@@ -1,3 +1,14 @@
+2005-09-29  Michael Smith <msmith@fluendo.com>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_src_event),
+	(gst_rmdemux_perform_seek), (gst_rmdemux_loop),
+	(gst_rmdemux_send_event), (gst_rmdemux_add_stream),
+	(gst_rmdemux_parse_mdpr), (gst_rmdemux_parse_packet):
+	Real demuxer fixes. Make it more bulletproof against bad data,
+	identify a few more stream types.
+	Fix seeking so that it works (at least with the seek example program;
+	it still fails with totem).
+
 2005-09-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:

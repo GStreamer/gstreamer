@@ -311,8 +311,33 @@ gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
         GST_DEBUG ("can only seek on TIME");
         goto done_unref;
       }
-      rmdemux->segment_start = cur;
-      rmdemux->segment_stop = stop;
+
+      GST_LOCK (rmdemux);
+
+      if (cur_type == GST_SEEK_TYPE_SET)
+        rmdemux->segment_start = cur;
+      else if (cur_type == GST_SEEK_TYPE_CUR)
+        rmdemux->segment_start += cur;
+      else if (cur_type == GST_SEEK_TYPE_END)
+        rmdemux->segment_start = rmdemux->duration + cur;
+
+      if (stop_type == GST_SEEK_TYPE_SET)
+        rmdemux->segment_stop = stop;
+      else if (cur_type == GST_SEEK_TYPE_CUR)
+        rmdemux->segment_stop += cur;
+      else if (cur_type == GST_SEEK_TYPE_END)
+        rmdemux->segment_stop = rmdemux->duration + cur;
+
+      /* Now do a sanity-check */
+      if (rmdemux->segment_stop < rmdemux->segment_start) {
+        GST_UNLOCK (rmdemux);
+        ret = FALSE;
+        GST_DEBUG_OBJECT (rmdemux, "Seek had stop " G_GUINT64_FORMAT " < start "
+            G_GUINT64_FORMAT ", cannot perform seek",
+            rmdemux->segment_stop, rmdemux->segment_start);
+        goto done_unref;
+      }
+
       rmdemux->segment_play = !!(flags & GST_SEEK_FLAG_SEGMENT);
       flush = !!(flags & GST_SEEK_FLAG_FLUSH);
       gst_event_unref (event);
@@ -322,7 +347,6 @@ gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
           GST_TIME_ARGS (rmdemux->segment_stop));
 
       /* check if we can do the seek now */
-      GST_LOCK (rmdemux);
       running = rmdemux->running;
       GST_UNLOCK (rmdemux);
 
@@ -360,12 +384,21 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
   rmdemux->segment_stop = CLAMP (rmdemux->segment_stop, 0, rmdemux->duration);
 
   /* first step is to unlock the streaming thread if it is
-   * blocked in a chain call, we do this by starting the flush. because
-   * we cannot yet hold any streaming lock, we have to protect the chains
-   * with their own lock. */
+   * blocked in a chain call, we do this by starting the flush. */
   if (flush) {
-    gst_pad_push_event (rmdemux->sinkpad, gst_event_new_flush_start ());
-    gst_rmdemux_send_event (rmdemux, gst_event_new_flush_start ());
+    gboolean res;
+
+    GST_DEBUG_OBJECT (rmdemux, "About to send flush_start events");
+    res = gst_pad_push_event (rmdemux->sinkpad, gst_event_new_flush_start ());
+    if (!res) {
+      GST_WARNING_OBJECT (rmdemux, "Failed to push event upstream!");
+    }
+
+    res = gst_rmdemux_send_event (rmdemux, gst_event_new_flush_start ());
+    if (!res) {
+      GST_WARNING_OBJECT (rmdemux, "Failed to push event downstream!");
+    }
+    GST_DEBUG_OBJECT (rmdemux, "Sent flush_start events");
   } else {
     gst_pad_pause_task (rmdemux->sinkpad);
   }
@@ -374,10 +407,12 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
    * non flushing seeks when the element is in PAUSED this could block
    * forever. */
   GST_STREAM_LOCK (rmdemux->sinkpad);
+  GST_DEBUG_OBJECT (rmdemux, "Taken stream lock on sinkpad!");
 
-  /* we need to stop flushing on the srcpad as we're going to use it
+  /* we need to stop flushing on the sinkpad as we're going to use it
    * next. We can do this as we have the STREAM lock now. */
   gst_pad_push_event (rmdemux->sinkpad, gst_event_new_flush_stop ());
+  GST_DEBUG_OBJECT (rmdemux, "Sent flush_stop downstream");
 
   /* Find the new offset */
   /* Get the video stream */
@@ -612,7 +647,7 @@ gst_rmdemux_loop (GstPad * pad)
 {
   GstRMDemux *rmdemux;
   GstBuffer *buffer;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint size;
 
   rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
@@ -633,6 +668,8 @@ gst_rmdemux_loop (GstPad * pad)
     case RMDEMUX_STATE_EOS:
       goto need_pause;
     default:
+      GST_LOG_OBJECT (rmdemux, "Default: requires %d bytes",
+          (int) rmdemux->size);
       size = rmdemux->size;
   }
 
@@ -649,8 +686,9 @@ gst_rmdemux_loop (GstPad * pad)
       return;
     } else {
       GST_DEBUG_OBJECT (rmdemux,
-          "Unable to pull data at offset %p (pull_range returned %d)",
-          rmdemux->offset, ret);
+          "Unable to pull %d bytes at offset %p (pull_range returned %d, state is %d)",
+          (int) size, rmdemux->offset, ret, GST_STATE (rmdemux));
+      ret = GST_FLOW_ERROR;
       goto need_pause;
     }
   }
@@ -658,7 +696,8 @@ gst_rmdemux_loop (GstPad * pad)
   size = GST_BUFFER_SIZE (buffer);
 
   /* Defer to the chain function */
-  if (gst_rmdemux_chain (pad, buffer) != GST_FLOW_OK) {
+  ret = gst_rmdemux_chain (pad, buffer);
+  if (ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (rmdemux, "Chain flow failed at %p", rmdemux->offset);
     goto need_pause;
   }
@@ -698,6 +737,11 @@ need_pause:
   {
     GST_LOG_OBJECT (rmdemux, "pausing task");
     gst_pad_pause_task (pad);
+    if (GST_FLOW_IS_FATAL (ret)) {
+      gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
+      GST_ELEMENT_ERROR (rmdemux, STREAM, STOPPED, (NULL),
+          ("stream stopped, reason %d", ret));
+    }
     return;
   }
 }
@@ -968,6 +1012,7 @@ static gboolean
 gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event)
 {
   int i;
+  gboolean ret = TRUE;
 
   for (i = 0; i < rmdemux->n_streams; i++) {
     GstRMDemuxStream *stream;
@@ -977,11 +1022,13 @@ gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event)
     GST_DEBUG_OBJECT (rmdemux, "Pushing event to stream %d", i);
 
     gst_event_ref (event);
-    gst_pad_push_event (stream->pad, event);
+    ret = gst_pad_push_event (stream->pad, event);
+    if (!ret)
+      break;
   }
   gst_event_unref (event);
 
-  return TRUE;
+  return ret;
 }
 
 void
@@ -1033,6 +1080,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         gst_pad_new_from_template (gst_static_pad_template_get
         (&gst_rmdemux_audiosrc_template), g_strdup_printf ("audio_%02d",
             rmdemux->n_audio_streams));
+    GST_LOG_OBJECT (rmdemux, "Created audio pad \"%s\"",
+        gst_pad_get_name (stream->pad));
     switch (stream->fourcc) {
         /* Older RealAudio Codecs */
       case GST_RM_AUD_14_4:
@@ -1074,6 +1123,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
         /* RALF is lossless */
       case GST_RM_AUD_RALF:
+        GST_DEBUG_OBJECT (rmdemux, "RALF");
         stream->caps = gst_caps_new_simple ("audio/x-ralf-mpeg4-generic", NULL);
         break;
 
@@ -1084,7 +1134,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
       default:
         GST_WARNING_OBJECT (rmdemux,
-            "Unknown audio FOURCC code " GST_FOURCC_FORMAT, stream->fourcc);
+            "Unknown audio FOURCC code \"" GST_FOURCC_FORMAT "\"",
+            stream->fourcc);
         break;
     }
 
@@ -1116,7 +1167,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   rmdemux->n_streams++;
   GST_LOG_OBJECT (rmdemux, "n_streams is now %d", rmdemux->n_streams);
 
-  if (stream->pad) {
+  if (stream->pad && stream->caps) {
     GST_DEBUG_OBJECT (rmdemux, "setting caps: %p", stream->caps);
 
     gst_pad_set_caps (stream->pad, stream->caps);
@@ -1145,8 +1196,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
       if (gst_pad_alloc_buffer (stream->pad, GST_BUFFER_OFFSET_NONE,
               stream->extra_data_size, stream->caps, &buffer) != GST_FLOW_OK) {
-        GST_WARNING_OBJECT (rmdemux, "failed to alloc src buffer for stream %d",
-            stream->id);
+        GST_WARNING_OBJECT (rmdemux, "failed to alloc extra_data src "
+            "buffer for stream %d", stream->id);
         return;
       }
 
@@ -1283,6 +1334,9 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
   if (strcmp (stream2_type_string, "video/x-pn-realvideo") == 0) {
     stream_type = GST_RMDEMUX_STREAM_VIDEO;
   } else if (strcmp (stream2_type_string, "audio/x-pn-realaudio") == 0) {
+    stream_type = GST_RMDEMUX_STREAM_AUDIO;
+  } else if (strcmp (stream2_type_string, "audio/x-ralf-mpeg4-generic") == 0) {
+    /* Another audio type found in the real testsuite */
     stream_type = GST_RMDEMUX_STREAM_AUDIO;
   } else if (strcmp (stream1_type_string, "") == 0 &&
       strcmp (stream2_type_string, "logical-fileinfo") == 0) {
@@ -1489,6 +1543,12 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
   }
 
   stream = gst_rmdemux_get_stream_by_id (rmdemux, id);
+
+  if (!stream) {
+    GST_WARNING_OBJECT (rmdemux, "No stream for stream id %d in parsing "
+        "data packet", id);
+    return;
+  }
 
   if ((rmdemux->offset + packet_size) > stream->seek_offset) {
     if (gst_pad_alloc_buffer (stream->pad, GST_BUFFER_OFFSET_NONE,
