@@ -152,27 +152,27 @@ send_messages (gpointer data)
   return FALSE;
 }
 
-/* test id adding two watches for different message types calls the
+/* test if adding a signal watch for different message types calls the
  * respective callbacks. */
 GST_START_TEST (test_watch)
 {
-  guint id1, id2;
+  guint id;
 
   test_bus = gst_bus_new ();
 
   main_loop = g_main_loop_new (NULL, FALSE);
 
-  id2 = gst_bus_add_watch (test_bus, GST_MESSAGE_EOS, message_func_eos, NULL);
-  id1 =
-      gst_bus_add_watch (test_bus, GST_MESSAGE_APPLICATION, message_func_app,
+  id = gst_bus_add_watch (test_bus, gst_bus_async_signal_func, NULL);
+  g_signal_connect (test_bus, "message::eos", (GCallback) message_func_eos,
       NULL);
+  g_signal_connect (test_bus, "message::application",
+      (GCallback) message_func_app, NULL);
 
   g_idle_add ((GSourceFunc) send_messages, NULL);
   while (g_main_context_pending (NULL))
     g_main_context_iteration (NULL, FALSE);
 
-  g_source_remove (id1);
-  g_source_remove (id2);
+  g_source_remove (id);
   g_main_loop_unref (main_loop);
 
   gst_object_unref ((GstObject *) test_bus);

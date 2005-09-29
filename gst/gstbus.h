@@ -103,8 +103,8 @@ struct _GstBusClass
   GstObjectClass parent_class;
 
   /* signals */
-  void (*sync_message)   (GstBus *bus, GstMessage *message);
-  void (*async_message)  (GstBus *bus, GstMessage *message);
+  void (*message)  	(GstBus *bus, GstMessage *message);
+  void (*sync_message)  (GstBus *bus, GstMessage *message);
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
@@ -116,7 +116,7 @@ GstBus*			gst_bus_new	 		(void);
 
 gboolean 		gst_bus_post 			(GstBus * bus, GstMessage * message);
 
-gboolean 		gst_bus_have_pending 		(GstBus * bus, GstMessageType events);
+gboolean 		gst_bus_have_pending 		(GstBus * bus);
 GstMessage *		gst_bus_peek 			(GstBus * bus);
 GstMessage *		gst_bus_pop 			(GstBus * bus);
 void			gst_bus_set_flushing		(GstBus * bus, gboolean flushing);
@@ -125,15 +125,13 @@ void			gst_bus_set_flushing		(GstBus * bus, gboolean flushing);
 void 			gst_bus_set_sync_handler 	(GstBus * bus, GstBusSyncHandler func,
     							 gpointer data);
 /* GSource based dispatching */
-GSource *		gst_bus_create_watch 		(GstBus * bus, GstMessageType events);
+GSource *		gst_bus_create_watch 		(GstBus * bus);
 guint 			gst_bus_add_watch_full 		(GstBus * bus,
     							 gint priority,
-							 GstMessageType events,
     							 GstBusFunc func, 
 							 gpointer user_data, 
 							 GDestroyNotify notify);
 guint 			gst_bus_add_watch 		(GstBus * bus,
-							 GstMessageType events,
     							 GstBusFunc func, 
 							 gpointer user_data);
 
@@ -146,6 +144,8 @@ gboolean		gst_bus_async_signal_func	(GstBus *bus, GstMessage *message,
 							 gpointer data);
 GstBusSyncReply		gst_bus_sync_signal_handler	(GstBus *bus, GstMessage *message,
 							 gpointer data);
+/* add watch that dispatches signals */
+guint 			gst_bus_add_signal_watch 	(GstBus * bus);
 
 G_END_DECLS
 

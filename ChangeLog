@@ -1,3 +1,23 @@
+2005-09-29  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstbin.c: (GST_START_TEST):
+	Change for new bus API.
+
+	* check/gst/gstbus.c: (message_func_eos), (message_func_app),
+	(send_messages), (GST_START_TEST), (gstbus_suite):
+	Change for new bus signal API.
+
+	* gst/gstbus.c: (gst_bus_class_init), (gst_bus_have_pending),
+	(gst_bus_source_prepare), (gst_bus_source_check),
+	(gst_bus_create_watch), (gst_bus_add_watch_full),
+	(gst_bus_add_watch), (gst_bus_poll), (gst_bus_async_signal_func),
+	(gst_bus_sync_signal_handler), (gst_bus_add_signal_watch):
+	* gst/gstbus.h:
+	Remove support for multiple GSources operating on different
+	message types as it is too complex and unneeded when using
+	signals.
+	Added support for receiving signals from the bus.
+
 2005-09-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/libs/tmpl/gstdataprotocol.sgml:

@@ -174,7 +174,7 @@ gst_bus_class_init (GstBusClass * klass)
       marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
 
   /**
-   * GstBus::async-message:
+   * GstBus::message:
    * @bus: the object which received the signal
    * @message: the message that has been posted asynchronously
    *
@@ -182,9 +182,9 @@ gst_bus_class_init (GstBusClass * klass)
    * GSource added to the mainloop.
    */
   gst_bus_signals[ASYNC_MESSAGE] =
-      g_signal_new ("async-message", G_TYPE_FROM_CLASS (klass),
+      g_signal_new ("message", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-      G_STRUCT_OFFSET (GstBusClass, async_message), NULL, NULL,
+      G_STRUCT_OFFSET (GstBusClass, message), NULL, NULL,
       marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
 }
 
@@ -381,10 +381,8 @@ is_flushing:
 /**
  * gst_bus_have_pending:
  * @bus: a #GstBus to check
- * @events: a mask of #GstMessageType, representing the set of message types to
- * watch for.
  *
- * Check if there are pending messages on the bus of the given types that
+ * Check if there are pending messages on the bus that
  * should be handled.
  *
  * Returns: TRUE if there are messages on the bus to be handled.
@@ -392,21 +390,15 @@ is_flushing:
  * MT safe.
  */
 gboolean
-gst_bus_have_pending (GstBus * bus, GstMessageType events)
+gst_bus_have_pending (GstBus * bus)
 {
-  GstMessage *message;
   gboolean result;
 
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
 
   g_mutex_lock (bus->queue_lock);
-  /* see if there is a message on the bus that satisfies the
-   * event mask */
-  message = g_queue_peek_head (bus->queue);
-  if (message)
-    result = (GST_MESSAGE_TYPE (message) & events) != 0;
-  else
-    result = FALSE;
+  /* see if there is a message on the bus */
+  result = !g_queue_is_empty (bus->queue);
   g_mutex_unlock (bus->queue_lock);
 
   return result;
@@ -537,7 +529,6 @@ typedef struct
 {
   GSource source;
   GstBus *bus;
-  GstMessageType events;
 } GstBusSource;
 
 static gboolean
@@ -546,7 +537,7 @@ gst_bus_source_prepare (GSource * source, gint * timeout)
   GstBusSource *bsrc = (GstBusSource *) source;
 
   *timeout = -1;
-  return gst_bus_have_pending (bsrc->bus, bsrc->events);
+  return gst_bus_have_pending (bsrc->bus);
 }
 
 static gboolean
@@ -554,7 +545,7 @@ gst_bus_source_check (GSource * source)
 {
   GstBusSource *bsrc = (GstBusSource *) source;
 
-  return gst_bus_have_pending (bsrc->bus, bsrc->events);
+  return gst_bus_have_pending (bsrc->bus);
 }
 
 static gboolean
@@ -616,19 +607,15 @@ static GSourceFuncs gst_bus_source_funcs = {
 /**
  * gst_bus_create_watch:
  * @bus: a #GstBus to create the watch for
- * @events: a mask of #GstMessageType, representing the set of message types to
- * watch for.
  *
- * Create watch for this bus. The source will only act on messages of the
- * given types, messages of other types will simply remain on the bus and 
- * this GSource will not be dispatched again before the message is popped off
- * the bus. For this reason one typically has a low priority GSource that
- * pops all remaining messages from the bus not handled by the other GSources.
+ * Create watch for this bus. The GSource will be dispatched whenever
+ * a message is on the bus. After the GSource is dispatched, the 
+ * message is popped off the bus and unreffed.
  *
  * Returns: A #GSource that can be added to a mainloop.
  */
 GSource *
-gst_bus_create_watch (GstBus * bus, GstMessageType events)
+gst_bus_create_watch (GstBus * bus)
 {
   GstBusSource *source;
 
@@ -638,7 +625,6 @@ gst_bus_create_watch (GstBus * bus, GstMessageType events)
       sizeof (GstBusSource));
   gst_object_ref (bus);
   source->bus = bus;
-  source->events = events;
 
   return (GSource *) source;
 }
@@ -647,8 +633,6 @@ gst_bus_create_watch (GstBus * bus, GstMessageType events)
  * gst_bus_add_watch_full:
  * @bus: a #GstBus to create the watch for.
  * @priority: The priority of the watch.
- * @events: a mask of #GstMessageType, representing the set of message types to
- * watch for.
  * @func: A function to call when a message is received.
  * @user_data: user data passed to @func.
  * @notify: the function to call when the source is removed.
@@ -666,7 +650,7 @@ gst_bus_create_watch (GstBus * bus, GstMessageType events)
  * MT safe.
  */
 guint
-gst_bus_add_watch_full (GstBus * bus, gint priority, GstMessageType events,
+gst_bus_add_watch_full (GstBus * bus, gint priority,
     GstBusFunc func, gpointer user_data, GDestroyNotify notify)
 {
   guint id;
@@ -674,7 +658,7 @@ gst_bus_add_watch_full (GstBus * bus, gint priority, GstMessageType events,
 
   g_return_val_if_fail (GST_IS_BUS (bus), 0);
 
-  source = gst_bus_create_watch (bus, events);
+  source = gst_bus_create_watch (bus);
 
   if (priority != G_PRIORITY_DEFAULT)
     g_source_set_priority (source, priority);
@@ -691,8 +675,6 @@ gst_bus_add_watch_full (GstBus * bus, gint priority, GstMessageType events,
 /**
  * gst_bus_add_watch:
  * @bus: a #GstBus to create the watch for
- * @events: a mask of #GstMessageType, representing the set of message types to
- * watch for.
  * @func: A function to call when a message is received.
  * @user_data: user data passed to @func.
  *
@@ -705,10 +687,9 @@ gst_bus_add_watch_full (GstBus * bus, gint priority, GstMessageType events,
  * MT safe.
  */
 guint
-gst_bus_add_watch (GstBus * bus, GstMessageType events, GstBusFunc func,
-    gpointer user_data)
+gst_bus_add_watch (GstBus * bus, GstBusFunc func, gpointer user_data)
 {
-  return gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT, events, func,
+  return gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT, func,
       user_data, NULL);
 }
 
@@ -811,7 +792,7 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
   else
     poll_data->timeout_id = 0;
 
-  id = gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT, GST_MESSAGE_ANY,
+  id = gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT,
       (GstBusFunc) poll_func, poll_data, (GDestroyNotify) poll_destroy);
 
   GST_DEBUG ("running mainloop %p", poll_data->loop);
@@ -847,6 +828,9 @@ gst_bus_async_signal_func (GstBus * bus, GstMessage * message, gpointer data)
 {
   GQuark detail = 0;
 
+  g_return_val_if_fail (GST_IS_BUS (bus), TRUE);
+  g_return_val_if_fail (message != NULL, TRUE);
+
   detail = gst_message_type_to_quark (GST_MESSAGE_TYPE (message));
 
   g_signal_emit (bus, gst_bus_signals[ASYNC_MESSAGE], detail, message);
@@ -871,9 +855,34 @@ gst_bus_sync_signal_handler (GstBus * bus, GstMessage * message, gpointer data)
 {
   GQuark detail = 0;
 
+  g_return_val_if_fail (GST_IS_BUS (bus), GST_BUS_DROP);
+  g_return_val_if_fail (message != NULL, GST_BUS_DROP);
+
   detail = gst_message_type_to_quark (GST_MESSAGE_TYPE (message));
 
   g_signal_emit (bus, gst_bus_signals[SYNC_MESSAGE], detail, message);
 
   return GST_BUS_PASS;
+}
+
+/**
+ * gst_bus_add_signal_watch:
+ * @bus: a #GstBus to create the watch for
+ *
+ * Adds a bus signal watch to the default main context with the default priority.
+ * After calling this statement, the bus will emit the message signal for each
+ * message posted on the bus.
+ *
+ * The watch can be removed using #g_source_remove().
+ *
+ * Returns: The event source id.
+ *
+ * MT safe.
+ */
+guint
+gst_bus_add_signal_watch (GstBus * bus)
+{
+  g_return_val_if_fail (GST_IS_BUS (bus), 0);
+
+  return gst_bus_add_watch (bus, gst_bus_async_signal_func, NULL);
 }
