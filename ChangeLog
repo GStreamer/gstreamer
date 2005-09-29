@@ -1,3 +1,10 @@
+2005-09-28  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gstmessage.c (gst_message_new_state_changed): Use
+	GST_TYPE_STATE instead of G_TYPE_INT, mainly for language bindings
+	which does introspection.
+	Reviewed by Christian Schaller
+
 2005-09-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstinfo.c: (gst_debug_log_default):

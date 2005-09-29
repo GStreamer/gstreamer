@@ -36,6 +36,7 @@
 
 #include "gst_private.h"
 #include "gsterror.h"
+#include "gstenumtypes.h"
 #include "gstinfo.h"
 #include "gstmessage.h"
 #include "gsttaglist.h"
@@ -368,8 +369,8 @@ gst_message_new_state_changed (GstObject * src, GstState old, GstState new)
 
   message = gst_message_new (GST_MESSAGE_STATE_CHANGED, src);
 
-  s = gst_structure_new ("GstMessageState", "old-state", G_TYPE_INT, (gint) old,
-      "new-state", G_TYPE_INT, (gint) new, NULL);
+  s = gst_structure_new ("GstMessageState", "old-state", GST_TYPE_STATE,
+      old, "new-state", GST_TYPE_STATE, new, NULL);
   gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
   message->structure = s;
 
