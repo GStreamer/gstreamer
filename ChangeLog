@@ -1,3 +1,8 @@
+2005-09-28  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gstelement.override (_wrap_gst_element_get_state): Set the
+	timeout to 0 as default
+
 2005-09-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:
