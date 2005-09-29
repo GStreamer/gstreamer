@@ -455,11 +455,18 @@ gst_bus_pop (GstBus * bus)
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
+  GST_DEBUG_OBJECT (bus, "%d messages on the bus",
+      g_queue_get_length (bus->queue));
+
   g_mutex_lock (bus->queue_lock);
   message = g_queue_pop_head (bus->queue);
   g_mutex_unlock (bus->queue_lock);
 
-  GST_DEBUG_OBJECT (bus, "pop on bus, got message %p", message);
+  if (message)
+    GST_DEBUG_OBJECT (bus, "pop on bus, got message %p, %s", message,
+        gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+  else
+    GST_DEBUG_OBJECT (bus, "pop on bus, no message");
 
   return message;
 }

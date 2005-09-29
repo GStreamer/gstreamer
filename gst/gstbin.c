@@ -1523,8 +1523,8 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
 static GstBusSyncReply
 bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 {
-  GST_DEBUG_OBJECT (bin, "[msg %p] handling child message of type %d",
-      message, GST_MESSAGE_TYPE (message));
+  GST_DEBUG_OBJECT (bin, "[msg %p] handling child message of type %s",
+      message, gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:{

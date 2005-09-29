@@ -226,7 +226,8 @@ gst_message_new (GstMessageType type, GstObject * src)
 
   message = (GstMessage *) gst_mini_object_new (GST_TYPE_MESSAGE);
 
-  GST_CAT_INFO (GST_CAT_MESSAGE, "creating new message %p %d", message, type);
+  GST_CAT_INFO (GST_CAT_MESSAGE, "creating new message %p %s", message,
+      gst_message_type_get_name (type));
 
   message->type = type;
   if (src) {
