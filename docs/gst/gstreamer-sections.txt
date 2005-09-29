@@ -1499,8 +1499,6 @@ gst_query_new_convert
 gst_query_new_position
 gst_query_parse_convert
 gst_query_parse_position
-gst_query_parse_seeking_query
-gst_query_parse_seeking_response
 gst_query_ref
 gst_query_set_convert
 gst_query_set_formats
