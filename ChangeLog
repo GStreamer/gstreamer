@@ -1,3 +1,9 @@
+2005-09-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_get_range):
+	  Fix documentation typos. Add some more debug info.
+
 2005-09-29  David Schleef  <ds@schleef.org>
 
 	* gst/gstplugin.c: (gst_plugin_load_file): Make some error messages

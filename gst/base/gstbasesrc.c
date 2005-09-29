@@ -23,7 +23,7 @@
 /**
  * SECTION:gstbasesrc
  * @short_description: Base class for getrange based source elements
- * @see_also: #GstBaseTransformc, #GstBaseSink
+ * @see_also: #GstBaseTransform, #GstBaseSink
  *
  * This class is mostly useful for elements that do byte based
  * access to a random access resource, like files.
@@ -31,7 +31,7 @@
  * to TRUE.
  *
  * <itemizedlist>
- *   <listitem><para>one sinkpad</para></listitem>
+ *   <listitem><para>one source pad</para></listitem>
  *   <listitem><para>handles state changes</para></listitem>
  *   <listitem><para>does flushing</para></listitem>
  *   <listitem><para>preroll with optional preview</para></listitem>
@@ -641,7 +641,8 @@ no_function:
   }
 unexpected_length:
   {
-    GST_DEBUG_OBJECT (src, "unexpected length %u", length);
+    GST_DEBUG_OBJECT (src, "unexpected length %u (offset=%" G_GUINT64_FORMAT
+        ", size=%" G_GUINT64_FORMAT ")", length, offset, src->size);
     return GST_FLOW_UNEXPECTED;
   }
 reached_num_buffers:
