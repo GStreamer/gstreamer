@@ -92,9 +92,13 @@ gst_bus_peek
 gst_bus_pop
 gst_bus_set_flushing
 gst_bus_set_sync_handler
+gst_bus_sync_signal_handler
 gst_bus_create_watch
 gst_bus_add_watch_full
 gst_bus_add_watch
+gst_bus_async_signal_func
+gst_bus_add_signal_watch
+gst_bus_remove_signal_watch
 gst_bus_poll
 <SUBSECTION Standard>
 GstBusClass
@@ -488,6 +492,7 @@ gst_element_lost_state
 gst_element_message_full
 gst_element_no_more_pads
 gst_element_post_message
+gst_element_provide_clock
 gst_element_provides_clock
 gst_element_query
 gst_element_query_convert
@@ -969,6 +974,8 @@ GST_MESSAGE_TRACE_NAME
 GST_MESSAGE_TYPE
 GST_MESSAGE_UNLOCK
 GST_MESSAGE_WAIT
+gst_message_type_to_quark
+gst_message_type_get_name
 gst_message_copy
 gst_message_get_structure
 gst_message_make_writable

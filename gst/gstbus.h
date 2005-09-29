@@ -94,6 +94,9 @@ struct _GstBus
   GstBusSyncHandler sync_handler;
   gpointer 	    sync_handler_data;
 
+  guint             signal_watch_id;
+  guint             num_signal_watchers;
+
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -144,8 +147,10 @@ gboolean		gst_bus_async_signal_func	(GstBus *bus, GstMessage *message,
 							 gpointer data);
 GstBusSyncReply		gst_bus_sync_signal_handler	(GstBus *bus, GstMessage *message,
 							 gpointer data);
-/* add watch that dispatches signals */
-guint 			gst_bus_add_signal_watch 	(GstBus * bus);
+
+/* convenience api to add/remove a gsource that emits the async signals */
+void 			gst_bus_add_signal_watch 	(GstBus * bus);
+void 			gst_bus_remove_signal_watch 	(GstBus * bus);
 
 G_END_DECLS
 
