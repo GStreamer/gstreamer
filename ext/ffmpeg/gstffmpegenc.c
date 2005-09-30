@@ -418,7 +418,12 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   /* some codecs support more than one format, first auto-choose one */
+  GST_DEBUG_OBJECT (ffmpegenc, "picking an output format ...");
   allowed_caps = gst_pad_get_allowed_caps (ffmpegenc->srcpad);
+  if (!allowed_caps) {
+    GST_DEBUG_OBJECT (ffmpegenc, "... but no peer, no caps");
+    allowed_caps = gst_pad_get_pad_template_caps (ffmpegenc->srcpad);
+  }
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, allowed_caps, ffmpegenc->context);
 

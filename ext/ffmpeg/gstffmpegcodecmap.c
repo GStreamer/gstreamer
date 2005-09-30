@@ -182,7 +182,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_RV10:
     case CODEC_ID_RV20:
-      do {
+      {
         gint version = (codec_id == CODEC_ID_RV10) ? 1 : 2;
 
         /* FIXME: context->sub_id must be filled in during decoding */
@@ -193,7 +193,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           gst_caps_set_simple (caps,
               "rmsubid", GST_TYPE_FOURCC, context->sub_id, NULL);
         }
-      } while (0);
+      }
       break;
 
     case CODEC_ID_MP2:
@@ -296,7 +296,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_MSMPEG4V1:
     case CODEC_ID_MSMPEG4V2:
     case CODEC_ID_MSMPEG4V3:
-      do {
+      {
         gint version = 41 + codec_id - CODEC_ID_MSMPEG4V1;
 
         /* encode-FIXME: bitrate */
@@ -306,17 +306,17 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           gst_caps_append (caps, GST_FF_VID_CAPS_NEW ("video/x-divx",
               "divxversion", G_TYPE_INT, 3, NULL));
         }
-      } while (0);
+      }
       break;
 
     case CODEC_ID_WMV1:
     case CODEC_ID_WMV2:
-      do {
+      {
         gint version = (codec_id == CODEC_ID_WMV1) ? 1 : 2;
 
         caps = GST_FF_VID_CAPS_NEW ("video/x-wmv",
             "wmvversion", G_TYPE_INT, version, NULL);
-      } while (0);
+      }
       break;
 
     case CODEC_ID_FLV1:
@@ -345,7 +345,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_WMAV1:
     case CODEC_ID_WMAV2:
-      do {
+      {
         gint version = (codec_id == CODEC_ID_WMAV1) ? 1 : 2;
 
         if (context) {
@@ -359,17 +359,17 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
              "block_align", GST_TYPE_INT_RANGE, 0, G_MAXINT,
              "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
         }
-      } while (0);
+      }
       break;
 
     case CODEC_ID_MACE3:
     case CODEC_ID_MACE6:
-      do {
+      {
         gint version = (codec_id == CODEC_ID_MACE3) ? 3 : 6;
 
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-mace",
             "maceversion", G_TYPE_INT, version, NULL);
-      } while (0);
+      }
       break;
 
     case CODEC_ID_HUFFYUV:
@@ -526,7 +526,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_PCM_U16BE:
     case CODEC_ID_PCM_S8:
     case CODEC_ID_PCM_U8:
-      do {
+      {
         gint width = 0, depth = 0, endianness = 0;
         gboolean signedness = FALSE;    /* blabla */
 
@@ -577,7 +577,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
             "depth", G_TYPE_INT, depth,
             "endianness", G_TYPE_INT, endianness,
             "signed", G_TYPE_BOOLEAN, signedness, NULL);
-      } while (0);
+      }
       break;
 
     case CODEC_ID_PCM_MULAW:
@@ -603,7 +603,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_CT:
     case CODEC_ID_ADPCM_SWF:
     case CODEC_ID_ADPCM_YAMAHA:
-      do {
+      {
         gchar *layout = NULL;
 
         switch (codec_id) {
@@ -665,7 +665,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           gst_caps_set_simple (caps,
               "block_align", G_TYPE_INT, context->block_align,
               "bitrate", G_TYPE_INT, context->bit_rate, NULL);
-      } while (0);
+      }
       break;
 
     case CODEC_ID_AMR_NB:
@@ -678,20 +678,20 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_RA_144:
     case CODEC_ID_RA_288:
-      do {
+      {
         gint version = (codec_id == CODEC_ID_RA_144) ? 1 : 2;
 
         /* FIXME: properties? */
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-pn-realaudio",
             "raversion", G_TYPE_INT, version, NULL);
-      } while (0);
+      }
       break;
 
     case CODEC_ID_ROQ_DPCM:
     case CODEC_ID_INTERPLAY_DPCM:
     case CODEC_ID_XAN_DPCM:
     case CODEC_ID_SOL_DPCM:
-      do {
+      {
         gchar *layout = NULL;
 
         switch (codec_id) {
@@ -720,7 +720,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           gst_caps_set_simple (caps,
               "block_align", G_TYPE_INT, context->block_align,
               "bitrate", G_TYPE_INT, context->bit_rate, NULL);
-      } while (0);
+      }
       break;
 
     case CODEC_ID_SHORTEN:
@@ -1235,7 +1235,7 @@ gst_ffmpeg_caps_with_codectype (enum CodecType type,
  * caps_with_codecid () transforms a GstCaps for a known codec
  * ID into a filled-in context.
  */
-                                                                                
+
 void
 gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     enum CodecType codec_type, const GstCaps *caps, AVCodecContext *context)
@@ -1258,7 +1258,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
   switch (codec_id) {
     case CODEC_ID_MPEG4:
-      do {
+      {
         const gchar *mime = gst_structure_get_name (str);
 
         if (!strcmp (mime, "video/x-divx"))
@@ -1269,7 +1269,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
           context->codec_tag = GST_MAKE_FOURCC ('3', 'I', 'V', '1');
         else if (!strcmp (mime, "video/mpeg"))
           context->codec_tag = GST_MAKE_FOURCC ('m', 'p', '4', 'v');
-      } while (0);
+      }
       break;
 
      case CODEC_ID_SVQ3:
@@ -1307,22 +1307,22 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
     case CODEC_ID_MSRLE:
     case CODEC_ID_QTRLE:
-      do {
+      {
         gint depth;
 
         if (gst_structure_get_int (str, "depth", &depth))
           context->bits_per_sample = depth;
-      } while (0);
+      }
       break;
 
     case CODEC_ID_RV10:
     case CODEC_ID_RV20:
-      do {
+      {
         guint32 fourcc;
 
         if (gst_structure_get_fourcc (str, "rmsubid", &fourcc))
           context->sub_id = fourcc;
-      } while (0);
+      }
       break;
 
     case CODEC_ID_ALAC:
