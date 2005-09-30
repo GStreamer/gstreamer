@@ -1,7 +1,13 @@
+2005-09-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_setcaps):
+	  if no peer, use the src pad template caps as allowed
+	  caps
+
 2005-09-22  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_setcaps):
-	Do not limit quantizer values so we can get realy low
+	Do not limit quantizer values so we can get really low
 	bitrates.
 
 2005-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
