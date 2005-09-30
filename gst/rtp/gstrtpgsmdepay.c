@@ -52,7 +52,10 @@ static GstStaticPadTemplate gst_rtpgsmparse_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp")
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "media = (string) \"audio\", "
+        "payload = (int) [ 96, 255 ], "
+        "clock-rate = (int) 8000, " "encoding-name = (string) \"GSM\"")
     );
 
 

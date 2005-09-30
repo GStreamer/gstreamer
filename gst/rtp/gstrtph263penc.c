@@ -25,7 +25,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_h263penc_details = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Encoder/Network",
   "Encodes H263+ video in RTP packets (RFC 2429)",
   "Wim Taymans <wim@fluendo.com>"
 };

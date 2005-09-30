@@ -25,7 +25,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_mpaenc_details = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Encoder/Network",
   "Encode MPEG audio as RTP packets (RFC 2038)",
   "Wim Taymans <wim@fluendo.com>"
 };

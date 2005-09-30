@@ -25,7 +25,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_mp4venc_details = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Encoder/Network",
   "Encode MPEG4 video as RTP packets (RFC 3016)",
   "Wim Taymans <wim@fluendo.com>"
 };

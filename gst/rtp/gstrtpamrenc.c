@@ -32,7 +32,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_amrenc_details = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Encoder/Network",
   "Encode AMR audio into RTP packets (RFC 3267)",
   "Wim Taymans <wim@fluendo.com>"
 };

@@ -1,3 +1,14 @@
+2005-09-30  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpamrenc.c: (gst_rtpamrenc_setcaps):
+	* gst/rtp/gstrtpgsmparse.c:
+	* gst/rtp/gstrtph263penc.c:
+	* gst/rtp/gstrtpmp4venc.c: (gst_rtpmp4venc_class_init),
+	(gst_rtpmp4venc_parse_data), (gst_rtpmp4venc_handle_buffer),
+	(gst_rtpmp4venc_set_property):
+	* gst/rtp/gstrtpmpaenc.c: (gst_rtpmpaenc_handle_buffer):
+	Various class and caps fixes from Andre Magalhaes (andrunko)
+
 2005-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/level/level-example.c: (main):
