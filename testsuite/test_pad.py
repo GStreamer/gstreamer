@@ -98,7 +98,7 @@ class PadProbeTest(TestCase):
         self.assertEquals(self.fakesrc.__gstrefcount__, 1)
         self.assertEquals(sys.getrefcount(self.fakesrc), 3)
 
-        self.pipeline.add_many(self.fakesrc, self.fakesink)
+        self.pipeline.add(self.fakesrc, self.fakesink)
         self.assertEquals(self.fakesrc.__gstrefcount__, 2) # added
         self.assertEquals(sys.getrefcount(self.fakesrc), 3)
 

@@ -95,5 +95,32 @@ class BinSubclassTest(TestCase):
         # back to NULL
         bin.set_state(gst.STATE_NULL)
 
+class BinAddRemove(TestCase):
+    def setUp(self):
+        TestCase.setUp(self)
+        self.bin = gst.Bin('bin')
+
+    def tearDown(self):
+        del self.bin
+        TestCase.tearDown(self)
+
+    def testError(self):
+        src = gst.element_factory_make('fakesrc', 'name')
+        sink = gst.element_factory_make('fakesink', 'name')
+        self.bin.add(src)
+        self.assertRaises(gst.AddError, self.bin.add, sink)
+        self.assertRaises(gst.AddError, self.bin.add, src)
+        self.assertRaises(gst.RemoveError, self.bin.remove, sink)
+        self.bin.remove(src)
+        self.assertRaises(gst.RemoveError, self.bin.remove, src)
+        
+    def testMany(self):
+        src = gst.element_factory_make('fakesrc')
+        sink = gst.element_factory_make('fakesink')
+        self.bin.add(src, sink)
+        self.assertRaises(gst.AddError, self.bin.add, src, sink)
+        self.bin.remove(src, sink)
+        self.assertRaises(gst.RemoveError, self.bin.remove, src, sink)
+ 
 if __name__ == "__main__":
     unittest.main()

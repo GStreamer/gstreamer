@@ -1,3 +1,20 @@
+2005-09-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gstbin.override:
+	  deprecate add_many/remove_many, fold into add/remove
+	* gst/gstmodule.c: (init_gst):
+	  add AddError and RemoveError
+	* testsuite/Makefile.am:
+	  remove fatal warnings, until we can wrap log handlers
+	  and catch our expected add/remove errors
+	* testsuite/test_bin.py:
+	  add tests for new add/remove semantics
+	* testsuite/test_pad.py:
+	* testsuite/test_pipeline.py:
+	  fix up
+
 2005-09-29  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gstelement.override (_wrap_gst_element_get_state): return an

@@ -24,9 +24,9 @@
 ignore
   gst_bin_get_by_name_recurse_up
 %%
-override gst_bin_add_many args
+override gst_bin_add args
 static PyObject *
-_wrap_gst_bin_add_many(PyGObject *self, PyObject *args)
+_wrap_gst_bin_add(PyGObject *self, PyObject *args)
 {
 	PyGObject *element;
 	int i, len;
@@ -49,16 +49,30 @@ _wrap_gst_bin_add_many(PyGObject *self, PyObject *args)
 	
 	for (i = 0; i < len; i++) {
 		element = (PyGObject*)PyTuple_GetItem(args, i);
-		gst_bin_add(GST_BIN(self->obj), GST_ELEMENT(element->obj));
+		if (!gst_bin_add(GST_BIN(self->obj), GST_ELEMENT(element->obj))) {
+			PyErr_Format(PyGstExc_AddError, "Could not add element '%s'", GST_OBJECT_NAME(element->obj));
+			return NULL;
+                }
 	}
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
 %%
-override gst_bin_remove_many args
+override gst_bin_add_many kwargs
 static PyObject *
-_wrap_gst_bin_remove_many(PyGObject *self, PyObject *args)
+_wrap_gst_bin_add_many(PyGObject *self, PyObject *args)
+{
+    if (PyErr_Warn(PyExc_DeprecationWarning, "gst.Bin.add_many() is deprecated, use gst.Bin.add()") < 0)
+        return NULL;
+    return _wrap_gst_bin_add (self, args);
+}
+
+%%
+override gst_bin_remove args
+static PyObject *
+_wrap_gst_bin_remove(PyGObject *self, PyObject *args)
 {
 	PyGObject *element;
 	int i, len;
@@ -81,12 +95,27 @@ _wrap_gst_bin_remove_many(PyGObject *self, PyObject *args)
 	
 	for (i = 0; i < len; i++) {
 		element = (PyGObject*)PyTuple_GetItem(args, i);
-		gst_bin_remove(GST_BIN(self->obj), GST_ELEMENT(element->obj));
+		if (!gst_bin_remove(GST_BIN(self->obj), GST_ELEMENT(element->obj))) {
+			PyErr_Format(PyGstExc_RemoveError, "Could not remove element '%s'", GST_OBJECT_NAME(element->obj));
+			return NULL;
+	        }
 	}
 
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
+%%
+override gst_bin_remove_many kwargs
+static PyObject *
+_wrap_gst_bin_remove_many(PyGObject *self, PyObject *args)
+{
+    if (PyErr_Warn(PyExc_DeprecationWarning, "gst.Bin.remove_many() is deprecated, use gst.Bin.remove()") < 0)
+        return NULL;
+    return _wrap_gst_bin_remove (self, args);
+}
+
+
 %%
 override gst_bin_get_by_name kwargs
 static PyObject *

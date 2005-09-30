@@ -51,6 +51,8 @@ headers
 #include <frameobject.h>
 
 PyObject *PyGstExc_LinkError = NULL;
+PyObject *PyGstExc_AddError = NULL;
+PyObject *PyGstExc_RemoveError = NULL;
 
 GST_DEBUG_CATEGORY_EXTERN (python_debug);
 #define GST_CAT_DEFAULT python_debug

@@ -70,10 +70,21 @@
 (define-method add
   (of-object "GstBin")
   (c-name "gst_bin_add")
-  (return-type "gboolean")
+  (return-type "none")
   (parameters
-    '("GstElement*" "element")
+    '("GstElement*" "element_1")
   )
+  (varargs #t)
+)
+
+(define-method add_many
+  (of-object "GstBin")
+  (c-name "gst_bin_add_many")
+  (return-type "none")
+  (parameters
+    '("GstElement*" "element_1")
+  )
+  (varargs #t)
 )
 
 (define-method remove
@@ -81,10 +92,20 @@
   (c-name "gst_bin_remove")
   (return-type "gboolean")
   (parameters
-    '("GstElement*" "element")
+    '("GstElement*" "element_1")
   )
+  (varargs #t)
 )
 
+(define-method remove_many
+  (of-object "GstBin")
+  (c-name "gst_bin_remove_many")
+  (return-type "gboolean")
+  (parameters
+    '("GstElement*" "element_1")
+  )
+  (varargs #t)
+)
 (define-method get_by_name
   (of-object "GstBin")
   (c-name "gst_bin_get_by_name")
@@ -5915,16 +5936,6 @@
     '("GstFormat*" "dest_fmt")
     '("gint64*" "dest_val")
   )
-)
-
-(define-method add_many
-  (of-object "GstBin")
-  (c-name "gst_bin_add_many")
-  (return-type "none")
-  (parameters
-    '("GstElement*" "element_1")
-  )
-  (varargs #t)
 )
 
 (define-method remove_many

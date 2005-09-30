@@ -41,6 +41,8 @@ extern PyMethodDef pygst_functions[];
 extern GSList *mainloops;
 extern void _pygst_main_quit(void);
 extern PyObject *PyGstExc_LinkError;
+extern PyObject *PyGstExc_AddError;
+extern PyObject *PyGstExc_RemoveError;
 
 GST_DEBUG_CATEGORY (pygst_debug);  /* for bindings code */
 GST_DEBUG_CATEGORY (python_debug); /* for python code */
@@ -171,11 +173,22 @@ init_gst (void)
 
      PyModule_AddObject(m, "CLOCK_TIME_NONE", PyLong_FromUnsignedLongLong(GST_CLOCK_TIME_NONE));
 
-     /* LinkError exception */
+     /* exceptions */
      PyGstExc_LinkError = PyErr_NewException("gst.LinkError",
 					     PyExc_RuntimeError,
 					     NULL);
      PyDict_SetItemString(d, "LinkError", PyGstExc_LinkError);
+
+     PyGstExc_AddError = PyErr_NewException("gst.AddError",
+					     PyExc_RuntimeError,
+					     NULL);
+     PyDict_SetItemString(d, "AddError", PyGstExc_AddError);
+
+     PyGstExc_RemoveError = PyErr_NewException("gst.RemoveError",
+					     PyExc_RuntimeError,
+					     NULL);
+     PyDict_SetItemString(d, "RemoveError", PyGstExc_RemoveError);
+
 
 
      pygstminiobject_register_class(d, "GstMiniObject", GST_TYPE_MINI_OBJECT,

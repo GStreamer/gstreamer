@@ -54,7 +54,7 @@ class Pipeline(TestCase):
         source = gst.element_factory_make('fakesrc', 'source')
         source.set_property('num-buffers', 5)
         sink = gst.element_factory_make('fakesink', 'sink')
-        self.pipeline.add_many(source, sink)
+        self.pipeline.add(source, sink)
         gst.element_link_many(source, sink)
 
     def tearDown(self):
@@ -93,7 +93,7 @@ class PipelineAndBus(TestCase):
         self.pipeline.set_property('play-timeout', 0L)
         source = gst.element_factory_make('fakesrc', 'source')
         sink = gst.element_factory_make('fakesink', 'sink')
-        self.pipeline.add_many(source, sink)
+        self.pipeline.add(source, sink)
         gst.element_link_many(source, sink)
 
         self.bus = self.pipeline.get_bus()
