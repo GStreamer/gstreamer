@@ -1,3 +1,14 @@
+2005-09-30  Michael Smith <msmith@fluendo.com>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_src_event),
+	(gst_rmdemux_perform_seek), (gst_rmdemux_src_query),
+	(gst_rmdemux_change_state), (gst_rmdemux_loop),
+	(gst_rmdemux_fourcc_isplausible), (gst_rmdemux_chain),
+	(gst_rmdemux_send_event), (gst_rmdemux_add_stream),
+	(gst_rmdemux_parse_packet):
+	* gst/realmedia/rmdemux.h:
+	  Sanity checking, and fix some minor memory leaks
+
 2005-09-29  Michael Smith <msmith@fluendo.com>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_src_event),
