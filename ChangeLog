@@ -1,5 +1,11 @@
 2005-09-30  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstelement.c: (gst_element_set_state),
+	(gst_element_change_state):
+	Small tweak, element in ASYNC remains ASYNC.
+
+2005-09-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesink.c: (gst_base_sink_change_state):
 	Only error is an error.
 

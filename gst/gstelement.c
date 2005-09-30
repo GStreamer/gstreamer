@@ -1854,6 +1854,10 @@ gst_element_set_state (GstElement * element, GstState state)
      * the STATE_LOCK */
     gst_element_commit_state (element);
     gst_element_lost_state (element);
+    if (state == GST_STATE_PENDING (element)) {
+      GST_STATE_UNLOCK (element);
+      return GST_STATE_CHANGE_ASYNC;
+    }
   }
 
   /* start with the current state */
@@ -2094,7 +2098,6 @@ was_ok:
     else
       return GST_STATE_CHANGE_SUCCESS;
   }
-
 }
 
 /**
