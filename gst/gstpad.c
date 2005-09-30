@@ -117,6 +117,7 @@ static void gst_pad_set_property (GObject * object, guint prop_id,
 static void gst_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static void handle_pad_block (GstPad * pad);
 static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad);
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
@@ -2366,13 +2367,14 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
   GstPadBufferAllocFunction bufferallocfunc;
   gboolean caps_changed;
 
-  GST_DEBUG_OBJECT (pad, "offset %" G_GUINT64_FORMAT, offset);
-
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
   GST_LOCK (pad);
+  while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
+    handle_pad_block (pad);
+
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto no_peer;
 
@@ -2387,14 +2389,17 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (peer)))
     goto flushing;
 
-  GST_CAT_DEBUG (GST_CAT_PADS,
-      "calling bufferallocfunc &%s (@%p) of peer pad %s:%s for size %d ...",
-      GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
-      &bufferallocfunc, GST_DEBUG_PAD_NAME (peer), size);
-  if (offset == GST_BUFFER_OFFSET_NONE)
-    GST_CAT_DEBUG (GST_CAT_PADS, "... and offset NONE");
-  else
-    GST_CAT_DEBUG (GST_CAT_PADS, "... and offset %" G_GUINT64_FORMAT, offset);
+  if (offset == GST_BUFFER_OFFSET_NONE) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "calling bufferallocfunc &%s (@%p) of peer pad %s:%s for size %d offset NONE",
+        GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
+        &bufferallocfunc, GST_DEBUG_PAD_NAME (peer), size);
+  } else {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "calling bufferallocfunc &%s (@%p) of peer pad %s:%s for size %d offset %"
+        G_GUINT64_FORMAT, GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
+        &bufferallocfunc, GST_DEBUG_PAD_NAME (peer), size, offset);
+  }
   GST_UNLOCK (peer);
 
   ret = bufferallocfunc (peer, offset, size, caps, buf);
@@ -2469,7 +2474,7 @@ peer_error:
   {
     gst_object_unref (peer);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "alloc function retured error %d", ret);
+        "alloc function retured error %s", gst_flow_get_name (ret));
     return ret;
   }
 }
@@ -3007,8 +3012,9 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   ret = chainfunc (pad, buffer);
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "called chainfunction &%s of pad %s:%s, returned %d",
-      GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_DEBUG_PAD_NAME (pad), ret);
+      "called chainfunction &%s of pad %s:%s, returned %s",
+      GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_DEBUG_PAD_NAME (pad),
+      gst_flow_get_name (ret));
 
   GST_STREAM_UNLOCK (pad);
 

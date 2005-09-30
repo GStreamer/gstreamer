@@ -1449,8 +1449,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
     GstStateChangeReturn bret;
 
     bret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-    if (bret != GST_STATE_CHANGE_SUCCESS)
+    if (bret == GST_STATE_CHANGE_FAILURE)
       goto activate_failed;
   }
 

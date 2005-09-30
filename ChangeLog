@@ -1,3 +1,17 @@
+2005-09-30  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_change_state):
+	Only error is an error.
+
+	* gst/gstbin.c: (gst_bin_change_state):
+	Better debugging.
+
+	* gst/gstpad.c: (gst_pad_alloc_buffer), (gst_pad_chain):
+	Also call pad_block in pad alloc.
+
+	* gst/gstutils.c: (gst_flow_get_name):
+	Better debugging.
+
 2005-09-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_class_init),

@@ -1758,25 +1758,25 @@ gst_flow_get_name (GstFlowReturn ret)
 {
   switch (ret) {
     case GST_FLOW_RESEND:
-      return "need to resend buffer";
+      return "RESEND_BUFFER";
     case GST_FLOW_OK:
       return "OK";
       /* expected failures */
     case GST_FLOW_NOT_LINKED:
-      return "pad not linked";
+      return "NOT_LINKED";
     case GST_FLOW_WRONG_STATE:
-      return "pad in wrong state";
+      return "WRONG_STATE";
       /* error cases */
     case GST_FLOW_UNEXPECTED:
-      return "unexpected data on pad";
+      return "UNEXPECTED";
     case GST_FLOW_NOT_NEGOTIATED:
-      return "pad not negotiated";
+      return "NOT_NEGOTIATED";
     case GST_FLOW_ERROR:
-      return "fatal error occured";
+      return "ERROR";
     case GST_FLOW_NOT_SUPPORTED:
-      return "unsupported function called";
+      return "NOT_SUPPORTED";
     default:
-      return "unknown error";
+      return "UNKNOWN error";
   }
 }
 
