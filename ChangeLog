@@ -1,3 +1,9 @@
+2005-09-30  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstpad.override:
+	Removed overriding of gst_caps_get_negotiated_caps, the codegenerator
+	handles it much better (hint:don't copy)
+
 2005-09-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:

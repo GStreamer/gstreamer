@@ -493,26 +493,6 @@ _wrap_gst_pad_link_filtered(PyGObject *self, PyObject *args, PyObject *kwargs)
     }
     return PyBool_FromLong(ret);
 }
-
-%%
-override gst_pad_get_negotiated_caps
-static PyObject *
-_wrap_gst_pad_get_negotiated_caps(PyGObject *self)
-{
-    const GstCaps *ret;
-
-    ret = gst_pad_get_negotiated_caps(GST_PAD(self->obj));
-    /* pyg_boxed_new handles NULL checking */
-    return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
-}
-%%
-override gst_pad_get_negotiated_caps noargs
-static PyObject *
-_wrap_gst_pad_get_negotiated_caps(PyGObject *self)
-{
-    GstCaps *ret = (GstCaps*)gst_pad_get_negotiated_caps(GST_PAD(self->obj));
-    return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
-}
 %%
 override gst_pad_get_pad_template_caps noargs
 static PyObject *
