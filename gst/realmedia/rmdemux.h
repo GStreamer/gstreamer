@@ -113,6 +113,9 @@ struct _GstRMDemux {
   gboolean segment_play;
   gboolean running;
 
+  /* Current timestamp */
+  GstClockTime cur_timestamp;
+
   int n_chunks;
   int chunk_index;
 
