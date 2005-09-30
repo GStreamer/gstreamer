@@ -70,7 +70,7 @@ _wrap_gst_element_set_state(PyGObject *self, PyObject *args, PyObject *kwargs)
     
 	pyg_end_allow_threads;
 
-	return PyInt_FromLong(ret);
+	return pyg_enum_from_gtype(GST_TYPE_STATE_CHANGE_RETURN, ret);
 }
 %%
 override gst_element_get_state kwargs

@@ -1,3 +1,8 @@
+2005-09-29  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gstelement.override (_wrap_gst_element_get_state): return an
+	enum instead of an int.
+
 2005-09-29  Andy Wingo  <wingo@pobox.com>
 
 	* examples/pipeline-tester (Window.play): 
