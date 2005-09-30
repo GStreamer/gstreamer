@@ -123,7 +123,7 @@ class TestCase(unittest.TestCase):
             c = gc.collect()
             ret += c
             if c == 0: break
-        gst.debug('done garbage collecting')
+        gst.debug('done garbage collecting, %d objects' % ret)
         return ret
 
     def gctrack(self):

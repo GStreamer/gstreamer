@@ -100,31 +100,33 @@ class PipelineAndBus(TestCase):
         self.assertEquals(self.bus.__gstrefcount__, 2)
         self.handler = self.bus.add_watch(self._message_received)
         self.assertEquals(self.bus.__gstrefcount__, 3)
+        self.assertEquals(self.pipeline.__gstrefcount__, 1)
 
         self.loop = gobject.MainLoop()
 
     def tearDown(self):
         # FIXME: fix the refcount issues with the bus/pipeline
-        return
         # flush the bus to be able to assert on the pipeline refcount
-        self.bus.set_flushing(True)
+        #while self.pipeline.__gstrefcount__ > 1:
         self.gccollect()
-        self.assertEquals(self.pipeline.__gstrefcount__, 1)
+
         # one for the pipeline, two for the snake
         # three for the watch now shake shake shake but don't you
         self.assertEquals(self.bus.__gstrefcount__, 3)
+        self.failUnless(gobject.source_remove(self.handler))
+        self.assertEquals(self.bus.__gstrefcount__, 2)
+        self.gccollect()
 
+        gst.debug('THOMAS: pipeline rc %d' % self.pipeline.__gstrefcount__)
+        #self.assertEquals(self.pipeline.__gstrefcount__, 1)
         del self.pipeline
         self.gccollect()
-        self.assertEquals(self.bus.__gstrefcount__, 2)
-
-        self.failUnless(gobject.source_remove(self.handler))
-        self.assertEquals(self.bus.__gstrefcount__, 1)
-
+        #self.assertEquals(self.bus.__gstrefcount__, 2)
         del self.bus
         self.gccollect()
 
-        TestCase.tearDown(self)
+        # the async thread can be holding a ref, Wim is going to work on this
+        #TestCase.tearDown(self)
 
     def _message_received(self, bus, message):
         gst.debug('received message: %s, %s' % (
@@ -156,7 +158,11 @@ class PipelineAndBus(TestCase):
 
         # FIXME: not setting to NULL causes a deadlock; we might want to
         # fix this in the bindings
-        self.pipeline.set_state(gst.STATE_NULL)
+        self.assertEquals(self.pipeline.set_state(gst.STATE_NULL),
+            gst.STATE_CHANGE_SUCCESS)
+        self.assertEquals(self.pipeline.get_state(),
+            (gst.STATE_CHANGE_SUCCESS, gst.STATE_NULL, gst.STATE_VOID_PENDING))
+        self.gccollect()
         
 if __name__ == "__main__":
     unittest.main()
