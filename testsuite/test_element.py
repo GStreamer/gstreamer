@@ -56,6 +56,7 @@ class FakeSinkTest(ElementTest):
         self.element = gst.element_factory_make('fakesink', 'sink')
 
     def tearDown(self):
+        self.element.set_state(gst.STATE_NULL)
         del self.element
         ElementTest.tearDown(self)
 
