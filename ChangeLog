@@ -1,3 +1,9 @@
+2005-09-30  Edward Hervey  <edward@fluendo.com>
+
+	* gst/elements/gsttee.c: (gst_tee_do_push), (gst_tee_handle_buffer):
+	Let's not iterate pads we're not interested in, it avoids getting 
+	sky-high refcounts on sinkpad.
+
 2005-09-30  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstelement.c: (gst_element_set_state),

@@ -260,9 +260,6 @@ gst_tee_do_push (GstPad * pad, GValue * ret, PushData * data)
 {
   GstFlowReturn res;
 
-  if (GST_PAD_DIRECTION (pad) != GST_PAD_SRC || !GST_PAD_IS_USABLE (pad))
-    return TRUE;
-
   if (G_UNLIKELY (!data->tee->silent)) {
     GstTee *tee = data->tee;
     GstBuffer *buf = data->buffer;
@@ -293,7 +290,7 @@ gst_tee_handle_buffer (GstTee * tee, GstBuffer * buffer)
   tee->offset += GST_BUFFER_SIZE (buffer);
 
   g_value_init (&ret, GST_TYPE_FLOW_RETURN);
-  iter = gst_element_iterate_pads (GST_ELEMENT (tee));
+  iter = gst_element_iterate_src_pads (GST_ELEMENT (tee));
   data.tee = tee;
   data.buffer = buffer;
 
