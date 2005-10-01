@@ -1,3 +1,11 @@
+2005-10-01  Alessandro Decina  <alessandro at nnva dot org>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstutils.c: (gst_pad_query_convert):
+	  Add assertion that makes sure src_val is >=0, just like
+	  gst_query_new_convert() has. (#315895)
+
 2005-09-30  Edward Hervey  <edward@fluendo.com>
 
 	* gst/elements/gsttee.c: (gst_tee_do_push), (gst_tee_handle_buffer):
