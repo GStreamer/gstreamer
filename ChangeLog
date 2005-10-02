@@ -1,3 +1,15 @@
+2005-10-02  Luca Ognibene  <luogni@tin.it>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
+	(gst_ffmpegdec_close), (gst_ffmpegdec_open),
+	(gst_ffmpegdec_connect), (gst_ffmpegdec_negotiate),
+	(gst_ffmpegdec_frame), (gst_ffmpegdec_handle_event),
+	(gst_ffmpegdec_chain):
+	  Use framerate from demuxer if it provides one 
+	  (#313970 and others)
+	  Use also timestamp informations from the demuxer if we
+	  are using its framerate info! (#317596)
+
 2005-09-27  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init),
