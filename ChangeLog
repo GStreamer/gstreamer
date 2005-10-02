@@ -1,3 +1,10 @@
+2005-10-03  Andy Wingo  <wingo@pobox.com>
+
+	* docs/design/part-gstghostpad.txt: Add a note about activation of
+	proxy pads outside of ghost pads.
+
+	* gst/gstghostpad.c: Implement the ghost pad activation design.
+
 2005-10-02  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstobject.h (GST_OBJECT_REFCOUNT_VALUE): Just use the int.
