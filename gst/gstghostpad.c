@@ -180,62 +180,6 @@ gst_proxy_pad_do_bufferalloc (GstPad * pad, guint64 offset, guint size,
   return result;
 }
 
-static gboolean
-gst_proxy_pad_do_activate (GstPad * pad)
-{
-  gboolean res;
-
-  res = gst_pad_activate_push (pad, TRUE);
-
-  return res;
-}
-
-static gboolean
-gst_proxy_pad_do_activatepull (GstPad * pad, gboolean active)
-{
-  GstActivateMode old;
-  GstPad *target = gst_proxy_pad_get_target (pad);
-  gboolean res;
-
-  g_return_val_if_fail (target != NULL, FALSE);
-
-  GST_LOCK (target);
-  old = GST_PAD_ACTIVATE_MODE (target);
-  GST_UNLOCK (target);
-
-  if ((active && old == GST_ACTIVATE_PULL)
-      || (!active && old == GST_ACTIVATE_NONE))
-    res = TRUE;
-  else
-    res = gst_pad_activate_pull (target, active);
-  gst_object_unref (target);
-
-  return res;
-}
-
-static gboolean
-gst_proxy_pad_do_activatepush (GstPad * pad, gboolean active)
-{
-  GstActivateMode old;
-  GstPad *target = gst_proxy_pad_get_target (pad);
-  gboolean res;
-
-  g_return_val_if_fail (target != NULL, FALSE);
-
-  GST_LOCK (target);
-  old = GST_PAD_ACTIVATE_MODE (target);
-  GST_UNLOCK (target);
-
-  if ((active && old == GST_ACTIVATE_PUSH)
-      || (!active && old == GST_ACTIVATE_NONE))
-    res = TRUE;
-  else
-    res = gst_pad_activate_push (target, active);
-  gst_object_unref (target);
-
-  return res;
-}
-
 static GstFlowReturn
 gst_proxy_pad_do_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -367,9 +311,6 @@ gst_proxy_pad_set_target_unlocked (GstPad * pad, GstPad * target)
     SETFUNC (eventfunc, event);
     SETFUNC (queryfunc, query);
     SETFUNC (intlinkfunc, internal_link);
-    SETFUNC (activatefunc, activate);
-    SETFUNC (activatepullfunc, activatepull);
-    SETFUNC (activatepushfunc, activatepush);
     SETFUNC (getcapsfunc, getcaps);
     SETFUNC (acceptcapsfunc, acceptcaps);
     SETFUNC (fixatecapsfunc, fixatecaps);
@@ -515,6 +456,19 @@ gst_critical (const gchar * format, ...)
   va_end (args);
 }
 
+static GstPad *
+gst_ghost_pad_get_internal (GstPad * pad)
+{
+  GstPad *internal;
+
+  GST_PROXY_LOCK (pad);
+  internal = GST_GHOST_PAD (pad)->internal;
+  gst_object_ref (internal);
+  GST_PROXY_UNLOCK (pad);
+
+  return internal;
+}
+
 static void
 gst_ghost_pad_class_init (GstGhostPadClass * klass)
 {
@@ -523,20 +477,56 @@ gst_ghost_pad_class_init (GstGhostPadClass * klass)
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ghost_pad_dispose);
 }
 
-/* will only be called for src pads (afaict) */
+/* see gstghostpad design docs */
 static gboolean
-gst_ghost_proxy_pad_do_activate_pull (GstPad * pad, gboolean active)
+gst_ghost_pad_internal_do_activate_push (GstPad * pad, gboolean active)
 {
-  GstObject *parent;
-  gboolean ret = FALSE;
+  gboolean ret;
 
-  parent = gst_object_get_parent (GST_OBJECT (pad));
-  if (parent) {
-    /* hacky hacky!!! */
-    if (GST_IS_GHOST_PAD (parent))
-      ret = gst_pad_activate_pull (GST_PAD (parent), active);
+  if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+    g_critical ("how did I get here?");
 
-    gst_object_unref (parent);
+    ret = FALSE;
+  } else {
+    GstPad *peer = gst_pad_get_peer (pad);
+
+    if (peer) {
+      ret = gst_pad_activate_push (peer, active);
+      gst_object_unref (peer);
+    } else {
+      ret = FALSE;
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ghost_pad_internal_do_activate_pull (GstPad * pad, gboolean active)
+{
+  gboolean ret;
+
+  if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+    GstPad *peer = gst_pad_get_peer (pad);
+
+    if (peer) {
+      ret = gst_pad_activate_pull (peer, active);
+      gst_object_unref (peer);
+    } else {
+      ret = FALSE;
+    }
+  } else {
+    GstPad *parent = GST_PAD (gst_object_get_parent (GST_OBJECT (pad)));
+
+    if (parent) {
+      g_return_val_if_fail (GST_IS_GHOST_PAD (parent), FALSE);
+
+      ret = gst_pad_activate_pull (parent, active);
+
+      gst_object_unref (parent);
+    } else {
+      ret = FALSE;
+    }
   }
 
   return ret;
@@ -545,19 +535,47 @@ gst_ghost_proxy_pad_do_activate_pull (GstPad * pad, gboolean active)
 static gboolean
 gst_ghost_pad_do_activate_push (GstPad * pad, gboolean active)
 {
-  GstPad *internal;
   gboolean ret;
 
-  ret = gst_proxy_pad_do_activatepush (pad, active);
+  if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+    GstPad *internal = gst_ghost_pad_get_internal (pad);
 
-  GST_PROXY_LOCK (pad);
-  if ((internal = GST_GHOST_PAD (pad)->internal))
-    gst_object_ref (internal);
-  GST_PROXY_UNLOCK (pad);
+    if (internal) {
+      ret = gst_pad_activate_push (internal, active);
+      gst_object_unref (internal);
+    } else {
+      ret = FALSE;
+    }
+  } else {
+    ret = TRUE;
+  }
 
-  if (internal) {
-    ret &= gst_pad_activate_push (internal, active);
-    gst_object_unref (internal);
+  return ret;
+}
+
+static gboolean
+gst_ghost_pad_do_activate_pull (GstPad * pad, gboolean active)
+{
+  gboolean ret;
+
+  if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+    GstPad *peer = gst_pad_get_peer (pad);
+
+    if (peer) {
+      ret = gst_pad_activate_pull (peer, active);
+      gst_object_unref (peer);
+    } else {
+      ret = FALSE;
+    }
+  } else {
+    GstPad *internal = gst_ghost_pad_get_internal (pad);
+
+    if (internal) {
+      ret = gst_pad_activate_pull (internal, active);
+      gst_object_unref (internal);
+    } else {
+      ret = FALSE;
+    }
   }
 
   return ret;
@@ -639,6 +657,7 @@ gst_ghost_pad_set_internal (GstGhostPad * pad, GstPad * internal)
     GstPad *intpeer;
 
     gst_pad_set_activatepull_function (pad->internal, NULL);
+    gst_pad_set_activatepush_function (pad->internal, NULL);
 
     g_signal_handler_disconnect (pad->internal, pad->notify_id);
 
@@ -665,8 +684,10 @@ gst_ghost_pad_set_internal (GstGhostPad * pad, GstPad * internal)
     pad->notify_id = g_signal_connect (internal, "notify::caps",
         G_CALLBACK (on_int_notify), pad);
     on_int_notify (internal, NULL, pad);
-    gst_pad_set_activatepull_function (internal,
-        gst_ghost_proxy_pad_do_activate_pull);
+    gst_pad_set_activatepull_function (GST_PAD (internal),
+        gst_ghost_pad_internal_do_activate_pull);
+    gst_pad_set_activatepush_function (GST_PAD (internal),
+        gst_ghost_pad_internal_do_activate_push);
     /* a ref was taken by set_parent */
   }
   pad->internal = internal;
@@ -687,7 +708,10 @@ could_not_set:
 static void
 gst_ghost_pad_init (GstGhostPad * pad)
 {
-  /* noop */
+  gst_pad_set_activatepull_function (GST_PAD (pad),
+      gst_ghost_pad_do_activate_pull);
+  gst_pad_set_activatepush_function (GST_PAD (pad),
+      gst_ghost_pad_do_activate_push);
 }
 
 static void

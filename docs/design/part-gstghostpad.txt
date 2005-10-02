@@ -400,3 +400,7 @@ Ghost sink pads (e.g. B):
   pull:
     called by: internal pad
     behavior: proxy to peer
+
+
+It doesn't really make sense to have activation functions on proxy pads
+that aren't part of a ghost pad arrangement.
