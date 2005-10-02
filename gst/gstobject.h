@@ -66,7 +66,7 @@ typedef enum
 
 #ifdef GST_HAVE_GLIB_2_8
 #define GST_OBJECT_REFCOUNT(obj)                (((GObject*)(obj))->ref_count)
-#define GST_OBJECT_REFCOUNT_VALUE(obj)          (g_atomic_int_get (&((GObject*)(obj))->ref_count))
+#define GST_OBJECT_REFCOUNT_VALUE(obj)          GST_OBJECT_REFCOUNT(obj)
 #else
 #define GST_OBJECT_REFCOUNT(obj)                ((GST_OBJECT_CAST(obj))->refcount)
 #define GST_OBJECT_REFCOUNT_VALUE(obj)          (g_atomic_int_get (&(GST_OBJECT_CAST(obj))->refcount))

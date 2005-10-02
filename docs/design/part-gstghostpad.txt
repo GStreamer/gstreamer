@@ -5,7 +5,7 @@ Ghostpads
  existing elements. They are used to expose internal element pads
  on the complex element.
 
- Some design requirements 
+ Some design requirements
 
   - Must look like a real GstPad on both sides.
   - target of Ghostpad must be changeable
@@ -50,7 +50,7 @@ Ghostpads
 
 
                                       (--------------
-	(- X --------)                |       
+	(- X --------)                |
 	|            |                |------)
 	| target *------------------> | sink |
 	|------------|                |------)
@@ -72,11 +72,11 @@ Ghostpads
    5) link/unlink and activate functions are set up
       on GstGhostPad.
 
-                           
-	(- X --------)     
-	|            |     
+
+	(- X --------)
+	|            |
 	| target *------>//
-	|------------|     
+	|------------|
         | internal *---->//
 	(------------)
 
@@ -87,10 +87,10 @@ Ghostpads
 
    gst_ghost_pad_set_target (char *name, GstPad *newtarget)
 
-	(- X --------)     
-	|            |     
+	(- X --------)
+	|            |
 	| target *------>//
-	|------------|     
+	|------------|
         | internal *---->//
 	(------------)
 
@@ -98,12 +98,12 @@ Ghostpads
    2) target is set to newtarget
 
                                 (--------
-        (- X --------)          |       
+        (- X --------)          |
         |            |          |------)
         | target *------------->| sink |
         |------------|          |------)
         | internal *--->//      (--------
-        (------------)        
+        (------------)
 
 
 * Setting target on an targetted unlinked ghostpad
@@ -111,23 +111,23 @@ Ghostpads
    gst_ghost_pad_set_target (char *name, GstPad *newtarget)
 
                                 (--------
-        (- X --------)          |       
+        (- X --------)          |
         |            |          |------)
         | target *------------->| sink |
         |------------|          |------)
         | internal *--->//      (--------
-        (------------)        
+        (------------)
 
    1) assert direction of newtarget == X direction
    2) target is set to newtarget
 
                                 (--------
-        (- X --------)          |       
+        (- X --------)          |
         |            |          |------)
         | target *------------->| sink |
         |------------|          |------)
         | internal *--->//      (--------
-        (------------)        
+        (------------)
 
 
 * Linking a pad to an untargetted ghostpad:
@@ -135,10 +135,10 @@ Ghostpads
   gst_pad_link (src, X)
 
 
-	          (- X --------)     
-	          |            |     
+	          (- X --------)
+	          |            |
 	          | target *------>//
-	          |------------|     
+	          |------------|
                   | internal *---->//
 	          (------------)
      -------)
@@ -157,12 +157,12 @@ Ghostpads
       e) Y is activated in the same mode as X
       f) core makes link from src to X
 
-                                          
-                         (- X --------)   
-                         |            |    
+
+                         (- X --------)
+                         |            |
                          | target *----->//
-                        >|------------|   
-       (real pad link) / | internal * | 
+                        >|------------|
+       (real pad link) / | internal * |
                       /  (----------|-)
                      /              |
           -------)  /               V
@@ -178,12 +178,12 @@ Ghostpads
     gst_pad_link (src, X)
 
                                               (--------
-                      (- X --------)          |       
+                      (- X --------)          |
                       |            |          |------)
                       | target *------------->| sink |
                       |------------|          |------)
                       | internal *--->//      (--------
-                      (------------)        
+                      (------------)
      -------)
             |
       (-----|
@@ -202,7 +202,7 @@ Ghostpads
       g) core makes link from src to X
 
                                                  (--------
-                         (- X --------)          |       
+                         (- X --------)          |
                          |            |          |------)
                          | target *------------->| sink |
                         >|------------|         >|------)
@@ -221,12 +221,12 @@ Ghostpads
 
    gst_ghost_pad_set_target (char *name, GstPad *newtarget)
 
-                                          
-                         (- X --------)   
-                         |            |    
+
+                         (- X --------)
+                         |            |
                          | target *----->//
-                        >|------------|   
-       (real pad link) / | internal * | 
+                        >|------------|
+       (real pad link) / | internal * |
                       /  (----------|-)
                      /              |
           -------)  /               V
@@ -240,9 +240,9 @@ Ghostpads
    2) X target is set to newtarget
    3) Y (X internal) is linked to newtarget
 
-                                          
+
                                                  (--------
-                         (- X --------)          |       
+                         (- X --------)          |
                          |            |          |------)
                          | target *------------->| sink |
                         >|------------|         >|------)
@@ -256,14 +256,14 @@ Ghostpads
            (-----|            (----------)
           -------)
 
- 
+
 * Setting target on targetted linked ghostpad:
 
    gst_ghost_pad_set_target (char *name, GstPad *newtarget)
 
-                                          
+
                                                  (--------
-                         (- X --------)          |       
+                         (- X --------)          |
                          |            |          |------)
                          | target *------------->| sink |
                         >|------------|         >|------)
@@ -276,15 +276,15 @@ Ghostpads
            | src |<-------------* target |
            (-----|            (----------)
           -------)
-                                          
+
    1) assert direction of newtarget == X direction
    2) Y and X target are unlinked
    2) X target is set to newtarget
    3) Y (X internal) is linked to newtarget
 
-                                          
+
                                                  (--------
-                         (- X --------)          |       
+                         (- X --------)          |
                          |            |          |------)
                          | target *------------->| sink |
                         >|------------|         >|------)
@@ -298,4 +298,105 @@ Ghostpads
            (-----|            (----------)
           -------)
 
- 
+
+Activation
+==========
+
+Sometimes ghost pads should proxy activation functions. This thingie
+attempts to explain how it should work in the different cases.
+
+
++---+     +----+                             +----+       +----+
+| A +-----+ B  |                             | C  |-------+ D  |
++---+     +---=+                             +=---+       +----+
+            +--=-----------------------------=-+
+            |  +=---+   +----+  +----+  +---=+ |
+            |  | a  +---+ b  ====  c +--+ d  | |
+            |  +----+   +----+  +----+  +----+ |
+            |                                  |
+            +----------------------------------+
+            state change goes from right to left
+   <-----------------------------------------------------------
+
+All of the labeled boxes are pads. The dashes (---) show pad links, and
+the double-lines (===) are internal connections. The box around a, b, c,
+and d is a bin. B and C are ghost pads, and a and d are proxy pads. The
+arrow represents the direction of a state change algorithm. Not counting
+the bin, there are three elements involved here -- the parent of D, the
+parent of A, and the parent of b and c.
+
+Now, in the state change from READY to PAUSED, assuming the pipeline
+does not have a live source, all of the pads will end up activated at
+the end. There are 4 possible activation modes:
+
+1) AD and ab in PUSH, cd and CD in PUSH
+2) AD and ab in PUSH, cd and CD in PULL
+3) AD and ab in PULL, cd and CD in PUSH
+4) AD and ab in PULL, cd and CD in PULL
+
+When activating (1), the state change algorithm will first visit the
+parent of D and activate D in push mode. Then it visits the bin. The bin
+will first change the state of its child before activating its pads.
+That means c will be activated in push mode. [*] At this point, d and C
+should also be active in push mode, because it could be that activating
+c in push mode starts a thread, which starts pushing to pads which
+aren't ready yet. Then b is activated in push mode. Then, the bin
+activates C in push mode, which should already be in push mode, so
+nothing is done. It then activates B in push mode, which activates b in
+push mode, but it's already there, then activates a in push mode as
+well. The order of activating a and b does not matter in this case.
+Then, finally, the state change algorithm moves to the parent of A,
+activates A in push mode, and dataflow begins.
+
+[*] Not yet implemented.
+
+Activation mode (2) is implausible, so we can ignore it for now. That
+leaves us with the rest.
+
+(3) is the same as (1) until you get to activating b. Activating b will
+proxy directly to activating a, which will activate B and A as well.
+Then when the state change algorithm gets to B and A it sees that they
+are already active, so it ignores them.
+
+Similarly in (4), activating D will cause the activation of all of the
+rest of the pads, in this order: C d c b a B A. Then when the state
+change gets to the other elements they are already active, and in fact
+data flow is already occuring.
+
+So, from these scenarios, we can distill how ghost pad activation
+functions should work:
+
+Ghost source pads (e.g. C):
+  push:
+    called by: element state change handler
+    behavior: just return TRUE
+  pull:
+    called by: peer's activatepull
+    behavior: change the internal pad, which proxies to its peer e.g. C
+        changes d which changes c.
+
+Internal sink pads (e.g. d):
+  push: 
+    called by: nobody (doesn't seem possible)
+    behavior: n/a
+  pull:
+    called by: ghost pad
+    behavior: proxy to peer first
+
+Internal src pads (e.g. a):
+  push:
+    called by: ghost pad
+    behavior: activate peer in push mode
+  pull:
+    called by: peer's activatepull
+    behavior: proxy to ghost pad, which proxies to its peer (e.g. a
+        calls B which calls A)
+
+Ghost sink pads (e.g. B):
+  push:
+    called by: element state change handler
+    behavior: change the internal pad, which proxies to peer (e.g. B
+        changes a which changes b)
+  pull:
+    called by: internal pad
+    behavior: proxy to peer

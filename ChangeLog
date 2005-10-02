@@ -1,3 +1,14 @@
+2005-10-02  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstobject.h (GST_OBJECT_REFCOUNT_VALUE): Just use the int.
+	It is volatile, after all.
+
+	* docs/design/part-gstghostpad.txt: Flesh out activation with
+	ghost pads.
+
+	* gst/base/gstbasesrc.c (gst_base_src_init): Use
+	GST_DEBUG_FUNCPTR.
+
 2005-10-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

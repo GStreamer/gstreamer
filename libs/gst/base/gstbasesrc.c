@@ -193,14 +193,19 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   pad = gst_pad_new_from_template (pad_template, "src");
 
   GST_DEBUG_OBJECT (basesrc, "setting functions on src pad");
-  gst_pad_set_activatepush_function (pad, gst_base_src_activate_push);
-  gst_pad_set_activatepull_function (pad, gst_base_src_activate_pull);
-  gst_pad_set_event_function (pad, gst_base_src_event_handler);
-  gst_pad_set_query_function (pad, gst_base_src_query);
-  gst_pad_set_checkgetrange_function (pad, gst_base_src_check_get_range);
-  gst_pad_set_getrange_function (pad, gst_base_src_get_range);
-  gst_pad_set_getcaps_function (pad, gst_base_src_getcaps);
-  gst_pad_set_setcaps_function (pad, gst_base_src_setcaps);
+  gst_pad_set_activatepush_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_src_activate_push));
+  gst_pad_set_activatepull_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_src_activate_pull));
+  gst_pad_set_event_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_src_event_handler));
+  gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_base_src_query));
+  gst_pad_set_checkgetrange_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_src_check_get_range));
+  gst_pad_set_getrange_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_src_get_range));
+  gst_pad_set_getcaps_function (pad, GST_DEBUG_FUNCPTR (gst_base_src_getcaps));
+  gst_pad_set_setcaps_function (pad, GST_DEBUG_FUNCPTR (gst_base_src_setcaps));
 
   /* hold pointer to pad */
   basesrc->srcpad = pad;
