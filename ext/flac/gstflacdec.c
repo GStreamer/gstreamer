@@ -25,7 +25,7 @@
 #include "gstflacdec.h"
 #include <gst/gsttagsetter.h>
 
-//#include <gst/tag/tag.h>
+#include <gst/tag/tag.h>
 
 #include "flac_compat.h"
 
@@ -256,7 +256,7 @@ gst_flacdec_update_metadata (FlacDec * flacdec,
       value = g_strndup (p_value + 1, str_ptr + str_len - p_value - 1);
 
       GST_DEBUG ("%s : %s", name, value);
-      //gst_vorbis_tag_add (list, name, value);
+      gst_vorbis_tag_add (list, name, value);
       g_free (name);
       g_free (value);
     }
@@ -518,7 +518,6 @@ static void
 gst_flacdec_loop (GstPad * sinkpad)
 {
   FlacDec *flacdec;
-  gboolean res;
   FLAC__SeekableStreamDecoderState s;
 
   flacdec = GST_FLACDEC (GST_OBJECT_PARENT (sinkpad));
@@ -527,15 +526,10 @@ gst_flacdec_loop (GstPad * sinkpad)
 
   GST_DEBUG ("flacdec: entering loop");
   if (flacdec->init) {
-    FLAC__StreamDecoderState res;
-
     GST_DEBUG ("flacdec: initializing decoder");
-    res = FLAC__seekable_stream_decoder_init (flacdec->decoder);
-    if (res != FLAC__SEEKABLE_STREAM_DECODER_OK) {
-      GST_ELEMENT_ERROR (flacdec, LIBRARY, INIT, (NULL),
-          (FLAC__SeekableStreamDecoderStateString[res]));
-      goto end;
-    }
+    s = FLAC__seekable_stream_decoder_init (flacdec->decoder);
+    if (s != FLAC__SEEKABLE_STREAM_DECODER_OK)
+      goto analyze_state;
     /*    FLAC__seekable_stream_decoder_process_metadata (flacdec->decoder); */
     flacdec->init = FALSE;
   }
@@ -555,33 +549,59 @@ gst_flacdec_loop (GstPad * sinkpad)
   }
 
   GST_DEBUG ("flacdec: processing single");
-  res = FLAC__seekable_stream_decoder_process_single (flacdec->decoder);
-  if (!res)
-    goto end;
-  GST_DEBUG ("flacdec: checking for EOS");
-  if ((s = FLAC__seekable_stream_decoder_get_state (flacdec->decoder)) ==
-      FLAC__SEEKABLE_STREAM_DECODER_END_OF_STREAM) {
-    GstEvent *event;
+  FLAC__seekable_stream_decoder_process_single (flacdec->decoder);
 
-    GST_DEBUG ("flacdec: sending EOS event");
-    FLAC__seekable_stream_decoder_reset (flacdec->decoder);
+analyze_state:
+  GST_DEBUG ("flacdec: done processing, checking encoder state");
+  s = FLAC__seekable_stream_decoder_get_state (flacdec->decoder);
+  switch (s) {
+    case FLAC__SEEKABLE_STREAM_DECODER_OK:
+    case FLAC__SEEKABLE_STREAM_DECODER_SEEKING:
+      GST_DEBUG ("flacdec: everything ok");
+      GST_STREAM_UNLOCK (sinkpad);
+      return;
 
-    event = gst_event_new_eos ();
-    if (!gst_pad_push_event (flacdec->srcpad, event))
-      goto end;
-  } else if (s >= FLAC__SEEKABLE_STREAM_DECODER_MEMORY_ALLOCATION_ERROR &&
-      s <= FLAC__SEEKABLE_STREAM_DECODER_INVALID_CALLBACK) {
-    GST_DEBUG ("Error: %d", s);
-    goto end;
+    case FLAC__SEEKABLE_STREAM_DECODER_END_OF_STREAM:{
+      GstEvent *event;
+
+      GST_DEBUG ("flacdec: got EOS, pushing downstream");
+      FLAC__seekable_stream_decoder_reset (flacdec->decoder);
+
+      event = gst_event_new_eos ();
+      gst_pad_push_event (flacdec->srcpad, event);
+
+      GST_DEBUG ("pausing");
+      gst_pad_pause_task (sinkpad);
+
+      GST_STREAM_UNLOCK (sinkpad);
+      return;
+    }
+
+    case FLAC__SEEKABLE_STREAM_DECODER_MEMORY_ALLOCATION_ERROR:
+    case FLAC__SEEKABLE_STREAM_DECODER_STREAM_DECODER_ERROR:
+    case FLAC__SEEKABLE_STREAM_DECODER_READ_ERROR:
+    case FLAC__SEEKABLE_STREAM_DECODER_SEEK_ERROR:
+    case FLAC__SEEKABLE_STREAM_DECODER_ALREADY_INITIALIZED:
+    case FLAC__SEEKABLE_STREAM_DECODER_INVALID_CALLBACK:
+    case FLAC__SEEKABLE_STREAM_DECODER_UNINITIALIZED:
+    default:{
+      GstEvent *event;
+
+      /* fixme: this error sucks -- should try to figure out when/if an more
+         specific error was already sent via the callback */
+      GST_ELEMENT_ERROR (flacdec, STREAM, DECODE, (NULL),
+          ("%s", FLAC__SeekableStreamDecoderStateString[s]));
+
+      event = gst_event_new_eos ();
+      gst_pad_push_event (flacdec->srcpad, event);
+
+      GST_DEBUG ("pausing");
+      gst_pad_pause_task (sinkpad);
+
+      GST_STREAM_UNLOCK (sinkpad);
+      return;
+    }
   }
-  GST_DEBUG ("flacdec: _loop end");
-  GST_STREAM_UNLOCK (sinkpad);
-  return;
-
-end:
-  GST_DEBUG ("pausing");
-  gst_pad_pause_task (sinkpad);
-  GST_STREAM_UNLOCK (sinkpad);
 }
 
 #if 0

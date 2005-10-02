@@ -26,20 +26,20 @@
 
 #include <FLAC/all.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
 
-#define GST_TYPE_FLACENC flacenc_get_type()
-#define GST_FLACENC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLACENC, FlacEnc)
-#define GST_FLACENC_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_FLACENC, FlacEnc)
+G_BEGIN_DECLS
+
+
+#define GST_TYPE_FLACENC (gst_flacenc_get_type())
+#define GST_FLACENC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLACENC, GstFlacEnc)
+#define GST_FLACENC_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_FLACENC, GstFlacEnc)
 #define GST_IS_FLACENC(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_FLACENC)
 #define GST_IS_FLACENC_CLASS(obj) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_FLACENC)
 
-typedef struct _FlacEnc FlacEnc;
-typedef struct _FlacEncClass FlacEncClass;
+typedef struct _GstFlacEnc GstFlacEnc;
+typedef struct _GstFlacEncClass GstFlacEncClass;
 
-struct _FlacEnc {
+struct _GstFlacEnc {
   GstElement 	 element;
 
   GstPad *sinkpad,*srcpad;
@@ -62,15 +62,14 @@ struct _FlacEnc {
   GstTagList *	   tags;
 };
 
-struct _FlacEncClass {
+struct _GstFlacEncClass {
   GstElementClass parent_class;
 };
 
-GType flacenc_get_type(void);
+GType gst_flacenc_get_type(void);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
+
 
 #endif /* __FLACENC_H__ */
