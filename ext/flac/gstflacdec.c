@@ -464,9 +464,14 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
     flacdec->frequency = frame->header.sample_rate;
   }
 
-  gst_pad_alloc_buffer (flacdec->srcpad, flacdec->total_samples,
+  ret = gst_pad_alloc_buffer (flacdec->srcpad, flacdec->total_samples,
       samples * channels * ((width + 7) >> 3), GST_PAD_CAPS (flacdec->srcpad),
       &outbuf);
+  if (ret != GST_FLOW_NOT_LINKED && ret != GST_FLOW_OK) {
+    GST_DEBUG ("stopping flac decoder engine (%d)", (gint) ret);
+    return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+  }
+
   GST_BUFFER_TIMESTAMP (outbuf) =
       flacdec->total_samples * GST_SECOND / frame->header.sample_rate;
   GST_BUFFER_DURATION (outbuf) =
@@ -786,12 +791,11 @@ gst_flacdec_sink_activate_pull (GstPad * sinkpad, gboolean active)
   if (active) {
     /* if we have a scheduler we can start the task */
     GST_FLACDEC (GST_OBJECT_PARENT (sinkpad))->offset = 0;
-    gst_pad_start_task (sinkpad, (GstTaskFunction) gst_flacdec_loop, sinkpad);
+    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_flacdec_loop,
+        sinkpad);
   } else {
-    gst_pad_stop_task (sinkpad);
+    return gst_pad_stop_task (sinkpad);
   }
-
-  return TRUE;
 }
 
 static GstStateChangeReturn
