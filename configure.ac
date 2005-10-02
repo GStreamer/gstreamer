@@ -496,8 +496,8 @@ dnl #############################
 
 dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
-AM_CONDITIONAL(EXPERIMENTAL,        test "x$EXPERIMENTAL" = "yes")
-AM_CONDITIONAL(BROKEN,              test "x$BROKEN" = "yes")
+AM_CONDITIONAL(EXPERIMENTAL,        test "x$EXPERIMENTAL" = "xyes")
+AM_CONDITIONAL(BROKEN,              test "x$BROKEN" = "xyes")
 AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
 
 
