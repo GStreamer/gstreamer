@@ -106,6 +106,7 @@ typedef struct _GstGnomeVFSSrc
   gint audiocast_thread_die_outfd;
   gint audiocast_port;
   gint audiocast_fd;
+  GMutex *list_uris_mutex;
 } GstGnomeVFSSrc;
 
 typedef struct _GstGnomeVFSSrcClass
@@ -343,9 +344,16 @@ static gchar **
 gst_gnomevfssrc_uri_get_protocols (void)
 {
   static gchar **protocols = NULL;
+  static GMutex *mutex = NULL;
 
-  if (!protocols)
+  if (G_UNLIKELY (!protocols)) {
+    if (!mutex)
+      mutex = g_mutex_new ();
+
+    g_mutex_lock (mutex);
     protocols = gst_gnomevfs_get_supported_uris ();
+    g_mutex_unlock (mutex);
+  }
 
   return protocols;
 }

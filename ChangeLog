@@ -1,3 +1,9 @@
+2005-10-02  Johan Dahlin  <johan@gnome.org>
+
+	* ext/gnomevfs/gstgnomevfssrc.c (gst_gnomevfssrc_uri_get_protocols): 
+	protect gst_gnomevfs_get_supported_uris by a mutex, to make it
+	MT safe.
+
 2005-10-02  Andy Wingo  <wingo@pobox.com>
 
 	* gst-libs/gst/audio/gstringbuffer.c (gst_ring_buffer_clear) 
