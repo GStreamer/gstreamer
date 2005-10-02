@@ -490,7 +490,7 @@ post_activate_switch (GstPad * pad, gboolean new_active)
     GST_PAD_UNSET_FLUSHING (pad);
     GST_UNLOCK (pad);
   } else {
-    /* make streaming stop */
+    /* ensures that streaming stops */
     GST_STREAM_LOCK (pad);
     GST_STREAM_UNLOCK (pad);
   }
@@ -688,6 +688,10 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
 
   pre_activate_switch (pad, active);
 
+  /* terrible hack */
+  if (active)
+    GST_STREAM_LOCK (pad);
+
   if (GST_PAD_ACTIVATEPUSHFUNC (pad)) {
     if (GST_PAD_ACTIVATEPUSHFUNC (pad) (pad, active)) {
       goto success;
@@ -714,6 +718,10 @@ success:
     GST_UNLOCK (pad);
     post_activate_switch (pad, active);
 
+    /* terrible hack */
+    if (active)
+      GST_STREAM_UNLOCK (pad);
+
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in push mode",
         active ? "activated" : "deactivated");
     return TRUE;
@@ -721,6 +729,10 @@ success:
 
 failure:
   {
+    /* terrible hack */
+    if (active)
+      GST_STREAM_UNLOCK (pad);
+
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in push mode",
         active ? "activate" : "deactivate");
     return FALSE;

@@ -1,5 +1,12 @@
 2005-10-03  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstpad.c (gst_pad_activate_push): There is a race condition
+	whereby calling a pad's activatepush() function can start a thread
+	that starts to push or pull before the pad gets the FLUSHING flag
+	unset. Hack around it by holding the stream lock until the flag is
+	set. Need to replace this with a proper solution. Together with
+	the ghost pad fixes, this fixes mp3 playing/tagreading.
+
 	* docs/design/part-gstghostpad.txt: Add a note about activation of
 	proxy pads outside of ghost pads.
 
