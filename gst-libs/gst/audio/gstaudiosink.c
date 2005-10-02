@@ -174,7 +174,7 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
       left = len;
       do {
         written = writefunc (sink, readptr + written, left);
-        GST_DEBUG ("transfered %d bytes of %d from segment %d", written, left,
+        GST_LOG ("transfered %d bytes of %d from segment %d", written, left,
             readseg);
         if (written < 0 || written > left) {
           GST_WARNING ("error writing data (reason: %s), skipping segment\n",

@@ -1,3 +1,10 @@
+2005-10-02  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/audio/gstringbuffer.c (gst_ring_buffer_clear) 
+	(gst_ring_buffer_prepare_read): 
+	* gst-libs/gst/audio/gstaudiosink.c (audioringbuffer_thread_func):
+	Demote to LOG.
+
 2005-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer):

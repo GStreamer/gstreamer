@@ -1147,7 +1147,7 @@ gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
   if (buf->callback)
     buf->callback (buf, *readptr, *len, buf->cb_data);
 
-  GST_DEBUG ("prepare read from segment %d (real %d) @%p",
+  GST_LOG ("prepare read from segment %d (real %d) @%p",
       *segment, segdone, *readptr);
 
   return TRUE;
@@ -1204,7 +1204,7 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
   data = GST_BUFFER_DATA (buf->data);
   data += (segment % buf->spec.segtotal) * buf->spec.segsize;
 
-  GST_DEBUG ("clear segment %d @%p", segment, data);
+  GST_LOG ("clear segment %d @%p", segment, data);
 
   memcpy (data, buf->empty_seg, buf->spec.segsize);
 }
