@@ -5674,21 +5674,6 @@
   )
 )
 
-(define-method abort_preroll
-  (of-object "GstElement")
-  (c-name "gst_element_abort_preroll")
-  (return-type "GstFlowReturn")
-)
-
-(define-method finish_preroll
-  (of-object "GstElement")
-  (c-name "gst_element_finish_preroll")
-  (return-type "GstFlowReturn")
-  (parameters
-    '("GstPad*" "pad")
-  )
-)
-
 (define-method create_all_pads
   (of-object "GstElement")
   (c-name "gst_element_create_all_pads")

@@ -1,3 +1,7 @@
+2005-10-02  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst.defs: Remove gst_element_*_preroll functions.
+
 2005-09-30  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstpad.override:
