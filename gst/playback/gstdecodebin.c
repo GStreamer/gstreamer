@@ -601,6 +601,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       gst_object_unref (sinkpad);
       /* this element did not work, remove it again and continue trying
        * other elements, the element will be disposed. */
+      gst_element_set_state (element, GST_STATE_NULL);
       gst_bin_remove (GST_BIN (decode_bin), element);
     } else {
       const gchar *klass;
@@ -763,6 +764,8 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
   GST_DEBUG_OBJECT (decode_bin, "removing %s", GST_ELEMENT_NAME (elem));
 
   g_list_free (int_links);
+
+  gst_element_set_state (elem, GST_STATE_NULL);
 
   gst_bin_remove (GST_BIN (decode_bin), elem);
 }

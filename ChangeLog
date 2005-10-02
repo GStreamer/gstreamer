@@ -1,3 +1,8 @@
+2005-10-03  Andy Wingo  <wingo@pobox.com>
+
+	* gst/playback/gstdecodebin.c (try_to_link_1)
+	(remove_element_chain): set element to NULL before removing it.
+
 2005-10-02  Johan Dahlin  <johan@gnome.org>
 
 	* ext/gnomevfs/gstgnomevfssrc.c (gst_gnomevfssrc_uri_get_protocols): 
