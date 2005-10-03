@@ -20,7 +20,7 @@ endif
 defs_DATA = gst-types.defs \
 	gst-extrafuncs.defs \
 	libs.defs
-defsdir = $(pkgdatadir)/2.0/defs
+defsdir = $(pkgdatadir)/0.9/defs
 
 noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstobject.h
 

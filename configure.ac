@@ -8,7 +8,7 @@ dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
                                                                                 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(gst-python, PYGST_VERSION, 0, 9, 0, 1, GST_CVS="no", GST_CVS="yes")
+AS_VERSION(gst-python, PYGST_VERSION, 0, 9, 3, 0, GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
@@ -23,9 +23,9 @@ dnl Add parameters for aclocal
 ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
 
 dnl required versions of other packages
-AC_SUBST(PYGTK_REQ, 2.4.1)
-AC_SUBST(GLIB_REQ,  2.0.0)
-AC_SUBST(GTK_REQ,   2.0.0)
+AC_SUBST(PYGTK_REQ, 2.6.1)
+AC_SUBST(GLIB_REQ,  2.6.0)
+AC_SUBST(GTK_REQ,   2.6.0)
 AC_SUBST(GST_REQ,   0.9.0)
 
 
@@ -143,8 +143,9 @@ changequote([,])dnl
 
 AC_OUTPUT([
   Makefile
-  examples/Makefile
+  codegen/Makefile
   gst/Makefile
+  examples/Makefile
   pkgconfig/Makefile
   pkgconfig/gst-python.pc
   pkgconfig/gst-python-uninstalled.pc

@@ -1,7 +1,4 @@
-UNCONDDIRS = examples gst pkgconfig testsuite
-SUBDIRS = \
-	$(UNCONDDIRS)
-DIST_SUBDIRS = $(UNCONDDIRS)
+SUBDIRS = codegen gst examples testsuite pkgconfig
 
 EXTRA_DIST = \
 	ltihooks.py \

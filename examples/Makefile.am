@@ -1,4 +1,4 @@
-examplesdir = $(pkgdatadir)/examples
+examplesdir = $(pkgdatadir)/0.9/examples
 examples_DATA = 	\
 	audio-controller.py \
 	bps.py		\

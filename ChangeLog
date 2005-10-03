@@ -1,3 +1,10 @@
+=== gst-python 0.8.3 ===
+
+2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  Releasing 0.8.3, "For the Virgin"
+
 2005-10-02  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gst.defs: Remove gst_element_*_preroll functions.
@@ -630,20 +637,19 @@
 	by Charles Baudelaire, "L'invitation au voyage" :
 	
 	  Mon enfant, ma soeur,
-	  Songe ‡ la douceur
-	  D'aller l‡-bas vivre ensemble !
-	  Aimer ‡ loisir,
+	  Songe √† la douceur
+	  D'aller l√†-bas vivre ensemble !
+	  Aimer √† loisir,
 	  Aimer et mourir
 	  Au pays qui te ressemble !
-	  Les soleils mouillÈs
-	  De ces ciels brouillÈs
+	  Les soleils mouill√©s
+	  De ces ciels brouill√©s
 	  Pour mon esprit ont les charmes
-	  Si mystÈrieux
-	  De tes traÓtres yeux,
-	  Brillant ‡ travers leurs larmes.
+	  Si myst√©rieux
+	  De tes tra√Ætres yeux,
+	  Brillant √† travers leurs larmes.
 
 	The rest at the next defs update :)
-
 
 2005-07-20  Edward Hervey  <edward@fluendo.com>
 
@@ -858,7 +864,6 @@
 	import pygst
 	pygst.require('0.9')
 	import gst
-	
 
 2005-06-28  Edward Hervey  <edward@fluendo.com>
 
@@ -958,13 +963,13 @@
 
 2005-06-17  Edward Hervey  <bilboed@bilboed.com>
 
-    * Backport of bugfixes/new features from 0.8 branch to HEAD
+	* Backport of bugfixes/new features from 0.8 branch to HEAD
 
-    * gst/gst.defs:
+	* gst/gst.defs:
 	* gst/gst-types.defs:
-	New defs files generated from 0.9 GStreamer
+	  New defs files generated from 0.9 GStreamer
 
-    PORTING-TODO will follow
+	  PORTING-TODO will follow
 
 2005-06-17  Andy Wingo  <wingo@pobox.com>
 
@@ -1060,7 +1065,7 @@
 2005-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 
 	* gst/gstcaps.override:
-	  fix uninitialized warning and refator function
+	  fix uninitialized warning and refactor function
 
 2005-05-03  Benjamin Otte  <in7y118@public.uni-hamburg.de>
 

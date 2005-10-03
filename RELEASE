@@ -1,20 +1,24 @@
 
-GStreamer: Release notes for GStreamer Python 0.7.92 "I stick my neck out for nobody"
+GStreamer: Release notes for GStreamer Python bindings 0.9.3 "For the Virgin"
         
 
-This is the 0.7.92 release of the GStreamer Python bindings.
-It should be used with the 0.8.x series of GStreamer and GStreamer Plugins.
+The GStreamer team is petrified to announce a new release
+in the 0.9.x development series of the
+GStreamer Python Bindings.
 
 
-This release adds an automated testsuite and some examples as well as
-improved coverage and bug fixes.
+The 0.9.x series is a development series and not recommended for end users.
+It is not API or ABI compatible with the stable 0.8.x series.
+It is, however, parallel installable with the 0.8.x series.
 
   
 Features of this release
     
-      * automated testsuite
-      * new video player example
-      * GstBuffer wrapping
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+
+Bugs fixed in this release
+    
 
 Download
 
@@ -40,8 +44,13 @@ subscribe to the gstreamer-devel list. If there is sufficient interest we
 will create more lists as necessary.
 
         
-Maintainers
+Applications
+  
+Contributors to this release
     
+      * Andy Wingo
+      * Edward Hervey
+      * Jan Schmidt
       * Johan Dahlin
-      * David Lehn
+      * Thomas Vander Stichele
  
