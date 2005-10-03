@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 19:32+0200\n"
+"POT-Creation-Date: 2005-10-03 14:53+0200\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -86,32 +86,32 @@ msgstr "Geen bestandsnaam opgegeven"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kon het VFS-bestand \"%s\" niet sluiten."
 
-#: gst/playback/gstplaybasebin.c:1296
+#: gst/playback/gstplaybasebin.c:1310
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1302
+#: gst/playback/gstplaybasebin.c:1316
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1306
+#: gst/playback/gstplaybasebin.c:1320
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1313
+#: gst/playback/gstplaybasebin.c:1327
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1379
+#: gst/playback/gstplaybasebin.c:1393
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1382
+#: gst/playback/gstplaybasebin.c:1396
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "Apparaat \"%s\" is niet een opvangapparaat."

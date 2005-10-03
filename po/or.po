@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 19:32+0200\n"
+"POT-Creation-Date: 2005-10-03 14:53+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -87,32 +87,32 @@ msgstr "କୌଣସି ଫାଇଲନାମ ଦିଆଯାଇ ନାହିଁ
 msgid "Could not close vfs file \"%s\"."
 msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
-#: gst/playback/gstplaybasebin.c:1296
+#: gst/playback/gstplaybasebin.c:1310
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1302
+#: gst/playback/gstplaybasebin.c:1316
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1306
+#: gst/playback/gstplaybasebin.c:1320
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1313
+#: gst/playback/gstplaybasebin.c:1327
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1379
+#: gst/playback/gstplaybasebin.c:1393
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1382
+#: gst/playback/gstplaybasebin.c:1396
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."

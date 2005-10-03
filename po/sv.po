@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.26 2005/09/03 14:05:25 thomasvs Exp $
+# $Id: sv.po,v 1.27 2005/10/03 17:48:19 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-09-02 19:32+0200\n"
+"POT-Creation-Date: 2005-10-03 14:53+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -90,32 +90,32 @@ msgstr "Inget filnamn angivet"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunde inte stänga vfs-filen \"%s\"."
 
-#: gst/playback/gstplaybasebin.c:1296
+#: gst/playback/gstplaybasebin.c:1310
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1302
+#: gst/playback/gstplaybasebin.c:1316
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1306
+#: gst/playback/gstplaybasebin.c:1320
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1313
+#: gst/playback/gstplaybasebin.c:1327
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1379
+#: gst/playback/gstplaybasebin.c:1393
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1382
+#: gst/playback/gstplaybasebin.c:1396
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "%s är ingen cdrom-enhet"

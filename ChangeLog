@@ -1,3 +1,10 @@
+=== release 0.9.3 ===
+
+2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  Releasing 0.9.3, "De Facto"
+
 2005-10-03  Andy Wingo  <wingo@pobox.com>
 
 	* gst/playback/gstdecodebin.c (try_to_link_1)
@@ -36,7 +43,7 @@
 2005-09-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/adder/gstadder.c: (gst_adder_collected):
-          fix adder for float elements
+	  fix adder for float elements
 
 2005-09-28  Wim Taymans  <wim@fluendo.com>
 
@@ -514,7 +521,7 @@
 2005-09-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/libvisual/Makefile.am:
-          link against gst-base-libs
+	  link against gst-base-libs
 
 2005-09-06  David Schleef  <ds@schleef.org>
 
