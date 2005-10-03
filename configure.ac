@@ -5,7 +5,7 @@ AC_CANONICAL_TARGET
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gstreamer, GST_VERSION, 0, 9, 2, 1,
+AS_VERSION(gstreamer, GST_VERSION, 0, 9, 3, 0,
     GST_CVS="no", GST_CVS="yes")
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
@@ -27,7 +27,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-AS_LIBTOOL(GST, 6, 0, 0)
+AS_LIBTOOL(GST, 7, 0, 0)
 AS_LIBTOOL_TAGS([])
 AM_PROG_LIBTOOL
 

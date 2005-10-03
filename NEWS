@@ -1,3 +1,21 @@
+This is GStreamer 0.9.3, "Unregistered".
+
+Changes since 0.9.2:
+
+      * gst-register has been removed
+      * Extensive documentation updates
+      * BaseTransform reworked
+      * Bus reworked; signal API added
+
+Bugs fixed since 0.9.2:
+
+      * 102980 : support incremental gst-register/compprep updates
+      * 313897 : [0.9] registry rewrite
+      * 314710 : gst_buffer_create_sub doesn't copy the GST_BUFFER_FLAGS
+      * 315895 : gst_pad_query_convert src_val check
+      * 316155 : MinGW compilation: glib-mkenums root path subtitution pro...
+      * 316157 : MinGW compilation: Plugin exports
+
 This is GStreamer 0.9.2, "South".
 
 Bugs fixed since 0.9.1:

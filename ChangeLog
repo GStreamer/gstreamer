@@ -1,3 +1,11 @@
+=== release 0.9.3 ===
+
+2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* README:
+	* configure.ac:
+	  Releasing 0.9.3, "Unregistered"
+
 2005-10-03  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.c (gst_pad_activate_push): There is a race condition
@@ -200,7 +208,7 @@
 2005-09-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstinfo.c: (gst_debug_log_default):
-          don't do dummy g_strdup()s
+	  don't do dummy g_strdup()s
 	* libs/gst/controller/gstcontroller.c:
 	(on_object_controlled_property_changed),
 	(gst_controlled_property_new), (gst_controller_new_valist),
@@ -212,7 +220,7 @@
 	* libs/gst/controller/gstcontroller.h:
 	* libs/gst/controller/gstinterpolation.c:
 	(gst_controlled_property_find_timed_value_node):
-          convert // to /**/ comments
+	  convert // to /**/ comments
 
 2005-09-28  Wim Taymans  <wim@fluendo.com>
 
@@ -234,7 +242,7 @@
 	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist),
 	(gst_controller_new_list):
 	* libs/gst/controller/gstcontroller.h:
-          added another constructor for language bindings
+	  added another constructor for language bindings
 
 2005-09-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -512,8 +520,8 @@
 	* gst/gstpipeline.c:
 	* gst/gstplugin.c:
 	* gst/gstplugin.h:
-          inlined the last two docs files
-          removed the tmpl directory from cvs (no more conflicts here!)
+	  inlined the last two docs files
+	  removed the tmpl directory from cvs (no more conflicts here!)
 
 2005-09-25  Stefan Kost  <ensonic@users.sf.net>
 
@@ -532,8 +540,8 @@
 	(gst_static_pad_template_get_caps), (gst_pad_template_get_caps),
 	(gst_pad_template_pad_created):
 	* gst/gstpadtemplate.h:
-          inlined two more docs
-          factored gstpadtemplate out of gstpad
+	  inlined two more docs
+	  factored gstpadtemplate out of gstpad
 
 2005-09-24  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -637,7 +645,7 @@
 	* gst/gstinfo.h:
 	* gst/gstobject.c: (gst_object_class_init):
 	* gst/gstobject.h:
-          inlined 3 more biiiig doc files and added some missing docs on the fly
+	  inlined 3 more biiiig doc files and added some missing docs on the fly
 
 2005-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -808,7 +816,7 @@
 	* docs/gst/tmpl/gstvalue.sgml:
 	* gst/gstvalue.c:
 	* gst/gstvalue.h:
-          inlied another one and added  some obvious docs
+	  inlied another one and added  some obvious docs
 
 2005-09-21  Wim Taymans  <wim@fluendo.com>
 
@@ -825,14 +833,14 @@
 	* docs/gst/tmpl/.cvsignore:
 	* docs/gst/tmpl/gstimplementsinterface.sgml:
 	* gst/gstinterface.c:
-          inlined more docs
+	  inlined more docs
 
 2005-09-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/tmpl/.cvsignore:
 	* docs/gst/tmpl/gstenumtypes.sgml:
-          remove obsolete doc file
+	  remove obsolete doc file
 
 2005-09-21  David Schleef  <ds@schleef.org>
 
@@ -859,7 +867,7 @@
 	* gst/gstpluginfeature.c:
 	* gst/gstpluginfeature.h:
 	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist):
-          more docs inlined, splitted gstindex.{c,h}
+	  more docs inlined, splitted gstindex.{c,h}
 
 2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -946,9 +954,9 @@
 
 	* check/gst-libs/controller.c: (plugin_init), (GST_START_TEST):
 	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist):
-          more leaks plumbed, added more debug-logging
+	  more leaks plumbed, added more debug-logging
 	* gst/gstmacros.h:
-          whitespace fix
+	  whitespace fix
 
 2005-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -1405,7 +1413,7 @@
 2005-09-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
-          more doc cleanups
+	  more doc cleanups
 
 2005-09-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -1585,8 +1593,8 @@
 	* gst/gsttrace.c:
 	* gst/gsttrace.h:
 	* gst/gsttrashstack.c:
-          renamed gsttag -> gsttaglist, gsttaginterface -> gsttagsetter
-          inlined docs for gsttrace, gsttrashstack
+	  renamed gsttag -> gsttaglist, gsttaginterface -> gsttagsetter
+	  inlined docs for gsttrace, gsttrashstack
 
 2005-09-07  Stefan Kost  <ensonic@users.sf.net>
 
@@ -1625,7 +1633,7 @@
 2005-09-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* check/pipelines/simple_launch_lines.c: (run_pipeline):
-          test for pipe!=NULL
+	  test for pipe!=NULL
 	* docs/gst/tmpl/.cvsignore:
 	* docs/gst/tmpl/gstmemchunk.sgml:
 	* docs/gst/tmpl/gstparse.sgml:
@@ -1639,7 +1647,7 @@
 	* gst/gsttaginterface.c:
 	* gst/gsttypefind.c:
 	* gst/gsttypefind.h:
-          inlined more docs
+	  inlined more docs
 
 === release 0.9.2 ===
 
