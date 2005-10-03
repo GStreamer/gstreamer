@@ -13,3 +13,11 @@ html
 gst-plugins-base-plugins-scan
 gst-plugins-base-plugins-scan.c
 inspect-registry.xml
+
+html-build.stamp
+html.stamp
+scan-build.stamp
+sgml-build.stamp
+sgml.stamp
+tmpl-build.stamp
+tmpl.stamp
