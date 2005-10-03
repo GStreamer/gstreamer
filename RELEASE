@@ -1,38 +1,43 @@
 
-GStreamer: Release notes for GStreamer FFmpeg 0.8.6 "Vamoz a la Playa"
+GStreamer: Release notes for GStreamer FFmpeg Plug-ins 0.9.3 "D'Artagnan"
         
 
-The GStreamer team is happy to announce a new stable release of the
-FFmpeg-based GStreamer plugin.
+The GStreamer team is petrified to announce a new release
+in the 0.9.x development series of the
+GStreamer FFmpeg Plug-ins.
 
 
-This module is separated from GStreamer Plugins for easier maintenance
-and decoupled release cycles.
-Our CVS contains both the patched source code to FFmpeg, as well as the
-set of patches against upstream CVS, so we can send patches upstream
-regularly from our modifications.
+The 0.9.x series is a development series and not recommended for end users.
+It is not API or ABI compatible with the stable 0.8.x series.
+It is, however, parallel installable with the 0.8.x series.
+
+
+This module contains plug-ins using libraries from the FFmpeg project.
+
+
+
+Other modules containing plug-ins are:
+
+
+gst-plugins-base
+contains a basic set of well-supported plug-ins
+gst-plugins-ugly
+contains a set of well-supported plug-ins, but might pose problems for
+    distributors
+gst-plugins-bad
+contains a set of less supported plug-ins that haven't passed the
+    rigorous quality testing we expect
+
+
 
   
 Features of this release
     
-      * codecs for most popular formats
-      * snapshot update to 20/7
-      * new post-processing plugin
-      * added flv/vob muxers
-      * decoder performance improvements
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
 
 Bugs fixed in this release
     
-      * 160665 : [ffdec_h264] VideoSoft h.264 videos (VSSH) make totem/ffd...
-      * 308335 : [PATCH] ffmpeg postprocessing plugins
-      * 308415 : gst-ffmpeg cvs doesn't build in
-      * 308804 : ffmpeg encoders do not set the GST_BUFFER_DELTA_UNIT flag
-      * 309050 : [PATCH] flv encoding
-      * 309051 : [PATCH] enable "streamheader" properties
-      * 309149 : [flv] flv demuxer/decoder doesn't set correct timestamps
-      * 310054 : [PATCH] fix flag handling for GST_FFMPEG_URL_STREAMHEADER
-      * 311593 : fix timestamps 
-      * 311802 : [PATCH] local variable 'bq' for timestamp conversion unin...
 
 Download
 
@@ -58,11 +63,11 @@ subscribe to the gstreamer-devel list. If there is sufficient interest we
 will create more lists as necessary.
 
         
+Applications
+  
 Contributors to this release
     
       * Ronald Bultje
-      * Edward Hervey
-      * Luca Ognibene
-      * Daniel Fischer
-      * Sebastien Cote
+      * Thomas Vander Stichele
+      * Wim Taymans
  

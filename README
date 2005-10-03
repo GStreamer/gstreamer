@@ -2,8 +2,3 @@ gst-ffmpeg
 
 This module contains a GStreamer plugin for FFmpeg, as well as an internal
 copy of the FFmpeg source code.
-
-It is separated from the GStreamer Plugins module because it is too
-hard to maintain inside the Plugins module.
-
-This module requires GStreamer to be built.
