@@ -1,3 +1,10 @@
+=== release 0.9.3 ===
+
+2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  Releasing 0.9.3, "Aramis"
+
 2005-10-03  Andy Wingo  <wingo@pobox.com>
 
 	* ext/flac/gstflacdec.c (gst_flacdec_write): Deal with pad_alloc
@@ -270,7 +277,7 @@
 2005-09-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/alpha/gstalpha.c:
-      fix element description
+	  fix element description
 
 2005-09-19  Wim Taymans  <wim@fluendo.com>
 
