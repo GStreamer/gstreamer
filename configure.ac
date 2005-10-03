@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-bad, GST_PLUGINS_BAD_VERSION, 0, 9, 1, 1,
+AS_VERSION(gst-plugins-bad, GST_PLUGINS_BAD_VERSION, 0, 9, 3, 0,
     GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
@@ -51,7 +51,7 @@ dnl the gettext stuff needed
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
                                                                             
-GETTEXT_PACKAGE=gst-plugins-$GST_MAJORMINOR
+GETTEXT_PACKAGE=gst-plugins-bad-$GST_MAJORMINOR
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
                   [gettext package name])
@@ -464,9 +464,7 @@ AC_CONFIG_FILES(
 Makefile
 gst-plugins-bad.spec
 gst/Makefile
-gst/librfb/Makefile
 gst/qtdemux/Makefile
-gst/speed/Makefile
 gst/tta/Makefile
 sys/Makefile
 ext/Makefile

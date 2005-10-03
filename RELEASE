@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.1 "Angel Eyes"
+GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.3 "Porthos"
         
 
 The GStreamer team is petrified to announce a new release
@@ -60,6 +60,7 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
+      * ported gsm, tta, sdlvideosink
 
 Bugs fixed in this release
     
@@ -92,17 +93,9 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
+      * Arwed v. Merkatz
       * Christian Schaller
-      * David Schleef
-      * Edward Hervey
-      * Jan Schmidt
-      * Michael Smith
-      * Philippe Khalaf
-      * Ronald Bultje
-      * Stefan Kost
-      * Thomas Vander Stichele
-      * Tim-Philipp Müller
+      * Edgard Lima
+      * Flavio Oliveira
       * Wim Taymans
-      * Zaheer Abbas Merali
  

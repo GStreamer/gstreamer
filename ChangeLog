@@ -1,3 +1,10 @@
+=== release 0.9.3 ===
+
+2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  Releasing 0.9.3, "Porthos"
+
 2005-09-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header):
@@ -15,9 +22,6 @@
 	* ext/gsm/gstgsmdec.c:
 	* PORTED_09:
 	Gsmdec ported to 0.9.
-
-
-
 
 2005-09-22  Arwed v. Merkatz  <v.merkatz@gmx.net>
 
@@ -37,25 +41,26 @@
 
 2005-09-20  Flavio Oliveira  <flavio.oliveira@indt.org.br>
 
-        * ext/gsm/gstgsmenc.c:
-        Setting caps on the outgoing buffers.
-        Need to fix: rtpencoder does not know what it is handling and errors out
+	* ext/gsm/gstgsmenc.c:
+	  Setting caps on the outgoing buffers.
+	  Need to fix: rtpencoder does not know what it is handling and
+	  errors out
 
 2005-09-20  Edgard Lima  <edgard.lima@indt.org.br>
 
-        * configure.ac:
-        * ext/sdl/Makefile.am:
-        Fixed Makefile.am - removed hard coded flags from Makefile.am.
-	Added AC_PATH_XTRA to configure.ac to be used by Makefile.am.
+	* configure.ac:
+	* ext/sdl/Makefile.am:
+	  Fixed Makefile.am - removed hard coded flags from Makefile.am.
+	  Added AC_PATH_XTRA to configure.ac to be used by Makefile.am.
 
 2005-09-19  Edgard Lima  <edgard.lima@indt.org.br>
 
-        * Makefile.am:
-        * configure.ac:
-        * ext/sdl/Makefile.am:
-        * ext/sdl/sdlvideosink.c:
-        * PORTED_09:
-        Ported to 0.9.
+	* Makefile.am:
+	* configure.ac:
+	* ext/sdl/Makefile.am:
+	* ext/sdl/sdlvideosink.c:
+	* PORTED_09:
+	  Ported to 0.9.
 
 === release 0.9.1 ===
 
