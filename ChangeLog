@@ -1,3 +1,12 @@
+=== release 0.9.3 ===
+
+2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* README:
+	* configure.ac:
+	  releasing 0.9.3, "Athos"
+
 2005-09-30  Michael Smith <msmith@fluendo.com>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_src_event),

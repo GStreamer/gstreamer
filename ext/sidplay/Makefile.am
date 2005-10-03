@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstsid.la
 
 libgstsid_la_SOURCES = gstsiddec.cc
