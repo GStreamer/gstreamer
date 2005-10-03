@@ -723,8 +723,6 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
 	if (ffmpegdec->picture->opaque != NULL) {
 	  outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
-          if (outbuf == ffmpegdec->last_buffer)
-            ffmpegdec->last_buffer = NULL;
 	} else {
 	  AVPicture pic;
 	  gint fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,

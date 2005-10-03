@@ -1,3 +1,9 @@
+2005-10-03  Luca Ognibene  <luogni@tin.it>
+
+	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_frame): 
+	  Disable wrong check. Fix a "huge" memory leak when
+	  changing from PLAYING -> READY in ffdec_mjpeg (and maybe others)
+
 2005-10-02  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
