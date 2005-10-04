@@ -1,3 +1,8 @@
+2005-10-04  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstformat.h: 
+	Added precision in the comments for GST_FORMAT_DEFAULT
+
 2005-10-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-launch.c: (main):

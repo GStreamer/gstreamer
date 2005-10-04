@@ -44,7 +44,7 @@ G_BEGIN_DECLS
  */
 typedef enum {
   GST_FORMAT_UNDEFINED 	=  0, /* must be first in list */
-  GST_FORMAT_DEFAULT   	=  1, /* samples for audio, frames/fields for video */
+  GST_FORMAT_DEFAULT   	=  1, /* samples for raw audio, frames/fields for raw video */
   GST_FORMAT_BYTES   	=  2,
   GST_FORMAT_TIME 	=  3,
   GST_FORMAT_BUFFERS	=  4,
