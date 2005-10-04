@@ -146,6 +146,7 @@ AC_OUTPUT([
   Makefile
   codegen/Makefile
   gst/Makefile
+  gst/extend/Makefile
   examples/Makefile
   pkgconfig/Makefile
   pkgconfig/gst-python.pc

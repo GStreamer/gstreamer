@@ -1,3 +1,13 @@
+2005-10-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/extend/Makefile.am:
+	* gst/extend/__init__.py:
+	* gst/extend/pygobject.py:
+	* gst/extend/utils.py:
+	  move over some of the extend stuff that I want to use right now
+
 2005-10-04  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/codegen.py:
