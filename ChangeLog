@@ -1,3 +1,9 @@
+2005-10-04  Michael Smith <msmith@fluendo.com>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_send_event):
+	  Correct refcounting in send_event() function. Previously was wrong
+	  if the first sink was unable to handle the event.
+
 2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

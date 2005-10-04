@@ -866,11 +866,14 @@ gst_play_bin_send_event (GstElement * element, GstEvent * event)
   while (sinks) {
     GstElement *sink = GST_ELEMENT_CAST (sinks->data);
 
+    gst_event_ref (event);
     if ((res = gst_element_send_event (sink, event)))
       break;
 
     sinks = g_list_next (sinks);
   }
+
+  gst_event_unref (event);
 
   return res;
 }
