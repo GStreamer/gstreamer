@@ -118,9 +118,13 @@ gst_plugin_feature_load (GstPluginFeature * feature)
       gst_registry_lookup_feature (gst_registry_get_default (), feature->name);
 
   if (real_feature == NULL) {
-    g_critical
+    GST_INFO
         ("Loaded plugin containing feature '%s', but feature disappeared.",
         feature->name);
+  } else if (!real_feature->loaded) {
+    GST_INFO ("Tried to load plugin containing feature '%s', but feature was "
+        "not found.", real_feature->name);
+    return NULL;
   }
 
   return real_feature;

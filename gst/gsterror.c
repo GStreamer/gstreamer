@@ -161,6 +161,7 @@ _gst_stream_errors_init (void)
   TABLE (t, STREAM, DEMUX, N_("Could not demultiplex stream."));
   TABLE (t, STREAM, MUX, N_("Could not multiplex stream."));
   TABLE (t, STREAM, FORMAT, N_("Stream is of the wrong format."));
+  TABLE (t, STREAM, STOPPED, N_("Streaming stopped."));
 
   return t;
 }

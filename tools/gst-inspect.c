@@ -1033,6 +1033,11 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
       GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
 
+  if (!factory) {
+    g_print ("element plugin couldn't be loaded\n");
+    return -1;
+  }
+
   element = gst_element_factory_create (factory, NULL);
   if (!element) {
     g_print ("couldn't construct element for some reason\n");
