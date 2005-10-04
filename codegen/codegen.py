@@ -324,7 +324,6 @@ class Wrapper:
             substdict['parseargs'] = ''
             substdict['extraparams'] = ''
             flags = 'METH_NOARGS'
-
         return template % substdict, flags
 
     def write_constructor(self):
@@ -699,7 +698,9 @@ class GObjectWrapper(Wrapper):
         '%(varlist)s' \
         '%(parseargs)s' \
         '%(codebefore)s' \
+        '    pyg_begin_allow_threads;\n' \
         '    %(setreturn)s%(cname)s(%(cast)s(self->obj)%(arglist)s);\n' \
+        '    pyg_end_allow_threads;\n' \
         '%(codeafter)s\n' \
         '}\n\n'
 
@@ -730,6 +731,7 @@ class GObjectWrapper(Wrapper):
         substdict = Wrapper.get_initial_method_substdict(self, method)
         substdict['cast'] = string.replace(self.objinfo.typecode, '_TYPE_', '_', 1)
         return substdict
+    
     def write_default_constructor(self):
         return '0'
 
@@ -842,7 +844,9 @@ class GstMiniObjectWrapper(Wrapper):
         '%(varlist)s' \
         '%(parseargs)s' \
         '%(codebefore)s' \
+        '    pyg_begin_allow_threads;\n' \
         '    %(setreturn)s%(cname)s(%(cast)s(self->obj)%(arglist)s);\n' \
+        '    pyg_end_allow_threads;\n' \
         '%(codeafter)s\n' \
         '}\n\n'
 

@@ -1,3 +1,11 @@
+2005-10-04  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/codegen.py:
+	Added pyg_[begin|end]_allow_threads before and after call of C methods 
+	in python methods wrappers.
+	This should get rid of more threading issues...
+	Should we also do that for function calls ?
+
 2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
