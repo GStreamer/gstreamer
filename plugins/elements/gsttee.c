@@ -274,6 +274,7 @@ gst_tee_do_push (GstPad * pad, GValue * ret, PushData * data)
 
   res = gst_pad_push (pad, gst_buffer_ref (data->buffer));
   g_value_set_enum (ret, res);
+
   gst_object_unref (pad);
 
   return (res == GST_FLOW_OK);

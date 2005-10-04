@@ -274,7 +274,9 @@ gst_fake_sink_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, sink->signal_handoffs);
       break;
     case PROP_LAST_MESSAGE:
+      GST_LOCK (sink);
       g_value_set_string (value, sink->last_message);
+      GST_UNLOCK (sink);
       break;
     case PROP_CAN_ACTIVATE_PUSH:
       g_value_set_boolean (value, GST_BASE_SINK (sink)->can_activate_push);
@@ -297,6 +299,7 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
   if (!sink->silent) {
     gchar *sstr;
 
+    GST_LOCK (sink);
     g_free (sink->last_message);
 
     if ((s = gst_event_get_structure (event)))
@@ -308,6 +311,7 @@ gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
         g_strdup_printf ("event   ******* E (type: %d, %s) %p",
         GST_EVENT_TYPE (event), sstr, event);
     g_free (sstr);
+    GST_UNLOCK (sink);
 
     g_object_notify (G_OBJECT (sink), "last_message");
   }
@@ -321,9 +325,11 @@ gst_fake_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
   GstFakeSink *sink = GST_FAKE_SINK (bsink);
 
   if (!sink->silent) {
+    GST_LOCK (sink);
     g_free (sink->last_message);
 
     sink->last_message = g_strdup_printf ("preroll   ******* ");
+    GST_UNLOCK (sink);
 
     g_object_notify (G_OBJECT (sink), "last_message");
   }
@@ -336,6 +342,7 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstFakeSink *sink = GST_FAKE_SINK (bsink);
 
   if (!sink->silent) {
+    GST_LOCK (sink);
     g_free (sink->last_message);
 
     sink->last_message =
@@ -346,6 +353,7 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
         GST_BUFFER_OFFSET_END (buf), GST_MINI_OBJECT (buf)->flags, buf);
+    GST_UNLOCK (sink);
 
     g_object_notify (G_OBJECT (sink), "last_message");
   }
@@ -397,8 +405,10 @@ gst_fake_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_READY_NULL)
         goto error;
+      GST_LOCK (fakesink);
       g_free (fakesink->last_message);
       fakesink->last_message = NULL;
+      GST_UNLOCK (fakesink);
       break;
     default:
       break;

@@ -497,8 +497,10 @@ gst_identity_stop (GstBaseTransform * trans)
 
   identity = GST_IDENTITY (trans);
 
+  GST_LOCK (identity);
   g_free (identity->last_message);
   identity->last_message = NULL;
+  GST_UNLOCK (identity);
 
   return TRUE;
 }
