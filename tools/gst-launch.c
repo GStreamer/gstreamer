@@ -571,8 +571,8 @@ main (int argc, char *argv[])
     return 1;
   } else if (error) {
     fprintf (stderr, _("WARNING: erroneous pipeline: %s\n"), error->message);
-    fprintf (stderr, _("         Trying to run anyway.\n"));
     g_error_free (error);
+    return 1;
   }
 
   if (verbose) {
