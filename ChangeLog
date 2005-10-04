@@ -1,3 +1,11 @@
+2005-10-04  Edward Hervey  <edward@fluendo.com>
+
+	* ext/dv/Makefile.am:
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_src_query), (gst_dvdemux_src_conver): 
+	Added DEFAULT <==> BYTES, TIME conversions on srcpad,
+	Corrected the query function for position so it doesn't forget what
+	format was asked, and calls the conversion functions on the correct pad.
+
 2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

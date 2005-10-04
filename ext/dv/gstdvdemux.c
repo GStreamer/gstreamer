@@ -24,6 +24,7 @@
 #include <string.h>
 #include <math.h>
 
+#include <gst/audio/audio.h>
 #include "gstdvdemux.h"
 
 /* DV output has two modes, normal and wide. The resolution is the same in both
@@ -245,13 +246,18 @@ gst_dvdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
     goto done;
   }
 
+  GST_INFO ("src_value:%lld, src_format:%d, dest_format:%d", src_value,
+      src_format, *dest_format);
+
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
-        case GST_FORMAT_BYTES:
-          *dest_value = src_value;
-          break;
         case GST_FORMAT_DEFAULT:
+          if (pad == dvdemux->videosrcpad)
+            *dest_value = src_value / dvdemux->frame_len;
+          else if (pad == dvdemux->audiosrcpad)
+            *dest_value = src_value / gst_audio_frame_byte_size (pad);
+          break;
         case GST_FORMAT_TIME:
           *dest_format = GST_FORMAT_TIME;
           if (pad == dvdemux->videosrcpad)
@@ -275,10 +281,41 @@ gst_dvdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
             *dest_value = 2 * src_value * dvdemux->frequency *
                 dvdemux->channels / GST_SECOND;
           break;
-        case GST_FORMAT_TIME:
         case GST_FORMAT_DEFAULT:
-          *dest_format = GST_FORMAT_TIME;
-          *dest_value = src_value;
+          if (pad == dvdemux->videosrcpad) {
+            if (src_value)
+              *dest_value = src_value / (dvdemux->framerate * GST_SECOND);
+            else
+              *dest_value = 0;
+          } else if (pad == dvdemux->audiosrcpad)
+            *dest_value = 2 * src_value * dvdemux->frequency *
+                dvdemux->channels / (GST_SECOND *
+                gst_audio_frame_byte_size (pad));
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_DEFAULT:
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          if (pad == dvdemux->videosrcpad) {
+            *dest_value = src_value * GST_SECOND * dvdemux->framerate;
+          } else if (pad == dvdemux->audiosrcpad) {
+            if (src_value)
+              *dest_value =
+                  src_value * GST_SECOND * gst_audio_frame_byte_size (pad)
+                  / (2 * dvdemux->frequency * dvdemux->channels);
+            else
+              *dest_value = 0;
+          }
+          break;
+        case GST_FORMAT_BYTES:
+          if (pad == dvdemux->videosrcpad) {
+            *dest_value = src_value * dvdemux->frame_len;
+          } else if (pad == dvdemux->audiosrcpad) {
+            *dest_value = src_value * gst_audio_frame_byte_size (pad);
+          }
           break;
         default:
           res = FALSE;
@@ -394,6 +431,7 @@ gst_dvdemux_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
+      GstFormat format2;
       gint64 cur, end;
       GstPad *peer;
 
@@ -415,8 +453,9 @@ gst_dvdemux_src_query (GstPad * pad, GstQuery * query)
 
         /* convert end to requested format */
         if (end != -1) {
-          if (!(res = gst_pad_query_convert (dvdemux->sinkpad,
-                      GST_FORMAT_BYTES, end, &format, &end))) {
+          format2 = format;
+          if (!(res = gst_pad_query_convert (pad,
+                      GST_FORMAT_BYTES, end, &format2, &end))) {
             gst_object_unref (peer);
             goto error;
           }
@@ -429,7 +468,6 @@ gst_dvdemux_src_query (GstPad * pad, GstQuery * query)
       if (!(res = gst_pad_query_convert (pad,
                   GST_FORMAT_TIME, dvdemux->timestamp, &format, &cur)))
         goto error;
-
       gst_query_set_position (query, format, cur, end);
       break;
     }
