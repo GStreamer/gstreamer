@@ -81,36 +81,45 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
     GstState state;
     GstState pending;
     GstStateChangeReturn ret;
-    PyObject *timeout = Py_None;
+    PyObject *timeout = NULL;
+    gdouble timeoutd;
     GTimeVal *timevalp = NULL;
     GTimeVal timeval;
     PyObject *tuple;
 
+    /*
+     * infinite timeout: timevalp == NULL
+     * 0 timeout: timeval set to 0, timevalp points to timeval
+     * x timeout: timeval set to gdouble conversion, timevalp points to timeval
+     */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
                                      "|O:GstElement.get_state", kwlist,
                                      &timeout)) {
 	PyErr_SetString(PyExc_RuntimeError, "Timeout not specified correctly");
         return NULL;
     }
-    if (timeout != Py_None) {
-        gdouble timeoutd;
-
-        if (!PyFloat_Check (timeout)) {
-            PyErr_SetString(PyExc_TypeError, "Timeout not specified as double");
-            return NULL;
+    if (timeout == Py_None) {
+      /* infinite timeout */
+    }
+    else {
+        if (timeout == NULL) {
+             timeoutd = 0.0;
+        } else {
+            if (!PyFloat_Check (timeout)) {
+                PyErr_SetString(PyExc_TypeError, "Timeout not specified as double");
+                return NULL;
+            }
+            timeoutd = PyFloat_AsDouble (timeout);
         }
-        timeoutd = PyFloat_AsDouble (timeout);
 
         timeval.tv_sec = (glong) timeoutd;
         timeval.tv_usec = (glong) ((timeoutd - (gdouble) timeval.tv_sec)
                                    * 1000.0 * 1000.0);
 	timevalp = &timeval;
-    } else {	
-	GST_TIME_TO_TIMEVAL (0, timeval);
     }
 	
     ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, &pending,
-        &timeval);
+        timevalp);
 
     tuple = Py_BuildValue("OOO",
         pyg_enum_from_gtype (GST_TYPE_STATE_CHANGE_RETURN, ret),

@@ -121,6 +121,51 @@ class BinAddRemove(TestCase):
         self.assertRaises(gst.AddError, self.bin.add, src, sink)
         self.bin.remove(src, sink)
         self.assertRaises(gst.RemoveError, self.bin.remove, src, sink)
+
+class Preroll(TestCase):
+    def setUp(self):
+        TestCase.setUp(self)
+        self.bin = gst.Bin('bin')
+
+    def tearDown(self):
+        del self.bin
+        TestCase.tearDown(self)
+
+    def testFake(self):
+        src = gst.element_factory_make('fakesrc')
+        sink = gst.element_factory_make('fakesink')
+        self.bin.add(src)
+
+        # bin will go to paused, src pad task will start and error out
+        self.bin.set_state(gst.STATE_PAUSED)
+        ret = self.bin.get_state(timeout=None)
+        self.assertEquals(ret[0], gst.STATE_CHANGE_SUCCESS)
+        self.assertEquals(ret[1], gst.STATE_PAUSED)
+        self.assertEquals(ret[2], gst.STATE_VOID_PENDING)
+
+        # adding the sink will cause the bin to go in preroll mode
+        gst.debug('adding sink and setting to PAUSED, should cause preroll')
+        self.bin.add(sink)
+        sink.set_state(gst.STATE_PAUSED)
+        ret = self.bin.get_state(timeout=0.0)
+        self.assertEquals(ret[0], gst.STATE_CHANGE_ASYNC)
+        self.assertEquals(ret[1], gst.STATE_PAUSED)
+        self.assertEquals(ret[2], gst.STATE_VOID_PENDING)
+        print ret
+
+        # to actually complete preroll, we need to link and re-enable fakesrc
+        src.set_state(gst.STATE_READY)
+        src.link(sink)
+        src.set_state(gst.STATE_PAUSED)
+        ret = self.bin.get_state(timeout=None)
+        self.assertEquals(ret[0], gst.STATE_CHANGE_SUCCESS)
+        self.assertEquals(ret[1], gst.STATE_PAUSED)
+        self.assertEquals(ret[2], gst.STATE_VOID_PENDING)
+
+        print ret
+
+        self.bin.set_state(gst.STATE_NULL)
+        self.bin.get_state(timeout=None)
  
 if __name__ == "__main__":
     unittest.main()
