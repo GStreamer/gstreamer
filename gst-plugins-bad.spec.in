@@ -1,7 +1,5 @@
 %define majorminor  @GST_MAJORMINOR@
 %define gstreamer   gstreamer09
-%define gstregister %{_bindir}/gst-register-%{majorminor}
-%define register    %{gstregister} > /dev/null 2>&1 || :
 
 %define gst_minver   0.9.1
 
@@ -21,8 +19,6 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:         %{gstreamer} >= %{gst_minver}
 BuildRequires:    %{gstreamer}-devel >= %{gst_minver}
-Requires(post):   %{gstregister}
-Requires(postun): %{gstregister}
 
 BuildRequires:  gcc-c++
 
@@ -81,18 +77,17 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 rm -rf $RPM_BUILD_ROOT
 
 %post
-%{register}
 
 %postun
-%{register}
 
-%files -f gst-plugins-bad-%{majorminor}
+%files
 %defattr(-, root, root)
 %doc AUTHORS COPYING README REQUIREMENTS
 
 # non-core plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmpegaudioparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgsttta.so
+%{_datadir}/locale
 
 # gstreamer-plugins with external dependencies but in the main package
 # @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -106,7 +101,7 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_MUSICBRAINZ_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttrm.so
 # @USE_OPENGL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstglimagesink.so
 # @USE_POLYP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libpolypaudio.so
-# @USE_SDL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsdlvideosink.so
+@USE_SDL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsdlvideosink.so
 # @USE_SNDFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
 # @USE_SWFDEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstswfdec.so
                                                                                 
@@ -129,10 +124,8 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_DXR3_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdxr3.so
 # @USE_DXR3_TRUE@
 # @USE_DXR3_TRUE@%post -n gstreamer-plugins-dxr3
-# @USE_DXR3_TRUE@%{register}
 # @USE_DXR3_TRUE@
 # @USE_DXR3_TRUE@%postun -n gstreamer-plugins-dxr3
-# @USE_DXR3_TRUE@%{register}
 
 ### FAAC ###
 # @USE_FAAC_TRUE@%package -n gstreamer-plugins-faac
@@ -150,10 +143,8 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_FAAC_TRUE@%defattr(-, root, root)
 # @USE_FAAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
 # @USE_FAAC_TRUE@%post -n  gstreamer-faac
-# @USE_FAAC_TRUE@%{register}
 # @USE_FAAC_TRUE@
 # @USE_FAAC_TRUE@%postun -n  gstreamer-plugins-faac
-# @USE_FAAC_TRUE@%{register}
 
 #### JACK AUDIO CONNECTION KIT ###
 # @USE_JACK_TRUE@%package -n gstreamer-plugins-jack
@@ -174,10 +165,8 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_JACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjack.so
 # @USE_JACK_TRUE@
 # @USE_JACK_TRUE@%post -n gstreamer-plugins-jack
-# @USE_JACK_TRUE@%{register}
 # @USE_JACK_TRUE@
 # @USE_JACK_TRUE@%postun -n gstreamer-plugins-jack
-# @USE_JACK_TRUE@%{register}
 
 #### NETWORK AUDIO SYSTEM  ###
 # @USE_NAS_TRUE@%package -n gstreamer-plugins-nas
@@ -195,10 +184,8 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_NAS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstnassink.so
 # @USE_NAS_TRUE@
 # @USE_NAS_TRUE@%post -n gstreamer-plugins-nas
-# @USE_NAS_TRUE@%{register}
 # @USE_NAS_TRUE@
 # @USE_NAS_TRUE@%postun -n gstreamer-plugins-nas
-# @USE_NAS_TRUE@%{register}
 
 #### MMS Protocol support ####
 # @USE_LIBMMS_TRUE@%package -n gstreamer-plugins-mms
@@ -216,10 +203,8 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_LIBMMS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmms.so
 # @USE_LIBMMS_TRUE@
 # @USE_LIBMMS_TRUE@%post -n gstreamer-plugins-mms
-# @USE_LIBMMS_TRUE@%{register}
 # @USE_LIBMMS_TRUE@
 # @USE_LIBMMS_TRUE@%postun -n gstreamer-plugins-mms
-# @USE_LIBMMS_TRUE@%{register}
 
 ### VIDEO 4 LINUX 2 ###
 # @USE_GST_V4L2_TRUE@%package -n gstreamer-plugins-v4l2
@@ -237,10 +222,8 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
 # @USE_GST_V4L2_TRUE@
 # @USE_GST_V4L2_TRUE@%post -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@%{register}
 # @USE_GST_V4L2_TRUE@
 # @USE_GST_V4L2_TRUE@%postun -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@%{register}
 
 ### XVID ###
 # @USE_XVID_TRUE@%package -n gstreamer-plugins-xvid
@@ -258,10 +241,8 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 # @USE_XVID_TRUE@
 # @USE_XVID_TRUE@%post -n gstreamer-plugins-xvid
-# @USE_XVID_TRUE@%{register}
 # @USE_XVID_TRUE@
 # @USE_XVID_TRUE@%postun -n gstreamer-plugins-xvid
-# @USE_XVID_TRUE@%{register}
 
 
 %changelog
