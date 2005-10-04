@@ -653,6 +653,7 @@ remove_sinks (GstPlayBin * play_bin)
        * there is no unwanted state change when the parent
        * is disposed */
       play_bin->sinks = g_list_remove (play_bin->sinks, element);
+      gst_element_set_state (element, GST_STATE_NULL);
       gst_bin_remove (GST_BIN (parent), element);
       gst_object_unref (parent);
     }
@@ -671,6 +672,7 @@ remove_sinks (GstPlayBin * play_bin)
     parent = gst_element_get_parent (element);
     if (parent != NULL) {
       play_bin->sinks = g_list_remove (play_bin->sinks, element);
+      gst_element_set_state (element, GST_STATE_NULL);
       gst_bin_remove (GST_BIN (parent), element);
       gst_object_unref (parent);
     }
@@ -701,6 +703,7 @@ remove_sinks (GstPlayBin * play_bin)
     }
     gst_object_unref (pad);
 
+    gst_element_set_state (element, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (play_bin), element);
   }
   g_list_free (play_bin->sinks);
@@ -708,9 +711,9 @@ remove_sinks (GstPlayBin * play_bin)
 
   /* FIXME: this is probably some refcounting problem */
   if (play_bin->visualisation && GST_OBJECT_PARENT (play_bin->visualisation)) {
+    gst_element_set_state (play_bin->visualisation, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (play_bin->visualisation)),
         play_bin->visualisation);
-    gst_element_set_state (play_bin->visualisation, GST_STATE_NULL);
   }
 
   if (play_bin->frame) {
@@ -761,6 +764,7 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
     g_warning ("could not link %s: %d", capsstr, res);
     g_free (capsstr);
 
+    gst_element_set_state (sink, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (play_bin), sink);
   } else {
     /* we got the sink succesfully linked, now keep the sink
@@ -848,6 +852,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   /* remove the sinks now, pipeline get_state will now wait for the
    * sinks to preroll */
   if (play_bin->fakesink) {
+    gst_element_set_state (play_bin->fakesink, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (play_bin), play_bin->fakesink);
     play_bin->fakesink = NULL;
   }
@@ -924,6 +929,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
         remove_sinks (play_bin);
       }
       if (play_bin->fakesink) {
+        gst_element_set_state (play_bin->fakesink, GST_STATE_NULL);
         gst_bin_remove (GST_BIN (play_bin), play_bin->fakesink);
         play_bin->fakesink = NULL;
       }

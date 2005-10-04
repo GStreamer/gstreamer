@@ -312,6 +312,7 @@ group_destroy (GstPlayBaseGroup * group)
       if (fakesrc != NULL) {
         GST_LOG ("removing fakesrc from %s:%s",
             GST_PAD_NAME (pad), GST_ELEMENT_NAME (gst_pad_get_parent (pad)));
+        gst_element_set_state (fakesrc, GST_STATE_NULL);
         gst_bin_remove (GST_BIN (play_base_bin), fakesrc);
       }
     }
@@ -320,10 +321,14 @@ group_destroy (GstPlayBaseGroup * group)
      * from the thread */
     if (get_active_group (play_base_bin) == group) {
       GST_LOG ("removing preroll element %s", GST_ELEMENT_NAME (element));
+      gst_element_set_state (element, GST_STATE_NULL);
+      gst_element_set_state (group->type[n].selector, GST_STATE_NULL);
       gst_bin_remove (group->type[n].bin, element);
       gst_bin_remove (group->type[n].bin, group->type[n].selector);
     } else {
       /* else we can just unref it */
+      gst_element_set_state (element, GST_STATE_NULL);
+      gst_element_set_state (group->type[n].selector, GST_STATE_NULL);
       gst_object_unref (element);
       gst_object_unref (group->type[n].selector);
     }
@@ -620,10 +625,12 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   gst_object_unref (preroll_pad);
 
   /* add to group list */
-  /* FIXME refcount elements, after bin_add, object refs are invalid since 
-   * it takes ownership. */
   group->type[type - 1].selector = selector;
   group->type[type - 1].preroll = preroll;
+
+  /* gst_bin_add takes ownership, so we need to take a ref beforehand */
+  gst_object_ref (preroll);
+  gst_object_ref (selector);
   if (type == GST_STREAM_TYPE_TEXT && play_base_bin->subtitle) {
     group->type[type - 1].bin = GST_BIN (play_base_bin->subtitle);
     gst_bin_add (GST_BIN (play_base_bin->subtitle), selector);
@@ -641,6 +648,9 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   gst_element_set_state (preroll,
       GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
       GST_STATE_PLAYING : GST_STATE_PAUSED);
+
+  gst_object_unref (preroll);
+  gst_object_unref (selector);
 }
 
 static void
@@ -661,6 +671,7 @@ remove_groups (GstPlayBaseBin * play_base_bin)
 
   /* clear subs */
   if (play_base_bin->subtitle) {
+    gst_element_set_state (play_base_bin->subtitle, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (play_base_bin), play_base_bin->subtitle);
     play_base_bin->subtitle = NULL;
   }
@@ -1142,6 +1153,7 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
   /* remove the old decoder now, if any */
   if (play_base_bin->decoder) {
     GST_DEBUG_OBJECT (play_base_bin, "removing old decoder element");
+    gst_element_set_state (play_base_bin->decoder, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (play_base_bin), play_base_bin->decoder);
     play_base_bin->decoder = NULL;
   }
