@@ -72,6 +72,7 @@ gst_auto_video_sink_reset (GstAutoVideoSink * sink)
 
   /* fakesink placeholder */
   if (sink->kid) {
+    gst_element_set_state (sink->kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (sink), sink->kid);
   }
   sink->kid = gst_element_factory_make ("fakesink", "tempsink");
@@ -145,12 +146,21 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
 
     GST_DEBUG_OBJECT (sink, "Trying %s", GST_PLUGIN_FEATURE (f)->name);
     if ((el = gst_element_factory_create (f, "actual-sink"))) {
+      GstStateChangeReturn ret;
+
       GST_DEBUG_OBJECT (sink, "Changing state to READY");
-      if (gst_element_set_state (el,
-              GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS) {
+
+      ret = gst_element_set_state (el, GST_STATE_READY);
+      if (ret == GST_STATE_CHANGE_SUCCESS) {
         GST_DEBUG_OBJECT (sink, "success");
         return el;
       }
+
+      GST_WARNING_OBJECT (sink, "Couldn't set READY: %d", ret);
+      ret = gst_element_set_state (el, GST_STATE_NULL);
+      if (ret != GST_STATE_CHANGE_SUCCESS)
+        GST_WARNING_OBJECT (sink,
+            "Couldn't set element to NULL prior to disposal.");
 
       gst_object_unref (GST_OBJECT (el));
     }
@@ -166,6 +176,7 @@ gst_auto_video_sink_detect (GstAutoVideoSink * sink)
   GstPad *targetpad;
 
   if (sink->kid) {
+    gst_element_set_state (sink->kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (sink), sink->kid);
     sink->kid = NULL;
   }

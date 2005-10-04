@@ -72,6 +72,7 @@ gst_auto_audio_sink_reset (GstAutoAudioSink * sink)
 
   /* fakesink placeholder */
   if (sink->kid) {
+    gst_element_set_state (sink->kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (sink), sink->kid);
   }
   sink->kid = gst_element_factory_make ("fakesink", "tempsink");
@@ -179,6 +180,8 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
             GST_LOG ("This worked!");
             choice = el;
             goto done;
+          } else {
+            gst_element_set_state (el, GST_STATE_NULL);
           }
         }
 
@@ -205,6 +208,7 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
   GstPad *targetpad;
 
   if (sink->kid) {
+    gst_element_set_state (sink->kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (sink), sink->kid);
     sink->kid = NULL;
   }
