@@ -61,7 +61,6 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 
 #include "gst_private.h"
 #include "gstinfo.h"
