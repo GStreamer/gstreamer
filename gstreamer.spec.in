@@ -181,7 +181,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/controller/gstcontroller.h
 
 %{_includedir}/gstreamer-%{majorminor}/gst/base
-%{_includedir}/gstreamer-%{majorminor}/gst/check
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
 
 %{_libdir}/libgstreamer-%{majorminor}.so
@@ -189,14 +188,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstbase-%{majorminor}.so
 %{_libdir}/libgstcontroller-%{majorminor}.so
 
-%{_libdir}/libgstcheck-%{majorminor}.so*
 
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-base-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-dataprotocol-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-controller-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-check-%{majorminor}.pc
 
 %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
 %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
