@@ -47,7 +47,7 @@ gobject.type_register(SinkBin)
         
 class PipeTest(TestCase):
     def setUp(self):
-        self.gctrack()
+        TestCase.setUp(self)
         self.pipeline = gst.Pipeline()
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
         self.assertEquals(sys.getrefcount(self.pipeline), 3)
@@ -96,9 +96,9 @@ class PipeTest(TestCase):
         del self.sink
         self.gccollect()
 
-        self.gcverify()
+        TestCase.tearDown(self)
         
-    def test(self):
+    def testBinState(self):
         self.pipeline.set_state_async(gst.STATE_PLAYING)
         while True:
             (ret, cur, pen) = self.pipeline.get_state(timeout=None)
@@ -110,8 +110,6 @@ class PipeTest(TestCase):
             (ret, cur, pen) = self.pipeline.get_state(timeout=None)
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_NULL:
                 break
-        
-        pass
 
 if __name__ == "__main__":
     unittest.main()

@@ -152,11 +152,15 @@ class TestCase(unittest.TestCase):
         """
         Override me by chaining up to me at the start of your setUp.
         """
+        gst.debug('%s.%s' % (self.__class__.__name__, 
+            self.__testMethodName))
         self.gctrack()
 
     def tearDown(self):
         """
         Override me by chaining up to me at the end of your tearDown.
         """
+        gst.debug('%s.%s' % (self.__class__.__name__, 
+            self.__testMethodName))
         self.gccollect()
         self.gcverify()

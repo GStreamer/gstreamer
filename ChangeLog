@@ -1,3 +1,12 @@
+2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.override:
+	  accurate line numbers for logging
+	* testsuite/common.py:
+	  log when TestCase.setUp() and .tearDown() get called
+	* testsuite/test_ghostpad.py:
+	  rework
+
 2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/Makefile.am:

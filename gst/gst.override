@@ -240,7 +240,7 @@ pygst_debug_log (PyObject *pyobject, PyObject *string, GstDebugLevel level,
     frame = PyEval_GetFrame();
     function = PyString_AsString(frame->f_code->co_name);
     filename = g_path_get_basename(PyString_AsString(frame->f_code->co_filename));
-    lineno = frame->f_code->co_firstlineno;
+    lineno = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
     /* gst_debug_log : category, level, file, function, line, object, format, va_list */
     if (isgstobject)
       object = G_OBJECT (pygobject_get (pyobject));
