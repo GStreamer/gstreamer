@@ -254,24 +254,20 @@ handle_chain_function_exception (GValue *ret, guint n, const GValue *params)
 }
 
 static GstFlowReturn
-call_chain_function(GstPad *pad, GstBuffer *data)
+call_chain_function(GstPad *pad, GstBuffer *buffer)
 {
     GClosure *closure;
     GValue ret = { 0, };
     GValue args[2] = { { 0, }, { 0, } };
     GstFlowReturn    flow;
     
-    g_value_init (&ret, G_TYPE_ENUM);
+    g_value_init (&ret, GST_TYPE_FLOW_RETURN);
     g_value_set_enum (&ret, GST_FLOW_ERROR);
     g_value_init (&args[0], GST_TYPE_PAD);
-    if (GST_IS_BUFFER (data)) {
-      g_value_init (&args[1], GST_TYPE_BUFFER);
-    } else if (GST_IS_EVENT (data)) {
-      g_value_init (&args[1], GST_TYPE_EVENT);
-    }
+    g_value_init (&args[1], GST_TYPE_BUFFER);
 
     g_value_set_object (&args[0], pad);
-    g_value_take_boxed (&args[1], data);
+    gst_value_set_mini_object (&args[1], GST_MINI_OBJECT (buffer));
     closure = pad_private(pad)->chain_function;
     
     g_closure_invoke (closure, &ret, 2, args, NULL);
@@ -281,6 +277,9 @@ call_chain_function(GstPad *pad, GstBuffer *data)
     g_value_unset (&args[0]);
     g_value_unset (&args[1]);
 
+    /* a chain function takes over the ref of the buffer handed to it;
+     * so we should unref after calling the pythonic chain func */
+    gst_buffer_unref (buffer);
     return flow;
 }
 
@@ -291,6 +290,7 @@ _wrap_gst_pad_set_chain_function(PyGObject *self,
 {
     SET_PAD_CLOSURE (self, args, kwargs, chain_function)
 }
+
 %%
 override gst_pad_set_event_function kwargs
 

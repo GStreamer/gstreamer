@@ -123,11 +123,18 @@ _wrap_gst_object_tp_dealloc(PyGObject *self)
 
     /* if we're a GstObject, we want to monkeypatch the GObject.tp_dealloc's
      * g_object_unref and "replace" it with a gst_object_unref */
-    if (! GST_IS_OBJECT (obj))
+    if (GST_IS_OBJECT (obj)) {
+        GST_DEBUG_OBJECT (obj, "gst.Object.tp_dealloc, go rc %d, gsto rc %d",
+            obj->ref_count, GST_OBJECT_REFCOUNT_VALUE (obj));
+	if (GST_OBJECT_REFCOUNT_VALUE (obj) == 0) {
+            /* already being finalized, can't resurrect object */
+            obj = NULL;
+            self->obj = NULL;
+        } else {
+          g_object_ref (obj);
+        }
+    } else {
         obj = NULL;
-    else {
-        GST_DEBUG_OBJECT (obj, "gst.Object.tp_dealloc");
-        g_object_ref (obj);
     }
 
     PyGObject_Type.tp_dealloc((PyObject *) self);

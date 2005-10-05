@@ -145,6 +145,7 @@ class TestCase(unittest.TestCase):
             new.extend([o for o in objs if o not in self._tracked[c]])
 
         self.failIf(new, new)
+        #self.failIf(new, ["%r:%d" % (type(o), id(o)) for o in new])
         del self._tracked
 
     def setUp(self):

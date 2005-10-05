@@ -39,6 +39,109 @@ class PadTemplateTest(TestCase):
         self.assertEquals(sys.getrefcount(template), 3)
         #self.assertEquals(template.__gstrefcount__, 1)
 
+class PadPushUnlinkedTest(TestCase):
+    def setUp(self):
+        self.gctrack()
+        self.src = gst.Pad("src", gst.PAD_SRC)
+        self.sink = gst.Pad("sink", gst.PAD_SINK)
+
+    def tearDown(self):
+        self.assertEquals(sys.getrefcount(self.src), 3)
+        self.assertEquals(self.src.__gstrefcount__, 1)
+        del self.src
+        self.assertEquals(sys.getrefcount(self.sink), 3)
+        self.assertEquals(self.sink.__gstrefcount__, 1)
+        del self.sink
+        self.gccollect()
+        self.gcverify()
+
+    def testNoProbe(self):
+        self.buffer = gst.Buffer()
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.assertEquals(self.src.push(self.buffer), gst.FLOW_NOT_LINKED)
+        # pushing it takes a ref in the python wrapper to keep buffer
+        # alive afterwards; but the core unrefs the ref it receives
+        self.assertEquals(self.buffer.__grefcount__, 1)
+
+    def testFalseProbe(self):
+        id = self.src.add_buffer_probe(self._probe_handler, False)
+        self.buffer = gst.Buffer()
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.assertEquals(self.src.push(self.buffer), gst.FLOW_OK)
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.src.remove_buffer_probe(id)
+
+    def testTrueProbe(self):
+        id = self.src.add_buffer_probe(self._probe_handler, True)
+        self.buffer = gst.Buffer()
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.assertEquals(self.src.push(self.buffer), gst.FLOW_NOT_LINKED)
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.src.remove_buffer_probe(id)
+
+    def _probe_handler(self, pad, buffer, ret):
+        return ret
+
+class PadPushLinkedTest(TestCase):
+    def setUp(self):
+        self.gctrack()
+        self.src = gst.Pad("src", gst.PAD_SRC)
+        self.sink = gst.Pad("sink", gst.PAD_SINK)
+        caps = gst.caps_from_string("foo/bar")
+        self.src.set_caps(caps)
+        self.sink.set_caps(caps)
+        self.sink.set_chain_function(self._chain_func)
+        self.src.link(self.sink)
+        self.buffers = []
+
+    def tearDown(self):
+        self.assertEquals(sys.getrefcount(self.src), 3)
+        self.assertEquals(self.src.__gstrefcount__, 1)
+        del self.src
+        self.assertEquals(sys.getrefcount(self.sink), 3)
+        self.assertEquals(self.sink.__gstrefcount__, 1)
+        del self.sink
+        self.gccollect()
+        self.gcverify()
+
+    def _chain_func(self, pad, buffer):
+        self.buffers.append(buffer)
+
+        return gst.FLOW_OK
+
+    def testNoProbe(self):
+        self.buffer = gst.Buffer()
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        gst.debug('pushing buffer on linked pad, no probe')
+        self.assertEquals(self.src.push(self.buffer), gst.FLOW_OK)
+        gst.debug('pushed buffer on linked pad, no probe')
+        # pushing it takes a ref in the python wrapper to keep buffer
+        # alive afterwards; fakesink will get the buffer
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.assertEquals(len(self.buffers), 1)
+
+    def testFalseProbe(self):
+        id = self.src.add_buffer_probe(self._probe_handler, False)
+        self.buffer = gst.Buffer()
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.assertEquals(self.src.push(self.buffer), gst.FLOW_OK)
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.src.remove_buffer_probe(id)
+        self.assertEquals(len(self.buffers), 0)
+
+    def testTrueProbe(self):
+        id = self.src.add_buffer_probe(self._probe_handler, True)
+        self.buffer = gst.Buffer()
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.assertEquals(self.src.push(self.buffer), gst.FLOW_OK)
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.src.remove_buffer_probe(id)
+        self.assertEquals(len(self.buffers), 1)
+
+    def _probe_handler(self, pad, buffer, ret):
+        return ret
+        
+ 
 class PadTest(TestCase):
     def setUp(self):
         self.gctrack()
@@ -86,7 +189,7 @@ class PadPipelineTest(TestCase):
 #        assert self.srcpad.query(gst.QUERY_POSITION, gst.FORMAT_TIME) == 0
 
 
-class PadProbeTest(TestCase):
+class PadProbePipeTest(TestCase):
     def setUp(self):
         self.gctrack()
         self.pipeline = gst.Pipeline()
@@ -101,6 +204,8 @@ class PadProbeTest(TestCase):
         self.pipeline.add(self.fakesrc, self.fakesink)
         self.assertEquals(self.fakesrc.__gstrefcount__, 2) # added
         self.assertEquals(sys.getrefcount(self.fakesrc), 3)
+        self.assertEquals(self.fakesink.__gstrefcount__, 2) # added
+        self.assertEquals(sys.getrefcount(self.fakesink), 3)
 
         self.fakesrc.link(self.fakesink)
 
@@ -108,48 +213,64 @@ class PadProbeTest(TestCase):
         self.assertEquals(sys.getrefcount(self.pipeline), 3)
         self.assertEquals(self.fakesrc.__gstrefcount__, 2)
         self.assertEquals(sys.getrefcount(self.fakesrc), 3)
+        self.assertEquals(self.fakesink.__gstrefcount__, 2)
+        self.assertEquals(sys.getrefcount(self.fakesink), 3)
 
     def tearDown(self):
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
         self.assertEquals(sys.getrefcount(self.pipeline), 3)
         self.assertEquals(self.fakesrc.__gstrefcount__, 2)
         self.assertEquals(sys.getrefcount(self.fakesrc), 3)
+        self.assertEquals(self.fakesink.__gstrefcount__, 2)
+        self.assertEquals(sys.getrefcount(self.fakesink), 3)
         gst.debug('deleting pipeline')
         del self.pipeline
         self.gccollect()
 
         self.assertEquals(self.fakesrc.__gstrefcount__, 1) # parent gone
+        self.assertEquals(self.fakesink.__gstrefcount__, 1) # parent gone
         self.assertEquals(sys.getrefcount(self.fakesrc), 3)
+        self.assertEquals(sys.getrefcount(self.fakesink), 3)
         gst.debug('deleting fakesrc')
         del self.fakesrc
         self.gccollect()
+        gst.debug('deleting fakesink')
         del self.fakesink
         self.gccollect()
 
         self.gcverify()
         
-    def testFakeSrcProbeOnce(self):
+    def testFakeSrcProbeOnceKeep(self):
         self.fakesrc.set_property('num-buffers', 1)
+
+        self.fakesink.set_property('signal-handoffs', True)
+        self.fakesink.connect('handoff', self._handoff_callback_fakesink)
 
         pad = self.fakesrc.get_pad('src')
         id = pad.add_buffer_probe(self._probe_callback_fakesrc)
         self._got_fakesrc_buffer = 0
+        self._got_fakesink_buffer = 0
         self.pipeline.set_state(gst.STATE_PLAYING)
         while not self._got_fakesrc_buffer:
             pass
+        while not self._got_fakesink_buffer:
+            pass
+
+        self.assertEquals(self._got_fakesink_buffer, 1)
+        pad.remove_buffer_probe(id)
 
         self.pipeline.set_state(gst.STATE_NULL)
-        pad.remove_buffer_probe (id)
 
     def testFakeSrcProbeMany(self):
         self.fakesrc.set_property('num-buffers', 1000)
 
         pad = self.fakesrc.get_pad('src')
-        pad.add_buffer_probe(self._probe_callback_fakesrc)
+        id = pad.add_buffer_probe(self._probe_callback_fakesrc)
         self._got_fakesrc_buffer = 0
         self.pipeline.set_state(gst.STATE_PLAYING)
         while not self._got_fakesrc_buffer == 1000:
             pass
+        pad.remove_buffer_probe(id)
 
         self.pipeline.set_state(gst.STATE_NULL)
 
@@ -157,6 +278,13 @@ class PadProbeTest(TestCase):
         self.failUnless(isinstance(pad, gst.Pad))
         self.failUnless(isinstance(buffer, gst.Buffer))
         self._got_fakesrc_buffer += 1
+        return True
+
+    def _handoff_callback_fakesink(self, sink, buffer, pad):
+        self.failUnless(isinstance(buffer, gst.Buffer))
+        self.failUnless(isinstance(pad, gst.Pad))
+        self._got_fakesink_buffer += 1
+        return True
 
     def testRemovingProbe(self):
         self.fakesrc.set_property('num-buffers', 10)
