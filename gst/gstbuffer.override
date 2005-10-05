@@ -102,7 +102,7 @@ _wrap_gst_buffer_tp_repr (PyGstMiniObject *self)
     PyObject *ret;
 
     g_assert (self);
-    buf = pyg_boxed_get (self, GstBuffer);
+    buf = GST_BUFFER(self->obj);
     g_assert (buf);
 
     size = GST_BUFFER_SIZE (buf);

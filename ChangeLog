@@ -1,3 +1,11 @@
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstbuffer.override:
+	  a buffer is not a boxed
+	* gst/gstobject.override:
+	  use Py_VISIT for cleaner and more pythonic code
+	  do not visit GstObjects that still have a parent
+
 2005-10-05  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/argtypes.py:
