@@ -28,11 +28,16 @@ try:
 except:
    pass
 
-import pygtk
-pygtk.require('2.0')
+import sys
+
+# we always require 2.0 of pygtk; so if pygtk is not imported anywhere
+# yet, we import pygtk here and .require
+if not sys.modules.has_key('pygtk'):
+    import pygtk
+    pygtk.require('2.0')
 
 try:
-   import sys, DLFCN
+   import DLFCN
    sys.setdlopenflags(DLFCN.RTLD_LAZY | DLFCN.RTLD_GLOBAL)
    del sys, DLFCN
 except ImportError:

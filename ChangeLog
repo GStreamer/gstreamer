@@ -1,6 +1,11 @@
 2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/__init__.py:
+	  only pygtk.require if pygtk wasn't imported yet
+
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/__init__.py:
 	  don't import gobject
 	  revert ltihooks change from Johan - if it throws an exception
 	  there is a bug and I want to fix it
