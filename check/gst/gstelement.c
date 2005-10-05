@@ -94,8 +94,7 @@ GST_START_TEST (test_error_no_bus)
 
 GST_END_TEST;
 
-/* link and run two elements without putting them in a 
- * pipeline */
+/* link and run two elements without putting them in a pipeline */
 GST_START_TEST (test_link)
 {
   GstElement *src, *sink;
@@ -131,6 +130,22 @@ GST_START_TEST (test_link)
 
 GST_END_TEST;
 
+/* linking two elements without pads should fail */
+GST_START_TEST (test_link_no_pads)
+{
+  GstElement *src, *sink;
+
+  src = gst_bin_new ("src");
+  sink = gst_bin_new ("sink");
+
+  fail_if (gst_element_link (src, sink));
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_element_suite (void)
 {
@@ -142,6 +157,7 @@ gst_element_suite (void)
   tcase_add_test (tc_chain, test_add_pad_unref_element);
   tcase_add_test (tc_chain, test_error_no_bus);
   tcase_add_test (tc_chain, test_link);
+  tcase_add_test (tc_chain, test_link_no_pads);
 
   return s;
 }

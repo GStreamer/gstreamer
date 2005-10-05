@@ -1024,7 +1024,8 @@ pad_link_maybe_ghosting (GstPad * src, GstPad * sink)
  * @src: a #GstElement containing the source pad.
  * @srcpadname: the name of the #GstPad in source element or NULL for any pad.
  * @dest: the #GstElement containing the destination pad.
- * @destpadname: the name of the #GstPad in destination element or NULL for any pad.
+ * @destpadname: the name of the #GstPad in destination element,
+ * or NULL for any pad.
  *
  * Links the two named pads of the source and destination elements.
  * Side effect is that if one of the pads has no parent, it becomes a
@@ -1054,8 +1055,9 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
       srcpadname ? srcpadname : "(any)", GST_ELEMENT_NAME (dest),
       destpadname ? destpadname : "(any)");
 
-  /* now get the pads we're trying to link and a list of all remaining pads */
+  /* get a src pad */
   if (srcpadname) {
+    /* name specified, look it up */
     srcpad = gst_element_get_pad (src, srcpadname);
     if (!srcpad) {
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no pad %s:%s",
@@ -1077,6 +1079,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     }
     srcpads = NULL;
   } else {
+    /* no name given, get the first available pad */
     GST_LOCK (src);
     srcpads = GST_ELEMENT_PADS (src);
     srcpad = srcpads ? GST_PAD_CAST (srcpads->data) : NULL;
@@ -1084,7 +1087,10 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
       gst_object_ref (srcpad);
     GST_UNLOCK (src);
   }
+
+  /* get a destination pad */
   if (destpadname) {
+    /* name specified, look it up */
     destpad = gst_element_get_pad (dest, destpadname);
     if (!destpad) {
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no pad %s:%s",
@@ -1106,6 +1112,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     }
     destpads = NULL;
   } else {
+    /* no name given, get the first available pad */
     GST_LOCK (dest);
     destpads = GST_ELEMENT_PADS (dest);
     destpad = destpads ? GST_PAD_CAST (destpads->data) : NULL;
@@ -1125,6 +1132,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
 
     return result;
   }
+
   if (srcpad) {
     /* loop through the allowed pads in the source, trying to find a
      * compatible destination pad */
@@ -1172,15 +1180,18 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
   if (srcpadname) {
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s:%s to %s",
         GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (dest));
-    gst_object_unref (srcpad);
+    if (srcpad)
+      gst_object_unref (srcpad);
+    srcpad = NULL;
     if (destpad)
       gst_object_unref (destpad);
-    return FALSE;
+    destpad = NULL;
   } else {
     if (srcpad)
       gst_object_unref (srcpad);
     srcpad = NULL;
   }
+
   if (destpad) {
     /* loop through the existing pads in the destination */
     do {
@@ -1213,6 +1224,7 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
       }
     } while (destpads);
   }
+
   if (destpadname) {
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s to %s:%s",
         GST_ELEMENT_NAME (src), GST_DEBUG_PAD_NAME (destpad));
@@ -1221,10 +1233,11 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
       gst_object_unref (srcpad);
     return FALSE;
   } else {
-    gst_object_unref (destpad);
     if (srcpad)
       gst_object_unref (srcpad);
     srcpad = NULL;
+    if (destpad)
+      gst_object_unref (destpad);
     destpad = NULL;
   }
 

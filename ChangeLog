@@ -1,5 +1,12 @@
 2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstutils.c: (gst_element_link_pads):
+	  fix a bug in the case where neither element has a pad
+	* check/gst/gstelement.c: (GST_START_TEST), (gst_element_suite):
+	  add a test for that case
+
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstpad.c: (gst_pad_push), (gst_pad_push_event):
 	  emit have-data before checking for peers.  This allows
 	  for probe handlers to connect elements.  This helps autopluggers.
