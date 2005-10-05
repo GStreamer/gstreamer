@@ -1701,7 +1701,7 @@ gst_element_get_state (GstElement * element,
  * @element: a #GstElement to abort the state of.
  *
  * Abort the state change of the element. This function is used
- * by elements that do asynchronous state changes and find out 
+ * by elements that do asynchronous state changes and find out
  * something is wrong.
  *
  * This function should be called with the STATE_LOCK held.
@@ -1845,7 +1845,6 @@ gst_element_set_state (GstElement * element, GstState state)
   GST_TIME_TO_TIMEVAL (0, tv);
   ret = gst_element_get_state (element, &current, &pending, &tv);
 
-  /* get the element state lock */
   GST_STATE_LOCK (element);
   /* this is the state we should go to */
   GST_STATE_FINAL (element) = state;
@@ -1868,7 +1867,7 @@ gst_element_set_state (GstElement * element, GstState state)
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  /* We always perform at least one state change, even if the 
+  /* We always perform at least one state change, even if the
    * current state is equal to the required state. This is needed
    * for bins that sync their children. */
   do {

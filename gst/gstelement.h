@@ -263,6 +263,15 @@ G_STMT_START {								\
 
 /* the state change mutexes and conds */
 #define GST_STATE_GET_LOCK(elem)               (GST_ELEMENT_CAST(elem)->state_lock)
+
+/**
+ * GST_STATE_LOCK:
+ * @elem:   the #GstElement to take the state lock on
+ *
+ * Takes the state lock on the element.
+ * This function is used by the core.  It is taken while getting or setting
+ * the state, during state changes, and while finalizing.
+ */
 #define GST_STATE_LOCK(elem)                   g_mutex_lock(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_TRYLOCK(elem)                g_mutex_trylock(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_UNLOCK(elem)                 g_mutex_unlock(GST_STATE_GET_LOCK(elem))
@@ -284,9 +293,12 @@ struct _GstElement
   guint8                current_state;
   guint8                pending_state;
   guint8                final_state;
-  gboolean              state_error; /* flag is set when the element has an error in the last state
-                                        change. it is cleared when doing another state change. */
-  gboolean		no_preroll;  /* flag is set when the element cannot preroll */
+  gboolean              state_error; /* Flag is set when the element has an
+                                      * error in the last state change.
+                                      * It is cleared when doing another
+                                      * state change. */
+  gboolean		no_preroll;  /* Flag is set when the element cannot
+                                      * preroll */
   /*< public >*/ /* with LOCK */
   GstBus	       *bus;
 

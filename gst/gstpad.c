@@ -501,7 +501,8 @@ post_activate_switch (GstPad * pad, gboolean new_active)
  * @pad: the #GstPad to activate or deactivate.
  * @active: whether or not the pad should be active.
  *
- * Activates or deactivates the given pad. Must be called with the %GST_STATE_LOCK.
+ * Activates or deactivates the given pad.
+ * Must be called with the parent element's #GST_STATE_LOCK held.
  * Normally called from within core state change functions.
  *
  * If @active, makes sure the pad is active. If it is already active, either in
@@ -512,9 +513,9 @@ post_activate_switch (GstPad * pad, gboolean new_active)
  * gst_pad_activate_push() or gst_pad_activate_pull(), as appropriate, with a
  * FALSE argument.
  *
- * Returns: TRUE if the operation was successfull.
+ * Returns: #TRUE if the operation was successful.
  *
- * MT safe. Must be called with %GST_STATE_LOCK.
+ * MT safe. Must be called with parent element's #GST_STATE_LOCK held.
  */
 gboolean
 gst_pad_set_active (GstPad * pad, gboolean active)
