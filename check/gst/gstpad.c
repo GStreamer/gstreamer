@@ -227,6 +227,157 @@ GST_START_TEST (test_name_is_valid)
 
 GST_END_TEST;
 
+static gboolean
+_probe_handler (GstPad * pad, GstBuffer * buffer, gpointer userdata)
+{
+  gint ret = GPOINTER_TO_INT (userdata);
+
+  if (ret == 1)
+    return TRUE;
+  return FALSE;
+}
+
+GST_START_TEST (test_push_unlinked)
+{
+  GstPad *src;
+  GstCaps *caps;
+  GstBuffer *buffer;
+  gulong id;
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  fail_if (src == NULL);
+  caps = gst_pad_get_allowed_caps (src);
+  fail_unless (caps == NULL);
+
+  caps = gst_caps_from_string ("foo/bar");
+
+  gst_pad_set_caps (src, caps);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
+  /* pushing on an unlinked pad will drop the buffer */
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_NOT_LINKED);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_unref (buffer);
+
+  /* adding a probe that returns FALSE will drop the buffer without trying
+   * to chain */
+  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
+      GINT_TO_POINTER (0));
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_unref (buffer);
+  gst_pad_remove_buffer_probe (src, id);
+
+  /* adding a probe that returns TRUE will still chain the buffer,
+   * and hence drop because pad is unlinked */
+  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
+      GINT_TO_POINTER (1));
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_NOT_LINKED);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_unref (buffer);
+  gst_pad_remove_buffer_probe (src, id);
+
+
+  /* cleanup */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+
+  gst_object_unref (src);
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_push_linked)
+{
+  GstPad *src, *sink;
+  GstPadLinkReturn plr;
+  GstCaps *caps;
+  GstBuffer *buffer;
+  ulong id;
+
+  /* setup */
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
+  fail_if (sink == NULL);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+
+  src = gst_pad_new ("src", GST_PAD_SRC);
+  fail_if (src == NULL);
+
+  caps = gst_caps_from_string ("foo/bar");
+  /* one for me */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+
+  gst_pad_set_caps (src, caps);
+  gst_pad_set_caps (sink, caps);
+  /* one for me and one for each set_caps */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+
+  plr = gst_pad_link (src, sink);
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+
+  /* test */
+  /* pushing on a linked pad will drop the ref to the buffer */
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 2);
+  gst_buffer_unref (buffer);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  buffer = GST_BUFFER (buffers->data);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  g_list_free (buffers);
+  buffers = NULL;
+
+  /* adding a probe that returns FALSE will drop the buffer without trying
+   * to chain */
+  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
+      GINT_TO_POINTER (0));
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_unref (buffer);
+  gst_pad_remove_buffer_probe (src, id);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* adding a probe that returns TRUE will still chain the buffer */
+  id = gst_pad_add_buffer_probe (src, (GCallback) _probe_handler,
+      GINT_TO_POINTER (1));
+  buffer = gst_buffer_new ();
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
+  gst_pad_remove_buffer_probe (src, id);
+
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 2);
+  gst_buffer_unref (buffer);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  buffer = GST_BUFFER (buffers->data);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  g_list_free (buffers);
+  buffers = NULL;
+
+  /* teardown */
+  gst_pad_unlink (src, sink);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 
 Suite *
 gst_pad_suite (void)
@@ -243,6 +394,8 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_get_allowed_caps);
   tcase_add_test (tc_chain, test_link_unlink_threaded);
   tcase_add_test (tc_chain, test_name_is_valid);
+  tcase_add_test (tc_chain, test_push_unlinked);
+  tcase_add_test (tc_chain, test_push_linked);
   return s;
 }
 

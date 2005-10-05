@@ -1,3 +1,12 @@
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstpad.c: (gst_pad_push), (gst_pad_push_event):
+	  emit have-data before checking for peers.  This allows
+	  for probe handlers to connect elements.  This helps autopluggers.
+	* check/gst/gstpad.c: (GST_START_TEST), (_probe_handler),
+	(gst_pad_suite):
+	  add six checks, linked/unlinked with no/true/false probe
+
 2005-10-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfakesink.c: (gst_fake_sink_get_property),

@@ -766,13 +766,16 @@ gst_pad_is_active (GstPad * pad)
 /**
  * gst_pad_set_blocked_async:
  * @pad: the #GstPad to block or unblock
- * @blocked: boolean indicating we should block or unblock
+ * @blocked: boolean indicating whether the pad should be blocked or unblocked
  * @callback: #GstPadBlockCallback that will be called when the
- *            operation succeeds.
+ *            operation succeeds
  * @user_data: user data passed to the callback
  *
  * Blocks or unblocks the dataflow on a pad. The provided callback
- * is called when the operation succeeds. This can take a while as
+ * is called when the operation succeeds; this happens right before the next
+ * attempt at pushing a buffer on the pad.
+ *
+ * This can take a while as
  * the pad can only become blocked when real dataflow is happening.
  * When the pipeline is stalled, for example in PAUSED, this can
  * take an indeterminate amount of time.
@@ -781,7 +784,7 @@ gst_pad_is_active (GstPad * pad)
  * reasons stated above.
  *
  * Returns: TRUE if the pad could be blocked. This function can fail
- *   if wrong parameters were passed or the pad was already in the 
+ *   if wrong parameters were passed or the pad was already in the
  *   requested state.
  *
  * MT safe.
@@ -3075,7 +3078,8 @@ no_function:
  * @pad: a source #GstPad.
  * @buffer: the #GstBuffer to push.
  *
- * Pushes a buffer to the peer of @pad. @pad must be linked.
+ * Pushes a buffer to the peer of @pad.
+ * buffer probes will be triggered before the buffer gets pushed.
  *
  * Returns: a #GstFlowReturn from the peer pad.
  *
@@ -3087,6 +3091,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   GstPad *peer;
   GstFlowReturn ret;
   gboolean emit_signal;
+  gboolean signal_ret = TRUE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
@@ -3094,23 +3099,35 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   GST_LOCK (pad);
+
+  /* FIXME: this check can go away; pad_set_blocked could be implemented with
+   * probes completely */
   while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
     handle_pad_block (pad);
 
-  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
-    goto not_linked;
-
-  /* we emit signals on the pad areg, the peer will have a chance to
+  /* we emit signals on the pad arg, the peer will have a chance to
    * emit in the _chain() function */
   emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
-
-  gst_object_ref (peer);
   GST_UNLOCK (pad);
 
   if (G_UNLIKELY (emit_signal)) {
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer)))
-      goto dropping;
+    signal_ret = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer));
   }
+
+  /* if the signal handler returned FALSE, it means we should just drop the
+   * buffer */
+  if (signal_ret == FALSE) {
+    gst_buffer_unref (buffer);
+    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
+    return GST_FLOW_OK;
+  }
+
+  GST_LOCK (pad);
+
+  if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
+    goto not_linked;
+  gst_object_ref (peer);
+  GST_UNLOCK (pad);
 
   ret = gst_pad_chain (peer, buffer);
 
@@ -3126,13 +3143,6 @@ not_linked:
         "pushing, but it was not linked");
     GST_UNLOCK (pad);
     return GST_FLOW_NOT_LINKED;
-  }
-dropping:
-  {
-    gst_buffer_unref (buffer);
-    gst_object_unref (peer);
-    GST_DEBUG ("Dropping buffer due to FALSE probe return");
-    return GST_FLOW_OK;
   }
 }
 
@@ -3374,24 +3384,30 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   GstPad *peerpad;
   gboolean result;
   gboolean emit_signal;
+  gboolean signal_ret = TRUE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
+
+  emit_signal = GST_PAD_DO_EVENT_SIGNALS (pad) > 0;
+
+  if (G_UNLIKELY (emit_signal)) {
+    signal_ret = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event));
+  }
+
+  if (signal_ret == FALSE) {
+    GST_DEBUG_OBJECT (pad, "Dropping event after FALSE probe return");
+    gst_event_unref (event);
+    return FALSE;
+  }
 
   GST_LOCK (pad);
   peerpad = GST_PAD_PEER (pad);
   if (peerpad == NULL)
     goto not_linked;
 
-  emit_signal = GST_PAD_DO_EVENT_SIGNALS (pad) > 0;
-
   gst_object_ref (peerpad);
   GST_UNLOCK (pad);
-
-  if (G_UNLIKELY (emit_signal)) {
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event)))
-      goto dropping;
-  }
 
   result = gst_pad_send_event (peerpad, event);
 
@@ -3404,13 +3420,6 @@ not_linked:
   {
     gst_event_unref (event);
     GST_UNLOCK (pad);
-    return FALSE;
-  }
-dropping:
-  {
-    GST_DEBUG ("Dropping event after FALSE probe return");
-    gst_object_unref (peerpad);
-    gst_event_unref (event);
     return FALSE;
   }
 }
