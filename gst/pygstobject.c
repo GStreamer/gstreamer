@@ -33,6 +33,9 @@
 #include <gst/gst.h>
 #include <gst/gstversion.h>
 
+GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
+#define GST_CAT_DEFAULT pygst_debug
+
 /* we reuse the same string for our quark so we get the same qdata;
  * it might be worth it to use our own to shake out all instances
  * were GObject-only calls are being used where we should be using
@@ -104,7 +107,7 @@ pygstobject_new(GObject *obj)
 
         PyObject_GC_Track((PyObject *)self);
     }
-    GST_DEBUG_OBJECT (obj, "wrapped GstObject as PyObject %p", self);
+    GST_DEBUG_OBJECT (obj, "wrapped GstObject %p as PyObject %p", obj, self);
 
     return (PyObject *)self;
 }
@@ -114,7 +117,7 @@ void
 pygst_object_unref(GObject *obj)
 {
     if (GST_IS_OBJECT (obj)) {
-        GST_DEBUG_OBJECT (obj, "unreffing GstObject");
+        GST_DEBUG_OBJECT (obj, "unreffing GstObject %p", obj);
         gst_object_unref (obj);
     } else
         g_object_unref (obj);
