@@ -1,5 +1,11 @@
 2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/Makefile.am:
+	* testsuite/test_ghostpad.py:
+	  add new testsuite for ghost pad behaviour
+
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.defs:
 	  gst.Bin constructor can take no arguments
 	* testsuite/test_bin.py:
