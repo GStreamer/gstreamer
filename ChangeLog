@@ -1,3 +1,11 @@
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	  we have better ways of debugging caps
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_setcaps):
+	  ye gods.  get_template_caps doesn't return a ref, so when the
+	  pad was not linked, crashes would ensue.  Serves me right.
+
 2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

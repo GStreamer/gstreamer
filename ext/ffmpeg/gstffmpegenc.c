@@ -421,9 +421,13 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (ffmpegenc, "picking an output format ...");
   allowed_caps = gst_pad_get_allowed_caps (ffmpegenc->srcpad);
   if (!allowed_caps) {
-    GST_DEBUG_OBJECT (ffmpegenc, "... but no peer, no caps");
-    allowed_caps = gst_pad_get_pad_template_caps (ffmpegenc->srcpad);
+    GST_DEBUG_OBJECT (ffmpegenc, "... but no peer, using template caps");
+    /* we need to copy because get_allowed_caps returns a ref, and
+     * get_pad_template_caps doesn't */
+    allowed_caps = gst_caps_copy (
+        gst_pad_get_pad_template_caps (ffmpegenc->srcpad));
   }
+  GST_DEBUG_OBJECT (ffmpegenc, "chose caps %" GST_PTR_FORMAT, allowed_caps);
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, allowed_caps, ffmpegenc->context);
 
