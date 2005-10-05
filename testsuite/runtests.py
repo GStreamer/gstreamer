@@ -28,17 +28,21 @@ import unittest
 
 SKIP_FILES = ['common', 'runtests']
 
-def gettestnames():
-    dir = os.path.split(os.path.abspath(__file__))[0]
-    files = [os.path.basename(p) for p in glob.glob('%s/*.py' % dir)]
-    names = map(lambda x: x[:-3], files)
-    map(names.remove, SKIP_FILES)
+def gettestnames(which):
+    if not which:
+        dir = os.path.split(os.path.abspath(__file__))[0]
+        which = [os.path.basename(p) for p in glob.glob('%s/*.py' % dir)]
+    
+    names = map(lambda x: x[:-3], which)
+    for f in SKIP_FILES:
+        if f in names:
+            names.remove(f)
     return names
         
 suite = unittest.TestSuite()
 loader = unittest.TestLoader()
 
-for name in gettestnames():
+for name in gettestnames(sys.argv[1:]):
     suite.addTest(loader.loadTestsFromName(name))
     
 descriptions = 1
