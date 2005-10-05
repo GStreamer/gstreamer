@@ -30,8 +30,6 @@ except:
 
 import pygtk
 pygtk.require('2.0')
-import gobject
-del gobject
 
 try:
    import sys, DLFCN
@@ -88,6 +86,5 @@ if __ltihooks_used__:
     __ltihooks_used__ = False
     del ltihooks
     import sys
-    if 'ltihooks' in sys.modules:
-        del sys.modules['ltihooks']
+    del sys.modules['ltihooks']
 

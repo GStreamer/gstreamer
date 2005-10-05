@@ -1,3 +1,10 @@
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/__init__.py:
+	  don't import gobject
+	  revert ltihooks change from Johan - if it throws an exception
+	  there is a bug and I want to fix it
+
 2005-10-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
