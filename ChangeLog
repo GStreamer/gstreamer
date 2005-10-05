@@ -1,5 +1,11 @@
 2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/test_pad.py:
+	  add a test that shows we can link a pad in a buffer probe
+	  callback.  yay !
+
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstobject.override:
 	  don't try and unref objects that are already finalizing
 	* gst/gstpad.override:

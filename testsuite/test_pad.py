@@ -140,7 +140,51 @@ class PadPushLinkedTest(TestCase):
 
     def _probe_handler(self, pad, buffer, ret):
         return ret
-        
+
+# a test to show that we can link a pad from the probe handler
+
+class PadPushProbeLinkTest(TestCase):
+    def setUp(self):
+        self.gctrack()
+        self.src = gst.Pad("src", gst.PAD_SRC)
+        self.sink = gst.Pad("sink", gst.PAD_SINK)
+        caps = gst.caps_from_string("foo/bar")
+        self.src.set_caps(caps)
+        self.sink.set_caps(caps)
+        self.sink.set_chain_function(self._chain_func)
+        self.buffers = []
+
+    def tearDown(self):
+        self.assertEquals(sys.getrefcount(self.src), 3)
+        self.assertEquals(self.src.__gstrefcount__, 1)
+        del self.src
+        self.assertEquals(sys.getrefcount(self.sink), 3)
+        self.assertEquals(self.sink.__gstrefcount__, 1)
+        del self.sink
+        self.gccollect()
+        self.gcverify()
+
+    def _chain_func(self, pad, buffer):
+        self.buffers.append(buffer)
+
+        return gst.FLOW_OK
+
+    def testProbeLink(self):
+        id = self.src.add_buffer_probe(self._probe_handler)
+        self.buffer = gst.Buffer()
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        gst.debug('pushing buffer on linked pad, no probe')
+        self.assertEquals(self.src.push(self.buffer), gst.FLOW_OK)
+        gst.debug('pushed buffer on linked pad, no probe')
+        # pushing it takes a ref in the python wrapper to keep buffer
+        # alive afterwards; fakesink will get the buffer
+        self.assertEquals(self.buffer.__grefcount__, 1)
+        self.assertEquals(len(self.buffers), 1)
+
+    def _probe_handler(self, pad, buffer):
+        self.src.link(self.sink)
+        return True
+      
  
 class PadTest(TestCase):
     def setUp(self):
