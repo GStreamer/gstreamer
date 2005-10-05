@@ -27,22 +27,14 @@
 #include "config.h"
 #endif
 
-#include <gstnavseek.h>
+#include "gstnavseek.h"
 #include <string.h>
 #include <math.h>
-
-/* GstNavSeek signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
 
 enum
 {
   ARG_0,
   ARG_SEEKOFFSET
-      /* FILL ME */
 };
 
 GstStaticPadTemplate navseek_src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -55,49 +47,30 @@ GstStaticPadTemplate navseek_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static void gst_navseek_base_init (gpointer g_class);
-static void gst_navseek_class_init (gpointer g_class, gpointer class_data);
-static void gst_navseek_init (GTypeInstance * instance, gpointer g_class);
+static GstElementDetails navseek_details =
+GST_ELEMENT_DETAILS ("Seek based on left-right arrows",
+    "Filter/Video",
+    "Seek based on navigation keys left-right",
+    "Jan Schmidt <thaytan@mad.scientist.com>");
 
+static gboolean gst_navseek_event (GstBaseTransform * trans, GstEvent * event);
+static GstFlowReturn gst_navseek_transform_ip (GstBaseTransform * basetrans,
+    GstBuffer * buf);
 static gboolean gst_navseek_handle_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_navseek_stop (GstBaseTransform * trans);
+static gboolean gst_navseek_start (GstBaseTransform * trans);
+
 static void gst_navseek_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_navseek_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_navseek_chain (GstPad * pad, GstData * _data);
 
-static GType
-gst_navseek_get_type (void)
-{
-  static GType navseek_type = 0;
-
-  if (!navseek_type) {
-    static const GTypeInfo navseek_info = {
-      sizeof (GstNavSeekClass),
-      gst_navseek_base_init,
-      NULL,
-      gst_navseek_class_init,
-      NULL,
-      NULL,
-      sizeof (GstNavSeek),
-      0,
-      gst_navseek_init,
-    };
-
-    navseek_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstNavSeek", &navseek_info, 0);
-  }
-  return navseek_type;
-}
+GST_BOILERPLATE (GstNavSeek, gst_navseek, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM);
 
 static void
 gst_navseek_base_init (gpointer g_class)
 {
-  static GstElementDetails navseek_details =
-      GST_ELEMENT_DETAILS ("Seek based on left-right arrows",
-      "Filter/Video",
-      "Seek based on navigation keys left-right",
-      "Jan Schmidt <thaytan@mad.scientist.com>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
@@ -109,43 +82,36 @@ gst_navseek_base_init (gpointer g_class)
 }
 
 static void
-gst_navseek_class_init (gpointer g_class, gpointer class_data)
+gst_navseek_class_init (GstNavSeekClass * klass)
 {
+  GstBaseTransformClass *gstbasetrans_class;
   GObjectClass *gobject_class;
 
-  gobject_class = G_OBJECT_CLASS (g_class);
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
-  g_object_class_install_property (G_OBJECT_CLASS (g_class),
+  gobject_class->set_property = gst_navseek_set_property;
+  gobject_class->get_property = gst_navseek_get_property;
+
+  g_object_class_install_property (gobject_class,
       ARG_SEEKOFFSET, g_param_spec_double ("seek-offset", "Seek Offset",
           "Time in seconds to seek by", 0.0, G_MAXDOUBLE, 5.0,
           G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_navseek_set_property;
-  gobject_class->get_property = gst_navseek_get_property;
+  gstbasetrans_class->event = GST_DEBUG_FUNCPTR (gst_navseek_event);
+  gstbasetrans_class->transform_ip =
+      GST_DEBUG_FUNCPTR (gst_navseek_transform_ip);
+  gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_navseek_start);
+  gstbasetrans_class->stop = GST_DEBUG_FUNCPTR (gst_navseek_stop);
 }
 
 static void
-gst_navseek_init (GTypeInstance * instance, gpointer g_class)
+gst_navseek_init (GstNavSeek * navseek, GstNavSeekClass * g_class)
 {
-  GstNavSeek *navseek = GST_NAVSEEK (instance);
+  gst_pad_set_event_function (GST_BASE_TRANSFORM (navseek)->srcpad,
+      GST_DEBUG_FUNCPTR (gst_navseek_handle_src_event));
 
-  navseek->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&navseek_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (navseek), navseek->sinkpad);
-  gst_pad_set_chain_function (navseek->sinkpad, gst_navseek_chain);
-  gst_pad_set_link_function (navseek->sinkpad, gst_pad_proxy_pad_link);
-  gst_pad_set_getcaps_function (navseek->sinkpad, gst_pad_proxy_getcaps);
-
-  navseek->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&navseek_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (navseek), navseek->srcpad);
-  gst_pad_set_link_function (navseek->srcpad, gst_pad_proxy_pad_link);
-  gst_pad_set_getcaps_function (navseek->srcpad, gst_pad_proxy_getcaps);
-  gst_pad_set_event_function (navseek->srcpad, gst_navseek_handle_src_event);
-
-  GST_FLAG_SET (GST_ELEMENT (navseek), GST_ELEMENT_EVENT_AWARE);
+  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (navseek), TRUE);
 
   navseek->seek_offset = 5.0;
   navseek->loop = FALSE;
@@ -158,74 +124,90 @@ gst_navseek_init (GTypeInstance * instance, gpointer g_class)
 static void
 gst_navseek_seek (GstNavSeek * navseek, gint64 offset)
 {
-  /* Query for the current time then attempt to set to time + offset */
-  gint64 peer_value;
   GstFormat peer_format = GST_FORMAT_TIME;
+  gboolean ret;
+  GstPad *peer_pad;
+  gint64 peer_value;
 
-  if (gst_pad_query (gst_pad_get_peer (navseek->sinkpad),
-          GST_QUERY_POSITION, &peer_format, &peer_value)) {
-    if (peer_format != GST_FORMAT_TIME)
-      return;
+
+  /* Query for the current time then attempt to set to time + offset */
+  peer_pad = gst_pad_get_peer (GST_BASE_TRANSFORM (navseek)->sinkpad);
+  ret = gst_pad_query_position (peer_pad, &peer_format, &peer_value, NULL);
+
+  if (ret && peer_format == GST_FORMAT_TIME) {
+    GstEvent *event;
 
     peer_value += offset;
     if (peer_value < 0)
       peer_value = 0;
 
-    gst_element_seek (GST_ELEMENT (navseek),
-        GST_SEEK_METHOD_SET | GST_FORMAT_TIME | GST_SEEK_FLAG_ACCURATE |
-        GST_SEEK_FLAG_FLUSH, peer_value);
+    event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH,
+        GST_SEEK_TYPE_SET, peer_value, GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE);
+
+    gst_pad_send_event (peer_pad, event);
   }
+
+  gst_object_unref (peer_pad);
 }
 
 static void
 gst_navseek_segseek (GstNavSeek * navseek)
 {
   GstEvent *event;
+  GstPad *peer_pad;
 
   if ((navseek->segment_start == GST_CLOCK_TIME_NONE) ||
       (navseek->segment_end == GST_CLOCK_TIME_NONE) ||
-      (!GST_PAD_IS_LINKED (navseek->sinkpad))) {
+      (!GST_PAD_IS_LINKED (GST_BASE_TRANSFORM (navseek)->sinkpad))) {
     return;
   }
 
   if (navseek->loop) {
     event =
-        gst_event_new_segment_seek (GST_SEEK_METHOD_SET | GST_FORMAT_TIME |
-        GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_SEGMENT_LOOP,
-        navseek->segment_start, navseek->segment_end);
+        gst_event_new_seek (1.0, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_SEGMENT,
+        GST_SEEK_TYPE_SET, navseek->segment_start, GST_SEEK_TYPE_SET,
+        navseek->segment_end);
   } else {
     event =
-        gst_event_new_segment_seek (GST_SEEK_METHOD_SET | GST_FORMAT_TIME |
-        GST_SEEK_FLAG_ACCURATE, navseek->segment_start, navseek->segment_end);
+        gst_event_new_seek (1.0, GST_FORMAT_TIME, GST_SEEK_FLAG_ACCURATE,
+        GST_SEEK_TYPE_SET, navseek->segment_start, GST_SEEK_TYPE_SET,
+        navseek->segment_end);
   }
 
-  g_return_if_fail (event != NULL);
-  gst_pad_send_event (gst_pad_get_peer (navseek->sinkpad), event);
+  peer_pad = gst_pad_get_peer (GST_BASE_TRANSFORM (navseek)->sinkpad);
+  gst_pad_send_event (peer_pad, event);
+  gst_object_unref (peer_pad);
 }
 
 static gboolean
 gst_navseek_handle_src_event (GstPad * pad, GstEvent * event)
 {
   GstNavSeek *navseek;
+  gboolean ret = TRUE;
 
-  navseek = GST_NAVSEEK (gst_pad_get_parent (pad));
+  navseek = GST_NAVSEEK (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
       /* Check for a keyup and convert left/right to a seek event */
     {
-      GstStructure *structure;
+      const GstStructure *structure;
       const gchar *event_type;
 
-      structure = event->event_data.structure.structure;
-      event_type = gst_structure_get_string (structure, "event");
+      structure = gst_event_get_structure (event);
+      g_return_val_if_fail (structure != NULL, FALSE);
 
-      g_return_val_if_fail (event != NULL, FALSE);
+      event_type = gst_structure_get_string (structure, "event");
+      g_return_val_if_fail (event_type != NULL, FALSE);
 
       if (strcmp (event_type, "key-press") == 0) {
-        const char *key = gst_structure_get_string (structure, "key");
+        const gchar *key;
 
-        g_assert (key != NULL);
+        key = gst_structure_get_string (structure, "key");
+        g_return_val_if_fail (key != NULL, FALSE);
+
         if (strcmp (key, "Left") == 0) {
           /* Seek backward by 5 secs */
           gst_navseek_seek (navseek, -1.0 * navseek->seek_offset * GST_SECOND);
@@ -253,42 +235,28 @@ gst_navseek_handle_src_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
-  if ((event) && GST_PAD_IS_LINKED (navseek->sinkpad)) {
-    return gst_pad_send_event (gst_pad_get_peer (navseek->sinkpad), event);
+
+  if (event && GST_PAD_IS_LINKED (GST_BASE_TRANSFORM (navseek)->sinkpad)) {
+    GstPad *peer_pad = gst_pad_get_peer (GST_BASE_TRANSFORM (navseek)->sinkpad);
+
+    ret = gst_pad_send_event (peer_pad, event);
+    gst_object_unref (peer_pad);
   }
-  return TRUE;
+
+  return ret;
 }
 
 static void
 gst_navseek_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstNavSeek *src;
-
-  g_return_if_fail (GST_IS_NAVSEEK (object));
-  src = GST_NAVSEEK (object);
+  GstNavSeek *navseek = GST_NAVSEEK (object);
 
   switch (prop_id) {
     case ARG_SEEKOFFSET:
-      src->seek_offset = g_value_get_double (value);
-      break;
-    default:
-      break;
-  }
-}
-
-static void
-gst_navseek_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstNavSeek *src;
-
-  g_return_if_fail (GST_IS_NAVSEEK (object));
-  src = GST_NAVSEEK (object);
-
-  switch (prop_id) {
-    case ARG_SEEKOFFSET:
-      g_value_set_double (value, src->seek_offset);
+      GST_LOCK (navseek);
+      navseek->seek_offset = g_value_get_double (value);
+      GST_UNLOCK (navseek);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -297,34 +265,79 @@ gst_navseek_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_navseek_chain (GstPad * pad, GstData * _data)
+gst_navseek_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
-  GstNavSeek *navseek;
+  GstNavSeek *navseek = GST_NAVSEEK (object);
 
-  navseek = GST_NAVSEEK (gst_pad_get_parent (pad));
+  switch (prop_id) {
+    case ARG_SEEKOFFSET:
+      GST_LOCK (navseek);
+      g_value_set_double (value, navseek->seek_offset);
+      GST_UNLOCK (navseek);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
-  if (GST_IS_BUFFER (_data) &&
-      GST_BUFFER_TIMESTAMP_IS_VALID (GST_BUFFER (_data))) {
+static gboolean
+gst_navseek_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstNavSeek *navseek = GST_NAVSEEK (trans);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      GST_LOCK (navseek);
+      if (navseek->loop)
+        gst_navseek_segseek (navseek);
+      GST_UNLOCK (navseek);
+      break;
+    default:
+      break;
+  }
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_navseek_transform_ip (GstBaseTransform * basetrans, GstBuffer * buf)
+{
+  GstNavSeek *navseek = GST_NAVSEEK (basetrans);
+
+  GST_LOCK (navseek);
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     if (navseek->grab_seg_start) {
-      navseek->segment_start = GST_BUFFER_TIMESTAMP (GST_BUFFER (_data));
+      navseek->segment_start = GST_BUFFER_TIMESTAMP (buf);
       navseek->segment_end = GST_CLOCK_TIME_NONE;
       navseek->grab_seg_start = FALSE;
     }
 
     if (navseek->grab_seg_end) {
-      navseek->segment_end = GST_BUFFER_TIMESTAMP (GST_BUFFER (_data));
+      navseek->segment_end = GST_BUFFER_TIMESTAMP (buf);
       navseek->grab_seg_end = FALSE;
       gst_navseek_segseek (navseek);
     }
   }
 
-  if (GST_IS_EVENT (_data) &&
-      (GST_EVENT_TYPE (GST_EVENT (_data)) == GST_EVENT_SEGMENT_DONE) &&
-      navseek->loop) {
-    gst_navseek_segseek (navseek);
-  }
+  GST_UNLOCK (navseek);
 
-  gst_pad_push (navseek->srcpad, _data);
+  return GST_FLOW_OK;
+}
+
+static gboolean
+gst_navseek_start (GstBaseTransform * trans)
+{
+  /* anything we should be doing here? */
+  return TRUE;
+}
+
+static gboolean
+gst_navseek_stop (GstBaseTransform * trans)
+{
+  /* anything we should be doing here? */
+  return TRUE;
 }
 
 gboolean

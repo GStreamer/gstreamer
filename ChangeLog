@@ -1,3 +1,16 @@
+2005-10-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/debug/Makefile.am:
+	* gst/debug/breakmydata.c:
+	* gst/debug/gstdebug.c:
+	* gst/debug/gstnavigationtest.c:
+	* gst/debug/gstnavseek.c: 
+	* gst/debug/gstnavseek.h:
+	* gst/debug/progressreport.c: 
+	* gst/debug/testplugin.c:
+	  Port progressreport, navseek, navigationtest, testsink and
+	  breakmydata.
+
 2005-10-05  Edward Hervey  <edward@fluendo.com>
 
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_src_convert),

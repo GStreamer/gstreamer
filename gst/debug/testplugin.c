@@ -22,6 +22,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 #include "tests.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_test_debug);
@@ -48,9 +49,7 @@ typedef struct _GstTestClass GstTestClass;
 
 struct _GstTest
 {
-  GstElement element;
-
-  GstPad *sinkpad;
+  GstBaseSink basesink;
 
   gpointer tests[TESTS_COUNT];
   GValue values[TESTS_COUNT];
@@ -58,27 +57,41 @@ struct _GstTest
 
 struct _GstTestClass
 {
-  GstElementClass parent_class;
+  GstBaseSinkClass parent_class;
 
   gchar *param_names[2 * TESTS_COUNT];
 };
 
-GST_BOILERPLATE (GstTest, gst_test, GstElement, GST_TYPE_ELEMENT)
+static gboolean gst_test_start (GstBaseSink * trans);
+static gboolean gst_test_stop (GstBaseSink * trans);
+static gboolean gst_test_sink_event (GstBaseSink * basesink, GstEvent * event);
+static GstFlowReturn gst_test_render_buffer (GstBaseSink * basesink,
+    GstBuffer * buf);
 
-     static void gst_test_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
-     static void gst_test_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
+static void gst_test_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_test_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
-     static void gst_test_chain (GstPad * pad, GstData * _data);
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
+
+static GstElementDetails details = GST_ELEMENT_DETAILS ("gsttestsink",
+    "Testing",
+    "perform a number of tests",
+    "Benjamin Otte <otte@gnome>");
+
+GST_BOILERPLATE (GstTest, gst_test, GstBaseSink, GST_TYPE_BASE_SINK)
 
      static void gst_test_base_init (gpointer g_class)
 {
-  static GstElementDetails details = GST_ELEMENT_DETAILS ("gsttestsink",
-      "Testing",
-      "perform a number of tests",
-      "Benjamin Otte <otte@gnome>");
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sinktemplate));
 
   gst_element_class_set_details (gstelement_class, &details);
 }
@@ -86,22 +99,29 @@ GST_BOILERPLATE (GstTest, gst_test, GstElement, GST_TYPE_ELEMENT)
 static void
 gst_test_class_init (GstTestClass * klass)
 {
-  GObjectClass *object = G_OBJECT_CLASS (klass);
+  GstBaseSinkClass *basesink_class = GST_BASE_SINK_CLASS (klass);
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   guint i;
 
-  object->set_property = GST_DEBUG_FUNCPTR (gst_test_set_property);
-  object->get_property = GST_DEBUG_FUNCPTR (gst_test_get_property);
+  object_class->set_property = GST_DEBUG_FUNCPTR (gst_test_set_property);
+  object_class->get_property = GST_DEBUG_FUNCPTR (gst_test_get_property);
 
   for (i = 0; i < TESTS_COUNT; i++) {
     GParamSpec *spec;
 
     spec = tests[i].get_spec (&tests[i], FALSE);
     klass->param_names[2 * i] = g_strdup (g_param_spec_get_name (spec));
-    g_object_class_install_property (object, 2 * i + 1, spec);
+    g_object_class_install_property (object_class, 2 * i + 1, spec);
     spec = tests[i].get_spec (&tests[i], TRUE);
     klass->param_names[2 * i + 1] = g_strdup (g_param_spec_get_name (spec));
-    g_object_class_install_property (object, 2 * i + 2, spec);
+    g_object_class_install_property (object_class, 2 * i + 2, spec);
   }
+
+  basesink_class->preroll = GST_DEBUG_FUNCPTR (gst_test_render_buffer);
+  basesink_class->render = GST_DEBUG_FUNCPTR (gst_test_render_buffer);
+  basesink_class->event = GST_DEBUG_FUNCPTR (gst_test_sink_event);
+  basesink_class->start = GST_DEBUG_FUNCPTR (gst_test_start);
+  basesink_class->stop = GST_DEBUG_FUNCPTR (gst_test_stop);
 }
 
 static void
@@ -109,13 +129,6 @@ gst_test_init (GstTest * test, GstTestClass * g_class)
 {
   GstTestClass *klass;
   guint i;
-
-  GST_FLAG_SET (test, GST_ELEMENT_EVENT_AWARE);
-
-  test->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (test), test->sinkpad);
-  gst_pad_set_chain_function (test->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_test_chain));
 
   klass = GST_TEST_GET_CLASS (test);
   for (i = 0; i < TESTS_COUNT; i++) {
@@ -150,61 +163,88 @@ tests_set (GstTest * test)
   }
 }
 
-static void
-gst_test_chain (GstPad * pad, GstData * data)
+static gboolean
+gst_test_sink_event (GstBaseSink * basesink, GstEvent * event)
 {
-  guint i;
-  GstTest *test = GST_TEST (gst_pad_get_parent (pad));
-  GstTestClass *klass = GST_TEST_GET_CLASS (test);
+  GstTestClass *klass = GST_TEST_GET_CLASS (basesink);
+  GstTest *test = GST_TEST (basesink);
+  gboolean ret = FALSE;
 
-  if (GST_IS_EVENT (data)) {
-    GstEvent *event = GST_EVENT (data);
+  switch (GST_EVENT_TYPE (event)) {
+/*
+    case GST_EVENT_NEWSEGMENT:
+      if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
+        tests_unset (test);
+        tests_set (test);
+      }
+      break;
+*/
+    case GST_EVENT_EOS:{
+      gint i;
 
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_DISCONTINUOUS:
-        if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
-          tests_unset (test);
-          tests_set (test);
-        }
-        break;
-      case GST_EVENT_EOS:
-        g_object_freeze_notify (G_OBJECT (test));
-        for (i = 0; i < TESTS_COUNT; i++) {
-          if (test->tests[i]) {
-            if (!tests[i].finish (test->tests[i], &test->values[i])) {
-              GValue v = { 0, };
-              gchar *real, *expected;
+      g_object_freeze_notify (G_OBJECT (test));
+      for (i = 0; i < TESTS_COUNT; i++) {
+        if (test->tests[i]) {
+          if (!tests[i].finish (test->tests[i], &test->values[i])) {
+            GValue v = { 0, };
+            gchar *real, *expected;
 
-              expected = gst_value_serialize (&test->values[i]);
-              g_value_init (&v, G_VALUE_TYPE (&test->values[i]));
-              g_object_get_property (G_OBJECT (test), klass->param_names[2 * i],
-                  &v);
-              real = gst_value_serialize (&v);
-              g_value_unset (&v);
-              GST_ELEMENT_ERROR (test, STREAM, FORMAT, (NULL),
-                  ("test %s returned value \"%s\" and not expected value \"%s\"",
-                      klass->param_names[2 * i], real, expected));
-              g_free (real);
-              g_free (expected);
-            }
-            g_object_notify (G_OBJECT (test), klass->param_names[2 * i]);
+            expected = gst_value_serialize (&test->values[i]);
+            g_value_init (&v, G_VALUE_TYPE (&test->values[i]));
+            g_object_get_property (G_OBJECT (test), klass->param_names[2 * i],
+                &v);
+            real = gst_value_serialize (&v);
+            g_value_unset (&v);
+            GST_ELEMENT_ERROR (test, STREAM, FORMAT, (NULL),
+                ("test %s returned value \"%s\" and not expected value \"%s\"",
+                    klass->param_names[2 * i], real, expected));
+            g_free (real);
+            g_free (expected);
           }
+          g_object_notify (G_OBJECT (test), klass->param_names[2 * i]);
         }
-        g_object_thaw_notify (G_OBJECT (test));
-        break;
-      default:
-        break;
+      }
+      g_object_thaw_notify (G_OBJECT (test));
+      ret = TRUE;
+      break;
     }
-    gst_pad_event_default (pad, event);
-    return;
+    default:
+      break;
   }
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_test_render_buffer (GstBaseSink * basesink, GstBuffer * buf)
+{
+  GstTest *test = GST_TEST (basesink);
+  guint i;
 
   for (i = 0; i < TESTS_COUNT; i++) {
     if (test->tests[i]) {
-      tests[i].add (test->tests[i], GST_BUFFER (data));
+      tests[i].add (test->tests[i], buf);
     }
   }
-  gst_data_unref (data);
+  return GST_FLOW_OK;
+}
+
+static gboolean
+gst_test_start (GstBaseSink * sink)
+{
+  GstTest *test = GST_TEST (sink);
+
+  tests_set (test);
+  return TRUE;
+}
+
+static gboolean
+gst_test_stop (GstBaseSink * sink)
+{
+  GstTest *test = GST_TEST (sink);
+
+  tests_unset (test);
+  return TRUE;
 }
 
 static void
@@ -223,7 +263,9 @@ gst_test_set_property (GObject * object, guint prop_id,
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   } else {
     /* expected values */
+    GST_LOCK (test);
     g_value_copy (value, &test->values[prop_id / 2 - 1]);
+    GST_UNLOCK (test);
   }
 }
 
@@ -239,6 +281,8 @@ gst_test_get_property (GObject * object, guint prop_id, GValue * value,
     return;
   }
 
+  GST_LOCK (test);
+
   if (prop_id % 2) {
     /* real values */
     tests[id].get_value (test->tests[id], value);
@@ -246,6 +290,8 @@ gst_test_get_property (GObject * object, guint prop_id, GValue * value,
     /* expected values */
     g_value_copy (&test->values[id], value);
   }
+
+  GST_UNLOCK (test);
 }
 
 gboolean

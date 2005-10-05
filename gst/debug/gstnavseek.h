@@ -23,6 +23,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
 
@@ -41,20 +42,18 @@ typedef struct _GstNavSeek GstNavSeek;
 typedef struct _GstNavSeekClass GstNavSeekClass;
 
 struct _GstNavSeek {
-  GstElement element;
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstBaseTransform  basetransform;
 
-  gdouble seek_offset;
-  gboolean loop;
-  gboolean grab_seg_start;
-  gboolean grab_seg_end;
-  GstClockTime segment_start;
-  GstClockTime segment_end;
+  gdouble           seek_offset;
+  gboolean          loop;
+  gboolean          grab_seg_start;
+  gboolean          grab_seg_end;
+  GstClockTime      segment_start;
+  GstClockTime      segment_end;
 };
 
 struct _GstNavSeekClass {
-  GstElementClass parent_class;
+  GstBaseTransformClass parent_class;
 };
 
 G_END_DECLS

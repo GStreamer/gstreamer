@@ -27,23 +27,9 @@
 #include "config.h"
 #endif
 
-/*#define DEBUG_ENABLED */
 #include <gstnavigationtest.h>
 #include <string.h>
 #include <math.h>
-
-/* GstNavigationtest signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-      /* FILL ME */
-};
 
 typedef struct
 {
@@ -61,10 +47,6 @@ static void gst_navigationtest_init (GTypeInstance * instance,
 
 static gboolean gst_navigationtest_handle_src_event (GstPad * pad,
     GstEvent * event);
-static void gst_navigationtest_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_navigationtest_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn
 gst_navigationtest_change_state (GstElement * element,
@@ -74,7 +56,7 @@ static void gst_navigationtest_planar411 (GstVideofilter * videofilter,
     void *dest, void *src);
 static void gst_navigationtest_setup (GstVideofilter * videofilter);
 
-static GstVideofilterClass *parent_class = NULL;
+static GstVideofilterClass *parent_class;       /* NULL */
 
 GType
 gst_navigationtest_get_type (void)
@@ -130,14 +112,10 @@ gst_navigationtest_base_init (gpointer g_class)
 static void
 gst_navigationtest_class_init (gpointer g_class, gpointer class_data)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
 
   parent_class = g_type_class_peek_parent (g_class);
-
-  gobject_class->set_property = gst_navigationtest_set_property;
-  gobject_class->get_property = gst_navigationtest_get_property;
 
   element_class->change_state = gst_navigationtest_change_state;
 
@@ -147,67 +125,58 @@ gst_navigationtest_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_navigationtest_init (GTypeInstance * instance, gpointer g_class)
 {
-  GstNavigationtest *navigationtest = GST_NAVIGATIONTEST (instance);
-  GstVideofilter *videofilter;
-
-  GST_DEBUG ("gst_navigationtest_init");
-
-  videofilter = GST_VIDEOFILTER (navigationtest);
+  GstNavigationtest *navtest = GST_NAVIGATIONTEST (instance);
+  GstVideofilter *videofilter = GST_VIDEOFILTER (navtest);
 
   gst_pad_set_event_function (videofilter->srcpad,
-      gst_navigationtest_handle_src_event);
+      GST_DEBUG_FUNCPTR (gst_navigationtest_handle_src_event));
 
-  navigationtest->x = -1;
-  navigationtest->y = -1;
+  navtest->x = -1;
+  navtest->y = -1;
 }
 
 static gboolean
 gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
 {
-  GstNavigationtest *navigationtest;
+  GstNavigationtest *navtest;
   const gchar *type;
 
-  navigationtest = GST_NAVIGATIONTEST (gst_pad_get_parent (pad));
+  navtest = GST_NAVIGATIONTEST (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
-      type = gst_structure_get_string (event->event_data.structure.structure,
-          "event");
+    {
+      const GstStructure *s = gst_event_get_structure (event);
+
+      type = gst_structure_get_string (s, "event");
       if (g_str_equal (type, "mouse-move")) {
-        gst_structure_get_double (event->event_data.structure.structure,
-            "pointer_x", &navigationtest->x);
-        gst_structure_get_double (event->event_data.structure.structure,
-            "pointer_y", &navigationtest->y);
+        gst_structure_get_double (s, "pointer_x", &navtest->x);
+        gst_structure_get_double (s, "pointer_y", &navtest->y);
       } else if (g_str_equal (type, "mouse-button-press")) {
         ButtonClick *click = g_new (ButtonClick, 1);
 
-        gst_structure_get_double (event->event_data.structure.structure,
-            "pointer_x", &click->x);
-        gst_structure_get_double (event->event_data.structure.structure,
-            "pointer_y", &click->y);
-        click->images_left = ceil (GST_VIDEOFILTER (navigationtest)->framerate);
+        gst_structure_get_double (s, "pointer_x", &click->x);
+        gst_structure_get_double (s, "pointer_y", &click->y);
+        click->images_left = ceil (GST_VIDEOFILTER (navtest)->framerate);
         /* green */
         click->cy = 150;
         click->cu = 46;
         click->cv = 21;
-        navigationtest->clicks =
-            g_slist_prepend (navigationtest->clicks, click);
+        navtest->clicks = g_slist_prepend (navtest->clicks, click);
       } else if (g_str_equal (type, "mouse-button-release")) {
         ButtonClick *click = g_new (ButtonClick, 1);
 
-        gst_structure_get_double (event->event_data.structure.structure,
-            "pointer_x", &click->x);
-        gst_structure_get_double (event->event_data.structure.structure,
-            "pointer_y", &click->y);
-        click->images_left = ceil (GST_VIDEOFILTER (navigationtest)->framerate);
+        gst_structure_get_double (s, "pointer_x", &click->x);
+        gst_structure_get_double (s, "pointer_y", &click->y);
+        click->images_left = ceil (GST_VIDEOFILTER (navtest)->framerate);
         /* red */
         click->cy = 76;
         click->cu = 85;
         click->cv = 255;
-        navigationtest->clicks =
-            g_slist_prepend (navigationtest->clicks, click);
+        navtest->clicks = g_slist_prepend (navtest->clicks, click);
       }
       break;
+    }
     default:
       break;
   }
@@ -215,64 +184,7 @@ gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static void
-gst_navigationtest_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstNavigationtest *src;
-
-  g_return_if_fail (GST_IS_NAVIGATIONTEST (object));
-  src = GST_NAVIGATIONTEST (object);
-
-  GST_DEBUG ("gst_navigationtest_set_property");
-  switch (prop_id) {
-#if 0
-    case ARG_METHOD:
-      src->method = g_value_get_enum (value);
-      break;
-#endif
-    default:
-      break;
-  }
-}
-
-static void
-gst_navigationtest_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstNavigationtest *src;
-
-  g_return_if_fail (GST_IS_NAVIGATIONTEST (object));
-  src = GST_NAVIGATIONTEST (object);
-
-  switch (prop_id) {
-#if 0
-    case ARG_METHOD:
-      g_value_set_enum (value, src->method);
-      break;
-#endif
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_library_load ("gstvideofilter"))
-    return FALSE;
-
-  return gst_element_register (plugin, "navigationtest", GST_RANK_NONE,
-      GST_TYPE_NAVIGATIONTEST);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "navigationtest",
-    "Template for a video filter",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
-
-     static void gst_navigationtest_setup (GstVideofilter * videofilter)
+gst_navigationtest_setup (GstVideofilter * videofilter)
 {
   GstNavigationtest *navigationtest;
 
@@ -328,19 +240,20 @@ static void
 gst_navigationtest_planar411 (GstVideofilter * videofilter,
     void *dest, void *src)
 {
-  GstNavigationtest *navigationtest;
-  int width = gst_videofilter_get_input_width (videofilter);
-  int height = gst_videofilter_get_input_height (videofilter);
+  GstNavigationtest *navtest = (GstNavigationtest *) videofilter;
+  gint width, height;
   GSList *walk;
 
   g_return_if_fail (GST_IS_NAVIGATIONTEST (videofilter));
-  navigationtest = GST_NAVIGATIONTEST (videofilter);
+
+  width = gst_videofilter_get_input_width (videofilter);
+  height = gst_videofilter_get_input_height (videofilter);
 
   /* do something interesting here.  This simply copies the source
    * to the destination. */
   memcpy (dest, src, width * height + (width / 2) * (height / 2) * 2);
 
-  walk = navigationtest->clicks;
+  walk = navtest->clicks;
   while (walk) {
     ButtonClick *click = walk->data;
 
@@ -348,32 +261,55 @@ gst_navigationtest_planar411 (GstVideofilter * videofilter,
     draw_box_planar411 (dest, width, height, rint (click->x),
         rint (click->y), click->cy, click->cu, click->cv);
     if (--click->images_left < 1) {
-      navigationtest->clicks = g_slist_remove (navigationtest->clicks, click);
+      navtest->clicks = g_slist_remove (navtest->clicks, click);
       g_free (click);
     }
   }
-  draw_box_planar411 (dest, width, height, rint (navigationtest->x),
-      rint (navigationtest->y), 0, 128, 128);
+  draw_box_planar411 (dest, width, height, rint (navtest->x),
+      rint (navtest->y), 0, 128, 128);
 }
 
 static GstStateChangeReturn
 gst_navigationtest_change_state (GstElement * element,
     GstStateChange transition)
 {
-  GstNavigationtest *navigation = GST_NAVIGATIONTEST (element);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstNavigationtest *navtest = GST_NAVIGATIONTEST (element);
 
+  /* upwards state changes */
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      while (navigation->clicks) {
-        g_free (navigation->clicks->data);
-        navigation->clicks =
-            g_slist_remove (navigation->clicks, navigation->clicks->data);
-      }
+    default:
       break;
   }
 
   if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_CHANGE_SUCCESS;
+  /* downwards state changes */
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    {
+      g_slist_foreach (navtest->clicks, (GFunc) g_free, NULL);
+      g_slist_free (navtest->clicks);
+      navtest->clicks = NULL;
+      break;
+    }
+    default:
+      break;
+  }
+
+  return ret;
 }
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return gst_element_register (plugin, "navigationtest", GST_RANK_NONE,
+      GST_TYPE_NAVIGATIONTEST);
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "navigationtest",
+    "Template for a video filter",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
