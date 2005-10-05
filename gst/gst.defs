@@ -63,7 +63,7 @@
   (is-constructor-of "GstBin")
   (return-type "GstElement*")
   (parameters
-    '("const-gchar*" "name")
+    '("const-gchar*" "name" (null-ok) (default "NULL"))
   )
 )
 

@@ -164,5 +164,16 @@ class Preroll(TestCase):
         self.bin.set_state(gst.STATE_NULL)
         self.bin.get_state(timeout=None)
  
+class ConstructorTest(TestCase):
+    def testGood(self):
+        bin = gst.Bin()
+        bin = gst.Bin(None)
+        bin = gst.Bin('')
+        bin = gst.Bin('myname')
+        
+    def testBad(self):
+        self.assertRaises(TypeError, gst.Bin, 0)
+        self.assertRaises(TypeError, gst.Bin, gst.Bin())
+
 if __name__ == "__main__":
     unittest.main()

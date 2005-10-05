@@ -222,5 +222,11 @@ class DebugTest(TestCase):
         e.set_property("name", "testelement")
         e.break_it_down()
         
+class LinkNoPadsTest(TestCase):
+    def testLinkNoPads(self):
+        src = gst.Bin()
+        sink = gst.Bin()
+        self.assertRaises(gst.LinkError, src.link, sink)
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,14 @@
 2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.defs:
+	  gst.Bin constructor can take no arguments
+	* testsuite/test_bin.py:
+	  add constructor tests
+	* testsuite/test_element.py:
+	  add same link test with no pads
+
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst-types.defs:
 	* gst/gstcaps.override:
 	* testsuite/test_caps.py:
