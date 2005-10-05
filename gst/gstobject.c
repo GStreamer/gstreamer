@@ -365,17 +365,17 @@ gst_object_ref (gpointer object)
 
 #ifdef REFCOUNT_HACK
   old = g_atomic_int_exchange_and_add (&((GstObject *) object)->refcount, 1);
-#ifdef DEBUG_REFCOUNT
+#  ifdef DEBUG_REFCOUNT
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d",
       object, old, old + 1);
-#endif
+#  endif
   PATCH_REFCOUNT (object);
 #else
-#ifdef DEBUG_REFCOUNT
+#  ifdef DEBUG_REFCOUNT
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d",
       object,
       ((GObject *) object)->ref_count, ((GObject *) object)->ref_count + 1);
-#endif
+#  endif
   g_object_ref (object);
 #endif
 
@@ -406,7 +406,7 @@ gst_object_unref (gpointer object)
 
   old = g_atomic_int_exchange_and_add (&((GstObject *) object)->refcount, -1);
 
-#ifdef DEBUG_REFCOUNT
+#  ifdef DEBUG_REFCOUNT
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p unref %d->%d",
       object, old, old - 1);
 #endif
