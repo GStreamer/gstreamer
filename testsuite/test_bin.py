@@ -151,7 +151,6 @@ class Preroll(TestCase):
         self.assertEquals(ret[0], gst.STATE_CHANGE_ASYNC)
         self.assertEquals(ret[1], gst.STATE_PAUSED)
         self.assertEquals(ret[2], gst.STATE_VOID_PENDING)
-        print ret
 
         # to actually complete preroll, we need to link and re-enable fakesrc
         src.set_state(gst.STATE_READY)
@@ -161,8 +160,6 @@ class Preroll(TestCase):
         self.assertEquals(ret[0], gst.STATE_CHANGE_SUCCESS)
         self.assertEquals(ret[1], gst.STATE_PAUSED)
         self.assertEquals(ret[2], gst.STATE_VOID_PENDING)
-
-        print ret
 
         self.bin.set_state(gst.STATE_NULL)
         self.bin.get_state(timeout=None)
