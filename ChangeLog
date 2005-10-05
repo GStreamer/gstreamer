@@ -1,5 +1,10 @@
 2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* codegen/argtypes.py:
+	  act on the mini object properly, not on the py object
+
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstbuffer.override:
 	  a buffer is not a boxed
 	* gst/gstobject.override:

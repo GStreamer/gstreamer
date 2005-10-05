@@ -535,7 +535,7 @@ class MiniObjectArg(ArgType):
                 info.add_parselist('O!', ['&Py%s_Type' % self.objname,
                                           '&' + pname], [pname])
         if keeprefcount:
-            info.codebefore.append('    gst_mini_object_ref(GST_MINI_OBJECT(%s));\n' % pname)
+            info.codebefore.append('    gst_mini_object_ref(GST_MINI_OBJECT(%s->obj));\n' % pname)
     def write_return(self, ptype, ownsreturn, info):
         if ptype[-1] == '*': ptype = ptype[:-1]
         info.varlist.add(ptype, '*ret')
