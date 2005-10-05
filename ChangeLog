@@ -1,5 +1,12 @@
 2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst-types.defs:
+	* gst/gstcaps.override:
+	* testsuite/test_caps.py:
+	  add gst.Caps.__refcount__
+
+2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/test_pad.py:
 	  add a test that shows we can link a pad in a buffer probe
 	  callback.  yay !

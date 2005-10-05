@@ -26,9 +26,12 @@ from common import gst, unittest
 class CapsTest(unittest.TestCase):
     def setUp(self):
         self.caps = gst.caps_from_string('video/x-raw-yuv,width=10,framerate=5.0;video/x-raw-rgb,width=15,framerate=10.0')
+        self.assertEquals(self.caps.__refcount__, 1)
         self.structure = self.caps[0]
         self.any = gst.Caps("ANY")
+        self.assertEquals(self.any.__refcount__, 1)
         self.empty = gst.Caps()
+        self.assertEquals(self.empty.__refcount__, 1)
 
     def testCapsMime(self):
         mime = self.structure.get_name()

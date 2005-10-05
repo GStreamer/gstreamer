@@ -203,6 +203,9 @@
   (in-module "Gst")
   (c-name "GstCaps")
   (gtype-id "GST_TYPE_CAPS")
+  (fields
+   '("int" "__refcount__")
+  )
 )
 
 (define-object Plugin
