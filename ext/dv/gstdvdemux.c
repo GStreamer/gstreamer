@@ -284,13 +284,14 @@ gst_dvdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_DEFAULT:
           if (pad == dvdemux->videosrcpad) {
             if (src_value)
-              *dest_value = src_value / (dvdemux->framerate * GST_SECOND);
+              *dest_value = src_value * dvdemux->framerate / GST_SECOND;
             else
               *dest_value = 0;
-          } else if (pad == dvdemux->audiosrcpad)
+          } else if (pad == dvdemux->audiosrcpad) {
             *dest_value = 2 * src_value * dvdemux->frequency *
                 dvdemux->channels / (GST_SECOND *
                 gst_audio_frame_byte_size (pad));
+          }
           break;
         default:
           res = FALSE;
@@ -454,7 +455,7 @@ gst_dvdemux_src_query (GstPad * pad, GstQuery * query)
         /* convert end to requested format */
         if (end != -1) {
           format2 = format;
-          if (!(res = gst_pad_query_convert (pad,
+          if (!(res = gst_pad_query_convert (dvdemux->sinkpad,
                       GST_FORMAT_BYTES, end, &format2, &end))) {
             gst_object_unref (peer);
             goto error;
@@ -467,6 +468,8 @@ gst_dvdemux_src_query (GstPad * pad, GstQuery * query)
       /* bring the position to the requested format. */
       if (!(res = gst_pad_query_convert (pad,
                   GST_FORMAT_TIME, dvdemux->timestamp, &format, &cur)))
+        goto error;
+      if (!(res = gst_pad_query_convert (pad, format2, end, &format, &end)))
         goto error;
       gst_query_set_position (query, format, cur, end);
       break;

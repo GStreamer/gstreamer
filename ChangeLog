@@ -1,3 +1,9 @@
+2005-10-05  Edward Hervey  <edward@fluendo.com>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_src_convert),
+	(gst_dvdemux_src_query):
+	Fixes for better conversion
+
 2005-10-04  Michael Smith <msmith@fluendo.com>
 
 	* gst/autodetect/gstautoaudiosink.c: (gst_auto_audio_sink_reset),
