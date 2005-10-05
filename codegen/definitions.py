@@ -7,11 +7,12 @@ def get_valid_scheme_definitions(defs):
 
 # New Parameter class, wich emulates a tuple for compatibility reasons
 class Parameter(object):
-    def __init__(self, ptype, pname, pdflt, pnull, prop=None):
+    def __init__(self, ptype, pname, pdflt, pnull, prop=None, keeprefcount=False):
         self.ptype = ptype
         self.pname = pname
         self.pdflt = pdflt
         self.pnull = pnull
+        self.keeprefcount = keeprefcount
         
     def __len__(self): return 4
     def __getitem__(self, i):
@@ -340,13 +341,17 @@ class MethodDefBase(Definition):
                     pname = parg[1]
                     pdflt = None
                     pnull = 0
+                    keeprefcount = False
                     for farg in parg[2:]:
                         assert isinstance(farg, tuple)
                         if farg[0] == 'default':
                             pdflt = farg[1]
                         elif farg[0] == 'null-ok':
                             pnull = 1
-                    self.params.append(Parameter(ptype, pname, pdflt, pnull))
+                        elif farg[0] == 'keep-refcount':
+                            keeprefcount = True
+                    self.params.append(Parameter(ptype, pname, pdflt, pnull,
+                                                 keeprefcount=keeprefcount))
             elif arg[0] == 'varargs':
                 self.varargs = arg[1] in ('t', '#t')
             elif arg[0] == 'deprecated':
@@ -448,12 +453,16 @@ class FunctionDef(Definition):
                     pname = parg[1]
                     pdflt = None
                     pnull = 0
+                    keeprefcount = False
                     for farg in parg[2:]:
                         if farg[0] == 'default':
                             pdflt = farg[1]
                         elif farg[0] == 'null-ok':
                             pnull = 1
-                    self.params.append(Parameter(ptype, pname, pdflt, pnull))
+                        elif farg[0] == 'keep-refcount':
+                            keeprefcount = True
+                    self.params.append(Parameter(ptype, pname, pdflt, pnull,
+                                                 keeprefcount = keeprefcount))
 	    elif arg[0] == 'properties':
                 if self.is_constructor_of is None:
                     print >> sys.stderr, "Warning: (properties ...) "\

@@ -280,7 +280,7 @@ class Wrapper:
                 info.add_parselist('|', [], [])
             handler = argtypes.matcher.get(param.ptype)
             handler.write_param(param.ptype, param.pname, param.pdflt,
-                                param.pnull, info)
+                                param.pnull, param.keeprefcount, info)
 
         substdict['setreturn'] = ''
         if handle_return:

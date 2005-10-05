@@ -3358,7 +3358,7 @@
   (c-name "gst_pad_push")
   (return-type "GstFlowReturn")
   (parameters
-    '("GstBuffer*" "buffer")
+    '("GstBuffer*" "buffer" (keep-refcount))
   )
 )
 

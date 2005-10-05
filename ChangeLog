@@ -1,3 +1,15 @@
+2005-10-05  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/argtypes.py:
+	* codegen/codegen.py:
+	* codegen/definitions.py:
+	* gst/arg-types.py:
+	Added 'keeprefcount' argument for function/method parameters in order to
+	cope with functions/methods that decrement the refcount of the given
+	parameter
+	* gst/gst.defs:
+	Added 'keeprefcount' for buffer argument of gst_pad_push() wrapper.
+
 2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/__init__.py:

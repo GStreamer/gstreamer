@@ -50,7 +50,7 @@ class XmlNodeArg(ArgType):
 			'    PyTuple_SetItem(xargs, 0, o);\n'
 			'    return PyInstance_New(xobj, xargs, PyDict_New());\n')
 	
-	def write_param(self, ptype, pname, pdflt, pnull, info):
+	def write_param(self, ptype, pname, pdflt, pnull, keeprefcount, info):
 		info.varlist.add('PyObject', '*xml = _gst_get_libxml2_module()')
 		info.varlist.add('PyObject', '*o')
 		info.varlist.add('PyObject', '*xobj')
@@ -90,7 +90,7 @@ class GstCapsArg(ArgType):
     after = ('    if (%(name)s && %(name)s_is_copy)\n'
              '        gst_caps_unref (%(name)s);\n')
 
-    def write_param(self, ptype, pname, pdflt, pnull, info):
+    def write_param(self, ptype, pname, pdflt, pnull, keeprefcount, info):
         if ptype == 'const-GstCaps*':
             self.write_const_param(pname, pdflt, pnull, info)
         elif ptype == 'GstCaps*':
