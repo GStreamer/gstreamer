@@ -335,6 +335,7 @@ GST_START_TEST (test_push_linked)
   fail_unless_equals_int (g_list_length (buffers), 1);
   buffer = GST_BUFFER (buffers->data);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_unref (buffer);
   g_list_free (buffers);
   buffers = NULL;
 
@@ -363,6 +364,7 @@ GST_START_TEST (test_push_linked)
   fail_unless_equals_int (g_list_length (buffers), 1);
   buffer = GST_BUFFER (buffers->data);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_unref (buffer);
   g_list_free (buffers);
   buffers = NULL;
 
