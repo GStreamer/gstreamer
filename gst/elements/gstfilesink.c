@@ -261,9 +261,11 @@ gst_file_sink_open_file (GstFileSink * sink)
 static void
 gst_file_sink_close_file (GstFileSink * sink)
 {
-  if (fclose (sink->file) != 0) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-        (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
+  if (sink->file) {
+    if (fclose (sink->file) != 0) {
+      GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
+          (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
+    }
   }
 }
 

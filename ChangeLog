@@ -1,3 +1,8 @@
+2005-10-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/elements/gstfilesink.c: (gst_file_sink_close_file):
+	Don't use NULL pointers.
+
 2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst_private.h:
