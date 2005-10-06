@@ -16,13 +16,13 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:	python >= 2
 Requires:	gnome-python2
-Requires:	pygtk2 >= 2.4.0
+Requires:	pygtk2 >= 2.6.3
 Requires:	%{gstreamer}
 Requires:	%{gstreamer}-plugins
 
 BuildRequires:	python >= 2
 BuildRequires:  python-devel >= 2
-BuildRequires:  pygtk2-devel >= 2.4.0
+BuildRequires:  pygtk2-devel >= 2.6.3
 BuildRequires:	xmlto
 BuildRequires:	links
 
