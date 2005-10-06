@@ -106,6 +106,7 @@ GType
 gst_event_get_type (void)
 {
   static GType _gst_event_type;
+  int i;
 
   if (G_UNLIKELY (_gst_event_type == 0)) {
     static const GTypeInfo event_info = {
@@ -123,6 +124,10 @@ gst_event_get_type (void)
 
     _gst_event_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
         "GstEvent", &event_info, 0);
+
+    for (i = 0; event_quarks[i].name; i++) {
+      event_quarks[i].quark = g_quark_from_static_string (event_quarks[i].name);
+    }
   }
 
   return _gst_event_type;
