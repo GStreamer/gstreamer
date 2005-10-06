@@ -1,7 +1,7 @@
-%define         gst_minver      0.8.0
-%define         gstp_minver     0.8.0
-%define         majorminor      0.8
+%define         majorminor      @GST_MAJORMINOR@
 %define         gstreamer       gstreamer
+%define		_pygtk		@PYGTK_REQ@
+%define		_gst		@GST_REQ@
 
 Name:           %{gstreamer}-python
 Version:        @VERSION@
@@ -16,21 +16,21 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:	python >= 2
 Requires:	gnome-python2
-Requires:	pygtk2 >= 2.6.3
+Requires:	pygtk2 >= %_pygtk
 Requires:	%{gstreamer}
 Requires:	%{gstreamer}-plugins
 
 BuildRequires:	python >= 2
 BuildRequires:  python-devel >= 2
-BuildRequires:  pygtk2-devel >= 2.6.3
+BuildRequires:  pygtk2-devel >= %_pygtk
 BuildRequires:	xmlto
 BuildRequires:	links
 
 # xwindowlistener needs X11 headers
 BuildRequires:  XFree86-devel
 
-BuildRequires:	%{gstreamer}-devel
-BuildRequires:	%{gstreamer}-plugins-devel
+BuildRequires:	%{gstreamer}-devel >= %_gst
+BuildRequires:	%{gstreamer}-plugins-devel >= %_gst
 
 # sigh, libtool
 BuildRequires:  gcc-c++
@@ -58,19 +58,23 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc AUTHORS COPYING ChangeLog NEWS README
-%doc examples/gst/*.py
-%doc examples/gstplay/*.py
-%dir %{_libdir}/python?.?/site-packages/gst
-%{_libdir}/python?.?/site-packages/gst/__init__.py*
-%{_libdir}/python?.?/site-packages/gst/_gst.so
-%{_libdir}/python?.?/site-packages/gst/interfaces.so
-%{_libdir}/python?.?/site-packages/gst/play.so
+%doc examples/*.py
+%dir %{_libdir}/python?.?/site-packages/gst-%{majorminor}
+%{_libdir}/python?.?/site-packages/pygst.pth
+%{_libdir}/python?.?/site-packages/pygst.py
+%{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/__init__.py*
+%{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/_gst.so
+%{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/interfaces.so
+%{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/play.so
 %dir %{_datadir}/gst-python
 %{_datadir}/gst-python/examples
 %{_datadir}/gst-python/2.0/defs/*.defs
-%{_libdir}/pkgconfig/gst-python-0.8.pc
+%{_libdir}/pkgconfig/gst-python-%{majorminor}.pc
 
 %changelog
+* Thu Oct 06 2005 Edward Hervey < edward at fluendo dot com >
+- Updated spec file for 0.9
+
 * Fri Nov 05 2004 Christian Schaller < uraeus at gnome org >
 - Remerged spec file with cvs version
 

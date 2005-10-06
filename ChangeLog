@@ -1,7 +1,7 @@
 2005-10-06  Edward Hervey  <edward@fluendo.com>
 
-	* gst-python.spec.in: (BuildRequires), (Requires): 
-	Update dependency for pygtk>= 2.6.3 here too
+	* gst-python.spec.in:
+	Wow, that file hasn't been updated in a long long time.
 
 	* gst/gstcaps.override: (_wrap_gst_caps_new_empty): 
 	new caps should be freed on dealloc...
