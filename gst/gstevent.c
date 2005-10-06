@@ -57,6 +57,51 @@ _gst_event_initialize (void)
   gst_event_get_type ();
 }
 
+typedef struct
+{
+  gint type;
+  gchar *name;
+  GQuark quark;
+} GstEventQuarks;
+
+static GstEventQuarks event_quarks[] = {
+  {GST_EVENT_UNKNOWN, "unknown", 0},
+  {GST_EVENT_FLUSH_START, "flush-start", 0},
+  {GST_EVENT_FLUSH_STOP, "flush-stop", 0},
+  {GST_EVENT_EOS, "eos", 0},
+  {GST_EVENT_NEWSEGMENT, "newsegment", 0},
+  {GST_EVENT_TAG, "tag", 0},
+  {GST_EVENT_FILLER, "filler", 0},
+  {GST_EVENT_QOS, "qos", 0},
+  {GST_EVENT_SEEK, "seek", 0},
+  {GST_EVENT_NAVIGATION, "navigation", 0},
+  {0, NULL, 0}
+};
+
+const gchar *
+gst_event_type_get_name (GstEventType type)
+{
+  gint i;
+
+  for (i = 0; event_quarks[i].name; i++) {
+    if (type == event_quarks[i].type)
+      return event_quarks[i].name;
+  }
+  return "unknown";
+}
+
+GQuark
+gst_event_type_to_quark (GstEventType type)
+{
+  gint i;
+
+  for (i = 0; event_quarks[i].name; i++) {
+    if (type == event_quarks[i].type)
+      return event_quarks[i].quark;
+  }
+  return 0;
+}
+
 GType
 gst_event_get_type (void)
 {
@@ -110,7 +155,8 @@ gst_event_finalize (GstEvent * event)
   g_return_if_fail (event != NULL);
   g_return_if_fail (GST_IS_EVENT (event));
 
-  GST_CAT_INFO (GST_CAT_EVENT, "freeing event %p", event);
+  GST_CAT_INFO (GST_CAT_EVENT, "freeing event %p type %s", event,
+      gst_event_type_get_name (GST_EVENT_TYPE (event)));
 
   if (GST_EVENT_SRC (event)) {
     gst_object_unref (GST_EVENT_SRC (event));
@@ -150,7 +196,8 @@ gst_event_new (GstEventType type)
 
   event = (GstEvent *) gst_mini_object_new (GST_TYPE_EVENT);
 
-  GST_CAT_INFO (GST_CAT_EVENT, "creating new event %p %d", event, type);
+  GST_CAT_INFO (GST_CAT_EVENT, "creating new event %p %s", event,
+      gst_event_type_get_name (type));
 
   event->type = type;
   event->src = NULL;

@@ -1,3 +1,10 @@
+2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstevent.c: (gst_event_type_get_name),
+	(gst_event_type_to_quark), (gst_event_finalize), (gst_event_new):
+	* gst/gstevent.h:
+	  add string representations for event types
+
 2005-10-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfilesink.c: (gst_file_sink_close_file):

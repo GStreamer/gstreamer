@@ -211,6 +211,10 @@ struct _GstEventClass {
 
 void		_gst_event_initialize		(void);
 
+const gchar*    gst_event_type_get_name         (GstEventType type);
+GQuark          gst_event_type_to_quark		(GstEventType type);
+
+
 GType		gst_event_get_type		(void);
 
 /* refcounting */
