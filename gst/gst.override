@@ -54,6 +54,7 @@ PyObject *PyGstExc_LinkError = NULL;
 PyObject *PyGstExc_AddError = NULL;
 PyObject *PyGstExc_RemoveError = NULL;
 
+GST_DEBUG_CATEGORY_EXTERN (python_debug);
 GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
 #define GST_CAT_DEFAULT pygst_debug
 
@@ -244,7 +245,7 @@ pygst_debug_log (PyObject *pyobject, PyObject *string, GstDebugLevel level,
     /* gst_debug_log : category, level, file, function, line, object, format, va_list */
     if (isgstobject)
       object = G_OBJECT (pygobject_get (pyobject));
-    gst_debug_log (GST_CAT_DEFAULT, level, filename, function, lineno, object, "%s", str);
+    gst_debug_log (python_debug, level, filename, function, lineno, object, "%s", str);
     if (filename)
 	g_free(filename);
     Py_INCREF (Py_None);
