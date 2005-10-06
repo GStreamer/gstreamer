@@ -852,7 +852,10 @@ gst_ring_buffer_clear_all (GstRingBuffer * buf)
   gint i;
 
   g_return_if_fail (buf != NULL);
-  g_return_if_fail (buf->spec.segtotal > 0);
+
+  /* not fatal, we just are not negotiated yet */
+  if (buf->spec.segtotal <= 0)
+    return;
 
   GST_DEBUG ("clear all segments");
 

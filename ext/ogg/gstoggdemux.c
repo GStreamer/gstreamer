@@ -2271,12 +2271,12 @@ chain_read_failed:
   }
 pause:
   {
-    GST_LOG_OBJECT (ogg, "pausing task, reason %d", ret);
+    GST_LOG_OBJECT (ogg, "pausing task, reason %s", gst_flow_get_name (ret));
     gst_pad_pause_task (ogg->sinkpad);
     if (GST_FLOW_IS_FATAL (ret)) {
       gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
       GST_ELEMENT_ERROR (ogg, STREAM, STOPPED,
-          (NULL), ("stream stopped, reason %d", ret));
+          (NULL), ("stream stopped, reason %s", gst_flow_get_name (ret)));
     }
     return;
   }

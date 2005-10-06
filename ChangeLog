@@ -1,3 +1,11 @@
+2005-10-06  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_loop):
+	Report the FLOW_RETURN as string in the error message.
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_clear_all):
+	Don't assert when clearing an unnegotiated buffer.
+
 2005-10-04  Michael Smith <msmith@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (group_destroy),
