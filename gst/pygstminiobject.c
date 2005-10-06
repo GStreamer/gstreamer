@@ -28,8 +28,8 @@ static GQuark       pygstminiobject_class_key    = 0;
 /* static GQuark       pygstminiobject_wrapper_key  = 0; */
 
 static void pygstminiobject_dealloc(PyGstMiniObject *self);
-static int  pygstminiobject_traverse(PyGstMiniObject *self, visitproc visit, void *arg);
-static int  pygstminiobject_clear(PyGstMiniObject *self);
+/* static int  pygstminiobject_traverse(PyGstMiniObject *self, visitproc visit, void *arg); */
+/* static int  pygstminiobject_clear(PyGstMiniObject *self); */
 
 GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
 #define GST_CAT_DEFAULT pygst_debug
@@ -98,7 +98,7 @@ pygstminiobject_register_class(PyObject *dict, const gchar *type_name,
     s = strrchr(class_name, '.');
     if (s != NULL)
 	class_name = s + 1;
-	
+    
     type->ob_type = &PyType_Type;
     type->tp_alloc = PyType_GenericAlloc;
     type->tp_new = PyType_GenericNew;
@@ -115,9 +115,11 @@ pygstminiobject_register_class(PyObject *dict, const gchar *type_name,
     if (gtype) {
 	o = pyg_type_wrapper_new(gtype);
 	PyDict_SetItemString(type->tp_dict, "__gtype__", o);
+	GST_INFO ("Decrement refcount %p", o);
 	Py_DECREF(o);
 
 	/* stash a pointer to the python class with the GType */
+	GST_INFO ("Increment refcount %p", type);
 	Py_INCREF(type);
 	g_type_set_qdata(gtype, pygstminiobject_class_key, type);
     }
@@ -142,7 +144,6 @@ pygstminiobject_register_wrapper (PyObject *self)
     PyGILState_STATE state;
 
     g_assert (obj);
-    Py_INCREF (self);
     GST_DEBUG ("inserting self %p in the table for object %p", self, obj);
     state = pyg_gil_state_ensure ();
     g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
@@ -182,6 +183,7 @@ pygstminiobject_new (GstMiniObject *obj)
 	/* make sure the lookup returned our object */
         g_assert (self->obj);
         g_assert (self->obj == obj);
+	GST_INFO ("Increment refcount %p", self);
 	Py_INCREF (self);
     } else {
         GST_DEBUG ("have to create wrapper for object %p", obj);
@@ -189,11 +191,11 @@ pygstminiobject_new (GstMiniObject *obj)
 	PyTypeObject *tp = pygstminiobject_lookup_class (G_OBJECT_TYPE (obj));
 	if (!tp)
 	    g_warning ("Couldn't get class for type object : %p", obj);
-	/* need to bump type refcount if created with
-	   pygstminiobject_new_with_interfaces(). fixes bug #141042 */
-	if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE)
+	if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE) {
+	    GST_INFO ("Increment refcount %p", tp);
 	    Py_INCREF (tp);
-	self = PyObject_GC_New (PyGstMiniObject, tp);
+	}
+	self = PyObject_New (PyGstMiniObject, tp);
 	if (self == NULL)
 	    return NULL;
 	self->obj = gst_mini_object_ref (obj);
@@ -201,15 +203,12 @@ pygstminiobject_new (GstMiniObject *obj)
 	self->inst_dict = NULL;
 	self->weakreflist = NULL;
 
-	Py_INCREF (self);
-
 	/* save wrapper pointer so we can access it later */
         GST_DEBUG ("inserting self %p in the table for object %p", self, obj);
 	state = pyg_gil_state_ensure ();
 	g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
 	pyg_gil_state_release (state);
 
-	PyObject_GC_Track ((PyObject *)self);
     }
     return (PyObject *) self;
 }
@@ -221,15 +220,10 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
 
     PyGILState_STATE state;
 
+    GST_INFO ("At the beginning %p", self);
     state = pyg_gil_state_ensure();
 
-    PyObject_ClearWeakRefs((PyObject *)self);
-
-    PyObject_GC_UnTrack((PyObject *)self);
-
     if (self->obj) {
-        /* the following causes problems with subclassed types */
-        /* self->ob_type->tp_free((PyObject *)self); */
         GST_DEBUG ("removing self %p from the table for object %p", self,
              self->obj);
         g_assert (g_hash_table_remove (_miniobjs, (gpointer) self->obj));
@@ -243,8 +237,9 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
     }
     self->inst_dict = NULL;
 
-    PyObject_GC_Del(self);
+    self->ob_type->tp_free((PyObject *) self);
     pyg_gil_state_release(state);
+    GST_INFO ("At the end %p", self);
 }
 
 static int
@@ -274,47 +269,11 @@ pygstminiobject_repr(PyGstMiniObject *self)
     return PyString_FromString(buf);
 }
 
-static int
-pygstminiobject_traverse(PyGstMiniObject *self, visitproc visit, void *arg)
-{
-    int ret = 0;
-
-    if (self->inst_dict) ret = visit(self->inst_dict, arg);
-    if (ret != 0) return ret;
-
-    if (self->obj && self->obj->refcount == 1)
-	ret = visit((PyObject *)self, arg);
-    if (ret != 0) return ret;
-
-    return 0;
-}
-
-static int
-pygstminiobject_clear(PyGstMiniObject *self)
-{
-    if (self->inst_dict) {
-	Py_DECREF(self->inst_dict);
-    }
-    self->inst_dict = NULL;
-
-    if (self->obj) {
-        /* the following causes problems with subclassed types */
-        /* self->ob_type->tp_free((PyObject *)self); */
-        GST_DEBUG ("removing self %p from the table for object %p", self,
-             self->obj);
-        g_assert (g_hash_table_remove (_miniobjs, (gpointer) self->obj));
-	gst_mini_object_unref (self->obj);
-    }
-    GST_DEBUG ("setting self %p -> obj to NULL", self);
-    self->obj = NULL;
-
-    return 0;
-}
 
 static void
 pygstminiobject_free(PyObject *op)
 {
-    PyObject_GC_Del(op);
+    PyObject_FREE(op);
 }
 
 
@@ -429,11 +388,10 @@ PyTypeObject PyGstMiniObject_Type = {
     (getattrofunc)0,			/* tp_getattro */
     (setattrofunc)0,			/* tp_setattro */
     0,					/* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE |
-    	Py_TPFLAGS_HAVE_GC,		/* tp_flags */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,		/* tp_flags */
     NULL, /* Documentation string */
-    (traverseproc)pygstminiobject_traverse,	/* tp_traverse */
-    (inquiry)pygstminiobject_clear,		/* tp_clear */
+    (traverseproc)0,	/* tp_traverse */
+    (inquiry)0,		/* tp_clear */
     (richcmpfunc)0,			/* tp_richcompare */
     offsetof(PyGstMiniObject, weakreflist),	/* tp_weaklistoffset */
     (getiterfunc)0,			/* tp_iter */

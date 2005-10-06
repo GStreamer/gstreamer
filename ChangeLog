@@ -1,3 +1,9 @@
+2005-10-06  Edward Hervey  <edward@fluendo.com>
+
+	* gst/pygstminiobject.c: 
+	Dooh, PyGstMiniObject doesn't need cyclic garbage collection !
+	Bye, bye Python refcounting (and refcounting bugs).
+
 2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/test_ghostpad.py:
