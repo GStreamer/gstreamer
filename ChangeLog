@@ -1,3 +1,14 @@
+2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  need at least 2.6.3, because that contains the code that
+	  converts signal closure arguments to the correct Gst
+	  types
+	* gst/gstpad.override:
+	  log name of probe handlers we call
+	* testsuite/test_pad.py:
+	  fix up tests; use TestCase base class methods
+
 2005-10-06  Edward Hervey  <edward@fluendo.com>
 
 	* gst/pygstminiobject.c: 

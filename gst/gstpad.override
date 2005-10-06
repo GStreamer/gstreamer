@@ -115,11 +115,14 @@ probe_handler_marshal(GstPad *pad, GstMiniObject *data, gpointer user_data)
     PyObject *ret;
     PyObject *py_data;
     PyObject *py_user_data;
+    PyObject *repr;
     gboolean res;
     gint len, i;
 
     g_return_val_if_fail(user_data != NULL, FALSE);
 
+    GST_LOG_OBJECT (pad, "marshalling probe handler for object %"
+        GST_PTR_FORMAT, data);
     state = pyg_gil_state_ensure();
 
     py_user_data = (PyObject *) user_data;
@@ -137,6 +140,9 @@ probe_handler_marshal(GstPad *pad, GstMiniObject *data, gpointer user_data)
         args = PySequence_Concat(tuple, PyTuple_GetItem(py_user_data, i));
         Py_DECREF(tuple);
     }
+    repr = PyObject_Repr (callback);
+    GST_LOG_OBJECT (pad, "calling callback %s", PyString_AsString (repr));
+    Py_DECREF (repr);
     ret = PyObject_CallObject(callback, args);
 
     if (!ret) {

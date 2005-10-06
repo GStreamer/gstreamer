@@ -25,13 +25,6 @@ import sys
 import gc
 
 class PadTemplateTest(TestCase):
-    def setUp(self):
-        self.gctrack()
-
-    def tearDown(self):
-        self.gccollect()
-        self.gcverify()
-        
     def testConstructor(self):
         template = gst.PadTemplate("template", gst.PAD_SINK,
             gst.PAD_ALWAYS, gst.caps_from_string("audio/x-raw-int"))
@@ -41,7 +34,7 @@ class PadTemplateTest(TestCase):
 
 class PadPushUnlinkedTest(TestCase):
     def setUp(self):
-        self.gctrack()
+        TestCase.setUp(self)
         self.src = gst.Pad("src", gst.PAD_SRC)
         self.sink = gst.Pad("sink", gst.PAD_SINK)
 
@@ -52,8 +45,7 @@ class PadPushUnlinkedTest(TestCase):
         self.assertEquals(sys.getrefcount(self.sink), 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
         del self.sink
-        self.gccollect()
-        self.gcverify()
+        TestCase.tearDown(self)
 
     def testNoProbe(self):
         self.buffer = gst.Buffer()
@@ -84,7 +76,7 @@ class PadPushUnlinkedTest(TestCase):
 
 class PadPushLinkedTest(TestCase):
     def setUp(self):
-        self.gctrack()
+        TestCase.setUp(self)
         self.src = gst.Pad("src", gst.PAD_SRC)
         self.sink = gst.Pad("sink", gst.PAD_SINK)
         caps = gst.caps_from_string("foo/bar")
@@ -101,8 +93,7 @@ class PadPushLinkedTest(TestCase):
         self.assertEquals(sys.getrefcount(self.sink), 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
         del self.sink
-        self.gccollect()
-        self.gcverify()
+        TestCase.tearDown(self)
 
     def _chain_func(self, pad, buffer):
         self.buffers.append(buffer)
@@ -145,7 +136,7 @@ class PadPushLinkedTest(TestCase):
 
 class PadPushProbeLinkTest(TestCase):
     def setUp(self):
-        self.gctrack()
+        TestCase.setUp(self)
         self.src = gst.Pad("src", gst.PAD_SRC)
         self.sink = gst.Pad("sink", gst.PAD_SINK)
         caps = gst.caps_from_string("foo/bar")
@@ -161,8 +152,7 @@ class PadPushProbeLinkTest(TestCase):
         self.assertEquals(sys.getrefcount(self.sink), 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
         del self.sink
-        self.gccollect()
-        self.gcverify()
+        TestCase.tearDown(self)
 
     def _chain_func(self, pad, buffer):
         self.buffers.append(buffer)
@@ -187,13 +177,6 @@ class PadPushProbeLinkTest(TestCase):
       
  
 class PadTest(TestCase):
-    def setUp(self):
-        self.gctrack()
-
-    def tearDown(self):
-        self.gccollect()
-        self.gcverify()
-       
     def testConstructor(self):
         # first style uses gst_pad_new
         gst.debug('creating pad with name src')
@@ -213,17 +196,15 @@ class PadTest(TestCase):
 
 class PadPipelineTest(TestCase):
     def setUp(self):
+        TestCase.setUp(self)
         self.pipeline = gst.parse_launch('fakesrc name=source ! fakesink')
         src = self.pipeline.get_by_name('source')
         self.srcpad = src.get_pad('src')
-        self.gctrack()
 
     def tearDown(self):
         del self.pipeline
         del self.srcpad
-        self.gccollect()
-        self.gcverify()
-
+        TestCase.tearDown(self)
         
 # FIXME: now that GstQuery is a miniobject with various _new_ factory
 # functions, we need to figure out a way to deal with them in python
@@ -235,7 +216,7 @@ class PadPipelineTest(TestCase):
 
 class PadProbePipeTest(TestCase):
     def setUp(self):
-        self.gctrack()
+        TestCase.setUp(self)
         self.pipeline = gst.Pipeline()
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
         self.assertEquals(sys.getrefcount(self.pipeline), 3)
@@ -282,7 +263,7 @@ class PadProbePipeTest(TestCase):
         del self.fakesink
         self.gccollect()
 
-        self.gcverify()
+        TestCase.tearDown(self)
         
     def testFakeSrcProbeOnceKeep(self):
         self.fakesrc.set_property('num-buffers', 1)
@@ -296,8 +277,10 @@ class PadProbePipeTest(TestCase):
         self._got_fakesink_buffer = 0
         self.pipeline.set_state(gst.STATE_PLAYING)
         while not self._got_fakesrc_buffer:
+            gst.debug('waiting for fakesrc buffer')
             pass
         while not self._got_fakesink_buffer:
+            gst.debug('waiting for fakesink buffer')
             pass
 
         self.assertEquals(self._got_fakesink_buffer, 1)
@@ -313,7 +296,10 @@ class PadProbePipeTest(TestCase):
         self._got_fakesrc_buffer = 0
         self.pipeline.set_state(gst.STATE_PLAYING)
         while not self._got_fakesrc_buffer == 1000:
-            pass
+            import time
+            # allow for context switching; a busy loop here locks up the
+            # streaming thread too much
+            time.sleep(.0001)
         pad.remove_buffer_probe(id)
 
         self.pipeline.set_state(gst.STATE_NULL)
@@ -322,12 +308,16 @@ class PadProbePipeTest(TestCase):
         self.failUnless(isinstance(pad, gst.Pad))
         self.failUnless(isinstance(buffer, gst.Buffer))
         self._got_fakesrc_buffer += 1
+        gst.debug('fakesrc sent buffer %r, %d total sent' % (
+            buffer, self._got_fakesrc_buffer))
         return True
 
     def _handoff_callback_fakesink(self, sink, buffer, pad):
         self.failUnless(isinstance(buffer, gst.Buffer))
         self.failUnless(isinstance(pad, gst.Pad))
         self._got_fakesink_buffer += 1
+        gst.debug('fakesink got buffer %r, %d total received' % (
+            buffer, self._got_fakesrc_buffer))
         return True
 
     def testRemovingProbe(self):
@@ -354,13 +344,6 @@ class PadProbePipeTest(TestCase):
         self.gccollect()
 
 class PadRefCountTest(TestCase):
-    def setUp(self):
-        self.gctrack()
-
-    def tearDown(self):
-        self.gccollect()
-        self.gcverify()
-        
     def testAddPad(self):
         # add a pad to an element
         e = gst.element_factory_make('fakesrc')
