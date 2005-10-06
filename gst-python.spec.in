@@ -1,5 +1,5 @@
 %define         majorminor      @GST_MAJORMINOR@
-%define         gstreamer       gstreamer
+%define         gstreamer       gstreamer09
 %define		_pygtk		@PYGTK_REQ@
 %define		_gst		@GST_REQ@
 
@@ -13,23 +13,14 @@ License:        LGPL
 URL:            http://gstreamer.net/
 Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
 Source: 	http://gstreamer.freedesktop.org/src/gst-python/gst-python-%{version}.tar.gz
-BuildRoot: 	%{_tmppath}/%{name}-%{version}-root
 
-%define _pygtk	2.3.97
-%define _gtk	@gtk_required_version@
-
-Requires: 	python2
-Requires: 	pygtk2 >= %_pygtk
-Requires: 	gstreamer09 >= 0.9.1
-BuildRequires:	pygtk2-devel >= %_pygtk
-BuildRequires:	python2-devel
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:	python >= 2
 Requires:	gnome-python2
 Requires:	pygtk2 >= %_pygtk
-Requires:	%{gstreamer}09
-Requires:	%{gstreamer}09-plugins-base
+Requires:	%{gstreamer}
+Requires:	%{gstreamer}-plugins-base
 
 BuildRequires:	python >= 2
 BuildRequires:  python-devel >= 2
@@ -37,11 +28,8 @@ BuildRequires:  pygtk2-devel >= %_pygtk
 BuildRequires:	xmlto
 BuildRequires:	links
 
-# xwindowlistener needs X11 headers
-BuildRequires:  XFree86-devel
-
-BuildRequires:	%{gstreamer}09-devel >= %_gst
-BuildRequires:	%{gstreamer}09-plugins-base-devel >= %_gst
+BuildRequires:	%{gstreamer}-devel >= %_gst
+BuildRequires:	%{gstreamer}-plugins-base-devel >= %_gst
 
 # sigh, libtool
 BuildRequires:  gcc-c++
@@ -67,19 +55,18 @@ find $RPM_BUILD_ROOT -type f -name "*.la" -exec rm -f {} ';'
 rm -rf $RPM_BUILD_ROOT
 
 %files
-%defattr(644,root,root,755)
-%doc AUTHORS ChangeLog README NEWS
-%{_libdir}/*
-%{_datadir}/*
 %defattr(-,root,root,-)
 %doc AUTHORS COPYING ChangeLog NEWS README
 %dir %{_libdir}/python?.?/site-packages/gst-%{majorminor}
 %{_libdir}/python?.?/site-packages/pygst.pth
 %{_libdir}/python?.?/site-packages/pygst.py
+%{_libdir}/python?.?/site-packages/gst/extend/*
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/__init__.py*
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/_gst.so
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/interfaces.so
 %dir %{_datadir}/gst-python
+%{_datadir}/gst-python/?.?/defs/*
+%{_datadir}/gst-python/?.?/examples/*
 %{_libdir}/pkgconfig/gst-python-%{majorminor}.pc
 
 %changelog
