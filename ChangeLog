@@ -1,3 +1,13 @@
+2005-10-06  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstbuffer.override: (_wrap_gst_buffer__get_caps): 
+	Proper wrapping of the GstBuffer.caps attribute
+
+	* gst/gstmodule.c: (init_gst):
+	* gst/pygstminiobject.c: (pygstminiobject_register_class):
+	gst-debug initialisation should happen before anything else if we
+	want the debugging functions to work.
+
 2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

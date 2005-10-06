@@ -148,6 +148,11 @@ init_gst (void)
 	  g_free (argv);
      }
 
+     /* Initialize debugging category */
+     GST_DEBUG_CATEGORY_INIT (pygst_debug, "pygst", 0, "GStreamer python bindings");
+     GST_DEBUG_CATEGORY_INIT (python_debug, "python", 
+         GST_DEBUG_FG_GREEN, "python code using gst-python");
+
 /*      _pygst_register_boxed_types (NULL); */
      pygobject_register_sinkfunc(GST_TYPE_OBJECT, pygstobject_sink);
 
@@ -207,11 +212,6 @@ init_gst (void)
                          pyg_type_wrapper_new(GST_TYPE_INDEX_FACTORY));
      PyModule_AddObject (m, "TYPE_TYPE_FIND_FACTORY",
                          pyg_type_wrapper_new(GST_TYPE_TYPE_FIND_FACTORY));
-
-     /* Initialize debugging category */
-     GST_DEBUG_CATEGORY_INIT (pygst_debug, "pygst", 0, "GStreamer python bindings");
-     GST_DEBUG_CATEGORY_INIT (python_debug, "python", 
-         GST_DEBUG_FG_GREEN, "python code using gst-python");
 
      g_timeout_add_full (0, 100, python_do_pending_calls, NULL, NULL);
      

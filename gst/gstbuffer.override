@@ -44,6 +44,7 @@ _wrap_gst_buffer_new(PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
 	int size = 0;
 	int buf_size = -1;
 
+	GST_INFO("self:%p", self);
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|z#i:GstBuffer.__init__", kwlist,
 					 &data, &size, &buf_size))
 		return -1;
@@ -60,7 +61,9 @@ _wrap_gst_buffer_new(PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
 	}
 	
 	self->obj = GST_MINI_OBJECT(gst_buffer_new_and_alloc(buf_size));
-	
+	GST_INFO ("pyo:%p pyr:%d minio:%p minir:%d",
+		  self, ((PyObject*)self)->ob_refcnt,
+		  self->obj, GST_MINI_OBJECT_REFCOUNT_VALUE(self->obj));
 	if (!self->obj) {
 		PyErr_SetString(PyExc_RuntimeError, "could not create GstBuffer object");
 		return -1;
@@ -287,6 +290,7 @@ _wrap_gst_buffer_copy_on_write (PyObject *self)
 {
 	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
 
+	GST_INFO("INCREF");
 	if (gst_buffer_is_writable (buf)) {
 	  Py_INCREF (self);
 	  return self;
@@ -502,4 +506,34 @@ _wrap_gst_buffer_stamp (PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
 
 	Py_INCREF(Py_None);
 	return Py_None;
+}
+%%
+override-attr GstBuffer.caps
+static PyObject *
+_wrap_gst_buffer__get_caps (PyObject *self, void *closure)
+{
+    GstMiniObject *miniobject;
+    GstCaps *ret;
+
+    miniobject = pygstminiobject_get (self);
+    g_assert (miniobject);
+
+    pyg_begin_allow_threads;
+    ret = gst_buffer_get_caps(GST_BUFFER(miniobject));
+    pyg_end_allow_threads;
+    return pyg_boxed_new (GST_TYPE_CAPS, ret, FALSE, TRUE);    
+}
+static int
+_wrap_gst_buffer__set_caps (PyGstMiniObject *self, PyObject *value, void *closure)
+{
+    GstCaps *caps;
+    g_assert (self);
+
+    caps = pygst_caps_from_pyobject (value, NULL);
+    if (PyErr_Occurred())
+	return -1;
+    pyg_begin_allow_threads;
+    gst_buffer_set_caps(GST_BUFFER(self->obj), caps);
+    pyg_end_allow_threads;
+    return 0;
 }

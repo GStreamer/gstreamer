@@ -115,11 +115,9 @@ pygstminiobject_register_class(PyObject *dict, const gchar *type_name,
     if (gtype) {
 	o = pyg_type_wrapper_new(gtype);
 	PyDict_SetItemString(type->tp_dict, "__gtype__", o);
-	GST_INFO ("Decrement refcount %p", o);
 	Py_DECREF(o);
 
 	/* stash a pointer to the python class with the GType */
-	GST_INFO ("Increment refcount %p", type);
 	Py_INCREF(type);
 	g_type_set_qdata(gtype, pygstminiobject_class_key, type);
     }
