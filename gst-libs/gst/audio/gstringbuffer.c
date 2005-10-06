@@ -1065,9 +1065,10 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
 
       /* segment too far ahead, we need to drop */
       if (diff < 0) {
-        /* we need to drop one segment at a time, pretend we wrote a
-         * segment. */
+        /* we need to drop one segment at a time, pretend we read an
+         * empty segment. */
         readlen = MIN (segsize, len);
+        memcpy (data, buf->empty_seg, readlen);
         goto next;
       }
 

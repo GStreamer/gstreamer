@@ -57,6 +57,9 @@ struct _GstBaseAudioSrc {
   GstClockTime   buffer_time;
   GstClockTime   latency_time;
 
+  /* the next sample to write */
+  guint64	 next_sample;
+
   /* clock */
   GstClock	*clock;
 

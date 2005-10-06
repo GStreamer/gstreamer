@@ -289,8 +289,12 @@ gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       gst_ring_buffer_pause (src->ringbuffer);
+      gst_ring_buffer_clear_all (src->ringbuffer);
       break;
     case GST_EVENT_FLUSH_STOP:
+      /* always resync on sample after a flush */
+      src->next_sample = -1;
+      gst_ring_buffer_clear_all (src->ringbuffer);
       break;
     default:
       break;
@@ -306,6 +310,7 @@ gst_base_audio_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   guchar *data;
   guint len;
   guint res;
+  guint64 sample;
 
   if (!gst_ring_buffer_is_acquired (src->ringbuffer))
     goto wrong_state;
@@ -315,9 +320,17 @@ gst_base_audio_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   data = GST_BUFFER_DATA (buf);
   len = GST_BUFFER_SIZE (buf);
 
-  res = gst_ring_buffer_read (src->ringbuffer, -1, data, len);
+  if (src->next_sample != -1) {
+    sample = src->next_sample;
+  } else {
+    sample = 0;
+  }
+
+  res = gst_ring_buffer_read (src->ringbuffer, sample, data, len);
   if (res == -1)
     goto stopped;
+
+  src->next_sample = sample + len / src->ringbuffer->spec.bytes_per_sample;
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
 
@@ -378,6 +391,7 @@ gst_base_audio_src_change_state (GstElement * element,
       }
       if (!gst_ring_buffer_open_device (src->ringbuffer))
         return GST_STATE_CHANGE_FAILURE;
+      src->next_sample = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
@@ -394,8 +408,8 @@ gst_base_audio_src_change_state (GstElement * element,
       gst_ring_buffer_pause (src->ringbuffer);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_ring_buffer_stop (src->ringbuffer);
       gst_ring_buffer_release (src->ringbuffer);
+      src->next_sample = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_ring_buffer_close_device (src->ringbuffer);
