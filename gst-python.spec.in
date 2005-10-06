@@ -29,7 +29,7 @@ Requires:	python >= 2
 Requires:	gnome-python2
 Requires:	pygtk2 >= %_pygtk
 Requires:	%{gstreamer}09
-Requires:	%{gstreamer}09-plugins
+Requires:	%{gstreamer}09-plugins-base
 
 BuildRequires:	python >= 2
 BuildRequires:  python-devel >= 2
