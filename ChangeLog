@@ -1,3 +1,8 @@
+2005-10-06  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstcaps.override: (_wrap_gst_caps_new_empty): 
+	new caps should be freed on dealloc...
+
 2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstcaps.override:

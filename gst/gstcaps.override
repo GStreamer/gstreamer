@@ -101,7 +101,7 @@ _wrap_gst_caps_new_empty(PyGBoxed *self, PyObject *args, PyObject *kwargs)
         /* we wrap caps_new, caps_from_string and caps_new_full */
         len = PyTuple_Size(args);
         self->gtype = GST_TYPE_CAPS;
-	self->free_on_dealloc = FALSE;
+	self->free_on_dealloc = TRUE;
 	
         if (len == 0) {
 		/* 0 length creates a new empty caps */
