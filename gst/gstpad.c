@@ -2584,23 +2584,22 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
 
     pads = g_list_next (pads);
 
-    /* for all of the internally-linked pads that are actually linked */
-    if (GST_PAD_IS_LINKED (eventpad)) {
-      if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
-        /* for each pad we send to, we should ref the event; it's up
-         * to downstream to unref again when handled. */
-        GST_LOG_OBJECT (pad, "Reffing and sending event %p to %s:%s", event,
-            GST_DEBUG_PAD_NAME (eventpad));
-        gst_event_ref (event);
-        gst_pad_push_event (eventpad, event);
-      } else {
-        /* we only send the event on one pad, multi-sinkpad elements
-         * should implement a handler */
-        GST_LOG_OBJECT (pad, "sending event %p to one sink pad %s:%s", event,
-            GST_DEBUG_PAD_NAME (eventpad));
-        result = gst_pad_push_event (eventpad, event);
-        goto done;
-      }
+    if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
+      /* for each pad we send to, we should ref the event; it's up
+       * to downstream to unref again when handled. */
+      GST_LOG_OBJECT (pad, "Reffing and sending event %p (%s) to %s:%s",
+          event, gst_event_type_get_name (GST_EVENT_TYPE (event)),
+          GST_DEBUG_PAD_NAME (eventpad));
+      gst_event_ref (event);
+      gst_pad_push_event (eventpad, event);
+    } else {
+      /* we only send the event on one pad, multi-sinkpad elements
+       * should implement a handler */
+      GST_LOG_OBJECT (pad, "sending event %p (%s) to one sink pad %s:%s",
+          event, gst_event_type_get_name (GST_EVENT_TYPE (event)),
+          GST_DEBUG_PAD_NAME (eventpad));
+      result = gst_pad_push_event (eventpad, event);
+      goto done;
     }
   }
   /* we handled the incoming event so we unref once */

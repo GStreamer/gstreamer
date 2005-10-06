@@ -1,5 +1,11 @@
 2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstpad.c: (gst_pad_event_default_dispatch):
+	  give events a chance to be handled by event probes when the pad
+	  is not linked
+
+2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstevent.c: (gst_event_type_get_name),
 	(gst_event_type_to_quark), (gst_event_finalize), (gst_event_new):
 	* gst/gstevent.h:
