@@ -1,3 +1,9 @@
+2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstghostpad.c: (gst_ghost_pad_internal_do_activate_push):
+	  add push activation of sink ghost pads.
+	  Andye, please verify
+
 2005-10-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstutils.c: (gst_element_link_pads):

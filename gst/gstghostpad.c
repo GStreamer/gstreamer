@@ -484,9 +484,17 @@ gst_ghost_pad_internal_do_activate_push (GstPad * pad, gboolean active)
   gboolean ret;
 
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-    g_critical ("how did I get here?");
+    GstPad *parent = GST_PAD (gst_object_get_parent (GST_OBJECT (pad)));
 
-    ret = FALSE;
+    if (parent) {
+      g_return_val_if_fail (GST_IS_GHOST_PAD (parent), FALSE);
+
+      ret = gst_pad_activate_push (parent, active);
+
+      gst_object_unref (parent);
+    } else {
+      ret = FALSE;
+    }
   } else {
     GstPad *peer = gst_pad_get_peer (pad);
 
