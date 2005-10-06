@@ -41,7 +41,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static const gint block_size[16] = { 12, 13, 15, 17, 19, 20, 26, 31, 5,
-  0, 0, 0, 0, 0, 0, 0
+  -1, -1, -1, -1, -1, -1, 0
 };
 
 static void gst_amrnbdec_base_init (GstAmrnbDecClass * klass);

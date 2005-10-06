@@ -346,6 +346,7 @@ gst_mad_init (GstMad * mad)
       GST_DEBUG_FUNCPTR (gst_mad_src_query));
   gst_pad_set_query_type_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_get_query_types));
+  gst_pad_use_fixed_caps (mad->srcpad);
 #if 0
   gst_pad_set_convert_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_convert_src));
@@ -1364,11 +1365,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
               } else {
                 mad->tags = gst_tag_list_copy (list);
               }
-              if (GST_PAD_IS_USABLE (mad->srcpad)) {
-                gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
-              } else {
-                gst_tag_list_free (list);
-              }
+              gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
             }
           }
         }
@@ -1406,11 +1403,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
               GST_TAG_BITRATE, bitrate, NULL);
           gst_element_post_message (GST_ELEMENT (mad),
               gst_message_new_tag (GST_OBJECT (mad), gst_tag_list_copy (list)));
-          if (GST_PAD_IS_USABLE (mad->srcpad)) {
-            gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
-          } else {
-            gst_tag_list_free (list);
-          }
+          gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
         }
 
         mad->check_for_xing = FALSE;
@@ -1450,8 +1443,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
             GST_FORMAT_BYTES, x_bytes, GST_FORMAT_TIME, time_offset, NULL);
       }
 
-      if (GST_PAD_IS_USABLE (mad->srcpad) &&
-          mad->segment_start <= (time_offset ==
+      if (mad->segment_start <= (time_offset ==
               GST_CLOCK_TIME_NONE ? 0 : time_offset)) {
 
         /* for sample accurate seeking, calculate how many samples

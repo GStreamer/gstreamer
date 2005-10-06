@@ -1,3 +1,12 @@
+2005-10-06  Wim Taymans  <wim@fluendo.com>
+
+	* ext/amrnb/amrnbdec.c:
+	Mark invalid frame sizes
+
+	* ext/mad/gstmad.c: (gst_mad_init), (gst_mad_chain):
+	UNUSABLE is not to be used here, just push out stuff so
+	probes can continue linking or making the pad usable.
+
 2005-10-05  Michael Smith <msmith@fluendo.com>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_sink_event),
