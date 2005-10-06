@@ -76,7 +76,7 @@ plugins.
 This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
 
-%package -n gstreamer-tools
+%package -n gstreamer09-tools
 Summary: 	tools for GStreamer streaming media framework
 Group: 		Applications/Multimedia
 
