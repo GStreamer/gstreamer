@@ -34,13 +34,13 @@
 
 G_BEGIN_DECLS
 
-/* bitmaks defining the direction */
-#define GST_EVDIR_US	(1 << 0)	
-#define GST_EVDIR_DS	(1 << 1)	
+/* bitmasks defining the direction */
+#define GST_EVDIR_US	(1 << 0)
+#define GST_EVDIR_DS	(1 << 1)
 #define GST_EVDIR_BOTH	GST_EVDIR_US | GST_EVDIR_DS
 /* mask defining event is serialized with data */
-#define GST_EVSER	(1 << 2)	
-#define GST_EVSHIFT	4	
+#define GST_EVSER	(1 << 2)
+#define GST_EVSHIFT	4
 
 /* when making custom event types, use this macro with the num and
  * the given flags */
@@ -51,26 +51,31 @@ G_BEGIN_DECLS
  * @GST_EVENT_UNKNOWN: unknown event.
  * @GST_EVENT_FLUSH_START: Start a flush operation
  * @GST_EVENT_FLUSH_STOP: Stop a flush operation
- * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow without
- * a NEWSEGMENT event.
+ * @GST_EVENT_EOS: End-Of-Stream. No more data is to be expected to follow
+ *                 without a NEWSEGMENT event.
  * @GST_EVENT_NEWSEGMENT: A new media segment follows in the dataflow.
  * @GST_EVENT_TAG: A new set of metadata tags has been found in the stream.
  * @GST_EVENT_FILLER: Filler for sparse data streams.
- * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements that the downstream elements
- * are being starved of or flooded with data.
+ * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
+ *                 that the downstream elements are being starved of or
+ *                 flooded with data.
  * @GST_EVENT_SEEK: A request for a new playback position and rate.
- * @GST_EVENT_NAVIGATION: Navigation events are usually used for communicating user
- * requests, such as mouse or keyboard movements, to upstream elements.
+ * @GST_EVENT_NAVIGATION: Navigation events are usually used for communicating
+                          user requests, such as mouse or keyboard movements,
+ *                        to upstream elements.
  * @GST_EVENT_CUSTOM_UP: Upstream custom event
  * @GST_EVENT_CUSTOM_DS: Downstream custom event that travels in the data flow.
  * @GST_EVENT_CUSTOM_DS_OOB: Custom out-of-band downstream event.
- * @GST_EVENT_CUSTOM_BOTH: Custom upstream or downstream event. In-band when travelling downstream.
+ * @GST_EVENT_CUSTOM_BOTH: Custom upstream or downstream event.
+ *                         In-band when travelling downstream.
  * @GST_EVENT_CUSTOM_BOTH_OOB: Custom upstream or downstream out-of-band event.
  *
- * GstEventType lists the standard event types that can be sent in a pipeline. 
+ * GstEventType lists the standard event types that can be sent in a pipeline.
  *
- * The custom event types can be used for private messages between elements that can't be expressed using normal
- * GStreamer buffer passing semantics. Custom events carry an arbitrary GstStructure. 
+ * The custom event types can be used for private messages between elements
+ * that can't be expressed using normal
+ * GStreamer buffer passing semantics. Custom events carry an arbitrary
+ * GstStructure.
  * Specific custom events are distinguished by the name of the structure.
  */
 typedef enum {
@@ -99,7 +104,7 @@ typedef enum {
 /**
  * GST_EVENT_TRACE_NAME:
  *
- * The name used for memory allocation tracing 
+ * The name used for memory allocation tracing
  */
 #define GST_EVENT_TRACE_NAME	"GstEvent"
 
@@ -168,7 +173,7 @@ typedef enum {
  * @GST_SEEK_FLAG_ACCURATE: accurate position is requested, this might
  *                     be slower for some formats.
  * @GST_SEEK_FLAG_KEY_UNIT: seek to the nearest keyframe. This might be
- * 		       faster but less accurate.
+ *		       faster but less accurate.
  * @GST_SEEK_FLAG_SEGMENT: perform a segment seek. After the playback
  *            of the segment completes, no EOS will be emmited but a
  *            SEGMENT_DONE message will be posted on the bus.
@@ -205,7 +210,7 @@ struct _GstEventClass {
 };
 
 void		_gst_event_initialize		(void);
-	
+
 GType		gst_event_get_type		(void);
 
 /* refcounting */
@@ -236,8 +241,8 @@ GType		gst_event_get_type		(void);
 /* custom event */
 GstEvent*	gst_event_new_custom		(GstEventType type, GstStructure *structure);
 
-const GstStructure *  
-		gst_event_get_structure 	(GstEvent *event);
+const GstStructure *
+		gst_event_get_structure		(GstEvent *event);
 
 /* flush events */
 GstEvent *	gst_event_new_flush_start	(void);
@@ -250,7 +255,7 @@ GstEvent *	gst_event_new_eos		(void);
 GstEvent*	gst_event_new_newsegment	(gdouble rate, GstFormat format,
                                                  gint64 start_value, gint64 stop_value,
 						 gint64 base);
-void		gst_event_parse_newsegment	(GstEvent *event, gdouble *rate, GstFormat *format, 
+void		gst_event_parse_newsegment	(GstEvent *event, gdouble *rate, GstFormat *format,
 						 gint64 *start_value, gint64 *stop_value, gint64 *base);
 /* tag event */
 GstEvent*	gst_event_new_tag		(GstTagList *taglist);
@@ -269,11 +274,11 @@ void		gst_event_parse_qos		(GstEvent *event, gdouble *proportion, GstClockTimeDi
 						 GstClockTime *timestamp);
 /* seek event */
 GstEvent*	gst_event_new_seek		(gdouble rate, GstFormat format, GstSeekFlags flags,
-						 GstSeekType cur_type, gint64 cur, 
+						 GstSeekType cur_type, gint64 cur,
 						 GstSeekType stop_type, gint64 stop);
-void		gst_event_parse_seek		(GstEvent *event, gdouble *rate, GstFormat *format, 
+void		gst_event_parse_seek		(GstEvent *event, gdouble *rate, GstFormat *format,
 		                                 GstSeekFlags *flags,
-						 GstSeekType *cur_type, gint64 *cur, 
+						 GstSeekType *cur_type, gint64 *cur,
 						 GstSeekType *stop_type, gint64 *stop);
 /* navigation event */
 GstEvent*	gst_event_new_navigation	(GstStructure *structure);
