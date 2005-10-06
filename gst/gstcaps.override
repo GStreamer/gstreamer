@@ -419,13 +419,14 @@ _wrap_gst_caps_tp_dealloc (PyObject *self)
 
   if (boxed->free_on_dealloc && boxed->boxed) {
       pygst_caps_map_modified (self);
-    GST_DEBUG ("unreffing caps %" GST_PTR_FORMAT "with refcount %d", 
-      boxed->boxed, GST_CAPS_REFCOUNT (boxed->boxed));
+    GST_DEBUG ("unreffing caps %" GST_PTR_FORMAT " at %p with refcount %d", 
+      boxed->boxed, boxed->boxed, GST_CAPS_REFCOUNT (boxed->boxed));
     gst_caps_unref (boxed->boxed);
   }
 
   self->ob_type->tp_free((PyObject *)self);
 }
+
 %%
 override-slot GstCaps.tp_str
 static PyObject *

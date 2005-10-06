@@ -1,3 +1,10 @@
+2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstcaps.override:
+	  some more debugging
+	* gst/gstevent.override:
+	  represent using the string for the type
+
 2005-10-06  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstbuffer.override: (_wrap_gst_buffer__get_caps): 

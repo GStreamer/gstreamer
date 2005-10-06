@@ -30,3 +30,23 @@ _wrap_gst_event_get_structure(PyGstMiniObject *self)
     /* pyg_boxed_new handles NULL checking */
     return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, TRUE, TRUE);
 }
+
+%%
+override-slot GstEvent.tp_repr
+static PyObject *
+_wrap_gst_event_tp_repr (PyGObject *self)
+{
+    char *buf;
+    PyObject *retval;
+    GstEvent *event;
+
+    event = GST_EVENT(self->obj);
+
+    buf = g_strdup_printf ("<GstEvent (%s) at %lx>",
+        gst_event_type_get_name (event->type), (long) self->obj);
+
+    retval = PyString_FromString(buf);
+    g_free(buf);
+    return retval;
+}
+
