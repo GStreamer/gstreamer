@@ -31,7 +31,7 @@ class SrcBin(gst.Bin):
         src = gst.element_factory_make('fakesrc')
         self.add(src)
         pad = src.get_pad("src")
-        ghostpad = gst.GhostPad("ghostsrc", pad)
+        ghostpad = gst.GhostPad("src", pad)
         self.add_pad(ghostpad)
 gobject.type_register(SrcBin)
 
@@ -40,7 +40,7 @@ class SinkBin(gst.Bin):
         sink = gst.element_factory_make('fakesink')
         self.add(sink)
         pad = sink.get_pad("sink")
-        ghostpad = gst.GhostPad("ghostsink", pad)
+        ghostpad = gst.GhostPad("sink", pad)
         self.add_pad(ghostpad)
 gobject.type_register(SinkBin)
 
@@ -58,20 +58,7 @@ class PipeTest(TestCase):
         self.sink.prepare()
         self.assertEquals(self.src.__gstrefcount__, 1)
         self.assertEquals(sys.getrefcount(self.src), 3)
-
-        self.pipeline.add(self.src, self.sink)
-        self.assertEquals(self.src.__gstrefcount__, 2) # added
-        self.assertEquals(sys.getrefcount(self.src), 3)
-        self.assertEquals(self.sink.__gstrefcount__, 2) # added
-        self.assertEquals(sys.getrefcount(self.sink), 3)
-
-        self.src.link(self.sink)
-
-        self.assertEquals(self.pipeline.__gstrefcount__, 1)
-        self.assertEquals(sys.getrefcount(self.pipeline), 3)
-        self.assertEquals(self.src.__gstrefcount__, 2)
-        self.assertEquals(sys.getrefcount(self.src), 3)
-        self.assertEquals(self.sink.__gstrefcount__, 2)
+        self.assertEquals(self.sink.__gstrefcount__, 1)
         self.assertEquals(sys.getrefcount(self.sink), 3)
 
     def tearDown(self):
@@ -99,6 +86,9 @@ class PipeTest(TestCase):
         TestCase.tearDown(self)
         
     def testBinState(self):
+        self.pipeline.add(self.src, self.sink)
+        self.src.link(self.sink)
+
         self.pipeline.set_state_async(gst.STATE_PLAYING)
         while True:
             (ret, cur, pen) = self.pipeline.get_state(timeout=None)
@@ -110,6 +100,46 @@ class PipeTest(TestCase):
             (ret, cur, pen) = self.pipeline.get_state(timeout=None)
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_NULL:
                 break
+
+    def testProbedLink(self):
+        self.pipeline.add(self.src)
+        pad = self.src.get_pad("src")
+        # FIXME: adding a probe to the ghost pad does not work atm
+        # id = pad.add_buffer_probe(self._src_buffer_probe_cb)
+        realpad = pad.get_target()
+        self._probe_id = realpad.add_buffer_probe(self._src_buffer_probe_cb)
+
+        self._probed = False
+        
+        self.pipeline.set_state_async(gst.STATE_PLAYING)
+        while True:
+            (ret, cur, pen) = self.pipeline.get_state(timeout=None)
+            if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_PLAYING:
+                break
+
+        while not self._probed:
+            pass
+
+        self.pipeline.set_state_async(gst.STATE_NULL)
+        while True:
+            (ret, cur, pen) = self.pipeline.get_state(timeout=None)
+            if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_NULL:
+                break
+
+    def _src_buffer_probe_cb(self, pad, buffer):
+        gst.debug("received probe on pad %r" % pad)
+        self._probed = True
+        gst.debug('adding sink bin')
+        self.pipeline.add(self.sink)
+        # this seems to get rid of the warnings about pushing on an unactivated
+        # pad
+        self.sink.set_state(gst.STATE_PAUSED)
+        gst.debug('linking')
+        self.src.link(self.sink)
+        gst.debug('removing buffer probe id %r' % self._probe_id)
+        pad.remove_buffer_probe(self._probe_id)
+        self._probe_id = None
+        gst.debug('done')
 
 if __name__ == "__main__":
     unittest.main()
