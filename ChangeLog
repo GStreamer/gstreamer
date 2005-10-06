@@ -1,5 +1,17 @@
 2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst_private.h:
+	* gst/gstbus.c:
+	* gst/gstelement.c:
+	* gst/gstinfo.c:
+	* gst/gstpluginfeature.c:
+	  widen the debug category in output to fit the biggest one we have
+	  add a bus category and use it
+	  play with the colors
+	  fix up some categories
+
+2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstghostpad.c: (gst_ghost_pad_internal_do_activate_push):
 	  add push activation of sink ghost pads.
 	  Andye, please verify

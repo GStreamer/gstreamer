@@ -1837,7 +1837,7 @@ gst_element_set_state (GstElement * element, GstState state)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
 
-  GST_DEBUG_OBJECT (element, "set_state to %s",
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "set_state to %s",
       gst_element_state_get_name (state));
   /* get current element state,  need to call the method so that
    * we call the virtual method and subclasses can implement their

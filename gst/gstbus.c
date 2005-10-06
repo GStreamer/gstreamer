@@ -67,6 +67,7 @@
 
 #include "gstbus.h"
 
+#define GST_CAT_DEFAULT GST_CAT_BUS
 /* bus signals */
 enum
 {

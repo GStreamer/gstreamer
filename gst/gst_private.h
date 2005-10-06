@@ -52,6 +52,7 @@ extern GstDebugCategory *GST_CAT_PARENTAGE;
 extern GstDebugCategory *GST_CAT_STATES;
 extern GstDebugCategory *GST_CAT_SCHEDULING;
 extern GstDebugCategory *GST_CAT_BUFFER;
+extern GstDebugCategory *GST_CAT_BUS;
 extern GstDebugCategory *GST_CAT_CAPS;
 extern GstDebugCategory *GST_CAT_CLOCK;
 extern GstDebugCategory *GST_CAT_ELEMENT_PADS;
@@ -83,6 +84,7 @@ extern GstDebugCategory *GST_CAT_REGISTRY;
 #define GST_CAT_SCHEDULING       NULL
 #define GST_CAT_DATAFLOW         NULL
 #define GST_CAT_BUFFER           NULL
+#define GST_CAT_BUS              NULL
 #define GST_CAT_CAPS             NULL
 #define GST_CAT_CLOCK            NULL
 #define GST_CAT_ELEMENT_PADS     NULL
