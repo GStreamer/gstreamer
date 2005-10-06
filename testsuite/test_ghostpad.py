@@ -42,6 +42,12 @@ class SinkBin(gst.Bin):
         pad = sink.get_pad("sink")
         ghostpad = gst.GhostPad("sink", pad)
         self.add_pad(ghostpad)
+        self.sink = sink
+
+    def connect_handoff(self, cb, *args, **kwargs):
+        self.sink.set_property('signal-handoffs', True)
+        self.sink.connect('handoff', cb, *args, **kwargs)
+        
 gobject.type_register(SinkBin)
 
         
@@ -88,12 +94,17 @@ class PipeTest(TestCase):
     def testBinState(self):
         self.pipeline.add(self.src, self.sink)
         self.src.link(self.sink)
+        self.sink.connect_handoff(self._sink_handoff_cb)
+        self._handoffs = 0
 
         self.pipeline.set_state_async(gst.STATE_PLAYING)
         while True:
             (ret, cur, pen) = self.pipeline.get_state(timeout=None)
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_PLAYING:
                 break
+
+        while self._handoffs < 10:
+                pass
 
         self.pipeline.set_state_async(gst.STATE_NULL)
         while True:
@@ -104,6 +115,10 @@ class PipeTest(TestCase):
     def testProbedLink(self):
         self.pipeline.add(self.src)
         pad = self.src.get_pad("src")
+        
+        self.sink.connect_handoff(self._sink_handoff_cb)
+        self._handoffs = 0
+
         # FIXME: adding a probe to the ghost pad does not work atm
         # id = pad.add_buffer_probe(self._src_buffer_probe_cb)
         realpad = pad.get_target()
@@ -120,6 +135,9 @@ class PipeTest(TestCase):
         while not self._probed:
             pass
 
+        while self._handoffs < 10:
+            pass
+
         self.pipeline.set_state_async(gst.STATE_NULL)
         while True:
             (ret, cur, pen) = self.pipeline.get_state(timeout=None)
@@ -133,13 +151,29 @@ class PipeTest(TestCase):
         self.pipeline.add(self.sink)
         # this seems to get rid of the warnings about pushing on an unactivated
         # pad
-        self.sink.set_state(gst.STATE_PAUSED)
+        gst.debug('setting sink state')
+        
+        # FIXME: attempt one: sync to current pending state of bin
+        (res, cur, pen) = self.pipeline.get_state(timeout=0.0)
+        target = pen
+        if target == gst.STATE_VOID_PENDING:
+            target = cur
+        gst.debug("setting sink state to %r" % target)
+        # FIXME: the following print can cause a lock-up; why ?
+        # print target
+        # if we don't set async, it will possibly end up in PAUSED
+        self.sink.set_state_async(target)
+        
         gst.debug('linking')
         self.src.link(self.sink)
         gst.debug('removing buffer probe id %r' % self._probe_id)
         pad.remove_buffer_probe(self._probe_id)
         self._probe_id = None
         gst.debug('done')
+
+    def _sink_handoff_cb(self, sink, pad, buffer):
+        gst.debug('received handoff on pad %r' % pad)
+        self._handoffs += 1
 
 if __name__ == "__main__":
     unittest.main()

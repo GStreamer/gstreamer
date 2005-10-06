@@ -1,5 +1,10 @@
 2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/test_ghostpad.py:
+	  add handoff to count received buffers
+
+2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.override:
 	  accurate line numbers for logging
 	* testsuite/common.py:
