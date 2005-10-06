@@ -48,9 +48,6 @@ except:
 # Load GST and make sure we load it from the current build
 sys.setdlopenflags(RTLD_LAZY | RTLD_GLOBAL)
 
-# Hack
-sys.argv.append('--gst-debug-no-color')
-
 topbuilddir = os.path.abspath(os.path.join('..'))
 topsrcdir = os.path.abspath(os.path.join('..'))
 if topsrcdir.endswith('_build'):
