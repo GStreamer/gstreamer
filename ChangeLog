@@ -1,5 +1,12 @@
 2005-10-06  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gstpad.override:
+	* gst/gststructure.override:
+	* testsuite/testhelpermodule.c: (_wrap_emit_event):
+	memleak fixes. Thanks valgrind :)
+
+2005-10-06  Edward Hervey  <edward@fluendo.com>
+
 	* gst-python.spec.in:
 	Wow, that file hasn't been updated in a long long time.
 

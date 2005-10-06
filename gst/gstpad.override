@@ -392,17 +392,27 @@ _wrap_gst_pad_tp_repr (PyGObject *self)
 {
     char *buf;
     PyObject *retval;
-      GstPad *pad;
-      GstElement *parent;
+    GstPad *pad;
+    GstElement *parent;
+    gchar *padname = NULL;
+    gchar *elementname = NULL;
 
     pad = GST_PAD(self->obj);
     parent = GST_ELEMENT (gst_pad_get_parent (pad));
         
-    buf = g_strdup_printf ("<GstPad (%s:%s) at %lx>",
-        parent ? gst_element_get_name (parent) : "---",
-        gst_pad_get_name (pad), (long) self->obj);
+    padname = gst_pad_get_name (pad);
     if (parent)
+	elementname = gst_element_get_name (parent);
+
+    buf = g_strdup_printf ("<GstPad (%s:%s) at %lx>",
+        parent ? elementname : "---",
+        padname, (long) self->obj);
+
+    if (parent) {
         gst_object_unref (parent);
+	g_free(elementname);
+    }
+    g_free(padname);
 
     retval = PyString_FromString(buf);
     g_free(buf);
@@ -1008,16 +1018,3 @@ _wrap_gst_pad_set_blocked_async (PyGObject *self, PyObject *args)
 
     return pret;
 }
-/* %% */
-/* override gst_pad_set_bufferalloc_function args */
-/* static GstFlowReturn */
-/* pad_set_bufferalloc_marshal (GstPad *pad, guint64 offset, guint size, */
-/*                  GstCaps *caps, GstBuffer **buf) */
-/* { */
-    
-/* } */
-/* PyObject * */
-/* _wrap_gst_pad_set_bufferalloc_function (PyGObject *self, PyObject *args) */
-/* { */
-    
-/* } */

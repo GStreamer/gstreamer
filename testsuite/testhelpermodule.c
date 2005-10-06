@@ -29,6 +29,8 @@ _wrap_emit_event (PyObject * self, PyObject *args)
   event = gst_event_new_custom(event_type, NULL);
   
   g_signal_emit_by_name(G_OBJECT(obj->obj), "event", event);
+  
+  gst_mini_object_unref(GST_MINI_OBJECT(event));
 
   Py_INCREF(Py_None);
   return Py_None;
