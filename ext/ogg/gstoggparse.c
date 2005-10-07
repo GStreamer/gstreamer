@@ -457,6 +457,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
          * BOS page; that way we know that when we next see a BOS page it's a
          * new chain, and we can flush all existing streams.
          */
+        page_type type;
         GstOggStream *stream = gst_ogg_parse_find_stream (ogg, serialno);
 
         if (!stream) {
@@ -467,7 +468,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
 
         ogg->last_page_not_bos = TRUE;
 
-        page_type type = gst_ogg_parse_is_header (ogg, stream, &page);
+        type = gst_ogg_parse_is_header (ogg, stream, &page);
 
         if (type == PAGE_PENDING && ogg->in_headers) {
           gst_buffer_ref (pagebuffer);
