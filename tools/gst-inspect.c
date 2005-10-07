@@ -825,6 +825,7 @@ print_children_info (GstElement * element)
 static void
 print_element_list (gboolean print_all)
 {
+  int plugincount = 0, featurecount = 0;
   GList *plugins, *orig_plugins;
 
   orig_plugins = plugins = gst_default_registry_get_plugin_list ();
@@ -834,6 +835,7 @@ print_element_list (gboolean print_all)
 
     plugin = (GstPlugin *) (plugins->data);
     plugins = g_list_next (plugins);
+    plugincount++;
 
     orig_features = features =
         gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
@@ -842,6 +844,7 @@ print_element_list (gboolean print_all)
       GstPluginFeature *feature;
 
       feature = GST_PLUGIN_FEATURE (features->data);
+      featurecount++;
 
       if (GST_IS_ELEMENT_FACTORY (feature)) {
         GstElementFactory *factory;
@@ -898,6 +901,9 @@ print_element_list (gboolean print_all)
   }
 
   gst_plugin_list_free (plugins);
+
+  g_print ("\nTotal plugins: %d\nTotal features: %d\n",
+      plugincount, featurecount);
 }
 
 static void

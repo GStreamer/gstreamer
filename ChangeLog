@@ -1,3 +1,23 @@
+2005-10-07  Michael Smith <msmith@fluendo.com>
+
+	* tools/gst-inspect.c:
+	  Print out feature and plugin count at the end when printing out
+	  all features.
+
+2005-10-04  Michael Smith <msmith@fluendo.com>
+
+	* gst/gsterror.c: (_gst_stream_errors_init):
+	  Add another error string used in a few existing plugins.
+
+	* gst/gstplugin.c:
+	* gst/gstpluginfeature.c: (gst_plugin_feature_load):
+	* tools/gst-inspect.c: (print_element_info):
+	  When a feature disappears from a plugin (and the feature exists in
+	  the cached registry file), things went horribly wrong. This isn't a
+	  complete fix, we should actually be removing the 'missing' features
+	  from the features list when we load the actual plugin. That's not
+	  yet implemented. 
+
 2005-10-04  Johan Dahlin  <johan@gnome.org>
 
 	* check/gst/gstiterator.c: (GST_START_TEST):
