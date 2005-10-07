@@ -144,7 +144,7 @@ static gboolean gst_signal_processor_src_activate_pull (GstPad * pad,
 static gboolean gst_signal_processor_sink_activate_push (GstPad * pad,
     gboolean active);
 static GstStateChangeReturn gst_signal_processor_change_state (GstElement *
-    element);
+    element, GstStateChange transition);
 
 static gboolean gst_signal_processor_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_signal_processor_getrange (GstPad * pad,

@@ -43,10 +43,6 @@ G_BEGIN_DECLS
 typedef struct _GstDV1394Src GstDV1394Src;
 typedef struct _GstDV1394SrcClass GstDV1394SrcClass;
 
-#define GST_DV_GET_LOCK(dv)	(GST_DV1394SRC (dv)->dv_lock)
-#define GST_DV_LOCK(dv)		g_mutex_lock(GST_DV_GET_LOCK (dv))
-#define GST_DV_UNLOCK(dv)	g_mutex_unlock(GST_DV_GET_LOCK (dv))
-
 struct _GstDV1394Src {
   GstPushSrc element;
 
@@ -54,8 +50,6 @@ struct _GstDV1394Src {
   gint consecutive;
   gint skip;
   gboolean drop_incomplete;
-
-  GMutex *dv_lock;
 
   gint num_ports;
   gint port;
@@ -75,7 +69,7 @@ struct _GstDV1394Src {
   guint bytes_in_frame;
   guint frame_sequence;
 
-  gboolean negotiated;
+  int control_sock[2];
 
   gchar *uri;
 };
