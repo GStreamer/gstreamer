@@ -929,9 +929,6 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     if (!vorbisenc->header_sent) {
-      GST_DEBUG_OBJECT (vorbisenc, "creating and sending header packets");
-      //gint result;
-
       /* Vorbis streams begin with three headers; the initial header (with
          most of the codec setup parameters) which is mandated by the Ogg
          bitstream spec.  The second header holds any comment fields.  The
@@ -944,6 +941,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
       GstBuffer *buf1, *buf2, *buf3;
       GstCaps *caps;
 
+      GST_DEBUG_OBJECT (vorbisenc, "creating and sending header packets");
       gst_vorbisenc_set_metadata (vorbisenc);
       vorbis_analysis_headerout (&vorbisenc->vd, &vorbisenc->vc, &header,
           &header_comm, &header_code);
