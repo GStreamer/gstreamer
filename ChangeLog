@@ -1,3 +1,11 @@
+2005-10-07  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstelement.override (_wrap_gst_element_get_state): Drop the
+	python lock while in get_state.
+
+	* gst/__init__.py: Check the right module (i.e., the same check as
+	pygtk does).
+
 2005-10-07  Edward Hervey  <edward@fluendo.com>
 
 	* gst/pygstiterator.c:
@@ -249,6 +257,8 @@
 	enum instead of an int.
 
 2005-09-29  Andy Wingo  <wingo@pobox.com>
+
+	* gst/__init__.py: Don't pygtk.require() if pygtk is already loaded.
 
 	* examples/pipeline-tester (Window.play): 
 	* examples/vumeter.py (Window.run): Updates for bus API.

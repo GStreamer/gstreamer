@@ -118,8 +118,12 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
 	timevalp = &timeval;
     }
 	
+    pyg_begin_allow_threads;
+
     ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, &pending,
         timevalp);
+
+    pyg_end_allow_threads;
 
     tuple = Py_BuildValue("OOO",
         pyg_enum_from_gtype (GST_TYPE_STATE_CHANGE_RETURN, ret),
