@@ -40,7 +40,7 @@ check-verbose: testhelper.la
 	@VERBOSE=yes PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
-EXTRA_DIST = $(TESTS) common.py runtests.py test-object.h python.supp
+EXTRA_DIST = $(TESTS) common.py runtests.py test-object.h python.supp gstpython.supp
 
 if HAVE_VALGRIND
 check-valgrind:
@@ -52,6 +52,7 @@ endif
 
 GSTSUPP = $(top_srcdir)/common/gst.supp
 PYTHONSUPP = $(top_srcdir)/testsuite/python.supp
+GSTPYTHONSUPP = $(top_srcdir)/testsuite/gstpython.supp
 
 # valgrind any given test_x.py by running make test_x.valgrind
 %.valgrind: %
@@ -59,6 +60,7 @@ PYTHONSUPP = $(top_srcdir)/testsuite/python.supp
 	$(VALGRIND_PATH) -q					\
 	--suppressions=$(GSTSUPP)				\
 	--suppressions=$(PYTHONSUPP)				\
+	--suppressions=$(GSTPYTHONSUPP)				\
 	--tool=memcheck --leak-check=yes --trace-children=yes   \
 	$(PYTHON)						\
 	$* 2>&1 | tee valgrind.log

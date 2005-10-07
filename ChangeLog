@@ -1,3 +1,17 @@
+2005-10-07  Edward Hervey  <edward@fluendo.com>
+
+	* gst/pygstminiobject.c: (pygstminiobject_register_wrapper),
+	(pygstminiobject_new), (pygstminiobject_dealloc):
+	Comments to better track the creation/destruction of PyGstMiniObject
+	Fixed naming (gst.GstMiniObject => gst.MiniObject)
+	* testsuite/python.supp:
+	Updated python specific valgrind suppressions to latest version and
+	added x86_64 cases
+	* testsuite/gstpython.supp:
+	Series of suppressions for errors/leaks not solvable within gst-python
+	* testsuite/Makefile.am:
+	Added gstpython.supp
+
 2005-10-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

@@ -1,0 +1,80 @@
+{
+   pthread leak
+   Memcheck:Leak
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate_tls*
+}
+
+{
+   pthread leak 2
+   Memcheck:Leak
+   fun:memalign
+   fun:_dl_allocate_tls*
+}
+
+{
+   popt leak
+   Memcheck:Leak
+   fun:malloc
+   fun:nss_parse_service_list
+   fun:__nss_database_lookup
+   obj:*
+   obj:*
+   fun:getpwuid_r@@GLIBC_2.2.5
+   fun:g_get_any_init_do
+   fun:g_get_home_dir
+   fun:init_post
+   fun:init_popt_callback
+}
+
+{
+   pygobject init leak
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:type_node_*
+   fun:type_node_*
+   fun:*
+   fun:*
+   fun:g_type_init*
+   fun:initgobject
+}
+
+{
+   borked pthread creation
+   Memcheck:Param
+   write(buf)
+   fun:__pthread_initialize_manager
+   fun:pthread_create@@GLIBC_2.2.5
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:gst_task_start
+}
+
+{
+   borked pthread creation 2
+   Memcheck:Param
+   write(buf)
+   fun:pthread_create@@GLIBC_2.2.5
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:gst_task_start
+}
+
+{
+   memory loss when creating thread from gst_task_start
+   Memcheck:Leak
+   fun:malloc
+   fun:__pthread_initialize_manager
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:gst_task_start
+}

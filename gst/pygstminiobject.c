@@ -145,6 +145,8 @@ pygstminiobject_register_wrapper (PyObject *self)
     GST_DEBUG ("inserting self %p in the table for object %p", self, obj);
     state = pyg_gil_state_ensure ();
     g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
+    GST_DEBUG ("There are now %d elements in the hash table",
+	       g_hash_table_size (_miniobjs));
     pyg_gil_state_release (state);
 }
 
@@ -205,6 +207,8 @@ pygstminiobject_new (GstMiniObject *obj)
         GST_DEBUG ("inserting self %p in the table for object %p", self, obj);
 	state = pyg_gil_state_ensure ();
 	g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
+	GST_DEBUG ("There are now %d elements in the hash table",
+		   g_hash_table_size (_miniobjs));
 	pyg_gil_state_release (state);
 
     }
@@ -225,6 +229,8 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
         GST_DEBUG ("removing self %p from the table for object %p", self,
              self->obj);
         g_assert (g_hash_table_remove (_miniobjs, (gpointer) self->obj));
+	GST_DEBUG ("There are now %d elements in the hash table",
+		   g_hash_table_size (_miniobjs));
 	gst_mini_object_unref(self->obj);
     }
     GST_DEBUG ("setting self %p -> obj to NULL", self);
@@ -367,7 +373,7 @@ static PyGetSetDef pygstminiobject_getsets[] = {
 PyTypeObject PyGstMiniObject_Type = {
     PyObject_HEAD_INIT(NULL)
     0,					/* ob_size */
-    "gst.GstMiniObject",			/* tp_name */
+    "gst.MiniObject",			/* tp_name */
     sizeof(PyGstMiniObject),			/* tp_basicsize */
     0,					/* tp_itemsize */
     /* methods */
