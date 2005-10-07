@@ -73,13 +73,13 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_PORT		-1
-#define DEFAULT_CHANNEL		63
-#define DEFAULT_CONSECUTIVE	1
-#define DEFAULT_SKIP		0
-#define DEFAULT_DROP_INCOMPLETE	TRUE
-#define DEFAULT_USE_AVC		TRUE
-#define DEFAULT_GUID		0
+#define DEFAULT_PORT    -1
+#define DEFAULT_CHANNEL   63
+#define DEFAULT_CONSECUTIVE 1
+#define DEFAULT_SKIP    0
+#define DEFAULT_DROP_INCOMPLETE TRUE
+#define DEFAULT_USE_AVC   TRUE
+#define DEFAULT_GUID    0
 
 enum
 {
@@ -437,8 +437,23 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
 static int
 gst_dv1394src_bus_reset (raw1394handle_t handle, unsigned int generation)
 {
-  GST_INFO_OBJECT (GST_DV1394SRC (raw1394_get_userdata (handle)),
-      "have bus reset");
+  GstDV1394Src *src;
+  gint nodecount;
+  GstMessage *message;
+  GstStructure *structure;
+
+  src = GST_DV1394SRC (raw1394_get_userdata (handle));
+
+  GST_INFO_OBJECT (src, "have bus reset");
+
+  nodecount = raw1394_get_nodecount (handle);
+
+  structure = gst_structure_new ("ieee1394-bus-reset", "nodecount", G_TYPE_INT,
+      nodecount, NULL);
+  message = gst_message_new_element (GST_OBJECT (src), structure);
+  gst_element_post_message (GST_ELEMENT (src), message);
+  gst_message_unref (message);
+
   return 0;
 }
 
@@ -472,8 +487,6 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
 
     if (pollfds[1].revents) {
       char command;
-
-      g_print ("told to stop!\n");
 
       if (pollfds[1].revents & POLLIN)
         READ_COMMAND (dv1394src, command, res);
@@ -694,7 +707,6 @@ gst_dv1394src_unlock (GstBaseSrc * bsrc)
 {
   GstDV1394Src *src = GST_DV1394SRC (bsrc);
 
-  g_print ("sending command!\n");
   SEND_COMMAND (src, CONTROL_STOP);
 
   return TRUE;
