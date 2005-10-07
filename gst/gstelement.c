@@ -1333,7 +1333,9 @@ gst_element_query (GstElement * element, GstQuery * query)
  * @element: a #GstElement posting the message
  * @message: a #GstMessage to post
  *
- * Post a message on the element's #GstBus.
+ * Post a message on the element's #GstBus. This function takes ownership of the
+ * message; if you want to access the message after this call, you should add an
+ * additional reference before calling.
  *
  * Returns: TRUE if the message was successfully posted.
  *

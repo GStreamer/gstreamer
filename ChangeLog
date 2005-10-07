@@ -1,5 +1,7 @@
 2005-10-07  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstelement.c (gst_element_post_message): Doc update.
+
 	* docs/gst/gstreamer-sections.txt: Update.
 
 	* gst/gstmessage.c (gst_message_new_application): Made into a
