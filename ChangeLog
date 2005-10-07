@@ -1,3 +1,10 @@
+2005-10-07  Andy Wingo  <wingo@pobox.com>
+
+	* ext/raw1394/gstdv1394src.c: Clean up for style before doing some
+	hacking. The only change should be that the state change stuff was
+	put into basesrc's start() and stop() routines, which coalesces
+	some steps.
+
 2005-10-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
