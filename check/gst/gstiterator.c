@@ -50,7 +50,7 @@ GST_START_TEST (test_manual_iteration)
   l = make_list_of_ints (NUM_ELEMENTS);
   m = g_mutex_new ();
 
-  iter = gst_iterator_new_list (m, &cookie, &l, NULL, NULL, NULL);
+  iter = gst_iterator_new_list (G_TYPE_INT, m, &cookie, &l, NULL, NULL, NULL);
 
   fail_unless (iter != NULL);
 
@@ -88,7 +88,7 @@ GST_START_TEST (test_resync)
   l = make_list_of_ints (NUM_ELEMENTS);
   m = g_mutex_new ();
 
-  iter = gst_iterator_new_list (m, &cookie, &l, NULL, NULL, NULL);
+  iter = gst_iterator_new_list (G_TYPE_INT, m, &cookie, &l, NULL, NULL, NULL);
 
   fail_unless (iter != NULL);
 
@@ -142,7 +142,7 @@ GST_START_TEST (test_fold)
 
   l = make_list_of_ints (NUM_ELEMENTS);
   m = g_mutex_new ();
-  iter = gst_iterator_new_list (m, &cookie, &l, NULL, NULL, NULL);
+  iter = gst_iterator_new_list (G_TYPE_INT, m, &cookie, &l, NULL, NULL, NULL);
   fail_unless (iter != NULL);
 
   expected = 0;

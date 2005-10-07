@@ -1,3 +1,16 @@
+2005-10-04  Johan Dahlin  <johan@gnome.org>
+
+	* check/gst/gstiterator.c: (GST_START_TEST):
+	* gst/gstbin.c: (gst_bin_iterate_elements),
+	(gst_bin_iterate_recurse), (gst_bin_iterate_sorted):
+	* gst/gstelement.c: (gst_element_iterate_pads):
+	* gst/gstformat.c: (gst_format_iterate_definitions):
+	* gst/gstiterator.c: (gst_iterator_init), (gst_iterator_new),
+	(gst_iterator_new_list), (gst_iterator_filter):
+	* gst/gstiterator.h:
+	* gst/gstquery.c: (gst_query_type_iterate_definitions):
+	Add a GType to GstIterator, update callsites and tests.
+
 2005-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstpad.c: (gst_pad_event_default_dispatch):

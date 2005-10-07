@@ -745,7 +745,8 @@ gst_bin_iterate_elements (GstBin * bin)
    * is freed it will unref the bin again using the provided dispose
    * function. */
   gst_object_ref (bin);
-  result = gst_iterator_new_list (GST_GET_LOCK (bin),
+  result = gst_iterator_new_list (GST_TYPE_ELEMENT,
+      GST_GET_LOCK (bin),
       &bin->children_cookie,
       &bin->children,
       bin,
@@ -793,7 +794,8 @@ gst_bin_iterate_recurse (GstBin * bin)
    * is freed it will unref the bin again using the provided dispose
    * function. */
   gst_object_ref (bin);
-  result = gst_iterator_new_list (GST_GET_LOCK (bin),
+  result = gst_iterator_new_list (GST_TYPE_ELEMENT,
+      GST_GET_LOCK (bin),
       &bin->children_cookie,
       &bin->children,
       bin,
@@ -1285,7 +1287,8 @@ gst_bin_iterate_sorted (GstBin * bin)
   /* we don't need a NextFunction because we ref the items in the _next
    * method already */
   result = (GstBinSortIterator *)
-      gst_iterator_new (sizeof (GstBinSortIterator),
+      gst_iterator_new (GST_TYPE_ELEMENT,
+      sizeof (GstBinSortIterator),
       GST_GET_LOCK (bin),
       &bin->children_cookie,
       (GstIteratorNextFunction) gst_bin_sort_iterator_next,

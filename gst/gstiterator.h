@@ -64,6 +64,7 @@ struct _GstIterator {
 
   GstIterator *pushed;		/* pushed iterator */
 
+  GType     type;
   GMutex   *lock;
   guint32   cookie;		/* cookie of the iterator */
   guint32  *master_cookie;	/* pointer to guint32 holding the cookie when this
@@ -75,6 +76,7 @@ struct _GstIterator {
 
 /* creating iterators */
 GstIterator*		gst_iterator_new		(guint size,
+							 GType type,
 							 GMutex *lock,
 							 guint32 *master_cookie,
 							 GstIteratorNextFunction next,
@@ -82,7 +84,8 @@ GstIterator*		gst_iterator_new		(guint size,
 							 GstIteratorResyncFunction resync,
 							 GstIteratorFreeFunction free);
 
-GstIterator*		gst_iterator_new_list		(GMutex *lock,
+GstIterator*		gst_iterator_new_list		(GType type,
+							 GMutex *lock,
 							 guint32 *master_cookie,
 							 GList **list,
 							 gpointer owner,

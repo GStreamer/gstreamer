@@ -941,7 +941,8 @@ gst_element_iterate_pads (GstElement * element)
 
   GST_LOCK (element);
   gst_object_ref (element);
-  result = gst_iterator_new_list (GST_GET_LOCK (element),
+  result = gst_iterator_new_list (GST_TYPE_PAD,
+      GST_GET_LOCK (element),
       &element->pads_cookie,
       &element->pads,
       element,

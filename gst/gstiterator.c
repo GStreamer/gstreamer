@@ -36,12 +36,14 @@
 
 static void
 gst_iterator_init (GstIterator * it,
+    GType type,
     GMutex * lock,
     guint32 * master_cookie,
     GstIteratorNextFunction next,
     GstIteratorItemFunction item,
     GstIteratorResyncFunction resync, GstIteratorFreeFunction free)
 {
+  it->type = type;
   it->lock = lock;
   it->master_cookie = master_cookie;
   it->cookie = *master_cookie;
@@ -55,6 +57,7 @@ gst_iterator_init (GstIterator * it,
 /**
  * gst_iterator_new:
  * @size: the size of the iterator structure
+ * @type: #GType of children
  * @lock: pointer to a #GMutex.
  * @master_cookie: pointer to a guint32 to protect the iterated object.
  * @next: function to get next item
@@ -74,6 +77,7 @@ gst_iterator_init (GstIterator * it,
  */
 GstIterator *
 gst_iterator_new (guint size,
+    GType type,
     GMutex * lock,
     guint32 * master_cookie,
     GstIteratorNextFunction next,
@@ -89,7 +93,8 @@ gst_iterator_new (guint size,
   g_return_val_if_fail (free != NULL, NULL);
 
   result = g_malloc (size);
-  gst_iterator_init (result, lock, master_cookie, next, item, resync, free);
+  gst_iterator_init (result, type, lock, master_cookie, next, item, resync,
+      free);
 
   return result;
 }
@@ -103,6 +108,7 @@ typedef struct _GstListIterator
   gpointer owner;
   GList **orig;
   GList *list;                  /* pointer in list */
+  GType *type;
   GstIteratorDisposeFunction freefunc;
 } GstListIterator;
 
@@ -135,6 +141,7 @@ gst_list_iterator_free (GstListIterator * it)
 
 /**
  * gst_iterator_new_list:
+ * @type: #GType of elements
  * @lock: pointer to a #GMutex protecting the list.
  * @master_cookie: pointer to a guint32 to protect the list.
  * @list: pointer to the list
@@ -149,7 +156,8 @@ gst_list_iterator_free (GstListIterator * it)
  * MT safe.
  */
 GstIterator *
-gst_iterator_new_list (GMutex * lock,
+gst_iterator_new_list (GType type,
+    GMutex * lock,
     guint32 * master_cookie,
     GList ** list,
     gpointer owner,
@@ -159,6 +167,7 @@ gst_iterator_new_list (GMutex * lock,
 
   /* no need to lock, nothing can change here */
   result = (GstListIterator *) gst_iterator_new (sizeof (GstListIterator),
+      type,
       lock,
       master_cookie,
       (GstIteratorNextFunction) gst_list_iterator_next,
@@ -402,7 +411,7 @@ gst_iterator_filter (GstIterator * it, GCompareFunc func, gpointer user_data)
   g_return_val_if_fail (func != NULL, NULL);
 
   result = (GstIteratorFilter *) gst_iterator_new (sizeof (GstIteratorFilter),
-      it->lock, it->master_cookie,
+      it->type, it->lock, it->master_cookie,
       (GstIteratorNextFunction) filter_next,
       (GstIteratorItemFunction) NULL,
       (GstIteratorResyncFunction) filter_resync,
