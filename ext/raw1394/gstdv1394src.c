@@ -452,7 +452,6 @@ gst_dv1394src_bus_reset (raw1394handle_t handle, unsigned int generation)
       nodecount, NULL);
   message = gst_message_new_element (GST_OBJECT (src), structure);
   gst_element_post_message (GST_ELEMENT (src), message);
-  gst_message_unref (message);
 
   return 0;
 }

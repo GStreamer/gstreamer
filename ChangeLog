@@ -5,6 +5,7 @@
 	(gst_dv1394src_bus_reset): Post a message when the cable is
 	unplugged.
 	(gst_dv1394src_create, gst_dv1394src_unlock): Remove some prints.
+        (gst_dv1394src_bus_reset): Don't unref the message.
 
 	* ext/raw1394/gstdv1394src.c: Clean up for style before doing some
 	hacking. The only change should be that the state change stuff was
