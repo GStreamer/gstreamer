@@ -25,6 +25,7 @@ TESTS =  \
 	test_event.py \
 	test_ghostpad.py \
         test_interface.py \
+	test_message.py \
 	test_pad.py \
         test_pipeline.py \
         test_registry.py \

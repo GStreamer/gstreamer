@@ -154,6 +154,12 @@ class BufferTest(unittest.TestCase):
         buffer.offset_end = 2**64 - 1
         assert buffer.offset_end == 2**64 - 1
 
+    def testBufferCaps(self):
+        buffer = gst.Buffer()
+        caps = gst.caps_from_string('foo/blah')
+        buffer.set_caps(caps)
+        c = buffer.get_caps()
+        self.assertEquals(caps, c)
 
 if __name__ == "__main__":
     unittest.main()
