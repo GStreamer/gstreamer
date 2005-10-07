@@ -1,5 +1,11 @@
 2005-10-07  Edward Hervey  <edward@fluendo.com>
 
+	* gst/pygstiterator.c:
+	Unref the return value, since the iterator refs them.
+	
+	* testsuite/test_iterator.py:
+	Added more test cases, re-enabled gcverify now the bug is fixed
+
 	* gst/pygstminiobject.c: (pygstminiobject_register_wrapper),
 	(pygstminiobject_new), (pygstminiobject_dealloc):
 	Comments to better track the creation/destruction of PyGstMiniObject

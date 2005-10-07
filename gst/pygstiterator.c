@@ -35,7 +35,7 @@ pygst_iterator_iter_next(PyGstIterator *self)
     gpointer element;
     PyObject *retval = NULL;
     GstIteratorResult result;
-    
+
     result = gst_iterator_next(self->iter, &element);
     switch (result)
 	{
@@ -43,11 +43,20 @@ pygst_iterator_iter_next(PyGstIterator *self)
 	    PyErr_SetNone(PyExc_StopIteration);
 	    break;
 	case GST_ITERATOR_OK:
-	    if (g_type_is_a(self->iter->type, G_TYPE_OBJECT))
+	    if (g_type_is_a(self->iter->type, GST_TYPE_OBJECT)) {
 		retval = pygstobject_new(G_OBJECT(element));
-	    else {
+		pygst_object_unref (element);
+	    } else if (g_type_is_a(self->iter->type, G_TYPE_OBJECT)) {
+		retval = pygobject_new(G_OBJECT(element));
+		g_object_unref (element);
+	    } else if (g_type_is_a(self->iter->type, GST_TYPE_MINI_OBJECT)) {
+		retval = pygstminiobject_new(GST_MINI_OBJECT(element));
+		gst_mini_object_unref (element);
+	    } else {
+		const gchar	*type_name;
+		type_name = g_type_name(self->iter->type);
 		PyErr_Format(PyExc_TypeError, "Unsupported child type: %s",
-			     g_type_name(self->iter->type));
+			     type_name ? type_name : "unknown");
 	    }
 	    break;
 	case GST_ITERATOR_RESYNC:
@@ -61,7 +70,6 @@ pygst_iterator_iter_next(PyGstIterator *self)
 	    g_assert_not_reached();
 	    break;
 	}
-    
     return retval;
 }
 
@@ -138,7 +146,10 @@ PyObject*
 pygst_iterator_new(GstIterator *iter)
 {
     PyGstIterator *self;
+
     self = PyObject_NEW(PyGstIterator, &PyGstIterator_Type);
     self->iter = iter;
+    GST_DEBUG("self:%p , iterator:%p, type:%d",
+	      self, self->iter, self->iter->type);
     return (PyObject *) self;
 }

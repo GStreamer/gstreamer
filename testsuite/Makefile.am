@@ -17,7 +17,7 @@ testhelper_la_SOURCES = \
 testhelper.la: $(testhelper_la_OBJECTS) $(testhelper_la_DEPENDENCIES)
 	$(LINK) -rpath $(pkgpyexecdir) $(testhelper_la_LDFLAGS) $(testhelper_la_OBJECTS) $(testhelper_la_LIBADD) $(LIBS)
 
-TESTS =  \
+tests =  \
 	test_bin.py \
 	test_buffer.py \
         test_caps.py \
@@ -40,7 +40,7 @@ check-verbose: testhelper.la
 	@VERBOSE=yes PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
-EXTRA_DIST = $(TESTS) common.py runtests.py test-object.h python.supp gstpython.supp
+EXTRA_DIST = $(tests) common.py runtests.py test-object.h python.supp gstpython.supp
 
 if HAVE_VALGRIND
 check-valgrind:
