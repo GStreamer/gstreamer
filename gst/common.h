@@ -23,6 +23,7 @@
 #define __COMMON_H__
 
 #include <Python.h>
+#include <pygobject.h>
 #include <glib.h>
 #include <glib-object.h>
 #include <gst/gst.h>
@@ -47,6 +48,14 @@ typedef struct {
 typedef struct {
      PyObject *func, *data;
 } PyGstCustomNotify;
+
+typedef struct {
+    PyObject_HEAD
+    GstIterator *iter;
+} PyGstIterator;
+
+PyTypeObject PyGstIterator_Type;
+
 
 /* from gst-types.c */
 /* gboolean pygst_data_from_pyobject(PyObject *object, GstData **data); */

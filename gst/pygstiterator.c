@@ -20,15 +20,7 @@
  * Author: Johan Dahlin <johan@gnome.org>
  */
 
-#include <gst/gstiterator.h>
-#include <Python.h>
-#include <pygobject.h>
-#include "pygstobject.h"
-
-typedef struct {
-    PyObject_HEAD
-    GstIterator *iter;
-} PyGstIterator;
+#include "common.h"
 
 static void
 pygst_iterator_dealloc(PyGstIterator *self)
@@ -59,6 +51,7 @@ pygst_iterator_iter_next(PyGstIterator *self)
 	    }
 	    break;
 	case GST_ITERATOR_RESYNC:
+	    /* XXX: add/raise gst.IteratorResync */
 	    PyErr_SetString(PyExc_TypeError, "Resync");
 	    break;
 	case GST_ITERATOR_ERROR:
@@ -71,6 +64,43 @@ pygst_iterator_iter_next(PyGstIterator *self)
     
     return retval;
 }
+
+static PyObject *
+pygst_iterator_next(PyGstIterator *self)
+{
+    /* Be compatible with Pythons API rather than GStreamers */
+    return pygst_iterator_iter_next(self);
+}
+
+static PyObject *
+pygst_iterator_push(PyGstIterator *self, PyObject *args)
+{
+    PyGstIterator *other;
+    
+    if (!PyArg_ParseTuple(args, "O!:push", &PyGstIterator_Type, &other))
+	return NULL;
+    
+    gst_iterator_push(self->iter, other->iter);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+ 
+static PyObject *
+pygst_iterator_resync(PyGstIterator *self)
+{
+    gst_iterator_resync(self->iter);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyMethodDef _PyGstIterator_methods[] = {
+    { "next", (PyCFunction)pygst_iterator_next, METH_NOARGS },
+    { "push", (PyCFunction)pygst_iterator_push, METH_VARARGS },
+    { "resync", (PyCFunction)pygst_iterator_resync, METH_NOARGS },
+    { NULL, NULL, 0 }
+};
 
 PyTypeObject PyGstIterator_Type = {
     PyObject_HEAD_INIT(NULL)
@@ -101,6 +131,7 @@ PyTypeObject PyGstIterator_Type = {
     0,					/* tp_weaklistoffset */
     PyObject_SelfIter,	                /* tp_iter */
     (iternextfunc)pygst_iterator_iter_next, /* tp_iternext */
+    _PyGstIterator_methods,             /* tp_methods */
 };
 
 PyObject*

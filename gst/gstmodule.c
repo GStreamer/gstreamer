@@ -194,6 +194,7 @@ init_gst (void)
 					     NULL);
      PyDict_SetItemString(d, "RemoveError", PyGstExc_RemoveError);
 
+     REGISTER_TYPE(d, PyGstIterator_Type, "Iterator");
 
 
      pygstminiobject_register_class(d, "GstMiniObject", GST_TYPE_MINI_OBJECT,

@@ -1,5 +1,15 @@
 2005-10-06  Johan Dahlin  <johan@gnome.org>
 
+	* gst/common.h:
+	* gst/gstmodule.c: (init_gst):
+	* gst/pygstiterator.c: (pygst_iterator_iter_next),
+	(pygst_iterator_next), (pygst_iterator_push),
+	(pygst_iterator_resync):
+	Even more bored tonight: Implement next/resync/push. 
+	Register type so we can call methods and so.
+	
+2005-10-06  Johan Dahlin  <johan@gnome.org>
+
 	* codegen/argtypes.py:
 	* gst/Makefile.am:
 	* gst/common.h:
