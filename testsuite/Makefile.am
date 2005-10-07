@@ -17,7 +17,7 @@ testhelper_la_SOURCES = \
 testhelper.la: $(testhelper_la_OBJECTS) $(testhelper_la_DEPENDENCIES)
 	$(LINK) -rpath $(pkgpyexecdir) $(testhelper_la_LDFLAGS) $(testhelper_la_OBJECTS) $(testhelper_la_LIBADD) $(LIBS)
 
-tests =  \
+TESTS =  \
 	test_bin.py \
 	test_buffer.py \
         test_caps.py \
@@ -39,5 +39,48 @@ check-verbose: testhelper.la
 	@VERBOSE=yes PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
-EXTRA_DIST = $(tests) common.py runtests.py test-object.h
+EXTRA_DIST = $(TESTS) common.py runtests.py test-object.h python.supp
 
+if HAVE_VALGRIND
+check-valgrind:
+	make valgrind
+else
+check-valgrind:
+	@true
+endif
+
+GSTSUPP = $(top_srcdir)/common/gst.supp
+PYTHONSUPP = $(top_srcdir)/testsuite/python.supp
+
+# valgrind any given test_x.py by running make test_x.valgrind
+%.valgrind: %
+	$(TESTS_ENVIRONMENT)                                    \
+	$(VALGRIND_PATH) -q					\
+	--suppressions=$(GSTSUPP)				\
+	--suppressions=$(PYTHONSUPP)				\
+	--tool=memcheck --leak-check=yes --trace-children=yes   \
+	$(PYTHON)						\
+	$* 2>&1 | tee valgrind.log
+	@if grep "tely lost" valgrind.log; then                 \
+	    rm valgrind.log;                                    \
+	    exit 1;                                             \
+	fi
+	@rm valgrind.log
+
+# valgrind all tests
+valgrind: $(TESTS)
+	@echo "Valgrinding tests ..."
+	@failed=0;                                                      \
+	for t in $(filter-out $(VALGRIND_TESTS_DISABLE),$(TESTS)); do   \
+	        make $$t.valgrind;                                      \
+	        if test "$$?" -ne 0; then                               \
+	                echo "Valgrind error for test $$t";             \
+	                failed=`expr $$failed + 1`;                     \
+	                whicht="$$whicht $$t";                          \
+	        fi;                                                     \
+	done;                                                           \
+	if test "$$failed" -ne 0; then                                  \
+	        echo "$$failed tests had leaks under valgrind:";        \
+	        echo "$$whicht";                                        \
+	        false;                                                  \
+	fi

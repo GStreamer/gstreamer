@@ -142,6 +142,8 @@ if test "x$GCC" = xyes; then
 fi
 changequote([,])dnl
 
+GST_VALGRIND_CHECK()
+
 AC_OUTPUT([
   Makefile
   codegen/Makefile
