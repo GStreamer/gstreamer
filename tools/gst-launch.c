@@ -360,7 +360,9 @@ event_loop (GstElement * pipeline, gboolean blocking)
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 
+#ifndef DISABLE_FAULT_HANDLER
   g_timeout_add (50, (GSourceFunc) check_intr, pipeline);
+#endif
 
   while (TRUE) {
     message = gst_bus_poll (bus, GST_MESSAGE_ANY, blocking ? -1 : 0);
