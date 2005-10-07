@@ -1066,8 +1066,8 @@ static GstStateChangeReturn
 gst_base_src_change_state (GstElement * element, GstStateChange transition)
 {
   GstBaseSrc *basesrc;
-  GstStateChangeReturn result = GST_STATE_CHANGE_SUCCESS;
-  GstStateChangeReturn presult;
+  GstStateChangeReturn result;
+  gboolean no_preroll = FALSE;
 
   basesrc = GST_BASE_SRC (element);
 
@@ -1078,7 +1078,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LIVE_LOCK (element);
       if (basesrc->is_live) {
-        result = GST_STATE_CHANGE_NO_PREROLL;
+        no_preroll = TRUE;
         basesrc->live_running = FALSE;
       }
       GST_LIVE_UNLOCK (element);
@@ -1095,7 +1095,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if ((presult =
+  if ((result =
           GST_ELEMENT_CLASS (parent_class)->change_state (element,
               transition)) == GST_STATE_CHANGE_FAILURE)
     goto failure;
@@ -1104,7 +1104,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_LIVE_LOCK (element);
       if (basesrc->is_live) {
-        result = GST_STATE_CHANGE_NO_PREROLL;
+        no_preroll = TRUE;
         basesrc->live_running = FALSE;
       }
       GST_LIVE_UNLOCK (element);
@@ -1119,12 +1119,15 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return result;
+  if (no_preroll && result == GST_STATE_CHANGE_SUCCESS)
+    return GST_STATE_CHANGE_NO_PREROLL;
+  else
+    return result;
 
   /* ERRORS */
 failure:
   {
     gst_base_src_stop (basesrc);
-    return presult;
+    return result;
   }
 }

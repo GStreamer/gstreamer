@@ -203,6 +203,30 @@ GST_START_TEST (test_sizetype_random)
 
 GST_END_TEST;
 
+GST_START_TEST (test_no_preroll)
+{
+  GstElement *src;
+  GstStateChangeReturn ret;
+
+  src = setup_fakesrc ();
+
+  g_object_set (G_OBJECT (src), "is-live", TRUE, NULL);
+
+  ret = gst_element_set_state (src, GST_STATE_PAUSED);
+
+  fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL,
+      "error going to paused the first time");
+
+  ret = gst_element_set_state (src, GST_STATE_PAUSED);
+
+  fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL,
+      "error going to paused the second time");
+
+  /* cleanup */
+  cleanup_fakesrc (src);
+}
+
+GST_END_TEST;
 
 Suite *
 fakesrc_suite (void)
@@ -215,6 +239,7 @@ fakesrc_suite (void)
   tcase_add_test (tc_chain, test_sizetype_empty);
   tcase_add_test (tc_chain, test_sizetype_fixed);
   tcase_add_test (tc_chain, test_sizetype_random);
+  tcase_add_test (tc_chain, test_no_preroll);
 
   return s;
 }

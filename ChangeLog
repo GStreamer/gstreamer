@@ -1,3 +1,12 @@
+2005-10-07  Andy Wingo  <wingo@pobox.com>
+
+	* check/elements/fakesrc.c (test_no_preroll): New check, checks
+	that setting a live fakesrc to PAUSED returns NO_PREROLL both
+	times.
+
+	* gst/base/gstbasesrc.c (gst_base_src_change_state): Allow a
+	NO_PREROLL from gst_element_change_state to fall through.
+
 2005-10-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstghostpad.c: (gst_ghost_pad_get_internal),
