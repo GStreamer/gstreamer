@@ -1,3 +1,9 @@
+2005-10-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstobject.h:
+	  there's no point in wrapping FLAG_SET/_UNSET in STMT macros.
+	  Fixes compilation on Windows.
+
 2005-10-07  Michael Smith <msmith@fluendo.com>
 
 	* tools/gst-inspect.c:

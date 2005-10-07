@@ -146,7 +146,7 @@ typedef enum
  *
  * This macro sets the given bits.
  */
-#define GST_FLAG_SET(obj,flag)          G_STMT_START{ (GST_FLAGS (obj) |= (1<<(flag))); }G_STMT_END
+#define GST_FLAG_SET(obj,flag)          (GST_FLAGS (obj) |= (1<<(flag)))
 /**
  * GST_FLAG_UNSET:
  * @obj: Object to unset flag in.
@@ -154,7 +154,7 @@ typedef enum
  *
  * This macro usets the given bits.
  */
-#define GST_FLAG_UNSET(obj,flag)        G_STMT_START{ (GST_FLAGS (obj) &= ~(1<<(flag))); }G_STMT_END
+#define GST_FLAG_UNSET(obj,flag)        (GST_FLAGS (obj) &= ~(1<<(flag)))
 
 
 /**
