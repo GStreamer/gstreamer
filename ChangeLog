@@ -1,3 +1,16 @@
+2005-10-06  Johan Dahlin  <johan@gnome.org>
+
+	* codegen/argtypes.py:
+	* gst/Makefile.am:
+	* gst/common.h:
+	* gst/gst.defs:
+	* gst/gstbin.override:
+	* gst/gstelement.override:
+	* gst/pygstiterator.c: (pygst_iterator_dealloc),
+	(pygst_iterator_iter_next), (pygst_iterator_new):
+	* testsuite/test_iterator.py:
+	Add GstIterator wrapping and tests.
+
 2005-10-06  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstpad.override:

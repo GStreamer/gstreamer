@@ -918,6 +918,11 @@ class ArgMatcher:
         if not self.argtypes.has_key(otype): return 0
         return self.object_is_a(self.get(otype).parent, parent)
 
+class GstIteratorArg(ArgType):
+    def write_return(self, ptype, ownsreturn, info):
+	info.varlist.add('GstIterator', '*ret')
+	info.codeafter.append('    return pygst_iterator_new(ret);')
+
 matcher = ArgMatcher()
 
 arg = NoneArg()
@@ -1002,6 +1007,8 @@ matcher.register('gfloat', arg)
 
 arg = FileArg()
 matcher.register('FILE*', arg)
+
+matcher.register('GstIterator*', GstIteratorArg())
 
 # enums, flags, objects
 

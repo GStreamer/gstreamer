@@ -114,8 +114,6 @@ _wrap_gst_bin_remove_many(PyGObject *self, PyObject *args)
         return NULL;
     return _wrap_gst_bin_remove (self, args);
 }
-
-
 %%
 override gst_bin_get_by_name kwargs
 static PyObject *
@@ -141,4 +139,11 @@ _wrap_gst_bin_get_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
 
     gst_object_unref (el); /* from _get_by_name */
     return ret;
+}
+%%
+override-slot GstBin.tp_iter
+static PyObject *
+_wrap_gst_bin_tp_iter(PyGObject *self)
+{
+    return _wrap_gst_bin_iterate_elements(self);
 }

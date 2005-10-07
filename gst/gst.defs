@@ -136,25 +136,25 @@
   )
 )
 
-(define-method iterate_elements
+(define-method elements
   (of-object "GstBin")
   (c-name "gst_bin_iterate_elements")
   (return-type "GstIterator*")
 )
 
-(define-method iterate_sorted
+(define-method sorted
   (of-object "GstBin")
   (c-name "gst_bin_iterate_sorted")
   (return-type "GstIterator*")
 )
 
-(define-method iterate_recurse
+(define-method recurse
   (of-object "GstBin")
   (c-name "gst_bin_iterate_recurse")
   (return-type "GstIterator*")
 )
 
-(define-method iterate_sinks
+(define-method sinks
   (of-object "GstBin")
   (c-name "gst_bin_iterate_sinks")
   (return-type "GstIterator*")
@@ -1018,19 +1018,19 @@
   )
 )
 
-(define-method iterate_pads
+(define-method pads
   (of-object "GstElement")
   (c-name "gst_element_iterate_pads")
   (return-type "GstIterator*")
 )
 
-(define-method iterate_src_pads
+(define-method src_pads
   (of-object "GstElement")
   (c-name "gst_element_iterate_src_pads")
   (return-type "GstIterator*")
 )
 
-(define-method iterate_sink_pads
+(define-method sink_pads
   (of-object "GstElement")
   (c-name "gst_element_iterate_sink_pads")
   (return-type "GstIterator*")

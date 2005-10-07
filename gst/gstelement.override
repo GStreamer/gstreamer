@@ -472,3 +472,10 @@ _wrap_gst_element_get_query_types (PyGObject *self)
     
     return ret;
 }
+%%
+override-slot GstElement.tp_iter
+static PyObject *
+_wrap_gst_element_tp_iter(PyGObject *self)
+{
+    return _wrap_gst_element_iterate_pads(self);
+}
