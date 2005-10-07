@@ -115,10 +115,8 @@ static gboolean gst_base_src_event_handler (GstPad * pad, GstEvent * event);
 
 static gboolean gst_base_src_query (GstPad * pad, GstQuery * query);
 
-#if 0
-static const GstEventMask *gst_base_src_get_event_mask (GstPad * pad);
-#endif
 static gboolean gst_base_src_default_negotiate (GstBaseSrc * basesrc);
+static gboolean gst_base_src_default_newsegment (GstBaseSrc * src);
 
 static gboolean gst_base_src_unlock (GstBaseSrc * basesrc);
 static gboolean gst_base_src_get_size (GstBaseSrc * basesrc, guint64 * size);
@@ -168,6 +166,7 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_src_change_state);
 
   klass->negotiate = gst_base_src_default_negotiate;
+  klass->newsegment = gst_base_src_default_newsegment;
 }
 
 static void
@@ -214,7 +213,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
 
   basesrc->segment_start = -1;
   basesrc->segment_end = -1;
-  basesrc->need_discont = TRUE;
+  basesrc->need_newsegment = TRUE;
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
   basesrc->clock_id = NULL;
 
@@ -368,7 +367,7 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
 }
 
 static gboolean
-gst_base_src_send_discont (GstBaseSrc * src)
+gst_base_src_default_newsegment (GstBaseSrc * src)
 {
   GstEvent *event;
 
@@ -380,6 +379,20 @@ gst_base_src_send_discont (GstBaseSrc * src)
       (gint64) src->segment_start, (gint64) src->segment_end, (gint64) 0);
 
   return gst_pad_push_event (src->srcpad, event);
+}
+
+static gboolean
+gst_base_src_newsegment (GstBaseSrc * src)
+{
+  GstBaseSrcClass *bclass;
+  gboolean result = FALSE;
+
+  bclass = GST_BASE_SRC_GET_CLASS (src);
+
+  if (bclass->newsegment)
+    result = bclass->newsegment (src);
+
+  return result;
 }
 
 static gboolean
@@ -463,8 +476,8 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
   GST_DEBUG_OBJECT (src, "seek pending for segment from %" G_GINT64_FORMAT
       " to %" G_GINT64_FORMAT, src->segment_start, src->segment_end);
 
-  /* now make sure the discont will be send */
-  src->need_discont = TRUE;
+  /* now make sure the newsegment will be send */
+  src->need_newsegment = TRUE;
 
   /* and restart the task */
   gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
@@ -681,10 +694,10 @@ gst_base_src_loop (GstPad * pad)
 
   src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
-  if (src->need_discont) {
-    /* now send discont */
-    gst_base_src_send_discont (src);
-    src->need_discont = FALSE;
+  if (src->need_newsegment) {
+    /* now send newsegment */
+    gst_base_src_newsegment (src);
+    src->need_newsegment = FALSE;
   }
 
   ret = gst_base_src_get_range (pad, src->offset, src->blocksize, &buf);
@@ -907,7 +920,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   /* we always run to the end */
   basesrc->segment_start = 0;
   basesrc->segment_end = basesrc->size;
-  basesrc->need_discont = TRUE;
+  basesrc->need_newsegment = TRUE;
 
   /* check if we can seek, updates ->seekable */
   gst_base_src_is_seekable (basesrc);

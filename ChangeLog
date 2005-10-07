@@ -1,5 +1,14 @@
 2005-10-07  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_init), (gst_base_src_default_newsegment),
+	(gst_base_src_newsegment), (gst_base_src_do_seek),
+	(gst_base_src_loop), (gst_base_src_start):
+	* gst/base/gstbasesrc.h:
+	Make the newsegment event customizable by subclasses.
+
+2005-10-07  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstevent.c: (gst_event_new_buffersize),
 	(gst_event_parse_buffersize):
 	* gst/gstevent.h:

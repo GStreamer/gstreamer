@@ -97,7 +97,7 @@ struct _GstBaseSrc {
   gint64	 segment_start;	/* start and end positions for seeking */
   gint64	 segment_end;
   gboolean	 segment_loop;
-  gboolean	 need_discont;
+  gboolean	 need_newsegment;
 
   guint64	 offset;	/* current offset in the resource */
   guint64        size;		/* total size of the resource */
@@ -127,6 +127,9 @@ struct _GstBaseSrcClass {
 
   /* decide on caps */
   gboolean      (*negotiate)    (GstBaseSrc *src);
+
+  /* generate and send a newsegment */
+  gboolean      (*newsegment)   (GstBaseSrc *src);
 
   /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseSrc *src);
