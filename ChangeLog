@@ -1,3 +1,11 @@
+2005-10-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Add check for mmap
+	  
+	* gst/debug/Makefile.am:
+	  Only compile efence plugin on systems that have mmap.
+
 2005-10-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/debug/Makefile.am:

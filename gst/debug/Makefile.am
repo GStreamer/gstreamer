@@ -1,4 +1,10 @@
-plugin_LTLIBRARIES = libgstefence.la libgstdebug.la libgstnavigationtest.la 
+if GST_HAVE_MMAP
+  EFENCE_PLUGIN=libgstefence.la
+else
+  EFENCE_PLUGIN=
+endif
+
+plugin_LTLIBRARIES = $(EFENCE_PLUGIN) libgstdebug.la libgstnavigationtest.la 
 
 noinst_HEADERS = efence.h gstnavigationtest.h gstnavseek.h tests.h
 
