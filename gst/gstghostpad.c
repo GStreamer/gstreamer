@@ -463,7 +463,8 @@ gst_ghost_pad_get_internal (GstPad * pad)
 
   GST_PROXY_LOCK (pad);
   internal = GST_GHOST_PAD (pad)->internal;
-  gst_object_ref (internal);
+  if (internal)
+    gst_object_ref (internal);
   GST_PROXY_UNLOCK (pad);
 
   return internal;
@@ -552,7 +553,7 @@ gst_ghost_pad_do_activate_push (GstPad * pad, gboolean active)
       ret = gst_pad_activate_push (internal, active);
       gst_object_unref (internal);
     } else {
-      ret = FALSE;
+      ret = TRUE;
     }
   } else {
     ret = TRUE;
