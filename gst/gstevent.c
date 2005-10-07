@@ -469,6 +469,56 @@ gst_event_new_filler (void)
   return gst_event_new (GST_EVENT_FILLER);
 }
 
+/* buffersize event */
+/**
+ * gst_event_new_buffersize:
+ *
+ * Create a new buffersize event. The event is sent downstream and notifies
+ * elements that they should provide a buffer of the specified dimensions.
+ *
+ * When the async flag is set, a thread boundary is prefered.
+ *
+ * Returns: a new #GstEvent
+ */
+GstEvent *
+gst_event_new_buffersize (GstFormat format, gint64 minsize,
+    gint64 maxsize, gboolean async)
+{
+  GST_CAT_INFO (GST_CAT_EVENT,
+      "creating buffersize format %d, minsize %" G_GINT64_FORMAT
+      ", maxsize %" G_GINT64_FORMAT ", async %d", format,
+      minsize, maxsize, async);
+
+  return gst_event_new_custom (GST_EVENT_BUFFERSIZE,
+      gst_structure_new ("GstEventBufferSize",
+          "format", GST_TYPE_FORMAT, format,
+          "minsize", G_TYPE_INT64, minsize,
+          "maxsize", G_TYPE_INT64, maxsize,
+          "async", G_TYPE_BOOLEAN, async, NULL));
+}
+
+void
+gst_event_parse_buffersize (GstEvent * event, GstFormat * format,
+    gint64 * minsize, gint64 * maxsize, gboolean * async)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_BUFFERSIZE);
+
+  structure = gst_event_get_structure (event);
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (minsize)
+    *minsize =
+        g_value_get_int64 (gst_structure_get_value (structure, "minsize"));
+  if (maxsize)
+    *maxsize =
+        g_value_get_int64 (gst_structure_get_value (structure, "maxsize"));
+  if (async)
+    *async = g_value_get_boolean (gst_structure_get_value (structure, "async"));
+}
+
 /**
  * gst_event_new_qos:
  * @proportion: the proportion of the qos message

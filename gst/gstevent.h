@@ -56,6 +56,7 @@ G_BEGIN_DECLS
  * @GST_EVENT_NEWSEGMENT: A new media segment follows in the dataflow.
  * @GST_EVENT_TAG: A new set of metadata tags has been found in the stream.
  * @GST_EVENT_FILLER: Filler for sparse data streams.
+ * @GST_EVENT_BUFFERSIZE: Notification of buffering requirements
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements are being starved of or
  *                 flooded with data.
@@ -88,10 +89,11 @@ typedef enum {
   GST_EVENT_NEWSEGMENT		= GST_EVENT_MAKE_TYPE (4, GST_EVDIR_DS | GST_EVSER),
   GST_EVENT_TAG			= GST_EVENT_MAKE_TYPE (5, GST_EVDIR_DS | GST_EVSER),
   GST_EVENT_FILLER		= GST_EVENT_MAKE_TYPE (6, GST_EVDIR_DS | GST_EVSER),
+  GST_EVENT_BUFFERSIZE		= GST_EVENT_MAKE_TYPE (7, GST_EVDIR_DS | GST_EVSER),
   /* upstream events */
-  GST_EVENT_QOS			= GST_EVENT_MAKE_TYPE (7, GST_EVDIR_US),
-  GST_EVENT_SEEK		= GST_EVENT_MAKE_TYPE (8, GST_EVDIR_US),
-  GST_EVENT_NAVIGATION		= GST_EVENT_MAKE_TYPE (9, GST_EVDIR_US),
+  GST_EVENT_QOS			= GST_EVENT_MAKE_TYPE (8, GST_EVDIR_US),
+  GST_EVENT_SEEK		= GST_EVENT_MAKE_TYPE (9, GST_EVDIR_US),
+  GST_EVENT_NAVIGATION		= GST_EVENT_MAKE_TYPE (10, GST_EVDIR_US),
 
   /* custom events start here */
   GST_EVENT_CUSTOM_UP		= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_US),
@@ -269,6 +271,11 @@ void		gst_event_parse_tag		(GstEvent *event, GstTagList **taglist);
 /* FIXME: FILLER events need to be fully specified and implemented */
 GstEvent *	gst_event_new_filler		(void);
 
+/* buffer */
+GstEvent *	gst_event_new_buffersize	(GstFormat format, gint64 minsize, gint64 maxsize, 
+						 gboolean async);
+void 		gst_event_parse_buffersize	(GstEvent *event, GstFormat *format, gint64 *minsize, 
+						 gint64 *maxsize, gboolean *async);
 
 /* QOS events */
 /* FIXME: QOS events need to be fully specified and implemented */

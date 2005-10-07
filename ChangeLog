@@ -1,3 +1,10 @@
+2005-10-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstevent.c: (gst_event_new_buffersize),
+	(gst_event_parse_buffersize):
+	* gst/gstevent.h:
+	New event for future idea.
+
 2005-10-07  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstelement.c (gst_element_post_message): Doc update.
