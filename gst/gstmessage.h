@@ -44,6 +44,8 @@ typedef struct _GstMessageClass GstMessageClass;
  *                             stops, errors, etc..
  * @GST_MESSAGE_APPLICATION: message posted by the application, possibly
  *                           via an application-specific element.
+ * @GST_MESSAGE_ELEMENT: element-specific message, see the specific element's
+ *                       documentation
  * @GST_MESSAGE_SEGMENT_START: pipeline started playback of a segment.
  * @GST_MESSAGE_SEGMENT_DONE: pipeline completed playback of a segment.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
@@ -63,8 +65,9 @@ typedef enum
   GST_MESSAGE_STRUCTURE_CHANGE  = (1 << 9),
   GST_MESSAGE_STREAM_STATUS     = (1 << 10),
   GST_MESSAGE_APPLICATION       = (1 << 11),
-  GST_MESSAGE_SEGMENT_START     = (1 << 12),
-  GST_MESSAGE_SEGMENT_DONE      = (1 << 13),
+  GST_MESSAGE_ELEMENT           = (1 << 12),
+  GST_MESSAGE_SEGMENT_START     = (1 << 13),
+  GST_MESSAGE_SEGMENT_DONE      = (1 << 14),
   GST_MESSAGE_ANY               = 0xffffffff
 } GstMessageType;
 
@@ -145,24 +148,11 @@ GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstState old_state
                                                  GstState new_state);
 GstMessage *	gst_message_new_segment_start 	(GstObject * src, GstClockTime timestamp);
 GstMessage *	gst_message_new_segment_done 	(GstObject * src, GstClockTime timestamp);
+GstMessage *	gst_message_new_application	(GstObject * src, GstStructure * structure);
+GstMessage *	gst_message_new_element		(GstObject * src, GstStructure * structure);
 GstMessage *	gst_message_new_custom 		(GstMessageType type,
 						 GstObject    * src,
 						 GstStructure * structure);
-
-/**
- * gst_message_new_application:
- * @src: The object originating the message.
- * @str: The structure for the message. The message will take ownership of
- * the structure.
- *
- * Create a new application-typed message. This can be used for anything not
- * handled by other message-specific functions to pass a message to the
- * app. The structure field can be NULL.
- *
- * MT safe.
- */
-#define		gst_message_new_application(src, str) \
-  gst_message_new_custom (GST_MESSAGE_APPLICATION, src, str)
 
 void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);

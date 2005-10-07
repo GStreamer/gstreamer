@@ -621,6 +621,8 @@ GST_EVDIR_BOTH
 GST_EVDIR_DS
 GST_EVDIR_US
 
+gst_event_type_get_name
+gst_event_type_to_quark
 gst_event_ref
 gst_event_unref
 gst_event_copy
@@ -980,6 +982,7 @@ gst_message_copy
 gst_message_get_structure
 gst_message_make_writable
 gst_message_new_application
+gst_message_new_element
 gst_message_new_custom
 gst_message_new_eos
 gst_message_new_error

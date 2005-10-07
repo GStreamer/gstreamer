@@ -439,6 +439,42 @@ gst_message_new_segment_done (GstObject * src, GstClockTime timestamp)
 }
 
 /**
+ * gst_message_new_application:
+ * @src: The object originating the message.
+ * @structure: The structure for the message. The message will take ownership of
+ * the structure.
+ *
+ * Create a new application-typed message. GStreamer will never create these
+ * messages; they are a gift from us to you. Enjoy.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_application (GstObject * src, GstStructure * structure)
+{
+  return gst_message_new_custom (GST_MESSAGE_APPLICATION, src, structure);
+}
+
+/**
+ * gst_message_new_element:
+ * @src: The object originating the message.
+ * @structure: The structure for the message. The message will take ownership of
+ * the structure.
+ *
+ * Create a new element-specific message. This is meant as a generic way of
+ * allowing one-way communication from an element to an application, for example
+ * "the firewire cable was unplugged". The format of the message should be
+ * documented in the element's documentation. The structure field can be NULL.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_element (GstObject * src, GstStructure * structure)
+{
+  return gst_message_new_custom (GST_MESSAGE_ELEMENT, src, structure);
+}
+
+/**
  * gst_message_new_custom:
  * @type: The #GstMessageType to distinguish messages
  * @src: The object originating the message.
