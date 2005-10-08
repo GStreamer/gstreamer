@@ -1,5 +1,11 @@
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_stop):
+	Only actually wait for the thread to be stopped if it's 
+	running.
+
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
 	(gst_base_audio_sink_event), (gst_base_audio_sink_render):
 	If we receive EOS we can start playback of what we had.

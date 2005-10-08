@@ -381,9 +381,11 @@ gst_audioringbuffer_stop (GstRingBuffer * buf)
 {
   GstAudioSink *sink;
   GstAudioSinkClass *csink;
+  GstAudioRingBuffer *abuf;
 
   sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
+  abuf = GST_AUDIORING_BUFFER (buf);
 
   /* unblock any pending writes to the audio device */
   if (csink->reset) {
@@ -392,9 +394,11 @@ gst_audioringbuffer_stop (GstRingBuffer * buf)
     GST_DEBUG ("reset done");
   }
 
-  GST_DEBUG ("stop, waiting...");
-  GST_AUDIORING_BUFFER_WAIT (buf);
-  GST_DEBUG ("stopped");
+  if (abuf->running) {
+    GST_DEBUG ("stop, waiting...");
+    GST_AUDIORING_BUFFER_WAIT (buf);
+    GST_DEBUG ("stopped");
+  }
 
   return TRUE;
 }
