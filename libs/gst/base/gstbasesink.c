@@ -940,10 +940,10 @@ gst_base_sink_wait (GstBaseSink * basesink, GstClockTime time)
  * 4) wait on the clock, this blocks
  * 5) unref the clockid again
  */
-static gboolean
+static GstClockReturn
 gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 {
-  gboolean result = TRUE;
+  GstClockReturn result = GST_CLOCK_OK;
   GstClockTime start, end;
   GstClockTimeDiff stream_start, stream_end;
   GstBaseSinkClass *bclass;
@@ -998,7 +998,6 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 
   /* now do clocking */
   if (basesink->clock && basesink->sync) {
-    GstClockReturn ret;
     GstClockTime base_time;
 
     GST_LOCK (basesink);
@@ -1016,13 +1015,11 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     else
       basesink->end_time = GST_CLOCK_TIME_NONE;
 
-    ret = gst_base_sink_wait (basesink, stream_start + base_time);
+    result = gst_base_sink_wait (basesink, stream_start + base_time);
 
     GST_UNLOCK (basesink);
 
-    GST_LOG_OBJECT (basesink, "clock entry done: %d", ret);
-    if (ret == GST_CLOCK_UNSCHEDULED)
-      result = FALSE;
+    GST_LOG_OBJECT (basesink, "clock entry done: %d", result);
   }
 
 done:
@@ -1031,7 +1028,7 @@ done:
 out_of_segment:
   {
     GST_LOG_OBJECT (basesink, "buffer skipped, not in segment");
-    return FALSE;
+    return GST_CLOCK_UNSCHEDULED;
   }
 }
 
@@ -1102,16 +1099,24 @@ static inline GstFlowReturn
 gst_base_sink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean render;
+  GstClockReturn status;
 
-  render = gst_base_sink_do_sync (basesink, buf);
+  status = gst_base_sink_do_sync (basesink, buf);
+  switch (status) {
+    case GST_CLOCK_EARLY:
+      GST_DEBUG_OBJECT (basesink, "late frame !");
+      /* fallthrough for now */
+    case GST_CLOCK_OK:
+    {
+      GstBaseSinkClass *bclass;
 
-  if (render) {
-    GstBaseSinkClass *bclass;
-
-    bclass = GST_BASE_SINK_GET_CLASS (basesink);
-    if (bclass->render)
-      ret = bclass->render (basesink, buf);
+      bclass = GST_BASE_SINK_GET_CLASS (basesink);
+      if (bclass->render)
+        ret = bclass->render (basesink, buf);
+      break;
+    }
+    default:
+      break;
   }
 
   GST_DEBUG_OBJECT (basesink, "buffer unref after render %p", basesink, buf);
