@@ -78,7 +78,7 @@ fi
 dnl subsystems - can influence other decisions so needs to be high up
 dnl we need to do AM_CONDITIONAL them here for automake 1.6.x compatibility
 GST_CHECK_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
-AM_CONDITIONAL(GST_DISABLE_GST_DEBUG, test "x$GST_DISABLE_GST_DEBUG" = "xyes")
+AM_CONDITIONAL(GST_DISABLE_GST_DEBUG, test "x$GST_GST_DISABLE_DEBUG" = "xyes")
 GST_CHECK_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
 AM_CONDITIONAL(GST_DISABLE_LOADSAVE, test "x$GST_DISABLE_LOADSAVE" = "xyes")
 GST_CHECK_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
@@ -320,15 +320,6 @@ AC_HELP_STRING([--enable-fast-stack-trash],[use fast memory allocator (i586 or a
 esac], 
 [USE_FAST_STACK_TRASH=yes]) dnl Default value
 
-AC_ARG_ENABLE(plugin-builddir,
-AC_HELP_STRING([--enable-plugin-builddir],[allow tests/demos to use non-installed plugins]),
-[case "${enableval}" in
-  yes) PLUGINS_USE_BUILDDIR=yes ;;
-  no)  PLUGINS_USE_BUILDDIR=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-plugin-builddir) ;;
-esac], 
-[PLUGINS_USE_BUILDDIR=no]) dnl Default value
-
 AC_ARG_ENABLE(profiling,
 AC_HELP_STRING([--enable-profiling],[adds -pg to compiler commandline, for profiling]),
 [case "${enableval}" in
@@ -339,13 +330,8 @@ esac],
 [USE_PROFILING=no]) dnl Default value
 
 dnl use a cache dir for storing element registry info.
-dnl default to building registry in the source tree if we are enabling plugin build dir
-if test "x$PLUGINS_USE_BUILDDIR" = "xyes"; then
-  GST_CACHE_DIR=`pwd`
-else
-  dnl ${localstatedir} points to PREFIX/var
-  GST_CACHE_DIR=${localstatedir}/cache/gstreamer-$GST_MAJORMINOR
-fi
+GST_CACHE_DIR=${localstatedir}/cache/gstreamer-$GST_MAJORMINOR
+
 AC_ARG_WITH(cachedir,
 AC_HELP_STRING([--with-cachedir],[specify path to use for plugin and command completion registries]),
 [case "${withval}" in
@@ -482,10 +468,6 @@ AC_CHECK_LIB(dl, dladdr,
              [Defined if we have dladdr ()]))
 CFLAGS="$save_cflags"
 
-if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
-  AC_DEFINE(PLUGINS_USE_BUILDDIR, 1, [Define if plugins should be loaded from the build tree - only developers should use this])
-fi
-
 if test "x$USE_DEBUG" = xyes; then
    GST_INT_CFLAGS="$GST_INT_CFLAGS -g"
 fi
@@ -498,8 +480,6 @@ dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
 dnl HAVE_ and it is likely to be easier to stick with the old name
 AM_CONDITIONAL(EXPERIMENTAL,        test "x$EXPERIMENTAL" = "xyes")
 AM_CONDITIONAL(BROKEN,              test "x$BROKEN" = "xyes")
-AM_CONDITIONAL(PLUGINS_USE_BUILDDIR,  test "x$PLUGINS_USE_BUILDDIR" = "xyes")
-
 
 dnl ############################
 dnl # Set up some more defines #
@@ -547,11 +527,6 @@ AS_AC_EXPAND(PLUGINS_DIR, ${libdir}/gstreamer-$GST_MAJORMINOR)
 AC_DEFINE_UNQUOTED(PLUGINS_DIR, "$PLUGINS_DIR", [Define the plugin directory])
 AC_SUBST(PLUGINS_DIR)
 AC_MSG_NOTICE([Using $PLUGINS_DIR as the plugin install location])
-
-dnl Set location of uninstalled plugin directory
-PLUGINS_BUILDDIR=`pwd`
-AC_DEFINE_UNQUOTED(PLUGINS_BUILDDIR, "$PLUGINS_BUILDDIR", [Define the uninstalled plugin directory])
-AC_SUBST(PLUGINS_BUILDDIR)
 
 dnl LDFLAGS modifier defining exported symbols from built objects
 EXPORT_LDFLAGS="-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*"
@@ -618,20 +593,6 @@ dnl ##################################################
 
 infomessages=
 
-if test "x$PLUGINS_USE_BUILDDIR" = xyes; then
-  infomessages="$infomessages
-*** Warning: You have configured using the --enable-plugin-builddir option.
-
-This option is for development purposes only: binaries built with
-it should be used with code in the build tree only.  To build an
-installable version, use ./configure without the --enable-plugin-builddir
-option.  Note that the autogen.sh script supplies the plugin builddir
-option automatically -- run ./autogen.sh -- --disable-plugin-builddir to make
-an installable build.
-
-"
-fi
-
 dnl #########################
 dnl # Make the output files #
 dnl #########################
@@ -640,7 +601,6 @@ dnl libs/ext/Makefile
 dnl nothing there yet !
 AC_OUTPUT(
 Makefile
-include/Makefile
 gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
