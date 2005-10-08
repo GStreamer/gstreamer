@@ -432,6 +432,7 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   }
   /* we can't have EOS anymore now */
   basesink->eos = FALSE;
+  basesink->eos_queued = FALSE;
   basesink->preroll_queued = 0;
   basesink->buffers_queued = 0;
   basesink->events_queued = 0;
@@ -461,6 +462,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
       case GST_EVENT_EOS:
         basesink->preroll_queued++;
         basesink->eos = TRUE;
+        basesink->eos_queued = TRUE;
         break;
       case GST_EVENT_NEWSEGMENT:
       {
@@ -474,6 +476,14 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
             &segment_start, &segment_stop, &basesink->segment_base);
 
         basesink->have_newsegment = TRUE;
+
+        /* any other format with 0 also gives time 0, the other values are
+         * invalid as time though. */
+        if (format != GST_FORMAT_TIME && segment_start == 0) {
+          format = GST_FORMAT_TIME;
+          segment_stop = -1;
+          basesink->segment_base = -1;
+        }
 
         if (format != GST_FORMAT_TIME) {
           GST_DEBUG_OBJECT (basesink,
@@ -633,7 +643,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     GST_STATE_UNLOCK (basesink);
 
     /* reacquire stream lock, pad could be flushing now */
-    /* FIXME in glib, if t==0, the lock is still taken... hmmm */
+    /* FIXME in glib, if t==0, the lock is still taken... hmmm.. bug #317802 */
     if (t > 0)
       GST_STREAM_LOCK_FULL (pad, t);
 
@@ -812,18 +822,19 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       if (bclass->event)
         bclass->event (basesink, event);
 
+      GST_LOCK (basesink);
+      basesink->flushing = TRUE;
+      if (basesink->clock_id) {
+        gst_clock_id_unschedule (basesink->clock_id);
+      }
+      GST_UNLOCK (basesink);
+
       GST_PREROLL_LOCK (pad);
       /* we need preroll after the flush */
       GST_DEBUG_OBJECT (basesink, "flushing, need preroll after flush");
       basesink->need_preroll = TRUE;
       /* unlock from a possible state change/preroll */
       gst_base_sink_preroll_queue_flush (basesink, pad);
-
-      GST_LOCK (basesink);
-      if (basesink->clock_id) {
-        gst_clock_id_unschedule (basesink->clock_id);
-      }
-      GST_UNLOCK (basesink);
       GST_PREROLL_UNLOCK (pad);
 
       /* and we need to commit our state again on the next
@@ -843,6 +854,9 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       /* now we are completely unblocked and the _chain method
        * will return */
       GST_STREAM_LOCK (pad);
+      GST_LOCK (basesink);
+      basesink->flushing = FALSE;
+      GST_UNLOCK (basesink);
       /* we need new segment info after the flush. */
       basesink->segment_start = -1;
       basesink->segment_stop = -1;
@@ -891,19 +905,27 @@ static GstClockReturn
 gst_base_sink_wait (GstBaseSink * basesink, GstClockTime time)
 {
   GstClockReturn ret;
+  GstClockID id;
+
+  /* no need to attempt a clock wait if we are flushing */
+  if (basesink->flushing) {
+    return GST_CLOCK_UNSCHEDULED;
+  }
 
   /* clock_id should be NULL outside of this function */
   g_assert (basesink->clock_id == NULL);
   g_assert (GST_CLOCK_TIME_IS_VALID (time));
 
-  basesink->clock_id = gst_clock_new_single_shot_id (basesink->clock, time);
+  id = gst_clock_new_single_shot_id (basesink->clock, time);
 
+  basesink->clock_id = id;
   /* release the object lock while waiting */
   GST_UNLOCK (basesink);
-  ret = gst_clock_id_wait (basesink->clock_id, NULL);
-  GST_LOCK (basesink);
 
-  gst_clock_id_unref (basesink->clock_id);
+  ret = gst_clock_id_wait (id, NULL);
+
+  GST_LOCK (basesink);
+  gst_clock_id_unref (id);
   basesink->clock_id = NULL;
 
   return ret;
@@ -1056,6 +1078,7 @@ gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
         GST_DEBUG_OBJECT (basesink, "Now posting EOS");
         gst_element_post_message (GST_ELEMENT (basesink),
             gst_message_new_eos (GST_OBJECT (basesink)));
+        basesink->eos_queued = FALSE;
       }
       GST_PREROLL_UNLOCK (basesink->sinkpad);
       break;
@@ -1413,7 +1436,6 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       ret = GST_STATE_CHANGE_ASYNC;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-    {
       GST_PREROLL_LOCK (basesink->sinkpad);
       /* if we have EOS, we should empty the queue now as there will
        * be no more data received in the chain function.
@@ -1421,7 +1443,17 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
        * we are pushing and syncing the buffers, better start a new
        * thread to do this. */
       if (basesink->eos) {
+        gboolean do_eos = !basesink->eos_queued;
+
         gst_base_sink_preroll_queue_empty (basesink, basesink->sinkpad);
+
+        /* need to post EOS message here if it was not in the preroll queue we
+         * just emptied. */
+        if (do_eos) {
+          GST_DEBUG_OBJECT (basesink, "Now posting EOS");
+          gst_element_post_message (GST_ELEMENT (basesink),
+              gst_message_new_eos (GST_OBJECT (basesink)));
+        }
       } else if (!basesink->have_preroll) {
         /* don't need preroll, but do queue a commit_state */
         GST_DEBUG_OBJECT (basesink,
@@ -1440,7 +1472,6 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       }
       GST_PREROLL_UNLOCK (basesink->sinkpad);
       break;
-    }
     default:
       break;
   }

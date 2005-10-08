@@ -72,6 +72,7 @@ struct _GstBaseSink {
   gint		 buffers_queued;
   gint		 events_queued;
   gboolean       eos;
+  gboolean       eos_queued;
   gboolean       need_preroll;
   gboolean       have_preroll;
   gboolean       playing_async;
@@ -93,6 +94,7 @@ struct _GstBaseSink {
   GstClockID     clock_id;
   GstClockTime   end_time;
   gboolean       sync;
+  gboolean       flushing;
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING];

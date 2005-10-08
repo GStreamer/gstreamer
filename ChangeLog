@@ -1,5 +1,16 @@
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_flush),
+	(gst_base_sink_handle_object), (gst_base_sink_event),
+	(gst_base_sink_wait), (gst_base_sink_handle_event),
+	(gst_base_sink_change_state):
+	* gst/base/gstbasesink.h:
+	Repost EOS message while going to PLAYING if still EOS.
+	Make sure that when receiving a FLUSH_START we don't attempt
+	to sync on the clock anymore.
+
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* tools/gst-launch.c: (event_loop):
 	Better message printout.
 
