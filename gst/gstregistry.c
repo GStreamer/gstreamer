@@ -703,6 +703,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       if (plugin->registered) {
         GST_DEBUG_OBJECT (registry, "plugin already registered from path %s",
             plugin->filename);
+        g_free (filename);
         continue;
       }
       plugin->registered = TRUE;
