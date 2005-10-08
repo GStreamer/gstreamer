@@ -1,5 +1,10 @@
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* tools/gst-launch.c: (event_loop):
+	Better message printout.
+
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_child_proxy_get_child_by_index),
 	(gst_bin_child_proxy_get_children_count):
 	* gst/gstchildproxy.c: (gst_child_proxy_get_child_by_name),

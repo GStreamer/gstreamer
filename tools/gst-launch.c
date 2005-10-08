@@ -377,14 +377,18 @@ event_loop (GstElement * pipeline, gboolean blocking)
       const GstStructure *s;
 
       s = gst_message_get_structure (message);
-      g_print (_("Got Message from element \"%s\"\n"),
-          GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
+
+      g_print (_("Got Message from element \"%s\" (%s): "),
+          GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))),
+          gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
       if (s) {
         gchar *sstr;
 
         sstr = gst_structure_to_string (s);
         g_print ("%s\n", sstr);
         g_free (sstr);
+      } else {
+        g_print ("no message details\n");
       }
     }
 
