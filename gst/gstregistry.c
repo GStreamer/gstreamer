@@ -603,17 +603,21 @@ gst_registry_lookup_locked (GstRegistry * registry, const char *filename)
 {
   GList *g;
   GstPlugin *plugin;
+  gchar *basename;
 
   if (filename == NULL)
     return NULL;
 
+  basename = g_path_get_basename (filename);
   for (g = registry->plugins; g; g = g_list_next (g)) {
     plugin = GST_PLUGIN (g->data);
-    if (plugin->filename && strcmp (filename, plugin->filename) == 0) {
+    if (plugin->basename && strcmp (basename, plugin->basename) == 0) {
+      g_free (basename);
       return plugin;
     }
   }
 
+  g_free (basename);
   return NULL;
 }
 
@@ -685,6 +689,8 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       continue;
     }
 
+    /* plug-ins are considered unique by basename; if the given name
+     * was already seen by the registry, we ignore it */
     plugin = gst_registry_lookup (registry, filename);
     if (plugin) {
       struct stat file_status;
@@ -694,7 +700,12 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
         g_free (filename);
         continue;
       }
-
+      if (plugin->registered) {
+        GST_DEBUG_OBJECT (registry, "plugin already registered from path %s",
+            plugin->filename);
+        continue;
+      }
+      plugin->registered = TRUE;
       if (plugin->file_mtime == file_status.st_mtime &&
           plugin->file_size == file_status.st_size) {
         GST_DEBUG_OBJECT (registry, "file %s cached", filename);
@@ -713,9 +724,12 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       gst_object_unref (plugin);
 
     } else {
+      GST_DEBUG_OBJECT (registry, "file %s not yet in registry", filename);
       newplugin = gst_plugin_load_file (filename, NULL);
-      if (newplugin)
+      if (newplugin) {
+        newplugin->registered = TRUE;
         gst_object_unref (newplugin);
+      }
     }
 
     g_free (filename);

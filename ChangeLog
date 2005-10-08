@@ -1,3 +1,15 @@
+2005-10-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstplugin.c: (gst_plugin_finalize), (gst_plugin_load_file):
+	* gst/gstplugin.h:
+	* gst/gstregistry.c: (gst_registry_lookup_locked),
+	(gst_registry_scan_path_level):
+	* gst/gstregistryxml.c: (load_plugin):
+	  Only ever load one plugin for a given plugin basename.
+	  This ensures correct overriding of GST_PLUGIN_PATH over
+	  GST_PLUGIN_SYSTEM_PATH and of home dir plugins over
+	  system installed plugins.
+
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),

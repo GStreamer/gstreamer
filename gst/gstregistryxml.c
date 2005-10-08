@@ -654,6 +654,7 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
         if (!read_string (reader, &plugin->filename))
           break;
         GST_DEBUG ("filename %s", plugin->filename);
+        plugin->basename = g_path_get_basename (plugin->filename);
       } else if (g_str_equal (tag, "version")) {
         if (!read_string (reader, &plugin->desc.version))
           break;

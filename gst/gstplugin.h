@@ -142,11 +142,14 @@ struct _GstPlugin {
   unsigned int  flags;
 
   gchar *	filename;
+  gchar *	basename;       /* base name (non-dir part) of plugin path */
 
   GModule *	module;		/* contains the module if plugin is loaded */
 
   size_t        file_size;
   time_t        file_mtime;
+  gboolean      registered;     /* TRUE when the registry has seen a filename
+                                 * that matches the plugin's basename */
 
   gpointer _gst_reserved[GST_PADDING];
 };

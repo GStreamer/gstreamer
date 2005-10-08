@@ -130,6 +130,7 @@ gst_plugin_finalize (GObject * object)
     }
   }
   g_free (plugin->filename);
+  g_free (plugin->basename);
   gst_plugin_desc_free (&plugin->desc);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -413,6 +414,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
   plugin->module = module;
   plugin->filename = strdup (filename);
+  plugin->basename = g_path_get_basename (filename);
   plugin->file_mtime = file_status.st_mtime;
   plugin->file_size = file_status.st_size;
 
