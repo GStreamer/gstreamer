@@ -1,3 +1,9 @@
+2005-10-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/typefind/gsttypefindfunctions.c: (utf8_type_find):
+	  Fix leaks in typefind registration
+	  Clean up the gratuitous commenting and whitespacing a little
+
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstaudiosink.c: (gst_audioringbuffer_stop):
