@@ -1,5 +1,19 @@
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* check/gst/gstbin.c: (GST_START_TEST):
+	* check/gst/gstmessage.c: (GST_START_TEST):
+	* check/gst/gstpipeline.c: (GST_START_TEST), (message_received):
+	* gst/gstelement.c: (gst_element_commit_state),
+	(gst_element_lost_state):
+	* gst/gstmessage.c: (gst_message_new_state_changed),
+	(gst_message_parse_state_changed):
+	* gst/gstmessage.h:
+	* tools/gst-launch.c: (event_loop):
+	Added extra field to STATE_CHANGE message with the pending
+	state, which will be different from the new state soon.
+
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbus.c: (gst_bus_pop):
 	* gst/gstclock.c:
 	* gst/gstsystemclock.c: (gst_system_clock_async_thread):

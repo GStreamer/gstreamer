@@ -354,6 +354,7 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * @src: The object originating the message.
  * @old: The previous state.
  * @new: The new (current) state.
+ * @pending: The pending (target) state.
  *
  * Create a state change message. This message is posted whenever an element changed
  * its state.
@@ -363,15 +364,18 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * MT safe.
  */
 GstMessage *
-gst_message_new_state_changed (GstObject * src, GstState old, GstState new)
+gst_message_new_state_changed (GstObject * src,
+    GstState old, GstState new, GstState pending)
 {
   GstMessage *message;
   GstStructure *s;
 
   message = gst_message_new (GST_MESSAGE_STATE_CHANGED, src);
 
-  s = gst_structure_new ("GstMessageState", "old-state", GST_TYPE_STATE,
-      (gint) old, "new-state", GST_TYPE_STATE, (gint) new, NULL);
+  s = gst_structure_new ("GstMessageState",
+      "old-state", GST_TYPE_STATE, (gint) old,
+      "new-state", GST_TYPE_STATE, (gint) new,
+      "pending-state", GST_TYPE_STATE, (gint) pending, NULL);
   gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
   message->structure = s;
 
@@ -545,6 +549,9 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
 /**
  * gst_message_parse_state_changed:
  * @message: A valid #GstMessage of type GST_MESSAGE_STATE_CHANGED.
+ * @old: The previous state.
+ * @new: The new (current) state.
+ * @pending: The pending (target) state.
  *
  * Extracts the old and new states from the GstMessage.
  *
@@ -552,17 +559,20 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
  */
 void
 gst_message_parse_state_changed (GstMessage * message, GstState * old,
-    GstState * new)
+    GstState * new, GstState * pending)
 {
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STATE_CHANGED);
 
-  if (!gst_structure_get_enum (message->structure, "old-state",
-          GST_TYPE_STATE, (gint *) old))
-    g_assert_not_reached ();
-  if (!gst_structure_get_enum (message->structure, "new-state",
-          GST_TYPE_STATE, (gint *) new))
-    g_assert_not_reached ();
+  if (old)
+    gst_structure_get_enum (message->structure, "old-state",
+        GST_TYPE_STATE, (gint *) old);
+  if (new)
+    gst_structure_get_enum (message->structure, "new-state",
+        GST_TYPE_STATE, (gint *) new);
+  if (pending)
+    gst_structure_get_enum (message->structure, "pending-state",
+        GST_TYPE_STATE, (gint *) pending);
 }
 
 /**

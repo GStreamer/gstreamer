@@ -1770,7 +1770,7 @@ gst_element_commit_state (GstElement * element)
     GST_STATE_ERROR (element) = FALSE;
 
     message = gst_message_new_state_changed (GST_OBJECT (element),
-        old_state, pending);
+        old_state, pending, pending);
     gst_element_post_message (element, message);
     GST_STATE_BROADCAST (element);
   }
@@ -1810,7 +1810,7 @@ gst_element_lost_state (GstElement * element)
     GST_STATE_ERROR (element) = FALSE;
 
     message = gst_message_new_state_changed (GST_OBJECT (element),
-        current_state, current_state);
+        current_state, current_state, current_state);
     gst_element_post_message (element, message);
   }
 }

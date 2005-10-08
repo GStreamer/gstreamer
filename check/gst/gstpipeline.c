@@ -86,11 +86,11 @@ GST_START_TEST (test_async_state_change_fake)
 
   while (!done) {
     GstMessage *message;
-    GstState old, new;
+    GstState old, new, pending;
 
     message = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, -1);
     if (message) {
-      gst_message_parse_state_changed (message, &old, &new);
+      gst_message_parse_state_changed (message, &old, &new, &pending);
       GST_DEBUG_OBJECT (message->src, "state change from %d to %d", old, new);
       if (message->src == GST_OBJECT (pipeline) && new == GST_STATE_PLAYING)
         done = TRUE;
@@ -141,10 +141,10 @@ message_received (GstBus * bus, GstMessage * message, gpointer data)
   switch (type) {
     case GST_MESSAGE_STATE_CHANGED:
     {
-      GstState old, new;
+      GstState old, new, pending;
 
       GST_DEBUG ("state change message received");
-      gst_message_parse_state_changed (message, &old, &new);
+      gst_message_parse_state_changed (message, &old, &new, &pending);
       GST_DEBUG ("new state %d", new);
       if (message->src == GST_OBJECT (pipeline) && new == GST_STATE_PLAYING) {
         GST_DEBUG ("quitting main loop");

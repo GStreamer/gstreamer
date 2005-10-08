@@ -448,11 +448,11 @@ GST_END_TEST;
 #define ASSERT_STATE_CHANGE_MSG(bus,element,old_state,new_state,num)          \
   {                                                                           \
     GstMessage *msg;                                                          \
-    GstState old = 0, new = 0;                                                \
+    GstState old = 0, new = 0, pending = 0;                                   \
     msg = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, GST_SECOND);          \
     fail_if (msg == NULL, "No state change message within 1 second (#"        \
         G_STRINGIFY (num) ")");                                               \
-    gst_message_parse_state_changed (msg, &old, &new);                        \
+    gst_message_parse_state_changed (msg, &old, &new, &pending);              \
     fail_if (msg->src != GST_OBJECT (element), G_STRINGIFY(element)           \
         " should have changed state next (#" G_STRINGIFY (num) ")");          \
     fail_if (old != old_state || new != new_state, "state change is not "     \
@@ -681,13 +681,13 @@ GST_START_TEST (test_children_state_change_order_two_sink)
   /* NULL => READY */
   {
     GstMessage *msg;
-    GstState old = 0, new = 0;
+    GstState old = 0, new = 0, pending = 0;
     GstObject *first, *second;
 
     msg = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, GST_SECOND);
     fail_if (msg == NULL, "No state change message within 1 second (#201)");
 
-    gst_message_parse_state_changed (msg, &old, &new);
+    gst_message_parse_state_changed (msg, &old, &new, &pending);
     first = gst_object_ref (msg->src);
 
     fail_if (first != GST_OBJECT (sink1) && first != GST_OBJECT (sink2),
@@ -697,7 +697,7 @@ GST_START_TEST (test_children_state_change_order_two_sink)
     msg = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, GST_SECOND);
     fail_if (msg == NULL, "No state change message within 1 second (#201)");
 
-    gst_message_parse_state_changed (msg, &old, &new);
+    gst_message_parse_state_changed (msg, &old, &new, &pending);
     second = gst_object_ref (msg->src);
 
     fail_if (second != GST_OBJECT (sink1) && second != GST_OBJECT (sink2),
