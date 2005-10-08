@@ -1,5 +1,11 @@
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_event), (gst_base_audio_sink_render):
+	If we receive EOS we can start playback of what we had.
+
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
 	(gst_multifdsink_finalize), (multifdsink_hash_remove),
 	(gst_multifdsink_stop):

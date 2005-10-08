@@ -306,6 +306,7 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       gst_ring_buffer_clear_all (sink->ringbuffer);
       break;
     case GST_EVENT_EOS:
+      gst_ring_buffer_start (sink->ringbuffer);
       break;
     default:
       break;
