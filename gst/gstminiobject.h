@@ -43,11 +43,44 @@ typedef struct _GstMiniObjectClass GstMiniObjectClass;
 typedef GstMiniObject * (*GstMiniObjectCopyFunction) (const GstMiniObject *);
 typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *);
 
+/**
+ * GST_MINI_OBJECT_FLAGS:
+ * @obj: MiniObject to return flags for.
+ *
+ * This macro returns the entire set of flags for the mini-object.
+ */
 #define GST_MINI_OBJECT_FLAGS(obj)  (GST_MINI_OBJECT(obj)->flags)
+/**
+ * GST_MINI_OBJECT_FLAG_IS_SET:
+ * @obj: MiniObject to check for flags.
+ * @flag: Flag to check for
+ *
+ * This macro checks to see if the given flag is set.
+ */
 #define GST_MINI_OBJECT_FLAG_IS_SET(obj,flag)        (GST_MINI_OBJECT_FLAGS(obj) & (flag))
+/**
+ * GST_MINI_OBJECT_FLAG_SET:
+ * @obj: MiniObject to set flag in.
+ * @flag: Flag to set, can by any number of bits in guint32.
+ *
+ * This macro sets the given bits.
+ */
 #define GST_MINI_OBJECT_FLAG_SET(obj,flag)           (GST_MINI_OBJECT_FLAGS (obj) |= (flag))
+/**
+ * GST_MINI_OBJECT_FLAG_UNSET:
+ * @obj: MiniObject to unset flag in.
+ * @flag: Flag to set, must be a single bit in guint32.
+ *
+ * This macro usets the given bits.
+ */
 #define GST_MINI_OBJECT_FLAG_UNSET(obj,flag)         (GST_MINI_OBJECT_FLAGS (obj) &= ~(flag))
 
+/**
+ * GST_VALUE_HOLDS_MINI_OBJECT:
+ * @value: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_MINI_OBJECT value.
+ */
 #define GST_VALUE_HOLDS_MINI_OBJECT(value)  (G_VALUE_HOLDS(value, GST_TYPE_MINI_OBJECT))
 
 typedef enum

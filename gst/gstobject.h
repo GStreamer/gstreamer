@@ -65,7 +65,19 @@ typedef enum
 } GstObjectFlags;
 
 #ifdef GST_HAVE_GLIB_2_8
+/**
+ * GST_OBJECT_REFCOUNT:
+ * @obj: Object get the refcount for.
+ *
+ * Get access to the reference count field of the object. 
+ */
 #define GST_OBJECT_REFCOUNT(obj)                (((GObject*)(obj))->ref_count)
+/**
+ * GST_OBJECT_REFCOUNT_VALUE:
+ * @obj: Object get the refcount value for.
+ *
+ * Get the reference count value of the object. 
+ */
 #define GST_OBJECT_REFCOUNT_VALUE(obj)          GST_OBJECT_REFCOUNT(obj)
 #else
 #define GST_OBJECT_REFCOUNT(obj)                ((GST_OBJECT_CAST(obj))->refcount)

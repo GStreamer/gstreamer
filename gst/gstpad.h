@@ -437,7 +437,29 @@ GType			gst_pad_get_type			(void);
 GstPad*			gst_pad_new				(const gchar *name, GstPadDirection direction);
 GstPad*			gst_pad_new_from_template		(GstPadTemplate *templ, const gchar *name);
 
+/**
+ * gst_pad_get_name:
+ * @pad: the pad to get the name from
+ *
+ * Returns a copy of the name of the pad.
+ *
+ * Returns: the name of the pad. g_free() after usage.
+ *
+ * MT safe.
+ */
 #define gst_pad_get_name(pad) gst_object_get_name (GST_OBJECT_CAST (pad))
+/**
+ * gst_pad_get_parent:
+ * @pad: the pad to get the parent of
+ *
+ * Returns the parent of @pad. This function increases the refcount
+ * of the parent object so you should gst_object_unref() it after usage.
+ *
+ * Returns: parent of the object, this can be NULL if the pad has no
+ *   parent. unref after usage.
+ *
+ * MT safe.
+ */
 #define gst_pad_get_parent(pad) gst_object_get_parent (GST_OBJECT_CAST (pad))
 
 GstPadDirection		gst_pad_get_direction			(GstPad *pad);

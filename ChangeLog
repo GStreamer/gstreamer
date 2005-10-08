@@ -1,3 +1,14 @@
+2005-10-08  Stefan Kost  <ensonic@users.sf.net>
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	* gst/gstminiobject.c:
+	* gst/gstminiobject.h:
+	* gst/gstobject.h:
+	* gst/gstpad.h:
+	* gst/gstutils.h:
+	  lots of new docs and doc fixes
+
 2005-10-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstplugin.c: (gst_plugin_finalize), (gst_plugin_load_file):

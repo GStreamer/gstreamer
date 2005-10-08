@@ -93,6 +93,14 @@ static GstMessageQuarks message_quarks[] = {
   {0, NULL, 0}
 };
 
+/**
+ * gst_message_type_get_name:
+ * @type: the message type
+ *
+ * Get a printable name for the given message type. Do not modify or free.
+ *
+ * Returns: a reference to the static name of the message. 
+ */
 const gchar *
 gst_message_type_get_name (GstMessageType type)
 {
@@ -105,6 +113,14 @@ gst_message_type_get_name (GstMessageType type)
   return "unknown";
 }
 
+/**
+ * gst_message_type_to_quark:
+ * @type: the message type
+ *
+ * Get the unique quark for the given message type.
+ *
+ * Returns: the quark associated with the message type
+ */
 GQuark
 gst_message_type_to_quark (GstMessageType type)
 {
@@ -364,7 +380,7 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 }
 
 /**
- * gst_message_new_state_change:
+ * gst_message_new_state_changed:
  * @src: The object originating the message.
  * @old: The previous state.
  * @new: The new (current) state.
@@ -536,6 +552,8 @@ gst_message_new_segment_done (GstObject * src, GstClockTime timestamp)
  * Create a new application-typed message. GStreamer will never create these
  * messages; they are a gift from us to you. Enjoy.
  *
+ * Returns: The new application message.
+ *
  * MT safe.
  */
 GstMessage *
@@ -554,6 +572,8 @@ gst_message_new_application (GstObject * src, GstStructure * structure)
  * allowing one-way communication from an element to an application, for example
  * "the firewire cable was unplugged". The format of the message should be
  * documented in the element's documentation. The structure field can be NULL.
+ *
+ * Returns: The new element message.
  *
  * MT safe.
  */
@@ -586,6 +606,7 @@ gst_message_get_structure (GstMessage * message)
 /**
  * gst_message_parse_tag:
  * @message: A valid #GstMessage of type GST_MESSAGE_TAG.
+ * @tag_list: Return location for the tag-list.
  *
  * Extracts the tag list from the GstMessage. The tag list returned in the
  * output argument is a copy; the caller must free it when done.
@@ -715,6 +736,8 @@ gst_message_parse_new_clock (GstMessage * message, GstClock ** clock)
 /**
  * gst_message_parse_error:
  * @message: A valid #GstMessage of type GST_MESSAGE_ERROR.
+ * @gerror: Location for the GError
+ * @debug: Location for the debug message
  *
  * Extracts the GError and debug string from the GstMessage. The values returned
  * in the output arguments are copies; the caller must free them when done.
@@ -745,6 +768,8 @@ gst_message_parse_error (GstMessage * message, GError ** gerror, gchar ** debug)
 /**
  * gst_message_parse_warning:
  * @message: A valid #GstMessage of type GST_MESSAGE_WARNING.
+ * @gerror: Location for the GError
+ * @debug: Location for the debug message
  *
  * Extracts the GError and debug string from the GstMessage. The values returned
  * in the output arguments are copies; the caller must free them when done.
@@ -777,6 +802,7 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
 /**
  * gst_message_parse_segment_start:
  * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_START.
+ * @timestamp: Result location for the timestamp
  *
  * Extracts the timestamp from the segment start message.
  *
@@ -801,6 +827,7 @@ gst_message_parse_segment_start (GstMessage * message, GstClockTime * timestamp)
 /**
  * gst_message_parse_segment_done:
  * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_DONE.
+ * @timestamp: Result location for the timestamp
  *
  * Extracts the timestamp from the segment done message.
  *

@@ -754,7 +754,6 @@ gst_index_add_object
 gst_index_add_id
 gst_index_get_assoc_entry
 gst_index_get_assoc_entry_full
-gst_index_entry_get_type
 gst_index_entry_copy
 gst_index_entry_free
 gst_index_entry_assoc_map
@@ -777,6 +776,7 @@ GST_TYPE_INDEX_RESOLVER_METHOD
 gst_index_get_type
 gst_assoc_flags_get_type
 gst_index_certainty_get_type
+gst_index_entry_get_type
 gst_index_entry_type_get_type
 gst_index_flags_get_type
 gst_index_lookup_method_get_type
@@ -1001,7 +1001,6 @@ gst_message_parse_state_changed
 gst_message_parse_tag
 gst_message_parse_warning
 gst_message_ref
-gst_message_type_get_type
 gst_message_unref
 <SUBSECTION Standard>
 GstMessageClass
@@ -1014,6 +1013,7 @@ GST_MESSAGE_GET_CLASS
 GST_TYPE_MESSAGE_TYPE
 <SUBSECTION Private>
 gst_message_get_type
+gst_message_type_get_type
 </SECTION>
 
 
@@ -1854,7 +1854,6 @@ GST_TASK_WAIT
 gst_task_cleanup_all
 gst_task_create
 gst_task_get_state
-gst_task_get_type
 gst_task_join
 gst_task_pause
 gst_task_set_lock

@@ -142,18 +142,54 @@ const gchar*	gst_message_type_get_name	(GstMessageType type);
 GQuark		gst_message_type_to_quark	(GstMessageType type);
 
 /* refcounting */
+/**
+ * gst_message_ref:
+ * @msg: the message to ref
+ *
+ * Convinience macro to increase the reference count of the message.
+ *
+ * Returns: the refed message.
+ */
 #define         gst_message_ref(msg)		GST_MESSAGE (gst_mini_object_ref (GST_MINI_OBJECT (msg)))
+/**
+ * gst_message_unref:
+ * @msg: the message to unref
+ *
+ * Convinience macro to decrease the reference count of the message, possibly freeing
+ * the it.
+ */
 #define         gst_message_unref(msg)		gst_mini_object_unref (GST_MINI_OBJECT (msg))
 /* copy message */
+/**
+ * gst_message_copy:
+ * @msg: the message to copy
+ *
+ * Creates a copy of the message.
+ *
+ * MT safe
+ *
+ * Returns: the new message.
+ */
 #define         gst_message_copy(msg)		GST_MESSAGE (gst_mini_object_copy (GST_MINI_OBJECT (msg)))
+/**
+ * gst_message_make_writable:
+ * @msg: the message to make writable
+ *
+ * Checks if a message is writable. If not, a writable copy is made and
+ * returned.
+ *
+ * MT safe
+ *
+ * Returns: a message (possibly a duplicate) that it writable.
+ */
 #define         gst_message_make_writable(msg)	GST_MESSAGE (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
 
 GstMessage *	gst_message_new_eos 		(GstObject * src);
 GstMessage *	gst_message_new_error 		(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
-GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstState old_state,
-                                                 GstState new_state, GstState pending);
+GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstState old,
+                                                 GstState new, GstState pending);
 GstMessage *	gst_message_new_clock_provide	(GstObject * src, GstClock *clock, gboolean ready);
 GstMessage *	gst_message_new_clock_lost	(GstObject * src, GstClock *clock);
 GstMessage *	gst_message_new_new_clock	(GstObject * src, GstClock *clock);
@@ -168,8 +204,8 @@ GstMessage *	gst_message_new_custom 		(GstMessageType type,
 void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
-void		gst_message_parse_state_changed	(GstMessage *message, GstState *old_state,
-                                                 GstState *new_state, GstState *pending);
+void		gst_message_parse_state_changed	(GstMessage *message, GstState *old,
+                                                 GstState *new, GstState *pending);
 void		gst_message_parse_clock_provide (GstMessage *message, GstClock **clock, gboolean *ready);
 void		gst_message_parse_clock_lost	(GstMessage *message, GstClock **clock);
 void		gst_message_parse_new_clock	(GstMessage *message, GstClock **clock);

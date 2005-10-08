@@ -202,23 +202,114 @@ GST_BOILERPLATE_FULL (type, type_as_function, parent_type,              \
 #define _GST_GET(__data, __size, __end) \
     (GUINT##__size##_FROM_##__end (* ((guint##__size *) (__data))))
 
+/**
+ * GST_READ_UINT64_BE:
+ * @data: memory location
+ *
+ * Read a 64 bit unsigned integer value in big endian format from the memory buffer.
+ */
 #define GST_READ_UINT64_BE(data)	_GST_GET (data, 64, BE)
+/**
+ * GST_READ_UINT64_LE:
+ * @data: memory location
+ *
+ * Read a 64 bit unsigned integer value in little endian format from the memory buffer.
+ */
 #define GST_READ_UINT64_LE(data)	_GST_GET (data, 64, LE)
+/**
+ * GST_READ_UINT32_BE:
+ * @data: memory location
+ *
+ * Read a 32 bit unsigned integer value in big endian format from the memory buffer.
+ */
 #define GST_READ_UINT32_BE(data)	_GST_GET (data, 32, BE)
+/**
+ * GST_READ_UINT32_LE:
+ * @data: memory location
+ *
+ * Read a 32 bit unsigned integer value in little endian format from the memory buffer.
+ */
 #define GST_READ_UINT32_LE(data)        _GST_GET (data, 32, LE)
+/**
+ * GST_READ_UINT16_BE:
+ * @data: memory location
+ *
+ * Read a 16 bit unsigned integer value in big endian format from the memory buffer.
+ */
 #define GST_READ_UINT16_BE(data)        _GST_GET (data, 16, BE)
+/**
+ * GST_READ_UINT16_LE:
+ * @data: memory location
+ *
+ * Read a 16 bit unsigned integer value in little endian format from the memory buffer.
+ */
 #define GST_READ_UINT16_LE(data)        _GST_GET (data, 16, LE)
+/**
+ * GST_READ_UINT8:
+ * @data: memory location
+ *
+ * Read an 8 bit unsigned integer value from the memory buffer.
+ */
 #define GST_READ_UINT8(data)		(* ((guint8 *) (data)))
 
 #define _GST_PUT(__data, __size, __end, __num) \
     ((* (guint##__size *) (__data)) = GUINT##__size##_TO_##__end (__num))
 
+/**
+ * GST_WRITE_UINT64_BE:
+ * @data: memory location
+ * @num: value to store
+ *
+ * Store a 64 bit unsigned integer value in big endian format into the memory buffer.
+ */
 #define GST_WRITE_UINT64_BE(data, num)	_GST_PUT(data, 64, BE, num)
+/**
+ * GST_WRITE_UINT64_LE:
+ * @data: memory location
+ * @num: value to store
+ *
+ * Store a 64 bit unsigned integer value in little endian format into the memory buffer.
+ */
 #define GST_WRITE_UINT64_LE(data, num)  _GST_PUT(data, 64, LE, num)
+/**
+ * GST_WRITE_UINT32_BE:
+ * @data: memory location
+ * @num: value to store
+ *
+ * Store a 32 bit unsigned integer value in big endian format into the memory buffer.
+ */
 #define GST_WRITE_UINT32_BE(data, num)  _GST_PUT(data, 32, BE, num)
+/**
+ * GST_WRITE_UINT32_LE:
+ * @data: memory location
+ * @num: value to store
+ *
+ * Store a 32 bit unsigned integer value in little endian format into the memory buffer.
+ */
 #define GST_WRITE_UINT32_LE(data, num)  _GST_PUT(data, 32, LE, num)
+/**
+ * GST_WRITE_UINT16_BE:
+ * @data: memory location
+ * @num: value to store
+ *
+ * Store a 16 bit unsigned integer value in big endian format into the memory buffer.
+ */
 #define GST_WRITE_UINT16_BE(data, num)  _GST_PUT(data, 16, BE, num)
+/**
+ * GST_WRITE_UINT16_LE:
+ * @data: memory location
+ * @num: value to store
+ *
+ * Store a 16 bit unsigned integer value in little endian format into the memory buffer.
+ */
 #define GST_WRITE_UINT16_LE(data, num)  _GST_PUT(data, 16, LE, num)
+/**
+ * GST_WRITE_UINT8:
+ * @data: memory location
+ * @num: value to store
+ *
+ * Store an 8 bit unsigned integer value into the memory buffer.
+ */
 #define GST_WRITE_UINT8(data, num)	((* (guint8 *) (data)) = (num))
 
 #else /* GST_HAVE_UNALIGNED_ACCESS */
@@ -319,11 +410,48 @@ GST_BOILERPLATE_FULL (type, type_as_function, parent_type,              \
 
 
 /* Miscellaneous utility macros */
+
+/**
+ * GST_ROUND_UP_2:
+ * @num: value round up
+ *
+ * Make number divideable by two without a rest.
+ */
 #define GST_ROUND_UP_2(num)  (((num)+1)&~1)
+/**
+ * GST_ROUND_UP_4:
+ * @num: value round up
+ *
+ * Make number divideable by four without a rest.
+ */
 #define GST_ROUND_UP_4(num)  (((num)+3)&~3)
+/**
+ * GST_ROUND_UP_8:
+ * @num: value round up
+ *
+ * Make number divideable by eight without a rest.
+ */
 #define GST_ROUND_UP_8(num)  (((num)+7)&~7)
+/**
+ * GST_ROUND_UP_16:
+ * @num: value round up
+ *
+ * Make number divideable by 16 without a rest.
+ */
 #define GST_ROUND_UP_16(num) (((num)+15)&~15)
+/**
+ * GST_ROUND_UP_32:
+ * @num: value round up
+ *
+ * Make number divideable by 32 without a rest.
+ */
 #define GST_ROUND_UP_32(num) (((num)+31)&~31)
+/**
+ * GST_ROUND_UP_64:
+ * @num: value round up
+ *
+ * Make number divideable by 64 without a rest.
+ */
 #define GST_ROUND_UP_64(num) (((num)+63)&~63)
 
 void			gst_object_default_error	(GstObject * source,
