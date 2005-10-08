@@ -61,31 +61,46 @@ static guint signals[LAST_SIGNAL] = { 0 };
  *
  * Implementors can use #GstObject together with gst_object_get_name() 
  *
- * Returns: the child object or %NULL if not found
+ * Returns: the child object or %NULL if not found. Unref after usage.
+ *
+ * MT safe.
  */
 GstObject *
 gst_child_proxy_get_child_by_name (GstChildProxy * parent, const gchar * name)
 {
   guint count, i;
-  GstObject *object;
-  const gchar *object_name;
+  GstObject *object, *result;
+  gchar *object_name;
 
   g_return_val_if_fail (GST_IS_CHILD_PROXY (parent), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
+  result = NULL;
+
   count = gst_child_proxy_get_children_count (parent);
   for (i = 0; i < count; i++) {
-    object = gst_child_proxy_get_child_by_index (parent, i);
+    gboolean eq;
+
+    if (!(object = gst_child_proxy_get_child_by_index (parent, i)))
+      continue;
+
     object_name = gst_object_get_name (object);
     if (object_name == NULL) {
       g_warning ("child %u of parent %s has no name", i,
           GST_OBJECT_NAME (parent));
-      continue;
+      goto next;
     }
-    if (g_str_equal (object_name, name))
-      return object;
+    eq = g_str_equal (object_name, name);
+    g_free (object_name);
+
+    if (eq) {
+      result = object;
+      break;
+    }
+  next:
+    gst_object_unref (object);
   }
-  return NULL;
+  return result;
 }
 
 /**
@@ -95,7 +110,10 @@ gst_child_proxy_get_child_by_name (GstChildProxy * parent, const gchar * name)
  *
  * Fetches a child by its number.
  *
- * Returns: the child object or %NULL if not found (index too high)
+ * Returns: the child object or %NULL if not found (index too high). Unref
+ * after usage.
+ *
+ * MT safe.
  */
 GstObject *
 gst_child_proxy_get_child_by_index (GstChildProxy * parent, guint index)
@@ -113,6 +131,8 @@ gst_child_proxy_get_child_by_index (GstChildProxy * parent, guint index)
  * Gets the number of child objects this parent contains.
  *
  * Returns: the number of child objects
+ *
+ * MT safe.
  */
 guint
 gst_child_proxy_get_children_count (GstChildProxy * parent)
@@ -132,7 +152,10 @@ gst_child_proxy_get_children_count (GstChildProxy * parent)
  * Looks up which object and #GParamSpec would be effected by the given @name.
  *
  * Returns: TRUE if @target and @pspec could be found. FALSE otherwise. In that 
- * case the values for @pspec and @target are not modified
+ * case the values for @pspec and @target are not modified. Unref @target after
+ * usage.
+ *
+ * MT safe.
  */
 gboolean
 gst_child_proxy_lookup (GstObject * object, const gchar * name,
@@ -144,21 +167,26 @@ gst_child_proxy_lookup (GstObject * object, const gchar * name,
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (name != NULL, FALSE);
 
+  gst_object_ref (object);
+
   current = names = g_strsplit (name, "::", -1);
   while (current[1]) {
+    GstObject *next;
+
     if (!GST_IS_CHILD_PROXY (object)) {
       GST_INFO
           ("object %s is not a parent, so you cannot request a child by name %s",
           GST_OBJECT_NAME (object), current[0]);
       break;
     }
-    object =
-        gst_child_proxy_get_child_by_name (GST_CHILD_PROXY (object),
+    next = gst_child_proxy_get_child_by_name (GST_CHILD_PROXY (object),
         current[0]);
-    if (!object) {
+    if (!next) {
       GST_INFO ("no such object %s", current[0]);
       break;
     }
+    gst_object_unref (object);
+    object = next;
     current++;
   };
   if (current[1] == NULL) {
@@ -169,11 +197,14 @@ gst_child_proxy_lookup (GstObject * object, const gchar * name,
     } else {
       if (pspec)
         *pspec = spec;
-      if (target)
+      if (target) {
+        gst_object_ref (object);
         *target = object;
+      }
       res = TRUE;
     }
   }
+  gst_object_unref (object);
   g_strfreev (names);
   return res;
 }
@@ -198,12 +229,20 @@ gst_child_proxy_get_property (GstObject * object, const gchar * name,
   g_return_if_fail (name != NULL);
   g_return_if_fail (!G_IS_VALUE (value));
 
-  if (!gst_child_proxy_lookup (object, name, &target, &pspec)) {
+  if (!gst_child_proxy_lookup (object, name, &target, &pspec))
+    goto not_found;
+
+  g_object_get_property (G_OBJECT (target), pspec->name, value);
+  gst_object_unref (target);
+
+  return;
+
+not_found:
+  {
     g_warning ("cannot get property %s from object %s", name,
         GST_OBJECT_NAME (object));
     return;
   }
-  g_object_get_property (G_OBJECT (target), pspec->name, value);
 }
 
 /**
@@ -224,8 +263,6 @@ gst_child_proxy_get_valist (GstObject * object,
 
   g_return_if_fail (G_IS_OBJECT (object));
 
-  g_object_ref (object);
-
   name = first_property_name;
 
   /* iterate over pairs */
@@ -239,8 +276,6 @@ gst_child_proxy_get_valist (GstObject * object,
     g_value_unset (&value);
     name = va_arg (var_args, gchar *);
   }
-
-  g_object_unref (object);
 }
 
 /**
@@ -282,12 +317,19 @@ gst_child_proxy_set_property (GstObject * object, const gchar * name,
   g_return_if_fail (name != NULL);
   g_return_if_fail (!G_IS_VALUE (value));
 
-  if (!gst_child_proxy_lookup (object, name, &target, &pspec)) {
+  if (!gst_child_proxy_lookup (object, name, &target, &pspec))
+    goto not_found;
+
+  g_object_set_property (G_OBJECT (target), pspec->name, value);
+  gst_object_unref (target);
+  return;
+
+not_found:
+  {
     g_warning ("cannot set property %s on object %s", name,
         GST_OBJECT_NAME (object));
     return;
   }
-  g_object_set_property (G_OBJECT (target), pspec->name, value);
 }
 
 /**
@@ -308,8 +350,6 @@ gst_child_proxy_set_valist (GstObject * object,
 
   g_return_if_fail (G_IS_OBJECT (object));
 
-  g_object_ref (object);
-
   name = first_property_name;
 
   /* iterate over pairs */
@@ -320,21 +360,21 @@ gst_child_proxy_set_valist (GstObject * object,
     if (!gst_child_proxy_lookup (object, name, &target, &pspec)) {
       g_warning ("no such property %s in object %s", name,
           GST_OBJECT_NAME (object));
-      g_object_unref (object);
+      continue;
     }
     g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
     G_VALUE_COLLECT (&value, var_args, G_VALUE_NOCOPY_CONTENTS, &error);
     if (error) {
       g_warning ("error copying value: %s", error);
-      g_object_unref (object);
+      gst_object_unref (target);
       return;
     }
     g_object_set_property (G_OBJECT (target), pspec->name, &value);
+    gst_object_unref (target);
+
     g_value_unset (&value);
     name = va_arg (var_args, gchar *);
   }
-
-  g_object_unref (object);
 }
 
 /**

@@ -267,6 +267,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     if (!gst_value_deserialize (&v, pos))
       goto error;
     g_object_set_property (G_OBJECT (target), pspec->name, &v);
+    gst_object_unref (target);
   } else { 
     SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, _("no property \"%s\" in element \"%s\""), value, GST_ELEMENT_NAME (element)); 
   }
@@ -280,6 +281,7 @@ out:
   return;
   
 error:
+  gst_object_unref (target);
   SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
          _("could not set property \"%s\" in element \"%s\" to \"%s\""), 
 	 value, GST_ELEMENT_NAME (element), pos); 

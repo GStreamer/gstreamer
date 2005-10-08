@@ -1,3 +1,14 @@
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_child_proxy_get_child_by_index),
+	(gst_bin_child_proxy_get_children_count):
+	* gst/gstchildproxy.c: (gst_child_proxy_get_child_by_name),
+	(gst_child_proxy_lookup), (gst_child_proxy_get_property),
+	(gst_child_proxy_get_valist), (gst_child_proxy_set_property),
+	(gst_child_proxy_set_valist):
+	* gst/parse/grammar.y:
+	Make ChildProxy threadsafe and fix mem leaks.
+
 2005-10-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.c: (init_post):

@@ -112,7 +112,7 @@ static void gst_bin_restore_thyself (GstObject * object, xmlNodePtr self);
 
 static gint bin_element_is_sink (GstElement * child, GstBin * bin);
 
-/* Bin signals and args */
+/* Bin signals and properties */
 enum
 {
   ELEMENT_ADDED,
@@ -122,7 +122,7 @@ enum
 
 enum
 {
-  ARG_0
+  PROP_0
       /* FILL ME */
 };
 
@@ -185,13 +185,32 @@ static GstObject *
 gst_bin_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
     guint index)
 {
-  return g_list_nth_data (GST_BIN (child_proxy)->children, index);
+  GstObject *res;
+  GstBin *bin;
+
+  bin = GST_BIN_CAST (child_proxy);
+
+  GST_LOCK (bin);
+  if ((res = g_list_nth_data (bin->children, index)))
+    gst_object_ref (res);
+  GST_UNLOCK (bin);
+
+  return res;
 }
 
 guint
 gst_bin_child_proxy_get_children_count (GstChildProxy * child_proxy)
 {
-  return GST_BIN (child_proxy)->numchildren;
+  guint num;
+  GstBin *bin;
+
+  bin = GST_BIN_CAST (child_proxy);
+
+  GST_LOCK (bin);
+  num = bin->numchildren;
+  GST_UNLOCK (bin);
+
+  return num;
 }
 
 static void
