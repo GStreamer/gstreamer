@@ -33,6 +33,9 @@
  * 
  * The GstBus provides support for #GSource based notifications. This makes it
  * possible to handle the delivery in the glib mainloop.
+ *
+ * The #GSource callback function gst_bus_async_signal_func() can be used to
+ * convert all bus messages into signal emissions.
  * 
  * A message is posted on the bus with the gst_bus_post() method. With the
  * gst_bus_peek() and _pop() methods one can look at or retrieve a previously
@@ -52,9 +55,9 @@
  * message on the bus. This should only be used if the application is able
  * to deal with messages from different threads.
  *
- * Every #GstBin has one bus.
+ * Every #GstPipeline has one bus.
  *
- * Note that a #GstBin will set its bus into flushing state when changing from
+ * Note that a #GstPipeline will set its bus into flushing state when changing from
  * READY to NULL state.
  */
 
@@ -455,18 +458,15 @@ gst_bus_pop (GstBus * bus)
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
-  GST_DEBUG_OBJECT (bus, "%d messages on the bus",
-      g_queue_get_length (bus->queue));
-
   g_mutex_lock (bus->queue_lock);
   message = g_queue_pop_head (bus->queue);
-  g_mutex_unlock (bus->queue_lock);
-
   if (message)
-    GST_DEBUG_OBJECT (bus, "pop on bus, got message %p, %s", message,
+    GST_DEBUG_OBJECT (bus, "pop from bus, have %d messages, got message %p, %s",
+        g_queue_get_length (bus->queue) + 1, message,
         gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
   else
-    GST_DEBUG_OBJECT (bus, "pop on bus, no message");
+    GST_DEBUG_OBJECT (bus, "pop from bus, no messages");
+  g_mutex_unlock (bus->queue_lock);
 
   return message;
 }

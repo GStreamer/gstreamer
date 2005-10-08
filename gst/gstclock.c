@@ -554,7 +554,8 @@ gst_clock_get_resolution (GstClock * clock)
  *
  * Converts the given @internal clock time to the real time, adjusting
  * and making sure that the returned time is increasing.
- * This function should be called with the clock lock held.
+ * This function should be called with the clock LOCK held and is
+ * mainly used by clock subclasses.
  *
  * Returns: the converted time of the clock.
  *

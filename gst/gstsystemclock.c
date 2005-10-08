@@ -230,14 +230,14 @@ gst_system_clock_async_thread (GstClock * clock)
   GST_LOCK (clock);
   /* signal spinup */
   GST_CLOCK_BROADCAST (clock);
-  /* now enter our infinite loop */
+  /* now enter our (almost) infinite loop */
   while (!sysclock->stopping) {
     GstClockEntry *entry;
     GstClockReturn res;
 
     /* check if something to be done */
     while (clock->entries == NULL) {
-      GST_CAT_DEBUG (GST_CAT_CLOCK, "nothing to wait for");
+      GST_CAT_DEBUG (GST_CAT_CLOCK, "no clock entries, waiting..");
       /* wait for work to do */
       GST_CLOCK_WAIT (clock);
       GST_CAT_DEBUG (GST_CAT_CLOCK, "got signal");
@@ -294,6 +294,8 @@ gst_system_clock_async_thread (GstClock * clock)
       default:
         GST_CAT_DEBUG (GST_CAT_CLOCK,
             "strange result %d waiting for %p, skipping", res, entry);
+        g_warning ("%s: strange result %d waiting for %p, skipping",
+            GST_OBJECT_NAME (clock), res, entry);
         goto next_entry;
     }
   next_entry:
@@ -336,6 +338,8 @@ gst_system_clock_get_resolution (GstClock * clock)
  *
  * Entries that arrive too late are simply not waited on and a
  * GST_CLOCK_EARLY result is returned.
+ *
+ * should be called with LOCK held.
  *
  * MT safe.
  */
