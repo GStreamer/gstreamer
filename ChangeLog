@@ -1,5 +1,12 @@
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* check/gst/gstbin.c: (GST_START_TEST):
+	* check/pipelines/cleanup.c: (GST_START_TEST):
+	* check/pipelines/simple_launch_lines.c: (GST_START_TEST):
+	Allow new clock message too.
+
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstmessage.c: (gst_message_new_error),
 	(gst_message_new_warning), (gst_message_new_tag),
 	(gst_message_new_state_changed), (gst_message_new_clock_provide),

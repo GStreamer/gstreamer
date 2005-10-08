@@ -279,10 +279,11 @@ GST_START_TEST (test_message_state_changed_children)
       == GST_STATE_CHANGE_SUCCESS);
 
   /* each object is referenced by one message
-   * sink might have an extra reference if it's still blocked on preroll */
+   * sink might have an extra reference if it's still blocked on preroll
+   * pipeline posted a new-clock message too. */
   ASSERT_OBJECT_REFCOUNT (src, "src", 2);
   ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 3);
-  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 3);
 
   pop_messages (bus, 3);
   fail_if ((gst_bus_pop (bus)) != NULL);
