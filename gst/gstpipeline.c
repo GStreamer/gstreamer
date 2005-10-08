@@ -316,15 +316,13 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       /* when going to playing, select a clock */
       if ((clock = gst_element_provide_clock (element))) {
         GstClockTime start_time;
-
-        /* distribute the clock */
-        gst_element_set_clock (element, clock);
+        gboolean new_clock;
 
         /* get start time */
         start_time = gst_clock_get_time (clock);
-        gst_object_unref (clock);
 
         GST_LOCK (element);
+        new_clock = element->clock != clock;
         element->base_time = start_time -
             pipeline->stream_time + pipeline->delay;
         GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", start_time=%"
@@ -332,6 +330,17 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
             GST_TIME_ARGS (pipeline->stream_time),
             GST_TIME_ARGS (start_time), GST_TIME_ARGS (element->base_time));
         GST_UNLOCK (element);
+
+        /* now distribute the clock */
+        gst_element_set_clock (element, clock);
+
+        if (new_clock) {
+          /* if we selected a new clock, let the app know about it */
+          gst_element_post_message (element,
+              gst_message_new_new_clock (GST_OBJECT_CAST (element), clock));
+        }
+
+        gst_object_unref (clock);
       } else {
         GST_DEBUG ("no clock, using base time of 0");
         gst_element_set_base_time (element, 0);

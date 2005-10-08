@@ -81,10 +81,13 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_BUFFERING, "buffering", 0},
   {GST_MESSAGE_STATE_CHANGED, "state-changed", 0},
   {GST_MESSAGE_STEP_DONE, "step-done", 0},
+  {GST_MESSAGE_CLOCK_PROVIDE, "clock-provide", 0},
+  {GST_MESSAGE_CLOCK_LOST, "clock-lost", 0},
   {GST_MESSAGE_NEW_CLOCK, "new-clock", 0},
   {GST_MESSAGE_STRUCTURE_CHANGE, "structure-change", 0},
   {GST_MESSAGE_STREAM_STATUS, "stream-status", 0},
   {GST_MESSAGE_APPLICATION, "application", 0},
+  {GST_MESSAGE_ELEMENT, "element", 0},
   {GST_MESSAGE_SEGMENT_START, "segment-start", 0},
   {GST_MESSAGE_SEGMENT_DONE, "segment-done", 0},
   {0, NULL, 0}
@@ -219,8 +222,24 @@ _gst_message_copy (GstMessage * message)
   return copy;
 }
 
-static GstMessage *
-gst_message_new (GstMessageType type, GstObject * src)
+/**
+ * gst_message_new_custom:
+ * @type: The #GstMessageType to distinguish messages
+ * @src: The object originating the message.
+ * @structure: The structure for the message. The message will take ownership of
+ * the structure.
+ *
+ * Create a new custom-typed message. This can be used for anything not
+ * handled by other message-specific functions to pass a message to the
+ * app. The structure field can be NULL.
+ *
+ * Returns: The new message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_custom (GstMessageType type, GstObject * src,
+    GstStructure * structure)
 {
   GstMessage *message;
 
@@ -237,7 +256,11 @@ gst_message_new (GstMessageType type, GstObject * src)
     message->src = NULL;
     GST_CAT_DEBUG (GST_CAT_MESSAGE, "NULL message source");
   }
-  message->structure = NULL;
+  if (structure) {
+    gst_structure_set_parent_refcount (structure,
+        &message->mini_object.refcount);
+  }
+  message->structure = structure;
 
   return message;
 }
@@ -259,7 +282,7 @@ gst_message_new_eos (GstObject * src)
 {
   GstMessage *message;
 
-  message = gst_message_new (GST_MESSAGE_EOS, src);
+  message = gst_message_new_custom (GST_MESSAGE_EOS, src, NULL);
 
   return message;
 }
@@ -282,14 +305,10 @@ GstMessage *
 gst_message_new_error (GstObject * src, GError * error, gchar * debug)
 {
   GstMessage *message;
-  GstStructure *s;
 
-  message = gst_message_new (GST_MESSAGE_ERROR, src);
-  /* gst_structure_new takes copies of the types passed in */
-  s = gst_structure_new ("GstMessageError", "gerror", GST_TYPE_G_ERROR, error,
-      "debug", G_TYPE_STRING, debug, NULL);
-  gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
-  message->structure = s;
+  message = gst_message_new_custom (GST_MESSAGE_ERROR, src,
+      gst_structure_new ("GstMessageError", "gerror", GST_TYPE_G_ERROR, error,
+          "debug", G_TYPE_STRING, debug, NULL));
 
   return message;
 }
@@ -311,14 +330,10 @@ GstMessage *
 gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
 {
   GstMessage *message;
-  GstStructure *s;
 
-  message = gst_message_new (GST_MESSAGE_WARNING, src);
-  /* gst_structure_new takes copies of the types passed in */
-  s = gst_structure_new ("GstMessageWarning", "gerror", GST_TYPE_G_ERROR, error,
-      "debug", G_TYPE_STRING, debug, NULL);
-  gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
-  message->structure = s;
+  message = gst_message_new_custom (GST_MESSAGE_WARNING, src,
+      gst_structure_new ("GstMessageWarning", "gerror", GST_TYPE_G_ERROR, error,
+          "debug", G_TYPE_STRING, debug, NULL));
 
   return message;
 }
@@ -342,9 +357,8 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 
   g_return_val_if_fail (GST_IS_STRUCTURE (tag_list), NULL);
 
-  message = gst_message_new (GST_MESSAGE_TAG, src);
-  gst_structure_set_parent_refcount (tag_list, &message->mini_object.refcount);
-  message->structure = tag_list;
+  message =
+      gst_message_new_custom (GST_MESSAGE_TAG, src, (GstStructure *) tag_list);
 
   return message;
 }
@@ -368,16 +382,64 @@ gst_message_new_state_changed (GstObject * src,
     GstState old, GstState new, GstState pending)
 {
   GstMessage *message;
-  GstStructure *s;
 
-  message = gst_message_new (GST_MESSAGE_STATE_CHANGED, src);
+  message = gst_message_new_custom (GST_MESSAGE_STATE_CHANGED, src,
+      gst_structure_new ("GstMessageState",
+          "old-state", GST_TYPE_STATE, (gint) old,
+          "new-state", GST_TYPE_STATE, (gint) new,
+          "pending-state", GST_TYPE_STATE, (gint) pending, NULL));
 
-  s = gst_structure_new ("GstMessageState",
-      "old-state", GST_TYPE_STATE, (gint) old,
-      "new-state", GST_TYPE_STATE, (gint) new,
-      "pending-state", GST_TYPE_STATE, (gint) pending, NULL);
-  gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
-  message->structure = s;
+  return message;
+}
+
+/**
+ * gst_message_new_clock_provide:
+ * @src: The object originating the message.
+ * @ready: TRUE if the sender can provide a clock
+ *
+ * Create a clock provide message. This message is posted whenever an 
+ * element is ready to provide a clock or lost its ability to provide
+ * a clock (maybe because it paused or became EOS).
+ *
+ * This message is mainly used internally to manage the clock 
+ * selection.
+ *
+ * Returns: The new provide clock message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_clock_provide (GstObject * src, gboolean ready)
+{
+  GstMessage *message;
+
+  message = gst_message_new_custom (GST_MESSAGE_CLOCK_PROVIDE, src,
+      gst_structure_new ("GstMessageClockProvide",
+          "ready", G_TYPE_BOOLEAN, ready, NULL));
+
+  return message;
+}
+
+/**
+ * gst_message_new_new_clock:
+ * @src: The object originating the message.
+ * @clock: the new selected clock
+ *
+ * Create a new clock message. This message is posted whenever the
+ * pipeline selectes a new clock for the pipeline.
+ *
+ * Returns: The new new clock message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_new_clock (GstObject * src, GstClock * clock)
+{
+  GstMessage *message;
+
+  message = gst_message_new_custom (GST_MESSAGE_NEW_CLOCK, src,
+      gst_structure_new ("GstMessageNewClock",
+          "clock", GST_TYPE_CLOCK, clock, NULL));
 
   return message;
 }
@@ -400,14 +462,10 @@ GstMessage *
 gst_message_new_segment_start (GstObject * src, GstClockTime timestamp)
 {
   GstMessage *message;
-  GstStructure *s;
 
-  message = gst_message_new (GST_MESSAGE_SEGMENT_START, src);
-
-  s = gst_structure_new ("GstMessageSegmentStart", "timestamp", G_TYPE_INT64,
-      (gint64) timestamp, NULL);
-  gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
-  message->structure = s;
+  message = gst_message_new_custom (GST_MESSAGE_SEGMENT_START, src,
+      gst_structure_new ("GstMessageSegmentStart", "timestamp", G_TYPE_INT64,
+          (gint64) timestamp, NULL));
 
   return message;
 }
@@ -430,14 +488,10 @@ GstMessage *
 gst_message_new_segment_done (GstObject * src, GstClockTime timestamp)
 {
   GstMessage *message;
-  GstStructure *s;
 
-  message = gst_message_new (GST_MESSAGE_SEGMENT_DONE, src);
-
-  s = gst_structure_new ("GstMessageSegmentDone", "timestamp", G_TYPE_INT64,
-      (gint64) timestamp, NULL);
-  gst_structure_set_parent_refcount (s, &message->mini_object.refcount);
-  message->structure = s;
+  message = gst_message_new_custom (GST_MESSAGE_SEGMENT_DONE, src,
+      gst_structure_new ("GstMessageSegmentDone", "timestamp", G_TYPE_INT64,
+          (gint64) timestamp, NULL));
 
   return message;
 }
@@ -476,36 +530,6 @@ GstMessage *
 gst_message_new_element (GstObject * src, GstStructure * structure)
 {
   return gst_message_new_custom (GST_MESSAGE_ELEMENT, src, structure);
-}
-
-/**
- * gst_message_new_custom:
- * @type: The #GstMessageType to distinguish messages
- * @src: The object originating the message.
- * @structure: The structure for the message. The message will take ownership of
- * the structure.
- *
- * Create a new custom-typed message. This can be used for anything not
- * handled by other message-specific functions to pass a message to the
- * app. The structure field can be NULL.
- *
- * Returns: The new message.
- *
- * MT safe.
- */
-GstMessage *
-gst_message_new_custom (GstMessageType type, GstObject * src,
-    GstStructure * structure)
-{
-  GstMessage *message;
-
-  message = gst_message_new (type, src);
-  if (structure) {
-    gst_structure_set_parent_refcount (structure,
-        &message->mini_object.refcount);
-    message->structure = structure;
-  }
-  return message;
 }
 
 /**
@@ -573,6 +597,51 @@ gst_message_parse_state_changed (GstMessage * message, GstState * old,
   if (pending)
     gst_structure_get_enum (message->structure, "pending-state",
         GST_TYPE_STATE, (gint *) pending);
+}
+
+/**
+ * gst_message_parse_clock_provide:
+ * @message: A valid #GstMessage of type GST_MESSAGE_CLOCK_PROVIDE.
+ * @ready: If the src can provide a clock or not.
+ *
+ * Extracts the ready flag from the GstMessage.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_clock_provide (GstMessage * message, gboolean * ready)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_CLOCK_PROVIDE);
+
+  if (ready)
+    gst_structure_get_boolean (message->structure, "ready", ready);
+}
+
+/**
+ * gst_message_parse_new_clock:
+ * @message: A valid #GstMessage of type GST_MESSAGE_NEW_CLOCK.
+ * @clock: A pointer to hold the selected new clock
+ *
+ * Extracts the new clock from the GstMessage.
+ * The clock object returned remains valid until the message is freed.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_new_clock (GstMessage * message, GstClock ** clock)
+{
+  const GValue *clock_gvalue;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_NEW_CLOCK);
+
+  clock_gvalue = gst_structure_get_value (message->structure, "clock");
+  g_return_if_fail (clock_gvalue != NULL);
+  g_return_if_fail (G_VALUE_TYPE (clock_gvalue) == GST_TYPE_CLOCK);
+
+  if (clock)
+    *clock = (GstClock *) g_value_get_object (clock_gvalue);
 }
 
 /**

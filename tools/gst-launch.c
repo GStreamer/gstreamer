@@ -393,6 +393,15 @@ event_loop (GstElement * pipeline, gboolean blocking)
     }
 
     switch (GST_MESSAGE_TYPE (message)) {
+      case GST_MESSAGE_NEW_CLOCK:
+      {
+        GstClock *clock;
+
+        gst_message_parse_new_clock (message, &clock);
+
+        g_print ("new clock: %p\n", clock);
+        break;
+      }
       case GST_MESSAGE_EOS:
         g_print (_
             ("Got EOS from element \"%s\".\n"),

@@ -38,6 +38,11 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_BUFFERING: the pipeline is buffering
  * @GST_MESSAGE_STATE_CHANGED: a state change happened
  * @GST_MESSAGE_STEP_DONE: a framestep finished.
+ * @GST_MESSAGE_CLOCK_PROVIDE: an element notifies it capability of providing
+ *                             a clock.
+ * @GST_MESSAGE_CLOCK_LOST: The current clock as selected by the pipeline became
+ *                          unusable. The pipeline will select a new clock on the
+ *                          next PLAYING state change.
  * @GST_MESSAGE_NEW_CLOCK: a new clock was selected in the pipeline
  * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed.
  * @GST_MESSAGE_STREAM_STATUS: status about a stream, emitted when it starts,
@@ -50,6 +55,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_SEGMENT_DONE: pipeline completed playback of a segment.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  */
+/* NOTE: keep in sync with quark registration in gstmessage.c */
 typedef enum
 {
   GST_MESSAGE_UNKNOWN           = 0,
@@ -61,13 +67,15 @@ typedef enum
   GST_MESSAGE_BUFFERING         = (1 << 5),
   GST_MESSAGE_STATE_CHANGED     = (1 << 6),
   GST_MESSAGE_STEP_DONE         = (1 << 7),
-  GST_MESSAGE_NEW_CLOCK         = (1 << 8),
-  GST_MESSAGE_STRUCTURE_CHANGE  = (1 << 9),
-  GST_MESSAGE_STREAM_STATUS     = (1 << 10),
-  GST_MESSAGE_APPLICATION       = (1 << 11),
-  GST_MESSAGE_ELEMENT           = (1 << 12),
-  GST_MESSAGE_SEGMENT_START     = (1 << 13),
-  GST_MESSAGE_SEGMENT_DONE      = (1 << 14),
+  GST_MESSAGE_CLOCK_PROVIDE     = (1 << 8),
+  GST_MESSAGE_CLOCK_LOST        = (1 << 9),
+  GST_MESSAGE_NEW_CLOCK         = (1 << 10),
+  GST_MESSAGE_STRUCTURE_CHANGE  = (1 << 11),
+  GST_MESSAGE_STREAM_STATUS     = (1 << 12),
+  GST_MESSAGE_APPLICATION       = (1 << 13),
+  GST_MESSAGE_ELEMENT           = (1 << 14),
+  GST_MESSAGE_SEGMENT_START     = (1 << 15),
+  GST_MESSAGE_SEGMENT_DONE      = (1 << 16),
   GST_MESSAGE_ANY               = 0xffffffff
 } GstMessageType;
 
@@ -146,6 +154,9 @@ GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * 
 GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
 GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstState old_state,
                                                  GstState new_state, GstState pending);
+GstMessage *	gst_message_new_clock_provide	(GstObject * src, gboolean ready);
+GstMessage *	gst_message_new_clock_lost	(GstObject * src);
+GstMessage *	gst_message_new_new_clock	(GstObject * src, GstClock *clock);
 GstMessage *	gst_message_new_segment_start 	(GstObject * src, GstClockTime timestamp);
 GstMessage *	gst_message_new_segment_done 	(GstObject * src, GstClockTime timestamp);
 GstMessage *	gst_message_new_application	(GstObject * src, GstStructure * structure);
@@ -159,6 +170,8 @@ void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **d
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
 void		gst_message_parse_state_changed	(GstMessage *message, GstState *old_state,
                                                  GstState *new_state, GstState *pending);
+void		gst_message_parse_clock_provide (GstMessage *message, gboolean *ready);
+void		gst_message_parse_new_clock	(GstMessage *message, GstClock **clock);
 void 		gst_message_parse_segment_start (GstMessage *message, GstClockTime *timestamp);
 void		gst_message_parse_segment_done 	(GstMessage *message, GstClockTime *timestamp);
 
