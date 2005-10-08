@@ -307,12 +307,17 @@ print_element_properties_info (GstElement * element)
         GParamSpecString *pstring = G_PARAM_SPEC_STRING (param);
 
         n_print ("%-23.23s String. ", "");
-        g_print ("Default: \"%s\" ", pstring->default_value);
+
+        if (pstring->default_value == NULL)
+          g_print ("Default: null ");
+        else
+          g_print ("Default: \"%s\" ", pstring->default_value);
+
         if (readable) {
           const char *string_val = g_value_get_string (&value);
 
           if (string_val == NULL)
-            g_print ("Current: \"\"");
+            g_print ("Current: null");
           else
             g_print ("Current: \"%s\"", string_val);
         }

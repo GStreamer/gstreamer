@@ -1,3 +1,8 @@
+2005-10-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-inspect.c: (print_element_properties_info):
+	  Can't pass NULL strings to g_print() on windows.
+
 2005-10-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/Makefile.am:
