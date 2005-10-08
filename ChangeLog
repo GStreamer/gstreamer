@@ -1,3 +1,8 @@
+2005-10-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.c: (init_post):
+	  debug the GST_PLUGIN_ env vars
+
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstbin.c: (GST_START_TEST):

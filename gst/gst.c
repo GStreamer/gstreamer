@@ -694,6 +694,7 @@ init_post (void)
 
     plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH");
     if (plugin_path == NULL) {
+      GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH not set");
 #ifdef PLUGINS_USE_BUILDDIR
       /* location libgstelements.so */
       gst_registry_scan_path (default_registry,
@@ -715,6 +716,7 @@ init_post (void)
       char **list;
       int i;
 
+      GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH set to %s", plugin_path);
       /* FIXME this doesn't split paths correctly on windows */
       list = g_strsplit (plugin_path, ":", 0);
       for (i = 0; list[i]; i++) {
@@ -728,12 +730,15 @@ init_post (void)
       char **list;
       int i;
 
+      GST_DEBUG ("GST_PLUGIN_PATH set to %s", plugin_path);
       /* FIXME this doesn't split paths correctly on windows */
       list = g_strsplit (plugin_path, ":", 0);
       for (i = 0; list[i]; i++) {
         gst_registry_scan_path (default_registry, list[i]);
       }
       g_strfreev (list);
+    } else {
+      GST_DEBUG ("GST_PLUGIN_PATH not set");
     }
 
     gst_registry_xml_write_cache (default_registry, registry_file);
