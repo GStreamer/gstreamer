@@ -67,8 +67,9 @@
  * Not all elements require a clock to operate correctly. If 
  * gst_element_requires_clock() returns TRUE, a clock should be set on the element
  * with gst_element_set_clock(). 
+ *
  * Note that clock slection and distribution is normally handled by the toplevel 
- * GstPipeline so the clock functions are only to be used in very specific situations.
+ * #GstPipeline so the clock functions are only to be used in very specific situations.
  */
 #include "gst_private.h"
 #include <glib.h>

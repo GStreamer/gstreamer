@@ -1588,7 +1588,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
   gboolean res = FALSE, done = FALSE;
 
   iter = gst_bin_iterate_sinks (bin);
-  GST_DEBUG_OBJECT (bin, "Sending event to sink children");
+  GST_DEBUG_OBJECT (bin, "Sending query to sink children");
 
   while (!(res || done)) {
     gpointer data;

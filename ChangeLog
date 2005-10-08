@@ -1,3 +1,10 @@
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (is_eos), (update_degree), (gst_bin_query):
+	* gst/gstelement.c: (gst_element_post_message):
+	* gst/gstpipeline.c: (gst_pipeline_change_state):
+	Small docs and debug updates.
+
 2005-10-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
