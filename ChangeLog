@@ -1,5 +1,16 @@
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_header_from_buffer), (gst_dp_packet_from_caps),
+	(gst_dp_packet_from_event):
+	* libs/gst/dataprotocol/dataprotocol.h:
+	* libs/gst/dataprotocol/dp-private.h:
+	It's about time we bump the version number.
+	Since event types don't fit in the guint8 anymore describing
+	the payload type, make payload type 16 bits wide.
+
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-TODO.txt:
 	* docs/design/part-clocks.txt:
 	* docs/design/part-events.txt:

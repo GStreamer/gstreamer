@@ -31,9 +31,9 @@ G_BEGIN_DECLS
 
 /* GStreamer Data Protocol Version */
 #define GST_DP_VERSION_MAJOR 0
-#define GST_DP_VERSION_MINOR 1
+#define GST_DP_VERSION_MINOR 2
 
-#define GST_DP_HEADER_LENGTH 60 /* header size in bytes */
+#define GST_DP_HEADER_LENGTH 62 /* header size in bytes */
 
 
 /* header flags */
