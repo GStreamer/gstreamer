@@ -1,3 +1,15 @@
+2005-10-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.c: (init_pre):
+	* gst/gstbin.c: (gst_bin_add_func):
+	  log distributing clocks and base time
+	* gst/gstregistry.c: (gst_registry_add_plugin),
+	(gst_registry_scan_path_level), (gst_registry_scan_path):
+	  clean up the debugging output a little
+	* gst/gstutils.c: (gst_element_state_get_name):
+	  warn about a memleak (I've actually seen this be used, though
+	  it was probably a bug)
+
 2005-10-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_class_init),

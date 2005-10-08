@@ -769,6 +769,7 @@ gst_element_state_get_name (GstState state)
       return "PAUSED";
       break;
     default:
+      /* This is a memory leak */
       return g_strdup_printf ("UNKNOWN!(%d)", state);
 #endif
   }

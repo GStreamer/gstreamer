@@ -291,14 +291,15 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   GST_LOCK (registry);
   existing_plugin = gst_registry_lookup_locked (registry, plugin->filename);
   if (existing_plugin) {
-    GST_DEBUG
-        ("Replacing existing plugin %p with new plugin %p for filename \"%s\"",
+    GST_DEBUG_OBJECT (registry,
+        "Replacing existing plugin %p with new plugin %p for filename \"%s\"",
         existing_plugin, plugin, plugin->filename);
     registry->plugins = g_list_remove (registry->plugins, existing_plugin);
     gst_object_unref (existing_plugin);
   }
 
-  GST_DEBUG ("adding plugin %p for filename \"%s\"", plugin, plugin->filename);
+  GST_DEBUG_OBJECT (registry, "adding plugin %p for filename \"%s\"",
+      plugin, plugin->filename);
 
   registry->plugins = g_list_prepend (registry->plugins, plugin);
 
@@ -306,7 +307,8 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   gst_object_sink (plugin);
   GST_UNLOCK (registry);
 
-  GST_DEBUG ("emitting plugin-added for filename %s", plugin->filename);
+  GST_DEBUG_OBJECT (registry, "emitting plugin-added for filename %s",
+      plugin->filename);
   g_signal_emit (G_OBJECT (registry), gst_registry_signals[PLUGIN_ADDED], 0,
       plugin);
 
@@ -656,27 +658,29 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
   while ((dirent = g_dir_read_name (dir))) {
     filename = g_strjoin ("/", path, dirent, NULL);
 
-    GST_DEBUG ("examining file: %s", filename);
+    GST_LOG_OBJECT (registry, "examining file: %s", filename);
 
     if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
       if (level > 0) {
-        GST_DEBUG ("found directory, recursing");
+        GST_LOG_OBJECT (registry, "found directory, recursing");
         gst_registry_scan_path_level (registry, filename, level - 1);
       } else {
-        GST_DEBUG ("found directory, but recursion level is too deep");
+        GST_LOG_OBJECT (registry,
+            "found directory, but recursion level is too deep");
       }
       g_free (filename);
       continue;
     }
     if (!g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
-      GST_DEBUG ("not a regular file, ignoring");
+      GST_LOG_OBJECT (registry, "not a regular file, ignoring");
       g_free (filename);
       continue;
     }
     if (!g_str_has_suffix (filename, ".so") &&
         !g_str_has_suffix (filename, ".dll") &&
         !g_str_has_suffix (filename, ".dynlib")) {
-      GST_DEBUG ("extension is not recognized as module file, ignoring");
+      GST_LOG_OBJECT (registry,
+          "extension is not recognized as module file, ignoring");
       g_free (filename);
       continue;
     }
@@ -693,11 +697,12 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
 
       if (plugin->file_mtime == file_status.st_mtime &&
           plugin->file_size == file_status.st_size) {
-        GST_DEBUG ("file %s cached", filename);
+        GST_DEBUG_OBJECT (registry, "file %s cached", filename);
         plugin->flags &= ~GST_PLUGIN_FLAG_CACHED;
       } else {
-        GST_DEBUG ("cached info for %s is stale", filename);
-        GST_DEBUG ("mtime %ld != %ld or size %" G_GSIZE_FORMAT " != %"
+        GST_INFO_OBJECT (registry, "cached info for %s is stale", filename);
+        GST_DEBUG_OBJECT (registry, "mtime %ld != %ld or size %"
+            G_GSIZE_FORMAT " != %"
             G_GSIZE_FORMAT, plugin->file_mtime, file_status.st_mtime,
             plugin->file_size, file_status.st_size);
         gst_registry_remove_plugin (gst_registry_get_default (), plugin);
@@ -731,6 +736,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
 void
 gst_registry_scan_path (GstRegistry * registry, const gchar * path)
 {
+  GST_DEBUG_OBJECT (registry, "scanning path %s", path);
   gst_registry_scan_path_level (registry, path, 10);
 }
 

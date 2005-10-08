@@ -477,7 +477,10 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gst_element_set_bus (element, bin->child_bus);
 
   /* propagate the current base time and clock */
+  GST_DEBUG_OBJECT (element, "setting base time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_ELEMENT (bin)->base_time));
   gst_element_set_base_time (element, GST_ELEMENT (bin)->base_time);
+  GST_DEBUG_OBJECT (element, "setting clock %p", GST_ELEMENT_CLOCK (bin));
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
 
   GST_UNLOCK (bin);

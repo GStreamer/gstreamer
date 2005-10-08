@@ -591,7 +591,7 @@ init_pre (void)
   /* This is the earliest we can make stuff show up in the logs.
    * So give some useful info about GStreamer here */
   GST_INFO ("Initializing GStreamer Core Library version %s", VERSION);
-  GST_INFO ("Using library from %s", LIBDIR);
+  GST_INFO ("Using library installed in %s", LIBDIR);
 
   return TRUE;
 }
