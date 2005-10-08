@@ -1,5 +1,18 @@
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstmessage.c: (gst_message_new_error),
+	(gst_message_new_warning), (gst_message_new_tag),
+	(gst_message_new_state_changed), (gst_message_new_clock_provide),
+	(gst_message_new_clock_lost), (gst_message_new_new_clock),
+	(gst_message_new_segment_start), (gst_message_new_segment_done),
+	(gst_message_parse_state_changed),
+	(gst_message_parse_clock_provide), (gst_message_parse_clock_lost),
+	(gst_message_parse_new_clock):
+	* gst/gstmessage.h:
+	Also carry the clock in question.
+
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstmessage.c: (gst_message_new_custom),
 	(gst_message_new_eos), (gst_message_new_error),
 	(gst_message_new_warning), (gst_message_new_tag),

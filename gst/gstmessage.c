@@ -395,6 +395,7 @@ gst_message_new_state_changed (GstObject * src,
 /**
  * gst_message_new_clock_provide:
  * @src: The object originating the message.
+ * @clock: The clock it provides
  * @ready: TRUE if the sender can provide a clock
  *
  * Create a clock provide message. This message is posted whenever an 
@@ -409,13 +410,43 @@ gst_message_new_state_changed (GstObject * src,
  * MT safe.
  */
 GstMessage *
-gst_message_new_clock_provide (GstObject * src, gboolean ready)
+gst_message_new_clock_provide (GstObject * src, GstClock * clock,
+    gboolean ready)
 {
   GstMessage *message;
 
   message = gst_message_new_custom (GST_MESSAGE_CLOCK_PROVIDE, src,
       gst_structure_new ("GstMessageClockProvide",
+          "clock", GST_TYPE_CLOCK, clock,
           "ready", G_TYPE_BOOLEAN, ready, NULL));
+
+  return message;
+}
+
+/**
+ * gst_message_new_clock_lost:
+ * @src: The object originating the message.
+ * @clock: the clock that was lost
+ *
+ * Create a clock lost message. This message is posted whenever the
+ * clock is not valid anymore.
+ *
+ * If this message is posted by the pipeline, the pipeline will
+ * select a new clock again when it goes to PLAYING. It might therefore
+ * be needed to set the pipeline to PAUSED and PLAYING again.
+ *
+ * Returns: The new clock lost message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_clock_lost (GstObject * src, GstClock * clock)
+{
+  GstMessage *message;
+
+  message = gst_message_new_custom (GST_MESSAGE_CLOCK_LOST, src,
+      gst_structure_new ("GstMessageClockLost",
+          "clock", GST_TYPE_CLOCK, clock, NULL));
 
   return message;
 }
@@ -602,20 +633,57 @@ gst_message_parse_state_changed (GstMessage * message, GstState * old,
 /**
  * gst_message_parse_clock_provide:
  * @message: A valid #GstMessage of type GST_MESSAGE_CLOCK_PROVIDE.
- * @ready: If the src can provide a clock or not.
+ * @clock: A pointer to  hold a clock object.
+ * @ready: A pointer to hold the ready flag.
  *
- * Extracts the ready flag from the GstMessage.
+ * Extracts the clock and ready flag from the GstMessage.
+ * The clock object returned remains valid until the message is freed.
  *
  * MT safe.
  */
 void
-gst_message_parse_clock_provide (GstMessage * message, gboolean * ready)
+gst_message_parse_clock_provide (GstMessage * message, GstClock ** clock,
+    gboolean * ready)
 {
+  const GValue *clock_gvalue;
+
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_CLOCK_PROVIDE);
 
+  clock_gvalue = gst_structure_get_value (message->structure, "clock");
+  g_return_if_fail (clock_gvalue != NULL);
+  g_return_if_fail (G_VALUE_TYPE (clock_gvalue) == GST_TYPE_CLOCK);
+
   if (ready)
     gst_structure_get_boolean (message->structure, "ready", ready);
+  if (clock)
+    *clock = (GstClock *) g_value_get_object (clock_gvalue);
+}
+
+/**
+ * gst_message_parse_clock_lost:
+ * @message: A valid #GstMessage of type GST_MESSAGE_CLOCK_LOST.
+ * @clock: A pointer to hold the lost clock
+ *
+ * Extracts the lost clock from the GstMessage.
+ * The clock object returned remains valid until the message is freed.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_clock_lost (GstMessage * message, GstClock ** clock)
+{
+  const GValue *clock_gvalue;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_NEW_CLOCK);
+
+  clock_gvalue = gst_structure_get_value (message->structure, "clock");
+  g_return_if_fail (clock_gvalue != NULL);
+  g_return_if_fail (G_VALUE_TYPE (clock_gvalue) == GST_TYPE_CLOCK);
+
+  if (clock)
+    *clock = (GstClock *) g_value_get_object (clock_gvalue);
 }
 
 /**

@@ -154,8 +154,8 @@ GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * 
 GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
 GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstState old_state,
                                                  GstState new_state, GstState pending);
-GstMessage *	gst_message_new_clock_provide	(GstObject * src, gboolean ready);
-GstMessage *	gst_message_new_clock_lost	(GstObject * src);
+GstMessage *	gst_message_new_clock_provide	(GstObject * src, GstClock *clock, gboolean ready);
+GstMessage *	gst_message_new_clock_lost	(GstObject * src, GstClock *clock);
 GstMessage *	gst_message_new_new_clock	(GstObject * src, GstClock *clock);
 GstMessage *	gst_message_new_segment_start 	(GstObject * src, GstClockTime timestamp);
 GstMessage *	gst_message_new_segment_done 	(GstObject * src, GstClockTime timestamp);
@@ -170,7 +170,8 @@ void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **d
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
 void		gst_message_parse_state_changed	(GstMessage *message, GstState *old_state,
                                                  GstState *new_state, GstState *pending);
-void		gst_message_parse_clock_provide (GstMessage *message, gboolean *ready);
+void		gst_message_parse_clock_provide (GstMessage *message, GstClock **clock, gboolean *ready);
+void		gst_message_parse_clock_lost	(GstMessage *message, GstClock **clock);
 void		gst_message_parse_new_clock	(GstMessage *message, GstClock **clock);
 void 		gst_message_parse_segment_start (GstMessage *message, GstClockTime *timestamp);
 void		gst_message_parse_segment_done 	(GstMessage *message, GstClockTime *timestamp);
