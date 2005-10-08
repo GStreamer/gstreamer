@@ -641,6 +641,9 @@ gst_event_parse_qos
 gst_event_new_seek
 gst_event_parse_seek
 gst_event_new_navigation
+
+gst_message_type_to_quark
+gst_message_type_get_name
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT
