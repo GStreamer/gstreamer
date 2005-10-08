@@ -72,9 +72,16 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_NEWSEGMENT, "newsegment", 0},
   {GST_EVENT_TAG, "tag", 0},
   {GST_EVENT_FILLER, "filler", 0},
+  {GST_EVENT_BUFFERSIZE, "buffersize", 0},
   {GST_EVENT_QOS, "qos", 0},
   {GST_EVENT_SEEK, "seek", 0},
   {GST_EVENT_NAVIGATION, "navigation", 0},
+  {GST_EVENT_CUSTOM_UP, "custom-up", 0},
+  {GST_EVENT_CUSTOM_DS, "custom-ds", 0},
+  {GST_EVENT_CUSTOM_DS_OOB, "custom-ds-oob", 0},
+  {GST_EVENT_CUSTOM_BOTH, "custom-both", 0},
+  {GST_EVENT_CUSTOM_BOTH_OOB, "custom-both-oob", 0},
+
   {0, NULL, 0}
 };
 
