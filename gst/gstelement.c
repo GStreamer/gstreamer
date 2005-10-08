@@ -1347,28 +1347,30 @@ gst_element_post_message (GstElement * element, GstMessage * message)
   GstBus *bus;
   gboolean result = FALSE;
 
-  GST_DEBUG ("posting message %p ...", message);
-
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (message != NULL, FALSE);
 
   GST_LOCK (element);
   bus = element->bus;
 
-  if (G_UNLIKELY (bus == NULL)) {
-    GST_DEBUG ("... but I won't because I have no bus");
-    GST_UNLOCK (element);
-    gst_message_unref (message);
-    return FALSE;
-  }
+  if (G_UNLIKELY (bus == NULL))
+    goto no_bus;
+
   gst_object_ref (bus);
-  GST_DEBUG ("... on bus %" GST_PTR_FORMAT, bus);
   GST_UNLOCK (element);
 
   result = gst_bus_post (bus, message);
   gst_object_unref (bus);
 
   return result;
+
+no_bus:
+  {
+    GST_DEBUG ("not posting message %p: no bus", message);
+    GST_UNLOCK (element);
+    gst_message_unref (message);
+    return FALSE;
+  }
 }
 
 /**

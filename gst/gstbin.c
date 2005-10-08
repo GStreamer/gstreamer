@@ -1133,7 +1133,7 @@ update_degree (GstElement * element, GstBinSortIterator * bit)
   gboolean linked = FALSE;
 
   GST_LOCK (element);
-  /* don't touch degree is element has no sourcepads */
+  /* don't touch degree if element has no sourcepads */
   if (element->numsinkpads != 0) {
     /* loop over all sinkpads, decrement degree for all connected
      * elements in this bin */
@@ -1147,6 +1147,7 @@ update_degree (GstElement * element, GstBinSortIterator * bit)
 
         if ((peer_element = gst_pad_get_parent_element (peer))) {
           GST_LOCK (peer_element);
+          /* check that we don't go outside of this bin */
           if (GST_OBJECT_CAST (peer_element)->parent ==
               GST_OBJECT_CAST (bit->bin)) {
             gint old_deg, new_deg;
@@ -1175,7 +1176,8 @@ update_degree (GstElement * element, GstBinSortIterator * bit)
     }
   }
   if (!linked) {
-    GST_DEBUG ("element %s not linked to anything", GST_ELEMENT_NAME (element));
+    GST_DEBUG ("element %s not linked on any sinkpads",
+        GST_ELEMENT_NAME (element));
   }
   GST_UNLOCK (element);
 }
@@ -1357,10 +1359,13 @@ gst_bin_change_state (GstElement * element, GstStateChange transition)
 
   bin = GST_BIN_CAST (element);
 
-  /* Clear eosed element list on READY-> PAUSED */
-  if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
+  /* Clear eosed element list on -> PAUSED */
+  if (transition == GST_STATE_CHANGE_READY_TO_PAUSED ||
+      transition == GST_STATE_CHANGE_PLAYING_TO_PAUSED) {
+    GST_LOCK (bin);
     g_list_free (bin->eosed);
     bin->eosed = NULL;
+    GST_UNLOCK (bin);
   }
 
   /* iterate in state change order */
@@ -1368,7 +1373,7 @@ gst_bin_change_state (GstElement * element, GstStateChange transition)
 
 restart:
   /* take base time */
-  base_time = element->base_time;
+  base_time = gst_element_get_base_time (element);
 
   have_async = FALSE;
   have_no_preroll = FALSE;
@@ -1380,40 +1385,40 @@ restart:
     switch (gst_iterator_next (it, &data)) {
       case GST_ITERATOR_OK:
       {
-        GstElement *element;
+        GstElement *child;
 
-        element = GST_ELEMENT_CAST (data);
+        child = GST_ELEMENT_CAST (data);
 
         /* set base time on element */
-        gst_element_set_base_time (element, base_time);
+        gst_element_set_base_time (child, base_time);
 
         /* set state now */
-        ret = gst_bin_element_set_state (bin, element, pending);
+        ret = gst_bin_element_set_state (bin, child, pending);
 
         switch (ret) {
           case GST_STATE_CHANGE_SUCCESS:
-            GST_CAT_DEBUG (GST_CAT_STATES,
+            GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
                 "child '%s' changed state to %d(%s) successfully",
-                GST_ELEMENT_NAME (element), pending,
+                GST_ELEMENT_NAME (child), pending,
                 gst_element_state_get_name (pending));
             break;
           case GST_STATE_CHANGE_ASYNC:
             GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
                 "child '%s' is changing state asynchronously",
-                GST_ELEMENT_NAME (element));
+                GST_ELEMENT_NAME (child));
             have_async = TRUE;
             break;
           case GST_STATE_CHANGE_FAILURE:
             GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
                 "child '%s' failed to go to state %d(%s)",
-                GST_ELEMENT_NAME (element),
+                GST_ELEMENT_NAME (child),
                 pending, gst_element_state_get_name (pending));
-            gst_object_unref (element);
+            gst_object_unref (child);
             goto done;
           case GST_STATE_CHANGE_NO_PREROLL:
-            GST_CAT_DEBUG (GST_CAT_STATES,
+            GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
                 "child '%s' changed state to %d(%s) successfully without preroll",
-                GST_ELEMENT_NAME (element), pending,
+                GST_ELEMENT_NAME (child), pending,
                 gst_element_state_get_name (pending));
             have_no_preroll = TRUE;
             break;
@@ -1421,7 +1426,7 @@ restart:
             g_assert_not_reached ();
             break;
         }
-        gst_object_unref (element);
+        gst_object_unref (child);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -1446,13 +1451,13 @@ restart:
   }
 
 done:
+  gst_iterator_free (it);
+
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
       "done changing bin's state from %s to %s, now in %s, ret %d",
       gst_element_state_get_name (old_state),
       gst_element_state_get_name (pending),
       gst_element_state_get_name (GST_STATE (element)), ret);
-
-  gst_iterator_free (it);
 
   return ret;
 }
@@ -1470,7 +1475,7 @@ gst_bin_dispose (GObject * object)
   bin->child_bus = NULL;
 
   while (bin->children) {
-    gst_bin_remove (bin, GST_ELEMENT (bin->children->data));
+    gst_bin_remove (bin, GST_ELEMENT_CAST (bin->children->data));
   }
   if (G_UNLIKELY (bin->children != NULL)) {
     g_critical ("could not remove elements from bin %s",
@@ -1547,16 +1552,16 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
         g_free (name);
 
         /* collect all eos messages from the children */
-        GST_LOCK (bin->child_bus);
+        GST_LOCK (bin);
         bin->eosed = g_list_prepend (bin->eosed, src);
         eos = is_eos (bin);
-        GST_UNLOCK (bin->child_bus);
+        GST_UNLOCK (bin);
 
         /* if we are completely EOS, we forward an EOS message */
         if (eos) {
           GST_DEBUG_OBJECT (bin, "all sinks posted EOS");
-          gst_element_post_message (GST_ELEMENT (bin),
-              gst_message_new_eos (GST_OBJECT (bin)));
+          gst_element_post_message (GST_ELEMENT_CAST (bin),
+              gst_message_new_eos (GST_OBJECT_CAST (bin)));
         }
       } else {
         GST_DEBUG_OBJECT (bin, "got EOS message from (NULL), not processing");
@@ -1568,7 +1573,7 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
     default:
       /* Send all other messages upward */
       GST_DEBUG_OBJECT (bin, "posting message upward");
-      gst_element_post_message (GST_ELEMENT (bin), message);
+      gst_element_post_message (GST_ELEMENT_CAST (bin), message);
       break;
   }
 

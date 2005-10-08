@@ -57,9 +57,9 @@ enum
 #define DEFAULT_PLAY_TIMEOUT  (2*GST_SECOND)
 enum
 {
-  ARG_0,
-  ARG_DELAY,
-  ARG_PLAY_TIMEOUT,
+  PROP_0,
+  PROP_DELAY,
+  PROP_PLAY_TIMEOUT,
   /* FILL ME */
 };
 
@@ -130,12 +130,12 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pipeline_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pipeline_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELAY,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELAY,
       g_param_spec_uint64 ("delay", "Delay",
           "Expected delay needed for elements "
           "to spin up to PLAYING in nanoseconds", 0, G_MAXUINT64, DEFAULT_DELAY,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PLAY_TIMEOUT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PLAY_TIMEOUT,
       g_param_spec_uint64 ("play-timeout", "Play Timeout",
           "Max timeout for going to PLAYING in nanoseconds", 0, G_MAXUINT64,
           DEFAULT_PLAY_TIMEOUT, G_PARAM_READWRITE));
@@ -183,10 +183,10 @@ gst_pipeline_set_property (GObject * object, guint prop_id,
 
   GST_LOCK (pipeline);
   switch (prop_id) {
-    case ARG_DELAY:
+    case PROP_DELAY:
       pipeline->delay = g_value_get_uint64 (value);
       break;
-    case ARG_PLAY_TIMEOUT:
+    case PROP_PLAY_TIMEOUT:
       pipeline->play_timeout = g_value_get_uint64 (value);
       break;
     default:
@@ -204,10 +204,10 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
 
   GST_LOCK (pipeline);
   switch (prop_id) {
-    case ARG_DELAY:
+    case PROP_DELAY:
       g_value_set_uint64 (value, pipeline->delay);
       break;
-    case ARG_PLAY_TIMEOUT:
+    case PROP_PLAY_TIMEOUT:
       g_value_set_uint64 (value, pipeline->play_timeout);
       break;
     default:
