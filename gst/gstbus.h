@@ -39,17 +39,32 @@ G_BEGIN_DECLS
 #define GST_BUS_GET_CLASS(bus)    (G_TYPE_INSTANCE_GET_CLASS ((bus), GST_TYPE_BUS, GstBusClass))
 #define GST_BUS_CAST(bus)         ((GstBus*)(bus))
 
+/**
+ * GstBusFlags:
+ * @GST_BUS_FLUSHING: The bus is currently dropping all messages
+ * @GST_BUS_FLAG_LAST: offset to define more flags
+ *
+ * The standard flags that a bus may have.
+ */
 typedef enum {
   GST_BUS_FLUSHING		= GST_OBJECT_FLAG_LAST,
 
   GST_BUS_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 1
 } GstBusFlags;
 
+/**
+ * GstBusSyncReply:
+ * @GST_BUS_DROP: drop the message
+ * @GST_BUS_PASS: pass the message to the async queue
+ * @GST_BUS_ASYNC: pass message to async queue, continue if message is handled
+ *
+ * The result values for a GstBusSyncHandler.
+ */
 typedef enum
 {
-  GST_BUS_DROP = 0,             /* drop message */
-  GST_BUS_PASS = 1,             /* pass message to async queue */
-  GST_BUS_ASYNC = 2,            /* pass message to async queue, continue if message is handled */
+  GST_BUS_DROP = 0,
+  GST_BUS_PASS = 1,
+  GST_BUS_ASYNC = 2,
 } GstBusSyncReply;
 
 /**

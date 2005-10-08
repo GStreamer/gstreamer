@@ -71,6 +71,8 @@ GST_EXPORT GType _gst_element_type;
  * @GST_STATE_CHANGE_SUCCESS   : the state change succeeded
  * @GST_STATE_CHANGE_ASYNC     : the state change will happen asynchronously
  * @GST_STATE_CHANGE_NO_PREROLL: the state change cannot be prerolled
+ *
+ * the possible return values from a state change function.
  */
 typedef enum {
   GST_STATE_CHANGE_FAILURE             = 0,

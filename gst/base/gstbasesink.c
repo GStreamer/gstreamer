@@ -1104,7 +1104,7 @@ gst_base_sink_handle_buffer (GstBaseSink * basesink, GstBuffer * buf)
   status = gst_base_sink_do_sync (basesink, buf);
   switch (status) {
     case GST_CLOCK_EARLY:
-      GST_DEBUG_OBJECT (basesink, "late frame !");
+      GST_DEBUG_OBJECT (basesink, "buffer too late!");
       /* fallthrough for now */
     case GST_CLOCK_OK:
     {

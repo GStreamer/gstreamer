@@ -76,13 +76,6 @@ struct _GstQueue {
   /* whether we leak data, and at which end */
   gint leaky;
 
-  /* number of nanoseconds until a blocked queue 'times out'
-   * to receive data and returns a filler event. -1 = disable */
-  guint64 block_timeout;
-
-  /* it the queue should fail on possible deadlocks */
-  gboolean may_deadlock;
-
   GMutex *qlock;	/* lock for queue (vs object lock) */
   GCond *item_add;	/* signals buffers now available for reading */
   GCond *item_del;	/* signals space now available for writing */

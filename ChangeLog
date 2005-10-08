@@ -1,3 +1,18 @@
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_handle_buffer):
+	Better log message.
+
+	* gst/gstbus.h:
+	* gst/gstelement.h:
+	More docs.
+
+	* gst/gstqueue.c: (gst_queue_class_init), (gst_queue_init),
+	(gst_queue_set_property), (gst_queue_get_property):
+	* gst/gstqueue.h:
+	Remove old unused properties.
+
 2005-10-08  Stefan Kost  <ensonic@users.sf.net>
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstmessage.c:

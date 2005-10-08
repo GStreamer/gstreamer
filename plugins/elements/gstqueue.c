@@ -105,9 +105,7 @@ enum
   ARG_MIN_THRESHOLD_BYTES,
   ARG_MIN_THRESHOLD_TIME,
   ARG_LEAKY,
-  ARG_MAY_DEADLOCK,
-  ARG_BLOCK_TIMEOUT
-      /* FILL ME */
+  /* FILL ME */
 };
 
 #define GST_QUEUE_MUTEX_LOCK(q) G_STMT_START {				\
@@ -322,15 +320,6 @@ gst_queue_class_init (GstQueueClass * klass)
       g_param_spec_enum ("leaky", "Leaky",
           "Where the queue leaks, if at all",
           GST_TYPE_QUEUE_LEAKY, GST_QUEUE_NO_LEAK, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_MAY_DEADLOCK,
-      g_param_spec_boolean ("may_deadlock", "May Deadlock",
-          "The queue may deadlock if it's full and not PLAYING",
-          TRUE, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_BLOCK_TIMEOUT,
-      g_param_spec_uint64 ("block_timeout", "Timeout for Block",
-          "Nanoseconds until blocked queue times out and returns filler event. "
-          "Value of -1 disables timeout",
-          0, G_MAXUINT64, -1, G_PARAM_READWRITE));
 
   /* set several parent class virtual functions */
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_queue_finalize);
@@ -384,8 +373,6 @@ gst_queue_init (GstQueue * queue)
   queue->min_threshold.time = 0;        /* no threshold */
 
   queue->leaky = GST_QUEUE_NO_LEAK;
-  queue->may_deadlock = TRUE;
-  queue->block_timeout = GST_CLOCK_TIME_NONE;
   queue->srcresult = GST_FLOW_WRONG_STATE;
 
   queue->qlock = g_mutex_new ();
@@ -1073,12 +1060,6 @@ gst_queue_set_property (GObject * object,
     case ARG_LEAKY:
       queue->leaky = g_value_get_enum (value);
       break;
-    case ARG_MAY_DEADLOCK:
-      queue->may_deadlock = g_value_get_boolean (value);
-      break;
-    case ARG_BLOCK_TIMEOUT:
-      queue->block_timeout = g_value_get_uint64 (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1125,12 +1106,6 @@ gst_queue_get_property (GObject * object,
       break;
     case ARG_LEAKY:
       g_value_set_enum (value, queue->leaky);
-      break;
-    case ARG_MAY_DEADLOCK:
-      g_value_set_boolean (value, queue->may_deadlock);
-      break;
-    case ARG_BLOCK_TIMEOUT:
-      g_value_set_uint64 (value, queue->block_timeout);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
