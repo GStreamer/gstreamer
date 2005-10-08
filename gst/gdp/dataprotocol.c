@@ -176,24 +176,24 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
   h[0] = (guint8) GST_DP_VERSION_MAJOR;
   h[1] = (guint8) GST_DP_VERSION_MINOR;
   h[2] = (guint8) flags;
-  h[3] = GST_DP_PAYLOAD_BUFFER;
+  h[3] = 0;                     /* padding byte */
+  GST_WRITE_UINT16_BE (h + 4, GST_DP_PAYLOAD_BUFFER);
 
   /* buffer properties */
-  GST_WRITE_UINT32_BE (h + 4, GST_BUFFER_SIZE (buffer));
-  GST_WRITE_UINT64_BE (h + 8, GST_BUFFER_TIMESTAMP (buffer));
-  GST_WRITE_UINT64_BE (h + 16, GST_BUFFER_DURATION (buffer));
-  GST_WRITE_UINT64_BE (h + 24, GST_BUFFER_OFFSET (buffer));
-  GST_WRITE_UINT64_BE (h + 32, GST_BUFFER_OFFSET_END (buffer));
+  GST_WRITE_UINT32_BE (h + 6, GST_BUFFER_SIZE (buffer));
+  GST_WRITE_UINT64_BE (h + 10, GST_BUFFER_TIMESTAMP (buffer));
+  GST_WRITE_UINT64_BE (h + 18, GST_BUFFER_DURATION (buffer));
+  GST_WRITE_UINT64_BE (h + 26, GST_BUFFER_OFFSET (buffer));
+  GST_WRITE_UINT64_BE (h + 34, GST_BUFFER_OFFSET_END (buffer));
 
   /* data flags */
   /* we only copy KEY_UNIT,DELTA_UNIT and IN_CAPS flags */
   flags_mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
       GST_BUFFER_FLAG_DELTA_UNIT;
 
-  GST_WRITE_UINT16_BE (h + 40, GST_BUFFER_FLAGS (buffer) & flags_mask);
+  GST_WRITE_UINT16_BE (h + 42, GST_BUFFER_FLAGS (buffer) & flags_mask);
 
   /* ABI padding */
-  GST_WRITE_UINT16_BE (h + 42, (guint64) 0);
   GST_WRITE_UINT32_BE (h + 44, (guint64) 0);
   GST_WRITE_UINT64_BE (h + 48, (guint64) 0);
 
@@ -201,15 +201,15 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
   crc = 0;
   if (flags & GST_DP_HEADER_FLAG_CRC_HEADER) {
     /* we don't crc the last four bytes of the header since they are crc's */
-    crc = gst_dp_crc (h, 56);
+    crc = gst_dp_crc (h, 58);
   }
-  GST_WRITE_UINT16_BE (h + 56, crc);
+  GST_WRITE_UINT16_BE (h + 58, crc);
 
   crc = 0;
   if (flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
     crc = gst_dp_crc (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
   }
-  GST_WRITE_UINT16_BE (h + 58, crc);
+  GST_WRITE_UINT16_BE (h + 60, crc);
 
   GST_LOG ("created header from buffer:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
@@ -252,31 +252,32 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
   h[0] = (guint8) GST_DP_VERSION_MAJOR;
   h[1] = (guint8) GST_DP_VERSION_MINOR;
   h[2] = (guint8) flags;
-  h[3] = GST_DP_PAYLOAD_CAPS;
+  h[3] = 0;                     /* padding bytes */
+  GST_WRITE_UINT16_BE (h + 4, GST_DP_PAYLOAD_CAPS);
 
   /* buffer properties */
-  GST_WRITE_UINT32_BE (h + 4, strlen ((gchar *) string) + 1);   /* include trailing 0 */
-  GST_WRITE_UINT64_BE (h + 8, (guint64) 0);
-  GST_WRITE_UINT64_BE (h + 16, (guint64) 0);
-  GST_WRITE_UINT64_BE (h + 24, (guint64) 0);
-  GST_WRITE_UINT64_BE (h + 32, (guint64) 0);
+  GST_WRITE_UINT32_BE (h + 8, strlen ((gchar *) string) + 1);   /* include trailing 0 */
+  GST_WRITE_UINT64_BE (h + 10, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 18, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 26, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 34, (guint64) 0);
 
   /* ABI padding */
-  GST_WRITE_UINT64_BE (h + 40, (guint64) 0);
-  GST_WRITE_UINT64_BE (h + 48, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 42, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 50, (guint64) 0);
 
   /* CRC */
   crc = 0;
   if (flags & GST_DP_HEADER_FLAG_CRC_HEADER) {
-    crc = gst_dp_crc (h, 56);
+    crc = gst_dp_crc (h, 58);
   }
-  GST_WRITE_UINT16_BE (h + 56, crc);
+  GST_WRITE_UINT16_BE (h + 58, crc);
 
   crc = 0;
   if (flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
     crc = gst_dp_crc (string, strlen ((gchar *) string) + 1);
   }
-  GST_WRITE_UINT16_BE (h + 58, crc);
+  GST_WRITE_UINT16_BE (h + 60, crc);
 
   GST_LOG ("created header from caps:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
@@ -324,7 +325,6 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_NEWSEGMENT:
-      GST_WRITE_UINT64_BE (h + 8, GST_EVENT_TIMESTAMP (event));
       pl_length = 0;
       *payload = NULL;
       break;
@@ -366,30 +366,32 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
   h[0] = (guint8) GST_DP_VERSION_MAJOR;
   h[1] = (guint8) GST_DP_VERSION_MINOR;
   h[2] = (guint8) flags;
-  h[3] = GST_DP_PAYLOAD_EVENT_NONE + GST_EVENT_TYPE (event);
+  h[3] = 0;                     /* padding byte */
+  GST_WRITE_UINT16_BE (h + 4,
+      GST_DP_PAYLOAD_EVENT_NONE + GST_EVENT_TYPE (event));
 
   /* length */
-  GST_WRITE_UINT32_BE (h + 4, (guint32) pl_length);
+  GST_WRITE_UINT32_BE (h + 6, (guint32) pl_length);
   /* timestamp */
-  GST_WRITE_UINT64_BE (h + 8, GST_EVENT_TIMESTAMP (event));
+  GST_WRITE_UINT64_BE (h + 10, GST_EVENT_TIMESTAMP (event));
 
   /* ABI padding */
-  GST_WRITE_UINT64_BE (h + 40, (guint64) 0);
-  GST_WRITE_UINT64_BE (h + 48, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 42, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 50, (guint64) 0);
 
   /* CRC */
   crc = 0;
   if (flags & GST_DP_HEADER_FLAG_CRC_HEADER) {
-    crc = gst_dp_crc (h, 56);
+    crc = gst_dp_crc (h, 58);
   }
-  GST_WRITE_UINT16_BE (h + 56, crc);
+  GST_WRITE_UINT16_BE (h + 58, crc);
 
   crc = 0;
   /* events can have a NULL payload */
   if (*payload && flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
     crc = gst_dp_crc (*payload, strlen ((gchar *) * payload) + 1);
   }
-  GST_WRITE_UINT16_BE (h + 58, crc);
+  GST_WRITE_UINT16_BE (h + 60, crc);
 
   GST_LOG ("created header from event:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
