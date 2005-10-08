@@ -70,9 +70,4 @@ Ghost Pads
 State
 -----
 
-Elements use state to determine what the are capable of doing at any given moment.  The states are defined as follows:
-
-NULL	No state is held for the element
-READY	Devices are open
-PLAYING	
-PAUSED	
+An element has a state. More info in part-states.txt.

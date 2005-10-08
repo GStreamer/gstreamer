@@ -20,7 +20,7 @@ the get_state() function would block on the sinks.
 
 A gstbin therefore always performs a zero timeout get_state() on its
 elements to discover the NO_PREROLL (and ERROR) elements before performing
-a blocking wait on all elements.
+a blocking wait.
 
 
 Scheduling

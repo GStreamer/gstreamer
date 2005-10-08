@@ -1,5 +1,19 @@
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-TODO.txt:
+	* docs/design/part-clocks.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-gstbin.txt:
+	* docs/design/part-gstelement.txt:
+	* docs/design/part-gstpipeline.txt:
+	* docs/design/part-live-source.txt:
+	* docs/design/part-messages.txt:
+	* docs/design/part-overview.txt:
+	* docs/design/part-states.txt:
+	Many doc updates.
+
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstevent.c:
 	* gst/gstevent.h:
 	Fix event quark registration.

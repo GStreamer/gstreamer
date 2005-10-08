@@ -10,10 +10,19 @@
 
 - unlinking pads in the PAUSED state needs to make sure the stream thread is not
   executing code. Can this be done with a flush to unlock all downstream chain
-  functions?
+  functions? Do we do this automatically or let the app handle this?
 
-- implement clock selection as explained in part-gstpipeline.txt
+- implement clock selection as explained in part-gstpipeline.txt. 
 
 - when a pipeline with a live source goes to PAUSED again, a sample is prerolled
   in the sinks. This sample should be discarded, possibly with a flush event
   started from the source.
+
+- implement latency calculation for live sources.
+
+- implement master/slave clocks.
+
+- implement QOS.
+
+- implement BUFFERSIZE.
+

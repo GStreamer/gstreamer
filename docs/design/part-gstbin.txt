@@ -36,7 +36,6 @@ operations on itself to all of its children. This includes:
  - state changes
  - index get/set
  - clock gst/set
- - scheduler set/get
 
 The state change distribution is the most complex and is explained in 
 part-states.txt.
@@ -50,7 +49,12 @@ messages from children. The bus for receiving messages from children is
 distinct from the bin's own externally-visible GstBus. 
 
 Messages received from children are forwarded intact onto the bin's 
-external message bus, except for EOS which is handled specially.
+external message bus, except for EOS and SEGMENT_START/DONE which are 
+handled specially.
+
+STATE_CHANGED messages received from the children are used to trigger a
+recalculation of the current state of the bin, as described in 
+part-states.txt.
 
 The application can retrieve the external GstBus and integrate it in the
 mainloop or it can just _pop() messages off in its own thread.
@@ -75,10 +79,21 @@ The list of queued EOS messages is cleared when the bin goes to PAUSED
 again. This means that all elements should repost the EOS message when going
 to PLAYING again.
 
+
+SEGMENT_START/DONE
+------------------
+
+* not implemented.
+
+A bin collects SEGMENT_START messages but does not post them to the application.
+It counts the number of SEGMENT_START messages and posts a SEGMENT_STOP message
+to the application when an equal number of SEGMENT_STOP messages where received.
+
+
 Subclassing
 -----------
 
 Subclasses of GstBin are free to implement their own add/remove implementations.
 It is a good idea to update the GList of children so that the _iterate() functions
-can still be used.
+can still be used if the custom bin allows acces to its children.
 

@@ -48,13 +48,22 @@ Message types
   
   GST_MESSAGE_STATE_CHANGED:
 
-    An element changed state in the pipeline. The message carries the old an new
-    state of the element.
+    An element changed state in the pipeline. The message carries the old, new
+    and pending state of the element.
   
   GST_MESSAGE_STEP_DONE:
 
     An element stepping frames has finished.
   
+  GST_MESSAGE_CLOCK_PROVIDE:
+
+    An element notifies it capability of providing a clock for the pipeline.
+
+  GST_MESSAGE_CLOCK_LOST:
+
+    The current clock as selected by the pipeline became unusable. The pipeline 
+    will select a new clock on the next PLAYING state change.
+
   GST_MESSAGE_NEW_CLOCK:
 
     A new clock was selected for the pipeline.
@@ -71,12 +80,16 @@ Message types
     
   GST_MESSAGE_APPLICATION:
 
-    An element posted an application specific message.
+    The application posted a message.
+
+  GST_MESSAGE_ELEMENT:
+
+    Element-specific message, see the specific element's documentation
 
   GST_MESSAGE_SEGMENT_START:
 
     An element started playback of a new segment. This message is not forwarded
-    the the application but is used internally to scheduler SEGMENT_DONE messages.
+    the the application but is used internally to schedule SEGMENT_DONE messages.
 
   GST_MESSAGE_SEGMENT_DONE:
 

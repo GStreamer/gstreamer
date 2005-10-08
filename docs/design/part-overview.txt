@@ -19,7 +19,7 @@ Introduction
  is an object that performs some action on a multimedia stream such as:
 
   - read a file
-  - decode or encoder between formats
+  - decode or encode between formats
   - capture from a hardware device
   - render to a hardware device
   - mix or multiplex multiple streams
@@ -283,7 +283,7 @@ Pipeline clock
  of one GST_SECOND per second. Clock values are expressed in nanoseconds.
  Elements use the clock time to synchronized the playback of data.
 
- Before the pipeline is set to PAUSED, the pipeline asks each element if they can
+ Before the pipeline is set to PLAYING, the pipeline asks each element if they can
  provide a clock. The clock is selected in the following order:
 
   - If the application selected a clock, use that one.
@@ -316,13 +316,14 @@ Pipeline states
  All intermediate states are traversed for each element resulting in the following
  chain of state changes:
 
-   alsasink to READY:  the audio device is opened
-   mp3dec to READY:    the decoding library is initialized
-   filesrc to READY:   the file is opened
-   alsasink to PAUSED: alsasink is a sink and returns ASYNC because it did not receive
-                       data yet.
-   mp3dec to PAUSED:   nothing happens
-   filesrc to PAUSED:  a thread is started to push data to mp3dec
+   alsasink to READY:  the audio device is probed
+   mp3dec to READY:    nothing happens.
+   filesrc to READY:   the file is probed
+   alsasink to PAUSED: the audio device is opened. alsasink is a sink and returns 
+                       ASYNC because it did not receive data yet.
+   mp3dec to PAUSED:   the decoding library is initialized
+   filesrc to PAUSED:  the file is opened and a thread is started to push data to 
+                       mp3dec
 
  At this point data flows from filesrc to mp3dec and alsasink. Since mp3dec is PAUSED,
  it accepts the data from filesrc on the sinkpad and starts decoding the compressed
@@ -336,7 +337,7 @@ Pipeline states
  Alsasink then receives the buffer, inspects the caps and reconfigures itself to process
  the buffer. Since it received the first buffer of samples, it completes the state change
  to the PAUSED state. At this point the pipeline is prerolled and all elements have
- samples.
+ samples. Alsasink is now also capable of providing a clock to the pipeline.
 
  Since alsasink is now in the PAUSED state it blocks while receiving the first buffer. This
  effectively blocks both mp3dec and filesrc in their gst_pad_push().
@@ -344,9 +345,9 @@ Pipeline states
  Since all elements now return SUCCESS from the gst_element_get_state() function,
  the pipeline can be put in the PLAYING state.
 
- Before going to PLAYING, the pipeline samples the current time of the clock. This is
- the base time. It then distributes this time to all elements. Elements can then
- synchronize against the clock using the buffer timestamp+base time. 
+ Before going to PLAYING, the pipeline select a clock and samples the current time of 
+ the clock. This is the base time. It then distributes this time to all elements. 
+ Elements can then synchronize against the clock using the buffer timestamp+base time. 
 
  The following chain of state changes then takes place:
 
@@ -402,8 +403,8 @@ Pipeline EOS
 Pipeline READY
 --------------
 
- When a running pipeline is set from the RUNNING to READY the following actions 
- occur in the pipeline:
+ When a running pipeline is set from the PLAYING to READY state, the following 
+ actions occur in the pipeline:
   
    alsasink to PAUSED:  alsasink blocks and completes the state change on the
                         next sample. If the element was EOS, it does not wait for
@@ -488,8 +489,8 @@ Pipeline seeking
  Since the pipeline is still PAUSED, this will preroll the next media sample in the
  sinks. 
 
- The last step in the seek operation is then to adjust the media time of the pipeline
- to the new position and to set the pipeline back to PLAYING.
+ The last step in the seek operation is then to adjust the stream time of the pipeline
+ to 0 and to set the pipeline back to PLAYING.
 
  The sequence of events in out mp3 playback example.
 
@@ -511,6 +512,6 @@ Pipeline seeking
               --------------------------> 4) FLUSH done event
               --------------------------> 5) NEWSEGMENT event
   
-                                      | e) update stream time
+                                      | e) update stream time to 0
 				      | f) PLAY pipeline
  

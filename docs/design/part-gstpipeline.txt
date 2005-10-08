@@ -18,15 +18,21 @@ State changes
 In addition to the normal state change procedure of its parent class
 GstBin, the pipeline performs the following actions during a state change:
 
+ - NULL -> READY:
+    - set the bus to non-flushing
+
  - READY -> PAUSED:
-    - Select and set a clock.
+    - reset the stream time to 0
 
  - PAUSED -> PLAYING:
-    - calculate the stream time.
+    - Select and set a clock.
+    - calculate base time using the stream time.
 
-The GstPipeline will also wait for any async state change to complete before
-proceeding to the next state change. This is usefull for the application because
-it does not have to deal with ASYNC state changes then.
+ - PAUSED -> PLAYING:
+    - calculate the stream time when the pipeline was stopped.
+
+ - READY -> NULL:
+    - set the bus to flushing
 
 
 Clock selection
@@ -65,7 +71,7 @@ When performing a seek on the pipeline element using gst_element_send_event(),
 the pipeline performs the following actions:
 
  - record the current state of the pipeline.
- - set the pipeline to paused
+ - set the pipeline to paused if a FLUSHING seek is requested
  - send the seek event to all sinks
  - when a FLUSH seek is done, the stream_time is set 0 again.
  - restore old state of the pipeline.

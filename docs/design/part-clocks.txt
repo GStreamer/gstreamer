@@ -5,8 +5,8 @@ To synchronize the different elements, the GstPipeline is responsible for
 selecting and distributing a global GstClock for all the elements in it.
 
 This selection happens whenever an element is added or removed from the 
-pipeline. Whever the clock changes in a pipeline, a message is posted on
-the bus signaling the new clock to the application.
+pipeline. Whever the clock changes in a pipeline, a NEW_CLOCK message is 
+posted on the bus signaling the new clock to the application.
 
 The GstClock returns a monotonically increasing time with the method 
 _get_time(). Its accuracy and base time depends on the specific clock 
@@ -39,22 +39,22 @@ GstClock absolute time.
 Timestamps
 ----------
 
-The combination of the last DISCONT event and the buffer timestamps 
+The combination of the last NEWSEGMENT event and the buffer timestamps 
 express the presentation stream time of the buffer. The stream time
 of a buffer is calculated as follows:
 
  ST = TS - DT        where: TS = buffer timestamp
-                            DT = DISCONT timestamp
+                            DT = NEWSEGMENT timestamp
 			    ST = buffer stream time
 
 The reason for not making the buffer times express the stream time directly
 is for the following reasons:
 
  - demuxers are easier if they can just copy the timestamps as encoded in
-   the file. The initial discont event would contain the lowest timestamp in
+   the file. The initial NEWSEGMENT event would contain the lowest timestamp in
    the stream which makes the stream time start from 0.
  - pipelines requiring retimestamping of buffers can efficiently adjust
-   the timestamp in the discont events and have all buffers retimestamped
+   the timestamp in the NEWSEGMENT events and have all buffers retimestamped
    automatically.
  - resync after different kinds of seeks is easier.
 
@@ -110,7 +110,8 @@ invalid.
 
 These clock operations do not operate on the stream time, so the callbacks
 will also occur when not in PLAYING state as if the clock just keeps on 
-running.
+running. Some clocks however do not progress when the element that provided
+the clock is not PLAYING.
 
 
 Clock implementations
