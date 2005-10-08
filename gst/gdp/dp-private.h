@@ -33,15 +33,16 @@ G_BEGIN_DECLS
 #define GST_DP_HEADER_MAJOR_VERSION(x)	((x)[0])
 #define GST_DP_HEADER_MINOR_VERSION(x)  ((x)[1])
 #define GST_DP_HEADER_FLAGS(x)          ((x)[2])
-#define GST_DP_HEADER_PAYLOAD_TYPE(x)   ((x)[3])
-#define GST_DP_HEADER_PAYLOAD_LENGTH(x) GST_READ_UINT32_BE (x + 4)
-#define GST_DP_HEADER_TIMESTAMP(x)      GST_READ_UINT64_BE (x + 8)
-#define GST_DP_HEADER_DURATION(x)       GST_READ_UINT64_BE (x + 16)
-#define GST_DP_HEADER_OFFSET(x)         GST_READ_UINT64_BE (x + 24)
-#define GST_DP_HEADER_OFFSET_END(x)     GST_READ_UINT64_BE (x + 32)
-#define GST_DP_HEADER_BUFFER_FLAGS(x)   GST_READ_UINT16_BE (x + 40)
-#define GST_DP_HEADER_CRC_HEADER(x)     GST_READ_UINT16_BE (x + 56)
-#define GST_DP_HEADER_CRC_PAYLOAD(x)    GST_READ_UINT16_BE (x + 58)
+/* free byte here to align */
+#define GST_DP_HEADER_PAYLOAD_TYPE(x)   GST_READ_UINT16_BE (x + 4)
+#define GST_DP_HEADER_PAYLOAD_LENGTH(x) GST_READ_UINT32_BE (x + 6)
+#define GST_DP_HEADER_TIMESTAMP(x)      GST_READ_UINT64_BE (x + 10)
+#define GST_DP_HEADER_DURATION(x)       GST_READ_UINT64_BE (x + 18)
+#define GST_DP_HEADER_OFFSET(x)         GST_READ_UINT64_BE (x + 26)
+#define GST_DP_HEADER_OFFSET_END(x)     GST_READ_UINT64_BE (x + 34)
+#define GST_DP_HEADER_BUFFER_FLAGS(x)   GST_READ_UINT16_BE (x + 42)
+#define GST_DP_HEADER_CRC_HEADER(x)     GST_READ_UINT16_BE (x + 58)
+#define GST_DP_HEADER_CRC_PAYLOAD(x)    GST_READ_UINT16_BE (x + 60)
 
 void gst_dp_init (void);
 void gst_dp_dump_byte_array (guint8 *array, guint length);
