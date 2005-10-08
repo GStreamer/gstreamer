@@ -85,6 +85,14 @@ static GstEventQuarks event_quarks[] = {
   {0, NULL, 0}
 };
 
+/**
+ * gst_event_type_get_name:
+ * @type: the event type
+ *
+ * Get a printable name for the given event type. Do not modify or free.
+ *
+ * Returns: a reference to the static name of the event. 
+ */
 const gchar *
 gst_event_type_get_name (GstEventType type)
 {
@@ -97,6 +105,14 @@ gst_event_type_get_name (GstEventType type)
   return "unknown";
 }
 
+/**
+ * gst_event_type_to_quark:
+ * @type: the event type
+ *
+ * Get the unique quark for the given event type.
+ *
+ * Returns: the quark associated with the event type
+ */
 GQuark
 gst_event_type_to_quark (GstEventType type)
 {

@@ -1,3 +1,11 @@
+2005-10-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstelementfactory.c:
+	* gst/gstevent.c:
+	* gst/gsttaglist.c:
+          more docs
+
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (is_eos), (update_degree), (gst_bin_change_state),

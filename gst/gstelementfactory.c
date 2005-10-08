@@ -487,7 +487,7 @@ gst_element_factory_get_longname (GstElementFactory * factory)
 }
 
 /**
- * gst_element_factory_get_class:
+ * gst_element_factory_get_klass:
  * @factory: a #GstElementFactory
  * 
  * Gets the class for this factory.

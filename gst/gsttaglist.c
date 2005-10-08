@@ -932,18 +932,343 @@ gst_tag_list_get_ ## name ## _index (const GstTagList *list,		\
 }
 
 #define COPY_FUNC /**/
+/**
+ * gst_tag_list_get_char:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_char_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (char, gchar)
+/**
+ * gst_tag_list_get_uchar:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_uchar_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (uchar, guchar)
+/**
+ * gst_tag_list_get_boolean:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_boolean_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (boolean, gboolean)
+/**
+ * gst_tag_list_get_int:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_int_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (int, gint)
+/**
+ * gst_tag_list_get_uint:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_uint_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (uint, guint)
+/**
+ * gst_tag_list_get_long:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_long_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (long, glong)
+/**
+ * gst_tag_list_get_ulong:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_ulong_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (ulong, gulong)
+/**
+ * gst_tag_list_get_int64:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_int64_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (int64, gint64)
+/**
+ * gst_tag_list_get_uint64:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_uint64_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (uint64, guint64)
+/**
+ * gst_tag_list_get_float:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_float_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (float, gfloat)
+/**
+ * gst_tag_list_get_double:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_double_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (double, gdouble)
+/**
+ * gst_tag_list_get_pointer:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_pointer_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (pointer, gpointer)
 #undef COPY_FUNC
 #define COPY_FUNC g_strdup
+/**
+ * gst_tag_list_get_string:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
+/**
+ * gst_tag_list_get_string_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list.
+ */
 TAG_MERGE_FUNCS (string, gchar *)
