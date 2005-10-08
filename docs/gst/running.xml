@@ -1,0 +1,172 @@
+<refentry id="gst-running" revision="08 Oct 2005">
+<refmeta>
+<refentrytitle>Running GStreamer Applications</refentrytitle>
+<manvolnum>3</manvolnum>
+<refmiscinfo>GStreamer Core</refmiscinfo>
+</refmeta>
+
+<refnamediv>
+<refname>Running GStreamer Applications</refname>
+<refpurpose>
+How to run and debug your GStreamer application
+</refpurpose>
+</refnamediv>
+
+<refsect1>
+<title>Running and debugging GStreamer Applications</title>
+
+<refsect2>
+<title>Environment variables</title>
+
+<para> 
+GStreamer inspects a few of environment variables in addition to standard
+variables like <envar>LANG</envar>, <envar>PATH</envar> or <envar>HOME</envar>. 
+</para>
+
+<formalpara id="GST_PLUGIN_SYSTEM_PATH">
+  <title><envar>GST_PLUGIN_SYSTEM_PATH</envar></title>
+
+  <para>
+
+This environment variable can be set to a colon-separated list of paths.
+If this variable is not set, GStreamer will fill in this list for you
+with
+<itemizedlist>
+  <listitem>
+    <para>
+plug-ins in the user's home directory.  These are stored in a directory called
+<filename>plugins</filename> inside the
+<filename>.gstreamer-&GST_MAJORMINOR;</filename> directory in the user's
+home directory.
+    </para>
+  </listitem>
+  <listitem>
+    <para>
+plug-ins installed system-wide.  On this system, they are stored in
+<filename>&GST_PLUGINS_DIR;</filename>.
+    </para>
+
+</listitem>
+</itemizedlist>
+   </para>
+
+    <para>
+GStreamer will scan these paths for GStreamer plug-ins.  These plug-ins will
+be loaded after the plug-ins in the GST_PLUGIN_PATH variable below.
+
+The paths are scanned in the given order.  This allows a user to override
+system-installed plug-ins with his own versions.
+   </para>
+
+    <para>
+Setting this variable to an empty string will cause GStreamer not to scan any
+system paths at all for plug-ins.  This can be useful if you're running
+uninstalled (for development purposes) or while running testsuites.
+   </para>
+
+</formalpara>
+
+<formalpara id="GST_PLUGIN_PATH">
+  <title><envar>GST_PLUGIN_PATH</envar></title>
+
+  <para>
+This environment variable can be set to a colon-separated list of paths.
+GStreamer will scan these paths for GStreamer plug-ins.  These plug-ins will
+be loaded in addition to, and before, the plug-ins in the system paths.
+  </para>
+
+</formalpara>
+
+<formalpara>
+  <title><envar>GST_DEBUG</envar></title>
+
+  <para>
+If GStreamer has been configured with <option>--enable-gst-debug=yes</option>,
+this variable can be set to a list of debug options, which cause GStreamer
+to print out different types of debugging information to stderr.
+  </para>
+  <para>
+The variable takes a comma-separated list of "category_name:level" pairs
+to set specific levels for the individual categories.
+The level value ranges from 0 (nothing) to 5 (LOG).
+    <variablelist>
+
+      <varlistentry>
+        <term>1 - <option>ERROR</option></term>
+        <listitem>
+<para>
+Logs all fatal errors.  These are errors that do not allow the core or elements
+to perform the requested action.  The application can still recover if
+programmed to handle the conditions that triggered the error.
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>2 - <option>WARNING</option></term>
+        <listitem>
+<para>
+Logs all warnings.  Typically these are non-fatal, but user-visible problems
+are expected to happen.
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>3 - <option>INFO</option></term>
+        <listitem>
+<para>
+Logs all informational messages.  These are typically used for events in
+the system that only happen once, or are important and rare enough to be
+logged at this level.
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>4 - <option>DEBUG</option></term>
+        <listitem>
+<para>
+Logs all debug messages.  These are general debug messages for events
+that happen only a limited number of times during an object's lifetime;
+these include setup, teardown, change of parameters, ...
+</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>5 - <option>LOG</option></term>
+        <listitem>
+<para>
+Logs all log messages.  These are messages for events
+that happen repeatedly during an object's lifetime;
+these include streaming and steady-state conditions.
+</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+ The category_name can contain "<option>*"</option> as a wildcard.
+  </para>
+
+  <para>
+For example, setting <envar>GST_DEBUG</envar> to
+<option>GST_AUTOPLUG:5,GST_ELEMENT_*:3</option>, will cause the
+<option>GST_AUTOPLUG</option> category to be logged at full
+<option>LOG</option> level, while all categories starting with
+<option>GST_ELEMENT_</option> will be logged at <option>INFO</option> level.
+  </para>
+
+  <para>
+To get all possible debug output, set
+<envar>GST_DEBUG</envar>
+to <option>*:5</option>
+  </para>
+
+</formalpara>
+
+</refsect2>
+
+</refsect1>
+
+</refentry>

@@ -1,3 +1,24 @@
+2005-10-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/Makefile.am:
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/running.xml:
+	* docs/version.entities.in:
+	  add a chapter on running GStreamer.
+	  document GST_DEBUG and GST_PLUGIN* env vars
+
+2005-10-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  remove include dir
+	* configure.ac:
+	  remove PLUGINS_BUILDDIR stuff
+	* gst/gst.c: (init_post):
+	  reorder parsing of GST_PLUGIN_PATH and GST_PLUGIN_SYSTEM_PATH
+	* idiottest.mak:
+	  remove, it was condescending and not needed
+
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_flush),

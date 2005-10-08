@@ -10,6 +10,8 @@ else
 SUBDIRS_DOCBOOK =
 endif
 
+BUILT_SOURCES = version.entities
+
 SUBDIRS = $(SUBDIRS_DOCBOOK) $(SUBDIRS_GTK_DOC)
 DIST_SUBDIRS = gst faq manual pwg libs xsl
 
