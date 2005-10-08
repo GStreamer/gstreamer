@@ -221,6 +221,7 @@ gst_client_status_get_type (void)
 static void gst_multifdsink_base_init (gpointer g_class);
 static void gst_multifdsink_class_init (GstMultiFdSinkClass * klass);
 static void gst_multifdsink_init (GstMultiFdSink * multifdsink);
+static void gst_multifdsink_finalize (GObject * object);
 
 static void gst_multifdsink_remove_client_link (GstMultiFdSink * sink,
     GList * link);
@@ -293,6 +294,7 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
 
   gobject_class->set_property = gst_multifdsink_set_property;
   gobject_class->get_property = gst_multifdsink_get_property;
+  gobject_class->finalize = gst_multifdsink_finalize;
 
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
@@ -461,6 +463,20 @@ gst_multifdsink_init (GstMultiFdSink * this)
 
   this->timeout = DEFAULT_TIMEOUT;
   this->sync_method = DEFAULT_SYNC_METHOD;
+}
+
+static void
+gst_multifdsink_finalize (GObject * object)
+{
+  GstMultiFdSink *this;
+
+  this = GST_MULTIFDSINK (object);
+
+  CLIENTS_LOCK_FREE (this);
+  g_hash_table_destroy (this->fd_hash);
+  g_array_free (this->bufqueue, TRUE);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 void
@@ -1722,6 +1738,12 @@ socket_pair:
 }
 
 static gboolean
+multifdsink_hash_remove (gpointer key, gpointer value, gpointer data)
+{
+  return TRUE;
+}
+
+static gboolean
 gst_multifdsink_stop (GstBaseSink * bsink)
 {
   GstMultiFdSinkClass *fclass;
@@ -1761,9 +1783,8 @@ gst_multifdsink_stop (GstBaseSink * bsink)
     gst_fdset_free (this->fdset);
     this->fdset = NULL;
   }
+  g_hash_table_foreach_remove (this->fd_hash, multifdsink_hash_remove, this);
   GST_FLAG_UNSET (this, GST_MULTIFDSINK_OPEN);
-  CLIENTS_LOCK_FREE (this);
-  g_hash_table_destroy (this->fd_hash);
 
   return TRUE;
 }

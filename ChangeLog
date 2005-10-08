@@ -1,3 +1,10 @@
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_class_init),
+	(gst_multifdsink_finalize), (multifdsink_hash_remove),
+	(gst_multifdsink_stop):
+	Fix crasher when going to NULL multiple times.
+
 2005-10-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c: (gst_base_audio_src_event),
