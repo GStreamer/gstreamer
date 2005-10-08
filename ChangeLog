@@ -1,5 +1,10 @@
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (is_eos), (bin_bus_handler):
+	Do a less CPU demanding EOS check because we can.
+
+2005-10-08  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/dataprotocol/dataprotocol.c:
 	(gst_dp_header_from_buffer), (gst_dp_packet_from_caps),
 	(gst_dp_packet_from_event):

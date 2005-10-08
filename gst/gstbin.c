@@ -386,50 +386,31 @@ gst_bin_provide_clock_func (GstElement * element)
   return result;
 }
 
+/* Check if the bin is EOS. We do this by scanning all sinks and
+ * checking if they posted EOS.
+ *
+ * call with bin LOCK */
 static gboolean
 is_eos (GstBin * bin)
 {
-  GstIterator *sinks;
-  gboolean result = TRUE;
-  gboolean done = FALSE;
+  gboolean result;
+  GList *walk;
 
-  sinks = gst_bin_iterate_sinks (bin);
-  while (!done) {
-    gpointer data;
+  result = TRUE;
+  for (walk = bin->children; walk; walk = g_list_next (walk)) {
+    GstElement *element;
 
-    switch (gst_iterator_next (sinks, &data)) {
-      case GST_ITERATOR_OK:
-      {
-        GstElement *element = GST_ELEMENT (data);
-        GList *eosed;
-        gchar *name;
-
-        name = gst_element_get_name (element);
-        eosed = g_list_find (bin->eosed, element);
-        if (!eosed) {
-          GST_DEBUG ("element %s did not post EOS yet", name);
-          result = FALSE;
-          done = TRUE;
-        } else {
-          GST_DEBUG ("element %s posted EOS", name);
-        }
-        g_free (name);
-        gst_object_unref (element);
+    element = GST_ELEMENT_CAST (walk->data);
+    if (bin_element_is_sink (element, bin) == 0) {
+      if (!g_list_find (bin->eosed, element)) {
+        GST_DEBUG ("element did not post EOS yet");
+        result = FALSE;
         break;
+      } else {
+        GST_DEBUG ("element posted EOS");
       }
-      case GST_ITERATOR_RESYNC:
-        result = TRUE;
-        gst_iterator_resync (sinks);
-        break;
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-      default:
-        g_assert_not_reached ();
-        break;
     }
   }
-  gst_iterator_free (sinks);
   return result;
 }
 
@@ -1559,6 +1540,7 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 
       if (src) {
         gchar *name;
+        gboolean eos;
 
         name = gst_object_get_name (src);
         GST_DEBUG_OBJECT (bin, "got EOS message from %s", name);
@@ -1567,10 +1549,11 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
         /* collect all eos messages from the children */
         GST_LOCK (bin->child_bus);
         bin->eosed = g_list_prepend (bin->eosed, src);
+        eos = is_eos (bin);
         GST_UNLOCK (bin->child_bus);
 
         /* if we are completely EOS, we forward an EOS message */
-        if (is_eos (bin)) {
+        if (eos) {
           GST_DEBUG_OBJECT (bin, "all sinks posted EOS");
           gst_element_post_message (GST_ELEMENT (bin),
               gst_message_new_eos (GST_OBJECT (bin)));
@@ -1578,7 +1561,6 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       } else {
         GST_DEBUG_OBJECT (bin, "got EOS message from (NULL), not processing");
       }
-
       /* we drop all EOS messages */
       gst_message_unref (message);
       break;
