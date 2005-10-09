@@ -1,3 +1,12 @@
+2005-10-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/adder/gstadder.c: (gst_adder_query), (gst_adder_class_init),
+	(gst_adder_init), (gst_adder_request_new_pad),
+	(gst_adder_change_state):
+	  Add query function to source pad, so adder reports the correct
+	  time/sample position when queried (#315457); fix state change
+	  function; use GST_DEBUG_FUNCPTR() for pad functions.
+
 2005-10-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/typefind/gsttypefindfunctions.c: (utf8_type_find):

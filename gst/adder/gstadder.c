@@ -53,19 +53,6 @@ static GstElementDetails adder_details = GST_ELEMENT_DETAILS ("Adder",
     "Add N audio channels together",
     "Thomas <thomas@apestaart.org>");
 
-/* Adder signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-  /* FILL ME */
-};
-
 static GstStaticPadTemplate gst_adder_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -96,8 +83,6 @@ static GstFlowReturn gst_adder_collected (GstCollectPads * pads,
     gpointer user_data);
 
 static GstElementClass *parent_class = NULL;
-
-/* static guint gst_adder_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_adder_get_type (void)
@@ -218,6 +203,41 @@ not_supported:
   }
 }
 
+static gboolean
+gst_adder_query (GstPad * pad, GstQuery * query)
+{
+  GstAdder *adder = GST_ADDER (gst_pad_get_parent (pad));
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+      /* FIXME: what to do about the length? query all pads upstream and
+       * pick the longest length? or the shortest length? or what? */
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+
+      gst_query_parse_position (query, &format, NULL, NULL);
+
+      if (format == GST_FORMAT_TIME) {
+        gst_query_set_position (query, GST_FORMAT_TIME, adder->timestamp,
+            GST_CLOCK_TIME_NONE);
+        res = TRUE;
+      } else if (format == GST_FORMAT_DEFAULT) {
+        gst_query_set_position (query, GST_FORMAT_DEFAULT, adder->offset,
+            GST_BUFFER_OFFSET_NONE);
+        res = TRUE;
+      }
+
+      break;
+    }
+    default:
+      break;
+  }
+
+  gst_object_unref (adder);
+  return res;
+}
+
 static void
 gst_adder_class_init (GstAdderClass * klass)
 {
@@ -233,7 +253,7 @@ gst_adder_class_init (GstAdderClass * klass)
       gst_static_pad_template_get (&gst_adder_sink_template));
   gst_element_class_set_details (gstelement_class, &adder_details);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstelement_class->request_new_pad = gst_adder_request_new_pad;
   gstelement_class->change_state = gst_adder_change_state;
@@ -245,8 +265,12 @@ gst_adder_init (GstAdder * adder)
   adder->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_adder_src_template), "src");
-  gst_pad_set_getcaps_function (adder->srcpad, gst_pad_proxy_getcaps);
-  gst_pad_set_setcaps_function (adder->srcpad, gst_adder_setcaps);
+  gst_pad_set_getcaps_function (adder->srcpad,
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_setcaps_function (adder->srcpad,
+      GST_DEBUG_FUNCPTR (gst_adder_setcaps));
+  gst_pad_set_query_function (adder->srcpad,
+      GST_DEBUG_FUNCPTR (gst_adder_query));
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
 
   adder->format = GST_ADDER_FORMAT_UNSET;
@@ -276,8 +300,9 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   name = g_strdup_printf ("sink%d", adder->numpads);
   newpad = gst_pad_new_from_template (templ, name);
 
-  gst_pad_set_getcaps_function (newpad, gst_pad_proxy_getcaps);
-  gst_pad_set_setcaps_function (newpad, gst_adder_setcaps);
+  gst_pad_set_getcaps_function (newpad,
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_setcaps_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_setcaps));
   gst_collectpads_add_pad (adder->collect, newpad, sizeof (GstCollectData));
   if (!gst_element_add_pad (GST_ELEMENT (adder), newpad))
     goto could_not_add;
@@ -417,14 +442,19 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_collectpads_stop (adder->collect);
       break;
     default:
       break;
   }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
 }
