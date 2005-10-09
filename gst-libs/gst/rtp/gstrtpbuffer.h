@@ -48,9 +48,9 @@ typedef enum
 
   /* Video: */
   GST_RTP_PAYLOAD_MPV = 32,             /* Video MPEG 1 & 2 */
+  GST_RTP_PAYLOAD_H263 = 34,
 
   /* BOTH */
-  GST_RTP_PAYLOAD_BMPEG = 34            /* Not Standard */
 } GstRTPPayload;
 
 /* creating buffers */

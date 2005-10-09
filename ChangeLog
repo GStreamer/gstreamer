@@ -1,3 +1,10 @@
+2005-10-09  Philippe Khalaf <burger@speedy.org>
+
+	* gst-libs/gst/rtp/rtpbasedepayload.c:
+	Set timestamp and add queue delay to timestamp
+	* gst-libs/gst/rtp/rtpbuffer.h:
+	Set correct payload type for h263
+
 2005-10-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:
