@@ -495,6 +495,10 @@ gst_event_new_filler (void)
 /* buffersize event */
 /**
  * gst_event_new_buffersize:
+ * @format: buffer format
+ * @minsize: minimum buffer size
+ * @maxsize: maximum buffer size
+ * @async: thread behavior
  *
  * Create a new buffersize event. The event is sent downstream and notifies
  * elements that they should provide a buffer of the specified dimensions.
@@ -520,6 +524,16 @@ gst_event_new_buffersize (GstFormat format, gint64 minsize,
           "async", G_TYPE_BOOLEAN, async, NULL));
 }
 
+/**
+ * gst_event_parse_buffersize:
+ * @event: The event to query
+ * @format: A pointer to store the format in
+ * @minsize: A pointer to store the minsize in
+ * @maxsize: A pointer to store the maxsize in
+ * @async: A pointer to store the async-flag in
+ *
+ * Get the format, minsize, maxsize and async-flag in the buffersize event.
+ */
 void
 gst_event_parse_buffersize (GstEvent * event, GstFormat * format,
     gint64 * minsize, gint64 * maxsize, gboolean * async)

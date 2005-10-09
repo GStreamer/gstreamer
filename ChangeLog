@@ -1,3 +1,15 @@
+2005-10-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	* gst/gstmessage.c: (gst_message_parse_state_changed):
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	  more docs, fix compilation
+
 2005-10-09  Philippe Khalaf <burger@speedy.org>
 	* gst/gstmessage.c:
 	Fixed a few forgotten variables on previous commit

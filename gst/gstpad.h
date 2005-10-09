@@ -236,6 +236,16 @@ typedef GstFlowReturn		(*GstPadBufferAllocFunction)	(GstPad *pad, guint64 offset
  */
 typedef gboolean		(*GstPadDispatcherFunction)	(GstPad *pad, gpointer data);
 
+/**
+ * GstPadBlockCallback:
+ * @pad: the #GstPad that is blockend or unblocked.
+ * @blocked: blocking state for the pad
+ * @user_data: the gpointer to optional user data.
+ *
+ * Callback used by gst_pad_set_blocked_async(). Gets called when the blocking
+ * operation succeeds.
+ */
+
 typedef void			(*GstPadBlockCallback)		(GstPad *pad, gboolean blocked, gpointer user_data);
 
 /**

@@ -871,8 +871,6 @@ GST_DEBUG
 GST_LOG
 GST_DEBUG_FUNCPTR
 GST_DEBUG_FUNCPTR_NAME
-gst_debug_set_log_function
-gst_debug_reset_log_function
 gst_debug_print_stack_trace
 GST_TIME_FORMAT
 GST_TIME_ARGS

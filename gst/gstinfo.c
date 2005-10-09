@@ -1252,6 +1252,12 @@ __cyg_profile_func_exit (void *this_fn, void *call_site)
   g_free (name);
 }
 
+/**
+ * gst_debug_print_stack_trace:
+ *
+ * If GST_ENABLE_FUNC_INSTRUMENTATION is defined a stacktracke is available for
+ * gstreamer code, which can be printed with this function. 
+ */
 void
 gst_debug_print_stack_trace (void)
 {

@@ -776,13 +776,12 @@ gst_pad_is_active (GstPad * pad)
  * is called when the operation succeeds; this happens right before the next
  * attempt at pushing a buffer on the pad.
  *
- * This can take a while as
- * the pad can only become blocked when real dataflow is happening.
+ * This can take a while as the pad can only become blocked when real dataflow
+ * is happening.
  * When the pipeline is stalled, for example in PAUSED, this can
  * take an indeterminate amount of time.
- * You can pass NULL as the callback to make this call block. Be
- * carefull with this blocking call as it might not return for
- * reasons stated above.
+ * You can pass NULL as the callback to make this call block. Be careful with
+ * this blocking call as it might not return for reasons stated above.
  *
  * Returns: TRUE if the pad could be blocked. This function can fail
  *   if wrong parameters were passed or the pad was already in the
@@ -854,7 +853,7 @@ had_right_state:
  * @blocked: boolean indicating we should block or unblock
  *
  * Blocks or unblocks the dataflow on a pad. This function is
- * a shortcut for @gst_pad_set_blocked_async() with a NULL
+ * a shortcut for gst_pad_set_blocked_async() with a NULL
  * callback.
  *
  * Returns: TRUE if the pad could be blocked. This function can fail

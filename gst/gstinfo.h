@@ -879,8 +879,6 @@ G_CONST_RETURN gchar *
 
 #define _gst_debug_init()				/* NOP */
 
-#define gst_debug_set_log_function(func,data)		/* NOP */
-#define gst_debug_reset_log_function(void)		/* NOP */
 #define gst_debug_set_default_threshold(level)		/* NOP */
 #define gst_debug_get_default_threshold()		(GST_LEVEL_NONE)
 

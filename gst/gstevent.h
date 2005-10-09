@@ -229,7 +229,7 @@ GType		gst_event_get_type		(void);
  */
 #define         gst_event_ref(ev)		GST_EVENT (gst_mini_object_ref (GST_MINI_OBJECT (ev)))
 /**
- * gst_event_ref:
+ * gst_event_unref:
  * @ev: The event to refcount
  *
  * Decrease the refcount of an event, freeing it if the refcount reaches 0.
