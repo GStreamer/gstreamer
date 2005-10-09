@@ -1,3 +1,12 @@
+2005-10-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
+	* gst/gstmessage.override:
+	  fix for pending state being added to state message
+	* testsuite/test_buffer.py:
+	* testsuite/test_pipeline.py:
+	  update
+
 2005-10-07  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstelement.override (_wrap_gst_element_get_state): Drop the

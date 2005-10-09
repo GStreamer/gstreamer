@@ -2625,6 +2625,7 @@
     '("GstObject*" "src")
     '("GstState" "old_state")
     '("GstState" "new_state")
+    '("GstState" "pending_state")
   )
 )
 

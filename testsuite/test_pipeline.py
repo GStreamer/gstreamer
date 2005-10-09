@@ -133,7 +133,7 @@ class PipelineAndBus(TestCase):
             message.src.get_path_string(), message.type.value_nicks[1]))
         t = message.type
         if t == gst.MESSAGE_STATE_CHANGED:
-            old, new = message.parse_state_changed()
+            old, new, pen = message.parse_state_changed()
             gst.debug('%r state change from %r to %r' % (
                 message.src.get_path_string(), old, new))
             if message.src == self.pipeline and new == self.final:

@@ -22,9 +22,9 @@
 
 import sys
 import gc
-from common import gobject, gst, unittest
+from common import gobject, gst, unittest, TestCase
 
-class BufferTest(unittest.TestCase):
+class BufferTest(TestCase):
     def testBufferBuffer(self):
         buf = gst.Buffer('test')
         assert str(buffer(buf)) == 'test'

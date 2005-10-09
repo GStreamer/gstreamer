@@ -27,18 +27,20 @@ _wrap_gst_message_parse_state_changed (PyGstMiniObject *self)
 {
   GstState	old;
   GstState	new;
-  PyObject		*ret;
+  GstState	pen;
+  PyObject      *ret;
 
   /* Should raise an exception if it's not a state-changed message */
   if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_STATE_CHANGED) {
 	  PyErr_SetString(PyExc_TypeError, "Message is not a state-changed message");
 	  return NULL;
   }
-  gst_message_parse_state_changed (GST_MESSAGE(self->obj), &old, &new);
+  gst_message_parse_state_changed (GST_MESSAGE(self->obj), &old, &new, &pen);
   /* Return this as a tuple */
-  ret = PyList_New(2);
+  ret = PyList_New(3);
   PyList_SET_ITEM(ret, 0, pyg_enum_from_gtype(GST_TYPE_STATE, old));
   PyList_SET_ITEM(ret, 1, pyg_enum_from_gtype(GST_TYPE_STATE, new));
+  PyList_SET_ITEM(ret, 2, pyg_enum_from_gtype(GST_TYPE_STATE, pen));
   return ret;
 }
 %%
