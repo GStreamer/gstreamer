@@ -643,9 +643,6 @@ gst_event_ref
 gst_event_type_get_name
 gst_event_type_to_quark
 gst_event_unref
-
-gst_message_type_to_quark
-gst_message_type_get_name
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT
