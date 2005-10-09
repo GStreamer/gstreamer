@@ -370,9 +370,9 @@ _wrap_gst_element_send_event(PyGObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstElement.send_event", kwlist, &py_event))
         return NULL;
-    if (pyg_boxed_check(py_event, GST_TYPE_EVENT))
-        event = pyg_boxed_get(py_event, GstEvent);
-    else {
+    if (pygstminiobject_check (py_event, &PyGstEvent_Type)) {
+        event = GST_EVENT (pygstminiobject_get (py_event));
+    } else {
         PyErr_SetString(PyExc_TypeError, "event should be a GstEvent");
         return NULL;
     }
@@ -406,6 +406,7 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
 	PyList_Append(ret, PyLong_FromLongLong(end));
 	PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
     } else {
+	g_print("FIXME: query failed\n");
 	Py_INCREF(Py_None);
 	ret = Py_None;
     }

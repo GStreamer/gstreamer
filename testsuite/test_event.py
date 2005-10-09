@@ -30,14 +30,18 @@ class EventTest(unittest.TestCase):
         self.sink = pipeline.get_by_name('sink')
         pipeline.set_state(gst.STATE_PLAYING)
         
-#    def testEventEmpty(self):
-#        event = gst.Event(gst.EVENT_EMPTY)
-#        self.sink.send_event(event)
-        
-#    def testEventSeek(self):
-#        event = gst.event_new_seek(gst.SEEK_METHOD_CUR, 0)
-#        assert event
-#        self.sink.send_event(event)
+    def testEventSeek(self):
+        event = gst.event_new_seek(1.0, gst.FORMAT_BYTES, gst.SEEK_FLAG_FLUSH,
+            gst.SEEK_TYPE_NONE, 0, gst.SEEK_TYPE_NONE, 0)
+        assert event
+        self.sink.send_event(event)
+
+    def testWrongEvent(self):
+        buffer = gst.Buffer()
+        self.assertRaises(TypeError, self.sink.send_event, buffer)
+        number = 1
+        self.assertRaises(TypeError, self.sink.send_event, number)
+
 
 # FIXME: fix these tests
 #class EventFileSrcTest(unittest.TestCase):

@@ -1,5 +1,11 @@
 2005-10-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstelement.override:
+	* testsuite/test_event.py:
+	  now we can send events to elements again
+
+2005-10-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.defs:
 	* gst/gstmessage.override:
 	  fix for pending state being added to state message
