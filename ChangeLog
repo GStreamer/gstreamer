@@ -1,5 +1,11 @@
 2005-10-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/typefind/gsttypefindfunctions.c: (wavpack_type_find),
+	(plugin_init):
+	  Add wavpack and spc typefind functions from 0.8 branch.
+
+2005-10-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c: (tar_type_find),
 	(ar_type_find), (msdos_type_find), (plugin_init):
 	  Add typefind functions for tar archives, ar archives,

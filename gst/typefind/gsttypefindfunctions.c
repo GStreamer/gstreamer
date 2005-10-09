@@ -529,6 +529,68 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** wavpack ***/
+
+static GstStaticCaps wavpack_caps =
+GST_STATIC_CAPS ("audio/x-wavpack, framed = (boolean) false");
+
+#define WAVPACK_CAPS (gst_static_caps_get(&wavpack_caps))
+
+static GstStaticCaps wavpack_correction_caps =
+GST_STATIC_CAPS ("audio/x-wavpack-correction, framed = (boolean) false");
+
+#define WAVPACK_CORRECTION_CAPS (gst_static_caps_get(&wavpack_correction_caps))
+
+static void
+wavpack_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 32);
+
+  if (!data)
+    return;
+
+  if (data[0] == 'w' && data[1] == 'v' && data[2] == 'p' && data[3] == 'k') {
+    guint32 blocksize, sublen;
+    gint32 left;
+
+    blocksize = GST_READ_UINT32_LE (data + 4);
+    /* peek from offset 0, otherwise it won't work with apedemux */
+    data = gst_type_find_peek (tf, 0, 32 + blocksize);
+    if (!data)
+      return;
+    data += 32;
+    left = (gint32) blocksize;
+    while (left > 2) {
+      sublen = ((guint32) data[1]) << 1;
+      if (data[0] & 0x80) {
+        sublen |= (((guint32) data[2]) << 9) | (((guint32) data[3]) << 17);
+        sublen += 1 + 3;        /* id + length */
+      } else {
+        sublen += 1 + 1;        /* id + length */
+      }
+      if (sublen > blocksize)
+        return;
+      if ((data[0] & 0x20) == 0) {
+        switch (data[0] & 0x0f) {
+          case 0xa:            /* ID_WV_BITSTREAM  */
+          case 0xc:            /* ID_WVX_BITSTREAM */
+            gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, WAVPACK_CAPS);
+            return;
+          case 0xb:            /* ID_WVC_BITSTREAM */
+            gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY,
+                WAVPACK_CORRECTION_CAPS);
+            return;
+          default:
+            break;
+        }
+      }
+      left -= sublen;
+      data += sublen;
+    }
+  }
+}
+
+
 /*** video/mpeg systemstream ***/
 
 static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
@@ -1762,6 +1824,9 @@ plugin_init (GstPlugin * plugin)
   static gchar *m4a_exts[] = { "m4a", NULL };
   static gchar *q3gp_exts[] = { "3gp", NULL };
   static gchar *aac_exts[] = { "aac", NULL };
+  static gchar *spc_exts[] = { "spc", NULL };
+  static gchar *wavpack_exts[] = { "wv", "wvp", NULL };
+  static gchar *wavpack_correction_exts[] = { "wvc", NULL };
   static gchar *rar_exts[] = { "rar", NULL };
   static gchar *tar_exts[] = { "tar", NULL };
   static gchar *ar_exts[] = { "a", NULL };
@@ -1914,6 +1979,13 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_MARGINAL, NULL, "\177ELF", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "adts_mpeg_stream", GST_RANK_SECONDARY,
       aac_type_find, aac_exts, AAC_CAPS, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-spc", GST_RANK_SECONDARY,
+      spc_exts, "SNES-SPC700 Sound File Data", 27, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER (plugin, "audio/x-wavpack", GST_RANK_SECONDARY,
+      wavpack_type_find, wavpack_exts, WAVPACK_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-wavpack-correction", GST_RANK_SECONDARY,
+      wavpack_type_find, wavpack_correction_exts,
+      WAVPACK_CORRECTION_CAPS, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-rar",
       GST_RANK_SECONDARY, rar_exts, "Rar!", 4, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER (plugin, "application/x-tar", GST_RANK_SECONDARY,
