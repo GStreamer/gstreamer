@@ -1,3 +1,10 @@
+2005-10-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstmessage.c: (gst_message_new_state_changed),
+	(gst_message_parse_state_changed):
+	* gst/gstmessage.h:
+	  don't use "new", it's a C++ keyword
+
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (is_eos), (update_degree), (gst_bin_query):
@@ -11,7 +18,7 @@
 	* gst/gstelementfactory.c:
 	* gst/gstevent.c:
 	* gst/gsttaglist.c:
-          more docs
+	  more docs
 
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 
@@ -22,7 +29,7 @@
 	in a threadsafe way.
 	Get base time in a threadsafe way too.
 	Fix confusing debug in the change_state function.
-	Various other mall cleanups.
+	Various other small cleanups.
 	
 	* gst/gstelement.c: (gst_element_post_message):
 	Fix very verbose bus posting code.

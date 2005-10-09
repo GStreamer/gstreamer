@@ -41,8 +41,8 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_CLOCK_PROVIDE: an element notifies it capability of providing
  *                             a clock.
  * @GST_MESSAGE_CLOCK_LOST: The current clock as selected by the pipeline became
- *                          unusable. The pipeline will select a new clock on the
- *                          next PLAYING state change.
+ *                          unusable. The pipeline will select a new clock on
+ *                          the next PLAYING state change.
  * @GST_MESSAGE_NEW_CLOCK: a new clock was selected in the pipeline
  * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed.
  * @GST_MESSAGE_STREAM_STATUS: status about a stream, emitted when it starts,
@@ -188,8 +188,8 @@ GstMessage *	gst_message_new_eos 		(GstObject * src);
 GstMessage *	gst_message_new_error 		(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
-GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstState old,
-                                                 GstState new, GstState pending);
+GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstState oldstate,
+                                                 GstState newstate, GstState pending);
 GstMessage *	gst_message_new_clock_provide	(GstObject * src, GstClock *clock, gboolean ready);
 GstMessage *	gst_message_new_clock_lost	(GstObject * src, GstClock *clock);
 GstMessage *	gst_message_new_new_clock	(GstObject * src, GstClock *clock);
@@ -204,8 +204,8 @@ GstMessage *	gst_message_new_custom 		(GstMessageType type,
 void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
-void		gst_message_parse_state_changed	(GstMessage *message, GstState *old,
-                                                 GstState *new, GstState *pending);
+void		gst_message_parse_state_changed	(GstMessage *message, GstState *oldstate,
+                                                 GstState *newstate, GstState *pending);
 void		gst_message_parse_clock_provide (GstMessage *message, GstClock **clock, gboolean *ready);
 void		gst_message_parse_clock_lost	(GstMessage *message, GstClock **clock);
 void		gst_message_parse_new_clock	(GstMessage *message, GstClock **clock);

@@ -381,13 +381,13 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 
 /**
  * gst_message_new_state_changed:
- * @src: The object originating the message.
- * @old: The previous state.
- * @new: The new (current) state.
- * @pending: The pending (target) state.
+ * @src: the object originating the message
+ * @oldstate: the previous state
+ * @newstate: the new (current) state
+ * @pending: the pending (target) state
  *
- * Create a state change message. This message is posted whenever an element changed
- * its state.
+ * Create a state change message. This message is posted whenever an element
+ * changed its state.
  *
  * Returns: The new state change message.
  *
@@ -395,14 +395,14 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  */
 GstMessage *
 gst_message_new_state_changed (GstObject * src,
-    GstState old, GstState new, GstState pending)
+    GstState oldstate, GstState newstate, GstState pending)
 {
   GstMessage *message;
 
   message = gst_message_new_custom (GST_MESSAGE_STATE_CHANGED, src,
       gst_structure_new ("GstMessageState",
-          "old-state", GST_TYPE_STATE, (gint) old,
-          "new-state", GST_TYPE_STATE, (gint) new,
+          "old-state", GST_TYPE_STATE, (gint) oldstate,
+          "new-state", GST_TYPE_STATE, (gint) newstate,
           "pending-state", GST_TYPE_STATE, (gint) pending, NULL));
 
   return message;
@@ -624,18 +624,18 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
 
 /**
  * gst_message_parse_state_changed:
- * @message: A valid #GstMessage of type GST_MESSAGE_STATE_CHANGED.
- * @old: The previous state.
- * @new: The new (current) state.
- * @pending: The pending (target) state.
+ * @message: a valid #GstMessage of type GST_MESSAGE_STATE_CHANGED
+ * @oldstate: the previous state
+ * @newstate: the new (current) state
+ * @pending: the pending (target) state
  *
  * Extracts the old and new states from the GstMessage.
  *
  * MT safe.
  */
 void
-gst_message_parse_state_changed (GstMessage * message, GstState * old,
-    GstState * new, GstState * pending)
+gst_message_parse_state_changed (GstMessage * message, GstState * oldstate,
+    GstState * newstate, GstState * pending)
 {
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STATE_CHANGED);
