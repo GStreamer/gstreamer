@@ -1,5 +1,10 @@
 2005-10-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* examples/play.py:
+	  update to current API and state of seek example
+
+2005-10-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstelement.override:
 	* testsuite/test_event.py:
 	  now we can send events to elements again

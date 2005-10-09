@@ -14,38 +14,62 @@ class GstPlayer:
 
     def set_video_sink(self, sink):
         self.player.set_property('video-sink', sink)
-        print self.player.get_property('video-sink')
+        gst.debug('using videosink %r' % self.player.get_property('video-sink'))
         
     def set_location(self, location):
         self.player.set_property('uri', location)
 
-    def get_length(self):
-        return self.player.query(gst.QUERY_TOTAL, gst.FORMAT_TIME)
+    def query_position(self):
+        "Returns a (position, duration) tuple"
+        ret = self.player.query_position(gst.FORMAT_TIME)
+        if not ret:
+            return (gst.CLOCK_TIME_NONE, gst.CLOCK_TIME_NONE, gst.FORMAT_TIME)
 
-    def get_position(self):
-        return self.player.query(gst.QUERY_POSITION, gst.FORMAT_TIME)
+        return ret
 
     def seek(self, location):
-        print "seek to %ld on element %s" % (location, self.player.get_name())
-        event = gst.event_new_seek(gst.FORMAT_TIME |
-                                   gst.SEEK_METHOD_SET |
-                                   gst.SEEK_FLAG_FLUSH, location)
+        """
+        @param location: time to seek to, in nanoseconds
+        """
+        gst.debug("seeking to %r" % location)
+        event = gst.event_new_seek(1.0, gst.FORMAT_TIME,
+            gst.SEEK_FLAG_FLUSH,
+            gst.SEEK_TYPE_SET, location,
+            gst.SEEK_TYPE_NONE, 0)
 
-        self.player.send_event(event)
-        self.player.set_state(gst.STATE_PLAYING)
+        res = self.player.send_event(event)
+        if res:
+            gst.info("setting new stream time to 0")
+            self.player.set_new_stream_time(0L)
+        else:
+            gst.error("seek to %r failed" % location)
 
     def pause(self):
+        gst.info("pausing player")
         self.player.set_state(gst.STATE_PAUSED)
 
     def play(self):
+        gst.info("playing player")
         self.player.set_state(gst.STATE_PLAYING)
         
     def stop(self):
+        gst.info("stopping player")
         self.player.set_state(gst.STATE_READY)
+        gst.info("stopped player")
 
-    is_playing = lambda self: self.player.get_state() == gst.STATE_PLAYING
-    is_paused = lambda self: self.player.get_state() == gst.STATE_PAUSED
-    is_stopped = lambda self: self.player.get_state() == gst.STATE_READY
+    def get_state(self, timeout=0.050):
+        return self.player.get_state(timeout=timeout)
+
+    def is_in_state(self, state):
+        gst.debug("checking if player is in state %r" % state)
+        cur, pen, final = self.get_state(timeout=0.0)
+        gst.debug("checked if player is in state %r" % state)
+        if pen == gst.STATE_VOID_PENDING and cure == state:
+            return True
+        return False
+    is_playing = lambda self: self.is_in_state(gst.STATE_PLAYING)
+    is_paused = lambda self: self.is_in_state(gst.STATE_PAUSED)
+    is_stopped = lambda self: self.is_in_state(gst.STATE_READY)
     
 class VideoWidget(gtk.DrawingArea):
     def __init__(self, player):
@@ -63,13 +87,16 @@ class VideoWidget(gtk.DrawingArea):
 
     # Sort of a hack, but it works for now.
     def after_realize_cb(self, window):
-        gtk.idle_add(self.idler)
+        gobject.idle_add(self.frame_video_sink)
 
-    def idler(self):
+    def frame_video_sink(self):
         self.set_window_id(self.window.xid)
         
     def set_window_id(self, xid):
         self.imagesink.set_xwindow_id(xid)
+
+    def unframe_video_sink(self):
+        self.set_window_id(0L)
         
 
 class PlayerWindow(gtk.Window):
@@ -84,6 +111,11 @@ class PlayerWindow(gtk.Window):
         self.create_ui()
 
         self.update_id = -1
+        self.changed_id = -1
+        self.seek_timeout_id = -1
+
+        self.p_position = gst.CLOCK_TIME_NONE
+        self.p_duration = gst.CLOCK_TIME_NONE
         
     def load_file(self, location):
         self.player.set_location(location)
@@ -91,8 +123,8 @@ class PlayerWindow(gtk.Window):
     def create_ui(self):
         vbox = gtk.VBox()
 
-        videowidget = VideoWidget(self.player)
-        vbox.pack_start(videowidget)
+        self.videowidget = VideoWidget(self.player)
+        vbox.pack_start(self.videowidget)
         
         hbox = gtk.HBox()
         vbox.pack_start(hbox)
@@ -117,38 +149,65 @@ class PlayerWindow(gtk.Window):
         hscale.connect('button-release-event', self.scale_button_release_cb)
         hscale.connect('format-value', self.scale_format_value_cb)
         hbox.pack_start(hscale)
+        self.hscale = hscale
 
         self.add(vbox)
 
     def scale_format_value_cb(self, scale, value):
-        duration = self.player.get_length()
-        if duration == -1:
+        if self.p_duration == -1:
             real = 0
         else:
-            real = value * duration / 100
+            real = value * self.p_duration / 100
         
         seconds = real / gst.SECOND
 
         return "%02d:%02d" % (seconds / 60, seconds % 60)
 
     def scale_button_press_cb(self, widget, event):
+        # see seek.c:start_seek
+        gst.debug('starting seek')
         self.player.pause()
+
+        # don't timeout-update position during seek
         if self.update_id != -1:
-            gtk.timeout_remove(self.update_id)
+            gobject.source_remove(self.update_id)
             self.update_id = -1
+
+        # make sure we get changed notifies
+        if self.changed_id == -1:
+            self.changed_id = self.hscale.connect('value-changed',
+                self.scale_value_changed_cb)
             
-    def scale_button_release_cb(self, widget, event):
-        duration = self.player.get_length()
-        real = long(widget.get_value() * duration / 100)
+    def scale_value_changed_cb(self, scale):
+        # see seek.c:seek_cb
+        real = long(scale.get_value() * self.p_duration / 100) # in ns
+        gst.debug('value changed, perform seek to %r' % real)
         self.player.seek(real)
-        
-        self.update_id = gtk.timeout_add(self.UPDATE_INTERVAL,
-                                         self.update_scale_cb)
+        # allow for a preroll
+        self.player.get_state(timeout=0.050) # 50 ms
+
+    def scale_button_release_cb(self, widget, event):
+        # see seek.cstop_seek
+        widget.disconnect(self.changed_id)
+        self.changed_id = -1
+
+        if self.seek_timeout_id != -1:
+            gobject.source_remove(self.seek_timeout_id)
+            self.seek_timeout_id = -1
+        else:
+            gst.debug('released slider, setting back to playing')
+            self.player.play()
+
+        if self.update_id != -1:
+            self.error('Had a previous update timeout id')
+        else:
+            self.update_id = gobject.timeout_add(self.UPDATE_INTERVAL,
+                self.update_scale_cb)
 
     def update_scale_cb(self):
-        length = self.player.get_length()
-        if length:
-            value = self.player.get_position() * 100.0 / length
+        self.p_position, self.p_duration, format = self.player.query_position()
+        if self.p_position != gst.CLOCK_TIME_NONE:
+            value = self.p_position * 100.0 / self.p_duration
             self.adjustment.set_value(value)
 
         return True
@@ -157,8 +216,10 @@ class PlayerWindow(gtk.Window):
         if self.player.is_playing():
             return
         
+        self.videowidget.frame_video_sink()
         self.player.play()
-        self.update_id = gtk.timeout_add(self.UPDATE_INTERVAL,
+        # keep the time display updated
+        self.update_id = gobject.timeout_add(self.UPDATE_INTERVAL,
                                          self.update_scale_cb)
 
     def pause_clicked_cb(self, button):
@@ -167,7 +228,7 @@ class PlayerWindow(gtk.Window):
         
         self.player.pause()
         if self.update_id != -1:
-            gtk.timeout_remove(self.update_id)
+            gobject.source_remove(self.update_id)
             self.update_id = -1
 
     def stop_clicked_cb(self, button):
@@ -175,8 +236,9 @@ class PlayerWindow(gtk.Window):
             return
         
         self.player.stop()
+        self.videowidget.unframe_video_sink()
         if self.update_id != -1:
-            gtk.timeout_remove(self.update_id)
+            gobject.source_remove(self.update_id)
             self.update_id = -1
         self.adjustment.set_value(0.0)
 
