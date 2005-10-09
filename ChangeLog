@@ -1,3 +1,19 @@
+2005-10-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audiostestsrc_wave_get_type), (gst_audiotestsrc_class_init),
+	(gst_audiotestsrc_init), (gst_audiotestsrc_create_sine),
+	(gst_audiotestsrc_create_square), (gst_audiotestsrc_create_saw),
+	(gst_audiotestsrc_create_triangle),
+	(gst_audiotestsrc_create_silence),
+	(gst_audiotestsrc_create_white_noise),
+	(gst_audiotestsrc_init_pink_noise),
+	(gst_audiotestsrc_generate_pink_noise_value),
+	(gst_audiotestsrc_create_pink_noise),
+	(gst_audiotestsrc_change_wave):
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+	  fixed typo, added pink noise
+
 2005-10-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c: (wavpack_type_find),

@@ -96,9 +96,10 @@ gst_audiostestsrc_wave_get_type (void)
     {GST_AUDIOTESTSRC_WAVE_SINE, "0", "Sine"},
     {GST_AUDIOTESTSRC_WAVE_SQUARE, "1", "Square"},
     {GST_AUDIOTESTSRC_WAVE_SAW, "2", "Saw"},
-    {GST_AUDIOTESTSRC_WAVE_TRIANGLE, "3", "Trinagle"},
+    {GST_AUDIOTESTSRC_WAVE_TRIANGLE, "3", "Triangle"},
     {GST_AUDIOTESTSRC_WAVE_SILENCE, "4", "Silence"},
     {GST_AUDIOTESTSRC_WAVE_WHITE_NOISE, "5", "White noise"},
+    {GST_AUDIOTESTSRC_WAVE_PINK_NOISE, "6", "Pink noise"},
     {0, NULL, NULL},
   };
 
@@ -421,6 +422,86 @@ gst_audiotestsrc_create_white_noise (GstAudioTestSrc * src, gint16 * samples)
   }
 }
 
+/* pink noise calculation is based on 
+ * http://www.firstpr.com.au/dsp/pink-noise/phil_burk_19990905_patest_pink.c
+ * which has been released under public domain
+ * Many thanks Phil!
+ */
+static void
+gst_audiotestsrc_init_pink_noise (GstAudioTestSrc * src)
+{
+  gint i;
+  gint num_rows = 12;           /* arbitrary: 1 .. PINK_MAX_RANDOM_ROWS */
+  glong pmax;
+
+  src->pink.index = 0;
+  src->pink.index_mask = (1 << num_rows) - 1;
+  /* calculate maximum possible signed random value.
+   * Extra 1 for white noise always added. */
+  pmax = (num_rows + 1) * (1 << (PINK_RANDOM_BITS - 1));
+  src->pink.scalar = 1.0f / pmax;
+  /* Initialize rows. */
+  for (i = 0; i < num_rows; i++)
+    src->pink.rows[i] = 0;
+  src->pink.running_sum = 0;
+}
+
+/* Generate Pink noise values between -1.0 and +1.0 */
+static gfloat
+gst_audiotestsrc_generate_pink_noise_value (GstPinkNoise * pink)
+{
+  glong new_random;
+  glong sum;
+
+  /* Increment and mask index. */
+  pink->index = (pink->index + 1) & pink->index_mask;
+
+  /* If index is zero, don't update any random values. */
+  if (pink->index != 0) {
+    /* Determine how many trailing zeros in PinkIndex. */
+    /* This algorithm will hang if n==0 so test first. */
+    gint num_zeros = 0;
+    gint n = pink->index;
+
+    while ((n & 1) == 0) {
+      n = n >> 1;
+      num_zeros++;
+    }
+
+    /* Replace the indexed ROWS random value.
+     * Subtract and add back to RunningSum instead of adding all the random
+     * values together. Only one changes each time.
+     */
+    pink->running_sum -= pink->rows[num_zeros];
+    //new_random = ((glong)GenerateRandomNumber()) >> PINK_RANDOM_SHIFT;
+    new_random = 32768.0 - (65536.0 * (gulong) rand () / (RAND_MAX + 1.0));
+    pink->running_sum += new_random;
+    pink->rows[num_zeros] = new_random;
+  }
+
+  /* Add extra white noise value. */
+  new_random = 32768.0 - (65536.0 * (gulong) rand () / (RAND_MAX + 1.0));
+  sum = pink->running_sum + new_random;
+
+  /* Scale to range of -1.0 to 0.9999. */
+  return (pink->scalar * sum);
+}
+
+static void
+gst_audiotestsrc_create_pink_noise (GstAudioTestSrc * src, gint16 * samples)
+{
+  gint i;
+  gdouble amp;
+
+  amp = src->volume * 32767.0;
+
+  for (i = 0; i < src->samples_per_buffer; i++) {
+    samples[i] =
+        (gint16) (gst_audiotestsrc_generate_pink_noise_value (&src->pink) *
+        amp);
+  }
+}
+
 static void
 gst_audiotestsrc_change_wave (GstAudioTestSrc * src)
 {
@@ -442,6 +523,10 @@ gst_audiotestsrc_change_wave (GstAudioTestSrc * src)
       break;
     case GST_AUDIOTESTSRC_WAVE_WHITE_NOISE:
       src->process = gst_audiotestsrc_create_white_noise;
+      break;
+    case GST_AUDIOTESTSRC_WAVE_PINK_NOISE:
+      gst_audiotestsrc_init_pink_noise (src);
+      src->process = gst_audiotestsrc_create_pink_noise;
       break;
     default:
       GST_ERROR ("invalid wave-form");

@@ -49,7 +49,20 @@ typedef enum {
   GST_AUDIOTESTSRC_WAVE_TRIANGLE,
   GST_AUDIOTESTSRC_WAVE_SILENCE,
   GST_AUDIOTESTSRC_WAVE_WHITE_NOISE,
+  GST_AUDIOTESTSRC_WAVE_PINK_NOISE,
 } GstAudioTestSrcWaves; 
+
+#define PINK_MAX_RANDOM_ROWS   (30)
+#define PINK_RANDOM_BITS       (16)
+#define PINK_RANDOM_SHIFT      ((sizeof(long)*8)-PINK_RANDOM_BITS)
+
+typedef struct {
+  glong      rows[PINK_MAX_RANDOM_ROWS];
+  glong      running_sum;   /* Used to optimize summing of generators. */
+  gint       index;         /* Incremented each sample. */
+  gint       index_mask;    /* Index wrapped by ANDing with this mask. */
+  gfloat     scalar;        /* Used to scale within range of -1.0 to +1.0 */
+} GstPinkNoise;
 
 typedef struct _GstAudioTestSrc GstAudioTestSrc;
 typedef struct _GstAudioTestSrcClass GstAudioTestSrcClass;
@@ -63,7 +76,7 @@ struct _GstAudioTestSrc {
   GstAudioTestSrcWaves wave;
   gdouble volume;
   gdouble freq;
-  
+    
   /* audio parameters */
   gint samplerate;
 
@@ -78,6 +91,11 @@ struct _GstAudioTestSrc {
 
   GstClockID clock_id;
   GstClockTimeDiff timestamp_offset;
+
+  /* < private > */
+  
+  /* waveform specific context data */
+  GstPinkNoise pink;
 };
 
 struct _GstAudioTestSrcClass {
@@ -88,6 +106,5 @@ GType gst_audiotestsrc_get_type(void);
 gboolean gst_audiotestsrc_factory_init (GstElementFactory *factory);
 
 G_END_DECLS
-
 
 #endif /* __GST_AUDIOTESTSRC_H__ */
