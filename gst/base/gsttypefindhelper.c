@@ -75,8 +75,18 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   if (ret != GST_FLOW_OK)
     goto error;
 
-  find->buffers = g_list_prepend (find->buffers, buffer);
+  /* getrange might silently return shortened buffers at the end of a file,
+   * we must, however, always return either the full requested data or NULL */
+  if (GST_BUFFER_OFFSET (buffer) != offset || GST_BUFFER_SIZE (buffer) < size) {
+    GST_DEBUG ("droping short buffer: %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
+        " instead of %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT,
+        GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET (buffer) +
+        GST_BUFFER_SIZE (buffer), offset, offset + size);
+    gst_buffer_unref (buffer);
+    return NULL;
+  }
 
+  find->buffers = g_list_prepend (find->buffers, buffer);
   return GST_BUFFER_DATA (buffer);
 
 error:
