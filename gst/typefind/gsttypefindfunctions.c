@@ -1555,6 +1555,75 @@ cmml_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
+/*** application/x-tar ***/
+
+static GstStaticCaps tar_caps = GST_STATIC_CAPS ("application/x-tar");
+
+#define TAR_CAPS (gst_static_caps_get(&tar_caps))
+#define OLDGNU_MAGIC "ustar  "  /* 7 chars and a NUL */
+#define NEWGNU_MAGIC "ustar"    /* 5 chars and a NUL */
+static void
+tar_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 257, 8);
+
+  /* of course we are not certain, but we don't want other typefind funcs
+   * to detect formats of files within the tar archive, e.g. mp3s */
+  if (data) {
+    if (memcmp (data, OLDGNU_MAGIC, 8) == 0) {  /* sic */
+      gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN, TAR_CAPS);
+    } else if (memcmp (data, NEWGNU_MAGIC, 6) == 0 &&   /* sic */
+        g_ascii_isdigit (data[6]) && g_ascii_isdigit (data[7])) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN, TAR_CAPS);
+    }
+  }
+}
+
+/*** application/x-ar ***/
+
+static GstStaticCaps ar_caps = GST_STATIC_CAPS ("application/x-ar");
+
+#define AR_CAPS (gst_static_caps_get(&ar_caps))
+static void
+ar_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 24);
+
+  if (data && memcmp (data, "!<arch>", 7) == 0) {
+    gint i;
+
+    for (i = 7; i < 24; ++i) {
+      if (!g_ascii_isprint (data[i]) && data[i] != '\n') {
+        gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, AR_CAPS);
+      }
+    }
+
+    gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN, AR_CAPS);
+  }
+}
+
+/*** application/x-ms-dos-executable ***/
+
+static GstStaticCaps msdos_caps =
+GST_STATIC_CAPS ("application/x-ms-dos-executable");
+#define MSDOS_CAPS (gst_static_caps_get(&msdos_caps))
+/* see http://www.madchat.org/vxdevl/papers/winsys/pefile/pefile.htm */
+static void
+msdos_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 64);
+
+  if (data && data[0] == 'M' && data[1] == 'Z' &&
+      GST_READ_UINT16_LE (data + 8) == 4) {
+    guint32 pe_offset = GST_READ_UINT32_LE (data + 60);
+
+    data = gst_type_find_peek (tf, pe_offset, 2);
+    if (data && data[0] == 'P' && data[1] == 'E') {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN, MSDOS_CAPS);
+    }
+  }
+}
+
 /*** generic typefind for streams that have some data at a specific position***/
 typedef struct
 {
@@ -1693,6 +1762,12 @@ plugin_init (GstPlugin * plugin)
   static gchar *m4a_exts[] = { "m4a", NULL };
   static gchar *q3gp_exts[] = { "3gp", NULL };
   static gchar *aac_exts[] = { "aac", NULL };
+  static gchar *rar_exts[] = { "rar", NULL };
+  static gchar *tar_exts[] = { "tar", NULL };
+  static gchar *ar_exts[] = { "a", NULL };
+  static gchar *msdos_exts[] = { "dll", "exe", "ocx", "sys", "scr",
+    "msstyles", "cpl", NULL
+  };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -1839,6 +1914,14 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_MARGINAL, NULL, "\177ELF", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "adts_mpeg_stream", GST_RANK_SECONDARY,
       aac_type_find, aac_exts, AAC_CAPS, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-rar",
+      GST_RANK_SECONDARY, rar_exts, "Rar!", 4, GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER (plugin, "application/x-tar", GST_RANK_SECONDARY,
+      tar_type_find, tar_exts, TAR_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-ar", GST_RANK_SECONDARY,
+      ar_type_find, ar_exts, AR_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-ms-dos-executable",
+      GST_RANK_SECONDARY, msdos_type_find, msdos_exts, MSDOS_CAPS, NULL);
 
   return TRUE;
 }
