@@ -640,12 +640,12 @@ gst_message_parse_state_changed (GstMessage * message, GstState * oldstate,
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STATE_CHANGED);
 
-  if (old)
+  if (oldstate)
     gst_structure_get_enum (message->structure, "old-state",
-        GST_TYPE_STATE, (gint *) old);
-  if (new)
+        GST_TYPE_STATE, (gint *) oldstate);
+  if (newstate)
     gst_structure_get_enum (message->structure, "new-state",
-        GST_TYPE_STATE, (gint *) new);
+        GST_TYPE_STATE, (gint *) newstate);
   if (pending)
     gst_structure_get_enum (message->structure, "pending-state",
         GST_TYPE_STATE, (gint *) pending);
