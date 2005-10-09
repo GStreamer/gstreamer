@@ -293,18 +293,19 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 	adder \
 	audioconvert \
-        audiorate \
-        audioresample \
+	audiorate \
+	audioresample \
+	audiotestsrc \
 	ffmpegcolorspace \
 	playback \
 	sine \
-        subparse \
-        tcp \
+	subparse \
+	tcp \
 	typefind \
 	videotestsrc \
 	videorate \
 	videoscale \
-        volume \
+	volume \
 	"
 
 dnl see if we can build C++ plug-ins
@@ -768,6 +769,7 @@ gst/adder/Makefile
 gst/audioconvert/Makefile
 gst/audiorate/Makefile
 gst/audioresample/Makefile
+gst/audiotestsrc/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/playback/Makefile
 gst/sine/Makefile

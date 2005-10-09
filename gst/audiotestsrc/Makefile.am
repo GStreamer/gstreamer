@@ -1,0 +1,8 @@
+plugin_LTLIBRARIES = libgstaudiotestsrc.la
+
+libgstaudiotestsrc_la_SOURCES = gstaudiotestsrc.c
+libgstaudiotestsrc_la_CFLAGS = $(GST_CFLAGS)
+libgstaudiotestsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstaudiotestsrc_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(GST_CTRL_LIBS)
+
+noinst_HEADERS = gstaudiotestsrc.h

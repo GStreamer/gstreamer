@@ -106,7 +106,7 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
   gobject_class->set_property = gst_sinesrc_set_property;
   gobject_class->get_property = gst_sinesrc_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
+  g_object_class_install_property (gobject_class,
       PROP_SAMPLES_PER_BUFFER,
       g_param_spec_int ("samplesperbuffer", "Samples per buffer",
           "Number of samples in each outgoing buffer",

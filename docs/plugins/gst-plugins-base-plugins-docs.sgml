@@ -13,6 +13,7 @@
   <chapter>
     <title>gst-plugins-base Elements</title>
     <xi:include href="xml/element-audioconvert.xml" />
+    <xi:include href="xml/element-audiotestsrc.xml" />
     <xi:include href="xml/element-ffmpegcolorspace.xml" />
 <!--
     <xi:include href="xml/element-gnomevfssink.xml" />
@@ -31,6 +32,7 @@
     <xi:include href="xml/plugin-alsa.xml" />
     <xi:include href="xml/plugin-audioconvert.xml" />
     <xi:include href="xml/plugin-audiorate.xml" />
+    <xi:include href="xml/plugin-audiotestsrc.xml" />
     <xi:include href="xml/plugin-decodebin.xml" />
     <xi:include href="xml/plugin-gnomevfs.xml" />
     <xi:include href="xml/plugin-libvisual.xml" />

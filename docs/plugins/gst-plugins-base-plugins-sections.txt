@@ -8,6 +8,14 @@ GstAudioConvertClass
 </SECTION>
 
 <SECTION>
+<FILE>element-audiotestsrc</FILE>
+<TITLE>audiotestsrc</TITLE>
+GstAudioTestSrc
+<SUBSECTION Standard>
+GstAudioTestSrcClass
+</SECTION>
+
+<SECTION>
 <FILE>element-ffmpegcolorspace</FILE>
 <TITLE>ffmpegcolorspace</TITLE>
 GstFFMpegCsp
