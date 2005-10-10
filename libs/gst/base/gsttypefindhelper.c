@@ -38,7 +38,7 @@ typedef struct
   guint best_probability;
   GstCaps *caps;
   guint64 size;
-  GList *buffers;
+  GSList *buffers;
   GstTypeFindFactory *factory;
 }
 GstTypeFindHelper;
@@ -67,8 +67,20 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     offset += find->size;
   }
 
-  /* TODO: is it worth checking our list of buffers for
-   * a match before pulling a new buffer via _getrange()? */
+  /* see if we have a matching buffer already in our list */
+  if (size > 0) {
+    GSList *walk;
+
+    for (walk = find->buffers; walk; walk = walk->next) {
+      GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+      guint64 buf_offset = GST_BUFFER_OFFSET (buf);
+      guint buf_size = GST_BUFFER_SIZE (buf);
+
+      if (buf_offset <= offset && (offset + size) < (buf_offset + buf_size))
+        return GST_BUFFER_DATA (buf) + (offset - buf_offset);
+    }
+  }
+
   buffer = NULL;
   ret = GST_PAD_GETRANGEFUNC (src) (src, offset, size, &buffer);
 
@@ -81,12 +93,12 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     GST_DEBUG ("droping short buffer: %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT
         " instead of %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT,
         GST_BUFFER_OFFSET (buffer), GST_BUFFER_OFFSET (buffer) +
-        GST_BUFFER_SIZE (buffer), offset, offset + size);
+        GST_BUFFER_SIZE (buffer) - 1, offset, offset + size - 1);
     gst_buffer_unref (buffer);
     return NULL;
   }
 
-  find->buffers = g_list_prepend (find->buffers, buffer);
+  find->buffers = g_slist_prepend (find->buffers, buffer);
   return GST_BUFFER_DATA (buffer);
 
 error:
@@ -118,6 +130,7 @@ gst_type_find_helper (GstPad * src, guint64 size)
 {
   GstTypeFind gst_find;
   GstTypeFindHelper find;
+  GSList *l;
   GList *walk, *type_list = NULL;
   GstCaps *result = NULL;
 
@@ -150,9 +163,9 @@ gst_type_find_helper (GstPad * src, guint64 size)
   if (find.best_probability > 0)
     result = find.caps;
 
-  for (walk = find.buffers; walk; walk = walk->next)
-    gst_buffer_unref (GST_BUFFER (walk->data));
-  g_list_free (find.buffers);
+  for (l = find.buffers; l; l = l->next)
+    gst_buffer_unref (GST_BUFFER_CAST (l->data));
+  g_slist_free (find.buffers);
 
   return result;
 }
