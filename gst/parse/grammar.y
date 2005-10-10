@@ -186,7 +186,7 @@ YYPRINTF(const char *format, ...)
   gchar *temp;
   
   va_start (varargs, format);
-  temp = g_strdup_vprintf ( format, varargs );
+  temp = g_strdup_vprintf (format, varargs);
   GST_CAT_LOG (GST_CAT_PIPELINE, "%s", temp);
   g_free (temp);
   va_end (varargs);
@@ -833,7 +833,7 @@ _gst_parse_launch (const gchar *str, GError **error)
   dstr = g_strdup (str);
   buf = _gst_parse_yy_scan_string (dstr);
 
-#ifndef GST_DISABLE_GST_DEBUG
+#ifndef YYDEBUG
   yydebug = 1;
 #endif
 
