@@ -1,3 +1,9 @@
+2005-10-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstutils.c: (guint64_to_gdouble), (gst_util_uint64_scale):
+	  apparently converting from guint64 to double is not implemented
+	  on MSVC
+
 2005-10-10  Wim Taymans  <wim@fluendo.com>
 
 	* check/Makefile.am:
