@@ -2033,7 +2033,10 @@ gst_util_dump_mem
 gst_util_uint64_scale
 gst_util_set_object_arg
 gst_util_set_value_from_string
+g_static_rec_cond_timed_wait
+g_static_rec_cond_wait
 <SUBSECTION Private>
+GST_COMPILE_STATIC_REC_COND_WAIT
 GST_HAVE_UNALIGNED_ACCESS
 </SECTION>
 

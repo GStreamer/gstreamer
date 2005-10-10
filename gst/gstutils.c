@@ -1816,6 +1816,65 @@ gst_object_default_error (GstObject * source, GError * error, gchar * debug)
   g_free (name);
 }
 
+#ifdef GST_COMPILE_STATIC_REC_COND_WAIT
+
+#if GLIB_SIZEOF_SYSTEM_THREAD == SIZEOF_VOID_P
+# define g_system_thread_equal_simple(thread1, thread2)                 \
+   ((thread1).dummy_pointer == (thread2).dummy_pointer)
+# define g_system_thread_assign(dest, src)                              \
+   ((dest).dummy_pointer = (src).dummy_pointer)
+#else /* GLIB_SIZEOF_SYSTEM_THREAD != SIZEOF_VOID_P */
+# define g_system_thread_equal_simple(thread1, thread2)                 \
+   (memcmp (&(thread1), &(thread2), GLIB_SIZEOF_SYSTEM_THREAD) == 0)
+# define g_system_thread_assign(dest, src)                              \
+   (memcpy (&(dest), &(src), GLIB_SIZEOF_SYSTEM_THREAD))
+#endif /* GLIB_SIZEOF_SYSTEM_THREAD == SIZEOF_VOID_P */
+
+#define g_system_thread_equal(thread1, thread2)                         \
+  (g_thread_functions_for_glib_use.thread_equal ?                       \
+   g_thread_functions_for_glib_use.thread_equal (&(thread1), &(thread2)) :\
+   g_system_thread_equal_simple((thread1), (thread2)))
+
+static GSystemThread zero_thread;
+
+gboolean
+g_static_rec_cond_timed_wait (GCond * cond,
+    GStaticRecMutex * mutex, GTimeVal * end_time)
+{
+  GMutex *smutex;
+  guint depth;
+  GSystemThread self;
+  gboolean res;
+
+  if (!g_thread_supported ())
+    return FALSE;
+
+  G_THREAD_UF (thread_self, (&self));
+
+  g_return_val_if_fail (g_system_thread_equal (self, mutex->owner), FALSE);
+
+  depth = mutex->depth;
+
+  g_system_thread_assign (mutex->owner, zero_thread);
+  mutex->depth = 0;
+  smutex = g_static_mutex_get_mutex (&mutex->mutex);
+
+  res = g_cond_timed_wait (cond, smutex, end_time);
+
+  g_system_thread_assign (mutex->owner, self);
+  mutex->depth = depth;
+
+  return res;
+}
+
+void
+g_static_rec_cond_wait (GCond * cond, GStaticRecMutex * mutex)
+{
+  g_static_rec_cond_timed_wait (cond, mutex, NULL);
+}
+
+#endif /* GST_COMPILE_STATIC_REC_COND_WAIT */
+
 /**
  * gst_bin_add_many:
  * @bin: the bin to add the elements to

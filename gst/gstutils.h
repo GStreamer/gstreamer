@@ -457,6 +457,15 @@ GST_BOILERPLATE_FULL (type, type_as_function, parent_type,              \
 void			gst_object_default_error	(GstObject * source,
 							 GError * error, gchar * debug);
 
+/* rec mutex */
+#ifndef g_static_rec_cond_wait
+#define GST_COMPILE_STATIC_REC_COND_WAIT
+void     		g_static_rec_cond_wait        	(GCond                *cond,
+		                                         GStaticRecMutex      *mutex);
+gboolean 		g_static_rec_cond_timed_wait  	(GCond                *cond,
+		                                         GStaticRecMutex      *mutex,
+						         GTimeVal             *end_time);
+#endif
 
 /* element functions */
 GstFlowReturn		gst_element_abort_preroll	(GstElement *element);

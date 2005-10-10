@@ -1,5 +1,7 @@
 2005-10-10  Andy Wingo  <wingo@pobox.com>
 
+	* docs/gst/gstreamer-sections.txt: Doc updates.
+
 	* gst/gstelement.c (gst_element_change_state_func): Renamed from
 	gst_element_change_state, variable name changes.
 	(gst_element_change_state): Split out of gst_element_set_state in
