@@ -170,11 +170,49 @@ gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstTCPServerSrc *src;
   GstFlowReturn ret = GST_FLOW_OK;
+  fd_set testfds;
+  int maxfdp1;
 
   src = GST_TCPSERVERSRC (psrc);
 
   if (!GST_FLAG_IS_SET (src, GST_TCPSERVERSRC_OPEN))
     goto wrong_state;
+
+restart:
+  /* do a blocking select on the socket */
+  FD_ZERO (&testfds);
+
+  /* always select on cancel socket */
+  FD_SET (READ_SOCKET (src), &testfds);
+
+  if (src->client_sock_fd >= 0) {
+    /* if we have a client, wait for read */
+    FD_SET (src->client_sock_fd, &testfds);
+    maxfdp1 = MAX (src->client_sock_fd, READ_SOCKET (src)) + 1;
+  } else {
+    /* else wait on server socket for connections */
+    FD_SET (src->server_sock_fd, &testfds);
+    maxfdp1 = MAX (src->server_sock_fd, READ_SOCKET (src)) + 1;
+  }
+
+  /* no action (0) is an error too in our case */
+  if (select (maxfdp1, &testfds, NULL, NULL, 0) <= 0)
+    goto select_error;
+
+  if (FD_ISSET (READ_SOCKET (src), &testfds))
+    goto select_cancelled;
+
+  /* if we have no client socket we can accept one now */
+  if (src->client_sock_fd < 0) {
+    if (FD_ISSET (src->server_sock_fd, &testfds)) {
+      if ((src->client_sock_fd =
+              accept (src->server_sock_fd, (struct sockaddr *) &src->client_sin,
+                  &src->client_sin_len)) == -1)
+        goto accept_error;
+    }
+    /* and restart now to poll the socket. */
+    goto restart;
+  }
 
   GST_LOG_OBJECT (src, "asked for a buffer");
 
@@ -191,6 +229,9 @@ gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
         ret = gst_tcp_gdp_read_caps (GST_ELEMENT (src), src->client_sock_fd,
             READ_SOCKET (src), &caps);
+
+        if (ret == GST_FLOW_WRONG_STATE)
+          goto gdp_cancelled;
 
         if (ret != GST_FLOW_OK)
           goto gdp_caps_read_error;
@@ -235,10 +276,35 @@ wrong_state:
     GST_DEBUG_OBJECT (src, "connection to closed, cannot read data");
     return GST_FLOW_WRONG_STATE;
   }
-gdp_caps_read_error:
+select_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("Could not read caps through GDP"));
+        ("Select error: %s", g_strerror (errno)));
+    return GST_FLOW_ERROR;
+  }
+select_cancelled:
+  {
+    GST_DEBUG_OBJECT (src, "select canceled");
+    return GST_FLOW_WRONG_STATE;
+  }
+accept_error:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("Could not accept client on server socket: %s", g_strerror (errno)));
+    return GST_FLOW_ERROR;
+  }
+gdp_cancelled:
+  {
+    GST_DEBUG_OBJECT (src, "reading gdp canceled");
+    return GST_FLOW_WRONG_STATE;
+  }
+gdp_caps_read_error:
+  {
+    /* if we did not get canceled, report an error */
+    if (ret != GST_FLOW_WRONG_STATE) {
+      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+          ("Could not read caps through GDP"));
+    }
     return ret;
   }
 }
@@ -350,14 +416,6 @@ gst_tcpserversrc_start (GstBaseSrc * bsrc)
   if (listen (src->server_sock_fd, TCP_BACKLOG) == -1)
     goto listen_error;
 
-  /* FIXME: maybe we should think about moving actual client accepting
-     somewhere else */
-  GST_DEBUG_OBJECT (src, "waiting for client");
-  if ((src->client_sock_fd =
-          accept (src->server_sock_fd, (struct sockaddr *) &src->client_sin,
-              &src->client_sin_len)) == -1)
-    goto accept_error;
-
   GST_DEBUG_OBJECT (src, "received client");
 
   GST_FLAG_SET (src, GST_TCPSERVERSRC_OPEN);
@@ -403,13 +461,6 @@ listen_error:
     gst_tcp_socket_close (&src->server_sock_fd);
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
         ("Could not listen on server socket: %s", g_strerror (errno)));
-    return FALSE;
-  }
-accept_error:
-  {
-    gst_tcp_socket_close (&src->server_sock_fd);
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-        ("Could not accept client on server socket: %s", g_strerror (errno)));
     return FALSE;
   }
 }

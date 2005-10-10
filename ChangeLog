@@ -1,3 +1,10 @@
+2005-10-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_create),
+	(gst_tcpserversrc_start):
+	Don't block in accept while doing the state change, move
+	to poll and make cancellable.
+
 2005-10-09  Philippe Khalaf <burger@speedy.org>
 
 	* gst-libs/gst/rtp/rtpbasedepayload.c:
