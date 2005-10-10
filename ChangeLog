@@ -1,5 +1,8 @@
 2005-10-10  Andy Wingo  <wingo@pobox.com>
 
+	* check/gst/gstghostpad.c (test_ghost_pads): Merge from the state
+	change patch.
+
 	* check/gst/gstbin.c: Merge in some style fixes and additional
 	checks from Wim's state change patch.
 
