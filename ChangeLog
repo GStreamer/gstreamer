@@ -1,3 +1,16 @@
+2005-10-10  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstelement.c (gst_element_change_state_func): Renamed from
+	gst_element_change_state, variable name changes.
+	(gst_element_change_state): Split out of gst_element_set_state in
+	preparation for the state change merge. Doesn't pay attention to
+	the 'transition' argument.
+	(gst_element_set_state): Updates, hopefully purely cosmetic.
+	(gst_element_sync_state_with_parent): MT-safety. Ported from the
+	state change patch.
+	(gst_element_get_state_func): Renamed from get_state, cosmetic
+	changes.
+
 2005-10-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/gstelements.c:

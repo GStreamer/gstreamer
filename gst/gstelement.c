@@ -116,6 +116,8 @@ static void gst_element_finalize (GObject * object);
 
 static GstStateChangeReturn gst_element_change_state (GstElement * element,
     GstStateChange transition);
+static GstStateChangeReturn gst_element_change_state_func (GstElement * element,
+    GstStateChange transition);
 static GstStateChangeReturn gst_element_get_state_func (GstElement * element,
     GstState * state, GstState * pending, GTimeVal * timeout);
 static void gst_element_set_bus_func (GstElement * element, GstBus * bus);
@@ -207,7 +209,7 @@ gst_element_class_init (GstElementClass * klass)
       GST_DEBUG_FUNCPTR (gst_element_restore_thyself);
 #endif
 
-  klass->change_state = GST_DEBUG_FUNCPTR (gst_element_change_state);
+  klass->change_state = GST_DEBUG_FUNCPTR (gst_element_change_state_func);
   klass->get_state = GST_DEBUG_FUNCPTR (gst_element_get_state_func);
   klass->set_bus = GST_DEBUG_FUNCPTR (gst_element_set_bus_func);
   klass->numpadtemplates = 0;
@@ -1561,6 +1563,8 @@ was_ok:
  * If this function returns FALSE, the state of element is undefined.
  *
  * Returns: TRUE, if the element's state could be synced to the parent's state.
+ *
+ * MT safe.
  */
 gboolean
 gst_element_sync_state_with_parent (GstElement * element)
@@ -1568,20 +1572,38 @@ gst_element_sync_state_with_parent (GstElement * element)
   GstElement *parent;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-  parent = GST_ELEMENT (GST_ELEMENT_PARENT (element));
-  g_return_val_if_fail (GST_IS_BIN (parent), FALSE);
 
-  GST_CAT_DEBUG (GST_CAT_STATES, "syncing state of element %s (%s) to %s (%s)",
-      GST_ELEMENT_NAME (element),
-      gst_element_state_get_name (GST_STATE (element)),
-      GST_ELEMENT_NAME (parent),
-      gst_element_state_get_name (GST_STATE (parent)));
+  if ((parent = GST_ELEMENT_CAST (gst_element_get_parent (element)))) {
+    GstState parent_current, parent_pending;
+    GstStateChangeReturn ret;
 
-  if (gst_element_set_state (element,
-          GST_STATE (parent)) == GST_STATE_CHANGE_FAILURE) {
+    GST_STATE_LOCK (parent);
+    parent_current = GST_STATE (parent);
+    parent_pending = GST_STATE_PENDING (parent);
+    GST_STATE_UNLOCK (parent);
+
+    GST_CAT_DEBUG (GST_CAT_STATES,
+        "syncing state of element %s (%s) to %s (%s, %s)",
+        GST_ELEMENT_NAME (element),
+        gst_element_state_get_name (GST_STATE (element)),
+        GST_ELEMENT_NAME (parent), gst_element_state_get_name (parent_current),
+        gst_element_state_get_name (parent_pending));
+
+    ret = gst_element_set_state (element, parent_current);
+    if (ret == GST_STATE_CHANGE_FAILURE)
+      goto failed;
+
+    gst_object_unref (parent);
+
+    return TRUE;
+  }
+  return FALSE;
+
+  /* ERROR */
+failed:
+  {
     return FALSE;
   }
-  return TRUE;
 }
 
 /* MT safe */
@@ -1611,16 +1633,17 @@ gst_element_get_state_func (GstElement * element,
   if (old_pending != GST_STATE_VOID_PENDING) {
     GTimeVal *timeval, abstimeout;
 
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "wait for pending");
     if (timeout) {
+      glong add = timeout->tv_sec * G_USEC_PER_SEC + timeout->tv_usec;
+
       /* make timeout absolute */
       g_get_current_time (&abstimeout);
-      g_time_val_add (&abstimeout,
-          timeout->tv_sec * G_USEC_PER_SEC + timeout->tv_usec);
+      g_time_val_add (&abstimeout, add);
       timeval = &abstimeout;
     } else {
       timeval = NULL;
     }
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "wait for pending");
     /* we have a pending state change, wait for it to complete */
     if (!GST_STATE_TIMED_WAIT (element, timeval)) {
       GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "timeout");
@@ -1786,6 +1809,7 @@ gst_element_commit_state (GstElement * element)
  * Brings the element to the lost state. The current state of the
  * element is copied to the pending state so that any call to
  * #gst_element_get_state() will return ASYNC.
+ *
  * This is mostly used for elements that lost their preroll buffer
  * in the PAUSED state after a flush, they become PAUSED again
  * if a new preroll buffer is queued.
@@ -1803,8 +1827,10 @@ gst_element_lost_state (GstElement * element)
 
   if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING &&
       !GST_STATE_ERROR (element)) {
-    GstState current_state = GST_STATE (element);
+    GstState current_state;
     GstMessage *message;
+
+    current_state = GST_STATE (element);
 
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
         "lost state of %s", gst_element_state_get_name (current_state));
@@ -1834,44 +1860,70 @@ gst_element_lost_state (GstElement * element)
 GstStateChangeReturn
 gst_element_set_state (GstElement * element, GstState state)
 {
-  GstElementClass *oclass;
-  GstState current;
-  GstStateChangeReturn return_val = GST_STATE_CHANGE_SUCCESS;
+  GstState current, old_pending;
   GstStateChangeReturn ret;
-  GstState pending;
+  GstStateChange transition;
   GTimeVal tv;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "set_state to %s",
       gst_element_state_get_name (state));
+
   /* get current element state,  need to call the method so that
    * we call the virtual method and subclasses can implement their
    * own algorithms */
   GST_TIME_TO_TIMEVAL (0, tv);
-  ret = gst_element_get_state (element, &current, &pending, &tv);
+  ret = gst_element_get_state (element, &current, &old_pending, &tv);
 
   GST_STATE_LOCK (element);
-  /* this is the state we should go to */
+
+  /* this is the (new) state we should go to */
   GST_STATE_FINAL (element) = state;
   if (ret == GST_STATE_CHANGE_ASYNC) {
     /* force next state keeping ASYNC, this is atomic as we hold
      * the STATE_LOCK */
     gst_element_commit_state (element);
     gst_element_lost_state (element);
-    if (state == GST_STATE_PENDING (element)) {
-      GST_STATE_UNLOCK (element);
-      return GST_STATE_CHANGE_ASYNC;
-    }
+    if (state == GST_STATE_PENDING (element))
+      goto was_busy;
   }
 
-  /* start with the current state */
-  current = GST_STATE (element);
+  /* fixme, not right */
+  transition = GST_STATE_CHANGE (element);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "setting state from %s to %s",
-      gst_element_state_get_name (current), gst_element_state_get_name (state));
+  ret = gst_element_change_state (element, transition);
+
+  GST_STATE_UNLOCK (element);
+
+  GST_DEBUG_OBJECT (element, "returned %d", ret);
+
+  return ret;
+
+was_busy:
+  {
+    GST_STATE_UNLOCK (element);
+
+    GST_DEBUG_OBJECT (element, "element was busy with async state change");
+
+    return GST_STATE_CHANGE_ASYNC;
+  }
+}
+
+/* with STATE_LOCK */
+static GstStateChangeReturn
+gst_element_change_state (GstElement * element, GstStateChange transition)
+{
+  GstElementClass *oclass;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstState current, next, final;
 
   oclass = GST_ELEMENT_GET_CLASS (element);
+
+  /* start with the current state. */
+  current = GST_STATE (element);
+  next = GST_STATE_PENDING (element);
+  final = GST_STATE_FINAL (element);
 
   /* We always perform at least one state change, even if the
    * current state is equal to the required state. This is needed
@@ -1880,9 +1932,9 @@ gst_element_set_state (GstElement * element, GstState state)
     GstState pending;
 
     /* calculate the pending state */
-    if (current < state)
+    if (current < final)
       pending = current + 1;
-    else if (current > state)
+    else if (current > final)
       pending = current - 1;
     else
       pending = current;
@@ -1892,15 +1944,15 @@ gst_element_set_state (GstElement * element, GstState state)
 
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
         "%s: setting state from %s to %s",
-        (pending != state ? "intermediate" : "final"),
+        (pending != final ? "intermediate" : "final"),
         gst_element_state_get_name (current),
         gst_element_state_get_name (pending));
 
     /* call the state change function so it can set the state */
     if (oclass->change_state)
-      return_val = (oclass->change_state) (element, GST_STATE_CHANGE (element));
+      ret = (oclass->change_state) (element, GST_STATE_CHANGE (element));
     else
-      return_val = GST_STATE_CHANGE_FAILURE;
+      ret = GST_STATE_CHANGE_FAILURE;
 
     /* clear the error and preroll flag, we need to do that after
      * calling the virtual change_state function so that it can use the
@@ -1908,7 +1960,7 @@ gst_element_set_state (GstElement * element, GstState state)
     GST_STATE_ERROR (element) = FALSE;
     GST_STATE_NO_PREROLL (element) = FALSE;
 
-    switch (return_val) {
+    switch (ret) {
       case GST_STATE_CHANGE_FAILURE:
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
             "have failed change_state return");
@@ -1937,31 +1989,29 @@ gst_element_set_state (GstElement * element, GstState state)
         GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "committed state");
         break;
       default:
+        ret = GST_STATE_CHANGE_FAILURE;
         goto invalid_return;
     }
     /* get the current state of the element and see if we need to do more
      * state changes */
     current = GST_STATE (element);
   }
-  while (current != state);
+  while (current != final);
 
 exit:
   GST_STATE_FINAL (element) = GST_STATE_VOID_PENDING;
-  GST_STATE_UNLOCK (element);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "exit state change");
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "exit state change %d", ret);
 
-  return return_val;
+  return ret;
 
   /* ERROR */
 invalid_return:
   {
     GST_STATE_FINAL (element) = GST_STATE_VOID_PENDING;
-    GST_STATE_UNLOCK (element);
     /* somebody added a GST_STATE_ and forgot to do stuff here ! */
-    g_critical ("unknown return value %d from a state change function",
-        return_val);
-    return GST_STATE_CHANGE_FAILURE;
+    g_critical ("unknown return value %d from a state change function", ret);
+    return ret;
   }
 }
 
@@ -2039,24 +2089,24 @@ gst_element_pads_activate (GstElement * element, gboolean active)
 
 /* is called with STATE_LOCK */
 static GstStateChangeReturn
-gst_element_change_state (GstElement * element, GstStateChange transition)
+gst_element_change_state_func (GstElement * element, GstStateChange transition)
 {
-  GstState state, pending;
+  GstState state, next;
   GstStateChangeReturn result = GST_STATE_CHANGE_SUCCESS;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
 
   state = GST_STATE (element);
-  pending = GST_STATE_PENDING (element);
+  next = GST_STATE_PENDING (element);
 
   /* if the element already is in the given state, we just return success */
-  if (pending == GST_STATE_VOID_PENDING || state == GST_STATE_PENDING (element))
+  if (next == GST_STATE_VOID_PENDING || state == next)
     goto was_ok;
 
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element,
       "default handler tries setting state from %s to %s (%04x)",
       gst_element_state_get_name (state),
-      gst_element_state_get_name (pending), transition);
+      gst_element_state_get_name (next), transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -2088,7 +2138,7 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
        */
       g_warning ("Unhandled state change from %s to %s",
           gst_element_state_get_name (state),
-          gst_element_state_get_name (pending));
+          gst_element_state_get_name (next));
       break;
   }
   return result;
