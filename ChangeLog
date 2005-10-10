@@ -1,3 +1,9 @@
+2005-10-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstiterator.c: (gst_iterator_new):
+	  Fix my previous commit: GTypes passed to gst_iterator_new()
+	  can be fundamental types.
+
 2005-10-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstelement.c: (gst_element_iterate_pad_list),
