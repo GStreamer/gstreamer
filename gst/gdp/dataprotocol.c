@@ -51,7 +51,7 @@ gst_dp_crc (const guint8 * buffer, register guint length)
 {
   static gboolean initialized = FALSE;
   static guint16 crc_table[256];
-  guint16 crc_register;
+  guint16 crc_register = CRC_INIT;
   unsigned long i, j, k;
 
   if (!initialized) {
@@ -65,8 +65,6 @@ gst_dp_crc (const guint8 * buffer, register guint length)
     }
     initialized = TRUE;
   }
-
-  crc_register = CRC_INIT;      /* always init register */
 
   /* calc CRC */
   for (; length--;) {
@@ -83,7 +81,7 @@ gst_dp_dump_byte_array (guint8 * array, guint length)
 {
   int i;
   int n = 8;                    /* number of bytes per line */
-  gchar *line = g_malloc (3 * n + 1);
+  gchar *line = g_malloc0 (3 * n + 1);
 
   GST_LOG ("dumping byte array of length %d", length);
   for (i = 0; i < length; ++i) {
@@ -170,7 +168,7 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
   g_return_val_if_fail (header, FALSE);
 
   *length = GST_DP_HEADER_LENGTH;
-  h = g_malloc (GST_DP_HEADER_LENGTH);
+  h = g_malloc0 (GST_DP_HEADER_LENGTH);
 
   /* version, flags, type */
   h[0] = (guint8) GST_DP_VERSION_MAJOR;
@@ -244,7 +242,7 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
   g_return_val_if_fail (payload, FALSE);
 
   *length = GST_DP_HEADER_LENGTH;
-  h = g_malloc (GST_DP_HEADER_LENGTH);
+  h = g_malloc0 (GST_DP_HEADER_LENGTH);
 
   string = (guchar *) gst_caps_to_string (caps);
 
