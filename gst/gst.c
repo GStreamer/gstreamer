@@ -237,6 +237,10 @@ parse_debug_list (const gchar * list)
   g_strfreev (split);
 }
 
+#ifndef GST_HAVE_GLIB_2_8
+#define G_OPTION_FLAG_NO_ARG 0
+#endif
+
 /**
  * gst_init_get_option_group:
  *

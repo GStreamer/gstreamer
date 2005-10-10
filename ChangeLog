@@ -14,6 +14,12 @@
 
 2005-10-10  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gst.c (G_OPTION_FLAG_NO_ARG): Apparently GLib 2.8 requires
+	this flag, but it's not even in GLib 2.6. Odd. Hack around the
+	issue.
+
+2005-10-10  Andy Wingo  <wingo@pobox.com>
+
 	Merged in popt removal + GOption addition patch from Ronald, bug
 	#169772.
 
