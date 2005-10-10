@@ -13,7 +13,6 @@ gst_object_flags_get_type (void)
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_OBJECT_DISPOSING, "GST_OBJECT_DISPOSING", "disposing"},
-      {GST_OBJECT_DESTROYED, "GST_OBJECT_DESTROYED", "destroyed"},
       {GST_OBJECT_FLOATING, "GST_OBJECT_FLOATING", "floating"},
       {GST_OBJECT_FLAG_LAST, "GST_OBJECT_FLAG_LAST", "flag-last"},
       {0, NULL, NULL}

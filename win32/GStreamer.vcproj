@@ -25,7 +25,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GST_EXPORTS"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="5"
 				BufferSecurityCheck="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="config.h"
@@ -37,13 +37,13 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="popt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
-				OutputFile="$(OutDir)/libgtreamer-0.8.dll"
+				AdditionalDependencies="libpopt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
+				OutputFile="$(OutDir)/libgtreamer-$(Version).dll"
 				LinkIncremental="0"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="c:\usr\lib"
 				IgnoreAllDefaultLibraries="FALSE"
-				ModuleDefinitionFile="gst.def"
+				ModuleDefinitionFile="gstreamer.def"
 				DelayLoadDLLs=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/GStreamer.pdb"
@@ -62,7 +62,8 @@ mkdir c:\gstreamer\bin
 copy /Y $(TargetPath) c:\gstreamer\bin
 for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do msgfmt -o ..\po\%%i.gmo ..\po\%%i.po
 for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do mkdir c:\gstreamer\locale\%%i
-for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do copy /Y ..\po\%%i.gmo c:\gstreamer\locale\%%i\gstreamer-0.8.mo"/>
+for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do copy /Y ..\po\%%i.gmo c:\gstreamer\locale\%%i\gstreamer-0.8.mo
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"
 				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
@@ -102,12 +103,15 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 			OutputDirectory="Release"
 			IntermediateDirectory="Release"
 			ConfigurationType="2"
-			CharacterSet="2">
+			CharacterSet="2"
+			ReferencesPath="">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=".\;..\;..\libs;c:\usr\include"
+				AdditionalIncludeDirectories=".\;..\;..\libs;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HAVE_CONFIG_H;HAVE_WIN32;GST_EXPORTS"
+				ExceptionHandling="FALSE"
 				RuntimeLibrary="2"
+				BufferSecurityCheck="FALSE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="config.h"
 				WarningLevel="3"
@@ -118,13 +122,13 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="popt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
-				OutputFile="$(OutDir)/libgtreamer-0.8.dll"
+				AdditionalDependencies="libpopt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
+				OutputFile="$(OutDir)/libgtreamer-0.9.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="c:\usr\lib"
 				IgnoreAllDefaultLibraries="FALSE"
-				ModuleDefinitionFile="gst.def"
+				ModuleDefinitionFile="gstreamer.def"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/GStreamer.pdb"
 				SubSystem="2"
@@ -136,16 +140,17 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				Name="VCMIDLTool"/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="del gst.def
-mkdir c:\gstreamer
+				CommandLine="mkdir c:\gstreamer
 mkdir c:\gstreamer\bin
 copy /Y $(TargetPath) c:\gstreamer\bin
 for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do msgfmt -o ..\po\%%i.gmo ..\po\%%i.po
 for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do mkdir c:\gstreamer\locale\%%i
-for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do copy /Y ..\po\%%i.gmo c:\gstreamer\locale\%%i\gstreamer-0.8.mo"/>
+for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do copy /Y ..\po\%%i.gmo c:\gstreamer\locale\%%i\gstreamer-0.8.mo
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
+				CommandLine="echo $(Path)
+copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
 copy $(ProjectDir)\gstversion.h $(ProjectDir)\..\gst\gstversion.h
 copy $(ProjectDir)\gstenumtypes.h $(ProjectDir)\..\gst\gstenumtypes.h
 copy $(ProjectDir)\gstenumtypes.c $(ProjectDir)\..\gst\gstenumtypes.c
@@ -201,16 +206,16 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				RelativePath="..\gst\gstbuffer.c">
 			</File>
 			<File
+				RelativePath="..\gst\gstbus.c">
+			</File>
+			<File
 				RelativePath="..\gst\gstcaps.c">
 			</File>
 			<File
+				RelativePath="..\gst\gstchildproxy.c">
+			</File>
+			<File
 				RelativePath="..\gst\gstclock.c">
-			</File>
-			<File
-				RelativePath="..\gst\gstcpu.c">
-			</File>
-			<File
-				RelativePath="..\gst\gstdata.c">
 			</File>
 			<File
 				RelativePath="..\gst\gstelement.c">
@@ -234,7 +239,13 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				RelativePath="..\gst\gstformat.c">
 			</File>
 			<File
+				RelativePath="..\gst\gstghostpad.c">
+			</File>
+			<File
 				RelativePath="..\gst\gstindex.c">
+			</File>
+			<File
+				RelativePath="..\gst\gstindexfactory.c">
 			</File>
 			<File
 				RelativePath="..\gst\gstinfo.c">
@@ -243,16 +254,28 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				RelativePath="..\gst\gstinterface.c">
 			</File>
 			<File
+				RelativePath="..\gst\gstiterator.c">
+			</File>
+			<File
 				RelativePath="..\gst\gstmarshal.c">
 			</File>
 			<File
 				RelativePath="..\gst\gstmemchunk.c">
 			</File>
 			<File
+				RelativePath="..\gst\gstmessage.c">
+			</File>
+			<File
+				RelativePath="..\gst\gstminiobject.c">
+			</File>
+			<File
 				RelativePath="..\gst\gstobject.c">
 			</File>
 			<File
 				RelativePath="..\gst\gstpad.c">
+			</File>
+			<File
+				RelativePath="..\gst\gstpadtemplate.c">
 			</File>
 			<File
 				RelativePath="..\gst\gstparse.c">
@@ -267,9 +290,6 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				RelativePath="..\gst\gstpluginfeature.c">
 			</File>
 			<File
-				RelativePath="..\gst\gstprobe.c">
-			</File>
-			<File
 				RelativePath="..\gst\gstquery.c">
 			</File>
 			<File
@@ -282,10 +302,7 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				RelativePath="..\gst\gstregistry.c">
 			</File>
 			<File
-				RelativePath="..\gst\gstregistrypool.c">
-			</File>
-			<File
-				RelativePath="..\gst\gstscheduler.c">
+				RelativePath="..\gst\gstregistryxml.c">
 			</File>
 			<File
 				RelativePath="..\gst\gststructure.c">
@@ -294,19 +311,22 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				RelativePath="..\gst\gstsystemclock.c">
 			</File>
 			<File
-				RelativePath="..\gst\gsttag.c">
+				RelativePath="..\gst\gsttaglist.c">
 			</File>
 			<File
-				RelativePath="..\gst\gsttaginterface.c">
+				RelativePath="..\gst\gsttagsetter.c">
 			</File>
 			<File
-				RelativePath="..\gst\gstthread.c">
+				RelativePath="..\gst\gsttask.c">
 			</File>
 			<File
 				RelativePath="..\gst\gsttrace.c">
 			</File>
 			<File
 				RelativePath="..\gst\gsttypefind.c">
+			</File>
+			<File
+				RelativePath="..\gst\gsttypefindfactory.c">
 			</File>
 			<File
 				RelativePath="..\gst\gsturi.c">
@@ -324,10 +344,13 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				RelativePath="..\gst\gstxml.c">
 			</File>
 			<File
-				RelativePath="..\gst\registries\gstxmlregistry.c">
+				RelativePath="..\gst\parse\lex._gst_parse_yy.c">
 			</File>
 			<File
-				RelativePath="..\gst\parse\lex._gst_parse_yy.c">
+				RelativePath=".\link_oldruntime.c">
+			</File>
+			<File
+				RelativePath="..\..\..\..\Program Files\Microsoft Visual Studio .NET 2003\Vc7\crt\src\intel\dll_lib\ulldvrm.obj">
 			</File>
 		</Filter>
 		<Filter
@@ -356,9 +379,6 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				RelativePath="..\gst\gstconfig.h">
 			</File>
 			<File
-				RelativePath="..\gst\gstcpu.h">
-			</File>
-			<File
 				RelativePath="..\gst\gstenumtypes.h">
 			</File>
 			<File
@@ -383,12 +403,6 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 				RelativePath="..\gst\gstplugin.h">
 			</File>
 			<File
-				RelativePath="..\gst\gstscheduler.h">
-			</File>
-			<File
-				RelativePath="..\gst\gsttaginterface.h">
-			</File>
-			<File
 				RelativePath="..\gst\gsttrace.h">
 			</File>
 			<File
@@ -408,53 +422,6 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 			Name="Resource Files"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}">
-		</Filter>
-		<Filter
-			Name="libs"
-			Filter="">
-			<Filter
-				Name="control"
-				Filter="">
-				<File
-					RelativePath="..\libs\gst\control\control.c">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\control.h">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\dparam.c">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\dparam.h">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\dparam_smooth.c">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\dparam_smooth.h">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\dparamcommon.h">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\dparammanager.c">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\dparammanager.h">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\dplinearinterp.c">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\dplinearinterp.h">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\unitconvert.c">
-				</File>
-				<File
-					RelativePath="..\libs\gst\control\unitconvert.h">
-				</File>
-			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

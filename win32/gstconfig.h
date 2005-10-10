@@ -20,6 +20,12 @@
 #define GST_DISABLE_URI 1
 #endif
 
+/***** default padding of structures *****/
+#define GST_PADDING		4
+#define GST_PADDING_INIT	{0}
+
+#define LIBDIR "win32:libdir define in vcproj"
+#define PACKAGE "temp seb package"
 
 /***** disabling of subsystems *****/
 

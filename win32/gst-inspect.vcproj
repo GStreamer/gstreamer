@@ -23,7 +23,7 @@
 				AdditionalIncludeDirectories=".\;..\;..\libs;c:\usr\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_CONFIG_H"
 				MinimalRebuild="TRUE"
-				BasicRuntimeChecks="3"
+				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -87,7 +87,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib intl.lib"
-				OutputFile="$(OutDir)/gst-inspect.exe"
+				OutputFile="$(OutDir)/gst-inspect-0.9.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="c:\usr\lib"

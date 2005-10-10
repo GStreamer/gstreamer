@@ -24,7 +24,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_CONFIG_H"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="5"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -34,11 +34,11 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib intl.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib intl.lib gstelements.lib libgstbase.lib libgstreamer.lib"
 				OutputFile="$(OutDir)/gst-launch.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="c:\usr\lib"
+				AdditionalLibraryDirectories="c:\usr\lib;C:\devel\gstreamer\win32\Release"
 				IgnoreAllDefaultLibraries="FALSE"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/gst-launch.pdb"
@@ -87,7 +87,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib intl.lib"
-				OutputFile="$(OutDir)/gst-launch.exe"
+				OutputFile="$(OutDir)/gst-launch-0.9.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="c:\usr\lib"

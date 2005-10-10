@@ -24,7 +24,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;HAVE_CONFIG_H;HAVE_WIN32"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="5"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -101,7 +101,9 @@
 				Name="VCMIDLTool"/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy /Y $(TargetPath) c:\gstreamer\bin"/>
+				CommandLine="mkdir c:\gstreamer\plugins
+copy /Y $(TargetPath) c:\gstreamer\plugins
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
@@ -128,10 +130,10 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath="..\gst\elements\gstaggregator.c">
+				RelativePath="..\gst\elements\gstbufferstore.c">
 			</File>
 			<File
-				RelativePath="..\gst\elements\gstbufferstore.c">
+				RelativePath="..\gst\elements\gstcapsfilter.c">
 			</File>
 			<File
 				RelativePath="..\gst\elements\gstelements.c">
@@ -143,12 +145,6 @@
 				RelativePath="..\gst\elements\gstfakesrc.c">
 			</File>
 			<File
-				RelativePath="..\gst\elements\gstfdsink.c">
-			</File>
-			<File
-				RelativePath="..\gst\elements\gstfdsrc.c">
-			</File>
-			<File
 				RelativePath="..\gst\elements\gstfilesink.c">
 			</File>
 			<File
@@ -158,31 +154,25 @@
 				RelativePath="..\gst\elements\gstidentity.c">
 			</File>
 			<File
-				RelativePath="..\gst\elements\gstmd5sink.c">
-			</File>
-			<File
-				RelativePath="..\gst\elements\gstshaper.c">
-			</File>
-			<File
-				RelativePath="..\gst\elements\gststatistics.c">
-			</File>
-			<File
 				RelativePath="..\gst\elements\gsttee.c">
 			</File>
 			<File
 				RelativePath="..\gst\elements\gsttypefindelement.c">
 			</File>
 			<File
+				RelativePath=".\link_oldruntime.c">
+			</File>
+			<File
 				RelativePath=".\mman.c">
+			</File>
+			<File
+				RelativePath=".\ulldvrm.obj">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
-			<File
-				RelativePath="..\gst\elements\gstaggregator.h">
-			</File>
 			<File
 				RelativePath="..\gst\elements\gstbufferstore.h">
 			</File>
@@ -191,9 +181,6 @@
 			</File>
 			<File
 				RelativePath="..\gst\elements\gstfakesrc.h">
-			</File>
-			<File
-				RelativePath="..\gst\elements\gstfdsink.h">
 			</File>
 			<File
 				RelativePath="..\gst\elements\gstfdsrc.h">
@@ -208,16 +195,7 @@
 				RelativePath="..\gst\elements\gstidentity.h">
 			</File>
 			<File
-				RelativePath="..\gst\elements\gstmd5sink.h">
-			</File>
-			<File
 				RelativePath="..\gst\elements\gstmultidisksrc.h">
-			</File>
-			<File
-				RelativePath="..\gst\elements\gstshaper.h">
-			</File>
-			<File
-				RelativePath="..\gst\elements\gststatistics.h">
 			</File>
 			<File
 				RelativePath="..\gst\elements\gsttee.h">

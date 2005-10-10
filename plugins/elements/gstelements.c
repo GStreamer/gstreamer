@@ -53,7 +53,7 @@ static struct _elements_entry _elements[] = {
   {"fakesink", GST_RANK_NONE, gst_fake_sink_get_type},
 #ifndef WIN32
   {"fdsrc", GST_RANK_NONE, gst_fdsrc_get_type},
-#endif
+#endif //WIN32
   {"filesrc", GST_RANK_NONE, gst_file_src_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
   {"filesink", GST_RANK_NONE, gst_file_sink_get_type},

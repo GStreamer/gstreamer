@@ -5,7 +5,7 @@
 #define ENABLE_NLS 1
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gstreamer-0.8"
+#define GETTEXT_PACKAGE "gstreamer-0.9"
 
 /* Location of registry */
 #define GST_CACHE_DIR "c:\\gstreamer"
@@ -190,11 +190,10 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.8.5.0"
+#define VERSION "0.9.0.0"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #define WORDS_BIGENDIAN 0
 
-#define GST_MAJORMINOR "0.8"
-
+#define GST_MAJORMINOR "0.9"
