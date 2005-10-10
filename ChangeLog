@@ -1,3 +1,7 @@
+2005-10-10  Andy Wingo  <wingo@pobox.com>
+
+	* autogen.sh (CONFIGURE_DEF_OPT): No more --plugin-buiddir, yay
+
 2005-10-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
