@@ -2215,6 +2215,8 @@ gst_element_finalize (GObject * object)
   element->state_cond = NULL;
   GST_STATE_UNLOCK (element);
   g_static_rec_mutex_free (element->state_lock);
+  g_free (element->state_lock);
+  element->state_lock = NULL;
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize parent");
 

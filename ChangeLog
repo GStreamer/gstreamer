@@ -1,3 +1,8 @@
+2005-10-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstelement.c: (gst_element_finalize):
+	And free the GStaticRecMutex too
+
 2005-10-10  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstelement.c (gst_element_init, gst_element_finalize):
