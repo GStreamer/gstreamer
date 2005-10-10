@@ -25,7 +25,6 @@
 #define __GST_H__
 
 #include <glib.h>
-#include <popt.h>
 
 #include <gst/gstenumtypes.h>
 #include <gst/gstversion.h>
@@ -73,30 +72,14 @@
 
 G_BEGIN_DECLS
 
-/* make our own type for poptOption because gtkdoc-1.2 can not handle functions
- * with return types like 'struct abc'
- * Filed as http://bugzilla.gnome.org/show_bug.cgi?id=148507
- *
- * Btw. popt provides a typedef, but it is:
- * typedef struct poptOption *poptOption
- */
-typedef struct poptOption GstPoptOption;
-
 #ifndef GST_DISABLE_REGISTRY
 GST_EXPORT gboolean _gst_registry_auto_load;
 #endif
 
-/* initialize GST */
 void		gst_init			(int *argc, char **argv[]);
-gboolean	gst_init_check			(int *argc, char **argv[]);
-void		gst_init_with_popt_table	(int *argc, char **argv[],
-						 const GstPoptOption
-						 *popt_options);
-gboolean	gst_init_check_with_popt_table	(int *argc, char **argv[],
-						 const GstPoptOption
-						 *popt_options);
-
-const GstPoptOption *	gst_init_get_popt_table		(void);
+gboolean	gst_init_check			(int *argc, char **argv[],
+						 GError ** err);
+GOptionGroup *	gst_init_get_option_group	(void);
 void		gst_deinit			(void);
 
 G_END_DECLS

@@ -223,7 +223,7 @@ dnl ====================================
 dnl === GLib 2 ===
 dnl Minimum required version of GLib2
 dnl required for compilation without warnings
-GLIB2_REQ="2.4"
+GLIB2_REQ="2.6"
 AC_SUBST(GLIB2_REQ)
 
 dnl Check for glib2 with sugar on top
@@ -262,34 +262,6 @@ else
   dnl check for libxml2 with minimum req version
   GST_LIBXML2_CHECK(2.4.9)
 fi
-
-dnl popt checks
-dnl FIXME: This test passes on popt 1.6.2, maybe earlier, but popt 1.6.2
-dnl        causes segfaults on gst_init. Write a working test if possible.
-GST_CHECK_LIBHEADER(POPT, popt, poptStrippedArgv,, popt.h, POPT_LIBS="-lpopt",
-  AC_MSG_ERROR([popt 1.6.3 or newer is required to build gstreamer. You can
-                download the latest version from 
-                ftp://ftp.rpm.org/pub/rpm/dist/])
-)
-AC_MSG_NOTICE(Checking for POPT_TABLEEND)
-AC_COMPILE_IFELSE([
-#include <popt.h>
-int main ()
-{
-#ifndef POPT_TABLEEND
-#error
-#else
-  return 0;
-#endif
-}
-],, [
-  dnl it failed
-  AC_MSG_ERROR([popt 1.6.3 or newer is required to build gstreamer. You can
-                download the latest version from 
-                ftp://ftp.rpm.org/pub/rpm/dist/])
-])
-AC_SUBST(POPT_CFLAGS)
-AC_SUBST(POPT_LIBS)
 
 dnl Check for ucontext.h
 AC_CHECK_HEADER(ucontext.h, AC_DEFINE(HAVE_UCONTEXT_H, 1, [defined if we have ucontext.h]))

@@ -8,7 +8,7 @@ LAT = lat
 
 endif
 
-noinst_PROGRAMS = $(LAT) mass_elements complexity
+noinst_PROGRAMS = $(LAT) mass_elements complexity init
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS)
 LIBS = $(GST_OBJ_LIBS) \

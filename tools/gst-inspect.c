@@ -1096,11 +1096,13 @@ int
 main (int argc, char *argv[])
 {
   gboolean print_all = FALSE;
-  struct poptOption options[] = {
-    {"print-all", 'a', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &print_all, 0,
+  GOptionEntry options[] = {
+    {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
         N_("Print all elements"), NULL},
-    POPT_TABLEEND
+    {NULL}
   };
+  GOptionContext *ctx;
+  GError *err = NULL;
 
 #ifdef GETTEXT_PACKAGE
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
@@ -1108,7 +1110,13 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-  gst_init_with_popt_table (&argc, &argv, options);
+  ctx = g_option_context_new ("gst-inspect");
+  g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+    g_print ("Error initializing: %s\n", err->message);
+    exit (1);
+  }
 
   if (print_all && argc > 2) {
     g_print ("-a requires no extra arguments\n");

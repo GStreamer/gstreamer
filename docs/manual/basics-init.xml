@@ -57,13 +57,13 @@ main (int   argc,
   </sect1>
 
   <sect1>
-    <title>The popt interface</title>
+    <title>The GOption interface</title>
     <para>
-      You can also use a popt table to initialize your own parameters as
+      You can also use a GOption table to initialize your own parameters as
       shown in the next example:
     </para>
     <programlisting>
-<!-- example-begin popt.c -->
+<!-- example-begin goption.c -->
 #include &lt;gst/gst.h&gt;
 
 int
@@ -72,28 +72,38 @@ main (int   argc,
 {
   gboolean silent = FALSE;
   gchar *savefile = NULL;
-  struct poptOption options[] = {
-    {"silent",	's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &amp;silent,   0,
-     "do not output status information", NULL},
-    {"output",	'o',  POPT_ARG_STRING|POPT_ARGFLAG_STRIP, &amp;savefile, 0,
-     "save xml representation of pipeline to FILE and exit", "FILE"},
-    POPT_TABLEEND
+  GOptionContext *ctx;
+  GError *err = NULL;
+  GOptionEntry entries[] = {
+    { "silent", 's', 0, G_OPTION_ARG_NONE, &amp;silent, 0,
+      "do not output status information", NULL },
+    { "output", 'o', 0, G_OPTION_ARG_STRING, &amp;savefile, 0,
+      "save xml representation of pipeline to FILE and exit", "FILE" },
+    { NULL }
   };
 
-  gst_init_with_popt_table (&amp;argc, &amp;argv, options);
+  ctx = g_option_context_new ("- Your application");
+  g_option_context_add_main_entries (ctx, entries, GETTEXT_PACKAGE);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+  if (!g_option_context_parse (ctx, &amp;argc, &amp;argv, &amp;err)) {
+    g_print ("Failed to initialize: %s\n", err->message);
+    g_error_free (err);
+    return 1;
+  }
 
   printf ("Run me with --help to see the Application options appended.\n");
 
   return 0;
 }
-<!-- example-end popt.c -->
+<!-- example-end goption.c -->
     </programlisting>
     <para>
       As shown in this fragment, you can use a <ulink
-      url="http://developer.gnome.org/doc/guides/popt/"
-      type="http">popt</ulink> table to define your application-specific
-      command line options, and pass this table to the
-      function <function>gst_init_with_popt_table</function>. Your
+      url="http://developer.gnome.org/doc/API/2.0/glib/glib-Commandline-option-parser.html"
+      type="http">GOption</ulink> table to define your application-specific
+      command line options, and pass this table to the GLib initialization
+      function along with the option group returned from the
+      function <function>gst_init_get_option_group</function>. Your
       application options will be parsed in addition to the standard
       <application>GStreamer</application> options.
     </para>

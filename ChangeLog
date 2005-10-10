@@ -1,3 +1,33 @@
+2005-10-10  Andy Wingo  <wingo@pobox.com>
+
+	Merged in popt removal + GOption addition patch from Ronald, bug
+	#169772.
+
+	* docs/gst/gstreamer-sections.txt: Add STATE_(UN)LOCK_FULL, move
+	GstElement macros around, remove popt-related symbols, add goption
+	stuff.
+
+	* configure.ac: Remove popt checks, require GLib 2.6 for GOption.
+	
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am: No POPT_CFLAGS.
+	
+	* examples/manual/Makefile.am:
+	* docs/manual/basics-init.xml: Doc updates with an example.
+	
+	* gst/gst.c: (gst_init_get_option_group), (gst_init_check),
+	(gst_init), (parse_one_option), (parse_goption_arg):
+	* gst/gst.h: Removed gst_init_with_popt_table and friends. Took a
+	bit of hand merging and debugging to get the GOption stuff working
+	tho.
+	
+	* tests/Makefile.am:
+	* tools/Makefile.am:
+	* tools/gst-inspect.c: (main):
+	* tools/gst-launch.c: (main):
+	* tools/gst-run.c: (main):
+	* tools/gst-xmlinspect.c: (main): Thanks Ronald!
+
 2005-10-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstiterator.c: (gst_iterator_new):

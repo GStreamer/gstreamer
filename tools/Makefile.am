@@ -77,10 +77,10 @@ gst_typefind_SOURCES = gst-run.c
 gst_xmlinspect_SOURCES = gst-run.c
 
 # CFLAGS and libs for nonversioned frontend binaries
-AM_CFLAGS = $(GLIB_ONLY_CFLAGS) $(POPT_CFLAGS)
-LDADD = $(GLIB_ONLY_LIBS) $(POPT_LIBS)
+AM_CFLAGS = $(GLIB_ONLY_CFLAGS)
+LDADD = $(GLIB_ONLY_LIBS)
 # due to depcomp not using AM_CFLAGS for rh9/yd3, we also set AM_CPPFLAGS
-AM_CPPFLAGS = $(GLIB_ONLY_CFLAGS) $(POPT_CFLAGS)
+AM_CPPFLAGS = $(GLIB_ONLY_CFLAGS)
 
 ### man pages we want to install
 if GST_DISABLE_LOADSAVE

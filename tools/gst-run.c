@@ -27,85 +27,23 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <popt.h>
 #include <glib.h>
-
-enum
-{
-  ARG_MM = 1,
-  ARG_LIST_MM,
-  ARG_PRINT,
-  ARG_HELP
-};
 
 /* global statics for option parsing */
 static gboolean _print = FALSE;
 static gchar *_arg_mm = NULL;
 static gboolean _arg_list_mm = FALSE;
 
-/* callback to parse arguments */
-static void
-popt_callback (poptContext context, enum poptCallbackReason reason,
-    const struct poptOption *option, const char *arg, void *data)
-{
-  if (reason == POPT_CALLBACK_REASON_OPTION) {
-    switch (option->val) {
-      case ARG_MM:
-        _arg_mm = g_strdup (arg);
-        break;
-      case ARG_LIST_MM:
-        _arg_list_mm = TRUE;
-        break;
-      case ARG_PRINT:
-        _print = TRUE;
-        break;
-      case ARG_HELP:
-        poptPrintHelp (context, stdout, 0);
-        g_print ("\n");
-        break;
-    }
-  } else {
-    g_print ("Unknown reason for callback\n");
-  }
-}
-
 /* popt options table for the wrapper */
-static struct poptOption wrapper_options[] = {
-  {NULL, '\0',
-        POPT_ARG_CALLBACK,
-      (void *) &popt_callback, 0, NULL, NULL},
-  {"help", '\0',
-        POPT_ARG_NONE | POPT_ARGFLAG_DOC_HIDDEN,
-      NULL, ARG_HELP, ("Show help"), NULL},
-  {"?", '\0',
-        POPT_ARG_NONE | POPT_ARGFLAG_STRIP | POPT_ARGFLAG_ONEDASH
-        | POPT_ARGFLAG_DOC_HIDDEN,
-      NULL, ARG_HELP, NULL, NULL},
-  /* We cheat by specifying -p as long "p" with onedash, so that it
-     also gets stripped properly from our arg flags */
-  {"p", '\0',
-        POPT_ARG_NONE | POPT_ARGFLAG_STRIP | POPT_ARGFLAG_ONEDASH
-        | POPT_ARGFLAG_DOC_HIDDEN,
-      NULL, ARG_PRINT, NULL, NULL},
-  {"print", '\0',
-        POPT_ARG_NONE | POPT_ARGFLAG_STRIP,
-      NULL, ARG_PRINT, ("Print wrapped command line"), NULL},
-  {"gst-mm", '\0',
-        POPT_ARG_STRING | POPT_ARGFLAG_STRIP,
-      NULL, ARG_MM, ("Force major/minor version"), NULL},
-  {"gst-list-mm", '\0',
-        POPT_ARG_NONE | POPT_ARGFLAG_STRIP,
-      NULL, ARG_LIST_MM, ("List found major/minor versions"), NULL},
-  POPT_TABLEEND
+static GOptionEntry wrapper_options[] = {
+  {"print", 'p', 0, G_OPTION_ARG_NONE, &_print,
+      "print wrapped command line options", NULL},
+  {"gst-mm", 0, 0, G_OPTION_ARG_STRING, &_arg_mm,
+      "Force major/minor version", "VERSION"},
+  {"gst-list-mm", 0, 0, G_OPTION_ARG_NONE, &_arg_list_mm,
+      "List found major/minor versions", NULL},
+  {NULL}
 };
-
-/* helper table including our wrapper options */
-static struct poptOption options[] = {
-  {NULL, '\0', POPT_ARG_INCLUDE_TABLE, wrapper_options, 0,
-      "Wrapper options:", NULL},
-  POPT_TABLEEND
-};
-
 
 /* print out the major/minor, which is the hash key */
 static void
@@ -294,18 +232,18 @@ main (int argc, char **argv)
   gchar *highest = NULL;
   gchar *binary;                /* actual binary we're going to run */
   gchar *path = NULL;           /* and its path */
-  poptContext ctx;
+  GOptionContext *ctx;
+  GError *err = NULL;
   int nextopt;
 
   /* parse command line options */
-  ctx = poptGetContext ("gst-run", argc, (const char **) argv, options, 0);
-  poptReadDefaultConfig (ctx, TRUE);
-  while ((nextopt = poptGetNextOpt (ctx)) > 0)
-    /* keep looping to parse */ ;
-
-  argc = poptStrippedArgv (ctx, argc, argv);
-  argv[argc] = NULL;
-  poptFreeContext (ctx);
+  ctx = g_option_context_new ("gst-run");
+  g_option_context_set_ignore_unknown_options (ctx, TRUE);
+  g_option_context_add_main_entries (ctx, wrapper_options, GETTEXT_PACKAGE);
+  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+    g_print ("Error initializing: %s\n", err->message);
+    exit (1);
+  }
 
   /* detect stuff */
   dir = get_dir_of_binary (argv[0]);

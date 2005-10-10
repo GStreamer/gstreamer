@@ -489,28 +489,29 @@ main (int argc, char *argv[])
   gboolean trace = FALSE;
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
-  struct poptOption options[] = {
-    {"tags", 't', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &tags, 0,
+  GOptionEntry options[] = {
+    {"tags", 't', 0, G_OPTION_ARG_NONE, &tags,
         N_("Output tags (also known as metadata)"), NULL},
-    {"messages", 'm', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &messages, 0,
-        N_("Output messages"), NULL},
-    {"verbose", 'v', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &verbose, 0,
+    {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
         N_("Output status information and property notifications"), NULL},
-    {"exclude", 'X', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, &exclude_args, 0,
+    {"messages", 'm', 0, G_OPTION_ARG_NONE, &messages,
+        N_("Output messages"), NULL},
+    {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
         N_("Do not output status information of TYPE"), N_("TYPE1,TYPE2,...")},
 #ifndef GST_DISABLE_LOADSAVE
-    {"output", 'o', POPT_ARG_STRING | POPT_ARGFLAG_STRIP, &savefile, 0,
+    {"output", 'o', 0, G_OPTION_ARG_STRING, &savefile,
         N_("Save xml representation of pipeline to FILE and exit"), N_("FILE")},
 #endif
-    {"no-fault", 'f', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &no_fault, 0,
+    {"no-fault", 'f', 0, G_OPTION_ARG_NONE, &no_fault,
         N_("Do not install a fault handler"), NULL},
-    {"trace", 'T', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &trace, 0,
+    {"trace", 'T', 0, G_OPTION_ARG_NONE, &trace,
         N_("Print alloc trace (if enabled at compile time)"), NULL},
-    {"iterations", 'i', POPT_ARG_INT | POPT_ARGFLAG_STRIP, &max_iterations, 0,
+    {"iterations", 'i', 0, G_OPTION_ARG_INT, &max_iterations,
         N_("Number of times to iterate pipeline"), NULL},
-    POPT_TABLEEND
+    {NULL}
   };
-
+  GOptionContext *ctx;
+  GError *err = NULL;
   gchar **argvn;
   GError *error = NULL;
   gint res = 0;
@@ -525,7 +526,13 @@ main (int argc, char *argv[])
 
   gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
 
-  gst_init_with_popt_table (&argc, &argv, options);
+  ctx = g_option_context_new ("gst-launch");
+  g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+    g_print ("Error initializing: %s\n", err->message);
+    exit (1);
+  }
 
   /* FIXpopt: strip short args, too. We do it ourselves for now */
   j = 1;

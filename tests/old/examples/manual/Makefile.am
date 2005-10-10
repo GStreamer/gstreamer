@@ -12,6 +12,8 @@ endif
 
 INCLUDES = $(GST_OBJ_CFLAGS)
 
+goption_CFLAGS = -DGETTEXT_PACKAGE="\"gstreamer-0.9\""
+
 #dynamic_LDADD = $(GST_OBJ_LIBS) $(LIBGNOMEUI_LIBS)
 #dynamic_CFLAGS = $(GST_OBJ_CFLAGS) $(LIBGNOMEUI_CFLAGS)
 gnome_LDADD = $(GST_OBJ_LIBS) $(LIBGNOMEUI_LIBS)
@@ -33,7 +35,7 @@ EXAMPLES = \
 	ghostpad \
 	helloworld \
 	init \
-	popt \
+	goption \
 	query \
 	typefind \
 	probe \
@@ -66,7 +68,7 @@ helloworld.c: $(top_srcdir)/docs/manual/basics-helloworld.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/basics-helloworld.xml
 
-init.c popt.c: $(top_srcdir)/docs/manual/basics-init.xml
+init.c goption.c: $(top_srcdir)/docs/manual/basics-init.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/basics-init.xml
 
@@ -94,7 +96,7 @@ xml-mp3.c: $(top_srcdir)/docs/manual/highlevel-xml.xml
 # they actually run
 include $(top_srcdir)/testsuite/Rules
                                                                                 
-tests_pass = elementmake elementget init popt
+tests_pass = elementmake elementget init goption
 tests_fail =
 tests_ignore =
 

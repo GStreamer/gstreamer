@@ -114,8 +114,6 @@ gboolean _gst_registry_auto_load = TRUE;
 
 static gboolean gst_initialized = FALSE;
 
-/* this will be set in popt callbacks when a problem has been encountered */
-static gboolean _gst_initialization_failure = FALSE;
 extern gint _gst_trace_on;
 
 /* set to TRUE when segfaults need to be left as is */
@@ -123,11 +121,10 @@ gboolean _gst_disable_segtrap = FALSE;
 
 
 static void load_plugin_func (gpointer data, gpointer user_data);
-static void init_popt_callback (poptContext context,
-    enum poptCallbackReason reason,
-    const GstPoptOption * option, const char *arg, void *data);
 static gboolean init_pre (void);
 static gboolean init_post (void);
+static gboolean parse_goption_arg (const gchar * s_opt,
+    const gchar * arg, gpointer data, GError ** err);
 
 static GSList *preload_plugins = NULL;
 
@@ -154,7 +151,6 @@ enum
   ARG_DEBUG_NO_COLOR,
   ARG_DEBUG_HELP,
 #endif
-  ARG_DISABLE_CPU_OPT,
   ARG_PLUGIN_SPEW,
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
@@ -242,91 +238,79 @@ parse_debug_list (const gchar * list)
 }
 
 /**
- * gst_init_get_popt_table:
+ * gst_init_get_option_group:
  *
- * Returns a popt option table with GStreamer's argument specifications. The
- * table is set up to use popt's callback method, so whenever the parsing is
- * actually performed (via poptGetContext), the GStreamer libraries will
- * be initialized.
+ * Returns a #GOptionGroup with GStreamer's argument specifications. The
+ * group is set up to use standard GOption callbacks, so when using this
+ * group in combination with GOption parsing methods, all argument parsing
+ * and initialization is automated.
  *
  * This function is useful if you want to integrate GStreamer with other
- * libraries that use popt.
+ * libraries that use GOption.
  *
- * Returns: a pointer to the static GStreamer option table.
- * No free is necessary.
+ * Returns: a pointer to a GStreamer option group. Should be dereferenced
+ * after use.
  */
-const GstPoptOption *
-gst_init_get_popt_table (void)
-{
-  static GstPoptOption gstreamer_options[] = {
-    {NULL, NUL, POPT_ARG_CALLBACK | POPT_CBFLAG_PRE | POPT_CBFLAG_POST,
-        (void *) &init_popt_callback, 0, NULL, NULL},
-    /* make sure we use our GETTEXT_PACKAGE as the domain for popt translations */
-    {NULL, NUL, POPT_ARG_INTL_DOMAIN, GETTEXT_PACKAGE, 0, NULL, NULL},
-    {"gst-version", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL, ARG_VERSION,
-        N_("Print the GStreamer version"), NULL},
-    {"gst-fatal-warnings", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-        ARG_FATAL_WARNINGS, N_("Make all warnings fatal"), NULL},
 
+GOptionGroup *
+gst_init_get_option_group (void)
+{
+  GOptionGroup *group;
+  static GOptionEntry gst_args[] = {
+    {"gst-version", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+        parse_goption_arg, N_("Print the GStreamer version"), NULL},
+    {"gst-fatal-warnings", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+        parse_goption_arg, N_("Make all warnings fatal"), NULL},
 #ifndef GST_DISABLE_GST_DEBUG
-    {"gst-debug-help", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-        ARG_DEBUG_HELP, N_("Print available debug categories and exit"), NULL},
-    {"gst-debug-level", NUL, POPT_ARG_INT | POPT_ARGFLAG_STRIP, NULL,
-          ARG_DEBUG_LEVEL,
+    {"gst-debug-help", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+          parse_goption_arg, N_("Print available debug categories and exit"),
+        NULL},
+    {"gst-debug-level", 0, 0, G_OPTION_ARG_CALLBACK, parse_goption_arg,
           N_("Default debug level from 1 (only error) to 5 (anything) or "
               "0 for no output"),
         N_("LEVEL")},
-    {"gst-debug", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL, ARG_DEBUG,
+    {"gst-debug", 0, 0, G_OPTION_ARG_CALLBACK, parse_goption_arg,
           N_("Comma-separated list of category_name:level pairs to set "
               "specific levels for the individual categories. Example: "
               "GST_AUTOPLUG:5,GST_ELEMENT_*:3"),
         N_("LIST")},
-    {"gst-debug-no-color", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-        ARG_DEBUG_NO_COLOR, N_("Disable colored debugging output"), NULL},
-    {"gst-debug-disable", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-        ARG_DEBUG_DISABLE, N_("Disable debugging")},
+    {"gst-debug-no-color", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+        parse_goption_arg, N_("Disable colored debugging output"), NULL},
+    {"gst-debug-disable", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+        parse_goption_arg, N_("Disable debugging"), NULL},
 #endif
-
-    {"gst-plugin-spew", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-        ARG_PLUGIN_SPEW, N_("Enable verbose plugin loading diagnostics"), NULL},
-    {"gst-plugin-path", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
-        ARG_PLUGIN_PATH, NULL, N_("PATHS")},
-    {"gst-plugin-load", NUL, POPT_ARG_STRING | POPT_ARGFLAG_STRIP, NULL,
-          ARG_PLUGIN_LOAD,
+    {"gst-plugin-spew", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+          parse_goption_arg, N_("Enable verbose plugin loading diagnostics"),
+        NULL},
+    {"gst-plugin-path", 0, 0, G_OPTION_ARG_CALLBACK, parse_goption_arg,
+        N_("Colon-separated paths containing plugins"), N_("PATHS")},
+    {"gst-plugin-load", 0, 0, G_OPTION_ARG_CALLBACK, parse_goption_arg,
           N_("Comma-separated list of plugins to preload in addition to the "
               "list stored in environment variable GST_PLUGIN_PATH"),
         N_("PLUGINS")},
-    {"gst-disable-segtrap", NUL, POPT_ARG_NONE | POPT_ARGFLAG_STRIP, NULL,
-          ARG_SEGTRAP_DISABLE,
+    {"gst-disable-segtrap", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
+          parse_goption_arg,
           N_("Disable trapping of segmentation faults during plugin loading"),
         NULL},
-    POPT_TABLEEND
+    {NULL}
   };
-  static gboolean inited = FALSE;
 
-  if (!inited) {
-    int i;
+  group = g_option_group_new ("gst", _("GStreamer Options"),
+      _("Show GStreamer Options"), NULL, NULL);
+  g_option_group_set_parse_hooks (group, (GOptionParseFunc) init_pre,
+      (GOptionParseFunc) init_post);
 
-    for (i = 0; i < G_N_ELEMENTS (gstreamer_options); i++) {
-      if (gstreamer_options[i].longName == NULL) {
-      } else if (strcmp (gstreamer_options[i].longName, "gst-plugin-path") == 0) {
-        gstreamer_options[i].descrip =
-            g_strdup_printf (_
-            ("path list for loading plugins (separated by '%s')"),
-            G_SEARCHPATH_SEPARATOR_S);
-      }
-    }
+  g_option_group_add_entries (group, gst_args);
+  g_option_group_set_translation_domain (group, GETTEXT_PACKAGE);
 
-    inited = TRUE;
-  }
-
-  return gstreamer_options;
+  return group;
 }
 
 /**
  * gst_init_check:
  * @argc: pointer to application's argc
  * @argv: pointer to application's argv
+ * @err: pointer to a #GError to which a message will be posted on error
  *
  * Initializes the GStreamer library, setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
@@ -338,9 +322,28 @@ gst_init_get_popt_table (void)
  * Returns: %TRUE if GStreamer could be initialized.
  */
 gboolean
-gst_init_check (int *argc, char **argv[])
+gst_init_check (int *argc, char **argv[], GError ** err)
 {
-  return gst_init_check_with_popt_table (argc, argv, NULL);
+  GOptionGroup *group;
+  GOptionContext *ctx;
+  gboolean res;
+
+  if (gst_initialized) {
+    GST_DEBUG ("already initialized gst");
+    return TRUE;
+  }
+
+  ctx = g_option_context_new ("- GStreamer initialization");
+  group = gst_init_get_option_group ();
+  g_option_context_add_group (ctx, group);
+  res = g_option_context_parse (ctx, argc, argv, err);
+  g_option_context_free (ctx);
+
+  if (res) {
+    gst_initialized = TRUE;
+  }
+
+  return res;
 }
 
 /**
@@ -363,128 +366,16 @@ gst_init_check (int *argc, char **argv[])
 void
 gst_init (int *argc, char **argv[])
 {
-  gst_init_with_popt_table (argc, argv, NULL);
-}
+  GError *err = NULL;
 
-/**
- * gst_init_with_popt_table:
- * @argc: pointer to application's argc
- * @argv: pointer to application's argv
- * @popt_options: pointer to a popt table to append
- *
- * Initializes the GStreamer library, parsing the options,
- * setting up internal path lists,
- * registering built-in elements, and loading standard plugins.
- *
- * This function will terminate your program if it was unable to initialize
- * GStreamer for some reason.  If you want your program to fall back,
- * use gst_init_check_with_popt_table() instead.
- */
-void
-gst_init_with_popt_table (int *argc, char **argv[],
-    const GstPoptOption * popt_options)
-{
-  if (!gst_init_check_with_popt_table (argc, argv, popt_options)) {
-    g_print ("Could not initialize GStreamer !\n");
+  if (!gst_init_check (argc, argv, &err)) {
+    g_print ("Could not initialized GStreamer: %s\n",
+        err ? err->message : "unknown error occurred");
+    if (err) {
+      g_error_free (err);
+    }
     exit (1);
   }
-}
-
-/**
- * gst_init_check_with_popt_table:
- * @argc: pointer to application's argc
- * @argv: pointer to application's argv
- * @popt_options: pointer to a popt table to append
- *
- * Initializes the GStreamer library, parsing the options,
- * setting up internal path lists,
- * registering built-in elements, and loading standard plugins.
- *
- * Returns: %TRUE if GStreamer could be initialized.
- */
-gboolean
-gst_init_check_with_popt_table (int *argc, char **argv[],
-    const GstPoptOption * popt_options)
-{
-  poptContext context;
-  gint nextopt;
-  GstPoptOption *options;
-  const gchar *gst_debug_env = NULL;
-
-  GstPoptOption options_with[] = {
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 0, "Help options:",
-        NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE,
-          (GstPoptOption *) gst_init_get_popt_table (), 0,
-        "GStreamer options:", NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, (GstPoptOption *) popt_options, 0,
-        "Application options:", NULL},
-    POPT_TABLEEND
-  };
-  GstPoptOption options_without[] = {
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE, poptHelpOptions, 0, "Help options:",
-        NULL},
-    {NULL, NUL, POPT_ARG_INCLUDE_TABLE,
-          (GstPoptOption *) gst_init_get_popt_table (), 0,
-        "GStreamer options:", NULL},
-    POPT_TABLEEND
-  };
-
-  if (gst_initialized) {
-    GST_DEBUG ("already initialized gst");
-    return TRUE;
-  }
-  if (!argc || !argv) {
-    if (argc || argv)
-      g_warning ("gst_init: Only one of argc or argv was NULL");
-
-    if (!init_pre ())
-      return FALSE;
-    if (!init_post ())
-      return FALSE;
-    gst_initialized = TRUE;
-    return TRUE;
-  }
-
-  if (popt_options == NULL) {
-    options = options_without;
-  } else {
-    options = options_with;
-  }
-  context = poptGetContext ("GStreamer", *argc, (const char **) *argv,
-      options, 0);
-
-  /* check for GST_DEBUG_NO_COLOR environment variable */
-  if (g_getenv ("GST_DEBUG_NO_COLOR") != NULL)
-    gst_debug_set_colored (FALSE);
-
-  /* check for GST_DEBUG environment variable */
-  gst_debug_env = g_getenv ("GST_DEBUG");
-  if (gst_debug_env)
-    parse_debug_list (gst_debug_env);
-
-  /* Scan until we reach the end (-1), ignoring errors */
-  while ((nextopt = poptGetNextOpt (context)) != -1) {
-
-    /* If an error occurred and it's not an missing options, throw an error
-     * We don't want to show the "unknown option" message, since it'll
-     * might interfere with the applications own command line parsing
-     */
-    if (nextopt < 0 && nextopt != POPT_ERROR_BADOPT) {
-      g_print ("Error on option %s: %s.\nRun '%s --help' "
-          "to see a full list of available command line options.\n",
-          poptBadOption (context, 0), poptStrerror (nextopt), (*argv)[0]);
-
-      poptFreeContext (context);
-      return FALSE;
-    }
-  }
-
-  *argc = poptStrippedArgv (context, *argc, *argv);
-
-  poptFreeContext (context);
-
-  return TRUE;
 }
 
 #ifndef GST_DISABLE_REGISTRY
@@ -833,77 +724,103 @@ gst_debug_help (void)
 }
 #endif
 
-static void
-init_popt_callback (poptContext context, enum poptCallbackReason reason,
-    const GstPoptOption * option, const char *arg, void *data)
+static gboolean
+parse_one_option (gint opt, const gchar * arg, GError ** err)
 {
-  GLogLevelFlags fatal_mask;
+  switch (opt) {
+    case ARG_VERSION:
+      g_print ("GStreamer Core Library version %s\n", GST_VERSION);
+      exit (0);
+    case ARG_FATAL_WARNINGS:{
+      GLogLevelFlags fatal_mask;
 
-  if (gst_initialized)
-    return;
-  switch (reason) {
-    case POPT_CALLBACK_REASON_PRE:
-      if (!init_pre ())
-        _gst_initialization_failure = TRUE;
+      fatal_mask = g_log_set_always_fatal (G_LOG_FATAL_MASK);
+      fatal_mask |= G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL;
+      g_log_set_always_fatal (fatal_mask);
       break;
-    case POPT_CALLBACK_REASON_OPTION:
-      switch (option->val) {
-        case ARG_VERSION:
-          g_print ("GStreamer Core Library version %s\n", GST_VERSION);
-          exit (0);
-        case ARG_FATAL_WARNINGS:
-          fatal_mask = g_log_set_always_fatal (G_LOG_FATAL_MASK);
-          fatal_mask |= G_LOG_LEVEL_WARNING | G_LOG_LEVEL_CRITICAL;
-          g_log_set_always_fatal (fatal_mask);
-          break;
+    }
 #ifndef GST_DISABLE_GST_DEBUG
-        case ARG_DEBUG_LEVEL:{
-          gint tmp = 0;
+    case ARG_DEBUG_LEVEL:{
+      gint tmp = 0;
 
-          tmp = strtol (arg, NULL, 0);
-          if (tmp >= 0 && tmp < GST_LEVEL_COUNT) {
-            gst_debug_set_default_threshold (tmp);
-          }
-          break;
-        }
-        case ARG_DEBUG:
-          parse_debug_list (arg);
-          break;
-        case ARG_DEBUG_NO_COLOR:
-          gst_debug_set_colored (FALSE);
-          break;
-        case ARG_DEBUG_DISABLE:
-          gst_debug_set_active (FALSE);
-          break;
-        case ARG_DEBUG_HELP:
-          gst_debug_help ();
-          exit (0);
-#endif
-        case ARG_PLUGIN_SPEW:
-          break;
-        case ARG_PLUGIN_PATH:
-#ifndef GST_DISABLE_REGISTRY
-          split_and_iterate (arg, G_SEARCHPATH_SEPARATOR_S, add_path_func,
-              NULL);
-#endif /* GST_DISABLE_REGISTRY */
-          break;
-        case ARG_PLUGIN_LOAD:
-          split_and_iterate (arg, ",", prepare_for_load_plugin_func, NULL);
-          break;
-        case ARG_SEGTRAP_DISABLE:
-          _gst_disable_segtrap = TRUE;
-          break;
-        default:
-          g_warning ("option %d not recognized", option->val);
-          break;
+      tmp = strtol (arg, NULL, 0);
+      if (tmp >= 0 && tmp < GST_LEVEL_COUNT) {
+        gst_debug_set_default_threshold (tmp);
       }
       break;
-    case POPT_CALLBACK_REASON_POST:
-      if (!init_post ())
-        _gst_initialization_failure = TRUE;
-      gst_initialized = TRUE;
+    }
+    case ARG_DEBUG:
+      parse_debug_list (arg);
       break;
+    case ARG_DEBUG_NO_COLOR:
+      gst_debug_set_colored (FALSE);
+      break;
+    case ARG_DEBUG_DISABLE:
+      gst_debug_set_active (FALSE);
+      break;
+    case ARG_DEBUG_HELP:
+      gst_debug_help ();
+      exit (0);
+#endif
+    case ARG_PLUGIN_SPEW:
+      break;
+    case ARG_PLUGIN_PATH:
+#ifndef GST_DISABLE_REGISTRY
+      split_and_iterate (arg, G_SEARCHPATH_SEPARATOR_S, add_path_func, NULL);
+#endif /* GST_DISABLE_REGISTRY */
+      break;
+    case ARG_PLUGIN_LOAD:
+      split_and_iterate (arg, ",", prepare_for_load_plugin_func, NULL);
+      break;
+    case ARG_SEGTRAP_DISABLE:
+      _gst_disable_segtrap = TRUE;
+      break;
+    default:
+      g_set_error (err, G_OPTION_ERROR, G_OPTION_ERROR_UNKNOWN_OPTION,
+          _("Unknown option"));
+      return FALSE;
   }
+
+  return TRUE;
+}
+
+static gboolean
+parse_goption_arg (const gchar * opt,
+    const gchar * arg, gpointer data, GError ** err)
+{
+  const struct
+  {
+    gchar *opt;
+    int val;
+  } options[] = {
+    {
+    "--gst-version", ARG_VERSION}, {
+    "--gst-fatal-warnings", ARG_FATAL_WARNINGS},
+#ifndef GST_DISABLE_GST_DEBUG
+    {
+    "--gst-debug-level", ARG_DEBUG_LEVEL}, {
+    "--gst-debug", ARG_DEBUG}, {
+    "--gst-debug-disable", ARG_DEBUG_DISABLE}, {
+    "--gst-debug-no-color", ARG_DEBUG_NO_COLOR}, {
+    "--gst-debug-help", ARG_DEBUG_HELP},
+#endif
+    {
+    "--gst-plugin-spew", ARG_PLUGIN_SPEW}, {
+    "--gst-plugin-path", ARG_PLUGIN_PATH}, {
+    "--gst-plugin-load", ARG_PLUGIN_LOAD}, {
+    "--gst-disable-segtrap", ARG_SEGTRAP_DISABLE}, {
+    NULL}
+  };
+  gint val = 0, n;
+
+  for (n = 0; options[n].opt; n++) {
+    if (!strcmp (opt, options[n].opt)) {
+      val = options[n].val;
+      break;
+    }
+  }
+
+  return parse_one_option (val, arg, err);
 }
 
 /**
