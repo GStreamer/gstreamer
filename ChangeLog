@@ -1,5 +1,13 @@
 2005-10-10  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstelement.c (gst_element_init, gst_element_finalize):
+	Allocate and free the mutex properly.
+
+	* gst/gstelement.h (GST_STATE_UNLOCK_FULL, GST_STATE_LOCK_FULL):
+	New macros.
+	(GstElement): The state_lock is now recursive. Rebuild your
+	plugins, suckers. Old macros adapted.
+
 	* docs/gst/gstreamer-sections.txt: Doc updates.
 
 	* gst/gstutils.h:

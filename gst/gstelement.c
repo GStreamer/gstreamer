@@ -241,7 +241,8 @@ gst_element_init (GstElement * element)
 {
   element->current_state = GST_STATE_NULL;
   element->pending_state = GST_STATE_VOID_PENDING;
-  element->state_lock = g_mutex_new ();
+  element->state_lock = g_new0 (GStaticRecMutex, 1);
+  g_static_rec_mutex_init (element->state_lock);
   element->state_cond = g_cond_new ();
 }
 
@@ -2213,7 +2214,7 @@ gst_element_finalize (GObject * object)
     g_cond_free (element->state_cond);
   element->state_cond = NULL;
   GST_STATE_UNLOCK (element);
-  g_mutex_free (element->state_lock);
+  g_static_rec_mutex_free (element->state_lock);
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "finalize parent");
 

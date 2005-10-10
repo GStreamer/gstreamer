@@ -274,13 +274,16 @@ G_STMT_START {								\
  * This function is used by the core.  It is taken while getting or setting
  * the state, during state changes, and while finalizing.
  */
-#define GST_STATE_LOCK(elem)                   g_mutex_lock(GST_STATE_GET_LOCK(elem))
-#define GST_STATE_TRYLOCK(elem)                g_mutex_trylock(GST_STATE_GET_LOCK(elem))
-#define GST_STATE_UNLOCK(elem)                 g_mutex_unlock(GST_STATE_GET_LOCK(elem))
+#define GST_STATE_LOCK(elem)                   g_static_rec_mutex_lock(GST_STATE_GET_LOCK(elem))
+#define GST_STATE_TRYLOCK(elem)                g_static_rec_mutex_trylock(GST_STATE_GET_LOCK(elem))
+#define GST_STATE_UNLOCK(elem)                 g_static_rec_mutex_unlock(GST_STATE_GET_LOCK(elem))
+#define GST_STATE_UNLOCK_FULL(elem)            g_static_rec_mutex_unlock_full(GST_STATE_GET_LOCK(elem))
+#define GST_STATE_LOCK_FULL(elem,t)            g_static_rec_mutex_lock_full(GST_STATE_GET_LOCK(elem), t)
 #define GST_STATE_GET_COND(elem)               (GST_ELEMENT_CAST(elem)->state_cond)
-#define GST_STATE_WAIT(elem)                   g_cond_wait (GST_STATE_GET_COND (elem), GST_STATE_GET_LOCK (elem))
-#define GST_STATE_TIMED_WAIT(elem, timeval)    g_cond_timed_wait (GST_STATE_GET_COND (elem), GST_STATE_GET_LOCK (elem),\
-		                                                timeval)
+#define GST_STATE_WAIT(elem)                   g_static_rec_cond_wait (GST_STATE_GET_COND (elem), \
+							GST_STATE_GET_LOCK (elem))
+#define GST_STATE_TIMED_WAIT(elem, timeval)    g_static_rec_cond_timed_wait (GST_STATE_GET_COND (elem), \
+							GST_STATE_GET_LOCK (elem), timeval)
 #define GST_STATE_SIGNAL(elem)                 g_cond_signal (GST_STATE_GET_COND (elem));
 #define GST_STATE_BROADCAST(elem)              g_cond_broadcast (GST_STATE_GET_COND (elem));
 
@@ -290,7 +293,7 @@ struct _GstElement
 
   /*< public >*/ /* with STATE_LOCK */
   /* element state */
-  GMutex               *state_lock;
+  GStaticRecMutex      *state_lock;
   GCond                *state_cond;
   guint8                current_state;
   guint8                pending_state;
