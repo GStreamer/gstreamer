@@ -92,6 +92,8 @@ struct _GstBin {
   GstBus        *child_bus;	/* Bus we set on our children */
   GList         *eosed;         /* list of elements that posted EOS */
 
+  gboolean	 polling;
+  gboolean       state_dirty;
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };

@@ -76,7 +76,6 @@ GST_DEBUG_CATEGORY_STATIC (bin_debug);
 	(guint) (bin)->child_states[2], (bin)->child_states[1], \
 	(bin)->child_states[0], gst_element_state_get_name (GST_STATE (bin)))
 
-
 static GstElementDetails gst_bin_details = GST_ELEMENT_DETAILS ("Generic bin",
     "Generic/Bin",
     "Simple container object",
@@ -86,6 +85,7 @@ GType _gst_bin_type = 0;
 
 static void gst_bin_dispose (GObject * object);
 
+static void gst_bin_recalc_state (GstBin * bin, gboolean force);
 static GstStateChangeReturn gst_bin_change_state_func (GstElement * element,
     GstStateChange transition);
 static GstStateChangeReturn gst_bin_get_state_func (GstElement * element,
@@ -292,6 +292,8 @@ gst_bin_init (GstBin * bin)
   bin->children = NULL;
   bin->children_cookie = 0;
   bin->eosed = NULL;
+  bin->polling = FALSE;
+  bin->state_dirty = FALSE;
 
   /* Set up a bus for listening to child elements */
   bus = g_object_new (gst_bus_get_type (), NULL);
@@ -483,7 +485,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gst_element_set_base_time (element, GST_ELEMENT (bin)->base_time);
   GST_DEBUG_OBJECT (element, "setting clock %p", GST_ELEMENT_CLOCK (bin));
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
-
+  bin->state_dirty = TRUE;
   GST_UNLOCK (bin);
 
   /* unlink all linked pads */
@@ -619,6 +621,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       GST_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
     }
   }
+  bin->state_dirty = TRUE;
   GST_UNLOCK (bin);
 
   GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "removed child \"%s\"",
@@ -872,14 +875,7 @@ gst_bin_iterate_sinks (GstBin * bin)
   return result;
 }
 
-/* 2 phases:
- *  1) check state of all children with 0 timeout to find ERROR and
- *     NO_PREROLL elements. return if found.
- *  2) perform full blocking wait with requested timeout.
- *
- * 2) cannot be performed when 1) returns results as the sinks might
- *    not be able to complete the state change making 2) block forever.
- *
+/*
  * MT safe
  */
 static GstStateChangeReturn
@@ -887,6 +883,18 @@ gst_bin_get_state_func (GstElement * element, GstState * state,
     GstState * pending, GTimeVal * timeout)
 {
   GstBin *bin = GST_BIN (element);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
+
+  /* do a non forced recalculation of the state */
+  gst_bin_recalc_state (bin, FALSE);
+
+  return parent_class->get_state (element, state, pending, timeout);
+}
+
+static void
+gst_bin_recalc_state (GstBin * bin, gboolean force)
+{
   GstStateChangeReturn ret;
   GList *children;
   guint32 children_cookie;
@@ -894,12 +902,21 @@ gst_bin_get_state_func (GstElement * element, GstState * state,
   gboolean have_async;
   GTimeVal tv;
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
-
   ret = GST_STATE_CHANGE_SUCCESS;
 
   /* lock bin, no element can be added or removed while we have this lock */
   GST_LOCK (bin);
+  /* no point in scanning if nothing changed and it's no forced recalc */
+  if (!force && !bin->state_dirty)
+    goto not_dirty;
+
+  /* no point in having two scans run concurrently */
+  if (bin->polling)
+    goto was_polling;
+
+  bin->polling = TRUE;
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "recalc state");
 
 restart:
   have_no_preroll = FALSE;
@@ -935,7 +952,7 @@ restart:
 
     switch (ret) {
       case GST_STATE_CHANGE_FAILURE:
-        /* report FAILURE immediately */
+        /* report FAILURE  immediatly */
         goto done;
       case GST_STATE_CHANGE_NO_PREROLL:
         /* we have to continue scanning as there might be
@@ -957,59 +974,15 @@ restart:
   /* if we have NO_PREROLL, return that */
   if (have_no_preroll) {
     ret = GST_STATE_CHANGE_NO_PREROLL;
-    goto done;
   }
-  /* else return SUCCESS if no async elements were found */
-  else if (!have_async) {
-    ret = GST_STATE_CHANGE_SUCCESS;
-    goto done;
+  /* else return ASYNC if async elements where found. */
+  else if (have_async) {
+    ret = GST_STATE_CHANGE_ASYNC;
   }
-
-  /* next we poll all children for their state to see if one of them
-   * is still busy with its state change. We did not release the bin lock
-   * yet so the elements are the same as the ones from the quick scan. */
-  children = bin->children;
-  children_cookie = bin->children_cookie;
-  while (children) {
-    GstElement *child = GST_ELEMENT_CAST (children->data);
-
-    gst_object_ref (child);
-    /* now we release the lock to enter the potentialy blocking wait */
-    GST_UNLOCK (bin);
-
-    /* ret is ASYNC if some child is still performing the state change
-     * ater the timeout. */
-    ret = gst_element_get_state (child, NULL, NULL, timeout);
-
-    gst_object_unref (child);
-
-    /* now grab the lock to iterate to the next child */
-    GST_LOCK (bin);
-    if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
-      /* child added/removed during state change, restart. We need
-       * to restart with the quick check as a no-preroll element could
-       * have been added here and we don't want to block on sinks then.*/
-      goto restart;
-    }
-
-    switch (ret) {
-      case GST_STATE_CHANGE_SUCCESS:
-        break;
-      case GST_STATE_CHANGE_FAILURE:
-      case GST_STATE_CHANGE_NO_PREROLL:
-        /* report FAILURE and NO_PREROLL immediatly */
-        goto done;
-      case GST_STATE_CHANGE_ASYNC:
-        goto done;
-      default:
-        g_assert_not_reached ();
-    }
-    children = g_list_next (children);
-  }
-  /* if we got here, all elements can do preroll */
-  have_no_preroll = FALSE;
 
 done:
+  bin->state_dirty = FALSE;
+  bin->polling = FALSE;
   GST_UNLOCK (bin);
 
   /* now we can take the state lock, it is possible that new elements
@@ -1019,33 +992,45 @@ done:
   GST_STATE_LOCK (bin);
   switch (ret) {
     case GST_STATE_CHANGE_SUCCESS:
-      gst_element_commit_state (element);
+    case GST_STATE_CHANGE_NO_PREROLL:
+      gst_element_commit_state (GST_ELEMENT_CAST (bin));
+      break;
+    case GST_STATE_CHANGE_ASYNC:
+      gst_element_lost_state (GST_ELEMENT_CAST (bin));
       break;
     case GST_STATE_CHANGE_FAILURE:
-      gst_element_abort_state (element);
+      gst_element_abort_state (GST_ELEMENT_CAST (bin));
       break;
     default:
-      /* other cases are just passed along */
-      break;
+      goto unknown_state;
   }
-
-  /* and report the state if needed */
-  if (state)
-    *state = GST_STATE (element);
-  if (pending)
-    *pending = GST_STATE_PENDING (element);
-
-  GST_STATE_NO_PREROLL (element) = have_no_preroll;
-
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-      "state current: %s, pending: %s, error: %d, no_preroll: %d, result: %d",
-      gst_element_state_get_name (GST_STATE (element)),
-      gst_element_state_get_name (GST_STATE_PENDING (element)),
-      GST_STATE_ERROR (element), GST_STATE_NO_PREROLL (element), ret);
-
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "return now %d",
+      GST_STATE_RETURN (bin));
   GST_STATE_UNLOCK (bin);
+  return;
 
-  return ret;
+not_dirty:
+  {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "not dirty");
+    GST_UNLOCK (bin);
+    return;
+  }
+was_polling:
+  {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "was polling");
+    GST_UNLOCK (bin);
+    return;
+  }
+unknown_state:
+  {
+    /* somebody added a GST_STATE_ and forgot to do stuff here ! */
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
+        "unknown return value %d from a state change function", ret);
+    g_critical ("unknown return value %d from a state change function", ret);
+    GST_STATE_RETURN (bin) = GST_STATE_CHANGE_FAILURE;
+    GST_STATE_UNLOCK (bin);
+    return;
+  }
 }
 
 /***********************************************
@@ -1340,15 +1325,12 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
   gboolean done;
 
   /* we don't need to take the STATE_LOCK, it is already taken */
-  current = GST_STATE (element);
-  next = GST_STATE_PENDING (element);
+  current = GST_STATE_TRANSITION_CURRENT (transition);
+  next = GST_STATE_TRANSITION_NEXT (transition);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
       "changing state of children from %s to %s",
       gst_element_state_get_name (current), gst_element_state_get_name (next));
-
-  if (next == GST_STATE_VOID_PENDING)
-    return GST_STATE_CHANGE_SUCCESS;
 
   bin = GST_BIN_CAST (element);
 
@@ -1435,12 +1417,14 @@ restart:
     }
   }
 
+  ret = parent_class->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto done;
+
   if (have_no_preroll) {
     ret = GST_STATE_CHANGE_NO_PREROLL;
   } else if (have_async) {
     ret = GST_STATE_CHANGE_ASYNC;
-  } else {
-    ret = parent_class->change_state (element, transition);
   }
 
 done:
@@ -1562,6 +1546,60 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       /* we drop all EOS messages */
       gst_message_unref (message);
       break;
+    }
+    case GST_MESSAGE_STATE_CHANGED:
+    {
+      GstState old, new, pending;
+      GstObject *src;
+
+      gst_message_parse_state_changed (message, &old, &new, &pending);
+      src = GST_MESSAGE_SRC (message);
+      /* ref src, as we need it after we post the message up */
+      gst_object_ref (src);
+
+      GST_DEBUG_OBJECT (bin, "%s gave state change, %s -> %s, pending %s",
+          GST_ELEMENT_NAME (src),
+          gst_element_state_get_name (old),
+          gst_element_state_get_name (new),
+          gst_element_state_get_name (pending));
+
+      /* post message up */
+      gst_element_post_message (GST_ELEMENT_CAST (bin), message);
+
+      /* we only act on our own children */
+      GST_LOCK (bin);
+      if (!g_list_find (bin->children, src))
+        goto not_our_child;
+      GST_UNLOCK (bin);
+
+      gst_object_unref (src);
+
+      /* we can lock, either the state change is sync and we can
+       * recursively lock or the state change is async and we 
+       * lock when the bin has done it state change. We can check which
+       * case it is by looking at the CHANGING_STATE flag. */
+      GST_STATE_LOCK (bin);
+      GST_DEBUG_OBJECT (bin, "locked");
+
+      if (!GST_FLAG_IS_SET (bin, GST_ELEMENT_CHANGING_STATE)) {
+        GST_DEBUG_OBJECT (bin, "got ASYNC message, forcing recalc state");
+        GST_STATE_UNLOCK (bin);
+
+        /* force bin state recalculation on async messages. */
+        gst_bin_recalc_state (bin, TRUE);
+      } else {
+        GST_STATE_UNLOCK (bin);
+        GST_DEBUG_OBJECT (bin, "got SYNC message");
+      }
+      break;
+
+    not_our_child:
+      {
+        GST_UNLOCK (bin);
+        GST_DEBUG_OBJECT (bin, "not our child");
+        gst_object_unref (src);
+        break;
+      }
     }
     default:
       /* Send all other messages upward */

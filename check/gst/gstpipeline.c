@@ -28,7 +28,6 @@ GST_START_TEST (test_async_state_change_empty)
 
   pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
   fail_unless (pipeline != NULL, "Could not create pipeline");
-  g_object_set (G_OBJECT (pipeline), "play-timeout", 0LL, NULL);
 
   fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING), GST_STATE_CHANGE_SUCCESS);
@@ -45,7 +44,6 @@ GST_START_TEST (test_async_state_change_fake_ready)
 
   pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
   fail_unless (pipeline != NULL, "Could not create pipeline");
-  g_object_set (G_OBJECT (pipeline), "play-timeout", 0LL, NULL);
 
   src = gst_element_factory_make ("fakesrc", NULL);
   sink = gst_element_factory_make ("fakesink", NULL);
@@ -71,7 +69,6 @@ GST_START_TEST (test_async_state_change_fake)
 
   pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
   fail_unless (pipeline != NULL, "Could not create pipeline");
-  g_object_set (G_OBJECT (pipeline), "play-timeout", 0LL, NULL);
 
   src = gst_element_factory_make ("fakesrc", NULL);
   sink = gst_element_factory_make ("fakesink", NULL);
@@ -81,7 +78,7 @@ GST_START_TEST (test_async_state_change_fake)
 
   bus = gst_pipeline_get_bus (pipeline);
 
-  fail_unless_equals_int (gst_element_set_state_async (GST_ELEMENT (pipeline),
+  fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING), GST_STATE_CHANGE_ASYNC);
 
   while (!done) {
@@ -98,7 +95,6 @@ GST_START_TEST (test_async_state_change_fake)
     }
   }
 
-  g_object_set (G_OBJECT (pipeline), "play-timeout", 3 * GST_SECOND, NULL);
   fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_NULL), GST_STATE_CHANGE_SUCCESS);
 
@@ -175,7 +171,6 @@ GST_START_TEST (test_bus)
   pipeline = gst_pipeline_new (NULL);
   fail_unless (pipeline != NULL, "Could not create pipeline");
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
-  g_object_set (pipeline, "play-timeout", 0LL, NULL);
 
   src = gst_element_factory_make ("fakesrc", NULL);
   fail_unless (src != NULL);
@@ -193,7 +188,7 @@ GST_START_TEST (test_bus)
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline after add_watch", 1);
   ASSERT_OBJECT_REFCOUNT (bus, "bus after add_watch", 3);
 
-  gst_element_set_state_async (pipeline, GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
   loop = g_main_loop_new (NULL, FALSE);
   GST_DEBUG ("going into main loop");
   g_main_loop_run (loop);
@@ -207,9 +202,6 @@ GST_START_TEST (test_bus)
   /* cleanup */
   GST_DEBUG ("cleanup");
 
-  /* current semantics require us to go step by step; this will change */
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  gst_element_set_state (pipeline, GST_STATE_READY);
   gst_element_set_state (pipeline, GST_STATE_NULL);
   fail_unless (gst_element_get_state (pipeline, &current, NULL, NULL) ==
       GST_STATE_CHANGE_SUCCESS);
@@ -237,6 +229,8 @@ gst_pipeline_suite (void)
 {
   Suite *s = suite_create ("GstPipeline");
   TCase *tc_chain = tcase_create ("pipeline tests");
+
+  tcase_set_timeout (tc_chain, 0);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_async_state_change_empty);

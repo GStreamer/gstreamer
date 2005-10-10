@@ -60,12 +60,11 @@ enum
 };
 
 #define DEFAULT_DELAY 0
-#define DEFAULT_PLAY_TIMEOUT  (2*GST_SECOND)
+
 enum
 {
   PROP_0,
   PROP_DELAY,
-  PROP_PLAY_TIMEOUT,
   /* FILL ME */
 };
 
@@ -141,10 +140,6 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
           "Expected delay needed for elements "
           "to spin up to PLAYING in nanoseconds", 0, G_MAXUINT64, DEFAULT_DELAY,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PLAY_TIMEOUT,
-      g_param_spec_uint64 ("play-timeout", "Play Timeout",
-          "Max timeout for going to PLAYING in nanoseconds", 0, G_MAXUINT64,
-          DEFAULT_PLAY_TIMEOUT, G_PARAM_READWRITE));
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
 
@@ -162,7 +157,6 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
   GstBus *bus;
 
   pipeline->delay = DEFAULT_DELAY;
-  pipeline->play_timeout = DEFAULT_PLAY_TIMEOUT;
 
   bus = g_object_new (gst_bus_get_type (), NULL);
   gst_element_set_bus (GST_ELEMENT_CAST (pipeline), bus);
@@ -192,9 +186,6 @@ gst_pipeline_set_property (GObject * object, guint prop_id,
     case PROP_DELAY:
       pipeline->delay = g_value_get_uint64 (value);
       break;
-    case PROP_PLAY_TIMEOUT:
-      pipeline->play_timeout = g_value_get_uint64 (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -212,9 +203,6 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DELAY:
       g_value_set_uint64 (value, pipeline->delay);
-      break;
-    case PROP_PLAY_TIMEOUT:
-      g_value_set_uint64 (value, pipeline->play_timeout);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -246,8 +234,9 @@ do_pipeline_seek (GstElement * element, GstEvent * event)
     gst_element_get_state (element, &state, NULL, &timeout);
     was_playing = state == GST_STATE_PLAYING;
 
-    if (was_playing)
+    if (was_playing) {
       gst_element_set_state (element, GST_STATE_PAUSED);
+    }
   }
 
   res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
@@ -255,10 +244,9 @@ do_pipeline_seek (GstElement * element, GstEvent * event)
   if (flush && res) {
     /* need to reset the stream time to 0 after a flushing seek */
     gst_pipeline_set_new_stream_time (GST_PIPELINE (element), 0);
-    if (was_playing) {
+    if (was_playing)
       /* and continue playing */
       gst_element_set_state (element, GST_STATE_PLAYING);
-    }
   }
   return res;
 }
@@ -306,7 +294,6 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn result = GST_STATE_CHANGE_SUCCESS;
   GstPipeline *pipeline = GST_PIPELINE (element);
-  GstClockTime play_timeout;
   GstClock *clock;
 
   switch (transition) {
@@ -400,40 +387,6 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       GST_UNLOCK (element);
       break;
   }
-
-  if (result == GST_STATE_CHANGE_ASYNC) {
-    GST_LOCK (pipeline);
-    play_timeout = pipeline->play_timeout;
-    GST_UNLOCK (pipeline);
-  } else {
-    play_timeout = 0;
-  }
-
-  /* we wait for async state changes ourselves when we are in an
-   * intermediate state. */
-  if (play_timeout > 0) {
-    GTimeVal *timeval, timeout;
-
-    GST_STATE_UNLOCK (pipeline);
-
-    if (play_timeout == G_MAXUINT64) {
-      timeval = NULL;
-    } else {
-      GST_TIME_TO_TIMEVAL (play_timeout, timeout);
-      timeval = &timeout;
-    }
-
-    result = gst_element_get_state (element, NULL, NULL, timeval);
-    if (result == GST_STATE_CHANGE_ASYNC) {
-      GST_WARNING_OBJECT (pipeline,
-          "timeout in PREROLL, forcing next state change");
-      g_warning ("timeout in PREROLL, forcing next state change");
-      result = GST_STATE_CHANGE_SUCCESS;
-    }
-
-    GST_STATE_LOCK (pipeline);
-  }
-
   return result;
 }
 

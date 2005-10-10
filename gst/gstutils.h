@@ -497,8 +497,6 @@ void                    gst_element_unlink_pads         (GstElement *src, const 
 gboolean		gst_element_link_pads_filtered	(GstElement * src, const gchar * srcpadname,
                                                          GstElement * dest, const gchar * destpadname,
                                                          GstCaps *filter);
-GstStateChangeReturn    gst_element_set_state_async     (GstElement * element, GstState state);
-
 /* util elementfactory functions */
 gboolean		gst_element_factory_can_src_caps(GstElementFactory *factory, const GstCaps *caps);
 gboolean		gst_element_factory_can_sink_caps(GstElementFactory *factory, const GstCaps *caps);
@@ -536,7 +534,6 @@ gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat 
 /* bin functions */
 void			gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...);
 void			gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...);
-void			gst_bin_watch_for_state_change  (GstBin *bin);
 
 /* buffer functions */
 GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);

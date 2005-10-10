@@ -42,7 +42,7 @@ GST_START_TEST (test_sink)
 
   ret = gst_element_get_state (sink, &current, &pending, &tv);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "not changing state async");
-  fail_unless (current == GST_STATE_PAUSED, "bad current state");
+  fail_unless (current == GST_STATE_READY, "bad current state");
   fail_unless (pending == GST_STATE_PLAYING, "bad pending state");
 
   ret = gst_element_set_state (sink, GST_STATE_PAUSED);
@@ -81,6 +81,7 @@ GST_START_TEST (test_src_sink)
   gst_object_unref (sinkpad);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no async state return");
   ret = gst_element_get_state (pipeline, NULL, NULL, NULL);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "no success state return");
 
@@ -139,8 +140,7 @@ GST_START_TEST (test_livesrc_remove)
   ret = gst_element_get_state (pipeline, &current, &pending, &tv);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "not async");
   fail_unless (current == GST_STATE_PAUSED, "not paused");
-  fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
-
+  fail_unless (pending == GST_STATE_PAUSED, "not paused");
 }
 
 GST_END_TEST

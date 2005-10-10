@@ -59,7 +59,6 @@ struct _GstPipeline {
   GstClock      *fixed_clock;	/* fixed clock if any */
   GstClockTime   stream_time;
   GstClockTime   delay;
-  GstClockTime   play_timeout;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

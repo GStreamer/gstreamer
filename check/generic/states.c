@@ -42,8 +42,7 @@ GST_START_TEST (test_state_changes)
     gst_element_set_state (element, GST_STATE_READY);
     gst_element_set_state (element, GST_STATE_PAUSED);
     gst_element_set_state (element, GST_STATE_PLAYING);
-    /* Sleep to give any pad tasks time to start */
-    g_usleep (0.2 * G_USEC_PER_SEC);
+
     gst_element_set_state (element, GST_STATE_PAUSED);
     gst_element_set_state (element, GST_STATE_READY);
     gst_element_set_state (element, GST_STATE_NULL);
@@ -52,6 +51,7 @@ GST_START_TEST (test_state_changes)
     gst_element_set_state (element, GST_STATE_PLAYING);
     gst_element_set_state (element, GST_STATE_PAUSED);
     gst_element_set_state (element, GST_STATE_NULL);
+
     gst_object_unref (GST_OBJECT (element));
   }
   gst_task_cleanup_all ();

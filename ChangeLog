@@ -1,3 +1,45 @@
+2005-10-10  Wim Taymans  <wim@fluendo.com>
+
+	* check/Makefile.am:
+	* check/generic/states.c: (GST_START_TEST):
+	* check/gst/gstbin.c: (GST_START_TEST):
+	* check/gst/gstpipeline.c: (GST_START_TEST), (gst_pipeline_suite):
+	* check/states/sinks.c: (GST_START_TEST):
+	* check/states/sinks2.c: (GST_START_TEST), (gst_object_suite),
+	(main):
+	Check fixes, use API as stated in design docs, remove hacks.
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_change_state):
+	Catch stopping our task while we're shutting down.
+
+	* gst/gstbin.c: (gst_bin_init), (gst_bin_add_func),
+	(gst_bin_remove_func), (gst_bin_get_state_func),
+	(gst_bin_recalc_state), (gst_bin_change_state_func),
+	(bin_bus_handler):
+	* gst/gstbin.h:
+	* gst/gstelement.c: (gst_element_init),
+	(gst_element_get_state_func), (gst_element_abort_state),
+	(gst_element_commit_state), (gst_element_lost_state),
+	(gst_element_set_state), (gst_element_change_state),
+	(gst_element_change_state_func):
+	* gst/gstelement.h:
+	New state change algorithm (see #318116)
+
+	* gst/gstpipeline.c: (gst_pipeline_class_init),
+	(gst_pipeline_init), (gst_pipeline_set_property),
+	(gst_pipeline_get_property), (do_pipeline_seek),
+	(gst_pipeline_change_state), (gst_pipeline_provide_clock_func):
+	* gst/gstpipeline.h:
+	Remove crude state change hacks.
+
+	* gst/gstutils.h:
+	Remove crude hacks.
+
+	* tools/gst-launch.c: (main):
+	Fixes for state change. Needs some more work to fully use the
+	new stuff.
+
 2005-10-10  Andy Wingo  <wingo@pobox.com>
 
 	* tests/Makefile.am (noinst_PROGRAMS): No more init.c.

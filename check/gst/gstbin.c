@@ -262,7 +262,7 @@ GST_START_TEST (test_message_state_changed_children)
   /* change state to PAUSED, spawning three messages */
   GST_DEBUG ("setting pipeline to PAUSED");
   ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
-  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC);
   ret =
       gst_element_get_state (GST_ELEMENT (pipeline), &current, &pending, NULL);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
@@ -364,19 +364,13 @@ GST_START_TEST (test_watch_for_state_change)
 
   fail_unless (gst_element_link (src, sink), "could not link src and sink");
 
-  /* change state, spawning two times three messages, minus one async */
+  /* change state, spawning two times three messages */
   ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+  ret = gst_element_get_state (GST_ELEMENT (bin), NULL, NULL, NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
-  pop_messages (bus, 5);
-
-  fail_unless (gst_bus_have_pending (bus) == FALSE,
-      "Unexpected messages on bus");
-
-  gst_bin_watch_for_state_change (GST_BIN (bin));
-
-  /* should get the bin's state change message now */
-  pop_messages (bus, 1);
+  pop_messages (bus, 6);
 
   fail_unless (gst_bus_have_pending (bus) == FALSE,
       "Unexpected messages on bus");
@@ -388,8 +382,7 @@ GST_START_TEST (test_watch_for_state_change)
 
   /* this one might return either SUCCESS or ASYNC, likely SUCCESS */
   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
-
-  gst_bin_watch_for_state_change (GST_BIN (bin));
+  gst_element_get_state (GST_ELEMENT (bin), NULL, NULL, NULL);
 
   pop_messages (bus, 3);
 
@@ -482,6 +475,7 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
 {
   GstElement *src, *identity, *sink, *pipeline;
   GstStateChangeReturn ret;
+  GstState current, pending;
   GstBus *bus;
 
   pipeline = gst_pipeline_new (NULL);
@@ -506,7 +500,12 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
 
   /* (1) Test state change with fakesink being a regular sink */
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_if (ret != GST_STATE_CHANGE_ASYNC,
+      "State change to PLAYING did not return ASYNC");
+  ret = gst_element_get_state (pipeline, &current, &pending, NULL);
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to PLAYING failed");
+  fail_if (current != GST_STATE_PLAYING, "State change to PLAYING failed");
+  fail_if (pending != GST_STATE_VOID_PENDING, "State change to PLAYING failed");
 
   /* NULL => READY */
   ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_NULL, GST_STATE_READY, 101);
@@ -602,7 +601,7 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   GST_FLAG_UNSET (sink, GST_ELEMENT_IS_SINK);   /* <======== */
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to PLAYING failed");
+  fail_if (ret != GST_STATE_CHANGE_ASYNC, "State change to PLAYING not ASYNC");
   ret = gst_element_get_state (pipeline, &current, &pending, NULL);
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to PLAYING failed");
   fail_if (current != GST_STATE_PLAYING, "State change to PLAYING failed");

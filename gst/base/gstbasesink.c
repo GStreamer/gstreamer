@@ -622,6 +622,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
 
   if (length == 1) {
     gint t;
+    GstTask *task;
 
     basesink->have_preroll = TRUE;
     /* we are prerolling */
@@ -636,8 +637,21 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
       g_warning ("STREAM_LOCK should have been locked !!");
     }
 
-    /* now we commit our state */
-    GST_STATE_LOCK (basesink);
+    /* now we commit our state, this will also automatically proceed to
+     * the next pending state. */
+    /* FIXME */
+    if ((task = GST_PAD_TASK (pad))) {
+      while (!GST_STATE_TRYLOCK (basesink)) {
+        GST_DEBUG_OBJECT (basesink,
+            "state change happening, checking shutdown");
+        GST_LOCK (pad);
+        if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+          goto task_stopped;
+        GST_UNLOCK (pad);
+      }
+    } else {
+      GST_STATE_LOCK (basesink);
+    }
     GST_DEBUG_OBJECT (basesink, "commit state");
     gst_element_commit_state (GST_ELEMENT (basesink));
     GST_STATE_UNLOCK (basesink);
@@ -741,6 +755,12 @@ playing_async:
       GST_STREAM_LOCK_FULL (pad, t);
 
     return ret;
+  }
+task_stopped:
+  {
+    GST_UNLOCK (pad);
+    GST_DEBUG_OBJECT (basesink, "task is stopped");
+    return GST_FLOW_WRONG_STATE;
   }
 flushing:
   {
@@ -1514,7 +1534,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
        * we need to wait for a preroll */
       GST_DEBUG_OBJECT (basesink, "have_preroll: %d, EOS: %d",
           basesink->have_preroll, basesink->eos);
-      if (!basesink->have_preroll && !basesink->eos) {
+      if (!basesink->have_preroll && !basesink->eos
+          && GST_STATE_PENDING (basesink) == GST_STATE_PAUSED) {
         GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, need preroll to TRUE");
         basesink->need_preroll = TRUE;
         ret = GST_STATE_CHANGE_ASYNC;
