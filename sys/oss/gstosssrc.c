@@ -39,6 +39,8 @@ GST_ELEMENT_DETAILS ("Audio Source (OSS)",
     "Capture from a sound card via OSS",
     "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
 
+#define DEFAULT_DEVICE		"/dev/dsp"
+#define DEFAULT_DEVICE_NAME	""
 
 enum
 {
@@ -136,11 +138,12 @@ gst_oss_src_class_init (GstOssSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
-          "OSS device (usually /dev/dspN)", "/dev/dsp", G_PARAM_READWRITE));
+          "OSS device (usually /dev/dspN)", DEFAULT_DEVICE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", "", G_PARAM_READABLE));
+          "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
+          G_PARAM_READABLE));
 }
 
 static void
@@ -155,7 +158,7 @@ gst_oss_src_set_property (GObject * object, guint prop_id,
     case PROP_DEVICE:
       if (src->device)
         g_free (src->device);
-      src->device = g_strdup (g_value_get_string (value));
+      src->device = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -190,7 +193,8 @@ gst_oss_src_init (GstOssSrc * osssrc, GstOssSrcClass * g_class)
   GST_DEBUG ("initializing osssrc");
 
   osssrc->fd = -1;
-  osssrc->device = g_strdup ("/dev/dsp");
+  osssrc->device = g_strdup (DEFAULT_DEVICE);
+  osssrc->device_name = g_strdup (DEFAULT_DEVICE_NAME);
 }
 
 static GstCaps *
@@ -228,22 +232,29 @@ ilog2 (gint x)
   return (x & 0x0000003f) - 1;
 }
 
-#define SET_PARAM(_oss, _label, _name, _val) 	\
+#define SET_PARAM(_oss, _name, _val) 		\
 G_STMT_START {					\
   int _tmp = _val;				\
   if (ioctl(_oss->fd, _name, &_tmp) == -1) {	\
-    perror(_label);				\
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ, \
+        ("Unable to set param "G_STRINGIFY (_name)": %s", 	 \
+		g_strerror (errno)),		\
+        (NULL));				\
     return FALSE;				\
   }						\
-  GST_DEBUG_OBJECT (_oss, _label " %d", _tmp);	\
+  GST_DEBUG_OBJECT (_oss, G_STRINGIFY (_name)" %d", _tmp);	\
 } G_STMT_END
 
-#define GET_PARAM(oss, label, name, val) 	\
+#define GET_PARAM(_oss, _name, _val) 	\
 G_STMT_START {					\
-  if (ioctl(oss->fd, name, val) == -1) {	\
-    perror(label);				\
+  if (ioctl(oss->fd, _name, _val) == -1) {	\
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ, \
+        ("Unable to get param "G_STRINGIFY (_name)": %s", 	 \
+		g_strerror (errno)),		\
+        (NULL));				\
     return FALSE;				\
   }						\
+  GST_DEBUG_OBJECT (_oss, G_STRINGIFY (_name)" %d", _val);	\
 } G_STMT_END
 
 static gint
@@ -301,23 +312,26 @@ gst_oss_src_open (GstAudioSrc * asrc)
   mode |= O_NONBLOCK;
 
   oss->fd = open (oss->device, mode, 0);
-  if (oss->fd == -1) {
-    perror (oss->device);
-    return FALSE;
-  }
+  if (oss->fd == -1)
+    goto open_failed;
 
   if (!oss->mixer) {
     oss->mixer = gst_ossmixer_new ("/dev/mixer", GST_OSS_MIXER_CAPTURE);
 
     if (oss->mixer) {
-      if (oss->device_name) {
-        g_free (oss->device_name);
-      }
+      g_free (oss->device_name);
       oss->device_name = g_strdup (oss->mixer->cardname);
     }
   }
-
   return TRUE;
+
+open_failed:
+  {
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+        ("Unable to open device %s for recording: %s",
+            oss->device, g_strerror (errno)), (NULL));
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -349,10 +363,8 @@ gst_oss_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 
   mode = fcntl (oss->fd, F_GETFL);
   mode &= ~O_NONBLOCK;
-  if (fcntl (oss->fd, F_SETFL, mode) == -1) {
-    perror (oss->device);
-    return FALSE;
-  }
+  if (fcntl (oss->fd, F_SETFL, mode) == -1)
+    goto non_block;
 
   tmp = gst_oss_src_get_format (spec->format);
   if (tmp == 0)
@@ -363,17 +375,17 @@ gst_oss_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   GST_DEBUG ("set segsize: %d, segtotal: %d, value: %08x", spec->segsize,
       spec->segtotal, tmp);
 
-  SET_PARAM (oss, "SETFRAGMENT", SNDCTL_DSP_SETFRAGMENT, tmp);
+  SET_PARAM (oss, SNDCTL_DSP_SETFRAGMENT, tmp);
 
-  SET_PARAM (oss, "RESET", SNDCTL_DSP_RESET, 0);
+  SET_PARAM (oss, SNDCTL_DSP_RESET, 0);
 
-  SET_PARAM (oss, "SETFMT", SNDCTL_DSP_SETFMT, tmp);
+  SET_PARAM (oss, SNDCTL_DSP_SETFMT, tmp);
   if (spec->channels == 2)
-    SET_PARAM (oss, "STEREO", SNDCTL_DSP_STEREO, 1);
-  SET_PARAM (oss, "CHANNELS", SNDCTL_DSP_CHANNELS, spec->channels);
-  SET_PARAM (oss, "SPEED", SNDCTL_DSP_SPEED, spec->rate);
+    SET_PARAM (oss, SNDCTL_DSP_STEREO, 1);
+  SET_PARAM (oss, SNDCTL_DSP_CHANNELS, spec->channels);
+  SET_PARAM (oss, SNDCTL_DSP_SPEED, spec->rate);
 
-  GET_PARAM (oss, "GETISPACE", SNDCTL_DSP_GETISPACE, &info);
+  GET_PARAM (oss, SNDCTL_DSP_GETISPACE, &info);
 
   spec->segsize = info.fragsize;
   spec->segtotal = info.fragstotal;
@@ -386,9 +398,17 @@ gst_oss_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 
   return TRUE;
 
+non_block:
+  {
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+        ("Unable to set device %s in non blocking mode: %s",
+            oss->device, g_strerror (errno)), (NULL));
+    return FALSE;
+  }
 wrong_format:
   {
-    GST_DEBUG ("wrong format %d\n", spec->format);
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+        ("Unable to get format %d", spec->format), (NULL));
     return FALSE;
   }
 }

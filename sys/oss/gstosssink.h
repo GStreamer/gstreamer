@@ -44,8 +44,9 @@ typedef struct _GstOssSinkClass GstOssSinkClass;
 struct _GstOssSink {
   GstAudioSink    sink;
 
-  gint fd;
-  gint		 bytes_per_sample;
+  gchar *device;
+  gint 	 fd;
+  gint   bytes_per_sample;
 };
 
 struct _GstOssSinkClass {

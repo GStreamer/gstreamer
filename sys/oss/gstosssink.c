@@ -46,6 +46,11 @@ static void gst_oss_sink_class_init (GstOssSinkClass * klass);
 static void gst_oss_sink_init (GstOssSink * osssink);
 static void gst_oss_sink_dispose (GObject * object);
 
+static void gst_oss_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_oss_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+
 static GstCaps *gst_oss_sink_getcaps (GstBaseSink * bsink);
 
 static gboolean gst_oss_sink_open (GstAudioSink * asink);
@@ -62,6 +67,13 @@ static void gst_oss_sink_reset (GstAudioSink * asink);
 enum
 {
   LAST_SIGNAL
+};
+
+#define DEFAULT_DEVICE	"/dev/dsp"
+enum
+{
+  PROP_0,
+  PROP_DEVICE,
 };
 
 static GstStaticPadTemplate osssink_sink_factory =
@@ -145,6 +157,12 @@ gst_oss_sink_class_init (GstOssSinkClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
 
   gobject_class->dispose = gst_oss_sink_dispose;
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_oss_sink_get_property);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_oss_sink_set_property);
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "OSS device (usually /dev/dspN)", DEFAULT_DEVICE, G_PARAM_READWRITE));
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_oss_sink_getcaps);
 
@@ -162,7 +180,45 @@ gst_oss_sink_init (GstOssSink * osssink)
 {
   GST_DEBUG ("initializing osssink");
 
+  osssink->device = g_strdup (DEFAULT_DEVICE);;
   osssink->fd = -1;
+}
+
+static void
+gst_oss_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstOssSink *sink;
+
+  sink = GST_OSSSINK (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      g_free (sink->device);
+      sink->device = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_oss_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstOssSink *sink;
+
+  sink = GST_OSSSINK (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      g_value_set_string (value, sink->device);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstCaps *
@@ -204,16 +260,22 @@ ilog2 (gint x)
 G_STMT_START {					\
   int _tmp = _val;				\
   if (ioctl(_oss->fd, _name, &_tmp) == -1) {	\
-    perror(G_STRINGIFY (_name));		\
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, \
+        ("Unable to set param "G_STRINGIFY (_name)": %s",        \
+                   g_strerror (errno)),            \
+        (NULL));                                \
     return FALSE;				\
   }						\
   GST_DEBUG(G_STRINGIFY (name) " %d", _tmp);	\
 } G_STMT_END
 
-#define GET_PARAM(oss, name, val) 		\
+#define GET_PARAM(_oss, _name, _val) 		\
 G_STMT_START {					\
-  if (ioctl(oss->fd, name, val) == -1) {	\
-    perror(G_STRINGIFY (name));			\
+  if (ioctl(oss->fd, _name, _val) == -1) {	\
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, \
+        ("Unable to get param "G_STRINGIFY (_name)": %s",        \
+                   g_strerror (errno)),            \
+        (NULL));                                \
     return FALSE;				\
   }						\
 } G_STMT_END
@@ -272,13 +334,19 @@ gst_oss_sink_open (GstAudioSink * asink)
   mode = O_WRONLY;
   mode |= O_NONBLOCK;
 
-  oss->fd = open ("/dev/dsp", mode, 0);
-  if (oss->fd == -1) {
-    perror ("/dev/dsp");
-    return FALSE;
-  }
+  oss->fd = open (oss->device, mode, 0);
+  if (oss->fd == -1)
+    goto open_failed;
 
   return TRUE;
+
+open_failed:
+  {
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
+        ("Unable to open device %s for writing: %s",
+            oss->device, g_strerror (errno)), (NULL));
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -300,14 +368,15 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   mode = fcntl (oss->fd, F_GETFL);
   mode &= ~O_NONBLOCK;
-  if (fcntl (oss->fd, F_SETFL, mode) == -1) {
-    perror ("/dev/dsp");
-    return FALSE;
-  }
+  if (fcntl (oss->fd, F_SETFL, mode) == -1)
+    goto non_block;
 
   tmp = gst_oss_sink_get_format (spec->format);
   if (tmp == 0)
     goto wrong_format;
+
+  if (spec->width != 16 && spec->width != 8)
+    goto dodgy_width;
 
   SET_PARAM (oss, SNDCTL_DSP_SETFMT, tmp);
   if (spec->channels == 2)
@@ -326,9 +395,6 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   spec->segsize = info.fragsize;
   spec->segtotal = info.fragstotal;
 
-  if (spec->width != 16 && spec->width != 8)
-    goto dodgy_width;
-
   spec->bytes_per_sample = (spec->width / 8) * spec->channels;
   oss->bytes_per_sample = (spec->width / 8) * spec->channels;
   memset (spec->silence_sample, 0, spec->bytes_per_sample);
@@ -338,14 +404,23 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   return TRUE;
 
+non_block:
+  {
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+        ("Unable to set device %s in non blocking mode: %s",
+            oss->device, g_strerror (errno)), (NULL));
+    return FALSE;
+  }
 wrong_format:
   {
-    GST_DEBUG ("wrong format %d\n", spec->format);
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+        ("Unable to get format %d", spec->format), (NULL));
     return FALSE;
   }
 dodgy_width:
   {
-    GST_DEBUG ("unexpected width %d\n", spec->width);
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+        ("unexpected width %d", spec->width), (NULL));
     return FALSE;
   }
 }
@@ -408,12 +483,13 @@ gst_oss_sink_delay (GstAudioSink * asink)
 static void
 gst_oss_sink_reset (GstAudioSink * asink)
 {
+#if 0
   GstOssSink *oss;
-
-  //gint ret;
+  gint ret;
 
   oss = GST_OSSSINK (asink);
 
   /* deadlocks on my machine... */
-  //ret = ioctl (oss->fd, SNDCTL_DSP_RESET, 0);
+  ret = ioctl (oss->fd, SNDCTL_DSP_RESET, 0);
+#endif
 }

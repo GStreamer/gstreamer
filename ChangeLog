@@ -1,5 +1,18 @@
 2005-10-10  Wim Taymans  <wim@fluendo.com>
 
+	* sys/oss/gstosssink.c: (gst_oss_sink_class_init),
+	(gst_oss_sink_init), (gst_oss_sink_set_property),
+	(gst_oss_sink_get_property), (gst_oss_sink_open),
+	(gst_oss_sink_prepare), (gst_oss_sink_reset):
+	* sys/oss/gstosssink.h:
+	* sys/oss/gstosssrc.c: (gst_oss_src_class_init),
+	(gst_oss_src_set_property), (gst_oss_src_init), (gst_oss_src_open),
+	(gst_oss_src_prepare):
+	Cleanups, make device configurable in the sink, handle and report
+	errors.
+
+2005-10-10  Wim Taymans  <wim@fluendo.com>
+
 	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_reset):
 	* ext/gconf/gstgconfvideosink.c: (gst_gconf_video_sink_reset):
 	Make sure element is NULL before removing from the bin.
