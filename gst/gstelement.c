@@ -925,6 +925,25 @@ iterate_pad (GstIterator * it, GstPad * pad)
   return GST_ITERATOR_ITEM_PASS;
 }
 
+static GstIterator *
+gst_element_iterate_pad_list (GstElement * element, GList ** padlist)
+{
+  GstIterator *result;
+
+  GST_LOCK (element);
+  gst_object_ref (element);
+  result = gst_iterator_new_list (GST_TYPE_PAD,
+      GST_GET_LOCK (element),
+      &element->pads_cookie,
+      padlist,
+      element,
+      (GstIteratorItemFunction) iterate_pad,
+      (GstIteratorDisposeFunction) gst_object_unref);
+  GST_UNLOCK (element);
+
+  return result;
+}
+
 /**
  * gst_element_iterate_pads:
  * @element: a #GstElement to iterate pads of.
@@ -939,36 +958,9 @@ iterate_pad (GstIterator * it, GstPad * pad)
 GstIterator *
 gst_element_iterate_pads (GstElement * element)
 {
-  GstIterator *result;
-
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  GST_LOCK (element);
-  gst_object_ref (element);
-  result = gst_iterator_new_list (GST_TYPE_PAD,
-      GST_GET_LOCK (element),
-      &element->pads_cookie,
-      &element->pads,
-      element,
-      (GstIteratorItemFunction) iterate_pad,
-      (GstIteratorDisposeFunction) gst_object_unref);
-  GST_UNLOCK (element);
-
-  return result;
-}
-
-static gint
-direction_filter (gconstpointer pad, gconstpointer direction)
-{
-  if (GST_PAD_DIRECTION (pad) == GPOINTER_TO_INT (direction)) {
-    /* pass the ref through */
-    return 0;
-  } else {
-    /* unref */
-    /* FIXME: this is very stupid */
-    gst_object_unref (GST_OBJECT_CAST (pad));
-    return 1;
-  }
+  return gst_element_iterate_pad_list (element, &element->pads);
 }
 
 /**
@@ -986,8 +978,7 @@ gst_element_iterate_src_pads (GstElement * element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  return gst_iterator_filter (gst_element_iterate_pads (element),
-      direction_filter, GINT_TO_POINTER (GST_PAD_SRC));
+  return gst_element_iterate_pad_list (element, &element->srcpads);
 }
 
 /**
@@ -1005,8 +996,7 @@ gst_element_iterate_sink_pads (GstElement * element)
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  return gst_iterator_filter (gst_element_iterate_pads (element),
-      direction_filter, GINT_TO_POINTER (GST_PAD_SINK));
+  return gst_element_iterate_pad_list (element, &element->sinkpads);
 }
 
 /**
