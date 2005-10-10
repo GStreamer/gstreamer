@@ -1,3 +1,13 @@
+2005-10-10  Josef Zlomek  <josef dot zlomek at xeris dot cz>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstbin.c: (gst_bin_iterate_sorted):
+	  Pass GType and size arguments to gst_iterator_new() in the right
+	  order (maybe we should make _new() take the GType as first argument
+	  just like _new_list()?) (#318447).
+	  
+
 2005-10-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstelement.c: (gst_element_finalize):
