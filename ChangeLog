@@ -2,6 +2,11 @@
 
 	* docs/gst/gstreamer-sections.txt: Doc updates.
 
+	* gst/gstutils.h:
+	* gst/gstutils.c (g_static_rec_cond_timed_wait) 
+	(g_static_rec_cond_wait): Ported from state changes patch, while
+	we wait on bug #317802 to be solved in a well-distributed GLib.
+
 	* gst/gstelement.c (gst_element_change_state_func): Renamed from
 	gst_element_change_state, variable name changes.
 	(gst_element_change_state): Split out of gst_element_set_state in
