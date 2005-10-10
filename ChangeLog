@@ -1,3 +1,9 @@
+2005-10-10  Wim Taymans  <wim@fluendo.com>
+
+	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_reset):
+	* ext/gconf/gstgconfvideosink.c: (gst_gconf_video_sink_reset):
+	Make sure element is NULL before removing from the bin.
+
 2005-10-07  Andy Wingo  <wingo@pobox.com>
 
 	* ext/raw1394/gstdv1394src.c: Make interruptible, so it won't
