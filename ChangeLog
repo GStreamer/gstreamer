@@ -1,3 +1,13 @@
+2005-10-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_query):
+	  use conversions
+	* gst/gstutils.c: (gst_guint64_to_gdouble),
+	(gst_gdouble_to_guint64), (gst_util_uint64_scale):
+	* gst/gstutils.h:
+	  externalize, basesrc uses it
+	  obviously the implementation needs testing
+
 2005-10-10  Wim Taymans  <wim@fluendo.com>
 
 	* tests/sched/Makefile.am:

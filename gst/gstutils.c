@@ -302,8 +302,8 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
 #ifdef WIN32
 /* work around error C2520: conversion from unsigned __int64 to double
  * not implemented, use signed __int64 */
-static gdouble
-guint64_to_gdouble (guint64 value)
+gdouble
+gst_guint64_to_gdouble (guint64 value)
 {
   if (value & 0x8000000000000000)
     return (gdouble) ((gint64) value) + (gdouble) 18446744073709551616.;
@@ -311,18 +311,15 @@ guint64_to_gdouble (guint64 value)
     return (gdouble) ((gint64) value);
 }
 
-static gdouble
-gdouble_to_guint64 (gdouble value)
+guint64
+gst_gdouble_to_guint64 (gdouble value)
 {
   if (value < (gdouble) 9223372036854775808.)   /* 1 << 63 */
     return ((guint64) ((gint64) value));
 
-  value -= 9223372036854775808.;
-  return ((guint64) ((gint64) value)) + 1LL << 63;
+  value -= (gdouble) 18446744073709551616.;
+  return ((guint64) ((gint64) value));
 }
-#else
-#define gdouble_to_guint64(value) ((guint64) (value))
-#define guint64_to_gdouble(value) ((gdouble) (value))
 #endif
 
 /**
@@ -339,7 +336,8 @@ guint64
 gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 {
   /* implement me with fixed point, if you care */
-  return val * ((guint64_to_gdouble (num)) / guint64_to_gdouble (denom));
+  return gst_gdouble_to_guint64 (gst_guint64_to_gdouble (val) *
+      ((gst_guint64_to_gdouble (num)) / gst_guint64_to_gdouble (denom)));
 }
 
 /* -----------------------------------------------------
