@@ -1,3 +1,11 @@
+2005-10-10  Andy Wingo  <wingo@pobox.com>
+
+	* tests/Makefile.am (noinst_PROGRAMS): No more init.c.
+
+	* gst/gst.c (G_OPTION_FLAG_NO_ARG): Apparently GLib 2.8 requires
+	this flag, but it's not even in GLib 2.6. Odd. Hack around the
+	issue.
+
 2005-10-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstiterator.c: (gst_iterator_new):
@@ -11,12 +19,6 @@
 	(gst_element_iterate_sink_pads):
 	Use src/sink pads lists for the respective iterators instead
 	of filtering.
-
-2005-10-10  Andy Wingo  <wingo@pobox.com>
-
-	* gst/gst.c (G_OPTION_FLAG_NO_ARG): Apparently GLib 2.8 requires
-	this flag, but it's not even in GLib 2.6. Odd. Hack around the
-	issue.
 
 2005-10-10  Andy Wingo  <wingo@pobox.com>
 
