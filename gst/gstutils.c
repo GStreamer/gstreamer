@@ -328,7 +328,7 @@ guint64
 gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 {
   /* implement me with fixed point, if you care */
-  return val * ((guint64_to_gdouble (num)) / denom);
+  return val * ((guint64_to_gdouble (num)) / guint64_to_gdouble (denom));
 }
 
 /* -----------------------------------------------------
