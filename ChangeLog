@@ -1,5 +1,13 @@
 2005-10-10  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstbin.c (gst_bin_get_state_func): Renamed from
+	gst_bin_get_state, cleaned up (but no logic changes).
+	(bin_element_is_sink): Comment updates.
+	(sink_iterator_filter): Remove needless cast.
+	(gst_bin_iterate_sinks): Doc update.
+	(gst_bin_change_state_func): Renamed from gst_bin_change_state,
+	cleaned up (but no logic changes).
+
 	* check/states/sinks.c (test_src_sink): Cleanups from the state
 	change patch.
 	(test_livesrc_sink): Sync on the state.
