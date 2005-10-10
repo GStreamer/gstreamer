@@ -1,5 +1,14 @@
 2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/gst-libs/gdp.c: (GST_START_TEST):
+	* check/gst/gstcaps.c: (GST_START_TEST):
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_crc),
+	(gst_dp_dump_byte_array), (gst_dp_header_from_buffer),
+	(gst_dp_packet_from_caps):
+	  fix more valgrind warnings before turning up the heat
+
+2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/parse/grammar.y:
 	  some cleanup before the hacking
 

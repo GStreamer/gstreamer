@@ -50,6 +50,7 @@ GST_START_TEST (test_buffer)
 
   GST_DEBUG ("caps: %" GST_PTR_FORMAT, c1);
 
+  gst_buffer_set_caps (buffer, c1);     /* gives away our c1 ref */
   gst_buffer_unref (buffer);
 }
 
@@ -64,6 +65,8 @@ GST_START_TEST (test_double_append)
   s1 = gst_structure_from_string ("audio/x-raw-int,rate=44100", NULL);
   gst_caps_append_structure (c1, s1);
   ASSERT_CRITICAL (gst_caps_append_structure (c1, s1));
+
+  gst_caps_unref (c1);
 }
 
 GST_END_TEST;
@@ -93,6 +96,7 @@ GST_START_TEST (test_mutability)
   gst_caps_set_simple (c1, "rate", G_TYPE_INT, 1, NULL);
   fail_unless (gst_structure_get_int (s1, "rate", &ret));
   fail_unless (ret == 1);
+  gst_caps_unref (c1);
 }
 
 GST_END_TEST;

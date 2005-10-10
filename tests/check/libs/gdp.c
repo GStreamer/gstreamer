@@ -176,6 +176,8 @@ GST_START_TEST (test_caps)
       "Created caps do not match original caps");
 
   /* cleanup */
+  gst_caps_unref (caps);
+  gst_caps_unref (newcaps);
   g_free (header);
   g_free (payload);
   g_free (string);
