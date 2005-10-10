@@ -1035,17 +1035,17 @@ gst_value_serialize_ ## _type (const GValue * value)			\
   return (char *) g_value_get_string (&val);				\
 }
 
-/* deserialize the given s into to as a long long.
+/* deserialize the given s into to as a gint64.
  * check if the result is actually storeable in the given size number of
  * bytes.
  */
 static gboolean
-gst_value_deserialize_int_helper (long long *to, const char *s,
-    long long min, long long max, int size)
+gst_value_deserialize_int_helper (gint64 * to, const char *s,
+    gint64 min, gint64 max, int size)
 {
   gboolean ret = FALSE;
   char *end;
-  long long mask = -1;
+  gint64 mask = -1;
 
   errno = 0;
   *to = g_ascii_strtoull (s, &end, 0);
@@ -1075,7 +1075,7 @@ gst_value_deserialize_int_helper (long long *to, const char *s,
     }
   }
   if (ret) {
-    /* by definition, a long long fits into a long long; so ignore those */
+    /* by definition, a gint64 fits into a gint64; so ignore those */
     if (size != sizeof (mask)) {
       if (*to >= 0) {
         /* for positive numbers, we create a mask of 1's outside of the range
@@ -1103,7 +1103,7 @@ CREATE_SERIALIZATION_START(_type,_macro)				\
 static gboolean								\
 gst_value_deserialize_ ## _type (GValue * dest, const char *s)		\
 {									\
-  long long x;								\
+  gint64 x;								\
 									\
   if (gst_value_deserialize_int_helper (&x, s, G_MIN ## _macro,		\
       G_MAX ## _macro, sizeof (g ## _type))) {				\
@@ -1120,7 +1120,7 @@ CREATE_SERIALIZATION_START(_type,_macro)				\
 static gboolean								\
 gst_value_deserialize_ ## _type (GValue * dest, const char *s)		\
 {									\
-  guint64 x;								\
+  gint64 x;								\
   char *end;								\
   gboolean ret = FALSE;							\
 									\
@@ -1174,18 +1174,19 @@ G_STMT_START {								\
   gst_value_register (&gst_value);					\
 } G_STMT_END
 
-CREATE_SERIALIZATION (int, INT)
-    CREATE_SERIALIZATION (int64, INT64)
-    CREATE_SERIALIZATION (long, LONG)
-CREATE_USERIALIZATION (uint, UINT)
-CREATE_USERIALIZATION (uint64, UINT64)
-CREATE_USERIALIZATION (ulong, ULONG)
+CREATE_SERIALIZATION (int, INT);
+CREATE_SERIALIZATION (int64, INT64);
+CREATE_SERIALIZATION (long, LONG);
+
+CREATE_USERIALIZATION (uint, UINT);
+CREATE_USERIALIZATION (uint64, UINT64);
+CREATE_USERIALIZATION (ulong, ULONG);
 
 /**********
  * double *
  **********/
-     static int
-         gst_value_compare_double (const GValue * value1, const GValue * value2)
+static int
+gst_value_compare_double (const GValue * value1, const GValue * value2)
 {
   if (value1->data[0].v_double > value2->data[0].v_double)
     return GST_VALUE_GREATER_THAN;

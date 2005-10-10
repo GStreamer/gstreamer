@@ -82,6 +82,7 @@ gst_caps_get_type (void)
  *
  * Creates a new #GstCaps that is empty.  That is, the returned
  * #GstCaps contains no media formats.
+ * Caller is responsible for unreffing the returned caps.
  *
  * Returns: the new #GstCaps
  */
@@ -128,6 +129,7 @@ gst_caps_new_any (void)
  * Creates a new #GstCaps that contains one #GstStructure.  The
  * structure is defined by the arguments, which have the same format
  * as @gst_structure_new().
+ * Caller is responsible for unreffing the returned caps.
  *
  * Returns: the new #GstCaps
  */

@@ -21,17 +21,18 @@
  */
 /**
  * SECTION:gstevent
- * @short_description: Structure describing events that are passed up and down a pipeline
+ * @short_description: Structure describing events that are passed up and down
+ *                     a pipeline
  * @see_also: #GstPad, #GstElement
  *
  * The event classes are used to construct and query events.
  *
- * Events are usually created with gst_event_new_*() which takes the extra event 
- * paramters as arguments. 
+ * Events are usually created with gst_event_new_*() which takes the extra
+ * event parameters as arguments.
  * Events can be parsed with their respective gst_event_parse_*() functions.
- * The event should be unreferenced with gst_event_unref().
+ * The event should be unreffed with gst_event_unref().
  *
- * gst_event_new_seek() is a usually used to create a seek event and it takes
+ * gst_event_new_seek() is usually used to create a seek event and it takes
  * the needed parameters for a seek event.
  *
  * gst_event_new_flush() creates a new flush event.
@@ -294,7 +295,7 @@ gst_event_get_structure (GstEvent * event)
  * It marks pads as being in a WRONG_STATE to process more data.
  *
  * Elements unlock and blocking functions and exit their streaming functions
- * as fast as possible. 
+ * as fast as possible.
  *
  * This event is typically generated after a seek to minimize the latency
  * after the seek.
@@ -450,7 +451,7 @@ gst_event_parse_newsegment (GstEvent * event, gdouble * rate,
  * @taglist: metadata list
  *
  * Generates a metadata tag event from the given @taglist.
- * 
+ *
  * Returns: a new #GstEvent
  */
 GstEvent *
@@ -571,7 +572,7 @@ gst_event_parse_buffersize (GstEvent * event, GstFormat * format,
  * datarate, 0.75 means increase datarate by 75%, 1.5 is 150%. Negative
  * values request a slow down, so -0.75 means a decrease by 75%.
  *
- * diff is the difference against the clock in stream time of the last 
+ * diff is the difference against the clock in stream time of the last
  * buffer that caused the element to generate the QOS event.
  *
  * timestamp is the timestamp of the last buffer that cause the element
@@ -628,7 +629,7 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * gst_event_new_seek:
  * @rate: The new playback rate
  * @format: The format of the seek values
- * @flags: The optional seek flags.
+ * @flags: The optional seek flags
  * @cur_type: The type and flags for the new current position
  * @cur: The value of the new current position
  * @stop_type: The type and flags for the new stop position

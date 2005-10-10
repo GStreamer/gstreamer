@@ -1,3 +1,12 @@
+2005-10-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstcaps.c:
+	* gst/gstevent.c:
+	  doc updates
+	* gst/gstvalue.c: (gst_value_deserialize_int_helper):
+	  don't use long long, it's not portable.  Replacing with
+	  gint64 seems to work; let's hope no skeletons fall out of the closet.
+
 2005-10-10  Andy Wingo  <wingo@pobox.com>
 
 	* autogen.sh (CONFIGURE_DEF_OPT): No more --plugin-buiddir, yay
