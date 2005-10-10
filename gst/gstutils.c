@@ -310,8 +310,19 @@ guint64_to_gdouble (guint64 value)
   else
     return (gdouble) ((gint64) value);
 }
+
+static gdouble
+gdouble_to_guint64 (gdouble value)
+{
+  if (value < (gdouble) 9223372036854775808.)   /* 1 << 63 */
+    return ((guint64) ((gint64) value));
+
+  value -= 9223372036854775808.;
+  return ((guint64) ((gint64) value)) + 1LL << 63;
+}
 #else
-#define guint64_to_gdouble(value) ((gdouble) value)
+#define gdouble_to_guint64(value) ((guint64) (value))
+#define guint64_to_gdouble(value) ((gdouble) (value))
 #endif
 
 /**
