@@ -48,12 +48,16 @@ run_pipeline (GstElement * pipeline, gchar * descr,
 {
   GstBus *bus;
   GstMessageType revent;
+  GstStateChangeReturn ret;
 
   g_assert (pipeline);
   bus = gst_element_get_bus (pipeline);
   g_assert (bus);
-  if (gst_element_set_state (pipeline,
-          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS) {
+
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  ret = gst_element_get_state (pipeline, NULL, NULL, NULL);
+
+  if (ret != GST_STATE_CHANGE_SUCCESS) {
     g_critical ("Couldn't set pipeline to PLAYING");
     goto done;
   }
@@ -190,7 +194,7 @@ simple_launch_lines_suite (void)
   TCase *tc_chain = tcase_create ("linear");
 
   /* time out after 20s, not the default 3 */
-  tcase_set_timeout (tc_chain, 20);
+  tcase_set_timeout (tc_chain, 0);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_2_elements);
