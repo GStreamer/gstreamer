@@ -84,8 +84,7 @@ static GstStaticPadTemplate alsasink_sink_factory =
 #else
         "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
 #endif
-        //"signed = (boolean) { TRUE, FALSE }, "
-        "signed = (boolean) TRUE, "
+        "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 16, "
         "depth = (int) 16, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
