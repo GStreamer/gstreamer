@@ -57,6 +57,8 @@ gst_channel_mix_unset_matrix (AudioConvertCtx * this)
   g_free (this->matrix);
 
   this->matrix = NULL;
+  g_free (this->tmp);
+  this->tmp = NULL;
 }
 
 /*
@@ -486,6 +488,9 @@ gst_channel_mix_setup_matrix (AudioConvertCtx * this)
   /* don't lose memory */
   gst_channel_mix_unset_matrix (this);
 
+  /* temp storage */
+  this->tmp = g_new (gint32, this->out.channels);
+
   /* allocate */
   this->matrix = g_new0 (gfloat *, this->in.channels);
   for (i = 0; i < this->in.channels; i++) {
@@ -543,12 +548,15 @@ gst_channel_mix_mix (AudioConvertCtx * this,
 {
   gint in, out, n;
   gint64 res;
-  gint32 tmp[this->out.channels];
-  gboolean backwards = this->out.channels > this->in.channels;
+  gboolean backwards;
   gint inchannels, outchannels;
+
+  g_return_if_fail (this->matrix != NULL);
+  g_return_if_fail (this->tmp != NULL);
 
   inchannels = this->in.channels;
   outchannels = this->out.channels;
+  backwards = outchannels > inchannels;
 
   /* FIXME: use liboil here? */
   for (n = (backwards ? samples - 1 : 0); n < samples && n >= 0;
@@ -565,8 +573,9 @@ gst_channel_mix_mix (AudioConvertCtx * this,
         res = G_MININT32;
       else if (res > G_MAXINT32)
         res = G_MAXINT32;
-      tmp[out] = res;
+      this->tmp[out] = res;
     }
-    memcpy (&out_data[n * outchannels], tmp, sizeof (gint32) * outchannels);
+    memcpy (&out_data[n * outchannels], this->tmp,
+        sizeof (gint32) * outchannels);
   }
 }

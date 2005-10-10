@@ -62,6 +62,8 @@ struct _AudioConvertCtx
   /* channel conversion matrix, m[in_channels][out_channels].
    * If identity matrix, passthrough applies. */
   gfloat **matrix;
+  /* temp storage for channelmix */
+  gint32 *tmp;
 
   gboolean in_default;
   gboolean mix_passthrough;
