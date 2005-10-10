@@ -1,3 +1,8 @@
+2005-10-10  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstbin.c: Merge in some style fixes and additional
+	checks from Wim's state change patch.
+
 2005-10-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gsttypefindhelper.c: (helper_find_peek),

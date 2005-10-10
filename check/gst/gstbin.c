@@ -109,6 +109,7 @@ GST_START_TEST (test_message_state_changed)
   GstBin *bin;
   GstBus *bus;
   GstMessage *message;
+  GstStateChangeReturn ret;
 
   bin = GST_BIN (gst_bin_new (NULL));
   fail_unless (bin != NULL, "Could not create bin");
@@ -118,7 +119,8 @@ GST_START_TEST (test_message_state_changed)
   gst_element_set_bus (GST_ELEMENT_CAST (bin), bus);
 
   /* change state, spawning a message, causing an incref on the bin */
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
+  ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 2);
 
@@ -133,7 +135,8 @@ GST_START_TEST (test_message_state_changed)
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
 
   /* clean up */
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   gst_object_unref (bus);
   gst_object_unref (bin);
@@ -147,6 +150,7 @@ GST_START_TEST (test_message_state_changed_child)
   GstElement *src;
   GstBus *bus;
   GstMessage *message;
+  GstStateChangeReturn ret;
 
   bin = GST_BIN (gst_bin_new (NULL));
   fail_unless (bin != NULL, "Could not create bin");
@@ -165,8 +169,8 @@ GST_START_TEST (test_message_state_changed_child)
    * - first for fakesrc, forwarded to bin's bus, causing incref on fakesrc
    * - second for bin, causing an incref on the bin */
   GST_DEBUG ("setting bin to READY");
-  fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY)
-      == GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_READY);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 2);
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 2);
@@ -194,8 +198,8 @@ GST_START_TEST (test_message_state_changed_child)
   ASSERT_OBJECT_REFCOUNT (bin, "bin", 1);
 
   /* clean up */
-  fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL)
-      == GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (bus);
   gst_object_unref (bin);
 }
@@ -207,6 +211,8 @@ GST_START_TEST (test_message_state_changed_children)
   GstPipeline *pipeline;
   GstElement *src, *sink;
   GstBus *bus;
+  GstStateChangeReturn ret;
+  GstState current, pending;
 
   pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
   fail_unless (pipeline != NULL, "Could not create pipeline");
@@ -236,8 +242,8 @@ GST_START_TEST (test_message_state_changed_children)
 
   /* change state to READY, spawning three messages */
   GST_DEBUG ("setting pipeline to READY");
-  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY)
-      == GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   /* each object is referenced by a message */
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
@@ -255,8 +261,13 @@ GST_START_TEST (test_message_state_changed_children)
 
   /* change state to PAUSED, spawning three messages */
   GST_DEBUG ("setting pipeline to PAUSED");
-  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED)
-      == GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+  ret =
+      gst_element_get_state (GST_ELEMENT (pipeline), &current, &pending, NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (current == GST_STATE_PAUSED);
+  fail_unless (pending == GST_STATE_VOID_PENDING);
 
   /* each object is referenced by a message;
    * base_sink_chain has taken a refcount on the sink, and is blocked on
@@ -275,8 +286,13 @@ GST_START_TEST (test_message_state_changed_children)
 
   /* change state to PLAYING, spawning three messages */
   GST_DEBUG ("setting pipeline to PLAYING");
-  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING)
-      == GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+  ret =
+      gst_element_get_state (GST_ELEMENT (pipeline), &current, &pending, NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (current == GST_STATE_PLAYING);
+  fail_unless (pending == GST_STATE_VOID_PENDING);
 
   /* each object is referenced by one message
    * sink might have an extra reference if it's still blocked on preroll
@@ -296,8 +312,8 @@ GST_START_TEST (test_message_state_changed_children)
 
   /* go back to READY, spawning six messages */
   GST_DEBUG ("setting pipeline to READY");
-  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY)
-      == GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   /* each object is referenced by two messages */
   ASSERT_OBJECT_REFCOUNT (src, "src", 3);
@@ -312,8 +328,8 @@ GST_START_TEST (test_message_state_changed_children)
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   /* setting pipeline to NULL flushes the bus automatically */
-  fail_unless (gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL)
-      == GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
@@ -330,6 +346,7 @@ GST_START_TEST (test_watch_for_state_change)
 {
   GstElement *src, *sink, *bin;
   GstBus *bus;
+  GstStateChangeReturn ret;
 
   bin = gst_element_factory_make ("bin", NULL);
   fail_unless (bin != NULL, "Could not create bin");
@@ -348,8 +365,8 @@ GST_START_TEST (test_watch_for_state_change)
   fail_unless (gst_element_link (src, sink), "could not link src and sink");
 
   /* change state, spawning two times three messages, minus one async */
-  fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED)
-      == GST_STATE_CHANGE_ASYNC);
+  ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC);
 
   pop_messages (bus, 5);
 
@@ -364,8 +381,8 @@ GST_START_TEST (test_watch_for_state_change)
   fail_unless (gst_bus_have_pending (bus) == FALSE,
       "Unexpected messages on bus");
 
-  fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING)
-      == GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   pop_messages (bus, 3);
 
@@ -380,8 +397,8 @@ GST_START_TEST (test_watch_for_state_change)
       "Unexpected messages on bus");
 
   /* setting bin to NULL flushes the bus automatically */
-  fail_unless (gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL)
-      == GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   /* clean up */
   gst_object_unref (bus);
@@ -527,6 +544,8 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   /* don't set to NULL that will set the bus flushing and kill our messages */
   ret = gst_element_set_state (pipeline, GST_STATE_READY);
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to READY failed");
+  ret = gst_element_get_state (pipeline, NULL, NULL, NULL);
+  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to READY failed");
 
   /* TODO: do we need to check downwards state change order as well? */
   pop_messages (bus, 4);        /* pop playing => paused messages off the bus */
@@ -554,6 +573,7 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
 {
   GstElement *src, *identity, *sink, *pipeline;
   GstStateChangeReturn ret;
+  GstState current, pending;
   GstBus *bus;
 
   /* (2) Now again, but check other code path where we don't have
@@ -583,6 +603,10 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to PLAYING failed");
+  ret = gst_element_get_state (pipeline, &current, &pending, NULL);
+  fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to PLAYING failed");
+  fail_if (current != GST_STATE_PLAYING, "State change to PLAYING failed");
+  fail_if (pending != GST_STATE_VOID_PENDING, "State change to PLAYING failed");
 
   /* NULL => READY */
   ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_NULL, GST_STATE_READY, 201);
@@ -743,6 +767,8 @@ gst_bin_suite (void)
 {
   Suite *s = suite_create ("GstBin");
   TCase *tc_chain = tcase_create ("bin tests");
+
+  tcase_set_timeout (tc_chain, 0);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_interface);
