@@ -1,3 +1,10 @@
+2005-10-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstiterator.c: (gst_iterator_new):
+	  Add assertions to make sure passed GType is likely to really
+	  be a GType (as the compiler won't catch it if the size and
+	  GType arguments get mixed up, see #318447).
+
 2005-10-10  Josef Zlomek  <josef dot zlomek at xeris dot cz>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

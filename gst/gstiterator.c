@@ -87,6 +87,8 @@ gst_iterator_new (guint size,
   GstIterator *result;
 
   g_return_val_if_fail (size >= sizeof (GstIterator), NULL);
+  g_return_val_if_fail (G_TYPE_IS_FUNDAMENTAL (type) == FALSE, NULL);
+  g_return_val_if_fail (g_type_qname (type) != 0, NULL);
   g_return_val_if_fail (master_cookie != NULL, NULL);
   g_return_val_if_fail (next != NULL, NULL);
   g_return_val_if_fail (resync != NULL, NULL);
