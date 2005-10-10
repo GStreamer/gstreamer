@@ -1,3 +1,11 @@
+2005-10-10  Edgard Lima <edgard.lima@indt.org.br>
+
+	* PORTED_09:
+	* ext/speex/Makefile.am:
+	* ext/speex/gstspeex.c:
+	* ext/speex/gstspeexenc.c:
+	Speexenc ported to 0.9
+
 2005-10-10  Wim Taymans  <wim@fluendo.com>
 
 	* sys/oss/gstosssink.c: (gst_oss_sink_class_init),
