@@ -1,7 +1,7 @@
 if GST_DISABLE_LOADSAVE
 noinst_PROGRAMS =
 else
-noinst_PROGRAMS = runxml dynamic-pipeline sched-stress interrupt1 interrupt2 interrupt3
+noinst_PROGRAMS = runxml dynamic-pipeline sched-stress interrupt1 interrupt2 interrupt3 sort
 endif
 
 dynamic_pipeline_SOURCES = dynamic-pipeline.c 

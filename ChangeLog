@@ -1,3 +1,9 @@
+2005-10-10  Wim Taymans  <wim@fluendo.com>
+
+	* tests/sched/Makefile.am:
+	* tests/sched/sort.c: (make_pipeline1), (make_pipeline2),
+	(make_pipeline3), (make_pipeline4), (print_elem), (main):
+
 2005-10-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstutils.c: (guint64_to_gdouble), (gst_util_uint64_scale):
