@@ -149,8 +149,7 @@ for %%i in (af az ca cs en_GB fr nl sq sr sv tr uk) do copy /Y ..\po\%%i.gmo c:\
 "/>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="echo $(Path)
-copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
+				CommandLine="copy $(ProjectDir)\gstconfig.h $(ProjectDir)\..\gst\gstconfig.h
 copy $(ProjectDir)\gstversion.h $(ProjectDir)\..\gst\gstversion.h
 copy $(ProjectDir)\gstenumtypes.h $(ProjectDir)\..\gst\gstenumtypes.h
 copy $(ProjectDir)\gstenumtypes.c $(ProjectDir)\..\gst\gstenumtypes.c
