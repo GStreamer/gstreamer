@@ -1,5 +1,24 @@
 2005-10-10  Wim Taymans  <wim@fluendo.com>
 
+	* check/pipelines/simple_launch_lines.c: (run_pipeline):
+	Small update, use API as stated in design docs.
+
+	* examples/seeking/seek.c: (make_avi_msmpeg4v3_mp3_pipeline),
+	(update_scale), (do_seek), (seek_cb), (set_update_scale),
+	(start_seek), (stop_seek), (play_cb), (pause_cb), (stop_cb),
+	(message_received), (main):
+	Updated seek example for GOption. Some usability improvements.
+
+2005-10-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audioconvert/audioconvert.h:
+	* gst/audioconvert/gstchannelmix.c: (gst_channel_mix_unset_matrix),
+	(gst_channel_mix_setup_matrix), (gst_channel_mix_mix):
+	Alloc temp storage somewhere else where we can do it more
+	portable.
+
+2005-10-10  Wim Taymans  <wim@fluendo.com>
+
 	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_create),
 	(gst_tcpserversrc_start):
 	Don't block in accept while doing the state change, move

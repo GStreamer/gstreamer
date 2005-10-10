@@ -20,7 +20,8 @@ static gboolean stats = FALSE;
 static gboolean elem_seek = FALSE;
 static gboolean verbose = FALSE;
 
-static guint update_id;
+static GstState state;
+static guint update_id = 0;
 static guint seek_timeout_id = 0;
 static gulong changed_id;
 
@@ -469,7 +470,7 @@ make_avi_msmpeg4v3_mp3_pipeline (const gchar * location)
   GstElement *src, *demux, *a_decoder, *a_convert, *v_decoder, *v_convert;
   GstElement *audiosink, *videosink;
   GstElement *a_queue, *v_queue;
-  GstPad *seekable;
+  GstPad *seekable, *pad;
 
   pipeline = gst_pipeline_new ("app");
 
@@ -488,18 +489,23 @@ make_avi_msmpeg4v3_mp3_pipeline (const gchar * location)
   a_convert = gst_element_factory_make_or_warn ("audioconvert", "a_convert");
   audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
 
-  gst_element_link (a_queue, a_decoder);
-  gst_element_link (a_decoder, a_convert);
-  gst_element_link (a_convert, audiosink);
-
   gst_bin_add (GST_BIN (audio_bin), a_queue);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
   gst_bin_add (GST_BIN (audio_bin), a_convert);
   gst_bin_add (GST_BIN (audio_bin), audiosink);
 
+  gst_element_link (a_queue, a_decoder);
+  gst_element_link (a_decoder, a_convert);
+  gst_element_link (a_convert, audiosink);
+
   gst_bin_add (GST_BIN (pipeline), audio_bin);
 
-  setup_dynamic_link (demux, NULL, gst_element_get_pad (a_queue, "sink"), NULL);
+  pad = gst_element_get_pad (a_queue, "sink");
+  gst_element_add_pad (audio_bin, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (pad);
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (audio_bin, "sink"),
+      NULL);
 
   video_bin = gst_bin_new ("v_decoder_bin");
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
@@ -507,16 +513,22 @@ make_avi_msmpeg4v3_mp3_pipeline (const gchar * location)
   v_convert =
       gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_convert");
   videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
-  gst_element_link_many (v_queue, v_decoder, v_convert, videosink, NULL);
 
   gst_bin_add (GST_BIN (video_bin), v_queue);
   gst_bin_add (GST_BIN (video_bin), v_decoder);
   gst_bin_add (GST_BIN (video_bin), v_convert);
   gst_bin_add (GST_BIN (video_bin), videosink);
 
+  gst_element_link_many (v_queue, v_decoder, v_convert, videosink, NULL);
+
   gst_bin_add (GST_BIN (pipeline), video_bin);
 
-  setup_dynamic_link (demux, NULL, gst_element_get_pad (v_queue, "sink"), NULL);
+  pad = gst_element_get_pad (v_queue, "sink");
+  gst_element_add_pad (video_bin, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (pad);
+
+  setup_dynamic_link (demux, NULL, gst_element_get_pad (video_bin, "sink"),
+      NULL);
 
   seekable = gst_element_get_pad (a_decoder, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
@@ -909,12 +921,10 @@ query_positions_pads ()
 static gboolean
 update_scale (gpointer data)
 {
-  GstClock *clock;
   GstFormat format;
 
   position = 0;
   duration = 0;
-  clock = gst_pipeline_get_clock (GST_PIPELINE (pipeline));
 
   format = GST_FORMAT_TIME;
 
@@ -933,11 +943,6 @@ update_scale (gpointer data)
   }
 
   if (stats) {
-    if (clock) {
-      g_print ("clock:                  %13" G_GUINT64_FORMAT "  (%s)\n",
-          position, gst_object_get_name (GST_OBJECT (clock)));
-    }
-
     if (elem_seek) {
       query_positions_elems ();
     } else {
@@ -952,8 +957,6 @@ update_scale (gpointer data)
     gtk_adjustment_set_value (adjustment, position * 100.0 / duration);
     gtk_widget_queue_draw (hscale);
   }
-
-  gst_object_unref (clock);
 
   return TRUE;
 }
@@ -1014,18 +1017,20 @@ do_seek (GtkWidget * widget)
     }
   }
 
-  if (res)
+  if (res) {
+    GTimeVal tv;
+
     gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
-  else
+    GST_TIME_TO_TIMEVAL (100 * GST_MSECOND, tv);
+    gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, &tv);
+  } else
     g_print ("seek failed\n");
 }
 
 static void
 seek_cb (GtkWidget * widget)
 {
-#ifndef SCRUB
-  GTimeVal timeval;
-#else
+#ifdef SCRUB
   /* If the timer hasn't expired yet, then the pipeline is running */
   if (seek_timeout_id != 0) {
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
@@ -1033,12 +1038,6 @@ seek_cb (GtkWidget * widget)
 #endif
 
   do_seek (widget);
-
-#ifndef SCRUB
-  /* wait for preroll */
-  GST_TIME_TO_TIMEVAL (50 * GST_MSECOND, timeval);
-  gst_element_get_state (pipeline, NULL, NULL, &timeval);
-#endif
 
 #ifdef SCRUB
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -1050,11 +1049,29 @@ seek_cb (GtkWidget * widget)
 #endif
 }
 
+static void
+set_update_scale (gboolean active)
+{
+  if (active) {
+    if (update_id == 0) {
+      update_id =
+          g_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+    }
+  } else {
+    if (update_id) {
+      g_source_remove (update_id);
+      update_id = 0;
+    }
+  }
+}
+
 static gboolean
 start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 {
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
-  g_source_remove (update_id);
+  if (state == GST_STATE_PLAYING)
+    gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+  set_update_scale (FALSE);
 
   if (changed_id == 0) {
     changed_id = gtk_signal_connect (GTK_OBJECT (hscale),
@@ -1074,11 +1091,11 @@ stop_seek (GtkWidget * widget, gpointer user_data)
     seek_timeout_id = 0;
     /* Still scrubbing, so the pipeline is already playing */
   } else {
-    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    if (state == GST_STATE_PLAYING)
+      gst_element_set_state (pipeline, GST_STATE_PLAYING);
   }
 
-  update_id =
-      g_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+  set_update_scale (TRUE);
 
   return FALSE;
 }
@@ -1086,43 +1103,91 @@ stop_seek (GtkWidget * widget, gpointer user_data)
 static void
 play_cb (GtkButton * button, gpointer data)
 {
-  GstState state;
+  GstStateChangeReturn ret;
 
-  gst_element_get_state (pipeline, &state, NULL, NULL);
   if (state != GST_STATE_PLAYING) {
     g_print ("PLAY pipeline\n");
-    gst_element_set_state (pipeline, GST_STATE_PLAYING);
-    update_id =
-        g_timeout_add (UPDATE_INTERVAL, (GtkFunction) update_scale, pipeline);
+    ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    if (ret == GST_STATE_CHANGE_FAILURE)
+      goto failed;
+
+    set_update_scale (TRUE);
+    state = GST_STATE_PLAYING;
+  }
+  return;
+
+failed:
+  {
+    g_print ("PLAY failed\n");
   }
 }
 
 static void
 pause_cb (GtkButton * button, gpointer data)
 {
-  GstState state;
+  GstStateChangeReturn ret;
 
-  gst_element_get_state (pipeline, &state, NULL, NULL);
   if (state != GST_STATE_PAUSED) {
     g_print ("PAUSE pipeline\n");
-    gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    g_source_remove (update_id);
+    ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    if (ret == GST_STATE_CHANGE_FAILURE)
+      goto failed;
+
+    set_update_scale (FALSE);
+    state = GST_STATE_PAUSED;
+  }
+  return;
+
+failed:
+  {
+    g_print ("PAUSE failed\n");
   }
 }
 
 static void
 stop_cb (GtkButton * button, gpointer data)
 {
-  GstState state;
+  GstStateChangeReturn ret;
 
-  gst_element_get_state (pipeline, &state, NULL, NULL);
   if (state != GST_STATE_READY) {
     g_print ("READY pipeline\n");
-    gst_element_set_state (pipeline, GST_STATE_READY);
+    ret = gst_element_set_state (pipeline, GST_STATE_READY);
+    if (ret == GST_STATE_CHANGE_FAILURE)
+      goto failed;
+
     gtk_adjustment_set_value (adjustment, 0.0);
-    g_source_remove (update_id);
+    set_update_scale (FALSE);
+
+    state = GST_STATE_READY;
+  }
+  return;
+
+failed:
+  {
+    g_print ("READY failed\n");
   }
 }
+
+static void
+message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+{
+  const GstStructure *s;
+
+  s = gst_message_get_structure (message);
+  g_print ("message from \"%s\" (%s): ",
+      GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))),
+      gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+  if (s) {
+    gchar *sstr;
+
+    sstr = gst_structure_to_string (s);
+    g_print ("%s\n", sstr);
+    g_free (sstr);
+  } else {
+    g_print ("no message details\n");
+  }
+}
+
 
 typedef struct
 {
@@ -1169,18 +1234,27 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *hbox, *vbox, *play_button, *pause_button, *stop_button;
-  struct poptOption options[] = {
-    {"stats", 's', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &stats, 0,
+  GOptionEntry options[] = {
+    {"stats", 's', 0, G_OPTION_ARG_NONE, &stats,
         "Show pad stats", NULL},
-    {"elem", 'e', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &elem_seek, 0,
+    {"elem", 'e', 0, G_OPTION_ARG_NONE, &elem_seek,
         "Seek on elements instead of pads", NULL},
-    {"verbose", 'v', POPT_ARG_NONE | POPT_ARGFLAG_STRIP, &verbose, 0,
+    {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
         "Verbose properties", NULL},
-    POPT_TABLEEND
+    {NULL}
   };
   gint type;
+  GOptionContext *ctx;
+  GError *err = NULL;
 
-  gst_init_with_popt_table (&argc, &argv, options);
+  ctx = g_option_context_new ("seek");
+  g_option_context_add_main_entries (ctx, options, NULL);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+
+  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+    g_print ("Error initializing: %s\n", err->message);
+    exit (1);
+  }
 
   GST_DEBUG_CATEGORY_INIT (seek_debug, "seek", 0, "seek example");
 
@@ -1223,7 +1297,7 @@ main (int argc, char **argv)
       "format_value", G_CALLBACK (format_value), pipeline);
 
   /* do the packing stuff ... */
-  gtk_window_set_default_size (GTK_WINDOW (window), 96, 96);
+  gtk_window_set_default_size (GTK_WINDOW (window), 250, 96);
   gtk_container_add (GTK_CONTAINER (window), vbox);
   gtk_container_add (GTK_CONTAINER (vbox), hbox);
   gtk_box_pack_start (GTK_BOX (hbox), play_button, FALSE, FALSE, 2);
@@ -1246,6 +1320,22 @@ main (int argc, char **argv)
   if (verbose) {
     g_signal_connect (pipeline, "deep_notify",
         G_CALLBACK (gst_object_default_deep_notify), NULL);
+  }
+  {
+    GstBus *bus;
+
+    bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+    gst_bus_add_signal_watch (bus);
+
+//    g_signal_connect (bus, "message::state-changed", (GCallback) message_received, pipeline);
+    g_signal_connect (bus, "message::new-clock", (GCallback) message_received,
+        pipeline);
+    g_signal_connect (bus, "message::error", (GCallback) message_received,
+        pipeline);
+    g_signal_connect (bus, "message::warning", (GCallback) message_received,
+        pipeline);
+    g_signal_connect (bus, "message::eos", (GCallback) message_received,
+        pipeline);
   }
   gtk_main ();
 

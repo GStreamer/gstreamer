@@ -49,12 +49,15 @@ run_pipeline (GstElement * pipe, const gchar * descr,
   GstBus *bus;
   GstMessage *message;
   GstMessageType revent;
+  GstStateChangeReturn ret;
 
   g_assert (pipe);
   bus = gst_element_get_bus (pipe);
   g_assert (bus);
-  if (gst_element_set_state (pipe,
-          GST_STATE_PLAYING) != GST_STATE_CHANGE_SUCCESS) {
+
+  ret = gst_element_set_state (pipe, GST_STATE_PLAYING);
+  ret = gst_element_get_state (pipe, NULL, NULL, NULL);
+  if (ret != GST_STATE_CHANGE_SUCCESS) {
     g_critical ("Couldn't set pipeline to PLAYING");
     goto done;
   }
