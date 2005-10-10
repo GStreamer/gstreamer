@@ -93,51 +93,62 @@ typedef struct {
   GstElement *sink;
   GstCaps *caps;
   gulong signal_id;
-  /* FIXME: need to connect to "disposed" signal to clean up, but there is no such signal */
+  /* FIXME: need to connect to "disposed" signal to clean up,
+   * but there is no such signal */
 } DelayedLink;
 
 #ifdef G_HAVE_ISO_VARARGS
-#define SET_ERROR(error, type, ...) G_STMT_START{ \
+#  define SET_ERROR(error, type, ...) \
+G_STMT_START { \
   GST_CAT_ERROR (GST_CAT_PIPELINE, __VA_ARGS__); \
   if ((error) && !*(error)) { \
     g_set_error ((error), GST_PARSE_ERROR, (type), __VA_ARGS__); \
   } \
-}G_STMT_END
-#define ERROR(type, ...) SET_ERROR (((graph_t *) graph)->error, (type), __VA_ARGS__ )
-#ifndef GST_DISABLE_GST_DEBUG
-#  define YYDEBUG 1
+} G_STMT_END
+
+#  define ERROR(type, ...) \
+  SET_ERROR (((graph_t *) graph)->error, (type), __VA_ARGS__ )
+
+#  ifndef GST_DISABLE_GST_DEBUG
+#    define YYDEBUG 1
    /* bison 1.35 calls this macro with side effects, we need to make sure the
       side effects work - crappy bison
 #  define YYFPRINTF(a, ...) GST_CAT_DEBUG (GST_CAT_PIPELINE, __VA_ARGS__)
  */
-#  define YYFPRINTF(a, ...) G_STMT_START{ \
+#    define YYFPRINTF(a, ...) \
+G_STMT_START { \
      gchar *temp = g_strdup_printf (__VA_ARGS__); \
      GST_CAT_LOG (GST_CAT_PIPELINE, temp); \
      g_free (temp); \
-   }G_STMT_END
-#endif
+} G_STMT_END
+#  endif /* GST_DISABLE_GST_DEBUG */
 
 #elif defined(G_HAVE_GNUC_VARARGS)
 
-#define SET_ERROR(error, type, args...) G_STMT_START{ \
+#  define SET_ERROR(error, type, args...) \
+G_STMT_START { \
   GST_CAT_ERROR (GST_CAT_PIPELINE, args ); \
   if ((error) && !*(error)) { \
     g_set_error ((error), GST_PARSE_ERROR, (type), args ); \
   } \
-}G_STMT_END
-#define ERROR(type, args...) SET_ERROR (((graph_t *) graph)->error, (type) , args )
-#ifndef GST_DISABLE_GST_DEBUG
-#  define YYDEBUG 1
+} G_STMT_END
+
+#  define ERROR(type, args...) \
+  SET_ERROR (((graph_t *) graph)->error,(type) , args )
+
+#  ifndef GST_DISABLE_GST_DEBUG
+#    define YYDEBUG 1
    /* bison 1.35 calls this macro with side effects, we need to make sure the
       side effects work - crappy bison
 #  define YYFPRINTF(a, args...) GST_CAT_DEBUG (GST_CAT_PIPELINE, args )
  */
-#  define YYFPRINTF(a, args...) G_STMT_START{ \
+#    define YYFPRINTF(a, args...) \
+G_STMT_START { \
      gchar *temp = g_strdup_printf ( args ); \
      GST_CAT_LOG (GST_CAT_PIPELINE, temp); \
      g_free (temp); \
-   }G_STMT_END
-#endif
+} G_STMT_END
+#  endif /* GST_DISABLE_GST_DEBUG */
 
 #else
 
@@ -162,8 +173,8 @@ SET_ERROR (GError **error, gint type, const char *format, ...)
   }
 }
 
-#ifndef GST_DISABLE_GST_DEBUG
-#  define YYDEBUG 1
+#  ifndef GST_DISABLE_GST_DEBUG
+#    define YYDEBUG 1
 static inline void
 YYPRINTF(const char *format, ...)
 {
@@ -176,21 +187,24 @@ YYPRINTF(const char *format, ...)
   g_free (temp);
   va_end (varargs);
 }
-#endif
+#  endif /* GST_DISABLE_GST_DEBUG */
 
-#endif
+#endif /* G_HAVE_ISO_VARARGS */
 
-#define GST_BIN_MAKE(res, type, chainval, assign) G_STMT_START{ \
+#define GST_BIN_MAKE(res, type, chainval, assign) \
+G_STMT_START { \
   chain_t *chain = chainval; \
   GSList *walk; \
   GstBin *bin = (GstBin *) gst_element_factory_make (type, NULL); \
   if (!chain) { \
-    SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_EMPTY_BIN, _("specified empty bin \"%s\", not allowed"), type); \
+    SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_EMPTY_BIN, \
+        _("specified empty bin \"%s\", not allowed"), type); \
     g_slist_foreach (assign, (GFunc) gst_parse_strfree, NULL); \
     g_slist_free (assign); \
     YYERROR; \
   } else if (!bin) { \
-    SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, _("no bin \"%s\", skipping"), type); \
+    SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, \
+        _("no bin \"%s\", skipping"), type); \
     g_slist_foreach (assign, (GFunc) gst_parse_strfree, NULL); \
     g_slist_free (assign); \
     res = chain; \
@@ -205,9 +219,10 @@ YYPRINTF(const char *format, ...)
       gst_parse_element_set ((gchar *) walk->data, GST_ELEMENT (bin), graph); \
     g_slist_free (assign); \
   } \
-}G_STMT_END
+} G_STMT_END
 
-#define MAKE_LINK(link, _src, _src_name, _src_pads, _sink, _sink_name, _sink_pads) G_STMT_START{ \
+#define MAKE_LINK(link, _src, _src_name, _src_pads, _sink, _sink_name, _sink_pads) \
+G_STMT_START { \
   link = gst_parse_link_new (); \
   link->src = _src; \
   link->sink = _sink; \
@@ -216,9 +231,10 @@ YYPRINTF(const char *format, ...)
   link->src_pads = _src_pads; \
   link->sink_pads = _sink_pads; \
   link->caps = NULL; \
-}G_STMT_END
+} G_STMT_END
 
-#define MAKE_REF(link, _src, _pads) G_STMT_START{ \
+#define MAKE_REF(link, _src, _pads) \
+G_STMT_START { \
   gchar *padname = _src; \
   GSList *pads = _pads; \
   if (padname) { \
@@ -229,7 +245,7 @@ YYPRINTF(const char *format, ...)
       pads = g_slist_prepend (pads, gst_parse_strdup (padname)); \
   } \
   MAKE_LINK (link, NULL, _src, pads, NULL, NULL, NULL); \
-}G_STMT_END
+} G_STMT_END
 
 static void
 gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
@@ -269,7 +285,9 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     g_object_set_property (G_OBJECT (target), pspec->name, &v);
     gst_object_unref (target);
   } else { 
-    SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, _("no property \"%s\" in element \"%s\""), value, GST_ELEMENT_NAME (element)); 
+    SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
+        _("no property \"%s\" in element \"%s\""), value, \
+        GST_ELEMENT_NAME (element)); 
   }
 
 out:
@@ -324,7 +342,8 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
         GstPad *pad = GST_PAD_CAST (data);
 
         if (GST_PAD_IS_SINK (pad) && GST_PAD_PEER (pad) &&
-            !gst_element_is_locked_state (GST_PAD_PARENT (GST_PAD_PEER (pad)))) {
+            !gst_element_is_locked_state (
+                GST_PAD_PARENT (GST_PAD_PEER (pad)))) {
           unlocked_peer = TRUE;
 	  done = TRUE;
         }
@@ -351,10 +370,12 @@ gst_parse_element_lock (GstElement *element, gboolean lock)
     if (!lock)
     {
       /* try to sync state with parent */
-      GST_CAT_DEBUG (GST_CAT_PIPELINE, "trying to sync state of element with parent");
+      GST_CAT_DEBUG (GST_CAT_PIPELINE,
+          "trying to sync state of element with parent");
       /* FIXME: it would be nice if we can figure out why it failed
          (e.g. caps nego) and give an error about that instead. */
-      if (gst_element_set_state (element, GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
+      if (gst_element_set_state (element, GST_STATE_PLAYING)
+          == GST_STATE_CHANGE_FAILURE)
         GST_ELEMENT_ERROR (element, CORE, STATE_CHANGE, (NULL), (NULL));
     }
   } else {
@@ -381,8 +402,10 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
                 GST_ELEMENT_NAME (src), link->src_pad,
                 GST_ELEMENT_NAME (link->sink), link->sink_pad);
 
-  if (gst_element_link_pads_filtered (src, link->src_pad, link->sink, link->sink_pad, link->caps)) {
-    /* do this here, we don't want to get any problems later on when unlocking states */
+  if (gst_element_link_pads_filtered (src, link->src_pad, link->sink,
+      link->sink_pad, link->caps)) {
+    /* do this here, we don't want to get any problems later on when
+     * unlocking states */
     GST_CAT_DEBUG (GST_CAT_PIPELINE, "delayed linking %s:%s to %s:%s worked", 
                	   GST_ELEMENT_NAME (src), link->src_pad,
                	   GST_ELEMENT_NAME (link->sink), link->sink_pad);
@@ -398,20 +421,24 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
 /* both padnames and the caps may be NULL */
 static gboolean
 gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad, 
-                                GstElement *sink, const gchar *sink_pad, GstCaps *caps)
+                                GstElement *sink, const gchar *sink_pad,
+                                GstCaps *caps)
 {
-  GList *templs = gst_element_class_get_pad_template_list (GST_ELEMENT_GET_CLASS (src));
+  GList *templs = gst_element_class_get_pad_template_list (
+      GST_ELEMENT_GET_CLASS (src));
 	 
   for (; templs; templs = templs->next) {
     GstPadTemplate *templ = (GstPadTemplate *) templs->data;
-    if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) && (GST_PAD_TEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
+    if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) &&
+        (GST_PAD_TEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
     {
       DelayedLink *data = g_new (DelayedLink, 1); 
       
       /* TODO: maybe we should check if src_pad matches this template's names */
 
       GST_CAT_DEBUG (GST_CAT_PIPELINE, "trying delayed link %s:%s to %s:%s", 
-                     GST_ELEMENT_NAME (src), src_pad, GST_ELEMENT_NAME (sink), sink_pad);
+                     GST_ELEMENT_NAME (src), src_pad,
+                     GST_ELEMENT_NAME (sink), sink_pad);
 
       data->src_pad = g_strdup (src_pad);
       data->sink = sink;
@@ -422,7 +449,7 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       	data->caps = NULL;
       }
       data->signal_id = g_signal_connect (G_OBJECT (src), "pad-added", 
-					  G_CALLBACK (gst_parse_found_pad), data);
+          G_CALLBACK (gst_parse_found_pad), data);
       return TRUE;
     }
   }
@@ -444,22 +471,22 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
   g_assert (GST_IS_ELEMENT (src));
   g_assert (GST_IS_ELEMENT (sink));
   
-  GST_CAT_INFO (GST_CAT_PIPELINE, "linking %s:%s to %s:%s (%u/%u) with caps \"%" GST_PTR_FORMAT "\"", 
-                GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "(any)",
-                GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "(any)",
-                g_slist_length (srcs), g_slist_length (sinks),
-	        link->caps);
+  GST_CAT_INFO (GST_CAT_PIPELINE,
+      "linking %s:%s to %s:%s (%u/%u) with caps \"%" GST_PTR_FORMAT "\"", 
+      GST_ELEMENT_NAME (src), link->src_name ? link->src_name : "(any)",
+      GST_ELEMENT_NAME (sink), link->sink_name ? link->sink_name : "(any)",
+      g_slist_length (srcs), g_slist_length (sinks), link->caps);
 
   if (!srcs || !sinks) {
-    if (gst_element_link_pads_filtered (src, srcs ? (const gchar *) srcs->data : NULL,
-                                        sink, sinks ? (const gchar *) sinks->data : NULL,
-					link->caps)) {
+    if (gst_element_link_pads_filtered (src,
+        srcs ? (const gchar *) srcs->data : NULL, sink,
+        sinks ? (const gchar *) sinks->data : NULL, link->caps)) {
       gst_parse_element_lock (sink, gst_element_is_locked_state (src));
       goto success;
     } else {
-      if (gst_parse_perform_delayed_link (src, srcs ? (const gchar *) srcs->data : NULL,
-                                          sink, sinks ? (const gchar *) sinks->data : NULL,
-					  link->caps)) {
+      if (gst_parse_perform_delayed_link (src,
+          srcs ? (const gchar *) srcs->data : NULL,
+          sink, sinks ? (const gchar *) sinks->data : NULL, link->caps)) {
         gst_parse_element_lock (sink, TRUE);
 	goto success;
       } else {
@@ -475,7 +502,8 @@ gst_parse_perform_link (link_t *link, graph_t *graph)
     const gchar *sink_pad = (const gchar *) sinks->data;
     srcs = g_slist_next (srcs);
     sinks = g_slist_next (sinks);
-    if (gst_element_link_pads_filtered (src, src_pad, sink, sink_pad, link->caps)) {
+    if (gst_element_link_pads_filtered (src, src_pad, sink, sink_pad,
+        link->caps)) {
       gst_parse_element_lock (sink, gst_element_is_locked_state (src));
       continue;
     } else {
@@ -495,7 +523,9 @@ success:
   return 0;
   
 error:
-  SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_LINK, _("could not link %s to %s"), GST_ELEMENT_NAME (src), GST_ELEMENT_NAME (sink));
+  SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_LINK,
+      _("could not link %s to %s"), GST_ELEMENT_NAME (src),
+      GST_ELEMENT_NAME (sink));
   gst_parse_free_link (link);
   return -1;
 }
@@ -803,14 +833,17 @@ _gst_parse_launch (const gchar *str, GError **error)
 #endif
 
   if (yyparse (&g) != 0) {
-    SET_ERROR (error, GST_PARSE_ERROR_SYNTAX, "Unrecoverable syntax error while parsing pipeline %s", str);
+    SET_ERROR (error, GST_PARSE_ERROR_SYNTAX,
+        "Unrecoverable syntax error while parsing pipeline %s", str);
     
     goto error1;
   }
   g_free (dstr);
   _gst_parse_yy_delete_buffer (buf);
   
-  GST_CAT_DEBUG (GST_CAT_PIPELINE, "got %u elements and %u links", g.chain ? g_slist_length (g.chain->elements) : 0, g_slist_length (g.links));
+  GST_CAT_DEBUG (GST_CAT_PIPELINE, "got %u elements and %u links",
+      g.chain ? g_slist_length (g.chain->elements) : 0,
+      g_slist_length (g.links));
   
   if (!g.chain) {
     ret = NULL;
@@ -846,7 +879,8 @@ _gst_parse_launch (const gchar *str, GError **error)
         }
       }
       if (!l->src) {
-        SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, "No element named \"%s\" - omitting link", l->src_name);
+        SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+            "No element named \"%s\" - omitting link", l->src_name);
         gst_parse_free_link (l);
         continue;
       }
@@ -860,7 +894,8 @@ _gst_parse_launch (const gchar *str, GError **error)
         }
       }
       if (!l->sink) {
-        SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, "No element named \"%s\" - omitting link", l->sink_name);
+        SET_ERROR (error, GST_PARSE_ERROR_NO_SUCH_ELEMENT,
+            "No element named \"%s\" - omitting link", l->sink_name);
         gst_parse_free_link (l);
         continue;
       }
@@ -871,9 +906,12 @@ _gst_parse_launch (const gchar *str, GError **error)
 
 out:
 #ifdef __GST_PARSE_TRACE
-  GST_CAT_DEBUG (GST_CAT_PIPELINE, "TRACE: %u strings, %u chains and %u links left", __strings, __chains, __links);
+  GST_CAT_DEBUG (GST_CAT_PIPELINE,
+      "TRACE: %u strings, %u chains and %u links left", __strings, __chains,
+      __links);
   if (__strings || __chains || __links) {
-    g_warning ("TRACE: %u strings, %u chains and %u links left", __strings, __chains, __links);
+    g_warning ("TRACE: %u strings, %u chains and %u links left", __strings,
+        __chains, __links);
   }
 #endif /* __GST_PARSE_TRACE */
 

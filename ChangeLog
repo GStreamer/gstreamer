@@ -1,3 +1,8 @@
+2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/parse/grammar.y:
+	  some cleanup before the hacking
+
 2005-10-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_query):
