@@ -15,6 +15,8 @@ win32/gstoptimalscheduler.vcproj
 win32/gstreamer-dbg.def
 win32/gstreamer.def
 win32/GStreamer.vcproj
+win32/libgstbase.def
+win32/libgstbase.vcproj
 win32/gst-register.vcproj
 win32/gstversion.h
 win32/gtchar.h
@@ -28,3 +30,4 @@ win32/mman.h
 win32/mman.inl
 win32/msvc71.sln
 win32/README.txt
+win32/link_oldruntime.c
