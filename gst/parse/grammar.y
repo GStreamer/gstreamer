@@ -97,7 +97,10 @@ typedef struct {
    * but there is no such signal */
 } DelayedLink;
 
+/*** define SET_ERROR and ERROR macros/functions */
+
 #ifdef G_HAVE_ISO_VARARGS
+
 #  define SET_ERROR(error, type, ...) \
 G_STMT_START { \
   GST_CAT_ERROR (GST_CAT_PIPELINE, __VA_ARGS__); \
@@ -108,20 +111,6 @@ G_STMT_START { \
 
 #  define ERROR(type, ...) \
   SET_ERROR (((graph_t *) graph)->error, (type), __VA_ARGS__ )
-
-#  ifndef GST_DISABLE_GST_DEBUG
-#    define YYDEBUG 1
-   /* bison 1.35 calls this macro with side effects, we need to make sure the
-      side effects work - crappy bison
-#  define YYFPRINTF(a, ...) GST_CAT_DEBUG (GST_CAT_PIPELINE, __VA_ARGS__)
- */
-#    define YYFPRINTF(a, ...) \
-G_STMT_START { \
-     gchar *temp = g_strdup_printf (__VA_ARGS__); \
-     GST_CAT_LOG (GST_CAT_PIPELINE, temp); \
-     g_free (temp); \
-} G_STMT_END
-#  endif /* GST_DISABLE_GST_DEBUG */
 
 #elif defined(G_HAVE_GNUC_VARARGS)
 
@@ -135,20 +124,6 @@ G_STMT_START { \
 
 #  define ERROR(type, args...) \
   SET_ERROR (((graph_t *) graph)->error,(type) , args )
-
-#  ifndef GST_DISABLE_GST_DEBUG
-#    define YYDEBUG 1
-   /* bison 1.35 calls this macro with side effects, we need to make sure the
-      side effects work - crappy bison
-#  define YYFPRINTF(a, args...) GST_CAT_DEBUG (GST_CAT_PIPELINE, args )
- */
-#    define YYFPRINTF(a, args...) \
-G_STMT_START { \
-     gchar *temp = g_strdup_printf ( args ); \
-     GST_CAT_LOG (GST_CAT_PIPELINE, temp); \
-     g_free (temp); \
-} G_STMT_END
-#  endif /* GST_DISABLE_GST_DEBUG */
 
 #else
 
@@ -173,8 +148,37 @@ SET_ERROR (GError **error, gint type, const char *format, ...)
   }
 }
 
-#  ifndef GST_DISABLE_GST_DEBUG
-#    define YYDEBUG 1
+#endif /* G_HAVE_ISO_VARARGS */
+
+/*** define YYPRINTF macro/function if we're debugging */
+
+/* bison 1.35 calls this macro with side effects, we need to make sure the
+   side effects work - crappy bison */
+
+#ifndef GST_DISABLE_GST_DEBUG
+#  define YYDEBUG 1
+
+#  ifdef G_HAVE_ISO_VARARGS
+
+/* #  define YYFPRINTF(a, ...) GST_CAT_DEBUG (GST_CAT_PIPELINE, __VA_ARGS__) */
+#    define YYFPRINTF(a, ...) \
+G_STMT_START { \
+     gchar *temp = g_strdup_printf (__VA_ARGS__); \
+     GST_CAT_LOG (GST_CAT_PIPELINE, temp); \
+     g_free (temp); \
+} G_STMT_END
+
+#  elif defined(G_HAVE_GNUC_VARARGS)
+
+#    define YYFPRINTF(a, args...) \
+G_STMT_START { \
+     gchar *temp = g_strdup_printf ( args ); \
+     GST_CAT_LOG (GST_CAT_PIPELINE, temp); \
+     g_free (temp); \
+} G_STMT_END
+
+#  else
+
 static inline void
 YYPRINTF(const char *format, ...)
 {
@@ -187,9 +191,10 @@ YYPRINTF(const char *format, ...)
   g_free (temp);
   va_end (varargs);
 }
-#  endif /* GST_DISABLE_GST_DEBUG */
 
-#endif /* G_HAVE_ISO_VARARGS */
+#  endif /* G_HAVE_ISO_VARARGS */
+
+#endif /* GST_DISABLE_GST_DEBUG */
 
 #define GST_BIN_MAKE(res, type, chainval, assign) \
 G_STMT_START { \
