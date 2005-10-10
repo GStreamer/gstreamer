@@ -91,6 +91,11 @@ GST_START_TEST (test_src_sink)
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "not playing");
   fail_unless (current == GST_STATE_PLAYING, "not playing");
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "cannot null pipeline");
+
+  gst_object_unref (pipeline);
+
 }
 
 GST_END_TEST
@@ -177,7 +182,9 @@ GST_START_TEST (test_livesrc_sink)
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "cannot force play");
+  ret = gst_element_get_state (pipeline, NULL, NULL, NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "cannot force play got %d",
+      ret);
 
   ret = gst_element_get_state (pipeline, &current, &pending, NULL);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "not playing");

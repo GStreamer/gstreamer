@@ -1,5 +1,9 @@
 2005-10-10  Andy Wingo  <wingo@pobox.com>
 
+	* check/states/sinks.c (test_src_sink): Cleanups from the state
+	change patch.
+	(test_livesrc_sink): Sync on the state.
+
 	* check/pipelines/simple_launch_lines.c (run_pipeline): Merge from
 	the state change patch.
 
