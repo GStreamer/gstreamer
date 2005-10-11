@@ -1,5 +1,10 @@
 2005-10-11  Wim Taymans  <wim@fluendo.com>
 
+	* ext/speex/gstspeexdec.c: (speex_dec_event), (speex_dec_chain):
+	newsegment API fix.
+
+2005-10-11  Wim Taymans  <wim@fluendo.com>
+
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_sink_event),
 	(gst_dvdemux_demux_frame):
 	* ext/flac/gstflacdec.c: (gst_flacdec_write):

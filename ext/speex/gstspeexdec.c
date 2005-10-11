@@ -279,7 +279,7 @@ speex_dec_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-      gst_event_parse_newsegment (event, NULL, &fmt, &value, NULL, NULL);
+      gst_event_parse_newsegment (event, NULL, NULL, &fmt, &value, NULL, NULL);
       if (fmt == GST_FORMAT_DEFAULT) {
         dec->samples_out = value;
         GST_DEBUG_OBJECT (dec,
@@ -296,7 +296,7 @@ speex_dec_event (GstPad * pad, GstEvent * event)
               ("can't handle discont before parsing first 2 packets"));
         dec->packetno = 0;
         gst_pad_push_event (dec->srcpad,
-            gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+            gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
                 0, GST_CLOCK_TIME_NONE, 0));
       } else {
         GstFormat time_format = GST_FORMAT_TIME;
@@ -306,7 +306,7 @@ speex_dec_event (GstPad * pad, GstEvent * event)
         if (speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT,
                 dec->samples_out, &time_format, &time)) {
           gst_pad_push_event (dec->srcpad,
-              gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+              gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
                   time, GST_CLOCK_TIME_NONE, 0));
         } else {
           GST_ERROR_OBJECT (dec,
@@ -389,7 +389,7 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
     }
     gst_caps_unref (caps);
     gst_pad_push_event (dec->srcpad,
-        gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+        gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
             0, GST_CLOCK_TIME_NONE, 0));
   } else if (dec->packetno == 1) {
     gchar *encoder = NULL;
