@@ -37,7 +37,7 @@
 /* FIXME: if we need it, we can add Q_ as well, like in glib */
 
 #else
-
+#undef GETTEXT_PACKAGE /* could still be defined in config.h */
 #define GETTEXT_PACKAGE NULL
 #define _(String) String
 #define N_(String) String

@@ -4,10 +4,6 @@
 #include <glib-object.h>
 #include "../gstelement.h"
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
 typedef struct {
   GstElement *src;
   GstElement *sink;

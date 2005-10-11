@@ -1,5 +1,21 @@
 2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst-i18n-lib.h:
+	  check for ENABLE_NLS, not GETTEXT_PACKAGE
+	* gst/gstregistry.c: (gst_registry_add_plugin),
+	(gst_registry_scan_path_level),
+	(_gst_registry_remove_cache_plugins):
+	  protect possibly NULL strings
+	* gst/parse/types.h:
+	  config.h already included before
+	* tools/gst-inspect.c: (main):
+	  sys/wait.h also doesn´t exist on mingw, so change the ifdef check
+	  check for ENABLE_NLS, not GETTEXT_PACKAGE
+	* tools/gst-launch.c: (main):
+	  check for ENABLE_NLS, not GETTEXT_PACKAGE
+
+2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  if we don't have glib, fail before testing 2.8
 	* gst/base/gstbasetransform.c: (gst_base_transform_change_state):

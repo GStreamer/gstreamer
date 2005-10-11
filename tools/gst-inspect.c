@@ -1104,7 +1104,7 @@ main (int argc, char *argv[])
   GOptionContext *ctx;
   GError *err = NULL;
 
-#ifdef GETTEXT_PACKAGE
+#ifdef ENABLE_NLS
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   textdomain (GETTEXT_PACKAGE);

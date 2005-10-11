@@ -26,7 +26,7 @@
 #endif
 
 /* FIXME: hack alert */
-#ifdef _MSC_VER
+#ifdef WIN32
 #define DISABLE_FAULT_HANDLER
 #endif
 
@@ -56,11 +56,11 @@ extern volatile gboolean glib_on_error_halt;
 static void fault_restore (void);
 static void fault_spin (void);
 static void sigint_restore (void);
+static gboolean caught_intr = FALSE;
 #endif
 
 static gint max_iterations = 0;
 static GstElement *pipeline;
-static gboolean caught_intr = FALSE;
 static gboolean caught_error = FALSE;
 static gboolean tags = FALSE;
 static gboolean messages = FALSE;
@@ -518,7 +518,7 @@ main (int argc, char *argv[])
 
   free (malloc (8));            /* -lefence */
 
-#ifdef GETTEXT_PACKAGE
+#ifdef ENABLE_NLS
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   textdomain (GETTEXT_PACKAGE);

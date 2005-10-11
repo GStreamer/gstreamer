@@ -293,13 +293,13 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   if (existing_plugin) {
     GST_DEBUG_OBJECT (registry,
         "Replacing existing plugin %p with new plugin %p for filename \"%s\"",
-        existing_plugin, plugin, plugin->filename);
+        existing_plugin, plugin, GST_STR_NULL (plugin->filename));
     registry->plugins = g_list_remove (registry->plugins, existing_plugin);
     gst_object_unref (existing_plugin);
   }
 
   GST_DEBUG_OBJECT (registry, "adding plugin %p for filename \"%s\"",
-      plugin, plugin->filename);
+      plugin, GST_STR_NULL (plugin->filename));
 
   registry->plugins = g_list_prepend (registry->plugins, plugin);
 
@@ -307,8 +307,8 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   gst_object_sink (plugin);
   GST_UNLOCK (registry);
 
-  GST_DEBUG_OBJECT (registry, "emitting plugin-added for filename %s",
-      plugin->filename);
+  GST_DEBUG_OBJECT (registry, "emitting plugin-added for filename \"%s\"",
+      GST_STR_NULL (plugin->filename));
   g_signal_emit (G_OBJECT (registry), gst_registry_signals[PLUGIN_ADDED], 0,
       plugin);
 
@@ -701,8 +701,9 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
         continue;
       }
       if (plugin->registered) {
-        GST_DEBUG_OBJECT (registry, "plugin already registered from path %s",
-            plugin->filename);
+        GST_DEBUG_OBJECT (registry,
+            "plugin already registered from path \"%s\"",
+            GST_STR_NULL (plugin->filename));
         g_free (filename);
         continue;
       }
@@ -768,8 +769,8 @@ _gst_registry_remove_cache_plugins (GstRegistry * registry)
     g_next = g->next;
     plugin = g->data;
     if (plugin->flags & GST_PLUGIN_FLAG_CACHED) {
-      GST_DEBUG_OBJECT (registry, "removing cached plugin %s",
-          plugin->filename);
+      GST_DEBUG_OBJECT (registry, "removing cached plugin \"%s\"",
+          GST_STR_NULL (plugin->filename));
       registry->plugins = g_list_remove (registry->plugins, plugin);
       gst_object_unref (plugin);
     }
