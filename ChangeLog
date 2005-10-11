@@ -1,5 +1,10 @@
 2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tools/gst-launch.c: (main):
+	  more null protecting
+
+2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst-i18n-lib.h:
 	  check for ENABLE_NLS, not GETTEXT_PACKAGE
 	* gst/gstregistry.c: (gst_registry_add_plugin),

@@ -530,7 +530,7 @@ main (int argc, char *argv[])
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
-    g_print ("Error initializing: %s\n", err->message);
+    g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
     exit (1);
   }
 
@@ -585,14 +585,15 @@ main (int argc, char *argv[])
   if (!pipeline) {
     if (error) {
       fprintf (stderr, _("ERROR: pipeline could not be constructed: %s.\n"),
-          error->message);
+          GST_STR_NULL (error->message));
       g_error_free (error);
     } else {
       fprintf (stderr, _("ERROR: pipeline could not be constructed.\n"));
     }
     return 1;
   } else if (error) {
-    fprintf (stderr, _("WARNING: erroneous pipeline: %s\n"), error->message);
+    fprintf (stderr, _("WARNING: erroneous pipeline: %s\n"),
+        GST_STR_NULL (error->message));
     g_error_free (error);
     return 1;
   }
