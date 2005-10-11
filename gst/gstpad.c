@@ -525,30 +525,43 @@ gst_pad_activate_default (GstPad * pad)
 }
 
 static void
-pre_activate_switch (GstPad * pad, gboolean new_active)
+pre_activate (GstPad * pad, GstActivateMode new_mode)
 {
-  if (new_active) {
-    return;
-  } else {
-    GST_LOCK (pad);
-    GST_PAD_SET_FLUSHING (pad);
-    /* unlock blocked pads so element can resume and stop */
-    GST_PAD_BLOCK_SIGNAL (pad);
-    GST_UNLOCK (pad);
+  switch (new_mode) {
+    case GST_ACTIVATE_PUSH:
+    case GST_ACTIVATE_PULL:
+      GST_LOCK (pad);
+      GST_PAD_UNSET_FLUSHING (pad);
+      GST_PAD_ACTIVATE_MODE (pad) = new_mode;
+      GST_UNLOCK (pad);
+      break;
+    case GST_ACTIVATE_NONE:
+      GST_LOCK (pad);
+      GST_PAD_SET_FLUSHING (pad);
+      /* unlock blocked pads so element can resume and stop */
+      GST_PAD_BLOCK_SIGNAL (pad);
+      GST_UNLOCK (pad);
+      break;
   }
 }
 
 static void
-post_activate_switch (GstPad * pad, gboolean new_active)
+post_activate (GstPad * pad, GstActivateMode new_mode)
 {
-  if (new_active) {
-    GST_LOCK (pad);
-    GST_PAD_UNSET_FLUSHING (pad);
-    GST_UNLOCK (pad);
-  } else {
-    /* ensures that streaming stops */
-    GST_STREAM_LOCK (pad);
-    GST_STREAM_UNLOCK (pad);
+  switch (new_mode) {
+    case GST_ACTIVATE_PUSH:
+    case GST_ACTIVATE_PULL:
+      /* nop */
+      break;
+    case GST_ACTIVATE_NONE:
+      /* ensures that streaming stops */
+      GST_STREAM_LOCK (pad);
+      /* while we're at it set activation mode */
+      GST_LOCK (pad);
+      GST_PAD_ACTIVATE_MODE (pad) = new_mode;
+      GST_UNLOCK (pad);
+      GST_STREAM_UNLOCK (pad);
+      break;
   }
 }
 
@@ -609,6 +622,13 @@ gst_pad_set_active (GstPad * pad, gboolean active)
     }
   }
 
+  if (!active && !ret) {
+    GST_LOCK (pad);
+    g_critical ("Failed to deactivate pad %s:%s, very bad",
+        GST_DEBUG_PAD_NAME (pad));
+    GST_UNLOCK (pad);
+  }
+
   return ret;
 }
 
@@ -632,7 +652,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
 gboolean
 gst_pad_activate_pull (GstPad * pad, gboolean active)
 {
-  GstActivateMode old;
+  GstActivateMode old, new;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
@@ -665,7 +685,8 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
     }
   }
 
-  pre_activate_switch (pad, active);
+  new = active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE;
+  pre_activate (pad, new);
 
   if (GST_PAD_ACTIVATEPULLFUNC (pad)) {
     if (GST_PAD_ACTIVATEPULLFUNC (pad) (pad, active)) {
@@ -687,11 +708,7 @@ was_ok:
 
 success:
   {
-    GST_LOCK (pad);
-    GST_PAD_ACTIVATE_MODE (pad) =
-        active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE;
-    GST_UNLOCK (pad);
-    post_activate_switch (pad, active);
+    post_activate (pad, new);
 
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in pull mode",
         active ? "activated" : "deactivated");
@@ -723,7 +740,7 @@ failure:
 gboolean
 gst_pad_activate_push (GstPad * pad, gboolean active)
 {
-  GstActivateMode old;
+  GstActivateMode old, new;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "trying to set %s in push mode",
@@ -743,11 +760,8 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
     g_return_val_if_fail (old == GST_ACTIVATE_PUSH, FALSE);
   }
 
-  pre_activate_switch (pad, active);
-
-  /* terrible hack */
-  if (active)
-    GST_STREAM_LOCK (pad);
+  new = active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE;
+  pre_activate (pad, new);
 
   if (GST_PAD_ACTIVATEPUSHFUNC (pad)) {
     if (GST_PAD_ACTIVATEPUSHFUNC (pad) (pad, active)) {
@@ -769,15 +783,7 @@ was_ok:
 
 success:
   {
-    GST_LOCK (pad);
-    GST_PAD_ACTIVATE_MODE (pad) =
-        active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE;
-    GST_UNLOCK (pad);
-    post_activate_switch (pad, active);
-
-    /* terrible hack */
-    if (active)
-      GST_STREAM_UNLOCK (pad);
+    post_activate (pad, new);
 
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in push mode",
         active ? "activated" : "deactivated");
@@ -786,10 +792,6 @@ success:
 
 failure:
   {
-    /* terrible hack */
-    if (active)
-      GST_STREAM_UNLOCK (pad);
-
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in push mode",
         active ? "activate" : "deactivate");
     return FALSE;

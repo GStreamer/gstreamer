@@ -1,3 +1,17 @@
+2005-10-11  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (pre_activate): Renamed from pre_activate_switch,
+	take the mode we're going to as an arg. Go head and set the mode
+	and flushing flags now, so that if the activate function starts a
+	thread all the flags will be in the right state.
+	(post_activate): Renamed also. Just handle making sure streaming
+	finishes for the deactivation case, and setting the deactivated
+	mode.
+	(gst_pad_set_active): Complain loudly if deactivation fails.
+	(gst_pad_activate_pull): Adapt to pre/post_activate changes.
+	(gst_pad_activate_push): Adapt to pre/post_activate changes,
+	remove the terrible hack.
+
 2005-10-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_init), (gst_bin_provide_clock_func),
