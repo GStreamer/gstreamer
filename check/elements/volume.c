@@ -105,6 +105,7 @@ GST_START_TEST (test_unity)
 {
   GstElement *volume;
   GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
   gint16 in[2] = { 16384, -256 };
 
   volume = setup_volume ();
@@ -114,7 +115,9 @@ GST_START_TEST (test_unity)
 
   inbuffer = gst_buffer_new_and_alloc (4);
   memcpy (GST_BUFFER_DATA (inbuffer), in, 4);
-  gst_buffer_set_caps (inbuffer, gst_caps_from_string (VOLUME_CAPS_STRING));
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* pushing gives away my reference ... */
@@ -137,6 +140,7 @@ GST_START_TEST (test_half)
   GstElement *volume;
   GstBuffer *inbuffer;
   GstBuffer *outbuffer;
+  GstCaps *caps;
   gint16 in[2] = { 16384, -256 };
   gint16 out[2] = { 8192, -128 };
 
@@ -149,7 +153,9 @@ GST_START_TEST (test_half)
   inbuffer = gst_buffer_new_and_alloc (4);
   memcpy (GST_BUFFER_DATA (inbuffer), in, 4);
   fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 4) == 0);
-  gst_buffer_set_caps (inbuffer, gst_caps_from_string (VOLUME_CAPS_STRING));
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   /* FIXME: reffing the inbuffer should make the transformation not be
    * inplace
@@ -177,6 +183,7 @@ GST_START_TEST (test_double)
   GstElement *volume;
   GstBuffer *inbuffer;
   GstBuffer *outbuffer;
+  GstCaps *caps;
   gint16 in[2] = { 16384, -256 };
   gint16 out[2] = { 32767, -512 };      /* notice the clamped sample */
 
@@ -189,7 +196,9 @@ GST_START_TEST (test_double)
   inbuffer = gst_buffer_new_and_alloc (4);
   memcpy (GST_BUFFER_DATA (inbuffer), in, 4);
   fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 4) == 0);
-  gst_buffer_set_caps (inbuffer, gst_caps_from_string (VOLUME_CAPS_STRING));
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   /* FIXME: reffing the inbuffer should make the transformation not be
    * inplace
@@ -219,6 +228,7 @@ GST_START_TEST (test_wrong_caps)
   gint16 in[2] = { 16384, -256 };
   GstBus *bus;
   GstMessage *message;
+  GstCaps *caps;
 
   volume = setup_volume ();
   bus = gst_bus_new ();
@@ -229,8 +239,9 @@ GST_START_TEST (test_wrong_caps)
 
   inbuffer = gst_buffer_new_and_alloc (4);
   memcpy (GST_BUFFER_DATA (inbuffer), in, 4);
-  gst_buffer_set_caps (inbuffer,
-      gst_caps_from_string (VOLUME_WRONG_CAPS_STRING));
+  caps = gst_caps_from_string (VOLUME_WRONG_CAPS_STRING);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_ref (inbuffer);
 
