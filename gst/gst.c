@@ -595,8 +595,7 @@ init_post (void)
       int i;
 
       GST_DEBUG ("GST_PLUGIN_PATH set to %s", plugin_path);
-      /* FIXME this doesn't split paths correctly on windows */
-      list = g_strsplit (plugin_path, ":", 0);
+      list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
       for (i = 0; list[i]; i++) {
         gst_registry_scan_path (default_registry, list[i]);
       }
@@ -628,8 +627,7 @@ init_post (void)
       int i;
 
       GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH set to %s", plugin_path);
-      /* FIXME this doesn't split paths correctly on windows */
-      list = g_strsplit (plugin_path, ":", 0);
+      list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
       for (i = 0; list[i]; i++) {
         gst_registry_scan_path (default_registry, list[i]);
       }
