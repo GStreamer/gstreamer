@@ -21,32 +21,18 @@
   (parameters
     '("int*" "argc")
     '("char**[]" "argv")
+    '("GError**" "err")
   )
 )
 
-(define-function init_with_popt_table
-  (c-name "gst_init_with_popt_table")
+(define-function gst_init_get_option_group
+  (c-name "gst_init_get_option_group")
+  (return-type "GOptionGroup*")
+)
+
+(define-function gst_deinit
+  (c-name "gst_deinit")
   (return-type "none")
-  (parameters
-    '("int*" "argc")
-    '("char**[]" "argv")
-    '("const-GstPoptOption*" "popt_options")
-  )
-)
-
-(define-function init_check_with_popt_table
-  (c-name "gst_init_check_with_popt_table")
-  (return-type "gboolean")
-  (parameters
-    '("int*" "argc")
-    '("char**[]" "argv")
-    '("const-GstPoptOption*" "popt_options")
-  )
-)
-
-(define-function init_get_popt_table
-  (c-name "gst_init_get_popt_table")
-  (return-type "const-GstPoptOption*")
 )
 
 
@@ -1141,15 +1127,6 @@
   )
 )
 
-(define-method set_state_async
-  (of-object "GstElement")
-  (c-name "gst_element_set_state_async")
-  (return-type "GstStateChangeReturn")
-  (parameters
-    '("GstState" "state")
-  )
-)
-
 (define-method abort_state
   (of-object "GstElement")
   (c-name "gst_element_abort_state")
@@ -1159,7 +1136,7 @@
 (define-method commit_state
   (of-object "GstElement")
   (c-name "gst_element_commit_state")
-  (return-type "none")
+  (return-type "GstStateChangeReturn")
 )
 
 (define-method lost_state
@@ -1653,6 +1630,18 @@
 
 ;; From ../gstreamer/gst/gstevent.h
 
+(define-method get_name
+  (of-object "GstEventType")
+  (c-name "gst_event_type_get_name")
+  (return-type "const-gchar*")
+)
+
+(define-method to_quark
+  (of-object "GstEventType")
+  (c-name "gst_event_type_to_quark")
+  (return-type "GQuark")
+)
+
 (define-function event_get_type
   (c-name "gst_event_get_type")
   (return-type "GType")
@@ -1740,6 +1729,29 @@
   (c-name "gst_event_new_filler")
   (return-type "GstEvent*")
   (caller-owns-return #t)
+)
+
+(define-function gst_event_new_buffersize
+  (c-name "gst_event_new_buffersize")
+  (return-type "GstEvent*")
+  (parameters
+    '("GstFormat" "format")
+    '("gint64" "minsize")
+    '("gint64" "maxsize")
+    '("gboolean" "async")
+  )
+)
+
+(define-method parse_buffersize
+  (of-object "GstEvent")
+  (c-name "gst_event_parse_buffersize")
+  (return-type "none")
+  (parameters
+    '("GstFormat*" "format")
+    '("gint64*" "minsize")
+    '("gint64*" "maxsize")
+    '("gboolean*" "async")
+  )
 )
 
 (define-function event_new_qos
@@ -2421,6 +2433,7 @@
   (return-type "GstIterator*")
   (parameters
     '("guint" "size")
+    '("GType" "type")
     '("GMutex*" "lock")
     '("guint32*" "master_cookie")
     '("GstIteratorNextFunction" "next")
@@ -2434,6 +2447,7 @@
   (c-name "gst_iterator_new_list")
   (return-type "GstIterator*")
   (parameters
+    '("GType" "type")
     '("GMutex*" "lock")
     '("guint32*" "master_cookie")
     '("GList**" "list")
@@ -2629,6 +2643,34 @@
   )
 )
 
+(define-function gst_message_new_clock_provide
+  (c-name "gst_message_new_clock_provide")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstClock*" "clock")
+    '("gboolean" "ready")
+  )
+)
+
+(define-function gst_message_new_clock_lost
+  (c-name "gst_message_new_clock_lost")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstClock*" "clock")
+  )
+)
+
+(define-function gst_message_new_new_clock
+  (c-name "gst_message_new_new_clock")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstClock*" "clock")
+  )
+)
+
 (define-function gst_message_new_segment_start
   (c-name "gst_message_new_segment_start")
   (return-type "GstMessage*")
@@ -2646,6 +2688,24 @@
   (parameters
     '("GstObject*" "src")
     '("GstClockTime" "timestamp")
+  )
+)
+
+(define-function gst_message_new_application
+  (c-name "gst_message_new_application")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstStructure*" "structure")
+  )
+)
+
+(define-function gst_message_new_element
+  (c-name "gst_message_new_element")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstStructure*" "structure")
   )
 )
 
@@ -2696,6 +2756,35 @@
   (parameters
     '("GstState*" "old_state")
     '("GstState*" "new_state")
+    '("GstState*" "pending")
+  )
+)
+
+(define-method parse_clock_provide
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_clock_provide")
+  (return-type "none")
+  (parameters
+    '("GstClock**" "clock")
+    '("gboolean*" "ready")
+  )
+)
+
+(define-method parse_clock_lost
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_clock_lost")
+  (return-type "none")
+  (parameters
+    '("GstClock**" "clock")
+  )
+)
+
+(define-method parse_new_clock
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_new_clock")
+  (return-type "none")
+  (parameters
+    '("GstClock**" "clock")
   )
 )
 
@@ -3003,6 +3092,22 @@
 )
 
 ;; From ../gstreamer/gst/gstpad.h
+
+(define-function flow_get_name
+  (c-name "gst_flow_get_name")
+  (return-type "const-gchar*")
+  (parameters
+    '("GstFlowReturn" "ret")
+  )
+)
+
+(define-function flow_to_quark
+  (c-name "gst_flow_to_quark")
+  (return-type "GQuark")
+  (parameters
+    '("GstFlowReturn" "ret")
+  )
+)
 
 (define-function gst_pad_get_type
   (c-name "gst_pad_get_type")
@@ -5635,6 +5740,22 @@
   )
 )
 
+(define-function gst_gdouble_to_guint64
+  (c-name "gst_gdouble_to_guint64")
+  (return-type "guint64")
+  (parameters
+    '("gdouble" "value")
+  )
+)
+
+(define-function gst_guint64_to_gdouble
+  (c-name "gst_guint64_to_gdouble")
+  (return-type "gdouble")
+  (parameters
+    '("guint64" "value")
+  )
+)
+
 (define-function gst_util_uint64_scale
   (c-name "gst_util_uint64_scale")
   (return-type "guint64")
@@ -5672,6 +5793,40 @@
   (parameters
     '("GError*" "error")
     '("gchar*" "debug")
+  )
+)
+
+(define-function g_static_rec_cond_wait
+  (c-name "g_static_rec_cond_wait")
+  (return-type "none")
+  (parameters
+    '("GCond*" "cond")
+    '("GStaticRecMutex*" "mutex")
+  )
+)
+
+(define-function g_static_rec_cond_timed_wait
+  (c-name "g_static_rec_cond_timed_wait")
+  (return-type "gboolean")
+  (parameters
+    '("GCond*" "cond")
+    '("GStaticRecMutex*" "mutex")
+    '("GTimeVal*" "end_time")
+  )
+)
+
+(define-method abort_preroll
+  (of-object "GstElement")
+  (c-name "gst_element_abort_preroll")
+  (return-type "GstFlowReturn")
+)
+
+(define-method finish_preroll
+  (of-object "GstElement")
+  (c-name "gst_element_finish_preroll")
+  (return-type "GstFlowReturn")
+  (parameters
+    '("GstPad*" "pad")
   )
 )
 
@@ -5893,14 +6048,6 @@
   (caller-owns-return #t)
 )
 
-(define-function flow_get_name
-  (c-name "gst_flow_get_name")
-  (return-type "const-gchar*")
-  (parameters
-    '("GstFlowReturn" "ret")
-  )
-)
-
 (define-method query_position
   (of-object "GstPad")
   (c-name "gst_pad_query_position")
@@ -5932,12 +6079,6 @@
     '("GstElement*" "element_1")
   )
   (varargs #t)
-)
-
-(define-method watch_for_state_change
-  (of-object "GstBin")
-  (c-name "gst_bin_watch_for_state_change")
-  (return-type "none")
 )
 
 (define-method merge

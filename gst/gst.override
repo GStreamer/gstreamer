@@ -311,6 +311,12 @@ ignore
   gst_debug_log
   gst_debug_log_default
   gst_iterator_new_list
+  gst_task_set_lock
+  gst_clock_id_compare_func
+  gst_print_pad_caps
+  gst_util_set_value_from_string
+  gst_print_element_args
+  gst_atomic_int_set
 %%
 override-slot GstPluginFeature.tp_repr
 static PyObject *
@@ -542,7 +548,8 @@ _wrap_gst_xml_get_topelements(PyGObject *self)
     for (l = xml_elements; l; l = l->next) {
 	GstElement *element = (GstElement*)l->data;
 	
-	PyList_Append(py_list, pygobject_new(G_OBJECT(element)));
+	PyList_Append(py_list, pygstobject_new(G_OBJECT(element)));
+	gst_object_unref (element);
     }
        
     return py_list;

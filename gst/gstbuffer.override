@@ -534,6 +534,28 @@ _wrap_gst_buffer__set_caps (PyGstMiniObject *self, PyObject *value, void *closur
 	return -1;
     pyg_begin_allow_threads;
     gst_buffer_set_caps(GST_BUFFER(self->obj), caps);
+    gst_caps_unref (caps);
     pyg_end_allow_threads;
     return 0;
+}
+%%
+override gst_buffer_set_caps kwargs
+static PyObject *
+_wrap_gst_buffer_set_caps(PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "caps", NULL };
+    PyObject *py_caps;
+    GstCaps *caps;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstBuffer.set_caps", kwlist, &py_caps))
+        return NULL;
+    caps = pygst_caps_from_pyobject (py_caps, NULL);
+    if (PyErr_Occurred())
+      return NULL;
+    pyg_begin_allow_threads;
+    gst_buffer_set_caps(GST_BUFFER(self->obj), caps);
+    gst_caps_unref (caps);
+    pyg_end_allow_threads;
+    Py_INCREF(Py_None);
+    return Py_None;
 }

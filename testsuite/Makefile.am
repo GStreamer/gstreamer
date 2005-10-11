@@ -61,7 +61,8 @@ GSTPYTHONSUPP = $(top_srcdir)/testsuite/gstpython.supp
 	--suppressions=$(GSTSUPP)				\
 	--suppressions=$(PYTHONSUPP)				\
 	--suppressions=$(GSTPYTHONSUPP)				\
-	--tool=memcheck --leak-check=yes --trace-children=yes   \
+	--tool=memcheck --leak-check=yes --trace-children=yes  \
+	--leak-resolution=med --num-callers=50		\
 	$(PYTHON)						\
 	$* 2>&1 | tee valgrind.log
 	@if grep "tely lost" valgrind.log; then                 \
@@ -71,10 +72,10 @@ GSTPYTHONSUPP = $(top_srcdir)/testsuite/gstpython.supp
 	@rm valgrind.log
 
 # valgrind all tests
-valgrind: $(TESTS)
+valgrind: $(tests)
 	@echo "Valgrinding tests ..."
 	@failed=0;                                                      \
-	for t in $(filter-out $(VALGRIND_TESTS_DISABLE),$(TESTS)); do   \
+	for t in $(filter-out $(VALGRIND_TESTS_DISABLE),$(tests)); do   \
 	        make $$t.valgrind;                                      \
 	        if test "$$?" -ne 0; then                               \
 	                echo "Valgrind error for test $$t";             \

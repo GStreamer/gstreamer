@@ -20,6 +20,12 @@
  * Author: Johan Dahlin <johan@gnome.org>
  */
 %%
+ignore
+  gst_controller_new
+  gst_controller_*_valist
+  gst_controller_remove_properties_list
+
+%%
 override gst_controller_set args
 static PyObject *
 _wrap_gst_controller_set (PyGObject *self, PyObject *args)
@@ -67,6 +73,31 @@ _wrap_gst_controller_set (PyGObject *self, PyObject *args)
   return Py_False;
 }
 %%
+override gst_controller_get kwargs
+static PyObject *
+_wrap_gst_controller_get (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    GstController	*controller = (GstController *) self->obj;
+    static char		*kwlist[] = { "propertyname", "timestamp", NULL };
+    gchar	*propertyname;
+    GstClockTime	timestamp;
+    GValue	*value = NULL;
+    PyObject	*pyvalue;
+
+    if (!PyArg_ParseTupleAndKeywords (args, kwargs,
+				      "sL:GstController.get",
+				      kwlist, &propertyname, &timestamp))
+	return NULL;
+
+    value = gst_controller_get (controller, propertyname, timestamp);
+    if (value) {
+	pyvalue = pyg_value_as_pyobject (value, FALSE);
+	return pyvalue;
+    }
+    Py_INCREF (Py_None);
+    return Py_None;
+}
+%%
 override gst_controller_new_list args
 static int
 _wrap_gst_controller_new_list(PyGObject *self, PyObject *args)
@@ -100,4 +131,121 @@ _wrap_gst_controller_new_list(PyGObject *self, PyObject *args)
     
     pygobject_register_wrapper((PyObject *) self);
     return 0;
+}
+%%
+override gst_controller_remove_properties args
+static PyObject *
+_wrap_gst_controller_remove_properties (PyGObject *self, PyObject *args)
+{
+    GstController *controller = (GstController *) self->obj;
+    gint	len;
+    GList	*list = NULL;
+    gboolean	res = FALSE;
+    PyObject	*pret;
+
+    if ((len = PyTuple_Size(args)) < 1) {
+	PyErr_SetString(PyExc_TypeError, "Please give at least one property name to remove");
+	return NULL;
+    }
+
+    while (len--) {
+	PyObject	*temp;
+	gchar	*str;
+	
+	temp = PyTuple_GetItem(args, len);
+	str = PyString_AsString(temp);
+	GST_INFO("prepending %s [%d]", str, len);
+	list = g_list_prepend(list, PyString_AsString(temp));
+    }
+    
+    res = gst_controller_remove_properties_list(controller, list);
+
+    if (res)
+	pret = Py_True;
+    else
+	pret = Py_False;
+
+    Py_INCREF (pret);
+
+    return pret;
+}
+%%
+override gst_controller_set_from_list args
+static PyObject *
+_wrap_gst_controller_set_from_list (PyGObject *self, PyObject *args)
+{
+    GstController *controller = (GstController *) self->obj;
+    PyObject	*temp;
+    gint	len;
+    gchar	*pname;
+    GSList	*list = NULL;
+    GList	*props;
+    gboolean	res = FALSE;
+    GType	vtype = 0;
+    PyObject	*pret;
+
+    if ((len = PyTuple_Size(args)) < 2) {
+	PyErr_SetString(PyExc_TypeError, "Please give a property name and a tuple of (time,value)");
+	return NULL;
+    }
+
+    temp = PyTuple_GetItem(args, 0);
+    if (!PyString_Check (temp)) {
+	PyErr_SetString(PyExc_TypeError, "First argument must be a string");
+	return NULL;
+    }
+    pname = PyString_AsString(temp);
+
+    /* Get the GType of the given property */
+    g_mutex_lock (controller->lock);
+    for (props = controller->properties; props; props = g_list_next(props)) {
+	GstControlledProperty	*prop = (GstControlledProperty *) props->data;
+
+	if (!strcmp(prop->name, pname)) {
+	    vtype = prop->type;
+	    break;
+	}
+    }
+    g_mutex_unlock (controller->lock);
+    if (!vtype)
+	goto error;
+
+    while (len-- > 1) {
+	PyObject	*temp2;
+	GstTimedValue	*tval;
+	
+	temp2 = PyTuple_GetItem(args, len);
+	if (!PyTuple_Check (temp2)) {
+	    PyErr_SetString (PyExc_TypeError, "Tuple doesn't contain tuples !");
+	    goto error;
+	}
+	tval = g_new0(GstTimedValue, 1);
+	tval->timestamp = PyLong_AsUnsignedLongLong(PyTuple_GetItem(temp2, 0));
+	g_value_init (&tval->value, vtype);
+	if ((pyg_value_from_pyobject (&tval->value, PyTuple_GetItem (temp2, 1))) < 0) {
+	    PyErr_SetString (PyExc_TypeError, "Couldn't convert value to correct type");
+	    goto error;
+	};
+
+	list = g_slist_prepend(list, tval);
+    }
+    
+    res = gst_controller_set_from_list(controller, pname, list);
+
+    if (res)
+	pret = Py_True;
+    else
+	pret = Py_False;
+
+    Py_INCREF (pret);
+
+    return pret;
+
+ error:
+    while (list) {
+	g_free(list->data);
+	list = g_slist_next(list);
+    }
+    g_slist_free (list);
+    return NULL;
 }

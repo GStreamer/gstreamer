@@ -58,8 +58,6 @@ PyTypeObject PyGstIterator_Type;
 
 
 /* from gst-types.c */
-/* gboolean pygst_data_from_pyobject(PyObject *object, GstData **data); */
-/* PyObject *pygst_data_to_pyobject(GstData *data); */
 GstCaps *pygst_caps_from_pyobject (PyObject *object, gboolean *copy);
 PyObject* pygst_iterator_new(GstIterator *iter);
 

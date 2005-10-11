@@ -22,11 +22,13 @@ import sys
 from common import gobject, gst, unittest, TestCase
 import gc
 
-class NewTest(unittest.TestCase):
+class NewTest(TestCase):
     def testEOS(self):
+        gst.info("creating new bin")
         b = gst.Bin()
+        gst.info("creating new EOS message from that bin")
         m = gst.message_new_eos(b)
-        while gc.collect(): pass
+        gst.info("got message : %s" % m)
 
 if __name__ == "__main__":
     unittest.main()

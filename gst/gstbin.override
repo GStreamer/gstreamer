@@ -136,8 +136,7 @@ _wrap_gst_bin_get_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
     
     /* pygobject_new handles NULL checking */
     ret = pygstobject_new((GObject *)el);
-
-    gst_object_unref (el); /* from _get_by_name */
+    gst_object_unref (((PyGObject *) ret)->obj); /* from _get_by_name */
     return ret;
 }
 %%

@@ -142,8 +142,11 @@ pygstminiobject_register_wrapper (PyObject *self)
     PyGILState_STATE state;
 
     g_assert (obj);
-    GST_DEBUG ("inserting self %p in the table for object %p", self, obj);
+    g_assert (GST_IS_MINI_OBJECT (obj));
+
     state = pyg_gil_state_ensure ();
+    GST_DEBUG ("inserting self %p in the table for object %p [ref:%d]", 
+	       self, obj, GST_MINI_OBJECT_REFCOUNT_VALUE (obj));
     g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
     GST_DEBUG ("There are now %d elements in the hash table",
 	       g_hash_table_size (_miniobjs));
@@ -204,7 +207,8 @@ pygstminiobject_new (GstMiniObject *obj)
 	self->weakreflist = NULL;
 
 	/* save wrapper pointer so we can access it later */
-        GST_DEBUG ("inserting self %p in the table for object %p", self, obj);
+        GST_DEBUG ("inserting self %p in the table for object %p [ref:%d]",
+		   self, obj, GST_MINI_OBJECT_REFCOUNT_VALUE (obj));
 	state = pyg_gil_state_ensure ();
 	g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
 	GST_DEBUG ("There are now %d elements in the hash table",
@@ -226,20 +230,20 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
     state = pyg_gil_state_ensure();
 
     if (self->obj) {
-        GST_DEBUG ("removing self %p from the table for object %p", self,
-             self->obj);
+        GST_DEBUG ("removing self %p from the table for object %p [ref:%d]", self,
+             self->obj, GST_MINI_OBJECT_REFCOUNT_VALUE (self->obj));
         g_assert (g_hash_table_remove (_miniobjs, (gpointer) self->obj));
 	GST_DEBUG ("There are now %d elements in the hash table",
 		   g_hash_table_size (_miniobjs));
 	gst_mini_object_unref(self->obj);
+	GST_DEBUG ("setting self %p -> obj to NULL", self);
+	self->obj = NULL;
     }
-    GST_DEBUG ("setting self %p -> obj to NULL", self);
-    self->obj = NULL;
 
     if (self->inst_dict) {
 	Py_DECREF(self->inst_dict);
+	self->inst_dict = NULL;
     }
-    self->inst_dict = NULL;
 
     self->ob_type->tp_free((PyObject *) self);
     pyg_gil_state_release(state);

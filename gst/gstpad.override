@@ -226,7 +226,7 @@ call_link_function (GstPad *pad, GstPad *peer)
     g_value_init (&args[0], GST_TYPE_PAD);
     g_value_init (&args[1], GST_TYPE_PAD);
     g_value_set_object (&args[0], pad);
-    g_value_set_boxed (&args[1], peer);
+    g_value_set_object (&args[1], peer);
     
     closure = pad_private(pad)->link_function;
     
@@ -340,51 +340,10 @@ _wrap_gst_pad_set_event_function (PyGObject *self,
                   PyObject  *args,
                   PyObject  *kwargs)
 {
-    SET_PAD_CLOSURE (self, args, kwargs, event_function)
+    SET_PAD_CLOSURE (self, args, 
+		     kwargs, event_function)
 }
 
-%%
-override gst_pad_set_get_function kwargs
-
-static void EXCEPTION_HANDLER
-handle_get_function_exception (GValue *ret, guint n, const GValue *params)
-{
-  GstElement *element = gst_pad_get_parent (g_value_get_object (&params[0]));
-  
-  if (!_pygst_element_check_error (element))
-    g_assert_not_reached (); /* only returns FALSE when there's no error */
-}
-
-static GstData*
-call_get_function (GstPad *pad)
-{
-    GClosure *closure;
-    GValue ret = { 0, };
-    GValue args = { 0, };
-    GstData *data = NULL;
-    
-    g_value_init (&ret, GST_TYPE_DATA);
-    g_value_init (&args, GST_TYPE_REAL_PAD);
-    g_value_set_object (&args, pad);
-    closure = pad_private(pad)->get_function;
-    
-    g_closure_invoke (closure, &ret, 1, &args, NULL);
-
-    data = g_value_get_boxed (&ret);
-    gst_data_ref (data);
-
-    g_value_unset (&ret);
-    g_value_unset (&args);
-    return data;
-}
-
-static PyObject*
-_wrap_gst_pad_set_get_function (PyGObject *self,
-                PyObject  *args,
-                PyObject  *kwargs)
-{
-    SET_PAD_CLOSURE (self, args, kwargs, get_function)
-}
 %%
 override-slot GstPad.tp_repr
 static PyObject *
@@ -1017,4 +976,27 @@ _wrap_gst_pad_set_blocked_async (PyGObject *self, PyObject *args)
     Py_INCREF(pret);
 
     return pret;
+}
+%%
+override gst_pad_set_caps kwargs
+static PyObject *
+_wrap_gst_pad_set_caps(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "caps", NULL };
+    PyObject *py_caps;
+    int ret;
+    GstCaps *caps;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstPad.set_caps", kwlist, &py_caps))
+        return NULL;
+    caps = pygst_caps_from_pyobject (py_caps, NULL);
+    if (PyErr_Occurred())
+      return NULL;
+    pyg_begin_allow_threads;
+    ret = gst_pad_set_caps(GST_PAD(self->obj), caps);
+    if (ret)
+	gst_caps_unref (caps);
+    pyg_end_allow_threads;
+    return PyBool_FromLong(ret);
+
 }

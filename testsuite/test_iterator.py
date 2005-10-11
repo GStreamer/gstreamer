@@ -41,24 +41,34 @@ class IteratorTest(TestCase):
         # XXX : There seems to be a problem about the GType
         #       set in gst_bin_iterated_sorted
 
-##     def testBinIterateSorted(self):
-##         gst.info("testBinIterateSorted beginning")
-##         pipeline =  gst.parse_launch("fakesrc name=src ! fakesink name=sink")
-##         gst.info("before calling pipeline.sorted()")
-##         elements = list(pipeline.sorted())
-##         gst.info("after calling pipeline.sorted()")
-##         fakesrc = pipeline.get_by_name("src")
-##         fakesink = pipeline.get_by_name("sink")
+    def testBinIterateSorted(self):
+        pipeline =  gst.parse_launch("fakesrc name=src ! fakesink name=sink")
+        elements = list(pipeline.sorted())
+        fakesrc = pipeline.get_by_name("src")
+        fakesink = pipeline.get_by_name("sink")
 
-##         self.assertEqual(elements[0], fakesink)
-##         self.assertEqual(elements[1], fakesrc)
-##         gst.info("testBinIterateSorted end")
+        self.assertEqual(elements[0], fakesink)
+        self.assertEqual(elements[1], fakesrc)
+
+    def testBinIterateRecurse(self):
+        pipeline = gst.parse_launch("fakesrc name=src ! fakesink name=sink")
+        elements = list(pipeline.recurse())
+        fakesrc = pipeline.get_by_name("src")
+        fakesink = pipeline.get_by_name("sink")
+
+        self.assertEqual(elements[0], fakesink)
+        self.assertEqual(elements[1], fakesrc)
 
     def testBinIterateSinks(self):
         pipeline = gst.parse_launch("fakesrc name=src ! fakesink name=sink")
-        elements = list(pipeline.elements())
+        elements = list(pipeline.sinks())
         fakesrc = pipeline.get_by_name("src")
         fakesink = pipeline.get_by_name("sink")
+
+        self.assertEqual(len(elements), 1)
+        self.failUnless(fakesink in elements)
+        self.failUnless(not fakesrc in elements)
+
     
     def testIteratePadsFakeSrc(self):
         fakesrc = gst.element_factory_make('fakesrc')

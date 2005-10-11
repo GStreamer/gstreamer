@@ -22,13 +22,14 @@
 
 import os
 import sys
-from common import gst, unittest, testhelper
+from common import gst, unittest, testhelper, TestCase
 
-class EventTest(unittest.TestCase):
+class EventTest(TestCase):
     def setUp(self):
         pipeline = gst.parse_launch('fakesrc ! fakesink name=sink')
         self.sink = pipeline.get_by_name('sink')
         pipeline.set_state(gst.STATE_PLAYING)
+        TestCase.setUp(self)
         
     def testEventSeek(self):
         event = gst.event_new_seek(1.0, gst.FORMAT_BYTES, gst.SEEK_FLAG_FLUSH,
@@ -95,7 +96,7 @@ class EventTest(unittest.TestCase):
 #        
 #        #print self.playAndIter()
 
-class TestEmit(unittest.TestCase):
+class TestEmit(TestCase):
     def testEmit(self):
         object = testhelper.get_object()
         object.connect('event', self._event_cb)

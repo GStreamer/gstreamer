@@ -98,6 +98,15 @@
   (varargs #t)
 )
 
+(define-method remove_properties_list
+  (of-object "GstController")
+  (c-name "gst_controller_remove_properties_list")
+  (return-type "gboolean")
+  (parameters
+   '("GList*" "list")
+  )
+)
+
 (define-method set
   (of-object "GstController")
   (c-name "gst_controller_set")

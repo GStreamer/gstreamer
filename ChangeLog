@@ -1,3 +1,48 @@
+2005-10-11  Edward Hervey  <edward@fluendo.com>
+
+	* gst/common.h:
+	cleanup
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	Updated defs file to current gstreamer core
+	* gst/gst.override:
+	Added useless function (at least from python bindings) and little correction
+	on _wrap_gst_xml_get_topelements()
+	* gst/gstbin.override:
+	* gst/gstbuffer.override:
+	Fix memleak in gst.Buffer.set_caps()
+	* gst/gstevent.override:
+	Added wrapper for remaining gst_event_parse_*()
+	* gst/gstlibs.override:
+	Wrapped more gst.Controller methods
+	* gst/gstmodule.c: (init_gst):
+	new gst_init()
+	Added atexit(gst_deinit)
+	* gst/gstpad.override:
+	Fix memleak in gst.Pad.set_caps()
+	* gst/gstquery.override:
+	add gst.Query.parse_segment()
+	* gst/libs.defs:
+	Updated to current gst-libs
+	* gst/pygstminiobject.c: (pygstminiobject_register_wrapper),
+	(pygstminiobject_new), (pygstminiobject_dealloc):
+	Added debug
+	
+	* testsuite/Makefile.am:
+	* testsuite/common.py:
+	* testsuite/gstpython.supp:
+	* testsuite/python.supp:
+	* testsuite/test_bin.py:
+	* testsuite/test_buffer.py:
+	* testsuite/test_element.py:
+	* testsuite/test_event.py:
+	* testsuite/test_ghostpad.py:
+	* testsuite/test_iterator.py:
+	* testsuite/test_message.py:
+	* testsuite/test_pipeline.py:
+	Proper valgrind testing,
+	Updated tests to new API
+
 2005-10-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* examples/play.py:

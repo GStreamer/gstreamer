@@ -1,4 +1,4 @@
-/* -*- Mode: C; ; c-file-style: "python" -*- */
+/* -*- Mode: C; ; c-file-style: "k&r"; c-basic-offset: 4 -*- */
 /* gst-python
  * Copyright (C) 2005 Edward Hervey
  *
@@ -24,11 +24,11 @@ override gst_event_get_structure noargs
 static PyObject *
 _wrap_gst_event_get_structure(PyGstMiniObject *self)
 {
-    GstStructure *ret;
+     GstStructure *ret;
 
-    ret = (GstStructure *) gst_event_get_structure(GST_EVENT(self->obj));
-    /* pyg_boxed_new handles NULL checking */
-    return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, TRUE, TRUE);
+     ret = (GstStructure *) gst_event_get_structure(GST_EVENT(self->obj));
+     /* pyg_boxed_new handles NULL checking */
+     return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, TRUE, TRUE);
 }
 
 %%
@@ -36,17 +36,120 @@ override-slot GstEvent.tp_repr
 static PyObject *
 _wrap_gst_event_tp_repr (PyGObject *self)
 {
-    char *buf;
-    PyObject *retval;
-    GstEvent *event;
+     char *buf;
+     PyObject *retval;
+     GstEvent *event;
 
-    event = GST_EVENT(self->obj);
+     event = GST_EVENT(self->obj);
 
-    buf = g_strdup_printf ("<GstEvent (%s) at %lx>",
-        gst_event_type_get_name (event->type), (long) self->obj);
+     buf = g_strdup_printf ("<GstEvent (%s) at %lx>",
+			    gst_event_type_get_name (event->type), (long) self->obj);
 
-    retval = PyString_FromString(buf);
-    g_free(buf);
-    return retval;
+     retval = PyString_FromString(buf);
+     g_free(buf);
+     return retval;
 }
+%%
+override gst_event_parse_newsegment noargs
+static PyObject *
+_wrap_gst_event_parse_newsegment (PyGstMiniObject *self)
+{
+     PyObject	*ret;
+     gdouble	rate;
+     GstFormat	format;
+     gint64	start_value, stop_value, base;
 
+     if (GST_EVENT_TYPE(self->obj) != GST_EVENT_NEWSEGMENT) {
+	  PyErr_SetString(PyExc_TypeError, "Even is not a 'NewSegment' event");
+	  return NULL;
+     }
+     
+     gst_event_parse_newsegment (GST_EVENT(self->obj), &rate, &format,
+				 &start_value, &stop_value, &base);
+     
+     ret = PyList_New(0);
+     PyList_Append (ret, PyFloat_FromDouble(rate));
+     PyList_Append (ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
+     PyList_Append (ret, PyLong_FromUnsignedLongLong(start_value));
+     PyList_Append (ret, PyLong_FromUnsignedLongLong(stop_value));
+     PyList_Append (ret, PyLong_FromUnsignedLongLong(base));
+
+     return ret;
+}
+%%
+override gst_event_parse_tag noargs
+static PyObject *
+_wrap_gst_event_parse_tag (PyGstMiniObject *self)
+{
+	PyObject	*ret;
+	GstTagList	*taglist;
+	
+	if (GST_EVENT_TYPE(self->obj) != GST_EVENT_TAG) {
+		PyErr_SetString(PyExc_TypeError, "Event is not an 'Tag' event");
+		return NULL;
+	}
+
+	gst_event_parse_tag (GST_EVENT(self->obj), &taglist);
+
+	ret = pyg_boxed_new (GST_TYPE_TAG_LIST, taglist, TRUE, TRUE);
+
+	return ret;
+}
+%%
+override gst_event_parse_qos noargs
+static PyObject *
+_wrap_gst_event_parse_qos (PyGstMiniObject *self)
+{
+	PyObject	*ret;
+	gdouble		proportion;
+	GstClockTimeDiff	diff;
+	GstClockTime	timestamp;
+	
+	if (GST_EVENT_TYPE(self->obj) != GST_EVENT_QOS) {
+		PyErr_SetString(PyExc_TypeError, "Event is not an 'Qos' event");
+		return NULL;
+	}
+
+	gst_event_parse_qos (GST_EVENT(self->obj), &proportion,
+			     &diff, &timestamp);
+	
+	ret = PyList_New (0);
+	PyList_Append (ret, PyFloat_FromDouble(proportion));
+	PyList_Append (ret, PyLong_FromLongLong(diff));
+	PyList_Append (ret, PyLong_FromUnsignedLongLong(timestamp));
+
+	return ret;
+}
+%%
+override gst_event_parse_seek noargs
+static PyObject *
+_wrap_gst_event_parse_seek (PyGstMiniObject *self)
+{
+	PyObject	*ret;
+	gdouble	        rate;
+	GstFormat	format;
+	GstSeekFlags	flags;
+	GstSeekType	cur_type;
+	gint64		cur;
+	GstSeekType	stop_type;
+	gint64		stop;
+	
+	if (GST_EVENT_TYPE(self->obj) != GST_EVENT_SEEK) {
+		PyErr_SetString(PyExc_TypeError, "Event is not an 'Seek' event");
+		return NULL;
+	}
+
+	gst_event_parse_seek (GST_EVENT(self->obj), &rate, &format, &flags,
+			      &cur_type, &cur, &stop_type, &stop);
+	
+	ret = PyList_New (0);
+	PyList_Append (ret, PyFloat_FromDouble(rate));
+	PyList_Append (ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
+	PyList_Append (ret, pyg_flags_from_gtype (GST_TYPE_SEEK_FLAGS, flags));
+	PyList_Append (ret, pyg_enum_from_gtype (GST_TYPE_SEEK_TYPE, cur_type));
+	PyList_Append (ret, PyLong_FromUnsignedLongLong (cur));
+	PyList_Append (ret, pyg_enum_from_gtype (GST_TYPE_SEEK_TYPE, stop_type));
+	PyList_Append (ret, PyLong_FromUnsignedLongLong (stop));
+	
+	return ret;
+}

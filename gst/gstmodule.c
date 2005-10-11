@@ -113,6 +113,7 @@ init_gst (void)
      PyObject *av, *tuple;
      int argc, i;
      char **argv;
+     GError	*error = NULL;
 
      init_pygobject ();
 
@@ -129,13 +130,14 @@ init_gst (void)
 	  argv = g_new (char *, argc);
 	  argv[0] = g_strdup("");
      }
-     if (!gst_init_check (&argc, &argv)) {
+     if (!gst_init_check (&argc, &argv, &error)) {
 	  if (argv != NULL) {
 	       for (i = 0; i < argc; i++)
                     g_free (argv[i]);
 	       g_free (argv);
 	  }
 	  PyErr_SetString (PyExc_RuntimeError, "can't initialize module gst");
+	  g_error_free (error);
 	  setlocale(LC_NUMERIC, "C");
 	  return;
      }
@@ -215,6 +217,8 @@ init_gst (void)
                          pyg_type_wrapper_new(GST_TYPE_TYPE_FIND_FACTORY));
 
      g_timeout_add_full (0, 100, python_do_pending_calls, NULL, NULL);
+
+     atexit(gst_deinit);
      
      if (PyErr_Occurred ()) {
 	  Py_FatalError ("can't initialize module gst");

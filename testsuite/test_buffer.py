@@ -157,8 +157,11 @@ class BufferTest(TestCase):
     def testBufferCaps(self):
         buffer = gst.Buffer()
         caps = gst.caps_from_string('foo/blah')
+        gst.info("before settings caps")
         buffer.set_caps(caps)
+        gst.info("after settings caps")
         c = buffer.get_caps()
+        gst.info("after getting caps")
         self.assertEquals(caps, c)
 
 if __name__ == "__main__":

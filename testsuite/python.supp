@@ -356,3 +356,88 @@
 }
 
 
+# python init memleak
+{
+   Py_Main memleak
+   Memcheck:Leak
+   fun:malloc
+   fun:PyObject_Malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:Py_InitializeEx
+}
+
+{
+   Py_Main memleak
+   Memcheck:Leak
+   fun:malloc
+   fun:PyObject_Malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:Py_InitializeEx
+}
+
+{
+   Py_Main memleak v2
+   Memcheck:Leak
+   fun:malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:Py_InitializeEx
+}
+
+{
+   Read compiled module memleak
+   Memcheck:Leak
+   fun:malloc
+   fun:PyObject_Malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_NewVar
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:read_compiled_module
+}
+
+{
+   PyRun_SimpleFileExFlags memleak
+   Memcheck:Leak
+   fun:malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New*
+   fun:*
+   fun:*
+   fun:*
+   fun:PyRun_SimpleFileExFlags
+}
+
+# memleak in update_keyword_args
+{
+   update_keyword_args
+   Memcheck:Leak
+   fun:malloc
+   fun:_PyObject_GC_Malloc
+   fun:*
+   fun:*
+   fun:update_keyword_args
+}

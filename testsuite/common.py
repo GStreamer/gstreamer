@@ -110,7 +110,7 @@ def run_silent(function, *args, **kwargs):
 
 class TestCase(unittest.TestCase):
 
-    _types = [gst.Element, gst.Pad, gst.Bus]
+    _types = [gst.Controller, gst.Object, gst.Element, gst.Pad, gst.Bus, gst.MiniObject]
 
     def gccollect(self):
         # run the garbage collector

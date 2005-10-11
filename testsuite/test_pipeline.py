@@ -90,7 +90,6 @@ class PipelineAndBus(TestCase):
     def setUp(self):
         TestCase.setUp(self)
         self.pipeline = gst.Pipeline('test-pipeline')
-        self.pipeline.set_property('play-timeout', 0L)
         source = gst.element_factory_make('fakesrc', 'source')
         sink = gst.element_factory_make('fakesink', 'sink')
         self.pipeline.add(source, sink)
@@ -143,7 +142,7 @@ class PipelineAndBus(TestCase):
 
     def testPlaying(self):
         self.final = gst.STATE_PLAYING
-        ret = self.pipeline.set_state_async(gst.STATE_PLAYING)
+        ret = self.pipeline.set_state(gst.STATE_PLAYING)
         self.assertEquals(ret, gst.STATE_CHANGE_ASYNC)
 
         # go into a main loop to wait for messages
@@ -152,8 +151,8 @@ class PipelineAndBus(TestCase):
         # we go to READY so we get messages; going to NULL would set
         # the bus flushing
         self.final = gst.STATE_READY
-        ret = self.pipeline.set_state_async(gst.STATE_READY)
-        self.assertEquals(ret, gst.STATE_CHANGE_ASYNC)
+        ret = self.pipeline.set_state(gst.STATE_READY)
+        self.assertEquals(ret, gst.STATE_CHANGE_SUCCESS)
         self.loop.run()
 
         # FIXME: not setting to NULL causes a deadlock; we might want to

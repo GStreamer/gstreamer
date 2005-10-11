@@ -47,11 +47,8 @@
    write(buf)
    fun:__pthread_initialize_manager
    fun:pthread_create@@GLIBC_2.2.5
-   fun:*
-   fun:*
-   fun:*
-   fun:*
-   fun:gst_task_start
+   fun:g_thread_create*
+   fun:g_thread_create*
 }
 
 {
@@ -67,14 +64,145 @@
 }
 
 {
-   memory loss when creating thread from gst_task_start
+   Syscall param clone(child_tidptr) contains uninitialised byte(s)
+   Memcheck:Param
+   clone(child_tidptr)
+   fun:clone
+}
+
+{
+   memory loss when creating thread
    Memcheck:Leak
    fun:malloc
    fun:__pthread_initialize_manager
+   fun:pthread_create*
+}
+
+# pyg_enable_threads memleak
+
+{
+  memleak in pyg_enable_threads 
+  Memcheck:Leak
+  fun:malloc
+  fun:*
+  fun:*
+  fun:*
+  fun:*
+  fun:*
+  fun:pyg_enable_threads
+}
+
+
+{
+  memleak in pyg_enable_threads 2
+  Memcheck:Leak
+  fun:malloc
+  fun:*
+  fun:*
+  fun:*
+  fun:*
+  fun:pyg_enable_threads
+}
+
+{
+  memleak in pyg_enable_threads 3
+  Memcheck:Leak
+  fun:malloc
+  fun:*
+  fun:*
+  fun:*
+  fun:pyg_enable_threads
+}
+
+#pygobject leaks
+
+{
+  PyType_Ready leak
+  Memcheck:Leak
+  fun:malloc
+  fun:PyObject_Malloc
+  fun:_PyObject_GC_Malloc
+  fun:PyType_GenericAlloc
+  fun:*
+  fun:*
+  fun:PyType_Ready
+}
+
+#gst debug category new leak
+{
+   gst debug category new leak
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_strdup
+   fun:_gst_debug_category_new
+}
+
+# memleak in gst_element_state_get_name that we can't get rid of
+{
+   gst_element_state_get_name
+   Memcheck:Leak
+   fun:malloc
+   fun:*
+   fun:g_vasprintf
+   fun:g_strdup*
+   fun:g_strdup*
+   fun:_wrap_gst_element_state_get_name
+}
+
+#memleak in pygobject_new_with_interfaces
+# weird, cos it seems to free the return value of g_type_interfaces
+{
+   _gst_element_factory_make
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_type_interfaces
+}
+
+#memleak in static_pad_template
+{
+   gst_static_pad_template_get
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:g_type_create_instance
+   fun:g_object_constructor
+   fun:gst_object_constructor
    fun:*
    fun:*
    fun:*
+   fun:gst_static_pad_template_get
+}
+
+#leak in libxml
+{
+   xml_parse_memory leak
+   Memcheck:Leak
+   fun:malloc
    fun:*
-   fun:*
-   fun:gst_task_start
+   fun:xml*
+}
+
+# FIXME : This is an awful leak that has do to with the gst_pad_set_*_function wrappers
+{
+   leak in gst_pad_set_*_function wrappers
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:pad_private
+}
+
+# python leak in runtime compiler
+{
+   python leak in runtime compiler
+   Memcheck:Leak
+   fun:malloc
+   fun:_PyObject_GC_Malloc
+   fun:_PyObject_GC_New*
+   fun:PyDict_New
+   fun:PySymtableEntry_New
+   fun:symtable_*
+   fun:symtable_*
+   fun:jcompile
 }

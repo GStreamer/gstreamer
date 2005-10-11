@@ -53,6 +53,7 @@ gobject.type_register(SinkBin)
         
 class PipeTest(TestCase):
     def setUp(self):
+        gst.info("setUp")
         TestCase.setUp(self)
         self.pipeline = gst.Pipeline()
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
@@ -66,8 +67,10 @@ class PipeTest(TestCase):
         self.assertEquals(sys.getrefcount(self.src), 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
         self.assertEquals(sys.getrefcount(self.sink), 3)
+        gst.info("end of SetUp")
 
     def tearDown(self):
+        gst.info("tearDown")
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
         self.assertEquals(sys.getrefcount(self.pipeline), 3)
         self.assertEquals(self.src.__gstrefcount__, 2)
@@ -97,7 +100,7 @@ class PipeTest(TestCase):
         self.sink.connect_handoff(self._sink_handoff_cb)
         self._handoffs = 0
 
-        self.pipeline.set_state_async(gst.STATE_PLAYING)
+        self.pipeline.set_state(gst.STATE_PLAYING)
         while True:
             (ret, cur, pen) = self.pipeline.get_state(timeout=None)
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_PLAYING:
@@ -106,7 +109,7 @@ class PipeTest(TestCase):
         while self._handoffs < 10:
                 pass
 
-        self.pipeline.set_state_async(gst.STATE_NULL)
+        self.pipeline.set_state(gst.STATE_NULL)
         while True:
             (ret, cur, pen) = self.pipeline.get_state(timeout=None)
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_NULL:
@@ -126,7 +129,7 @@ class PipeTest(TestCase):
 
         self._probed = False
         
-        self.pipeline.set_state_async(gst.STATE_PLAYING)
+        self.pipeline.set_state(gst.STATE_PLAYING)
         while True:
             (ret, cur, pen) = self.pipeline.get_state(timeout=None)
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_PLAYING:
@@ -138,7 +141,7 @@ class PipeTest(TestCase):
         while self._handoffs < 10:
             pass
 
-        self.pipeline.set_state_async(gst.STATE_NULL)
+        self.pipeline.set_state(gst.STATE_NULL)
         while True:
             (ret, cur, pen) = self.pipeline.get_state(timeout=None)
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_NULL:
@@ -162,7 +165,7 @@ class PipeTest(TestCase):
         # FIXME: the following print can cause a lock-up; why ?
         # print target
         # if we don't set async, it will possibly end up in PAUSED
-        self.sink.set_state_async(target)
+        self.sink.set_state(target)
         
         gst.debug('linking')
         self.src.link(self.sink)

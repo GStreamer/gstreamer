@@ -39,47 +39,49 @@ class ElementTest(TestCase):
         assert element is not None, 'element is None'
         assert isinstance(element, gst.Element)
         assert element.get_name() == self.alias
+
+## FIXME : Make a new test for state changes, using bus signals
         
-class FakeSinkTest(ElementTest):
-    FAKESINK_STATE_ERROR_NONE           = "0"
-    FAKESINK_STATE_ERROR_NULL_READY,    = "1"
-    FAKESINK_STATE_ERROR_READY_PAUSED,  = "2"
-    FAKESINK_STATE_ERROR_PAUSED_PLAYING = "3"
-    FAKESINK_STATE_ERROR_PLAYING_PAUSED = "4"
-    FAKESINK_STATE_ERROR_PAUSED_READY   = "5"
-    FAKESINK_STATE_ERROR_READY_NULL     = "6"
+## class FakeSinkTest(ElementTest):
+##     FAKESINK_STATE_ERROR_NONE           = "0"
+##     FAKESINK_STATE_ERROR_NULL_READY,    = "1"
+##     FAKESINK_STATE_ERROR_READY_PAUSED,  = "2"
+##     FAKESINK_STATE_ERROR_PAUSED_PLAYING = "3"
+##     FAKESINK_STATE_ERROR_PLAYING_PAUSED = "4"
+##     FAKESINK_STATE_ERROR_PAUSED_READY   = "5"
+##     FAKESINK_STATE_ERROR_READY_NULL     = "6"
 
-    name = 'fakesink'
-    alias = 'sink'
-    def setUp(self):
-        ElementTest.setUp(self)
-        self.element = gst.element_factory_make('fakesink', 'sink')
+##     name = 'fakesink'
+##     alias = 'sink'
+##     def setUp(self):
+##         ElementTest.setUp(self)
+##         self.element = gst.element_factory_make('fakesink', 'sink')
 
-    def tearDown(self):
-        self.element.set_state(gst.STATE_NULL)
-        del self.element
-        ElementTest.tearDown(self)
+##     def tearDown(self):
+##         self.element.set_state(gst.STATE_NULL)
+##         del self.element
+##         ElementTest.tearDown(self)
 
-    def checkError(self, old_state, state, name):
-        assert self.element.get_state() == gst.STATE_NULL
-        assert self.element.set_state(old_state)
-        assert self.element.get_state() == old_state
-        self.element.set_property('state-error', name)
-        self.error = False
-        def error_cb(element, source, gerror, debug):
-            assert isinstance(element, gst.Element)
-            assert element == self.element
-            assert isinstance(source, gst.Element)
-            assert source == self.element
-            assert isinstance(gerror, gst.GError)
-            self.error = True
+##     def checkError(self, old_state, state, name):
+##         assert self.element.get_state() == gst.STATE_NULL
+##         assert self.element.set_state(old_state)
+##         assert self.element.get_state() == old_state
+##         self.element.set_property('state-error', name)
+##         self.error = False
+##         def error_cb(element, source, gerror, debug):
+##             assert isinstance(element, gst.Element)
+##             assert element == self.element
+##             assert isinstance(source, gst.Element)
+##             assert source == self.element
+##             assert isinstance(gerror, gst.GError)
+##             self.error = True
             
-        self.element.connect('error', error_cb)
-        self.element.set_state (state)
-        assert self.error, 'error not set'
-        #assert error_message.find('ERROR') != -1
+##         self.element.connect('error', error_cb)
+##         self.element.set_state (state)
+##         assert self.error, 'error not set'
+##         #assert error_message.find('ERROR') != -1
         
-        self.element.get_state() == old_state, 'state changed'
+##         self.element.get_state() == old_state, 'state changed'
         
 ##     def testStateErrorNullReady(self):
 ##         self.checkError(gst.STATE_NULL, gst.STATE_READY,
@@ -105,24 +107,24 @@ class FakeSinkTest(ElementTest):
 ##         self.checkError(gst.STATE_READY, gst.STATE_NULL,
 ##                         self.FAKESINK_STATE_ERROR_READY_NULL)
 
-    def checkStateChange(self, old, new):
-        def state_change_cb(element, old_s, new_s):
-            assert isinstance(element, gst.Element)
-            assert element == self.element
-            assert old_s == old
-            assert new_s == new
+##     def checkStateChange(self, old, new):
+##         def state_change_cb(element, old_s, new_s):
+##             assert isinstance(element, gst.Element)
+##             assert element == self.element
+##             assert old_s == old
+##             assert new_s == new
             
-        assert self.element.set_state(old)
-        assert self.element.get_state(0.0)[1] == old
+##         assert self.element.set_state(old)
+##         assert self.element.get_state(0.0)[1] == old
 
-# FIXME: replace with messages
-#        self.element.connect('state-change', state_change_cb)
+## # FIXME: replace with messages
+## #        self.element.connect('state-change', state_change_cb)
 
-        assert self.element.set_state(new)
-        assert self.element.get_state(0.0)[1] == new
+##         assert self.element.set_state(new)
+##         assert self.element.get_state(0.0)[1] == new
         
-    def testStateChangeNullReady(self):
-        self.checkStateChange(gst.STATE_NULL, gst.STATE_READY)
+##     def testStateChangeNullReady(self):
+##         self.checkStateChange(gst.STATE_NULL, gst.STATE_READY)
         
 ##     def testStateChangeReadyPaused(self):
 ##         self.checkStateChange(gst.STATE_READY, gst.STATE_PAUSED)
@@ -136,8 +138,8 @@ class FakeSinkTest(ElementTest):
 ##     def testStateChangePausedReady(self):
 ##         self.checkStateChange(gst.STATE_PAUSED, gst.STATE_READY)
 
-    def testStateChangeReadyNull(self):
-        self.checkStateChange(gst.STATE_READY, gst.STATE_NULL)
+##     def testStateChangeReadyNull(self):
+##         self.checkStateChange(gst.STATE_READY, gst.STATE_NULL)
 
 class NonExistentTest(ElementTest):
     name = 'this-element-does-not-exist'
@@ -154,7 +156,7 @@ class FileSinkTest(ElementTest):
     name = 'filesink'
     alias = 'sink'
 
-class ElementName(unittest.TestCase):
+class ElementName(TestCase):
     def testElementStateGetName(self):
         get_name = gst.element_state_get_name
         for state in ('NULL',
