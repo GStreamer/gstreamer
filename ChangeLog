@@ -1,3 +1,18 @@
+2005-10-11  Wim Taymans  <wim@fluendo.com>
+
+	* check/generic/states.c: (GST_START_TEST):
+	remove old property.
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_perform_seek):
+	* ext/theora/theoradec.c: (theora_dec_sink_event):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),
+	(vorbis_handle_data_packet):
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_set_gst_timestamp):
+	* gst/videorate/gstvideorate.c: (gst_videorate_event):
+	Update for newsegment API change.
+
 2005-10-11  Michael Smith <msmith@fluendo.com>
 
 	* gst/playback/gstplaybin.c: (gst_play_bin_send_event_to_sink),

@@ -430,9 +430,11 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gdouble rate;
       gint64 start, stop, base;
+      gboolean update;
 
       GST_STREAM_LOCK (pad);
-      gst_event_parse_newsegment (event, &rate, &format, &start, &stop, &base);
+      gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
+          &base);
 
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;

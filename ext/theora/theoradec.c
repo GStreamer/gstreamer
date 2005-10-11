@@ -616,7 +616,8 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       gint64 start, stop, base;
 
       GST_STREAM_LOCK (pad);
-      gst_event_parse_newsegment (event, &rate, &format, &start, &stop, &base);
+      gst_event_parse_newsegment (event, NULL, &rate, &format, &start, &stop,
+          &base);
 
       /* we need TIME and a positive rate */
       if (format != GST_FORMAT_TIME)

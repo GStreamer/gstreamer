@@ -388,7 +388,8 @@ gst_videorate_event (GstPad * pad, GstEvent * event)
 
       GST_STREAM_LOCK (pad);
 
-      gst_event_parse_newsegment (event, NULL, &format, &start, &stop, NULL);
+      gst_event_parse_newsegment (event, NULL, NULL, &format, &start, &stop,
+          NULL);
 
       if (format != GST_FORMAT_TIME) {
         GST_WARNING ("Got discont but doesn't have GST_FORMAT_TIME value");
