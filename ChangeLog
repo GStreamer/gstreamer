@@ -1,3 +1,12 @@
+2005-10-11  Richard Hult  <richard@imendio.com>
+
+	Reviewed by Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	* gst/gst.override: (_wrap_gst_tag_list_get):
+	couple of memleak fixes
+	Closes #171287
+
 2005-10-11  Michael Scherer <misc@mandriva.org>
 
 	Reviewed by Edward Hervey  <edward@fluendo.com>

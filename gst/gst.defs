@@ -1742,6 +1742,7 @@
   (of-object "GstElementFactory")
   (c-name "gst_element_factory_create")
   (return-type "GstElement*")
+  (caller-owns-return #t)
   (parameters
     '("const-gchar*" "name" (null-ok) (default "NULL"))
   )

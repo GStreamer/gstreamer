@@ -425,9 +425,10 @@ _wrap_gst_tag_list_get(PyGObject *self, PyObject *args)
 		}
 	}
 
-	if (val == NULL)
-		val = failobj;
-	Py_INCREF(val);
+	if (val == NULL) {
+	    Py_INCREF(Py_None);
+	    return Py_None;
+	}
 	return val;
 }
 %%
