@@ -1335,13 +1335,14 @@ gst_base_transform_change_state (GstElement * element,
       else
         trans->have_same_caps = trans->passthrough;
       GST_DEBUG_OBJECT (trans, "have_same_caps %d", trans->have_same_caps);
-      gst_caps_replace (&trans->cache_caps1, NULL);
-      gst_caps_replace (&trans->cache_caps2, NULL);
       trans->negotiated = FALSE;
       GST_UNLOCK (trans);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_caps_replace (&trans->cache_caps1, NULL);
+      gst_caps_replace (&trans->cache_caps2, NULL);
     default:
       break;
   }

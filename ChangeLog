@@ -1,3 +1,10 @@
+2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  if we don't have glib, fail before testing 2.8
+	* gst/base/gstbasetransform.c: (gst_base_transform_change_state):
+	  fix a leak, should fix plugins-base testsuite
+
 2005-10-11  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.c (pre_activate): Renamed from pre_activate_switch,
