@@ -1,3 +1,11 @@
+2005-10-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_init), (gst_bin_provide_clock_func),
+	(gst_bin_add_func), (gst_bin_remove_func), (gst_bin_recalc_state),
+	(gst_bin_change_state_func), (bin_bus_handler):
+	* gst/gstbin.h:
+	Work on proper clock selection.
+
 2005-10-11  Edward Hervey  <edward@fluendo.com>
 
 	* libs/gst/controller/gstcontroller.c: (gst_controller_remove_properties_list): 

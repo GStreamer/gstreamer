@@ -289,6 +289,8 @@ gst_bin_init (GstBin * bin)
   bin->eosed = NULL;
   bin->polling = FALSE;
   bin->state_dirty = FALSE;
+  bin->provided_clock = NULL;
+  bin->clock_dirty = FALSE;
 
   /* Set up a bus for listening to child elements */
   bus = g_object_new (gst_bus_get_type (), NULL);
@@ -361,8 +363,11 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
  * The ref of the returned clock in increased so unref after usage.
  *
  * MT safe
- *
- * FIXME, clock selection is not correct here.
+ */
+/*
+ * FIXME, clock selection is not correct here. We should loop the
+ * elements in state order and pick the last clock we can get. This
+ * makes sure we get a clock from the source.
  */
 static GstClock *
 gst_bin_provide_clock_func (GstElement * element)
@@ -374,16 +379,32 @@ gst_bin_provide_clock_func (GstElement * element)
   bin = GST_BIN (element);
 
   GST_LOCK (bin);
+  if (!bin->clock_dirty)
+    goto not_dirty;
+
   for (children = bin->children; children; children = g_list_next (children)) {
     GstElement *child = GST_ELEMENT (children->data);
 
-    result = gst_element_provide_clock (child);
-    if (result)
+    if ((result = gst_element_provide_clock (child)))
       break;
   }
+  gst_object_replace ((GstObject **) & bin->provided_clock,
+      (GstObject *) result);
+  bin->clock_dirty = FALSE;
+  GST_DEBUG_OBJECT (bin, "provided new clock %p", result);
   GST_UNLOCK (bin);
 
   return result;
+
+not_dirty:
+  {
+    if ((result = bin->provided_clock))
+      gst_object_ref (result);
+    GST_DEBUG_OBJECT (bin, "returning old clock %p", result);
+    GST_UNLOCK (bin);
+
+    return result;
+  }
 }
 
 /* Check if the bin is EOS. We do this by scanning all sinks and
@@ -467,6 +488,11 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "element \"%s\" was sink",
         elem_name);
     GST_FLAG_SET (bin, GST_ELEMENT_IS_SINK);
+  }
+  if (gst_element_provides_clock (element)) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin,
+        "element \"%s\" can provide a clock", elem_name);
+    bin->clock_dirty = TRUE;
   }
 
   bin->children = g_list_prepend (bin->children, element);
@@ -617,6 +643,11 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       /* yups, we're not a sink anymore */
       GST_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
     }
+  }
+  if (gst_element_provides_clock (element)) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin,
+        "element \"%s\" could provide a clock", elem_name);
+    bin->clock_dirty = TRUE;
   }
   bin->state_dirty = TRUE;
   GST_UNLOCK (bin);

@@ -95,6 +95,9 @@ struct _GstBin {
   gboolean	 polling;
   gboolean       state_dirty;
 
+  gboolean       clock_dirty;
+  GstClock	*provided_clock;
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
