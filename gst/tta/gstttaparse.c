@@ -209,8 +209,8 @@ gst_tta_parse_src_event (GstPad * pad, GstEvent * event)
           gst_pad_push_event (ttaparse->sinkpad, gst_event_new_flush_stop ());
         }
 
-        gst_pad_push_event (ttaparse->srcpad, gst_event_new_newsegment (1.0,
-                GST_FORMAT_TIME, 0,
+        gst_pad_push_event (ttaparse->srcpad, gst_event_new_newsegment (FALSE,
+                1.0, GST_FORMAT_TIME, 0,
                 ttaparse->num_frames * FRAME_TIME * GST_SECOND, 0));
 
         gst_pad_start_task (ttaparse->sinkpad,
@@ -365,7 +365,7 @@ gst_tta_parse_parse_header (GstTtaParse * ttaparse)
   gst_pad_set_caps (ttaparse->srcpad, caps);
 
   discont =
-      gst_event_new_newsegment (1.0, GST_FORMAT_TIME, 0,
+      gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, 0,
       num_frames * FRAME_TIME * GST_SECOND, 0);
 
   gst_pad_push_event (ttaparse->srcpad, discont);
