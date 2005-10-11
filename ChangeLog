@@ -1,3 +1,10 @@
+2005-10-11  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/base/gstcollectpads.c: (gst_collectpads_init),
+	(gst_collectpads_add_pad), (gst_collectpads_pop),
+	(gst_collectpads_event), (gst_collectpads_chain):
+	* gst/base/gstcollectpads.h: Handle EOS correctly.
+
 2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tools/gst-launch.c: (main):

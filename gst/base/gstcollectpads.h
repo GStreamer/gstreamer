@@ -42,7 +42,6 @@ typedef struct _GstCollectData
   GstPad		*pad;
   GstBuffer		*buffer;
   guint			 pos;
-  gboolean		 eos;
 } GstCollectData;
 
 /* function will be called when all pads have data */
@@ -68,6 +67,7 @@ struct _GstCollectPads {
 
   guint		 numpads;		/* number of pads */
   guint		 queuedpads;		/* number of pads with a buffer */
+  guint		 eospads;		/* number of pads that are EOS */
 
   gboolean	 started;
 
