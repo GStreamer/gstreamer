@@ -935,7 +935,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       gdouble rate;
       GstFormat fmt;
 
-      gst_event_parse_newsegment (event, &rate, &fmt, &start, &end, &base);
+      gst_event_parse_newsegment (event, NULL, &rate, &fmt, &start, &end, &base);
       if (fmt == GST_FORMAT_TIME) {
         ffmpegdec->next_ts = start;
         GST_DEBUG_OBJECT (ffmpegdec, "Discont to time %" GST_TIME_FORMAT,
@@ -950,7 +950,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
             end,
             GST_TIME_ARGS (end * GST_SECOND / ffmpegdec->context->bit_rate));
         gst_event_unref (event);
-        event = gst_event_new_newsegment (rate, fmt,
+        event = gst_event_new_newsegment (FALSE, rate, fmt,
             start * GST_SECOND / ffmpegdec->context->bit_rate,
             end == -1 ? -1 : end * GST_SECOND / ffmpegdec->context->bit_rate,
             base * GST_SECOND / ffmpegdec->context->bit_rate);
