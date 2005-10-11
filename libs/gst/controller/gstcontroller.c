@@ -557,6 +557,44 @@ gst_controller_remove_properties_valist (GstController * self, va_list var_args)
 }
 
 /**
+ * gst_controller_remove_properties_list:
+ * @self: the controller object from which some properties should be removed
+ * @list: #GList of property names that should be removed
+ *
+ * Removes the given object properties from the controller
+ *
+ * Returns: %FALSE if one of the given property isn't handled by the controller, %TRUE otherwise
+ * Since: 0.9
+ */
+gboolean
+gst_controller_remove_properties_list (GstController * self, GList * list)
+{
+  gboolean res = TRUE;
+  GstControlledProperty *prop;
+  gchar *name;
+  GList *tmp;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
+
+  for (tmp = list; tmp; tmp = g_list_next (tmp)) {
+    name = (gchar *) tmp->data;
+
+    /* find the property in the properties list of the controller, remove and free it */
+    g_mutex_lock (self->lock);
+    if ((prop = gst_controller_find_controlled_property (self, name))) {
+      self->properties = g_list_remove (self->properties, prop);
+      g_signal_handler_disconnect (self->object, prop->notify_handler_id);
+      gst_controlled_property_free (prop);
+    } else {
+      res = FALSE;
+    }
+    g_mutex_unlock (self->lock);
+  }
+
+  return (res);
+}
+
+/**
  * gst_controller_remove_properties:
  * @self: the controller object from which some properties should be removed
  * @...: %NULL terminated list of property names that should be removed

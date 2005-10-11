@@ -1,3 +1,10 @@
+2005-10-11  Edward Hervey  <edward@fluendo.com>
+
+	* libs/gst/controller/gstcontroller.c: (gst_controller_remove_properties_list): 
+	* libs/gst/controller/gstcontroller.h:
+	Added GList* version of _remove_properties() in order to be able to wrap
+	it in bindings.
+
 2005-10-11  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-states.txt:

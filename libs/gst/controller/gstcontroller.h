@@ -207,6 +207,8 @@ GstController *gst_controller_new (GObject * object, ...);
 
 gboolean gst_controller_remove_properties_valist (GstController * self,
     va_list var_args);
+gboolean gst_controller_remove_properties_list (GstController * self,
+						GList *list);
 gboolean gst_controller_remove_properties (GstController * self, ...);
 
 gboolean gst_controller_set (GstController * self, gchar * property_name,
