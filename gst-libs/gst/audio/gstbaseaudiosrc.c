@@ -308,7 +308,7 @@ gst_base_audio_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (psrc);
   GstBuffer *buf;
   guchar *data;
-  guint len;
+  guint len, samples;
   guint res;
   guint64 sample;
 
@@ -326,11 +326,13 @@ gst_base_audio_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     sample = 0;
   }
 
-  res = gst_ring_buffer_read (src->ringbuffer, sample, data, len);
+  samples = len / src->ringbuffer->spec.bytes_per_sample;
+
+  res = gst_ring_buffer_read (src->ringbuffer, sample, data, samples);
   if (res == -1)
     goto stopped;
 
-  src->next_sample = sample + len / src->ringbuffer->spec.bytes_per_sample;
+  src->next_sample = sample + samples;
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
 

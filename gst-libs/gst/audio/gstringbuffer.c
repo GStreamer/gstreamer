@@ -904,7 +904,7 @@ not_started:
  * @buf: the #GstRingBuffer to commit
  * @sample: the sample position of the data
  * @data: the data to commit
- * @len: the length of the data to commit
+ * @len: the number of samples in the data to commit
  *
  * Commit @len samples pointed to by @data to the ringbuffer
  * @buf. The first sample should be written at position @sample in
@@ -936,15 +936,15 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
   bps = buf->spec.bytes_per_sample;
   sps = buf->samples_per_seg;
 
-  /* write out all bytes */
+  /* write out all samples */
   while (len > 0) {
-    gint writelen;
-    gint writeseg, writeoff;
+    gint sampleslen;
+    gint writeseg, sampleoff;
 
     /* figure out the segment and the offset inside the segment where
      * the sample should be written. */
     writeseg = sample / sps;
-    writeoff = (sample % sps) * bps;
+    sampleoff = (sample % sps);
 
     while (TRUE) {
       gint diff;
@@ -957,13 +957,13 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
 
       GST_DEBUG
           ("pointer at %d, sample %llu, write to %d-%d, len %d, diff %d, segtotal %d, segsize %d",
-          segdone, sample, writeseg, writeoff, len, diff, segtotal, segsize);
+          segdone, sample, writeseg, sampleoff, len, diff, segtotal, sps);
 
       /* segment too far ahead, we need to drop */
       if (diff < 0) {
         /* we need to drop one segment at a time, pretend we wrote a
          * segment. */
-        writelen = MIN (segsize, len);
+        sampleslen = MIN (sps, len);
         goto next;
       }
 
@@ -979,17 +979,18 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
 
     /* we can write now */
     writeseg = writeseg % segtotal;
-    writelen = MIN (segsize - writeoff, len);
+    sampleslen = MIN (sps - sampleoff, len);
 
     GST_DEBUG ("write @%p seg %d, off %d, len %d",
-        dest + writeseg * segsize, writeseg, writeoff, writelen);
+        dest + writeseg * segsize, writeseg, sampleoff, sampleslen);
 
-    memcpy (dest + writeseg * segsize + writeoff, data, writelen);
+    memcpy (dest + (writeseg * segsize) + (sampleoff * bps), data,
+        (sampleslen * bps));
 
   next:
-    len -= writelen;
-    data += writelen;
-    sample += writelen / bps;
+    len -= sampleslen;
+    sample += sampleslen;
+    data += sampleslen * bps;
   }
 
   return len;
@@ -1007,9 +1008,9 @@ not_started:
  * @buf: the #GstRingBuffer to read from
  * @sample: the sample position of the data
  * @data: where the data should be read
- * @len: the length of the data to read
+ * @len: the number of samples in data to read
  *
- * Read @length samples from the ringbuffer into the memory pointed 
+ * Read @len samples from the ringbuffer into the memory pointed 
  * to by @data.
  * The first sample should be read from position @sample in
  * the ringbuffer.
@@ -1040,15 +1041,15 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
   bps = buf->spec.bytes_per_sample;
   sps = buf->samples_per_seg;
 
-  /* read enough bytes */
+  /* read enough samples */
   while (len > 0) {
-    gint readlen;
-    gint readseg, readoff;
+    gint sampleslen;
+    gint readseg, sampleoff;
 
     /* figure out the segment and the offset inside the segment where
      * the sample should be written. */
     readseg = sample / sps;
-    readoff = (sample % sps) * bps;
+    sampleoff = (sample % sps);
 
     while (TRUE) {
       gint diff;
@@ -1061,14 +1062,14 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
 
       GST_DEBUG
           ("pointer at %d, sample %llu, read from %d-%d, len %d, diff %d, segtotal %d, segsize %d",
-          segdone, sample, readseg, readoff, len, diff, segtotal, segsize);
+          segdone, sample, readseg, sampleoff, len, diff, segtotal, segsize);
 
       /* segment too far ahead, we need to drop */
       if (diff < 0) {
         /* we need to drop one segment at a time, pretend we read an
          * empty segment. */
-        readlen = MIN (segsize, len);
-        memcpy (data, buf->empty_seg, readlen);
+        sampleslen = MIN (sps, len);
+        memcpy (data, buf->empty_seg, sampleslen * bps);
         goto next;
       }
 
@@ -1084,17 +1085,18 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
 
     /* we can read now */
     readseg = readseg % segtotal;
-    readlen = MIN (segsize - readoff, len);
+    sampleslen = MIN (sps - sampleoff, len);
 
     GST_DEBUG ("read @%p seg %d, off %d, len %d",
-        dest + readseg * segsize, readseg, readoff, readlen);
+        dest + readseg * segsize, readseg, sampleoff, sampleslen);
 
-    memcpy (data, dest + readseg * segsize + readoff, readlen);
+    memcpy (data, dest + (readseg * segsize) + (sampleoff * bps),
+        (sampleslen * bps));
 
   next:
-    len -= readlen;
-    data += readlen;
-    sample += readlen / bps;
+    len -= sampleslen;
+    sample += sampleslen;
+    data += sampleslen * bps;
   }
 
   return len;
