@@ -369,6 +369,10 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   /* bring buffer timestamp to stream time */
   render_time = render_diff;
+  /* adjust for rate */
+  render_time /= ABS (bsink->segment_rate);
+  /* adjust for accumulated segments */
+  render_time += bsink->segment_accum;
   /* add base time to get absolute clock time */
   render_time += gst_element_get_base_time (GST_ELEMENT (bsink));
   /* and bring the time to the offset in the buffer */
