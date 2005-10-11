@@ -160,6 +160,8 @@ gst_buffer_finalize (GstBuffer * buffer)
 {
   g_return_if_fail (buffer != NULL);
 
+  GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
+
   /* free our data */
   if (buffer->malloc_data) {
     g_free (buffer->malloc_data);
