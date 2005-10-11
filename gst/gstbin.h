@@ -90,7 +90,7 @@ struct _GstBin {
   guint32	 children_cookie;
 
   GstBus        *child_bus;	/* Bus we set on our children */
-  GList         *eosed;         /* list of elements that posted EOS */
+  GList         *messages;      /* list of queued messages */
 
   gboolean	 polling;
   gboolean       state_dirty;

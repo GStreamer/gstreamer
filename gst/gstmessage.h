@@ -38,7 +38,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_BUFFERING: the pipeline is buffering
  * @GST_MESSAGE_STATE_CHANGED: a state change happened
  * @GST_MESSAGE_STEP_DONE: a framestep finished.
- * @GST_MESSAGE_CLOCK_PROVIDE: an element notifies it capability of providing
+ * @GST_MESSAGE_CLOCK_PROVIDE: an element notifies its capability of providing
  *                             a clock.
  * @GST_MESSAGE_CLOCK_LOST: The current clock as selected by the pipeline became
  *                          unusable. The pipeline will select a new clock on

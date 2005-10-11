@@ -286,7 +286,7 @@ gst_bin_init (GstBin * bin)
   bin->numchildren = 0;
   bin->children = NULL;
   bin->children_cookie = 0;
-  bin->eosed = NULL;
+  bin->messages = NULL;
   bin->polling = FALSE;
   bin->state_dirty = FALSE;
   bin->provided_clock = NULL;
@@ -423,7 +423,7 @@ is_eos (GstBin * bin)
 
     element = GST_ELEMENT_CAST (walk->data);
     if (bin_element_is_sink (element, bin) == 0) {
-      if (!g_list_find (bin->eosed, element)) {
+      if (!g_list_find (bin->messages, element)) {
         GST_DEBUG ("element did not post EOS yet");
         result = FALSE;
         break;
@@ -1362,12 +1362,12 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
 
   bin = GST_BIN_CAST (element);
 
-  /* Clear eosed element list on next PAUSED */
+  /* Clear message list on next PAUSED */
   if (next == GST_STATE_PAUSED) {
     GST_LOCK (bin);
     GST_DEBUG_OBJECT (element, "clearing EOS elements");
-    g_list_free (bin->eosed);
-    bin->eosed = NULL;
+    g_list_free (bin->messages);
+    bin->messages = NULL;
     GST_UNLOCK (bin);
   }
 
@@ -1474,8 +1474,8 @@ gst_bin_dispose (GObject * object)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
-  g_list_free (bin->eosed);
-  bin->eosed = NULL;
+  g_list_free (bin->messages);
+  bin->messages = NULL;
   gst_object_unref (bin->child_bus);
   bin->child_bus = NULL;
 
@@ -1549,16 +1549,17 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       GstObject *src = GST_MESSAGE_SRC (message);
 
       if (src) {
-        gchar *name;
         gboolean eos;
 
-        name = gst_object_get_name (src);
-        GST_DEBUG_OBJECT (bin, "got EOS message from %s", name);
-        g_free (name);
+        /* silly if we're not debugging.. */
+        GST_LOCK (src);
+        GST_DEBUG_OBJECT (bin, "got EOS message from %s",
+            GST_ELEMENT_NAME (src));
+        GST_UNLOCK (src);
 
         /* collect all eos messages from the children */
         GST_LOCK (bin);
-        bin->eosed = g_list_prepend (bin->eosed, src);
+        bin->messages = g_list_prepend (bin->messages, src);
         eos = is_eos (bin);
         GST_UNLOCK (bin);
 
