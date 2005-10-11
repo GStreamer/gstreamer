@@ -82,7 +82,7 @@ struct _GstBaseSink {
   gdouble	 segment_rate;
   gint64	 segment_start;
   gint64	 segment_stop;
-  gint64	 segment_base;
+  gint64	 segment_time;
   gint64	 segment_accum;
 
   gint64	 current_start;
