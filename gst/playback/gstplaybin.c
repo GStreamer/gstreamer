@@ -858,16 +858,15 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   }
 }
 
+/* Send an event to our sinks until one of them works; don't then send to the
+ * remaining sinks (unlike GstBin)
+ */
 static gboolean
-gst_play_bin_send_event (GstElement * element, GstEvent * event)
+gst_play_bin_send_event_to_sink (GstPlayBin * play_bin, GstEvent * event)
 {
-  GstPlayBin *play_bin;
-  GList *sinks;
-  gboolean res = FALSE;
+  GList *sinks = play_bin->sinks;
+  gboolean res = TRUE;
 
-  play_bin = GST_PLAY_BIN (element);
-
-  sinks = play_bin->sinks;
   while (sinks) {
     GstElement *sink = GST_ELEMENT_CAST (sinks->data);
 
@@ -879,6 +878,68 @@ gst_play_bin_send_event (GstElement * element, GstEvent * event)
   }
 
   gst_event_unref (event);
+
+  return res;
+}
+
+static gboolean
+do_playbin_seek (GstElement * element, GstEvent * event)
+{
+  gdouble rate;
+  GstSeekFlags flags;
+  gboolean flush;
+  gboolean was_playing = FALSE;
+  gboolean res;
+
+  gst_event_parse_seek (event, &rate, NULL, &flags, NULL, NULL, NULL, NULL);
+
+  flush = flags & GST_SEEK_FLAG_FLUSH;
+
+  if (flush) {
+    GstState state;
+    GTimeVal timeout;
+
+    GST_TIME_TO_TIMEVAL (0, timeout);
+    /* need to call _get_state() since a bin state is only updated
+     * with this call. */
+    gst_element_get_state (element, &state, NULL, &timeout);
+    was_playing = state == GST_STATE_PLAYING;
+
+    if (was_playing) {
+      gst_element_set_state (element, GST_STATE_PAUSED);
+    }
+  }
+
+  res = gst_play_bin_send_event_to_sink (GST_PLAY_BIN (element), event);
+
+  if (flush && res) {
+    /* need to reset the stream time to 0 after a flushing seek */
+    gst_pipeline_set_new_stream_time (GST_PIPELINE (element), 0);
+    if (was_playing)
+      /* and continue playing */
+      gst_element_set_state (element, GST_STATE_PLAYING);
+  }
+  return res;
+}
+
+/* We only want to send the event to a single sink (overriding GstBin's 
+ * behaviour), but we want to keep GstPipeline's behaviour - wrapping seek
+ * events appropriately. So, this is a messy duplication of code. */
+static gboolean
+gst_play_bin_send_event (GstElement * element, GstEvent * event)
+{
+  gboolean res = FALSE;
+  GstEventType event_type = GST_EVENT_TYPE (event);
+
+
+  switch (event_type) {
+    case GST_EVENT_SEEK:
+      res = do_playbin_seek (element, event);
+      break;
+    default:
+      res = gst_play_bin_send_event_to_sink (GST_PLAY_BIN (element), event);
+      break;
+  }
 
   return res;
 }

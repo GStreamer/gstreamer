@@ -1,3 +1,15 @@
+2005-10-11  Michael Smith <msmith@fluendo.com>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_send_event_to_sink),
+	(do_playbin_seek), (gst_play_bin_send_event):
+	  Override send_event differently, so that we can takes bits of
+	  functionality from GstPipeline (special handling for seeks,
+	  including pausing/resuming, and resetting stream time) and still get
+	  the appropriate behaviour of only forwarding event to a single sink,
+	  rather than all of them.
+	  Unfortunately requires a lot of code duplication, but the
+	  alternatives are equally ugly in the end.
+
 2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/elements/audioconvert.c: (setup_audioconvert),
