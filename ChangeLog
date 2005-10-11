@@ -1,3 +1,10 @@
+2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/elements/audioconvert.c: (setup_audioconvert),
+	(cleanup_audioconvert), (get_int_caps), (verify_convert),
+	(GST_START_TEST), (audioconvert_suite):
+	  clean up tests a little, fix some leaks.
+
 2005-10-10  Wim Taymans  <wim@fluendo.com>
 
 	* ext/alsa/gstalsasink.c:
