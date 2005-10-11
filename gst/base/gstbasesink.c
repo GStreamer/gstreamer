@@ -469,11 +469,12 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         GstFormat format;
         gint64 segment_start;
         gint64 segment_stop;
+        gboolean update;
 
         /* the newsegment event is needed to bring the buffer timestamps to the
          * stream time and to drop samples outside of the playback segment. */
-        gst_event_parse_newsegment (event, &basesink->segment_rate, &format,
-            &segment_start, &segment_stop, &basesink->segment_base);
+        gst_event_parse_newsegment (event, &update, &basesink->segment_rate,
+            &format, &segment_start, &segment_stop, &basesink->segment_base);
 
         basesink->have_newsegment = TRUE;
 

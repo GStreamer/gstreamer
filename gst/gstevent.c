@@ -354,6 +354,7 @@ gst_event_new_eos (void)
 
 /**
  * gst_event_new_newsegment:
+ * @update: is this segment an update to a previous one
  * @rate: a new rate for playback
  * @format: The format of the segment values
  * @start_value: the start value of the segment
@@ -380,21 +381,21 @@ gst_event_new_eos (void)
  * Returns: A new newsegment event.
  */
 GstEvent *
-gst_event_new_newsegment (gdouble rate, GstFormat format,
+gst_event_new_newsegment (gboolean update, gdouble rate, GstFormat format,
     gint64 start_value, gint64 stop_value, gint64 stream_time)
 {
   if (format == GST_FORMAT_TIME) {
     GST_CAT_INFO (GST_CAT_EVENT,
-        "creating newsegment rate %lf, format GST_FORMAT_TIME, "
+        "creating newsegment update %d, rate %lf, format GST_FORMAT_TIME, "
         "start %" GST_TIME_FORMAT ", stop %" GST_TIME_FORMAT
         ", stream_time %" GST_TIME_FORMAT,
-        rate, GST_TIME_ARGS (start_value),
+        update, rate, GST_TIME_ARGS (start_value),
         GST_TIME_ARGS (stop_value), GST_TIME_ARGS (stream_time));
   } else {
     GST_CAT_INFO (GST_CAT_EVENT,
-        "creating newsegment rate %lf, format %d, "
+        "creating newsegment update %d, rate %lf, format %d, "
         "start %lld, stop %lld, stream_time %lld",
-        rate, format, start_value, stop_value, stream_time);
+        update, rate, format, start_value, stop_value, stream_time);
   }
   if (start_value == -1)
     g_return_val_if_fail (start_value != -1, NULL);
@@ -403,7 +404,9 @@ gst_event_new_newsegment (gdouble rate, GstFormat format,
     g_return_val_if_fail (start_value <= stop_value, NULL);
 
   return gst_event_new_custom (GST_EVENT_NEWSEGMENT,
-      gst_structure_new ("GstEventNewsegment", "rate", G_TYPE_DOUBLE, rate,
+      gst_structure_new ("GstEventNewsegment",
+          "update", G_TYPE_BOOLEAN, update,
+          "rate", G_TYPE_DOUBLE, rate,
           "format", GST_TYPE_FORMAT, format,
           "start_val", G_TYPE_INT64, start_value,
           "stop_val", G_TYPE_INT64, stop_value,
@@ -413,6 +416,7 @@ gst_event_new_newsegment (gdouble rate, GstFormat format,
 /**
  * gst_event_parse_newsegment:
  * @event: The event to query
+ * @update: A pointer to the update flag of the segment
  * @rate: A pointer to the rate of the segment
  * @format: A pointer to the format of the newsegment values
  * @start_value: A pointer to store the start value in
@@ -422,7 +426,7 @@ gst_event_new_newsegment (gdouble rate, GstFormat format,
  * Get the start, stop and format in the newsegment event.
  */
 void
-gst_event_parse_newsegment (GstEvent * event, gdouble * rate,
+gst_event_parse_newsegment (GstEvent * event, gboolean * update, gdouble * rate,
     GstFormat * format, gint64 * start_value, gint64 * stop_value,
     gint64 * stream_time)
 {
@@ -432,6 +436,9 @@ gst_event_parse_newsegment (GstEvent * event, gdouble * rate,
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT);
 
   structure = gst_event_get_structure (event);
+  if (update)
+    *update =
+        g_value_get_boolean (gst_structure_get_value (structure, "update"));
   if (rate)
     *rate = g_value_get_double (gst_structure_get_value (structure, "rate"));
   if (format)

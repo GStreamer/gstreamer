@@ -1025,9 +1025,11 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gdouble rate;
       gint64 start, stop, base;
+      gboolean update;
 
       GST_STREAM_LOCK (pad);
-      gst_event_parse_newsegment (event, &rate, &format, &start, &stop, &base);
+      gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
+          &base);
       if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (trans, "received NEW_SEGMENT %" GST_TIME_FORMAT
             " -- %" GST_TIME_FORMAT ", base %" GST_TIME_FORMAT,

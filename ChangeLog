@@ -1,3 +1,17 @@
+2005-10-11  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstevent.c: (GST_START_TEST):
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_change_state):
+	* gst/base/gstbasesrc.c: (gst_base_src_default_newsegment):
+	* gst/base/gstbasetransform.c: (gst_base_transform_event):
+	* gst/elements/gstfilesink.c: (gst_file_sink_event):
+	* gst/gstevent.c: (gst_event_new_newsegment),
+	(gst_event_parse_newsegment):
+	* gst/gstevent.h:
+	Added extra flag to newsegment for future API freeze.
+	Updated check and base elements.
+
 2005-10-11  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/base/gstcollectpads.c: (gst_collectpads_init),
