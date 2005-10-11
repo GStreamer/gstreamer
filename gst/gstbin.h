@@ -94,6 +94,7 @@ struct _GstBin {
 
   gboolean	 polling;
   gboolean       state_dirty;
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };

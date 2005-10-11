@@ -1784,41 +1784,6 @@ gst_pad_get_parent_element (GstPad * pad)
 }
 
 /**
- * gst_flow_get_name:
- * @ret: a #GstFlowReturn to get the name of.
- *
- * Gets a string representing the given flow return.
- *
- * Returns: a string with the name of the flow return.
- */
-G_CONST_RETURN gchar *
-gst_flow_get_name (GstFlowReturn ret)
-{
-  switch (ret) {
-    case GST_FLOW_RESEND:
-      return "RESEND_BUFFER";
-    case GST_FLOW_OK:
-      return "OK";
-      /* expected failures */
-    case GST_FLOW_NOT_LINKED:
-      return "NOT_LINKED";
-    case GST_FLOW_WRONG_STATE:
-      return "WRONG_STATE";
-      /* error cases */
-    case GST_FLOW_UNEXPECTED:
-      return "UNEXPECTED";
-    case GST_FLOW_NOT_NEGOTIATED:
-      return "NOT_NEGOTIATED";
-    case GST_FLOW_ERROR:
-      return "ERROR";
-    case GST_FLOW_NOT_SUPPORTED:
-      return "NOT_SUPPORTED";
-    default:
-      return "UNKNOWN error";
-  }
-}
-
-/**
  * gst_object_default_error:
  * @source: the #GstObject that initiated the error.
  * @error: the GError.

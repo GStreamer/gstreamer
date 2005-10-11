@@ -286,6 +286,55 @@ Bin:
 Locking overview (element)
 --------------------------
 
+* Element commiting SUCCESS
+
+ - STATE_LOCK is taken in set_state
+ - change state is called if SUCCESS, commit state is called
+ - commit state calls change_state to next state change.
+ - if final state is reached, stack unwinds and result is returned to 
+   set_state and caller.
+
+
+ set_state(element)       change_state (element)   commit_state
+
+      |                         |                       |
+      |                         |                       |
+  STATE_LOCK                    |                       |
+      |                         |                       |
+      |------------------------>|                       | 
+      |                         |                       | 
+      |                         |                       | 
+      |                         | (do state change)     |
+      |                         |                       |
+      |                         |                       |
+      |                         | if SUCCESS            |
+      |                         |---------------------->|
+      |                         |                       | post message
+      |                         |                       |
+      |                         |<----------------------| if (!final) change_state (next)
+      |                         |                       | else SIGNAL
+      |                         |                       |
+      |                         |                       |
+      |                         |                       |
+      |<------------------------|                       |
+      |     SUCCESS               
+      | 
+  STATE_UNLOCK
+      |      
+    SUCCESS   
+           
+
+
+* Element commiting ASYNC
+
+ - STATE_LOCK is taken in set_state
+ - change state is called and returns ASYNC
+ - ASYNC returned to the caller.
+ - element takes STATE_LOCK in streaming thread.
+ - element calls commit_state in streaming thread.
+ - commit state calls change_state to next state change.
+
+
  set_state(element)       change_state (element)     stream_thread      commit_state (element)
 
       |                         |                          |                  |
@@ -298,19 +347,21 @@ Locking overview (element)
       |                         | (start_task)             |                  |
       |                         |                          |                  |
       |                         |                     STREAM_LOCK             |
-      |                         |                          |                  |
+      |                         |                          |...               |
       |<------------------------|                          |                  |
-      |     ASYNC                                          |                  |
+      |     ASYNC                                     STREAM_UNLOCK           |
   STATE_UNLOCK                                             |                  |       
       |                .....sync........               STATE_LOCK             |               
     ASYNC                                                  |----------------->|
                                                            |                  |
-                                                           |                  |---> post_message(ASYNC)
+                                                           |                  |---> post_message()
                                                            |                  |---> if (!final) change_state (next)
                                                            |                  |     else SIGNAL
                                                            |<-----------------|
                                                        STATE_UNLOCK
                                                            |
+                                                      STREAM_LOCK
+                                                           | ...
                                                       STREAM_UNLOCK
                                      
        

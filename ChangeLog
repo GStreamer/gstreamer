@@ -1,3 +1,35 @@
+2005-10-11  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-states.txt:
+	Some more docs.
+
+	* gst/gstbin.c: (gst_bin_set_clock_func), (gst_bin_recalc_state),
+	(gst_bin_change_state_func), (bin_bus_handler):
+	Doc updates. Don't distribute the same clock over and over again.
+
+	* gst/gstclock.c:
+	* gst/gstclock.h:
+	Doc updates.
+
+	* gst/gstpad.c: (gst_flow_get_name), (gst_flow_to_quark),
+	(gst_pad_get_type), (gst_pad_push), (gst_pad_push_event),
+	(gst_pad_send_event):
+	* gst/gstpad.h:
+	Make probe emission threadsafe again.
+	Register quarks and move _get_name() from utils.
+	Doc updates.
+
+	* gst/gstpipeline.c: (gst_pipeline_class_init),
+	(gst_pipeline_change_state), (gst_pipeline_provide_clock_func):
+	Only redistribute the clock of it changed.
+
+	* gst/gstsystemclock.h:
+	Doc updates. 
+
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	Moved the _flow_get_name() to GstPad.
+
 2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst-libs/gdp.c: (GST_START_TEST):

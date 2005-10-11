@@ -324,10 +324,10 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
             GST_TIME_ARGS (start_time), GST_TIME_ARGS (element->base_time));
         GST_UNLOCK (element);
 
-        /* now distribute the clock */
-        gst_element_set_clock (element, clock);
-
         if (new_clock) {
+          /* now distribute the clock */
+          gst_element_set_clock (element, clock);
+
           /* if we selected a new clock, let the app know about it */
           gst_element_post_message (element,
               gst_message_new_new_clock (GST_OBJECT_CAST (element), clock));

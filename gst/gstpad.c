@@ -73,17 +73,6 @@
 #include "gstvalue.h"
 
 GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
-#define DEBUG_DATA(obj,data,notice) G_STMT_START{\
-  if (!data) { \
-    GST_CAT_DEBUG_OBJECT (debug_dataflow, obj, "NULL data value"); \
-  } else if (GST_IS_EVENT (data)) { \
-    GST_CAT_DEBUG_OBJECT (debug_dataflow, obj, "%s event %p (type %d, refcount %d)", notice, data, \
-	GST_EVENT_TYPE (data), GST_DATA_REFCOUNT_VALUE (data)); \
-  } else { \
-    GST_CAT_LOG_OBJECT (debug_dataflow, obj, "%s buffer %p (size %u, refcount %d)", notice, data, \
-	GST_BUFFER_SIZE (data), GST_BUFFER_REFCOUNT_VALUE (data)); \
-  } \
-}G_STMT_END
 #define GST_CAT_DEFAULT GST_CAT_PADS
 
 /* Pad signals and args */
@@ -129,8 +118,70 @@ static xmlNodePtr gst_pad_save_thyself (GstObject * object, xmlNodePtr parent);
 static GstObjectClass *parent_class = NULL;
 static guint gst_pad_signals[LAST_SIGNAL] = { 0 };
 
+/* quarks for probe signals */
 static GQuark buffer_quark;
 static GQuark event_quark;
+
+typedef struct
+{
+  gint ret;
+  gchar *name;
+  GQuark quark;
+} GstFlowQuarks;
+
+static GstFlowQuarks flow_quarks[] = {
+  {GST_FLOW_RESEND, "resend", 0},
+  {GST_FLOW_OK, "ok", 0},
+  {GST_FLOW_NOT_LINKED, "not-linked", 0},
+  {GST_FLOW_WRONG_STATE, "wrong-state", 0},
+  {GST_FLOW_UNEXPECTED, "unexpected", 0},
+  {GST_FLOW_NOT_NEGOTIATED, "not-negotiated", 0},
+  {GST_FLOW_ERROR, "error", 0},
+  {GST_FLOW_NOT_SUPPORTED, "not-supported", 0},
+
+  {0, NULL, 0}
+};
+
+/**
+ * gst_flow_get_name:
+ * @ret: a #GstFlowReturn to get the name of.
+ *
+ * Gets a string representing the given flow return.
+ *
+ * Returns: a string with the name of the flow return.
+ */
+G_CONST_RETURN gchar *
+gst_flow_get_name (GstFlowReturn ret)
+{
+  gint i;
+
+  for (i = 0; flow_quarks[i].name; i++) {
+    if (ret == flow_quarks[i].ret)
+      return flow_quarks[i].name;
+  }
+  return "unknown";
+}
+
+/**
+ * gst_flow_to_quark:
+ * @ret: a #GstFlowReturn to get the quark of.
+ *
+ * Get the unique quark for the given GstFlowReturn.
+ *
+ * Returns: the quark associated with the flow return or 0 if an
+ * invalid return was specified.
+ */
+GQuark
+gst_flow_to_quark (GstFlowReturn ret)
+{
+  gint i;
+
+  for (i = 0; flow_quarks[i].name; i++) {
+    if (ret == flow_quarks[i].ret)
+      return flow_quarks[i].quark;
+  }
+  return 0;
+}
 
 GType
 gst_pad_get_type (void)
@@ -143,12 +194,17 @@ gst_pad_get_type (void)
       0,
       (GInstanceInitFunc) gst_pad_init, NULL
     };
+    gint i;
 
     _gst_pad_type = g_type_register_static (GST_TYPE_OBJECT, "GstPad",
         &pad_info, 0);
 
     buffer_quark = g_quark_from_static_string ("buffer");
     event_quark = g_quark_from_static_string ("event");
+
+    for (i = 0; flow_quarks[i].name; i++) {
+      flow_quarks[i].quark = g_quark_from_static_string (flow_quarks[i].name);
+    }
 
     GST_DEBUG_CATEGORY_INIT (debug_dataflow, "GST_DATAFLOW",
         GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "dataflow inside pads");
@@ -3089,8 +3145,6 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 {
   GstPad *peer;
   GstFlowReturn ret;
-  gboolean emit_signal;
-  gboolean signal_ret = TRUE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
@@ -3106,22 +3160,17 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 
   /* we emit signals on the pad arg, the peer will have a chance to
    * emit in the _chain() function */
-  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
-  GST_UNLOCK (pad);
+  if (G_UNLIKELY (GST_PAD_DO_BUFFER_SIGNALS (pad) > 0)) {
+    /* unlock before emitting */
+    GST_UNLOCK (pad);
 
-  if (G_UNLIKELY (emit_signal)) {
-    signal_ret = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer));
+    /* if the signal handler returned FALSE, it means we should just drop the
+     * buffer */
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (buffer)))
+      goto dropped;
+
+    GST_LOCK (pad);
   }
-
-  /* if the signal handler returned FALSE, it means we should just drop the
-   * buffer */
-  if (signal_ret == FALSE) {
-    gst_buffer_unref (buffer);
-    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
-    return GST_FLOW_OK;
-  }
-
-  GST_LOCK (pad);
 
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
@@ -3135,6 +3184,12 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   return ret;
 
   /* ERROR recovery here */
+dropped:
+  {
+    gst_buffer_unref (buffer);
+    GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
+    return GST_FLOW_OK;
+  }
 not_linked:
   {
     gst_buffer_unref (buffer);
@@ -3382,25 +3437,20 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 {
   GstPad *peerpad;
   gboolean result;
-  gboolean emit_signal;
-  gboolean signal_ret = TRUE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
-
-  emit_signal = GST_PAD_DO_EVENT_SIGNALS (pad) > 0;
-
-  if (G_UNLIKELY (emit_signal)) {
-    signal_ret = gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event));
-  }
-
-  if (signal_ret == FALSE) {
-    GST_DEBUG_OBJECT (pad, "Dropping event after FALSE probe return");
-    gst_event_unref (event);
-    return FALSE;
-  }
+  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
 
   GST_LOCK (pad);
+  if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {
+    GST_UNLOCK (pad);
+
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event)))
+      goto dropping;
+
+    GST_LOCK (pad);
+  }
   peerpad = GST_PAD_PEER (pad);
   if (peerpad == NULL)
     goto not_linked;
@@ -3415,6 +3465,12 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   return result;
 
   /* ERROR handling */
+dropping:
+  {
+    GST_DEBUG_OBJECT (pad, "Dropping event after FALSE probe return");
+    gst_event_unref (event);
+    return FALSE;
+  }
 not_linked:
   {
     gst_event_unref (event);
@@ -3444,7 +3500,6 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   g_return_val_if_fail (event != NULL, FALSE);
 
   GST_LOCK (pad);
-
   if (GST_PAD_IS_SINK (pad) && !GST_EVENT_IS_DOWNSTREAM (event))
     goto wrong_direction;
   if (GST_PAD_IS_SRC (pad) && !GST_EVENT_IS_UPSTREAM (event))
@@ -3482,8 +3537,6 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
     goto no_function;
 
   emit_signal = GST_PAD_DO_EVENT_SIGNALS (pad) > 0;
-
-  gst_object_ref (pad);
   GST_UNLOCK (pad);
 
   if (G_UNLIKELY (emit_signal)) {
@@ -3492,8 +3545,6 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   }
 
   result = eventfunc (GST_PAD_CAST (pad), event);
-
-  gst_object_unref (pad);
 
   return result;
 
@@ -3524,7 +3575,6 @@ flushing:
 dropping:
   {
     GST_DEBUG ("Dropping event after FALSE probe return");
-    gst_object_unref (pad);
     gst_event_unref (event);
     return FALSE;
   }

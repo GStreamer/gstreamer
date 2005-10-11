@@ -51,7 +51,7 @@
  * bin. Likewise the "element_removed" signal is fired whenever an element is
  * removed from the bin.
  *
- * gst_bin_unref() is used to destroy the bin. 
+ * gst_object_unref() is used to destroy the bin. 
  */
 
 #include "gst_private.h"
@@ -70,11 +70,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (bin_debug);
 #define GST_CAT_DEFAULT bin_debug
-#define GST_LOG_BIN_CONTENTS(bin, text) GST_LOG_OBJECT ((bin), \
-	text ": %d elements: %u PLAYING, %u PAUSED, %u READY, %u NULL, own state: %s", \
-	(bin)->numchildren, (guint) (bin)->child_states[3], \
-	(guint) (bin)->child_states[2], (bin)->child_states[1], \
-	(bin)->child_states[0], gst_element_state_get_name (GST_STATE (bin)))
 
 static GstElementDetails gst_bin_details = GST_ELEMENT_DETAILS ("Generic bin",
     "Generic/Bin",
@@ -351,10 +346,12 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
   bin = GST_BIN (element);
 
   GST_LOCK (bin);
-  for (children = bin->children; children; children = g_list_next (children)) {
-    GstElement *child = GST_ELEMENT (children->data);
+  if (element->clock != clock) {
+    for (children = bin->children; children; children = g_list_next (children)) {
+      GstElement *child = GST_ELEMENT (children->data);
 
-    gst_element_set_clock (child, clock);
+      gst_element_set_clock (child, clock);
+    }
   }
   GST_UNLOCK (bin);
 }

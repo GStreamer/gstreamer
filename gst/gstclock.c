@@ -31,8 +31,8 @@
  *
  * The clock time is always measured in nanoseconds and always increases. The
  * pipeline uses the clock to calculate the stream time.
- * Usually all renderers sync to the global clock using the buffer timestamps
- * and the segment events.
+ * Usually all renderers sync to the global clock using the buffer timestamps,
+ * the newsegment events and the element's base time.
  *
  * The time of the clock in itself is not very usefull for an application.
  */

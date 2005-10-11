@@ -76,7 +76,7 @@ typedef enum {
  * @ret: the #GstPadLinkReturn value
  *
  * Macro to test if the given #GstPadLinkReturn value indicates a failed
- * negotiation step (REFUSED/DELAYED).
+ * link step.
  */
 #define GST_PAD_LINK_FAILED(ret) ((ret) < GST_PAD_LINK_OK)
 
@@ -85,24 +85,46 @@ typedef enum {
  * @ret: the #GstPadLinkReturn value
  *
  * Macro to test if the given #GstPadLinkReturn value indicates a successfull
- * negotiation step (OK/DONE).
+ * link step.
  */
 #define GST_PAD_LINK_SUCCESSFUL(ret) ((ret) >= GST_PAD_LINK_OK)
 
+/**
+ * GstFlowReturn:
+ * GST_FLOW_RESEND:	  	 Resend buffer, possibly with new caps.
+ * GST_FLOW_OK:		  	 Data passing was ok.
+ * GST_FLOW_NOT_LINKED:     	 Pad is not linked.
+ * GST_FLOW_WRONG_STATE:    	 Pad is in wrong state.
+ * GST_FLOW_UNEXPECTED:     	 Did not expect anything, like after EOS.
+ * GST_FLOW_NOT_NEGOTIATED: 	 Pad is not negotiated.
+ * GST_FLOW_ERROR:	  	 Some (fatal) error occured.
+ *
+ * The result of passing data to a linked pad.
+ */
 typedef enum {
-  GST_FLOW_RESEND	  =  1,		/* resend buffer, possibly with new caps */
-  GST_FLOW_OK		  =  0,		/* data passing was ok */
+  GST_FLOW_RESEND	  =  1,
+  GST_FLOW_OK		  =  0,
   /* expected failures */
-  GST_FLOW_NOT_LINKED     = -1,		/* pad is not linked */
-  GST_FLOW_WRONG_STATE    = -2,		/* pad is in wrong state */
+  GST_FLOW_NOT_LINKED     = -1,
+  GST_FLOW_WRONG_STATE    = -2,
   /* error cases */
-  GST_FLOW_UNEXPECTED     = -3,		/* did not expect anything, like after EOS */
-  GST_FLOW_NOT_NEGOTIATED = -4,		/* pad is not negotiated */
-  GST_FLOW_ERROR	  = -5,		/* some (fatal) error occured */
-  GST_FLOW_NOT_SUPPORTED  = -6		/* function not supported */
+  GST_FLOW_UNEXPECTED     = -3,
+  GST_FLOW_NOT_NEGOTIATED = -4,
+  GST_FLOW_ERROR	  = -5,
+  GST_FLOW_NOT_SUPPORTED  = -6
 } GstFlowReturn;
 
+/**
+ * GST_FLOW_IS_FATAL:
+ * @ret: a #GstFlowReturn value
+ *
+ * Macro to test if the given #GstFlowReturn value indicates a fatal
+ * error.
+ */
 #define GST_FLOW_IS_FATAL(ret) ((ret) <= GST_FLOW_UNEXPECTED)
+
+G_CONST_RETURN gchar*	gst_flow_get_name	(GstFlowReturn ret);
+GQuark			gst_flow_to_quark	(GstFlowReturn ret);
 
 typedef enum {
   GST_ACTIVATE_NONE,
