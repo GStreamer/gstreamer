@@ -1,3 +1,10 @@
+2005-10-11  Michael Scherer <misc@mandriva.org>
+
+	Reviewed by Edward Hervey  <edward@fluendo.com>
+
+	* gst/extend/Makefile.am: (pygst_PYTHON): 
+	jukebox.py and utils.py are now properly packaged
+
 2005-09-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:
