@@ -466,15 +466,19 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         break;
       case GST_EVENT_NEWSEGMENT:
       {
+        gboolean update;
+        gdouble rate;
         GstFormat format;
         gint64 segment_start;
         gint64 segment_stop;
-        gboolean update;
+        gint64 segment_time;
+        GstClockTime duration;
+
 
         /* the newsegment event is needed to bring the buffer timestamps to the
          * stream time and to drop samples outside of the playback segment. */
-        gst_event_parse_newsegment (event, &update, &basesink->segment_rate,
-            &format, &segment_start, &segment_stop, &basesink->segment_base);
+        gst_event_parse_newsegment (event, &update, &rate, &format,
+            &segment_start, &segment_stop, &segment_time);
 
         basesink->have_newsegment = TRUE;
 
@@ -483,53 +487,57 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         if (format != GST_FORMAT_TIME && segment_start == 0) {
           format = GST_FORMAT_TIME;
           segment_stop = -1;
-          basesink->segment_base = -1;
+          segment_time = -1;
         }
 
         if (format != GST_FORMAT_TIME) {
           GST_DEBUG_OBJECT (basesink,
               "received non time %d NEW_SEGMENT %" G_GINT64_FORMAT
-              " -- %" G_GINT64_FORMAT ", base %" G_GINT64_FORMAT,
-              format, basesink->segment_start, basesink->segment_stop,
-              basesink->segment_base);
+              " -- %" G_GINT64_FORMAT ", time %" G_GINT64_FORMAT,
+              format, segment_start, segment_stop, segment_time);
 
           /* this means this sink will not be able to clip or drop samples
            * and timestamps have to start from 0. */
           basesink->segment_start = -1;
           basesink->segment_stop = -1;
-          basesink->segment_base = -1;
+          basesink->segment_time = -1;
           goto done_newsegment;
         }
         /* check if we really have a new segment or the previous one is
          * closed */
-        if (basesink->segment_start != segment_start) {
+        if (!update) {
           /* the new segment has to be aligned with the old segment.
            * We first update the accumulated time of the previous
            * segment. the accumulated time is used when syncing to the
            * clock. A flush event sets the accumulated time back to 0
            */
           if (GST_CLOCK_TIME_IS_VALID (basesink->segment_stop)) {
-            basesink->segment_accum +=
-                basesink->segment_stop - basesink->segment_start;
+            duration = basesink->segment_stop - basesink->segment_start;
           } else if (GST_CLOCK_TIME_IS_VALID (basesink->current_end)) {
             /* else use last seen timestamp as segment stop */
-            basesink->segment_accum +=
-                basesink->current_end - basesink->segment_start;
+            duration = basesink->current_end - basesink->segment_start;
           } else {
-            basesink->segment_accum = 0;
+            duration = 0;
           }
+        } else {
+          duration = segment_start - basesink->segment_start;
         }
 
+        /* use previous rate to calculate duration */
+        basesink->segment_accum += (duration / ABS (basesink->segment_rate));
+        /* then update the current segment */
+        basesink->segment_rate = rate;
         basesink->segment_start = segment_start;
         basesink->segment_stop = segment_stop;
+        basesink->segment_time = segment_time;
 
         GST_DEBUG_OBJECT (basesink,
-            "received DISCONT %" GST_TIME_FORMAT " -- %"
-            GST_TIME_FORMAT ", base %" GST_TIME_FORMAT ", accum %"
+            "received NEWSEGMENT %" GST_TIME_FORMAT " -- %"
+            GST_TIME_FORMAT ", time %" GST_TIME_FORMAT ", accum %"
             GST_TIME_FORMAT,
             GST_TIME_ARGS (basesink->segment_start),
             GST_TIME_ARGS (basesink->segment_stop),
-            GST_TIME_ARGS (basesink->segment_base),
+            GST_TIME_ARGS (basesink->segment_time),
             GST_TIME_ARGS (basesink->segment_accum));
       done_newsegment:
         break;
@@ -1013,6 +1021,13 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     stream_end = (gint64) end;
   }
 
+  /* correct for rate */
+  if (basesink->segment_rate != 0.0) {
+    stream_start /= ABS (basesink->segment_rate);
+    if (end_valid)
+      stream_end /= ABS (basesink->segment_rate);
+  }
+
   stream_start += basesink->segment_accum;
   if (end_valid)
     stream_end += basesink->segment_accum;
@@ -1416,7 +1431,7 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
     {
       gst_query_set_segment (query, basesink->segment_rate,
           GST_FORMAT_TIME, basesink->segment_start, basesink->segment_stop,
-          basesink->segment_base);
+          basesink->segment_time);
       break;
     }
     case GST_QUERY_CONVERT:
@@ -1459,6 +1474,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       basesink->segment_rate = 1.0;
       basesink->segment_start = 0;
       basesink->segment_stop = 0;
+      basesink->segment_time = 0;
+      basesink->segment_accum = 0;
       ret = GST_STATE_CHANGE_ASYNC;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
