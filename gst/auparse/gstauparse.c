@@ -370,7 +370,7 @@ Samples :
 
     event = NULL;
 
-    event = gst_event_new_newsegment (1.0, GST_FORMAT_DEFAULT,
+    event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_DEFAULT,
         0, GST_CLOCK_TIME_NONE, 0);
 
 

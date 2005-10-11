@@ -1,3 +1,19 @@
+2005-10-11  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_sink_event),
+	(gst_dvdemux_demux_frame):
+	* ext/flac/gstflacdec.c: (gst_flacdec_write):
+	* gst/auparse/gstauparse.c: (gst_auparse_chain):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_header),
+	(gst_avi_demux_handle_seek):
+	* gst/goom/gstgoom.c: (gst_goom_event):
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_stop_file):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_handle_seek),
+	(gst_wavparse_stream_headers), (gst_wavparse_stream_data),
+	(gst_wavparse_loop), (gst_wavparse_pad_convert),
+	(gst_wavparse_srcpad_event):
+	newsegment API update.
+
 2005-10-11  Andy Wingo  <wingo@pobox.com>
 
 	* ext/speex/gstspeexenc.c: Signedness cleanups.

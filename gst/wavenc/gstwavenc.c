@@ -264,7 +264,7 @@ gst_wavenc_stop_file (GstWavEnc * wavenc)
   GstEvent *event;
   GstBuffer *outbuf;
 
-  event = gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+  event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
       0, GST_CLOCK_TIME_NONE, 0);
 
   gst_pad_push_event (wavenc->srcpad, event);

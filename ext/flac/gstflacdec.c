@@ -437,7 +437,7 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
     format = GST_FORMAT_TIME;
     gst_flacdec_convert_src (flacdec->srcpad, GST_FORMAT_DEFAULT,
         flacdec->total_samples, &format, &time);
-    newsegment = gst_event_new_newsegment (1.0, GST_FORMAT_TIME, time,
+    newsegment = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, time,
         GST_CLOCK_TIME_NONE, 0);
 
     if (!gst_pad_push_event (flacdec->srcpad, newsegment))

@@ -598,7 +598,7 @@ gst_dvdemux_handle_sink_event (GstPad * pad, GstEvent * event)
       GST_STREAM_LOCK (pad);
 
       /* parse byte start and stop positions */
-      gst_event_parse_newsegment (event, NULL, &format,
+      gst_event_parse_newsegment (event, NULL, NULL, &format,
           &dvdemux->start_byte, &dvdemux->stop_byte, NULL);
 
       /* and queue a DISCONT before sending the next set of buffers */
@@ -873,7 +873,7 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, const guint8 * data)
       }
     }
 
-    event = gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+    event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
         dvdemux->start_timestamp, dvdemux->stop_timestamp, 0);
     gst_dvdemux_send_event (dvdemux, event);
 

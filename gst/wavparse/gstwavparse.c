@@ -730,8 +730,7 @@ gst_wavparse_handle_seek (GstWavParse * wav, gboolean update)
       wav->offset, wav->dataleft, GST_TIME_ARGS (start_time),
       GST_TIME_ARGS (stop_time));
 
-  /* wav->seek_event = gst_event_new_newsegment (!update, wav->segment_rate, */
-  wav->seek_event = gst_event_new_newsegment (wav->segment_rate,
+  wav->seek_event = gst_event_new_newsegment (!update, wav->segment_rate,
       GST_FORMAT_TIME, start_time, stop_time, 0);
 
   if (flush)
@@ -854,8 +853,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   wav->segment_stop = (gint64) GST_SECOND *wav->datasize / wav->bps;
 
   /* Initial discont */
-  /* wav->seek_event = gst_event_new_newsegment (FALSE, 1.0, */
-  wav->seek_event = gst_event_new_newsegment (1.0,
+  wav->seek_event = gst_event_new_newsegment (FALSE, 1.0,
       GST_FORMAT_TIME, wav->segment_start, wav->segment_stop, 0);
 
   return GST_FLOW_OK;
@@ -1027,8 +1025,8 @@ pause:
   if (GST_FLOW_IS_FATAL (ret)) {
     /* for fatal errors we post an error message */
     GST_ELEMENT_ERROR (wav, STREAM, STOPPED,
-        ("streaming stopped, reason %d", ret),
-        ("streaming stopped, reason %d", ret));
+        ("streaming stopped, reason %s", gst_flow_get_name (ret)),
+        ("streaming stopped, reason %s", gst_flow_get_name (ret)));
     gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
   }
 }
@@ -1219,8 +1217,6 @@ gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
   gboolean res = TRUE;
 
   GST_DEBUG ("event %d", GST_EVENT_TYPE (event));
-
-  /* TODO : we need to call handle_seek */
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:

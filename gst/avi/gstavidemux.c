@@ -1957,7 +1957,7 @@ done:
   }
 
   /* send initial discont */
-  avi->seek_event = gst_event_new_newsegment (1.0,
+  avi->seek_event = gst_event_new_newsegment (FALSE, 1.0,
       GST_FORMAT_TIME, (gint64) 0,
       (gint64) (((gfloat) avi->stream[0].strh->scale) *
           avi->stream[0].strh->length /
@@ -1989,7 +1989,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, guint64 time)
 
   avi->last_seek = time;
   avi->current_entry = avi->seek_entry;
-  avi->seek_event = gst_event_new_newsegment (1.0,
+  avi->seek_event = gst_event_new_newsegment (FALSE, 1.0,
       GST_FORMAT_TIME, time,
       (gint64) (((gfloat) avi->stream[0].strh->scale) *
           avi->stream[0].strh->length /
