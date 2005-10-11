@@ -567,9 +567,6 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
     walk = g_slist_next (walk);
 
-    if (data->eos)
-      continue;
-
     /* try to get a new buffer for this pad if needed and possible */
     if (pad->buffer == NULL) {
       GstBuffer *buf;
@@ -577,20 +574,28 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
       buf = gst_collectpads_pop (ogg_mux->collect, data);
 
-      incaps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
-      /* if we need headers */
-      if (pad->state == GST_OGG_PAD_STATE_CONTROL) {
-        /* and we have one */
-        if (incaps) {
-          GST_DEBUG ("muxer: got incaps buffer in control state, ignoring");
-          /* just ignore */
-          gst_buffer_unref (buf);
-          buf = NULL;
-        } else {
-          GST_DEBUG
-              ("muxer: got data buffer in control state, switching to data mode");
-          /* this is a data buffer so switch to data state */
-          pad->state = GST_OGG_PAD_STATE_DATA;
+      /* On EOS we get a NULL buffer */
+      if (buf != NULL) {
+        incaps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+        /* if we need headers */
+        if (pad->state == GST_OGG_PAD_STATE_CONTROL) {
+          /* and we have one */
+          if (incaps) {
+            GST_DEBUG ("muxer: got incaps buffer in control state, ignoring");
+            /* just ignore */
+            gst_buffer_unref (buf);
+            buf = NULL;
+            /* We discarded the data of this pad, so it's not EOS. If no bestpad
+               selected so far then use this one */
+            if (!bestpad) {
+              bestpad = pad;
+            }
+          } else {
+            GST_DEBUG ("muxer: got data buffer in control state, switching "
+                "to data mode");
+            /* this is a data buffer so switch to data state */
+            pad->state = GST_OGG_PAD_STATE_DATA;
+          }
         }
       }
       pad->buffer = buf;
@@ -897,10 +902,15 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
   GST_DEBUG ("collected");
 
   best = gst_ogg_mux_queue_pads (ogg_mux);
-  if (best == NULL)
+  if (best && !best->buffer)
     return GST_FLOW_OK;
 
   GST_DEBUG ("best pad %p", best);
+
+  if (!best) {                  /* EOS : FIXME !! We need to handle EOS correctly */
+    gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
+    return GST_FLOW_WRONG_STATE;
+  }
 
   /* we're pulling a pad and there is a better one, see if we need
    * to flush the current page */
