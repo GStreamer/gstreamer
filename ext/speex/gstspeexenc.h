@@ -107,7 +107,7 @@ struct _GstSpeexEnc {
   gint			frame_size;
   guint64		frameno;
 
-  gchar			*comments;
+  guint8		*comments;
   gint			comment_len;
 
   gfloat		input[MAX_FRAME_SIZE];

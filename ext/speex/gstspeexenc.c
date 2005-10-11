@@ -584,36 +584,34 @@ gst_speexenc_get_tag_value (const GstTagList * list, const gchar * tag,
   }while(0)
 
 static void
-comment_init (char **comments, int *length, char *vendor_string)
+comment_init (guint8 ** comments, int *length, char *vendor_string)
 {
   int vendor_length = strlen (vendor_string);
   int user_comment_list_length = 0;
   int len = 4 + vendor_length + 4;
-  char *p = (char *) malloc (len);
+  guint8 *p = g_malloc (len);
 
-  if (p == NULL) {
-  }
   writeint (p, 0, vendor_length);
-  memcpy (p + 4, vendor_string, vendor_length);
+  memcpy (p + 4, (guint8 *) vendor_string, vendor_length);
   writeint (p, 4 + vendor_length, user_comment_list_length);
   *length = len;
   *comments = p;
 }
 static void
-comment_add (char **comments, int *length, const char *tag, char *val)
+comment_add (guint8 ** comments, int *length, const char *tag, char *val)
 {
-  char *p = *comments;
+  guint8 *p = *comments;
   int vendor_length = readint (p, 0);
   int user_comment_list_length = readint (p, 4 + vendor_length);
   int tag_len = (tag ? strlen (tag) : 0);
   int val_len = strlen (val);
   int len = (*length) + 4 + tag_len + val_len;
 
-  p = (char *) realloc (p, len);
+  p = g_realloc (p, len);
 
   writeint (p, *length, tag_len + val_len);     /* length of comment */
   if (tag)
-    memcpy (p + *length + 4, tag, tag_len);     /* comment */
+    memcpy (p + *length + 4, (guint8 *) tag, tag_len);  /* comment */
   memcpy (p + *length + 4 + tag_len, val, val_len);     /* comment */
   writeint (p, 4 + vendor_length, user_comment_list_length + 1);
 
@@ -921,7 +919,7 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
     gst_speexenc_set_metadata (speexenc);
 
     /* create header buffer */
-    data = speex_header_to_packet (&speexenc->header, &data_len);
+    data = (guint8 *) speex_header_to_packet (&speexenc->header, &data_len);
     buf1 = gst_speexenc_buffer_from_data (speexenc, data, data_len, 0);
 
     /* create comment buffer */
@@ -989,8 +987,8 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
           GST_BUFFER_OFFSET_NONE, outsize, GST_PAD_CAPS (speexenc->srcpad),
           &outbuf);
 
-      written =
-          speex_bits_write (&speexenc->bits, GST_BUFFER_DATA (outbuf), outsize);
+      written = speex_bits_write (&speexenc->bits,
+          (gchar *) GST_BUFFER_DATA (outbuf), outsize);
       g_assert (written == outsize);
       speex_bits_reset (&speexenc->bits);
 

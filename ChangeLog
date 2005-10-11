@@ -1,3 +1,7 @@
+2005-10-11  Andy Wingo  <wingo@pobox.com>
+
+	* ext/speex/gstspeexenc.c: Signedness cleanups.
+
 2005-10-10  Edgard Lima <edgard.lima@indt.org.br>
 
 	* PORTED_09:
