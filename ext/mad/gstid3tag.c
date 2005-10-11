@@ -795,8 +795,8 @@ gst_id3_tag_sink_event (GstPad * pad, GstEvent * event)
           GstFormat format = GST_FORMAT_UNDEFINED;
           gint64 value, end_value;
 
-          gst_event_parse_newsegment (event, NULL, &format, &value, &end_value,
-              NULL);
+          gst_event_parse_newsegment (event, NULL, NULL, &format, &value,
+              &end_value, NULL);
 
           if (format == GST_FORMAT_BYTES || format == GST_FORMAT_DEFAULT) {
             if (value !=
@@ -845,15 +845,15 @@ gst_id3_tag_sink_event (GstPad * pad, GstEvent * event)
           gdouble rate;
           gint64 value, end_value, base;
 
-          gst_event_parse_newsegment (event, &rate, &format, &value, &end_value,
-              &base);
+          gst_event_parse_newsegment (event, NULL, &rate, &format, &value,
+              &end_value, &base);
           if (format == GST_FORMAT_BYTES || format == GST_FORMAT_DEFAULT) {
             if (value > tag->v2tag_size) {
               value -= tag->v2tag_size;
               gst_event_unref (event);
               event =
-                  gst_event_new_newsegment (rate, format, value, end_value,
-                  base);
+                  gst_event_new_newsegment (FALSE, rate, format, value,
+                  end_value, base);
             }
           }
           if (tag->srcpad)

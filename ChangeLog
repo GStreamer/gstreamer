@@ -1,3 +1,13 @@
+2005-10-11  Wim Taymans  <wim@fluendo.com>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_sink_event):
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_sink_event), (gst_mp3parse_chain):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_perform_seek),
+	(gst_rmdemux_chain), (gst_rmdemux_add_stream):
+	newsegment API update.
+
 2005-10-06  Wim Taymans  <wim@fluendo.com>
 
 	* ext/amrnb/amrnbdec.c:

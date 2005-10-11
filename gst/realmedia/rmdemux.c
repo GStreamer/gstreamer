@@ -389,7 +389,6 @@ gst_rmdemux_validate_offset (GstRMDemux * rmdemux)
         rmdemux->offset);
     return FALSE;
   }
-
   // TODO: Can we also be seeking to a 'DATA' chunk header? Check this.
   // Also, for the case we currently handle, can we check any more? It's pretty
   // sucky to not be validating a little more heavily than this...
@@ -584,7 +583,7 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
       gst_rmdemux_send_event (rmdemux, gst_event_new_flush_stop ());
 
     /* create the discont event we are going to send out */
-    event = gst_event_new_newsegment (1.0,
+    event = gst_event_new_newsegment (FALSE, 1.0,
         GST_FORMAT_TIME, (gint64) rmdemux->segment_start,
         (gint64) rmdemux->segment_stop, 0);
 
@@ -1032,7 +1031,7 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
 
           GST_LOG_OBJECT (rmdemux, "no more pads.");
           gst_rmdemux_send_event (rmdemux,
-              gst_event_new_newsegment (1.0, GST_FORMAT_TIME, (gint64) 0,
+              gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, (gint64) 0,
                   (gint64) - 1, 0));
         }
 
@@ -1344,7 +1343,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     gst_element_add_pad (GST_ELEMENT (rmdemux), stream->pad);
 
     gst_pad_push_event (stream->pad,
-        gst_event_new_newsegment (1.0, GST_FORMAT_TIME, (gint64) 0,
+        gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, (gint64) 0,
             (gint64) - 1, 0));
 
     /* If there's some extra data then send it as the first packet */

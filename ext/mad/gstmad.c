@@ -1491,10 +1491,11 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 
         if (do_send_discont) {
           gst_pad_push_event (mad->srcpad,
-              gst_event_new_newsegment (1.0, GST_FORMAT_TIME,
+              gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
                   GST_BUFFER_TIMESTAMP (outbuffer), GST_CLOCK_TIME_NONE, 0));
           do_send_discont = FALSE;
         }
+
         result = gst_pad_push (mad->srcpad, outbuffer);
         if (result != GST_FLOW_OK) {
           goto end;
