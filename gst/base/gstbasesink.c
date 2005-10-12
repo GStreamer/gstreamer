@@ -524,7 +524,8 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         }
 
         /* use previous rate to calculate duration */
-        basesink->segment_accum += (duration / ABS (basesink->segment_rate));
+        basesink->segment_accum += gst_gdouble_to_guint64 (
+            (gst_guint64_to_gdouble (duration) / ABS (basesink->segment_rate)));
         /* then update the current segment */
         basesink->segment_rate = rate;
         basesink->segment_start = segment_start;

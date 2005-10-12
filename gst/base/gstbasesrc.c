@@ -338,7 +338,9 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
         case GST_FORMAT_PERCENT:
           b = gst_base_src_get_size (src, &ui64);
           i64 = GST_FORMAT_PERCENT_MAX;
-          i64 *= b ? (src->offset / gst_guint64_to_gdouble (ui64)) : 1.0;
+          if (b)
+            i64 *= gst_guint64_to_gdouble (src->offset)
+                / gst_guint64_to_gdouble (ui64);
           gst_query_set_position (query, GST_FORMAT_PERCENT,
               i64, GST_FORMAT_PERCENT_MAX);
           return TRUE;

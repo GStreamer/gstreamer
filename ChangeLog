@@ -1,5 +1,11 @@
 2005-10-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	* gst/base/gstbasesrc.c: (gst_base_src_query):
+	  fix more guint64<->gdouble conversions
+
+2005-10-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	  add win32-update target
 	* win32/common/gstconfig.h:
