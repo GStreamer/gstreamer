@@ -123,8 +123,8 @@ typedef gpointer GstClockID;
  */
 #define GST_TIME_TO_TIMEVAL(t,tv)			\
 G_STMT_START {						\
-  (tv).tv_sec  =  (t) / GST_SECOND;			\
-  (tv).tv_usec = ((t) - (tv).tv_sec * GST_SECOND) / GST_USECOND;	\
+  (tv).tv_sec  =  ((GstClockTime)(t)) / GST_SECOND;			\
+  (tv).tv_usec = (((GstClockTime)(t)) - (tv).tv_sec * GST_SECOND) / GST_USECOND;	\
 } G_STMT_END
 
 /**

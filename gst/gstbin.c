@@ -934,8 +934,12 @@ gst_bin_recalc_state (GstBin * bin, gboolean force)
 
   /* lock bin, no element can be added or removed while we have this lock */
   GST_LOCK (bin);
+  /* forced recalc, make state dirty again */
+  if (force)
+    bin->state_dirty = TRUE;
+
   /* no point in scanning if nothing changed and it's no forced recalc */
-  if (!force && !bin->state_dirty)
+  if (!bin->state_dirty)
     goto not_dirty;
 
   /* no point in having two scans run concurrently */
@@ -947,6 +951,10 @@ gst_bin_recalc_state (GstBin * bin, gboolean force)
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "recalc state");
 
 restart:
+  /* when we leave this function, the state must not be dirty, whenever
+   * we are scanning and the state bemoces dirty again, we restart. */
+  bin->state_dirty = FALSE;
+
   have_no_preroll = FALSE;
   have_async = FALSE;
 
@@ -975,6 +983,11 @@ restart:
       /* child added/removed during state change, restart. We need
        * to restart with the quick check as a no-preroll element could
        * have been added here and we don't want to block on sinks then.*/
+      GST_DEBUG_OBJECT (bin, "children added or removed, restarting recalc");
+      goto restart;
+    }
+    if (bin->state_dirty) {
+      GST_DEBUG_OBJECT (bin, "state dirty again, restarting recalc");
       goto restart;
     }
 
@@ -1009,7 +1022,6 @@ restart:
   }
 
 done:
-  bin->state_dirty = FALSE;
   bin->polling = FALSE;
   GST_UNLOCK (bin);
 

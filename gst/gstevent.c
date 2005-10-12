@@ -384,6 +384,8 @@ GstEvent *
 gst_event_new_newsegment (gboolean update, gdouble rate, GstFormat format,
     gint64 start_value, gint64 stop_value, gint64 stream_time)
 {
+  g_return_val_if_fail (rate != 0.0, NULL);
+
   if (format == GST_FORMAT_TIME) {
     GST_CAT_INFO (GST_CAT_EVENT,
         "creating newsegment update %d, rate %lf, format GST_FORMAT_TIME, "

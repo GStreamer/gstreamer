@@ -1,3 +1,23 @@
+2005-10-12  Wim Taymans  <wim@fluendo.com>
+
+	* check/Makefile.am:
+	* check/states/sinks.c: (GST_START_TEST), (gst_object_suite):
+	* check/states/sinks2.c:
+	Moved sinks2 testcode in sinks check.
+
+	* gst/gstbin.c: (gst_bin_provide_clock_func), (gst_bin_add_func),
+	(gst_bin_remove_func), (gst_bin_recalc_state),
+	(gst_bin_change_state_func), (bin_bus_handler):
+	Fix potential race condition when _get_state() iterated over an
+	ASYNC element right before it posted a state completion.
+
+	* gst/gstclock.h:
+	Do proper cast here.
+
+	* gst/gstevent.c: (gst_event_new_newsegment),
+	(gst_event_parse_newsegment):
+	A playback rate of 0.0 is not allowed.
+
 2005-10-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* win32/common/config.h:

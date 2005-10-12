@@ -54,7 +54,6 @@ check_PROGRAMS =				\
 	pipelines/simple_launch_lines		\
 	pipelines/cleanup			\
 	states/sinks				\
-	states/sinks2				\
 	gst-libs/controller			\
 	gst-libs/gdp
 
