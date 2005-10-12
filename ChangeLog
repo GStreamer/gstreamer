@@ -1,3 +1,9 @@
+2005-10-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
+	* gst/gstevent.override:
+	  update for new API
+
 2005-10-11  Edward Hervey  <edward@fluendo.com>
 
 	* gst/common.h:

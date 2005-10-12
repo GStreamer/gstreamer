@@ -1686,6 +1686,7 @@
   (return-type "GstEvent*")
   (caller-owns-return #t)
   (parameters
+    '("gboolean" "update")
     '("gdouble" "rate")
     '("GstFormat" "format")
     '("gint64" "start_value")
