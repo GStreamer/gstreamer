@@ -1,3 +1,8 @@
+2005-10-12  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gst.c (gst_init_check): Ignore unknown options, as has
+	always been the case.
+
 2005-10-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* check/gst/gstbin.c: (GST_START_TEST):
@@ -83,6 +88,9 @@
 	Remove old code in gstutils.c
 
 2005-10-12  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstregistry.h (gst_registry_scan_paths): Not implemented, so
+	removed.
 
 	* gst/gstpad.c (gst_pad_pause_task): Actually return FALSE if
 	there is no task. Shouldn't affect any code, as nothing in our
