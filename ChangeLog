@@ -1,3 +1,10 @@
+2005-10-12  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/gst-argtypes.c:
+	* gst/pygstminiobject.c:
+	* testsuite/testhelpermodule.c: Reordering header inclusion order to
+	fix build on my machine.
+
 2005-10-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:

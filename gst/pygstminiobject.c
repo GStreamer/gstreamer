@@ -19,8 +19,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  */
-#include <gst/gst.h>
+
 #include "pygstminiobject.h"
+#include <gst/gst.h>
 
 static const gchar *pygstminiobject_class_id     = "PyGstMiniObject::class";
 static GQuark       pygstminiobject_class_key    = 0;

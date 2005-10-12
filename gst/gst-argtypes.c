@@ -23,8 +23,8 @@
  * before including pygobject.h */
 #define NO_IMPORT_PYGOBJECT
 
-#include <gst/gst.h>
 #include "common.h"
+#include <gst/gst.h>
 
 /* This function will return a copy, unless the following is all TRUE:
  * - The given PyObject contains a GstCaps already

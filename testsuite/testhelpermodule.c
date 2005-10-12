@@ -1,8 +1,8 @@
-#include <glib-object.h>
-#include <gst/gst.h>
-
 #include "pygobject.h"
 #include "test-object.h"
+
+#include <gst/gst.h>
+#include <glib-object.h>
 
 static PyObject *
 _wrap_get_object (PyObject * self)
