@@ -305,16 +305,31 @@ gst_file_sink_do_seek (GstFileSink * filesink, guint64 new_offset)
   GST_DEBUG_OBJECT (filesink, "Seeking to offset %" G_GUINT64_FORMAT,
       new_offset);
 
+  if (fflush (filesink->file))
+    goto flush_failed;
+
 #ifdef G_OS_UNIX
   if (lseek (fileno (filesink->file), (off_t) new_offset,
-          SEEK_SET) != (off_t) - 1)
-    return;
+          SEEK_SET) == (off_t) - 1)
+    goto seek_failed;
 #else
-  if (fseek (filesink->file, (long) new_offset, SEEK_SET) == 0)
-    return;
+  if (fseek (filesink->file, (long) new_offset, SEEK_SET) != 0)
+    goto seek_failed;
 #endif
 
-  GST_DEBUG_OBJECT (filesink, "Seeking failed: %s", g_strerror (errno));
+  return;
+
+  /* ERRORS */
+flush_failed:
+  {
+    GST_DEBUG_OBJECT (filesink, "Flush failed: %s", g_strerror (errno));
+    return;
+  }
+seek_failed:
+  {
+    GST_DEBUG_OBJECT (filesink, "Seeking failed: %s", g_strerror (errno));
+    return;
+  }
 }
 
 /* handle events (search) */
