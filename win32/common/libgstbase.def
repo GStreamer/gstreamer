@@ -1,15 +1,15 @@
-EXPORTS
-	gst_base_transform_set_passthrough
-	gst_base_transform_get_type
-	gst_base_sink_get_type
-	gst_base_src_set_live
-	gst_base_src_get_type
-	gst_base_src_is_live
-	gst_push_src_get_type
-	gst_type_find_helper
-	gst_collectpads_add_pad
-	gst_collectpads_pop
-	gst_collectpads_start
-	gst_collectpads_stop
-	gst_collectpads_set_function
-	gst_collectpads_new
+EXPORTS
+	gst_base_transform_set_passthrough
+	gst_base_transform_get_type
+	gst_base_sink_get_type
+	gst_base_src_set_live
+	gst_base_src_get_type
+	gst_base_src_is_live
+	gst_push_src_get_type
+	gst_type_find_helper
+	gst_collectpads_add_pad
+	gst_collectpads_pop
+	gst_collectpads_start
+	gst_collectpads_stop
+	gst_collectpads_set_function
+	gst_collectpads_new
