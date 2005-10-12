@@ -140,7 +140,7 @@ gst_stream_selector_init (GstStreamSelector * sel)
   sel->last_active_sinkpad = NULL;
   sel->nb_sinkpads = 0;
 
-  //GST_FLAG_SET (sel, GST_ELEMENT_WORK_IN_PLACE);
+  //GST_OBJECT_FLAG_SET (sel, GST_ELEMENT_WORK_IN_PLACE);
 }
 
 static void

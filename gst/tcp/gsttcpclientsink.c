@@ -160,7 +160,7 @@ gst_tcpclientsink_init (GstTCPClientSink * this)
 
   this->sock_fd = -1;
   this->protocol = GST_TCP_PROTOCOL_NONE;
-  GST_FLAG_UNSET (this, GST_TCPCLIENTSINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (this, GST_TCPCLIENTSINK_OPEN);
 }
 
 static void
@@ -224,7 +224,7 @@ gst_tcpclientsink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   sink = GST_TCPCLIENTSINK (bsink);
 
-  g_return_val_if_fail (GST_FLAG_IS_SET (sink, GST_TCPCLIENTSINK_OPEN),
+  g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_TCPCLIENTSINK_OPEN),
       GST_FLOW_WRONG_STATE);
 
   size = GST_BUFFER_SIZE (buf);
@@ -335,7 +335,7 @@ gst_tcpclientsink_start (GstTCPClientSink * this)
   int ret;
   gchar *ip;
 
-  if (GST_FLAG_IS_SET (this, GST_TCPCLIENTSINK_OPEN))
+  if (GST_OBJECT_FLAG_IS_SET (this, GST_TCPCLIENTSINK_OPEN))
     return TRUE;
 
   /* reset caps_sent flag */
@@ -388,7 +388,7 @@ gst_tcpclientsink_start (GstTCPClientSink * this)
     }
   }
 
-  GST_FLAG_SET (this, GST_TCPCLIENTSINK_OPEN);
+  GST_OBJECT_FLAG_SET (this, GST_TCPCLIENTSINK_OPEN);
 
   this->data_written = 0;
 
@@ -398,7 +398,7 @@ gst_tcpclientsink_start (GstTCPClientSink * this)
 static gboolean
 gst_tcpclientsink_stop (GstTCPClientSink * this)
 {
-  if (!GST_FLAG_IS_SET (this, GST_TCPCLIENTSINK_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (this, GST_TCPCLIENTSINK_OPEN))
     return TRUE;
 
   if (this->sock_fd != -1) {
@@ -406,7 +406,7 @@ gst_tcpclientsink_stop (GstTCPClientSink * this)
     this->sock_fd = -1;
   }
 
-  GST_FLAG_UNSET (this, GST_TCPCLIENTSINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (this, GST_TCPCLIENTSINK_OPEN);
 
   return TRUE;
 }

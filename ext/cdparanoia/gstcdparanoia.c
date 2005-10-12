@@ -477,7 +477,7 @@ cdparanoia_get (GstPad * pad)
 
   src = CDPARANOIA (gst_pad_get_parent (pad));
 
-  g_return_val_if_fail (GST_FLAG_IS_SET (src, CDPARANOIA_OPEN), NULL);
+  g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (src, CDPARANOIA_OPEN), NULL);
 
   if (src->seek_request != -1) {
     gst_pad_send_event (src->srcpad,
@@ -662,7 +662,7 @@ cdparanoia_open (CDParanoia * src)
   gint i;
   gint paranoia_mode;
 
-  g_return_val_if_fail (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (src, CDPARANOIA_OPEN), FALSE);
 
   GST_DEBUG_OBJECT (src, "trying to open device...");
 
@@ -759,7 +759,7 @@ cdparanoia_open (CDParanoia * src)
   paranoia_seek (src->p, src->cur_sector, SEEK_SET);
   GST_DEBUG ("successfully seek'd to beginning of disk");
 
-  GST_FLAG_SET (src, CDPARANOIA_OPEN);
+  GST_OBJECT_FLAG_SET (src, CDPARANOIA_OPEN);
 
   if (src->index && GST_INDEX_IS_WRITABLE (src->index)) {
     add_index_associations (src);
@@ -774,7 +774,7 @@ cdparanoia_open (CDParanoia * src)
 static void
 cdparanoia_close (CDParanoia * src)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (src, CDPARANOIA_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (src, CDPARANOIA_OPEN));
 
   /* kill the paranoia state */
   paranoia_free (src->p);
@@ -785,7 +785,7 @@ cdparanoia_close (CDParanoia * src)
   cdda_close (src->d);
   src->d = NULL;
 
-  GST_FLAG_UNSET (src, CDPARANOIA_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, CDPARANOIA_OPEN);
 }
 
 static GstStateChangeReturn
@@ -853,7 +853,7 @@ cdparanoia_event (GstPad * pad, GstEvent * event)
 
   src = CDPARANOIA (gst_pad_get_parent (pad));
 
-  if (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN)) {
+  if (!GST_OBJECT_FLAG_IS_SET (src, CDPARANOIA_OPEN)) {
     GST_DEBUG ("device not open, cannot handle event");
     goto error;
   }
@@ -974,7 +974,7 @@ cdparanoia_convert (GstPad * pad,
 
   src = CDPARANOIA (gst_pad_get_parent (pad));
 
-  if (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN)) {
+  if (!GST_OBJECT_FLAG_IS_SET (src, CDPARANOIA_OPEN)) {
     return FALSE;
   }
 
@@ -1095,7 +1095,7 @@ cdparanoia_query (GstPad * pad, GstQueryType type,
 
   src = CDPARANOIA (gst_pad_get_parent (pad));
 
-  if (!GST_FLAG_IS_SET (src, CDPARANOIA_OPEN)) {
+  if (!GST_OBJECT_FLAG_IS_SET (src, CDPARANOIA_OPEN)) {
     return FALSE;
   }
 

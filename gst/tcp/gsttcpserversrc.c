@@ -154,7 +154,7 @@ gst_tcpserversrc_init (GstTCPServerSrc * src, GstTCPServerSrcClass * g_class)
   READ_SOCKET (src) = -1;
   WRITE_SOCKET (src) = -1;
 
-  GST_FLAG_UNSET (src, GST_TCPSERVERSRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, GST_TCPSERVERSRC_OPEN);
 }
 
 static void
@@ -175,7 +175,7 @@ gst_tcpserversrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   src = GST_TCPSERVERSRC (psrc);
 
-  if (!GST_FLAG_IS_SET (src, GST_TCPSERVERSRC_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (src, GST_TCPSERVERSRC_OPEN))
     goto wrong_state;
 
 restart:
@@ -418,7 +418,7 @@ gst_tcpserversrc_start (GstBaseSrc * bsrc)
 
   GST_DEBUG_OBJECT (src, "received client");
 
-  GST_FLAG_SET (src, GST_TCPSERVERSRC_OPEN);
+  GST_OBJECT_FLAG_SET (src, GST_TCPSERVERSRC_OPEN);
 
   return TRUE;
 
@@ -478,7 +478,7 @@ gst_tcpserversrc_stop (GstBaseSrc * bsrc)
     close (src->client_sock_fd);
     src->client_sock_fd = -1;
   }
-  GST_FLAG_UNSET (src, GST_TCPSERVERSRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, GST_TCPSERVERSRC_OPEN);
 
   close (READ_SOCKET (src));
   close (WRITE_SOCKET (src));

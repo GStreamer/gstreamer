@@ -58,9 +58,9 @@ extern "C" {
 
 /* NOTE: per-element flags start with 16 for now */
 typedef enum {
-  CDPARANOIA_OPEN		= GST_ELEMENT_FLAG_LAST,
+  CDPARANOIA_OPEN		= (GST_ELEMENT_FLAG_LAST << 0),
 
-  CDPARANOIA_FLAG_LAST		= GST_ELEMENT_FLAG_LAST+2,
+  CDPARANOIA_FLAG_LAST		= (GST_ELEMENT_FLAG_LAST << 2),
 } CDParanoiaFlags;
 
 typedef struct _CDParanoia CDParanoia;

@@ -446,7 +446,7 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
 static void
 gst_multifdsink_init (GstMultiFdSink * this)
 {
-  GST_FLAG_UNSET (this, GST_MULTIFDSINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (this, GST_MULTIFDSINK_OPEN);
 
   this->protocol = DEFAULT_PROTOCOL;
   this->mode = DEFAULT_MODE;
@@ -1523,7 +1523,7 @@ gst_multifdsink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* since we keep this buffer out of the scope of this method */
   gst_buffer_ref (buf);
 
-  g_return_val_if_fail (GST_FLAG_IS_SET (sink, GST_MULTIFDSINK_OPEN),
+  g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_MULTIFDSINK_OPEN),
       GST_FLOW_ERROR);
 
   GST_LOG_OBJECT (sink, "received buffer %p", buf);
@@ -1691,7 +1691,7 @@ gst_multifdsink_start (GstBaseSink * bsink)
   int control_socket[2];
   GstMultiFdSink *this;
 
-  if (GST_FLAG_IS_SET (bsink, GST_MULTIFDSINK_OPEN))
+  if (GST_OBJECT_FLAG_IS_SET (bsink, GST_MULTIFDSINK_OPEN))
     return TRUE;
 
   this = GST_MULTIFDSINK (bsink);
@@ -1724,7 +1724,7 @@ gst_multifdsink_start (GstBaseSink * bsink)
   this->thread = g_thread_create ((GThreadFunc) gst_multifdsink_thread,
       this, TRUE, NULL);
 
-  GST_FLAG_SET (this, GST_MULTIFDSINK_OPEN);
+  GST_OBJECT_FLAG_SET (this, GST_MULTIFDSINK_OPEN);
 
   return TRUE;
 
@@ -1752,7 +1752,7 @@ gst_multifdsink_stop (GstBaseSink * bsink)
   this = GST_MULTIFDSINK (bsink);
   fclass = GST_MULTIFDSINK_GET_CLASS (this);
 
-  if (!GST_FLAG_IS_SET (bsink, GST_MULTIFDSINK_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (bsink, GST_MULTIFDSINK_OPEN))
     return TRUE;
 
   this->running = FALSE;
@@ -1784,7 +1784,7 @@ gst_multifdsink_stop (GstBaseSink * bsink)
     this->fdset = NULL;
   }
   g_hash_table_foreach_remove (this->fd_hash, multifdsink_hash_remove, this);
-  GST_FLAG_UNSET (this, GST_MULTIFDSINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (this, GST_MULTIFDSINK_OPEN);
 
   return TRUE;
 }

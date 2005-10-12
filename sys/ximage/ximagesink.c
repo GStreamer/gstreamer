@@ -1799,8 +1799,8 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
   ximagesink->pend_nav_events = NULL;
 
 #if 0
-  GST_FLAG_SET (ximagesink, GST_ELEMENT_THREAD_SUGGESTED);
-  GST_FLAG_SET (ximagesink, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (ximagesink, GST_ELEMENT_THREAD_SUGGESTED);
+  GST_OBJECT_FLAG_SET (ximagesink, GST_ELEMENT_EVENT_AWARE);
 #endif
 }
 

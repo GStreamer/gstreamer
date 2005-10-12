@@ -48,9 +48,9 @@ typedef struct _GstMultiFdSink GstMultiFdSink;
 typedef struct _GstMultiFdSinkClass GstMultiFdSinkClass;
 
 typedef enum {
-  GST_MULTIFDSINK_OPEN             = GST_ELEMENT_FLAG_LAST,
+  GST_MULTIFDSINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_MULTIFDSINK_FLAG_LAST        = GST_ELEMENT_FLAG_LAST + 2,
+  GST_MULTIFDSINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2),
 } GstMultiFdSinkFlags;
 
 typedef enum

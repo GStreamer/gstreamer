@@ -244,7 +244,7 @@ gst_gnomevfssink_init (GstGnomeVFSSink * gnomevfssink)
 {
   GstPad *pad;
 
-  GST_FLAG_SET (gnomevfssink, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (gnomevfssink, GST_ELEMENT_EVENT_AWARE);
 
   pad = gst_pad_new ("sink", GST_PAD_SINK);
   gst_element_add_pad (GST_ELEMENT (gnomevfssink), pad);
@@ -399,7 +399,8 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink * sink)
 {
   GnomeVFSResult result;
 
-  g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN),
+      FALSE);
 
   if (sink->uri) {
     /* open the file */
@@ -441,7 +442,7 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink * sink)
     sink->own_handle = FALSE;
   }
 
-  GST_FLAG_SET (sink, GST_GNOMEVFSSINK_OPEN);
+  GST_OBJECT_FLAG_SET (sink, GST_GNOMEVFSSINK_OPEN);
 
   return TRUE;
 }
@@ -451,7 +452,7 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink * sink)
 {
   GnomeVFSResult result;
 
-  g_return_if_fail (GST_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN));
 
   if (sink->own_handle) {
     /* close the file */
@@ -470,7 +471,7 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink * sink)
     sink->handle = NULL;
   }
 
-  GST_FLAG_UNSET (sink, GST_GNOMEVFSSINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (sink, GST_GNOMEVFSSINK_OPEN);
 }
 
 /**
@@ -594,7 +595,7 @@ gst_gnomevfssink_chain (GstPad * pad, GstData * _data)
 
   sink = GST_GNOMEVFSSINK (gst_pad_get_parent (pad));
 
-  if (GST_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN)) {
+  if (GST_OBJECT_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN)) {
     if (GST_IS_EVENT (_data)) {
       gst_gnomevfssink_handle_event (sink, GST_EVENT (_data));
       return;
@@ -624,13 +625,13 @@ gst_gnomevfssink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!GST_FLAG_IS_SET (element, GST_GNOMEVFSSINK_OPEN)) {
+      if (!GST_OBJECT_FLAG_IS_SET (element, GST_GNOMEVFSSINK_OPEN)) {
         if (!gst_gnomevfssink_open_file (GST_GNOMEVFSSINK (element)))
           return GST_STATE_CHANGE_FAILURE;
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (GST_FLAG_IS_SET (element, GST_GNOMEVFSSINK_OPEN))
+      if (GST_OBJECT_FLAG_IS_SET (element, GST_GNOMEVFSSINK_OPEN))
         gst_gnomevfssink_close_file (GST_GNOMEVFSSINK (element));
       break;
     default:

@@ -53,9 +53,9 @@ typedef struct _GstTCPServerSrc GstTCPServerSrc;
 typedef struct _GstTCPServerSrcClass GstTCPServerSrcClass;
 
 typedef enum {
-  GST_TCPSERVERSRC_OPEN       = GST_ELEMENT_FLAG_LAST,
+  GST_TCPSERVERSRC_OPEN       = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_TCPSERVERSRC_FLAG_LAST,
+  GST_TCPSERVERSRC_FLAG_LAST  = (GST_ELEMENT_FLAG_LAST << 2)
 } GstTCPServerSrcFlags;
 
 struct _GstTCPServerSrc {

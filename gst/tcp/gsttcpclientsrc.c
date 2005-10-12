@@ -160,7 +160,7 @@ gst_tcpclientsrc_init (GstTCPClientSrc * this, GstTCPClientSrcClass * g_class)
 
   gst_base_src_set_live (GST_BASE_SRC (this), TRUE);
 
-  GST_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
 }
 
 static void
@@ -179,7 +179,7 @@ gst_tcpclientsrc_getcaps (GstBaseSrc * bsrc)
 
   src = GST_TCPCLIENTSRC (bsrc);
 
-  if (!GST_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN))
     caps = gst_caps_new_any ();
   else if (src->caps)
     caps = gst_caps_copy (src->caps);
@@ -198,7 +198,7 @@ gst_tcpclientsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   src = GST_TCPCLIENTSRC (psrc);
 
-  if (!GST_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN))
     goto wrong_state;
 
   GST_LOG_OBJECT (src, "asked for a buffer");
@@ -338,7 +338,7 @@ gst_tcpclientsrc_start (GstBaseSrc * bsrc)
 
   GST_DEBUG_OBJECT (src, "opened receiving client socket with fd %d",
       src->sock_fd);
-  GST_FLAG_SET (src, GST_TCPCLIENTSRC_OPEN);
+  GST_OBJECT_FLAG_SET (src, GST_TCPCLIENTSRC_OPEN);
 
   /* look up name if we need to */
   if (!(ip = gst_tcp_host_to_ip (GST_ELEMENT (src), src->host)))
@@ -414,7 +414,7 @@ gst_tcpclientsrc_stop (GstBaseSrc * bsrc)
     gst_caps_unref (src->caps);
     src->caps = NULL;
   }
-  GST_FLAG_UNSET (src, GST_TCPCLIENTSRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, GST_TCPCLIENTSRC_OPEN);
 
   close (READ_SOCKET (src));
   close (WRITE_SOCKET (src));

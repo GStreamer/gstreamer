@@ -57,9 +57,9 @@ typedef struct _GstTCPServerSink GstTCPServerSink;
 typedef struct _GstTCPServerSinkClass GstTCPServerSinkClass;
 
 typedef enum {
-  GST_TCPSERVERSINK_OPEN             = GST_ELEMENT_FLAG_LAST,
+  GST_TCPSERVERSINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_TCPSERVERSINK_FLAG_LAST        = GST_ELEMENT_FLAG_LAST + 2,
+  GST_TCPSERVERSINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
 } GstTCPServerSinkFlags;
 
 struct _GstTCPServerSink {

@@ -1,3 +1,39 @@
+2005-10-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* examples/indexing/indexmpeg.c: (main):
+	* ext/cdparanoia/gstcdparanoia.c: (cdparanoia_get),
+	(cdparanoia_open), (cdparanoia_close), (cdparanoia_event),
+	(cdparanoia_convert), (cdparanoia_query):
+	* ext/cdparanoia/gstcdparanoia.h:
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnomevfssink_init),
+	(gst_gnomevfssink_open_file), (gst_gnomevfssink_close_file),
+	(gst_gnomevfssink_chain), (gst_gnomevfssink_change_state):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init):
+	* gst/audioscale/gstaudioscale.c: (gst_audioscale_init):
+	* gst/playback/gststreamselector.c: (gst_stream_selector_init):
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_init),
+	(gst_multifdsink_render), (gst_multifdsink_start),
+	(gst_multifdsink_stop):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcpclientsink.c: (gst_tcpclientsink_init),
+	(gst_tcpclientsink_render), (gst_tcpclientsink_start),
+	(gst_tcpclientsink_stop):
+	* gst/tcp/gsttcpclientsink.h:
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_init),
+	(gst_tcpclientsrc_getcaps), (gst_tcpclientsrc_create),
+	(gst_tcpclientsrc_start), (gst_tcpclientsrc_stop):
+	* gst/tcp/gsttcpclientsrc.h:
+	* gst/tcp/gsttcpserversink.h:
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_init),
+	(gst_tcpserversrc_create), (gst_tcpserversrc_start),
+	(gst_tcpserversrc_stop):
+	* gst/tcp/gsttcpserversrc.h:
+	* sys/v4l/gstv4lmjpegsink.c: (gst_v4lmjpegsink_init):
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_init):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_init):
+	  renamed GST_FLAGS macros to GST_OBJECT_FLAGS
+	  moved bitshift from macro to enum definition
+
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
 	* examples/seeking/Makefile.am:

@@ -196,7 +196,7 @@ gst_v4lmjpegsink_init (GstV4lMjpegSink * v4lmjpegsink)
   v4lmjpegsink->numbufs = 64;
   v4lmjpegsink->bufsize = 256;
 
-  GST_FLAG_SET (v4lmjpegsink, GST_ELEMENT_THREAD_SUGGESTED);
+  GST_OBJECT_FLAG_SET (v4lmjpegsink, GST_ELEMENT_THREAD_SUGGESTED);
 }
 
 

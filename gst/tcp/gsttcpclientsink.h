@@ -59,9 +59,9 @@ typedef struct _GstTCPClientSink GstTCPClientSink;
 typedef struct _GstTCPClientSinkClass GstTCPClientSinkClass;
 
 typedef enum {
-  GST_TCPCLIENTSINK_OPEN             = GST_ELEMENT_FLAG_LAST,
+  GST_TCPCLIENTSINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_TCPCLIENTSINK_FLAG_LAST        = GST_ELEMENT_FLAG_LAST + 2,
+  GST_TCPCLIENTSINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2),
 } GstTCPClientSinkFlags;
 
 struct _GstTCPClientSink {

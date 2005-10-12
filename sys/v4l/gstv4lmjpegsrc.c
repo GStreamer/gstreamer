@@ -229,7 +229,7 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc * v4lmjpegsrc)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (v4lmjpegsrc);
 
-  GST_FLAG_SET (GST_ELEMENT (v4lmjpegsrc), GST_ELEMENT_THREAD_SUGGESTED);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (v4lmjpegsrc), GST_ELEMENT_THREAD_SUGGESTED);
 
   v4lmjpegsrc->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,

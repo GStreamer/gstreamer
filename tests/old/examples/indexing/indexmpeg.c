@@ -272,7 +272,7 @@ main (gint argc, gchar * argv[])
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
   if (index)
-    GST_FLAG_UNSET (index, GST_INDEX_WRITABLE);
+    GST_OBJECT_FLAG_UNSET (index, GST_INDEX_WRITABLE);
 
   src = gst_bin_get_by_name (GST_BIN (pipeline), "video_decoder");
 

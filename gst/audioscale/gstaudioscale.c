@@ -519,7 +519,7 @@ gst_audioscale_init (Audioscale * audioscale)
   audioscale->gst_resample_offset = 0;
   audioscale->increase = FALSE;
 
-  GST_FLAG_SET (audioscale, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (audioscale, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void

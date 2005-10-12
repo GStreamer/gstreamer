@@ -266,7 +266,7 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   gst_pad_set_event_function (ogg_mux->srcpad, gst_ogg_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (ogg_mux), ogg_mux->srcpad);
 
-  GST_FLAG_SET (GST_ELEMENT (ogg_mux), GST_OGG_FLAG_BOS);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (ogg_mux), GST_OGG_FLAG_BOS);
 
   /* seed random number generator for creation of serial numbers */
   srand (time (NULL));
