@@ -1,5 +1,12 @@
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_buffer):
+	* gst/elements/gstfilesink.c: (gst_file_sink_event),
+	(gst_file_sink_render):
+	Some more debugging info.
+
+2005-10-12  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-states.txt:
 	* tools/gst-launch.c: (main):
 	Some doc updates.
