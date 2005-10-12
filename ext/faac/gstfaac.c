@@ -253,9 +253,10 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   faacEncHandle *handle;
   gint channels, samplerate, depth;
   gulong samples, bytes, fmt = 0, bps = 0;
+  gboolean result = FALSE;
 
   if (!gst_caps_is_fixed (caps))
-    return FALSE;               /* GST_PAD_LINK_DELAYED; */
+    goto done;                  /* GST_PAD_LINK_DELAYED; */
 
   if (faac->handle) {
     faacEncClose (faac->handle);
@@ -272,7 +273,7 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   /* open a new handle to the encoder */
   if (!(handle = faacEncOpen (samplerate, channels, &samples, &bytes)))
-    return FALSE;
+    goto done;
 
   switch (depth) {
     case 16:
@@ -291,7 +292,7 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   if (!fmt) {
     faacEncClose (handle);
-    return FALSE;
+    goto done;
   }
 
   faac->format = fmt;
@@ -303,12 +304,18 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   faac->samplerate = samplerate;
 
   /* if the other side was already set-up, redo that */
-  if (GST_PAD_CAPS (faac->srcpad))
-    return gst_faac_src_setcaps (faac->srcpad,
+  if (GST_PAD_CAPS (faac->srcpad)) {
+    result = gst_faac_src_setcaps (faac->srcpad,
         gst_pad_get_allowed_caps (faac->srcpad));
+    goto done;
+  }
 
   /* else, that'll be done later */
-  return TRUE;
+  result = TRUE;
+
+done:
+  gst_object_unref (faac);
+  return result;
 }
 
 static gboolean
@@ -316,9 +323,10 @@ gst_faac_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstFaac *faac = GST_FAAC (gst_pad_get_parent (pad));
   gint n;
+  gboolean result = FALSE;
 
   if (!faac->handle || (faac->samplerate == -1 || faac->channels == -1)) {
-    return FALSE;
+    goto done;
   }
 
   /* we do samplerate/channels ourselves */
@@ -363,12 +371,12 @@ gst_faac_src_setcaps (GstPad * pad, GstCaps * caps)
     /* negotiate with these caps */
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, newcaps);
     if (gst_pad_set_caps (faac->srcpad, newcaps) == TRUE)
-      return TRUE;
-    else
-      return FALSE;
+      result = TRUE;
   }
 
-  return FALSE;
+done:
+  gst_object_unref (faac);
+  return result;
 }
 
 static GstFlowReturn
@@ -392,7 +400,8 @@ gst_faac_chain (GstPad * pad, GstBuffer * data)
             GST_ELEMENT_ERROR (faac, LIBRARY, ENCODE, (NULL), (NULL));
             gst_event_unref (event);
             gst_buffer_unref (outbuf);
-            return GST_FLOW_ERROR;
+            result = GST_FLOW_ERROR;
+            goto done;
           }
 
           if (ret_size > 0) {
@@ -407,10 +416,10 @@ gst_faac_chain (GstPad * pad, GstBuffer * data)
 
         gst_pad_push_event (faac->srcpad, gst_event_new_eos ());
         gst_pad_push (faac->srcpad, data);
-        return result;
+        goto done;
       default:
         gst_pad_event_default (pad, event);
-        return result;
+        goto done;
     }
   }
 
@@ -420,7 +429,8 @@ gst_faac_chain (GstPad * pad, GstBuffer * data)
     GST_ELEMENT_ERROR (faac, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before chain function"));
     gst_buffer_unref (inbuf);
-    return GST_FLOW_ERROR;
+    result = GST_FLOW_ERROR;
+    goto done;
   }
 
   if (!GST_PAD_CAPS (faac->srcpad)) {
@@ -429,7 +439,8 @@ gst_faac_chain (GstPad * pad, GstBuffer * data)
       GST_ELEMENT_ERROR (faac, CORE, NEGOTIATION, (NULL),
           ("failed to negotiate MPEG/AAC format with next element"));
       gst_buffer_unref (inbuf);
-      return GST_FLOW_ERROR;
+      result = GST_FLOW_ERROR;
+      goto done;
     }
   }
 
@@ -466,7 +477,7 @@ gst_faac_chain (GstPad * pad, GstBuffer * data)
         gst_buffer_unref (inbuf);
       }
 
-      return result;
+      goto done;
     }
 
     /* create the frame */
@@ -499,7 +510,8 @@ gst_faac_chain (GstPad * pad, GstBuffer * data)
       GST_ELEMENT_ERROR (faac, LIBRARY, ENCODE, (NULL), (NULL));
       gst_buffer_unref (inbuf);
       gst_buffer_unref (subbuf);
-      return GST_FLOW_ERROR;
+      result = GST_FLOW_ERROR;
+      goto done;
     }
 
     if (ret_size > 0) {
@@ -534,6 +546,8 @@ gst_faac_chain (GstPad * pad, GstBuffer * data)
     gst_buffer_unref (subbuf);
   }
 
+done:
+  gst_object_unref (faac);
   return result;
 }
 
