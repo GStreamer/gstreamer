@@ -42,9 +42,9 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LAME))
 
 typedef enum {
-  GST_LAME_OPEN		= GST_ELEMENT_FLAG_LAST,
+  GST_LAME_OPEN		= (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_LAME_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
+  GST_LAME_FLAG_LAST	= (GST_ELEMENT_FLAG_LAST << 2)
 } GstLameFlags;
 
 typedef struct _GstLame GstLame;
