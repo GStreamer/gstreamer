@@ -128,7 +128,7 @@ static void
 gst_multifilesrc_init (GstMultiFileSrc * multifilesrc,
     GstMultiFileSrcClass * g_class)
 {
-/*  GST_FLAG_SET (filesrc, GST_SRC_); */
+/*  GST_OBJECT_FLAG_SET (filesrc, GST_SRC_); */
 
   multifilesrc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
@@ -221,11 +221,12 @@ gst_multifilesrc_get (GstPad * pad)
   src = GST_MULTIFILESRC (gst_pad_get_parent (pad));
 
   GST_DEBUG ("curfileindex = %d newmedia flag = %s", src->curfileindex,
-      GST_FLAG_IS_SET (src, GST_MULTIFILESRC_NEWFILE) ? "true" : "false");
+      GST_OBJECT_FLAG_IS_SET (src,
+          GST_MULTIFILESRC_NEWFILE) ? "true" : "false");
 
-  switch (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_NEWFILE)) {
+  switch (GST_OBJECT_FLAG_IS_SET (src, GST_MULTIFILESRC_NEWFILE)) {
     case FALSE:
-      if (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN))
+      if (GST_OBJECT_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN))
         gst_multifilesrc_close_file (src);
 
       if (!src->listptr) {
@@ -248,14 +249,14 @@ gst_multifilesrc_get (GstPad * pad)
         newmedia =
             gst_event_new_discontinuous (TRUE, GST_FORMAT_TIME, (gint64) 0,
             GST_FORMAT_UNDEFINED);
-        GST_FLAG_SET (src, GST_MULTIFILESRC_NEWFILE);
+        GST_OBJECT_FLAG_SET (src, GST_MULTIFILESRC_NEWFILE);
 
         GST_DEBUG ("sending new media event");
         return GST_DATA (newmedia);
       }
     default:
-      if (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_NEWFILE))
-        GST_FLAG_UNSET (src, GST_MULTIFILESRC_NEWFILE);
+      if (GST_OBJECT_FLAG_IS_SET (src, GST_MULTIFILESRC_NEWFILE))
+        GST_OBJECT_FLAG_UNSET (src, GST_MULTIFILESRC_NEWFILE);
       /* create the buffer */
       /* FIXME: should eventually use a bufferpool for this */
       buf = gst_buffer_new ();
@@ -287,7 +288,8 @@ gst_multifilesrc_get (GstPad * pad)
 static gboolean
 gst_multifilesrc_open_file (GstMultiFileSrc * src, GstPad * srcpad)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN),
+      FALSE);
 
   if (src->currentfilename == NULL || src->currentfilename[0] == '\0') {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
@@ -320,7 +322,7 @@ gst_multifilesrc_open_file (GstMultiFileSrc * src, GstPad * srcpad)
           ("mmap call failed."));
       return FALSE;
     }
-    GST_FLAG_SET (src, GST_MULTIFILESRC_OPEN);
+    GST_OBJECT_FLAG_SET (src, GST_MULTIFILESRC_OPEN);
     src->new_seek = TRUE;
   }
   return TRUE;
@@ -330,7 +332,7 @@ gst_multifilesrc_open_file (GstMultiFileSrc * src, GstPad * srcpad)
 static void
 gst_multifilesrc_close_file (GstMultiFileSrc * src)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (src, GST_MULTIFILESRC_OPEN));
 
   /* unmap the file from memory and close the file */
   munmap (src->map, src->size);
@@ -342,7 +344,7 @@ gst_multifilesrc_close_file (GstMultiFileSrc * src)
   src->map = NULL;
   src->new_seek = FALSE;
 
-  GST_FLAG_UNSET (src, GST_MULTIFILESRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, GST_MULTIFILESRC_OPEN);
 }
 
 static GstStateChangeReturn
@@ -352,7 +354,7 @@ gst_multifilesrc_change_state (GstElement * element, GstStateChange transition)
       GST_STATE_CHANGE_FAILURE);
 
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_MULTIFILESRC_OPEN))
+    if (GST_OBJECT_FLAG_IS_SET (element, GST_MULTIFILESRC_OPEN))
       gst_multifilesrc_close_file (GST_MULTIFILESRC (element));
   }
 

@@ -213,7 +213,7 @@ gst_multipart_mux_init (GstMultipartMux * multipart_mux)
       gst_multipart_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (multipart_mux), multipart_mux->srcpad);
 
-  GST_FLAG_SET (GST_ELEMENT (multipart_mux), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (multipart_mux), GST_ELEMENT_EVENT_AWARE);
 
   multipart_mux->sinkpads = NULL;
   multipart_mux->boundary = g_strdup (DEFAULT_BOUNDARY);

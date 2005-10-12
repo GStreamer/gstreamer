@@ -490,7 +490,7 @@ gst_videomixer_init (GstVideoMixer * mix)
   gst_pad_set_event_function (mix->srcpad, gst_videomixer_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (mix), mix->srcpad);
 
-  GST_FLAG_SET (GST_ELEMENT (mix), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (mix), GST_ELEMENT_EVENT_AWARE);
 
   mix->sinkpads = NULL;
   mix->background = DEFAULT_BACKGROUND;

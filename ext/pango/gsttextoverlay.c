@@ -694,7 +694,7 @@ gst_textoverlay_init (GstTextOverlay * overlay)
 
   gst_element_set_loop_function (GST_ELEMENT (overlay), gst_textoverlay_loop);
 
-  GST_FLAG_SET (overlay, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (overlay, GST_ELEMENT_EVENT_AWARE);
 }
 
 

@@ -93,7 +93,7 @@ gst_auto_video_sink_init (GstAutoVideoSink * sink,
 
   gst_auto_video_sink_reset (sink);
 
-  GST_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
+  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
 }
 
 static gboolean

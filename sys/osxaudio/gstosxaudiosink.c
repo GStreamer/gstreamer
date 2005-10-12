@@ -146,8 +146,8 @@ gst_osxaudiosink_init (GstOsxAudioSink * osxaudiosink)
 
   GST_DEBUG ("initializing osxaudiosink");
 
-  GST_FLAG_SET (osxaudiosink, GST_ELEMENT_THREAD_SUGGESTED);
-  GST_FLAG_SET (osxaudiosink, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (osxaudiosink, GST_ELEMENT_THREAD_SUGGESTED);
+  GST_OBJECT_FLAG_SET (osxaudiosink, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void

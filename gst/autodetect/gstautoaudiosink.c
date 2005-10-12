@@ -93,7 +93,7 @@ gst_auto_audio_sink_init (GstAutoAudioSink * sink,
 
   gst_auto_audio_sink_reset (sink);
 
-  GST_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
+  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
 }
 
 static gboolean

@@ -163,7 +163,7 @@ gst_multipart_demux_init (GstMultipartDemux * multipart,
   gst_pad_set_chain_function (multipart->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multipart_demux_chain));
 
-  GST_FLAG_SET (multipart, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (multipart, GST_ELEMENT_EVENT_AWARE);
 
   multipart->maxlen = 4096;
   multipart->parsing_mime = NULL;

@@ -174,7 +174,7 @@ gst_matroska_demux_init (GstMatroskaDemux * demux)
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (demux);
   gint i;
 
-  GST_FLAG_SET (GST_OBJECT (demux), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_OBJECT (demux), GST_ELEMENT_EVENT_AWARE);
 
   demux->sinkpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,

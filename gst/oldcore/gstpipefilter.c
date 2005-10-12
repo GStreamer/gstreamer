@@ -121,7 +121,7 @@ gst_pipefilter_class_init (GstPipefilterClass * klass)
 static void
 gst_pipefilter_init (GstPipefilter * pipefilter, GstPipefilterClass * g_class)
 {
-  GST_FLAG_SET (pipefilter, GST_ELEMENT_DECOUPLED);
+  GST_OBJECT_FLAG_SET (pipefilter, GST_ELEMENT_DECOUPLED);
 
   pipefilter->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
@@ -283,7 +283,8 @@ gst_pipefilter_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_pipefilter_open_file (GstPipefilter * src)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_PIPEFILTER_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (src, GST_PIPEFILTER_OPEN),
+      FALSE);
 
   pipe (src->fdin);
   pipe (src->fdout);
@@ -309,7 +310,7 @@ gst_pipefilter_open_file (GstPipefilter * src)
     close (src->fdout[1]);
   }
 
-  GST_FLAG_SET (src, GST_PIPEFILTER_OPEN);
+  GST_OBJECT_FLAG_SET (src, GST_PIPEFILTER_OPEN);
   return TRUE;
 }
 
@@ -317,7 +318,7 @@ gst_pipefilter_open_file (GstPipefilter * src)
 static void
 gst_pipefilter_close_file (GstPipefilter * src)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (src, GST_PIPEFILTER_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (src, GST_PIPEFILTER_OPEN));
 
   /* close the file */
   close (src->fdout[0]);
@@ -329,7 +330,7 @@ gst_pipefilter_close_file (GstPipefilter * src)
   src->curoffset = 0;
   src->seq = 0;
 
-  GST_FLAG_UNSET (src, GST_PIPEFILTER_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, GST_PIPEFILTER_OPEN);
 }
 
 static GstStateChangeReturn
@@ -339,11 +340,11 @@ gst_pipefilter_change_state (GstElement * element, GstStateChange transition)
 
   /* if going down into NULL state, close the file if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_PIPEFILTER_OPEN))
+    if (GST_OBJECT_FLAG_IS_SET (element, GST_PIPEFILTER_OPEN))
       gst_pipefilter_close_file (GST_PIPEFILTER (element));
     /* otherwise (READY or higher) we need to open the file */
   } else {
-    if (!GST_FLAG_IS_SET (element, GST_PIPEFILTER_OPEN)) {
+    if (!GST_OBJECT_FLAG_IS_SET (element, GST_PIPEFILTER_OPEN)) {
       if (!gst_pipefilter_open_file (GST_PIPEFILTER (element)))
         return GST_STATE_CHANGE_FAILURE;
     }

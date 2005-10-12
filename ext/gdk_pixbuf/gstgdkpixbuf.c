@@ -249,7 +249,7 @@ gst_gdk_pixbuf_init (GstGdkPixbuf * filter)
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   gst_pad_set_chain_function (filter->sinkpad, gst_gdk_pixbuf_chain);
 
-  GST_FLAG_SET (GST_ELEMENT (filter), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (filter), GST_ELEMENT_EVENT_AWARE);
 }
 
 static void

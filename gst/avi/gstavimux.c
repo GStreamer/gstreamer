@@ -258,7 +258,7 @@ gst_avimux_init (GstAviMux * avimux)
           "src"), "src");
   gst_element_add_pad (GST_ELEMENT (avimux), avimux->srcpad);
 
-  GST_FLAG_SET (GST_ELEMENT (avimux), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (avimux), GST_ELEMENT_EVENT_AWARE);
 
   avimux->audiosinkpad = NULL;
   avimux->audio_pad_connected = FALSE;

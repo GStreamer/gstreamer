@@ -404,7 +404,7 @@ gst_esdmon_open_audio (GstEsdmon * src)
     return FALSE;
   }
 
-  GST_FLAG_SET (src, GST_ESDMON_OPEN);
+  GST_OBJECT_FLAG_SET (src, GST_ESDMON_OPEN);
 
   return TRUE;
 }
@@ -418,7 +418,7 @@ gst_esdmon_close_audio (GstEsdmon * src)
   close (src->fd);
   src->fd = -1;
 
-  GST_FLAG_UNSET (src, GST_ESDMON_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, GST_ESDMON_OPEN);
 
   GST_DEBUG ("esdmon: closed sound device");
 }
@@ -430,11 +430,11 @@ gst_esdmon_change_state (GstElement * element, GstStateChange transition)
 
   /* if going down into NULL state, close the fd if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_ESDMON_OPEN))
+    if (GST_OBJECT_FLAG_IS_SET (element, GST_ESDMON_OPEN))
       gst_esdmon_close_audio (GST_ESDMON (element));
     /* otherwise (READY or higher) we need to open the fd */
   } else {
-    if (!GST_FLAG_IS_SET (element, GST_ESDMON_OPEN)) {
+    if (!GST_OBJECT_FLAG_IS_SET (element, GST_ESDMON_OPEN)) {
       if (!gst_esdmon_open_audio (GST_ESDMON (element)))
         return GST_STATE_CHANGE_FAILURE;
     }

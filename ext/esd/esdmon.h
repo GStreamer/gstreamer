@@ -39,8 +39,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ESDMON))
 
 typedef enum {
-  GST_ESDMON_OPEN            = GST_ELEMENT_FLAG_LAST,
-  GST_ESDMON_FLAG_LAST       = GST_ELEMENT_FLAG_LAST+2,
+  GST_ESDMON_OPEN            = (GST_ELEMENT_FLAG_LAST << 0),
+  GST_ESDMON_FLAG_LAST       = (GST_ELEMENT_FLAG_LAST << 2)
 } GstEsdSrcFlags;
 
 typedef struct _GstEsdmon GstEsdmon;
