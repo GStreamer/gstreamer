@@ -1,3 +1,12 @@
+2005-10-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gst.c:
+	* gst/gstminiobject.h:
+	* gst/gstpad.h:
+	* win32/gstenumtypes.c: (gst_mini_object_flags_get_type):
+	  removed unused flags from miniobject
+	  doc fixes
+
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/elements/gstfilesink.c: (gst_file_sink_do_seek),

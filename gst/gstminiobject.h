@@ -86,7 +86,6 @@ typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *);
 /**
  * GstMiniObjectFlags:
  * @GST_MINI_OBJECT_FLAG_READONLY: is the miniobject readonly or writable
- * @GST_MINI_OBJECT_FLAG_STATIC: 
  * @GST_MINI_OBJECT_FLAG_LAST: first flag that can be used by subclasses.
  *
  * Flags for the padtemplate
@@ -95,7 +94,6 @@ typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *);
 typedef enum
 {
   GST_MINI_OBJECT_FLAG_READONLY = (1<<0),
-  GST_MINI_OBJECT_FLAG_STATIC = (1<<1),
   /* padding */
   GST_MINI_OBJECT_FLAG_LAST = (1<<4)
 } GstMiniObjectFlags;

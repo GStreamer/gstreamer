@@ -359,9 +359,11 @@ gst_init_check (int *argc, char **argv[], GError ** err)
  * Initializes the GStreamer library, setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
  *
+ * <note><para>
  * This function will terminate your program if it was unable to initialize
  * GStreamer for some reason.  If you want your program to fall back,
  * use gst_init_check() instead.
+ * </para></note>
  *
  * WARNING: This function does not work in the same way as corresponding
  * functions in other glib-style libraries, such as gtk_init().  In

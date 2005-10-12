@@ -685,7 +685,6 @@ gst_mini_object_flags_get_type (void)
     static const GFlagsValue values[] = {
       {GST_MINI_OBJECT_FLAG_READONLY, "GST_MINI_OBJECT_FLAG_READONLY",
           "readonly"},
-      {GST_MINI_OBJECT_FLAG_STATIC, "GST_MINI_OBJECT_FLAG_STATIC", "static"},
       {GST_MINI_OBJECT_FLAG_LAST, "GST_MINI_OBJECT_FLAG_LAST", "last"},
       {0, NULL, NULL}
     };
