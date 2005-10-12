@@ -1,5 +1,12 @@
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (pre_activate), (post_activate),
+	(gst_pad_activate_pull), (gst_pad_activate_push):
+	Cleanup activation code. Reset old state if
+	activation failed.
+
+2005-10-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
 	(gst_base_sink_change_state):
 	No need to prerol after receiving EOS.

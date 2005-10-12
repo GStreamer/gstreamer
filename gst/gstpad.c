@@ -531,12 +531,16 @@ pre_activate (GstPad * pad, GstActivateMode new_mode)
     case GST_ACTIVATE_PUSH:
     case GST_ACTIVATE_PULL:
       GST_LOCK (pad);
+      GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE %d, unset flushing",
+          new_mode);
       GST_PAD_UNSET_FLUSHING (pad);
       GST_PAD_ACTIVATE_MODE (pad) = new_mode;
       GST_UNLOCK (pad);
       break;
     case GST_ACTIVATE_NONE:
       GST_LOCK (pad);
+      GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE NONE, set flushing",
+          new_mode);
       GST_PAD_SET_FLUSHING (pad);
       /* unlock blocked pads so element can resume and stop */
       GST_PAD_BLOCK_SIGNAL (pad);
@@ -558,6 +562,7 @@ post_activate (GstPad * pad, GstActivateMode new_mode)
       GST_STREAM_LOCK (pad);
       /* while we're at it set activation mode */
       GST_LOCK (pad);
+      GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE %d", new_mode);
       GST_PAD_ACTIVATE_MODE (pad) = new_mode;
       GST_UNLOCK (pad);
       GST_STREAM_UNLOCK (pad);
@@ -653,6 +658,7 @@ gboolean
 gst_pad_activate_pull (GstPad * pad, gboolean active)
 {
   GstActivateMode old, new;
+  GstPad *peer;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
@@ -671,17 +677,10 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
   }
 
   if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
-    GstPad *peer = gst_pad_get_peer (pad);
-
-    if (peer) {
-      if (!gst_pad_activate_pull (peer, active)) {
-        GST_LOCK (peer);
-        GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
-            "activate_pull on peer (%s:%s) failed", GST_DEBUG_PAD_NAME (peer));
-        GST_UNLOCK (peer);
-        gst_object_unref (peer);
-        goto failure;
-      }
+    if ((peer = gst_pad_get_peer (pad))) {
+      if (!gst_pad_activate_pull (peer, active))
+        goto peer_failed;
+      gst_object_unref (peer);
     }
   }
 
@@ -689,15 +688,17 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
   pre_activate (pad, new);
 
   if (GST_PAD_ACTIVATEPULLFUNC (pad)) {
-    if (GST_PAD_ACTIVATEPULLFUNC (pad) (pad, active)) {
-      goto success;
-    } else {
+    if (!GST_PAD_ACTIVATEPULLFUNC (pad) (pad, active))
       goto failure;
-    }
   } else {
     /* can happen for sinks of passthrough elements */
-    goto success;
   }
+
+  post_activate (pad, new);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in pull mode",
+      active ? "activated" : "deactivated");
+  return TRUE;
 
 was_ok:
   {
@@ -705,20 +706,21 @@ was_ok:
         active ? "activated" : "deactivated");
     return TRUE;
   }
-
-success:
+peer_failed:
   {
-    post_activate (pad, new);
-
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in pull mode",
-        active ? "activated" : "deactivated");
-    return TRUE;
+    GST_LOCK (peer);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "activate_pull on peer (%s:%s) failed", GST_DEBUG_PAD_NAME (peer));
+    GST_UNLOCK (peer);
+    gst_object_unref (peer);
+    return FALSE;
   }
-
 failure:
   {
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in pull mode",
         active ? "activate" : "deactivate");
+    pre_activate (pad, GST_ACTIVATE_NONE);
+    post_activate (pad, GST_ACTIVATE_NONE);
     return FALSE;
   }
 }
@@ -764,15 +766,18 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
   pre_activate (pad, new);
 
   if (GST_PAD_ACTIVATEPUSHFUNC (pad)) {
-    if (GST_PAD_ACTIVATEPUSHFUNC (pad) (pad, active)) {
-      goto success;
-    } else {
+    if (!GST_PAD_ACTIVATEPUSHFUNC (pad) (pad, active)) {
       goto failure;
     }
   } else {
     /* quite ok, element relies on state change func to prepare itself */
-    goto success;
   }
+
+  post_activate (pad, new);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in push mode",
+      active ? "activated" : "deactivated");
+  return TRUE;
 
 was_ok:
   {
@@ -780,20 +785,12 @@ was_ok:
         active ? "activated" : "deactivated");
     return TRUE;
   }
-
-success:
-  {
-    post_activate (pad, new);
-
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "%s in push mode",
-        active ? "activated" : "deactivated");
-    return TRUE;
-  }
-
 failure:
   {
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in push mode",
         active ? "activate" : "deactivate");
+    pre_activate (pad, GST_ACTIVATE_NONE);
+    post_activate (pad, GST_ACTIVATE_NONE);
     return FALSE;
   }
 }
