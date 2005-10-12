@@ -343,6 +343,18 @@ GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
   AS_SCRUB_INCLUDE(AALIB_CFLAGS)
 ])
 
+dnl *** cairo ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO, true)
+GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
+  PKG_CHECK_MODULES(CAIRO, cairo >= 1.0.0, [
+    HAVE_CAIRO=yes
+    AC_SUBST(CAIRO_CFLAGS)
+    AC_SUBST(CAIRO_LIBS)
+  ], [
+     HAVE_CAIRO=no
+  ])
+])
+
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
 GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink, [
@@ -512,6 +524,10 @@ GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $G
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
+dnl check for "check", unit testing library/header
+AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
+AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+
 dnl ######################
 dnl # Checks for gtk-doc #
 dnl ######################
@@ -588,6 +604,7 @@ gst/wavparse/Makefile
 ext/jpeg/Makefile
 ext/Makefile
 ext/aalib/Makefile
+ext/cairo/Makefile
 ext/dv/Makefile
 ext/esd/Makefile
 ext/flac/Makefile
