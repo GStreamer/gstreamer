@@ -1,3 +1,19 @@
+2005-10-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  add win32-update target
+	* win32/common/gstconfig.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstenumtypes.h:
+	* win32/common/gstversion.h:
+	  add files that visual studio can't generate
+
+2005-10-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  add a win32-update target
+	* configure.ac:
+
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_remove_func),
