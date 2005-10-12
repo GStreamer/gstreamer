@@ -1803,7 +1803,9 @@ gst_element_commit_state (GstElement * element)
     GstState current, next;
     GstMessage *message;
 
+    GST_LOCK (element);
     GST_OBJECT_FLAG_SET (element, GST_ELEMENT_CHANGING_STATE);
+    GST_UNLOCK (element);
 
     old_state = GST_STATE (element);
     /* this is the state we should go to next */
@@ -1854,7 +1856,9 @@ gst_element_commit_state (GstElement * element)
     } else {
       GST_STATE_BROADCAST (element);
     }
+    GST_LOCK (element);
     GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_CHANGING_STATE);
+    GST_UNLOCK (element);
   }
   return ret;
 }
@@ -1934,7 +1938,10 @@ gst_element_set_state (GstElement * element, GstState state)
       gst_element_state_get_name (state));
 
   GST_STATE_LOCK (element);
+
+  GST_LOCK (element);
   GST_OBJECT_FLAG_SET (element, GST_ELEMENT_CHANGING_STATE);
+  GST_UNLOCK (element);
 
   old_ret = GST_STATE_RETURN (element);
   /* previous state change returned an error, remove all pending
@@ -1986,7 +1993,9 @@ gst_element_set_state (GstElement * element, GstState state)
 
   ret = gst_element_change_state (element, transition);
 
+  GST_LOCK (element);
   GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_CHANGING_STATE);
+  GST_UNLOCK (element);
   GST_STATE_UNLOCK (element);
 
   GST_DEBUG_OBJECT (element, "returned %d", ret);
@@ -1996,7 +2005,9 @@ gst_element_set_state (GstElement * element, GstState state)
 was_busy:
   {
     GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
+    GST_LOCK (element);
     GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_CHANGING_STATE);
+    GST_UNLOCK (element);
     GST_STATE_UNLOCK (element);
 
     GST_DEBUG_OBJECT (element, "element was busy with async state change");

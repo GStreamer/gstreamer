@@ -1,3 +1,12 @@
+2005-10-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_remove_func),
+	(reset_degree), (gst_bin_dispose), (bin_bus_handler):
+	* gst/gstelement.c: (gst_element_commit_state),
+	(gst_element_set_state):
+	Protect flags with proper lock.
+	unref provided cached clock in dispose.
+
 2005-10-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gst.c:
