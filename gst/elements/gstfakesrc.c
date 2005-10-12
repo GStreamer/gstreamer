@@ -351,12 +351,21 @@ gst_fake_src_event_handler (GstBaseSrc * basesrc, GstEvent * event)
   src = GST_FAKE_SRC (basesrc);
 
   if (!src->silent) {
+    const GstStructure *s;
+    gchar *sstr;
+
     GST_LOCK (src);
     g_free (src->last_message);
 
+    if ((s = gst_event_get_structure (event)))
+      sstr = gst_structure_to_string (s);
+    else
+      sstr = g_strdup ("");
+
     src->last_message =
-        g_strdup_printf ("event   ******* E (type: %d) %p",
-        GST_EVENT_TYPE (event), event);
+        g_strdup_printf ("event   ******* E (type: %d, %s) %p",
+        GST_EVENT_TYPE (event), sstr, event);
+    g_free (sstr);
     GST_UNLOCK (src);
 
     g_object_notify (G_OBJECT (src), "last_message");

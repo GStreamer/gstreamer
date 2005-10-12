@@ -1,5 +1,16 @@
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_change_state):
+	No need to prerol after receiving EOS.
+
+	* gst/elements/gstfakesink.c: (gst_fake_sink_event):
+	* gst/elements/gstfakesrc.c: (gst_fake_src_event_handler):
+	* gst/elements/gstidentity.c: (gst_identity_event):
+	Print events more verbosely.
+
+2005-10-12  Wim Taymans  <wim@fluendo.com>
+
 	* check/Makefile.am:
 	* check/states/sinks.c: (GST_START_TEST), (gst_object_suite):
 	* check/states/sinks2.c:

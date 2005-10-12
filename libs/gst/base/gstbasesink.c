@@ -1489,6 +1489,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         gboolean do_eos = !basesink->eos_queued;
 
         gst_base_sink_preroll_queue_empty (basesink, basesink->sinkpad);
+        basesink->need_preroll = FALSE;
 
         /* need to post EOS message here if it was not in the preroll queue we
          * just emptied. */

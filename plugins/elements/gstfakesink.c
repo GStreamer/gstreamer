@@ -294,9 +294,9 @@ static gboolean
 gst_fake_sink_event (GstBaseSink * bsink, GstEvent * event)
 {
   GstFakeSink *sink = GST_FAKE_SINK (bsink);
-  const GstStructure *s;
 
   if (!sink->silent) {
+    const GstStructure *s;
     gchar *sstr;
 
     GST_LOCK (sink);

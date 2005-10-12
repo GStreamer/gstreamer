@@ -240,12 +240,22 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
   identity = GST_IDENTITY (trans);
 
   if (!identity->silent) {
+    const GstStructure *s;
+    gchar *sstr;
+
     GST_LOCK (identity);
     g_free (identity->last_message);
 
+    if ((s = gst_event_get_structure (event)))
+      sstr = gst_structure_to_string (s);
+    else
+      sstr = g_strdup ("");
+
     identity->last_message =
-        g_strdup_printf ("chain   ******* (%s:%s)E (type: %d) %p",
-        GST_DEBUG_PAD_NAME (trans->sinkpad), GST_EVENT_TYPE (event), event);
+        g_strdup_printf ("event   ******* (%s:%s) E (type: %d, %s) %p",
+        GST_DEBUG_PAD_NAME (trans->sinkpad), GST_EVENT_TYPE (event), sstr,
+        event);
+    g_free (sstr);
     GST_UNLOCK (identity);
 
     g_object_notify (G_OBJECT (identity), "last_message");
