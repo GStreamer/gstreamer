@@ -1,5 +1,10 @@
 2005-10-12  Andy Wingo  <wingo@pobox.com>
 
+	* autogen.sh (CONFIGURE_DEF_OPT): Check for automake 1.9 and 1.8,
+	but not for 1.5.
+
+	* gst/gst-types.defs: Fix flags wrongly declared as enums.
+
 	* gst/gst-extrafuncs.defs (flags, set_flag, unset_flag): Fix for
 	core updates.
 
