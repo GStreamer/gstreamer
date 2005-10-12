@@ -1,15 +1,16 @@
 2005-10-12  Andy Wingo  <wingo@pobox.com>
 
-	* gst/gst.defs (gst_element_abort_preroll): foo
-	(gst_plugin_check_file): 
+	* gst/gst-extrafuncs.defs (flags, set_flag, unset_flag): Fix for
+	core updates.
 
-	* gst/gst.defs (gst_element_finish_preroll): foo
+	* gst/gstmodule.c (init_gst): Give a better error message.
+
+	* gst/gst.defs (gst_registry_scan_paths)
+	(gst_element_abort_preroll, gst_plugin_check_file)
+	(gst_element_finish_preroll): Removed undefined symbols.
 
 	* gst/gstelement.override (_wrap_gst_element_get_state): Fix for
 	GstClockTime api change.
-
-	* gst/gst.defs (gst_registry_scan_paths): Removed, following
-	removal from GStreamer.
 
 2005-10-12  Julien MOUTTE  <julien@moutte.net>
 

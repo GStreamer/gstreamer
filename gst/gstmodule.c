@@ -131,12 +131,17 @@ init_gst (void)
 	  argv[0] = g_strdup("");
      }
      if (!gst_init_check (&argc, &argv, &error)) {
+          gchar *errstr;
+          
 	  if (argv != NULL) {
 	       for (i = 0; i < argc; i++)
                     g_free (argv[i]);
 	       g_free (argv);
 	  }
-	  PyErr_SetString (PyExc_RuntimeError, "can't initialize module gst");
+          errstr = g_strdup_printf ("can't initialize module gst: %s",
+              GST_STR_NULL (error->message));
+	  PyErr_SetString (PyExc_RuntimeError, errstr);
+          g_free (errstr);
 	  g_error_free (error);
 	  setlocale(LC_NUMERIC, "C");
 	  return;

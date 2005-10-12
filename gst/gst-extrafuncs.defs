@@ -2,13 +2,13 @@
 
 (define-method flags
   (of-object "GstElement")
-  (c-name "GST_FLAGS")
+  (c-name "GST_OBJECT_FLAGS")
   (return-type "GstElementFlags")
 )
 
 (define-method set_flag
   (of-object "GstObject")
-  (c-name "GST_FLAG_SET")
+  (c-name "GST_OBJECT_FLAG_SET")
   (return-type "none")
   (parameters
    '("GstObjectFlags" "flags")
@@ -17,7 +17,7 @@
 
 (define-method unset_flag
   (of-object "GstObject")
-  (c-name "GST_FLAG_UNSET")
+  (c-name "GST_OBJECT_FLAG_UNSET")
   (return-type "none")
   (parameters
    '("GstObjectFlags" "flag")
