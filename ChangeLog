@@ -1,5 +1,10 @@
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
+	* examples/seeking/Makefile.am:
+	Oops.
+
+2005-10-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_commit),
 	(gst_ring_buffer_read), (gst_ring_buffer_clear):
 	Don't assert on normal stuff.
