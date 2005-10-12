@@ -1018,11 +1018,9 @@ do_seek (GtkWidget * widget)
   }
 
   if (res) {
-    GTimeVal tv;
-
     gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
-    GST_TIME_TO_TIMEVAL (100 * GST_MSECOND, tv);
-    gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, &tv);
+    gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
+        100 * GST_MSECOND);
   } else
     g_print ("seek failed\n");
 }

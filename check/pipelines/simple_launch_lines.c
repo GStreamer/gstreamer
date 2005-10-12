@@ -56,7 +56,7 @@ run_pipeline (GstElement * pipe, const gchar * descr,
   g_assert (bus);
 
   ret = gst_element_set_state (pipe, GST_STATE_PLAYING);
-  ret = gst_element_get_state (pipe, NULL, NULL, NULL);
+  ret = gst_element_get_state (pipe, NULL, NULL, GST_CLOCK_TIME_NONE);
   if (ret != GST_STATE_CHANGE_SUCCESS) {
     g_critical ("Couldn't set pipeline to PLAYING");
     goto done;

@@ -191,7 +191,7 @@ play_cb (GtkButton * button, gpointer data)
 {
   GstState state;
 
-  gst_element_get_state (pipeline, &state, NULL, NULL);
+  gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
   if (state != GST_STATE_PLAYING) {
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     update_id =
@@ -204,7 +204,7 @@ pause_cb (GtkButton * button, gpointer data)
 {
   GstState state;
 
-  gst_element_get_state (pipeline, &state, NULL, NULL);
+  gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
   if (state != GST_STATE_PAUSED) {
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     gtk_timeout_remove (update_id);
@@ -216,7 +216,7 @@ stop_cb (GtkButton * button, gpointer data)
 {
   GstState state;
 
-  gst_element_get_state (pipeline, &state, NULL, NULL);
+  gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
   if (state != GST_STATE_READY) {
     gst_element_set_state (pipeline, GST_STATE_READY);
     gtk_timeout_remove (update_id);

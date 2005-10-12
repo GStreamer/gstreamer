@@ -1,3 +1,14 @@
+2005-10-12  Wim Taymans  <wim@fluendo.com>
+
+	* check/pipelines/simple_launch_lines.c: (run_pipeline):
+	* examples/seeking/Makefile.am:
+	* examples/seeking/cdplayer.c: (play_cb), (pause_cb), (stop_cb):
+	* examples/seeking/seek.c: (make_avi_msmpeg4v3_mp3_pipeline),
+	(do_seek), (set_update_scale), (message_received), (main):
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_commit),
+	(gst_ring_buffer_read), (gst_ring_buffer_clear):
+	Update for _get_state() API change.
+
 2005-10-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
