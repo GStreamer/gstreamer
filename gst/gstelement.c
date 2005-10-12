@@ -120,7 +120,7 @@ static GstStateChangeReturn gst_element_change_state_func (GstElement * element,
 static GstStateChangeReturn gst_element_change_state_func (GstElement * element,
     GstStateChange transition);
 static GstStateChangeReturn gst_element_get_state_func (GstElement * element,
-    GstState * state, GstState * pending, GTimeVal * timeout);
+    GstState * state, GstState * pending, GstClockTime timeout);
 static void gst_element_set_bus_func (GstElement * element, GstBus * bus);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -1604,7 +1604,7 @@ failed:
 /* MT safe */
 static GstStateChangeReturn
 gst_element_get_state_func (GstElement * element,
-    GstState * state, GstState * pending, GTimeVal * timeout)
+    GstState * state, GstState * pending, GstClockTime timeout)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_FAILURE;
   GstState old_pending;
@@ -1630,8 +1630,8 @@ gst_element_get_state_func (GstElement * element,
   if (old_pending != GST_STATE_VOID_PENDING) {
     GTimeVal *timeval, abstimeout;
 
-    if (timeout) {
-      glong add = timeout->tv_sec * G_USEC_PER_SEC + timeout->tv_usec;
+    if (timeout != GST_CLOCK_TIME_NONE) {
+      glong add = timeout / 1000;
 
       if (add == 0)
         goto done;
@@ -1688,8 +1688,8 @@ done:
  * @state: a pointer to #GstState to hold the state. Can be NULL.
  * @pending: a pointer to #GstState to hold the pending state.
  *           Can be NULL.
- * @timeout: a #GTimeVal to specify the timeout for an async
- *           state change or NULL for infinite timeout.
+ * @timeout: a #GstClockTime to specify the timeout for an async
+ *           state change or GST_CLOCK_TIME_NONE for infinite timeout.
  *
  * Gets the state of the element. 
  *
@@ -1712,7 +1712,7 @@ done:
  */
 GstStateChangeReturn
 gst_element_get_state (GstElement * element,
-    GstState * state, GstState * pending, GTimeVal * timeout)
+    GstState * state, GstState * pending, GstClockTime timeout)
 {
   GstElementClass *oclass;
   GstStateChangeReturn result = GST_STATE_CHANGE_FAILURE;

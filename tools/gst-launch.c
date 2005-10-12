@@ -642,7 +642,7 @@ main (int argc, char *argv[])
         break;
       case GST_STATE_CHANGE_ASYNC:
         fprintf (stderr, _("PREROLL pipeline ...\n"));
-        gst_element_get_state (pipeline, &state, &pending, NULL);
+        gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
         /* fallthrough */
       case GST_STATE_CHANGE_SUCCESS:
         fprintf (stderr, _("PREROLLED pipeline ...\n"));
@@ -677,15 +677,15 @@ main (int argc, char *argv[])
 
     fprintf (stderr, _("PAUSE pipeline ...\n"));
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    gst_element_get_state (pipeline, &state, &pending, NULL);
+    gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
     fprintf (stderr, _("READY pipeline ...\n"));
     gst_element_set_state (pipeline, GST_STATE_READY);
-    gst_element_get_state (pipeline, &state, &pending, NULL);
+    gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
 
   end:
     fprintf (stderr, _("NULL pipeline ...\n"));
     gst_element_set_state (pipeline, GST_STATE_NULL);
-    gst_element_get_state (pipeline, &state, &pending, NULL);
+    gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
   }
 
   fprintf (stderr, _("FREEING pipeline ...\n"));

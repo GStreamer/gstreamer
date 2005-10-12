@@ -167,6 +167,7 @@ GST_START_TEST (test_bus)
   GstBus *bus;
   guint id;
   GstState current;
+  GstStateChangeReturn ret;
 
   pipeline = gst_pipeline_new (NULL);
   fail_unless (pipeline != NULL, "Could not create pipeline");
@@ -188,7 +189,9 @@ GST_START_TEST (test_bus)
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline after add_watch", 1);
   ASSERT_OBJECT_REFCOUNT (bus, "bus after add_watch", 3);
 
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+
   loop = g_main_loop_new (NULL, FALSE);
   GST_DEBUG ("going into main loop");
   g_main_loop_run (loop);
@@ -202,23 +205,22 @@ GST_START_TEST (test_bus)
   /* cleanup */
   GST_DEBUG ("cleanup");
 
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-  fail_unless (gst_element_get_state (pipeline, &current, NULL, NULL) ==
-      GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+  ret = gst_element_get_state (pipeline, &current, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
   fail_unless (current == GST_STATE_NULL, "state is not NULL but %d", current);
 
-  /* FIXME: need to figure out an extra refcount, checks disabled */
-//  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline at start of cleanup", 1);
-//  ASSERT_OBJECT_REFCOUNT (bus, "bus at start of cleanup", 3);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline at start of cleanup", 1);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus at start of cleanup", 3);
 
   fail_unless (g_source_remove (id));
-//  ASSERT_OBJECT_REFCOUNT (bus, "bus after removing source", 2);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus after removing source", 2);
 
   GST_DEBUG ("unreffing pipeline");
   gst_object_unref (pipeline);
 
-
-//  ASSERT_OBJECT_REFCOUNT (bus, "bus after unref pipeline", 1);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus after unref pipeline", 1);
   gst_object_unref (bus);
 }
 

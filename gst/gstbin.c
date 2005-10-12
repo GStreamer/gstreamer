@@ -84,7 +84,7 @@ static void gst_bin_recalc_state (GstBin * bin, gboolean force);
 static GstStateChangeReturn gst_bin_change_state_func (GstElement * element,
     GstStateChange transition);
 static GstStateChangeReturn gst_bin_get_state_func (GstElement * element,
-    GstState * state, GstState * pending, GTimeVal * timeout);
+    GstState * state, GstState * pending, GstClockTime timeout);
 
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
@@ -908,7 +908,7 @@ gst_bin_iterate_sinks (GstBin * bin)
  */
 static GstStateChangeReturn
 gst_bin_get_state_func (GstElement * element, GstState * state,
-    GstState * pending, GTimeVal * timeout)
+    GstState * pending, GstClockTime timeout)
 {
   GstBin *bin = GST_BIN (element);
 
@@ -928,7 +928,6 @@ gst_bin_recalc_state (GstBin * bin, gboolean force)
   guint32 children_cookie;
   gboolean have_no_preroll;
   gboolean have_async;
-  GTimeVal tv;
 
   ret = GST_STATE_CHANGE_SUCCESS;
 
@@ -962,7 +961,6 @@ restart:
 
   /* scan all element states with a zero timeout so we don't block on
    * anything */
-  GST_TIME_TO_TIMEVAL (0, tv);
   children = bin->children;
   children_cookie = bin->children_cookie;
   while (children) {
@@ -973,7 +971,7 @@ restart:
      * release the lock anyway since we can. */
     GST_UNLOCK (bin);
 
-    ret = gst_element_get_state (child, NULL, NULL, &tv);
+    ret = gst_element_get_state (child, NULL, NULL, 0);
 
     gst_object_unref (child);
 

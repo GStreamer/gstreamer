@@ -355,7 +355,7 @@ struct _GstElementClass
 
   /* state changes */
   GstStateChangeReturn (*get_state)		(GstElement * element, GstState * state,
-						 GstState * pending, GTimeVal * timeout);
+						 GstState * pending, GstClockTime timeout);
   GstStateChangeReturn (*change_state)		(GstElement *element, GstStateChange transition);
 
   /* bus */
@@ -485,7 +485,7 @@ gboolean		gst_element_sync_state_with_parent (GstElement *element);
 GstStateChangeReturn	gst_element_get_state		(GstElement * element,
 							 GstState * state,
 							 GstState * pending,
-							 GTimeVal * timeout);
+							 GstClockTime timeout);
 GstStateChangeReturn	gst_element_set_state		(GstElement *element, GstState state);
 
 void			gst_element_abort_state		(GstElement * element);

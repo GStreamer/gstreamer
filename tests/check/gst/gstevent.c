@@ -245,7 +245,8 @@ static void test_event
   got_event_before_q = got_event_after_q = NULL;
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, NULL);
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
 
   event = gst_event_new_custom (type,
       gst_structure_empty_new ("application/x-custom"));
@@ -275,7 +276,8 @@ static void test_event
   }
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
-  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, NULL);
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
 
   if (got_event_before_q)
     gst_event_unref (got_event_before_q);
@@ -372,7 +374,8 @@ GST_START_TEST (send_custom_events)
       G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, NULL);
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
 
   gst_object_unref (pipeline);
 }

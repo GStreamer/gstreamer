@@ -248,11 +248,11 @@ GST_START_TEST (test_ghost_pads)
   assert_gstrefcount (isrc, 3); /* parent and gsrc */
 
   ret = gst_element_set_state (b1, GST_STATE_PLAYING);
-  ret = gst_element_get_state (b1, NULL, NULL, NULL);
+  ret = gst_element_get_state (b1, NULL, NULL, GST_CLOCK_TIME_NONE);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   ret = gst_element_set_state (b1, GST_STATE_NULL);
-  ret = gst_element_get_state (b1, NULL, NULL, NULL);
+  ret = gst_element_get_state (b1, NULL, NULL, GST_CLOCK_TIME_NONE);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   gst_object_unref (b1);

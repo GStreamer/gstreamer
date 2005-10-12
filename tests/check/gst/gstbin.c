@@ -264,7 +264,8 @@ GST_START_TEST (test_message_state_changed_children)
   ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC);
   ret =
-      gst_element_get_state (GST_ELEMENT (pipeline), &current, &pending, NULL);
+      gst_element_get_state (GST_ELEMENT (pipeline), &current, &pending,
+      GST_CLOCK_TIME_NONE);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
   fail_unless (current == GST_STATE_PAUSED);
   fail_unless (pending == GST_STATE_VOID_PENDING);
@@ -289,7 +290,8 @@ GST_START_TEST (test_message_state_changed_children)
   ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
   ret =
-      gst_element_get_state (GST_ELEMENT (pipeline), &current, &pending, NULL);
+      gst_element_get_state (GST_ELEMENT (pipeline), &current, &pending,
+      GST_CLOCK_TIME_NONE);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
   fail_unless (current == GST_STATE_PLAYING);
   fail_unless (pending == GST_STATE_VOID_PENDING);
@@ -367,7 +369,9 @@ GST_START_TEST (test_watch_for_state_change)
   /* change state, spawning two times three messages */
   ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC);
-  ret = gst_element_get_state (GST_ELEMENT (bin), NULL, NULL, NULL);
+  ret =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   pop_messages (bus, 6);
@@ -382,7 +386,7 @@ GST_START_TEST (test_watch_for_state_change)
 
   /* this one might return either SUCCESS or ASYNC, likely SUCCESS */
   gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
-  gst_element_get_state (GST_ELEMENT (bin), NULL, NULL, NULL);
+  gst_element_get_state (GST_ELEMENT (bin), NULL, NULL, GST_CLOCK_TIME_NONE);
 
   pop_messages (bus, 3);
 
@@ -502,7 +506,8 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_if (ret != GST_STATE_CHANGE_ASYNC,
       "State change to PLAYING did not return ASYNC");
-  ret = gst_element_get_state (pipeline, &current, &pending, NULL);
+  ret =
+      gst_element_get_state (pipeline, &current, &pending, GST_CLOCK_TIME_NONE);
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to PLAYING failed");
   fail_if (current != GST_STATE_PLAYING, "State change to PLAYING failed");
   fail_if (pending != GST_STATE_VOID_PENDING, "State change to PLAYING failed");
@@ -543,7 +548,7 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   /* don't set to NULL that will set the bus flushing and kill our messages */
   ret = gst_element_set_state (pipeline, GST_STATE_READY);
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to READY failed");
-  ret = gst_element_get_state (pipeline, NULL, NULL, NULL);
+  ret = gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to READY failed");
 
   /* TODO: do we need to check downwards state change order as well? */
@@ -602,7 +607,8 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_if (ret != GST_STATE_CHANGE_ASYNC, "State change to PLAYING not ASYNC");
-  ret = gst_element_get_state (pipeline, &current, &pending, NULL);
+  ret =
+      gst_element_get_state (pipeline, &current, &pending, GST_CLOCK_TIME_NONE);
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to PLAYING failed");
   fail_if (current != GST_STATE_PLAYING, "State change to PLAYING failed");
   fail_if (pending != GST_STATE_VOID_PENDING, "State change to PLAYING failed");

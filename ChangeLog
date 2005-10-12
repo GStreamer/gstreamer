@@ -1,3 +1,30 @@
+2005-10-12  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstbin.c: (GST_START_TEST):
+	* check/gst/gstelement.c: (GST_START_TEST):
+	* check/gst/gstevent.c: (GST_START_TEST), (test_event):
+	* check/gst/gstghostpad.c: (GST_START_TEST):
+	* check/gst/gstpipeline.c: (GST_START_TEST):
+	* check/pipelines/simple_launch_lines.c: (run_pipeline):
+	* check/states/sinks.c: (GST_START_TEST):
+	* gst/elements/gsttypefindelement.c: (stop_typefinding):
+	* gst/gstbin.c: (gst_bin_provide_clock_func), (gst_bin_add_func),
+	(gst_bin_remove_func), (gst_bin_get_state_func),
+	(gst_bin_recalc_state), (gst_bin_change_state_func),
+	(bin_bus_handler):
+	* gst/gstelement.c: (gst_element_get_state_func),
+	(gst_element_get_state), (gst_element_abort_state),
+	(gst_element_commit_state), (gst_element_set_state),
+	(gst_element_change_state), (gst_element_change_state_func):
+	* gst/gstelement.h:
+	* gst/gstpipeline.c: (gst_pipeline_class_init), (do_pipeline_seek),
+	(gst_pipeline_provide_clock_func):
+	* gst/gstutils.c: (gst_element_link_pads_filtered):
+	* tools/gst-launch.c: (main):
+	* tools/gst-typefind.c: (main):
+	Use GstClockTime in _get_state() instead of GTimeVal.
+	Remove old code in gstutils.c
+
 2005-10-12  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.c (gst_pad_pause_task): Actually return FALSE if

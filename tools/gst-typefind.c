@@ -92,7 +92,8 @@ main (int argc, char *argv[])
 
     if (GST_STATE_CHANGE_ASYNC == sret) {
       if (GST_STATE_CHANGE_FAILURE ==
-          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, NULL))
+          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
+              GST_CLOCK_TIME_NONE))
         break;
     } else if (sret != GST_STATE_CHANGE_SUCCESS)
       g_print ("%s - No type found\n", argv[i]);
@@ -100,7 +101,8 @@ main (int argc, char *argv[])
     if (GST_STATE_CHANGE_ASYNC ==
         gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL)) {
       if (GST_STATE_CHANGE_FAILURE ==
-          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, NULL))
+          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
+              GST_CLOCK_TIME_NONE))
         break;
     }
 

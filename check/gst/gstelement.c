@@ -109,7 +109,7 @@ GST_START_TEST (test_link)
   gst_element_set_state (src, GST_STATE_PAUSED);
 
   /* wait for preroll */
-  gst_element_get_state (sink, NULL, NULL, NULL);
+  gst_element_get_state (sink, NULL, NULL, GST_CLOCK_TIME_NONE);
 
   /* play some more */
   gst_element_set_state (sink, GST_STATE_PLAYING);
@@ -122,7 +122,7 @@ GST_START_TEST (test_link)
   gst_element_set_state (src, GST_STATE_PAUSED);
 
   /* wait for preroll */
-  gst_element_get_state (sink, NULL, NULL, NULL);
+  gst_element_get_state (sink, NULL, NULL, GST_CLOCK_TIME_NONE);
 
   gst_element_set_state (sink, GST_STATE_NULL);
   gst_element_set_state (src, GST_STATE_NULL);
