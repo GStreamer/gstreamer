@@ -1,5 +1,12 @@
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-states.txt:
+	* tools/gst-launch.c: (main):
+	Some doc updates.
+	Revert non-intentional change.
+
+2005-10-12  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst/gstbin.c: (GST_START_TEST):
 	* check/gst/gstelement.c: (GST_START_TEST):
 	* check/gst/gstevent.c: (GST_START_TEST), (test_event):

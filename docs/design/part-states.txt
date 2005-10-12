@@ -142,7 +142,7 @@ Getting state of elements
 -------------------------
 
 The _get_state() function takes 3 arguments, two pointers that will hold the
-current and pending state and one GTimeVal that holds a timeout value. The 
+current and pending state and one GstClockTime that holds a timeout value. The 
 function returns a GstElementStateReturn.
 
  - If the element returned SUCCESS to the previous _set_state() function, this
@@ -160,7 +160,7 @@ function returns a GstElementStateReturn.
 
  - If the element returned ASYNC to the previous _set_state() call, this function
    will wait for the element to complete its state change up to the amount of time
-   specified in the GTimeVal. 
+   specified in the GstClockTime. 
 
    * If the element does not complete the state change in the specified amount of 
      time, this function will return ASYNC with the state set to the current state

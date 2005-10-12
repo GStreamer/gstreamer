@@ -624,12 +624,8 @@ main (int argc, char *argv[])
       gst_bin_add (GST_BIN (real_pipeline), pipeline);
       pipeline = real_pipeline;
     }
-#if 0
     fprintf (stderr, _("PAUSE pipeline ...\n"));
     ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
-#endif
-    fprintf (stderr, _("PLAYING pipeline ...\n"));
-    ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
     switch (ret) {
       case GST_STATE_CHANGE_FAILURE:
