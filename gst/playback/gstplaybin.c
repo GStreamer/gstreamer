@@ -897,12 +897,10 @@ do_playbin_seek (GstElement * element, GstEvent * event)
 
   if (flush) {
     GstState state;
-    GTimeVal timeout;
 
-    GST_TIME_TO_TIMEVAL (0, timeout);
     /* need to call _get_state() since a bin state is only updated
      * with this call. */
-    gst_element_get_state (element, &state, NULL, &timeout);
+    gst_element_get_state (element, &state, NULL, 0);
     was_playing = state == GST_STATE_PLAYING;
 
     if (was_playing) {

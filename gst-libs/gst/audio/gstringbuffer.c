@@ -1204,7 +1204,10 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
   guint8 *data;
 
   g_return_if_fail (buf != NULL);
-  g_return_if_fail (buf->data != NULL);
+  /* no data means it's allready cleared */
+  if (buf->data == NULL)
+    return;
+
   g_return_if_fail (buf->empty_seg != NULL);
 
   data = GST_BUFFER_DATA (buf->data);

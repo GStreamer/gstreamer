@@ -1,5 +1,14 @@
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_commit),
+	(gst_ring_buffer_read), (gst_ring_buffer_clear):
+	Don't assert on normal stuff.
+
+	* gst/playback/gstplaybin.c: (do_playbin_seek):
+	API fix.
+
+2005-10-12  Wim Taymans  <wim@fluendo.com>
+
 	* check/pipelines/simple_launch_lines.c: (run_pipeline):
 	* examples/seeking/Makefile.am:
 	* examples/seeking/cdplayer.c: (play_cb), (pause_cb), (stop_cb):
