@@ -33,7 +33,7 @@ echo -n "+ check for build tools"
 if test ! -z "$NOCHECK"; then echo ": skipped version checks"; else  echo; fi
 version_check "autoconf" "$AUTOCONF autoconf autoconf259 autoconf257 autoconf-2.54 autoconf-2.53 autoconf253 autoconf-2.52 autoconf252" \
               "ftp://ftp.gnu.org/pub/gnu/autoconf/" 2 52 || DIE=1
-version_check "automake" "$AUTOMAKE automake automake-1.7 automake17 automake-1.6" \
+version_check "automake" "$AUTOMAKE automake automake-1.9 automake19 automake-1.8 automake18 automake-1.7 automake17 automake-1.6 automake16" \
               "ftp://ftp.gnu.org/pub/gnu/automake/" 1 6 || DIE=1
 version_check "autopoint" "autopoint" \
               "ftp://ftp.gnu.org/pub/gnu/gettext/" 0 11 5 || DIE=1
