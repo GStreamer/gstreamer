@@ -47,6 +47,7 @@ typedef struct _GstTimeoverlayClass GstTimeoverlayClass;
 struct _GstTimeoverlay {
   GstVideofilter videofilter;
 
+  cairo_surface_t *surface;
   cairo_t *cr;
   int text_height;
 

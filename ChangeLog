@@ -1,3 +1,15 @@
+2005-10-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/Makefile.am:
+	* ext/cairo/Makefile.am:
+	* ext/cairo/gstcairo.c: (plugin_init):
+	* ext/cairo/gsttextoverlay.c: (gst_textoverlay_change_state):
+	* ext/cairo/gsttimeoverlay.c: (gst_timeoverlay_update_font_height),
+	(gst_timeoverlay_setup), (gst_timeoverlay_planar411):
+	* ext/cairo/gsttimeoverlay.h:
+	  update of cairo-based timeoverlay to 1.0 Cairo API
+	  doesn't work yet for resizing of output sink
+
 2005-10-11  Wim Taymans  <wim@fluendo.com>
 
 	* ext/speex/gstspeexdec.c: (speex_dec_event), (speex_dec_chain):

@@ -4,11 +4,11 @@ else
 AALIB_DIR =
 endif
 
-# if USE_CAIRO
-# CAIRO_DIR = cairo
-# else
+if USE_CAIRO
+CAIRO_DIR = cairo
+else
 CAIRO_DIR =
-# endif
+endif
 
 if USE_ESD
 ESD_DIR = esd

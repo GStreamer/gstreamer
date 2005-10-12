@@ -33,11 +33,10 @@ GST_DEBUG_CATEGORY (cairo_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstvideofilter"))
-    return FALSE;
-
+#if 0
   gst_element_register (plugin, "cairotextoverlay", GST_RANK_NONE,
       GST_TYPE_TEXTOVERLAY);
+#endif
   gst_element_register (plugin, "cairotimeoverlay", GST_RANK_NONE,
       GST_TYPE_TIMEOVERLAY);
 
@@ -46,5 +45,6 @@ plugin_init (GstPlugin * plugin)
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "timeoverlay",
-    "Time overlay", plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "cairo",
+    "Cairo-based overlaying", plugin_init, VERSION,
+    GST_LICENSE, GST_PACKAGE, GST_ORIGIN);

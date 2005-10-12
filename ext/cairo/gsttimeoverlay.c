@@ -190,26 +190,41 @@ gst_timeoverlay_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
+gst_timeoverlay_update_font_height (GstVideofilter * videofilter)
+{
+  GstTimeoverlay *timeoverlay = GST_TIMEOVERLAY (videofilter);
+  gint width, height;
+  cairo_surface_t *font_surface;
+  cairo_t *font_cairo;
+  cairo_font_extents_t font_extents;
+
+  width = gst_videofilter_get_input_width (videofilter);
+  height = gst_videofilter_get_input_height (videofilter);
+
+  font_surface =
+      cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+  font_cairo = cairo_create (font_surface);
+  cairo_surface_destroy (font_surface);
+  font_surface = NULL;
+
+  cairo_select_font_face (font_cairo, "monospace", 0, 0);
+  cairo_set_font_size (font_cairo, 20);
+  cairo_font_extents (font_cairo, &font_extents);
+  timeoverlay->text_height = font_extents.height;
+  GST_DEBUG_OBJECT (timeoverlay, "font height is %d", font_extents.height);
+  cairo_destroy (font_cairo);
+  font_cairo = NULL;
+}
+
+static void
 gst_timeoverlay_setup (GstVideofilter * videofilter)
 {
   GstTimeoverlay *timeoverlay;
-  cairo_font_extents_t font_extents;
 
   g_return_if_fail (GST_IS_TIMEOVERLAY (videofilter));
   timeoverlay = GST_TIMEOVERLAY (videofilter);
 
-  /* if any setup needs to be done, do it here */
-
-  timeoverlay->cr = cairo_create ();
-
-  cairo_set_rgb_color (timeoverlay->cr, 0, 0, 0);
-
-  cairo_select_font (timeoverlay->cr, "monospace", 0, 0);
-  cairo_scale_font (timeoverlay->cr, 20);
-
-  cairo_current_font_extents (timeoverlay->cr, &font_extents);
-  timeoverlay->text_height = font_extents.height;
-
+  gst_timeoverlay_update_font_height (videofilter);
 }
 
 static char *
@@ -234,6 +249,7 @@ gst_timeoverlay_print_smpte_time (guint64 time)
   return g_strdup_printf ("%02d:%02d:%02d.%03d", hours, minutes, seconds, ms);
 }
 
+
 static void
 gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
 {
@@ -243,8 +259,11 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   int b_width;
   char *string;
   int i, j;
-  uint8_t *image;
+  unsigned char *image;
   cairo_text_extents_t extents;
+
+  cairo_surface_t *font_surface;
+  cairo_t *text_cairo;
 
   g_return_if_fail (GST_IS_TIMEOVERLAY (videofilter));
   timeoverlay = GST_TIMEOVERLAY (videofilter);
@@ -252,28 +271,37 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   width = gst_videofilter_get_input_width (videofilter);
   height = gst_videofilter_get_input_height (videofilter);
 
+  /* create surface for font rendering */
+  /* FIXME: preparation of the surface could also be done once when settings
+   * change */
+  image = g_malloc (4 * width * timeoverlay->text_height);
+
+  font_surface =
+      cairo_image_surface_create_for_data (image, CAIRO_FORMAT_ARGB32, width,
+      timeoverlay->text_height, width * 4);
+  text_cairo = cairo_create (font_surface);
+  cairo_surface_destroy (font_surface);
+  font_surface = NULL;
+
+  /* we draw a rectangle because the compositing on the buffer below
+   * doesn't do alpha */
+  cairo_save (text_cairo);
+  cairo_rectangle (text_cairo, 0, 0, width, timeoverlay->text_height);
+  cairo_set_source_rgba (text_cairo, 0, 0, 0, 1);
+  cairo_set_operator (text_cairo, CAIRO_OPERATOR_SOURCE);
+  cairo_fill (text_cairo);
+  cairo_restore (text_cairo);
+
   string =
       gst_timeoverlay_print_smpte_time (GST_BUFFER_TIMESTAMP (videofilter->
           in_buf));
-
-  image = g_malloc (4 * width * timeoverlay->text_height);
-
-  cairo_set_target_image (timeoverlay->cr, image, CAIRO_FORMAT_ARGB32,
-      width, timeoverlay->text_height, width * 4);
-
-  cairo_save (timeoverlay->cr);
-  cairo_rectangle (timeoverlay->cr, 0, 0, width, timeoverlay->text_height);
-  cairo_set_alpha (timeoverlay->cr, 0);
-  cairo_set_operator (timeoverlay->cr, CAIRO_OPERATOR_SRC);
-  cairo_fill (timeoverlay->cr);
-  cairo_restore (timeoverlay->cr);
-
-  cairo_save (timeoverlay->cr);
-  cairo_text_extents (timeoverlay->cr, string, &extents);
-
-  cairo_set_rgb_color (timeoverlay->cr, 1, 1, 1);
-  cairo_move_to (timeoverlay->cr, 0, timeoverlay->text_height - 2);
-  cairo_show_text (timeoverlay->cr, string);
+  cairo_save (text_cairo);
+  cairo_select_font_face (text_cairo, "monospace", 0, 0);
+  cairo_set_font_size (text_cairo, 20);
+  cairo_text_extents (text_cairo, string, &extents);
+  cairo_set_source_rgb (text_cairo, 1, 1, 1);
+  cairo_move_to (text_cairo, 0, timeoverlay->text_height - 2);
+  cairo_show_text (text_cairo, string);
   g_free (string);
 #if 0
   cairo_text_path (timeoverlay->cr, string);
@@ -282,8 +310,9 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   cairo_stroke (timeoverlay->cr);
 #endif
 
-  cairo_restore (timeoverlay->cr);
+  cairo_restore (text_cairo);
 
+  /* blend width; should retain a max text width so it doesn't jitter */
   b_width = extents.width;
   if (b_width > width)
     b_width = width;
@@ -291,7 +320,7 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   memcpy (dest, src, videofilter->from_buf_size);
   for (i = 0; i < timeoverlay->text_height; i++) {
     for (j = 0; j < b_width; j++) {
-      ((uint8_t *) dest)[i * width + j] = image[(i * width + j) * 4 + 0];
+      ((unsigned char *) dest)[i * width + j] = image[(i * width + j) * 4 + 0];
     }
   }
   for (i = 0; i < timeoverlay->text_height / 2; i++) {
@@ -300,5 +329,7 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
         i * (width / 2), 128, b_width / 2);
   }
 
+  cairo_destroy (text_cairo);
+  text_cairo = NULL;
   g_free (image);
 }
