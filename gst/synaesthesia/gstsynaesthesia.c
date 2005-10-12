@@ -194,7 +194,7 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
       gst_synaesthesia_src_getcaps);
   gst_pad_set_link_function (synaesthesia->srcpad, gst_synaesthesia_src_link);
 
-  GST_FLAG_SET (synaesthesia, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (synaesthesia, GST_ELEMENT_EVENT_AWARE);
 
   synaesthesia->adapter = gst_adapter_new ();
 

@@ -1,3 +1,26 @@
+2005-10-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* examples/indexing/indexmpeg.c: (main):
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_init):
+	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_is_open),
+	(dvdnavsrc_set_property), (dvdnavsrc_open), (dvdnavsrc_close),
+	(dvdnavsrc_event), (dvdnavsrc_convert), (dvdnavsrc_query):
+	* ext/dvdread/dvdreadsrc.c: (dvdreadsrc_set_property),
+	(dvdreadsrc_srcpad_query), (dvdreadsrc_get),
+	(dvdreadsrc_open_file), (dvdreadsrc_close_file):
+	* ext/dvdread/dvdreadsrc.h:
+	* ext/lame/gstlame.h:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_init):
+	* gst/asfdemux/gstasfmux.c: (gst_asfmux_init):
+	* gst/iec958/ac3iec.h:
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_init):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_init):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_init):
+	* gst/mpegstream/gstrfc2250enc.c: (gst_rfc2250_enc_init):
+	* gst/synaesthesia/gstsynaesthesia.c: (gst_synaesthesia_init):
+	renamed GST_FLAGS macros to GST_OBJECT_FLAGS
+	moved bitshift from macro to enum definition
+
 2005-10-11  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_sink_event):

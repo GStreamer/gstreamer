@@ -175,7 +175,7 @@ gst_asf_demux_init (GstASFDemux * asf_demux)
   asf_demux->seek_pending = GST_CLOCK_TIME_NONE;
   asf_demux->seek_discont = FALSE;
 
-  GST_FLAG_SET (asf_demux, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (asf_demux, GST_ELEMENT_EVENT_AWARE);
 }
 
 static gboolean

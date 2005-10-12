@@ -249,7 +249,7 @@ gst_mpeg_parse_init (GstMPEGParse * mpeg_parse)
   mpeg_parse->do_adjust = TRUE;
   mpeg_parse->use_adjust = TRUE;
 
-  GST_FLAG_SET (mpeg_parse, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (mpeg_parse, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void

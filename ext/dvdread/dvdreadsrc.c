@@ -285,7 +285,7 @@ dvdreadsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_LOCATION:
     case ARG_DEVICE:
       /* the element must be stopped in order to do this */
-      /*g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
+      /*g_return_if_fail(!GST_OBJECT_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
 
       g_free (priv->location);
       /* clear the filename if we get a NULL (is that possible?) */
@@ -491,7 +491,7 @@ dvdreadsrc_srcpad_query (GstPad * pad, GstQueryType type,
   DVDReadSrcPrivate *priv = dvdreadsrc->priv;
   gboolean res = TRUE;
 
-  if (!GST_FLAG_IS_SET (dvdreadsrc, DVDREADSRC_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (dvdreadsrc, DVDREADSRC_OPEN))
     return FALSE;
 
   switch (type) {
@@ -989,7 +989,8 @@ dvdreadsrc_get (GstPad * pad)
 
   dvdreadsrc = DVDREADSRC (gst_pad_get_parent (pad));
   priv = dvdreadsrc->priv;
-  g_return_val_if_fail (GST_FLAG_IS_SET (dvdreadsrc, DVDREADSRC_OPEN), NULL);
+  g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (dvdreadsrc, DVDREADSRC_OPEN),
+      NULL);
 
   /* handle vents, if any */
   if (priv->seek_pend) {
@@ -1056,7 +1057,7 @@ dvdreadsrc_open_file (DVDReadSrc * src)
 {
   g_return_val_if_fail (src != NULL, FALSE);
   g_return_val_if_fail (GST_IS_DVDREADSRC (src), FALSE);
-  g_return_val_if_fail (!GST_FLAG_IS_SET (src, DVDREADSRC_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (src, DVDREADSRC_OPEN), FALSE);
 
   if (_open (src->priv, src->priv->location)) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL), (NULL));
@@ -1065,7 +1066,7 @@ dvdreadsrc_open_file (DVDReadSrc * src)
   src->priv->seek_pend_fmt = title_format;
   src->priv->seek_pend = TRUE;
 
-  GST_FLAG_SET (src, DVDREADSRC_OPEN);
+  GST_OBJECT_FLAG_SET (src, DVDREADSRC_OPEN);
 
   return TRUE;
 }
@@ -1074,11 +1075,11 @@ dvdreadsrc_open_file (DVDReadSrc * src)
 static void
 dvdreadsrc_close_file (DVDReadSrc * src)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (src, DVDREADSRC_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (src, DVDREADSRC_OPEN));
 
   _close (src->priv);
 
-  GST_FLAG_UNSET (src, DVDREADSRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, DVDREADSRC_OPEN);
 }
 
 static GstStateChangeReturn

@@ -46,8 +46,8 @@ typedef struct _AC3IECClass AC3IECClass;
 
 
 typedef enum {
-  AC3IEC_OPEN = GST_ELEMENT_FLAG_LAST,
-  AC3IEC_FLAG_LAST
+  AC3IEC_OPEN           = (GST_ELEMENT_FLAG_LAST << 0),
+  AC3IEC_FLAG_LAST      = (GST_ELEMENT_FLAG_LAST << 2)
 } Ac3iecFlags;
 
 

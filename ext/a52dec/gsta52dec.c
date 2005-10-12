@@ -157,7 +157,7 @@ gst_a52dec_class_init (GstA52DecClass * klass)
 static void
 gst_a52dec_init (GstA52Dec * a52dec)
 {
-  GST_FLAG_SET (GST_ELEMENT (a52dec), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (a52dec), GST_ELEMENT_EVENT_AWARE);
 
   /* create the sink and src pads */
   a52dec->sinkpad =

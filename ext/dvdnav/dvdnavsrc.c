@@ -439,7 +439,7 @@ dvdnavsrc_is_open (DVDNavSrc * src)
   g_return_val_if_fail (src != NULL, FALSE);
   g_return_val_if_fail (GST_IS_DVDNAVSRC (src), FALSE);
 
-  return GST_FLAG_IS_SET (src, DVDNAVSRC_OPEN);
+  return GST_OBJECT_FLAG_IS_SET (src, DVDNAVSRC_OPEN);
 }
 
 static void
@@ -456,7 +456,7 @@ dvdnavsrc_set_property (GObject * object, guint prop_id,
     case ARG_LOCATION:
     case ARG_DEVICE:
       /* the element must be stopped in order to do this */
-      /*g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
+      /*g_return_if_fail(!GST_OBJECT_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
 
       g_free (src->location);
       /* clear the filename if we get a NULL (is that possible?) */
@@ -1533,7 +1533,7 @@ dvdnavsrc_open (DVDNavSrc * src)
     return FALSE;
   }
 
-  GST_FLAG_SET (src, DVDNAVSRC_OPEN);
+  GST_OBJECT_FLAG_SET (src, DVDNAVSRC_OPEN);
 
   /* Read the first block before seeking to force a libdvdnav internal
    * call to vm_start, otherwise it ignores our seek position.
@@ -1578,7 +1578,7 @@ dvdnavsrc_close (DVDNavSrc * src)
 
   DVDNAV_CALLVAL (dvdnav_close, (src->dvdnav), src, FALSE);
 
-  GST_FLAG_UNSET (src, DVDNAVSRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, DVDNAVSRC_OPEN);
 
   return TRUE;
 }
@@ -1684,7 +1684,7 @@ dvdnavsrc_event (GstPad * pad, GstEvent * event)
 
   src = DVDNAVSRC (gst_pad_get_parent (pad));
 
-  if (!GST_FLAG_IS_SET (src, DVDNAVSRC_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (src, DVDNAVSRC_OPEN))
     goto error;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -1879,7 +1879,7 @@ dvdnavsrc_convert (GstPad * pad,
 
   src = DVDNAVSRC (gst_pad_get_parent (pad));
 
-  if (!GST_FLAG_IS_SET (src, DVDNAVSRC_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (src, DVDNAVSRC_OPEN))
     return FALSE;
 
   switch (src_format) {
@@ -1923,7 +1923,7 @@ dvdnavsrc_query (GstPad * pad, GstQueryType type,
 
   src = DVDNAVSRC (gst_pad_get_parent (pad));
 
-  if (!GST_FLAG_IS_SET (src, DVDNAVSRC_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (src, DVDNAVSRC_OPEN))
     return FALSE;
 
   switch (type) {

@@ -39,9 +39,9 @@ GstElementDetails dvdreadsrc_details;
 
 /* NOTE: per-element flags start with 16 for now */
 typedef enum {
-  DVDREADSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
+  DVDREADSRC_OPEN		= (GST_ELEMENT_FLAG_LAST << 0),
 
-  DVDREADSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
+  DVDREADSRC_FLAG_LAST          = (GST_ELEMENT_FLAG_LAST << 2)
 } DVDReadSrcFlags;
 
 typedef struct _DVDReadSrc DVDReadSrc;

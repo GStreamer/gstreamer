@@ -246,7 +246,7 @@ gst_mpeg_demux_init (GstMPEGDemux * mpeg_demux)
 
   mpeg_demux->adjust = 0;
 
-  GST_FLAG_SET (mpeg_demux, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (mpeg_demux, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void

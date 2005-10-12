@@ -275,7 +275,7 @@ gst_dvd_demux_init (GstDVDDemux * dvd_demux)
   GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (dvd_demux);
   gint i;
 
-  GST_FLAG_SET (dvd_demux, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (dvd_demux, GST_ELEMENT_EVENT_AWARE);
 
   /* Create the pads for the current streams. */
   dvd_demux->cur_video =

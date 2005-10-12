@@ -161,7 +161,7 @@ gst_rfc2250_enc_init (GstRFC2250Enc * rfc2250_enc)
   rfc2250_enc->bit_rate = 0;
   rfc2250_enc->MTU = 3048;
 
-  GST_FLAG_SET (rfc2250_enc, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (rfc2250_enc, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void

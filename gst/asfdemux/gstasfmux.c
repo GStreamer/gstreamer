@@ -240,7 +240,7 @@ gst_asfmux_init (GstAsfMux * asfmux)
       (&gst_asfmux_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (asfmux), asfmux->srcpad);
 
-  GST_FLAG_SET (GST_ELEMENT (asfmux), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (asfmux), GST_ELEMENT_EVENT_AWARE);
 
   asfmux->num_outputs = asfmux->num_video = asfmux->num_audio = 0;
   memset (&asfmux->output, 0, sizeof (asfmux->output));
