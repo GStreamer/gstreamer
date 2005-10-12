@@ -1,3 +1,11 @@
+2005-10-12  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (gst_pad_pause_task): Actually return FALSE if
+	there is no task. Shouldn't affect any code, as nothing in our
+	plugins checks this return value.
+	(gst_pad_stop_task): Also take the stream lock if the pad has no
+	task. Docs updated.
+
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (pre_activate), (post_activate),

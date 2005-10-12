@@ -3672,8 +3672,10 @@ gst_pad_pause_task (GstPad * pad)
 
 no_task:
   {
+    GST_WARNING_OBJECT (pad,
+        "pad has no task -- very likely a programming error");
     GST_UNLOCK (pad);
-    return TRUE;
+    return FALSE;
   }
 }
 
@@ -3688,8 +3690,10 @@ no_task:
  * This function will deadlock if called from the GstTaskFunction of
  * the task. Use #gst_task_pause() instead.
  *
- * Returns: a TRUE if the task could be stopped or FALSE when the pad
- * has no task.
+ * Regardless of whether the pad has a task, the stream lock is acquired and
+ * released so as to ensure that streaming through this pad has finished.
+ *
+ * Returns: a TRUE if the task could be stopped or FALSE on error.
  */
 gboolean
 gst_pad_stop_task (GstPad * pad)
@@ -3718,6 +3722,10 @@ gst_pad_stop_task (GstPad * pad)
 no_task:
   {
     GST_UNLOCK (pad);
+
+    GST_STREAM_LOCK (pad);
+    GST_STREAM_UNLOCK (pad);
+
     return TRUE;
   }
 }
