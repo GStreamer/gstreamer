@@ -83,8 +83,7 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
     GstStateChangeReturn ret;
     PyObject *timeout = NULL;
     gdouble timeoutd;
-    GTimeVal *timevalp = NULL;
-    GTimeVal timeval;
+    GstClockTime timeout64;
     PyObject *tuple;
 
     /*
@@ -112,16 +111,13 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
             timeoutd = PyFloat_AsDouble (timeout);
         }
 
-        timeval.tv_sec = (glong) timeoutd;
-        timeval.tv_usec = (glong) ((timeoutd - (gdouble) timeval.tv_sec)
-                                   * 1000.0 * 1000.0);
-	timevalp = &timeval;
+        timeout64 = timeoutd * GST_SECOND;
     }
 	
     pyg_begin_allow_threads;
 
     ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, &pending,
-        timevalp);
+        timeout64);
 
     pyg_end_allow_threads;
 

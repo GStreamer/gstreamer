@@ -3929,15 +3929,6 @@
   )
 )
 
-(define-function plugin_check_file
-  (c-name "gst_plugin_check_file")
-  (return-type "gboolean")
-  (parameters
-    '("const-gchar*" "filename")
-    '("GError**" "error")
-  )
-)
-
 (define-function plugin_load_file
   (c-name "gst_plugin_load_file")
   (return-type "GstPlugin*")
@@ -4393,12 +4384,6 @@
   (parameters
     '("const-char*" "location")
   )
-)
-
-(define-method scan_paths
-  (of-object "GstRegistry")
-  (c-name "gst_registry_scan_paths")
-  (return-type "none")
 )
 
 ;; From ../gstreamer/gst/gststructure.h
@@ -5813,21 +5798,6 @@
     '("GCond*" "cond")
     '("GStaticRecMutex*" "mutex")
     '("GTimeVal*" "end_time")
-  )
-)
-
-(define-method abort_preroll
-  (of-object "GstElement")
-  (c-name "gst_element_abort_preroll")
-  (return-type "GstFlowReturn")
-)
-
-(define-method finish_preroll
-  (of-object "GstElement")
-  (c-name "gst_element_finish_preroll")
-  (return-type "GstFlowReturn")
-  (parameters
-    '("GstPad*" "pad")
   )
 )
 
