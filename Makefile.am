@@ -6,18 +6,26 @@ else
 GCONF_DIR =
 endif
 
+if HAVE_CHECK
+SUBDIRS_CHECK = check
+else
+SUBDIRS_CHECK =
+endif
+
 ALWAYS_SUBDIRS =		\
 	gst sys ext 		\
-	check docs		\
+	docs			\
 	po			\
 	m4 common
 
 SUBDIRS = 			\
 	$(ALWAYS_SUBDIRS)	\
+	$(SUBDIRS_CHECK)	\
 	$(GCONF_DIR)
 
 DIST_SUBDIRS = 			\
 	$(ALWAYS_SUBDIRS)	\
+	check			\
 	gconf
 
 EXTRA_DIST = \
