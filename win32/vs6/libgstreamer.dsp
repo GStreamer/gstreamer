@@ -318,6 +318,238 @@ SOURCE=..\common\libgstreamer.def
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\..\gst\gettext.h
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\gst\glib-compat.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\gst\gst-i18n-app.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\gst\gst-i18n-lib.h"
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gst.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gst_private.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstbin.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstbuffer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstbus.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstcaps.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstchildproxy.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstclock.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstcompat.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstconfig.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstconfig.h.in
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstelement.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstelementfactory.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstenumtypes.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gsterror.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstevent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstfilter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstformat.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstghostpad.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstindex.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstindexfactory.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstinfo.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstinterface.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstiterator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstmacros.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstmarshal.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstmemchunk.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstmessage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstminiobject.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstobject.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstpad.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstpadtemplate.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstparse.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstpipeline.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstplugin.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstpluginfeature.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstquery.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstqueue.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstregistry.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gststructure.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstsystemclock.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gsttaglist.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gsttagsetter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gsttask.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gsttrace.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gsttrashstack.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gsttypefind.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gsttypefindfactory.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gsturi.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gsturitype.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstutils.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstvalue.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstversion.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstxml.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 

@@ -89,5 +89,128 @@ InputPath=..\..\gst\parse\grammar.y
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gst.h
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\gstconfig.h
+
+!IF  "$(CFG)" == "grammar - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
+
+# Begin Custom Build
+InputPath=..\common\gstconfig.h
+
+"..\..\gstconfig.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y ..\common\gstconfig.h ..\..\gst
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\gstenumtypes.c
+
+!IF  "$(CFG)" == "grammar - Win32 Release"
+
+# Begin Custom Build
+InputPath=..\common\gstenumtypes.c
+
+BuildCmds= \
+	copy /y ..\common\gstenumtypes.c ..\..\gst\gstenumtypes.c \
+	copy /y ..\common\gstenumtypes.c ..\..\gst\gstenumtypes.h \
+	
+
+"..\..\gst\gstenumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst\gstenumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
+
+# Begin Custom Build
+InputPath=..\common\gstenumtypes.c
+
+BuildCmds= \
+	copy /y ..\common\gstenumtypes.c ..\..\gst\gstenumtypes.c \
+	copy /y ..\common\gstenumtypes.h ..\..\gst\gstenumtypes.h \
+	
+
+"..\..\gst\gstenumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst\gstenumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstmarshal.list
+
+!IF  "$(CFG)" == "grammar - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
+
+# Begin Custom Build
+InputPath=..\..\gst\gstmarshal.list
+
+BuildCmds= \
+	echo #include "glib-object.h" > gstmarshal.c.tmp \
+	echo #include "gstmarshal.h" >> gstmarshal.c.tmp \
+	glib-genmarshal --body --prefix=gst_marshal ..\..\gst\gstmarshal.list >> gstmarshal.c.tmp \
+	move gstmarshal.c.tmp ..\..\gst\gstmarshal.c \
+	echo #include "gst/gstconfig.h" > gstmarshal.h.tmp \
+	glib-genmarshal --header --prefix=gst_marshal ..\..\gst\gstmarshal.list >> gstmarshal.h.tmp \
+	move gstmarshal.h.tmp ..\..\gst\gstmarshal.h \
+	
+
+"..\..\gst\gstmarshal.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst\gstmarshal.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\gstversion.h
+
+!IF  "$(CFG)" == "grammar - Win32 Release"
+
+# Begin Custom Build
+InputPath=..\common\gstversion.h
+
+"..\..\gst\gstversion.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /? ..\common\gstversion.h ..\..\gst
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
+
+# Begin Custom Build
+InputPath=..\common\gstversion.h
+
+"..\..\gst\gstversion.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y ..\common\gstversion.h ..\..\gst
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
 # End Target
 # End Project

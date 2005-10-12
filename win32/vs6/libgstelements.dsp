@@ -57,7 +57,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 TargetPath=.\Release\libgstelements.dll
 SOURCE="$(InputPath)"
-PostBuild_Cmds=mkdir c:\gstreamer\plugins	copy /Y $(TargetPath) c:\gstreamer\plugins
+PostBuild_Cmds=mkdir c:\gstreamer\lib	mkdir c:\gstreamer\lib\gstreamer-0.9	copy /Y $(TargetPath) c:\gstreamer\plugins
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libgstelements - Win32 Debug"
@@ -88,7 +88,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 TargetPath=.\Debug\libgstelements.dll
 SOURCE="$(InputPath)"
-PostBuild_Cmds=mkdir c:\gstreamer\plugins	copy /Y $(TargetPath) c:\gstreamer\plugins
+PostBuild_Cmds=mkdir c:\gstreamer\lib	mkdir c:\gstreamer\lib\gstreamer-0.9	copy /Y $(TargetPath) c:\gstreamer\plugins
 # End Special Build Tool
 
 !ENDIF 
