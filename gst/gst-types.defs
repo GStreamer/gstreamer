@@ -243,12 +243,12 @@
 
 ;; Enumerations and flags ...
 
-(define-enum BinFlags
+(define-flags BinFlags
   (in-module "Gst")
   (c-name "GstBinFlags")
   (gtype-id "GST_TYPE_BIN_FLAGS")
   (values
-    '("t" "GST_BIN_FLAG_LAST")
+    '("last" "GST_BIN_FLAG_LAST")
   )
 )
 
@@ -268,13 +268,13 @@
   )
 )
 
-(define-enum BusFlags
+(define-flags BusFlags
   (in-module "Gst")
   (c-name "GstBusFlags")
   (gtype-id "GST_TYPE_BUS_FLAGS")
   (values
-    '("ushing" "GST_BUS_FLUSHING")
-    '("ag-last" "GST_BUS_FLAG_LAST")
+    '("flushing" "GST_BUS_FLUSHING")
+    '("flag-last" "GST_BUS_FLAG_LAST")
   )
 )
 
@@ -327,7 +327,7 @@
   )
 )
 
-(define-enum ElementFlags
+(define-flags ElementFlags
   (in-module "Gst")
   (c-name "GstElementFlags")
   (gtype-id "GST_TYPE_ELEMENT_FLAGS")
@@ -538,7 +538,7 @@
   )
 )
 
-(define-enum IndexFlags
+(define-flags IndexFlags
   (in-module "Gst")
   (c-name "GstIndexFlags")
   (gtype-id "GST_TYPE_INDEX_FLAGS")
@@ -651,7 +651,7 @@
   )
 )
 
-(define-enum ObjectFlags
+(define-flags ObjectFlags
   (in-module "Gst")
   (c-name "GstObjectFlags")
   (gtype-id "GST_TYPE_OBJECT_FLAGS")
@@ -715,7 +715,7 @@
   )
 )
 
-(define-enum PadFlags
+(define-flags PadFlags
   (in-module "Gst")
   (c-name "GstPadFlags")
   (gtype-id "GST_TYPE_PAD_FLAGS")
@@ -739,13 +739,13 @@
   )
 )
 
-(define-enum PadTemplateFlags
+(define-flags PadTemplateFlags
   (in-module "Gst")
   (c-name "GstPadTemplateFlags")
   (gtype-id "GST_TYPE_PAD_TEMPLATE_FLAGS")
   (values
-    '("ixed" "GST_PAD_TEMPLATE_FIXED")
-    '("lag-last" "GST_PAD_TEMPLATE_FLAG_LAST")
+    '("fixed" "GST_PAD_TEMPLATE_FIXED")
+    '("flag-last" "GST_PAD_TEMPLATE_FLAG_LAST")
   )
 )
 
@@ -764,7 +764,7 @@
   )
 )
 
-(define-enum PipelineFlags
+(define-flags PipelineFlags
   (in-module "Gst")
   (c-name "GstPipelineFlags")
   (gtype-id "GST_TYPE_PIPELINE_FLAGS")
