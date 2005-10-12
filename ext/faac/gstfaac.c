@@ -22,21 +22,46 @@
 #endif
 
 #include "gstfaac.h"
+#include <string.h>
+
+#define SINK_CAPS \
+    "audio/x-raw-int, "                \
+    "endianness = (int) BYTE_ORDER, "  \
+    "signed = (boolean) true, "        \
+    "width = (int) 16, "               \
+    "depth = (int) 16, "               \
+    "rate = (int) [ 8000, 96000 ], "   \
+    "channels = (int) [ 1, 6]; "       \
+\
+    "audio/x-raw-int, "                \
+    "endianness = (int) BYTE_ORDER, "  \
+    "signed = (boolean) true, "        \
+    "width = (int) 32, "               \
+    "depth = (int) { 24, 32 }, "       \
+    "rate = (int) [ 8000, 96000], "    \
+    "channels = (int) [ 1, 6]; "       \
+\
+    "audio/x-raw-float, "              \
+    "endianness = (int) BYTE_ORDER, "  \
+    "width = (int) 32, "               \
+    "rate = (int) [ 8000, 96000], "    \
+    "channels = (int) [ 1, 6]"
+
+#define SRC_CAPS \
+    "audio/mpeg, "                     \
+    "mpegversion = (int) { 4, 2 }, "   \
+    "channels = (int) [ 1, 6 ], "      \
+    "rate = (int) [ 8000, 96000 ]"
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg, "
-        "mpegversion = (int) { 4, 2 }, "
-        "channels = (int) [ 1, 6 ], " "rate = (int) [ 8000, 96000 ]")
-    );
+    GST_STATIC_CAPS (SRC_CAPS));
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, " "endianness = (int) BYTE_ORDER, " "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16, " "rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 6]; " "audio/x-raw-int, " "endianness = (int) BYTE_ORDER, " "signed = (boolean) TRUE, " "width = (int) 32, " "depth = (int) 24, " "rate = (int) [ 8000, 96000], " "channels = (int) [ 1, 6]; " "audio/x-raw-float, " "endianness = (int) BYTE_ORDER, " "depth = (int) 32, "    /* sizeof (gfloat) */
-        "rate = (int) [ 8000, 96000], " "channels = (int) [ 1, 6]")
-    );
+    GST_STATIC_CAPS (SINK_CAPS));
 
 enum
 {
@@ -251,7 +276,7 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstFaac *faac = GST_FAAC (gst_pad_get_parent (pad));
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   faacEncHandle *handle;
-  gint channels, samplerate, depth;
+  gint channels, samplerate, width;
   gulong samples, bytes, fmt = 0, bps = 0;
   gboolean result = FALSE;
 
@@ -267,27 +292,32 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
     faac->cache = NULL;
   }
 
-  gst_structure_get_int (structure, "channels", &channels);
-  gst_structure_get_int (structure, "rate", &samplerate);
-  gst_structure_get_int (structure, "depth", &depth);
+  if (!gst_structure_get_int (structure, "channels", &channels) ||
+      !gst_structure_get_int (structure, "rate", &samplerate)) {
+    goto done;
+  }
 
-  /* open a new handle to the encoder */
   if (!(handle = faacEncOpen (samplerate, channels, &samples, &bytes)))
     goto done;
 
-  switch (depth) {
-    case 16:
-      fmt = FAAC_INPUT_16BIT;
-      bps = 2;
-      break;
-    case 24:
-      fmt = FAAC_INPUT_32BIT;   /* 24-in-32, actually */
-      bps = 4;
-      break;
-    case 32:
-      fmt = FAAC_INPUT_FLOAT;   /* see template, this is right */
-      bps = 4;
-      break;
+  if (gst_structure_has_name (structure, "audio/x-raw-int")) {
+    gst_structure_get_int (structure, "width", &width);
+    switch (width) {
+      case 16:
+        fmt = FAAC_INPUT_16BIT;
+        bps = 2;
+        break;
+      case 24:
+      case 32:
+        fmt = FAAC_INPUT_32BIT;
+        bps = 4;
+        break;
+      default:
+        g_return_val_if_reached (FALSE);
+    }
+  } else if (gst_structure_has_name (structure, "audio/x-raw-float")) {
+    fmt = FAAC_INPUT_FLOAT;
+    bps = 4;
   }
 
   if (!fmt) {

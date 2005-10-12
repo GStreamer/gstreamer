@@ -2,9 +2,16 @@
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/faac/gstfaac.c: (gst_faac_sink_setcaps):
+	  Fix depth/width handling for float audio (#318659).
+
+2005-10-12  Josef Zlomek  <josef dot zlomek at xeris dot cz>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/faac/gstfaac.c: (gst_faac_sink_setcaps),
 	(gst_faac_src_setcaps), (gst_faac_chain):
-	  Refcount fixes (#318659)
+	  Refcount fixes (#318660)
 
 2005-10-12  Julien MOUTTE  <julien@moutte.net>
 
