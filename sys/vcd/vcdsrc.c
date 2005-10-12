@@ -219,7 +219,7 @@ gst_vcdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case ARG_DEVICE:
     case ARG_LOCATION:
       /* the element must be stopped in order to do this */
-/*      g_return_if_fail(!GST_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
+/*      g_return_if_fail(!GST_OBJECT_FLAG_IS_SET(src,GST_STATE_RUNNING)); */
 
       g_free (src->device);
       /* clear the filename if we get a NULL (is that possible?) */
@@ -411,7 +411,7 @@ gst_vcdsrc_get (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
   vcdsrc = GST_VCDSRC (GST_OBJECT_PARENT (pad));
-  g_return_val_if_fail (GST_FLAG_IS_SET (vcdsrc, VCDSRC_OPEN), NULL);
+  g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (vcdsrc, VCDSRC_OPEN), NULL);
 
   offset = vcdsrc->trackoffset + vcdsrc->curoffset;
   if (offset >= gst_vcdsrc_msf (vcdsrc, vcdsrc->track + 1)) {
@@ -484,7 +484,7 @@ gst_vcdsrc_open_file (GstVCDSrc * src)
 {
   int i;
 
-  g_return_val_if_fail (!GST_FLAG_IS_SET (src, VCDSRC_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (src, VCDSRC_OPEN), FALSE);
 
   /* open the device */
   src->fd = open (src->device, O_RDONLY);
@@ -520,7 +520,7 @@ gst_vcdsrc_open_file (GstVCDSrc * src)
         src->tracks[i].cdte_addr.msf.frame);
   }
 
-  GST_FLAG_SET (src, VCDSRC_OPEN);
+  GST_OBJECT_FLAG_SET (src, VCDSRC_OPEN);
   gst_vcdsrc_recalculate (src);
 
   return TRUE;
@@ -530,7 +530,7 @@ gst_vcdsrc_open_file (GstVCDSrc * src)
 static void
 gst_vcdsrc_close_file (GstVCDSrc * src)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (src, VCDSRC_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (src, VCDSRC_OPEN));
 
   /* close the file */
   close (src->fd);
@@ -542,7 +542,7 @@ gst_vcdsrc_close_file (GstVCDSrc * src)
 
   g_free (src->tracks);
 
-  GST_FLAG_UNSET (src, VCDSRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, VCDSRC_OPEN);
 }
 
 static GstStateChangeReturn
@@ -552,7 +552,7 @@ gst_vcdsrc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (GST_FLAG_IS_SET (element, VCDSRC_OPEN))
+      if (GST_OBJECT_FLAG_IS_SET (element, VCDSRC_OPEN))
         gst_vcdsrc_close_file (vcdsrc);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -560,7 +560,7 @@ gst_vcdsrc_change_state (GstElement * element, GstStateChange transition)
       vcdsrc->discont = vcdsrc->flush = FALSE;
       break;
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!GST_FLAG_IS_SET (element, VCDSRC_OPEN))
+      if (!GST_OBJECT_FLAG_IS_SET (element, VCDSRC_OPEN))
         if (!gst_vcdsrc_open_file (vcdsrc))
           return GST_STATE_CHANGE_FAILURE;
       break;
@@ -585,7 +585,7 @@ gst_vcdsrc_msf (GstVCDSrc * vcdsrc, gint track)
 static void
 gst_vcdsrc_recalculate (GstVCDSrc * vcdsrc)
 {
-  if (GST_FLAG_IS_SET (vcdsrc, VCDSRC_OPEN)) {
+  if (GST_OBJECT_FLAG_IS_SET (vcdsrc, VCDSRC_OPEN)) {
     /* calculate track offset (beginning of track) */
     vcdsrc->trackoffset = gst_vcdsrc_msf (vcdsrc, vcdsrc->track);
     GST_DEBUG ("track offset is %ld", vcdsrc->trackoffset);

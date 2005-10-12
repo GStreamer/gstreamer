@@ -344,7 +344,7 @@ gst_sf_set_property (GObject * object, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case ARG_LOCATION:
-      if (GST_FLAG_IS_SET (object, GST_SF_OPEN))
+      if (GST_OBJECT_FLAG_IS_SET (object, GST_SF_OPEN))
         gst_sf_close_file (this);
       if (this->filename)
         g_free (this->filename);
@@ -462,7 +462,7 @@ gst_sf_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (GST_FLAG_IS_SET (this, GST_SF_OPEN))
+      if (GST_OBJECT_FLAG_IS_SET (this, GST_SF_OPEN))
         gst_sf_close_file (this);
       break;
   }
@@ -536,7 +536,7 @@ gst_sf_release_request_pad (GstElement * element, GstPad * pad)
 
   INFO_OBJ (element, "Releasing request pad %s", GST_PAD_NAME (channel->pad));
 
-  if (GST_FLAG_IS_SET (element, GST_SF_OPEN))
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_SF_OPEN))
     gst_sf_close_file (this);
 
   gst_element_remove_pad (element, channel->pad);
@@ -577,7 +577,7 @@ gst_sf_open_file (GstSF * this)
   int mode;
   SF_INFO info;
 
-  g_return_val_if_fail (!GST_FLAG_IS_SET (this, GST_SF_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (this, GST_SF_OPEN), FALSE);
 
   this->time = 0;
 
@@ -647,7 +647,7 @@ gst_sf_open_file (GstSF * this)
       GST_SF_CHANNEL (l)->caps_set = FALSE;
   }
 
-  GST_FLAG_SET (this, GST_SF_OPEN);
+  GST_OBJECT_FLAG_SET (this, GST_SF_OPEN);
 
   return TRUE;
 }
@@ -657,7 +657,7 @@ gst_sf_close_file (GstSF * this)
 {
   int err = 0;
 
-  g_return_if_fail (GST_FLAG_IS_SET (this, GST_SF_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (this, GST_SF_OPEN));
 
   INFO_OBJ (this, "Closing file %s", this->filename);
 
@@ -666,7 +666,7 @@ gst_sf_close_file (GstSF * this)
         ("Could not close file file \"%s\".", this->filename),
         ("soundfile error: %s", strerror (err)));
   else
-    GST_FLAG_UNSET (this, GST_SF_OPEN);
+    GST_OBJECT_FLAG_UNSET (this, GST_SF_OPEN);
 
   this->file = NULL;
   if (this->buffer)
@@ -699,7 +699,7 @@ gst_sf_loop (GstElement * element)
     gfloat *buf = this->buffer;
     GstBuffer *out;
 
-    if (!GST_FLAG_IS_SET (this, GST_SF_OPEN))
+    if (!GST_OBJECT_FLAG_IS_SET (this, GST_SF_OPEN))
       if (!gst_sf_open_file (this))
         return;                 /* we've already set gst_element_error */
 
@@ -805,7 +805,7 @@ gst_sf_loop (GstElement * element)
         num_to_write = buffer_frames;
       }
 
-      if (!GST_FLAG_IS_SET (this, GST_SF_OPEN))
+      if (!GST_OBJECT_FLAG_IS_SET (this, GST_SF_OPEN))
         if (!gst_sf_open_file (this))
           return;               /* we've already set gst_element_error */
 

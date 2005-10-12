@@ -131,7 +131,7 @@ gst_cdxaparse_init (GstCDXAParse * cdxaparse)
   cdxaparse->seek_pending = FALSE;
   cdxaparse->seek_offset = 0;
 
-  GST_FLAG_SET (cdxaparse, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (cdxaparse, GST_ELEMENT_EVENT_AWARE);
 }
 
 static gboolean

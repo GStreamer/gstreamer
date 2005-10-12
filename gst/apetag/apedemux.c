@@ -118,7 +118,7 @@ gst_ape_demux_class_init (GstApeDemuxClass * klass)
 static void
 gst_ape_demux_init (GstApeDemux * ape)
 {
-  GST_FLAG_SET (ape, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (ape, GST_ELEMENT_EVENT_AWARE);
 
   ape->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_templ),

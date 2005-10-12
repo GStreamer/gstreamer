@@ -599,8 +599,8 @@ gst_polypsink_init (GTypeInstance * instance, gpointer g_class)
   gst_pad_set_link_function (polypsink->sinkpad, gst_polypsink_link);
   gst_pad_set_fixate_function (polypsink->sinkpad, gst_polypsink_sink_fixate);
 
-/*     GST_FLAG_SET(polypsink, GST_ELEMENT_THREAD_SUGGESTED); */
-  GST_FLAG_SET (polypsink, GST_ELEMENT_EVENT_AWARE);
+/*     GST_OBJECT_FLAG_SET(polypsink, GST_ELEMENT_THREAD_SUGGESTED); */
+  GST_OBJECT_FLAG_SET (polypsink, GST_ELEMENT_EVENT_AWARE);
 
   polypsink->context = NULL;
   polypsink->stream = NULL;

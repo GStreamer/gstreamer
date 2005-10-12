@@ -40,8 +40,8 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NASSINK))
 
 typedef enum {
-  GST_NASSINK_OPEN            = GST_ELEMENT_FLAG_LAST,
-  GST_NASSINK_FLAG_LAST       = GST_ELEMENT_FLAG_LAST+2
+  GST_NASSINK_OPEN            = (GST_ELEMENT_FLAG_LAST << 0),
+  GST_NASSINK_FLAG_LAST       = (GST_ELEMENT_FLAG_LAST << 2)
 } GstNasSinkFlags;
 
 typedef struct _GstNassink GstNassink;

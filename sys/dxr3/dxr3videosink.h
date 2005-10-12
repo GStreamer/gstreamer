@@ -44,8 +44,8 @@ typedef struct _Dxr3VideoSinkClass Dxr3VideoSinkClass;
 
 
 typedef enum {
-  DXR3VIDEOSINK_OPEN = GST_ELEMENT_FLAG_LAST,
-  DXR3VIDEOSINK_FLAG_LAST  = GST_ELEMENT_FLAG_LAST + 2,
+  DXR3VIDEOSINK_OPEN            = (GST_ELEMENT_FLAG_LAST << 0),
+  DXR3VIDEOSINK_FLAG_LAST       = (GST_ELEMENT_FLAG_LAST << 2),
 } Dxr3VideoSinkFlags;
 
 

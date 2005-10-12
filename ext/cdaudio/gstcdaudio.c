@@ -206,8 +206,8 @@ gst_cdaudio_init (GstCDAudio * cdaudio, GstCDAudioClass * g_class)
   cdaudio->was_playing = FALSE;
   cdaudio->timer = g_timer_new ();
 
-  GST_FLAG_SET (cdaudio, GST_BIN_FLAG_MANAGER);
-  GST_FLAG_SET (cdaudio, GST_BIN_SELF_SCHEDULABLE);
+  GST_OBJECT_FLAG_SET (cdaudio, GST_BIN_FLAG_MANAGER);
+  GST_OBJECT_FLAG_SET (cdaudio, GST_BIN_SELF_SCHEDULABLE);
 }
 
 static void

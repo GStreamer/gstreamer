@@ -46,8 +46,8 @@ typedef struct _Dxr3AudioSinkClass Dxr3AudioSinkClass;
 
 
 typedef enum {
-  DXR3AUDIOSINK_OPEN = GST_ELEMENT_FLAG_LAST,
-  DXR3AUDIOSINK_FLAG_LAST  = GST_ELEMENT_FLAG_LAST + 2,
+  DXR3AUDIOSINK_OPEN            = (GST_ELEMENT_FLAG_LAST << 0),
+  DXR3AUDIOSINK_FLAG_LAST       = (GST_ELEMENT_FLAG_LAST << 2),
 } Dxr3AudioSinkFlags;
 
 

@@ -228,7 +228,7 @@ gst_videodrop_link (GstPad * pad, const GstCaps * caps)
 static void
 gst_videodrop_init (GstVideodrop * videodrop)
 {
-  GST_FLAG_SET (videodrop, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (videodrop, GST_ELEMENT_EVENT_AWARE);
 
   GST_DEBUG ("gst_videodrop_init");
   videodrop->sinkpad =

@@ -375,7 +375,7 @@ gst_swfdec_init (GstSwfdec * swfdec)
 
   swfdec_decoder_set_colorspace (swfdec->decoder, SWF_COLORSPACE_RGB888);
 
-  GST_FLAG_SET (GST_ELEMENT (swfdec), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (swfdec), GST_ELEMENT_EVENT_AWARE);
 
   swfdec->frame_rate = 0.;
 }

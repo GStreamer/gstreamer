@@ -229,8 +229,8 @@ gst_musicbrainz_init (GstMusicBrainz * musicbrainz)
   musicbrainz->total_time = 0;
   musicbrainz->signature_available = FALSE;
 
-  GST_FLAG_SET (musicbrainz, GST_ELEMENT_EVENT_AWARE);
-  /*GST_FLAG_SET(musicbrainz, GST_ELEMENT_THREAD_SUGGESTED); */
+  GST_OBJECT_FLAG_SET (musicbrainz, GST_ELEMENT_EVENT_AWARE);
+  /*GST_OBJECT_FLAG_SET(musicbrainz, GST_ELEMENT_THREAD_SUGGESTED); */
 }
 
 static void

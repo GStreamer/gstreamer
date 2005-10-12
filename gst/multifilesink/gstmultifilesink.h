@@ -44,10 +44,10 @@ typedef struct _GstMultiFileSink GstMultiFileSink;
 typedef struct _GstMultiFileSinkClass GstMultiFileSinkClass;
 
 typedef enum {
-  GST_MULTIFILESINK_OPEN             = GST_ELEMENT_FLAG_LAST,
-  GST_MULTIFILESINK_NEWFILE = GST_ELEMENT_FLAG_LAST +2,
+  GST_MULTIFILESINK_OPEN        = (GST_ELEMENT_FLAG_LAST << 0),
+  GST_MULTIFILESINK_NEWFILE     = (GST_ELEMENT_FLAG_LAST << 1),
 
-  GST_MULTIFILESINK_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 4
+  GST_MULTIFILESINK_FLAG_LAST 	= (GST_ELEMENT_FLAG_LAST << 4)
 } GstMultiFileSinkFlags;
 
 struct _GstMultiFileSink {

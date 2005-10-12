@@ -389,11 +389,11 @@ gst_qcamsrc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (GST_FLAG_IS_SET (element, GST_QCAMSRC_OPEN))
+      if (GST_OBJECT_FLAG_IS_SET (element, GST_QCAMSRC_OPEN))
         gst_qcamsrc_close (GST_QCAMSRC (element));
       break;
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!GST_FLAG_IS_SET (element, GST_QCAMSRC_OPEN)) {
+      if (!GST_OBJECT_FLAG_IS_SET (element, GST_QCAMSRC_OPEN)) {
         GST_DEBUG ("opening");
         if (!gst_qcamsrc_open (GST_QCAMSRC (element))) {
           GST_DEBUG ("open failed");
@@ -420,7 +420,7 @@ gst_qcamsrc_open (GstQCamSrc * qcamsrc)
     return FALSE;
   }
 
-  GST_FLAG_SET (qcamsrc, GST_QCAMSRC_OPEN);
+  GST_OBJECT_FLAG_SET (qcamsrc, GST_QCAMSRC_OPEN);
 
   return TRUE;
 }
@@ -429,7 +429,7 @@ static void
 gst_qcamsrc_close (GstQCamSrc * src)
 {
   qc_close (src->qcam);
-  GST_FLAG_UNSET (src, GST_QCAMSRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, GST_QCAMSRC_OPEN);
 }
 
 static gboolean

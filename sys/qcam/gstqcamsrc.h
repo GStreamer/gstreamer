@@ -45,9 +45,9 @@ extern "C" {
 
 /* NOTE: per-element flags start with 16 for now */
 typedef enum {
-  GST_QCAMSRC_OPEN            = GST_ELEMENT_FLAG_LAST,
+  GST_QCAMSRC_OPEN            = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_QCAMSRC_FLAG_LAST       = GST_ELEMENT_FLAG_LAST+2,
+  GST_QCAMSRC_FLAG_LAST       = (GST_ELEMENT_FLAG_LAST << 2),
 } GstQCamSrcFlags;
 
 typedef struct _GstQCamSrc GstQCamSrc;

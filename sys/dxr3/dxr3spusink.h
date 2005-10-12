@@ -44,8 +44,8 @@ typedef struct _Dxr3SpuSinkClass Dxr3SpuSinkClass;
 
 
 typedef enum {
-  DXR3SPUSINK_OPEN = GST_ELEMENT_FLAG_LAST,
-  DXR3SPUSINK_FLAG_LAST  = GST_ELEMENT_FLAG_LAST + 2,
+  DXR3SPUSINK_OPEN            = (GST_ELEMENT_FLAG_LAST << 0),
+  DXR3SPUSINK_FLAG_LAST       = (GST_ELEMENT_FLAG_LAST << 2),
 } Dxr3SpuSinkFlags;
 
 

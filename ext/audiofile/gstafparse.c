@@ -342,7 +342,8 @@ gst_afparse_plugin_init (GstPlugin * plugin)
 static gboolean
 gst_afparse_open_file (GstAFParse * afparse)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (afparse, GST_AFPARSE_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (afparse, GST_AFPARSE_OPEN),
+      FALSE);
 
 
   /* open the file */
@@ -391,7 +392,7 @@ gst_afparse_open_file (GstAFParse * afparse)
           "rate", G_TYPE_INT, afparse->rate,
           "channels", G_TYPE_INT, afparse->channels, NULL));
 
-  GST_FLAG_SET (afparse, GST_AFPARSE_OPEN);
+  GST_OBJECT_FLAG_SET (afparse, GST_AFPARSE_OPEN);
 
   return TRUE;
 }
@@ -399,11 +400,11 @@ gst_afparse_open_file (GstAFParse * afparse)
 static void
 gst_afparse_close_file (GstAFParse * afparse)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (afparse, GST_AFPARSE_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (afparse, GST_AFPARSE_OPEN));
   if (afCloseFile (afparse->file) != 0) {
     g_warning ("afparse: oops, error closing !\n");
   } else {
-    GST_FLAG_UNSET (afparse, GST_AFPARSE_OPEN);
+    GST_OBJECT_FLAG_UNSET (afparse, GST_AFPARSE_OPEN);
   }
 }
 

@@ -94,9 +94,9 @@ typedef struct FT_Info
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FESTIVAL))
 
 typedef enum {
-  GST_FESTIVAL_OPEN		= GST_ELEMENT_FLAG_LAST,
+  GST_FESTIVAL_OPEN		= (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_FESTIVAL_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
+  GST_FESTIVAL_FLAG_LAST 	= (GST_ELEMENT_FLAG_LAST << 2),
 } GstFestivalFlags;
 
 typedef struct _GstFestival GstFestival;

@@ -425,7 +425,7 @@ gst_nassink_open_audio (GstNassink * sink)
 
   /* Start a flow */
 
-  GST_FLAG_SET (sink, GST_NASSINK_OPEN);
+  GST_OBJECT_FLAG_SET (sink, GST_NASSINK_OPEN);
 
   GST_CAT_DEBUG (NAS, "opened audio device");
   return TRUE;
@@ -455,7 +455,7 @@ gst_nassink_close_audio (GstNassink * sink)
   AuCloseServer (sink->audio);
   sink->audio = NULL;
 
-  GST_FLAG_UNSET (sink, GST_NASSINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (sink, GST_NASSINK_OPEN);
 
   GST_CAT_DEBUG (NAS, "closed audio device");
 }
@@ -471,12 +471,12 @@ gst_nassink_change_state (GstElement * element, GstStateChange transition)
 
   switch (GST_STATE_PENDING (element)) {
     case GST_STATE_NULL:
-      if (GST_FLAG_IS_SET (element, GST_NASSINK_OPEN))
+      if (GST_OBJECT_FLAG_IS_SET (element, GST_NASSINK_OPEN))
         gst_nassink_close_audio (nassink);
       break;
 
     case GST_STATE_READY:
-      if (!GST_FLAG_IS_SET (element, GST_NASSINK_OPEN))
+      if (!GST_OBJECT_FLAG_IS_SET (element, GST_NASSINK_OPEN))
         gst_nassink_open_audio (nassink);
       break;
 

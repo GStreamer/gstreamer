@@ -170,7 +170,7 @@ gst_multifilesink_init (GstMultiFileSink * filesink,
   gst_element_add_pad (GST_ELEMENT (filesink), pad);
   gst_pad_set_chain_function (pad, gst_multifilesink_chain);
 
-  GST_FLAG_SET (GST_ELEMENT (filesink), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (filesink), GST_ELEMENT_EVENT_AWARE);
 
   gst_pad_set_query_function (pad, gst_multifilesink_pad_query);
   gst_pad_set_query_type_function (pad, gst_multifilesink_get_query_types);
@@ -207,11 +207,11 @@ gst_multifilesink_set_location (GstMultiFileSink * sink, const gchar * location)
   /* the element must be stopped or paused in order to do this or in newfile 
      signal */
   if (GST_STATE (sink) > GST_STATE_PAUSED &&
-      !GST_FLAG_IS_SET (sink, GST_MULTIFILESINK_NEWFILE))
+      !GST_OBJECT_FLAG_IS_SET (sink, GST_MULTIFILESINK_NEWFILE))
     return FALSE;
   if (GST_STATE (sink) == GST_STATE_PAUSED &&
-      (GST_FLAG_IS_SET (sink, GST_MULTIFILESINK_OPEN) ||
-          !GST_FLAG_IS_SET (sink, GST_MULTIFILESINK_NEWFILE)))
+      (GST_OBJECT_FLAG_IS_SET (sink, GST_MULTIFILESINK_OPEN) ||
+          !GST_OBJECT_FLAG_IS_SET (sink, GST_MULTIFILESINK_NEWFILE)))
 
     return FALSE;
 
@@ -228,7 +228,7 @@ gst_multifilesink_set_location (GstMultiFileSink * sink, const gchar * location)
   }
 
   if (GST_STATE (sink) == GST_STATE_PAUSED &&
-      !GST_FLAG_IS_SET (sink, GST_MULTIFILESINK_NEWFILE))
+      !GST_OBJECT_FLAG_IS_SET (sink, GST_MULTIFILESINK_NEWFILE))
     gst_multifilesink_open_file (sink);
 
   return TRUE;
@@ -275,7 +275,8 @@ gst_multifilesink_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_multifilesink_open_file (GstMultiFileSink * sink)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_MULTIFILESINK_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (sink, GST_MULTIFILESINK_OPEN),
+      FALSE);
 
   /* open the file */
   if (sink->curfilename == NULL || sink->curfilename[0] == '\0') {
@@ -292,7 +293,7 @@ gst_multifilesink_open_file (GstMultiFileSink * sink)
     return FALSE;
   }
 
-  GST_FLAG_SET (sink, GST_MULTIFILESINK_OPEN);
+  GST_OBJECT_FLAG_SET (sink, GST_MULTIFILESINK_OPEN);
 
   sink->data_written = 0;
   sink->curfileindex++;
@@ -303,13 +304,13 @@ gst_multifilesink_open_file (GstMultiFileSink * sink)
 static void
 gst_multifilesink_close_file (GstMultiFileSink * sink)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (sink, GST_MULTIFILESINK_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_MULTIFILESINK_OPEN));
 
   if (fclose (sink->file) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
         (_("Error closing file \"%s\"."), sink->curfilename), GST_ERROR_SYSTEM);
   } else {
-    GST_FLAG_UNSET (sink, GST_MULTIFILESINK_OPEN);
+    GST_OBJECT_FLAG_UNSET (sink, GST_MULTIFILESINK_OPEN);
   }
 }
 
@@ -317,16 +318,18 @@ static gboolean
 gst_multifilesink_next_file (GstMultiFileSink * sink)
 {
   GST_DEBUG ("next file");
-  g_return_val_if_fail (GST_FLAG_IS_SET (sink, GST_MULTIFILESINK_OPEN), FALSE);
+  g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_MULTIFILESINK_OPEN),
+      FALSE);
 
   if (fclose (sink->file) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
         (_("Error closing file \"%s\"."), sink->curfilename), GST_ERROR_SYSTEM);
   } else {
-    GST_FLAG_UNSET (sink, GST_MULTIFILESINK_OPEN);
+    GST_OBJECT_FLAG_UNSET (sink, GST_MULTIFILESINK_OPEN);
   }
 
-  g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_MULTIFILESINK_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (sink, GST_MULTIFILESINK_OPEN),
+      FALSE);
   if (sink->curfilename)
     g_free (sink->curfilename);
   if (sink->uri)
@@ -349,7 +352,7 @@ gst_multifilesink_next_file (GstMultiFileSink * sink)
     return FALSE;
   }
 
-  GST_FLAG_SET (sink, GST_MULTIFILESINK_OPEN);
+  GST_OBJECT_FLAG_SET (sink, GST_MULTIFILESINK_OPEN);
   sink->data_written = 0;
   if (sink->streamheader) {
     GSList *l;
@@ -394,7 +397,8 @@ gst_multifilesink_pad_query (GstPad * pad, GstQueryType type,
     case GST_QUERY_TOTAL:
       switch (*format) {
         case GST_FORMAT_BYTES:
-          if (GST_FLAG_IS_SET (GST_ELEMENT (sink), GST_MULTIFILESINK_OPEN)) {
+          if (GST_OBJECT_FLAG_IS_SET (GST_ELEMENT (sink),
+                  GST_MULTIFILESINK_OPEN)) {
             *value = sink->data_written;        /* FIXME - doesn't the kernel provide
                                                    such a function? */
             break;
@@ -406,7 +410,8 @@ gst_multifilesink_pad_query (GstPad * pad, GstQueryType type,
     case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_BYTES:
-          if (GST_FLAG_IS_SET (GST_ELEMENT (sink), GST_MULTIFILESINK_OPEN)) {
+          if (GST_OBJECT_FLAG_IS_SET (GST_ELEMENT (sink),
+                  GST_MULTIFILESINK_OPEN)) {
             *value = ftell (sink->file);
             break;
           }
@@ -431,7 +436,7 @@ gst_multifilesink_handle_event (GstPad * pad, GstEvent * event)
   filesink = GST_MULTIFILESINK (gst_pad_get_parent (pad));
 
 
-  if (!(GST_FLAG_IS_SET (filesink, GST_MULTIFILESINK_OPEN))) {
+  if (!(GST_OBJECT_FLAG_IS_SET (filesink, GST_MULTIFILESINK_OPEN))) {
     gst_event_unref (event);
     return FALSE;
   }
@@ -478,10 +483,10 @@ gst_multifilesink_handle_event (GstPad * pad, GstEvent * event)
       if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
         /* do not create a new file on the first new media discont */
         if (filesink->numfiles > 0) {
-          GST_FLAG_SET (filesink, GST_MULTIFILESINK_NEWFILE);
+          GST_OBJECT_FLAG_SET (filesink, GST_MULTIFILESINK_NEWFILE);
           g_signal_emit (G_OBJECT (filesink),
               gst_multifilesink_signals[SIGNAL_NEWFILE], 0);
-          GST_FLAG_UNSET (filesink, GST_MULTIFILESINK_NEWFILE);
+          GST_OBJECT_FLAG_UNSET (filesink, GST_MULTIFILESINK_NEWFILE);
           if (!gst_multifilesink_next_file (filesink))
             GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
                 (_("Error switching files to \"%s\"."),
@@ -557,7 +562,7 @@ gst_multifilesink_chain (GstPad * pad, GstData * _data)
     gst_buffer_ref (buf);
     filesink->streamheader = g_slist_append (filesink->streamheader, buf);
   }
-  if (GST_FLAG_IS_SET (filesink, GST_MULTIFILESINK_OPEN)) {
+  if (GST_OBJECT_FLAG_IS_SET (filesink, GST_MULTIFILESINK_OPEN)) {
 
     guint bytes_written = 0, back_pending = 0;
 
@@ -595,12 +600,12 @@ gst_multifilesink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (GST_FLAG_IS_SET (element, GST_MULTIFILESINK_OPEN))
+      if (GST_OBJECT_FLAG_IS_SET (element, GST_MULTIFILESINK_OPEN))
         gst_multifilesink_close_file (GST_MULTIFILESINK (element));
       break;
 
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!GST_FLAG_IS_SET (element, GST_MULTIFILESINK_OPEN)) {
+      if (!GST_OBJECT_FLAG_IS_SET (element, GST_MULTIFILESINK_OPEN)) {
         if (!gst_multifilesink_open_file (GST_MULTIFILESINK (element)))
           return GST_STATE_CHANGE_FAILURE;
       }

@@ -92,8 +92,8 @@ gst_jack_bin_init (GstJackBin * this)
   GST_DEBUG ("initializing jack bin");
 
   /* jack bins are managing bins and iterate themselves */
-  GST_FLAG_SET (this, GST_BIN_FLAG_MANAGER);
-  GST_FLAG_SET (this, GST_BIN_SELF_SCHEDULABLE);
+  GST_OBJECT_FLAG_SET (this, GST_BIN_FLAG_MANAGER);
+  GST_OBJECT_FLAG_SET (this, GST_BIN_SELF_SCHEDULABLE);
 
   /* make a new scheduler and associate it with the bin */
   gst_scheduler_factory_make (NULL, GST_ELEMENT (this));
@@ -148,7 +148,7 @@ gst_jack_bin_change_state (GstElement * element, GstStateChange transition)
         jack_on_shutdown (this->client, shutdown, this);
       }
 
-      if (GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_OPEN)) {
+      if (GST_OBJECT_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_OPEN)) {
         l = this->src_pads;
         while (l) {
           JACK_DEBUG ("jackbin: unregistering pad %s:%s",
@@ -163,12 +163,12 @@ gst_jack_bin_change_state (GstElement * element, GstStateChange transition)
           jack_port_unregister (this->client, GST_JACK_PAD (l)->port);
           l = g_list_next (l);
         }
-        GST_FLAG_UNSET (GST_OBJECT (this), GST_JACK_OPEN);
+        GST_OBJECT_FLAG_UNSET (GST_OBJECT (this), GST_JACK_OPEN);
 
-        if (GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
+        if (GST_OBJECT_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
           JACK_DEBUG ("jackbin: deactivating client");
           jack_deactivate (this->client);
-          GST_FLAG_UNSET (GST_OBJECT (this), GST_JACK_ACTIVE);
+          GST_OBJECT_FLAG_UNSET (GST_OBJECT (this), GST_JACK_ACTIVE);
         }
       }
 
@@ -180,7 +180,7 @@ gst_jack_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_PAUSED:
       JACK_DEBUG ("jackbin: PAUSED");
 
-      if (!GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_OPEN)) {
+      if (!GST_OBJECT_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_OPEN)) {
         l = this->src_pads;
         while (l) {
           pad = GST_JACK_PAD (l);
@@ -204,10 +204,10 @@ gst_jack_bin_change_state (GstElement * element, GstStateChange transition)
         }
 
         /* must activate before connecting */
-        if (!GST_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
+        if (!GST_OBJECT_FLAG_IS_SET (GST_OBJECT (this), GST_JACK_ACTIVE)) {
           JACK_DEBUG ("jackbin: activating client");
           jack_activate (this->client);
-          GST_FLAG_SET (GST_OBJECT (this), GST_JACK_ACTIVE);
+          GST_OBJECT_FLAG_SET (GST_OBJECT (this), GST_JACK_ACTIVE);
         }
 
         l = this->src_pads;
@@ -238,7 +238,7 @@ gst_jack_bin_change_state (GstElement * element, GstStateChange transition)
         }
 
         JACK_DEBUG ("jackbin: setting OPEN flag");
-        GST_FLAG_SET (GST_OBJECT (this), GST_JACK_OPEN);
+        GST_OBJECT_FLAG_SET (GST_OBJECT (this), GST_JACK_OPEN);
 
         if (GST_ELEMENT_CLASS (parent_class)->change_state)
           return GST_ELEMENT_CLASS (parent_class)->change_state (element,

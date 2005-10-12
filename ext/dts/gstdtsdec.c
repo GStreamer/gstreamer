@@ -178,7 +178,7 @@ gst_dtsdec_init (GstDtsDec * dtsdec)
   gst_pad_use_explicit_caps (dtsdec->srcpad);
   gst_element_add_pad (element, dtsdec->srcpad);
 
-  GST_FLAG_SET (element, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (element, GST_ELEMENT_EVENT_AWARE);
   dtsdec->dynamic_range_compression = FALSE;
 }
 

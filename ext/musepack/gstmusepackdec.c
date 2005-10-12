@@ -129,7 +129,7 @@ gst_musepackdec_class_init (GstMusepackDecClass * klass)
 static void
 gst_musepackdec_init (GstMusepackDec * musepackdec)
 {
-  GST_FLAG_SET (musepackdec, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (musepackdec, GST_ELEMENT_EVENT_AWARE);
 
   musepackdec->r = g_new (mpc_reader, 1);
   musepackdec->d = g_new (mpc_decoder, 1);

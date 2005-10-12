@@ -171,7 +171,7 @@ gst_tarkindec_init (TarkinDec * tarkindec)
   tarkindec->nheader = 0;
 
   /* we're chained and we can deal with events */
-  GST_FLAG_SET (tarkindec, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (tarkindec, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void

@@ -207,7 +207,7 @@ dxr3spusink_init (Dxr3SpuSink * sink)
   gst_element_add_pad (GST_ELEMENT (sink), pad);
   gst_pad_set_chain_function (pad, dxr3spusink_chain);
 
-  GST_FLAG_SET (GST_ELEMENT (sink), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (sink), GST_ELEMENT_EVENT_AWARE);
 
   sink->card_number = 0;
 
@@ -256,7 +256,8 @@ dxr3spusink_get_property (GObject * object, guint prop_id,
 static gboolean
 dxr3spusink_open (Dxr3SpuSink * sink)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (sink, DXR3SPUSINK_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (sink, DXR3SPUSINK_OPEN),
+      FALSE);
 
   /* Compute the name of the spu device file. */
   sink->spu_filename = g_strdup_printf ("/dev/em8300_sp-%d", sink->card_number);
@@ -281,7 +282,7 @@ dxr3spusink_open (Dxr3SpuSink * sink)
     return FALSE;
   }
 
-  GST_FLAG_SET (sink, DXR3SPUSINK_OPEN);
+  GST_OBJECT_FLAG_SET (sink, DXR3SPUSINK_OPEN);
 
   return TRUE;
 }
@@ -290,7 +291,7 @@ dxr3spusink_open (Dxr3SpuSink * sink)
 static void
 dxr3spusink_close (Dxr3SpuSink * sink)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (sink, DXR3SPUSINK_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (sink, DXR3SPUSINK_OPEN));
 
   if (close (sink->spu_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
@@ -306,7 +307,7 @@ dxr3spusink_close (Dxr3SpuSink * sink)
     return;
   }
 
-  GST_FLAG_UNSET (sink, DXR3SPUSINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (sink, DXR3SPUSINK_OPEN);
 
   free (sink->spu_filename);
   sink->spu_filename = NULL;
@@ -377,7 +378,7 @@ dxr3spusink_chain (GstPad * pad, GstData * _data)
     return;
   }
 
-  if (GST_FLAG_IS_SET (sink, DXR3SPUSINK_OPEN)) {
+  if (GST_OBJECT_FLAG_IS_SET (sink, DXR3SPUSINK_OPEN)) {
     /* If we have PTS information for the SPU unit, register it now.
        The card needs the PTS to be written *before* the actual data. */
     if (GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
@@ -405,7 +406,7 @@ dxr3spusink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!GST_FLAG_IS_SET (element, DXR3SPUSINK_OPEN)) {
+      if (!GST_OBJECT_FLAG_IS_SET (element, DXR3SPUSINK_OPEN)) {
         if (!dxr3spusink_open (DXR3SPUSINK (element))) {
           return GST_STATE_CHANGE_FAILURE;
         }
@@ -420,7 +421,7 @@ dxr3spusink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (GST_FLAG_IS_SET (element, DXR3SPUSINK_OPEN)) {
+      if (GST_OBJECT_FLAG_IS_SET (element, DXR3SPUSINK_OPEN)) {
         dxr3spusink_close (DXR3SPUSINK (element));
       }
       break;

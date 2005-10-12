@@ -167,7 +167,7 @@ gst_smoothwave_init (GstSmoothWave * smoothwave)
   gst_element_add_pad (GST_ELEMENT (smoothwave), smoothwave->srcpad);
   gst_pad_set_link_function (smoothwave->srcpad, gst_sw_srclink);
 
-  GST_FLAG_SET (smoothwave, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (smoothwave, GST_ELEMENT_EVENT_AWARE);
 
   smoothwave->adapter = gst_adapter_new ();
 

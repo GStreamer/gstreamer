@@ -66,8 +66,8 @@ typedef struct _GstSF GstSF;
 typedef struct _GstSFClass GstSFClass;
 
 typedef enum {
-  GST_SF_OPEN		= GST_ELEMENT_FLAG_LAST,
-  GST_SF_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
+  GST_SF_OPEN		= (GST_ELEMENT_FLAG_LAST << 0),
+  GST_SF_FLAG_LAST 	= (GST_ELEMENT_FLAG_LAST << 2),
 } GstSFlags;
 
 typedef struct {

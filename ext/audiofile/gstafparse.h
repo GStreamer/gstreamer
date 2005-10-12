@@ -54,9 +54,9 @@ typedef struct _GstAFParse GstAFParse;
 typedef struct _GstAFParseClass GstAFParseClass;
 
 typedef enum {
-  GST_AFPARSE_OPEN             = GST_ELEMENT_FLAG_LAST,
+  GST_AFPARSE_OPEN              = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_AFPARSE_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
+  GST_AFPARSE_FLAG_LAST 	= (GST_ELEMENT_FLAG_LAST << 2),
 } GstAFParseFlags;
 
 struct _GstAFParse {

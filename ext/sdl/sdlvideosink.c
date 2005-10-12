@@ -661,14 +661,14 @@ gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_sdlvideosink_initsdl (sdlvideosink))
         return GST_STATE_CHANGE_FAILURE;
-      GST_FLAG_SET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
+      GST_OBJECT_FLAG_SET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_sdlvideosink_destroy (sdlvideosink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_sdlvideosink_deinitsdl (sdlvideosink);
-      GST_FLAG_UNSET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
+      GST_OBJECT_FLAG_UNSET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
     default:                   /* do nothing */
       break;

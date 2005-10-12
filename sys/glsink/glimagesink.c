@@ -1466,8 +1466,8 @@ gst_glimagesink_init (GstGLImageSink * glimagesink)
   glimagesink->synchronous = FALSE;
   glimagesink->signal_handoffs = FALSE;
 
-  GST_FLAG_SET (glimagesink, GST_ELEMENT_THREAD_SUGGESTED);
-  GST_FLAG_SET (glimagesink, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (glimagesink, GST_ELEMENT_THREAD_SUGGESTED);
+  GST_OBJECT_FLAG_SET (glimagesink, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void

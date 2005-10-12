@@ -160,7 +160,7 @@ cdplayer_init (CDPlayer * cdp)
 
   cdp->paused = FALSE;
 
-  GST_FLAG_SET (cdp, GST_BIN_FLAG_MANAGER);
+  GST_OBJECT_FLAG_SET (cdp, GST_BIN_FLAG_MANAGER);
 
   return;
 }

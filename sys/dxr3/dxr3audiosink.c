@@ -214,7 +214,7 @@ dxr3audiosink_init (Dxr3AudioSink * sink)
   gst_pad_set_chain_function (sink->ac3_sinkpad, dxr3audiosink_chain_ac3);
   gst_element_add_pad (GST_ELEMENT (sink), sink->ac3_sinkpad);
 
-  GST_FLAG_SET (GST_ELEMENT (sink), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (sink), GST_ELEMENT_EVENT_AWARE);
 
   sink->card_number = 0;
 
@@ -285,7 +285,8 @@ dxr3audiosink_get_property (GObject * object, guint prop_id,
 static gboolean
 dxr3audiosink_open (Dxr3AudioSink * sink)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (sink, DXR3AUDIOSINK_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (sink, DXR3AUDIOSINK_OPEN),
+      FALSE);
 
   /* Compute the name of the audio device file. */
   sink->audio_filename = g_strdup_printf ("/dev/em8300_ma-%d",
@@ -311,7 +312,7 @@ dxr3audiosink_open (Dxr3AudioSink * sink)
     return FALSE;
   }
 
-  GST_FLAG_SET (sink, DXR3AUDIOSINK_OPEN);
+  GST_OBJECT_FLAG_SET (sink, DXR3AUDIOSINK_OPEN);
 
   dxr3audiosink_set_mode_pcm (sink);
 
@@ -414,7 +415,7 @@ dxr3audiosink_set_mode_ac3 (Dxr3AudioSink * sink)
 static void
 dxr3audiosink_close (Dxr3AudioSink * sink)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (sink, DXR3AUDIOSINK_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (sink, DXR3AUDIOSINK_OPEN));
 
   if (close (sink->audio_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
@@ -430,7 +431,7 @@ dxr3audiosink_close (Dxr3AudioSink * sink)
     return;
   }
 
-  GST_FLAG_UNSET (sink, DXR3AUDIOSINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (sink, DXR3AUDIOSINK_OPEN);
 
   g_free (sink->audio_filename);
   sink->audio_filename = NULL;
@@ -543,7 +544,7 @@ dxr3audiosink_chain_pcm (GstPad * pad, GstData * _data)
     dxr3audiosink_set_mode_pcm (sink);
   }
 
-  if (GST_FLAG_IS_SET (sink, DXR3AUDIOSINK_OPEN)) {
+  if (GST_OBJECT_FLAG_IS_SET (sink, DXR3AUDIOSINK_OPEN)) {
     if (GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
       /* We have a new scr value. */
       sink->scr = GSTTIME_TO_MPEGTIME (GST_BUFFER_TIMESTAMP (buf));
@@ -608,7 +609,7 @@ dxr3audiosink_chain_ac3 (GstPad * pad, GstData * _data)
     dxr3audiosink_set_mode_ac3 (sink);
   }
 
-  if (GST_FLAG_IS_SET (sink, DXR3AUDIOSINK_OPEN)) {
+  if (GST_OBJECT_FLAG_IS_SET (sink, DXR3AUDIOSINK_OPEN)) {
     int event;
 
     if (GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
@@ -709,11 +710,11 @@ dxr3audiosink_change_state (GstElement * element, GstStateChange transition)
       GST_STATE_CHANGE_FAILURE);
 
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, DXR3AUDIOSINK_OPEN)) {
+    if (GST_OBJECT_FLAG_IS_SET (element, DXR3AUDIOSINK_OPEN)) {
       dxr3audiosink_close (DXR3AUDIOSINK (element));
     }
   } else {
-    if (!GST_FLAG_IS_SET (element, DXR3AUDIOSINK_OPEN)) {
+    if (!GST_OBJECT_FLAG_IS_SET (element, DXR3AUDIOSINK_OPEN)) {
       if (!dxr3audiosink_open (DXR3AUDIOSINK (element))) {
         return GST_STATE_CHANGE_FAILURE;
       }

@@ -1,3 +1,79 @@
+2005-10-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* examples/indexing/indexmpeg.c: (main):
+	* ext/artsd/gstartsdsink.c: (gst_artsdsink_open_audio),
+	(gst_artsdsink_close_audio), (gst_artsdsink_change_state):
+	* ext/artsd/gstartsdsink.h:
+	* ext/audiofile/gstafparse.c: (gst_afparse_open_file),
+	(gst_afparse_close_file):
+	* ext/audiofile/gstafparse.h:
+	* ext/audiofile/gstafsink.c: (gst_afsink_open_file),
+	(gst_afsink_close_file), (gst_afsink_chain),
+	(gst_afsink_change_state):
+	* ext/audiofile/gstafsink.h:
+	* ext/audiofile/gstafsrc.c: (gst_afsrc_open_file),
+	(gst_afsrc_close_file), (gst_afsrc_change_state):
+	* ext/audiofile/gstafsrc.h:
+	* ext/cdaudio/gstcdaudio.c: (gst_cdaudio_init):
+	* ext/directfb/directfbvideosink.c: (gst_directfbvideosink_init):
+	* ext/dts/gstdtsdec.c: (gst_dtsdec_init):
+	* ext/jack/gstjack.h:
+	* ext/jack/gstjackbin.c: (gst_jack_bin_init),
+	(gst_jack_bin_change_state):
+	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_init):
+	* ext/musicbrainz/gsttrm.c: (gst_musicbrainz_init):
+	* ext/nas/nassink.c: (gst_nassink_open_audio),
+	(gst_nassink_close_audio), (gst_nassink_change_state):
+	* ext/nas/nassink.h:
+	* ext/polyp/polypsink.c: (gst_polypsink_init):
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_change_state):
+	* ext/sdl/sdlvideosink.h:
+	* ext/smoothwave/gstsmoothwave.c: (gst_smoothwave_init):
+	* ext/sndfile/gstsf.c: (gst_sf_set_property),
+	(gst_sf_change_state), (gst_sf_release_request_pad),
+	(gst_sf_open_file), (gst_sf_close_file), (gst_sf_loop):
+	* ext/sndfile/gstsf.h:
+	* ext/swfdec/gstswfdec.c: (gst_swfdec_init):
+	* ext/tarkin/gsttarkindec.c: (gst_tarkindec_init):
+	* gst/apetag/apedemux.c: (gst_ape_demux_init):
+	* gst/cdxaparse/gstcdxaparse.c: (gst_cdxaparse_init):
+	* gst/cdxaparse/gstcdxastrip.c: (gst_cdxastrip_init):
+	* gst/festival/gstfestival.c: (gst_festival_change_state):
+	* gst/festival/gstfestival.h:
+	* gst/mpeg2sub/gstmpeg2subt.c: (gst_mpeg2subt_init):
+	* gst/multifilesink/gstmultifilesink.c: (gst_multifilesink_init),
+	(gst_multifilesink_set_location), (gst_multifilesink_open_file),
+	(gst_multifilesink_close_file), (gst_multifilesink_next_file),
+	(gst_multifilesink_pad_query), (gst_multifilesink_handle_event),
+	(gst_multifilesink_chain), (gst_multifilesink_change_state):
+	* gst/multifilesink/gstmultifilesink.h:
+	* gst/videodrop/gstvideodrop.c: (gst_videodrop_init):
+	* sys/cdrom/gstcdplayer.c: (cdplayer_init):
+	* sys/dxr3/dxr3audiosink.c: (dxr3audiosink_init),
+	(dxr3audiosink_open), (dxr3audiosink_close),
+	(dxr3audiosink_chain_pcm), (dxr3audiosink_chain_ac3),
+	(dxr3audiosink_change_state):
+	* sys/dxr3/dxr3audiosink.h:
+	* sys/dxr3/dxr3spusink.c: (dxr3spusink_init), (dxr3spusink_open),
+	(dxr3spusink_close), (dxr3spusink_chain),
+	(dxr3spusink_change_state):
+	* sys/dxr3/dxr3spusink.h:
+	* sys/dxr3/dxr3videosink.c: (dxr3videosink_init),
+	(dxr3videosink_open), (dxr3videosink_close),
+	(dxr3videosink_write_data), (dxr3videosink_change_state):
+	* sys/dxr3/dxr3videosink.h:
+	* sys/glsink/glimagesink.c: (gst_glimagesink_init):
+	* sys/qcam/gstqcamsrc.c: (gst_qcamsrc_change_state),
+	(gst_qcamsrc_open), (gst_qcamsrc_close):
+	* sys/qcam/gstqcamsrc.h:
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_init):
+	* sys/vcd/vcdsrc.c: (gst_vcdsrc_set_property), (gst_vcdsrc_get),
+	(gst_vcdsrc_open_file), (gst_vcdsrc_close_file),
+	(gst_vcdsrc_change_state), (gst_vcdsrc_recalculate):
+	* sys/vcd/vcdsrc.h:
+	renamed GST_FLAGS macros to GST_OBJECT_FLAGS
+	moved bitshift from macro to enum definition
+
 2005-10-12  Josef Zlomek  <josef dot zlomek at xeris dot cz>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

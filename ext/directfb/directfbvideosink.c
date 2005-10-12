@@ -682,8 +682,8 @@ gst_directfbvideosink_init (GstDirectFBVideoSink * directfbvideosink)
   directfbvideosink->internal_surface = FALSE;
   directfbvideosink->surface_locked = FALSE;
 
-  GST_FLAG_SET (directfbvideosink, GST_ELEMENT_THREAD_SUGGESTED);
-  GST_FLAG_SET (directfbvideosink, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (directfbvideosink, GST_ELEMENT_THREAD_SUGGESTED);
+  GST_OBJECT_FLAG_SET (directfbvideosink, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void

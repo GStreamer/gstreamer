@@ -113,7 +113,7 @@ gst_cdxastrip_class_init (GstCDXAStripClass * klass)
 static void
 gst_cdxastrip_init (GstCDXAStrip * cdxastrip)
 {
-  GST_FLAG_SET (cdxastrip, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (cdxastrip, GST_ELEMENT_EVENT_AWARE);
 
   cdxastrip->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get

@@ -41,8 +41,8 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ARTSDSINK))
 
 typedef enum {
-  GST_ARTSDSINK_OPEN            = GST_ELEMENT_FLAG_LAST,
-  GST_ARTSDSINK_FLAG_LAST       = GST_ELEMENT_FLAG_LAST+2,
+  GST_ARTSDSINK_OPEN            = (GST_ELEMENT_FLAG_LAST << 0)
+  GST_ARTSDSINK_FLAG_LAST       = (GST_ELEMENT_FLAG_LAST << 2),
 } GstArtsdSinkFlags;
 
 typedef struct _GstArtsdsink GstArtsdsink;

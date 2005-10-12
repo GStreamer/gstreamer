@@ -41,9 +41,9 @@ G_BEGIN_DECLS
 
 /* NOTE: per-element flags start with 16 for now */
 typedef enum {
-  VCDSRC_OPEN		= GST_ELEMENT_FLAG_LAST,
+  VCDSRC_OPEN		= (GST_ELEMENT_FLAG_LAST << 0),
 
-  VCDSRC_FLAG_LAST	= GST_ELEMENT_FLAG_LAST+2,
+  VCDSRC_FLAG_LAST	= (GST_ELEMENT_FLAG_LAST << 2),
 } GstVCDSrcFlags;
 
 typedef struct _GstVCDSrc GstVCDSrc;

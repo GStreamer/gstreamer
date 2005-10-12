@@ -308,7 +308,7 @@ gst_afsrc_plugin_init (GstPlugin * plugin)
 static gboolean
 gst_afsrc_open_file (GstAFSrc * src)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (src, GST_AFSRC_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (src, GST_AFSRC_OPEN), FALSE);
 
   /* open the file */
   src->file = afOpenFile (src->filename, "r", AF_NULL_FILESETUP);
@@ -353,7 +353,7 @@ gst_afsrc_open_file (GstAFSrc * src)
           "rate", G_TYPE_INT, src->rate,
           "channels", G_TYPE_INT, src->channels, NULL));
 
-  GST_FLAG_SET (src, GST_AFSRC_OPEN);
+  GST_OBJECT_FLAG_SET (src, GST_AFSRC_OPEN);
 
   return TRUE;
 }
@@ -362,14 +362,14 @@ static void
 gst_afsrc_close_file (GstAFSrc * src)
 {
 /*  g_print ("DEBUG: closing srcfile...\n"); */
-  g_return_if_fail (GST_FLAG_IS_SET (src, GST_AFSRC_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (src, GST_AFSRC_OPEN));
 /*  g_print ("DEBUG: past flag test\n"); */
 /*  if (fclose (src->file) != 0) 	*/
   if (afCloseFile (src->file) != 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, CLOSE,
         (_("Error closing file \"%s\"."), src->filename), GST_ERROR_SYSTEM);
   } else {
-    GST_FLAG_UNSET (src, GST_AFSRC_OPEN);
+    GST_OBJECT_FLAG_UNSET (src, GST_AFSRC_OPEN);
   }
 }
 
@@ -381,13 +381,13 @@ gst_afsrc_change_state (GstElement * element, GstStateChange transition)
   /* if going to NULL then close the file */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
 /*    printf ("DEBUG: afsrc state change: null pending\n"); */
-    if (GST_FLAG_IS_SET (element, GST_AFSRC_OPEN)) {
+    if (GST_OBJECT_FLAG_IS_SET (element, GST_AFSRC_OPEN)) {
 /*      g_print ("DEBUG: trying to close the src file\n"); */
       gst_afsrc_close_file (GST_AFSRC (element));
     }
   } else if (GST_STATE_PENDING (element) == GST_STATE_READY) {
 /*    g_print ("DEBUG: afsrc: ready state pending.  This shouldn't happen at the *end* of a stream\n"); */
-    if (!GST_FLAG_IS_SET (element, GST_AFSRC_OPEN)) {
+    if (!GST_OBJECT_FLAG_IS_SET (element, GST_AFSRC_OPEN)) {
 /*      g_print ("DEBUG: GST_AFSRC_OPEN not set\n"); */
       if (!gst_afsrc_open_file (GST_AFSRC (element))) {
 /*        g_print ("DEBUG: element tries to open file\n"); */

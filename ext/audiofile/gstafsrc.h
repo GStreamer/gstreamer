@@ -52,9 +52,9 @@ typedef struct _GstAFSrc GstAFSrc;
 typedef struct _GstAFSrcClass GstAFSrcClass;
 
 typedef enum {
-  GST_AFSRC_OPEN             = GST_ELEMENT_FLAG_LAST,
+  GST_AFSRC_OPEN        = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_AFSRC_FLAG_LAST 	= GST_ELEMENT_FLAG_LAST + 2,
+  GST_AFSRC_FLAG_LAST 	= (GST_ELEMENT_FLAG_LAST << 2),
 } GstAFSrcFlags;
 
 struct _GstAFSrc {

@@ -231,7 +231,7 @@ gst_mpeg2subt_init (GstMpeg2Subt * mpeg2subt)
       GST_DEBUG_FUNCPTR (gst_mpeg2subt_src_event));
 
   gst_element_set_loop_function (GST_ELEMENT (mpeg2subt), gst_mpeg2subt_loop);
-  GST_FLAG_SET (GST_ELEMENT (mpeg2subt), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (mpeg2subt), GST_ELEMENT_EVENT_AWARE);
 
   mpeg2subt->partialbuf = NULL;
   mpeg2subt->hold_frame = NULL;

@@ -204,7 +204,7 @@ dxr3videosink_init (Dxr3VideoSink * sink)
   gst_element_add_pad (GST_ELEMENT (sink), pad);
   gst_pad_set_chain_function (pad, dxr3videosink_chain);
 
-  GST_FLAG_SET (GST_ELEMENT (sink), GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (GST_ELEMENT (sink), GST_ELEMENT_EVENT_AWARE);
 
   sink->card_number = 0;
 
@@ -258,7 +258,8 @@ dxr3videosink_get_property (GObject * object, guint prop_id,
 static gboolean
 dxr3videosink_open (Dxr3VideoSink * sink)
 {
-  g_return_val_if_fail (!GST_FLAG_IS_SET (sink, DXR3VIDEOSINK_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (sink, DXR3VIDEOSINK_OPEN),
+      FALSE);
 
   /* Compute the name of the video device file. */
   sink->video_filename = g_strdup_printf ("/dev/em8300_mv-%d",
@@ -284,7 +285,7 @@ dxr3videosink_open (Dxr3VideoSink * sink)
     return FALSE;
   }
 
-  GST_FLAG_SET (sink, DXR3VIDEOSINK_OPEN);
+  GST_OBJECT_FLAG_SET (sink, DXR3VIDEOSINK_OPEN);
 
   return TRUE;
 }
@@ -293,7 +294,7 @@ dxr3videosink_open (Dxr3VideoSink * sink)
 static void
 dxr3videosink_close (Dxr3VideoSink * sink)
 {
-  g_return_if_fail (GST_FLAG_IS_SET (sink, DXR3VIDEOSINK_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (sink, DXR3VIDEOSINK_OPEN));
 
   if (close (sink->video_fd) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
@@ -309,7 +310,7 @@ dxr3videosink_close (Dxr3VideoSink * sink)
     return;
   }
 
-  GST_FLAG_UNSET (sink, DXR3VIDEOSINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (sink, DXR3VIDEOSINK_OPEN);
 
   free (sink->video_filename);
   sink->video_filename = NULL;
@@ -423,7 +424,7 @@ dxr3videosink_write_data (Dxr3VideoSink * sink, guint cut)
 
   g_return_if_fail (sink->cur_buf != NULL);
 
-  if (GST_FLAG_IS_SET (sink, DXR3VIDEOSINK_OPEN)) {
+  if (GST_OBJECT_FLAG_IS_SET (sink, DXR3VIDEOSINK_OPEN)) {
     if (sink->cur_ts != GST_CLOCK_TIME_NONE) {
       guint pts;
 
@@ -642,7 +643,7 @@ dxr3videosink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!GST_FLAG_IS_SET (element, DXR3VIDEOSINK_OPEN)) {
+      if (!GST_OBJECT_FLAG_IS_SET (element, DXR3VIDEOSINK_OPEN)) {
         if (!dxr3videosink_open (DXR3VIDEOSINK (element))) {
           return GST_STATE_CHANGE_FAILURE;
         }
@@ -661,7 +662,7 @@ dxr3videosink_change_state (GstElement * element, GstStateChange transition)
       dxr3videosink_mvcommand (DXR3VIDEOSINK (element), MVCOMMAND_STOP);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (GST_FLAG_IS_SET (element, DXR3VIDEOSINK_OPEN)) {
+      if (GST_OBJECT_FLAG_IS_SET (element, DXR3VIDEOSINK_OPEN)) {
         dxr3videosink_close (DXR3VIDEOSINK (element));
       }
       break;

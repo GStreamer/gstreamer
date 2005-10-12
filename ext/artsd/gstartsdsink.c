@@ -304,7 +304,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
   /* FIXME: check connection */
   /*   GST_DEBUG ("artsdsink: can't open connection to aRtsd server"); */
 
-  GST_FLAG_SET (sink, GST_ARTSDSINK_OPEN);
+  GST_OBJECT_FLAG_SET (sink, GST_ARTSDSINK_OPEN);
   sink->connected = TRUE;
 
   return TRUE;
@@ -318,7 +318,7 @@ gst_artsdsink_close_audio (GstArtsdsink * sink)
 
   arts_close_stream (sink->stream);
   arts_free ();
-  GST_FLAG_UNSET (sink, GST_ARTSDSINK_OPEN);
+  GST_OBJECT_FLAG_UNSET (sink, GST_ARTSDSINK_OPEN);
   sink->connected = FALSE;
 
   g_print ("artsdsink: closed connection\n");
@@ -331,11 +331,11 @@ gst_artsdsink_change_state (GstElement * element, GstStateChange transition)
 
   /* if going down into NULL state, close the stream if it's open */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
-    if (GST_FLAG_IS_SET (element, GST_ARTSDSINK_OPEN))
+    if (GST_OBJECT_FLAG_IS_SET (element, GST_ARTSDSINK_OPEN))
       gst_artsdsink_close_audio (GST_ARTSDSINK (element));
     /* otherwise (READY or higher) we need to open the stream */
   } else {
-    if (!GST_FLAG_IS_SET (element, GST_ARTSDSINK_OPEN)) {
+    if (!GST_OBJECT_FLAG_IS_SET (element, GST_ARTSDSINK_OPEN)) {
       if (!gst_artsdsink_open_audio (GST_ARTSDSINK (element)))
         return GST_STATE_CHANGE_FAILURE;
     }

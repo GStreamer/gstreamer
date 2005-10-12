@@ -292,7 +292,7 @@ gst_afsink_open_file (GstAFSink * sink)
   int sample_format;            /* audiofile's sample format, look in audiofile.h */
   int byte_order = 0;           /* audiofile's byte order defines */
 
-  g_return_val_if_fail (!GST_FLAG_IS_SET (sink, GST_AFSINK_OPEN), FALSE);
+  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (sink, GST_AFSINK_OPEN), FALSE);
 
   /* get the audio parameters */
   g_return_val_if_fail (GST_IS_PAD (sink->sinkpad), FALSE);
@@ -348,7 +348,7 @@ gst_afsink_open_file (GstAFSink * sink)
   afFreeFileSetup (outfilesetup);
 /*  afSetVirtualByteOrder (sink->file, AF_DEFAULT_TRACK, byte_order); */
 
-  GST_FLAG_SET (sink, GST_AFSINK_OPEN);
+  GST_OBJECT_FLAG_SET (sink, GST_AFSINK_OPEN);
 
   return TRUE;
 }
@@ -357,14 +357,14 @@ static void
 gst_afsink_close_file (GstAFSink * sink)
 {
 /*  g_print ("DEBUG: closing sinkfile...\n"); */
-  g_return_if_fail (GST_FLAG_IS_SET (sink, GST_AFSINK_OPEN));
+  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_AFSINK_OPEN));
 /*  g_print ("DEBUG: past flag test\n"); */
 /*  if (fclose (sink->file) != 0) */
   if (afCloseFile (sink->file) != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
         (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
   } else {
-    GST_FLAG_UNSET (sink, GST_AFSINK_OPEN);
+    GST_OBJECT_FLAG_UNSET (sink, GST_AFSINK_OPEN);
   }
 }
 
@@ -393,7 +393,7 @@ gst_afsink_chain (GstPad * pad, GstData * _data)
   buf = GST_BUFFER (_data);
   afsink = GST_AFSINK (gst_pad_get_parent (pad));
 /* we use audiofile now
-  if (GST_FLAG_IS_SET (afsink, GST_AFSINK_OPEN))
+  if (GST_OBJECT_FLAG_IS_SET (afsink, GST_AFSINK_OPEN))
   {
     bytes_written = fwrite (GST_BUFFER_DATA (buf), 1, GST_BUFFER_SIZE (buf), afsink->file);
     if (bytes_written < GST_BUFFER_SIZE (buf))
@@ -404,14 +404,14 @@ gst_afsink_chain (GstPad * pad, GstData * _data)
   }
 */
 
-  if (!GST_FLAG_IS_SET (afsink, GST_AFSINK_OPEN)) {
+  if (!GST_OBJECT_FLAG_IS_SET (afsink, GST_AFSINK_OPEN)) {
     /* it's not open yet, open it */
     if (!gst_afsink_open_file (afsink))
       g_print ("WARNING: gstafsink: can't open file !\n");
 /*        return FALSE;    Can't return value */
   }
 
-  if (GST_FLAG_IS_SET (afsink, GST_AFSINK_OPEN)) {
+  if (GST_OBJECT_FLAG_IS_SET (afsink, GST_AFSINK_OPEN)) {
     int frameCount = 0;
 
     frameCount =
@@ -437,7 +437,7 @@ gst_afsink_change_state (GstElement * element, GstStateChange transition)
   /* if going to NULL? then close the file */
   if (GST_STATE_PENDING (element) == GST_STATE_NULL) {
 /*    printf ("DEBUG: afsink state change: null pending\n"); */
-    if (GST_FLAG_IS_SET (element, GST_AFSINK_OPEN)) {
+    if (GST_OBJECT_FLAG_IS_SET (element, GST_AFSINK_OPEN)) {
 /*      g_print ("DEBUG: trying to close the sink file\n"); */
       gst_afsink_close_file (GST_AFSINK (element));
     }
@@ -449,7 +449,7 @@ gst_afsink_change_state (GstElement * element, GstStateChange transition)
  the caps are set and can be known 
  {
     g_print ("DEBUG: it's not going to null\n"); 
-    if (!GST_FLAG_IS_SET (element, GST_AFSINK_OPEN)) 
+    if (!GST_OBJECT_FLAG_IS_SET (element, GST_AFSINK_OPEN)) 
     {
       g_print ("DEBUG: GST_AFSINK_OPEN not set\n"); 
       if (!gst_afsink_open_file (GST_AFSINK (element)))
