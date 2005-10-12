@@ -121,6 +121,7 @@ SUBDIRS = \
 
 DIST_SUBDIRS = \
 	aalib \
+	cairo \
 	dv \
 	esd \
 	flac \
