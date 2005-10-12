@@ -68,7 +68,7 @@ gst_test_src_init (GstTestElement * src)
   }
   gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
 
-  GST_FLAG_SET (src, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (src, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -101,7 +101,7 @@ gst_test_filter_init (GstTestElement * filter)
   filter->srcpad = gst_pad_new ("src", GST_PAD_SRC);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
-  GST_FLAG_SET (filter, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (filter, GST_ELEMENT_EVENT_AWARE);
 }
 
 static void
@@ -129,7 +129,7 @@ gst_test_sink_init (GstTestElement * sink)
   }
   gst_element_add_pad (GST_ELEMENT (sink), sink->sinkpad);
 
-  GST_FLAG_SET (sink, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_EVENT_AWARE);
 }
 
 #define parent_class src_parent_class

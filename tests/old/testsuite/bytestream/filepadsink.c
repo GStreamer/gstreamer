@@ -80,7 +80,7 @@ static GstStaticPadTemplate template = GST_STATIC_PAD_TEMPLATE ("sink",
 static void
 gst_fp_sink_init (GstFpSink * fp)
 {
-  GST_FLAG_SET (fp, GST_ELEMENT_EVENT_AWARE);
+  GST_OBJECT_FLAG_SET (fp, GST_ELEMENT_EVENT_AWARE);
 
   fp->sinkpad =
       GST_FILE_PAD (gst_file_pad_new (gst_static_pad_template_get (&template),

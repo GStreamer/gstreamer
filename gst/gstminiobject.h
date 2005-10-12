@@ -57,7 +57,7 @@ typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *);
  *
  * This macro checks to see if the given flag is set.
  */
-#define GST_MINI_OBJECT_FLAG_IS_SET(obj,flag)        (GST_MINI_OBJECT_FLAGS(obj) & (flag))
+#define GST_MINI_OBJECT_FLAG_IS_SET(obj,flag)        (GST_MINI_OBJECT_FLAGS (obj) & (flag))
 /**
  * GST_MINI_OBJECT_FLAG_SET:
  * @obj: MiniObject to set flag in.
@@ -83,10 +83,20 @@ typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *);
  */
 #define GST_VALUE_HOLDS_MINI_OBJECT(value)  (G_VALUE_HOLDS(value, GST_TYPE_MINI_OBJECT))
 
+/**
+ * GstMiniObjectFlags:
+ * @GST_MINI_OBJECT_FLAG_READONLY: is the miniobject readonly or writable
+ * @GST_MINI_OBJECT_FLAG_STATIC: 
+ * @GST_MINI_OBJECT_FLAG_LAST: first flag that can be used by subclasses.
+ *
+ * Flags for the padtemplate
+ */
+
 typedef enum
 {
   GST_MINI_OBJECT_FLAG_READONLY = (1<<0),
   GST_MINI_OBJECT_FLAG_STATIC = (1<<1),
+  /* padding */
   GST_MINI_OBJECT_FLAG_LAST = (1<<4)
 } GstMiniObjectFlags;
 

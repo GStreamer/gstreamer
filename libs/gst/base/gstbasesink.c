@@ -278,7 +278,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
 
   basesink->sync = DEFAULT_SYNC;
 
-  GST_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
+  GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }
 
 static void

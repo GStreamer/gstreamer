@@ -863,7 +863,7 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
 
-    GST_FLAG_SET (pad, GST_PAD_BLOCKED);
+    GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKED);
     pad->block_callback = callback;
     pad->block_data = user_data;
     if (!callback) {
@@ -875,7 +875,7 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocking pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
 
-    GST_FLAG_UNSET (pad, GST_PAD_BLOCKED);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKED);
 
     pad->block_callback = callback;
     pad->block_data = user_data;
@@ -943,7 +943,7 @@ gst_pad_is_blocked (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), result);
 
   GST_LOCK (pad);
-  result = GST_FLAG_IS_SET (pad, GST_PAD_BLOCKED);
+  result = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKED);
   GST_UNLOCK (pad);
 
   return result;
@@ -1755,11 +1755,11 @@ gst_pad_get_caps_unlocked (GstPad * pad)
   if (GST_PAD_GETCAPSFUNC (pad)) {
     GST_CAT_DEBUG (GST_CAT_CAPS, "dispatching to pad getcaps function");
 
-    GST_FLAG_SET (pad, GST_PAD_IN_GETCAPS);
+    GST_OBJECT_FLAG_SET (pad, GST_PAD_IN_GETCAPS);
     GST_UNLOCK (pad);
     result = GST_PAD_GETCAPSFUNC (pad) (pad);
     GST_LOCK (pad);
-    GST_FLAG_UNSET (pad, GST_PAD_IN_GETCAPS);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_IN_GETCAPS);
 
     if (result == NULL) {
       g_critical ("pad %s:%s returned NULL caps from getcaps function",
@@ -2139,12 +2139,12 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
   /* call setcaps function to configure the pad */
   if (setcaps != NULL && caps) {
     if (!GST_PAD_IS_IN_SETCAPS (pad)) {
-      GST_FLAG_SET (pad, GST_PAD_IN_SETCAPS);
+      GST_OBJECT_FLAG_SET (pad, GST_PAD_IN_SETCAPS);
       GST_UNLOCK (pad);
       if (!setcaps (pad, caps))
         goto could_not_set;
       GST_LOCK (pad);
-      GST_FLAG_UNSET (pad, GST_PAD_IN_SETCAPS);
+      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_IN_SETCAPS);
     } else {
       GST_CAT_DEBUG (GST_CAT_CAPS, "pad %s:%s was dispatching",
           GST_DEBUG_PAD_NAME (pad));
@@ -2172,7 +2172,7 @@ setting_same_caps:
 could_not_set:
   {
     GST_LOCK (pad);
-    GST_FLAG_UNSET (pad, GST_PAD_IN_SETCAPS);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_IN_SETCAPS);
     GST_CAT_DEBUG (GST_CAT_CAPS,
         "pad %s:%s, caps %" GST_PTR_FORMAT " could not be set",
         GST_DEBUG_PAD_NAME (pad), caps);

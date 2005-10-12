@@ -148,8 +148,8 @@ struct _GstIndexAssociation {
  * Flags for an association entry.
  */
 typedef enum {
-  GST_ASSOCIATION_FLAG_NONE 	= 0,
-  GST_ASSOCIATION_FLAG_KEY_UNIT = (1 << 0),
+  GST_ASSOCIATION_FLAG_NONE 	  = 0,
+  GST_ASSOCIATION_FLAG_KEY_UNIT   = (1 << 0),
   GST_ASSOCIATION_FLAG_DELTA_UNIT = (1 << 1),
 
   /* new flags should start here */
@@ -292,10 +292,10 @@ typedef gboolean 	(*GstIndexResolver) 		(GstIndex *index,
  * Flags for this index
  */
 typedef enum {
-  GST_INDEX_WRITABLE 		= GST_OBJECT_FLAG_LAST,	
-  GST_INDEX_READABLE,	
+  GST_INDEX_WRITABLE    = (GST_OBJECT_FLAG_LAST << 0),	
+  GST_INDEX_READABLE    = (GST_OBJECT_FLAG_LAST << 1),	
 
-  GST_INDEX_FLAG_LAST 		= GST_OBJECT_FLAG_LAST + 8
+  GST_INDEX_FLAG_LAST   = (GST_OBJECT_FLAG_LAST << 8)
 } GstIndexFlags;
 
 /**
@@ -304,7 +304,7 @@ typedef enum {
  *
  * Check if the index can be read from
  */
-#define GST_INDEX_IS_READABLE(obj)    (GST_FLAG_IS_SET (obj, GST_INDEX_READABLE))
+#define GST_INDEX_IS_READABLE(obj)    (GST_OBJECT_FLAG_IS_SET (obj, GST_INDEX_READABLE))
 
 /**
  * GST_INDEX_IS_WRITABLE:
@@ -312,7 +312,7 @@ typedef enum {
  *
  * Check if the index can be written to
  */
-#define GST_INDEX_IS_WRITABLE(obj)    (GST_FLAG_IS_SET (obj, GST_INDEX_WRITABLE))
+#define GST_INDEX_IS_WRITABLE(obj)    (GST_OBJECT_FLAG_IS_SET (obj, GST_INDEX_WRITABLE))
 
 struct _GstIndex {
   GstObject		 object;

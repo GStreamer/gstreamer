@@ -217,7 +217,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
   basesrc->clock_id = NULL;
 
-  GST_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
+  GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
 
   GST_DEBUG_OBJECT (basesrc, "init done");
 }
@@ -602,7 +602,7 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
     goto flushing;
   GST_UNLOCK (pad);
 
-  if (!GST_FLAG_IS_SET (src, GST_BASE_SRC_STARTED))
+  if (!GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED))
     goto not_started;
 
   if (!bclass->create)
@@ -677,7 +677,7 @@ gst_base_src_check_get_range (GstPad * pad)
 
   src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
-  if (!GST_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)) {
+  if (!GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)) {
     gst_base_src_start (src);
     gst_base_src_stop (src);
   }
@@ -884,7 +884,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   GstBaseSrcClass *bclass;
   gboolean result;
 
-  if (GST_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED))
+  if (GST_OBJECT_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED))
     return TRUE;
 
   GST_DEBUG_OBJECT (basesrc, "starting source");
@@ -900,7 +900,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   if (!result)
     goto could_not_start;
 
-  GST_FLAG_SET (basesrc, GST_BASE_SRC_STARTED);
+  GST_OBJECT_FLAG_SET (basesrc, GST_BASE_SRC_STARTED);
 
   /* start in the beginning */
   basesrc->offset = 0;
@@ -964,7 +964,7 @@ gst_base_src_stop (GstBaseSrc * basesrc)
   GstBaseSrcClass *bclass;
   gboolean result = TRUE;
 
-  if (!GST_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED))
+  if (!GST_OBJECT_FLAG_IS_SET (basesrc, GST_BASE_SRC_STARTED))
     return TRUE;
 
   GST_DEBUG_OBJECT (basesrc, "stopping source");
@@ -974,7 +974,7 @@ gst_base_src_stop (GstBaseSrc * basesrc)
     result = bclass->stop (basesrc);
 
   if (result)
-    GST_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
+    GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
 
   return result;
 }

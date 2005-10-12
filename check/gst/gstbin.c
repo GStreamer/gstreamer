@@ -603,7 +603,7 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   fail_unless (gst_element_link (identity, sink) == TRUE);
 
   /* this is not very nice but should work just fine in this case. */
-  GST_FLAG_UNSET (sink, GST_ELEMENT_IS_SINK);   /* <======== */
+  GST_OBJECT_FLAG_UNSET (sink, GST_ELEMENT_IS_SINK);    /* <======== */
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_if (ret != GST_STATE_CHANGE_ASYNC, "State change to PLAYING not ASYNC");

@@ -191,14 +191,15 @@ typedef struct _GstBufferClass GstBufferClass;
  * A set of buffer flags used to describe properties of a #GstBuffer.
  */
 typedef enum {
-  GST_BUFFER_FLAG_READONLY = GST_MINI_OBJECT_FLAG_READONLY,
-  GST_BUFFER_FLAG_ORIGINAL = (GST_MINI_OBJECT_FLAG_LAST << 0),		/* original data, not copied, not currently used  */
-  GST_BUFFER_FLAG_PREROLL = (GST_MINI_OBJECT_FLAG_LAST << 1),		/* sample should not be displayed */
-  GST_BUFFER_FLAG_DISCONT = (GST_MINI_OBJECT_FLAG_LAST << 2),		/* buffer is first after discontinuity in the stream */
-  GST_BUFFER_FLAG_IN_CAPS = (GST_MINI_OBJECT_FLAG_LAST << 3),		/* buffer is also part of caps */
-  GST_BUFFER_FLAG_GAP = (GST_MINI_OBJECT_FLAG_LAST << 4),		/* buffer has been created to fill a gap in the stream */
+  GST_BUFFER_FLAG_READONLY   = GST_MINI_OBJECT_FLAG_READONLY,
+  GST_BUFFER_FLAG_ORIGINAL   = (GST_MINI_OBJECT_FLAG_LAST << 0),	/* original data, not copied, not currently used  */
+  GST_BUFFER_FLAG_PREROLL    = (GST_MINI_OBJECT_FLAG_LAST << 1),	/* sample should not be displayed */
+  GST_BUFFER_FLAG_DISCONT    = (GST_MINI_OBJECT_FLAG_LAST << 2),	/* buffer is first after discontinuity in the stream */
+  GST_BUFFER_FLAG_IN_CAPS    = (GST_MINI_OBJECT_FLAG_LAST << 3),	/* buffer is also part of caps */
+  GST_BUFFER_FLAG_GAP        = (GST_MINI_OBJECT_FLAG_LAST << 4),	/* buffer has been created to fill a gap in the stream */
   GST_BUFFER_FLAG_DELTA_UNIT = (GST_MINI_OBJECT_FLAG_LAST << 5),	/* can't be used as sync point in stream */
-  GST_BUFFER_FLAG_LAST = (GST_MINI_OBJECT_FLAG_LAST << 8)
+  /* padding */
+  GST_BUFFER_FLAG_LAST       = (GST_MINI_OBJECT_FLAG_LAST << 8)
 } GstBufferFlag;
 
 struct _GstBuffer {

@@ -302,7 +302,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
 
   GST_LOCK (bus);
   /* check if the bus is flushing */
-  if (GST_FLAG_IS_SET (bus, GST_BUS_FLUSHING))
+  if (GST_OBJECT_FLAG_IS_SET (bus, GST_BUS_FLUSHING))
     goto is_flushing;
 
   handler = bus->sync_handler;
@@ -426,7 +426,7 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
   GST_LOCK (bus);
 
   if (flushing) {
-    GST_FLAG_SET (bus, GST_BUS_FLUSHING);
+    GST_OBJECT_FLAG_SET (bus, GST_BUS_FLUSHING);
 
     GST_DEBUG_OBJECT (bus, "set bus flushing");
 
@@ -434,7 +434,7 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
       gst_message_unref (message);
   } else {
     GST_DEBUG_OBJECT (bus, "unset bus flushing");
-    GST_FLAG_UNSET (bus, GST_BUS_FLUSHING);
+    GST_OBJECT_FLAG_UNSET (bus, GST_BUS_FLUSHING);
   }
 
   GST_UNLOCK (bus);

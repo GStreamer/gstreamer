@@ -58,10 +58,10 @@ GST_EXPORT GType _gst_object_type;
  */
 typedef enum
 {
-  GST_OBJECT_DISPOSING   = 0,
-  GST_OBJECT_FLOATING,
-
-  GST_OBJECT_FLAG_LAST   = 4
+  GST_OBJECT_DISPOSING = (1<<0),
+  GST_OBJECT_FLOATING = (1<<1),
+  /* padding */
+  GST_OBJECT_FLAG_LAST = (1<<4)
 } GstObjectFlags;
 
 #ifdef GST_HAVE_GLIB_2_8
@@ -136,37 +136,36 @@ typedef enum
 
 
 /**
- * GST_FLAGS:
+ * GST_OBJECT_FLAGS:
  * @obj: Object to return flags for.
  *
  * This macro returns the entire set of flags for the object.
  */
-#define GST_FLAGS(obj)                  (GST_OBJECT_CAST (obj)->flags)
-/* for the flags we double-not to make them comparable to TRUE and FALSE */
+#define GST_OBJECT_FLAGS(obj)                  (GST_OBJECT_CAST (obj)->flags)
 /**
- * GST_FLAG_IS_SET:
+ * GST_OBJECT_FLAG_IS_SET:
  * @obj: Object to check for flags.
- * @flag: Flag to check for, must be a single bit in guint32.
+ * @flag: Flag to check for
  *
  * This macro checks to see if the given flag is set.
  */
-#define GST_FLAG_IS_SET(obj,flag)       (!!(GST_FLAGS (obj) & (1<<(flag))))
+#define GST_OBJECT_FLAG_IS_SET(obj,flag)       (GST_OBJECT_FLAGS (obj) & (flag))
 /**
- * GST_FLAG_SET:
+ * GST_OBJECT_FLAG_SET:
  * @obj: Object to set flag in.
- * @flag: Flag to set, can by any number of bits in guint32.
+ * @flag: Flag to set
  *
  * This macro sets the given bits.
  */
-#define GST_FLAG_SET(obj,flag)          (GST_FLAGS (obj) |= (1<<(flag)))
+#define GST_OBJECT_FLAG_SET(obj,flag)          (GST_OBJECT_FLAGS (obj) |= (flag))
 /**
- * GST_FLAG_UNSET:
+ * GST_OBJECT_FLAG_UNSET:
  * @obj: Object to unset flag in.
- * @flag: Flag to set, must be a single bit in guint32.
+ * @flag: Flag to set
  *
  * This macro usets the given bits.
  */
-#define GST_FLAG_UNSET(obj,flag)        (GST_FLAGS (obj) &= ~(1<<(flag)))
+#define GST_OBJECT_FLAG_UNSET(obj,flag)        (GST_OBJECT_FLAGS (obj) &= ~(flag))
 
 
 /**
@@ -175,14 +174,14 @@ typedef enum
  *
  * Check if the given object is beeing destroyed.
  */
-#define GST_OBJECT_IS_DISPOSING(obj)    (GST_FLAG_IS_SET (obj, GST_OBJECT_DISPOSING))
+#define GST_OBJECT_IS_DISPOSING(obj)    (GST_OBJECT_FLAG_IS_SET (obj, GST_OBJECT_DISPOSING))
 /**
  * GST_OBJECT_IS_FLOATING:
  * @obj:Object to check
  *
  * Check if the given object is floating (has no owner).
  */
-#define GST_OBJECT_IS_FLOATING(obj)     (GST_FLAG_IS_SET (obj, GST_OBJECT_FLOATING))
+#define GST_OBJECT_IS_FLOATING(obj)     (GST_OBJECT_FLAG_IS_SET (obj, GST_OBJECT_FLOATING))
 
 typedef struct _GstObject GstObject;
 typedef struct _GstObjectClass GstObjectClass;

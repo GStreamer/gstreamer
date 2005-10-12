@@ -154,11 +154,12 @@ typedef enum /*< flags=0 >*/
  */
 typedef enum
 {
-  GST_ELEMENT_LOCKED_STATE 	= GST_OBJECT_FLAG_LAST,
-  GST_ELEMENT_IS_SINK,
-  GST_ELEMENT_UNPARENTING,
-  GST_ELEMENT_CHANGING_STATE,
-  GST_ELEMENT_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 16
+  GST_ELEMENT_LOCKED_STATE      = (GST_OBJECT_FLAG_LAST << 0),
+  GST_ELEMENT_IS_SINK           = (GST_OBJECT_FLAG_LAST << 1),
+  GST_ELEMENT_UNPARENTING       = (GST_OBJECT_FLAG_LAST << 2),
+  GST_ELEMENT_CHANGING_STATE    = (GST_OBJECT_FLAG_LAST << 3),
+  /* padding */
+  GST_ELEMENT_FLAG_LAST         = (GST_OBJECT_FLAG_LAST << 16)
 } GstElementFlags;
 
 /**
@@ -168,7 +169,7 @@ typedef enum
  * Check if the element is in the loacked state and therefore will ignore state
  * changes from its parent object.
  */
-#define GST_ELEMENT_IS_LOCKED_STATE(obj)        (GST_FLAG_IS_SET(obj,GST_ELEMENT_LOCKED_STATE))
+#define GST_ELEMENT_IS_LOCKED_STATE(obj)        (GST_OBJECT_FLAG_IS_SET(obj,GST_ELEMENT_LOCKED_STATE))
 
 /**
  * GST_ELEMENT_NAME:

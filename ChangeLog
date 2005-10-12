@@ -1,3 +1,46 @@
+2005-10-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* check/gst/gstbin.c: (GST_START_TEST):
+	* docs/gst/gstreamer-sections.txt:
+	* gst/base/gstbasesink.c: (gst_base_sink_init):
+	* gst/base/gstbasesrc.c: (gst_base_src_init),
+	(gst_base_src_get_range), (gst_base_src_check_get_range),
+	(gst_base_src_start), (gst_base_src_stop):
+	* gst/base/gstbasesrc.h:
+	* gst/elements/gstfakesrc.c: (gst_fake_src_set_property):
+	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_remove_func),
+	(bin_element_is_sink), (reset_degree), (gst_bin_element_set_state),
+	(bin_bus_handler):
+	* gst/gstbin.h:
+	* gst/gstbuffer.h:
+	* gst/gstbus.c: (gst_bus_post), (gst_bus_set_flushing):
+	* gst/gstbus.h:
+	* gst/gstelement.c: (gst_element_is_locked_state),
+	(gst_element_set_locked_state), (gst_element_commit_state),
+	(gst_element_set_state):
+	* gst/gstelement.h:
+	* gst/gstindex.c: (gst_index_init):
+	* gst/gstindex.h:
+	* gst/gstminiobject.h:
+	* gst/gstobject.c: (gst_object_init), (gst_object_sink),
+	(gst_object_set_parent):
+	* gst/gstobject.h:
+	* gst/gstpad.c: (gst_pad_set_blocked_async), (gst_pad_is_blocked),
+	(gst_pad_get_caps_unlocked), (gst_pad_set_caps):
+	* gst/gstpad.h:
+	* gst/gstpadtemplate.h:
+	* gst/gstpipeline.c: (gst_pipeline_provide_clock_func),
+	(gst_pipeline_use_clock), (gst_pipeline_auto_clock):
+	* gst/gstpipeline.h:
+	* gst/indexers/gstfileindex.c: (gst_file_index_load),
+	(gst_file_index_commit):
+	* testsuite/bytestream/filepadsink.c: (gst_fp_sink_init):
+	* testsuite/pad/link.c: (gst_test_src_init),
+	(gst_test_filter_init), (gst_test_sink_init):
+	* testsuite/states/locked.c: (main):
+          renamed GST_FLAGS macros to GST_OBJECT_FLAGS
+          moved bitshift from macro to enum definition
+
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_buffer):
@@ -154,7 +197,7 @@
 	* gst/parse/types.h:
 	  config.h already included before
 	* tools/gst-inspect.c: (main):
-	  sys/wait.h also doesn´t exist on mingw, so change the ifdef check
+	  sys/wait.h also doesnï¿½t exist on mingw, so change the ifdef check
 	  check for ENABLE_NLS, not GETTEXT_PACKAGE
 	* tools/gst-launch.c: (main):
 	  check for ENABLE_NLS, not GETTEXT_PACKAGE

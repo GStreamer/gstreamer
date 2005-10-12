@@ -455,7 +455,7 @@ gst_file_index_load (GstFileIndex * index)
 
   xmlFreeDoc (doc);
 
-  GST_FLAG_UNSET (index, GST_INDEX_WRITABLE);
+  GST_OBJECT_FLAG_UNSET (index, GST_INDEX_WRITABLE);
   index->is_loaded = TRUE;
   GST_LOG_OBJECT (index, "index %s loaded OK", index->location);
 }
@@ -589,7 +589,7 @@ gst_file_index_commit (GstIndex * _index, gint _writer_id)
   g_return_if_fail (index->location);
   g_return_if_fail (!index->is_loaded);
 
-  GST_FLAG_UNSET (index, GST_INDEX_WRITABLE);
+  GST_OBJECT_FLAG_UNSET (index, GST_INDEX_WRITABLE);
 
   doc = xmlNewDoc ((xmlChar *) "1.0");
   doc->xmlRootNode =

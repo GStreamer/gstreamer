@@ -77,8 +77,8 @@ main (gint argc, gchar * argv[])
   g_signal_connect (G_OBJECT (pipeline), "deep_notify",
       G_CALLBACK (gst_object_default_deep_notify), NULL);
 
-  GST_FLAG_SET (fakesrc2, GST_ELEMENT_LOCKED_STATE);
-  GST_FLAG_SET (fakesink2, GST_ELEMENT_LOCKED_STATE);
+  GST_OBJECT_FLAG_SET (fakesrc2, GST_ELEMENT_LOCKED_STATE);
+  GST_OBJECT_FLAG_SET (fakesink2, GST_ELEMENT_LOCKED_STATE);
 
   g_print ("play..\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -89,8 +89,8 @@ main (gint argc, gchar * argv[])
 
   gst_element_set_state (pipeline, GST_STATE_READY);
 
-  GST_FLAG_UNSET (fakesrc2, GST_ELEMENT_LOCKED_STATE);
-  GST_FLAG_UNSET (fakesink2, GST_ELEMENT_LOCKED_STATE);
+  GST_OBJECT_FLAG_UNSET (fakesrc2, GST_ELEMENT_LOCKED_STATE);
+  GST_OBJECT_FLAG_UNSET (fakesink2, GST_ELEMENT_LOCKED_STATE);
 
   g_print ("play..\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);

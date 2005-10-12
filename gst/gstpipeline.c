@@ -462,7 +462,7 @@ gst_pipeline_provide_clock_func (GstElement * element)
 
   /* if we have a fixed clock, use that one */
   GST_LOCK (pipeline);
-  if (GST_FLAG_IS_SET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK)) {
+  if (GST_OBJECT_FLAG_IS_SET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK)) {
     clock = pipeline->fixed_clock;
     gst_object_ref (clock);
     GST_UNLOCK (pipeline);
@@ -522,7 +522,7 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
 
   GST_LOCK (pipeline);
-  GST_FLAG_SET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
+  GST_OBJECT_FLAG_SET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
 
   gst_object_replace ((GstObject **) & pipeline->fixed_clock,
       (GstObject *) clock);
@@ -566,7 +566,7 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
 
   GST_LOCK (pipeline);
-  GST_FLAG_UNSET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
+  GST_OBJECT_FLAG_UNSET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
 
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
   GST_UNLOCK (pipeline);

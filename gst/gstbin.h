@@ -46,12 +46,12 @@ GST_EXPORT GType _gst_bin_type;
  * Derived classes can use this as first value in a list of flags.
  *
  * GstBinFlags are a set of flags specific to bins. Most are set/used
- * internally. They can be checked using the GST_FLAG_IS_SET () macro,
- * and (un)set using GST_FLAG_SET () and GST_FLAG_UNSET ().
+ * internally. They can be checked using the GST_OBJECT_FLAG_IS_SET () macro,
+ * and (un)set using GST_OBJECT_FLAG_SET () and GST_OBJECT_FLAG_UNSET ().
  */
 typedef enum {
   /* padding */
-  GST_BIN_FLAG_LAST		= GST_ELEMENT_FLAG_LAST + 5
+  GST_BIN_FLAG_LAST		= (GST_ELEMENT_FLAG_LAST << 5)
 } GstBinFlags;
 
 typedef struct _GstBin GstBin;

@@ -43,9 +43,9 @@ G_BEGIN_DECLS
  * The #GstElement flags that a basesrc element may have.
  */
 typedef enum {
-  GST_BASE_SRC_STARTED           = GST_ELEMENT_FLAG_LAST,
-
-  GST_BASE_SRC_FLAG_LAST         = GST_ELEMENT_FLAG_LAST + 2
+  GST_BASE_SRC_STARTED           = (GST_ELEMENT_FLAG_LAST << 0),
+  /* padding */
+  GST_BASE_SRC_FLAG_LAST         = (GST_ELEMENT_FLAG_LAST << 2)
 } GstBaseSrcFlags;
 
 typedef struct _GstBaseSrc GstBaseSrc;

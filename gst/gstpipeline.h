@@ -46,10 +46,9 @@ typedef struct _GstPipelineClass GstPipelineClass;
  * Pipeline flags
  */
 typedef enum {
-  GST_PIPELINE_FLAG_FIXED_CLOCK        = GST_BIN_FLAG_LAST,
-
+  GST_PIPELINE_FLAG_FIXED_CLOCK        = (GST_BIN_FLAG_LAST << 0),
   /* padding */
-  GST_PIPELINE_FLAG_LAST               = GST_BIN_FLAG_LAST + 4
+  GST_PIPELINE_FLAG_LAST               = (GST_BIN_FLAG_LAST << 4)
 } GstPipelineFlags;
 
 struct _GstPipeline {

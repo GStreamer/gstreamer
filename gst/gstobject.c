@@ -315,7 +315,7 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
   PATCH_REFCOUNT (object);
 
   object->flags = 0;
-  GST_FLAG_SET (object, GST_OBJECT_FLOATING);
+  GST_OBJECT_FLAG_SET (object, GST_OBJECT_FLOATING);
 }
 
 #ifndef GST_DISABLE_TRACE
@@ -448,7 +448,7 @@ gst_object_sink (gpointer object)
 
   GST_LOCK (object);
   if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
-    GST_FLAG_UNSET (object, GST_OBJECT_FLOATING);
+    GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
     GST_UNLOCK (object);
     gst_object_unref (object);
   } else {
@@ -869,7 +869,7 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
    * in the floating case. */
   object->parent = parent;
   if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
-    GST_FLAG_UNSET (object, GST_OBJECT_FLOATING);
+    GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
     GST_UNLOCK (object);
   } else {
     GST_UNLOCK (object);

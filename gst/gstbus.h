@@ -47,9 +47,9 @@ G_BEGIN_DECLS
  * The standard flags that a bus may have.
  */
 typedef enum {
-  GST_BUS_FLUSHING		= GST_OBJECT_FLAG_LAST,
-
-  GST_BUS_FLAG_LAST		= GST_OBJECT_FLAG_LAST + 1
+  GST_BUS_FLUSHING      = (GST_OBJECT_FLAG_LAST << 0),
+  /* padding */
+  GST_BUS_FLAG_LAST     = (GST_OBJECT_FLAG_LAST << 1)
 } GstBusFlags;
 
 /**

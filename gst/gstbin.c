@@ -484,10 +484,10 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     goto had_parent;
 
   /* if we add a sink we become a sink */
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin, "element \"%s\" was sink",
         elem_name);
-    GST_FLAG_SET (bin, GST_ELEMENT_IS_SINK);
+    GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_IS_SINK);
   }
   if (gst_element_provides_clock (element)) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin,
@@ -609,10 +609,10 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   GST_LOCK (element);
   /* Check if the element is already being removed and immediately
    * return */
-  if (G_UNLIKELY (GST_FLAG_IS_SET (element, GST_ELEMENT_UNPARENTING)))
+  if (G_UNLIKELY (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_UNPARENTING)))
     goto already_removing;
 
-  GST_FLAG_SET (element, GST_ELEMENT_UNPARENTING);
+  GST_OBJECT_FLAG_SET (element, GST_ELEMENT_UNPARENTING);
   /* grab element name so we can print it */
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
   GST_UNLOCK (element);
@@ -633,7 +633,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   bin->children_cookie++;
 
   /* check if we removed a sink */
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
     GList *other_sink;
 
     /* check if we removed the last sink */
@@ -641,7 +641,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
         bin, (GCompareFunc) bin_element_is_sink);
     if (!other_sink) {
       /* yups, we're not a sink anymore */
-      GST_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
+      GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
     }
   }
   if (gst_element_provides_clock (element)) {
@@ -672,7 +672,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   gst_object_unparent (GST_OBJECT_CAST (element));
 
   GST_LOCK (element);
-  GST_FLAG_UNSET (element, GST_ELEMENT_UNPARENTING);
+  GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_UNPARENTING);
   GST_UNLOCK (element);
 
   g_signal_emit (G_OBJECT (bin), gst_bin_signals[ELEMENT_REMOVED], 0, element);
@@ -851,7 +851,7 @@ bin_element_is_sink (GstElement * child, GstBin * bin)
   /* we lock the child here for the remainder of the function to
    * get its name and flag safely. */
   GST_LOCK (child);
-  is_sink = GST_FLAG_IS_SET (child, GST_ELEMENT_IS_SINK);
+  is_sink = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SINK);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
       "child %s %s sink", GST_OBJECT_NAME (child), is_sink ? "is" : "is not");
@@ -1129,7 +1129,7 @@ static void
 reset_degree (GstElement * element, GstBinSortIterator * bit)
 {
   /* sinks are added right away */
-  if (GST_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
+  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_IS_SINK)) {
     add_to_queue (bit, element);
   } else {
     /* others are marked with 0 and handled when sinks are done */
@@ -1334,7 +1334,7 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element, GstState pending)
 
   /* peel off the locked flag */
   GST_LOCK (element);
-  locked = GST_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+  locked = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
   GST_UNLOCK (element);
 
   /* skip locked elements */
@@ -1620,7 +1620,7 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       GST_STATE_LOCK (bin);
       GST_DEBUG_OBJECT (bin, "locked");
 
-      if (!GST_FLAG_IS_SET (bin, GST_ELEMENT_CHANGING_STATE)) {
+      if (!GST_OBJECT_FLAG_IS_SET (bin, GST_ELEMENT_CHANGING_STATE)) {
         GST_DEBUG_OBJECT (bin, "got ASYNC message, forcing recalc state");
         GST_STATE_UNLOCK (bin);
 

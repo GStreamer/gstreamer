@@ -193,8 +193,8 @@ gst_index_init (GstIndex * index)
   index->resolver = resolvers[index->method].resolver;
   index->resolver_user_data = resolvers[index->method].user_data;
 
-  GST_FLAG_SET (index, GST_INDEX_WRITABLE);
-  GST_FLAG_SET (index, GST_INDEX_READABLE);
+  GST_OBJECT_FLAG_SET (index, GST_INDEX_WRITABLE);
+  GST_OBJECT_FLAG_SET (index, GST_INDEX_READABLE);
 
   GST_DEBUG ("created new index");
 }

@@ -448,11 +448,11 @@ gst_fake_src_set_property (GObject * object, guint prop_id,
       src->dump = g_value_get_boolean (value);
       break;
     case PROP_CAN_ACTIVATE_PUSH:
-      g_return_if_fail (!GST_FLAG_IS_SET (object, GST_BASE_SRC_STARTED));
+      g_return_if_fail (!GST_OBJECT_FLAG_IS_SET (object, GST_BASE_SRC_STARTED));
       GST_BASE_SRC (src)->can_activate_push = g_value_get_boolean (value);
       break;
     case PROP_CAN_ACTIVATE_PULL:
-      g_return_if_fail (!GST_FLAG_IS_SET (object, GST_BASE_SRC_STARTED));
+      g_return_if_fail (!GST_OBJECT_FLAG_IS_SET (object, GST_BASE_SRC_STARTED));
       src->can_activate_pull = g_value_get_boolean (value);
       break;
     case PROP_IS_LIVE:

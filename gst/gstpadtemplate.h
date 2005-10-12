@@ -101,9 +101,9 @@ typedef enum {
  * Flags for the padtemplate
  */
 typedef enum {
-  GST_PAD_TEMPLATE_FIXED	= GST_OBJECT_FLAG_LAST,
-
-  GST_PAD_TEMPLATE_FLAG_LAST	= GST_OBJECT_FLAG_LAST + 4
+  GST_PAD_TEMPLATE_FIXED        = (GST_OBJECT_FLAG_LAST << 0),
+  /* padding */
+  GST_PAD_TEMPLATE_FLAG_LAST    = (GST_OBJECT_FLAG_LAST << 4)
 } GstPadTemplateFlags;
 
 /**
@@ -112,7 +112,7 @@ typedef enum {
  *
  * Check if the properties of the padtemplate are fixed
  */
-#define GST_PAD_TEMPLATE_IS_FIXED(templ)	(GST_FLAG_IS_SET(templ, GST_PAD_TEMPLATE_FIXED))
+#define GST_PAD_TEMPLATE_IS_FIXED(templ)	(GST_OBJECT_FLAG_IS_SET(templ, GST_PAD_TEMPLATE_FIXED))
 
 /**
  * GstPadTemplate:
