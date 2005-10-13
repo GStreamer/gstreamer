@@ -42,6 +42,9 @@ typedef struct _GstCollectData
   GstPad		*pad;
   GstBuffer		*buffer;
   guint			 pos;
+  gint64		 segment_start;
+  gint64		 segment_stop;
+  gint64		 stream_time;
 } GstCollectData;
 
 /* function will be called when all pads have data */

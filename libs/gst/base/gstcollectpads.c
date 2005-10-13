@@ -550,6 +550,24 @@ gst_collectpads_event (GstPad * pad, GstEvent * event)
       return TRUE;
       break;
     }
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gint64 segment_start, segment_stop, stream_time;
+      gdouble segment_rate;
+      GstFormat format;
+      gboolean update;
+
+      gst_event_parse_newsegment (event, &update, &segment_rate, &format,
+          &segment_start, &segment_stop, &stream_time);
+
+      if (format == GST_FORMAT_TIME) {
+        data->segment_start = segment_start;
+        data->segment_stop = segment_start;
+        data->stream_time = stream_time;
+      }
+
+      goto beach;
+    }
     default:
       goto beach;
   }
