@@ -1,3 +1,19 @@
+2005-10-13  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	Updated to new API
+	* gst/gstbus.override:
+	bus.add_watch() now uses gst_bus_add_watch_full() using 
+	pyg_destroy_notify as the DestroyNotify function, thus enabling
+	proper python garbage collection.
+	* testsuite/common.py:
+	Let's check refcounting of ALL gst.Object
+	* testsuite/test_bin.py:
+	Added debug
+	* testsuite/test_bus.py:
+	Added "message" signal version of test
+
 2005-10-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstelement.override:

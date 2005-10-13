@@ -646,7 +646,6 @@
   (gtype-id "GST_TYPE_MINI_OBJECT_FLAGS")
   (values
     '("readonly" "GST_MINI_OBJECT_FLAG_READONLY")
-    '("static" "GST_MINI_OBJECT_FLAG_STATIC")
     '("last" "GST_MINI_OBJECT_FLAG_LAST")
   )
 )

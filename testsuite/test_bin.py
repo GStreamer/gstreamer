@@ -105,13 +105,21 @@ class BinAddRemove(TestCase):
         TestCase.tearDown(self)
 
     def testError(self):
+        gst.info("creating fakesrc")
         src = gst.element_factory_make('fakesrc', 'name')
+        gst.info("creating fakesink")
         sink = gst.element_factory_make('fakesink', 'name')
+        gst.info("adding src:%d to bin" % src.__gstrefcount__)
+        self.assertEqual(src.__gstrefcount__, 1)
         self.bin.add(src)
+        self.assertEqual(src.__gstrefcount__, 2)
+        gst.info("added src:%d" % src.__gstrefcount__)
         self.assertRaises(gst.AddError, self.bin.add, sink)
         self.assertRaises(gst.AddError, self.bin.add, src)
         self.assertRaises(gst.RemoveError, self.bin.remove, sink)
+        gst.info("removing src")
         self.bin.remove(src)
+        gst.info("removed")
         self.assertRaises(gst.RemoveError, self.bin.remove, src)
         
     def testMany(self):

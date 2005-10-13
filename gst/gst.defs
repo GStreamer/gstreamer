@@ -1114,7 +1114,7 @@
   (parameters
     '("GstState*" "state")
     '("GstState*" "pending")
-    '("GTimeVal*" "timeout")
+    '("GstClockTime" "timeout")
   )
 )
 
@@ -1691,7 +1691,7 @@
     '("GstFormat" "format")
     '("gint64" "start_value")
     '("gint64" "stop_value")
-    '("gint64" "base")
+    '("gint64" "stream_time")
   )
 )
 
@@ -1700,11 +1700,12 @@
   (c-name "gst_event_parse_newsegment")
   (return-type "none")
   (parameters
+    '("gboolean*" "update")
     '("gdouble*" "rate")
     '("GstFormat*" "format")
     '("gint64*" "start_value")
     '("gint64*" "end_value")
-    '("gint64*" "base")
+    '("gint64*" "stream_time")
   )
 )
 

@@ -206,8 +206,8 @@ _wrap_gst_bus_add_watch (PyGObject *self, PyObject *args)
     if (data == NULL)
         return NULL;
 
-    sigid = gst_bus_add_watch (GST_BUS (self->obj),
-        (GstBusFunc) bus_func, data);
+    sigid = gst_bus_add_watch_full (GST_BUS (self->obj), G_PRIORITY_DEFAULT,
+        (GstBusFunc) bus_func, data, (GDestroyNotify)pyg_destroy_notify);
 
     return PyInt_FromLong(sigid);
 }

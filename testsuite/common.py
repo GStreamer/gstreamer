@@ -110,7 +110,8 @@ def run_silent(function, *args, **kwargs):
 
 class TestCase(unittest.TestCase):
 
-    _types = [gst.Controller, gst.Object, gst.Element, gst.Pad, gst.Bus, gst.MiniObject]
+    _types = [gst.Object, gst.MiniObject]
+    _except_types = [gst.Registry, gst.Plugin, gst.PluginFeature]
 
     def gccollect(self):
         # run the garbage collector
@@ -141,6 +142,8 @@ class TestCase(unittest.TestCase):
             objs = [o for o in gc.get_objects() if isinstance(o, c)]
             new.extend([o for o in objs if o not in self._tracked[c]])
 
+        for u in self._except_types:
+            new = [o for o in new if not isinstance(o, u)]
         self.failIf(new, new)
         #self.failIf(new, ["%r:%d" % (type(o), id(o)) for o in new])
         del self._tracked
