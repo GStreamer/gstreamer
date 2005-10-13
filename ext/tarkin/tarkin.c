@@ -252,7 +252,7 @@ tarkin_analysis_framein (TarkinStream * s, uint8_t * frame,
     _stream_flush (s);
 
 #ifdef DBG_OGG
-  printf ("dbg_ogg: framein at pos %d/%d, n° %d,%d on layer %d\n",
+  printf ("dbg_ogg: framein at pos %d/%d, n? %d,%d on layer %d\n",
       date->numerator, date->denominator,
       layer->frameno, s->current_frame, layer_id);
 #endif
@@ -301,7 +301,7 @@ tarkin_synthesis_packetin (TarkinStream * s, ogg_packet * op)
   TarkinPacket *packet;
 
 #ifdef DBG_OGG
-  printf ("dbg_ogg: Reading packet n° %lld, granulepos %lld, len %ld, %s%s\n",
+  printf ("dbg_ogg: Reading packet n? %lld, granulepos %lld, len %ld, %s%s\n",
       op->packetno, op->granulepos, op->bytes,
       op->b_o_s ? "b_o_s" : "", op->e_o_s ? "e_o_s" : "");
 #endif
@@ -329,7 +329,7 @@ tarkin_synthesis_packetin (TarkinStream * s, ogg_packet * op)
     for (junk = 1 << 31; junk & 1 << 31;)       /* and many future data */
       while ((junk = oggpack_read (&opb, 32)) & 1 << 30);
     /* That is, feature data comes in 30 bit chunks. We also have
-     * 31 potentially usefull bits in last chunk. */
+     * 31 potentially useful bits in last chunk. */
   }
 
   nread = (opb.ptr - opb.buffer);
