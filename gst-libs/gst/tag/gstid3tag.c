@@ -340,9 +340,8 @@ gst_tag_list_new_from_id3v1 (const guint8 * data)
   if (year > 0) {
     GDate *date = g_date_new_dmy (1, 1, year);
 
-    year = g_date_get_julian (date);
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, date, NULL);
     g_date_free (date);
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, year, NULL);
   }
   if (data[125] == 0) {
     gst_tag_extract_id3v1_string (list, GST_TAG_COMMENT, (gchar *) & data[97],
