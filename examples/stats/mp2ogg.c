@@ -20,7 +20,7 @@
 #include <gst/gst.h>
 
 /* This example app demonstartes the use of pad query and convert to
- * get usefull statistics about a plugin. In this case we monitor the
+ * get useful statistics about a plugin. In this case we monitor the
  * compression status of mpeg audio to ogg vorbis transcoding.
  */
 
