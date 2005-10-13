@@ -39,12 +39,19 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#  include <unistd.h>
 #endif
+
 #ifdef HAVE_MMAP
-#include <sys/mman.h>
+# include <sys/mman.h>
 #endif
+
+#ifdef HAVE_WIN32
+#  include <io.h>               /* lseek, open, close, read */
+#endif
+
 #include <errno.h>
 #include <string.h>
 
@@ -732,7 +739,7 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
     goto could_not_read;
 
   /* regular files should have given us what we expected */
-  if ((gint) ret < length && src->is_regular)
+  if ((guint) ret < length && src->is_regular)
     goto unexpected_eos;
 
   /* other files should eos if they read 0 */

@@ -51,9 +51,9 @@ static struct _elements_entry _elements[] = {
   {"capsfilter", GST_RANK_NONE, gst_capsfilter_get_type},
   {"fakesrc", GST_RANK_NONE, gst_fake_src_get_type},
   {"fakesink", GST_RANK_NONE, gst_fake_sink_get_type},
-#ifndef WIN32
+#ifndef HAVE_WIN32
   {"fdsrc", GST_RANK_NONE, gst_fdsrc_get_type},
-#endif //WIN32
+#endif
   {"filesrc", GST_RANK_NONE, gst_file_src_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
   {"filesink", GST_RANK_NONE, gst_file_sink_get_type},
