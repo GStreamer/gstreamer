@@ -1117,6 +1117,7 @@ main (int argc, char *argv[])
     g_print ("Error initializing: %s\n", err->message);
     exit (1);
   }
+  g_option_context_free (ctx);
 
   if (print_all && argc > 2) {
     g_print ("-a requires no extra arguments\n");

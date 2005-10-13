@@ -187,9 +187,37 @@ typedef enum
 
 #define GST_TYPE_G_ERROR    (gst_g_error_get_type ())
 
+/**
+ * GST_LIBRARY_ERROR:
+ *
+ * Error domain for library loading. Errors in this domain will
+ * be from the #GstLibraryError enumeration.
+ * See #GError for information on error domains.
+ */
 #define GST_LIBRARY_ERROR   gst_library_error_quark ()
+/**
+ * GST_RESOURCE_ERROR:
+ *
+ * Error domain for resource handling. Errors in this domain will
+ * be from the #GstResourceError enumeration.
+ * See #GError for information on error domains.
+ */
 #define GST_RESOURCE_ERROR  gst_resource_error_quark ()
+/**
+ * GST_CORE_ERROR:
+ *
+ * Error domain for core system. Errors in this domain will
+ * be from the #GstCoreError enumeration.
+ * See #GError for information on error domains.
+ */
 #define GST_CORE_ERROR      gst_core_error_quark ()
+/**
+ * GST_STREAM_ERROR:
+ *
+ * Error domain for media stream processing. Errors in this domain will
+ * be from the #GstStreamError enumeration.
+ * See #GError for information on error domains.
+ */
 #define GST_STREAM_ERROR    gst_stream_error_quark ()
 
 /**

@@ -533,6 +533,7 @@ main (int argc, char *argv[])
     g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
     exit (1);
   }
+  g_option_context_free (ctx);
 
   /* FIXpopt: strip short args, too. We do it ourselves for now */
   j = 1;

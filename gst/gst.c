@@ -250,9 +250,9 @@ parse_debug_list (const gchar * list)
  * and initialization is automated.
  *
  * This function is useful if you want to integrate GStreamer with other
- * libraries that use GOption.
+ * libraries that use GOption (see g_option_context_add_group() ).
  *
- * Returns: a pointer to a GStreamer option group. Should be dereferenced
+ * Returns: a pointer to GStreamer's option group. Should be dereferenced
  * after use.
  */
 

@@ -244,6 +244,7 @@ main (int argc, char **argv)
     g_print ("Error initializing: %s\n", err->message);
     exit (1);
   }
+  g_option_context_free (ctx);
 
   /* detect stuff */
   dir = get_dir_of_binary (argv[0]);

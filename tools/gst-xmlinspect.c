@@ -780,6 +780,7 @@ main (int argc, char *argv[])
     g_print ("Error initializing: %s\n", err->message);
     exit (1);
   }
+  g_option_context_free (ctx);
 
   PUT_STRING (0, "<?xml version=\"1.0\"?>");
 
