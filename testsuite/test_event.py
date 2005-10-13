@@ -26,16 +26,32 @@ from common import gst, unittest, testhelper, TestCase
 
 class EventTest(TestCase):
     def setUp(self):
-        pipeline = gst.parse_launch('fakesrc ! fakesink name=sink')
-        self.sink = pipeline.get_by_name('sink')
-        pipeline.set_state(gst.STATE_PLAYING)
         TestCase.setUp(self)
+        self.pipeline = gst.parse_launch('fakesrc ! fakesink name=sink')
+        self.sink = self.pipeline.get_by_name('sink')
+        self.pipeline.set_state(gst.STATE_PLAYING)
+
+    def tearDown(self):
+        gst.debug('setting pipeline to NULL')
+        self.pipeline.set_state(gst.STATE_NULL)
+        gst.debug('set pipeline to NULL')
+
+        del self.sink
+        del self.pipeline
+        TestCase.tearDown(self)
         
     def testEventSeek(self):
+        # this event only serves to change the rate of data transfer
         event = gst.event_new_seek(1.0, gst.FORMAT_BYTES, gst.SEEK_FLAG_FLUSH,
             gst.SEEK_TYPE_NONE, 0, gst.SEEK_TYPE_NONE, 0)
+        # FIXME: but basesrc goes into an mmap/munmap spree, needs to be fixed
+
+        event = gst.event_new_seek(1.0, gst.FORMAT_BYTES, gst.SEEK_FLAG_FLUSH,
+            gst.SEEK_TYPE_SET, 0, gst.SEEK_TYPE_NONE, 0)
         assert event
+        gst.debug('sending event')
         self.sink.send_event(event)
+        gst.debug('sent event')
 
     def testWrongEvent(self):
         buffer = gst.Buffer()

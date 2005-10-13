@@ -83,7 +83,7 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
     GstStateChangeReturn ret;
     PyObject *timeout = NULL;
     gdouble timeoutd;
-    GstClockTime timeout64;
+    GstClockTime timeout64 = GST_CLOCK_TIME_NONE;
     PyObject *tuple;
 
     /*
