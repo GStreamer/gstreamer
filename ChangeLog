@@ -1,3 +1,8 @@
+2005-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list):
+	  Fix handling of GST_TAG_DATE, which is now of type GST_TYPE_DATE.
+
 2005-10-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* examples/stats/mp2ogg.c:

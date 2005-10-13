@@ -528,6 +528,7 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
   const id3_ucs4_t *ucs4;
   id3_utf8_t *utf8;
   GstTagList *tag_list;
+  GType tag_type;
   guint i = 0;
 
   tag_list = gst_tag_list_new ();
@@ -587,8 +588,10 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
         continue;
       }
 
+      tag_type = gst_tag_get_type (tag_name);
+
       /* be sure to add non-string tags here */
-      switch (gst_tag_get_type (tag_name)) {
+      switch (tag_type) {
         case G_TYPE_UINT:
         {
           guint tmp;
@@ -651,11 +654,28 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
               GST_TAG_DURATION, tmp * 1000 * 1000, NULL);
           break;
         }
-        default:
-          g_assert (gst_tag_get_type (tag_name) == G_TYPE_STRING);
-          gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, utf8,
-              NULL);
+        case G_TYPE_STRING:{
+          gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
+              tag_name, (const gchar *) utf8, NULL);
           break;
+        }
+          /* handles GST_TYPE_DATE and anything else */
+        default:{
+          GValue src = { 0, };
+          GValue dest = { 0, };
+
+          g_value_init (&src, G_TYPE_STRING);
+          g_value_set_string (&src, (const gchar *) utf8);
+          g_value_init (&dest, tag_type);
+          if (g_value_transform (&src, &dest)) {
+            gst_tag_list_add_values (tag_list, GST_TAG_MERGE_APPEND,
+                tag_name, &dest, NULL);
+          } else {
+            GST_WARNING ("Failed to transform tag from string to type '%s'",
+                g_type_name (tag_type));
+          }
+          break;
+        }
       }
       free (utf8);
     }
