@@ -220,6 +220,13 @@ gboolean	gst_tag_list_get_pointer_index	(const GstTagList *	list,
 						 const gchar *		tag,
 						 guint			index,
 						 gpointer *		value);
+gboolean        gst_tag_list_get_date           (const GstTagList     * list,
+                                                 const gchar          * tag,
+                                                 GDate               ** value);
+gboolean        gst_tag_list_get_date_index     (const GstTagList     * list,
+                                                 const gchar          * tag,
+                                                 guint                  index,
+                                                 GDate               ** value);
 
 /* GStreamer core tags (need to be discussed) */
 /**
@@ -243,7 +250,7 @@ gboolean	gst_tag_list_get_pointer_index	(const GstTagList *	list,
 /**
  * GST_TAG_DATE:
  *
- * date the data was created (in Julian calendar days)
+ * date the data was created (#GDate structure)
  */
 #define GST_TAG_DATE			"date"
 /**

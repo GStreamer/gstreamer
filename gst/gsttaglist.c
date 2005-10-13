@@ -95,9 +95,8 @@ _gst_tag_initialize (void)
       G_TYPE_STRING,
       _("album"),
       _("album containing this data"), gst_tag_merge_strings_with_comma);
-  gst_tag_register (GST_TAG_DATE, GST_TAG_FLAG_META, G_TYPE_UINT,       /* FIXME: own data type for dates? */
-      _("date"),
-      _("date the data was created (in Julian calendar days)"), NULL);
+  gst_tag_register (GST_TAG_DATE, GST_TAG_FLAG_META, GST_TYPE_DATE,
+      _("date"), _("date the data was created (as a GDate structure)"), NULL);
   gst_tag_register (GST_TAG_GENRE, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("genre"),
@@ -1272,3 +1271,61 @@ TAG_MERGE_FUNCS (pointer, gpointer)
  *	        given list.
  */
 TAG_MERGE_FUNCS (string, gchar *)
+
+/**
+ * gst_tag_list_get_date:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @value: location for the result
+ *
+ * Copies the contents for the given tag into the value, merging multiple values
+ * into one if multiple values are associated with the tag.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list or if it was #NULL.
+ */
+gboolean
+gst_tag_list_get_date (const GstTagList * list, const gchar * tag,
+    GDate ** value)
+{
+  GValue v = { 0, };
+
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
+  g_return_val_if_fail (tag != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  if (!gst_tag_list_copy_value (&v, list, tag))
+    return FALSE;
+  *value = (GDate *) g_value_dup_boxed (&v);
+  g_value_unset (&v);
+  return (*value != NULL);
+}
+
+/**
+ * gst_tag_list_get_date_index:
+ * @list: a #GStTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: location for the result
+ *
+ * Gets the value that is at the given index for the given tag in the given
+ * list.
+ *
+ * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ *	        given list or if it was #NULL.
+ */
+gboolean
+gst_tag_list_get_date_index (const GstTagList * list,
+    const gchar * tag, guint index, GDate ** value)
+{
+  const GValue *v;
+
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
+  g_return_val_if_fail (tag != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  if ((v = gst_tag_list_get_value_index (list, tag, index)) == NULL)
+    return FALSE;
+  *value = (GDate *) g_value_dup_boxed (v);
+  return (*value != NULL);
+}
