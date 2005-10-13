@@ -1,3 +1,8 @@
+2005-10-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* examples/stats/mp2ogg.c:
+	  yes, typo fixes
+
 2005-10-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* examples/indexing/indexmpeg.c: (main):
