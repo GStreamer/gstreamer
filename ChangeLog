@@ -1,3 +1,16 @@
+2005-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/faac/gstfaac.c: (gst_faac_class_init), (gst_faac_init),
+	(gst_faac_sink_setcaps), (gst_faac_src_setcaps),
+	(gst_faac_sink_event), (gst_faac_chain), (gst_faac_set_property),
+	(gst_faac_get_property), (gst_faac_change_state):
+	  Gst09-ize code a little bit more: use gst_pad_alloc_buffer(),
+	  move event handling from chain function into an event function,
+	  add some locks here and there, do some cleanups; disable 32-bit
+	  integer and float input formats until we're sure that those 
+	  actually work (couldn't play back the produced files with 
+	  anything).
+
 2005-10-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* examples/indexing/indexmpeg.c: (main):

@@ -22,7 +22,6 @@
 #endif
 
 #include "gstfaac.h"
-#include <string.h>
 
 #define SINK_CAPS \
     "audio/x-raw-int, "                \
@@ -31,28 +30,27 @@
     "width = (int) 16, "               \
     "depth = (int) 16, "               \
     "rate = (int) [ 8000, 96000 ], "   \
-    "channels = (int) [ 1, 6]; "       \
-\
-    "audio/x-raw-int, "                \
-    "endianness = (int) BYTE_ORDER, "  \
-    "signed = (boolean) true, "        \
-    "width = (int) 32, "               \
-    "depth = (int) { 24, 32 }, "       \
-    "rate = (int) [ 8000, 96000], "    \
-    "channels = (int) [ 1, 6]; "       \
-\
-    "audio/x-raw-float, "              \
-    "endianness = (int) BYTE_ORDER, "  \
-    "width = (int) 32, "               \
-    "rate = (int) [ 8000, 96000], "    \
-    "channels = (int) [ 1, 6]"
+    "channels = (int) [ 1, 6] "
 
+/* these don't seem to work? */
+#if 0
+"audio/x-raw-int, "
+    "endianness = (int) BYTE_ORDER, "
+    "signed = (boolean) true, "
+    "width = (int) 32, "
+    "depth = (int) { 24, 32 }, "
+    "rate = (int) [ 8000, 96000], "
+    "channels = (int) [ 1, 6]; "
+    "audio/x-raw-float, "
+    "endianness = (int) BYTE_ORDER, "
+    "width = (int) 32, "
+    "rate = (int) [ 8000, 96000], " "channels = (int) [ 1, 6]"
+#endif
 #define SRC_CAPS \
     "audio/mpeg, "                     \
     "mpegversion = (int) { 4, 2 }, "   \
     "channels = (int) [ 1, 6 ], "      \
     "rate = (int) [ 8000, 96000 ]"
-
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -72,7 +70,6 @@ enum
   ARG_TNS,
   ARG_MIDSIDE,
   ARG_SHORTCTL
-      /* FILL ME */
 };
 
 static void gst_faac_base_init (GstFaacClass * klass);
@@ -84,6 +81,7 @@ static void gst_faac_set_property (GObject * object,
 static void gst_faac_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
+static gboolean gst_faac_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_faac_src_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_faac_chain (GstPad * pad, GstBuffer * data);
@@ -91,8 +89,6 @@ static GstStateChangeReturn gst_faac_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
-
-/* static guint gst_faac_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_faac_get_type (void)
@@ -207,7 +203,7 @@ gst_faac_class_init (GstFaacClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_faac_set_property;
   gobject_class->get_property = gst_faac_get_property;
@@ -235,7 +231,7 @@ gst_faac_class_init (GstFaacClass * klass)
           GST_TYPE_FAAC_OUTPUTFORMAT, MAIN, G_PARAM_READWRITE));
 
   /* virtual functions */
-  gstelement_class->change_state = gst_faac_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_faac_change_state);
 }
 
 static void
@@ -251,14 +247,20 @@ gst_faac_init (GstFaac * faac)
   faac->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
       "sink");
-  gst_pad_set_chain_function (faac->sinkpad, gst_faac_chain);
-  gst_pad_set_setcaps_function (faac->sinkpad, gst_faac_sink_setcaps);
+  gst_pad_set_chain_function (faac->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_faac_chain));
+  gst_pad_set_setcaps_function (faac->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_faac_sink_setcaps));
+  gst_pad_set_event_function (faac->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_faac_sink_event));
   gst_element_add_pad (GST_ELEMENT (faac), faac->sinkpad);
 
   faac->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
-  gst_pad_set_setcaps_function (faac->srcpad, gst_faac_src_setcaps);
+  gst_pad_set_setcaps_function (faac->srcpad,
+      GST_DEBUG_FUNCPTR (gst_faac_src_setcaps));
+  gst_pad_use_fixed_caps (faac->srcpad);
   gst_element_add_pad (GST_ELEMENT (faac), faac->srcpad);
 
   /* default properties */
@@ -281,8 +283,9 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   gboolean result = FALSE;
 
   if (!gst_caps_is_fixed (caps))
-    goto done;                  /* GST_PAD_LINK_DELAYED; */
+    goto done;
 
+  GST_LOCK (faac);
   if (faac->handle) {
     faacEncClose (faac->handle);
     faac->handle = NULL;
@@ -291,6 +294,7 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_buffer_unref (faac->cache);
     faac->cache = NULL;
   }
+  GST_UNLOCK (faac);
 
   if (!gst_structure_get_int (structure, "channels", &channels) ||
       !gst_structure_get_int (structure, "rate", &samplerate)) {
@@ -325,6 +329,7 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
     goto done;
   }
 
+  GST_LOCK (faac);
   faac->format = fmt;
   faac->bps = bps;
   faac->handle = handle;
@@ -332,6 +337,7 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   faac->samples = samples;
   faac->channels = channels;
   faac->samplerate = samplerate;
+  GST_UNLOCK (faac);
 
   /* if the other side was already set-up, redo that */
   if (GST_PAD_CAPS (faac->srcpad)) {
@@ -400,8 +406,7 @@ gst_faac_src_setcaps (GstPad * pad, GstCaps * caps)
 
     /* negotiate with these caps */
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, newcaps);
-    if (gst_pad_set_caps (faac->srcpad, newcaps) == TRUE)
-      result = TRUE;
+    result = gst_pad_set_caps (faac->srcpad, newcaps);
   }
 
 done:
@@ -409,51 +414,74 @@ done:
   return result;
 }
 
-static GstFlowReturn
-gst_faac_chain (GstPad * pad, GstBuffer * data)
+static gboolean
+gst_faac_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstFaac *faac = GST_FAAC (gst_pad_get_parent (pad));
-  GstBuffer *inbuf, *outbuf, *subbuf;
-  guint size, ret_size, in_size, frame_size;
-  GstFlowReturn result = GST_FLOW_OK;
+  GstFaac *faac;
+  gboolean ret;
 
-  if (GST_IS_EVENT (data)) {
-    GstEvent *event = GST_EVENT (data);
+  faac = GST_FAAC (gst_pad_get_parent (pad));
 
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_EOS:
-        /* flush first */
-        while (1) {
-          outbuf = gst_buffer_new_and_alloc (faac->bytes);
-          if ((ret_size = faacEncEncode (faac->handle,
-                      NULL, 0, GST_BUFFER_DATA (outbuf), faac->bytes)) < 0) {
-            GST_ELEMENT_ERROR (faac, LIBRARY, ENCODE, (NULL), (NULL));
-            gst_event_unref (event);
-            gst_buffer_unref (outbuf);
-            result = GST_FLOW_ERROR;
-            goto done;
-          }
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    {
+      GstBuffer *outbuf;
 
-          if (ret_size > 0) {
+      GST_STREAM_LOCK (pad);
+
+      /* flush first */
+      ret = TRUE;
+      do {
+        if (gst_pad_alloc_buffer (faac->srcpad, GST_BUFFER_OFFSET_NONE,
+                faac->bytes, GST_PAD_CAPS (faac->srcpad),
+                &outbuf) == GST_FLOW_OK) {
+          gint ret_size;
+
+          if ((ret_size = faacEncEncode (faac->handle, NULL, 0,
+                      GST_BUFFER_DATA (outbuf), faac->bytes)) > 0) {
             GST_BUFFER_SIZE (outbuf) = ret_size;
-            GST_BUFFER_TIMESTAMP (outbuf) = 0;
-            GST_BUFFER_DURATION (outbuf) = 0;
+            GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
+            GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
             gst_pad_push (faac->srcpad, outbuf);
           } else {
-            break;
+            gst_buffer_unref (outbuf);
+            ret = FALSE;
           }
         }
+      } while (ret);
 
-        gst_pad_push_event (faac->srcpad, gst_event_new_eos ());
-        gst_pad_push (faac->srcpad, data);
-        goto done;
-      default:
-        gst_pad_event_default (pad, event);
-        goto done;
+      ret = gst_pad_event_default (pad, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
     }
-  }
+    case GST_EVENT_NEWSEGMENT:
+      GST_STREAM_LOCK (pad);
+      ret = gst_pad_push_event (faac->srcpad, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
+    case GST_EVENT_TAG:
+      GST_STREAM_LOCK (pad);
+      ret = gst_pad_event_default (pad, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
+    default:
+      ret = gst_pad_event_default (pad, event);
+      break;
 
-  inbuf = GST_BUFFER (data);
+  }
+  gst_object_unref (faac);
+  return ret;
+}
+
+static GstFlowReturn
+gst_faac_chain (GstPad * pad, GstBuffer * inbuf)
+{
+  GstFlowReturn result = GST_FLOW_OK;
+  GstBuffer *outbuf, *subbuf;
+  GstFaac *faac;
+  guint size, ret_size, in_size, frame_size;
+
+  faac = GST_FAAC (gst_pad_get_parent (pad));
 
   if (!faac->handle) {
     GST_ELEMENT_ERROR (faac, CORE, NEGOTIATION, (NULL),
@@ -532,7 +560,11 @@ gst_faac_chain (GstPad * pad, GstBuffer * data)
           (size - in_size) / size);
     }
 
-    outbuf = gst_buffer_new_and_alloc (faac->bytes);
+    result = gst_pad_alloc_buffer (faac->srcpad, GST_BUFFER_OFFSET_NONE,
+        faac->bytes, GST_PAD_CAPS (faac->srcpad), &outbuf);
+    if (result != GST_FLOW_OK)
+      goto done;
+
     if ((ret_size = faacEncEncode (faac->handle,
                 (gint32 *) GST_BUFFER_DATA (subbuf),
                 GST_BUFFER_SIZE (subbuf) / faac->bps,
@@ -556,7 +588,7 @@ gst_faac_chain (GstPad * pad, GstBuffer * data)
         GST_BUFFER_DURATION (outbuf) += faac->cache_duration;
         faac->cache_duration = 0;
       }
-      gst_pad_push (faac->srcpad, outbuf);
+      result = gst_pad_push (faac->srcpad, outbuf);
     } else {
       /* FIXME: what I'm doing here isn't fully correct, but there
        * really isn't a better way yet.
@@ -587,6 +619,8 @@ gst_faac_set_property (GObject * object,
 {
   GstFaac *faac = GST_FAAC (object);
 
+  GST_LOCK (faac);
+
   switch (prop_id) {
     case ARG_BITRATE:
       faac->bitrate = g_value_get_int (value);
@@ -610,6 +644,8 @@ gst_faac_set_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_UNLOCK (faac);
 }
 
 static void
@@ -617,6 +653,8 @@ gst_faac_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
   GstFaac *faac = GST_FAAC (object);
+
+  GST_LOCK (faac);
 
   switch (prop_id) {
     case ARG_BITRATE:
@@ -641,15 +679,29 @@ gst_faac_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_UNLOCK (faac);
 }
 
 static GstStateChangeReturn
 gst_faac_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstFaac *faac = GST_FAAC (element);
 
+  /* upwards state changes */
+  switch (transition) {
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  /* downwards state changes */
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    {
+      GST_LOCK (faac);
       if (faac->handle) {
         faacEncClose (faac->handle);
         faac->handle = NULL;
@@ -662,15 +714,14 @@ gst_faac_change_state (GstElement * element, GstStateChange transition)
       faac->cache_duration = 0;
       faac->samplerate = -1;
       faac->channels = -1;
+      GST_UNLOCK (faac);
       break;
+    }
     default:
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
 
 static gboolean
