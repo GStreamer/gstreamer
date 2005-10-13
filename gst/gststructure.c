@@ -1287,7 +1287,7 @@ gst_structure_to_string (const GstStructure * structure)
     type = gst_structure_value_get_generic_type (&field->value);
 
     g_string_append_printf (s, ", %s=(%s)%s", g_quark_to_string (field->name),
-        gst_structure_to_abbr (type), t);
+        gst_structure_to_abbr (type), GST_STR_NULL (t));
     g_free (t);
   }
   return g_string_free (s, FALSE);

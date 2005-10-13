@@ -1,3 +1,9 @@
+2005-10-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gststructure.c: (gst_structure_to_string):
+	  guard against NULL printf - happens when for example
+	  a message structure with GstClock gets serialized
+
 2005-10-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstcollectpads.c: (gst_collectpads_event):
