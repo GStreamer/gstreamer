@@ -514,15 +514,20 @@ gst_speexenc_init (GstSpeexEnc * speexenc)
 }
 
 
+/* FIXME: why are we not using the from/to vorbiscomment 
+ * functions that are in -lgsttagedit-0.9 here? */
+
 static gchar *
 gst_speexenc_get_tag_value (const GstTagList * list, const gchar * tag,
     int index)
 {
+  GType tag_type;
   gchar *speexvalue = NULL;
 
-  if (tag == NULL) {
+  if (tag == NULL)
     return NULL;
-  }
+
+  tag_type = gst_tag_get_type (tag);
 
   /* get tag name right */
   if ((strcmp (tag, GST_TAG_TRACK_NUMBER) == 0)
@@ -531,24 +536,26 @@ gst_speexenc_get_tag_value (const GstTagList * list, const gchar * tag,
       || (strcmp (tag, GST_TAG_ALBUM_VOLUME_COUNT) == 0)) {
     guint track_no;
 
-    if (!gst_tag_list_get_uint_index (list, tag, index, &track_no))
-      g_assert_not_reached ();
-    speexvalue = g_strdup_printf ("%u", track_no);
-  } else if (strcmp (tag, GST_TAG_DATE) == 0) {
+    if (gst_tag_list_get_uint_index (list, tag, index, &track_no)) {
+      speexvalue = g_strdup_printf ("%u", track_no);
+    } else {
+      GST_WARNING ("Failed to extract int tag %d for '%s'", index, tag);
+    }
+  } else if (tag_type == GST_TYPE_DATE) {
     /* FIXME: how are dates represented in speex files? */
     GDate *date;
-    guint u;
 
-    if (!gst_tag_list_get_uint_index (list, tag, index, &u))
-      g_assert_not_reached ();
-    date = g_date_new_julian (u);
-    speexvalue =
-        g_strdup_printf ("%04d-%02d-%02d", (gint) g_date_get_year (date),
-        (gint) g_date_get_month (date), (gint) g_date_get_day (date));
-    g_date_free (date);
-  } else if (gst_tag_get_type (tag) == G_TYPE_STRING) {
+    if (gst_tag_list_get_date_index (list, tag, index, &date)) {
+      speexvalue =
+          g_strdup_printf ("%04d-%02d-%02d", (gint) g_date_get_year (date),
+          (gint) g_date_get_month (date), (gint) g_date_get_day (date));
+      g_date_free (date);
+    } else {
+      GST_WARNING ("Failed to extract date tag %d for '%s'", index, tag);
+    }
+  } else if (tag_type == G_TYPE_STRING) {
     if (!gst_tag_list_get_string_index (list, tag, index, &speexvalue))
-      g_assert_not_reached ();
+      GST_WARNING ("Failed to extract string tag %d for '%s'", index, tag);
   }
 
   return speexvalue;
@@ -573,16 +580,6 @@ gst_speexenc_get_tag_value (const GstTagList * list, const gchar * tag,
  *
  *  If you have troubles, please write to ymnk@jcraft.com.
  */
-#define readint(buf, base) (((buf[base+3]<<24) & 0xff000000)|	\
-		            ((buf[base+2]<<16) & 0xff0000)|	\
-		            ((buf[base+1]<< 8) & 0xff00)|	\
-			    (buf[base  ]      & 0xff))
-#define writeint(buf, base, val) do{ buf[base+3] = ((val)>>24) & 0xff;	\
-    buf[base+2] = ((val)>>16) & 0xff;					\
-    buf[base+1] = ((val)>> 8) & 0xff;					\
-    buf[base  ] =  (val)      & 0xff;					\
-  }while(0)
-
 static void
 comment_init (guint8 ** comments, int *length, char *vendor_string)
 {
@@ -591,9 +588,9 @@ comment_init (guint8 ** comments, int *length, char *vendor_string)
   int len = 4 + vendor_length + 4;
   guint8 *p = g_malloc (len);
 
-  writeint (p, 0, vendor_length);
-  memcpy (p + 4, (guint8 *) vendor_string, vendor_length);
-  writeint (p, 4 + vendor_length, user_comment_list_length);
+  GST_WRITE_UINT32_LE (p, vendor_length);
+  memcpy (p + 4, vendor_string, vendor_length);
+  GST_WRITE_UINT32_LE (p + 4 + vendor_length, user_comment_list_length);
   *length = len;
   *comments = p;
 }
@@ -601,26 +598,23 @@ static void
 comment_add (guint8 ** comments, int *length, const char *tag, char *val)
 {
   guint8 *p = *comments;
-  int vendor_length = readint (p, 0);
-  int user_comment_list_length = readint (p, 4 + vendor_length);
+  int vendor_length = GST_READ_UINT32_LE (p);
+  int user_comment_list_length = GST_READ_UINT32_LE (p + 4 + vendor_length);
   int tag_len = (tag ? strlen (tag) : 0);
   int val_len = strlen (val);
   int len = (*length) + 4 + tag_len + val_len;
 
   p = g_realloc (p, len);
 
-  writeint (p, *length, tag_len + val_len);     /* length of comment */
+  GST_WRITE_UINT32_LE (p + *length, tag_len + val_len); /* length of comment */
   if (tag)
     memcpy (p + *length + 4, (guint8 *) tag, tag_len);  /* comment */
   memcpy (p + *length + 4 + tag_len, val, val_len);     /* comment */
-  writeint (p, 4 + vendor_length, user_comment_list_length + 1);
+  GST_WRITE_UINT32_LE (p + 4 + vendor_length, user_comment_list_length + 1);
 
   *comments = p;
   *length = len;
 }
-
-#undef readint
-#undef writeint
 
 static void
 gst_speexenc_metadata_set1 (const GstTagList * list, const gchar * tag,
