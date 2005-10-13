@@ -394,7 +394,8 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstFileSink *filesink;
   guint64 cur_pos;
-  guint size, back_pending = 0;
+  guint size;
+  guint64 back_pending = 0;
 
   size = GST_BUFFER_SIZE (buffer);
 

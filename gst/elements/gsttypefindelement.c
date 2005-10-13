@@ -371,7 +371,7 @@ gst_type_find_element_src_event (GstPad * pad, GstEvent * event)
 typedef struct
 {
   GstTypeFindFactory *factory;
-  gint probability;
+  guint probability;
   GstCaps *caps;
   guint requested_size;
   GstTypeFindElement *self;

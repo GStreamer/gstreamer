@@ -1,3 +1,12 @@
+2005-10-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/elements/gstfakesrc.h:
+	* gst/elements/gstfilesrc.c: (gst_file_src_create_read):
+	* gst/elements/gsttypefindelement.c:
+	  fix some signedness
+	* gst/elements/gstfilesink.c: (gst_file_sink_render):
+	  I wonder if this could actually write +2GB files before
+
 2005-10-13  Andy Wingo  <wingo@pobox.com>
 
 	* libs/gst/dataprotocol/dataprotocol.c (gst_dp_packet_from_caps):

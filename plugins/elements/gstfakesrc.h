@@ -101,7 +101,7 @@ struct _GstFakeSrc {
   gboolean	 segment_loop;
   gint		 num_buffers;
   gint		 rt_num_buffers; /* we are going to change this at runtime */
-  guint64	 buffer_count;
+  gint64	 buffer_count;
   gboolean	 silent;
   gboolean	 signal_handoffs;
   gboolean	 dump;

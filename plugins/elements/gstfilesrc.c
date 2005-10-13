@@ -36,6 +36,7 @@
 #include "gstfilesrc.h"
 
 #include <stdio.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #ifdef HAVE_UNISTD_H
@@ -731,7 +732,7 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
     goto could_not_read;
 
   /* regular files should have given us what we expected */
-  if (ret < length && src->is_regular)
+  if ((gint) ret < length && src->is_regular)
     goto unexpected_eos;
 
   /* other files should eos if they read 0 */
