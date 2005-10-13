@@ -108,7 +108,7 @@ gst_ffmpeg_set_palette (GstCaps * caps, AVCodecContext * context)
  * to a GstCaps. If the context is ommitted, no fixed values
  * for video/audio size will be included in the GstCaps
  *
- * See below for usefullness
+ * See below for usefulness
  */
 
 static GstCaps *
@@ -291,7 +291,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
  * to a GstCaps. If the context is ommitted, no fixed values
  * for video/audio size will be included in the GstCaps
  *
- * See below for usefullness
+ * See below for usefulness
  */
 
 static GstCaps *
@@ -394,7 +394,7 @@ gst_ffmpegcsp_codectype_to_caps (enum CodecType codec_type,
 /* Convert a GstCaps (audio/raw) to a FFMPEG SampleFmt
  * and other audio properties in a AVCodecContext.
  *
- * For usefullness, see below
+ * For usefulness, see below
  */
 
 static void
@@ -429,7 +429,7 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
 /* Convert a GstCaps (video/raw) to a FFMPEG PixFmt
  * and other video properties in a AVCodecContext.
  *
- * For usefullness, see below
+ * For usefulness, see below
  */
 
 static void
