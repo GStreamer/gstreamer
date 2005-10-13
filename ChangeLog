@@ -1,5 +1,14 @@
 2005-10-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/glib-compat.c: (gst_flags_get_first_value):
+	* gst/glib-compat.h:
+	* gst/gstvalue.c: (gst_value_deserialize_int_helper),
+	(gst_value_compare_double), (gst_value_serialize_flags):
+	  GLib 2.6 g_flags_get_first_value has a bug that triggers an
+	  infinite loop
+
+2005-10-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
 	* gst/base/gstbasesrc.c: (gst_base_src_get_range):
 	  fix up debugging

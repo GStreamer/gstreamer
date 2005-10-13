@@ -5,6 +5,7 @@
  * Copyright 2005 David Schleef <ds@schleef.org>
  */
 
+#include <gst_private.h> /* for g_warning */
 #include <glib.h>
 #if GLIB_CHECK_VERSION (2, 6, 0)
 #include <glib/gstdio.h>
@@ -26,5 +27,9 @@ struct stat;
 int g_stat (const gchar *filename, struct stat *buf);
 #endif
 
+#include <glib-object.h>
+GFlagsValue*
+gst_flags_get_first_value (GFlagsClass *flags_class,
+                           guint        value);
 G_END_DECLS
 

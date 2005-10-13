@@ -264,3 +264,32 @@ g_stat (const gchar * filename, struct stat *buf)
 #endif
 }
 #endif
+
+/* This version is copied from GLib 2.8.
+ * In GLib 2.6, it didn't check for a flag value being NULL, hence it
+ * hits an infinite loop in our flags serialize function
+ */
+GFlagsValue *
+gst_flags_get_first_value (GFlagsClass * flags_class, guint value)
+{
+  g_return_val_if_fail (G_IS_FLAGS_CLASS (flags_class), NULL);
+
+  if (flags_class->n_values) {
+    GFlagsValue *flags_value;
+
+    if (value == 0) {
+      for (flags_value = flags_class->values; flags_value->value_name;
+          flags_value++)
+        if (flags_value->value == 0)
+          return flags_value;
+    } else {
+      for (flags_value = flags_class->values; flags_value->value_name;
+          flags_value++)
+        if (flags_value->value != 0
+            && (flags_value->value & value) == flags_value->value)
+          return flags_value;
+    }
+  }
+
+  return NULL;
+}

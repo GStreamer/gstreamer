@@ -32,6 +32,7 @@
 #include <ctype.h>
 
 #include "gst_private.h"
+#include "glib-compat.h"
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
 
@@ -1570,7 +1571,7 @@ gst_value_serialize_flags (const GValue * value)
   result = g_strdup ("");
   flags = g_value_get_flags (value);
   while (flags) {
-    fl = g_flags_get_first_value (klass, flags);
+    fl = gst_flags_get_first_value (klass, flags);
     if (fl != NULL) {
       tmp = g_strconcat (result, (first ? "" : "+"), fl->value_name, NULL);
       g_free (result);
