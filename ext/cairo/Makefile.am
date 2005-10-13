@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstcairo.la
 
-noinst_HEADERS = gsttimeoverlay.h # gsttextoverlay.h
+noinst_HEADERS = gsttimeoverlay.h gsttextoverlay.h
 
 libgstcairo_la_SOURCES = \
 	gsttimeoverlay.c \
