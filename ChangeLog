@@ -1,3 +1,13 @@
+2005-10-13  Andy Wingo  <wingo@pobox.com>
+
+	* libs/gst/dataprotocol/dataprotocol.c (gst_dp_packet_from_caps):
+	Fix Timmeke Waymans bug.
+	(gst_dp_caps_from_packet): Make sure we pass a NUL-terminated
+	string of the proper length to gst_caps_from_string. There's a
+	potential for, before this fix, that this could cause someone
+	connecting over the network to cause a segfault if the payload is
+	not NUL-terminated.
+
 2005-10-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/design/draft-push-pull.txt:
@@ -34,7 +44,6 @@
 	  Added gst_tag_list_get_date() and gst_tag_list_get_date_index().
 	  GST_TAG_DATE now has a tag type of GST_TYPE_DATE (#170777).
 
->>>>>>> 1.1723
 2005-10-13  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/base/gstcollectpads.c: (gst_collectpads_event),
@@ -111,6 +120,7 @@
 	(gst_file_sink_event), (gst_file_sink_render):
 	Flush before seeking.
 
+>>>>>>> 1.1724
 2005-10-12  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gst.c (gst_init_check): Ignore unknown options, as has
@@ -727,7 +737,7 @@
 	* libs/gst/dataprotocol/dp-private.h:
 	It's about time we bump the version number.
 	Since event types don't fit in the guint8 anymore describing
-	the payload type, make payload type 16 bits wide.
+ 	the payload type, make payload type 16 bits wide.
 
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 

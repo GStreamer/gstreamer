@@ -254,7 +254,7 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
   GST_WRITE_UINT16_BE (h + 4, GST_DP_PAYLOAD_CAPS);
 
   /* buffer properties */
-  GST_WRITE_UINT32_BE (h + 8, strlen ((gchar *) string) + 1);   /* include trailing 0 */
+  GST_WRITE_UINT32_BE (h + 6, strlen ((gchar *) string) + 1);   /* include trailing 0 */
   GST_WRITE_UINT64_BE (h + 10, (guint64) 0);
   GST_WRITE_UINT64_BE (h + 18, (guint64) 0);
   GST_WRITE_UINT64_BE (h + 26, (guint64) 0);
@@ -444,15 +444,16 @@ gst_dp_caps_from_packet (guint header_length, const guint8 * header,
     const guint8 * payload)
 {
   GstCaps *caps;
-  const gchar *string;
+  gchar *string;
 
   g_return_val_if_fail (header, NULL);
   g_return_val_if_fail (payload, NULL);
   g_return_val_if_fail (GST_DP_HEADER_PAYLOAD_TYPE (header) ==
       GST_DP_PAYLOAD_CAPS, NULL);
 
-  string = (gchar *) payload;
+  string = g_strndup ((gchar *) payload, GST_DP_HEADER_PAYLOAD_LENGTH (header));
   caps = gst_caps_from_string (string);
+  g_free (string);
   return caps;
 }
 
