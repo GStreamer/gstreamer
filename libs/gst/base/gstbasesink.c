@@ -485,6 +485,8 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         /* any other format with 0 also gives time 0, the other values are
          * invalid as time though. */
         if (format != GST_FORMAT_TIME && segment_start == 0) {
+          GST_DEBUG_OBJECT (basesink,
+              "non-time newsegment with start 0, coaxing into FORMAT_TIME");
           format = GST_FORMAT_TIME;
           segment_stop = -1;
           segment_time = -1;

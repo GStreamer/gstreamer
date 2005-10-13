@@ -612,7 +612,7 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
 
   GST_DEBUG_OBJECT (src,
       "reading offset %" G_GUINT64_FORMAT ", length %u, size %"
-      G_GUINT64_FORMAT, offset, length, src->size);
+      G_GINT64_FORMAT, offset, length, src->size);
 
   /* check size */
   if (src->size != -1) {

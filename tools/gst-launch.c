@@ -399,7 +399,7 @@ event_loop (GstElement * pipeline, gboolean blocking)
 
         gst_message_parse_new_clock (message, &clock);
 
-        g_print ("new clock: %p\n", clock);
+        g_print ("New clock: %s\n", GST_OBJECT_NAME (clock));
         break;
       }
       case GST_MESSAGE_EOS:

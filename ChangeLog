@@ -1,3 +1,11 @@
+2005-10-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	* gst/base/gstbasesrc.c: (gst_base_src_get_range):
+	  fix up debugging
+	* tools/gst-launch.c: (event_loop):
+	  print out clock nicely
+
 2005-10-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
