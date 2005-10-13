@@ -120,7 +120,6 @@
 	(gst_file_sink_event), (gst_file_sink_render):
 	Flush before seeking.
 
->>>>>>> 1.1724
 2005-10-12  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gst.c (gst_init_check): Ignore unknown options, as has
