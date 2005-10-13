@@ -562,7 +562,7 @@ gst_collectpads_event (GstPad * pad, GstEvent * event)
 
       if (format == GST_FORMAT_TIME) {
         data->segment_start = segment_start;
-        data->segment_stop = segment_start;
+        data->segment_stop = segment_stop;
         data->stream_time = stream_time;
       }
 
