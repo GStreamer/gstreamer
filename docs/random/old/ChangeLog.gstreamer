@@ -3146,10 +3146,10 @@
 2001-06-02 22:57  wtay
 
 	* plugins/cdparanoia/: cdparanoia.c, cdparanoia.h: Applied the
-	patch from Apoc:  _ Add properties cur_sector read only ( get
-	current sector )  _ Add properties last_track read only ( last
-	track of the cd )  _ Add properties cur_track read only ( get the
-	current track )  _ Properties end_track writeable ( last track to
+	patch from Apoc: ?? _ Add properties cur_sector read only ( get
+	current sector ) ?? _ Add properties last_track read only ( last
+	track of the cd ) ?? _ Add properties cur_track read only ( get the
+	current track ) ?? _ Properties end_track writeable ( last track to
 	rip/play )
 
 2001-06-02 22:52  wtay
@@ -5222,7 +5222,7 @@
 2001-05-01 23:43  wtay
 
 	* gst/gstprops.c: Removed the assert on an unknown propertytype and
-	print usefull info.
+	print useful info.
 
 2001-05-01 22:41  omegahacker
 
@@ -8966,7 +8966,7 @@
 	* gst/: gstbin.c, gstscheduler.c: Check for NULL buffers before
 	chaining/pushing them to the next element.  NULL buffers happen on
 	EOS.  gst_bin_iterate now returns a gboolean indicating something
-	usefull happened.  It the bin is EOS, it returns FALSE.
+	useful happened.  It the bin is EOS, it returns FALSE.
 
 2001-01-20 17:59  wtay
 

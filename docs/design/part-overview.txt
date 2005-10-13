@@ -375,7 +375,7 @@ Pipeline status
 
  Other methods for obtaining the pipeline status include the Query functionality that
  can be performed with gst_element_query() on the pipeline. This type of query
- is usefull for obtaining information about the current position and total time of
+ is useful for obtaining information about the current position and total time of
  the pipeline. It can also be used to query for the supported seeking formats and
  ranges.
 

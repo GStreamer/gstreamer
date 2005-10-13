@@ -20,7 +20,7 @@ Usages of pull based scheduling:
   - sinks that pull in data, possibly at fixed intervals driven by some
     hardware device (audiocard, videodevice, ...).
 
-  - Efficient random access to resources. Especially usefull for certain
+  - Efficient random access to resources. Especially useful for certain
     types of demuxers.
 
 

@@ -25,7 +25,7 @@
  * @short_description: Base class for push based source elements
  * @see_also: #GstBaseSrc
  *
- * This class is mostly usefull for elements that cannot do
+ * This class is mostly useful for elements that cannot do
  * random access, or at least very slowly. The source usually
  * prefers to push out a fixed size buffer.
  *
