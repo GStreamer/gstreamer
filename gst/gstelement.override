@@ -99,6 +99,7 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
     }
     if (timeout == Py_None) {
       /* infinite timeout */
+      timeout64 = GST_CLOCK_TIME_NONE;
     }
     else {
         if (timeout == NULL) {

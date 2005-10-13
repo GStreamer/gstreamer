@@ -1,3 +1,23 @@
+2005-10-13  Edward Hervey  <edward@fluendo.com>
+
+	* examples/gstfile.py:
+	misc fixes
+	* gst/Makefile.am:
+	* gst/pygstexception.c:
+	* gst/pygstexception.h:
+	* gst/gstelementfactory.override:
+	* gst/gst.override:
+	* gst/gstpad.override:
+	* gst/gstmodule.c: (init_gst):
+	Added exceptions system by Alessandro Decina <alessandro@nnva.org>
+	Closes bug #315433
+	
+	* gst/gstbus.override:
+	* gst/gstelement.override:
+	Fix for _wrap_gst_element_get_state()
+	* gst/gstobject.override:
+	More debug
+
 2005-10-12  Andy Wingo  <wingo@pobox.com>
 
 	* autogen.sh (CONFIGURE_DEF_OPT): Check for automake 1.9 and 1.8,

@@ -60,27 +60,29 @@ _wrap_gst_object_tp_traverse(PyGObject *self, visitproc visit, void *arg)
     int ret = 0;
     GSList *tmp;
 
-    GST_LOG_OBJECT(self->obj,
-            "gst.Object.tp_traverse");
+    GST_LOG_OBJECT(self->obj, "gst.Object.tp_traverse, arg:%p", arg);
 
     Py_VISIT(self->inst_dict);
 
+    GST_LOG_OBJECT(self->obj, "visited self->inst_dict");
+
     for (tmp = self->closures; tmp != NULL; tmp = tmp->next) {
         PyGClosure *closure = tmp->data;
+	GST_DEBUG_OBJECT (self->obj, "visiting closures");
 
         Py_VISIT(closure->callback);
         Py_VISIT(closure->extra_args);
         Py_VISIT(closure->swap_data);
     }
 
-    if (self->obj && GST_OBJECT_REFCOUNT_VALUE(self->obj) == 1 && GST_OBJECT(self->obj)->parent == NULL) {
+    if (self->obj && GST_OBJECT_REFCOUNT_VALUE(self->obj) == 1) {
         GST_DEBUG_OBJECT(self->obj,
             "gst.Object.tp_traverse: GstObject refcount of %p is 1, visit",
             self->obj);
         ret = visit((PyObject *)self, arg);
         GST_LOG_OBJECT(self->obj,
-            "gst.Object.tp_traverse: GstObject %p visited, ret %d",
-            self->obj, ret);
+            "gst.Object.tp_traverse: GstObject %p visited, ret %d, refcount %d",
+            self->obj, ret, GST_OBJECT_REFCOUNT_VALUE(self->obj));
     }
 
     return ret;

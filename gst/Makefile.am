@@ -39,7 +39,8 @@ _gst_la_SOURCES = 		\
 	pygstiterator.c		\
 	pygstminiobject.c 	\
 	pygstobject.c		\
-	pygstvalue.c 
+	pygstvalue.c 		\
+	pygstexception.c
 
 nodist__gst_la_SOURCES = gst.c
 GST_OVERRIDES = 		\
@@ -50,6 +51,7 @@ GST_OVERRIDES = 		\
 	gstevent.override	\
 	gstcaps.override 	\
 	gstelement.override 	\
+	gstelementfactory.override \
 	gstmessage.override	\
 	gstobject.override	\
 	gstquery.override	\

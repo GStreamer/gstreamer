@@ -100,7 +100,7 @@ class Discoverer(gst.Pipeline):
         self.src.set_property("location", filename)
         self.src.set_property("blocksize", 1000000)
         self.dbin = gst.element_factory_make("decodebin")
-        self.add_many(self.src, self.dbin)
+        self.add(self.src, self.dbin)
         self.src.link(self.dbin)
         self.typefind = self.dbin.get_by_name("typefind")
 
@@ -214,14 +214,16 @@ class Discoverer(gst.Pipeline):
         # We now get the total length of that stream
         q = gst.query_new_position(gst.FORMAT_TIME)
         #print "query refcount", q.__grefcount__
+        pad.info("sending position query")
         if pad.get_peer().query(q):
             #print "query refcount", q.__grefcount__
             length = q.structure["end"]
             pos = q.structure["cur"]
             format = q.structure["format"]
+            pad.info("got position query answer : %d:%d:%d" % (length, pos, format))
             #print "got length", time_to_string(pos), time_to_string(length), format
         else:
-            print "query didn't work"
+            gst.warning("position query didn't work")
         #length = pad.get_peer().query(gst.QUERY_TOTAL, gst.FORMAT_TIME)
         # We store the caps and length in the proper location
         if "audio" in caps.to_string():
@@ -248,19 +250,20 @@ class Discoverer(gst.Pipeline):
     def _new_decoded_pad_cb(self, dbin, pad, is_last):
         # Does the file contain got audio or video ?
         caps = pad.get_caps()
+        gst.info("caps:%s" % caps.to_string())
 #        print "new decoded pad", caps.to_string()
         if "audio" in caps.to_string():
             self.is_audio = True
-            if caps.is_fixed():
-                print "have negotiated caps", caps
-                self.audiocaps = caps
-                return
+##             if caps.is_fixed():
+##                 print "have negotiated caps", caps
+##                 self.audiocaps = caps
+##                 return
         elif "video" in caps.to_string():
             self.is_video = True
-            if caps.is_fixed():
-                print "have negotiated caps", caps
-                self.videocaps = caps
-                return
+##             if caps.is_fixed():
+##                 print "have negotiated caps", caps
+##                 self.videocaps = caps
+##                 return
         else:
             print "got a different caps..", caps
             return
@@ -268,18 +271,20 @@ class Discoverer(gst.Pipeline):
             self.finished = True
             return
         # we connect a fakesink to the new pad...
+        pad.info("adding queue->fakesink")
         fakesink = gst.element_factory_make("fakesink")
         queue = gst.element_factory_make("queue")
-        self.add_many(fakesink, queue)
+        self.add(fakesink, queue)
         queue.link(fakesink)
         sinkpad = fakesink.get_pad("sink")
         queuepad = queue.get_pad("sink")
         # ... and connect a callback for when the caps are fixed
         sinkpad.connect("notify::caps", self._notify_caps_cb)
         if pad.link(queuepad):
-            print "##### Couldn't link pad to queue"
+            pad.warning("##### Couldn't link pad to queue")
         queue.set_state(gst.STATE_PLAYING)
         fakesink.set_state(gst.STATE_PLAYING)
+        gst.info('finished here')
 
     def _found_tag_cb(self, dbin, source, tags):
         self.tags.update(tags)

@@ -44,15 +44,12 @@ headers
 
 #include "pygstvalue.h"
 #include "pygstminiobject.h"
+#include "pygstexception.h"
 
 /* These headers have been included directly to get around multiple 
  * GetAttrString calls */
 #include <compile.h>
 #include <frameobject.h>
-
-PyObject *PyGstExc_LinkError = NULL;
-PyObject *PyGstExc_AddError = NULL;
-PyObject *PyGstExc_RemoveError = NULL;
 
 GST_DEBUG_CATEGORY_EXTERN (python_debug);
 GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
@@ -259,6 +256,7 @@ include
   gstbus.override
   gstcaps.override
   gstelement.override
+  gstelementfactory.override
   gstevent.override
   gstmessage.override
   gstobject.override

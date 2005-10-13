@@ -432,7 +432,9 @@ _wrap_gst_pad_link(PyGObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     ret = gst_pad_link(GST_PAD(self->obj), GST_PAD(sinkpad->obj));
     if (ret) {
-        PyErr_SetString(PyGstExc_LinkError, "link failed");
+        PyObject *exc_val = pyg_enum_from_gtype(GST_TYPE_PAD_LINK_RETURN, ret);
+        PyErr_SetObject(PyGstExc_LinkError, exc_val);
+        Py_DECREF(exc_val);
         return NULL;
     }
     return PyBool_FromLong(ret);
@@ -463,7 +465,9 @@ _wrap_gst_pad_link_filtered(PyGObject *self, PyObject *args, PyObject *kwargs)
                                 GST_PAD(sinkpad->obj),
                                 filtercaps);
     if (ret) {
-        PyErr_SetString(PyGstExc_LinkError, "link failed");
+        PyObject *exc_val = pyg_enum_from_gtype(GST_TYPE_PAD_LINK_RETURN, ret);
+        PyErr_SetObject(PyGstExc_LinkError, exc_val);
+        Py_DECREF(exc_val);
         return NULL;
     }
     return PyBool_FromLong(ret);
