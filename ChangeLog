@@ -1,3 +1,10 @@
+2005-10-13  Michael Smith <msmith@fluendo.com>
+
+	* ext/ogg/gstoggmux.c:
+	* gst/audioconvert/audioconvert.c: (float):
+	  Don't use LL suffix, as it's not portable, and neither of these
+	  uses required it anyway.
+
 2005-10-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* examples/indexing/indexmpeg.c: (main):

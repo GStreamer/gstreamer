@@ -62,7 +62,7 @@ MAKE_UNPACK_FUNC_NAME (float) (gpointer src, gint32 * dst,
 
   for (; count; count--) {
     temp = *p++ * 2147483647.0f + .5;
-    *dst++ = (gint32) CLAMP (temp, -2147483648ll, 2147483647ll);
+    *dst++ = (gint32) CLAMP (temp, G_MININT, G_MAXINT);
   }
 }
 

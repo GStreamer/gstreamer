@@ -131,8 +131,8 @@ enum
 };
 
 /* set to 0.5 seconds by default */
-#define DEFAULT_MAX_DELAY	500000000LL
-#define DEFAULT_MAX_PAGE_DELAY	500000000LL
+#define DEFAULT_MAX_DELAY	500000000
+#define DEFAULT_MAX_PAGE_DELAY	500000000
 enum
 {
   ARG_0,
