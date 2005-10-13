@@ -1,5 +1,10 @@
 2005-10-13  Edward Hervey  <edward@fluendo.com>
 
+	* gst/Makefile.am: (noinst_HEADERS): 
+	Added pygstexception.h
+
+2005-10-13  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst-types.defs:
 	* gst/gst.defs:
 	Updated to new API

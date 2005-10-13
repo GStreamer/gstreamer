@@ -22,7 +22,7 @@ defs_DATA = gst-types.defs \
 	libs.defs
 defsdir = $(pkgdatadir)/0.9/defs
 
-noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstobject.h
+noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstobject.h pygstexception.h
 
 INCLUDES = $(PYTHON_INCLUDES)
 EXTRA_DIST = $(defs_DATA) common.h arg-types.py
