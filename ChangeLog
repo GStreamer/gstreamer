@@ -1,3 +1,12 @@
+2005-10-13  Alessandro Decina  <alessandro@nnva.org>
+
+	Reviewed by Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstobject.override: (_wrap_gst_object_tp_traverse):
+	Py_VISIT() might make code cleaner... but it doesn't work with
+	python < 2.4
+	Closes bug #318692
+
 2005-10-13  Edward Hervey  <edward@fluendo.com>
 
 	* examples/gstfile.py:

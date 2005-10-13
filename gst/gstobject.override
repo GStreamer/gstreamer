@@ -62,7 +62,8 @@ _wrap_gst_object_tp_traverse(PyGObject *self, visitproc visit, void *arg)
 
     GST_LOG_OBJECT(self->obj, "gst.Object.tp_traverse, arg:%p", arg);
 
-    Py_VISIT(self->inst_dict);
+    if (self->inst_dict) ret = visit(self->inst_dict, arg);
+    if (ret != 0) return ret;
 
     GST_LOG_OBJECT(self->obj, "visited self->inst_dict");
 
@@ -70,9 +71,14 @@ _wrap_gst_object_tp_traverse(PyGObject *self, visitproc visit, void *arg)
         PyGClosure *closure = tmp->data;
 	GST_DEBUG_OBJECT (self->obj, "visiting closures");
 
-        Py_VISIT(closure->callback);
-        Py_VISIT(closure->extra_args);
-        Py_VISIT(closure->swap_data);
+	if (closure->callback) ret = visit(closure->callback, arg);
+	if (ret != 0) return ret;
+
+	if (closure->extra_args) ret = visit(closure->extra_args, arg);
+	if (ret != 0) return ret;
+
+	if (closure->swap_data) ret = visit(closure->swap_data, arg);
+	if (ret != 0) return ret;
     }
 
     if (self->obj && GST_OBJECT_REFCOUNT_VALUE(self->obj) == 1) {
