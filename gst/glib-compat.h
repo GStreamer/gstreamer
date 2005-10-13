@@ -5,7 +5,7 @@
  * Copyright 2005 David Schleef <ds@schleef.org>
  */
 
-#include <gst_private.h> /* for g_warning */
+#include "gst_private.h" /* for g_warning */
 #include <glib.h>
 #if GLIB_CHECK_VERSION (2, 6, 0)
 #include <glib/gstdio.h>

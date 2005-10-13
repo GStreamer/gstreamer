@@ -3524,8 +3524,9 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       GST_CAT_DEBUG (GST_CAT_EVENT, "cleared flush flag");
       break;
     default:
-      GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %d on pad %s:%s",
-          GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
+      GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %s on pad %s:%s",
+          gst_event_type_get_name (GST_EVENT_TYPE (event)),
+          GST_DEBUG_PAD_NAME (pad));
 
       if (GST_PAD_IS_FLUSHING (pad))
         goto flushing;
