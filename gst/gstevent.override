@@ -68,13 +68,13 @@ _wrap_gst_event_parse_newsegment (PyGstMiniObject *self)
      gst_event_parse_newsegment (GST_EVENT(self->obj), &update, &rate, &format,
 				 &start_value, &stop_value, &base);
      
-     ret = PyList_New (0);
-     PyList_Append (ret, PyBool_FromLong(update));
-     PyList_Append (ret, PyFloat_FromDouble(rate));
-     PyList_Append (ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
-     PyList_Append (ret, PyLong_FromUnsignedLongLong(start_value));
-     PyList_Append (ret, PyLong_FromUnsignedLongLong(stop_value));
-     PyList_Append (ret, PyLong_FromUnsignedLongLong(base));
+     ret = PyList_New (6);
+     PyList_SetItem (ret, 0, PyBool_FromLong(update));
+     PyList_SetItem (ret, 1, PyFloat_FromDouble(rate));
+     PyList_SetItem (ret, 2, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
+     PyList_SetItem (ret, 3, PyLong_FromUnsignedLongLong(start_value));
+     PyList_SetItem (ret, 4, PyLong_FromUnsignedLongLong(stop_value));
+     PyList_SetItem (ret, 5, PyLong_FromUnsignedLongLong(base));
 
      return ret;
 }
@@ -115,10 +115,10 @@ _wrap_gst_event_parse_qos (PyGstMiniObject *self)
 	gst_event_parse_qos (GST_EVENT(self->obj), &proportion,
 			     &diff, &timestamp);
 	
-	ret = PyList_New (0);
-	PyList_Append (ret, PyFloat_FromDouble(proportion));
-	PyList_Append (ret, PyLong_FromLongLong(diff));
-	PyList_Append (ret, PyLong_FromUnsignedLongLong(timestamp));
+	ret = PyList_New (3);
+	PyList_SetItem (ret, 0, PyFloat_FromDouble(proportion));
+	PyList_SetItem (ret, 1, PyLong_FromLongLong(diff));
+	PyList_SetItem (ret, 2, PyLong_FromUnsignedLongLong(timestamp));
 
 	return ret;
 }
@@ -144,14 +144,15 @@ _wrap_gst_event_parse_seek (PyGstMiniObject *self)
 	gst_event_parse_seek (GST_EVENT(self->obj), &rate, &format, &flags,
 			      &cur_type, &cur, &stop_type, &stop);
 	
-	ret = PyList_New (0);
-	PyList_Append (ret, PyFloat_FromDouble(rate));
-	PyList_Append (ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
-	PyList_Append (ret, pyg_flags_from_gtype (GST_TYPE_SEEK_FLAGS, flags));
-	PyList_Append (ret, pyg_enum_from_gtype (GST_TYPE_SEEK_TYPE, cur_type));
-	PyList_Append (ret, PyLong_FromUnsignedLongLong (cur));
-	PyList_Append (ret, pyg_enum_from_gtype (GST_TYPE_SEEK_TYPE, stop_type));
-	PyList_Append (ret, PyLong_FromUnsignedLongLong (stop));
+	ret = PyList_New (7);
+	PyList_SetItem (ret, 0, PyFloat_FromDouble(rate));
+	PyList_SetItem (ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
+	PyList_SetItem (ret, 2, pyg_flags_from_gtype (GST_TYPE_SEEK_FLAGS, flags));
+	PyList_SetItem (ret, 3, pyg_enum_from_gtype (GST_TYPE_SEEK_TYPE, cur_type));
+	PyList_SetItem (ret, 4, PyLong_FromUnsignedLongLong (cur));
+	PyList_SetItem (ret, 5,
+            pyg_enum_from_gtype (GST_TYPE_SEEK_TYPE, stop_type));
+	PyList_SetItem (ret, 6, PyLong_FromUnsignedLongLong (stop));
 	
 	return ret;
 }

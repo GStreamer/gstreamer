@@ -36,10 +36,10 @@ _wrap_gst_query_parse_position (PyGstMiniObject *self)
 	
 	gst_query_parse_position (GST_QUERY(self->obj), &format, &cur, &end);
 	
-	ret = PyList_New(0);
-	PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
-	PyList_Append(ret, PyLong_FromLongLong(cur));
-	PyList_Append(ret, PyLong_FromLongLong(end));
+	ret = PyList_New(3);
+	PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
+	PyList_SetItem(ret, 1, PyLong_FromLongLong(cur));
+	PyList_SetItem(ret, 2, PyLong_FromLongLong(end));
 
 	return ret;
 }
@@ -61,11 +61,11 @@ _wrap_gst_query_parse_convert (PyGstMiniObject *self)
 				 &srcformat, &srcvalue,
 				 &destformat, &destvalue);
 	
-	ret = PyList_New(0);
-	PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FORMAT, srcformat));
-	PyList_Append(ret, PyLong_FromLongLong(srcvalue));
-	PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FORMAT, destformat));
-	PyList_Append(ret, PyLong_FromLongLong(destvalue));
+	ret = PyList_New(4);
+	PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FORMAT, srcformat));
+	PyList_SetItem(ret, 1, PyLong_FromLongLong(srcvalue));
+	PyList_SetItem(ret, 2, pyg_enum_from_gtype(GST_TYPE_FORMAT, destformat));
+	PyList_SetItem(ret, 3, PyLong_FromLongLong(destvalue));
 
 	return ret;
 }
@@ -90,12 +90,12 @@ _wrap_gst_query_parse_segment (PyGstMiniObject *self)
 				 &rate, &format,
 				 &start_value, &stop_value, &base);
 	
-	ret = PyList_New(0);
-	PyList_Append (ret, PyFloat_FromDouble(rate));
-	PyList_Append (ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
-	PyList_Append (ret, PyLong_FromUnsignedLongLong(start_value));
-	PyList_Append (ret, PyLong_FromUnsignedLongLong(stop_value));
-	PyList_Append (ret, PyLong_FromUnsignedLongLong(base));
+	ret = PyList_New(5);
+	PyList_SetItem (ret, 0, PyFloat_FromDouble(rate));
+	PyList_SetItem (ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
+	PyList_SetItem (ret, 2, PyLong_FromUnsignedLongLong(start_value));
+	PyList_SetItem (ret, 3, PyLong_FromUnsignedLongLong(stop_value));
+	PyList_SetItem (ret, 4, PyLong_FromUnsignedLongLong(base));
 
 	return ret;
 }

@@ -388,15 +388,16 @@ _wrap_gst_registry_get_path_list (PyGObject *self)
 	GstRegistry *registry;
 	GList *l, *paths;
 	PyObject *list;
+    gint i;
 	
         registry = GST_REGISTRY (self->obj);
 
 	paths = gst_registry_get_path_list (registry);
 
-	list = PyList_New (0);
-	for (l = paths; l; l = l->next) {
+	list = PyList_New (g_list_length(paths));
+	for (l = paths, i = 0; l; l = l->next, ++i) {
 		gchar *path = (gchar *) l->data;
-	        PyList_Append (list, PyString_FromString(path));
+	    PyList_SetItem (list, i, PyString_FromString(path));
 	}
 	g_list_free (paths);
 	
@@ -411,15 +412,16 @@ _wrap_gst_registry_get_plugin_list (PyGObject *self)
 	GstRegistry *registry;
 	GList *l, *plugins;
 	PyObject *list;
-	
+	gint i;
+    
         registry = GST_REGISTRY (self->obj);
 
 	plugins = gst_registry_get_plugin_list (registry);
 
-	list = PyList_New (0);
-	for (l = plugins; l; l = l->next) {
+	list = PyList_New (g_list_length(plugins));
+	for (l = plugins, i = 0; l; l = l->next, ++i) {
 		GstPlugin *plugin = (GstPlugin *) l->data;
-		PyList_Append (list, pygobject_new (G_OBJECT (plugin)));
+		PyList_SetItem (list, i, pygobject_new (G_OBJECT (plugin)));
 	}
 	g_list_free (plugins);
 	
@@ -438,6 +440,7 @@ _wrap_gst_registry_get_feature_list (PyGObject *self, PyObject *args, PyObject *
     GstRegistry *registry;
     GList *l, *features;
     PyObject *list;
+    gint i;
 	
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
@@ -450,10 +453,10 @@ _wrap_gst_registry_get_feature_list (PyGObject *self, PyObject *args, PyObject *
 
     features = gst_registry_get_feature_list (registry, type);
 
-    list = PyList_New (0);
-    for (l = features; l; l = l->next) {
+    list = PyList_New (g_list_length(features));
+    for (l = features, i = 0; l; l = l->next, ++i) {
         GstPluginFeature *feature = (GstPluginFeature *) l->data;
-        PyList_Append (list, pygobject_new (G_OBJECT (feature)));
+        PyList_SetItem (list, i, pygobject_new (G_OBJECT (feature)));
     }
     g_list_free (features);
 	
@@ -471,7 +474,7 @@ _wrap_gst_registry_get_feature_list_by_plugin (PyGObject *self, PyObject *args, 
     GstRegistry *registry;
     GList *l, *features;
     PyObject *list;
-	
+	gint i;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
             "s:GstRegistry.get_feature_list_by_plugin", kwlist, &name))
@@ -481,10 +484,10 @@ _wrap_gst_registry_get_feature_list_by_plugin (PyGObject *self, PyObject *args, 
 
     features = gst_registry_get_feature_list_by_plugin (registry, name);
 
-    list = PyList_New (0);
-    for (l = features; l; l = l->next) {
+    list = PyList_New (g_list_length(features));
+    for (l = features, i = 0; l; l = l->next, ++i) {
         GstPluginFeature *feature = (GstPluginFeature *) l->data;
-        PyList_Append (list, pygobject_new (G_OBJECT (feature)));
+        PyList_SetItem (list, i, pygobject_new (G_OBJECT (feature)));
     }
     g_list_free (features);
 	
@@ -539,15 +542,14 @@ _wrap_gst_xml_get_topelements(PyGObject *self)
 {
     GList *l, *xml_elements;
     PyObject *py_list;
-
-    py_list = PyList_New(0);
+    gint i;
 
     xml_elements = gst_xml_get_topelements(GST_XML(self->obj));
-    for (l = xml_elements; l; l = l->next) {
-	GstElement *element = (GstElement*)l->data;
-	
-	PyList_Append(py_list, pygstobject_new(G_OBJECT(element)));
-	gst_object_unref (element);
+    py_list = PyList_New(g_list_length(xml_elements));
+    for (l = xml_elements, i = 0; l; l = l->next, ++i) {
+        GstElement *element = (GstElement*)l->data;
+        PyList_SetItem(py_list, i, pygstobject_new(G_OBJECT(element)));
+        gst_object_unref (element);
     }
        
     return py_list;
@@ -660,11 +662,11 @@ _wrap_gst_uri_handler_get_protocols (PyGObject *self)
 	Py_INCREF (Py_None);
 	return Py_None;
     }
-    ret = PyList_New(0);
-
+    
     len = g_strv_length (tab);
+    ret = PyList_New(len);
     for (i = 0; i < len; i++) {
-	PyList_Append(ret, PyString_FromString(tab[i]));
+        PyList_SetItem(ret, i, PyString_FromString(tab[i]));
     }
 
     return ret;

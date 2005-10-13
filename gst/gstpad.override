@@ -674,14 +674,14 @@ _wrap_gst_pad_query_position (PyGObject *self, PyObject *args)
         return NULL;
     }
 
-    ret = PyList_New(0);
     if ((gst_pad_query_position(GST_PAD (self->obj), (GstFormat*) &format, &cur, &end))) {
-    PyList_Append(ret, PyLong_FromLongLong(cur));
-    PyList_Append(ret, PyLong_FromLongLong(end));
-    PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+        ret = PyList_New(3);
+        PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
+        PyList_SetItem(ret, 1, PyLong_FromLongLong(end));
+        PyList_SetItem(ret, 2, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
     } else {
-    Py_INCREF(Py_None);
-    ret = Py_None;
+        Py_INCREF(Py_None);
+        ret = Py_None;
     }
 
     return ret;
@@ -720,9 +720,9 @@ _wrap_gst_pad_query_convert (PyGObject *self, PyObject *args, PyObject *kwargs)
     return Py_None;
     }
     
-    ret = PyList_New(0);
-    PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat));
-    PyList_Append(ret, PyLong_FromLongLong(dstval));
+    ret = PyList_New(2);
+    PyList_SetItem(ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat));
+    PyList_SetItem(ret, 1, PyLong_FromLongLong(dstval));
 
     return ret;
 }
@@ -747,13 +747,12 @@ _wrap_gst_pad_alloc_buffer (PyGObject *self, PyObject * args, PyObject *kwargs)
     caps = pyg_boxed_get(pcaps, GstCaps);
     res = gst_pad_alloc_buffer (GST_PAD(pygobject_get(self)),
                 offset, size, caps, &buf);
-    ret = PyList_New(0);
-    PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
+    ret = PyList_New(2);
+    PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
     if (res != GST_FLOW_OK) {
-    Py_INCREF(Py_None);
-    PyList_Append(ret, Py_None);
+        PyList_Append(ret, Py_None);
     } else {
-    PyList_Append(ret, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+        PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
     }
     return ret;
 }
@@ -775,13 +774,12 @@ _wrap_gst_pad_pull_range (PyGObject *self, PyObject * args, PyObject *kwargs)
     return NULL;
     res = gst_pad_pull_range (GST_PAD(pygobject_get(self)),
                   offset, size, &buf);
-    ret = PyList_New(0);
-    PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
+    ret = PyList_New(2);
+    PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
     if (res != GST_FLOW_OK) {
-    Py_INCREF(Py_None);
-    PyList_Append(ret, Py_None);
+        PyList_Append(ret, Py_None);
     } else {
-    PyList_Append(ret, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+        PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
     }
     return ret;
 }
@@ -803,13 +801,12 @@ _wrap_gst_pad_get_range (PyGObject *self, PyObject * args, PyObject *kwargs)
     return NULL;
     res = gst_pad_get_range (GST_PAD(pygobject_get(self)),
                  offset, size, &buf);
-    ret = PyList_New(0);
-    PyList_Append(ret, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
+    ret = PyList_New(2);
+    PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
     if (res != GST_FLOW_OK) {
-    Py_INCREF(Py_None);
-    PyList_Append(ret, Py_None);
+        PyList_Append(ret, Py_None);
     } else {
-    PyList_Append(ret, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+        PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
     }
     return ret;
 }
@@ -820,12 +817,13 @@ _wrap_gst_pad_get_internal_links (PyGObject * self)
 {
     PyObject    *ret;
     GList    *lst, *tmp;
+    gint i;
 
     lst = gst_pad_get_internal_links (GST_PAD (pygobject_get(self)));
 
-    ret = PyList_New(0);
-    for (tmp = lst ; tmp; tmp = g_list_next(tmp)) {
-    PyList_Append(ret, pygstobject_new(G_OBJECT(tmp->data)));
+    ret = PyList_New(g_list_length(lst));
+    for (tmp = lst, i = 0 ; tmp; tmp = g_list_next(tmp), ++i) {
+        PyList_SetItem(ret, i, pygstobject_new(G_OBJECT(tmp->data)));
     }
     g_list_free(lst);
     return ret;
@@ -837,12 +835,13 @@ _wrap_gst_pad_get_internal_links_default (PyGObject * self)
 {
     PyObject    *ret;
     GList    *lst, *tmp;
+    gint i;
 
     lst = gst_pad_get_internal_links_default (GST_PAD (pygobject_get(self)));
 
-    ret = PyList_New(0);
-    for (tmp = lst ; tmp; tmp = g_list_next(tmp)) {
-    PyList_Append(ret, pygstobject_new(G_OBJECT(tmp->data)));
+    ret = PyList_New(g_list_length(lst));
+    for (tmp = lst, i = 0 ; tmp; tmp = g_list_next(tmp), ++i) {
+        PyList_SetItem(ret, i, pygstobject_new(G_OBJECT(tmp->data)));
     }
     g_list_free(lst);
     return ret;
@@ -865,8 +864,9 @@ _wrap_gst_pad_get_query_types (PyGObject *self)
 
     ret = PyList_New(0);
     for (i = 0; tab[i] != 0; i++) {
-    item = pyg_enum_from_gtype (GST_TYPE_QUERY_TYPE, tab[i]);
-    PyList_Append(ret, item);
+        item = pyg_enum_from_gtype (GST_TYPE_QUERY_TYPE, tab[i]);
+        PyList_Append(ret, item);
+        Py_XDECREF(item);
     }
     
     return ret;
@@ -889,8 +889,9 @@ _wrap_gst_pad_get_query_types_default (PyGObject *self)
 
     ret = PyList_New(0);
     for (i = 0; tab[i] != 0; i++) {
-    item = pyg_enum_from_gtype (GST_TYPE_QUERY_TYPE, tab[i]);
-    PyList_Append(ret, item);
+        item = pyg_enum_from_gtype (GST_TYPE_QUERY_TYPE, tab[i]);
+        PyList_Append(ret, item);
+        Py_XDECREF(item);
     }
     
     return ret;
