@@ -1,3 +1,15 @@
+2005-10-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstpluginfeature.c: (gst_plugin_feature_check_version):
+	* gst/gstpluginfeature.h:
+	* gst/gstregistry.c: (gst_default_registry_check_feature_version):
+	* gst/gstregistry.h:
+	* docs/gst/gstreamer-sections.txt:
+	  Add new API to check plugin feature version requirements.
+
+	* check/gst/gstplugin.c: (test_version_checks), (gst_plugin_suite):
+	  Some basic tests for the above.	  
+
 2005-10-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gststructure.c: (gst_structure_to_string):

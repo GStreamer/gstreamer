@@ -803,3 +803,42 @@ _gst_registry_cleanup ()
   gst_object_unref (_gst_registry_default);
   _gst_registry_default = NULL;
 }
+
+/**
+ * gst_default_registry_check_feature_version:
+ * @feature_name: the name of the feature (e.g. "oggdemux")
+ * @min_major: the minimum major version number
+ * @min_minor: the minimum minor version number
+ * @min_micro: the minimum micro version number
+ *
+ * Checks whether a plugin feature by the given name exists in the
+ * default registry and whether its version is at least the
+ * version required.
+ *
+ * Returns: #TRUE if the feature could be found and the version is
+ * the same as the required version or newer, and #FALSE otherwise.
+ */
+gboolean
+gst_default_registry_check_feature_version (const gchar * feature_name,
+    guint min_major, guint min_minor, guint min_micro)
+{
+  GstPluginFeature *feature;
+  GstRegistry *registry;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (feature_name != NULL, FALSE);
+
+  GST_DEBUG ("Looking up plugin feature '%s'", feature_name);
+
+  registry = gst_registry_get_default ();
+  feature = gst_registry_lookup_feature (registry, feature_name);
+  if (feature) {
+    ret = gst_plugin_feature_check_version (feature, min_major, min_minor,
+        min_micro);
+    gst_object_unref (feature);
+  } else {
+    GST_DEBUG ("Could not find plugin feature '%s'", feature_name);
+  }
+
+  return ret;
+}

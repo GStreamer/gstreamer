@@ -199,7 +199,7 @@ gst_plugin_feature_set_rank (GstPluginFeature * feature, guint rank)
 }
 
 /**
- * gst_plugin_feature_get rank:
+ * gst_plugin_feature_get_rank:
  * @feature: a feature
  *
  * Gets the rank of a plugin feature.
@@ -231,4 +231,70 @@ gst_plugin_feature_list_free (GList * list)
     gst_object_unref (feature);
   }
   g_list_free (list);
+}
+
+/**
+ * gst_plugin_feature_check_version:
+ * @feature: a feature
+ * @min_major: minimum required major version
+ * @min_minor: minimum required minor version
+ * @min_micro: minimum required micro version
+ *
+ * Checks whether the given plugin feature is at least
+ *  the required version
+ *
+ * Returns: #TRUE if the plugin feature has at least
+ *  the required version, otherwise #FALSE.
+ */
+gboolean
+gst_plugin_feature_check_version (GstPluginFeature * feature,
+    guint min_major, guint min_minor, guint min_micro)
+{
+  GstRegistry *registry;
+  GstPlugin *plugin;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (feature != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
+
+  GST_DEBUG ("Looking up plugin '%s' containing plugin feature '%s'",
+      feature->plugin_name, feature->name);
+
+  registry = gst_registry_get_default ();
+  plugin = gst_registry_find_plugin (registry, feature->plugin_name);
+
+  if (plugin) {
+    const gchar *ver_str;
+    guint major, minor, micro;
+
+    ver_str = gst_plugin_get_version (plugin);
+    g_return_val_if_fail (ver_str != NULL, FALSE);
+
+    if (sscanf (ver_str, "%u.%u.%u", &major, &minor, &micro) == 3) {
+      if (major > min_major)
+        ret = TRUE;
+      else if (major < min_major)
+        ret = FALSE;
+      else if (minor > min_minor)
+        ret = TRUE;
+      else if (minor < min_minor)
+        ret = FALSE;
+      else if (micro > min_micro)
+        ret = TRUE;
+      else
+        ret = (micro == min_micro);
+
+      GST_DEBUG ("Checking whether %u.%u.%u >= %u.%u.%u? %s", major, minor,
+          micro, min_major, min_minor, min_micro, (ret) ? "yes" : "no");
+    } else {
+      GST_WARNING ("Could not parse version string '%s' of plugin '%s'",
+          ver_str, feature->plugin_name);
+    }
+
+    gst_object_unref (plugin);
+  } else {
+    GST_DEBUG ("Could not find plugin '%s'", feature->plugin_name);
+  }
+
+  return ret;
 }

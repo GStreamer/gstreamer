@@ -247,6 +247,49 @@ GST_START_TEST (test_typefind)
 GST_END_TEST;
 #endif
 
+GST_START_TEST (test_version_checks)
+{
+  fail_if (gst_default_registry_check_feature_version ("identity",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, GST_VERSION_MICRO) == FALSE,
+      "Unexpected version check result");
+
+  fail_if (gst_default_registry_check_feature_version ("identity",
+          GST_VERSION_MAJOR + 1, GST_VERSION_MINOR, GST_VERSION_MICRO) == TRUE,
+      "Unexpected version check result");
+
+  fail_if (gst_default_registry_check_feature_version ("identity",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR + 1, GST_VERSION_MICRO) == TRUE,
+      "Unexpected version check result");
+
+  fail_if (gst_default_registry_check_feature_version ("identity",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, GST_VERSION_MICRO + 1) == TRUE,
+      "Unexpected version check result");
+
+  if (GST_VERSION_MAJOR > 0) {
+    fail_if (gst_default_registry_check_feature_version ("identity",
+            GST_VERSION_MAJOR - 1, GST_VERSION_MINOR,
+            GST_VERSION_MICRO) == FALSE, "Unexpected version check result");
+  }
+
+  if (GST_VERSION_MINOR > 0) {
+    fail_if (gst_default_registry_check_feature_version ("identity",
+            GST_VERSION_MAJOR, GST_VERSION_MINOR - 1,
+            GST_VERSION_MICRO) == FALSE, "Unexpected version check result");
+  }
+
+  if (GST_VERSION_MICRO > 0) {
+    fail_if (gst_default_registry_check_feature_version ("identity",
+            GST_VERSION_MAJOR, GST_VERSION_MINOR,
+            GST_VERSION_MICRO - 1) == FALSE, "Unexpected version check result");
+  }
+
+  fail_if (gst_default_registry_check_feature_version ("entityid",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, GST_VERSION_MICRO) == TRUE,
+      "Unexpected version check result");
+}
+
+GST_END_TEST;
+
 Suite *
 gst_plugin_suite (void)
 {
@@ -264,11 +307,11 @@ gst_plugin_suite (void)
   tcase_add_test (tc_chain, test_find_plugin);
   tcase_add_test (tc_chain, test_find_feature);
   tcase_add_test (tc_chain, test_find_element);
+  tcase_add_test (tc_chain, test_version_checks);
   //tcase_add_test (tc_chain, test_typefind);
 
   return s;
 }
-
 
 int
 main (int argc, char **argv)

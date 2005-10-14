@@ -60,6 +60,7 @@ struct _GstRegistryClass {
   void 			(*plugin_added)		(GstRegistry *registry, GstPlugin *plugin);
   void 			(*feature_added)	(GstRegistry *registry, GstPluginFeature *feature);
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -118,6 +119,11 @@ void                    _gst_registry_cleanup           (void);
   gst_registry_find_plugin (gst_registry_get_default(),name)
 #define gst_default_registry_feature_filter(filter,first,user_data) \
   gst_registry_feature_filter (gst_registry_get_default(),filter,first,user_data)
+
+gboolean                gst_default_registry_check_feature_version (const gchar *feature_name,
+                                                                    guint        min_major,
+                                                                    guint        min_minor,
+                                                                    guint        min_micro);
 
 G_END_DECLS
 

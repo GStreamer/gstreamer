@@ -1504,6 +1504,7 @@ gst_plugin_feature_get_rank
 gst_plugin_feature_get_name
 gst_plugin_feature_load
 gst_plugin_feature_list_free
+gst_plugin_feature_check_version
 <SUBSECTION Standard>
 GstPluginFeatureClass
 GST_PLUGIN_FEATURE
@@ -1614,6 +1615,7 @@ gst_registry_lookup_feature
 gst_registry_get_plugin_list
 gst_registry_add_feature
 <SUBSECTION Default Registry>
+gst_default_registry_check_feature_version
 gst_default_registry_get_path_list
 gst_default_registry_add_plugin
 gst_default_registry_add_path
