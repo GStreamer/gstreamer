@@ -1,5 +1,13 @@
 2005-10-14  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst-types.defs:
+	Added GstDate boxed type
+	* gst/gst.override:
+	Added setters and getters for GstDate's day/month/year
+	Added tp_repr for GstDate
+
+2005-10-14  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst.defs:
 	Update for new API
 	* gst/gst.override:

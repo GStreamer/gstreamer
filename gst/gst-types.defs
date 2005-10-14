@@ -241,6 +241,17 @@
    '("gchar*" "message"))
 )
 
+(define-boxed Date
+  (in-module "Gst")
+  (c-name "GstDate")
+  (gtype-id "GST_TYPE_DATE")
+  (fields
+   '("gint" "day")
+   '("gint" "month")
+   '("gint" "year")
+  )
+)
+
 ;; Enumerations and flags ...
 
 (define-flags BinFlags
