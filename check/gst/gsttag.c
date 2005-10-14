@@ -181,14 +181,48 @@ GST_START_TEST (test_merge)
     gst_tag_list_free (merge);
 }
 
-GST_END_TEST Suite *
-gst_tag_suite (void)
+GST_END_TEST
+GST_START_TEST (test_date_tags)
+{
+  GstTagList *tag_list, *tag_list2;
+  GDate *date, *date2;
+  gchar *str;
+
+  date = g_date_new_dmy (14, 10, 2005);
+  tag_list = gst_tag_list_new ();
+  gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, GST_TAG_DATE, date, NULL);
+
+  str = gst_structure_to_string (tag_list);
+  fail_if (str == NULL);
+  fail_if (strstr (str, "2005-10-14") == NULL);
+
+  tag_list2 = gst_structure_from_string (str, NULL);
+  fail_if (tag_list2 == NULL);
+  fail_if (!gst_tag_list_get_date (tag_list2, GST_TAG_DATE, &date2));
+  gst_tag_list_free (tag_list2);
+  g_free (str);
+
+  fail_if (g_date_compare (date, date2) != 0);
+  fail_if (g_date_get_day (date) != 14);
+  fail_if (g_date_get_month (date) != 10);
+  fail_if (g_date_get_year (date) != 2005);
+  fail_if (g_date_get_day (date2) != 14);
+  fail_if (g_date_get_month (date2) != 10);
+  fail_if (g_date_get_year (date2) != 2005);
+  g_date_free (date2);
+
+  gst_tag_list_free (tag_list);
+  g_date_free (date);
+}
+GST_END_TEST Suite * gst_tag_suite (void)
 {
   Suite *s = suite_create ("GstTag");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_merge);
+  tcase_add_test (tc_chain, test_date_tags);
+
   return s;
 }
 

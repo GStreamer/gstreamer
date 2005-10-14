@@ -1,5 +1,10 @@
 2005-10-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* check/gst/gsttag.c: (test_date_tags), (gst_tag_suite):
+	  Add some simple tests for the new taglist date API.
+
+2005-10-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/elements/gstfakesink.c: (gst_fake_sink_render):
 	* gst/elements/gstfakesrc.c: (gst_fake_src_create):
 	  Beautify 'last-message' output: print 'none' for buffer timestamps
