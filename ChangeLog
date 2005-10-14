@@ -1,5 +1,12 @@
 2005-10-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/elements/gstfakesink.c: (gst_fake_sink_render):
+	* gst/elements/gstfakesrc.c: (gst_fake_src_create):
+	  Beautify 'last-message' output: print 'none' for buffer timestamps
+	  and durations if none is set; improve alignment with next messages.
+
+2005-10-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstpluginfeature.c: (gst_plugin_feature_check_version):
 	* gst/gstpluginfeature.h:
 	* gst/gstregistry.c: (gst_default_registry_check_feature_version):

@@ -342,17 +342,31 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstFakeSink *sink = GST_FAKE_SINK (bsink);
 
   if (!sink->silent) {
+    gchar ts_str[64], dur_str[64];
+
     GST_LOCK (sink);
     g_free (sink->last_message);
 
+    if (GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
+      g_snprintf (ts_str, sizeof (ts_str), "%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+    } else {
+      g_strlcpy (ts_str, "none", sizeof (ts_str));
+    }
+
+    if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE) {
+      g_snprintf (dur_str, sizeof (dur_str), "%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+    } else {
+      g_strlcpy (dur_str, "none", sizeof (dur_str));
+    }
+
     sink->last_message =
-        g_strdup_printf ("chain   ******* < (%d bytes, timestamp: %"
-        GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
-        G_GINT64_FORMAT ", offset_end: %" G_GINT64_FORMAT ", flags: %d) %p",
-        GST_BUFFER_SIZE (buf),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
-        GST_BUFFER_OFFSET_END (buf), GST_MINI_OBJECT (buf)->flags, buf);
+        g_strdup_printf ("chain   ******* < (%5d bytes, timestamp: %s"
+        ", duration: %s, offset: %" G_GINT64_FORMAT ", offset_end: %"
+        G_GINT64_FORMAT ", flags: %d) %p", GST_BUFFER_SIZE (buf), ts_str,
+        dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
+        GST_MINI_OBJECT (buf)->flags, buf);
     GST_UNLOCK (sink);
 
     g_object_notify (G_OBJECT (sink), "last_message");
