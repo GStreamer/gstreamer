@@ -20,11 +20,11 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
-from common import gst, unittest
+from common import gst, unittest, TestCase
 
 import gobject
 
-class Availability(unittest.TestCase):
+class Availability(TestCase):
     def testXOverlay(self):
         assert hasattr(gst.interfaces, 'XOverlay')
         assert issubclass(gst.interfaces.XOverlay, gobject.GInterface)
@@ -33,7 +33,7 @@ class Availability(unittest.TestCase):
         assert hasattr(gst.interfaces, 'Mixer')
         assert issubclass(gst.interfaces.Mixer, gobject.GInterface)
 
-class FunctionCall(unittest.TestCase):
+class FunctionCall(TestCase):
     def FIXME_testXOverlay(self):
         # obviously a testsuite is not allowed to instantiate this
         # since it needs a running X or will fail.  find some way to

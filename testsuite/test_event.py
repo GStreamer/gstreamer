@@ -60,57 +60,62 @@ class EventTest(TestCase):
         self.assertRaises(TypeError, self.sink.send_event, number)
 
 
-# FIXME: fix these tests
-#class EventFileSrcTest(unittest.TestCase):
-#    # FIXME: properly create temp files
-#    filename = '/tmp/gst-python-test-file'
-#    def setUp(self):
-#        if os.path.exists(self.filename):
-#            os.remove(self.filename)
-#        open(self.filename, 'w').write(''.join(map(str, range(10))))
-#                
-#        self.pipeline = gst.parse_launch('filesrc name=source location=%s blocksize=1 ! fakesink signal-handoffs=1 name=sink' % self.filename)
-#        self.source = self.pipeline.get_by_name('source')
-#        self.sink = self.pipeline.get_by_name('sink')
-#        self.sink.connect('handoff', self.handoff_cb)
-#        self.bus = self.pipeline.get_bus()
-#        self.pipeline.set_state(gst.STATE_PLAYING)
-#        
-#    def tearDown(self):
-#        assert self.pipeline.set_state(gst.STATE_PLAYING)
-#        if os.path.exists(self.filename):
-#            os.remove(self.filename)
-#
-#    def handoff_cb(self, element, buffer, pad):
-#        self.handoffs.append(str(buffer))
-#
-#    def playAndIter(self):
-#        self.handoffs = []
-#        assert self.pipeline.set_state(gst.STATE_PLAYING)
-#        while 42:
-#            msg = self.bus.pop()
-#            if msg and msg.type == gst.MESSAGE_EOS:
-#                break
-#        assert self.pipeline.set_state(gst.STATE_PAUSED)
-#        handoffs = self.handoffs
-#        self.handoffs = []
-#        return handoffs
-#
-#    def sink_seek(self, offset, method=gst.SEEK_METHOD_SET):
-#        method |= (gst.SEEK_FLAG_FLUSH | gst.FORMAT_BYTES)
-#        self.source.send_event(gst.event_new_seek(method, offset))
-#        self.source.send_event(gst.Event(gst.EVENT_FLUSH)) 
-#        self.sink.send_event(gst.event_new_seek(method, offset))
-#        self.sink.send_event(gst.Event(gst.EVENT_FLUSH))
-#       
-#    def testSimple(self):
-#        handoffs = self.playAndIter()
-#        assert handoffs == map(str, range(10))
-#    
-#    def testSeekCur(self):
-#        self.sink_seek(8)
-#        
-#        #print self.playAndIter()
+class EventFileSrcTest(TestCase):
+   # FIXME: properly create temp files
+   filename = '/tmp/gst-python-test-file'
+   def setUp(self):
+       TestCase.setUp(self)
+       gst.info("start")
+       if os.path.exists(self.filename):
+           os.remove(self.filename)
+       open(self.filename, 'w').write(''.join(map(str, range(10))))
+       
+       self.pipeline = gst.parse_launch('filesrc name=source location=%s blocksize=1 ! fakesink signal-handoffs=1 name=sink' % self.filename)
+       self.source = self.pipeline.get_by_name('source')
+       self.sink = self.pipeline.get_by_name('sink')
+       self.sigid = self.sink.connect('handoff', self.handoff_cb)
+       self.bus = self.pipeline.get_bus()
+       
+   def tearDown(self):
+       self.pipeline.set_state(gst.STATE_NULL)
+       self.sink.disconnect(self.sigid)
+       if os.path.exists(self.filename):
+           os.remove(self.filename)
+       del self.bus
+       del self.pipeline
+       del self.source
+       del self.sink
+       del self.handoffs
+       TestCase.tearDown(self)
+
+   def handoff_cb(self, element, buffer, pad):
+       self.handoffs.append(str(buffer))
+
+   def playAndIter(self):
+       self.handoffs = []
+       self.pipeline.set_state(gst.STATE_PLAYING)
+       assert self.pipeline.set_state(gst.STATE_PLAYING)
+       while 42:
+           msg = self.bus.pop()
+           if msg and msg.type == gst.MESSAGE_EOS:
+               break
+       assert self.pipeline.set_state(gst.STATE_PAUSED)
+       handoffs = self.handoffs
+       self.handoffs = []
+       return handoffs
+
+   def sink_seek(self, offset, method=gst.SEEK_TYPE_SET):
+       self.sink.seek(1.0, gst.FORMAT_BYTES, gst.SEEK_FLAG_FLUSH,
+                      method, offset,
+                      gst.SEEK_TYPE_NONE, 0)
+      
+   def testSimple(self):
+       handoffs = self.playAndIter()
+       assert handoffs == map(str, range(10))
+   
+   def testSeekCur(self):
+       self.sink_seek(8)
+       self.playAndIter()
 
 class TestEmit(TestCase):
     def testEmit(self):

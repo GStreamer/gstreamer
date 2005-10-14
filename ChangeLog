@@ -1,3 +1,24 @@
+2005-10-14  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	Update for new API
+	* gst/gst.override:
+	Added unreffing for gst.Registry.get_plugin_list and .get_feature_list
+	* testsuite/common.py:
+	removed crude hack for gst.Registry and gst.Plugin
+	
+	* testsuite/test_interface.py:
+	* testsuite/test_caps.py:
+	* testsuite/test_struct.py:
+	* testsuite/test_xml.py:
+	converted to using common's TestCase class
+
+	* testsuite/test_event.py:
+	Enabled/fixed previously non working test
+	* testsuite/test_registry.py:
+	Now uses common's TestCase class,
+	added special case setUp()
+
 2005-10-13  Edward Hervey  <edward@fluendo.com>
 
 	* gst/Makefile.am: (noinst_HEADERS): 

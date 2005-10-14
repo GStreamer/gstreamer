@@ -385,23 +385,23 @@ override gst_registry_get_path_list
 static PyObject *
 _wrap_gst_registry_get_path_list (PyGObject *self)
 {
-	GstRegistry *registry;
-	GList *l, *paths;
-	PyObject *list;
+    GstRegistry *registry;
+    GList *l, *paths;
+    PyObject *list;
     gint i;
-	
-        registry = GST_REGISTRY (self->obj);
-
-	paths = gst_registry_get_path_list (registry);
-
-	list = PyList_New (g_list_length(paths));
-	for (l = paths, i = 0; l; l = l->next, ++i) {
-		gchar *path = (gchar *) l->data;
-	    PyList_SetItem (list, i, PyString_FromString(path));
-	}
-	g_list_free (paths);
-	
-	return list;
+    
+    registry = GST_REGISTRY (self->obj);
+    
+    paths = gst_registry_get_path_list (registry);
+    
+    list = PyList_New (g_list_length(paths));
+    for (l = paths, i = 0; l; l = l->next, ++i) {
+	gchar *path = (gchar *) l->data;
+	PyList_SetItem (list, i, PyString_FromString(path));
+    }
+    g_list_free (paths);
+    
+    return list;
 }
 
 %%
@@ -421,10 +421,13 @@ _wrap_gst_registry_get_plugin_list (PyGObject *self)
 	list = PyList_New (g_list_length(plugins));
 	for (l = plugins, i = 0; l; l = l->next, ++i) {
 		GstPlugin *plugin = (GstPlugin *) l->data;
-		PyList_SetItem (list, i, pygobject_new (G_OBJECT (plugin)));
+		PyObject *object = pygstobject_new (G_OBJECT (plugin));
+		gst_object_unref (plugin);
+
+		PyList_SetItem (list, i, object);
 	}
 	g_list_free (plugins);
-	
+
 	return list;
 }
 
@@ -457,6 +460,7 @@ _wrap_gst_registry_get_feature_list (PyGObject *self, PyObject *args, PyObject *
     for (l = features, i = 0; l; l = l->next, ++i) {
         GstPluginFeature *feature = (GstPluginFeature *) l->data;
         PyList_SetItem (list, i, pygobject_new (G_OBJECT (feature)));
+	gst_object_unref (feature);
     }
     g_list_free (features);
 	

@@ -21,10 +21,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
 import sys
-from common import gst, unittest
+from common import gst, unittest, TestCase
 
-class StructureTest(unittest.TestCase):
+class StructureTest(TestCase):
     def setUp(self):
+        TestCase.setUp(self)
         self.struct = gst.structure_from_string('video/x-raw-yuv,width=10,foo="bar",pixel-aspect-ratio=1/2,framerate=5.0,boolean=(boolean)true')
 
     def testName(self):

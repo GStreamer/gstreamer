@@ -20,9 +20,9 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
-from common import gst, unittest
+from common import gst, unittest, TestCase
 
-class PadTest(unittest.TestCase):
+class PadTest(TestCase):
         
     def testQuery(self):
         xml = gst.XML()

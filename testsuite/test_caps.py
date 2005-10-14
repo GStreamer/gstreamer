@@ -21,10 +21,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
 import sys
-from common import gst, unittest
+from common import gst, unittest, TestCase
 
-class CapsTest(unittest.TestCase):
+class CapsTest(TestCase):
     def setUp(self):
+        TestCase.setUp(self)
         self.caps = gst.caps_from_string('video/x-raw-yuv,width=10,framerate=5.0;video/x-raw-rgb,width=15,framerate=10.0')
         self.assertEquals(self.caps.__refcount__, 1)
         self.structure = self.caps[0]

@@ -5282,6 +5282,27 @@
   )
 )
 
+(define-method get_date
+  (of-object "GstTagList")
+  (c-name "gst_tag_list_get_date")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "tag")
+    '("GDate**" "value")
+  )
+)
+
+(define-method get_date_index
+  (of-object "GstTagList")
+  (c-name "gst_tag_list_get_date_index")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "tag")
+    '("guint" "index")
+    '("GDate**" "value")
+  )
+)
+
 
 ;; From ../gstreamer/gst/gsttaginterface.h
 

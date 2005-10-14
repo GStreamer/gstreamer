@@ -21,39 +21,48 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
 import sys
-from common import gst, unittest
+import gc
+from common import gst, unittest, TestCase
 
-class RegistryTest(unittest.TestCase):
+class RegistryTest(TestCase):
+    def setUp(self):
+        self.registry = gst.registry_get_default()
+        self.plugins = self.registry.get_plugin_list()
+        TestCase.setUp(self)
+
     def testGetDefault(self):
-        registry = gst.registry_get_default()
+        assert(self.registry)
 
     def testPluginList(self):
-        registry = gst.registry_get_default()
-        plugins = registry.get_plugin_list()
-        names = map(lambda p: p.get_name(), plugins)
+        names = map(lambda p: p.get_name(), self.plugins)
         self.failUnless('gstcoreelements' in names)
-
-    def testFeatureList(self):
-        registry = gst.registry_get_default()
-        self.assertRaises(TypeError, registry.get_feature_list, "kaka")
-        
-        features = registry.get_feature_list(gst.TYPE_ELEMENT_FACTORY)
-        elements = map(lambda f: f.get_name(), features)
-        self.failUnless('fakesink' in elements)
-
-        features = registry.get_feature_list(gst.TYPE_TYPE_FIND_FACTORY)
-        typefinds = map(lambda f: f.get_name(), features)
-
-        features = registry.get_feature_list(gst.TYPE_INDEX_FACTORY)
-        indexers = map(lambda f: f.get_name(), features)
-        self.failUnless('memindex' in indexers)
 
     def testGetPathList(self):
         # FIXME: this returns an empty list; probably due to core;
         # examine problem
-        registry = gst.registry_get_default()
         
-        paths = registry.get_path_list()
+        paths = self.registry.get_path_list()
 
+class RegistryFeatureTest(TestCase):
+    def setUp(self):
+        self.registry = gst.registry_get_default()
+        self.plugins = self.registry.get_plugin_list()
+        self.efeatures = self.registry.get_feature_list(gst.TYPE_ELEMENT_FACTORY)
+        self.tfeatures = self.registry.get_feature_list(gst.TYPE_TYPE_FIND_FACTORY)
+        self.ifeatures = self.registry.get_feature_list(gst.TYPE_INDEX_FACTORY)
+        TestCase.setUp(self)
+
+    def testFeatureList(self):
+        self.assertRaises(TypeError, self.registry.get_feature_list, "kaka")
+        
+        elements = map(lambda f: f.get_name(), self.efeatures)
+        self.failUnless('fakesink' in elements)
+
+        typefinds = map(lambda f: f.get_name(), self.tfeatures)
+
+        indexers = map(lambda f: f.get_name(), self.ifeatures)
+        self.failUnless('memindex' in indexers)
+        
+        
 if __name__ == "__main__":
     unittest.main()
