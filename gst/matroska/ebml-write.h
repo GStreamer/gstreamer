@@ -1,5 +1,6 @@
 /* GStreamer EBML I/O
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2005 Michal Benes <michal.benes@xeris.cz>
  *
  * ebml-write.c: write EBML data to file/stream
  *
@@ -41,20 +42,34 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_EBML_WRITE, GstEbmlWriteClass))
 
 typedef struct _GstEbmlWrite {
-  GstElement parent;
+  GstObject object;
 
   GstPad *srcpad;
   guint64 pos;
 
   GstBuffer *cache;
+  guint cache_size;
   guint handled;
+
+  GstFlowReturn last_write_result;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 } GstEbmlWrite;
 
 typedef struct _GstEbmlWriteClass {
-  GstElementClass parent;
+  GstObjectClass parent;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 } GstEbmlWriteClass;
 
 GType   gst_ebml_write_get_type      (void);
+
+GstEbmlWrite *gst_ebml_write_new     (GstPad *srcpad);
+void    gst_ebml_write_reset         (GstEbmlWrite *ebml);
+
+GstFlowReturn gst_ebml_last_write_result (GstEbmlWrite *ebml);
 
 /*
  * Caching means that we do not push one buffer for

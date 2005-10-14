@@ -27,6 +27,9 @@ G_BEGIN_DECLS
 /* EBML version supported */
 #define GST_EBML_VERSION 1
 
+/* Unknown size (all bits set to 1) */
+#define GST_EBML_SIZE_UNKNOWN          G_GINT64_CONSTANT(0x00ffffffffffffff)
+
 /* top-level master-IDs */
 #define GST_EBML_ID_HEADER             0x1A45DFA3
 

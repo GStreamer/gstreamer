@@ -1,5 +1,6 @@
 /* GStreamer Matroska muxer/demuxer
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2005 Michal Benes <michal.benes@xeris.cz>
  *
  * matroska-mux.h: matroska file/stream muxer object types
  *
@@ -23,6 +24,7 @@
 #define __GST_MATROSKA_MUX_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstcollectpads.h>
 
 #include "ebml-write.h"
 #include "matroska-ids.h"
@@ -39,8 +41,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MATROSKA_MUX))
 #define GST_IS_MATROSKA_MUX_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MATROSKA_MUX))
-
-#define GST_MATROSKA_MUX_MAX_STREAMS 64
 
 typedef struct _BITMAPINFOHEADER {
   guint32 bi_size;
@@ -67,22 +67,32 @@ typedef struct _GstMatroskaMetaSeekIndex {
   guint64  pos;
 } GstMatroskaMetaSeekIndex;
 
+/* all information needed for one matroska stream */
+typedef struct
+{
+  GstCollectData collect;       /* we extend the CollectData */
+  GstMatroskaTrackContext *track;
+
+  GstBuffer *buffer;            /* the queued buffer for this pad */
+
+  guint64 duration;
+}
+GstMatroskaPad;
+
+
 typedef struct _GstMatroskaMux {
-  GstEbmlWrite   parent;
+  GstElement     element;
 
   /* pads */
   GstPad 	*srcpad;
-  struct {
-    GstMatroskaTrackContext *track;
-    GstBuffer   *buffer;
-    gboolean     eos;
-    guint64      duration;
-  } sink[GST_MATROSKA_MUX_MAX_STREAMS];
+  GstCollectPads *collect;
+  GstEbmlWrite *ebml_write;
+
   guint          num_streams,
                  num_v_streams, num_a_streams, num_t_streams;
 
-  /* metadata - includes writing_app and creation_time */
-  GstCaps      *metadata;
+  /* Application name (for the writing application header element) */
+  gchar          *writing_app;
 
   /* state */
   GstMatroskaMuxState state;
@@ -99,15 +109,13 @@ typedef struct _GstMatroskaMux {
 
   /* byte-positions of master-elements (for replacing contents) */
   guint64        segment_pos,
-		 seekhead_pos,
-		 cues_pos,
-#if 0
-		 tags_pos,
-#endif
-		 info_pos,
-		 tracks_pos,
-		 duration_pos,
-     meta_pos;
+                 seekhead_pos,
+                 cues_pos,
+                 /* tags_pos, */
+                 info_pos,
+                 tracks_pos,
+                 duration_pos,
+                 meta_pos;
   guint64        segment_master;
 
   /* current cluster */
@@ -121,7 +129,7 @@ typedef struct _GstMatroskaMux {
 } GstMatroskaMux;
 
 typedef struct _GstMatroskaMuxClass {
-  GstEbmlWriteClass parent;
+  GstElementClass parent;
 } GstMatroskaMuxClass;
 
 GType    gst_matroska_mux_get_type    (void);

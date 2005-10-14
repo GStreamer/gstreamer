@@ -132,6 +132,7 @@
 #define GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_SP     "V_MPEG4/ISO/SP"
 #define GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP    "V_MPEG4/ISO/ASP"
 #define GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AP     "V_MPEG4/ISO/AP"
+#define GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AVC    "V_MPEG4/ISO/AVC"
 #define GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3    "V_MPEG4/MS/V3"
 #define GST_MATROSKA_CODEC_ID_VIDEO_MPEG1        "V_MPEG1"
 #define GST_MATROSKA_CODEC_ID_VIDEO_MPEG2        "V_MPEG2"
@@ -151,6 +152,7 @@
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG2        "A_AAC/MPEG2/"
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG4        "A_AAC/MPEG4/"
 #define GST_MATROSKA_CODEC_ID_AUDIO_TTA          "A_TTA1"
+#define GST_MATROSKA_CODEC_ID_AUDIO_WAVPACK4     "A_WAVPACK4"
 /* TODO: AC3-9/10 (?), Real, Musepack, Quicktime */
 
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8      "S_TEXT/UTF8"
@@ -266,5 +268,18 @@ typedef struct _GstMatroskaIndex {
   guint16        track; /* reference to 'num' */
   guint64        time;  /* in nanoseconds */
 } GstMatroskaIndex;
+
+typedef struct _Wavpack4Header {
+  guchar  ck_id [4];     /* "wvpk"                                         */
+  guint32 ck_size;       /* size of entire frame (minus 8, of course)      */
+  guint16 version;       /* 0x403 for now                                  */
+  guint8  track_no;      /* track number (0 if not used, like now)         */
+  guint8  index_no;      /* remember these? (0 if not used, like now)      */
+  guint32 total_samples; /* for entire file (-1 if unknown)                */
+  guint32 block_index;   /* index of first sample in block (to file begin) */
+  guint32 block_samples; /* # samples in this block                        */
+  guint32 flags;         /* various flags for id and decoding              */
+  guint32 crc;           /* crc for actual decoded data                    */
+} Wavpack4Header;
 
 #endif /* __GST_MATROSKA_IDS_H__ */

@@ -1,3 +1,18 @@
+2005-10-14  Michal Benes  <michal dot benes at xeris dot cz>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/matroska/Makefile.am:
+	* gst/matroska/ebml-ids.h:
+	* gst/matroska/ebml-write.c:
+	* gst/matroska/ebml-write.h:
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-mux.c:
+	* gst/matroska/matroska-mux.h:
+	* gst/matroska/matroska.c: (plugin_init):
+	  Port matroska muxer to 0.9 (#318847).
+
 2005-10-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/speex/gstspeexenc.c: (gst_speexenc_get_tag_value),

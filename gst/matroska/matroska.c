@@ -23,14 +23,14 @@
 #include "config.h"
 #endif
 
-#include "matroska-demux.h"
+/* #include "matroska-demux.h" */
 #include "matroska-mux.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return (gst_matroska_demux_plugin_init (plugin) &&
-      gst_matroska_mux_plugin_init (plugin));
+  return                        /* gst_matroska_demux_plugin_init (plugin) && */
+      gst_matroska_mux_plugin_init (plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
