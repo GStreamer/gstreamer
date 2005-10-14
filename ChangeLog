@@ -1,5 +1,10 @@
 2005-10-14  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.defs:
+	Updated to new API
+
+2005-10-14  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst-types.defs:
 	Added GstDate boxed type
 	* gst/gst.override:

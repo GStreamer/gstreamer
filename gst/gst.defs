@@ -4024,6 +4024,17 @@
   )
 )
 
+(define-method check_version
+  (of-object "GstPluginFeature")
+  (c-name "gst_plugin_feature_check_version")
+  (return-type "gboolean")
+  (parameters
+    '("guint" "min_major")
+    '("guint" "min_minor")
+    '("guint" "min_micro")
+  )
+)
+
 ;; From ../gstreamer/gst/gstquery.h
 
 (define-function gst_query_get_type
@@ -4384,6 +4395,23 @@
   (return-type "gboolean")
   (parameters
     '("const-char*" "location")
+  )
+)
+
+(define-method scan_paths
+  (of-object "GstRegistry")
+  (c-name "gst_registry_scan_paths")
+  (return-type "none")
+)
+
+(define-function gst_default_registry_check_feature_version
+  (c-name "gst_default_registry_check_feature_version")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "feature_name")
+    '("guint" "min_major")
+    '("guint" "min_minor")
+    '("guint" "min_micro")
   )
 )
 
