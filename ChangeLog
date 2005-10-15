@@ -1,3 +1,9 @@
+2005-10-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstevent.h:
+	  Add GST_EVENT_TYPE_NAME() macro.
+
 2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstinfo.c:

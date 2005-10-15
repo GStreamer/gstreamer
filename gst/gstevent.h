@@ -130,6 +130,14 @@ typedef struct _GstEventClass GstEventClass;
 #define GST_EVENT_TYPE(event)		(GST_EVENT(event)->type)
 
 /**
+ * GST_EVENT_TYPE_NAME:
+ * @event: the event to query
+ *
+ * Get a constant string representation of the #GstEventType of the event.
+ */
+#define GST_EVENT_TYPE_NAME(event)	(gst_event_type_get_name(GST_EVENT_TYPE(event))
+
+/**
  * GST_EVENT_TIMESTAMP:
  * @event: the event to query
  *
