@@ -112,7 +112,7 @@
 /* underscore is to prevent conflict with GST_CAT_DEBUG define */
 GST_DEBUG_CATEGORY_STATIC (_GST_CAT_DEBUG);
 /* time of initialization, so we get useful debugging output times */
-GstClockTime start_time;
+static GstClockTime start_time;
 
 #if 0
 #if defined __sgi__

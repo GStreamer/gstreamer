@@ -25,7 +25,7 @@
 #include "gstinfo.h"
 #include "gsttask.h"
 
-GST_DEBUG_CATEGORY (task_debug);
+GST_DEBUG_CATEGORY_STATIC (task_debug);
 #define GST_CAT_DEFAULT (task_debug)
 
 static void gst_task_class_init (GstTaskClass * klass);

@@ -1,5 +1,12 @@
 2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstinfo.c:
+	* gst/gstpluginfeature.c:
+	* gst/gsttask.c:
+	  privatize more symbols
+
+2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  add srcdir, builddir includes to GST_ALL_CFLAGS, since
 	  everything that uses GStreamer API should have the includes

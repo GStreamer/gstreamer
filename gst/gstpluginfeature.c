@@ -46,7 +46,7 @@ static void gst_plugin_feature_finalize (GObject * object);
 /* static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 }; */
 
 G_DEFINE_ABSTRACT_TYPE (GstPluginFeature, gst_plugin_feature, GST_TYPE_OBJECT);
-GstObjectClass *parent_class = NULL;
+static GstObjectClass *parent_class = NULL;
 
 static void
 gst_plugin_feature_class_init (GstPluginFeatureClass * klass)
