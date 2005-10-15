@@ -40,11 +40,8 @@
  *   <programlisting>
  *   GstBuffer *buffer;
  *   gint size, width, height, bpp;
- *
  *   ...
- *
  *   size = width * height * bpp;
- *
  *   buffer = gst_buffer_new ();
  *   GST_BUFFER_SIZE (buffer) = size;
  *   GST_BUFFER_MALLOCDATA (buffer) = g_alloc (size);

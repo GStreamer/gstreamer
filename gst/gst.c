@@ -69,7 +69,6 @@
  * <programlisting>
  * static gboolean stats = FALSE;
  * ...
- *
  * int
  * main (int argc, char *argv[])
  * {
@@ -78,10 +77,8 @@
  *         "Show pad stats", NULL},
  *       POPT_TABLEEND
  *     };
- *
  *   // initialize the GStreamer library
  *   gst_init_with_popt_table (&amp;argc, &amp;argv, options);
- *
  *   ...
  * }
  * </programlisting>

@@ -33,7 +33,7 @@
 #include "gst_private.h"
 #include <gst/gst.h>
 
-/* #define DEBUG_REFCOUNT */
+#define DEBUG_REFCOUNT
 
 #define CAPS_POISON(caps) G_STMT_START{ \
   if (caps) { \

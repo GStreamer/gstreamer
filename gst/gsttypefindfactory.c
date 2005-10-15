@@ -61,7 +61,6 @@
  *     GList *walk, *type_list;
  *     MyTypeFind find = {data, size, 0, NULL};
  *     GstTypeFind gst_find = {my_peek, my_suggest, &amp;find, };
- *
  *     walk = type_list = gst_type_find_factory_get_list ();
  *     while (walk) {
  *       GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);

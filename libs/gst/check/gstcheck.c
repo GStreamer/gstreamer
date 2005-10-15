@@ -168,7 +168,8 @@ gst_check_setup_src_pad (GstElement * element,
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
   ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
-  fail_unless (gst_pad_set_caps (srcpad, caps));
+  if (caps)
+    fail_unless (gst_pad_set_caps (srcpad, caps));
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (sinkpad);   /* because we got it higher up */
@@ -218,7 +219,8 @@ gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
   srcpad = gst_element_get_pad (element, "src");
   fail_if (srcpad == NULL, "Could not get source pad from %s",
       GST_ELEMENT_NAME (element));
-  fail_unless (gst_pad_set_caps (sinkpad, caps));
+  if (caps)
+    fail_unless (gst_pad_set_caps (sinkpad, caps));
   gst_pad_set_chain_function (sinkpad, gst_check_chain_func);
 
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
