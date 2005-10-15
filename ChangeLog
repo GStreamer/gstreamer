@@ -1,3 +1,24 @@
+2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  reorganize
+	  clean up
+	  document more
+	  remove cruft
+	* check/Makefile.am:
+	* docs/gst/Makefile.am:
+	* examples/helloworld/Makefile.am:
+	* gst/Makefile.am:
+	* gst/base/Makefile.am:
+	* gst/check/Makefile.am:
+	* gst/elements/Makefile.am:
+	* gst/indexers/Makefile.am:
+	* gst/parse/Makefile.am:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/dataprotocol/Makefile.am:
+	* examples/helloworld/helloworld.c: (event_loop):
+	  compile fixes, though it's not being compiled currently
+
 2005-10-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* check/gst/gsttag.c: (test_date_tags), (gst_tag_suite):

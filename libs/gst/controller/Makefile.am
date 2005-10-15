@@ -10,7 +10,6 @@ libgstcontroller_@GST_MAJORMINOR@_la_SOURCES = \
 	gstinterpolation.c \
 	gsthelper.c
 
-libgstcontroller_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS) -I$(top_srcdir)/libs 
-libgstcontroller_@GST_MAJORMINOR@_la_LDFLAGS = @GST_LIB_LDFLAGS@ \
-	-no-undefined
+libgstcontroller_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstcontroller_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS)
+libgstcontroller_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_OBJ_LDFLAGS)

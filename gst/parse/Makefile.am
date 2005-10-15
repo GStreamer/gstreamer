@@ -1,6 +1,5 @@
-
+# libgstparse.la is an optionally built helper library linked into core
 noinst_LTLIBRARIES = libgstparse.la
-
 
 CLEANFILES = grammar.tab.h grammar.output
 EXTRA_DIST = grammar.y parse.l types.h
@@ -13,8 +12,8 @@ EXTRA_DIST = grammar.y parse.l types.h
 nodist_libgstparse_la_SOURCES = lex._gst_parse_yy.c grammar.tab.c
 CLEANFILES += grammar.tab.c lex._gst_parse_yy.c 
 
-libgstparse_la_CFLAGS = $(GST_LIB_CFLAGS) $(DISABLE_FLEX_WARNING)
-libgstparse_la_LIBADD = $(GST_LIB_LIBS)
+libgstparse_la_CFLAGS = $(GST_ALL_CFLAGS)
+libgstparse_la_LIBADD = $(GST_ALL_LIBS)
 
 noinst_HEADERS = grammar.tab.h
 

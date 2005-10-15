@@ -62,20 +62,20 @@ TESTS = $(check_PROGRAMS)
 noinst_HEADERS = gst/capslist.h
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(CHECK_CFLAGS)
-LDADD = $(GST_OBJ_LIBS) \
-	$(top_builddir)/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
+LDADD = $(top_builddir)/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
+	$(GST_OBJ_LIBS) \
 	$(CHECK_LIBS)
 
 gst_libs_gdp_SOURCES = \
 	gst-libs/gdp.c \
 	$(top_srcdir)/libs/gst/dataprotocol/dataprotocol.c
 # remove GST_ENABLE_NEW when dataprotocol has been declared API-stable
+# FIXME: time to do this
 gst_libs_gdp_CFLAGS = $(AM_CFLAGS) -DGST_ENABLE_NEW
 
-gst_libs_controller_LDADD = $(GST_OBJ_LIBS) \
-	$(top_builddir)/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
-	$(CHECK_LIBS) \
-	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la 
+gst_libs_controller_LDADD = \
+	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
+	$(LDADD)
 
 # valgrind testing
 # these just need valgrind fixing, period

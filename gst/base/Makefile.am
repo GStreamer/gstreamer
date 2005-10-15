@@ -12,8 +12,7 @@ libgstbase_@GST_MAJORMINOR@_la_SOURCES =	\
 	gsttypefindhelper.c	
 
 libgstbase_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
-libgstbase_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS) \
-	../libgstreamer-@GST_MAJORMINOR@.la
+libgstbase_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS)
 libgstbase_@GST_MAJORMINOR@_la_LDFLAGS = \
 	-no-undefined
 

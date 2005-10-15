@@ -21,9 +21,9 @@ libgstelements_la_SOURCES =	\
 	gsttypefindelement.c
 
 libgstelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
-libgstelements_la_LIBADD = $(GST_OBJ_LIBS) \
+libgstelements_la_LIBADD = \
 	$(top_builddir)/gst/base/libgstbase-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
+	$(GST_OBJ_LIBS)
 libgstelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS =		\
