@@ -221,7 +221,7 @@ gst_caps_copy (const GstCaps * caps)
 {
   GstCaps *newcaps;
   GstStructure *structure;
-  int i;
+  guint i;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
@@ -240,7 +240,7 @@ static void
 _gst_caps_free (GstCaps * caps)
 {
   GstStructure *structure;
-  int i;
+  guint i;
 
   /* The refcount must be 0, but since we're only called by gst_caps_unref,
    * don't bother testing. */
@@ -512,7 +512,7 @@ gst_caps_split_one (GstCaps * caps)
  *
  * Returns: the number of structures that @caps contains
  */
-int
+guint
 gst_caps_get_size (const GstCaps * caps)
 {
   g_return_val_if_fail (GST_IS_CAPS (caps), 0);
@@ -536,7 +536,7 @@ gst_caps_get_size (const GstCaps * caps)
  * Returns: a pointer to the #GstStructure corresponding to @index
  */
 GstStructure *
-gst_caps_get_structure (const GstCaps * caps, int index)
+gst_caps_get_structure (const GstCaps * caps, guint index)
 {
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
   g_return_val_if_fail (index >= 0, NULL);
@@ -556,7 +556,7 @@ gst_caps_get_structure (const GstCaps * caps, int index)
  * Returns: the new @GstCaps 	 
  */
 GstCaps *
-gst_caps_copy_nth (const GstCaps * caps, gint nth)
+gst_caps_copy_nth (const GstCaps * caps, guint nth)
 {
   GstCaps *newcaps;
   GstStructure *structure;
@@ -954,7 +954,7 @@ gst_caps_structure_union (const GstStructure * struct1,
 GstCaps *
 gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
 {
-  int i, j, k;
+  guint i, j, k;
   GstStructure *struct1;
   GstStructure *struct2;
   GstCaps *dest;
@@ -1088,7 +1088,7 @@ gst_caps_structure_subtract (GSList ** into, const GstStructure * minuend,
 GstCaps *
 gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
 {
-  int i, j;
+  guint i, j;
   GstStructure *min;
   GstStructure *sub;
   GstCaps *dest = NULL, *src;
@@ -1187,7 +1187,7 @@ gst_caps_normalize_foreach (GQuark field_id, const GValue * value, gpointer ptr)
 {
   NormalizeForeach *nf = (NormalizeForeach *) ptr;
   GValue val = { 0 };
-  int i;
+  guint i;
 
   if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
     for (i = 1; i < gst_value_list_get_size (value); i++) {
@@ -1222,7 +1222,7 @@ gst_caps_normalize (const GstCaps * caps)
 {
   NormalizeForeach nf;
   GstCaps *newcaps;
-  int i;
+  guint i;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
 
@@ -1531,7 +1531,7 @@ gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
 gchar *
 gst_caps_to_string (const GstCaps * caps)
 {
-  int i;
+  guint i;
   GString *s;
 
   /* NOTE:  This function is potentially called by the debug system,

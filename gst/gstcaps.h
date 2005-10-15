@@ -156,10 +156,10 @@ void                     gst_caps_append                                (GstCaps
 									 GstCaps       *caps2);
 void                     gst_caps_append_structure                      (GstCaps       *caps,
 									 GstStructure  *structure);
-int                      gst_caps_get_size                              (const GstCaps *caps);
+guint                    gst_caps_get_size                              (const GstCaps *caps);
 GstStructure *           gst_caps_get_structure                         (const GstCaps *caps,
-									 int            index);
-GstCaps *		 gst_caps_copy_nth                              (const GstCaps * caps, gint nth);
+									 guint          index);
+GstCaps *		 gst_caps_copy_nth                              (const GstCaps * caps, guint nth);
 void			 gst_caps_truncate                              (GstCaps * caps);
 void                     gst_caps_set_simple                            (GstCaps       *caps,
 									 char          *field, ...);
