@@ -35,12 +35,10 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT GType _gst_pad_type;
-
 /*
  * Pad base class
  */
-#define GST_TYPE_PAD			(_gst_pad_type)
+#define GST_TYPE_PAD			(gst_pad_get_type ())
 #define GST_IS_PAD(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PAD))
 #define GST_IS_PAD_FAST(obj)		(G_OBJECT_TYPE(obj) == GST_TYPE_PAD) /* necessary? */
 #define GST_IS_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))

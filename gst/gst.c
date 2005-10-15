@@ -107,10 +107,6 @@
 #define MAX_PATH_SPLIT	16
 #define GST_PLUGIN_SEPARATOR ","
 
-#ifndef GST_DISABLE_REGISTRY
-gboolean _gst_registry_auto_load = TRUE;
-#endif
-
 static gboolean gst_initialized = FALSE;
 
 extern gint _gst_trace_on;

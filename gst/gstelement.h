@@ -55,9 +55,7 @@ typedef enum {
 
 G_BEGIN_DECLS
 
-GST_EXPORT GType _gst_element_type;
-
-#define GST_TYPE_ELEMENT		(_gst_element_type)
+#define GST_TYPE_ELEMENT		(gst_element_get_type ())
 #define GST_IS_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_ELEMENT))
 #define GST_IS_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_ELEMENT))
 #define GST_ELEMENT_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_ELEMENT, GstElementClass))

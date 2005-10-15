@@ -1,5 +1,20 @@
 2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gst.c:
+	* gst/gst.h:
+	  remove _gst_registry_auto_load, not used anymore
+	* gst/gstbin.c: (gst_bin_get_type):
+	* gst/gstbin.h:
+	* gst/gstelement.c: (gst_element_get_type):
+	* gst/gstelement.h:
+	* gst/gstobject.c: (gst_object_get_type):
+	* gst/gstobject.h:
+	* gst/gstpad.c: (gst_pad_get_type):
+	* gst/gstpad.h:
+	  make _get_type functions similar, fixes data export from library
+
+2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  correctly make conditionals
 	* gst/elements/Makefile.am:

@@ -30,9 +30,7 @@
 
 G_BEGIN_DECLS
 
-GST_EXPORT GType _gst_bin_type;
-
-#define GST_TYPE_BIN             (_gst_bin_type)
+#define GST_TYPE_BIN             (gst_bin_get_type ())
 #define GST_IS_BIN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_BIN))
 #define GST_IS_BIN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_BIN))
 #define GST_BIN_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BIN, GstBinClass))

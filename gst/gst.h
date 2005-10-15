@@ -72,10 +72,6 @@
 
 G_BEGIN_DECLS
 
-#ifndef GST_DISABLE_REGISTRY
-GST_EXPORT gboolean _gst_registry_auto_load;
-#endif
-
 void		gst_init			(int *argc, char **argv[]);
 gboolean	gst_init_check			(int *argc, char **argv[],
 						 GError ** err);

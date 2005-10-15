@@ -77,8 +77,6 @@ static GstElementDetails gst_bin_details = GST_ELEMENT_DETAILS ("Generic bin",
     "Simple container object",
     "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");
 
-GType _gst_bin_type = 0;
-
 static void gst_bin_dispose (GObject * object);
 
 static void gst_bin_recalc_state (GstBin * bin, gboolean force);
@@ -138,7 +136,9 @@ static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 GType
 gst_bin_get_type (void)
 {
-  if (!_gst_bin_type) {
+  static GType gst_bin_type = 0;
+
+  if (!gst_bin_type) {
     static const GTypeInfo bin_info = {
       sizeof (GstBinClass),
       gst_bin_base_init,
@@ -157,16 +157,16 @@ gst_bin_get_type (void)
       NULL
     };
 
-    _gst_bin_type =
+    gst_bin_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstBin", &bin_info, 0);
 
-    g_type_add_interface_static (_gst_bin_type, GST_TYPE_CHILD_PROXY,
+    g_type_add_interface_static (gst_bin_type, GST_TYPE_CHILD_PROXY,
         &child_proxy_info);
 
     GST_DEBUG_CATEGORY_INIT (bin_debug, "bin", GST_DEBUG_BOLD,
         "debugging info for the 'bin' container element");
   }
-  return _gst_bin_type;
+  return gst_bin_type;
 }
 
 static void

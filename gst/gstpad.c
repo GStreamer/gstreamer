@@ -95,8 +95,6 @@ enum
   /* FILL ME */
 };
 
-GType _gst_pad_type = 0;
-
 static void gst_pad_class_init (GstPadClass * klass);
 static void gst_pad_init (GstPad * pad);
 static void gst_pad_dispose (GObject * object);
@@ -186,7 +184,9 @@ gst_flow_to_quark (GstFlowReturn ret)
 GType
 gst_pad_get_type (void)
 {
-  if (!_gst_pad_type) {
+  static GType gst_pad_type = 0;
+
+  if (!gst_pad_type) {
     static const GTypeInfo pad_info = {
       sizeof (GstPadClass), NULL, NULL,
       (GClassInitFunc) gst_pad_class_init, NULL, NULL,
@@ -196,7 +196,7 @@ gst_pad_get_type (void)
     };
     gint i;
 
-    _gst_pad_type = g_type_register_static (GST_TYPE_OBJECT, "GstPad",
+    gst_pad_type = g_type_register_static (GST_TYPE_OBJECT, "GstPad",
         &pad_info, 0);
 
     buffer_quark = g_quark_from_static_string ("buffer");
@@ -209,7 +209,7 @@ gst_pad_get_type (void)
     GST_DEBUG_CATEGORY_INIT (debug_dataflow, "GST_DATAFLOW",
         GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "dataflow inside pads");
   }
-  return _gst_pad_type;
+  return gst_pad_type;
 }
 
 static gboolean

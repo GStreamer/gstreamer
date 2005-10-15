@@ -131,15 +131,15 @@ static xmlNodePtr gst_element_save_thyself (GstObject * object,
 static void gst_element_restore_thyself (GstObject * parent, xmlNodePtr self);
 #endif
 
-GType _gst_element_type = 0;
-
 static GstObjectClass *parent_class = NULL;
 static guint gst_element_signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_element_get_type (void)
 {
-  if (!_gst_element_type) {
+  static GType gst_element_type = 0;
+
+  if (!gst_element_type) {
     static const GTypeInfo element_info = {
       sizeof (GstElementClass),
       gst_element_base_class_init,
@@ -153,10 +153,10 @@ gst_element_get_type (void)
       NULL
     };
 
-    _gst_element_type = g_type_register_static (GST_TYPE_OBJECT, "GstElement",
+    gst_element_type = g_type_register_static (GST_TYPE_OBJECT, "GstElement",
         &element_info, G_TYPE_FLAG_ABSTRACT);
   }
-  return _gst_element_type;
+  return gst_element_type;
 }
 
 static void

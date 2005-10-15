@@ -138,7 +138,6 @@ enum
   SO_LAST_SIGNAL
 };
 
-GType _gst_object_type = 0;
 static GHashTable *object_name_counts = NULL;
 
 G_LOCK_DEFINE_STATIC (object_name_mutex);
@@ -186,7 +185,9 @@ static guint gst_object_signals[LAST_SIGNAL] = { 0 };
 GType
 gst_object_get_type (void)
 {
-  if (!_gst_object_type) {
+  static GType gst_object_type = 0;
+
+  if (!gst_object_type) {
     static const GTypeInfo object_info = {
       sizeof (GstObjectClass),
       NULL,
@@ -200,11 +201,11 @@ gst_object_get_type (void)
       NULL
     };
 
-    _gst_object_type =
+    gst_object_type =
         g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info,
         G_TYPE_FLAG_ABSTRACT);
   }
-  return _gst_object_type;
+  return gst_object_type;
 }
 
 static void
