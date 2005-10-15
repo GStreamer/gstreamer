@@ -220,7 +220,7 @@ gst_structure_copy (const GstStructure * structure)
 {
   GstStructure *new_structure;
   GstStructureField *field;
-  int i;
+  guint i;
 
   g_return_val_if_fail (structure != NULL, NULL);
 
@@ -252,7 +252,7 @@ void
 gst_structure_free (GstStructure * structure)
 {
   GstStructureField *field;
-  int i;
+  guint i;
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (structure->parent_refcount == NULL);
@@ -466,7 +466,7 @@ static void
 gst_structure_set_field (GstStructure * structure, GstStructureField * field)
 {
   GstStructureField *f;
-  int i;
+  guint i;
 
   for (i = 0; i < structure->fields->len; i++) {
     f = GST_STRUCTURE_FIELD (structure, i);
@@ -487,7 +487,7 @@ static GstStructureField *
 gst_structure_id_get_field (const GstStructure * structure, GQuark field_id)
 {
   GstStructureField *field;
-  int i;
+  guint i;
 
   g_return_val_if_fail (structure != NULL, NULL);
 
@@ -576,7 +576,7 @@ gst_structure_remove_field (GstStructure * structure, const gchar * fieldname)
 {
   GstStructureField *field;
   GQuark id;
-  int i;
+  guint i;
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (fieldname != NULL);
@@ -748,7 +748,7 @@ gboolean
 gst_structure_foreach (const GstStructure * structure,
     GstStructureForeachFunc func, gpointer user_data)
 {
-  int i;
+  guint i;
   GstStructureField *field;
   gboolean ret;
 
@@ -782,7 +782,7 @@ gboolean
 gst_structure_map_in_place (GstStructure * structure,
     GstStructureMapFunc func, gpointer user_data)
 {
-  int i;
+  guint i;
   GstStructureField *field;
   gboolean ret;
 
@@ -1264,7 +1264,7 @@ gst_structure_to_string (const GstStructure * structure)
 {
   GstStructureField *field;
   GString *s;
-  int i;
+  guint i;
 
   /* NOTE:  This function is potentially called by the debug system,
    * so any calls to gst_log() (and GST_DEBUG(), GST_LOG(), etc.)

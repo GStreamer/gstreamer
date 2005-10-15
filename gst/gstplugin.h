@@ -27,6 +27,7 @@
 #include <gst/gstconfig.h>
 
 #include <time.h> /* time_t */
+#include <sys/stat.h> /* off_t */
 #include <gmodule.h>
 #include <gst/gstobject.h>
 #include <gst/gstmacros.h>
@@ -146,7 +147,7 @@ struct _GstPlugin {
 
   GModule *	module;		/* contains the module if plugin is loaded */
 
-  size_t        file_size;
+  off_t         file_size;
   time_t        file_mtime;
   gboolean      registered;     /* TRUE when the registry has seen a filename
                                  * that matches the plugin's basename */

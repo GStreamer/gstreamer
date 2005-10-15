@@ -2325,7 +2325,7 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
   GstElementClass *oclass;
   GParamSpec **specs, *spec;
   guint nspecs;
-  gint i;
+  guint i;
   GValue value = { 0, };
   GstElement *element;
 
