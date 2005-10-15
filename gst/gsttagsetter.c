@@ -18,9 +18,11 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gsttagsetter
- * @short_description: Element interface that allows setting and retrieval of media metadata
+ * @short_description: Element interface that allows setting and retrieval
+ *                     of media metadata
  *
  */
 

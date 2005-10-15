@@ -18,6 +18,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gsttypefindfactory
  * @short_description: Information about registered typefind functions
@@ -73,8 +74,9 @@
  *   </programlisting>
  * </example>
  *
- * The above example shows how to write a very simple typefinder that identifies
- * the given data. You can get quite a bit more complicated than that though.
+ * The above example shows how to write a very simple typefinder that
+ * identifies the given data. You can get quite a bit more complicated than
+ * that though.
  */
 
 #include "gst_private.h"

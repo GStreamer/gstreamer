@@ -18,6 +18,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstbus
  * @short_description: Asynchronous message bus subsystem
@@ -45,9 +46,9 @@
  * up to the specified timeout value until one of the specified messages types
  * is posted on the bus. The application can then _pop() the messages from the
  * bus to handle them.
- * Alternatively the application can register an asynchronous bus function using
- * gst_bus_add_watch_full() or gst_bus_add_watch(). This function will receive
- * messages a short while after they have been posted.
+ * Alternatively the application can register an asynchronous bus function
+ * using gst_bus_add_watch_full() or gst_bus_add_watch(). This function will
+ * receive messages a short while after they have been posted.
  *
  * It is also possible to get messages from the bus without any thread
  * marshalling with the gst_bus_set_sync_handler() method. This makes it
@@ -57,8 +58,8 @@
  *
  * Every #GstPipeline has one bus.
  *
- * Note that a #GstPipeline will set its bus into flushing state when changing from
- * READY to NULL state.
+ * Note that a #GstPipeline will set its bus into flushing state when changing
+ * from READY to NULL state.
  */
 
 #include <errno.h>

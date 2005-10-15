@@ -19,21 +19,24 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstpipeline
- * @short_description: Top-level bin with clocking and bus management functionality.
+ * @short_description: Top-level bin with clocking and bus management
+                       functionality.
  * @see_also: #GstBin
  *
  * In almost all cases, you'll want to use a GstPipeline when creating a filter
- * graph.  The GstPipeline will manage the selection and distribution of a global
+ * graph.  The GstPipeline will manage the selection and distribution of a
+ * global
  * clock as well as provide a GstBus to the application.
  *
- * The pipeline will also use the selected clock to calculate the stream time of
- * the pipeline.
+ * The pipeline will also use the selected clock to calculate the stream time
+ * of the pipeline.
  *
  * When sending a seek event to a GstPipeline, it will make sure that the
- * pipeline is properly PAUSED and resumed as well as update the new stream time
- * after the seek.
+ * pipeline is properly PAUSED and resumed as well as update the new stream
+ * time after the seek.
  *
  * gst_pipeline_new() is used to create a pipeline. when you are done with
  * the pipeline, use gst_object_unref() to free its resources including all

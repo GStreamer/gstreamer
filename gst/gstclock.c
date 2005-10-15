@@ -20,6 +20,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstclock
  * @short_description: Abstract class for global clocks
@@ -36,6 +37,7 @@
  *
  * The time of the clock in itself is not very useful for an application.
  */
+
 #include <time.h>
 
 #include "gst_private.h"

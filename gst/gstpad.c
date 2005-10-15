@@ -21,7 +21,8 @@
  */
 /**
  * SECTION:gstpad
- * @short_description: Object contained by elements that allows links to other elements
+ * @short_description: Object contained by elements that allows links to
+ *                     other elements
  * @see_also: #GstPadTemplate, #GstElement, #GstEvent
  *
  * A #GstElement is linked to other elements via "pads", which are extremely
@@ -34,10 +35,9 @@
  * Pads are typically created from a #GstPadTemplate with
  * gst_pad_new_from_template().
  *
- * Pads have #GstCaps attached to it to describe the media type they are capable
- * of dealing with.
- * gst_pad_get_caps() and gst_pad_try_set_caps() are used to manipulate the caps
- * of the pads.
+ * Pads have #GstCaps attached to it to describe the media type they are
+ * capable of dealing with.  gst_pad_get_caps() and gst_pad_try_set_caps() are
+ * used to manipulate the caps of the pads.
  * Pads created from a pad template cannot set capabilities that are
  * incompatible with the pad template capabilities.
  *

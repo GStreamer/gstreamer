@@ -22,6 +22,7 @@
  *
  * MT safe.
  */
+
 /**
  * SECTION:gstbin
  * @short_description: Base class for elements that contain other elements

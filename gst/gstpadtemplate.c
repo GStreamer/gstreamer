@@ -19,6 +19,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstpadtemplate
  * @short_description: Describe the media type of a pad.
@@ -27,14 +28,14 @@
  * Padtemplates describe the possible media types a pad or an elementfactory can
  * handle.
  *
- * Pad and PadTemplates have #GstCaps attached to it to describe the media type they
- * are capable of dealing with. gst_pad_template_get_caps() is used to get the
- * caps of a padtemplate. It's not possible to modify the caps of a padtemplate after
- * creation.
+ * Pad and PadTemplates have #GstCaps attached to it to describe the media type
+ * they are capable of dealing with. gst_pad_template_get_caps() is used to get
+ * the caps of a padtemplate. It's not possible to modify the caps of a
+ * padtemplate after creation.
  *
- * Padtemplates can be created with gst_pad_template_new() or with the convenient
- * GST_PAD_TEMPLATE_FACTORY() macro. A padtemplate can be used to create a pad or
- * to add to an elementfactory.
+ * Padtemplates can be created with gst_pad_template_new() or with the
+ * convenient GST_PAD_TEMPLATE_FACTORY() macro. A padtemplate can be used to
+ * create a pad or to add to an elementfactory.
  *
  * The following code example shows the code to create a pad from a padtemplate.
  * <example>
@@ -44,7 +45,7 @@
  *   GST_STATIC_PAD_TEMPLATE (
  *     "sink",		// the name of the pad
  *     GST_PAD_SINK,	// the direction of the pad
- *     GST_PAD_ALWAYS, 	// when this pad will be present
+ *     GST_PAD_ALWAYS,	// when this pad will be present
  *     GST_STATIC_CAPS (	// the capabilities of the padtemplate
  *       "audio/x-raw-int, "
  *         "channels = (int) [ 1, 6 ]"
@@ -62,7 +63,8 @@
  *   </programlisting>
  * </example>
  *
- * The following example shows you how to add the padtemplate to an elementfactory:
+ * The following example shows you how to add the padtemplate to an
+ * elementfactory:
  * <informalexample>
  *   <programlisting>
  *   gboolean

@@ -19,13 +19,14 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gsturihandler
  * @short_description: Plugin feature that handles URI types
  * @see_also: #GstPluginFeature, #GstUri
  *
- * The URIHandler is a pluginfeature that can be used to locate elements and the
- * element property that can handle a given URI.
+ * The URIHandler is a pluginfeature that can be used to locate elements and
+ * the element property that can handle a given URI.
  */
 
 #ifdef HAVE_CONFIG_H

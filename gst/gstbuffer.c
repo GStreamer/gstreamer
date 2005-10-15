@@ -19,6 +19,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstbuffer
  * @short_description: Data-passing buffer type, supporting sub-buffers.
@@ -75,12 +76,13 @@
  * a buffer that is safe to modify by using gst_buffer_make_writable().  This
  * function is optimized so that a copy will only be made when it is necessary.
  *
- * Several flags of the buffer can be set and unset with the GST_BUFFER_FLAG_SET()
- * and GST_BUFFER_FLAG_UNSET() macros. Use GST_BUFFER_FLAG_IS_SET() to test it
- * a certain #GstBufferFlag is set.
+ * Several flags of the buffer can be set and unset with the
+ * GST_BUFFER_FLAG_SET() and GST_BUFFER_FLAG_UNSET() macros. Use
+ * GST_BUFFER_FLAG_IS_SET() to test it a certain #GstBufferFlag is set.
  *
- * Buffers can be efficiently merged into a larger buffer with gst_buffer_merge()
- * and gst_buffer_span() if the gst_buffer_is_span_fast() function returns TRUE.
+ * Buffers can be efficiently merged into a larger buffer with
+ * gst_buffer_merge() and gst_buffer_span() if the gst_buffer_is_span_fast()
+ * function returns TRUE.
  *
  * An element should either unref the buffer or push it out on a src pad
  * using gst_pad_push() (see #GstPad).

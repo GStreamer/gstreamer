@@ -20,6 +20,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstmemchunk
  * @short_description: Atomic chunk allocator
@@ -32,6 +33,7 @@
  * The GstMemChunk is used to allocate critical resources for #GstBuffer and
  * #GstEvent.
  */
+
 #include "gst_private.h"
 
 #include <string.h>             /* memset */

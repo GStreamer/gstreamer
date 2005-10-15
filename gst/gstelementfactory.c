@@ -20,24 +20,26 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstelementfactory
  * @short_description: Create GstElements from a factory
  * @see_also: #GstElement, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
  *
- * GstElementFactory is used to create instances of elements. A GstElementfactory
- * can be added to a #GstPlugin as it is also a #GstPluginFeature.
+ * GstElementFactory is used to create instances of elements. A
+ * GstElementfactory can be added to a #GstPlugin as it is also a
+ * #GstPluginFeature.
  *
- * Use gst_element_factory_new() to create a new factory which can be added to a
- * plugin with gst_plugin_add_feature().
+ * Use gst_element_factory_new() to create a new factory which can be added to
+ * a plugin with gst_plugin_add_feature().
  *
- * gst_element_factory_add_pad_template() is used to add a padtemplate to the factory.
- * This function will enable the application to query for elementfactories that handle
- * a specific media type.
+ * gst_element_factory_add_pad_template() is used to add a padtemplate to the
+ * factory.  This function will enable the application to query for
+ * elementfactories that handle a specific media type.
  *
- * Use the gst_element_factory_find() and gst_element_factory_create() functions
- * to create element instances or use gst_element_factory_make() as a convenient
- * shortcut.
+ * Use the gst_element_factory_find() and gst_element_factory_create()
+ * functions to create element instances or use gst_element_factory_make() as a
+ * convenient shortcut.
  *
  * The following code example shows you how to create a GstFileSrc element.
  *

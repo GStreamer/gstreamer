@@ -20,13 +20,15 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstformat
  * @short_description: Dynamically register new data formats
  * @see_also: #GstPad, #GstElement
  *
- * GstFormats functions are used to register a new format to the gstreamer core.
- * Formats can be used to perform seeking or conversions/query operations.
+ * GstFormats functions are used to register a new format to the gstreamer
+ * core.  Formats can be used to perform seeking or conversions/query
+ * operations.
  */
 
 #include <string.h>

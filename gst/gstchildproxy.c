@@ -18,6 +18,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstchildproxy
  * @short_description: Interface for multi child elements.
@@ -25,8 +26,8 @@
  *
  * This interface abstracts handling of property sets for child elements.
  * Imagine elements such as mixers or polyphonic generators. They all have
- * multiple #GstPads or some kind of voice objects. The element acts as a parent
- * for those child objects. Each child has the same properties.
+ * multiple #GstPads or some kind of voice objects. The element acts as a
+ * parent for those child objects. Each child has the same properties.
  *
  * By implementing this interface the child properties can be accessed from the
  * parent element by using gst_child_proxy_get() and gst_child_proxy_set().

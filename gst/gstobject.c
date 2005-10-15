@@ -20,6 +20,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstobject
  * @short_description: Base class for the GStreamer object hierarchy
@@ -33,30 +34,31 @@
  * found under the same name in the base class of GstObject which is GObject
  * (e.g. g_object_ref() becomes gst_object_ref()).
  *
- * The most interesting difference between GstObject and GObject is the "floating"
- * reference count. A GObject is created with a reference count of 1, owned by the
- * creator of the GObject. (The owner of a reference is the code section that has
- * the right to call gst_object_unref() in order to remove that reference.)
- * A GstObject is created with a reference count of 1 also, but it isn't owned by
- * anyone; calling gst_object_unref() on the newly-created GtkObject is incorrect.
- * Instead, the initial reference count of a GstObject is "floating". The floating
- * reference can be removed by anyone at any time, by calling gst_object_sink().
- * gst_object_sink() does nothing if an object is already sunk (has no floating
- * reference).
+ * The most interesting difference between GstObject and GObject is the
+ * "floating" reference count. A GObject is created with a reference count of
+ * 1, owned by the creator of the GObject. (The owner of a reference is the
+ * code section that has the right to call gst_object_unref() in order to
+ * remove that reference.) A GstObject is created with a reference count of 1
+ * also, but it isn't owned by anyone; calling gst_object_unref() on the
+ * newly-created GtkObject is incorrect.  Instead, the initial reference count
+ * of a GstObject is "floating". The floating reference can be removed by
+ * anyone at any time, by calling gst_object_sink().  gst_object_sink() does
+ * nothing if an object is already sunk (has no floating reference).
  *
- * When you add a GstElement to its parent container, the parent container will do
- * this:
+ * When you add a GstElement to its parent container, the parent container will
+ * do this:
  * <informalexample>
  * <programlisting>
  *   gst_object_ref (GST_OBJECT (child_element));
  *   gst_object_sink (GST_OBJECT (child_element));
  * </programlisting>
  * </informalexample>
- * This means that the container now owns a reference to the child element (since
- * it called gst_object_ref()), and the child element has no floating reference.
+ * This means that the container now owns a reference to the child element
+ * (since it called gst_object_ref()), and the child element has no floating
+ * reference.
  *
- * The purpose of the floating reference is to keep the child element alive until
- * you add it to a parent container:
+ * The purpose of the floating reference is to keep the child element alive
+ * until you add it to a parent container:
  * <informalexample>
  * <programlisting>
  *    element = gst_element_factory_make (factoryname, name);
@@ -66,9 +68,9 @@
  * </programlisting>
  * </informalexample>
  *
- * Another effect of this is, that calling gst_object_unref() on a bin object, will
- * also destoy all the GstElement objects in it. The same is true for calling
- * gst_bin_remove().
+ * Another effect of this is, that calling gst_object_unref() on a bin object,
+ * will also destoy all the GstElement objects in it. The same is true for
+ * calling gst_bin_remove().
  *
  * In contrast to GObject instances GstObject add a name property. The functions
  * gst_object_set_name() and gst_object_get_name() are used to set/get the name
@@ -91,18 +93,17 @@
 #define REFCOUNT_HACK
 #endif
 
-/* Refcount hack: since glib is not threadsafe, the glib refcounter can be
+/* Refcount hack: since glib < 2.8 is not threadsafe, the glib refcounter can be
  * screwed up and the object can be freed unexpectedly. We use an evil hack
  * to work around this problem. We set the glib refcount to a high value so
  * that glib will never unref the object under realistic circumstances. Then
  * we use our own atomic refcounting to do proper MT safe refcounting.
  *
  * The hack has several side-effect. At first you should use
- * gst_object_ref/unref() whenever you can. Next when using g_value_set/get_object();
- * you need to manually fix the refcount.
+ * gst_object_ref/unref() whenever you can. Next when using
+ * g_value_set/get_object(); you need to manually fix the refcount.
  *
- * A proper fix is of course to make the glib refcounting threadsafe which is
- * planned. Update: atomic refcounting is now in glib >= 2.7.3
+ * A proper fix is of course to upgrade to glib 2.8
  */
 #ifdef REFCOUNT_HACK
 #define PATCH_REFCOUNT(obj)    ((GObject*)(obj))->ref_count = 100000;

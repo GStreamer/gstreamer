@@ -19,6 +19,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstelement
  * @short_description: Abstract base class for all pipeline elements
@@ -64,11 +65,12 @@
  * gst_element_provides_clock() returns TRUE. With the gst_element_provide_clock()
  * method one can retrieve the clock provided by such an element.
  * Not all elements require a clock to operate correctly. If
- * gst_element_requires_clock() returns TRUE, a clock should be set on the element
- * with gst_element_set_clock().
+ * gst_element_requires_clock() returns TRUE, a clock should be set on the
+ * element with gst_element_set_clock().
  *
- * Note that clock slection and distribution is normally handled by the toplevel
- * #GstPipeline so the clock functions are only to be used in very specific situations.
+ * Note that clock slection and distribution is normally handled by the
+ * toplevel #GstPipeline so the clock functions are only to be used in very
+ * specific situations.
  */
 
 #include "gst_private.h"

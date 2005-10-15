@@ -20,6 +20,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstinfo
  * @short_description: Debugging and logging facillities
@@ -27,21 +28,19 @@
  * and environment variables that affect the debugging output.
  *
  * GStreamer's debugging subsystem is an easy way to get information about what
- * the application is doing.
- * It is not meant for programming errors. Use GLib methods (g_warning and
- * friends) for that.
+ * the application is doing.  It is not meant for programming errors. Use GLib
+ * methods (g_warning and friends) for that.
  *
  * The debugging subsystem works only after GStreamer has been initialized
  * - for example by calling gst_init().
  *
  * The debugging subsystem is used to log informational messages while the
- * application runs.
- * Each messages has some properties attached to it. Among these properties
- * are the debugging category, the severity (called "level" here) and an
- * optional
- * #GObject it belongs to. Each of these messages is sent to all registered
- * debugging handlers, which then handle the messages. GStreamer attaches a
- * default handler on startup, which outputs requested messages to stderr.
+ * application runs.  Each messages has some properties attached to it. Among
+ * these properties are the debugging category, the severity (called "level"
+ * here) and an optional #GObject it belongs to. Each of these messages is sent
+ * to all registered debugging handlers, which then handle the messages.
+ * GStreamer attaches a default handler on startup, which outputs requested
+ * messages to stderr.
  *
  * Messages are output by using shortcut macros like #GST_DEBUG,
  * #GST_CAT_ERROR_OBJECT or similar. These all expand to calling gst_debug_log()

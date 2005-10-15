@@ -19,11 +19,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gst
- * @short_description: Media library supporting arbitrary formats and filter graphs.
+ * @short_description: Media library supporting arbitrary formats and filter
+ *                     graphs.
  * @see_also: Check out both <ulink url="http://www.cse.ogi.edu/sysl/">OGI's
- *   pipeline</ulink> and Microsoft's DirectShow for some background.
+ *            pipeline</ulink> and Microsoft's DirectShow for some background.
  *
  * GStreamer is a framework for constructing graphs of various filters
  * (termed elements here) that will handle streaming media.  Any discreet
@@ -57,8 +59,8 @@
  * </programlisting>
  * </example>
  *
- * It's allowed to pass two NULL pointers to gst_init() in case you don't want to
- * pass the command line args to GStreamer.
+ * It's allowed to pass two NULL pointers to gst_init() in case you don't want
+ * to pass the command line args to GStreamer.
  *
  * You can also use a popt table to initialize your own parameters as shown in
  * the next code fragment:
@@ -85,8 +87,8 @@
  * </programlisting>
  * </example>
  *
- * Use gst_version() to query the library version at runtime or use the GST_VERSION_* macros
- * to find the version at compile time.
+ * Use gst_version() to query the library version at runtime or use the
+ * GST_VERSION_* macros to find the version at compile time.
  *
  * The functions gst_main() and gst_main_quit() enter and exit the main loop.
  * GStreamer doesn't currently require you to use a mainloop but can intergrate
