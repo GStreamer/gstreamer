@@ -184,11 +184,10 @@ EXPORTS
     gst_marshal_VOID__POINTER_OBJECT
     gst_marshal_VOID__INT_INT
     _gst_element_error_printf
-    _gst_bin_type           DATA
-    _gst_element_type       DATA
-    _gst_object_type        DATA
-    _gst_registry_auto_load DATA
-    _gst_pad_type           DATA
+    gst_bin_get_get_type
+    gst_element_get_type
+    gst_object_get_type
+    gst_pad_get_type
     gst_deinit
     gst_alloc_trace_print_live
     gst_message_parse_state_changed
