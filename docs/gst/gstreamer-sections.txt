@@ -24,7 +24,6 @@ gst_init_check
 gst_init_get_option_group
 gst_deinit
 <SUBSECTION Private>
-GstPoptOption
 mutex
 start_cond
 sync_cond
@@ -510,7 +509,6 @@ gst_element_set_locked_state
 gst_element_set_name
 gst_element_set_parent
 gst_element_set_state
-gst_element_set_state_async
 gst_element_state_get_name
 gst_element_sync_state_with_parent
 gst_element_unlink
@@ -2029,7 +2027,6 @@ GST_ROUND_UP_32
 GST_ROUND_UP_64
 
 gst_atomic_int_set
-gst_bin_watch_for_state_change
 gst_flow_get_name
 gst_print_element_args
 gst_print_pad_caps

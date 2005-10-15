@@ -1,5 +1,12 @@
 2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstvalue.c: (gst_date_get_type), (_gst_value_initialize):
+	* gst/gstvalue.h:
+	  give each value a _get_type, removes the DATA exports
+
+2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.c:
 	* gst/gst.h:
 	  remove _gst_registry_auto_load, not used anymore

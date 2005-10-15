@@ -60,8 +60,6 @@ struct _GstValueSubtractInfo
   GstValueSubtractFunc func;
 };
 
-GType gst_type_fourcc;
-GType gst_type_int_range;
 GType gst_type_double_range;
 GType gst_type_list;
 GType gst_type_array;
@@ -3087,25 +3085,138 @@ gst_value_transform_string_date (const GValue * src_value, GValue * dest_value)
   gst_value_deserialize_date (dest_value, src_value->data[0].v_pointer);
 }
 
+static GTypeInfo _info = {
+  0,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  0,
+  0,
+  NULL,
+  NULL,
+};
+
+static GTypeFundamentalInfo _finfo = {
+  0
+};
+
+#define FUNC_VALUE_GET_TYPE(type, name)				\
+GType gst_ ## type ## _get_type (void)				\
+{								\
+  static GType gst_ ## type ## _type = 0;			\
+								\
+  if (!gst_ ## type ## _type) {					\
+    _info.value_table = & _gst_ ## type ## _value_table;	\
+    gst_ ## type ## _type = g_type_register_fundamental (	\
+        g_type_fundamental_next (),				\
+        name, &_info, &_finfo, 0);				\
+  }								\
+								\
+  return gst_ ## type ## _type;					\
+}
+
+static const GTypeValueTable _gst_fourcc_value_table = {
+  gst_value_init_fourcc,
+  NULL,
+  gst_value_copy_fourcc,
+  NULL,
+  "i",
+  gst_value_collect_fourcc,
+  "p",
+  gst_value_lcopy_fourcc
+};
+
+FUNC_VALUE_GET_TYPE (fourcc, "GstFourcc");
+
+static const GTypeValueTable _gst_int_range_value_table = {
+  gst_value_init_int_range,
+  NULL,
+  gst_value_copy_int_range,
+  NULL,
+  "ii",
+  gst_value_collect_int_range,
+  "pp",
+  gst_value_lcopy_int_range
+};
+
+FUNC_VALUE_GET_TYPE (int_range, "GstIntRange");
+
+static const GTypeValueTable _gst_double_range_value_table = {
+  gst_value_init_double_range,
+  NULL,
+  gst_value_copy_double_range,
+  NULL,
+  "dd",
+  gst_value_collect_double_range,
+  "pp",
+  gst_value_lcopy_double_range
+};
+
+FUNC_VALUE_GET_TYPE (double_range, "GstDoubleRange");
+
+static const GTypeValueTable _gst_value_list_value_table = {
+  gst_value_init_list,
+  gst_value_free_list,
+  gst_value_copy_list,
+  gst_value_list_peek_pointer,
+  "p",
+  gst_value_collect_list,
+  "p",
+  gst_value_lcopy_list
+};
+
+FUNC_VALUE_GET_TYPE (value_list, "GstValueList");
+
+static const GTypeValueTable _gst_value_array_value_table = {
+  gst_value_init_list,
+  gst_value_free_list,
+  gst_value_copy_list,
+  gst_value_list_peek_pointer,
+  "p",
+  gst_value_collect_list,
+  "p",
+  gst_value_lcopy_list
+};
+
+FUNC_VALUE_GET_TYPE (value_array, "GstValueArray");
+
+static const GTypeValueTable _gst_fraction_value_table = {
+  gst_value_init_fraction,
+  NULL,
+  gst_value_copy_fraction,
+  NULL,
+  "ii",
+  gst_value_collect_fraction,
+  "pp",
+  gst_value_lcopy_fraction
+};
+
+FUNC_VALUE_GET_TYPE (fraction, "GstFraction");
+
+
+GType
+gst_date_get_type (void)
+{
+  static GType gst_date_type = 0;
+
+  if (!gst_date_type) {
+    /* Not using G_TYPE_DATE here on purpose, even if we could
+     * if GLIB_CHECK_VERSION(2,8,0) was true: we don't want the
+     * serialised strings to have different type strings depending
+     * on what version is used, so FIXME in 0.11 when we
+     * require GLib-2.8 */
+    gst_date_type = g_boxed_type_register_static ("GstDate",
+        (GBoxedCopyFunc) gst_date_copy, (GBoxedFreeFunc) g_date_free);
+  }
+
+  return gst_date_type;
+}
+
 void
 _gst_value_initialize (void)
 {
-  GTypeInfo info = {
-    0,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    0,
-    0,
-    NULL,
-    NULL,
-  };
-  GTypeFundamentalInfo finfo = {
-    0
-  };
-
   //const GTypeFundamentalInfo finfo = { G_TYPE_FLAG_DERIVABLE, };
 
   gst_value_table = g_array_new (FALSE, FALSE, sizeof (GstValueTable));
@@ -3117,16 +3228,6 @@ _gst_value_initialize (void)
       sizeof (GstValueSubtractInfo));
 
   {
-    static const GTypeValueTable value_table = {
-      gst_value_init_fourcc,
-      NULL,
-      gst_value_copy_fourcc,
-      NULL,
-      "i",
-      gst_value_collect_fourcc,
-      "p",
-      gst_value_lcopy_fourcc
-    };
     static GstValueTable gst_value = {
       0,
       gst_value_compare_fourcc,
@@ -3134,24 +3235,11 @@ _gst_value_initialize (void)
       gst_value_deserialize_fourcc,
     };
 
-    info.value_table = &value_table;
-    gst_type_fourcc = g_type_register_fundamental (g_type_fundamental_next (),
-        "GstFourcc", &info, &finfo, 0);
-    gst_value.type = gst_type_fourcc;
+    gst_value.type = gst_fourcc_get_type ();
     gst_value_register (&gst_value);
   }
 
   {
-    static const GTypeValueTable value_table = {
-      gst_value_init_int_range,
-      NULL,
-      gst_value_copy_int_range,
-      NULL,
-      "ii",
-      gst_value_collect_int_range,
-      "pp",
-      gst_value_lcopy_int_range
-    };
     static GstValueTable gst_value = {
       0,
       gst_value_compare_int_range,
@@ -3159,25 +3247,11 @@ _gst_value_initialize (void)
       gst_value_deserialize_int_range,
     };
 
-    info.value_table = &value_table;
-    gst_type_int_range =
-        g_type_register_fundamental (g_type_fundamental_next (), "GstIntRange",
-        &info, &finfo, 0);
-    gst_value.type = gst_type_int_range;
+    gst_value.type = gst_int_range_get_type ();
     gst_value_register (&gst_value);
   }
 
   {
-    static const GTypeValueTable value_table = {
-      gst_value_init_double_range,
-      NULL,
-      gst_value_copy_double_range,
-      NULL,
-      "dd",
-      gst_value_collect_double_range,
-      "pp",
-      gst_value_lcopy_double_range
-    };
     static GstValueTable gst_value = {
       0,
       gst_value_compare_double_range,
@@ -3185,25 +3259,11 @@ _gst_value_initialize (void)
       gst_value_deserialize_double_range,
     };
 
-    info.value_table = &value_table;
-    gst_type_double_range =
-        g_type_register_fundamental (g_type_fundamental_next (),
-        "GstDoubleRange", &info, &finfo, 0);
-    gst_value.type = gst_type_double_range;
+    gst_value.type = gst_double_range_get_type ();
     gst_value_register (&gst_value);
   }
 
   {
-    static const GTypeValueTable value_table = {
-      gst_value_init_list,
-      gst_value_free_list,
-      gst_value_copy_list,
-      gst_value_list_peek_pointer,
-      "p",
-      gst_value_collect_list,
-      "p",
-      gst_value_lcopy_list
-    };
     static GstValueTable gst_value = {
       0,
       gst_value_compare_list,
@@ -3211,24 +3271,11 @@ _gst_value_initialize (void)
       gst_value_deserialize_list,
     };
 
-    info.value_table = &value_table;
-    gst_type_list = g_type_register_fundamental (g_type_fundamental_next (),
-        "GstValueList", &info, &finfo, 0);
-    gst_value.type = gst_type_list;
+    gst_value.type = gst_value_list_get_type ();
     gst_value_register (&gst_value);
   }
 
   {
-    static const GTypeValueTable value_table = {
-      gst_value_init_list,
-      gst_value_free_list,
-      gst_value_copy_list,
-      gst_value_list_peek_pointer,
-      "p",
-      gst_value_collect_list,
-      "p",
-      gst_value_lcopy_list
-    };
     static GstValueTable gst_value = {
       0,
       gst_value_compare_list,
@@ -3236,11 +3283,7 @@ _gst_value_initialize (void)
       gst_value_deserialize_array,
     };
 
-    info.value_table = &value_table;
-    gst_type_array =
-        g_type_register_fundamental (g_type_fundamental_next (),
-        "GstValueArray", &info, &finfo, 0);
-    gst_value.type = gst_type_array;
+    gst_value.type = gst_value_array_get_type ();;
     gst_value_register (&gst_value);
   }
 
@@ -3268,16 +3311,6 @@ _gst_value_initialize (void)
     gst_value_register (&gst_value);
   }
   {
-    static const GTypeValueTable value_table = {
-      gst_value_init_fraction,
-      NULL,
-      gst_value_copy_fraction,
-      NULL,
-      "ii",
-      gst_value_collect_fraction,
-      "pp",
-      gst_value_lcopy_fraction
-    };
     static GstValueTable gst_value = {
       0,
       gst_value_compare_fraction,
@@ -3285,11 +3318,7 @@ _gst_value_initialize (void)
       gst_value_deserialize_fraction,
     };
 
-    info.value_table = &value_table;
-    gst_type_fraction =
-        g_type_register_fundamental (g_type_fundamental_next (), "GstFraction",
-        &info, &finfo, 0);
-    gst_value.type = gst_type_fraction;
+    gst_value.type = gst_fraction_get_type ();
     gst_value_register (&gst_value);
   }
   {
@@ -3311,15 +3340,7 @@ _gst_value_initialize (void)
       gst_value_deserialize_date,
     };
 
-    /* Not using G_TYPE_DATE here on purpose, even if we could
-     * if GLIB_CHECK_VERSION(2,8,0) was true: we don't want the
-     * serialised strings to have different type strings depending
-     * on what version is used, so FIXME in 0.11 when we
-     * require GLib-2.8 */
-    gst_type_date = g_boxed_type_register_static ("GstDate",
-        (GBoxedCopyFunc) gst_date_copy, (GBoxedFreeFunc) g_date_free);
-
-    gst_value.type = gst_type_date;
+    gst_value.type = gst_date_get_type ();
     gst_value_register (&gst_value);
   }
 

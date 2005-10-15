@@ -90,7 +90,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_FOURCC value.
  */
-#define GST_VALUE_HOLDS_FOURCC(x)       (G_VALUE_HOLDS(x, gst_type_fourcc))
+#define GST_VALUE_HOLDS_FOURCC(x)       (G_VALUE_HOLDS(x, gst_fourcc_get_type ()))
 
 /**
  * GST_VALUE_HOLDS_INT_RANGE:
@@ -98,7 +98,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_INT_RANGE value.
  */
-#define GST_VALUE_HOLDS_INT_RANGE(x)    (G_VALUE_HOLDS(x, gst_type_int_range))
+#define GST_VALUE_HOLDS_INT_RANGE(x)    (G_VALUE_HOLDS(x, gst_int_range_get_type ()))
 
 /**
  * GST_VALUE_HOLDS_DOUBLE_RANGE:
@@ -106,7 +106,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_DOUBLE_RANGE value.
  */
-#define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_type_double_range))
+#define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_double_range_get_type ()))
 
 /**
  * GST_VALUE_HOLDS_LIST:
@@ -114,7 +114,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_LIST value.
  */
-#define GST_VALUE_HOLDS_LIST(x)		(G_VALUE_HOLDS(x, gst_type_list))
+#define GST_VALUE_HOLDS_LIST(x)		(G_VALUE_HOLDS(x, gst_value_list_get_type ()))
 
 /**
  * GST_VALUE_HOLDS_ARRAY:
@@ -122,7 +122,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_ARRAY value.
  */
-#define GST_VALUE_HOLDS_ARRAY(x)	(G_VALUE_HOLDS(x, gst_type_array))
+#define GST_VALUE_HOLDS_ARRAY(x)	(G_VALUE_HOLDS(x, gst_value_array_get_type ()))
 
 /**
  * GST_VALUE_HOLDS_CAPS:
@@ -146,7 +146,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_FRACTION value.
  */
-#define GST_VALUE_HOLDS_FRACTION(x)	(G_VALUE_HOLDS(x, gst_type_fraction))
+#define GST_VALUE_HOLDS_FRACTION(x)	(G_VALUE_HOLDS(x, gst_fraction_get_type ()))
 
 /**
  * GST_VALUE_HOLDS_DATE:
@@ -154,7 +154,7 @@ G_BEGIN_DECLS
  *
  * Checks if the given #GValue contains a #GST_TYPE_DATE value.
  */
-#define GST_VALUE_HOLDS_DATE(x)         (G_VALUE_HOLDS(x, gst_type_date))
+#define GST_VALUE_HOLDS_DATE(x)         (G_VALUE_HOLDS(x, gst_date_get_type ()))
 
 /**
  * GST_TYPE_FOURCC:
@@ -163,7 +163,7 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstFourcc
  */
-#define GST_TYPE_FOURCC                  gst_type_fourcc
+#define GST_TYPE_FOURCC                  gst_fourcc_get_type ()
 
 /**
  * GST_TYPE_INT_RANGE:
@@ -172,7 +172,7 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstIntRange
  */
-#define GST_TYPE_INT_RANGE               gst_type_int_range
+#define GST_TYPE_INT_RANGE               gst_int_range_get_type ()
 
 /**
  * GST_TYPE_DOUBLE_RANGE:
@@ -181,7 +181,7 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstIntRange
  */
-#define GST_TYPE_DOUBLE_RANGE            gst_type_double_range
+#define GST_TYPE_DOUBLE_RANGE            gst_double_range_get_type ()
 
 /**
  * GST_TYPE_LIST:
@@ -190,7 +190,7 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstValueList (which is not explicitly typed)
  */
-#define GST_TYPE_LIST                    gst_type_list
+#define GST_TYPE_LIST                    gst_value_list_get_type ()
 
 /**
  * GST_TYPE_ARRAY:
@@ -199,7 +199,7 @@ G_BEGIN_DECLS
  *
  * Returns: the #GType of GstArrayList (which is not explicitly typed)
  */
-#define GST_TYPE_ARRAY			 gst_type_array
+#define GST_TYPE_ARRAY			 gst_value_array_get_type ()
 
 /**
  * GST_TYPE_FRACTION:
@@ -210,7 +210,7 @@ G_BEGIN_DECLS
  * Returns: the #GType of GstFraction (which is not explicitly typed)
  */
 
-#define GST_TYPE_FRACTION                gst_type_fraction
+#define GST_TYPE_FRACTION                gst_fraction_get_type ()
 
 /**
  * GST_TYPE_DATE:
@@ -220,7 +220,7 @@ G_BEGIN_DECLS
  * Returns: the #GType of GstDate
  */
 
-#define GST_TYPE_DATE                    gst_type_date
+#define GST_TYPE_DATE                    gst_date_get_type ()
 
 /**
  * GST_VALUE_LESS_THAN:
@@ -295,13 +295,14 @@ struct _GstValueTable {
   void *_gst_reserved [GST_PADDING];
 };
 
-GST_EXPORT GType gst_type_fourcc;
-GST_EXPORT GType gst_type_int_range;
-GST_EXPORT GType gst_type_double_range;
-GST_EXPORT GType gst_type_list;
-GST_EXPORT GType gst_type_array;
-GST_EXPORT GType gst_type_fraction;
-GST_EXPORT GType gst_type_date;
+GType gst_int_range_get_type ();
+GType gst_double_range_get_type ();
+GType gst_fourcc_get_type ();
+GType gst_fraction_get_type ();
+GType gst_value_list_get_type ();
+GType gst_value_array_get_type ();
+
+GType gst_date_get_type ();
 
 void		gst_value_register		(const GstValueTable   *table);
 void		gst_value_init_and_copy		(GValue                *dest,
