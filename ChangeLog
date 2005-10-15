@@ -1,6 +1,17 @@
 2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
+	  check for some headers
+	* gst/elements/Makefile.am:
+	* gst/elements/gstelements.c:
+	  don't compile fdsrc without sys/socket.h
+	* gst/indexers/Makefile.am:
+	* gst/indexers/gstindexers.c: (plugin_init):
+	  don't compile fileindex without mmap
+
+2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
 	  reorganize
 	  clean up
 	  document more

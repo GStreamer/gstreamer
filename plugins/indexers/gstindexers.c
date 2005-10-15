@@ -30,7 +30,9 @@ plugin_init (GstPlugin * plugin)
   gboolean res = TRUE;
 
   res &= gst_mem_index_plugin_init (plugin);
+#ifdef HAVE_MMAP
   res &= gst_file_index_plugin_init (plugin);
+#endif
 
   return res;
 }

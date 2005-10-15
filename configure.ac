@@ -379,6 +379,8 @@ AC_HEADER_STDC
 
 dnl Check for ucontext.h
 AC_CHECK_HEADERS([ucontext.h])
+AC_CHECK_HEADERS([sys/socket.h])
+AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 
 dnl *** checks for library functions ***
 
@@ -394,6 +396,7 @@ AC_CHECK_FUNCS([fsetpos])
 
 dnl check for mmap()
 AC_FUNC_MMAP
+AM_CONDITIONAL(HAVE_MMAP, test "x$HAVE_MMAP" = "xyes")
 
 dnl common/m4/gst-mcsc.m4
 dnl check for makecontext and define HAVE_MAKECONTEXT if we have it
@@ -595,6 +598,7 @@ GST_OBJ_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la \$(GST_ALL_LI
 GST_OBJ_LDFLAGS="$GST_LT_LDFLAGS $GST_ALL_LDFLAGS"
 AC_SUBST(GST_OBJ_CFLAGS)
 AC_SUBST(GST_OBJ_LIBS)
+AC_SUBST(GST_OBJ_LDFLAGS)
 
 dnl GST_PLUGIN_LDFLAGS
 dnl LDFLAGS for plugins; include GST_ALL_LDFLAGS
