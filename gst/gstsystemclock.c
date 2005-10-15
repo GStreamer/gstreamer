@@ -210,13 +210,13 @@ gst_system_clock_obtain (void)
   return clock;
 }
 
-/* this thread reads the sorted clock entries from the queue. 
+/* this thread reads the sorted clock entries from the queue.
  *
  * It waits on each of them and fires the callback when the timeout occurs.
  *
  * When an entry in the queue was canceled, it is simply skipped.
  *
- * When waiting for an entry, it can become canceled, in that case we don't 
+ * When waiting for an entry, it can become canceled, in that case we don't
  * call the callback but move to the next item in the queue.
  *
  * MT safe.
@@ -286,7 +286,7 @@ gst_system_clock_async_thread (GstClock * clock)
       }
       case GST_CLOCK_BUSY:
         /* somebody unlocked the entry but is was not canceled, This means that
-         * either a new entry was added in front of the queue or some other entry 
+         * either a new entry was added in front of the queue or some other entry
          * was canceled. Whatever it is, pick the head entry of the list and
          * continue waiting. */
         GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p needs restart", entry);
@@ -409,7 +409,7 @@ gst_system_clock_id_wait (GstClock * clock, GstClockEntry * entry)
 /* Add an entry to the list of pending async waits. The entry is inserted
  * in sorted order. If we inserted the entry at the head of the list, we
  * need to signal the thread as it might either be waiting on it or waiting
- * for a new entry. 
+ * for a new entry.
  *
  * MT safe.
  */
@@ -438,7 +438,7 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
 }
 
 /* unschedule an entry. This will set the state of the entry to GST_CLOCK_UNSCHEDULED
- * and will signal any thread waiting for entries to recheck their entry. 
+ * and will signal any thread waiting for entries to recheck their entry.
  * We cannot really decide if the signal is needed or not because the entry
  * could be waited on in async or sync mode.
  *

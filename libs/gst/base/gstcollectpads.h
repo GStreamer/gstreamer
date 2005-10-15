@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
  *
- * gstcollectpads.h: 
+ * gstcollectpads.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -111,9 +111,9 @@ GstBuffer*	gst_collectpads_pop		(GstCollectPads *pads, GstCollectData *data);
 
 /* get collected bytes */
 guint 		gst_collectpads_available 	(GstCollectPads *pads);
-guint		gst_collectpads_read		(GstCollectPads *pads, GstCollectData *data, 
+guint		gst_collectpads_read		(GstCollectPads *pads, GstCollectData *data,
 						 guint8 **bytes, guint size);
-guint 		gst_collectpads_flush 		(GstCollectPads *pads, GstCollectData *data, 
+guint 		gst_collectpads_flush 		(GstCollectPads *pads, GstCollectData *data,
 						 guint size);
 
 G_END_DECLS

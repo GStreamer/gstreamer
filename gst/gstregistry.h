@@ -79,12 +79,12 @@ gboolean                gst_registry_add_feature        (GstRegistry * registry,
 void                    gst_registry_remove_feature     (GstRegistry * registry, GstPluginFeature * feature);
 
 GList*                  gst_registry_get_plugin_list    (GstRegistry *registry);
-GList*			gst_registry_plugin_filter	(GstRegistry *registry, 
-							 GstPluginFilter filter, 
-							 gboolean first, 
+GList*			gst_registry_plugin_filter	(GstRegistry *registry,
+							 GstPluginFilter filter,
+							 gboolean first,
 							 gpointer user_data);
-GList*			gst_registry_feature_filter	(GstRegistry *registry, 
-							 GstPluginFeatureFilter filter, 
+GList*			gst_registry_feature_filter	(GstRegistry *registry,
+							 GstPluginFeatureFilter filter,
 							 gboolean first,
 							 gpointer user_data);
 GList *                 gst_registry_get_feature_list   (GstRegistry *registry,

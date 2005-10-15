@@ -87,14 +87,14 @@ typedef GstBusSyncReply (*GstBusSyncHandler) 	(GstBus * bus, GstMessage * messag
  * @message: the #GstMessage
  * @data: user data that has been given, when registering the handler
  *
- * Specifies the type of function passed to #gst_bus_add_watch() or 
+ * Specifies the type of function passed to #gst_bus_add_watch() or
  * #gst_bus_add_watch_full(), which is called from the mainloop when a message
  * is available on the bus.
  *
  * The message passed to the function will be unreffed after execution of this
- * function so it should not be freed in the function. 
+ * function so it should not be freed in the function.
  *
- * Returns: %FALSE if the event source should be removed. 
+ * Returns: %FALSE if the event source should be removed.
  */
 typedef gboolean 	(*GstBusFunc)	 	(GstBus * bus, GstMessage * message, gpointer data);
 
@@ -146,11 +146,11 @@ void 			gst_bus_set_sync_handler 	(GstBus * bus, GstBusSyncHandler func,
 GSource *		gst_bus_create_watch 		(GstBus * bus);
 guint 			gst_bus_add_watch_full 		(GstBus * bus,
     							 gint priority,
-    							 GstBusFunc func, 
-							 gpointer user_data, 
+    							 GstBusFunc func,
+							 gpointer user_data,
 							 GDestroyNotify notify);
 guint 			gst_bus_add_watch 		(GstBus * bus,
-    							 GstBusFunc func, 
+    							 GstBusFunc func,
 							 gpointer user_data);
 
 /* polling the bus */

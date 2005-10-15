@@ -568,7 +568,7 @@ gst_tag_list_copy (const GstTagList * list)
  * @list1: first list to merge
  * @list2: second list to merge
  * @mode: the mode to use
- * 
+ *
  * Merges the two given lists into a new list. If one of the lists is NULL, a
  * copy of the other is returned. If both lists are NULL, NULL is returned.
  *

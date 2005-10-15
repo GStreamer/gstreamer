@@ -34,30 +34,30 @@ G_BEGIN_DECLS
  * GstDebugLevel:
  * @GST_LEVEL_NONE: No debugging level specified or desired. Used to deactivate
  *  debugging output.
- * @GST_LEVEL_ERROR: Error messages are to be used only when an error occured 
+ * @GST_LEVEL_ERROR: Error messages are to be used only when an error occured
  *  that stops the application from keeping working correctly.
  *  An examples is gst_element_error, which outputs a message with this priority.
  *  It does not mean that the application is terminating as with g_errror.
  * @GST_LEVEL_WARNING: Warning messages are to inform about abnormal behaviour
- *  that could lead to problems or weird behaviour later on. An example of this 
+ *  that could lead to problems or weird behaviour later on. An example of this
  *  would be clocking issues ("your computer is pretty slow") or broken input
  *  data ("Can't synchronize to stream.")
  * @GST_LEVEL_INFO: Informational messages should be used to keep the developer
  *  updated about what is happening.
- *  Examples where this should be used are when a typefind function has 
+ *  Examples where this should be used are when a typefind function has
  *  successfully determined the type of the stream or when an mp3 plugin detects
  *  the format to be used. ("This file has mono sound.")
  * @GST_LEVEL_DEBUG: Debugging messages should be used when something common
- *  happens that is not the expected default behavior. 
+ *  happens that is not the expected default behavior.
  *  An example would be notifications about state changes or receiving/sending of
  *  events.
- * @GST_LEVEL_LOG: Log messages are messages that are very common but might be 
+ * @GST_LEVEL_LOG: Log messages are messages that are very common but might be
  *  useful to know. As a rule of thumb a pipeline that is iterating as expected
  *  should never output anzthing else but LOG messages.
  *  Examples for this are referencing/dereferencing of objects or cothread switches.
  * @GST_LEVEL_COUNT: The number of defined debugging levels.
- * 
- * The level defines the importance of a debugging message. The more important a 
+ *
+ * The level defines the importance of a debugging message. The more important a
  * message is, the greater the probability that the debugging system outputs it.
  */
 typedef enum {
@@ -114,7 +114,7 @@ typedef enum {
  * @GST_DEBUG_BG_WHITE: Use white as background color.
  * @GST_DEBUG_BOLD: Make the output bold.
  * @GST_DEBUG_UNDERLINE: Underline the output.
- * 
+ *
  * These are some terminal style flags you can use when creating your
  * debugging categories to make them stand out in debugging output.
  */
@@ -515,7 +515,7 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @obj: the #GObject the message belongs to
  * @...: printf-style message to output
  *
- * Output an informational message belonging to the given object in the default 
+ * Output an informational message belonging to the given object in the default
  * category.
  */
 /**
@@ -523,7 +523,7 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @obj: the #GObject the message belongs to
  * @...: printf-style message to output
  *
- * Output a debugging message belonging to the given object in the default 
+ * Output a debugging message belonging to the given object in the default
  * category.
  */
 /**
@@ -534,7 +534,7 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * Output a logging message belonging to the given object in the default category.
  */
 
- 
+
 /**
  * GST_ERROR:
  * @...: printf-style message to output

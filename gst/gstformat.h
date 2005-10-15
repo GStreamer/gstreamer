@@ -76,7 +76,7 @@ typedef struct _GstFormatDefinition GstFormatDefinition;
  *
  * A format definition
  */
-struct _GstFormatDefinition 
+struct _GstFormatDefinition
 {
   GstFormat  value;
   gchar     *nick;
@@ -86,7 +86,7 @@ struct _GstFormatDefinition
 void		_gst_format_initialize		(void);
 
 /* register a new format */
-GstFormat	gst_format_register		(const gchar *nick, 
+GstFormat	gst_format_register		(const gchar *nick,
 						 const gchar *description);
 GstFormat	gst_format_get_by_nick		(const gchar *nick);
 
@@ -94,7 +94,7 @@ GstFormat	gst_format_get_by_nick		(const gchar *nick);
 gboolean	gst_formats_contains		(const GstFormat *formats, GstFormat format);
 
 /* query for format details */
-G_CONST_RETURN GstFormatDefinition*	
+G_CONST_RETURN GstFormatDefinition*
 		gst_format_get_details		(GstFormat format);
 GstIterator* 	gst_format_iterate_definitions 	(void);
 

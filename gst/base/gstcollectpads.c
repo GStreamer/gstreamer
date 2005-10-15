@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
  *
- * gstcollectpads.c: 
+ * gstcollectpads.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,7 +21,7 @@
 /**
  * SECTION:gstcollectpads
  * @short_description: manages a set of pads that operate in collect mode
- * @see_also: 
+ * @see_also:
  *
  * Manages a set of pads that operate in collect mode. This means that control
  * is given to the manager of this object when all pads have data.
@@ -40,7 +40,7 @@
  *     When data is queued on all pads, a callback function is called.
  *   </para></listitem>
  *   <listitem><para>
- *     Data can be dequeued from the pad with the _pop() method. 
+ *     Data can be dequeued from the pad with the _pop() method.
  *     One can _peek() at the data with the peek function.
  *   </para></listitem>
  *   <listitem><para>
@@ -127,7 +127,7 @@ gst_collectpads_finalize (GObject * object)
  * gst_collectpads_new:
  *
  * Create a new instance of #GstCollectsPads.
- * 
+ *
  * Returns: a new #GstCollectPads, or NULL in case of an error.
  *
  * MT safe.
@@ -416,7 +416,7 @@ gst_collectpads_pop (GstCollectPads * pads, GstCollectData * data)
  * This function should be called with @pads LOCK held, such as
  * in the callback.
  *
- * Returns: The maximum number of bytes queued on all pad. This function 
+ * Returns: The maximum number of bytes queued on all pad. This function
  * returns 0 if a pad has no queued buffer.
  *
  * MT safe.
@@ -453,7 +453,7 @@ not_filled:
  * gst_collectpads_read:
  * @pads: the collectspads to query
  * @data: the data to use
- * @bytes: a pointer to a byte array 
+ * @bytes: a pointer to a byte array
  * @size: the number of bytes to read
  *
  * Get a pointer in @bytes where @size bytes can be read from the
@@ -487,7 +487,7 @@ gst_collectpads_read (GstCollectPads * pads, GstCollectData * data,
  * @data: the data to use
  * @size: the number of bytes to flush
  *
- * Flush @size bytes from the pad @data. 
+ * Flush @size bytes from the pad @data.
  *
  * This function should be called with @pads LOCK held, such as
  * in the callback.

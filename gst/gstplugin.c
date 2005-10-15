@@ -38,9 +38,9 @@
  *
  * Use gst_plugin_find_feature() and gst_plugin_get_feature_list() to find features in a plugin.
  *
- * Usually plugins are always automaticlly loaded so you don't need to call gst_plugin_load() explicitly 
+ * Usually plugins are always automaticlly loaded so you don't need to call gst_plugin_load() explicitly
  * to bring it into memory. There are options to statically link plugins to an app or even
- * use GStreamer without a plugin repository in which case gst_plugin_load() can be needed 
+ * use GStreamer without a plugin repository in which case gst_plugin_load() can be needed
  * to bring the plugin into memory.
  */
 
@@ -82,8 +82,8 @@ static gboolean _gst_plugin_fault_handler_is_setup = FALSE;
 #endif
 
 /* list of valid licenses.
- * One of these must be specified or the plugin won't be loaded 
- * Contact gstreamer-devel@lists.sourceforge.net if your license should be 
+ * One of these must be specified or the plugin won't be loaded
+ * Contact gstreamer-devel@lists.sourceforge.net if your license should be
  * added.
  *
  * GPL: http://www.gnu.org/copyleft/gpl.html
@@ -155,7 +155,7 @@ gst_plugin_error_quark (void)
 }
 
 /* this function can be called in the GCC constructor extension, before
- * the _gst_plugin_initialize() was called. In that case, we store the 
+ * the _gst_plugin_initialize() was called. In that case, we store the
  * plugin description in a list to initialize it when we open the main
  * module later on.
  * When the main module is known, we can register the plugin right away.
@@ -192,7 +192,7 @@ _gst_plugin_initialize (void)
       NULL);
 }
 
-/* this function could be extended to check if the plugin license matches the 
+/* this function could be extended to check if the plugin license matches the
  * applications license (would require the app to register its license somehow).
  * We'll wait for someone who's interested in it to code it :)
  */
@@ -632,10 +632,10 @@ gst_plugin_get_origin (GstPlugin * plugin)
  * gst_plugin_get_module:
  * @plugin: plugin to query
  *
- * Gets the #GModule of the plugin. If the plugin isn't loaded yet, NULL is 
+ * Gets the #GModule of the plugin. If the plugin isn't loaded yet, NULL is
  * returned.
  *
- * Returns: module belonging to the plugin or NULL if the plugin isn't 
+ * Returns: module belonging to the plugin or NULL if the plugin isn't
  *          loaded yet.
  */
 GModule *
@@ -882,11 +882,11 @@ gst_plugin_load_by_name (const gchar * name)
  *
  * Loads @plugin. Note that the *return value* is the loaded plugin; @plugin is
  * untouched. The normal use pattern of this function goes like this:
- *  
+ *
  * <programlisting>
  * GstPlugin *loaded_plugin;
  * loaded_plugin = gst_plugin_load (plugin);
- *  
+ *
  * // presumably, we're no longer interested in the potentially-unloaded plugin
  * gst_object_unref (plugin);
  * plugin = loaded_plugin;

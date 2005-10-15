@@ -199,7 +199,7 @@ gst_iterator_pop (GstIterator * it)
  * @elem: pointer to hold next element
  *
  * Get the next item from the iterator.
- * 
+ *
  * Returns: The result of the iteration.
  *
  * MT safe.
@@ -263,7 +263,7 @@ done:
  *
  * Resync the iterator. this function is mostly called
  * after #gst_iterator_next() returned #GST_ITERATOR_RESYNC.
- * 
+ *
  * MT safe.
  */
 void
@@ -310,7 +310,7 @@ gst_iterator_free (GstIterator * it)
  *
  * This function is mainly used by objects implementing the iterator
  * next function to recurse into substructures.
- * 
+ *
  * MT safe.
  */
 void
@@ -400,7 +400,7 @@ filter_free (GstIteratorFilter * it)
  * When this iterator is freed, @it will also be freed.
  *
  * Returns: a new #GstIterator.
- * 
+ *
  * MT safe.
  */
 GstIterator *
@@ -449,7 +449,7 @@ gst_iterator_filter (GstIterator * it, GCompareFunc func, gpointer user_data)
  * The iterator will not be freed.
  *
  * Returns: A #GstIteratorResult, as described above.
- * 
+ *
  * MT safe.
  */
 GstIteratorResult

@@ -56,7 +56,7 @@ struct _GstTypeFindElement {
   GstBuffer *		store;
   guint64		stream_length;
   gboolean		stream_length_available;
-  
+
   GList *		possibilities;
 };
 

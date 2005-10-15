@@ -35,12 +35,12 @@
  *
  * All entries are simply added to a GList first. Then we build
  * an index to each entry for each id/format
- * 
+ *
  *
  *  memindex
  *    -----------------------------...
- *    !                  !         
- *   id1                 id2        
+ *    !                  !
+ *   id1                 id2
  *    ------------
  *    !          !
  *   format1  format2
@@ -54,8 +54,8 @@
  * The MemIndexId keeps a MemIndexFormatIndex for each format the
  * specific writer wants indexed.
  *
- * The MemIndexFormatIndex keeps all the values of the particular 
- * format in a GTree, The values of the GTree point back to the entry. 
+ * The MemIndexFormatIndex keeps all the values of the particular
+ * format in a GTree, The values of the GTree point back to the entry.
  *
  * Finding a value for an id/format requires locating the correct GTree,
  * then do a lookup in the Tree to get the required value.
@@ -359,7 +359,7 @@ gst_mem_index_get_assoc_entry (GstIndex * index, gint id,
   data.index = format_index;
   data.exact = (method == GST_INDEX_LOOKUP_EXACT);
 
-  /* setup data for low/high checks if we are not looking 
+  /* setup data for low/high checks if we are not looking
    * for an exact match */
   if (!data.exact) {
     data.low_diff = G_MININT64;

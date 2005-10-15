@@ -144,7 +144,7 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
  * GstPadChainFunction:
  * @pad: the #GstPad that performed the chain.
  * @buffer: the #GstBuffer that is chained.
- * 
+ *
  * A function that will be called when chaining buffers.
  *
  *  Returns: GST_FLOW_OK for success
@@ -201,7 +201,7 @@ typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
  * @query: the #GstQuery object to execute
  *
  * The signature of the query function.
- * 
+ *
  * Returns: TRUE if the query could be performed.
  */
 typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstQuery *query);
@@ -251,7 +251,7 @@ typedef GstFlowReturn		(*GstPadBufferAllocFunction)	(GstPad *pad, guint64 offset
  * @pad: the #GstPad that is dispatched.
  * @data: the gpointer to optional user data.
  *
- * A dispatcher function is called for all internally linked pads, see 
+ * A dispatcher function is called for all internally linked pads, see
  * gst_pad_dispatcher().
  *
  * Returns: TRUE if the dispatching procedure has to be stopped.

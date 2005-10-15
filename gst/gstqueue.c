@@ -28,11 +28,11 @@
  * Data is queued till max_level buffers have been stored. Any subsequent
  * buffers sent to this filter will block until free space becomes available in
  * the buffer. The queue is typically used in conjunction with a thread.
- * 
+ *
  * You can query how many buffers are queued with the level argument.
- * 
+ *
  * The default queue length is set to 100.
- * 
+ *
  * The queue blocks by default.
  */
 
@@ -776,7 +776,7 @@ restart:
           g_thread_self ());
       g_cond_wait (queue->item_add, queue->qlock);
 
-      /* we released the lock in the g_cond above so we might be 
+      /* we released the lock in the g_cond above so we might be
        * flushing now */
       if (queue->srcresult != GST_FLOW_OK)
         goto out_flushing;

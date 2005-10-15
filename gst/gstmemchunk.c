@@ -115,7 +115,7 @@ populate (GstMemChunk * mem_chunk)
  * @type: the allocation strategy to use
  *
  * Creates a new memchunk that will allocate atom_sized memchunks.
- * The initial area is set to area_size and will grow automatically 
+ * The initial area is set to area_size and will grow automatically
  * when it is too small (with a small overhead when that happens)
  *
  * Returns: a new #GstMemChunk

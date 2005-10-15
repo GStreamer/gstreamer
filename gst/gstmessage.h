@@ -122,7 +122,7 @@ struct _GstMessage
   GstObject *src;
 
   GstStructure *structure;
-  
+
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };

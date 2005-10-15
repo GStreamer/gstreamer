@@ -25,22 +25,22 @@
  *
  * The #GstBus is an object responsible for delivering #GstMessages in
  * a first-in first-out way from the streaming threads to the application.
- * 
+ *
  * Since the application typically only wants to deal with delivery of these
  * messages from one thread, the GstBus will marshall the messages between
  * different threads. This is important since the actual streaming of media
  * is done in another thread than the application.
- * 
+ *
  * The GstBus provides support for #GSource based notifications. This makes it
  * possible to handle the delivery in the glib mainloop.
  *
  * The #GSource callback function gst_bus_async_signal_func() can be used to
  * convert all bus messages into signal emissions.
- * 
+ *
  * A message is posted on the bus with the gst_bus_post() method. With the
  * gst_bus_peek() and _pop() methods one can look at or retrieve a previously
  * posted message.
- * 
+ *
  * The bus can be polled with the gst_bus_poll() method. This methods blocks
  * up to the specified timeout value until one of the specified messages types
  * is posted on the bus. The application can then _pop() the messages from the
@@ -48,8 +48,8 @@
  * Alternatively the application can register an asynchronous bus function using
  * gst_bus_add_watch_full() or gst_bus_add_watch(). This function will receive
  * messages a short while after they have been posted.
- * 
- * It is also possible to get messages from the bus without any thread 
+ *
+ * It is also possible to get messages from the bus without any thread
  * marshalling with the gst_bus_set_sync_handler() method. This makes it
  * possible to react to a message in the same thread that posted the
  * message on the bus. This should only be used if the application is able
@@ -477,7 +477,7 @@ gst_bus_pop (GstBus * bus)
  * gst_bus_peek:
  * @bus: a #GstBus
  *
- * Peek the message on the top of the bus' queue. The message will remain 
+ * Peek the message on the top of the bus' queue. The message will remain
  * on the bus' message queue. A reference is returned, and needs to be unreffed
  * by the caller.
  *
@@ -618,7 +618,7 @@ static GSourceFuncs gst_bus_source_funcs = {
  * @bus: a #GstBus to create the watch for
  *
  * Create watch for this bus. The GSource will be dispatched whenever
- * a message is on the bus. After the GSource is dispatched, the 
+ * a message is on the bus. After the GSource is dispatched, the
  * message is popped off the bus and unreffed.
  *
  * Returns: A #GSource that can be added to a mainloop.
@@ -646,10 +646,10 @@ gst_bus_create_watch (GstBus * bus)
  * @user_data: user data passed to @func.
  * @notify: the function to call when the source is removed.
  *
- * Adds a bus watch to the default main context with the given priority. 
- * If the func returns FALSE, the source will be removed. 
+ * Adds a bus watch to the default main context with the given priority.
+ * If the func returns FALSE, the source will be removed.
  *
- * When the func is called, the message belongs to the caller; if you want to 
+ * When the func is called, the message belongs to the caller; if you want to
  * keep a copy of it, call gst_message_ref() before leaving the func.
  *
  * The watch can be removed using #g_source_remove().
@@ -778,7 +778,7 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  *
  * This function will enter the default mainloop while polling.
  *
- * Returns: The message that was received, or NULL if the poll timed out. 
+ * Returns: The message that was received, or NULL if the poll timed out.
  * The message is taken from the bus and needs to be unreffed after usage.
  */
 GstMessage *
@@ -827,7 +827,7 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
  * @message: the message received
  * @data: user data
  *
- * A helper GstBusFunc that can be used to convert all asynchronous messages 
+ * A helper GstBusFunc that can be used to convert all asynchronous messages
  * into signals.
  *
  * Returns: TRUE

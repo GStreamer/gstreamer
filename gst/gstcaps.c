@@ -328,7 +328,7 @@ gst_caps_ref (GstCaps * caps)
  * gst_caps_unref:
  * @caps: the #GstCaps to unref
  *
- * Unref a #GstCaps and and free all its structures and the 
+ * Unref a #GstCaps and and free all its structures and the
  * structures' values when the refcount reaches 0.
  */
 void
@@ -356,7 +356,7 @@ gst_caps_unref (GstCaps * caps)
  * Converts a #GstStaticCaps to a #GstCaps.
  *
  * Returns: A pointer to the #GstCaps. Unref after usage. Since the
- * core holds an additional ref to the returned caps, 
+ * core holds an additional ref to the returned caps,
  * use gst_caps_make_writable() on the returned caps to modify it.
  */
 GstCaps *
@@ -471,7 +471,7 @@ gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
  * @caps: the #GstCaps to remove from
  * @idx: Index of the structure to remove
  *
- * removes the stucture with the given index from the list of structures 
+ * removes the stucture with the given index from the list of structures
  * contained in @caps.
  */
 void
@@ -525,7 +525,7 @@ gst_caps_get_size (const GstCaps * caps)
  * @caps: a #GstCaps
  * @index: the index of the structure
  *
- * Finds the structure in @caps that has the index @index, and 
+ * Finds the structure in @caps that has the index @index, and
  * returns it.
  *
  * WARNING: This function takes a const GstCaps *, but returns a
@@ -545,15 +545,15 @@ gst_caps_get_structure (const GstCaps * caps, guint index)
   return g_ptr_array_index (caps->structs, index);
 }
 
-/** 	 
- * gst_caps_copy_nth: 	 
- * @caps: the @GstCaps to copy 	 
+/**
+ * gst_caps_copy_nth:
+ * @caps: the @GstCaps to copy
  * @nth: the nth structure to copy
- * 	 
- * Creates a new @GstCaps and appends a copy of the nth structure 	 
- * contained in @caps. 	 
- * 	 
- * Returns: the new @GstCaps 	 
+ *
+ * Creates a new @GstCaps and appends a copy of the nth structure
+ * contained in @caps.
+ *
+ * Returns: the new @GstCaps
  */
 GstCaps *
 gst_caps_copy_nth (const GstCaps * caps, guint nth)
@@ -574,10 +574,10 @@ gst_caps_copy_nth (const GstCaps * caps, guint nth)
   return newcaps;
 }
 
-/** 	 
- * gst_caps_truncate: 	 
+/**
+ * gst_caps_truncate:
  * @caps: the @GstCaps to truncate
- * 	 
+ *
  * Destructively discard all but the first structure from @caps. Useful when
  * fixating. @caps must be writable.
  */
@@ -974,8 +974,8 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
   dest = gst_caps_new_empty ();
 
   /* run zigzag on top line then right line, this preserves the caps order
-   * much better than a simple loop. 
-   * 
+   * much better than a simple loop.
+   *
    * This algorithm zigzags over the caps structures as demonstrated in
    * the folowing matrix:
    *
@@ -984,10 +984,10 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
    *       | 1  2  4  7
    * caps2 | 3  5  8 10
    *       | 6  9 11 12
-   *       
+   *
    * First we iterate over the caps1 structures (top line) intersecting
    * the structures diagonally down, then we iterate over the caps2
-   * structures. 
+   * structures.
    */
   for (i = 0; i < caps1->structs->len + caps2->structs->len - 1; i++) {
     /* caps1 index goes from 0 to caps1->structs->len-1 */
@@ -1246,7 +1246,7 @@ gst_caps_compare_structures (gconstpointer one, gconstpointer two)
   const GstStructure *struct1 = *((const GstStructure **) one);
   const GstStructure *struct2 = *((const GstStructure **) two);
 
-  /* FIXME: this orders aphabetically, but ordering the quarks might be faster 
+  /* FIXME: this orders aphabetically, but ordering the quarks might be faster
      So what's the best way? */
   ret = strcmp (gst_structure_get_name (struct1),
       gst_structure_get_name (struct2));
@@ -1391,9 +1391,9 @@ gst_caps_switch_structures (GstCaps * caps, GstStructure * old,
  * gst_caps_do_simplify:
  * @caps: a #GstCaps to simplify
  *
- * Modifies the given @caps inplace into a representation that represents the 
- * same set of formats, but in a simpler form.  Component structures that are 
- * identical are merged.  Component structures that have values that can be 
+ * Modifies the given @caps inplace into a representation that represents the
+ * same set of formats, but in a simpler form.  Component structures that are
+ * identical are merged.  Component structures that have values that can be
  * merged are also merged.
  *
  * Returns: TRUE, if the caps could be simplified

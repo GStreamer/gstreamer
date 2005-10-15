@@ -27,40 +27,40 @@
  *
  * GstElementFactory is used to create instances of elements. A GstElementfactory
  * can be added to a #GstPlugin as it is also a #GstPluginFeature.
- * 
+ *
  * Use gst_element_factory_new() to create a new factory which can be added to a
  * plugin with gst_plugin_add_feature().
- * 
+ *
  * gst_element_factory_add_pad_template() is used to add a padtemplate to the factory.
  * This function will enable the application to query for elementfactories that handle
  * a specific media type.
- * 
+ *
  * Use the gst_element_factory_find() and gst_element_factory_create() functions
- * to create element instances or use gst_element_factory_make() as a convenient 
+ * to create element instances or use gst_element_factory_make() as a convenient
  * shortcut.
- * 
+ *
  * The following code example shows you how to create a GstFileSrc element.
  *
  * <example>
  * <title>Using an element factory</title>
  * <programlisting language="c">
  *   #include &lt;gst/gst.h&gt;
- *   
+ *
  *   GstElement *src;
  *   GstElementFactory *srcfactory;
- *   
+ *
  *   gst_init(&amp;argc,&amp;argv);
- *   
+ *
  *   srcfactory = gst_element_factory_find("filesrc");
  *   g_return_if_fail(srcfactory != NULL);
- *   
+ *
  *   src = gst_element_factory_create(srcfactory,"src");
  *   g_return_if_fail(src != NULL);
  *   ...
  * </programlisting>
  * </example>
- * 
- * An elementfactory can be assigned a rank with gst_element_factory_set_rank() 
+ *
+ * An elementfactory can be assigned a rank with gst_element_factory_set_rank()
  * so that the autopluggers can select a plugin more appropriatly
  */
 
@@ -457,7 +457,7 @@ __gst_element_factory_add_static_pad_template (GstElementFactory * factory,
 /**
  * gst_element_factory_get_element_type:
  * @factory: factory to get managed #GType from
- * 
+ *
  * Get the #GType for elements managed by this factory
  *
  * Returns: the #GType for elements managed by this factory
@@ -473,7 +473,7 @@ gst_element_factory_get_element_type (GstElementFactory * factory)
 /**
  * gst_element_factory_get_longname:
  * @factory: a #GstElementFactory
- * 
+ *
  * Gets the longname for this factory
  *
  * Returns: the longname
@@ -489,7 +489,7 @@ gst_element_factory_get_longname (GstElementFactory * factory)
 /**
  * gst_element_factory_get_klass:
  * @factory: a #GstElementFactory
- * 
+ *
  * Gets the class for this factory.
  *
  * Returns: the class
@@ -505,7 +505,7 @@ gst_element_factory_get_klass (GstElementFactory * factory)
 /**
  * gst_element_factory_get_description:
  * @factory: a #GstElementFactory
- * 
+ *
  * Gets the description for this factory.
  *
  * Returns: the description
@@ -521,7 +521,7 @@ gst_element_factory_get_description (GstElementFactory * factory)
 /**
  * gst_element_factory_get_author:
  * @factory: a #GstElementFactory
- * 
+ *
  * Gets the author for this factory.
  *
  * Returns: the author
@@ -537,7 +537,7 @@ gst_element_factory_get_author (GstElementFactory * factory)
 /**
  * gst_element_factory_get_num_pad_templates:
  * @factory: a #GstElementFactory
- * 
+ *
  * Gets the number of pad_templates in this factory.
  *
  * Returns: the number of pad_templates
@@ -573,7 +573,7 @@ __gst_element_factory_add_interface (GstElementFactory * elementfactory,
 /**
  * gst_element_factory_get_static_pad_templates:
  * @factory: a #GstElementFactory
- * 
+ *
  * Gets the #GList of padtemplates for this factory.
  *
  * Returns: the padtemplates
@@ -589,7 +589,7 @@ gst_element_factory_get_static_pad_templates (GstElementFactory * factory)
 /**
  * gst_element_factory_get_uri_type:
  * @factory: a #GstElementFactory
- * 
+ *
  * Gets the type of URIs the element supports or GST_URI_UNKNOWN if none.
  *
  * Returns: type of URIs this element supports
@@ -605,7 +605,7 @@ gst_element_factory_get_uri_type (GstElementFactory * factory)
 /**
  * gst_element_factory_get_uri_protocols:
  * @factory: a #GstElementFactory
- * 
+ *
  * Gets a NULL-terminated array of protocols this element supports or NULL, if
  * no protocols are supported. You may not change the contents of the returned
  * array as it is still ownt by the element factory. Use g_strdupv() if you want to.

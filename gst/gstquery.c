@@ -26,7 +26,7 @@
  * @see_also: #GstPad, #GstElement
  *
  * GstQuery functions are used to register a new query types to the gstreamer
- * core. 
+ * core.
  * Query types can be used to perform queries on pads and elements.
  *
  * Query answer can be parsed using gst_query_parse_xxx() helpers.
@@ -212,7 +212,7 @@ gst_query_type_register (const gchar * nick, const gchar * description)
  * gst_query_type_get_by_nick:
  * @nick: The nick of the query
  *
- * Return the query registered with the given nick. 
+ * Return the query registered with the given nick.
  *
  * Returns: The query with @nick or GST_QUERY_NONE
  * if the query was not registered.

@@ -82,7 +82,7 @@ typedef enum
  * plugin_desc struct.
  * This function will be called by the loader at startup.
  *
- * Returns: %TRUE if plugin initialised successfully 
+ * Returns: %TRUE if plugin initialised successfully
  */
 typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
 
@@ -99,7 +99,7 @@ typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
  * @package: shipped package plugin belongs to
  * @origin: URL to provider of plugin
  * @_gst_reserved: private, for later expansion
- * 
+ *
  *
  * A plugins should export a variable of this type called plugin_desc. This plugin
  * loaded will use this variable to initialize the plugin.

@@ -157,8 +157,8 @@
  *       interested in modifying the buffers.
  *     </para></listitem>
  *     <listitem><para>
- *       Elements which are always in passthrough mode whenever the same caps has 
- *       been negotiated on both pads can set the class variable 
+ *       Elements which are always in passthrough mode whenever the same caps has
+ *       been negotiated on both pads can set the class variable
  *       passthrough_on_same_caps to have this behaviour automatically.
  *     </para></listitem>
  *   </itemizedlist>
@@ -824,7 +824,7 @@ gst_base_transform_prepare_output_buf (GstBaseTransform * trans,
       return ret;
   }
 
-  /* If the output buffer metadata is modifiable, copy timestamps and 
+  /* If the output buffer metadata is modifiable, copy timestamps and
    * buffer flags */
   if (*buf != input && GST_MINI_OBJECT_REFCOUNT_VALUE (*buf) == 1) {
 
@@ -1102,7 +1102,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   *outbuf = NULL;
 
   if (want_in_place) {
-    /* If want_in_place is TRUE, we may need to prepare a new output buffer 
+    /* If want_in_place is TRUE, we may need to prepare a new output buffer
      * Sub-classes can implement a prepare_output_buffer function as they
      * wish. */
     GST_LOG_OBJECT (trans, "doing inplace transform");
@@ -1373,9 +1373,9 @@ gst_base_transform_change_state (GstElement * element,
  * @passthrough: boolean indicating passthrough mode.
  *
  * Set passthrough mode for this filter by default. This is mostly
- * useful for filters that do not care about negotiation. 
- * 
- * Always TRUE for filters which don't implement either a transform 
+ * useful for filters that do not care about negotiation.
+ *
+ * Always TRUE for filters which don't implement either a transform
  * or transform_ip method.
  *
  * MT safe.
@@ -1432,7 +1432,7 @@ gst_base_transform_is_passthrough (GstBaseTransform * trans)
  * @in_place: Boolean value indicating that we would like to operate
  * on in_place buffers.
  *
- * Determines whether a non-writable buffer will be copied before passing 
+ * Determines whether a non-writable buffer will be copied before passing
  * to the transform_ip function.
  * <itemizedlist>
  *   <listitem>Always TRUE if no transform function is implemented.</listitem>

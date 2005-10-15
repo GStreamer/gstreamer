@@ -69,14 +69,14 @@ typedef enum
  * GST_OBJECT_REFCOUNT:
  * @obj: Object get the refcount for.
  *
- * Get access to the reference count field of the object. 
+ * Get access to the reference count field of the object.
  */
 #define GST_OBJECT_REFCOUNT(obj)                (((GObject*)(obj))->ref_count)
 /**
  * GST_OBJECT_REFCOUNT_VALUE:
  * @obj: Object get the refcount value for.
  *
- * Get the reference count value of the object. 
+ * Get the reference count value of the object.
  */
 #define GST_OBJECT_REFCOUNT_VALUE(obj)          GST_OBJECT_REFCOUNT(obj)
 #else
@@ -86,7 +86,7 @@ typedef enum
 
 /* we do a GST_OBJECT_CAST to avoid type checking, better call these
  * function with a valid object! */
- 
+
 /**
  * GST_LOCK:
  * @obj: Object to lock.
@@ -257,7 +257,7 @@ GstObject*	gst_object_get_parent		(GstObject *object);
 void		gst_object_unparent		(GstObject *object);
 gboolean	gst_object_has_ancestor		(GstObject *object, GstObject *ancestor);
 
-void            gst_object_default_deep_notify 	(GObject *object, GstObject *orig, 
+void            gst_object_default_deep_notify 	(GObject *object, GstObject *orig,
                                                  GParamSpec *pspec, gchar **excluded_props);
 
 /* refcounting + life cycle */

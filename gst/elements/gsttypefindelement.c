@@ -28,7 +28,7 @@
  * 4) if a function returns a value >= ARG_MAXIMUM goto 8
  * 5) all functions with a result > ARG_MINIMUM or functions that did not get
  *    all requested data (where peek returned NULL) stay in list
- * 6) seek to requested offset of best function that still has open data 
+ * 6) seek to requested offset of best function that still has open data
  *    requests
  * 7) goto 2
  * 8) take best available result and use its caps
@@ -38,13 +38,13 @@
  * 1) chain based, it will collect buffers and run the typefind function on
  *    the buffer until something is found.
  * 2) getrange based, it will proxy the getrange function to the sinkpad. It
- *    is assumed that the peer element is happy with whatever format we 
+ *    is assumed that the peer element is happy with whatever format we
  *    eventually read.
  *
  * When the element has no connected srcpad, and the sinkpad can operate in
- * getrange based mode, the element starts its own task to figure out the 
+ * getrange based mode, the element starts its own task to figure out the
  * type of the stream.
- * 
+ *
  */
 
 #ifdef HAVE_CONFIG_H

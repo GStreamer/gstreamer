@@ -49,7 +49,7 @@ typedef struct _GstIndexClass GstIndexClass;
  * @GST_INDEX_UNKNOWN: accuracy is not known
  * @GST_INDEX_CERTAIN: accuracy is perfect
  * @GST_INDEX_FUZZY: accuracy is fuzzy
- * 
+ *
  * The certainty of a group in the index.
  */
 typedef enum {
@@ -64,7 +64,7 @@ typedef enum {
  * @GST_INDEX_ENTRY_ASSOCIATION: This entry is an association between formats
  * @GST_INDEX_ENTRY_OBJECT: An object
  * @GST_INDEX_ENTRY_FORMAT: A format definition
- * 
+ *
  * The different types of entries in the index.
  */
 typedef enum {
@@ -79,7 +79,7 @@ typedef enum {
  * @GST_INDEX_LOOKUP_EXACT: There has to be an exact indexentry with the given format/value
  * @GST_INDEX_LOOKUP_BEFORE: The exact entry or the one before it
  * @GST_INDEX_LOOKUP_AFTER: The exact entry or the one after it
- * 
+ *
  * Specify the method to find an index entry in the index.
  */
 typedef enum {
@@ -203,7 +203,7 @@ struct _GstIndexEntry {
     } id;
     struct {
       gint		 nassocs;
-      GstIndexAssociation 
+      GstIndexAssociation
 	      		*assocs;
       GstAssocFlags	 flags;
     } assoc;
@@ -251,7 +251,7 @@ struct _GstIndexGroup {
  * to the index, %FALSE otherwise.
  *
  */
-typedef gboolean 	(*GstIndexFilter)	 	(GstIndex *index, 
+typedef gboolean 	(*GstIndexFilter)	 	(GstIndex *index,
 							 GstIndexEntry *entry);
 /**
  * GstIndexResolverMethod:
@@ -278,8 +278,8 @@ typedef enum {
  *
  * Returns: %TRUE if an id could be assigned to the writer.
  */
-typedef gboolean 	(*GstIndexResolver) 		(GstIndex *index, 
-						   	 GstObject *writer, 
+typedef gboolean 	(*GstIndexResolver) 		(GstIndex *index,
+						   	 GstObject *writer,
 						   	 gchar **writer_string,
 						   	 gpointer user_data);
 
@@ -292,8 +292,8 @@ typedef gboolean 	(*GstIndexResolver) 		(GstIndex *index,
  * Flags for this index
  */
 typedef enum {
-  GST_INDEX_WRITABLE    = (GST_OBJECT_FLAG_LAST << 0),	
-  GST_INDEX_READABLE    = (GST_OBJECT_FLAG_LAST << 1),	
+  GST_INDEX_WRITABLE    = (GST_OBJECT_FLAG_LAST << 0),
+  GST_INDEX_READABLE    = (GST_OBJECT_FLAG_LAST << 1),
 
   GST_INDEX_FLAG_LAST   = (GST_OBJECT_FLAG_LAST << 8)
 } GstIndexFlags;
@@ -344,11 +344,11 @@ struct _GstIndexClass {
   /* abstract methods */
   void		(*add_entry)		(GstIndex *index, GstIndexEntry *entry);
 
-  GstIndexEntry* (*get_assoc_entry)	(GstIndex *index, gint id, 
+  GstIndexEntry* (*get_assoc_entry)	(GstIndex *index, gint id,
 		                         GstIndexLookupMethod method, GstAssocFlags flags,
 		                         GstFormat format, gint64 value,
 					 GCompareDataFunc func,
-					 gpointer user_data); 
+					 gpointer user_data);
   /* signals */
   void		(*entry_added)		(GstIndex *index, GstIndexEntry *entry);
 
@@ -363,29 +363,29 @@ gint			gst_index_get_group		(GstIndex *index);
 gint			gst_index_new_group		(GstIndex *index);
 gboolean		gst_index_set_group		(GstIndex *index, gint groupnum);
 
-void			gst_index_set_certainty		(GstIndex *index, 
+void			gst_index_set_certainty		(GstIndex *index,
 							 GstIndexCertainty certainty);
 GstIndexCertainty	gst_index_get_certainty		(GstIndex *index);
 
-void			gst_index_set_filter		(GstIndex *index, 
+void			gst_index_set_filter		(GstIndex *index,
 		                                         GstIndexFilter filter, gpointer user_data);
-void			gst_index_set_resolver		(GstIndex *index, 
+void			gst_index_set_resolver		(GstIndex *index,
 		                                         GstIndexResolver resolver, gpointer user_data);
 
 gboolean 		gst_index_get_writer_id 	(GstIndex *index, GstObject *writer, gint *id);
 
-GstIndexEntry*		gst_index_add_format		(GstIndex *index, gint id, GstFormat format); 
+GstIndexEntry*		gst_index_add_format		(GstIndex *index, gint id, GstFormat format);
 GstIndexEntry*		gst_index_add_association	(GstIndex *index, gint id, GstAssocFlags flags,
 							 GstFormat format, gint64 value, ...);
 GstIndexEntry*		gst_index_add_object		(GstIndex *index, gint id, gchar *key,
 							 GType type, gpointer object);
 GstIndexEntry*		gst_index_add_id		(GstIndex *index, gint id,
-							 gchar *description); 
+							 gchar *description);
 
-GstIndexEntry*		gst_index_get_assoc_entry	(GstIndex *index, gint id, 
+GstIndexEntry*		gst_index_get_assoc_entry	(GstIndex *index, gint id,
 		 					 GstIndexLookupMethod method, GstAssocFlags flags,
 		                                         GstFormat format, gint64 value);
-GstIndexEntry*		gst_index_get_assoc_entry_full	(GstIndex *index, gint id, 
+GstIndexEntry*		gst_index_get_assoc_entry_full	(GstIndex *index, gint id,
 							 GstIndexLookupMethod method, GstAssocFlags flags,
 		                                         GstFormat format, gint64 value,
 							 GCompareDataFunc func,

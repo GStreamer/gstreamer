@@ -51,23 +51,23 @@ struct _GstTypeFindFactory {
   GstTypeFindFunction		function;
   gchar **			extensions;
   GstCaps *			caps; /* FIXME: not yet saved in registry */
-  
+
   gpointer			user_data;
-    
+
   gpointer _gst_reserved[GST_PADDING];
 };
-                                                                                                                                                                         
+
 struct _GstTypeFindFactoryClass {
   GstPluginFeatureClass		parent;
   /* <private> */
-    
+
   gpointer _gst_reserved[GST_PADDING];
 };
 
 /* typefinding interface */
 
 GType           gst_type_find_factory_get_type		(void);
-    
+
 GList *		gst_type_find_factory_get_list		(void);
 
 gchar **	gst_type_find_factory_get_extensions	(GstTypeFindFactory *factory);

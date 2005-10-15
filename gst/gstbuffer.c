@@ -28,10 +28,10 @@
  * provides all the state necessary to define a region of memory as part of a
  * stream.  Sub-buffers are also supported, allowing a smaller region of a
  * buffer to become its own buffer, with mechanisms in place to ensure that
- * neither memory space goes away. 
- * 
- * Buffers are usually created with gst_buffer_new(). After a buffer has been 
- * created one will typically allocate memory for it and set the size of the 
+ * neither memory space goes away.
+ *
+ * Buffers are usually created with gst_buffer_new(). After a buffer has been
+ * created one will typically allocate memory for it and set the size of the
  * buffer data.  The following example creates a buffer that can hold a given
  * video frame with a given width, height and bits per plane.
  * <example>
@@ -39,11 +39,11 @@
  *   <programlisting>
  *   GstBuffer *buffer;
  *   gint size, width, height, bpp;
- *   
+ *
  *   ...
- *   
+ *
  *   size = width * height * bpp;
- *   
+ *
  *   buffer = gst_buffer_new ();
  *   GST_BUFFER_SIZE (buffer) = size;
  *   GST_BUFFER_MALLOCDATA (buffer) = g_alloc (size);
@@ -51,10 +51,10 @@
  *   ...
  *   </programlisting>
  * </example>
- * 
- * Alternatively, use gst_buffer_new_and_alloc() 
+ *
+ * Alternatively, use gst_buffer_new_and_alloc()
  * to create a buffer with preallocated data of a given size.
- * 
+ *
  * If an element knows what pad you will push the buffer out on, it should use
  * gst_pad_alloc_buffer() instead to create a buffer.  This allows downstream
  * elements to provide special buffers to write in, like hardware buffers.
@@ -63,28 +63,28 @@
  * in the buffer. Attach caps to the buffer with gst_buffer_set_caps(); this
  * is typically done before pushing out a buffer using gst_pad_push() so that
  * the downstream element knows the type of the buffer.
- * 
+ *
  * gst_buffer_ref() is used to increase the refcount of a buffer. This must be
  * done when you want to keep a handle to the buffer after pushing it to the
  * next element.
- * 
+ *
  * To efficiently create a smaller buffer out of an existing one, you can
  * use gst_buffer_create_sub().
- * 
+ *
  * If the plug-in wants to modify the buffer in-place, it should first obtain
  * a buffer that is safe to modify by using gst_buffer_make_writable().  This
  * function is optimized so that a copy will only be made when it is necessary.
- * 
+ *
  * Several flags of the buffer can be set and unset with the GST_BUFFER_FLAG_SET()
  * and GST_BUFFER_FLAG_UNSET() macros. Use GST_BUFFER_FLAG_IS_SET() to test it
  * a certain #GstBufferFlag is set.
- * 
+ *
  * Buffers can be efficiently merged into a larger buffer with gst_buffer_merge()
  * and gst_buffer_span() if the gst_buffer_is_span_fast() function returns TRUE.
- * 
+ *
  * An element should either unref the buffer or push it out on a src pad
  * using gst_pad_push() (see #GstPad).
- * 
+ *
  * Buffers usually are freed by unreffing them with gst_buffer_unref(). When
  * the refcount drops to 0, the buffer memory will be freed again.
  *

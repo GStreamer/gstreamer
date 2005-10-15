@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstpushsrc.h: 
+ * gstpushsrc.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

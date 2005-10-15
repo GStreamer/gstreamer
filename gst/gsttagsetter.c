@@ -136,7 +136,7 @@ gst_tag_setter_merge (GstTagSetter * setter, const GstTagList * list,
  * @tag: tag to set
  * @...: more tag / value pairs to set
  *
- * Adds the given tag / value pairs on the setter using the given merge mode. 
+ * Adds the given tag / value pairs on the setter using the given merge mode.
  * The list must be terminated with NULL.
  */
 void
@@ -160,7 +160,7 @@ gst_tag_setter_add (GstTagSetter * setter, GstTagMergeMode mode,
  * @tag: tag to set
  * @...: more tag / GValue pairs to set
  *
- * Adds the given tag / GValue pairs on the setter using the given merge mode. 
+ * Adds the given tag / GValue pairs on the setter using the given merge mode.
  * The list must be terminated with NULL.
  */
 void
@@ -184,7 +184,7 @@ gst_tag_setter_add_values (GstTagSetter * setter, GstTagMergeMode mode,
  * @tag: tag to set
  * @var_args: tag / value pairs to set
  *
- * Adds the given tag / value pairs on the setter using the given merge mode. 
+ * Adds the given tag / value pairs on the setter using the given merge mode.
  * The list must be terminated with NULL.
  */
 void
@@ -210,7 +210,7 @@ gst_tag_setter_add_valist (GstTagSetter * setter, GstTagMergeMode mode,
  * @tag: tag to set
  * @var_args: tag / GValue pairs to set
  *
- * Adds the given tag / GValue pairs on the setter using the given merge mode. 
+ * Adds the given tag / GValue pairs on the setter using the given merge mode.
  * The list must be terminated with NULL.
  */
 void
@@ -269,7 +269,7 @@ gst_tag_setter_set_merge_mode (GstTagSetter * setter, GstTagMergeMode mode)
  * gst_tag_setter_get_merge_mode:
  * @setter: a #GstTagSetter
  *
- * Queries the mode by which tags inside the setter are overwritten by tags 
+ * Queries the mode by which tags inside the setter are overwritten by tags
  * from events
  *
  * Returns: the merge mode used inside the element.

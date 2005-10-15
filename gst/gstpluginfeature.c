@@ -147,7 +147,7 @@ gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
  * @name: the name to set
  *
  * Sets the name of a plugin feature. The name uniquely identifies a feature
- * within all features of the same type. Renaming a plugin feature is not 
+ * within all features of the same type. Renaming a plugin feature is not
  * allowed. A copy is made of the name so you should free the supplied @name
  * after calling this function.
  */

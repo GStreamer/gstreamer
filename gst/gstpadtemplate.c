@@ -25,17 +25,17 @@
  * @see_also: #GstPad, #GstElementFactory
  *
  * Padtemplates describe the possible media types a pad or an elementfactory can
- * handle. 
- * 
+ * handle.
+ *
  * Pad and PadTemplates have #GstCaps attached to it to describe the media type they
  * are capable of dealing with. gst_pad_template_get_caps() is used to get the
  * caps of a padtemplate. It's not possible to modify the caps of a padtemplate after
- * creation. 
- * 
+ * creation.
+ *
  * Padtemplates can be created with gst_pad_template_new() or with the convenient
- * GST_PAD_TEMPLATE_FACTORY() macro. A padtemplate can be used to create a pad or 
+ * GST_PAD_TEMPLATE_FACTORY() macro. A padtemplate can be used to create a pad or
  * to add to an elementfactory.
- * 
+ *
  * The following code example shows the code to create a pad from a padtemplate.
  * <example>
  * <title>Create a pad from a padtemplate</title>
@@ -50,18 +50,18 @@
  *         "channels = (int) [ 1, 6 ]"
  *     )
  *   )
- *   
+ *
  *   void
- *   my_method (void) 
+ *   my_method (void)
  *   {
  *     GstPad *pad;
- *     
+ *
  *     pad = gst_pad_new_from_template (GST_PAD_TEMPLATE_GET (my_template_factory), "sink");
  *     ...
  *   }
  *   </programlisting>
  * </example>
- * 
+ *
  * The following example shows you how to add the padtemplate to an elementfactory:
  * <informalexample>
  *   <programlisting>
@@ -69,14 +69,14 @@
  *   my_factory_init (GstPlugin *plugin)
  *   {
  *     GstElementFactory *factory;
- *     
+ *
  *     factory = gst_element_factory_new ("my_factory", GST_TYPE_MYFACTORY, &amp;gst_myfactory_details);
  *     g_return_val_if_fail (factory != NULL, FALSE);
- *     
+ *
  *     gst_element_factory_add_pad_template (factory, GST_PAD_TEMPLATE_GET (my_template_factory));
- *     
+ *
  *     gst_plugin_add_feature (plugin, GST_PLUGIN_FEATURE (factory));
- *     
+ *
  *     return TRUE;
  *   }
  *   </programlisting>
@@ -294,7 +294,7 @@ gst_pad_template_new (const gchar * name_template,
  *
  * Gets the capabilities of the static pad template.
  *
- * Returns: the #GstCaps of the static pad template. If you need to keep a 
+ * Returns: the #GstCaps of the static pad template. If you need to keep a
  * reference to the caps, take a ref (see gst_caps_ref ()).
  */
 GstCaps *

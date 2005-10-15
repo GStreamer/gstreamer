@@ -737,7 +737,7 @@ gst_ghost_pad_dispose (GObject * object)
  * @dir: the direction of the ghostpad
  *
  * Create a new ghostpad without a target with the given direction.
- * A target can be set on the ghostpad later with the 
+ * A target can be set on the ghostpad later with the
  * #gst_ghost_pad_set_target() function.
  *
  * The created ghostpad will not have a padtemplate.

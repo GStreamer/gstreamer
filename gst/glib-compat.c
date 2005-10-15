@@ -144,18 +144,18 @@ g_mkdir_with_parents (const gchar * pathname, int mode)
 
 #if !GLIB_CHECK_VERSION (2, 6, 0)
 /**
- * g_mkdir: 
+ * g_mkdir:
  * @filename: a pathname in the GLib file name encoding (UTF-8 on Windows)
  * @mode: permissions to use for the newly created directory
  *
- * A wrapper for the POSIX mkdir() function. The mkdir() function 
+ * A wrapper for the POSIX mkdir() function. The mkdir() function
  * attempts to create a directory with the given name and permissions.
- * 
+ *
  * See the C library manual for more details about mkdir().
  *
- * Returns: 0 if the directory was successfully created, -1 if an error 
+ * Returns: 0 if the directory was successfully created, -1 if an error
  *    occurred
- * 
+ *
  * Since: 2.6
  */
 int
@@ -205,19 +205,19 @@ g_mkdir (const gchar * filename, int mode)
 
 #if !GLIB_CHECK_VERSION (2, 6, 0)
 /**
- * g_stat: 
+ * g_stat:
  * @filename: a pathname in the GLib file name encoding (UTF-8 on Windows)
  * @buf: a pointer to a <structname>stat</structname> struct, which
  *    will be filled with the file information
  *
- * A wrapper for the POSIX stat() function. The stat() function 
+ * A wrapper for the POSIX stat() function. The stat() function
  * returns information about a file.
- * 
+ *
  * See the C library manual for more details about stat().
  *
- * Returns: 0 if the information was successfully retrieved, -1 if an error 
+ * Returns: 0 if the information was successfully retrieved, -1 if an error
  *    occurred
- * 
+ *
  * Since: 2.6
  */
 int

@@ -118,7 +118,7 @@ gst_format_register (const gchar * nick, const gchar * description)
  * gst_format_get_by_nick:
  * @nick: The nick of the format
  *
- * Return the format registered with the given nick. 
+ * Return the format registered with the given nick.
  *
  * Returns: The format with @nick or GST_FORMAT_UNDEFINED
  * if the format was not registered.
@@ -190,7 +190,7 @@ gst_format_get_details (GstFormat format)
 /**
  * gst_format_iterate_definitions:
  *
- * Iterate all the registered formats. The format definition is read 
+ * Iterate all the registered formats. The format definition is read
  * only.
  *
  * Returns: A GstIterator of #GstFormatDefinition.

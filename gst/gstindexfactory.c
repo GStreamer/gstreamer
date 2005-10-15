@@ -171,7 +171,7 @@ gst_index_factory_find (const gchar * name)
  * gst_index_factory_create:
  * @factory: the factory used to create the instance
  *
- * Create a new #GstIndex instance from the 
+ * Create a new #GstIndex instance from the
  * given indexfactory.
  *
  * Returns: A new #GstIndex instance.
@@ -201,7 +201,7 @@ gst_index_factory_create (GstIndexFactory * factory)
  * gst_index_factory_make:
  * @name: the name of the factory used to create the instance
  *
- * Create a new #GstIndex instance from the 
+ * Create a new #GstIndex instance from the
  * indexfactory with the given name.
  *
  * Returns: A new #GstIndex instance.

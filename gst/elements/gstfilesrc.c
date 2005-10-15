@@ -884,7 +884,7 @@ gst_file_src_start (GstBaseSrc * basesrc)
   } else
 #endif
   {
-    /* If not in mmap mode, we need to check if the underlying file is 
+    /* If not in mmap mode, we need to check if the underlying file is
      * seekable. */
     off_t res = lseek (src->fd, 0, SEEK_CUR);
 

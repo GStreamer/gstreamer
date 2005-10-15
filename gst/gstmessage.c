@@ -23,13 +23,13 @@
  * @short_description: Lightweight objects to signal the application of pipeline events
  * @see_also: #GstBus,#GstMiniObject
  *
- * Messages are implemented as a subclass of #GstMiniObject with a generic 
+ * Messages are implemented as a subclass of #GstMiniObject with a generic
  * #GstStructure as the content. This allows for writing custom messages without
  * requiring an API change while allowing a wide range of different types
  * of messages.
  *
- * Messages are posted by objects in the pipeline and are passed to the 
- * application using the #GstBus. 
+ * Messages are posted by objects in the pipeline and are passed to the
+ * application using the #GstBus.
  */
 
 #include <string.h>             /* memcpy */
@@ -99,7 +99,7 @@ static GstMessageQuarks message_quarks[] = {
  *
  * Get a printable name for the given message type. Do not modify or free.
  *
- * Returns: a reference to the static name of the message. 
+ * Returns: a reference to the static name of the message.
  */
 const gchar *
 gst_message_type_get_name (GstMessageType type)
@@ -311,7 +311,7 @@ gst_message_new_eos (GstObject * src)
  *
  * Create a new error message. The message will copy @error and
  * @debug. This message is posted by element when a fatal event
- * occured. The pipeline will probably (partially) stop. 
+ * occured. The pipeline will probably (partially) stop.
  *
  * Returns: The new error message.
  *
@@ -414,11 +414,11 @@ gst_message_new_state_changed (GstObject * src,
  * @clock: The clock it provides
  * @ready: TRUE if the sender can provide a clock
  *
- * Create a clock provide message. This message is posted whenever an 
+ * Create a clock provide message. This message is posted whenever an
  * element is ready to provide a clock or lost its ability to provide
  * a clock (maybe because it paused or became EOS).
  *
- * This message is mainly used internally to manage the clock 
+ * This message is mainly used internally to manage the clock
  * selection.
  *
  * Returns: The new provide clock message.
@@ -590,7 +590,7 @@ gst_message_new_element (GstObject * src, GstStructure * structure)
  * Access the structure of the message.
  *
  * Returns: The structure of the message. The structure is still
- * owned by the message, which means that you should not free it and 
+ * owned by the message, which means that you should not free it and
  * that the pointer becomes invalid when you free the message.
  *
  * MT safe.

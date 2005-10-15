@@ -43,7 +43,7 @@
  * reference can be removed by anyone at any time, by calling gst_object_sink().
  * gst_object_sink() does nothing if an object is already sunk (has no floating
  * reference).
- * 
+ *
  * When you add a GstElement to its parent container, the parent container will do
  * this:
  * <informalexample>
@@ -69,7 +69,7 @@
  * Another effect of this is, that calling gst_object_unref() on a bin object, will
  * also destoy all the GstElement objects in it. The same is true for calling
  * gst_bin_remove().
- * 
+ *
  * In contrast to GObject instances GstObject add a name property. The functions
  * gst_object_set_name() and gst_object_get_name() are used to set/get the name
  * of the object.
@@ -552,9 +552,9 @@ gst_object_finalize (GObject * object)
  * signals being emitted by the object itself, as well as in each parent
  * object. This is so that an application can connect a listener to the
  * top-level bin to catch property-change notifications for all contained
- * elements. 
+ * elements.
  *
- * This function is not MT safe in glib so we need to lock it with a 
+ * This function is not MT safe in glib so we need to lock it with a
  * classwide mutex.
  *
  * MT safe.
@@ -618,7 +618,7 @@ gst_object_dispatch_properties_changed (GObject * object,
   GST_CLASS_UNLOCK (klass);
 }
 
-/** 
+/**
  * gst_object_default_deep_notify:
  * @object: the #GObject that signalled the notify.
  * @orig: a #GstObject that initiated the notify.
@@ -626,9 +626,9 @@ gst_object_dispatch_properties_changed (GObject * object,
  * @excluded_props: a set of user-specified properties to exclude or
  *  NULL to show all changes.
  *
- * A default deep_notify signal callback for an element. The user data 
- * should contain a pointer to an array of strings that should be excluded 
- * from the notify. The default handler will print the new value of the property 
+ * A default deep_notify signal callback for an element. The user data
+ * should contain a pointer to an array of strings that should be excluded
+ * from the notify. The default handler will print the new value of the property
  * using g_print.
  *
  * MT safe. This function grabs and releases the object's LOCK or getting the
@@ -1127,7 +1127,7 @@ gst_object_get_property (GObject * object, guint prop_id,
  * the object hierarchy. Only useful (or used) for debugging.
  *
  * Returns: a string describing the path of the object. You must
- *          g_free() the string after usage. 
+ *          g_free() the string after usage.
  *
  * MT safe. Grabs and releases the object's LOCK for all objects
  *          in the hierarchy.

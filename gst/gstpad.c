@@ -24,21 +24,21 @@
  * @short_description: Object contained by elements that allows links to other elements
  * @see_also: #GstPadTemplate, #GstElement, #GstEvent
  *
- * A #GstElement is linked to other elements via "pads", which are extremely 
- * light-weight generic link points. 
- * After two pads are retrieved from an element with gst_element_get_pad(), 
+ * A #GstElement is linked to other elements via "pads", which are extremely
+ * light-weight generic link points.
+ * After two pads are retrieved from an element with gst_element_get_pad(),
  * the pads can be link with gst_pad_link(). (For quick links,
  * you can also use gst_element_link(), which will make the obvious
  * link for you if it's straightforward.)
  *
- * Pads are typically created from a #GstPadTemplate with 
+ * Pads are typically created from a #GstPadTemplate with
  * gst_pad_new_from_template().
  *
  * Pads have #GstCaps attached to it to describe the media type they are capable
- * of dealing with. 
+ * of dealing with.
  * gst_pad_get_caps() and gst_pad_try_set_caps() are used to manipulate the caps
- * of the pads. 
- * Pads created from a pad template cannot set capabilities that are 
+ * of the pads.
+ * Pads created from a pad template cannot set capabilities that are
  * incompatible with the pad template capabilities.
  *
  * Pads without pad templates can be created with gst_pad_new(),
@@ -47,11 +47,11 @@
  *
  * gst_pad_get_parent() will retrieve the #GstElement that owns the pad.
  *
- * A #GstElement creating a pad will typically use the various 
- * gst_pad_set_*_function() calls to register callbacks for various events 
+ * A #GstElement creating a pad will typically use the various
+ * gst_pad_set_*_function() calls to register callbacks for various events
  * on the pads.
  *
- * GstElements will use gst_pad_push() and gst_pad_pull() to push out 
+ * GstElements will use gst_pad_push() and gst_pad_pull() to push out
  * or pull in a buffer.
  * gst_pad_select() and gst_pad_selectv() are used by plugins to wait for the
  * first incoming buffer or event on any of the given set of pads.
@@ -454,7 +454,7 @@ gst_pad_get_property (GObject * object, guint prop_id,
  * @direction: the #GstPadDirection of the pad.
  *
  * Creates a new pad with the given name in the given direction.
- * If name is NULL, a guaranteed unique name (across all pads) 
+ * If name is NULL, a guaranteed unique name (across all pads)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
@@ -475,7 +475,7 @@ gst_pad_new (const gchar * name, GstPadDirection direction)
  * @name: the name of the element
  *
  * Creates a new pad with the given name from the given template.
- * If name is NULL, a guaranteed unique name (across all pads) 
+ * If name is NULL, a guaranteed unique name (across all pads)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
@@ -495,7 +495,7 @@ gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
  * @pad: a #GstPad to get the direction of.
  *
  * Gets the direction of the pad. The direction of the pad is
- * decided at construction time so this function does not take 
+ * decided at construction time so this function does not take
  * the LOCK.
  *
  * Returns: the #GstPadDirection of the pad.
@@ -912,7 +912,7 @@ had_right_state:
  * callback.
  *
  * Returns: TRUE if the pad could be blocked. This function can fail
- *   wrong parameters were passed or the pad was already in the 
+ *   wrong parameters were passed or the pad was already in the
  *   requested state.
  *
  * MT safe.
@@ -925,7 +925,7 @@ gst_pad_set_blocked (GstPad * pad, gboolean blocked)
 
 /**
  * gst_pad_is_blocked:
- * @pad: the #GstPad to query 
+ * @pad: the #GstPad to query
  *
  * Checks if the pad is blocked or not. This function returns the
  * last requested state of the pad. It is not certain that the pad
@@ -1204,14 +1204,14 @@ gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
  * gst_pad_set_link_function:
  * @pad: a #GstPad.
  * @link: the #GstPadLinkFunction to set.
- * 
+ *
  * Sets the given link function for the pad. It will be called when the pad is
  * linked or relinked with caps. The caps passed to the link function is
  * the caps for the connnection. It can contain a non fixed caps.
- * 
+ *
  * The return value GST_PAD_LINK_OK should be used when the connection can be
  * made.
- * 
+ *
  * The return value GST_PAD_LINK_REFUSED should be used when the connection
  * cannot be made for some reason.
  */
@@ -1247,7 +1247,7 @@ gst_pad_set_unlink_function (GstPad * pad, GstPadUnlinkFunction unlink)
  * gst_pad_set_getcaps_function:
  * @pad: a #GstPad.
  * @getcaps: the #GstPadGetCapsFunction to set.
- * 
+ *
  * Sets the given getcaps function for the pad. @getcaps should return the
  * allowable caps for a pad in the context of the element's state, its link to
  * other elements, and the devices or files it has opened. These caps must be a
@@ -1257,14 +1257,14 @@ gst_pad_set_unlink_function (GstPad * pad, GstPadUnlinkFunction unlink)
  * but this is discouraged.
  *
  * You do not need to call this function if @pad's allowed caps are always the
- * same as the pad template caps. This can only be true if the padtemplate 
+ * same as the pad template caps. This can only be true if the padtemplate
  * has fixed simple caps.
  *
  * For most filters, the caps returned by @getcaps is directly affected by the
  * allowed caps on other pads. For demuxers and decoders, the caps returned by
  * the srcpad's getcaps function is directly related to the stream data. Again,
  * @getcaps should return the most specific caps it reasonably can, since this
- * helps with autoplugging. 
+ * helps with autoplugging.
  *
  * Note that the return value from @getcaps is owned by the caller, so the caller
  * should unref the caps after usage.
@@ -1409,7 +1409,7 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   GST_UNLOCK (sinkpad);
   GST_UNLOCK (srcpad);
 
-  /* fire off a signal to each of the pads telling them 
+  /* fire off a signal to each of the pads telling them
    * that they've been unlinked */
   g_signal_emit (G_OBJECT (srcpad), gst_pad_signals[PAD_UNLINKED], 0, sinkpad);
   g_signal_emit (G_OBJECT (sinkpad), gst_pad_signals[PAD_UNLINKED], 0, srcpad);
@@ -1872,7 +1872,7 @@ was_dispatching:
  *
  * Gets the capabilities of the peer connected to this pad.
  *
- * Returns: the #GstCaps of the peer pad. This function returns a new caps, so use 
+ * Returns: the #GstCaps of the peer pad. This function returns a new caps, so use
  * gst_caps_unref to get rid of it. this function returns NULL if there is no
  * peer pad or when this function is called recursively from a getcaps function.
  */
@@ -2704,9 +2704,9 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
  * @dispatch: the #GstDispatcherFunction to call.
  * @data: gpointer user data passed to the dispatcher function.
  *
- * Invokes the given dispatcher function on all pads that are 
- * internally linked to the given pad. 
- * The GstPadDispatcherFunction should return TRUE when no further pads 
+ * Invokes the given dispatcher function on all pads that are
+ * internally linked to the given pad.
+ * The GstPadDispatcherFunction should return TRUE when no further pads
  * need to be processed.
  *
  * Returns: TRUE if one of the dispatcher functions returned TRUE.
@@ -2932,8 +2932,8 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
 #endif /* 0 */
 #endif /* GST_DISABLE_LOADSAVE */
 
-/* 
- * should be called with pad lock held 
+/*
+ * should be called with pad lock held
  *
  * MT safe.
  */
@@ -3205,7 +3205,7 @@ not_linked:
  *
  * Checks if a #gst_pad_pull_range() can be performed on the peer
  * source pad. This function is used by plugins that want to check
- * if they can use random access on the peer source pad. 
+ * if they can use random access on the peer source pad.
  *
  * The peer sourcepad can implement a custom #GstPadCheckGetRangeFunction
  * if it needs to perform some logic to determine if pull_range is
@@ -3272,7 +3272,7 @@ not_connected:
  * @size: The length of the buffer
  * @buffer: a pointer to hold the #GstBuffer.
  *
- * Calls the getrange function of @pad. 
+ * Calls the getrange function of @pad.
  *
  * Returns: a #GstFlowReturn from the pad.
  *
@@ -3585,7 +3585,7 @@ dropping:
  * @pad: the #GstPad to set the private data of.
  * @priv: The private data to attach to the pad.
  *
- * Set the given private data gpointer on the pad. 
+ * Set the given private data gpointer on the pad.
  * This function can only be used by the element that owns the pad.
  */
 void
@@ -3619,7 +3619,7 @@ gst_pad_get_element_private (GstPad * pad)
  * dataflow. This function will automatically acauire the STREAM_LOCK of
  * the pad before calling @func.
  *
- * Returns: a TRUE if the task could be started. 
+ * Returns: a TRUE if the task could be started.
  */
 gboolean
 gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
@@ -3646,7 +3646,7 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
  * gst_pad_pause_task:
  * @pad: the #GstPad to pause the task of
  *
- * Pause the task of @pad. This function will also make sure that the 
+ * Pause the task of @pad. This function will also make sure that the
  * function executed by the task will effectively stop.
  *
  * Returns: a TRUE if the task could be paused or FALSE when the pad
@@ -3684,7 +3684,7 @@ no_task:
  * gst_pad_stop_task:
  * @pad: the #GstPad to stop the task of
  *
- * Stop the task of @pad. This function will also make sure that the 
+ * Stop the task of @pad. This function will also make sure that the
  * function executed by the task will effectively stop if not called
  * from the GstTaskFunction.
  *

@@ -22,7 +22,7 @@
  * SECTION:gsttypefindfactory
  * @short_description: Information about registered typefind functions
  *
- * These functions allow querying informations about registered typefind 
+ * These functions allow querying informations about registered typefind
  * functions. How to create and register these functions is described in
  * the section <link linkend="gstreamer-Writing-typefind-functions">
  * "Writing typefind functions"</link>.
@@ -60,7 +60,7 @@
  *     GList *walk, *type_list;
  *     MyTypeFind find = {data, size, 0, NULL};
  *     GstTypeFind gst_find = {my_peek, my_suggest, &amp;find, };
- *     
+ *
  *     walk = type_list = gst_type_find_factory_get_list ();
  *     while (walk) {
  *       GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
@@ -160,7 +160,7 @@ gst_type_find_factory_dispose (GObject * object)
  *
  * Gets the list of all registered typefind factories. You must free the
  * list using g_list_free.
- * 
+ *
  * Returns: the list of all registered typefind factories
  */
 GList *
@@ -173,7 +173,7 @@ gst_type_find_factory_get_list (void)
 /**
  * gst_type_find_factory_get_caps:
  * @factory: a factory
- * 
+ *
  * Gets the caps associated with a typefind factory.
  *
  * Returns: the #GstCaps associated with this factory
@@ -189,7 +189,7 @@ gst_type_find_factory_get_caps (GstTypeFindFactory * factory)
 /**
  * gst_type_find_factory_get_extensions:
  * @factory: a factory
- * 
+ *
  * Gets the extensions associated with a typefind factory. The returned
  * array should not be changed. If you need to change stuff in it, you should
  * copy it using g_stdupv().  This function may return NULL to indicate
@@ -210,7 +210,7 @@ gst_type_find_factory_get_extensions (GstTypeFindFactory * factory)
  * @factory: a factory
  * @find: a properly setup #GstTypeFind entry. The get_data and suggest_type
  *        members must be set.
- * 
+ *
  * Calls the typefinding function associated with this factory.
  */
 void

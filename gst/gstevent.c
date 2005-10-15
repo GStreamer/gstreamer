@@ -92,7 +92,7 @@ static GstEventQuarks event_quarks[] = {
  *
  * Get a printable name for the given event type. Do not modify or free.
  *
- * Returns: a reference to the static name of the event. 
+ * Returns: a reference to the static name of the event.
  */
 const gchar *
 gst_event_type_get_name (GstEventType type)

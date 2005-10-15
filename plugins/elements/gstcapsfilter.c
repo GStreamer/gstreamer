@@ -226,9 +226,9 @@ gst_capsfilter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 /* Output buffer preparation... if the buffer has no caps, and
  * our allowed output caps is fixed, then give the caps to the
  * buffer.
- * This ensures that outgoing buffers have caps if we can, so 
+ * This ensures that outgoing buffers have caps if we can, so
  * that pipelines like:
- *   gst-launch filesrc location=rawsamples.raw ! 
+ *   gst-launch filesrc location=rawsamples.raw !
  *       audio/x-raw-int,width=16,depth=16,rate=48000,channels=2,
  *       endianness=4321,signed='(boolean)'true ! alsasink
  * will work.

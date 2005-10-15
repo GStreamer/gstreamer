@@ -54,9 +54,9 @@ struct _GstTypeFind {
   void		(* suggest)	(gpointer		data,
 				 guint			probability,
 				 const GstCaps *	caps);
-  
+
   gpointer	data;
-  
+
   /* optional */
   guint64	(* get_length)	(gpointer		data);
 
@@ -75,12 +75,12 @@ guint64		gst_type_find_get_length		(GstTypeFind *		find);
 
 /* registration interface */
 gboolean	gst_type_find_register			(GstPlugin *		plugin,
-							 const gchar *		name, 
+							 const gchar *		name,
 							 guint			rank,
 							 GstTypeFindFunction	func,
 							 gchar **		extensions,
 							 const GstCaps *	possible_caps,
-							 gpointer		data); 
+							 gpointer		data);
 
 G_END_DECLS
 

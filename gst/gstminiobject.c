@@ -192,7 +192,7 @@ gst_mini_object_copy (const GstMiniObject * mini_object)
  * if the reference count is one and the GST_MINI_OBJECT_FLAG_READONLY
  * flag is not set.  Modification of a mini-object should only be
  * done after verifying that it is writable.
- * 
+ *
  * MT safe
  *
  * Returns: TRUE if the object is writable.
@@ -243,7 +243,7 @@ gst_mini_object_ref (GstMiniObject * mini_object)
 {
   g_return_val_if_fail (mini_object != NULL, NULL);
   /* we cannot assert that the refcount > 0 since a bufferalloc
-   * function might resurect an object 
+   * function might resurect an object
    g_return_val_if_fail (mini_object->refcount > 0, NULL);
    */
 

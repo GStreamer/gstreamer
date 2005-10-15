@@ -50,7 +50,7 @@ typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
  * GstPadPresence:
  * @GST_PAD_ALWAYS: the pad is always available
  * @GST_PAD_SOMETIMES: the pad will become available depending on the media stream
- * @GST_PAD_REQUEST: the pad is only available on request with 
+ * @GST_PAD_REQUEST: the pad is only available on request with
  *  gst_element_request_pad_by_name() or gst_element_request_compatible_pad().
  *
  * Indicates when this pad will become available.

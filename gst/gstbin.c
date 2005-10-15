@@ -34,7 +34,7 @@
  * A new GstBin is created with gst_bin_new(). Use a #GstPipeline instead if you
  * want to create a toplevel bin because a normal bin doesn't have a bus or
  * handle clock distribution of its own.
- * 
+ *
  * After the bin has been created you will typically add elements to it with
  * gst_bin_add(). You can remove elements with gst_bin_remove().
  *
@@ -42,16 +42,16 @@
  * elements name. gst_bin_get_by_name_recurse_up() is mainly used for internal
  * purposes and will query the parent bins when the element is not found in the
  * current bin.
- * 
- * An iterator of elements in a bin can be retrieved with 
+ *
+ * An iterator of elements in a bin can be retrieved with
  * gst_bin_iterate_elements(). Various other iterators exist to retrieve the
  * elements in a bin.
- * 
+ *
  * The "element_added" signal is fired whenever a new element is added to the
  * bin. Likewise the "element_removed" signal is fired whenever an element is
  * removed from the bin.
  *
- * gst_object_unref() is used to destroy the bin. 
+ * gst_object_unref() is used to destroy the bin.
  */
 
 #include "gst_private.h"
@@ -1076,12 +1076,12 @@ unknown_state:
 }
 
 /***********************************************
- * Topologically sorted iterator 
+ * Topologically sorted iterator
  * see http://en.wikipedia.org/wiki/Topological_sorting
  *
  * For each element in the graph, an entry is kept in a HashTable
- * with its number of srcpad connections (degree). 
- * We then change state of all elements without dependencies 
+ * with its number of srcpad connections (degree).
+ * We then change state of all elements without dependencies
  * (degree 0) and decrement the degree of all elements connected
  * on the sinkpads. When an element reaches degree 0, its state is
  * changed next.
@@ -1297,13 +1297,13 @@ gst_bin_sort_iterator_free (GstBinSortIterator * bit)
  * sorted order. This means that the elements are returned from
  * the most downstream elements (sinks) to the sources.
  *
- * This function is used internally to perform the state changes 
+ * This function is used internally to perform the state changes
  * of the bin elements.
  *
  * Each element will have its refcount increased, so unref
  * after use.
  *
- * MT safe. 
+ * MT safe.
  *
  * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
  */
@@ -1625,7 +1625,7 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       gst_object_unref (src);
 
       /* we can lock, either the state change is sync and we can
-       * recursively lock or the state change is async and we 
+       * recursively lock or the state change is async and we
        * lock when the bin has done its state change. We can check which
        * case it is by looking at the CHANGING_STATE flag. */
       GST_STATE_LOCK (bin);

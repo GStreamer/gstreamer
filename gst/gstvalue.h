@@ -257,7 +257,7 @@ G_BEGIN_DECLS
 /**
  * GstValueCompareFunc:
  * @value1: first value for comparission
- * @value2: second value for comparission 
+ * @value2: second value for comparission
  *
  * Used together with gst_value_compare() to compare #GValues.
  *
@@ -266,20 +266,20 @@ G_BEGIN_DECLS
  */
 typedef int      (* GstValueCompareFunc)     (const GValue *value1,
 					      const GValue *value2);
-                                              
+
 typedef char *   (* GstValueSerializeFunc)   (const GValue *value1);
 
 typedef gboolean (* GstValueDeserializeFunc) (GValue       *dest,
 					      const char   *s);
-                                              
+
 typedef int      (* GstValueUnionFunc)       (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
-                                              
+
 typedef int      (* GstValueIntersectFunc)   (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
-                                              
+
 typedef int      (* GstValueSubtractFunc)    (GValue       *dest,
 					      const GValue *minuend,
 					      const GValue *subtrahend);

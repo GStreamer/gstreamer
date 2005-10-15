@@ -30,8 +30,8 @@ struct _graph_t {
 };
 
 
-/* 
- * Memory checking. Should probably be done with gsttrace stuff, but that 
+/*
+ * Memory checking. Should probably be done with gsttrace stuff, but that
  * doesn't really work.
  * This is not safe from reentrance issues, but that doesn't matter as long as
  * we lock a mutex before parsing anyway.
@@ -66,11 +66,11 @@ static inline void
 gst_parse_unescape (gchar *str)
 {
   gchar *walk;
-  
+
   g_return_if_fail (str != NULL);
-  
+
   walk = str;
-  
+
   while (*walk) {
     if (*walk == '\\')
       walk++;

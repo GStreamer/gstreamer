@@ -140,7 +140,7 @@ gst_registry_xml_get_perms_func (GstRegistry * registry)
 
   /* if the dir does not exist, make it. if that can't be done, flags = 0x0.
      if the file can be appended to, it's writable. if it can then be read,
-     it's readable. 
+     it's readable.
      After that check if it exists. */
 
   if (make_dir (registry->location) != TRUE) {
@@ -832,7 +832,7 @@ G_STMT_START{ 							\
 static gboolean
 gst_registry_xml_save_caps (GstRegistry * registry, const GstCaps * caps)
 {
-  /* we copy the caps here so we can simplify them before saving. This is a lot 
+  /* we copy the caps here so we can simplify them before saving. This is a lot
    * faster when loading them later on */
   char *s;
   GstCaps *copy = gst_caps_copy (caps);

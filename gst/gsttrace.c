@@ -406,8 +406,8 @@ gst_alloc_trace_print (const GstAllocTrace * trace)
 
 /**
  * gst_alloc_trace_set_flags:
- * @trace: the GstAllocTrace 
- * @flags: flags to set 
+ * @trace: the GstAllocTrace
+ * @flags: flags to set
  *
  * Enable the given features on the given GstAllocTrace object.
  */

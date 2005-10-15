@@ -964,7 +964,7 @@ gst_base_sink_wait (GstBaseSink * basesink, GstClockTime time)
 }
 
 /* perform synchronisation on a buffer
- * 
+ *
  * 1) check if we have a clock, if not, do nothing
  * 2) calculate the start and end time of the buffer
  * 3) create a single shot notification to wait on

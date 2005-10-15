@@ -56,7 +56,7 @@ void		gst_print_element_args		(GString *buf, gint indent, GstElement *element);
  * @type_as_function: the prefix for the functions
  * @parent_type: the parent type struct name
  * @parent_type_macro: the parent type macro
- * @additional_initializations: function pointer in the form of 
+ * @additional_initializations: function pointer in the form of
  * void additional_initializations (GType type) that can be used for
  * initializing interfaces and the like
  *

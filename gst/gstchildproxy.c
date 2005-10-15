@@ -59,7 +59,7 @@ static guint signals[LAST_SIGNAL] = { 0 };
  *
  * Looks up a child element by the given name.
  *
- * Implementors can use #GstObject together with gst_object_get_name() 
+ * Implementors can use #GstObject together with gst_object_get_name()
  *
  * Returns: the child object or %NULL if not found. Unref after usage.
  *
@@ -151,7 +151,7 @@ gst_child_proxy_get_children_count (GstChildProxy * parent)
  *
  * Looks up which object and #GParamSpec would be effected by the given @name.
  *
- * Returns: TRUE if @target and @pspec could be found. FALSE otherwise. In that 
+ * Returns: TRUE if @target and @pspec could be found. FALSE otherwise. In that
  * case the values for @pspec and @target are not modified. Unref @target after
  * usage.
  *
@@ -213,7 +213,7 @@ gst_child_proxy_lookup (GstObject * object, const gchar * name,
  * gst_child_proxy_get_property:
  * @object: object to query
  * @name: name of the property
- * @value: an uninitialized #GValue that should take the result. 
+ * @value: an uninitialized #GValue that should take the result.
  *
  * Gets a single property using the GstChildProxy mechanism.
  * You are responsible for for freeing it by calling g_value_unset()
@@ -401,7 +401,7 @@ gst_child_proxy_set (GstObject * object, const gchar * first_property_name, ...)
  * gst_child_proxy_child_added:
  * @object: the parent object
  * @child: the newly added child
- * 
+ *
  * Emits the "child-added" signal.
  */
 void
@@ -414,7 +414,7 @@ gst_child_proxy_child_added (GstObject * object, GstObject * child)
  * gst_child_proxy_child_removed:
  * @object: the parent object
  * @child: the newly added child
- * 
+ *
  * Emits the "child-removed" signal.
  */
 void

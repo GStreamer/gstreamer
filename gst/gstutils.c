@@ -1695,7 +1695,7 @@ gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
  * gst_pad_use_fixed_caps:
  * @pad: the pad to use
  *
- * A helper function you can use that sets the 
+ * A helper function you can use that sets the
  * @gst_pad_get_fixed_caps_func as the gstcaps function for the
  * pad. This way the function will always return the negotiated caps
  * or in case the pad is not negotiated, the padtemplate caps.
@@ -2306,7 +2306,7 @@ gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur,
  * @pad: a #GstPad to invoke the convert query on.
  * @src_format: a #GstFormat to convert from.
  * @src_val: a value to convert.
- * @dest_format: a pointer to the #GstFormat to convert to. 
+ * @dest_format: a pointer to the #GstFormat to convert to.
  * @dest_val: a pointer to the result.
  *
  * Queries a pad to convert @src_val in @src_format to @dest_format.

@@ -103,14 +103,14 @@ struct _GstQuery
   GstQueryType type;
 
   GstStructure *structure;
-  
+
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstQueryClass {
   GstMiniObjectClass mini_object_class;
-  
+
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -119,7 +119,7 @@ void            _gst_query_initialize          (void);
 GType		gst_query_get_type             (void);
 
 /* register a new query */
-GstQueryType    gst_query_type_register        (const gchar *nick, 
+GstQueryType    gst_query_type_register        (const gchar *nick,
                                                 const gchar *description);
 GstQueryType    gst_query_type_get_by_nick     (const gchar *nick);
 
@@ -129,7 +129,7 @@ gboolean        gst_query_types_contains       (const GstQueryType *types,
 
 /* query for query details */
 
-G_CONST_RETURN GstQueryTypeDefinition*      
+G_CONST_RETURN GstQueryTypeDefinition*
                 gst_query_type_get_details         (GstQueryType type);
 GstIterator*    gst_query_type_iterate_definitions (void);
 

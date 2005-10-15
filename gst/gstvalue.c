@@ -1355,7 +1355,7 @@ gst_string_wrap (const char *s)
   return d;
 }
 
-/* 
+/*
  * This function takes a string delimited with double quotes (")
  * and unescapes any \xxx octal numbers.
  *
@@ -1825,7 +1825,7 @@ gst_value_subtract_int_int_range (GValue * dest, const GValue * minuend,
   return FALSE;
 }
 
-/* creates a new int range based on input values. 
+/* creates a new int range based on input values.
  */
 static gboolean
 gst_value_create_new_range (GValue * dest, int min1, int max1, int min2,
@@ -2445,7 +2445,7 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
  * @subtrahend_type: type of the subtrahend
  * @func: function to use
  *
- * Registers @func as a function capable of subtracting the values of 
+ * Registers @func as a function capable of subtracting the values of
  * @subtrahend_type from values of @minuend_type.
  */
 void
@@ -3314,7 +3314,7 @@ _gst_value_initialize (void)
     /* Not using G_TYPE_DATE here on purpose, even if we could
      * if GLIB_CHECK_VERSION(2,8,0) was true: we don't want the
      * serialised strings to have different type strings depending
-     * on what version is used, so FIXME in 0.11 when we 
+     * on what version is used, so FIXME in 0.11 when we
      * require GLib-2.8 */
     gst_type_date = g_boxed_type_register_static ("GstDate",
         (GBoxedCopyFunc) gst_date_copy, (GBoxedFreeFunc) g_date_free);

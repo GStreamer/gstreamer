@@ -41,10 +41,10 @@ GST_DEBUG_CATEGORY_EXTERN (gst_type_find_debug);
  * @func: the function to use for typefinding
  * @extensions: optional extensions that could belong to this type
  * @possible_caps: optionally the caps that could be returned when typefinding succeeds
- * @data: optional user data. This user data must be available until the plugin 
+ * @data: optional user data. This user data must be available until the plugin
  *	  is unloaded.
  *
- * Registers a new typefind function to be used for typefinding. After 
+ * Registers a new typefind function to be used for typefinding. After
  * registering this function will be available for typefinding.
  * This function is typically called during an element's plugin initialization.
  *
@@ -93,9 +93,9 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
  * @offset: the offset
  * @size: the number of bytes to return
  *
- * Returns size bytes of the stream to identify beginning at offset. If offset 
+ * Returns size bytes of the stream to identify beginning at offset. If offset
  * is a positive number, the offset is relative to the beginning of the stream,
- * if offset is a negative number the offset is relative to the end of the 
+ * if offset is a negative number the offset is relative to the end of the
  * stream. The returned memory is valid until the typefinding function returns
  * and must not be freed.
  * If NULL is returned, that data is not available.
@@ -138,7 +138,7 @@ gst_type_find_suggest (GstTypeFind * find, guint probability,
  * @find: the find object the function was called with
  *
  * Get the length of the data stream.
- * 
+ *
  * Returns: the length of the data stream or 0 if it is not available.
  */
 guint64

@@ -28,14 +28,14 @@
  *
  * GStreamer's debugging subsystem is an easy way to get information about what
  * the application is doing.
- * It is not meant for programming errors. Use GLib methods (g_warning and 
+ * It is not meant for programming errors. Use GLib methods (g_warning and
  * friends) for that.
  *
  * The debugging subsystem works only after GStreamer has been initialized
  * - for example by calling gst_init().
  *
  * The debugging subsystem is used to log informational messages while the
- * application runs. 
+ * application runs.
  * Each messages has some properties attached to it. Among these properties
  * are the debugging category, the severity (called "level" here) and an
  * optional
@@ -43,10 +43,10 @@
  * debugging handlers, which then handle the messages. GStreamer attaches a
  * default handler on startup, which outputs requested messages to stderr.
  *
- * Messages are output by using shortcut macros like #GST_DEBUG, 
+ * Messages are output by using shortcut macros like #GST_DEBUG,
  * #GST_CAT_ERROR_OBJECT or similar. These all expand to calling gst_debug_log()
  * with the right parameters.
- * The only thing a developer will probably want to do is define his own 
+ * The only thing a developer will probably want to do is define his own
  * categories. This is easily done with 3 lines. At the top of your code,
  * declare
  * the variables and set the default category.
@@ -64,7 +64,7 @@
  * </programlisting>
  * </informalexample>
  * Initialization must be done before the category is used first.
- * Plugins do this 
+ * Plugins do this
  * in their plugin_init function, libraries and applications should do that
  * during their initialization.
  *
@@ -79,11 +79,11 @@
  * subsystem was compiled out, #GST_DISABLE_GST_DEBUG is defined in
  * &lt;gst/gst.h&gt;,
  * so you can check that before doing your trick.
- * Disabling the debugging subsystem will give you a slight (read: unnoticable) 
- * speed increase and will reduce the size of your compiled code. The GStreamer 
+ * Disabling the debugging subsystem will give you a slight (read: unnoticable)
+ * speed increase and will reduce the size of your compiled code. The GStreamer
  * library itself becomes around 10% smaller.
  *
- * Please note that there are naming conventions for the names of debugging 
+ * Please note that there are naming conventions for the names of debugging
  * categories. These are explained at GST_DEBUG_CATEGORY_INIT().
  */
 
@@ -260,7 +260,7 @@ __gst_in_valgrind (void)
 
 /**
  * _gst_debug_init:
- * 
+ *
  * Initializes the debugging system.
  * Normally you don't want to call this, because gst_init does it for you.
  */
@@ -366,7 +366,7 @@ _gst_debug_init (void)
  * @object: the object this message relates to or NULL if none
  * @format: a printf style format string
  * @...: optional arguments for the format
- * 
+ *
  * Logs the given message using the currently registered debugging handlers.
  */
 void
@@ -392,7 +392,7 @@ gst_debug_log (GstDebugCategory * category, GstDebugLevel level,
  * @object: the object this message relates to or NULL if none
  * @format: a printf style format string
  * @args: optional arguments for the format
- * 
+ *
  * Logs the given message using the currently registered debugging handlers.
  */
 void
@@ -492,11 +492,11 @@ gst_debug_print_object (gpointer ptr)
 /**
  * gst_debug_construct_term_color:
  * @colorinfo: the color info
- * 
+ *
  * Constructs a string that can be used for getting the desired color in color
  * terminals.
  * You need to free the string after use.
- * 
+ *
  * Returns: a string containing the color definition
  */
 gchar *
@@ -537,11 +537,11 @@ gst_debug_construct_term_color (guint colorinfo)
  * @message: the actual message
  * @object: the object this message relates to or NULL if none
  * @unused: an unused variable, reserved for some user_data.
- * 
+ *
  * The default logging handler used by GStreamer. Logging functions get called
  * whenever a macro like GST_DEBUG or similar is used. This function outputs the
  * message and additional info using the glib error handler.
- * You can add other handlers by using #gst_debug_add_log_function. 
+ * You can add other handlers by using #gst_debug_add_log_function.
  * And you can remove this handler by calling
  * gst_debug_remove_log_function (gst_debug_log_default);
  */
@@ -603,9 +603,9 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 /**
  * gst_debug_level_get_name:
  * @level: the level to get the name for
- * 
+ *
  * Get the string trepresentation of a debugging level
- * 
+ *
  * Returns: the name
  */
 const gchar *
@@ -634,7 +634,7 @@ gst_debug_level_get_name (GstDebugLevel level)
  * gst_debug_add_log_function:
  * @func: the function to use
  * @data: user data
- * 
+ *
  * Adds the logging function to the list of logging functions.
  * Be sure to use G_GNUC_NO_INSTRUMENT on that function, it is needed.
  */
@@ -652,7 +652,7 @@ gst_debug_add_log_function (GstLogFunction func, gpointer data)
   /* FIXME: we leak the old list here - other threads might access it right now
    * in gst_debug_logv. Another solution is to lock the mutex in gst_debug_logv,
    * but that is waaay costly.
-   * It'd probably be clever to use some kind of RCU here, but I don't know 
+   * It'd probably be clever to use some kind of RCU here, but I don't know
    * anything about that.
    */
   g_static_mutex_lock (&__log_func_mutex);
@@ -708,9 +708,9 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
 /**
  * gst_debug_remove_log_function:
  * @func: the log function to remove
- * 
+ *
  * Removes all registrered instances of the given logging functions.
- * 
+ *
  * Returns: How many instances of the function were removed
  */
 guint
@@ -732,9 +732,9 @@ gst_debug_remove_log_function (GstLogFunction func)
 /**
  * gst_debug_remove_log_function_by_data:
  * @data: user data of the log function to remove
- * 
+ *
  * Removes all registrered instances of log functions with the given user data.
- * 
+ *
  * Returns: How many instances of the function were removed
  */
 guint
@@ -755,7 +755,7 @@ gst_debug_remove_log_function_by_data (gpointer data)
 /**
  * gst_debug_set_colored:
  * @colored: Whether to use colored output or not
- * 
+ *
  * Sets or unsets the use of coloured debugging output.
  */
 void
@@ -766,9 +766,9 @@ gst_debug_set_colored (gboolean colored)
 
 /**
  * gst_debug_is_colored:
- * 
+ *
  * Checks if the debugging output should be colored.
- * 
+ *
  * Returns: TRUE, if the debug output should be colored.
  */
 gboolean
@@ -780,7 +780,7 @@ gst_debug_is_colored (void)
 /**
  * gst_debug_set_active:
  * @active: Whether to use debugging output or not
- * 
+ *
  * If activated, debugging messages are sent to the debugging
  * handlers.
  * It makes sense to deactivate it for speed issues.
@@ -795,9 +795,9 @@ gst_debug_set_active (gboolean active)
 
 /**
  * gst_debug_is_active:
- * 
+ *
  * Checks if debugging output is activated.
- * 
+ *
  * Returns: TRUE, if debugging is activated
  */
 gboolean
@@ -809,7 +809,7 @@ gst_debug_is_active (void)
 /**
  * gst_debug_set_default_threshold:
  * @level: level to set
- * 
+ *
  * Sets the default threshold to the given level and updates all categories to
  * use this threshold.
  */
@@ -822,9 +822,9 @@ gst_debug_set_default_threshold (GstDebugLevel level)
 
 /**
  * gst_debug_get_default_threshold:
- * 
+ *
  * Returns the default threshold that is used for new categories.
- * 
+ *
  * Returns: the default threshold level
  */
 GstDebugLevel
@@ -1256,7 +1256,7 @@ __cyg_profile_func_exit (void *this_fn, void *call_site)
  * gst_debug_print_stack_trace:
  *
  * If GST_ENABLE_FUNC_INSTRUMENTATION is defined a stacktracke is available for
- * gstreamer code, which can be printed with this function. 
+ * gstreamer code, which can be printed with this function.
  */
 void
 gst_debug_print_stack_trace (void)

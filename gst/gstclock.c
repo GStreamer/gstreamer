@@ -327,7 +327,7 @@ unscheduled:
 /**
  * gst_clock_id_wait_async:
  * @id: a #GstClockID to wait on
- * @func: The callback function 
+ * @func: The callback function
  * @user_data: User data passed in the calback
  *
  * Register a callback on the given clockid with the given
@@ -623,7 +623,7 @@ gst_clock_get_time (GstClock * clock)
  *
  * Adjusts the current time of the clock with the adjust value.
  * A positive value moves the clock forwards and a backwards value
- * moves it backwards. Note that _get_time() always returns 
+ * moves it backwards. Note that _get_time() always returns
  * increasing values so when you move the clock backwards, _get_time()
  * will report the previous value until the clock catches up.
  *

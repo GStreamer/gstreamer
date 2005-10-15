@@ -554,9 +554,9 @@ gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
  *
  * Before entries can be added to the index, a writer
  * should obtain a unique id. The methods to add new entries
- * to the index require this id as an argument. 
+ * to the index require this id as an argument.
  *
- * The application can implement a custom function to map the writer object 
+ * The application can implement a custom function to map the writer object
  * to a string. That string will be used to register or look up an id
  * in the index.
  *
@@ -681,7 +681,7 @@ gst_index_add_associationv (GstIndex * index, gint id, GstAssocFlags flags,
  * @id: the id of the index writer
  * @flags: optinal flags for this entry
  * @format: the format of the value
- * @value: the value 
+ * @value: the value
  * @...: other format/value pairs or 0 to end the list
  *
  * Associate given format/value pairs with each other.
@@ -744,7 +744,7 @@ gst_index_add_association (GstIndex * index, gint id, GstAssocFlags flags,
  * @object: a pointer to the object to add
  *
  * Add the given object to the index with the given key.
- * 
+ *
  * Returns: a pointer to the newly added entry in the index.
  */
 GstIndexEntry *
@@ -841,7 +841,7 @@ gst_index_get_assoc_entry_full (GstIndex * index, gint id,
  *
  * Gets alternative formats associated with the indexentry.
  *
- * Returns: TRUE if there was a value associated with the given 
+ * Returns: TRUE if there was a value associated with the given
  * format.
  */
 gboolean

@@ -148,21 +148,21 @@ struct _GstBaseTransformClass {
   gboolean       passthrough_on_same_caps;
 
   /* Subclasses can override this to do their own allocation of output buffers.
-   * Elements that only do analysis can return a subbuffer or even just 
+   * Elements that only do analysis can return a subbuffer or even just
    * increment the reference to the input buffer (if in passthrough mode)
    */
-  GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans, 
+  GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans,
      GstBuffer *input, gint size, GstCaps *caps, GstBuffer **buf);
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING - 2];
 };
 
-void		gst_base_transform_set_passthrough (GstBaseTransform *trans, 
+void		gst_base_transform_set_passthrough (GstBaseTransform *trans,
 	            gboolean passthrough);
 gboolean	gst_base_transform_is_passthrough (GstBaseTransform *trans);
 
-void		gst_base_transform_set_in_place (GstBaseTransform *trans, 
+void		gst_base_transform_set_in_place (GstBaseTransform *trans,
 	            gboolean in_place);
 gboolean	gst_base_transform_is_in_place (GstBaseTransform *trans);
 

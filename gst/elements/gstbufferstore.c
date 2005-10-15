@@ -284,7 +284,7 @@ gst_buffer_store_clear (GstBufferStore * store)
  * @store: a bufferstore
  * @buffer: the buffer to add
  *
- * Adds a buffer to the buffer store. 
+ * Adds a buffer to the buffer store.
  *
  * Returns: TRUE, if the buffer was added, FALSE if an error occured.
  */
@@ -317,7 +317,7 @@ gst_buffer_store_add_buffer (GstBufferStore * store, GstBuffer * buffer)
  * data is not available inside the store, NULL is returned. You have to unref
  * the buffer after use.
  *
- * Returns: a buffer with the requested data or NULL if the data was not 
+ * Returns: a buffer with the requested data or NULL if the data was not
  *          available.
  */
 GstBuffer *

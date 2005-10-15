@@ -47,7 +47,7 @@ typedef struct _GstIndexFactoryClass GstIndexFactoryClass;
  */
 struct _GstIndexFactory {
   GstPluginFeature feature;
-	    
+
   gchar *longdesc;            /* long description of the index (well, don't overdo it..) */
   GType type;                 /* unique GType of the index */
 
@@ -55,14 +55,14 @@ struct _GstIndexFactory {
 };
 
 struct _GstIndexFactoryClass {
-  GstPluginFeatureClass parent; 
+  GstPluginFeatureClass parent;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
 GType 			gst_index_factory_get_type 	(void);
 
-GstIndexFactory*	gst_index_factory_new 		(const gchar *name, 
+GstIndexFactory*	gst_index_factory_new 		(const gchar *name,
 							 const gchar *longdesc, GType type);
 void 			gst_index_factory_destroy	(GstIndexFactory *factory);
 

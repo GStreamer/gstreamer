@@ -242,7 +242,7 @@ gst_structure_copy (const GstStructure * structure)
 }
 
 /**
- * gst_structure_free: 
+ * gst_structure_free:
  * @structure: the #GstStructure to free
  *
  * Frees a #GstStructure and all its fields and values. The structure must not
@@ -546,7 +546,7 @@ gst_structure_get_value (const GstStructure * structure,
  *
  * Accessor function.
  *
- * Returns: the #GValue corresponding to the field with the given name 
+ * Returns: the #GValue corresponding to the field with the given name
  *          identifier.
  */
 const GValue *
@@ -652,7 +652,7 @@ gst_structure_remove_fields_valist (GstStructure * structure,
  * gst_structure_remove_all_fields:
  * @structure: a #GstStructure
  *
- * Removes all fields in a GstStructure. 
+ * Removes all fields in a GstStructure.
  */
 void
 gst_structure_remove_all_fields (GstStructure * structure)
@@ -1256,7 +1256,7 @@ gst_structure_value_get_generic_type (GValue * val)
  * @structure: a #GstStructure
  *
  * Converts @structure to a human-readable representation.
- * 
+ *
  * Returns: a pointer to string allocated by g_malloc()
  */
 gchar *
@@ -1294,11 +1294,11 @@ gst_structure_to_string (const GstStructure * structure)
 }
 
 /*
- * r will still point to the string. if end == next, the string will not be 
+ * r will still point to the string. if end == next, the string will not be
  * null-terminated. In all other cases it will be.
  * end = pointer to char behind end of string, next = pointer to start of
  * unread data.
- * THIS FUNCTION MODIFIES THE STRING AND DETECTS INSIDE A NONTERMINATED STRING 
+ * THIS FUNCTION MODIFIES THE STRING AND DETECTS INSIDE A NONTERMINATED STRING
  */
 static gboolean
 gst_structure_parse_string (gchar * s, gchar ** end, gchar ** next)

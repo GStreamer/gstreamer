@@ -183,7 +183,7 @@ escape_string_internal (const gchar * string, UnsafeCharacterSet mask)
  * escape_string:
  * @string: string to be escaped
  *
- * Escapes @string, replacing any and all special characters 
+ * Escapes @string, replacing any and all special characters
  * with equivalent escape sequences.
  *
  * Return value: a newly allocated string equivalent to @string
@@ -229,11 +229,11 @@ unescape_character (const char *scanner)
  * considered "illegal", '\0' is automatically in this list.
  *
  * Decodes escaped characters (i.e. PERCENTxx sequences) in @escaped_string.
- * Characters are encoded in PERCENTxy form, where xy is the ASCII hex code 
+ * Characters are encoded in PERCENTxy form, where xy is the ASCII hex code
  * for character 16x+y.
- * 
- * Return value: a newly allocated string with the unescaped equivalents, 
- * or %NULL if @escaped_string contained one of the characters 
+ *
+ * Return value: a newly allocated string with the unescaped equivalents,
+ * or %NULL if @escaped_string contained one of the characters
  * in @illegal_characters.
  **/
 static char *
@@ -360,7 +360,7 @@ gst_uri_get_protocol (const gchar * uri)
  * @uri: URI to get the location from
  *
  * Extracts the location out of a given valid URI. So the protocol and "://"
- * are stripped from the URI. The returned string must be freed using 
+ * are stripped from the URI. The returned string must be freed using
  * g_free().
  *
  * Returns: The location for this URI.
@@ -457,8 +457,8 @@ sort_by_rank (gconstpointer a, gconstpointer b)
  * @uri: URI to create element for
  * @elementname: optional name of created element
  *
- * Creates an element for handling the given URI. 
- * 
+ * Creates an element for handling the given URI.
+ *
  * Returns: a new element or NULL if none could be created
  */
 GstElement *

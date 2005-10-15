@@ -54,7 +54,7 @@ struct _GstTee {
   gint pad_counter;
   guint64 offset;
   GstActivateMode sink_mode;
-  
+
   gchar    *last_message;
 };
 

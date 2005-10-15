@@ -32,11 +32,11 @@
  * a powerful negotiation framework.  Plugins are heavily used to provide for
  * all elements, allowing one to construct plugins outside of the GST
  * library, even released binary-only if license require (please don't).
- * 
+ *
  * GStreamer borrows heavily from both the <ulink
  * url="http://www.cse.ogi.edu/sysl/">OGI media pipeline</ulink> and
  * Microsoft's DirectShow, hopefully taking the best of both and leaving the
- * cruft behind.  Its interface is still very fluid and thus can be changed 
+ * cruft behind.  Its interface is still very fluid and thus can be changed
  * to increase the sanity/noise ratio.
  *
  * The <application>GStreamer</application> library should be initialized with
@@ -47,7 +47,7 @@
  * <example>
  * <title>Initializing the gstreamer library</title>
  * <programlisting language="c">
- * int 
+ * int
  * main (int argc, char *argv[])
  * {
  *   // initialize the GStreamer library
@@ -56,7 +56,7 @@
  * }
  * </programlisting>
  * </example>
- * 
+ *
  * It's allowed to pass two NULL pointers to gst_init() in case you don't want to
  * pass the command line args to GStreamer.
  *
@@ -67,8 +67,8 @@
  * <programlisting>
  * static gboolean stats = FALSE;
  * ...
- *  
- * int 
+ *
+ * int
  * main (int argc, char *argv[])
  * {
  *   struct poptOption options[] = {
@@ -76,10 +76,10 @@
  *         "Show pad stats", NULL},
  *       POPT_TABLEEND
  *     };
- *   
+ *
  *   // initialize the GStreamer library
  *   gst_init_with_popt_table (&amp;argc, &amp;argv, options);
- *   
+ *
  *   ...
  * }
  * </programlisting>

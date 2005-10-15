@@ -22,14 +22,14 @@
  * @short_description: object to splice and merge buffers to desired size
  * @see_also: #GstBytestream, #GstFilePad
  *
- * This class is for elements that receive buffers in an undesired size. 
- * While for example raw video contains one image per buffer, the same is not 
- * true for a lot of other formats, especially those that come directly from 
- * a file. So if you have undefined buffer sizes and require a specific size, 
+ * This class is for elements that receive buffers in an undesired size.
+ * While for example raw video contains one image per buffer, the same is not
+ * true for a lot of other formats, especially those that come directly from
+ * a file. So if you have undefined buffer sizes and require a specific size,
  * this object is for you.
  *
  * The theory of operation is like this: All buffers received are put
- * into the adapter using gst_adapter_push() and the data is then read back 
+ * into the adapter using gst_adapter_push() and the data is then read back
  * in chunks of the desired size using gst_adapter_peek(). After the data is
  * processed, it is freed using gst_adapter_flush(). An example function that
  * needs to process data in 10 byte chunks could look like this:
@@ -51,10 +51,10 @@
  * For another example, a simple element inside GStreamer that uses GstAdapter
  * is the libvisual element.
  *
- * A last thing to note is that while GstAdapter is pretty optimized, 
- * merging buffers still might be an operation that requires a memcpy() 
- * operation, and this operation is not the fastest. Because of this, some 
- * functions like gst_adapter_available_fast() are provided to help speed up 
+ * A last thing to note is that while GstAdapter is pretty optimized,
+ * merging buffers still might be an operation that requires a memcpy()
+ * operation, and this operation is not the fastest. Because of this, some
+ * functions like gst_adapter_available_fast() are provided to help speed up
  * such cases should you want to.
  */
 
@@ -152,7 +152,7 @@ gst_adapter_clear (GstAdapter * adapter)
  * @adapter: a #GstAdapter
  * @buf: the #GstBuffer to queue into the adapter
  *
- * Adds the data from @buf to the data stored inside @adapter and takes 
+ * Adds the data from @buf to the data stored inside @adapter and takes
  * ownership of the buffer.
  */
 void
@@ -295,8 +295,8 @@ gst_adapter_take (GstAdapter * adapter, guint nbytes)
  * gst_adapter_available:
  * @adapter: a #GstAdapter
  *
- * Gets the maximum amount of bytes available, that is it returns the maximum 
- * value that can be supplied to gst_adapter_peek() without that function 
+ * Gets the maximum amount of bytes available, that is it returns the maximum
+ * value that can be supplied to gst_adapter_peek() without that function
  * returning NULL.
  *
  * Returns: amount of bytes available in @adapter

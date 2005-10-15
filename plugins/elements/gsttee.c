@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *               2000,2001,2002,2003,2004,2005 Wim Taymans <wim@fluendo.com>
- *               
+ *
  *
  * gsttee.c: Tee element, one in N out
  *
