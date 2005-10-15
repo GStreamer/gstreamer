@@ -1,3 +1,8 @@
+2005-10-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstevent.h:
+	  Oops, add missing closing bracket.
+
 2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
