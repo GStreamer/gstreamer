@@ -1,6 +1,64 @@
 2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
+	  correctly make conditionals
+	* gst/elements/Makefile.am:
+	* gst/elements/gstelements.c:
+	  fix typo causing fdsrc not to build
+
+2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/Makefile.am:
+	* testsuite/bytestream/.cvsignore:
+	* testsuite/bytestream/Makefile.am:
+	* testsuite/bytestream/filepadsink.c:
+	* testsuite/bytestream/gstbstest.c:
+	* testsuite/bytestream/test1.c:
+	* testsuite/bytestream/testfile1:
+	* testsuite/caps/normalisation.c:
+	* testsuite/caps/random.c: (main):
+	* testsuite/cleanup/.cvsignore:
+	* testsuite/cleanup/Makefile.am:
+	* testsuite/cleanup/cleanup1.c:
+	* testsuite/cleanup/cleanup2.c:
+	* testsuite/cleanup/cleanup3.c:
+	* testsuite/cleanup/cleanup4.c:
+	* testsuite/cleanup/cleanup5.c:
+	* testsuite/controller/interpolator.c:
+	* testsuite/debug/printf_extension.c: (main):
+	* testsuite/elements/tee.c:
+	* testsuite/negotiation/.cvsignore:
+	* testsuite/negotiation/Makefile.am:
+	* testsuite/negotiation/pad_link.c:
+	* testsuite/pad/Makefile.am:
+	* testsuite/pad/chainnopull.c:
+	* testsuite/pad/getnopush.c:
+	* testsuite/pad/link.c:
+	* testsuite/refcounting/sched.c: (create_pipeline):
+	* testsuite/registry/Makefile.am:
+	* testsuite/registry/gst-print-formats.c:
+	* testsuite/schedulers/.cvsignore:
+	* testsuite/schedulers/142183-2.c:
+	* testsuite/schedulers/142183.c:
+	* testsuite/schedulers/143777-2.c:
+	* testsuite/schedulers/143777.c:
+	* testsuite/schedulers/147713.c:
+	* testsuite/schedulers/147819.c:
+	* testsuite/schedulers/147894-2.c:
+	* testsuite/schedulers/147894.c:
+	* testsuite/schedulers/Makefile.am:
+	* testsuite/schedulers/group_link.c:
+	* testsuite/schedulers/queue_link.c:
+	* testsuite/schedulers/relink.c:
+	* testsuite/schedulers/unlink.c:
+	* testsuite/schedulers/unref.c:
+	* testsuite/schedulers/useless_iteration.c:
+	* testsuite/states/bin.c:
+	  clean out/remove some stuff from the testsuite directories
+
+2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
 	  check for some headers
 	* gst/elements/Makefile.am:
 	* gst/elements/gstelements.c:

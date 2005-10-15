@@ -379,7 +379,8 @@ AC_HEADER_STDC
 
 dnl Check for ucontext.h
 AC_CHECK_HEADERS([ucontext.h])
-AC_CHECK_HEADERS([sys/socket.h])
+AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
+echo $HAVE_SYS_SOCKET_H
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 
 dnl *** checks for library functions ***
@@ -396,13 +397,13 @@ AC_CHECK_FUNCS([fsetpos])
 
 dnl check for mmap()
 AC_FUNC_MMAP
-AM_CONDITIONAL(HAVE_MMAP, test "x$HAVE_MMAP" = "xyes")
+AM_CONDITIONAL(HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" = "xyes")
 
 dnl common/m4/gst-mcsc.m4
 dnl check for makecontext and define HAVE_MAKECONTEXT if we have it
 AC_CHECK_MCSC
 if test "$ac_cv_check_mcsc" = "yes"; then
-  AC_DEFINE_UNQUOTED(HAVE_MAKECONTEXT, $HAVE_MAKECONTEXT,
+  AC_DEFINE_UNQUOTED(HAVE_MAKECONTEXT, 1,
                      [defined if we have makecontext ()])
 fi
 
@@ -646,20 +647,14 @@ tests/seeking/Makefile
 tests/sched/Makefile
 tests/threadstate/Makefile
 testsuite/Makefile
-testsuite/bytestream/Makefile
 testsuite/caps/Makefile
-testsuite/cleanup/Makefile
-testsuite/controller/Makefile
 testsuite/debug/Makefile
 testsuite/dlopen/Makefile
 testsuite/elements/Makefile
 testsuite/indexers/Makefile
-testsuite/negotiation/Makefile
-testsuite/pad/Makefile
 testsuite/parse/Makefile
 testsuite/plugin/Makefile
 testsuite/refcounting/Makefile
-testsuite/schedulers/Makefile
 testsuite/states/Makefile
 testsuite/threads/Makefile
 testsuite/trigger/Makefile

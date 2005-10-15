@@ -18,7 +18,7 @@ libgstelements_la_SOURCES =	\
 	gstcapsfilter.c		\
 	gstfakesrc.c		\
 	gstfakesink.c		\
-	$(GSTFDRSRC)		\
+	$(GSTFDSRC)		\
 	gstfilesink.c		\
 	gstfilesrc.c		\
 	gstidentity.c		\
