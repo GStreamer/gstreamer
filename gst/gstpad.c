@@ -1939,7 +1939,7 @@ fixate_value (GValue * dest, const GValue * src)
     g_value_unset (&temp);
   } else if (G_VALUE_TYPE (src) == GST_TYPE_ARRAY) {
     gboolean res = FALSE;
-    gint n;
+    guint n;
 
     g_value_init (dest, GST_TYPE_ARRAY);
     for (n = 0; n < gst_value_list_get_size (src); n++) {
@@ -1991,7 +1991,7 @@ void
 gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
 {
   GstPadFixateCapsFunction fixatefunc;
-  gint n;
+  guint n;
 
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (caps != NULL);
