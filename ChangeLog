@@ -1,5 +1,11 @@
 2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  add srcdir, builddir includes to GST_ALL_CFLAGS, since
+	  everything that uses GStreamer API should have the includes
+
+2005-10-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstvalue.c: (gst_date_get_type), (_gst_value_initialize):
 	* gst/gstvalue.h:

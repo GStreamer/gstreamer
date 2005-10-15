@@ -578,10 +578,13 @@ AC_SUBST(GST_OPTION_CFLAGS)
 
 dnl GST_ALL_*
 dnl vars common to for all internal objects (core libs, elements, applications)
-dnl CFLAGS: XML needs to be added because xmlPtr is used in core
+dnl CFLAGS:
+dnl - XML needs to be added because xmlPtr is used in core
+dnl - src and build dirs need to be added because every piece that gets built
+dnl   will need the GStreamer source and generated headers
 dnl LIBS: XML doesn't need to be added because we don't explicitly use symbols
 dnl       from LibXML
-GST_ALL_CFLAGS="$GLIB_CFLAGS $XML_CFLAGS \$(GST_OPTION_CFLAGS)"
+GST_ALL_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir) $GLIB_CFLAGS $XML_CFLAGS \$(GST_OPTION_CFLAGS)"
 dnl FIXME: check if LTLIBINTL is needed everywhere
 dnl I presume it is given that it contains the symbols that _() stuff maps to
 GST_ALL_LIBS="$GLIB_LIBS $LTLIBINTL"
@@ -594,7 +597,7 @@ AC_SUBST(GST_ALL_LDFLAGS)
 
 dnl GST_OBJ_*
 dnl default vars for all internal objects built on libgstreamer
-GST_OBJ_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) \$(GST_ALL_CFLAGS)"
+GST_OBJ_CFLAGS="\$(GST_ALL_CFLAGS)"
 GST_OBJ_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la \$(GST_ALL_LIBS)"
 GST_OBJ_LDFLAGS="$GST_LT_LDFLAGS $GST_ALL_LDFLAGS"
 AC_SUBST(GST_OBJ_CFLAGS)
