@@ -16,9 +16,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <string.h>
-#include <gst/gst.h>
+
 #include "gstpngdec.h"
+
+#include <string.h>
 #include <gst/video/video.h>
 
 static GstElementDetails gst_pngdec_details = {
@@ -28,27 +29,16 @@ static GstElementDetails gst_pngdec_details = {
   "Wim Taymans <wim@fluendo.com>",
 };
 
-
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-};
+GST_DEBUG_CATEGORY (pngdec_debug);
+#define GST_CAT_DEFAULT pngdec_debug
 
 static void gst_pngdec_base_init (gpointer g_class);
 static void gst_pngdec_class_init (GstPngDecClass * klass);
 static void gst_pngdec_init (GstPngDec * pngdec);
 
-static void gst_pngdec_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_pngdec_chain (GstPad * pad, GstBuffer * buf);
 
 static GstElementClass *parent_class = NULL;
-
 
 static void
 user_error_fn (png_structp png_ptr, png_const_charp error_msg)
@@ -61,7 +51,6 @@ user_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 {
   g_warning ("%s", warning_msg);
 }
-
 
 GType
 gst_pngdec_get_type (void)
@@ -91,7 +80,7 @@ static GstStaticPadTemplate gst_pngdec_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRA ";" GST_VIDEO_CAPS_BGR)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGB)
     );
 
 static GstStaticPadTemplate gst_pngdec_sink_pad_template =
@@ -125,21 +114,10 @@ gst_pngdec_class_init (GstPngDecClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  GST_DEBUG_CATEGORY_INIT (pngdec_debug, "pngdec", 0, "PNG image decoder");
 }
 
-static GstPadLinkReturn
-gst_pngdec_sinklink (GstPad * pad, const GstCaps * caps)
-{
-  GstPngDec *pngdec;
-  GstStructure *structure;
-
-  pngdec = GST_PNGDEC (gst_pad_get_parent (pad));
-
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_double (structure, "framerate", &pngdec->fps);
-
-  return TRUE;
-}
 
 static void
 gst_pngdec_init (GstPngDec * pngdec)
@@ -153,9 +131,6 @@ gst_pngdec_init (GstPngDec * pngdec)
   gst_element_add_pad (GST_ELEMENT (pngdec), pngdec->srcpad);
 
   gst_pad_set_chain_function (pngdec->sinkpad, gst_pngdec_chain);
-  gst_pad_set_link_function (pngdec->sinkpad, gst_pngdec_sinklink);
-
-  gst_pad_use_explicit_caps (pngdec->srcpad);
 
   pngdec->png = NULL;
   pngdec->info = NULL;
@@ -163,7 +138,7 @@ gst_pngdec_init (GstPngDec * pngdec)
   pngdec->color_type = -1;
   pngdec->width = -1;
   pngdec->height = -1;
-  pngdec->fps = -1;
+  pngdec->fps = 0.0;
 }
 
 static void
@@ -172,6 +147,8 @@ user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
   GstPngDec *dec;
 
   dec = GST_PNGDEC (png_ptr->io_ptr);
+
+  GST_LOG ("reading %d bytes of data at offset %d", length, dec->offset);
 
   if (GST_BUFFER_SIZE (dec->buffer_in) < dec->offset + length) {
     g_warning ("reading past end of buffer");
@@ -182,10 +159,12 @@ user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
   dec->offset += length;
 }
 
-static void
-gst_pngdec_chain (GstPad * pad, GstData * _data)
+#define ROUND_UP_4(x) (((x) + 3) & ~3)
+
+static GstFlowReturn
+gst_pngdec_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
+  GstFlowReturn ret = GST_FLOW_OK;
   GstPngDec *pngdec;
   png_uint_32 width, height;
   gint depth, color;
@@ -193,11 +172,14 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
   GstBuffer *out;
   gint i;
 
+  GST_LOG ("chain");
+
   pngdec = GST_PNGDEC (gst_pad_get_parent (pad));
 
   if (!GST_PAD_IS_USABLE (pngdec->srcpad)) {
     gst_buffer_unref (buf);
-    return;
+    ret = GST_FLOW_UNEXPECTED;
+    goto beach;
   }
 
   pngdec->buffer_in = buf;
@@ -211,7 +193,8 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
         ("Failed to initialize png structure"));
-    return;
+    ret = GST_FLOW_UNEXPECTED;
+    goto beach;
   }
 
   pngdec->info = png_create_info_struct (pngdec->png);
@@ -221,7 +204,8 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
         (png_infopp) NULL);
     GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
         ("Failed to initialize info structure"));
-    return;
+    ret = GST_FLOW_UNEXPECTED;
+    goto beach;
   }
 
   pngdec->endinfo = png_create_info_struct (pngdec->png);
@@ -230,7 +214,8 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
     png_destroy_read_struct (&pngdec->png, &pngdec->info, (png_infopp) NULL);
     GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
         ("Failed to initialize endinfo structure"));
-    return;
+    ret = GST_FLOW_UNEXPECTED;
+    goto beach;
   }
 
   /* non-0 return is from a longjmp inside of libpng */
@@ -239,7 +224,8 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
     png_destroy_read_struct (&pngdec->png, &pngdec->info, &pngdec->endinfo);
     GST_ELEMENT_ERROR (pngdec, LIBRARY, FAILED, (NULL),
         ("returning from longjmp"));
-    return;
+    ret = GST_FLOW_UNEXPECTED;
+    goto beach;
   }
 
   png_set_read_fn (pngdec->png, pngdec, user_read_data);
@@ -253,7 +239,8 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
     png_destroy_read_struct (&pngdec->png, &pngdec->info, &pngdec->endinfo);
     GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
         ("pngdec only supports 8 bit images for now"));
-    return;
+    ret = GST_FLOW_UNEXPECTED;
+    goto beach;
   }
 
   if (pngdec->width != width ||
@@ -263,24 +250,25 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
     gboolean ret;
     gint bpp;
 
+    GST_LOG ("this is a %dx%d PNG image", width, height);
     pngdec->width = width;
     pngdec->height = height;
     pngdec->color_type = pngdec->info->color_type;
 
-    templ = gst_caps_copy (gst_pad_template_get_caps
-        (gst_static_pad_template_get (&gst_pngdec_src_pad_template)));
-
     switch (pngdec->color_type) {
       case PNG_COLOR_TYPE_RGB:
+        GST_LOG ("we have no alpha channel, depth is 24 bits");
         bpp = 24;
         break;
       case PNG_COLOR_TYPE_RGB_ALPHA:
+        GST_LOG ("we have an alpha channel, depth is 32 bits");
         bpp = 32;
         break;
       default:
         GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
             ("pngdec does not support grayscale or paletted data yet"));
-        return;
+        ret = GST_FLOW_UNEXPECTED;
+        goto beach;
     }
 
     caps = gst_caps_new_simple ("video/x-raw-rgb",
@@ -288,29 +276,44 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
         "height", G_TYPE_INT, height,
         "bpp", G_TYPE_INT, bpp, "framerate", G_TYPE_DOUBLE, pngdec->fps, NULL);
 
+    templ = gst_caps_copy (gst_pad_template_get_caps
+        (gst_static_pad_template_get (&gst_pngdec_src_pad_template)));
+
     res = gst_caps_intersect (templ, caps);
-    gst_caps_free (caps);
-    gst_caps_free (templ);
-    ret = gst_pad_set_explicit_caps (pngdec->srcpad, res);
-    gst_caps_free (res);
+    gst_caps_unref (caps);
+    gst_caps_unref (templ);
+    {
+      gchar *caps_str = gst_caps_to_string (res);
+
+      GST_LOG ("intersecting caps with template gave %s", caps_str);
+      g_free (caps_str);
+    }
+    ret = gst_pad_set_caps (pngdec->srcpad, res);
+    gst_caps_unref (res);
 
     if (!ret) {
       gst_buffer_unref (buf);
       png_destroy_read_struct (&pngdec->png, &pngdec->info, &pngdec->endinfo);
       GST_ELEMENT_ERROR (pngdec, CORE, NEGOTIATION, (NULL), (NULL));
-      return;
+      ret = GST_FLOW_UNEXPECTED;
+      goto beach;
     }
   }
 
   rows = (png_bytep *) g_malloc (sizeof (png_bytep) * height);
 
-  out = gst_pad_alloc_buffer (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
-      height * pngdec->info->rowbytes);
+  ret = gst_pad_alloc_buffer (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
+      height * ROUND_UP_4 (pngdec->info->rowbytes),
+      GST_PAD_CAPS (pngdec->srcpad), &out);
+
+  if (ret != GST_FLOW_OK) {
+    goto beach;
+  }
 
   inp = GST_BUFFER_DATA (out);
   for (i = 0; i < height; i++) {
     rows[i] = inp;
-    inp += pngdec->info->rowbytes;
+    inp += ROUND_UP_4 (pngdec->info->rowbytes);
   }
 
   png_read_image (pngdec->png, rows);
@@ -322,5 +325,10 @@ gst_pngdec_chain (GstPad * pad, GstData * _data)
   pngdec->buffer_in = NULL;
   gst_buffer_unref (buf);
 
-  gst_pad_push (pngdec->srcpad, GST_DATA (out));
+  /* Pushing */
+  GST_LOG ("pushing our raw RGB frame");
+  ret = gst_pad_push (pngdec->srcpad, out);
+
+beach:
+  return ret;
 }

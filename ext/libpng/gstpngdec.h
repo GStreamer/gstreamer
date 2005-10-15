@@ -24,16 +24,13 @@
 #include <gst/gst.h>
 #include <png.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
-
-#define GST_TYPE_PNGDEC  	(gst_pngdec_get_type())
-#define GST_PNGDEC(obj)  	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PNGDEC,GstPngDec))
+#define GST_TYPE_PNGDEC (gst_pngdec_get_type())
+#define GST_PNGDEC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PNGDEC,GstPngDec))
 #define GST_PNGDEC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PNGDEC,GstPngDec))
-#define GST_IS_PNGDEC(obj) 	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PNGDEC))
-#define GST_IS_PNGDEC_CLASS(obj)(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PNGDEC))
+#define GST_IS_PNGDEC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PNGDEC))
+#define GST_IS_PNGDEC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PNGDEC))
 
 typedef struct _GstPngDec GstPngDec;
 typedef struct _GstPngDecClass GstPngDecClass;
@@ -65,10 +62,6 @@ struct _GstPngDecClass
 
 GType gst_pngdec_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_PNGDEC_H__ */
