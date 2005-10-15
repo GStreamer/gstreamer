@@ -27,7 +27,7 @@
 /*
  * Use these only when you want to know what GStreamer version your stuff was
  * compiled against.
- * Use the #gst_version function if you want to know which version of 
+ * Use the #gst_version function if you want to know which version of
  * GStreamer you are currently linked against.
  */
 #define GST_VERSION_MAJOR 0

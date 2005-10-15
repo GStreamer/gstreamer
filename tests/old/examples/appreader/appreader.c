@@ -22,7 +22,7 @@
 static void
 fill_queue (GstElement * queue, gint level, GstBin * pipeline)
 {
-  /* this needs to iterate till something is pushed 
+  /* this needs to iterate till something is pushed
    * in the queue */
   gst_bin_iterate (pipeline);
 }

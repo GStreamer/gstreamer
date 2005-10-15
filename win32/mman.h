@@ -31,7 +31,7 @@ extern "C" {
 #   define MAP_FAILED ((void *) -1)
 # endif
 
-	
+
 # define PROT_READ PAGE_READONLY
 # define PROT_WRITE PAGE_WRITEONLY
 

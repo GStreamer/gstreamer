@@ -445,7 +445,7 @@ GST_START_TEST (test_value_subtract_int)
   const GValue *tmp;
   gboolean ret;
 
-  /*  int <-> int 
+  /*  int <-> int
    */
   g_value_init (&src1, G_TYPE_INT);
   g_value_set_int (&src1, 10);
@@ -463,7 +463,7 @@ GST_START_TEST (test_value_subtract_int)
   g_value_unset (&src1);
   g_value_unset (&src2);
 
-  /*  int <-> int_range 
+  /*  int <-> int_range
    */
 
   /* would yield an empty set */
@@ -547,7 +547,7 @@ GST_START_TEST (test_value_subtract_int)
   g_value_unset (&src1);
   g_value_unset (&src2);
 
-  /*  int_range <-> int_range 
+  /*  int_range <-> int_range
    */
 
   /* same range, empty set */
@@ -720,7 +720,7 @@ GST_START_TEST (test_value_subtract_double)
   const GValue *tmp;
   gboolean ret;
 
-  /*  double <-> double 
+  /*  double <-> double
    */
   g_value_init (&src1, G_TYPE_DOUBLE);
   g_value_set_double (&src1, 10.0);
@@ -738,7 +738,7 @@ GST_START_TEST (test_value_subtract_double)
   g_value_unset (&src1);
   g_value_unset (&src2);
 
-  /*  double <-> double_range 
+  /*  double <-> double_range
    */
 
   /* would yield an empty set */
@@ -819,7 +819,7 @@ GST_START_TEST (test_value_subtract_double)
   g_value_unset (&src1);
   g_value_unset (&src2);
 
-  /*  double_range <-> double_range 
+  /*  double_range <-> double_range
    */
 
   /* same range, empty set */

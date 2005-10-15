@@ -1,15 +1,15 @@
 /*
  * mixer.c - stereo audio mixer - thomas@apestaart.org
  * example based on helloworld
- * demonstrates the adder plugin and the volume envelope plugin 
- * work in progress but do try it out 
- * 
+ * demonstrates the adder plugin and the volume envelope plugin
+ * work in progress but do try it out
+ *
  * Latest change : 	28/08/2001
  * 					trying to adapt to incsched
  * 					delayed start for channels > 1
  *					now works by quickhacking the
  *					adder plugin to set
- * 					GST_ELEMENT_COTHREAD_STOPPING		
+ * 					GST_ELEMENT_COTHREAD_STOPPING
  * Version :		0.5.1
  */
 
@@ -150,7 +150,7 @@ main (int argc, char *argv[])
     /* register a volume envelope */
     printf ("\tregistering volume envelope...\n");
 
-    /* 
+    /*
      * this is the volenv :
      * each song gets a slot of 5 seconds, with a 5 second fadeout
      * at the end of that, all audio streams play simultaneously
@@ -372,7 +372,7 @@ create_input_channel (int id, char *location)
 void
 destroy_input_channel (input_channel_t * channel)
 {
-  /* 
+  /*
    * destroy an input channel
    */
 

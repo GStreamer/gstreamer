@@ -192,11 +192,11 @@ GST_START_TEST (test_simplify)
 
   /* check simplified caps, should be:
    *
-   * video/x-raw-rgb, bpp=(int)8, depth=(int)8, endianness=(int)1234, 
-   *     framerate=(double)[ 1, 100 ], width=(int)[ 16, 4096 ], 
-   *     height=(int)[ 16, 4096 ]; 
-   * video/x-raw-yuv, format=(fourcc){ YV12, YUY2, I420 }, 
-   *     width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], 
+   * video/x-raw-rgb, bpp=(int)8, depth=(int)8, endianness=(int)1234,
+   *     framerate=(double)[ 1, 100 ], width=(int)[ 16, 4096 ],
+   *     height=(int)[ 16, 4096 ];
+   * video/x-raw-yuv, format=(fourcc){ YV12, YUY2, I420 },
+   *     width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ],
    *     framerate=(double)[ 1, 100 ]
    */
   fail_unless (gst_caps_get_size (caps) == 2);

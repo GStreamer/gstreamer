@@ -519,13 +519,13 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_NULL, GST_STATE_READY, 104);
 
   /* READY => PAUSED */
-  /* because of pre-rolling, sink will return ASYNC on state 
+  /* because of pre-rolling, sink will return ASYNC on state
    * change and change state later when it has a buffer */
   ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_READY, GST_STATE_PAUSED,
       105);
 #if 0
   /* From here on, all bets are off. Usually the source changes state next,
-   * but it might just as well be that the first buffer produced by the 
+   * but it might just as well be that the first buffer produced by the
    * source reaches the sink before the source has finished its state change,
    * in which case the sink will commit its new state before the source ...  */
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_READY, GST_STATE_PAUSED, 106);
@@ -620,13 +620,13 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_NULL, GST_STATE_READY, 204);
 
   /* READY => PAUSED */
-  /* because of pre-rolling, sink will return ASYNC on state 
+  /* because of pre-rolling, sink will return ASYNC on state
    * change and change state later when it has a buffer */
   ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_READY, GST_STATE_PAUSED,
       205);
 #if 0
   /* From here on, all bets are off. Usually the source changes state next,
-   * but it might just as well be that the first buffer produced by the 
+   * but it might just as well be that the first buffer produced by the
    * source reaches the sink before the source has finished its state change,
    * in which case the sink will commit its new state before the source ...  */
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_READY, GST_STATE_PAUSED, 206);

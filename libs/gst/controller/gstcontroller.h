@@ -81,7 +81,7 @@ typedef struct _GstValueArray
 /**
  * GstInterpolateMode:
  * @GST_INTERPOLATE_NONE: steps-like interpolation, default
- * @GST_INTERPOLATE_TRIGGER: returns the default value of the property, 
+ * @GST_INTERPOLATE_TRIGGER: returns the default value of the property,
  * except for times with specific values
  * @GST_INTERPOLATE_LINEAR: linear interpolation
  * @GST_INTERPOLATE_QUADRATIC: square interpolation
@@ -228,7 +228,7 @@ const GList *gst_controller_get_all (GstController * self,
 
 gboolean gst_controller_sync_values (GstController * self,
     GstClockTime timestamp);
-    
+
 gboolean gst_controller_get_value_arrays (GstController * self,
     GstClockTime timestamp, GSList * value_arrays);
 gboolean gst_controller_get_value_array (GstController * self,

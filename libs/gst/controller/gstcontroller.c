@@ -319,7 +319,7 @@ gst_controlled_property_new (GObject * object, const gchar * name)
        * first timestamp is at 5
        * requested value if for timestamp=3
        * LINEAR and Co. would need to interpolate from default value to value
-       * at timestamp 5 
+       * at timestamp 5
        */
       signal_name = g_alloca (8 + 1 + strlen (name));
       g_sprintf (signal_name, "notify::%s", name);
@@ -787,7 +787,7 @@ gst_controller_get (GstController * self, gchar * property_name,
  * gst_controller_get_all:
  * @self: the controller to get the list from
  * @property_name: the name of the property to get the list for
- * 
+ *
  * Returns a read-only copy of the list of GstTimedValue for the given property.
  * Free the list after done with it.
  *
@@ -871,7 +871,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
     }
   }
   g_mutex_unlock (self->lock);
-  /* TODO what can here go wrong, to return FALSE ? 
+  /* TODO what can here go wrong, to return FALSE ?
      BilboEd : Nothing I guess, as long as all the checks are made when creating the controller,
      adding/removing controlled properties, etc...
    */
@@ -888,7 +888,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
  * Function to be able to get an array of values for one or more given element
  * properties.
  *
- * If the GstValueArray->values array in list nodes is NULL, it will be created 
+ * If the GstValueArray->values array in list nodes is NULL, it will be created
  * by the function.
  * The type of the values in the array are the same as the property's type.
  *
@@ -1065,7 +1065,7 @@ _gst_controller_class_init (GstControllerClass * klass)
   /* register properties */
   /* register signals */
   /* set defaults for overridable methods */
-  /* TODO which of theses do we need ? 
+  /* TODO which of theses do we need ?
      BilboEd : none :)
    */
 }

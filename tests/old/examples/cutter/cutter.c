@@ -1,6 +1,6 @@
 /*
  * cutter.c - cut audio into pieces based on silence  - thomas@apestaart.org
- * 
+ *
  * construct a simple pipeline osssrc ! cutter ! filesink
  * pause when necessary, change output
  *
@@ -111,7 +111,7 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 /*
-  if (argc == 1) 
+  if (argc == 1)
   {
     g_print("usage: %s <filename1> <filename2> <...>\n", argv[0]);
     exit(-1);

@@ -1,6 +1,6 @@
 /*
  * audio-example.c
- * 
+ *
  * Build a pipeline with testaudiosource->alsasink
  * and sweep frequency and volume
  *

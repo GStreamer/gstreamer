@@ -23,17 +23,17 @@
  * SECTION:gstconfig
  * @short_description: Build configuration options
  *
- * This describes the configuration options for GStreamer. When building 
- * GStreamer there are a lot of parts (known internally as "subsystems" ) that can 
- * be disabled for various reasons. The most common reasons are speed and size, 
+ * This describes the configuration options for GStreamer. When building
+ * GStreamer there are a lot of parts (known internally as "subsystems" ) that can
+ * be disabled for various reasons. The most common reasons are speed and size,
  * which is important because GStreamer is designed to run on embedded systems.
- * 
+ *
  * If a subsystem is disabled, most of this changes are done in an API compatible
  * way, so you don't need to adapt your code in most cases. It is never done in an
  * ABI compatible way though. So if you want to disable a suybsystem, you have to
  * rebuild all programs depending on GStreamer, too.
- * 
- * If a subsystem is disabled in GStreamer, a value is defined in 
+ *
+ * If a subsystem is disabled in GStreamer, a value is defined in
  * &lt;gst/gst.h&gt;. You can check this if you do subsystem-specific stuff.
  * <example>
  * <title>Doing subsystem specific things</title>

@@ -29,7 +29,7 @@
  * You can also use the macros to keep the GStreamer version information in your
  * application.
  *
- * Use the gst_version() function if you want to know which version of 
+ * Use the gst_version() function if you want to know which version of
  * GStreamer you are currently linked against.
  *
  * The version macros get defined by including "gst/gst.h".

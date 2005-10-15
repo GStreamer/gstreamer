@@ -1,7 +1,7 @@
 /*
  * dirent.c
  *
- * Derived from DIRLIB.C by Matt J. Weinstein 
+ * Derived from DIRLIB.C by Matt J. Weinstein
  * This note appears in the DIRLIB.H
  * DIRLIB.H by M. J. Weinstein   Released to public domain 1-Jan-89
  *
@@ -11,7 +11,7 @@
  *
  * Resource leaks fixed by <steve.lhomme@free.fr>
  *
- *	
+ *
  * $Revision$
  * $Author$
  * $Date$
@@ -156,7 +156,7 @@ _treaddir (_TDIR * dirp)
   } else {
     /* Get the next search entry. */
     if (_tfindnext (dirp->dd_handle, &(dirp->dd_dta))) {
-      /* We are off the end or otherwise error.     
+      /* We are off the end or otherwise error.
          _findnext sets errno to ENOENT if no more file
          Undo this. */
       DWORD winerr = GetLastError ();

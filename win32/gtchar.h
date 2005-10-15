@@ -1,4 +1,4 @@
-/* 
+/*
  * tchar.h
  *
  * Unicode mapping layer for the standard C library. By including this
@@ -150,7 +150,7 @@ typedef wchar_t _TCHAR;
 #define _totupper	towupper
 #define	_totlower	towlower
 #define _tcsftime	wcsftime
-/* Macro functions */ 
+/* Macro functions */
 #define _tcsdec     _wcsdec
 #define _tcsinc     _wcsinc
 #define _tcsnbcnt   _wcsncnt
@@ -331,7 +331,7 @@ typedef char	_TCHAR;
 #define	_tstrtime	_strtime
 #define	_tutime		_utime
 #define _tcsftime	strftime
-/* Macro functions */ 
+/* Macro functions */
 #define _tcsdec     _strdec
 #define _tcsinc     _strinc
 #define _tcsnbcnt   _strncnt

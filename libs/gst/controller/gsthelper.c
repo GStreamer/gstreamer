@@ -45,7 +45,7 @@ extern GQuark __gst_controller_key;
  * Convenience function for GObject
  *
  * Creates a GstController that allows you to dynamically control one, or more, GObject properties.
- * If the given GObject already has a GstController, it adds the given properties to the existing 
+ * If the given GObject already has a GstController, it adds the given properties to the existing
  * controller and returns that controller.
  *
  * Returns: The GstController with which the user can control the given properties dynamically or NULL if
@@ -171,7 +171,7 @@ gst_object_sync_values (GObject * object, GstClockTime timestamp)
  * Function to be able to get an array of values for one or more given element
  * properties.
  *
- * If the GstValueArray->values array in list nodes is NULL, it will be created 
+ * If the GstValueArray->values array in list nodes is NULL, it will be created
  * by the function.
  * The type of the values in the array are the same as the property's type.
  *

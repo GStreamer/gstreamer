@@ -1,9 +1,9 @@
-/* 
+/*
  * This example shows how to use interfaces and the tag subsystem.
  * It takes an mp3 file as input, and makes an ogg file out of it. While doing
  * this, it parses the filename and sets artist and title in the ogg file.
  * It assumes the filename to be "<artist> - <title>.mp3"
- * 
+ *
  * Run the program as "transcode <mp3 file>"
  *
  * To run this program, you need to have the gst-plugins package (specifically
@@ -80,7 +80,7 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (filesink), "location", filename, NULL);
   g_free (filename);
 
-  /* make sure the tag setter uses our stuff 
+  /* make sure the tag setter uses our stuff
      (though that should already be default) */
   gst_tag_setter_set_merge_mode (GST_TAG_SETTER (encoder), GST_TAG_MERGE_KEEP);
   /* set the tagging information */
