@@ -1,6 +1,6 @@
 /*
  * interpolator.c
- * 
+ *
  * test interpolator methods
  *
  */

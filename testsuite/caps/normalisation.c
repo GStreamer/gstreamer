@@ -36,7 +36,7 @@ GST_CAPS_FACTORY (rawcaps4,
       "fourcc",   GST_PROPS_LIST (
                     GST_PROPS_FOURCC (GST_STR_FOURCC ("YUY2")),
                     GST_PROPS_FOURCC (GST_STR_FOURCC ("YV12")),
-                    GST_PROPS_FOURCC (GST_STR_FOURCC ("YUYV")) 
+                    GST_PROPS_FOURCC (GST_STR_FOURCC ("YUYV"))
 		  ),
       "height",	  GST_PROPS_INT_RANGE (16, 4096)
   )

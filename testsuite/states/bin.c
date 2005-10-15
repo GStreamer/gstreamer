@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) <2004> Benjamin Otte <otte@gnome.org>
  *
- * bin.c: 
+ * bin.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

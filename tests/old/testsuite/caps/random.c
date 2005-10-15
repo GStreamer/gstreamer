@@ -31,13 +31,13 @@ gint
 main (gint argc, gchar * argv[])
 {
   /* this file contains random tests for stuff that went wrong in some version
-   * and should be tested so we're sure it works right now 
+   * and should be tested so we're sure it works right now
    * Please add what exactly the code tests for in your test */
 
   gst_init (&argc, &argv);
 
   /* TEST 1:
-   * gstcaps.c 1.120 used a code path that caused a GST_ERROR for the tested 
+   * gstcaps.c 1.120 used a code path that caused a GST_ERROR for the tested
    * caps when simplifying even though that is absolutely valid */
   {
     GstCaps *caps =
@@ -50,7 +50,7 @@ main (gint argc, gchar * argv[])
   }
 
   /* TEST 2:
-   * gstvalue.c 1.34 had a broken comparison function for int ranges that 
+   * gstvalue.c 1.34 had a broken comparison function for int ranges that
    * returned GST_VALUE_EQUAL even though the range end was different */
   {
     GValue v1 = { 0, };

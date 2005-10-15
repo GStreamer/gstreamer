@@ -38,7 +38,7 @@ create_pipeline (void)
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   gst_element_link (src, sink);
 
-  /** 
+  /**
    * now make the bug appear
    * I believe it has something to do with 2 chains being created in the scheduler
    * but I haven't looked at it yet

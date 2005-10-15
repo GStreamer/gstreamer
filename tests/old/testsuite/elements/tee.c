@@ -5,7 +5,7 @@
  * which shows a bug in 0.3.2 :
  * request pad, get 0
  * request pad, get 1
- * remove pad 0, 
+ * remove pad 0,
  * request pad, get 1 (number of pads), already exists, assert fail
  *
  * thomas@apestaart.org

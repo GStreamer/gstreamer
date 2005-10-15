@@ -38,7 +38,7 @@ main (gint argc, gchar * argv[])
   GST_ERROR ("This should print null: %" GST_PTR_FORMAT, NULL);
   GST_ERROR ("This should print a pointer: %" GST_PTR_FORMAT, &null);
   /* 64 bit address to a 32 bit int will cause the GObject interpretation
-   * to segfault; since GST_PTR_FORMAT only works on stuff with 
+   * to segfault; since GST_PTR_FORMAT only works on stuff with
    * sizeof(gpointer) */
   /* GST_ERROR ("This should print a pointer: %" GST_PTR_FORMAT, &zero); */
 
