@@ -5,7 +5,7 @@ libdir=${pcfiledir}/../libs
 includedir=${pcfiledir}/..
 
 Name: GStreamer data protocol library, uninstalled
-Description: Data protocol for plug-ins
+Description: Data protocol for plug-ins, Not Installed
 Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 

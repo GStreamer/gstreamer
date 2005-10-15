@@ -5,7 +5,7 @@ libdir=${pcfiledir}/../libs/gst/controller
 includedir=${pcfiledir}/..
 
 Name: GStreamer controller, uninstalled
-Description: Dynamic parameter control for GStreamer elements
+Description: Dynamic parameter control for GStreamer elements, Not Installed
 Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 

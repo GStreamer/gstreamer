@@ -4,8 +4,8 @@ exec_prefix=
 libdir=${pcfiledir}/../gst/check
 includedir=${pcfiledir}/..
 
-Name: GStreamer check unittesting, uninstalled
-Description: Unit testing helper library for GStreamer modules
+Name: GStreamer check unit testing, uninstalled
+Description: Unit testing helper library for GStreamer modules, Not Installed
 Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 

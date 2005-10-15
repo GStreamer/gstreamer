@@ -3,7 +3,7 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
 
-Name: GStreamer check unittesting
+Name: GStreamer check unit testing
 Description: Unit testing helper library for GStreamer modules
 Requires: gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@

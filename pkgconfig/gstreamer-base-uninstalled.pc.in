@@ -5,7 +5,7 @@ libdir=${pcfiledir}/../gst/base
 includedir=${pcfiledir}/..
 
 Name: GStreamer base classes, uninstalled
-Description: Base classes for GStreamer elements
+Description: Base classes for GStreamer elements, Not Installed
 Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 
