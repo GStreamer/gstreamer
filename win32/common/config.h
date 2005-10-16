@@ -24,13 +24,13 @@
 #define GST_LEVEL_DEFAULT GST_LEVEL_ERROR
 
 /* GStreamer license */
-#define GST_LICENSE LGPL
+#define GST_LICENSE "LGPL"
 
 /* package origin */
-#define GST_ORIGIN @GST_ORIGIN@
-
+#define GST_PACKAGE_ORIGIN "Unknown package origin"
+"
 /* package name in plugins */
-#define GST_PACKAGE @GST_PACKAGE@
+#define GST_PACKAGE_NAME "GStreamer CVS/prerelease"
 
 /* Define the version */
 #define GST_VERSION 0.9.3.1

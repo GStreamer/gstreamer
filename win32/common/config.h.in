@@ -24,13 +24,13 @@
 #define GST_LEVEL_DEFAULT @GST_LEVEL_DEFAULT@
 
 /* GStreamer license */
-#define GST_LICENSE @GST_LICENSE@
+#define GST_LICENSE "@GST_LICENSE@"
 
 /* package origin */
-#define GST_ORIGIN @GST_ORIGIN@
-
+#define GST_PACKAGE_ORIGIN "@GST_PACKAGE_ORIGIN@"
+"
 /* package name in plugins */
-#define GST_PACKAGE @GST_PACKAGE@
+#define GST_PACKAGE_NAME "@GST_PACKAGE_NAME@"
 
 /* Define the version */
 #define GST_VERSION @GST_VERSION@
