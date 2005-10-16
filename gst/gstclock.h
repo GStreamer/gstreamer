@@ -114,17 +114,24 @@ typedef gpointer GstClockID;
  * Convert a GTimeVal to a #GstClockTime.
  */
 #define GST_TIMEVAL_TO_TIME(tv)		((tv).tv_sec * GST_SECOND + (tv).tv_usec * GST_USECOND)
+
 /**
  * GST_TIME_TO_TIMEVAL:
  * @t: The GstClockTime to convert
  * @tv: The target timeval
  *
+ * Note: on 32-bit systems, a timeval has a range of only 2^32 - 1 seconds,
+ * which is about 68 years.  Expect trouble if you want to schedule stuff
+ * in your pipeline for 2038.
+ *
  * Convert a GstClockTime to a GTimeVal
  */
-#define GST_TIME_TO_TIMEVAL(t,tv)			\
-G_STMT_START {						\
-  (tv).tv_sec  =  ((GstClockTime)(t)) / GST_SECOND;			\
-  (tv).tv_usec = (((GstClockTime)(t)) - (tv).tv_sec * GST_SECOND) / GST_USECOND;	\
+#define GST_TIME_TO_TIMEVAL(t,tv)				\
+G_STMT_START {							\
+  (tv).tv_sec  = ((GstClockTime) (t)) / GST_SECOND;		\
+  (tv).tv_usec = (((GstClockTime) (t)) -			\
+                  ((GstClockTime) (tv).tv_sec) * GST_SECOND)	\
+                 / GST_USECOND;					\
 } G_STMT_END
 
 /**
