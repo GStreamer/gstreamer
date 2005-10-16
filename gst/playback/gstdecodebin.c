@@ -546,6 +546,37 @@ many_types:
   }
 }
 
+/* crude crude crude crude hack to avoid deadlocks in core while wim figures out
+ * what's going on */
+/* not mt-safe */
+static GstStateChangeReturn
+gst_element_set_state_like_a_crazy_man (GstElement * element, GstState state)
+{
+  GstElement *e;
+  GList *chain = NULL, *walk;
+  GstStateChangeReturn ret;
+
+  for (e = gst_object_ref (element); e;
+      e = (GstElement *) gst_element_get_parent (e))
+    chain = g_list_prepend (chain, e);
+
+  for (walk = chain; walk; walk = walk->next)
+    GST_STATE_LOCK (walk->data);
+
+  ret = gst_element_set_state (element, state);
+
+  chain = g_list_reverse (chain);
+
+  for (walk = chain; walk; walk = walk->next) {
+    GST_STATE_UNLOCK (walk->data);
+    gst_object_unref (walk->data);
+  }
+
+  g_list_free (chain);
+
+  return ret;
+}
+
 /*
  * given a list of element factories, try to link one of the factories
  * to the given pad.
@@ -591,7 +622,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
     gst_bin_add (GST_BIN (decode_bin), element);
 
     /* set to ready first so it is ready */
-    gst_element_set_state (element, GST_STATE_READY);
+    gst_element_set_state_like_a_crazy_man (element, GST_STATE_READY);
 
     /* keep our own list of elements */
     decode_bin->elements = g_list_prepend (decode_bin->elements, element);
@@ -603,7 +634,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       gst_object_unref (sinkpad);
       /* this element did not work, remove it again and continue trying
        * other elements, the element will be disposed. */
-      gst_element_set_state (element, GST_STATE_NULL);
+      gst_element_set_state_like_a_crazy_man (element, GST_STATE_NULL);
       gst_bin_remove (GST_BIN (decode_bin), element);
     } else {
       const gchar *klass;
@@ -638,7 +669,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
        * on it until we have a raw type */
       close_link (element, decode_bin);
       /* change the state of the element to that of the parent */
-      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state_like_a_crazy_man (element, GST_STATE_PAUSED);
 
       result = element;
 

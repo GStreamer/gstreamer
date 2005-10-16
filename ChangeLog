@@ -1,3 +1,10 @@
+2005-10-16  Andy Wingo  <wingo@pobox.com>
+
+	* gst/playback/gstdecodebin.c
+	(gst_element_set_state_like_a_crazy_man): New kraaaaaaazy
+	function!
+	(try_to_link_1): Increase kraziness level.
+
 2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
