@@ -1,3 +1,13 @@
+2005-10-17  Zeeshan Ali  <zeenix at gmail dot com>
+
+	* configure.ac:
+	* gst/flx/Makefile.am:
+	* gst/flx/gstflxdec.c: (gst_flxdec_init),
+	(gst_flxdec_src_event_handler), (gst_flxdec_sink_event_handler),
+	(gst_flxdec_chain), (gst_flxdec_change_state), (plugin_init):
+	* gst/flx/gstflxdec.h:
+	flx plugin ported to 0.9
+
 2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/shout2/gstshout2.c: (gst_shout2send_change_state):

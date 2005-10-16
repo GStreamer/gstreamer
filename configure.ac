@@ -603,6 +603,7 @@ gst/videobox/Makefile
 gst/videofilter/Makefile
 gst/wavenc/Makefile
 gst/wavparse/Makefile
+gst/flx/Makefile
 ext/jpeg/Makefile
 ext/Makefile
 ext/aalib/Makefile

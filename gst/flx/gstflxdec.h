@@ -23,7 +23,7 @@
 #include <gst/gst.h>
 
 #include "flx_color.h"
-#include <gst/bytestream/bytestream.h>
+#include <gst/base/gstadapter.h>
 
 
 #ifdef __cplusplus
@@ -47,7 +47,7 @@ struct _GstFlxDec {
   gboolean active, new_meta;
 
   GstBuffer *delta, *frame;
-  GstByteStream *bs;
+  GstAdapter *adapter;
   gulong size;
   GstFlxDecState state;
   glong frame_time;
