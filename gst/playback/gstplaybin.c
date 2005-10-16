@@ -399,7 +399,7 @@ gen_video_element (GstPlayBin * play_bin)
   if (play_bin->video_sink) {
     sink = play_bin->video_sink;
   } else {
-    sink = gst_element_factory_make ("autovideosink", "videosink");
+    sink = gst_element_factory_make ("xvimagesink", "videosink");
     if (sink == NULL) {
       g_warning ("could not create autovideosink element");
     }
@@ -516,7 +516,7 @@ gen_audio_element (GstPlayBin * play_bin)
   if (play_bin->audio_sink) {
     sink = play_bin->audio_sink;
   } else {
-    sink = gst_element_factory_make ("autoaudiosink", "audiosink");
+    sink = gst_element_factory_make ("alsasink", "audiosink");
     if (sink == NULL) {
       g_warning ("could not create autoaudiosink element");
     }
@@ -1012,4 +1012,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "playbin",
-    "player bin", plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
+    "player bin", plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME,
+    GST_PACKAGE_ORIGIN)

@@ -1,3 +1,53 @@
+2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  restructure like the core one
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/interfaces/Makefile.am:
+	* gst-libs/gst/net/Makefile.am:
+	* gst-libs/gst/riff/Makefile.am:
+	* gst-libs/gst/rtp/Makefile.am:
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/video/Makefile.am:
+	  use correct linker flags, now the libs are properly versioned
+	* check/elements/audioconvert.c: (verify_convert):
+	* ext/alsa/gstalsaplugin.c:
+	* ext/cdparanoia/gstcdparanoia.c:
+	* ext/gnomevfs/gstgnomevfs.c:
+	* ext/libvisual/visual.c:
+	* ext/ogg/gstogg.c:
+	* ext/ogg/gstoggparse.c: (gst_ogg_parse_chain):
+	* ext/theora/theora.c:
+	* ext/vorbis/vorbis.c:
+	* gst-libs/gst/audio/gstaudiofiltertemplate.c:
+	* gst-libs/gst/tag/gsttagediting.c:
+	* gst-libs/gst/video/video.c:
+	* gst/adder/gstadder.c:
+	* gst/audioconvert/plugin.c:
+	* gst/audiorate/gstaudiorate.c:
+	* gst/audioresample/gstaudioresample.c:
+	* gst/audioresample/resample_ref.c: (resample_scale_ref):
+	* gst/audioscale/gstaudioscale.c:
+	* gst/audioscale/resample.c:
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	* gst/ffmpegcolorspace/gstffmpeg.c:
+	* gst/playback/gstdecodebin.c: (close_pad_link):
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_audio_element):
+	* gst/sine/gstsinesrc.c:
+	* gst/subparse/gstsubparse.c:
+	* gst/tags/gsttagediting.c:
+	* gst/tcp/gsttcpplugin.c:
+	* gst/typefind/gsttypefindfunctions.c:
+	* gst/videorate/gstvideorate.c:
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/volume/gstvolume.c:
+	* sys/v4l/gstv4l.c:
+	* sys/ximage/ximage.c:
+	* sys/xvimage/xvimagesink.c:
+	  fix up defines
+
 2005-10-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/vorbis/vorbisenc.c:

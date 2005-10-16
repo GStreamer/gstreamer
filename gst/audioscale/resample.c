@@ -268,7 +268,8 @@ gst_resample_nearest_s16 (gst_resample_t * r)
       SCALE_LOOP (o_ptr[0] = i_ptr[0], 1);
       break;
     case 2:
-      SCALE_LOOP (o_ptr[0] = i_ptr[0]; o_ptr[1] = i_ptr[1], 2);
+      SCALE_LOOP (o_ptr[0] = i_ptr[0];
+          o_ptr[1] = i_ptr[1], 2);
       break;
     default:
     {
@@ -629,7 +630,8 @@ gst_resample_nearest_float (gst_resample_t * r)
       SCALE_LOOP (o_ptr[0] = i_ptr[0], 1);
       break;
     case 2:
-      SCALE_LOOP (o_ptr[0] = i_ptr[0]; o_ptr[1] = i_ptr[1], 2);
+      SCALE_LOOP (o_ptr[0] = i_ptr[0];
+          o_ptr[1] = i_ptr[1], 2);
       break;
     default:
     {
@@ -924,4 +926,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gstresample",
     "Resampling routines for use in audio plugins",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN);
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

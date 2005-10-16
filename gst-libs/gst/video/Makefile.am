@@ -6,5 +6,5 @@ libgstvideoincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
 libgstvideoinclude_HEADERS = video.h videosink.h
 
 libgstvideo_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
-libgstvideo_@GST_MAJORMINOR@_la_LDFLAGS =
 libgstvideo_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
+libgstvideo_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LT_LDFLAGS)

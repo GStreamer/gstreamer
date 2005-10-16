@@ -502,8 +502,10 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     GST_LOG_OBJECT (element, "closed pad %s", padname);
 
     /* our own signal with an extra flag that this is the only pad */
+    GST_DEBUG_OBJECT (decode_bin, "emitting new-decoded-pad");
     g_signal_emit (G_OBJECT (decode_bin),
         gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD], 0, ghost, !more);
+    GST_DEBUG_OBJECT (decode_bin, "emitted new-decoded-pad");
 
     g_free (padname);
   } else {
@@ -1102,4 +1104,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "decodebin",
-    "decoder bin", plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
+    "decoder bin", plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME,
+    GST_PACKAGE_ORIGIN)

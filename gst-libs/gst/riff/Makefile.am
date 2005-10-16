@@ -11,6 +11,6 @@ libgstriff_@GST_MAJORMINOR@include_HEADERS = \
 	riff-media.h \
 	riff-read.h
 
-libgstriff_@GST_MAJORMINOR@_la_LIBADD =
+libgstriff_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS)
 libgstriff_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
-libgstriff_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIBS)
+libgstriff_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LT_LDFLAGS)

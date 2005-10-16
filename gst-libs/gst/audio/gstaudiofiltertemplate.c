@@ -216,7 +216,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gstaudiofilter_template",
     "Audio filter template",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 
      static void gst_audio_filter_template_setup (GstAudiofilter * audiofilter)
 {
