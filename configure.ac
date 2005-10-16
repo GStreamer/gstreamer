@@ -186,7 +186,7 @@ AC_C99_FUNC_LRINTF()
 dnl Check for essential libraries first:
 dnl ====================================
 
-GST_GLIB2_CHECK()
+GST_GLIB_CHECK([2.6.0])
 
 dnl Check for additional libraries that we might use:
 dnl =================================================

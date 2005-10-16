@@ -1,3 +1,8 @@
+2005-10-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Fix glib check
+
 2005-10-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list):
