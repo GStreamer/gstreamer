@@ -1,5 +1,10 @@
 2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstcaps.c: (gst_caps_intersect):
+	  Fix guint j diving under 0
+
+2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	* win32/common/config.h:
 	* win32/common/config.h.in:

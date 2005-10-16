@@ -1008,6 +1008,8 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
       gst_caps_append_structure (dest, istruct);
       /* move down left */
       k++;
+      if (j == 0)
+        break;                  /* we use a guint for j */
       j--;
     }
   }
