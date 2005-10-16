@@ -196,7 +196,7 @@
 #undef PACKAGE_VERSION
 
 /* Define the plugin directory */
-#define PLUGINS_DIR PREFIX "\\lib\\gstreamer-0.9"
+#define PLUGINDIR PREFIX "\\lib\\gstreamer-0.9"
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS

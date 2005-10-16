@@ -37,6 +37,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
+dnl sets GST_LT_LDFLAGS
 AS_LIBTOOL(GST, 7, 0, 0)
 AS_LIBTOOL_TAGS
 AM_PROG_LIBTOOL
@@ -431,6 +432,8 @@ dnl I presume it is given that it contains the symbols that _() stuff maps to
 GST_ALL_LIBS="$GLIB_LIBS $LTLIBINTL"
 dnl LDFLAGS modifier defining exported symbols from built shared objects
 EXPORT_LDFLAGS="-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*"
+dnl LDFLAGS really should only contain flags, not libs - they get added before
+dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="$EXPORT_LDFLAGS -no-undefined"
 AC_SUBST(GST_ALL_CFLAGS)
 AC_SUBST(GST_ALL_LIBS)
