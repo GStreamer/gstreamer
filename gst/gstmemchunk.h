@@ -32,7 +32,7 @@ G_BEGIN_DECLS
 typedef struct _GstMemChunk GstMemChunk;
 
 GstMemChunk*	gst_mem_chunk_new 	(gchar *name,
-					 gint atom_size,
+					 guint atom_size,
 					 gulong area_size,
 					 gint type);
 

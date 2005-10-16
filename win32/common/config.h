@@ -126,6 +126,9 @@
 /* Defined if we have register_printf_function () */
 #undef HAVE_PRINTF_EXTENSION
 
+/* Define to 1 if you have the <process.h> header file. */
+#define HAVE_PROCESS_H 1
+
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
 

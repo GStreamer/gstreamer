@@ -157,11 +157,12 @@ EXPORTS
     gst_caps_is_fixed
     gst_caps_to_string
     gst_caps_from_string
-    gst_list_get_type
-    gst_fourcc_get_type
     gst_double_range_get_type
+    gst_fourcc_get_type
     gst_int_range_get_type
     gst_fraction_get_type
+    gst_value_list_get_type
+    gst_value_array_get_type
     gst_structure_new
     gst_caps_new_full
     gst_caps_append

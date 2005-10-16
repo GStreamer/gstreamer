@@ -83,7 +83,7 @@ static gboolean
 populate (GstMemChunk * mem_chunk)
 {
   guint8 *area;
-  gint i;
+  guint i;
 
   if (mem_chunk->cleanup)
     return FALSE;
@@ -125,7 +125,7 @@ populate (GstMemChunk * mem_chunk)
  * MT safe.
  */
 GstMemChunk *
-gst_mem_chunk_new (gchar * name, gint atom_size, gulong area_size, gint type)
+gst_mem_chunk_new (gchar * name, guint atom_size, gulong area_size, gint type)
 {
   GstMemChunk *mem_chunk;
 

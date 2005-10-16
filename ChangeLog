@@ -1,3 +1,17 @@
+2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* win32/common/config.h:
+	* win32/common/config.h.in:
+	  check for process.h, declares getpid() on Windows
+	* gst/gstinfo.c:
+	  include process.h if we have it
+	* gst/gstmemchunk.c: (populate), (gst_mem_chunk_new):
+	* gst/gstmemchunk.h:
+	  fix signedness issues
+	* win32/common/libgstreamer.def:
+	  fix get_type's
+
 2005-10-16  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/gstcaps.c: (gst_caps_intersect): Fix a bad bug with a simple

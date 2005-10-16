@@ -260,6 +260,7 @@ dnl Check for ucontext.h
 AC_CHECK_HEADERS([ucontext.h])
 AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
+AC_CHECK_HEADERS([process.h])
 
 dnl *** checks for library functions ***
 

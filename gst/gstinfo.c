@@ -92,20 +92,23 @@
 #ifndef GST_DISABLE_GST_DEBUG
 
 #ifdef HAVE_DLFCN_H
-#include <dlfcn.h>
+#  include <dlfcn.h>
 #endif
 #ifdef HAVE_PRINTF_EXTENSION
-#include <printf.h>
+#  include <printf.h>
 #endif
 #include <stdio.h>              /* fprintf */
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>
+#  include <unistd.h>           /* getpid on UNIX */
+#endif
+#ifdef HAVE_PROCESS_H
+#  include <process.h>          /* getpid on win32 */
 #endif
 #include <string.h>             /* G_VA_COPY */
 #include "gst_private.h"
 #include "gstutils.h"
 #ifdef HAVE_VALGRIND
-#include <valgrind/valgrind.h>
+#  include <valgrind/valgrind.h>
 #endif
 #include <glib/gprintf.h>       /* g_sprintf */
 
