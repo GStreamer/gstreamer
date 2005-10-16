@@ -853,17 +853,20 @@ gst_deinit (void)
  * @major: pointer to a guint to store the major version number
  * @minor: pointer to a guint to store the minor version number
  * @micro: pointer to a guint to store the micro version number
+ * @nano:  pointer to a guint to store the nano version number
  *
  * Gets the version number of the GStreamer library.
  */
 void
-gst_version (guint * major, guint * minor, guint * micro)
+gst_version (guint * major, guint * minor, guint * micro, guint * nano)
 {
   g_return_if_fail (major);
   g_return_if_fail (minor);
   g_return_if_fail (micro);
+  g_return_if_fail (nano);
 
   *major = GST_VERSION_MAJOR;
   *minor = GST_VERSION_MINOR;
   *micro = GST_VERSION_MICRO;
+  *nano = GST_VERSION_NANO;
 }
