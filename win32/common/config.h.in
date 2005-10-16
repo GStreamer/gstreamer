@@ -175,7 +175,7 @@
 #define LOCALEDIR PREFIX "\\share\\locale"
 
 /* Name of package */
-#undef PACKAGE
+#define PACKAGE "@PACKAGE@"
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
