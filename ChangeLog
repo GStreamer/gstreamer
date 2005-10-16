@@ -1,3 +1,8 @@
+2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/interfaces/Makefile.am:
+	  fix silly typo
+
 2005-10-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/playback/gstdecodebin.c

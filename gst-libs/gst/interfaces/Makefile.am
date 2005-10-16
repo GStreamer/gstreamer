@@ -55,7 +55,7 @@ nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = 	\
 
 libgstinterfaces_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
 libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS)
-libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LT_LDLFAGS)
+libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LT_LDFLAGS)
 
 BUILT_SOURCES = \
 	$(built_sources) \
