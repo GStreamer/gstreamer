@@ -11,4 +11,4 @@ Description: Streaming media framework
 Requires: @GST_PKG_DEPS@@LIBXML_PKG@
 Version: @VERSION@
 Libs: -L${libdir} -lgstreamer-@GST_MAJORMINOR@
-Cflags: -I${includedir} @GST_PKG_CFLAGS@
+Cflags: -I${includedir}
