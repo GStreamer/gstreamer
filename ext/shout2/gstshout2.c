@@ -536,7 +536,6 @@ gst_shout2send_change_state (GstElement * element, GstStateChange transition)
   GstShout2send *shout2send;
   GstStateChangeReturn ret;
 
-  guint major, minor, micro;
   gshort proto = 3;
 
   gchar *version_string;
@@ -622,10 +621,7 @@ gst_shout2send_change_state (GstElement * element, GstStateChange transition)
             shout_get_error (shout2send->conn));
       }
 
-      gst_version (&major, &minor, &micro);
-
-      version_string =
-          g_strdup_printf ("GStreamer %d.%d.%d", major, minor, micro);
+      version_string = gst_version_string ();
 
       if (shout_set_agent (shout2send->conn,
               version_string) != SHOUTERR_SUCCESS) {
