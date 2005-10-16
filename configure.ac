@@ -405,7 +405,7 @@ dnl *** FIXME: name this part
 
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
-AC_DEFINE(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
+AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
 AC_SUBST(GST_LICENSE)
 
 dnl define LIBDIR so we can inform people where we live

@@ -40,8 +40,8 @@ static GstPluginDesc plugin_desc = {
   VERSION,
   GST_LICENSE,
   PACKAGE,
-  GST_PACKAGE,
-  GST_ORIGIN,
+  GST_PACKAGE_NAME,
+  GST_PACKAGE_ORIGIN,
 
   GST_PADDING_INIT
 };
@@ -150,8 +150,8 @@ GST_START_TEST (test_find_plugin)
   fail_unless_equals_string (plugin->desc.version, VERSION);
   fail_unless_equals_string (plugin->desc.license, "LGPL");
   fail_unless_equals_string (plugin->desc.source, "gstreamer");
-  fail_unless_equals_string (plugin->desc.package, GST_PACKAGE);
-  fail_unless_equals_string (plugin->desc.origin, GST_ORIGIN);
+  fail_unless_equals_string (plugin->desc.package, GST_PACKAGE_NAME);
+  fail_unless_equals_string (plugin->desc.origin, GST_PACKAGE_ORIGIN);
 
   gst_object_unref (plugin);
 }
