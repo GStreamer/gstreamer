@@ -1,5 +1,21 @@
 2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  use the gettext macro
+	* gst/elements/gstelements.c:
+	* gst/gst.c:
+	* gst/indexers/gstindexers.c:
+	  update for GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN
+	* win32/common/config.h:
+	  updated config.h
+	* win32/common/config.h.in:
+	  add the template to generate config.h
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstversion.h:
+	  updated copies
+
+2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.c: (gst_version):
 	* gst/gstversion.h.in:
 	  add the nano

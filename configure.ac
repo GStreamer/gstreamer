@@ -315,23 +315,7 @@ AC_C_INLINE
 dnl *** TODO: decide where to put ***
 
 dnl set up gettext
-AM_GNU_GETTEXT_VERSION(0.11.5)
-AM_GNU_GETTEXT([external])
-
-GETTEXT_PACKAGE=gstreamer-$GST_MAJORMINOR
-AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
-                   [gettext package name])
-
-dnl define LOCALEDIR in config.h
-AS_AC_EXPAND(LOCALEDIR, $datadir/locale)
-AC_DEFINE_UNQUOTED([LOCALEDIR], "$LOCALEDIR",
-                   [gettext locale dir])
-
-dnl define LIBDIR so we can inform people where we live
-AS_AC_EXPAND(LIBDIR, $libdir)
-AC_DEFINE_UNQUOTED([LIBDIR], "$LIBDIR",
-                   [library dir])
+GST_GETTEXT([gstreamer-$GST_MAJORMINOR])
 
 dnl define an ERROR_CFLAGS Makefile variable
 GST_SET_ERROR_CFLAGS($GST_CVS)
@@ -339,8 +323,13 @@ GST_SET_ERROR_CFLAGS($GST_CVS)
 dnl define correct errorlevel for debugging messages. We want to have GST_ERROR
 dnl messages printed when running cvs builds
 if test "x$GST_CVS" = "xyes"; then
-  AC_DEFINE(GST_LEVEL_DEFAULT, GST_LEVEL_ERROR, [Default errorlevel to use])
+  GST_LEVEL_DEFAULT=GST_LEVEL_ERROR
+else
+  GST_LEVEL_DEFAULT=GST_LEVEL_NONE
 fi
+AC_DEFINE_UNQUOTED(GST_LEVEL_DEFAULT, $GST_LEVEL_DEFAULT,
+  [Default errorlevel to use])
+AC_SUBST(GST_LEVEL_DEFAULT)
 
 dnl *** checks for dependency libraries ***
 
@@ -415,9 +404,15 @@ fi
 dnl *** FIXME: name this part
 
 dnl set license and copyright notice
-AC_DEFINE(GST_LICENSE, "LGPL", [GStreamer license])
+GST_LICENSE="LGPL"
+AC_DEFINE(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
+AC_SUBST(GST_LICENSE)
 
-dnl Set location of plugin directory
+dnl define LIBDIR so we can inform people where we live
+AS_AC_EXPAND(LIBDIR, $libdir)
+AC_DEFINE_UNQUOTED(LIBDIR, "$LIBDIR", [library dir])
+
+dnl set location of plugin directory
 AS_AC_EXPAND(PLUGINS_DIR, ${libdir}/gstreamer-$GST_MAJORMINOR)
 AC_DEFINE_UNQUOTED(PLUGINS_DIR, "$PLUGINS_DIR", [Define the plugin directory])
 AC_SUBST(PLUGINS_DIR)
@@ -566,6 +561,7 @@ docs/manual/Makefile
 docs/pwg/Makefile
 docs/xsl/Makefile
 docs/version.entities
+win32/common/config.h
 pkgconfig/Makefile
 stamp.h
 pkgconfig/gstreamer.pc

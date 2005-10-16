@@ -26,8 +26,8 @@
  * Use the GST_VERSION_* macros e.g. when defining own plugins. The GStreamer
  * runtime checks if these plugin and core version match and refuses to use a
  * plugin compiled against a different version of GStreamer.
- * You can also use the macros to keep the GStreamer version information in your
- * application.
+ * You can also use the macros to keep the GStreamer version information in
+ * your application.
  *
  * Use the gst_version() function if you want to know which version of
  * GStreamer you are currently linked against.
@@ -58,8 +58,15 @@ G_BEGIN_DECLS
  * The micro version of GStreamer at compile time:
  */
 #define GST_VERSION_MICRO (3)
+/**
+ * GST_VERSION_NANO:
+ *
+ * The nano version of GStreamer at compile time:
+ * Actual releases have 0, CVS versions have 1, prerelease versions have 2-...
+ */
+#define GST_VERSION_NANO (1)
 
-void    gst_version     (guint *major, guint *minor, guint *micro);
+void    gst_version     (guint *major, guint *minor, guint *micro, guint *nano);
 
 G_END_DECLS
 

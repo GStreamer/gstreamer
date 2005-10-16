@@ -513,8 +513,8 @@ static GstPluginDesc plugin_desc = {
   VERSION,
   GST_LICENSE,
   PACKAGE,
-  GST_PACKAGE,
-  GST_ORIGIN,
+  GST_PACKAGE_NAME,
+  GST_PACKAGE_ORIGIN,
 
   GST_PADDING_INIT
 };

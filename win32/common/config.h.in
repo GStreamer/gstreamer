@@ -6,7 +6,7 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gstreamer-0.9"
+#define GETTEXT_PACKAGE "@GETTEXT_PACKAGE@"
 
 /* PREFIX - specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
@@ -21,10 +21,10 @@
 #undef GST_GCOV_ENABLED
 
 /* Default errorlevel to use */
-#define GST_LEVEL_DEFAULT GST_LEVEL_ERROR
+#define GST_LEVEL_DEFAULT @GST_LEVEL_DEFAULT@
 
 /* GStreamer license */
-#define GST_LICENSE LGPL
+#define GST_LICENSE @GST_LICENSE@
 
 /* package origin */
 #define GST_ORIGIN @GST_ORIGIN@
@@ -33,7 +33,7 @@
 #define GST_PACKAGE @GST_PACKAGE@
 
 /* Define the version */
-#define GST_VERSION 0.9.3.1
+#define GST_VERSION @GST_VERSION@
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
@@ -202,7 +202,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION 0.9.3.1
+#define VERSION @VERSION@
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
