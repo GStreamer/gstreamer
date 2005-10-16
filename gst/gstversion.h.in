@@ -66,8 +66,6 @@ G_BEGIN_DECLS
  */
 #define GST_VERSION_NANO (@GST_VERSION_NANO@)
 
-void    gst_version     (guint *major, guint *minor, guint *micro, guint *nano);
-
 G_END_DECLS
 
 #endif /* __GST_VERSION_H__ */

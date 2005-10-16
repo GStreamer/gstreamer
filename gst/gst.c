@@ -870,3 +870,27 @@ gst_version (guint * major, guint * minor, guint * micro, guint * nano)
   *micro = GST_VERSION_MICRO;
   *nano = GST_VERSION_NANO;
 }
+
+/**
+ * gst_version_string:
+ *
+ * This function returns a string that is useful for describing this version
+ * of GStreamer to the outside world: user agent strings, logging, ...
+ *
+ * Returns: a newly allocated string describing this version of GStreamer.
+ */
+
+gchar *
+gst_version_string ()
+{
+  guint major, minor, micro, nano;
+
+  gst_version (&major, &minor, &micro, &nano);
+  if (nano == 0)
+    return g_strdup_printf ("GStreamer %d.%d.%d", major, minor, micro);
+  else if (nano == 1)
+    return g_strdup_printf ("GStreamer %d.%d.%d (CVS)", major, minor, micro);
+  else
+    return g_strdup_printf ("GStreamer %d.%d.%d (prerelease)", major, minor,
+        micro);
+}

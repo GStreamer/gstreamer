@@ -338,3 +338,5 @@ EXPORTS
 	gst_message_parse_new_clock
 	gst_message_type_get_name
 	gst_flags_get_first_value
+	gst_version
+	gst_version_string

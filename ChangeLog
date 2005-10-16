@@ -1,5 +1,14 @@
 2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gst.c: (gst_version_string):
+	* gst/gst.h:
+	* gst/gstversion.h.in:
+	* win32/common/libgstreamer.def:
+	  add gst_version_string ()
+
+2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  clean up further
 	* gst/gst.c: (init_post):

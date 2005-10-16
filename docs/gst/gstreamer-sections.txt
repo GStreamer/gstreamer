@@ -23,6 +23,8 @@ gst_init
 gst_init_check
 gst_init_get_option_group
 gst_deinit
+gst_version
+gst_version_string
 <SUBSECTION Private>
 mutex
 start_cond
@@ -2148,7 +2150,6 @@ gst_value_register_intersect_func
 GST_VERSION_MAJOR
 GST_VERSION_MINOR
 GST_VERSION_MICRO
-gst_version
 </SECTION>
 
 
