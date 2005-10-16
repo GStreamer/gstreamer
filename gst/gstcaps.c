@@ -955,7 +955,7 @@ gst_caps_structure_union (const GstStructure * struct1,
 GstCaps *
 gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
 {
-  guint i, j, k;
+  gint i, j, k;
   GstStructure *struct1;
   GstStructure *struct2;
   GstCaps *dest;
