@@ -18,6 +18,9 @@ AM_CONFIG_HEADER([config.h])
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
 
+dnl sets host_* variables
+AC_CANONICAL_HOST
+
 dnl initialize automake
 dnl FIXME: this is deprecated use, we should move PACKAGE and VERSION to
 dnl AC_INIT, but then we need to parse the version to pass to AS_VERSION
@@ -45,6 +48,12 @@ AS_AUTOTOOLS_ALTERNATE
 
 dnl Add parameters for aclocal
 AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4")
+
+dnl set up gettext
+dnl the version check needs to stay here because autopoint greps for it
+AM_GNU_GETTEXT_VERSION([0.11.5])
+AM_GNU_GETTEXT([external])
+GST_GETTEXT([gstreamer-$GST_MAJORMINOR])
 
 dnl *** check for arguments to configure ***
 
@@ -75,6 +84,8 @@ GST_ARG_DEBUG
 GST_ARG_PROFILING
 GST_ARG_VALGRIND
 GST_ARG_GCOV
+
+GST_ARG_EXAMPLES
 
 GST_ARG_WITH_PKG_CONFIG_PATH
 GST_ARG_WITH_PACKAGE_NAME([GStreamer])
@@ -131,18 +142,6 @@ else
   AC_MSG_WARN([Sissy ! By asking to not build the tests known to fail, you hereby waive your right to customer support.  If you do not agree with this EULA, please press Ctrl-C before the next line is printed.  By allowing the next line to be printed, you expressly acknowledge your acceptance of this EULA.])
 fi
 
-AC_ARG_ENABLE(examples,
-  AC_HELP_STRING([--disable-examples], [disable building examples]),
-    [
-      case "${enableval}" in
-        yes) BUILD_EXAMPLES=yes ;;
-        no)  BUILD_EXAMPLES=no ;;
-        *)   AC_MSG_ERROR(bad value ${enableval} for --disable-examples) ;;
-      esac
-    ], 
-    [BUILD_EXAMPLES=yes]) dnl Default value
-AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
-
 dnl poison destroyed objects
 AC_ARG_ENABLE(poisoning,
   AC_HELP_STRING([--enable-poisoning],
@@ -160,7 +159,7 @@ if test "x$USE_POISONING" = xyes; then
     [Define if we should poison deallocated memory])
 fi
 
-dnl *** platform checks ***
+dnl *** checks for platform ***
 
 dnl * hardware/architecture *
 
@@ -178,7 +177,6 @@ else
   GST_HAVE_UNALIGNED_ACCESS_DEFINE="#define GST_HAVE_UNALIGNED_ACCESS 0"
 fi
 AC_SUBST(GST_HAVE_UNALIGNED_ACCESS_DEFINE)
-
 
 dnl * software *
 
@@ -262,6 +260,30 @@ AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 AC_CHECK_HEADERS([process.h])
 
+dnl *** checks for types/defines ***
+
+dnl *** checks for structures ***
+
+dnl *** checks for compiler characteristics ***
+
+dnl make sure we can use "inline" from C code
+AC_C_INLINE
+
+OPT_CFLAGS=
+dnl Check for some compiler flags that optimize our code.
+if test "x$GCC" = xyes; then
+  AS_COMPILER_FLAG(-fno-common, OPT_CFLAGS="$OPT_CFLAGS -fno-common")
+fi
+
+dnl FIXME: decide what kind of flag this is, maybe it's not an optimization
+dnl flag
+dnl check if we should use -Wa,-mregnames on PowerPC, so we can use
+dnl symbolic register names in inline asm
+if test x$HAVE_CPU_PPC = xyes ; then
+  AS_COMPILER_FLAG(["-Wa,-mregnames"],
+    [OPT_CFLAGS="$OPT_CFLAGS -Wa,-mregnames"])
+fi
+
 dnl *** checks for library functions ***
 
 AC_CHECK_FUNCS([sigaction])
@@ -308,50 +330,11 @@ AC_CHECK_LIB(dl, dladdr,
              [Defined if we have dladdr ()]))
 CFLAGS="$save_cflags"
 
-dnl *** checks for compiler characteristics ***
-
-dnl make sure we can use "inline" from C code
-AC_C_INLINE
-
-dnl *** TODO: decide where to put ***
-
-dnl set up gettext
-GST_GETTEXT([gstreamer-$GST_MAJORMINOR])
-
-dnl define an ERROR_CFLAGS Makefile variable
-GST_SET_ERROR_CFLAGS($GST_CVS)
-
-dnl define correct errorlevel for debugging messages. We want to have GST_ERROR
-dnl messages printed when running cvs builds
-if test "x$GST_CVS" = "xyes"; then
-  GST_LEVEL_DEFAULT=GST_LEVEL_ERROR
-else
-  GST_LEVEL_DEFAULT=GST_LEVEL_NONE
-fi
-AC_DEFINE_UNQUOTED(GST_LEVEL_DEFAULT, $GST_LEVEL_DEFAULT,
-  [Default errorlevel to use])
-AC_SUBST(GST_LEVEL_DEFAULT)
-
-dnl *** checks for dependency libraries ***
+dnl *** checks for dependancy libraries ***
 
 dnl GLib
 
-dnl Minimum required version of GLib
-GLIB_REQ="2.6"
-AC_SUBST(GLIB_REQ)
-
-dnl Check for glib2 with sugar on top
-PKG_CHECK_MODULES(GLIB,
-    glib-2.0 >= $GLIB_REQ gobject-2.0 gthread-2.0 gmodule-2.0,
-    HAVE_GLIB=yes,
-    HAVE_GLIB=no)
-
-if test "x$HAVE_GLIB" = "xno"; then
-  AC_MSG_ERROR([GStreamer requires GLib >= $GLIB_REQ to compile.])
-fi
-
-dnl for the poor souls who for example have glib in /usr/local
-AS_SCRUB_INCLUDE(GLIB_CFLAGS)
+GST_GLIB_CHECK([2.6])
 
 dnl GLib 2.8 has some bug fixes that we like, so make sure our code knows
 AC_MSG_CHECKING([glib version >= 2.8])
@@ -387,22 +370,7 @@ AM_PATH_CHECK(0.9.2,
     HAVE_CHECK=no)
 AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
 
-OPT_CFLAGS=
-dnl Check for some compiler flags that optimize our code.
-if test "x$GCC" = xyes; then
-  AS_COMPILER_FLAG(-fno-common, OPT_CFLAGS="$OPT_CFLAGS -fno-common")
-fi
-
-dnl FIXME: decide what kind of flag this is, maybe it's not an optimization
-dnl flag
-dnl check if we should use -Wa,-mregnames on PowerPC, so we can use
-dnl symbolic register names in inline asm
-if test x$HAVE_CPU_PPC = xyes ; then
-  AS_COMPILER_FLAG(["-Wa,-mregnames"],
-    [OPT_CFLAGS="$OPT_CFLAGS -Wa,-mregnames"])
-fi
-
-dnl *** FIXME: name this part
+dnl *** set variables based on configure arguments
 
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
@@ -414,18 +382,17 @@ AS_AC_EXPAND(LIBDIR, $libdir)
 AC_DEFINE_UNQUOTED(LIBDIR, "$LIBDIR", [library dir])
 
 dnl set location of plugin directory
-AS_AC_EXPAND(PLUGINS_DIR, ${libdir}/gstreamer-$GST_MAJORMINOR)
-AC_DEFINE_UNQUOTED(PLUGINS_DIR, "$PLUGINS_DIR", [Define the plugin directory])
-AC_SUBST(PLUGINS_DIR)
-AC_MSG_NOTICE([Using $PLUGINS_DIR as the plugin install location])
-
-dnl plugin directory configure-time variable for use in Makefile.am
-plugindir="\$(libdir)/gstreamer-$GST_MAJORMINOR"
-AC_SUBST(plugindir)
+GST_SET_PLUGINDIR
 
 dnl FIXME: add LIBXML_PKG here
 GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
+
+dnl define an ERROR_CFLAGS Makefile variable
+GST_SET_ERROR_CFLAGS($GST_CVS)
+
+dnl define correct level for debugging messages
+GST_SET_LEVEL_DEFAULT($GST_CVS)
 
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
 

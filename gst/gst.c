@@ -619,7 +619,7 @@ init_post (void)
       g_free (home_plugins);
 
       /* add the main (installed) library path */
-      gst_registry_scan_path (default_registry, PLUGINS_DIR);
+      gst_registry_scan_path (default_registry, PLUGINDIR);
     } else {
       char **list;
       int i;

@@ -955,7 +955,8 @@ gst_caps_structure_union (const GstStructure * struct1,
 GstCaps *
 gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
 {
-  guint i, j, k;
+  gint64 i, j, k;               /* indexes can be up to 2 * sizeof (guint) */
+
   GstStructure *struct1;
   GstStructure *struct2;
   GstCaps *dest;
@@ -1008,8 +1009,6 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
       gst_caps_append_structure (dest, istruct);
       /* move down left */
       k++;
-      if (j == 0)
-        break;                  /* we use a guint for j */
       j--;
     }
   }

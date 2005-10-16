@@ -1,5 +1,15 @@
 2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  clean up further
+	* gst/gst.c: (init_post):
+	* win32/common/config.h.in:
+	  it's PLUGINDIR now
+	* gst/gstcaps.c: (gst_caps_intersect):
+	  use gint64, the range could be bigger than a guint
+
+2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstclock.h:
 	  document potential problem in 2038
 
