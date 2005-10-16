@@ -33,7 +33,7 @@
 #define GST_PACKAGE_NAME "GStreamer CVS/prerelease"
 
 /* Define the version */
-#define GST_VERSION 0.9.3.1
+#define GST_VERSION "0.9.3.1"
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA

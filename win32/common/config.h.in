@@ -33,7 +33,7 @@
 #define GST_PACKAGE_NAME "@GST_PACKAGE_NAME@"
 
 /* Define the version */
-#define GST_VERSION @GST_VERSION@
+#define GST_VERSION "@GST_VERSION@"
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
