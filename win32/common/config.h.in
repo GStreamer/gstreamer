@@ -28,7 +28,7 @@
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "@GST_PACKAGE_ORIGIN@"
-"
+
 /* package name in plugins */
 #define GST_PACKAGE_NAME "@GST_PACKAGE_NAME@"
 
