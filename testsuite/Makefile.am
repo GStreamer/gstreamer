@@ -54,7 +54,14 @@ GSTSUPP = $(top_srcdir)/common/gst.supp
 PYTHONSUPP = $(top_srcdir)/testsuite/python.supp
 GSTPYTHONSUPP = $(top_srcdir)/testsuite/gstpython.supp
 
-# valgrind any given test_x.py by running make test_x.valgrind
+# gdb any given test_x.py by running make test_x.py.gdb
+%.gdb: %
+	$(TESTS_ENVIRONMENT)                                    \
+	gdb --args 						\
+	$(PYTHON) 						\
+	$*
+
+# valgrind any given test_x.py by running make test_x.py.valgrind
 %.valgrind: %
 	$(TESTS_ENVIRONMENT)                                    \
 	$(VALGRIND_PATH) -q					\
