@@ -138,18 +138,32 @@ static GstCaps *
 gst_alpha_color_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstAlphaColor *alpha;
-  GstCaps *result;
+  GstAlphaColor *alpha = NULL;
+  GstCaps *result = NULL;
 
   alpha = GST_ALPHA_COLOR (btrans);
 
-  GST_DEBUG ("transforming direction %d caps %s", direction,
-      gst_caps_to_string (caps));
-  result = gst_caps_new_simple ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'),
-      "width", GST_TYPE_INT_RANGE, 16, 4096,
-      "height", GST_TYPE_INT_RANGE, 16, 4096,
-      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+  if (gst_caps_is_fixed (caps)) {
+    GstStructure *structure = NULL;
+    gint width, height;
+    gdouble fps;
+
+    structure = gst_caps_get_structure (caps, 0);
+    gst_structure_get_int (structure, "width", &width);
+    gst_structure_get_int (structure, "height", &height);
+    gst_structure_get_double (structure, "framerate", &fps);
+
+    result = gst_caps_new_simple ("video/x-raw-yuv",
+        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'),
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height, "framerate", G_TYPE_DOUBLE, fps, NULL);
+  } else {
+    result = gst_caps_new_simple ("video/x-raw-yuv",
+        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'),
+        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+        "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+  }
 
   return result;
 }
