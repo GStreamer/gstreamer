@@ -1,5 +1,13 @@
 2005-10-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstmemchunk.c:
+	* gst/gstmemchunk.h:
+	* gst/gsttrashstack.c:
+	* gst/gsttrashstack.h:
+	  out.  get out.  you're fired.  to the Attic !
+
+2005-10-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstcaps.c: (gst_caps_intersect):
 	  fix signedness issues in a (hopefully) correct way
 	* gst/gstelement.c: (gst_element_pads_activate):
