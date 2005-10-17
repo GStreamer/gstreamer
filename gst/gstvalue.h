@@ -295,14 +295,14 @@ struct _GstValueTable {
   void *_gst_reserved [GST_PADDING];
 };
 
-GType gst_int_range_get_type ();
-GType gst_double_range_get_type ();
-GType gst_fourcc_get_type ();
-GType gst_fraction_get_type ();
-GType gst_value_list_get_type ();
-GType gst_value_array_get_type ();
+GType gst_int_range_get_type (void);
+GType gst_double_range_get_type (void);
+GType gst_fourcc_get_type (void);
+GType gst_fraction_get_type (void);
+GType gst_value_list_get_type (void);
+GType gst_value_array_get_type (void);
 
-GType gst_date_get_type ();
+GType gst_date_get_type (void);
 
 void		gst_value_register		(const GstValueTable   *table);
 void		gst_value_init_and_copy		(GValue                *dest,
