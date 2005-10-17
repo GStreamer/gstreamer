@@ -988,7 +988,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     bclass->get_times (basesink, buffer, &start, &end);
 
   start_valid = GST_CLOCK_TIME_IS_VALID (start);
-  end_valid = GST_CLOCK_TIME_IS_VALID (start);
+  end_valid = GST_CLOCK_TIME_IS_VALID (end);
 
   GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
       ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
