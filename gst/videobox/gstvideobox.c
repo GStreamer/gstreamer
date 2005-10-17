@@ -349,10 +349,10 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
     structure = gst_caps_get_structure (to, i);
     if (gst_structure_get_int (structure, "width", &tmp))
       gst_structure_set (structure, "width", G_TYPE_INT,
-          tmp + direction * (video_box->box_left + video_box->box_right), NULL);
+          tmp + dir * (video_box->box_left + video_box->box_right), NULL);
     if (gst_structure_get_int (structure, "height", &tmp))
       gst_structure_set (structure, "height", G_TYPE_INT,
-          tmp + direction * (video_box->box_top + video_box->box_bottom), NULL);
+          tmp + dir * (video_box->box_top + video_box->box_bottom), NULL);
   }
 
   return to;
@@ -398,18 +398,28 @@ gst_video_box_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     guint * size)
 {
   GstVideoBox *video_box;
+  GstStructure *structure = NULL;
+  guint32 fourcc;
+  gint width, height;
 
   g_return_val_if_fail (size, FALSE);
   video_box = GST_VIDEO_BOX (trans);
 
-  if (gst_caps_is_equal (caps, GST_PAD_CAPS (trans->sinkpad))) {
-    *size = GST_VIDEO_I420_SIZE (video_box->in_width, video_box->in_height);
-  } else if (gst_caps_is_equal (caps, GST_PAD_CAPS (trans->srcpad))) {
-    if (video_box->use_alpha) {
-      *size = video_box->out_height * video_box->out_height * 4;
-    } else {
-      *size = GST_VIDEO_I420_SIZE (video_box->out_width, video_box->out_height);
-    }
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_fourcc (structure, "format", &fourcc);
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_int (structure, "height", &height);
+
+  switch (fourcc) {
+    case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
+      *size = width * height * 4;
+      break;
+    case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+      *size = GST_VIDEO_I420_SIZE (width, height);
+      break;
+    default:
+      return FALSE;
+      break;
   }
 
   return TRUE;
