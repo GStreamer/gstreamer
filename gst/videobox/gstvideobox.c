@@ -337,22 +337,46 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
 {
   GstVideoBox *video_box;
   GstCaps *to;
-  GstStructure *structure;
-  gint dir, i, tmp;
 
   video_box = GST_VIDEO_BOX (trans);
-  to = gst_caps_copy (from);
-  dir = (direction == GST_PAD_SINK) ? -1 : 1;
 
-  /* FIXME, include AYUV */
-  for (i = 0; i < gst_caps_get_size (to); i++) {
-    structure = gst_caps_get_structure (to, i);
-    if (gst_structure_get_int (structure, "width", &tmp))
-      gst_structure_set (structure, "width", G_TYPE_INT,
-          tmp + dir * (video_box->box_left + video_box->box_right), NULL);
-    if (gst_structure_get_int (structure, "height", &tmp))
-      gst_structure_set (structure, "height", G_TYPE_INT,
-          tmp + dir * (video_box->box_top + video_box->box_bottom), NULL);
+  if (gst_caps_is_fixed (from)) {
+    GstCaps *to_ayuv, *to_i420;
+    GstStructure *structure;
+    gint width, height, dir;
+    gdouble fps;
+
+    dir = (direction == GST_PAD_SINK) ? -1 : 1;
+
+    structure = gst_caps_get_structure (from, 0);
+
+    gst_structure_get_int (structure, "width", &width);
+    gst_structure_get_int (structure, "height", &height);
+    gst_structure_get_double (structure, "framerate", &fps);
+
+    width += dir * (video_box->box_left + video_box->box_right);
+    height += dir * (video_box->box_top + video_box->box_bottom);
+
+    to_i420 = gst_caps_new_simple ("video/x-raw-yuv",
+        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height, "framerate", G_TYPE_DOUBLE, fps, NULL);
+
+    to_ayuv = gst_caps_new_simple ("video/x-raw-yuv",
+        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'),
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height, "framerate", G_TYPE_DOUBLE, fps, NULL);
+    to = to_i420;
+    gst_caps_append (to, to_ayuv);
+  } else {
+    GstPadTemplate *tmpl;
+
+    if (direction == GST_PAD_SINK) {
+      tmpl = gst_static_pad_template_get (&gst_video_box_src_template);
+    } else {
+      tmpl = gst_static_pad_template_get (&gst_video_box_sink_template);
+    }
+    to = gst_caps_copy (gst_pad_template_get_caps (tmpl));
   }
 
   return to;
