@@ -955,7 +955,8 @@ gst_caps_structure_union (const GstStructure * struct1,
 GstCaps *
 gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
 {
-  gint64 i, j, k;               /* indexes can be up to 2 * sizeof (guint) */
+  guint64 i;                    /* index can be up to 2 * G_MAX_UINT */
+  guint j, k;
 
   GstStructure *struct1;
   GstStructure *struct2;
@@ -1000,7 +1001,7 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
 
     /* now run the diagonal line, end condition is the left or bottom
      * border */
-    while (k < caps2->structs->len && j >= 0) {
+    while (k < caps2->structs->len) {
       struct1 = gst_caps_get_structure (caps1, j);
       struct2 = gst_caps_get_structure (caps2, k);
 
@@ -1009,6 +1010,8 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
       gst_caps_append_structure (dest, istruct);
       /* move down left */
       k++;
+      if (j == 0)
+        break;                  /* so we don't roll back to G_MAXUINT */
       j--;
     }
   }

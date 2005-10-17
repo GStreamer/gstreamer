@@ -1,3 +1,12 @@
+2005-10-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstcaps.c: (gst_caps_intersect):
+	  fix signedness issues in a (hopefully) correct way
+	* gst/gstelement.c: (gst_element_pads_activate):
+	  some debugging
+	* gst/gstobject.c: (gst_object_set_parent):
+	  some debugging
+
 2005-10-17  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/gstvalue.h: Fix prototypes.

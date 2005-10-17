@@ -871,6 +871,7 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
    * in the floating case. */
   object->parent = parent;
   if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
+    GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unsetting floating flag");
     GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
     GST_UNLOCK (object);
   } else {

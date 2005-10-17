@@ -2157,6 +2157,7 @@ gst_element_pads_activate (GstElement * element, gboolean active)
   GstIterator *iter;
   gboolean fold_ok;
 
+  GST_DEBUG_OBJECT (element, "pads_activate with active %d", active);
   /* no need to unset this later, it's just a boolean */
   g_value_init (&ret, G_TYPE_BOOLEAN);
   g_value_set_boolean (&ret, TRUE);
@@ -2165,16 +2166,21 @@ gst_element_pads_activate (GstElement * element, gboolean active)
   fold_ok = iterator_fold_with_resync
       (iter, (GstIteratorFoldFunction) activate_pads, &ret, &active);
   gst_iterator_free (iter);
-  if (!fold_ok || !g_value_get_boolean (&ret))
+  if (!fold_ok || !g_value_get_boolean (&ret)) {
+    GST_DEBUG_OBJECT (element, "pads_activate failed");
     return FALSE;
+  }
 
   iter = gst_element_iterate_sink_pads (element);
   fold_ok = iterator_fold_with_resync
       (iter, (GstIteratorFoldFunction) activate_pads, &ret, &active);
   gst_iterator_free (iter);
-  if (!fold_ok || !g_value_get_boolean (&ret))
+  if (!fold_ok || !g_value_get_boolean (&ret)) {
+    GST_DEBUG_OBJECT (element, "pads_activate failed");
     return FALSE;
+  }
 
+  GST_DEBUG_OBJECT (element, "pads_activate successful");
   return TRUE;
 }
 
