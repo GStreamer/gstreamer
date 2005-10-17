@@ -281,6 +281,7 @@ GST_PLUGINS_ALL="\
 		smpte	\
 		udp     \
 		videobox \
+		videomixer \
 		wavenc \
 		wavparse \
                 "
@@ -601,6 +602,7 @@ gst/smpte/Makefile
 gst/udp/Makefile
 gst/videobox/Makefile
 gst/videofilter/Makefile
+gst/videomixer/Makefile
 gst/wavenc/Makefile
 gst/wavparse/Makefile
 gst/flx/Makefile

@@ -326,7 +326,7 @@ gst_pngdec_chain (GstPad * pad, GstBuffer * buf)
   gst_buffer_unref (buf);
 
   /* Pushing */
-  GST_LOG ("pushing our raw RGB frame");
+  GST_LOG ("pushing our raw RGB frame of %d bytes", GST_BUFFER_SIZE (out));
   ret = gst_pad_push (pngdec->srcpad, out);
 
 beach:
