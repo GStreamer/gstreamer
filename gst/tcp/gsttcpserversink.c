@@ -59,9 +59,6 @@ enum
   ARG_PORT,
 };
 
-static void gst_tcpserversink_base_init (gpointer g_class);
-static void gst_tcpserversink_class_init (GstTCPServerSink * klass);
-static void gst_tcpserversink_init (GstTCPServerSink * tcpserversink);
 static void gst_tcpserversink_finalize (GObject * gobject);
 
 static gboolean gst_tcpserversink_handle_wait (GstMultiFdSink * sink,
@@ -76,34 +73,9 @@ static void gst_tcpserversink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 
-static GstMultiFdSinkClass *parent_class = NULL;
+GST_BOILERPLATE (GstTCPServerSink, gst_tcpserversink, GstMultiFdSink,
+    GST_TYPE_MULTIFDSINK);
 
-GType
-gst_tcpserversink_get_type (void)
-{
-  static GType tcpserversink_type = 0;
-
-
-  if (!tcpserversink_type) {
-    static const GTypeInfo tcpserversink_info = {
-      sizeof (GstTCPServerSinkClass),
-      gst_tcpserversink_base_init,
-      NULL,
-      (GClassInitFunc) gst_tcpserversink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstTCPServerSink),
-      0,
-      (GInstanceInitFunc) gst_tcpserversink_init,
-      NULL
-    };
-
-    tcpserversink_type =
-        g_type_register_static (GST_TYPE_MULTIFDSINK, "GstTCPServerSink",
-        &tcpserversink_info, 0);
-  }
-  return tcpserversink_type;
-}
 
 static void
 gst_tcpserversink_base_init (gpointer g_class)
@@ -114,17 +86,13 @@ gst_tcpserversink_base_init (gpointer g_class)
 }
 
 static void
-gst_tcpserversink_class_init (GstTCPServerSink * klass)
+gst_tcpserversink_class_init (GstTCPServerSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstMultiFdSinkClass *gstmultifdsink_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstmultifdsink_class = (GstMultiFdSinkClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_MULTIFDSINK);
 
   gobject_class->set_property = gst_tcpserversink_set_property;
   gobject_class->get_property = gst_tcpserversink_get_property;
@@ -146,7 +114,7 @@ gst_tcpserversink_class_init (GstTCPServerSink * klass)
 }
 
 static void
-gst_tcpserversink_init (GstTCPServerSink * this)
+gst_tcpserversink_init (GstTCPServerSink * this, GstTCPServerSinkClass * klass)
 {
   this->server_port = TCP_DEFAULT_PORT;
   /* should support as minimum 576 for IPV4 and 1500 for IPV6 */

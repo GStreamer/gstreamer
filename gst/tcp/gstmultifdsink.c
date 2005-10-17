@@ -218,9 +218,6 @@ gst_client_status_get_type (void)
   return client_status_type;
 }
 
-static void gst_multifdsink_base_init (gpointer g_class);
-static void gst_multifdsink_class_init (GstMultiFdSinkClass * klass);
-static void gst_multifdsink_init (GstMultiFdSink * multifdsink);
 static void gst_multifdsink_finalize (GObject * object);
 
 static void gst_multifdsink_remove_client_link (GstMultiFdSink * sink,
@@ -237,36 +234,12 @@ static void gst_multifdsink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 
-static GstElementClass *parent_class = NULL;
+GST_BOILERPLATE (GstMultiFdSink, gst_multifdsink, GstBaseSink,
+    GST_TYPE_BASE_SINK);
+
 
 static guint gst_multifdsink_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_multifdsink_get_type (void)
-{
-  static GType multifdsink_type = 0;
-
-
-  if (!multifdsink_type) {
-    static const GTypeInfo multifdsink_info = {
-      sizeof (GstMultiFdSinkClass),
-      gst_multifdsink_base_init,
-      NULL,
-      (GClassInitFunc) gst_multifdsink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMultiFdSink),
-      0,
-      (GInstanceInitFunc) gst_multifdsink_init,
-      NULL
-    };
-
-    multifdsink_type =
-        g_type_register_static (GST_TYPE_BASE_SINK, "GstMultiFdSink",
-        &multifdsink_info, 0);
-  }
-  return multifdsink_type;
-}
 
 static void
 gst_multifdsink_base_init (gpointer g_class)
@@ -289,8 +262,6 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
 
   gobject_class->set_property = gst_multifdsink_set_property;
   gobject_class->get_property = gst_multifdsink_get_property;
@@ -444,7 +415,7 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
 }
 
 static void
-gst_multifdsink_init (GstMultiFdSink * this)
+gst_multifdsink_init (GstMultiFdSink * this, GstMultiFdSinkClass * klass)
 {
   GST_OBJECT_FLAG_UNSET (this, GST_MULTIFDSINK_OPEN);
 

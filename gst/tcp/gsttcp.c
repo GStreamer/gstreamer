@@ -124,11 +124,8 @@ gst_tcp_socket_write (int socket, const void *buf, size_t count)
   return bytes_written;
 }
 
-/* read number of bytes from a socket into a given buffer incrementally.
- * Returns number of bytes read with same semantics as read(2):
- * < 0: error, see errno
- * = 0: EOF
- * > 0: bytes read
+/* atomically read count bytes into buf, cancellable. return val of GST_FLOW_OK
+ * indicates success, anything else is failure.
  */
 static GstFlowReturn
 gst_tcp_socket_read (GstElement * this, int socket, void *buf, size_t count,

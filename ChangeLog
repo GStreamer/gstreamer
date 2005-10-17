@@ -1,5 +1,9 @@
 2005-10-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/tcp/gstmultifdsink.c: Convert to use the boilerplate macro.
+
+	* gst/tcp/gsttcp.c (gst_tcp_socket_read): Comment update.
+
 	* ext/theora/theoraenc.c (theora_buffer_from_packet): Pass the
 	alloc_buffer flow return to callers.
 	(theora_enc_chain, theora_enc_chain): Adapt to buffer_from_packet
