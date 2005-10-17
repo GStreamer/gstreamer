@@ -22,7 +22,7 @@
 /**
  * SECTION:gstbasesink
  * @short_description: Base class for sink elements
- * @see_also: #GstBaseTransformc, #GstBaseSource
+ * @see_also: #GstBaseTransform, #GstBaseSource
  *
  * This class is for elements that do output operations.
  *
