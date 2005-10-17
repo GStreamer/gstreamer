@@ -1,3 +1,14 @@
+2005-10-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  rewrite
+
+2005-10-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/video/video.c: (gst_video_get_size):
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	  doc updates
+
 2005-10-17  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ogg/gstoggmux.c (gst_ogg_mux_queue_pads): Fix bug introduced

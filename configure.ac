@@ -69,6 +69,55 @@ GST_ARG_WITH_PKG_CONFIG_PATH
 GST_ARG_WITH_PACKAGE_NAME([GStreamer Base Plug-ins])
 GST_ARG_WITH_PACKAGE_ORIGIN
 
+dnl these are all the gst plug-ins, compilable without additional libs
+GST_PLUGINS_ALL="\
+	adder \
+	audioconvert \
+	audiorate \
+	audioresample \
+	audiotestsrc \
+	ffmpegcolorspace \
+	playback \
+	sine \
+	subparse \
+	tcp \
+	typefind \
+	videotestsrc \
+	videorate \
+	videoscale \
+	volume \
+	"
+AC_SUBST(GST_PLUGINS_ALL)
+
+GST_PLUGINS_SELECTED=""
+
+AC_ARG_WITH(plugins,
+    AC_HELP_STRING([--with-plugins],[comma-separated list of plug-ins to compile]),
+    [for i in `echo $withval | tr , ' '`; do
+        if echo $GST_PLUGINS_ALL | grep $i > /dev/null
+        then
+            GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED $i"
+        else
+            echo "plug-in $i not recognized, ignoring..."
+        fi
+    done],
+    [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
+
+AC_SUBST(GST_PLUGINS_SELECTED)
+
+
+dnl ext plug-ins; plug-ins that have external dependencies
+GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
+  [HAVE_EXTERNAL=yes], enabled,
+  [
+    AC_MSG_NOTICE(building external plug-ins)
+    BUILD_EXTERNAL="yes"
+  ],[
+    AC_MSG_NOTICE(all plug-ins with external dependencies will not be built)
+    BUILD_EXTERNAL="no"
+  ])
+AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
+
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *
@@ -141,15 +190,51 @@ GST_CHECK_FUNCTION
 
 dnl *** checks for dependancy libraries ***
 
-dnl GLib
-
+dnl GLib is required
 GST_GLIB_CHECK([2.6])
 
-dnl liboil
+dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.2, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 if test "x${HAVE_LIBOIL}" != xyes ; then
   AC_ERROR([liboil-0.3 is required])
 fi
+
+dnl checks for gstreamer
+dnl uninstalled is selected preferentially -- see pkg-config(1)
+GST_REQ=0.9.3
+GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
+
+dnl FIXME: get rid of this by making sure gstreamer-check brings it in
+dnl check for "check", unit testing library/header
+AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
+AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+
+
+dnl GTK is optional and used in examples
+HAVE_GTK=NO
+PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2.0, HAVE_GTK_22=yes, HAVE_GTK_22=no)
+if test "x$HAVE_GTK_22" = "xyes"; then
+  HAVE_GTK=yes
+  GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
+  AC_SUBST(GTK_VERSION)
+  GTK_PREFIX=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
+  AC_SUBST(GTK_BASE_DIR)
+else
+  PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK_20=yes, HAVE_GTK_20=no)
+fi
+if test "x$HAVE_GTK_20" = "xyes"; then
+  HAVE_GTK=yes
+fi
+GTK_CFLAGS=$GTK2_CFLAGS
+GTK_LIBS=$GTK2_LIBS
+AC_SUBST(GTK_LIBS)
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(HAVE_GTK)
+AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
 dnl *** set variables based on configure arguments ***
 
@@ -206,156 +291,13 @@ AC_SUBST(DEFAULT_VISUALIZER)
 AC_DEFINE_UNQUOTED(DEFAULT_VISUALIZER, "$DEFAULT_VISUALIZER",
   [Default visualizer])
 
-dnl ############################################
-dnl # Super Duper options for plug-in building #
-dnl ############################################
-
-dnl ext plug-ins; plug-ins that have external dependencies
-GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
-[HAVE_EXTERNAL=yes],enabled,
-[
-  AC_MSG_WARN(building external plug-ins)
-  BUILD_EXTERNAL="yes"
-],[
-  AC_MSG_WARN(all plug-ins with external dependencies will not be built)
-  BUILD_EXTERNAL="no"
-])
-# make BUILD_EXTERNAL available to Makefile.am
-AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
-
-dnl ##############################
-dnl # Do automated configuration #
-dnl ##############################
-
-dnl check for gstreamer
-dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_REQ=0.9.0
-PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST="yes", HAVE_GST="no")
-
-if test "x$HAVE_GST" = "xno"; then
-  AC_MSG_ERROR(no GStreamer found)
-fi
-
-GST_TOOLS_DIR=`pkg-config --variable=toolsdir gstreamer-$GST_MAJORMINOR`
-if test -z $GST_TOOLS_DIR; then
-  AC_MSG_ERROR([no tools dir defined in GStreamer pkg-config file; core upgrade needed.])
-fi
-AC_SUBST(GST_TOOLS_DIR)
-
-dnl check for where core plug-ins got installed
-dnl this is used for unit tests
-GST_PLUGINS_DIR=`pkg-config --variable=pluginsdir gstreamer-$GST_MAJORMINOR`
-if test -z $GST_PLUGINS_DIR; then
-  AC_MSG_ERROR([no plugins dir defined in GStreamer pkg-config file; core upgrade needed.])
-fi
-AC_SUBST(GST_PLUGINS_DIR)
-
-dnl check for gstreamer-dataprotocol; uninstalled is selected preferentially
-PKG_CHECK_MODULES(GST_GDP, gstreamer-dataprotocol-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST_GDP="yes", HAVE_GST_GDP="no")
-
-if test "x$HAVE_GST_GDP" = "xno"; then
-  AC_MSG_ERROR(no GStreamer Dataprotocol Libs found)
-fi
-
-AC_SUBST(GST_GDP_LIBS)
-
-dnl check for gstreamer-controller; uninstalled is selected preferentially
-PKG_CHECK_MODULES(GST_CTRL, gstreamer-controller-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST_CTRL="yes", HAVE_GST_CTRL="no")
-
-if test "x$HAVE_GST_CTRL" = "xno"; then
-  AC_MSG_ERROR(no GStreamer Controller Libs found)
-fi
-
-AC_SUBST(GST_CTRL_LIBS)
-
-PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST_BASE="yes", HAVE_GST_BASE="no")
-
-if test "x$HAVE_GST_BASE" = "xno"; then
-  AC_MSG_ERROR(no libgstbase found)
-fi
-
-AC_SUBST(GST_BASE_LIBS)
-
-PKG_CHECK_MODULES(GST_CHECK, gstreamer-check-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST_CHECK="yes", HAVE_GST_CHECK="no")
-
-
-dnl Check for additional libraries that we might use:
-dnl =================================================
-dnl GTK
-HAVE_GTK=NO
-PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2.0, HAVE_GTK_22=yes, HAVE_GTK_22=no)
-if test "x$HAVE_GTK_22" = "xyes"; then
-  HAVE_GTK=yes
-  GTK_VERSION=`$PKG_CONFIG --variable=gtk_binary_version gtk+-2.0`
-  AC_SUBST(GTK_VERSION)
-  GTK_PREFIX=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
-  AC_SUBST(GTK_BASE_DIR)
-else
-  PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK_20=yes, HAVE_GTK_20=no)
-fi
-if test "x$HAVE_GTK_20" = "xyes"; then
-  HAVE_GTK=yes
-fi
-GTK_CFLAGS=$GTK2_CFLAGS
-GTK_LIBS=$GTK2_LIBS
-AC_SUBST(GTK_LIBS)
-AC_SUBST(GTK_CFLAGS)
-AC_SUBST(HAVE_GTK)
-
-dnl ===========================================================================
-dnl ============================= gst plug-ins ================================
-dnl ===========================================================================
-
-dnl these are all the gst plug-ins, compilable without additional libs
-GST_PLUGINS_ALL="\
-	adder \
-	audioconvert \
-	audiorate \
-	audioresample \
-	audiotestsrc \
-	ffmpegcolorspace \
-	playback \
-	sine \
-	subparse \
-	tcp \
-	typefind \
-	videotestsrc \
-	videorate \
-	videoscale \
-	volume \
-	"
-AC_SUBST(GST_PLUGINS_ALL)
-
-GST_PLUGINS_SELECTED=""
-
-AC_ARG_WITH(plugins,
-    AC_HELP_STRING([--with-plugins],[comma-separated list of plug-ins to compile]),
-    [for i in `echo $withval | tr , ' '`; do
-        if echo $GST_PLUGINS_ALL | grep $i > /dev/null
-        then
-            GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED $i"
-        else
-            echo "plug-in $i not recognized, ignoring..."
-        fi
-    done],
-    [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
-
-AC_SUBST(GST_PLUGINS_SELECTED)
-
-dnl ==========================================================================
-dnl ============================= sys plug-ins ================================
-dnl ==========================================================================
+dnl *** sys plug-ins ***
 
 echo
 AC_MSG_NOTICE([Checking libraries for plugins in sys/])
 echo
 
-dnl Check for X11
+dnl *** X11 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesink], [
@@ -472,10 +414,8 @@ GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
   fi
 ])
 
-dnl Next, check for the optional libraries:
-dnl These are all libraries used in building plug-ins
-dnl ================================================
-dnl let's try and sort them alphabetically, shall we ?
+dnl *** ext plug-ins ***
+dnl keep this list sorted alphabetically !
 
 if test "x$BUILD_EXTERNAL" = "xyes"; then
 
@@ -599,10 +539,6 @@ fi
 
 fi dnl of EXT plugins
 
-dnl check for "check", unit testing library/header
-AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
-AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
-
 dnl ######################################################################
 dnl # Check command line parameters, and set shell variables accordingly #
 dnl ######################################################################
@@ -615,16 +551,6 @@ dnl make the HAVE_FT2 variable available to automake and Makefile.am
 AM_CONDITIONAL(HAVE_FT2, test "x$HAVE_FT2" = "xyes")
 AC_SUBST(FT2_CFLAGS)
 AC_SUBST(FT2_LIBS)
-
-dnl #############################
-dnl # Set automake conditionals #
-dnl #############################
-
-dnl These should be "USE_*" instead of "HAVE_*", but some packages expect
-dnl HAVE_ and it is likely to be easier to stick with the old name
-AM_CONDITIONAL(HAVE_GTK,            test "x$HAVE_GTK" = "xyes")
-AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
-AM_CONDITIONAL(BUILD_EXAMPLES,      test "x$BUILD_EXAMPLES" = "xyes")
 
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
