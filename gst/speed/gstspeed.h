@@ -60,7 +60,6 @@ struct _GstSpeed {
   guint          rate;
   guint          channels;
   guint          width;
-  guint          buffer_frames;
 
   guint          sample_size;
   GstSpeedFormat format;

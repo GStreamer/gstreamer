@@ -1,3 +1,13 @@
+2005-10-17  Edgard Lima <edgard.lima@indt.org.br>
+
+	* gst/speed/gstspeed.c: (speed_chain), (speed_setcaps),
+	(speed_parse_caps), (speed_src_event), (speed_sink_event),
+	(speed_src_query), (speed_init), (speed_set_property),
+	(speed_change_state), (gst_speed_convert):
+	Fixed speed - the previous version, 1.38, has been ported to 0.9
+	from a wrong version, 1.37 (from 1.36). That fix already includes
+	the changes done in 1.36.2.4.
+
 2005-10-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
