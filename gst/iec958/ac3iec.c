@@ -329,6 +329,7 @@ ac3iec_chain_raw (GstPad * pad, GstBuffer * buf)
 
       /* Set the timestamp. */
       GST_BUFFER_TIMESTAMP (new) = ac3iec->cur_ts;
+      GST_BUFFER_DURATION (new) = IEC958_FRAME_DURATION;
       ac3iec->cur_ts = GST_CLOCK_TIME_NONE;
 
       GST_LOG_OBJECT (ac3iec, "Pushing IEC958 buffer of size %d",
