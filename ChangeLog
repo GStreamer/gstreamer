@@ -1,5 +1,9 @@
 2005-10-17  Julien MOUTTE  <julien@moutte.net>
 
+	* ext/libpng/gstpngdec.c: (gst_pngdec_init): We use fixed caps.
+
+2005-10-17  Julien MOUTTE  <julien@moutte.net>
+
 	* gst/videobox/gstvideobox.c: (gst_video_box_transform_caps),
 	(gst_video_box_get_unit_size): Fix wrong size calculations and
 	implement get_unit_size correctly.

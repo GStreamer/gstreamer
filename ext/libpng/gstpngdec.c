@@ -87,9 +87,7 @@ static GstStaticPadTemplate gst_pngdec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/png, "
-        "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 0.0, MAX ]")
+    GST_STATIC_CAPS ("image/png")
     );
 
 static void
@@ -124,10 +122,12 @@ gst_pngdec_init (GstPngDec * pngdec)
 {
   pngdec->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_pngdec_sink_pad_template), "sink");
+  gst_pad_use_fixed_caps (pngdec->sinkpad);
   gst_element_add_pad (GST_ELEMENT (pngdec), pngdec->sinkpad);
 
   pngdec->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_pngdec_src_pad_template), "src");
+  gst_pad_use_fixed_caps (pngdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (pngdec), pngdec->srcpad);
 
   gst_pad_set_chain_function (pngdec->sinkpad, gst_pngdec_chain);
