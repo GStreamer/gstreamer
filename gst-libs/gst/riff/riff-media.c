@@ -342,6 +342,13 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Xan Wing Commander 4");
       break;
 
+    case GST_MAKE_FOURCC ('I', 'V', '3', '2'):
+      caps = gst_caps_new_simple ("video/x-indeo",
+          "indeoversion", G_TYPE_INT, 3, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Intel Video 3");
+      break;
+
     case GST_MAKE_FOURCC ('I', 'V', '5', '0'):
       caps = gst_caps_new_simple ("video/x-intel",
           "ivversion", G_TYPE_INT, 5, NULL);
@@ -643,6 +650,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('R', 'L', 'E', ' '),
     GST_MAKE_FOURCC ('D', 'I', 'B', ' '),
     GST_MAKE_FOURCC ('X', 'x', 'a', 'n'),
+    GST_MAKE_FOURCC ('I', 'V', '3', '2'),
     GST_MAKE_FOURCC ('I', 'V', '5', '0'),
     GST_MAKE_FOURCC ('M', '4', 'S', '2'),
     /* FILL ME */
