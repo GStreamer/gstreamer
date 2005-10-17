@@ -272,6 +272,7 @@ GST_PLUGINS_ALL="\
 		avi \
 		debug \
 		effectv \
+		flx \
 		goom \
 		law \
 		level \

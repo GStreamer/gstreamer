@@ -205,7 +205,8 @@ gst_flxdec_sink_event_handler (GstPad * pad, GstEvent * event)
 }
 
 static void
-flx_decode_chunks (GstFlxDec * flxdec, gulong count, gchar * data, gchar * dest)
+flx_decode_chunks (GstFlxDec * flxdec, gulong count, guchar * data,
+    guchar * dest)
 {
   FlxFrameChunk *hdr;
 
