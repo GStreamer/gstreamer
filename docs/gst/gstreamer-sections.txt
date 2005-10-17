@@ -423,23 +423,30 @@ GstState
 GstStateChange
 GstStateChangeReturn
 
+GST_SIGN
 GST_STATE
-GST_STATE_PENDING
+GST_STATE_BROADCAST
 GST_STATE_CHANGE
 GST_STATE_ERROR
-GST_STATE_NO_PREROLL
 GST_STATE_FINAL
 GST_STATE_GET_COND
 GST_STATE_GET_LOCK
+GST_STATE_GET_NEXT
 GST_STATE_LOCK
-GST_STATE_UNLOCK
 GST_STATE_LOCK_FULL
-GST_STATE_UNLOCK_FULL
-GST_STATE_TRYLOCK
-GST_STATE_BROADCAST
+GST_STATE_NEXT
+GST_STATE_NO_PREROLL
+GST_STATE_PENDING
+GST_STATE_RETURN
 GST_STATE_SIGNAL
-GST_STATE_WAIT
 GST_STATE_TIMED_WAIT
+GST_STATE_TRANSITION
+GST_STATE_TRANSITION_CURRENT
+GST_STATE_TRANSITION_NEXT
+GST_STATE_TRYLOCK
+GST_STATE_UNLOCK
+GST_STATE_UNLOCK_FULL
+GST_STATE_WAIT
 GST_ELEMENT_NAME
 GST_ELEMENT_PARENT
 GST_ELEMENT_BUS
@@ -951,18 +958,6 @@ gst_iterator_result_get_type
 
 
 <SECTION>
-<FILE>gstmemchunk</FILE>
-<TITLE>GstMemChunk</TITLE>
-GstMemChunk
-gst_mem_chunk_alloc0
-gst_mem_chunk_destroy
-gst_mem_chunk_new
-gst_mem_chunk_alloc
-gst_mem_chunk_free
-</SECTION>
-
-
-<SECTION>
 <FILE>gstmessage</FILE>
 <TITLE>GstMessage</TITLE>
 GstMessage
@@ -1261,7 +1256,6 @@ GstPadDispatcherFunction
 
 gst_pad_set_element_private
 gst_pad_get_element_private
-
 
 <SUBSECTION Core>
 gst_pad_chain
@@ -2031,8 +2025,11 @@ GST_ROUND_UP_64
 
 gst_atomic_int_set
 gst_flow_get_name
+gst_flow_to_quark
 gst_print_element_args
 gst_print_pad_caps
+gst_guint64_to_gdouble
+gst_gdouble_to_guint64
 gst_util_dump_mem
 gst_util_uint64_scale
 gst_util_set_object_arg
@@ -2141,7 +2138,16 @@ gst_value_register_subtract_func
 gst_value_intersect
 gst_value_can_intersect
 gst_value_register_intersect_func
+
 <SUBSECTION Standard>
+<SUBSECTION Private>
+gst_date_get_type
+gst_double_range_get_type
+gst_fourcc_get_type
+gst_fraction_get_type
+gst_int_range_get_type
+gst_value_array_get_type
+gst_value_list_get_type
 </SECTION>
 
 <SECTION>
@@ -2150,6 +2156,7 @@ gst_value_register_intersect_func
 GST_VERSION_MAJOR
 GST_VERSION_MINOR
 GST_VERSION_MICRO
+GST_VERSION_NANO
 </SECTION>
 
 

@@ -53,6 +53,7 @@ gst_controller_new
 gst_controller_new_list
 gst_controller_new_valist
 gst_controller_remove_properties
+gst_controller_remove_properties_list
 gst_controller_remove_properties_valist
 gst_controller_set
 gst_controller_set_from_list

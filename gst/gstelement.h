@@ -115,8 +115,8 @@ typedef enum {
  */
 #define GST_STATE_RETURN(obj)		(GST_ELEMENT(obj)->last_return)
 
-#define GST_SIGN(val)				((val) < 0 ? -1 : ((val) > 0 ? 1 : 0))
-#define GST_STATE_GET_NEXT(cur,pending) 	((cur)+GST_SIGN ((gint)(pending)-(gint)(cur)))
+#define __GST_SIGN(val)				((val) < 0 ? -1 : ((val) > 0 ? 1 : 0))
+#define GST_STATE_GET_NEXT(cur,pending) 	((cur) + __GST_SIGN ((gint)(pending) - (gint)(cur)))
 #define GST_STATE_TRANSITION(cur,next)  	(((cur)<<3)|(next))
 #define GST_STATE_TRANSITION_CURRENT(trans)  	((trans)>>3)
 #define GST_STATE_TRANSITION_NEXT(trans)  	((trans)&0x7)

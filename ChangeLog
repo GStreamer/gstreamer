@@ -1,3 +1,11 @@
+2005-10-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* gst/gstelement.h:
+	  add new api entries
+	  hide internal macro
+
 2005-10-17  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstcollectpads.c (gst_collectpads_chain): Slight
