@@ -108,7 +108,9 @@ interpolate_none_get_##type##_value_array (GstControlledProperty * prop, \
 }
 
 DEFINE_NONE_GET (int)
+    DEFINE_NONE_GET (uint)
     DEFINE_NONE_GET (long)
+DEFINE_NONE_GET (ulong)
 DEFINE_NONE_GET (float)
 DEFINE_NONE_GET (double)
 DEFINE_NONE_GET (boolean)
@@ -117,7 +119,11 @@ DEFINE_NONE_GET (boolean)
        interpolate_none_get,
        interpolate_none_get_int_value_array,
        interpolate_none_get,
+       interpolate_none_get_uint_value_array,
+       interpolate_none_get,
        interpolate_none_get_long_value_array,
+       interpolate_none_get,
+       interpolate_none_get_ulong_value_array,
        interpolate_none_get,
        interpolate_none_get_float_value_array,
        interpolate_none_get,
@@ -156,6 +162,10 @@ interpolate_trigger_get_value_array (GstControlledProperty * prop,
 static GstInterpolateMethod interpolate_trigger = {
   interpolate_trigger_get,
   interpolate_trigger_get_value_array,
+  interpolate_trigger_get,
+  NULL,
+  interpolate_trigger_get,
+  NULL,
   interpolate_trigger_get,
   NULL,
   interpolate_trigger_get,
@@ -223,15 +233,21 @@ interpolate_linear_get_##type##_value_array (GstControlledProperty * prop, \
 }
 
 DEFINE_LINEAR_GET (int)
+DEFINE_LINEAR_GET (uint)
 DEFINE_LINEAR_GET (long)
+DEFINE_LINEAR_GET (ulong)
 DEFINE_LINEAR_GET (float)
 DEFINE_LINEAR_GET (double)
 
      static GstInterpolateMethod interpolate_linear = {
        interpolate_linear_get_int,
        interpolate_linear_get_int_value_array,
+       interpolate_linear_get_uint,
+       interpolate_linear_get_uint_value_array,
        interpolate_linear_get_long,
        interpolate_linear_get_long_value_array,
+       interpolate_linear_get_ulong,
+       interpolate_linear_get_ulong_value_array,
        interpolate_linear_get_float,
        interpolate_linear_get_float_value_array,
        interpolate_linear_get_double,

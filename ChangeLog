@@ -1,3 +1,18 @@
+2005-10-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* check/gst-libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_set_interpolation_mode):
+	* libs/gst/controller/gstcontroller.h:
+	* libs/gst/controller/gstinterpolation.c:
+	* testsuite/controller/.cvsignore:
+	* testsuite/controller/Makefile.am:
+	* testsuite/controller/interpolator.c:
+	  merge controller testsuites
+	  fix broken tests
+	  remove mem-chunk from docs
+
 2005-10-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstmemchunk.c:

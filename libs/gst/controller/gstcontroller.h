@@ -117,8 +117,12 @@ typedef struct _GstInterpolateMethod
 {
   InterpolateGet get_int;
   InterpolateGetValueArray get_int_value_array;
+  InterpolateGet get_uint;
+  InterpolateGetValueArray get_uint_value_array;
   InterpolateGet get_long;
   InterpolateGetValueArray get_long_value_array;
+  InterpolateGet get_ulong;
+  InterpolateGetValueArray get_ulong_value_array;
   InterpolateGet get_float;
   InterpolateGetValueArray get_float_value_array;
   InterpolateGet get_double;

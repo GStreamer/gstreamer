@@ -172,16 +172,24 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
   if (mode != GST_INTERPOLATE_USER) {
     switch (self->type) {
       case G_TYPE_INT:
-      case G_TYPE_UINT:
         self->get = interpolation_methods[mode]->get_int;
         self->get_value_array =
             interpolation_methods[mode]->get_int_value_array;
         break;
+      case G_TYPE_UINT:
+        self->get = interpolation_methods[mode]->get_uint;
+        self->get_value_array =
+            interpolation_methods[mode]->get_uint_value_array;
+        break;
       case G_TYPE_LONG:
-      case G_TYPE_ULONG:
         self->get = interpolation_methods[mode]->get_long;
         self->get_value_array =
             interpolation_methods[mode]->get_long_value_array;
+        break;
+      case G_TYPE_ULONG:
+        self->get = interpolation_methods[mode]->get_ulong;
+        self->get_value_array =
+            interpolation_methods[mode]->get_ulong_value_array;
         break;
       case G_TYPE_FLOAT:
         self->get = interpolation_methods[mode]->get_float;
