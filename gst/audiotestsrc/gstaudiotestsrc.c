@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Stefan Kost <ensonic@users.sf.net>
  *
- * gstaudiotestsrc.c: 
+ * gstaudiotestsrc.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,19 +23,21 @@
  *
  * <refsect2>
  * AudioTestSrc can be used to generate basic audio signals. It support several
- * different waveforms, variable pitch and volume.
+ * different waveforms and allows you to set the base frequency and volume.
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
  * gst-launch audiotestsrc ! audioconvert ! alsasink
  * </programlisting>
- * This pipeline produces a sine with default pitch and volume.
+ * This pipeline produces a sine with default frequency (mid-C) and volume.
  * </para>
  * <para>
  * <programlisting>
  * gst-launch audiotestsrc wave=2 freq=200 ! audioconvert ! tee name=t ! alsasink t. ! libvisual_lv_scope ! ffmpegcolorspace ! xvimagesink
  * </programlisting>
- * In this example a saw-wave has been choosen. The wave is shown using a scope.
+ * In this example a saw wave is generated. The wave is shown using a
+ * scope visualizer from libvisual, allowing you to visually verify that
+ * the saw wave is correct.
  * </para>
  * </refsect2>
  */
@@ -680,4 +682,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "audiotestsrc",
     "Creates audio test signals of given frequency and volume",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
