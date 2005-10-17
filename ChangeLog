@@ -1,5 +1,10 @@
 2005-10-17  Andy Wingo  <wingo@pobox.com>
 
+	* ext/theora/theoraenc.c (theora_buffer_from_packet): Pass the
+	alloc_buffer flow return to callers.
+	(theora_enc_chain, theora_enc_chain): Adapt to buffer_from_packet
+	change. Fix some memleaks in theoraenc.
+
 	* ext/ogg/gstoggmux.c (gst_ogg_mux_send_headers): Fix a segfault
 	in strange circumstance.
 

@@ -314,9 +314,9 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 /* prepare a buffer for transmission by passing data through libtheora */
-static GstBuffer *
+static GstFlowReturn
 theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
-    GstClockTime timestamp, GstClockTime duration)
+    GstClockTime timestamp, GstClockTime duration, GstBuffer ** buffer)
 {
   GstBuffer *buf;
   GstFlowReturn ret;
@@ -341,11 +341,13 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
   }
   enc->packetno++;
 
-  return buf;
+  *buffer = buf;
+  return ret;
 
 no_buffer:
   {
-    return NULL;
+    *buffer = NULL;
+    return ret;
   }
 }
 
@@ -369,8 +371,9 @@ theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet,
   GstBuffer *buf;
   GstFlowReturn ret;
 
-  buf = theora_buffer_from_packet (enc, packet, timestamp, duration);
-  ret = theora_push_buffer (enc, buf);
+  ret = theora_buffer_from_packet (enc, packet, timestamp, duration, &buf);
+  if (ret == GST_FLOW_OK)
+    ret = theora_push_buffer (enc, buf);
 
   return ret;
 }
@@ -458,14 +461,27 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
     /* first packet will get its own page automatically */
     theora_encode_header (&enc->state, &op);
-    buf1 = theora_buffer_from_packet (enc, &op, 0, 0);
+    ret = theora_buffer_from_packet (enc, &op, 0, 0, &buf1);
+    if (ret != GST_FLOW_OK) {
+      goto header_buffer_alloc;
+    }
 
     /* create the remaining theora headers */
     theora_comment_init (&enc->comment);
     theora_encode_comment (&enc->comment, &op);
-    buf2 = theora_buffer_from_packet (enc, &op, 0, 0);
+    ret = theora_buffer_from_packet (enc, &op, 0, 0, &buf2);
+    if (ret != GST_FLOW_OK) {
+      gst_buffer_unref (buf1);
+      goto header_buffer_alloc;
+    }
+
     theora_encode_tables (&enc->state, &op);
-    buf3 = theora_buffer_from_packet (enc, &op, 0, 0);
+    ret = theora_buffer_from_packet (enc, &op, 0, 0, &buf3);
+    if (ret != GST_FLOW_OK) {
+      gst_buffer_unref (buf1);
+      gst_buffer_unref (buf2);
+      goto header_buffer_alloc;
+    }
 
     /* mark buffers and put on caps */
     caps = gst_pad_get_caps (enc->srcpad);
@@ -478,12 +494,18 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_set_caps (buf3, caps);
 
     /* push out the header buffers */
-    if ((ret = theora_push_buffer (enc, buf1)) != GST_FLOW_OK)
+    if ((ret = theora_push_buffer (enc, buf1)) != GST_FLOW_OK) {
+      gst_buffer_unref (buf2);
+      gst_buffer_unref (buf3);
       goto header_push;
-    if ((ret = theora_push_buffer (enc, buf2)) != GST_FLOW_OK)
+    }
+    if ((ret = theora_push_buffer (enc, buf2)) != GST_FLOW_OK) {
+      gst_buffer_unref (buf3);
       goto header_push;
-    if ((ret = theora_push_buffer (enc, buf3)) != GST_FLOW_OK)
+    }
+    if ((ret = theora_push_buffer (enc, buf3)) != GST_FLOW_OK) {
       goto header_push;
+    }
   }
 
   {
@@ -648,6 +670,11 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   return ret;
 
   /* ERRORS */
+header_buffer_alloc:
+  {
+    gst_buffer_unref (buffer);
+    return ret;
+  }
 header_push:
   {
     gst_buffer_unref (buffer);
