@@ -1,3 +1,10 @@
+2005-10-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiotestsrc/Makefile.am:
+	* gst/sine/Makefile.am:
+	* gst/volume/Makefile.am:
+	  fix broken build of controllerized plugins
+
 2005-10-17  Fabrizio Gennari  <fabrizio dot ge at tiscali dot it>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
