@@ -305,17 +305,28 @@ static gboolean
 gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     guint * size)
 {
-  GstFFMpegCsp *space;
+  GstFFMpegCsp *space = NULL;
+  GstStructure *structure = NULL;
+  AVCodecContext *ctx = NULL;
+  gint width, height;
 
   g_return_val_if_fail (size, FALSE);
 
   space = GST_FFMPEGCSP (btrans);
-  if (gst_caps_is_equal (caps, GST_PAD_CAPS (btrans->srcpad))) {
-    *size = avpicture_get_size (space->to_pixfmt, space->width, space->height);
-  } else if (gst_caps_is_equal (caps, GST_PAD_CAPS (btrans->sinkpad))) {
-    *size =
-        avpicture_get_size (space->from_pixfmt, space->width, space->height);
-  }
+
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "width", &width);
+  gst_structure_get_int (structure, "height", &height);
+
+  ctx = avcodec_alloc_context ();
+
+  g_assert (ctx != NULL);
+
+  gst_ffmpegcsp_caps_with_codectype (CODEC_TYPE_VIDEO, caps, ctx);
+
+  *size = avpicture_get_size (ctx->pix_fmt, width, height);
+
+  av_free (ctx);
 
   return TRUE;
 }

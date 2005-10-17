@@ -1,3 +1,9 @@
+2005-10-17  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_get_unit_size): We are asked to compute a buffer size
+	from caps, let's use the caps...
+
 2005-10-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
