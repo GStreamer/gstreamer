@@ -182,7 +182,7 @@ gst_message_init (GTypeInstance * instance, gpointer g_class)
 {
   GstMessage *message = GST_MESSAGE (instance);
 
-  GST_CAT_INFO (GST_CAT_MESSAGE, "new message %p", message);
+  GST_CAT_LOG (GST_CAT_MESSAGE, "new message %p", message);
   GST_MESSAGE_TIMESTAMP (message) = GST_CLOCK_TIME_NONE;
 }
 
@@ -191,7 +191,7 @@ gst_message_finalize (GstMessage * message)
 {
   g_return_if_fail (message != NULL);
 
-  GST_CAT_INFO (GST_CAT_MESSAGE, "finalize message %p", message);
+  GST_CAT_LOG (GST_CAT_MESSAGE, "finalize message %p", message);
 
   if (GST_MESSAGE_SRC (message)) {
     gst_object_unref (GST_MESSAGE_SRC (message));
@@ -215,7 +215,7 @@ _gst_message_copy (GstMessage * message)
 {
   GstMessage *copy;
 
-  GST_CAT_INFO (GST_CAT_MESSAGE, "copy message %p", message);
+  GST_CAT_LOG (GST_CAT_MESSAGE, "copy message %p", message);
 
   copy = (GstMessage *) gst_mini_object_new (GST_TYPE_MESSAGE);
 
@@ -263,7 +263,7 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
 
   message = (GstMessage *) gst_mini_object_new (GST_TYPE_MESSAGE);
 
-  GST_CAT_INFO (GST_CAT_MESSAGE, "creating new message %p %s", message,
+  GST_CAT_LOG (GST_CAT_MESSAGE, "creating new message %p %s", message,
       gst_message_type_get_name (type));
 
   message->type = type;

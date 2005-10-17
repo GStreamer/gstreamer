@@ -1,3 +1,20 @@
+2005-10-17  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstcollectpads.c (gst_collectpads_chain): Slight
+	cleanup.
+
+	* gst/Makefile.am (gstenumtypes.c): Threadsafe now.
+
+	* gst/gstevent.c (gst_event_new, gst_event_finalize): LOG.
+
+	* gst/gstelement.c (gst_element_get_state_func): s/INFO/DEBUG/.
+	(gst_element_get_state_func): Better debug message.
+	(gst_element_commit_state): s/INFO/DEBUG/.
+	(gst_element_lost_state, gst_element_change_state): 
+
+	* gst/gstmessage.c (gst_message_init): s/INFO/LOG/.
+	(gst_message_new_custom): s/INFO/LOG/.
+
 2005-10-17  Michael Smith <msmith@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_do_sync):

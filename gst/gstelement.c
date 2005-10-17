@@ -1611,7 +1611,7 @@ gst_element_get_state_func (GstElement * element,
   GstStateChangeReturn ret = GST_STATE_CHANGE_FAILURE;
   GstState old_pending;
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "getting state");
 
   GST_STATE_LOCK (element);
   ret = GST_STATE_RETURN (element);
@@ -1645,26 +1645,27 @@ gst_element_get_state_func (GstElement * element,
     } else {
       timeval = NULL;
     }
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "wait for pending");
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+        "waiting for element to commit state");
     /* we have a pending state change, wait for it to complete */
     if (!GST_STATE_TIMED_WAIT (element, timeval)) {
-      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "timeout");
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "timed out");
       /* timeout triggered */
       ret = GST_STATE_CHANGE_ASYNC;
     } else {
       /* could be success or failure */
       if (old_pending == GST_STATE (element)) {
-        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "got success");
+        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "got success");
         ret = GST_STATE_CHANGE_SUCCESS;
       } else {
-        GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "got failure");
+        GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "got failure");
         ret = GST_STATE_CHANGE_FAILURE;
       }
     }
   }
   /* if nothing is pending anymore we can return SUCCESS */
   if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING) {
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "nothing pending");
+    GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "nothing pending");
     ret = GST_STATE_CHANGE_SUCCESS;
   }
 
@@ -1674,7 +1675,7 @@ done:
   if (pending)
     *pending = GST_STATE_PENDING (element);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
       "state current: %s, pending: %s, result: %d",
       gst_element_state_get_name (GST_STATE (element)),
       gst_element_state_get_name (GST_STATE_PENDING (element)), ret);
@@ -1828,7 +1829,7 @@ gst_element_commit_state (GstElement * element)
 
     GST_STATE_RETURN (element) = ret;
 
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
         "committing state from %s to %s, pending %s",
         gst_element_state_get_name (old_state),
         gst_element_state_get_name (next),
@@ -1844,7 +1845,7 @@ gst_element_commit_state (GstElement * element)
       /* calc new next state */
       next = GST_STATE_GET_NEXT (current, pending);
 
-      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
           "continue state change %s to %s, final %s",
           gst_element_state_get_name (current),
           gst_element_state_get_name (next),
@@ -1895,7 +1896,7 @@ gst_element_lost_state (GstElement * element)
 
     current_state = GST_STATE (element);
 
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
         "lost state of %s", gst_element_state_get_name (current_state));
 
     GST_STATE_NEXT (element) = current_state;
@@ -2051,7 +2052,7 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
       gst_element_abort_state (element);
       break;
     case GST_STATE_CHANGE_ASYNC:
-      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
           "element will change state ASYNC");
 
       /* if we go upwards, we give the app a change to wait for
@@ -2070,14 +2071,14 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
       ret = gst_element_commit_state (element);
       break;
     case GST_STATE_CHANGE_SUCCESS:
-      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
           "element changed state SUCCESS");
       /* we can commit the state now which will proceeed to
        * the next state */
       ret = gst_element_commit_state (element);
       break;
     case GST_STATE_CHANGE_NO_PREROLL:
-      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
           "element changed state NO_PREROLL");
       /* we can commit the state now which will proceeed to
        * the next state */
@@ -2092,7 +2093,7 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
 exit:
   GST_STATE_RETURN (element) = ret;
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "exit state change %d", ret);
+  GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "exit state change %d", ret);
 
   return ret;
 

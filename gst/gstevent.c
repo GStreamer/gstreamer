@@ -185,7 +185,7 @@ gst_event_finalize (GstEvent * event)
   g_return_if_fail (event != NULL);
   g_return_if_fail (GST_IS_EVENT (event));
 
-  GST_CAT_INFO (GST_CAT_EVENT, "freeing event %p type %s", event,
+  GST_CAT_LOG (GST_CAT_EVENT, "freeing event %p type %s", event,
       gst_event_type_get_name (GST_EVENT_TYPE (event)));
 
   if (GST_EVENT_SRC (event)) {
@@ -226,7 +226,7 @@ gst_event_new (GstEventType type)
 
   event = (GstEvent *) gst_mini_object_new (GST_TYPE_EVENT);
 
-  GST_CAT_INFO (GST_CAT_EVENT, "creating new event %p %s", event,
+  GST_CAT_DEBUG (GST_CAT_EVENT, "creating new event %p %s", event,
       gst_event_type_get_name (type));
 
   event->type = type;

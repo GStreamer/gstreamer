@@ -609,10 +609,8 @@ gst_collectpads_chain (GstPad * pad, GstBuffer * buffer)
     goto not_started;
 
   /* Call the collected callback until a pad with a buffer is popped. */
-  while (((pads->queuedpads + pads->eospads) == pads->numpads) &&
-      pads->func != NULL) {
+  while (((pads->queuedpads + pads->eospads) == pads->numpads) && pads->func)
     ret = pads->func (pads, pads->user_data);
-  }
 
   /* queue buffer on this pad, block if filled */
   while (data->buffer != NULL) {
