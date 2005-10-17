@@ -3,7 +3,7 @@
   <description>XFree86 video output and input elements based on standard Xlib calls</description>
   <filename>../../sys/ximage/.libs/libgstximage.so</filename>
   <basename>libgstximage.so</basename>
-  <version>0.9.2.1</version>
+  <version>0.9.3.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer CVS/prerelease</package>

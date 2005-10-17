@@ -1,0 +1,20 @@
+<plugin>
+  <name>audiotestsrc</name>
+  <description>Creates audio test signals of given frequency and volume</description>
+  <filename>../../gst/audiotestsrc/.libs/libgstaudiotestsrc.so</filename>
+  <basename>libgstaudiotestsrc.so</basename>
+  <version>0.9.3.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>audiotestsrc</name>
+      <longname>Audio test source</longname>
+      <class>Source/Audio</class>
+      <description>Creates audio test signals of given frequency and volume</description>
+      <author>Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

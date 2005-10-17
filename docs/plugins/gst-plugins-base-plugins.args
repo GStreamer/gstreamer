@@ -189,6 +189,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstVideoTestSrc::is-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Is Live</NICK>
+<BLURB>Whether to act as a live source.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstVideoscale::method</NAME>
 <TYPE>GstVideoscaleMethod</TYPE>
 <RANGE></RANGE>
@@ -536,6 +546,16 @@
 <NICK>Volume</NICK>
 <BLURB>Volume.</BLURB>
 <DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSineSrc::is-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Is Live</NICK>
+<BLURB>Whether to act as a live source.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -976,5 +996,65 @@
 <NICK>Device name</NICK>
 <BLURB>Human-readable name of the sound device.</BLURB>
 <DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::freq</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,20000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frequency</NICK>
+<BLURB>Frequency of test signal.</BLURB>
+<DEFAULT>440</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::is-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Is Live</NICK>
+<BLURB>Whether to act as a live source.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::samplesperbuffer</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Samples per buffer</NICK>
+<BLURB>Number of samples in each outgoing buffer.</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::timestamp-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp offset</NICK>
+<BLURB>An offset added to timestamps set on buffers (in ns).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::volume</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Volume</NICK>
+<BLURB>Volume of test signal.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::wave</NAME>
+<TYPE>GstAudioTestSrcWave</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Waveform</NICK>
+<BLURB>Oscillator waveform.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
