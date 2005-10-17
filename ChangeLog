@@ -1,3 +1,8 @@
+2005-10-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  put back AX_CREATE_STDINT_H, ffmpegcolorspace includes _stdint.h
+
 2005-10-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/interfaces/Makefile.am:

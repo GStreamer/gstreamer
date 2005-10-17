@@ -113,6 +113,9 @@ dnl used in gst/ffmpegcolorspace/mem.c
 dnl FIXME: could be fixed by redefining av_malloc and av_free to GLib's
 AC_CHECK_HEADER([malloc.h])
 
+dnl ffmpegcolorspace includes _stdint.h
+AX_CREATE_STDINT_H
+
 dnl *** checks for types/defines ***
 
 dnl Check for FIONREAD ioctl declaration
