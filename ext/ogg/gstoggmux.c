@@ -762,9 +762,14 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     if (pad->headers) {
       buf = GST_BUFFER (pad->headers->data);
       pad->headers = g_list_remove (pad->headers, buf);
-    } else {
+    } else if (pad->buffer) {
       buf = pad->buffer;
       gst_buffer_ref (buf);
+    } else {
+      /* fixme -- I don't really know what's going on here */
+      GST_WARNING_OBJECT (mux, "No headers or buffers on pad %" GST_PTR_FORMAT,
+          pad);
+      continue;
     }
 
     /* create a packet from the buffer */
