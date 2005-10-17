@@ -553,7 +553,7 @@ gst_ogg_mux_compare_pads (GstOggMux * ogg_mux, GstOggPad * old, GstOggPad * new)
 static GstOggPad *
 gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 {
-  GstOggPad *bestpad = NULL;
+  GstOggPad *bestpad = NULL, *still_hungry = NULL;
   GSList *walk;
 
   /* try to make sure we have a buffer from each usable pad first */
@@ -585,11 +585,6 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
             /* just ignore */
             gst_buffer_unref (buf);
             buf = NULL;
-            /* We discarded the data of this pad, so it's not EOS. If no bestpad
-               selected so far then use this one */
-            if (!bestpad) {
-              bestpad = pad;
-            }
           } else {
             GST_DEBUG ("muxer: got data buffer in control state, switching "
                 "to data mode");
@@ -603,13 +598,19 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
     /* we should have a buffer now, see if it is the best pad to
      * pull on */
-    if (pad->buffer != NULL) {
-      if (gst_ogg_mux_compare_pads (ogg_mux, bestpad, pad) > 0) {
+    if (pad->buffer) {
+      if (gst_ogg_mux_compare_pads (ogg_mux, bestpad, pad) > 0)
         bestpad = pad;
-      }
+    } else {
+      still_hungry = pad;
     }
   }
-  return bestpad;
+
+  if (still_hungry)
+    /* drop back into collectpads... */
+    return still_hungry;
+  else
+    return bestpad;
 }
 
 static GList *
@@ -766,9 +767,11 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       buf = pad->buffer;
       gst_buffer_ref (buf);
     } else {
-      /* fixme -- I don't really know what's going on here */
-      GST_WARNING_OBJECT (mux, "No headers or buffers on pad %" GST_PTR_FORMAT,
-          pad);
+      /* fixme -- should be caught in the previous list traversal. */
+      GST_LOCK (pad);
+      g_critical ("No headers or buffers on pad %s:%s",
+          GST_DEBUG_PAD_NAME (pad));
+      GST_UNLOCK (pad);
       continue;
     }
 
