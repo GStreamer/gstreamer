@@ -2,6 +2,7 @@
 
 	* gst/gstmessage.override (_wrap_gst_message_tp_repr): Add a repr
 	for messages.
+	(_wrap_gst_message_tp_repr): Is your message repr t00 sma11?
 
 2005-10-14  Edward Hervey  <edward@fluendo.com>
 

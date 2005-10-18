@@ -26,17 +26,25 @@ static PyObject *
 _wrap_gst_message_tp_repr (PyGstMiniObject *self)
 {
     GstMessage *msg;
-    gchar *repr;
+    gchar *repr, *structure_str, *src_str;
     PyObject *ret;
 
     g_assert (self);
     msg = GST_MESSAGE (self->obj);
     g_assert (msg);
 
-    repr = g_strdup_printf ("<gst.Message %s at %p>",
-        gst_message_type_get_name (GST_MESSAGE_TYPE (msg)), msg);
+    structure_str = msg->structure ? gst_structure_to_string (msg->structure)
+        : g_strdup ("(none)");
+    src_str = msg->src ? gst_object_get_name (msg->src) : g_strdup ("(no src)");
+
+    repr = g_strdup_printf ("<gst.Message %s from %s at %p>",
+        structure_str, src_str, msg);
+    g_free (src_str);
+    g_free (structure_str);
+
     ret = PyString_FromStringAndSize(repr, strlen (repr));
     g_free (repr);
+
     return ret;
 }
 
