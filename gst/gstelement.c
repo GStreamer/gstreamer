@@ -397,6 +397,8 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
+  GST_DEBUG_OBJECT (element, "setting clock %p", clock);
+
   if (oclass->set_clock)
     oclass->set_clock (element, clock);
 
@@ -1748,23 +1750,35 @@ gst_element_abort_state (GstElement * element)
 {
   GstState pending;
 
+#ifndef GST_DISABLE_GST_DEBUG
+  GstState old_state;
+#endif
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   pending = GST_STATE_PENDING (element);
 
-  if (pending != GST_STATE_VOID_PENDING &&
-      GST_STATE_RETURN (element) != GST_STATE_CHANGE_FAILURE) {
+  if (pending == GST_STATE_VOID_PENDING ||
+      GST_STATE_RETURN (element) == GST_STATE_CHANGE_FAILURE)
+    goto nothing_aborted;
+
 #ifndef GST_DISABLE_GST_DEBUG
-    GstState old_state = GST_STATE (element);
+  old_state = GST_STATE (element);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "aborting state from %s to %s", gst_element_state_get_name (old_state),
+      gst_element_state_get_name (pending));
 #endif
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-        "aborting state from %s to %s", gst_element_state_get_name (old_state),
-        gst_element_state_get_name (pending));
 
-    /* flag error */
-    GST_STATE_RETURN (element) = GST_STATE_CHANGE_FAILURE;
+  /* flag error */
+  GST_STATE_RETURN (element) = GST_STATE_CHANGE_FAILURE;
 
-    GST_STATE_BROADCAST (element);
+  GST_STATE_BROADCAST (element);
+
+  return;
+
+nothing_aborted:
+  {
+    return;
   }
 }
 
@@ -1888,25 +1902,33 @@ gst_element_commit_state (GstElement * element)
 void
 gst_element_lost_state (GstElement * element)
 {
+  GstState current_state;
+  GstMessage *message;
+
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING &&
-      GST_STATE_RETURN (element) != GST_STATE_CHANGE_FAILURE) {
-    GstState current_state;
-    GstMessage *message;
+  if (GST_STATE_PENDING (element) != GST_STATE_VOID_PENDING ||
+      GST_STATE_RETURN (element) == GST_STATE_CHANGE_FAILURE)
+    goto nothing_lost;
 
-    current_state = GST_STATE (element);
+  current_state = GST_STATE (element);
 
-    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-        "lost state of %s", gst_element_state_get_name (current_state));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+      "lost state of %s", gst_element_state_get_name (current_state));
 
-    GST_STATE_NEXT (element) = current_state;
-    GST_STATE_PENDING (element) = current_state;
-    GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
+  GST_STATE_NEXT (element) = current_state;
+  GST_STATE_PENDING (element) = current_state;
+  GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
 
-    message = gst_message_new_state_changed (GST_OBJECT (element),
-        FALSE, current_state, current_state, current_state);
-    gst_element_post_message (element, message);
+  message = gst_message_new_state_changed (GST_OBJECT (element),
+      FALSE, current_state, current_state, current_state);
+  gst_element_post_message (element, message);
+
+  return;
+
+nothing_lost:
+  {
+    return;
   }
 }
 

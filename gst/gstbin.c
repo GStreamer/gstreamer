@@ -104,6 +104,7 @@ static xmlNodePtr gst_bin_save_thyself (GstObject * object, xmlNodePtr parent);
 static void gst_bin_restore_thyself (GstObject * object, xmlNodePtr self);
 #endif
 
+static void gst_bin_recalc_func (GstBin * child, gpointer data);
 static gint bin_element_is_sink (GstElement * child, GstBin * bin);
 
 /* Bin signals and properties */
@@ -224,6 +225,7 @@ gst_bin_class_init (GstBinClass * klass)
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
   GstElementClass *gstelement_class;
+  GError *err;
 
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
@@ -277,6 +279,14 @@ gst_bin_class_init (GstBinClass * klass)
 
   klass->add_element = GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element = GST_DEBUG_FUNCPTR (gst_bin_remove_func);
+
+  GST_DEBUG ("creating bin thread pool");
+  err = NULL;
+  klass->pool =
+      g_thread_pool_new ((GFunc) gst_bin_recalc_func, NULL, 1, FALSE, &err);
+  if (err != NULL) {
+    g_critical ("could alloc threadpool %s", err->message);
+  }
 }
 
 static void
@@ -916,13 +926,16 @@ gst_bin_get_state_func (GstElement * element, GstState * state,
     GstState * pending, GstClockTime timeout)
 {
   GstBin *bin = GST_BIN (element);
+  GstStateChangeReturn ret;
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "getting state");
 
   /* do a non forced recalculation of the state */
   gst_bin_recalc_state (bin, FALSE);
 
-  return parent_class->get_state (element, state, pending, timeout);
+  ret = parent_class->get_state (element, state, pending, timeout);
+
+  return ret;
 }
 
 static void
@@ -1558,6 +1571,17 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
   gst_event_unref (event);
 
   return res;
+}
+
+static void
+gst_bin_recalc_func (GstBin * bin, gpointer data)
+{
+  GST_DEBUG_OBJECT (bin, "doing state recalc");
+  GST_STATE_LOCK (bin);
+  gst_bin_recalc_state (bin, FALSE);
+  GST_STATE_UNLOCK (bin);
+  GST_DEBUG_OBJECT (bin, "state recalc done");
+  gst_object_unref (bin);
 }
 
 static GstBusSyncReply
