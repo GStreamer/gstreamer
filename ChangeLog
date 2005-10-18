@@ -1,3 +1,13 @@
+2005-10-18  Michal Benes  <michal dot benes at xeris dot cz>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_video_pad_setcaps),
+	(gst_matroska_mux_audio_pad_setcaps):
+	  Fix mpeg4 input handling (#318847); also, while we're at it,
+	  fix media type for Motion-JPEG: should be image/jpeg.
+
 2005-10-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_handle_seek),

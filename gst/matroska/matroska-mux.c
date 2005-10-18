@@ -73,7 +73,7 @@ static GstStaticPadTemplate videosink_templ =
         COMMON_VIDEO_CAPS "; "
         "video/x-msmpeg, "
         COMMON_VIDEO_CAPS "; "
-        "video/x-jpeg, "
+        "image/jpeg, "
         COMMON_VIDEO_CAPS "; "
         "video/x-raw-yuv, "
         "format = (fourcc) { YUY2, I420 }, " COMMON_VIDEO_CAPS)
@@ -473,7 +473,7 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
     gst_structure_get_fourcc (structure, "format", &videocontext->fourcc);
 
     return TRUE;
-  } else if (!strcmp (mimetype, "video/x-jpeg")) {
+  } else if (!strcmp (mimetype, "image/jpeg")) {
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MJPEG);
 
     return TRUE;
@@ -568,9 +568,11 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
       case 2:
         context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG2);
         break;
-      case 3:
+      case 4:
         context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP);
         break;
+      default:
+        return FALSE;
     }
 
     return TRUE;
@@ -649,6 +651,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
             context->default_duration =
                 1152 * GST_SECOND / audiocontext->samplerate;
             break;
+          default:
+            return FALSE;
         }
         break;
       }
@@ -658,6 +662,8 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       case 4:
         context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_MPEG4 "MAIN");
         break;
+      default:
+        return FALSE;
     }
 
     return TRUE;
