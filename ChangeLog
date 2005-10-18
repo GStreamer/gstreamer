@@ -1,3 +1,12 @@
+2005-10-18  Tim-Philipp Müller  <tim at centricular dot net>
+	* gst/matroska/Makefile.am:
+	* gst/matroska/ebml-read.c:
+	* gst/matroska/ebml-read.h:
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-demux.h:
+	* gst/matroska/matroska.c: (plugin_init):
+	  Ported matroska demuxer to 0.9.
+
 2005-10-18  Michal Benes  <michal dot benes at xeris dot cz>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

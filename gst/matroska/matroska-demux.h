@@ -23,7 +23,6 @@
 #define __GST_MATROSKA_DEMUX_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 
 #include "ebml-read.h"
 #include "matroska-ids.h"
@@ -56,49 +55,56 @@ typedef struct _GstMatroskaDemuxIndex {
 } GstMatroskaDemuxIndex;
 
 typedef struct _GstMatroskaDemux {
-  GstEbmlRead    parent;
+  GstEbmlRead              parent;
 
   /* pads */
-  GstPad 	*sinkpad;
+  GstPad                  *sinkpad;
   GstMatroskaTrackContext *src[GST_MATROSKA_DEMUX_MAX_STREAMS];
-  guint          num_streams,
-                 num_v_streams, num_a_streams, num_t_streams;
-  GstClock	*clock;
+  GstClock                *clock;
+  guint                    num_streams;
+  guint                    num_v_streams;
+  guint                    num_a_streams;
+  guint                    num_t_streams;
 
   /* metadata */
-  gchar         *muxing_app, *writing_app;
-  gint64         created;
+  gchar                   *muxing_app;
+  gchar                   *writing_app;
+  gint64                   created;
 
   /* state */
-  GstMatroskaDemuxState state;
-  guint          level_up;
+  GstMatroskaDemuxState    state;
+  guint                    level_up;
 
   /* did we parse metadata/cues already? */
-  gboolean       metadata_parsed,
-		 index_parsed;
+  gboolean                 metadata_parsed;
+  gboolean                 index_parsed;
 
   /* start-of-segment */
-  guint64        segment_start;
+  guint64                  ebml_segment_start;
 
   /* a cue (index) table */
-  GstMatroskaIndex *index;
-  guint          num_indexes;
+  GstMatroskaIndex        *index;
+  guint                    num_indexes;
 
   /* timescale in the file */
-  guint64        time_scale;
+  guint64                  time_scale;
 
   /* length, position (time, ns) */
-  guint64        duration, pos;
+  guint64                  pos;
+  guint64                  duration;
 
   /* a possible pending seek */
-  guint64        seek_pending;
+  gboolean                 seek_pending;
+
+  gdouble                  segment_rate;
+  gint64                   segment_start;
+  gint64                   segment_stop;
+  gboolean                 segment_play;
 } GstMatroskaDemux;
 
 typedef struct _GstMatroskaDemuxClass {
   GstEbmlReadClass parent;
 } GstMatroskaDemuxClass;
-
-GType    gst_matroska_demux_get_type    (void);
 
 gboolean gst_matroska_demux_plugin_init (GstPlugin *plugin);
 
