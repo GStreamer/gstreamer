@@ -1,5 +1,10 @@
 2005-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* check/pipelines/stress.c: (GST_START_TEST):
+	Make check a little more time consuming.
+
+2005-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* check/Makefile.am:
 	* check/pipelines/stress.c: (GST_START_TEST),
 	(simple_launch_lines_suite), (main):

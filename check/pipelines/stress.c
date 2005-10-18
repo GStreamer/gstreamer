@@ -37,7 +37,7 @@ GST_START_TEST (test_stress)
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
   gst_element_link (fakesrc, fakesink);
 
-  i = 10000;
+  i = 100;
   while (i--) {
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
