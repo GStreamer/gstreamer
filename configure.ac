@@ -461,16 +461,6 @@ PKG_CHECK_MODULES(LIBGNOMEUI, libgnomeui-2.0,
                   HAVE_LIBGNOMEUI="yes", HAVE_LIBGNOMEUI="no")
 AM_CONDITIONAL(HAVE_LIBGNOMEUI, test "x$HAVE_LIBGNOMEUI" = "xyes")
 
-dnl ##################################################
-dnl # Prepare informative messages to display at end #
-dnl ##################################################
-
-infomessages=
-
-dnl *** output files ***
-
-dnl libs/ext/Makefile
-dnl nothing there yet !
 AC_CONFIG_FILES(
 Makefile
 gst/Makefile
@@ -547,5 +537,4 @@ pkgconfig/gstreamer-dataprotocol.pc
 pkgconfig/gstreamer-dataprotocol-uninstalled.pc
 gstreamer.spec
 )
-AC_CONFIG_COMMANDS(echo "$infomessages", infomessages="$infomessages")
 AC_OUTPUT
