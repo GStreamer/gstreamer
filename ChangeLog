@@ -1,3 +1,7 @@
+2005-10-18  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/speed/Makefile.am: Fix build of speed. 
+
 2005-10-17  Edgard Lima <edgard.lima@indt.org.br>
 
 	* gst/speed/gstspeed.c: (speed_chain), (speed_setcaps),
