@@ -1577,10 +1577,10 @@ gst_element_sync_state_with_parent (GstElement * element)
     GstState parent_current, parent_pending;
     GstStateChangeReturn ret;
 
-    GST_STATE_LOCK (parent);
+    GST_LOCK (parent);
     parent_current = GST_STATE (parent);
     parent_pending = GST_STATE_PENDING (parent);
-    GST_STATE_UNLOCK (parent);
+    GST_UNLOCK (parent);
 
     GST_CAT_DEBUG (GST_CAT_STATES,
         "syncing state of element %s (%s) to %s (%s, %s)",
@@ -1616,7 +1616,7 @@ gst_element_get_state_func (GstElement * element,
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "getting state");
 
-  GST_STATE_LOCK (element);
+  GST_LOCK (element);
   ret = GST_STATE_RETURN (element);
 
   /* we got an error, report immediatly */
@@ -1634,6 +1634,7 @@ gst_element_get_state_func (GstElement * element,
   old_pending = GST_STATE_PENDING (element);
   if (old_pending != GST_STATE_VOID_PENDING) {
     GTimeVal *timeval, abstimeout;
+    guint32 cookie;
 
     if (timeout != GST_CLOCK_TIME_NONE) {
       glong add = timeout / 1000;
@@ -1648,14 +1649,21 @@ gst_element_get_state_func (GstElement * element,
     } else {
       timeval = NULL;
     }
+    /* get cookie to dected state change during waiting */
+    cookie = element->state_cookie;
+
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
         "waiting for element to commit state");
+
     /* we have a pending state change, wait for it to complete */
     if (!GST_STATE_TIMED_WAIT (element, timeval)) {
       GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "timed out");
       /* timeout triggered */
       ret = GST_STATE_CHANGE_ASYNC;
     } else {
+      if (cookie != element->state_cookie)
+        goto interrupted;
+
       /* could be success or failure */
       if (old_pending == GST_STATE (element)) {
         GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "got success");
@@ -1682,10 +1690,23 @@ done:
       "state current: %s, pending: %s, result: %d",
       gst_element_state_get_name (GST_STATE (element)),
       gst_element_state_get_name (GST_STATE_PENDING (element)), ret);
-
-  GST_STATE_UNLOCK (element);
+  GST_UNLOCK (element);
 
   return ret;
+
+interrupted:
+  {
+    if (state)
+      *state = GST_STATE_VOID_PENDING;
+    if (pending)
+      *pending = GST_STATE_VOID_PENDING;
+
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "get_state() interruped");
+
+    GST_UNLOCK (element);
+
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
 
 /**
@@ -1753,8 +1774,10 @@ gst_element_abort_state (GstElement * element)
 #ifndef GST_DISABLE_GST_DEBUG
   GstState old_state;
 #endif
+
   g_return_if_fail (GST_IS_ELEMENT (element));
 
+  GST_LOCK (element);
   pending = GST_STATE_PENDING (element);
 
   if (pending == GST_STATE_VOID_PENDING ||
@@ -1773,11 +1796,13 @@ gst_element_abort_state (GstElement * element)
   GST_STATE_RETURN (element) = GST_STATE_CHANGE_FAILURE;
 
   GST_STATE_BROADCAST (element);
+  GST_UNLOCK (element);
 
   return;
 
 nothing_aborted:
   {
+    GST_UNLOCK (element);
     return;
   }
 }
@@ -1808,77 +1833,81 @@ gst_element_commit_state (GstElement * element)
 {
   GstState pending;
   GstStateChangeReturn ret;
+  GstState old_state, old_next;
+  GstState current, next;
+  GstMessage *message;
+  GstStateChange transition;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
 
-  ret = GST_STATE_CHANGE_SUCCESS;
-
+  GST_LOCK (element);
   pending = GST_STATE_PENDING (element);
 
   /* check if there is something to commit */
-  if (pending != GST_STATE_VOID_PENDING) {
-    GstState old_state;
-    GstState current, next;
-    GstMessage *message;
+  if (pending == GST_STATE_VOID_PENDING)
+    goto nothing_pending;
 
-    GST_LOCK (element);
-    GST_OBJECT_FLAG_SET (element, GST_ELEMENT_CHANGING_STATE);
+  old_state = GST_STATE (element);
+  /* this is the state we should go to next */
+  old_next = GST_STATE_NEXT (element);
+  /* update current state */
+  current = GST_STATE (element) = old_next;
+
+  /* see if we reached the final state */
+  if (pending == current)
+    goto complete;
+
+  /* not there yet, will get there ASYNC */
+  ret = GST_STATE_CHANGE_ASYNC;
+
+  next = GST_STATE_GET_NEXT (current, pending);
+  transition = GST_STATE_TRANSITION (current, next);
+
+  GST_STATE_NEXT (element) = next;
+  GST_UNLOCK (element);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "committing state from %s to %s, pending %s",
+      gst_element_state_get_name (old_state),
+      gst_element_state_get_name (old_next),
+      gst_element_state_get_name (pending));
+
+  message = gst_message_new_state_changed (GST_OBJECT (element),
+      old_state, old_next, pending);
+  gst_element_post_message (element, message);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+      "continue state change %s to %s, final %s",
+      gst_element_state_get_name (current),
+      gst_element_state_get_name (next), gst_element_state_get_name (pending));
+
+  ret = gst_element_change_state (element, transition);
+
+  return ret;
+
+nothing_pending:
+  {
+    GST_DEBUG_OBJECT (element, "nothing pending");
     GST_UNLOCK (element);
+    return GST_STATE_CHANGE_SUCCESS;
+  }
+complete:
+  {
+    GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
+    GST_STATE_NEXT (element) = GST_STATE_VOID_PENDING;
+    ret = GST_STATE_RETURN (element) = GST_STATE_CHANGE_SUCCESS;
 
-    old_state = GST_STATE (element);
-    /* this is the state we should go to next */
-    next = GST_STATE_NEXT (element);
-    /* update current state */
-    current = GST_STATE (element) = next;
-
-    /* see if we reached the final state */
-    if (pending == next) {
-      pending = GST_STATE_VOID_PENDING;
-      GST_STATE_PENDING (element) = pending;
-      GST_STATE_NEXT (element) = pending;
-      ret = GST_STATE_CHANGE_SUCCESS;
-    } else {
-      /* not there yet, will get there ASYNC */
-      ret = GST_STATE_CHANGE_ASYNC;
-    }
-
-    GST_STATE_RETURN (element) = ret;
-
-    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-        "committing state from %s to %s, pending %s",
-        gst_element_state_get_name (old_state),
-        gst_element_state_get_name (next),
-        gst_element_state_get_name (pending));
+    GST_DEBUG_OBJECT (element, "completed state change");
+    GST_UNLOCK (element);
 
     message = gst_message_new_state_changed (GST_OBJECT (element),
-        old_state, next, pending);
+        old_state, old_next, GST_STATE_VOID_PENDING);
     gst_element_post_message (element, message);
 
-    if (pending != GST_STATE_VOID_PENDING) {
-      GstStateChange transition;
+    GST_STATE_BROADCAST (element);
 
-      /* calc new next state */
-      next = GST_STATE_GET_NEXT (current, pending);
-
-      GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-          "continue state change %s to %s, final %s",
-          gst_element_state_get_name (current),
-          gst_element_state_get_name (next),
-          gst_element_state_get_name (pending));
-
-      /* create transition */
-      transition = GST_STATE_TRANSITION (current, next);
-
-      /* perform next transition */
-      ret = gst_element_change_state (element, transition);
-    } else {
-      GST_STATE_BROADCAST (element);
-    }
-    GST_LOCK (element);
-    GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_CHANGING_STATE);
-    GST_UNLOCK (element);
+    return ret;
   }
-  return ret;
 }
 
 /**
@@ -1907,6 +1936,7 @@ gst_element_lost_state (GstElement * element)
 
   g_return_if_fail (GST_IS_ELEMENT (element));
 
+  GST_LOCK (element);
   if (GST_STATE_PENDING (element) != GST_STATE_VOID_PENDING ||
       GST_STATE_RETURN (element) == GST_STATE_CHANGE_FAILURE)
     goto nothing_lost;
@@ -1919,15 +1949,21 @@ gst_element_lost_state (GstElement * element)
   GST_STATE_NEXT (element) = current_state;
   GST_STATE_PENDING (element) = current_state;
   GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
+  GST_UNLOCK (element);
 
   message = gst_message_new_state_changed (GST_OBJECT (element),
       current_state, current_state, current_state);
+  gst_element_post_message (element, message);
+
+  /* and mark us dirty */
+  message = gst_message_new_state_dirty (GST_OBJECT (element));
   gst_element_post_message (element, message);
 
   return;
 
 nothing_lost:
   {
+    GST_UNLOCK (element);
     return;
   }
 }
@@ -1983,12 +2019,12 @@ gst_element_set_state_func (GstElement * element, GstState state)
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "set_state to %s",
       gst_element_state_get_name (state));
 
+  /* state lock is taken to protect the set_state() and get_state() 
+   * procedures, it does not lock any variables. */
   GST_STATE_LOCK (element);
 
+  /* now calculate how to get to the new state */
   GST_LOCK (element);
-  GST_OBJECT_FLAG_SET (element, GST_ELEMENT_CHANGING_STATE);
-  GST_UNLOCK (element);
-
   old_ret = GST_STATE_RETURN (element);
   /* previous state change returned an error, remove all pending
    * and next states */
@@ -2001,6 +2037,7 @@ gst_element_set_state_func (GstElement * element, GstState state)
   current = GST_STATE (element);
   next = GST_STATE_NEXT (element);
   old_pending = GST_STATE_PENDING (element);
+  element->state_cookie++;
 
   /* this is the (new) state we should go to */
   GST_STATE_PENDING (element) = state;
@@ -2029,19 +2066,22 @@ gst_element_set_state_func (GstElement * element, GstState state)
     }
   }
   next = GST_STATE_GET_NEXT (current, state);
+  /* now we store the next state */
+  GST_STATE_NEXT (element) = next;
+  transition = GST_STATE_TRANSITION (current, next);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
       "%s: setting state from %s to %s",
       (next != state ? "intermediate" : "final"),
       gst_element_state_get_name (current), gst_element_state_get_name (next));
 
-  transition = GST_STATE_TRANSITION (current, next);
+  /* now signal any waiters, they will error since the cookie was increased */
+  GST_STATE_BROADCAST (element);
+
+  GST_UNLOCK (element);
 
   ret = gst_element_change_state (element, transition);
 
-  GST_LOCK (element);
-  GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_CHANGING_STATE);
-  GST_UNLOCK (element);
   GST_STATE_UNLOCK (element);
 
   GST_DEBUG_OBJECT (element, "returned %d", ret);
@@ -2051,12 +2091,10 @@ gst_element_set_state_func (GstElement * element, GstState state)
 was_busy:
   {
     GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
-    GST_LOCK (element);
-    GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_CHANGING_STATE);
-    GST_UNLOCK (element);
-    GST_STATE_UNLOCK (element);
-
     GST_DEBUG_OBJECT (element, "element was busy with async state change");
+    GST_UNLOCK (element);
+
+    GST_STATE_UNLOCK (element);
 
     return GST_STATE_CHANGE_ASYNC;
   }
@@ -2076,9 +2114,6 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
   /* start with the current state. */
   current = GST_STATE_TRANSITION_CURRENT (transition);
   next = GST_STATE_TRANSITION_NEXT (transition);
-
-  /* now we store the next state */
-  GST_STATE_NEXT (element) = next;
 
   /* call the state change function so it can set the state */
   if (oclass->change_state)
@@ -2108,7 +2143,9 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
           gst_element_state_get_name (current),
           gst_element_state_get_name (next));
 
+      GST_LOCK (element);
       GST_STATE_RETURN (element) = GST_STATE_CHANGE_SUCCESS;
+      GST_UNLOCK (element);
 
       ret = gst_element_commit_state (element);
       break;
@@ -2133,7 +2170,9 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
   }
 
 exit:
+  GST_LOCK (element);
   GST_STATE_RETURN (element) = ret;
+  GST_UNLOCK (element);
 
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "exit state change %d", ret);
 
@@ -2142,7 +2181,10 @@ exit:
   /* ERROR */
 invalid_return:
   {
+    GST_LOCK (element);
     GST_STATE_RETURN (element) = ret;
+    GST_UNLOCK (element);
+
     /* somebody added a GST_STATE_ and forgot to do stuff here ! */
     g_critical ("unknown return value %d from a state change function", ret);
     return ret;

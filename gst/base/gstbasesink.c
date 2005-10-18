@@ -98,6 +98,8 @@ gst_base_sink_get_type (void)
   return base_sink_type;
 }
 
+static GstStateChangeReturn do_playing (GstBaseSink * sink);
+
 static void gst_base_sink_set_clock (GstElement * element, GstClock * clock);
 
 static void gst_base_sink_set_property (GObject * object, guint prop_id,
@@ -441,6 +443,74 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   GST_PREROLL_SIGNAL (pad);
 }
 
+static gboolean
+gst_base_sink_commit_state (GstBaseSink * basesink)
+{
+  /* commit state and proceed to next pending state */
+  {
+    GstState current, next, pending;
+    GstMessage *message;
+    gboolean post_paused = FALSE;
+    gboolean post_playing = FALSE;
+
+    GST_LOCK (basesink);
+    current = GST_STATE (basesink);
+    next = GST_STATE_NEXT (basesink);
+    pending = GST_STATE_PENDING (basesink);
+
+    switch (pending) {
+      case GST_STATE_PLAYING:
+        do_playing (basesink);
+        post_playing = TRUE;
+        break;
+      case GST_STATE_PAUSED:
+        basesink->need_preroll = TRUE;
+        post_paused = TRUE;
+        break;
+      case GST_STATE_READY:
+        goto stopping;
+      default:
+        break;
+    }
+
+    if (pending != GST_STATE_VOID_PENDING) {
+      GST_STATE (basesink) = pending;
+      GST_STATE_NEXT (basesink) = GST_STATE_VOID_PENDING;
+      GST_STATE_PENDING (basesink) = GST_STATE_VOID_PENDING;
+      GST_STATE_RETURN (basesink) = GST_STATE_CHANGE_SUCCESS;
+
+      pending = GST_STATE_VOID_PENDING;
+    }
+    GST_UNLOCK (basesink);
+
+    if (post_paused) {
+      message = gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
+          current, next, GST_STATE_VOID_PENDING);
+      gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
+    }
+    if (post_playing) {
+      message = gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
+          next, pending, GST_STATE_VOID_PENDING);
+      gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
+    }
+    /* and mark dirty */
+    if (post_paused || post_playing) {
+      gst_element_post_message (GST_ELEMENT_CAST (basesink),
+          gst_message_new_state_dirty (GST_OBJECT_CAST (basesink)));
+    }
+
+    GST_STATE_BROADCAST (basesink);
+  }
+  return TRUE;
+
+stopping:
+  {
+    /* app is going to READY */
+    GST_UNLOCK (basesink);
+    return FALSE;
+  }
+}
+
 /* with STREAM_LOCK */
 static GstFlowReturn
 gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
@@ -601,13 +671,11 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     basesink->preroll_queued++;
     basesink->buffers_queued++;
   }
+
   GST_DEBUG_OBJECT (basesink,
       "now %d preroll, %d buffers, %d events on queue",
       basesink->preroll_queued,
       basesink->buffers_queued, basesink->events_queued);
-
-  if (basesink->playing_async)
-    goto playing_async;
 
   /* check if we are prerolling */
   if (!basesink->need_preroll)
@@ -633,59 +701,22 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
   GST_DEBUG_OBJECT (basesink, "prerolled length %d", length);
 
   if (length == 1) {
-    gint t;
-    GstTask *task;
 
     basesink->have_preroll = TRUE;
-    /* we are prerolling */
-    GST_PREROLL_UNLOCK (pad);
 
-    /* have to release STREAM_LOCK as we cannot take the STATE_LOCK
-     * inside the STREAM_LOCK */
-    t = GST_STREAM_UNLOCK_FULL (pad);
-    GST_DEBUG_OBJECT (basesink, "released stream lock %d times", t);
-    if (t <= 0) {
-      GST_WARNING ("STREAM_LOCK should have been locked !!");
-      g_warning ("STREAM_LOCK should have been locked !!");
-    }
-
-    /* now we commit our state, this will also automatically proceed to
-     * the next pending state. */
-    /* FIXME */
-    if ((task = GST_PAD_TASK (pad))) {
-      while (!GST_STATE_TRYLOCK (basesink)) {
-        GST_DEBUG_OBJECT (basesink,
-            "state change happening, checking shutdown");
-        GST_LOCK (pad);
-        if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-          goto task_stopped;
-        GST_UNLOCK (pad);
-      }
-    } else {
-      GST_STATE_LOCK (basesink);
-    }
-    GST_DEBUG_OBJECT (basesink, "commit state");
-    gst_element_commit_state (GST_ELEMENT (basesink));
-    GST_STATE_UNLOCK (basesink);
-
-    /* reacquire stream lock, pad could be flushing now */
-    /* FIXME in glib, if t==0, the lock is still taken... hmmm.. bug #317802 */
-    if (t > 0)
-      GST_STREAM_LOCK_FULL (pad, t);
-
-    /* and wait if needed */
-    GST_PREROLL_LOCK (pad);
+    /* commit state */
+    if (!gst_base_sink_commit_state (basesink))
+      goto stopping;
 
     GST_LOCK (pad);
     if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
       goto flushing;
     GST_UNLOCK (pad);
 
-    /* it is possible that the application set the state to PLAYING
+    /* it is possible that commiting the state made us go to PLAYING
      * now in which case we don't need to block anymore. */
     if (!basesink->need_preroll)
       goto no_preroll;
-
 
     length = basesink->preroll_queued;
 
@@ -706,12 +737,11 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     GST_DEBUG_OBJECT (basesink, "waiting to finish preroll");
     GST_PREROLL_WAIT (pad);
     GST_DEBUG_OBJECT (basesink, "done preroll");
+    GST_LOCK (pad);
+    if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+      goto flushing;
+    GST_UNLOCK (pad);
   }
-  GST_LOCK (pad);
-  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-    goto flushing;
-  GST_UNLOCK (pad);
-
   GST_PREROLL_UNLOCK (pad);
 
   return GST_FLOW_OK;
@@ -740,74 +770,29 @@ dropping:
 
     return GST_FLOW_OK;
   }
-playing_async:
-  {
-    GstFlowReturn ret;
-    gint t;
-
-    basesink->have_preroll = FALSE;
-    basesink->playing_async = FALSE;
-
-    /* handle buffer first */
-    ret = gst_base_sink_preroll_queue_empty (basesink, pad);
-
-    /* unroll locks, commit state, reacquire stream lock */
-    GST_PREROLL_UNLOCK (pad);
-    t = GST_STREAM_UNLOCK_FULL (pad);
-    GST_DEBUG_OBJECT (basesink, "released stream lock %d times", t);
-    if (t <= 0) {
-      GST_WARNING ("STREAM_LOCK should have been locked !!");
-      g_warning ("STREAM_LOCK should have been locked !!");
-    }
-    GST_STATE_LOCK (basesink);
-    GST_DEBUG_OBJECT (basesink, "commit state");
-    gst_element_commit_state (GST_ELEMENT (basesink));
-    GST_STATE_UNLOCK (basesink);
-    if (t > 0)
-      GST_STREAM_LOCK_FULL (pad, t);
-
-    return ret;
-  }
-task_stopped:
-  {
-    GST_UNLOCK (pad);
-    GST_DEBUG_OBJECT (basesink, "task is stopped");
-    return GST_FLOW_WRONG_STATE;
-  }
 flushing:
   {
     GST_UNLOCK (pad);
     gst_base_sink_preroll_queue_flush (basesink, pad);
     GST_PREROLL_UNLOCK (pad);
     GST_DEBUG_OBJECT (basesink, "pad is flushing");
+
+    return GST_FLOW_WRONG_STATE;
+  }
+stopping:
+  {
+    GST_PREROLL_UNLOCK (pad);
+    GST_DEBUG_OBJECT (basesink, "stopping");
+
     return GST_FLOW_WRONG_STATE;
   }
 preroll_failed:
   {
-    gint t;
-
     GST_DEBUG_OBJECT (basesink, "preroll failed");
     gst_base_sink_preroll_queue_flush (basesink, pad);
-    GST_PREROLL_UNLOCK (pad);
 
-    /* have to release STREAM_LOCK as we cannot take the STATE_LOCK
-     * inside the STREAM_LOCK */
-    t = GST_STREAM_UNLOCK_FULL (pad);
-    GST_DEBUG_OBJECT (basesink, "released stream lock %d times", t);
-    if (t <= 0) {
-      GST_WARNING ("STREAM_LOCK should have been locked !!");
-      g_warning ("STREAM_LOCK should have been locked !!");
-    }
-
-    /* now we abort our state */
-    GST_STATE_LOCK (basesink);
     GST_DEBUG_OBJECT (basesink, "abort state");
     gst_element_abort_state (GST_ELEMENT (basesink));
-    GST_STATE_UNLOCK (basesink);
-
-    /* reacquire stream lock, pad could be flushing now */
-    if (t > 0)
-      GST_STREAM_LOCK_FULL (pad, t);
 
     return GST_FLOW_ERROR;
   }
@@ -871,11 +856,9 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
 
       /* and we need to commit our state again on the next
        * prerolled buffer */
-      GST_STATE_LOCK (basesink);
       GST_STREAM_LOCK (pad);
       gst_element_lost_state (GST_ELEMENT (basesink));
       GST_STREAM_UNLOCK (pad);
-      GST_STATE_UNLOCK (basesink);
       GST_DEBUG_OBJECT (basesink, "event unref %p %p", basesink, event);
       gst_event_unref (event);
       break;
@@ -1450,6 +1433,50 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
   return res;
 }
 
+/* with PREROLL_LOCK */
+static GstStateChangeReturn
+do_playing (GstBaseSink * basesink)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  /* no preroll needed */
+  basesink->need_preroll = FALSE;
+
+  /* if we have EOS, we should empty the queue now as there will
+   * be no more data received in the chain function.
+   * FIXME, this could block the state change function too long when
+   * we are pushing and syncing the buffers, better start a new
+   * thread to do this. */
+  if (basesink->eos) {
+    gboolean do_eos = !basesink->eos_queued;
+
+    gst_base_sink_preroll_queue_empty (basesink, basesink->sinkpad);
+
+    /* need to post EOS message here if it was not in the preroll queue we
+     * just emptied. */
+    if (do_eos) {
+      GST_DEBUG_OBJECT (basesink, "Now posting EOS");
+      gst_element_post_message (GST_ELEMENT (basesink),
+          gst_message_new_eos (GST_OBJECT (basesink)));
+    }
+  } else if (!basesink->have_preroll) {
+    /* don't need preroll, but do queue a commit_state */
+    basesink->need_preroll = TRUE;
+    GST_DEBUG_OBJECT (basesink,
+        "PAUSED to PLAYING, !eos, !have_preroll, need preroll to FALSE");
+    ret = GST_STATE_CHANGE_ASYNC;
+    /* we know it's not waiting, no need to signal */
+  } else {
+    /* don't need the preroll anymore */
+    GST_DEBUG_OBJECT (basesink,
+        "PAUSED to PLAYING, !eos, have_preroll, need preroll to FALSE");
+    /* now let it play */
+    GST_PREROLL_SIGNAL (basesink->sinkpad);
+  }
+
+  return ret;
+}
+
 static GstStateChangeReturn
 gst_base_sink_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1484,40 +1511,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_PREROLL_LOCK (basesink->sinkpad);
-      /* if we have EOS, we should empty the queue now as there will
-       * be no more data received in the chain function.
-       * FIXME, this could block the state change function too long when
-       * we are pushing and syncing the buffers, better start a new
-       * thread to do this. */
-      if (basesink->eos) {
-        gboolean do_eos = !basesink->eos_queued;
-
-        gst_base_sink_preroll_queue_empty (basesink, basesink->sinkpad);
-        basesink->need_preroll = FALSE;
-
-        /* need to post EOS message here if it was not in the preroll queue we
-         * just emptied. */
-        if (do_eos) {
-          GST_DEBUG_OBJECT (basesink, "Now posting EOS");
-          gst_element_post_message (GST_ELEMENT (basesink),
-              gst_message_new_eos (GST_OBJECT (basesink)));
-        }
-      } else if (!basesink->have_preroll) {
-        /* don't need preroll, but do queue a commit_state */
-        GST_DEBUG_OBJECT (basesink,
-            "PAUSED to PLAYING, !eos, !have_preroll, need preroll to FALSE");
-        basesink->need_preroll = FALSE;
-        basesink->playing_async = TRUE;
-        ret = GST_STATE_CHANGE_ASYNC;
-        /* we know it's not waiting, no need to signal */
-      } else {
-        /* don't need the preroll anymore */
-        basesink->need_preroll = FALSE;
-        GST_DEBUG_OBJECT (basesink,
-            "PAUSED to PLAYING, !eos, have_preroll, need preroll to FALSE");
-        /* now let it play */
-        GST_PREROLL_SIGNAL (basesink->sinkpad);
-      }
+      ret = do_playing (basesink);
       GST_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     default:
@@ -1546,8 +1540,6 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         gst_clock_id_unschedule (basesink->clock_id);
       }
       GST_UNLOCK (basesink);
-
-      basesink->playing_async = FALSE;
 
       /* unlock any subclasses */
       if (bclass->unlock)

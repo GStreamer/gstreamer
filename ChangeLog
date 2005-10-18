@@ -1,5 +1,33 @@
 2005-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* check/Makefile.am:
+	* check/pipelines/stress.c: (GST_START_TEST),
+	(simple_launch_lines_suite), (main):
+	Small state change torture test.
+
+	* docs/design/part-states.txt:
+	* gst/base/gstbasesink.c: (gst_base_sink_commit_state),
+	(gst_base_sink_handle_object), (gst_base_sink_event), (do_playing),
+	(gst_base_sink_change_state):
+	Never take state lock from streaming thread, clean up ugly
+	hacks. Unfortunatly core does not yet support nice ways to
+	async commit state.
+	
+	* gst/gstbin.c: (gst_bin_remove_func), (gst_bin_recalc_state),
+	(bin_bus_handler):
+	Start state recalc if a STATE_DIRTY message is posted, but only
+	on the toplevel bin.
+
+	* gst/gstelement.c: (gst_element_sync_state_with_parent),
+	(gst_element_get_state_func), (gst_element_abort_state),
+	(gst_element_commit_state), (gst_element_lost_state),
+	(gst_element_set_state_func), (gst_element_change_state):
+	* gst/gstelement.h:
+	State variables are now protected with the LOCK, the state
+	lock is only used to serialize _set_state().
+
+2005-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst/gstbin.c: (GST_START_TEST):
 	* check/gst/gstmessage.c: (GST_START_TEST):
 	* check/gst/gstpipeline.c: (GST_START_TEST), (message_received):

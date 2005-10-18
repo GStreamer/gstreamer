@@ -155,7 +155,6 @@ typedef enum
   GST_ELEMENT_LOCKED_STATE      = (GST_OBJECT_FLAG_LAST << 0),
   GST_ELEMENT_IS_SINK           = (GST_OBJECT_FLAG_LAST << 1),
   GST_ELEMENT_UNPARENTING       = (GST_OBJECT_FLAG_LAST << 2),
-  GST_ELEMENT_CHANGING_STATE    = (GST_OBJECT_FLAG_LAST << 3),
   /* padding */
   GST_ELEMENT_FLAG_LAST         = (GST_OBJECT_FLAG_LAST << 16)
 } GstElementFlags;
@@ -281,10 +280,10 @@ G_STMT_START {								\
 #define GST_STATE_UNLOCK_FULL(elem)            g_static_rec_mutex_unlock_full(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_LOCK_FULL(elem,t)            g_static_rec_mutex_lock_full(GST_STATE_GET_LOCK(elem), t)
 #define GST_STATE_GET_COND(elem)               (GST_ELEMENT_CAST(elem)->state_cond)
-#define GST_STATE_WAIT(elem)                   g_static_rec_cond_wait (GST_STATE_GET_COND (elem), \
-							GST_STATE_GET_LOCK (elem))
-#define GST_STATE_TIMED_WAIT(elem, timeval)    g_static_rec_cond_timed_wait (GST_STATE_GET_COND (elem), \
-							GST_STATE_GET_LOCK (elem), timeval)
+#define GST_STATE_WAIT(elem)                   g_cond_wait (GST_STATE_GET_COND (elem), \
+							GST_GET_LOCK (elem))
+#define GST_STATE_TIMED_WAIT(elem, timeval)    g_cond_timed_wait (GST_STATE_GET_COND (elem), \
+							GST_GET_LOCK (elem), timeval)
 #define GST_STATE_SIGNAL(elem)                 g_cond_signal (GST_STATE_GET_COND (elem));
 #define GST_STATE_BROADCAST(elem)              g_cond_broadcast (GST_STATE_GET_COND (elem));
 
@@ -292,7 +291,7 @@ struct _GstElement
 {
   GstObject		object;
 
-  /*< public >*/ /* with STATE_LOCK */
+  /*< public >*/ /* with LOCK */
   /* element state */
   GStaticRecMutex      *state_lock;
   GCond                *state_cond;

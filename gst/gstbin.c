@@ -677,9 +677,9 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
    * we are waiting for an ASYNC state change on this element. The
    * element cannot be added to another bin yet as it is not yet
    * unparented. */
-  GST_STATE_LOCK (element);
+  GST_LOCK (element);
   GST_STATE_BROADCAST (element);
-  GST_STATE_UNLOCK (element);
+  GST_UNLOCK (element);
 
   /* we ref here because after the _unparent() the element can be disposed
    * and we still need it to reset the UNPARENTING flag and fire a signal. */
@@ -944,6 +944,7 @@ gst_bin_recalc_state (GstBin * bin, gboolean force)
   GstStateChangeReturn ret;
   GList *children;
   guint32 children_cookie;
+  guint32 state_cookie;
   gboolean have_no_preroll;
   gboolean have_async;
 
@@ -964,6 +965,7 @@ gst_bin_recalc_state (GstBin * bin, gboolean force)
     goto was_polling;
 
   bin->polling = TRUE;
+  state_cookie = GST_ELEMENT_CAST (bin)->state_cookie;
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "recalc state");
 
@@ -1001,6 +1003,10 @@ restart:
        * have been added here and we don't want to block on sinks then.*/
       GST_DEBUG_OBJECT (bin, "children added or removed, restarting recalc");
       goto restart;
+    }
+    if (state_cookie != GST_ELEMENT_CAST (bin)->state_cookie) {
+      GST_DEBUG_OBJECT (bin, "concurrent state change");
+      goto concurrent_state;
     }
     if (bin->state_dirty) {
       GST_DEBUG_OBJECT (bin, "state dirty again, restarting recalc");
@@ -1045,7 +1051,6 @@ done:
    * are added now and we still report the old state. No problem though as
    * the return is still consistent, the effect is as if the element was
    * added after this function completed. */
-  GST_STATE_LOCK (bin);
   switch (ret) {
     case GST_STATE_CHANGE_SUCCESS:
     case GST_STATE_CHANGE_NO_PREROLL:
@@ -1060,9 +1065,10 @@ done:
     default:
       goto unknown_state;
   }
+
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "return now %d",
       GST_STATE_RETURN (bin));
-  GST_STATE_UNLOCK (bin);
+
   return;
 
 not_dirty:
@@ -1074,6 +1080,13 @@ not_dirty:
 was_polling:
   {
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "was polling");
+    GST_UNLOCK (bin);
+    return;
+  }
+concurrent_state:
+  {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "concurrent_state");
+    bin->polling = FALSE;
     GST_UNLOCK (bin);
     return;
   }
@@ -1622,60 +1635,41 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       gst_message_unref (message);
       break;
     }
-    case GST_MESSAGE_STATE_CHANGED:
+    case GST_MESSAGE_STATE_DIRTY:
     {
-      GstState old, new, pending;
       GstObject *src;
+      GstBinClass *klass;
 
-      gst_message_parse_state_changed (message, &old, &new, &pending);
       src = GST_MESSAGE_SRC (message);
-      /* ref src, as we need it after we post the message up */
-      gst_object_ref (src);
 
-      GST_DEBUG_OBJECT (bin, "%s gave state change, %s -> %s, pending %s",
-          GST_ELEMENT_NAME (src),
-          gst_element_state_get_name (old),
-          gst_element_state_get_name (new),
-          gst_element_state_get_name (pending));
+      GST_DEBUG_OBJECT (bin, "%s gave state dirty", GST_ELEMENT_NAME (src));
 
-      /* post message up */
-      gst_element_post_message (GST_ELEMENT_CAST (bin), message);
-
-      /* we only act on our own children */
+      /* mark the bin dirty */
       GST_LOCK (bin);
-      if (!g_list_find (bin->children, src))
-        goto not_our_child;
+      GST_DEBUG_OBJECT (bin, "marking dirty");
+      bin->state_dirty = TRUE;
+
+      if (GST_OBJECT_PARENT (bin))
+        goto not_toplevel;
+
+      /* free message */
+      gst_message_unref (message);
+
+      klass = GST_BIN_GET_CLASS (bin);
+      gst_object_ref (bin);
+      GST_DEBUG_OBJECT (bin, "pushing recalc on thread pool");
+      g_thread_pool_push (klass->pool, bin, NULL);
       GST_UNLOCK (bin);
-
-      gst_object_unref (src);
-
-      /* we can lock, either the state change is sync and we can
-       * recursively lock or the state change is async and we
-       * lock when the bin has done its state change. We can check which
-       * case it is by looking at the CHANGING_STATE flag. */
-      GST_STATE_LOCK (bin);
-      GST_DEBUG_OBJECT (bin, "locked");
-
-      GST_LOCK (bin);
-      if (!GST_OBJECT_FLAG_IS_SET (bin, GST_ELEMENT_CHANGING_STATE)) {
-        GST_UNLOCK (bin);
-        GST_DEBUG_OBJECT (bin, "got ASYNC message, forcing recalc state");
-        GST_STATE_UNLOCK (bin);
-
-        /* force bin state recalculation on async messages. */
-        gst_bin_recalc_state (bin, TRUE);
-      } else {
-        GST_UNLOCK (bin);
-        GST_STATE_UNLOCK (bin);
-        GST_DEBUG_OBJECT (bin, "got SYNC message");
-      }
       break;
 
-    not_our_child:
+    not_toplevel:
       {
         GST_UNLOCK (bin);
-        GST_DEBUG_OBJECT (bin, "not our child");
-        gst_object_unref (src);
+        GST_DEBUG_OBJECT (bin, "not toplevel");
+
+        /* post message up, mark parent bins dirty */
+        gst_element_post_message (GST_ELEMENT_CAST (bin), message);
+
         break;
       }
     }

@@ -363,10 +363,32 @@ Locking overview (element)
                                                       STREAM_LOCK
                                                            | ...
                                                       STREAM_UNLOCK
-                                     
-       
-       
-       
-               
+
+*********************************************
+*********************************************
+
+set_state cannot be called from multiple threads at the same time. The STATE_LOCK
+prevents this.
+
+state variables are protected with the LOCK.
+
+calling set_state while gst_state is called should unlock the get_state with
+an error. The cookie will do that.
+
+
+ set_state(element)
+
+  STATE_LOCK
+
+  LOCK
+  update current, next, pending state
+  cookie++
+  UNLOCK
+
+  change_state
+
+  STATE_UNLOCK
+ 
    
+
 

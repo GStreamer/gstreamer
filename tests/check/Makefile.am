@@ -52,6 +52,7 @@ check_PROGRAMS =				\
 	elements/identity			\
 	generic/states				\
 	pipelines/simple_launch_lines		\
+	pipelines/stress			\
 	pipelines/cleanup			\
 	states/sinks				\
 	gst-libs/controller			\
