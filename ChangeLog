@@ -1,5 +1,17 @@
 2005-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.h:
+	* gst/gstelement.c: (gst_element_class_init),
+	(gst_element_set_state), (gst_element_set_state_func):
+	* gst/gstelement.h:
+	Pending ABI changes.
+	GThreadPool in GstBinClass to monitor async state changes.
+	state_cookie in GstElement to detect concurrent gst/set state.
+	set_state is now virtual too in case a very complicated element
+	has to be constructed.
+
+2005-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst/gstbin.c: (GST_START_TEST):
 	* check/gst/gstmessage.c: (GST_START_TEST):
 	* check/gst/gstpipeline.c: (GST_START_TEST), (message_received):

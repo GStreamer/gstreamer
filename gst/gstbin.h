@@ -104,6 +104,8 @@ struct _GstBinClass {
   GstElementClass parent_class;
 
   /*< private >*/
+  GThreadPool  *pool;
+
   /* signals */
   void		(*element_added)	(GstBin *bin, GstElement *child);
   void		(*element_removed)	(GstBin *bin, GstElement *child);

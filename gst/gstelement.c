@@ -119,10 +119,10 @@ static GstStateChangeReturn gst_element_change_state (GstElement * element,
     GstStateChange transition);
 static GstStateChangeReturn gst_element_change_state_func (GstElement * element,
     GstStateChange transition);
-static GstStateChangeReturn gst_element_change_state_func (GstElement * element,
-    GstStateChange transition);
 static GstStateChangeReturn gst_element_get_state_func (GstElement * element,
     GstState * state, GstState * pending, GstClockTime timeout);
+static GstStateChangeReturn gst_element_set_state_func (GstElement * element,
+    GstState state);
 static void gst_element_set_bus_func (GstElement * element, GstBus * bus);
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -213,6 +213,7 @@ gst_element_class_init (GstElementClass * klass)
 #endif
 
   klass->change_state = GST_DEBUG_FUNCPTR (gst_element_change_state_func);
+  klass->set_state = GST_DEBUG_FUNCPTR (gst_element_set_state_func);
   klass->get_state = GST_DEBUG_FUNCPTR (gst_element_get_state_func);
   klass->set_bus = GST_DEBUG_FUNCPTR (gst_element_set_bus_func);
   klass->numpadtemplates = 0;
@@ -1930,6 +1931,26 @@ gst_element_lost_state (GstElement * element)
 GstStateChangeReturn
 gst_element_set_state (GstElement * element, GstState state)
 {
+  GstElementClass *oclass;
+  GstStateChangeReturn result = GST_STATE_CHANGE_FAILURE;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
+
+  oclass = GST_ELEMENT_GET_CLASS (element);
+
+  if (oclass->set_state)
+    result = (oclass->set_state) (element, state);
+
+  return result;
+}
+
+/**
+ * default set state function, calculates the next state based
+ * on current state and calls the change_state function 
+ */
+static GstStateChangeReturn
+gst_element_set_state_func (GstElement * element, GstState state)
+{
   GstState current, next, old_pending;
   GstStateChangeReturn ret;
   GstStateChange transition;
@@ -2017,7 +2038,6 @@ was_busy:
 
     return GST_STATE_CHANGE_ASYNC;
   }
-
 }
 
 /* with STATE_LOCK */

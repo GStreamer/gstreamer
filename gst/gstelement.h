@@ -296,6 +296,7 @@ struct _GstElement
   /* element state */
   GStaticRecMutex      *state_lock;
   GCond                *state_cond;
+  guint32		state_cookie;
   GstState              current_state;
   GstState              next_state;
   GstState              pending_state;
@@ -355,6 +356,7 @@ struct _GstElementClass
   /* state changes */
   GstStateChangeReturn (*get_state)		(GstElement * element, GstState * state,
 						 GstState * pending, GstClockTime timeout);
+  GstStateChangeReturn (*set_state)		(GstElement *element, GstState state);
   GstStateChangeReturn (*change_state)		(GstElement *element, GstStateChange transition);
 
   /* bus */
