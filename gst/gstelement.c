@@ -1836,7 +1836,7 @@ gst_element_commit_state (GstElement * element)
         gst_element_state_get_name (pending));
 
     message = gst_message_new_state_changed (GST_OBJECT (element),
-        old_state, next, pending);
+        FALSE, old_state, next, pending);
     gst_element_post_message (element, message);
 
     if (pending != GST_STATE_VOID_PENDING) {
@@ -1904,7 +1904,7 @@ gst_element_lost_state (GstElement * element)
     GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
 
     message = gst_message_new_state_changed (GST_OBJECT (element),
-        current_state, current_state, current_state);
+        FALSE, current_state, current_state, current_state);
     gst_element_post_message (element, message);
   }
 }

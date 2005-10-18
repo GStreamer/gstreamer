@@ -121,22 +121,29 @@ GST_START_TEST (test_parsing)
   /* GST_MESSAGE_STATE_CHANGED   */
   {
     GstState oldstate, newstate, pending;
+    gboolean async;
 
+    async = TRUE;
     oldstate = GST_STATE_PAUSED;
     newstate = GST_STATE_PLAYING;
     pending = GST_STATE_VOID_PENDING;
 
-    message = gst_message_new_state_changed (NULL, oldstate, newstate, pending);
+    message =
+        gst_message_new_state_changed (NULL, async, oldstate, newstate,
+        pending);
     fail_if (message == NULL);
     fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STATE_CHANGED);
     fail_unless (GST_MESSAGE_SRC (message) == NULL);
 
     /* set some wrong values to check if the parse method overwrites them
      * with the good values */
+    async = FALSE;
     oldstate = GST_STATE_READY;
     newstate = GST_STATE_READY;
     pending = GST_STATE_READY;
-    gst_message_parse_state_changed (message, &oldstate, &newstate, &pending);
+    gst_message_parse_state_changed (message, &async, &oldstate, &newstate,
+        &pending);
+    fail_unless (async == TRUE);
     fail_unless (oldstate == GST_STATE_PAUSED);
     fail_unless (newstate == GST_STATE_PLAYING);
     fail_unless (pending == GST_STATE_VOID_PENDING);

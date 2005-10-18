@@ -400,6 +400,7 @@ event_loop (GstElement * pipeline, gboolean blocking)
         gst_message_parse_new_clock (message, &clock);
 
         g_print ("New clock: %s\n", GST_OBJECT_NAME (clock));
+        gst_message_unref (message);
         break;
       }
       case GST_MESSAGE_EOS:
@@ -452,8 +453,9 @@ event_loop (GstElement * pipeline, gboolean blocking)
       }
       case GST_MESSAGE_STATE_CHANGED:{
         GstState old, new, pending;
+        gboolean async;
 
-        gst_message_parse_state_changed (message, &old, &new, &pending);
+        gst_message_parse_state_changed (message, &async, &old, &new, &pending);
         if (!(old == GST_STATE_PLAYING && new == GST_STATE_PAUSED &&
                 GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline))) {
           gst_message_unref (message);

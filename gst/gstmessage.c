@@ -92,6 +92,7 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_ELEMENT, "element", 0},
   {GST_MESSAGE_SEGMENT_START, "segment-start", 0},
   {GST_MESSAGE_SEGMENT_DONE, "segment-done", 0},
+  {GST_MESSAGE_DURATION, "duration", 0},
   {0, NULL, 0}
 };
 
@@ -384,6 +385,7 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 /**
  * gst_message_new_state_changed:
  * @src: the object originating the message
+ * @async: if this is a state change from a streaming thread
  * @oldstate: the previous state
  * @newstate: the new (current) state
  * @pending: the pending (target) state
@@ -396,13 +398,14 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * MT safe.
  */
 GstMessage *
-gst_message_new_state_changed (GstObject * src,
+gst_message_new_state_changed (GstObject * src, gboolean async,
     GstState oldstate, GstState newstate, GstState pending)
 {
   GstMessage *message;
 
   message = gst_message_new_custom (GST_MESSAGE_STATE_CHANGED, src,
       gst_structure_new ("GstMessageState",
+          "async", G_TYPE_BOOLEAN, async,
           "old-state", GST_TYPE_STATE, (gint) oldstate,
           "new-state", GST_TYPE_STATE, (gint) newstate,
           "pending-state", GST_TYPE_STATE, (gint) pending, NULL));
@@ -496,7 +499,8 @@ gst_message_new_new_clock (GstObject * src, GstClock * clock)
 /**
  * gst_message_new_segment_start:
  * @src: The object originating the message.
- * @timestamp: The timestamp of the segment being played
+ * @format: The format of the position being played
+ * @position: The position of the segment being played
  *
  * Create a new segment message. This message is posted by elements that
  * start playback of a segment as a result of a segment seek. This message
@@ -508,13 +512,15 @@ gst_message_new_new_clock (GstObject * src, GstClock * clock)
  * MT safe.
  */
 GstMessage *
-gst_message_new_segment_start (GstObject * src, GstClockTime timestamp)
+gst_message_new_segment_start (GstObject * src, GstFormat format,
+    gint64 position)
 {
   GstMessage *message;
 
   message = gst_message_new_custom (GST_MESSAGE_SEGMENT_START, src,
-      gst_structure_new ("GstMessageSegmentStart", "timestamp", G_TYPE_INT64,
-          (gint64) timestamp, NULL));
+      gst_structure_new ("GstMessageSegmentStart",
+          "format", GST_TYPE_FORMAT, format,
+          "position", G_TYPE_INT64, position, NULL));
 
   return message;
 }
@@ -522,7 +528,8 @@ gst_message_new_segment_start (GstObject * src, GstClockTime timestamp)
 /**
  * gst_message_new_segment_done:
  * @src: The object originating the message.
- * @timestamp: The timestamp of the segment being played
+ * @format: The format of the position being done
+ * @position: The position of the segment being done
  *
  * Create a new segment done message. This message is posted by elements that
  * finish playback of a segment as a result of a segment seek. This message
@@ -534,13 +541,15 @@ gst_message_new_segment_start (GstObject * src, GstClockTime timestamp)
  * MT safe.
  */
 GstMessage *
-gst_message_new_segment_done (GstObject * src, GstClockTime timestamp)
+gst_message_new_segment_done (GstObject * src, GstFormat format,
+    gint64 position)
 {
   GstMessage *message;
 
   message = gst_message_new_custom (GST_MESSAGE_SEGMENT_DONE, src,
-      gst_structure_new ("GstMessageSegmentDone", "timestamp", G_TYPE_INT64,
-          (gint64) timestamp, NULL));
+      gst_structure_new ("GstMessageSegmentDone",
+          "format", GST_TYPE_FORMAT, format,
+          "position", G_TYPE_INT64, position, NULL));
 
   return message;
 }
@@ -586,6 +595,34 @@ gst_message_new_element (GstObject * src, GstStructure * structure)
 }
 
 /**
+ * gst_message_new_duration:
+ * @src: The object originating the message.
+ * @format: The format of the duration
+ * @duration: The new duration 
+ *
+ * Create a new duration message. This message is posted by elements that
+ * know the duration of a stream in a specific format. This message
+ * is received by bins and is used to calculate the total duration of a
+ * pipeline.
+ *
+ * Returns: The new duration message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_duration (GstObject * src, GstFormat format, gint64 duration)
+{
+  GstMessage *message;
+
+  message = gst_message_new_custom (GST_MESSAGE_DURATION, src,
+      gst_structure_new ("GstMessageDuration",
+          "format", GST_TYPE_FORMAT, format,
+          "duration", G_TYPE_INT64, duration, NULL));
+
+  return message;
+}
+
+/**
  * gst_message_get_structure:
  * @message: The #GstMessage.
  *
@@ -627,6 +664,7 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
 /**
  * gst_message_parse_state_changed:
  * @message: a valid #GstMessage of type GST_MESSAGE_STATE_CHANGED
+ * @async: is this an async state change
  * @oldstate: the previous state
  * @newstate: the new (current) state
  * @pending: the pending (target) state
@@ -636,12 +674,14 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
  * MT safe.
  */
 void
-gst_message_parse_state_changed (GstMessage * message, GstState * oldstate,
-    GstState * newstate, GstState * pending)
+gst_message_parse_state_changed (GstMessage * message, gboolean * async,
+    GstState * oldstate, GstState * newstate, GstState * pending)
 {
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STATE_CHANGED);
 
+  if (async)
+    gst_structure_get_boolean (message->structure, "async", async);
   if (oldstate)
     gst_structure_get_enum (message->structure, "old-state",
         GST_TYPE_STATE, (gint *) oldstate);
@@ -804,49 +844,80 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
 /**
  * gst_message_parse_segment_start:
  * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_START.
- * @timestamp: Result location for the timestamp
+ * @format: Result location for the format
+ * @position: Result location for the position
  *
- * Extracts the timestamp from the segment start message.
+ * Extracts the position and format from the segment start message.
  *
  * MT safe.
  */
 void
-gst_message_parse_segment_start (GstMessage * message, GstClockTime * timestamp)
+gst_message_parse_segment_start (GstMessage * message, GstFormat * format,
+    gint64 * position)
 {
-  const GValue *time_gvalue;
+  const GstStructure *structure;
 
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_SEGMENT_START);
 
-  time_gvalue = gst_structure_get_value (message->structure, "timstamp");
-  g_return_if_fail (time_gvalue != NULL);
-  g_return_if_fail (G_VALUE_TYPE (time_gvalue) == G_TYPE_INT64);
-
-  if (timestamp)
-    *timestamp = (GstClockTime) g_value_get_int64 (time_gvalue);
+  structure = gst_message_get_structure (message);
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (position)
+    *position =
+        g_value_get_int64 (gst_structure_get_value (structure, "position"));
 }
 
 /**
  * gst_message_parse_segment_done:
  * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_DONE.
- * @timestamp: Result location for the timestamp
+ * @format: Result location for the format
+ * @position: Result location for the position
  *
- * Extracts the timestamp from the segment done message.
+ * Extracts the position and format from the segment start message.
  *
  * MT safe.
  */
 void
-gst_message_parse_segment_done (GstMessage * message, GstClockTime * timestamp)
+gst_message_parse_segment_done (GstMessage * message, GstFormat * format,
+    gint64 * position)
 {
-  const GValue *time_gvalue;
+  const GstStructure *structure;
 
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_SEGMENT_DONE);
 
-  time_gvalue = gst_structure_get_value (message->structure, "timstamp");
-  g_return_if_fail (time_gvalue != NULL);
-  g_return_if_fail (G_VALUE_TYPE (time_gvalue) == G_TYPE_INT64);
+  structure = gst_message_get_structure (message);
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (position)
+    *position =
+        g_value_get_int64 (gst_structure_get_value (structure, "position"));
+}
 
-  if (timestamp)
-    *timestamp = (GstClockTime) g_value_get_int64 (time_gvalue);
+/**
+ * gst_message_parse_duration:
+ * @message: A valid #GstMessage of type GST_MESSAGE_DURATION.
+ * @format: Result location for the format
+ * @duration: Result location for the duration
+ *
+ * Extracts the duration and format from the duration message.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_duration (GstMessage * message, GstFormat * format,
+    gint64 * duration)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_DURATION);
+
+  structure = gst_message_get_structure (message);
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (duration)
+    *duration =
+        g_value_get_int64 (gst_structure_get_value (structure, "duration"));
 }
