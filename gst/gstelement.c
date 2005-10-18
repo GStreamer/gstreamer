@@ -2274,7 +2274,14 @@ gst_element_dispose (GObject * object)
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
 
-  g_return_if_fail (GST_STATE (element) == GST_STATE_NULL);
+  if (GST_STATE (element) != GST_STATE_NULL) {
+    g_critical
+        ("\nTrying to dispose element %s, but it is not in the NULL state.\n"
+        "You need to explicitly set elements to the NULL state before\n"
+        "dropping the final reference, to allow them to clean up.\n",
+        GST_OBJECT_NAME (element));
+    return;
+  }
   g_return_if_fail (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING);
 
   /* first we break all our links with the outside */

@@ -1,3 +1,7 @@
+2005-10-18  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstelement.c (gst_element_dispose): More helpful message.
+
 2005-10-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstregistry.c: (gst_registry_scan_path_level):
