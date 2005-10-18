@@ -1,5 +1,12 @@
 2005-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* check/Makefile.am:
+	* check/clocks/selection.c: (GST_START_TEST), (volume_suite),
+	(main):
+	Add future test for clock selection.
+
+2005-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* ext/alsa/gstalsasink.c: (gst_alsasink_init),
 	(gst_alsasink_close):
 	Set handle to NULL.

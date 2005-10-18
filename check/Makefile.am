@@ -32,6 +32,7 @@ check_PROGRAMS = \
 	elements/audioresample \
 	elements/volume \
         pipelines/simple_launch_lines \
+	clocks/selection \
 	$(check_vorbis)
 
 # tests to fix leaks in
