@@ -1,3 +1,22 @@
+2005-10-19  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/libpng/gstpngdec.c: (gst_pngdec_class_init),
+	(gst_pngdec_init), (user_error_fn), (user_warning_fn),
+	(user_info_callback), (user_endrow_callback), (user_end_callback),
+	(user_read_data), (gst_pngdec_caps_create_and_set),
+	(gst_pngdec_task), (gst_pngdec_chain), (gst_pngdec_sink_event),
+	(gst_pngdec_libpng_clear), (gst_pngdec_libpng_init),
+	(gst_pngdec_change_state), (gst_pngdec_sink_activate_push),
+	(gst_pngdec_sink_activate_pull), (gst_pngdec_sink_activate):
+	* ext/libpng/gstpngdec.h: Complete rewrite of pngdec. It's now
+	very nice and handle push/pull based model. if you have filesrc
+	connected to it, it will do random access to load the png file.
+	If you have a network source that can't do _getrange, it does 
+	progressive loading through the chain function.
+	* gst/alpha/gstalphacolor.c: (gst_alpha_color_transform_caps),
+	(transform_rgb), (transform_bgr): Fix caps negotiation correctly
+	thanks to Master Wim Taymans ;-)
+
 2005-10-18  Tim-Philipp Müller  <tim at centricular dot net>
 	* gst/matroska/Makefile.am:
 	* gst/matroska/ebml-read.c:

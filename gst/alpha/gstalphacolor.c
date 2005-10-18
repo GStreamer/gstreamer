@@ -139,31 +139,49 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps)
 {
   GstAlphaColor *alpha = NULL;
-  GstCaps *result = NULL;
+  GstCaps *result = NULL, *local_caps = NULL;
+  GstPadTemplate *tmpl = NULL;
+  guint i;
 
   alpha = GST_ALPHA_COLOR (btrans);
 
-  if (gst_caps_is_fixed (caps)) {
-    GstStructure *structure = NULL;
-    gint width, height;
-    gdouble fps;
+  local_caps = gst_caps_copy (caps);
 
-    structure = gst_caps_get_structure (caps, 0);
-    gst_structure_get_int (structure, "width", &width);
-    gst_structure_get_int (structure, "height", &height);
-    gst_structure_get_double (structure, "framerate", &fps);
+  for (i = 0; i < gst_caps_get_size (local_caps); i++) {
+    GstStructure *structure = gst_caps_get_structure (local_caps, i);
 
-    result = gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'),
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height, "framerate", G_TYPE_DOUBLE, fps, NULL);
-  } else {
-    result = gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'),
-        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+    /* Throw away the structure name and set it to transformed format */
+    if (direction == GST_PAD_SINK) {
+      gst_structure_set_name (structure, "video/x-raw-yuv");
+    } else if (direction == GST_PAD_SRC) {
+      gst_structure_set_name (structure, "video/x-raw-rgb");
+    }
+    /* Remove any specific parameter from the structure */
+    gst_structure_remove_field (structure, "format");
+    gst_structure_remove_field (structure, "endianness");
+    gst_structure_remove_field (structure, "depth");
+    gst_structure_remove_field (structure, "bpp");
+    gst_structure_remove_field (structure, "red_mask");
+    gst_structure_remove_field (structure, "green_mask");
+    gst_structure_remove_field (structure, "blue_mask");
+    gst_structure_remove_field (structure, "alpha_mask");
   }
+
+  /* Get the appropriate template */
+  if (direction == GST_PAD_SINK) {
+    tmpl = gst_static_pad_template_get (&gst_alpha_color_src_template);
+  } else if (direction == GST_PAD_SRC) {
+    tmpl = gst_static_pad_template_get (&gst_alpha_color_sink_template);
+  }
+
+  /* Intersect with our template caps */
+  result = gst_caps_intersect (local_caps, gst_pad_template_get_caps (tmpl));
+
+  gst_caps_unref (local_caps);
+  gst_caps_do_simplify (result);
+
+  GST_LOG ("transformed %s to %s", gst_caps_to_string (caps),
+      gst_caps_to_string (result));
 
   return result;
 }

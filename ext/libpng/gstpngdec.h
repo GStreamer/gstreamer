@@ -41,12 +41,18 @@ struct _GstPngDec
 
   GstPad *sinkpad, *srcpad;
 
-  GstBuffer *buffer_in;
+  /* Progressive */
+  GstBuffer *buffer_out;
+  GstFlowReturn ret;
+  png_uint_32 rowbytes;
+  
+  /* Pull range */
   gint offset;
 
   png_structp png;
   png_infop info;
   png_infop endinfo;
+  gboolean setup;
 
   gint width;
   gint height;
