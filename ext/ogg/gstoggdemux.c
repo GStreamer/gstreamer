@@ -749,7 +749,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     if (ret == GST_FLOW_NOT_LINKED)
       ret = GST_FLOW_OK;
 
-    if (packet->granulepos != -1) {
+    if (packet->granulepos >= 0) {
       GstFormat format;
 
       ogg->current_granule = packet->granulepos;
@@ -1472,6 +1472,9 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gboolean accurate,
 
   /* first find the chain to search in */
   total = ogg->total_time;
+  if (ogg->chains->len == 0)
+    goto no_chains;
+
   for (i = ogg->chains->len - 1; i >= 0; i--) {
     chain = g_array_index (ogg->chains, GstOggChain *, i);
     total -= chain->total_time;
@@ -1633,7 +1636,8 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gboolean accurate,
     /* notify start of new segment */
     if (ogg->segment_play) {
       gst_element_post_message (GST_ELEMENT (ogg),
-          gst_message_new_segment_start (GST_OBJECT (ogg), ogg->segment_start));
+          gst_message_new_segment_start (GST_OBJECT (ogg), GST_FORMAT_TIME,
+              ogg->segment_start));
     }
     /* restart our task since it might have been stopped when we did the 
      * flush. */
@@ -1646,11 +1650,20 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gboolean accurate,
 
   return TRUE;
 
-seek_error:
-  GST_DEBUG_OBJECT (ogg, "got a seek error");
-  GST_STREAM_UNLOCK (ogg->sinkpad);
+no_chains:
+  {
+    GST_DEBUG_OBJECT (ogg, "no chains");
+    GST_STREAM_UNLOCK (ogg->sinkpad);
 
-  return FALSE;
+    return FALSE;
+  }
+seek_error:
+  {
+    GST_DEBUG_OBJECT (ogg, "got a seek error");
+    GST_STREAM_UNLOCK (ogg->sinkpad);
+
+    return FALSE;
+  }
 }
 
 /* finds each bitstream link one at a time using a bisection search
@@ -2243,7 +2256,8 @@ gst_ogg_demux_loop (GstOggPad * pad)
      * can check against segment_stop time. */
     if (ogg->segment_play) {
       gst_element_post_message (GST_ELEMENT (ogg),
-          gst_message_new_segment_done (GST_OBJECT (ogg), ogg->total_time));
+          gst_message_new_segment_done (GST_OBJECT (ogg), GST_FORMAT_TIME,
+              ogg->total_time));
     } else {
       gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
     }

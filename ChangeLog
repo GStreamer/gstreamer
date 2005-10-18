@@ -1,5 +1,11 @@
 2005-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_loop):
+	Fix for segment-start/stop API change.
+
+2005-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* check/Makefile.am:
 	* check/clocks/selection.c: (GST_START_TEST), (volume_suite),
 	(main):
