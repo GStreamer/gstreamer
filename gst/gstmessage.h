@@ -67,17 +67,18 @@ typedef enum
   GST_MESSAGE_TAG               = (1 << 4),
   GST_MESSAGE_BUFFERING         = (1 << 5),
   GST_MESSAGE_STATE_CHANGED     = (1 << 6),
-  GST_MESSAGE_STEP_DONE         = (1 << 7),
-  GST_MESSAGE_CLOCK_PROVIDE     = (1 << 8),
-  GST_MESSAGE_CLOCK_LOST        = (1 << 9),
-  GST_MESSAGE_NEW_CLOCK         = (1 << 10),
-  GST_MESSAGE_STRUCTURE_CHANGE  = (1 << 11),
-  GST_MESSAGE_STREAM_STATUS     = (1 << 12),
-  GST_MESSAGE_APPLICATION       = (1 << 13),
-  GST_MESSAGE_ELEMENT           = (1 << 14),
-  GST_MESSAGE_SEGMENT_START     = (1 << 15),
-  GST_MESSAGE_SEGMENT_DONE      = (1 << 16),
-  GST_MESSAGE_DURATION          = (1 << 17),
+  GST_MESSAGE_STATE_DIRTY       = (1 << 7),
+  GST_MESSAGE_STEP_DONE         = (1 << 8),
+  GST_MESSAGE_CLOCK_PROVIDE     = (1 << 9),
+  GST_MESSAGE_CLOCK_LOST        = (1 << 10),
+  GST_MESSAGE_NEW_CLOCK         = (1 << 11),
+  GST_MESSAGE_STRUCTURE_CHANGE  = (1 << 12),
+  GST_MESSAGE_STREAM_STATUS     = (1 << 13),
+  GST_MESSAGE_APPLICATION       = (1 << 14),
+  GST_MESSAGE_ELEMENT           = (1 << 15),
+  GST_MESSAGE_SEGMENT_START     = (1 << 16),
+  GST_MESSAGE_SEGMENT_DONE      = (1 << 17),
+  GST_MESSAGE_DURATION          = (1 << 18),
   GST_MESSAGE_ANY               = 0xffffffff
 } GstMessageType;
 
@@ -190,8 +191,9 @@ GstMessage *	gst_message_new_eos 		(GstObject * src);
 GstMessage *	gst_message_new_error 		(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
-GstMessage *	gst_message_new_state_changed 	(GstObject * src, gboolean async, GstState oldstate,
+GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstState oldstate,
                                                  GstState newstate, GstState pending);
+GstMessage *	gst_message_new_state_dirty 	(GstObject * src);
 GstMessage *	gst_message_new_clock_provide	(GstObject * src, GstClock *clock, gboolean ready);
 GstMessage *	gst_message_new_clock_lost	(GstObject * src, GstClock *clock);
 GstMessage *	gst_message_new_new_clock	(GstObject * src, GstClock *clock);
@@ -207,7 +209,7 @@ GstMessage *	gst_message_new_custom 		(GstMessageType type,
 void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
-void		gst_message_parse_state_changed	(GstMessage *message, gboolean *async, GstState *oldstate,
+void		gst_message_parse_state_changed	(GstMessage *message, GstState *oldstate,
                                                  GstState *newstate, GstState *pending);
 void		gst_message_parse_clock_provide (GstMessage *message, GstClock **clock, gboolean *ready);
 void		gst_message_parse_clock_lost	(GstMessage *message, GstClock **clock);

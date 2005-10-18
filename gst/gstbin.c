@@ -1626,9 +1626,8 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
     {
       GstState old, new, pending;
       GstObject *src;
-      gboolean async;
 
-      gst_message_parse_state_changed (message, &async, &old, &new, &pending);
+      gst_message_parse_state_changed (message, &old, &new, &pending);
       src = GST_MESSAGE_SRC (message);
       /* ref src, as we need it after we post the message up */
       gst_object_ref (src);

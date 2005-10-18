@@ -1,5 +1,28 @@
 2005-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* check/gst/gstbin.c: (GST_START_TEST):
+	* check/gst/gstmessage.c: (GST_START_TEST):
+	* check/gst/gstpipeline.c: (GST_START_TEST), (message_received):
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_recalc_func),
+	(bin_bus_handler):
+	* gst/gstelement.c: (gst_element_abort_state),
+	(gst_element_commit_state), (gst_element_lost_state):
+	* gst/gstmessage.c: (gst_message_new_state_changed),
+	(gst_message_new_state_dirty), (gst_message_new_segment_start),
+	(gst_message_new_segment_done), (gst_message_new_duration),
+	(gst_message_parse_state_changed),
+	(gst_message_parse_segment_start),
+	(gst_message_parse_segment_done), (gst_message_parse_duration):
+	* gst/gstmessage.h:
+	* tools/gst-launch.c: (event_loop):
+	Seriously, this is better than a previous commit as we only need
+	to notify the fact that an element changed state in a streaming
+	thread, marking the state of the parents dirty, hence the 
+	STATE_DIRTY message instead of abusing a boolean in a STATE_CHANGE
+	message.
+
+2005-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_get_state_func),
 	(gst_bin_recalc_func):
 	* gst/gstelement.c: (gst_element_set_clock),

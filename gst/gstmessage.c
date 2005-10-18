@@ -82,6 +82,7 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_TAG, "tag", 0},
   {GST_MESSAGE_BUFFERING, "buffering", 0},
   {GST_MESSAGE_STATE_CHANGED, "state-changed", 0},
+  {GST_MESSAGE_STATE_DIRTY, "state-dirty", 0},
   {GST_MESSAGE_STEP_DONE, "step-done", 0},
   {GST_MESSAGE_CLOCK_PROVIDE, "clock-provide", 0},
   {GST_MESSAGE_CLOCK_LOST, "clock-lost", 0},
@@ -385,7 +386,6 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 /**
  * gst_message_new_state_changed:
  * @src: the object originating the message
- * @async: if this is a state change from a streaming thread
  * @oldstate: the previous state
  * @newstate: the new (current) state
  * @pending: the pending (target) state
@@ -398,17 +398,38 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * MT safe.
  */
 GstMessage *
-gst_message_new_state_changed (GstObject * src, gboolean async,
+gst_message_new_state_changed (GstObject * src,
     GstState oldstate, GstState newstate, GstState pending)
 {
   GstMessage *message;
 
   message = gst_message_new_custom (GST_MESSAGE_STATE_CHANGED, src,
       gst_structure_new ("GstMessageState",
-          "async", G_TYPE_BOOLEAN, async,
           "old-state", GST_TYPE_STATE, (gint) oldstate,
           "new-state", GST_TYPE_STATE, (gint) newstate,
           "pending-state", GST_TYPE_STATE, (gint) pending, NULL));
+
+  return message;
+}
+
+/**
+ * gst_message_new_state_dirty:
+ * @src: the object originating the message
+ *
+ * Create a state dirty message. This message is posted whenever an element
+ * changed its state asynchronously and is used internally to update the
+ * states of container objects.
+ *
+ * Returns: The new state dirty message.
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_state_dirty (GstObject * src)
+{
+  GstMessage *message;
+
+  message = gst_message_new_custom (GST_MESSAGE_STATE_DIRTY, src, NULL);
 
   return message;
 }
@@ -664,7 +685,6 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
 /**
  * gst_message_parse_state_changed:
  * @message: a valid #GstMessage of type GST_MESSAGE_STATE_CHANGED
- * @async: is this an async state change
  * @oldstate: the previous state
  * @newstate: the new (current) state
  * @pending: the pending (target) state
@@ -674,14 +694,12 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
  * MT safe.
  */
 void
-gst_message_parse_state_changed (GstMessage * message, gboolean * async,
+gst_message_parse_state_changed (GstMessage * message,
     GstState * oldstate, GstState * newstate, GstState * pending)
 {
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STATE_CHANGED);
 
-  if (async)
-    gst_structure_get_boolean (message->structure, "async", async);
   if (oldstate)
     gst_structure_get_enum (message->structure, "old-state",
         GST_TYPE_STATE, (gint *) oldstate);
