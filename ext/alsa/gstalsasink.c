@@ -238,6 +238,7 @@ gst_alsasink_init (GstAlsaSink * alsasink)
   GST_DEBUG ("initializing alsasink");
 
   alsasink->device = g_strdup ("default");
+  alsasink->handle = NULL;
 }
 
 static GstCaps *
@@ -616,10 +617,20 @@ static gboolean
 gst_alsasink_close (GstAudioSink * asink)
 {
   GstAlsaSink *alsa = GST_ALSA_SINK (asink);
+  gint err;
 
-  snd_pcm_close (alsa->handle);
+  CHECK (snd_pcm_close (alsa->handle), close_error);
+  alsa->handle = NULL;
 
   return TRUE;
+
+  /* ERRORS */
+close_error:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, CLOSE,
+        ("Playback close error: %s", snd_strerror (err)), (NULL));
+    return FALSE;
+  }
 }
 
 

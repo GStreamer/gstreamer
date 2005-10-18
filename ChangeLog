@@ -1,3 +1,17 @@
+2005-10-18  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_init),
+	(gst_alsasink_close):
+	Set handle to NULL.
+
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ring_buffer_open_device), (gst_ring_buffer_close_device),
+	(gst_ring_buffer_acquire), (gst_ring_buffer_release),
+	(gst_ring_buffer_start), (gst_ring_buffer_pause),
+	(gst_ring_buffer_stop), (gst_ring_buffer_commit),
+	(gst_ring_buffer_read):
+	More debug info.
+
 2005-10-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiotestsrc/Makefile.am:

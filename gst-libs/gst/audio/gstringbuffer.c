@@ -349,6 +349,8 @@ gst_ring_buffer_open_device (GstRingBuffer * buf)
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
+  GST_DEBUG_OBJECT (buf, "opening device");
+
   GST_LOCK (buf);
   if (buf->open) {
     g_warning ("Device for ring buffer %p already open, fix your code", buf);
@@ -366,6 +368,9 @@ gst_ring_buffer_open_device (GstRingBuffer * buf)
 
   if (!res) {
     buf->open = FALSE;
+    GST_DEBUG_OBJECT (buf, "failed opening device");
+  } else {
+    GST_DEBUG_OBJECT (buf, "opened device");
   }
 
 done:
@@ -393,6 +398,8 @@ gst_ring_buffer_close_device (GstRingBuffer * buf)
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
+  GST_DEBUG_OBJECT (buf, "closing device");
+
   GST_LOCK (buf);
   if (!buf->open) {
     g_warning ("Device for ring buffer %p already closed, fix your code", buf);
@@ -414,6 +421,9 @@ gst_ring_buffer_close_device (GstRingBuffer * buf)
 
   if (!res) {
     buf->open = TRUE;
+    GST_DEBUG_OBJECT (buf, "error closing device");
+  } else {
+    GST_DEBUG_OBJECT (buf, "closed device");
   }
 
 done:
@@ -470,6 +480,8 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   g_return_val_if_fail (buf != NULL, FALSE);
 
+  GST_DEBUG_OBJECT (buf, "acquiring device");
+
   GST_LOCK (buf);
   if (!buf->open) {
     g_critical ("Device for %p not opened", buf);
@@ -478,6 +490,7 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   }
   if (buf->acquired) {
     res = TRUE;
+    GST_DEBUG_OBJECT (buf, "device was acquired");
     goto done;
   }
   buf->acquired = TRUE;
@@ -488,6 +501,7 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   if (!res) {
     buf->acquired = FALSE;
+    GST_DEBUG_OBJECT (buf, "failed to acquire device");
   } else {
     if (buf->spec.bytes_per_sample != 0) {
       gint i, j;
@@ -501,6 +515,7 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
         buf->empty_seg[i] = buf->spec.silence_sample[j];
         j = (j + 1) % buf->spec.bytes_per_sample;
       }
+      GST_DEBUG_OBJECT (buf, "acquired device");
     } else {
       g_warning
           ("invalid bytes_per_sample from acquire ringbuffer, fix the element");
@@ -532,11 +547,14 @@ gst_ring_buffer_release (GstRingBuffer * buf)
 
   g_return_val_if_fail (buf != NULL, FALSE);
 
+  GST_DEBUG_OBJECT (buf, "releasing device");
+
   gst_ring_buffer_stop (buf);
 
   GST_LOCK (buf);
   if (!buf->acquired) {
     res = TRUE;
+    GST_DEBUG_OBJECT (buf, "device was released");
     goto done;
   }
   buf->acquired = FALSE;
@@ -553,9 +571,11 @@ gst_ring_buffer_release (GstRingBuffer * buf)
 
   if (!res) {
     buf->acquired = TRUE;
+    GST_DEBUG_OBJECT (buf, "failed to release device");
   } else {
     g_free (buf->empty_seg);
     buf->empty_seg = NULL;
+    GST_DEBUG_OBJECT (buf, "released device");
   }
 
 done:
@@ -608,6 +628,8 @@ gst_ring_buffer_start (GstRingBuffer * buf)
 
   g_return_val_if_fail (buf != NULL, FALSE);
 
+  GST_DEBUG_OBJECT (buf, "starting ringbuffer");
+
   GST_LOCK (buf);
   /* if stopped, set to started */
   res = g_atomic_int_compare_and_exchange (&buf->state,
@@ -620,9 +642,11 @@ gst_ring_buffer_start (GstRingBuffer * buf)
     if (!res) {
       /* was not paused either, must be started then */
       res = TRUE;
+      GST_DEBUG_OBJECT (buf, "was started");
       goto done;
     }
     resume = TRUE;
+    GST_DEBUG_OBJECT (buf, "resuming");
   }
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
@@ -636,6 +660,9 @@ gst_ring_buffer_start (GstRingBuffer * buf)
 
   if (!res) {
     buf->state = GST_RING_BUFFER_STATE_PAUSED;
+    GST_DEBUG_OBJECT (buf, "failed to start");
+  } else {
+    GST_DEBUG_OBJECT (buf, "started");
   }
 
 done:
@@ -662,6 +689,8 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
 
   g_return_val_if_fail (buf != NULL, FALSE);
 
+  GST_DEBUG_OBJECT (buf, "pausing ringbuffer");
+
   GST_LOCK (buf);
   /* if started, set to paused */
   res = g_atomic_int_compare_and_exchange (&buf->state,
@@ -670,6 +699,7 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
   if (!res) {
     /* was not started */
     res = TRUE;
+    GST_DEBUG_OBJECT (buf, "was not started");
     goto done;
   }
 
@@ -682,7 +712,11 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
 
   if (!res) {
     buf->state = GST_RING_BUFFER_STATE_STARTED;
+    GST_DEBUG_OBJECT (buf, "failed to pause");
+  } else {
+    GST_DEBUG_OBJECT (buf, "paused");
   }
+
 done:
   GST_UNLOCK (buf);
 
@@ -707,6 +741,8 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
 
   g_return_val_if_fail (buf != NULL, FALSE);
 
+  GST_DEBUG_OBJECT (buf, "stopping");
+
   GST_LOCK (buf);
   /* if started, set to stopped */
   res = g_atomic_int_compare_and_exchange (&buf->state,
@@ -714,6 +750,7 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
 
   if (!res) {
     /* was not started, must be stopped then */
+    GST_DEBUG_OBJECT (buf, "was not started");
     res = TRUE;
     goto done;
   }
@@ -727,6 +764,9 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
 
   if (!res) {
     buf->state = GST_RING_BUFFER_STATE_STARTED;
+    GST_DEBUG_OBJECT (buf, "failed to stop");
+  } else {
+    GST_DEBUG_OBJECT (buf, "stopped");
   }
 done:
   GST_UNLOCK (buf);
