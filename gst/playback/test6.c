@@ -19,42 +19,48 @@
 #include <unistd.h>
 #include <gst/gst.h>
 
-static GMainLoop *loop;
-
-static void
-new_pad (GstElement * element, GstPad * pad, gboolean last, GstElement * sink)
+gint
+main (gint argc, gchar * argv[])
 {
-  g_print ("New pad...\n");
-}
-
-static void
-no_more_pads (GstElement * element)
-{
-  g_print ("No more pads...\n");
-  g_main_loop_quit (loop);
-}
-
-static gboolean
-start_finding (GstElement * pipeline)
-{
+  GstElement *pipeline, *filesrc, *decodebin;
   GstStateChangeReturn res;
+  GstIterator *it;
+  gpointer data;
 
-  g_print ("finding caps...\n");
+  gst_init (&argc, &argv);
+
+  pipeline = gst_pipeline_new ("pipeline");
+
+  filesrc = gst_element_factory_make ("filesrc", "filesrc");
+  g_assert (filesrc);
+
+  decodebin = gst_element_factory_make ("decodebin", "decodebin");
+  g_assert (decodebin);
+
+  gst_bin_add_many (GST_BIN (pipeline), filesrc, decodebin, NULL);
+  gst_element_link (filesrc, decodebin);
+
+  if (argc < 2) {
+    g_print ("usage: %s <uri>\n", argv[0]);
+    exit (-1);
+  }
+  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
+
+  g_print ("pause..\n");
   res = gst_element_set_state (pipeline, GST_STATE_PAUSED);
   if (res == GST_STATE_CHANGE_FAILURE) {
     g_print ("could not pause\n");
     exit (-1);
   }
-  return FALSE;
-}
+  g_print ("waiting..\n");
+  res = gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  if (res != GST_STATE_CHANGE_SUCCESS) {
+    g_print ("could not complete pause\n");
+    exit (-1);
+  }
+  g_print ("stats..\n");
 
-static void
-dump_element_stats (GstElement * element)
-{
-  GstIterator *it;
-  gpointer data;
-
-  it = gst_element_iterate_src_pads (element);
+  it = gst_element_iterate_src_pads (decodebin);
   while (gst_iterator_next (it, &data) == GST_ITERATOR_OK) {
     GstPad *pad = GST_PAD (data);
     GstCaps *caps;
@@ -81,43 +87,6 @@ dump_element_stats (GstElement * element)
     gst_object_unref (pad);
   }
   gst_iterator_free (it);
-}
-
-gint
-main (gint argc, gchar * argv[])
-{
-  GstElement *pipeline, *filesrc, *decodebin;
-
-  gst_init (&argc, &argv);
-
-  pipeline = gst_pipeline_new ("pipeline");
-
-  filesrc = gst_element_factory_make ("filesrc", "filesrc");
-  g_assert (filesrc);
-
-  decodebin = gst_element_factory_make ("decodebin", "decodebin");
-  g_assert (decodebin);
-
-  g_signal_connect (G_OBJECT (decodebin), "new-decoded-pad",
-      G_CALLBACK (new_pad), NULL);
-  g_signal_connect (G_OBJECT (decodebin), "no-more-pads",
-      G_CALLBACK (no_more_pads), NULL);
-
-  gst_bin_add_many (GST_BIN (pipeline), filesrc, decodebin, NULL);
-  gst_element_link (filesrc, decodebin);
-
-  if (argc < 2) {
-    g_print ("usage: %s <uri>\n", argv[0]);
-    exit (-1);
-  }
-  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
-
-  /* event based programming approach */
-  loop = g_main_loop_new (NULL, TRUE);
-  g_idle_add ((GSourceFunc) start_finding, pipeline);
-  g_main_loop_run (loop);
-
-  dump_element_stats (decodebin);
 
   return 0;
 }

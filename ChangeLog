@@ -1,5 +1,23 @@
 2005-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/Makefile.am:
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
+	(gst_decode_bin_dispose), (dynamic_create), (dynamic_free),
+	(free_dynamics), (pad_unblocked), (pad_blocked), (close_pad_link),
+	(try_to_link_1), (new_pad), (no_more_pads), (type_found),
+	(gst_decode_bin_change_state):
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	(gst_play_bin_send_event_to_sink):
+	* gst/playback/test5.c: (new_pad), (no_more_pads), (start_finding),
+	(dump_element_stats), (main):
+	* gst/playback/test6.c: (main):
+	Make playbin async, it'll commit state to paused when all streams
+	are detected.
+	Remove ugly hack.
+	Added test6.c to show async behaviour.
+
+2005-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer),
 	(gst_ogg_demux_perform_seek), (gst_ogg_demux_loop):
 	Fix for segment-start/stop API change.

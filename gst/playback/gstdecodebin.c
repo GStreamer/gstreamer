@@ -56,16 +56,20 @@ struct _GstDecodeBin
   GstBin bin;                   /* we extend GstBin */
 
   GstElement *typefind;         /* this holds the typefind object */
+  GstElement *fakesink;
 
   gboolean threaded;            /* indicating threaded execution is desired */
   GList *dynamics;              /* list of dynamic connections */
 
   GList *factories;             /* factories we can use for selecting elements */
   gint numpads;
+  gint numwaiting;
 
   GList *elements;              /* elements we added in autoplugging */
 
   guint have_type_id;           /* signal id for the typefind element */
+
+  gboolean shutting_down;       /* stop pluggin if we're shutting down */
 };
 
 struct _GstDecodeBinClass
@@ -122,6 +126,7 @@ static void gst_decode_bin_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
     GstStateChange transition);
 
+static void free_dynamics (GstDecodeBin * decode_bin);
 static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin);
 static GstElement *try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad,
@@ -334,6 +339,16 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
         g_signal_connect (G_OBJECT (decode_bin->typefind), "have_type",
         G_CALLBACK (type_found), decode_bin);
   }
+  decode_bin->fakesink = gst_element_factory_make ("fakesink", "fakesink");
+  if (!decode_bin->fakesink) {
+    g_warning ("can't find fakesink element, decodebin will not work");
+  } else {
+    if (!gst_bin_add (GST_BIN (decode_bin), decode_bin->fakesink)) {
+      g_warning ("Could not add fakesink element, decodebin will not work");
+      gst_object_unref (decode_bin->fakesink);
+      decode_bin->fakesink = NULL;
+    }
+  }
 
   decode_bin->threaded = DEFAULT_THREADED;
   decode_bin->dynamics = NULL;
@@ -353,12 +368,19 @@ gst_decode_bin_dispose (GObject * object)
   decode_bin->factories = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+
+  /* our parent dispose might trigger new signals when pads are unlinked
+   * etc. clean up the mess here. */
+  /* FIXME do proper cleanup when going to NULL */
+  free_dynamics (decode_bin);
 }
 
 static GstDynamic *
 dynamic_create (GstElement * element, GstDecodeBin * decode_bin)
 {
   GstDynamic *dyn;
+
+  GST_DEBUG_OBJECT (element, "dynamic create");
 
   /* take refs */
   gst_object_ref (element);
@@ -378,6 +400,8 @@ dynamic_create (GstElement * element, GstDecodeBin * decode_bin)
 static void
 dynamic_free (GstDynamic * dyn)
 {
+  GST_DEBUG_OBJECT (dyn->decode_bin, "dynamic free");
+
   /* disconnect signals */
   g_signal_handler_disconnect (G_OBJECT (dyn->element), dyn->np_sig_id);
   g_signal_handler_disconnect (G_OBJECT (dyn->element), dyn->nmp_sig_id);
@@ -387,6 +411,20 @@ dynamic_free (GstDynamic * dyn)
   dyn->element = NULL;
   dyn->decode_bin = NULL;
   g_free (dyn);
+}
+
+static void
+free_dynamics (GstDecodeBin * decode_bin)
+{
+  GList *dyns;
+
+  for (dyns = decode_bin->dynamics; dyns; dyns = g_list_next (dyns)) {
+    GstDynamic *dynamic = (GstDynamic *) dyns->data;
+
+    dynamic_free (dynamic);
+  }
+  g_list_free (decode_bin->dynamics);
+  decode_bin->dynamics = NULL;
 }
 
 /* this function runs through the element factories and returns a list
@@ -439,6 +477,33 @@ mimetype_is_raw (const gchar * mimetype)
   return g_str_has_prefix (mimetype, "video/x-raw") ||
       g_str_has_prefix (mimetype, "audio/x-raw") ||
       g_str_has_prefix (mimetype, "text/plain");
+}
+
+static void
+pad_unblocked (GstPad * pad, gboolean blocked, GstDecodeBin * decode_bin)
+{
+}
+
+static void
+pad_blocked (GstPad * pad, gboolean blocked, GstDecodeBin * decode_bin)
+{
+  decode_bin->numwaiting--;
+  if (decode_bin->numwaiting == 0) {
+    gst_object_ref (decode_bin->fakesink);
+    gst_bin_remove (GST_BIN (decode_bin), decode_bin->fakesink);
+
+    gst_element_set_state (decode_bin->fakesink, GST_STATE_NULL);
+    gst_element_get_state (decode_bin->fakesink, NULL, NULL,
+        GST_CLOCK_TIME_NONE);
+
+    gst_object_unref (decode_bin->fakesink);
+    decode_bin->fakesink = NULL;
+
+    gst_element_post_message (GST_ELEMENT_CAST (decode_bin),
+        gst_message_new_state_dirty (GST_OBJECT_CAST (decode_bin)));
+  }
+  gst_pad_set_blocked_async (pad, FALSE, (GstPadBlockCallback) pad_unblocked,
+      NULL);
 }
 
 /* given a pad and a caps from an element, find the list of elements
@@ -494,10 +559,14 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     /* make a unique name for this new pad */
     padname = g_strdup_printf ("src%d", decode_bin->numpads);
     decode_bin->numpads++;
+    decode_bin->numwaiting++;
 
     /* make it a ghostpad */
     ghost = gst_ghost_pad_new (padname, pad);
     gst_element_add_pad (GST_ELEMENT (decode_bin), ghost);
+
+    gst_pad_set_blocked_async (pad, TRUE, (GstPadBlockCallback) pad_blocked,
+        decode_bin);
 
     GST_LOG_OBJECT (element, "closed pad %s", padname);
 
@@ -546,37 +615,6 @@ many_types:
   }
 }
 
-/* crude crude crude crude hack to avoid deadlocks in core while wim figures out
- * what's going on */
-/* not mt-safe */
-static GstStateChangeReturn
-gst_element_set_state_like_a_crazy_man (GstElement * element, GstState state)
-{
-  GstElement *e;
-  GList *chain = NULL, *walk;
-  GstStateChangeReturn ret;
-
-  for (e = gst_object_ref (element); e;
-      e = (GstElement *) gst_element_get_parent (e))
-    chain = g_list_prepend (chain, e);
-
-  for (walk = chain; walk; walk = walk->next)
-    GST_STATE_LOCK (walk->data);
-
-  ret = gst_element_set_state (element, state);
-
-  chain = g_list_reverse (chain);
-
-  for (walk = chain; walk; walk = walk->next) {
-    GST_STATE_UNLOCK (walk->data);
-    gst_object_unref (walk->data);
-  }
-
-  g_list_free (chain);
-
-  return ret;
-}
-
 /*
  * given a list of element factories, try to link one of the factories
  * to the given pad.
@@ -622,7 +660,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
     gst_bin_add (GST_BIN (decode_bin), element);
 
     /* set to ready first so it is ready */
-    gst_element_set_state_like_a_crazy_man (element, GST_STATE_READY);
+    gst_element_set_state (element, GST_STATE_READY);
 
     /* keep our own list of elements */
     decode_bin->elements = g_list_prepend (decode_bin->elements, element);
@@ -634,7 +672,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
       gst_object_unref (sinkpad);
       /* this element did not work, remove it again and continue trying
        * other elements, the element will be disposed. */
-      gst_element_set_state_like_a_crazy_man (element, GST_STATE_NULL);
+      gst_element_set_state (element, GST_STATE_NULL);
       gst_bin_remove (GST_BIN (decode_bin), element);
     } else {
       const gchar *klass;
@@ -669,7 +707,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
        * on it until we have a raw type */
       close_link (element, decode_bin);
       /* change the state of the element to that of the parent */
-      gst_element_set_state_like_a_crazy_man (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_PAUSED);
 
       result = element;
 
@@ -811,6 +849,15 @@ new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
   GstDecodeBin *decode_bin = dynamic->decode_bin;
   GstCaps *caps;
 
+  GST_LOCK (decode_bin);
+  if (decode_bin->shutting_down)
+    goto shutting_down1;
+  GST_UNLOCK (decode_bin);
+
+  GST_STATE_LOCK (decode_bin);
+  if (decode_bin->shutting_down)
+    goto shutting_down2;
+
   /* see if any more pending dynamic connections exist */
   gboolean more = gst_decode_bin_is_dynamic (decode_bin);
 
@@ -818,6 +865,17 @@ new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
   close_pad_link (element, pad, caps, decode_bin, more);
   if (caps)
     gst_caps_unref (caps);
+  GST_STATE_UNLOCK (decode_bin);
+
+  return;
+
+shutting_down1:
+  GST_UNLOCK (decode_bin);
+  return;
+
+shutting_down2:
+  GST_STATE_UNLOCK (decode_bin);
+  return;
 }
 
 /* this signal is fired when an element signals the no_more_pads signal.
@@ -843,6 +901,7 @@ no_more_pads (GstElement * element, GstDynamic * dynamic)
     GST_DEBUG_OBJECT (decode_bin,
         "no more dynamic elements, signaling no_more_pads");
     gst_element_no_more_pads (GST_ELEMENT (decode_bin));
+
   } else {
     GST_DEBUG_OBJECT (decode_bin, "we have more dynamic elements");
   }
@@ -1021,6 +1080,10 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
   gboolean dynamic;
   GstPad *pad;
 
+  GST_STATE_LOCK (decode_bin);
+  if (decode_bin->shutting_down)
+    goto shutting_down;
+
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
   /* autoplug the new pad with the caps that the signal gave us. */
@@ -1038,6 +1101,10 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
     /* more dynamic elements exist that could create new pads */
     GST_DEBUG_OBJECT (decode_bin, "we have more dynamic elements");
   }
+
+shutting_down:
+  GST_STATE_UNLOCK (decode_bin);
+  return;
 }
 
 static void
@@ -1085,18 +1152,28 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   GstDecodeBin *decode_bin;
-  GList *dyns;
 
   decode_bin = GST_DECODE_BIN (element);
-
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       decode_bin->numpads = 0;
+      decode_bin->numwaiting = 0;
       decode_bin->dynamics = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_LOCK (decode_bin);
+      decode_bin->shutting_down = FALSE;
+      GST_UNLOCK (decode_bin);
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_LOCK (decode_bin);
+      decode_bin->shutting_down = TRUE;
+      GST_UNLOCK (decode_bin);
+      break;
     default:
       break;
   }
@@ -1108,13 +1185,7 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      for (dyns = decode_bin->dynamics; dyns; dyns = g_list_next (dyns)) {
-        GstDynamic *dynamic = (GstDynamic *) dyns->data;
-
-        dynamic_free (dynamic);
-      }
-      g_list_free (decode_bin->dynamics);
-      decode_bin->dynamics = NULL;
+      free_dynamics (decode_bin);
       break;
     default:
       break;
