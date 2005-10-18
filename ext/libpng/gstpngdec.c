@@ -280,6 +280,8 @@ user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
 
   memcpy (data, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
 
+  gst_buffer_unref (buffer);
+
   pngdec->offset += length;
 
   return;
