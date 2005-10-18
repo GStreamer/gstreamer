@@ -1,3 +1,9 @@
+2005-10-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_validate_offset),
+	(gst_rmdemux_perform_seek):
+	segment-start/done API change.
+
 2005-10-17  Michael Smith <msmith@fluendo.com>
 
 	* gst/iec958/ac3iec.c: (ac3iec_chain_raw):

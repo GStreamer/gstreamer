@@ -595,7 +595,7 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
     /* notify start of new segment */
     if (rmdemux->segment_play) {
       gst_element_post_message (GST_ELEMENT (rmdemux),
-          gst_message_new_segment_start (GST_OBJECT (rmdemux),
+          gst_message_new_segment_start (GST_OBJECT (rmdemux), GST_FORMAT_TIME,
               rmdemux->segment_start));
     }
     /* restart our task since it might have been stopped when we did the 
