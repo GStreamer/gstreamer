@@ -706,6 +706,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
             "plugin already registered from path \"%s\"",
             GST_STR_NULL (plugin->filename));
         g_free (filename);
+        gst_object_unref (plugin);
         continue;
       }
       plugin->registered = TRUE;

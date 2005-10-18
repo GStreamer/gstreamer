@@ -1,3 +1,8 @@
+2005-10-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstregistry.c: (gst_registry_scan_path_level):
+	  unref a plug-in we get that was already initialized
+
 2005-10-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
