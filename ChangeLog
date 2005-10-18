@@ -1,3 +1,8 @@
+2005-10-18  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstmessage.override (_wrap_gst_message_tp_repr): Add a repr
+	for messages.
+
 2005-10-14  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:
