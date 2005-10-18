@@ -738,7 +738,8 @@ gst_wavparse_handle_seek (GstWavParse * wav, gboolean update)
 
   if (wav->segment_flags & GST_SEEK_FLAG_SEGMENT) {
     gst_element_post_message (GST_ELEMENT (wav),
-        gst_message_new_segment_start (GST_OBJECT (wav), start_time));
+        gst_message_new_segment_start (GST_OBJECT (wav), GST_FORMAT_TIME,
+            start_time));
   }
 
   gst_pad_start_task (wav->sinkpad, (GstTaskFunction) gst_wavparse_loop,
@@ -967,7 +968,8 @@ found_eos:
       stop_time = GST_SECOND * wav->segment_stop / wav->bps;
 
       gst_element_post_message (GST_ELEMENT (wav),
-          gst_message_new_segment_done (GST_OBJECT (wav), stop_time));
+          gst_message_new_segment_done (GST_OBJECT (wav), GST_FORMAT_TIME,
+              stop_time));
     } else {
       gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
     }
