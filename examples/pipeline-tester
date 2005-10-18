@@ -194,9 +194,11 @@ class Window(gtk.Window):
             m.format_secondary_text(secondary)
         m.run()
         m.destroy()
-                              
+        self.stop()
+
     def on_message(self, bus, message):
         t = message.type
+        print message
         if t == gst.MESSAGE_STATE_CHANGED:
             pass
         elif t == gst.MESSAGE_ERROR:
@@ -227,18 +229,9 @@ class Window(gtk.Window):
         bus = pipeline.get_bus()
         bus.add_signal_watch()
         watch_id = bus.connect('message', self.on_message)
-        if pipeline.set_state(gst.STATE_PLAYING) != gst.STATE_CHANGE_SUCCESS:
-            # make sure we get error messages
-            while gtk.events_pending():
-                gtk.main_iteration()
-            pipeline.set_state(gst.STATE_NULL)
-            bus.remove_signal_watch()
-            bus.disconnect(watch_id)
-            return False
-        else:
-            self.pipeline = pipeline
-            self.watch_id = watch_id
-            return True
+        self.pipeline = pipeline
+        self.watch_id = watch_id
+        pipeline.set_state(gst.STATE_PLAYING)
 
     def stop(self):
         bus = self.pipeline.get_bus()
@@ -254,9 +247,9 @@ class Window(gtk.Window):
             self.button.set_label(gtk.STOCK_MEDIA_PLAY)
             self.playing = False
         else:
-            if self.play():
-                self.playing = True
-                self.button.set_label(gtk.STOCK_MEDIA_STOP)
+            self.play()
+            self.playing = True
+            self.button.set_label(gtk.STOCK_MEDIA_STOP)
 
 if __name__ == '__main__':
     w = Window()

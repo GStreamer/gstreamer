@@ -1,5 +1,7 @@
 2005-10-18  Andy Wingo  <wingo@pobox.com>
 
+	* examples/pipeline-tester: Fix for state change changes.
+
 	* gst/gstmessage.override (_wrap_gst_message_tp_repr): Add a repr
 	for messages.
 	(_wrap_gst_message_tp_repr): Is your message repr t00 sma11?
