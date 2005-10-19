@@ -135,7 +135,7 @@ AC_ARG_WITH(pkg-config-path,
    AC_HELP_STRING([--with-pkg-config-path],[colon-separated list of pkg-config(1) dirs]),
    [export PKG_CONFIG_PATH=${withval}])
 
-GST_DOC()
+GST_DOCBOOK_CHECK()
 dnl check architecture
 GST_ARCH()
 
