@@ -135,13 +135,13 @@ _wrap_gst_message_parse_error (PyGstMiniObject *self)
 
 	gst_message_parse_error (GST_MESSAGE(self->obj), &error, &debug);
 
-	ret = PyList_New(0);
-	PyList_Append(ret, pyg_boxed_new (GST_TYPE_G_ERROR, error, TRUE, TRUE));
+	ret = PyList_New(2);
+	PyList_SetItem(ret, 0, pyg_boxed_new (GST_TYPE_G_ERROR, error, TRUE, TRUE));
 	if (debug != NULL) {
-		PyList_Append(ret, PyString_FromString(debug));
+		PyList_SetItem(ret, 1, PyString_FromString(debug));
 	} else {
 		Py_INCREF (Py_None);
-		PyList_Append(ret, Py_None);
+		PyList_SetItem(ret, 1, Py_None);
 	}
 
 	return ret;
@@ -162,8 +162,8 @@ _wrap_gst_message_parse_warning (PyGstMiniObject *self)
 
 	gst_message_parse_warning (GST_MESSAGE(self->obj), &warning, &debug);
 
-	ret = PyList_New(0);
-	PyList_Append(ret, pyg_boxed_new (GST_TYPE_G_ERROR, warning, TRUE, TRUE));
+	ret = PyList_New(1);
+	PyList_SetItem(ret, 0, pyg_boxed_new (GST_TYPE_G_ERROR, warning, TRUE, TRUE));
 	if (debug != NULL)
 		PyList_Append(ret, PyString_FromString(debug));
 
@@ -187,4 +187,80 @@ _wrap_gst_message_parse_tag (PyGstMiniObject *self)
 	ret = pyg_boxed_new (GST_TYPE_TAG_LIST, taglist, TRUE, TRUE);
 
 	return ret;
+}
+%%
+override gst_message_parse_clock_provide noargs
+static PyObject *
+_wrap_gst_message_parse_clock_provide (PyGstMiniObject *self)
+{
+  GstClock	*clock;
+  gboolean	ready;
+  PyObject	*ret;
+
+  if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_CLOCK_PROVIDE) {
+	  PyErr_SetString(PyExc_TypeError, "Message is not a 'clock provide' message");
+	  return NULL;
+  }
+
+  gst_message_parse_clock_provide (GST_MESSAGE(self->obj), &clock, &ready);
+
+  ret = PyList_New(2);
+  PyList_SET_ITEM(ret, 0, pygstobject_new(G_OBJECT (clock)));
+  PyList_SET_ITEM(ret, 1, PyBool_FromLong(ready));
+
+  return ret;
+}
+%%
+override gst_message_parse_clock_lost noargs
+static PyObject *
+_wrap_gst_message_parse_clock_lost (PyGstMiniObject *self)
+{
+  GstClock	*clock;
+
+  if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_CLOCK_LOST) {
+	  PyErr_SetString(PyExc_TypeError, "Message is not a 'clock lost' message");
+	  return NULL;
+  }
+
+  gst_message_parse_clock_lost (GST_MESSAGE(self->obj), &clock);
+
+  return pygstobject_new(G_OBJECT(clock));
+}
+%%
+override gst_message_parse_new_clock noargs
+static PyObject *
+_wrap_gst_message_parse_new_clock (PyGstMiniObject *self)
+{
+  GstClock	*clock;
+
+  if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_NEW_CLOCK) {
+	  PyErr_SetString(PyExc_TypeError, "Message is not a 'new clock' message");
+	  return NULL;
+  }
+
+  gst_message_parse_new_clock (GST_MESSAGE(self->obj), &clock);
+
+  return pygstobject_new(G_OBJECT(clock));
+}
+%%
+override gst_message_parse_duration noargs
+static PyObject *
+_wrap_gst_message_parse_duration (PyGstMiniObject *self)
+{
+  GstFormat	format;
+  gint64	duration;
+  PyObject	*ret;
+
+  if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_DURATION) {
+	  PyErr_SetString(PyExc_TypeError, "Message is not a 'duration' message");
+	  return NULL;
+  }
+
+  gst_message_parse_duration (GST_MESSAGE(self->obj), &format, &duration);
+
+  ret = PyList_New(2);
+  PyList_SET_ITEM(ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
+  PyList_SET_ITEM(ret, 1, PyLong_FromLongLong(duration));
+
+  return ret;
 }
