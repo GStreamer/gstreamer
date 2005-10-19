@@ -1,3 +1,24 @@
+2005-10-19  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_get_src_query_types),
+	(gst_dvdemux_src_query):
+	* ext/flac/gstflacdec.c: (gst_flacdec_length),
+	(gst_flacdec_src_query):
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_query):
+	* ext/speex/gstspeexdec.c: (speex_dec_src_query):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query):
+	* gst/debug/gstnavseek.c: (gst_navseek_seek):
+	* gst/debug/progressreport.c: (gst_progress_report_report):
+	* gst/matroska/ebml-read.c: (gst_ebml_read_get_length):
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_handle_src_query):
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_start):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_handle_seek),
+	(gst_wavparse_stream_headers), (gst_wavparse_stream_data),
+	(gst_wavparse_pad_convert), (gst_wavparse_pad_query),
+	(gst_wavparse_srcpad_event):
+	API change fix.
+
 2005-10-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/goom/filters.c:

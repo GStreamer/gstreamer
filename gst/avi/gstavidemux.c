@@ -390,10 +390,8 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
-      gint64 len, pos = 0;
+      gint64 pos = 0;
 
-      len = (((gfloat) stream->strh->scale) * stream->strh->length /
-          stream->strh->rate) * GST_SECOND;
       if (stream->strh->type == GST_RIFF_FCC_auds) {
         if (!stream->strh->samplesize) {
           pos = GST_SECOND * stream->current_frame *
@@ -422,7 +420,16 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
         }
       }
       if (res)
-        gst_query_set_position (query, GST_FORMAT_TIME, pos, len);
+        gst_query_set_position (query, GST_FORMAT_TIME, pos);
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      gint64 len;
+
+      len = (((gfloat) stream->strh->scale) * stream->strh->length /
+          stream->strh->rate) * GST_SECOND;
+      gst_query_set_duration (query, GST_FORMAT_TIME, len);
       break;
     }
     default:

@@ -413,6 +413,7 @@ gst_dvdemux_get_src_query_types (GstPad * pad)
 {
   static const GstQueryType src_query_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
     GST_QUERY_CONVERT,
     0
   };
@@ -432,15 +433,30 @@ gst_dvdemux_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
+      gint64 cur;
+
+      /* get target format */
+      gst_query_parse_position (query, &format, NULL);
+
+      /* bring the position to the requested format. */
+      if (!(res = gst_pad_query_convert (pad,
+                  GST_FORMAT_TIME, dvdemux->timestamp, &format, &cur)))
+        goto error;
+      gst_query_set_position (query, format, cur);
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
       GstFormat format2;
-      gint64 cur, end;
+      gint64 end;
       GstPad *peer;
 
       /* get target format */
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_duration (query, &format, NULL);
 
-      /* change query to perform on peer */
-      gst_query_set_position (query, GST_FORMAT_BYTES, -1, -1);
+      /* change query to bytes to perform on peer */
+      gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
 
       if ((peer = gst_pad_get_peer (dvdemux->sinkpad))) {
         /* ask peer for total length */
@@ -450,28 +466,22 @@ gst_dvdemux_src_query (GstPad * pad, GstQuery * query)
         }
 
         /* get peer total length */
-        gst_query_parse_position (query, NULL, NULL, &end);
+        gst_query_parse_duration (query, NULL, &end);
+
+        gst_object_unref (peer);
 
         /* convert end to requested format */
         if (end != -1) {
           format2 = format;
           if (!(res = gst_pad_query_convert (dvdemux->sinkpad,
                       GST_FORMAT_BYTES, end, &format2, &end))) {
-            gst_object_unref (peer);
             goto error;
           }
         }
-        gst_object_unref (peer);
       } else {
         end = -1;
       }
-      /* bring the position to the requested format. */
-      if (!(res = gst_pad_query_convert (pad,
-                  GST_FORMAT_TIME, dvdemux->timestamp, &format, &cur)))
-        goto error;
-      if (!(res = gst_pad_query_convert (pad, format2, end, &format, &end)))
-        goto error;
-      gst_query_set_position (query, format, cur, end);
+      gst_query_set_duration (query, format, end);
       break;
     }
     case GST_QUERY_CONVERT:

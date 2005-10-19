@@ -359,7 +359,7 @@ gst_flacdec_length (const FLAC__SeekableStreamDecoder * decoder,
 
   if (!(peer = gst_pad_get_peer (flacdec->sinkpad)))
     return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_ERROR;
-  gst_pad_query_position (peer, &fmt, NULL, &len);
+  gst_pad_query_duration (peer, &fmt, &len);
   gst_object_unref (peer);
   if (fmt != GST_FORMAT_BYTES || len == -1)
     return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_ERROR;
@@ -706,20 +706,30 @@ gst_flacdec_src_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
-      gint64 len, pos;
+      gint64 pos;
+      GstFormat fmt = GST_FORMAT_TIME;
+
+      pos = flacdec->total_samples;
+
+      if (gst_flacdec_convert_src (flacdec->srcpad,
+              GST_FORMAT_DEFAULT, pos, &fmt, &pos))
+        gst_query_set_position (query, GST_FORMAT_TIME, pos);
+      else
+        res = FALSE;
+      break;
+    }
+    case GST_QUERY_DURATION:{
+      gint64 len;
       GstFormat fmt = GST_FORMAT_TIME;
 
       if (flacdec->stream_samples == 0)
         len = flacdec->total_samples;
       else
         len = flacdec->stream_samples;
-      pos = flacdec->total_samples;
 
       if (gst_flacdec_convert_src (flacdec->srcpad,
-              GST_FORMAT_DEFAULT, len, &fmt, &len) &&
-          gst_flacdec_convert_src (flacdec->srcpad,
-              GST_FORMAT_DEFAULT, pos, &fmt, &pos))
-        gst_query_set_position (query, GST_FORMAT_TIME, pos, len);
+              GST_FORMAT_DEFAULT, len, &fmt, &len))
+        gst_query_set_duration (query, GST_FORMAT_TIME, len);
       else
         res = FALSE;
       break;

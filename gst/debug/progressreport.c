@@ -182,8 +182,8 @@ gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time)
 
     format = try_formats[i];
 
-    if (gst_pad_query_position (peer_pad, &format, &cur_progress,
-            &total_progress)) {
+    if (gst_pad_query_position (peer_pad, &format, &cur_progress) &&
+        gst_pad_query_duration (peer_pad, &format, &total_progress)) {
       switch (format) {
         case GST_FORMAT_BYTES:
           format_name = "bytes";

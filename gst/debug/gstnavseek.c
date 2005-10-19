@@ -132,7 +132,7 @@ gst_navseek_seek (GstNavSeek * navseek, gint64 offset)
 
   /* Query for the current time then attempt to set to time + offset */
   peer_pad = gst_pad_get_peer (GST_BASE_TRANSFORM (navseek)->sinkpad);
-  ret = gst_pad_query_position (peer_pad, &peer_format, &peer_value, NULL);
+  ret = gst_pad_query_position (peer_pad, &peer_format, &peer_value);
 
   if (ret && peer_format == GST_FORMAT_TIME) {
     GstEvent *event;

@@ -211,23 +211,44 @@ speex_dec_convert (GstPad * pad,
 static gboolean
 speex_dec_src_query (GstPad * pad, GstQuery * query)
 {
-  gint64 samples_out = 0, total_samples;
   GstSpeexDec *dec = GST_SPEEXDEC (GST_OBJECT_PARENT (pad));
-  GstFormat my_format = GST_FORMAT_TIME;
-  GstPad *peer;
 
-  if (GST_QUERY_TYPE (query) != GST_QUERY_POSITION)
-    return FALSE;
-  if (!(peer = gst_pad_get_peer (dec->sinkpad)))
-    return FALSE;
-  gst_pad_query_position (peer, &my_format, NULL, &total_samples);
-  gst_object_unref (peer);
-  samples_out = dec->samples_out;
-  speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT, samples_out,
-      &my_format, &samples_out);
-  speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT, total_samples,
-      &my_format, &total_samples);
-  gst_query_set_position (query, GST_FORMAT_TIME, samples_out, total_samples);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      gint64 cur;
+      GstFormat format;
+
+      gst_query_parse_position (query, &format, NULL);
+
+      speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT, dec->samples_out,
+          &format, &cur);
+
+      gst_query_set_position (query, format, cur);
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstPad *peer;
+      GstFormat my_format = GST_FORMAT_TIME;
+      gint64 total_samples;
+
+      if (!(peer = gst_pad_get_peer (dec->sinkpad)))
+        return FALSE;
+
+      gst_pad_query_duration (peer, &my_format, &total_samples);
+      gst_object_unref (peer);
+
+      speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT, total_samples,
+          &my_format, &total_samples);
+
+      gst_query_set_duration (query, GST_FORMAT_TIME, total_samples);
+      break;
+    }
+    default:
+      return FALSE;
+      break;
+  }
 
   return TRUE;
 }

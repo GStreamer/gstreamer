@@ -789,13 +789,13 @@ gst_dv1394src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       gint64 current;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
       /* bring our current frame to the requested format */
       res = gst_pad_query_convert (pad,
           GST_FORMAT_DEFAULT, src->frame_sequence, &format, &current);
 
-      gst_query_set_position (query, format, current, -1);
+      gst_query_set_position (query, format, current);
       break;
     }
     case GST_QUERY_CONVERT:

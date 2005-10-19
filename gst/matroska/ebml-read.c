@@ -366,9 +366,9 @@ gint64
 gst_ebml_read_get_length (GstEbmlRead * ebml)
 {
   GstFormat fmt = GST_FORMAT_BYTES;
-  gint64 pos, end;
+  gint64 end;
 
-  if (!gst_pad_query_position (GST_PAD_PEER (ebml->sinkpad), &fmt, &pos, &end))
+  if (!gst_pad_query_duration (GST_PAD_PEER (ebml->sinkpad), &fmt, &end))
     g_return_val_if_reached (0);        ///// FIXME /////////
 
   if (fmt != GST_FORMAT_BYTES || end < 0)

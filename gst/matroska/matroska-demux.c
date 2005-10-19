@@ -972,7 +972,7 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
     {
       GstFormat format;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
       if (format != GST_FORMAT_TIME) {
         GST_DEBUG ("only query position on TIME is supported");
@@ -980,12 +980,25 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
       }
 
       GST_LOCK (demux);
+      gst_query_set_position (query, GST_FORMAT_TIME, demux->pos);
+      GST_UNLOCK (demux);
 
-      /* mabe we should only fill in the total time and let
-       * decoders fill in the current position? (like oggdemux) */
-      gst_query_set_position (query, GST_FORMAT_TIME, demux->pos,
-          demux->duration);
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
 
+      gst_query_parse_position (query, &format, NULL);
+
+      if (format != GST_FORMAT_TIME) {
+        GST_DEBUG ("only query duration on TIME is supported");
+        break;
+      }
+
+      GST_LOCK (demux);
+      gst_query_set_duration (query, GST_FORMAT_TIME, demux->duration);
       GST_UNLOCK (demux);
 
       res = TRUE;

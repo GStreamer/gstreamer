@@ -1163,32 +1163,52 @@ gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
-      gint64 curb, endb;
-      gint64 cur, end;
+      gint64 curb;
+      gint64 cur;
       GstFormat format;
       gboolean res = TRUE;
 
       curb = wav->offset - wav->datastart;
-      endb = wav->datasize;
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
       switch (format) {
         case GST_FORMAT_TIME:
           res &=
               gst_wavparse_pad_convert (pad, GST_FORMAT_BYTES, curb,
               &format, &cur);
+          break;
+        default:
+          format = GST_FORMAT_BYTES;
+          cur = curb;
+          break;
+      }
+      if (res)
+        gst_query_set_position (query, format, cur);
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      gint64 endb;
+      gint64 end;
+      GstFormat format;
+      gboolean res = TRUE;
+
+      endb = wav->datasize;
+      gst_query_parse_duration (query, &format, NULL);
+
+      switch (format) {
+        case GST_FORMAT_TIME:
           res &=
               gst_wavparse_pad_convert (pad, GST_FORMAT_BYTES, endb,
               &format, &end);
           break;
         default:
           format = GST_FORMAT_BYTES;
-          cur = curb;
           end = endb;
           break;
       }
       if (res)
-        gst_query_set_position (query, format, cur, end);
+        gst_query_set_duration (query, format, end);
       break;
     }
     case GST_QUERY_CONVERT:

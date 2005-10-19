@@ -1034,12 +1034,12 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     thepad = collect_pad->collect.pad;
 
     /* Query the total length of the track. */
-    query = gst_query_new_position (GST_FORMAT_TIME);
+    query = gst_query_new_duration (GST_FORMAT_TIME);
     if (gst_pad_query (GST_PAD_PEER (thepad), query)) {
       GstFormat format;
-      gint64 cur, trackduration;
+      gint64 trackduration;
 
-      gst_query_parse_position (query, &format, &cur, &trackduration);
+      gst_query_parse_duration (query, &format, &trackduration);
 
       if ((gdouble) trackduration > duration) {
         duration = (gdouble) trackduration;
