@@ -16,7 +16,7 @@
 
 extern unsigned int resolx, resoly;
 
-inline unsigned char
+static inline unsigned char
 lighten (unsigned char value, unsigned char power)
 {
   unsigned char i;

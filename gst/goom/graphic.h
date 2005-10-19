@@ -1,6 +1,8 @@
 #ifndef GRAPHIC_H
 #define GRAPHIC_H
 
+#include <glib.h>  /* defines inline for better portability */
+
 typedef unsigned int Uint;
 
 typedef struct
@@ -18,7 +20,7 @@ extern const Color YELLOW;
 extern const Color ORANGE;
 extern const Color VIOLET;
 
-inline void setPixelRGB (Uint *buffer, Uint x, Uint y, Color c) ;
-inline void getPixelRGB (Uint *buffer, Uint x, Uint y, Color *c) ;
+extern inline void setPixelRGB (Uint *buffer, Uint x, Uint y, Color c) ;
+extern inline void getPixelRGB (Uint *buffer, Uint x, Uint y, Color *c) ;
 
 #endif /*GRAPHIC_H*/

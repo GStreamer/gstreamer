@@ -75,7 +75,7 @@ static int *firedec = 0;
 
 
 /* retourne x>>s , en testant le signe de x */
-inline int
+static inline int
 ShiftRight (int x, const unsigned char s)
 {
   if (x < 0)
@@ -182,7 +182,7 @@ calculatePXandPY (int x, int y, int *px, int *py)
 
 /*#define _DEBUG */
 
-inline void
+extern inline void
 setPixelRGB (Uint * buffer, Uint x, Uint y, Color c)
 {
 /*		buffer[ y*WIDTH + x ] = (c.r<<16)|(c.v<<8)|c.b */
@@ -201,7 +201,7 @@ setPixelRGB (Uint * buffer, Uint x, Uint y, Color c)
 }
 
 
-inline void
+static inline void
 setPixelRGB_ (Uint * buffer, Uint x, Color c)
 {
 #ifdef _DEBUG
@@ -220,7 +220,7 @@ setPixelRGB_ (Uint * buffer, Uint x, Color c)
 
 
 
-inline void
+extern inline void
 getPixelRGB (Uint * buffer, Uint x, Uint y, Color * c)
 {
   register unsigned char *tmp8;
@@ -250,7 +250,7 @@ getPixelRGB (Uint * buffer, Uint x, Uint y, Color * c)
 }
 
 
-inline void
+static inline void
 getPixelRGB_ (Uint * buffer, Uint x, Color * c)
 {
   register unsigned char *tmp8;

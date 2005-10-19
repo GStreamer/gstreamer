@@ -1,3 +1,11 @@
+2005-10-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/goom/filters.c:
+	* gst/goom/graphic.h:
+	* gst/goom/lines.c:
+	  Make inline functions either 'static inline' or 'extern inline',
+	  otherwise the Forte compiler apparently won't inline them (#317300).
+
 2005-10-19  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/libpng/gstpngdec.c: (gst_pngdec_class_init),
