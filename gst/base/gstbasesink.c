@@ -1403,6 +1403,9 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
     case GST_QUERY_POSITION:
       res = gst_base_sink_peer_query (basesink, query);
       break;
+    case GST_QUERY_DURATION:
+      res = gst_base_sink_peer_query (basesink, query);
+      break;
     case GST_QUERY_LATENCY:
       break;
     case GST_QUERY_JITTER:
@@ -1411,9 +1414,6 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       //gst_query_set_rate (query, basesink->segment_rate);
       res = TRUE;
       break;
-    case GST_QUERY_SEEKING:
-      res = gst_base_sink_peer_query (basesink, query);
-      break;
     case GST_QUERY_SEGMENT:
     {
       /* FIXME, bring start/stop to stream time */
@@ -1421,13 +1421,11 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
           GST_FORMAT_TIME, basesink->segment_start, basesink->segment_stop);
       break;
     }
+    case GST_QUERY_SEEKING:
     case GST_QUERY_CONVERT:
-      res = gst_base_sink_peer_query (basesink, query);
-      break;
     case GST_QUERY_FORMATS:
-      res = gst_base_sink_peer_query (basesink, query);
-      break;
     default:
+      res = gst_base_sink_peer_query (basesink, query);
       break;
   }
   return res;
