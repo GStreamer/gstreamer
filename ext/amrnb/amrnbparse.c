@@ -192,10 +192,26 @@ gst_amrnbparse_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
-      gint64 cur, tot;
+      gint64 cur;
+
+      gst_query_parse_position (query, &format, NULL);
+
+      if (format != GST_FORMAT_TIME)
+        return FALSE;
+
+      cur = amrnbparse->ts;
+
+      gst_query_set_position (query, GST_FORMAT_TIME, cur);
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+      gint64 tot;
       GstPad *peer;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_duration (query, &format, NULL);
 
       if (format != GST_FORMAT_TIME)
         return FALSE;
@@ -208,15 +224,14 @@ gst_amrnbparse_query (GstPad * pad, GstQuery * query)
         gint64 pcur, ptot;
 
         pformat = GST_FORMAT_BYTES;
-        res = gst_pad_query_position (peer, &pformat, &pcur, &ptot);
+        res = gst_pad_query_position (peer, &pformat, &pcur);
+        res = gst_pad_query_duration (peer, &pformat, &ptot);
         gst_object_unref (GST_OBJECT (peer));
         if (res) {
           tot = amrnbparse->ts * ((gdouble) ptot / pcur);
         }
       }
-      cur = amrnbparse->ts;
-
-      gst_query_set_position (query, GST_FORMAT_TIME, cur, tot);
+      gst_query_set_duration (query, GST_FORMAT_TIME, tot);
       res = TRUE;
       break;
     }

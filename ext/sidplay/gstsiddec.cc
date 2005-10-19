@@ -592,13 +592,13 @@ gst_siddec_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       gint64 current;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
       /* we only know about our bytes, convert to requested format */
       res &= gst_siddec_src_convert (pad,
           GST_FORMAT_BYTES, siddec->total_bytes, &format, &current);
       if (res) {
-        gst_query_set_position (query, format, current, -1);
+        gst_query_set_position (query, format, current);
       }
       break;
     }

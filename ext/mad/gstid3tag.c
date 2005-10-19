@@ -428,9 +428,9 @@ gst_id3_tag_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
       GstFormat format;
-      gint64 current, total;
+      gint64 current;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
       switch (format) {
         case GST_FORMAT_BYTES:{
           GstPad *peer;
@@ -439,15 +439,42 @@ gst_id3_tag_src_query (GstPad * pad, GstQuery * query)
             break;
 
           if (tag->state == GST_ID3_TAG_STATE_NORMAL &&
-              gst_pad_query_position (peer, &format, &current, &total)) {
-            total -= tag->v2tag_size + tag->v1tag_size;
-            total += tag->v2tag_size_new + tag->v1tag_size_new;
+              gst_pad_query_position (peer, &format, &current)) {
             if (tag->state == GST_ID3_TAG_STATE_NORMAL) {
               current -= tag->v2tag_size + tag->v2tag_size_new;
             } else {
               current = 0;
             }
-            gst_query_set_position (query, format, current, total);
+            gst_query_set_position (query, format, current);
+
+            res = TRUE;
+          }
+          gst_object_unref (peer);
+          break;
+        }
+        default:
+          break;
+      }
+      break;
+    }
+    case GST_QUERY_DURATION:{
+      GstFormat format;
+      gint64 total;
+
+      gst_query_parse_duration (query, &format, NULL);
+      switch (format) {
+        case GST_FORMAT_BYTES:{
+          GstPad *peer;
+
+          if ((peer = gst_pad_get_peer (tag->sinkpad)) == NULL)
+            break;
+
+          if (tag->state == GST_ID3_TAG_STATE_NORMAL &&
+              gst_pad_query_duration (peer, &format, &total)) {
+            total -= tag->v2tag_size + tag->v1tag_size;
+            total += tag->v2tag_size_new + tag->v1tag_size_new;
+
+            gst_query_set_duration (query, format, total);
 
             res = TRUE;
           }

@@ -535,6 +535,8 @@ gst_mad_get_query_types (GstPad * pad)
 {
   static const GstQueryType gst_mad_src_query_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_CONVERT,
     0
   };
 
@@ -553,15 +555,38 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
+      gint64 cur;
+
+      /* save requested format */
+      gst_query_parse_position (query, &format, NULL);
+
+      /* and convert to the requested format */
+      if (format != GST_FORMAT_DEFAULT) {
+        if (!gst_mad_convert_src (pad, GST_FORMAT_DEFAULT, mad->total_samples,
+                &format, &cur))
+          goto error;
+      } else {
+        cur = mad->total_samples;
+      }
+
+      gst_query_set_position (query, format, cur);
+
+      GST_LOG_OBJECT (mad,
+          "position query: we return %llu (format %u)", cur, format);
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
       GstFormat rformat;
-      gint64 cur, total, total_bytes;
+      gint64 total, total_bytes;
       GstPad *peer;
 
       /* save requested format */
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_duration (query, &format, NULL);
 
       /* query peer for total length in bytes */
-      gst_query_set_position (query, GST_FORMAT_BYTES, -1, -1);
+      gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
 
       if ((peer = gst_pad_get_peer (mad->sinkpad)) == NULL)
         goto error;
@@ -573,7 +598,7 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
       gst_object_unref (peer);
 
       /* get the returned format */
-      gst_query_parse_position (query, &rformat, NULL, &total_bytes);
+      gst_query_parse_duration (query, &rformat, &total_bytes);
       if (rformat == GST_FORMAT_BYTES)
         GST_LOG_OBJECT (mad, "peer pad returned total=%lld bytes", total_bytes);
       else if (rformat == GST_FORMAT_TIME)
@@ -582,15 +607,6 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
       /* Check if requested format is returned format */
       if (format == rformat)
         return TRUE;
-
-      /* and convert to the requested format */
-      if (format != GST_FORMAT_DEFAULT) {
-        if (!gst_mad_convert_src (pad, GST_FORMAT_DEFAULT, mad->total_samples,
-                &format, &cur))
-          goto error;
-      } else {
-        cur = mad->total_samples;
-      }
 
       if (total_bytes != -1) {
         if (format != GST_FORMAT_BYTES) {
@@ -604,12 +620,10 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
         total = -1;
       }
 
-      gst_query_set_position (query, format, cur, total);
+      gst_query_set_duration (query, format, total);
 
       GST_LOG_OBJECT (mad,
-          "position query: peer returned total: %llu - we return %llu (format %u)",
-          total, cur, format);
-
+          "position query: we return %llu (format %u)", total, format);
       break;
     }
     case GST_QUERY_CONVERT:

@@ -1,3 +1,15 @@
+2005-10-19  Wim Taymans  <wim@fluendo.com>
+
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_query),
+	(gst_amrnbparse_state_change):
+	* ext/mad/gstid3tag.c: (gst_id3_tag_src_query):
+	* ext/mad/gstmad.c: (gst_mad_get_query_types), (gst_mad_src_query):
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/sidplay/gstsiddec.cc:
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_validate_offset),
+	(gst_rmdemux_src_query), (gst_rmdemux_src_query_types):
+	API change fixen.
+
 2005-10-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

@@ -624,11 +624,12 @@ gst_rmdemux_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
       GST_DEBUG_OBJECT (rmdemux, "src_query position");
-      gst_query_set_position (query, GST_FORMAT_TIME, -1,       //rmdemux->cur_timestamp, 
-          rmdemux->duration);
+      gst_query_set_position (query, GST_FORMAT_TIME, -1);      //rmdemux->cur_timestamp, 
       break;
-    case GST_QUERY_CONVERT:
-      res = FALSE;
+    case GST_QUERY_DURATION:
+      GST_DEBUG_OBJECT (rmdemux, "src_query duration");
+      gst_query_set_duration (query, GST_FORMAT_TIME,   //rmdemux->cur_timestamp, 
+          rmdemux->duration);
       break;
     default:
       res = FALSE;
@@ -643,6 +644,7 @@ gst_rmdemux_src_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
     0
   };
 
