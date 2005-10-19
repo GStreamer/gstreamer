@@ -42,9 +42,6 @@ struct _AudioConvertFmt
   gboolean sign;
   gint depth;
 
-  /* float audio caps */
-  gint buffer_frames;
-
   gint unit_size;
 };
 

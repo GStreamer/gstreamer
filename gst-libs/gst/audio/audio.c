@@ -260,7 +260,4 @@ gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag)
   if (flag & GST_AUDIO_FIELD_SIGNED)
     _gst_audio_structure_set_list (structure, "signed", G_TYPE_BOOLEAN, 2, TRUE,
         FALSE, NULL);
-  if (flag & GST_AUDIO_FIELD_BUFFER_FRAMES)
-    gst_structure_set (structure, "buffer-frames", GST_TYPE_INT_RANGE, 1,
-        G_MAXINT, NULL);
 }

@@ -60,7 +60,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
       "layout = \"sequential\", "
 #endif
 */
-        "width = (int) 32, " "buffer-frames = (int) 0")
+        "width = (int) 32")
     );
 
 static GstStaticPadTemplate vorbis_dec_sink_factory =
@@ -492,8 +492,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   caps = gst_caps_new_simple ("audio/x-raw-float",
       "rate", G_TYPE_INT, vd->vi.rate,
       "channels", G_TYPE_INT, vd->vi.channels,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "width", G_TYPE_INT, 32, "buffer-frames", G_TYPE_INT, 0, NULL);
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
 
   switch (vd->vi.channels) {
     case 1:

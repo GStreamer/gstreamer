@@ -83,8 +83,7 @@ G_BEGIN_DECLS
   "rate = (int) [ 1, MAX ], " \
   "channels = (int) [ 1, MAX ], " \
   "endianness = (int) { LITTLE_ENDIAN , BIG_ENDIAN }, " \
-  "width = (int) { 32, 64 }, " \
-  "buffer-frames = (int) [ 1, MAX]"
+  "width = (int) { 32, 64 }"
 
 /* "standard" float audio is native order, 32 bit mono. */
 #define GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS \
@@ -92,8 +91,7 @@ G_BEGIN_DECLS
   "width = (int) 32, " \
   "rate = (int) [ 1, MAX ], " \
   "channels = (int) 1, " \
-  "endianness = (int) BYTE_ORDER, " \
-  "buffer-frames = (int) [ 1, MAX]"
+  "endianness = (int) BYTE_ORDER"
 
 /*
  * this library defines and implements some helper functions for audio
@@ -126,7 +124,6 @@ typedef enum {
   GST_AUDIO_FIELD_WIDTH         = (1 << 3),
   GST_AUDIO_FIELD_DEPTH         = (1 << 4),
   GST_AUDIO_FIELD_SIGNED        = (1 << 5),
-  GST_AUDIO_FIELD_BUFFER_FRAMES = (1 << 6)
 } GstAudioFieldFlag;
 
 void gst_audio_structure_set_int (GstStructure *structure, GstAudioFieldFlag flag);

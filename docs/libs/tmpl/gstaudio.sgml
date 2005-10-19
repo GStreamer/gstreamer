@@ -28,7 +28,6 @@ a support library for audio elements
 @GST_AUDIO_FIELD_WIDTH: 
 @GST_AUDIO_FIELD_DEPTH: 
 @GST_AUDIO_FIELD_SIGNED: 
-@GST_AUDIO_FIELD_BUFFER_FRAMES: 
 
 <!-- ##### FUNCTION gst_audio_frame_byte_size ##### -->
 <para>

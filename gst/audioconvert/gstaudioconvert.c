@@ -123,8 +123,7 @@ GST_STATIC_CAPS ( \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
     "endianness = (int) BYTE_ORDER, " \
-    "width = (int) 32, " \
-    "buffer-frames = (int) [ 0, MAX ];" \
+    "width = (int) 32;" \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
@@ -273,11 +272,6 @@ gst_audio_convert_parse_caps (const GstCaps * caps, AudioConvertFmt * fmt)
     /* depth cannot be bigger than the width */
     if (fmt->depth > fmt->width)
       goto not_allowed;
-  } else {
-    /* float specific fields */
-    if (!gst_structure_get_int (structure, "buffer-frames",
-            &fmt->buffer_frames))
-      goto no_values;
   }
 
   fmt->unit_size = (fmt->width * fmt->channels) / 8;

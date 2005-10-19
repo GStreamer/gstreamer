@@ -37,8 +37,7 @@ GstPad *mysrcpad, *mysinkpad;
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
     "endianness = (int) BYTE_ORDER, " \
-    "width = (int) 32, " \
-    "buffer-frames = (int) [ 0, MAX ];" \
+    "width = (int) 32;" \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
