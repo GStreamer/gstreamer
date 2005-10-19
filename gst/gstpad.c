@@ -3454,12 +3454,14 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   if (peerpad == NULL)
     goto not_linked;
 
+  GST_LOG_OBJECT (peerpad, "sending event on peerpad");
   gst_object_ref (peerpad);
   GST_UNLOCK (pad);
 
   result = gst_pad_send_event (peerpad, event);
 
   gst_object_unref (peerpad);
+  GST_LOG_OBJECT (peerpad, "sent event on peerpad");
 
   return result;
 
@@ -3504,8 +3506,10 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   if (GST_PAD_IS_SRC (pad) && !GST_EVENT_IS_UPSTREAM (event))
     goto wrong_direction;
 
-  if (GST_EVENT_SRC (event) == NULL)
+  if (GST_EVENT_SRC (event) == NULL) {
+    GST_LOG_OBJECT (pad, "event had no source, setting pad as event source");
     GST_EVENT_SRC (event) = gst_object_ref (pad);
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
