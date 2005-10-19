@@ -4,7 +4,6 @@ libgstaudioconvert_la_SOURCES = \
 	gstaudioconvert.c \
 	audioconvert.c \
 	gstchannelmix.c \
-	bufferframesconvert.c \
 	plugin.c
 
 libgstaudioconvert_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)

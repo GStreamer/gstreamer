@@ -20,8 +20,8 @@
  */
 
 
-#ifndef __GST_PLUGIN_BUFFERFRAMESCONVERT_H__
-#define __GST_PLUGIN_BUFFERFRAMESCONVERT_H__
+#ifndef __GST_PLUGIN_AUDIOCONVERT_H__
+#define __GST_PLUGIN_AUDIOCONVERT_H__
 
 
 #include <gst/gst.h>
@@ -29,8 +29,7 @@
 G_BEGIN_DECLS
 
 GType gst_audio_convert_get_type (void);
-GType gstplugin_buffer_frames_convert_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_PLUGIN_BUFFERFRAMESCONVERT_H__ */
+#endif /* __GST_PLUGIN_AUDIOCONVERT_H__ */

@@ -1,3 +1,11 @@
+2005-10-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/audioconvert/Makefile.am:
+	* gst/audioconvert/bufferframesconvert.c:
+	* gst/audioconvert/plugin.c: (plugin_init):
+	* gst/audioconvert/plugin.h:
+	  And bye bye buffer-frames-convert
+
 2005-10-19  Wim Taymans  <wim@fluendo.com>
 
 	* check/elements/audioconvert.c:
