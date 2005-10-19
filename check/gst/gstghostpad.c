@@ -21,14 +21,6 @@
 
 #include <gst/check/gstcheck.h>
 
-static void
-assert_gstrefcount (gpointer p, gint i)
-{
-  if (GST_OBJECT_REFCOUNT_VALUE (p) != i)
-    g_critical ("Expected refcount %d for %s, got %d", i, GST_OBJECT_NAME (p),
-        GST_OBJECT_REFCOUNT_VALUE (p));
-}
-
 /* test if removing a bin also cleans up the ghostpads
  */
 GST_START_TEST (test_remove1)
@@ -237,15 +229,15 @@ GST_START_TEST (test_ghost_pads)
 
   /* all objects above have one refcount owned by us as well */
 
-  assert_gstrefcount (fsrc, 3); /* parent and gisrc */
-  assert_gstrefcount (gsink, 2);        /* parent */
-  assert_gstrefcount (gsrc, 2); /* parent */
-  assert_gstrefcount (fsink, 3);        /* parent and gisink */
+  ASSERT_OBJECT_REFCOUNT (fsrc, "fsrc", 3);     /* parent and gisrc */
+  ASSERT_OBJECT_REFCOUNT (gsink, "gsink", 2);   /* parent */
+  ASSERT_OBJECT_REFCOUNT (gsrc, "gsrc", 2);     /* parent */
+  ASSERT_OBJECT_REFCOUNT (fsink, "fsink", 3);   /* parent and gisink */
 
-  assert_gstrefcount (gisrc, 2);        /* parent */
-  assert_gstrefcount (isink, 3);        /* parent and gsink */
-  assert_gstrefcount (gisink, 2);       /* parent */
-  assert_gstrefcount (isrc, 3); /* parent and gsrc */
+  ASSERT_OBJECT_REFCOUNT (gisrc, "gisrc", 2);   /* parent */
+  ASSERT_OBJECT_REFCOUNT (isink, "isink", 3);   /* parent and gsink */
+  ASSERT_OBJECT_REFCOUNT (gisink, "gisink", 2); /* parent */
+  ASSERT_OBJECT_REFCOUNT (isrc, "isrc", 3);     /* parent and gsrc */
 
   ret = gst_element_set_state (b1, GST_STATE_PLAYING);
   ret = gst_element_get_state (b1, NULL, NULL, GST_CLOCK_TIME_NONE);
@@ -259,29 +251,33 @@ GST_START_TEST (test_ghost_pads)
   /* unreffing the bin will unref all elements, which will unlink and unparent
    * all pads */
 
-  assert_gstrefcount (fsrc, 2); /* gisrc */
-  assert_gstrefcount (gsink, 1);
-  assert_gstrefcount (gsrc, 1);
-  assert_gstrefcount (fsink, 2);        /* gisink */
+  /* wait for thread to settle down */
+  while (GST_OBJECT_REFCOUNT_VALUE (fsrc) > 2)
+    THREAD_SWITCH ();
 
-  assert_gstrefcount (gisrc, 1);        /* gsink */
-  assert_gstrefcount (isink, 2);        /* gsink */
-  assert_gstrefcount (gisink, 1);       /* gsrc */
-  assert_gstrefcount (isrc, 2); /* gsrc */
+  ASSERT_OBJECT_REFCOUNT (fsrc, "fsrc", 2);     /* gisrc */
+  ASSERT_OBJECT_REFCOUNT (gsink, "gsink", 1);
+  ASSERT_OBJECT_REFCOUNT (gsrc, "gsink", 1);
+  ASSERT_OBJECT_REFCOUNT (fsink, "fsink", 2);   /* gisink */
+
+  ASSERT_OBJECT_REFCOUNT (gisrc, "gisrc", 1);   /* gsink */
+  ASSERT_OBJECT_REFCOUNT (isink, "isink", 2);   /* gsink */
+  ASSERT_OBJECT_REFCOUNT (gisink, "gisink", 1); /* gsrc */
+  ASSERT_OBJECT_REFCOUNT (isrc, "isrc", 2);     /* gsrc */
 
   gst_object_unref (gsink);
-  assert_gstrefcount (isink, 1);
-  assert_gstrefcount (gisrc, 1);
-  assert_gstrefcount (fsrc, 2); /* gisrc */
+  ASSERT_OBJECT_REFCOUNT (isink, "isink", 1);
+  ASSERT_OBJECT_REFCOUNT (gisrc, "gisrc", 1);
+  ASSERT_OBJECT_REFCOUNT (fsrc, "fsrc", 2);     /* gisrc */
   gst_object_unref (gisrc);
-  assert_gstrefcount (fsrc, 1);
+  ASSERT_OBJECT_REFCOUNT (fsrc, "fsrc", 1);
 
   gst_object_unref (gsrc);
-  assert_gstrefcount (isrc, 1);
-  assert_gstrefcount (gisink, 1);
-  assert_gstrefcount (fsink, 2);        /* gisrc */
+  ASSERT_OBJECT_REFCOUNT (isrc, "isrc", 1);
+  ASSERT_OBJECT_REFCOUNT (gisink, "gisink", 1);
+  ASSERT_OBJECT_REFCOUNT (fsink, "fsink", 2);   /* gisrc */
   gst_object_unref (gisink);
-  assert_gstrefcount (fsink, 1);
+  ASSERT_OBJECT_REFCOUNT (fsink, "fsink", 1);
 
   gst_object_unref (fsrc);
   gst_object_unref (isrc);

@@ -78,7 +78,6 @@ run_pipeline (GstElement * pipeline, gchar * descr,
 GST_START_TEST (test_pipeline_unref)
 {
   gchar *s;
-  gint count;
   GstElement *pipeline, *src, *sink;
 
   s = "fakesrc name=src num-buffers=20 ! fakesink name=sink";
@@ -91,15 +90,17 @@ GST_START_TEST (test_pipeline_unref)
 
   run_pipeline (pipeline, s, GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED,
       GST_MESSAGE_EOS);
-  count = GST_OBJECT_REFCOUNT_VALUE (src);
-  fail_unless (count == 1, "src has a refcount of %d instead of 1", count);
-  count = GST_OBJECT_REFCOUNT_VALUE (sink);
-  fail_unless (count == 1, "sink has a refcount of %d instead of 1", count);
+  while (GST_OBJECT_REFCOUNT_VALUE (src) > 1)
+    THREAD_SWITCH ();
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   gst_object_unref (src);
   gst_object_unref (sink);
 }
 
-GST_END_TEST Suite *
+GST_END_TEST;
+
+Suite *
 cleanup_suite (void)
 {
   Suite *s = suite_create ("Pipeline cleanup");

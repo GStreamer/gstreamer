@@ -270,6 +270,10 @@ GST_START_TEST (test_message_state_changed_children)
   fail_unless (current == GST_STATE_PAUSED);
   fail_unless (pending == GST_STATE_VOID_PENDING);
 
+  /* wait for async thread to settle down */
+  while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 2)
+    THREAD_SWITCH ();
+
   /* each object is referenced by a message;
    * base_sink_chain has taken a refcount on the sink, and is blocked on
    * preroll */
@@ -653,6 +657,9 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   /* TODO: do we need to check downwards state change order as well? */
   pop_messages (bus, 4);        /* pop playing => paused messages off the bus */
   pop_messages (bus, 4);        /* pop paused => ready messages off the bus */
+
+  while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 1)
+    THREAD_SWITCH ();
 
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
