@@ -312,6 +312,7 @@ gst_qtdemux_get_src_query_types (GstPad * pad)
 {
   static const GstQueryType src_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
     0
   };
 
@@ -326,9 +327,14 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      if (qtdemux->duration != 0 && qtdemux->timescale != 0 &&
-          GST_CLOCK_TIME_IS_VALID (qtdemux->last_ts)) {
-        gst_query_set_position (query, GST_FORMAT_TIME, qtdemux->last_ts,
+      if (GST_CLOCK_TIME_IS_VALID (qtdemux->last_ts)) {
+        gst_query_set_position (query, GST_FORMAT_TIME, qtdemux->last_ts);
+        res = TRUE;
+      }
+      break;
+    case GST_QUERY_DURATION:
+      if (qtdemux->duration != 0 && qtdemux->timescale != 0) {
+        gst_query_set_duration (query, GST_FORMAT_TIME,
             (guint64) qtdemux->duration * GST_SECOND / qtdemux->timescale);
         res = TRUE;
       }

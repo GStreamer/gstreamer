@@ -1,3 +1,12 @@
+2005-10-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_src_query_types),
+	(gst_qtdemux_handle_src_query):
+	* gst/speed/gstspeed.c: (speed_get_query_types), (speed_src_query):
+	* gst/tta/gstttaparse.c: (gst_tta_parse_src_event),
+	(gst_tta_parse_get_query_types), (gst_tta_parse_query):
+	API change fix.
+
 2005-10-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

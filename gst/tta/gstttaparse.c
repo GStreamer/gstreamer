@@ -238,6 +238,7 @@ gst_tta_parse_get_query_types (GstPad * pad)
 {
   static const GstQueryType types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
     0
   };
 
@@ -253,23 +254,39 @@ gst_tta_parse_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
-      gint64 cur, end;
+      gint64 cur;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
       switch (format) {
         case GST_FORMAT_TIME:
           cur = ttaparse->index[ttaparse->current_frame].time;
+          break;
+        default:
+          format = GST_FORMAT_BYTES;
+          cur = ttaparse->index[ttaparse->current_frame].pos;
+          break;
+      }
+      gst_query_set_position (query, format, cur);
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+      gint64 end;
+
+      gst_query_parse_duration (query, &format, NULL);
+      switch (format) {
+        case GST_FORMAT_TIME:
           end = ((gdouble) ttaparse->data_length /
               (gdouble) ttaparse->samplerate) * GST_SECOND;
           break;
         default:
           format = GST_FORMAT_BYTES;
-          cur = ttaparse->index[ttaparse->current_frame].pos;
           end = ttaparse->index[ttaparse->num_frames].pos +
               ttaparse->index[ttaparse->num_frames].size;
           break;
       }
-      gst_query_set_position (query, format, cur, end);
+      gst_query_set_duration (query, format, end);
       break;
     }
     default:
