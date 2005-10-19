@@ -1,3 +1,29 @@
+2005-10-19  Wim Taymans  <wim@fluendo.com>
+
+	reviewed by: <delete if not using a buddy>
+
+	* examples/seeking/seek.c: (make_avi_msmpeg4v3_mp3_pipeline),
+	(query_positions_elems), (query_positions_pads), (update_scale),
+	(do_seek), (set_update_scale), (message_received), (main):
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_src_query),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_find_chains),
+	(gst_ogg_demux_loop):
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_sink_query):
+	* ext/theora/theoradec.c: (theora_dec_src_query),
+	(theora_dec_sink_event):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query),
+	(vorbis_dec_sink_event), (vorbis_handle_data_packet):
+	* gst/adder/gstadder.c: (gst_adder_query):
+	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audiotestsrc_src_query):
+	* gst/playback/test3.c: (update_scale):
+	* gst/playback/test5.c: (new_pad), (no_more_pads), (start_finding),
+	(dump_element_stats), (main):
+	* gst/playback/test6.c: (main):
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_src_query):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_class_init), (gst_videotestsrc_negotiate),
+	(gst_videotestsrc_newsegment):
+
 2005-10-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c: (utf8_type_find),

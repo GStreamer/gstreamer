@@ -497,7 +497,7 @@ gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query)
     {
       gint64 val;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
       if (format != GST_FORMAT_DEFAULT && format != GST_FORMAT_TIME)
         return FALSE;
@@ -505,7 +505,7 @@ gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query)
       if ((res = gst_ogm_parse_sink_convert (pad,
                   GST_FORMAT_DEFAULT, ogm->next_granulepos, &format, &val))) {
         /* don't know the total length here.. */
-        gst_query_set_position (query, format, val, -1);
+        gst_query_set_position (query, format, val);
       }
       break;
     }

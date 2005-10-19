@@ -78,7 +78,7 @@ main (gint argc, gchar * argv[])
     if (gst_pad_query (pad, query)) {
       gint64 duration;
 
-      gst_query_parse_position (query, NULL, NULL, &duration);
+      gst_query_parse_duration (query, NULL, &duration);
 
       g_print (" duration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (duration));
     }

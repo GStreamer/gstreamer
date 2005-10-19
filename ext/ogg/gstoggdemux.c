@@ -364,19 +364,19 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
   cur = GST_OGG_PAD (pad);
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_POSITION:
+    case GST_QUERY_DURATION:
     {
       GstFormat format;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_duration (query, &format, NULL);
       /* can only get position in time */
       if (format != GST_FORMAT_TIME) {
-        GST_DEBUG ("only query position on TIME is supported");
+        GST_DEBUG ("only query duration on TIME is supported");
         res = FALSE;
         goto done;
       }
       /* can only return the total time position */
-      gst_query_set_position (query, GST_FORMAT_TIME, -1, ogg->total_time);
+      gst_query_set_duration (query, GST_FORMAT_TIME, ogg->total_time);
       break;
     }
     case GST_QUERY_CONVERT:
@@ -2020,7 +2020,7 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
 
   /* find length to read last page, we store this for later use. */
   format = GST_FORMAT_BYTES;
-  res = gst_pad_query_position (peer, &format, NULL, &ogg->length);
+  res = gst_pad_query_duration (peer, &format, &ogg->length);
   gst_object_unref (peer);
   if (!res)
     goto no_length;

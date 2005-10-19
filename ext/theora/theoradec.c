@@ -426,13 +426,9 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
-      gint64 granulepos, total, value;
+      gint64 granulepos, value;
       GstFormat my_format, format;
       gint64 time;
-
-      /* forward to peer for total */
-      if (!(res = gst_pad_query (GST_PAD_PEER (dec->sinkpad), query)))
-        goto error;
 
       /* we can convert a granule position to everything */
       granulepos = dec->granulepos;
@@ -440,12 +436,8 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       GST_LOG_OBJECT (dec,
           "query %p: we have current granule: %lld", query, granulepos);
 
-      /* parse total time from peer and format */
-      gst_query_parse_position (query, &format, NULL, &total);
-
-      GST_LOG_OBJECT (dec,
-          "query %p: peer returned total: %lld (format %u)",
-          query, total, format);
+      /* parse format */
+      gst_query_parse_position (query, &format, NULL);
 
       /* and convert to the final format in two steps with time as the 
        * intermediate step */
@@ -464,14 +456,18 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
               theora_dec_src_convert (pad, my_format, time, &format, &value)))
         goto error;
 
-      gst_query_set_position (query, format, value, total);
+      gst_query_set_position (query, format, value);
 
       GST_LOG_OBJECT (dec,
-          "query %p: we return %lld and %lld (format %u)",
-          query, value, total, format);
+          "query %p: we return %lld (format %u)", query, value, format);
 
       break;
     }
+    case GST_QUERY_DURATION:
+      /* forward to peer for total */
+      if (!(res = gst_pad_query (GST_PAD_PEER (dec->sinkpad), query)))
+        goto error;
+      break;
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;

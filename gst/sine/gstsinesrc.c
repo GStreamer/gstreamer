@@ -202,7 +202,7 @@ gst_sinesrc_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       gint64 current;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
       switch (format) {
         case GST_FORMAT_TIME:
@@ -221,8 +221,16 @@ gst_sinesrc_src_query (GstPad * pad, GstQuery * query)
           break;
       }
       if (res) {
-        gst_query_set_position (query, format, current, -1);
+        gst_query_set_position (query, format, current);
       }
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+
+      gst_query_parse_position (query, &format, NULL);
+      gst_query_set_position (query, format, -1);
       break;
     }
     default:

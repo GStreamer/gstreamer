@@ -27,7 +27,8 @@ update_scale (GstElement * element)
   gint64 position;
   GstFormat format = GST_FORMAT_TIME;
 
-  gst_element_query_position (element, &format, &position, &duration);
+  gst_element_query_position (element, &format, &position);
+  gst_element_query_duration (element, &format, &duration);
 
   g_print ("%" G_GINT64_FORMAT " %" G_GINT64_FORMAT "\n", duration, position);
 

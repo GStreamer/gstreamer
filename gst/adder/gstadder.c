@@ -210,26 +210,30 @@ gst_adder_query (GstPad * pad, GstQuery * query)
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
-      /* FIXME: what to do about the length? query all pads upstream and
-       * pick the longest length? or the shortest length? or what? */
     case GST_QUERY_POSITION:
     {
       GstFormat format;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
 
-      if (format == GST_FORMAT_TIME) {
-        gst_query_set_position (query, GST_FORMAT_TIME, adder->timestamp,
-            GST_CLOCK_TIME_NONE);
-        res = TRUE;
-      } else if (format == GST_FORMAT_DEFAULT) {
-        gst_query_set_position (query, GST_FORMAT_DEFAULT, adder->offset,
-            GST_BUFFER_OFFSET_NONE);
-        res = TRUE;
+      switch (format) {
+        case GST_FORMAT_TIME:
+          gst_query_set_position (query, GST_FORMAT_TIME, adder->timestamp);
+          res = TRUE;
+          break;
+        case GST_FORMAT_DEFAULT:
+          gst_query_set_position (query, GST_FORMAT_DEFAULT, adder->offset);
+          res = TRUE;
+          break;
+        default:
+          break;
       }
-
       break;
     }
+      /* FIXME: what to do about the length? query all pads upstream and
+       * pick the longest length? or the shortest length? or what? */
+    case GST_QUERY_DURATION:
+      break;
     default:
       break;
   }

@@ -278,15 +278,11 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
     {
       GstFormat format;
-      gint64 value, total;
-
-      /* query peer for total length */
-      if (!(res = gst_pad_query (GST_PAD_PEER (dec->sinkpad), query)))
-        goto error;
+      gint64 value;
 
       granulepos = dec->granulepos;
 
-      gst_query_parse_position (query, &format, NULL, &total);
+      gst_query_parse_position (query, &format, NULL);
 
       /* and convert to the final format */
       if (!(res =
@@ -296,12 +292,19 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
 
       value = (value - dec->segment_start) + dec->segment_base;
 
-      gst_query_set_position (query, format, value, total);
+      gst_query_set_position (query, format, value);
 
       GST_LOG_OBJECT (dec,
           "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
           query, granulepos, value, format);
 
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      /* query peer for total length */
+      if (!(res = gst_pad_query (GST_PAD_PEER (dec->sinkpad), query)))
+        goto error;
       break;
     }
     case GST_QUERY_CONVERT:
