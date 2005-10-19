@@ -76,11 +76,11 @@ plugins.
 This package contains the libraries and includes files necessary to develop
 applications and plugins for GStreamer.
 
-%package -n gstreamer09-tools
+%package -n %{gstreamer}-tools
 Summary: 	tools for GStreamer streaming media framework
 Group: 		Applications/Multimedia
 
-%description -n gstreamer-tools
+%description -n %{gstreamer}-tools
 GStreamer is a streaming-media framework, based on graphs of filters which
 operate on media data. Applications using this library can do anything
 from real-time sound processing to playing videos, and just about anything
@@ -160,7 +160,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %dir %{_localstatedir}/cache/gstreamer-%{majorminor}
 
-%files -n gstreamer-tools
+%files -n %{gstreamer}-tools
 %defattr(-, root, root, -)
 %{_bindir}/gst-complete
 %{_bindir}/gst-compprep
