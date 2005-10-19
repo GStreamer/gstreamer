@@ -81,33 +81,22 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
     GstState state;
     GstState pending;
     GstStateChangeReturn ret;
-    PyObject *timeout = NULL;
-    GstClockTime timeout64 = GST_CLOCK_TIME_NONE;
+    GstClockTime timeout = GST_CLOCK_TIME_NONE;
     PyObject *tuple;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                                     "|O:GstElement.get_state", kwlist,
+                                     "|K:GstElement.get_state", kwlist,
                                      &timeout)) {
 	PyErr_SetString(PyExc_RuntimeError, "Timeout not specified correctly");
         return NULL;
     }
-    if (timeout == Py_None) {
-      /* infinite timeout */
-      timeout64 = GST_CLOCK_TIME_NONE;
-    }
-    else {
-            if (!PyLong_Check (timeout)) {
-                PyErr_SetString(PyExc_TypeError, "timeout not specified as a long");
-                return NULL;
-            }
-            timeout64 = PyLong_AsLong (timeout);
 
-    }
+    GST_DEBUG ("timeout:%lld", timeout);
 	
     pyg_begin_allow_threads;
 
     ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, &pending,
-        timeout64);
+        timeout);
 
     pyg_end_allow_threads;
 

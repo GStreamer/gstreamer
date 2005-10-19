@@ -66,7 +66,7 @@ class BinSubclassTest(TestCase):
         self.assertEquals(bin.__gstrefcount__, 1)
 
         # test get_state with no timeout
-        (ret, state, pending) = bin.get_state(None)
+        (ret, state, pending) = bin.get_state()
         self.failIfEqual(ret, gst.STATE_CHANGE_FAILURE)
         self.assertEquals(bin.__gstrefcount__, 1)
 
@@ -75,7 +75,7 @@ class BinSubclassTest(TestCase):
         self.failUnless(bin._state_changed)
 
         # test get_state with no timeout
-        (ret, state, pending) = bin.get_state(None)
+        (ret, state, pending) = bin.get_state()
         self.failIfEqual(ret, gst.STATE_CHANGE_FAILURE)
 
         if ret == gst.STATE_CHANGE_SUCCESS:
@@ -83,14 +83,14 @@ class BinSubclassTest(TestCase):
             self.assertEquals(pending, gst.STATE_VOID_PENDING)
 
         # test get_state with a timeout
-        (ret, state, pending) = bin.get_state(0.1)
+        (ret, state, pending) = bin.get_state(1)
         self.failIfEqual(ret, gst.STATE_CHANGE_FAILURE)
 
         if ret == gst.STATE_CHANGE_SUCCESS:
             self.assertEquals(state, gst.STATE_PLAYING)
             self.assertEquals(pending, gst.STATE_VOID_PENDING)
 
-        (ret, state, pending) = bin.get_state(timeout=0.1)
+        (ret, state, pending) = bin.get_state(timeout=gst.SECOND)
 
         # back to NULL
         bin.set_state(gst.STATE_NULL)
@@ -146,7 +146,7 @@ class Preroll(TestCase):
 
         # bin will go to paused, src pad task will start and error out
         self.bin.set_state(gst.STATE_PAUSED)
-        ret = self.bin.get_state(timeout=None)
+        ret = self.bin.get_state()
         self.assertEquals(ret[0], gst.STATE_CHANGE_SUCCESS)
         self.assertEquals(ret[1], gst.STATE_PAUSED)
         self.assertEquals(ret[2], gst.STATE_VOID_PENDING)
@@ -155,7 +155,7 @@ class Preroll(TestCase):
         gst.debug('adding sink and setting to PAUSED, should cause preroll')
         self.bin.add(sink)
         sink.set_state(gst.STATE_PAUSED)
-        ret = self.bin.get_state(timeout=0.0)
+        ret = self.bin.get_state(timeout=0)
         self.assertEquals(ret[0], gst.STATE_CHANGE_ASYNC)
         self.assertEquals(ret[1], gst.STATE_PAUSED)
         self.assertEquals(ret[2], gst.STATE_PAUSED)
@@ -164,13 +164,13 @@ class Preroll(TestCase):
         src.set_state(gst.STATE_READY)
         src.link(sink)
         src.set_state(gst.STATE_PAUSED)
-        ret = self.bin.get_state(timeout=None)
+        ret = self.bin.get_state()
         self.assertEquals(ret[0], gst.STATE_CHANGE_SUCCESS)
         self.assertEquals(ret[1], gst.STATE_PAUSED)
         self.assertEquals(ret[2], gst.STATE_VOID_PENDING)
 
         self.bin.set_state(gst.STATE_NULL)
-        self.bin.get_state(timeout=None)
+        self.bin.get_state()
  
 class ConstructorTest(TestCase):
     def testGood(self):

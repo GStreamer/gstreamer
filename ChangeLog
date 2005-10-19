@@ -1,3 +1,25 @@
+2005-10-19  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	* gst/gst-types.defs:
+	Updated API
+	
+	* gst/gstelement.override:
+	_wrap_gst_element_get_state: made wrapper behave more like codegen-ed
+	functions. 
+	It now only takes an int or long as optional timeout argument, and if
+	there's no argument it will use GST_CLOCK_TIME_NONE
+	
+	* testsuite/test_bin.py:
+	* testsuite/test_event.py:
+	* testsuite/test_ghostpad.py:
+	* testsuite/test_pipeline.py:
+	Updated testsuites for element.get_state() modifications
+	Added event parsing checks
+	Commented out test_ghostpad.PipeTest.testProbedLink til I find out why
+	"while self._handoffs < 10: pass" doesn't exit although it reaches
+	values way over 10
+
 2005-10-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.defs:

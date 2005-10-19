@@ -35,6 +35,22 @@
   (return-type "none")
 )
 
+(define-function version
+  (c-name "gst_version")
+  (return-type "none")
+  (parameters
+    '("guint*" "major")
+    '("guint*" "minor")
+    '("guint*" "micro")
+    '("guint*" "nano")
+  )
+)
+
+(define-function version_string
+  (c-name "gst_version_string")
+  (return-type "gchar*")
+)
+
 
 
 ;; From ../gstreamer/gst/gstbin.h
@@ -479,7 +495,7 @@
 (define-method get_size
   (of-object "GstCaps")
   (c-name "gst_caps_get_size")
-  (return-type "int")
+  (return-type "guint")
 )
 
 (define-method get_structure
@@ -487,7 +503,7 @@
   (c-name "gst_caps_get_structure")
   (return-type "GstStructure*")
   (parameters
-    '("int" "index")
+    '("guint" "index")
   )
 )
 
@@ -497,7 +513,7 @@
   (return-type "GstCaps*")
   (caller-owns-return #t)
   (parameters
-    '("gint" "nth")
+    '("guint" "nth")
   )
 )
 
@@ -1301,7 +1317,7 @@
 (define-method get_uri_type
   (of-object "GstElementFactory")
   (c-name "gst_element_factory_get_uri_type")
-  (return-type "guint")
+  (return-type "gint")
 )
 
 (define-method get_uri_protocols
@@ -2530,49 +2546,6 @@
   )
 )
 
-;; From ../gstreamer/gst/gstmemchunk.h
-
-(define-function gst_mem_chunk_new
-  (c-name "gst_mem_chunk_new")
-  (is-constructor-of "GstMemChunk")
-  (return-type "GstMemChunk*")
-  (parameters
-    '("gchar*" "name")
-    '("gint" "atom_size")
-    '("gulong" "area_size")
-    '("gint" "type")
-  )
-)
-
-(define-method destroy
-  (of-object "GstMemChunk")
-  (c-name "gst_mem_chunk_destroy")
-  (return-type "none")
-)
-
-(define-method alloc
-  (of-object "GstMemChunk")
-  (c-name "gst_mem_chunk_alloc")
-  (return-type "gpointer")
-)
-
-(define-method alloc0
-  (of-object "GstMemChunk")
-  (c-name "gst_mem_chunk_alloc0")
-  (return-type "gpointer")
-)
-
-(define-method free
-  (of-object "GstMemChunk")
-  (c-name "gst_mem_chunk_free")
-  (return-type "none")
-  (parameters
-    '("gpointer" "mem")
-  )
-)
-
-
-
 ;; From ../gstreamer/gst/gstmessage.h
 
 (define-function gst_message_get_type
@@ -2645,6 +2618,14 @@
   )
 )
 
+(define-function gst_message_new_state_dirty
+  (c-name "gst_message_new_state_dirty")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+  )
+)
+
 (define-function gst_message_new_clock_provide
   (c-name "gst_message_new_clock_provide")
   (return-type "GstMessage*")
@@ -2710,6 +2691,16 @@
   (parameters
     '("GstObject*" "src")
     '("GstStructure*" "structure")
+  )
+)
+
+(define-function gst_message_new_duration
+  (c-name "gst_message_new_duration")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("GstFormat" "format")
+    '("gint64" "duration")
   )
 )
 
@@ -2797,7 +2788,8 @@
   (c-name "gst_message_parse_segment_start")
   (return-type "none")
   (parameters
-    '("GstClockTime*" "timestamp")
+    '("GstFormat*" "format")
+    '("gint64*" "position")
   )
 )
 
@@ -2806,7 +2798,18 @@
   (c-name "gst_message_parse_segment_done")
   (return-type "none")
   (parameters
-    '("GstClockTime*" "timestamp")
+    '("GstFormat*" "format")
+    '("gint64*" "position")
+  )
+)
+
+(define-method parse_duration
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_duration")
+  (return-type "none")
+  (parameters
+    '("GstFormat*" "format")
+    '("gint64*" "duration")
   )
 )
 

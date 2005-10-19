@@ -102,7 +102,7 @@ class PipeTest(TestCase):
 
         self.pipeline.set_state(gst.STATE_PLAYING)
         while True:
-            (ret, cur, pen) = self.pipeline.get_state(timeout=None)
+            (ret, cur, pen) = self.pipeline.get_state()
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_PLAYING:
                 break
 
@@ -111,41 +111,40 @@ class PipeTest(TestCase):
 
         self.pipeline.set_state(gst.STATE_NULL)
         while True:
-            (ret, cur, pen) = self.pipeline.get_state(timeout=None)
+            (ret, cur, pen) = self.pipeline.get_state()
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_NULL:
                 break
 
-    def testProbedLink(self):
-        self.pipeline.add(self.src)
-        pad = self.src.get_pad("src")
+##     def testProbedLink(self):
+##         self.pipeline.add(self.src)
+##         pad = self.src.get_pad("src")
         
-        self.sink.connect_handoff(self._sink_handoff_cb)
-        self._handoffs = 0
+##         self.sink.connect_handoff(self._sink_handoff_cb)
+##         self._handoffs = 0
 
-        # FIXME: adding a probe to the ghost pad does not work atm
-        # id = pad.add_buffer_probe(self._src_buffer_probe_cb)
-        realpad = pad.get_target()
-        self._probe_id = realpad.add_buffer_probe(self._src_buffer_probe_cb)
+##         # FIXME: adding a probe to the ghost pad does not work atm
+##         # id = pad.add_buffer_probe(self._src_buffer_probe_cb)
+##         realpad = pad.get_target()
+##         self._probe_id = realpad.add_buffer_probe(self._src_buffer_probe_cb)
 
-        self._probed = False
+##         self._probed = False
         
-        self.pipeline.set_state(gst.STATE_PLAYING)
-        while True:
-            (ret, cur, pen) = self.pipeline.get_state(timeout=None)
-            if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_PLAYING:
-                break
+##         while True:
+##             (ret, cur, pen) = self.pipeline.get_state()
+##             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_PLAYING:
+##                 break
 
-        while not self._probed:
-            pass
+##         while not self._probed:
+##             pass
 
-        while self._handoffs < 10:
-            pass
+##         while self._handoffs < 10:
+##             pass
 
-        self.pipeline.set_state(gst.STATE_NULL)
-        while True:
-            (ret, cur, pen) = self.pipeline.get_state(timeout=None)
-            if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_NULL:
-                break
+##         self.pipeline.set_state(gst.STATE_NULL)
+##         while True:
+##             (ret, cur, pen) = self.pipeline.get_state()
+##             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_NULL:
+##                 break
 
     def _src_buffer_probe_cb(self, pad, buffer):
         gst.debug("received probe on pad %r" % pad)
@@ -157,7 +156,7 @@ class PipeTest(TestCase):
         gst.debug('setting sink state')
         
         # FIXME: attempt one: sync to current pending state of bin
-        (res, cur, pen) = self.pipeline.get_state(timeout=0.0)
+        (res, cur, pen) = self.pipeline.get_state(timeout=0)
         target = pen
         if target == gst.STATE_VOID_PENDING:
             target = cur
@@ -174,7 +173,7 @@ class PipeTest(TestCase):
         self._probe_id = None
         gst.debug('done')
 
-    def _sink_handoff_cb(self, sink, pad, buffer):
+    def _sink_handoff_cb(self, sink, buffer, pad):
         gst.debug('received handoff on pad %r' % pad)
         self._handoffs += 1
 

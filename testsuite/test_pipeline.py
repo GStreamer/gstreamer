@@ -63,15 +63,15 @@ class Pipeline(TestCase):
         self.gcverify()
 
     def testRun(self):
-        self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_NULL)
+        self.assertEqual(self.pipeline.get_state()[1], gst.STATE_NULL)
         self.pipeline.set_state(gst.STATE_PLAYING)
-        self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_PLAYING)
+        self.assertEqual(self.pipeline.get_state()[1], gst.STATE_PLAYING)
         
         time.sleep(1)
 
-        self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_PLAYING)
+        self.assertEqual(self.pipeline.get_state()[1], gst.STATE_PLAYING)
         self.pipeline.set_state(gst.STATE_NULL)
-        self.assertEqual(self.pipeline.get_state(None)[1], gst.STATE_NULL)
+        self.assertEqual(self.pipeline.get_state()[1], gst.STATE_NULL)
 
 class Bus(TestCase):
     def testGet(self):
