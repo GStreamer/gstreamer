@@ -26,7 +26,7 @@
  * <para>
  * Level analyses incoming audio buffers and, if the
  * <link linkend="GstLevel--message">message property</link> is #TRUE,
- * generates an application message named
+ * generates an element message named
  * <classname>&quot;level&quot;</classname>:
  * after each interval of time given by the
  * <link linkend="GstLevel--interval">interval property</link>.
@@ -366,7 +366,7 @@ gst_level_message_new (GstLevel * l, GstClockTime endtime)
   gst_structure_set_value (s, "peak", &v);
   gst_structure_set_value (s, "decay", &v);
 
-  return gst_message_new_application (GST_OBJECT (l), s);
+  return gst_message_new_element (GST_OBJECT (l), s);
 }
 
 static void

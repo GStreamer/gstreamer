@@ -7,7 +7,7 @@ gboolean
 message_handler (GstBus * bus, GstMessage * message, gpointer data)
 {
 
-  if (message->type == GST_MESSAGE_APPLICATION) {
+  if (message->type == GST_MESSAGE_ELEMENT) {
     const GstStructure *s = gst_message_get_structure (message);
     const gchar *name = gst_structure_get_name (s);
 

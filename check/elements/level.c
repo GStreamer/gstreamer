@@ -129,11 +129,11 @@ GST_START_TEST (test_int16)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
 
-  message = gst_bus_poll (bus, GST_MESSAGE_APPLICATION, -1);
+  message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, -1);
 
   fail_unless (message != NULL);
   fail_unless (GST_MESSAGE_SRC (message) == GST_OBJECT (level));
-  fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_APPLICATION);
+  fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT);
   structure = gst_message_get_structure (message);
   fail_if (structure == NULL);
   fail_unless_equals_string ((char *) gst_structure_get_name (structure),
