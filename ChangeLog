@@ -1,3 +1,10 @@
+2005-10-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  some docs I had
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_chain):
+	  trivial fixes
+
 2005-10-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_validate_offset),

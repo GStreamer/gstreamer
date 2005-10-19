@@ -192,6 +192,8 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
 
   amrnbenc = GST_AMRNBENC (GST_PAD_PARENT (pad));
 
+  g_return_val_if_fail (amrnbenc->handle, GST_FLOW_WRONG_STATE);
+
   if (amrnbenc->rate == 0 || amrnbenc->channels == 0)
     goto not_negotiated;
 
@@ -217,7 +219,7 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
 
     data = (guint8 *) gst_adapter_peek (amrnbenc->adapter, 320);
 
-    /* decode */
+    /* encode */
     outsize = Encoder_Interface_Encode (amrnbenc->handle, MR122, (short *) data,
         (guint8 *) GST_BUFFER_DATA (out), 0);
 

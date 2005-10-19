@@ -82,6 +82,8 @@ AC_ISC_POSIX
 
 AC_HEADER_STDC([])
 AC_C_INLINE
+
+dnl used by ext/a52dec
 AX_CREATE_STDINT_H
 
 dnl Check for malloc.h
@@ -178,10 +180,6 @@ AC_SUBST(GST_PLUGINS_BASE_CFLAGS)
 
 dnl Determine endianness
 AC_C_BIGENDIAN
-
-dnl Check for fast float to int casting as defined in C99
-AC_C99_FUNC_LRINT()
-AC_C99_FUNC_LRINTF()
 
 dnl Check for essential libraries first:
 dnl ====================================
