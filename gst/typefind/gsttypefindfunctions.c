@@ -38,6 +38,9 @@ GST_DEBUG_CATEGORY_STATIC (type_find_debug);
 #define GST_CAT_DEFAULT type_find_debug
 
 /*** text/plain ***/
+static gboolean xml_check_first_element (GstTypeFind * tf,
+    const gchar * element, guint elen);
+
 
 static GstStaticCaps utf8_caps = GST_STATIC_CAPS ("text/plain");
 
@@ -52,6 +55,10 @@ utf8_type_find (GstTypeFind * tf, gpointer unused)
   guint probability = 95;       /* starting probability */
   guint step = 10;              /* how much we reduce probability in each
                                  * iteration */
+
+  /* leave xml to the xml typefinders */
+  if (xml_check_first_element (tf, "", 0))
+    return;
 
   while (probability > step) {
     data = gst_type_find_peek (tf, 0, size);
@@ -130,6 +137,84 @@ uri_type_find (GstTypeFind * tf, gpointer unused)
     }
 
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, URI_CAPS);
+  }
+}
+
+
+/*** application/xml **********************************************************/
+
+#define XML_BUFFER_SIZE 256
+#define XML_INC_BUFFER {						\
+  pos++;								\
+  if (pos == XML_BUFFER_SIZE) {						\
+    pos = 0;								\
+    offset += XML_BUFFER_SIZE;						\
+    data = gst_type_find_peek (tf, offset, XML_BUFFER_SIZE);		\
+    if (data == NULL) return FALSE;					\
+  } else {								\
+    data++;								\
+  }									\
+}
+
+static gboolean
+xml_check_first_element (GstTypeFind * tf, const gchar * element, guint elen)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, XML_BUFFER_SIZE);
+  guint offset = 0;
+  guint pos = 0;
+
+  /* look for the XMLDec,
+   * see XML spec 2.8, Prolog and Document Type Declaration
+   * http://www.w3.org/TR/2004/REC-xml-20040204/#sec-prolog-dtd */
+  if (!data || memcmp (data, "<?xml", 5) != 0)
+    return FALSE;
+
+  pos += 5;
+  data += 5;
+
+  /* look for the first element, it has to be a <smil> element */
+  while (data) {
+    while (*data != '<') {
+      XML_INC_BUFFER;
+    }
+
+    XML_INC_BUFFER;
+    if (!g_ascii_isalpha (*data)) {
+      /* if not alphabetic, it's a PI or an element / attribute declaration
+       * like <?xxx or <!xxx */
+      XML_INC_BUFFER;
+      continue;
+    }
+
+    /* the first normal element, check if it's the one asked for */
+    data = gst_type_find_peek (tf, offset + pos, elen + 1);
+    return (data && element && strncmp ((char *) data, element, elen) == 0);
+  }
+
+  return FALSE;
+}
+
+static GstStaticCaps generic_xml_caps = GST_STATIC_CAPS ("application/xml");
+
+#define GENERIC_XML_CAPS (gst_static_caps_get(&generic_xml_caps))
+static void
+xml_type_find (GstTypeFind * tf, gpointer unused)
+{
+  if (xml_check_first_element (tf, "", 0)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MINIMUM, GENERIC_XML_CAPS);
+  }
+}
+
+/*** application/smil *********************************************************/
+
+static GstStaticCaps smil_caps = GST_STATIC_CAPS ("application/smil");
+
+#define SMIL_CAPS (gst_static_caps_get(&smil_caps))
+static void
+smil_type_find (GstTypeFind * tf, gpointer unused)
+{
+  if (xml_check_first_element (tf, "smil", 4)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SMIL_CAPS);
   }
 }
 
@@ -1803,6 +1888,8 @@ plugin_init (GstPlugin * plugin)
   static gchar *shn_exts[] = { "shn", NULL };
   static gchar *ape_exts[] = { "ape", NULL };
   static gchar *uri_exts[] = { "ram", NULL };
+  static gchar *smil_exts[] = { "smil", NULL };
+  static gchar *xml_exts[] = { "xml", NULL };
   static gchar *jpeg_exts[] = { "jpg", "jpe", "jpeg", NULL };
   static gchar *gif_exts[] = { "gif", NULL };
   static gchar *png_exts[] = { "png", NULL };
@@ -1892,26 +1979,30 @@ plugin_init (GstPlugin * plugin)
       utf8_exts, UTF8_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "text/uri-list", GST_RANK_MARGINAL, uri_type_find,
       uri_exts, URI_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/smil", GST_RANK_SECONDARY,
+      smil_type_find, smil_exts, SMIL_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/xml", GST_RANK_MARGINAL,
+      xml_type_find, xml_exts, GENERIC_XML_CAPS, NULL);
   TYPE_FIND_REGISTER_RIFF (plugin, "audio/x-wav", GST_RANK_PRIMARY, wav_exts,
       "WAVE");
   TYPE_FIND_REGISTER (plugin, "audio/x-aiff", GST_RANK_SECONDARY,
       aiff_type_find, aiff_exts, AIFF_CAPS, NULL);
-  TYPE_FIND_REGISTER (plugin, "audio/x-svx", GST_RANK_SECONDARY,
-      svx_type_find, svx_exts, SVX_CAPS, NULL);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-paris",
-      GST_RANK_SECONDARY, paris_exts, " paf", 4, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-paris",
-      GST_RANK_SECONDARY, paris_exts, "fap ", 4, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-nist",
-      GST_RANK_SECONDARY, nist_exts, "NIST", 4, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-voc",
-      GST_RANK_SECONDARY, voc_exts, "Creative", 8, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER (plugin, "audio/x-sds", GST_RANK_SECONDARY,
-      sds_type_find, sds_exts, SDS_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-svx", GST_RANK_SECONDARY, svx_type_find,
+      svx_exts, SVX_CAPS, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-paris", GST_RANK_SECONDARY,
+      paris_exts, " paf", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-paris", GST_RANK_SECONDARY,
+      paris_exts, "fap ", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-nist", GST_RANK_SECONDARY,
+      nist_exts, "NIST", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-voc", GST_RANK_SECONDARY,
+      voc_exts, "Creative", 8, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER (plugin, "audio/x-sds", GST_RANK_SECONDARY, sds_type_find,
+      sds_exts, SDS_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-ircam", GST_RANK_SECONDARY,
       ircam_type_find, ircam_exts, IRCAM_CAPS, NULL);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-w64",
-      GST_RANK_SECONDARY, w64_exts, "riff", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-w64", GST_RANK_SECONDARY,
+      w64_exts, "riff", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "audio/x-shorten", GST_RANK_SECONDARY,
       shn_type_find, shn_exts, SHN_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-ape", GST_RANK_SECONDARY,
@@ -1969,8 +2060,8 @@ plugin_init (GstPlugin * plugin)
       speex_type_find, NULL, SPEEX_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-ogg-skeleton", GST_RANK_PRIMARY,
       oggskel_type_find, NULL, OGG_SKELETON_CAPS, NULL);
-  TYPE_FIND_REGISTER (plugin, "text/x-cmml", GST_RANK_PRIMARY,
-      cmml_type_find, NULL, CMML_CAPS, NULL);
+  TYPE_FIND_REGISTER (plugin, "text/x-cmml", GST_RANK_PRIMARY, cmml_type_find,
+      NULL, CMML_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,
       m4a_exts, M4A_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-3gp", GST_RANK_PRIMARY,
@@ -1984,8 +2075,8 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "audio/x-wavpack", GST_RANK_SECONDARY,
       wavpack_type_find, wavpack_exts, WAVPACK_CAPS, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-wavpack-correction", GST_RANK_SECONDARY,
-      wavpack_type_find, wavpack_correction_exts,
-      WAVPACK_CORRECTION_CAPS, NULL);
+      wavpack_type_find, wavpack_correction_exts, WAVPACK_CORRECTION_CAPS,
+      NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-rar",
       GST_RANK_SECONDARY, rar_exts, "Rar!", 4, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER (plugin, "application/x-tar", GST_RANK_SECONDARY,

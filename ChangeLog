@@ -1,3 +1,11 @@
+2005-10-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (utf8_type_find),
+	(xml_check_first_element), (xml_type_find), (smil_type_find),
+	(plugin_init):
+	  Add typefinding for SMIL and for generic XML. Based on patch by
+	  Akos Maroy (#308663).
+
 2005-10-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/Makefile.am:
