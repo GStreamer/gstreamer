@@ -326,14 +326,11 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
     {
       GstFormat format;
 
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          b = gst_base_src_get_size (src, &ui64);
-          /* better to make get_size take an int64 */
-          i64 = b ? (gint64) ui64 : -1;
-          gst_query_set_position (query, GST_FORMAT_BYTES, src->offset, i64);
+          gst_query_set_position (query, GST_FORMAT_BYTES, src->offset);
           return TRUE;
         case GST_FORMAT_PERCENT:
           b = gst_base_src_get_size (src, &ui64);
@@ -341,8 +338,28 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
           if (b)
             i64 *= gst_guint64_to_gdouble (src->offset)
                 / gst_guint64_to_gdouble (ui64);
-          gst_query_set_position (query, GST_FORMAT_PERCENT,
-              i64, GST_FORMAT_PERCENT_MAX);
+          gst_query_set_position (query, GST_FORMAT_PERCENT, i64);
+          return TRUE;
+        default:
+          return FALSE;
+      }
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+
+      gst_query_parse_duration (query, &format, NULL);
+      switch (format) {
+        case GST_FORMAT_DEFAULT:
+        case GST_FORMAT_BYTES:
+          b = gst_base_src_get_size (src, &ui64);
+          /* better to make get_size take an int64 */
+          i64 = b ? (gint64) ui64 : -1;
+          gst_query_set_duration (query, GST_FORMAT_BYTES, i64);
+          return TRUE;
+        case GST_FORMAT_PERCENT:
+          gst_query_set_duration (query, GST_FORMAT_PERCENT,
+              GST_FORMAT_PERCENT_MAX);
           return TRUE;
         default:
           return FALSE;

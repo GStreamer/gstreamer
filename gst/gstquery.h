@@ -37,7 +37,8 @@ G_BEGIN_DECLS
 /**
  * GstQueryType:
  * @GST_QUERY_NONE: invalid query type
- * @GST_QUERY_POSITION: current/end position in stream
+ * @GST_QUERY_POSITION: current position in stream
+ * @GST_QUERY_DURATION: total duration of the stream
  * @GST_QUERY_LATENCY: latency of stream
  * @GST_QUERY_JITTER: current jitter of stream
  * @GST_QUERY_RATE: current rate of the stream
@@ -51,6 +52,7 @@ G_BEGIN_DECLS
 typedef enum {
   GST_QUERY_NONE = 0,
   GST_QUERY_POSITION,
+  GST_QUERY_DURATION,
   GST_QUERY_LATENCY,
   GST_QUERY_JITTER, 	/* not in draft-query, necessary? */
   GST_QUERY_RATE,
@@ -142,10 +144,14 @@ GstIterator*    gst_query_type_iterate_definitions (void);
 
 /* position query */
 GstQuery*	gst_query_new_position		(GstFormat format);
-void		gst_query_set_position		(GstQuery *query, GstFormat format,
-						 gint64 cur, gint64 end);
-void		gst_query_parse_position	(GstQuery *query, GstFormat *format,
-						 gint64 *cur, gint64 *end);
+void		gst_query_set_position		(GstQuery *query, GstFormat format, gint64 cur);
+void		gst_query_parse_position	(GstQuery *query, GstFormat *format, gint64 *cur);
+
+/* duration query */
+GstQuery*	gst_query_new_duration		(GstFormat format);
+void		gst_query_set_duration		(GstQuery *query, GstFormat format, gint64 duration);
+void		gst_query_parse_duration	(GstQuery *query, GstFormat *format, gint64 *duration);
+
 /* convert query */
 GstQuery*	gst_query_new_convert		(GstFormat src_fmt, gint64 value, GstFormat dest_fmt);
 void		gst_query_set_convert		(GstQuery *query, GstFormat src_format, gint64 src_value,
@@ -155,9 +161,9 @@ void		gst_query_parse_convert		(GstQuery *query, GstFormat *src_format, gint64 *
 /* segment query */
 GstQuery*       gst_query_new_segment           (GstFormat format);
 void            gst_query_set_segment           (GstQuery *query, gdouble rate, GstFormat format,
-                                                 gint64 start_value, gint64 stop_value, gint64 base);
+                                                 gint64 start_value, gint64 stop_value);
 void            gst_query_parse_segment         (GstQuery *query, gdouble *rate, GstFormat *format,
-                                                 gint64 *start_value, gint64 *stop_value, gint64 *base);
+                                                 gint64 *start_value, gint64 *stop_value);
 
 
 /* application specific query */

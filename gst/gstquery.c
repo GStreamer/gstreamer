@@ -55,7 +55,8 @@ static GHashTable *_query_type_to_nick = NULL;
 static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for NONE */
 
 static GstQueryTypeDefinition standard_definitions[] = {
-  {GST_QUERY_POSITION, "position", "Current position and total duration"},
+  {GST_QUERY_POSITION, "position", "Current position"},
+  {GST_QUERY_DURATION, "duration", "Total duration"},
   {GST_QUERY_LATENCY, "latency", "Latency"},
   {GST_QUERY_JITTER, "jitter", "Jitter"},
   {GST_QUERY_RATE, "rate", "Configured rate 1000000 = 1"},
@@ -342,8 +343,7 @@ gst_query_new_position (GstFormat format)
 
   structure = gst_structure_new ("GstQueryPosition",
       "format", GST_TYPE_FORMAT, format,
-      "cur", G_TYPE_INT64, (gint64) - 1,
-      "end", G_TYPE_INT64, (gint64) - 1, NULL);
+      "cur", G_TYPE_INT64, (gint64) - 1, NULL);
   query = gst_query_new (GST_QUERY_POSITION, structure);
 
   return query;
@@ -354,13 +354,11 @@ gst_query_new_position (GstFormat format)
  * @query: the query to fill in
  * @format: the requested #GstFormat
  * @cur: the current position
- * @end: the end position
  *
  * Answer a position query by setting the requested values.
  */
 void
-gst_query_set_position (GstQuery * query, GstFormat format,
-    gint64 cur, gint64 end)
+gst_query_set_position (GstQuery * query, GstFormat format, gint64 cur)
 {
   GstStructure *structure;
 
@@ -368,8 +366,7 @@ gst_query_set_position (GstQuery * query, GstFormat format,
 
   structure = gst_query_get_structure (query);
   gst_structure_set (structure,
-      "format", GST_TYPE_FORMAT, format,
-      "cur", G_TYPE_INT64, cur, "end", G_TYPE_INT64, end, NULL);
+      "format", GST_TYPE_FORMAT, format, "cur", G_TYPE_INT64, cur, NULL);
 }
 
 /**
@@ -377,13 +374,11 @@ gst_query_set_position (GstQuery * query, GstFormat format,
  * @query: the query to parse
  * @format: the storage for the #GstFormat of the position values
  * @cur: the storage for the current position
- * @end: the storage for the end position
  *
  * Parse a position query answer.
  */
 void
-gst_query_parse_position (GstQuery * query, GstFormat * format,
-    gint64 * cur, gint64 * end)
+gst_query_parse_position (GstQuery * query, GstFormat * format, gint64 * cur)
 {
   GstStructure *structure;
 
@@ -394,8 +389,75 @@ gst_query_parse_position (GstQuery * query, GstFormat * format,
     *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
   if (cur)
     *cur = g_value_get_int64 (gst_structure_get_value (structure, "cur"));
-  if (end)
-    *end = g_value_get_int64 (gst_structure_get_value (structure, "end"));
+}
+
+
+/**
+ * gst_query_new_duration:
+ * @format: the default #GstFormat for the new query
+ *
+ * Constructs a new stream duration query object. Use gst_query_unref()
+ * when done with it.
+ *
+ * Returns: A new #GstQuery
+ */
+GstQuery *
+gst_query_new_duration (GstFormat format)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new ("GstQueryDuration",
+      "format", GST_TYPE_FORMAT, format,
+      "duration", G_TYPE_INT64, (gint64) - 1, NULL);
+  query = gst_query_new (GST_QUERY_DURATION, structure);
+
+  return query;
+}
+
+/**
+ * gst_query_set_duration:
+ * @query: the query to fill in
+ * @format: the requested #GstFormat
+ * @duration: the total duration
+ *
+ * Answer a duration query by setting the requested values.
+ */
+void
+gst_query_set_duration (GstQuery * query, GstFormat format, gint64 duration)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_DURATION);
+
+  structure = gst_query_get_structure (query);
+  gst_structure_set (structure,
+      "format", GST_TYPE_FORMAT, format,
+      "duration", G_TYPE_INT64, duration, NULL);
+}
+
+/**
+ * gst_query_parse_duration:
+ * @query: the query to parse
+ * @format: the storage for the #GstFormat of the duration value
+ * @duration: the storage for the total duration
+ *
+ * Parse a duration query answer.
+ */
+void
+gst_query_parse_duration (GstQuery * query, GstFormat * format,
+    gint64 * duration)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_DURATION);
+
+  structure = gst_query_get_structure (query);
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (duration)
+    *duration =
+        g_value_get_int64 (gst_structure_get_value (structure, "duration"));
 }
 
 /**
@@ -515,13 +577,12 @@ gst_query_new_segment (GstFormat format)
  * @format: the #GstFormat of the segment values
  * @start_value: the start value
  * @stop_value: the stop value
- * @base: the base value
  *
  * Answer a segment query by setting the requested values.
  */
 void
 gst_query_set_segment (GstQuery * query, gdouble rate, GstFormat format,
-    gint64 start_value, gint64 stop_value, gint64 base)
+    gint64 start_value, gint64 stop_value)
 {
   GstStructure *structure;
 
@@ -532,7 +593,7 @@ gst_query_set_segment (GstQuery * query, gdouble rate, GstFormat format,
       "rate", G_TYPE_DOUBLE, rate,
       "format", GST_TYPE_FORMAT, format,
       "start_value", G_TYPE_INT64, start_value,
-      "stop_value", G_TYPE_INT64, stop_value, "base", G_TYPE_INT64, base, NULL);
+      "stop_value", G_TYPE_INT64, stop_value, NULL);
 }
 
 /**
@@ -542,13 +603,12 @@ gst_query_set_segment (GstQuery * query, gdouble rate, GstFormat format,
  * @format: the storage for the #GstFormat of the values
  * @start_value: the storage for the start value
  * @stop_value: the storage for the stop value
- * @base: the storage for the base value
  *
  * Parse a segment query answer.
  */
 void
 gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
-    gint64 * start_value, gint64 * stop_value, gint64 * base)
+    gint64 * start_value, gint64 * stop_value)
 {
   GstStructure *structure;
 
@@ -565,8 +625,6 @@ gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
   if (stop_value)
     *stop_value =
         g_value_get_int64 (gst_structure_get_value (structure, "stop_value"));
-  if (base)
-    *base = g_value_get_int64 (gst_structure_get_value (structure, "base"));
 }
 
 /**

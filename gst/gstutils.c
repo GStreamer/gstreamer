@@ -1583,9 +1583,20 @@ gst_element_unlink (GstElement * src, GstElement * dest)
   }
 }
 
+/**
+ * gst_element_query_position:
+ * @element: a #GstElement to invoke the position query on.
+ * @format: a pointer to the #GstFormat asked for.
+ *          On return contains the #GstFormat used.
+ * @cur: A location in which to store the current position, or NULL.
+ *
+ * Queries an element for the stream position.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
 gboolean
 gst_element_query_position (GstElement * element, GstFormat * format,
-    gint64 * cur, gint64 * end)
+    gint64 * cur)
 {
   GstQuery *query;
   gboolean ret;
@@ -1597,13 +1608,57 @@ gst_element_query_position (GstElement * element, GstFormat * format,
   ret = gst_element_query (element, query);
 
   if (ret)
-    gst_query_parse_position (query, format, cur, end);
+    gst_query_parse_position (query, format, cur);
 
   gst_query_unref (query);
 
   return ret;
 }
 
+/**
+ * gst_element_query_duration:
+ * @element: a #GstElement to invoke the duration query on.
+ * @format: a pointer to the #GstFormat asked for.
+ *          On return contains the #GstFormat used.
+ * @cur: A location in which to store the total duration, or NULL.
+ *
+ * Queries an element for the total stream duration.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_element_query_duration (GstElement * element, GstFormat * format,
+    gint64 * duration)
+{
+  GstQuery *query;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+
+  query = gst_query_new_duration (*format);
+  ret = gst_element_query (element, query);
+
+  if (ret)
+    gst_query_parse_duration (query, format, duration);
+
+  gst_query_unref (query);
+
+  return ret;
+}
+
+/**
+ * gst_element_query_convert:
+ * @element: a #GstElement to invoke the convert query on.
+ * @src_format: a #GstFormat to convert from.
+ * @src_val: a value to convert.
+ * @dest_format: a pointer to the #GstFormat to convert to.
+ * @dest_val: a pointer to the result.
+ *
+ * Queries an element to convert @src_val in @src_format to @dest_format.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
 gboolean
 gst_element_query_convert (GstElement * element, GstFormat src_format,
     gint64 src_val, GstFormat * dest_fmt, gint64 * dest_val)
@@ -1630,7 +1685,6 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
 
   return ret;
 }
-
 
 /**
  * gst_pad_can_link:
@@ -2275,15 +2329,13 @@ pads_changed:
  * @format: a pointer to the #GstFormat asked for.
  *          On return contains the #GstFormat used.
  * @cur: A location in which to store the current position, or NULL.
- * @end: A location in which to store the end position (length), or NULL.
  *
- * Queries a pad for the stream position and length.
+ * Queries a pad for the stream position.
  *
  * Returns: TRUE if the query could be performed.
  */
 gboolean
-gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur,
-    gint64 * end)
+gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur)
 {
   GstQuery *query;
   gboolean ret;
@@ -2295,7 +2347,38 @@ gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur,
   ret = gst_pad_query (pad, query);
 
   if (ret)
-    gst_query_parse_position (query, format, cur, end);
+    gst_query_parse_position (query, format, cur);
+
+  gst_query_unref (query);
+
+  return ret;
+}
+
+/**
+ * gst_pad_query_duration:
+ * @pad: a #GstPad to invoke the duration query on.
+ * @format: a pointer to the #GstFormat asked for.
+ *          On return contains the #GstFormat used.
+ * @cur: A location in which to store the total duration, or NULL.
+ *
+ * Queries a pad for the total stream duration.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query_duration (GstPad * pad, GstFormat * format, gint64 * duration)
+{
+  GstQuery *query;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+
+  query = gst_query_new_duration (*format);
+  ret = gst_pad_query (pad, query);
+
+  if (ret)
+    gst_query_parse_duration (query, format, duration);
 
   gst_query_unref (query);
 

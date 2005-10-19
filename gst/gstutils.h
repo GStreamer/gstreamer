@@ -511,7 +511,9 @@ gboolean		gst_element_factory_can_sink_caps(GstElementFactory *factory, const Gs
 
 /* util query functions */
 gboolean                gst_element_query_position      (GstElement *element, GstFormat *format,
-		                                         gint64 *cur, gint64 *end);
+		                                         gint64 *cur);
+gboolean                gst_element_query_duration      (GstElement *element, GstFormat *format,
+		                                         gint64 *duration);
 gboolean                gst_element_query_convert       (GstElement *element, GstFormat src_format, gint64 src_val,
 		                                         GstFormat *dest_fmt, gint64 *dest_val);
 
@@ -531,7 +533,9 @@ GstElement*		gst_pad_get_parent_element	(GstPad *pad);
 
 /* util query functions */
 gboolean                gst_pad_query_position          (GstPad *pad, GstFormat *format,
-		                                         gint64 *cur, gint64 *end);
+		                                         gint64 *cur);
+gboolean                gst_pad_query_duration          (GstPad *pad, GstFormat *format,
+		                                         gint64 *duration);
 gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat src_format, gint64 src_val,
 		                                         GstFormat *dest_format, gint64 *dest_val);
 

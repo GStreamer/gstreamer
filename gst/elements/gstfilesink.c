@@ -279,12 +279,11 @@ gst_file_sink_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      gst_query_parse_position (query, &format, NULL, NULL);
+      gst_query_parse_position (query, &format, NULL);
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          gst_query_set_position (query, GST_FORMAT_BYTES,
-              self->data_written, self->data_written);
+          gst_query_set_position (query, GST_FORMAT_BYTES, self->data_written);
           return TRUE;
         default:
           return FALSE;

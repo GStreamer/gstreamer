@@ -313,13 +313,13 @@ gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
-      gint64 peer_pos, peer_total;
+      gint64 peer_pos;
       GstFormat format;
 
       if (typefind->store == NULL)
         return TRUE;
 
-      gst_query_parse_position (query, &format, &peer_pos, &peer_total);
+      gst_query_parse_position (query, &format, &peer_pos);
 
       /* FIXME: this code assumes that there's no discont in the queue */
       switch (format) {
@@ -330,7 +330,7 @@ gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
           /* FIXME */
           break;
       }
-      gst_query_set_position (query, format, peer_pos, peer_total);
+      gst_query_set_position (query, format, peer_pos);
       break;
     }
     default:
@@ -453,8 +453,8 @@ find_element_get_length (gpointer data)
     return 0;
   }
   if (entry->self->stream_length == 0) {
-    if (!gst_pad_query_position (GST_PAD_PEER (entry->self->sink), &format,
-            NULL, (gint64 *) & entry->self->stream_length))
+    if (!gst_pad_query_duration (GST_PAD_PEER (entry->self->sink), &format,
+            (gint64 *) & entry->self->stream_length))
       goto no_length;
 
     if (format != GST_FORMAT_BYTES) {
@@ -805,7 +805,7 @@ gst_type_find_element_activate (GstPad * pad)
       gint64 size;
       GstFormat format = GST_FORMAT_BYTES;
 
-      gst_pad_query_position (peer, &format, NULL, &size);
+      gst_pad_query_duration (peer, &format, &size);
       found_caps = gst_type_find_helper (peer, (guint64) size);
       gst_object_unref (peer);
     }

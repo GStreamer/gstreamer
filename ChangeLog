@@ -1,3 +1,33 @@
+2005-10-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_commit_state),
+	(gst_base_sink_handle_object), (gst_base_sink_query), (do_playing):
+	* gst/base/gstbasesrc.c: (gst_base_src_query):
+	* gst/elements/gstfilesink.c: (gst_file_sink_query):
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_handle_src_query), (find_element_get_length),
+	(gst_type_find_element_activate):
+	API change fix.
+
+	* gst/gstquery.c: (gst_query_new_position),
+	(gst_query_set_position), (gst_query_parse_position),
+	(gst_query_new_duration), (gst_query_set_duration),
+	(gst_query_parse_duration), (gst_query_set_segment),
+	(gst_query_parse_segment):
+	* gst/gstquery.h:
+	Bundling query position/duration is not a good idea since duration
+	does not change much and we don't want to recalculate it for every
+	position query, so they are separated again..
+	Base value in segment query is not needed.
+
+	* gst/gstqueue.c: (gst_queue_handle_src_query):
+	* gst/gstutils.c: (gst_element_query_position),
+	(gst_element_query_duration), (gst_pad_query_position),
+	(gst_pad_query_duration):
+	* gst/gstutils.h:
+	Updates for query API change.
+	Added some docs here and there.
+
 2005-10-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstbin.c: (GST_START_TEST):

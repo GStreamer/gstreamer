@@ -897,11 +897,11 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
-      gint64 peer_pos, peer_total;
+      gint64 peer_pos;
       GstFormat format;
 
       /* get peer position */
-      gst_query_parse_position (query, &format, &peer_pos, &peer_total);
+      gst_query_parse_position (query, &format, &peer_pos);
 
       /* FIXME: this code assumes that there's no discont in the queue */
       switch (format) {
@@ -912,14 +912,14 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
           peer_pos -= queue->cur_level.time;
           break;
         default:
-          /* FIXME */
-          break;
+          return FALSE;
       }
-      /* set updated positions */
-      gst_query_set_position (query, format, peer_pos, peer_total);
+      /* set updated position */
+      gst_query_set_position (query, format, peer_pos);
       break;
     }
     default:
+      /* peer handled other queries */
       break;
   }
 

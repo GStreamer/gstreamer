@@ -1416,9 +1416,9 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       break;
     case GST_QUERY_SEGMENT:
     {
+      /* FIXME, bring start/stop to stream time */
       gst_query_set_segment (query, basesink->segment_rate,
-          GST_FORMAT_TIME, basesink->segment_start, basesink->segment_stop,
-          basesink->segment_time);
+          GST_FORMAT_TIME, basesink->segment_start, basesink->segment_stop);
       break;
     }
     case GST_QUERY_CONVERT:
