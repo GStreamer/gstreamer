@@ -82,15 +82,9 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
     GstState pending;
     GstStateChangeReturn ret;
     PyObject *timeout = NULL;
-    gdouble timeoutd;
     GstClockTime timeout64 = GST_CLOCK_TIME_NONE;
     PyObject *tuple;
 
-    /*
-     * infinite timeout: timevalp == NULL
-     * 0 timeout: timeval set to 0, timevalp points to timeval
-     * x timeout: timeval set to gdouble conversion, timevalp points to timeval
-     */
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
                                      "|O:GstElement.get_state", kwlist,
                                      &timeout)) {
@@ -102,17 +96,12 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
       timeout64 = GST_CLOCK_TIME_NONE;
     }
     else {
-        if (timeout == NULL) {
-             timeoutd = 0.0;
-        } else {
-            if (!PyFloat_Check (timeout)) {
-                PyErr_SetString(PyExc_TypeError, "Timeout not specified as double");
+            if (!PyLong_Check (timeout)) {
+                PyErr_SetString(PyExc_TypeError, "timeout not specified as a long");
                 return NULL;
             }
-            timeoutd = PyFloat_AsDouble (timeout);
-        }
+            timeout64 = PyLong_AsLong (timeout);
 
-        timeout64 = timeoutd * GST_SECOND;
     }
 	
     pyg_begin_allow_threads;

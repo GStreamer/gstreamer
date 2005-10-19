@@ -283,6 +283,7 @@ class PadProbePipeTest(TestCase):
             gst.debug('waiting for fakesink buffer')
             pass
 
+        gst.debug('got buffers from fakesrc and fakesink')
         self.assertEquals(self._got_fakesink_buffer, 1)
         pad.remove_buffer_probe(id)
 
@@ -318,6 +319,8 @@ class PadProbePipeTest(TestCase):
         self._got_fakesink_buffer += 1
         gst.debug('fakesink got buffer %r, %d total received' % (
             buffer, self._got_fakesrc_buffer))
+        gst.debug('pad %r, py refcount %d, go rc %d, gst rc %d' % (
+            pad, sys.getrefcount(pad), pad.__grefcount__, pad.__gstrefcount__))
         return True
 
     def testRemovingProbe(self):

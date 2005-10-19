@@ -2679,7 +2679,8 @@
   (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
-    '("GstClockTime" "timestamp")
+    '("GstFormat" "format")
+    '("gint64" "position")
   )
 )
 
@@ -2689,7 +2690,8 @@
   (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
-    '("GstClockTime" "timestamp")
+    '("GstFormat" "format")
+    '("gint64" "position")
   )
 )
 

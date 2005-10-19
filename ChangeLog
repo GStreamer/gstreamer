@@ -1,3 +1,13 @@
+2005-10-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.defs:
+	* gst/gstmessage.override:
+	  update for latest API changes
+	* gst/gstelement.override:
+	  use GstClockTime for get_state
+	* testsuite/test_pad.py:
+	  add logging
+
 2005-10-18  Andy Wingo  <wingo@pobox.com>
 
 	* examples/pipeline-tester: Fix for state change changes.
