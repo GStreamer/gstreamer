@@ -1,5 +1,20 @@
 2005-10-19  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	Update (hopefully) final API modifications
+	
+	* gst/gstelement.override:
+	* gst/gstpad.override:
+	* gst/gstquery.override:
+	Updated position querying/parsing
+	Removed useless debug line
+	
+	* testsuite/test_element.py:
+	Updated test for new API
+
+2005-10-19  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gstmessage.override:
 	Added wrappers for parsing CLOCK_PROVIDE, CLOCK_LOST, NEW_CLOCK and
 	DURATION messages

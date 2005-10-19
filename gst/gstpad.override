@@ -663,7 +663,7 @@ override gst_pad_query_position args
 static PyObject *
 _wrap_gst_pad_query_position (PyGObject *self, PyObject *args)
 {
-    gint64    cur, end;
+    gint64    cur;
     gint    format;
     PyObject    *pformat;
     PyObject    *ret;
@@ -674,10 +674,9 @@ _wrap_gst_pad_query_position (PyGObject *self, PyObject *args)
         return NULL;
     }
 
-    if ((gst_pad_query_position(GST_PAD (self->obj), (GstFormat*) &format, &cur, &end))) {
-        ret = PyList_New(3);
+    if ((gst_pad_query_position(GST_PAD (self->obj), (GstFormat*) &format, &cur))) {
+        ret = PyList_New(2);
         PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
-        PyList_SetItem(ret, 1, PyLong_FromLongLong(end));
         PyList_SetItem(ret, 2, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
     } else {
         Py_INCREF(Py_None);

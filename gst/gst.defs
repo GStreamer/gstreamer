@@ -4100,7 +4100,6 @@
   (parameters
     '("GstFormat" "format")
     '("gint64" "cur")
-    '("gint64" "end")
   )
 )
 
@@ -4111,7 +4110,34 @@
   (parameters
     '("GstFormat*" "format")
     '("gint64*" "cur")
-    '("gint64*" "end")
+  )
+)
+
+(define-function gst_query_new_duration
+  (c-name "gst_query_new_duration")
+  (return-type "GstQuery*")
+  (parameters
+    '("GstFormat" "format")
+  )
+)
+
+(define-method set_duration
+  (of-object "GstQuery")
+  (c-name "gst_query_set_duration")
+  (return-type "none")
+  (parameters
+    '("GstFormat" "format")
+    '("gint64" "duration")
+  )
+)
+
+(define-method parse_duration
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_duration")
+  (return-type "none")
+  (parameters
+    '("GstFormat*" "format")
+    '("gint64*" "duration")
   )
 )
 
@@ -4168,7 +4194,6 @@
     '("GstFormat" "format")
     '("gint64" "start_value")
     '("gint64" "stop_value")
-    '("gint64" "base")
   )
 )
 
@@ -4181,7 +4206,6 @@
     '("GstFormat*" "format")
     '("gint64*" "start_value")
     '("gint64*" "stop_value")
-    '("gint64*" "base")
   )
 )
 
@@ -6003,7 +6027,16 @@
   (parameters
     '("GstFormat*" "format")
     '("gint64*" "cur")
-    '("gint64*" "end")
+  )
+)
+
+(define-method query_duration
+  (of-object "GstElement")
+  (c-name "gst_element_query_duration")
+  (return-type "gboolean")
+  (parameters
+    '("GstFormat*" "format")
+    '("gint64*" "duration")
   )
 )
 
@@ -6081,7 +6114,16 @@
   (parameters
     '("GstFormat*" "format")
     '("gint64*" "cur")
-    '("gint64*" "end")
+  )
+)
+
+(define-method query_duration
+  (of-object "GstPad")
+  (c-name "gst_pad_query_duration")
+  (return-type "gboolean")
+  (parameters
+    '("GstFormat*" "format")
+    '("gint64*" "duration")
   )
 )
 

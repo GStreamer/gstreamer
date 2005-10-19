@@ -812,6 +812,7 @@
   (values
     '("none" "GST_QUERY_NONE")
     '("position" "GST_QUERY_POSITION")
+    '("duration" "GST_QUERY_DURATION")
     '("latency" "GST_QUERY_LATENCY")
     '("jitter" "GST_QUERY_JITTER")
     '("rate" "GST_QUERY_RATE")

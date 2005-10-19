@@ -91,8 +91,6 @@ _wrap_gst_element_get_state(PyGObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    GST_DEBUG ("timeout:%lld", timeout);
-	
     pyg_begin_allow_threads;
 
     ret = gst_element_get_state(GST_ELEMENT (self->obj), &state, &pending,
@@ -364,7 +362,7 @@ override gst_element_query_position args
 static PyObject *
 _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
 {
-    gint64	cur, end;
+    gint64	cur;
     gint	format;
     PyObject	*pformat;
     PyObject	*ret;
@@ -376,9 +374,8 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
     }
 
     ret = PyList_New(0);
-    if ((gst_element_query_position(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur, &end))) {
+    if ((gst_element_query_position(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur))) {
 	PyList_Append(ret, PyLong_FromLongLong(cur));
-	PyList_Append(ret, PyLong_FromLongLong(end));
 	PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
     } else {
 	g_print("FIXME: query failed\n");

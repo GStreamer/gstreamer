@@ -197,7 +197,6 @@ class QueryTest(TestCase):
         self.assertEquals(sys.getrefcount(self.element), 3)
         assert res
         assert res[0] == 0
-        assert res[1] == -1
         res = self.element.query_position(gst.FORMAT_TIME)
         assert not res
         self.gccollect()

@@ -26,7 +26,7 @@ static PyObject *
 _wrap_gst_query_parse_position (PyGstMiniObject *self)
 {
 	GstFormat	format;
-	gint64		cur, end;
+	gint64		cur;
 	PyObject	*ret;
 
 	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_POSITION) {
@@ -34,12 +34,11 @@ _wrap_gst_query_parse_position (PyGstMiniObject *self)
 		return NULL;
 	}
 	
-	gst_query_parse_position (GST_QUERY(self->obj), &format, &cur, &end);
+	gst_query_parse_position (GST_QUERY(self->obj), &format, &cur);
 	
-	ret = PyList_New(3);
+	ret = PyList_New(2);
 	PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
 	PyList_SetItem(ret, 1, PyLong_FromLongLong(cur));
-	PyList_SetItem(ret, 2, PyLong_FromLongLong(end));
 
 	return ret;
 }
@@ -79,7 +78,6 @@ _wrap_gst_query_parse_segment (PyGstMiniObject *self)
 	GstFormat	format;
 	gint64		start_value;
 	gint64		stop_value;
-	gint64		base;
 
 	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_SEGMENT) {
 		PyErr_SetString(PyExc_TypeError, "Query is not a 'Segment' query");
@@ -88,14 +86,13 @@ _wrap_gst_query_parse_segment (PyGstMiniObject *self)
 
 	gst_query_parse_segment (GST_QUERY(self->obj),
 				 &rate, &format,
-				 &start_value, &stop_value, &base);
+				 &start_value, &stop_value);
 	
-	ret = PyList_New(5);
+	ret = PyList_New(4);
 	PyList_SetItem (ret, 0, PyFloat_FromDouble(rate));
 	PyList_SetItem (ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
 	PyList_SetItem (ret, 2, PyLong_FromUnsignedLongLong(start_value));
 	PyList_SetItem (ret, 3, PyLong_FromUnsignedLongLong(stop_value));
-	PyList_SetItem (ret, 4, PyLong_FromUnsignedLongLong(base));
 
 	return ret;
 }
