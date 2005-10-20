@@ -1,5 +1,14 @@
 2005-10-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (message_check), (bin_replace_message),
+	(bin_remove_messages), (is_eos), (gst_bin_add_func),
+	(update_degree), (gst_bin_sort_iterator_next),
+	(gst_bin_change_state_func), (gst_bin_dispose), (bin_bus_handler):
+	Reworked the message handling a bit, cache the messages instead of
+	only the senders. alows us to do more in the future.
+
+2005-10-20  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-TODO.txt:
 	Update TODO
 

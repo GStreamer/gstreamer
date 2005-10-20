@@ -418,8 +418,102 @@ not_dirty:
   }
 }
 
+/*
+ * functions for manipulating cached messages
+ */
+typedef struct
+{
+  GstObject *src;
+  GstMessageType types;
+} MessageFind;
+
+/* check if a message is of given src and type */
+static gint
+message_check (GstMessage * message, MessageFind * target)
+{
+  gboolean eq = TRUE;
+
+  if (target->src)
+    eq &= GST_MESSAGE_SRC (message) == target->src;
+  if (target->types)
+    eq &= (GST_MESSAGE_TYPE (message) & target->types) != 0;
+
+  return (eq ? 0 : 1);
+}
+
+/* with LOCK, returns TRUE if message had a valid SRC, takes ref on
+ * the message. */
+static gboolean
+bin_replace_message (GstBin * bin, GstMessage * message, GstMessageType types)
+{
+  GList *previous;
+  GstObject *src;
+  gboolean res = TRUE;
+
+  if ((src = GST_MESSAGE_SRC (message))) {
+    MessageFind find;
+
+    find.src = src;
+    find.types = types;
+
+    /* first find the previous message posted by this element */
+    previous = g_list_find_custom (bin->messages, &find,
+        (GCompareFunc) message_check);
+    if (previous) {
+      /* if we found a previous message, replace it */
+      gst_message_unref (previous->data);
+      previous->data = message;
+
+      GST_DEBUG_OBJECT (bin, "replace old message %s from %s",
+          gst_message_type_get_name (GST_MESSAGE_TYPE (message)),
+          GST_ELEMENT_NAME (src));
+    } else {
+      /* keep new message */
+      bin->messages = g_list_prepend (bin->messages, message);
+
+      GST_DEBUG_OBJECT (bin, "got new message %s from %s",
+          gst_message_type_get_name (GST_MESSAGE_TYPE (message)),
+          GST_ELEMENT_NAME (src));
+    }
+  } else {
+    GST_DEBUG_OBJECT (bin, "got message %s from (NULL), not processing",
+        gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+    res = FALSE;
+    gst_message_unref (message);
+  }
+  return res;
+}
+
+/* with LOCK. Remove all messages of given types */
+static void
+bin_remove_messages (GstBin * bin, GstObject * src, GstMessageType types)
+{
+  MessageFind find;
+  GList *walk, *next;
+
+  find.src = src;
+  find.types = types;
+
+  for (walk = bin->messages; walk; walk = next) {
+    GstMessage *message = (GstMessage *) walk->data;
+
+    next = g_list_next (walk);
+
+    if (message_check (message, &find) == 0) {
+      GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
+          "deleting message of types %d", types);
+      bin->messages = g_list_delete_link (bin->messages, walk);
+      gst_message_unref (message);
+    } else {
+      GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
+          "not deleting message of types %d", types);
+    }
+  }
+}
+
+
 /* Check if the bin is EOS. We do this by scanning all sinks and
- * checking if they posted EOS.
+ * checking if they posted an EOS message.
  *
  * call with bin LOCK */
 static gboolean
@@ -434,12 +528,19 @@ is_eos (GstBin * bin)
 
     element = GST_ELEMENT_CAST (walk->data);
     if (bin_element_is_sink (element, bin) == 0) {
-      if (!g_list_find (bin->messages, element)) {
+      MessageFind find;
+
+      /* check if element posted EOS */
+      find.src = GST_OBJECT_CAST (element);
+      find.types = GST_MESSAGE_EOS;
+
+      if (g_list_find_custom (bin->messages, &find,
+              (GCompareFunc) message_check)) {
+        GST_DEBUG ("element posted EOS");
+      } else {
         GST_DEBUG ("element did not post EOS yet");
         result = FALSE;
         break;
-      } else {
-        GST_DEBUG ("element posted EOS");
       }
     }
   }
@@ -1421,8 +1522,7 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
   if (next == GST_STATE_PAUSED) {
     GST_LOCK (bin);
     GST_DEBUG_OBJECT (element, "clearing EOS elements");
-    g_list_free (bin->messages);
-    bin->messages = NULL;
+    bin_remove_messages (bin, NULL, GST_MESSAGE_EOS);
     GST_UNLOCK (bin);
   }
 
@@ -1529,8 +1629,7 @@ gst_bin_dispose (GObject * object)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
-  g_list_free (bin->messages);
-  bin->messages = NULL;
+  bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
   gst_object_unref (bin->child_bus);
   bin->child_bus = NULL;
   gst_object_replace ((GstObject **) & bin->provided_clock, NULL);
@@ -1612,35 +1711,22 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       message, gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
 
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_EOS:{
-      GstObject *src = GST_MESSAGE_SRC (message);
+    case GST_MESSAGE_EOS:
+    {
+      gboolean eos;
 
-      if (src) {
-        gboolean eos;
+      /* collect all eos messages from the children */
+      GST_LOCK (bin);
+      bin_replace_message (bin, message, GST_MESSAGE_EOS);
+      eos = is_eos (bin);
+      GST_UNLOCK (bin);
 
-        /* silly if we're not debugging.. */
-        GST_LOCK (src);
-        GST_DEBUG_OBJECT (bin, "got EOS message from %s",
-            GST_ELEMENT_NAME (src));
-        GST_UNLOCK (src);
-
-        /* collect all eos messages from the children */
-        GST_LOCK (bin);
-        bin->messages = g_list_prepend (bin->messages, src);
-        eos = is_eos (bin);
-        GST_UNLOCK (bin);
-
-        /* if we are completely EOS, we forward an EOS message */
-        if (eos) {
-          GST_DEBUG_OBJECT (bin, "all sinks posted EOS");
-          gst_element_post_message (GST_ELEMENT_CAST (bin),
-              gst_message_new_eos (GST_OBJECT_CAST (bin)));
-        }
-      } else {
-        GST_DEBUG_OBJECT (bin, "got EOS message from (NULL), not processing");
+      /* if we are completely EOS, we forward an EOS message */
+      if (eos) {
+        GST_DEBUG_OBJECT (bin, "all sinks posted EOS");
+        gst_element_post_message (GST_ELEMENT_CAST (bin),
+            gst_message_new_eos (GST_OBJECT_CAST (bin)));
       }
-      /* we drop all EOS messages */
-      gst_message_unref (message);
       break;
     }
     case GST_MESSAGE_STATE_DIRTY:
@@ -1681,6 +1767,17 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
         break;
       }
     }
+    case GST_MESSAGE_SEGMENT_START:
+      GST_LOCK (bin);
+      bin_replace_message (bin, message, GST_MESSAGE_SEGMENT_START);
+      GST_UNLOCK (bin);
+      break;
+    case GST_MESSAGE_SEGMENT_DONE:
+      GST_LOCK (bin);
+      bin_replace_message (bin, message, GST_MESSAGE_SEGMENT_START);
+      GST_UNLOCK (bin);
+      break;
+    case GST_MESSAGE_DURATION:
     default:
       /* Send all other messages upward */
       GST_DEBUG_OBJECT (bin, "posting message upward");
