@@ -1,8 +1,8 @@
-# if USE_A52DEC
-# A52DEC_DIR = a52dec
-# else
+if USE_A52DEC
+A52DEC_DIR = a52dec
+else
 A52DEC_DIR =
-# endif
+endif
 
 if USE_AMRNB
  AMRNB_DIR = amrnb
