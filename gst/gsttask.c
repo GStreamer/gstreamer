@@ -20,6 +20,42 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gsttask
+ * @short_description: Abstraction of GStreamer streaming threads.
+ * @see_also: #GstElement, #GstPad
+ *
+ * GstTasks are used by GstElements and GstPads to provide the data passing
+ * threads in a pipeline.
+ *
+ * A GstPad will typically start a GstTask to push or pull data to/from the
+ * peer pads. Most source elements start a GstTask to push data. In some cases
+ * a demuxer element can start a GstTask to pull data from a peer element. This
+ * is typically done when the demuxer can perform random access on the upstream
+ * peer element for improved performance.
+ *
+ * Although convenience functions exist on GstPad to start/pause/stop tasks, it 
+ * might sometimes be needed to create a GstTask manually if it is not related to
+ * a GstPad.
+ *
+ * Before the GstTask can be run, it needs a GStaticRecMutex that can be set with
+ * gst_task_set_lock().
+ *
+ * The task can be started, paused and stopped with gst_task_start(), gst_task_pause()
+ * and gst_task_stop() respectively.
+ *
+ * A GstTask will repeadedly call the GstTaskFunction with the user provided data
+ * that was provided when creating the task with gst_task_create(). Before calling
+ * the function it will acquire the provided lock.
+ *
+ * Stopping a task with gst_task_stop() will not immediatly make sure the task is
+ * not running anymnore. Use gst_task_join() to  make sure the task is completely
+ * stopped and the thread is stopped.
+ *
+ * After creating a GstTask, use gst_object_unref() to free its resources. this can
+ * only be done it the task is not running anymore.
+ */
+
 #include "gst_private.h"
 
 #include "gstinfo.h"

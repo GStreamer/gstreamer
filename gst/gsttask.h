@@ -41,12 +41,26 @@ typedef void         (*GstTaskFunction)          (void *data);
 typedef struct _GstTask GstTask;
 typedef struct _GstTaskClass GstTaskClass;
 
+/**
+ * GstTaskState:
+ * @GST_TASK_STARTED: the task is started and running
+ * @GST_TASK_STOPPED:  the task is stopped
+ * @GST_TASK_PAUSED: the task is paused
+ *
+ * The different states a task can be in
+ */
 typedef enum {
   GST_TASK_STARTED,
   GST_TASK_STOPPED,
   GST_TASK_PAUSED,
 } GstTaskState;
 
+/**
+ * GST_TASK_STATE:
+ * @task: Task to get the state of
+ *
+ * Get access to the state of the task.
+ */
 #define GST_TASK_STATE(task)		(GST_TASK_CAST(task)->state)
 
 #define GST_TASK_GET_COND(task)		(GST_TASK_CAST(task)->cond)
@@ -56,6 +70,17 @@ typedef enum {
 
 #define GST_TASK_GET_LOCK(task)		(GST_TASK_CAST(task)->lock)
 
+/**
+ * GstTask:
+ * @state: the state of the task
+ * @cond: used to pause/resume the task
+ * @lock: The lock taken when iterating the taskfunction
+ * @func: the function executed by this task
+ * @data: data passed to the task function
+ * @running: a flag indicating that the task is running.
+ *
+ * The GstTask object.
+ */
 struct _GstTask {
   GstObject      object;
 
