@@ -2000,7 +2000,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, guint64 time)
       GST_FORMAT_TIME, time,
       (gint64) (((gfloat) avi->stream[0].strh->scale) *
           avi->stream[0].strh->length /
-          avi->stream[0].strh->rate) * GST_SECOND, 0);
+          avi->stream[0].strh->rate) * GST_SECOND, time);
   gst_avi_demux_send_event (avi, gst_event_new_flush_stop ());
 
   gst_pad_start_task (avi->sinkpad, (GstTaskFunction) gst_avi_demux_loop,
