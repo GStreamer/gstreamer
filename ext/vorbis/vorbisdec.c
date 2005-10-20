@@ -23,6 +23,7 @@
 
 #include "vorbisdec.h"
 #include <string.h>
+#include <gst/audio/audio.h>
 #include <gst/tag/tag.h>
 #include <gst/audio/multichannel.h>
 
@@ -452,6 +453,9 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       dec->segment_base = base;
 
       dec->granulepos = -1;
+      dec->cur_timestamp = GST_CLOCK_TIME_NONE;
+      dec->prev_timestamp = GST_CLOCK_TIME_NONE;
+
 #ifdef HAVE_VORBIS_SYNTHESIS_RESTART
       vorbis_synthesis_restart (&dec->vd);
 #endif
@@ -791,6 +795,18 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   }
   GST_BUFFER_DURATION (out) = sample_count * GST_SECOND / vd->vi.rate;
 
+  if (vd->cur_timestamp != GST_CLOCK_TIME_NONE) {
+    GST_BUFFER_TIMESTAMP (out) = vd->cur_timestamp;
+    GST_DEBUG ("cur_timestamp: %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT " = % "
+        GST_TIME_FORMAT, GST_TIME_ARGS (vd->cur_timestamp),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (out)),
+        GST_TIME_ARGS (vd->cur_timestamp + GST_BUFFER_DURATION (out)));
+    vd->cur_timestamp += GST_BUFFER_DURATION (out);
+    GST_BUFFER_OFFSET (out) = GST_CLOCK_TIME_TO_FRAMES (vd->cur_timestamp,
+        vd->vi.rate);
+    GST_BUFFER_OFFSET_END (out) = GST_BUFFER_OFFSET (out) + sample_count;
+  }
+
   if (vd->granulepos != -1)
     vd->granulepos += sample_count;
 
@@ -847,6 +863,21 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
     GST_ELEMENT_ERROR (vd, STREAM, DECODE, (NULL), ("empty buffer received"));
     return GST_FLOW_ERROR;
   }
+
+  /* only ogg has granulepos, demuxers of other container formats 
+   * might provide us with timestamps instead (e.g. matroskademux) */
+  if (GST_BUFFER_OFFSET_END (buffer) == GST_BUFFER_OFFSET_NONE &&
+      GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE) {
+    /* we might get multiple consecutive buffers with the same timestamp */
+    if (GST_BUFFER_TIMESTAMP (buffer) != vd->prev_timestamp) {
+      vd->cur_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+      vd->prev_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    }
+  } else {
+    vd->cur_timestamp = GST_CLOCK_TIME_NONE;
+    vd->prev_timestamp = GST_CLOCK_TIME_NONE;
+  }
+
   /* make ogg_packet out of the buffer */
   packet.packet = GST_BUFFER_DATA (buffer);
   packet.bytes = GST_BUFFER_SIZE (buffer);
@@ -860,8 +891,8 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
    */
   packet.e_o_s = 0;
 
-  GST_DEBUG_OBJECT (vd, "vorbis granule: %" G_GUINT64_FORMAT,
-      packet.granulepos);
+  GST_DEBUG_OBJECT (vd, "vorbis granule: %" G_GINT64_FORMAT,
+      (gint64) packet.granulepos);
 
   /* switch depending on packet type */
   if (packet.packet[0] & 1) {
@@ -874,8 +905,8 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
     result = vorbis_handle_data_packet (vd, &packet);
   }
 
-  GST_DEBUG_OBJECT (vd, "offset end: %" G_GUINT64_FORMAT,
-      GST_BUFFER_OFFSET_END (buffer));
+  GST_DEBUG_OBJECT (vd, "offset end: %" G_GINT64_FORMAT,
+      (gint64) GST_BUFFER_OFFSET_END (buffer));
 
 done:
   gst_buffer_unref (buffer);
@@ -897,6 +928,8 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
       vorbis_info_init (&vd->vi);
       vorbis_comment_init (&vd->vc);
       vd->initialized = FALSE;
+      vd->cur_timestamp = GST_CLOCK_TIME_NONE;
+      vd->prev_timestamp = GST_CLOCK_TIME_NONE;
       vd->granulepos = -1;
       vd->packetno = 0;
       break;

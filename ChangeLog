@@ -1,3 +1,15 @@
+2005-10-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),
+	(vorbis_handle_data_packet), (vorbis_dec_chain),
+	(vorbis_dec_change_state):
+	* ext/vorbis/vorbisdec.h:
+	  Vorbis streams can be embedded in other container formats
+	  than ogg, container formats where the demuxer might set 
+	  timestamps on encoded vorbis buffers instead of those silly 
+	  granulepos thingies. In short: make vorbisdec handle 
+	  timestamps on incoming buffers as well.
+
 2005-10-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (group_destroy),
