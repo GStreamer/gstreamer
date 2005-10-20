@@ -405,6 +405,8 @@ gst_vorbisenc_get_query_types (GstPad * pad)
 {
   static const GstQueryType gst_vorbisenc_src_query_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_CONVERT,
     0
   };
 
@@ -416,52 +418,50 @@ gst_vorbisenc_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
   GstVorbisEnc *vorbisenc;
+  GstPad *peerpad;
 
-  vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
+  vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
+  peerpad = gst_pad_get_peer (GST_PAD (vorbisenc->sinkpad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
-#if 0
-      switch (*format) {
-        case GST_FORMAT_BYTES:
-        case GST_FORMAT_TIME:
-        {
-          gint64 peer_value;
-          const GstFormat *peer_formats;
+      GstFormat fmt, req_fmt;
+      gint64 pos, val;
 
-          res = FALSE;
-
-          peer_formats =
-              gst_pad_get_formats (GST_PAD_PEER (vorbisenc->sinkpad));
-
-          while (peer_formats && *peer_formats && !res) {
-
-            GstFormat peer_format = *peer_formats;
-
-            /* do the probe */
-            if (gst_pad_query (GST_PAD_PEER (vorbisenc->sinkpad),
-                    GST_QUERY_TOTAL, &peer_format, &peer_value)) {
-              GstFormat conv_format;
-
-              /* convert to TIME */
-              conv_format = GST_FORMAT_TIME;
-              res = gst_vorbisenc_convert_sink (vorbisenc->sinkpad,
-                  peer_format, peer_value, &conv_format, value);
-              /* and to final format */
-              res &= gst_vorbisenc_convert_src (pad,
-                  GST_FORMAT_TIME, *value, format, value);
-            }
-            peer_formats++;
-          }
-          break;
-        }
-        default:
-          res = FALSE;
-          break;
+      gst_query_parse_position (query, &req_fmt, NULL);
+      if ((res = gst_pad_query_position (peerpad, &req_fmt, &val))) {
+        gst_query_set_position (query, req_fmt, val);
+        break;
       }
-#endif
-      res = FALSE;
+
+      fmt = GST_FORMAT_TIME;
+      if (!(res = gst_pad_query_position (peerpad, &fmt, &pos)))
+        break;
+
+      if ((res = gst_pad_query_convert (peerpad, fmt, pos, &req_fmt, &val))) {
+        gst_query_set_position (query, req_fmt, val);
+      }
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat fmt, req_fmt;
+      gint64 dur, val;
+
+      gst_query_parse_duration (query, &req_fmt, NULL);
+      if ((res = gst_pad_query_duration (peerpad, &req_fmt, &val))) {
+        gst_query_set_duration (query, req_fmt, val);
+        break;
+      }
+
+      fmt = GST_FORMAT_TIME;
+      if (!(res = gst_pad_query_duration (peerpad, &fmt, &dur)))
+        break;
+
+      if ((res = gst_pad_query_convert (peerpad, fmt, dur, &req_fmt, &val))) {
+        gst_query_set_duration (query, req_fmt, val);
+      }
       break;
     }
     case GST_QUERY_CONVERT:
@@ -483,6 +483,8 @@ gst_vorbisenc_src_query (GstPad * pad, GstQuery * query)
   }
 
 error:
+  gst_object_unref (peerpad);
+  gst_object_unref (vorbisenc);
   return res;
 }
 

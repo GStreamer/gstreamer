@@ -23,14 +23,26 @@
 static gboolean
 update_scale (GstElement * element)
 {
-  gint64 duration;
-  gint64 position;
+  gint64 duration = -1;
+  gint64 position = -1;
   GstFormat format = GST_FORMAT_TIME;
+  gchar dur_str[32], pos_str[32];
 
-  gst_element_query_position (element, &format, &position);
-  gst_element_query_duration (element, &format, &duration);
+  if (gst_element_query_position (element, &format, &position) &&
+      position != -1) {
+    g_snprintf (pos_str, 32, "%" GST_TIME_FORMAT, GST_TIME_ARGS (position));
+  } else {
+    g_snprintf (pos_str, 32, "-:--:--.---------");
+  }
 
-  g_print ("%" G_GINT64_FORMAT " %" G_GINT64_FORMAT "\n", duration, position);
+  if (gst_element_query_duration (element, &format, &duration) &&
+      duration != -1) {
+    g_snprintf (dur_str, 32, "%" GST_TIME_FORMAT, GST_TIME_ARGS (duration));
+  } else {
+    g_snprintf (dur_str, 32, "-:--:--.---------");
+  }
+
+  g_print ("%s / %s\n", pos_str, dur_str);
 
   return TRUE;
 }
@@ -49,7 +61,7 @@ main (gint argc, gchar * argv[])
   g_object_set (G_OBJECT (player), "uri", argv[1], NULL);
 
   res = gst_element_set_state (player, GST_STATE_PLAYING);
-  if (res != GST_STATE_CHANGE_SUCCESS) {
+  if (res == GST_STATE_CHANGE_FAILURE) {
     g_print ("could not play\n");
     return -1;
   }
