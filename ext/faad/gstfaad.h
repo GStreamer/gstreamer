@@ -57,7 +57,8 @@ typedef struct _GstFaad {
   gboolean need_channel_setup;
   gboolean packetised; /* We must differentiate between raw and packetised streams */
 
-  guint64 next_ts;     /* timestamp of next buffer                        */
+  gint64  prev_ts;     /* timestamp of previous buffer                    */
+  gint64  next_ts;     /* timestamp of next buffer                        */
   guint64 bytes_in;    /* bytes received                                  */
   guint64 sum_dur_out; /* sum of durations of decoded buffers we sent out */
 } GstFaad;

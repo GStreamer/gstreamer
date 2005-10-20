@@ -22,6 +22,7 @@
 #endif
 
 #include <string.h>
+#include <gst/audio/audio.h>
 #include <gst/audio/multichannel.h>
 #include "gstfaad.h"
 
@@ -135,6 +136,8 @@ gst_faad_base_init (GstFaadClass * klass)
       gst_static_pad_template_get (&sink_template));
 
   gst_element_class_set_details (element_class, &faad_details);
+
+  GST_DEBUG_CATEGORY_INIT (faad_debug, "faad", 0, "AAC decoding");
 }
 
 static void
@@ -144,9 +147,7 @@ gst_faad_class_init (GstFaadClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gstelement_class->change_state = gst_faad_change_state;
-
-  GST_DEBUG_CATEGORY_INIT (faad_debug, "faad", 0, "AAC decoding");
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_faad_change_state);
 }
 
 static void
@@ -160,6 +161,7 @@ gst_faad_init (GstFaad * faad)
   faad->channel_positions = NULL;
   faad->init = FALSE;
   faad->next_ts = 0;
+  faad->prev_ts = GST_CLOCK_TIME_NONE;
   faad->bytes_in = 0;
   faad->sum_dur_out = 0;
   faad->packetised = FALSE;
@@ -168,16 +170,20 @@ gst_faad_init (GstFaad * faad)
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
       "sink");
   gst_element_add_pad (GST_ELEMENT (faad), faad->sinkpad);
-  gst_pad_set_event_function (faad->sinkpad, gst_faad_event);
-  gst_pad_set_setcaps_function (faad->sinkpad, gst_faad_setcaps);
-  gst_pad_set_chain_function (faad->sinkpad, gst_faad_chain);
+  gst_pad_set_event_function (faad->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_faad_event));
+  gst_pad_set_setcaps_function (faad->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_faad_setcaps));
+  gst_pad_set_chain_function (faad->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_faad_chain));
 
   faad->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
   gst_element_add_pad (GST_ELEMENT (faad), faad->srcpad);
   gst_pad_use_fixed_caps (faad->srcpad);
-  gst_pad_set_getcaps_function (faad->srcpad, gst_faad_srcgetcaps);
+  gst_pad_set_getcaps_function (faad->srcpad,
+      GST_DEBUG_FUNCPTR (gst_faad_srcgetcaps));
 }
 
 static gboolean
@@ -380,7 +386,7 @@ gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps)
 static GstCaps *
 gst_faad_srcgetcaps (GstPad * pad)
 {
-  GstFaad *faad = GST_FAAD (GST_OBJECT_PARENT (pad));
+  GstFaad *faad = GST_FAAD (gst_pad_get_parent (pad));
   static GstAudioChannelPosition *supported_positions = NULL;
   static gint num_supported_positions = LFE_CHANNEL - FRONT_CHANNEL_CENTER + 1;
   GstCaps *templ;
@@ -485,7 +491,7 @@ gst_faad_srcgetcaps (GstPad * pad)
       gst_audio_set_caps_channel_positions_list (caps,
           supported_positions, num_supported_positions);
     }
-
+    gst_object_unref (faad);
     return caps;
   }
 
@@ -494,6 +500,7 @@ gst_faad_srcgetcaps (GstPad * pad)
   gst_audio_set_caps_channel_positions_list (templ,
       supported_positions, num_supported_positions);
 
+  gst_object_unref (faad);
   return templ;
 }
 
@@ -611,18 +618,18 @@ gst_faad_event (GstPad * pad, GstEvent * event)
 
   faad = GST_FAAD (gst_pad_get_parent (pad));
 
-  GST_LOG ("handling event %d", GST_EVENT_TYPE (event));
+  GST_LOG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
 
   /* FIXME: we should probably handle FLUSH and also
    *  SEEK in the case where we are not in a container
    *  (when our newsegment was in BYTES) */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
+      GST_STREAM_LOCK (pad);
       if (faad->tempbuf != NULL) {
         gst_buffer_unref (faad->tempbuf);
         faad->tempbuf = NULL;
       }
-      GST_STREAM_LOCK (pad);
       res = gst_pad_push_event (faad->srcpad, event);
       GST_STREAM_UNLOCK (pad);
       break;
@@ -672,17 +679,10 @@ gst_faad_event (GstPad * pad, GstEvent * event)
       GST_STREAM_UNLOCK (pad);
       break;
     }
-    case GST_EVENT_FLUSH_START:
-      res = gst_pad_push_event (faad->srcpad, event);
-      break;
     default:
-      GST_STREAM_LOCK (pad);
-      res = gst_pad_push_event (faad->srcpad, event);
-      GST_STREAM_UNLOCK (pad);
+      res = gst_pad_event_default (pad, event);
       break;
   }
-
-/*  res = gst_pad_event_default (faad->sinkpad, event); */
 
   return res;
 }
@@ -740,14 +740,20 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   void *out;
   gboolean run_loop = TRUE;
 
-  faad = GST_FAAD (GST_OBJECT_PARENT (pad));
+  faad = GST_FAAD (gst_pad_get_parent (pad));
 
   if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE) {
-    faad->next_ts = GST_BUFFER_TIMESTAMP (buffer);
-    GST_DEBUG ("Timestamp on incoming buffer: %" GST_TIME_FORMAT,
+    /* some demuxers send multiple buffers in a row
+     *  with the same timestamp (e.g. matroskademux) */
+    if (GST_BUFFER_TIMESTAMP (buffer) != faad->prev_ts) {
+      faad->next_ts = GST_BUFFER_TIMESTAMP (buffer);
+      faad->prev_ts = GST_BUFFER_TIMESTAMP (buffer);
+    }
+    GST_DEBUG ("Timestamp on incoming buffer: %" GST_TIME_FORMAT
+        ", next_ts: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
         GST_TIME_ARGS (faad->next_ts));
   }
-
   /* buffer + remaining data */
   if (faad->tempbuf) {
     buffer = gst_buffer_join (faad->tempbuf, buffer);
@@ -766,6 +772,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     if (init_res < 0) {
       GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
           ("Failed to init decoder from stream"));
+      gst_object_unref (faad);
       return GST_FLOW_UNEXPECTED;
     }
     skip_bytes = init_res;
@@ -838,22 +845,20 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 
       /* play decoded data */
       if (info.samples > 0 && GST_PAD_PEER (faad->srcpad)) {
-        GstFlowReturn r;
         guint bufsize = info.samples * faad->bps;
+        guint num_samples = info.samples / faad->channels;
 
         /* note: info.samples is total samples, not per channel */
-        r = gst_pad_alloc_buffer (faad->srcpad, 0, bufsize, caps, &outbuf);
-        if (r != GST_FLOW_OK) {
-          GST_DEBUG ("Failed to allocate buffer");
-          ret = r;              //GST_FLOW_OK;    /* CHECK: or return something else? */
+        ret = gst_pad_alloc_buffer (faad->srcpad, 0, bufsize, caps, &outbuf);
+        if (ret != GST_FLOW_OK)
           goto out;
-        }
 
         memcpy (GST_BUFFER_DATA (outbuf), out, GST_BUFFER_SIZE (outbuf));
         GST_BUFFER_OFFSET (outbuf) =
-            (faad->next_ts * faad->samplerate) / GST_SECOND;
+            GST_CLOCK_TIME_TO_FRAMES (faad->next_ts, faad->samplerate);
         GST_BUFFER_TIMESTAMP (outbuf) = faad->next_ts;
-        GST_BUFFER_DURATION (outbuf) = (guint64) GST_SECOND *info.samples / (faad->samplerate * 2);     ///////// over 2?
+        GST_BUFFER_DURATION (outbuf) =
+            GST_FRAMES_TO_CLOCK_TIME (num_samples, faad->samplerate);
 
         faad->next_ts += GST_BUFFER_DURATION (outbuf);
         faad->sum_dur_out += GST_BUFFER_DURATION (outbuf);
@@ -887,6 +892,7 @@ out:
     gst_caps_unref (caps);
 
   gst_buffer_unref (buffer);
+  gst_object_unref (faad);
 
   return ret;
 }
@@ -894,6 +900,7 @@ out:
 static GstStateChangeReturn
 gst_faad_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstFaad *faad = GST_FAAD (element);
 
   switch (transition) {
@@ -913,6 +920,14 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
       }
       break;
     }
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       faad->samplerate = -1;
       faad->channels = -1;
@@ -921,6 +936,7 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
       g_free (faad->channel_positions);
       faad->channel_positions = NULL;
       faad->next_ts = 0;
+      faad->prev_ts = GST_CLOCK_TIME_NONE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       faacDecClose (faad->handle);
@@ -934,10 +950,7 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
 
 static gboolean

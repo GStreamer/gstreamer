@@ -1,3 +1,14 @@
+2005-10-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/faad/gstfaad.c: (gst_faad_base_init), (gst_faad_class_init),
+	(gst_faad_init), (gst_faad_srcgetcaps), (gst_faad_event),
+	(gst_faad_chain), (gst_faad_change_state):
+	* ext/faad/gstfaad.h:
+	  Do some timestamp smoothing (matroskademux apparently sends
+	  multiple buffers in a row with the same timestamp); fix
+	  duration on outgoing buffers; fix change state function; use
+	  GST_DEBUG_FUNCPTR for pad functions.
+
 2005-10-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_src_query_types),
