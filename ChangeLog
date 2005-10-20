@@ -1,3 +1,10 @@
+2005-10-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-inspect.c: (print_interfaces),
+	(print_element_properties_info):
+	  Fix interface output with the -a option and don't print
+	  newlines after double/float properties.
+
 2005-09-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:

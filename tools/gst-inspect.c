@@ -237,13 +237,13 @@ print_interfaces (GType type)
 
   if (ifaces) {
     if (n_ifaces) {
-      g_print ("Implemented Interfaces:\n");
+      g_print ("%sImplemented Interfaces:\n", (_name) ? _name : "");
       iface = ifaces;
       while (*iface) {
-        g_print ("  %s\n", g_type_name (*iface));
+        g_print ("%s  %s\n", (_name) ? _name : "", g_type_name (*iface));
         iface++;
       }
-      g_print ("\n");
+      g_print ("%s\n", (_name) ? _name : "");
       g_free (ifaces);
     }
   }
@@ -380,7 +380,7 @@ print_element_properties_info (GstElement * element)
         g_print ("Range: %15.7g - %15.7g Default: %15.7g ",
             pfloat->minimum, pfloat->maximum, pfloat->default_value);
         if (readable)
-          g_print ("Current: %15.7g\n", g_value_get_float (&value));
+          g_print ("Current: %15.7g", g_value_get_float (&value));
         break;
       }
       case G_TYPE_DOUBLE:
@@ -391,7 +391,7 @@ print_element_properties_info (GstElement * element)
         g_print ("Range: %15.7g - %15.7g Default: %15.7g ",
             pdouble->minimum, pdouble->maximum, pdouble->default_value);
         if (readable)
-          g_print ("Current: %15.7g\n", g_value_get_double (&value));
+          g_print ("Current: %15.7g", g_value_get_double (&value));
         break;
       }
       default:
