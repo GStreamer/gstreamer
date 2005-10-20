@@ -56,6 +56,7 @@ SUBDIRS = \
 	$(SIDPLAY_DIR)
 
 DIST_SUBDIRS = \
+	a52dec \
 	amrnb \
 	lame \
 	mad \
