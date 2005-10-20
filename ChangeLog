@@ -1,3 +1,12 @@
+2005-10-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/a52dec/Makefile.am:
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_base_init),
+	(gst_a52dec_class_init), (gst_a52dec_sink_event),
+	(gst_a52dec_change_state):
+	* ext/a52dec/gsta52dec.h:
+	  Re-enable CPU flags, use liboil to get them.
+
 2005-10-20  Josef Zlomek  <josef dot zlomek at xeris dot cz>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

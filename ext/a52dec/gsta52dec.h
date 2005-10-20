@@ -63,6 +63,8 @@ struct _GstA52Dec {
 
 struct _GstA52DecClass {
   GstElementClass parent_class;
+
+  guint32 a52_cpuflags;
 };
 
 GType gst_a52dec_get_type (void);

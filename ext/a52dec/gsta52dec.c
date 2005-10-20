@@ -33,6 +33,10 @@
 #include <a52dec/mm_accel.h>
 #include "gsta52dec.h"
 
+#include <liboil/liboil.h>
+#include <liboil/liboilcpu.h>
+#include <liboil/liboilfunction.h>
+
 /* elementfactory information */
 static GstElementDetails gst_a52dec_details = {
   "ATSC A/52 audio decoder",
@@ -132,6 +136,7 @@ gst_a52dec_class_init (GstA52DecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  guint cpuflags;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -146,6 +151,19 @@ gst_a52dec_class_init (GstA52DecClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRC,
       g_param_spec_boolean ("drc", "Dynamic Range Compression",
           "Use Dynamic Range Compression", FALSE, G_PARAM_READWRITE));
+
+  oil_init ();
+
+  klass->a52_cpuflags = 0;
+  cpuflags = oil_cpu_get_flags ();
+  if (cpuflags & OIL_IMPL_FLAG_MMX)
+    klass->a52_cpuflags |= MM_ACCEL_X86_MMX;
+  if (cpuflags & OIL_IMPL_FLAG_3DNOW)
+    klass->a52_cpuflags |= MM_ACCEL_X86_3DNOW;
+  if (cpuflags & OIL_IMPL_FLAG_MMXEXT)
+    klass->a52_cpuflags |= MM_ACCEL_X86_MMXEXT;
+
+  GST_LOG ("CPU flags: a52=%08x, liboil=%08x", klass->a52_cpuflags, cpuflags);
 }
 
 static void
@@ -331,10 +349,9 @@ static gboolean
 gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
 {
   GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
-  GST_LOG ("Handling event of type %d timestamp %llu", GST_EVENT_TYPE (event),
-      GST_EVENT_TIMESTAMP (event));
+  GST_LOG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:{
@@ -539,29 +556,17 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
 static GstStateChangeReturn
 gst_a52dec_change_state (GstElement * element, GstStateChange transition)
 {
-  GstA52Dec *a52dec = GST_A52DEC (element);
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-
-#if 0
-  GstCPUFlags cpuflags;
-  uint32_t a52_cpuflags = 0;
-#endif
+  GstA52Dec *a52dec = GST_A52DEC (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-#if 0
-      cpuflags = gst_cpu_get_flags ();
-      if (cpuflags & GST_CPU_FLAG_MMX)
-        a52_cpuflags |= MM_ACCEL_X86_MMX;
-      if (cpuflags & GST_CPU_FLAG_3DNOW)
-        a52_cpuflags |= MM_ACCEL_X86_3DNOW;
-      if (cpuflags & GST_CPU_FLAG_MMXEXT)
-        a52_cpuflags |= MM_ACCEL_X86_MMXEXT;
+    case GST_STATE_CHANGE_NULL_TO_READY:{
+      GstA52DecClass *klass;
 
-      a52dec->state = a52_init (a52_cpuflags);
-#endif
-      a52dec->state = a52_init (0);
+      klass = GST_A52DEC_CLASS (G_OBJECT_GET_CLASS (a52dec));
+      a52dec->state = a52_init (klass->a52_cpuflags);
       break;
+    }
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       a52dec->samples = a52_samples (a52dec->state);
       a52dec->bit_rate = -1;
