@@ -229,8 +229,8 @@ gst_sinesrc_src_query (GstPad * pad, GstQuery * query)
     {
       GstFormat format;
 
-      gst_query_parse_position (query, &format, NULL);
-      gst_query_set_position (query, format, -1);
+      gst_query_parse_duration (query, &format, NULL);
+      gst_query_set_duration (query, format, -1);
       break;
     }
     default:

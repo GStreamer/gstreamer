@@ -282,7 +282,7 @@ gst_audiotestsrc_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
 
       /* unlimited length */
-      gst_query_parse_position (query, &format, NULL);
+      gst_query_parse_duration (query, &format, NULL);
       gst_query_set_duration (query, format, -1);
       break;
     }

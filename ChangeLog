@@ -1,5 +1,12 @@
 2005-10-20  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audiotestsrc_src_query):
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_src_query):
+	  Don't use functions for position queries when handling
+	  duration queries.
+
+2005-10-20  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),
 	(vorbis_handle_data_packet), (vorbis_dec_chain),
 	(vorbis_dec_change_state):
