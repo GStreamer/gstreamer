@@ -1393,6 +1393,49 @@ gst_base_sink_peer_query (GstBaseSink * sink, GstQuery * query)
 }
 
 static gboolean
+gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
+    gint64 * cur)
+{
+  GstClock *clock;
+  gboolean res = FALSE;
+
+  switch (format) {
+    case GST_FORMAT_TIME:
+    {
+      /* we can answer time format */
+      GST_LOCK (basesink);
+      if ((clock = GST_ELEMENT_CLOCK (basesink))) {
+        GstClockTime now;
+
+        gst_object_ref (clock);
+        GST_UNLOCK (basesink);
+
+        now = gst_clock_get_time (clock);
+
+        GST_LOCK (basesink);
+        *cur =
+            now - GST_ELEMENT_CAST (basesink)->base_time +
+            basesink->segment_time;
+
+        GST_DEBUG_OBJECT (basesink,
+            "now %" GST_TIME_FORMAT " + segment_time %" GST_TIME_FORMAT " = %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (now),
+            GST_TIME_ARGS (basesink->segment_time), GST_TIME_ARGS (*cur));
+
+        gst_object_unref (clock);
+
+        res = TRUE;
+      } else {
+      }
+      GST_UNLOCK (basesink);
+    }
+    default:
+      break;
+  }
+  return res;
+}
+
+static gboolean
 gst_base_sink_query (GstElement * element, GstQuery * query)
 {
   gboolean res = FALSE;
@@ -1401,8 +1444,21 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      res = gst_base_sink_peer_query (basesink, query);
+    {
+      gint64 cur = 0;
+      GstFormat format;
+
+      gst_query_parse_position (query, &format, NULL);
+
+      GST_DEBUG_OBJECT (basesink, "current position format %d", format);
+
+      if ((res = gst_base_sink_get_position (basesink, format, &cur))) {
+        gst_query_set_position (query, format, cur);
+      } else {
+        res = gst_base_sink_peer_query (basesink, query);
+      }
       break;
+    }
     case GST_QUERY_DURATION:
       res = gst_base_sink_peer_query (basesink, query);
       break;

@@ -1,3 +1,23 @@
+2005-10-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_get_position),
+	(gst_base_sink_query):
+	Speed up current position calculation.
+
+	* gst/base/gstbasesrc.c: (gst_base_src_query),
+	(gst_base_src_default_newsegment):
+	Correctly set stream position in newsegment.
+
+	* gst/gstbin.c: (gst_bin_add_func), (add_to_queue),
+	(update_degree), (gst_bin_sort_iterator_next),
+	(gst_bin_sort_iterator_resync), (gst_bin_sort_iterator_free):
+	* gst/gstmessage.c: (gst_message_new_custom):
+	Clean up debugging info
+
+	* gst/gstqueue.c: (gst_queue_link_src), (gst_queue_chain),
+	(gst_queue_loop), (gst_queue_handle_src_query):
+	Pause task faster.
+
 2005-10-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_commit_state),

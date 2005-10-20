@@ -395,7 +395,8 @@ gst_base_src_default_newsegment (GstBaseSrc * src)
       (gint64) src->segment_end);
   event = gst_event_new_newsegment (FALSE, 1.0,
       GST_FORMAT_BYTES,
-      (gint64) src->segment_start, (gint64) src->segment_end, (gint64) 0);
+      (gint64) src->segment_start, (gint64) src->segment_end,
+      (gint64) src->segment_start);
 
   return gst_pad_push_event (src->srcpad, event);
 }

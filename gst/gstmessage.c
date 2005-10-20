@@ -265,17 +265,16 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
 
   message = (GstMessage *) gst_mini_object_new (GST_TYPE_MESSAGE);
 
-  GST_CAT_LOG (GST_CAT_MESSAGE, "creating new message %p %s", message,
+  GST_CAT_LOG (GST_CAT_MESSAGE, "source %s: creating new message %p %s",
+      (src ? GST_OBJECT_NAME (src) : "NULL"), message,
       gst_message_type_get_name (type));
 
   message->type = type;
-  if (src) {
-    message->src = gst_object_ref (src);
-    GST_CAT_DEBUG_OBJECT (GST_CAT_MESSAGE, src, "message source");
-  } else {
-    message->src = NULL;
-    GST_CAT_DEBUG (GST_CAT_MESSAGE, "NULL message source");
-  }
+
+  if (src)
+    gst_object_ref (src);
+  message->src = src;
+
   if (structure) {
     gst_structure_set_parent_refcount (structure,
         &message->mini_object.refcount);

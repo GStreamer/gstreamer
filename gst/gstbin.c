@@ -503,8 +503,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
     GST_OBJECT_FLAG_SET (bin, GST_ELEMENT_IS_SINK);
   }
   if (gst_element_provides_clock (element)) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin,
-        "element \"%s\" can provide a clock", elem_name);
+    GST_DEBUG_OBJECT (bin, "element \"%s\" can provide a clock", elem_name);
     bin->clock_dirty = TRUE;
   }
 
@@ -516,10 +515,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gst_element_set_bus (element, bin->child_bus);
 
   /* propagate the current base time and clock */
-  GST_DEBUG_OBJECT (element, "setting base time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_ELEMENT (bin)->base_time));
   gst_element_set_base_time (element, GST_ELEMENT (bin)->base_time);
-  GST_DEBUG_OBJECT (element, "setting clock %p", GST_ELEMENT_CLOCK (bin));
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
   bin->state_dirty = TRUE;
   GST_UNLOCK (bin);
@@ -1137,7 +1133,7 @@ typedef struct _GstBinSortIterator
 static void
 add_to_queue (GstBinSortIterator * bit, GstElement * element)
 {
-  GST_DEBUG ("%s add to queue", GST_ELEMENT_NAME (element));
+  GST_DEBUG_OBJECT (bit->bin, "%s add to queue", GST_ELEMENT_NAME (element));
   gst_object_ref (element);
   g_queue_push_tail (bit->queue, element);
   HASH_SET_DEGREE (bit, element, -1);
@@ -1209,9 +1205,10 @@ update_degree (GstElement * element, GstBinSortIterator * bit)
             old_deg = HASH_GET_DEGREE (bit, peer_element);
             new_deg = old_deg + bit->mode;
 
-            GST_DEBUG ("change element %s, degree %d->%d, linked to %s",
-                GST_ELEMENT_NAME (peer_element),
-                old_deg, new_deg, GST_ELEMENT_NAME (element));
+            GST_DEBUG_OBJECT (bit->bin,
+                "change element %s, degree %d->%d, linked to %s",
+                GST_ELEMENT_NAME (peer_element), old_deg, new_deg,
+                GST_ELEMENT_NAME (element));
 
             /* update degree */
             if (new_deg == 0) {
@@ -1230,7 +1227,7 @@ update_degree (GstElement * element, GstBinSortIterator * bit)
     }
   }
   if (!linked) {
-    GST_DEBUG ("element %s not linked on any sinkpads",
+    GST_DEBUG_OBJECT (bit->bin, "element %s not linked on any sinkpads",
         GST_ELEMENT_NAME (element));
   }
   GST_UNLOCK (element);
@@ -1259,23 +1256,28 @@ find_element (GstElement * element, GstBinSortIterator * bit)
 static GstIteratorResult
 gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
 {
+  GstBin *bin = bit->bin;
+
   /* empty queue, we have to find a next best element */
   if (g_queue_is_empty (bit->queue)) {
+    GstElement *best;
+
     bit->best = NULL;
     bit->best_deg = G_MAXINT;
-    g_list_foreach (bit->bin->children, (GFunc) find_element, bit);
-    if (bit->best) {
+    g_list_foreach (bin->children, (GFunc) find_element, bit);
+    if ((best = bit->best)) {
       if (bit->best_deg != 0) {
         /* we don't fail on this one yet */
         g_warning ("loop detected in the graph !!");
       }
       /* best unhandled element, schedule as next element */
-      GST_DEBUG ("queue empty, next best: %s", GST_ELEMENT_NAME (bit->best));
-      gst_object_ref (bit->best);
-      HASH_SET_DEGREE (bit, bit->best, -1);
-      *result = bit->best;
+      GST_DEBUG_OBJECT (bin, "queue empty, next best: %s",
+          GST_ELEMENT_NAME (best));
+      gst_object_ref (best);
+      HASH_SET_DEGREE (bit, best, -1);
+      *result = best;
     } else {
-      GST_DEBUG ("queue empty, elements exhausted");
+      GST_DEBUG_OBJECT (bin, "queue empty, elements exhausted");
       /* no more unhandled elements, we are done */
       return GST_ITERATOR_DONE;
     }
@@ -1284,7 +1286,7 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
     *result = g_queue_pop_head (bit->queue);
   }
 
-  GST_DEBUG ("queue head gives %s", GST_ELEMENT_NAME (*result));
+  GST_DEBUG_OBJECT (bin, "queue head gives %s", GST_ELEMENT_NAME (*result));
   /* update degrees of linked elements */
   update_degree (GST_ELEMENT_CAST (*result), bit);
 
@@ -1295,12 +1297,15 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
 static void
 gst_bin_sort_iterator_resync (GstBinSortIterator * bit)
 {
+  GstBin *bin = bit->bin;
+
+  GST_DEBUG_OBJECT (bin, "resync");
   clear_queue (bit->queue);
   /* reset degrees */
-  g_list_foreach (bit->bin->children, (GFunc) reset_degree, bit);
+  g_list_foreach (bin->children, (GFunc) reset_degree, bit);
   /* calc degrees, incrementing */
   bit->mode = 1;
-  g_list_foreach (bit->bin->children, (GFunc) update_degree, bit);
+  g_list_foreach (bin->children, (GFunc) update_degree, bit);
   /* for the rest of the function we decrement the degrees */
   bit->mode = -1;
 }
@@ -1309,10 +1314,13 @@ gst_bin_sort_iterator_resync (GstBinSortIterator * bit)
 static void
 gst_bin_sort_iterator_free (GstBinSortIterator * bit)
 {
+  GstBin *bin = bit->bin;
+
+  GST_DEBUG_OBJECT (bin, "free");
   clear_queue (bit->queue);
   g_queue_free (bit->queue);
   g_hash_table_destroy (bit->hash);
-  gst_object_unref (bit->bin);
+  gst_object_unref (bin);
   g_free (bit);
 }
 

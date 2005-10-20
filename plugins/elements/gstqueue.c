@@ -439,7 +439,7 @@ gst_queue_link_src (GstPad * pad, GstPad * peer)
 
   queue = GST_QUEUE (gst_pad_get_parent (pad));
 
-  GST_DEBUG ("queue linking source pad");
+  GST_DEBUG_OBJECT (queue, "queue linking source pad");
 
   if (GST_PAD_LINKFUNC (peer)) {
     result = GST_PAD_LINKFUNC (peer) (peer, pad);
@@ -449,9 +449,9 @@ gst_queue_link_src (GstPad * pad, GstPad * peer)
     GST_QUEUE_MUTEX_LOCK (queue);
     if (queue->srcresult == GST_FLOW_OK) {
       gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
-      GST_DEBUG ("starting task as pad is linked");
+      GST_DEBUG_OBJECT (queue, "starting task as pad is linked");
     } else {
-      GST_DEBUG ("not starting task reason %s",
+      GST_DEBUG_OBJECT (queue, "not starting task reason %s",
           gst_flow_get_name (queue->srcresult));
     }
     GST_QUEUE_MUTEX_UNLOCK (queue);
@@ -740,6 +740,7 @@ out_flushing:
     GstFlowReturn ret = queue->srcresult;
     const gchar *flowname = gst_flow_get_name (ret);
 
+    gst_pad_pause_task (queue->srcpad);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "exit because task paused, reason: %s", flowname);
     GST_QUEUE_MUTEX_UNLOCK (queue);
@@ -823,7 +824,7 @@ restart:
             ("streaming stopped, reason %s", flowname));
         gst_pad_push_event (queue->srcpad, gst_event_new_eos ());
       }
-      GST_DEBUG ("pausing queue, reason %s", flowname);
+      GST_DEBUG_OBJECT (queue, "pausing queue, reason %s", flowname);
       gst_pad_pause_task (queue->srcpad);
     }
   } else {
@@ -831,7 +832,7 @@ restart:
       /* all incomming data is now unexpected */
       queue->srcresult = GST_FLOW_UNEXPECTED;
       /* and we don't need to process anymore */
-      GST_DEBUG ("pausing queue, we're EOS now");
+      GST_DEBUG_OBJECT (queue, "pausing queue, we're EOS now");
       gst_pad_pause_task (queue->srcpad);
       restart = FALSE;
     }
@@ -854,6 +855,7 @@ out_flushing:
   {
     const gchar *flowname = gst_flow_get_name (queue->srcresult);
 
+    gst_pad_pause_task (queue->srcpad);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "exit because task paused, reason:  %s", flowname);
     GST_QUEUE_MUTEX_UNLOCK (queue);
