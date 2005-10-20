@@ -317,8 +317,32 @@ GstBuffer*	gst_buffer_create_sub		(GstBuffer *parent, guint offset, guint size);
 gboolean	gst_buffer_is_span_fast		(GstBuffer *buf1, GstBuffer *buf2);
 GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, guint32 len);
 
+/**
+ * gst_value_set_buffer:
+ * @v: a #GstValue to receive the data
+ * @b: a #GstBuffer to assign to the GstValue
+ *
+ * Sets @b as the value of @v, correclty incrementing the refcount of
+ * the buffer.
+ */
 #define		gst_value_set_buffer(v,b)	gst_value_set_mini_object(v, GST_MINI_OBJECT(b))
+/**
+ * gst_value_take_buffer:
+ * @v: a #GstValue to receive the data
+ * @b: a #GstBuffer to assign to the GstValue
+ *
+ * Sets @b as the value of @v, this function lets the GstValue
+ * take ownership of the buffer.
+ */
 #define		gst_value_take_buffer(v,b)	gst_value_take_mini_object(v, GST_MINI_OBJECT(b))
+/**
+ * gst_value_get_buffer:
+ * @v: a #GstValue to qeury
+ *
+ * Receives a #GstBuffer as the value of @v. This function does not
+ * increase the refcount of the returned buffer so the buffer remains
+ * valid as long as you own a refcount to the GstValue.
+ */
 #define		gst_value_get_buffer(v)		GST_BUFFER (gst_value_get_mini_object(v))
 
 /* --- protected --- */

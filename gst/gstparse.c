@@ -38,6 +38,13 @@
 
 extern GstElement *_gst_parse_launch (const gchar *, GError **);
 
+/**
+ * gst_parse_error_quark:
+ *
+ * Get the error quark used by the parsing subsystem.
+ *
+ * Returns: the quark of the parse errors.
+ */
 GQuark
 gst_parse_error_quark (void)
 {

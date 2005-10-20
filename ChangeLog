@@ -1,5 +1,12 @@
 2005-10-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbuffer.h:
+	* gst/gstpad.c:
+	* gst/gstparse.c:
+	Another 1% more coverage.
+
+2005-10-20  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstelement.c: (gst_element_get_state_func),
 	(gst_element_abort_state), (gst_element_commit_state),

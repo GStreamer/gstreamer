@@ -2777,6 +2777,19 @@ no_func:
   }
 }
 
+/**
+ * gst_pad_query_default:
+ * @pad: a #GstPad to call the default query handler on.
+ * @query: the #GstQuery to handle.
+ *
+ * Invokes the default query handler for the given pad. 
+ * The query is sent to all pads internally linked to @pad. Note that 
+ * if there are many possible sink pads that are internally linked to 
+ * @pad, only one will be sent the query.
+ * Multi-sinkpad elements should implement custom query handlers.
+ *
+ * Returns: TRUE if the query was performed succesfully.
+ */
 gboolean
 gst_pad_query_default (GstPad * pad, GstQuery * query)
 {
