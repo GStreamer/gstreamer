@@ -311,7 +311,7 @@ group_destroy (GstPlayBaseGroup * group)
       fakesrc = (GstElement *) g_object_get_data (G_OBJECT (pad), "fakesrc");
       if (fakesrc != NULL) {
         GST_LOG ("removing fakesrc from %s:%s",
-            GST_PAD_NAME (pad), GST_ELEMENT_NAME (gst_pad_get_parent (pad)));
+            GST_PAD_NAME (pad), GST_ELEMENT_NAME (GST_PAD_PARENT (pad)));
         gst_element_set_state (fakesrc, GST_STATE_NULL);
         gst_bin_remove (GST_BIN (play_base_bin), fakesrc);
       }
@@ -1701,7 +1701,7 @@ gst_play_base_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (ret == GST_STATE_CHANGE_SUCCESS) {
+      if (ret != GST_STATE_CHANGE_FAILURE) {
         finish_source (play_base_bin);
       } else {
         /* clean up leftover groups */
