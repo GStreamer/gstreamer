@@ -153,7 +153,7 @@ void		gst_query_set_duration		(GstQuery *query, GstFormat format, gint64 duratio
 void		gst_query_parse_duration	(GstQuery *query, GstFormat *format, gint64 *duration);
 
 /* convert query */
-GstQuery*	gst_query_new_convert		(GstFormat src_fmt, gint64 value, GstFormat dest_fmt);
+GstQuery*	gst_query_new_convert		(GstFormat src_format, gint64 value, GstFormat dest_format);
 void		gst_query_set_convert		(GstQuery *query, GstFormat src_format, gint64 src_value,
 						 GstFormat dest_format, gint64 dest_value);
 void		gst_query_parse_convert		(GstQuery *query, GstFormat *src_format, gint64 *src_value,

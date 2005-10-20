@@ -1,5 +1,16 @@
 2005-10-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.h:
+	* gst/gstquery.c: (gst_query_set_position),
+	(gst_query_parse_position), (gst_query_set_duration),
+	(gst_query_parse_duration), (gst_query_new_convert):
+	* gst/gstquery.h:
+	* gst/gstutils.c: (gst_element_query_convert):
+	* gst/gstutils.h:
+	Docs and consistency fixes.
+
+2005-10-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gsttask.c:
 	* gst/gsttask.h:
 	More docs.

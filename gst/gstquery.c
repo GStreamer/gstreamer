@@ -462,9 +462,9 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
 
 /**
  * gst_query_new_convert:
- * @src_fmt: the source #GstFormat for the new query
+ * @src_format: the source #GstFormat for the new query
  * @value: the value to convert
- * @dest_fmt: the target #GstFormat
+ * @dest_format: the target #GstFormat
  *
  * Constructs a new query convert object. Use gst_query_unref()
  * when done with it.
@@ -472,7 +472,8 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
  * Returns: A new #GstQuery
  */
 GstQuery *
-gst_query_new_convert (GstFormat src_fmt, gint64 value, GstFormat dest_fmt)
+gst_query_new_convert (GstFormat src_format, gint64 value,
+    GstFormat dest_format)
 {
   GstQuery *query;
   GstStructure *structure;
@@ -480,9 +481,9 @@ gst_query_new_convert (GstFormat src_fmt, gint64 value, GstFormat dest_fmt)
   g_return_val_if_fail (value >= 0, NULL);
 
   structure = gst_structure_new ("GstQueryConvert",
-      "src_format", GST_TYPE_FORMAT, src_fmt,
+      "src_format", GST_TYPE_FORMAT, src_format,
       "src_value", G_TYPE_INT64, value,
-      "dest_format", GST_TYPE_FORMAT, dest_fmt,
+      "dest_format", GST_TYPE_FORMAT, dest_format,
       "dest_value", G_TYPE_INT64, (gint64) - 1, NULL);
   query = gst_query_new (GST_QUERY_CONVERT, structure);
 

@@ -96,6 +96,7 @@ typedef enum {
  * @GST_FLOW_UNEXPECTED:     	 Did not expect anything, like after EOS.
  * @GST_FLOW_NOT_NEGOTIATED: 	 Pad is not negotiated.
  * @GST_FLOW_ERROR:	  	 Some (fatal) error occured.
+ * @GST_FLOW_NOT_SUPPORTED:  	 This operation is not supported.
  *
  * The result of passing data to a linked pad.
  */

@@ -1661,25 +1661,25 @@ gst_element_query_duration (GstElement * element, GstFormat * format,
  */
 gboolean
 gst_element_query_convert (GstElement * element, GstFormat src_format,
-    gint64 src_val, GstFormat * dest_fmt, gint64 * dest_val)
+    gint64 src_val, GstFormat * dest_format, gint64 * dest_val)
 {
   GstQuery *query;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
-  g_return_val_if_fail (dest_fmt != NULL, FALSE);
+  g_return_val_if_fail (dest_format != NULL, FALSE);
   g_return_val_if_fail (dest_val != NULL, FALSE);
 
-  if (*dest_fmt == src_format) {
+  if (*dest_format == src_format) {
     *dest_val = src_val;
     return TRUE;
   }
 
-  query = gst_query_new_convert (src_format, src_val, *dest_fmt);
+  query = gst_query_new_convert (src_format, src_val, *dest_format);
   ret = gst_element_query (element, query);
 
   if (ret)
-    gst_query_parse_convert (query, NULL, NULL, dest_fmt, dest_val);
+    gst_query_parse_convert (query, NULL, NULL, dest_format, dest_val);
 
   gst_query_unref (query);
 
