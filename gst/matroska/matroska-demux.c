@@ -990,7 +990,7 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
     {
       GstFormat format;
 
-      gst_query_parse_position (query, &format, NULL);
+      gst_query_parse_duration (query, &format, NULL);
 
       if (format != GST_FORMAT_TIME) {
         GST_DEBUG ("only query duration on TIME is supported");
@@ -1196,7 +1196,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   }
 
   newsegment_event = gst_event_new_newsegment (FALSE, demux->segment_rate,
-      GST_FORMAT_TIME, entry->time, demux->segment_stop, 0);
+      GST_FORMAT_TIME, entry->time, demux->segment_stop, entry->time);
 
   GST_UNLOCK (demux);
 
@@ -2730,7 +2730,8 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
         /* send initial discont */
         gst_matroska_demux_send_event (demux,
             gst_event_new_newsegment (FALSE, 1.0,
-                GST_FORMAT_TIME, 0, demux->duration, 0));
+                GST_FORMAT_TIME, 0,
+                (demux->duration > 0) ? demux->duration : -1, 0));
 
         GST_DEBUG_OBJECT (demux, "signaling no more pads");
         gst_element_no_more_pads (GST_ELEMENT (demux));

@@ -1,3 +1,18 @@
+2005-10-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_handle_src_query),
+	(gst_matroska_demux_handle_seek_event),
+	(gst_matroska_demux_loop_stream_parse_id):
+	  Fix duration query; fix basetime in newsegment event after
+	  seek; fix duration in initial newsegment event.
+
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_audio_pad_setcaps), (gst_matroska_mux_start):
+	  Extract number of channels and samplerate from vorbis headers;
+	  add some debug messages when querying the durations of the
+	  input streams.
+
 2005-10-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_handle_seek),

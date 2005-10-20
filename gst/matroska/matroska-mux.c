@@ -603,7 +603,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstMatroskaPad *collect_pad;
   GstMatroskaMux *mux = GST_MATROSKA_MUX (gst_pad_get_parent (pad));
   const gchar *mimetype;
-  gint samplerate, channels;
+  gint samplerate = 0, channels = 0;
   GstStructure *structure;
 
   /* find context */
@@ -671,10 +671,12 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     gint endianness, width, depth;
     gboolean signedness;
 
-    gst_structure_get_int (structure, "endianness", &endianness);
-    gst_structure_get_int (structure, "width", &width);
-    gst_structure_get_int (structure, "depth", &depth);
-    gst_structure_get_int (structure, "signed", &signedness);
+    if (!gst_structure_get_int (structure, "endianness", &endianness) ||
+        !gst_structure_get_int (structure, "width", &width) ||
+        !gst_structure_get_int (structure, "depth", &depth) ||
+        !gst_structure_get_int (structure, "signed", &signedness))
+      return FALSE;
+
     if (width != depth ||
         (width == 8 && signedness) || (width == 16 && !signedness))
       return FALSE;
@@ -746,6 +748,13 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
             memcpy (priv_data + offset, GST_BUFFER_DATA (buf[i]),
                 GST_BUFFER_SIZE (buf[i]));
             offset += GST_BUFFER_SIZE (buf[i]);
+          }
+
+          if (memcmp (GST_BUFFER_DATA (buf[0]) + 1, "vorbis", 6) == 0) {
+            guint8 *hdr = GST_BUFFER_DATA (buf[0]) + 1 + 6 + 4;
+
+            audiocontext->channels = GST_READ_UINT8 (hdr);
+            audiocontext->samplerate = GST_READ_UINT32_LE (hdr + 1);
           }
         } else {
           GST_WARNING_OBJECT (mux, "Vorbis header does not contain "
@@ -1027,25 +1036,24 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   for (collected = mux->collect->data; collected;
       collected = g_slist_next (collected)) {
     GstMatroskaPad *collect_pad;
-    GstPad *thepad;
-    GstQuery *query;
+    GstFormat format = GST_FORMAT_TIME;
+    GstPad *thepad, *peerpad;
+    gint64 trackduration;
 
     collect_pad = (GstMatroskaPad *) collected->data;
     thepad = collect_pad->collect.pad;
 
     /* Query the total length of the track. */
-    query = gst_query_new_duration (GST_FORMAT_TIME);
-    if (gst_pad_query (GST_PAD_PEER (thepad), query)) {
-      GstFormat format;
-      gint64 trackduration;
-
-      gst_query_parse_duration (query, &format, &trackduration);
-
+    peerpad = gst_pad_get_peer (thepad);
+    GST_DEBUG ("Querying duration on pad %s:%s", GST_DEBUG_PAD_NAME (thepad));
+    if (gst_pad_query_duration (peerpad, &format, &trackduration)) {
+      GST_DEBUG ("%s:%s - duration: %" GST_TIME_FORMAT,
+          GST_DEBUG_PAD_NAME (thepad), GST_TIME_ARGS (trackduration));
       if ((gdouble) trackduration > duration) {
         duration = (gdouble) trackduration;
       }
     }
-    gst_query_unref (query);
+    gst_object_unref (peerpad);
   }
   gst_ebml_write_float (ebml, GST_MATROSKA_ID_DURATION,
       duration / mux->time_scale);
