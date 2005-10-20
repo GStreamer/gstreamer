@@ -1425,7 +1425,6 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
         gst_object_unref (clock);
 
         res = TRUE;
-      } else {
       }
       GST_UNLOCK (basesink);
     }
@@ -1447,15 +1446,24 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
     {
       gint64 cur = 0;
       GstFormat format;
+      gboolean eos;
 
-      gst_query_parse_position (query, &format, NULL);
+      GST_PREROLL_LOCK (basesink->sinkpad);
+      eos = basesink->eos;
+      GST_PREROLL_UNLOCK (basesink->sinkpad);
 
-      GST_DEBUG_OBJECT (basesink, "current position format %d", format);
-
-      if ((res = gst_base_sink_get_position (basesink, format, &cur))) {
-        gst_query_set_position (query, format, cur);
-      } else {
+      if (eos) {
         res = gst_base_sink_peer_query (basesink, query);
+      } else {
+        gst_query_parse_position (query, &format, NULL);
+
+        GST_DEBUG_OBJECT (basesink, "current position format %d", format);
+
+        if ((res = gst_base_sink_get_position (basesink, format, &cur))) {
+          gst_query_set_position (query, format, cur);
+        } else {
+          res = gst_base_sink_peer_query (basesink, query);
+        }
       }
       break;
     }

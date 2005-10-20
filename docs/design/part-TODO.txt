@@ -6,7 +6,9 @@
 
 - implement return values from events in addition to the gboolean. This should be
   done by making the event contain a GstStructure with input/output values, similar
-  to GstMessage.
+  to GstQuery. A typical use case is performing a non-accurate seek to a keyframe,
+  after the seek you want to get the new stream time that will actually be used to
+  update the slider bar.
 
 - unlinking pads in the PAUSED state needs to make sure the stream thread is not
   executing code. Can this be done with a flush to unlock all downstream chain
@@ -25,4 +27,7 @@
 - implement QOS.
 
 - implement BUFFERSIZE.
+
+- make bin_bus_handler a vmethod so subclasses can use their own implementation
+  or chain to the parent.
 

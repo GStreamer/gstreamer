@@ -1,3 +1,12 @@
+2005-10-20  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	Update TODO
+
+	* gst/base/gstbasesink.c: (gst_base_sink_get_position),
+	(gst_base_sink_query):
+	Don't use clock time to report position when in EOS.
+
 2005-10-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-inspect.c: (print_interfaces),
