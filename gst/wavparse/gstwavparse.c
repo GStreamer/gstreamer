@@ -731,7 +731,7 @@ gst_wavparse_handle_seek (GstWavParse * wav, gboolean update)
       GST_TIME_ARGS (stop_time));
 
   wav->seek_event = gst_event_new_newsegment (!update, wav->segment_rate,
-      GST_FORMAT_TIME, start_time, stop_time, 0);
+      GST_FORMAT_TIME, start_time, stop_time, start_time);
 
   if (flush)
     gst_pad_push_event (wav->srcpad, gst_event_new_flush_stop ());
@@ -855,7 +855,8 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
   /* Initial discont */
   wav->seek_event = gst_event_new_newsegment (FALSE, 1.0,
-      GST_FORMAT_TIME, wav->segment_start, wav->segment_stop, 0);
+      GST_FORMAT_TIME,
+      wav->segment_start, wav->segment_stop, wav->segment_start);
 
   return GST_FLOW_OK;
 

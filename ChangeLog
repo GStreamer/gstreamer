@@ -1,5 +1,12 @@
 2005-10-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_handle_seek),
+	(gst_wavparse_stream_headers), (gst_wavparse_stream_data),
+	(gst_wavparse_pad_convert), (gst_wavparse_srcpad_event):
+	Set stream time correctly in newsegment.
+
+2005-10-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_seek):
 	Correctly fill in the stream time.
 
