@@ -74,7 +74,7 @@ main (gint argc, gchar * argv[])
     g_print (" caps: %s\n", str);
     g_free (str);
 
-    query = gst_query_new_position (GST_FORMAT_TIME);
+    query = gst_query_new_duration (GST_FORMAT_TIME);
     if (gst_pad_query (pad, query)) {
       gint64 duration;
 
