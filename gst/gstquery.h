@@ -136,11 +136,38 @@ G_CONST_RETURN GstQueryTypeDefinition*
 GstIterator*    gst_query_type_iterate_definitions (void);
 
 /* refcounting */
-#define         gst_query_ref(msg)		GST_QUERY (gst_mini_object_ref (GST_MINI_OBJECT (msg)))
-#define         gst_query_unref(msg)		gst_mini_object_unref (GST_MINI_OBJECT (msg))
+/**
+ * gst_query_ref:
+ * @q: a #GstQuery to increase the refcount of.
+ *
+ * Increases the refcount of the given query by one.
+ */
+#define         gst_query_ref(q)		GST_QUERY (gst_mini_object_ref (GST_MINI_OBJECT (q)))
+/**
+ * gst_query_unref:
+ * @q: a #GstQuery to decrease the refcount of.
+ *
+ * Decreases the refcount of the query. If the refcount reaches 0, the query
+ * will be freed.
+ */
+#define         gst_query_unref(q)		gst_mini_object_unref (GST_MINI_OBJECT (q))
+
 /* copy query */
-#define         gst_query_copy(msg)		GST_QUERY (gst_mini_object_copy (GST_MINI_OBJECT (msg)))
-#define         gst_query_make_writable(msg)	GST_QUERY (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
+/**
+ * gst_query_copy:
+ * @q: a #GstQuery to copy.
+ *
+ * Copies the given query using the copy function of the parent #GstData
+ * structure.
+ */
+#define         gst_query_copy(q)		GST_QUERY (gst_mini_object_copy (GST_MINI_OBJECT (q)))
+/**
+ * gst_query_make_writable:
+ * @q: a #GstQuery to make writable
+ *
+ * Makes a writable query from the given query.
+ */
+#define         gst_query_make_writable(q)	GST_QUERY (gst_mini_object_make_writable (GST_MINI_OBJECT (q)))
 
 /* position query */
 GstQuery*	gst_query_new_position		(GstFormat format);

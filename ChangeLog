@@ -1,5 +1,15 @@
 2005-10-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gsterror.c: (gst_error_get_message):
+	* gst/gstparse.h:
+	* gst/gstquery.h:
+	* gst/gststructure.c:
+	* gst/gsttrace.c:
+	* gst/gstutils.c:
+	More docs.
+
+2005-10-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbuffer.h:
 	* gst/gstpad.c:
 	* gst/gstparse.c:

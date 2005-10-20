@@ -1899,6 +1899,26 @@ gst_object_default_error (GstObject * source, GError * error, gchar * debug)
 
 static GSystemThread zero_thread;
 
+/**
+ * g_static_rec_cond_timed_wait:
+ * @cond: the GCond to wait for
+ * @mutex: a currently locked mutex
+ * @end_time: timeout value.
+ *
+ * Waits until this thread is woken up on cond, but not longer than until the 
+ * time, that is specified by abs_time. The mutex is fully unlocked before falling 
+ * asleep and fully locked again before resuming.
+ *
+ * If abs_time is NULL, g_static_rec_cond_timed_wait() acts like g_static_rec_cond_wait().
+ *
+ * This function can also be used, if g_thread_init() has not yet been called and will 
+ * immediately return TRUE then.
+ *
+ * To easily calculate abs_time a combination of g_get_current_time() and g_time_val_add() 
+ * can be used. 
+ *
+ * Returns: TRUE, if the thread is woken up in time.
+ */
 gboolean
 g_static_rec_cond_timed_wait (GCond * cond,
     GStaticRecMutex * mutex, GTimeVal * end_time)
@@ -1929,6 +1949,18 @@ g_static_rec_cond_timed_wait (GCond * cond,
   return res;
 }
 
+/**
+ * g_static_rec_cond_wait:
+ * @cond: the GCond to wait for
+ * @mutex: a currently locked mutex
+ *
+ * Waits until this thread is woken up on cond.
+ * The mutex is fully unlocked before falling 
+ * asleep and fully locked again before resuming.
+ *
+ * This function can also be used, if g_thread_init() has not yet been called and will 
+ * immediately return then.
+ */
 void
 g_static_rec_cond_wait (GCond * cond, GStaticRecMutex * mutex)
 {

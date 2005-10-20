@@ -30,6 +30,11 @@ G_BEGIN_DECLS
 #ifndef GST_DISABLE_PARSE
 
 GQuark gst_parse_error_quark (void);
+/**
+ * GST_PARSE_ERROR:
+ *
+ * Get access to the error quark of the parse subsystem.
+ */
 #define GST_PARSE_ERROR gst_parse_error_quark ()
 
 typedef enum

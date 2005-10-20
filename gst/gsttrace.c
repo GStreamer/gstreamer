@@ -241,7 +241,9 @@ gst_alloc_trace_list (void)
 /**
  * gst_alloc_trace_live_all:
  *
- * Returns the total number of live registered alloc trace objects.
+ * Get the total number of live registered alloc trace objects.
+ *
+ * Returns: the total number of live registered alloc trace objects.
  */
 int
 gst_alloc_trace_live_all (void)

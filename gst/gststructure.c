@@ -293,6 +293,8 @@ gst_structure_get_name (const GstStructure * structure)
  * @structure: a #GstStructure
  * @name: structure name to check for
  *
+ * Checks if the structure has the given name
+ *
  * Returns: TRUE if @name matches the name of the structure.
  */
 gboolean
@@ -722,7 +724,9 @@ gst_structure_n_fields (const GstStructure * structure)
  * @structure: a #GstStructure
  * @index: the index to get the name of
  *
- * Returns: the name of the given field number, counting from 0 onwards.
+ * Get the name of the given field number, counting from 0 onwards.
+ *
+ * Returns: the name of the given field number
  */
 const gchar *
 gst_structure_nth_field_name (const GstStructure * structure, guint index)
