@@ -320,8 +320,11 @@ siddec_negotiate (GstSidDec * siddec)
   int channels = 2;
 
   allowed = gst_pad_get_allowed_caps (siddec->srcpad);
-  if (!allowed)
+  if (!allowed) {
+    GST_DEBUG_OBJECT (siddec, "could not get allowed caps");
     return FALSE;
+  }
+  GST_DEBUG_OBJECT (siddec, "allowed caps: " GST_PTR_FORMAT, allowed);
 
   structure = gst_caps_get_structure (allowed, 0);
 
@@ -329,6 +332,8 @@ siddec_negotiate (GstSidDec * siddec)
   gst_structure_get_int (structure, "depth", &depth);
 
   if (width && depth && width != depth) {
+    GST_DEBUG_OBJECT (siddec, "width %d and depth %d are different",
+        width, depth);
     return FALSE;
   }
   width = width | depth;
@@ -384,6 +389,7 @@ play_loop (GstPad * pad)
   GST_BUFFER_OFFSET (out) = offset;
 
   /* get current timestamp */
+  format = GST_FORMAT_TIME;
   gst_siddec_src_convert (siddec->srcpad,
       GST_FORMAT_BYTES, siddec->total_bytes, &format, &time);
   GST_BUFFER_TIMESTAMP (out) = time;
@@ -430,6 +436,9 @@ start_play_tune (GstSidDec * siddec)
           siddec->tune_number))
     goto could_not_init;
 
+  gst_pad_push_event (siddec->srcpad,
+      gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
+
   res = gst_pad_start_task (siddec->srcpad,
       (GstTaskFunction) play_loop, siddec->srcpad);
   return res;
@@ -437,17 +446,20 @@ start_play_tune (GstSidDec * siddec)
   /* ERRORS */
 could_not_load:
   {
-    GST_ELEMENT_ERROR (siddec, LIBRARY, TOO_LAZY, (NULL), (NULL));
+    GST_ELEMENT_ERROR (siddec, LIBRARY, INIT,
+        ("Could not load tune"), ("Could not load tune"));
     return FALSE;
   }
 could_not_negotiate:
   {
-    GST_ELEMENT_ERROR (siddec, CORE, NEGOTIATION, (NULL), (NULL));
+    GST_ELEMENT_ERROR (siddec, CORE, NEGOTIATION,
+        ("Could not negotiate format"), ("Could not negotiate format"));
     return FALSE;
   }
 could_not_init:
   {
-    GST_ELEMENT_ERROR (siddec, LIBRARY, TOO_LAZY, (NULL), (NULL));
+    GST_ELEMENT_ERROR (siddec, LIBRARY, INIT,
+        ("Could not initialize song"), ("Could not initialize song"));
     return FALSE;
   }
 }

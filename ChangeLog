@@ -1,3 +1,8 @@
+2005-10-20  Wim Taymans  <wim@fluendo.com>
+
+	* ext/sidplay/gstsiddec.cc:
+	Small fixes and more error messages.
+
 2005-10-19  Wim Taymans  <wim@fluendo.com>
 
 	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_query),
