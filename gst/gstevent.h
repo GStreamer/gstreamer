@@ -34,16 +34,45 @@
 
 G_BEGIN_DECLS
 
-/* bitmasks defining the direction */
+/**
+ * GST_EVDIR_US:
+ *
+ * bitmask defining the event can travel upstream
+ */
 #define GST_EVDIR_US	(1 << 0)
+/**
+ * GST_EVDIR_DS:
+ *
+ * bitmask defining the event can travel downstream
+ */
 #define GST_EVDIR_DS	(1 << 1)
+/**
+ * GST_EVDIR_BOTH:
+ *
+ * bitmask defining the event can travel both up and downstream
+ */
 #define GST_EVDIR_BOTH	GST_EVDIR_US | GST_EVDIR_DS
-/* mask defining event is serialized with data */
+/**
+ * GST_EVSER:
+ *
+ * mask defining if the event is serialized with the data stream
+ */
 #define GST_EVSER	(1 << 2)
+/**
+ * GST_EVSHIFT:
+ *
+ * shift for the bits in the serialize mask.
+ */
 #define GST_EVSHIFT	4
 
-/* when making custom event types, use this macro with the num and
- * the given flags */
+/**
+ * GST_EVENT_MAKE_TYPE:
+ * @num: the event number to create
+ * @flags: the event flags
+ *
+ * when making custom event types, use this macro with the num and
+ * the given flags
+ */
 #define GST_EVENT_MAKE_TYPE(num,flags) (((num) << GST_EVSHIFT) | (flags))
 
 /**
@@ -153,8 +182,26 @@ typedef struct _GstEventClass GstEventClass;
  */
 #define GST_EVENT_SRC(event)		(GST_EVENT(event)->src)
 
+/**
+ * GST_EVENT_IS_UPSTREAM:
+ * @ev: the event to query
+ *
+ * Check if an event can travel upstream.
+ */
 #define GST_EVENT_IS_UPSTREAM(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVDIR_US)
+/**
+ * GST_EVENT_IS_DOWNSTREAM:
+ * @ev: the event to query
+ *
+ * Check if an event can travel downstream.
+ */
 #define GST_EVENT_IS_DOWNSTREAM(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVDIR_DS)
+/**
+ * GST_EVENT_IS_SERIALIZED:
+ * @ev: the event to query
+ *
+ * Check if an event is serialized with the data stream.
+ */
 #define GST_EVENT_IS_SERIALIZED(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVSER)
 
 /**
@@ -164,8 +211,8 @@ typedef struct _GstEventClass GstEventClass;
  * @GST_SEEK_TYPE_SET: absolute position is requested
  * @GST_SEEK_TYPE_END: relative position to duration is requested
  *
- * The different types of seek events. When constructing a seek event a format,
- * a seek method and optional flags are OR-ed together. The seek event is then
+ * The different types of seek events. When constructing a seek event, a format,
+ * a seek method and optional flags are to be provided. The seek event is then
  * inserted into the graph with #gst_pad_send_event() or
  * #gst_element_send_event().
  */
@@ -182,14 +229,21 @@ typedef enum {
  * @GST_SEEK_FLAG_NONE: no flag
  * @GST_SEEK_FLAG_FLUSH: flush pipeline
  * @GST_SEEK_FLAG_ACCURATE: accurate position is requested, this might
- *                     be slower for some formats.
+ *                     be considerably slower for some formats.
  * @GST_SEEK_FLAG_KEY_UNIT: seek to the nearest keyframe. This might be
  *		       faster but less accurate.
  * @GST_SEEK_FLAG_SEGMENT: perform a segment seek. After the playback
  *            of the segment completes, no EOS will be emmited but a
  *            SEGMENT_DONE message will be posted on the bus.
  *
- * Flags to be used with gst_element_seek()
+ * Flags to be used with #gst_element_seek() or #gst_event_new_seek()
+ *
+ * A non flushing seek might take some time to perform as the currently
+ * playing data in the pipeline will not be cleared.
+ *
+ * An accurate seek might be slower for formats that don't have any indexes
+ * or timestamp markers in the stream. Specifying this flag might require a
+ * complete scan of the file in those cases.
  */
 typedef enum {
   GST_SEEK_FLAG_NONE		= 0,

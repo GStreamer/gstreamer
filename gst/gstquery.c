@@ -664,6 +664,16 @@ gst_query_get_structure (GstQuery * query)
   return query->structure;
 }
 
+/**
+ * gst_query_set_seeking:
+ * @query: the query to set
+ * @format: the format to set
+ * @seekable: the seekable flag to set
+ * @segment_start: the segment_start to set
+ * @segment_end: the segment_end to set
+ *
+ * Set the seeking query result fields in @query.
+ */
 void
 gst_query_set_seeking (GstQuery * query, GstFormat format,
     gboolean seekable, gint64 segment_start, gint64 segment_end)
@@ -680,6 +690,15 @@ gst_query_set_seeking (GstQuery * query, GstFormat format,
       "segment-end", G_TYPE_INT64, segment_end, NULL);
 }
 
+/**
+ * gst_query_set_formats:
+ * @query: the query to set
+ * @n_formats: the first format to set
+ * @...: additional formats, NULL terminated.
+ *
+ * Set the formats query result fields in @query. a NULL terminated
+ * list of formats should be passed to this function.
+ */
 void
 gst_query_set_formats (GstQuery * query, gint n_formats, ...)
 {

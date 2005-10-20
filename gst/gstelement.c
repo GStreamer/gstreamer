@@ -2002,7 +2002,7 @@ gst_element_set_state (GstElement * element, GstState state)
   return result;
 }
 
-/**
+/*
  * default set state function, calculates the next state based
  * on current state and calls the change_state function 
  */
