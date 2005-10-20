@@ -50,13 +50,7 @@ static GstElementDetails gst_a52dec_details = {
 GST_DEBUG_CATEGORY_STATIC (a52dec_debug);
 #define GST_CAT_DEFAULT (a52dec_debug)
 
-/* A52Dec signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
+/* A52Dec args */
 enum
 {
   ARG_0,
@@ -73,17 +67,17 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-float, "
-        "endianness = (int) BYTE_ORDER, "
+        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
         "width = (int) " G_STRINGIFY (SAMPLE_WIDTH) ", "
-        "rate = (int) [ 4000, 96000 ], "
-        "channels = (int) [ 1, 6 ], " "buffer-frames = (int) 0")
+        "rate = (int) [ 4000, 96000 ], " "channels = (int) [ 1, 6 ]")
     );
 
-static void gst_a52dec_base_init (gpointer g_class);
+static void gst_a52dec_base_init (GstA52DecClass * klass);
 static void gst_a52dec_class_init (GstA52DecClass * klass);
 static void gst_a52dec_init (GstA52Dec * a52dec);
 
-static void gst_a52dec_chain (GstPad * pad, GstData * data);
+static GstFlowReturn gst_a52dec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_a52dec_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_a52dec_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -94,8 +88,6 @@ static void gst_a52dec_get_property (GObject * object, guint prop_id,
 
 static GstElementClass *parent_class = NULL;
 
-/* static guint gst_a52dec_signals[LAST_SIGNAL] = { 0 }; */
-
 GType
 gst_a52dec_get_type (void)
 {
@@ -104,8 +96,9 @@ gst_a52dec_get_type (void)
   if (!a52dec_type) {
     static const GTypeInfo a52dec_info = {
       sizeof (GstA52DecClass),
-      gst_a52dec_base_init,
-      NULL, (GClassInitFunc) gst_a52dec_class_init,
+      (GBaseInitFunc) gst_a52dec_base_init,
+      NULL,
+      (GClassInitFunc) gst_a52dec_class_init,
       NULL,
       NULL,
       sizeof (GstA52Dec),
@@ -115,23 +108,23 @@ gst_a52dec_get_type (void)
 
     a52dec_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstA52Dec", &a52dec_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (a52dec_debug, "a52dec", 0,
-        "AC3/A52 software decoder");
   }
   return a52dec_type;
 }
 
 static void
-gst_a52dec_base_init (gpointer g_class)
+gst_a52dec_base_init (GstA52DecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_set_details (element_class, &gst_a52dec_details);
+
+  GST_DEBUG_CATEGORY_INIT (a52dec_debug, "a52dec", 0,
+      "AC3/A52 software decoder");
 }
 
 static void
@@ -143,33 +136,37 @@ gst_a52dec_class_init (GstA52DecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRC,
-      g_param_spec_boolean ("drc", "Dynamic Range Compression",
-          "Use Dynamic Range Compression", FALSE, G_PARAM_READWRITE));
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_a52dec_set_property;
   gobject_class->get_property = gst_a52dec_get_property;
 
-  gstelement_class->change_state = gst_a52dec_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_a52dec_change_state);
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRC,
+      g_param_spec_boolean ("drc", "Dynamic Range Compression",
+          "Use Dynamic Range Compression", FALSE, G_PARAM_READWRITE));
 }
 
 static void
 gst_a52dec_init (GstA52Dec * a52dec)
 {
-  GST_OBJECT_FLAG_SET (GST_ELEMENT (a52dec), GST_ELEMENT_EVENT_AWARE);
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (a52dec);
 
   /* create the sink and src pads */
   a52dec->sinkpad =
-      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
-          (a52dec), "sink"), "sink");
-  gst_pad_set_chain_function (a52dec->sinkpad, gst_a52dec_chain);
+      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
+          "sink"), "sink");
+  gst_pad_set_chain_function (a52dec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_a52dec_chain));
+  gst_pad_set_event_function (a52dec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_a52dec_sink_event));
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->sinkpad);
 
   a52dec->srcpad =
-      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
-          (a52dec), "src"), "src");
-  gst_pad_use_explicit_caps (a52dec->srcpad);
+      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
+          "src"), "src");
+  gst_pad_use_fixed_caps (a52dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
   a52dec->dynamic_range_compression = FALSE;
@@ -259,22 +256,25 @@ gst_a52dec_channels (int flags, GstAudioChannelPosition ** _pos)
   return chans;
 }
 
-static int
+static GstFlowReturn
 gst_a52dec_push (GstA52Dec * a52dec,
     GstPad * srcpad, int flags, sample_t * samples, GstClockTime timestamp)
 {
   GstBuffer *buf;
   int chans, n, c;
+  GstFlowReturn result;
 
   flags &= (A52_CHANNEL_MASK | A52_LFE);
   chans = gst_a52dec_channels (flags, NULL);
   if (!chans) {
-    return 1;
+    return GST_FLOW_ERROR;
   }
 
-  buf = gst_buffer_new ();
-  GST_BUFFER_SIZE (buf) = 256 * chans * (SAMPLE_WIDTH / 8);
-  GST_BUFFER_DATA (buf) = g_malloc (GST_BUFFER_SIZE (buf));
+  result = gst_pad_alloc_buffer (srcpad, 0, 256 * chans * (SAMPLE_WIDTH / 8),
+      GST_PAD_CAPS (srcpad), &buf);
+  if (result != GST_FLOW_OK)
+    return result;
+
   for (n = 0; n < 256; n++) {
     for (c = 0; c < chans; c++) {
       ((sample_t *) GST_BUFFER_DATA (buf))[n * chans + c] =
@@ -289,9 +289,7 @@ gst_a52dec_push (GstA52Dec * a52dec,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
-  gst_pad_push (srcpad, GST_DATA (buf));
-
-  return 0;
+  return gst_pad_push (srcpad, buf);
 }
 
 static gboolean
@@ -300,10 +298,11 @@ gst_a52dec_reneg (GstPad * pad)
   GstAudioChannelPosition *pos;
   GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
   gint channels = gst_a52dec_channels (a52dec->using_channels, &pos);
-  GstCaps *caps;
+  GstCaps *caps = NULL;
+  gboolean result = FALSE;
 
   if (!channels)
-    return FALSE;
+    goto done;
 
   GST_INFO ("a52dec: reneg channels:%d rate:%d\n",
       channels, a52dec->sample_rate);
@@ -312,43 +311,78 @@ gst_a52dec_reneg (GstPad * pad)
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "width", G_TYPE_INT, SAMPLE_WIDTH,
       "channels", G_TYPE_INT, channels,
-      "rate", G_TYPE_INT, a52dec->sample_rate,
-      "buffer-frames", G_TYPE_INT, 0, NULL);
+      "rate", G_TYPE_INT, a52dec->sample_rate, NULL);
   gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
   g_free (pos);
 
-  return gst_pad_set_explicit_caps (pad, caps);
+  if (!gst_pad_set_caps (pad, caps))
+    goto done;
+
+  result = TRUE;
+
+done:
+  if (caps)
+    gst_caps_unref (caps);
+  gst_object_unref (GST_OBJECT (a52dec));
+  return result;
 }
 
-static void
-gst_a52dec_handle_event (GstA52Dec * a52dec, GstEvent * event)
+static gboolean
+gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
 {
+  GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
+  gboolean ret = TRUE;
+
   GST_LOG ("Handling event of type %d timestamp %llu", GST_EVENT_TYPE (event),
       GST_EVENT_TIMESTAMP (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:{
+    case GST_EVENT_NEWSEGMENT:{
+      GstFormat format;
       gint64 val;
 
-      if (!gst_event_discont_get_value (event, GST_FORMAT_TIME, &val)
-          || !GST_CLOCK_TIME_IS_VALID (val)) {
-        GST_WARNING ("No time discont value in event %p", event);
+      GST_STREAM_LOCK (pad);
+      gst_event_parse_newsegment (event, NULL, NULL, &format, &val, NULL, NULL);
+      if (format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (val)) {
+        GST_WARNING ("No time in newsegment event %p", event);
       } else {
         a52dec->time = val;
       }
-    }
-      /* fall-through */
-    case GST_EVENT_FLUSH:
+
       if (a52dec->cache) {
         gst_buffer_unref (a52dec->cache);
         a52dec->cache = NULL;
       }
+      ret = gst_pad_event_default (pad, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
+    }
+    case GST_EVENT_TAG:
+    case GST_EVENT_EOS:{
+      GST_STREAM_LOCK (pad);
+      ret = gst_pad_event_default (pad, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
+    }
+    case GST_EVENT_FLUSH_START:
+      ret = gst_pad_event_default (pad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_STREAM_LOCK (pad);
+      if (a52dec->cache) {
+        gst_buffer_unref (a52dec->cache);
+        a52dec->cache = NULL;
+      }
+      ret = gst_pad_event_default (pad, event);
+      GST_STREAM_UNLOCK (pad);
       break;
     default:
+      ret = gst_pad_event_default (pad, event);
       break;
   }
 
-  gst_pad_event_default (a52dec->sinkpad, event);
+  gst_object_unref (a52dec);
+  return ret;
 }
 
 static void
@@ -362,10 +396,10 @@ gst_a52dec_update_streaminfo (GstA52Dec * a52dec)
       GST_TAG_BITRATE, (guint) a52dec->bit_rate, NULL);
 
   gst_element_found_tags_for_pad (GST_ELEMENT (a52dec),
-      GST_PAD (a52dec->srcpad), a52dec->time, taglist);
+      GST_PAD (a52dec->srcpad), taglist);
 }
 
-static gboolean
+static GstFlowReturn
 gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
     guint length, gint flags, gint sample_rate, gint bit_rate)
 {
@@ -393,7 +427,7 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
   a52dec->level = 1;
   if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
     GST_WARNING ("a52_frame error");
-    return TRUE;
+    return GST_FLOW_OK;
   }
   channels = flags & (A52_CHANNEL_MASK | A52_LFE);
   if (a52dec->using_channels != channels) {
@@ -407,7 +441,7 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
         a52dec->sample_rate, a52dec->stream_channels, a52dec->using_channels);
     if (!gst_a52dec_reneg (a52dec->srcpad)) {
       GST_ELEMENT_ERROR (a52dec, CORE, NEGOTIATION, (NULL), (NULL));
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
   }
 
@@ -420,33 +454,30 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
     if (a52_block (a52dec->state)) {
       GST_WARNING ("a52_block error %d", i);
     } else {
+      GstFlowReturn ret;
+
       /* push on */
-      gst_a52dec_push (a52dec, a52dec->srcpad, a52dec->using_channels,
+      ret = gst_a52dec_push (a52dec, a52dec->srcpad, a52dec->using_channels,
           a52dec->samples, a52dec->time);
+      if (ret != GST_FLOW_OK)
+        return ret;
     }
     a52dec->time += 256 * GST_SECOND / a52dec->sample_rate;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
-static void
-gst_a52dec_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
-  GstBuffer *buf;
   guint8 *data;
   guint size;
   gint length = 0, flags, sample_rate, bit_rate;
-
-  /* event handling */
-  if (GST_IS_EVENT (_data)) {
-    gst_a52dec_handle_event (a52dec, GST_EVENT (_data));
-    return;
-  }
+  GstFlowReturn result = GST_FLOW_OK;
 
   /* merge with cache, if any. Also make sure timestamps match */
-  buf = GST_BUFFER (_data);
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     a52dec->time = GST_BUFFER_TIMESTAMP (buf);
     GST_DEBUG_OBJECT (a52dec,
@@ -474,8 +505,9 @@ gst_a52dec_chain (GstPad * pad, GstData * _data)
       size--;
     } else if (length <= size) {
       GST_DEBUG ("Sync: %d", length);
-      if (!gst_a52dec_handle_frame (a52dec, data,
-              length, flags, sample_rate, bit_rate)) {
+      result = gst_a52dec_handle_frame (a52dec, data,
+          length, flags, sample_rate, bit_rate);
+      if (result != GST_FLOW_OK) {
         size = 0;
         break;
       }
@@ -492,22 +524,32 @@ gst_a52dec_chain (GstPad * pad, GstData * _data)
   if (length == 0) {
     GST_LOG ("No sync found");
   }
+
   if (size > 0) {
     a52dec->cache = gst_buffer_create_sub (buf,
         GST_BUFFER_SIZE (buf) - size, size);
   }
+
   gst_buffer_unref (buf);
+  gst_object_unref (a52dec);
+
+  return result;
 }
 
 static GstStateChangeReturn
 gst_a52dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstA52Dec *a52dec = GST_A52DEC (element);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+#if 0
   GstCPUFlags cpuflags;
   uint32_t a52_cpuflags = 0;
+#endif
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+#if 0
       cpuflags = gst_cpu_get_flags ();
       if (cpuflags & GST_CPU_FLAG_MMX)
         a52_cpuflags |= MM_ACCEL_X86_MMX;
@@ -517,6 +559,8 @@ gst_a52dec_change_state (GstElement * element, GstStateChange transition)
         a52_cpuflags |= MM_ACCEL_X86_MMXEXT;
 
       a52dec->state = a52_init (a52_cpuflags);
+#endif
+      a52dec->state = a52_init (0);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       a52dec->samples = a52_samples (a52dec->state);
@@ -531,6 +575,13 @@ gst_a52dec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -546,26 +597,22 @@ gst_a52dec_change_state (GstElement * element, GstStateChange transition)
       break;
     default:
       break;
-
   }
 
-  GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
 
 static void
 gst_a52dec_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstA52Dec *src;
-
-  g_return_if_fail (GST_IS_A52DEC (object));
-  src = GST_A52DEC (object);
+  GstA52Dec *src = GST_A52DEC (object);
 
   switch (prop_id) {
     case ARG_DRC:
+      GST_LOCK (src);
       src->dynamic_range_compression = g_value_get_boolean (value);
+      GST_UNLOCK (src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -577,14 +624,13 @@ static void
 gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstA52Dec *src;
-
-  g_return_if_fail (GST_IS_A52DEC (object));
-  src = GST_A52DEC (object);
+  GstA52Dec *src = GST_A52DEC (object);
 
   switch (prop_id) {
     case ARG_DRC:
+      GST_LOCK (src);
       g_value_set_boolean (value, src->dynamic_range_compression);
+      GST_UNLOCK (src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -595,10 +641,6 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-
-  if (!gst_library_load ("gstaudio"))
-    return FALSE;
-
   if (!gst_element_register (plugin, "a52dec", GST_RANK_PRIMARY,
           GST_TYPE_A52DEC))
     return FALSE;

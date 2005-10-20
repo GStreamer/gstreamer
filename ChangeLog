@@ -1,3 +1,13 @@
+2005-10-20  Josef Zlomek  <josef dot zlomek at xeris dot cz>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* ext/a52dec/Makefile.am:
+	* ext/a52dec/gsta52dec.c:
+	* ext/a52dec/gsta52dec.h:
+	  Port AC3 decoder to 0.9 (#318849).
+
 2005-10-20  Wim Taymans  <wim@fluendo.com>
 
 	* ext/sidplay/gstsiddec.cc:

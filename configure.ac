@@ -247,6 +247,12 @@ dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
 
+dnl *** a52dec ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
+GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
+  AC_CHECK_A52DEC(HAVE_A52DEC=yes, HAVE_A52DEC=no)
+])
+
 dnl *** AMR-NB ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
 GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnbdec amrnbenc, [
@@ -386,6 +392,7 @@ gst/iec958/Makefile
 gst/mpegaudioparse/Makefile
 gst/realmedia/Makefile
 ext/Makefile
+ext/a52dec/Makefile
 ext/amrnb/Makefile
 ext/lame/Makefile
 ext/mad/Makefile

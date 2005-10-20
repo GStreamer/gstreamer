@@ -22,7 +22,6 @@
 #define __GST_A52DEC_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 
 G_BEGIN_DECLS
 
@@ -65,6 +64,8 @@ struct _GstA52Dec {
 struct _GstA52DecClass {
   GstElementClass parent_class;
 };
+
+GType gst_a52dec_get_type (void);
 
 G_END_DECLS
 
