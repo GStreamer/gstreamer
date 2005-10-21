@@ -1,3 +1,8 @@
+2005-10-21  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstbasesrc.c (gst_base_src_query): Clean up percent
+	position reporting.
+
 2005-10-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gsterror.c: (gst_error_get_message):
