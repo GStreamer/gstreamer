@@ -1,3 +1,13 @@
+2005-10-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/speex/gstspeexenc.c: (gst_speexenc_get_query_types),
+	(gst_speexenc_src_query):
+	  Add position and duration query, fix query type function.
+	  
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream),
+	(gst_matroska_demux_video_caps), (gst_matroska_demux_audio_caps):
+	  Let's not set non-fixed caps on source pads.
+
 2005-10-21  Wim Taymans  <wim@fluendo.com>
 
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_demux_frame):

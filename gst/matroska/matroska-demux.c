@@ -265,28 +265,6 @@ gst_matroska_demux_stream_from_num (GstMatroskaDemux * demux, guint track_num)
   return -1;
 }
 
-static GstCaps *
-gst_matroska_demux_getcaps (GstPad * pad)
-{
-  GstMatroskaDemux *demux;
-  GstCaps *caps = NULL;
-  guint i;
-
-  demux = GST_MATROSKA_DEMUX (gst_pad_get_parent (pad));
-
-  for (i = 0; caps == NULL && i < demux->num_streams; ++i) {
-    if (demux->src[i]->pad == pad)
-      caps = gst_caps_copy (demux->src[i]->caps);
-  }
-
-  gst_object_unref (demux);
-
-  g_return_val_if_fail (caps != NULL, NULL);
-
-  return caps;
-}
-
-
 static gboolean
 gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
 {
@@ -922,16 +900,13 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   if (caps) {
     GST_LOG ("Adding pad '%s' with caps %" GST_PTR_FORMAT, padname, caps);
     if (gst_caps_is_fixed (caps)) {
-      GST_LOG ("fixed caps");
       gst_pad_use_fixed_caps (context->pad);
       gst_pad_set_caps (context->pad, context->caps);
+      gst_pad_set_active (context->pad, TRUE);
+      gst_element_add_pad (GST_ELEMENT (demux), context->pad);
     } else {
-      GST_LOG ("non-fixed caps");
-      gst_pad_set_getcaps_function (context->pad,
-          GST_DEBUG_FUNCPTR (gst_matroska_demux_getcaps));
+      g_warning ("FIXME: non-fixed caps: %s", gst_caps_to_string (caps));
     }
-    gst_pad_set_active (context->pad, TRUE);
-    gst_element_add_pad (GST_ELEMENT (demux), context->pad);
   } else {
     /* FIXME: are we leaking the pad here? can this even happen? */
     GST_LOG ("Not adding pad '%s' with empty caps", padname);
@@ -2967,12 +2942,17 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       *codec_name = g_strdup ("MPEG-4 simple profile");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP) ||
       !strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AP)) {
+#if 0
     caps = gst_caps_new_full (gst_structure_new ("video/x-divx",
             "divxversion", G_TYPE_INT, 5, NULL),
         gst_structure_new ("video/x-xvid", NULL),
         gst_structure_new ("video/mpeg",
             "mpegversion", G_TYPE_INT, 4,
             "systemstream", G_TYPE_BOOLEAN, FALSE, NULL), NULL);
+#endif
+    caps = gst_caps_new_simple ("video/mpeg",
+        "mpegversion", G_TYPE_INT, 4,
+        "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
     if (codec_name) {
       if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP))
         *codec_name = g_strdup ("MPEG-4 advanced simple profile");
@@ -2980,10 +2960,14 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         *codec_name = g_strdup ("MPEG-4 advanced profile");
     }
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3)) {
+#if 0
     caps = gst_caps_new_full (gst_structure_new ("video/x-divx",
             "divxversion", G_TYPE_INT, 3, NULL),
         gst_structure_new ("video/x-msmpeg",
             "msmpegversion", G_TYPE_INT, 43, NULL), NULL);
+#endif
+    caps = gst_caps_new_simple ("video/x-msmpeg",
+        "msmpegversion", G_TYPE_INT, 43, NULL);
     if (codec_name)
       *codec_name = g_strdup ("Microsoft MPEG-4 v.3");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG1) ||
@@ -3190,8 +3174,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
           audiocontext->bitdepth);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_PCM_FLOAT)) {
     caps = gst_caps_new_simple ("audio/x-raw-float",
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "buffer-frames", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+        "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
     if (audiocontext != NULL) {
       gst_caps_set_simple (caps,
           "width", G_TYPE_INT, audiocontext->bitdepth, NULL);
@@ -3286,6 +3269,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       caps = gst_caps_new_simple ("audio/x-tta",
           "width", G_TYPE_INT, audiocontext->bitdepth, NULL);
     } else {
+      /* FIXME: we can't have non-fixed caps, what to do here? */
       caps = gst_caps_from_string ("audio/x-tta, "
           "width = (int) { 8, 16, 24 }");
     }
@@ -3297,6 +3281,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
           "width", G_TYPE_INT, audiocontext->bitdepth,
           "framed", G_TYPE_BOOLEAN, TRUE, NULL);
     } else {
+      /* FIXME: we can't have non-fixed caps, what to do here? */
       caps = gst_caps_from_string ("audio/x-wavpack, "
           "width = (int) { 8, 16, 24 }, " "framed = (boolean) true");
     }
@@ -3320,6 +3305,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
               "rate", G_TYPE_INT, audiocontext->samplerate, NULL);
         }
       } else {
+        /* FIXME: we can't have non-fixed caps, what to do here? */
         gst_structure_set (structure,
             "channels", GST_TYPE_INT_RANGE, 1, 6,
             "rate", GST_TYPE_INT_RANGE, 4000, 96000, NULL);
