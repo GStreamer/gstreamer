@@ -246,9 +246,10 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
     /* Buffer has no caps. See if the output pad only supports fixed caps */
     GstCaps *out_caps;
 
-    if (GST_PAD_CAPS (trans->srcpad) != NULL) {
-      gst_caps_ref (GST_PAD_CAPS (trans->srcpad));
-      out_caps = GST_PAD_CAPS (trans->srcpad);
+    out_caps = GST_PAD_CAPS (trans->srcpad);
+
+    if (out_caps != NULL) {
+      gst_caps_ref (out_caps);
     } else {
       out_caps = gst_pad_get_allowed_caps (trans->srcpad);
       g_return_val_if_fail (out_caps != NULL, GST_FLOW_ERROR);
@@ -264,7 +265,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
         GST_DEBUG_OBJECT (trans, "Creating sub-buffer and setting caps");
         *buf = gst_buffer_create_sub (input, 0, GST_BUFFER_SIZE (input));
       }
-      GST_BUFFER_CAPS (input) = out_caps;
+      GST_BUFFER_CAPS (*buf) = out_caps;
 
       if (GST_PAD_CAPS (trans->srcpad) == NULL)
         gst_pad_set_caps (trans->srcpad, out_caps);

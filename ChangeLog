@@ -1,5 +1,13 @@
 2005-10-21  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-segments.txt:
+	More docs.
+
+	* gst/elements/gstcapsfilter.c: (gst_capsfilter_prepare_buf):
+	Correctly set caps, even on the subbufer.
+
+2005-10-21  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstelement.h:
