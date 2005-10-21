@@ -291,7 +291,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
                   &value)))
         goto error;
 
-      value = (value - dec->segment_start) + dec->segment_base;
+      value = (value - dec->segment_start) + dec->segment_time;
 
       gst_query_set_position (query, format, value);
 
@@ -433,12 +433,12 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
     {
       GstFormat format;
       gdouble rate;
-      gint64 start, stop, base;
+      gint64 start, stop, time;
       gboolean update;
 
       GST_STREAM_LOCK (pad);
       gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
-          &base);
+          &time);
 
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
@@ -450,7 +450,7 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       dec->segment_rate = rate;
       dec->segment_start = start;
       dec->segment_stop = stop;
-      dec->segment_base = base;
+      dec->segment_time = time;
 
       dec->granulepos = -1;
       dec->cur_timestamp = GST_CLOCK_TIME_NONE;

@@ -374,13 +374,19 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GST_DEBUG ("time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->segment_start));
 
+  if (!GST_CLOCK_TIME_IS_VALID (time)) {
+    render_offset = sink->next_sample;
+    goto no_sync;
+  }
+
   render_diff = time - bsink->segment_start;
+
   /* samples should be rendered based on their timestamp. All samples
    * arriving before the segment_start are to be thrown away */
   /* FIXME, for now we drop the sample completely, we should
    * in fact clip the sample. Same for the segment_stop, actually. */
   if (render_diff < 0)
-    return GST_FLOW_OK;
+    goto out_of_segment;
 
   /* bring buffer timestamp to stream time */
   render_time = render_diff;
@@ -415,6 +421,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     GST_DEBUG ("resync");
   }
 
+no_sync:
   /* clip length based on rate */
   samples /= ABS (bsink->segment_rate);
 
@@ -423,13 +430,20 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   gst_ring_buffer_commit (ringbuf, render_offset, data, samples);
 
-  if (time + duration >= bsink->segment_stop) {
+  if (GST_CLOCK_TIME_IS_VALID (time) && time + duration >= bsink->segment_stop) {
     GST_DEBUG ("start playback because we are at the end of segment");
     gst_ring_buffer_start (ringbuf);
   }
 
   return GST_FLOW_OK;
 
+out_of_segment:
+  {
+    GST_DEBUG ("dropping sample out of segment time %" GST_TIME_FORMAT
+        ", start %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (time), GST_TIME_ARGS (bsink->segment_start));
+    return GST_FLOW_OK;
+  }
 wrong_state:
   {
     GST_DEBUG ("ringbuffer not negotiated");

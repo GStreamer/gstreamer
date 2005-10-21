@@ -62,7 +62,7 @@ struct _GstVorbisDec {
   gdouble segment_rate;
   gint64  segment_start;
   gint64  segment_stop;
-  gint64  segment_base;
+  gint64  segment_time;
 
   GstClockTime          cur_timestamp; /* only used with non-ogg container formats */
   GstClockTime          prev_timestamp; /* only used with non-ogg container formats */

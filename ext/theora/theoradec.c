@@ -70,7 +70,7 @@ struct _GstTheoraDec
   gdouble segment_rate;
   gint64 segment_start;
   gint64 segment_stop;
-  gint64 segment_base;
+  gint64 segment_time;
 };
 
 struct _GstTheoraDecClass
@@ -447,7 +447,7 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
                   granulepos, &my_format, &time)))
         goto error;
 
-      time = (time - dec->segment_start) + dec->segment_base;
+      time = (time - dec->segment_start) + dec->segment_time;
 
       GST_LOG_OBJECT (dec,
           "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
@@ -609,11 +609,11 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
     {
       GstFormat format;
       gdouble rate;
-      gint64 start, stop, base;
+      gint64 start, stop, time;
 
       GST_STREAM_LOCK (pad);
       gst_event_parse_newsegment (event, NULL, &rate, &format, &start, &stop,
-          &base);
+          &time);
 
       /* we need TIME and a positive rate */
       if (format != GST_FORMAT_TIME)
@@ -626,7 +626,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       dec->segment_rate = rate;
       dec->segment_start = start;
       dec->segment_stop = stop;
-      dec->segment_base = base;
+      dec->segment_time = time;
 
       dec->need_keyframe = TRUE;
       dec->granulepos = -1;
