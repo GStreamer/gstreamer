@@ -104,6 +104,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioresample.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaudiotestsrc.so
 
 # Here are packages not in the base plugins package but not dependant
 # on an external lib
