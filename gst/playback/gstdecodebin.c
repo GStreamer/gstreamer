@@ -488,7 +488,7 @@ static void
 pad_blocked (GstPad * pad, gboolean blocked, GstDecodeBin * decode_bin)
 {
   decode_bin->numwaiting--;
-  if (decode_bin->numwaiting == 0) {
+  if (decode_bin->numwaiting == 0 && decode_bin->fakesink) {
     gst_object_ref (decode_bin->fakesink);
     gst_bin_remove (GST_BIN (decode_bin), decode_bin->fakesink);
 

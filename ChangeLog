@@ -1,5 +1,12 @@
 2005-10-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
+	(gst_decode_bin_dispose), (free_dynamics), (pad_unblocked),
+	(pad_blocked), (close_pad_link), (new_pad):
+	Don't try to remove elements twice.
+
+2005-10-21  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theoradec.c: (theora_dec_src_query),
 	(theora_dec_sink_event):
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query),
