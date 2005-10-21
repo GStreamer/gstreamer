@@ -1,5 +1,14 @@
 2005-10-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesink.c: (gst_base_sink_commit_state),
+	(gst_base_sink_get_position), (gst_base_sink_query),
+	(gst_base_sink_change_state):
+	Simply set the right flag when going to playing, that's all
+	we need to do instead of calling a function inside the object
+	lock (that could take the lock as well and deadlock)
+
+2005-10-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesrc.c: (gst_base_src_do_seek),
 	(gst_base_src_loop):
 	Don't warn, the peer element knows what to do best when

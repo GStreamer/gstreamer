@@ -98,8 +98,6 @@ gst_base_sink_get_type (void)
   return base_sink_type;
 }
 
-static GstStateChangeReturn do_playing (GstBaseSink * sink);
-
 static void gst_base_sink_set_clock (GstElement * element, GstClock * clock);
 
 static void gst_base_sink_set_property (GObject * object, guint prop_id,
@@ -443,6 +441,7 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   GST_PREROLL_SIGNAL (pad);
 }
 
+/* with PREROLL_LOCK */
 static gboolean
 gst_base_sink_commit_state (GstBaseSink * basesink)
 {
@@ -460,7 +459,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
 
     switch (pending) {
       case GST_STATE_PLAYING:
-        do_playing (basesink);
+        basesink->need_preroll = FALSE;
         post_playing = TRUE;
         break;
       case GST_STATE_PAUSED:
@@ -1495,50 +1494,6 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
   return res;
 }
 
-/* with PREROLL_LOCK */
-static GstStateChangeReturn
-do_playing (GstBaseSink * basesink)
-{
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-
-  /* no preroll needed */
-  basesink->need_preroll = FALSE;
-
-  /* if we have EOS, we should empty the queue now as there will
-   * be no more data received in the chain function.
-   * FIXME, this could block the state change function too long when
-   * we are pushing and syncing the buffers, better start a new
-   * thread to do this. */
-  if (basesink->eos) {
-    gboolean do_eos = !basesink->eos_queued;
-
-    gst_base_sink_preroll_queue_empty (basesink, basesink->sinkpad);
-
-    /* need to post EOS message here if it was not in the preroll queue we
-     * just emptied. */
-    if (do_eos) {
-      GST_DEBUG_OBJECT (basesink, "Now posting EOS");
-      gst_element_post_message (GST_ELEMENT (basesink),
-          gst_message_new_eos (GST_OBJECT (basesink)));
-    }
-  } else if (!basesink->have_preroll) {
-    /* don't need preroll, but do queue a commit_state */
-    basesink->need_preroll = TRUE;
-    GST_DEBUG_OBJECT (basesink,
-        "PAUSED to PLAYING, !eos, !have_preroll, need preroll to FALSE");
-    ret = GST_STATE_CHANGE_ASYNC;
-    /* we know it's not waiting, no need to signal */
-  } else {
-    /* don't need the preroll anymore */
-    GST_DEBUG_OBJECT (basesink,
-        "PAUSED to PLAYING, !eos, have_preroll, need preroll to FALSE");
-    /* now let it play */
-    GST_PREROLL_SIGNAL (basesink->sinkpad);
-  }
-
-  return ret;
-}
-
 static GstStateChangeReturn
 gst_base_sink_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1573,7 +1528,39 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_PREROLL_LOCK (basesink->sinkpad);
-      ret = do_playing (basesink);
+      /* no preroll needed */
+      basesink->need_preroll = FALSE;
+
+      /* if we have EOS, we should empty the queue now as there will
+       * be no more data received in the chain function.
+       * FIXME, this could block the state change function too long when
+       * we are pushing and syncing the buffers, better start a new
+       * thread to do this. */
+      if (basesink->eos) {
+        gboolean do_eos = !basesink->eos_queued;
+
+        gst_base_sink_preroll_queue_empty (basesink, basesink->sinkpad);
+
+        /* need to post EOS message here if it was not in the preroll queue we
+         * just emptied. */
+        if (do_eos) {
+          GST_DEBUG_OBJECT (basesink, "Now posting EOS");
+          gst_element_post_message (GST_ELEMENT (basesink),
+              gst_message_new_eos (GST_OBJECT (basesink)));
+        }
+      } else if (!basesink->have_preroll) {
+        /* queue a commit_state */
+        basesink->need_preroll = TRUE;
+        GST_DEBUG_OBJECT (basesink,
+            "PAUSED to PLAYING, !eos, !have_preroll, need preroll to FALSE");
+        ret = GST_STATE_CHANGE_ASYNC;
+        /* we know it's not waiting, no need to signal */
+      } else {
+        GST_DEBUG_OBJECT (basesink,
+            "PAUSED to PLAYING, !eos, have_preroll, need preroll to FALSE");
+        /* now let it play */
+        GST_PREROLL_SIGNAL (basesink->sinkpad);
+      }
       GST_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     default:
