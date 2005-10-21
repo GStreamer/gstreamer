@@ -1,3 +1,11 @@
+2005-10-21  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_demux_frame):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_get_src_query_types),
+	(gst_avi_demux_handle_seek):
+	Set correct stream_time in newsegment event.
+	avi can also handle a duration query now.
+
 2005-10-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-demux.c:

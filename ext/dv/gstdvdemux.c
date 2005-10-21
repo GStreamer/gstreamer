@@ -884,7 +884,8 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, const guint8 * data)
     }
 
     event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
-        dvdemux->start_timestamp, dvdemux->stop_timestamp, 0);
+        dvdemux->start_timestamp, dvdemux->stop_timestamp,
+        dvdemux->start_timestamp);
     gst_dvdemux_send_event (dvdemux, event);
 
     dvdemux->need_discont = FALSE;
