@@ -211,6 +211,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   GST_DEBUG_OBJECT (basesrc, "adding src pad");
   gst_element_add_pad (GST_ELEMENT (basesrc), pad);
 
+  basesrc->segment_loop = FALSE;
   basesrc->segment_start = -1;
   basesrc->segment_end = -1;
   basesrc->need_newsegment = TRUE;
@@ -424,6 +425,8 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
+  gboolean flush;
+  gboolean update_stop = TRUE, update_start = TRUE;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
@@ -433,13 +436,18 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
     format = GST_FORMAT_BYTES;
   /* we can only seek bytes */
   if (format != GST_FORMAT_BYTES)
-    return FALSE;
+    goto unsupported_seek;
+
+  flush = flags & GST_SEEK_FLAG_FLUSH;
 
   /* get seek positions */
-  src->segment_loop = flags & GST_SEEK_FLAG_SEGMENT;
+  src->segment_loop = (flags & GST_SEEK_FLAG_SEGMENT) != 0;
 
   /* send flush start */
-  gst_pad_push_event (src->srcpad, gst_event_new_flush_start ());
+  if (flush)
+    gst_pad_push_event (src->srcpad, gst_event_new_flush_start ());
+  else
+    gst_pad_pause_task (src->srcpad);
 
   /* unblock streaming thread */
   gst_base_src_unlock (src);
@@ -447,52 +455,49 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
   /* grab streaming lock */
   GST_STREAM_LOCK (src->srcpad);
 
-  /* send flush stop */
-  gst_pad_push_event (src->srcpad, gst_event_new_flush_stop ());
-
   /* perform the seek */
   switch (cur_type) {
     case GST_SEEK_TYPE_NONE:
+      /* no update to segment */
+      cur = src->segment_start;
+      update_start = FALSE;
       break;
     case GST_SEEK_TYPE_SET:
-      if (cur < 0)
-        goto error;
-      src->offset = MIN (cur, src->size);
-      src->segment_start = src->offset;
+      /* cur hold desired position */
       break;
     case GST_SEEK_TYPE_CUR:
-      src->offset = CLAMP (src->offset + cur, 0, src->size);
-      src->segment_start = src->offset;
+      /* add cur to currently configure segment */
+      cur = src->segment_start + cur;
       break;
     case GST_SEEK_TYPE_END:
-      if (cur > 0)
-        goto error;
-      src->offset = MAX (0, src->size + cur);
-      src->segment_start = src->offset;
+      /* add cur to total length */
+      cur = src->size + cur;
       break;
-    default:
-      goto error;
   }
+  /* bring in sane range */
+  cur = CLAMP (cur, 0, src->size);
 
   switch (stop_type) {
     case GST_SEEK_TYPE_NONE:
+      stop = src->segment_end;
+      update_stop = FALSE;
       break;
     case GST_SEEK_TYPE_SET:
-      if (stop < 0)
-        goto error;
-      src->segment_end = MIN (stop, src->size);
       break;
     case GST_SEEK_TYPE_CUR:
-      src->segment_end = CLAMP (src->segment_end + stop, 0, src->size);
+      stop = src->segment_end + stop;
       break;
     case GST_SEEK_TYPE_END:
-      if (stop > 0)
-        goto error;
-      src->segment_end = src->size + stop;
+      stop = src->size + stop;
       break;
-    default:
-      goto error;
   }
+  stop = CLAMP (stop, 0, src->size);
+
+  src->segment_start = cur;
+  src->segment_end = stop;
+
+  /* update our offset */
+  src->offset = cur;
 
   GST_DEBUG_OBJECT (src, "seek pending for segment from %" G_GINT64_FORMAT
       " to %" G_GINT64_FORMAT, src->segment_start, src->segment_end);
@@ -500,9 +505,20 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
   /* now make sure the newsegment will be send */
   src->need_newsegment = TRUE;
 
+  if (flush)
+    /* send flush stop */
+    gst_pad_push_event (src->srcpad, gst_event_new_flush_stop ());
+
+  if (src->segment_loop) {
+    gst_element_post_message (GST_ELEMENT (src),
+        gst_message_new_segment_start (GST_OBJECT (src), GST_FORMAT_BYTES,
+            cur));
+  }
+
   /* and restart the task */
   gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
       src->srcpad);
+
   GST_STREAM_UNLOCK (src->srcpad);
 
   gst_event_unref (event);
@@ -510,11 +526,12 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
   return TRUE;
 
   /* ERROR */
-error:
+unsupported_seek:
   {
-    GST_DEBUG_OBJECT (src, "seek error");
-    GST_STREAM_UNLOCK (src->srcpad);
-    gst_event_unref (event);
+    GST_DEBUG_OBJECT (src, "invalid format");
+    GST_ELEMENT_WARNING (src, STREAM, NOT_IMPLEMENTED,
+        ("Seek aborted, unsupported format"),
+        ("Seek aborted, unsupported format"));
     return FALSE;
   }
 }
@@ -740,7 +757,12 @@ eos:
   {
     GST_DEBUG_OBJECT (src, "going to EOS");
     gst_pad_pause_task (pad);
-    gst_pad_push_event (pad, gst_event_new_eos ());
+    if (src->segment_loop) {
+      gst_element_post_message (GST_ELEMENT (src),
+          gst_message_new_segment_done (GST_OBJECT (src),
+              GST_FORMAT_BYTES, src->segment_end));
+    } else
+      gst_pad_push_event (pad, gst_event_new_eos ());
     return;
   }
 pause:
@@ -938,7 +960,8 @@ gst_base_src_start (GstBaseSrc * basesrc)
 
   GST_DEBUG ("size %d %lld", result, basesrc->size);
 
-  /* we always run to the end */
+  /* we always run to the end when starting */
+  basesrc->segment_loop = FALSE;
   basesrc->segment_start = 0;
   basesrc->segment_end = basesrc->size;
   basesrc->need_newsegment = TRUE;
