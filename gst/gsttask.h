@@ -27,6 +27,13 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstTaskFunction:
+ * @data: user data passed to the function
+ *
+ * A function that will repeadedly be called in the thread created by
+ * a GstTask. 
+ */
 typedef void         (*GstTaskFunction)          (void *data);
 
 /* --- standard type macros --- */
@@ -63,11 +70,41 @@ typedef enum {
  */
 #define GST_TASK_STATE(task)		(GST_TASK_CAST(task)->state)
 
+/**
+ * GST_TASK_GET_COND:
+ * @task: Task to get the cond of
+ *
+ * Get access to the cond of the task.
+ */
 #define GST_TASK_GET_COND(task)		(GST_TASK_CAST(task)->cond)
+/**
+ * GST_TASK_WAIT:
+ * @task: Task to wait for
+ *
+ * Wait for the task cond to be signalled
+ */
 #define GST_TASK_WAIT(task)		g_cond_wait(GST_TASK_GET_COND (task), GST_GET_LOCK (task))
+/**
+ * GST_TASK_SIGNAL:
+ * @task: Task to signal
+ *
+ * Signal the task cond
+ */
 #define GST_TASK_SIGNAL(task)		g_cond_signal(GST_TASK_GET_COND (task))
+/**
+ * GST_TASK_BROADCAST:
+ * @task: Task to broadcast
+ *
+ * Send a broadcast signal to all waiting task conds
+ */
 #define GST_TASK_BROADCAST(task)	g_cond_breadcast(GST_TASK_GET_COND (task))
 
+/**
+ * GST_TASK_GET_LOCK:
+ * @task: Task to get the lock of
+ *
+ * Get access to the task lock.
+ */
 #define GST_TASK_GET_LOCK(task)		(GST_TASK_CAST(task)->lock)
 
 /**

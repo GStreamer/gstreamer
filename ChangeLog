@@ -1,3 +1,19 @@
+2005-10-21  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstelement.h:
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* gst/gstmessage.h:
+	* gst/gstpad.h:
+	* gst/gstparse.h:
+	* gst/gsttask.c: (gst_task_finalize), (gst_task_func):
+	* gst/gsttask.h:
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	And 2% more doc coverage.
+
 2005-10-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstbasesrc.c (gst_base_src_query): Clean up percent

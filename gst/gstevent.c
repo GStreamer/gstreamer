@@ -33,12 +33,41 @@
  * Events can be parsed with their respective gst_event_parse_*() functions.
  * The event should be unreffed with gst_event_unref().
  *
+ * Events are passed between elements in parallel to the data stream. Some events
+ * are serialized with buffers, others are not. Some events only travel downstream,
+ * others only upstream. Some events can travel both upstream and downstream. 
+ * 
+ * The events are used to signal special conditions in the datastream such as EOS
+ * or the start of a new segment. Events are also used to flush the pipeline of
+ * any pending data.
+ *
+ * Most of the event API is used inside plugins. The application usually only 
+ * constructs and uses the seek event API when it wants to perform a seek in the
+ * pipeline. 
+
  * gst_event_new_seek() is usually used to create a seek event and it takes
  * the needed parameters for a seek event.
- *
- * gst_event_new_flush() creates a new flush event.
+ * <example>
+ * <title>performing a seek on a pipeline</title>
+ *   <programlisting>
+ *   GstEvent *event;
+ *   gboolean result;
+ *   ...
+ *   // construct a seek event to play the media from second 2 to 5, flush
+ *   // the pipeline to decrease latency.
+ *   event = gst_event_new_seek (1.0, 
+ *      GST_FORMAT_TIME, 
+ *   	GST_SEEK_FLAG_FLUSH,
+ *   	GST_SEEK_TYPE_SET, 2 * GST_SECOND,
+ *   	GST_SEEK_TYPE_SET, 5 * GST_SECOND);
+ *   ...
+ *   result = gst_element_send_event (pipeline, event);
+ *   if (!result)
+ *     g_warning ("seek failed");
+ *   ...
+ *   </programlisting>
+ * </example>
  */
-
 #include <string.h>             /* memcpy */
 
 #include "gst_private.h"
@@ -373,7 +402,7 @@ gst_event_new_eos (void)
  * into the stream time again.
  *
  * The @start_value cannot be -1, the @stop_value can be -1. If there
- * is a valid @stop_value given, it must be smaller than @start_value.
+ * is a valid @stop_value given, it must be greater or equal than @start_value.
  *
  * After a newsegment event, the buffer stream time is calculated with:
  *
@@ -649,7 +678,7 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * Allocate a new seek event with the given parameters.
  *
  * The seek event configures playback of the pipeline from
- * @cur to @stop at the speed given in @rate.
+ * @cur to @stop at the speed given in @rate, also called a segment.
  * The @cur and @stop values are expressed in format @format.
  *
  * A @rate of 1.0 means normal playback rate, 2.0 means double speed.
@@ -657,8 +686,9 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * rate is not allowed.
  *
  * @cur_type and @stop_type specify how to adjust the current and stop
- * time, relative or absolute. A type of #GST_EVENT_TYPE_NONE means that
- * the position should not be updated.
+ * time, relative or absolute. A type of #GST_SEEK_TYPE_NONE means that
+ * the position should not be updated. The currently configured playback
+ * segment can be queried with #GST_QUERY_SEGMENT.
  *
  * Returns: A new seek event.
  */

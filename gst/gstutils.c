@@ -1640,7 +1640,7 @@ gst_element_query_position (GstElement * element, GstFormat * format,
  * @element: a #GstElement to invoke the duration query on.
  * @format: a pointer to the #GstFormat asked for.
  *          On return contains the #GstFormat used.
- * @cur: A location in which to store the total duration, or NULL.
+ * @duration: A location in which to store the total duration, or NULL.
  *
  * Queries an element for the total stream duration.
  *
@@ -2411,7 +2411,7 @@ gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur)
  * @pad: a #GstPad to invoke the duration query on.
  * @format: a pointer to the #GstFormat asked for.
  *          On return contains the #GstFormat used.
- * @cur: A location in which to store the total duration, or NULL.
+ * @duration: A location in which to store the total duration, or NULL.
  *
  * Queries a pad for the total stream duration.
  *

@@ -232,9 +232,7 @@ typedef enum {
  *                     be considerably slower for some formats.
  * @GST_SEEK_FLAG_KEY_UNIT: seek to the nearest keyframe. This might be
  *		       faster but less accurate.
- * @GST_SEEK_FLAG_SEGMENT: perform a segment seek. After the playback
- *            of the segment completes, no EOS will be emmited but a
- *            SEGMENT_DONE message will be posted on the bus.
+ * @GST_SEEK_FLAG_SEGMENT: perform a segment seek. 
  *
  * Flags to be used with #gst_element_seek() or #gst_event_new_seek()
  *
@@ -244,6 +242,12 @@ typedef enum {
  * An accurate seek might be slower for formats that don't have any indexes
  * or timestamp markers in the stream. Specifying this flag might require a
  * complete scan of the file in those cases.
+ *
+ * When perfoming a segment seek: after the playback of the segment completes, 
+ * no EOS will be emmited byt the element that performed the seek but a SEGMENT_DONE 
+ * message will be posted on the bus by the element. When this message is posted, it is
+ * possible to send a new seek event to continue playback. With this seek method it
+ * is possible to perform seemless looping or simple linear editing.
  */
 typedef enum {
   GST_SEEK_FLAG_NONE		= 0,

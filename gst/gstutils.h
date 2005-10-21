@@ -476,9 +476,6 @@ gboolean 		g_static_rec_cond_timed_wait  	(GCond                *cond,
 #endif
 
 /* element functions */
-GstFlowReturn		gst_element_abort_preroll	(GstElement *element);
-GstFlowReturn		gst_element_finish_preroll	(GstElement *element, GstPad *pad);
-
 void                    gst_element_create_all_pads     (GstElement *element);
 GstPad*                 gst_element_get_compatible_pad  (GstElement *element, GstPad *pad,
 		                                         const GstCaps *caps);

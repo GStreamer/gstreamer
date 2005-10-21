@@ -29,6 +29,16 @@ typedef struct _GstElement GstElement;
 typedef struct _GstElementClass GstElementClass;
 
 /* gstmessage.h needs State */
+/**
+ * GstState:
+ * @GST_STATE_VOID_PENDING     : no pending state.
+ * @GST_STATE_NULL             : the NULL state or initial state of an element
+ * @GST_STATE_READY            : the element is ready to go to PAUSED
+ * @GST_STATE_PAUSED           : the element is PAUSED
+ * @GST_STATE_PLAYING          : the element is PLAYING
+ *
+ * The posible states an element can be in. 
+ */
 typedef enum {
   GST_STATE_VOID_PENDING        = 0, /* used for GstElement->pending_state when
                                         there is no pending state */
@@ -116,9 +126,37 @@ typedef enum {
 #define GST_STATE_RETURN(obj)		(GST_ELEMENT(obj)->last_return)
 
 #define __GST_SIGN(val)				((val) < 0 ? -1 : ((val) > 0 ? 1 : 0))
+/**
+ * GST_STATE_GET_NEXT:
+ * @cur: A starting state
+ * @pending: A target state
+ *
+ * Given a current state and a target state, calculate the next (intermediate)
+ * state.
+ */
 #define GST_STATE_GET_NEXT(cur,pending) 	((cur) + __GST_SIGN ((gint)(pending) - (gint)(cur)))
+/**
+ * GST_STATE_TRANSITION:
+ * @cur: A current state
+ * @next: A next state
+ *
+ * Given a current state and a next state, calculate the associated 
+ * state transition.
+ */
 #define GST_STATE_TRANSITION(cur,next)  	(((cur)<<3)|(next))
+/**
+ * GST_STATE_TRANSITION_CURRENT:
+ * @trans: A state transition
+ *
+ * Given a state transition, extract the current state.
+ */
 #define GST_STATE_TRANSITION_CURRENT(trans)  	((trans)>>3)
+/**
+ * GST_STATE_TRANSITION_NEXT:
+ * @trans: A state transition
+ *
+ * Given a state transition, extract the next state.
+ */
 #define GST_STATE_TRANSITION_NEXT(trans)  	((trans)&0x7)
 
 /**
@@ -129,6 +167,9 @@ typedef enum {
  * @GST_STATE_CHANGE_PLAYING_TO_PAUSED: state change from PLAYING to PAUSED
  * @GST_STATE_CHANGE_PAUSED_TO_READY  : state change from PAUSED to READY
  * @GST_STATE_CHANGE_READY_TO_NULL    : state change from READY to NULL
+ *
+ * The different (interesting) state changes that are passed to the
+ * state change functions of elements.
  */
 typedef enum /*< flags=0 >*/
 {

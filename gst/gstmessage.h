@@ -55,6 +55,8 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_SEGMENT_DONE: pipeline completed playback of a segment.
  * @GST_MESSAGE_DURATION: The duration of a pipeline changed.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
+ *
+ * The different message types that are available.
  */
 /* NOTE: keep in sync with quark registration in gstmessage.c */
 typedef enum
@@ -149,9 +151,8 @@ GQuark		gst_message_type_to_quark	(GstMessageType type);
  * gst_message_ref:
  * @msg: the message to ref
  *
- * Convinience macro to increase the reference count of the message.
- *
- * Returns: the refed message.
+ * Convinience macro to increase the reference count of the message. Returns the
+ * reffed message.
  */
 #define         gst_message_ref(msg)		GST_MESSAGE (gst_mini_object_ref (GST_MINI_OBJECT (msg)))
 /**
@@ -167,11 +168,9 @@ GQuark		gst_message_type_to_quark	(GstMessageType type);
  * gst_message_copy:
  * @msg: the message to copy
  *
- * Creates a copy of the message.
+ * Creates a copy of the message. Returns a copy of the message.
  *
  * MT safe
- *
- * Returns: the new message.
  */
 #define         gst_message_copy(msg)		GST_MESSAGE (gst_mini_object_copy (GST_MINI_OBJECT (msg)))
 /**
@@ -179,11 +178,9 @@ GQuark		gst_message_type_to_quark	(GstMessageType type);
  * @msg: the message to make writable
  *
  * Checks if a message is writable. If not, a writable copy is made and
- * returned.
+ * returned. Returns a message (possibly a duplicate) that is writable.
  *
  * MT safe
- *
- * Returns: a message (possibly a duplicate) that it writable.
  */
 #define         gst_message_make_writable(msg)	GST_MESSAGE (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
 

@@ -43,6 +43,7 @@
 <!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
 <!ENTITY GstTagList SYSTEM "xml/gsttaglist.xml">
 <!ENTITY GstTagSetter SYSTEM "xml/gsttagsetter.xml">
+<!ENTITY GstTask SYSTEM "xml/gsttask.xml">
 <!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
 <!ENTITY GstTypeFindFactory SYSTEM "xml/gsttypefindfactory.xml">
@@ -153,6 +154,7 @@ Windows.  It is released under the GNU Library General Public License
     &GstSystemClock;
     &GstTagList;
     &GstTagSetter;
+    &GstTask;
     &GstTypeFind;
     &GstTypeFindFactory;
     &GstUriHandler;

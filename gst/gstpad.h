@@ -118,19 +118,37 @@ typedef enum {
  * @ret: a #GstFlowReturn value
  *
  * Macro to test if the given #GstFlowReturn value indicates a fatal
- * error.
+ * error. This macro is mainly used in elements to decide when an error
+ * message should be posted on the bus.
  */
 #define GST_FLOW_IS_FATAL(ret) ((ret) <= GST_FLOW_UNEXPECTED)
 
 G_CONST_RETURN gchar*	gst_flow_get_name	(GstFlowReturn ret);
 GQuark			gst_flow_to_quark	(GstFlowReturn ret);
 
+/**
+ * GstActivateMode:
+ * @GST_ACTIVATE_NONE:	  	 Pad will not handle dataflow
+ * @GST_ACTIVATE_PUSH:		 Pad handles dataflow in downstream push mode
+ * @GST_ACTIVATE_PULL:     	 Pad handles dataflow in upstream pull mode
+ *
+ * The status of a GstPad. After activating a pad, which usually happens when the
+ * parent element goes from READY to PAUSED, the GstActivateMode defines if the
+ * pad operates in push or pull mode.
+ */
 typedef enum {
   GST_ACTIVATE_NONE,
   GST_ACTIVATE_PUSH,
   GST_ACTIVATE_PULL,
 } GstActivateMode;
 
+/**
+ * GST_PAD_MODE_ACTIVATE:
+ * @mode: a #GstActivateMode
+ *
+ * Macro to test if the given #GstActivateMode value indicates that datapassing
+ * is possible or not.
+ */
 #define GST_PAD_MODE_ACTIVATE(mode) ((mode) != GST_ACTIVATE_NONE)
 
 /* pad states */
@@ -144,11 +162,25 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
  * @pad: the #GstPad that performed the chain.
  * @buffer: the #GstBuffer that is chained.
  *
- * A function that will be called when chaining buffers.
+ * A function that will be called on sinkpads when chaining buffers.
  *
- *  Returns: GST_FLOW_OK for success
+ * Returns: GST_FLOW_OK for success
  */
 typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
+/**
+ * GstPadGetRangeFunction:
+ * @pad: the #GstPad to perform the getrange on.
+ * @offset: the offset of the range
+ * @length: the length of the range
+ * @buffer: a memory location to hold the result buffer
+ *
+ * This function will be called on sourcepads when a peer element
+ * request a buffer at the specified offset and length. If this function
+ * returns GST_FLOW_OK, the result buffer will be stored in @buffer. The 
+ * contents of @buffer is invalid for any other return value.
+ *
+ * Returns: GST_FLOW_OK for success
+ */
 typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
 		                                                 guint length, GstBuffer **buffer);
 
@@ -178,7 +210,6 @@ typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad);
  * Returns: a newly allocated #GList of pads that are linked to the given pad on
  *  the inside of the parent element.
  *  The caller must call g_list_free() on it after use.
- *
  */
 typedef GList*			(*GstPadIntLinkFunction)	(GstPad *pad);
 
@@ -190,7 +221,7 @@ typedef GList*			(*GstPadIntLinkFunction)	(GstPad *pad);
  *
  * The signature of the query types function.
  *
- * Returns: an array of query types
+ * Returns: a constant array of query types
  */
 typedef const GstQueryType*	(*GstPadQueryTypeFunction)	(GstPad *pad);
 
@@ -266,7 +297,6 @@ typedef gboolean		(*GstPadDispatcherFunction)	(GstPad *pad, gpointer data);
  * Callback used by gst_pad_set_blocked_async(). Gets called when the blocking
  * operation succeeds.
  */
-
 typedef void			(*GstPadBlockCallback)		(GstPad *pad, gboolean blocked, gpointer user_data);
 
 /**
@@ -286,7 +316,7 @@ typedef enum {
 /**
  * GstPadFlags:
  * @GST_PAD_BLOCKED: is dataflow on a pad blocked
- * @GST_PAD_FLUSHING: is pad empying buffers
+ * @GST_PAD_FLUSHING: is pad refusing buffers
  * @GST_PAD_IN_GETCAPS: GstPadGetCapsFunction() is running now
  * @GST_PAD_IN_SETCAPS: GstPadSetCapsFunction() is running now
  * @GST_PAD_FLAG_LAST: offset to define more flags
@@ -471,9 +501,7 @@ GstPad*			gst_pad_new_from_template		(GstPadTemplate *templ, const gchar *name);
  * gst_pad_get_name:
  * @pad: the pad to get the name from
  *
- * Returns a copy of the name of the pad.
- *
- * Returns: the name of the pad. g_free() after usage.
+ * Get a copy of the name of the pad. g_free() after usage.
  *
  * MT safe.
  */
@@ -482,11 +510,9 @@ GstPad*			gst_pad_new_from_template		(GstPadTemplate *templ, const gchar *name);
  * gst_pad_get_parent:
  * @pad: the pad to get the parent of
  *
- * Returns the parent of @pad. This function increases the refcount
+ * Get the parent of @pad. This function increases the refcount
  * of the parent object so you should gst_object_unref() it after usage.
- *
- * Returns: parent of the object, this can be NULL if the pad has no
- *   parent. unref after usage.
+ * Can return NULL if the pad did not have a parent.
  *
  * MT safe.
  */

@@ -49,10 +49,10 @@
  * the function it will acquire the provided lock.
  *
  * Stopping a task with gst_task_stop() will not immediatly make sure the task is
- * not running anymnore. Use gst_task_join() to  make sure the task is completely
+ * not running anymore. Use gst_task_join() to  make sure the task is completely
  * stopped and the thread is stopped.
  *
- * After creating a GstTask, use gst_object_unref() to free its resources. this can
+ * After creating a GstTask, use gst_object_unref() to free its resources. This can
  * only be done it the task is not running anymore.
  */
 
@@ -132,6 +132,8 @@ gst_task_finalize (GObject * object)
 
   GST_DEBUG ("task %p finalize", task);
 
+  /* task thread cannot be running here since it holds a ref
+   * to the task so that the finalize could not have happened */
   g_cond_free (task->cond);
   task->cond = NULL;
 
@@ -174,7 +176,7 @@ gst_task_func (GstTask * task, GstTaskClass * tclass)
         g_static_rec_mutex_lock_full (lock, t);
 
       GST_LOCK (task);
-      if (task->state == GST_TASK_STOPPED)
+      if (G_UNLIKELY (task->state == GST_TASK_STOPPED))
         goto done;
     }
     GST_UNLOCK (task);
@@ -260,7 +262,8 @@ gst_task_create (GstTaskFunction func, gpointer data)
  * @task: The #GstTask to use
  * @mutex: The GMutex to use
  *
- * Set the mutex used by the task.
+ * Set the mutex used by the task. The mutex will be acquired before
+ * calling the #GstTaskFunction.
  *
  * MT safe.
  */
@@ -312,7 +315,8 @@ gst_task_get_state (GstTask * task)
  * gst_task_start:
  * @task: The #GstTask to start
  *
- * Starts @task.
+ * Starts @task. The @task must have a lock associated with it using
+ * #gst_task_set_lock() or thsi function will return FALSE.
  *
  * Returns: TRUE if the task could be started.
  *
@@ -372,7 +376,9 @@ no_lock:
  * gst_task_stop:
  * @task: The #GstTask to stop
  *
- * Stops @task.
+ * Stops @task. This method merely schedules the task to stop and
+ * will not wait for the task to have completely stopped. Use
+ * #gst_task_join() to stop and wait for completion.
  *
  * Returns: TRUE if the task could be stopped.
  *
@@ -411,7 +417,10 @@ gst_task_stop (GstTask * task)
  * gst_task_pause:
  * @task: The #GstTask to pause
  *
- * Pauses @task.
+ * Pauses @task. This method can also be called on a task in the
+ * stopped state, in which case a thread will be started and will remain
+ * in the paused state. This function does not wait for the task to complete
+ * the paused state.
  *
  * Returns: TRUE if the task could be paused.
  *
@@ -461,7 +470,8 @@ gst_task_pause (GstTask * task)
  *
  * The task will automatically be stopped with this call.
  *
- * This function cannot be called from within a task function.
+ * This function cannot be called from within a task function as this
+ * will cause a deadlock.
  *
  * Returns: TRUE if the task could be joined.
  *

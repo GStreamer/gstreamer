@@ -37,6 +37,18 @@ GQuark gst_parse_error_quark (void);
  */
 #define GST_PARSE_ERROR gst_parse_error_quark ()
 
+/**
+ * GstParseError:
+ * @GST_PARSE_ERROR_SYNTAX: A syntax error occured.
+ * @GST_PARSE_ERROR_NO_SUCH_ELEMENT: The description contained an unknown element
+ * @GST_PARSE_ERROR_NO_SUCH_PROPERTY: An element did not have a specified property
+ * @GST_PARSE_ERROR_LINK: There was an error linking two pads.
+ * @GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY: There was an error setting a property
+ * @GST_PARSE_ERROR_EMPTY_BIN: An empty bin was specified.
+ * @GST_PARSE_ERROR_EMPTY: An empty description was specified
+ *
+ * The different parsing errors that can occur.
+ */
 typedef enum
 {
   GST_PARSE_ERROR_SYNTAX,
