@@ -528,10 +528,7 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
   /* ERROR */
 unsupported_seek:
   {
-    GST_DEBUG_OBJECT (src, "invalid format");
-    GST_ELEMENT_WARNING (src, STREAM, NOT_IMPLEMENTED,
-        ("Seek aborted, unsupported format"),
-        ("Seek aborted, unsupported format"));
+    GST_DEBUG_OBJECT (src, "invalid format, seek aborted.");
     return FALSE;
   }
 }

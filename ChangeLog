@@ -1,5 +1,12 @@
 2005-10-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasesrc.c: (gst_base_src_do_seek),
+	(gst_base_src_loop):
+	Don't warn, the peer element knows what to do best when
+	the seek failed, it might try something else.
+
+2005-10-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesrc.c: (gst_base_src_init),
 	(gst_base_src_do_seek), (gst_base_src_loop), (gst_base_src_start):
 	Fix seeking.
