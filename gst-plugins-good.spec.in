@@ -104,6 +104,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstauparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdebug.so
 %{_libdir}/gstreamer-%{majorminor}/libgstnavigationtest.so
+%{_libdir}/gstreamer-%{majorminor}/libgstalphacolor.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcairo.so
+%{_libdir}/gstreamer-%{majorminor}/libgstflxdec.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmatroska.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideomixer.so
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
