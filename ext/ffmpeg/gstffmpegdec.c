@@ -1156,7 +1156,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     /* no quasi-codecs, please */
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
         (in_plugin->id >= CODEC_ID_PCM_S16LE &&
-            in_plugin->id <= CODEC_ID_PCM_U8)) {
+            in_plugin->id <= CODEC_ID_PCM_S24DAUD)) {
       goto next;
     }
 

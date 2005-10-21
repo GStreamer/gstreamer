@@ -17,7 +17,7 @@ if test ! -f gst-libs/ext/ffmpeg/autogen.sh
 then 
   rm -rf gst-libs/ext/ffmpeg
   echo "+ getting ffmpeg from cvs"
-  cvs co -D "16 Aug 2005 17:00" mirror-ffmpeg 
+  cvs co mirror-ffmpeg 
 fi
 
 

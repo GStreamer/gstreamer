@@ -484,12 +484,17 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "wmvversion", G_TYPE_INT, 3, NULL);
       break;
 
+    case CODEC_ID_QDM2:
+      caps = GST_FF_AUD_CAPS_NEW ("audio/x-qdm2", NULL);
+      break;
+
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
     case CODEC_ID_8BPS:
     case CODEC_ID_SMC:
     case CODEC_ID_FLIC:
     case CODEC_ID_TRUEMOTION1:
+    case CODEC_ID_TRUEMOTION2:
     case CODEC_ID_VMDVIDEO:
     case CODEC_ID_VMDAUDIO:
     case CODEC_ID_MSZH:
@@ -1572,6 +1577,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "audio/x-vorbis")) {
     id = CODEC_ID_VORBIS;
     audio = TRUE;
+  } else if (!strcmp (mimetype, "audio/x-qdm2")) {
+    id = CODEC_ID_QDM2;
+    audio = TRUE;
   } else if (!strcmp (mimetype, "audio/mpeg")) {
     gint layer = 0;
     gint mpegversion = 0;
@@ -1933,6 +1941,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_VORBIS:
       name = "Vorbis audio";
       break;
+    case CODEC_ID_QDM2:
+      name = "QDesign Music 2";
+      break;
     case CODEC_ID_AC3:
       name = "AC-3 audio";
       break;
@@ -2092,6 +2103,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_TRUEMOTION1:
       name = "Duck Truemotion video";
+      break;
+    case CODEC_ID_TRUEMOTION2:
+      name = "Duck Truemotion 2 video";
       break;
     case CODEC_ID_VMDVIDEO:
       name = "Sierra VMD video";

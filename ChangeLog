@@ -1,3 +1,16 @@
+2005-10-21  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* autogen.sh:
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid), (gst_ffmpeg_get_codecid_longname):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_register):
+	* ext/libpostproc/Makefile.am:
+	* ext/libpostproc/gstpostproc.h:
+	  Update snapshot to thu 10/20 evening (EST/GMT-5). Adds QDM2 and
+	  truemotion2 decoding support.
+
 2005-10-03  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_frame): 
