@@ -1,3 +1,9 @@
+2005-10-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_validate_offset),
+	(gst_rmdemux_perform_seek), (gst_rmdemux_src_query):
+	Set correct stream time in newsegment event.
+
 2005-10-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/Makefile.am:

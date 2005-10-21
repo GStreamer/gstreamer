@@ -585,7 +585,7 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
     /* create the discont event we are going to send out */
     event = gst_event_new_newsegment (FALSE, 1.0,
         GST_FORMAT_TIME, (gint64) rmdemux->segment_start,
-        (gint64) rmdemux->segment_stop, 0);
+        (gint64) rmdemux->segment_stop, rmdemux->segment_start);
 
     GST_DEBUG_OBJECT (rmdemux,
         "sending NEWSEGMENT event to all src pads with segment_start= %"
