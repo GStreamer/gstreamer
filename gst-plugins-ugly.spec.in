@@ -20,7 +20,7 @@ BuildRequires: 	%{gstreamer}-devel >= %{gst_minver}
 BuildRequires:  gcc-c++
 
 @USE_SIDPLAY_TRUE@BuildRequires:  libsidplay-devel >= 1.36.0
-# @USE_A52DEC_TRUE@BuildRequires:  a52dec-devel >= 0.7.3
+@USE_A52DEC_TRUE@BuildRequires:  a52dec-devel >= 0.7.3
 # @USE_DVDNAV_TRUE@BuildRequires:  libdvdnav-devel >= 0.1.3
 # @USE_DVDREAD_TRUE@BuildRequires:  libdvdread-devel >= 0.9.0
 @USE_LAME_TRUE@BuildRequires:  lame-devel >= 3.89
@@ -31,7 +31,7 @@ BuildRequires:  gcc-c++
 @USE_SIDPLAY_TRUE@Provides:       gstreamer-sid = %{version}-%{release}
 @USE_LAME_TRUE@Provides:      gstreamer-lame = %{version}-%{release}
 @USE_MAD_TRUE@Provides:       gstreamer-mad = %{version}-%{release}
-# @USE_A52DEC_TRUE@Provides:       gstreamer-a52dec = %{version}-%{release}
+@USE_A52DEC_TRUE@Provides:       gstreamer-a52dec = %{version}-%{release}
 # @USE_DVDNAV_TRUE@Provides:       gstreamer-dvdnavsrc = %{version}-%{release}
 # @USE_DVDREAD_TRUE@Provides:       gstreamer-dvdreadsrc = %{version}-%{release}
 @USE_MPEG2DEC_TRUE@Provides:       gstreamer-mpeg2dec = %{version}-%{release}
@@ -112,7 +112,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_SIDPLAY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsid.so
 @USE_LAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlame.so
 @USE_MAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmad.so
-# @USE_A52DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsta52dec.so
+@USE_A52DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsta52dec.so
 # @USE_DVDNAV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdnavsrc.so
 # @USE_DVDREAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdreadsrc.so
 @USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
