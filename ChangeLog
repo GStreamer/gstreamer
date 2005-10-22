@@ -1,3 +1,10 @@
+2005-10-22  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	Cleaned-up symbols which still had the gst_ prefix
+	* gst/gst.override:
+	add gst_deinit to the ignore list
+
 2005-10-20  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbin.override (_wrap_gst_bin_get_by_name): Dude, like

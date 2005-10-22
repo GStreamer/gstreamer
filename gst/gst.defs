@@ -1749,7 +1749,7 @@
   (caller-owns-return #t)
 )
 
-(define-function gst_event_new_buffersize
+(define-function event_new_buffersize
   (c-name "gst_event_new_buffersize")
   (return-type "GstEvent*")
   (parameters
@@ -2618,7 +2618,7 @@
   )
 )
 
-(define-function gst_message_new_state_dirty
+(define-function message_new_state_dirty
   (c-name "gst_message_new_state_dirty")
   (return-type "GstMessage*")
   (parameters
@@ -2626,7 +2626,7 @@
   )
 )
 
-(define-function gst_message_new_clock_provide
+(define-function message_new_clock_provide
   (c-name "gst_message_new_clock_provide")
   (return-type "GstMessage*")
   (parameters
@@ -2636,7 +2636,7 @@
   )
 )
 
-(define-function gst_message_new_clock_lost
+(define-function message_new_clock_lost
   (c-name "gst_message_new_clock_lost")
   (return-type "GstMessage*")
   (parameters
@@ -2645,7 +2645,7 @@
   )
 )
 
-(define-function gst_message_new_new_clock
+(define-function message_new_new_clock
   (c-name "gst_message_new_new_clock")
   (return-type "GstMessage*")
   (parameters
@@ -2654,7 +2654,7 @@
   )
 )
 
-(define-function gst_message_new_segment_start
+(define-function message_new_segment_start
   (c-name "gst_message_new_segment_start")
   (return-type "GstMessage*")
   (caller-owns-return #t)
@@ -2665,7 +2665,7 @@
   )
 )
 
-(define-function gst_message_new_segment_done
+(define-function message_new_segment_done
   (c-name "gst_message_new_segment_done")
   (return-type "GstMessage*")
   (caller-owns-return #t)
@@ -2676,7 +2676,7 @@
   )
 )
 
-(define-function gst_message_new_application
+(define-function message_new_application
   (c-name "gst_message_new_application")
   (return-type "GstMessage*")
   (parameters
@@ -2685,7 +2685,7 @@
   )
 )
 
-(define-function gst_message_new_element
+(define-function message_new_element
   (c-name "gst_message_new_element")
   (return-type "GstMessage*")
   (parameters
@@ -2694,7 +2694,7 @@
   )
 )
 
-(define-function gst_message_new_duration
+(define-function message_new_duration
   (c-name "gst_message_new_duration")
   (return-type "GstMessage*")
   (parameters
@@ -4113,7 +4113,7 @@
   )
 )
 
-(define-function gst_query_new_duration
+(define-function query_new_duration
   (c-name "gst_query_new_duration")
   (return-type "GstQuery*")
   (parameters
@@ -4433,7 +4433,7 @@
   (return-type "none")
 )
 
-(define-function gst_default_registry_check_feature_version
+(define-function default_registry_check_feature_version
   (c-name "gst_default_registry_check_feature_version")
   (return-type "gboolean")
   (parameters
@@ -5558,7 +5558,7 @@
   (return-type "none")
 )
 
-(define-function gst_alloc_trace_print_live
+(define-function alloc_trace_print_live
   (c-name "gst_alloc_trace_print_live")
   (return-type "none")
 )
@@ -5768,7 +5768,7 @@
 
 ;; From ../gstreamer/gst/gsturitype.h
 
-(define-function gst_uri_get_uri_type
+(define-function uri_get_uri_type
   (c-name "gst_uri_get_uri_type")
   (return-type "GType")
 )
@@ -5805,7 +5805,7 @@
   )
 )
 
-(define-function gst_gdouble_to_guint64
+(define-function gdouble_to_guint64
   (c-name "gst_gdouble_to_guint64")
   (return-type "guint64")
   (parameters
@@ -5813,7 +5813,7 @@
   )
 )
 
-(define-function gst_guint64_to_gdouble
+(define-function guint64_to_gdouble
   (c-name "gst_guint64_to_gdouble")
   (return-type "gdouble")
   (parameters
@@ -5821,7 +5821,7 @@
   )
 )
 
-(define-function gst_util_uint64_scale
+(define-function util_uint64_scale
   (c-name "gst_util_uint64_scale")
   (return-type "guint64")
   (parameters
