@@ -1,3 +1,10 @@
+=== release 0.9.4 ===
+
+2005-10-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.4, "Tyrannosaurus Rex"
+
 2005-10-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/elements/gstfilesink.c: (gst_file_sink_do_seek),
@@ -802,8 +809,8 @@
 	* testsuite/pad/link.c: (gst_test_src_init),
 	(gst_test_filter_init), (gst_test_sink_init):
 	* testsuite/states/locked.c: (main):
-          renamed GST_FLAGS macros to GST_OBJECT_FLAGS
-          moved bitshift from macro to enum definition
+	  renamed GST_FLAGS macros to GST_OBJECT_FLAGS
+	  moved bitshift from macro to enum definition
 
 2005-10-12  Wim Taymans  <wim@fluendo.com>
 
@@ -1308,7 +1315,7 @@
 
 2005-10-09  Philippe Khalaf <burger@speedy.org>
 	* gst/gstmessage.c:
-	Fixed a few forgotten variables on previous commit
+	  Fixed a few forgotten variables on previous commit
 
 2005-10-09  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -1373,7 +1380,7 @@
 	* libs/gst/dataprotocol/dp-private.h:
 	It's about time we bump the version number.
 	Since event types don't fit in the guint8 anymore describing
- 	the payload type, make payload type 16 bits wide.
+	the payload type, make payload type 16 bits wide.
 
 2005-10-08  Wim Taymans  <wim@fluendo.com>
 

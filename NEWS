@@ -1,4 +1,22 @@
-This is GStreamer 0.9.3, "Unregistered".
+This is GStreamer 0.9.4, "Tyrannosaurus Rex".
+
+Changes since 0.9.3:
+
+      * state lock redefined
+      * Extensive documentation updates
+      * BaseTransform reworked
+      * Bus reworked; signal API added
+
+Bugs fixed since 0.9.3:
+
+      * 111146 : new GstThread fails on pipeline with errors
+      * 169772 : [PATCH] GOption command-line parsing
+      * 170777 : use GST_TYPE_DATE for GST_TAG_DATE
+      * 315050 : [API] consider using GstClockTime instead of GTimeVal in ...
+      * 315126 : filesrc + forced caps should be possible
+      * 315383 : gst-launch shouldn't run broken pipelines
+      * 317041 : GstObject flags should be made real flags
+      * 318447 : gst_bin_iterate_sorted: Invalid call to gst_iterator_new
 
 Changes since 0.9.2:
 

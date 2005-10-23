@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.9.2 "South"
+GStreamer: Release notes for GStreamer 0.9.4 "Tyrannosaurus Rex"
         
 
 The GStreamer team is petrified to announce a new release
@@ -36,19 +36,21 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
+      * state lock redefined
+      * Extensive documentation updates
+      * BaseTransform reworked
+      * Bus reworked; signal API added
 
 Bugs fixed in this release
     
-      * 121015 : [api] gst_clock_entry_new() seems broken
-      * 134227 : [api] gst_clock_id_wait_async, wrong return code for defa...
-      * 142209 : [build] Large file support broken
-      * 154785 : Clock does not run if audio stream lacks data for a short...
-      * 305256 : [API] Change gst_element_seek to not mix enum/flags types
-      * 309253 : GST_DEBUG_FUNCPTR macro does illegal casting from functio...
-      * 311004 : ghostpad bugginess
-      * 311009 : valgrind shows undesired messages
-      * 311848 : Renegotiation broken
-      * 314708 : filesrc doesn't set GST_BUFFER_FLAG_READONLY on mmaped bu...
+      * 111146 : new GstThread fails on pipeline with errors
+      * 169772 : [PATCH] GOption command-line parsing
+      * 170777 : use GST_TYPE_DATE for GST_TAG_DATE
+      * 315050 : [API] consider using GstClockTime instead of GTimeVal in ...
+      * 315126 : filesrc + forced caps should be possible
+      * 315383 : gst-launch shouldn't run broken pipelines
+      * 317041 : GstObject flags should be made real flags
+      * 318447 : gst_bin_iterate_sorted: Invalid call to gst_iterator_new
 
 Download
 
@@ -85,19 +87,20 @@ A patch for Rhythmbox is maintained at
 http://bugzilla.gnome.org/show_bug.cgi?id=309609.
 Jamboree has a branch with the tag "jamboree-gst-0.9" that works against
 GStreamer 0.9.
+Flumotion has been mostly ported to 0.9 as well.
 
   
 Contributors to this release
     
       * Andy Wingo
-      * Antoine Tremblay
       * Edward Hervey
-      * Jan Schmidt
+      * Johan Dahlin
+      * Josef Zlomek
+      * Julien Moutte
+      * Michael Smith
       * Philippe Khalaf
-      * Ronald Bultje
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Torsten Schoenfeld
       * Wim Taymans
  

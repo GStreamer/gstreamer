@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-03 14:21+0200\n"
+"POT-Creation-Date: 2005-10-23 12:51+0200\n"
 "PO-Revision-Date: 2004-12-21 14:49+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -17,30 +17,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:267
+#: gst/gst.c:260
 msgid "Print the GStreamer version"
 msgstr "Skriv ut Gstreamer-versionen"
 
-#: gst/gst.c:269
+#: gst/gst.c:262
 msgid "Make all warnings fatal"
 msgstr "Gör alla varningar ödesdigra"
 
-#: gst/gst.c:273
+#: gst/gst.c:265
 msgid "Print available debug categories and exit"
 msgstr "Skriv ut tillgängliga felsökningskategorier och avsluta"
 
-#: gst/gst.c:276
+#: gst/gst.c:268
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för "
 "ingen utmatning"
 
-#: gst/gst.c:278
+#: gst/gst.c:270
 msgid "LEVEL"
 msgstr "NIVÅ"
 
-#: gst/gst.c:280
+#: gst/gst.c:272
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,27 +48,31 @@ msgstr ""
 "Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika "
 "nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:283
+#: gst/gst.c:275
 msgid "LIST"
 msgstr "LISTA"
 
-#: gst/gst.c:285
+#: gst/gst.c:277
 msgid "Disable colored debugging output"
 msgstr "Inaktivera färglagd felsökningsutmatning"
 
-#: gst/gst.c:287
+#: gst/gst.c:279
 msgid "Disable debugging"
 msgstr "Inaktivera felsökning"
 
-#: gst/gst.c:291
+#: gst/gst.c:282
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktivera utförlig diagnostik vid inläsning av insticksmoduler"
 
-#: gst/gst.c:293
+#: gst/gst.c:285
+msgid "Colon-separated paths containing plugins"
+msgstr ""
+
+#: gst/gst.c:285
 msgid "PATHS"
 msgstr "SÖKVÄGAR"
 
-#: gst/gst.c:296
+#: gst/gst.c:287
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -76,26 +80,36 @@ msgstr ""
 "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
 "som lagras i miljövariabeln GST_PLUGIN_PATH"
 
-#: gst/gst.c:298
+#: gst/gst.c:289
 msgid "PLUGINS"
 msgstr "INSTICKSMODULER"
 
-#: gst/gst.c:301
+#: gst/gst.c:292
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
 
-#: gst/gst.c:315
-#, c-format
-msgid "path list for loading plugins (separated by '%s')"
-msgstr "sökvägslista för inläsning av insticksmoduler (åtskild av \"%s\")"
+#: gst/gst.c:297
+#, fuzzy
+msgid "GStreamer Options"
+msgstr "_GStreamer-rörledning:"
 
-#: gst/gstelement.c:265
+#: gst/gst.c:298
+#, fuzzy
+msgid "Show GStreamer Options"
+msgstr "Visa mixerikoner"
+
+#: gst/gst.c:780
+#, fuzzy
+msgid "Unknown option"
+msgstr "Okänd artist"
+
+#: gst/gstelement.c:276
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FEL: från element %s: %s\n"
 
-#: gst/gstelement.c:267
+#: gst/gstelement.c:278
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -104,11 +118,11 @@ msgstr ""
 "Ytterligare felsökningsinformation:\n"
 "%s\n"
 
-#: gst/gsterror.c:61
+#: gst/gsterror.c:62
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer stötte på ett allmänt fel i kärnbibliotek."
 
-#: gst/gsterror.c:63 gst/gsterror.c:99 gst/gsterror.c:119 gst/gsterror.c:149
+#: gst/gsterror.c:64 gst/gsterror.c:100 gst/gsterror.c:120 gst/gsterror.c:150
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error.  "
 "Please file a bug."
@@ -116,12 +130,12 @@ msgstr ""
 "Utvecklarna av GStreamer var för lata för att tilldela detta fel ett "
 "felnummer. Skicka en felrapport."
 
-#: gst/gsterror.c:67
+#: gst/gsterror.c:68
 #, fuzzy
 msgid "Internal GStreamer error: code not implemented.  Please file a bug."
 msgstr "Internt GStreamer-fel: koden inte implementerad. Skicka en felrapport."
 
-#: gst/gsterror.c:69
+#: gst/gsterror.c:70
 #, fuzzy
 msgid "Internal GStreamer error: state change failed.  Please file a bug."
 msgstr ""
@@ -129,184 +143,185 @@ msgstr ""
 
 # Richard Hult säger: "Pad" i gstreamer betyder ungefär "kontakt", man
 # kopplar ihop två element via deras "pads".
-#: gst/gsterror.c:71
+#: gst/gsterror.c:72
 #, fuzzy
 msgid "Internal GStreamer error: pad problem.  Please file a bug."
 msgstr "Internt GStreamer-fel: kontaktproblem. Skicka en felrapport."
 
-#: gst/gsterror.c:73
+#: gst/gsterror.c:74
 #, fuzzy
 msgid "Internal GStreamer error: thread problem.  Please file a bug."
 msgstr "Internt GStreamer-fel: trådproblem. Skicka en felrapport."
 
-#: gst/gsterror.c:75
+#: gst/gsterror.c:76
 #, fuzzy
 msgid "Internal GStreamer error: negotiation problem.  Please file a bug."
 msgstr "Internt GStreamer-fel: förhandlingsproblem. Skicka en felrapport."
 
-#: gst/gsterror.c:77
+#: gst/gsterror.c:78
 #, fuzzy
 msgid "Internal GStreamer error: event problem.  Please file a bug."
 msgstr "Internt GStreamer-fel: händelseproblem. Skicka en felrapport."
 
-#: gst/gsterror.c:79
+#: gst/gsterror.c:80
 #, fuzzy
 msgid "Internal GStreamer error: seek problem.  Please file a bug."
 msgstr "Internt GStreamer-fel: spolningsproblem. Skicka en felrapport."
 
 # Osäker. Jag tror "caps" är kort för "capabilities".
-#: gst/gsterror.c:81
+#: gst/gsterror.c:82
 #, fuzzy
 msgid "Internal GStreamer error: caps problem.  Please file a bug."
 msgstr "Internt GStreamer-fel: förmågeproblem. Skicka en felrapport."
 
-#: gst/gsterror.c:83
+#: gst/gsterror.c:84
 #, fuzzy
 msgid "Internal GStreamer error: tag problem.  Please file a bug."
 msgstr "Internt GStreamer-fel: taggproblem. Skicka en felrapport."
 
-#: gst/gsterror.c:97
+#: gst/gsterror.c:98
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer stötte på ett allmänt fel i stödbibliotek."
 
-#: gst/gsterror.c:101
+#: gst/gsterror.c:102
 msgid "Could not initialize supporting library."
 msgstr "Kunde inte initiera stödbibliotek."
 
-#: gst/gsterror.c:102 gst/gsterror.c:103
+#: gst/gsterror.c:103 gst/gsterror.c:104
 msgid "Could not close supporting library."
 msgstr "Kunde inte stänga stödbibliotek."
 
-#: gst/gsterror.c:117
+#: gst/gsterror.c:118
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer stötte på ett allmänt fel i kärnbibliotek."
 
-#: gst/gsterror.c:121
+#: gst/gsterror.c:122
 msgid "Resource not found."
 msgstr "Resursen kunde inte hittas."
 
-#: gst/gsterror.c:122
+#: gst/gsterror.c:123
 msgid "Resource busy or not available."
 msgstr "Resursen upptagen eller inte tillgänglig."
 
-#: gst/gsterror.c:123
+#: gst/gsterror.c:124
 msgid "Could not open resource for reading."
 msgstr "Kunde inte öppna resursen för läsning."
 
-#: gst/gsterror.c:124
+#: gst/gsterror.c:125
 msgid "Could not open resource for writing."
 msgstr "Kunde inte öppna resursen för skrivning."
 
-#: gst/gsterror.c:126
+#: gst/gsterror.c:127
 msgid "Could not open resource for reading and writing."
 msgstr "Kunde inte öppna resursen för läsning och skrivning."
 
-#: gst/gsterror.c:127
+#: gst/gsterror.c:128
 msgid "Could not close resource."
 msgstr "Kunde inte stänga resursen."
 
-#: gst/gsterror.c:128
+#: gst/gsterror.c:129
 msgid "Could not read from resource."
 msgstr "Kunde inte läsa från resursen."
 
-#: gst/gsterror.c:129
+#: gst/gsterror.c:130
 msgid "Could not write to resource."
 msgstr "Kunde inte skriva till resursen."
 
-#: gst/gsterror.c:130
+#: gst/gsterror.c:131
 msgid "Could not perform seek on resource."
 msgstr "Kunde inte utföra spolning på resursen."
 
-#: gst/gsterror.c:131
+#: gst/gsterror.c:132
 msgid "Could not synchronize on resource."
 msgstr "Kunde inte synronisera på resursen."
 
-#: gst/gsterror.c:133
+#: gst/gsterror.c:134
 msgid "Could not get/set settings from/on resource."
 msgstr "Kunde inte hämta/ställa in inställningar från/på resursen."
 
-#: gst/gsterror.c:147
+#: gst/gsterror.c:148
 #, fuzzy
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer stötte på ett allmänt fel i kärnbibliotek."
 
-#: gst/gsterror.c:152
+#: gst/gsterror.c:153
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr "Elementet stöder inte hantering av detta flöde. Skicka en felrapport."
 
-#: gst/gsterror.c:154
+#: gst/gsterror.c:155
 msgid "Could not determine type of stream."
 msgstr "Kunde inte avgöra typen av flöde."
 
-#: gst/gsterror.c:156
+#: gst/gsterror.c:157
 msgid "The stream is of a different type than handled by this element."
 msgstr "Flödet är av en annan typ än den som hanteras av detta element."
 
-#: gst/gsterror.c:158
+#: gst/gsterror.c:159
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Det finns ingen komprimeringsmetod som kan hantera denna flödestyp."
 
-#: gst/gsterror.c:159
+#: gst/gsterror.c:160
 msgid "Could not decode stream."
 msgstr "Kunde inte avkoda flöde."
 
-#: gst/gsterror.c:160
+#: gst/gsterror.c:161
 msgid "Could not encode stream."
 msgstr "Kunde inte koda flöde."
 
-#: gst/gsterror.c:161
+#: gst/gsterror.c:162
 msgid "Could not demultiplex stream."
 msgstr "Kunde inte avmultiplexera flöde."
 
-#: gst/gsterror.c:162
+#: gst/gsterror.c:163
 msgid "Could not multiplex stream."
 msgstr "Kunde inte multiplexera flöde."
 
-#: gst/gsterror.c:163
-msgid "Stream is of the wrong format."
-msgstr "Flödet är av fel format."
-
-#: gst/gsterror.c:211
+#: gst/gsterror.c:213
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Inget felmeddelande för domänen %s."
 
-#: gst/gsterror.c:219
+#: gst/gsterror.c:221
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Inget standardfelmeddelande för domänen %s och koden %d."
 
-#: gst/gsttaglist.c:88
+#: gst/gstqueue.c:824 gst/base/gstbasesrc.c:773 gst/base/gstbasesrc.c:782
+msgid "Internal data flow error."
+msgstr ""
+
+#: gst/gsttaglist.c:89
 msgid "title"
 msgstr "titel"
 
-#: gst/gsttaglist.c:88
+#: gst/gsttaglist.c:89
 msgid "commonly used title"
 msgstr "vanligtvis använd titel"
 
-#: gst/gsttaglist.c:91
+#: gst/gsttaglist.c:92
 msgid "artist"
 msgstr "artist"
 
-#: gst/gsttaglist.c:92
+#: gst/gsttaglist.c:93
 msgid "person(s) responsible for the recording"
 msgstr "person(er) som ansvarar för inspelningen"
 
-#: gst/gsttaglist.c:96
+#: gst/gsttaglist.c:97
 msgid "album"
 msgstr "album"
 
-#: gst/gsttaglist.c:97
+#: gst/gsttaglist.c:98
 msgid "album containing this data"
 msgstr "album som innehåller dessa data"
 
-#: gst/gsttaglist.c:99
+#: gst/gsttaglist.c:100
 msgid "date"
 msgstr "datum"
 
 #: gst/gsttaglist.c:100
-msgid "date the data was created (in Julian calendar days)"
+#, fuzzy
+msgid "date the data was created (as a GDate structure)"
 msgstr "datum då dessa data skapades (i dagar i den julianska kalendern)"
 
 #: gst/gsttaglist.c:103
@@ -561,6 +576,10 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
+#: gst/base/gstbasesink.c:627
+msgid "Internal data flow problem."
+msgstr ""
+
 #: gst/elements/gstfilesink.c:244
 msgid "No file name specified for writing."
 msgstr "Inget filnamn angivet för skrivning."
@@ -570,41 +589,41 @@ msgstr "Inget filnamn angivet för skrivning."
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 
-#: gst/elements/gstfilesink.c:266
+#: gst/elements/gstfilesink.c:267
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: gst/elements/gstfilesink.c:348 gst/elements/gstfilesink.c:402
+#: gst/elements/gstfilesink.c:375 gst/elements/gstfilesink.c:439
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid skrivning till filen \"%s\"."
 
-#: gst/elements/gstfilesrc.c:902
+#: gst/elements/gstfilesrc.c:910
 msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
-#: gst/elements/gstfilesrc.c:914
+#: gst/elements/gstfilesrc.c:922
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: gst/elements/gstfilesrc.c:923
+#: gst/elements/gstfilesrc.c:931
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "kunde inte länka %s till %s"
 
-#: gst/elements/gstfilesrc.c:930
+#: gst/elements/gstfilesrc.c:938
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" är en katalog."
 
-#: gst/elements/gstfilesrc.c:937
+#: gst/elements/gstfilesrc.c:945
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" är ett uttag."
 
-#: gst/elements/gstidentity.c:306
+#: gst/elements/gstidentity.c:316
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
@@ -626,76 +645,76 @@ msgid "maximum"
 msgstr "maximum"
 
 # Osäker.
-#: gst/parse/grammar.y:188
+#: gst/parse/grammar.y:206
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "angav tom korg \"%s\", inte tillåtet"
 
-#: gst/parse/grammar.y:193
+#: gst/parse/grammar.y:212
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "ingen korg \"%s\", hoppar över"
 
-#: gst/parse/grammar.y:271
+#: gst/parse/grammar.y:294
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "ingen \"%s\"-egenskap i elementet \"%s\""
 
-#: gst/parse/grammar.y:284
+#: gst/parse/grammar.y:309
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kunde inte ställa in egenskapen \"%s\" i elementet \"%s\" till \"%s\""
 
-#: gst/parse/grammar.y:496
+#: gst/parse/grammar.y:532
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kunde inte länka %s till %s"
 
-#: gst/parse/grammar.y:541
+#: gst/parse/grammar.y:578
 #, c-format
 msgid "no element \"%s\""
 msgstr "inget \"%s\"-element"
 
 # Osäker. Jag tror "caps" är kort för "capabilities".
-#: gst/parse/grammar.y:592
+#: gst/parse/grammar.y:629
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "kunde inte tolka förmågorna \"%s\""
 
-#: gst/parse/grammar.y:614 gst/parse/grammar.y:662 gst/parse/grammar.y:678
-#: gst/parse/grammar.y:736
+#: gst/parse/grammar.y:651 gst/parse/grammar.y:699 gst/parse/grammar.y:715
+#: gst/parse/grammar.y:773
 msgid "link without source element"
 msgstr "länk utan källelement"
 
-#: gst/parse/grammar.y:620 gst/parse/grammar.y:659 gst/parse/grammar.y:745
+#: gst/parse/grammar.y:657 gst/parse/grammar.y:696 gst/parse/grammar.y:782
 msgid "link without sink element"
 msgstr "länk utan utgångselement"
 
-#: gst/parse/grammar.y:696
+#: gst/parse/grammar.y:733
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "inget källelement för URI:n \"%s\""
 
-#: gst/parse/grammar.y:706
+#: gst/parse/grammar.y:743
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "inget element att länka URI:n \"%s\" till"
 
-#: gst/parse/grammar.y:714
+#: gst/parse/grammar.y:751
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "inget utgångselement för URI:n \"%s\""
 
-#: gst/parse/grammar.y:718
+#: gst/parse/grammar.y:755
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 
-#: gst/parse/grammar.y:730
+#: gst/parse/grammar.y:767
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
-#: tools/gst-inspect.c:1085
+#: tools/gst-inspect.c:1101
 msgid "Print all elements"
 msgstr "Skriv ut alla element"
 
@@ -728,159 +747,163 @@ msgstr "FEL: kunde inte tolka kommandoradsargumentet %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VARNING: elementet med namnet \"%s\" hittades inte.\n"
 
-#: tools/gst-launch.c:378
+#: tools/gst-launch.c:381
 #, fuzzy, c-format
-msgid "Got Message from element \"%s\"\n"
+msgid "Got Message from element \"%s\" (%s): "
 msgstr "FEL: från element %s: %s\n"
 
-#: tools/gst-launch.c:392
+#: tools/gst-launch.c:408
 #, fuzzy, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "FEL: från element %s: %s\n"
 
-#: tools/gst-launch.c:402
+#: tools/gst-launch.c:418
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
 
-#: tools/gst-launch.c:448
+#: tools/gst-launch.c:464
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr ""
 
-#: tools/gst-launch.c:479
+#: tools/gst-launch.c:495
 msgid "Output tags (also known as metadata)"
 msgstr "Utmatningstaggar (även känt som metadata)"
 
-#: tools/gst-launch.c:481
+#: tools/gst-launch.c:497
+msgid "Output status information and property notifications"
+msgstr "Skriv ut statusinformation och egenskapsnotifieringar"
+
+#: tools/gst-launch.c:499
 #, fuzzy
 msgid "Output messages"
 msgstr "Utförstärkning"
 
-#: tools/gst-launch.c:483
-msgid "Output status information and property notifications"
-msgstr "Skriv ut statusinformation och egenskapsnotifieringar"
-
-#: tools/gst-launch.c:485
+#: tools/gst-launch.c:501
 msgid "Do not output status information of TYPE"
 msgstr "Skriv inte ut statusinformation av TYP"
 
-#: tools/gst-launch.c:485
+#: tools/gst-launch.c:501
 msgid "TYPE1,TYPE2,..."
 msgstr "TYP1,TYP2,..."
 
-#: tools/gst-launch.c:488
+#: tools/gst-launch.c:504
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Spara xml-representation av rörledningen i FIL och avsluta"
 
-#: tools/gst-launch.c:488
+#: tools/gst-launch.c:504
 msgid "FILE"
 msgstr "FIL"
 
-#: tools/gst-launch.c:491
+#: tools/gst-launch.c:507
 msgid "Do not install a fault handler"
 msgstr "Installera inte en felhanterare"
 
-#: tools/gst-launch.c:493
+#: tools/gst-launch.c:509
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"
 
-#: tools/gst-launch.c:495
+#: tools/gst-launch.c:511
 msgid "Number of times to iterate pipeline"
 msgstr "Antalet gånger som rörledningen ska itereras"
 
-#: tools/gst-launch.c:565
+#: tools/gst-launch.c:589
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras: %s.\n"
 
-#: tools/gst-launch.c:569
+#: tools/gst-launch.c:593
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras.\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:573
+#: tools/gst-launch.c:597
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VARNING: felaktig rörledning: %s\n"
 
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:574
-#, c-format
-msgid "         Trying to run anyway.\n"
-msgstr "         Försöker köra ändå.\n"
-
-#: tools/gst-launch.c:598
+#: tools/gst-launch.c:623
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEL: \"pipeline\"-elementet hittades inte.\n"
 
-#: tools/gst-launch.c:605 tools/gst-launch.c:652
+#: tools/gst-launch.c:629 tools/gst-launch.c:676
 #, fuzzy, c-format
 msgid "PAUSE pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
-#: tools/gst-launch.c:610
+#: tools/gst-launch.c:634
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to pause.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
 
-#: tools/gst-launch.c:615
+#: tools/gst-launch.c:639
 #, fuzzy, c-format
 msgid "NO_PREROLL pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
-#: tools/gst-launch.c:618
+#: tools/gst-launch.c:642
 #, fuzzy, c-format
 msgid "PREROLL pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
-#: tools/gst-launch.c:622
+#: tools/gst-launch.c:646
 #, fuzzy, c-format
 msgid "PREROLLED pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
-#: tools/gst-launch.c:629
+#: tools/gst-launch.c:653
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
 
-#: tools/gst-launch.c:634
+#: tools/gst-launch.c:658
 #, c-format
 msgid "RUNNING pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
-#: tools/gst-launch.c:637
+#: tools/gst-launch.c:661
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:648
+#: tools/gst-launch.c:672
 msgid "Execution ended after %"
 msgstr "Körning avslutades efter %"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:648
+#: tools/gst-launch.c:672
 #, fuzzy
 msgid " ns.\n"
 msgstr " ns).\n"
 
-#: tools/gst-launch.c:655
+#: tools/gst-launch.c:679
 #, fuzzy, c-format
 msgid "READY pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
-#: tools/gst-launch.c:660
+#: tools/gst-launch.c:684
 #, fuzzy, c-format
 msgid "NULL pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
-#: tools/gst-launch.c:665
+#: tools/gst-launch.c:689
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "KÖR rörledning...\n"
+
+#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgstr "sökvägslista för inläsning av insticksmoduler (åtskild av \"%s\")"
+
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "Flödet är av fel format."
+
+# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Försöker köra ändå.\n"
 
 #~ msgid "Registry to use"
 #~ msgstr "Register att använda"
@@ -1702,9 +1725,6 @@ msgstr "KÖR rörledning...\n"
 #~ msgid "Playing %s - %s"
 #~ msgstr "Spelar %s - %s"
 
-#~ msgid "Unknown Artist"
-#~ msgstr "Okänd artist"
-
 #~ msgid "Unknown Album"
 #~ msgstr "Okänt album"
 
@@ -2281,9 +2301,6 @@ msgstr "KÖR rörledning...\n"
 
 #~ msgid "_Create"
 #~ msgstr "_Skapa"
-
-#~ msgid "_GStreamer Pipeline:"
-#~ msgstr "_GStreamer-rörledning:"
 
 #~ msgid "_Profile name:"
 #~ msgstr "_Profilnamn:"
@@ -3167,9 +3184,6 @@ msgstr "KÖR rörledning...\n"
 
 #~ msgid "GUI"
 #~ msgstr "Grafiskt användargränssnitt"
-
-#~ msgid "Show mixer icons"
-#~ msgstr "Visa mixerikoner"
 
 #~ msgid "Show mixer labels"
 #~ msgstr "Visa mixeretiketter"

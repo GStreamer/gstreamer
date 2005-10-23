@@ -113,7 +113,8 @@ TODO :
            cvs tag RELEASE-0_6_3
   - run "make release", build rpms
   - install on gnome's ftp
-  - for core: run "make upload" from gstreamer/docs to get the new docs online
+  - for plugins docs: run "make update" in docs/plugins to update version info
+  - for docs: run "make upload" from gstreamer/docs to get the new docs online
   - change www/src/htdocs/entities.gst with the new version numbers
   - change www/src/htdocs/bugs/bugs.xml and add a new milestone
   - possibly add new version and milestone to bugzilla
