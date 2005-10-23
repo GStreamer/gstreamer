@@ -21,6 +21,7 @@
 
 #include <string.h>
 #include <gst/video/video.h>
+#include <gst/gst-i18n-plugin.h>
 
 static GstElementDetails gst_pngdec_details = {
   "PNG decoder",
@@ -291,8 +292,9 @@ pause:
   gst_pad_pause_task (pngdec->sinkpad);
   if (GST_FLOW_IS_FATAL (ret)) {
     gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
-    GST_ELEMENT_ERROR (pngdec, STREAM, STOPPED,
-        (NULL), ("stream stopped, reason %s", gst_flow_get_name (ret)));
+    GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
+        (_("Internal data stream error.")),
+        ("stream stopped, reason %s", gst_flow_get_name (ret)));
   }
 }
 
@@ -436,8 +438,9 @@ pause:
   gst_pad_pause_task (pngdec->sinkpad);
   if (GST_FLOW_IS_FATAL (ret)) {
     gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
-    GST_ELEMENT_ERROR (pngdec, STREAM, STOPPED,
-        (NULL), ("stream stopped, reason %s", gst_flow_get_name (ret)));
+    GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
+        (_("Internal data stream error.")),
+        ("stream stopped, reason %s", gst_flow_get_name (ret)));
   }
 }
 

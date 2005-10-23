@@ -27,6 +27,7 @@
 #include "gstwavparse.h"
 #include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-media.h"
+#include <gst/gst-i18n-plugin.h>
 
 #ifndef G_MAXUINT32
 #define G_MAXUINT32 0xffffffff
@@ -1027,8 +1028,8 @@ pause:
   gst_pad_pause_task (wav->sinkpad);
   if (GST_FLOW_IS_FATAL (ret)) {
     /* for fatal errors we post an error message */
-    GST_ELEMENT_ERROR (wav, STREAM, STOPPED,
-        ("streaming stopped, reason %s", gst_flow_get_name (ret)),
+    GST_ELEMENT_ERROR (wav, STREAM, FAILED,
+        (_("Internal data stream error.")),
         ("streaming stopped, reason %s", gst_flow_get_name (ret)));
     gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
   }
