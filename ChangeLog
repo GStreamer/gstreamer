@@ -1,3 +1,10 @@
+=== gst-python 0.9.4 ===
+
+2005-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  Releasing 0.9.4, "Stegosaurus"
+
 2005-10-22  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:
@@ -216,8 +223,8 @@
 	* gst/gst.defs:
 	Updated defs file to current gstreamer core
 	* gst/gst.override:
-	Added useless function (at least from python bindings) and little correction
-	on _wrap_gst_xml_get_topelements()
+	Added useless function (at least from python bindings) and little
+	correction on _wrap_gst_xml_get_topelements()
 	* gst/gstbin.override:
 	* gst/gstbuffer.override:
 	Fix memleak in gst.Buffer.set_caps()

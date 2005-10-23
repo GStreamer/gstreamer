@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Python bindings 0.9.3 "For the Virgin"
+GStreamer: Release notes for GStreamer Python bindings 0.9.4 "Stegosaurus"
         
 
 The GStreamer team is petrified to announce a new release
@@ -19,6 +19,9 @@ Features of this release
 
 Bugs fixed in this release
     
+      * 315433 : gst.element_factory_make and some other functions should ...
+      * 318684 : [PATCH] reference leaks when using PyList_Append to popul...
+      * 318692 : gst-python fails to build with python 2.3
 
 Download
 
@@ -48,9 +51,9 @@ Applications
   
 Contributors to this release
     
+      * Allesandro Decina
       * Andy Wingo
       * Edward Hervey
-      * Jan Schmidt
       * Johan Dahlin
       * Thomas Vander Stichele
  
