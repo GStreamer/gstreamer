@@ -244,3 +244,9 @@ GstBin *gstbin
 GstElement *arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstDV1394Src::frame-dropped</NAME>
+<RETURNS>void</RETURNS>
+GstDV1394Src *gstdv1394src
+</SIGNAL>
+

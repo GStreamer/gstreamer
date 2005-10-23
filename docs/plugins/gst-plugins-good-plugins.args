@@ -6518,3 +6518,473 @@
 <DEFAULT>8000</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstSpeexEnc::abr</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ABR</NICK>
+<BLURB>Enable average bit-rate (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeexEnc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding Bit-rate</NICK>
+<BLURB>Specify an encoding bit-rate (in bps). (0 = automatic).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeexEnc::complexity</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Complexity</NICK>
+<BLURB>Set encoding complexity.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeexEnc::dtx</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DTX</NICK>
+<BLURB>Enable discontinuous transmission.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeexEnc::last-message</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>last-message</NICK>
+<BLURB>The last status message.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeexEnc::nframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>NFrames</NICK>
+<BLURB>Number of frames per buffer.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeexEnc::quality</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Encoding quality.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeexEnc::vad</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VAD</NICK>
+<BLURB>Enable voice activity detection.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeexEnc::vbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VBR</NICK>
+<BLURB>Enable variable bit-rate.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDV1394Src::channel</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,64]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel number for listening.</BLURB>
+<DEFAULT>63</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDV1394Src::consecutive</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>consecutive frames</NICK>
+<BLURB>send n consecutive frames after skipping.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDV1394Src::drop-incomplete</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>drop_incomplete</NICK>
+<BLURB>drop incomplete frames.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDV1394Src::guid</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GUID</NICK>
+<BLURB>select one of multiple DV devices by its GUID. use a hexadecimal like 0xhhhhhhhhhhhhhhhh. (0 = no guid).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDV1394Src::port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port</NICK>
+<BLURB>Port number (-1 automatic).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDV1394Src::skip</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>skip frames</NICK>
+<BLURB>skip n frames.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDV1394Src::use-avc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use AV/C</NICK>
+<BLURB>Use AV/C VTR control.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::blocksize</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[16,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Blocksize</NICK>
+<BLURB>Blocksize in samples.</BLURB>
+<DEFAULT>4608</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::escape-coding</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Escape coding</NICK>
+<BLURB>search for escape codes in the entropy coding stage for slightly better compression.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::exhaustive-model-search</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do exhaustive model search</NICK>
+<BLURB>do exhaustive search of LP coefficient quantization (expensive!).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::loose-mid-side-stereo</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Loose mid side stereo</NICK>
+<BLURB>Loose mid side stereo.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::max-lpc-order</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 32</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max LPC order</NICK>
+<BLURB>Max LPC order; 0 => use only fixed predictors.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::max-residual-partition-order</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 16</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max residual partition order</NICK>
+<BLURB>Max residual partition order (above 4 doesn't usually help much).</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::mid-side-stereo</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do mid side stereo</NICK>
+<BLURB>Do mid side stereo (only for stereo input).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::min-residual-partition-order</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 16</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min residual partition order</NICK>
+<BLURB>Min residual partition order (above 4 doesn't usually help much).</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::qlp-coeff-prec-search</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do QLP coefficients precision search</NICK>
+<BLURB>false = use qlp_coeff_precision, true = search around qlp_coeff_precision, take best.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::qlp-coeff-precision</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 32</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>QLP coefficients precision</NICK>
+<BLURB>Precision in bits of quantized linear-predictor coefficients; 0 = automatic.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::quality</NAME>
+<TYPE>GstFlacEncQuality</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Speed versus compression tradeoff.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::rice-parameter-search-dist</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 15</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>rice_parameter_search_dist</NICK>
+<BLURB>0 = try only calc'd parameter k; else try all [k-dist..k+dist] parameters, use best.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFlacEnc::streamable-subset</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Streamable subset</NICK>
+<BLURB>true to limit encoder to generating a Subset stream, else false.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOssSink::device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>OSS device (usually /dev/dspN).</BLURB>
+<DEFAULT>"/dev/dsp"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMixer::background</NAME>
+<TYPE>GstVideoMixerBackground</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Background</NICK>
+<BLURB>Background type.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMatroskaMux::writing-app</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Writing application.</NICK>
+<BLURB>The name the application that creates the matroska file.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTest::allowed-timestamp-deviation</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>allowed timestamp deviation</NICK>
+<BLURB>allowed average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTest::buffer-count</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>buffer count</NICK>
+<BLURB>number of buffers in stream.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTest::expected-buffer-count</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>expected buffer count</NICK>
+<BLURB>expected number of buffers in stream.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTest::expected-length</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>expected length</NICK>
+<BLURB>expected length of stream.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTest::expected-md5</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>expected md5</NICK>
+<BLURB>expected md5 of processing the whole data.</BLURB>
+<DEFAULT>"---"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTest::length</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>length</NICK>
+<BLURB>length of stream.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTest::md5</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>md5</NICK>
+<BLURB>md5 of processing the whole data.</BLURB>
+<DEFAULT>"---"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTest::timestamp-deviation</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>timestamp deviation</NICK>
+<BLURB>average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstProgressReport::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do not print output to stdout</NICK>
+<BLURB>Do not print output to stdout.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstProgressReport::update-freq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Update Frequency</NICK>
+<BLURB>Number of seconds between reports when data is flowing.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNavSeek::seek-offset</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Seek Offset</NICK>
+<BLURB>Time in seconds to seek by.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBreakMyData::probability</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>probability</NICK>
+<BLURB>probability for each byte in the buffer to be changed.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBreakMyData::seed</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>seed</NICK>
+<BLURB>seed for randomness (initialized when going from READY to PAUSED).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBreakMyData::set-to</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,255]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>set-to</NICK>
+<BLURB>set changed bytes to this value (-1 means random value.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBreakMyData::skip</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>skip</NICK>
+<BLURB>amount of bytes skipped at the beginning of stream.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+

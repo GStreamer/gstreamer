@@ -1,0 +1,20 @@
+<plugin>
+  <name>cairo</name>
+  <description>Cairo-based overlaying</description>
+  <filename>../../ext/cairo/.libs/libgstcairo.so</filename>
+  <basename>libgstcairo.so</basename>
+  <version>0.9.4</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>cairotimeoverlay</name>
+      <longname>Time Overlay</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Overlays the time on a video stream</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+    </element>
+  </elements>
+</plugin>

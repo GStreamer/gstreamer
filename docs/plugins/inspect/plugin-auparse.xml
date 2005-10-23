@@ -1,8 +1,8 @@
 <plugin>
-  <name>wavparse</name>
-  <description>Parse a .wav file into raw audio</description>
-  <filename>../../gst/wavparse/.libs/libgstwavparse.so</filename>
-  <basename>libgstwavparse.so</basename>
+  <name>auparse</name>
+  <description>parses au streams</description>
+  <filename>../../gst/auparse/.libs/libgstauparse.so</filename>
+  <basename>libgstauparse.so</basename>
   <version>0.9.4</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
@@ -10,10 +10,10 @@
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
     <element>
-      <name>wavparse</name>
-      <longname>.wav demuxer</longname>
+      <name>auparse</name>
+      <longname>.au parser</longname>
       <class>Codec/Demuxer/Audio</class>
-      <description>Parse a .wav file into raw audio</description>
+      <description>Parse an .au file into raw audio</description>
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
     </element>
   </elements>

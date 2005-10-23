@@ -1,3 +1,10 @@
+=== release 0.9.4 ===
+
+2005-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  Releasing 0.9.4, "Dromiceiomimus"
+
 2005-10-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/speex/gstspeexenc.c: (gst_speexenc_get_query_types),
@@ -99,6 +106,7 @@
 	thanks to Master Wim Taymans ;-)
 
 2005-10-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/matroska/Makefile.am:
 	* gst/matroska/ebml-read.c:
 	* gst/matroska/ebml-read.h:
@@ -258,8 +266,8 @@
 	* sys/osxaudio/gstosxaudiosink.c: (gst_osxaudiosink_init):
 	* sys/osxaudio/gstosxaudiosink.h:
 	* sys/osxaudio/gstosxaudiosrc.h:
-	renamed GST_FLAGS macros to GST_OBJECT_FLAGS
-        moved bitshift from macro to enum definition
+	  renamed GST_FLAGS macros to GST_OBJECT_FLAGS
+	  moved bitshift from macro to enum definition
 
 2005-10-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -332,7 +340,7 @@
 	(gst_dv1394src_bus_reset): Post a message when the cable is
 	unplugged.
 	(gst_dv1394src_create, gst_dv1394src_unlock): Remove some prints.
-        (gst_dv1394src_bus_reset): Don't unref the message.
+	(gst_dv1394src_bus_reset): Don't unref the message.
 
 	* ext/raw1394/gstdv1394src.c: Clean up for style before doing some
 	hacking. The only change should be that the state change stuff was

@@ -1,0 +1,20 @@
+<plugin>
+  <name>alphacolor</name>
+  <description>RGB-&gt;YUV colorspace conversion preserving the alpha channels</description>
+  <filename>../../gst/alpha/.libs/libgstalphacolor.so</filename>
+  <basename>libgstalphacolor.so</basename>
+  <version>0.9.4</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>alphacolor</name>
+      <longname>alpha color filter</longname>
+      <class>Filter/Effect/Video</class>
+      <description>RGB-&gt;YUV colorspace conversion preserving the alpha channels</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

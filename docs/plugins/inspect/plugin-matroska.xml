@@ -1,0 +1,27 @@
+<plugin>
+  <name>matroska</name>
+  <description>Matroska stream handling</description>
+  <filename>../../gst/matroska/.libs/libgstmatroska.so</filename>
+  <basename>libgstmatroska.so</basename>
+  <version>0.9.4</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>matroskademux</name>
+      <longname>Matroska demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demuxes a Matroska Stream into video/audio/subtitles</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>matroskamux</name>
+      <longname>Matroska muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>Muxes video/audio/subtitle streams into a matroska stream</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

@@ -1,0 +1,20 @@
+<plugin>
+  <name>videomixer</name>
+  <description>Video mixer</description>
+  <filename>../../gst/videomixer/.libs/libgstvideomixer.so</filename>
+  <basename>libgstvideomixer.so</basename>
+  <version>0.9.4</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>videomixer</name>
+      <longname>video mixer</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Mix multiple video streams</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

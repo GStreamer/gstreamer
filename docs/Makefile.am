@@ -12,5 +12,5 @@ EXTRA_DIST = \
 	upload.mak \
         version.entities.in
 
-#upload:
-#	@if test "x$(SUBDIRS_DOCS)" != x; then for a in $(SUBDIRS_DOCS); do cd $$a; make upload; cd ..; done; fi
+upload:
+	@if test "x$(SUBDIRS)" != x; then for a in $(SUBDIRS); do cd $$a; make upload; cd ..; done; fi

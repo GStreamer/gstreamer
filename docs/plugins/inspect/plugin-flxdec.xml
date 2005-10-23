@@ -1,0 +1,20 @@
+<plugin>
+  <name>flxdec</name>
+  <description>FLX video decoder</description>
+  <filename>../../gst/flx/.libs/libgstflxdec.so</filename>
+  <basename>libgstflxdec.so</basename>
+  <version>0.9.4</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>flxdec</name>
+      <longname>FLX Decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FLX decoder</description>
+      <author>Sepp Wijnands &lt;mrrazz@garbage-coderz.net&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

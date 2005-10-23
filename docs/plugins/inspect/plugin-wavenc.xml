@@ -1,0 +1,20 @@
+<plugin>
+  <name>wavenc</name>
+  <description>Encode raw audio into WAV</description>
+  <filename>../../gst/wavenc/.libs/libgstwavenc.so</filename>
+  <basename>libgstwavenc.so</basename>
+  <version>0.9.4</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>wavenc</name>
+      <longname>WAV encoder</longname>
+      <class>Codec/Muxer/Audio</class>
+      <description>Encode raw audio into WAV</description>
+      <author>Iain Holmes &lt;iain@prettypeople.org&gt;</author>
+    </element>
+  </elements>
+</plugin>

@@ -3,10 +3,10 @@
   <description>Speex plugin library</description>
   <filename>../../ext/speex/.libs/libgstspeex.so</filename>
   <basename>libgstspeex.so</basename>
-  <version>0.9.1.1</version>
+  <version>0.9.4</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer CVS/prerelease</package>
+  <package>GStreamer source release</package>
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
     <element>
@@ -14,6 +14,13 @@
       <longname>SpeexDec</longname>
       <class>Codec/Decoder/Audio</class>
       <description>decode speex streams to audio</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>speexenc</name>
+      <longname>Speex encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>Encodes audio in Speex format</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
   </elements>

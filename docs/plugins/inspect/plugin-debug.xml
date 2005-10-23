@@ -1,0 +1,41 @@
+<plugin>
+  <name>debug</name>
+  <description>elements for testing and debugging</description>
+  <filename>../../gst/debug/.libs/libgstdebug.so</filename>
+  <basename>libgstdebug.so</basename>
+  <version>0.9.4</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>breakmydata</name>
+      <longname>breakmydata</longname>
+      <class>Testing</class>
+      <description>randomly change data in the stream</description>
+      <author>Benjamin Otte &lt;otte@gnome&gt;</author>
+    </element>
+    <element>
+      <name>navseek</name>
+      <longname>Seek based on left-right arrows</longname>
+      <class>Filter/Video</class>
+      <description>Seek based on navigation keys left-right</description>
+      <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+    </element>
+    <element>
+      <name>progressreport</name>
+      <longname>Progress Report</longname>
+      <class>Testing</class>
+      <description>Periodically query and report on processing progress</description>
+      <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+    </element>
+    <element>
+      <name>testsink</name>
+      <longname>gsttestsink</longname>
+      <class>Testing</class>
+      <description>perform a number of tests</description>
+      <author>Benjamin Otte &lt;otte@gnome&gt;</author>
+    </element>
+  </elements>
+</plugin>
