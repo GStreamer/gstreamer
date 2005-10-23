@@ -3,10 +3,10 @@
   <description>Decode DVD LPCM frames into standard PCM</description>
   <filename>../../gst/dvdlpcmdec/.libs/libgstdvdlpcmdec.so</filename>
   <basename>libgstdvdlpcmdec.so</basename>
-  <version>0.9.1.1</version>
+  <version>0.9.4</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer CVS/prerelease</package>
+  <package>GStreamer source release</package>
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
     <element>

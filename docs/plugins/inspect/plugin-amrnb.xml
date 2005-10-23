@@ -1,0 +1,34 @@
+<plugin>
+  <name>amrnb</name>
+  <description>Adaptive Multi-Rate Narrow-Band</description>
+  <filename>../../ext/amrnb/.libs/libgstamrnb.so</filename>
+  <basename>libgstamrnb.so</basename>
+  <version>0.9.4</version>
+  <license>unknown</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>amrnbdec</name>
+      <longname>AMR-NB decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Adaptive Multi-Rate Narrow-Band audio decoder</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>amrnbenc</name>
+      <longname>AMR-NB encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>Adaptive Multi-Rate Narrow-Band audio encoder</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>amrnbparse</name>
+      <longname>AMR-NB parser</longname>
+      <class>Codec/Parser/Audio</class>
+      <description>Adaptive Multi-Rate Narrow-Band audio parser</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

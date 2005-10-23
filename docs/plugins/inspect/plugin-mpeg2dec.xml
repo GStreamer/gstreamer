@@ -1,0 +1,20 @@
+<plugin>
+  <name>mpeg2dec</name>
+  <description>LibMpeg2 decoder</description>
+  <filename>../../ext/mpeg2dec/.libs/libgstmpeg2dec.so</filename>
+  <basename>libgstmpeg2dec.so</basename>
+  <version>0.9.4</version>
+  <license>GPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>mpeg2dec</name>
+      <longname>mpeg1 and mpeg2 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Uses libmpeg2 to decode MPEG video streams</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+  </elements>
+</plugin>

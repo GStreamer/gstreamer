@@ -518,3 +518,13 @@
 <DEFAULT>0</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstA52Dec::drc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dynamic Range Compression</NICK>
+<BLURB>Use Dynamic Range Compression.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+

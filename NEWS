@@ -1,4 +1,13 @@
-This is GStreamer Ugly Plug-ins 0.9.3, "Athos".
+This is GStreamer Ugly Plug-ins 0.9.4, "Diplodocus".
+
+Changes since 0.9.3:
+
+      * rmdemux fixes
+      * a52dec ported
+
+Bugs fixed since 0.9.3:
+
+      * 318849 : [a52dec] ported to gstreamer 0.9
 
 Changes since 0.9.1:
 

@@ -28,11 +28,13 @@
 #include <string.h>
 #include <ctype.h>
 #include <zlib.h>
+
 #define RMDEMUX_GUINT32_GET(a)	GST_READ_UINT32_BE(a)
 #define RMDEMUX_GUINT16_GET(a)	GST_READ_UINT16_BE(a)
 #define RMDEMUX_FOURCC_GET(a)	GST_READ_UINT32_LE(a)
 #define HEADER_SIZE 10
 #define DATA_SIZE 8
+
 typedef struct _GstRMDemuxIndex GstRMDemuxIndex;
 
 struct _GstRMDemuxStream
@@ -867,7 +869,9 @@ need_pause:
     gst_pad_pause_task (pad);
     if (GST_FLOW_IS_FATAL (ret)) {
       gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
-      GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED, (NULL),
+      /* FIXME: add translations */
+      GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED,
+          (("Internal data stream error.")),
           ("stream stopped, reason %d", ret));
     }
     return;
