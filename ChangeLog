@@ -1,3 +1,9 @@
+2005-10-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_loop):
+	* po/POTFILES.in:
+	  STOPPED -> FAILED
+
 2005-10-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),

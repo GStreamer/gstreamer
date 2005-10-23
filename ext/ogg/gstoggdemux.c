@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <ogg/ogg.h>
 #include <string.h>
+#include <gst/gst-i18n-plugin.h>
 
 #define CHUNKSIZE (8500)        /* this is out of vorbisfile */
 
@@ -2289,8 +2290,9 @@ pause:
     gst_pad_pause_task (ogg->sinkpad);
     if (GST_FLOW_IS_FATAL (ret)) {
       gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
-      GST_ELEMENT_ERROR (ogg, STREAM, STOPPED,
-          (NULL), ("stream stopped, reason %s", gst_flow_get_name (ret)));
+      GST_ELEMENT_ERROR (ogg, STREAM, FAILED,
+          (_("Internal data stream error.")),
+          ("stream stopped, reason %s", gst_flow_get_name (ret)));
     }
     return;
   }
