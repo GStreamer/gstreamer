@@ -468,7 +468,7 @@ pause:
   GST_LOG_OBJECT (ttaparse, "pausing task %d", ret);
   gst_pad_pause_task (ttaparse->sinkpad);
   if (GST_FLOW_IS_FATAL (ret)) {
-    GST_ELEMENT_ERROR (ttaparse, STREAM, STOPPED,
+    GST_ELEMENT_ERROR (ttaparse, STREAM, FAILED,
         ("streaming stopped, reason %d", ret),
         ("streaming stopped, reason %d", ret));
     gst_pad_push_event (ttaparse->srcpad, gst_event_new_eos ());
