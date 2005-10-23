@@ -1,3 +1,11 @@
+2005-10-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/elements/gstfilesink.c: (gst_file_sink_do_seek),
+	(gst_file_sink_get_current_offset):
+	  Use fseeko() and ftello() if available. When falling back on
+	  lseek() to get the current offset, fflush() first to make sure
+	  everything is up-to-date and we get the right offset.
+
 2005-10-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
