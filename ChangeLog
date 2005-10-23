@@ -1,3 +1,8 @@
+2005-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  back to HEAD
+
 === gst-python 0.9.4 ===
 
 2005-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
