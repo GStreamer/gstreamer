@@ -867,7 +867,7 @@ need_pause:
     gst_pad_pause_task (pad);
     if (GST_FLOW_IS_FATAL (ret)) {
       gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
-      GST_ELEMENT_ERROR (rmdemux, STREAM, STOPPED, (NULL),
+      GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED, (NULL),
           ("stream stopped, reason %d", ret));
     }
     return;

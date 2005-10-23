@@ -1,3 +1,7 @@
+2005-10-23  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_loop): STOPPED->FAILED
+
 2005-10-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_validate_offset),
