@@ -3,11 +3,11 @@
   <description>ogg stream manipulation (info about ogg: http://xiph.org)</description>
   <filename>../../ext/ogg/.libs/libgstogg.so</filename>
   <basename>libgstogg.so</basename>
-  <version>0.9.3.1</version>
+  <version>0.9.4</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>oggdemux</name>

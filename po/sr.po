@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-03 14:53+0200\n"
+"POT-Creation-Date: 2005-10-23 12:58+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -73,47 +73,51 @@ msgstr ""
 msgid "Could not open CD device for reading."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
-#: ext/gnomevfs/gstgnomevfssink.c:430
+#: ext/gnomevfs/gstgnomevfssink.c:431
 #, fuzzy, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Не могу да отворим ВСД датотеку „%s“ ради уписа."
 
-#: ext/gnomevfs/gstgnomevfssink.c:437
+#: ext/gnomevfs/gstgnomevfssink.c:438
 #, fuzzy
 msgid "No filename given"
 msgstr "Име датотеке није задато."
 
-#: ext/gnomevfs/gstgnomevfssink.c:465
+#: ext/gnomevfs/gstgnomevfssink.c:466
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не могу да затворим ВСД датотеку „%s“."
 
-#: gst/playback/gstplaybasebin.c:1310
+#: ext/ogg/gstoggdemux.c:2294
+msgid "Internal data stream error."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1322
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1316
+#: gst/playback/gstplaybasebin.c:1328
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1320
+#: gst/playback/gstplaybasebin.c:1332
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1327
+#: gst/playback/gstplaybasebin.c:1339
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1393
+#: gst/playback/gstplaybasebin.c:1405
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1396
+#: gst/playback/gstplaybasebin.c:1408
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "Уређај „%s“ не представља уређај за снимање."

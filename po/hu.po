@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-03 14:53+0200\n"
+"POT-Creation-Date: 2005-10-23 12:58+0200\n"
 "PO-Revision-Date: 2004-07-18 11:03+0200\n"
 "Last-Translator: Laszlo Dvornik <dvornik@invitel.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -71,46 +71,50 @@ msgstr ""
 msgid "Could not open CD device for reading."
 msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."
 
-#: ext/gnomevfs/gstgnomevfssink.c:430
+#: ext/gnomevfs/gstgnomevfssink.c:431
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Nem lehet írásra megnyitni a(z) \"%s\" vfs-fájlt: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:437
+#: ext/gnomevfs/gstgnomevfssink.c:438
 msgid "No filename given"
 msgstr "Nincs fájlnév megadva"
 
-#: ext/gnomevfs/gstgnomevfssink.c:465
+#: ext/gnomevfs/gstgnomevfssink.c:466
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Nem lehet bezárni a(z) \"%s\" vfs-fájlt."
 
-#: gst/playback/gstplaybasebin.c:1310
+#: ext/ogg/gstoggdemux.c:2294
+msgid "Internal data stream error."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1322
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1316
+#: gst/playback/gstplaybasebin.c:1328
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1320
+#: gst/playback/gstplaybasebin.c:1332
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1327
+#: gst/playback/gstplaybasebin.c:1339
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1393
+#: gst/playback/gstplaybasebin.c:1405
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1396
+#: gst/playback/gstplaybasebin.c:1408
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "A(z) \"%s\" eszköz nem rögzítőeszköz."

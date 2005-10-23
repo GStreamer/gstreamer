@@ -3,11 +3,11 @@
   <description>Convert audio to different formats</description>
   <filename>../../gst/audioconvert/.libs/libgstaudioconvert.so</filename>
   <basename>libgstaudioconvert.so</basename>
-  <version>0.9.3.1</version>
+  <version>0.9.4</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>audioconvert</name>
@@ -15,13 +15,6 @@
       <class>Filter/Converter/Audio</class>
       <description>Convert audio to different formats</description>
       <author>Benjamin Otte &lt;in7y118@public.uni-hamburg.de&gt;</author>
-    </element>
-    <element>
-      <name>buffer-frames-convert</name>
-      <longname>buffer-frames conversion</longname>
-      <class>Filter/Converter/Audio</class>
-      <description>Convert between different values of the buffer-frames stream property</description>
-      <author>Andy Wingo &lt;wingo at pobox.com&gt;</author>
     </element>
   </elements>
 </plugin>

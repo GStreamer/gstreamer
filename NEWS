@@ -1,4 +1,10 @@
-This is GStreamer Base Plug-ins 0.9.3, "De Facto".
+This is GStreamer Base Plug-ins 0.9.4, "Velociraptor".
+
+Changes since 0.9.3:
+
+      * New element: audiotestsrc
+      * typefind improvements
+      * buffer-frames removed
 
 Changes since 0.9.2:
 

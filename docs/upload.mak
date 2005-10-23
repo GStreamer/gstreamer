@@ -16,6 +16,7 @@
 DOC_SERVER=freedesktop.org
 DOC_BASE=/srv/gstreamer.freedesktop.org/www/data/doc
 DOC_URL=$(DOC_SERVER):$(DOC_BASE)
+GST_VERSION_NANO = $(GST_PLUGINS_BASE_VERSION_NANO)
 
 
 upload: $(FORMATS)
