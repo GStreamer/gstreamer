@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.3 "Porthos"
+GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.4 "Utahraptor"
         
 
 The GStreamer team is petrified to announce a new release
@@ -60,10 +60,12 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * ported gsm, tta, sdlvideosink
 
 Bugs fixed in this release
     
+      * 317438 : [speed] fix 0.9 port
+      * 318659 : [faac] problem with float capabilities
+      * 318660 : [faac] missing unrefs
 
 Download
 
@@ -93,9 +95,10 @@ Applications
   
 Contributors to this release
     
-      * Arwed v. Merkatz
-      * Christian Schaller
       * Edgard Lima
-      * Flavio Oliveira
+      * Josef Zlomek
+      * Julien Moutte
+      * Stefan Kost
+      * Tim-Philipp Müller
       * Wim Taymans
  

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-03 18:32+0200\n"
+"POT-Creation-Date: 2005-10-24 00:23+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -39,47 +39,47 @@ msgstr "Geen lêernaam gespesifiseer."
 msgid "Could not write to file \"%s\"."
 msgstr "Kon nie skryf na lêer \"%s\" nie."
 
-#: sys/dxr3/dxr3audiosink.c:297
+#: sys/dxr3/dxr3audiosink.c:298
 #, c-format
 msgid "Could not open audio device \"%s\" for writing."
 msgstr "Kon nie oudio-toestel \"%s\" oopmaak vir skryf nie."
 
-#: sys/dxr3/dxr3audiosink.c:309 sys/dxr3/dxr3videosink.c:282
+#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
 #, c-format
 msgid "Could not open control device \"%s\" for writing."
 msgstr "Kon nie beheertoestel \"%s\" oopmaak vir skryf nie."
 
-#: sys/dxr3/dxr3audiosink.c:342
+#: sys/dxr3/dxr3audiosink.c:343
 #, c-format
 msgid "Could not configure audio device \"%s\"."
 msgstr "Kon nie oudio-toestel \"%s\" konfigureer nie."
 
-#: sys/dxr3/dxr3audiosink.c:356 sys/dxr3/dxr3audiosink.c:393
+#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
 #, c-format
 msgid "Could not set audio device \"%s\" to %d Hz."
 msgstr "Kon nie klanktoestel \"%s\" verstel na %d Hz nie."
 
-#: sys/dxr3/dxr3audiosink.c:421
+#: sys/dxr3/dxr3audiosink.c:422
 #, c-format
 msgid "Could not close audio device \"%s\"."
 msgstr "Kon nie oudio-toestel \"%s\" toemaak nie."
 
-#: sys/dxr3/dxr3audiosink.c:428 sys/dxr3/dxr3videosink.c:307
+#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
 #, c-format
 msgid "Could not close control device \"%s\"."
 msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
 
-#: sys/dxr3/dxr3videosink.c:270
+#: sys/dxr3/dxr3videosink.c:271
 #, c-format
 msgid "Could not open video device \"%s\" for writing."
 msgstr "Kon nie video-toestel \"%s\" oopmaak vir skryf nie."
 
-#: sys/dxr3/dxr3videosink.c:300
+#: sys/dxr3/dxr3videosink.c:301
 #, c-format
 msgid "Could not close video device \"%s\"."
 msgstr "Kon nie video-toestel \"%s\" toemaak nie."
 
-#: sys/dxr3/dxr3videosink.c:452
+#: sys/dxr3/dxr3videosink.c:453
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Kon nie skryf na toestel \"%s\" nie."
