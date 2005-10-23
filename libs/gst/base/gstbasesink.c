@@ -42,6 +42,7 @@
 
 #include "gstbasesink.h"
 #include <gst/gstmarshal.h>
+#include <gst/gst-i18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_sink_debug);
 #define GST_CAT_DEFAULT gst_base_sink_debug
@@ -622,8 +623,8 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     GstBuffer *buf = GST_BUFFER (obj);
 
     if (!basesink->have_newsegment) {
-      GST_ELEMENT_WARNING (basesink, STREAM, STOPPED,
-          ("Received buffer without a new-segment. Cannot sync to clock."),
+      GST_ELEMENT_WARNING (basesink, STREAM, FAILED,
+          (_("Internal data flow problem.")),
           ("Received buffer without a new-segment. Cannot sync to clock."));
       basesink->have_newsegment = TRUE;
       /* this means this sink will not be able to sync to the clock */

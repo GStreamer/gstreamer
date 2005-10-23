@@ -3,7 +3,10 @@
 gst/gst.c
 gst/gstelement.c
 gst/gsterror.c
+gst/gstqueue.c
 gst/gsttaglist.c
+gst/base/gstbasesrc.c
+gst/base/gstbasesink.c
 gst/elements/gstfakesink.c
 gst/elements/gstfilesink.c
 gst/elements/gstfilesrc.c

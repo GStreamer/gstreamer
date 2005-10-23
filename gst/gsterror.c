@@ -161,16 +161,14 @@ _gst_stream_errors_init (void)
   TABLE (t, STREAM, ENCODE, N_("Could not encode stream."));
   TABLE (t, STREAM, DEMUX, N_("Could not demultiplex stream."));
   TABLE (t, STREAM, MUX, N_("Could not multiplex stream."));
-  TABLE (t, STREAM, FORMAT, N_("Stream is of the wrong format."));
-  TABLE (t, STREAM, STOPPED, N_("Streaming stopped."));
 
   return t;
 }
 
-QUARK_FUNC (core)
-    QUARK_FUNC (library)
-    QUARK_FUNC (resource)
-    QUARK_FUNC (stream)
+QUARK_FUNC (core);
+QUARK_FUNC (library);
+QUARK_FUNC (resource);
+QUARK_FUNC (stream);
 
 /**
  * gst_error_get_message:
@@ -182,7 +180,8 @@ QUARK_FUNC (core)
  * Returns: a newly allocated string describing the error message in the
  * current locale.
  */
-     gchar *gst_error_get_message (GQuark domain, gint code)
+gchar *
+gst_error_get_message (GQuark domain, gint code)
 {
   static gchar **gst_core_errors = NULL;
   static gchar **gst_library_errors = NULL;

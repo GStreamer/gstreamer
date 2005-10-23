@@ -44,6 +44,7 @@
 #include "gstinfo.h"
 #include "gsterror.h"
 #include "gstutils.h"
+#include "gst-i18n-lib.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -819,8 +820,8 @@ restart:
 
       queue->srcresult = result;
       if (GST_FLOW_IS_FATAL (result)) {
-        GST_ELEMENT_ERROR (queue, STREAM, STOPPED,
-            ("streaming stopped, reason %s", flowname),
+        GST_ELEMENT_ERROR (queue, STREAM, FAILED,
+            (_("Internal data flow error.")),
             ("streaming stopped, reason %s", flowname));
         gst_pad_push_event (queue->srcpad, gst_event_new_eos ());
       }

@@ -50,6 +50,7 @@
 #include "gstbasesrc.h"
 #include "gsttypefindhelper.h"
 #include <gst/gstmarshal.h>
+#include <gst/gst-i18n-lib.h>
 
 #define DEFAULT_BLOCKSIZE	4096
 #define DEFAULT_NUM_BUFFERS	-1
@@ -768,18 +769,17 @@ pause:
     gst_pad_pause_task (pad);
     if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
       /* for fatal errors we post an error message */
-      GST_ELEMENT_ERROR (src, STREAM, STOPPED,
-          ("streaming stopped, reason %s", gst_flow_get_name (ret)),
-          ("streaming stopped, reason %s", gst_flow_get_name (ret)));
+      GST_ELEMENT_ERROR (src, STREAM, FAILED,
+          (_("Internal data flow error.")),
+          ("streaming task paused, reason %s", gst_flow_get_name (ret)));
       gst_pad_push_event (pad, gst_event_new_eos ());
     }
     return;
   }
 error:
   {
-    GST_ELEMENT_ERROR (src, STREAM, STOPPED,
-        ("internal: element returned NULL buffer"),
-        ("internal: element returned NULL buffer"));
+    GST_ELEMENT_ERROR (src, STREAM, FAILED,
+        (_("Internal data flow error.")), ("element returned NULL buffer"));
     gst_pad_pause_task (pad);
     gst_pad_push_event (pad, gst_event_new_eos ());
     return;

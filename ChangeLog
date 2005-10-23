@@ -1,3 +1,13 @@
+2005-10-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	* gst/base/gstbasesrc.c: (gst_base_src_loop):
+	* gst/gsterror.c: (_gst_stream_errors_init):
+	* gst/gsterror.h:
+	* gst/gstqueue.c: (gst_queue_loop):
+	* po/POTFILES.in:
+	  remove prematurely added error category and clean up the instances
+
 2005-10-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_commit_state),
