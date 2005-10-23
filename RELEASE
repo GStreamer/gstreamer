@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer FFmpeg Plug-ins 0.9.3 "D'Artagnan"
+GStreamer: Release notes for GStreamer FFmpeg Plug-ins 0.9.4 "Triceratops"
         
 
 The GStreamer team is petrified to announce a new release
@@ -67,7 +67,6 @@ Applications
   
 Contributors to this release
     
-      * Ronald Bultje
       * Thomas Vander Stichele
       * Wim Taymans
  

@@ -1,3 +1,10 @@
+=== release 0.9.4 ===
+
+2005-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.4, "Triceratops"
+
 2005-10-23  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/ffmpeg/Makefile.am: Fix build.
