@@ -1,3 +1,12 @@
+2005-10-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/tmpl/gstdparam.sgml:
+	* docs/libs/tmpl/gstdplinint.sgml:
+	* docs/libs/tmpl/gstdpman.sgml:
+	* docs/libs/tmpl/gstdpsmooth.sgml:
+	* docs/libs/tmpl/gstunitconvert.sgml:
+	  these are obsolete
+
 2005-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
