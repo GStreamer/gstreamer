@@ -363,8 +363,6 @@ gst_base_audio_sink_get_offset (GstBaseAudioSink * sink)
     sample = (segdone + 1) * sps;
   }
 
-  g_print ("diff: %d\n", diff);
-
   return sample;
 }
 
@@ -406,7 +404,9 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GST_DEBUG ("time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->segment_start));
 
-  if (!GST_CLOCK_TIME_IS_VALID (time)) {
+  /* if not valid timestamp or we don't need to sync, try to play
+   * sample ASAP */
+  if (!GST_CLOCK_TIME_IS_VALID (time) || !bsink->sync) {
     render_offset = gst_base_audio_sink_get_offset (sink);
     goto no_sync;
   }

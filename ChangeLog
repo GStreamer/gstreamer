@@ -2,6 +2,13 @@
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
 	(gst_base_audio_sink_get_offset), (gst_base_audio_sink_render):
+	Remove g_print
+	Use sync property from baseclass to disable sync.
+
+2005-10-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_get_offset), (gst_base_audio_sink_render):
 	Buffers with no timestamps get aligned with previous buffers or
 	on underrun, played ASAP.
 
