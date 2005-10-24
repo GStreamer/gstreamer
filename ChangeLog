@@ -1,3 +1,8 @@
+2005-10-24  Edward Hervey  <edward@fluendo.com>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_add_pads): 
+	Call gst_element_no_more_pads when there will be no more pads.
+
 2005-10-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/Makefile.am:

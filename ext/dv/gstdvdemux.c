@@ -225,6 +225,8 @@ gst_dvdemux_add_pads (GstDVDemux * dvdemux)
       GST_DEBUG_FUNCPTR (gst_dvdemux_handle_src_event));
   gst_pad_use_fixed_caps (dvdemux->audiosrcpad);
   gst_element_add_pad (GST_ELEMENT (dvdemux), dvdemux->audiosrcpad);
+
+  gst_element_no_more_pads (GST_ELEMENT (dvdemux));
 }
 
 static gboolean
@@ -246,8 +248,8 @@ gst_dvdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
     goto done;
   }
 
-  GST_INFO ("src_value:%lld, src_format:%d, dest_format:%d", src_value,
-      src_format, *dest_format);
+  GST_INFO ("pad:%s:%s, src_value:%lld, src_format:%d, dest_format:%d",
+      GST_DEBUG_PAD_NAME (pad), src_value, src_format, *dest_format);
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
@@ -301,7 +303,7 @@ gst_dvdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
       switch (*dest_format) {
         case GST_FORMAT_TIME:
           if (pad == dvdemux->videosrcpad) {
-            *dest_value = src_value * GST_SECOND * dvdemux->framerate;
+            *dest_value = src_value * GST_SECOND / dvdemux->framerate;
           } else if (pad == dvdemux->audiosrcpad) {
             if (src_value)
               *dest_value =
@@ -329,6 +331,8 @@ gst_dvdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
 done:
   gst_object_unref (dvdemux);
 
+  GST_INFO ("Result : dest_format:%d, dest_value:%lld, res:%d",
+      *dest_format, *dest_value, res);
   return res;
 
 error:
@@ -351,6 +355,8 @@ gst_dvdemux_sink_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
     goto error;
 
   GST_DEBUG ("%d -> %d", src_format, *dest_format);
+  GST_INFO ("pad:%s:%s, src_value:%lld, src_format:%d, dest_format:%d",
+      GST_DEBUG_PAD_NAME (pad), src_value, src_format, *dest_format);
 
   if (*dest_format == GST_FORMAT_DEFAULT)
     *dest_format = GST_FORMAT_TIME;
@@ -396,6 +402,8 @@ gst_dvdemux_sink_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
     default:
       res = FALSE;
   }
+  GST_INFO ("Result : dest_format:%d, dest_value:%lld, res:%d",
+      *dest_format, *dest_value, res);
 
 done:
   gst_object_unref (dvdemux);
@@ -659,6 +667,7 @@ gst_dvdemux_handle_src_event (GstPad * pad, GstEvent * event)
           &cur_type, &cur, &stop_type, &stop);
 
       if ((offset = cur) != -1) {
+        GST_INFO ("starting conversion of cur");
         /* bring the format to time on srcpad. */
         conv = GST_FORMAT_TIME;
         if (!(res = gst_pad_query_convert (pad,
@@ -673,11 +682,14 @@ gst_dvdemux_handle_src_event (GstPad * pad, GstEvent * event)
           /* could not convert time format to bytes offset */
           break;
         }
+        GST_INFO ("Finished conversion of cur, BYTES cur : %lld",
+            start_position);
       } else {
         start_position = -1;
       }
 
       if ((offset = stop) != -1) {
+        GST_INFO ("starting conversion of stop");
         /* bring the format to time on srcpad. */
         conv = GST_FORMAT_TIME;
         if (!(res = gst_pad_query_convert (pad,
@@ -692,6 +704,8 @@ gst_dvdemux_handle_src_event (GstPad * pad, GstEvent * event)
           /* could not convert seek format to bytes offset */
           break;
         }
+        GST_INFO ("Finished conversion of stop, BYTES cur : %lld",
+            start_position);
       } else {
         end_position = -1;
       }
