@@ -1,3 +1,7 @@
+2005-10-24  Christian Schaller  <christian at fluendo dot com>
+
+	* configure.ac: port over thomas plugin listing from base
+
 2005-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
