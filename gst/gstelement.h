@@ -204,7 +204,7 @@ typedef enum
  * GST_ELEMENT_IS_LOCKED_STATE:
  * @obj: A #GstElement to query
  *
- * Check if the element is in the loacked state and therefore will ignore state
+ * Check if the element is in the locked state and therefore will ignore state
  * changes from its parent object.
  */
 #define GST_ELEMENT_IS_LOCKED_STATE(obj)        (GST_OBJECT_FLAG_IS_SET(obj,GST_ELEMENT_LOCKED_STATE))

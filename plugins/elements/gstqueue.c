@@ -483,7 +483,7 @@ gst_queue_locked_flush (GstQueue * queue)
   while (!g_queue_is_empty (queue->queue)) {
     GstMiniObject *data = g_queue_pop_head (queue->queue);
 
-    /* Then loose another reference because we are supposed to destroy that
+    /* Then lose another reference because we are supposed to destroy that
        data when flushing */
     gst_mini_object_unref (data);
   }
@@ -522,7 +522,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       STATUS (queue, "received flush start event");
-      /* forward event, re first as we're going to use it still */
+      /* forward event, ref first as we're going to use it still */
       gst_event_ref (event);
       gst_pad_push_event (queue->srcpad, event);
 
@@ -541,7 +541,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       goto done;
     case GST_EVENT_FLUSH_STOP:
       STATUS (queue, "received flush stop event");
-      /* forward event, re first as we're going to use it still */
+      /* forward event, ref first as we're going to use it still */
       gst_event_ref (event);
       gst_pad_push_event (queue->srcpad, event);
 
