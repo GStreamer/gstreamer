@@ -136,7 +136,6 @@ gst_pngdec_init (GstPngDec * pngdec)
       gst_pngdec_sink_activate_pull);
   gst_pad_set_chain_function (pngdec->sinkpad, gst_pngdec_chain);
   gst_pad_set_event_function (pngdec->sinkpad, gst_pngdec_sink_event);
-  gst_pad_use_fixed_caps (pngdec->sinkpad);
   gst_element_add_pad (GST_ELEMENT (pngdec), pngdec->sinkpad);
 
   pngdec->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
