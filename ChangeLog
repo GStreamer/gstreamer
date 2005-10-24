@@ -1,3 +1,17 @@
+2005-10-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/flac/gstflacenc.c: (gst_flacenc_base_init),
+	(gst_flacenc_init), (gst_flacenc_sink_setcaps),
+	(gst_flacenc_seek_callback), (gst_flacenc_write_callback),
+	(gst_flacenc_sink_event), (gst_flacenc_chain),
+	(gst_flacenc_set_property), (gst_flacenc_get_property),
+	(gst_flacenc_change_state):
+	* ext/flac/gstflacenc.h:
+	  Fix seeking, so that flacenc can rewrite the header with the
+	  correct duration and amount of samples and all that at EOS;
+	  also set timestamps and granulepos on outgoing buffers; add
+	  debug category; fix state change function.
+	  
 2005-10-24  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/videomixer/videomixer.c: Don't restrict video geometry

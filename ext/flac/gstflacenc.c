@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include <gstflacenc.h>
+#include <gst/audio/audio.h>
 #include <gst/tag/tag.h>
 #include <gst/gsttagsetter.h>
 #include "flac_compat.h"
@@ -37,6 +38,14 @@ GstElementDetails flacenc_details = {
   "Wim Taymans <wim.taymans@chello.be>",
 };
 
+#define FLAC_SINK_CAPS \
+  "audio/x-raw-int, "               \
+  "endianness = (int) BYTE_ORDER, " \
+  "signed = (boolean) TRUE, "       \
+  "width = (int) 16, "              \
+  "depth = (int) 16, "              \
+  "rate = (int) [ 11025, 48000 ], " \
+  "channels = (int) [ 1, 2 ]"
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -47,14 +56,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) [ 11025, 48000 ], " "channels = (int) [ 1, 2 ]")
+    GST_STATIC_CAPS (FLAC_SINK_CAPS)
     );
-
 
 enum
 {
@@ -74,6 +77,9 @@ enum
   PROP_RICE_PARAMETER_SEARCH_DIST
 };
 
+GST_DEBUG_CATEGORY_STATIC (flacenc_debug);
+#define GST_CAT_DEFAULT flacenc_debug
+
 
 #define _do_init(type)                                                          \
   G_STMT_START{                                                                 \
@@ -88,7 +94,6 @@ enum
 
 GST_BOILERPLATE_FULL (GstFlacEnc, gst_flacenc, GstElement, GST_TYPE_ELEMENT,
     _do_init);
-
 
 static void gst_flacenc_finalize (GObject * object);
 
@@ -183,6 +188,9 @@ gst_flacenc_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_factory));
 
   gst_element_class_set_details (element_class, &flacenc_details);
+
+  GST_DEBUG_CATEGORY_INIT (flacenc_debug, "flacenc", 0,
+      "Flac encoding element");
 }
 
 static void
@@ -298,6 +306,7 @@ gst_flacenc_init (GstFlacEnc * flacenc, GstFlacEncClass * klass)
   flacenc->encoder = FLAC__seekable_stream_encoder_new ();
 
   flacenc->offset = 0;
+  flacenc->samples_written = 0;
   gst_flacenc_update_quality (flacenc, DEFAULT_QUALITY);
   flacenc->tags = gst_tag_list_new ();
 }
@@ -378,7 +387,7 @@ gst_flacenc_sink_setcaps (GstPad * pad, GstCaps * caps)
       || !gst_structure_get_int (structure, "depth", &flacenc->depth)
       || !gst_structure_get_int (structure, "rate", &flacenc->sample_rate))
     /* we got caps incompatible with the template? */
-    g_assert_not_reached ();
+    g_return_val_if_reached (FALSE);
 
   caps = gst_caps_new_simple ("audio/x-flac",
       "channels", G_TYPE_INT, flacenc->channels,
@@ -487,27 +496,30 @@ gst_flacenc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
     FLAC__uint64 absolute_byte_offset, void *client_data)
 {
   GstFlacEnc *flacenc;
+  GstEvent *event;
+  GstPad *peerpad;
 
   flacenc = GST_FLACENC (client_data);
 
   if (flacenc->stopped)
     return FLAC__STREAM_ENCODER_OK;
 
-  g_warning ("seeking has not been ported from 0.8 yet");
+  event = gst_event_new_newsegment (TRUE, 1.0, GST_FORMAT_BYTES,
+      absolute_byte_offset, GST_BUFFER_OFFSET_NONE, 0);
 
+  if ((peerpad = gst_pad_get_peer (flacenc->srcpad))) {
+    gboolean ret = gst_pad_send_event (peerpad, event);
 
-#if 0
-  GstEvent *event;
+    gst_object_unref (peerpad);
 
-  event =
-      gst_event_new_seek ((GstSeekType) (int) (GST_FORMAT_BYTES |
-          GST_SEEK_METHOD_SET), absolute_byte_offset);
-
-  if (event) {
-    gst_pad_push (flacenc->srcpad, GST_DATA (event));
-    flacenc->offset = absolute_byte_offset;
+    GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " %s", absolute_byte_offset,
+        (ret) ? "succeeded" : "failed");
+  } else {
+    GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " failed (no peer pad)",
+        absolute_byte_offset);
   }
-#endif
+
+  flacenc->offset = absolute_byte_offset;
 
   return FLAC__STREAM_ENCODER_OK;
 }
@@ -517,23 +529,48 @@ gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
     const FLAC__byte buffer[], unsigned bytes,
     unsigned samples, unsigned current_frame, void *client_data)
 {
+  GstFlowReturn ret;
   GstFlacEnc *flacenc;
   GstBuffer *outbuf;
 
   flacenc = GST_FLACENC (client_data);
 
   if (flacenc->stopped)
-    return FLAC__STREAM_ENCODER_OK;
+    return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 
-  outbuf = gst_buffer_new_and_alloc (bytes);
+  if (gst_pad_alloc_buffer (flacenc->srcpad, flacenc->offset, bytes,
+          GST_PAD_CAPS (flacenc->srcpad), &outbuf) != GST_FLOW_OK) {
+    return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
+  }
 
   memcpy (GST_BUFFER_DATA (outbuf), buffer, bytes);
-  /* fixme: set timestamps, offsets, durations, your mom's phone # */
 
-  gst_pad_push (flacenc->srcpad, outbuf);
+  if (samples > 0 && flacenc->samples_written != (guint64) - 1) {
+    GST_BUFFER_TIMESTAMP (outbuf) =
+        GST_FRAMES_TO_CLOCK_TIME (flacenc->samples_written,
+        flacenc->sample_rate);
+    GST_BUFFER_DURATION (outbuf) =
+        GST_FRAMES_TO_CLOCK_TIME (samples, flacenc->sample_rate);
+    /* offset_end = granulepos for ogg muxer */
+    GST_BUFFER_OFFSET_END (outbuf) = flacenc->samples_written + samples;
+  } else {
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+  }
+
+  GST_DEBUG ("Pushing buffer: ts=%" GST_TIME_FORMAT ", samples=%u, size=%u, "
+      "pos=%" G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      samples, bytes, flacenc->offset);
+
+  ret = gst_pad_push (flacenc->srcpad, outbuf);
+
   flacenc->offset += bytes;
+  flacenc->samples_written += samples;
 
-  return FLAC__STREAM_ENCODER_OK;
+  if (ret != GST_FLOW_OK && GST_FLOW_IS_FATAL (ret))
+    return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
+
+  return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 }
 
 static FLAC__SeekableStreamEncoderTellStatus
@@ -552,14 +589,48 @@ gst_flacenc_sink_event (GstPad * pad, GstEvent * event)
 {
   GstFlacEnc *flacenc;
   GstTagList *taglist;
-  gboolean ret;
+  gboolean ret = TRUE;
 
   flacenc = GST_FLACENC (gst_pad_get_parent (pad));
 
+  GST_DEBUG ("Received %s event on sinkpad", GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:{
+      GstFormat format;
+      gint64 start, stream_time;
+
+      GST_STREAM_LOCK (pad);
+      if (flacenc->offset == 0) {
+        gst_event_parse_newsegment (event, NULL, NULL, &format, &start, NULL,
+            &stream_time);
+      } else {
+        start = -1;
+      }
+      if (start != 0) {
+        if (flacenc->offset > 0)
+          GST_DEBUG ("Not handling mid-stream newsegment event");
+        else
+          GST_DEBUG ("Not handling newsegment event with non-zero start");
+      } else {
+        GstEvent *e = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_BYTES,
+            0, -1, 0);
+
+        ret = gst_pad_push_event (flacenc->srcpad, e);
+      }
+      if (stream_time != 0) {
+        GST_DEBUG ("Not handling non-zero stream time");
+      }
+      gst_event_unref (event);
+      /* don't push it downstream, we'll generate our own via seek to 0 */
+      GST_STREAM_UNLOCK (pad);
+      break;
+    }
     case GST_EVENT_EOS:
+      GST_STREAM_LOCK (pad);
       FLAC__seekable_stream_encoder_finish (flacenc->encoder);
       ret = gst_pad_event_default (pad, event);
+      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_TAG:
       if (flacenc->tags) {
@@ -568,7 +639,9 @@ gst_flacenc_sink_event (GstPad * pad, GstEvent * event)
       } else {
         g_assert_not_reached ();
       }
+      GST_STREAM_LOCK (pad);
       ret = gst_pad_event_default (pad, event);
+      GST_STREAM_UNLOCK (pad);
       break;
     default:
       ret = gst_pad_event_default (pad, event);
@@ -590,7 +663,6 @@ gst_flacenc_chain (GstPad * pad, GstBuffer * buffer)
   gulong i;
   FLAC__bool res;
 
-  /* we now have a ref on flacenc */
   flacenc = GST_FLACENC (gst_pad_get_parent (pad));
 
   depth = flacenc->depth;
@@ -634,6 +706,8 @@ gst_flacenc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstFlacEnc *this = GST_FLACENC (object);
+
+  GST_LOCK (this);
 
   switch (prop_id) {
     case PROP_QUALITY:
@@ -689,8 +763,10 @@ gst_flacenc_set_property (GObject * object, guint prop_id,
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      return;
+      break;
   }
+
+  GST_UNLOCK (this);
 }
 
 static void
@@ -698,6 +774,8 @@ gst_flacenc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstFlacEnc *this = GST_FLACENC (object);
+
+  GST_LOCK (this);
 
   switch (prop_id) {
     case PROP_QUALITY:
@@ -762,11 +840,14 @@ gst_flacenc_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_UNLOCK (this);
 }
 
 static GstStateChangeReturn
 gst_flacenc_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstFlacEnc *flacenc = GST_FLACENC (element);
 
   switch (transition) {
@@ -775,6 +856,13 @@ gst_flacenc_change_state (GstElement * element, GstStateChange transition)
       flacenc->stopped = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -784,6 +872,7 @@ gst_flacenc_change_state (GstElement * element, GstStateChange transition)
         FLAC__seekable_stream_encoder_finish (flacenc->encoder);
       }
       flacenc->offset = 0;
+      flacenc->samples_written = 0;
       if (flacenc->meta) {
         FLAC__metadata_object_delete (flacenc->meta[0]);
         g_free (flacenc->meta);
@@ -795,8 +884,5 @@ gst_flacenc_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
