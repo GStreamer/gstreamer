@@ -336,6 +336,38 @@ wrong_state:
   }
 }
 
+static guint64
+gst_base_audio_sink_get_offset (GstBaseAudioSink * sink)
+{
+  guint64 sample;
+  gint writeseg, segdone, sps;
+  gint diff;
+
+  /* assume we can append to the previous sample */
+  sample = sink->next_sample;
+
+  sps = sink->ringbuffer->samples_per_seg;
+
+  /* figure out the segment and the offset inside the segment where
+   * the sample should be written. */
+  writeseg = sample / sps;
+
+  /* get the currently processed segment */
+  segdone = g_atomic_int_get (&sink->ringbuffer->segdone)
+      - sink->ringbuffer->segbase;
+
+  /* see how far away it is from the write segment */
+  diff = writeseg - segdone;
+  if (diff < 0) {
+    /* sample would be dropped, position to next playable position */
+    sample = (segdone + 1) * sps;
+  }
+
+  g_print ("diff: %d\n", diff);
+
+  return sample;
+}
+
 static GstFlowReturn
 gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
@@ -375,7 +407,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->segment_start));
 
   if (!GST_CLOCK_TIME_IS_VALID (time)) {
-    render_offset = sink->next_sample;
+    render_offset = gst_base_audio_sink_get_offset (sink);
     goto no_sync;
   }
 
@@ -423,7 +455,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
 no_sync:
   /* clip length based on rate */
-  samples /= ABS (bsink->segment_rate);
+  samples = MIN (samples, samples / ABS (bsink->segment_rate));
 
   /* the next sample should be current sample and its length */
   sink->next_sample = render_offset + samples;
