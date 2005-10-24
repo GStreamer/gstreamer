@@ -1300,6 +1300,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstXvImageSink *xvimagesink;
   GstStructure *structure;
+  GstCaps *intersection;
   guint32 im_format = 0;
   gboolean ret;
   gint video_width, video_height;
@@ -1314,6 +1315,15 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_DEBUG_OBJECT (xvimagesink,
       "In setcaps. Possible caps %" GST_PTR_FORMAT ", setting caps %"
       GST_PTR_FORMAT, xvimagesink->xcontext->caps, caps);
+
+  intersection = gst_caps_intersect (xvimagesink->xcontext->caps, caps);
+  GST_DEBUG_OBJECT (xvimagesink, "intersection returned %" GST_PTR_FORMAT,
+      intersection);
+  if (gst_caps_is_empty (intersection)) {
+    return FALSE;
+  }
+
+  gst_caps_unref (intersection);
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "width", &video_width);

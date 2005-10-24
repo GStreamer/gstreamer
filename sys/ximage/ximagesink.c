@@ -1053,6 +1053,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstXImageSink *ximagesink;
   gboolean ret = TRUE;
   GstStructure *structure;
+  GstCaps *intersection;
   const GValue *par;
   gint new_width, new_height;
 
@@ -1064,6 +1065,15 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_DEBUG_OBJECT (ximagesink,
       "sinkconnect possible caps %" GST_PTR_FORMAT " with given caps %"
       GST_PTR_FORMAT, ximagesink->xcontext->caps, caps);
+
+  intersection = gst_caps_intersect (ximagesink->xcontext->caps, caps);
+  GST_DEBUG_OBJECT (ximagesink, "intersection returned %" GST_PTR_FORMAT,
+      intersection);
+  if (gst_caps_is_empty (intersection)) {
+    return FALSE;
+  }
+
+  gst_caps_unref (intersection);
 
   structure = gst_caps_get_structure (caps, 0);
 
