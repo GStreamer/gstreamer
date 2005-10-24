@@ -61,7 +61,7 @@ GST_STATIC_PAD_TEMPLATE (
 static void          gst_mimdec_class_init   (GstMimDecClass *klass);
 static void          gst_mimdec_base_init    (GstMimDecClass *klass);
 static void          gst_mimdec_init	     (GstMimDec      *mimdec);
-static void          gst_mimdec_dispose      (GObject        *object);
+static void          gst_mimdec_finalize      (GObject        *object);
 
 static GstFlowReturn gst_mimdec_chain        (GstPad         *pad, 
                                               GstBuffer      *in);
@@ -132,7 +132,7 @@ gst_mimdec_class_init (GstMimDecClass *klass)
   gstelement_class = (GstElementClass*) klass;
   gstelement_class->change_state = gst_mimdec_change_state;
 
-  gobject_class->dispose = gst_mimdec_dispose;
+  gobject_class->finalize = gst_mimdec_finalize;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -161,7 +161,7 @@ gst_mimdec_init (GstMimDec *mimdec)
 }
 
 static void
-gst_mimdec_dispose (GObject *object)
+gst_mimdec_finalize (GObject *object)
 {
     GstMimDec *mimdec = GST_MIMDEC (object);
 
