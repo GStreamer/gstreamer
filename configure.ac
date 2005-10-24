@@ -481,10 +481,13 @@ po/Makefile.in
 )
 AC_OUTPUT
 
-echo -n "configure: *** Plug-ins that will be built :"
+echo "configure: *** Core plug-ins, always built:"
+( for i in $GST_PLUGINS_ALL; do echo -e '\t'$i; done ) | sort
+echo
+echo -n "configure: *** Plug-ins relying on libraries that will be built:"
 echo -e "$GST_PLUGINS_YES" | sort
 echo
-echo -n "configure: *** Plug-ins that will not be built :"
+echo -n "configure: *** Plug-ins relying on libraries that will NOT be built:"
 echo -e "$GST_PLUGINS_NO" | sort
 echo
 if test "x$BUILD_EXTERNAL" = "xno"; then
