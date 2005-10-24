@@ -86,9 +86,9 @@ gst_ffmpeg_set_palette (GstCaps * caps, AVCodecContext * context)
 	__VA_ARGS__, NULL)  					\
     :	  							\
     gst_caps_new_simple (mimetype,			      	\
-	"width",     GST_TYPE_INT_RANGE, 16, 4096,      	\
-	"height",    GST_TYPE_INT_RANGE, 16, 4096,	      	\
-	"framerate", GST_TYPE_DOUBLE_RANGE, 0., G_MAXDOUBLE,	\
+	"width",     GST_TYPE_INT_RANGE, 1, G_MAXINT,      	\
+	"height",    GST_TYPE_INT_RANGE, 1, G_MAXINT,	      	\
+	"framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,	\
 	__VA_ARGS__, NULL)
 
 /* same for audio - now with channels/sample rate

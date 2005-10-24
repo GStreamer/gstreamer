@@ -59,8 +59,8 @@ G_BEGIN_DECLS
 #define GST_VIDEO_GREEN_MASK_15_INT 0x03e0
 #define GST_VIDEO_BLUE_MASK_15_INT 0x001f
 
-#define GST_VIDEO_SIZE_RANGE "(int) [ 16, 4096 ]"
-#define GST_VIDEO_FPS_RANGE "(double) [ 0, max ]"
+#define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
+#define GST_VIDEO_FPS_RANGE "(double) [ 0.0, max ]"
 
 /* consider the next 2 protected */
 #define __GST_VIDEO_CAPS_MAKE_32A(R, G, B, A)				\

@@ -1,3 +1,14 @@
+2005-10-24  Julien MOUTTE  <julien@moutte.net>
+
+	* gst-libs/gst/video/video.h:
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support): And
+	here comes my change on caps for framerate and geometry range.
+	We are now accepting 1 to MAXINT for width and height, and from
+	0.0 to MAXDOUBLE for framerate. That allows duration less png frames
+	to be blended correctly in videomixer.
+
 2005-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
