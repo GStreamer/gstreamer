@@ -1,5 +1,11 @@
 2005-10-24  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* sys/oss/gstosssrc.c: (gst_oss_src_prepare):
+	  Set bytes_per_sample correctly (is not always 4, but 
+	  depends on width and number of channels).
+
+2005-10-24  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/flac/gstflacenc.c: (gst_flacenc_base_init),
 	(gst_flacenc_init), (gst_flacenc_sink_setcaps),
 	(gst_flacenc_seek_callback), (gst_flacenc_write_callback),
