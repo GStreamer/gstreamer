@@ -383,8 +383,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv,"
         "format = (fourcc) AYUV,"
-        "width = (int) [ 16, 4096 ],"
-        "height = (int) [ 16, 4096 ]," "framerate = (double) [ 0, max ]")
+        "width = (int) [ 1, max ],"
+        "height = (int) [ 1, max ]," "framerate = (double) [ 0, max ]")
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
@@ -392,8 +392,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-raw-yuv,"
         "format = (fourcc) AYUV,"
-        "width = (int) [ 16, 4096 ],"
-        "height = (int) [ 16, 4096 ]," "framerate = (double) [ 0, max ]")
+        "width = (int) [ 1, max ],"
+        "height = (int) [ 1, max ]," "framerate = (double) [ 0, max ]")
     );
 
 static void gst_videomixer_base_init (gpointer g_class);
