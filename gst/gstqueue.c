@@ -522,8 +522,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       STATUS (queue, "received flush start event");
-      /* forward event, ref first as we're going to use it still */
-      gst_event_ref (event);
+      /* forward event */
       gst_pad_push_event (queue->srcpad, event);
 
       /* now unblock the chain function */
@@ -537,12 +536,10 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       /* make sure it pauses */
       gst_pad_pause_task (queue->srcpad);
       GST_CAT_LOG_OBJECT (queue_dataflow, queue, "loop stopped");
-      gst_event_unref (event);
       goto done;
     case GST_EVENT_FLUSH_STOP:
       STATUS (queue, "received flush stop event");
-      /* forward event, ref first as we're going to use it still */
-      gst_event_ref (event);
+      /* forward event */
       gst_pad_push_event (queue->srcpad, event);
 
       GST_QUEUE_MUTEX_LOCK (queue);
@@ -557,7 +554,6 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       GST_QUEUE_MUTEX_UNLOCK (queue);
 
       STATUS (queue, "after flush");
-      gst_event_unref (event);
       goto done;
     case GST_EVENT_EOS:
       STATUS (queue, "received EOS");
@@ -568,9 +564,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
         GST_CAT_LOG_OBJECT (queue_dataflow, queue,
             "adding event %p of type %d", event, GST_EVENT_TYPE (event));
       } else {
-        gst_event_ref (event);
         gst_pad_push_event (queue->srcpad, event);
-        gst_event_unref (event);
         goto done;
       }
       break;
@@ -739,11 +733,9 @@ out_unref:
 out_flushing:
   {
     GstFlowReturn ret = queue->srcresult;
-    const gchar *flowname = gst_flow_get_name (ret);
 
-    gst_pad_pause_task (queue->srcpad);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "exit because task paused, reason: %s", flowname);
+        "exit because task paused, reason: %s", gst_flow_get_name (ret));
     GST_QUEUE_MUTEX_UNLOCK (queue);
 
     gst_buffer_unref (buffer);
@@ -810,9 +802,9 @@ restart:
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
     result = gst_pad_push (pad, GST_BUFFER (data));
-    GST_QUEUE_MUTEX_LOCK (queue);
-    /* can opt to check for srcresult here but the push should
-     * return an error value that is more accurate */
+    /* need to check for srcresult here as well */
+    GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
+    /* else result of push indicates what happens */
     if (result != GST_FLOW_OK) {
       const gchar *flowname;
 

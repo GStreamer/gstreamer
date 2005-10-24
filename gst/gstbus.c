@@ -39,7 +39,7 @@
  * convert all bus messages into signal emissions.
  *
  * A message is posted on the bus with the gst_bus_post() method. With the
- * gst_bus_peek() and _pop() methods one can look at or retrieve a previously
+ * gst_bus_peek() and gst_bus_pop() methods one can look at or retrieve a previously
  * posted message.
  *
  * The bus can be polled with the gst_bus_poll() method. This methods blocks
