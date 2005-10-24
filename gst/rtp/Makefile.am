@@ -10,6 +10,8 @@ libgstrtp_la_SOURCES = gstrtp.c \
 		       gstrtpamrenc.c \
 		       gstrtph263pdec.c \
 		       gstrtph263penc.c \
+		       gstrtph263enc.c \
+		       gstasteriskh263.c \
 		       gstrtpmp4venc.c	\
 		       gstrtpmp4vdec.c
 
@@ -30,6 +32,8 @@ noinst_HEADERS = gstrtpL16enc.h 	\
 		 gstrtpmpaenc.h 	\
 		 gstrtph263pdec.h 	\
 		 gstrtph263penc.h 	\
+		 gstrtph263enc.c 	\
+		 gstasteriskh263.c 	\
 		 gstrtpmp4venc.h	\
 		 gstrtpmp4vdec.h	\
 		 gstrtpdec.h

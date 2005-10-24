@@ -30,6 +30,8 @@
 #include "gstrtpmpadec.h"
 #include "gstrtph263pdec.h"
 #include "gstrtph263penc.h"
+#include "gstrtph263enc.h"
+#include "gstasteriskh263.h"
 #include "gstrtpmp4venc.h"
 #include "gstrtpmp4vdec.h"
 
@@ -61,6 +63,12 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtph263pdec_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtph263enc_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_asteriskh263_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtpmp4venc_plugin_init (plugin))

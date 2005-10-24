@@ -1,3 +1,24 @@
+2005-10-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstasteriskh263.c: (gst_asteriskh263_get_type),
+	(gst_asteriskh263_base_init), (gst_asteriskh263_class_init),
+	(gst_asteriskh263_init), (gst_asteriskh263_finalize),
+	(gst_asteriskh263_chain), (gst_asteriskh263_set_property),
+	(gst_asteriskh263_get_property), (gst_asteriskh263_change_state),
+	(gst_asteriskh263_plugin_init):
+	* gst/rtp/gstasteriskh263.h:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtph263enc.c: (gst_rtph263enc_get_type),
+	(gst_rtph263enc_base_init), (gst_rtph263enc_class_init),
+	(gst_rtph263enc_init), (gst_rtph263enc_finalize),
+	(gst_rtph263enc_setcaps), (gst_rtph263enc_gobfiner),
+	(gst_rtph263enc_flush), (gst_rtph263enc_handle_buffer),
+	(gst_rtph263enc_plugin_init):
+	* gst/rtp/gstrtph263enc.h:
+	Added two new payloaders, an RFC 2190 payloader for h263 and
+	a payload convertor for an asterisk server.
+
 2005-10-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/oss/gstosssrc.c: (gst_oss_src_prepare):
