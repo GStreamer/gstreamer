@@ -1,3 +1,9 @@
+2005-10-24  Wim Taymans  <wim@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):
+	Correctly flush decoder samples even if we could not
+	copy them to an output buffer. Fixes #319618.
+
 2005-10-24  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_setcaps):

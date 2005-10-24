@@ -810,11 +810,11 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   if (vd->granulepos != -1)
     vd->granulepos += sample_count;
 
-  vorbis_synthesis_read (&vd->vd, sample_count);
-
   result = vorbis_dec_push (vd, out);
 
 done:
+  vorbis_synthesis_read (&vd->vd, sample_count);
+
   /* granulepos is the last sample in the packet */
   if (packet->granulepos != -1)
     vd->granulepos = packet->granulepos;
