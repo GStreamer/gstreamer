@@ -26,6 +26,9 @@
 
 #include <string.h>
 
+GST_DEBUG_CATEGORY (videobox_debug);
+#define GST_CAT_DEFAULT videobox_debug
+
 #define GST_TYPE_VIDEO_BOX \
   (gst_video_box_get_type())
 #define GST_VIDEO_BOX(obj) \
@@ -212,6 +215,9 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
   trans_class->set_caps = gst_video_box_set_caps;
   trans_class->get_unit_size = gst_video_box_get_unit_size;
   trans_class->transform = gst_video_box_transform;
+
+  GST_DEBUG_CATEGORY_INIT (videobox_debug, "videobox", 0,
+      "Resizes a video by adding borders or cropping");
 }
 
 static void
@@ -337,47 +343,42 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
 {
   GstVideoBox *video_box;
   GstCaps *to;
+  GstStructure *structure;
+  GValue list_value = { 0 }, value = {
+  0};
+  gint dir, i, tmp;
 
   video_box = GST_VIDEO_BOX (trans);
 
-  if (gst_caps_is_fixed (from)) {
-    GstCaps *to_ayuv, *to_i420;
-    GstStructure *structure;
-    gint width, height, dir;
-    gdouble fps;
+  g_value_init (&list_value, GST_TYPE_LIST);
+  g_value_init (&value, GST_TYPE_FOURCC);
+  gst_value_set_fourcc (&value, GST_MAKE_FOURCC ('I', '4', '2', '0'));
+  gst_value_list_append_value (&list_value, &value);
+  g_value_unset (&value);
 
-    dir = (direction == GST_PAD_SINK) ? -1 : 1;
+  to = gst_caps_copy (from);
+  dir = (direction == GST_PAD_SINK) ? -1 : 1;
 
-    structure = gst_caps_get_structure (from, 0);
-
-    gst_structure_get_int (structure, "width", &width);
-    gst_structure_get_int (structure, "height", &height);
-    gst_structure_get_double (structure, "framerate", &fps);
-
-    width += dir * (video_box->box_left + video_box->box_right);
-    height += dir * (video_box->box_top + video_box->box_bottom);
-
-    to_i420 = gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height, "framerate", G_TYPE_DOUBLE, fps, NULL);
-
-    to_ayuv = gst_caps_new_simple ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'),
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height, "framerate", G_TYPE_DOUBLE, fps, NULL);
-    to = to_i420;
-    gst_caps_append (to, to_ayuv);
-  } else {
-    GstPadTemplate *tmpl;
-
-    if (direction == GST_PAD_SINK) {
-      tmpl = gst_static_pad_template_get (&gst_video_box_src_template);
-    } else {
-      tmpl = gst_static_pad_template_get (&gst_video_box_sink_template);
+  for (i = 0; i < gst_caps_get_size (to); i++) {
+    structure = gst_caps_get_structure (to, i);
+    if (direction == GST_PAD_SINK) {    /* I420 to { I420, AYUV } */
+      g_value_init (&value, GST_TYPE_FOURCC);
+      gst_value_set_fourcc (&value, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'));
+      gst_value_list_append_value (&list_value, &value);
+      g_value_unset (&value);
+      gst_structure_set_value (structure, "format", &list_value);
+    } else if (direction == GST_PAD_SRC) {
+      gst_structure_set_value (structure, "format", &list_value);
     }
-    to = gst_caps_copy (gst_pad_template_get_caps (tmpl));
+    if (gst_structure_get_int (structure, "width", &tmp))
+      gst_structure_set (structure, "width", G_TYPE_INT,
+          tmp + direction * (video_box->box_left + video_box->box_right), NULL);
+    if (gst_structure_get_int (structure, "height", &tmp))
+      gst_structure_set (structure, "height", G_TYPE_INT,
+          tmp + direction * (video_box->box_top + video_box->box_bottom), NULL);
   }
+
+  g_value_unset (&list_value);
 
   return to;
 }
