@@ -26,28 +26,26 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstRtpGSMEnc GstRtpGSMEnc;
-typedef struct _GstRtpGSMEncClass GstRtpGSMEncClass;
+typedef struct _GstRTPGSMEnc GstRTPGSMEnc;
+typedef struct _GstRTPGSMEncClass GstRTPGSMEncClass;
 
 #define GST_TYPE_RTP_GSM_ENC \
   (gst_rtpgsmenc_get_type())
 #define GST_RTP_GSM_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_GSM_ENC,GstRtpGSMEnc))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_GSM_ENC,GstRTPGSMEnc))
 #define GST_RTP_GSM_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_GSM_ENC,GstRtpGSMEnc))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_GSM_ENC,GstRTPGSMEnc))
 #define GST_IS_RTP_GSM_ENC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_GSM_ENC))
 #define GST_IS_RTP_GSM_ENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_GSM_ENC))
 
-struct _GstRtpGSMEnc
+struct _GstRTPGSMEnc
 {
   GstBaseRTPPayload payload;
-
-  gint frequency;
 };
 
-struct _GstRtpGSMEncClass
+struct _GstRTPGSMEncClass
 {
   GstBaseRTPPayloadClass parent_class;
 };

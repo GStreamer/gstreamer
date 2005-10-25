@@ -1,3 +1,17 @@
+2005-10-25  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst/rtp/gstrtpgsmenc.c: (gst_rtpgsmenc_get_type),
+	(gst_rtpgsmenc_base_init), (gst_rtpgsmenc_class_init),
+	(gst_rtpgsmenc_init), (gst_rtpgsmenc_setcaps),
+	(gst_rtpgsmenc_handle_buffer):
+	* gst/rtp/gstrtpgsmenc.h:
+	* gst/rtp/gstrtpgsmparse.c: (gst_rtpgsmparse_get_type),
+	(gst_rtpgsmparse_base_init), (gst_rtpgsmparse_class_init),
+	(gst_rtpgsmparse_init), (gst_rtpgsmparse_setcaps),
+	(gst_rtpgsmparse_finalize), (gst_rtpgsmparse_process):
+	* gst/rtp/gstrtpgsmparse.h:
+	Getting the GSM (de)payloader working and compatible with our plans for RTP.
+
 2005-10-25  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/libpng/gstpngdec.c: (user_info_callback),

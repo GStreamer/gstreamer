@@ -21,26 +21,27 @@
 #define __GST_RTP_GSM_PARSE_H__
 
 #include <gst/gst.h>
+#include <gst/rtp/gstbasertpdepayload.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstRtpGSMParse GstRtpGSMParse;
-typedef struct _GstRtpGSMParseClass GstRtpGSMParseClass;
+typedef struct _GstRTPGSMParse GstRTPGSMParse;
+typedef struct _GstRTPGSMParseClass GstRTPGSMParseClass;
 
 #define GST_TYPE_RTP_GSM_PARSE \
   (gst_rtpgsmparse_get_type())
 #define GST_RTP_GSM_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_GSM_PARSE,GstRtpGSMParse))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_GSM_PARSE,GstRTPGSMParse))
 #define GST_RTP_GSM_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_GSM_PARSE,GstRtpGSMParse))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_GSM_PARSE,GstRTPGSMParse))
 #define GST_IS_RTP_GSM_PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_GSM_PARSE))
 #define GST_IS_RTP_GSM_PARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_GSM_PARSE))
 
-struct _GstRtpGSMParse
+struct _GstRTPGSMParse
 {
-  GstElement element;
+  GstBaseRTPDepayload depayload;
 
   GstPad *sinkpad;
   GstPad *srcpad;
@@ -48,9 +49,9 @@ struct _GstRtpGSMParse
   guint frequency;
 };
 
-struct _GstRtpGSMParseClass
+struct _GstRTPGSMParseClass
 {
-  GstElementClass parent_class;
+  GstBaseRTPDepayloadClass parent_class;
 };
 
 gboolean gst_rtpgsmparse_plugin_init (GstPlugin * plugin);

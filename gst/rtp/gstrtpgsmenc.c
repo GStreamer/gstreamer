@@ -39,7 +39,7 @@ static GstStaticPadTemplate gst_rtpgsmenc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-gsm, " "rate = (int) [ 1000, 48000 ]")
+    GST_STATIC_CAPS ("audio/x-gsm, " "rate = (int) 8000, " "channels = (int) 1")
     );
 
 static GstStaticPadTemplate gst_rtpgsmenc_src_template =
@@ -53,9 +53,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-static void gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass);
-static void gst_rtpgsmenc_base_init (GstRtpGSMEncClass * klass);
-static void gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc);
+static void gst_rtpgsmenc_class_init (GstRTPGSMEncClass * klass);
+static void gst_rtpgsmenc_base_init (GstRTPGSMEncClass * klass);
+static void gst_rtpgsmenc_init (GstRTPGSMEnc * rtpgsmenc);
 
 static gboolean gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
@@ -71,26 +71,26 @@ gst_rtpgsmenc_get_type (void)
 
   if (!rtpgsmenc_type) {
     static const GTypeInfo rtpgsmenc_info = {
-      sizeof (GstRtpGSMEncClass),
+      sizeof (GstRTPGSMEncClass),
       (GBaseInitFunc) gst_rtpgsmenc_base_init,
       NULL,
       (GClassInitFunc) gst_rtpgsmenc_class_init,
       NULL,
       NULL,
-      sizeof (GstRtpGSMEnc),
+      sizeof (GstRTPGSMEnc),
       0,
       (GInstanceInitFunc) gst_rtpgsmenc_init,
     };
 
     rtpgsmenc_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpGSMEnc",
+        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRTPGSMEnc",
         &rtpgsmenc_info, 0);
   }
   return rtpgsmenc_type;
 }
 
 static void
-gst_rtpgsmenc_base_init (GstRtpGSMEncClass * klass)
+gst_rtpgsmenc_base_init (GstRTPGSMEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -102,7 +102,7 @@ gst_rtpgsmenc_base_init (GstRtpGSMEncClass * klass)
 }
 
 static void
-gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass)
+gst_rtpgsmenc_class_init (GstRTPGSMEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -119,15 +119,16 @@ gst_rtpgsmenc_class_init (GstRtpGSMEncClass * klass)
 }
 
 static void
-gst_rtpgsmenc_init (GstRtpGSMEnc * rtpgsmenc)
+gst_rtpgsmenc_init (GstRTPGSMEnc * rtpgsmenc)
 {
-  rtpgsmenc->frequency = 8000;
+  GST_BASE_RTP_PAYLOAD (rtpgsmenc)->clock_rate = 8000;
+  GST_BASE_RTP_PAYLOAD_PT (rtpgsmenc) = GST_RTP_PAYLOAD_GSM;
 }
 
 static gboolean
 gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  GstRtpGSMEnc *rtpgsmenc;
+  GstRTPGSMEnc *rtpgsmenc;
   GstStructure *structure;
   gboolean ret;
   GstCaps *srccaps;
@@ -136,7 +137,9 @@ gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  ret = gst_structure_get_int (structure, "rate", &rtpgsmenc->frequency);
+  ret =
+      gst_structure_get_int (structure, "rate",
+      &(GST_BASE_RTP_PAYLOAD (rtpgsmenc)->clock_rate));
   if (!ret)
     return FALSE;
 
@@ -151,7 +154,7 @@ static GstFlowReturn
 gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
-  GstRtpGSMEnc *rtpgsmenc;
+  GstRTPGSMEnc *rtpgsmenc;
   guint size, payload_len;
   GstBuffer *outbuf;
   guint8 *payload, *data;
@@ -169,8 +172,6 @@ gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * basepayload,
   outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
   /* FIXME, assert for now */
   g_assert (GST_BUFFER_SIZE (outbuf) < GST_BASE_RTP_PAYLOAD_MTU (rtpgsmenc));
-
-  gst_rtpbuffer_set_timestamp (outbuf, timestamp * 8000 / GST_SECOND);
 
   /* copy timestamp */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
