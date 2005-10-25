@@ -36,4 +36,6 @@ noinst_HEADERS = gstrtpL16enc.h 	\
 		 gstasteriskh263.c 	\
 		 gstrtpmp4venc.h	\
 		 gstrtpmp4vdec.h	\
-		 gstrtpdec.h
+		 gstrtpdec.h		\
+		 gstrtph263enc.h	\
+		 gstasteriskh263.h
