@@ -1,3 +1,26 @@
+This is GStreamer FFMpeg 0.8.7
+
+Changes since 0.8.6:
+	Bug fixes:
+	* fixed FPS setting, which was wrong for divx5
+	* fixes altivec detection so it runs on G3 CPUs, also
+
+	New elements:
+	* QDM2 decoder
+
+	Snapshot update:
+	* to 20/10
+
+Bugs fixed since 0.8.6:
+	* 312764: --disable-encoders doesn't work
+	* 313223: gst-ffmpeg-0.8.6 fails to compile on a PPC
+	* 313970: ffdec_mpeg4 detects wrong framerate with some files
+	* 314320: gst ffmpeg calls "make" without caring about called make ...
+	* 315385: SIGFPE in gst_ffmpegdec_chain/gst_ffmpeg_time_gst_to_ff
+	* 317596: Gstreamer unable to play a qt video
+	* 319471: hooks.texi and faq.texi are missing from 0.8.6.2 tarball.
+	* 319482: altivec detections is broken.
+
 This is GStreamer FFMpeg 0.8.6
 
 Changes since 0.8.5:

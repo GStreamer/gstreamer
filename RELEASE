@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer FFmpeg 0.8.6 "Vamoz a la Playa"
+GStreamer: Release notes for GStreamer FFmpeg 0.8.7 "Redneck soup"
         
 
 The GStreamer team is happy to announce a new stable release of the
@@ -16,23 +16,22 @@ regularly from our modifications.
 Features of this release
     
       * codecs for most popular formats
-      * snapshot update to 20/7
-      * new post-processing plugin
-      * added flv/vob muxers
-      * decoder performance improvements
+      * snapshot update to 20/10
+      * fixed FPS setting bug for divx5 movies
+      * fixed possible memleak in MJPEG decoding
+      * fixed altivec detection which caused it to not run on G3 CPUs
+      * added QDM2 decoding
 
 Bugs fixed in this release
     
-      * 160665 : [ffdec_h264] VideoSoft h.264 videos (VSSH) make totem/ffd...
-      * 308335 : [PATCH] ffmpeg postprocessing plugins
-      * 308415 : gst-ffmpeg cvs doesn't build in
-      * 308804 : ffmpeg encoders do not set the GST_BUFFER_DELTA_UNIT flag
-      * 309050 : [PATCH] flv encoding
-      * 309051 : [PATCH] enable "streamheader" properties
-      * 309149 : [flv] flv demuxer/decoder doesn't set correct timestamps
-      * 310054 : [PATCH] fix flag handling for GST_FFMPEG_URL_STREAMHEADER
-      * 311593 : fix timestamps 
-      * 311802 : [PATCH] local variable 'bq' for timestamp conversion unin...
+      * 312764 : --disable-encoders doesn't work
+      * 313223 : gst-ffmpeg-0.8.6 fails to compile on a PPC 
+      * 313970 : ffdec_mpeg4 detects wrong framerate with some files
+      * 314320 : gst ffmpeg calls "make" without caring about called make ...
+      * 315385 : SIGFPE in gst_ffmpegdec_chain/gst_ffmpeg_time_gst_to_ff
+      * 317596 : Gstreamer unable to play a qt video
+      * 319471 : hooks.texi and faq.texi are missing from 0.8.6.2 tarball.
+      * 319482 : altivec detections is broken.
 
 Download
 
@@ -61,8 +60,6 @@ will create more lists as necessary.
 Contributors to this release
     
       * Ronald Bultje
-      * Edward Hervey
       * Luca Ognibene
-      * Daniel Fischer
-      * Sebastien Cote
+      * Zaheer Abbas Merali
  

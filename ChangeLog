@@ -1,3 +1,10 @@
+2005-10-25  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Release 0.8.7.
+
 2005-10-21  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* autogen.sh:
