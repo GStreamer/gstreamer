@@ -175,7 +175,7 @@ user_info_callback (png_structp png_ptr, png_infop info)
 {
   GstPngDec *pngdec = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-  gint bpc = 0;
+  gint bpc = 0, color_type;
   png_uint_32 width, height;
   size_t buffer_size;
   GstBuffer *buffer = NULL;
@@ -192,6 +192,13 @@ user_info_callback (png_structp png_ptr, png_infop info)
     GST_LOG ("this is a 16 bits per channel PNG image, strip down to 8 bits");
     png_set_strip_16 (pngdec->png);
   }
+
+  /* Get Color type */
+  color_type = png_get_color_type (pngdec->png, pngdec->info);
+
+  /* HACK: The doc states that it's RGBA but apparently it's not... */
+  if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+    png_set_bgr (pngdec->png);
 
   /* Update the info structure */
   png_read_update_info (pngdec->png, pngdec->info);
@@ -340,7 +347,7 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
     ret = GST_FLOW_ERROR;
   }
 
-  GST_LOG ("our caps %s", gst_caps_to_string (res));
+  GST_DEBUG_OBJECT (pngdec, "our caps %" GST_PTR_FORMAT, res);
 
   gst_caps_unref (res);
 
@@ -354,7 +361,7 @@ gst_pngdec_task (GstPad * pad)
   GstPngDec *pngdec;
   GstBuffer *buffer = NULL;
   size_t buffer_size = 0;
-  gint i = 0, bpc = 0;
+  gint i = 0, bpc = 0, color_type;
   png_bytep *rows, inp;
   png_uint_32 width, height, rowbytes;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -381,6 +388,13 @@ gst_pngdec_task (GstPad * pad)
     GST_LOG ("this is a 16 bits per channel PNG image, strip down to 8 bits");
     png_set_strip_16 (pngdec->png);
   }
+
+  /* Get Color type */
+  color_type = png_get_color_type (pngdec->png, pngdec->info);
+
+  /* HACK: The doc states that it's RGBA but apparently it's not... */
+  if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+    png_set_bgr (pngdec->png);
 
   /* Update the info structure */
   png_read_update_info (pngdec->png, pngdec->info);
