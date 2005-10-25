@@ -36,12 +36,6 @@ enum
   ARG_QUEUEDELAY,
 };
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp")
-    );
-
 static GstElementClass *parent_class = NULL;
 
 static void gst_base_rtp_depayload_base_init (GstBaseRTPDepayloadClass * klass);
@@ -100,10 +94,7 @@ static void gst_base_rtp_depayload_set_gst_timestamp
 static void
 gst_base_rtp_depayload_base_init (GstBaseRTPDepayloadClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+  //GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 }
 
 static void
@@ -176,7 +167,9 @@ gst_base_rtp_depayload_finalize (GObject * object)
 {
   // free our queue
   g_queue_free (GST_BASE_RTP_DEPAYLOAD (object)->queue);
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+
+  if (G_OBJECT_CLASS (parent_class)->finalize)
+    G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

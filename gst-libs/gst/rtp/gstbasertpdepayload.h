@@ -38,6 +38,9 @@ G_BEGIN_DECLS
 #define GST_IS_BASE_RTP_DEPAYLOAD_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_RTP_DEPAYLOAD))
 
+#define GST_BASE_RTP_DEPAYLOAD_SINKPAD(depayload) (GST_BASE_RTP_DEPAYLOAD (depayload)->sinkpad)
+#define GST_BASE_RTP_DEPAYLOAD_SRCPAD(depayload)  (GST_BASE_RTP_DEPAYLOAD (depayload)->srcpad)
+
 // in milliseconds
 #define RTP_QUEUEDELAY 100;
 
