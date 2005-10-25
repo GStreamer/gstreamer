@@ -1406,6 +1406,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       GST_LOCK (basesink);
       if ((clock = GST_ELEMENT_CLOCK (basesink))) {
         GstClockTime now;
+        gint64 segment_time;
 
         gst_object_ref (clock);
         GST_UNLOCK (basesink);
@@ -1413,14 +1414,17 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
         now = gst_clock_get_time (clock);
 
         GST_LOCK (basesink);
-        *cur =
-            now - GST_ELEMENT_CAST (basesink)->base_time +
-            basesink->segment_time;
+        if (GST_CLOCK_TIME_IS_VALID (basesink->segment_time))
+          segment_time = basesink->segment_time;
+        else
+          segment_time = 0;
+
+        *cur = now - GST_ELEMENT_CAST (basesink)->base_time + segment_time;
 
         GST_DEBUG_OBJECT (basesink,
             "now %" GST_TIME_FORMAT " + segment_time %" GST_TIME_FORMAT " = %"
             GST_TIME_FORMAT, GST_TIME_ARGS (now),
-            GST_TIME_ARGS (basesink->segment_time), GST_TIME_ARGS (*cur));
+            GST_TIME_ARGS (segment_time), GST_TIME_ARGS (*cur));
 
         gst_object_unref (clock);
 

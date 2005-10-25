@@ -1,3 +1,11 @@
+2005-10-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_get_position):
+	Don't use invalid stream_time.
+
+	* gst/gstevent.c: (gst_event_new_newsegment):
+	stream_time in newsegment cannot be undefined.
+
 2005-10-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbus.c:

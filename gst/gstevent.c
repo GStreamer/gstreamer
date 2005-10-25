@@ -398,8 +398,9 @@ gst_event_new_eos (void)
  * used intelligently by plugins to use more efficient methods of skipping
  * unneeded packets.
  *
- * The stream time of the segment is also used to convert the buffer timestamps
- * into the stream time again.
+ * The stream time of the segment is used to convert the buffer timestamps
+ * into the stream time again, this is usually done in sinks to report the 
+ * current stream_time. @stream_time cannot be -1.
  *
  * The @start_value cannot be -1, the @stop_value can be -1. If there
  * is a valid @stop_value given, it must be greater or equal than @start_value.
@@ -429,6 +430,9 @@ gst_event_new_newsegment (gboolean update, gdouble rate, GstFormat format,
         "start %lld, stop %lld, stream_time %lld",
         update, rate, format, start_value, stop_value, stream_time);
   }
+  if (stream_time == -1)
+    g_return_val_if_fail (stream_time != -1, NULL);
+
   if (start_value == -1)
     g_return_val_if_fail (start_value != -1, NULL);
 
