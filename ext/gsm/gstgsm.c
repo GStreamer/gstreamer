@@ -1,5 +1,7 @@
-/* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/*
+ * Farsight
+ * GStreamer GSM encoder/decoder (uses WAV49 compiled libgsm)
+ * Copyright (C) 2005 Philippe Khalaf <burger@speedy.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,14 +31,14 @@ plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "gsmenc", GST_RANK_NONE, GST_TYPE_GSMENC))
     return FALSE;
-  if (!gst_element_register (plugin, "gsmdec", GST_RANK_PRIMARY,
-          GST_TYPE_GSMDEC))
+  if (!gst_element_register (plugin, "gsmdec", GST_RANK_NONE, GST_TYPE_GSMDEC))
     return FALSE;
+
   return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gsm",
-    "GSM Elements Plugin",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    "GSM encoder/decoder",
+    plugin_init, VERSION, "LGPL", "Farsight", "http://farsight.sf.net")

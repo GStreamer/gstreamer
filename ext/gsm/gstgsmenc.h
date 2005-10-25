@@ -21,6 +21,7 @@
 #define __GST_GSMENC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #ifdef GSM_HEADER_IN_SUBDIR
 #include <gsm/gsm.h>
@@ -50,10 +51,9 @@ struct _GstGSMEnc
 
   /* pads */
   GstPad *sinkpad, *srcpad;
+  GstAdapter *adapter;
 
   gsm state;
-  gsm_signal buffer[160];
-  gint bufsize;
   GstClockTime next_ts;
   gboolean firstBuf;
 };
@@ -61,9 +61,6 @@ struct _GstGSMEnc
 struct _GstGSMEncClass
 {
   GstElementClass parent_class;
-
-  /* signals */
-  void (*frame_encoded) (GstElement * element);
 };
 
 GType gst_gsmenc_get_type (void);

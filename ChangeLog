@@ -1,8 +1,20 @@
+2005-10-25  Zeeshan Ali  <zeenix@gmail.com>
+
+	* ext/gsm/gstgsm.c: (plugin_init):
+	* ext/gsm/gstgsmdec.c: (gst_gsmdec_class_init), (gst_gsmdec_init),
+	(gst_gsmdec_chain):
+	* ext/gsm/gstgsmdec.h:
+	* ext/gsm/gstgsmenc.c: (gst_gsmenc_class_init), (gst_gsmenc_init),
+	(gst_gsmenc_chain):
+	* ext/gsm/gstgsmenc.h:
+	Over-writing Wim's gsm plugins (currently not working) with that from the 
+	farsight repo. Also made sure that they work with the RTP (de)payloader.
+
 2005-10-25  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/gsm/gstgsmenc.c: (gst_gsmenc_init), 
 	(gst_gsmenc_sink_event), (gst_gsmenc_chain):
-        * ext/gsm/gstgsmenc.h:
+	* ext/gsm/gstgsmenc.h:
 	Fixed event handling
 
 2005-10-24  Christian Schaller  <christian@fluendo.com>

@@ -1,5 +1,7 @@
-/* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/*
+ * Farsight
+ * GStreamer GSM decoder (uses WAV49 compiled libgsm)
+ * Copyright (C) 2005 Philippe Khalaf <burger@speedy.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -52,10 +54,8 @@ struct _GstGSMDec
   GstPad *sinkpad, *srcpad;
 
   gsm state;
-  gsm_byte buffer[33];
-  gint bufsize;
-  GstClockTime next_ts;
   gint64 next_of;
+  GstClockTime next_ts;
 };
 
 struct _GstGSMDecClass
