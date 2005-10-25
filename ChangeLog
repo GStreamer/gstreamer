@@ -1,3 +1,12 @@
+2005-10-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbus.c:
+	Doc fix.
+
+	* gst/gstqueue.c: (gst_queue_handle_sink_event), (gst_queue_chain),
+	(gst_queue_loop):
+	Fix potential deadlock when QUEUE_LOCK is taken before STREAM_LOCK.
+
 2005-10-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/tmpl/gstdparam.sgml:
