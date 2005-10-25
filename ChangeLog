@@ -1,3 +1,14 @@
+2005-10-25  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* gst/rtp/Makefile.am
+	* gst/rtp/gstrtp.c
+	* gst/rtp/gstrtpg711enc.c
+	* gst/rtp/gstrtpg711enc.h
+	* gst/rtp/gstrtpg711dec.c
+	* gst/rtp/gstrtpg711dec.h
+	Created G711 payloader and depayloader (it supports mulaw and alaw
+	(dec)encoders)
+
 2005-10-25  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),

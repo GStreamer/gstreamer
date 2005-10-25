@@ -22,6 +22,8 @@
 #endif
 
 #include "gstrtpdec.h"
+#include "gstrtpg711enc.h"
+#include "gstrtpg711dec.h"
 #include "gstrtpgsmenc.h"
 #include "gstrtpgsmparse.h"
 #include "gstrtpamrenc.h"
@@ -51,6 +53,12 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtpamrenc_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtpg711dec_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtpg711enc_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtpmpadec_plugin_init (plugin))
