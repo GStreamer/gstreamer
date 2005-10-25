@@ -372,13 +372,16 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
     }
     if (gst_structure_get_int (structure, "width", &tmp))
       gst_structure_set (structure, "width", G_TYPE_INT,
-          tmp + direction * (video_box->box_left + video_box->box_right), NULL);
+          tmp + dir * (video_box->box_left + video_box->box_right), NULL);
     if (gst_structure_get_int (structure, "height", &tmp))
       gst_structure_set (structure, "height", G_TYPE_INT,
-          tmp + direction * (video_box->box_top + video_box->box_bottom), NULL);
+          tmp + dir * (video_box->box_top + video_box->box_bottom), NULL);
   }
 
   g_value_unset (&list_value);
+
+  GST_DEBUG_OBJECT (video_box, "transformed %" GST_PTR_FORMAT
+      " to %" GST_PTR_FORMAT, from, to);
 
   return to;
 }

@@ -1,6 +1,10 @@
-2005-10-25  Christian Schaller  <set EMAIL_ADDRESS environment variable>
+2005-10-25  Julien MOUTTE  <julien@moutte.net>
 
-	reviewed by: <delete if not using a buddy>
+	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
+	(gst_video_box_transform_caps), (gst_video_box_get_unit_size):
+	Doh ! I introduced wingo's bug again ! Sorry...
+
+2005-10-25  Christian Schaller <christian@fluendo.com> 
 
 	* gst/rtp/Makefile.am: add missing header files for disting
 
