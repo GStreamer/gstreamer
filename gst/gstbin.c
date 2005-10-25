@@ -52,6 +52,35 @@
  * bin. Likewise the "element_removed" signal is fired whenever an element is
  * removed from the bin.
  *
+ * A GstBin internally interceps all #GstMessage posted by its children and 
+ * implements the following default behaviour for each of them.
+ *
+ *   GST_MESSAGE_EOS: This message is only posted by sinks
+ *     in the PLAYING state. If all sinks posted the EOS message, this bin
+ *     will post and EOS message upwards.
+ *
+ *   GST_MESSAGE_SEGMENT_START: just collected and never forwarded upwards.
+ *     The messages are used to decide when all elements have completed playback
+ *     of their segment.
+ *
+ *   GST_MESSAGE_SEGMENT_DONE: Is posted by GstBin when all elements that posted
+ *     a SEGMENT_START have posted a SEGMENT_DONE.
+ *
+ *   OTHERS: posted upwards.
+ *
+ * A GstBin implements the following default behaviour for answering to a 
+ * #GstQuery:
+ *
+ *   GST_QUERY_DURATION: If the query has been asked before with the same
+ *           format, use the cached previous value. If no previous value 
+ *           was cached, the query is sent to all sink elements in the bin
+ *           and the MAXIMUM of all values is returned and cached. If no 
+ *           sinks are available in the bin, the query fails. 
+ *
+ *   OTHERS: the query is forwarded to all sink elements, the result of the 
+ *           first sink that answers the query successfully is returned. If
+ *           no sink is in the bin, the query fails.
+ *
  * gst_object_unref() is used to destroy the bin.
  */
 
@@ -1708,6 +1737,31 @@ gst_bin_recalc_func (GstBin * bin, gpointer data)
   gst_object_unref (bin);
 }
 
+/* handle child messages:
+ *
+ * GST_MESSAGE_EOS: This message is only posted by sinks
+ *     in the PLAYING state. If all sinks posted the EOS message, post
+ *     one upwards.
+ *
+ * GST_MESSAGE_STATE_DIRTY: if we are the toplevel bin we do a state
+ *     recalc. If we are not toplevel (we have a parent) we just post
+ *     the message upwards.
+ *
+ * GST_MESSAGE_SEGMENT_START: just collect, never forward upwards. If an
+ *     element posts segment_start twice, only the last message is kept.
+ *
+ * GST_MESSAGE_SEGMENT_DONE: replace SEGMENT_START message from same poster
+ *     with the segment_done message. If there are no more segment_start
+ *     messages, post segment_done message upwards.
+ *
+ * GST_MESSAGE_DURATION: remove all previously cached duration messages.
+ *     Whenever someone performs a duration query on the bin, we store the
+ *     result so we can answer it quicker the next time. Any element that
+ *     changes its duration marks our cached values invalid.
+ *     This message is also posted upwards.
+ *
+ * OTHER: post upwards.
+ */
 static GstBusSyncReply
 bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 {
@@ -1878,6 +1932,12 @@ bin_query_duration_done (GstBin * bin, QueryFold * fold)
   gst_query_set_duration (fold->query, format, fold->max);
 
   GST_DEBUG_OBJECT (bin, "max duration %" G_GINT64_FORMAT, fold->max);
+
+  /* and cache now */
+  GST_LOCK (bin);
+  bin->messages = g_list_prepend (bin->messages,
+      gst_message_new_duration (GST_OBJECT_CAST (bin), format, fold->max));
+  GST_UNLOCK (bin);
 }
 
 /* generic fold, return first valid result */
@@ -1888,7 +1948,7 @@ bin_query_generic_fold (GstElement * item, GValue * ret, QueryFold * fold)
 
   if ((res = gst_element_query (item, fold->query))) {
     g_value_set_boolean (ret, TRUE);
-    GST_DEBUG_OBJECT (item, "answered query");
+    GST_DEBUG_OBJECT (item, "answered query %p", fold->query);
   }
 
   /* and stop as soon as we have a valid result */
@@ -1907,24 +1967,59 @@ gst_bin_query (GstElement * element, GstQuery * query)
   QueryFold fold_data;
   GValue ret = { 0 };
 
-  fold_data.query = query;
-
-  g_value_init (&ret, G_TYPE_BOOLEAN);
-  g_value_set_boolean (&ret, FALSE);
-
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
+    {
+      GList *cached;
+      GstFormat qformat;
+
+      gst_query_parse_duration (query, &qformat, NULL);
+
+      /* find cached duration query */
+      GST_LOCK (bin);
+      for (cached = bin->messages; cached; cached = g_list_next (cached)) {
+        GstMessage *message = (GstMessage *) cached->data;
+
+        if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_DURATION &&
+            GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (bin)) {
+          GstFormat format;
+          gint64 duration;
+
+          gst_message_parse_duration (message, &format, &duration);
+
+          /* if cached same format, copy duration in query result */
+          if (format == qformat) {
+            GST_DEBUG_OBJECT (bin, "return cached duration %" G_GINT64_FORMAT,
+                duration);
+            GST_UNLOCK (bin);
+
+
+            gst_query_set_duration (query, qformat, duration);
+            res = TRUE;
+            goto exit;
+          }
+        }
+      }
+      GST_UNLOCK (bin);
+
       fold_func = (GstIteratorFoldFunction) bin_query_duration_fold;
       fold_init = bin_query_duration_init;
       fold_done = bin_query_duration_done;
       break;
+    }
     default:
       fold_func = (GstIteratorFoldFunction) bin_query_generic_fold;
       break;
   }
 
+  fold_data.query = query;
+
+  g_value_init (&ret, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&ret, FALSE);
+
   iter = gst_bin_iterate_sinks (bin);
-  GST_DEBUG_OBJECT (bin, "Sending query to sink children");
+  GST_DEBUG_OBJECT (bin, "Sending query %p (type %d) to sink children",
+      query, GST_QUERY_TYPE (query));
 
   if (fold_init)
     fold_init (bin, &fold_data);
@@ -1943,9 +2038,9 @@ gst_bin_query (GstElement * element, GstQuery * query)
         break;
       case GST_ITERATOR_OK:
       case GST_ITERATOR_DONE:
-        if (fold_done)
-          fold_done (bin, &fold_data);
         res = g_value_get_boolean (&ret);
+        if (fold_done != NULL && res)
+          fold_done (bin, &fold_data);
         goto done;
       default:
         res = FALSE;
@@ -1955,7 +2050,8 @@ gst_bin_query (GstElement * element, GstQuery * query)
 done:
   gst_iterator_free (iter);
 
-  GST_DEBUG_OBJECT (bin, "query result %d", res);
+exit:
+  GST_DEBUG_OBJECT (bin, "query %p result %d", query, res);
 
   return res;
 }

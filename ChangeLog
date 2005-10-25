@@ -1,5 +1,17 @@
 2005-10-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (message_check), (bin_replace_message),
+	(bin_remove_messages), (is_eos), (gst_bin_add_func),
+	(update_degree), (gst_bin_sort_iterator_next), (bin_bus_handler),
+	(bin_query_duration_init), (bin_query_duration_fold),
+	(bin_query_duration_done), (bin_query_generic_fold),
+	(gst_bin_query):
+	Some doc and debug updates.
+	Cache previously requested query DURATION for speed. invalidate
+	cached duration if element posts a DURATION message.
+
+2005-10-25  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-TODO.txt:
 	Update TODO.
 
