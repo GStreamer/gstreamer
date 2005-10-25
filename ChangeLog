@@ -1,5 +1,11 @@
 2005-10-25  Edgard Lima  <edgard.lima@indt.org.br>
 
+	* gst/rtp/gstrtpg711dec.c
+	Just removed a couple of lines of weird code used during
+	development/test time.
+
+2005-10-25  Edgard Lima  <edgard.lima@indt.org.br>
+
 	* gst/rtp/Makefile.am
 	* gst/rtp/gstrtp.c
 	* gst/rtp/gstrtpg711enc.c

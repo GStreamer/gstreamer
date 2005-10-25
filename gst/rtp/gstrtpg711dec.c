@@ -204,22 +204,14 @@ gst_rtpg711dec_chain (GstPad * pad, GstBuffer * buf)
   {
     gint payload_len;
     guint8 *payload;
-    guint32 timestamp;
-    static guint32 firstTS = -1;
 
     payload_len = gst_rtpbuffer_get_payload_len (buf);
     payload = gst_rtpbuffer_get_payload (buf);
 
-    timestamp = gst_rtpbuffer_get_timestamp (buf);
-
-    if (firstTS == -1) {
-      firstTS = gst_rtpbuffer_get_timestamp (buf);
-    }
-    timestamp = gst_rtpbuffer_get_timestamp (buf) - firstTS;
-
     outbuf = gst_buffer_new_and_alloc (payload_len);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / 8000;
+    GST_BUFFER_TIMESTAMP (outbuf) =
+        gst_rtpbuffer_get_timestamp (buf) * GST_SECOND / 8000;
 
     memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
 
