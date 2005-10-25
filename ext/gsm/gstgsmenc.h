@@ -55,6 +55,7 @@ struct _GstGSMEnc
   gsm_signal buffer[160];
   gint bufsize;
   GstClockTime next_ts;
+  gboolean firstBuf;
 };
 
 struct _GstGSMEncClass

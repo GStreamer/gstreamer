@@ -56,6 +56,9 @@ static GstFlowReturn gst_gsmenc_chain (GstPad * pad, GstBuffer * buf);
 static GstElementClass *parent_class = NULL;
 static guint gst_gsmenc_signals[LAST_SIGNAL] = { 0 };
 
+static gboolean gst_gsmenc_sink_event (GstPad * pad, GstEvent * event);
+
+
 GType
 gst_gsmenc_get_type (void)
 {
@@ -137,6 +140,7 @@ gst_gsmenc_init (GstGSMEnc * gsmenc)
       (&gsmenc_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->sinkpad);
   gst_pad_set_chain_function (gsmenc->sinkpad, gst_gsmenc_chain);
+  gst_pad_set_event_function (gsmenc->sinkpad, gst_gsmenc_sink_event);
 
   gsmenc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
@@ -146,98 +150,127 @@ gst_gsmenc_init (GstGSMEnc * gsmenc)
   gsmenc->state = gsm_create ();
   gsmenc->bufsize = 0;
   gsmenc->next_ts = 0;
+  gsmenc->firstBuf = TRUE;
+}
+
+static gboolean
+gst_gsmenc_sink_event (GstPad * pad, GstEvent * event)
+{
+
+  GstGSMEnc *gsmenc;
+
+  gsmenc = GST_GSMENC (GST_OBJECT_PARENT (pad));
+  gboolean ret = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    {
+      GST_STREAM_LOCK (pad);
+      ret = gst_pad_push_event (gsmenc->srcpad, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
+    }
+    case GST_EVENT_NEWSEGMENT:
+    {
+      /* drop the discontinuity */
+      gst_event_unref (event);
+      break;
+    }
+    default:
+    {
+      gst_pad_event_default (pad, event);
+      break;
+    }
+  }
+  return ret;
+
 }
 
 static GstFlowReturn
 gst_gsmenc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstGSMEnc *gsmenc;
+  gsm_signal *data;
+  guint size;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  gsmenc = GST_GSMENC (GST_OBJECT_PARENT (pad));
+  gsmenc = GST_GSMENC (gst_pad_get_parent (pad));
 
-  if (GST_IS_EVENT (buf)) {
-    GstEvent *event = GST_EVENT (buf);
+  data = (gsm_signal *) GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf) / sizeof (gsm_signal);
 
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_EOS:{
-        gst_pad_push_event (gsmenc->srcpad, gst_event_new_eos ());
-        gst_pad_push (gsmenc->srcpad, buf);
-        break;
-      }
-      case GST_EVENT_NEWSEGMENT:{
-        /* drop the discontinuity */
-        break;
-      }
-      default:{
-        gst_pad_event_default (pad, event);
-        break;
-      }
-    }
-    return GST_FLOW_OK;
-  } else if (GST_IS_BUFFER (buf)) {
-    gsm_signal *data;
-    guint size;
-    GstCaps *tempcaps = NULL;
+  if (gsmenc->bufsize && (gsmenc->bufsize + size >= 160)) {
+    GstBuffer *outbuf;
 
-    data = (gsm_signal *) GST_BUFFER_DATA (buf);
-    size = GST_BUFFER_SIZE (buf) / sizeof (gsm_signal);
+    memcpy (gsmenc->buffer + gsmenc->bufsize, data,
+        (160 - gsmenc->bufsize) * sizeof (gsm_signal));
 
-    if (gsmenc->bufsize && (gsmenc->bufsize + size >= 160)) {
-      GstBuffer *outbuf;
+    outbuf = gst_buffer_new_and_alloc (33 * sizeof (gsm_byte));
+    GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
+    GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+    gsmenc->next_ts += 20 * GST_MSECOND;
 
-      memcpy (gsmenc->buffer + gsmenc->bufsize, data,
-          (160 - gsmenc->bufsize) * sizeof (gsm_signal));
+    gsm_encode (gsmenc->state, gsmenc->buffer,
+        (gsm_byte *) GST_BUFFER_DATA (outbuf));
 
-      outbuf = gst_buffer_new_and_alloc (33 * sizeof (gsm_byte));
-      GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
-      GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
-      gsmenc->next_ts += 20 * GST_MSECOND;
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (gsmenc->srcpad));
 
-      gsm_encode (gsmenc->state, gsmenc->buffer,
-          (gsm_byte *) GST_BUFFER_DATA (outbuf));
-
-      tempcaps = gst_caps_new_simple ("audio/x-gsm",
-          "rate", G_TYPE_INT, 8000, "channels", G_TYPE_INT, 1, NULL);
-
-      gst_buffer_set_caps (outbuf, tempcaps);
-      gst_pad_push (gsmenc->srcpad, outbuf);
-
-      size -= (160 - gsmenc->bufsize);
-      data += (160 - gsmenc->bufsize);
-      gsmenc->bufsize = 0;
+    if (gsmenc->firstBuf) {
+      gst_pad_push_event (gsmenc->srcpad,
+          gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_DEFAULT,
+              0, GST_CLOCK_TIME_NONE, 0));
+      gsmenc->firstBuf = FALSE;
     }
 
-    while (size >= 160) {
-      GstBuffer *outbuf;
+    ret = gst_pad_push (gsmenc->srcpad, outbuf);
 
-      outbuf = gst_buffer_new_and_alloc (33 * sizeof (gsm_byte));
-      GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
-      GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
-      gsmenc->next_ts += 20 * GST_MSECOND;
-
-      gsm_encode (gsmenc->state, data, (gsm_byte *) GST_BUFFER_DATA (outbuf));
-
-      /* I was wondering that gst_buffer_set_caps (outbuf, GST_PAD_CAPS (gsmenc->srcpad)); 
-       * could work, but it doens't work */
-
-      tempcaps = gst_caps_new_simple ("audio/x-gsm",
-          "rate", G_TYPE_INT, 8000, "channels", G_TYPE_INT, 1, NULL);
-
-      gst_buffer_set_caps (outbuf, tempcaps);
-      gst_pad_push (gsmenc->srcpad, outbuf);
-
-      size -= 160;
-      data += 160;
+    if (ret != GST_FLOW_OK) {
+      gst_buffer_unref (outbuf);
+      goto error;
     }
 
-    if (size) {
-      memcpy (gsmenc->buffer + gsmenc->bufsize, data,
-          size * sizeof (gsm_signal));
-      gsmenc->bufsize += size;
-    }
+    size -= (160 - gsmenc->bufsize);
+    data += (160 - gsmenc->bufsize);
+    gsmenc->bufsize = 0;
 
-    /*gst_buffer_unref (buf); */
-    return GST_FLOW_OK;
   }
-  return GST_FLOW_OK;
+
+  while (size >= 160) {
+    GstBuffer *outbuf;
+
+    outbuf = gst_buffer_new_and_alloc (33 * sizeof (gsm_byte));
+    GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
+    GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+    gsmenc->next_ts += 20 * GST_MSECOND;
+
+    gsm_encode (gsmenc->state, data, (gsm_byte *) GST_BUFFER_DATA (outbuf));
+
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (gsmenc->srcpad));
+    if (gsmenc->firstBuf) {
+      gst_pad_push_event (gsmenc->srcpad,
+          gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_DEFAULT,
+              0, GST_CLOCK_TIME_NONE, 0));
+      gsmenc->firstBuf = FALSE;
+    }
+    ret = gst_pad_push (gsmenc->srcpad, outbuf);
+
+    if (ret != GST_FLOW_OK) {
+      gst_buffer_unref (outbuf);
+      goto error;
+    }
+
+    size -= 160;
+    data += 160;
+  }
+
+  if (size) {
+    memcpy (gsmenc->buffer + gsmenc->bufsize, data, size * sizeof (gsm_signal));
+    gsmenc->bufsize += size;
+  }
+
+error:
+
+  gst_object_unref (gsmenc);
+  return ret;
+
 }

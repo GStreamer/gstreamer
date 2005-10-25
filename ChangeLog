@@ -1,3 +1,10 @@
+2005-10-25  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/gsm/gstgsmenc.c: (gst_gsmenc_init), 
+	(gst_gsmenc_sink_event), (gst_gsmenc_chain):
+        * ext/gsm/gstgsmenc.h:
+	Fixed event handling
+
 2005-10-24  Christian Schaller  <christian@fluendo.com>
 
 	* configure.ac: port over thomas's plugin listing from base
