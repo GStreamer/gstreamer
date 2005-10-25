@@ -442,13 +442,20 @@ message_check (GstMessage * message, MessageFind * target)
 }
 
 /* with LOCK, returns TRUE if message had a valid SRC, takes ref on
- * the message. */
+ * the message. 
+ *
+ * A message that is cached and has the same SRC and type is replaced
+ * by the given message.
+ */
 static gboolean
 bin_replace_message (GstBin * bin, GstMessage * message, GstMessageType types)
 {
   GList *previous;
   GstObject *src;
   gboolean res = TRUE;
+  const gchar *name;
+
+  name = gst_message_type_get_name (GST_MESSAGE_TYPE (message));
 
   if ((src = GST_MESSAGE_SRC (message))) {
     MessageFind find;
@@ -465,19 +472,16 @@ bin_replace_message (GstBin * bin, GstMessage * message, GstMessageType types)
       previous->data = message;
 
       GST_DEBUG_OBJECT (bin, "replace old message %s from %s",
-          gst_message_type_get_name (GST_MESSAGE_TYPE (message)),
-          GST_ELEMENT_NAME (src));
+          name, GST_ELEMENT_NAME (src));
     } else {
       /* keep new message */
       bin->messages = g_list_prepend (bin->messages, message);
 
       GST_DEBUG_OBJECT (bin, "got new message %s from %s",
-          gst_message_type_get_name (GST_MESSAGE_TYPE (message)),
-          GST_ELEMENT_NAME (src));
+          name, GST_ELEMENT_NAME (src));
     }
   } else {
-    GST_DEBUG_OBJECT (bin, "got message %s from (NULL), not processing",
-        gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+    GST_DEBUG_OBJECT (bin, "got message %s from (NULL), not processing", name);
     res = FALSE;
     gst_message_unref (message);
   }
@@ -1756,6 +1760,8 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       GST_UNLOCK (bin);
       break;
 
+      /* non toplevel bins just forward the message and don't start
+       * a recalc themselves */
     not_toplevel:
       {
         GST_UNLOCK (bin);
@@ -1769,15 +1775,54 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
     }
     case GST_MESSAGE_SEGMENT_START:
       GST_LOCK (bin);
+      /* replace any previous segment_start message from this source 
+       * with the new segment start message */
       bin_replace_message (bin, message, GST_MESSAGE_SEGMENT_START);
       GST_UNLOCK (bin);
       break;
     case GST_MESSAGE_SEGMENT_DONE:
+    {
+      MessageFind find;
+      gboolean post = FALSE;
+      GstFormat format;
+      gint64 position;
+
+      gst_message_parse_segment_done (message, &format, &position);
+
       GST_LOCK (bin);
       bin_replace_message (bin, message, GST_MESSAGE_SEGMENT_START);
+      /* if there are no more segment_start messages, everybody posted
+       * a segment_done and we can post one on the bus. */
+
+      /* we don't care who still has a pending segment start */
+      find.src = NULL;
+      find.types = GST_MESSAGE_SEGMENT_START;
+
+      if (!g_list_find_custom (bin->messages, &find,
+              (GCompareFunc) message_check)) {
+        /* nothing found */
+        post = TRUE;
+        /* remove all old segment_done messages */
+        bin_remove_messages (bin, NULL, GST_MESSAGE_SEGMENT_DONE);
+      }
       GST_UNLOCK (bin);
+      if (post) {
+        /* post segment done with latest format and position. */
+        gst_element_post_message (GST_ELEMENT_CAST (bin),
+            gst_message_new_segment_done (GST_OBJECT_CAST (bin),
+                format, position));
+      }
       break;
+    }
     case GST_MESSAGE_DURATION:
+    {
+      /* remove all cached duration messages, next time somebody asks
+       * for duration, we will recalculate. */
+      GST_LOCK (bin);
+      bin_remove_messages (bin, NULL, GST_MESSAGE_DURATION);
+      GST_UNLOCK (bin);
+      /* fallthrough */
+    }
     default:
       /* Send all other messages upward */
       GST_DEBUG_OBJECT (bin, "posting message upward");
@@ -1788,39 +1833,129 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
   return GST_BUS_DROP;
 }
 
+/* generic struct passed to all query fold methods */
+typedef struct
+{
+  GstQuery *query;
+  gint64 max;
+} QueryFold;
+
+typedef void (*QueryInitFunction) (GstBin * bin, QueryFold * fold);
+typedef void (*QueryDoneFunction) (GstBin * bin, QueryFold * fold);
+
+/* for duration we collect all durations and take the MAX of
+ * all valid results */
+static void
+bin_query_duration_init (GstBin * bin, QueryFold * fold)
+{
+  fold->max = -1;
+}
+
+static gboolean
+bin_query_duration_fold (GstElement * item, GValue * ret, QueryFold * fold)
+{
+  if (gst_element_query (item, fold->query)) {
+    gint64 duration;
+
+    g_value_set_boolean (ret, TRUE);
+
+    gst_query_parse_duration (fold->query, NULL, &duration);
+
+    GST_DEBUG_OBJECT (item, "got duration %" G_GINT64_FORMAT, duration);
+
+    if (duration > fold->max)
+      fold->max = duration;
+  }
+  return TRUE;
+}
+static void
+bin_query_duration_done (GstBin * bin, QueryFold * fold)
+{
+  GstFormat format;
+
+  gst_query_parse_duration (fold->query, &format, NULL);
+  /* store max in query result */
+  gst_query_set_duration (fold->query, format, fold->max);
+
+  GST_DEBUG_OBJECT (bin, "max duration %" G_GINT64_FORMAT, fold->max);
+}
+
+/* generic fold, return first valid result */
+static gboolean
+bin_query_generic_fold (GstElement * item, GValue * ret, QueryFold * fold)
+{
+  gboolean res;
+
+  if ((res = gst_element_query (item, fold->query))) {
+    g_value_set_boolean (ret, TRUE);
+    GST_DEBUG_OBJECT (item, "answered query");
+  }
+
+  /* and stop as soon as we have a valid result */
+  return !res;
+}
+
 static gboolean
 gst_bin_query (GstElement * element, GstQuery * query)
 {
   GstBin *bin = GST_BIN (element);
   GstIterator *iter;
-  gboolean res = FALSE, done = FALSE;
+  gboolean res = FALSE;
+  GstIteratorFoldFunction fold_func;
+  QueryInitFunction fold_init = NULL;
+  QueryDoneFunction fold_done = NULL;
+  QueryFold fold_data;
+  GValue ret = { 0 };
+
+  fold_data.query = query;
+
+  g_value_init (&ret, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&ret, FALSE);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DURATION:
+      fold_func = (GstIteratorFoldFunction) bin_query_duration_fold;
+      fold_init = bin_query_duration_init;
+      fold_done = bin_query_duration_done;
+      break;
+    default:
+      fold_func = (GstIteratorFoldFunction) bin_query_generic_fold;
+      break;
+  }
 
   iter = gst_bin_iterate_sinks (bin);
   GST_DEBUG_OBJECT (bin, "Sending query to sink children");
 
-  while (!(res || done)) {
-    gpointer data;
+  if (fold_init)
+    fold_init (bin, &fold_data);
 
-    switch (gst_iterator_next (iter, &data)) {
-      case GST_ITERATOR_OK:
-      {
-        GstElement *sink;
+  while (TRUE) {
+    GstIteratorResult ires;
 
-        sink = GST_ELEMENT_CAST (data);
-        res = gst_element_query (sink, query);
-        gst_object_unref (sink);
-        break;
-      }
+    ires = gst_iterator_fold (iter, fold_func, &ret, &fold_data);
+
+    switch (ires) {
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
+        if (fold_init)
+          fold_init (bin, &fold_data);
+        g_value_set_boolean (&ret, FALSE);
         break;
-      default:
+      case GST_ITERATOR_OK:
       case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
+        if (fold_done)
+          fold_done (bin, &fold_data);
+        res = g_value_get_boolean (&ret);
+        goto done;
+      default:
+        res = FALSE;
+        goto done;
     }
   }
+done:
   gst_iterator_free (iter);
+
+  GST_DEBUG_OBJECT (bin, "query result %d", res);
 
   return res;
 }

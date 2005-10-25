@@ -31,3 +31,4 @@
 - make bin_bus_handler a vmethod so subclasses can use their own implementation
   or chain to the parent.
 
+- make it possible to seek on other formats than bytes in basesrc.

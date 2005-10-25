@@ -1185,6 +1185,8 @@ gst_element_send_event (GstElement * element, GstEvent * event)
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   if (oclass->send_event) {
+    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "send event on element %s",
+        GST_ELEMENT_NAME (element));
     result = oclass->send_event (element, event);
   } else {
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
@@ -1306,6 +1308,8 @@ gst_element_query (GstElement * element, GstQuery * query)
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   if (oclass->query) {
+    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "send query on element %s",
+        GST_ELEMENT_NAME (element));
     result = oclass->query (element, query);
   } else {
     GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SRC);

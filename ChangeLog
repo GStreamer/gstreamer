@@ -1,5 +1,28 @@
 2005-10-25  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-TODO.txt:
+	Update TODO.
+
+	* gst/gstbin.c: (message_check), (bin_replace_message),
+	(bin_remove_messages), (is_eos), (gst_bin_add_func),
+	(update_degree), (gst_bin_sort_iterator_next), (bin_bus_handler),
+	(bin_query_duration_init), (bin_query_duration_fold),
+	(bin_query_duration_done), (bin_query_generic_fold),
+	(gst_bin_query):
+	Handle SEGMENT_START/DONE messages correctly.
+	More evolved query algorithm that handles duration queries
+	correctly.
+
+	* gst/gstelement.c: (gst_element_send_event), (gst_element_query),
+	(gst_element_get_state_func), (gst_element_abort_state),
+	(gst_element_commit_state), (gst_element_lost_state):
+	Some more debugging.
+
+	* gst/gstmessage.h:
+	Added doc.
+
+2005-10-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasesink.c: (gst_base_sink_get_position):
 	Don't use invalid stream_time.
 

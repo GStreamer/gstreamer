@@ -37,6 +37,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_TAG: a tag was found.
  * @GST_MESSAGE_BUFFERING: the pipeline is buffering
  * @GST_MESSAGE_STATE_CHANGED: a state change happened
+ * @GST_MESSAGE_STATE_DIRTY: an element changed state in a streaming thread
  * @GST_MESSAGE_STEP_DONE: a framestep finished.
  * @GST_MESSAGE_CLOCK_PROVIDE: an element notifies its capability of providing
  *                             a clock.
