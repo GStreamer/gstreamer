@@ -1,6 +1,12 @@
 2005-10-25  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/libpng/gstpngdec.c: (user_info_callback),
+	(gst_pngdec_caps_create_and_set), (gst_pngdec_task): Push
+	a newsegment event, move some redundant code in a single place.
+
+2005-10-25  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/libpng/gstpngdec.c: (user_info_callback),
 	(gst_pngdec_caps_create_and_set), (gst_pngdec_task): Temporary
 	hack to get correct colors order when we have a png image with
 	alpha channel.

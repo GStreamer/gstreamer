@@ -175,41 +175,12 @@ user_info_callback (png_structp png_ptr, png_infop info)
 {
   GstPngDec *pngdec = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-  gint bpc = 0, color_type;
-  png_uint_32 width, height;
   size_t buffer_size;
   GstBuffer *buffer = NULL;
 
   pngdec = GST_PNGDEC (png_ptr->io_ptr);
 
   GST_LOG ("info ready");
-
-  /* Get bits per channel */
-  bpc = png_get_bit_depth (pngdec->png, pngdec->info);
-
-  /* We don't handle 16 bits per color, strip down to 8 */
-  if (bpc == 16) {
-    GST_LOG ("this is a 16 bits per channel PNG image, strip down to 8 bits");
-    png_set_strip_16 (pngdec->png);
-  }
-
-  /* Get Color type */
-  color_type = png_get_color_type (pngdec->png, pngdec->info);
-
-  /* HACK: The doc states that it's RGBA but apparently it's not... */
-  if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-    png_set_bgr (pngdec->png);
-
-  /* Update the info structure */
-  png_read_update_info (pngdec->png, pngdec->info);
-
-  /* Get IHDR header again after transformation settings */
-
-  png_get_IHDR (pngdec->png, pngdec->info, &width, &height,
-      &bpc, &pngdec->color_type, NULL, NULL, NULL);
-
-  pngdec->width = width;
-  pngdec->height = height;
 
   /* Generate the caps and configure */
   ret = gst_pngdec_caps_create_and_set (pngdec);
@@ -310,8 +281,38 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps = NULL, *res = NULL;
   GstPadTemplate *templ = NULL;
+  GstEvent *new_seg = NULL;
+  gint bpc = 0, color_type;
+  png_uint_32 width, height;
 
   g_return_val_if_fail (GST_IS_PNGDEC (pngdec), GST_FLOW_ERROR);
+
+  /* Get bits per channel */
+  bpc = png_get_bit_depth (pngdec->png, pngdec->info);
+
+  /* We don't handle 16 bits per color, strip down to 8 */
+  if (bpc == 16) {
+    GST_LOG ("this is a 16 bits per channel PNG image, strip down to 8 bits");
+    png_set_strip_16 (pngdec->png);
+  }
+
+  /* Get Color type */
+  color_type = png_get_color_type (pngdec->png, pngdec->info);
+
+  /* HACK: The doc states that it's RGBA but apparently it's not... */
+  if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
+    png_set_bgr (pngdec->png);
+
+  /* Update the info structure */
+  png_read_update_info (pngdec->png, pngdec->info);
+
+  /* Get IHDR header again after transformation settings */
+
+  png_get_IHDR (pngdec->png, pngdec->info, &width, &height,
+      &bpc, &pngdec->color_type, NULL, NULL, NULL);
+
+  pngdec->width = width;
+  pngdec->height = height;
 
   GST_LOG ("this is a %dx%d PNG image", pngdec->width, pngdec->height);
 
@@ -351,6 +352,12 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
 
   gst_caps_unref (res);
 
+  /* Push a newsegment event */
+  new_seg = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  if (GST_IS_EVENT (new_seg)) {
+    gst_pad_push_event (pngdec->srcpad, new_seg);
+  }
+
 beach:
   return ret;
 }
@@ -361,9 +368,9 @@ gst_pngdec_task (GstPad * pad)
   GstPngDec *pngdec;
   GstBuffer *buffer = NULL;
   size_t buffer_size = 0;
-  gint i = 0, bpc = 0, color_type;
+  gint i = 0;
   png_bytep *rows, inp;
-  png_uint_32 width, height, rowbytes;
+  png_uint_32 rowbytes;
   GstFlowReturn ret = GST_FLOW_OK;
 
   pngdec = GST_PNGDEC (GST_OBJECT_PARENT (pad));
@@ -380,33 +387,6 @@ gst_pngdec_task (GstPad * pad)
   /* Read info */
   png_read_info (pngdec->png, pngdec->info);
 
-  /* Get bits per channel */
-  bpc = png_get_bit_depth (pngdec->png, pngdec->info);
-
-  /* We don't handle 16 bits per color, strip down to 8 */
-  if (bpc == 16) {
-    GST_LOG ("this is a 16 bits per channel PNG image, strip down to 8 bits");
-    png_set_strip_16 (pngdec->png);
-  }
-
-  /* Get Color type */
-  color_type = png_get_color_type (pngdec->png, pngdec->info);
-
-  /* HACK: The doc states that it's RGBA but apparently it's not... */
-  if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-    png_set_bgr (pngdec->png);
-
-  /* Update the info structure */
-  png_read_update_info (pngdec->png, pngdec->info);
-
-  /* Get IHDR header again after transformation settings */
-
-  png_get_IHDR (pngdec->png, pngdec->info, &width, &height,
-      &bpc, &pngdec->color_type, NULL, NULL, NULL);
-
-  pngdec->width = width;
-  pngdec->height = height;
-
   /* Generate the caps and configure */
   ret = gst_pngdec_caps_create_and_set (pngdec);
   if (ret != GST_FLOW_OK) {
@@ -422,11 +402,11 @@ gst_pngdec_task (GstPad * pad)
     goto pause;
   }
 
-  rows = (png_bytep *) g_malloc (sizeof (png_bytep) * height);
+  rows = (png_bytep *) g_malloc (sizeof (png_bytep) * pngdec->height);
 
   inp = GST_BUFFER_DATA (buffer);
 
-  for (i = 0; i < height; i++) {
+  for (i = 0; i < pngdec->height; i++) {
     rows[i] = inp;
     inp += GST_ROUND_UP_4 (rowbytes);
   }
