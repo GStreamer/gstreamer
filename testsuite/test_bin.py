@@ -21,8 +21,10 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
-import sys
 from common import gobject, gst, unittest, TestCase
+
+import sys
+import time
 
 # see
 # http://www.sicem.biz/personal/lgs/docs/gobject-python/gobject-tutorial.html
@@ -136,6 +138,10 @@ class Preroll(TestCase):
         self.bin = gst.Bin('bin')
 
     def tearDown(self):
+        # FIXME: wait for state change thread to settle down
+        while self.bin.__gstrefcount__ > 1:
+            time.sleep(0.1)
+        self.assertEquals(self.bin.__gstrefcount__, 1)
         del self.bin
         TestCase.tearDown(self)
 
