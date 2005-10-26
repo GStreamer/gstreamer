@@ -1,3 +1,9 @@
+2005-10-27  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst/rtp/gstrtpgsmenc.c:
+	* gst/rtp/gstrtpgsmparse.c:
+	Declaring the padtemplate correctly.
+
 2005-10-26  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst/rtp/gstrtpg711dec.c:
