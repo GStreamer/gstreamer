@@ -1,3 +1,16 @@
+2005-10-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
+	(gst_ffmpegdec_close), (gst_ffmpegdec_open),
+	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_negotiate),
+	(gst_ffmpegdec_frame), (gst_ffmpegdec_sink_event),
+	(gst_ffmpegdec_chain):
+	  Backported some fixes from 0.8. Most importantly, use
+	  demuxer's timestamping information if we use its framerate
+	  value. Makes divx play properly again among other things
+	  (#319616, #313970, #317596). Did not backport memory leak
+	  fix.
+
 2005-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
