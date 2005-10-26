@@ -1,3 +1,13 @@
+2005-10-26  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/videobox/Makefile.am: Use liboil.
+	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
+	(gst_video_box_set_property), (gst_video_box_transform_caps),
+	(gst_video_box_set_caps), (gst_video_box_get_unit_size),
+	(gst_video_box_ayuv): Lot of optimization in AYUV rendering
+	using liboil. Will dot the same to I420 border generation
+	tomorrow.
+
 2005-10-26  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst/rtp/gstrtpg711dec.c: (gst_rtpg711dec_base_init),

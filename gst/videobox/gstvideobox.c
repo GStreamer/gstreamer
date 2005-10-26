@@ -24,6 +24,7 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 
+#include <liboil/liboil.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY (videobox_debug);
@@ -296,12 +297,6 @@ gst_video_box_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-
-  if (video_box->box_left == 0 && video_box->box_right == 0 &&
-      video_box->box_top == 0 && video_box->box_bottom == 0)
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), TRUE);
-  else
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), FALSE);
 }
 
 static void
@@ -381,8 +376,8 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
 
   g_value_unset (&list_value);
 
-  GST_DEBUG_OBJECT (video_box, "transformed %" GST_PTR_FORMAT
-      " to %" GST_PTR_FORMAT, from, to);
+  GST_DEBUG_OBJECT (video_box, "direction %d, transformed %" GST_PTR_FORMAT
+      " to %" GST_PTR_FORMAT, direction, from, to);
 
   return to;
 }
@@ -406,7 +401,19 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   ret &= gst_structure_get_int (structure, "height", &video_box->out_height);
   ret &= gst_structure_get_fourcc (structure, "format", &fourcc);
 
-  video_box->use_alpha = fourcc == GST_STR_FOURCC ("AYUV");
+  if (fourcc == GST_STR_FOURCC ("AYUV")) {
+    video_box->use_alpha = TRUE;
+  } else {
+    if (video_box->box_left == 0 && video_box->box_right == 0 &&
+        video_box->box_top == 0 && video_box->box_bottom == 0) {
+      gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), TRUE);
+      GST_LOG ("we are using passthrough");
+    } else {
+      gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box),
+          FALSE);
+      GST_LOG ("we are not using passthrough");
+    }
+  }
 
   return ret;
 }
@@ -555,7 +562,6 @@ gst_video_box_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 
 /* Note the source image is always I420, we
  * are converting to AYUV on the fly here */
-
 static void
 gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 {
@@ -608,24 +614,28 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
       colorV);
 
   /* top border */
-  for (i = 0; i < bt; i++) {
-    for (j = 0; j < out_width; j++) {
-      *destp++ = ayuv;
-    }
+  if (bt) {
+    size_t nb_pixels = bt * out_width;
+
+    oil_splat_u32_ns (destp, &ayuv, nb_pixels);
+    destp += nb_pixels;
   }
   for (i = 0; i < crop_height; i++) {
     /* left border */
-    for (j = 0; j < bl; j++) {
-      *destp++ = ayuv;
+    if (bl) {
+      oil_splat_u32_ns (destp, &ayuv, bl);
+      destp += bl;
     }
     dest = (guint8 *) destp;
     /* center */
+    /* We can splat the alpha channel for the whole line */
+    oil_splat_u8 (dest, 4, &i_alpha, crop_width);
     for (j = 0; j < crop_width2; j++) {
-      *dest++ = i_alpha;
+      dest++;
       *dest++ = *srcY++;
       *dest++ = *srcU;
       *dest++ = *srcV;
-      *dest++ = i_alpha;
+      dest++;
       *dest++ = *srcY++;
       *dest++ = *srcU++;
       *dest++ = *srcV++;
@@ -641,15 +651,17 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 
     destp = (guint32 *) dest;
     /* right border */
-    for (j = 0; j < br; j++) {
-      *destp++ = ayuv;
+    if (br) {
+      oil_splat_u32_ns (destp, &ayuv, br);
+      destp += br;
     }
   }
   /* bottom border */
-  for (i = 0; i < bb; i++) {
-    for (j = 0; j < out_width; j++) {
-      *destp++ = ayuv;
-    }
+  if (bb) {
+    size_t nb_pixels = bb * out_width;
+
+    oil_splat_u32_ns (destp, &ayuv, nb_pixels);
+    destp += nb_pixels;
   }
 }
 
