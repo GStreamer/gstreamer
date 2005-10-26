@@ -27,8 +27,6 @@
 #include "gstosssink.h"
 #include "gstosssrc.h"
 
-extern gchar *__gst_oss_plugin_dir;
-
 GST_DEBUG_CATEGORY (oss_debug);
 
 static gboolean

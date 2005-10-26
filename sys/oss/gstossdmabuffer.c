@@ -34,6 +34,9 @@
 
 #include "gstossdmabuffer.h"
 
+GST_DEBUG_CATEGORY_EXTERN (oss_debug);
+#define GST_CAT_DEFAULT oss_debug
+
 static void gst_ossdmabuffer_class_init (GstOssDMABufferClass * klass);
 static void gst_ossdmabuffer_init (GstOssDMABuffer * ossdmabuffer);
 static void gst_ossdmabuffer_dispose (GObject * object);

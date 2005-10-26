@@ -32,6 +32,8 @@
 
 #include "gstosssrc.h"
 
+GST_DEBUG_CATEGORY_EXTERN (oss_debug);
+#define GST_CAT_DEFAULT oss_debug
 
 static GstElementDetails gst_oss_src_details =
 GST_ELEMENT_DETAILS ("Audio Source (OSS)",

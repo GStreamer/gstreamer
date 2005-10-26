@@ -24,6 +24,8 @@
 
 #include "gstossmixerelement.h"
 
+GST_DEBUG_CATEGORY_EXTERN (oss_debug);
+#define GST_CAT_DEFAULT oss_debug
 
 static GstElementDetails gst_oss_mixer_element_details =
 GST_ELEMENT_DETAILS ("OSS Mixer",

@@ -40,6 +40,9 @@
 #include "gstosshelper.h"
 #include "gstossmixer.h"
 
+GST_DEBUG_CATEGORY_EXTERN (oss_debug);
+#define GST_CAT_DEFAULT oss_debug
+
 #if 0
 
 #ifdef HAVE_OSS_INCLUDE_IN_SYS

@@ -36,6 +36,9 @@
 
 #include "gstossmixertrack.h"
 
+GST_DEBUG_CATEGORY_EXTERN (oss_debug);
+#define GST_CAT_DEFAULT oss_debug
+
 #define MASK_BIT_IS_SET(mask, bit) \
   (mask & (1 << bit))
 

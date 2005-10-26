@@ -33,6 +33,9 @@
 
 #include "gstosssink.h"
 
+GST_DEBUG_CATEGORY_EXTERN (oss_debug);
+#define GST_CAT_DEFAULT oss_debug
+
 /* elementfactory information */
 static GstElementDetails gst_oss_sink_details =
 GST_ELEMENT_DETAILS ("Audio Sink (OSS)",
