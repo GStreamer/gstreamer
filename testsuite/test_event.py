@@ -22,6 +22,8 @@
 
 import os
 import sys
+import time
+
 from common import gst, unittest, testhelper, TestCase
 
 class EventTest(TestCase):
@@ -35,6 +37,11 @@ class EventTest(TestCase):
         gst.debug('setting pipeline to NULL')
         self.pipeline.set_state(gst.STATE_NULL)
         gst.debug('set pipeline to NULL')
+        # FIXME: wait for state change thread to die
+        while self.pipeline.__gstrefcount__ > 1:
+            gst.debug('waiting for self.pipeline G rc to drop to 1')
+            time.sleep(0.1)
+        self.assertEquals(self.pipeline.__gstrefcount__, 1)
 
         del self.sink
         del self.pipeline

@@ -1,5 +1,10 @@
 2005-10-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/test_event.py:
+	  fix race condition because of state thread
+
+2005-10-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/test_bin.py:
 	  fix race condition because of state thread
 
