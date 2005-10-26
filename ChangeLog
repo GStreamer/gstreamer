@@ -1,3 +1,11 @@
+2005-10-26  Michael Smith <msmith@fluendo.com>
+
+	* gst/audioconvert/audioconvert.c: (audio_convert_clean_context):
+	  When clearing an audioconvert context, set tmpbufsize to zero, so
+	  we'll allocate it again later if required.
+	  This fixes audioconvert re-negotiating formats, which previously
+	  segfaulted with a NULL destination buffer.
+
 2005-10-26  Zeeshan Ali <zeenix@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:

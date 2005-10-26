@@ -272,6 +272,7 @@ audio_convert_clean_context (AudioConvertCtx * ctx)
 
   g_free (ctx->tmpbuf);
   ctx->tmpbuf = NULL;
+  ctx->tmpbufsize = 0;
 
   return TRUE;
 }
