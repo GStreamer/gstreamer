@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-24 00:23+0200\n"
+"POT-Creation-Date: 2005-10-26 15:32+0200\n"
 "PO-Revision-Date: 2004-07-18 11:03+0200\n"
 "Last-Translator: Laszlo Dvornik <dvornik@invitel.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -14,24 +14,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:343 ext/sndfile/gstsf.c:625
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nem lehet írásra megnyitni a(z) \"%s\" fájlt."
-
-#: ext/audiofile/gstafsink.c:365 ext/audiofile/gstafsrc.c:370
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Hiba a(z) \"%s\" fájl bezárása közben."
-
-#: ext/audiofile/gstafsrc.c:317
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" fájlt."
-
 #: ext/sndfile/gstsf.c:586
 msgid "No filename specified."
 msgstr "Nincs fájlnév megadva."
+
+#: ext/sndfile/gstsf.c:625
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Nem lehet írásra megnyitni a(z) \"%s\" fájlt."
 
 #: ext/sndfile/gstsf.c:839
 #, c-format
@@ -82,6 +72,12 @@ msgstr "Nem lehet lezárni a(z) \"%s\" videoeszközt."
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Nem lehet írni a(z) \"%s\" eszközre."
+
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Hiba a(z) \"%s\" fájl bezárása közben."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" fájlt."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Nincs vagy érvénytelen bemeneti hang, az AVI-folyam sérült lesz."

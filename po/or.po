@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-24 00:23+0200\n"
+"POT-Creation-Date: 2005-10-26 15:32+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -16,24 +16,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:343 ext/sndfile/gstsf.c:625
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "\"%s\" ଫାଇଲ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
-
-#: ext/audiofile/gstafsink.c:365 ext/audiofile/gstafsrc.c:370
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "\"%s\" ଫାଇଲ ବନ୍ଦ କରିବାରେ ତ୍ରୁଟି."
-
-#: ext/audiofile/gstafsrc.c:317
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
-
 #: ext/sndfile/gstsf.c:586
 msgid "No filename specified."
 msgstr "କୌଣସି ଫାଇଲନାମ ଉଲ୍ଲେଖିତ ହୋଇ ନାହିଁ."
+
+#: ext/sndfile/gstsf.c:625
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "\"%s\" ଫାଇଲ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
 #: ext/sndfile/gstsf.c:839
 #, c-format
@@ -84,6 +74,12 @@ msgstr "\"%s\" ଭିଡିଓ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେ�
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "\"%s\" ଯନ୍ତ୍ରରେ ଲେଖିହେଲା ନାହିଁ."
+
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "\"%s\" ଫାଇଲ ବନ୍ଦ କରିବାରେ ତ୍ରୁଟି."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "ନିବେଶ ଧ୍ବନି ନାହିଁ ବା ଅବୈଧ ଅଛି. ଏ.ଭି.ଆଇ. ଧାରା ଭ୍ରଷ୍ଟ ହୋଇଯିବ."

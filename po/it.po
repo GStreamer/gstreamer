@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-24 00:23+0200\n"
+"POT-Creation-Date: 2005-10-26 15:32+0200\n"
 "PO-Revision-Date: 2004-11-07 19:11+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -15,24 +15,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:343 ext/sndfile/gstsf.c:625
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Impossibile aprire il file «%s» in scrittura."
-
-#: ext/audiofile/gstafsink.c:365 ext/audiofile/gstafsrc.c:370
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Errore nel chiudere il file «%s»."
-
-#: ext/audiofile/gstafsrc.c:317
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Impossibile aprire il file «%s» in lettura."
-
 #: ext/sndfile/gstsf.c:586
 msgid "No filename specified."
 msgstr "Nessun nome di file specificato."
+
+#: ext/sndfile/gstsf.c:625
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Impossibile aprire il file «%s» in scrittura."
 
 #: ext/sndfile/gstsf.c:839
 #, c-format
@@ -83,6 +73,12 @@ msgstr "Impossibile chiudere il device video «%s»."
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Impossibile scrivere sul device «%s»."
+
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Errore nel chiudere il file «%s»."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Impossibile aprire il file «%s» in lettura."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr ""

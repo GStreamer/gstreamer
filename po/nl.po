@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-24 00:23+0200\n"
+"POT-Creation-Date: 2005-10-26 15:32+0200\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -15,24 +15,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:343 ext/sndfile/gstsf.c:625
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kon \"%s\" niet openen om te schrijven."
-
-#: ext/audiofile/gstafsink.c:365 ext/audiofile/gstafsrc.c:370
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Fout bij sluiten bestand \"%s\"."
-
-#: ext/audiofile/gstafsrc.c:317
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kon \"%s\" niet openen om te lezen."
-
 #: ext/sndfile/gstsf.c:586
 msgid "No filename specified."
 msgstr "Geen bestandsnaam opgegeven."
+
+#: ext/sndfile/gstsf.c:625
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kon \"%s\" niet openen om te schrijven."
 
 #: ext/sndfile/gstsf.c:839
 #, c-format
@@ -83,6 +73,12 @@ msgstr "Kon videoapparaat \"%s\" niet sluiten."
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Kon niet schrijven naar apparaat \"%s\"."
+
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Fout bij sluiten bestand \"%s\"."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Kon \"%s\" niet openen om te lezen."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."

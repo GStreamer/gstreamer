@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-24 00:23+0200\n"
+"POT-Creation-Date: 2005-10-26 15:32+0200\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -14,24 +14,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:343 ext/sndfile/gstsf.c:625
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kunne ikke åpne filen «%s» for skriving."
-
-#: ext/audiofile/gstafsink.c:365 ext/audiofile/gstafsrc.c:370
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Feil under lukking av fil «%s»."
-
-#: ext/audiofile/gstafsrc.c:317
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kunne ikke åpne filen «%s» for lesing."
-
 #: ext/sndfile/gstsf.c:586
 msgid "No filename specified."
 msgstr "Ingen filnavn oppgitt."
+
+#: ext/sndfile/gstsf.c:625
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Kunne ikke åpne filen «%s» for skriving."
 
 #: ext/sndfile/gstsf.c:839
 #, c-format
@@ -82,6 +72,12 @@ msgstr ""
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr ""
+
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Feil under lukking av fil «%s»."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Kunne ikke åpne filen «%s» for lesing."
 
 #~ msgid "Device \"%s\" does not exist."
 #~ msgstr "Enhet «%s» eksisterer ikke."
