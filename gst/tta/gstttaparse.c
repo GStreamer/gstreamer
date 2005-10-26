@@ -469,8 +469,7 @@ pause:
   gst_pad_pause_task (ttaparse->sinkpad);
   if (GST_FLOW_IS_FATAL (ret)) {
     GST_ELEMENT_ERROR (ttaparse, STREAM, FAILED,
-        ("streaming stopped, reason %d", ret),
-        ("streaming stopped, reason %d", ret));
+        ("Internal data stream error."), ("streaming stopped, reason %d", ret));
     gst_pad_push_event (ttaparse->srcpad, gst_event_new_eos ());
   }
 }
