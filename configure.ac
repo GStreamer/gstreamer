@@ -21,7 +21,7 @@ AC_CONFIG_SRCDIR([gst/gstmodule.c])
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
-ACLOCAL="$ACLOCAL -I common/m4 $ACLOCAL_FLAGS"
+AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4")
 
 dnl required versions of other packages
 AC_SUBST(PYGTK_REQ, 2.6.3)
