@@ -2,6 +2,12 @@
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
 	(gst_video_box_transform_caps), (gst_video_box_get_unit_size),
+	(gst_video_box_ayuv): Removing this forgotten debug.
+
+2005-10-26  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
+	(gst_video_box_transform_caps), (gst_video_box_get_unit_size),
 	(gst_video_box_ayuv): Fix the stride issue when boxing to AYUV.
 
 2005-10-26  Tim-Philipp Müller  <tim at centricular dot net>

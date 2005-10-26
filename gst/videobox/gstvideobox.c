@@ -571,8 +571,6 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   guint32 *destp = (guint32 *) dest;
   guint32 ayuv;
 
-  GST_LOG ("blending AYUV");
-
   br = video_box->border_right;
   bl = video_box->border_left;
   bt = video_box->border_top;
