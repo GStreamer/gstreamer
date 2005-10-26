@@ -41,7 +41,7 @@ G_BEGIN_DECLS
 #define GST_BASE_RTP_DEPAYLOAD_SINKPAD(depayload) (GST_BASE_RTP_DEPAYLOAD (depayload)->sinkpad)
 #define GST_BASE_RTP_DEPAYLOAD_SRCPAD(depayload)  (GST_BASE_RTP_DEPAYLOAD (depayload)->srcpad)
 
-// in milliseconds
+/* in milliseconds */
 #define RTP_QUEUEDELAY 100;
 
 #define QUEUE_LOCK_INIT(base)	(g_static_rec_mutex_init(&base->queuelock))
@@ -65,18 +65,19 @@ struct _GstBaseRTPDepayload
   /* the releaser thread */
   GThread *thread;
 
-  // this attribute must be set by the child
+  /* this attribute must be set by the child */
   guint clock_rate;
 
-  // this value can be modified by the child if needed
+  /* this value can be modified by the child if needed */
   guint queue_delay;
 
   gboolean process_only;
 
-  // we will queue up to RTP_QUEUEDELAY ms of packets,
-  // reordering them if necessary
-  // dropping any packets that are more than
-  // RTP_QUEUEDELAY ms late
+  /* we will queue up to RTP_QUEUEDELAY ms of packets,
+   * reordering them if necessary
+   * dropping any packets that are more than
+   * RTP_QUEUEDELAY ms late 
+   */
   GQueue *queue;
 
   /*< private >*/
@@ -87,19 +88,22 @@ struct _GstBaseRTPDepayloadClass
 {
   GstElementClass parent_class;
 
-  // virtuals
+  /* virtuals */
   gboolean (*set_caps) (GstBaseRTPDepayload *filter, GstCaps *caps);
 
-  // non-pure function, default implementation in base class
-  // this does buffering, reordering and dropping
+  /* non-pure function, default implementation in base class
+   * this does buffering, reordering and dropping 
+   */
   GstFlowReturn (*add_to_queue) (GstBaseRTPDepayload *filter, GstBuffer *in);
 
-  // pure virtual function, child must use this to process incoming
-  // rtp packets
+  /* pure virtual function, child must use this to process incoming
+   * rtp packets
+   */
   GstBuffer * (*process) (GstBaseRTPDepayload *base, GstBuffer *in);
 
-  // non-pure function used to convert from RTP timestamp to GST timestamp
-  // this function is used by the child class before gst_pad_pushing
+  /* non-pure function used to convert from RTP timestamp to GST timestamp
+   * this function is used by the child class before gst_pad_pushing
+   */
   void (*set_gst_timestamp) (GstBaseRTPDepayload *filter, guint32 timestamp, GstBuffer *buf);
 
   /*< private >*/

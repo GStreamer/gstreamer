@@ -70,7 +70,6 @@ gst_base_rtp_depayload_get_type (void)
   return plugin_type;
 }
 
-//static GstStateChangeReturn gst_base_rtp_depayload_change_state (GstElement * element, GstStateChange transition);
 static void gst_base_rtp_depayload_finalize (GObject * object);
 static void gst_base_rtp_depayload_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -94,7 +93,7 @@ static void gst_base_rtp_depayload_set_gst_timestamp
 static void
 gst_base_rtp_depayload_base_init (GstBaseRTPDepayloadClass * klass)
 {
-  //GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  /*GstElementClass *element_class = GST_ELEMENT_CLASS (klass); */
 }
 
 static void
@@ -150,22 +149,22 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter, gpointer g_class)
   filter->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
-  // create out queue
+  /* create out queue */
   filter->queue = g_queue_new ();
 
   filter->queue_delay = RTP_QUEUEDELAY;
 
-  // init queue mutex
+  /* init queue mutex */
   QUEUE_LOCK_INIT (filter);
 
-  // this one needs to be overwritten by child
+  /* this one needs to be overwritten by child */
   filter->clock_rate = 0;
 }
 
 static void
 gst_base_rtp_depayload_finalize (GObject * object)
 {
-  // free our queue
+  /* free our queue */
   g_queue_free (GST_BASE_RTP_DEPAYLOAD (object)->queue);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
@@ -177,8 +176,8 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseRTPDepayload *filter;
 
-//  GstStructure *structure;
-//  int ret;
+/*  GstStructure *structure;
+  int ret;*/
 
   filter = GST_BASE_RTP_DEPAYLOAD (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, FALSE);
@@ -229,7 +228,7 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
 {
   GQueue *queue = filter->queue;
 
-  // our first packet, just push it
+  /* our first packet, just push it */
   QUEUE_LOCK (filter);
   if (g_queue_is_empty (queue)) {
     g_queue_push_tail (queue, in);
@@ -242,12 +241,12 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
     seqnum = gst_rtpbuffer_get_seq (in);
     queueseq = gst_rtpbuffer_get_seq (GST_BUFFER (g_queue_peek_head (queue)));
 
-    // not our first packet
-    // let us make sure it is not very late
+    /* not our first packet
+     * let us make sure it is not very late */
     if (seqnum < queueseq)
       goto too_late;
 
-    // look for right place to insert it
+    /* look for right place to insert it */
     int i = 0;
 
     while (seqnum < queueseq) {
@@ -256,7 +255,7 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
           gst_rtpbuffer_get_seq (GST_BUFFER (g_queue_peek_nth (queue, i)));
     }
 
-    // now insert it at that place
+    /* now insert it at that place */
     QUEUE_LOCK (filter);
     g_queue_push_nth (queue, in, i);
     QUEUE_UNLOCK (filter);
@@ -271,7 +270,7 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
 too_late:
   {
     QUEUE_UNLOCK (filter);
-    // we need to drop this one
+    /* we need to drop this one */
     GST_DEBUG ("Packet arrived to late, dropping");
     return GST_FLOW_OK;
   }
@@ -283,20 +282,21 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * rtp_buf)
   GstBaseRTPDepayloadClass *bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
   GstBuffer *out_buf;
 
-  // let's send it out to processing
+  /* let's send it out to processing */
   out_buf = bclass->process (filter, rtp_buf);
   if (out_buf) {
-    // set the caps
+    /* set the caps */
     gst_buffer_set_caps (GST_BUFFER (out_buf),
         gst_pad_get_caps (filter->srcpad));
-    // set the timestamp
-    // I am assuming here that the timestamp of the last RTP buffer
-    // is the same as the timestamp wanted on the collector
-    // maybe i should add a way to override this timestamp from the
-    // depayloader child class
+    /* set the timestamp
+     * I am assuming here that the timestamp of the last RTP buffer
+     * is the same as the timestamp wanted on the collector
+     * maybe i should add a way to override this timestamp from the
+     * depayloader child class
+     */
     bclass->set_gst_timestamp (filter, gst_rtpbuffer_get_timestamp (rtp_buf),
         out_buf);
-    // push it
+    /* push it */
     GST_DEBUG ("Pushing buffer size %d, timestamp %u",
         GST_BUFFER_SIZE (out_buf), GST_BUFFER_TIMESTAMP (out_buf));
     gst_pad_push (filter->srcpad, GST_BUFFER (out_buf));
@@ -311,20 +311,21 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
 {
   static gboolean first = TRUE;
 
-  // rtp timestamps are based on the clock_rate
-  // gst timesamps are in nanoseconds
-  //GST_DEBUG("calculating ts : timestamp : %u, clockrate : %u", timestamp, filter->clock_rate);
   guint64 ts = ((timestamp * GST_SECOND) / filter->clock_rate);
 
+  /* rtp timestamps are based on the clock_rate
+   * gst timesamps are in nanoseconds
+   */
+  GST_DEBUG ("calculating ts : timestamp : %u, clockrate : %u", timestamp,
+      filter->clock_rate);
+
   GST_BUFFER_TIMESTAMP (buf) = ts;
-  //GST_BUFFER_TIMESTAMP (buf) =
-  //    (guint64)(((timestamp * GST_SECOND) / filter->clock_rate));
   GST_DEBUG ("calculated ts %"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
-  // if this is the first buf send a discont
+  /* if this is the first buf send a discont */
   if (first) {
-    // send discont
+    /* send discont */
     GstEvent *event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
         ts, GST_CLOCK_TIME_NONE, 0);
 
@@ -332,7 +333,7 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     first = FALSE;
     GST_DEBUG ("Pushed discont on this first buffer");
   }
-  // add delay to timestamp
+  /* add delay to timestamp */
   GST_BUFFER_TIMESTAMP (buf) =
       GST_BUFFER_TIMESTAMP (buf) + (filter->queue_delay * GST_MSECOND);
 }
@@ -347,9 +348,11 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
   if (g_queue_is_empty (queue))
     return;
 
-  // if our queue is getting to big (more than RTP_QUEUEDELAY ms of data)
-  // release heading buffers
-  //GST_DEBUG("clockrate %d, queu_delay %d", filter->clock_rate, filter->queue_delay);
+  /* if our queue is getting to big (more than RTP_QUEUEDELAY ms of data)
+   * release heading buffers
+   */
+  GST_DEBUG ("clockrate %d, queu_delay %d", filter->clock_rate,
+      filter->queue_delay);
   gfloat q_size_secs = (gfloat) filter->queue_delay / 1000;
   guint maxtsunits = (gfloat) filter->clock_rate * q_size_secs;
 
@@ -359,7 +362,7 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
 
   bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
-  //GST_DEBUG("maxtsunit is %u %u %u %u", maxtsunits, headts, tailts, headts - tailts);
+  /*GST_DEBUG("maxtsunit is %u %u %u %u", maxtsunits, headts, tailts, headts - tailts); */
   while (headts - tailts > maxtsunits) {
     GST_DEBUG ("Poping packet from queue");
     if (bclass->process) {
@@ -379,9 +382,9 @@ gst_base_rtp_depayload_thread (GstBaseRTPDepayload * filter)
 {
   while (filter->thread_running) {
     gst_base_rtp_depayload_queue_release (filter);
-    // i want to run this thread clock_rate times per second
+    /* i want to run this thread clock_rate times per second */
     g_usleep (1000000 / filter->clock_rate);
-    //g_usleep (1000000);
+    /* g_usleep (1000000); */
   }
   return NULL;
 }
@@ -416,8 +419,6 @@ gst_base_rtp_depayload_change_state (GstElement * element,
 {
   GstBaseRTPDepayload *filter;
 
-//    GstStateChangeReturn ret;
-
   g_return_val_if_fail (GST_IS_BASE_RTP_DEPAYLOAD (element),
       GST_STATE_CHANGE_FAILURE);
   filter = GST_BASE_RTP_DEPAYLOAD (element);
@@ -439,8 +440,6 @@ gst_base_rtp_depayload_change_state (GstElement * element,
     default:
       break;
   }
-
-//    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
