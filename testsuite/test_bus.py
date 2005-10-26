@@ -21,6 +21,7 @@
 from common import gst, unittest, TestCase
 
 import gobject
+import time
 
 class BusSignalTest(TestCase):
     def testGoodConstructor(self):
@@ -68,6 +69,10 @@ class BusSignalTest(TestCase):
         gst.info("set to NULL %s" % ret)
         self.gccollect()
         self.assertEquals(bus.__gstrefcount__, 3)
+        # FIXME: state change thread needs to die
+        while pipeline.__gstrefcount__ > 1:
+            gst.debug('waiting for pipeline refcount to drop')
+            time.sleep(0.1)
         self.assertEquals(pipeline.__gstrefcount__, 1)
 
         gst.info("about to remove the watch id")
