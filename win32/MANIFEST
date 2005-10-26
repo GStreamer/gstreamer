@@ -41,7 +41,6 @@ win32/common/gstenumtypes.c
 win32/common/gstconfig.h
 win32/common/gstenumtypes.h
 win32/common/gstversion.h
-win32/common/config.h.old
 win32/common/config.h.in
 win32/vs6/grammar.dsp
 win32/vs6/gstreamer.dsw
