@@ -228,6 +228,8 @@ gst_videomixer_pad_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  gst_object_unref (mix);
 }
 
 typedef enum
@@ -275,6 +277,7 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   GstVideoMixerPad *mixpad;
   GstStructure *structure;
   gint in_width, in_height;
+  gboolean ret = FALSE;
 
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
   mixpad = GST_VIDEO_MIXER_PAD (pad);
@@ -287,7 +290,7 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
       || !gst_structure_get_int (structure, "height", &in_height)
       || !gst_structure_get_double (structure, "framerate",
           &mixpad->in_framerate))
-    return FALSE;
+    goto beach;
 
   mixpad->in_width = in_width;
   mixpad->in_height = in_height;
@@ -302,7 +305,12 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
     mix->master = mixpad;
   }
 
-  return TRUE;
+  ret = TRUE;
+
+beach:
+  gst_object_unref (mix);
+
+  return ret;
 }
 
 static void
@@ -522,6 +530,8 @@ gst_videomixer_getcaps (GstPad * pad)
     gst_structure_set (structure,
         "framerate", G_TYPE_DOUBLE, mix->in_framerate, NULL);
   }
+
+  gst_object_unref (mix);
 
   return caps;
 }
