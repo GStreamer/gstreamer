@@ -139,7 +139,7 @@ gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   ret =
       gst_structure_get_int (structure, "rate",
-      &(GST_BASE_RTP_PAYLOAD (rtpgsmenc)->clock_rate));
+      (gint *) & (GST_BASE_RTP_PAYLOAD (rtpgsmenc)->clock_rate));
   if (!ret)
     return FALSE;
 
