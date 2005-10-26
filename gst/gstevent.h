@@ -244,7 +244,7 @@ typedef enum {
  * complete scan of the file in those cases.
  *
  * When perfoming a segment seek: after the playback of the segment completes, 
- * no EOS will be emmited byt the element that performed the seek but a SEGMENT_DONE 
+ * no EOS will be emmited by the element that performed the seek, but a SEGMENT_DONE 
  * message will be posted on the bus by the element. When this message is posted, it is
  * possible to send a new seek event to continue playback. With this seek method it
  * is possible to perform seemless looping or simple linear editing.

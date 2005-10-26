@@ -1,3 +1,15 @@
+2005-10-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* examples/controller/audio-example.c: (main):
+	* examples/queue/queue.c: (event_loop):
+	* gst/base/gstbasetransform.h:
+	* gst/gstelement.c: (gst_element_send_event):
+	* gst/gstevent.h:
+	* gst/gstpad.c: (gst_pad_send_event):
+	  fixing examples
+	  fixing docs typos
+	  changing log priority in error situations
+
 2005-10-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (message_check), (bin_replace_message),

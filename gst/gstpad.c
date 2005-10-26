@@ -3585,7 +3585,7 @@ no_function:
 flushing:
   {
     GST_UNLOCK (pad);
-    GST_CAT_DEBUG (GST_CAT_EVENT, "Received event on flushing pad. Discarding");
+    GST_CAT_INFO (GST_CAT_EVENT, "Received event on flushing pad. Discarding");
     gst_event_unref (event);
     return FALSE;
   }

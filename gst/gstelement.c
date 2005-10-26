@@ -1198,7 +1198,7 @@ gst_element_send_event (GstElement * element, GstEvent * event)
       result = gst_pad_push_event (pad, event);
       gst_object_unref (pad);
     } else {
-      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "can't send event on element %s",
+      GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "can't send event on element %s",
           GST_ELEMENT_NAME (element));
     }
   }

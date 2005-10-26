@@ -7,7 +7,7 @@
  */
 
 #include <gst/gst.h>
-#include <gst/controller/gst-controller.h>
+#include <gst/controller/gstcontroller.h>
 
 gint
 main (gint argc, gchar ** argv)
@@ -27,8 +27,7 @@ main (gint argc, gchar ** argv)
   // build pipeline
   bin = gst_pipeline_new ("pipeline");
   clock = gst_pipeline_get_clock (GST_PIPELINE (bin));
-  /* TODO make this "testaudiosrc", when its ready */
-  src = gst_element_factory_make ("sinesrc", "gen_audio");
+  src = gst_element_factory_make ("audiotestsrc", "gen_audio");
   sink = gst_element_factory_make ("alsasink", "play_audio");
   gst_bin_add_many (GST_BIN (bin), src, sink, NULL);
   if (!gst_element_link (src, sink)) {

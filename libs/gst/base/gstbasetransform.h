@@ -56,6 +56,7 @@ struct _GstBaseTransform {
   GstPad	*sinkpad;
   GstPad	*srcpad;
 
+  /*< public >*/
   /* Set by sub-class */
   gboolean	 passthrough;
   gboolean	 always_in_place;
@@ -71,6 +72,7 @@ struct _GstBaseTransform {
 
   gboolean       have_newsegment;
 
+  /* MT-protected (with STREAM_LOCK) */
   gdouble        segment_rate;
   gint64         segment_start;
   gint64         segment_stop;

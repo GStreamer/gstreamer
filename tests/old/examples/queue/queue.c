@@ -13,18 +13,15 @@ static void
 event_loop (GstElement * pipe)
 {
   GstBus *bus;
-  GstMessageType revent;
   GstMessage *message = NULL;
 
   bus = gst_element_get_bus (GST_ELEMENT (pipe));
 
   while (TRUE) {
-    revent = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
-
-    message = gst_bus_pop (bus);
+    message = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
     g_assert (message != NULL);
 
-    switch (revent) {
+    switch (message->type) {
       case GST_MESSAGE_EOS:
         gst_message_unref (message);
         return;
