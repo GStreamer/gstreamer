@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,7 +25,7 @@ static GstElementDetails gst_rtp_g711dec_details = {
   "RTP packet parser",
   "Codec/Parser/Network",
   "Extracts PCMU/PCMA audio from RTP packets",
-  "Edgard Lima <edgard.lima@indt.org.br>"
+  "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>"
 };
 
 /* RtpG711Dec signals and args */
@@ -64,49 +64,16 @@ static GstStaticPadTemplate gst_rtpg711dec_src_template =
         "audio/x-alaw, channels = (int) 1")
     );
 
-static void gst_rtpg711dec_class_init (GstRtpG711DecClass * klass);
-static void gst_rtpg711dec_base_init (GstRtpG711DecClass * klass);
-static void gst_rtpg711dec_init (GstRtpG711Dec * rtpg711dec);
-static gboolean gst_rtpg711dec_sink_setcaps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_rtpg711dec_chain (GstPad * pad, GstBuffer * buffer);
+static GstBuffer *gst_rtpg711dec_process (GstBaseRTPDepayload * depayload,
+    GstBuffer * buf);
+static gboolean gst_rtpg711dec_setcaps (GstBaseRTPDepayload * depayload,
+    GstCaps * caps);
 
-static void gst_rtpg711dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtpg711dec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
-static GstStateChangeReturn gst_rtpg711dec_change_state (GstElement * element,
-    GstStateChange transition);
-
-static GstElementClass *parent_class = NULL;
-
-static GType
-gst_rtpg711dec_get_type (void)
-{
-  static GType rtpg711dec_type = 0;
-
-  if (!rtpg711dec_type) {
-    static const GTypeInfo rtpg711dec_info = {
-      sizeof (GstRtpG711DecClass),
-      (GBaseInitFunc) gst_rtpg711dec_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtpg711dec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRtpG711Dec),
-      0,
-      (GInstanceInitFunc) gst_rtpg711dec_init,
-    };
-
-    rtpg711dec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpG711Dec",
-        &rtpg711dec_info, 0);
-  }
-  return rtpg711dec_type;
-}
+GST_BOILERPLATE (GstRtpG711Dec, gst_rtpg711dec, GstBaseRTPDepayload,
+    GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void
-gst_rtpg711dec_base_init (GstRtpG711DecClass * klass)
+gst_rtpg711dec_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -122,47 +89,38 @@ gst_rtpg711dec_class_init (GstRtpG711DecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_DEPAYLOAD);
 
-  gobject_class->set_property = gst_rtpg711dec_set_property;
-  gobject_class->get_property = gst_rtpg711dec_get_property;
-
-  gstelement_class->change_state = gst_rtpg711dec_change_state;
+  gstbasertpdepayload_class->process = gst_rtpg711dec_process;
+  gstbasertpdepayload_class->set_caps = gst_rtpg711dec_setcaps;
 }
 
 static void
-gst_rtpg711dec_init (GstRtpG711Dec * rtpg711dec)
+gst_rtpg711dec_init (GstRtpG711Dec * rtpg711dec, GstRtpG711DecClass * klass)
 {
-  rtpg711dec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpg711dec_src_template), "src");
-  rtpg711dec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpg711dec_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (rtpg711dec), rtpg711dec->srcpad);
+  GstBaseRTPDepayload *depayload;
 
-  gst_pad_set_setcaps_function (rtpg711dec->sinkpad,
-      gst_rtpg711dec_sink_setcaps);
-  gst_element_add_pad (GST_ELEMENT (rtpg711dec), rtpg711dec->sinkpad);
-  gst_pad_set_chain_function (rtpg711dec->sinkpad, gst_rtpg711dec_chain);
+  depayload = GST_BASE_RTP_DEPAYLOAD (rtpg711dec);
+
+  depayload->clock_rate = 8000;
+  gst_pad_use_fixed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
 }
 
 static gboolean
-gst_rtpg711dec_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_rtpg711dec_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
-  GstRtpG711Dec *rtpg711dec;
   const gchar *enc_name;
   GstStructure *structure;
+  gboolean ret;
 
   structure = gst_caps_get_structure (caps, 0);
-
-  enc_name = gst_structure_get_name (structure);
-
   enc_name = gst_structure_get_string (structure, "encoding-name");
 
   if (NULL == enc_name) {
@@ -179,116 +137,30 @@ gst_rtpg711dec_sink_setcaps (GstPad * pad, GstCaps * caps)
     return FALSE;
   }
 
-  rtpg711dec = GST_RTP_G711_DEC (GST_OBJECT_PARENT (pad));
-
-  srccaps = gst_caps_new_simple ("audio/x-mulaw",
-      "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
-  gst_pad_set_caps (rtpg711dec->srcpad, srccaps);
+  ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
-}
-
-static GstFlowReturn
-gst_rtpg711dec_chain (GstPad * pad, GstBuffer * buf)
-{
-  GstRtpG711Dec *rtpg711dec;
-  GstBuffer *outbuf;
-  GstFlowReturn ret;
-
-  rtpg711dec = GST_RTP_G711_DEC (gst_pad_get_parent (pad));
-
-  if (!gst_rtpbuffer_validate (buf))
-    goto bad_packet;
-
-  {
-    gint payload_len;
-    guint8 *payload;
-
-    payload_len = gst_rtpbuffer_get_payload_len (buf);
-    payload = gst_rtpbuffer_get_payload (buf);
-
-    outbuf = gst_buffer_new_and_alloc (payload_len);
-
-    GST_BUFFER_TIMESTAMP (outbuf) =
-        gst_rtpbuffer_get_timestamp (buf) * GST_SECOND / 8000;
-
-    memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
-
-    GST_DEBUG ("pushing buffer of size %d", GST_BUFFER_SIZE (outbuf));
-
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (rtpg711dec->srcpad));
-    gst_buffer_unref (buf);
-
-    ret = gst_pad_push (rtpg711dec->srcpad, outbuf);
-  }
-
   return ret;
-
-bad_packet:
-  {
-    GST_DEBUG ("Packet did not validate");
-    gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
-  }
 }
 
-static void
-gst_rtpg711dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
+static GstBuffer *
+gst_rtpg711dec_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
-  GstRtpG711Dec *rtpg711dec;
+  GstBuffer *outbuf = NULL;
+  gint payload_len;
+  guint8 *payload;
 
-  rtpg711dec = GST_RTP_G711_DEC (object);
+  GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
+      GST_BUFFER_SIZE (buf),
+      gst_rtpbuffer_get_marker (buf),
+      gst_rtpbuffer_get_timestamp (buf), gst_rtpbuffer_get_seq (buf));
 
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
+  payload_len = gst_rtpbuffer_get_payload_len (buf);
+  payload = gst_rtpbuffer_get_payload (buf);
 
-static void
-gst_rtpg711dec_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstRtpG711Dec *rtpg711dec;
-
-  rtpg711dec = GST_RTP_G711_DEC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static GstStateChangeReturn
-gst_rtpg711dec_change_state (GstElement * element, GstStateChange transition)
-{
-  GstRtpG711Dec *rtpg711dec;
-  GstStateChangeReturn ret;
-
-  rtpg711dec = GST_RTP_G711_DEC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-  return ret;
+  outbuf = gst_buffer_new_and_alloc (payload_len);
+  memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
+  return outbuf;
 }
 
 gboolean

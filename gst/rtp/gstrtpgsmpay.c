@@ -32,7 +32,7 @@ static GstElementDetails gst_rtpgsmenc_details = {
   "RTP GSM Audio Encoder",
   "Codec/Encoder/Network",
   "Encodes GSM audio into a RTP packet",
-  "Zeeshan Ali <zak147@yahoo.com>"
+  "Zeeshan Ali <zeenix@gmail.com>"
 };
 
 static GstStaticPadTemplate gst_rtpgsmenc_sink_template =
@@ -52,45 +52,16 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 8000, " "encoding-name = (string) \"GSM\"")
     );
 
-
-static void gst_rtpgsmenc_class_init (GstRTPGSMEncClass * klass);
-static void gst_rtpgsmenc_base_init (GstRTPGSMEncClass * klass);
-static void gst_rtpgsmenc_init (GstRTPGSMEnc * rtpgsmenc);
-
 static gboolean gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * payload,
     GstBuffer * buffer);
 
-static GstBaseRTPPayloadClass *parent_class = NULL;
-
-static GType
-gst_rtpgsmenc_get_type (void)
-{
-  static GType rtpgsmenc_type = 0;
-
-  if (!rtpgsmenc_type) {
-    static const GTypeInfo rtpgsmenc_info = {
-      sizeof (GstRTPGSMEncClass),
-      (GBaseInitFunc) gst_rtpgsmenc_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtpgsmenc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRTPGSMEnc),
-      0,
-      (GInstanceInitFunc) gst_rtpgsmenc_init,
-    };
-
-    rtpgsmenc_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRTPGSMEnc",
-        &rtpgsmenc_info, 0);
-  }
-  return rtpgsmenc_type;
-}
+GST_BOILERPLATE (GstRTPGSMEnc, gst_rtpgsmenc, GstBaseRTPPayload,
+    GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
-gst_rtpgsmenc_base_init (GstRTPGSMEncClass * klass)
+gst_rtpgsmenc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -119,7 +90,7 @@ gst_rtpgsmenc_class_init (GstRTPGSMEncClass * klass)
 }
 
 static void
-gst_rtpgsmenc_init (GstRTPGSMEnc * rtpgsmenc)
+gst_rtpgsmenc_init (GstRTPGSMEnc * rtpgsmenc, GstRTPGSMEncClass * klass)
 {
   GST_BASE_RTP_PAYLOAD (rtpgsmenc)->clock_rate = 8000;
   GST_BASE_RTP_PAYLOAD_PT (rtpgsmenc) = GST_RTP_PAYLOAD_GSM;
@@ -128,24 +99,20 @@ gst_rtpgsmenc_init (GstRTPGSMEnc * rtpgsmenc)
 static gboolean
 gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  GstRTPGSMEnc *rtpgsmenc;
+  const char *stname;
   GstStructure *structure;
-  gboolean ret;
-  GstCaps *srccaps;
-
-  rtpgsmenc = GST_RTP_GSM_ENC (payload);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  ret =
-      gst_structure_get_int (structure, "rate",
-      (gint *) & (GST_BASE_RTP_PAYLOAD (rtpgsmenc)->clock_rate));
-  if (!ret)
-    return FALSE;
+  stname = gst_structure_get_name (structure);
 
-  srccaps = gst_caps_new_simple ("application/x-rtp", NULL);
-  gst_pad_set_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (rtpgsmenc), srccaps);
-  gst_caps_unref (srccaps);
+  if (0 == strcmp ("audio/x-gsm", stname)) {
+    gst_basertppayload_set_options (payload, "audio", FALSE, "GSM", 8000);
+  } else {
+    return FALSE;
+  }
+
+  gst_basertppayload_set_outcaps (payload, NULL);
 
   return TRUE;
 }
@@ -171,7 +138,7 @@ gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * basepayload,
 
   outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
   /* FIXME, assert for now */
-  g_assert (GST_BUFFER_SIZE (outbuf) < GST_BASE_RTP_PAYLOAD_MTU (rtpgsmenc));
+  g_assert (payload_len <= GST_BASE_RTP_PAYLOAD_MTU (rtpgsmenc));
 
   /* copy timestamp */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;

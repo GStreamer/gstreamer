@@ -1,3 +1,21 @@
+2005-10-26  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst/rtp/gstrtpg711dec.c: (gst_rtpg711dec_base_init),
+	(gst_rtpg711dec_class_init), (gst_rtpg711dec_init),
+	(gst_rtpg711dec_setcaps), (gst_rtpg711dec_process):
+	* gst/rtp/gstrtpg711dec.h:
+	* gst/rtp/gstrtpg711enc.c: (gst_rtpg711enc_base_init),
+	(gst_rtpg711enc_init), (gst_rtpg711enc_handle_buffer):
+	* gst/rtp/gstrtpgsmenc.c: (gst_rtpgsmenc_base_init),
+	(gst_rtpgsmenc_init), (gst_rtpgsmenc_setcaps),
+	(gst_rtpgsmenc_handle_buffer):
+	* gst/rtp/gstrtpgsmparse.c: (gst_rtpgsmparse_base_init),
+	(gst_rtpgsmparse_class_init), (gst_rtpgsmparse_init),
+	(gst_rtpgsmparse_setcaps), (gst_rtpgsmparse_process):
+	* gst/rtp/gstrtpgsmparse.h:
+	Hacked the G711 (de)payloader to try to make things right. rtpg711dec now
+	inherits from the basertpdepayloader.
+
 2005-10-26  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),

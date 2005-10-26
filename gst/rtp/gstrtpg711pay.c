@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -53,45 +53,16 @@ static GstStaticPadTemplate gst_rtpg711enc_src_template =
         "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\"")
     );
 
-
-static void gst_rtpg711enc_class_init (GstRtpG711EncClass * klass);
-static void gst_rtpg711enc_base_init (GstRtpG711EncClass * klass);
-static void gst_rtpg711enc_init (GstRtpG711Enc * rtpg711enc);
-
 static gboolean gst_rtpg711enc_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtpg711enc_handle_buffer (GstBaseRTPPayload * payload,
     GstBuffer * buffer);
 
-static GstBaseRTPPayloadClass *parent_class = NULL;
-
-static GType
-gst_rtpg711enc_get_type (void)
-{
-  static GType rtpg711enc_type = 0;
-
-  if (!rtpg711enc_type) {
-    static const GTypeInfo rtpg711enc_info = {
-      sizeof (GstRtpG711EncClass),
-      (GBaseInitFunc) gst_rtpg711enc_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtpg711enc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRtpG711Enc),
-      0,
-      (GInstanceInitFunc) gst_rtpg711enc_init,
-    };
-
-    rtpg711enc_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpG711Enc",
-        &rtpg711enc_info, 0);
-  }
-  return rtpg711enc_type;
-}
+GST_BOILERPLATE (GstRtpG711Enc, gst_rtpg711enc, GstBaseRTPPayload,
+    GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
-gst_rtpg711enc_base_init (GstRtpG711EncClass * klass)
+gst_rtpg711enc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -120,8 +91,9 @@ gst_rtpg711enc_class_init (GstRtpG711EncClass * klass)
 }
 
 static void
-gst_rtpg711enc_init (GstRtpG711Enc * rtpg711enc)
+gst_rtpg711enc_init (GstRtpG711Enc * rtpg711enc, GstRtpG711EncClass * klass)
 {
+  GST_BASE_RTP_PAYLOAD (rtpg711enc)->clock_rate = 8000;
 }
 
 static gboolean
@@ -169,9 +141,7 @@ gst_rtpg711enc_handle_buffer (GstBaseRTPPayload * basepayload,
 
   outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
   /* FIXME, assert for now */
-  g_assert (GST_BUFFER_SIZE (outbuf) < GST_BASE_RTP_PAYLOAD_MTU (rtpg711enc));
-
-  gst_rtpbuffer_set_timestamp (outbuf, timestamp * 8000 / GST_SECOND);
+  g_assert (payload_len <= GST_BASE_RTP_PAYLOAD_MTU (rtpg711enc));
 
   /* copy timestamp */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;

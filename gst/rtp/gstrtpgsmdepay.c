@@ -25,7 +25,7 @@ static GstElementDetails gst_rtp_gsmparse_details = {
   "RTP packet parser",
   "Codec/Parser/Network",
   "Extracts GSM audio from RTP packets",
-  "Zeeshan Ali <zak147@yahoo.com>"
+  "Zeeshan Ali <zeenix@gmail.com>"
 };
 
 /* RTPGSMParse signals and args */
@@ -52,43 +52,16 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "clock-rate = (int) 8000, " "encoding-name = (string) \"GSM\"")
     );
 
-static void gst_rtpgsmparse_class_init (GstRTPGSMParseClass * klass);
-static void gst_rtpgsmparse_base_init (GstRTPGSMParseClass * klass);
-static void gst_rtpgsmparse_init (GstRTPGSMParse * rtpgsmparse);
 static GstBuffer *gst_rtpgsmparse_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
-static gboolean gst_rtpgsmparse_setcaps (GstBaseRTPDepayload * payload,
+static gboolean gst_rtpgsmparse_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
-static void gst_rtpgsmparse_finalize (GObject * object);
-static GstElementClass *parent_class = NULL;
 
-static GType
-gst_rtpgsmparse_get_type (void)
-{
-  static GType rtpgsmparse_type = 0;
-
-  if (!rtpgsmparse_type) {
-    static const GTypeInfo rtpgsmparse_info = {
-      sizeof (GstRTPGSMParseClass),
-      (GBaseInitFunc) gst_rtpgsmparse_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtpgsmparse_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRTPGSMParse),
-      0,
-      (GInstanceInitFunc) gst_rtpgsmparse_init,
-    };
-
-    rtpgsmparse_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_DEPAYLOAD, "GstRTPGSMParse",
-        &rtpgsmparse_info, 0);
-  }
-  return rtpgsmparse_type;
-}
+GST_BOILERPLATE (GstRTPGSMParse, gst_rtpgsmparse, GstBaseRTPDepayload,
+    GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void
-gst_rtpgsmparse_base_init (GstRTPGSMParseClass * klass)
+gst_rtpgsmparse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -114,12 +87,10 @@ gst_rtpgsmparse_class_init (GstRTPGSMParseClass * klass)
 
   gstbasertpdepayload_class->process = gst_rtpgsmparse_process;
   gstbasertpdepayload_class->set_caps = gst_rtpgsmparse_setcaps;
-
-  gobject_class->finalize = gst_rtpgsmparse_finalize;
 }
 
 static void
-gst_rtpgsmparse_init (GstRTPGSMParse * rtpgsmparse)
+gst_rtpgsmparse_init (GstRTPGSMParse * rtpgsmparse, GstRTPGSMParseClass * klass)
 {
   GST_BASE_RTP_DEPAYLOAD (rtpgsmparse)->clock_rate = 8000;
 }
@@ -127,20 +98,14 @@ gst_rtpgsmparse_init (GstRTPGSMParse * rtpgsmparse)
 static gboolean
 gst_rtpgsmparse_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
-  GstRTPGSMParse *rtpgsmparse;
   GstCaps *srccaps;
-
-  rtpgsmparse = GST_RTP_GSM_PARSE (depayload);
+  gboolean ret;
 
   srccaps = gst_static_pad_template_get_caps (&gst_rtpgsmparse_src_template);
-  return gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
-}
+  ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
 
-static void
-gst_rtpgsmparse_finalize (GObject * object)
-{
-  if (G_OBJECT_CLASS (parent_class)->finalize)
-    G_OBJECT_CLASS (parent_class)->finalize (object);
+  gst_caps_unref (srccaps);
+  return ret;
 }
 
 static GstBuffer *

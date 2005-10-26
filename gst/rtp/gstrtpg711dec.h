@@ -16,6 +16,7 @@
 #define __GST_RTP_G711_DEC_H__
 
 #include <gst/gst.h>
+#include <gst/rtp/gstbasertpdepayload.h>
 
 G_BEGIN_DECLS
 
@@ -35,15 +36,12 @@ typedef struct _GstRtpG711DecClass GstRtpG711DecClass;
 
 struct _GstRtpG711Dec
 {
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstBaseRTPDepayload depayload;
 };
 
 struct _GstRtpG711DecClass
 {
-  GstElementClass parent_class;
+  GstBaseRTPDepayloadClass parent_class;
 };
 
 gboolean gst_rtpg711dec_plugin_init (GstPlugin * plugin);

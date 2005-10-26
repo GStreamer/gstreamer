@@ -42,11 +42,6 @@ typedef struct _GstRTPGSMParseClass GstRTPGSMParseClass;
 struct _GstRTPGSMParse
 {
   GstBaseRTPDepayload depayload;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  guint frequency;
 };
 
 struct _GstRTPGSMParseClass
