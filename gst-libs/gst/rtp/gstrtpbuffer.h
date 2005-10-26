@@ -53,6 +53,24 @@ typedef enum
   /* BOTH */
 } GstRTPPayload;
 
+/* Defining the above as strings, to make the declaration of pad_templates
+ * easier. So if please keep these synchronized with the above.
+ */
+#define GST_RTP_PAYLOAD_PCMU_STRING "0"
+#define GST_RTP_PAYLOAD_GSM_STRING "3"
+#define GST_RTP_PAYLOAD_PCMA_STRING "8"
+#define GST_RTP_PAYLOAD_L16_STEREO_STRING "10"
+#define GST_RTP_PAYLOAD_L16_MONO_STRING "11"
+#define GST_RTP_PAYLOAD_MPA_STRING "14"
+#define GST_RTP_PAYLOAD_G723_63_STRING "16"
+#define GST_RTP_PAYLOAD_G723_53_STRING "17"
+#define GST_RTP_PAYLOAD_TS48_STRING "18"
+#define GST_RTP_PAYLOAD_TS41_STRING "19"
+#define GST_RTP_PAYLOAD_G728_STRING "20"
+#define GST_RTP_PAYLOAD_G729_STRING "21"
+#define GST_RTP_PAYLOAD_MPV_STRING "32"
+#define GST_RTP_PAYLOAD_H263_STRING "34"
+
 /* creating buffers */
 GstBuffer*	gst_rtpbuffer_new		(void);
 void		gst_rtpbuffer_allocate_data	(GstBuffer *buffer, guint payload_len, 

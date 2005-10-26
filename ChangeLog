@@ -1,3 +1,9 @@
+2005-10-27  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	Declaring the payload types as strings too so that they can be used
+	in the padtemplate inialization.
+
 2005-10-26  Andre Magalhaes  <andrunko@gmail.com>
 
 	reviewed by: Zeeshan Ali   <zeenix@gmail.com>
