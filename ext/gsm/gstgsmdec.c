@@ -1,6 +1,6 @@
 /*
  * Farsight
- * GStreamer GSM decoder
+ * GStreamer GSM encoder
  * Copyright (C) 2005 Philippe Khalaf <burger@speedy.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -157,13 +157,9 @@ gst_gsmdec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstGSMDec *gsmdec;
   gsm_byte *data;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  GstFlowReturn ret = GST_FLOW_OK;
 
   gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
-  g_return_val_if_fail (GST_IS_GSMDEC (gsmdec), GST_FLOW_ERROR);
-
-  g_return_val_if_fail (GST_PAD_IS_LINKED (gsmdec->srcpad), GST_FLOW_ERROR);
 
   // do we have enough bytes to read a header
   if (GST_BUFFER_SIZE (buf) >= 33) {
@@ -196,10 +192,11 @@ gst_gsmdec_chain (GstPad * pad, GstBuffer * buf)
         GST_BUFFER_SIZE (outbuf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
     //gst_util_dump_mem (GST_BUFFER_DATA(outbuf), GST_BUFFER_SIZE (outbuf));
-    gst_pad_push (gsmdec->srcpad, outbuf);
+    ret = gst_pad_push (gsmdec->srcpad, outbuf);
   }
 
   gst_buffer_unref (buf);
+  gst_object_unref (gsmdec);
 
-  return GST_FLOW_OK;
+  return ret;
 }

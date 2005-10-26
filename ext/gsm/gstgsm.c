@@ -41,4 +41,5 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gsm",
     "GSM encoder/decoder",
-    plugin_init, VERSION, "LGPL", "Farsight", "http://farsight.sf.net")
+    plugin_init,
+    VERSION, "LGPL", "Gstreamer", "http://gstreamer.freedesktop.org")

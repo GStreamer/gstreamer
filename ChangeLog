@@ -1,3 +1,12 @@
+2005-10-26  Zeeshan Ali  <zeenix@gmail.com>
+
+	* ext/gsm/gstgsm.c:
+	* ext/gsm/gstgsmdec.c: (gst_gsmdec_init), (gst_gsmdec_chain):
+	* ext/gsm/gstgsmdec.h:
+	* ext/gsm/gstgsmenc.c: (gst_gsmenc_class_init), (gst_gsmenc_init),
+	(gst_gsmenc_chain):
+	Fixing stuff as wingo pointed out.
+
 2005-10-25  Zeeshan Ali  <zeenix@gmail.com>
 
 	* ext/gsm/gstgsm.c: (plugin_init):

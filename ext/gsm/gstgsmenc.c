@@ -158,18 +158,12 @@ gst_gsmenc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstGSMEnc *gsmenc;
   gsm_signal *data;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  GstFlowReturn ret = GST_FLOW_OK;
 
   gsmenc = GST_GSMENC (gst_pad_get_parent (pad));
-  g_return_val_if_fail (GST_IS_GSMENC (gsmenc), GST_FLOW_ERROR);
-
-  g_return_val_if_fail (GST_PAD_IS_LINKED (gsmenc->srcpad), GST_FLOW_ERROR);
-
   gst_adapter_push (gsmenc->adapter, buf);
 
   while (gst_adapter_available (gsmenc->adapter) >= 320) {
-
     GstBuffer *outbuf;
 
     outbuf = gst_buffer_new_and_alloc (33 * sizeof (gsm_byte));
@@ -185,8 +179,10 @@ gst_gsmenc_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_set_caps (outbuf, gst_pad_get_caps (gsmenc->srcpad));
     GST_DEBUG ("Pushing buffer of size %d", GST_BUFFER_SIZE (outbuf));
     //gst_util_dump_mem (GST_BUFFER_DATA(outbuf), GST_BUFFER_SIZE (outbuf));
-    gst_pad_push (gsmenc->srcpad, outbuf);
+    ret = gst_pad_push (gsmenc->srcpad, outbuf);
   }
 
-  return GST_FLOW_OK;
+  gst_object_unref (gsmenc);
+
+  return ret;
 }
