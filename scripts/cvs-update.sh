@@ -16,7 +16,7 @@ for m in \
   ; do
   if test -d $m; then
     cd $m
-    cvs update
+    cvs update -d
     if test $? -ne 0
     then
       FAILURE="$FAILURE$m: update\n"
