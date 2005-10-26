@@ -1,3 +1,12 @@
+2005-10-26  Andre Magalhaes  <andrunko@gmail.com>
+
+	reviewed by: Zeeshan Ali   <zeenix@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_class_init):
+	Fixes a small but nasty bug. The derived elements no longer segfaults
+	on finalization.
+
 2005-10-26  Michael Smith <msmith@fluendo.com>
 
 	* gst/audioconvert/audioconvert.c: (audio_convert_clean_context):
