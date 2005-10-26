@@ -303,6 +303,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
   else
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), FALSE);
 }
+
 static void
 gst_video_box_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
@@ -561,7 +562,7 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   guint8 *srcY, *srcU, *srcV;
   gint crop_width, crop_width2, crop_height;
   gint out_width, out_height;
-  gint src_stride, src_stride2;
+  gint src_stridey, src_strideu, src_stridev;
   gint br, bl, bt, bb;
   gint colorY, colorU, colorV;
   gint i, j;
@@ -569,6 +570,8 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   guint8 i_alpha = (guint8) (video_box->alpha * 255);
   guint32 *destp = (guint32 *) dest;
   guint32 ayuv;
+
+  GST_LOG ("blending AYUV");
 
   br = video_box->border_right;
   bl = video_box->border_left;
@@ -578,8 +581,9 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   out_width = video_box->out_width;
   out_height = video_box->out_height;
 
-  src_stride = GST_VIDEO_I420_Y_ROWSTRIDE (video_box->in_width);
-  src_stride2 = src_stride / 2;
+  src_stridey = GST_VIDEO_I420_Y_ROWSTRIDE (video_box->in_width);
+  src_strideu = GST_VIDEO_I420_U_ROWSTRIDE (video_box->in_width);
+  src_stridev = GST_VIDEO_I420_V_ROWSTRIDE (video_box->in_width);
 
   crop_width =
       video_box->in_width - (video_box->crop_left + video_box->crop_right);
@@ -589,13 +593,13 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 
   srcY =
       src + GST_VIDEO_I420_Y_OFFSET (video_box->in_width, video_box->in_height);
-  srcY += src_stride * video_box->crop_top + video_box->crop_left;
+  srcY += src_stridey * video_box->crop_top + video_box->crop_left;
   srcU =
       src + GST_VIDEO_I420_U_OFFSET (video_box->in_width, video_box->in_height);
-  srcU += src_stride2 * (video_box->crop_top / 2) + (video_box->crop_left / 2);
+  srcU += src_strideu * (video_box->crop_top / 2) + (video_box->crop_left / 2);
   srcV =
       src + GST_VIDEO_I420_V_OFFSET (video_box->in_width, video_box->in_height);
-  srcV += src_stride2 * (video_box->crop_top / 2) + (video_box->crop_left / 2);
+  srcV += src_stridev * (video_box->crop_top / 2) + (video_box->crop_left / 2);
 
   colorY = yuv_colors_Y[video_box->fill_type];
   colorU = yuv_colors_U[video_box->fill_type];
@@ -632,10 +636,10 @@ gst_video_box_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
       srcU -= crop_width2;
       srcV -= crop_width2;
     } else {
-      srcU += src_stride2 - crop_width2;
-      srcV += src_stride2 - crop_width2;
+      srcU += src_strideu - crop_width2;
+      srcV += src_stridev - crop_width2;
     }
-    srcY += src_stride - crop_width;
+    srcY += src_stridey - crop_width;
 
     destp = (guint32 *) dest;
     /* right border */
