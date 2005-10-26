@@ -70,6 +70,8 @@ struct _GstMpeg2dec {
   		*userdatapad;
 
   mpeg2dec_t 	*decoder;
+  const mpeg2_info_t *info;
+
   gboolean	 closed;
   gboolean	 have_fbuf;
 

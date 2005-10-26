@@ -1,3 +1,13 @@
+2005-10-26  Wim Taymans  <wim@fluendo.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_init),
+	(gst_mpeg2dec_dispose), (gst_mpeg2dec_reset),
+	(gst_mpeg2dec_alloc_buffer), (gst_mpeg2dec_negotiate_format),
+	(handle_sequence), (handle_picture):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	Removed lots of dubious code.
+	Handle flushing and seeking correctly. Still leaks though...
+
 2005-10-24  Christian Schaller  <christian at fluendo dot com>
 
 	* configure.ac: port over thomas plugin listing from base
