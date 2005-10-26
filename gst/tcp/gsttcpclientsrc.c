@@ -153,7 +153,6 @@ gst_tcpclientsrc_init (GstTCPClientSrc * this, GstTCPClientSrcClass * g_class)
   this->sock_fd = -1;
   this->protocol = GST_TCP_PROTOCOL_NONE;
   this->caps = NULL;
-  this->curoffset = 0;
 
   READ_SOCKET (this) = -1;
   WRITE_SOCKET (this) = -1;

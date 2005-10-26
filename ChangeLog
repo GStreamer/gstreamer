@@ -1,3 +1,11 @@
+2005-10-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcpclientsrc_init):
+	* gst/tcp/gsttcpclientsrc.h:
+	* gst/tcp/gsttcpserversrc.c: (gst_tcpserversrc_init):
+	* gst/tcp/gsttcpserversrc.h:
+	  Remove unused 'curoffset' structure member.
+
 2005-10-25  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:

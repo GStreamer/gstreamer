@@ -148,7 +148,6 @@ gst_tcpserversrc_init (GstTCPServerSrc * src, GstTCPServerSrcClass * g_class)
   src->host = g_strdup (TCP_DEFAULT_HOST);
   src->server_sock_fd = -1;
   src->client_sock_fd = -1;
-  src->curoffset = 0;
   src->protocol = GST_TCP_PROTOCOL_NONE;
 
   READ_SOCKET (src) = -1;
