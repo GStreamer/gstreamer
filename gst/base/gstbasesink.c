@@ -689,11 +689,14 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     if (GST_IS_BUFFER (obj)) {
       GstBaseSinkClass *bclass;
       GstFlowReturn pres;
+      GstBuffer *buf = GST_BUFFER (obj);
+
+      GST_DEBUG_OBJECT (basesink, "preroll buffer %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
       bclass = GST_BASE_SINK_GET_CLASS (basesink);
       if (bclass->preroll)
-        if ((pres =
-                bclass->preroll (basesink, GST_BUFFER (obj))) != GST_FLOW_OK)
+        if ((pres = bclass->preroll (basesink, buf)) != GST_FLOW_OK)
           goto preroll_failed;
     }
   }

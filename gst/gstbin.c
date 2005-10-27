@@ -1993,7 +1993,6 @@ gst_bin_query (GstElement * element, GstQuery * query)
                 duration);
             GST_UNLOCK (bin);
 
-
             gst_query_set_duration (query, qformat, duration);
             res = TRUE;
             goto exit;

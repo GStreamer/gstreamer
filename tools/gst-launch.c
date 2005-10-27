@@ -59,7 +59,6 @@ static void sigint_restore (void);
 static gboolean caught_intr = FALSE;
 #endif
 
-static gint max_iterations = 0;
 static GstElement *pipeline;
 static gboolean caught_error = FALSE;
 static gboolean tags = FALSE;
@@ -507,8 +506,6 @@ main (int argc, char *argv[])
         N_("Do not install a fault handler"), NULL},
     {"trace", 'T', 0, G_OPTION_ARG_NONE, &trace,
         N_("Print alloc trace (if enabled at compile time)"), NULL},
-    {"iterations", 'i', 0, G_OPTION_ARG_INT, &max_iterations,
-        N_("Number of times to iterate pipeline"), NULL},
     {NULL}
   };
   GOptionContext *ctx;

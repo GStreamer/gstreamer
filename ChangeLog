@@ -1,3 +1,18 @@
+2005-10-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_get_position):
+	Some more debug.
+
+	* gst/gstbin.c: (message_check), (bin_replace_message),
+	(bin_remove_messages), (is_eos), (gst_bin_add_func),
+	(update_degree), (gst_bin_sort_iterator_next), (bin_bus_handler),
+	(bin_query_duration_init), (bin_query_duration_fold),
+	(bin_query_duration_done), (bin_query_generic_fold),
+	(gst_bin_query):
+	* tools/gst-launch.c: (main):
+	Remove old option.
+
 2005-10-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* examples/controller/audio-example.c: (main):
