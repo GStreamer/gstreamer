@@ -1,3 +1,10 @@
+2005-10-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_class_init),
+	(qtdemux_parse_tree):
+	  Remove 'got-redirect' signal and post element message
+	  on the bus instead.
+
 2005-10-26  Zeeshan Ali  <zeenix@gmail.com>
 
 	* ext/gsm/gstgsm.c:

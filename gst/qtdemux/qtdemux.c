@@ -117,17 +117,6 @@ static GstElementDetails gst_qtdemux_details = {
   "David Schleef <ds@schleef.org>"
 };
 
-enum
-{
-  SIGNAL_REDIRECT,
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-};
-
 static GstStaticPadTemplate gst_qtdemux_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -147,7 +136,6 @@ GST_STATIC_PAD_TEMPLATE ("video_%02d",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
-static guint qt_signals[LAST_SIGNAL] = { 0 };
 static GstElementClass *parent_class = NULL;
 
 static void gst_qtdemux_class_init (GstQTDemuxClass * klass);
@@ -225,13 +213,7 @@ gst_qtdemux_class_init (GstQTDemuxClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  qt_signals[SIGNAL_REDIRECT] = g_signal_new ("got-redirect",
-      G_TYPE_FROM_CLASS (gobject_class), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstQTDemuxClass, got_redirect),
-      NULL, NULL, g_cclosure_marshal_VOID__STRING,
-      G_TYPE_NONE, 1, G_TYPE_STRING);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstelement_class->change_state = gst_qtdemux_change_state;
 }
@@ -1817,9 +1799,14 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
       if (rmra) {
         rdrf = qtdemux_tree_get_child_by_type (rmda, FOURCC_rdrf);
         if (rdrf) {
+          GstStructure *s;
+          GstMessage *msg;
+
           GST_LOG ("New location: %s", (char *) rdrf->data + 20);
-          g_signal_emit (qtdemux, qt_signals[SIGNAL_REDIRECT], 0,
-              (char *) rdrf->data + 20);
+          s = gst_structure_new ("redirect", "new-location", G_TYPE_STRING,
+              (char *) rdrf->data + 20, NULL);
+          msg = gst_message_new_element (GST_OBJECT (qtdemux), s);
+          gst_element_post_message (GST_ELEMENT (qtdemux), msg);
           return;
         }
       }
