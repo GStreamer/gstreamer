@@ -129,7 +129,9 @@ static GstStateChangeReturn gst_base_src_change_state (GstElement * element,
 
 static void gst_base_src_loop (GstPad * pad);
 static gboolean gst_base_src_check_get_range (GstPad * pad);
-static GstFlowReturn gst_base_src_get_range (GstPad * pad, guint64 offset,
+static GstFlowReturn gst_base_src_pad_get_range (GstPad * pad, guint64 offset,
+    guint length, GstBuffer ** buf);
+static GstFlowReturn gst_base_src_get_range (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer ** buf);
 
 static void
@@ -203,7 +205,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   gst_pad_set_checkgetrange_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_src_check_get_range));
   gst_pad_set_getrange_function (pad,
-      GST_DEBUG_FUNCPTR (gst_base_src_get_range));
+      GST_DEBUG_FUNCPTR (gst_base_src_pad_get_range));
   gst_pad_set_getcaps_function (pad, GST_DEBUG_FUNCPTR (gst_base_src_getcaps));
   gst_pad_set_setcaps_function (pad, GST_DEBUG_FUNCPTR (gst_base_src_setcaps));
 
@@ -316,12 +318,10 @@ gst_base_src_getcaps (GstPad * pad)
 static gboolean
 gst_base_src_query (GstPad * pad, GstQuery * query)
 {
-  gboolean b;
-  guint64 ui64;
-  gint64 i64;
   GstBaseSrc *src;
+  gboolean res;
 
-  src = GST_BASE_SRC (GST_PAD_PARENT (pad));
+  src = GST_BASE_SRC (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -333,18 +333,28 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
           gst_query_set_position (query, GST_FORMAT_BYTES, src->offset);
-          return TRUE;
+          res = TRUE;
+          break;
         case GST_FORMAT_PERCENT:
+        {
+          gboolean b;
+          gint64 i64;
+          guint64 ui64;
+
           b = gst_base_src_get_size (src, &ui64);
           if (b && src->offset > ui64)
             i64 = gst_util_uint64_scale (GST_FORMAT_PERCENT_MAX, src->offset,
                 ui64);
           else
             i64 = GST_FORMAT_PERCENT_MAX;
+
           gst_query_set_position (query, GST_FORMAT_PERCENT, i64);
-          return TRUE;
+          res = TRUE;
+          break;
+        }
         default:
-          return FALSE;
+          res = FALSE;
+          break;
       }
     }
     case GST_QUERY_DURATION:
@@ -355,37 +365,52 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
+        {
+          gboolean b;
+          gint64 i64;
+          guint64 ui64;
+
           b = gst_base_src_get_size (src, &ui64);
           /* better to make get_size take an int64 */
           i64 = b ? (gint64) ui64 : -1;
           gst_query_set_duration (query, GST_FORMAT_BYTES, i64);
-          return TRUE;
+          res = TRUE;
+          break;
+        }
         case GST_FORMAT_PERCENT:
           gst_query_set_duration (query, GST_FORMAT_PERCENT,
               GST_FORMAT_PERCENT_MAX);
-          return TRUE;
+          res = TRUE;
+          break;
         default:
-          return FALSE;
+          res = FALSE;
+          break;
       }
     }
 
     case GST_QUERY_SEEKING:
       gst_query_set_seeking (query, GST_FORMAT_BYTES,
           src->seekable, src->segment_start, src->segment_end);
-      return TRUE;
+      res = TRUE;
+      break;
 
     case GST_QUERY_FORMATS:
       gst_query_set_formats (query, 3, GST_FORMAT_DEFAULT,
           GST_FORMAT_BYTES, GST_FORMAT_PERCENT);
-      return TRUE;
+      res = TRUE;
+      break;
 
     case GST_QUERY_LATENCY:
     case GST_QUERY_JITTER:
     case GST_QUERY_RATE:
     case GST_QUERY_CONVERT:
     default:
-      return gst_pad_query_default (pad, query);
+      res = gst_pad_query_default (pad, query);
+      break;
   }
+
+  gst_object_unref (src);
+  return res;
 }
 
 static gboolean
@@ -611,14 +636,12 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstFlowReturn
-gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
+gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
     GstBuffer ** buf)
 {
   GstFlowReturn ret;
-  GstBaseSrc *src;
   GstBaseSrcClass *bclass;
 
-  src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
   GST_LIVE_LOCK (src);
@@ -630,18 +653,18 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
       GST_LIVE_WAIT (src);
       GST_DEBUG ("live source unlocked");
     }
+    /* FIXME, use another variable to signal stopping */
+    GST_LOCK (src->srcpad);
+    if (GST_PAD_IS_FLUSHING (src->srcpad))
+      goto flushing;
+    GST_UNLOCK (src->srcpad);
   }
   GST_LIVE_UNLOCK (src);
-
-  GST_LOCK (pad);
-  if (GST_PAD_IS_FLUSHING (pad))
-    goto flushing;
-  GST_UNLOCK (pad);
 
   if (!GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED))
     goto not_started;
 
-  if (!bclass->create)
+  if (G_UNLIKELY (!bclass->create))
     goto no_function;
 
   GST_DEBUG_OBJECT (src,
@@ -680,7 +703,8 @@ gst_base_src_get_range (GstPad * pad, guint64 offset, guint length,
 flushing:
   {
     GST_DEBUG_OBJECT (src, "pad is flushing");
-    GST_UNLOCK (pad);
+    GST_UNLOCK (src->srcpad);
+    GST_LIVE_UNLOCK (src);
     return GST_FLOW_WRONG_STATE;
   }
 not_started:
@@ -706,6 +730,22 @@ reached_num_buffers:
   }
 }
 
+static GstFlowReturn
+gst_base_src_pad_get_range (GstPad * pad, guint64 offset, guint length,
+    GstBuffer ** buf)
+{
+  GstBaseSrc *src;
+  GstFlowReturn res;
+
+  src = GST_BASE_SRC (gst_pad_get_parent (pad));
+
+  res = gst_base_src_get_range (src, offset, length, buf);
+
+  gst_object_unref (src);
+
+  return res;
+}
+
 static gboolean
 gst_base_src_check_get_range (GstPad * pad)
 {
@@ -728,29 +768,34 @@ gst_base_src_loop (GstPad * pad)
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
 
-  src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
+  src = GST_BASE_SRC (gst_pad_get_parent (pad));
 
-  if (src->need_newsegment) {
+  if (G_UNLIKELY (src->need_newsegment)) {
     /* now send newsegment */
     gst_base_src_newsegment (src);
     src->need_newsegment = FALSE;
   }
 
-  ret = gst_base_src_get_range (pad, src->offset, src->blocksize, &buf);
-  if (ret != GST_FLOW_OK)
-    goto eos;
-
-  if (buf == NULL)
+  ret = gst_base_src_get_range (src, src->offset, src->blocksize, &buf);
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    if (ret == GST_FLOW_UNEXPECTED)
+      goto eos;
+    else
+      goto pause;
+  }
+  if (G_UNLIKELY (buf == NULL))
     goto error;
 
   src->offset += GST_BUFFER_SIZE (buf);
 
   ret = gst_pad_push (pad, buf);
-  if (ret != GST_FLOW_OK)
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto pause;
 
+  gst_object_unref (src);
   return;
 
+  /* special cases */
 eos:
   {
     GST_DEBUG_OBJECT (src, "going to EOS");
@@ -759,21 +804,29 @@ eos:
       gst_element_post_message (GST_ELEMENT (src),
           gst_message_new_segment_done (GST_OBJECT (src),
               GST_FORMAT_BYTES, src->segment_end));
-    } else
+    } else {
       gst_pad_push_event (pad, gst_event_new_eos ());
+    }
+
+    gst_object_unref (src);
     return;
   }
 pause:
   {
-    GST_DEBUG_OBJECT (src, "pausing task");
+    const gchar *reason;
+
+    reason = gst_flow_get_name (ret);
+
+    GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
     gst_pad_pause_task (pad);
     if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
       /* for fatal errors we post an error message */
       GST_ELEMENT_ERROR (src, STREAM, FAILED,
           (_("Internal data flow error.")),
-          ("streaming task paused, reason %s", gst_flow_get_name (ret)));
+          ("streaming task paused, reason %s", reason));
       gst_pad_push_event (pad, gst_event_new_eos ());
     }
+    gst_object_unref (src);
     return;
   }
 error:
@@ -782,6 +835,8 @@ error:
         (_("Internal data flow error.")), ("element returned NULL buffer"));
     gst_pad_pause_task (pad);
     gst_pad_push_event (pad, gst_event_new_eos ());
+
+    gst_object_unref (src);
     return;
   }
 }

@@ -275,9 +275,10 @@ GST_START_TEST (test_message_state_changed_children)
     THREAD_SWITCH ();
 
   /* each object is referenced by a message;
+   * base_src is blocked in the push and has an extra refcount.
    * base_sink_chain has taken a refcount on the sink, and is blocked on
    * preroll */
-  ASSERT_OBJECT_REFCOUNT (src, "src", 2);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 3);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 3);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);
 
@@ -285,7 +286,7 @@ GST_START_TEST (test_message_state_changed_children)
   fail_if ((gst_bus_pop (bus)) != NULL);
 
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
-  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 2);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
@@ -301,9 +302,10 @@ GST_START_TEST (test_message_state_changed_children)
   fail_unless (pending == GST_STATE_VOID_PENDING);
 
   /* each object is referenced by one message
+   * src might have an extra reference if it's still pushing
    * sink might have an extra reference if it's still blocked on preroll
    * pipeline posted a new-clock message too. */
-  ASSERT_OBJECT_REFCOUNT (src, "src", 2);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (src, "src", 2, 3);
   ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 3);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 3);
 
@@ -311,7 +313,8 @@ GST_START_TEST (test_message_state_changed_children)
   fail_if ((gst_bus_pop (bus)) != NULL);
 
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
-  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  /* src might have an extra reference if it's still pushing */
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (src, "src", 1, 2);
   /* sink might have an extra reference if it's still blocked on preroll */
   ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 1, 2);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
