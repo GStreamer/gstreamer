@@ -1,3 +1,9 @@
+2005-10-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/adder/gstadder.c: (gst_adder_query), (gst_adder_collected),
+	(gst_adder_change_state):
+	Fix timestamps and fix deadlock when stopping the collectpads.
+
 2005-10-27  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst-libs/gst/rtp/gstrtpbuffer.h:

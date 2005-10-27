@@ -402,17 +402,21 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
   /* set timestamps on the output buffer */
   {
+    guint64 samples;
     guint64 duration;
 
     /* width is in bits and we need bytes */
-    duration = size * (adder->width / 8) / adder->channels;
+    samples = size / ((adder->width / 8) * adder->channels);
+    duration = samples * GST_SECOND / adder->rate;
 
     GST_BUFFER_TIMESTAMP (outbuf) = adder->timestamp;
     GST_BUFFER_OFFSET (outbuf) = adder->offset;
-    GST_BUFFER_DURATION (outbuf) = duration;
 
-    adder->offset += duration;
+    adder->offset += samples;
     adder->timestamp = adder->offset * GST_SECOND / adder->rate;
+
+    GST_BUFFER_DURATION (outbuf) = adder->timestamp -
+        GST_BUFFER_TIMESTAMP (outbuf);
   }
 
   /* send it out */
@@ -446,6 +450,11 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* need to unblock the collectpads before calling the
+       * parent change_state so that streaming can finish */
+      gst_collectpads_stop (adder->collect);
+      break;
     default:
       break;
   }
@@ -453,9 +462,6 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collectpads_stop (adder->collect);
-      break;
     default:
       break;
   }
