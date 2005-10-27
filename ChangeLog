@@ -1,3 +1,13 @@
+2005-10-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_finalize),
+	(gst_sdlvideosink_get_times), (gst_sdlvideosink_class_init),
+	(gst_sdlvideosink_init), (gst_sdlvideosink_lock),
+	(gst_sdlvideosink_initsdl), (gst_sdlvideosink_create),
+	(gst_sdlvideosink_show_frame), (gst_sdlvideosink_set_property),
+	(gst_sdlvideosink_get_property), (gst_sdlvideosink_change_state):
+	Fix SDL videosink and did some cleanups.
+
 2005-10-27  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/sdl/sdlvideosink.c:
