@@ -77,9 +77,6 @@ struct _GstQTDemux {
 
 struct _GstQTDemuxClass {
   GstElementClass parent_class;
-
-  void (* got_redirect) (GstElement  * element,
-			 const gchar * new_location);
 };
 
 #ifdef __cplusplus
