@@ -1,5 +1,16 @@
 2005-10-27  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* gst/gstelement.override:
+	* gst/pygstexception.c:
+	* gst/pygstexception.h:
+	* testsuite/test_element.py:
+	  add gst.QueryError and use it
+	* testsuite/test_pad.py:
+	  add some tests that show comparison between two different
+	  Python objects wrapping the same MiniObject
+
+2005-10-27  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* gst/gst.override:
 	* gst/pygstminiobject.c:
 	  remove the hash table for miniobjects - since we can't get notified

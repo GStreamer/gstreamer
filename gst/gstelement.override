@@ -374,14 +374,14 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
     }
 
     ret = PyList_New(0);
-    if ((gst_element_query_position(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur))) {
-	PyList_Append(ret, PyLong_FromLongLong(cur));
-	PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
-    } else {
-	g_print("FIXME: query failed\n");
-	Py_INCREF(Py_None);
-	ret = Py_None;
+    if (!(gst_element_query_position(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur))) {
+	PyErr_Format(PyGstExc_QueryError,
+		     "query failed");
+        return NULL;
     }
+
+    PyList_Append(ret, PyLong_FromLongLong(cur));
+    PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
 
     return ret;
 }

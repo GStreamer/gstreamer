@@ -128,14 +128,22 @@ class PadPushLinkedTest(TestCase):
         self.assertEquals(len(self.buffers), 0)
 
     def testTrueProbe(self):
-        id = self.src.add_buffer_probe(self._probe_handler, True)
+        probe_id = self.src.add_buffer_probe(self._probe_handler, True)
         self.buffer = gst.Buffer()
         self.assertEquals(self.buffer.__grefcount__, 1)
         self.assertEquals(self.src.push(self.buffer), gst.FLOW_OK)
         # one refcount is held by our scope, another is held on
         # self.buffers through _chain_func
         self.assertEquals(self.buffer.__grefcount__, 2)
-        self.src.remove_buffer_probe(id)
+
+        # they are not the same Python object ...
+        self.failIf(self.buffer is self.buffers[0])
+        self.failIf(id(self.buffer) == id(self.buffers[0]))
+        # ... but they wrap the same GstBuffer
+        self.failUnless(self.buffer == self.buffers[0])
+        self.assertEquals(repr(self.buffer), repr(self.buffers[0]))
+        
+        self.src.remove_buffer_probe(probe_id)
         self.assertEquals(len(self.buffers), 1)
         self.buffers = None
         self.assertEquals(self.buffer.__grefcount__, 1)

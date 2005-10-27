@@ -26,6 +26,7 @@
 
 PyObject *PyGstExc_LinkError = NULL;
 PyObject *PyGstExc_AddError = NULL;
+PyObject *PyGstExc_QueryError = NULL;
 PyObject *PyGstExc_RemoveError = NULL;
 PyObject *PyGstExc_PluginNotFoundError = NULL;
 
@@ -189,6 +190,18 @@ pygst_exceptions_register_classes(PyObject *d)
         goto exception;
     
     Py_DECREF(PyGstExc_RemoveError);
+
+    /* register gst.QueryError */
+    PyGstExc_QueryError = PyErr_NewException("gst.QueryError",
+            PyExc_Exception, NULL);
+    if (PyGstExc_QueryError == NULL)
+        goto exception;
+    
+    if (PyDict_SetItemString(d, "QueryError", PyGstExc_QueryError) < 0)
+        goto exception;
+    
+    Py_DECREF(PyGstExc_QueryError);
+   
    
     /* register gst.PluginNotFoundError */
     dict = PyDict_New();
@@ -219,6 +232,7 @@ exception:
     Py_XDECREF(PyGstExc_LinkError);
     Py_XDECREF(PyGstExc_AddError);
     Py_XDECREF(PyGstExc_RemoveError);
+    Py_XDECREF(PyGstExc_QueryError);
     Py_XDECREF(PyGstExc_PluginNotFoundError);
 
     return;
