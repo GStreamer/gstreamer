@@ -29,14 +29,11 @@ BuildRequires:  gcc-c++
 # @USE_HERMES_TRUE@Requires:      Hermes >= 1.3.0
 # @USE_HERMES_TRUE@BuildRequires: Hermes-devel >= 1.3.0
 # @USE_LIBFAME_TRUE@BuildRequires:  libfame-devel >= 0.9.0
-# @USE_SDL_TRUE@Requires:      SDL >= 1.2.0
-# @USE_SDL_TRUE@BuildRequires: SDL-devel >= 1.2.0
-# @USE_SDL_TRUE@#SDL-devel should require XFree86-devel because it links to it
-# @USE_SDL_TRUE@#only it doesn't seem to do that currently
-# @USE_SDL_TRUE@BuildRequires: 	XFree86-devel
+@USE_SDL_TRUE@Requires:      SDL >= 1.2.0
+@USE_SDL_TRUE@BuildRequires: 	XFree86-devel
 # @USE_SWFDEC_TRUE@BuildRequires:  swfdec-devel
-
 @USE_FAAD_TRUE@Provides:      gstreamer-faad = %{version}-%{release}
+@USE_FAAC_TRUE@Requires:      faac >= 1.23
 # @USE_GSM_TRUE@Provides:       gstreamer-gsm = %{version}-%{release}
 # @USE_LIBFAME_TRUE@Provides:       gstreamer-libfame = %{version}-%{release}
 # @USE_SWFDEC_TRUE@Provides:       gstreamer-swfdec = %{version}-%{release}
@@ -71,7 +68,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
-%find_lang gst-plugins-bad-%{majorminor}
+# %find_lang gst-plugins-bad-%{majorminor}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -88,7 +85,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttta.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspeed.so
-%{_datadir}/locale
 
 # gstreamer-plugins with external dependencies but in the main package
 # @USE_ARTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstarts.so
@@ -96,6 +92,7 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_AUDIOFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaudiofile.so
 # @USE_DIRAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdirac.so
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
+@USE_FAAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
 # @USE_GSM_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 # @USE_HERMES_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthermescolorspace.so
 # @USE_LIBFAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibfame.so
@@ -127,25 +124,6 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_DXR3_TRUE@%post -n gstreamer-plugins-dxr3
 # @USE_DXR3_TRUE@
 # @USE_DXR3_TRUE@%postun -n gstreamer-plugins-dxr3
-
-### FAAC ###
-# @USE_FAAC_TRUE@%package -n gstreamer-plugins-faac
-# @USE_FAAC_TRUE@Summary:GStreamer plug-ins for AAC audio playback.
-# @USE_FAAC_TRUE@Group:         Applications/Multimedia
-# @USE_FAAC_TRUE@Requires:      gstreamer-plugins = %{version}
-# @USE_FAAC_TRUE@Requires:      faac >= 1.23
-# @USE_FAAC_TRUE@BuildRequires: faac-devel >= 1.23
-# @USE_FAAC_TRUE@Obsoletes:     gstreamer-faac
-# @USE_FAAC_TRUE@
-# @USE_FAAC_TRUE@%description -n gstreamer-plugins-faac
-# @USE_FAAC_TRUE@Plug-ins for playing AAC audio
-# @USE_FAAC_TRUE@
-# @USE_FAAC_TRUE@%files -n gstreamer-plugins-faac
-# @USE_FAAC_TRUE@%defattr(-, root, root)
-# @USE_FAAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
-# @USE_FAAC_TRUE@%post -n  gstreamer-faac
-# @USE_FAAC_TRUE@
-# @USE_FAAC_TRUE@%postun -n  gstreamer-plugins-faac
 
 #### JACK AUDIO CONNECTION KIT ###
 # @USE_JACK_TRUE@%package -n gstreamer-plugins-jack
