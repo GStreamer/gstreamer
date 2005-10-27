@@ -21,8 +21,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
 from common import gst, unittest, TestCase
+
 import sys
-import gc
+import time
 
 class PadTemplateTest(TestCase):
     def testConstructor(self):
@@ -96,20 +97,26 @@ class PadPushLinkedTest(TestCase):
         TestCase.tearDown(self)
 
     def _chain_func(self, pad, buffer):
+        gst.debug('got buffer %r, id %x, with GMO rc %d'% (
+            buffer, id(buffer), buffer.__grefcount__))
         self.buffers.append(buffer)
 
         return gst.FLOW_OK
 
     def testNoProbe(self):
         self.buffer = gst.Buffer()
+        gst.debug('created new buffer %r, id %x' % (
+            self.buffer, id(self.buffer)))
         self.assertEquals(self.buffer.__grefcount__, 1)
         gst.debug('pushing buffer on linked pad, no probe')
         self.assertEquals(self.src.push(self.buffer), gst.FLOW_OK)
         gst.debug('pushed buffer on linked pad, no probe')
-        # pushing it takes a ref in the python wrapper to keep buffer
-        # alive afterwards; fakesink will get the buffer
-        self.assertEquals(self.buffer.__grefcount__, 1)
+        # one refcount is held by our scope, another is held on
+        # self.buffers through _chain_func
+        self.assertEquals(self.buffer.__grefcount__, 2)
         self.assertEquals(len(self.buffers), 1)
+        self.buffers = None
+        self.assertEquals(self.buffer.__grefcount__, 1)
 
     def testFalseProbe(self):
         id = self.src.add_buffer_probe(self._probe_handler, False)
@@ -125,9 +132,13 @@ class PadPushLinkedTest(TestCase):
         self.buffer = gst.Buffer()
         self.assertEquals(self.buffer.__grefcount__, 1)
         self.assertEquals(self.src.push(self.buffer), gst.FLOW_OK)
-        self.assertEquals(self.buffer.__grefcount__, 1)
+        # one refcount is held by our scope, another is held on
+        # self.buffers through _chain_func
+        self.assertEquals(self.buffer.__grefcount__, 2)
         self.src.remove_buffer_probe(id)
         self.assertEquals(len(self.buffers), 1)
+        self.buffers = None
+        self.assertEquals(self.buffer.__grefcount__, 1)
 
     def _probe_handler(self, pad, buffer, ret):
         return ret
@@ -166,10 +177,13 @@ class PadPushProbeLinkTest(TestCase):
         gst.debug('pushing buffer on linked pad, no probe')
         self.assertEquals(self.src.push(self.buffer), gst.FLOW_OK)
         gst.debug('pushed buffer on linked pad, no probe')
-        # pushing it takes a ref in the python wrapper to keep buffer
-        # alive afterwards; fakesink will get the buffer
-        self.assertEquals(self.buffer.__grefcount__, 1)
+        # one refcount is held by our scope, another is held on
+        # self.buffers through _chain_func
+        self.assertEquals(self.buffer.__grefcount__, 2)
         self.assertEquals(len(self.buffers), 1)
+        self.buffers = None
+        self.assertEquals(self.buffer.__grefcount__, 1)
+
 
     def _probe_handler(self, pad, buffer):
         self.src.link(self.sink)
@@ -246,8 +260,6 @@ class PadProbePipeTest(TestCase):
         self.assertEquals(sys.getrefcount(self.pipeline), 3)
         self.assertEquals(self.fakesrc.__gstrefcount__, 2)
         self.assertEquals(sys.getrefcount(self.fakesrc), 3)
-        self.assertEquals(self.fakesink.__gstrefcount__, 2)
-        self.assertEquals(sys.getrefcount(self.fakesink), 3)
         gst.debug('deleting pipeline')
         del self.pipeline
         self.gccollect()
@@ -367,15 +379,15 @@ class PadRefCountTest(TestCase):
         self.assertEquals(pad.__gstrefcount__, 2) # added to element
 
         gst.debug('deleting element and collecting')
-        gc.collect()
+        self.gccollect()
         del e
-        self.assertEquals(gc.collect(), 1) # collected the element
+        self.assertEquals(self.gccollect(), 1) # collected the element
         self.assertEquals(sys.getrefcount(pad), 3)
         self.assertEquals(pad.__gstrefcount__, 1) # removed from element
 
         gst.debug('deleting pad and collecting')
         del pad
-        self.assertEquals(gc.collect(), 1) # collected the pad
+        self.assertEquals(self.gccollect(), 1) # collected the pad
         gst.debug('going into teardown')
 
 if __name__ == "__main__":

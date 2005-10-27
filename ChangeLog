@@ -1,3 +1,13 @@
+2005-10-27  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* gst/gst.override:
+	* gst/pygstminiobject.c:
+	  remove the hash table for miniobjects - since we can't get notified
+	  when they get destroyed, we shouldn't be caching pointer mappings
+	* testsuite/test_pad.py:
+	  update refcount tests because mini objects now have a ref for
+	  each time an object is made for it
+
 2005-10-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/test_bus.py:

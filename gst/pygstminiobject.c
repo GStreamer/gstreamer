@@ -35,14 +35,6 @@ static void pygstminiobject_dealloc(PyGstMiniObject *self);
 GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
 #define GST_CAT_DEFAULT pygst_debug
 
-static GHashTable *_miniobjs;
-
-void
-pygst_miniobject_init ()
-{
-    _miniobjs = g_hash_table_new (NULL, NULL);
-}
-
 /**
  * pygstminiobject_lookup_class:
  * @gtype: the GType of the GstMiniObject subclass.
@@ -126,32 +118,9 @@ pygstminiobject_register_class(PyObject *dict, const gchar *type_name,
     PyDict_SetItemString(dict, (char *)class_name, (PyObject *)type);
 }
 
-/**
- * pygstminiobject_register_wrapper:
- * @self: the wrapper instance
- *
- * In the constructor of PyGTK wrappers, this function should be
- * called after setting the obj member.  It will tie the wrapper
- * instance to the Gstminiobject so that the same wrapper instance will
- * always be used for this Gstminiobject instance.  It will also sink any
- * floating references on the Gstminiobject.
- */
 void
 pygstminiobject_register_wrapper (PyObject *self)
 {
-    GstMiniObject *obj = ((PyGstMiniObject *) self)->obj;
-    PyGILState_STATE state;
-
-    g_assert (obj);
-    g_assert (GST_IS_MINI_OBJECT (obj));
-
-    state = pyg_gil_state_ensure ();
-    GST_DEBUG ("inserting self %p in the table for object %p [ref:%d]", 
-	       self, obj, GST_MINI_OBJECT_REFCOUNT_VALUE (obj));
-    g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
-    GST_DEBUG ("There are now %d elements in the hash table",
-	       g_hash_table_size (_miniobjs));
-    pyg_gil_state_release (state);
 }
 
 
@@ -160,63 +129,46 @@ pygstminiobject_register_wrapper (PyObject *self)
  * @obj: a GstMiniObject instance.
  *
  * This function gets a reference to a wrapper for the given GstMiniObject
- * instance.  If a wrapper has already been created, a new reference
- * to that wrapper will be returned.  Otherwise, a wrapper instance
- * will be created.
+ * instance.  A new wrapper will always be created.
  *
  * Returns: a reference to the wrapper for the GstMiniObject.
  */
 PyObject *
 pygstminiobject_new (GstMiniObject *obj)
 {
-    PyGILState_STATE state;
     PyGstMiniObject *self = NULL;
+    PyGILState_STATE state;
+    PyTypeObject *tp = NULL;
 
     if (obj == NULL) {
 	Py_INCREF (Py_None);
 	return Py_None;
     }
 
-    /* see if we already have a wrapper for this object */
-    state = pyg_gil_state_ensure ();
-    self = (PyGstMiniObject *) g_hash_table_lookup (_miniobjs, (gpointer) obj);
-    pyg_gil_state_release (state);
-
-    if (self != NULL) {
-        GST_DEBUG ("had self %p in the table for object %p", self, obj);
-	/* make sure the lookup returned our object */
-        g_assert (self->obj);
-        g_assert (self->obj == obj);
-	GST_INFO ("Increment refcount %p", self);
-	Py_INCREF (self);
-    } else {
-        GST_DEBUG ("have to create wrapper for object %p", obj);
-	/* we don't, so create one */
-	PyTypeObject *tp = pygstminiobject_lookup_class (G_OBJECT_TYPE (obj));
-	if (!tp)
-	    g_warning ("Couldn't get class for type object : %p", obj);
-	if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE) {
-	    GST_INFO ("Increment refcount %p", tp);
-	    Py_INCREF (tp);
-	}
-	self = PyObject_New (PyGstMiniObject, tp);
-	if (self == NULL)
-	    return NULL;
-	self->obj = gst_mini_object_ref (obj);
-
-	self->inst_dict = NULL;
-	self->weakreflist = NULL;
-
-	/* save wrapper pointer so we can access it later */
-        GST_DEBUG ("inserting self %p in the table for object %p [ref:%d]",
-		   self, obj, GST_MINI_OBJECT_REFCOUNT_VALUE (obj));
-	state = pyg_gil_state_ensure ();
-	g_hash_table_insert (_miniobjs, (gpointer) obj, (gpointer) self);
-	GST_DEBUG ("There are now %d elements in the hash table",
-		   g_hash_table_size (_miniobjs));
-	pyg_gil_state_release (state);
-
+    /* since mini objects cannot notify us when they get destroyed, we
+     * can't use a global hash to map GMO to PyO, and have to create a new
+     * Python object every time we see it */
+    tp = pygstminiobject_lookup_class (G_OBJECT_TYPE (obj));
+    GST_DEBUG ("have to create wrapper for object %p", obj);
+    if (!tp)
+        g_warning ("Couldn't get class for type object : %p", obj);
+    if (tp->tp_flags & Py_TPFLAGS_HEAPTYPE) {
+        GST_INFO ("Increment refcount %p", tp);
+        Py_INCREF (tp);
     }
+    state = pyg_gil_state_ensure();
+    self = PyObject_New (PyGstMiniObject, tp);
+    pyg_gil_state_release(state);
+
+    if (self == NULL)
+        return NULL;
+    self->obj = gst_mini_object_ref (obj);
+
+    self->inst_dict = NULL;
+    self->weakreflist = NULL;
+
+    GST_DEBUG ("created Python object %p for GstMiniObject %p [ref:%d]",
+        self, obj, GST_MINI_OBJECT_REFCOUNT_VALUE (obj));
     return (PyObject *) self;
 }
 
@@ -227,15 +179,12 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
 
     PyGILState_STATE state;
 
-    GST_INFO ("At the beginning %p", self);
+    GST_DEBUG ("At the beginning %p", self);
     state = pyg_gil_state_ensure();
 
     if (self->obj) {
-        GST_DEBUG ("removing self %p from the table for object %p [ref:%d]", self,
+        GST_DEBUG ("PyO %p unreffing GstMiniObject %p [ref:%d]", self,
              self->obj, GST_MINI_OBJECT_REFCOUNT_VALUE (self->obj));
-        g_assert (g_hash_table_remove (_miniobjs, (gpointer) self->obj));
-	GST_DEBUG ("There are now %d elements in the hash table",
-		   g_hash_table_size (_miniobjs));
 	gst_mini_object_unref(self->obj);
 	GST_DEBUG ("setting self %p -> obj to NULL", self);
 	self->obj = NULL;
@@ -248,7 +197,7 @@ pygstminiobject_dealloc(PyGstMiniObject *self)
 
     self->ob_type->tp_free((PyObject *) self);
     pyg_gil_state_release(state);
-    GST_INFO ("At the end %p", self);
+    GST_DEBUG ("At the end %p", self);
 }
 
 static int
