@@ -1,4 +1,4 @@
-/* -*- Mode: C; ; c-file-style: "python" -*- */
+/* -*- Mode: C -*- */
 /* gst-python
  * Copyright (C) 2005 Edward Hervey
  *
@@ -31,11 +31,10 @@ override-attr GstObject.__gstrefcount__
 
 /* keep this attribute around even after 2.8 for compatibility reasons */
 static PyObject *
-_wrap_gst_object__get___gstrefcount__(PyGObject *self, void *closure)
+_wrap_gst_object__get___gstrefcount__ (PyGObject * self, void *closure)
 {
-    return PyInt_FromLong(GST_OBJECT_REFCOUNT_VALUE(self->obj));
+  return PyInt_FromLong (GST_OBJECT_REFCOUNT_VALUE (self->obj));
 }
-
 
 /* < GLib 2.8 */
 
@@ -55,134 +54,142 @@ override-slot GstObject.tp_flags
 %%
 override-slot GstObject.tp_traverse
 static int
-_wrap_gst_object_tp_traverse(PyGObject *self, visitproc visit, void *arg)
+_wrap_gst_object_tp_traverse (PyGObject * self, visitproc visit, void *arg)
 {
-    int ret = 0;
-    GSList *tmp;
+  int ret = 0;
+  GSList *tmp;
 
-    GST_LOG_OBJECT(self->obj, "gst.Object.tp_traverse, arg:%p", arg);
+  GST_LOG_OBJECT (self->obj, "gst.Object.tp_traverse, arg:%p", arg);
 
-    if (self->inst_dict) ret = visit(self->inst_dict, arg);
-    if (ret != 0) return ret;
-
-    GST_LOG_OBJECT(self->obj, "visited self->inst_dict");
-
-    for (tmp = self->closures; tmp != NULL; tmp = tmp->next) {
-        PyGClosure *closure = tmp->data;
-	GST_DEBUG_OBJECT (self->obj, "visiting closures");
-
-	if (closure->callback) ret = visit(closure->callback, arg);
-	if (ret != 0) return ret;
-
-	if (closure->extra_args) ret = visit(closure->extra_args, arg);
-	if (ret != 0) return ret;
-
-	if (closure->swap_data) ret = visit(closure->swap_data, arg);
-	if (ret != 0) return ret;
-    }
-
-    if (self->obj && GST_OBJECT_REFCOUNT_VALUE(self->obj) == 1) {
-        GST_DEBUG_OBJECT(self->obj,
-            "gst.Object.tp_traverse: GstObject refcount of %p is 1, visit",
-            self->obj);
-        ret = visit((PyObject *)self, arg);
-        GST_LOG_OBJECT(self->obj,
-            "gst.Object.tp_traverse: GstObject %p visited, ret %d, refcount %d",
-            self->obj, ret, GST_OBJECT_REFCOUNT_VALUE(self->obj));
-    }
-
+  if (self->inst_dict) {
+    ret = visit (self->inst_dict, arg);
+    GST_LOG_OBJECT (self->obj, "visited self->inst_dict, ret %d", ret);
+  }
+  if (ret != 0)
     return ret;
+
+  for (tmp = self->closures; tmp != NULL; tmp = tmp->next) {
+    PyGClosure *closure = tmp->data;
+
+    GST_DEBUG_OBJECT (self->obj, "visiting closures");
+
+    if (closure->callback)
+      ret = visit (closure->callback, arg);
+    if (ret != 0)
+      return ret;
+
+    if (closure->extra_args)
+      ret = visit (closure->extra_args, arg);
+    if (ret != 0)
+      return ret;
+
+    if (closure->swap_data)
+      ret = visit (closure->swap_data, arg);
+    if (ret != 0)
+      return ret;
+  }
+
+  if (self->obj && GST_OBJECT_REFCOUNT_VALUE (self->obj) == 1) {
+    GST_DEBUG_OBJECT (self->obj,
+        "gst.Object.tp_traverse: GstObject refcount of %p is 1, visit",
+        self->obj);
+    ret = visit ((PyObject *) self, arg);
+    GST_LOG_OBJECT (self->obj,
+        "gst.Object.tp_traverse: GstObject %p visited, ret %d, refcount %d",
+        self->obj, ret, GST_OBJECT_REFCOUNT_VALUE (self->obj));
+  }
+
+  return ret;
 }
 
 %%
 override-slot GstObject.tp_clear
 int
-_wrap_gst_object_tp_clear(PyGObject *self)
+_wrap_gst_object_tp_clear (PyGObject * self)
 {
-    int ret;
-    GObject *obj = self->obj;
+  int ret;
+  GObject *obj = self->obj;
 
-    /* if we're a GstObject, we want to monkeypatch the GObject.tp_clear's
-     * g_object_unref and "replace" it with a gst_object_unref */
-    if (! GST_IS_OBJECT (obj))
-        obj = NULL;
-    else {
-        GST_DEBUG_OBJECT (obj,
-          "gst.Object.tp_clear, pyo %p, pyo rc %d, gsto %p, gst rc %d",
-          self, ((PyObject *) self)->ob_refcnt, obj,
-          GST_OBJECT_REFCOUNT_VALUE (obj));
-        g_object_ref (obj);
-    }
+  /* if we're a GstObject, we want to monkeypatch the GObject.tp_clear's
+   * g_object_unref and "replace" it with a gst_object_unref */
+  if (!GST_IS_OBJECT (obj))
+    obj = NULL;
+  else {
+    GST_DEBUG_OBJECT (obj,
+        "gst.Object.tp_clear, pyo %p, pyo rc %d, gsto %p, gst rc %d",
+        self, ((PyObject *) self)->ob_refcnt, obj,
+        GST_OBJECT_REFCOUNT_VALUE (obj));
+    g_object_ref (obj);
+  }
 
-    ret = PyGObject_Type.tp_clear((PyObject *) self);
+  ret = PyGObject_Type.tp_clear ((PyObject *) self);
 
-    if (obj)
-        gst_object_unref (obj);
+  if (obj)
+    gst_object_unref (obj);
 
-    return ret;
+  return ret;
 }
 
 %%
 override-slot GstObject.tp_dealloc
 void
-_wrap_gst_object_tp_dealloc(PyGObject *self)
+_wrap_gst_object_tp_dealloc (PyGObject * self)
 {
-    GObject *obj = self->obj;
+  GObject *obj = self->obj;
 
-    /* if we're a GstObject, we want to monkeypatch the GObject.tp_dealloc's
-     * g_object_unref and "replace" it with a gst_object_unref */
-    if (GST_IS_OBJECT (obj)) {
-        GST_DEBUG_OBJECT (obj, "gst.Object.tp_dealloc, go rc %d, gsto rc %d",
-            obj->ref_count, GST_OBJECT_REFCOUNT_VALUE (obj));
-	if (GST_OBJECT_REFCOUNT_VALUE (obj) == 0) {
-            /* already being finalized, can't resurrect object */
-            obj = NULL;
-            self->obj = NULL;
-        } else {
-          g_object_ref (obj);
-        }
+  /* if we're a GstObject, we want to monkeypatch the GObject.tp_dealloc's
+   * g_object_unref and "replace" it with a gst_object_unref */
+  if (GST_IS_OBJECT (obj)) {
+    GST_DEBUG_OBJECT (obj, "gst.Object.tp_dealloc, go rc %d, gsto rc %d",
+        obj->ref_count, GST_OBJECT_REFCOUNT_VALUE (obj));
+    if (GST_OBJECT_REFCOUNT_VALUE (obj) == 0) {
+      /* already being finalized, can't resurrect object */
+      obj = NULL;
+      self->obj = NULL;
     } else {
-        obj = NULL;
+      g_object_ref (obj);
     }
+  } else {
+    obj = NULL;
+  }
 
-    PyGObject_Type.tp_dealloc((PyObject *) self);
+  PyGObject_Type.tp_dealloc ((PyObject *) self);
 
-    if (obj)
-        gst_object_unref (obj);
+  if (obj)
+    gst_object_unref (obj);
 }
 
 %%
 override-slot GstObject.tp_repr
 static PyObject *
-_wrap_gst_object_tp_repr(PyObject *self)
+_wrap_gst_object_tp_repr (PyObject * self)
 {
-    gchar *repr;
-    PyObject *ret;
-    GstObject *object = GST_OBJECT (pygobject_get (self));
+  gchar *repr;
+  PyObject *ret;
+  GstObject *object = GST_OBJECT (pygobject_get (self));
 
-    repr = g_strdup_printf ("<%s object (%s) at 0x%lx>",
-	       self->ob_type->tp_name,
-	       GST_OBJECT_NAME(object) ? GST_OBJECT_NAME(object) : "unnamed",
-	       (long)self);
-    ret = PyString_FromString(repr);
-    g_free (repr);
-    return ret;
+  repr = g_strdup_printf ("<%s object (%s) at 0x%lx>",
+      self->ob_type->tp_name,
+      GST_OBJECT_NAME (object) ? GST_OBJECT_NAME (object) : "unnamed",
+      (long) self);
+  ret = PyString_FromString (repr);
+  g_free (repr);
+  return ret;
 }
 
 %%
 override-slot GstObject.tp_str
 static PyObject *
-_wrap_gst_object_tp_str(PyObject *self)
+_wrap_gst_object_tp_str (PyObject * self)
 {
-    gchar *repr, *path;
-    PyObject *ret;
-    GstObject *object = GST_OBJECT (pygobject_get (self));
+  gchar *repr, *path;
+  PyObject *ret;
+  GstObject *object = GST_OBJECT (pygobject_get (self));
 
-    path = gst_object_get_path_string (object);
-    repr = g_strdup_printf ("%s (%s)",
-	       path, self->ob_type->tp_name);
-    ret = PyString_FromString(repr);
-    g_free (repr);
-    g_free (path);
-    return ret;
+  path = gst_object_get_path_string (object);
+  repr = g_strdup_printf ("%s (%s)", path, self->ob_type->tp_name);
+  ret = PyString_FromString (repr);
+  g_free (repr);
+  g_free (path);
+  return ret;
 }
