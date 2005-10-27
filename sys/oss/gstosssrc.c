@@ -359,7 +359,7 @@ gst_oss_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   GstOssSrc *oss;
   struct audio_buf_info info;
   int mode;
-  int tmp;
+  int fmt, tmp;
 
   oss = GST_OSS_SRC (asrc);
 
@@ -368,8 +368,8 @@ gst_oss_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   if (fcntl (oss->fd, F_SETFL, mode) == -1)
     goto non_block;
 
-  tmp = gst_oss_src_get_format (spec->format);
-  if (tmp == 0)
+  fmt = gst_oss_src_get_format (spec->format);
+  if (fmt == 0)
     goto wrong_format;
 
   tmp = ilog2 (spec->segsize);
@@ -381,7 +381,7 @@ gst_oss_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 
   SET_PARAM (oss, SNDCTL_DSP_RESET, 0);
 
-  SET_PARAM (oss, SNDCTL_DSP_SETFMT, tmp);
+  SET_PARAM (oss, SNDCTL_DSP_SETFMT, fmt);
   if (spec->channels == 2)
     SET_PARAM (oss, SNDCTL_DSP_STEREO, 1);
   SET_PARAM (oss, SNDCTL_DSP_CHANNELS, spec->channels);

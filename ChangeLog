@@ -1,3 +1,8 @@
+2005-10-27  Wim Taymans  <wim@fluendo.com>
+
+	* sys/oss/gstosssrc.c: (gst_oss_src_prepare):
+	Set correct format on oss instead of a silly value. 
+
 2005-10-27  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
