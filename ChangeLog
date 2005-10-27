@@ -1,3 +1,9 @@
+2005-10-27  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	Added 'caller-owns-return' to all gst_[message|event|query]_new_*()
+	wrappers
+
 2005-10-27  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* gst/gstelement.override:

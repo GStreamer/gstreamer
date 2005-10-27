@@ -1752,6 +1752,7 @@
 (define-function event_new_buffersize
   (c-name "gst_event_new_buffersize")
   (return-type "GstEvent*")
+  (caller-owns-return #t)
   (parameters
     '("GstFormat" "format")
     '("gint64" "minsize")
@@ -2621,6 +2622,7 @@
 (define-function message_new_state_dirty
   (c-name "gst_message_new_state_dirty")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
   )
@@ -2629,6 +2631,7 @@
 (define-function message_new_clock_provide
   (c-name "gst_message_new_clock_provide")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstClock*" "clock")
@@ -2639,6 +2642,7 @@
 (define-function message_new_clock_lost
   (c-name "gst_message_new_clock_lost")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstClock*" "clock")
@@ -2648,6 +2652,7 @@
 (define-function message_new_new_clock
   (c-name "gst_message_new_new_clock")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstClock*" "clock")
@@ -2679,6 +2684,7 @@
 (define-function message_new_application
   (c-name "gst_message_new_application")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstStructure*" "structure")
@@ -2688,6 +2694,7 @@
 (define-function message_new_element
   (c-name "gst_message_new_element")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstStructure*" "structure")
@@ -2697,6 +2704,7 @@
 (define-function message_new_duration
   (c-name "gst_message_new_duration")
   (return-type "GstMessage*")
+  (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
     '("GstFormat" "format")
@@ -4116,6 +4124,7 @@
 (define-function query_new_duration
   (c-name "gst_query_new_duration")
   (return-type "GstQuery*")
+  (caller-owns-return #t)
   (parameters
     '("GstFormat" "format")
   )
