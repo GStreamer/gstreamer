@@ -49,6 +49,10 @@ struct _GstALawEnc {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
+  guint64 ts;
+
+  gint channels;
+  gint rate;
 
   /*MetaAudioRaw meta; */
 

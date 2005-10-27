@@ -104,16 +104,13 @@ mulawenc_setcaps (GstPad * pad, GstCaps * caps)
   GstMuLawEnc *mulawenc;
   GstPad *otherpad;
   GstStructure *structure;
-  const GValue *rate, *chans;
   GstCaps *base_caps;
 
   mulawenc = GST_MULAWENC (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
-  rate = gst_structure_get_value (structure, "rate");
-  chans = gst_structure_get_value (structure, "channels");
-  if (!rate || !chans)
-    return FALSE;
+  gst_structure_get_int (structure, "channels", &mulawenc->channels);
+  gst_structure_get_int (structure, "rate", &mulawenc->rate);
 
   if (pad == mulawenc->sinkpad) {
     otherpad = mulawenc->srcpad;
@@ -123,10 +120,12 @@ mulawenc_setcaps (GstPad * pad, GstCaps * caps)
   base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (otherpad));
 
   structure = gst_caps_get_structure (base_caps, 0);
-  gst_structure_set_value (structure, "rate", rate);
-  gst_structure_set_value (structure, "channels", chans);
+  gst_structure_set (structure, "rate", G_TYPE_INT, mulawenc->rate, NULL);
+  gst_structure_set (structure, "channels", G_TYPE_INT, mulawenc->channels,
+      NULL);
 
   gst_pad_set_caps (otherpad, base_caps);
+
   gst_caps_unref (base_caps);
 
   return TRUE;
@@ -193,6 +192,11 @@ gst_mulawenc_init (GstMuLawEnc * mulawenc)
   gst_pad_set_setcaps_function (mulawenc->srcpad, mulawenc_setcaps);
   gst_pad_set_getcaps_function (mulawenc->srcpad, mulawenc_getcaps);
   gst_element_add_pad (GST_ELEMENT (mulawenc), mulawenc->srcpad);
+
+  /* init rest */
+  mulawenc->channels = 0;
+  mulawenc->rate = 0;
+  mulawenc->ts = 0;
 }
 
 static GstFlowReturn
@@ -202,13 +206,22 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
   gint16 *linear_data;
   guint8 *mulaw_data;
   GstBuffer *outbuf;
+  gint bufsize;
 
   mulawenc = GST_MULAWENC (GST_OBJECT_PARENT (pad));
 
+  if (!mulawenc->rate || !mulawenc->channels)
+    goto not_negotiated;
+
   linear_data = (gint16 *) GST_BUFFER_DATA (buffer);
-  outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer) / 2);
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+  bufsize = GST_BUFFER_SIZE (buffer) / 2;
+  outbuf = gst_buffer_new_and_alloc (bufsize);
+
+  GST_BUFFER_DURATION (outbuf) = GST_SECOND * (bufsize) /
+      (mulawenc->rate * mulawenc->channels);
+  GST_BUFFER_TIMESTAMP (outbuf) = mulawenc->ts;
+  mulawenc->ts += GST_BUFFER_DURATION (outbuf);
+
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mulawenc->srcpad));
   mulaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
 
@@ -217,4 +230,9 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
   gst_buffer_unref (buffer);
 
   return gst_pad_push (mulawenc->srcpad, outbuf);
+
+not_negotiated:
+  {
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }

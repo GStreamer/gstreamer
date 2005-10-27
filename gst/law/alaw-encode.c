@@ -171,16 +171,13 @@ alawenc_setcaps (GstPad * pad, GstCaps * caps)
   GstALawEnc *alawenc;
   GstPad *otherpad;
   GstStructure *structure;
-  const GValue *rate, *chans;
   GstCaps *base_caps;
 
   alawenc = GST_ALAWENC (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
-  rate = gst_structure_get_value (structure, "rate");
-  chans = gst_structure_get_value (structure, "channels");
-  if (!rate || !chans)
-    return FALSE;
+  gst_structure_get_int (structure, "channels", &alawenc->channels);
+  gst_structure_get_int (structure, "rate", &alawenc->rate);
 
   if (pad == alawenc->sinkpad) {
     otherpad = alawenc->srcpad;
@@ -190,8 +187,9 @@ alawenc_setcaps (GstPad * pad, GstCaps * caps)
 
   base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (otherpad));
   structure = gst_caps_get_structure (base_caps, 0);
-  gst_structure_set_value (structure, "rate", rate);
-  gst_structure_set_value (structure, "channels", chans);
+  gst_structure_set (structure, "rate", G_TYPE_INT, alawenc->rate, NULL);
+  gst_structure_set (structure, "channels", G_TYPE_INT, alawenc->channels,
+      NULL);
 
   gst_pad_set_caps (otherpad, base_caps);
 
@@ -260,6 +258,11 @@ gst_alawenc_init (GstALawEnc * alawenc)
   gst_pad_set_setcaps_function (alawenc->srcpad, alawenc_setcaps);
   gst_pad_set_getcaps_function (alawenc->srcpad, alawenc_getcaps);
   gst_element_add_pad (GST_ELEMENT (alawenc), alawenc->srcpad);
+
+  /* init rest */
+  alawenc->channels = 0;
+  alawenc->rate = 0;
+  alawenc->ts = 0;
 }
 
 static GstFlowReturn
@@ -269,14 +272,23 @@ gst_alawenc_chain (GstPad * pad, GstBuffer * buffer)
   gint16 *linear_data;
   guint8 *alaw_data;
   GstBuffer *outbuf;
+  gint bufsize;
   gint i;
 
   alawenc = GST_ALAWENC (GST_OBJECT_PARENT (pad));
 
+  if (!alawenc->rate || !alawenc->channels)
+    goto not_negotiated;
+
   linear_data = (gint16 *) GST_BUFFER_DATA (buffer);
-  outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer) / 2);
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+  bufsize = GST_BUFFER_SIZE (buffer) / 2;
+  outbuf = gst_buffer_new_and_alloc (bufsize);
+
+  GST_BUFFER_DURATION (outbuf) = GST_SECOND * (bufsize) /
+      (alawenc->rate * alawenc->channels);
+  GST_BUFFER_TIMESTAMP (outbuf) = alawenc->ts;
+  alawenc->ts += GST_BUFFER_DURATION (outbuf);
+
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (alawenc->srcpad));
   alaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
 
@@ -289,4 +301,9 @@ gst_alawenc_chain (GstPad * pad, GstBuffer * buffer)
   gst_buffer_unref (buffer);
 
   return gst_pad_push (alawenc->srcpad, outbuf);
+
+not_negotiated:
+  {
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }

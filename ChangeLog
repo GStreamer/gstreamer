@@ -1,3 +1,14 @@
+2005-10-27  Edgard Lima  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* gst/law/alaw-encode.c: (gst_alawenc_init),
+        (alawenc_setcaps), (gst_alawenc_chain)
+	* gst/law/alaw-encode.h:
+	* gst/law/mulaw-encode.c: (gst_mulawenc_init),
+        (mulawenc_setcaps), (gst_mulawenc_chain)
+	* gst/law/mulaw-encode.h:
+	Set timestamp on buffer and it allows RTP G711 elements
+	work properly.
+
 2005-10-27  Wim Taymans  <wim@fluendo.com>
 
 	* sys/oss/gstosssrc.c: (gst_oss_src_prepare):
