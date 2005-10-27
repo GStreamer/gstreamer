@@ -1,3 +1,10 @@
+2005-10-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_negotiate_format),
+	(handle_sequence), (handle_slice), (gst_mpeg2dec_chain),
+	(gst_mpeg2dec_src_query), (gst_mpeg2dec_change_state):
+	Small cleanups in refcounting.
+
 2005-10-26  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_init),

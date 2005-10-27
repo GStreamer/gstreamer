@@ -513,6 +513,7 @@ static gboolean
 handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 {
   gint i;
+  GstBuffer *buf;
 
   mpeg2dec->width = info->sequence->picture_width;
   mpeg2dec->height = info->sequence->picture_height;
@@ -545,8 +546,11 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 
   mpeg2_custom_fbuf (mpeg2dec->decoder, 1);
 
-  if (!gst_mpeg2dec_alloc_buffer (mpeg2dec, mpeg2dec->offset))
+  if (!(buf = gst_mpeg2dec_alloc_buffer (mpeg2dec, mpeg2dec->offset)))
     return FALSE;
+
+  /* libmpeg2 discards first buffer twice for some reason. */
+  gst_buffer_ref (buf);
 
   mpeg2dec->need_sequence = FALSE;
 
@@ -593,8 +597,6 @@ static gboolean
 handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 {
   GstBuffer *outbuf = NULL;
-  gboolean skip = FALSE;
-
 
   GST_DEBUG_OBJECT (mpeg2dec, "picture slice/end %p %p %p %p",
       info->display_fbuf,
@@ -604,6 +606,7 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   if (info->display_fbuf && info->display_fbuf->id) {
     const mpeg2_picture_t *picture;
     gboolean key_frame = FALSE;
+    GstClockTime time;
 
     outbuf = GST_BUFFER (info->display_fbuf->id);
 
@@ -611,35 +614,39 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 
     key_frame =
         (picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I;
+
     GST_DEBUG_OBJECT (mpeg2dec, "picture keyframe %d", key_frame);
 
-    if (key_frame) {
-      /* not need for decode GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_DELTA_UNIT); */
-      /* 0.9 GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT); */
-    }
+    if (key_frame)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+    else
+      GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
     if (mpeg2dec->discont_state == MPEG2DEC_DISC_NEW_KEYFRAME && key_frame)
       mpeg2dec->discont_state = MPEG2DEC_DISC_NONE;
 
+    time = GST_CLOCK_TIME_NONE;
+
 #if MPEG2_RELEASE < MPEG2_VERSION(0,4,0)
-    if (picture->flags & PIC_FLAG_PTS) {
-      GstClockTime time = MPEG_TIME_TO_GST_TIME (picture->pts);
+    if (picture->flags & PIC_FLAG_PTS)
+      time = MPEG_TIME_TO_GST_TIME (picture->pts);
 #else
-    if (picture->flags & PIC_FLAG_TAGS) {
-      GstClockTime time =
-          MPEG_TIME_TO_GST_TIME ((GstClockTime) (picture->
+    if (picture->flags & PIC_FLAG_TAGS)
+      time = MPEG_TIME_TO_GST_TIME ((GstClockTime) (picture->
               tag2) << 32 | picture->tag);
 #endif
+
+    if (time == GST_CLOCK_TIME_NONE) {
+      time = mpeg2dec->next_time;
+      GST_DEBUG_OBJECT (mpeg2dec, "picture didn't have pts");
+    } else {
       GST_DEBUG_OBJECT (mpeg2dec,
           "picture had pts %" GST_TIME_FORMAT ", we had %"
           GST_TIME_FORMAT, GST_TIME_ARGS (time),
           GST_TIME_ARGS (mpeg2dec->next_time));
-      GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time = time;
-    } else {
-      GST_DEBUG_OBJECT (mpeg2dec,
-          "picture didn't have pts. Using %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (mpeg2dec->next_time));
-      GST_BUFFER_TIMESTAMP (outbuf) = mpeg2dec->next_time;
+      mpeg2dec->next_time = time;
     }
+    GST_BUFFER_TIMESTAMP (outbuf) = time;
 
     /* TODO set correct offset here based on frame number */
     if (info->display_picture_2nd) {
@@ -668,23 +675,14 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 
     if (picture->flags & PIC_FLAG_SKIP) {
       GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer because of skip flag");
-      gst_buffer_unref (outbuf);
-    } else if (gst_pad_get_negotiated_caps (mpeg2dec->srcpad) == NULL) {
-      GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, pad not usable");
-      gst_buffer_unref (outbuf);
     } else if (mpeg2dec->discont_state != MPEG2DEC_DISC_NONE) {
       GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, discont state %d",
           mpeg2dec->discont_state);
-      gst_buffer_unref (outbuf);
     } else if (mpeg2dec->next_time < mpeg2dec->segment_start) {
       GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, next_time %"
           GST_TIME_FORMAT " <  segment_start %" GST_TIME_FORMAT,
           GST_TIME_ARGS (mpeg2dec->next_time),
           GST_TIME_ARGS (mpeg2dec->segment_start));
-      gst_buffer_unref (outbuf);
-    } else if (skip) {
-      GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, asked to skip");
-      gst_buffer_unref (outbuf);
     } else {
       GST_LOG_OBJECT (mpeg2dec, "pushing buffer, timestamp %"
           GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
@@ -695,24 +693,16 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
           (mpeg2dec->decoded_width > mpeg2dec->width))
         outbuf = crop_buffer (mpeg2dec, outbuf);
 
-      if (info->current_picture
-          && (info->current_picture->flags & PIC_MASK_CODING_TYPE) ==
-          PIC_FLAG_CODING_TYPE_I) {
-        /* not need for decode GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DELTA_UNIT); */
-        /* 0.9 GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT); */
-      } else {
-        /* not need for decode GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_DELTA_UNIT); */
-        /* 0.9 GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_KEY_UNIT); */
-      }
-      gst_pad_push (mpeg2dec->srcpad, GST_BUFFER (outbuf));
+      gst_buffer_ref (outbuf);
+      gst_pad_push (mpeg2dec->srcpad, outbuf);
     }
-  } else if (info->display_fbuf && !info->display_fbuf->id) {
-    GST_ELEMENT_ERROR (mpeg2dec, LIBRARY, TOO_LAZY, (NULL),
-        ("libmpeg2 reported invalid buffer %p", info->discard_fbuf->id));
   }
 
   if (info->discard_fbuf && info->discard_fbuf->id) {
-    GST_DEBUG_OBJECT (mpeg2dec, "Discarded buffer %p", info->discard_fbuf->id);
+    GstBuffer *discard = GST_BUFFER (info->discard_fbuf->id);
+
+    gst_buffer_unref (discard);
+    GST_DEBUG_OBJECT (mpeg2dec, "Discarded buffer %p", discard);
   }
   return TRUE;
 }
