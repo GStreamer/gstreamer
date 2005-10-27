@@ -1,5 +1,15 @@
 2005-10-27  Wim Taymans  <wim@fluendo.com>
 
+	* ext/theora/theoradec.c: (theora_dec_src_query),
+	(theora_dec_sink_event):
+	* ext/theora/theoraenc.c: (theora_enc_sink_event),
+	(theora_enc_change_state):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_init),
+	(gst_vorbisenc_sink_event), (gst_vorbisenc_change_state):
+	Take proper locks when handling events.
+
+2005-10-27  Wim Taymans  <wim@fluendo.com>
+
 	* gst/adder/gstadder.c: (gst_adder_query), (gst_adder_collected),
 	(gst_adder_change_state):
 	Fix timestamps and fix deadlock when stopping the collectpads.

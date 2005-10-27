@@ -550,8 +550,6 @@ gst_vorbisenc_init (GstVorbisEnc * vorbisenc)
   vorbisenc->quality_set = FALSE;
   vorbisenc->last_message = NULL;
 
-  vorbisenc->setup = FALSE;
-  vorbisenc->header_sent = FALSE;
 }
 
 
@@ -883,14 +881,17 @@ gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
+      GST_STREAM_LOCK (pad);
       /* Tell the library we're at end of stream so that it can handle
        * the last frame and mark end of stream in the output properly */
       GST_DEBUG_OBJECT (vorbisenc, "EOS, clearing state and sending event on");
       gst_vorbisenc_clear (vorbisenc);
 
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (vorbisenc->srcpad, event);
+      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_TAG:
+      GST_STREAM_LOCK (pad);
       if (vorbisenc->tags) {
         GstTagList *list;
 
@@ -900,10 +901,11 @@ gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
       } else {
         g_assert_not_reached ();
       }
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (vorbisenc->srcpad, event);
+      GST_STREAM_UNLOCK (pad);
       break;
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (vorbisenc->srcpad, event);
       break;
   }
   return res;
@@ -1141,7 +1143,11 @@ gst_vorbisenc_change_state (GstElement * element, GstStateChange transition)
       vorbisenc->tags = gst_tag_list_new ();
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      vorbisenc->setup = FALSE;
+      vorbisenc->header_sent = FALSE;
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
     default:
       break;
   }
@@ -1152,7 +1158,9 @@ gst_vorbisenc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_vorbisenc_clear (vorbisenc);
+      vorbis_block_clear (&vorbisenc->vb);
+      vorbis_dsp_clear (&vorbisenc->vd);
+      vorbis_info_clear (&vorbisenc->vi);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_tag_list_free (vorbisenc->tags);

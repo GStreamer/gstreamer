@@ -419,20 +419,27 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
 {
   GstTheoraEnc *enc;
   ogg_packet op;
+  gboolean res;
 
   enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
+      GST_STREAM_LOCK (pad);
       /* push last packet with eos flag */
       while (theora_encode_packetout (&enc->state, 1, &op)) {
         GstClockTime out_time =
             theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
+
         theora_push_packet (enc, &op, out_time, GST_SECOND / enc->fps);
       }
+      res = gst_pad_push_event (enc->srcpad, event);
+      GST_STREAM_UNLOCK (pad);
+      break;
     default:
-      return gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (enc->srcpad, event);
   }
+  return res;
 }
 
 static GstFlowReturn
@@ -721,11 +728,9 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_STREAM_LOCK (enc->sinkpad);
       theora_clear (&enc->state);
       theora_comment_clear (&enc->comment);
       theora_info_clear (&enc->info);
-      GST_STREAM_UNLOCK (enc->sinkpad);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
