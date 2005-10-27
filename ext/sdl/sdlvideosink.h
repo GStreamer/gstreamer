@@ -52,6 +52,8 @@ struct _GstSDLVideoSink {
   guint32 format;
   gint width, height;   /* the size of the incoming YUV stream */
   unsigned long xwindow_id;
+  
+  gdouble framerate;
 
   gboolean init;
 

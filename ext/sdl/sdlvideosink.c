@@ -162,6 +162,30 @@ gst_sdlvideosink_finalize (GObject * obj)
 }
 
 static void
+gst_sdlvideosink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
+{
+  GstSDLVideoSink *sdlvideosink = GST_SDLVIDEOSINK (basesink);
+  GstClockTime timestamp, duration;
+
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+
+    *start = timestamp;
+    duration = GST_BUFFER_DURATION (buffer);
+    if (GST_CLOCK_TIME_IS_VALID (duration)) {
+      *end = timestamp + duration;
+    } else {
+      if (sdlvideosink->framerate > 0) {
+        *end = timestamp + GST_SECOND / sdlvideosink->framerate;
+      }
+    }
+
+  }
+
+}
+
+static void
 gst_sdlvideosink_class_init (GstSDLVideoSinkClass * klass)
 {
   GObjectClass *gobject_class;
@@ -183,6 +207,7 @@ gst_sdlvideosink_class_init (GstSDLVideoSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_sdlvideosink_change_state);
 
   gstvs_class->set_caps = GST_DEBUG_FUNCPTR (gst_sdlvideosink_setcaps);
+  gstvs_class->get_times = GST_DEBUG_FUNCPTR (gst_sdlvideosink_get_times);
   gstvs_class->preroll = GST_DEBUG_FUNCPTR (gst_sdlvideosink_show_frame);
   gstvs_class->render = GST_DEBUG_FUNCPTR (gst_sdlvideosink_show_frame);
 
@@ -256,6 +281,7 @@ gst_sdlvideosink_init (GstSDLVideoSink * sdlvideosink)
 
   sdlvideosink->width = -1;
   sdlvideosink->height = -1;
+  sdlvideosink->framerate = 0;
 
   sdlvideosink->overlay = NULL;
   sdlvideosink->screen = NULL;
@@ -543,6 +569,7 @@ gst_sdlvideosink_setcaps (GstBaseSink * bsink, GstCaps * vscapslist)
       gst_sdlvideosink_get_sdl_from_fourcc (sdlvideosink, format);
   gst_structure_get_int (structure, "width", &sdlvideosink->width);
   gst_structure_get_int (structure, "height", &sdlvideosink->height);
+  gst_structure_get_double (structure, "framerate", &sdlvideosink->framerate);
 
   if (!sdlvideosink->format || !gst_sdlvideosink_create (sdlvideosink))
     return FALSE;
@@ -652,6 +679,7 @@ static GstStateChangeReturn
 gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition)
 {
   GstSDLVideoSink *sdlvideosink;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   g_return_val_if_fail (GST_IS_SDLVIDEOSINK (element),
       GST_STATE_CHANGE_FAILURE);
@@ -663,7 +691,16 @@ gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       GST_OBJECT_FLAG_SET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
       break;
+    default:                   /* do nothing */
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      sdlvideosink->framerate = 0;
       gst_sdlvideosink_destroy (sdlvideosink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -674,8 +711,6 @@ gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return GST_STATE_CHANGE_SUCCESS;
 }
