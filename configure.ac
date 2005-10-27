@@ -477,7 +477,6 @@ ext/sdl/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile
-po/Makefile.in
 )
 AC_OUTPUT
 

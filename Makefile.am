@@ -1,6 +1,6 @@
 SUBDIRS = \
 	gst sys ext \
-	m4 common po
+	m4 common
 
 EXTRA_DIST = \
 	gst-plugins-bad.spec depcomp \
