@@ -475,22 +475,22 @@ gst_video_box_copy_plane_i420 (GstVideoBox * video_box, guint8 * src,
 
   /* top border */
   for (j = 0; j < bt; j++) {
-    memset (dest, fill_color, dest_width);
+    oil_splat_u8_ns (dest, &fill_color, dest_width);
     dest += dest_stride;
   }
 
   /* copy and add left and right border */
   for (j = 0; j < src_crop_height; j++) {
-    memset (dest, fill_color, bl);
-    memcpy (dest + bl, src, src_crop_width);
-    memset (dest + bl + src_crop_width, fill_color, br);
+    oil_splat_u8_ns (dest, &fill_color, bl);
+    oil_memcpy (dest + bl, src, src_crop_width);
+    oil_splat_u8_ns (dest + bl + src_crop_width, &fill_color, br);
     dest += dest_stride;
     src += src_stride;
   }
 
   /* bottom border */
   for (j = 0; j < bb; j++) {
-    memset (dest, fill_color, dest_width);
+    oil_splat_u8_ns (dest, &fill_color, dest_width);
     dest += dest_stride;
   }
 }

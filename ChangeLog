@@ -1,3 +1,12 @@
+2005-10-27  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
+	(gst_video_box_transform_caps), (gst_video_box_set_caps),
+	(gst_video_box_get_unit_size), (gst_video_box_copy_plane_i420),
+	(gst_video_box_i420), (gst_video_box_ayuv): Use liboil for
+	I420 rendering as well, doesn't bring much for my platform.
+	Might help on some other platforms.
+
 2005-10-27  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst/rtp/gstrtpgsmenc.c:
