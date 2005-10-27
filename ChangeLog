@@ -1,3 +1,9 @@
+2005-10-27  Philippe Khalaf <burger at speedy dot org> 
+
+	* gst-libs/gst/rtp/gstbasedepayload.c:
+	* gst-libs/gst/rtp/gstbasedepayload.h:
+	  Minor cleanups
+
 2005-10-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/.cvsignore:

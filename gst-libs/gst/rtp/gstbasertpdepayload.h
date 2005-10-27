@@ -42,7 +42,7 @@ G_BEGIN_DECLS
 #define GST_BASE_RTP_DEPAYLOAD_SRCPAD(depayload)  (GST_BASE_RTP_DEPAYLOAD (depayload)->srcpad)
 
 /* in milliseconds */
-#define RTP_QUEUEDELAY 100;
+#define RTP_QUEUE_DELAY 100;
 
 #define QUEUE_LOCK_INIT(base)	(g_static_rec_mutex_init(&base->queuelock))
 #define QUEUE_LOCK_FREE(base)	(g_static_rec_mutex_free(&base->queuelock))

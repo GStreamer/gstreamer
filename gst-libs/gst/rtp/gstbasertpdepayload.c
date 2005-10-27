@@ -33,7 +33,7 @@ enum
 {
   ARG_0,
   ARG_PROCESS_ONLY,
-  ARG_QUEUEDELAY,
+  ARG_QUEUE_DELAY,
 };
 
 static GstElementClass *parent_class = NULL;
@@ -109,7 +109,7 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
   gobject_class->set_property = gst_base_rtp_depayload_set_property;
   gobject_class->get_property = gst_base_rtp_depayload_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_QUEUEDELAY,
+  g_object_class_install_property (gobject_class, ARG_QUEUE_DELAY,
       g_param_spec_uint ("queue_delay", "Queue Delay",
           "Amount of ms to queue/buffer", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
 
@@ -150,13 +150,9 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter, gpointer g_class)
   filter->srcpad = gst_pad_new_from_template (pad_template, "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
-  /* create out queue */
   filter->queue = g_queue_new ();
 
-  filter->queue_delay = RTP_QUEUEDELAY;
-
-  /* init queue mutex */
-  QUEUE_LOCK_INIT (filter);
+  filter->queue_delay = RTP_QUEUE_DELAY;
 
   /* this one needs to be overwritten by child */
   filter->clock_rate = 0;
@@ -165,7 +161,6 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter, gpointer g_class)
 static void
 gst_base_rtp_depayload_finalize (GObject * object)
 {
-  /* free our queue */
   g_queue_free (GST_BASE_RTP_DEPAYLOAD (object)->queue);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
@@ -177,20 +172,9 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseRTPDepayload *filter;
 
-/*  GstStructure *structure;
-  int ret;*/
-
   filter = GST_BASE_RTP_DEPAYLOAD (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BASE_RTP_DEPAYLOAD (filter), FALSE);
-
-  /*
-     structure = gst_caps_get_structure( caps, 0 );
-     ret = gst_structure_get_int( structure, "clock_rate", &filter->clock_rate );
-     if (!ret) {
-     return FALSE;
-     }
-   */
 
   GstBaseRTPDepayloadClass *bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
@@ -387,7 +371,6 @@ gst_base_rtp_depayload_thread (GstBaseRTPDepayload * filter)
     gst_base_rtp_depayload_queue_release (filter);
     /* i want to run this thread clock_rate times per second */
     g_usleep (1000000 / filter->clock_rate);
-    /* g_usleep (1000000); */
   }
   return NULL;
 }
@@ -474,7 +457,7 @@ gst_base_rtp_depayload_set_property (GObject * object, guint prop_id,
   filter = GST_BASE_RTP_DEPAYLOAD (object);
 
   switch (prop_id) {
-    case ARG_QUEUEDELAY:
+    case ARG_QUEUE_DELAY:
       filter->queue_delay = g_value_get_uint (value);
       break;
     case ARG_PROCESS_ONLY:
@@ -496,7 +479,7 @@ gst_base_rtp_depayload_get_property (GObject * object, guint prop_id,
   filter = GST_BASE_RTP_DEPAYLOAD (object);
 
   switch (prop_id) {
-    case ARG_QUEUEDELAY:
+    case ARG_QUEUE_DELAY:
       g_value_set_uint (value, filter->queue_delay);
       break;
     case ARG_PROCESS_ONLY:
