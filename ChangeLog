@@ -1,3 +1,16 @@
+2005-10-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_init), (gst_base_src_query),
+	(gst_base_src_default_newsegment),
+	(gst_base_src_configure_segment), (gst_base_src_do_seek),
+	(gst_base_src_send_event), (gst_base_src_event_handler),
+	(gst_base_src_pad_get_range), (gst_base_src_loop),
+	(gst_base_src_unlock), (gst_base_src_default_negotiate),
+	(gst_base_src_start), (gst_base_src_deactivate),
+	(gst_base_src_activate_push), (gst_base_src_change_state):
+	Move some stuff around and cleanup things.
+
 2005-10-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_query):

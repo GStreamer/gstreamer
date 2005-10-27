@@ -113,6 +113,7 @@ static void gst_base_src_set_property (GObject * object, guint prop_id,
 static void gst_base_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_base_src_event_handler (GstPad * pad, GstEvent * event);
+static gboolean gst_base_src_send_event (GstElement * elem, GstEvent * event);
 
 static gboolean gst_base_src_query (GstPad * pad, GstQuery * query);
 
@@ -167,6 +168,7 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_src_change_state);
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_src_send_event);
 
   klass->negotiate = gst_base_src_default_negotiate;
   klass->newsegment = gst_base_src_default_newsegment;
@@ -214,10 +216,6 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   GST_DEBUG_OBJECT (basesrc, "adding src pad");
   gst_element_add_pad (GST_ELEMENT (basesrc), pad);
 
-  basesrc->segment_loop = FALSE;
-  basesrc->segment_start = -1;
-  basesrc->segment_end = -1;
-  basesrc->need_newsegment = TRUE;
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
   basesrc->clock_id = NULL;
 
@@ -392,9 +390,25 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
 
     case GST_QUERY_SEEKING:
       gst_query_set_seeking (query, GST_FORMAT_BYTES,
-          src->seekable, src->segment_start, src->segment_end);
+          src->seekable, 0, src->size);
       res = TRUE;
       break;
+
+    case GST_QUERY_SEGMENT:
+    {
+      gint64 start, stop;
+
+      start = src->segment_start;
+      /* no end segment configured, current size then */
+      if ((stop = src->segment_end) == -1)
+        stop = src->size;
+
+      /* FIXME, we can't report our rate as we did not store it, d'oh!.
+       * Also, subclasses might want to support other formats. */
+      gst_query_set_segment (query, 1.0, GST_FORMAT_BYTES, start, stop);
+      res = TRUE;
+      break;
+    }
 
     case GST_QUERY_FORMATS:
       gst_query_set_formats (query, 3, GST_FORMAT_DEFAULT,
@@ -421,12 +435,11 @@ gst_base_src_default_newsegment (GstBaseSrc * src)
   GstEvent *event;
 
   GST_DEBUG_OBJECT (src, "Sending newsegment from %" G_GINT64_FORMAT
-      " to %" G_GINT64_FORMAT, (gint64) src->segment_start,
-      (gint64) src->segment_end);
+      " to %" G_GINT64_FORMAT, src->segment_start, src->segment_end);
+
   event = gst_event_new_newsegment (FALSE, 1.0,
-      GST_FORMAT_BYTES,
-      (gint64) src->segment_start, (gint64) src->segment_end,
-      (gint64) src->segment_start);
+      GST_FORMAT_BYTES, src->segment_start, src->segment_end,
+      src->segment_start);
 
   return gst_pad_push_event (src->srcpad, event);
 }
@@ -445,45 +458,31 @@ gst_base_src_newsegment (GstBaseSrc * src)
   return result;
 }
 
+/* based on the event parameters configure the segment_start/stop
+ * times. Called with STREAM_LOCK.
+ */
 static gboolean
-gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
+gst_base_src_configure_segment (GstBaseSrc * src, GstEvent * event)
 {
   gdouble rate;
   GstFormat format;
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
-  gboolean flush;
-  gboolean update_stop = TRUE, update_start = TRUE;
+  gboolean update_stop, update_start;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
 
-  /* get seek format */
-  if (format == GST_FORMAT_DEFAULT)
-    format = GST_FORMAT_BYTES;
-  /* we can only seek bytes */
-  if (format != GST_FORMAT_BYTES)
-    goto unsupported_seek;
-
-  flush = flags & GST_SEEK_FLAG_FLUSH;
-
-  /* get seek positions */
+  /* parse the loop flag */
+  /* FIXME, need to store other flags and rate too */
   src->segment_loop = (flags & GST_SEEK_FLAG_SEGMENT) != 0;
 
-  /* send flush start */
-  if (flush)
-    gst_pad_push_event (src->srcpad, gst_event_new_flush_start ());
-  else
-    gst_pad_pause_task (src->srcpad);
+  /* assume we'll update both start and stop values */
+  update_start = TRUE;
+  update_stop = TRUE;
 
-  /* unblock streaming thread */
-  gst_base_src_unlock (src);
-
-  /* grab streaming lock */
-  GST_STREAM_LOCK (src->srcpad);
-
-  /* perform the seek */
+  /* perform the seek, segment_start is never invalid */
   switch (cur_type) {
     case GST_SEEK_TYPE_NONE:
       /* no update to segment */
@@ -491,7 +490,7 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
       update_start = FALSE;
       break;
     case GST_SEEK_TYPE_SET:
-      /* cur hold desired position */
+      /* cur holds desired position */
       break;
     case GST_SEEK_TYPE_CUR:
       /* add cur to currently configure segment */
@@ -503,53 +502,153 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
       break;
   }
   /* bring in sane range */
-  cur = CLAMP (cur, 0, src->size);
+  if (src->size != -1)
+    cur = CLAMP (cur, 0, src->size);
+  else
+    cur = MAX (cur, 0);
 
+  /* segment_end can be -1 if we have not configured a stop. */
   switch (stop_type) {
     case GST_SEEK_TYPE_NONE:
       stop = src->segment_end;
       update_stop = FALSE;
       break;
     case GST_SEEK_TYPE_SET:
+      /* stop folds required value */
       break;
     case GST_SEEK_TYPE_CUR:
-      stop = src->segment_end + stop;
+      if (src->segment_end != -1)
+        stop = src->segment_end + stop;
+      else
+        stop = -1;
       break;
     case GST_SEEK_TYPE_END:
-      stop = src->size + stop;
+      if (src->size != -1)
+        stop = src->size + stop;
+      else
+        stop = -1;
       break;
   }
-  stop = CLAMP (stop, 0, src->size);
+
+  /* if we have a valid stop time, make sure it is clipped */
+  if (stop != -1) {
+    if (src->size != -1)
+      stop = CLAMP (stop, 0, src->size);
+    else
+      stop = MAX (stop, 0);
+  }
 
   src->segment_start = cur;
   src->segment_end = stop;
 
-  /* update our offset */
-  src->offset = cur;
+  /* update our offset if it was updated */
+  if (update_start)
+    src->offset = cur;
 
-  GST_DEBUG_OBJECT (src, "seek pending for segment from %" G_GINT64_FORMAT
+  GST_DEBUG_OBJECT (src, "segment configured from %" G_GINT64_FORMAT
       " to %" G_GINT64_FORMAT, src->segment_start, src->segment_end);
 
-  /* now make sure the newsegment will be send */
-  src->need_newsegment = TRUE;
+  return TRUE;
+}
 
+/* this code implements the seeking. It is a good example
+ * handling all cases (modulo the FIXMEs).
+ *
+ * A seek updates the currently configured segment_start
+ * and segment_stop values based on the SEEK_TYPE. If the
+ * segment_start value is updated, a seek to this new position
+ * should be performed.
+ *
+ * The seek can only be executed when we are not currently
+ * streaming any data, to make sure that this is the case, we
+ * acquire the STREAM_LOCK which is taken when we are in the
+ * _loop() function or when a getrange() is called. Normally
+ * we will not receive a seek if we are operating in pull mode
+ * though.
+ *
+ * When we are in the loop() function, we might be in the middle
+ * of pushing a buffer, which might block in a sink. To make sure
+ * that the push gets unblocked we push out a FLUSH_START event.
+ * Our loop function will get a WRONG_STATE return value from
+ * the push and will pause, effectively releasing the STREAM_LOCK.
+ *
+ * For a non-flushing seek, we pause the task, which might eventually
+ * release the STREAM_LOCK. We say eventually because when the sink
+ * blocks on the sample we might wait a very long time until the sink
+ * unblocks the sample. In any case we acquire the STREAM_LOCK and
+ * can continue the seek. A non-flushing seek is normally done in a 
+ * running pipeline to perform seamless playback.
+ *
+ * After updating the segment_start/stop values, we prepare for
+ * streaming again. We push out a FLUSH_STOP to make the peer pad
+ * accept data again and we start our task again.
+ *
+ * A segment seek posts a message on the bus saying that the playback
+ * of the segment started. We store the segment flag internally because
+ * when we reach the segment_stop we have to post a segment_done
+ * instead of EOS when doing a segment seek.
+ */
+static gboolean
+gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
+{
+  gdouble rate;
+  GstFormat format;
+  GstSeekFlags flags;
+  gboolean flush;
+
+  gst_event_parse_seek (event, &rate, &format, &flags, NULL, NULL, NULL, NULL);
+
+  /* FIXME subclasses should be able to provide other formats */
+  /* get seek format */
+  if (format == GST_FORMAT_DEFAULT)
+    format = GST_FORMAT_BYTES;
+  /* we can only seek bytes */
+  if (format != GST_FORMAT_BYTES)
+    goto unsupported_seek;
+
+  flush = flags & GST_SEEK_FLAG_FLUSH;
+
+  /* send flush start */
   if (flush)
-    /* send flush stop */
+    gst_pad_push_event (src->srcpad, gst_event_new_flush_start ());
+  else
+    gst_pad_pause_task (src->srcpad);
+
+  /* unblock streaming thread */
+  gst_base_src_unlock (src);
+
+  /* grab streaming lock, this should eventually be possible, either
+   * because the task is paused or out streaming thread stopped 
+   * because our peer is flushing. */
+  GST_STREAM_LOCK (src->srcpad);
+
+  /* now configure the segment */
+  gst_base_src_configure_segment (src, event);
+
+  /* and prepare to continue streaming */
+  if (flush)
+    /* send flush stop, peer will accept data and events again. We
+     * are not yet providing data as we still have the STREAM_LOCK. */
     gst_pad_push_event (src->srcpad, gst_event_new_flush_stop ());
 
+  /* now make sure the newsegment will be send from the streaming
+   * thread. We could opt to send it here too. */
+  src->need_newsegment = TRUE;
+
   if (src->segment_loop) {
+    /* FIXME subclasses should be able to provide other formats */
     gst_element_post_message (GST_ELEMENT (src),
         gst_message_new_segment_start (GST_OBJECT (src), GST_FORMAT_BYTES,
-            cur));
+            src->segment_start));
   }
 
-  /* and restart the task */
+  /* and restart the task in case it got paused explicitely or by
+   * the FLUSH_START event we pushed out. */
   gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
       src->srcpad);
 
+  /* and release the lock again so we can continue streaming */
   GST_STREAM_UNLOCK (src->srcpad);
-
-  gst_event_unref (event);
 
   return TRUE;
 
@@ -557,8 +656,31 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
 unsupported_seek:
   {
     GST_DEBUG_OBJECT (src, "invalid format, seek aborted.");
+
     return FALSE;
   }
+}
+
+/* all events send to this element directly
+ */
+static gboolean
+gst_base_src_send_event (GstElement * element, GstEvent * event)
+{
+  GstBaseSrc *src;
+  gboolean result;
+
+  src = GST_BASE_SRC (element);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      result = gst_base_src_configure_segment (src, event);
+      break;
+    default:
+      result = FALSE;
+      break;
+  }
+
+  return result;
 }
 
 static gboolean
@@ -568,31 +690,52 @@ gst_base_src_event_handler (GstPad * pad, GstEvent * event)
   GstBaseSrcClass *bclass;
   gboolean result;
 
-  src = GST_BASE_SRC (GST_PAD_PARENT (pad));
+  src = GST_BASE_SRC (gst_pad_get_parent (pad));
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
-  if (bclass->event)
-    result = bclass->event (src, event);
+  if (bclass->event) {
+    if (!(result = bclass->event (src, event)))
+      goto subclass_failed;
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      if (!src->seekable) {
-        gst_event_unref (event);
-        return FALSE;
-      }
-      return gst_base_src_do_seek (src, event);
+      /* is normally called when in push mode */
+      if (!src->seekable)
+        goto not_seekable;
+
+      result = gst_base_src_do_seek (src, event);
+      break;
     case GST_EVENT_FLUSH_START:
-      /* cancel any blocking getrange */
-      gst_base_src_unlock (src);
+      /* cancel any blocking getrange, is normally called
+       * when in pull mode. */
+      result = gst_base_src_unlock (src);
       break;
     case GST_EVENT_FLUSH_STOP:
-      break;
     default:
+      result = TRUE;
       break;
   }
   gst_event_unref (event);
+  gst_object_unref (src);
 
-  return TRUE;
+  return result;
+
+  /* ERRORS */
+subclass_failed:
+  {
+    GST_DEBUG_OBJECT (src, "subclass refused event");
+    gst_object_unref (src);
+    gst_event_unref (event);
+    return result;
+  }
+not_seekable:
+  {
+    GST_DEBUG_OBJECT (src, "is not seekable");
+    gst_object_unref (src);
+    gst_event_unref (event);
+    return FALSE;
+  }
 }
 
 static void
@@ -772,6 +915,7 @@ gst_base_src_loop (GstPad * pad)
 
   src = GST_BASE_SRC (gst_pad_get_parent (pad));
 
+  /* only send segments when operating in push mode */
   if (G_UNLIKELY (src->need_newsegment)) {
     /* now send newsegment */
     gst_base_src_newsegment (src);
@@ -800,9 +944,10 @@ gst_base_src_loop (GstPad * pad)
   /* special cases */
 eos:
   {
-    GST_DEBUG_OBJECT (src, "going to EOS");
+    GST_DEBUG_OBJECT (src, "going to EOS, getrange returned UNEXPECTED");
     gst_pad_pause_task (pad);
     if (src->segment_loop) {
+      /* FIXME, subclass might want to use another format */
       gst_element_post_message (GST_ELEMENT (src),
           gst_message_new_segment_done (GST_OBJECT (src),
               GST_FORMAT_BYTES, src->segment_end));
@@ -815,9 +960,7 @@ eos:
   }
 pause:
   {
-    const gchar *reason;
-
-    reason = gst_flow_get_name (ret);
+    const gchar *reason = gst_flow_get_name (ret);
 
     GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
     gst_pad_pause_task (pad);
@@ -850,7 +993,7 @@ static gboolean
 gst_base_src_unlock (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
-  gboolean result = FALSE;
+  gboolean result = TRUE;
 
   GST_DEBUG ("unlock");
   /* unblock whatever the subclass is doing */
@@ -905,6 +1048,7 @@ gst_base_src_is_seekable (GstBaseSrc * basesrc)
   return basesrc->seekable;
 }
 
+/* default negotiation code */
 static gboolean
 gst_base_src_default_negotiate (GstBaseSrc * basesrc)
 {
@@ -913,38 +1057,48 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
   GstCaps *peercaps = NULL;
   gboolean result = FALSE;
 
+  /* first see what is possible on our source pad */
   thiscaps = gst_pad_get_caps (GST_BASE_SRC_PAD (basesrc));
   GST_DEBUG ("caps of src: %" GST_PTR_FORMAT, thiscaps);
+  /* nothing or anything is allowed, we're done */
   if (thiscaps == NULL || gst_caps_is_any (thiscaps))
     goto no_nego_needed;
 
+  /* get the peer caps */
   peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
   GST_DEBUG ("caps of peer: %" GST_PTR_FORMAT, peercaps);
   if (peercaps) {
     GstCaps *icaps;
 
+    /* get intersection */
     icaps = gst_caps_intersect (thiscaps, peercaps);
     GST_DEBUG ("intersect: %" GST_PTR_FORMAT, icaps);
     gst_caps_unref (thiscaps);
     gst_caps_unref (peercaps);
     if (icaps) {
+      /* take first (and best) possibility */
       caps = gst_caps_copy_nth (icaps, 0);
       gst_caps_unref (icaps);
     }
   } else {
+    /* no peer, work with our own caps then */
     caps = thiscaps;
   }
   if (caps) {
     caps = gst_caps_make_writable (caps);
     gst_caps_truncate (caps);
 
+    /* now fixate */
     gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
     GST_DEBUG ("fixated to: %" GST_PTR_FORMAT, caps);
 
     if (gst_caps_is_any (caps)) {
+      /* hmm, still anything, so element can do anything and
+       * nego is not needed */
       gst_caps_unref (caps);
       result = TRUE;
     } else if (gst_caps_is_fixed (caps)) {
+      /* yay, fixed caps, use those then */
       gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), caps);
       gst_caps_unref (caps);
       result = TRUE;
@@ -999,9 +1153,6 @@ gst_base_src_start (GstBaseSrc * basesrc)
 
   GST_OBJECT_FLAG_SET (basesrc, GST_BASE_SRC_STARTED);
 
-  /* start in the beginning */
-  basesrc->offset = 0;
-
   /* figure out the size */
   if (bclass->get_size) {
     result = bclass->get_size (basesrc, &basesrc->size);
@@ -1014,14 +1165,10 @@ gst_base_src_start (GstBaseSrc * basesrc)
 
   GST_DEBUG ("size %d %lld", result, basesrc->size);
 
-  /* we always run to the end when starting */
-  basesrc->segment_loop = FALSE;
-  basesrc->segment_start = 0;
-  basesrc->segment_end = basesrc->size;
-  basesrc->need_newsegment = TRUE;
-
   /* check if we can seek, updates ->seekable */
   gst_base_src_is_seekable (basesrc);
+
+  basesrc->need_newsegment = TRUE;
 
   /* run typefind */
 #if 0
@@ -1088,10 +1235,10 @@ gst_base_src_deactivate (GstBaseSrc * basesrc, GstPad * pad)
   GST_LIVE_UNLOCK (basesrc);
 
   /* step 1, unblock clock sync (if any) */
-  gst_base_src_unlock (basesrc);
+  result = gst_base_src_unlock (basesrc);
 
   /* step 2, make sure streaming finishes */
-  result = gst_pad_stop_task (pad);
+  result &= gst_pad_stop_task (pad);
 
   return result;
 }
@@ -1100,6 +1247,7 @@ static gboolean
 gst_base_src_activate_push (GstPad * pad, gboolean active)
 {
   GstBaseSrc *basesrc;
+  gboolean res;
 
   basesrc = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
@@ -1113,12 +1261,14 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
     if (!gst_base_src_start (basesrc))
       goto error_start;
 
-    return gst_pad_start_task (pad, (GstTaskFunction) gst_base_src_loop, pad);
+    res = gst_pad_start_task (pad, (GstTaskFunction) gst_base_src_loop, pad);
   } else {
     GST_DEBUG_OBJECT (basesrc, "Deactivating in push mode");
-    return gst_base_src_deactivate (basesrc, pad);
+    res = gst_base_src_deactivate (basesrc, pad);
   }
+  return res;
 
+  /* ERRORS */
 no_push_activation:
   {
     GST_DEBUG_OBJECT (basesrc, "Subclass disabled push-mode activation");
@@ -1182,7 +1332,6 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
 
   basesrc = GST_BASE_SRC (element);
 
-
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
@@ -1212,6 +1361,15 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     goto failure;
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      /* we always run from start to end when in READY, after putting
+       * the element to READY a seek can be done on the element to
+       * configure the segment when going to PAUSED. */
+      basesrc->segment_loop = FALSE;
+      basesrc->segment_start = 0;
+      basesrc->segment_end = -1;
+      basesrc->offset = 0;
+      break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_LIVE_LOCK (element);
       if (basesrc->is_live) {
@@ -1222,7 +1380,12 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (!gst_base_src_stop (basesrc))
-        result = GST_STATE_CHANGE_FAILURE;
+        goto error_stop;
+      /* we always run from start to end when in READY */
+      basesrc->segment_loop = FALSE;
+      basesrc->segment_start = 0;
+      basesrc->segment_end = -1;
+      basesrc->offset = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -1231,14 +1394,20 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
   }
 
   if (no_preroll && result == GST_STATE_CHANGE_SUCCESS)
-    return GST_STATE_CHANGE_NO_PREROLL;
-  else
-    return result;
+    result = GST_STATE_CHANGE_NO_PREROLL;
+
+  return result;
 
   /* ERRORS */
 failure:
   {
+    GST_DEBUG_OBJECT (basesrc, "parent failed state change");
     gst_base_src_stop (basesrc);
     return result;
+  }
+error_stop:
+  {
+    GST_DEBUG_OBJECT (basesrc, "Failed to stop");
+    return GST_STATE_CHANGE_FAILURE;
   }
 }
