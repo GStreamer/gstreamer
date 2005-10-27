@@ -1,3 +1,8 @@
+2005-10-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* examples/retag/retag.c: (main):
+	  Update retag example so that it actually works (#319316).
+
 2005-10-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-inspect.c: (print_interfaces),

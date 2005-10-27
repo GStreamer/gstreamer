@@ -19,6 +19,7 @@ int
 main (int argc, char *argv[])
 {
   GstElement *bin, *filesrc, *tag_changer, *filesink;
+  GstCaps *filtercaps;
   gchar *artist, *title, *ext, *filename;
 
   /* initialize GStreamer */
@@ -74,7 +75,8 @@ main (int argc, char *argv[])
   /* make sure the tag setter uses our stuff 
      (though that should already be default) */
   gst_tag_setter_set_merge_mode (GST_TAG_SETTER (tag_changer),
-      GST_TAG_MERGE_KEEP);
+      GST_TAG_MERGE_REPLACE);
+
   /* set the tagging information */
   gst_tag_setter_add (GST_TAG_SETTER (tag_changer), GST_TAG_MERGE_REPLACE,
       GST_TAG_ARTIST, artist, GST_TAG_TITLE, title, NULL);
@@ -83,8 +85,14 @@ main (int argc, char *argv[])
   gst_bin_add_many (GST_BIN (bin), filesrc, tag_changer, filesink, NULL);
 
   /* link the elements */
-  if (!gst_element_link_many (filesrc, tag_changer, filesink, NULL))
+  if (!gst_element_link (filesrc, tag_changer))
     g_assert_not_reached ();
+
+  /* id3tag determines its mode of operation from its source caps */
+  filtercaps = gst_caps_new_simple ("application/x-id3", NULL);
+  if (!gst_element_link_filtered (tag_changer, filesink, filtercaps))
+    g_assert_not_reached ();
+  gst_caps_free (filtercaps);
 
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);
