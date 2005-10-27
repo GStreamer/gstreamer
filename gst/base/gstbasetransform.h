@@ -82,8 +82,10 @@ struct _GstBaseTransform {
   /* Set if caps on each pad are equal */
   gboolean	 have_same_caps;
 
+  GMutex	*transform_lock;
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING - 1];
+  gpointer       _gst_reserved[GST_PADDING - 2];
 };
 
 /**

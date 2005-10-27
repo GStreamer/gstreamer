@@ -980,8 +980,10 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
       ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
 
   /* if we don't have a timestamp, we don't sync */
-  if (!start_valid)
+  if (!start_valid) {
+    GST_DEBUG_OBJECT (basesink, "start not valid");
     goto done;
+  }
 
   /* save last times seen. */
   basesink->current_start = start;
@@ -1030,8 +1032,9 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     base_time = GST_ELEMENT (basesink)->base_time;
 
     GST_LOG_OBJECT (basesink,
-        "waiting for clock, base time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (base_time));
+        "waiting for clock, base time %" GST_TIME_FORMAT
+        "stream_start %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (base_time), GST_TIME_ARGS (stream_start));
 
     /* also save end_time of this buffer so that we can wait
      * to signal EOS */
@@ -1045,6 +1048,8 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     GST_UNLOCK (basesink);
 
     GST_LOG_OBJECT (basesink, "clock entry done: %d", result);
+  } else {
+    GST_DEBUG_OBJECT (basesink, "no clock, not syncing");
   }
 
 done:

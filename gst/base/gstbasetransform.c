@@ -278,6 +278,12 @@ gst_base_transform_base_init (gpointer g_class)
 static void
 gst_base_transform_finalize (GObject * object)
 {
+  GstBaseTransform *trans;
+
+  trans = GST_BASE_TRANSFORM (object);
+
+  g_mutex_free (trans->transform_lock);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -345,6 +351,7 @@ gst_base_transform_init (GstBaseTransform * trans,
       GST_DEBUG_FUNCPTR (gst_base_transform_src_activate_pull));
   gst_element_add_pad (GST_ELEMENT (trans), trans->srcpad);
 
+  trans->transform_lock = g_mutex_new ();
   trans->delay_configure = FALSE;
   trans->pending_configure = FALSE;
   trans->cache_caps1 = NULL;
@@ -894,9 +901,9 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
-  /* we cannot run this when we are processing data or doing another
-   * negotiation in the streaming thread. */
-  GST_STREAM_LOCK (pad);
+  /* we cannot run this when we are transforming data and as such doing 
+   * another negotiation in the transform method. */
+  g_mutex_lock (trans->transform_lock);
 
   *buf = NULL;
 
@@ -961,7 +968,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     gst_caps_unref (srccaps);
     gst_caps_unref (sinkcaps);
   }
-  GST_STREAM_UNLOCK (pad);
+  g_mutex_unlock (trans->transform_lock);
 
   gst_object_unref (trans);
 
@@ -975,7 +982,7 @@ not_configured:
       gst_buffer_unref (*buf);
       *buf = NULL;
     }
-    GST_STREAM_UNLOCK (pad);
+    g_mutex_unlock (trans->transform_lock);
     gst_object_unref (trans);
     return GST_FLOW_OK;
   }
@@ -987,7 +994,7 @@ unknown_size:
       gst_buffer_unref (*buf);
       *buf = NULL;
     }
-    GST_STREAM_UNLOCK (pad);
+    g_mutex_unlock (trans->transform_lock);
     gst_object_unref (trans);
     return GST_FLOW_OK;
   }
@@ -1024,20 +1031,20 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
     {
       GstFormat format;
       gdouble rate;
-      gint64 start, stop, base;
+      gint64 start, stop, time;
       gboolean update;
 
       GST_STREAM_LOCK (pad);
       gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
-          &base);
+          &time);
       if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (trans, "received NEW_SEGMENT %" GST_TIME_FORMAT
-            " -- %" GST_TIME_FORMAT ", base %" GST_TIME_FORMAT,
-            start, stop, base);
+            " -- %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (start), GST_TIME_ARGS (stop), GST_TIME_ARGS (time));
         trans->have_newsegment = TRUE;
         trans->segment_start = start;
         trans->segment_stop = stop;
-        trans->segment_base = base;
+        trans->segment_base = time;
         trans->segment_rate = rate;
       } else {
         GST_DEBUG_OBJECT (trans,
@@ -1215,7 +1222,9 @@ gst_base_transform_getrange (GstPad * pad, guint64 offset,
 
   ret = gst_pad_pull_range (trans->sinkpad, offset, length, &inbuf);
   if (ret == GST_FLOW_OK) {
+    g_mutex_lock (trans->transform_lock);
     ret = gst_base_transform_handle_buffer (trans, inbuf, buffer);
+    g_mutex_unlock (trans->transform_lock);
   }
 
   gst_object_unref (trans);
@@ -1232,7 +1241,11 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
+  /* protect transform method and concurrent buffer alloc */
+  g_mutex_lock (trans->transform_lock);
   ret = gst_base_transform_handle_buffer (trans, buffer, &outbuf);
+  g_mutex_unlock (trans->transform_lock);
+
   if (ret == GST_FLOW_OK) {
     ret = gst_pad_push (trans->srcpad, outbuf);
   } else if (outbuf != NULL)
