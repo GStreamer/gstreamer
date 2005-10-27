@@ -1,3 +1,10 @@
+2005-10-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/.cvsignore:
+	* gst/playback/decodetest.c:
+	* gst/playback/test3.c:
+	  Port these two tests as well.
+
 2005-10-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (theora_dec_src_query),

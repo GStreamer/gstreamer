@@ -47,16 +47,65 @@ update_scale (GstElement * element)
   return TRUE;
 }
 
+static void
+warning_cb (GstBus * bus, GstMessage * msg, gpointer foo)
+{
+  GError *err = NULL;
+  gchar *dbg = NULL;
+
+  gst_message_parse_warning (msg, &err, &dbg);
+
+  g_printerr ("WARNING: %s (%s)\n", err->message, (dbg) ? dbg : "no details");
+
+  g_error_free (err);
+  g_free (dbg);
+}
+
+static void
+error_cb (GstBus * bus, GstMessage * msg, GMainLoop * main_loop)
+{
+  GError *err = NULL;
+  gchar *dbg = NULL;
+
+  gst_message_parse_error (msg, &err, &dbg);
+
+  g_printerr ("ERROR: %s (%s)\n", err->message, (dbg) ? dbg : "no details");
+
+  g_main_loop_quit (main_loop);
+
+  g_error_free (err);
+  g_free (dbg);
+}
+
+static void
+eos_cb (GstBus * bus, GstMessage * msg, GMainLoop * main_loop)
+{
+  g_print ("EOS\n");
+  g_main_loop_quit (main_loop);
+}
+
+
 gint
 main (gint argc, gchar * argv[])
 {
-  GstElement *player;
   GstStateChangeReturn res;
+  GstElement *player;
+  GMainLoop *loop;
+  GstBus *bus;
 
   gst_init (&argc, &argv);
 
+  loop = g_main_loop_new (NULL, TRUE);
+
   player = gst_element_factory_make ("playbin", "player");
   g_assert (player);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (player));
+  gst_bus_add_signal_watch (bus);
+
+  g_signal_connect (bus, "message::eos", G_CALLBACK (eos_cb), loop);
+  g_signal_connect (bus, "message::error", G_CALLBACK (error_cb), loop);
+  g_signal_connect (bus, "message::warning", G_CALLBACK (warning_cb), NULL);
 
   g_object_set (G_OBJECT (player), "uri", argv[1], NULL);
 
@@ -68,7 +117,12 @@ main (gint argc, gchar * argv[])
 
   g_timeout_add (UPDATE_INTERVAL, (GSourceFunc) update_scale, player);
 
-  g_main_loop_run (g_main_loop_new (NULL, TRUE));
+  g_main_loop_run (loop);
+
+  /* tidy up */
+  gst_element_set_state (player, GST_STATE_NULL);
+  gst_object_unref (player);
+  gst_object_unref (bus);
 
   return 0;
 }
