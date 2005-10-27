@@ -1,3 +1,8 @@
+2005-10-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_query):
+	  Add missing break statements.
+
 2005-10-27  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstbin.c: (GST_START_TEST):

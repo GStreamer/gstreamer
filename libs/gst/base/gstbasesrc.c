@@ -356,6 +356,7 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
           res = FALSE;
           break;
       }
+      break;
     }
     case GST_QUERY_DURATION:
     {
@@ -386,6 +387,7 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
           res = FALSE;
           break;
       }
+      break;
     }
 
     case GST_QUERY_SEEKING:
