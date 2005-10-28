@@ -57,21 +57,21 @@ typedef struct _GstBinClass GstBinClass;
 
 /**
  * GST_BIN_NUMCHILDREN:
- * @bin: the bin to get the number of children from
+ * @bin: a #GstBin
  *
- * Gets the number of children a bin manages.
+ * Gets the number of children in a bin.
  */
 #define GST_BIN_NUMCHILDREN(bin)	(GST_BIN_CAST(bin)->numchildren)
 /**
  * GST_BIN_CHILDREN:
- * @bin: the bin to get the list with children from
+ * @bin: a #GstBin
  *
- * Gets the list with children a bin manages.
+ * Gets the list with children in a bin.
  */
 #define GST_BIN_CHILDREN(bin)		(GST_BIN_CAST(bin)->children)
 /**
  * GST_BIN_CHILDREN_COOKIE:
- * @bin: the bin to get the children cookie from
+ * @bin: a #GstBin
  *
  * Gets the children cookie that watches the children list.
  */

@@ -1971,8 +1971,8 @@ g_static_rec_cond_wait (GCond * cond, GStaticRecMutex * mutex)
 
 /**
  * gst_bin_add_many:
- * @bin: the bin to add the elements to
- * @element_1: the first element to add to the bin
+ * @bin: a #GstBin
+ * @element_1: the #GstElement element to add to the bin
  * @...: additional elements to add to the bin
  *
  * Adds a NULL-terminated list of elements to a bin.  This function is
@@ -1999,8 +1999,8 @@ gst_bin_add_many (GstBin * bin, GstElement * element_1, ...)
 
 /**
  * gst_bin_remove_many:
- * @bin: the bin to remove the elements from
- * @element_1: the first element to remove from the bin
+ * @bin: a #GstBin
+ * @element_1: the first #GstElement to remove from the bin
  * @...: NULL-terminated list of elements to remove from the bin
  *
  * Remove a list of elements from a bin. This function is equivalent

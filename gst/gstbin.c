@@ -52,7 +52,7 @@
  * bin. Likewise the "element_removed" signal is fired whenever an element is
  * removed from the bin.
  *
- * A GstBin internally interceps all #GstMessage posted by its children and 
+ * A GstBin internally intercepts all #GstMessage posted by its children and
  * implements the following default behaviour for each of them.
  *
  *   GST_MESSAGE_EOS: This message is only posted by sinks
@@ -68,20 +68,22 @@
  *
  *   OTHERS: posted upwards.
  *
- * A GstBin implements the following default behaviour for answering to a 
+ * A GstBin implements the following default behaviour for answering to a
  * #GstQuery:
  *
  *   GST_QUERY_DURATION: If the query has been asked before with the same
- *           format, use the cached previous value. If no previous value 
+ *           format, use the cached previous value. If no previous value
  *           was cached, the query is sent to all sink elements in the bin
- *           and the MAXIMUM of all values is returned and cached. If no 
- *           sinks are available in the bin, the query fails. 
+ *           and the MAXIMUM of all values is returned and cached. If no
+ *           sinks are available in the bin, the query fails.
  *
- *   OTHERS: the query is forwarded to all sink elements, the result of the 
+ *   OTHERS: the query is forwarded to all sink elements, the result of the
  *           first sink that answers the query successfully is returned. If
  *           no sink is in the bin, the query fails.
  *
  * gst_object_unref() is used to destroy the bin.
+ *
+ * Last reviewed on 2005-10-28 (0.9.4)
  */
 
 #include "gst_private.h"
@@ -264,8 +266,8 @@ gst_bin_class_init (GstBinClass * klass)
 
   /**
    * GstBin::element-added:
-   * @bin: the object which emitted the signal.
-   * @element: the element that was added to the bin
+   * @bin: the #GstBin
+   * @element: the #GstElement that was added to the bin
    *
    * Will be emitted if a new element was removed/added to this bin.
    */
@@ -275,8 +277,8 @@ gst_bin_class_init (GstBinClass * klass)
       NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
   /**
    * GstBin::element-removed:
-   * @bin: the object which emitted the signal.
-   * @element: the element that was removed from the bin
+   * @bin: #GstBin
+   * @element: the #GstElement that was removed from the bin
    *
    * Will be emitted if an element was removed from this bin.
    */
@@ -340,11 +342,11 @@ gst_bin_init (GstBin * bin)
 
 /**
  * gst_bin_new:
- * @name: name of new bin
+ * @name: the name of the new bin
  *
- * Create a new bin with given name.
+ * Creates a new bin with the given name.
  *
- * Returns: new bin
+ * Returns: a new #GstBin
  */
 GstElement *
 gst_bin_new (const gchar * name)
@@ -695,8 +697,8 @@ had_parent:
 
 /**
  * gst_bin_add:
- * @bin: #GstBin to add element to
- * @element: #GstElement to add to bin
+ * @bin: a #GstBin
+ * @element: the #GstElement to add to the bin
  *
  * Adds the given element to the bin.  Sets the element's parent, and thus
  * takes ownership of the element. An element can only be added to one bin.
@@ -706,7 +708,7 @@ had_parent:
  *
  * MT safe.
  *
- * Returns: TRUE if the element could be added, FALSE on wrong parameters or
+ * Returns: TRUE if the element could be added, FALSE if
  * the bin does not want to accept the element.
  */
 gboolean
@@ -845,10 +847,10 @@ already_removing:
 
 /**
  * gst_bin_remove:
- * @bin: #GstBin to remove element from
- * @element: #GstElement to remove
+ * @bin: a #GstBin
+ * @element: the #GstElement to remove
  *
- * Remove the element from its associated bin, unparenting it as well.
+ * Removes the element from the bin, unparenting it as well.
  * Unparenting the element means that the element will be dereferenced,
  * so if the bin holds the only reference to the element, the element
  * will be freed in the process of removing it from the bin.  If you
@@ -860,7 +862,7 @@ already_removing:
  *
  * MT safe.
  *
- * Returns: TRUE if the element could be removed, FALSE on wrong parameters or
+ * Returns: TRUE if the element could be removed, FALSE if
  * the bin does not want to remove the element.
  */
 gboolean
@@ -902,16 +904,16 @@ iterate_child (GstIterator * it, GstElement * child)
 
 /**
  * gst_bin_iterate_elements:
- * @bin: #Gstbin to iterate the elements of
+ * @bin: a #GstBin
  *
- * Get an iterator for the elements in this bin.
- * Each element will have its refcount increased, so unref
- * after use.
+ * Gets an iterator for the elements in this bin.
  *
- * MT safe.
+ * Each element yielded by the iterator will have its refcount increased, so
+ * unref after use.
  *
- * Returns: a #GstIterator of #GstElements. gst_iterator_free after
- * use. returns NULL when passing bad parameters.
+ * MT safe.  Caller owns returned value.
+ *
+ * Returns: a #GstIterator of #GstElement, or NULL
  */
 GstIterator *
 gst_bin_iterate_elements (GstBin * bin)
@@ -951,16 +953,17 @@ iterate_child_recurse (GstIterator * it, GstElement * child)
 
 /**
  * gst_bin_iterate_recurse:
- * @bin: #Gstbin to iterate the elements of
+ * @bin: a #GstBin
  *
- * Get an iterator for the elements in this bin.
- * Each element will have its refcount increased, so unref
- * after use. This iterator recurses into GstBin children.
+ * Gets an iterator for the elements in this bin.
+ * This iterator recurses into GstBin children.
  *
- * MT safe.
+ * Each element yielded by the iterator will have its refcount increased, so
+ * unref after use.
  *
- * Returns: a #GstIterator of #GstElements. gst_iterator_free after
- * use. returns NULL when passing bad parameters.
+ * MT safe.  Caller owns returned value.
+ *
+ * Returns: a #GstIterator of #GstElement, or NULL
  */
 GstIterator *
 gst_bin_iterate_recurse (GstBin * bin)
@@ -1021,17 +1024,17 @@ sink_iterator_filter (GstElement * child, GstBin * bin)
 
 /**
  * gst_bin_iterate_sinks:
- * @bin: #Gstbin to iterate on
+ * @bin: a #GstBin
  *
- * Get an iterator for the sink elements in this bin.
- * Each element will have its refcount increased, so unref
- * after use.
+ * Gets an iterator for all elements in the bin that have the
+ * #GST_ELEMENT_IS_SINK flag set.
  *
- * The sink elements are those with the GST_ELEMENT_IS_SINK flag set.
+ * Each element yielded by the iterator will have its refcount increased, so
+ * unref after use.
  *
- * MT safe.
+ * MT safe.  Caller owns returned value.
  *
- * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
+ * Returns: a #GstIterator of #GstElement, or NULL
  */
 GstIterator *
 gst_bin_iterate_sinks (GstBin * bin)
@@ -1460,21 +1463,21 @@ gst_bin_sort_iterator_free (GstBinSortIterator * bit)
 
 /**
  * gst_bin_iterate_sorted:
- * @bin: #Gstbin to iterate on
+ * @bin: a #GstBin
  *
- * Get an iterator for the elements in this bin in topologically
+ * Gets an iterator for the elements in this bin in topologically
  * sorted order. This means that the elements are returned from
  * the most downstream elements (sinks) to the sources.
  *
  * This function is used internally to perform the state changes
  * of the bin elements.
  *
- * Each element will have its refcount increased, so unref
- * after use.
+ * Each element yielded by the iterator will have its refcount increased, so
+ * unref after use.
  *
- * MT safe.
+ * MT safe.  Caller owns returned value.
  *
- * Returns: a #GstIterator of #GstElements. gst_iterator_free after use.
+ * Returns: a #GstIterator of #GstElement, or NULL
  */
 GstIterator *
 gst_bin_iterate_sorted (GstBin * bin)
@@ -2072,17 +2075,17 @@ compare_name (GstElement * element, const gchar * name)
 
 /**
  * gst_bin_get_by_name:
- * @bin: #Gstbin to search
+ * @bin: a #GstBin
  * @name: the element name to search for
  *
- * Get the element with the given name from this bin. This
- * function recurses into subbins.
+ * Gets the element with the given name from a bin. This
+ * function recurses into child bins.
  *
- * MT safe.
+ * Returns NULL if no element with the given name is found in the bin.
  *
- * Returns: the element with the given name. Returns NULL if the
- * element is not found or when bad parameters were given. Unref after
- * use.
+ * MT safe.  Caller owns returned reference.
+ *
+ * Returns: the #GstElement with the given name, or NULL
  */
 GstElement *
 gst_bin_get_by_name (GstBin * bin, const gchar * name)
@@ -2105,16 +2108,18 @@ gst_bin_get_by_name (GstBin * bin, const gchar * name)
 
 /**
  * gst_bin_get_by_name_recurse_up:
- * @bin: #Gstbin to search
+ * @bin: a #GstBin
  * @name: the element name to search for
  *
- * MT safe.
- *
- * Get the element with the given name from this bin. If the
+ * Gets the element with the given name from this bin. If the
  * element is not found, a recursion is performed on the parent bin.
  *
- * Returns: the element with the given name or NULL when the element
- * was not found or bad parameters were given. Unref after use.
+ * Returns NULL if:
+ * - no element with the given name is found in the bin
+ *
+ * MT safe.  Caller owns returned reference.
+ *
+ * Returns: the #GstElement with the given name, or NULL
  */
 GstElement *
 gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
@@ -2159,19 +2164,18 @@ compare_interface (GstElement * element, gpointer interface)
 
 /**
  * gst_bin_get_by_interface:
- * @bin: bin to find element in
- * @interface: interface to be implemented by interface
+ * @bin: a #GstBin
+ * @interface: the #GType of an interface
  *
- * Looks for the first element inside the bin that implements the given
- * interface. If such an element is found, it returns the element. You can
- * cast this element to the given interface afterwards.
- * If you want all elements that implement the interface, use
- * gst_bin_iterate_all_by_interface(). The function recurses inside bins.
+ * Looks for an element inside the bin that implements the given
+ * interface. If such an element is found, it returns the element.
+ * You can cast this element to the given interface afterwards.  If you want
+ * all elements that implement the interface, use
+ * gst_bin_iterate_all_by_interface(). This function recurses into child bins.
  *
- * MT safe.
+ * MT safe.  Caller owns returned reference.
  *
- * Returns: An #GstElement inside the bin implementing the interface.
- *          Unref after use.
+ * Returns: A #GstElement inside the bin implementing the interface
  */
 GstElement *
 gst_bin_get_by_interface (GstBin * bin, GType interface)
@@ -2191,18 +2195,21 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
 
 /**
  * gst_bin_iterate_all_by_interface:
- * @bin: bin to find elements in
- * @interface: interface to be implemented by interface
+ * @bin: a #GstBin
+ * @interface: the #GType of an interface
  *
  * Looks for all elements inside the bin that implements the given
  * interface. You can safely cast all returned elements to the given interface.
- * The function recurses bins inside bins. The iterator will return a series
+ * The function recurses inside child bins. The iterator will yield a series
  * of #GstElement that should be unreffed after use.
  *
- * MT safe.
+ * Each element yielded by the iterator will have its refcount increased, so
+ * unref after use.
  *
- * Returns: A #GstIterator for the elements inside the bin implementing the
- *          given interface.
+ * MT safe.  Caller owns returned value.
+ *
+ * Returns: a #GstIterator of #GstElement for all elements in the bin
+ *          implementing the given interface, or NULL
  */
 GstIterator *
 gst_bin_iterate_all_by_interface (GstBin * bin, GType interface)
