@@ -287,8 +287,8 @@ G_STMT_START {						\
  * gst_buffer_copy:
  * @buf: a #GstBuffer.
  *
- * Returns a copy of the given buffer. This will also make a newly allocated
- * copy of the data the source buffer points at.
+ * Create a copy of the given buffer. This will also make a newly allocated
+ * copy of the data the source buffer contains.
  */
 #define		gst_buffer_copy(buf)		GST_BUFFER_CAST (gst_mini_object_copy (GST_MINI_OBJECT (buf)))
 /**
