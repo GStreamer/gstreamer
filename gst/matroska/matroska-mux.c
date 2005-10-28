@@ -42,7 +42,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_WRITING_APP
+  ARG_WRITING_APP,
+  ARG_MATROSKA_VERSION
       /* FILL ME */
 };
 
@@ -201,6 +202,10 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       g_param_spec_string ("writing-app", "Writing application.",
           "The name the application that creates the matroska file.",
           NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_MATROSKA_VERSION,
+      g_param_spec_int ("version", "Matroska version",
+          "This parameter determines what matroska features can be used.",
+          1, 2, 1, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_matroska_mux_change_state;
   gstelement_class->request_new_pad = gst_matroska_mux_request_new_pad;
@@ -233,6 +238,7 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
 
   /* initialize internal variables */
   mux->index = NULL;
+  mux->matroska_version = 1;
 
   /* Initialize all variables */
   gst_matroska_mux_reset (GST_ELEMENT (mux));
@@ -1000,7 +1006,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GTimeVal time = { 0, 0 };
 
   /* we start with a EBML header */
-  gst_ebml_write_header (ebml, "matroska", 1);
+  gst_ebml_write_header (ebml, "matroska", mux->matroska_version);
 
   /* start a segment */
   mux->segment_pos =
@@ -1269,6 +1275,35 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux)
   return best;
 }
 
+
+/**
+ * gst_matroska_mux_buffer_header:
+ * @track: Track context.
+ * @relative_timestamp: relative timestamp of the buffer
+ * @flags: Buffer flags.
+ *
+ * Create a buffer containing buffer header.
+ * 
+ * Returns: New buffer.
+ */
+GstBuffer *
+gst_matroska_mux_create_buffer_header (GstMatroskaTrackContext * track,
+    guint16 relative_timestamp, int flags)
+{
+  GstBuffer *hdr;
+
+  hdr = gst_buffer_new_and_alloc (4);
+  /* track num - FIXME: what if num >= 0x80 (unlikely)? */
+  GST_BUFFER_DATA (hdr)[0] = track->num | 0x80;
+  /* time relative to clustertime */
+  GST_WRITE_UINT16_BE (GST_BUFFER_DATA (hdr) + 1, relative_timestamp);
+
+  /* flags */
+  GST_BUFFER_DATA (hdr)[3] = flags;
+
+  return hdr;
+}
+
 /**
  * gst_matroska_mux_write_data:
  * @mux: #GstMatroskaMux
@@ -1284,6 +1319,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
   GstEbmlWrite *ebml = mux->ebml_write;
   GstBuffer *buf, *hdr;
   guint64 cluster, blockgroup;
+  gboolean write_duration;
+  guint16 relative_timestamp;
 
   /* which stream to write from? */
   best = gst_matroska_mux_best_pad (mux);
@@ -1379,32 +1416,52 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
     idx->track = best->track->num;
   }
 
-  /* write one blockgroup with one block with
-   * one slice (*breath*).
-   * FIXME: lacing, etc. */
-  blockgroup = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_BLOCKGROUP);
-  gst_ebml_write_buffer_header (ebml, GST_MATROSKA_ID_BLOCK,
-      GST_BUFFER_SIZE (buf) + 4);
-  hdr = gst_buffer_new_and_alloc (4);
-  /* track num - FIXME: what if num >= 0x80 (unlikely)? */
-  GST_BUFFER_DATA (hdr)[0] = best->track->num | 0x80;
-  /* time relative to clustertime */
-  *(guint16 *) & GST_BUFFER_DATA (hdr)[1] = GUINT16_TO_BE (
-      (GST_BUFFER_TIMESTAMP (buf) - mux->cluster_time) / mux->time_scale);
-  /* flags - no lacing (yet) */
-  GST_BUFFER_DATA (hdr)[3] = 0;
-  gst_ebml_write_buffer (ebml, hdr);
-  gst_ebml_write_buffer (ebml, buf);
+  /* Check if the duration differs from the default duration. */
+  write_duration = FALSE;
   if (GST_BUFFER_DURATION_IS_VALID (buf)) {
     guint64 block_duration = GST_BUFFER_DURATION (buf);
 
     if (block_duration != best->track->default_duration) {
+      write_duration = TRUE;
+    }
+  }
+
+  /* write the block, for matroska v2 use SimpleBlock if possible
+   * one slice (*breath*).
+   * FIXME: lacing, etc. */
+  relative_timestamp =
+      (GST_BUFFER_TIMESTAMP (buf) - mux->cluster_time) / mux->time_scale;
+  if (mux->matroska_version > 1 && !write_duration) {
+    int flags =
+        GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) ? 0 : 0x80;
+
+    hdr =
+        gst_matroska_mux_create_buffer_header (best->track, relative_timestamp,
+        flags);
+    gst_ebml_write_buffer_header (ebml, GST_MATROSKA_ID_SIMPLEBLOCK,
+        GST_BUFFER_SIZE (buf) + GST_BUFFER_SIZE (hdr));
+    gst_ebml_write_buffer (ebml, hdr);
+    gst_ebml_write_buffer (ebml, buf);
+
+    return gst_ebml_last_write_result (ebml);
+  } else {
+    blockgroup = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_BLOCKGROUP);
+    hdr =
+        gst_matroska_mux_create_buffer_header (best->track, relative_timestamp,
+        0);
+    gst_ebml_write_buffer_header (ebml, GST_MATROSKA_ID_BLOCK,
+        GST_BUFFER_SIZE (buf) + GST_BUFFER_SIZE (hdr));
+    gst_ebml_write_buffer (ebml, hdr);
+    gst_ebml_write_buffer (ebml, buf);
+    if (write_duration) {
+      guint64 block_duration = GST_BUFFER_DURATION (buf);
+
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_BLOCKDURATION,
           block_duration / mux->time_scale);
     }
+    gst_ebml_write_master_finish (ebml, blockgroup);
+    return gst_ebml_last_write_result (ebml);
   }
-  gst_ebml_write_master_finish (ebml, blockgroup);
-  return gst_ebml_last_write_result (ebml);
 }
 
 
@@ -1504,6 +1561,9 @@ gst_matroska_mux_set_property (GObject * object,
       g_free (mux->writing_app);
       mux->writing_app = g_strdup (g_value_get_string (value));
       break;
+    case ARG_MATROSKA_VERSION:
+      mux->matroska_version = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1522,6 +1582,9 @@ gst_matroska_mux_get_property (GObject * object,
   switch (prop_id) {
     case ARG_WRITING_APP:
       g_value_set_string (value, mux->writing_app);
+      break;
+    case ARG_MATROSKA_VERSION:
+      g_value_set_int (value, mux->matroska_version);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

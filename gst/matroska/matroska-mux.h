@@ -94,6 +94,9 @@ typedef struct _GstMatroskaMux {
   /* Application name (for the writing application header element) */
   gchar          *writing_app;
 
+  /* Matroska version. */
+  guint          matroska_version;
+
   /* state */
   GstMatroskaMuxState state;
 

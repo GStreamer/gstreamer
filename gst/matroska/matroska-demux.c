@@ -1254,9 +1254,9 @@ gst_matroska_demux_init_stream (GstMatroskaDemux * demux)
     return FALSE;
   }
   g_free (doctype);
-  if (version > 1) {
+  if (version > 2) {
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
-        ("Demuxer version (1) is too old to read stream version %d", version));
+        ("Demuxer version (2) is too old to read stream version %d", version));
     return FALSE;
   }
 
@@ -1622,6 +1622,13 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
           break;
         }
         demux->created = time;
+        break;
+      }
+
+      case GST_MATROSKA_ID_SEGMENTUID:{
+        /* TODO not yet implemented. */
+        if (!gst_ebml_read_skip (ebml))
+          res = FALSE;
         break;
       }
 
@@ -2087,8 +2094,8 @@ gst_matroska_demux_add_wvpk_header (GstMatroskaTrackContext * stream,
 }
 
 static gboolean
-gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
-    guint64 cluster_time)
+gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
+    guint64 cluster_time, gboolean is_simpleblock)
 {
   GstMatroskaTrackContext *stream = NULL;
   GstEbmlRead *ebml = GST_EBML_READ (demux);
@@ -2101,25 +2108,30 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
   guint size = 0;
   gint *lace_size = NULL;
   gint64 time = 0;
+  gint flags = 0;
 
   while (!got_error) {
-    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
-      goto error;
+    if (!is_simpleblock) {
+      if (!gst_ebml_peek_id (ebml, &demux->level_up, &id))
+        goto error;
 
-    if (demux->level_up) {
-      demux->level_up--;
-      break;
+      if (demux->level_up) {
+        demux->level_up--;
+        break;
+      }
+    } else {
+      id = GST_MATROSKA_ID_SIMPLEBLOCK;
     }
 
     switch (id) {
         /* one block inside the group. Note, block parsing is one
          * of the harder things, so this code is a bit complicated.
          * See http://www.matroska.org/ for documentation. */
+      case GST_MATROSKA_ID_SIMPLEBLOCK:
       case GST_MATROSKA_ID_BLOCK:
       {
         guint64 num;
         guint8 *data;
-        gint flags = 0;
 
         if (!gst_ebml_read_buffer (ebml, &id, &buf)) {
           got_error = TRUE;
@@ -2281,6 +2293,9 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
         break;
     }
 
+    if (is_simpleblock)
+      break;
+
     if (demux->level_up) {
       demux->level_up--;
       break;
@@ -2329,6 +2344,13 @@ gst_matroska_demux_parse_blockgroup (GstMatroskaDemux * demux,
       if (duration) {
         GST_BUFFER_DURATION (sub) = duration / laces;
         stream->pos += GST_BUFFER_DURATION (sub);
+      }
+
+      if (is_simpleblock) {
+        if (flags & 0x80)
+          GST_BUFFER_FLAG_UNSET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
+        else
+          GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
       }
 
       GST_DEBUG ("Pushing data of size %d for stream %d, time=%"
@@ -2394,10 +2416,19 @@ gst_matroska_demux_parse_cluster (GstMatroskaDemux * demux)
         if (!gst_ebml_read_master (ebml, &id)) {
           got_error = TRUE;
         } else {
-          if (!gst_matroska_demux_parse_blockgroup (demux, cluster_time))
+          if (!gst_matroska_demux_parse_blockgroup_or_simpleblock (demux,
+                  cluster_time, FALSE))
             got_error = TRUE;
         }
         break;
+
+      case GST_MATROSKA_ID_SIMPLEBLOCK:
+      {
+        if (!gst_matroska_demux_parse_blockgroup_or_simpleblock (demux,
+                cluster_time, TRUE))
+          got_error = TRUE;
+        break;
+      }
 
       default:
         GST_WARNING ("Unknown entry 0x%x in cluster data", id);
