@@ -40,8 +40,23 @@ G_BEGIN_DECLS
 typedef struct _GstMiniObject GstMiniObject;
 typedef struct _GstMiniObjectClass GstMiniObjectClass;
 
-typedef GstMiniObject * (*GstMiniObjectCopyFunction) (const GstMiniObject *);
-typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *);
+/**
+ * GstMiniObjectCopyFunction:
+ * @obj: MiniObject to copy
+ *
+ * Virtual function prototype for methods to create copies of instances.
+ *
+ * Returns: reference to cloned instance.
+ */
+typedef GstMiniObject * (*GstMiniObjectCopyFunction) (const GstMiniObject *obj);
+/**
+ * GstMiniObjectFinalizeFunction:
+ * @obj: MiniObject to finalize
+ *
+ * Virtual function prototype for methods to free ressources used by
+ * mini-objects.
+ */
+typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *obj);
 
 /**
  * GST_MINI_OBJECT_FLAGS:
@@ -98,7 +113,19 @@ typedef enum
   GST_MINI_OBJECT_FLAG_LAST = (1<<4)
 } GstMiniObjectFlags;
 
+/**
+ * GST_MINI_OBJECT_REFCOUNT:
+ * @obj: MiniObject get the refcount for.
+ *
+ * Get access to the reference count field of the mini-object.
+ */
 #define GST_MINI_OBJECT_REFCOUNT(obj)           ((GST_MINI_OBJECT_CAST(obj))->refcount)
+/**
+ * GST_MINI_OBJECT_REFCOUNT_VALUE:
+ * @obj: MiniObject get the refcount value for.
+ *
+ * Get the reference count value of the mini-object.
+ */
 #define GST_MINI_OBJECT_REFCOUNT_VALUE(obj)     (g_atomic_int_get (&(GST_MINI_OBJECT_CAST(obj))->refcount))
 
 struct _GstMiniObject {

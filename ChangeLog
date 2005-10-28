@@ -1,3 +1,13 @@
+2005-10-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	  move some macros to private sections
+	* gst/gstminiobject.c:
+	* gst/gstminiobject.h:
+	  add descriptions provided by ds and some more
+	* gst/gstpad.h:
+	  mark macro as to be removed
+
 2005-10-28  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:

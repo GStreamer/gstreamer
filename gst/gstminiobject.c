@@ -18,7 +18,15 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstminiobject
+ * @short_description: Lightweight base class for the GStreamer object hierarchy
+ *
+ * #GstMiniObject is a baseclass like #GObject, but has been stripped down of 
+ * features to be fast and small.
+ * It offers sub-classing and ref-counting in the same way as #GObject does.
+ * It has no properties and no signal-support though.
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

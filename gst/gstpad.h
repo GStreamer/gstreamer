@@ -40,11 +40,13 @@ G_BEGIN_DECLS
  */
 #define GST_TYPE_PAD			(gst_pad_get_type ())
 #define GST_IS_PAD(obj)			(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PAD))
-#define GST_IS_PAD_FAST(obj)		(G_OBJECT_TYPE(obj) == GST_TYPE_PAD) /* necessary? */
 #define GST_IS_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PAD))
 #define GST_PAD(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD, GstPad))
 #define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
 #define GST_PAD_CAST(obj)		((GstPad*)(obj))
+
+/* FIXME: remove - its unused */
+#define GST_IS_PAD_FAST(obj)		(G_OBJECT_TYPE(obj) == GST_TYPE_PAD)
 
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;
