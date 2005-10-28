@@ -2,17 +2,19 @@
 gstcolorbalance
 
 <!-- ##### SECTION Short_Description ##### -->
-interface for elements that provide color balance operations
+
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
 
 </para>
 
+
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
+
 
 <!-- ##### SECTION Stability_Level ##### -->
 

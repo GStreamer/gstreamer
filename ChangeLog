@@ -1,3 +1,25 @@
+2005-10-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/playback/gstplaybin.c: (gen_video_element):
+	  first try autovideosink, then xvimagesink, then error out
+	* po/POTFILES.in:
+	  add translatable file
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	  update translations
+
 2005-10-27  Philippe Khalaf <burger at speedy dot org> 
 
 	* gst-libs/gst/rtp/gstbasedepayload.c:

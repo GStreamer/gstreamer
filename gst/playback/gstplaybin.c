@@ -24,6 +24,8 @@
 #include <string.h>
 #include <gst/gst.h>
 
+#include <gst/gst-i18n-plugin.h>
+
 #include "gstplaybasebin.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
@@ -373,6 +375,8 @@ handoff (GstElement * identity, GstBuffer * frame, gpointer data)
  *  +----------|--------------------------------------------------+
  *           handoff
  */
+/* FIXME: this might return NULL if no videosink was found, handle
+ * this in callers */
 static GstElement *
 gen_video_element (GstPlayBin * play_bin)
 {
@@ -390,23 +394,32 @@ gen_video_element (GstPlayBin * play_bin)
     return element;
   }
 
+  if (play_bin->video_sink) {
+    sink = play_bin->video_sink;
+  } else {
+    sink = gst_element_factory_make ("autovideosink", "videosink");
+    if (sink == NULL) {
+      sink = gst_element_factory_make ("xvimagesink", "videosink");
+    }
+    /* FIXME: this warrants adding a CORE error category for missing
+     * elements/plugins */
+    if (sink == NULL) {
+      GST_ELEMENT_ERROR (play_bin, CORE, FAILED,
+          (_("Both autovideosink and xvimagesink elements are missing.")),
+          (NULL));
+      return NULL;
+    }
+  }
+  gst_object_ref (sink);
+  g_hash_table_insert (play_bin->cache, "video_sink", sink);
+
+
   element = gst_bin_new ("vbin");
   identity = gst_element_factory_make ("identity", "id");
   g_object_set (identity, "silent", TRUE, NULL);
   g_signal_connect (identity, "handoff", G_CALLBACK (handoff), play_bin);
   conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
   scale = gst_element_factory_make ("videoscale", "vscale");
-  if (play_bin->video_sink) {
-    sink = play_bin->video_sink;
-  } else {
-    sink = gst_element_factory_make ("xvimagesink", "videosink");
-    if (sink == NULL) {
-      g_warning ("could not create autovideosink element");
-    }
-  }
-  gst_object_ref (sink);
-  g_hash_table_insert (play_bin->cache, "video_sink", sink);
-
   gst_bin_add (GST_BIN (element), identity);
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), scale);
