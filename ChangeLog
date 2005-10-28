@@ -1,3 +1,14 @@
+2005-10-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_base_init),
+	(gst_sdlvideosink_class_init),
+	(gst_sdlvideosink_get_sdl_from_fourcc), (gst_sdlvideosink_setcaps),
+	(gst_sdlvideosink_show_frame):
+	* ext/sdl/sdlvideosink.h:
+	  Fix I420 output on some machines (not very nice, but should work).
+	  Add an 'sdlvideosink' debug category. Disable formats that do
+	  not work. Fix some vararg function issues.
+
 2005-10-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_finalize),

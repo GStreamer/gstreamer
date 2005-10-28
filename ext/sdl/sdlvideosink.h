@@ -49,7 +49,9 @@ typedef struct _GstSDLVideoSinkClass GstSDLVideoSinkClass;
 struct _GstSDLVideoSink {
   GstVideoSink videosink;
 
-  guint32 format;
+  guint32 format;       /* the SDL format                      */
+  guint32 fourcc;       /* our fourcc from the caps            */
+
   gint width, height;   /* the size of the incoming YUV stream */
   unsigned long xwindow_id;
   

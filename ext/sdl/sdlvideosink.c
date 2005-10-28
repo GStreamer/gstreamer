@@ -32,6 +32,21 @@
 
 #include "sdlvideosink.h"
 
+GST_DEBUG_CATEGORY_STATIC (sdlvideosink_debug);
+#define GST_CAT_DEFAULT sdlvideosink_debug
+
+/* These macros are adapted from videotestsrc.c 
+ *  and/or gst-plugins/gst/games/gstvideoimage.c */
+#define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
+#define I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
+#define I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
+
+#define I420_Y_OFFSET(w,h) (0)
+#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
+#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+
+#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+
 /* elementfactory information */
 static GstElementDetails gst_sdlvideosink_details = {
   "Video sink",
@@ -124,22 +139,26 @@ gst_sdlvideosink_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *capslist;
   gint i;
-  gulong format[6] = { GST_MAKE_FOURCC ('I', '4', '2', '0'),
+  guint32 formats[] = {
+    GST_MAKE_FOURCC ('I', '4', '2', '0'),
     GST_MAKE_FOURCC ('Y', 'V', '1', '2'),
-    GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'),
+    GST_MAKE_FOURCC ('Y', 'U', 'Y', '2')
+/*
     GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'),
     GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')
+*/
   };
 
   /* make a list of all available caps */
   capslist = gst_caps_new_empty ();
-  for (i = 0; i < 5; i++) {
+  for (i = 0; i < G_N_ELEMENTS (formats); i++) {
     gst_caps_append_structure (capslist,
         gst_structure_new ("video/x-raw-yuv",
-            "format", GST_TYPE_FOURCC, format[i],
+            "format", GST_TYPE_FOURCC, formats[i],
             "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
             "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "framerate", GST_TYPE_DOUBLE_RANGE, 1.0, 100.0, NULL));
+            "framerate", GST_TYPE_DOUBLE_RANGE, (gdouble) 1.0,
+            (gdouble) 100.0, NULL));
   }
 
   sink_template = gst_pad_template_new ("sink",
@@ -147,6 +166,9 @@ gst_sdlvideosink_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class, sink_template);
   gst_element_class_set_details (element_class, &gst_sdlvideosink_details);
+
+  GST_DEBUG_CATEGORY_INIT (sdlvideosink_debug, "sdlvideosink", 0,
+      "SDL video sink element");
 }
 
 static void
@@ -189,7 +211,7 @@ gst_sdlvideosink_class_init (GstSDLVideoSinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstvs_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_sdlvideosink_set_property;
   gobject_class->get_property = gst_sdlvideosink_get_property;
@@ -337,8 +359,9 @@ gst_sdlvideosink_get_sdl_from_fourcc (GstSDLVideoSink * sdlvideosink,
     guint32 code)
 {
   switch (code) {
+      /* Note: SDL_IYUV_OVERLAY does not always work for I420 */
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-      return SDL_IYUV_OVERLAY;
+      return SDL_YV12_OVERLAY;
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
       return SDL_YV12_OVERLAY;
     case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
@@ -544,9 +567,9 @@ gst_sdlvideosink_setcaps (GstBaseSink * bsink, GstCaps * vscapslist)
   sdlvideosink = GST_SDLVIDEOSINK (bsink);
 
   structure = gst_caps_get_structure (vscapslist, 0);
-  gst_structure_get_fourcc (structure, "format", &format);
+  gst_structure_get_fourcc (structure, "format", &sdlvideosink->fourcc);
   sdlvideosink->format =
-      gst_sdlvideosink_get_sdl_from_fourcc (sdlvideosink, format);
+      gst_sdlvideosink_get_sdl_from_fourcc (sdlvideosink, sdlvideosink->fourcc);
   gst_structure_get_int (structure, "width", &sdlvideosink->width);
   gst_structure_get_int (structure, "height", &sdlvideosink->height);
   gst_structure_get_double (structure, "framerate", &sdlvideosink->framerate);
@@ -574,21 +597,36 @@ gst_sdlvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
       !sdlvideosink->overlay || !sdlvideosink->overlay->pixels)
     goto not_init;
 
-  if (GST_BUFFER_DATA (buf) != sdlvideosink->overlay->pixels[0]) {
+  /* if (GST_BUFFER_DATA (buf) != sdlvideosink->overlay->pixels[0]) */
+  if (TRUE) {
     if (!gst_sdlvideosink_lock (sdlvideosink))
       goto cannot_lock;
 
     /* buf->yuv - FIXME: bufferpool! */
-    if (sdlvideosink->format == SDL_IYUV_OVERLAY ||
-        sdlvideosink->format == SDL_YV12_OVERLAY) {
-      memcpy (sdlvideosink->overlay->pixels[0], GST_BUFFER_DATA (buf),
+    if (sdlvideosink->format == SDL_YV12_OVERLAY) {
+      guint8 *y, *u, *v;
+
+      switch (sdlvideosink->fourcc) {
+        case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+          y = GST_BUFFER_DATA (buf);
+          /* I420 is YV12 with switched colour planes and different offsets */
+          v = y + I420_U_OFFSET (sdlvideosink->width, sdlvideosink->height);
+          u = y + I420_V_OFFSET (sdlvideosink->width, sdlvideosink->height);
+          break;
+        case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+          y = GST_BUFFER_DATA (buf);
+          u = y + sdlvideosink->width * sdlvideosink->height;
+          v = y + sdlvideosink->width * sdlvideosink->height * 5 / 4;
+          break;
+        default:
+          g_assert_not_reached ();
+      }
+
+      memcpy (sdlvideosink->overlay->pixels[0], y,
           sdlvideosink->width * sdlvideosink->height);
-      memcpy (sdlvideosink->overlay->pixels[1],
-          GST_BUFFER_DATA (buf) + sdlvideosink->width * sdlvideosink->height,
+      memcpy (sdlvideosink->overlay->pixels[1], u,
           sdlvideosink->width * sdlvideosink->height / 4);
-      memcpy (sdlvideosink->overlay->pixels[2],
-          GST_BUFFER_DATA (buf) +
-          sdlvideosink->width * sdlvideosink->height * 5 / 4,
+      memcpy (sdlvideosink->overlay->pixels[2], v,
           sdlvideosink->width * sdlvideosink->height / 4);
     } else {
       memcpy (sdlvideosink->overlay->pixels[0], GST_BUFFER_DATA (buf),
