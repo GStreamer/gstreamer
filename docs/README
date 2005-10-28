@@ -190,12 +190,16 @@ STYLE GUIDE FOR GTK-DOC
   top
 - functions that can return FALSE/NULL or fail should describe their failure
   conditions like this:
-  * Returns NULL if:
-  * - no element with the given name is found in the bin
+  * Returns NULL if no element with the given name is found in the bin, if
+  * the frobble was stuck in the froob, or the frizzle was frazzed.
 - a line with function attributes should be added before Returns:
   - can contain:
     "MT safe." - the function is verified to be multithreadingsafe
-    "Caller owns returned reference"
+    "Caller owns returned reference" for refcounted classes
+    "Caller owns returned value" for other types (iterators, ..)
+  - we do this because, in contrast with GLib/GTK, we are more explicit
+    about threadsafety and related issues
+
 - the bottom of the description should say when the doc was last reviewed
   (version and date)
    * Last reviewed on 2005-10-28 (0.9.4)
