@@ -60,6 +60,8 @@
  *
  * Note that a #GstPipeline will set its bus into flushing state when changing
  * from READY to NULL state.
+ *
+ * Last reviewed on 2005-10-28 (0.9.4)
  */
 
 #include <errno.h>
@@ -264,7 +266,7 @@ gst_bus_get_property (GObject * object, guint prop_id,
 /**
  * gst_bus_new:
  *
- * Creates a new #GstBuus instance.
+ * Creates a new #GstBus instance.
  *
  * Returns: a new #GstBus instance
  */
@@ -286,7 +288,7 @@ gst_bus_new (void)
  * Post a message on the given bus. Ownership of the message
  * is taken by the bus.
  *
- * Returns: TRUE if the message could be posted.
+ * Returns: TRUE if the message could be posted, FALSE if the bus is flushing.
  *
  * MT safe.
  */
@@ -391,7 +393,8 @@ is_flushing:
  * Check if there are pending messages on the bus that
  * should be handled.
  *
- * Returns: TRUE if there are messages on the bus to be handled.
+ * Returns: TRUE if there are messages on the bus to be handled, FALSE 
+ * otherwise.
  *
  * MT safe.
  */
@@ -771,9 +774,9 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  * poll for.
  * @timeout: the poll timeout, as a #GstClockTimeDiff, or -1 to poll indefinitely.
  *
- * Poll the bus for events. Will block while waiting for events to come. You can
- * specify a maximum time to poll with the @timeout parameter. If @timeout is
- * negative, this function will block indefinitely.
+ * Poll the bus for messages. Will block while waiting for messages to come.
+ * You can specify a maximum time to poll with the @timeout parameter. If
+ * @timeout is negative, this function will block indefinitely.
  *
  * All messages not in @events will be popped off the bus and will be ignored.
  *
@@ -825,7 +828,7 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
 /**
  * gst_bus_async_signal_func:
  * @bus: a #GstBus
- * @message: the message received
+ * @message: the #GstMessage received
  * @data: user data
  *
  * A helper GstBusFunc that can be used to convert all asynchronous messages
@@ -852,7 +855,7 @@ gst_bus_async_signal_func (GstBus * bus, GstMessage * message, gpointer data)
 /**
  * gst_bus_sync_signal_handler:
  * @bus: a #GstBus
- * @message: the message received
+ * @message: the #GstMessage received
  * @data: user data
  *
  * A helper GstBusSyncHandler that can be used to convert all synchronous

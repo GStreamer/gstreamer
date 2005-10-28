@@ -1,3 +1,7 @@
+2005-10-28  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/gstbus.c: Doc updates.
+
 2005-10-28  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:
