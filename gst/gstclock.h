@@ -44,6 +44,11 @@ G_BEGIN_DECLS
  */
 typedef guint64	GstClockTime;
 
+/**
+ * GST_TYPE_CLOCK_TIME:
+ *
+ * The GType of a GstClockTime.
+ */
 #define GST_TYPE_CLOCK_TIME G_TYPE_UINT64
 
 /**
@@ -55,14 +60,14 @@ typedef gint64 GstClockTimeDiff;
 /**
  * GstClockID:
  *
- * A detatype to hold the handle to an outstanding async clock callback
+ * A datatype to hold the handle to an outstanding async clock callback.
  */
 typedef gpointer GstClockID;
 
 /**
  * GST_CLOCK_TIME_NONE:
  *
- * Constant to define an undefined clock time
+ * Constant to define an undefined clock time.
  */
 #define GST_CLOCK_TIME_NONE		((GstClockTime) -1)
 /**
@@ -76,19 +81,19 @@ typedef gpointer GstClockID;
 /**
  * GST_SECOND:
  *
- * Constant that defines one GStreamer second
+ * Constant that defines one GStreamer second.
  */
 #define GST_SECOND  (G_USEC_PER_SEC * G_GINT64_CONSTANT (1000))
 /**
  * GST_MSECOND:
  *
- * Constant that defines one GStreamer millisecond
+ * Constant that defines one GStreamer millisecond.
  */
 #define GST_MSECOND (GST_SECOND / G_GINT64_CONSTANT (1000))
 /**
  * GST_USECOND:
  *
- * Constant that defines one GStreamer microsecond
+ * Constant that defines one GStreamer microsecond.
  */
 #define GST_USECOND (GST_SECOND / G_GINT64_CONSTANT (1000000))
 /**
@@ -155,7 +160,18 @@ G_STMT_START {						\
 } G_STMT_END
 
 /* timestamp debugging macros */
+/**
+ * GST_TIME_FORMAT:
+ *
+ * A format that can be used in printf like format strings to format
+ * a GstClockTime value.
+ */
 #define GST_TIME_FORMAT "u:%02u:%02u.%09u"
+/**
+ * GST_TIME_ARGS:
+ *
+ * Format the GstClockTime argument for the GST_TIME_FORMAT format string.
+ */
 #define GST_TIME_ARGS(t) \
         (guint) (((GstClockTime)(t)) / (GST_SECOND * 60 * 60)), \
         (guint) ((((GstClockTime)(t)) / (GST_SECOND * 60)) % 60), \
@@ -310,11 +326,45 @@ typedef enum {
  */
 #define GST_CLOCK_FLAGS(clock)  (GST_CLOCK(clock)->flags)
 
+/**
+ * GST_CLOCK_COND:
+ * @clock: the clock to query
+ *
+ * Gets the #GCond that gets signaled when the entries of the clock
+ * changed.
+ */
 #define GST_CLOCK_COND(clock)            (GST_CLOCK_CAST(clock)->entries_changed)
+/**
+ * GST_CLOCK_WAIT:
+ * @clock: the clock to wait on
+ *
+ * Wait on the clock until the entries changed.
+ */
 #define GST_CLOCK_WAIT(clock)            g_cond_wait(GST_CLOCK_COND(clock),GST_GET_LOCK(clock))
+/**
+ * GST_CLOCK_TIMED_WAIT:
+ * @clock: the clock to wait on
+ * @tv: a GTimeVal to wait.
+ *
+ * Wait on the clock until the entries changed or the specified timeout
+ * occured. 
+ */
 #define GST_CLOCK_TIMED_WAIT(clock,tv)   g_cond_timed_wait(GST_CLOCK_COND(clock),GST_GET_LOCK(clock),tv)
+/**
+ * GST_CLOCK_BROADCAST:
+ * @clock: the clock to broadcast
+ *
+ * Signal that the entries in the clock have changed.
+ */
 #define GST_CLOCK_BROADCAST(clock)       g_cond_broadcast(GST_CLOCK_COND(clock))
 
+/**
+ * GstClock:
+ * @flags: The flags specifying the capabilities of the clock.
+ *
+ * GstClock base structure. The values of this structure are
+ * protected for subclasses, use the methods to use the #GstClock.
+ */
 struct _GstClock {
   GstObject	 object;
 

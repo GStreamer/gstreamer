@@ -26,16 +26,58 @@
  * @short_description: Abstract class for global clocks
  * @see_also: #GstSystemClock
  *
- * GStreamer uses a global clock to synchronise the plugins in a pipeline.
+ * GStreamer uses a global clock to synchronize the plugins in a pipeline.
  * Different clock implementations are possible by implementing this abstract
  * base class.
  *
- * The clock time is always measured in nanoseconds and always increases. The
- * pipeline uses the clock to calculate the stream time.
- * Usually all renderers sync to the global clock using the buffer timestamps,
+ * The #GstClock returns a monotonically increasing time with the method
+ * gst_clock_get_time(). Its accuracy and base time depends on the specific clock
+ * implementation but time is always expessed in nanoseconds. Since the
+ * baseline of the clock is undefined, the clock time returned is not
+ * meaningfull in itself, what matters are the deltas between two clock
+ * times.
+ *
+ * The pipeline uses the clock to calculate the stream time.
+ * Usually all renderers synchronize to the global clock using the buffer timestamps,
  * the newsegment events and the element's base time.
  *
  * The time of the clock in itself is not very useful for an application.
+ *
+ * A clock implementation can support periodic and single shot clock notifications 
+ * both synchronous and asynchronous.
+ *
+ * One first needs to create a #GstClockID for the periodic or single shot
+ * notification using gst_clock_new_single_shot_id() or gst_clock_new_periodic_id().
+ *
+ * To perform a blocking wait for the specific time of the #GstClockID use the
+ * gst_clock_id_wait(). To receive a callback when the specific time is reached
+ * in the clock use gst_clock_id_wait_async(). Both these calls can be interrupted
+ * with the gst_clock_id_unschedule() call. If the blocking wait is unscheduled
+ * a return value of GST_CLOCK_UNSCHEDULED is returned.
+ *
+ * The async callbacks can happen from any thread, either provided by the
+ * core or from a streaming thread. The application should be prepared for this.
+ *
+ * A #GstClockID that has been unscheduled cannot be used again for any wait
+ * operation.
+ *
+ * It is possible to perform a blocking wait on the same #GstClockID from multiple
+ * threads. However, registering the same #GstClockID for multiple async notifications is
+ * not possible, the callback will only be called once.
+ *
+ * None of the wait operations unref the #GstClockID, the owner is
+ * responsible for unreffing the ids itself. This holds for both periodic and
+ * single shot notifications. The reason being that the owner of the #GstClockID
+ * has to keep a handle to the #GstClockID to unblock the wait on FLUSHING events
+ * or state changes and if we unref it automatically, the handle might be
+ * invalid.
+ *
+ * These clock operations do not operate on the stream time, so the callbacks
+ * will also occur when not in PLAYING state as if the clock just keeps on
+ * running. Some clocks however do not progress when the element that provided
+ * the clock is not PLAYING.
+ *
+ * Last reviewed on 2005-10-28 (0.9.4)
  */
 
 #include <time.h>
