@@ -1,3 +1,12 @@
+2005-10-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_class_init),
+	(gst_base_transform_init):
+	Don't leak class.
+
+	* gst/gstqueue.c: (gst_queue_handle_sink_event), (gst_queue_loop):
+	An EOS event marks the queue as completely filled.
+
 2005-10-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),

@@ -516,6 +516,7 @@ static gboolean
 gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
 {
   GstQueue *queue;
+  gboolean have_eos = FALSE;
 
   queue = GST_QUEUE (GST_OBJECT_PARENT (pad));
 
@@ -557,6 +558,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       goto done;
     case GST_EVENT_EOS:
       STATUS (queue, "received EOS");
+      have_eos = TRUE;
       break;
     default:
       if (GST_EVENT_IS_SERIALIZED (event)) {
@@ -571,6 +573,12 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
   }
 
   GST_QUEUE_MUTEX_LOCK (queue);
+  if (have_eos) {
+    /* FIXME, abusing the cur_level */
+    queue->cur_level.buffers = queue->max_size.buffers;
+    queue->cur_level.bytes = queue->max_size.bytes;
+    queue->cur_level.time = queue->max_size.time;
+  }
   g_queue_push_tail (queue->queue, event);
   g_cond_signal (queue->item_add);
   GST_QUEUE_MUTEX_UNLOCK (queue);
@@ -822,6 +830,9 @@ restart:
     }
   } else {
     if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
+      queue->cur_level.buffers = 0;
+      queue->cur_level.bytes = 0;
+      queue->cur_level.time = 0;
       /* all incomming data is now unexpected */
       queue->srcresult = GST_FLOW_UNEXPECTED;
       /* and we don't need to process anymore */
