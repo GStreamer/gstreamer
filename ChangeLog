@@ -1,3 +1,10 @@
+2005-10-28  Edward Hervey  <edward@fluendo.com>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	the GstURIType documentation page is private, it only defines GstURIType
+	which should be defined in the GstURIHandler page
+	
 2005-10-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstbin.c: (gst_bin_class_init):

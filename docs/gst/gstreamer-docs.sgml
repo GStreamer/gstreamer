@@ -48,7 +48,6 @@
 <!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
 <!ENTITY GstTypeFindFactory SYSTEM "xml/gsttypefindfactory.xml">
 <!ENTITY GstUriHandler SYSTEM "xml/gsturihandler.xml">
-<!ENTITY GstUriType SYSTEM "xml/gsturitype.xml">
 <!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
 <!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
 <!ENTITY GstVersion SYSTEM "xml/gstversion.xml">
@@ -158,7 +157,6 @@ Windows.  It is released under the GNU Library General Public License
     &GstTypeFind;
     &GstTypeFindFactory;
     &GstUriHandler;
-    &GstUriType;
     &GstUtils;
     &GstValue;
     &GstVersion;
