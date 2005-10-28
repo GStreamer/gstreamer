@@ -78,6 +78,11 @@ struct _GstJpegDec {
   /* video state */
   gdouble  fps;
 
+  /* negotiated state */
+  gdouble  caps_fps;
+  gint 	   caps_width;
+  gint 	   caps_height;
+
   struct jpeg_decompress_struct cinfo;
   struct GstJpegDecErrorMgr     jerr;
   struct GstJpegDecSourceMgr    jsrc;

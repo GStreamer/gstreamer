@@ -54,7 +54,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("image/jpeg, "
         "width = (int) [ " G_STRINGIFY (MIN_WIDTH) ", " G_STRINGIFY (MAX_WIDTH)
         " ], " "height = (int) [ " G_STRINGIFY (MIN_HEIGHT) ", "
-        G_STRINGIFY (MAX_HEIGHT) " ], " "framerate = (double) [ 1, MAX ]")
+        G_STRINGIFY (MAX_HEIGHT) " ], " "framerate = (double) [ 0, MAX ]")
     );
 
 GST_DEBUG_CATEGORY (jpeg_dec_debug);
@@ -242,10 +242,6 @@ gst_jpeg_dec_init (GstJpegDec * dec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_jpeg_dec_src_pad_template), "src");
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
-
-  dec->packetized = FALSE;
-  dec->next_ts = 0;
-  dec->fps = 1.0;
 
   /* setup jpeglib */
   memset (&dec->cinfo, 0, sizeof (dec->cinfo));
@@ -696,7 +692,6 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret;
   GstJpegDec *dec;
   GstBuffer *outbuf;
-  GstCaps *caps;
   gulong size;
   guchar *data, *outdata;
   guchar *base[3], *last[3];
@@ -704,11 +699,15 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   gint width, height;
   gint r_h, r_v;
   gint i;
+  guint code;
+  GstClockTime timestamp, duration;
 
   dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf))) {
-    dec->next_ts = GST_BUFFER_TIMESTAMP (buf);
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    dec->next_ts = timestamp;
   }
 
   if (dec->tempbuf) {
@@ -719,7 +718,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   buf = NULL;
 
   if (!gst_jpeg_dec_ensure_header (dec))
-    return GST_FLOW_OK;         /* need more data */
+    goto need_more_data;
 
   /* If we know that each input buffer contains data
    * for a whole jpeg image (e.g. MJPEG streams), just 
@@ -727,25 +726,13 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
    * the jpeg data */
   if (dec->packetized) {
     img_len = GST_BUFFER_SIZE (dec->tempbuf);
-#if 0
-    /* This does not work, e.g. avidemux adds an 
-     * extra 0 at the end of the buffer */
-    if (!gst_jpeg_dec_have_end_marker (dec)) {
-      gst_util_dump_mem (GST_BUFFER_DATA (dec->tempbuf),
-          GST_BUFFER_SIZE (dec->tempbuf));
-      GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("JPEG input without EOI marker"),
-          (NULL));
-      ret = GST_FLOW_ERROR;
-      goto done;
-    }
-#endif
   } else {
     /* Parse jpeg image to handle jpeg input that
      * is not aligned to buffer boundaries */
     img_len = gst_jpeg_dec_parse_image_data (dec);
 
     if (img_len == 0)
-      return GST_FLOW_OK;       /* need more data */
+      goto need_more_data;
   }
 
   data = (guchar *) GST_BUFFER_DATA (dec->tempbuf);
@@ -756,17 +743,13 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   dec->jsrc.pub.bytes_in_buffer = size;
 
   if (setjmp (dec->jerr.setjmp_buffer)) {
-    guint code = dec->jerr.pub.msg_code;
+    code = dec->jerr.pub.msg_code;
 
     if (code == JERR_INPUT_EOF) {
       GST_DEBUG ("jpeg input EOF error, we probably need more data");
-      return GST_FLOW_OK;
+      goto need_more_data;
     }
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        (_("Failed to decode JPEG image")),
-        ("Error #%u: %s", code, dec->jerr.pub.jpeg_message_table[code]));
-    ret = GST_FLOW_ERROR;
-    goto done;
+    goto decode_error;
   }
 
   GST_LOG_OBJECT (dec, "reading header %02x %02x %02x %02x", data[0], data[1],
@@ -796,40 +779,51 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   height = dec->cinfo.output_height;
 
   if (width < MIN_WIDTH || width > MAX_WIDTH ||
-      height < MIN_HEIGHT || height > MAX_HEIGHT) {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        ("Picture is too small or too big (%ux%u)", width, height),
-        ("Picture is too small or too big (%ux%u)", width, height));
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
+      height < MIN_HEIGHT || height > MAX_HEIGHT)
+    goto wrong_size;
 
-  caps = gst_caps_new_simple ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
-      "width", G_TYPE_INT, width,
-      "height", G_TYPE_INT, height,
-      "framerate", G_TYPE_DOUBLE, (double) dec->fps, NULL);
+  if (width != dec->caps_width || height != dec->caps_height ||
+      dec->fps != dec->caps_fps) {
+    GstCaps *caps;
 
-  GST_DEBUG_OBJECT (dec, "setting caps %" GST_PTR_FORMAT, caps);
-  GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d", dec->cinfo.max_v_samp_factor);
+    /* framerate == 0.0 is a still frame */
+    caps = gst_caps_new_simple ("video/x-raw-yuv",
+        "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        "framerate", G_TYPE_DOUBLE, (double) dec->fps, NULL);
 
-  if (gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-          I420_SIZE (width, height), caps, &outbuf) != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (dec, "failed to alloc buffer");
+    GST_DEBUG_OBJECT (dec, "setting caps %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d",
+        dec->cinfo.max_v_samp_factor);
+
+    gst_pad_set_caps (dec->srcpad, caps);
     gst_caps_unref (caps);
-    return GST_FLOW_ERROR;
+
+    dec->caps_width = width;
+    dec->caps_height = height;
+    dec->caps_fps = dec->fps;
   }
 
-  gst_caps_unref (caps);
-  caps = NULL;
+  ret = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+      I420_SIZE (width, height), GST_PAD_CAPS (dec->srcpad), &outbuf);
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
 
   outdata = GST_BUFFER_DATA (outbuf);
   GST_BUFFER_TIMESTAMP (outbuf) = dec->next_ts;
-  GST_BUFFER_DURATION (outbuf) = GST_SECOND / dec->fps;
+
+  if (dec->packetized) {
+    duration = GST_SECOND / dec->fps;
+    dec->next_ts += duration;
+  } else {
+    duration = GST_CLOCK_TIME_NONE;
+    dec->next_ts = GST_CLOCK_TIME_NONE;
+  }
+  GST_BUFFER_DURATION (outbuf) = duration;
+
   GST_LOG_OBJECT (dec, "width %d, height %d, buffer size %d, required size %d",
       width, height, GST_BUFFER_SIZE (outbuf), I420_SIZE (width, height));
-
-  dec->next_ts += GST_BUFFER_DURATION (outbuf);
 
   /* mind the swap, jpeglib outputs blue chroma first */
   base[0] = outdata + I420_Y_OFFSET (width, height);
@@ -864,9 +858,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   jpeg_finish_decompress (&dec->cinfo);
 
   GST_LOG_OBJECT (dec, "pushing buffer");
-  gst_pad_push (dec->srcpad, outbuf);
-
-  ret = GST_FLOW_OK;
+  ret = gst_pad_push (dec->srcpad, outbuf);
 
 done:
   if (GST_BUFFER_SIZE (dec->tempbuf) == img_len) {
@@ -879,8 +871,45 @@ done:
     gst_buffer_unref (dec->tempbuf);
     dec->tempbuf = buf;
   }
-
   return ret;
+
+  /* special cases */
+need_more_data:
+  {
+    GST_LOG_OBJECT (dec, "we need more data");
+    return GST_FLOW_OK;
+  }
+  /* ERRORS */
+wrong_size:
+  {
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
+        ("Picture is too small or too big (%ux%u)", width, height),
+        ("Picture is too small or too big (%ux%u)", width, height));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+decode_error:
+  {
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
+        (_("Failed to decode JPEG image")),
+        ("Error #%u: %s", code, dec->jerr.pub.jpeg_message_table[code]));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+alloc_failed:
+  {
+    const gchar *reason;
+
+    reason = gst_flow_get_name (ret);
+
+    GST_DEBUG_OBJECT (dec, "failed to alloc buffer, reason %s", reason);
+    if (GST_FLOW_IS_FATAL (ret)) {
+      GST_ELEMENT_ERROR (dec, STREAM, DECODE,
+          ("Buffer allocation failed, reason: %s", reason),
+          ("Buffer allocation failed, reason: %s", reason));
+    }
+    return ret;
+  }
 }
 
 static GstStateChangeReturn
@@ -892,10 +921,13 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
   dec = GST_JPEG_DEC (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      dec->next_ts = 0;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      dec->fps = 0.0;
+      dec->caps_fps = 0.0;
+      dec->caps_width = -1;
+      dec->caps_height = -1;
       dec->packetized = FALSE;
-      break;
+      dec->next_ts = 0;
     default:
       break;
   }

@@ -1,3 +1,10 @@
+2005-10-28  Wim Taymans  <wim@fluendo.com>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_init), (gst_jpeg_dec_chain),
+	(gst_jpeg_dec_change_state):
+	* ext/jpeg/gstjpegdec.h:
+	Cleanups. Don't create caps for every chain.
+
 2005-10-27  Edgard Lima  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* gst/law/alaw-encode.c: (gst_alawenc_init),
