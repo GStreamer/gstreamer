@@ -2147,7 +2147,7 @@ gst_element_class_install_std_props (GstElementClass * klass,
 
 /**
  * gst_buffer_merge:
- * @buf1: a first source #GstBuffer to merge.
+ * @buf1: the first source #GstBuffer to merge.
  * @buf2: the second source #GstBuffer to merge.
  *
  * Create a new buffer that is the concatenation of the two source
@@ -2158,7 +2158,7 @@ gst_element_class_install_std_props (GstElementClass * klass,
  * If the buffers point to contiguous areas of memory, the buffer
  * is created without copying the data.
  *
- * Returns: the new #GstBuffer that's the concatenation of the source buffers.
+ * Returns: the new #GstBuffer which is the concatenation of the source buffers.
  */
 GstBuffer *
 gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
@@ -2173,16 +2173,16 @@ gst_buffer_merge (GstBuffer * buf1, GstBuffer * buf2)
 
 /**
  * gst_buffer_join:
- * @buf1: a first source #GstBuffer to join.
- * @buf2: the second source #GstBuffer to join.
+ * @buf1: the first source #GstBuffer.
+ * @buf2: the second source #GstBuffer.
  *
  * Create a new buffer that is the concatenation of the two source
- * buffers, and takes ownership of the original source buffers.
+ * buffers, and unrefs the original source buffers.
  *
  * If the buffers point to contiguous areas of memory, the buffer
  * is created without copying the data.
  *
- * Returns: the new #GstBuffer that's the concatenation of the source buffers.
+ * Returns: the new #GstBuffer which is the concatenation of the source buffers.
  */
 GstBuffer *
 gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
@@ -2202,8 +2202,8 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
  * @dest: buffer to stamp
  * @src: buffer to stamp from
  *
- * Copies additional information (timestamps and offsets) from one buffer to
- * the other.
+ * Copies additional information (the timestamp, duration, and offset start 
+ * and end) from one buffer to the other.
  */
 void
 gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)

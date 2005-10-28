@@ -29,7 +29,7 @@
  * provides all the state necessary to define a region of memory as part of a
  * stream.  Sub-buffers are also supported, allowing a smaller region of a
  * buffer to become its own buffer, with mechanisms in place to ensure that
- * neither memory space goes away.
+ * neither memory space goes away prematurely.
  *
  * Buffers are usually created with gst_buffer_new(). After a buffer has been
  * created one will typically allocate memory for it and set the size of the
@@ -61,6 +61,20 @@
  * in the buffer. Attach caps to the buffer with gst_buffer_set_caps(); this
  * is typically done before pushing out a buffer using gst_pad_push() so that
  * the downstream element knows the type of the buffer.
+ * 
+ * A buffer will usually have a timestamp, and a duration, but neither of these
+ * are guaranteed (they may be set to GST_CLOCK_TIME_NONE). Whenever a 
+ * meaningful value can be given for these, they should be set. The timestamp 
+ * and duration are measured in nanoseconds (they are #GstClockTime values). 
+ * 
+ * A buffer can also have one or both of a start and an end offset. These are
+ * media-type specific. For video buffers, the start offset will generally be
+ * the frame number. For audio buffers, it will be the number of samples 
+ * produced so far. For compressed data, it could be the byte offset in a 
+ * source or destination file. Likewise, the end offset will be the offset of
+ * the end of the buffer. These can only be meaningfully interpreted if you
+ * know the media type of the buffer (the #GstCaps set on it). Either or both
+ * can be set to GST_BUFFER_OFFSET_NONE.
  *
  * gst_buffer_ref() is used to increase the refcount of a buffer. This must be
  * done when you want to keep a handle to the buffer after pushing it to the
@@ -75,7 +89,7 @@
  *
  * Several flags of the buffer can be set and unset with the
  * GST_BUFFER_FLAG_SET() and GST_BUFFER_FLAG_UNSET() macros. Use
- * GST_BUFFER_FLAG_IS_SET() to test it a certain #GstBufferFlag is set.
+ * GST_BUFFER_FLAG_IS_SET() to test if a certain #GstBufferFlag is set.
  *
  * Buffers can be efficiently merged into a larger buffer with
  * gst_buffer_merge() and gst_buffer_span() if the gst_buffer_is_span_fast()
@@ -84,10 +98,11 @@
  * An element should either unref the buffer or push it out on a src pad
  * using gst_pad_push() (see #GstPad).
  *
- * Buffers usually are freed by unreffing them with gst_buffer_unref(). When
- * the refcount drops to 0, the buffer memory will be freed again.
+ * Buffers are usually freed by unreffing them with gst_buffer_unref(). When
+ * the refcount drops to 0, any data pointed to by GST_BUFFER_MALLOCDATA() will
+ * also be freed.
  *
- * Last reviewed on September 24th, 2005 (0.9.0)
+ * Last reviewed on October 28th, 2005 (0.9.4)
  */
 #include "gst_private.h"
 
@@ -228,9 +243,8 @@ gst_buffer_init (GTypeInstance * instance, gpointer g_class)
  *
  * Creates a newly allocated buffer without any data.
  *
- * Returns: the new #GstBuffer.
- *
  * MT safe.
+ * Returns: the new #GstBuffer.
  */
 GstBuffer *
 gst_buffer_new (void)
@@ -250,9 +264,8 @@ gst_buffer_new (void)
  *
  * Creates a newly allocated buffer with data of the given size.
  *
- * Returns: the new #GstBuffer.
- *
  * MT safe.
+ * Returns: the new #GstBuffer.
  */
 GstBuffer *
 gst_buffer_new_and_alloc (guint size)
@@ -272,14 +285,13 @@ gst_buffer_new_and_alloc (guint size)
 
 /**
  * gst_buffer_get_caps:
- * @buffer: a #GstBuffer to get the caps of.
+ * @buffer: a #GstBuffer.
  *
  * Gets the media type of the buffer. This can be NULL if there
- * is not media type attached to this buffer or when the media
- * type is the same as the previous received buffer.
+ * is no media type attached to this buffer.
  *
- * Returns: a reference to the #GstCaps, or NULL if there were no caps on this
- * buffer.
+ * Returns: a reference to the #GstCaps.
+ * Returns NULL if there were no caps on this buffer.
  */
 /* FIXME can we make this threadsafe without a lock on the buffer?
  * We can use compare and swap and atomic reads. */
@@ -300,10 +312,10 @@ gst_buffer_get_caps (GstBuffer * buffer)
 
 /**
  * gst_buffer_set_caps:
- * @buffer: a #GstBuffer to set the caps of.
- * @caps: a #GstCaps to set.
+ * @buffer: a #GstBuffer.
+ * @caps: a #GstCaps.
  *
- * Sets the media type on the buffer. The caps' refcount will
+ * Sets the media type on the buffer. The refcount of the caps will
  * be increased and any previous caps on the buffer will be
  * unreffed.
  */
@@ -318,7 +330,6 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), caps);
 }
-
 
 typedef struct _GstSubBuffer GstSubBuffer;
 typedef struct _GstSubBufferClass GstSubBufferClass;
@@ -398,19 +409,20 @@ gst_subbuffer_init (GTypeInstance * instance, gpointer g_class)
 
 /**
  * gst_buffer_create_sub:
- * @parent: a parent #GstBuffer to create a subbuffer from.
- * @offset: the offset into parent #GstBuffer.
- * @size: the size of the new #GstBuffer sub-buffer (with size > 0).
+ * @parent: a #GstBuffer.
+ * @offset: the offset into parent #GstBuffer at which the new sub-buffer 
+ *          begins.
+ * @size: the size of the new #GstBuffer sub-buffer, in bytes (with size > 0).
  *
  * Creates a sub-buffer from the parent at a given offset.
  * This sub-buffer uses the actual memory space of the parent buffer.
- * This function will copy the offset and timestamp field when the
- * offset is 0, else they are set to _NONE.
- * The duration field of the new buffer are set to GST_CLOCK_TIME_NONE.
- *
- * Returns: the new #GstBuffer, or NULL if there was an error.
+ * This function will copy the offset and timestamp fields when the
+ * offset is 0, else they are set to GST_CLOCK_TIME_NONE/GST_BUFFER_OFFSET_NONE.
+ * The duration field of the new buffer is set to GST_CLOCK_TIME_NONE.
  *
  * MT safe.
+ * Returns: the new #GstBuffer.
+ * Returns NULL if the arguments were invalid.
  */
 GstBuffer *
 gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
@@ -462,16 +474,16 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
 
 /**
  * gst_buffer_is_span_fast:
- * @buf1: a first source #GstBuffer.
- * @buf2: the second source #GstBuffer.
+ * @buf1: the first #GstBuffer.
+ * @buf2: the second #GstBuffer.
  *
  * Determines whether a gst_buffer_span() can be done without copying
- * the contents, that is, whether the data areas are contiguous.
- *
- * Returns: TRUE if the buffers are contiguous,
- * FALSE if a copy would be required.
+ * the contents, that is, whether the data areas are contiguous sub-buffers of 
+ * the same buffer.
  *
  * MT safe.
+ * Returns: TRUE if the buffers are contiguous,
+ * FALSE if a copy would be required.
  */
 gboolean
 gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
@@ -489,7 +501,7 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
 
 /**
  * gst_buffer_span:
- * @buf1: a first source #GstBuffer to merge.
+ * @buf1: the first source #GstBuffer to merge.
  * @offset: the offset in the first buffer from where the new
  * buffer should start.
  * @buf2: the second source #GstBuffer to merge.
@@ -505,9 +517,9 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
  * parent, and thus no copying is necessary. you can use
  * gst_buffer_is_span_fast() to determine if a memcpy will be needed.
  *
- * Returns: the new #GstBuffer that spans the two source buffers.
- *
  * MT safe.
+ * Returns: the new #GstBuffer that spans the two source buffers.
+ * Returns NULL if the arguments are invalid.
  */
 GstBuffer *
 gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
@@ -516,8 +528,8 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
   GstBuffer *newbuf;
 
   g_return_val_if_fail (buf1 != NULL && buf2 != NULL, NULL);
-  g_return_val_if_fail (buf1->mini_object.refcount > 0, FALSE);
-  g_return_val_if_fail (buf2->mini_object.refcount > 0, FALSE);
+  g_return_val_if_fail (buf1->mini_object.refcount > 0, NULL);
+  g_return_val_if_fail (buf2->mini_object.refcount > 0, NULL);
   g_return_val_if_fail (len > 0, NULL);
   g_return_val_if_fail (len <= buf1->size + buf2->size - offset, NULL);
 
