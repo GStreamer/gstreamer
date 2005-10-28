@@ -178,6 +178,28 @@ GTK-DOC NOTES
   - Warning: multiple "IDs" for constraint linkend: gst-tag-register.
     - check if gst_tag_register is listed more than once in -sections.txt
 
+STYLE GUIDE FOR GTK-DOC
+=======================
+- this is in addition to gtk-doc's style-guide.txt
+
+- when documenting signals, use "the #Gst..." for the object receiving the
+  signal; no trailing dot, and no "that received the signal"
+- function/macro descriptions are descriptive, not imperative
+  ie, it uses the third person verb
+- synopsis and description should have most-used/application functions at the
+  top
+- functions that can return FALSE/NULL or fail should describe their failure
+  conditions like this:
+  * Returns NULL if:
+  * - no element with the given name is found in the bin
+- a line with function attributes should be added before Returns:
+  - can contain:
+    "MT safe." - the function is verified to be multithreadingsafe
+    "Caller owns returned reference"
+- the bottom of the description should say when the doc was last reviewed
+  (version and date)
+   * Last reviewed on 2005-10-28 (0.9.4)
+
 WEBSITE DOCUMENTATION
 =====================
 
