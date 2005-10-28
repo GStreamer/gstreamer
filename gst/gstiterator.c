@@ -30,6 +30,32 @@
  *
  * Various GStreamer objects provide access to their internal structures using
  * an iterator.
+ *
+ * The basic use pattern of an iterator is as follows:
+ *
+ * <example>
+ * <title>Using an iterator</title>
+ *   <programlisting>
+ *    it = _get_iterator(object);
+ *    done = FALSE;
+ *    while (!done) {
+ *      switch (gst_iterator_next (it, &amp;item)) {
+ *        case GST_ITERATOR_OK:
+ *          ... use/change item here...
+ *          gst_object_unref (item);
+ *          break;
+ *        case GST_ITERATOR_RESYNC:
+ *          ...rollback changes to items...
+ *          gst_iterator_resync (it);
+ *          break;
+ *        case GST_ITERATOR_DONE:
+ *          done = TRUE;
+ *          break;
+ *      }
+ *    }
+ *    gst_iterator_free (it);
+ *   </programlisting>
+ * </example>
  */
 
 #include "gst_private.h"
@@ -464,7 +490,7 @@ gst_iterator_fold (GstIterator * iter, GstIteratorFoldFunction func,
     result = gst_iterator_next (iter, &item);
     switch (result) {
       case GST_ITERATOR_OK:
-        /* fixme: is there a way to ref/unref items? */
+        /* FIXME: is there a way to ref/unref items? */
         if (!func (item, ret, user_data))
           goto fold_done;
         else
@@ -548,6 +574,9 @@ find_custom_fold_func (gpointer item, GValue * ret, FindCustomFoldData * data)
  *
  * The iterator will not be freed.
  *
+ * This function will return NULL if an error or resync happened to
+ * the iterator.
+ *
  * Returns: The element in the iterator that matches the compare
  * function or NULL when no element matched.
  *
@@ -565,6 +594,8 @@ gst_iterator_find_custom (GstIterator * iter, GCompareFunc func,
   data.func = func;
   data.user_data = user_data;
 
+  /* FIXME, we totally ignore RESYNC and return NULL so that the
+   * app does not know if the element was not found or a resync happened */
   res =
       gst_iterator_fold (iter, (GstIteratorFoldFunction) find_custom_fold_func,
       &ret, &data);

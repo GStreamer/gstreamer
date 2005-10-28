@@ -20,6 +20,8 @@
   in the sinks. This sample should be discarded, possibly with a flush event
   started from the source.
 
+- convert framerate to GstFraction in GstCaps.
+
 - implement latency calculation for live sources.
 
 - implement master/slave clocks.

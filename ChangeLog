@@ -1,5 +1,15 @@
 2005-10-28  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-TODO.txt:
+	Add an item to TODO.
+
+	* gst/gstiterator.c: (gst_iterator_fold),
+	(gst_iterator_find_custom):
+	* gst/gstiterator.h:
+	Add iterator docs.
+
+2005-10-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasetransform.c: (gst_base_transform_class_init),
 	(gst_base_transform_init):
 	Don't leak class.
