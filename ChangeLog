@@ -1,3 +1,11 @@
+2005-10-28  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	* gst/gstiterator.c:
+	* gst/gstsystemclock.c:
+	* gst/gstsystemclock.h:
+	Doc updates.
+
 2005-10-28  Edward Hervey  <edward@fluendo.com>
 
 	* docs/gst/gstreamer-docs.sgml:

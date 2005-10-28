@@ -34,3 +34,9 @@
   or chain to the parent.
 
 - make it possible to seek on other formats than bytes in basesrc.
+
+- GstFormat quarks, get_name. 
+
+- GstQuery quark, get_name.
+
+- GstEvent, GstMessage register like GstFormat or GstQuery.

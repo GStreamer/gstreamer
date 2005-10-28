@@ -25,7 +25,17 @@
  * @short_description: Default clock that uses the current system time
  * @see_also: #GstClock
  *
- * The System clock is an implementation of GstClock using the system time.
+ * The GStreamer core provides a GstSystemClock based on the system time.
+ * Asynchronous callbacks are scheduled from an internal thread.
+ *
+ * Clock implementors are encouraged to subclass this systemclock as it
+ * implements the async notification.
+ *
+ * Subclasses can however override all of the important methods for sync and
+ * async notifications to implement their own callback methods or blocking
+ * wait operations.
+ *
+ * Last reviewed on 2005-10-28 (0.9.4)
  */
 
 #include "gst_private.h"

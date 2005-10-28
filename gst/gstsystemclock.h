@@ -40,6 +40,12 @@ G_BEGIN_DECLS
 typedef struct _GstSystemClock GstSystemClock;
 typedef struct _GstSystemClockClass GstSystemClockClass;
 
+/**
+ * GstSystemClock:
+ * @clock: The parent clock
+ *
+ * The default implementation of a #GstClock that uses the system time.
+ */
 struct _GstSystemClock {
   GstClock 	 clock;
 
