@@ -1,3 +1,10 @@
+2005-10-28  Edgard Lima <edgard.lima@cin.ufpe.br>
+
+	* ext/speex/gstspeexenc.c: (gst_speexenc_chain), 
+	(gst_speexenc_push_buffer):
+	Add checks for return values from gst_pad_push and
+	gst_pad_alloc_buffer.
+
 2005-10-28  Michal Benes  <michal dot benes at xeris dot cz>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

@@ -813,17 +813,15 @@ gst_speexenc_buffer_from_data (GstSpeexEnc * speexenc, guchar * data,
   return outbuf;
 }
 
+
 /* push out the buffer and do internal bookkeeping */
-static void
+static GstFlowReturn
 gst_speexenc_push_buffer (GstSpeexEnc * speexenc, GstBuffer * buffer)
 {
   speexenc->bytes_out += GST_BUFFER_SIZE (buffer);
 
-  if (GST_PAD_IS_USABLE (speexenc->srcpad)) {
-    gst_pad_push (speexenc->srcpad, buffer);
-  } else {
-    gst_buffer_unref (buffer);
-  }
+  return gst_pad_push (speexenc->srcpad, buffer);
+
 }
 
 static GstCaps *
@@ -890,18 +888,21 @@ gst_speexenc_sinkevent (GstPad * pad, GstEvent * event)
   return res;
 }
 
+
 static GstFlowReturn
 gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstSpeexEnc *speexenc;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  speexenc = GST_SPEEXENC (GST_PAD_PARENT (pad));
+  speexenc = GST_SPEEXENC (gst_pad_get_parent (pad));
 
   if (!speexenc->setup) {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (speexenc, CORE, NEGOTIATION, (NULL),
         ("encoder not initialized (input is not audio?)"));
-    return GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_UNEXPECTED;
+    goto error;
   }
 
   if (!speexenc->header_sent) {
@@ -939,8 +940,15 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_set_caps (buf2, caps);
 
     /* push out buffers */
-    gst_speexenc_push_buffer (speexenc, buf1);
-    gst_speexenc_push_buffer (speexenc, buf2);
+    if (GST_FLOW_OK != (ret = gst_speexenc_push_buffer (speexenc, buf1))) {
+      gst_buffer_unref (buf1);
+      goto error;
+    }
+
+    if (GST_FLOW_OK != (ret = gst_speexenc_push_buffer (speexenc, buf2))) {
+      gst_buffer_unref (buf2);
+      goto error;
+    }
 
     speex_bits_init (&speexenc->bits);
     speex_bits_reset (&speexenc->bits);
@@ -983,9 +991,13 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
       speex_bits_insert_terminator (&speexenc->bits);
       outsize = speex_bits_nbytes (&speexenc->bits);
 
-      gst_pad_alloc_buffer (speexenc->srcpad,
+      ret = gst_pad_alloc_buffer (speexenc->srcpad,
           GST_BUFFER_OFFSET_NONE, outsize, GST_PAD_CAPS (speexenc->srcpad),
           &outbuf);
+
+      if (GST_FLOW_OK != ret) {
+        goto error;
+      }
 
       written = speex_bits_write (&speexenc->bits,
           (gchar *) GST_BUFFER_DATA (outbuf), outsize);
@@ -1000,12 +1012,20 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
       GST_BUFFER_OFFSET_END (outbuf) =
           speexenc->frameno * frame_size - speexenc->lookahead;
 
-      gst_speexenc_push_buffer (speexenc, outbuf);
+      if (GST_FLOW_OK != (ret = gst_speexenc_push_buffer (speexenc, outbuf))) {
+        printf ("ret = %d\n", ret);
+        // gst_buffer_unref(outbuf);
+        //      goto error;
+      }
     }
   }
 
-  return GST_FLOW_OK;
+error:
+
+  gst_object_unref (speexenc);
+  return ret;
 }
+
 
 static void
 gst_speexenc_get_property (GObject * object, guint prop_id, GValue * value,
