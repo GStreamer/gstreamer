@@ -726,6 +726,21 @@ gst_ogg_demux_queue_data (GstOggPad * pad, ogg_packet * packet)
   return GST_FLOW_OK;
 }
 
+static gboolean
+gst_ogg_pad_query_convert (GstOggPad * ogg_pad, GstFormat from_format,
+    gint64 from_value, GstFormat * to_format, gint64 * to_value)
+{
+  if (from_value == -1) {
+    *to_value = -1;
+    return TRUE;
+  }
+
+  g_return_val_if_fail (ogg_pad->elem_pad != NULL, FALSE);
+
+  return gst_pad_query_convert (ogg_pad->elem_pad,
+      from_format, from_value, to_format, to_value);
+}
+
 /* send packet to internal element */
 static GstFlowReturn
 gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
@@ -755,7 +770,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
 
       ogg->current_granule = packet->granulepos;
       format = GST_FORMAT_TIME;
-      if (!gst_pad_query_convert (pad->elem_pad,
+      if (!gst_ogg_pad_query_convert (pad,
               GST_FORMAT_DEFAULT, packet->granulepos, &format,
               (gint64 *) & ogg->current_time)) {
         g_warning ("could not convert granulepos to time");
@@ -1564,7 +1579,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, gboolean accurate,
           continue;
 
         format = GST_FORMAT_TIME;
-        if (!gst_pad_query_convert (pad->elem_pad,
+        if (!gst_ogg_pad_query_convert (pad,
                 GST_FORMAT_DEFAULT, granulepos, &format,
                 (gint64 *) & granuletime)) {
           g_warning ("could not convert granulepos to time");
@@ -1823,7 +1838,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
     GstFormat target;
 
     target = GST_FORMAT_TIME;
-    if (!gst_pad_query_convert (pad->elem_pad,
+    if (!gst_ogg_pad_query_convert (pad,
             GST_FORMAT_DEFAULT, pad->first_granule, &target,
             (gint64 *) & pad->first_time)) {
       g_warning ("could not convert granule to time");
@@ -1887,7 +1902,7 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
     GstFormat target;
 
     target = GST_FORMAT_TIME;
-    if (!gst_pad_query_convert (pad->elem_pad,
+    if (!gst_ogg_pad_query_convert (pad,
             GST_FORMAT_DEFAULT, pad->last_granule, &target,
             (gint64 *) & pad->last_time)) {
       g_warning ("could not convert granule to time");
