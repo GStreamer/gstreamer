@@ -71,8 +71,6 @@ struct _GstBaseRTPDepayload
   /* this value can be modified by the child if needed */
   guint queue_delay;
 
-  gboolean process_only;
-
   /* we will queue up to RTP_QUEUEDELAY ms of packets,
    * reordering them if necessary
    * dropping any packets that are more than

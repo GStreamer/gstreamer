@@ -1,6 +1,21 @@
 2005-10-31  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_class_init), (gst_base_rtp_depayload_init),
+	(gst_base_rtp_depayload_chain),
+	(gst_base_rtp_depayload_add_to_queue),
+	(gst_base_rtp_depayload_push),
+	(gst_base_rtp_depayload_set_gst_timestamp),
+	(gst_base_rtp_depayload_queue_release),
+	(gst_base_rtp_depayload_start_thread),
+	(gst_base_rtp_depayload_set_property),
+	(gst_base_rtp_depayload_get_property):
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	Some random fixes, to fullfill the desires of thomas.
+
+2005-10-31  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
 	(gst_base_rtp_depayload_add_to_queue),
 	(gst_base_rtp_depayload_push):
 	Fixed the queueing algorithm.

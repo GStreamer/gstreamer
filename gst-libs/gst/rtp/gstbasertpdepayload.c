@@ -32,7 +32,6 @@ enum
 enum
 {
   ARG_0,
-  ARG_PROCESS_ONLY,
   ARG_QUEUE_DELAY,
 };
 
@@ -113,10 +112,6 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
       g_param_spec_uint ("queue_delay", "Queue Delay",
           "Amount of ms to queue/buffer", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class, ARG_PROCESS_ONLY,
-      g_param_spec_boolean ("process_only", "Process Only",
-          "Directly send packets to processing", FALSE, G_PARAM_READWRITE));
-
   gobject_class->finalize = gst_base_rtp_depayload_finalize;
 
   gstelement_class->change_state = gst_base_rtp_depayload_change_state;
@@ -133,7 +128,7 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter, gpointer g_class)
 {
   GstPadTemplate *pad_template;
 
-  GST_DEBUG ("gst_base_rtp_depayload_init");
+  GST_DEBUG_OBJECT (filter, "init");
 
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
@@ -197,8 +192,8 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
 
   bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
-  if (filter->process_only) {
-    GST_DEBUG ("Pushing directly!");
+  if (filter->queue_delay == 0) {
+    GST_DEBUG_OBJECT (filter, "Pushing directly!");
     gst_base_rtp_depayload_push (filter, in);
   } else {
     if (bclass->add_to_queue)
@@ -247,7 +242,8 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
 
     timestamp = gst_rtpbuffer_get_timestamp (in);
 
-    GST_DEBUG ("Packet added to queue %d at pos %d timestamp %u sn %d",
+    GST_DEBUG_OBJECT (filter,
+        "Packet added to queue %d at pos %d timestamp %u sn %d",
         g_queue_get_length (queue), i, timestamp, seqnum);
   }
   return GST_FLOW_OK;
@@ -278,11 +274,11 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * rtp_buf)
     bclass->set_gst_timestamp (filter, gst_rtpbuffer_get_timestamp (rtp_buf),
         out_buf);
     /* push it */
-    GST_DEBUG ("Pushing buffer size %d, timestamp %u",
+    GST_DEBUG_OBJECT (filter, "Pushing buffer size %d, timestamp %u",
         GST_BUFFER_SIZE (out_buf), GST_BUFFER_TIMESTAMP (out_buf));
     gst_pad_push (filter->srcpad, GST_BUFFER (out_buf));
     gst_buffer_unref (rtp_buf);
-    GST_DEBUG ("Pushed buffer");
+    GST_DEBUG_OBJECT (filter, "Pushed buffer");
   }
 }
 
@@ -297,11 +293,11 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
   /* rtp timestamps are based on the clock_rate
    * gst timesamps are in nanoseconds
    */
-  GST_DEBUG ("calculating ts : timestamp : %u, clockrate : %u", timestamp,
-      filter->clock_rate);
+  GST_DEBUG_OBJECT (filter, "calculating ts : timestamp : %u, clockrate : %u",
+      timestamp, filter->clock_rate);
 
   GST_BUFFER_TIMESTAMP (buf) = ts;
-  GST_DEBUG ("calculated ts %"
+  GST_DEBUG_OBJECT (filter, "calculated ts %"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   /* if this is the first buf send a discont */
@@ -312,7 +308,7 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
 
     gst_pad_push_event (filter->srcpad, event);
     first = FALSE;
-    GST_DEBUG ("Pushed discont on this first buffer");
+    GST_DEBUG_OBJECT (filter, "Pushed discont on this first buffer");
   }
   /* add delay to timestamp */
   GST_BUFFER_TIMESTAMP (buf) =
@@ -332,7 +328,7 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
   /* if our queue is getting to big (more than RTP_QUEUEDELAY ms of data)
    * release heading buffers
    */
-  GST_DEBUG ("clockrate %d, queu_delay %d", filter->clock_rate,
+  GST_DEBUG_OBJECT (filter, "clockrate %d, queu_delay %d", filter->clock_rate,
       filter->queue_delay);
   gfloat q_size_secs = (gfloat) filter->queue_delay / 1000;
   guint maxtsunits = (gfloat) filter->clock_rate * q_size_secs;
@@ -345,7 +341,7 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
 
   /*GST_DEBUG("maxtsunit is %u %u %u %u", maxtsunits, headts, tailts, headts - tailts); */
   while (headts - tailts > maxtsunits) {
-    GST_DEBUG ("Poping packet from queue");
+    GST_DEBUG_OBJECT (filter, "Poping packet from queue");
     if (bclass->process) {
       GstBuffer *in = g_queue_pop_tail (queue);
 
@@ -372,11 +368,11 @@ gst_base_rtp_depayload_thread (GstBaseRTPDepayload * filter)
 static gboolean
 gst_base_rtp_depayload_start_thread (GstBaseRTPDepayload * filter)
 {
-  GST_DEBUG ("Starting queue release thread");
+  GST_DEBUG_OBJECT (filter, "Starting queue release thread");
   filter->thread_running = TRUE;
   filter->thread = g_thread_create ((GThreadFunc) gst_base_rtp_depayload_thread,
       filter, TRUE, NULL);
-  GST_DEBUG ("Started queue release thread");
+  GST_DEBUG_OBJECT (filter, "Started queue release thread");
   return TRUE;
 }
 
@@ -454,9 +450,6 @@ gst_base_rtp_depayload_set_property (GObject * object, guint prop_id,
     case ARG_QUEUE_DELAY:
       filter->queue_delay = g_value_get_uint (value);
       break;
-    case ARG_PROCESS_ONLY:
-      filter->process_only = g_value_get_boolean (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -475,9 +468,6 @@ gst_base_rtp_depayload_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_QUEUE_DELAY:
       g_value_set_uint (value, filter->queue_delay);
-      break;
-    case ARG_PROCESS_ONLY:
-      g_value_set_boolean (value, filter->process_only);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
