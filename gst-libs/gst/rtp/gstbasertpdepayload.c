@@ -226,18 +226,18 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
     seqnum = gst_rtpbuffer_get_seq (in);
     queueseq = gst_rtpbuffer_get_seq (GST_BUFFER (g_queue_peek_head (queue)));
 
-    /* not our first packet
-     * let us make sure it is not very late */
-    if (seqnum < queueseq)
-      goto too_late;
-
     /* look for right place to insert it */
     int i = 0;
 
-    while (seqnum < queueseq) {
+    while (seqnum > queueseq) {
+      gpointer data;
+
       i++;
-      queueseq =
-          gst_rtpbuffer_get_seq (GST_BUFFER (g_queue_peek_nth (queue, i)));
+      data = g_queue_peek_nth (queue, i);
+      if (!data)
+        break;
+
+      queueseq = gst_rtpbuffer_get_seq (GST_BUFFER (data));
     }
 
     /* now insert it at that place */
@@ -251,14 +251,6 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
         g_queue_get_length (queue), i, timestamp, seqnum);
   }
   return GST_FLOW_OK;
-
-too_late:
-  {
-    QUEUE_UNLOCK (filter);
-    /* we need to drop this one */
-    GST_DEBUG ("Packet arrived to late, dropping");
-    return GST_FLOW_OK;
-  }
 }
 
 static void

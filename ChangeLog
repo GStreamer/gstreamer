@@ -1,6 +1,13 @@
 2005-10-31  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_add_to_queue),
+	(gst_base_rtp_depayload_push):
+	Fixed the queueing algorithm.
+
+2005-10-31  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
 	(gst_base_rtp_depayload_push):
 	A small fix
 
