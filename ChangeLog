@@ -1,5 +1,11 @@
 2005-10-31  Edgard Lima <edgard.lima@indt.org.br>
 
+	* gst/auparse/gstauparse.c: gst_auparse_init, gst_auparse_chain,
+	gst_auparse_change_state:
+	Just some cleanup.
+
+2005-10-31  Edgard Lima <edgard.lima@indt.org.br>
+
 	* ext/speex/gstspeexenc.c: (gst_speexenc_chain)
 	Add checks to GST_FLOW_NOT_LINKED for values returned
 	from gst_pad_push.

@@ -146,13 +146,10 @@ gst_auparse_init (GstAuParse * auparse)
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
   gst_pad_set_chain_function (auparse->sinkpad, gst_auparse_chain);
 
-  auparse->srcpad = NULL;
-#if 0                           /* FIXME: spider */
-  gst_pad_new_from_template (gst_static_pad_template_get
+  auparse->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_auparse_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
   gst_pad_use_fixed_caps (auparse->srcpad);
-#endif
+  gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
 
   auparse->offset = 0;
   auparse->size = 0;
@@ -173,10 +170,6 @@ gst_auparse_chain (GstPad * pad, GstBuffer * buf)
   gchar layout[7];
 
   layout[0] = 0;
-
-  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
   auparse = GST_AUPARSE (gst_pad_get_parent (pad));
 
@@ -226,6 +219,8 @@ gst_auparse_chain (GstPad * pad, GstBuffer * buf)
 
     } else {
       GST_ELEMENT_ERROR (auparse, STREAM, WRONG_TYPE, (NULL), (NULL));
+      gst_buffer_unref (buf);
+      g_object_unref (auparse);
       return GST_FLOW_ERROR;
     }
 
@@ -311,17 +306,10 @@ Samples :
 
       default:
         GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL), (NULL));
+        gst_buffer_unref (buf);
+        g_object_unref (auparse);
         return GST_FLOW_ERROR;
     }
-
-    auparse->srcpad =
-        gst_pad_new_from_template (gst_static_pad_template_get
-        (&gst_auparse_src_template), "src");
-
-    g_return_val_if_fail (auparse->srcpad != NULL, GST_FLOW_ERROR);
-
-
-    gst_pad_use_fixed_caps (auparse->srcpad);
 
     if (law) {
       tempcaps =
@@ -348,15 +336,14 @@ Samples :
           NULL);
     }
 
-    gst_pad_use_fixed_caps (auparse->srcpad);
     gst_pad_set_active (auparse->srcpad, TRUE);
     gst_pad_set_caps (auparse->srcpad, tempcaps);
-    gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
 
     if ((ret = gst_pad_alloc_buffer (auparse->srcpad, GST_BUFFER_OFFSET_NONE,
                 size - (auparse->offset),
                 GST_PAD_CAPS (auparse->srcpad), &newbuf)) != GST_FLOW_OK) {
-      printf ("failed gst_pad_alloc_buffer\n");
+      gst_buffer_unref (buf);
+      g_object_unref (auparse);
       return ret;
     }
     ret = GST_FLOW_OK;
@@ -376,10 +363,13 @@ Samples :
 
     gst_pad_push_event (auparse->srcpad, event);
 
+    gst_buffer_unref (buf);
+    g_object_unref (auparse);
     return gst_pad_push (auparse->srcpad, newbuf);
 
   }
 
+  g_object_unref (auparse);
   return gst_pad_push (auparse->srcpad, buf);
 
 }
@@ -387,10 +377,24 @@ Samples :
 static GstStateChangeReturn
 gst_auparse_change_state (GstElement * element, GstStateChange transition)
 {
-  if (parent_class->change_state)
-    return parent_class->change_state (element, transition);
+  GstAuParse *auparse = GST_AUPARSE (element);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
-  return GST_STATE_CHANGE_SUCCESS;
+  if (parent_class->change_state)
+    ret = parent_class->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      auparse->offset = 0;
+      auparse->size = 0;
+      auparse->encoding = 0;
+      auparse->frequency = 0;
+      auparse->channels = 0;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean
