@@ -1,3 +1,9 @@
+2005-10-31  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_push):
+	A small fix
+
 2005-10-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstringbuffer.h:

@@ -272,9 +272,11 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * rtp_buf)
   out_buf = bclass->process (filter, rtp_buf);
   if (out_buf) {
     /* set the caps */
-    srccaps = gst_pad_get_caps (filter->srcpad);
-    gst_buffer_set_caps (GST_BUFFER (out_buf), srccaps);
-    gst_caps_unref (srccaps);
+    srccaps = GST_PAD_CAPS (filter->srcpad);
+
+    if (srccaps)
+      gst_buffer_set_caps (GST_BUFFER (out_buf), srccaps);
+
     /* set the timestamp
      * I am assuming here that the timestamp of the last RTP buffer
      * is the same as the timestamp wanted on the collector
