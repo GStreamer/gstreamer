@@ -575,7 +575,10 @@ gst_object_dispatch_properties_changed (GObject * object,
 
   klass = GST_OBJECT_GET_CLASS (object);
 
+#ifndef GST_HAVE_GLIB_2_8
   GST_CLASS_LOCK (klass);
+#endif
+
   /* do the standard dispatching */
   PATCH_REFCOUNT (object);
   G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs,
@@ -617,7 +620,10 @@ gst_object_dispatch_properties_changed (GObject * object,
     gst_object_unref (old_parent);
   }
   g_free (name);
+
+#ifndef GST_HAVE_GLIB_2_8
   GST_CLASS_UNLOCK (klass);
+#endif
 }
 
 /**

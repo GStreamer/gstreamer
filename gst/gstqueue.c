@@ -653,7 +653,8 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
             "queue is full, leaking buffer on downstream end");
 
-        for (item = queue->queue->head; item != NULL; item = item->next) {
+        for (item = g_queue_peek_head_link (queue->queue); item;
+            item = item->next) {
           if (GST_IS_BUFFER (item->data)) {
             leak = item->data;
             break;
@@ -664,22 +665,17 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
          * in here. That cannot happen, since we had >= 1 bufs */
         g_assert (leak);
 
-        /* Now remove it from the list, fixing up the GQueue
-         * CHECKME: is a queue->head the first or the last item? */
-        item = g_list_delete_link (queue->queue->head, item);
-        queue->queue->head = g_list_first (item);
-        queue->queue->tail = g_list_last (item);
-        queue->queue->length--;
+        /* Now remove the link from the queue */
+        g_queue_delete_link (queue->queue, item);
 
         /* and unref the buffer at the end. Twice, because we keep a ref
          * to make things read-only. Also keep our list uptodate. */
-        queue->cur_level.bytes -= GST_BUFFER_SIZE (buffer);
+        queue->cur_level.bytes -= GST_BUFFER_SIZE (leak);
         queue->cur_level.buffers--;
-        if (GST_BUFFER_DURATION (buffer) != GST_CLOCK_TIME_NONE)
-          queue->cur_level.time -= GST_BUFFER_DURATION (buffer);
+        if (GST_BUFFER_DURATION (leak) != GST_CLOCK_TIME_NONE)
+          queue->cur_level.time -= GST_BUFFER_DURATION (leak);
 
-        gst_buffer_unref (buffer);
-        gst_buffer_unref (buffer);
+        gst_buffer_unref (leak);
         break;
       }
 

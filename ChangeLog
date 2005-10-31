@@ -1,3 +1,15 @@
+2005-10-31  Andy Wingo  <wingo@pobox.com>
+
+	* Boo!
+
+	* gst/gstqueue.c (gst_queue_chain): Fix downstream leaky mode.
+
+	* gst/gstobject.c (gst_object_dispatch_properties_changed): No
+	need to serialize property notifications on GLib 2.8. GLib 2.6 has
+	the possibility of deadlocks here if code calling notify() or
+	set() has a lock that can be taken in another notify handler (ABBA
+	with class lock and e.g. python GIL state lock).
+
 2005-10-28  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/gstbus.c: Doc updates.
