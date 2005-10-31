@@ -1,3 +1,12 @@
+2005-10-31  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst/rtp/gstrtpg711dec.c: (gst_rtpg711dec_setcaps),
+	(gst_rtpg711dec_process):
+	* gst/rtp/gstrtpgsmenc.c:
+	Payloader now sets some default caps on the srcpad if caps on the sinkpad
+	are never set. This is important for the g711 to work with burger's rtpbin
+	element.
+
 2005-10-28  Edgard Lima <edgard.lima@cin.ufpe.br>
 
 	* ext/speex/gstspeexenc.c: (gst_speexenc_chain), 

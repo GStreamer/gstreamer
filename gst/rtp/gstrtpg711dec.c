@@ -62,8 +62,8 @@ static GstStaticPadTemplate gst_rtpg711dec_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-mulaw, channels = (int) 1; "
-        "audio/x-alaw, channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-mulaw, "
+        "channels = (int) 1; " "audio/x-alaw, " "channels = (int) 1")
     );
 
 static GstBuffer *gst_rtpg711dec_process (GstBaseRTPDepayload * depayload,
@@ -148,6 +148,7 @@ gst_rtpg711dec_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 static GstBuffer *
 gst_rtpg711dec_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
+  GstCaps *srccaps;
   GstBuffer *outbuf = NULL;
   gint payload_len;
   guint8 *payload;
@@ -156,6 +157,15 @@ gst_rtpg711dec_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       GST_BUFFER_SIZE (buf),
       gst_rtpbuffer_get_marker (buf),
       gst_rtpbuffer_get_timestamp (buf), gst_rtpbuffer_get_seq (buf));
+
+  srccaps = GST_PAD_CAPS (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
+  if (!srccaps) {
+    /* Set the default caps */
+    srccaps = gst_caps_new_simple ("audio/x-mulaw",
+        "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
+    gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+    gst_caps_unref (srccaps);
+  }
 
   payload_len = gst_rtpbuffer_get_payload_len (buf);
   payload = gst_rtpbuffer_get_payload (buf);
