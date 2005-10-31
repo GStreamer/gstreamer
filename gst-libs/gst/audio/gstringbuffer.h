@@ -172,6 +172,8 @@ struct _GstRingBuffer {
   GstRingBufferCallback  callback;
   gpointer               cb_data;
 
+  gboolean		 flushing;
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -223,6 +225,9 @@ gboolean 	gst_ring_buffer_acquire 	(GstRingBuffer *buf, GstRingBufferSpec *spec)
 gboolean 	gst_ring_buffer_release 	(GstRingBuffer *buf);
 
 gboolean 	gst_ring_buffer_is_acquired	(GstRingBuffer *buf);
+
+/* flushing */
+void	 	gst_ring_buffer_set_flushing	(GstRingBuffer *buf, gboolean flushing);
 
 /* playback/pause */
 gboolean 	gst_ring_buffer_start 		(GstRingBuffer *buf);

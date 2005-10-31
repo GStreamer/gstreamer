@@ -297,13 +297,12 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      gst_ring_buffer_pause (sink->ringbuffer);
-      gst_ring_buffer_clear_all (sink->ringbuffer);
+      gst_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
       break;
     case GST_EVENT_FLUSH_STOP:
       /* always resync on sample after a flush */
       sink->next_sample = -1;
-      gst_ring_buffer_clear_all (sink->ringbuffer);
+      gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
     case GST_EVENT_EOS:
       gst_ring_buffer_start (sink->ringbuffer);

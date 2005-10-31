@@ -31,6 +31,8 @@ static void gst_ring_buffer_init (GstRingBuffer * ringbuffer);
 static void gst_ring_buffer_dispose (GObject * object);
 static void gst_ring_buffer_finalize (GObject * object);
 
+static gboolean gst_ring_buffer_pause_unlocked (GstRingBuffer * buf);
+
 static GstObjectClass *parent_class = NULL;
 
 /* ringbuffer abstract base class */
@@ -608,6 +610,28 @@ gst_ring_buffer_is_acquired (GstRingBuffer * buf)
   return res;
 }
 
+/**
+ * gst_ring_buffer_set_flushing:
+ * @buf: the #GstRingBuffer to flush
+ *
+ * Set the ringbuffer to flushing mode or normal mode.
+ *
+ * MT safe.
+ */
+void
+gst_ring_buffer_set_flushing (GstRingBuffer * buf, gboolean flushing)
+{
+  GST_LOCK (buf);
+  buf->flushing = flushing;
+
+  gst_ring_buffer_clear_all (buf);
+  if (flushing) {
+    gst_ring_buffer_pause_unlocked (buf);
+  }
+
+  GST_UNLOCK (buf);
+}
+
 
 /**
  * gst_ring_buffer_start:
@@ -631,6 +655,9 @@ gst_ring_buffer_start (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "starting ringbuffer");
 
   GST_LOCK (buf);
+  if (buf->flushing)
+    goto flushing;
+
   /* if stopped, set to started */
   res = g_atomic_int_compare_and_exchange (&buf->state,
       GST_RING_BUFFER_STATE_STOPPED, GST_RING_BUFFER_STATE_STARTED);
@@ -669,29 +696,22 @@ done:
   GST_UNLOCK (buf);
 
   return res;
+
+flushing:
+  {
+    GST_UNLOCK (buf);
+    return FALSE;
+  }
 }
 
-/**
- * gst_ring_buffer_pause:
- * @buf: the #GstRingBuffer to pause
- *
- * Pause processing samples from the ringbuffer.
- *
- * Returns: TRUE if the device could be paused, FALSE on error.
- *
- * MT safe.
- */
-gboolean
-gst_ring_buffer_pause (GstRingBuffer * buf)
+static gboolean
+gst_ring_buffer_pause_unlocked (GstRingBuffer * buf)
 {
   gboolean res = FALSE;
   GstRingBufferClass *rclass;
 
-  g_return_val_if_fail (buf != NULL, FALSE);
-
   GST_DEBUG_OBJECT (buf, "pausing ringbuffer");
 
-  GST_LOCK (buf);
   /* if started, set to paused */
   res = g_atomic_int_compare_and_exchange (&buf->state,
       GST_RING_BUFFER_STATE_STARTED, GST_RING_BUFFER_STATE_PAUSED);
@@ -718,9 +738,41 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
   }
 
 done:
+  return res;
+}
+
+/**
+ * gst_ring_buffer_pause:
+ * @buf: the #GstRingBuffer to pause
+ *
+ * Pause processing samples from the ringbuffer.
+ *
+ * Returns: TRUE if the device could be paused, FALSE on error.
+ *
+ * MT safe.
+ */
+gboolean
+gst_ring_buffer_pause (GstRingBuffer * buf)
+{
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (buf != NULL, FALSE);
+
+  GST_LOCK (buf);
+  if (buf->flushing)
+    goto flushing;
+
+  res = gst_ring_buffer_pause_unlocked (buf);
+
   GST_UNLOCK (buf);
 
   return res;
+
+flushing:
+  {
+    GST_UNLOCK (buf);
+    return FALSE;
+  }
 }
 
 /**
@@ -744,6 +796,9 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "stopping");
 
   GST_LOCK (buf);
+  if (buf->flushing)
+    goto flushing;
+
   /* if started, set to stopped */
   res = g_atomic_int_compare_and_exchange (&buf->state,
       GST_RING_BUFFER_STATE_STARTED, GST_RING_BUFFER_STATE_STOPPED);
@@ -772,6 +827,12 @@ done:
   GST_UNLOCK (buf);
 
   return res;
+
+flushing:
+  {
+    GST_UNLOCK (buf);
+    return FALSE;
+  }
 }
 
 /**
@@ -916,12 +977,17 @@ wait_segment (GstRingBuffer * buf)
 
   /* take lock first, then update our waiting flag */
   GST_LOCK (buf);
+  if (buf->flushing)
+    goto flushing;
+
   if (g_atomic_int_compare_and_exchange (&buf->waiting, 0, 1)) {
     GST_DEBUG ("waiting..");
     if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
       goto not_started;
 
     GST_RING_BUFFER_WAIT (buf);
+    if (buf->flushing)
+      goto flushing;
 
     if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
       goto not_started;
@@ -935,6 +1001,12 @@ not_started:
   {
     GST_UNLOCK (buf);
     GST_DEBUG ("stopped processing");
+    return FALSE;
+  }
+flushing:
+  {
+    GST_UNLOCK (buf);
+    GST_DEBUG ("flushing");
     return FALSE;
   }
 }

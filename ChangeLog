@@ -1,3 +1,19 @@
+2005-10-31  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_event), (gst_base_audio_sink_get_offset),
+	(gst_base_audio_sink_render):
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ring_buffer_open_device), (gst_ring_buffer_close_device),
+	(gst_ring_buffer_set_flushing), (gst_ring_buffer_start),
+	(gst_ring_buffer_pause_unlocked), (gst_ring_buffer_pause),
+	(gst_ring_buffer_stop), (wait_segment), (gst_ring_buffer_commit),
+	(gst_ring_buffer_read):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Add flushing mode to the ringbuffer so that it in all cases does
+	not try to handle more audio. This makes sure it does not try to
+	block anymore when flushing and fixes a livelock.
+
 2005-10-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_query_convert),
