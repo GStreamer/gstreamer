@@ -120,11 +120,6 @@ struct _GstOggPad
   gint64 first_granule;         /* the granulepos of first page == first sample in next page */
   GstClockTime first_time;      /* the timestamp of the second page */
 
-  GstClockTime last_time;       /* the timestamp of the last page == last sample */
-  gint64 last_granule;          /* the granulepos of the last page */
-
-  GstClockTime total_time;      /* the total time of this stream */
-
   ogg_stream_state stream;
 };
 
@@ -259,13 +254,10 @@ gst_ogg_pad_init (GstOggPad * pad)
   pad->mode = GST_OGG_PAD_MODE_INIT;
 
   pad->first_granule = -1;
-  pad->last_granule = -1;
   pad->current_granule = -1;
 
   pad->start_time = GST_CLOCK_TIME_NONE;
   pad->first_time = GST_CLOCK_TIME_NONE;
-  pad->last_time = GST_CLOCK_TIME_NONE;
-  pad->total_time = GST_CLOCK_TIME_NONE;
 
   pad->have_type = FALSE;
   pad->headers = NULL;
@@ -1807,9 +1799,17 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
   /* now read pages until we receive a buffer from each of the
    * stream decoders, this will tell us the timestamp of the
    * first packet in the chain then */
+
+  /* save the offset to the first non bos page in the chain: if searching for
+   * pad->first_time we read past the end of the chain, we'll seek back to this
+   * position
+   */
+  offset = ogg->offset;
+
   done = FALSE;
   while (!done) {
     glong serial;
+    gboolean known_serial = FALSE;
     gint ret;
 
     serial = ogg_page_serialno (&op);
@@ -1818,11 +1818,29 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
       GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
       if (pad->serialno == serial) {
+        known_serial = TRUE;
+
+        if (pad->start_time == -1 && ogg_page_eos (&op)) {
+          /* got EOS on a pad before we could find its start_time.
+           * We have no chance of finding a start_time for every pad so
+           * stop searching for the other start_time(s).
+           */
+          done = TRUE;
+          break;
+        }
         gst_ogg_pad_submit_page (pad, &op);
       }
       /* the timestamp will be filled in when we submit the pages */
       done &= (pad->start_time != GST_CLOCK_TIME_NONE);
       GST_LOG_OBJECT (ogg, "done %08lx now %d", serial, done);
+    }
+
+    /* we read a page not belonging to the current chain: seek back to the
+     * beginning of the chain
+     */
+    if (!known_serial) {
+      gst_ogg_demux_seek (ogg, offset);
+      break;
     }
 
     if (!done) {
@@ -1857,6 +1875,9 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
 {
   gint64 begin = chain->end_offset;
   gint64 end = begin;
+  gint64 last_granule = -1;
+  GstOggPad *last_pad = NULL;
+  GstFormat target;
   gint64 ret;
   gboolean done = FALSE;
   ogg_page og;
@@ -1879,35 +1900,33 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
       if (ret < 0) {
         break;
       } else {
-        done = TRUE;
         for (i = 0; i < chain->streams->len; i++) {
           GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
           if (pad->serialno == ogg_page_serialno (&og)) {
             gint64 granulepos = ogg_page_granulepos (&og);
 
-            if (pad->last_granule < granulepos) {
-              pad->last_granule = granulepos;
+            if (last_granule < granulepos) {
+              last_granule = granulepos;
+              last_pad = pad;
             }
-          } else {
-            done &= (pad->last_granule != -1);
+
+            done = TRUE;
+            break;
           }
         }
       }
     }
   }
-  /* now we can fill in the missing info using queries */
-  for (i = 0; i < chain->streams->len; i++) {
-    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
-    GstFormat target;
 
-    target = GST_FORMAT_TIME;
-    if (!gst_ogg_pad_query_convert (pad,
-            GST_FORMAT_DEFAULT, pad->last_granule, &target,
-            (gint64 *) & pad->last_time)) {
-      g_warning ("could not convert granule to time");
-    }
+  target = GST_FORMAT_TIME;
+  if (last_granule == -1 || !gst_ogg_pad_query_convert (last_pad,
+          GST_FORMAT_DEFAULT, last_granule, &target,
+          (gint64 *) & chain->segment_stop)) {
+    g_warning ("could not convert granule to time");
+    chain->segment_stop = GST_CLOCK_TIME_NONE;
   }
+
   return 0;
 }
 
@@ -1962,9 +1981,8 @@ gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
 {
   gint i;
 
-  chain->total_time = 0;
+  chain->total_time = GST_CLOCK_TIME_NONE;
   chain->segment_start = G_MAXINT64;
-  chain->segment_stop = 0;
 
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
@@ -1973,17 +1991,12 @@ gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
     if (pad->start_time == GST_CLOCK_TIME_NONE)
       goto no_start_time;
 
-    if (pad->last_time != GST_CLOCK_TIME_NONE) {
-      pad->total_time = pad->last_time - pad->start_time;
-      chain->total_time = MAX (chain->total_time, pad->total_time);
-      chain->segment_stop = MAX (chain->segment_stop, pad->last_time);
-    } else {
-      pad->total_time = GST_CLOCK_TIME_NONE;
-      chain->total_time = GST_CLOCK_TIME_NONE;
-      chain->segment_stop = GST_CLOCK_TIME_NONE;
-    }
     chain->segment_start = MIN (chain->segment_start, pad->start_time);
   }
+
+  if (chain->segment_stop != GST_CLOCK_TIME_NONE)
+    chain->total_time = chain->segment_stop - chain->segment_start;
+
   return TRUE;
 
   /* ERROR */
@@ -2549,12 +2562,6 @@ gst_ogg_print (GstOggDemux * ogg)
           stream->first_granule);
       GST_INFO_OBJECT (ogg, "   first time:       %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->first_time));
-      GST_INFO_OBJECT (ogg, "   last granulepos:  %" G_GINT64_FORMAT,
-          stream->last_granule);
-      GST_INFO_OBJECT (ogg, "   last time:        %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (stream->last_time));
-      GST_INFO_OBJECT (ogg, "   total time:       %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (stream->total_time));
     }
   }
 }

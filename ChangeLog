@@ -1,3 +1,16 @@
+2005-10-31  Michael Smith <msmith@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_init),
+	(gst_ogg_demux_read_chain), (gst_ogg_demux_read_end_chain),
+	(gst_ogg_demux_collect_chain_info), (gst_ogg_print):
+	  Patch from Alessandro Decina <alessandro@nnva.org>.
+	  Make oggdemux only find the final time in a chain, not per-pad,
+	  since the per-pad information can be very expensive to locate, and
+	  it isn't used anywhere. This makes reading a file containing
+	  OggSkeleton reasonably fast.
+	  Also, make chain finding work when there are logical bitstreams that
+	  can't be decoded. Fixes #319110.
+
 2005-10-31  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
