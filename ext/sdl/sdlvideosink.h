@@ -57,6 +57,7 @@ struct _GstSDLVideoSink {
   
   gdouble framerate;
 
+  gboolean full_screen;
   gboolean init;
 
   SDL_Surface *screen;

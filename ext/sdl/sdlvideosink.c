@@ -55,6 +55,13 @@ static GstElementDetails gst_sdlvideosink_details = {
   "Ronald Bultje <rbultje@ronald.bitfreak.net>",
 };
 
+
+enum
+{
+  PROP_0,
+  PROP_FULLSCREEN
+};
+
 static void gst_sdlvideosink_base_init (gpointer g_class);
 static void gst_sdlvideosink_class_init (GstSDLVideoSinkClass * klass);
 static void gst_sdlvideosink_init (GstSDLVideoSink * sdl);
@@ -226,6 +233,10 @@ gst_sdlvideosink_class_init (GstSDLVideoSinkClass * klass)
   gstvs_class->preroll = GST_DEBUG_FUNCPTR (gst_sdlvideosink_show_frame);
   gstvs_class->render = GST_DEBUG_FUNCPTR (gst_sdlvideosink_show_frame);
 
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
+      g_param_spec_boolean ("full-screen", "Full-screnn",
+          "If true it will be Full screen", FALSE, G_PARAM_READWRITE));
+
   /*gstvs_class->set_video_out = gst_sdlvideosink_set_video_out;
      gstvs_class->push_ui_event = gst_sdlvideosink_push_ui_event;
      gstvs_class->set_geometry = gst_sdlvideosink_set_geometry; */
@@ -297,6 +308,7 @@ gst_sdlvideosink_init (GstSDLVideoSink * sdlvideosink)
   sdlvideosink->width = -1;
   sdlvideosink->height = -1;
   sdlvideosink->framerate = 0;
+  sdlvideosink->full_screen = FALSE;
 
   sdlvideosink->overlay = NULL;
   sdlvideosink->screen = NULL;
@@ -505,8 +517,16 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
   g_mutex_lock (sdlvideosink->lock);
 
   /* create a SDL window of the size requested by the user */
-  sdlvideosink->screen = SDL_SetVideoMode (GST_VIDEO_SINK_WIDTH (sdlvideosink),
-      GST_VIDEO_SINK_HEIGHT (sdlvideosink), 0, SDL_HWSURFACE | SDL_RESIZABLE);
+  if (sdlvideosink->full_screen) {
+    sdlvideosink->screen =
+        SDL_SetVideoMode (GST_VIDEO_SINK_WIDTH (sdlvideosink),
+        GST_VIDEO_SINK_HEIGHT (sdlvideosink), 0,
+        SDL_HWSURFACE | SDL_FULLSCREEN);
+  } else {
+    sdlvideosink->screen =
+        SDL_SetVideoMode (GST_VIDEO_SINK_WIDTH (sdlvideosink),
+        GST_VIDEO_SINK_HEIGHT (sdlvideosink), 0, SDL_HWSURFACE | SDL_RESIZABLE);
+  }
   if (sdlvideosink->screen == NULL)
     goto no_screen;
 
@@ -675,6 +695,9 @@ gst_sdlvideosink_set_property (GObject * object, guint prop_id,
   sdlvideosink = GST_SDLVIDEOSINK (object);
 
   switch (prop_id) {
+    case PROP_FULLSCREEN:
+      sdlvideosink->full_screen = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -691,6 +714,9 @@ gst_sdlvideosink_get_property (GObject * object, guint prop_id, GValue * value,
   sdlvideosink = GST_SDLVIDEOSINK (object);
 
   switch (prop_id) {
+    case PROP_FULLSCREEN:
+      g_value_set_boolean (value, &sdlvideosink->full_screen);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

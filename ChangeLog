@@ -1,3 +1,11 @@
+2005-10-31 Edgard Lima <edgard.lima@indt.org.br>
+
+	* gst-plugins-bad/ext/sdl/sdlvideosink.c: gst_sdlvideosink_class_init,
+	gst_sdlvideosink_set_property, gst_sdlvideosink_get_property,
+	gst_sdlvideosink_init, gst_sdlvideosink_create:
+	* gst-plugins-bad/ext/sdl/sdlvideosink.h:
+	Added a property that allows full-screen.
+
 2005-10-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_base_init),
