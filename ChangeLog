@@ -1,5 +1,13 @@
 2005-10-31 Edgard Lima <edgard.lima@indt.org.br>
 
+	* gst-plugins-bad/ext/sdl/sdlvideosink.c:
+	gst_sdlvideosink_set_property, gst_sdlvideosink_init,
+	gst_sdlvideosink_create:
+	Changed property full-screen to fullscreen, using SDL_SWSURFACE
+	instead of SDL_HWSURFACE when in full screen mode.
+	
+2005-10-31 Edgard Lima <edgard.lima@indt.org.br>
+
 	* gst-plugins-bad/ext/sdl/sdlvideosink.c: gst_sdlvideosink_class_init,
 	gst_sdlvideosink_set_property, gst_sdlvideosink_get_property,
 	gst_sdlvideosink_init, gst_sdlvideosink_create:

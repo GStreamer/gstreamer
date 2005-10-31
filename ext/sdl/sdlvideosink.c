@@ -234,7 +234,7 @@ gst_sdlvideosink_class_init (GstSDLVideoSinkClass * klass)
   gstvs_class->render = GST_DEBUG_FUNCPTR (gst_sdlvideosink_show_frame);
 
   g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
-      g_param_spec_boolean ("full-screen", "Full-screnn",
+      g_param_spec_boolean ("fullscreen", "Fullscreen",
           "If true it will be Full screen", FALSE, G_PARAM_READWRITE));
 
   /*gstvs_class->set_video_out = gst_sdlvideosink_set_video_out;
@@ -521,7 +521,7 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
     sdlvideosink->screen =
         SDL_SetVideoMode (GST_VIDEO_SINK_WIDTH (sdlvideosink),
         GST_VIDEO_SINK_HEIGHT (sdlvideosink), 0,
-        SDL_HWSURFACE | SDL_FULLSCREEN);
+        SDL_SWSURFACE | SDL_FULLSCREEN);
   } else {
     sdlvideosink->screen =
         SDL_SetVideoMode (GST_VIDEO_SINK_WIDTH (sdlvideosink),
@@ -715,7 +715,7 @@ gst_sdlvideosink_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_FULLSCREEN:
-      g_value_set_boolean (value, &sdlvideosink->full_screen);
+      g_value_set_boolean (value, sdlvideosink->full_screen);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
