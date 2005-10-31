@@ -940,12 +940,17 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_set_caps (buf2, caps);
 
     /* push out buffers */
-    if (GST_FLOW_OK != (ret = gst_speexenc_push_buffer (speexenc, buf1))) {
+    ret = gst_speexenc_push_buffer (speexenc, buf1);
+
+    if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret)) {
       gst_buffer_unref (buf1);
       goto error;
     }
 
-    if (GST_FLOW_OK != (ret = gst_speexenc_push_buffer (speexenc, buf2))) {
+    ret = gst_speexenc_push_buffer (speexenc, buf2);
+
+    if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret)) {
+
       gst_buffer_unref (buf2);
       goto error;
     }
@@ -995,7 +1000,7 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
           GST_BUFFER_OFFSET_NONE, outsize, GST_PAD_CAPS (speexenc->srcpad),
           &outbuf);
 
-      if (GST_FLOW_OK != ret) {
+      if ((GST_FLOW_OK != ret)) {
         goto error;
       }
 
@@ -1012,10 +1017,11 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
       GST_BUFFER_OFFSET_END (outbuf) =
           speexenc->frameno * frame_size - speexenc->lookahead;
 
-      if (GST_FLOW_OK != (ret = gst_speexenc_push_buffer (speexenc, outbuf))) {
-        printf ("ret = %d\n", ret);
-        // gst_buffer_unref(outbuf);
-        //      goto error;
+      ret = gst_speexenc_push_buffer (speexenc, outbuf);
+
+      if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret)) {
+        gst_buffer_unref (outbuf);
+        goto error;
       }
     }
   }

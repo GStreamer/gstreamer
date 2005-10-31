@@ -1,3 +1,9 @@
+2005-10-31  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/speex/gstspeexenc.c: (gst_speexenc_chain)
+	Add checks to GST_FLOW_NOT_LINKED for values returned
+	from gst_pad_push.
+	
 2005-10-31  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst/rtp/gstrtpg711dec.c: (gst_rtpg711dec_setcaps),
