@@ -148,26 +148,41 @@ gst_ffmpegcsp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   const GValue *in_par = NULL;
   const GValue *out_par = NULL;
   AVCodecContext *ctx;
+  gboolean res;
 
   space = GST_FFMPEGCSP (btrans);
 
   /* parse in and output values */
   structure = gst_caps_get_structure (incaps, 0);
-  gst_structure_get_int (structure, "width", &in_width);
-  gst_structure_get_int (structure, "height", &in_height);
-  gst_structure_get_double (structure, "framerate", &in_framerate);
+
+  /* we have to have width and height */
+  res = gst_structure_get_int (structure, "width", &in_width);
+  res &= gst_structure_get_int (structure, "height", &in_height);
+  res &= gst_structure_get_double (structure, "framerate", &in_framerate);
+  if (!res)
+    goto no_width_height;
+
+  /* this is optional */
   in_par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   structure = gst_caps_get_structure (outcaps, 0);
-  gst_structure_get_int (structure, "width", &out_width);
-  gst_structure_get_int (structure, "height", &out_height);
-  gst_structure_get_double (structure, "framerate", &out_framerate);
+
+  /* we have to have width and height */
+  res = gst_structure_get_int (structure, "width", &out_width);
+  res &= gst_structure_get_int (structure, "height", &out_height);
+  res &= gst_structure_get_double (structure, "framerate", &out_framerate);
+  if (!res)
+    goto no_width_height;
+
+  /* this is optional */
   out_par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
+  /* these must match */
   if (in_width != out_width || in_height != out_height ||
       in_framerate != out_framerate)
     goto format_mismatch;
 
+  /* if present, these must match too */
   if (in_par && out_par
       && gst_value_compare (in_par, out_par) != GST_VALUE_EQUAL)
     goto format_mismatch;
@@ -203,6 +218,13 @@ gst_ffmpegcsp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   return TRUE;
 
   /* ERRORS */
+no_width_height:
+  {
+    GST_DEBUG ("did not specify width or height");
+    space->from_pixfmt = PIX_FMT_NB;
+    space->to_pixfmt = PIX_FMT_NB;
+    return FALSE;
+  }
 format_mismatch:
   {
     GST_DEBUG ("input and output formats do not match");

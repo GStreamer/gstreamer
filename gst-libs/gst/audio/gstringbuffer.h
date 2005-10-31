@@ -172,10 +172,14 @@ struct _GstRingBuffer {
   GstRingBufferCallback  callback;
   gpointer               cb_data;
 
-  gboolean		 flushing;
-
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    struct {
+      gboolean		 flushing;
+    };
+    /* adding + 0 to mark ABI change to be undone later */
+    gpointer _gst_reserved[GST_PADDING + 0];
+  };
 };
 
 struct _GstRingBufferClass {

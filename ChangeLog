@@ -1,5 +1,17 @@
 2005-10-31  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Don't break ABI.
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_caps_to_pixfmt):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_set_caps):
+	Some more comments.
+	Handle missing required caps fields better.
+
+2005-10-31  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
 	(gst_base_audio_sink_event), (gst_base_audio_sink_get_offset),
 	(gst_base_audio_sink_render):

@@ -445,6 +445,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
   gst_structure_get_int (structure, "width", &context->width);
   gst_structure_get_int (structure, "height", &context->height);
 
+  /* framerate does not really matter */
   if (gst_structure_get_double (structure, "framerate", &fps)) {
     context->frame_rate = fps * DEFAULT_FRAME_RATE_BASE;
     context->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
