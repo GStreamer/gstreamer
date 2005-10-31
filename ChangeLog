@@ -1,3 +1,14 @@
+2005-10-31  Andy Wingo  <wingo@pobox.com>
+
+	* gst/videomixer/videomixer.c (gst_videomixer_pad_unlink)
+	(gst_videomixer_pad_link): Kill some memleaks.
+	(gst_videomixer_pad_get_property): Style fix.
+	(gst_videomixer_pad_set_property): Style fix.
+	(gst_videomixer_pad_init): Style fix.
+	(gst_videomixer_update_queues): Kill memleak.
+	(gst_videomixer_loop): Kill memleak.
+	(gst_videomixer_collected): Kill memleak.
+
 2005-10-31  Edgard Lima <edgard.lima@indt.org.br>
 
 	* gst/auparse/gstauparse.c: gst_auparse_init, gst_auparse_chain,

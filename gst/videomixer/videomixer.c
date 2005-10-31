@@ -173,11 +173,7 @@ static void
 gst_videomixer_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVideoMixerPad *pad;
-
-  g_return_if_fail (GST_IS_VIDEO_MIXER_PAD (object));
-
-  pad = GST_VIDEO_MIXER_PAD (object);
+  GstVideoMixerPad *pad = GST_VIDEO_MIXER_PAD (object);
 
   switch (prop_id) {
     case ARG_PAD_ZORDER:
@@ -204,8 +200,6 @@ gst_videomixer_pad_set_property (GObject * object, guint prop_id,
 {
   GstVideoMixerPad *pad;
   GstVideoMixer *mix;
-
-  g_return_if_fail (GST_IS_PAD (object));
 
   pad = GST_VIDEO_MIXER_PAD (object);
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (GST_PAD (pad)));
@@ -316,22 +310,22 @@ beach:
 static void
 gst_videomixer_pad_link (GstPad * pad, GstPad * peer, gpointer data)
 {
-  GST_DEBUG ("pad '%s' connected", gst_pad_get_name (pad));
+  GST_DEBUG_OBJECT (pad, "connected");
 }
 
 static void
 gst_videomixer_pad_unlink (GstPad * pad, GstPad * peer, gpointer data)
 {
-  GST_DEBUG ("pad '%s' unlinked", gst_pad_get_name (pad));
+  GST_DEBUG_OBJECT (pad, "unlinked");
 }
 
 static void
 gst_videomixer_pad_init (GstVideoMixerPad * mixerpad)
 {
   g_signal_connect (mixerpad, "linked",
-      G_CALLBACK (gst_videomixer_pad_link), (gpointer) mixerpad);
+      G_CALLBACK (gst_videomixer_pad_link), mixerpad);
   g_signal_connect (mixerpad, "unlinked",
-      G_CALLBACK (gst_videomixer_pad_unlink), (gpointer) mixerpad);
+      G_CALLBACK (gst_videomixer_pad_unlink), mixerpad);
 
   /* setup some pad functions */
   gst_pad_set_setcaps_function (GST_PAD (mixerpad),
@@ -342,7 +336,6 @@ gst_videomixer_pad_init (GstVideoMixerPad * mixerpad)
   mixerpad->ypos = DEFAULT_PAD_YPOS;
   mixerpad->alpha = DEFAULT_PAD_ALPHA;
 }
-
 
 
 /* elementfactory information */
@@ -981,8 +974,7 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
 
     if (mixcol->buffer != NULL && GST_CLOCK_TIME_IS_VALID (pad->queued)) {
       pad->queued -= interval;
-      GST_DEBUG ("queued now %s %lld", gst_pad_get_name (GST_PAD (pad)),
-          pad->queued);
+      GST_DEBUG_OBJECT (pad, "queued now %lld", pad->queued);
       if (pad->queued == 0) {
         GST_DEBUG ("unreffing buffer");
         gst_buffer_unref (mixcol->buffer);
@@ -1022,8 +1014,8 @@ gst_videomixer_loop (GstElement * element)
       new_height != mix->out_height || !GST_PAD_CAPS (mix->srcpad)) {
     GstCaps *newcaps;
 
-    newcaps =
-        gst_caps_copy (gst_pad_get_negotiated_caps (GST_PAD (mix->master)));
+    newcaps = gst_caps_make_writable (
+        gst_pad_get_negotiated_caps (GST_PAD (mix->master)));
     gst_caps_set_simple (newcaps, "format", GST_TYPE_FOURCC,
         GST_STR_FOURCC ("AYUV"), "width", G_TYPE_INT, new_width, "height",
         G_TYPE_INT, new_height, NULL);
@@ -1091,8 +1083,8 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
   if (mix->in_width != mix->out_width || mix->in_height != mix->out_height) {
     GstCaps *newcaps = NULL;
 
-    newcaps =
-        gst_caps_copy (gst_pad_get_negotiated_caps (GST_PAD (mix->master)));
+    newcaps = gst_caps_make_writable
+        (gst_pad_get_negotiated_caps (GST_PAD (mix->master)));
     gst_caps_set_simple (newcaps,
         "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("AYUV"),
         "width", G_TYPE_INT, mix->in_width,
