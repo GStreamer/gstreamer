@@ -99,7 +99,7 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buf: a #GstBuffer.:
  *
  * The timestamp in nanoseconds (as a #GstClockTime) of the data in the buffer.
- * Value will be %GST_CLOCK_TIME_NONE if the duration is unknown.
+ * Value will be %GST_CLOCK_TIME_NONE if the timestamp is unknown.
  *
  */
 #define GST_BUFFER_TIMESTAMP(buf)		(GST_BUFFER_CAST(buf)->timestamp)
