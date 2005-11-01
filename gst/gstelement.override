@@ -373,15 +373,43 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
         return NULL;
     }
 
-    ret = PyList_New(0);
     if (!(gst_element_query_position(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur))) {
 	PyErr_Format(PyGstExc_QueryError,
 		     "query failed");
         return NULL;
     }
 
-    PyList_Append(ret, PyLong_FromLongLong(cur));
-    PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+    ret = PyList_New(2);
+    PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
+    PyList_SetItem(ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+
+    return ret;
+}
+%%
+override gst_element_query_duration args
+static PyObject *
+_wrap_gst_element_query_duration (PyGObject *self, PyObject *args)
+{
+    gint64	cur;
+    gint	format;
+    PyObject	*pformat;
+    PyObject	*ret;
+
+    pformat = (PyObject*)PyTuple_GetItem(args, 0);
+    if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
+        PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+        return NULL;
+    }
+
+    if (!(gst_element_query_duration(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur))) {
+	PyErr_Format(PyGstExc_QueryError,
+		     "query failed");
+        return NULL;
+    }
+
+    ret = PyList_New(2);
+    PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
+    PyList_SetItem(ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
 
     return ret;
 }
@@ -419,9 +447,9 @@ _wrap_gst_element_query_convert (PyGObject *self, PyObject *args, PyObject *kwar
 	return Py_None;
     }
     
-    ret = PyList_New(0);
-    PyList_Append(ret, pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat));
-    PyList_Append(ret, PyLong_FromLongLong(dstval));
+    ret = PyList_New(2);
+    PyList_SetItem(ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat));
+    PyList_SetItem(ret, 1, PyLong_FromLongLong(dstval));
 
     return ret;
 }

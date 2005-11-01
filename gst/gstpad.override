@@ -686,6 +686,33 @@ _wrap_gst_pad_query_position (PyGObject *self, PyObject *args)
     return ret;
 }
 %%
+override gst_pad_query_duration args
+static PyObject *
+_wrap_gst_pad_query_duration (PyGObject *self, PyObject *args)
+{
+    gint64    cur;
+    gint    format;
+    PyObject    *pformat;
+    PyObject    *ret;
+
+    pformat = (PyObject*)PyTuple_GetItem(args, 0);
+    if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
+        PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+        return NULL;
+    }
+
+    if ((gst_pad_query_duration(GST_PAD (self->obj), (GstFormat*) &format, &cur))) {
+        ret = PyList_New(2);
+        PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
+        PyList_SetItem(ret, 2, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+    } else {
+        Py_INCREF(Py_None);
+        ret = Py_None;
+    }
+
+    return ret;
+}
+%%
 override gst_pad_query_convert kwargs
 static PyObject *
 _wrap_gst_pad_query_convert (PyGObject *self, PyObject *args, PyObject *kwargs)
@@ -749,7 +776,7 @@ _wrap_gst_pad_alloc_buffer (PyGObject *self, PyObject * args, PyObject *kwargs)
     ret = PyList_New(2);
     PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
     if (res != GST_FLOW_OK) {
-        PyList_Append(ret, Py_None);
+        PyList_SetItem(ret, 1, Py_None);
     } else {
         PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
     }
@@ -776,7 +803,7 @@ _wrap_gst_pad_pull_range (PyGObject *self, PyObject * args, PyObject *kwargs)
     ret = PyList_New(2);
     PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
     if (res != GST_FLOW_OK) {
-        PyList_Append(ret, Py_None);
+        PyList_SetItem(ret, 1, Py_None);
     } else {
         PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
     }
@@ -803,7 +830,7 @@ _wrap_gst_pad_get_range (PyGObject *self, PyObject * args, PyObject *kwargs)
     ret = PyList_New(2);
     PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
     if (res != GST_FLOW_OK) {
-        PyList_Append(ret, Py_None);
+        PyList_SetItem(ret, 1, Py_None);
     } else {
         PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
     }

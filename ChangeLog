@@ -1,5 +1,17 @@
 2005-11-01  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gstelement.override:
+	added wrapper for gst_element_query_duration()
+	* gst/gstpad.override:
+	added wrapper for gst_pad_query_duration()
+
+	Also converted some functions using fixed size PyList to use 
+	PyList_SetItem instead of PyList_Append
+
+	Closes bug #320357
+
+2005-11-01  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst-types.defs:
 	Updated modification from API
 	* gst/gstquery.override:
