@@ -34,6 +34,7 @@ static void gst_wavenc_base_init (gpointer g_class);
 static void gst_wavenc_class_init (GstWavEncClass * klass);
 static void gst_wavenc_init (GstWavEnc * wavenc);
 static GstFlowReturn gst_wavenc_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_wavenc_event (GstPad * pad, GstEvent * event);
 
 #define WAVE_FORMAT_PCM 0x0001
 
@@ -264,7 +265,7 @@ gst_wavenc_stop_file (GstWavEnc * wavenc)
   GstEvent *event;
   GstBuffer *outbuf;
 
-  event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
+  event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_BYTES,
       0, GST_CLOCK_TIME_NONE, 0);
 
   gst_pad_push_event (wavenc->srcpad, event);
@@ -277,9 +278,9 @@ gst_wavenc_stop_file (GstWavEnc * wavenc)
   GST_BUFFER_OFFSET (outbuf) = 0;
   GST_BUFFER_OFFSET_END (outbuf) = WAV_HEADER_LEN;
   GST_BUFFER_TIMESTAMP (outbuf) = 0;
-  GST_BUFFER_DURATION (outbuf) = 0;
 
-  gst_pad_push (wavenc->srcpad, outbuf);
+  if ((gst_pad_push (wavenc->srcpad, outbuf)) != GST_FLOW_OK)
+    GST_WARNING_OBJECT (wavenc, "couldn't push header....");
 }
 
 static void
@@ -292,6 +293,7 @@ gst_wavenc_init (GstWavEnc * wavenc)
           "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (wavenc), wavenc->sinkpad);
   gst_pad_set_chain_function (wavenc->sinkpad, gst_wavenc_chain);
+  gst_pad_set_event_function (wavenc->sinkpad, gst_wavenc_event);
   gst_pad_set_setcaps_function (wavenc->sinkpad, gst_wavenc_sink_setcaps);
 
   wavenc->srcpad =
@@ -601,16 +603,16 @@ write_labels (GstWavEnc * wavenc)
 }
 #endif
 
-static GstFlowReturn
-gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
+static gboolean
+gst_wavenc_event (GstPad * pad, GstEvent * event)
 {
+  gboolean res = TRUE;
   GstWavEnc *wavenc;
-  GstFlowReturn result = GST_FLOW_OK;
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
 
-  if (GST_IS_EVENT (buf)) {
-    if (GST_EVENT_TYPE (buf) == GST_EVENT_EOS) {
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
       wavenc->pad_eos = TRUE;
 
 #if 0
@@ -623,30 +625,41 @@ gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
 #endif
 
       gst_wavenc_stop_file (wavenc);
-      gst_pad_push (wavenc->srcpad, buf);
-      gst_pad_push_event (wavenc->srcpad, gst_event_new_eos ());
-    } else if (GST_EVENT_TYPE (buf) == GST_EVENT_NEWSEGMENT) {
-      //if (GST_EVENT_DISCONT_NEW_MEDIA (buf)) {
+
+      break;
+    case GST_EVENT_NEWSEGMENT:
       if (wavenc->newmediacount++ > 0) {
         gst_wavenc_stop_file (wavenc);
         wavenc->setup = FALSE;
         wavenc->flush_header = TRUE;
         gst_wavenc_setup (wavenc);
       }
-      gst_pad_event_default (wavenc->sinkpad, GST_EVENT (buf));
-      //}
-    } else {
-      gst_pad_event_default (wavenc->sinkpad, GST_EVENT (buf));
-    }
-
-    return result;
+      break;
+    default:
+      break;
   }
+
+  /* and forward it */
+  res = gst_pad_event_default (pad, event);
+
+  gst_object_unref (wavenc);
+  return res;
+}
+
+static GstFlowReturn
+gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstWavEnc *wavenc;
+  GstFlowReturn result = GST_FLOW_OK;
+
+  wavenc = GST_WAVENC (gst_pad_get_parent (pad));
 
   if (!wavenc->setup) {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (wavenc, CORE, NEGOTIATION, (NULL),
         ("encoder not initialised (input is not audio?)"));
-    return GST_FLOW_ERROR;
+    result = GST_FLOW_ERROR;
+    goto beach;
   }
 
   if (GST_PAD_IS_USABLE (wavenc->srcpad)) {
@@ -665,6 +678,8 @@ gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
     gst_pad_push (wavenc->srcpad, buf);
   }
 
+beach:
+  gst_object_unref (wavenc);
   return result;
 }
 

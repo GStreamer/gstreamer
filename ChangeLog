@@ -1,3 +1,16 @@
+2005-11-01  Edward Hervey  <edward@fluendo.com>
+
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_stop_file),
+	(gst_wavenc_init), (gst_wavenc_event), (gst_wavenc_chain):
+	Added proper event handlind, 
+	made downstream newsegment event use GST_FORMAT_BYTES (otherwise it's
+	ignored),
+	and don't set a duration of 0 for buffers otherwise they are discarded
+	by GstBaseSink.
+
+	GstWavEnc needs some serious loving, after going through the code I'm
+	really wondering how this can stay in -good ...
+
 2005-11-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/elements/matroskamux.c: (setup_src_pad), (setup_sink_pad),
