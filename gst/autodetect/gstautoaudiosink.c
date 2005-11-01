@@ -57,7 +57,7 @@ gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
-  eklass->change_state = gst_auto_audio_sink_change_state;
+  eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_audio_sink_change_state);
 }
 
 /*
@@ -237,15 +237,21 @@ static GstStateChangeReturn
 gst_auto_audio_sink_change_state (GstElement * element,
     GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstAutoAudioSink *sink = GST_AUTO_AUDIO_SINK (element);
-
-  GST_DEBUG_OBJECT (element, "Change state 0x%x", transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_auto_audio_sink_detect (sink))
         return GST_STATE_CHANGE_FAILURE;
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_auto_audio_sink_reset (sink);
       break;
@@ -253,5 +259,5 @@ gst_auto_audio_sink_change_state (GstElement * element,
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return ret;
 }

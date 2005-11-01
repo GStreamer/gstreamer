@@ -1,3 +1,14 @@
+2005-11-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_class_init),
+	(gst_auto_audio_sink_change_state):
+	* gst/autodetect/gstautovideosink.c:
+	(gst_auto_video_sink_class_init),
+	(gst_auto_video_sink_change_state):
+	  Fix state change function and use GST_DEBUG_FUNCPTR in
+	  class_init.
+
 2005-11-01  Josef Zlomek  <josef dot zlomek at xeris dot cz>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
