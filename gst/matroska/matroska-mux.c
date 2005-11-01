@@ -258,6 +258,8 @@ gst_matroska_mux_finalize (GObject * object)
 
   gst_object_unref (mux->collect);
   gst_object_unref (mux->ebml_write);
+  if (mux->writing_app)
+    g_free (mux->writing_app);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -346,7 +348,7 @@ gst_matroska_mux_reset (GstElement * element)
 
   /* reset writing_app */
   if (mux->writing_app) {
-    free (mux->writing_app);
+    g_free (mux->writing_app);
   }
   mux->writing_app = g_strdup ("GStreamer Matroska muxer");
 
@@ -752,11 +754,15 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
             offset += GST_BUFFER_SIZE (buf[i]);
           }
 
-          if (memcmp (GST_BUFFER_DATA (buf[0]) + 1, "vorbis", 6) == 0) {
-            guint8 *hdr = GST_BUFFER_DATA (buf[0]) + 1 + 6 + 4;
+          if (GST_BUFFER_SIZE (buf[0]) < 1 + 6 + 4) {
+            GST_WARNING ("First vorbis header too small, ignoring");
+          } else {
+            if (memcmp (GST_BUFFER_DATA (buf[0]) + 1, "vorbis", 6) == 0) {
+              guint8 *hdr = GST_BUFFER_DATA (buf[0]) + 1 + 6 + 4;
 
-            audiocontext->channels = GST_READ_UINT8 (hdr);
-            audiocontext->samplerate = GST_READ_UINT32_LE (hdr + 1);
+              audiocontext->channels = GST_READ_UINT8 (hdr);
+              audiocontext->samplerate = GST_READ_UINT32_LE (hdr + 1);
+            }
           }
         } else {
           GST_WARNING ("Vorbis header does not contain "
@@ -1031,6 +1037,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   g_free (rand);
   gst_ebml_write_binary (ebml, GST_MATROSKA_ID_SEGMENTUID,
       (guint8 *) segment_uid, 16);
+  g_free (segment_uid);
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TIMECODESCALE, mux->time_scale);
   mux->duration_pos = ebml->pos;
   /* get duration */
@@ -1046,10 +1053,10 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
 
     /* Query the total length of the track. */
     peerpad = gst_pad_get_peer (thepad);
-    GST_DEBUG ("Querying duration on pad %s:%s", GST_DEBUG_PAD_NAME (thepad));
+    GST_DEBUG_OBJECT (thepad, "querying duration");
     if (gst_pad_query_duration (peerpad, &format, &trackduration)) {
-      GST_DEBUG ("%s:%s - duration: %" GST_TIME_FORMAT,
-          GST_DEBUG_PAD_NAME (thepad), GST_TIME_ARGS (trackduration));
+      GST_DEBUG_OBJECT (thepad, "%duration: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (trackduration));
       if ((gdouble) trackduration > duration) {
         duration = (gdouble) trackduration;
       }
@@ -1323,12 +1330,12 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
 
   /* if there is no best pad, we have reached EOS */
   if (best == NULL) {
-    GST_DEBUG ("No best pad finishing...");
+    GST_DEBUG_OBJECT (mux, "No best pad finishing...");
     gst_matroska_mux_finish (mux);
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
     return GST_FLOW_WRONG_STATE;
   }
-  GST_DEBUG ("Best pad %s.", gst_pad_get_name (best->collect.pad));
+  GST_DEBUG_OBJECT (best->collect.pad, "best pad");
 
   /* write data */
   buf = best->buffer;
@@ -1478,7 +1485,7 @@ gst_matroska_mux_collected (GstCollectPads * pads, gpointer user_data)
 {
   GstMatroskaMux *mux = GST_MATROSKA_MUX (user_data);
 
-  GST_DEBUG ("Collected pads");
+  GST_DEBUG_OBJECT (mux, "Collected pads");
 
   /* start with a header */
   if (mux->state == GST_MATROSKA_MUX_STATE_START) {

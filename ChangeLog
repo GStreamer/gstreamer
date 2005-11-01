@@ -1,5 +1,15 @@
 2005-11-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/elements/matroskamux.c: (setup_src_pad), (setup_sink_pad),
+	(setup_matroskamux), (check_buffer_data), (GST_START_TEST):
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_finalize),
+	(gst_matroska_mux_reset), (gst_matroska_mux_audio_pad_setcaps),
+	(gst_matroska_mux_start), (gst_matroska_mux_write_data),
+	(gst_matroska_mux_collected):
+	  Fix leaks and invalid memory access as reported by valgrind
+
+2005-11-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	Patch by: Michal Benes <michal.benes@xeris.cz>
 
 	* check/Makefile.am:
