@@ -1,3 +1,8 @@
+2005-11-01  Luca Ognibene  <luogni@tin.it>
+
+	* gst/gst.c:
+	  fix docs. popt is death, long live GOption.
+
 2005-10-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbuffer.h:

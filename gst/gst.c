@@ -62,7 +62,7 @@
  * It's allowed to pass two NULL pointers to gst_init() in case you don't want
  * to pass the command line args to GStreamer.
  *
- * You can also use a popt table to initialize your own parameters as shown in
+ * You can also use GOption to initialize your own parameters as shown in
  * the next code fragment:
  * <example>
  * <title>Initializing own parameters when initializing gstreamer</title>
@@ -72,14 +72,20 @@
  * int
  * main (int argc, char *argv[])
  * {
- *   struct poptOption options[] = {
- *     { "stats",  's',  POPT_ARG_NONE|POPT_ARGFLAG_STRIP,   &amp;stats,   0,
- *         "Show pad stats", NULL},
- *       POPT_TABLEEND
- *     };
- *   // initialize the GStreamer library
- *   gst_init_with_popt_table (&amp;argc, &amp;argv, options);
- *   ...
+ *  GOptionEntry options[] = {
+ *   {"tags", 't', 0, G_OPTION_ARG_NONE, &amp;tags,
+ *       N_("Output tags (also known as metadata)"), NULL},
+ *   {NULL}
+ *  };
+ *  ctx = g_option_context_new ("gst-launch");
+ *  g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
+ *  g_option_context_add_group (ctx, gst_init_get_option_group ());
+ *  if (!g_option_context_parse (ctx, &amp;argc, &amp;argv, &amp;err)) {
+ *    g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+ *    exit (1);
+ *  }
+ *  g_option_context_free (ctx);
+ * ...
  * }
  * </programlisting>
  * </example>
