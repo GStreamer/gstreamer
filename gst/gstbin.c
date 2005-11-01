@@ -27,10 +27,11 @@
  * SECTION:gstbin
  * @short_description: Base class for elements that contain other elements
  *
- * GstBin is the simplest of the container elements, allowing elements to
- * become children of itself.  Pads from the child elements can be ghosted to
- * the bin, making the bin itself look transparently like any other element,
- * allowing for deep nesting of predefined sub-pipelines.
+ * GstBin is an element that can contain other elements, allowing them to be
+ * managed as a group.
+ * Pads from the child elements can be ghosted to the bin.
+ * This makes the bin look like any other elements and enables creation of
+ * higher-level abstraction elements.
  *
  * A new GstBin is created with gst_bin_new(). Use a #GstPipeline instead if you
  * want to create a toplevel bin because a normal bin doesn't have a bus or
@@ -52,7 +53,8 @@
  * bin. Likewise the "element_removed" signal is fired whenever an element is
  * removed from the bin.
  *
- * A GstBin internally intercepts all #GstMessage posted by its children and
+ * A GstBin internally interceps all #GstMessage posted by its children and
+ * A GstBin internally intercepts every #GstMessage posted by its children and
  * implements the following default behaviour for each of them.
  *
  *   GST_MESSAGE_EOS: This message is only posted by sinks
@@ -81,7 +83,7 @@
  *           first sink that answers the query successfully is returned. If
  *           no sink is in the bin, the query fails.
  *
- * gst_object_unref() is used to destroy the bin.
+ * gst_object_unref() is used to drop your reference to the bin.
  *
  * Last reviewed on 2005-10-28 (0.9.4)
  */
@@ -269,7 +271,7 @@ gst_bin_class_init (GstBinClass * klass)
    * @bin: the #GstBin
    * @element: the #GstElement that was added to the bin
    *
-   * Will be emitted if a new element was removed/added to this bin.
+   * Will be emitted after the element was added to the bin.
    */
   gst_bin_signals[ELEMENT_ADDED] =
       g_signal_new ("element-added", G_TYPE_FROM_CLASS (klass),
@@ -277,10 +279,10 @@ gst_bin_class_init (GstBinClass * klass)
       NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
   /**
    * GstBin::element-removed:
-   * @bin: #GstBin
+   * @bin: the #GstBin
    * @element: the #GstElement that was removed from the bin
    *
-   * Will be emitted if an element was removed from this bin.
+   * Will be emitted after the element was removed from the bin.
    */
   gst_bin_signals[ELEMENT_REMOVED] =
       g_signal_new ("element-removed", G_TYPE_FROM_CLASS (klass),
@@ -597,7 +599,7 @@ unlink_pads (GstPad * pad)
   gst_object_unref (pad);
 }
 
-/* add an element to this bin
+/* vmethod that adds an element to a bin
  *
  * MT safe
  */
@@ -698,7 +700,7 @@ had_parent:
 /**
  * gst_bin_add:
  * @bin: a #GstBin
- * @element: the #GstElement to add to the bin
+ * @element: the #GstElement to add
  *
  * Adds the given element to the bin.  Sets the element's parent, and thus
  * takes ownership of the element. An element can only be added to one bin.
