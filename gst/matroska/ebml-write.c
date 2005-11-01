@@ -89,6 +89,7 @@ gst_ebml_write_new (GstPad * srcpad)
       GST_EBML_WRITE (g_object_new (GST_TYPE_EBML_WRITE, NULL));
 
   ebml->srcpad = gst_object_ref (srcpad);
+  ebml->timestamp = GST_CLOCK_TIME_NONE;
 
   gst_ebml_write_reset (ebml);
 
@@ -113,6 +114,7 @@ gst_ebml_write_reset (GstEbmlWrite * ebml)
   }
   ebml->cache_size = 0;
   ebml->last_write_result = GST_FLOW_OK;
+  ebml->timestamp = GST_CLOCK_TIME_NONE;
 }
 
 
@@ -220,6 +222,7 @@ gst_ebml_write_element_new (GstEbmlWrite * ebml, guint size)
   /* else, use a one-element buffer. This is slower */
   buf = gst_buffer_new_and_alloc (size);
   GST_BUFFER_SIZE (buf) = 0;
+  GST_BUFFER_TIMESTAMP (buf) = ebml->timestamp;
 
   return buf;
 }

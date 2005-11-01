@@ -1338,6 +1338,9 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
   buf = best->buffer;
   best->buffer = NULL;
 
+  /* set the timestamp for outgoing buffers */
+  ebml->timestamp = GST_BUFFER_TIMESTAMP (buf);
+
   if (mux->cluster) {
     /* start a new cluster every two seconds */
     if (mux->cluster_time + GST_SECOND * 2 < GST_BUFFER_TIMESTAMP (buf)) {

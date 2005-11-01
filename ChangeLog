@@ -1,3 +1,16 @@
+2005-11-01  Josef Zlomek  <josef dot zlomek at xeris dot cz>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/ebml-write.c: (gst_ebml_write_new),
+	(gst_ebml_write_reset), (gst_ebml_write_element_new):
+	* gst/matroska/ebml-write.h:
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_write_data):
+	  Set timestamps on outgoing ebml headers as well, so that the
+	  element after matroskamux can get the timestamp already when
+	  reading the first ebml element and doesn't have to wait for
+	  the actual data buffer for that (#320308).
+	  
 2005-10-31  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videomixer/videomixer.c (gst_videomixer_pad_unlink)

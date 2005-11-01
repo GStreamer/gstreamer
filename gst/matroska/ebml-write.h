@@ -46,6 +46,7 @@ typedef struct _GstEbmlWrite {
 
   GstPad *srcpad;
   guint64 pos;
+  GstClockTime timestamp;
 
   GstBuffer *cache;
   guint cache_size;
