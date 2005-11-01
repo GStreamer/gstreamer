@@ -1,3 +1,14 @@
+2005-11-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Patch by: Michal Benes <michal.benes@xeris.cz>
+
+	* check/Makefile.am:
+	* gst/matroska/ebml-write.c: (gst_ebml_write_seek):
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_handle_src_event),
+	(gst_matroska_mux_audio_pad_setcaps), (gst_matroska_mux_start):
+	  add a unit test for matroskamux
+	  fix the bugs that the unit test exposed
+
 2005-11-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/autodetect/gstautoaudiosink.c:

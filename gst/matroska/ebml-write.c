@@ -384,8 +384,7 @@ gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
     }
   }
 
-  seek = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_BYTES,
-      pos, -1, GST_CLOCK_TIME_NONE);
+  seek = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_BYTES, pos, -1, 0);
   peer_pad = GST_PAD_PEER (ebml->srcpad);
   if (peer_pad) {
     gst_pad_send_event (peer_pad, seek);

@@ -18,7 +18,9 @@ clean-local: clean-local-check
 TESTS = $(check_PROGRAMS)
 
 check_PROGRAMS = \
-	elements/level
+	elements/level \
+    elements/matroskamux
+    
 
 # these tests don't even pass
 noinst_PROGRAMS =

@@ -389,10 +389,7 @@ gst_matroska_mux_reset (GstElement * element)
 static gboolean
 gst_matroska_mux_handle_src_event (GstPad * pad, GstEvent * event)
 {
-  GstMatroskaMux *mux;
   GstEventType type;
-
-  mux = GST_MATROSKA_MUX (gst_pad_get_parent (pad));
 
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
@@ -607,7 +604,6 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstMatroskaTrackContext *context = NULL;
   GstMatroskaTrackAudioContext *audiocontext;
   GstMatroskaPad *collect_pad;
-  GstMatroskaMux *mux = GST_MATROSKA_MUX (gst_pad_get_parent (pad));
   const gchar *mimetype;
   gint samplerate = 0, channels = 0;
   GstStructure *structure;
@@ -763,15 +759,14 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
             audiocontext->samplerate = GST_READ_UINT32_LE (hdr + 1);
           }
         } else {
-          GST_WARNING_OBJECT (mux, "Vorbis header does not contain "
+          GST_WARNING ("Vorbis header does not contain "
               "three buffers (found %d buffers), Ignoring.", bufarr->len);
         }
       }
     }
 
     if (priv_data == NULL) {
-      GST_WARNING_OBJECT (mux,
-          "Could not write Vorbis header into codec private data. "
+      GST_WARNING ("Could not write Vorbis header into codec private data. "
           "You will probably not be able to play the stream.");
     }
 
@@ -1085,7 +1080,8 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     collect_pad = (GstMatroskaPad *) collected->data;
     thepad = collect_pad->collect.pad;
 
-    if (GST_PAD_IS_USABLE (thepad)) {
+    if (GST_PAD_IS_USABLE (thepad)
+        && collect_pad->track->codec_id != 0) {
       collect_pad->track->num = tracknum++;
       child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKENTRY);
       gst_matroska_mux_track_header (mux, collect_pad->track);
