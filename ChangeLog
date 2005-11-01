@@ -1,3 +1,13 @@
+2005-11-01  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst-types.defs:
+	Updated modification from API
+	* gst/gstquery.override:
+	Added gst_query_parse_duration override
+	* examples/gstfile.py:
+	Now use duration query
+	Cleanups
+
 2005-10-27  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:

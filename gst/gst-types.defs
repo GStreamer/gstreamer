@@ -423,7 +423,6 @@
     '("demux" "GST_STREAM_ERROR_DEMUX")
     '("mux" "GST_STREAM_ERROR_MUX")
     '("format" "GST_STREAM_ERROR_FORMAT")
-    '("stopped" "GST_STREAM_ERROR_STOPPED")
     '("num-errors" "GST_STREAM_ERROR_NUM_ERRORS")
   )
 )

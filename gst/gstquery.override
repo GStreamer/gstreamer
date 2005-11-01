@@ -43,6 +43,28 @@ _wrap_gst_query_parse_position (PyGstMiniObject *self)
 	return ret;
 }
 %%
+override gst_query_parse_duration noargs
+static PyObject *
+_wrap_gst_query_parse_duration (PyGstMiniObject *self)
+{
+	GstFormat	format;
+	gint64		cur;
+	PyObject	*ret;
+
+	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_DURATION) {
+		PyErr_SetString(PyExc_TypeError, "Query is not a 'Duration' query");
+		return NULL;
+	}
+	
+	gst_query_parse_duration (GST_QUERY(self->obj), &format, &cur);
+	
+	ret = PyList_New(2);
+	PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
+	PyList_SetItem(ret, 1, PyLong_FromLongLong(cur));
+
+	return ret;
+}
+%%
 override gst_query_parse_convert noargs
 static PyObject *
 _wrap_gst_query_parse_convert (PyGstMiniObject *self)

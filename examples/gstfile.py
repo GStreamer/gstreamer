@@ -108,7 +108,6 @@ class Discoverer(gst.Pipeline):
         self.typefind.connect("have-type", self._have_type_cb)
         self.dbin.connect("new-decoded-pad", self._new_decoded_pad_cb)
         self.dbin.connect("unknown-type", self._unknown_type_cb)
-        #self.dbin.connect("found-tag", self._found_tag_cb)
 
         self.discover()
 
@@ -130,29 +129,21 @@ class Discoverer(gst.Pipeline):
             if not msg:
                 print "got empty message..."
                 break
-            #print "##", msg.type
             if msg.type & gst.MESSAGE_STATE_CHANGED:
-                #print "## state changed\t", msg.src.get_name() ,
-                #print msg.parse_state_changed()
                 pass
             elif msg.type & gst.MESSAGE_EOS:
-                #print "EOS"
                 break
             elif msg.type & gst.MESSAGE_TAG:
                 for key in msg.parse_tag().keys():
                     self.tags[key] = msg.structure[key]
-                #print msg.structure.to_string()
             elif msg.type & gst.MESSAGE_ERROR:
                 print "whooops, error", msg.parse_error()
                 break
             else:
                 print "unknown message type"
                 
-#       self.info( "going to PAUSED")
         self.set_state(gst.STATE_PAUSED)
-#       self.info("going to ready")
         self.set_state(gst.STATE_READY)
-#        print "now in ready"
         self.finished = True
 
     def print_info(self):
@@ -207,24 +198,18 @@ class Discoverer(gst.Pipeline):
 
     def _notify_caps_cb(self, pad, args):
         caps = pad.get_negotiated_caps()
-#        print "caps notify on", pad, ":", caps
         if not caps:
             return
         # the caps are fixed
         # We now get the total length of that stream
-        q = gst.query_new_position(gst.FORMAT_TIME)
-        #print "query refcount", q.__grefcount__
+        q = gst.query_new_duration(gst.FORMAT_TIME)
         pad.info("sending position query")
         if pad.get_peer().query(q):
-            #print "query refcount", q.__grefcount__
-            length = q.structure["end"]
-            pos = q.structure["cur"]
-            format = q.structure["format"]
-            pad.info("got position query answer : %d:%d:%d" % (length, pos, format))
-            #print "got length", time_to_string(pos), time_to_string(length), format
+            format, length = q.parse_duration()
+            pad.info("got position query answer : %d:%d" % (length, format))
         else:
             gst.warning("position query didn't work")
-        #length = pad.get_peer().query(gst.QUERY_TOTAL, gst.FORMAT_TIME)
+
         # We store the caps and length in the proper location
         if "audio" in caps.to_string():
             self.audiocaps = caps
@@ -251,19 +236,10 @@ class Discoverer(gst.Pipeline):
         # Does the file contain got audio or video ?
         caps = pad.get_caps()
         gst.info("caps:%s" % caps.to_string())
-#        print "new decoded pad", caps.to_string()
         if "audio" in caps.to_string():
             self.is_audio = True
-##             if caps.is_fixed():
-##                 print "have negotiated caps", caps
-##                 self.audiocaps = caps
-##                 return
         elif "video" in caps.to_string():
             self.is_video = True
-##             if caps.is_fixed():
-##                 print "have negotiated caps", caps
-##                 self.videocaps = caps
-##                 return
         else:
             print "got a different caps..", caps
             return
