@@ -1,5 +1,16 @@
 2005-11-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c:
+	Fix typo in docs.
+
+	* gst/gstelement.c: (gst_element_commit_state):
+	Remove unused value.
+
+	* gst/gstiterator.c:
+	Mention that the returned element is reffed in the docs.
+
+2005-11-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_alloc_buffer), (handle_pad_block),
 	(gst_pad_push), (gst_pad_push_event):
 	Unlock blocked pads when they are flushed.

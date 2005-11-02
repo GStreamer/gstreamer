@@ -227,9 +227,11 @@ gst_iterator_pop (GstIterator * it)
  * @it: The #GstIterator to iterate
  * @elem: pointer to hold next element
  *
- * Get the next item from the iterator.
+ * Get the next item from the iterator. For iterators that return
+ * objects derived from #GObject a refcounted object will be
+ * returned that should be unreffed after usage.
  *
- * Returns: The result of the iteration.
+ * Returns: The result of the iteration. Unref after usage.
  *
  * MT safe.
  */

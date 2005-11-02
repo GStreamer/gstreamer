@@ -1277,7 +1277,7 @@ typedef struct _GstBinSortIterator
   gint mode;                    /* adding or removing dependency */
   GstElement *best;             /* next element with least dependencies */
   gint best_deg;                /* best degree */
-  GHashTable *hash;             /* has table with element dependencies */
+  GHashTable *hash;             /* hashtable with element dependencies */
 } GstBinSortIterator;
 
 /* we add and subtract 1 to make sure we don't confuse NULL and 0 */

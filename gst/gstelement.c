@@ -1861,9 +1861,6 @@ gst_element_commit_state (GstElement * element)
   if (pending == current)
     goto complete;
 
-  /* not there yet, will get there ASYNC */
-  ret = GST_STATE_CHANGE_ASYNC;
-
   next = GST_STATE_GET_NEXT (current, pending);
   transition = GST_STATE_TRANSITION (current, next);
 
