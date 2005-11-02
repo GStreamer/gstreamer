@@ -2981,6 +2981,8 @@ handle_pad_block (GstPad * pad)
   }
 
   while (GST_PAD_IS_BLOCKED (pad)) {
+    if (GST_PAD_IS_FLUSHING (pad))
+      goto flushing;
     GST_PAD_BLOCK_WAIT (pad);
     if (GST_PAD_IS_FLUSHING (pad))
       goto flushing;

@@ -1,3 +1,8 @@
+2005-11-02  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstpad.c: (handle_pad_block):
+	Follow-up to Wim's patch, solves deadlock for blocked and flushing pads
+	
 2005-11-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c:
