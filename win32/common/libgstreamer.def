@@ -282,6 +282,7 @@ EXPORTS
 	gst_element_iterate_pads
 	gst_flow_return_get_type
 	gst_pad_query_position
+	gst_pad_query_duration
 	gst_type_find_factory_call_function
 	gst_type_find_factory_get_type
 	gst_type_find_factory_get_list
