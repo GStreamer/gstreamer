@@ -122,6 +122,7 @@ do_toggle_element (GstGConfAudioSink * sink)
   /* kill old element */
   if (sink->kid) {
     GST_DEBUG_OBJECT (sink, "Removing old kid");
+    gst_element_set_state (sink->kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (sink), sink->kid);
     sink->kid = NULL;
   }
@@ -156,6 +157,7 @@ static GstStateChangeReturn
 gst_gconf_audio_sink_change_state (GstElement * element,
     GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstGConfAudioSink *sink = GST_GCONF_AUDIO_SINK (element);
 
   switch (transition) {
@@ -163,6 +165,14 @@ gst_gconf_audio_sink_change_state (GstElement * element,
       if (!do_toggle_element (sink))
         return GST_STATE_CHANGE_FAILURE;
       break;
+    default:
+      break;
+  }
+
+  ret = GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
+      (element, transition), GST_STATE_CHANGE_SUCCESS);
+
+  switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_gconf_audio_sink_reset (sink);
       break;
@@ -170,6 +180,5 @@ gst_gconf_audio_sink_change_state (GstElement * element,
       break;
   }
 
-  return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS, change_state,
-      (element, transition), GST_STATE_CHANGE_SUCCESS);
+  return ret;
 }

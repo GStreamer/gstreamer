@@ -1,3 +1,12 @@
+2005-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gconf/gstgconfaudiosink.c: (do_toggle_element),
+	(gst_gconf_audio_sink_change_state):
+	* ext/gconf/gstgconfvideosink.c: (do_toggle_element),
+	(gst_gconf_video_sink_change_state):
+	  Fix state change functions here as well and set kid
+	  to NULL state before removing it.
+
 2005-11-01  Edward Hervey  <edward@fluendo.com>
 
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_stop_file),
