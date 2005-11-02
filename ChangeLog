@@ -1,5 +1,9 @@
 2005-11-02  Julien MOUTTE  <julien@moutte.net>
 
+	* configure.ac: Requires DirectFB 0.9.24
+
+2005-11-02  Julien MOUTTE  <julien@moutte.net>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/directfb/Makefile.am:

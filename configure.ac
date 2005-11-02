@@ -327,7 +327,7 @@ dnl ###########################
 dnl **** DirectFB ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
 GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
-  PKG_CHECK_MODULES(DIRECTFB, directfb, [
+  PKG_CHECK_MODULES(DIRECTFB, directfb >= 0.9.24, [
     HAVE_DIRECTFB="yes"
     AC_SUBST(DIRECTFB_CFLAGS)
     AC_SUBST(DIRECTFB_LIBS)
