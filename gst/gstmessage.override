@@ -185,7 +185,7 @@ _wrap_gst_message_parse_tag (PyGstMiniObject *self)
 	gst_message_parse_tag (GST_MESSAGE(self->obj), &taglist);
 
 	ret = pyg_boxed_new (GST_TYPE_TAG_LIST, taglist, TRUE, TRUE);
-
+	gst_tag_list_free (taglist);
 	return ret;
 }
 %%
