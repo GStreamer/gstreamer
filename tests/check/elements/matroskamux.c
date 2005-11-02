@@ -65,7 +65,6 @@ setup_src_pad (GstElement * element,
   /* sending pad */
   templ = gst_static_pad_template_get (template);
   srcpad = gst_pad_new_from_template (templ, "src");
-  gst_object_unref (templ);
   fail_if (srcpad == NULL, "Could not create a srcpad");
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
 
@@ -117,7 +116,6 @@ setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
   /* receiving pad */
   templ = gst_static_pad_template_get (template);
   sinkpad = gst_pad_new_from_template (templ, "sink");
-  gst_object_unref (templ);
 
   fail_if (sinkpad == NULL, "Could not create a sinkpad");
 
@@ -197,10 +195,12 @@ GST_START_TEST (test_ebml_header)
   int i;
   guint8 data0[12] =
       { 0x1a, 0x45, 0xdf, 0xa3, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-        0xff };
+    0xff
+  };
   guint8 data1[12] =
       { 0x42, 0x82, 0x89, 0x6d, 0x61, 0x74, 0x72, 0x6f, 0x73, 0x6b, 0x61,
-        0x00 };
+    0x00
+  };
   guint8 data2[4] = { 0x42, 0x87, 0x81, 0x01 };
   guint8 data3[4] = { 0x42, 0x85, 0x81, 0x01 };
   guint8 data4[8] = { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14 };
@@ -264,7 +264,8 @@ GST_START_TEST (test_vorbis_header)
   gboolean vorbis_header_found = FALSE;
   guint8 data[12] =
       { 0x63, 0xa2, 0x89, 0x02, 0x01, 0x02, 0x10, 0x20, 0x20, 0x30, 0x30,
-        0x30 };
+    0x30
+  };
 
   matroskamux = setup_matroskamux (&srcvorbistemplate);
   fail_unless (gst_element_set_state (matroskamux,
