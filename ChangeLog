@@ -1,3 +1,16 @@
+2005-11-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/README:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbin.c:
+	  doc updates
+	* gst/gstregistry.c: (gst_registry_scan_path_level):
+	  fix for a nasty little missed situation where an installed plug-in
+	  which was in the cache did not get overridden by an uninstalled one
+	  which was earlier in the plugin path because the newly created plugin
+	  for the uninstalled one (not in the registry) didn't get its
+	  ->registered set to TRUE
+
 2005-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstcollectpads.c: (gst_collectpads_set_function),

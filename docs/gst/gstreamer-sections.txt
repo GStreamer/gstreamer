@@ -37,11 +37,7 @@ thread_list
 <FILE>gstbin</FILE>
 <TITLE>GstBin</TITLE>
 GstBin
-GstBinFlags
-
-GST_BIN_CHILDREN
-GST_BIN_CHILDREN_COOKIE
-GST_BIN_NUMCHILDREN
+GstBinClass
 
 gst_bin_new
 gst_bin_add
@@ -56,12 +52,19 @@ gst_bin_iterate_recurse
 gst_bin_iterate_sinks
 gst_bin_iterate_sorted
 gst_bin_iterate_all_by_interface
+
 <SUBSECTION>
 gst_bin_add_many
 gst_bin_remove_many
 
+<SUBSECTION>
+GstBinFlags
+
+GST_BIN_CHILDREN
+GST_BIN_CHILDREN_COOKIE
+GST_BIN_NUMCHILDREN
+
 <SUBSECTION Standard>
-GstBinClass
 GST_BIN
 GST_IS_BIN
 GST_TYPE_BIN

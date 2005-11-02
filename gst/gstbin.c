@@ -25,7 +25,7 @@
 
 /**
  * SECTION:gstbin
- * @short_description: Base class for elements that contain other elements
+ * @short_description: Base class and element that can contain other elements
  *
  * GstBin is an element that can contain other elements, allowing them to be
  * managed as a group.
@@ -49,41 +49,61 @@
  * gst_bin_iterate_elements(). Various other iterators exist to retrieve the
  * elements in a bin.
  *
- * The "element_added" signal is fired whenever a new element is added to the
- * bin. Likewise the "element_removed" signal is fired whenever an element is
- * removed from the bin.
+ * gst_object_unref() is used to drop your reference to the bin.
  *
- * A GstBin internally interceps all #GstMessage posted by its children and
+ * The <link linkend="GstBin-element-added">element-added</link> signal is
+ * fired whenever a new element is added to the bin. Likewise the <link
+ * linkend="GstBin-element-removed">element-removed</link> signal is fired
+ * whenever an element is removed from the bin.
+ *
+ * <refsect2><title>Notes</title>
+ * <para>
  * A GstBin internally intercepts every #GstMessage posted by its children and
- * implements the following default behaviour for each of them.
- *
- *   GST_MESSAGE_EOS: This message is only posted by sinks
- *     in the PLAYING state. If all sinks posted the EOS message, this bin
- *     will post and EOS message upwards.
- *
- *   GST_MESSAGE_SEGMENT_START: just collected and never forwarded upwards.
+ * implements the following default behaviour for each of them:
+ * <variablelist>
+ *   <varlistentry>
+ *     <term>GST_MESSAGE_EOS</term>
+ *     <listitem><para>This message is only posted by sinks in the PLAYING
+ *     state. If all sinks posted the EOS message, this bin will post and EOS
+ *     message upwards.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>GST_MESSAGE_SEGMENT_START</term>
+ *     <listitem><para>just collected and never forwarded upwards.
  *     The messages are used to decide when all elements have completed playback
- *     of their segment.
- *
- *   GST_MESSAGE_SEGMENT_DONE: Is posted by GstBin when all elements that posted
- *     a SEGMENT_START have posted a SEGMENT_DONE.
- *
- *   OTHERS: posted upwards.
+ *     of their segment.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>GST_MESSAGE_SEGMENT_DONE</term>
+ *     <listitem><para> Is posted by GstBin when all elements that posted
+ *     a SEGMENT_START have posted a SEGMENT_DONE.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>OTHERS</term>
+ *     <listitem><para> posted upwards.</para></listitem>
+ *   </varlistentry>
+ * </variablelist>
  *
  * A GstBin implements the following default behaviour for answering to a
  * #GstQuery:
- *
- *   GST_QUERY_DURATION: If the query has been asked before with the same
- *           format, use the cached previous value. If no previous value
- *           was cached, the query is sent to all sink elements in the bin
- *           and the MAXIMUM of all values is returned and cached. If no
- *           sinks are available in the bin, the query fails.
- *
- *   OTHERS: the query is forwarded to all sink elements, the result of the
- *           first sink that answers the query successfully is returned. If
- *           no sink is in the bin, the query fails.
- *
- * gst_object_unref() is used to drop your reference to the bin.
+ * <variablelist>
+ *   <varlistentry>
+ *     <term>GST_QUERY_DURATION</term>
+ *     <listitem><para>If the query has been asked before with the same format,
+ *     use the cached previous value. If no previous value was cached, the
+ *     query is sent to all sink elements in the bin and the MAXIMUM of all
+ *     values is returned and cached. If no sinks are available in the bin, the
+ *     query fails.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>OTHERS</term>
+ *     <listitem><para>the query is forwarded to all sink elements, the result
+ *     of the first sink that answers the query successfully is returned. If no
+ *     sink is in the bin, the query fails.</para></listitem>
+ *   </varlistentry>
+ * </variablelist>
+ * </para>
+ * </refsect2>
  *
  * Last reviewed on 2005-10-28 (0.9.4)
  */
