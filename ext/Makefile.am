@@ -228,4 +228,5 @@ DIST_SUBDIRS= \
 	faac \
 	faad \
 	gsm \
-	sdl
+	sdl \
+	directfb
