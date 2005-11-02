@@ -368,7 +368,9 @@ gst_collectpads_peek (GstCollectPads * pads, GstCollectData * data)
   GstBuffer *result;
 
   result = data->buffer;
-  gst_buffer_ref (result);
+
+  if (result)
+    gst_buffer_ref (result);
 
   return result;
 }
