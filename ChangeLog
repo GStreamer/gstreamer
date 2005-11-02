@@ -1,3 +1,14 @@
+2005-11-02  Sebastien Cote  <sebas642@yahoo.ca> 
+
+	reviewed by: Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_add_to_queue),
+	(gst_base_rtp_depayload_push),
+	(gst_base_rtp_depayload_set_gst_timestamp),
+	(gst_base_rtp_depayload_queue_release):
+	  Fixes some bugs in the depayloader's queuing/de-queueing code.
+
 2005-10-31  Michael Smith <msmith@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_init),

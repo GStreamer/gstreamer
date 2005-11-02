@@ -214,7 +214,6 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
     g_queue_push_tail (queue, in);
     QUEUE_UNLOCK (filter);
   } else {
-    QUEUE_UNLOCK (filter);
     guint16 seqnum, queueseq;
     guint32 timestamp;
 
@@ -236,7 +235,6 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
     }
 
     /* now insert it at that place */
-    QUEUE_LOCK (filter);
     g_queue_push_nth (queue, in, i);
     QUEUE_UNLOCK (filter);
 
@@ -328,7 +326,7 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
   /* if our queue is getting to big (more than RTP_QUEUEDELAY ms of data)
    * release heading buffers
    */
-  GST_DEBUG_OBJECT (filter, "clockrate %d, queu_delay %d", filter->clock_rate,
+  GST_DEBUG_OBJECT (filter, "clockrate %d, queue_delay %d", filter->clock_rate,
       filter->queue_delay);
   gfloat q_size_secs = (gfloat) filter->queue_delay / 1000;
   guint maxtsunits = (gfloat) filter->clock_rate * q_size_secs;
@@ -343,12 +341,12 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
   while (headts - tailts > maxtsunits) {
     GST_DEBUG_OBJECT (filter, "Poping packet from queue");
     if (bclass->process) {
-      GstBuffer *in = g_queue_pop_tail (queue);
+      GstBuffer *in = g_queue_pop_head (queue);
 
       gst_base_rtp_depayload_push (filter, in);
     }
-    tailts =
-        gst_rtpbuffer_get_timestamp (GST_BUFFER (g_queue_peek_tail (queue)));
+    headts =
+        gst_rtpbuffer_get_timestamp (GST_BUFFER (g_queue_peek_head (queue)));
   }
   QUEUE_UNLOCK (filter);
 }
