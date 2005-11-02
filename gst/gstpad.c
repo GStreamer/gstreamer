@@ -1205,9 +1205,8 @@ gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
  * @pad: a #GstPad.
  * @link: the #GstPadLinkFunction to set.
  *
- * Sets the given link function for the pad. It will be called when the pad is
- * linked or relinked with caps. The caps passed to the link function is
- * the caps for the connnection. It can contain a non fixed caps.
+ * Sets the given link function for the pad. It will be called when
+ * the pad is linked with another pad.
  *
  * The return value GST_PAD_LINK_OK should be used when the connection can be
  * made.

@@ -1,3 +1,17 @@
+2005-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gstcollectpads.c: (gst_collectpads_set_function),
+	(gst_collectpads_add_pad), (gst_collectpads_remove_pad),
+	(gst_collectpads_is_active), (gst_collectpads_collect),
+	(gst_collectpads_collect_range), (gst_collectpads_start),
+	(gst_collectpads_stop), (gst_collectpads_peek),
+	(gst_collectpads_pop), (gst_collectpads_available),
+	(gst_collectpads_read), (gst_collectpads_flush):
+	  Guard public API with assertions.
+	
+	* gst/gstpad.c:
+	  Fix docs for gst_pad_set_link_function().
+
 2005-11-02  Johan Dahlin  <johan@gnome.org>
 
 	* gst/elements/gsttypefindelement.c (gst_type_find_element_activate): 

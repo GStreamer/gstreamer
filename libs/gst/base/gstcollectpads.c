@@ -158,6 +158,7 @@ gst_collectpads_set_function (GstCollectPads * pads,
     GstCollectPadsFunction func, gpointer user_data)
 {
   g_return_if_fail (pads != NULL);
+  g_return_if_fail (GST_IS_COLLECTPADS (pads));
 
   GST_LOCK (pads);
   pads->func = func;
@@ -188,6 +189,7 @@ gst_collectpads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
   GstCollectData *data;
 
   g_return_val_if_fail (pads != NULL, NULL);
+  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), NULL);
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), NULL);
   g_return_val_if_fail (size >= sizeof (GstCollectData), NULL);
@@ -234,7 +236,9 @@ gst_collectpads_remove_pad (GstCollectPads * pads, GstPad * pad)
   GSList *list;
 
   g_return_val_if_fail (pads != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), FALSE);
   g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_LOCK (pads);
   list = g_slist_find_custom (pads->data, pad, (GCompareFunc) find_pad);
@@ -264,7 +268,9 @@ gboolean
 gst_collectpads_is_active (GstCollectPads * pads, GstPad * pad)
 {
   g_return_val_if_fail (pads != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), FALSE);
   g_return_val_if_fail (pad != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   return FALSE;
 }
@@ -284,6 +290,7 @@ GstFlowReturn
 gst_collectpads_collect (GstCollectPads * pads)
 {
   g_return_val_if_fail (pads != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), GST_FLOW_ERROR);
 
   return GST_FLOW_ERROR;
 }
@@ -306,6 +313,7 @@ gst_collectpads_collect_range (GstCollectPads * pads, guint64 offset,
     guint length)
 {
   g_return_val_if_fail (pads != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), GST_FLOW_ERROR);
 
   return GST_FLOW_ERROR;
 }
@@ -322,6 +330,7 @@ void
 gst_collectpads_start (GstCollectPads * pads)
 {
   g_return_if_fail (pads != NULL);
+  g_return_if_fail (GST_IS_COLLECTPADS (pads));
 
   GST_LOCK (pads);
   pads->started = TRUE;
@@ -341,6 +350,7 @@ void
 gst_collectpads_stop (GstCollectPads * pads)
 {
   g_return_if_fail (pads != NULL);
+  g_return_if_fail (GST_IS_COLLECTPADS (pads));
 
   GST_LOCK (pads);
   pads->started = FALSE;
@@ -366,6 +376,10 @@ GstBuffer *
 gst_collectpads_peek (GstCollectPads * pads, GstCollectData * data)
 {
   GstBuffer *result;
+
+  g_return_val_if_fail (pads != NULL, NULL);
+  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), NULL);
+  g_return_val_if_fail (data != NULL, NULL);
 
   result = data->buffer;
 
@@ -393,6 +407,10 @@ GstBuffer *
 gst_collectpads_pop (GstCollectPads * pads, GstCollectData * data)
 {
   GstBuffer *result;
+
+  g_return_val_if_fail (pads != NULL, NULL);
+  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), NULL);
+  g_return_val_if_fail (data != NULL, NULL);
 
   result = data->buffer;
   if (result) {
@@ -428,6 +446,9 @@ gst_collectpads_available (GstCollectPads * pads)
 {
   GSList *collected;
   guint result = G_MAXUINT;
+
+  g_return_val_if_fail (pads != NULL, 0);
+  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), 0);
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
     GstCollectData *pdata;
@@ -476,6 +497,11 @@ gst_collectpads_read (GstCollectPads * pads, GstCollectData * data,
 {
   guint readsize;
 
+  g_return_val_if_fail (pads != NULL, 0);
+  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), 0);
+  g_return_val_if_fail (data != NULL, 0);
+  g_return_val_if_fail (bytes != NULL, 0);
+
   readsize = MIN (size, GST_BUFFER_SIZE (data->buffer) - data->pos);
 
   *bytes = GST_BUFFER_DATA (data->buffer) + data->pos;
@@ -503,6 +529,10 @@ guint
 gst_collectpads_flush (GstCollectPads * pads, GstCollectData * data, guint size)
 {
   guint flushsize;
+
+  g_return_val_if_fail (pads != NULL, 0);
+  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), 0);
+  g_return_val_if_fail (data != NULL, 0);
 
   flushsize = MIN (size, GST_BUFFER_SIZE (data->buffer) - data->pos);
 
