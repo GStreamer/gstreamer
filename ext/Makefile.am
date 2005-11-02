@@ -34,11 +34,11 @@ CDAUDIO_DIR=
 DIRAC_DIR=
 # endif
 
-# if USE_DIRECTFB
-# DIRECTFB_DIR=directfb
-# else
+if USE_DIRECTFB
+DIRECTFB_DIR=directfb
+else
 DIRECTFB_DIR=
-# endif
+endif
 
 # if USE_DIVX
 # DIVX_DIR=divx

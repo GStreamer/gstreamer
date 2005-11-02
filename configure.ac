@@ -324,6 +324,18 @@ dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
 
+dnl **** DirectFB ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
+GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
+  PKG_CHECK_MODULES(DIRECTFB, directfb, [
+    HAVE_DIRECTFB="yes"
+    AC_SUBST(DIRECTFB_CFLAGS)
+    AC_SUBST(DIRECTFB_LIBS)
+  ], [
+    HAVE_DIRECTFB="no"
+  ])
+])
+
 dnl **** Free AAC Encoder (FAAC) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
 GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
@@ -470,6 +482,7 @@ gst/qtdemux/Makefile
 gst/tta/Makefile
 sys/Makefile
 ext/Makefile
+ext/directfb/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
 ext/gsm/Makefile

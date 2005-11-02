@@ -1,3 +1,37 @@
+2005-11-02  Julien MOUTTE  <julien@moutte.net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/directfb/Makefile.am:
+	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_get_format_name),
+	(gst_dfbvideosink_surface_create),
+	(gst_dfbvideosink_surface_destroy),
+	(gst_dfbvideosink_event_thread), (gst_dfbvideosink_enum_layers),
+	(gst_dfbvideosink_enum_vmodes), (gst_dfbvideosink_enum_devices),
+	(gst_dfbvideosink_setup), (gst_dfbvideosink_cleanup),
+	(gst_dfbvideosink_get_format_from_caps),
+	(gst_dfbvideosink_get_caps_from_format),
+	(gst_dfbvideosink_can_blit_from_format),
+	(gst_dfbvideosink_get_best_vmode), (gst_dfbvideosink_getcaps),
+	(gst_dfbvideosink_setcaps), (gst_dfbvideosink_change_state),
+	(gst_dfbvideosink_get_times), (gst_dfbvideosink_center_rect),
+	(gst_dfbvideosink_show_frame), (gst_dfbvideosink_bufferpool_clear),
+	(gst_dfbvideosink_buffer_alloc), (gst_dfbsurface_finalize),
+	(gst_dfbsurface_init), (gst_dfbsurface_class_init),
+	(gst_dfbsurface_get_type), (gst_dfbvideosink_interface_supported),
+	(gst_dfbvideosink_interface_init),
+	(gst_dfbvideosink_navigation_send_event),
+	(gst_dfbvideosink_navigation_init),
+	(gst_dfbvideosink_set_property), (gst_dfbvideosink_get_property),
+	(gst_dfbvideosink_init), (gst_dfbvideosink_base_init),
+	(gst_dfbvideosink_class_init), (gst_dfbvideosink_get_type),
+	(plugin_init):
+	* ext/directfb/dfbvideosink.h:
+	* ext/directfb/directfbvideosink.c:
+	* ext/directfb/directfbvideosink.h: Complete rewrite/port of
+	DirectFB video sink to 0.9. Handles reverse negotiation, hardware
+	scaling, navigation, buffer allocation from video memory etc...
+
 2005-10-31 Edgard Lima <edgard.lima@indt.org.br>
 
 	* gst-plugins-bad/ext/sdl/sdlvideosink.c:
