@@ -1,3 +1,8 @@
+2005-11-02  Johan Dahlin  <johan@gnome.org>
+
+	* gst/elements/gsttypefindelement.c (gst_type_find_element_activate): 
+	Unref found_caps after we used it.
+
 2005-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstcollectpads.c: (gst_collectpads_peek):
