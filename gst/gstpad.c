@@ -104,7 +104,7 @@ static void gst_pad_set_property (GObject * object, guint prop_id,
 static void gst_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void handle_pad_block (GstPad * pad);
+static GstFlowReturn handle_pad_block (GstPad * pad);
 static GstCaps *gst_pad_get_caps_unlocked (GstPad * pad);
 static void gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ);
 static gboolean gst_pad_activate_default (GstPad * pad);
@@ -2442,7 +2442,8 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
 
   GST_LOCK (pad);
   while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
-    handle_pad_block (pad);
+    if ((ret = handle_pad_block (pad)) != GST_FLOW_OK)
+      goto flushed;
 
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto no_peer;
@@ -2501,6 +2502,13 @@ do_caps:
   }
   return ret;
 
+flushed:
+  {
+    GST_CAT_DEBUG (GST_CAT_PADS, "%s:%s pad block stopped by flush",
+        GST_DEBUG_PAD_NAME (pad));
+    GST_UNLOCK (pad);
+    return ret;
+  }
 no_peer:
   {
     /* pad has no peer */
@@ -2949,11 +2957,12 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
  *
  * MT safe.
  */
-static void
+static GstFlowReturn
 handle_pad_block (GstPad * pad)
 {
   GstPadBlockCallback callback;
   gpointer user_data;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
       "signal block taken on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
@@ -2971,8 +2980,11 @@ handle_pad_block (GstPad * pad)
     GST_PAD_BLOCK_SIGNAL (pad);
   }
 
-  while (GST_PAD_IS_BLOCKED (pad))
+  while (GST_PAD_IS_BLOCKED (pad)) {
     GST_PAD_BLOCK_WAIT (pad);
+    if (GST_PAD_IS_FLUSHING (pad))
+      goto flushing;
+  }
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "got unblocked");
 
@@ -2987,6 +2999,14 @@ handle_pad_block (GstPad * pad)
   }
 
   gst_object_unref (pad);
+
+  return ret;
+
+flushing:
+  {
+    gst_object_unref (pad);
+    return GST_FLOW_WRONG_STATE;
+  }
 }
 
 /**********************************************************************
@@ -3167,7 +3187,8 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   /* FIXME: this check can go away; pad_set_blocked could be implemented with
    * probes completely */
   while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
-    handle_pad_block (pad);
+    if ((ret = handle_pad_block (pad)) != GST_FLOW_OK)
+      goto flushed;
 
   /* we emit signals on the pad arg, the peer will have a chance to
    * emit in the _chain() function */
@@ -3195,6 +3216,13 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   return ret;
 
   /* ERROR recovery here */
+flushed:
+  {
+    gst_buffer_unref (buffer);
+    GST_DEBUG_OBJECT (pad, "pad block stopped by flush");
+    GST_UNLOCK (pad);
+    return ret;
+  }
 dropped:
   {
     gst_buffer_unref (buffer);
@@ -3454,6 +3482,23 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
 
   GST_LOCK (pad);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      GST_PAD_SET_FLUSHING (pad);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_PAD_UNSET_FLUSHING (pad);
+      break;
+    default:
+      break;
+  }
+
+  if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
+      GST_PAD_BLOCK_SIGNAL (pad);
+    }
+  }
+
   if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {
     GST_UNLOCK (pad);
 
