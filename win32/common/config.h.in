@@ -15,7 +15,7 @@
 #define GST_CACHE_DIR PREFIX "\\var\\cache"
 
 /* macro to use to show function name */
-#undef GST_FUNCTION
+#define GST_FUNCTION "(function)"
 
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 #undef GST_GCOV_ENABLED

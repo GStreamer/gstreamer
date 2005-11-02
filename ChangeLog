@@ -1,5 +1,10 @@
 2005-11-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* win32/common/config.h.in:
+	  provide a GST_FUNCTION that just gives a string for now
+
+2005-11-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* win32/common/gstenumtypes.c: (register_gst_object_flags),
 	(gst_object_flags_get_type), (register_gst_bin_flags),
 	(gst_bin_flags_get_type), (register_gst_buffer_flag),
