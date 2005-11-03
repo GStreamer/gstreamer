@@ -78,6 +78,8 @@ struct _GstBaseRTPDepayload
    */
   GQueue *queue;
 
+  GstClock *clock;
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };

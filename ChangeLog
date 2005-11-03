@@ -1,3 +1,13 @@
+2005-11-04  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_class_init), (gst_base_rtp_depayload_init),
+	(gst_base_rtp_depayload_thread), (gst_base_rtp_depayload_wait),
+	(gst_base_rtp_depayload_set_clock):
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	Don't sleep on the bench (system clock) when you have a nice 
+	comfortable bed (Gstreamer clock) to sleep on.
+
 2005-11-03  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
