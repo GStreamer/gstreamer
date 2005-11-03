@@ -1,5 +1,28 @@
 2005-11-03  Wim Taymans  <wim@fluendo.com>
 
+	* check/states/sinks.c: (GST_START_TEST), (gst_object_suite):
+	Added some more checks. Specifically the case where NO_PREROLL
+	elements are in the pipeline.
+
+	* gst/base/gstbasesink.c: (gst_base_sink_commit_state),
+	(gst_base_sink_handle_object), (gst_base_sink_do_sync),
+	(gst_base_sink_get_position):
+	Post READY->PAUSED state change messages too.
+	Fix bug where VOID was posted as pending state...
+
+	* gst/gstbin.c: (gst_bin_recalc_state):
+	use _element_continue_state() to continue the state change.
+
+	* gst/gstelement.c: (gst_element_continue_state),
+	(gst_element_commit_state), (gst_element_set_state_func),
+	(gst_element_change_state), (gst_element_change_state_func):
+	Lots of state change cleanups, assign the STATE_RETURN in
+	a new continue_state() function that also propagates the
+	last return value from a state change to the app.
+	Update some debug statements with proper category.
+
+2005-11-03  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-events.txt:
 	* docs/design/part-gstpipeline.txt:
 	* docs/design/part-messages.txt:

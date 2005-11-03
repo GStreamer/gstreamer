@@ -1811,40 +1811,19 @@ nothing_aborted:
   }
 }
 
-/**
- * gst_element_commit_state:
- * @element: a #GstElement to commit the state of.
- *
- * Commit the state change of the element. This function is used
- * by elements that do asynchronous state changes.
- * The core will normally call this method automatically when an
- * element returned SUCCESS from the state change function.
- * Elements that return ASYNC from the change_state function should
- * eventually call this method from the streaming thread to signal
- * successfull state change completion.
- *
- * If after calling this method the element still has not reached
- * the pending state, the next state change is performed.
- *
- * This function can only be called with the STATE_LOCK held.
- *
- * Returns: The result of the commit state change.
- *
- * MT safe.
- */
+/* FIXME, this function is to be put in the .h file,
+ * gst_element_commit_state() should go away. */
 GstStateChangeReturn
-gst_element_commit_state (GstElement * element)
+gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
 {
   GstState pending;
-  GstStateChangeReturn ret;
   GstState old_state, old_next;
   GstState current, next;
   GstMessage *message;
   GstStateChange transition;
 
-  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
-
   GST_LOCK (element);
+  GST_STATE_RETURN (element) = ret;
   pending = GST_STATE_PENDING (element);
 
   /* check if there is something to commit */
@@ -1888,17 +1867,16 @@ gst_element_commit_state (GstElement * element)
 
 nothing_pending:
   {
-    GST_DEBUG_OBJECT (element, "nothing pending");
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "nothing pending");
     GST_UNLOCK (element);
-    return GST_STATE_CHANGE_SUCCESS;
+    return ret;
   }
 complete:
   {
     GST_STATE_PENDING (element) = GST_STATE_VOID_PENDING;
     GST_STATE_NEXT (element) = GST_STATE_VOID_PENDING;
-    ret = GST_STATE_RETURN (element) = GST_STATE_CHANGE_SUCCESS;
 
-    GST_DEBUG_OBJECT (element, "completed state change");
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "completed state change");
     GST_UNLOCK (element);
 
     message = gst_message_new_state_changed (GST_OBJECT (element),
@@ -1909,6 +1887,35 @@ complete:
 
     return ret;
   }
+}
+
+/**
+ * gst_element_commit_state:
+ * @element: a #GstElement to commit the state of.
+ *
+ * Commit the state change of the element. This function is used
+ * by elements that do asynchronous state changes.
+ * The core will normally call this method automatically when an
+ * element returned SUCCESS from the state change function.
+ * Elements that return ASYNC from the change_state function should
+ * eventually call this method from the streaming thread to signal
+ * successfull state change completion.
+ *
+ * If after calling this method the element still has not reached
+ * the pending state, the next state change is performed.
+ *
+ * This function can only be called with the STATE_LOCK held.
+ *
+ * Returns: The result of the commit state change.
+ *
+ * MT safe.
+ */
+GstStateChangeReturn
+gst_element_commit_state (GstElement * element)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
+
+  return gst_element_continue_state (element, GST_STATE_CHANGE_SUCCESS);
 }
 
 /**
@@ -2085,14 +2092,15 @@ gst_element_set_state_func (GstElement * element, GstState state)
 
   GST_STATE_UNLOCK (element);
 
-  GST_DEBUG_OBJECT (element, "returned %d", ret);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "returned %d", ret);
 
   return ret;
 
 was_busy:
   {
     GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
-    GST_DEBUG_OBJECT (element, "element was busy with async state change");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+        "element was busy with async state change");
     GST_UNLOCK (element);
 
     GST_STATE_UNLOCK (element);
@@ -2136,7 +2144,7 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
       /* if we go upwards, we give the app a change to wait for
        * completion */
       if (current < next)
-        goto exit;
+        goto async;
 
       /* else we just continue the state change downwards */
       GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
@@ -2144,38 +2152,36 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
           gst_element_state_get_name (current),
           gst_element_state_get_name (next));
 
-      GST_LOCK (element);
-      GST_STATE_RETURN (element) = GST_STATE_CHANGE_SUCCESS;
-      GST_UNLOCK (element);
-
-      ret = gst_element_commit_state (element);
+      ret = gst_element_continue_state (element, GST_STATE_CHANGE_SUCCESS);
       break;
     case GST_STATE_CHANGE_SUCCESS:
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
           "element changed state SUCCESS");
       /* we can commit the state now which will proceeed to
        * the next state */
-      ret = gst_element_commit_state (element);
+      ret = gst_element_continue_state (element, ret);
       break;
     case GST_STATE_CHANGE_NO_PREROLL:
       GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
           "element changed state NO_PREROLL");
       /* we can commit the state now which will proceeed to
        * the next state */
-      gst_element_commit_state (element);
-      ret = GST_STATE_CHANGE_NO_PREROLL;
+      ret = gst_element_continue_state (element, ret);
       break;
     default:
-      ret = GST_STATE_CHANGE_FAILURE;
       goto invalid_return;
   }
 
-exit:
+  GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "exit state change %d", ret);
+
+  return ret;
+
+async:
   GST_LOCK (element);
   GST_STATE_RETURN (element) = ret;
+  GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "exit async state change %d",
+      ret);
   GST_UNLOCK (element);
-
-  GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "exit state change %d", ret);
 
   return ret;
 
@@ -2183,11 +2189,14 @@ exit:
 invalid_return:
   {
     GST_LOCK (element);
+    /* somebody added a GST_STATE_ and forgot to do stuff here ! */
+    g_critical ("%s: unknown return value %d from a state change function",
+        GST_ELEMENT_NAME (element), ret);
+
+    ret = GST_STATE_CHANGE_FAILURE;
     GST_STATE_RETURN (element) = ret;
     GST_UNLOCK (element);
 
-    /* somebody added a GST_STATE_ and forgot to do stuff here ! */
-    g_critical ("unknown return value %d from a state change function", ret);
     return ret;
   }
 }
@@ -2328,10 +2337,14 @@ gst_element_change_state_func (GstElement * element, GstStateChange transition)
 
 was_ok:
   {
+    GST_LOCK (element);
+    result = GST_STATE_RETURN (element);
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
         "element is already in the %s state",
         gst_element_state_get_name (state));
-    return GST_STATE_RETURN (element);
+    GST_UNLOCK (element);
+
+    return result;
   }
 }
 

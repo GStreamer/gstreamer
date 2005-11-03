@@ -462,6 +462,9 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
       case GST_STATE_PLAYING:
         basesink->need_preroll = FALSE;
         post_playing = TRUE;
+        /* post PAUSED too when we were READY */
+        if (current == GST_STATE_READY)
+          post_paused = TRUE;
         break;
       case GST_STATE_PAUSED:
         basesink->need_preroll = TRUE;
@@ -478,8 +481,6 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
       GST_STATE_NEXT (basesink) = GST_STATE_VOID_PENDING;
       GST_STATE_PENDING (basesink) = GST_STATE_VOID_PENDING;
       GST_STATE_RETURN (basesink) = GST_STATE_CHANGE_SUCCESS;
-
-      pending = GST_STATE_VOID_PENDING;
     }
     GST_UNLOCK (basesink);
 

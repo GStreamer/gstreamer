@@ -1093,6 +1093,10 @@ gst_bin_get_state_func (GstElement * element, GstState * state,
   return ret;
 }
 
+/* FIXME, defined in gstelement.c but not yet in the header */
+GstStateChangeReturn
+gst_element_continue_state (GstElement * element, GstStateChangeReturn ret);
+
 static void
 gst_bin_recalc_state (GstBin * bin, gboolean force)
 {
@@ -1209,7 +1213,7 @@ done:
   switch (ret) {
     case GST_STATE_CHANGE_SUCCESS:
     case GST_STATE_CHANGE_NO_PREROLL:
-      gst_element_commit_state (GST_ELEMENT_CAST (bin));
+      ret = gst_element_continue_state (GST_ELEMENT_CAST (bin), ret);
       break;
     case GST_STATE_CHANGE_ASYNC:
       gst_element_lost_state (GST_ELEMENT_CAST (bin));
@@ -1221,8 +1225,7 @@ done:
       goto unknown_state;
   }
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "return now %d",
-      GST_STATE_RETURN (bin));
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "bin RETURN is now %d", ret);
 
   return;
 
