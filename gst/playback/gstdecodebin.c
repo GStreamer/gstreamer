@@ -480,15 +480,9 @@ mimetype_is_raw (const gchar * mimetype)
 }
 
 static void
-pad_unblocked (GstPad * pad, gboolean blocked, GstDecodeBin * decode_bin)
+remove_fakesink (GstDecodeBin * decode_bin)
 {
-}
-
-static void
-pad_blocked (GstPad * pad, gboolean blocked, GstDecodeBin * decode_bin)
-{
-  decode_bin->numwaiting--;
-  if (decode_bin->numwaiting == 0 && decode_bin->fakesink) {
+  if (decode_bin->fakesink) {
     gst_object_ref (decode_bin->fakesink);
     gst_bin_remove (GST_BIN (decode_bin), decode_bin->fakesink);
 
@@ -502,8 +496,19 @@ pad_blocked (GstPad * pad, gboolean blocked, GstDecodeBin * decode_bin)
     gst_element_post_message (GST_ELEMENT_CAST (decode_bin),
         gst_message_new_state_dirty (GST_OBJECT_CAST (decode_bin)));
   }
-  gst_pad_set_blocked_async (pad, FALSE, (GstPadBlockCallback) pad_unblocked,
-      NULL);
+}
+
+static void
+pad_blocked (GstPad * pad, gboolean blocked, GstDecodeBin * decode_bin)
+{
+  if (blocked) {
+    decode_bin->numwaiting--;
+    if (decode_bin->numwaiting == 0) {
+      remove_fakesink (decode_bin);
+    }
+    gst_pad_set_blocked_async (pad, FALSE, (GstPadBlockCallback) pad_blocked,
+        NULL);
+  }
 }
 
 /* given a pad and a caps from an element, find the list of elements
@@ -559,14 +564,15 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     /* make a unique name for this new pad */
     padname = g_strdup_printf ("src%d", decode_bin->numpads);
     decode_bin->numpads++;
-    decode_bin->numwaiting++;
 
     /* make it a ghostpad */
     ghost = gst_ghost_pad_new (padname, pad);
     gst_element_add_pad (GST_ELEMENT (decode_bin), ghost);
 
-    gst_pad_set_blocked_async (pad, TRUE, (GstPadBlockCallback) pad_blocked,
-        decode_bin);
+    if (gst_pad_set_blocked_async (pad, TRUE, (GstPadBlockCallback) pad_blocked,
+            decode_bin)) {
+      decode_bin->numwaiting++;
+    }
 
     GST_LOG_OBJECT (element, "closed pad %s", padname);
 
@@ -898,10 +904,14 @@ no_more_pads (GstElement * element, GstDynamic * dynamic)
   /* if we have no more dynamic elements, we have no chance of creating
    * more pads, so we fire the no_more_pads signal */
   if (decode_bin->dynamics == NULL) {
+    if (decode_bin->numwaiting == 0) {
+      GST_DEBUG_OBJECT (decode_bin,
+          "no more dynamic elements, removing fakesink");
+      remove_fakesink (decode_bin);
+    }
     GST_DEBUG_OBJECT (decode_bin,
         "no more dynamic elements, signaling no_more_pads");
     gst_element_no_more_pads (GST_ELEMENT (decode_bin));
-
   } else {
     GST_DEBUG_OBJECT (decode_bin, "we have more dynamic elements");
   }

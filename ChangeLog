@@ -1,3 +1,10 @@
+2005-11-03  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
+	(gst_decode_bin_dispose), (free_dynamics), (remove_fakesink),
+	(pad_blocked), (close_pad_link), (new_pad), (no_more_pads):
+	Handle the case where a pad_block failed.
+
 2005-11-02  Sebastien Cote  <sebas642@yahoo.ca> 
 
 	reviewed by: Zeeshan Ali  <zeenix@gmail.com>
