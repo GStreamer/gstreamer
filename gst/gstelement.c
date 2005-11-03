@@ -1496,9 +1496,9 @@ void gst_element_message_full
  * This way you can leave currently unused elements inside bins. Just lock their
  * state before changing the state from #GST_STATE_NULL.
  *
- * Returns: TRUE, if the element's state is locked.
- *
  * MT safe.
+ *
+ * Returns: TRUE, if the element's state is locked.
  */
 gboolean
 gst_element_is_locked_state (GstElement * element)
@@ -1522,10 +1522,10 @@ gst_element_is_locked_state (GstElement * element)
  * Locks the state of an element, so state changes of the parent don't affect
  * this element anymore.
  *
- * Returns: TRUE if the state was changed, FALSE if bad params were given or
- * the element was already in the correct state.
- *
  * MT safe.
+ *
+ * Returns: TRUE if the state was changed, FALSE if bad parameterss were given
+ * or the elements state-locking needed no change.
  */
 gboolean
 gst_element_set_locked_state (GstElement * element, gboolean locked_state)

@@ -1970,6 +1970,7 @@ gst_uri_protocol_is_valid
 gst_uri_is_valid
 gst_uri_get_protocol
 gst_uri_get_location
+gst_uri_get_uri_type
 gst_uri_construct
 gst_element_make_from_uri
 gst_uri_handler_get_uri_type

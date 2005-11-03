@@ -540,6 +540,18 @@ gst_param_spec_mini_object_get_type (void)
   return type;
 }
 
+/**
+ * gst_param_spec_mini_object:
+ * @name: the canonical name of the property
+ * @nick: the nickname of the property
+ * @blurb: a short description of the property
+ * @object_type: the #GstMiniObjectType for the property
+ * @flags: a combination of #GParamFlags
+ *
+ * Creates a new #GParamSpec instance that hold #GstMiniObject references.
+ *
+ * Returns: a newly allocated #GParamSpec instance
+ */
 GParamSpec *
 gst_param_spec_mini_object (const char *name, const char *nick,
     const char *blurb, GType object_type, GParamFlags flags)
