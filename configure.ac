@@ -79,7 +79,6 @@ GST_PLUGINS_ALL="\
 	ffmpegcolorspace \
 	playback \
 	sine \
-	tcp \
 	typefind \
 	videotestsrc \
 	videorate \
@@ -164,6 +163,12 @@ AC_CHECK_HEADERS([malloc.h])
 dnl used in gst/subparse/gstsubparse.c
 AC_CHECK_HEADERS([regex.h], HAVE_REGEX_H="yes", HAVE_REGEX_H="no")
 AM_CONDITIONAL(HAVE_REGEX_H, test "x$HAVE_REGEX_H" = "xyes")
+
+dnl used in gst/tcp
+AC_CHECK_HEADERS([sys/socket.h], 
+  HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")
+AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
+
 
 dnl ffmpegcolorspace includes _stdint.h
 AX_CREATE_STDINT_H
