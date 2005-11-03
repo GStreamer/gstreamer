@@ -1,3 +1,9 @@
+2005-11-03  Andy Wingo  <wingo@pobox.com>
+
+	* check/states/sinks.c (test_livesrc_sink): Add checks that the
+	state-changed messages actually have the right order and the right
+	values.
+
 2005-11-03  Wim Taymans  <wim@fluendo.com>
 
 	* check/states/sinks.c: (GST_START_TEST), (gst_object_suite):

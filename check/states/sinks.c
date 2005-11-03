@@ -22,6 +22,28 @@
 
 #include <gst/check/gstcheck.h>
 
+static void
+pop_state_change_message (GstBus * bus, GstElement * src, GstState old,
+    GstState new, GstState pending)
+{
+  GstMessage *message = NULL;
+  GstState _old, _new, _pending;
+
+  message = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, GST_SECOND);
+  fail_unless (message != NULL,
+      "Expected state change message, but got nothing");
+
+  gst_message_parse_state_changed (message, &_old, &_new, &_pending);
+
+  fail_unless (GST_MESSAGE_SRC (message) == (GstObject *) src,
+      "Unexpected state change order");
+  fail_unless (old == _old, "Unexpected old state");
+  fail_unless (new == _new, "Unexpected new state");
+  fail_unless (pending == _pending, "Unexpected pending state");
+
+  gst_message_unref (message);
+}
+
 /* a sink should go ASYNC to PAUSE. forcing PLAYING is possible */
 GST_START_TEST (test_sink)
 {
@@ -192,6 +214,7 @@ GST_START_TEST (test_livesrc_sink)
   GstStateChangeReturn ret;
   GstState current, pending;
   GstPad *srcpad, *sinkpad;
+  GstBus *bus;
 
   pipeline = gst_pipeline_new ("pipeline");
   src = gst_element_factory_make ("fakesrc", "src");
@@ -207,9 +230,25 @@ GST_START_TEST (test_livesrc_sink)
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
 
+  bus = gst_element_get_bus (pipeline);
+
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL,
       "no no_preroll state return");
+
+  pop_state_change_message (bus, sink, GST_STATE_NULL, GST_STATE_READY,
+      GST_STATE_VOID_PENDING);
+  pop_state_change_message (bus, src, GST_STATE_NULL, GST_STATE_READY,
+      GST_STATE_VOID_PENDING);
+  pop_state_change_message (bus, pipeline, GST_STATE_NULL, GST_STATE_READY,
+      GST_STATE_PAUSED);
+
+  /* this order only holds true for live sources because they do not push
+     buffers in PAUSED */
+  pop_state_change_message (bus, src, GST_STATE_READY, GST_STATE_PAUSED,
+      GST_STATE_VOID_PENDING);
+  pop_state_change_message (bus, pipeline, GST_STATE_READY, GST_STATE_PAUSED,
+      GST_STATE_VOID_PENDING);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
   fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL,
@@ -239,6 +278,56 @@ GST_START_TEST (test_livesrc_sink)
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "not playing");
   fail_unless (current == GST_STATE_PLAYING, "not playing");
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
+
+#ifdef WIM_EARNS_HIS_KEEP
+  /* now we have four messages on the bus: src from paused to playing, sink from
+     ready to paused and paused to playing, and pipeline from paused to playing.
+     the pipeline message should be last, and the sink messages should go in
+     order, but the src message can be interleaved with the sink one. */
+  {
+    GstMessage *m;
+    GstState old, new, pending;
+    gint n_src = 1, n_sink = 2;
+
+    while (n_src + n_sink > 0) {
+      m = gst_bus_poll (bus, GST_MESSAGE_STATE_CHANGED, GST_SECOND);
+      fail_unless (m != NULL, "expected state change message");
+      gst_message_parse_state_changed (m, &old, &new, &pending);
+      if (GST_MESSAGE_SRC (m) == (GstObject *) src) {
+        fail_unless (n_src == 1, "already got one message from the src");
+        n_src--;
+        fail_unless (old == GST_STATE_PAUSED, "unexpected old");
+        fail_unless (new == GST_STATE_PLAYING, "unexpected new (got %d)", new);
+        fail_unless (pending == GST_STATE_VOID_PENDING, "unexpected pending");
+      } else if (GST_MESSAGE_SRC (m) == (GstObject *) sink) {
+        if (n_sink == 2) {
+          fail_unless (old == GST_STATE_READY, "unexpected old");
+          fail_unless (new == GST_STATE_PAUSED, "unexpected new");
+          fail_unless (pending == GST_STATE_PLAYING, "unexpected pending");
+        } else if (n_sink == 1) {
+          fail_unless (old == GST_STATE_PAUSED, "unexpected old");
+          fail_unless (new == GST_STATE_PLAYING, "unexpected new");
+          fail_unless (pending == GST_STATE_VOID_PENDING, "unexpected pending");
+        } else {
+          g_assert_not_reached ();
+        }
+        n_sink--;
+      } else {
+        g_critical
+            ("Unexpected state change message src %s (%d src %d sink pending)",
+            GST_OBJECT_NAME (GST_MESSAGE_SRC (m)), n_src, n_sink);
+      }
+      gst_message_unref (m);
+    }
+  }
+
+  pop_state_change_message (bus, pipeline, GST_STATE_PAUSED, GST_STATE_PLAYING,
+      GST_STATE_VOID_PENDING);
+#endif
+
+  gst_object_unref (bus);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
