@@ -319,6 +319,9 @@ gst_sdlvideosink_init (GstSDLVideoSink * sdlvideosink)
 
   sdlvideosink->init = FALSE;
 
+  sdlvideosink->event_thread = NULL;
+  sdlvideosink->running = FALSE;
+
   sdlvideosink->lock = g_mutex_new ();
 }
 
@@ -402,8 +405,6 @@ gst_sdlvideosink_lock (GstSDLVideoSink * sdlvideosink)
   if (SDL_LockYUVOverlay (sdlvideosink->overlay) < 0)
     goto lock_yuv;
 
-  sdlvideosink->init = TRUE;
-
   return TRUE;
 
   /* ERRORS */
@@ -443,11 +444,81 @@ gst_sdlvideosink_deinitsdl (GstSDLVideoSink * sdlvideosink)
   g_mutex_lock (sdlvideosink->lock);
 
   if (sdlvideosink->init) {
+    sdlvideosink->running = FALSE;
+    if (sdlvideosink->event_thread) {
+      g_thread_join (sdlvideosink->event_thread);
+      sdlvideosink->event_thread = NULL;
+    }
+
     SDL_Quit ();
     sdlvideosink->init = FALSE;
+
   }
 
   g_mutex_unlock (sdlvideosink->lock);
+}
+
+int
+SDL_WaitEventTimeout (SDL_Event * event, Uint32 timeout)
+{
+  Uint32 i;
+  int numevents = 0;
+
+  for (i = 0; i < timeout; i += 10) {
+    SDL_PumpEvents ();
+    /*  numevents = SDL_PeepEvents(event, 1, SDL_GETEVENT, SDL_ALLEVENTS); */
+    numevents =
+        SDL_PeepEvents (event, 1, SDL_GETEVENT,
+        SDL_KEYDOWNMASK | SDL_KEYUPMASK |
+        /* SDL_MOUSEMOTIONMASK | SDL_MOUSEBUTTONDOWNMASK | SDL_MOUSEBUTTONUPMASK | */
+        SDL_QUITMASK);
+    switch (numevents) {
+      case -1:
+        return 0;
+        break;
+      case 0:
+        SDL_Delay (10);
+        break;
+      default:
+        return numevents;
+        break;
+    }
+  }
+
+  return 0;
+}
+
+static gpointer
+gst_sdlvideosink_event_thread (GstSDLVideoSink * sdlvideosink)
+{
+
+  SDL_Event event;
+
+  while (sdlvideosink->running) {
+    if (SDL_WaitEventTimeout (&event, 50)) {
+
+      switch (event.type) {
+        case SDL_KEYDOWN:
+          if (SDLK_ESCAPE != event.key.keysym.sym) {
+            break;
+          } else {
+            /* fall through */
+          }
+        case SDL_QUIT:
+          sdlvideosink->running = FALSE;
+          GST_ELEMENT_ERROR (sdlvideosink, RESOURCE, OPEN_WRITE,
+              ("Video output device is gone."),
+              ("We were running fullscreen and user "
+                  "pressed the ESC key, stopping playback."));
+          break;
+      }
+
+    }
+
+  }
+
+  return NULL;
+
 }
 
 static gboolean
@@ -471,6 +542,11 @@ gst_sdlvideosink_initsdl (GstSDLVideoSink * sdlvideosink)
     goto init_failed;
 
   sdlvideosink->init = TRUE;
+
+  sdlvideosink->running = TRUE;
+  sdlvideosink->event_thread =
+      g_thread_create ((GThreadFunc) gst_sdlvideosink_event_thread,
+      sdlvideosink, TRUE, NULL);
 
   g_mutex_unlock (sdlvideosink->lock);
 

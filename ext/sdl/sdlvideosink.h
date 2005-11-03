@@ -59,7 +59,8 @@ struct _GstSDLVideoSink {
 
   gboolean full_screen;
   gboolean init;
-
+  gboolean running;
+  GThread *event_thread;
   SDL_Surface *screen;
   SDL_Overlay *overlay;
   SDL_Rect rect;
