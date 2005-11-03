@@ -72,7 +72,7 @@ typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *obj);
  *
  * This macro checks to see if the given flag is set.
  */
-#define GST_MINI_OBJECT_FLAG_IS_SET(obj,flag)        (GST_MINI_OBJECT_FLAGS (obj) & (flag))
+#define GST_MINI_OBJECT_FLAG_IS_SET(obj,flag)        !!(GST_MINI_OBJECT_FLAGS (obj) & (flag))
 /**
  * GST_MINI_OBJECT_FLAG_SET:
  * @obj: MiniObject to set flag in.
