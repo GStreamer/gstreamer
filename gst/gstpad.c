@@ -854,7 +854,7 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
 
   GST_LOCK (pad);
 
-  was_blocked = GST_PAD_IS_BLOCKED (pad);
+  was_blocked = !!GST_PAD_IS_BLOCKED (pad);
 
   if (G_UNLIKELY (was_blocked == blocked))
     goto had_right_state;

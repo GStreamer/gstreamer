@@ -1,3 +1,9 @@
+2005-11-03  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_set_blocked_async):
+	comparing a flag and a gboolean rarely returns coherent results...
+	Added two characters (!!) to make that work correctly.
+	
 2005-11-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbus.c: (gst_bus_class_init):
