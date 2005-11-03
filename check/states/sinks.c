@@ -279,7 +279,6 @@ GST_START_TEST (test_livesrc_sink)
   fail_unless (current == GST_STATE_PLAYING, "not playing");
   fail_unless (pending == GST_STATE_VOID_PENDING, "not playing");
 
-#ifdef WIM_EARNS_HIS_KEEP
   /* now we have four messages on the bus: src from paused to playing, sink from
      ready to paused and paused to playing, and pipeline from paused to playing.
      the pipeline message should be last, and the sink messages should go in
@@ -323,7 +322,6 @@ GST_START_TEST (test_livesrc_sink)
 
   pop_state_change_message (bus, pipeline, GST_STATE_PAUSED, GST_STATE_PLAYING,
       GST_STATE_VOID_PENDING);
-#endif
 
   gst_object_unref (bus);
   gst_element_set_state (pipeline, GST_STATE_NULL);

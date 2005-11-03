@@ -40,3 +40,5 @@
 - GstQuery quark, get_name.
 
 - GstEvent, GstMessage register like GstFormat or GstQuery.
+
+- unblocking while seeking. gst_element_flush_pads (GstElement, gboolean);

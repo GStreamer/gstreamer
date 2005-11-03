@@ -448,7 +448,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
 {
   /* commit state and proceed to next pending state */
   {
-    GstState current, next, pending;
+    GstState current, next, pending, post_pending;
     GstMessage *message;
     gboolean post_paused = FALSE;
     gboolean post_playing = FALSE;
@@ -457,18 +457,21 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
     current = GST_STATE (basesink);
     next = GST_STATE_NEXT (basesink);
     pending = GST_STATE_PENDING (basesink);
+    post_pending = pending;
 
     switch (pending) {
       case GST_STATE_PLAYING:
         basesink->need_preroll = FALSE;
         post_playing = TRUE;
         /* post PAUSED too when we were READY */
-        if (current == GST_STATE_READY)
+        if (current == GST_STATE_READY) {
           post_paused = TRUE;
+        }
         break;
       case GST_STATE_PAUSED:
         basesink->need_preroll = TRUE;
         post_paused = TRUE;
+        post_pending = GST_STATE_VOID_PENDING;
         break;
       case GST_STATE_READY:
         goto stopping;
@@ -486,7 +489,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
 
     if (post_paused) {
       message = gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
-          current, next, GST_STATE_VOID_PENDING);
+          current, next, post_pending);
       gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
     }
     if (post_playing) {

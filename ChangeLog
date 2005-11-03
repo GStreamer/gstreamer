@@ -1,3 +1,22 @@
+2005-11-03  Wim Taymans  <wim@fluendo.com>
+
+	* check/states/sinks.c: (GST_START_TEST):
+	Uncomment fixed check.
+
+	* docs/design/part-TODO.txt:
+	Updated TODO.
+
+	* gst/base/gstbasesink.c: (gst_base_sink_commit_state),
+	(gst_base_sink_handle_object), (gst_base_sink_do_sync),
+	(gst_base_sink_get_position):
+	If we are going to PLAYING, post the right pending state
+	when we post the intermediate paused message.
+
+	* gst/gstelement.c: (gst_element_continue_state),
+	(gst_element_set_state_func), (gst_element_change_state):
+	Don't post state changes that were between the same state
+	and were not ASYNC.
+
 2005-11-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:

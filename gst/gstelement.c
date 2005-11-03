@@ -1817,12 +1817,13 @@ GstStateChangeReturn
 gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
 {
   GstState pending;
-  GstState old_state, old_next;
+  GstState old_ret, old_state, old_next;
   GstState current, next;
   GstMessage *message;
   GstStateChange transition;
 
   GST_LOCK (element);
+  old_ret = GST_STATE_RETURN (element);
   GST_STATE_RETURN (element) = ret;
   pending = GST_STATE_PENDING (element);
 
@@ -1879,9 +1880,17 @@ complete:
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "completed state change");
     GST_UNLOCK (element);
 
-    message = gst_message_new_state_changed (GST_OBJECT (element),
-        old_state, old_next, GST_STATE_VOID_PENDING);
-    gst_element_post_message (element, message);
+    /* don't post silly messages with the same state. This can happen
+     * when an element state is changed to what it already was. For bins
+     * this can be the result of a lost state, which we check with the
+     * previous return value. 
+     * We do signal the cond though as a _get_state() might be blocking 
+     * on it. */
+    if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
+      message = gst_message_new_state_changed (GST_OBJECT (element),
+          old_state, old_next, GST_STATE_VOID_PENDING);
+      gst_element_post_message (element, message);
+    }
 
     GST_STATE_BROADCAST (element);
 
