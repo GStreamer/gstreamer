@@ -27,6 +27,9 @@
 /* Object header */
 #include "dfbvideosink.h"
 
+#include <string.h>
+#include <liboil/liboil.h>
+
 /* Debugging category */
 GST_DEBUG_CATEGORY (dfbvideosink_debug);
 #define GST_CAT_DEFAULT dfbvideosink_debug
@@ -1138,6 +1141,8 @@ static GstFlowReturn
 gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstDfbVideoSink *dfbvideosink;
+  DFBResult res;
+  DFBRectangle dst, src, result;
   GstFlowReturn ret = GST_FLOW_OK;
 
   dfbvideosink = GST_DFBVIDEOSINK (bsink);
@@ -1151,43 +1156,129 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   if (GST_IS_DFBSURFACE (buf)) {
     GstDfbSurface *surface = GST_DFBSURFACE (buf);
 
-    if (dfbvideosink->ext_surface) {    /* Blit to an external surface */
-      /* FIXME : Check return values */
-      dfbvideosink->ext_surface->Blit (dfbvideosink->ext_surface,
-          surface->surface, NULL, 0, 0);
+    /* Blit to the fullscreen primary */
+    GST_DEBUG ("show frame with a buffer we allocated");
+
+    src.w = surface->width;
+    src.h = surface->height;
+
+    dfbvideosink->primary->GetSize (dfbvideosink->primary, &dst.w, &dst.h);
+
+    /* Unlocking surface before blit */
+    surface->surface->Unlock (surface->surface);
+
+    gst_dfbvideosink_center_rect (src, dst, &result, dfbvideosink->hw_scaling);
+
+    if (dfbvideosink->hw_scaling) {
+      dfbvideosink->primary->StretchBlit (dfbvideosink->primary,
+          surface->surface, NULL, &result);
+    } else {
+      dfbvideosink->primary->Blit (dfbvideosink->primary, surface->surface,
+          NULL, result.x, result.y);
+    }
+
+    if (dfbvideosink->backbuffer) {
+      dfbvideosink->primary->Flip (dfbvideosink->primary, NULL, 0);
+    }
+  } else {
+    if (dfbvideosink->ext_surface) {
+      IDirectFBSurface *dest = NULL;
+      gpointer data;
+      gint dest_pitch, src_pitch, line;
+
+      /* External surface, no buffer_alloc optimization */
+      GST_DEBUG ("show frame for an external surface (memcpy)");
+
+      src.w = dfbvideosink->video_width;
+      src.h = dfbvideosink->video_height;
+
+      dfbvideosink->ext_surface->GetSize (dfbvideosink->ext_surface, &dst.w,
+          &dst.h);
+
+      gst_dfbvideosink_center_rect (src, dst, &result, FALSE);
+
+      res = dfbvideosink->ext_surface->GetSubSurface (dfbvideosink->ext_surface,
+          &result, &dest);
+      if (res != DFB_OK) {
+        GST_WARNING ("failed when getting a sub surface from the external one");
+        ret = GST_FLOW_UNEXPECTED;
+        goto beach;
+      }
+
+      res = dest->Lock (dest, DSLF_WRITE, &data, &dest_pitch);
+      if (res != DFB_OK) {
+        GST_WARNING ("failed locking the external subsurface for writing");
+        ret = GST_FLOW_ERROR;
+        goto beach;
+      }
+
+      /* Source video rowbytes */
+      src_pitch = GST_BUFFER_SIZE (buf) / result.h;
+
+      /* Write each line respecting subsurface pitch */
+      for (line = 0; line < result.h; line++) {
+        memcpy (data, GST_BUFFER_DATA (buf) + (line * src_pitch), src_pitch);
+        data += dest_pitch;
+      }
+
+      dest->Unlock (dest);
+
+      dest->Release (dest);
 
       if (dfbvideosink->backbuffer) {
         dfbvideosink->ext_surface->Flip (dfbvideosink->ext_surface, NULL, 0);
       }
-    } else {                    /* Blit to the fullscreen primary */
-      DFBRectangle dst, src, result;
+    } else {
+      IDirectFBSurface *dest = NULL;
+      DFBSurfaceDescription s_dsc;
+      gpointer data;
+      gint pitch;
 
-      src.w = surface->width;
-      src.h = surface->height;
+      /* Our peer is bad, it's not using pad_buffer_alloc */
+      GST_DEBUG ("show frame for a buffer we did not allocate (memcpy)");
+
+      src.w = dfbvideosink->video_width;
+      src.h = dfbvideosink->video_height;
 
       dfbvideosink->primary->GetSize (dfbvideosink->primary, &dst.w, &dst.h);
-
-      /* Unlocking surface before blit */
-      surface->surface->Unlock (surface->surface);
 
       gst_dfbvideosink_center_rect (src, dst, &result,
           dfbvideosink->hw_scaling);
 
-      if (dfbvideosink->hw_scaling) {
-        dfbvideosink->primary->StretchBlit (dfbvideosink->primary,
-            surface->surface, NULL, &result);
-      } else {
-        dfbvideosink->primary->Blit (dfbvideosink->primary, surface->surface,
-            NULL, result.x, result.y);
+      s_dsc.flags = DSDESC_PIXELFORMAT | DSDESC_WIDTH |
+          DSDESC_HEIGHT | DSDESC_CAPS;
+
+      s_dsc.pixelformat = dfbvideosink->pixel_format;
+      s_dsc.width = dfbvideosink->video_width;
+      s_dsc.height = dfbvideosink->video_height;
+      s_dsc.caps = DSCAPS_VIDEOONLY;
+
+      res = dfbvideosink->dfb->CreateSurface (dfbvideosink->dfb, &s_dsc, &dest);
+      if (res != DFB_OK) {
+        GST_WARNING ("failed creating a surface to memcpy buffer data");
+        goto beach;
       }
+
+      dest->Lock (dest, DSLF_WRITE, &data, &pitch);
+
+      memcpy (data, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+
+      dest->Unlock (dest);
+
+      if (dfbvideosink->hw_scaling) {
+        dfbvideosink->primary->StretchBlit (dfbvideosink->primary, dest, NULL,
+            &result);
+      } else {
+        dfbvideosink->primary->Blit (dfbvideosink->primary, dest, NULL,
+            result.x, result.y);
+      }
+
+      dest->Release (dest);
 
       if (dfbvideosink->backbuffer) {
         dfbvideosink->primary->Flip (dfbvideosink->primary, NULL, 0);
       }
     }
-  } else {
-    GST_WARNING
-        ("we have to do a memcpy to our internal surface. implement me");
   }
 
 beach:
@@ -1227,6 +1318,12 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   GST_DEBUG ("a buffer of %d bytes was requested with caps %" GST_PTR_FORMAT
       " and offset %llu", size, caps, offset);
+
+  /* If we use an external surface we can't allocate surfaces ourselves */
+  if (dfbvideosink->ext_surface) {
+    *buf = NULL;
+    goto beach;
+  }
 
   desired_caps = gst_caps_copy (caps);
 

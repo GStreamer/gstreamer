@@ -1,3 +1,11 @@
+2005-11-03  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/directfb/Makefile.am: Prepare for liboil usage.
+	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_show_frame),
+	(gst_dfbvideosink_buffer_alloc):  Prepare for liboil, handle
+	rendering in external surface correctly. Will commit a neat
+	example soon.
+
 2005-11-03  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/sdl/sdlvideosink.c: (SDL_WaitEventTimeout),
