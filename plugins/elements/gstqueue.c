@@ -824,7 +824,7 @@ restart:
       GST_DEBUG_OBJECT (queue, "pausing queue, reason %s", flowname);
       gst_pad_pause_task (queue->srcpad);
     }
-  } else {
+  } else if (GST_IS_EVENT (data)) {
     if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
       queue->cur_level.buffers = 0;
       queue->cur_level.bytes = 0;
@@ -841,6 +841,9 @@ restart:
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
     if (restart == TRUE)
       goto restart;
+  } else {
+    g_warning ("Unexpected object in queue %s (refcounting problem?)",
+        GST_OBJECT_NAME (queue));
   }
 
   STATUS (queue, "after _get()");

@@ -172,7 +172,7 @@ gst_bus_class_init (GstBusClass * klass)
    * @bus: the object which received the signal
    * @message: the message that has been posted synchronously
    *
-   * A message has been posted on the bus. This signal is emited from the
+   * A message has been posted on the bus. This signal is emitted from the
    * thread that posted the message so one has to be carefull with locking.
    */
   gst_bus_signals[SYNC_MESSAGE] =
@@ -186,7 +186,7 @@ gst_bus_class_init (GstBusClass * klass)
    * @bus: the object which received the signal
    * @message: the message that has been posted asynchronously
    *
-   * A message has been posted on the bus. This signal is emited from a
+   * A message has been posted on the bus. This signal is emitted from a
    * GSource added to the mainloop.
    */
   gst_bus_signals[ASYNC_MESSAGE] =
