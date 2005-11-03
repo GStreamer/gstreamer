@@ -20,6 +20,16 @@
 2005-11-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
+	* gst/gstcaps.h:
+	* gst/gstinfo.c:
+	* gst/gstminiobject.h:
+	* gst/gstobject.h:
+	* gst/gstutils.h:
+	  more docs and doc style fixes
+
+2005-11-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
 	* gst/gstelement.c:
 	* gst/gstminiobject.c:
 	doc fixes
