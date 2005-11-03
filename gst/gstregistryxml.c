@@ -584,7 +584,7 @@ load_feature (xmlTextReaderPtr reader)
 
           if (template) {
             GST_LOG ("adding template %s to factory %s",
-                GST_PAD_TEMPLATE_NAME_TEMPLATE (template),
+                GST_STR_NULL (GST_PAD_TEMPLATE_NAME_TEMPLATE (template)),
                 GST_PLUGIN_FEATURE_NAME (feature));
             __gst_element_factory_add_static_pad_template (factory, template);
           }

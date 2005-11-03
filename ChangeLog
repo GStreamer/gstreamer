@@ -1,3 +1,8 @@
+2005-11-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstregistryxml.c: (load_feature):
+	  Add another GST_STR_NULL instance
+
 2005-11-02  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstpad.c: (handle_pad_block):
