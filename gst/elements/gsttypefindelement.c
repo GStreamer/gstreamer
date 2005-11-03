@@ -826,7 +826,6 @@ gst_type_find_element_activate (GstPad * pad)
       0, 100, found_caps);
   gst_caps_unref (found_caps);
   typefind->mode = MODE_NORMAL;
-  /* FIXME see if I can unref the caps here */
 
   /* 7 */
   if (gst_pad_is_active (pad))

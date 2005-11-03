@@ -1,3 +1,13 @@
+2005-11-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/advanced-position.xml:
+	  Update seek example and explanations to current 0.9 API.
+
+	* gst/elements/gsttypefindelement.c:
+	(gst_type_find_element_activate):
+	  Remove FIXME comment now that the found caps
+	  are unreffed.
+
 2005-11-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstregistryxml.c: (load_feature):

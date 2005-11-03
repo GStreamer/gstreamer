@@ -25,8 +25,9 @@
       frames or bytes. The function most commonly used for this is
       <function>gst_element_query ()</function>, although some convenience
       wrappers are provided as well (such as
-      <function>gst_element_query_position ()</function>). You can generally
-      query the pipeline directly, it'll figure out the internal details
+      <function>gst_element_query_position ()</function> and
+      <function>gst_element_query_duration ()</function>). You can generally
+      query the pipeline directly, and it'll figure out the internal details
       for you, like which element to query.
     </para>
 
@@ -42,12 +43,12 @@
 #include &lt;gst/gst.h&gt;
 <!-- example-end query.c a -->
 <!-- example-begin query.c b --><!--
-static gboolean
-my_bus_callback (GstBus     *bus,
-                 GstMessage *message,
-                 gpointer    data)
+static void
+my_bus_message_cb (GstBus     *bus,
+                   GstMessage *message,
+                   gpointer    data)
 {
-  GMainLoop *loop = data;
+  GMainLoop *loop = (GMainLoop *) data;
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR: {
@@ -69,9 +70,6 @@ my_bus_callback (GstBus     *bus,
     default:
       break;
   }
-
-  /* remove from queue */
-  return TRUE;
 }
 --><!-- example-end query.c b -->
 <!-- example-begin query.c c -->
@@ -81,7 +79,8 @@ cb_print_position (GstElement *pipeline)
   GstFormat fmt = GST_FORMAT_TIME;
   gint64 pos, len;
 
-  if (gst_element_query_position (pipeline, &amp;fmt, &amp;pos, &amp;len)) {
+  if (gst_element_query_position (pipeline, &amp;fmt, &amp;pos)
+    &amp; &amp; gst_element_query_duration (pipeline, &amp;fmt, &amp;len)) {
     g_print ("Time: %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "\r",
 	     GST_TIME_ARGS (pos), GST_TIME_ARGS (len));
   }
@@ -97,7 +96,10 @@ main (gint   argc,
   GstElement *pipeline;
 <!-- example-end query.c c -->
 [..]<!-- example-begin query.c d --><!--
+  GstStateChangeReturn ret;
   GMainLoop *loop;
+  GError *err = NULL;
+  GstBus *bus;
   gchar *l;
 
   /* init */
@@ -109,18 +111,32 @@ main (gint   argc,
     return -1;
   }
 
+  loop = g_main_loop_new (NULL, FALSE);
+
   /* build pipeline, the easy way */
   l = g_strdup_printf ("filesrc location=\"%s\" ! oggdemux ! vorbisdec ! "
-		       "audioconvert ! audioscale ! alsasink",
+		       "audioconvert ! audioresample ! alsasink",
 		       argv[1]);
-  pipeline = gst_parse_launch (l, NULL);
+  pipeline = gst_parse_launch (l, &amp;err);
+  if (pipeline == NULL || err != NULL) {
+    g_printerr ("Cannot build pipeline: %s\n", err->message);
+    g_error_free (err);
+    g_free (l);
+    if (pipeline)
+      gst_object_unref (pipeline);
+    return -1;
+  }
   g_free (l);
-  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
-		     my_bus_callback, NULL);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message", G_CALLBACK (my_bus_message_cb), loop);
+  gst_object_unref (bus);
 
   /* play */
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  loop = g_main_loop_new (NULL, FALSE);
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    g_error ("Failed to set pipeline to PLAYING.\n");
 --><!-- example-end query.c d -->
 <!-- example-begin query.c e -->
   /* run pipeline */
@@ -149,12 +165,16 @@ main (gint   argc,
       and it will figure out everything for you. Although there are more
       ways in which applications and elements can interact using events,
       we will only focus on seeking here. This is done using the seek-event.
-      A seek-event contains a seeking offset, a seek method (which indicates
-      relative to what the offset was given), a seek format (which is the
-      unit of the offset, e.g. time, audio samples, video frames or bytes)
-      and optionally a set of seeking-related flags (e.g. whether internal
-      buffers should be flushed). The behaviour of a seek is also wrapped
-      in the function <function>gst_element_seek ()</function>.
+      A seek-event contains a playback rate, a seek offset format (which is
+      the unit of the offsets to follow, e.g. time, audio samples, video
+      frames or bytes), optionally a set of seeking-related flags (e.g.
+      whether internal buffers should be flushed), a seek method (which
+      indicates relative to what the offset was given), and seek offsets.
+      The first offset (cur) is the new position to seek to, while
+      the second offset (stop) is optional and specifies a position where
+      streaming is supposed to stop. Usually it is fine to just specify
+      GST_SEEK_TYPE_NONE and -1 as end_method and end offset. The behaviour
+      of a seek is also wrapped in the <function>gst_element_seek ()</function>.
     </para>
 
     <programlisting>
@@ -162,11 +182,33 @@ static void
 seek_to_time (GstElement *pipeline,
 	      gint64      time_nanoseconds)
 {
-  gst_element_seek (pipeline,
-		    GST_SEEK_METHOD_SET | GST_FORMAT_TIME |
-		    GST_SEEK_FLAG_FLUSH, time_nanoseconds);
+  GstFormat format = GST_FORMAT_TIME;
+
+  if (!gst_element_seek (pipeline, 1.0, &amp;format, GST_SEEK_FLAG_FLUSH,
+                         GST_SEEK_TYPE_SET, time_nanoseconds,
+                         GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE)) {
+    g_print ("Seek failed!\n");
+  }
 }
     </programlisting>
+    <para>
+      Seeks should usually be done when the pipeline is in PAUSED or PLAYING
+      state (when it is in PLAYING state the pipeline will pause itself, issue
+      the seek, and then set itself back to PLAYING again itself).
+      returns. 
+    </para>
+
+    <para>
+      It is important to realise that seeks will not happen instantly in the
+      sense that they are finished when the function
+      <function>gst_element_seek ()</function> returns. Depending on the
+      specific elements involved, the actual seeking might be done later in
+      another thread (the streaming thread), and it might take a short time
+      until buffers from the new seek position will reach downstream elements
+      such as sinks (if the seek was non-flushing then it might take a bit
+      longer).
+    </para>
+
     <para>
       It is possible to do multiple seeks in short time-intervals, such as
       a direct response to slider movement. After a seek, internally, the
