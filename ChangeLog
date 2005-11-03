@@ -1,3 +1,7 @@
+2005-11-03  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/gstpad.c: (gst_pad_alloc_buffer): Fix some typos.
+
 2005-11-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/advanced-position.xml:

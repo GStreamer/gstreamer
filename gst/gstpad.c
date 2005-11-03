@@ -2544,14 +2544,14 @@ fallback:
 not_negotiated:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "alloc function retured unacceptable buffer");
+        "alloc function returned unacceptable buffer");
     return GST_FLOW_NOT_NEGOTIATED;
   }
 peer_error:
   {
     gst_object_unref (peer);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "alloc function retured error %s", gst_flow_get_name (ret));
+        "alloc function returned error %s", gst_flow_get_name (ret));
     return ret;
   }
 }
