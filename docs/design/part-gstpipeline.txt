@@ -1,7 +1,7 @@
 GstPipeline
 -----------
 
-A GstPipeline is usually a toplevel bin an provides all of its 
+A GstPipeline is usually a toplevel bin and provides all of its 
 children with a clock.
 
 A GstPipeline also provides a toplevel GstBus (see part-gstbus.txt)

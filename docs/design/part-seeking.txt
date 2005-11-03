@@ -16,16 +16,16 @@ Seeking can be performed in different formats such as time, frames
 or samples.
 
 Seeking can be performed to an absolute position or relative to the
-current playback position.
+current configured segment.
 
 For seeking to work reliably, all plugins in the pipeline need to follow
 the well-defined rules in this document.
 
 Non segment seeking will make the pipeline emit EOS when the configured 
-playback range has been played.
+segment has been played.
 
 Segment seeking will not emit an EOS at the end of the range but will
-post a SEGMENT_STOP message on the bus. This message is posted by the
+post a SEGMENT_DONE message on the bus. This message is posted by the
 earliest element in the pipeline, typically a demuxer. After receiving
 the message, the application can reconnect the pipeline or issue other
 seek events in the pipeline.

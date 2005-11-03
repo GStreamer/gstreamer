@@ -1,3 +1,21 @@
+2005-11-03  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-events.txt:
+	* docs/design/part-gstpipeline.txt:
+	* docs/design/part-messages.txt:
+	* docs/design/part-overview.txt:
+	* docs/design/part-seeking.txt:
+	* docs/design/part-states.txt:
+	* docs/design/part-trickmodes.txt:
+	* docs/manual/advanced-position.xml:
+	Small docs updates.
+
+	* gst/gstobject.h:
+	People think !! is ugly, this looks better.
+
+	* gst/gstpad.c: (gst_pad_set_blocked_async):
+	Remove !! since it's fixed elsewhere now.
+
 2005-11-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstminiobject.h:

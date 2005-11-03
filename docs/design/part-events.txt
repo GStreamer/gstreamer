@@ -132,7 +132,7 @@ of the indicated newsegment range.
 If a newsegment arrives at an element not preceeded by a flush event, the 
 streamtime of the pipeline will not be reset to 0 so any element that syncs
 to the clock must use the stop times of the previous newsegment events to
-make the buffer timestamps increasing.
+make the buffer timestamps increasing (part-segments.txt).
 
 TAG
 ---    
@@ -176,7 +176,7 @@ at -1 to continue playback to the end of the stream. The seek event
 also contains the new playback rate of the stream, 1.0 is normal playback,
 2.0 double speed and negative values mean backwards playback.
 
-A seek usually flushes the graph to minimize latency after the seek this
+A seek usually flushes the graph to minimize latency after the seek. This
 behaviour is triggered by using the SEEK_FLUSH flag. 
 
 The seek event is passed along from element to element until it reaches
@@ -209,6 +209,7 @@ The general flow of executing the seek with FLUSH is as follows:
  4) send a FLUSH_STOP event to all peer elements to allow streaming again.
 
  5) send a NEWSEGMENT event to signal the new buffer timestamp base time.
+    This can also be done from the streaming thread.
 
  6) start stopped tasks and unlock the STREAM_LOCK, dataflow will continue
     now from the new position.

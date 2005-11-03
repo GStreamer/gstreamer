@@ -397,7 +397,8 @@ Pipeline EOS
  to the application. 
 
  When in EOS, the pipeline remains in the playing state, if is the application
- responsability to PAUSE or READY the pipeline. 
+ responsability to PAUSE or READY the pipeline. The application can also issue
+ a seek, for example.
 
 
 Pipeline READY
@@ -487,12 +488,13 @@ Pipeline seeking
  to produce new data.
 
  Since the pipeline is still PAUSED, this will preroll the next media sample in the
- sinks. 
+ sinks. The application can wait for this preroll to complete by performing a 
+ _get_state() on the pipeline.
 
  The last step in the seek operation is then to adjust the stream time of the pipeline
  to 0 and to set the pipeline back to PLAYING.
 
- The sequence of events in out mp3 playback example.
+ The sequence of events in our mp3 playback example.
 
                                       | a) seek on pipeline
                                       | b) PAUSE pipeline

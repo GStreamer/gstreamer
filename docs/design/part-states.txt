@@ -84,10 +84,7 @@ the following state changes are possible:
 State variables
 ---------------
 
-An element has a special lock to manage the state changes. This lock is called
-the STATE_LOCK. 
-
-The STATE_LOCK protects 3 element variables:
+An element has 4 state variables that are protected with the object LOCK:
 
   - STATE
   - STATE_NEXT
@@ -101,6 +98,10 @@ The STATE_RETURN reflects the last return value of a state change.
 
 The STATE_NEXT and STATE_PENDING can be VOID_PENDING if the element is in 
 the right state. 
+
+An element has a special lock to protect against concurrent invocations of
+_set_state(), called the STATE_LOCK. 
+
 
 Setting state on elements
 -------------------------

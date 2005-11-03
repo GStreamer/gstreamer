@@ -18,8 +18,9 @@ Message types
 
   GST_MESSAGE_EOS:
 
-    The pipeline went to EOS. This means that all the sink elements in the
-    pipeline posted the EOS message to the bus.
+    Posted by sink elements. This message is posted to the application when
+    all the sinks in a pipeline posted an EOS message. When performing a seek,
+    the EOS state of the pipeline and sinks is undone.
   
   GST_MESSAGE_ERROR:
   
@@ -75,8 +76,8 @@ Message types
 
   GST_MESSAGE_STREAM_STATUS:
 
-   An element posted information about the stream it is handling. This could include
-   information about the length of the stream.
+    An element posted information about the stream it is handling. This could include
+    information about the length of the stream.
     
   GST_MESSAGE_APPLICATION:
 
