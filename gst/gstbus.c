@@ -97,6 +97,9 @@ static void gst_bus_get_property (GObject * object, guint prop_id,
 static GstObjectClass *parent_class = NULL;
 static guint gst_bus_signals[LAST_SIGNAL] = { 0 };
 
+/* the context we wakeup when we posted a message on the bus */
+static GMainContext *main_context;
+
 GType
 gst_bus_get_type (void)
 {
@@ -194,6 +197,8 @@ gst_bus_class_init (GstBusClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
       G_STRUCT_OFFSET (GstBusClass, message), NULL, NULL,
       marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
+
+  main_context = g_main_context_default ();
 }
 
 static void
@@ -203,8 +208,6 @@ gst_bus_init (GstBus * bus)
   bus->queue_lock = g_mutex_new ();
 
   GST_DEBUG_OBJECT (bus, "created");
-
-  return;
 }
 
 static void
@@ -332,8 +335,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_mutex_unlock (bus->queue_lock);
       GST_DEBUG_OBJECT (bus, "[msg %p] pushed on async queue", message);
 
-      /* FIXME cannot assume the source is only in the default context */
-      g_main_context_wakeup (NULL);
+      /* FIXME cannot assume sources are only in the default context */
+      g_main_context_wakeup (main_context);
 
       break;
     case GST_BUS_ASYNC:
@@ -356,8 +359,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_queue_push_tail (bus->queue, message);
       g_mutex_unlock (bus->queue_lock);
 
-      /* FIXME cannot assume the source is only in the default context */
-      g_main_context_wakeup (NULL);
+      /* FIXME cannot assume sources are only in the default context */
+      g_main_context_wakeup (main_context);
 
       /* now block till the message is freed */
       g_cond_wait (cond, lock);

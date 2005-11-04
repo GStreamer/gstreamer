@@ -1,3 +1,9 @@
+2005-11-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbus.c: (gst_bus_class_init), (gst_bus_init),
+	(gst_bus_post):
+	Get the context to wake up only once.
+
 2005-11-03  Wim Taymans  <wim@fluendo.com>
 
 	* check/states/sinks.c: (GST_START_TEST):
