@@ -30,11 +30,13 @@ static gulong changed_id;
 #define ASINK "alsasink"
 //#define ASINK "osssink"
 #define VSINK "xvimagesink"
+//#define VSINK "sdlvideosink"
 //#define VSINK "ximagesink"
 //#define VSINK "aasink"
 //#define VSINK "cacasink"
 
-#define UPDATE_INTERVAL 500
+//#define UPDATE_INTERVAL 500
+#define UPDATE_INTERVAL 100
 
 /* number of milliseconds to play for after a seek */
 //#define SCRUB_TIME 250
@@ -66,10 +68,12 @@ gst_element_factory_make_or_warn (gchar * type, gchar * name)
 static void
 dynamic_link (GstPadTemplate * templ, GstPad * newpad, gpointer data)
 {
+  gchar *padname;
   dyn_link *connect = (dyn_link *) data;
 
-  if (connect->padname == NULL ||
-      !strcmp (gst_pad_get_name (newpad), connect->padname)) {
+  padname = gst_pad_get_name (newpad);
+
+  if (connect->padname == NULL || !strcmp (padname, connect->padname)) {
     if (connect->bin)
       gst_bin_add (GST_BIN (pipeline), connect->bin);
     gst_pad_link (newpad, connect->target);
@@ -77,6 +81,7 @@ dynamic_link (GstPadTemplate * templ, GstPad * newpad, gpointer data)
     //seekable_pads = g_list_prepend (seekable_pads, newpad);
     rate_pads = g_list_prepend (rate_pads, newpad);
   }
+  g_free (padname);
 }
 
 static void
@@ -598,7 +603,6 @@ make_avi_pipeline (const gchar * location)
   audio_bin = gst_bin_new ("a_decoder_bin");
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
-  //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   gst_element_link (a_decoder, a_queue);
   gst_element_link (a_queue, audiosink);
@@ -617,14 +621,9 @@ make_avi_pipeline (const gchar * location)
       g_list_prepend (rate_pads, gst_element_get_pad (a_decoder, "sink"));
 
   video_bin = gst_bin_new ("v_decoder_bin");
-  //v_decoder = gst_element_factory_make_or_warn ("identity", "v_dec");
-  //v_decoder = gst_element_factory_make_or_warn ("windec", "v_dec");
   v_decoder = gst_element_factory_make_or_warn ("ffmpegdecall", "v_dec");
   videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
-  //videosink = gst_element_factory_make_or_warn ("fakesink", "v_sink");
-  //g_object_set (G_OBJECT (videosink), "sync", TRUE, NULL);
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
-  //g_object_set (G_OBJECT (v_queue), "max_level", 10, NULL);
   gst_element_link (v_decoder, v_queue);
   gst_element_link (v_queue, videosink);
   gst_bin_add (GST_BIN (video_bin), v_decoder);
@@ -653,16 +652,15 @@ make_mpeg_pipeline (const gchar * location)
   GstElement *audiosink, *videosink;
   GstElement *a_queue, *v_queue;
   GstPad *seekable;
+  GstPad *pad;
 
   pipeline = gst_pipeline_new ("app");
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
   g_object_set (G_OBJECT (src), "location", location, NULL);
 
-  demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
-  g_object_set (G_OBJECT (demux), "sync", FALSE, NULL);
-
-  seekable_elements = g_list_prepend (seekable_elements, demux);
+  //demux = gst_element_factory_make_or_warn ("mpegdemux", "demux");
+  demux = gst_element_factory_make_or_warn ("flupsdemux", "demux");
 
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), demux);
@@ -672,38 +670,47 @@ make_mpeg_pipeline (const gchar * location)
   a_decoder = gst_element_factory_make_or_warn ("mad", "a_dec");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   audiosink = gst_element_factory_make_or_warn (ASINK, "a_sink");
-  //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
-  gst_element_link (a_decoder, a_queue);
-  gst_element_link (a_queue, audiosink);
   gst_bin_add (GST_BIN (audio_bin), a_decoder);
   gst_bin_add (GST_BIN (audio_bin), a_queue);
   gst_bin_add (GST_BIN (audio_bin), audiosink);
 
-  setup_dynamic_link (demux, "audio_00", gst_element_get_pad (a_decoder,
-          "sink"), audio_bin);
+  gst_element_link (a_decoder, a_queue);
+  gst_element_link (a_queue, audiosink);
 
-  seekable = gst_element_get_pad (a_queue, "src");
-  seekable_pads = g_list_prepend (seekable_pads, seekable);
-  rate_pads = g_list_prepend (rate_pads, seekable);
-  rate_pads =
-      g_list_prepend (rate_pads, gst_element_get_pad (a_decoder, "sink"));
+  gst_bin_add (GST_BIN (pipeline), audio_bin);
+
+  pad = gst_element_get_pad (a_decoder, "sink");
+  gst_element_add_pad (audio_bin, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (pad);
+
+  setup_dynamic_link (demux, "audio_c0", gst_element_get_pad (audio_bin,
+          "sink"), NULL);
 
   video_bin = gst_bin_new ("v_decoder_bin");
   v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
-  //g_object_set (G_OBJECT (video_thread), "priority", 2, NULL);
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   v_filter = gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_filter");
-  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
-  gst_element_link_many (v_decoder, v_queue, v_filter, NULL);
+  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
 
+  gst_bin_add (GST_BIN (video_bin), v_decoder);
+  gst_bin_add (GST_BIN (video_bin), v_queue);
+  gst_bin_add (GST_BIN (video_bin), v_filter);
+  gst_bin_add (GST_BIN (video_bin), videosink);
+
+  gst_element_link (v_decoder, v_queue);
+  gst_element_link (v_queue, v_filter);
   gst_element_link (v_filter, videosink);
-  gst_bin_add_many (GST_BIN (video_bin), v_decoder, NULL);
-  gst_bin_add_many (GST_BIN (video_bin), v_queue, v_filter, videosink, NULL);
 
-  setup_dynamic_link (demux, "video_00", gst_element_get_pad (v_decoder,
-          "sink"), video_bin);
+  gst_bin_add (GST_BIN (pipeline), video_bin);
 
-  seekable = gst_element_get_pad (v_queue, "src");
+  pad = gst_element_get_pad (v_decoder, "sink");
+  gst_element_add_pad (video_bin, gst_ghost_pad_new ("sink", pad));
+  gst_object_unref (pad);
+
+  setup_dynamic_link (demux, "video_e0", gst_element_get_pad (video_bin,
+          "sink"), NULL);
+
+  seekable = gst_element_get_pad (v_filter, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
   rate_pads = g_list_prepend (rate_pads, seekable);
   rate_pads =

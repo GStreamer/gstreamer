@@ -1,3 +1,20 @@
+2005-11-04  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/Makefile.am:
+	* examples/seeking/scrubby.c: (gst_element_factory_make_or_warn),
+	(dynamic_link), (setup_dynamic_link), (make_wav_pipeline),
+	(make_playerbin_pipeline), (format_value), (update_scale),
+	(speed_cb), (seek_cb), (do_seek), (start_seek), (stop_seek),
+	(play_cb), (pause_cb), (stop_cb), (print_message), (bus_message),
+	(print_usage), (main):
+	Added app for playback speed testing.
+
+	* examples/seeking/seek.c: (dynamic_link),
+	(make_avi_msmpeg4v3_mp3_pipeline), (make_avi_pipeline),
+	(make_mpeg_pipeline), (do_seek), (set_update_scale),
+	(message_received), (main):
+	Updated seek example.
+
 2005-11-04  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
