@@ -188,18 +188,32 @@ type_as_function ## _init_interfaces (GType type)                       \
 GST_BOILERPLATE_FULL (type, type_as_function, parent_type,              \
     parent_type_as_macro, type_as_function ## _init_interfaces)
 
-/* Just call the parent handler.  This assumes that there is a variable
+/**
+ * GST_CALL_PARENT:
+ * @parent_class_cast: the name of the class cast macro for the parent type
+ * @name: name of the function to call
+ * @args: arguments enclosed in '( )'
+ *
+ * Just call the parent handler.  This assumes that there is a variable
  * named parent_class that points to the (duh!) parent class.  Note that
  * this macro is not to be used with things that return something, use
- * the _WITH_DEFAULT version for that */
+ * the _WITH_DEFAULT version for that
+ */
 #define GST_CALL_PARENT(parent_class_cast, name, args)			\
 	((parent_class_cast(parent_class)->name != NULL) ?		\
 	 parent_class_cast(parent_class)->name args : (void) 0)
 
-/* Same as above, but in case there is no implementation, it evaluates
- * to def_return */
-#define GST_CALL_PARENT_WITH_DEFAULT(parent_class_cast, name, args,	\
-    def_return)								\
+/**
+ * GST_CALL_PARENT_WITH_DEFAULT:
+ * @parent_class_cast: the name of the class cast macro for the parent type
+ * @name: name of the function to call
+ * @args: arguments enclosed in '( )'
+ * @def_return: default result
+ *
+ * Same as GST_CALL_PARENT(), but in case there is no implementation, it
+ * evaluates to @def_return.
+ */
+#define GST_CALL_PARENT_WITH_DEFAULT(parent_class_cast, name, args, def_return)\
 	((parent_class_cast(parent_class)->name != NULL) ?		\
 	 parent_class_cast(parent_class)->name args : def_return)
 

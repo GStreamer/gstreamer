@@ -115,14 +115,14 @@ typedef enum
 
 /**
  * GST_MINI_OBJECT_REFCOUNT:
- * @obj: MiniObject get the refcount for.
+ * @obj: a #GstMiniObject
  *
  * Get access to the reference count field of the mini-object.
  */
 #define GST_MINI_OBJECT_REFCOUNT(obj)           ((GST_MINI_OBJECT_CAST(obj))->refcount)
 /**
  * GST_MINI_OBJECT_REFCOUNT_VALUE:
- * @obj: MiniObject get the refcount value for.
+ * @obj: a #GstMiniObject
  *
  * Get the reference count value of the mini-object.
  */

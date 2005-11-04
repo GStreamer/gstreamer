@@ -106,7 +106,19 @@ typedef struct _GstCaps GstCaps;
 typedef struct _GstStaticCaps GstStaticCaps;
 
 /* refcount */
+/**
+ * GST_CAPS_REFCOUNT:
+ * @caps: a #GstCaps
+ *
+ * Get access to the reference count field of the caps
+ */
 #define GST_CAPS_REFCOUNT(caps)                 ((GST_CAPS(caps))->refcount)
+/**
+ * GST_CAPS_REFCOUNT_VALUE:
+ * @caps: a #GstCaps
+ *
+ * Get the reference count value of the caps.
+ */
 #define GST_CAPS_REFCOUNT_VALUE(caps)           (g_atomic_int_get (&(GST_CAPS(caps))->refcount))
 
 struct _GstCaps {

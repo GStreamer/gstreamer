@@ -69,10 +69,9 @@
  *
  * The whole debugging subsystem can be disabled at build time with passing the
  * --disable-gst-debug switch to configure. If this is done, every function,
- * macro
- * and even structs described in this file evaluate to default values or
- * nothing
- * at all. So don't take addresses of these functions or use other tricks.
+ * macro and even structs described in this file evaluate to default values or
+ * nothing at all.
+ * So don't take addresses of these functions or use other tricks.
  * If you must do that for some reason, there is still an option.
  * If the debugging
  * subsystem was compiled out, #GST_DISABLE_GST_DEBUG is defined in
@@ -264,7 +263,7 @@ __gst_in_valgrind (void)
  * _gst_debug_init:
  *
  * Initializes the debugging system.
- * Normally you don't want to call this, because gst_init does it for you.
+ * Normally you don't want to call this, because gst_init() does it for you.
  */
 void
 _gst_debug_init (void)
