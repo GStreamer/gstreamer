@@ -1,3 +1,8 @@
+2005-11-04  Edward Hervey  <edward@fluendo.com>
+
+	* examples/play.py:
+	Fixed the play example to work with 0.9.4 API
+
 2005-11-01  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstelement.override:

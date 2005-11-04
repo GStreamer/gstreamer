@@ -4,6 +4,9 @@ pygtk.require('2.0')
 import sys
 
 import gobject
+
+import pygst
+pygst.require('0.9')
 import gst
 import gst.interfaces
 import gtk
@@ -21,11 +24,21 @@ class GstPlayer:
 
     def query_position(self):
         "Returns a (position, duration) tuple"
-        ret = self.player.query_position(gst.FORMAT_TIME)
-        if not ret:
-            return (gst.CLOCK_TIME_NONE, gst.CLOCK_TIME_NONE, gst.FORMAT_TIME)
+        try:
+            ret = self.player.query_position(gst.FORMAT_TIME)
+        except:
+            position = gst.CLOCK_TIME_NONE
+        else:
+            position = ret[0]
 
-        return ret
+        try:
+            ret = self.player.query_duration(gst.FORMAT_TIME)
+        except:
+            duration = gst.CLOCK_TIME_NONE
+        else:
+            duration = ret[0]
+
+        return (position, duration, ret[1])
 
     def seek(self, location):
         """
@@ -57,12 +70,12 @@ class GstPlayer:
         self.player.set_state(gst.STATE_READY)
         gst.info("stopped player")
 
-    def get_state(self, timeout=0.050):
+    def get_state(self, timeout=1):
         return self.player.get_state(timeout=timeout)
 
     def is_in_state(self, state):
         gst.debug("checking if player is in state %r" % state)
-        cur, pen, final = self.get_state(timeout=0.0)
+        cur, pen, final = self.get_state(timeout=0)
         gst.debug("checked if player is in state %r" % state)
         if pen == gst.STATE_VOID_PENDING and cure == state:
             return True
@@ -127,7 +140,7 @@ class PlayerWindow(gtk.Window):
         vbox.pack_start(self.videowidget)
         
         hbox = gtk.HBox()
-        vbox.pack_start(hbox)
+        vbox.pack_start(hbox, fill=False, expand=False)
         
         button = gtk.Button('play')
         button.connect('clicked', self.play_clicked_cb)
@@ -184,7 +197,7 @@ class PlayerWindow(gtk.Window):
         gst.debug('value changed, perform seek to %r' % real)
         self.player.seek(real)
         # allow for a preroll
-        self.player.get_state(timeout=0.050) # 50 ms
+        self.player.get_state(timeout=50) # 50 ms
 
     def scale_button_release_cb(self, widget, event):
         # see seek.cstop_seek
