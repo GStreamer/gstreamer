@@ -428,9 +428,10 @@ _wrap_gst_element_query_convert (PyGObject *self, PyObject *args, PyObject *kwar
     /* Returns : dst_format, dst_val OR None */
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-				     "0L0:GstElement.query_convert",
+				     "OLO:GstElement.query_convert",
 				     kwlist, &pfromformat, &fromval, &pdestformat))
 	return NULL;
+
     if (pyg_enum_get_value(GST_TYPE_FORMAT, pfromformat, (gint *) &srcformat)) {
 	PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
 	return NULL;
