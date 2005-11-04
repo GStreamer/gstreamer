@@ -821,6 +821,10 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
     if (offset > src->size)
       goto unexpected_length;
 
+    /* is segment done ? */
+    if (src->segment_loop && (offset > src->segment_end))
+      goto unexpected_length;
+
     if (offset + length > src->size) {
       if (bclass->get_size)
         bclass->get_size (src, &src->size);

@@ -1,3 +1,9 @@
+2005-11-04  Edward Hervey  <edward@fluendo.com>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_get_range):
+	Check if we are doing a segment seek and have arrived at the
+	end of that segment.
+
 2005-11-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbus.c: (gst_bus_post), (gst_bus_set_sync_handler):
