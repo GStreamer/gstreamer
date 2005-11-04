@@ -1,6 +1,11 @@
 2005-11-04  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstpad.override:
+	works better now we set the item to the proper position...
+
+2005-11-04  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstpad.override:
 	Use proper GValue <-> MiniObject conversion function
 	* examples/Makefile.am:
 	* examples/sinkelement.py:

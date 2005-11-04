@@ -677,7 +677,7 @@ _wrap_gst_pad_query_position (PyGObject *self, PyObject *args)
     if ((gst_pad_query_position(GST_PAD (self->obj), (GstFormat*) &format, &cur))) {
         ret = PyList_New(2);
         PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
-        PyList_SetItem(ret, 2, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+        PyList_SetItem(ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
     } else {
         Py_INCREF(Py_None);
         ret = Py_None;
@@ -704,7 +704,7 @@ _wrap_gst_pad_query_duration (PyGObject *self, PyObject *args)
     if ((gst_pad_query_duration(GST_PAD (self->obj), (GstFormat*) &format, &cur))) {
         ret = PyList_New(2);
         PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
-        PyList_SetItem(ret, 2, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+        PyList_SetItem(ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
     } else {
         Py_INCREF(Py_None);
         ret = Py_None;
