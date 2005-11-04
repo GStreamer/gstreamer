@@ -786,6 +786,7 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
 {
   GstFlowReturn ret;
   GstBaseSrcClass *bclass;
+  gint64 maxsize;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
@@ -816,21 +817,30 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
       "reading offset %" G_GUINT64_FORMAT ", length %u, size %"
       G_GINT64_FORMAT, offset, length, src->size);
 
+  /* the max amount of bytes to read is the total size or
+   * up to the segment_end if present. */
+  if (src->segment_end != -1)
+    maxsize = MIN (src->size, src->segment_end);
+  else
+    maxsize = src->size;
+
   /* check size */
-  if (src->size != -1) {
-    if (offset > src->size)
+  if (maxsize != -1) {
+    if (offset > maxsize)
       goto unexpected_length;
 
-    /* is segment done ? */
-    if (src->segment_loop && (offset > src->segment_end))
-      goto unexpected_length;
-
-    if (offset + length > src->size) {
+    if (offset + length > maxsize) {
+      /* see if length of the file changed */
       if (bclass->get_size)
         bclass->get_size (src, &src->size);
 
-      if (offset + length > src->size) {
-        length = src->size - offset;
+      if (src->segment_end != -1)
+        maxsize = MIN (src->size, src->segment_end);
+      else
+        maxsize = src->size;
+
+      if (offset + length > maxsize) {
+        length = maxsize - offset;
       }
     }
   }
