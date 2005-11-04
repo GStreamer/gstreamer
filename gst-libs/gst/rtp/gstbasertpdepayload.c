@@ -399,8 +399,11 @@ gst_base_rtp_depayload_wait (GstBaseRTPDepayload * filter, GstClockTime time)
 {
   GstClockID id;
 
-  g_return_if_fail (filter->clock != NULL);
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (time));
+  if (filter->clock == NULL) {
+    GST_DEBUG_OBJECT (filter, "No clock given yet");
+    return;
+  }
 
   id = gst_clock_new_single_shot_id (filter->clock, time);
 

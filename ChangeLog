@@ -1,3 +1,9 @@
+2005-11-04  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_class_init), (gst_base_rtp_depayload_wait):
+	Fixed a small problem.
+
 2005-11-04  Wim Taymans  <wim@fluendo.com>
 
 	* examples/seeking/Makefile.am:
