@@ -522,6 +522,9 @@ gst_bus_peek (GstBus * bus)
  * function is usually only called by the creator of the bus. Applications
  * should handle messages asynchronously using the gst_bus watch and poll
  * functions.
+ *
+ * You cannot replace an existing sync_handler. You can pass NULL to this
+ * function, which will clear the existing handler.
  */
 void
 gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func, gpointer data)
@@ -532,11 +535,21 @@ gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func, gpointer data)
 
   /* Assert if the user attempts to replace an existing sync_handler,
    * other than to clear it */
-  g_assert (func == NULL || bus->sync_handler == NULL);
+  if (func != NULL && bus->sync_handler != NULL)
+    goto no_replace;
 
   bus->sync_handler = func;
   bus->sync_handler_data = data;
   GST_UNLOCK (bus);
+
+  return;
+
+no_replace:
+  {
+    GST_UNLOCK (bus);
+    g_warning ("cannot replace existing sync handler");
+    return;
+  }
 }
 
 /* GSource for the bus
