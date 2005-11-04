@@ -13,6 +13,7 @@ examples_DATA = 	\
 	audioconcat.py  \
 	pipeline-tester \
 	vumeter.py	\
-	fvumeter.py
+	fvumeter.py	\
+	sinkelement.py
 
 EXTRA_DIST = $(examples_DATA)
