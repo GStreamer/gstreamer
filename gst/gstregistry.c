@@ -550,6 +550,14 @@ gst_registry_get_feature_list (GstRegistry * registry, GType type)
       FALSE, &data);
 }
 
+/**
+ * gst_registry_get_plugin_list:
+ * @registry: the registry to search
+ *
+ * Get a copy of all plugins registered in the given registry.
+ *
+ * Returns: a copy of the list. Free after use.
+ */
 GList *
 gst_registry_get_plugin_list (GstRegistry * registry)
 {

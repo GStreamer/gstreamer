@@ -105,18 +105,89 @@ void 			_gst_registry_remove_cache_plugins (GstRegistry *registry);
 
 void                    _gst_registry_cleanup           (void);
 
+/* convinience defines for the default registry */
+
+/**
+ * gst_default_registry_add_plugin:
+ * @plugin: the plugin to add
+ *
+ * Add the plugin to the default registry.
+ * The plugin-added signal will be emitted.
+ *
+ * Returns: TRUE on success.
+ */
 #define gst_default_registry_add_plugin(plugin) \
   gst_registry_add_plugin (gst_registry_get_default(), plugin)
+
+/**
+ * gst_default_registry_add_path:
+ * @path: the path to add to the registry
+ *
+ * Add the given path to the default registry. The syntax of the
+ * path is specific to the registry. If the path has already been
+ * added, do nothing.
+ */
 #define gst_default_registry_add_path(path) \
   gst_registry_add_path (gst_registry_get_default(), path)
+
+/**
+ * gst_default_registry_get_path_list:
+ *
+ * Get the list of paths for the default registry.
+ *
+ * Returns: A Glist of paths as strings. g_list_free after use.
+ */
 #define gst_default_registry_get_path_list() \
   gst_registry_get_path_list (gst_registry_get_default())
+  
+/**
+ * gst_default_registry_get_plugin_list:
+ *
+ * Get a copy of all plugins registered in the default registry.
+ *
+ * Returns: a copy of the list. Free after use.
+ */
 #define gst_default_registry_get_plugin_list() \
   gst_registry_get_plugin_list (gst_registry_get_default())
+
+/**
+ * gst_default_registry_find_feature:
+ * @name: the pluginfeature name to find
+ * @type: the pluginfeature type to find
+ *
+ * Find the pluginfeature with the given name and type in the default registry.
+ *
+ * Returns: The pluginfeature with the given name and type or NULL
+ * if the plugin was not found.
+ */
 #define gst_default_registry_find_feature(name,type) \
   gst_registry_find_feature (gst_registry_get_default(),name,type)
+
+/**
+ * gst_default_registry_find_plugin:
+ * @name: the plugin name to find
+ *
+ * Find the plugin with the given name in the default registry.
+ * The plugin will be reffed; caller is responsible for unreffing.
+ *
+ * Returns: The plugin with the given name or NULL if the plugin was not found.
+ */
 #define gst_default_registry_find_plugin(name) \
   gst_registry_find_plugin (gst_registry_get_default(),name)
+
+/**
+ * gst_default_registry_feature_filter:
+ * @filter: the filter to use
+ * @first: only return first match
+ * @user_data: user data passed to the filter function
+ *
+ * Runs a filter against all features of the plugins in the default registry
+ * and returns a GList with the results.
+ * If the first flag is set, only the first match is
+ * returned (as a list with a single object).
+ *
+ * Returns: a GList of plugin features, gst_plugin_feature_list_free after use.
+ */
 #define gst_default_registry_feature_filter(filter,first,user_data) \
   gst_registry_feature_filter (gst_registry_get_default(),filter,first,user_data)
 
