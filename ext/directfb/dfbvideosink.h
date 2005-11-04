@@ -50,6 +50,8 @@ struct _GstDfbSurface {
   gint width;
   gint height;
   
+  gboolean locked;
+  
   DFBSurfacePixelFormat pixel_format;
   
   GstDfbVideoSink *dfbvideosink;
