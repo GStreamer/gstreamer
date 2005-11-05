@@ -1,3 +1,11 @@
+2005-11-05  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_enum_layers),
+	(gst_dfbvideosink_setup), (gst_dfbvideosink_can_blit_from_format),
+	(gst_dfbvideosink_getcaps): Make acceleration detection work, 
+	better, add safety checks and ARGB support for cards that
+	support it.
+
 2005-11-04  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_surface_create),

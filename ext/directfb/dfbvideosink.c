@@ -544,6 +544,9 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
       GST_DEBUG ("getting primary surface");
       dfbvideosink->layer->GetSurface (dfbvideosink->layer,
           &dfbvideosink->primary);
+
+      dfbvideosink->primary->SetBlittingFlags (dfbvideosink->primary,
+          DSBLIT_NOFX);
     }
 
     dfbvideosink->primary->GetPixelFormat (dfbvideosink->primary,
@@ -781,20 +784,27 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
   IDirectFBSurface *surface = NULL;
   DFBSurfaceDescription s_dsc;
   DFBAccelerationMask mask;
-  DFBDisplayLayerConfig dlc;
+  DFBDisplayLayerConfig dlc, prev_dlc;
 
   g_return_val_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink), FALSE);
 
   /* Create a surface of desired format */
   s_dsc.flags = DSDESC_PIXELFORMAT | DSDESC_WIDTH | DSDESC_HEIGHT;
   s_dsc.pixelformat = format;
-  s_dsc.width = 1;
-  s_dsc.height = 1;
+  s_dsc.width = 10;
+  s_dsc.height = 10;
 
   ret = dfbvideosink->dfb->CreateSurface (dfbvideosink->dfb, &s_dsc, &surface);
   if (ret != DFB_OK) {
     GST_WARNING ("failed creating surface with format %s",
         gst_dfbvideosink_get_format_name (format));
+    goto beach;
+  }
+
+  /* Backup layer configuration */
+  ret = dfbvideosink->layer->GetConfiguration (dfbvideosink->layer, &prev_dlc);
+  if (ret != DFB_OK) {
+    GST_WARNING ("failed when getting current layer configuration");
     goto beach;
   }
 
@@ -833,7 +843,14 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
   } else {
     GST_DEBUG ("blitting from format %s to our primary is not accelerated",
         gst_dfbvideosink_get_format_name (format));
-    res = TRUE;
+    res = FALSE;
+  }
+
+  /* Restore original layer configuration */
+  ret = dfbvideosink->layer->SetConfiguration (dfbvideosink->layer, &prev_dlc);
+  if (ret != DFB_OK) {
+    GST_WARNING ("failed when restoring layer configuration");
+    goto beach;
   }
 
 beach:
@@ -933,6 +950,15 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink)
       if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB24)) {
         gst_caps_append (caps,
             gst_dfbvideosink_get_caps_from_format (DSPF_RGB24));
+      }
+      /* There's something wrong with RGB32, ffmpegcolorspace ?
+         if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_RGB32)) {
+         gst_caps_append (caps,
+         gst_dfbvideosink_get_caps_from_format (DSPF_RGB32));
+         } */
+      if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_ARGB)) {
+        gst_caps_append (caps,
+            gst_dfbvideosink_get_caps_from_format (DSPF_ARGB));
       }
       if (gst_dfbvideosink_can_blit_from_format (dfbvideosink, DSPF_YUY2)) {
         gst_caps_append (caps,
