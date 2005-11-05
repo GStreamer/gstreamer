@@ -1,3 +1,8 @@
+2005-11-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/base/gstpushsrc.c: Shorten by 30% via use of boilerplate
+	macro.
+
 2005-11-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:

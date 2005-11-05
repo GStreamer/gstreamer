@@ -55,51 +55,12 @@
 GST_DEBUG_CATEGORY_STATIC (gst_push_src_debug);
 #define GST_CAT_DEFAULT gst_push_src_debug
 
-/* PushSrc signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
+#define _do_init(type) \
+    GST_DEBUG_CATEGORY_INIT (gst_push_src_debug, "pushsrc", 0, \
+        "pushsrc element");
 
-enum
-{
-  PROP_0,
-};
-
-static GstElementClass *parent_class = NULL;
-
-static void gst_push_src_base_init (gpointer g_class);
-static void gst_push_src_class_init (GstPushSrcClass * klass);
-static void gst_push_src_init (GstPushSrc * src, gpointer g_class);
-
-GType
-gst_push_src_get_type (void)
-{
-  static GType push_src_type = 0;
-
-  if (!push_src_type) {
-    static const GTypeInfo push_src_info = {
-      sizeof (GstPushSrcClass),
-      (GBaseInitFunc) gst_push_src_base_init,
-      NULL,
-      (GClassInitFunc) gst_push_src_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPushSrc),
-      0,
-      (GInstanceInitFunc) gst_push_src_init,
-    };
-
-    push_src_type = g_type_register_static (GST_TYPE_BASE_SRC,
-        "GstPushSrc", &push_src_info, G_TYPE_FLAG_ABSTRACT);
-  }
-  return push_src_type;
-}
-
-#if 0
-static const GstEventMask *gst_push_src_get_event_mask (GstPad * pad);
-#endif
+GST_BOILERPLATE_FULL (GstPushSrc, gst_push_src, GstBaseSrc, GST_TYPE_BASE_SRC,
+    _do_init);
 
 static GstFlowReturn gst_push_src_create (GstBaseSrc * bsrc, guint64 offset,
     guint length, GstBuffer ** ret);
@@ -107,28 +68,21 @@ static GstFlowReturn gst_push_src_create (GstBaseSrc * bsrc, guint64 offset,
 static void
 gst_push_src_base_init (gpointer g_class)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_push_src_debug, "pushsrc", 0, "pushsrc element");
+  /* nop */
 }
 
 static void
 gst_push_src_class_init (GstPushSrcClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSrcClass *gstbasesrc_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesrc_class = (GstBaseSrcClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_BASE_SRC);
+  GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
 
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_push_src_create);
 }
 
 static void
-gst_push_src_init (GstPushSrc * pushsrc, gpointer g_class)
+gst_push_src_init (GstPushSrc * pushsrc, GstPushSrcClass * klass)
 {
+  /* nop */
 }
 
 static GstFlowReturn
