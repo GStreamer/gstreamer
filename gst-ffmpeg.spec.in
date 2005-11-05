@@ -12,7 +12,6 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %define		gst_majorminor 	@GST_FFMPEG_VERSION_MAJOR@.@GST_FFMPEG_VERSION_MINOR@
 
-Prereq:		%{_bindir}/gst-register-%{gst_majorminor}
 Requires: 	gstreamer >= 0.7.5
 Requires:	gstreamer-tools >= 0.7.5
 BuildRequires: 	gstreamer-devel >= 0.7.5
@@ -46,10 +45,8 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{gst_majorminor}/*.la
 rm -rf $RPM_BUILD_ROOT
 
 %post
-%{_bindir}/gst-register-%{gst_majorminor} > /dev/null 2> /dev/null
 
 %postun
-%{_bindir}/gst-register-%{gst_majorminor} > /dev/null 2> /dev/null
 
 %files
 %defattr(-, root, root, -)
