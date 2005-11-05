@@ -1,3 +1,16 @@
+2005-11-06  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/directfb/Makefile.am: Add the example application.
+	* ext/directfb/dfb-example.c: (get_me_out), (main):
+	Here is an example application that runs videotestsrc for 20
+	seconds. It's included in the documentation.
+	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_enum_layers),
+	(gst_dfbvideosink_setup), (gst_dfbvideosink_can_blit_from_format),
+	(gst_dfbvideosink_getcaps), (gst_dfbvideosink_buffer_alloc):
+	More fixes, calculate new size of the buffer when renegotiating.
+	This completely breaks ffmpegcolorspace but i need to discuss 
+	that with Wim on monday. Add documentation.
+
 2005-11-05  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_enum_layers),

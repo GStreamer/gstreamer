@@ -17,6 +17,66 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-dfbvideosink
+ *
+ * <refsect2>
+ * <para>
+ * DfbVideoSink renders video frames using the
+ * <ulink url="http://www.directfb.org/">DirectFB</ulink> library.
+ * Rendering can happen in two different modes :
+ * <itemizedlist>
+ * <listitem>
+ *   <para>
+ *   Standalone: this mode will take complete control of the monitor forcing
+ *   <ulink url="http://www.directfb.org/">DirectFB</ulink> to fullscreen layout.
+ *   This is convenient to test using the  gst-launch command line tool or
+ *   other simple applications. It is possible to interrupt playback while
+ *   being in this mode by pressing the Escape key.
+ *   </para>
+ *   <para>
+ *   This mode handles navigation events for every input device supported by
+ *   the <ulink url="http://www.directfb.org/">DirectFB</ulink> library, it will
+ *   look for available video modes in the fb.modes file and try to switch
+ *   the framebuffer video mode to the most suitable one. Depending on 
+ *   hardware acceleration capabilities the element will handle scaling or not.
+ *   If no acceleration is available it will do clipping or centering of the
+ *   video frames respecting the original aspect ratio.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   Embedded: this mode will render video frames in a 
+ *   <link linkend="GstDfbVideoSink--surface">surface</link> provided by the
+ *   application developer. This is a more advanced usage of the element and
+ *   it is required to integrate video playback in existing 
+ *   <ulink url="http://www.directfb.org/">DirectFB</ulink> applications.
+ *   </para>
+ *   <para>
+ *   When using this mode the element just renders to the
+ *   <link linkend="GstDfbVideoSink--surface">surface</link> provided by the 
+ *   application, that means it won't handle navigation events and won't resize
+ *   the <link linkend="GstDfbVideoSink--surface">surface</link> to fit video
+ *   frames geometry. Application has to implement the necessary code to grab
+ *   informations about the negotiated geometry and resize there
+ *   <link linkend="GstDfbVideoSink--surface">surface</link> accordingly.
+ *   </para>
+ * </listitem>
+ * </itemizedlist>
+ * For both modes the element implements a buffer pool allocation system to 
+ * optimize memory allocation time and handle reverse negotiation. Indeed if 
+ * you insert an element like videoscale in the pipeline the video sink will
+ * negotiate with it to try get a scaled video for either the fullscreen layout
+ * or the application provided external
+ * <link linkend="GstDfbVideoSink--surface">surface</link>.
+ * </para>
+ * <title>Example application</title>
+ * <para>
+ * <include xmlns="http://www.w3.org/2003/XInclude" href="element-dfb-example.xml" />
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -1392,11 +1452,15 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       gst_structure_set (structure, "height", G_TYPE_INT, result.h, NULL);
 
       if (gst_pad_accept_caps (peer, desired_caps)) {
-        GST_DEBUG ("peed pad accepts our desired caps %" GST_PTR_FORMAT,
-            desired_caps);
+        gint bpp;
+
+        bpp = size / height / width;
         rev_nego = TRUE;
         width = result.w;
         height = result.h;
+        size = bpp * width * height;
+        GST_DEBUG ("peed pad accepts our desired caps %" GST_PTR_FORMAT
+            " buffer size is now %d bytes", desired_caps, size);
       } else {
         GST_DEBUG ("peer pad does not accept our desired caps %" GST_PTR_FORMAT,
             desired_caps);

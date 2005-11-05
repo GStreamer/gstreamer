@@ -12,3 +12,7 @@ libgstdfbvideosink_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 libgstdfbvideosink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = dfbvideosink.h
+
+noinst_PROGRAMS = dfb-example
+dfb_example_CFLAGS = $(GST_CFLAGS) $(DIRECTFB_CFLAGS)
+dfb_example_LDADD = $(GST_LIBS) $(DIRECTFB_LIBS)
