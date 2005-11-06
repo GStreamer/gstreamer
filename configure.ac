@@ -427,6 +427,13 @@ GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $G
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
+dnl ######################
+dnl # Checks for gtk-doc #
+dnl ######################
+
+GTK_DOC_CHECK([1.3])
+AS_PATH_PYTHON([2.1])
+
 dnl ############################
 dnl # Set up some more defines #
 dnl ############################
@@ -481,12 +488,17 @@ gst/speed/Makefile
 gst/qtdemux/Makefile
 gst/tta/Makefile
 sys/Makefile
+examples/Makefile
+examples/directfb/Makefile
 ext/Makefile
 ext/directfb/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
 ext/gsm/Makefile
 ext/sdl/Makefile
+docs/Makefile
+docs/plugins/Makefile
+docs/version.entities
 common/Makefile
 common/m4/Makefile
 m4/Makefile

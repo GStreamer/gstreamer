@@ -1,5 +1,34 @@
 2005-11-06  Julien MOUTTE  <julien@moutte.net>
 
+	* Makefile.am:
+	* autogen.sh:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/plugins/.cvsignore:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-decl-list.txt:
+	* docs/plugins/gst-plugins-bad-plugins-decl.txt:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins-undocumented.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.prerequisites:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/gst-plugins-bad-plugins.types:
+	* docs/plugins/inspect/plugin-dfbvideosink.xml:
+	* docs/version.entities.in: Enable documentation.
+	* examples/Makefile.am:
+	* examples/directfb/Makefile.am:
+	* examples/directfb/decker.ttf:
+	* examples/directfb/dfblogo.png:
+	* examples/directfb/gstdfb.c: (myclock), (dynamic_link),
+	(size_changed), (setup_dynamic_link), (main): Add an example
+	application for DirectFB.
+
+2005-11-06  Julien MOUTTE  <julien@moutte.net>
+
 	* ext/directfb/Makefile.am: Add the example application.
 	* ext/directfb/dfb-example.c: (get_me_out), (main):
 	Here is an example application that runs videotestsrc for 20

@@ -1,6 +1,8 @@
+DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
+
 SUBDIRS = \
 	gst sys ext \
-	m4 common
+	m4 common docs
 
 EXTRA_DIST = \
 	gst-plugins-bad.spec depcomp \

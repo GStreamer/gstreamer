@@ -1,0 +1,119 @@
+<MACRO>
+<NAME>GST_TYPE_DFBVIDEOSINK</NAME>
+#define GST_TYPE_DFBVIDEOSINK              (gst_dfbvideosink_get_type())
+</MACRO>
+<MACRO>
+<NAME>GST_DFBVIDEOSINK</NAME>
+#define GST_DFBVIDEOSINK(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DFBVIDEOSINK, GstDfbVideoSink))
+</MACRO>
+<MACRO>
+<NAME>GST_DFBVIDEOSINK_CLASS</NAME>
+#define GST_DFBVIDEOSINK_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_DFBVIDEOSINK, GstDfbVideoSink))
+</MACRO>
+<MACRO>
+<NAME>GST_IS_DFBVIDEOSINK</NAME>
+#define GST_IS_DFBVIDEOSINK(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DFBVIDEOSINK))
+</MACRO>
+<MACRO>
+<NAME>GST_IS_DFBVIDEOSINK_CLASS</NAME>
+#define GST_IS_DFBVIDEOSINK_CLASS(obj)     (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_DFBVIDEOSINK))
+</MACRO>
+<STRUCT>
+<NAME>GstDfbVideoSink</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstDfbVideoSinkClass</NAME>
+</STRUCT>
+<MACRO>
+<NAME>GST_TYPE_DFBSURFACE</NAME>
+#define GST_TYPE_DFBSURFACE (gst_dfbsurface_get_type())
+</MACRO>
+<MACRO>
+<NAME>GST_IS_DFBSURFACE</NAME>
+#define GST_IS_DFBSURFACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_DFBSURFACE))
+</MACRO>
+<MACRO>
+<NAME>GST_DFBSURFACE</NAME>
+#define GST_DFBSURFACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_DFBSURFACE, GstDfbSurface))
+</MACRO>
+<STRUCT>
+<NAME>GstDfbSurface</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstDfbSurface</NAME>
+struct _GstDfbSurface {
+  GstBuffer buffer; /* We extend GstBuffer */
+  
+  IDirectFBSurface *surface;
+  
+  gint width;
+  gint height;
+  
+  gboolean locked;
+  
+  DFBSurfacePixelFormat pixel_format;
+  
+  GstDfbVideoSink *dfbvideosink;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstDfbVMode</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstDfbVMode</NAME>
+struct _GstDfbVMode {
+  gint width;
+  gint height;
+  gint bpp;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstDfbVideoSink</NAME>
+struct _GstDfbVideoSink {
+  /* Our element stuff */
+  GstVideoSink videosink;
+  
+  GSList *buffer_pool;
+  
+  gdouble framerate;
+  gint video_width, video_height; /* size of incoming video */
+  gint out_width, out_height;
+  
+  /* Standalone */
+  IDirectFB *dfb;
+  
+  GSList *vmodes; /* Video modes */
+  
+  gint layer_id;
+  IDirectFBDisplayLayer *layer;
+  IDirectFBSurface *primary;
+  IDirectFBEventBuffer *event_buffer;
+  GThread *event_thread;
+  
+  /* Embedded */
+  IDirectFBSurface *ext_surface;
+  
+  DFBSurfacePixelFormat pixel_format;
+  
+  gboolean hw_scaling;
+  gboolean backbuffer;
+  gboolean setup;
+  gboolean running;
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstDfbVideoSinkClass</NAME>
+struct _GstDfbVideoSinkClass {
+  GstVideoSinkClass parent_class;
+};
+</STRUCT>
+<FUNCTION>
+<NAME>gst_dfbvideosink_get_type</NAME>
+<RETURNS>GType </RETURNS>
+void
+</FUNCTION>
+<FUNCTION>
+<NAME>gst_dfbsurface_get_type</NAME>
+<RETURNS>GType </RETURNS>
+void
+</FUNCTION>

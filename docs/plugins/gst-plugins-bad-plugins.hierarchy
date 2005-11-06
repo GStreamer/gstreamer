@@ -1,0 +1,20 @@
+GObject
+  GstObject
+    GstPad
+    GstPluginFeature
+      GstElementFactory
+      GstTypeFindFactory
+      GstIndexFactory
+    GstElement
+      GstBin
+        GstPipeline
+      GstQueue
+      GstBaseSink
+        GstVideoSink
+          GstDfbVideoSink
+    GstPlugin
+    GstRegistry
+    GstPadTemplate
+  GstSignalObject
+GInterface
+  GstChildProxy

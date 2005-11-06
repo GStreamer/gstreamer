@@ -1,0 +1,9 @@
+<ARG>
+<NAME>GstDfbVideoSink::surface</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Destination surface</NICK>
+<BLURB>Render video frames to this surface. The pointer you pass here has to point to an IDirectFBSurface * interface</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>

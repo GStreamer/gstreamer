@@ -1,0 +1,8 @@
+<SECTION>
+<FILE>element-dfbvideosink</FILE>
+GstDfbVideoSink
+<TITLE>dfbvideosink</TITLE>
+<SUBSECTION Standard>
+GstDfbVideoSinkClass
+</SECTION>
+
