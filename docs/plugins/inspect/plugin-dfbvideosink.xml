@@ -1,19 +1,19 @@
 <plugin>
   <name>dfbvideosink</name>
-  <description>DirectFB video sink</description>
+  <description>DirectFB video output plugin</description>
   <filename>../../ext/directfb/.libs/libgstdfbvideosink.so</filename>
   <basename>libgstdfbvideosink.so</basename>
-  <version>0.9.4</version>
+  <version>0.9.4.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer source release</package>
+  <package>GStreamer CVS/prerelease</package>
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
     <element>
       <name>dfbvideosink</name>
-      <longname>DirectFB video sink</longname>
+      <longname>Video sink</longname>
       <class>Sink/Video</class>
-      <description>DirectFB video sink</description>
+      <description>A DirectFB based videosink</description>
       <author>Julien Moutte &lt;julien@moutte.net&gt;</author>
     </element>
   </elements>

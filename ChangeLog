@@ -1,5 +1,14 @@
 2005-11-06  Julien MOUTTE  <julien@moutte.net>
 
+	* Makefile.am: examples in dist subdirs.
+	* configure.ac: enable parameter for building 
+	examples.
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/inspect/plugin-dfbvideosink.xml:
+	* examples/Makefile.am: Updates.
+
+2005-11-06  Julien MOUTTE  <julien@moutte.net>
+
 	* Makefile.am:
 	* autogen.sh:
 	* configure.ac:

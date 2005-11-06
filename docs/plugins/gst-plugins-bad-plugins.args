@@ -3,7 +3,28 @@
 <TYPE>gpointer</TYPE>
 <RANGE></RANGE>
 <FLAGS>w</FLAGS>
-<NICK>Destination surface</NICK>
-<BLURB>Render video frames to this surface. The pointer you pass here has to point to an IDirectFBSurface * interface</BLURB>
-<DEFAULT>NULL</DEFAULT>
+<NICK>Surface</NICK>
+<BLURB>The target surface for video.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
+
+<ARG>
+<NAME>GstSDLVideoSink::fullscreen</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fullscreen</NICK>
+<BLURB>If true it will be Full screen.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeed::speed</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.1,40]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>speed</NICK>
+<BLURB>speed.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
