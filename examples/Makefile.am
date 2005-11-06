@@ -6,4 +6,4 @@ DIRECTFB_DIR=
 endif
 
 SUBDIRS= $(DIRECTFB_DIR)
-DIST_SUBDIRS=capsfilter dynparams indexing gstplay directfb switch level
+DIST_SUBDIRS=capsfilter indexing gstplay directfb switch level

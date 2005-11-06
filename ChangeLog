@@ -1,5 +1,9 @@
 2005-11-06  Julien MOUTTE  <julien@moutte.net>
 
+	* examples/Makefile.am: Make buildbot happy.
+
+2005-11-06  Julien MOUTTE  <julien@moutte.net>
+
 	* Makefile.am: examples in dist subdirs.
 	* configure.ac: enable parameter for building 
 	examples.
