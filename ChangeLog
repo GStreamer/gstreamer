@@ -1,5 +1,9 @@
 2005-11-06  Julien MOUTTE  <julien@moutte.net>
 
+	* docs/plugins/inspect.stamp: Add missing files.
+
+2005-11-06  Julien MOUTTE  <julien@moutte.net>
+
 	* examples/Makefile.am: Make buildbot happy.
 
 2005-11-06  Julien MOUTTE  <julien@moutte.net>
