@@ -1,3 +1,10 @@
+2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_push_vorbis_codec_priv_data),
+	(gst_matroska_demux_add_wvpk_header):
+	  Don't error out when the source pad isn't linked.
+
 2005-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/gconf/gstgconfaudiosink.c: (do_toggle_element),
