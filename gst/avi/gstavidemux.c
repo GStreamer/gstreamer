@@ -1081,10 +1081,11 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   stream->current_entry = -1;
   gst_pad_set_element_private (pad, stream);
   avi->num_streams++;
-  gst_pad_set_active (pad, TRUE);
   gst_pad_set_caps (pad, caps);
+  gst_pad_set_active (pad, TRUE);
   gst_element_add_pad (GST_ELEMENT (avi), pad);
-  GST_LOG_OBJECT (element, "Added pad %s", gst_pad_get_name (pad));
+  GST_LOG_OBJECT (element, "Added pad %s with caps %" GST_PTR_FORMAT,
+      GST_PAD_NAME (pad), caps);
 
   if (codec_name) {
     GstTagList *list = gst_tag_list_new ();
@@ -2061,7 +2062,7 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
         GST_DEBUG_OBJECT (avi, "Processing buffer of size %d and time %"
             GST_TIME_FORMAT " on pad %s",
             GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-            gst_pad_get_name (stream->pad));
+            GST_PAD_NAME (stream->pad));
         if ((res = gst_pad_push (stream->pad, buf)) != GST_FLOW_OK &&
             res != GST_FLOW_NOT_LINKED)
           return res;
@@ -2145,7 +2146,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
         GST_DEBUG_OBJECT (avi,
             "Pushing buffer with time=%" GST_TIME_FORMAT " over pad %s",
-            GST_TIME_ARGS (next_ts), gst_pad_get_name (stream->pad));
+            GST_TIME_ARGS (next_ts), GST_PAD_NAME (stream->pad));
         gst_pad_push (stream->pad, GST_DATA (buf));
       }
     }
@@ -2160,8 +2161,6 @@ gst_avi_demux_loop (GstPad * pad)
 {
   GstFlowReturn res;
   GstAviDemux *avi = GST_AVI_DEMUX (GST_PAD_PARENT (pad));
-
-  GST_STREAM_LOCK (avi->sinkpad);
 
   switch (avi->state) {
     case GST_AVI_DEMUX_START:
@@ -2186,14 +2185,12 @@ gst_avi_demux_loop (GstPad * pad)
       g_assert_not_reached ();
   }
 
-  GST_STREAM_UNLOCK (avi->sinkpad);
-
   return;
 
 pause:
   GST_LOG_OBJECT (avi, "pausing task");
   gst_pad_pause_task (avi->sinkpad);
-  GST_STREAM_UNLOCK (pad);
+  return;
 }
 
 static gboolean

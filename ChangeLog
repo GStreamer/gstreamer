@@ -1,5 +1,13 @@
 2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data),
+	(gst_avi_demux_loop):
+	  No need to take the STREAM_LOCK in the loop function. Improve
+	  some debug messages. Don't leak pad names in debug messages.
+
+2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/matroska/matroska-demux.c:
 	(gst_matroska_demux_push_vorbis_codec_priv_data),
 	(gst_matroska_demux_add_wvpk_header):
