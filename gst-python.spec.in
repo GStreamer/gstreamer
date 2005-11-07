@@ -1,5 +1,5 @@
 %define         majorminor      @GST_MAJORMINOR@
-%define         gstreamer       gstreamer09
+%define         gstreamer       gstreamer
 %define		_pygtk		@PYGTK_REQ@
 %define		_gst		@GST_REQ@
 
@@ -19,8 +19,8 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:	python >= 2
 Requires:	gnome-python2
 Requires:	pygtk2 >= %_pygtk
-Requires:	%{gstreamer}
-Requires:	%{gstreamer}-plugins-base
+Requires:	%{gstreamer}09
+Requires:	%{gstreamer}09-plugins-base
 
 BuildRequires:	python >= 2
 BuildRequires:  python-devel >= 2
@@ -28,8 +28,8 @@ BuildRequires:  pygtk2-devel >= %_pygtk
 BuildRequires:	xmlto
 BuildRequires:	links
 
-BuildRequires:	%{gstreamer}-devel >= %_gst
-BuildRequires:	%{gstreamer}-plugins-base-devel >= %_gst
+BuildRequires:	%{gstreamer}09-devel >= %_gst
+BuildRequires:	%{gstreamer}09-plugins-base-devel >= %_gst
 
 # sigh, libtool
 BuildRequires:  gcc-c++
@@ -60,8 +60,8 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_libdir}/python?.?/site-packages/gst-%{majorminor}
 %{_libdir}/python?.?/site-packages/pygst.pth
 %{_libdir}/python?.?/site-packages/pygst.py
-%{_libdir}/python?.?/site-packages/gst/extend/*
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/__init__.py*
+%{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/extend
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/_gst.so
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/interfaces.so
 %dir %{_datadir}/gst-python
