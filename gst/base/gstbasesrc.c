@@ -218,6 +218,8 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
 
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
   basesrc->clock_id = NULL;
+  basesrc->segment_start = 0;
+  basesrc->segment_end = -1;
 
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
 
@@ -813,16 +815,17 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
   if (G_UNLIKELY (!bclass->create))
     goto no_function;
 
-  GST_DEBUG_OBJECT (src,
-      "reading offset %" G_GUINT64_FORMAT ", length %u, size %"
-      G_GINT64_FORMAT, offset, length, src->size);
-
   /* the max amount of bytes to read is the total size or
    * up to the segment_end if present. */
   if (src->segment_end != -1)
     maxsize = MIN (src->size, src->segment_end);
   else
     maxsize = src->size;
+
+  GST_DEBUG_OBJECT (src,
+      "reading offset %" G_GUINT64_FORMAT ", length %u, size %" G_GINT64_FORMAT
+      ", segment_end %" G_GINT64_FORMAT ", maxsize %" G_GINT64_FORMAT, offset,
+      length, src->size, src->segment_end, maxsize);
 
   /* check size */
   if (maxsize != -1) {
