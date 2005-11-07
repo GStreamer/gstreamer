@@ -47,6 +47,8 @@ struct _GstOssSink {
   gchar *device;
   gint 	 fd;
   gint   bytes_per_sample;
+
+  GstCaps *probed_caps;
 };
 
 struct _GstOssSinkClass {

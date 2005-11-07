@@ -1,5 +1,13 @@
 2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* sys/oss/gstosssink.c: (gst_oss_sink_dispose),
+	(gst_oss_sink_set_property), (gst_oss_sink_getcaps),
+	(gst_oss_sink_prepare):
+	* sys/oss/gstosssink.h:
+	  Cache probed caps; fix debug output for SET_PARAM macros.
+
+2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/cairo/Makefile.am:
 	* ext/cairo/gstcairo.c: (plugin_init):
 	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_base_init),
@@ -15,7 +23,7 @@
 	(gst_text_overlay_change_state):
 	* ext/cairo/gsttextoverlay.h:
 	  Port cairo textoverlay plugin to 0.9. Add 'shaded-background'
-	  property and redo position. Doesn't handle upstream renegotiation
+	  property and redo positioning. Doesn't handle upstream renegotiation
 	  yet though.
 
 2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>

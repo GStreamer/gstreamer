@@ -129,6 +129,13 @@ gst_oss_sink_get_type (void)
 static void
 gst_oss_sink_dispose (GObject * object)
 {
+  GstOssSink *osssink = GST_OSSSINK (object);
+
+  if (osssink->probed_caps) {
+    gst_caps_unref (osssink->probed_caps);
+    osssink->probed_caps = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -199,6 +206,10 @@ gst_oss_sink_set_property (GObject * object, guint prop_id,
     case PROP_DEVICE:
       g_free (sink->device);
       sink->device = g_value_dup_string (value);
+      if (sink->probed_caps) {
+        gst_caps_unref (sink->probed_caps);
+        sink->probed_caps = NULL;
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -235,8 +246,13 @@ gst_oss_sink_getcaps (GstBaseSink * bsink)
   if (osssink->fd == -1) {
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
             (bsink)));
+  } else if (osssink->probed_caps) {
+    caps = gst_caps_copy (osssink->probed_caps);
   } else {
     caps = gst_oss_helper_probe_caps (osssink->fd);
+    if (caps && !gst_caps_is_empty (caps)) {
+      osssink->probed_caps = gst_caps_copy (caps);
+    }
   }
 
   return caps;
@@ -259,24 +275,24 @@ ilog2 (gint x)
   return (x & 0x0000003f) - 1;
 }
 
-#define SET_PARAM(_oss, _name, _val) 		\
+#define SET_PARAM(_oss, _name, _val, _detail) 	\
 G_STMT_START {					\
   int _tmp = _val;				\
   if (ioctl(_oss->fd, _name, &_tmp) == -1) {	\
     GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, \
-        ("Unable to set param "G_STRINGIFY (_name)": %s",        \
+        ("Unable to set param " _detail ": %s",   \
                    g_strerror (errno)),            \
         (NULL));                                \
     return FALSE;				\
   }						\
-  GST_DEBUG(G_STRINGIFY (name) " %d", _tmp);	\
+  GST_DEBUG(_detail " %d", _tmp);	\
 } G_STMT_END
 
-#define GET_PARAM(_oss, _name, _val) 		\
+#define GET_PARAM(_oss, _name, _val, _detail) 	\
 G_STMT_START {					\
   if (ioctl(oss->fd, _name, _val) == -1) {	\
     GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, \
-        ("Unable to get param "G_STRINGIFY (_name)": %s",        \
+        ("Unable to get param " _detail ": %s",    \
                    g_strerror (errno)),            \
         (NULL));                                \
     return FALSE;				\
@@ -381,19 +397,19 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   if (spec->width != 16 && spec->width != 8)
     goto dodgy_width;
 
-  SET_PARAM (oss, SNDCTL_DSP_SETFMT, tmp);
+  SET_PARAM (oss, SNDCTL_DSP_SETFMT, tmp, "SETFMT");
   if (spec->channels == 2)
-    SET_PARAM (oss, SNDCTL_DSP_STEREO, 1);
-  SET_PARAM (oss, SNDCTL_DSP_CHANNELS, spec->channels);
-  SET_PARAM (oss, SNDCTL_DSP_SPEED, spec->rate);
+    SET_PARAM (oss, SNDCTL_DSP_STEREO, 1, "STEREO");
+  SET_PARAM (oss, SNDCTL_DSP_CHANNELS, spec->channels, "CHANNELS");
+  SET_PARAM (oss, SNDCTL_DSP_SPEED, spec->rate, "SPEED");
 
   tmp = ilog2 (spec->segsize);
   tmp = ((spec->segtotal & 0x7fff) << 16) | tmp;
   GST_DEBUG ("set segsize: %d, segtotal: %d, value: %08x", spec->segsize,
       spec->segtotal, tmp);
 
-  SET_PARAM (oss, SNDCTL_DSP_SETFRAGMENT, tmp);
-  GET_PARAM (oss, SNDCTL_DSP_GETOSPACE, &info);
+  SET_PARAM (oss, SNDCTL_DSP_SETFRAGMENT, tmp, "SETFRAGMENT");
+  GET_PARAM (oss, SNDCTL_DSP_GETOSPACE, &info, "GETOSPACE");
 
   spec->segsize = info.fragsize;
   spec->segtotal = info.fragstotal;
