@@ -32,5 +32,7 @@
 #include <alsa/error.h>
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_EXTERN (alsa_debug);
+#define GST_CAT_DEFAULT alsa_debug
 
 #endif /* __GST_ALSA_H__ */

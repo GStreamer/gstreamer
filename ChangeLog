@@ -1,3 +1,8 @@
+2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/alsa/gstalsa.h:
+	  We register a debug category, so let's use it.
+
 2005-11-04  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
