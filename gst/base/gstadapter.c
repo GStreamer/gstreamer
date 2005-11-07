@@ -69,7 +69,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_adapter_debug);
 #define GST_CAT_DEFAULT gst_adapter_debug
 
 #define _do_init(thing) \
-  GST_DEBUG_CATEGORY_INIT (gst_adapter_debug, "GstAdapter", 0, "object to splice and merge buffers to desired size")
+  GST_DEBUG_CATEGORY_INIT (gst_adapter_debug, "adapter", 0, "object to splice and merge buffers to desired size")
 GST_BOILERPLATE_FULL (GstAdapter, gst_adapter, GObject, G_TYPE_OBJECT, _do_init)
 
      static void gst_adapter_dispose (GObject * object);

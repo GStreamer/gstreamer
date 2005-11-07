@@ -51,56 +51,34 @@
 
 #include "gstcollectpads.h"
 
-static GstFlowReturn gst_collectpads_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_collectpads_event (GstPad * pad, GstEvent * event);
+GST_DEBUG_CATEGORY_STATIC (collect_pads_debug);
+#define GST_CAT_DEFAULT collect_pads_debug
 
-static void gst_collectpads_class_init (GstCollectPadsClass * klass);
-static void gst_collectpads_init (GstCollectPads * pads);
-static void gst_collectpads_finalize (GObject * object);
+GST_BOILERPLATE (GstCollectPads, gst_collectpads, GstObject, GST_TYPE_OBJECT)
 
-static GstObjectClass *parent_class = NULL;
+     static GstFlowReturn gst_collectpads_chain (GstPad * pad,
+    GstBuffer * buffer);
+     static gboolean gst_collectpads_event (GstPad * pad, GstEvent * event);
+     static void gst_collectpads_finalize (GObject * object);
+     static void gst_collectpads_init (GstCollectPads * pads,
+    GstCollectPadsClass * g_class);
 
-GType
-gst_collectpads_get_type (void)
+     static void gst_collectpads_base_init (gpointer g_class)
 {
-  static GType collect_type = 0;
-
-  if (!collect_type) {
-    static const GTypeInfo collect_info = {
-      sizeof (GstCollectPadsClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_collectpads_class_init,
-      NULL,
-      NULL,
-      sizeof (GstCollectPads),
-      0,
-      (GInstanceInitFunc) gst_collectpads_init,
-      NULL
-    };
-
-    collect_type = g_type_register_static (GST_TYPE_OBJECT, "GstCollectPads",
-        &collect_info, 0);
-  }
-  return collect_type;
+  GST_DEBUG_CATEGORY_INIT (collect_pads_debug, "collectpads", 0,
+      "GstCollectPads");
 }
 
 static void
 gst_collectpads_class_init (GstCollectPadsClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_collectpads_finalize);
-
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
 }
 
 static void
-gst_collectpads_init (GstCollectPads * pads)
+gst_collectpads_init (GstCollectPads * pads, GstCollectPadsClass * g_class)
 {
   pads->cond = g_cond_new ();
   pads->data = NULL;
@@ -367,7 +345,7 @@ gst_collectpads_stop (GstCollectPads * pads)
  * should be called with the @pads LOCK held, such as in the callback
  * handler.
  *
- * Returns: The buffer in @data or NULL if no buffer is queued. You
+ * Returns: The buffer in @data or NULL if no buffer is queued.
  *  should unref the buffer after usage.
  *
  * MT safe.
@@ -386,6 +364,9 @@ gst_collectpads_peek (GstCollectPads * pads, GstCollectData * data)
   if (result)
     gst_buffer_ref (result);
 
+  GST_DEBUG ("Peeking at pad %s:%s: buffer=%p",
+      GST_DEBUG_PAD_NAME (data->pad), result);
+
   return result;
 }
 
@@ -398,7 +379,7 @@ gst_collectpads_peek (GstCollectPads * pads, GstCollectData * data)
  * should be called with the @pads LOCK held, such as in the callback
  * handler.
  *
- * Returns: The buffer in @data or NULL if no buffer was queued. The
+ * Returns: The buffer in @data or NULL if no buffer was queued.
  *   You should unref the buffer after usage.
  *
  * MT safe.
@@ -417,10 +398,12 @@ gst_collectpads_pop (GstCollectPads * pads, GstCollectData * data)
     gst_buffer_replace (&data->buffer, NULL);
     data->pos = 0;
     pads->queuedpads--;
-
   }
 
   GST_COLLECTPADS_SIGNAL (pads);
+
+  GST_DEBUG ("Pop buffer on pad %s:%s: buffer=%p",
+      GST_DEBUG_PAD_NAME (data->pad), result);
 
   return result;
 }
@@ -561,6 +544,9 @@ gst_collectpads_event (GstPad * pad, GstEvent * event)
 
   pads = data->collect;
 
+  GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
+      GST_DEBUG_PAD_NAME (data->pad));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
     {
@@ -624,7 +610,7 @@ gst_collectpads_chain (GstPad * pad, GstBuffer * buffer)
   guint64 size;
   GstFlowReturn ret;
 
-  GST_DEBUG ("chain");
+  GST_DEBUG ("Got buffer for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   /* some magic to get the managing collectpads */
   data = (GstCollectData *) gst_pad_get_element_private (pad);
@@ -646,18 +632,28 @@ gst_collectpads_chain (GstPad * pad, GstBuffer * buffer)
 
   /* queue buffer on this pad, block if filled */
   while (data->buffer != NULL) {
+    GST_DEBUG ("Pad %s:%s already has a buffer queued, waiting",
+        GST_DEBUG_PAD_NAME (pad));
     GST_COLLECTPADS_WAIT (pads);
+    GST_DEBUG ("Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
     /* after a signal,  we could be stopped */
     if (!pads->started)
       goto not_started;
   }
+
+  GST_DEBUG ("Queuing buffer %p for pad %s:%s", buffer,
+      GST_DEBUG_PAD_NAME (pad));
+
   pads->queuedpads++;
   gst_buffer_replace (&data->buffer, buffer);
 
   /* if all pads have data and we have a function, call it */
   if (((pads->queuedpads + pads->eospads) == pads->numpads) && pads->func) {
+    GST_DEBUG ("All active pads have data, calling %s",
+        GST_DEBUG_FUNCPTR_NAME (pads->func));
     ret = pads->func (pads, pads->user_data);
   } else {
+    GST_DEBUG ("Not all active pads have data, continuing");
     ret = GST_FLOW_OK;
   }
   GST_UNLOCK (pads);

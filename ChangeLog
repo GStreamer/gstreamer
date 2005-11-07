@@ -1,3 +1,15 @@
+2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gstadapter.c:
+	  Debug category should be 'adapter', not 'GstAdapter'.
+	  
+	* gst/base/gstcollectpads.c: (gst_collectpads_base_init),
+	(gst_collectpads_class_init), (gst_collectpads_init),
+	(gst_collectpads_peek), (gst_collectpads_pop),
+	(gst_collectpads_event), (gst_collectpads_chain):
+	  Add debug category and some debugging output. Use boilerplate
+	  macros. Remove some extraneous words from docs.
+
 2005-11-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstpushsrc.c: Shorten by 30% via use of boilerplate
