@@ -1,3 +1,8 @@
+2005-11-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/faq/gst-uninstalled:
+	  fix up PS1 for systems that try to reset it
+
 2005-11-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_init),
