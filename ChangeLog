@@ -1,5 +1,25 @@
 2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/cairo/Makefile.am:
+	* ext/cairo/gstcairo.c: (plugin_init):
+	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_base_init),
+	(gst_text_overlay_class_init), (gst_text_overlay_finalize),
+	(gst_text_overlay_init), (gst_text_overlay_font_init),
+	(gst_text_overlay_set_property), (gst_text_overlay_render_text),
+	(gst_text_overlay_getcaps), (gst_text_overlay_setcaps),
+	(gst_text_overlay_text_pad_linked),
+	(gst_text_overlay_text_pad_unlinked), (gst_text_overlay_shade_y),
+	(gst_text_overlay_blit_1), (gst_text_overlay_blit_sub2x2),
+	(gst_text_overlay_push_frame), (gst_text_overlay_pop_video),
+	(gst_text_overlay_pop_text), (gst_text_overlay_collected),
+	(gst_text_overlay_change_state):
+	* ext/cairo/gsttextoverlay.h:
+	  Port cairo textoverlay plugin to 0.9. Add 'shaded-background'
+	  property and redo position. Doesn't handle upstream renegotiation
+	  yet though.
+
+2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),
 	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data),
 	(gst_avi_demux_loop):

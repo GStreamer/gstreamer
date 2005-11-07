@@ -22,7 +22,6 @@
 #include "config.h"
 #endif
 
-/*#define DEBUG_ENABLED */
 #include <gsttimeoverlay.h>
 #include <gsttextoverlay.h>
 #include <string.h>
@@ -33,10 +32,8 @@ GST_DEBUG_CATEGORY (cairo_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-#if 0
   gst_element_register (plugin, "cairotextoverlay", GST_RANK_NONE,
-      GST_TYPE_TEXTOVERLAY);
-#endif
+      GST_TYPE_TEXT_OVERLAY);
   gst_element_register (plugin, "cairotimeoverlay", GST_RANK_NONE,
       GST_TYPE_TIMEOVERLAY);
 

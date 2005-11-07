@@ -1,26 +1,23 @@
 
-#ifndef __GST_TEXTOVERLAY_H__
-#define __GST_TEXTOVERLAY_H__
+#ifndef __GST_TEXT_OVERLAY_H__
+#define __GST_TEXT_OVERLAY_H__
 
 #include <gst/gst.h>
-#include <cairo.h>
+#include <gst/base/gstcollectpads.h>
 
 G_BEGIN_DECLS
 
-GST_DEBUG_CATEGORY_EXTERN (cairo_debug);
-#define GST_CAT_DEFAULT cairo_debug
-
-#define GST_TYPE_TEXTOVERLAY           (gst_textoverlay_get_type())
-#define GST_TEXTOVERLAY(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),\
-                                        GST_TYPE_TEXTOVERLAY, GstTextOverlay))
-#define GST_TEXTOVERLAY_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),\
+#define GST_TYPE_TEXT_OVERLAY           (gst_text_overlay_get_type())
+#define GST_TEXT_OVERLAY(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),\
+                                        GST_TYPE_TEXT_OVERLAY, GstTextOverlay))
+#define GST_TEXT_OVERLAY_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),\
                                         GST_TYPE_ULAW, GstTextOverlay))
-#define GST_TEXTOVERLAY_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj),\
-                                        GST_TYPE_TEXTOVERLAY, GstTextOverlayClass))
-#define GST_IS_TEXTOVERLAY(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj),\
-                                        GST_TYPE_TEXTOVERLAY))
-#define GST_IS_TEXTOVERLAY_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass),\
-                                        GST_TYPE_TEXTOVERLAY))
+#define GST_TEXT_OVERLAY_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj),\
+                                        GST_TYPE_TEXT_OVERLAY, GstTextOverlayClass))
+#define GST_IS_TEXT_OVERLAY(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj),\
+                                        GST_TYPE_TEXT_OVERLAY))
+#define GST_IS_TEXT_OVERLAY_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass),\
+                                        GST_TYPE_TEXT_OVERLAY))
 
 typedef struct _GstTextOverlay      GstTextOverlay;
 typedef struct _GstTextOverlayClass GstTextOverlayClass;
@@ -47,36 +44,44 @@ struct _GstTextOverlay {
     GstPad               *video_sinkpad;
     GstPad               *text_sinkpad;
     GstPad               *srcpad;
+
+    GstCollectPads       *collect;
+    GstCollectData       *video_collect_data;
+    GstCollectData       *text_collect_data;
+
     gint                  width;
     gint                  height;
+    gdouble               framerate;
 
     GstTextOverlayVAlign  valign;
     GstTextOverlayHAlign  halign;
-    gint                  x0;
-    gint                  y0;
+    gint                  xpad;
+    gint                  ypad;
+    gint                  deltax;
+    gint                  deltay;
     gchar		 *default_text;
+    gboolean		  want_shading;
 
-    cairo_t *cr;
-    guchar *text_fill_image;
-    guchar *text_outline_image;
-    int text_height;
+    guchar               *text_fill_image;
+    guchar               *text_outline_image;
+    gint                  font_height;
+    gint                  text_x0, text_x1; /* start/end x position of text */
+    gint                  text_dy;
 
-    GstBuffer		 *current_buffer;
-    GstBuffer		 *next_buffer;
     gboolean		  need_render;
 
-    gchar *font;
-    int slant;
-    int weight;
-    double scale;
+    gchar                *font;
+    gint                  slant;
+    gint                  weight;
+    gdouble               scale;
 };
 
 struct _GstTextOverlayClass {
-    GstElementClass parent_class;
+  GstElementClass parent_class;
 };
 
-GType gst_textoverlay_get_type(void) G_GNUC_CONST;
+GType gst_text_overlay_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_TEXTOVERLAY_H */
+#endif /* __GST_TEXT_OVERLAY_H */
