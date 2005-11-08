@@ -81,7 +81,10 @@ struct _GstBaseRTPDepayload
   GstClock *clock;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    gboolean need_newsegment;
+    gpointer _gst_reserved[GST_PADDING-1+1];
+  };
 };
 
 struct _GstBaseRTPDepayloadClass

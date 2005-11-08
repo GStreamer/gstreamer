@@ -154,6 +154,7 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter, gpointer g_class)
   filter->queue = g_queue_new ();
 
   filter->queue_delay = RTP_QUEUE_DELAY;
+  filter->need_newsegment = TRUE;
 
   /* this one needs to be overwritten by child */
   filter->clock_rate = 0;
@@ -291,8 +292,6 @@ static void
 gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     guint32 timestamp, GstBuffer * buf)
 {
-  static gboolean first = TRUE;
-
   guint64 ts = ((timestamp * GST_SECOND) / filter->clock_rate);
 
   /* rtp timestamps are based on the clock_rate
@@ -306,14 +305,14 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   /* if this is the first buf send a discont */
-  if (first) {
+  if (filter->need_newsegment) {
     /* send discont */
     GstEvent *event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
-        ts, GST_CLOCK_TIME_NONE, 0);
+        GST_BUFFER_TIMESTAMP (buf), GST_CLOCK_TIME_NONE, 0);
 
     gst_pad_push_event (filter->srcpad, event);
-    first = FALSE;
-    GST_DEBUG_OBJECT (filter, "Pushed discont on this first buffer");
+    filter->need_newsegment = FALSE;
+    GST_DEBUG_OBJECT (filter, "Pushed newsegment event on this first buffer");
   }
   /* add delay to timestamp */
   GST_BUFFER_TIMESTAMP (buf) =

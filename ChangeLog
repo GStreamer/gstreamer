@@ -1,3 +1,15 @@
+2005-11-08  Sebastien Cote  <sebas642 at yahoo dot ca>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_init),
+	(gst_base_rtp_depayload_set_gst_timestamp):
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	  We need to send a newsegment event for each instance, not
+	  just for the first instance of this class (get rid of
+	  static variable in function). (#321011).
+	  
 2005-11-08  Michael Smith <msmith@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_request_new_pad),
