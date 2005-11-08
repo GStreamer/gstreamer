@@ -1,3 +1,13 @@
+2005-11-08  Michael Smith <msmith@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_request_new_pad),
+	(gst_ogg_mux_buffer_from_page), (gst_ogg_mux_push_buffer),
+	(gst_ogg_mux_dequeue_page), (gst_ogg_mux_pad_queue_page),
+	(gst_ogg_mux_send_headers), (gst_ogg_mux_collected):
+	  Forward port rewrite of muxing strategy to 0.9 version of oggmux.
+	  This makes us mux things correctly according to the ogg muxing
+	  rules. Still not handling EOS correctly right now, though.
+
 2005-11-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/audioconvert/gstaudioconvert.c:
