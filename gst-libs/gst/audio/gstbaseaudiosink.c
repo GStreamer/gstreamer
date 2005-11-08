@@ -426,7 +426,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* adjust for accumulated segments */
   render_time += bsink->segment_accum;
   /* add base time to get absolute clock time */
-  render_time += gst_element_get_base_time (GST_ELEMENT (bsink));
+  render_time += gst_element_get_base_time (GST_ELEMENT_CAST (bsink));
   /* and bring the time to the offset in the buffer */
   render_offset = render_time * ringbuf->spec.rate / GST_SECOND;
 
