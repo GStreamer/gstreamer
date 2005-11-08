@@ -26,7 +26,7 @@
  *
  * <refsect2>
  * Audioconvert converts raw audio buffers between various possible formats.
- * It supports integer to float conversion, widht/depth conversion,
+ * It supports integer to float conversion, width/depth conversion,
  * signedness and endianness conversion.
  * <title>Example launch line</title>
  * <para>

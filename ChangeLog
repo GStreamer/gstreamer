@@ -1,5 +1,10 @@
 2005-11-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/audioconvert/gstaudioconvert.c:
+	  Fix typo in docs. 
+
+2005-11-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_internal_chain),
 	(gst_ogg_pad_submit_packet), (gst_ogg_chain_new):
 	  Initialise segment_stop to GST_CLOCK_TIME_NONE when
