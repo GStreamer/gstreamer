@@ -1,3 +1,8 @@
+2005-11-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_event):
+	  Hold STREAM_LOCK while pushing newsegment or tag events as well.
+
 2005-11-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_empty),

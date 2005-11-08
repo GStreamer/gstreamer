@@ -1027,6 +1027,10 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
       GST_STREAM_LOCK (pad);
       unlock = TRUE;
       break;
+    case GST_EVENT_TAG:
+      GST_STREAM_LOCK (pad);
+      unlock = TRUE;
+      break;
     case GST_EVENT_NEWSEGMENT:
     {
       GstFormat format;
@@ -1035,6 +1039,7 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
       gboolean update;
 
       GST_STREAM_LOCK (pad);
+      unlock = TRUE;
       gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
           &time);
       if (format == GST_FORMAT_TIME) {
@@ -1050,7 +1055,6 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (trans,
             "received NEW_SEGMENT in non-time format, ignoring");
       }
-      GST_STREAM_UNLOCK (pad);
       break;
     }
     default:
