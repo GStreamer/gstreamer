@@ -1,14 +1,8 @@
 The never-ending story of new features:
 * add more codecs into our codec map
-* encoding support lacks:
-   - event handling (particularly discont/flush and EOS)
-   - prevent data copying
-* demux/mux support lacks:
-   - correct caps sets on the pad templates
-   - event handling in the loop function (mux)
-   - prevent data copying
-   - better timestamp handling (particularly in demuxers)
-* other filter elements
+* demux/mux elements need rewrite for 0.9
+* investigate possible use of AVFMT_FLAG_GENPTS for timestamp smoothing
+* other filter elements that we don't have yet?
 * can we wrap URLProtocol as a source/sink?
 
 If you have cool ideas, add them here or contact the mailinglist:
