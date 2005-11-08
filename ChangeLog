@@ -1,3 +1,10 @@
+2005-11-08  Brian Cameron  <brian dot cameron at sun dot com>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/volume/gstvolume.c: (volume_set_caps):
+	  Fix compilation on Solaris with Forte. (#320923)
+
 2005-11-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

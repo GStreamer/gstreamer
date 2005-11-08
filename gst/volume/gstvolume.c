@@ -393,7 +393,7 @@ volume_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
 
   if (!this->process) {
     GST_ELEMENT_ERROR (this, CORE, NEGOTIATION,
-        ("Invalid incoming caps: %" GST_PTR_FORMAT, incaps), NULL);
+        ("Invalid incoming caps: %" GST_PTR_FORMAT, incaps), (NULL));
     return FALSE;
   }
   return TRUE;
