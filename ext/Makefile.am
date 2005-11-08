@@ -229,4 +229,5 @@ DIST_SUBDIRS= \
 	faad \
 	gsm \
 	sdl \
-	directfb
+	directfb \
+	ivorbis
