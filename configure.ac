@@ -288,6 +288,7 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		speed   \
+		mpegstream \
 		qtdemux \
 		tta     \
                 "
@@ -403,10 +404,7 @@ fi
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
 GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink, [
-  dnl sdlvideosink depends on the xoverlay interface, which depends on X
-  if test x$HAVE_X = xyes; then
     AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
-  fi
 ])
 
 dnl *** ivorbis ***
@@ -499,6 +497,7 @@ AC_CONFIG_FILES(
 Makefile
 gst-plugins-bad.spec
 gst/Makefile
+gst/mpegstream/Makefile
 gst/speed/Makefile
 gst/qtdemux/Makefile
 gst/tta/Makefile
