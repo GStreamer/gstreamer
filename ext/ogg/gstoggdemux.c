@@ -571,7 +571,8 @@ gst_ogg_pad_internal_chain (GstPad * pad, GstBuffer * buffer)
   ogg = GST_OGG_DEMUX (oggpad->ogg);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  GST_DEBUG_OBJECT (oggpad, "received buffer from iternal pad, TS=%lld",
+  GST_DEBUG_OBJECT (oggpad, "received buffer from internal pad, TS=%"
+      GST_TIME_FORMAT "=%" G_GINT64_FORMAT, GST_TIME_ARGS (timestamp),
       timestamp);
 
   if (oggpad->start_time == GST_CLOCK_TIME_NONE) {
@@ -829,13 +830,29 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         GstEvent *event;
         GstClockTime segment_start, segment_stop;
 
+        GST_DEBUG ("chain->begin_time:    %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (chain->begin_time));
+        GST_DEBUG ("chain->segment_start: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (chain->segment_start));
+        GST_DEBUG ("chain->segment_stop:  %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (chain->segment_stop));
+
         if (chain->begin_time != GST_CLOCK_TIME_NONE) {
           segment_start = chain->segment_start - chain->begin_time;
-          segment_stop = chain->segment_stop - chain->begin_time;
+          if (chain->segment_stop != GST_CLOCK_TIME_NONE) {
+            segment_stop = chain->segment_stop - chain->begin_time;
+          } else {
+            segment_stop = GST_CLOCK_TIME_NONE;
+          }
         } else {
           segment_start = chain->segment_start;
           segment_stop = chain->segment_stop;
         }
+
+        GST_DEBUG ("segment_start: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (segment_start));
+        GST_DEBUG ("segment_stop:  %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (segment_stop));
 
         /* create the discont event we are going to send out */
         event = gst_event_new_newsegment (FALSE, ogg->segment_rate,
@@ -934,6 +951,7 @@ gst_ogg_chain_new (GstOggDemux * ogg)
   chain->streams = g_array_new (FALSE, TRUE, sizeof (GstOggPad *));
   chain->begin_time = GST_CLOCK_TIME_NONE;
   chain->segment_start = GST_CLOCK_TIME_NONE;
+  chain->segment_stop = GST_CLOCK_TIME_NONE;
   chain->total_time = GST_CLOCK_TIME_NONE;
 
   return chain;
