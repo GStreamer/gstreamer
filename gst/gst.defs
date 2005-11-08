@@ -6196,7 +6196,13 @@
   )
 )
 
-
+(define-function TIME_ARGS
+  (c-name "GST_TIME_ARGS")
+  (return-type "gchar*")
+  (parameters
+   '("GstClockTime" "time")
+  )
+)
 
 ;; From ../gstreamer/gst/gstvalue.h
 

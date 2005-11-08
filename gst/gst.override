@@ -837,3 +837,31 @@ _wrap_gst_object_error (PyObject *whatever, PyObject *string)
 {
     return pygst_debug_log (whatever, string, GST_LEVEL_ERROR, TRUE);
 }
+%%
+override GST_TIME_ARGS kwargs
+static PyObject *
+_wrap_GST_TIME_ARGS(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "time", NULL };
+    PyObject *py_time = NULL;
+    PyObject *string;
+    gchar *ret;
+    guint64 time;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:time_to_string", kwlist, &PyLong_Type, &py_time))
+        return NULL;
+    time = PyLong_AsUnsignedLongLong(py_time);
+    ret = g_strdup_printf("%"GST_TIME_FORMAT, GST_TIME_ARGS(time));
+
+    if (!ret) {
+	Py_INCREF(Py_None);
+	return Py_None;
+    }
+
+    if (!(string = PyString_FromString(ret))) {
+	g_free(ret);
+	return NULL;
+    }
+    g_free(ret);
+    return string;
+}
