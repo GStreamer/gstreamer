@@ -1,3 +1,10 @@
+2005-11-08  Alessandro Decina  <alessandro at nnva dot org>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/oss/gstosssink.c: (gst_oss_sink_close):
+	  Don't re-use already closed file descriptor. (#320920)
+
 2005-11-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/oss/gstosssink.c: (gst_oss_sink_dispose),

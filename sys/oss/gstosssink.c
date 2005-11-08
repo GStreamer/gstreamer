@@ -372,6 +372,7 @@ static gboolean
 gst_oss_sink_close (GstAudioSink * asink)
 {
   close (GST_OSSSINK (asink)->fd);
+  GST_OSSSINK (asink)->fd = -1;
   return TRUE;
 }
 
