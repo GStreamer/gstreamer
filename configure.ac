@@ -409,6 +409,19 @@ GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink, [
   fi
 ])
 
+dnl *** ivorbis ***
+dnl AM_PATH_IVORBIS only takes two options
+translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
+GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
+  IVORBIS_LIBS=
+  IVORBIS_CFLAGS=
+  AC_CHECK_LIB(vorbisidec, vorbis_block_init,
+    [IVORBIS_LIBS=-lvorbisidec
+     HAVE_IVORBIS=yes],
+    HAVE_IVORBIS=no)
+  AC_SUBST(IVORBIS_LIBS)
+  AC_SUBST(IVORBIS_CFLAGS)
+])
 
 dnl *** gsm ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
@@ -496,6 +509,7 @@ ext/Makefile
 ext/directfb/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
+ext/ivorbis/Makefile
 ext/gsm/Makefile
 ext/sdl/Makefile
 docs/Makefile
