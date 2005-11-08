@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 #define GST_BASE_SRC_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_SRC, GstBaseSrcClass))
 #define GST_IS_BASE_SRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_SRC))
 #define GST_IS_BASE_SRC_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_SRC))
+#define GST_BASE_SRC_CAST(obj)		((GstBaseSrc *)(obj))
 
 /**
  * GstBaseSrcFlags:
@@ -57,13 +58,13 @@ typedef struct _GstBaseSrcClass GstBaseSrcClass;
  *
  * Gives the pointer to the #GstPad object of the element.
  */
-#define GST_BASE_SRC_PAD(obj)                 (GST_BASE_SRC (obj)->srcpad)
+#define GST_BASE_SRC_PAD(obj)                 (GST_BASE_SRC_CAST (obj)->srcpad)
 
-#define GST_LIVE_GET_LOCK(elem)               (GST_BASE_SRC(elem)->live_lock)
+#define GST_LIVE_GET_LOCK(elem)               (GST_BASE_SRC_CAST(elem)->live_lock)
 #define GST_LIVE_LOCK(elem)                   g_mutex_lock(GST_LIVE_GET_LOCK(elem))
 #define GST_LIVE_TRYLOCK(elem)                g_mutex_trylock(GST_LIVE_GET_LOCK(elem))
 #define GST_LIVE_UNLOCK(elem)                 g_mutex_unlock(GST_LIVE_GET_LOCK(elem))
-#define GST_LIVE_GET_COND(elem)               (GST_BASE_SRC(elem)->live_cond)
+#define GST_LIVE_GET_COND(elem)               (GST_BASE_SRC_CAST(elem)->live_cond)
 #define GST_LIVE_WAIT(elem)                   g_cond_wait (GST_LIVE_GET_COND (elem), GST_LIVE_GET_LOCK (elem))
 #define GST_LIVE_TIMED_WAIT(elem, timeval)    g_cond_timed_wait (GST_LIVE_GET_COND (elem), GST_LIVE_GET_LOCK (elem),\
 		                                                                timeval)

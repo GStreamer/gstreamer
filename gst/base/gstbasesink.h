@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 #define GST_BASE_SINK_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_SINK, GstBaseSinkClass))
 #define GST_IS_BASE_SINK(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_SINK))
 #define GST_IS_BASE_SINK_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_SINK))
+#define GST_BASE_SINK_CAST(obj)		((GstBaseSink *) (obj))
 
 /**
  * GST_BASE_SINK_CLOCK:
@@ -41,14 +42,14 @@ G_BEGIN_DECLS
  *
  * Gives the pointer to the #GstClock object of the element.
  */
-#define GST_BASE_SINK_CLOCK(obj)	(GST_BASE_SINK (obj)->clock)
+#define GST_BASE_SINK_CLOCK(obj)	(GST_BASE_SINK_CAST (obj)->clock)
 /**
  * GST_BASE_SINK_PAD:
  * @obj: base sink instance
  *
  * Gives the pointer to the #GstPad object of the element.
  */
-#define GST_BASE_SINK_PAD(obj)		(GST_BASE_SINK (obj)->sinkpad)
+#define GST_BASE_SINK_PAD(obj)		(GST_BASE_SINK_CAST (obj)->sinkpad)
 
 typedef struct _GstBaseSink GstBaseSink;
 typedef struct _GstBaseSinkClass GstBaseSinkClass;

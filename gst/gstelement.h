@@ -99,7 +99,7 @@ typedef enum {
  *
  * This macro returns the current state of the element.
  */
-#define GST_STATE(obj)			(GST_ELEMENT(obj)->current_state)
+#define GST_STATE(obj)			(GST_ELEMENT_CAST(obj)->current_state)
 
 /**
  * GST_STATE_NEXT:
@@ -107,7 +107,7 @@ typedef enum {
  *
  * This macro returns the next state of the element.
  */
-#define GST_STATE_NEXT(obj)		(GST_ELEMENT(obj)->next_state)
+#define GST_STATE_NEXT(obj)		(GST_ELEMENT_CAST(obj)->next_state)
 
 /**
  * GST_STATE_PENDING:
@@ -115,7 +115,7 @@ typedef enum {
  *
  * This macro returns the currently pending state of the element.
  */
-#define GST_STATE_PENDING(obj)		(GST_ELEMENT(obj)->pending_state)
+#define GST_STATE_PENDING(obj)		(GST_ELEMENT_CAST(obj)->pending_state)
 
 /**
  * GST_STATE_RETURN:
@@ -123,7 +123,7 @@ typedef enum {
  *
  * This macro returns the last state change return value.
  */
-#define GST_STATE_RETURN(obj)		(GST_ELEMENT(obj)->last_return)
+#define GST_STATE_RETURN(obj)		(GST_ELEMENT_CAST(obj)->last_return)
 
 #define __GST_SIGN(val)				((val) < 0 ? -1 : ((val) > 0 ? 1 : 0))
 /**
@@ -438,7 +438,7 @@ GType			gst_element_get_type		(void);
  *
  * Gets the name of the element.
  */
-#define			gst_element_get_name(elem)	gst_object_get_name(GST_OBJECT(elem))
+#define			gst_element_get_name(elem)	gst_object_get_name(GST_OBJECT_CAST(elem))
 
 /**
  * gst_element_set_name:
@@ -447,7 +447,7 @@ GType			gst_element_get_type		(void);
  *
  * Sets the name of the element, getting rid of the old name if there was one.
  */
-#define			gst_element_set_name(elem,name)	gst_object_set_name(GST_OBJECT(elem),name)
+#define			gst_element_set_name(elem,name)	gst_object_set_name(GST_OBJECT_CAST(elem),name)
 
 /**
  * gst_element_get_parent:
@@ -455,7 +455,7 @@ GType			gst_element_get_type		(void);
  *
  * Gets the parent of an element.
  */
-#define			gst_element_get_parent(elem)	gst_object_get_parent(GST_OBJECT(elem))
+#define			gst_element_get_parent(elem)	gst_object_get_parent(GST_OBJECT_CAST(elem))
 
 /**
  * gst_element_set_parent:
@@ -464,7 +464,7 @@ GType			gst_element_get_type		(void);
  *
  * Sets the parent of an element.
  */
-#define			gst_element_set_parent(elem,parent)	gst_object_set_parent(GST_OBJECT(elem),parent)
+#define			gst_element_set_parent(elem,parent)	gst_object_set_parent(GST_OBJECT_CAST(elem),parent)
 
 /* clocking */
 gboolean		gst_element_requires_clock	(GstElement *element);

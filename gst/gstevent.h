@@ -149,6 +149,7 @@ typedef struct _GstEventClass GstEventClass;
 #define GST_EVENT_GET_CLASS(obj)        (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_EVENT, GstEventClass))
 #define GST_EVENT(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_EVENT, GstEvent))
 #define GST_EVENT_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_EVENT, GstEventClass))
+#define GST_EVENT_CAST(obj)             ((GstEvent *)(obj))
 
 /**
  * GST_EVENT_TYPE:
@@ -156,7 +157,7 @@ typedef struct _GstEventClass GstEventClass;
  *
  * Get the #GstEventType of the event.
  */
-#define GST_EVENT_TYPE(event)		(GST_EVENT(event)->type)
+#define GST_EVENT_TYPE(event)		(GST_EVENT_CAST(event)->type)
 
 /**
  * GST_EVENT_TYPE_NAME:
@@ -172,7 +173,7 @@ typedef struct _GstEventClass GstEventClass;
  *
  * Get the #GstClockTime timestamp of the event.
  */
-#define GST_EVENT_TIMESTAMP(event)	(GST_EVENT(event)->timestamp)
+#define GST_EVENT_TIMESTAMP(event)	(GST_EVENT_CAST(event)->timestamp)
 
 /**
  * GST_EVENT_SRC:
@@ -180,7 +181,7 @@ typedef struct _GstEventClass GstEventClass;
  *
  * The source #GstObject that generated this event.
  */
-#define GST_EVENT_SRC(event)		(GST_EVENT(event)->src)
+#define GST_EVENT_SRC(event)		(GST_EVENT_CAST(event)->src)
 
 /**
  * GST_EVENT_IS_UPSTREAM:
@@ -309,7 +310,7 @@ GType		gst_event_get_type		(void);
  *
  * Copy the event using the event specific copy function.
  */
-#define         gst_event_copy(ev)		GST_EVENT (gst_mini_object_copy (GST_MINI_OBJECT (ev)))
+#define         gst_event_copy(ev)		GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT (ev)))
 
 /* custom event */
 GstEvent*	gst_event_new_custom		(GstEventType type, GstStructure *structure);

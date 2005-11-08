@@ -383,7 +383,7 @@ gst_base_sink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
       gboolean is_buffer;
 
       is_buffer = GST_IS_BUFFER (obj);
-      if (is_buffer) {
+      if (G_LIKELY (is_buffer)) {
         basesink->preroll_queued--;
         basesink->buffers_queued--;
       } else {
@@ -401,12 +401,12 @@ gst_base_sink_preroll_queue_empty (GstBaseSink * basesink, GstPad * pad)
        * inside the element. */
       GST_PREROLL_UNLOCK (pad);
 
-      if (is_buffer) {
+      if (G_LIKELY (is_buffer)) {
         GST_DEBUG_OBJECT (basesink, "popped buffer %p", obj);
-        ret = gst_base_sink_handle_buffer (basesink, GST_BUFFER (obj));
+        ret = gst_base_sink_handle_buffer (basesink, GST_BUFFER_CAST (obj));
       } else {
         GST_DEBUG_OBJECT (basesink, "popped event %p", obj);
-        gst_base_sink_handle_event (basesink, GST_EVENT (obj));
+        gst_base_sink_handle_event (basesink, GST_EVENT_CAST (obj));
         ret = GST_FLOW_OK;
       }
 
@@ -1033,7 +1033,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 
     GST_LOCK (basesink);
 
-    base_time = GST_ELEMENT (basesink)->base_time;
+    base_time = GST_ELEMENT_CAST (basesink)->base_time;
 
     GST_LOG_OBJECT (basesink,
         "waiting for clock, base time %" GST_TIME_FORMAT
@@ -1107,8 +1107,8 @@ gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
       if (basesink->eos) {
         /* ok, now we can post the message */
         GST_DEBUG_OBJECT (basesink, "Now posting EOS");
-        gst_element_post_message (GST_ELEMENT (basesink),
-            gst_message_new_eos (GST_OBJECT (basesink)));
+        gst_element_post_message (GST_ELEMENT_CAST (basesink),
+            gst_message_new_eos (GST_OBJECT_CAST (basesink)));
         basesink->eos_queued = FALSE;
       }
       GST_PREROLL_UNLOCK (basesink->sinkpad);
@@ -1177,7 +1177,8 @@ gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
     goto done;
   }
 
-  result = gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT (buf));
+  result =
+      gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT_CAST (buf));
 
 done:
   gst_object_unref (basesink);
@@ -1562,8 +1563,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
          * just emptied. */
         if (do_eos) {
           GST_DEBUG_OBJECT (basesink, "Now posting EOS");
-          gst_element_post_message (GST_ELEMENT (basesink),
-              gst_message_new_eos (GST_OBJECT (basesink)));
+          gst_element_post_message (GST_ELEMENT_CAST (basesink),
+              gst_message_new_eos (GST_OBJECT_CAST (basesink)));
         }
       } else if (!basesink->have_preroll) {
         /* queue a commit_state */

@@ -38,6 +38,7 @@
 
 #ifndef GST_DISABLE_TRACE
 #include "gsttrace.h"
+static GstAllocTrace *_gst_mini_object_trace;
 #endif
 
 #define DEBUG_REFCOUNT
@@ -95,6 +96,11 @@ gst_mini_object_get_type (void)
     _gst_mini_object_type = g_type_fundamental_next ();
     g_type_register_fundamental (_gst_mini_object_type, "GstMiniObject",
         &mini_object_info, &mini_object_fundamental_info, G_TYPE_FLAG_ABSTRACT);
+
+#ifndef GST_DISABLE_TRACE
+    _gst_mini_object_trace =
+        gst_alloc_trace_register (g_type_name (_gst_mini_object_type));
+#endif
   }
 
   return _gst_mini_object_type;
@@ -121,7 +127,7 @@ gst_mini_object_class_init (gpointer g_class, gpointer class_data)
 static void
 gst_mini_object_init (GTypeInstance * instance, gpointer klass)
 {
-  GstMiniObject *mini_object = GST_MINI_OBJECT (instance);
+  GstMiniObject *mini_object = GST_MINI_OBJECT_CAST (instance);
 
   mini_object->refcount = 1;
 }
@@ -139,34 +145,14 @@ gst_mini_object_init (GTypeInstance * instance, gpointer klass)
 GstMiniObject *
 gst_mini_object_new (GType type)
 {
-  //GstMiniObjectClass *klass;
   GstMiniObject *mini_object;
 
-#if 0
-  klass = g_type_class_peek_static (type);
-  if (!klass) {
-    g_warning ("cannot find class for type '%s'", g_type_name (type));
-    return NULL;
-  }
-#endif
   /* we don't support dynamic types because they really aren't useful,
    * and could cause refcount problems */
-
   mini_object = (GstMiniObject *) g_type_create_instance (type);
 
 #ifndef GST_DISABLE_TRACE
-  {
-    const gchar *name;
-    GstAllocTrace *trace;
-
-    name = g_type_name (type);
-
-    trace = gst_alloc_trace_get (name);
-    if (!trace) {
-      trace = gst_alloc_trace_register (name);
-    }
-    gst_alloc_trace_new (trace, mini_object);
-  }
+  gst_alloc_trace_new (_gst_mini_object_trace, mini_object);
 #endif
 
   return mini_object;
@@ -279,19 +265,7 @@ gst_mini_object_free (GstMiniObject * mini_object)
    * object, else the finalize method recycled the object */
   if (g_atomic_int_get (&mini_object->refcount) == 0) {
 #ifndef GST_DISABLE_TRACE
-    {
-      const gchar *name;
-      GstAllocTrace *trace;
-
-      name = g_type_name (G_TYPE_FROM_CLASS (mo_class));
-
-      trace = gst_alloc_trace_get (name);
-      if (G_LIKELY (trace)) {
-        gst_alloc_trace_free (trace, mini_object);
-      } else {
-        g_warning ("Untraced miniobject: (%s)%p", name, mini_object);
-      }
-    }
+    gst_alloc_trace_free (_gst_mini_object_trace, mini_object);
 #endif
     g_type_free_instance ((GTypeInstance *) mini_object);
   }

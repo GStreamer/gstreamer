@@ -1,3 +1,21 @@
+2005-11-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_empty),
+	(gst_base_sink_do_sync), (gst_base_sink_handle_event),
+	(gst_base_sink_chain), (gst_base_sink_change_state):
+	* gst/base/gstbasesink.h:
+	* gst/base/gstbasesrc.h:
+	* gst/gstelement.h:
+	* gst/gstevent.h:
+	Avoid excessive typechecking in macros.
+
+	* gst/gstminiobject.c: (gst_mini_object_get_type),
+	(gst_mini_object_init), (gst_mini_object_new),
+	(gst_mini_object_free):
+	* gst/gstobject.c: (gst_object_class_init), (gst_object_init),
+	(gst_object_finalize):
+	Remove cruft code, optimize alloc_trace.
+
 2005-11-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/faq/gst-uninstalled:
