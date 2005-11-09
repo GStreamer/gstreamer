@@ -65,6 +65,7 @@ typedef struct _GstURIHandlerInterface GstURIHandlerInterface;
 
 /**
  * GstURIHandlerInterface:
+ * @parent: The parent interface type
  * @get_type: Method to tell wether the element handles source or sink URI.
  * @get_protocols: Method to return the list of protocols handled by the element.
  * @get_uri: Method to return the URI currently handled by the element.
@@ -72,7 +73,6 @@ typedef struct _GstURIHandlerInterface GstURIHandlerInterface;
  *
  * #GstElements using this interface should implement these methods.
  */
-
 struct _GstURIHandlerInterface {
   GTypeInterface	parent;
 

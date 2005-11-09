@@ -1,5 +1,11 @@
 2005-11-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstevent.h:
+	* gst/gsturi.h:
+	Fix docs.
+
+2005-11-09  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	Moved the message async delivery private lock and cond
 	to the private section.

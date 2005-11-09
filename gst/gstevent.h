@@ -100,12 +100,12 @@ G_BEGIN_DECLS
  *                         In-band when travelling downstream.
  * @GST_EVENT_CUSTOM_BOTH_OOB: Custom upstream or downstream out-of-band event.
  *
- * GstEventType lists the standard event types that can be sent in a pipeline.
+ * #GstEventType lists the standard event types that can be sent in a pipeline.
  *
  * The custom event types can be used for private messages between elements
  * that can't be expressed using normal
  * GStreamer buffer passing semantics. Custom events carry an arbitrary
- * GstStructure.
+ * #GstStructure.
  * Specific custom events are distinguished by the name of the structure.
  */
 /* NOTE: keep in sync with quark registration in gstevent.c */
@@ -171,7 +171,8 @@ typedef struct _GstEventClass GstEventClass;
  * GST_EVENT_TIMESTAMP:
  * @event: the event to query
  *
- * Get the #GstClockTime timestamp of the event.
+ * Get the #GstClockTime timestamp of the event. This is the time when the event
+ * was created.
  */
 #define GST_EVENT_TIMESTAMP(event)	(GST_EVENT_CAST(event)->timestamp)
 
@@ -214,8 +215,8 @@ typedef struct _GstEventClass GstEventClass;
  *
  * The different types of seek events. When constructing a seek event, a format,
  * a seek method and optional flags are to be provided. The seek event is then
- * inserted into the graph with #gst_pad_send_event() or
- * #gst_element_send_event().
+ * inserted into the graph with gst_pad_send_event() or
+ * gst_element_send_event().
  */
 typedef enum {
   /* one of these */
@@ -235,7 +236,7 @@ typedef enum {
  *		       faster but less accurate.
  * @GST_SEEK_FLAG_SEGMENT: perform a segment seek. 
  *
- * Flags to be used with #gst_element_seek() or #gst_event_new_seek()
+ * Flags to be used with gst_element_seek() or gst_event_new_seek()
  *
  * A non flushing seek might take some time to perform as the currently
  * playing data in the pipeline will not be cleared.
@@ -258,6 +259,17 @@ typedef enum {
   GST_SEEK_FLAG_SEGMENT		= (1 << 3)
 } GstSeekFlags;
 
+
+/**
+ * GstEvent:
+ * @mini_object: the parent structure
+ * @type: the #GstEventType of the event
+ * @timestamp: the timestamp of the event
+ * @src: the src of the event
+ * @structure: the #GstStructure containing the event info.
+ *
+ * A #GstEvent.
+ */
 struct _GstEvent {
   GstMiniObject mini_object;
 
