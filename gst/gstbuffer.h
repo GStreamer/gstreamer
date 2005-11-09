@@ -204,13 +204,36 @@ typedef enum {
   GST_BUFFER_FLAG_LAST       = (GST_MINI_OBJECT_FLAG_LAST << 8)
 } GstBufferFlag;
 
+/**
+ * GstBuffer:
+ * @mini_object: the parent structure
+ * @data: pointer to the buffer data
+ * @size: size of buffer data
+ * @timestamp: timestamp of the buffer, can be GST_CLOCK_TIME_NONE when the
+ *     timestamp is not known or relevant.
+ * @duration: duration in time of the buffer data, can be GST_CLOCK_TIME_NONE
+ *     when the duration is not known or relevant.
+ * @caps: the #GstCaps describing the data format in this buffer
+ * @offset: a media specific offset for the buffer data. 
+ *     For video frames, this is the frame number of this buffer.
+ *     For audio samples, this is the offset of the first sample in this buffer.
+ *     For file data or compressed data this is the byte offset of the first
+ *       byte in this buffer.
+ * @offset_end: the last offset contained in this buffer. It has the same 
+ *     format as @offset.
+ * @malloc_data: a pointer to the allocated memory associated with this buffer.
+ *     When the buffer is freed, this data will freed with free().
+ *
+ * The structure of a #GstBuffer. Use the associated macros to access the public
+ * variables.
+ */
 struct _GstBuffer {
   GstMiniObject		 mini_object;
 
   /*< public >*/ /* with COW */
   /* pointer to data and its size */
-  guint8		*data;			/* pointer to buffer data */
-  guint			 size;			/* size of buffer data */
+  guint8		*data;
+  guint			 size;
 
   /* timestamp */
   GstClockTime		 timestamp;
@@ -219,13 +242,7 @@ struct _GstBuffer {
   /* the media type of this buffer */
   GstCaps		*caps;
 
-  /* media specific offset
-   * for video frames, this could be the number of frames,
-   * for audio data, this could be the number of audio samples,
-   * for file data or compressed data, this could be the number of bytes
-   * offset_end is the last offset contained in the buffer. The format specifies
-   * the meaning of both of them exactly.
-   */
+  /* media specific offset */
   guint64		 offset;
   guint64		 offset_end;
 

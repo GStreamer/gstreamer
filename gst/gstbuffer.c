@@ -63,7 +63,7 @@
  * the downstream element knows the type of the buffer.
  * 
  * A buffer will usually have a timestamp, and a duration, but neither of these
- * are guaranteed (they may be set to GST_CLOCK_TIME_NONE). Whenever a 
+ * are guaranteed (they may be set to #GST_CLOCK_TIME_NONE). Whenever a 
  * meaningful value can be given for these, they should be set. The timestamp 
  * and duration are measured in nanoseconds (they are #GstClockTime values). 
  * 
@@ -74,7 +74,7 @@
  * source or destination file. Likewise, the end offset will be the offset of
  * the end of the buffer. These can only be meaningfully interpreted if you
  * know the media type of the buffer (the #GstCaps set on it). Either or both
- * can be set to GST_BUFFER_OFFSET_NONE.
+ * can be set to #GST_BUFFER_OFFSET_NONE.
  *
  * gst_buffer_ref() is used to increase the refcount of a buffer. This must be
  * done when you want to keep a handle to the buffer after pushing it to the
@@ -414,11 +414,11 @@ gst_subbuffer_init (GTypeInstance * instance, gpointer g_class)
  *          begins.
  * @size: the size of the new #GstBuffer sub-buffer, in bytes (with size > 0).
  *
- * Creates a sub-buffer from the parent at a given offset.
+ * Creates a sub-buffer from @parent at @offset and @size.
  * This sub-buffer uses the actual memory space of the parent buffer.
  * This function will copy the offset and timestamp fields when the
- * offset is 0, else they are set to GST_CLOCK_TIME_NONE/GST_BUFFER_OFFSET_NONE.
- * The duration field of the new buffer is set to GST_CLOCK_TIME_NONE.
+ * offset is 0, else they are set to #GST_CLOCK_TIME_NONE/#GST_BUFFER_OFFSET_NONE.
+ * The duration field of the new buffer is set to #GST_CLOCK_TIME_NONE.
  *
  * MT safe.
  * Returns: the new #GstBuffer.
