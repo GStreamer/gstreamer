@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
  *
- * gstbasesink.c:
+ * gstbasesink.c: Base class for sink elements
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,16 +24,52 @@
  * @short_description: Base class for sink elements
  * @see_also: #GstBaseTransform, #GstBaseSource
  *
- * This class is for elements that do output operations.
+ * GstBaseSink is the base class for sink elements in GStreamer, such as
+ * xvimagesink or filesink. It is a layer on top of #GstElement that provides a
+ * simplified interface to plugin writers. GstBaseSink handles many details for
+ * you, for example preroll, clock synchronization, state changes, activation in
+ * push or pull mode, and queries. In most cases, when writing sink elements,
+ * there is no need to implement class methods from #GstElement or to set
+ * functions on pads, because the GstBaseSink infrastructure is sufficient.
  *
- * <itemizedlist>
- *   <listitem><para>one sinkpad</para></listitem>
- *   <listitem><para>handles state changes</para></listitem>
- *   <listitem><para>pull/push mode</para></listitem>
- *   <listitem><para>handles seeking/query</para></listitem>
- *   <listitem><para>handles preroll</para></listitem>
- *   <listitem><para>EOS handling</para></listitem>
- * </itemizedlist>
+ * There is only support in GstBaseSink for one sink pad, which should be named
+ * "sink". A sink implementation (subclass of GstBaseSink) should install a pad
+ * template in its base_init function, like so:
+ * <programlisting>
+ * static void
+ * my_element_base_init (gpointer g_class)
+ * {
+ *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+ *   
+ *   // sinktemplate should be a #GstStaticPadTemplate with direction
+ *   // #GST_PAD_SINK and name "sink"
+ *   gst_element_class_add_pad_template (gstelement_class,
+ *       gst_static_pad_template_get (&amp;sinktemplate));
+ *   // see #GstElementDetails
+ *   gst_element_class_set_details (gstelement_class, &amp;details);
+ * }
+ * </programlisting>
+ *
+ * The one method which all subclasses of GstBaseSink must implement is
+ * GstBaseSink::render. This method will be called...
+ * 
+ * preroll()
+ *
+ * event(): mostly useful for file-like sinks (seeking or flushing)
+ *
+ * get_caps/set_caps/buffer_alloc
+ *
+ * start/stop for resource allocation
+ *
+ * unlock if you block on an fd, for example
+ *
+ * get_times i'm sure is for something :P
+ *
+ * provide example of textsink
+ *
+ * admonishment not to try to implement your own sink with prerolling...
+ *
+ * extending via subclassing, setting pad functions, gstelement vmethods.
  */
 
 #ifdef HAVE_CONFIG_H

@@ -1,5 +1,8 @@
 2005-11-09  Andy Wingo  <wingo@pobox.com>
 
+	* gst/base/gstbasesink.c: Add the beginning of docs here -- have
+	to work on something else now tho...
+
 	* gst/base/gstadapter.c: More adapter docs.
 
 	* gst/elements/gstfilesink.c (gst_file_sink_start) 
