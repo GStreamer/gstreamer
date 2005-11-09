@@ -1,5 +1,12 @@
 2005-11-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstiterator.c: (gst_iterator_fold), (gst_iterator_foreach),
+	(gst_iterator_find_custom):
+	* gst/gstiterator.h:
+	Fix iterator docs.
+
+2005-11-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.h:
 	Document another field.
 

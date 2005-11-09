@@ -236,10 +236,10 @@ void			gst_iterator_push		(GstIterator *it, GstIterator *other);
 /* higher-order functions that operate on iterators */
 GstIterator*		gst_iterator_filter		(GstIterator *it, GCompareFunc func,
                                                          gpointer user_data);
-GstIteratorResult	gst_iterator_fold		(GstIterator *iter,
+GstIteratorResult	gst_iterator_fold		(GstIterator *it,
                                                          GstIteratorFoldFunction func,
                                                          GValue *ret, gpointer user_data);
-GstIteratorResult	gst_iterator_foreach		(GstIterator *iter,
+GstIteratorResult	gst_iterator_foreach		(GstIterator *it,
                                                          GFunc func, gpointer user_data);
 gpointer		gst_iterator_find_custom	(GstIterator *it, GCompareFunc func,
                                                          gpointer user_data);
