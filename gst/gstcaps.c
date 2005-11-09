@@ -22,6 +22,45 @@
  * @short_description: Structure describing sets of media formats
  * @see_also: #GstStructure
  *
+ * Caps are lighweight refcounted objects describing media types.
+ * They are composed of an array of #GstStructure.
+ *
+ * Caps are exposed on #GstPadTemplate to describe all possible types a
+ * given pad can handle. They are also stored in the registry along with
+ * a description of the element.
+ *
+ * Caps are exposed on the element pads using the gst_pad_get_caps() pad 
+ * function. This function describes the possible types that the pad can 
+ * handle or produce at runtime. 
+ *
+ * Caps are also attached to buffers to describe to content of the data
+ * pointed to by the buffer with gst_buffer_set_caps(). Caps attached to
+ * a #GstBuffer allow for format negotiation upstream and downstream.
+ *
+ * A #GstCaps can be constructed with the following code fragment:
+ *
+ * <example>
+ *  <title>Creating caps</title>
+ *  <programlisting>
+ *  GstCaps *caps;
+ *  caps = gst_caps_new_simple ("video/x-raw-yuv",
+ *       "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+ *       "framerate", G_TYPE_DOUBLE, 25.0,
+ *       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+ *       "width", G_TYPE_INT, 320, 
+ *       "height", G_TYPE_INT, 240, 
+ *       NULL);
+ *  </programlisting>
+ * </example>
+ *
+ * A #GstCaps is fixed when it has no properties with ranges or lists. Use
+ * gst_caps_is_fixed() to test for fixed caps. Only fixed caps can be
+ * set on a #GstPad or #GstBuffer.
+ *
+ * Various methods exist to work with the media types such as substracting
+ * or intersecting.
+ *
+ * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -129,7 +168,7 @@ gst_caps_new_any (void)
  *
  * Creates a new #GstCaps that contains one #GstStructure.  The
  * structure is defined by the arguments, which have the same format
- * as @gst_structure_new().
+ * as gst_structure_new().
  * Caller is responsible for unreffing the returned caps.
  *
  * Returns: the new #GstCaps
@@ -532,7 +571,7 @@ gst_caps_get_size (const GstCaps * caps)
  * WARNING: This function takes a const GstCaps *, but returns a
  * non-const GstStructure *.  This is for programming convenience --
  * the caller should be aware that structures inside a constant
- * @GstCaps should not be modified.
+ * #GstCaps should not be modified.
  *
  * Returns: a pointer to the #GstStructure corresponding to @index
  */
@@ -548,13 +587,13 @@ gst_caps_get_structure (const GstCaps * caps, guint index)
 
 /**
  * gst_caps_copy_nth:
- * @caps: the @GstCaps to copy
+ * @caps: the #GstCaps to copy
  * @nth: the nth structure to copy
  *
- * Creates a new @GstCaps and appends a copy of the nth structure
+ * Creates a new #GstCaps and appends a copy of the nth structure
  * contained in @caps.
  *
- * Returns: the new @GstCaps
+ * Returns: the new #GstCaps
  */
 GstCaps *
 gst_caps_copy_nth (const GstCaps * caps, guint nth)
@@ -577,7 +616,7 @@ gst_caps_copy_nth (const GstCaps * caps, guint nth)
 
 /**
  * gst_caps_truncate:
- * @caps: the @GstCaps to truncate
+ * @caps: the #GstCaps to truncate
  *
  * Destructively discard all but the first structure from @caps. Useful when
  * fixating. @caps must be writable.
@@ -598,13 +637,13 @@ gst_caps_truncate (GstCaps * caps)
 
 /**
  * gst_caps_set_simple:
- * @caps: the @GstCaps to set
+ * @caps: the #GstCaps to set
  * @field: first field to set
  * @...: additional parameters
  *
  * Sets fields in a simple #GstCaps.  A simple #GstCaps is one that
  * only has one structure.  The arguments must be passed in the same
- * manner as @gst_structure_set(), and be NULL-terminated.
+ * manner as gst_structure_set(), and be NULL-terminated.
  */
 void
 gst_caps_set_simple (GstCaps * caps, char *field, ...)
@@ -625,13 +664,13 @@ gst_caps_set_simple (GstCaps * caps, char *field, ...)
 
 /**
  * gst_caps_set_simple_valist:
- * @caps: the @GstCaps to copy
+ * @caps: the #GstCaps to copy
  * @field: first field to set
  * @varargs: additional parameters
  *
  * Sets fields in a simple #GstCaps.  A simple #GstCaps is one that
  * only has one structure.  The arguments must be passed in the same
- * manner as @gst_structure_set(), and be NULL-terminated.
+ * manner as gst_structure_set(), and be NULL-terminated.
  */
 void
 gst_caps_set_simple_valist (GstCaps * caps, char *field, va_list varargs)
@@ -651,7 +690,7 @@ gst_caps_set_simple_valist (GstCaps * caps, char *field, va_list varargs)
 
 /**
  * gst_caps_is_any:
- * @caps: the @GstCaps to test
+ * @caps: the #GstCaps to test
  *
  * Determines if @caps represents any media format.
  *
@@ -667,7 +706,7 @@ gst_caps_is_any (const GstCaps * caps)
 
 /**
  * gst_caps_is_empty:
- * @caps: the @GstCaps to test
+ * @caps: the #GstCaps to test
  *
  * Determines if @caps represents no media formats.
  *
@@ -693,9 +732,9 @@ gst_caps_is_fixed_foreach (GQuark field_id, const GValue * value,
 
 /**
  * gst_caps_is_fixed:
- * @caps: the @GstCaps to test
+ * @caps: the #GstCaps to test
  *
- * Fixed @GstCaps describe exactly one format, that is, they have exactly
+ * Fixed #GstCaps describe exactly one format, that is, they have exactly
  * one structure, and each field in the structure describes a fixed type.
  * Examples of non-fixed types are GST_TYPE_INT_RANGE and GST_TYPE_LIST.
  *

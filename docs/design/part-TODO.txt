@@ -42,3 +42,8 @@
 - GstEvent, GstMessage register like GstFormat or GstQuery.
 
 - unblocking while seeking. gst_element_flush_pads (GstElement, gboolean);
+
+- make GstCapsFlags instead of the #define for GST_CAPS_FLAGS_ANY.
+
+- query POSITION/DURATION return accuracy. Just a flag or accuracy percentage.
+

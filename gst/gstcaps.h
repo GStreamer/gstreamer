@@ -121,6 +121,15 @@ typedef struct _GstStaticCaps GstStaticCaps;
  */
 #define GST_CAPS_REFCOUNT_VALUE(caps)           (g_atomic_int_get (&(GST_CAPS(caps))->refcount))
 
+/**
+ * GstCaps:
+ * @type: GType of the caps
+ * @refcount: the atomic refcount value
+ * @flags: extra flags for the caps
+ * @structs: array of #GstStructure for this caps
+ *
+ * Object describing media types.
+ */
 struct _GstCaps {
   GType type;
 
@@ -135,6 +144,15 @@ struct _GstCaps {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstStaticCaps:
+ * @caps: the cached #GstCaps
+ * @string: a string describing a caps
+ *
+ * Datastructure to initialize #GstCaps from a string description usually
+ * used in conjunction with GST_STATIC_CAPS() and gst_static_caps_get() to
+ * instantiate a #GstCaps.
+ */
 struct _GstStaticCaps {
   /*< public >*/
   GstCaps caps;
@@ -184,12 +202,12 @@ gboolean                 gst_caps_is_any                                (const G
 gboolean                 gst_caps_is_empty                              (const GstCaps *caps);
 gboolean                 gst_caps_is_fixed                              (const GstCaps *caps);
 gboolean                 gst_caps_is_always_compatible                  (const GstCaps *caps1,
-									const GstCaps *caps2);
+									 const GstCaps *caps2);
 gboolean		 gst_caps_is_subset				(const GstCaps *subset,
 									 const GstCaps *superset);
 gboolean		 gst_caps_is_equal				(const GstCaps *caps1,
 									 const GstCaps *caps2);
-gboolean		gst_caps_is_equal_fixed				(const GstCaps * caps1,
+gboolean		 gst_caps_is_equal_fixed			(const GstCaps * caps1,
 									 const GstCaps * caps2);
 
 
