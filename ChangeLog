@@ -1,3 +1,8 @@
+2005-11-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_dispose):
+	  Set elements to NULL state before disposing of them.
+
 2005-11-08  Sebastien Cote  <sebas642 at yahoo dot ca>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

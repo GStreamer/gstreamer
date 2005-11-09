@@ -230,14 +230,17 @@ gst_play_bin_dispose (GObject * object)
   }
 
   if (play_bin->audio_sink != NULL) {
+    gst_element_set_state (play_bin->audio_sink, GST_STATE_NULL);
     gst_object_unref (play_bin->audio_sink);
     play_bin->audio_sink = NULL;
   }
   if (play_bin->video_sink != NULL) {
+    gst_element_set_state (play_bin->video_sink, GST_STATE_NULL);
     gst_object_unref (play_bin->video_sink);
     play_bin->video_sink = NULL;
   }
   if (play_bin->visualisation != NULL) {
+    gst_element_set_state (play_bin->visualisation, GST_STATE_NULL);
     gst_object_unref (play_bin->visualisation);
     play_bin->visualisation = NULL;
   }
