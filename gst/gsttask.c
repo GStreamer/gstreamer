@@ -25,35 +25,37 @@
  * @short_description: Abstraction of GStreamer streaming threads.
  * @see_also: #GstElement, #GstPad
  *
- * GstTasks are used by GstElements and GstPads to provide the data passing
- * threads in a pipeline.
+ * #GstTask is used by #GstElement and #GstPad to provide the data passing
+ * threads in a #GstPipeline.
  *
- * A GstPad will typically start a GstTask to push or pull data to/from the
- * peer pads. Most source elements start a GstTask to push data. In some cases
- * a demuxer element can start a GstTask to pull data from a peer element. This
+ * A #GstPad will typically start a #GstTask to push or pull data to/from the
+ * peer pads. Most source elements start a #GstTask to push data. In some cases
+ * a demuxer element can start a #GstTask to pull data from a peer element. This
  * is typically done when the demuxer can perform random access on the upstream
  * peer element for improved performance.
  *
- * Although convenience functions exist on GstPad to start/pause/stop tasks, it 
- * might sometimes be needed to create a GstTask manually if it is not related to
- * a GstPad.
+ * Although convenience functions exist on #GstPad to start/pause/stop tasks, it 
+ * might sometimes be needed to create a #GstTask manually if it is not related to
+ * a #GstPad.
  *
- * Before the GstTask can be run, it needs a GStaticRecMutex that can be set with
+ * Before the #GstTask can be run, it needs a #GStaticRecMutex that can be set with
  * gst_task_set_lock().
  *
  * The task can be started, paused and stopped with gst_task_start(), gst_task_pause()
  * and gst_task_stop() respectively.
  *
- * A GstTask will repeadedly call the GstTaskFunction with the user provided data
+ * A #GstTask will repeadedly call the #GstTaskFunction with the user data
  * that was provided when creating the task with gst_task_create(). Before calling
  * the function it will acquire the provided lock.
  *
  * Stopping a task with gst_task_stop() will not immediatly make sure the task is
- * not running anymore. Use gst_task_join() to  make sure the task is completely
+ * not running anymore. Use gst_task_join() to make sure the task is completely
  * stopped and the thread is stopped.
  *
- * After creating a GstTask, use gst_object_unref() to free its resources. This can
+ * After creating a #GstTask, use gst_object_unref() to free its resources. This can
  * only be done it the task is not running anymore.
+ *
+ * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #include "gst_private.h"
@@ -316,7 +318,7 @@ gst_task_get_state (GstTask * task)
  * @task: The #GstTask to start
  *
  * Starts @task. The @task must have a lock associated with it using
- * #gst_task_set_lock() or thsi function will return FALSE.
+ * gst_task_set_lock() or thsi function will return FALSE.
  *
  * Returns: TRUE if the task could be started.
  *
@@ -378,7 +380,7 @@ no_lock:
  *
  * Stops @task. This method merely schedules the task to stop and
  * will not wait for the task to have completely stopped. Use
- * #gst_task_join() to stop and wait for completion.
+ * gst_task_join() to stop and wait for completion.
  *
  * Returns: TRUE if the task could be stopped.
  *
@@ -466,7 +468,7 @@ gst_task_pause (GstTask * task)
  * @task: The #GstTask to join
  *
  * Joins @task. After this call, it is safe to unref the task
- * and clean up the lock set with #gst_task_set_lock().
+ * and clean up the lock set with gst_task_set_lock().
  *
  * The task will automatically be stopped with this call.
  *

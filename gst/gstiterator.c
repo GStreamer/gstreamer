@@ -57,7 +57,7 @@
  *   </programlisting>
  * </example>
  *
- * Last reviewed on 2005-10-28 (0.9.4)
+ * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #include "gst_private.h"

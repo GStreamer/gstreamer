@@ -1,5 +1,14 @@
 2005-11-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstiterator.c:
+	Fix revision data.
+
+	* gst/gsttask.c:
+	* gst/gsttask.h:
+	Fix docs.
+
+2005-11-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstevent.h:
 	* gst/gsturi.h:
 	Fix docs.

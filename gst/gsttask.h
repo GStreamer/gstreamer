@@ -116,7 +116,7 @@ typedef enum {
  * @data: data passed to the task function
  * @running: a flag indicating that the task is running.
  *
- * The GstTask object.
+ * The #GstTask object.
  */
 struct _GstTask {
   GstObject      object;
