@@ -339,7 +339,6 @@ flx_decode_delta_fli (GstFlxDec * flxdec, guchar * data, guchar * dest)
   g_return_if_fail (flxdec != NULL);
   g_return_if_fail (flxdec->delta != NULL);
 
-
   /* use last frame for delta */
   memcpy (dest, GST_BUFFER_DATA (flxdec->delta),
       GST_BUFFER_SIZE (flxdec->delta));
@@ -391,7 +390,6 @@ flx_decode_delta_flc (GstFlxDec * flxdec, guchar * data, guchar * dest)
 
   g_return_if_fail (flxdec != NULL);
   g_return_if_fail (flxdec->delta != NULL);
-
 
   /* use last frame for delta */
   memcpy (dest, GST_BUFFER_DATA (flxdec->delta),
@@ -458,7 +456,6 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
 
   GstFlxDec *flxdec;
   FlxHeader *flxh;
-  FlxFrameChunk *flxfh;
 
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
   flxdec = (GstFlxDec *) gst_pad_get_parent (pad);
@@ -537,23 +534,24 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
     GstBuffer *out;
 
     if (avail >= FlxFrameChunkSize) {
+      FlxFrameChunk flxfh;
       guchar *chunk = NULL;
       guint to_flush = 0;
       const guint8 *data =
           gst_adapter_peek (flxdec->adapter, FlxFrameChunkSize);
-      flxfh = (FlxFrameChunk *) g_memdup (data, FlxFrameChunkSize);
+      memcpy (&flxfh, data, FlxFrameChunkSize);
 
-      switch (flxfh->id) {
+      switch (flxfh.id) {
         case FLX_FRAME_TYPE:
-          if (avail < flxfh->size) {
+          if (avail < flxfh.size) {
             break;
           }
 
           gst_adapter_flush (flxdec->adapter, FlxFrameChunkSize);
           data = gst_adapter_peek (flxdec->adapter,
-              flxfh->size - FlxFrameChunkSize);
-          chunk = g_memdup (data, flxfh->size - FlxFrameChunkSize);
-          to_flush = flxfh->size - FlxFrameChunkSize;
+              flxfh.size - FlxFrameChunkSize);
+          chunk = g_memdup (data, flxfh.size - FlxFrameChunkSize);
+          to_flush = flxfh.size - FlxFrameChunkSize;
 
           if (((FlxFrameType *) chunk)->chunks == 0)
             break;
@@ -590,7 +588,6 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
 
       if (chunk)
         g_free (chunk);
-      g_free (flxfh);
     }
   }
 

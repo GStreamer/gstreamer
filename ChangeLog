@@ -1,3 +1,9 @@
+2005-11-09  Zeeshan Ali  <zeenix@gmail.com>
+
+	* gst/flx/gstflxdec.c: (flx_decode_delta_fli),
+	(flx_decode_delta_flc), (gst_flxdec_chain):
+	Attempting to optimize the code for embedded systems.
+
 2005-11-08  Alessandro Decina  <alessandro at nnva dot org>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
