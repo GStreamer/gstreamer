@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2002 Billy Biggs <vektor@dumbterm.net>.
  * Copyright (c) 2002 Doug Bell <drbell@users.sourceforge.net>
  *

@@ -437,6 +437,7 @@ dxr3spusink_change_state (GstElement * element, GstStateChange transition)
 #if 0
 /**
  * dxr3spusink_wait:
+ *
  * Make the sink wait the specified amount of time.
  */
 static void

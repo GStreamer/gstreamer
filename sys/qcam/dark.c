@@ -24,7 +24,7 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************/
 
-/** Fixdark
+/* Fixdark
 	Routine to repair dark current artifacts in qcam output.
 	Basic idea: the Qcam CCD suffers from "dark current";
 	that is, some of the CCD pixels will leak current under
@@ -120,7 +120,7 @@ read_darkmask()
 */
 
 
-/** fixdark
+/* fixdark
 		We first record a list of bad leaky pixels, by making a
 		number of exposures in the dark.  master_darkmask holds
 		this information.  It's a map of the CCD.

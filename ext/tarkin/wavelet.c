@@ -5,7 +5,7 @@
 #include "mem.h"
 #include "wavelet.h"
 
-/**
+/*
  *   (The transform code is in wavelet_xform.c)
  */
 

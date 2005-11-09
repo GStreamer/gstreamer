@@ -88,7 +88,7 @@ static const struct frmsize_s frmsizecod_tbl[64] = {
 
 
 /**
- * ac3p_init
+ * ac3p_init:
  * @padder: The padder structure to initialize.
  *
  * Initializes an AC3 stream padder.  This structure can be
@@ -111,7 +111,7 @@ ac3p_init (ac3_padder * padder)
 
 
 /**
- * ac3_push_data
+ * ac3_push_data:
  * @padder The padder structure.
  * @data A pointer to a buffer with new data to parse.  This should 
  * correspond to a new piece of a stream containing raw AC3 data.
@@ -132,7 +132,7 @@ ac3p_push_data (ac3_padder * padder, guchar * data, guint size)
 
 
 /**
- * ac3p_parse
+ * ac3p_parse:
  * @padder The padder structure.
  * 
  * Parses the bytes already pushed into the padder structure (see

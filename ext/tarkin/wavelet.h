@@ -23,7 +23,7 @@ extern Wavelet3DBuf* wavelet_3d_buf_new (uint32_t width, uint32_t height,
 
 extern void wavelet_3d_buf_destroy (Wavelet3DBuf* buf);
 
-/**
+/*
  *  transform buf->data
  *  a_moments is the number of vanishing moments of the analyzing
  *  highpass filter,

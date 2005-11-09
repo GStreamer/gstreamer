@@ -674,6 +674,7 @@ dxr3audiosink_chain_ac3 (GstPad * pad, GstData * _data)
 #if 0
 /**
  * dxr3audiosink_wait:
+ *
  * Make the sink wait the specified amount of time.
  */
 static void

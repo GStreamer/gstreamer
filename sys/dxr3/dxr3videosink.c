@@ -678,6 +678,7 @@ dxr3videosink_change_state (GstElement * element, GstStateChange transition)
 #if 0
 /**
  * dxr3videosink_wait:
+ *
  * Make the sink wait the specified amount of time.
  */
 static void
