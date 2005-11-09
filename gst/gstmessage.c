@@ -23,7 +23,7 @@
  * SECTION:gstmessage
  * @short_description: Lightweight objects to signal the application of
  *                     pipeline events
- * @see_also: #GstBus,#GstMiniObject
+ * @see_also: #GstBus, #GstMiniObject, #GstElement
  *
  * Messages are implemented as a subclass of #GstMiniObject with a generic
  * #GstStructure as the content. This allows for writing custom messages without
@@ -32,6 +32,20 @@
  *
  * Messages are posted by objects in the pipeline and are passed to the
  * application using the #GstBus.
+
+ * The basic use pattern of posting a message on a #GstBus is as follows:
+ *
+ * <example>
+ * <title>Posting a #GstMessage</title>
+ *   <programlisting>
+ *    gst_bus_post (bus, gst_message_new_eos());
+ *   </programlisting>
+ * </example>
+ *
+ * A #GstElement usually posts messages on the bus provided by the parent
+ * container using gst_element_post_message().
+ *
+ * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #include <string.h>             /* memcpy */

@@ -91,6 +91,11 @@ typedef enum
 #include <gst/gsttaglist.h>
 #include <gst/gststructure.h>
 
+/**
+ * GST_MESSAGE_TRACE_NAME:
+ *
+ * The name used for memory allocation tracing
+ */
 #define GST_MESSAGE_TRACE_NAME	"GstMessage"
 
 #define GST_TYPE_MESSAGE			 (gst_message_get_type())
@@ -99,6 +104,7 @@ typedef enum
 #define GST_MESSAGE_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MESSAGE, GstMessageClass))
 #define GST_MESSAGE(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MESSAGE, GstMessage))
 #define GST_MESSAGE_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MESSAGE, GstMessageClass))
+#define GST_MESSAGE_CAST(obj)                    ((GstMessage*)(obj))
 
 /* the lock is used to handle the synchronous handling of messages,
  * the emiting thread is block until the handling thread processed
@@ -110,15 +116,44 @@ typedef enum
 #define GST_MESSAGE_WAIT(message)	g_cond_wait(GST_MESSAGE_COND(message),GST_MESSAGE_GET_LOCK(message))
 #define GST_MESSAGE_SIGNAL(message)	g_cond_signal(GST_MESSAGE_COND(message))
 
+/**
+ * GST_MESSAGE_TYPE:
+ * @message: a #GstMessage
+ *
+ * Get the #GstMessageType of @message.
+ */
 #define GST_MESSAGE_TYPE(message)	(GST_MESSAGE(message)->type)
+/**
+ * GST_MESSAGE_TIMESTAMP:
+ * @message: a #GstMessage
+ *
+ * Get the timestamp of @message. This is the timestamp when the message
+ * was created.
+ */
 #define GST_MESSAGE_TIMESTAMP(message)	(GST_MESSAGE(message)->timestamp)
+/**
+ * GST_MESSAGE_SRC:
+ * @message: a #GstMessage
+ *
+ * Get the object that posted @message.
+ */
 #define GST_MESSAGE_SRC(message)	(GST_MESSAGE(message)->src)
 
+/**
+ * GstMessage:
+ * @mini_object: the parent structure
+ * @type: the #GstMessageType of the message
+ * @timestamp: the timestamp of the message
+ * @src: the src of the message
+ * @structure: the #GstStructure containing the message info.
+ *
+ * A #GstMessage. 
+ */
 struct _GstMessage
 {
   GstMiniObject mini_object;
 
-  /*< public > *//* with MESSAGE_LOCK */
+  /*< private > *//* with MESSAGE_LOCK */
   GMutex *lock;                 /* lock and cond for async delivery */
   GCond *cond;
 
