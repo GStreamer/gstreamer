@@ -77,6 +77,21 @@ typedef struct _GstBinClass GstBinClass;
  */
 #define GST_BIN_CHILDREN_COOKIE(bin)	(GST_BIN_CAST(bin)->children_cookie)
 
+/**
+ * GstBin:
+ * @numchildren: the number of children in this bin
+ * @children: the list of children in this bin
+ * @children_cookie: updated whenever @children changes
+ * @child_bus: internal bus for handling child messages
+ * @messages: queued messages
+ * @polling: the bin is currently calculating its state
+ * @state_dirty: the bin needs to recalculate its state
+ * @clock_dirty: the bin needs to select a new clock
+ * @provided_clock: the last clock selected
+ *
+ * The GstBin base class. Subclasses can access these fields provided
+ * the LOCK is taken.
+ */
 struct _GstBin {
   GstElement	 element;
 
@@ -87,8 +102,8 @@ struct _GstBin {
   GList		*children;
   guint32	 children_cookie;
 
-  GstBus        *child_bus;	/* Bus we set on our children */
-  GList         *messages;      /* list of queued messages */
+  GstBus        *child_bus;
+  GList         *messages;
 
   gboolean	 polling;
   gboolean       state_dirty;
@@ -100,6 +115,14 @@ struct _GstBin {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstBinClass:
+ * @add_element: method to add an element to a bin
+ * @remove_element: method to remove an element from a bin
+ *
+ * Subclasses can override the @add_element and @remove_element to
+ * update the list of children in the bin.
+ */
 struct _GstBinClass {
   GstElementClass parent_class;
 

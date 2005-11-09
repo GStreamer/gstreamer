@@ -1,5 +1,10 @@
 2005-11-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.h:
+	Documented structs.
+
+2005-11-09  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	Added some new macros.
 
