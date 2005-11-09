@@ -209,21 +209,24 @@ gst_type_find_element_init (GstTypeFindElement * typefind,
       gst_pad_new_from_template (gst_static_pad_template_get
       (&type_find_element_sink_template), "sink");
   gst_pad_set_activate_function (typefind->sink,
-      gst_type_find_element_activate);
-  gst_pad_set_chain_function (typefind->sink, gst_type_find_element_chain);
+      GST_DEBUG_FUNCPTR (gst_type_find_element_activate));
+  gst_pad_set_chain_function (typefind->sink,
+      GST_DEBUG_FUNCPTR (gst_type_find_element_chain));
   gst_pad_set_event_function (typefind->sink,
-      gst_type_find_element_handle_event);
+      GST_DEBUG_FUNCPTR (gst_type_find_element_handle_event));
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->sink);
   /* srcpad */
   typefind->src =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&type_find_element_src_template), "src");
   gst_pad_set_activatepull_function (typefind->src,
-      gst_type_find_element_activate_src_pull);
+      GST_DEBUG_FUNCPTR (gst_type_find_element_activate_src_pull));
   gst_pad_set_checkgetrange_function (typefind->src,
-      gst_type_find_element_checkgetrange);
-  gst_pad_set_getrange_function (typefind->src, gst_type_find_element_getrange);
-  gst_pad_set_event_function (typefind->src, gst_type_find_element_src_event);
+      GST_DEBUG_FUNCPTR (gst_type_find_element_checkgetrange));
+  gst_pad_set_getrange_function (typefind->src,
+      GST_DEBUG_FUNCPTR (gst_type_find_element_getrange));
+  gst_pad_set_event_function (typefind->src,
+      GST_DEBUG_FUNCPTR (gst_type_find_element_src_event));
   gst_pad_set_query_function (typefind->src,
       GST_DEBUG_FUNCPTR (gst_type_find_handle_src_query));
   gst_pad_use_fixed_caps (typefind->src);

@@ -179,8 +179,8 @@ gst_collectpads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
 
   GST_LOCK (pads);
   pads->data = g_slist_append (pads->data, data);
-  gst_pad_set_chain_function (pad, gst_collectpads_chain);
-  gst_pad_set_event_function (pad, gst_collectpads_event);
+  gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_collectpads_chain));
+  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_collectpads_event));
   gst_pad_set_element_private (pad, data);
   pads->numpads++;
   pads->cookie++;

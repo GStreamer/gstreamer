@@ -334,11 +334,11 @@ gst_pad_init (GstPad * pad)
   pad->linkfunc = NULL;
   pad->getcapsfunc = NULL;
 
-  pad->activatefunc = gst_pad_activate_default;
-  pad->eventfunc = gst_pad_event_default;
-  pad->querytypefunc = gst_pad_get_query_types_default;
-  pad->queryfunc = gst_pad_query_default;
-  pad->intlinkfunc = gst_pad_get_internal_links_default;
+  pad->activatefunc = GST_DEBUG_FUNCPTR (gst_pad_activate_default);
+  pad->eventfunc = GST_DEBUG_FUNCPTR (gst_pad_event_default);
+  pad->querytypefunc = GST_DEBUG_FUNCPTR (gst_pad_get_query_types_default);
+  pad->queryfunc = GST_DEBUG_FUNCPTR (gst_pad_query_default);
+  pad->intlinkfunc = GST_DEBUG_FUNCPTR (gst_pad_get_internal_links_default);
 
   pad->do_buffer_signals = 0;
   pad->do_event_signals = 0;

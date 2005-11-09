@@ -147,7 +147,7 @@ gst_file_sink_init (GstFileSink * filesink, GstFileSinkClass * g_class)
 
   pad = GST_BASE_SINK_PAD (filesink);
 
-  gst_pad_set_query_function (pad, gst_file_sink_query);
+  gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_file_sink_query));
 
   filesink->filename = NULL;
   filesink->file = NULL;

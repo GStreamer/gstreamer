@@ -695,9 +695,9 @@ gst_ghost_pad_set_internal (GstGhostPad * pad, GstPad * internal)
         G_CALLBACK (on_int_notify), pad);
     on_int_notify (internal, NULL, pad);
     gst_pad_set_activatepull_function (GST_PAD (internal),
-        gst_ghost_pad_internal_do_activate_pull);
+        GST_DEBUG_FUNCPTR (gst_ghost_pad_internal_do_activate_pull));
     gst_pad_set_activatepush_function (GST_PAD (internal),
-        gst_ghost_pad_internal_do_activate_push);
+        GST_DEBUG_FUNCPTR (gst_ghost_pad_internal_do_activate_push));
     /* a ref was taken by set_parent */
   }
   pad->internal = internal;
@@ -719,9 +719,9 @@ static void
 gst_ghost_pad_init (GstGhostPad * pad)
 {
   gst_pad_set_activatepull_function (GST_PAD (pad),
-      gst_ghost_pad_do_activate_pull);
+      GST_DEBUG_FUNCPTR (gst_ghost_pad_do_activate_pull));
   gst_pad_set_activatepush_function (GST_PAD (pad),
-      gst_ghost_pad_do_activate_push);
+      GST_DEBUG_FUNCPTR (gst_ghost_pad_do_activate_push));
 }
 
 static void
@@ -752,9 +752,11 @@ gst_ghost_pad_new_notarget (const gchar * name, GstPadDirection dir)
 
   ret = g_object_new (GST_TYPE_GHOST_PAD, "name", name, "direction", dir, NULL);
 
-  gst_pad_set_activatepush_function (ret, gst_ghost_pad_do_activate_push);
-  gst_pad_set_link_function (ret, gst_ghost_pad_do_link);
-  gst_pad_set_unlink_function (ret, gst_ghost_pad_do_unlink);
+  gst_pad_set_activatepush_function (ret,
+      GST_DEBUG_FUNCPTR (gst_ghost_pad_do_activate_push));
+  gst_pad_set_link_function (ret, GST_DEBUG_FUNCPTR (gst_ghost_pad_do_link));
+  gst_pad_set_unlink_function (ret,
+      GST_DEBUG_FUNCPTR (gst_ghost_pad_do_unlink));
 
   return ret;
 }

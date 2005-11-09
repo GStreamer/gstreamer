@@ -1,3 +1,13 @@
+2005-11-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/base/gstcollectpads.c: (gst_collectpads_add_pad):
+	* gst/elements/gstfilesink.c: (gst_file_sink_init):
+	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init):
+	* gst/gstghostpad.c: (gst_ghost_pad_set_internal),
+	(gst_ghost_pad_init), (gst_ghost_pad_new_notarget):
+	* gst/gstpad.c: (gst_pad_init):
+	  Use GST_DEBUG_FUNCPTR() more extensively.
+
 2005-11-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstobject.c: (gst_object_class_init):
