@@ -1,6 +1,15 @@
 2005-11-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.h:
+	Document another field.
+
+	* gst/gststructure.c:
+	* gst/gststructure.h:
+	Document.
+
+2005-11-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.h:
 	Documented structs.
 
 2005-11-09  Wim Taymans  <wim@fluendo.com>

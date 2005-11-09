@@ -32,14 +32,42 @@ G_BEGIN_DECLS
 
 typedef struct _GstStructure GstStructure;
 
+/**
+ * GstStructureForeachFunc:
+ * @field_id: the #GQuark of the field name
+ * @value: the #GValue of the field
+ * @user_data: user data
+ *
+ * A function that will be called in gst_structure_foreach()
+ *
+ * Returns: TRUE if the foreach operation should continue, FALSE if
+ * the foreach operation should stop with FALSE.
+ */
 typedef gboolean (*GstStructureForeachFunc) (GQuark   field_id,
 					     const GValue * value,
 					     gpointer user_data);
 
+/**
+ * GstStructureMapFunc:
+ * @field_id: the #GQuark of the field name
+ * @value: the #GValue of the field
+ * @user_data: user data
+ *
+ * A function that will be called in gst_structure_map_in_place()
+ *
+ * Returns: TRUE if the map operation should continue, FALSE if
+ * the map operation should stop with FALSE.
+ */
 typedef gboolean (*GstStructureMapFunc)     (GQuark   field_id,
 					     GValue * value,
 					     gpointer user_data);
 
+/**
+ * GstStructure:
+ * @type: the GType of a structure
+ *
+ * The GstStructure object. Most fields are private.
+ */
 struct _GstStructure {
   GType type;
 

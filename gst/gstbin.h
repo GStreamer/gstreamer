@@ -117,6 +117,7 @@ struct _GstBin {
 
 /**
  * GstBinClass:
+ * @parent_class: bin parent class
  * @add_element: method to add an element to a bin
  * @remove_element: method to remove an element from a bin
  *

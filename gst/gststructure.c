@@ -22,7 +22,31 @@
 /**
  * SECTION:gststructure
  * @short_description: Generic structure containing fields of names and values
+ * @see_also: #GstCaps, #GstMessage, #GstEvent, #GstQuery
  *
+ * A #GstStructure is a collection of key/value pairs. The keys are expressed as
+ * GQuarks and the values can be of any GType.
+ *
+ * In addition to the key/value pairs, a #GstStructure also has a name.
+ * 
+ * #GstStructure is used by various GStreamer subsystems to store information in
+ * a flexible an extensible way. A #GstStructure does not have a refcount because it
+ * usually is part of a higher level object such as #GstCaps. It provides a means to 
+ * enforce mutability using the refcount of the parent with the 
+ * gst_structure_set_parent_refcount() method.
+ *
+ * A #GstStructure can be created with gst_structure_empty_new() or gst_structure_new(),
+ * which both take a name and an optional set of key/value pairs along with the types
+ * of the values.
+ * 
+ * Field values can be changed with gst_structure_set_value() or gst_structure_set().
+ *
+ * Field values can be retrieved with gst_structure_get_value() or the more convenient
+ * gst_structure_get_*() functions.
+ *
+ * Fields can be removed with gst_structure_remove_field() or gst_structure_remove_fields().
+ *
+ * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -99,7 +123,7 @@ gst_structure_id_empty_new_with_size (GQuark quark, guint prealloc)
  * gst_structure_id_empty_new:
  * @quark: name of new structure
  *
- * Creates a new, empty #GstStructure with the given name.
+ * Creates a new, empty #GstStructure with the given name as a GQuark.
  *
  * Returns: a new, empty #GstStructure
  */
@@ -190,7 +214,7 @@ gst_structure_new_valist (const gchar * name,
  *
  * Sets the parent_refcount field of #GstStructure. This field is used to
  * determine whether a structure is mutable or not. This function should only be
- * called by code implementing parent objects of GstStructure, as described in
+ * called by code implementing parent objects of #GstStructure, as described in
  * the MT Refcounting section of the design documents.
  */
 void
@@ -276,7 +300,7 @@ gst_structure_free (GstStructure * structure)
  * gst_structure_get_name:
  * @structure: a #GstStructure
  *
- * Accessor fuction.
+ * Get the name of @structure as a string.
  *
  * Returns: the name of the structure.
  */
@@ -314,7 +338,7 @@ gst_structure_has_name (const GstStructure * structure, const gchar * name)
  * gst_structure_get_name_id:
  * @structure: a #GstStructure
  *
- * Accessor fuction.
+ * Get the name of @structure as a GQuark.
  *
  * Returns: the quark representing the name of the structure.
  */
@@ -350,9 +374,9 @@ gst_structure_set_name (GstStructure * structure, const gchar * name)
  * @field: a #GQuark representing a field
  * @value: the new value of the field
  *
- * Sets the field with the given ID to the provided value.  If the field
+ * Sets the field with the given GQuark @field to @value.  If the field
  * does not exist, it is created.  If the field exists, the previous
- * value is freed.
+ * value is replaced and freed.
  */
 void
 gst_structure_id_set_value (GstStructure * structure,
@@ -376,9 +400,9 @@ gst_structure_id_set_value (GstStructure * structure,
  * @fieldname: the name of the field to set
  * @value: the new value of the field
  *
- * Sets the field with the given name to the provided value.  If the field
+ * Sets the field with the given name @field to @value.  If the field
  * does not exist, it is created.  If the field exists, the previous
- * value is freed.
+ * value is replaced and freed.
  */
 void
 gst_structure_set_value (GstStructure * structure,
@@ -401,7 +425,7 @@ gst_structure_set_value (GstStructure * structure,
  *
  * Parses the variable arguments and sets fields accordingly.
  * Variable arguments should be in the form field name, field type
- * (as a GType), value.  The last variable argument should be NULL.
+ * (as a GType), value(s).  The last variable argument should be NULL.
  */
 void
 gst_structure_set (GstStructure * structure, const gchar * field, ...)
@@ -522,7 +546,7 @@ gst_structure_get_field (const GstStructure * structure,
  * @structure: a #GstStructure
  * @fieldname: the name of the field to get
  *
- * Accessor function.
+ * Get the value of the field with name @fieldname.
  *
  * Returns: the #GValue corresponding to the field with the given name.
  */
@@ -547,7 +571,7 @@ gst_structure_get_value (const GstStructure * structure,
  * @structure: a #GstStructure
  * @field: the #GQuark of the field to get
  *
- * Accessor function.
+ * Get the value of the field with GQuark @field.
  *
  * Returns: the #GValue corresponding to the field with the given name
  *          identifier.
@@ -606,7 +630,7 @@ gst_structure_remove_field (GstStructure * structure, const gchar * fieldname)
  * @fieldname: the name of the field to remove
  * @...: NULL-terminated list of more fieldnames to remove
  *
- * Removes the field with the given names. If a field does not exist, the
+ * Removes the fields with the given names. If a field does not exist, the
  * argument is ignored.
  */
 void
@@ -632,8 +656,7 @@ gst_structure_remove_fields (GstStructure * structure,
  * @fieldname: the name of the field to remove
  * @varargs: NULL-terminated list of more fieldnames to remove
  *
- * Removes the field with the given names. If a field does not exist, the
- * argument is ignored.
+ * va_list form of #gst_structure_remove_fields.
  */
 void
 gst_structure_remove_fields_valist (GstStructure * structure,
@@ -707,7 +730,7 @@ gst_structure_get_field_type (const GstStructure * structure,
  * gst_structure_n_fields:
  * @structure: a #GstStructure
  *
- * Accessor function.
+ * Get the number of fields in the structure.
  *
  * Returns: the number of fields in the structure
  */
@@ -810,7 +833,7 @@ gst_structure_map_in_place (GstStructure * structure,
  * @structure: a #GstStructure
  * @fieldname: the name of a field
  *
- * Accessor function.
+ * Check if @structure contains a field named @fieldname.
  *
  * Returns: TRUE if the structure contains a field with the given name
  */
@@ -834,7 +857,7 @@ gst_structure_has_field (const GstStructure * structure,
  * @fieldname: the name of a field
  * @type: the type of a value
  *
- * Accessor function.
+ * Check if @structure contains a field named @fieldname and with GType @type.
  *
  * Returns: TRUE if the structure contains a field with the given name and type
  */
@@ -867,7 +890,9 @@ gst_structure_has_field_typed (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
- * Returns: TRUE if the value could be set correctly
+ * Returns: TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain a boolean, this function
+ * returns FALSE.
  */
 gboolean
 gst_structure_get_boolean (const GstStructure * structure,
@@ -900,7 +925,9 @@ gst_structure_get_boolean (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
- * Returns: TRUE if the value could be set correctly
+ * Returns: TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain an int, this function
+ * returns FALSE.
  */
 gboolean
 gst_structure_get_int (const GstStructure * structure,
@@ -934,7 +961,9 @@ gst_structure_get_int (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
- * Returns: TRUE if the value could be set correctly
+ * Returns: TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain a fourcc, this function
+ * returns FALSE.
  */
 gboolean
 gst_structure_get_fourcc (const GstStructure * structure,
@@ -968,7 +997,9 @@ gst_structure_get_fourcc (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
- * Returns: TRUE if the value could be set correctly
+ * Returns: TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain a data, this function
+ * returns FALSE.
  */
 gboolean
 gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
@@ -1002,7 +1033,9 @@ gst_structure_get_date (const GstStructure * structure, const gchar * fieldname,
  * of the given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
- * Returns: TRUE if the value could be set correctly
+ * Returns: TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain a #GstClockTime, this 
+ * function returns FALSE.
  */
 gboolean
 gst_structure_get_clock_time (const GstStructure * structure,
@@ -1036,7 +1069,9 @@ gst_structure_get_clock_time (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
- * Returns: TRUE if the value could be set correctly
+ * Returns: TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain a double, this 
+ * function returns FALSE.
  */
 gboolean
 gst_structure_get_double (const GstStructure * structure,
@@ -1072,7 +1107,8 @@ gst_structure_get_double (const GstStructure * structure,
  * The string should not be modified, and remains valid until the next
  * call to a gst_structure_*() function with the given structure.
  *
- * Returns: a pointer to the string
+ * Returns: a pointer to the string or NULL when the field did not exist
+ * or did not contain a string.
  */
 const gchar *
 gst_structure_get_string (const GstStructure * structure,
@@ -1104,7 +1140,9 @@ gst_structure_get_string (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists,
  * has the correct type and that the enumtype is correct.
  *
- * Returns: TRUE if the value could be set correctly
+ * Returns: TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain an enum of the given
+ * type, this function returns FALSE.
  */
 gboolean
 gst_structure_get_enum (const GstStructure * structure,
@@ -1260,9 +1298,10 @@ gst_structure_value_get_generic_type (GValue * val)
  * gst_structure_to_string:
  * @structure: a #GstStructure
  *
- * Converts @structure to a human-readable representation.
+ * Converts @structure to a human-readable string representation.
  *
- * Returns: a pointer to string allocated by g_malloc()
+ * Returns: a pointer to string allocated by g_malloc(). g_free after
+ * usage.
  */
 gchar *
 gst_structure_to_string (const GstStructure * structure)
@@ -1623,7 +1662,8 @@ gst_structure_parse_value (gchar * str,
  * If end is not NULL, a pointer to the place inside the given string
  * where parsing ended will be returned.
  *
- * Returns: a new #GstStructure
+ * Returns: a new #GstStructure or NULL when the string could not
+ * be parsed. Free after usage.
  */
 GstStructure *
 gst_structure_from_string (const gchar * string, gchar ** end)
