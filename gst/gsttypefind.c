@@ -23,6 +23,10 @@
  * SECTION:gsttypefind
  * @short_description: Stream type detection
  *
+ * The following functions allow you to detect the media type of an unknown
+ * stream.
+ *
+ * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #include "gst_private.h"
@@ -36,13 +40,13 @@ GST_DEBUG_CATEGORY_EXTERN (gst_type_find_debug);
 
 /**
  * gst_type_find_register:
- * @plugin: the GstPlugin to register with
- * @name: the name for registering
- * @rank: rank (or importance) of this typefind function
- * @func: the function to use for typefinding
- * @extensions: optional extensions that could belong to this type
- * @possible_caps: optionally the caps that could be returned when typefinding succeeds
- * @data: optional user data. This user data must be available until the plugin
+ * @plugin: A #GstPlugin.
+ * @name: The name for registering
+ * @rank: The rank (or importance) of this typefind function
+ * @func: The #GstTypeFindFunction to use
+ * @extensions: Optional extensions that could belong to this type
+ * @possible_caps: Optionally the caps that could be returned when typefinding succeeds
+ * @data: Optional user data. This user data must be available until the plugin
  *	  is unloaded.
  *
  * Registers a new typefind function to be used for typefinding. After
@@ -90,18 +94,17 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
 
 /**
  * gst_type_find_peek:
- * @find: the find object the function was called with
- * @offset: the offset
- * @size: the number of bytes to return
+ * @find: The #GstTypeFind object the function was called with
+ * @offset: The offset
+ * @size: The number of bytes to return
  *
- * Returns size bytes of the stream to identify beginning at offset. If offset
- * is a positive number, the offset is relative to the beginning of the stream,
- * if offset is a negative number the offset is relative to the end of the
- * stream. The returned memory is valid until the typefinding function returns
- * and must not be freed.
- * If NULL is returned, that data is not available.
+ * Returns the @size bytes of the stream to identify beginning at offset. If
+ * offset is a positive number, the offset is relative to the beginning of the
+ * stream, if offset is a negative number the offset is relative to the end of
+ * the stream. The returned memory is valid until the typefinding function
+ * returns and must not be freed.
  *
- * Returns: the requested data or NULL if that data is not available.
+ * Returns: the requested data, or NULL if that data is not available.
  */
 guint8 *
 gst_type_find_peek (GstTypeFind * find, gint64 offset, guint size)
@@ -113,14 +116,14 @@ gst_type_find_peek (GstTypeFind * find, gint64 offset, guint size)
 
 /**
  * gst_type_find_suggest:
- * @find: the find object the function was called with
- * @probability: the probability in percent that the suggestion is right
- * @caps: the fixed caps to suggest
+ * @find: The #GstTypeFind object the function was called with
+ * @probability: The probability in percent that the suggestion is right
+ * @caps: The fixed #GstCaps to suggest
  *
- * If a typefind function calls this function it suggests the caps with the
- * given probability. A typefind function may supply different suggestions
+ * If a #GstTypeFindFunction calls this function it suggests the caps with the
+ * given probability. A #GstTypeFindFunction may supply different suggestions
  * in one call.
- * It is up to the caller of the typefind function to interpret these values.
+ * It is up to the caller of the #GstTypeFindFunction to interpret these values.
  */
 void
 gst_type_find_suggest (GstTypeFind * find, guint probability,
@@ -136,11 +139,11 @@ gst_type_find_suggest (GstTypeFind * find, guint probability,
 
 /**
  * gst_type_find_get_length:
- * @find: the find object the function was called with
+ * @find: The #GstTypeFind the function was called with
  *
  * Get the length of the data stream.
  *
- * Returns: the length of the data stream or 0 if it is not available.
+ * Returns: The length of the data stream, or 0 if it is not available.
  */
 guint64
 gst_type_find_get_length (GstTypeFind * find)

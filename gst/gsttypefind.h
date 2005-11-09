@@ -31,6 +31,13 @@ G_BEGIN_DECLS
 
 typedef struct _GstTypeFind GstTypeFind;
 
+/**
+ * GstTypeFindFunction:
+ * @find: A #GstTypeFind structure
+ * @data: optionnal data to pass to the function
+ *
+ * A function that will be called by typefinding.
+ */
 typedef void (* GstTypeFindFunction) (GstTypeFind *find, gpointer data);
 
 typedef enum {
@@ -43,8 +50,12 @@ typedef enum {
 
 /**
  * GstTypeFind:
+ * @peek: Method to peek data.
+ * @suggest: Method to suggest #GstCaps with a given probability.
+ * @data: The data used by the caller of the typefinding function.
+ * @get_length: Returns the length of current data.
  *
- * Object that stores typefind callbacks.
+ * Object that stores typefind callbacks. To use with #GstTypeFindFactory.
  */
 struct _GstTypeFind {
   /* private to the caller of the typefind function */

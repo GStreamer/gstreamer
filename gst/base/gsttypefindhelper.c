@@ -125,6 +125,17 @@ helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
   }
 }
 
+/**
+ * gst_type_find_helper:
+ * @src: A source #GstPad
+ * @size: The length in bytes
+ *
+ * Tries to find what type of data is flowing from the given source #GstPad.
+ *
+ * Returns: The #GstCaps corresponding to the data stream.
+ * Returns #NULL if no #GstCaps matches the data stream.
+ */
+
 GstCaps *
 gst_type_find_helper (GstPad * src, guint64 size)
 {
