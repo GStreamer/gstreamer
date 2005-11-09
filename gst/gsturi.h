@@ -30,12 +30,27 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstURIType:
+ * @GST_URI_UNKNOWN	: The URI direction is unknown
+ * @GST_URI_SINK	: The URI is a consumer.
+ * @GST_URI_SRC		: The URI is a producer.
+ *
+ * The different types of URI direction.
+ */
+
 typedef enum {
   GST_URI_UNKNOWN,
   GST_URI_SINK,
   GST_URI_SRC
 } GstURIType;
 
+/**
+ * GST_URI_TYPE_IS_VALID:
+ * @type: A #GstURIType
+ *
+ * Tests if the type direction is valid.
+ */
 #define GST_URI_TYPE_IS_VALID(type) ((type) == GST_URI_SRC || (type) == GST_URI_SINK)
 
 /* uri handler functions */
@@ -48,9 +63,20 @@ typedef enum {
 typedef struct _GstURIHandler GstURIHandler;
 typedef struct _GstURIHandlerInterface GstURIHandlerInterface;
 
+/**
+ * GstURIHandlerInterface:
+ * @get_type: Method to tell wether the element handles source or sink URI.
+ * @get_protocols: Method to return the list of protocols handled by the element.
+ * @get_uri: Method to return the URI currently handled by the element.
+ * @set_uri: Method to set a new URI.
+ *
+ * #GstElements using this interface should implement these methods.
+ */
+
 struct _GstURIHandlerInterface {
   GTypeInterface	parent;
 
+  /*< private >*/
   /* signals */
   void		(* new_uri)			(GstURIHandler * handler,
 						 const gchar *   uri);
@@ -62,6 +88,7 @@ struct _GstURIHandlerInterface {
 
   /* vtable */
 
+  /*< public >*/
   /* querying capabilities */
   GstURIType		(* get_type)		(void);
   gchar **		(* get_protocols)	(void);
@@ -71,6 +98,7 @@ struct _GstURIHandlerInterface {
   gboolean		(* set_uri)		(GstURIHandler * handler,
 						 const gchar *	 uri);
 
+  /*< private >*/
   /* we might want to add functions here to query features,
    * someone with gnome-vfs knowledge go ahead */
 

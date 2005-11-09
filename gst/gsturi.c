@@ -22,11 +22,17 @@
 
 /**
  * SECTION:gsturihandler
- * @short_description: Plugin feature that handles URI types
- * @see_also: #GstPluginFeature, #GstUri
+ * @short_description: Interface to ease URI handling in plugins.
  *
- * The URIHandler is a pluginfeature that can be used to locate elements and
- * the element property that can handle a given URI.
+ * The URIHandler is an interface that is implemented by Source and Sink 
+ * #GstElement to simplify then handling of URI.
+ *
+ * An application can use the following functions to quickly get an element
+ * that handles the given URI for reading or writing (#gst_element_make_from_uri).
+ *
+ * Source and Sink plugins should implement when possible this interface.
+ *
+ * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -79,6 +85,15 @@ gst_uri_handler_base_init (gpointer g_class)
   static gboolean initialized = FALSE;
 
   if (!initialized) {
+
+    /**
+     * GstURIHandler::new-uri:
+     * @handler: The #GstURIHandler which emitted the signal
+     * @uri: The new URI, or NULL if the URI was removed
+     *
+     * The URI of the given @handler has changed.
+     */
+
     g_signal_new ("new-uri", GST_TYPE_URI_HANDLER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstURIHandlerInterface, new_uri), NULL, NULL,
         gst_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
@@ -190,7 +205,7 @@ escape_string_internal (const gchar * string, UnsafeCharacterSet mask)
  * Return value: a newly allocated string equivalent to @string
  * but with all special characters escaped
  **/
-gchar *
+static gchar *
 escape_string (const gchar * string)
 {
   return escape_string_internal (string, UNSAFE_ALL);
@@ -294,12 +309,12 @@ gst_uri_protocol_check_internal (const gchar * uri, gchar ** endptr)
 
 /**
  * gst_uri_protocol_is_valid:
- * @protocol: string to check
+ * @protocol: A string
  *
  * Tests if the given string is a valid protocol identifier. Protocols
  * must consist of alphanumeric characters and not start with a number.
  *
- * Returns: TRUE if the string is a valid protocol identifier
+ * Returns: TRUE if the string is a valid protocol identifier, FALSE otherwise.
  */
 gboolean
 gst_uri_protocol_is_valid (const gchar * protocol)
@@ -315,10 +330,10 @@ gst_uri_protocol_is_valid (const gchar * protocol)
 
 /**
  * gst_uri_is_valid:
- * @uri: string to check
+ * @uri: A URI string
  *
  * Tests if the given string is a valid URI identifier. URIs start with a valid
- * protocol followed by "://" and a string identifying the location.
+ * protocol followed by "://" and maybe a string identifying the location.
  *
  * Returns: TRUE if the string is a valid URI
  */
@@ -336,7 +351,7 @@ gst_uri_is_valid (const gchar * uri)
 
 /**
  * gst_uri_get_protocol:
- * @uri: URI to get protocol from
+ * @uri: A URI string
  *
  * Extracts the protocol out of a given valid URI. The returned string must be
  * freed using g_free().
@@ -358,13 +373,13 @@ gst_uri_get_protocol (const gchar * uri)
 
 /**
  * gst_uri_get_location:
- * @uri: URI to get the location from
+ * @uri: A URI string
  *
  * Extracts the location out of a given valid URI. So the protocol and "://"
  * are stripped from the URI. The returned string must be freed using
  * g_free().
  *
- * Returns: The location for this URI.
+ * Returns: The location for this URI. Returns NULL if the URI isn't valid.
  */
 gchar *
 gst_uri_get_location (const gchar * uri)
@@ -387,12 +402,13 @@ gst_uri_get_location (const gchar * uri)
 
 /**
  * gst_uri_construct:
- * @protocol: protocol for URI
- * @location: location for URI
+ * @protocol: Protocol for URI
+ * @location: Location for URI
  *
  * Constructs a URI for a given valid protocol and location.
  *
- * Returns: a new string for this URI
+ * Returns: a new string for this URI. Returns NULL if the given URI protocol
+ * is not valid, or the given location is NULL.
  */
 gchar *
 gst_uri_construct (const gchar * protocol, const gchar * location)
@@ -454,9 +470,9 @@ sort_by_rank (gconstpointer a, gconstpointer b)
 
 /**
  * gst_element_make_from_uri:
- * @type: wether to create a source or a sink
- * @uri: URI to create element for
- * @elementname: optional name of created element
+ * @type: Wether to create a source or a sink
+ * @uri: URI to create an element for
+ * @elementname: Name of created element, can be NULL.
  *
  * Creates an element for handling the given URI.
  *
@@ -508,11 +524,12 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
 
 /**
  * gst_uri_handler_get_uri_type:
- * @handler: Handler to query type of
+ * @handler: A #GstURIHandler.
  *
- * Gets the type of a URI handler
+ * Gets the type of the given URI handler
  *
- * Returns: the type of the URI handler
+ * Returns: the #GstURIType of the URI handler.
+ * Returns #GST_URI_UNKNOWN if the @handler isn't implemented correctly.
  */
 guint
 gst_uri_handler_get_uri_type (GstURIHandler * handler)
@@ -533,12 +550,14 @@ gst_uri_handler_get_uri_type (GstURIHandler * handler)
 
 /**
  * gst_uri_handler_get_protocols:
- * @handler: Handler to get protocols for
+ * @handler: A #GstURIHandler.
  *
- * Gets the list of supported protocols for this handler. This list may not be
+ * Gets the list of protocols supported by @handler. This list may not be
  * modified.
  *
- * Returns: the supported protocols
+ * Returns: the supported protocols.
+ * Returns NULL if the @handler isn't implemented properly, or the @handler
+ * doesn't support any protocols.
  */
 gchar **
 gst_uri_handler_get_protocols (GstURIHandler * handler)
@@ -559,11 +578,12 @@ gst_uri_handler_get_protocols (GstURIHandler * handler)
 
 /**
  * gst_uri_handler_get_uri:
- * @handler: handler to query URI of
+ * @handler: A #GstURIHandler
  *
- * Gets the currently handled URI of the handler or NULL, if none is set.
+ * Gets the currently handled URI.
  *
- * Returns: the URI
+ * Returns: the URI currently handler by the @handler.
+ * Returns NULL if there are no URI currently handled.
  */
 G_CONST_RETURN gchar *
 gst_uri_handler_get_uri (GstURIHandler * handler)
@@ -585,12 +605,12 @@ gst_uri_handler_get_uri (GstURIHandler * handler)
 
 /**
  * gst_uri_handler_set_uri:
- * @handler: handler to set URI of
+ * @handler: A #GstURIHandler
  * @uri: URI to set
  *
- * Tries to set the URI of the given handler and returns TRUE if it succeeded.
+ * Tries to set the URI of the given handler.
  *
- * Returns: TRUE, if the URI was set successfully
+ * Returns: TRUE if the URI was set successfully, else FALSE.
  */
 gboolean
 gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
@@ -608,10 +628,10 @@ gst_uri_handler_set_uri (GstURIHandler * handler, const gchar * uri)
 
 /**
  * gst_uri_handler_new_uri:
- * @handler: handler with a new URI
+ * @handler: A #GstURIHandler
  * @uri: new URI or NULL if it was unset
  *
- * Emits the new-uri event for a given handler, when that handler has a new URI.
+ * Emits the new-uri signal for a given handler, when that handler has a new URI.
  * This function should only be called by URI handlers themselves.
  */
 void

@@ -1965,13 +1965,13 @@ gst_type_find_factory_get_type
 <FILE>gsturihandler</FILE>
 <TITLE>GstUriHandler</TITLE>
 GstURIHandler
+GstURIHandlerInterface
 GstURIType
 GST_URI_TYPE_IS_VALID
 gst_uri_protocol_is_valid
 gst_uri_is_valid
 gst_uri_get_protocol
 gst_uri_get_location
-gst_uri_get_uri_type
 gst_uri_construct
 gst_element_make_from_uri
 gst_uri_handler_get_uri_type
@@ -1990,7 +1990,7 @@ GST_TYPE_URI
 GST_TYPE_URI_TYPE
 <SUBSECTION Private>
 gst_uri_handler_get_type
-gst_uri_get_type
+gst_uri_get_uri_type
 gst_uri_type_get_type
 </SECTION>
 
