@@ -86,13 +86,20 @@ typedef enum
  * function with a valid object! */
 
 /**
+ * GST_GET_LOCK:
+ * @obj: Object to get the mutex of.
+ *
+ * Acquire a reference to the mutex of this object.
+ */
+#define GST_GET_LOCK(obj)               (GST_OBJECT_CAST(obj)->lock)
+/**
  * GST_LOCK:
  * @obj: Object to lock.
  *
  * This macro will obtain a lock on the object, making serialization possible.
- * It block until the lock can be obtained.
+ * It blocks until the lock can be obtained.
  */
-#define GST_LOCK(obj)                   g_mutex_lock(GST_OBJECT_CAST(obj)->lock)
+#define GST_LOCK(obj)                   g_mutex_lock(GST_GET_LOCK(obj))
 /**
  * GST_TRYLOCK:
  * @obj: Object to try to get a lock on.
@@ -100,21 +107,14 @@ typedef enum
  * This macro will try to obtain a lock on the object, but will return with
  * FALSE if it can't get it immediately.
  */
-#define GST_TRYLOCK(obj)                g_mutex_trylock(GST_OBJECT_CAST(obj)->lock)
+#define GST_TRYLOCK(obj)                g_mutex_trylock(GST_GET_LOCK(obj))
 /**
- * GST_LOCK:
+ * GST_UNLOCK:
  * @obj: Object to unlock.
  *
  * This macro releases a lock on the object.
  */
-#define GST_UNLOCK(obj)                 g_mutex_unlock(GST_OBJECT_CAST(obj)->lock)
-/**
- * GST_LOCK:
- * @obj: Object to get the mutex of.
- *
- * Acquire a reference to the mutex of this object.
- */
-#define GST_GET_LOCK(obj)               (GST_OBJECT_CAST(obj)->lock)
+#define GST_UNLOCK(obj)                 g_mutex_unlock(GST_GET_LOCK(obj))
 
 
 /**
@@ -212,10 +212,35 @@ struct _GstObject {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-#define GST_CLASS_LOCK(obj)             (g_static_rec_mutex_lock(GST_OBJECT_CLASS_CAST(obj)->lock))
-#define GST_CLASS_TRYLOCK(obj)          (g_static_rec_mutex_trylock(GST_OBJECT_CLASS_CAST(obj)->lock))
-#define GST_CLASS_UNLOCK(obj)           (g_static_rec_mutex_unlock(GST_OBJECT_CLASS_CAST(obj)->lock))
+/**
+ * GST_CLASS_GET_LOCK:
+ * @obj: a #GstObjectClass
+ *
+ * This macro will return the class lock used to protect deep_notify signal
+ * emission on thread-unsafe glib versions (glib < 2.8).
+ */
 #define GST_CLASS_GET_LOCK(obj)         (GST_OBJECT_CLASS_CAST(obj)->lock)
+/**
+ * GST_CLASS_LOCK:
+ * @obj: a #GstObjectClass
+ *
+ * Lock the class.
+ */
+#define GST_CLASS_LOCK(obj)             (g_static_rec_mutex_lock(GST_CLASS_GET_LOCK(obj)))
+/**
+ * GST_CLASS_TRYLOCK:
+ * @obj: a #GstObjectClass
+ *
+ * Try to lock the class, returns TRUE if class could be locked.
+ */
+#define GST_CLASS_TRYLOCK(obj)          (g_static_rec_mutex_trylock(GST_CLASS_GET_LOCK(obj)))
+/**
+ * GST_CLASS_UNLOCK:
+ * @obj: a #GstObjectClass
+ *
+ * Unlock the class.
+ */
+#define GST_CLASS_UNLOCK(obj)           (g_static_rec_mutex_unlock(GST_CLASS_GET_LOCK(obj)))
 
 /* signal_object is used to signal to the whole class */
 struct _GstObjectClass {

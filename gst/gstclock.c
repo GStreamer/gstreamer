@@ -55,6 +55,10 @@
  * with the gst_clock_id_unschedule() call. If the blocking wait is unscheduled
  * a return value of GST_CLOCK_UNSCHEDULED is returned.
  *
+ * Periodic callbacks scheduled async will be repeadedly called automatically until
+ * it is unscheduled. To schedule an async periodic callback, gst_clock_id_wait() 
+ * should be called repeadedly.
+ *
  * The async callbacks can happen from any thread, either provided by the
  * core or from a streaming thread. The application should be prepared for this.
  *

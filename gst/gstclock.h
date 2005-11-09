@@ -169,8 +169,9 @@ G_STMT_START {						\
 #define GST_TIME_FORMAT "u:%02u:%02u.%09u"
 /**
  * GST_TIME_ARGS:
+ * @t: a #GstClockTime
  *
- * Format the GstClockTime argument for the GST_TIME_FORMAT format string.
+ * Format @t for the GST_TIME_FORMAT format string.
  */
 #define GST_TIME_ARGS(t) \
         (guint) (((GstClockTime)(t)) / (GST_SECOND * 60 * 60)), \
