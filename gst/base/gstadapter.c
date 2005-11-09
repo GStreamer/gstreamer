@@ -176,7 +176,7 @@ gst_adapter_clear (GstAdapter * adapter)
 /**
  * gst_adapter_push:
  * @adapter: a #GstAdapter
- * @buf: the #GstBuffer to queue into the adapter
+ * @buf: a #GstBuffer to add to queue in the adapter
  *
  * Adds the data from @buf to the data stored inside @adapter and takes
  * ownership of the buffer.
@@ -263,7 +263,8 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
  * @adapter: a #GstAdapter
  * @flush: the number of bytes to flush
  *
- * Flushes the first @flush bytes out of @adapter.
+ * Flushes the first @flush bytes in the @adapter. The caller must ensure that
+ * at least this many bytes are available.
  *
  * See also: gst_adapter_peek().
  */
@@ -352,10 +353,10 @@ gst_adapter_available (GstAdapter * adapter)
  * gst_adapter_available_fast:
  * @adapter: a #GstAdapter
  *
- * Gets the maximum amount of bytes available without the need to do expensive
+ * Gets the maximum number of bytes available without the need to do expensive
  * operations (like copying the data into a temporary buffer).
  *
- * Returns: amount of bytes available in @adapter without expensive operations
+ * Returns: number of bytes available in @adapter without expensive operations
  */
 guint
 gst_adapter_available_fast (GstAdapter * adapter)
