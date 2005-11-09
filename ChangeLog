@@ -1,3 +1,16 @@
+2005-11-09  Andy Wingo  <wingo@pobox.com>
+
+	* gst/elements/gstfilesink.c (gst_file_sink_start) 
+	(gst_file_sink_stop): New functions, replace the state change
+	handler.
+	(gst_file_sink_class_init): Hook up the start and stop functions.
+	(gst_file_sink_base_init): Don't set the state change handler any
+	more. It was a bit ugly too, being set from here...
+	(gst_file_sink_get_property, gst_file_sink_set_property):
+	Cleanups...
+	(gst_file_sink_set_location): More robust check that doesn't call
+	GST_STATE. Ugggggg.
+
 2005-11-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_event):

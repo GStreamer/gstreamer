@@ -24,7 +24,7 @@
  * @short_description: write stream to a file
  * @see_also: #GstFileSrc
  *
- * Wrtite incomming data to a file in the local file system.
+ * Write incoming data to a file in the local file system.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -58,15 +58,6 @@ GST_ELEMENT_DETAILS ("File Sink",
     "Write stream to a file",
     "Thomas <thomas@apestaart.org>");
 
-
-/* FileSink signals and args */
-enum
-{
-  /* FILL ME */
-  SIGNAL_HANDOFF,
-  LAST_SIGNAL
-};
-
 enum
 {
   ARG_0,
@@ -83,6 +74,8 @@ static void gst_file_sink_get_property (GObject * object, guint prop_id,
 static gboolean gst_file_sink_open_file (GstFileSink * sink);
 static void gst_file_sink_close_file (GstFileSink * sink);
 
+static gboolean gst_file_sink_start (GstBaseSink * sink);
+static gboolean gst_file_sink_stop (GstBaseSink * sink);
 static gboolean gst_file_sink_event (GstBaseSink * sink, GstEvent * event);
 static GstFlowReturn gst_file_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
@@ -92,10 +85,6 @@ static gboolean gst_file_sink_query (GstPad * pad, GstQuery * query);
 static void gst_file_sink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static GstStateChangeReturn gst_file_sink_change_state (GstElement * element,
-    GstStateChange transition);
-
-//static guint gst_file_sink_signals[LAST_SIGNAL] = { 0 };
 
 static void
 _do_init (GType filesink_type)
@@ -120,7 +109,6 @@ gst_file_sink_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gstelement_class->change_state = gst_file_sink_change_state;
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
   gst_element_class_set_details (gstelement_class, &gst_file_sink_details);
@@ -142,6 +130,8 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
   gobject_class->dispose = gst_file_sink_dispose;
 
   gstbasesink_class->get_times = NULL;
+  gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_file_sink_start);
+  gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_file_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_file_sink_render);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_file_sink_event);
 
@@ -181,9 +171,11 @@ gst_file_sink_dispose (GObject * object)
 static gboolean
 gst_file_sink_set_location (GstFileSink * sink, const gchar * location)
 {
-  /* the element must be stopped or paused in order to do this */
-  if (GST_STATE (sink) >= GST_STATE_PAUSED)
+  if (sink->file) {
+    g_warning ("Changing the `location' property on filesink when "
+        "a file is open not supported.");
     return FALSE;
+  }
 
   g_free (sink->filename);
   g_free (sink->uri);
@@ -201,9 +193,7 @@ static void
 gst_file_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstFileSink *sink;
-
-  sink = GST_FILE_SINK (object);
+  GstFileSink *sink = GST_FILE_SINK (object);
 
   switch (prop_id) {
     case ARG_LOCATION:
@@ -219,11 +209,7 @@ static void
 gst_file_sink_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstFileSink *sink;
-
-  g_return_if_fail (GST_IS_FILE_SINK (object));
-
-  sink = GST_FILE_SINK (object);
+  GstFileSink *sink = GST_FILE_SINK (object);
 
   switch (prop_id) {
     case ARG_LOCATION:
@@ -442,44 +428,17 @@ handle_error:
   return GST_FLOW_ERROR;
 }
 
-static GstStateChangeReturn
-gst_file_sink_change_state (GstElement * element, GstStateChange transition)
+static gboolean
+gst_file_sink_start (GstBaseSink * basesink)
 {
-  GstStateChangeReturn ret;
+  return gst_file_sink_open_file (GST_FILE_SINK (basesink));
+}
 
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!gst_file_sink_open_file (GST_FILE_SINK (element)))
-        goto open_error;
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_file_sink_close_file (GST_FILE_SINK (element));
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-
-  return ret;
-
-open_error:
-  {
-    return GST_STATE_CHANGE_FAILURE;
-  }
+static gboolean
+gst_file_sink_stop (GstBaseSink * basesink)
+{
+  gst_file_sink_close_file (GST_FILE_SINK (basesink));
+  return TRUE;
 }
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
