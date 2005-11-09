@@ -76,6 +76,8 @@
  * The above example shows how to write a very simple typefinder that
  * identifies the given data. You can get quite a bit more complicated than
  * that though.
+ *
+ * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #include "gst_private.h"
@@ -162,7 +164,7 @@ gst_type_find_factory_dispose (GObject * object)
  * Gets the list of all registered typefind factories. You must free the
  * list using g_list_free.
  *
- * Returns: the list of all registered typefind factories
+ * Returns: the list of all registered #GstTypeFindFactory.
  */
 GList *
 gst_type_find_factory_get_list (void)
@@ -173,11 +175,11 @@ gst_type_find_factory_get_list (void)
 
 /**
  * gst_type_find_factory_get_caps:
- * @factory: a factory
+ * @factory: A #GstTypeFindFactory
  *
- * Gets the caps associated with a typefind factory.
+ * Gets the #GstCaps associated with a typefind factory.
  *
- * Returns: the #GstCaps associated with this factory
+ * Returns: The #GstCaps associated with this factory
  */
 GstCaps *
 gst_type_find_factory_get_caps (GstTypeFindFactory * factory)
@@ -189,9 +191,9 @@ gst_type_find_factory_get_caps (GstTypeFindFactory * factory)
 
 /**
  * gst_type_find_factory_get_extensions:
- * @factory: a factory
+ * @factory: A #GstTypeFindFactory
  *
- * Gets the extensions associated with a typefind factory. The returned
+ * Gets the extensions associated with a #GstTypeFindFactory. The returned
  * array should not be changed. If you need to change stuff in it, you should
  * copy it using g_stdupv().  This function may return NULL to indicate
  * a 0-length list.
@@ -208,11 +210,11 @@ gst_type_find_factory_get_extensions (GstTypeFindFactory * factory)
 
 /**
  * gst_type_find_factory_call_function:
- * @factory: a factory
- * @find: a properly setup #GstTypeFind entry. The get_data and suggest_type
+ * @factory: A #GstTypeFindFactory
+ * @find: A properly setup #GstTypeFind entry. The get_data and suggest_type
  *        members must be set.
  *
- * Calls the typefinding function associated with this factory.
+ * Calls the #GstTypeFindFunction associated with this factory.
  */
 void
 gst_type_find_factory_call_function (GstTypeFindFactory * factory,

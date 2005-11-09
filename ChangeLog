@@ -1,9 +1,14 @@
 2005-11-09  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gsttypefindfactory.c:
+	Fix docs.
+	
+2005-11-09  Edward Hervey  <edward@fluendo.com>
+
 	* gst/base/gsttypefindhelper.c:
 	* gst/gsttypefind.c:
 	* gst/gsttypefind.h:
-
+	Fix docs.
 
 2005-11-09  Wim Taymans  <wim@fluendo.com>
 
