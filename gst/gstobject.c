@@ -25,27 +25,26 @@
  * SECTION:gstobject
  * @short_description: Base class for the GStreamer object hierarchy
  *
- * GstObject provides a root for the object hierarchy tree filed in by the
- * GST library.  It is currently a thin wrapper on top of
+ * #GstObject provides a root for the object hierarchy tree filed in by the
+ * GStreamer library.  It is currently a thin wrapper on top of
  * #GObject. It is an abstract class that is not very usable on its own.
  *
- * GstObject gives us basic refcounting, parenting functionality and locking.
- * Most of the function are just extended for special gstreamer needs and can be
- * found under the same name in the base class of GstObject which is GObject
+ * #GstObject gives us basic refcounting, parenting functionality and locking.
+ * Most of the function are just extended for special GStreamer needs and can be
+ * found under the same name in the base class of #GstObject which is #GObject
  * (e.g. g_object_ref() becomes gst_object_ref()).
  *
- * The most interesting difference between GstObject and GObject is the
- * "floating" reference count. A GObject is created with a reference count of
- * 1, owned by the creator of the GObject. (The owner of a reference is the
+ * The most interesting difference between #GstObject and #GObject is the
+ * "floating" reference count. A #GObject is created with a reference count of
+ * 1, owned by the creator of the #GObject. (The owner of a reference is the
  * code section that has the right to call gst_object_unref() in order to
- * remove that reference.) A GstObject is created with a reference count of 1
- * also, but it isn't owned by anyone; calling gst_object_unref() on the
- * newly-created GtkObject is incorrect.  Instead, the initial reference count
- * of a GstObject is "floating". The floating reference can be removed by
+ * remove that reference.) A #GstObject is created with a reference count of 1
+ * also, but it isn't owned by anyone; Instead, the initial reference count
+ * of a #GstObject is "floating". The floating reference can be removed by
  * anyone at any time, by calling gst_object_sink().  gst_object_sink() does
  * nothing if an object is already sunk (has no floating reference).
  *
- * When you add a GstElement to its parent container, the parent container will
+ * When you add a #GstElement to its parent container, the parent container will
  * do this:
  * <informalexample>
  * <programlisting>
@@ -58,7 +57,8 @@
  * reference.
  *
  * The purpose of the floating reference is to keep the child element alive
- * until you add it to a parent container:
+ * until you add it to a parent container, which then manages the lifetime of
+ * the object itself:
  * <informalexample>
  * <programlisting>
  *    element = gst_element_factory_make (factoryname, name);
@@ -69,12 +69,18 @@
  * </informalexample>
  *
  * Another effect of this is, that calling gst_object_unref() on a bin object,
- * will also destoy all the GstElement objects in it. The same is true for
+ * will also destoy all the #GstElement objects in it. The same is true for
  * calling gst_bin_remove().
  *
- * In contrast to GObject instances GstObject add a name property. The functions
+ * Special care has to be taken for all methods that gst_object_sink() an object
+ * since if the caller of those functions had a floating reference to the object,
+ * the object reference is now invalid.
+ *
+ * In contrast to #GObject instances, #GstObject adds a name property. The functions
  * gst_object_set_name() and gst_object_get_name() are used to set/get the name
  * of the object.
+ *
+ * Last reviewed on 2005-11-09 (0.9.4)
  */
 
 #include "gst_private.h"
@@ -226,10 +232,10 @@ gst_object_class_init (GstObjectClass * klass)
 
   /**
    * GstObject::parent-set:
-   * @gstobject: the object which received the signal.
+   * @gstobject: a #GstObject
    * @parent: the new parent
    *
-   * Is emitted when the parent of an object is set.
+   * Emitted when the parent of an object is set.
    */
   gst_object_signals[PARENT_SET] =
       g_signal_new ("parent-set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -238,10 +244,10 @@ gst_object_class_init (GstObjectClass * klass)
 
   /**
    * GstObject::parent-unset:
-   * @gstobject: the object which received the signal.
+   * @gstobject: a #GstObject
    * @parent: the old parent
    *
-   * Is emitted when the parent of an object is unset.
+   * Emitted when the parent of an object is unset.
    */
   gst_object_signals[PARENT_UNSET] =
       g_signal_new ("parent-unset", G_TYPE_FROM_CLASS (klass),
@@ -251,10 +257,10 @@ gst_object_class_init (GstObjectClass * klass)
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   /**
    * GstObject::object-saved:
-   * @gstobject: the object which received the signal.
+   * @gstobject: a #GstObject
    * @xml_node: the xmlNodePtr of the parent node
    *
-   * Is trigered whenever a new object is saved to XML. You can connect to this
+   * Trigered whenever a new object is saved to XML. You can connect to this
    * signal to insert custom XML tags into the core XML.
    */
   /* FIXME This should be the GType of xmlNodePtr instead of G_TYPE_POINTER
@@ -270,7 +276,7 @@ gst_object_class_init (GstObjectClass * klass)
 
   /**
    * GstObject::deep-notify:
-   * @gstobject: the object which received the signal.
+   * @gstobject: a #GstObject
    * @prop_object: the object that originated the signal
    * @prop: the property that changed
    *
@@ -323,17 +329,17 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
 
 /**
  * gst_object_ref:
- * @object: GstObject to reference
+ * @object: a #GstObject to reference
  *
- * Increments the refence count on the object. This function
- * does not take the lock on the object because it relies on
+ * Increments the refence count on @object. This function
+ * does not take the lock on @object because it relies on
  * atomic refcounting.
  *
  * This object returns the input parameter to ease writing
  * constructs like :
  *  result = gst_object_ref (object->parent);
  *
- * Returns: A pointer to the object
+ * Returns: A pointer to @object
  */
 gpointer
 gst_object_ref (gpointer object)
@@ -365,11 +371,11 @@ gst_object_ref (gpointer object)
 
 /**
  * gst_object_unref:
- * @object: GstObject to unreference
+ * @object: a #GstObject to unreference
  *
- * Decrements the refence count on the object.  If reference count hits
- * zero, destroy the object. This function does not take the lock
- * on the object as it relies on atomic refcounting.
+ * Decrements the refence count on @object.  If reference count hits
+ * zero, destroy @object. This function does not take the lock
+ * on @object as it relies on atomic refcounting.
  *
  * The unref method should never be called with the LOCK held since
  * this might deadlock the dispose function.
@@ -411,14 +417,20 @@ gst_object_unref (gpointer object)
 
 /**
  * gst_object_sink:
- * @object: GstObject to sink
+ * @object: a #GstObject to sink
  *
- * Removes floating reference on an object.  Any newly created object has
- * a refcount of 1 and is FLOATING.  This function should be used when
- * creating a new object to symbolically 'take ownership' of the object.
- * Use #gst_object_set_parent to have this done for you.
+ * If @object was floating, the #GST_OBJECT_FLOATING flag is removed 
+ * and @object is unreffed. When @object was not floating,
+ * this function does nothing.
  *
- * MT safe. This function grabs and releases the object lock.
+ * Any newly created object has a refcount of 1 and is floating. 
+ * This function should be used when creating a new object to 
+ * symbolically 'take ownership' of @object. This done by first doing a
+ * gst_object_ref() to keep a reference to @object and then gst_object_sink()
+ * to remove and unref any floating references to @object.
+ * Use gst_object_set_parent() to have this done for you.
+ *
+ * MT safe. This function grabs and releases @object lock.
  */
 void
 gst_object_sink (gpointer object)
@@ -439,16 +451,16 @@ gst_object_sink (gpointer object)
 
 /**
  * gst_object_replace:
- * @oldobj: pointer to place of old GstObject
- * @newobj: new GstObject
+ * @oldobj: pointer to a place of a #GstObject to replace
+ * @newobj: a new #GstObject
  *
- * Unrefs the object pointer to by oldobj, refs the newobj and
- * puts the newobj in *oldobj. Be carefull when calling this
+ * Unrefs the #GstObject pointed to by @oldobj, refs @newobj and
+ * puts @newobj in *@oldobj. Be carefull when calling this
  * function, it does not take any locks. You might want to lock
- * the object owning the oldobj pointer before calling this
+ * the object owning @oldobj pointer before calling this
  * function.
  *
- * Make sure not to LOCK the oldobj because it might be unreffed
+ * Make sure not to LOCK @oldobj because it might be unreffed
  * which could cause a deadlock when it is disposed.
  */
 void
@@ -527,8 +539,8 @@ gst_object_finalize (GObject * object)
  * top-level bin to catch property-change notifications for all contained
  * elements.
  *
- * This function is not MT safe in glib so we need to lock it with a
- * classwide mutex.
+ * This function is not MT safe in glib < 2.8 so we need to lock it with a
+ * classwide mutex in that case.
  *
  * MT safe.
  */
@@ -605,13 +617,13 @@ gst_object_dispatch_properties_changed (GObject * object,
  * @excluded_props: a set of user-specified properties to exclude or
  *  NULL to show all changes.
  *
- * A default deep_notify signal callback for an element. The user data
+ * A default deep_notify signal callback for an object. The user data
  * should contain a pointer to an array of strings that should be excluded
  * from the notify. The default handler will print the new value of the property
  * using g_print.
  *
- * MT safe. This function grabs and releases the object's LOCK or getting the
- *          path string of the object.
+ * MT safe. This function grabs and releases @object's LOCK for getting its
+ *          path string.
  */
 void
 gst_object_default_deep_notify (GObject * object, GstObject * orig,
@@ -692,18 +704,19 @@ gst_object_set_name_default (GstObject * object, const gchar * type_name)
 
 /**
  * gst_object_set_name:
- * @object: a #GstObject to set the name of
+ * @object: a #GstObject 
  * @name:   new name of object
  *
- * Sets the name of the object, or gives the object a guaranteed unique
+ * Sets the name of @object, or gives @object a guaranteed unique
  * name (if @name is NULL).
  * This function makes a copy of the provided name, so the caller
  * retains ownership of the name it sent.
  *
- * Returns: TRUE if the name could be set. Objects that have
- * a parent cannot be renamed.
+ * Returns: TRUE if the name could be set. Since Objects that have
+ * a parent cannot be renamed, this function returns FALSE in those
+ * cases.
  *
- * MT safe.  This function grabs and releases the object's LOCK.
+ * MT safe.  This function grabs and releases @object's LOCK.
  */
 gboolean
 gst_object_set_name (GstObject * object, const gchar * name)
@@ -739,16 +752,16 @@ had_parent:
 
 /**
  * gst_object_get_name:
- * @object: a #GstObject to get the name of
+ * @object: a #GstObject
  *
- * Returns a copy of the name of the object.
+ * Returns a copy of the name of @object.
  * Caller should g_free() the return value after usage.
  * For a nameless object, this returns NULL, which you can safely g_free()
  * as well.
  *
- * Returns: the name of the object. g_free() after usage.
+ * Returns: the name of @object. g_free() after usage.
  *
- * MT safe. This function grabs and releases the object's LOCK.
+ * MT safe. This function grabs and releases @object's LOCK.
  */
 gchar *
 gst_object_get_name (GstObject * object)
@@ -766,14 +779,14 @@ gst_object_get_name (GstObject * object)
 
 /**
  * gst_object_set_name_prefix:
- * @object:      a #GstObject to set the name prefix of
- * @name_prefix: new name prefix of object
+ * @object:      a #GstObject 
+ * @name_prefix: new name prefix of @object
  *
- * Sets the name prefix of the object.
+ * Sets the name prefix of @object to @name_prefix.
  * This function makes a copy of the provided name prefix, so the caller
  * retains ownership of the name prefix it sent.
  *
- * MT safe.  This function grabs and releases the object's LOCK.
+ * MT safe.  This function grabs and releases @object's LOCK.
  */
 void
 gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
@@ -788,16 +801,16 @@ gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
 
 /**
  * gst_object_get_name_prefix:
- * @object: a #GstObject to get the name prefix of
+ * @object: a #GstObject 
  *
- * Returns a copy of the name prefix of the object.
+ * Returns a copy of the name prefix of @object.
  * Caller should g_free() the return value after usage.
  * For a prefixless object, this returns NULL, which you can safely g_free()
  * as well.
  *
- * Returns: the name prefix of the object. g_free() after usage.
+ * Returns: the name prefix of @object. g_free() after usage.
  *
- * MT safe. This function grabs and releases the object's LOCK.
+ * MT safe. This function grabs and releases @object's LOCK.
  */
 gchar *
 gst_object_get_name_prefix (GstObject * object)
@@ -815,19 +828,19 @@ gst_object_get_name_prefix (GstObject * object)
 
 /**
  * gst_object_set_parent:
- * @object: GstObject to set parent of
+ * @object: a #GstObject 
  * @parent: new parent of object
  *
- * Sets the parent of @object. The object's reference count will be incremented,
- * and any floating reference will be removed (see gst_object_sink()).
+ * Sets the parent of @object to @parent. The object's reference count will 
+ * be incremented, and any floating reference will be removed (see gst_object_sink()).
  *
- * Causes the parent-set signal to be emitted.
+ * This function causes the parent-set signal to be emitted when the parent
+ * was successfully set.
  *
- * Returns: TRUE if the parent could be set or FALSE when the object
- * already had a parent, the object and parent are the same or wrong
- * parameters were provided.
+ * Returns: TRUE if @parent could be set or FALSE when @object
+ * already had a parent or @object and @parent are the same.
  *
- * MT safe. Grabs and releases the object's LOCK.
+ * MT safe. Grabs and releases @object's LOCK.
  */
 gboolean
 gst_object_set_parent (GstObject * object, GstObject * parent)
@@ -870,15 +883,15 @@ had_parent:
 
 /**
  * gst_object_get_parent:
- * @object: GstObject to get parent of
+ * @object: a #GstObject 
  *
  * Returns the parent of @object. This function increases the refcount
  * of the parent object so you should gst_object_unref() it after usage.
  *
- * Returns: parent of the object, this can be NULL if the object has no
+ * Returns: parent of @object, this can be NULL if @object has no
  *   parent. unref after usage.
  *
- * MT safe. Grabs and releases the object's LOCK.
+ * MT safe. Grabs and releases @object's LOCK.
  */
 GstObject *
 gst_object_get_parent (GstObject * object)
@@ -898,13 +911,12 @@ gst_object_get_parent (GstObject * object)
 
 /**
  * gst_object_unparent:
- * @object: GstObject to unparent
+ * @object: a #GstObject to unparent
  *
  * Clear the parent of @object, removing the associated reference.
- * This function decreases the refcount of the object so the object
- * might not point to valid memory anymore after calling this function.
+ * This function decreases the refcount of @object.
  *
- * MT safe. Grabs and releases the object's lock.
+ * MT safe. Grabs and releases @object's lock.
  */
 void
 gst_object_unparent (GstObject * object)
@@ -932,15 +944,15 @@ gst_object_unparent (GstObject * object)
 
 /**
  * gst_object_has_ancestor:
- * @object: GstObject to check
- * @ancestor: GstObject to check as ancestor
+ * @object: a #GstObject to check
+ * @ancestor: a #GstObject to check as ancestor
  *
  * Check if @object has an ancestor @ancestor somewhere up in
  * the hierarchy.
  *
  * Returns: TRUE if @ancestor is an ancestor of @object.
  *
- * MT safe. Grabs and releases the object's locks.
+ * MT safe. Grabs and releases @object's locks.
  */
 gboolean
 gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
@@ -970,10 +982,11 @@ gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
  * Checks to see if there is any object named @name in @list. This function
  * does not do any locking of any kind. You might want to protect the
  * provided list with the lock of the owner of the list. This function
- * will lock each GstObject in the list to compare the name, so be
+ * will lock each #GstObject in the list to compare the name, so be
  * carefull when passing a list with a locked object.
  *
- * Returns: TRUE if the name does not appear in the list, FALSE if it does.
+ * Returns: TRUE if a #GstObject named @name does not appear in @list, 
+ * FALSE if it does.
  *
  * MT safe. Grabs and releases the LOCK of each object in the list.
  */
@@ -1006,10 +1019,10 @@ gst_object_check_uniqueness (GList * list, const gchar * name)
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
 /**
  * gst_object_save_thyself:
- * @object: GstObject to save
- * @parent: The parent XML node to save the object into
+ * @object: a #GstObject to save
+ * @parent: The parent XML node to save @object into
  *
- * Saves the given object into the parent XML node.
+ * Saves @object into the parent XML node.
  *
  * Returns: the new xmlNodePtr with the saved object
  */
@@ -1034,10 +1047,10 @@ gst_object_save_thyself (GstObject * object, xmlNodePtr parent)
 
 /**
  * gst_object_restore_thyself:
- * @object: GstObject to load into
- * @self: The XML node to load the object from
+ * @object: a #GstObject to load into
+ * @self: The XML node to load @object from
  *
- * Restores the given object with the data from the parent XML node.
+ * Restores @object with the data from the parent XML node.
  */
 void
 gst_object_restore_thyself (GstObject * object, xmlNodePtr self)
@@ -1101,15 +1114,15 @@ gst_object_get_property (GObject * object, guint prop_id,
 
 /**
  * gst_object_get_path_string:
- * @object: GstObject to get the path from
+ * @object: a #GstObject
  *
- * Generates a string describing the path of the object in
+ * Generates a string describing the path of @object in
  * the object hierarchy. Only useful (or used) for debugging.
  *
- * Returns: a string describing the path of the object. You must
+ * Returns: a string describing the path of @object. You must
  *          g_free() the string after usage.
  *
- * MT safe. Grabs and releases the object's LOCK for all objects
+ * MT safe. Grabs and releases the #GstObject's LOCK for all objects
  *          in the hierarchy.
  */
 gchar *
@@ -1238,7 +1251,7 @@ gst_signal_object_init (GstSignalObject * object)
 
 /**
  * gst_class_signal_connect
- * @klass: the GstObjectClass to attach the signal to
+ * @klass: a #GstObjectClass to attach the signal to
  * @name: the name of the signal to attach to
  * @func: the signal function
  * @func_data: a pointer to user data
@@ -1257,7 +1270,7 @@ gst_class_signal_connect (GstObjectClass * klass,
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
 /**
  * gst_class_signal_emit_by_name:
- * @object: the object that sends the signal
+ * @object: a #GstObject that emits the signal
  * @name: the name of the signal to emit
  * @self: data for the signal
  *

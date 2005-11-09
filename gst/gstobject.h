@@ -87,14 +87,14 @@ typedef enum
 
 /**
  * GST_GET_LOCK:
- * @obj: Object to get the mutex of.
+ * @obj: a #GstObject
  *
  * Acquire a reference to the mutex of this object.
  */
 #define GST_GET_LOCK(obj)               (GST_OBJECT_CAST(obj)->lock)
 /**
  * GST_LOCK:
- * @obj: Object to lock.
+ * @obj: a #GstObject to lock
  *
  * This macro will obtain a lock on the object, making serialization possible.
  * It blocks until the lock can be obtained.
@@ -102,7 +102,7 @@ typedef enum
 #define GST_LOCK(obj)                   g_mutex_lock(GST_GET_LOCK(obj))
 /**
  * GST_TRYLOCK:
- * @obj: Object to try to get a lock on.
+ * @obj: a #Object.
  *
  * This macro will try to obtain a lock on the object, but will return with
  * FALSE if it can't get it immediately.
@@ -110,7 +110,7 @@ typedef enum
 #define GST_TRYLOCK(obj)                g_mutex_trylock(GST_GET_LOCK(obj))
 /**
  * GST_UNLOCK:
- * @obj: Object to unlock.
+ * @obj: a #GstObject to unlock.
  *
  * This macro releases a lock on the object.
  */
@@ -119,14 +119,14 @@ typedef enum
 
 /**
  * GST_OBJECT_NAME:
- * @obj: Object to get the name of.
+ * @obj: a #GstObject
  *
  * Get the name of this object
  */
 #define GST_OBJECT_NAME(obj)            (GST_OBJECT_CAST(obj)->name)
 /**
  * GST_OBJECT_PARENT:
- * @obj: Object to get the parent of.
+ * @obj: a #GstObject
  *
  * Get the parent of this object
  */
@@ -135,14 +135,14 @@ typedef enum
 
 /**
  * GST_OBJECT_FLAGS:
- * @obj: Object to return flags for.
+ * @obj: a #GstObject
  *
  * This macro returns the entire set of flags for the object.
  */
 #define GST_OBJECT_FLAGS(obj)                  (GST_OBJECT_CAST (obj)->flags)
 /**
  * GST_OBJECT_FLAG_IS_SET:
- * @obj: Object to check for flags.
+ * @obj: a #GstObject
  * @flag: Flag to check for
  *
  * This macro checks to see if the given flag is set.
@@ -150,7 +150,7 @@ typedef enum
 #define GST_OBJECT_FLAG_IS_SET(obj,flag)       ((GST_OBJECT_FLAGS (obj) & (flag)) == (flag))
 /**
  * GST_OBJECT_FLAG_SET:
- * @obj: Object to set flag in.
+ * @obj: a #GstObject
  * @flag: Flag to set
  *
  * This macro sets the given bits.
@@ -158,7 +158,7 @@ typedef enum
 #define GST_OBJECT_FLAG_SET(obj,flag)          (GST_OBJECT_FLAGS (obj) |= (flag))
 /**
  * GST_OBJECT_FLAG_UNSET:
- * @obj: Object to unset flag in.
+ * @obj: a #GstObject
  * @flag: Flag to set
  *
  * This macro usets the given bits.
@@ -168,14 +168,14 @@ typedef enum
 
 /**
  * GST_OBJECT_IS_DISPOSING:
- * @obj: Object to check
+ * @obj: a #GstObject
  *
  * Check if the given object is beeing destroyed.
  */
 #define GST_OBJECT_IS_DISPOSING(obj)    (GST_OBJECT_FLAG_IS_SET (obj, GST_OBJECT_DISPOSING))
 /**
  * GST_OBJECT_IS_FLOATING:
- * @obj:Object to check
+ * @obj: a #GstObject
  *
  * Check if the given object is floating (has no owner).
  */

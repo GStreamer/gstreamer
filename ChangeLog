@@ -1,3 +1,9 @@
+2005-11-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstobject.c: (gst_object_class_init):
+	* gst/gstobject.h:
+	Documentation fixes.
+
 2005-11-09  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gsttypefindfactory.c:
