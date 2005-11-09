@@ -45,6 +45,7 @@ typedef struct _GstAdapterClass GstAdapterClass;
 struct _GstAdapter {
   GObject	object;
 
+  /*< private >*/
   GSList *	buflist;
   guint		size;
   guint		skip;
@@ -54,7 +55,6 @@ struct _GstAdapter {
   guint		assembled_size;
   guint		assembled_len;
 
-  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

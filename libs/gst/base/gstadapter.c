@@ -19,8 +19,7 @@
 
 /**
  * SECTION:gstadapter
- * @short_description: object to splice and merge buffers to desired size
- * @see_also: #GstBytestream, #GstFilePad
+ * @short_description: adapts incoming data on a sink pad into chunks of N bytes
  *
  * This class is for elements that receive buffers in an undesired size.
  * While for example raw video contains one image per buffer, the same is not
@@ -31,31 +30,55 @@
  * The theory of operation is like this: All buffers received are put
  * into the adapter using gst_adapter_push() and the data is then read back
  * in chunks of the desired size using gst_adapter_peek(). After the data is
- * processed, it is freed using gst_adapter_flush(). An example function that
- * needs to process data in 10 byte chunks could look like this:
+ * processed, it is freed using gst_adapter_flush().
+ *
+ * For example, a sink pad's chain function that needs to pass data to a library
+ * in 512-byte chunks could be implemented like this:
  * <programlisting>
- * void
- * process_buffer (GstAdapter *adapter, GstBuffer *buffer)
+ * static GstFlowReturn
+ * sink_pad_chain (GstPad *pad, GstBuffer *buffer)
  * {
- *   guint8 *data;
+ *   MyElement *this;
+ *   GstAdapter *adapter;
+ *   GstFlowReturn ret = GST_FLOW_OK;
+ *   
+ *   // will give the element an extra ref; remember to drop it
+ *   this = MY_ELEMENT (gst_pad_get_parent (pad));
+ *   adapter = this->adapter;
+ *   
  *   // put buffer into adapter
  *   #gst_adapter_push (adapter, buffer);
- *   // while we can read out 10 bytes, process them
- *   while ((data = #gst_adapter_peek (adapter, 10))) {
- *     // process the 10 bytes here
- *     // after processing the data, flush it
- *     #gst_adapter_flush (adapter, 10);
+ *   // while we can read out 512 bytes, process them
+ *   while (#gst_adapter_available (adapter) >= 512 && fret == GST_FLOW_OK) {
+ *     // use flowreturn as an error value
+ *     ret = my_library_foo (#gst_adapter_peek (adapter, 512));
+ *     #gst_adapter_flush (adapter, 512);
  *   }
+ *   
+ *   gst_object_unref (this);
+ *   return ret;
  * }
  * </programlisting>
  * For another example, a simple element inside GStreamer that uses GstAdapter
  * is the libvisual element.
+ *
+ * An element using GstAdapter in its sink pad chain function should ensure that
+ * when the FLUSH_STOP event is received, that any queued data is cleared using
+ * gst_adapter_clear(). Data should also be cleared or processed on EOS and
+ * when changing state from #GST_STATE_PAUSED to #GST_STATE_READY.
  *
  * A last thing to note is that while GstAdapter is pretty optimized,
  * merging buffers still might be an operation that requires a memcpy()
  * operation, and this operation is not the fastest. Because of this, some
  * functions like gst_adapter_available_fast() are provided to help speed up
  * such cases should you want to.
+ *
+ * GstAdapter is not MT safe. All operations on an adapter must be serialized by
+ * the caller. This is not normally a problem, however, as the normal use case
+ * of GstAdapter is inside one pad's chain function, in which case access is
+ * serialized via the pad's stream lock.
+ *
+ * Last reviewed on 2005-11-08 (0.9.5).
  */
 
 #include <string.h>
@@ -70,13 +93,16 @@ GST_DEBUG_CATEGORY_STATIC (gst_adapter_debug);
 
 #define _do_init(thing) \
   GST_DEBUG_CATEGORY_INIT (gst_adapter_debug, "adapter", 0, "object to splice and merge buffers to desired size")
-GST_BOILERPLATE_FULL (GstAdapter, gst_adapter, GObject, G_TYPE_OBJECT, _do_init)
+GST_BOILERPLATE_FULL (GstAdapter, gst_adapter, GObject, G_TYPE_OBJECT,
+    _do_init);
 
-     static void gst_adapter_dispose (GObject * object);
-     static void gst_adapter_finalize (GObject * object);
+static void gst_adapter_dispose (GObject * object);
+static void gst_adapter_finalize (GObject * object);
 
-     static void gst_adapter_base_init (gpointer g_class)
+static void
+gst_adapter_base_init (gpointer g_class)
 {
+  /* nop */
 }
 
 static void
@@ -130,9 +156,9 @@ gst_adapter_new (void)
 
 /**
  * gst_adapter_clear:
- * @adapter: the #GstAdapter to clear
+ * @adapter: a #GstAdapter
  *
- * Removes all buffers from the @adapter.
+ * Removes all buffers from @adapter.
  */
 void
 gst_adapter_clear (GstAdapter * adapter)
@@ -168,13 +194,22 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
 /**
  * gst_adapter_peek:
  * @adapter: a #GstAdapter
- * @size: number of bytes to peek
+ * @size: the number of bytes to peek
  *
- * Gets the first @size bytes stored in the @adapter. If this many bytes are
- * not available, it returns NULL. The returned pointer is valid until the next
- * function is called on the adapter.
+ * Gets the first @size bytes stored in the @adapter. The returned pointer is
+ * valid until the next function is called on the adapter.
  *
- * Returns: a pointer to the first @size bytes of data or NULL
+ * Note that setting the returned pointer as the data of a #GstBuffer is
+ * incorrect for general-purpose plugins. The reason is that if a downstream
+ * element stores the buffer so that it has access to it outside of the bounds
+ * of its chain function, the buffer will have an invalid data pointer after
+ * your element flushes the bytes. In that case you should use
+ * gst_adapter_take(), which returns a freshly-allocated buffer that you can set
+ * as #GstBuffer malloc_data.
+ *
+ * Returns #NULL if @size bytes are not available.
+ *
+ * Returns: a pointer to the first @size bytes of data, or NULL.
  */
 const guint8 *
 gst_adapter_peek (GstAdapter * adapter, guint size)
@@ -226,9 +261,11 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
 /**
  * gst_adapter_flush:
  * @adapter: a #GstAdapter
- * @flush: number of bytes to flush
+ * @flush: the number of bytes to flush
  *
- * Flushes the first @flush bytes of the @adapter.
+ * Flushes the first @flush bytes out of @adapter.
+ *
+ * See also: gst_adapter_peek().
  */
 void
 gst_adapter_flush (GstAdapter * adapter, guint flush)
@@ -260,12 +297,14 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
 /**
  * gst_adapter_take:
  * @adapter: a #GstAdapter
- * @nbytes: number of bytes to take
+ * @nbytes: the number of bytes to take
  *
  * Returns a freshly allocated buffer containing the first @nbytes bytes of the
- * @adapter. g_free() the return value after use.
+ * @adapter.
  *
- * Returns: oven-fresh hot data, or NULL if @nbytes bytes are not available
+ * Caller owns returned value.
+ *
+ * Returns: oven-fresh hot data, or #NULL if @nbytes bytes are not available
  */
 guint8 *
 gst_adapter_take (GstAdapter * adapter, guint nbytes)
@@ -299,7 +338,7 @@ gst_adapter_take (GstAdapter * adapter, guint nbytes)
  * value that can be supplied to gst_adapter_peek() without that function
  * returning NULL.
  *
- * Returns: amount of bytes available in @adapter
+ * Returns: number of bytes available in @adapter
  */
 guint
 gst_adapter_available (GstAdapter * adapter)

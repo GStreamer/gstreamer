@@ -1,5 +1,7 @@
 2005-11-09  Andy Wingo  <wingo@pobox.com>
 
+	* gst/base/gstadapter.c: More adapter docs.
+
 	* gst/elements/gstfilesink.c (gst_file_sink_start) 
 	(gst_file_sink_stop): New functions, replace the state change
 	handler.
