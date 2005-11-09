@@ -176,7 +176,7 @@ _gst_query_copy (GstQuery * query)
  * @description: The description of the new query
  *
  * Create a new GstQueryType based on the nick or return an
- * allrady registered query with that nick
+ * already registered query with that nick
  *
  * Returns: A new GstQueryType or an already registered query
  * with the same nick.
@@ -214,9 +214,7 @@ gst_query_type_register (const gchar * nick, const gchar * description)
  * gst_query_type_get_by_nick:
  * @nick: The nick of the query
  *
- * Return the query registered with the given nick.
- *
- * Returns: The query with @nick or GST_QUERY_NONE
+ * Returns: The query registered with @nick or GST_QUERY_NONE
  * if the query was not registered.
  */
 GstQueryType
@@ -239,11 +237,11 @@ gst_query_type_get_by_nick (const gchar * nick)
 /**
  * gst_query_types_contains:
  * @types: The query array to search
- * @type: the querytype to find
+ * @type: the #GstQueryType to find
  *
- * See if the given query is inside the query array.
+ * See if the given #GstQueryType is inside the @types query types array.
  *
- * Returns: TRUE if the query is found inside the array
+ * Returns: TRUE if the type is found inside the array
  */
 gboolean
 gst_query_types_contains (const GstQueryType * types, GstQueryType type)
@@ -263,11 +261,11 @@ gst_query_types_contains (const GstQueryType * types, GstQueryType type)
 
 /**
  * gst_query_type_get_details:
- * @type: The query to get details of
+ * @type: a #GstQueryType
  *
- * Get details about the given query.
+ * Get details about the given #GstQueryType.
  *
- * Returns: The #GstQueryTypeDefinition for @query or NULL on failure.
+ * Returns: The #GstQueryTypeDefinition for @type or NULL on failure.
  */
 const GstQueryTypeDefinition *
 gst_query_type_get_details (GstQueryType type)
@@ -284,8 +282,8 @@ gst_query_type_get_details (GstQueryType type)
 /**
  * gst_query_type_iterate_definitions:
  *
- * Get an Iterator of all the registered query types. The querytype
- * definition is read only.
+ * Get a #GstIterator of all the registered query types. The definitions 
+ * iterated over are read only.
  *
  * Returns: A #GstIterator of #GstQueryTypeDefinition.
  */
@@ -333,7 +331,7 @@ gst_query_new (GstQueryType type, GstStructure * structure)
  * Constructs a new query stream position query object. Use gst_query_unref()
  * when done with it.
  *
- * Returns: A new #GstQuery
+ * Returns: A #GstQuery
  */
 GstQuery *
 gst_query_new_position (GstFormat format)
@@ -351,11 +349,11 @@ gst_query_new_position (GstFormat format)
 
 /**
  * gst_query_set_position:
- * @query: the query to fill in
+ * @query: a #GstQuery with query type GST_QUERY_POSITION
  * @format: the requested #GstFormat
- * @cur: the current position
+ * @cur: the position to set
  *
- * Answer a position query by setting the requested values.
+ * Answer a position query by setting the requested value in the given format.
  */
 void
 gst_query_set_position (GstQuery * query, GstFormat format, gint64 cur)
@@ -371,11 +369,12 @@ gst_query_set_position (GstQuery * query, GstFormat format, gint64 cur)
 
 /**
  * gst_query_parse_position:
- * @query: the query to parse
- * @format: the storage for the #GstFormat of the position values
- * @cur: the storage for the current position
+ * @query: a #GstQuery
+ * @format: the storage for the #GstFormat of the position values (may be NULL)
+ * @cur: the storage for the current position (may be NULL)
  *
- * Parse a position query answer.
+ * Parse a position query, writing the format into @format, and the position
+ * into @cur, if the respective parameters are non-NULL.
  */
 void
 gst_query_parse_position (GstQuery * query, GstFormat * format, gint64 * cur)
@@ -394,12 +393,12 @@ gst_query_parse_position (GstQuery * query, GstFormat * format, gint64 * cur)
 
 /**
  * gst_query_new_duration:
- * @format: the default #GstFormat for the new query
+ * @format: the #GstFormat for this duration query
  *
- * Constructs a new stream duration query object. Use gst_query_unref()
- * when done with it.
+ * Constructs a new stream duration query object to query in the given format. 
+ * Use gst_query_unref() when done with it.
  *
- * Returns: A new #GstQuery
+ * Returns: A #GstQuery
  */
 GstQuery *
 gst_query_new_duration (GstFormat format)
@@ -417,11 +416,11 @@ gst_query_new_duration (GstFormat format)
 
 /**
  * gst_query_set_duration:
- * @query: the query to fill in
- * @format: the requested #GstFormat
- * @duration: the total duration
+ * @query: a #GstQuery
+ * @format: the #GstFormat for the duration
+ * @duration: the duration of the stream
  *
- * Answer a duration query by setting the requested values.
+ * Answer a duration query by setting the requested value in the given format.
  */
 void
 gst_query_set_duration (GstQuery * query, GstFormat format, gint64 duration)
@@ -438,11 +437,12 @@ gst_query_set_duration (GstQuery * query, GstFormat format, gint64 duration)
 
 /**
  * gst_query_parse_duration:
- * @query: the query to parse
- * @format: the storage for the #GstFormat of the duration value
- * @duration: the storage for the total duration
+ * @query: a #GstQuery
+ * @format: the storage for the #GstFormat of the duration value, or NULL.
+ * @duration: the storage for the total duration, or NULL.
  *
- * Parse a duration query answer.
+ * Parse a duration query answer. Write the format of the duration into @format,
+ * and the value into @duration, if the respective variables are non-NULL.
  */
 void
 gst_query_parse_duration (GstQuery * query, GstFormat * format,
@@ -466,10 +466,10 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
  * @value: the value to convert
  * @dest_format: the target #GstFormat
  *
- * Constructs a new query convert object. Use gst_query_unref()
+ * Constructs a new convert query object. Use gst_query_unref()
  * when done with it.
  *
- * Returns: A new #GstQuery
+ * Returns: A #GstQuery
  */
 GstQuery *
 gst_query_new_convert (GstFormat src_format, gint64 value,
@@ -492,7 +492,7 @@ gst_query_new_convert (GstFormat src_format, gint64 value,
 
 /**
  * gst_query_set_convert:
- * @query: the query to fill in
+ * @query: a #GstQuery
  * @src_format: the source #GstFormat
  * @src_value: the source value
  * @dest_format: the destination #GstFormat
@@ -518,13 +518,14 @@ gst_query_set_convert (GstQuery * query, GstFormat src_format, gint64 src_value,
 
 /**
  * gst_query_parse_convert:
- * @query: the query to parse
- * @src_format: the storage for the #GstFormat of the source value
- * @src_value: the storage for the source value
- * @dest_format: the storage for the #GstFormat of the destination value
- * @dest_value: the storage for the destination value
+ * @query: a #GstQuery
+ * @src_format: the storage for the #GstFormat of the source value, or NULL
+ * @src_value: the storage for the source value, or NULL
+ * @dest_format: the storage for the #GstFormat of the destination value, or NULL
+ * @dest_value: the storage for the destination value, or NULL
  *
- * Parse a convert query answer.
+ * Parse a convert query answer. Any of @src_format, @src_value, @dest_format,
+ * and @dest_value may be NULL, in which case that value is omitted.
  */
 void
 gst_query_parse_convert (GstQuery * query, GstFormat * src_format,
@@ -553,10 +554,10 @@ gst_query_parse_convert (GstQuery * query, GstFormat * src_format,
  * gst_query_new_segment:
  * @format: the #GstFormat for the new query
  *
- * Constructs a new query segment object. Use gst_query_unref()
+ * Constructs a new segment query object. Use gst_query_unref()
  * when done with it.
  *
- * Returns: A new #GstQuery
+ * Returns: a #GstQuery
  */
 GstQuery *
 gst_query_new_segment (GstFormat format)
@@ -573,9 +574,9 @@ gst_query_new_segment (GstFormat format)
 
 /**
  * gst_query_set_segment:
- * @query: the query to fill in
+ * @query: a #GstQuery
  * @rate: the rate of the segment
- * @format: the #GstFormat of the segment values
+ * @format: the #GstFormat of the segment values (@start_value and @stop_value)
  * @start_value: the start value
  * @stop_value: the stop value
  *
@@ -599,13 +600,14 @@ gst_query_set_segment (GstQuery * query, gdouble rate, GstFormat format,
 
 /**
  * gst_query_parse_segment:
- * @query: the query to parse
- * @rate: the storage for the rate of the segment
- * @format: the storage for the #GstFormat of the values
- * @start_value: the storage for the start value
- * @stop_value: the storage for the stop value
+ * @query: a #GstQuery
+ * @rate: the storage for the rate of the segment, or NULL
+ * @format: the storage for the #GstFormat of the values, or NULL
+ * @start_value: the storage for the start value, or NULL
+ * @stop_value: the storage for the stop value, or NULL
  *
- * Parse a segment query answer.
+ * Parse a segment query answer. Any of @rate, @format, @start_value, and 
+ * @stop_value may be NULL, which will cause this value to be omitted.
  */
 void
 gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
@@ -636,7 +638,7 @@ gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
  * Constructs a new custom application query object. Use gst_query_unref()
  * when done with it.
  *
- * Returns: A new #GstQuery
+ * Returns: a #GstQuery
  */
 GstQuery *
 gst_query_new_application (GstQueryType type, GstStructure * structure)
@@ -649,7 +651,7 @@ gst_query_new_application (GstQueryType type, GstStructure * structure)
 
 /**
  * gst_query_get_structure:
- * @query: the query to parse
+ * @query: a #GstQuery
  *
  * Get the structure of a query.
  *
@@ -666,8 +668,8 @@ gst_query_get_structure (GstQuery * query)
 
 /**
  * gst_query_set_seeking:
- * @query: the query to set
- * @format: the format to set
+ * @query: a #GstQuery
+ * @format: the format to set for the @segment_start and @segment_end values
  * @seekable: the seekable flag to set
  * @segment_start: the segment_start to set
  * @segment_end: the segment_end to set
@@ -692,12 +694,12 @@ gst_query_set_seeking (GstQuery * query, GstFormat format,
 
 /**
  * gst_query_set_formats:
- * @query: the query to set
- * @n_formats: the first format to set
- * @...: additional formats, NULL terminated.
+ * @query: a #GstQuery
+ * @n_formats: the number of formats to set.
+ * @...: A number of @GstFormats equal to @n_formats.
  *
- * Set the formats query result fields in @query. a NULL terminated
- * list of formats should be passed to this function.
+ * Set the formats query result fields in @query. The number of formats passed
+ * must be equal to @n_formats.
  */
 void
 gst_query_set_formats (GstQuery * query, gint n_formats, ...)
