@@ -33,6 +33,34 @@ ignore
   gst_tag_list_remove_tag
   gst_tag_list_foreach
 %%
+define GstTagList.keys noargs
+static void
+tag_foreach_func_list (const GstTagList *list,
+		       const gchar      *tag,
+		       PyObject         *py_list)
+{
+	int count;
+    
+	count = gst_tag_list_get_tag_size(GST_TAG_LIST(list), tag);
+	if (count == 0)
+		PyErr_SetString(PyExc_KeyError, tag);
+	else if (count == 1)
+		PyList_Append(py_list, PyString_FromString(tag));
+}
+
+static PyObject*
+_wrap_gst_tag_list_keys(PyGObject *self)
+{
+	PyObject *dict;
+
+	dict = PyList_New(0);
+    
+	gst_tag_list_foreach(GST_TAG_LIST(self->obj),
+			     (GstTagForeachFunc)tag_foreach_func_list,
+			     (gpointer)dict);
+	return dict;
+}
+%%
 override-slot GstTagList.tp_as_mapping
 static int
 _wrap_gst_tag_list_length(PyGObject *self)

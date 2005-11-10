@@ -1,5 +1,10 @@
 2005-11-10  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gsttaglist.override:
+	put the gst.TagList.keys() method back.
+
+2005-11-10  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gstmodule.c: (init_gst):
 	Added GST_TAG_* string constants
 	* gst/gstpad.override:
