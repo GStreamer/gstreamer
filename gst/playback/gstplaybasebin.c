@@ -1410,7 +1410,7 @@ prepare_output (GstPlayBaseBin * play_base_bin)
           (_("You do not have a decoder installed to handle \"%s\".  You might need to install the necessary plugins."), play_base_bin->uri), (NULL));
     } else {
       GST_ELEMENT_ERROR (play_base_bin, STREAM, WRONG_TYPE,
-          (_("\"%s\" is not a media file")), (NULL));
+          (_("\"%s\" is not a media file"), play_base_bin->uri), (NULL));
     }
     return FALSE;
   }

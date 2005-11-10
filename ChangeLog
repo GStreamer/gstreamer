@@ -1,3 +1,8 @@
+2005-11-10  Andy Wingo  <wingo@pobox.com>
+
+	* gst/playback/gstplaybasebin.c (prepare_output): Fix format
+	string doober.
+
 2005-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
@@ -38,10 +43,11 @@
 
 2005-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_fixate):
-	  Check if the caps have a fourcc field.  Fixes crash for
-	  gst-launch-0.9 v4lsrc name=source autoprobe=false autoprobe-fps=false 	                 copy-mode=1 device=/dev/video0 ! ffmpegcolorspace !
-	                 "video/x-raw-yuv, format=(fourcc)I420" ! xvimagesink
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_fixate): Check if the caps have
+	  a fourcc field. Fixes crash for gst-launch-0.9 v4lsrc
+	  name=source autoprobe=false autoprobe-fps=false copy-mode=1
+	  device=/dev/video0 ! ffmpegcolorspace ! "video/x-raw-yuv,
+	  format=(fourcc)I420" ! xvimagesink
 
 2005-11-10  Tim-Philipp Müller  <tim at centricular dot net>
 
