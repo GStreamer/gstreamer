@@ -782,6 +782,84 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+/* with STREAM_LOCK and LOCK*/
+static GstClockReturn
+gst_base_src_wait (GstBaseSrc * basesrc, GstClockTime time)
+{
+  GstClockReturn ret;
+  GstClockID id;
+  GstClock *clock;
+
+  if ((clock = GST_ELEMENT_CLOCK (basesrc)) == NULL)
+    return GST_CLOCK_OK;
+
+  /* clock_id should be NULL outside of this function */
+  g_assert (basesrc->clock_id == NULL);
+  g_assert (GST_CLOCK_TIME_IS_VALID (time));
+
+  id = gst_clock_new_single_shot_id (clock, time);
+
+  basesrc->clock_id = id;
+  /* release the object lock while waiting */
+  GST_UNLOCK (basesrc);
+
+  ret = gst_clock_id_wait (id, NULL);
+
+  GST_LOCK (basesrc);
+  gst_clock_id_unref (id);
+  basesrc->clock_id = NULL;
+
+  return ret;
+}
+
+
+/* perform synchronisation on a buffer
+ */
+static GstClockReturn
+gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
+{
+  GstClockReturn result = GST_CLOCK_OK;
+  GstClockTime start, end;
+  GstBaseSrcClass *bclass;
+  gboolean start_valid;
+  GstClockTime base_time;
+
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
+
+  start = end = -1;
+  if (bclass->get_times)
+    bclass->get_times (basesrc, buffer, &start, &end);
+
+  start_valid = GST_CLOCK_TIME_IS_VALID (start);
+
+  /* if we don't have a timestamp, we don't sync */
+  if (!start_valid) {
+    GST_DEBUG_OBJECT (basesrc, "get_times returned invalid start");
+    goto done;
+  }
+
+  GST_DEBUG_OBJECT (basesrc, "got times start: %" GST_TIME_FORMAT
+      ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
+
+  /* now do clocking */
+  GST_LOCK (basesrc);
+  base_time = GST_ELEMENT_CAST (basesrc)->base_time;
+
+  GST_LOG_OBJECT (basesrc,
+      "waiting for clock, base time %" GST_TIME_FORMAT
+      ", stream_start %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (base_time), GST_TIME_ARGS (start));
+
+  result = gst_base_src_wait (basesrc, start + base_time);
+  GST_UNLOCK (basesrc);
+
+  GST_LOG_OBJECT (basesrc, "clock entry done: %d", result);
+
+done:
+  return result;
+}
+
+
 static GstFlowReturn
 gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
     GstBuffer ** buf)
@@ -789,6 +867,7 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
   GstFlowReturn ret;
   GstBaseSrcClass *bclass;
   gint64 maxsize;
+  GstClockReturn status;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
@@ -858,7 +937,26 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
   }
 
   ret = bclass->create (src, offset, length, buf);
+  if (ret != GST_FLOW_OK)
+    goto done;
 
+  /* now sync before pushing the buffer */
+  status = gst_base_src_do_sync (src, *buf);
+  switch (status) {
+    case GST_CLOCK_EARLY:
+      GST_DEBUG_OBJECT (src, "buffer too late!, returning anyway");
+      break;
+    case GST_CLOCK_OK:
+      GST_DEBUG_OBJECT (src, "buffer ok");
+      break;
+    default:
+      GST_DEBUG_OBJECT (src, "clock returned %d, not returning", status);
+      gst_buffer_unref (*buf);
+      *buf = NULL;
+      ret = GST_FLOW_WRONG_STATE;
+      break;
+  }
+done:
   return ret;
 
   /* ERROR */

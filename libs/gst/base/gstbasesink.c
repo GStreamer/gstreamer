@@ -1063,8 +1063,13 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
   if (end_valid)
     stream_end += basesink->segment_accum;
 
+  if (!basesink->sync) {
+    GST_DEBUG_OBJECT (basesink, "no need to sync");
+    goto done;
+  }
+
   /* now do clocking */
-  if (basesink->clock && basesink->sync) {
+  if (basesink->clock) {
     GstClockTime base_time;
 
     GST_LOCK (basesink);

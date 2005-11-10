@@ -1,3 +1,10 @@
+2005-11-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_do_sync):
+	* gst/base/gstbasesrc.c: (gst_base_src_wait),
+	(gst_base_src_do_sync), (gst_base_src_get_range):
+	Implement clock sync in base class.
+
 2005-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Tim-Philipp Müller <tim at centricular dot net>
