@@ -1,3 +1,15 @@
+2005-11-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audiotestsrc_class_init), (gst_audiotestsrc_get_times),
+	(gst_audiotestsrc_create):
+	* gst/sine/gstsinesrc.c: (gst_sinesrc_class_init),
+	(gst_sinesrc_get_times), (gst_sinesrc_create):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_class_init), (gst_videotestsrc_get_times),
+	(gst_videotestsrc_create):
+	The base class can now sync for us.
+
 2005-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_fixate):

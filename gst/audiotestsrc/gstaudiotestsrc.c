@@ -116,7 +116,6 @@ static void gst_audiotestsrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_audiotestsrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static gboolean gst_audiotestsrc_unlock (GstBaseSrc * bsrc);
 
 static gboolean gst_audiotestsrc_setcaps (GstBaseSrc * basesrc, GstCaps * caps);
 static void gst_audiotestsrc_src_fixate (GstPad * pad, GstCaps * caps);
@@ -126,6 +125,8 @@ static gboolean gst_audiotestsrc_src_query (GstPad * pad, GstQuery * query);
 
 static void gst_audiotestsrc_change_wave (GstAudioTestSrc * src);
 
+static void gst_audiotestsrc_get_times (GstBaseSrc * basesrc,
+    GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static GstFlowReturn gst_audiotestsrc_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
 static gboolean gst_audiotestsrc_start (GstBaseSrc * basesrc);
@@ -177,8 +178,8 @@ gst_audiotestsrc_class_init (GstAudioTestSrcClass * klass)
 
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_audiotestsrc_setcaps);
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_audiotestsrc_start);
+  gstbasesrc_class->get_times = GST_DEBUG_FUNCPTR (gst_audiotestsrc_get_times);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_audiotestsrc_create);
-  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_audiotestsrc_unlock);
 }
 
 static void
@@ -291,45 +292,6 @@ gst_audiotestsrc_src_query (GstPad * pad, GstQuery * query)
   }
 
   return res;
-}
-
-/* with STREAM_LOCK */
-static GstClockReturn
-gst_audiotestsrc_wait (GstAudioTestSrc * src, GstClockTime time)
-{
-  GstClockReturn ret;
-  GstClockTime base_time;
-
-  GST_LOCK (src);
-  /* clock_id should be NULL outside of this function */
-  g_assert (src->clock_id == NULL);
-  g_assert (GST_CLOCK_TIME_IS_VALID (time));
-  base_time = GST_ELEMENT (src)->base_time;
-  src->clock_id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (src),
-      time + base_time);
-  GST_UNLOCK (src);
-
-  ret = gst_clock_id_wait (src->clock_id, NULL);
-
-  GST_LOCK (src);
-  gst_clock_id_unref (src->clock_id);
-  src->clock_id = NULL;
-  GST_UNLOCK (src);
-
-  return ret;
-}
-
-static gboolean
-gst_audiotestsrc_unlock (GstBaseSrc * bsrc)
-{
-  GstAudioTestSrc *src = GST_AUDIOTESTSRC (bsrc);
-
-  GST_LOCK (src);
-  if (src->clock_id)
-    gst_clock_id_unschedule (src->clock_id);
-  GST_UNLOCK (src);
-
-  return TRUE;
 }
 
 static void
@@ -545,6 +507,29 @@ gst_audiotestsrc_change_wave (GstAudioTestSrc * src)
   }
 }
 
+static void
+gst_audiotestsrc_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
+{
+  /* for live sources, sync on the timestamp of the buffer */
+  if (gst_base_src_is_live (basesrc)) {
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      /* get duration to calculate end time */
+      GstClockTime duration = GST_BUFFER_DURATION (buffer);
+
+      if (GST_CLOCK_TIME_IS_VALID (duration)) {
+        *end = timestamp + duration;
+      }
+      *start = timestamp;
+    }
+  } else {
+    *start = -1;
+    *end = -1;
+  }
+}
+
 static GstFlowReturn
 gst_audiotestsrc_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer)
@@ -571,14 +556,6 @@ gst_audiotestsrc_create (GstBaseSrc * basesrc, guint64 offset,
 
   tdiff = src->samples_per_buffer * GST_SECOND / src->samplerate;
 
-  if (gst_base_src_is_live (basesrc)) {
-    GstClockReturn ret;
-
-    ret = gst_audiotestsrc_wait (src, src->timestamp + src->timestamp_offset);
-    if (ret == GST_CLOCK_UNSCHEDULED)
-      goto unscheduled;
-  }
-
   buf = gst_buffer_new_and_alloc (src->samples_per_buffer * sizeof (gint16));
   gst_buffer_set_caps (buf, GST_PAD_CAPS (basesrc->srcpad));
 
@@ -598,12 +575,6 @@ gst_audiotestsrc_create (GstBaseSrc * basesrc, guint64 offset,
   *buffer = buf;
 
   return GST_FLOW_OK;
-
-unscheduled:
-  {
-    GST_DEBUG_OBJECT (src, "Unscheduled while waiting for clock");
-    return GST_FLOW_WRONG_STATE;        /* is this the right return? */
-  }
 }
 
 static void

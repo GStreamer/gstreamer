@@ -78,11 +78,10 @@ static void gst_videotestsrc_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_videotestsrc_getcaps (GstBaseSrc * bsrc);
 static gboolean gst_videotestsrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 static gboolean gst_videotestsrc_negotiate (GstBaseSrc * bsrc);
-static void gst_videotestsrc_get_times (GstBaseSrc * src, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end);
 static gboolean gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event);
-static gboolean gst_videotestsrc_unlock (GstBaseSrc * bsrc);
 
+static void gst_videotestsrc_get_times (GstBaseSrc * basesrc,
+    GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static GstFlowReturn gst_videotestsrc_create (GstPushSrc * psrc,
     GstBuffer ** buffer);
 
@@ -148,10 +147,9 @@ gst_videotestsrc_class_init (GstVideoTestSrcClass * klass)
   gstbasesrc_class->get_caps = gst_videotestsrc_getcaps;
   gstbasesrc_class->set_caps = gst_videotestsrc_setcaps;
   gstbasesrc_class->negotiate = gst_videotestsrc_negotiate;
-  gstbasesrc_class->get_times = gst_videotestsrc_get_times;
   gstbasesrc_class->event = gst_videotestsrc_event;
-  gstbasesrc_class->unlock = gst_videotestsrc_unlock;
 
+  gstbasesrc_class->get_times = gst_videotestsrc_get_times;
   gstpushsrc_class->create = gst_videotestsrc_create;
 }
 
@@ -346,14 +344,6 @@ gst_videotestsrc_negotiate (GstBaseSrc * bsrc)
   return result;
 }
 
-static void
-gst_videotestsrc_get_times (GstBaseSrc * src, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end)
-{
-  *start = GST_CLOCK_TIME_NONE;
-  *end = GST_CLOCK_TIME_NONE;
-}
-
 static gboolean
 gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event)
 {
@@ -407,43 +397,27 @@ gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event)
   return res;
 }
 
-/* with STREAM_LOCK */
-static GstClockReturn
-gst_videotestsrc_wait (GstVideoTestSrc * src, GstClockTime time)
+static void
+gst_videotestsrc_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
 {
-  GstClockReturn ret;
-  GstClockTime base_time;
+  /* for live sources, sync on the timestamp of the buffer */
+  if (gst_base_src_is_live (basesrc)) {
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  GST_LOCK (src);
-  /* clock_id should be NULL outside of this function */
-  g_assert (src->clock_id == NULL);
-  g_assert (GST_CLOCK_TIME_IS_VALID (time));
-  base_time = GST_ELEMENT (src)->base_time;
-  src->clock_id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (src),
-      time + base_time);
-  GST_UNLOCK (src);
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      /* get duration to calculate end time */
+      GstClockTime duration = GST_BUFFER_DURATION (buffer);
 
-  ret = gst_clock_id_wait (src->clock_id, NULL);
-
-  GST_LOCK (src);
-  gst_clock_id_unref (src->clock_id);
-  src->clock_id = NULL;
-  GST_UNLOCK (src);
-
-  return ret;
-}
-
-static gboolean
-gst_videotestsrc_unlock (GstBaseSrc * bsrc)
-{
-  GstVideoTestSrc *src = GST_VIDEOTESTSRC (bsrc);
-
-  GST_LOCK (src);
-  if (src->clock_id)
-    gst_clock_id_unschedule (src->clock_id);
-  GST_UNLOCK (src);
-
-  return TRUE;
+      if (GST_CLOCK_TIME_IS_VALID (duration)) {
+        *end = timestamp + duration;
+      }
+      *start = timestamp;
+    }
+  } else {
+    *start = -1;
+    *end = -1;
+  }
 }
 
 static GstFlowReturn
@@ -466,14 +440,6 @@ gst_videotestsrc_create (GstPushSrc * psrc, GstBuffer ** buffer)
   GST_LOG_OBJECT (src, "creating buffer of %ld bytes for %dx%d image",
       newsize, src->width, src->height);
 
-  if (gst_base_src_is_live (GST_BASE_SRC (src))) {
-    GstClockReturn ret;
-
-    ret =
-        gst_videotestsrc_wait (src, src->running_time + src->timestamp_offset);
-    if (ret == GST_CLOCK_UNSCHEDULED)
-      goto unscheduled;
-  }
 #ifdef USE_PEER_BUFFERALLOC
   res =
       gst_pad_alloc_buffer (GST_BASE_SRC_PAD (psrc), GST_BUFFER_OFFSET_NONE,
@@ -502,11 +468,6 @@ gst_videotestsrc_create (GstPushSrc * psrc, GstBuffer ** buffer)
 
   return GST_FLOW_OK;
 
-unscheduled:
-  {
-    GST_DEBUG_OBJECT (src, "Unscheduled while waiting for clock");
-    return GST_FLOW_WRONG_STATE;
-  }
 not_negotiated:
   {
     GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),

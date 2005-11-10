@@ -71,7 +71,6 @@ static void gst_sinesrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_sinesrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static gboolean gst_sinesrc_unlock (GstBaseSrc * bsrc);
 
 static gboolean gst_sinesrc_setcaps (GstBaseSrc * basesrc, GstCaps * caps);
 static void gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps);
@@ -79,6 +78,8 @@ static void gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps);
 static const GstQueryType *gst_sinesrc_get_query_types (GstPad * pad);
 static gboolean gst_sinesrc_src_query (GstPad * pad, GstQuery * query);
 
+static void gst_sinesrc_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end);
 static GstFlowReturn gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer);
 static gboolean gst_sinesrc_start (GstBaseSrc * basesrc);
@@ -129,7 +130,7 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_sinesrc_setcaps);
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_sinesrc_start);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_sinesrc_create);
-  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_sinesrc_unlock);
+  gstbasesrc_class->get_times = GST_DEBUG_FUNCPTR (gst_sinesrc_get_times);
   gstbasesrc_class->newsegment = GST_DEBUG_FUNCPTR (gst_sinesrc_newsegment);
 }
 
@@ -249,43 +250,27 @@ gst_sinesrc_src_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
-/* with STREAM_LOCK */
-static GstClockReturn
-gst_sinesrc_wait (GstSineSrc * src, GstClockTime time)
+static void
+gst_sinesrc_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
 {
-  GstClockReturn ret;
-  GstClockTime base_time;
+  /* for live sources, sync on the timestamp of the buffer */
+  if (gst_base_src_is_live (basesrc)) {
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  GST_LOCK (src);
-  /* clock_id should be NULL outside of this function */
-  g_assert (src->clock_id == NULL);
-  g_assert (GST_CLOCK_TIME_IS_VALID (time));
-  base_time = GST_ELEMENT (src)->base_time;
-  src->clock_id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (src),
-      time + base_time);
-  GST_UNLOCK (src);
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      /* get duration to calculate end time */
+      GstClockTime duration = GST_BUFFER_DURATION (buffer);
 
-  ret = gst_clock_id_wait (src->clock_id, NULL);
-
-  GST_LOCK (src);
-  gst_clock_id_unref (src->clock_id);
-  src->clock_id = NULL;
-  GST_UNLOCK (src);
-
-  return ret;
-}
-
-static gboolean
-gst_sinesrc_unlock (GstBaseSrc * bsrc)
-{
-  GstSineSrc *src = GST_SINESRC (bsrc);
-
-  GST_LOCK (src);
-  if (src->clock_id)
-    gst_clock_id_unschedule (src->clock_id);
-  GST_UNLOCK (src);
-
-  return TRUE;
+      if (GST_CLOCK_TIME_IS_VALID (duration)) {
+        *end = timestamp + duration;
+      }
+      *start = timestamp;
+    }
+  } else {
+    *start = -1;
+    *end = -1;
+  }
 }
 
 static GstFlowReturn
@@ -317,14 +302,6 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
 
   tdiff = src->samples_per_buffer * GST_SECOND / src->samplerate;
 
-  if (gst_base_src_is_live (basesrc)) {
-    GstClockReturn ret;
-
-    ret = gst_sinesrc_wait (src, src->timestamp + src->timestamp_offset);
-    if (ret == GST_CLOCK_UNSCHEDULED)
-      goto unscheduled;
-  }
-
   buf = gst_buffer_new_and_alloc (src->samples_per_buffer * sizeof (gint16));
   gst_buffer_set_caps (buf, GST_PAD_CAPS (basesrc->srcpad));
 
@@ -354,12 +331,6 @@ gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
   *buffer = buf;
 
   return GST_FLOW_OK;
-
-unscheduled:
-  {
-    GST_DEBUG_OBJECT (src, "Unscheduled while waiting for clock");
-    return GST_FLOW_WRONG_STATE;        /* is this the right return? */
-  }
 }
 
 static void
