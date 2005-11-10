@@ -731,25 +731,21 @@ typedef struct
   GstMessage *message;
 } GstBusPollData;
 
-static gboolean
+static void
 poll_func (GstBus * bus, GstMessage * message, GstBusPollData * poll_data)
 {
   if (!g_main_loop_is_running (poll_data->loop)) {
     GST_DEBUG ("mainloop %p not running", poll_data->loop);
-    return TRUE;
+    return;
   }
 
   if (GST_MESSAGE_TYPE (message) & poll_data->events) {
-    g_return_val_if_fail (poll_data->message == NULL, FALSE);
+    g_return_if_fail (poll_data->message == NULL);
     /* keep ref to message */
     poll_data->message = gst_message_ref (message);
     GST_DEBUG ("mainloop %p quit", poll_data->loop);
     g_main_loop_quit (poll_data->loop);
   }
-
-  /* we always keep the source alive so that we don't accidentialy
-   * free the poll_data */
-  return TRUE;
 }
 
 static gboolean
@@ -764,7 +760,7 @@ poll_timeout (GstBusPollData * poll_data)
 }
 
 static void
-poll_destroy (GstBusPollData * poll_data)
+poll_destroy (GstBusPollData * poll_data, gpointer unused)
 {
   poll_data->source_running = FALSE;
   if (!poll_data->timeout_id) {
@@ -796,7 +792,14 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  *
  * All messages not in @events will be popped off the bus and will be ignored.
  *
- * This function will enter the default mainloop while polling.
+ * Because poll is implemented using the "message" signal enabled by
+ * gst_bus_add_signal_watch(), calling gst_bus_poll() will cause the "message"
+ * signal to be emitted for every message that poll sees. Thus a "message"
+ * signal handler will see the same messages that this function sees -- neither
+ * will steal messages from the other.
+ *
+ * This function will run a main loop from the default main context when
+ * polling.
  *
  * Returns: The message that was received, or NULL if the poll timed out.
  * The message is taken from the bus and needs to be unreffed after usage.
@@ -806,7 +809,7 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
 {
   GstBusPollData *poll_data;
   GstMessage *ret;
-  guint id;
+  gulong id;
 
   poll_data = g_new0 (GstBusPollData, 1);
   poll_data->source_running = TRUE;
@@ -821,20 +824,26 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
   else
     poll_data->timeout_id = 0;
 
-  id = gst_bus_add_watch_full (bus, G_PRIORITY_DEFAULT,
-      (GstBusFunc) poll_func, poll_data, (GDestroyNotify) poll_destroy);
+  id = g_signal_connect_data (bus, "message", G_CALLBACK (poll_func), poll_data,
+      (GClosureNotify) poll_destroy, 0);
+
+  /* these can be nested, so it's ok */
+  gst_bus_add_signal_watch (bus);
 
   GST_DEBUG ("running mainloop %p", poll_data->loop);
   g_main_loop_run (poll_data->loop);
   GST_DEBUG ("mainloop stopped %p", poll_data->loop);
+
+  gst_bus_remove_signal_watch (bus);
+
   /* holds a ref */
   ret = poll_data->message;
 
   if (poll_data->timeout_id)
     g_source_remove (poll_data->timeout_id);
 
-  /* poll_data may get destroyed at any time now */
-  g_source_remove (id);
+  /* poll_data will be freed now */
+  g_signal_handler_disconnect (bus, id);
 
   GST_DEBUG_OBJECT (bus, "finished poll with message %p", ret);
 

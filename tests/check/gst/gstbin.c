@@ -252,7 +252,7 @@ GST_START_TEST (test_message_state_changed_children)
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);
 
   pop_messages (bus, 3);
-  fail_if ((gst_bus_pop (bus)) != NULL);
+  fail_if (gst_bus_have_pending (bus), "unexpected pending messages");
 
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);

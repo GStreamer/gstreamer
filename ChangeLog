@@ -1,3 +1,15 @@
+2005-11-10  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstbin.c (test_message_state_changed_children): Style
+	fix..
+
+	* gst/gstbus.c (poll_destroy, poll_func, gst_bus_poll): Implement
+	gst_bus_poll with the signal watch. Ensures that poll and a signal
+	watch see the same messages.
+
+	* check/gst/gstbus.c (test_watch_with_poll): New test, checks that
+	a poll and a watch at the same time get the same messages.
+
 2005-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_transform_caps):

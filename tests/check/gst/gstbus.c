@@ -177,6 +177,53 @@ GST_START_TEST (test_watch)
 
   gst_object_unref ((GstObject *) test_bus);
 }
+GST_END_TEST static gint messages_seen = 0;
+
+static void
+message_func (GstBus * bus, GstMessage * message, gpointer data)
+{
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_APPLICATION);
+
+  messages_seen++;
+}
+
+static void
+send_10_app_messages (void)
+{
+  GstMessage *m;
+  GstStructure *s;
+  gint i;
+
+  for (i = 0; i < 10; i++) {
+    s = gst_structure_new ("test_message", "msg_id", G_TYPE_INT, i, NULL);
+    m = gst_message_new_application (NULL, s);
+    gst_bus_post (test_bus, m);
+  }
+}
+
+/* test that you get the same messages from a poll as from signal watches. */
+GST_START_TEST (test_watch_with_poll)
+{
+  guint i;
+
+  test_bus = gst_bus_new ();
+
+  gst_bus_add_signal_watch (test_bus);
+  g_signal_connect (test_bus, "message", (GCallback) message_func, NULL);
+
+  send_10_app_messages ();
+
+  for (i = 0; i < 10; i++)
+    gst_message_unref (gst_bus_poll (test_bus, GST_MESSAGE_APPLICATION,
+            GST_CLOCK_TIME_NONE));
+
+  fail_if (gst_bus_have_pending (test_bus), "unexpected messages on bus");
+  fail_unless (messages_seen == 10, "signal handler didn't get 10 messages");
+
+  gst_bus_remove_signal_watch (test_bus);
+
+  gst_object_unref (test_bus);
+}
 GST_END_TEST Suite * gstbus_suite (void)
 {
   Suite *s = suite_create ("GstBus");
@@ -187,6 +234,7 @@ GST_END_TEST Suite * gstbus_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_hammer_bus);
   tcase_add_test (tc_chain, test_watch);
+  tcase_add_test (tc_chain, test_watch_with_poll);
   return s;
 }
 
