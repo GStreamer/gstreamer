@@ -1,3 +1,20 @@
+2005-11-10  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstghostpad.c: (GST_START_TEST), (gst_ghost_pad_suite):
+	Added check for bug #317341
+
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	Some more spiffifying.
+
+	* gst/gstghostpad.c: (gst_ghost_pad_do_link):
+	Call peer linkfunction if we are a source pad. Totally fixes
+	#317341
+
+	* gst/gstpad.c:
+	Update docs, source pads should call the peer linkfunction
+	so they can atomically perform the pad link.
+
 2005-11-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbuffer.c:

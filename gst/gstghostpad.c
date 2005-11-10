@@ -615,6 +615,13 @@ gst_ghost_pad_do_link (GstPad * pad, GstPad * peer)
   else
     ret = gst_pad_link (target, internal);
 
+  /* if we are a source pad, we should call the peer link function
+   * if the peer has one */
+  if (GST_PAD_IS_SRC (pad)) {
+    if (GST_PAD_LINKFUNC (peer) && ret == GST_PAD_LINK_OK)
+      ret = GST_PAD_LINKFUNC (peer) (peer, pad);
+  }
+
   gst_object_unref (target);
 
   if (ret == GST_PAD_LINK_OK)

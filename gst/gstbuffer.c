@@ -25,7 +25,7 @@
  * @short_description: Data-passing buffer type, supporting sub-buffers.
  * @see_also: #GstPad, #GstMiniObject
  *
- * Buffers are the basic unit of data transfer in GStreamer.  The GstBuffer type
+ * Buffers are the basic unit of data transfer in GStreamer.  The #GstBuffer type
  * provides all the state necessary to define a region of memory as part of a
  * stream.  Sub-buffers are also supported, allowing a smaller region of a
  * buffer to become its own buffer, with mechanisms in place to ensure that

@@ -1208,11 +1208,14 @@ gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
  * Sets the given link function for the pad. It will be called when
  * the pad is linked with another pad.
  *
- * The return value GST_PAD_LINK_OK should be used when the connection can be
+ * The return value #GST_PAD_LINK_OK should be used when the connection can be
  * made.
  *
- * The return value GST_PAD_LINK_REFUSED should be used when the connection
+ * The return value #GST_PAD_LINK_REFUSED should be used when the connection
  * cannot be made for some reason.
+ *
+ * If @link is installed on a source pad, it should call the #GstPadLinkFunction
+ * of the peer sink pad, if present.
  */
 void
 gst_pad_set_link_function (GstPad * pad, GstPadLinkFunction link)

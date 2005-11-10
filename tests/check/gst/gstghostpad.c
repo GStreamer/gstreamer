@@ -104,7 +104,7 @@ GST_END_TEST;
 
 #if 0
 /* test if a ghost pad without a target can be linked
- *
+ * It can't because it has incompatible caps...
  */
 GST_START_TEST (test_ghost_pad_notarget)
 {
@@ -287,6 +287,46 @@ GST_START_TEST (test_ghost_pads)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ghost_pads_bin)
+{
+  GstBin *pipeline;
+  GstBin *srcbin;
+  GstBin *sinkbin;
+  GstElement *src;
+  GstElement *sink;
+  GstPad *srcghost;
+  GstPad *sinkghost;
+
+  pipeline = GST_BIN (gst_pipeline_new ("pipe"));
+
+  srcbin = GST_BIN (gst_bin_new ("srcbin"));
+  gst_bin_add (pipeline, GST_ELEMENT (srcbin));
+
+  sinkbin = GST_BIN (gst_bin_new ("sinkbin"));
+  gst_bin_add (pipeline, GST_ELEMENT (sinkbin));
+
+  src = gst_element_factory_make ("fakesrc", "src");
+  gst_bin_add (srcbin, src);
+  srcghost = gst_ghost_pad_new ("src", gst_element_get_pad (src, "src"));
+  gst_element_add_pad (GST_ELEMENT (srcbin), srcghost);
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add (sinkbin, sink);
+  sinkghost = gst_ghost_pad_new ("sink", gst_element_get_pad (sink, "sink"));
+  gst_element_add_pad (GST_ELEMENT (sinkbin), sinkghost);
+
+  gst_element_link (GST_ELEMENT (srcbin), GST_ELEMENT (sinkbin));
+
+  fail_unless (GST_PAD_PEER (srcghost) != NULL);
+  fail_unless (GST_PAD_PEER (sinkghost) != NULL);
+  fail_unless (GST_PAD_PEER (gst_ghost_pad_get_target (GST_GHOST_PAD
+              (srcghost))) != NULL);
+  fail_unless (GST_PAD_PEER (gst_ghost_pad_get_target (GST_GHOST_PAD
+              (sinkghost))) != NULL);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_ghost_pad_suite (void)
 {
@@ -298,6 +338,7 @@ gst_ghost_pad_suite (void)
   tcase_add_test (tc_chain, test_remove2);
   tcase_add_test (tc_chain, test_link);
   tcase_add_test (tc_chain, test_ghost_pads);
+  tcase_add_test (tc_chain, test_ghost_pads_bin);
 /*  tcase_add_test (tc_chain, test_ghost_pad_notarget); */
 
   return s;

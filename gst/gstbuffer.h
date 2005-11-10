@@ -209,9 +209,9 @@ typedef enum {
  * @mini_object: the parent structure
  * @data: pointer to the buffer data
  * @size: size of buffer data
- * @timestamp: timestamp of the buffer, can be GST_CLOCK_TIME_NONE when the
+ * @timestamp: timestamp of the buffer, can be #GST_CLOCK_TIME_NONE when the
  *     timestamp is not known or relevant.
- * @duration: duration in time of the buffer data, can be GST_CLOCK_TIME_NONE
+ * @duration: duration in time of the buffer data, can be #GST_CLOCK_TIME_NONE
  *     when the duration is not known or relevant.
  * @caps: the #GstCaps describing the data format in this buffer
  * @offset: a media specific offset for the buffer data. 
