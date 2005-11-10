@@ -1,5 +1,12 @@
 2005-11-10  Wim Taymans  <wim@fluendo.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	Fix docs, move some STATE macros to private.
+
+2005-11-10  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst/gstghostpad.c: (GST_START_TEST), (gst_ghost_pad_suite):
 	Added check for bug #317341
 

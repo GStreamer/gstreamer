@@ -40,8 +40,7 @@ typedef struct _GstElementClass GstElementClass;
  * The posible states an element can be in. 
  */
 typedef enum {
-  GST_STATE_VOID_PENDING        = 0, /* used for GstElement->pending_state when
-                                        there is no pending state */
+  GST_STATE_VOID_PENDING        = 0,
   GST_STATE_NULL                = 1,
   GST_STATE_READY               = 2,
   GST_STATE_PAUSED              = 3,
@@ -95,44 +94,44 @@ typedef enum {
 
 /**
  * GST_STATE:
- * @obj: Element to return state for.
+ * @elem: a #GstElement to return state for.
  *
- * This macro returns the current state of the element.
+ * This macro returns the current #GstState of the element.
  */
-#define GST_STATE(obj)			(GST_ELEMENT_CAST(obj)->current_state)
+#define GST_STATE(elem)			(GST_ELEMENT_CAST(elem)->current_state)
 
 /**
  * GST_STATE_NEXT:
- * @obj: Element to return the next state for.
+ * @elem: a #GstElement to return the next state for.
  *
- * This macro returns the next state of the element.
+ * This macro returns the next #GstState of the element. 
  */
-#define GST_STATE_NEXT(obj)		(GST_ELEMENT_CAST(obj)->next_state)
+#define GST_STATE_NEXT(elem)		(GST_ELEMENT_CAST(elem)->next_state)
 
 /**
  * GST_STATE_PENDING:
- * @obj: Element to return the pending state for.
+ * @elem: a #GstElement to return the pending state for.
  *
- * This macro returns the currently pending state of the element.
+ * This macro returns the currently pending #GstState of the element.
  */
-#define GST_STATE_PENDING(obj)		(GST_ELEMENT_CAST(obj)->pending_state)
+#define GST_STATE_PENDING(elem)		(GST_ELEMENT_CAST(elem)->pending_state)
 
 /**
  * GST_STATE_RETURN:
- * @obj: Element to return the last state result for.
+ * @elem: a #GstElement to return the last state result for.
  *
- * This macro returns the last state change return value.
+ * This macro returns the last #GstStateChangeReturn value.
  */
-#define GST_STATE_RETURN(obj)		(GST_ELEMENT_CAST(obj)->last_return)
+#define GST_STATE_RETURN(elem)		(GST_ELEMENT_CAST(elem)->last_return)
 
 #define __GST_SIGN(val)				((val) < 0 ? -1 : ((val) > 0 ? 1 : 0))
 /**
  * GST_STATE_GET_NEXT:
- * @cur: A starting state
- * @pending: A target state
+ * @cur: A starting #GstState
+ * @pending: A target #GstState
  *
- * Given a current state and a target state, calculate the next (intermediate)
- * state.
+ * Given a current state @cur and a target state @pending, calculate the next (intermediate)
+ * #GstState.
  */
 #define GST_STATE_GET_NEXT(cur,pending) 	((cur) + __GST_SIGN ((gint)(pending) - (gint)(cur)))
 /**
@@ -140,22 +139,22 @@ typedef enum {
  * @cur: A current state
  * @next: A next state
  *
- * Given a current state and a next state, calculate the associated 
- * state transition.
+ * Given a current state @cur and a next state @next, calculate the associated 
+ * #GstStateChange transition.
  */
 #define GST_STATE_TRANSITION(cur,next)  	(((cur)<<3)|(next))
 /**
  * GST_STATE_TRANSITION_CURRENT:
- * @trans: A state transition
+ * @trans: A #GstStateChange 
  *
- * Given a state transition, extract the current state.
+ * Given a state transition @trans, extract the current #GstState.
  */
 #define GST_STATE_TRANSITION_CURRENT(trans)  	((trans)>>3)
 /**
  * GST_STATE_TRANSITION_NEXT:
- * @trans: A state transition
+ * @trans: A #GstStateChange
  *
- * Given a state transition, extract the next state.
+ * Given a state transition @trans, extract the next #GstState.
  */
 #define GST_STATE_TRANSITION_NEXT(trans)  	((trans)&0x7)
 
@@ -202,59 +201,59 @@ typedef enum
 
 /**
  * GST_ELEMENT_IS_LOCKED_STATE:
- * @obj: A #GstElement to query
+ * @elem: A #GstElement to query
  *
  * Check if the element is in the locked state and therefore will ignore state
  * changes from its parent object.
  */
-#define GST_ELEMENT_IS_LOCKED_STATE(obj)        (GST_OBJECT_FLAG_IS_SET(obj,GST_ELEMENT_LOCKED_STATE))
+#define GST_ELEMENT_IS_LOCKED_STATE(elem)        (GST_OBJECT_FLAG_IS_SET(elem,GST_ELEMENT_LOCKED_STATE))
 
 /**
  * GST_ELEMENT_NAME:
- * @obj: A #GstElement to query
+ * @elem: A #GstElement to query
  *
  * Gets the name of this element. Use only in core as this is not
  * ABI-compatible. Others use gst_element_get_name()
  */
-#define GST_ELEMENT_NAME(obj)			(GST_OBJECT_NAME(obj))
+#define GST_ELEMENT_NAME(elem)			(GST_OBJECT_NAME(elem))
 
 /**
  * GST_ELEMENT_PARENT:
- * @obj: A #GstElement to query
+ * @elem: A #GstElement to query
  *
  * Get the parent object of this element.
  */
-#define GST_ELEMENT_PARENT(obj)			(GST_ELEMENT_CAST(GST_OBJECT_PARENT(obj)))
+#define GST_ELEMENT_PARENT(elem)		(GST_ELEMENT_CAST(GST_OBJECT_PARENT(elem)))
 
 /**
  * GST_ELEMENT_BUS:
- * @obj: A #GstElement to query
+ * @elem: A #GstElement to query
  *
  * Get the message bus of this element.
  */
-#define GST_ELEMENT_BUS(obj)			(GST_ELEMENT_CAST(obj)->bus)
+#define GST_ELEMENT_BUS(elem)			(GST_ELEMENT_CAST(elem)->bus)
 
 /**
  * GST_ELEMENT_CLOCK:
- * @obj: A #GstElement to query
+ * @elem: A #GstElement to query
  *
  * Get the clock of this element
  */
-#define GST_ELEMENT_CLOCK(obj)			(GST_ELEMENT_CAST(obj)->clock)
+#define GST_ELEMENT_CLOCK(elem)			(GST_ELEMENT_CAST(elem)->clock)
 
 /**
  * GST_ELEMENT_PADS:
- * @obj: A #GstElement to query
+ * @elem: A #GstElement to query
  *
  * Get the pads of this elements.
  */
-#define GST_ELEMENT_PADS(obj)			(GST_ELEMENT_CAST(obj)->pads)
+#define GST_ELEMENT_PADS(elem)			(GST_ELEMENT_CAST(elem)->pads)
 
 /**
  * GST_ELEMENT_ERROR:
  * @el:     the element that throws the error
- * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstError)
- * @code:   error code defined for that domain (see #GstError)
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstGError)
+ * @code:   error code defined for that domain (see #GstGError)
  * @text:   the message to display (format string and args enclosed in
             parentheses)
  * @debug:  debugging information for the message (format string and args
@@ -280,8 +279,8 @@ G_STMT_START {								\
 /**
  * GST_ELEMENT_WARNING:
  * @el:     the element that throws the error
- * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstError)
- * @code:   error code defined for that domain (see #GstError)
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstGError)
+ * @code:   error code defined for that domain (see #GstGError)
  * @text:   the message to display (format string and args enclosed in
             parentheses)
  * @debug:  debugging information for the message (format string and args
@@ -305,22 +304,28 @@ G_STMT_START {								\
 } G_STMT_END
 
 /* the state change mutexes and conds */
-#define GST_STATE_GET_LOCK(elem)               (GST_ELEMENT_CAST(elem)->state_lock)
-
 /**
- * GST_STATE_LOCK:
- * @elem:   the #GstElement to take the state lock on
+ * GST_STATE_GET_LOCK:
+ * @elem:   a #GstElement
  *
- * Takes the state lock on the element.
- * This function is used by the core.  It is taken while getting or setting
+ * Get a reference to the state lock of @elem.
+ * This lock is used by the core.  It is taken while getting or setting
  * the state, during state changes, and while finalizing.
  */
+#define GST_STATE_GET_LOCK(elem)               (GST_ELEMENT_CAST(elem)->state_lock)
+/**
+ * GST_STATE_GET_COND:
+ * @elem: a #GstElement 
+ *
+ * Get the conditional used to signal the completion of a state change.
+ */
+#define GST_STATE_GET_COND(elem)               (GST_ELEMENT_CAST(elem)->state_cond)
+
 #define GST_STATE_LOCK(elem)                   g_static_rec_mutex_lock(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_TRYLOCK(elem)                g_static_rec_mutex_trylock(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_UNLOCK(elem)                 g_static_rec_mutex_unlock(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_UNLOCK_FULL(elem)            g_static_rec_mutex_unlock_full(GST_STATE_GET_LOCK(elem))
 #define GST_STATE_LOCK_FULL(elem,t)            g_static_rec_mutex_lock_full(GST_STATE_GET_LOCK(elem), t)
-#define GST_STATE_GET_COND(elem)               (GST_ELEMENT_CAST(elem)->state_cond)
 #define GST_STATE_WAIT(elem)                   g_cond_wait (GST_STATE_GET_COND (elem), \
 							GST_GET_LOCK (elem))
 #define GST_STATE_TIMED_WAIT(elem, timeval)    g_cond_timed_wait (GST_STATE_GET_COND (elem), \
@@ -328,13 +333,42 @@ G_STMT_START {								\
 #define GST_STATE_SIGNAL(elem)                 g_cond_signal (GST_STATE_GET_COND (elem));
 #define GST_STATE_BROADCAST(elem)              g_cond_broadcast (GST_STATE_GET_COND (elem));
 
+/**
+ * GstElement:
+ * @state_lock: Used to serialize execution of gst_element_set_state()
+ * @state_cond: Used to signal completion of a state change
+ * @state_cookie: Used to detect concurrent execution of gst_element_set_state() and
+ *     gst_element_get_state()
+ * @current_state: the current state of an element
+ * @next_state: the next state of an element, can be #GST_STATE_VOID_PENDING if the 
+ *     element is in the correct state.
+ * @pending_state: the final state the element should go to, can be #GST_STATE_VOID_PENDING
+ *     if the element is in the correct state
+ * @last_return: the last return value of an element state change
+ * @bus: the bus of the element. This bus is provided to the element by the parent element
+ *     or the application. A #GstPipeline has a bus of its own.
+ * @clock: the clock of the element. This clock is usually provided by to the element by
+ *     the toplevel #GstPipeline.
+ * @base_time: the time of the clock right before the element is set to PLAYING. Subtracting
+ *     @base_time from the current clock time in the PLAYING state will yield the stream time.
+ * @numpads: number of pads of the element, includes both source and sink pads.
+ * @pads: list of pads
+ * @numsrcpads: number of source pads of the element.
+ * @srcpads: list of source pads
+ * @numsinkpads: number of sink pads of the element.
+ * @sinkpads: list of sink pads
+ * @pads_cookie: updated whenever the a pad is added or removed
+ *
+ * GStreamer element abstract base class.
+ */
 struct _GstElement
 {
   GstObject		object;
 
   /*< public >*/ /* with LOCK */
-  /* element state */
   GStaticRecMutex      *state_lock;
+
+  /* element state */
   GCond                *state_cond;
   guint32		state_cookie;
   GstState              current_state;
@@ -342,7 +376,6 @@ struct _GstElement
   GstState              pending_state;
   GstStateChangeReturn  last_return;
 
-  /*< public >*/ /* with LOCK */
   GstBus	       *bus;
 
   /* allocated clock */
@@ -363,6 +396,31 @@ struct _GstElement
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstElementClass:
+ * @parent_class: the parent class structure
+ * @details: #GstElementDetails for elements of this class
+ * @elementfactory: the #GstElementFactory that creates these elements
+ * @padtemplates: a #GList of #GstPadTemplate
+ * @numpadtemplates: the number of padtemplates 
+ * @pad_templ_cookie: changed whenever the padtemplates change
+ * @request_new_pad: called when a new pad is requested
+ * @release_pad: called when a request pad is to be released
+ * @get_state: get the state of the element
+ * @set_state: set a new state on the element
+ * @change_state: called by @set_state to perform an incremental state change
+ * @set_bus: set a #GstBus on the element
+ * @provide_clock: gets the #GstClock provided by the element
+ * @set_clock: set the #GstClock on the element
+ * @get_index: set a #GstIndex on the element
+ * @set_index: get the #GstIndex of an element
+ * @send_event: send a #GstEvent to the element
+ * @get_query_types: get the supported #GstQueryType of this element
+ * @query: perform a #GstQuery on the element
+ *
+ * GStreamer element class. Override the vmethods to implement the element
+ * functionality.
+ */
 struct _GstElementClass
 {
   GstObjectClass         parent_class;
@@ -381,7 +439,7 @@ struct _GstElementClass
 
   /*< private >*/
   /* signal callbacks */
-  void (*state_changed)	(GstElement *element, GstState old, GstState state);
+  void (*state_changed)	(GstElement *element, GstState old, GstState state); /* FIXME, ABI unused */
   void (*pad_added)	(GstElement *element, GstPad *pad);
   void (*pad_removed)	(GstElement *element, GstPad *pad);
   void (*no_more_pads)	(GstElement *element);

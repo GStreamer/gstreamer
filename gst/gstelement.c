@@ -29,14 +29,14 @@
  * used in a GStreamer pipeline.  As such, it is not a functional entity, and
  * cannot do anything when placed in a pipeline.
  *
- * The name of a GstElement can be get with gst_element_get_name() and set with
+ * The name of a #GstElement can be get with gst_element_get_name() and set with
  * gst_element_set_name().  For speed, GST_ELEMENT_NAME() can be used in the
  * core when using the appropriate locking. Do not use this in plug-ins or
  * applications in order to retain ABI compatibility.
  *
  * All elements have pads (of the type #GstPad).  These pads link to pads on
- * other elements.  Buffers flow between these linked pads.
- * A GstElement has a GList of #GstPad structures for all their input (or sink)
+ * other elements.  #GstBuffer flow between these linked pads.
+ * A #GstElement has a #GList of #GstPad structures for all their input (or sink)
  * and output (or source) pads.
  * Core and plug-in writers can add and remove pads with gst_element_add_pad()
  * and gst_element_remove_pad().
@@ -332,7 +332,8 @@ gst_element_requires_clock (GstElement * element)
  * gst_element_provides_clock:
  * @element: a #GstElement to query
  *
- * Query if the element provides a clock.
+ * Query if the element provides a clock. A #GstClock provided by an
+ * element can be used as the global #GstClock for the pipeline. 
  *
  * Returns: TRUE if the element provides a clock
  *
@@ -506,7 +507,7 @@ gst_element_is_indexable (GstElement * element)
  * @element: a #GstElement.
  * @index: a #GstIndex.
  *
- * Set the specified GstIndex on the element. The refcount of the index
+ * Set @index on the element. The refcount of the index
  * will be increased, any previously set index is unreffed.
  *
  * MT safe.
@@ -567,7 +568,8 @@ gst_element_get_index (GstElement * element)
  * The pad and the element should be unlocked when calling this function.
  *
  * Returns: TRUE if the pad could be added. This function can fail when
- * passing bad arguments or when a pad with the same name already existed.
+ * a pad with the same name already existed or the pad already had another
+ * parent.
  *
  * MT safe.
  */
@@ -660,8 +662,7 @@ no_direction:
  * referenced elsewhere.
  *
  * Returns: TRUE if the pad could be removed. Can return FALSE if the
- * pad is not belonging to the provided element or when wrong parameters
- * are passed to this function.
+ * pad is not belonging to the provided element.
  *
  * MT safe.
  */
@@ -740,7 +741,7 @@ not_our_pad:
  *
  * Use this function to signal that the element does not expect any more pads
  * to show up in the current pipeline. This function should be called whenever
- * pads have been added by the element itself. Elements with GST_PAD_SOMETIMES
+ * pads have been added by the element itself. Elements with #GST_PAD_SOMETIMES
  * pad templates use this in combination with autopluggers to figure out that
  * the element is done initializing its pads.
  *
@@ -1166,7 +1167,7 @@ wrong_direction:
  * Sends an event to an element. If the element doesn't
  * implement an event handler, the event will be forwarded
  * to a random sink pad. This function takes owership of the
- * provided event so you should _ref it if you want to reuse
+ * provided event so you should gst_event_ref() it if you want to reuse
  * the event after this call.
  *
  * Returns: TRUE if the event was handled.
@@ -1287,7 +1288,7 @@ gst_element_get_query_types (GstElement * element)
  * @query: the #GstQuery.
  *
  * Performs a query on the given element. If the format is set
- * to GST_FORMAT_DEFAULT and this function returns TRUE, the
+ * to #GST_FORMAT_DEFAULT and this function returns TRUE, the
  * format pointer will hold the default format.
  * For element that don't implement a query handler, this function
  * forwards the query to a random usable sinkpad of this element.
@@ -1729,15 +1730,24 @@ interrupted:
  * specified timeout value for the state change to complete.
  * If the element completes the state change or goes into
  * an error, this function returns immediatly with a return value of
- * GST_STATE_CHANGE_SUCCESS or GST_STATE_CHANGE_FAILURE respectively.
+ * #GST_STATE_CHANGE_SUCCESS or #GST_STATE_CHANGE_FAILURE respectively.
  *
- * For elements that did not return ASYNC, this function returns the
- * current and pending state immediatly.
+ * For elements that did not return #GST_STATE_CHANGE_ASYNC, this function 
+ * returns the current and pending state immediatly.
  *
- * Returns: GST_STATE_CHANGE_SUCCESS if the element has no more pending state and
- *          the last state change succeeded, GST_STATE_CHANGE_ASYNC
+ * This function returns #GST_STATE_CHANGE_NO_PREROLL if the element 
+ * successfully changed its state but is not able to provide data yet. This mostly
+ * happens for live sources that only produce data in the PLAYING state. 
+ * While the state change return is equivalent to #GST_STATE_CHANGE_SUCCESS, it
+ * is returned to the application to signal that some sink elements might not
+ * be able to complete their state change because an element is not producing
+ * data to complete the preroll. When setting the element to playing, the preroll
+ * will complete and playback will start.
+ *
+ * Returns: #GST_STATE_CHANGE_SUCCESS if the element has no more pending state and
+ *          the last state change succeeded, #GST_STATE_CHANGE_ASYNC
  *          if the element is still performing a state change or
- *          GST_STATE_CHANGE_FAILURE if the last state change failed.
+ *          #GST_STATE_CHANGE_FAILURE if the last state change failed.
  *
  * MT safe.
  */
@@ -1994,8 +2004,9 @@ nothing_lost:
  * requested state by going through all the intermediary states and calling
  * the class's state change function for each.
  *
- * This function can return GST_STATE_CHANGE_ASYNC, in which case the
- * element will perform the remainder of the state change asynchronously.
+ * This function can return #GST_STATE_CHANGE_ASYNC, in which case the
+ * element will perform the remainder of the state change asynchronously in
+ * another thread.
  * An application can use gst_element_get_state() to wait for the completion
  * of the state change or it can wait for a state change message on the bus.
  *
