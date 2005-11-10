@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wim.taymans@chello.be>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstquery.c: GstQueryType registration
+ * gstquery.c: GstQueryType registration and Query parsing/creation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,14 +23,17 @@
 
 /**
  * SECTION:gstquery
- * @short_description: Dynamically register new query types and parse results
+ * @short_description: Dynamically register new query types. Provide functions
+ *                     to create queries, and to set and parse values in them.
  * @see_also: #GstPad, #GstElement
  *
  * GstQuery functions are used to register a new query types to the gstreamer
  * core.
  * Query types can be used to perform queries on pads and elements.
  *
- * Query answer can be parsed using gst_query_parse_xxx() helpers.
+ * Queries can be created using the gst_query_new_xxx() functions.  
+ * Query values can be set using gst_query_set_xxx(), and parsed using 
+ * gst_query_parse_xxx() helpers.
  */
 #include <string.h>
 
@@ -214,7 +217,7 @@ gst_query_type_register (const gchar * nick, const gchar * description)
  * gst_query_type_get_by_nick:
  * @nick: The nick of the query
  *
- * Returns: The query registered with @nick or GST_QUERY_NONE
+ * Returns: The query registered with @nick or #GST_QUERY_NONE
  * if the query was not registered.
  */
 GstQueryType
@@ -329,7 +332,8 @@ gst_query_new (GstQueryType type, GstStructure * structure)
  * @format: the default #GstFormat for the new query
  *
  * Constructs a new query stream position query object. Use gst_query_unref()
- * when done with it.
+ * when done with it. A position query is used to query the current position
+ * of playback in the streams, in some format.
  *
  * Returns: A #GstQuery
  */
@@ -396,7 +400,8 @@ gst_query_parse_position (GstQuery * query, GstFormat * format, gint64 * cur)
  * @format: the #GstFormat for this duration query
  *
  * Constructs a new stream duration query object to query in the given format. 
- * Use gst_query_unref() when done with it.
+ * Use gst_query_unref() when done with it. A duration query will give the
+ * total length of the stream.
  *
  * Returns: A #GstQuery
  */
@@ -467,7 +472,8 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
  * @dest_format: the target #GstFormat
  *
  * Constructs a new convert query object. Use gst_query_unref()
- * when done with it.
+ * when done with it. A convert query is used to ask for a conversion between
+ * one format and another.
  *
  * Returns: A #GstQuery
  */
@@ -555,7 +561,8 @@ gst_query_parse_convert (GstQuery * query, GstFormat * src_format,
  * @format: the #GstFormat for the new query
  *
  * Constructs a new segment query object. Use gst_query_unref()
- * when done with it.
+ * when done with it. A segment query is used to discover information about the
+ * currently configured segment for playback.
  *
  * Returns: a #GstQuery
  */

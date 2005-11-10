@@ -44,7 +44,7 @@ G_BEGIN_DECLS
  * @GST_QUERY_RATE: current rate of the stream
  * @GST_QUERY_SEEKING: seeking capabilities
  * @GST_QUERY_SEGMENT: segment start/stop positions
- * @GST_QUERY_CONVERT: convert values
+ * @GST_QUERY_CONVERT: convert values between formats
  * @GST_QUERY_FORMATS: query supported formats for convert
  *
  * Standard predefined Query types
