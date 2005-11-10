@@ -1,3 +1,10 @@
+2005-11-10  Daniel Amelang  <daniel dot amelang at gmail dot com>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_udta):
+	  Add support for custom genre tags.
+
 2005-11-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/tarkin/wavelet.c:
