@@ -1,3 +1,10 @@
+2005-11-10  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_event), (gst_ogg_demux_init),
+	(gst_ogg_demux_configure_segment), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_loop), (gst_ogg_demux_change_state):
+	Modernise the seek code.
+
 2005-11-10  Michael Smith <msmith@fluendo.com>
 	
 	* gst/playback/gstplaybasebin.c: (group_commit), (new_decoded_pad),
