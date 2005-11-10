@@ -85,6 +85,7 @@ static GstElementClass *parent_class = NULL;
 
 /*static guint gst_ffmpegcsp_signals[LAST_SIGNAL] = { 0 }; */
 
+/* copies the given caps */
 static GstCaps *
 gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
 {
@@ -122,17 +123,26 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
   return caps;
 }
 
+/* The caps can be transformed into any other caps with format info removed.
+ * However, we should prefer passthrough, so if passthrough is possible,
+ * put it first in the list. */
 static GstCaps *
 gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps)
 {
   GstFFMpegCsp *space;
+  GstCaps *template;
   GstCaps *result;
 
   space = GST_FFMPEGCSP (btrans);
 
-  result = gst_ffmpegcsp_caps_remove_format_info (caps);
+  template = gst_ffmpegcsp_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
+  result = gst_caps_intersect (caps, template);
 
+  gst_caps_append (result, gst_ffmpegcsp_caps_remove_format_info (caps));
+
+  GST_DEBUG_OBJECT (btrans, "transformed %" GST_PTR_FORMAT " into %"
+      GST_PTR_FORMAT, caps, result);
   return result;
 }
 
