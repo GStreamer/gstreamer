@@ -1324,6 +1324,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
   guint64 cluster, blockgroup;
   gboolean write_duration;
   guint16 relative_timestamp;
+  guint64 block_duration;
 
   /* which stream to write from? */
   best = gst_matroska_mux_best_pad (mux);
@@ -1424,9 +1425,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
 
   /* Check if the duration differs from the default duration. */
   write_duration = FALSE;
+  block_duration = GST_BUFFER_DURATION (buf);
   if (GST_BUFFER_DURATION_IS_VALID (buf)) {
-    guint64 block_duration = GST_BUFFER_DURATION (buf);
-
     if (block_duration != best->track->default_duration) {
       write_duration = TRUE;
     }
@@ -1460,8 +1460,6 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux)
     gst_ebml_write_buffer (ebml, hdr);
     gst_ebml_write_buffer (ebml, buf);
     if (write_duration) {
-      guint64 block_duration = GST_BUFFER_DURATION (buf);
-
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_BLOCKDURATION,
           block_duration / mux->time_scale);
     }

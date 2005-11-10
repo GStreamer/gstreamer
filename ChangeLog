@@ -1,3 +1,12 @@
+2005-11-10  Josef Zlomek  <josef dot zlomek at xeris dot cz>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_write_data):
+	  Don't try to ready buffer duration from buffer that we don't
+	  own any  longer and that might already have been unreffed.
+	  (#321136)
+
 2005-11-09  Zeeshan Ali  <zeenix@gmail.com>
 
 	* gst/flx/gstflxdec.c: (flx_decode_delta_fli),
