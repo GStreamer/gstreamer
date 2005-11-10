@@ -723,7 +723,11 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
             pad->state = GST_OGG_PAD_STATE_DATA;
           }
         }
+      } else {
+        GST_DEBUG ("EOS on pad");
+        pad->eos = TRUE;
       }
+
       pad->buffer = buf;
     }
 
@@ -732,7 +736,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
     if (pad->buffer) {
       if (gst_ogg_mux_compare_pads (ogg_mux, bestpad, pad) > 0)
         bestpad = pad;
-    } else {
+    } else if (!pad->eos) {
       still_hungry = pad;
     }
   }
@@ -1030,11 +1034,13 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
  *    packet is the last of the stream. We need to do this because the ogg
  *    spec mandates that the last packet should have the EOS flag set before
  *    sending it to ogg. FIXME: Apparently we're allowed to send empty 'nil'
- *    pages with the EOS flag set for EOS, so we could do this.
+ *    pages with the EOS flag set for EOS, so we could do this. Not sure how
+ *    that works, though. TODO: 'read ahead one more buffer' is a bit funky
+ *    with collectpads. Rethink this.
  * 4) pages get queued on a per-pad queue. Every time a page is queued, a
  *    dequeue is called, which will dequeue the oldest page on any pad, provided
- *    that ALL pads have at least one marked page in the queue (TODO: or that
- *    pad is at EOS?)
+ *    that ALL pads have at least one marked page in the queue (or remaining
+ *    pad are at EOS)
  */
 static GstFlowReturn
 gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
@@ -1054,7 +1060,9 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 
   GST_DEBUG ("best pad %p", best);
 
-  if (!best) {                  /* EOS : FIXME !! We need to handle EOS correctly */
+  if (!best) {                  /* EOS : FIXME !! We need to handle EOS correctly, and set EOS
+                                   flags on the ogg pages. */
+    GST_DEBUG ("Pushing EOS");
     gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
     return GST_FLOW_WRONG_STATE;
   }

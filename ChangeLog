@@ -1,3 +1,13 @@
+2005-11-10  Michael Smith <msmith@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_request_new_pad),
+	(gst_ogg_mux_push_buffer), (gst_ogg_mux_dequeue_page),
+	(gst_ogg_mux_pad_queue_page), (gst_ogg_mux_queue_pads),
+	(gst_ogg_mux_collected):
+	 Fix EOS handling, partially. Now forwarding an EOS event once we have
+	 EOS on all pads works correctly. However, we still don't properly set
+	 EOS on the actual ogg stream pages.
+
 2005-11-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybin.c: (gst_play_bin_dispose):
