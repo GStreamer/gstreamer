@@ -4934,8 +4934,6 @@
 
 	* configure.ac:
 	  hunting season on 0.9 is now OPEN
-<<<<<<< ChangeLog
-=======
 
 2005-02-22  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -20525,5 +20523,3 @@
 
 	* ChangeLog: moved to gstreamer/docs/random/old/ChangeLog.gst-plugins
         * moved CVS to freedesktop.org
-
->>>>>>> 1.1891
