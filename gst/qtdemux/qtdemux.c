@@ -842,6 +842,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
 #define FOURCC_rmra	GST_MAKE_FOURCC('r','m','r','a')
 #define FOURCC_rmda	GST_MAKE_FOURCC('r','m','d','a')
 #define FOURCC_rdrf	GST_MAKE_FOURCC('r','d','r','f')
+#define FOURCC__gen	GST_MAKE_FOURCC(0xa9, 'g', 'e', 'n')
 
 static void qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth);
 static void qtdemux_dump_tkhd (GstQTDemux * qtdemux, void *buffer, int depth);
@@ -945,6 +946,7 @@ QtNodeType qt_node_types[] = {
   {FOURCC_rmra, "rmra", QT_CONTAINER,},
   {FOURCC_rmda, "rmda", QT_CONTAINER,},
   {FOURCC_rdrf, "rdrf", 0,},
+  {FOURCC__gen, "Custom Genre", QT_CONTAINER,},
   {0, "unknown", 0},
 };
 static int n_qt_node_types = sizeof (qt_node_types) / sizeof (qt_node_types[0]);
@@ -2395,6 +2397,11 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC_gnre);
   if (node) {
     qtdemux_tag_add_gnre (qtdemux, GST_TAG_GENRE, node);
+  } else {
+    node = qtdemux_tree_get_child_by_type (ilst, FOURCC__gen);
+    if (node) {
+      qtdemux_tag_add_str (qtdemux, GST_TAG_GENRE, node);
+    }
   }
 }
 
