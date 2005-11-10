@@ -1,3 +1,13 @@
+2005-11-10  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstmodule.c: (init_gst):
+	Added GST_TAG_* string constants
+	* gst/gstpad.override:
+	Make probe handler return TRUE if the Python callback doesn't return
+	anything.
+	* gst/gsttaglist.override:
+	Cleaned up gst.TagList, works as a dictionnary.
+
 2005-11-08  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:

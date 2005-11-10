@@ -205,6 +205,43 @@ init_gst (void)
      PyModule_AddObject (m, "TYPE_TYPE_FIND_FACTORY",
                          pyg_type_wrapper_new(GST_TYPE_TYPE_FIND_FACTORY));
 
+     /* GStreamer core tags */
+     PyModule_AddStringConstant (m, "TAG_TITLE", GST_TAG_TITLE);
+     PyModule_AddStringConstant (m, "TAG_ARTIST", GST_TAG_ARTIST);
+     PyModule_AddStringConstant (m, "TAG_ALBUM", GST_TAG_ALBUM);
+     PyModule_AddStringConstant (m, "TAG_DATE", GST_TAG_DATE);
+     PyModule_AddStringConstant (m, "TAG_GENRE", GST_TAG_GENRE);
+     PyModule_AddStringConstant (m, "TAG_COMMENT", GST_TAG_COMMENT);
+     PyModule_AddStringConstant (m, "TAG_TRACK_NUMBER", GST_TAG_TRACK_NUMBER);
+     PyModule_AddStringConstant (m, "TAG_TRACK_COUNT", GST_TAG_TRACK_COUNT);
+     PyModule_AddStringConstant (m, "TAG_ALBUM_VOLUME_NUMBER", GST_TAG_ALBUM_VOLUME_NUMBER);
+     PyModule_AddStringConstant (m, "TAG_ALBUM_VOLUME_COUNT", GST_TAG_ALBUM_VOLUME_COUNT);
+     PyModule_AddStringConstant (m, "TAG_LOCATION", GST_TAG_LOCATION);
+     PyModule_AddStringConstant (m, "TAG_DESCRIPTION", GST_TAG_DESCRIPTION);
+     PyModule_AddStringConstant (m, "TAG_VERSION", GST_TAG_VERSION);
+     PyModule_AddStringConstant (m, "TAG_ISRC", GST_TAG_ISRC);
+     PyModule_AddStringConstant (m, "TAG_ORGANIZATION", GST_TAG_ORGANIZATION);
+     PyModule_AddStringConstant (m, "TAG_COPYRIGHT", GST_TAG_COPYRIGHT);
+     PyModule_AddStringConstant (m, "TAG_CONTACT", GST_TAG_CONTACT);
+     PyModule_AddStringConstant (m, "TAG_LICENSE", GST_TAG_LICENSE);
+     PyModule_AddStringConstant (m, "TAG_PERFORMER", GST_TAG_PERFORMER);
+     PyModule_AddStringConstant (m, "TAG_DURATION", GST_TAG_DURATION);
+     PyModule_AddStringConstant (m, "TAG_CODEC", GST_TAG_CODEC);
+     PyModule_AddStringConstant (m, "TAG_VIDEO_CODEC", GST_TAG_VIDEO_CODEC);
+     PyModule_AddStringConstant (m, "TAG_AUDIO_CODEC", GST_TAG_AUDIO_CODEC);
+     PyModule_AddStringConstant (m, "TAG_BITRATE", GST_TAG_BITRATE);
+     PyModule_AddStringConstant (m, "TAG_NOMINAL_BITRATE", GST_TAG_NOMINAL_BITRATE);
+     PyModule_AddStringConstant (m, "TAG_MINIMUM_BITRATE", GST_TAG_MINIMUM_BITRATE);
+     PyModule_AddStringConstant (m, "TAG_MAXIMUM_BITRATE", GST_TAG_MAXIMUM_BITRATE);
+     PyModule_AddStringConstant (m, "TAG_SERIAL", GST_TAG_SERIAL);
+     PyModule_AddStringConstant (m, "TAG_ENCODER", GST_TAG_ENCODER);
+     PyModule_AddStringConstant (m, "TAG_ENCODER_VERSION", GST_TAG_ENCODER_VERSION);
+     PyModule_AddStringConstant (m, "TAG_TRACK_GAIN", GST_TAG_TRACK_GAIN);
+     PyModule_AddStringConstant (m, "TAG_TRACK_PEAK", GST_TAG_TRACK_PEAK);
+     PyModule_AddStringConstant (m, "TAG_ALBUM_GAIN", GST_TAG_ALBUM_GAIN);
+     PyModule_AddStringConstant (m, "TAG_ALBUM_PEAK", GST_TAG_ALBUM_PEAK);
+     PyModule_AddStringConstant (m, "TAG_LANGUAGE_CODE", GST_TAG_LANGUAGE_CODE);
+
      g_timeout_add_full (0, 100, python_do_pending_calls, NULL, NULL);
 
      atexit(gst_deinit);

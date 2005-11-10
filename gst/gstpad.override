@@ -147,7 +147,7 @@ probe_handler_marshal(GstPad *pad, GstMiniObject *data, gpointer user_data)
 
     if (!ret) {
         PyErr_Print();
-        res = FALSE;
+        res = TRUE;
     } else {
         res = PyObject_IsTrue(ret);
         Py_DECREF(ret);
