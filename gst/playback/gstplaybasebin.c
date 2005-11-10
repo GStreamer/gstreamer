@@ -401,8 +401,10 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
   GST_DEBUG ("signaled group done");
 
   if (!subtitle && !had_active_group) {
-    if (!prepare_output (play_base_bin))
+    if (!prepare_output (play_base_bin)) {
+      GROUP_UNLOCK (play_base_bin);
       return;
+    }
 
     setup_substreams (play_base_bin);
     GST_DEBUG ("Emitting signal");
@@ -988,6 +990,9 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   if (type == GST_STREAM_TYPE_UNKNOWN || group->type[type - 1].npads > 0) {
     guint id;
 
+    GST_DEBUG ("Adding silence_stream data probe on type %d (npads %d)", type,
+        group->type[type - 1].npads);
+
     id = gst_pad_add_data_probe (GST_PAD_CAST (pad),
         G_CALLBACK (silence_stream), info);
     g_object_set_data (G_OBJECT (pad), "eat_probe", GINT_TO_POINTER (id));
@@ -1115,7 +1120,7 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
     }
   }
 
-  /* now acticate the right sources. Don't forget that during preroll,
+  /* now activate the right sources. Don't forget that during preroll,
    * we set the first source to forwarding and ignored the rest. */
   for (n = 0; n < NUM_TYPES; n++) {
     set_active_source (play_base_bin, n + 1, play_base_bin->current[n]);
@@ -1512,18 +1517,24 @@ set_active_source (GstPlayBaseBin * play_base_bin,
   play_base_bin->current[type - 1] = source_num;
 
   group = get_active_group (play_base_bin);
-  if (!group || !group->type[type - 1].preroll)
+  if (!group || !group->type[type - 1].preroll) {
+    GST_LOG ("No active group, or group for type %d has no preroll", type);
     return;
+  }
 
   for (s = group->streaminfo; s; s = s->next) {
     GstStreamInfo *info = s->data;
 
     if (info->type == type) {
       if (num == source_num) {
+        GST_LOG ("Unmuting (if already muted) source %d of type %d", source_num,
+            type);
         g_object_set (s->data, "mute", FALSE, NULL);
         have_active = TRUE;
       } else {
         guint id;
+
+        GST_LOG_OBJECT (info->object, "Muting source %d of type %d", num, type);
 
         id = gst_pad_add_buffer_probe (GST_PAD_CAST (info->object),
             G_CALLBACK (mute_stream), info);
@@ -1533,6 +1544,7 @@ set_active_source (GstPlayBaseBin * play_base_bin,
     }
   }
 
+  GST_LOG ("Muting group type: %d -> %d", type, !have_active);
   mute_group_type (group, type, !have_active);
 }
 

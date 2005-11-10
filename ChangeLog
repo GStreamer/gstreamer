@@ -1,3 +1,10 @@
+2005-11-10  Michael Smith <msmith@fluendo.com>
+	
+	* gst/playback/gstplaybasebin.c: (group_commit), (new_decoded_pad),
+	(setup_substreams), (set_active_source):
+	  Unlock GROUP_LOCK in failure cases, so that we don't deadlock when
+	  trying to go to NULL if we failed to read a file.
+
 2005-11-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:
