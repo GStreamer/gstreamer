@@ -242,7 +242,7 @@ gst_v4lsrc_fixate (GstPad * pad, GstCaps * caps)
         7.5);
 
     v = gst_structure_get_value (structure, "format");
-    if (G_VALUE_TYPE (v) != GST_TYPE_FOURCC) {
+    if (v && G_VALUE_TYPE (v) != GST_TYPE_FOURCC) {
       guint32 fourcc;
 
       g_return_if_fail (G_VALUE_TYPE (v) == GST_TYPE_LIST);
