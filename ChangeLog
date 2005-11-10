@@ -1,3 +1,9 @@
+2005-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_open):
+	  check for ALSA errors properly, instead of relying on ALSA's
+	  error strings to serve to the user.
+
 2005-11-10  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_event), (gst_ogg_demux_init),

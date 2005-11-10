@@ -516,8 +516,12 @@ gst_alsasink_open (GstAudioSink * asink)
   /* ERRORS */
 open_error:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Playback open error: %s", snd_strerror (err)), (NULL));
+    if (err == -EBUSY) {
+      GST_ELEMENT_ERROR (alsa, RESOURCE, BUSY, (NULL), (NULL));
+    } else {
+      GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_WRITE,
+          (NULL), ("Playback open error: %s", snd_strerror (err)));
+    }
     return FALSE;
   }
 }
