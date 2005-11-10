@@ -82,7 +82,7 @@ static gboolean gst_sinesrc_src_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn gst_sinesrc_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer);
 static gboolean gst_sinesrc_start (GstBaseSrc * basesrc);
-
+static gboolean gst_sinesrc_newsegment (GstBaseSrc * basesrc);
 
 static void
 gst_sinesrc_base_init (gpointer g_class)
@@ -130,6 +130,7 @@ gst_sinesrc_class_init (GstSineSrcClass * klass)
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_sinesrc_start);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_sinesrc_create);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_sinesrc_unlock);
+  gstbasesrc_class->newsegment = GST_DEBUG_FUNCPTR (gst_sinesrc_newsegment);
 }
 
 static void
@@ -182,6 +183,7 @@ gst_sinesrc_get_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
     0,
   };
 
@@ -230,7 +232,14 @@ gst_sinesrc_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
 
       gst_query_parse_duration (query, &format, NULL);
-      gst_query_set_duration (query, format, -1);
+      if (format == GST_FORMAT_TIME && GST_BASE_SRC (src)->num_buffers > 0) {
+        gst_query_set_duration (query, GST_FORMAT_TIME, GST_SECOND *
+            GST_BASE_SRC (src)->num_buffers * src->samples_per_buffer /
+            src->samplerate);
+        res = TRUE;
+      } else {
+        gst_query_set_duration (query, format, -1);
+      }
       break;
     }
     default:
@@ -407,6 +416,30 @@ gst_sinesrc_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_sinesrc_newsegment (GstBaseSrc * basesrc)
+{
+  GstSineSrc *src = GST_SINESRC (basesrc);
+  GstEvent *event;
+  gint64 start, end;
+
+  if (basesrc->num_buffers_left > 0) {
+    start = src->timestamp;
+    end = start + GST_SECOND * basesrc->num_buffers_left *
+        src->samples_per_buffer / src->samplerate;
+  } else {
+    start = src->timestamp;
+    end = GST_CLOCK_TIME_NONE;
+  }
+
+  GST_DEBUG_OBJECT (basesrc, "Sending newsegment from %" GST_TIME_FORMAT
+      " to %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
+
+  event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, start, end, 0);
+
+  return gst_pad_push_event (basesrc->srcpad, event);
 }
 
 static gboolean
