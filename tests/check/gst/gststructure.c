@@ -33,6 +33,9 @@ GST_START_TEST (test_from_string_int)
     "video/x-raw-rgb, red_mask = (int) 0x7FFFFFFF",
     "video/x-raw-rgb, red_mask = (int) 0x80000000",
     "video/x-raw-rgb, red_mask = (int) 0xFF000000",
+    /* result from
+     * gst-launch ... ! "video/x-raw-rgb, red_mask=(int)0xFF000000" ! ... */
+    "video/x-raw-rgb,\\ red_mask=(int)0xFF000000",
   };
   gint results[] = {
     123456,
@@ -41,6 +44,7 @@ GST_START_TEST (test_from_string_int)
     0xFFFF,
     0x7FFFFFFF,
     0x80000000,
+    0xFF000000,
     0xFF000000,
   };
   GstStructure *structure;

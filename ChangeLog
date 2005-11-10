@@ -1,3 +1,16 @@
+2005-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Tim-Philipp Müller <tim at centricular dot net>
+
+	* gst/gststructure.c: (gst_structure_parse_field),
+	(gst_structure_from_string):
+	  Forward-port a 0.8 patch to handle escaped spaces in structure string,
+	  so that gst_parse_launch() can deal with spaces in filtered link
+	  caps (fixes #164479)
+	* check/gst/capslist.h:
+	* check/gst/gststructure.c: (GST_START_TEST):
+	  add unit tests for this change
+
 2005-11-10  Wim Taymans  <wim@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:

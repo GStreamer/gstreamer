@@ -14,6 +14,7 @@ static const gchar *caps_list[] = {
   "video/x-raw-yuv, format=(fourcc){ I420 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(double)[ 0, 1.7976931348623157e+308 ]",
   "video/x-raw-rgb, bpp = (int) 32, depth = (int) 24, endianness = (int) BIG_ENDIAN, red_mask = (int) 0x000000FF, framerate = (double) [ 0, max ]",
   "video/x-raw-rgb, bpp = (int) 32, depth = (int) 24, endianness = (int) BIG_ENDIAN, red_mask = (int) 0xFF000000, framerate = (double) [ 0, max ]",
+  "video/x-raw-rgb,\\ bpp=(int)32",
   "ANY",
   "EMPTY"
 };

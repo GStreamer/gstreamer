@@ -1542,14 +1542,14 @@ gst_structure_parse_field (gchar * str,
 
   s = str;
 
-  while (g_ascii_isspace (*s))
+  while (g_ascii_isspace (*s) || (s[0] == '\\' && g_ascii_isspace (s[1])))
     s++;
   name = s;
   if (!gst_structure_parse_simple_string (s, &name_end))
     return FALSE;
 
   s = name_end;
-  while (g_ascii_isspace (*s))
+  while (g_ascii_isspace (*s) || (s[0] == '\\' && g_ascii_isspace (s[1])))
     s++;
 
   if (*s != '=')
@@ -1685,7 +1685,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   if (!gst_structure_parse_string (r, &w, &r))
     goto error;
 
-  while (g_ascii_isspace (*r))
+  while (g_ascii_isspace (*r) || (r[0] == '\\' && g_ascii_isspace (r[1])))
     r++;
   if (*r != 0 && *r != ';' && *r != ',')
     goto error;
@@ -1699,14 +1699,16 @@ gst_structure_from_string (const gchar * string, gchar ** end)
     if (*r != ',')
       goto error;
     r++;
-    while (*r && g_ascii_isspace (*r))
+    while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
+                && g_ascii_isspace (r[1]))))
       r++;
 
     memset (&field, 0, sizeof (field));
     if (!gst_structure_parse_field (r, &r, &field))
       goto error;
     gst_structure_set_field (structure, &field);
-    while (*r && g_ascii_isspace (*r))
+    while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
+                && g_ascii_isspace (r[1]))))
       r++;
   }
 
