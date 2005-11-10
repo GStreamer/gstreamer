@@ -1,3 +1,10 @@
+2005-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_transform_caps):
+	* gst/gstcaps.c: (gst_caps_intersect):
+	  Don't call gst_caps_do_simplify - it doesn't respect order of caps
+	  and it's not needed.
+
 2005-11-10  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:

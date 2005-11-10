@@ -406,7 +406,6 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
         gst_caps_append (ret, temp);
       }
     }
-    gst_caps_do_simplify (ret);
   } else {
     /* else use the identity transform */
     ret = gst_caps_ref (caps);

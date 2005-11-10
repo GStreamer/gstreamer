@@ -1054,7 +1054,6 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
       j--;
     }
   }
-  gst_caps_do_simplify (dest);
   return dest;
 }
 
