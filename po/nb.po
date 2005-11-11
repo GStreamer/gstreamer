@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-23 12:58+0200\n"
+"POT-Creation-Date: 2005-11-11 18:35+0100\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -85,39 +85,43 @@ msgstr "Ingen filnavn oppgitt"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
 
-#: ext/ogg/gstoggdemux.c:2294
+#: ext/ogg/gstoggdemux.c:2401
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1322
+#: gst/playback/gstplaybasebin.c:1327
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1328
+#: gst/playback/gstplaybasebin.c:1333
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1332
+#: gst/playback/gstplaybasebin.c:1337
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1339
+#: gst/playback/gstplaybasebin.c:1344
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1405
+#: gst/playback/gstplaybasebin.c:1410
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1408
+#: gst/playback/gstplaybasebin.c:1413
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "Enhet «%s» kan ikke fange data."
+
+#: gst/playback/gstplaybin.c:411
+msgid "Both autovideosink and xvimagesink elements are missing."
+msgstr ""
 
 #~ msgid "No device specified."
 #~ msgstr "Ingen enhet oppgitt."
