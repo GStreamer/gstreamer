@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Good Plug-ins 0.9.4 "Dromiceiomimus"
+GStreamer: Release notes for GStreamer Good Plug-ins 0.9.5 "Phone Alarm"
         
 
 The GStreamer team is petrified to announce a new release
@@ -53,14 +53,17 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * DV/Firewire fixes
-      * speexenc, cairotimeoverlay, matroska, pngdec, flxdec, videomixer, alphacolor ported
+      * matroskamux fixes
+      * wavenc fixes
+      * cairotextoverlay ported
 
 Bugs fixed in this release
     
-      * 316204 : MinGW compilation: smtpe plugin has undefined symbols fro...
-      * 316205 : Debug category for wavenc is not defined
-      * 318847 : Matroska muxer port to 0.9
+      * 315194 : Licence information inconsistency of gst-plugins-good/gst...
+      * 319731 : [matroska] SimpleBlock support for muxer and demuxer
+      * 320308 : [matroska] set timestamps for buffers with ebml elements
+      * 320920 : [osssink] tries to reuse a bad file descriptor
+      * 321136 : [matroska-mux] avoid reading from unref'ed buffer
 
 Download
 
@@ -90,13 +93,14 @@ Applications
   
 Contributors to this release
     
+      * Alessandro Decina
       * Andy Wingo
+      * Christian Schaller
       * Edgard Lima
       * Edward Hervey
-      * Julien Moutte
-      * Michael Benes
-      * Michael Smith
-      * Stefan Kost
+      * Josef Zlomek
+      * Julien MOUTTE
+      * Michal Benes
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans

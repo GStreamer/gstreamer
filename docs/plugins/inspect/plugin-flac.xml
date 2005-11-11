@@ -3,7 +3,7 @@
   <description>The FLAC Lossless compressor Codec</description>
   <filename>../../ext/flac/.libs/libgstflac.so</filename>
   <basename>libgstflac.so</basename>
-  <version>0.9.4</version>
+  <version>0.9.5</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer source release</package>

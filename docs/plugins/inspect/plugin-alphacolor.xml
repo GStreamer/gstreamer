@@ -3,7 +3,7 @@
   <description>RGB-&gt;YUV colorspace conversion preserving the alpha channels</description>
   <filename>../../gst/alpha/.libs/libgstalphacolor.so</filename>
   <basename>libgstalphacolor.so</basename>
-  <version>0.9.4</version>
+  <version>0.9.5</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer source release</package>

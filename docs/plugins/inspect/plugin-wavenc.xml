@@ -3,7 +3,7 @@
   <description>Encode raw audio into WAV</description>
   <filename>../../gst/wavenc/.libs/libgstwavenc.so</filename>
   <basename>libgstwavenc.so</basename>
-  <version>0.9.4</version>
+  <version>0.9.5</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer source release</package>

@@ -1,4 +1,18 @@
-This is GStreamer Good Plug-ins 0.9.4, "Dromiceiomimus"
+This is GStreamer Good Plug-ins 0.9.5, "Phone Alarm"
+
+Changes since 0.9.4:
+    
+      * matroskamux fixes
+      * wavenc fixes
+      * cairotextoverlay ported
+
+Bugs fixed since 0.9.4:
+    
+      * 315194 : Licence information inconsistency of gst-plugins-good/gst...
+      * 319731 : [matroska] SimpleBlock support for muxer and demuxer
+      * 320308 : [matroska] set timestamps for buffers with ebml elements
+      * 320920 : [osssink] tries to reuse a bad file descriptor
+      * 321136 : [matroska-mux] avoid reading from unref'ed buffer
 
 Changes since 0.9.3:
 

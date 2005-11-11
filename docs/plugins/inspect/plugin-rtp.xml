@@ -3,12 +3,19 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.9.4</version>
-  <license>GPL</license>
+  <version>0.9.5</version>
+  <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer source release</package>
   <origin>http://gstreamer.freedesktop.org/</origin>
   <elements>
+    <element>
+      <name>asteriskh263</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Extracts H263 video from RTP and encodes in Asterisk H263 format</description>
+      <author>Neil Stratford &lt;neils@vipadia.com&gt;</author>
+    </element>
     <element>
       <name>rtpamrdec</name>
       <longname>RTP packet parser</longname>
@@ -31,18 +38,39 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
+      <name>rtpg711dec</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Extracts PCMU/PCMA audio from RTP packets</description>
+      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpg711enc</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Encoder/Network</class>
+      <description>Encodes PCMU/PCMA audio into a RTP packet</description>
+      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+    </element>
+    <element>
       <name>rtpgsmenc</name>
       <longname>RTP GSM Audio Encoder</longname>
       <class>Codec/Encoder/Network</class>
       <description>Encodes GSM audio into a RTP packet</description>
-      <author>Zeeshan Ali &lt;zak147@yahoo.com&gt;</author>
+      <author>Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
     </element>
     <element>
       <name>rtpgsmparse</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Parser/Network</class>
       <description>Extracts GSM audio from RTP packets</description>
-      <author>Zeeshan Ali &lt;zak147@yahoo.com&gt;</author>
+      <author>Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
+    </element>
+    <element>
+      <name>rtph263enc</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Encoder/Network</class>
+      <description>Encodes H263 video in RTP packets (RFC 2190)</description>
+      <author>Neil Stratford &lt;neils@vipadia.com&gt;</author>
     </element>
     <element>
       <name>rtph263pdec</name>
