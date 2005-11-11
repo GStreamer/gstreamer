@@ -1,5 +1,16 @@
 2005-11-11  Wim Taymans  <wim@fluendo.com>
 
+	* gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buf),
+	(gst_base_transform_handle_buffer):
+	Small cleanups.
+	If we're processing a buffer and need to allocate an output
+	buffer, we cannot accept a format change. If we did get a 
+	format change, we have to alloc a buffer ourselves of the 
+	right size.
+
+2005-11-11  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_get_caps), (gst_pad_peer_get_caps):
 	While checking the flag for reentrancy in the gstcaps function
 	is nice to detect recursive invocations, it also makes it 

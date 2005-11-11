@@ -785,10 +785,19 @@ failed_configure:
   }
 }
 
-/* Allocate a buffer using gst_pad_alloc_buffer */
+/* Allocate a buffer using gst_pad_alloc_buffer.
+ *
+ * This function can trigger a renegotiation on the source pad when the
+ * peer alloc_buffer function sets new caps. Since we currently are
+ * processing a buffer on the sinkpad when this function is called, we cannot
+ * reconfigure the transform with sinkcaps different from those of the current
+ * buffer. FIXME, we currently don't check if the pluging can transform to the
+ * new srcpad caps using the same sinkcaps, we alloc a proper outbuf buffer
+ * ourselves instead.
+ */
 static GstFlowReturn
 gst_base_transform_prepare_output_buf (GstBaseTransform * trans,
-    GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf)
+    GstBuffer * in_buf, gint out_size, GstCaps * out_caps, GstBuffer ** out_buf)
 {
   GstBaseTransformClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -796,52 +805,71 @@ gst_base_transform_prepare_output_buf (GstBaseTransform * trans,
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
+  /* we cannot reconfigure the element yet as we are still processing
+   * the old buffer. We will therefore delay the reconfiguration of the
+   * element until we have processed this last buffer. */
+  trans->delay_configure = TRUE;
+
+  /* see if the subclass wants to alloc a buffer */
   if (bclass->prepare_output_buffer) {
-    ret = bclass->prepare_output_buffer (trans, input, size, caps, buf);
+    ret =
+        bclass->prepare_output_buffer (trans, in_buf, out_size, out_caps,
+        out_buf);
     if (ret != GST_FLOW_OK)
-      return ret;
+      goto done;
   }
 
   /* See if we want to prepare the buffer for in place output */
-  if (*buf == NULL && GST_BUFFER_SIZE (input) == size && bclass->transform_ip) {
-    if (gst_buffer_is_writable (input)) {
+  if (*out_buf == NULL && GST_BUFFER_SIZE (in_buf) == out_size
+      && bclass->transform_ip) {
+    if (gst_buffer_is_writable (in_buf)) {
       if (trans->have_same_caps) {
         /* Input buffer is already writable and caps are the same, just ref and return it */
-        *buf = input;
-        gst_buffer_ref (input);
+        *out_buf = in_buf;
+        gst_buffer_ref (in_buf);
       } else {
         /* Writable buffer, but need to change caps => subbuffer */
-        *buf = gst_buffer_create_sub (input, 0, GST_BUFFER_SIZE (input));
-        gst_caps_replace (&GST_BUFFER_CAPS (*buf), caps);
+        *out_buf = gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
+        gst_caps_replace (&GST_BUFFER_CAPS (*out_buf), out_caps);
       }
-
-      return GST_FLOW_OK;
+      goto done;
     } else {
       /* Make a writable buffer below and copy the data */
       copy_inbuf = TRUE;
     }
   }
 
-  if (*buf == NULL) {
-    /* Sub-class didn't already implement a buffer for us. Make one */
-    ret = gst_pad_alloc_buffer (trans->srcpad, GST_BUFFER_OFFSET (input),
-        size, caps, buf);
-    if (ret != GST_FLOW_OK || *buf == NULL)
-      return ret;
+  if (*out_buf == NULL) {
+    /* Sub-class didn't already provide a buffer for us. Make one */
+    ret = gst_pad_alloc_buffer (trans->srcpad, GST_BUFFER_OFFSET (in_buf),
+        out_size, out_caps, out_buf);
+    if (ret != GST_FLOW_OK || *out_buf == NULL)
+      goto done;
+
+    /* allocated buffer could be of different caps than what we requested */
+    if (G_UNLIKELY (!gst_caps_is_equal (out_caps, GST_BUFFER_CAPS (*out_buf)))) {
+      /* FIXME, it is possible we can reconfigure the transform with new caps at this
+       * point but for now we just create a buffer ourselves */
+      *out_buf = gst_buffer_new_and_alloc (out_size);
+      gst_buffer_set_caps (*out_buf, out_caps);
+    }
   }
 
   /* If the output buffer metadata is modifiable, copy timestamps and
    * buffer flags */
-  if (*buf != input && GST_MINI_OBJECT_REFCOUNT_VALUE (*buf) == 1) {
+  if (*out_buf != in_buf && GST_MINI_OBJECT_REFCOUNT_VALUE (*out_buf) == 1) {
 
-    if (copy_inbuf && gst_buffer_is_writable (*buf))
-      memcpy (GST_BUFFER_DATA (*buf), GST_BUFFER_DATA (input), size);
+    if (copy_inbuf && gst_buffer_is_writable (*out_buf))
+      memcpy (GST_BUFFER_DATA (*out_buf), GST_BUFFER_DATA (in_buf), out_size);
 
-    gst_buffer_stamp (*buf, input);
-    GST_BUFFER_FLAGS (*buf) |= GST_BUFFER_FLAGS (input) &
+    gst_buffer_stamp (*out_buf, in_buf);
+    GST_BUFFER_FLAGS (*out_buf) |= GST_BUFFER_FLAGS (in_buf) &
         (GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
         GST_BUFFER_FLAG_DELTA_UNIT);
   }
+
+done:
+  trans->delay_configure = FALSE;
 
   return ret;
 }
@@ -1117,13 +1145,8 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
      * wish. */
     GST_LOG_OBJECT (trans, "doing inplace transform");
 
-    /* we cannot reconfigure the element yet as we are still processing
-     * the old buffer. We will therefore delay the reconfiguration of the
-     * element until we have processed this last buffer. */
-    trans->delay_configure = TRUE;
     ret = gst_base_transform_prepare_output_buf (trans, inbuf,
         GST_BUFFER_SIZE (inbuf), GST_PAD_CAPS (trans->srcpad), outbuf);
-    trans->delay_configure = FALSE;
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto no_buffer;
 
@@ -1145,15 +1168,9 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
       }
     }
 
-    /* we cannot reconfigure the element yet as we are still processing
-     * the old buffer. We will therefore delay the reconfiguration of the
-     * element until we have processed this last buffer. */
-    trans->delay_configure = TRUE;
     /* no in place transform, get buffer, this might renegotiate. */
     ret = gst_base_transform_prepare_output_buf (trans, inbuf, out_size,
         GST_PAD_CAPS (trans->srcpad), outbuf);
-    trans->delay_configure = FALSE;
-
     if (ret != GST_FLOW_OK)
       goto no_buffer;
 
