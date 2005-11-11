@@ -1,3 +1,10 @@
+=== release 0.9.5 ===
+
+2005-11-11  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.5, "Zero-Test Patching"
+
 2005-10-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_reset),

@@ -3,7 +3,7 @@
   <description>Encode MP3's with LAME</description>
   <filename>../../ext/lame/.libs/libgstlame.so</filename>
   <basename>libgstlame.so</basename>
-  <version>0.9.4</version>
+  <version>0.9.5</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer source release</package>
