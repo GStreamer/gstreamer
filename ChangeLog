@@ -1,6 +1,11 @@
 2005-11-11  Michael Smith <msmith@fluendo.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_setcaps), (gst_faad_chain):
+	  Make this compile on systems with broken headers. 
+
+2005-11-11  Michael Smith <msmith@fluendo.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_setcaps), (gst_faad_chain):
 	  Call functions with the correct API. Unfortunately, unless your
 	  distribution patches upstream, the public header file for FAAD
 	  doesn't actually declare the API accurately. So, some nastiness

@@ -25,7 +25,8 @@
 #include <gst/audio/audio.h>
 #include <gst/audio/multichannel.h>
 
-/* These are the correct types for these functions, as defined in the source.
+/* These are the correct types for these functions, as defined in the source,
+ * with types changed to match glib types, since those are defined for us.
  * However, upstream FAAD is distributed with a broken header file that defined
  * these wrongly (in a way which was broken on 64 bit systems).
  * Upstream CVS still has the bug, but has also renamed all the public symbols
@@ -36,16 +37,15 @@
  * but not all, hence this Truly Evil Hack. This hack will need updating if
  * upstream ever releases something with the new API.
  */
-#define faadDecInit faadDecInit_no_definition
-#define faadDecInit2 faadDecInit2_no_definition
+#define faacDecInit faadDecInit_no_definition
+#define faacDecInit2 faadDecInit2_no_definition
 #include "gstfaad.h"
-#undef faadDecInit
-#undef faadDecInit2
+#undef faacDecInit
+#undef faacDecInit2
 
-extern long faadDecInit (faacDecHandle, uint8_t *, uint32_t,
-    uint32_t *, uint8_t *);
-extern int8_t faadDecInit2 (faacDecHandle, uint8_t *, uint32_t,
-    uint32_t *, uint8_t *);
+extern long faacDecInit (faacDecHandle, guint8 *, guint32, guint32 *, guint8 *);
+extern int8_t faacDecInit2 (faacDecHandle, guint8 *, guint32,
+    guint32 *, guint8 *);
 
 GST_DEBUG_CATEGORY_STATIC (faad_debug);
 #define GST_CAT_DEFAULT faad_debug
@@ -227,7 +227,7 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
     buf = GST_BUFFER (gst_value_get_mini_object (value));
 
     /* someone forgot that char can be unsigned when writing the API */
-    if ((gint8) faadDecInit2 (faad->handle,
+    if ((gint8) faacDecInit2 (faad->handle,
             GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), &samplerate,
             &channels) < 0) {
       GST_DEBUG ("faacDecInit2() failed");
