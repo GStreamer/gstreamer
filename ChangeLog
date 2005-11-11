@@ -1,3 +1,10 @@
+2005-11-11  Edward Hervey  <edward@fluendo.com>
+
+	* examples/seeking/seek.c: (make_parselaunch_pipeline):
+	Added parse-launch syntax seeking mode for the seeking example.
+	This should help stress-test even more cases.
+	Ex usage : ./seek 15 "filesrc location=uranus.avi ! decodebin ! xvimagesink"
+
 2005-11-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/xvimage/xvimagesink.c:

@@ -801,6 +801,21 @@ make_playerbin_pipeline (const gchar * location)
   return player;
 }
 
+static GstElement *
+make_parselaunch_pipeline (const gchar * description)
+{
+  GstElement *pipeline;
+  GError *error;
+
+  pipeline = gst_parse_launch (description, &error);
+
+  seekable_elements = g_list_prepend (seekable_elements, pipeline);
+
+  elem_seek = TRUE;
+
+  return pipeline;
+}
+
 static gchar *
 format_value (GtkScale * scale, gdouble value)
 {
@@ -1221,6 +1236,7 @@ static Pipeline pipelines[] = {
   {"dv", make_dv_pipeline},
   {"mpeg1nothreads", make_mpegnt_pipeline},
   {"playerbin", make_playerbin_pipeline},
+  {"parse-launch", make_parselaunch_pipeline},
   {NULL, NULL},
 };
 
