@@ -3,7 +3,7 @@
   <description>Sine audio wave generator</description>
   <filename>../../gst/sine/.libs/libgstsinesrc.so</filename>
   <basename>libgstsinesrc.so</basename>
-  <version>0.9.4</version>
+  <version>0.9.5</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

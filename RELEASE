@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Base Plug-ins 0.9.4 "Velociraptor"
+GStreamer: Release notes for GStreamer Base Plug-ins 0.9.5 "No No Kia"
         
 
 The GStreamer team is petrified to announce a new release
@@ -53,13 +53,16 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * RTP base classes
-      * New element: audiotestsrc
-      * typefind improvements
-      * buffer-frames removed
+      * video caps now use a good range for framerate and w/h
+      * oggdemux/oggmux improvements
+      * playbin improvements
 
 Bugs fixed in this release
     
+      * 319110 : [PATCH] oggdemux chain finding is slow
+      * 320058 : playbin of a jpeg over http does not work
+      * 320923 : [volume] doesn't build on Solaris
+      * 321011 : gstbasertpdepayload doesn't send the " new segment " event ...
 
 Download
 
@@ -89,15 +92,14 @@ Applications
   
 Contributors to this release
     
-      * Akos Maroy
+      * Andre Magalhaes
       * Andy Wingo
-      * Edgar Lima
-      * Fabrizio Gennari
-      * Julien Moutte
+      * Brian Cameron
+      * Julien MOUTTE
       * Michael Smith
-      * Philippe Khalaf
-      * Stefan Kost
+      * Sebastien Cote
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans
+      * Zeeshan Ali
  

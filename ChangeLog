@@ -1,3 +1,10 @@
+=== release 0.9.5 ===
+
+2005-11-11  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.5, "No No Kia"
+
 2005-11-11  Edward Hervey  <edward@fluendo.com>
 
 	* examples/seeking/seek.c: (make_parselaunch_pipeline):
@@ -396,8 +403,8 @@
 	(gst_base_rtp_depayload_finalize):
 	* gst-libs/gst/rtp/gstbasertpdepayload.h:
 	* gst-libs/gst/rtp/gstbasertppayload.h:
-	The pad-template on the sinkpad should be set by the derived classes. Also
-	added some usefull macros.
+	  The pad-template on the sinkpad should be set by the derived classes.
+	  Also added some useful macros.
 
 2005-10-24  Wim Taymans  <wim@fluendo.com>
 

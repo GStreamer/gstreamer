@@ -1,4 +1,17 @@
-This is GStreamer Base Plug-ins 0.9.4, "Velociraptor".
+This is GStreamer Base Plug-ins 0.9.5, "No No Kia".
+
+Changes since 0.9.4:
+    
+      * video caps now use a good range for framerate and w/h
+      * oggdemux/oggmux improvements
+      * playbin improvements
+
+Bugs fixed since 0.9.4:
+    
+      * 319110 : [PATCH] oggdemux chain finding is slow
+      * 320058 : playbin of a jpeg over http does not work
+      * 320923 : [volume] doesn't build on Solaris
+      * 321011 : gstbasertpdepayload doesn't send the " new segment " event ...
 
 Changes since 0.9.3:
 
