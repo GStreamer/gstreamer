@@ -1,1 +1,5 @@
-This is GStreamer FFMpeg 0.9.4, "Triceratops"
+This is GStreamer FFmpeg Plug-ins 0.9.5, "Sound Of Silence"
+        
+Changes since 0.9.4:
+    
+      * DivX fix
