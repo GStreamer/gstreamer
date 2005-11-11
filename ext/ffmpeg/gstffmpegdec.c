@@ -720,6 +720,11 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   if (ffmpegdec->context->codec == NULL)
     return -1;
 
+  GST_DEBUG_OBJECT (ffmpegdec,
+		    "data:%p, size:%d, *in_ts:%"GST_TIME_FORMAT" inbuf:%p  inbuf.ts:%"GST_TIME_FORMAT,
+		    data, size, GST_TIME_ARGS (*in_ts), inbuf,
+		    GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)));
+  
   ffmpegdec->context->frame_number++;
 
   switch (oclass->in_plugin->type) {
@@ -752,6 +757,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           ((ffmpegdec->picture->pict_type == FF_I_TYPE ||
             !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts)) &&
         GST_CLOCK_TIME_IS_VALID (*in_ts))) {
+	GST_DEBUG_OBJECT (ffmpegdec, "setting next_ts to %"GST_TIME_FORMAT,
+			  GST_TIME_ARGS (*in_ts));
         ffmpegdec->next_ts = *in_ts;
         *in_ts = GST_CLOCK_TIME_NONE;
       }
@@ -832,7 +839,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             /* Take repeat_pict into account */
             GST_BUFFER_DURATION (outbuf) += GST_BUFFER_DURATION (outbuf)
                 * ffmpegdec->picture->repeat_pict / 2;
-
+	    GST_DEBUG_OBJECT (ffmpegdec, "advancing next_ts by duration of %"GST_TIME_FORMAT,
+			      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
             ffmpegdec->next_ts += GST_BUFFER_DURATION (outbuf);
           } else {
             ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
@@ -841,9 +849,11 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       } else if (ffmpegdec->picture->pict_type != -1 &&
 		 oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
         /* update time for skip-frame */
-        if ((ffmpegdec->picture->pict_type == FF_I_TYPE ||
-             !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts)) &&
-            GST_CLOCK_TIME_IS_VALID (*in_ts)) {
+        if ((!have_data) 
+	    || (ffmpegdec->picture->pict_type == FF_I_TYPE ||
+		!GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts))
+	    && GST_CLOCK_TIME_IS_VALID (*in_ts)) {
+	  GST_DEBUG_OBJECT (ffmpegdec, "setting next_ts to *in_ts");
           ffmpegdec->next_ts = *in_ts;
 	  *in_ts = GST_CLOCK_TIME_NONE;
         }
@@ -856,7 +866,9 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
           /* Take repeat_pict into account */
           dur += dur * ffmpegdec->picture->repeat_pict / 2;
-
+	  GST_DEBUG_OBJECT (ffmpegdec,
+			    "Advancing next_ts by dur:%"GST_TIME_FORMAT,
+			    GST_TIME_ARGS (dur));
           ffmpegdec->next_ts += dur;
         } else {
           ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
@@ -1022,8 +1034,9 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     goto not_negotiated;
   
   GST_DEBUG_OBJECT (ffmpegdec,
-      "Received new data of size %d, time %" GST_TIME_FORMAT,
-      GST_BUFFER_SIZE (inbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)));
+      "Received new data of size %d, time %" GST_TIME_FORMAT " next_ts %"GST_TIME_FORMAT,
+      GST_BUFFER_SIZE (inbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
+		    GST_TIME_ARGS (ffmpegdec->next_ts));
 
   /* parse cache joining */
   if (ffmpegdec->pcache) {
