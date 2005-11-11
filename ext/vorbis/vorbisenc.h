@@ -69,6 +69,7 @@ struct _GstVorbisEnc {
 
   guint64	   samples_in;
   guint64	   bytes_out;
+  GstClockTime     prev_ts;
 
   GstTagList *	   tags;
 

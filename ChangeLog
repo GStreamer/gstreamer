@@ -1,3 +1,11 @@
+2005-11-11  Michael Smith <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_setup),
+	(gst_vorbisenc_buffer_from_packet):
+	* ext/vorbis/vorbisenc.h:
+	  Set duration on encoded buffers. This allows oggmux's
+	  max_page_delay parameter to actually work.
+
 2005-11-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:

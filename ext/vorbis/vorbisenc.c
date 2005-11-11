@@ -772,6 +772,8 @@ gst_vorbisenc_setup (GstVorbisEnc * vorbisenc)
   vorbis_analysis_init (&vorbisenc->vd, &vorbisenc->vi);
   vorbis_block_init (&vorbisenc->vd, &vorbisenc->vb);
 
+  vorbisenc->prev_ts = 0;
+
   vorbisenc->setup = TRUE;
 
   return TRUE;
@@ -808,6 +810,9 @@ gst_vorbisenc_buffer_from_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
   GST_BUFFER_TIMESTAMP (outbuf) =
       vorbis_granule_time_copy (&vorbisenc->vd,
       packet->granulepos) * GST_SECOND;
+  GST_BUFFER_DURATION (outbuf) =
+      GST_BUFFER_TIMESTAMP (outbuf) - vorbisenc->prev_ts;
+  vorbisenc->prev_ts = GST_BUFFER_TIMESTAMP (outbuf);
 
   GST_DEBUG ("encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
   return outbuf;
