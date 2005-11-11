@@ -1,3 +1,11 @@
+2005-11-11  Michael Smith <msmith@fluendo.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_setcaps), (gst_faad_chain):
+	  Call functions with the correct API. Unfortunately, unless your
+	  distribution patches upstream, the public header file for FAAD
+	  doesn't actually declare the API accurately. So, some nastiness
+	  ensues...
+
 2005-11-10  Daniel Amelang  <daniel dot amelang at gmail dot com>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
