@@ -1,3 +1,14 @@
+2005-11-11  Edward Hervey  <edward@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
+	(gst_avi_demux_src_convert), (gst_avi_demux_handle_src_event),
+	(gst_avi_demux_stream_header), (gst_avi_demux_handle_seek),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data),
+	(gst_avi_demux_loop):
+	* gst/avi/gstavidemux.h:
+	Yeah, implement proper seeking. Exact seeking and segment seeking.
+	Still need to do some checks for segment_stop.
+
 2005-11-10  Josef Zlomek  <josef dot zlomek at xeris dot cz>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

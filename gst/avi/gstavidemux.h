@@ -116,10 +116,11 @@ typedef struct _GstAviDemux {
   gst_riff_avih	*avih;
 
   /* seeking */
-  guint64 	 seek_offset;
-  guint64	 last_seek;
-  gint		 seek_entry;
-  gboolean	 seek_flush;
+  gdouble	segment_rate;
+  GstSeekFlags	segment_flags;
+  /* in GST_FORMAT_TIME */
+  gint64	segment_start;
+  gint64	segment_stop;
   GstEvent	*seek_event;
 } GstAviDemux;
 
