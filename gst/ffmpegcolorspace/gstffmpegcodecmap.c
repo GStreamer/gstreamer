@@ -39,12 +39,13 @@ gst_ffmpeg_get_palette (const GstCaps * caps, AVCodecContext * context)
 {
   GstStructure *str = gst_caps_get_structure (caps, 0);
   const GValue *palette_v;
-  const GstBuffer *palette;
 
   /* do we have a palette? */
   if ((palette_v = gst_structure_get_value (str, "palette_data")) && context) {
-    palette = g_value_get_boxed (palette_v);
-    if (GST_BUFFER_SIZE (palette) >= 256 * 4) {
+    const GstBuffer *palette;
+
+    palette = gst_value_get_buffer (palette_v);
+    if (palette && GST_BUFFER_SIZE (palette) >= 256 * 4) {
       if (context->palctrl)
         av_free (context->palctrl);
       context->palctrl = av_malloc (sizeof (AVPaletteControl));
@@ -64,6 +65,7 @@ gst_ffmpeg_set_palette (GstCaps * caps, AVCodecContext * context)
     memcpy (GST_BUFFER_DATA (palette), context->palctrl->palette,
         AVPALETTE_SIZE);
     gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, palette, NULL);
+    gst_buffer_unref (palette);
   }
 }
 
@@ -585,9 +587,6 @@ gst_ffmpegcsp_caps_with_codectype (enum CodecType type,
 
 #define GEN_MASK(x) ((1<<(x))-1)
 #define ROUND_UP_X(v,x) (((v) + GEN_MASK(x)) & ~GEN_MASK(x))
-#define ROUND_UP_2(x) ROUND_UP_X (x, 1)
-#define ROUND_UP_4(x) ROUND_UP_X (x, 2)
-#define ROUND_UP_8(x) ROUND_UP_X (x, 3)
 #define DIV_ROUND_UP_X(v,x) (((v) + GEN_MASK(x)) >> (x))
 
 /*
@@ -615,11 +614,11 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
     case PIX_FMT_YUVJ420P:
     case PIX_FMT_YUVJ422P:
     case PIX_FMT_YUVJ444P:
-      stride = ROUND_UP_4 (width);
+      stride = GST_ROUND_UP_4 (width);
       h2 = ROUND_UP_X (height, pinfo->y_chroma_shift);
       size = stride * h2;
       w2 = DIV_ROUND_UP_X (width, pinfo->x_chroma_shift);
-      stride2 = ROUND_UP_4 (w2);
+      stride2 = GST_ROUND_UP_4 (w2);
       h2 = DIV_ROUND_UP_X (height, pinfo->y_chroma_shift);
       size2 = stride2 * h2;
       picture->data[0] = ptr;
@@ -632,22 +631,22 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       /* PIX_FMT_YVU420P = YV12: same as PIX_FMT_YUV420P, but
        *  with U and V plane swapped. Strides as in videotestsrc */
     case PIX_FMT_YVU420P:
-      stride = ROUND_UP_4 (width);
-      h2 = ROUND_UP_2 (height);
+      stride = GST_ROUND_UP_4 (width);
+      h2 = GST_ROUND_UP_2 (height);
       size = stride * h2;
-      stride2 = ROUND_UP_8 (stride) / 2;
-      h2 = ROUND_UP_2 (height) / 2;
+      stride2 = GST_ROUND_UP_8 (stride) / 2;
+      h2 = GST_ROUND_UP_2 (height) / 2;
       size2 = stride2 * h2;
       picture->data[0] = ptr;
       picture->data[2] = picture->data[0] + size;
       picture->data[1] = picture->data[2] + size2;
       picture->linesize[0] = stride;
-      picture->linesize[1] = ROUND_UP_8 (stride) / 2;
-      picture->linesize[2] = ROUND_UP_8 (stride) / 2;
+      picture->linesize[1] = GST_ROUND_UP_8 (stride) / 2;
+      picture->linesize[2] = GST_ROUND_UP_8 (stride) / 2;
       return size + 2 * size2;
     case PIX_FMT_RGB24:
     case PIX_FMT_BGR24:
-      stride = ROUND_UP_4 (width * 3);
+      stride = GST_ROUND_UP_4 (width * 3);
       size = stride * height;
       picture->data[0] = ptr;
       picture->data[1] = NULL;
@@ -670,7 +669,7 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
     case PIX_FMT_RGB565:
     case PIX_FMT_YUV422:
     case PIX_FMT_UYVY422:
-      stride = ROUND_UP_4 (width * 2);
+      stride = GST_ROUND_UP_4 (width * 2);
       size = stride * height;
       picture->data[0] = ptr;
       picture->data[1] = NULL;
@@ -679,7 +678,7 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       return size;
     case PIX_FMT_UYVY411:
       /* FIXME, probably not the right stride */
-      stride = ROUND_UP_4 (width);
+      stride = GST_ROUND_UP_4 (width);
       size = stride * height;
       picture->data[0] = ptr;
       picture->data[1] = NULL;
@@ -687,7 +686,7 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       picture->linesize[0] = width + width / 2;
       return size + size / 2;
     case PIX_FMT_GRAY8:
-      stride = ROUND_UP_4 (width);
+      stride = GST_ROUND_UP_4 (width);
       size = stride * height;
       picture->data[0] = ptr;
       picture->data[1] = NULL;
@@ -696,7 +695,7 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       return size;
     case PIX_FMT_MONOWHITE:
     case PIX_FMT_MONOBLACK:
-      stride = ROUND_UP_4 ((width + 7) >> 3);
+      stride = GST_ROUND_UP_4 ((width + 7) >> 3);
       size = stride * height;
       picture->data[0] = ptr;
       picture->data[1] = NULL;
@@ -705,7 +704,7 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
       return size;
     case PIX_FMT_PAL8:
       /* already forced to be with stride, so same result as other function */
-      stride = ROUND_UP_4 (width);
+      stride = GST_ROUND_UP_4 (width);
       size = stride * height;
       picture->data[0] = ptr;
       picture->data[1] = ptr + size;    /* palette is stored here as 256 32 bit words */

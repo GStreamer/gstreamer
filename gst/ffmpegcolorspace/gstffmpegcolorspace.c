@@ -358,6 +358,9 @@ gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
 
   *size = avpicture_get_size (ctx->pix_fmt, width, height);
 
+  if (space->palette)
+    *size -= 4 * 256;
+
   av_free (ctx);
 
   return TRUE;
@@ -391,7 +394,7 @@ gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
 
   /* fill optional palette */
   if (space->palette)
-    space->from_frame.data[1] = (uint8_t *) space->palette;
+    space->from_frame.data[1] = (uint8_t *) space->palette->palette;
 
   /* fill target frame */
   gst_ffmpegcsp_avpicture_fill (&space->to_frame,

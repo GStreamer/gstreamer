@@ -1,3 +1,13 @@
+2005-11-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_get_palette), (gst_ffmpeg_set_palette),
+	(gst_ffmpegcsp_avpicture_fill):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_get_unit_size), (gst_ffmpegcsp_transform):
+	  Make palettes work again (see #132341). Use our own macros
+	  for rounding up.
+
 2005-11-10  Andy Wingo  <wingo@pobox.com>
 
 	* gst/playback/gstplaybasebin.c (prepare_output): Fix format
