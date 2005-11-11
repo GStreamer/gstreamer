@@ -566,7 +566,8 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 	return avcodec_default_get_buffer(context, picture);
       }
       
-      if (gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, bufsize, GST_PAD_CAPS (ffmpegdec->srcpad), &buf) != GST_FLOW_OK)
+      if (gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE, 
+				bufsize, GST_PAD_CAPS (ffmpegdec->srcpad), &buf) != GST_FLOW_OK)
         return -1;
       ffmpegdec->last_buffer = buf;
       
@@ -592,6 +593,8 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   picture->opaque = buf;
   gst_buffer_ref (buf);
 
+  GST_LOG_OBJECT (ffmpegdec, "END");
+
   return 0;
 }
 
@@ -602,6 +605,7 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
   GstBuffer *buf = GST_BUFFER (picture->opaque);
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) context->opaque; 
   
+
   g_return_if_fail (buf != NULL);
   g_return_if_fail (picture->type == FF_BUFFER_TYPE_USER);
 
@@ -727,7 +731,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       len = avcodec_decode_video (ffmpegdec->context,
           ffmpegdec->picture, &have_data, data, size);
       GST_DEBUG_OBJECT (ffmpegdec,
-          "Decode video: len=%d, have_data=%d", len, have_data);
+          "Decoded video: len=%d, have_data=%d", len, have_data);
 
       if (ffmpegdec->waiting_for_key) {
         if (ffmpegdec->picture->pict_type == FF_I_TYPE) {
@@ -758,9 +762,11 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           ffmpegdec->synctime = GST_CLOCK_TIME_NONE;
         } else {
           GST_WARNING_OBJECT (ffmpegdec,
-              "Dropping frame for synctime %" GST_TIME_FORMAT ", expected %"
+              "Dropping frame for synctime %" GST_TIME_FORMAT ", expected(next_ts) %"
               GST_TIME_FORMAT, GST_TIME_ARGS (ffmpegdec->synctime),
               GST_TIME_ARGS (ffmpegdec->next_ts));
+	  if (ffmpegdec->last_buffer)
+	    gst_buffer_unref(ffmpegdec->last_buffer);
           have_data = 0;
           /* don´t break here! Timestamps are updated below */
         }
@@ -960,8 +966,8 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_newsegment (event, NULL, &rate, &fmt, &start, &end, &base);
       if (fmt == GST_FORMAT_TIME) {
         ffmpegdec->next_ts = start;
-        GST_DEBUG_OBJECT (ffmpegdec, "Discont to time %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (start));
+        GST_DEBUG_OBJECT (ffmpegdec, "Discont to time (next_ts) %" GST_TIME_FORMAT" -- %"GST_TIME_FORMAT,
+            GST_TIME_ARGS (start), GST_TIME_ARGS (end));
       } else if (ffmpegdec->context->bit_rate && fmt == GST_FORMAT_BYTES) {
         ffmpegdec->next_ts = start * GST_SECOND / ffmpegdec->context->bit_rate;
         GST_DEBUG_OBJECT (ffmpegdec,

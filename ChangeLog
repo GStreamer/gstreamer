@@ -1,3 +1,11 @@
+2005-11-11  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_get_buffer),
+	(gst_ffmpegdec_release_buffer), (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_sink_event):
+	Properly unref a buffer if we drop it.
+	Esthetic fixes.
+
 2005-11-08  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* TODO:
