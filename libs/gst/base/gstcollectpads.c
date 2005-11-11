@@ -27,7 +27,12 @@
  * is given to the manager of this object when all pads have data.
  * <itemizedlist>
  *   <listitem><para>
- *     Pads are added to the collection with add/remove_pad. The pad
+ *     Collectpads are created with gst_collectpads_new(). A callback should then
+ *     be installed with gst_collectpads_set_function (). 
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Pads are added to the collection with gst_collectpads_add_pad()/
+ *     gst_collectpads_remove_pad(). The pad
  *     has to be a sinkpad. The chain function of the pad is
  *     overridden. The element_private of the pad is used to store
  *     private information.
@@ -37,14 +42,29 @@
  *     performing a pull_range.
  *   </para></listitem>
  *   <listitem><para>
- *     When data is queued on all pads, a callback function is called.
+ *     When data is queued on all pads, the callback function is called.
  *   </para></listitem>
  *   <listitem><para>
- *     Data can be dequeued from the pad with the _pop() method.
- *     One can _peek() at the data with the peek function.
+ *     Data can be dequeued from the pad with the gst_collectpads_pop() method.
+ *     One can peek at the data with the gst_collectpads_peek() function.
+ *     These functions will return NULL if the pad received an EOS event. When all
+ *     pads return NULL from a gst_collectpads_peek(), the element can emit an EOS
+ *     event itself.
  *   </para></listitem>
  *   <listitem><para>
- *     Data can also be dequeued with the available/read/flush calls.
+ *     Data can also be dequeued in byte units using the gst_collectpads_available(), 
+ *     gst_collectpads_read() and gst_collectpads_flush() calls.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     Elements should call gst_collectpads_start() and gst_collectpads_stop() in
+ *     their state change functions to start and stop the processing of the collecpads.
+ *     The gst_collectpads_stop() call should be called before calling the parent
+ *     element state change function in the PAUSED_TO_READY state change to ensure
+ *     no pad is blocked and the element can finish streaming.
+ *   </para></listitem>
+ *   <listitem><para>
+ *     gst_collectpads_collect() and gst_collectpads_collect_range() can be used by
+ *     elements that start a #GstTask to drive the collectpads.
  *   </para></listitem>
  * </itemizedlist>
  */

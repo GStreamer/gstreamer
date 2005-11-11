@@ -33,10 +33,23 @@ G_BEGIN_DECLS
 #define GST_IS_COLLECTPADS(obj)  	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COLLECTPADS))
 #define GST_IS_COLLECTPADS_CLASS(obj)  	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COLLECTPADS))
 
+typedef struct _GstCollectData GstCollectData;
 typedef struct _GstCollectPads GstCollectPads;
 typedef struct _GstCollectPadsClass GstCollectPadsClass;
 
-typedef struct _GstCollectData
+/**
+ * GstCollectData:
+ * @collect: owner #GstCollectPads
+ * @pad: #GstPad managed by this data
+ * @buffer: currently queued buffer.
+ * @pos: position in the buffer
+ * @segment_start: last segment start received.
+ * @segment_stop: last segment stop received.
+ * @stream_time: stream time of last segment.
+ *
+ * Structure used by the collectpads.
+ */
+struct _GstCollectData
 {
   GstCollectPads 	*collect;
   GstPad		*pad;
@@ -45,9 +58,17 @@ typedef struct _GstCollectData
   gint64		 segment_start;
   gint64		 segment_stop;
   gint64		 stream_time;
-} GstCollectData;
+};
 
-/* function will be called when all pads have data */
+/**
+ * GstCollectPadsFunction:
+ * @pads: the #GstCollectPads that trigered the callback
+ * @user_data: user data passed to gst_collectpads_set_function()
+ *
+ * A function that will be called when all pads have received data.
+ *
+ * Returns: GST_FLOW_OK for success
+ */
 typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer user_data);
 
 #define GST_COLLECTPADS_GET_COND(pads) (((GstCollectPads *)pads)->cond)
@@ -55,16 +76,23 @@ typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer 
 #define GST_COLLECTPADS_SIGNAL(pads)   (g_cond_signal (GST_COLLECTPADS_GET_COND (pads)))
 #define GST_COLLECTPADS_BROADCAST(pads)(g_cond_broadcast (GST_COLLECTPADS_GET_COND (pads)))
 
+/**
+ * GstCollectPads:
+ * @data: #GList of #GstCollectData managed by this #GstCollectPads.
+ *
+ * Collectpads object. 
+ */
 struct _GstCollectPads {
   GstObject      object;
 
   /*< public >*/ /* with LOCK */
-  GSList	*data;			/* GstCollectData in this collection */
+  GSList	*data;
+
+  /*< private >*/
   guint32	 cookie;
 
   GCond		*cond;			/* to signal removal of data */
 
-  /*< private >*/
   GstCollectPadsFunction func;		/* function and user_data for callback */
   gpointer	 user_data;
 
@@ -74,6 +102,7 @@ struct _GstCollectPads {
 
   gboolean	 started;
 
+  /*< private >*/
   gpointer       _gst_reserved[GST_PADDING];
 };
 

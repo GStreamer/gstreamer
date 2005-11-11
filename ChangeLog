@@ -1,3 +1,15 @@
+2005-11-11  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	Added some docs for GstCollectData.
+
+	* gst/base/gstadapter.c:
+	Some small code example fix.
+
+	* gst/base/gstcollectpads.c:
+	* gst/base/gstcollectpads.h:
+	Document some more.
+
 2005-11-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD

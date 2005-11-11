@@ -2308,6 +2308,7 @@ gst_base_transform_get_type
 <FILE>gstcollectpads</FILE>
 <TITLE>GstCollectPads</TITLE>
 <INCLUDE>gst/base/gstcollectpads.h</INCLUDE>
+GstCollectData
 GstCollectPads
 GstCollectPadsFunction
 gst_collectpads_new
