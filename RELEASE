@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.4 "Utahraptor"
+GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.5 "Thrice Belgian Bar"
         
 
 The GStreamer team is petrified to announce a new release
@@ -60,12 +60,13 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
+      * qtdemux supports custom genre tags
+      * tremor integer vorbis decoder ported
+      * directfb video sink ported (with examples and documentation!)
 
 Bugs fixed in this release
     
-      * 317438 : [speed] fix 0.9 port
-      * 318659 : [faac] problem with float capabilities
-      * 318660 : [faac] missing unrefs
+      * 321241 : faad compile fix
 
 Download
 
@@ -95,10 +96,13 @@ Applications
   
 Contributors to this release
     
+      * Christian Schaller
+      * Daniel Amelang
       * Edgard Lima
-      * Josef Zlomek
-      * Julien Moutte
-      * Stefan Kost
+      * Julien MOUTTE
+      * Michael Smith
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans
+      * Zeeshan Ali
  

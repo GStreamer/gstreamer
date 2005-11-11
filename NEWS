@@ -1,4 +1,16 @@
-This is GStreamer Bad Plug-ins 0.9.4, "Utahraptor"
+This is GStreamer Bad Plug-ins 0.9.5, "Thrice Belgian Bar"
+
+Changes since 0.9.4:
+    
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+      * qtdemux supports custom genre tags
+      * tremor integer vorbis decoder ported
+      * directfb video sink ported (with examples and documentation!)
+
+Bugs fixed since 0.9.4:
+    
+      * 321241 : faad compile fix
 
 Bugs fixed since 0.9.3:
 
