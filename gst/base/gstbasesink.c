@@ -1047,10 +1047,16 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 
     stream_start = (gint64) start - basesink->segment_start;
     stream_end = (gint64) end - basesink->segment_start;
+
+    if (stream_start < 0) {
+      GST_DEBUG_OBJECT (basesink, "stream_start negative, invalid");
+      goto done;
+    }
   } else {
     stream_start = (gint64) start;
     stream_end = (gint64) end;
   }
+
 
   /* correct for rate */
   if (basesink->segment_rate != 0.0) {

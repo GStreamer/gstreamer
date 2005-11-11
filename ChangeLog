@@ -1,3 +1,9 @@
+2005-11-11  Michael Smith <msmith@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_do_sync):
+	  Don't sync on buffers that fall partially outside our current
+	  segment. Prevents an assertion failure/abort playing some files.
+
 2005-11-10  Andy Wingo  <wingo@pobox.com>
 
 	* check/gst/gstbin.c (test_message_state_changed_children): Style
