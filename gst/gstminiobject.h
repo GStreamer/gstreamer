@@ -128,11 +128,21 @@ typedef enum
  */
 #define GST_MINI_OBJECT_REFCOUNT_VALUE(obj)     (g_atomic_int_get (&(GST_MINI_OBJECT_CAST(obj))->refcount))
 
+/**
+ * GstMiniObject:
+ * @instance: type instance
+ * @refcount: atomic refcount
+ * @flags: extra flags.
+ * 
+ * Base class for refcounted lightweight objects.
+ */
 struct _GstMiniObject {
   GTypeInstance instance;
+  /*< public >*/ /* with COW */
   gint refcount;
   guint flags;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -142,27 +152,31 @@ struct _GstMiniObjectClass {
   GstMiniObjectCopyFunction copy;
   GstMiniObjectFinalizeFunction finalize;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_mini_object_get_type (void);
+GType 		gst_mini_object_get_type 	(void);
 
-GstMiniObject * gst_mini_object_new (GType type);
-GstMiniObject * gst_mini_object_copy (const GstMiniObject *mini_object);
-gboolean gst_mini_object_is_writable (const GstMiniObject *mini_object);
-GstMiniObject * gst_mini_object_make_writable (GstMiniObject *mini_object);
+GstMiniObject* 	gst_mini_object_new 		(GType type);
+GstMiniObject* 	gst_mini_object_copy 		(const GstMiniObject *mini_object);
+gboolean 	gst_mini_object_is_writable 	(const GstMiniObject *mini_object);
+GstMiniObject*  gst_mini_object_make_writable 	(GstMiniObject *mini_object);
 
-GstMiniObject * gst_mini_object_ref (GstMiniObject *mini_object);
-void gst_mini_object_unref (GstMiniObject *mini_object);
+/* refcounting */
+GstMiniObject* 	gst_mini_object_ref 		(GstMiniObject *mini_object);
+void 		gst_mini_object_unref 		(GstMiniObject *mini_object);
+void 		gst_mini_object_replace 	(GstMiniObject **olddata, GstMiniObject *newdata);
 
-void gst_mini_object_replace (GstMiniObject **olddata, GstMiniObject *newdata);
+/* GParamSpec */
+GParamSpec* 	gst_param_spec_mini_object 	(const char *name, const char *nick,
+    						 const char *blurb, GType object_type, 
+						 GParamFlags flags);
 
-GParamSpec * gst_param_spec_mini_object (const char *name, const char *nick,
-    const char *blurb, GType object_type, GParamFlags flags);
-
-void gst_value_set_mini_object (GValue *value, GstMiniObject *mini_object);
-void gst_value_take_mini_object (GValue *value, GstMiniObject *mini_object);
-GstMiniObject * gst_value_get_mini_object (const GValue *value);
+/* GValue stuff */
+void 		gst_value_set_mini_object 	(GValue *value, GstMiniObject *mini_object);
+void 		gst_value_take_mini_object 	(GValue *value, GstMiniObject *mini_object);
+GstMiniObject* 	gst_value_get_mini_object 	(const GValue *value);
 
 
 G_END_DECLS

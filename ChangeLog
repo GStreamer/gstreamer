@@ -1,5 +1,21 @@
 2005-11-11  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbuffer.c: (_gst_buffer_copy):
+	Copy more flags.
+
+	* gst/gstcaps.c: (gst_caps_is_equal):
+	Fix some docs.
+	Make _is_equal fast in the trivial cases.
+
+	* gst/gstminiobject.c:
+	* gst/gstminiobject.h:
+	More docs. Spifify .h file.
+
+	* gst/gstutils.c:
+	Small doc update.
+
+2005-11-11  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasetransform.c:
 	(gst_base_transform_prepare_output_buf),
 	(gst_base_transform_handle_buffer):

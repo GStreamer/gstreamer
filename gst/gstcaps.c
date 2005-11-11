@@ -868,6 +868,10 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
 gboolean
 gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
 {
+  /* NULL <-> NULL is allowed here */
+  if (caps1 == caps2)
+    return TRUE;
+
   g_return_val_if_fail (caps1 != NULL, FALSE);
   g_return_val_if_fail (caps2 != NULL, FALSE);
 
@@ -1537,9 +1541,9 @@ gst_caps_load_thyself (xmlNodePtr parent)
  * @caps: a pointer to #GstCaps
  * @newcaps: a #GstCaps to replace *caps
  *
- * Replaces *caps with @newcaps.  Frees the #GstCaps in the location
+ * Replaces *caps with @newcaps.  Unrefs the #GstCaps in the location
  * pointed to by @caps, if applicable, then modifies @caps to point to
- * @newcaps.
+ * @newcaps. An additional ref on @newcaps is taken.
  */
 void
 gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)

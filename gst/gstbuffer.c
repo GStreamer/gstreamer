@@ -199,7 +199,8 @@ _gst_buffer_copy (GstBuffer * buffer)
 
   /* copy relevant flags */
   mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
-      GST_BUFFER_FLAG_DELTA_UNIT;
+      GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
+      GST_BUFFER_FLAG_GAP;
   GST_MINI_OBJECT (copy)->flags |= GST_MINI_OBJECT (buffer)->flags & mask;
 
   /* we simply copy everything from our parent */

@@ -134,7 +134,7 @@ gst_mini_object_init (GTypeInstance * instance, gpointer klass)
 
 /**
  * gst_mini_object_new:
- * @type: the GType of the mini-object to create
+ * @type: the #GType of the mini-object to create
  *
  * Creates a new mini-object of the desired type.
  *
@@ -183,7 +183,7 @@ gst_mini_object_copy (const GstMiniObject * mini_object)
  * @mini_object: the mini-object to check
  *
  * Checks if a mini-object is writable.  A mini-object is writable
- * if the reference count is one and the GST_MINI_OBJECT_FLAG_READONLY
+ * if the reference count is one and the #GST_MINI_OBJECT_FLAG_READONLY
  * flag is not set.  Modification of a mini-object should only be
  * done after verifying that it is writable.
  *
