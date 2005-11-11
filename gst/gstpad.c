@@ -1849,23 +1849,10 @@ gst_pad_get_caps (GstPad * pad)
   GST_CAT_DEBUG (GST_CAT_CAPS, "get pad caps of %s:%s (%p)",
       GST_DEBUG_PAD_NAME (pad), pad);
 
-  if (G_UNLIKELY (GST_PAD_IS_IN_GETCAPS (pad)))
-    goto was_dispatching;
-
   result = gst_pad_get_caps_unlocked (pad);
   GST_UNLOCK (pad);
 
   return result;
-
-was_dispatching:
-  {
-    GST_CAT_DEBUG (GST_CAT_CAPS,
-        "pad %s:%s is already dispatching!", GST_DEBUG_PAD_NAME (pad));
-    g_warning ("pad %s:%s recursively called getcaps!",
-        GST_DEBUG_PAD_NAME (pad));
-    GST_UNLOCK (pad);
-    return NULL;
-  }
 }
 
 /**
@@ -1876,7 +1863,7 @@ was_dispatching:
  *
  * Returns: the #GstCaps of the peer pad. This function returns a new caps, so use
  * gst_caps_unref to get rid of it. this function returns NULL if there is no
- * peer pad or when this function is called recursively from a getcaps function.
+ * peer pad.
  */
 GstCaps *
 gst_pad_peer_get_caps (GstPad * pad)
@@ -1895,9 +1882,6 @@ gst_pad_peer_get_caps (GstPad * pad)
   if (G_UNLIKELY (peerpad == NULL))
     goto no_peer;
 
-  if (G_UNLIKELY (GST_PAD_IS_IN_GETCAPS (peerpad)))
-    goto was_dispatching;
-
   gst_object_ref (peerpad);
   GST_UNLOCK (pad);
 
@@ -1909,15 +1893,6 @@ gst_pad_peer_get_caps (GstPad * pad)
 
 no_peer:
   {
-    GST_UNLOCK (pad);
-    return NULL;
-  }
-was_dispatching:
-  {
-    GST_CAT_DEBUG (GST_CAT_CAPS,
-        "pad %s:%s is already dispatching!", GST_DEBUG_PAD_NAME (pad));
-    g_warning ("pad %s:%s recursively called getcaps!",
-        GST_DEBUG_PAD_NAME (pad));
     GST_UNLOCK (pad);
     return NULL;
   }

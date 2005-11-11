@@ -1,3 +1,11 @@
+2005-11-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_get_caps), (gst_pad_peer_get_caps):
+	While checking the flag for reentrancy in the gstcaps function
+	is nice to detect recursive invocations, it also makes it 
+	impossible to call getcaps from multiple threads, which must be
+	possible. So, checking for recursive calls has to go.
+
 2005-11-11  Michael Smith <msmith@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_do_sync):
