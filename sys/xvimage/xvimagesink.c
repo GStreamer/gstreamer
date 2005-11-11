@@ -1710,25 +1710,33 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
     GstStructure * structure)
 {
   GstXvImageSink *xvimagesink = GST_XVIMAGESINK (navigation);
-  GstEvent *event;
-  double x, y;
+  GstPad *peer;
 
-  event = gst_event_new_custom (GST_EVENT_NAVIGATION, structure);
+  if ((peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (xvimagesink)))) {
+    GstEvent *event;
+    gdouble x, y, xscale = 1.0, yscale = 1.0;
 
-  /* Converting pointer coordinates to the non scaled geometry */
-  if (gst_structure_get_double (structure, "pointer_x", &x)) {
-    x *= GST_VIDEO_SINK_WIDTH (xvimagesink);
-    x /= xvimagesink->xwindow->width;
-    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+    event = gst_event_new_custom (GST_EVENT_NAVIGATION, structure);
+
+    if (xvimagesink->xwindow) {
+      xscale = GST_VIDEO_SINK_WIDTH (xvimagesink) / xvimagesink->xwindow->width;
+      yscale =
+          GST_VIDEO_SINK_HEIGHT (xvimagesink) / xvimagesink->xwindow->height;
+    }
+
+    /* Converting pointer coordinates to the non scaled geometry */
+    if (gst_structure_get_double (structure, "pointer_x", &x)) {
+      gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+          (gdouble) x * xscale, NULL);
+    }
+    if (gst_structure_get_double (structure, "pointer_y", &y)) {
+      gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
+          (gdouble) y * yscale, NULL);
+    }
+
+    gst_pad_send_event (peer, event);
+    gst_object_unref (peer);
   }
-  if (gst_structure_get_double (structure, "pointer_y", &y)) {
-    y *= GST_VIDEO_SINK_HEIGHT (xvimagesink);
-    y /= xvimagesink->xwindow->height;
-    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
-  }
-
-  gst_pad_send_event (gst_pad_get_peer (GST_VIDEO_SINK_PAD (xvimagesink)),
-      event);
 }
 
 static void
