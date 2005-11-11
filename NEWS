@@ -1,4 +1,15 @@
-This is GStreamer Python Bindings 0.9.4, "Stegosaurus"
+This is GStreamer Python Bindings 0.9.5, "96-bit Audio"
+
+Changes since 0.9.4:
+    
+      * Remove mini-object caching, fixes crashes
+      * added gst.TagList
+      * added gst.TIME_ARGS
+
+Bugs fixed since 0.9.4:
+    
+      * 306817 : No way to set tags in gst-python
+      * 320357 : element_query_duration not wrapped
 
 Bugs fixed since 0.9.3:
 

@@ -1,3 +1,10 @@
+=== release 0.9.5 ===
+
+2005-11-11  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.5, "96-bit Audio"
+
 2005-11-10  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gsttaglist.override:
@@ -11,7 +18,7 @@
 	Make probe handler return TRUE if the Python callback doesn't return
 	anything.
 	* gst/gsttaglist.override:
-	Cleaned up gst.TagList, works as a dictionnary.
+	Cleaned up gst.TagList, works as a dictionary.
 
 2005-11-08  Edward Hervey  <edward@fluendo.com>
 
@@ -112,7 +119,7 @@
 	* configure.ac:
 	  back to HEAD
 
-=== gst-python 0.9.4 ===
+=== release 0.9.4 ===
 
 2005-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -613,7 +620,7 @@
 	* configure.ac:
 	  back to development
 
-=== gst-python 0.9.3 ===
+=== release 0.9.3 ===
 
 2005-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -1986,7 +1993,7 @@
 
 	* configure.ac: Post release version bump
 
-=== gst-python 0.8.1 ===
+=== release 0.8.1 ===
 
 2004-11-29  Johan Dahlin  <johan@gnome.org>
 
@@ -2055,6 +2062,7 @@
 	test_event.py 
 	
 === release 0.8.0 ===
+
 2004-11-15  Johan Dahlin  <johan@gnome.org>
 
 	* configure.ac: bump
