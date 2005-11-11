@@ -1,3 +1,10 @@
+=== release 0.9.5 ===
+
+2005-11-11  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.5, "Bike Lunch Day"
+
 2005-11-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbuffer.c: (_gst_buffer_copy):

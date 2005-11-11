@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.9.4 "Tyrannosaurus Rex"
+GStreamer: Release notes for GStreamer 0.9.5 "Bike Lunch Day"
         
 
 The GStreamer team is petrified to announce a new release
@@ -36,21 +36,15 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * state lock redefined
-      * Extensive documentation updates
-      * BaseTransform reworked
+      * gst_bus_poll and signal watch now see the same messages
+      * clock sync in BaseSrc class
+      * API documentation updates
       * Bus reworked; signal API added
 
 Bugs fixed in this release
     
-      * 111146 : new GstThread fails on pipeline with errors
-      * 169772 : [PATCH] GOption command-line parsing
-      * 170777 : use GST_TYPE_DATE for GST_TAG_DATE
-      * 315050 : [API] consider using GstClockTime instead of GTimeVal in ...
-      * 315126 : filesrc + forced caps should be possible
-      * 315383 : gst-launch shouldn't run broken pipelines
-      * 317041 : GstObject flags should be made real flags
-      * 318447 : gst_bin_iterate_sorted: Invalid call to gst_iterator_new
+      * 317341 : after linking ghost pads, one target pad does not have a ...
+      * 320774 : basesrc commit broke typefinding
 
 Download
 
@@ -95,10 +89,9 @@ Contributors to this release
       * Andy Wingo
       * Edward Hervey
       * Johan Dahlin
-      * Josef Zlomek
-      * Julien Moutte
+      * Julien MOUTTE
+      * Luca Ognibene
       * Michael Smith
-      * Philippe Khalaf
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller

@@ -1,4 +1,16 @@
-This is GStreamer 0.9.4, "Tyrannosaurus Rex".
+This is GStreamer 0.9.5, "Bike Lunch Day".
+  
+Changes since 0.9.4:
+    
+      * gst_bus_poll and signal watch now see the same messages
+      * clock sync in BaseSrc class
+      * API documentation updates
+      * Bus reworked; signal API added
+
+Bugs fixed since 0.9.4:
+    
+      * 317341 : after linking ghost pads, one target pad does not have a ...
+      * 320774 : basesrc commit broke typefinding
 
 Changes since 0.9.3:
 
