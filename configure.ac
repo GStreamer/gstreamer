@@ -8,7 +8,7 @@ dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
                                                                                 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(gst-python, PYGST_VERSION, 0, 9, 5, 0,
+AS_VERSION(gst-python, PYGST_VERSION, 0, 9, 5, 1,
     GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
