@@ -761,7 +761,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG ("num_components=%d, comps_in_scan=%d\n",
       dec->cinfo.num_components, dec->cinfo.comps_in_scan);
-  for (i = 0; i < 3; ++i) {
+  for (i = 0; i < dec->cinfo.num_components; ++i) {
     GST_DEBUG ("[%d] h_samp_factor=%d, v_samp_factor=%d\n", i,
         dec->cinfo.cur_comp_info[i]->h_samp_factor,
         dec->cinfo.cur_comp_info[i]->v_samp_factor);

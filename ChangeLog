@@ -1,3 +1,8 @@
+2005-11-12  Edward Hervey  <edward@fluendo.com>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_chain): 
+	Only GST_DEBUG() information on the valid components.
+
 2005-11-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD
