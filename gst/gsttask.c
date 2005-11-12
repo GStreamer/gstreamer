@@ -493,5 +493,7 @@ gst_task_join (GstTask * task)
     GST_TASK_WAIT (task);
   GST_UNLOCK (task);
 
+  GST_DEBUG_OBJECT (task, "Joined task %p", task);
+
   return TRUE;
 }
