@@ -1,3 +1,10 @@
+2005-11-13  Edward Hervey  <edward@fluendo.com>
+
+	* examples/seeking/seek.c: (do_seek), (accurate_toggle_cb),
+	(key_toggle_cb), (main):
+	Added checkboxes for adding/removing the accurate and key_unit seek
+	flags.
+
 2005-11-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD

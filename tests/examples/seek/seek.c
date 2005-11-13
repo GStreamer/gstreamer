@@ -11,6 +11,9 @@ static GList *seekable_pads = NULL;
 static GList *rate_pads = NULL;
 static GList *seekable_elements = NULL;
 
+static gboolean accurate_seek = FALSE;
+static gboolean keyframe_seek = FALSE;
+
 static GstElement *pipeline;
 static gint64 position;
 static gint64 duration;
@@ -1006,6 +1009,13 @@ do_seek (GtkWidget * widget)
   gint64 real = gtk_range_get_value (GTK_RANGE (widget)) * duration / 100;
   gboolean res = FALSE;
   GstEvent *s_event;
+  GstSeekFlags flags;
+
+  flags = GST_SEEK_FLAG_FLUSH;
+  if (accurate_seek)
+    flags |= GST_SEEK_FLAG_ACCURATE;
+  if (keyframe_seek)
+    flags |= GST_SEEK_FLAG_KEY_UNIT;
 
   if (!elem_seek) {
     GList *walk = seekable_pads;
@@ -1018,7 +1028,7 @@ do_seek (GtkWidget * widget)
 
       s_event = gst_event_new_seek (1.0,
           GST_FORMAT_TIME,
-          GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
+          flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
 
       res = gst_pad_send_event (seekable, s_event);
 
@@ -1035,7 +1045,7 @@ do_seek (GtkWidget * widget)
 
       s_event = gst_event_new_seek (1.0,
           GST_FORMAT_TIME,
-          GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
+          flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
 
       res = gst_element_send_event (seekable, s_event);
 
@@ -1193,6 +1203,18 @@ failed:
 }
 
 static void
+accurate_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  accurate_seek = gtk_toggle_button_get_active (button);
+}
+
+static void
+key_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  keyframe_seek = gtk_toggle_button_get_active (button);
+}
+
+static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *s;
@@ -1259,6 +1281,7 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *hbox, *vbox, *play_button, *pause_button, *stop_button;
+  GtkWidget *accurate_checkbox, *key_checkbox;
   GOptionEntry options[] = {
     {"stats", 's', 0, G_OPTION_ARG_NONE, &stats,
         "Show pad stats", NULL},
@@ -1308,6 +1331,9 @@ main (int argc, char **argv)
   pause_button = gtk_button_new_with_label ("pause");
   stop_button = gtk_button_new_with_label ("stop");
 
+  accurate_checkbox = gtk_check_button_new_with_label ("Accurate Seek");
+  key_checkbox = gtk_check_button_new_with_label ("Key_unit Seek");
+
   adjustment =
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
   hscale = gtk_hscale_new (adjustment);
@@ -1328,6 +1354,8 @@ main (int argc, char **argv)
   gtk_box_pack_start (GTK_BOX (hbox), play_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), pause_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), stop_button, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (hbox), accurate_checkbox, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (hbox), key_checkbox, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
 
   /* connect things ... */
@@ -1337,6 +1365,11 @@ main (int argc, char **argv)
       pipeline);
   g_signal_connect (G_OBJECT (stop_button), "clicked", G_CALLBACK (stop_cb),
       pipeline);
+  g_signal_connect (G_OBJECT (accurate_checkbox), "toggled",
+      G_CALLBACK (accurate_toggle_cb), pipeline);
+  g_signal_connect (G_OBJECT (key_checkbox), "toggled",
+      G_CALLBACK (key_toggle_cb), pipeline);
+
   g_signal_connect (G_OBJECT (window), "delete_event", gtk_main_quit, NULL);
 
   /* show the gui. */
