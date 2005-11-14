@@ -1,3 +1,8 @@
+2005-11-14  Martin Soto  <soto@localhost.localdomain>
+
+	* gst/mpegstream/Makefile.am (noinst_HEADERS): Add
+	gstrfc2250enc.h.
+
 2005-11-14  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* configure.ac:

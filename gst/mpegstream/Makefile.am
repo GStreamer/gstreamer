@@ -16,6 +16,7 @@ noinst_HEADERS = gstmpegparse.h \
                  gstmpegdemux.h \
                  gstdvddemux.h \
                  gstmpegpacketize.h \
-                 gstmpegclock.h
+                 gstmpegclock.h \
+		 gstrfc2250enc.h
 
 EXTRA_DIST = README notes
