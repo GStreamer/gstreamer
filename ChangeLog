@@ -1,3 +1,11 @@
+2005-11-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_sink_event):
+	  Don't crash in debug message by dereferencing the NULL buffer
+	  gst_ffmpegdec_frame() gets passed on EOS. Take STREAM_LOCK for
+	  EOS, TAG, NEWSEGMENT and FLUSH_STOP events.
+
 2005-11-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD
