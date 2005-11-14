@@ -1,3 +1,21 @@
+2005-11-14  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* configure.ac:
+	* gst/mpegstream/Makefile.am:
+	* gst/mpegstream/gstdvddemux.c:
+	* gst/mpegstream/gstdvddemux.h:
+	* gst/mpegstream/gstmpegdemux.c:
+	* gst/mpegstream/gstmpegdemux.h:
+	* gst/mpegstream/gstmpegpacketize.c:
+	* gst/mpegstream/gstmpegpacketize.h:
+	* gst/mpegstream/gstmpegparse.c:
+	* gst/mpegstream/gstmpegparse.h:
+	* gst/mpegstream/gstmpegstream.c:
+	* gst/mpegstream/gstrfc2250enc.c:
+	* gst/mpegstream/gstrfc2250enc.h:
+	Applied patch from Josef Zlomek <josef.zlomek@xeris.cz> to
+	partially port the mpegstream plugin to GStreamer 0.9.
+
 2005-11-14  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac (GST_PLUGIN_LDFLAGS): -no-undefined for better

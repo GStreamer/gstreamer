@@ -34,13 +34,8 @@ plugin_init (GstPlugin * plugin)
    * stack again and the first _init will be called more than once
    * and wtay wants to use dlclose at some point in the future */
 
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
-  if (!gst_mpeg_parse_plugin_init (plugin) ||
-      !gst_mpeg_demux_plugin_init (plugin) ||
-      !gst_dvd_demux_plugin_init (plugin) ||
-      !gst_rfc2250_enc_plugin_init (plugin))
+  if (!gst_mpeg_parse_plugin_init (plugin) || !gst_mpeg_demux_plugin_init (plugin) || !gst_dvd_demux_plugin_init (plugin)       /*||
+                                                                                                                                   !gst_rfc2250_enc_plugin_init (plugin) */ )
     return FALSE;
 
   return TRUE;

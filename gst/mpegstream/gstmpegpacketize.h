@@ -23,7 +23,6 @@
 
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 
 G_BEGIN_DECLS
 
@@ -55,18 +54,25 @@ struct _GstMPEGPacketize {
   /* current parse state */
   guchar id;
 
-  GstPad *pad;
-  GstByteStream *bs;
+  GstPad *srcpad;
   GstMPEGPacketizeType type;
+
+  guint8 *cache;            /* cache for incoming data */
+  guint cache_size;         /* allocated size of the cache */
+  guint cache_head;         /* position of the beginning of the data */
+  guint cache_tail;         /* position of the end of the data in the cache */
+  guint64 cache_byte_pos;   /* byte position of the cache in the MPEG stream */
 
   gboolean MPEG2;
   gboolean resync;
 };
 
-GstMPEGPacketize* 	gst_mpeg_packetize_new 		(GstPad *pad, GstMPEGPacketizeType type);
-void		 	gst_mpeg_packetize_destroy 	(GstMPEGPacketize *packetize);
+GstMPEGPacketize* gst_mpeg_packetize_new     (GstPad *pad, GstMPEGPacketizeType type);
+void              gst_mpeg_packetize_destroy (GstMPEGPacketize *packetize);
 
-GstData* 		gst_mpeg_packetize_read 	(GstMPEGPacketize *packetize);
+guint64           gst_mpeg_packetize_tell    (GstMPEGPacketize *packetize);
+gboolean          gst_mpeg_packetize_put     (GstMPEGPacketize *packetize, GstBuffer * buf);
+GstFlowReturn     gst_mpeg_packetize_read    (GstMPEGPacketize *packetize, GstBuffer ** outbuf);
 
 G_END_DECLS
 

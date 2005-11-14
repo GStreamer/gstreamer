@@ -22,7 +22,6 @@
 #define __MPEG_PARSE_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 #include "gstmpegpacketize.h"
 
 G_BEGIN_DECLS
@@ -80,6 +79,8 @@ G_BEGIN_DECLS
     guint64 next_scr;           /* Expected next SCR. */
     guint64 bytes_since_scr;    /* Bytes since current_scr */
 
+    GstClockTime current_ts;    /* Current TS corresponding to SCR */
+
     gboolean do_adjust;         /* If false, send discont events on SCR
                                  * jumps
                                  */
@@ -98,6 +99,8 @@ G_BEGIN_DECLS
 
     GstIndex *index;
     gint index_id;
+
+    guint64 byte_offset;
   };
 
   struct _GstMPEGParseClass
@@ -111,11 +114,16 @@ G_BEGIN_DECLS
       gboolean (*parse_pes) (GstMPEGParse * parse, GstBuffer * buffer);
 
     /* process events */
-    void (*handle_discont) (GstMPEGParse * parse, GstEvent * event);
+    GstFlowReturn (*handle_discont) (GstMPEGParse * parse, GstEvent * event);
 
     /* optional method to send out the data */
-    void (*send_data) (GstMPEGParse * parse, GstData * data, GstClockTime time);
-    void (*send_discont) (GstMPEGParse * parse, GstClockTime time);
+    GstFlowReturn (*send_buffer) (GstMPEGParse * parse, GstBuffer * buffer, GstClockTime time);
+    GstFlowReturn (*process_event) (GstMPEGParse * parse, GstEvent * event, GstClockTime time);
+    GstFlowReturn (*send_discont) (GstMPEGParse * parse, GstClockTime time);
+    GstFlowReturn (*send_event) (GstMPEGParse * parse, GstEvent *event, GstClockTime time);
+
+    /* signals */
+    void (*reached_offset) (GstMPEGParse *mpeg_parse, GstClockTime timeval);
   };
 
   GType gst_mpeg_parse_get_type (void);
@@ -126,7 +134,6 @@ G_BEGIN_DECLS
 
   gboolean gst_mpeg_parse_convert_src (GstPad * pad, GstFormat src_format,
       gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
-  const GstEventMask *gst_mpeg_parse_get_src_event_masks (GstPad * pad);
   gboolean gst_mpeg_parse_handle_src_event (GstPad * pad, GstEvent * event);
 
   const GstQueryType *gst_mpeg_parse_get_src_query_types (GstPad * pad);

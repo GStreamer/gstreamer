@@ -21,24 +21,31 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 /*#define GST_DEBUG_ENABLED */
 #include "gstmpegpacketize.h"
 
 GstMPEGPacketize *
-gst_mpeg_packetize_new (GstPad * pad, GstMPEGPacketizeType type)
+gst_mpeg_packetize_new (GstPad * srcpad, GstMPEGPacketizeType type)
 {
   GstMPEGPacketize *new;
 
-  g_return_val_if_fail (pad != NULL, NULL);
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+  g_return_val_if_fail (srcpad != NULL, NULL);
+  g_return_val_if_fail (GST_IS_PAD (srcpad), NULL);
+  g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), NULL);
+
+  gst_object_ref (GST_OBJECT (srcpad));
 
   new = g_malloc (sizeof (GstMPEGPacketize));
-
-  gst_object_ref (GST_OBJECT (pad));
   new->resync = TRUE;
   new->id = 0;
-  new->pad = pad;
-  new->bs = gst_bytestream_new (pad);
+  new->srcpad = srcpad;
+  new->cache_head = 0;
+  new->cache_tail = 0;
+  new->cache_size = 0x4000;
+  new->cache = g_malloc (new->cache_size);
+  new->cache_byte_pos = 0;
   new->MPEG2 = FALSE;
   new->type = type;
 
@@ -50,25 +57,118 @@ gst_mpeg_packetize_destroy (GstMPEGPacketize * packetize)
 {
   g_return_if_fail (packetize != NULL);
 
-  gst_bytestream_destroy (packetize->bs);
-  gst_object_unref (GST_OBJECT (packetize->pad));
+  gst_object_unref (GST_OBJECT (packetize->srcpad));
 
+  g_free (packetize->cache);
   g_free (packetize);
 }
 
-static GstData *
-parse_packhead (GstMPEGPacketize * packetize)
+guint64
+gst_mpeg_packetize_tell (GstMPEGPacketize * packetize)
 {
-  gint length = 8 + 4;
+  return packetize->cache_byte_pos + packetize->cache_head;
+}
+
+gboolean
+gst_mpeg_packetize_put (GstMPEGPacketize * packetize, GstBuffer * buf)
+{
+  int cache_len = packetize->cache_tail - packetize->cache_head;
+
+  if (cache_len + GST_BUFFER_SIZE (buf) > packetize->cache_size) {
+    /* the buffer does not fit into the cache so grow the cache */
+
+    guint8 *new_cache;
+
+    /* get the new size of the cache */
+    do {
+      packetize->cache_size *= 2;
+    } while (cache_len + GST_BUFFER_SIZE (buf) > packetize->cache_size);
+
+    /* allocate new cache - do not realloc to avoid copying data twice */
+    new_cache = g_malloc (packetize->cache_size);
+    if (new_cache == NULL)
+      return FALSE;
+
+    /* copy the data to the beginning of the new cache and update the cache info */
+    memcpy (new_cache, packetize->cache + packetize->cache_head, cache_len);
+    g_free (packetize->cache);
+    packetize->cache = new_cache;
+    packetize->cache_byte_pos += packetize->cache_head;
+    packetize->cache_head = 0;
+    packetize->cache_tail = cache_len;
+  } else if (packetize->cache_tail + GST_BUFFER_SIZE (buf) >
+      packetize->cache_size) {
+    /* the buffer does not fit into the end of the cache so move the cache data
+       to the beginning of the cache */
+
+    memmove (packetize->cache, packetize->cache + packetize->cache_head,
+        packetize->cache_tail - packetize->cache_head);
+    packetize->cache_byte_pos += packetize->cache_head;
+    packetize->cache_tail -= packetize->cache_head;
+    packetize->cache_head = 0;
+  }
+
+  /* copy the buffer to the cache */
+  memcpy (packetize->cache + packetize->cache_tail, GST_BUFFER_DATA (buf),
+      GST_BUFFER_SIZE (buf));
+  packetize->cache_tail += GST_BUFFER_SIZE (buf);
+
+  gst_buffer_unref (buf);
+  return TRUE;
+}
+
+static guint
+peek_cache (GstMPEGPacketize * packetize, guint length, guint8 ** buf)
+{
+  *buf = packetize->cache + packetize->cache_head;
+
+  if (packetize->cache_tail - packetize->cache_head < length)
+    return packetize->cache_tail - packetize->cache_head;
+
+  return length;
+}
+
+static void
+skip_cache (GstMPEGPacketize * packetize, guint length)
+{
+  g_assert (packetize->cache_tail - packetize->cache_head >= length);
+
+  packetize->cache_head += length;
+}
+
+static GstFlowReturn
+read_cache (GstMPEGPacketize * packetize, guint length, GstBuffer ** outbuf)
+{
+  if (packetize->cache_tail - packetize->cache_head < length)
+    return GST_FLOW_RESEND;
+  if (length == 0)
+    return GST_FLOW_RESEND;
+
+  *outbuf = gst_buffer_new_and_alloc (length);
+  if (*outbuf == NULL)
+    return GST_FLOW_ERROR;
+
+  memcpy (GST_BUFFER_DATA (*outbuf), packetize->cache + packetize->cache_head,
+      length);
+  packetize->cache_head += length;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+parse_packhead (GstMPEGPacketize * packetize, GstBuffer ** outbuf)
+{
+  guint length = 8 + 4;
   guint8 *buf;
-  GstBuffer *outbuf;
-  guint32 got_bytes;
+  guint got_bytes;
 
   GST_DEBUG ("packetize: in parse_packhead");
 
-  got_bytes = gst_bytestream_peek_bytes (packetize->bs, &buf, length);
+  *outbuf = NULL;
+
+  got_bytes = peek_cache (packetize, length, &buf);
   if (got_bytes < length)
-    return NULL;
+    return GST_FLOW_RESEND;
 
   buf += 4;
 
@@ -79,74 +179,55 @@ parse_packhead (GstMPEGPacketize * packetize)
     GST_DEBUG ("packetize::parse_packhead setting mpeg2");
     packetize->MPEG2 = TRUE;
     length += 2;
-    got_bytes = gst_bytestream_peek_bytes (packetize->bs, &buf, length);
+    got_bytes = peek_cache (packetize, length, &buf);
     if (got_bytes < length)
-      return NULL;
+      return GST_FLOW_RESEND;
   } else {
     GST_DEBUG ("packetize::parse_packhead setting mpeg1");
     packetize->MPEG2 = FALSE;
   }
 
-  got_bytes = gst_bytestream_read (packetize->bs, &outbuf, length);
-  if (got_bytes < length)
-    return NULL;
-
-  return GST_DATA (outbuf);
+  return read_cache (packetize, length, outbuf);
 }
 
-static GstData *
-parse_end (GstMPEGPacketize * packetize)
+static GstFlowReturn
+parse_end (GstMPEGPacketize * packetize, GstBuffer ** outbuf)
 {
-  guint32 got_bytes;
-  GstBuffer *outbuf;
-
-  got_bytes = gst_bytestream_read (packetize->bs, &outbuf, 4);
-  if (got_bytes < 4)
-    return NULL;
-
-  return GST_DATA (outbuf);
+  return read_cache (packetize, 4, outbuf);
 }
 
-static inline GstData *
-parse_generic (GstMPEGPacketize * packetize)
+static GstFlowReturn
+parse_generic (GstMPEGPacketize * packetize, GstBuffer ** outbuf)
 {
-  GstByteStream *bs = packetize->bs;
   guchar *buf;
-  GstBuffer *outbuf;
-  guint32 got_bytes;
-  gint16 length = 6;
+  guint length = 6;
+  guint got_bytes;
 
   GST_DEBUG ("packetize: in parse_generic");
 
-  got_bytes = gst_bytestream_peek_bytes (bs, (guint8 **) & buf, length);
-  if (got_bytes < 6)
-    return NULL;
+  got_bytes = peek_cache (packetize, length, &buf);
+  if (got_bytes < length)
+    return GST_FLOW_RESEND;
 
   buf += 4;
 
   length += GST_READ_UINT16_BE (buf);
   GST_DEBUG ("packetize: header_length %d", length);
 
-  got_bytes = gst_bytestream_read (packetize->bs, &outbuf, length);
-  if (got_bytes < length)
-    return NULL;
-
-  return GST_DATA (outbuf);
+  return read_cache (packetize, length, outbuf);
 }
 
-static inline GstData *
-parse_chunk (GstMPEGPacketize * packetize)
+static GstFlowReturn
+parse_chunk (GstMPEGPacketize * packetize, GstBuffer ** outbuf)
 {
-  GstByteStream *bs = packetize->bs;
   guchar *buf;
   gint offset;
   guint32 code;
-  gint chunksize;
-  GstBuffer *outbuf = NULL;
+  guint chunksize;
 
-  chunksize = gst_bytestream_peek_bytes (bs, (guint8 **) & buf, 4096);
+  chunksize = peek_cache (packetize, 4096, &buf);
   if (chunksize == 0)
-    return NULL;
+    return GST_FLOW_RESEND;
 
   offset = 4;
 
@@ -160,33 +241,29 @@ parse_chunk (GstMPEGPacketize * packetize)
     GST_DEBUG ("  code = %08x", code);
 
     if (offset == chunksize) {
-      chunksize =
-          gst_bytestream_peek_bytes (bs, (guint8 **) & buf, offset + 4096);
+      chunksize = peek_cache (packetize, offset + 4096, &buf);
       if (chunksize == 0)
-        return NULL;
+        return GST_FLOW_RESEND;
       chunksize += offset;
     }
   }
   if (offset > 4) {
-    chunksize = gst_bytestream_read (bs, &outbuf, offset - 4);
-    if (chunksize == 0)
-      return NULL;
+    return read_cache (packetize, offset - 4, outbuf);
   }
-  return GST_DATA (outbuf);
+  return GST_FLOW_RESEND;
 }
 
 
 /* FIXME mmx-ify me */
-static inline gboolean
+static gboolean
 find_start_code (GstMPEGPacketize * packetize)
 {
-  GstByteStream *bs = packetize->bs;
-  guchar *buf;
+  guint8 *buf;
   gint offset;
   guint32 code;
   gint chunksize;
 
-  chunksize = gst_bytestream_peek_bytes (bs, (guint8 **) & buf, 4096);
+  chunksize = peek_cache (packetize, 4096, &buf);
   if (chunksize < 5)
     return FALSE;
 
@@ -202,9 +279,9 @@ find_start_code (GstMPEGPacketize * packetize)
     GST_DEBUG ("  code = %08x %p %08x", code, buf, chunksize);
 
     if (offset == chunksize) {
-      gst_bytestream_flush_fast (bs, offset);
+      skip_cache (packetize, offset);
 
-      chunksize = gst_bytestream_peek_bytes (bs, (guint8 **) & buf, 4096);
+      chunksize = peek_cache (packetize, 4096, &buf);
       if (chunksize == 0)
         return FALSE;
 
@@ -213,86 +290,75 @@ find_start_code (GstMPEGPacketize * packetize)
   }
   packetize->id = code & 0xff;
   if (offset > 4) {
-    gst_bytestream_flush_fast (bs, offset - 4);
+    skip_cache (packetize, offset - 4);
   }
   return TRUE;
 }
 
-GstData *
-gst_mpeg_packetize_read (GstMPEGPacketize * packetize)
+GstFlowReturn
+gst_mpeg_packetize_read (GstMPEGPacketize * packetize, GstBuffer ** outbuf)
 {
-  gboolean got_event = FALSE;
-  GstData *outbuf = NULL;
+  g_return_val_if_fail (packetize != NULL, GST_FLOW_ERROR);
 
-  g_return_val_if_fail (packetize != NULL, NULL);
+  *outbuf = NULL;
 
-  while (outbuf == NULL) {
+  while (*outbuf == NULL) {
     if (!find_start_code (packetize))
-      got_event = TRUE;
-    else {
-      GST_DEBUG ("packetize: have chunk 0x%02X", packetize->id);
-      if (packetize->type == GST_MPEG_PACKETIZE_SYSTEM) {
-        if (packetize->resync) {
-          if (packetize->id != PACK_START_CODE) {
-            gst_bytestream_flush_fast (packetize->bs, 4);
-            continue;
+      return GST_FLOW_RESEND;
+
+    GST_DEBUG ("packetize: have chunk 0x%02X", packetize->id);
+    if (packetize->type == GST_MPEG_PACKETIZE_SYSTEM) {
+      if (packetize->resync) {
+        if (packetize->id != PACK_START_CODE) {
+          skip_cache (packetize, 4);
+          continue;
+        }
+
+        packetize->resync = FALSE;
+      }
+      switch (packetize->id) {
+        case PACK_START_CODE:
+          return parse_packhead (packetize, outbuf);
+        case SYS_HEADER_START_CODE:
+          return parse_generic (packetize, outbuf);
+        case ISO11172_END_START_CODE:
+          return parse_end (packetize, outbuf);
+        default:
+          if (packetize->MPEG2 && ((packetize->id < 0xBD)
+                  || (packetize->id > 0xFE))) {
+            skip_cache (packetize, 4);
+            g_warning ("packetize: ******** unknown id 0x%02X", packetize->id);
+          } else {
+            return parse_generic (packetize, outbuf);
           }
-
-          packetize->resync = FALSE;
-        }
-        switch (packetize->id) {
-          case PACK_START_CODE:
-            outbuf = parse_packhead (packetize);
-            if (!outbuf)
-              got_event = TRUE;
-            break;
-          case SYS_HEADER_START_CODE:
-            outbuf = parse_generic (packetize);
-            if (!outbuf)
-              got_event = TRUE;
-            break;
-          case ISO11172_END_START_CODE:
-            outbuf = parse_end (packetize);
-            if (!outbuf)
-              got_event = TRUE;
-            break;
-          default:
-            if (packetize->MPEG2 && ((packetize->id < 0xBD)
-                    || (packetize->id > 0xFE))) {
-              gst_bytestream_flush (packetize->bs, 4);
-              g_warning ("packetize: ******** unknown id 0x%02X",
-                  packetize->id);
-            } else {
-              outbuf = parse_generic (packetize);
-              if (!outbuf)
-                got_event = TRUE;
-            }
-        }
-      } else if (packetize->type == GST_MPEG_PACKETIZE_VIDEO) {
-        outbuf = parse_chunk (packetize);
-      } else {
-        g_assert_not_reached ();
       }
-    }
-
-    if (got_event) {
-      guint32 remaining;
-      GstEvent *event;
-      gint etype;
-
-      gst_bytestream_get_status (packetize->bs, &remaining, &event);
-      etype = event ? GST_EVENT_TYPE (event) : GST_EVENT_EOS;
-
-      switch (etype) {
-        case GST_EVENT_DISCONTINUOUS:
-          GST_DEBUG ("packetize: discont\n");
-          gst_bytestream_flush_fast (packetize->bs, remaining);
-          break;
-      }
-
-      return GST_DATA (event);
+    } else if (packetize->type == GST_MPEG_PACKETIZE_VIDEO) {
+      return parse_chunk (packetize, outbuf);
+    } else {
+      g_assert_not_reached ();
     }
   }
 
-  return outbuf;
+#if 0
+  /* TODO: flush cache when newsegment is received */
+  if (got_event) {
+    guint32 remaining;
+    GstEvent *event;
+    gint etype;
+
+    gst_bytestream_get_status (packetize->bs, &remaining, &event);
+    etype = event ? GST_EVENT_TYPE (event) : GST_EVENT_EOS;
+
+    switch (etype) {
+      case GST_EVENT_NEWSEGMENT:
+        GST_DEBUG ("packetize: discont\n");
+        gst_bytestream_flush_fast (packetize->bs, remaining);
+        break;
+    }
+
+    return GST_MINI_OBJECT (event);
+  }
+#endif
+
+  g_assert_not_reached ();
 }

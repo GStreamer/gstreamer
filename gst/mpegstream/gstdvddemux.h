@@ -91,18 +91,17 @@ struct _GstDVDLPCMStream {
 struct _GstDVDDemux {
   GstMPEGDemux	 parent;
 
-  GstPad *cur_video;		/* Current video stream pad. */
-  GstPad *cur_audio;		/* Current audio stream pad. */
-  GstPad *cur_subpicture;	/* Current subpicture stream pad. */
+  GstPad *cur_video;           /* Current video stream pad. */
+  GstPad *cur_audio;           /* Current audio stream pad. */
+  GstPad *cur_subpicture;      /* Current subpicture stream pad. */
 
   gint cur_video_nr;		/* Current video stream number. */
   gint cur_audio_nr;		/* Current audio stream number. */
   gint cur_subpicture_nr;	/* Current subpicture stream number. */
 
-  GstClockTime last_end_ptm;	/* End presentation time of the las nav packet
+  GstClockTime last_end_ptm;	/* End presentation time of the last nav packet
                                    event received. */
 
-  gboolean just_flushed;	/* The element just received a flush event. */
   GstClockTime discont_time;	/* If different from GST_CLOCK_TIME_NONE, a
                                    discontinuous event should be sent with the
                                    given time, before sending the next data
@@ -112,8 +111,10 @@ struct _GstDVDDemux {
 
   GstMPEGStream *subpicture_stream[GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS];
 				/* Subpicture output streams. */
-  GstClockTime   subpicture_time[GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS];
-  				/* Last timestamp for buffer on each stream */
+
+  GstEvent *langcodes;
+
+  gboolean ignore_next_newmedia_discont;
 };
 
 

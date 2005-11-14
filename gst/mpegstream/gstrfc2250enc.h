@@ -23,7 +23,6 @@
 
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 #include "gstmpegpacketize.h"
 
 G_BEGIN_DECLS
