@@ -770,6 +770,9 @@ gst_multifdsink_handle_client_read (GstMultiFdSink * sink,
   return ret;
 }
 
+/* Queue raw data, creating a new buffer. This takes ownership of the data by
+ * setting it as GST_BUFFER_MALLOCDATA() on the created buffer
+ */
 static gboolean
 gst_multifdsink_client_queue_data (GstMultiFdSink * sink, GstTCPClient * client,
     gchar * data, gint len)
@@ -778,6 +781,7 @@ gst_multifdsink_client_queue_data (GstMultiFdSink * sink, GstTCPClient * client,
 
   buf = gst_buffer_new ();
   GST_BUFFER_DATA (buf) = (guint8 *) data;
+  GST_BUFFER_MALLOCDATA (buf) = (guint8 *) data;
   GST_BUFFER_SIZE (buf) = len;
 
   GST_LOG_OBJECT (sink, "[fd %5d] queueing data of length %d",
@@ -1509,6 +1513,7 @@ gst_multifdsink_render (GstBaseSink * bsink, GstBuffer * buf)
     g_slist_free (sink->streamheader);
     sink->streamheader = NULL;
   }
+
   /* if the incoming buffer is marked as IN CAPS, then we assume for now
    * it's a streamheader that needs to be sent to each new client, so we
    * put it on our internal list of streamheader buffers.

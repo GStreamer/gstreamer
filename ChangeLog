@@ -1,3 +1,9 @@
+2005-11-14  Michael Smith <msmith@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multifdsink_client_queue_data),
+	(gst_multifdsink_render):
+	  Don't leak GDP headers when using GDP mode (i.e. tcpserversink).
+
 2005-11-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybin.c: (gen_audio_element):
