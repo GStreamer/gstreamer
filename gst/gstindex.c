@@ -746,6 +746,8 @@ gst_index_add_association (GstIndex * index, gint id, GstAssocFlags flags,
  *
  * Add the given object to the index with the given key.
  *
+ * This function is not yet implemented.
+ *
  * Returns: a pointer to the newly added entry in the index.
  */
 GstIndexEntry *
