@@ -1,3 +1,10 @@
+2005-11-14  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buf):
+	Ref the source pad caps while we need them.
+	Fixes (#321386)
+
 2005-11-11  Wim Taymans  <wim@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:
