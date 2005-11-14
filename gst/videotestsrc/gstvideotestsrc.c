@@ -77,7 +77,8 @@ static void gst_videotestsrc_get_property (GObject * object, guint prop_id,
 
 static GstCaps *gst_videotestsrc_getcaps (GstBaseSrc * bsrc);
 static gboolean gst_videotestsrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
-static gboolean gst_videotestsrc_negotiate (GstBaseSrc * bsrc);
+static void gst_videotestsrc_src_fixate (GstPad * pad, GstCaps * caps);
+
 static gboolean gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event);
 
 static void gst_videotestsrc_get_times (GstBaseSrc * basesrc,
@@ -146,7 +147,6 @@ gst_videotestsrc_class_init (GstVideoTestSrcClass * klass)
 
   gstbasesrc_class->get_caps = gst_videotestsrc_getcaps;
   gstbasesrc_class->set_caps = gst_videotestsrc_setcaps;
-  gstbasesrc_class->negotiate = gst_videotestsrc_negotiate;
   gstbasesrc_class->event = gst_videotestsrc_event;
 
   gstbasesrc_class->get_times = gst_videotestsrc_get_times;
@@ -156,6 +156,10 @@ gst_videotestsrc_class_init (GstVideoTestSrcClass * klass)
 static void
 gst_videotestsrc_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
 {
+  GstPad *pad = GST_BASE_SRC_PAD (src);
+
+  gst_pad_set_fixatecaps_function (pad, gst_videotestsrc_src_fixate);
+
   gst_videotestsrc_set_pattern (src, GST_VIDEOTESTSRC_SMPTE);
 
   src->segment_start_frame = -1;
@@ -163,6 +167,18 @@ gst_videotestsrc_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
   src->timestamp_offset = 0;
 
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
+}
+
+static void
+gst_videotestsrc_src_fixate (GstPad * pad, GstCaps * caps)
+{
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_caps_structure_fixate_field_nearest_int (structure, "width", 320);
+  gst_caps_structure_fixate_field_nearest_int (structure, "height", 240);
+  gst_caps_structure_fixate_field_nearest_double (structure, "framerate", 30.0);
 }
 
 static void
@@ -309,39 +325,6 @@ gst_videotestsrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
         videotestsrc->height, videotestsrc->rate);
   }
   return res;
-}
-
-static gboolean
-gst_videotestsrc_negotiate (GstBaseSrc * bsrc)
-{
-  GstCaps *caps;
-  GstCaps *temp;
-  gboolean result = FALSE;
-
-  /* get all possible caps on this link */
-  caps = gst_pad_get_allowed_caps (GST_BASE_SRC_PAD (bsrc));
-  temp = gst_caps_normalize (caps);
-  gst_caps_unref (caps);
-  caps = temp;
-
-  if (gst_caps_get_size (caps) > 0) {
-    GstStructure *structure;
-
-    /* pick the first one */
-    gst_caps_truncate (caps);
-
-    structure = gst_caps_get_structure (caps, 0);
-
-    gst_caps_structure_fixate_field_nearest_int (structure, "width", 320);
-    gst_caps_structure_fixate_field_nearest_int (structure, "height", 240);
-    gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
-        30.0);
-
-    result = gst_pad_set_caps (GST_BASE_SRC_PAD (bsrc), caps);
-    gst_caps_unref (caps);
-  }
-
-  return result;
 }
 
 static gboolean

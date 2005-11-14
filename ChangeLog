@@ -1,3 +1,12 @@
+2005-11-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_class_init), (gst_videotestsrc_init),
+	(gst_videotestsrc_src_fixate):
+	  move fixation to a fixate function
+	  remove negotiate function, basesrc's is good enough
+	  fixes a bug for check when using the element alone
+
 2005-11-13  Edward Hervey  <edward@fluendo.com>
 
 	* examples/seeking/seek.c: (do_seek), (accurate_toggle_cb),
