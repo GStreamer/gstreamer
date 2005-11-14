@@ -1,3 +1,17 @@
+2005-11-14  Michael Smith <msmith@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_clear), (gst_ogg_mux_init),
+	(gst_ogg_mux_sinkconnect), (gst_ogg_mux_request_new_pad),
+	(gst_ogg_mux_push_buffer), (gst_ogg_mux_dequeue_page),
+	(gst_ogg_mux_pad_queue_page), (gst_ogg_mux_queue_pads),
+	(gst_ogg_mux_set_header_on_caps), (gst_ogg_mux_collected),
+	(gst_ogg_mux_clear_collectpads), (gst_ogg_mux_change_state):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_buffer_from_packet),
+	(gst_vorbisenc_change_state):
+	  Fix a small memory leak in vorbisenc.
+	  Fix large memory leaks in oggmux, also fix lots of state change
+	  bugs in oggmux.
+
 2005-11-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/videotestsrc/gstvideotestsrc.c:

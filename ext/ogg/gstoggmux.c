@@ -262,6 +262,20 @@ gst_ogg_mux_get_sink_event_masks (GstPad * pad)
 #endif
 
 static void
+gst_ogg_mux_clear (GstOggMux * ogg_mux)
+{
+  ogg_mux->collect = gst_collectpads_new ();
+  gst_collectpads_set_function (ogg_mux->collect,
+      (GstCollectPadsFunction) gst_ogg_mux_collected, ogg_mux);
+  ogg_mux->pulling = NULL;
+  ogg_mux->need_headers = TRUE;
+  ogg_mux->max_delay = DEFAULT_MAX_DELAY;
+  ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
+
+  ogg_mux->delta_pad = NULL;
+}
+
+static void
 gst_ogg_mux_init (GstOggMux * ogg_mux)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (ogg_mux);
@@ -277,26 +291,22 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   /* seed random number generator for creation of serial numbers */
   srand (time (NULL));
 
-  ogg_mux->collect = gst_collectpads_new ();
-  gst_collectpads_set_function (ogg_mux->collect,
-      (GstCollectPadsFunction) gst_ogg_mux_collected, ogg_mux);
-  ogg_mux->pulling = NULL;
-  ogg_mux->need_headers = TRUE;
-  ogg_mux->max_delay = DEFAULT_MAX_DELAY;
-  ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
-
-  ogg_mux->delta_pad = NULL;
+  gst_ogg_mux_clear (ogg_mux);
 }
 
 static GstPadLinkReturn
 gst_ogg_mux_sinkconnect (GstPad * pad, GstPad * peer)
 {
   GstOggMux *ogg_mux;
+  gchar *name;
 
   ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
 
-  GST_DEBUG_OBJECT (ogg_mux, "sinkconnect triggered on %s",
-      gst_pad_get_name (pad));
+  name = gst_pad_get_name (pad);
+
+  GST_DEBUG_OBJECT (ogg_mux, "sinkconnect triggered on %s", name);
+
+  g_free (name);
 
   return GST_PAD_LINK_OK;
 }
@@ -823,6 +833,7 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
     walk = walk->next;
 
     /* mark buffer */
+    GST_LOG ("Setting IN_CAPS on buffer of length %d", GST_BUFFER_SIZE (buf));
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
     g_value_init (&value, GST_TYPE_BUFFER);
@@ -1096,6 +1107,11 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     }
   }
 
+  if (ogg_mux->need_headers) {
+    ret = gst_ogg_mux_send_headers (ogg_mux);
+    ogg_mux->need_headers = FALSE;
+  }
+
   /* if we don't know which pad to pull on, use the best one */
   if (ogg_mux->pulling == NULL) {
     ogg_mux->pulling = best;
@@ -1107,11 +1123,6 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
       gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
       return GST_FLOW_WRONG_STATE;
     }
-  }
-
-  if (ogg_mux->need_headers) {
-    ret = gst_ogg_mux_send_headers (ogg_mux);
-    ogg_mux->need_headers = FALSE;
   }
 
   /* we are pulling from a pad, continue to do so until a page
@@ -1326,6 +1337,28 @@ gst_ogg_mux_set_property (GObject * object,
   }
 }
 
+static void
+gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
+{
+  GSList *walk;
+
+  walk = collect->data;
+  while (walk) {
+    GstOggPad *pad = (GstOggPad *) walk->data;
+    GstBuffer *buf;
+
+    ogg_stream_clear (&pad->stream);
+
+    while ((buf = g_queue_pop_head (pad->pagebuffers)) != NULL) {
+      gst_buffer_unref (buf);
+    }
+    g_queue_free (pad->pagebuffers);
+
+    gst_collectpads_remove_pad (collect, ((GstCollectData *) pad)->pad);
+    walk = collect->data;
+  }
+}
+
 static GstStateChangeReturn
 gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1336,6 +1369,7 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ogg_mux->next_ts = 0;
       ogg_mux->offset = 0;
@@ -1344,14 +1378,25 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collectpads_stop (ogg_mux->collect);
-      break;
     default:
       break;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_collectpads_stop (ogg_mux->collect);
+      gst_ogg_mux_clear_collectpads (ogg_mux->collect);
+      gst_ogg_mux_clear (ogg_mux);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
 
   return ret;
 }

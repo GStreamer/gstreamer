@@ -1166,6 +1166,8 @@ gst_vorbisenc_change_state (GstElement * element, GstStateChange transition)
       vorbis_block_clear (&vorbisenc->vb);
       vorbis_dsp_clear (&vorbisenc->vd);
       vorbis_info_clear (&vorbisenc->vi);
+      g_free (vorbisenc->last_message);
+      vorbisenc->last_message = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_tag_list_free (vorbisenc->tags);
