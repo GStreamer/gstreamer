@@ -532,7 +532,7 @@ gen_audio_element (GstPlayBin * play_bin)
   if (play_bin->audio_sink) {
     sink = play_bin->audio_sink;
   } else {
-    sink = gst_element_factory_make ("autoaudiiosink", "audiosink");
+    sink = gst_element_factory_make ("autoaudiosink", "audiosink");
     if (sink == NULL) {
       sink = gst_element_factory_make ("alsasink", "audiosink");
     }

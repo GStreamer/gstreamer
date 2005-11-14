@@ -1,3 +1,9 @@
+2005-11-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybin.c: (gen_audio_element):
+	  Use autoaudiosink, it tends to be more widely available than
+	  autoaudiiosink.
+	  
 2005-11-14  Andy Wingo  <wingo@pobox.com>
 
 	* gst/playback/gstplaybin.c (gen_audio_element): Use autoaudiosink
