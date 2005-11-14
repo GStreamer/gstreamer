@@ -1,3 +1,8 @@
+2005-11-14  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac (GST_PLUGIN_LDFLAGS): -no-undefined for better
+	debugging, allows dll builds on windows. Fixes #316076.
+
 2005-11-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
