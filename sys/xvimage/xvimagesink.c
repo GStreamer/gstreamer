@@ -525,6 +525,10 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
       0, 0, xwindow->width, xwindow->height,
       0, 0, xvimagesink->xcontext->black);
 
+  /* We have to do that to prevent X from redrawing the background on 
+   * ConfigureNotify. This takes away flickering of video when resizing. */
+  XSetWindowBackgroundPixmap (xvimagesink->xcontext->disp, xwindow->win, None);
+
   XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
       StructureNotifyMask | PointerMotionMask | KeyPressMask |
       KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
