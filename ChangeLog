@@ -1,5 +1,8 @@
 2005-11-14  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstpad.c (gst_pad_set_active): Change docs; parent's
+	STATE_LOCK not necessary. Fixes #311489.
+
 	* gst/gsterror.c (FILE_A_BUG): Be polite *and* helpful. Fixes
 	#305291.
 
