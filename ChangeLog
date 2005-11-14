@@ -1,3 +1,70 @@
+2005-11-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  rework configure.ac file
+	* ext/aalib/gstaasink.c:
+	* ext/cairo/gstcairo.c:
+	* ext/dv/gstdv.c:
+	* ext/esd/gstesd.c:
+	* ext/flac/gstflac.c:
+	* ext/gconf/gstgconfelements.c:
+	* ext/gdk_pixbuf/gstgdkpixbuf.c:
+	* ext/jpeg/gstjpeg.c:
+	* ext/ladspa/gstladspa.c:
+	* ext/libcaca/gstcacasink.c:
+	* ext/libmng/gstmng.c:
+	* ext/libpng/gstpng.c:
+	* ext/mikmod/gstmikmod.c:
+	* ext/pango/gsttextoverlay.c:
+	* ext/pango/gsttimeoverlay.c:
+	* ext/raw1394/gst1394.c:
+	* ext/speex/gstspeex.c:
+	* gst/alpha/Makefile.am:
+	* gst/alpha/gstalpha.c:
+	* gst/alpha/gstalphacolor.c:
+	* gst/auparse/gstauparse.c:
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_factory_filter),
+	(gst_auto_audio_sink_find_best), (gst_auto_audio_sink_detect):
+	* gst/autodetect/gstautodetect.c:
+	* gst/avi/gstavi.c:
+	* gst/cutter/gstcutter.c:
+	* gst/debug/efence.c:
+	* gst/debug/gstdebug.c:
+	* gst/debug/gstnavigationtest.c:
+	* gst/effectv/gsteffectv.c:
+	* gst/flx/gstflxdec.c:
+	* gst/goom/gstgoom.c:
+	* gst/interleave/plugin.c:
+	* gst/law/alaw.c:
+	* gst/law/mulaw.c:
+	* gst/level/gstlevel.c:
+	* gst/matroska/ebml-write.c: (gst_ebml_write_seek):
+	* gst/matroska/matroska.c:
+	* gst/median/gstmedian.c:
+	* gst/monoscope/gstmonoscope.c:
+	* gst/multipart/multipart.c:
+	* gst/oldcore/gstelements.c:
+	* gst/rtp/gstrtp.c:
+	* gst/rtsp/gstrtsp.c:
+	* gst/smoothwave/gstsmoothwave.c:
+	* gst/smpte/gstsmpte.c:
+	* gst/udp/gstudp.c:
+	* gst/videobox/gstvideobox.c:
+	* gst/videofilter/gstgamma.c:
+	* gst/videofilter/gstvideobalance.c:
+	* gst/videofilter/gstvideoflip.c:
+	* gst/videofilter/gstvideotemplate.c:
+	* gst/videomixer/videomixer.c:
+	* gst/wavenc/gstwavenc.c:
+	* gst/wavparse/gstwavparse.c:
+	* sys/oss/gstossaudio.c:
+	* sys/osxaudio/gstosxaudio.c:
+	  update GST_PLUGIN_DEFINE
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstasteriskh263.c:
+	  check for htons/htonl headers and possibly link to winsock2 lib
+
 2005-11-12  Edward Hervey  <edward@fluendo.com>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_chain): 

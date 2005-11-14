@@ -320,7 +320,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "access to data in the buffer is more likely to cause segmentation "
     "faults.  This allocation method is very similar to the debugging tool "
     "\"Electric Fence\".",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 
      static void gst_fenced_buffer_finalize (GstFencedBuffer * buffer)
 {

@@ -40,4 +40,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "1394",
     "Source for DV data via IEEE1394 interface",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

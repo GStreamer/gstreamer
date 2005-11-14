@@ -1,26 +1,35 @@
-dnl autoconf configuration file for gst-plugins 
+AC_PREREQ(2.52)
+
+dnl initialize autoconf
+dnl we don't specify PACKAGE and VERSION because AS_VERSION puts it together
 AC_INIT
-AC_CANONICAL_TARGET
-
-dnl We disable static building for development, for time savings
-dnl this goes before AS_LIBTOOL to appease autoconf
-dnl *NOTE*: dnl this line before release, so release does static too
-AM_DISABLE_STATIC
-
-dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
-AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
 AS_VERSION(gst-plugins-good, GST_PLUGINS_GOOD_VERSION, 0, 9, 5, 1,
     GST_CVS="no", GST_CVS="yes")
 
-AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
+dnl can autoconf find the source ?
+AC_CONFIG_SRCDIR([gst/law/alaw.c])
+
+dnl define the output header for config
+AM_CONFIG_HEADER([config.h])
+
+dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
+AM_MAINTAINER_MODE
+
+dnl sets host_* variables
+AC_CANONICAL_HOST
+
+dnl initialize automake
+dnl FIXME: this is deprecated use, we should move PACKAGE and VERSION to
+dnl AC_INIT, but then we need to parse the version to pass to AS_VERSION
+AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_PLUGINS_GOOD_VERSION_MAJOR.$GST_PLUGINS_GOOD_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
-GST_MAJORMINOR=0.9
+# GST_MAJORMINOR=0.9
 AC_SUBST(GST_MAJORMINOR)
 
 dnl CURRENT, REVISION, AGE
@@ -33,234 +42,32 @@ AS_LIBTOOL(GST_PLUGINS_GOOD, 0, 0, 0)
 AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
-AC_CONFIG_SRCDIR([gst/law/alaw.c])
-AM_CONFIG_HEADER(config.h)
-
-dnl Add parameters for aclocal
-dnl (This must come after AM_INIT_AUTOMAKE, since it modifies ACLOCAL)
-ACLOCAL_FLAGS="-I m4 -I common/m4"
-AC_SUBST(ACLOCAL_AMFLAGS, $ACLOCAL_FLAGS)
-
-AC_PROG_CC
-AM_PROG_CC_STDC
-AM_PROG_AS
-AS="${CC}"
-AS_PROG_OBJC
-
-dnl the gettext stuff needed
-AM_GNU_GETTEXT_VERSION(0.11.5)
-AM_GNU_GETTEXT([external])
-                                                                            
-GETTEXT_PACKAGE=gst-plugins-good-$GST_MAJORMINOR
-AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
-                  [gettext package name])
-
-dnl define LOCALEDIR in config.h
-AS_AC_EXPAND(LOCALEDIR, $datadir/locale)
-AC_DEFINE_UNQUOTED([LOCALEDIR], "$LOCALEDIR",
-                   [gettext locale dir])
-
-dnl decide on error flags
-AS_COMPILER_FLAG(-Wall, GST_WALL="yes", GST_WALL="no")
-
-if test "x$GST_WALL" = "xyes"; then
-   GST_ERROR="$GST_ERROR -Wall"
-
-   if test "x$GST_CVS" = "xyes"; then
-     AS_COMPILER_FLAG(-Werror,GST_ERROR="$GST_ERROR -Werror",GST_ERROR="$GST_ERROR")
-   fi
-fi
-
-dnl determine c++ compiler
-AC_PROG_CXX
-dnl determine if c++ is available on this system
-AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
-dnl determine c++ preprocessor
-AC_PROG_CXXCPP
-AC_ISC_POSIX
-
-AC_HEADER_STDC([])
-AC_C_INLINE
-AX_CREATE_STDINT_H
-
-dnl Check for malloc.h
-AC_CHECK_HEADER(malloc.h,[
-  AC_DEFINE(HAVE_MALLOC_H, 1, [whether malloc.h available])
-])
-
-dnl Check for a way to display the function name in debug output
-GST_CHECK_FUNCTION()
-
-dnl Check for FIONREAD ioctl declaration :
-GST_CHECK_FIONREAD()
-
-DEFAULT_AUDIOSINK="autoaudiosink"
-DEFAULT_VIDEOSINK="autovideosink"
-DEFAULT_AUDIOSRC="alsasrc"
-DEFAULT_VIDEOSRC="v4lsrc"
-DEFAULT_VISUALIZER="goom"
-case "$host" in 
-  *-sun-* | *pc-solaris* )
-    DEFAULT_AUDIOSRC="sunaudiosrc"
-    ;;
-  *-darwin* )
-    DEFAULT_AUDIOSRC="osxaudiosrc"
-    ;;
-esac
-
-AC_SUBST(DEFAULT_AUDIOSINK)
-AC_DEFINE_UNQUOTED(DEFAULT_AUDIOSINK,"$DEFAULT_AUDIOSINK",[Default audio sink])
-AC_SUBST(DEFAULT_AUDIOSRC)
-AC_DEFINE_UNQUOTED(DEFAULT_AUDIOSRC,"$DEFAULT_AUDIOSRC",[Default audio source])
-AC_SUBST(DEFAULT_VIDEOSINK)
-AC_DEFINE_UNQUOTED(DEFAULT_VIDEOSINK,"$DEFAULT_VIDEOSINK",[Default video sink])
-AC_SUBST(DEFAULT_VIDEOSRC)
-AC_DEFINE_UNQUOTED(DEFAULT_VIDEOSRC,"$DEFAULT_VIDEOSRC",[Default video source])
-AC_SUBST(DEFAULT_VISUALIZER)
-AC_DEFINE_UNQUOTED(DEFAULT_VISUALIZER,"$DEFAULT_VISUALIZER",[Default visualizer])
-
-dnl ############################################
-dnl # Super Duper options for plug-in building #
-dnl ############################################
-
-dnl ext plug-ins; plug-ins that have external dependencies
-GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
-[HAVE_EXTERNAL=yes],enabled,
-[
-  AC_MSG_WARN(building external plug-ins)
-  BUILD_EXTERNAL="yes"
-],[
-  AC_MSG_WARN(all plug-ins with external dependencies will not be built)
-  BUILD_EXTERNAL="no"
-])
-# make BUILD_EXTERNAL available to Makefile.am
-AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
-
-dnl ##############################
-dnl # Do automated configuration #
-dnl ##############################
-
-dnl Check for tools:
-dnl ================
+dnl *** autotools stuff ****
 
 dnl allow for different autotools
-AS_AUTOTOOLS_ALTERNATE()
+AS_AUTOTOOLS_ALTERNATE
 
-dnl modify pkg-config path
-AC_ARG_WITH(pkg-config-path, 
-   AC_HELP_STRING([--with-pkg-config-path],[colon-separated list of pkg-config(1) dirs]),
-   [export PKG_CONFIG_PATH=${withval}])
+dnl Add parameters for aclocal
+AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 
-GST_DOCBOOK_CHECK()
-dnl check architecture
-GST_ARCH()
+dnl set up gettext
+dnl the version check needs to stay here because autopoint greps for it
+AM_GNU_GETTEXT_VERSION([0.11.5])
+AM_GNU_GETTEXT([external])
+GST_GETTEXT([gst-plugins-good-$GST_MAJORMINOR])
 
-dnl check for gconftool-2
+dnl *** check for arguments to configure ***
 
-dnl this macro defines an am conditional, so it needs to be run always
-AM_GCONF_SOURCE_2
+GST_ARG_DEBUG
+GST_ARG_PROFILING
+GST_ARG_VALGRIND
+GST_ARG_GCOV
 
-translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
-GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
-  AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
-  if test x$GCONFTOOL = xno; then
-    AC_MSG_WARN(Not installing GConf schemas)
-    HAVE_GCONFTOOL="no"
-  else
-    HAVE_GCONFTOOL="yes"
-  fi
-  AC_SUBST(HAVE_GCONFTOOL)
-])
+GST_ARG_EXAMPLES
 
-dnl check for GConf libraries
-translit(dnm, m, l) AM_CONDITIONAL(USE_GCONF, true)
-GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
-  PKG_CHECK_MODULES(GCONF, gconf-2.0, HAVE_GCONF="yes", HAVE_GCONF="no")
-  AC_SUBST(GCONF_CFLAGS)
-  AC_SUBST(GCONF_LIBS)
-])
-
-dnl check for gstreamer
-dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_REQ=0.9.0.1
-PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST="yes", HAVE_GST="no")
-
-if test "x$HAVE_GST" = "xno"; then
-  AC_MSG_ERROR(no GStreamer found)
-fi
-
-GST_TOOLS_DIR=`pkg-config --variable=toolsdir gstreamer-$GST_MAJORMINOR`
-if test -z $GST_TOOLS_DIR; then
-  AC_MSG_ERROR([no tools dir defined in GStreamer pkg-config file; core upgrade needed.])
-fi
-AC_SUBST(GST_TOOLS_DIR)
-
-dnl check for gstreamer-base; uninstalled is selected preferentially
-PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST_BASE="yes", HAVE_GST_BASE="no")
-
-if test "x$HAVE_GST_BASE" = "xno"; then
-  AC_MSG_ERROR(no GStreamer Base Libs found)
-fi
-
-AC_SUBST(GST_BASE_LIBS)
-AC_SUBST(GST_BASE_CFLAGS)
-
-dnl check for gstreamer-plugins-base; uinstalled is selected preferentially
-PKG_CHECK_MODULES(GST_PLUGINS_BASE,
-  gstreamer-plugins-base-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST_PLUGINS_BASE="yes", HAVE_GST_PLUGINS_BASE="no")
-
-if test "x$HAVE_GST_PLUGINS_BASE" = "xno"; then
-  AC_MSG_ERROR(no GStreamer Base Plugins development files found)
-fi
-
-AC_SUBST(GST_PLUGINS_BASE_LIBS)
-AC_SUBST(GST_PLUGINS_BASE_CFLAGS)
-
-PKG_CHECK_MODULES(GST_CHECK, gstreamer-check-$GST_MAJORMINOR >= $GST_REQ,
-  HAVE_GST_CHECK="yes", HAVE_GST_CHECK="no")
-
-AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
-AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
-
-dnl Determine endianness
-AC_C_BIGENDIAN
-
-dnl Check for fast float to int casting as defined in C99
-AC_C99_FUNC_LRINT()
-AC_C99_FUNC_LRINTF()
-
-dnl Check for essential libraries first:
-dnl ====================================
-
-GST_GLIB_CHECK([2.6])
-
-dnl Check for additional libraries that we might use:
-dnl =================================================
-
-# we set the defaults always to make sure we have non-empty variables
-# for the Makefile
-
-PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.0, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-AC_SUBST(LIBOIL_CFLAGS)
-AC_SUBST(LIBOIL_LIBS)
-if test "x${HAVE_LIBOIL}" = xyes ; then
-  #AC_DEFINE_UNQUOTED(HAVE_LIBOIL, 1, [Define if liboil is being used])
-  true
-fi
-
-dnl ===========================================================================
-dnl ============================= gst plug-ins ================================
-dnl ===========================================================================
-
-plugindir="\$(libdir)/gstreamer-$GST_MAJORMINOR"
-AC_SUBST(plugindir)
-
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' -no-undefined"
-AC_SUBST(GST_PLUGIN_LDFLAGS)
+GST_ARG_WITH_PKG_CONFIG_PATH
+GST_ARG_WITH_PACKAGE_NAME([GStreamer Good Plug-ins])
+GST_ARG_WITH_PACKAGE_ORIGIN
 
 dnl these are all the gst plug-ins, compilable without additional libs
 dnl videofilter is at the top because others depend on it
@@ -286,13 +93,13 @@ GST_PLUGINS_ALL="\
 		wavenc \
 		wavparse \
                 "
-
 AC_SUBST(GST_PLUGINS_ALL)
 
 GST_PLUGINS_SELECTED=""
 
 AC_ARG_WITH(plugins,
-    AC_HELP_STRING([--with-plugins],[comma-separated list of plug-ins to compile]),
+    AC_HELP_STRING([--with-plugins],
+      [comma-separated list of plug-ins to compile]),
     [for i in `echo $withval | tr , ' '`; do
         if echo $GST_PLUGINS_ALL | grep $i > /dev/null
         then
@@ -305,13 +112,149 @@ AC_ARG_WITH(plugins,
 
 AC_SUBST(GST_PLUGINS_SELECTED)
 
+dnl ext plug-ins; plug-ins that have external dependencies
+GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
+  [HAVE_EXTERNAL=yes], enabled,
+  [
+    AC_MSG_NOTICE(building external plug-ins)
+    BUILD_EXTERNAL="yes"
+  ],[
+    AC_MSG_NOTICE(all plug-ins with external dependencies will not be built)
+    BUILD_EXTERNAL="no"
+  ])
+AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
+
+dnl *** checks for platform ***
+
+dnl * hardware/architecture *
+
+dnl common/m4/gst-arch.m4
+dnl check CPU type
+GST_ARCH
+
+dnl Determine endianness
+AC_C_BIGENDIAN
+
+dnl *** checks for programs ***
+
+dnl find a compiler
+AC_PROG_CC
+
+dnl determine c++ compiler
+AC_PROG_CXX
+dnl determine if c++ is available on this system
+AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
+
+dnl determine c++ preprocessor
+dnl FIXME: do we need this ?
+AC_PROG_CXXCPP
+
+AS_PROG_OBJC
+
+AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
+AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
+
+dnl check for gconftool-2
+dnl this macro defines an am conditional, so it needs to be run always
+AM_GCONF_SOURCE_2
+
+dnl check for documentation tools
+GTK_DOC_CHECK([1.3])
+AS_PATH_PYTHON([2.1])
+
+dnl *** checks for header files ***
+
+dnl check if we have ANSI C header files
+AC_HEADER_STDC
+
+dnl used in gst/rtp/gstasteriskh263.c
+AC_CHECK_HEADERS([netinet/in.h])
+AC_CHECK_HEADERS([winsock2.h])
+AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
+
+dnl *** checks for compiler characteristics ***
+
+dnl FIXME: check if this is used; was used for floatcast.h in base
+dnl Check for fast float to int casting as defined in C99
+AC_C99_FUNC_LRINT
+AC_C99_FUNC_LRINTF
+
+dnl *** checks for library functions ***
+
 dnl Check for mmap (needed by electricfence plugin)
-AC_FUNC_MMAP()
+AC_FUNC_MMAP
 AM_CONDITIONAL(GST_HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" == "xyes")
 
-dnl ==========================================================================
-dnl ============================= sys plug-ins ================================
-dnl ==========================================================================
+dnl *** checks for dependancy libraries ***
+
+dnl GLib is required
+GST_GLIB_CHECK([2.6])
+
+dnl liboil is required
+PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.2, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+if test "x${HAVE_LIBOIL}" != xyes ; then
+  AC_ERROR([liboil-0.3 is required])
+fi
+
+dnl checks for gstreamer
+dnl uninstalled is selected preferentially -- see pkg-config(1)
+GST_REQ=0.9.5
+GSTPB_REQ=0.9.5
+GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
+GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ])
+
+GST_TOOLS_DIR=`pkg-config --variable=toolsdir gstreamer-$GST_MAJORMINOR`
+if test -z $GST_TOOLS_DIR; then
+  AC_MSG_ERROR([no tools dir defined in GStreamer pkg-config file; core upgrade needed.])
+fi
+AC_SUBST(GST_TOOLS_DIR)
+
+dnl FIXME: get rid of this by making sure gstreamer-check brings it in
+dnl check for "check", unit testing library/header
+AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
+AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+
+dnl should we install schemas ?
+translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
+GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
+  AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
+  if test x$GCONFTOOL = xno; then
+    AC_MSG_WARN(Not installing GConf schemas)
+    HAVE_GCONFTOOL="no"
+  else
+    HAVE_GCONFTOOL="yes"
+  fi
+  AC_SUBST(HAVE_GCONFTOOL)
+])
+
+dnl *** set variables based on configure arguments ***
+
+dnl set license and copyright notice
+GST_LICENSE="LGPL"
+AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
+AC_SUBST(GST_LICENSE)
+
+dnl set location of plugin directory
+GST_SET_PLUGINDIR
+
+dnl define an ERROR_CFLAGS Makefile variable
+GST_SET_ERROR_CFLAGS($GST_CVS)
+
+dnl define correct level for debugging messages
+GST_SET_LEVEL_DEFAULT($GST_CVS)
+
+dnl used in examples
+GST_DEFAULT_ELEMENTS
+
+dnl *** sys plug-ins ***
+
+echo
+AC_MSG_NOTICE([Checking libraries for plugins in sys/])
+echo
 
 dnl *** OSS audio *** (Linux, *BSD)
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
@@ -327,7 +270,8 @@ dnl Some old BSD versions :
      ], [
   dnl Some old BSD versions :
      AC_CHECK_HEADER(machine/soundcard.h, [
-       AC_DEFINE(HAVE_OSS_INCLUDE_IN_MACHINE,, [Define if OSS includes are in /machine/])
+       AC_DEFINE(HAVE_OSS_INCLUDE_IN_MACHINE,,
+         [Define if OSS includes are in /machine/])
        ], [
        HAVE_OSS="no"
      ])
@@ -335,9 +279,14 @@ dnl Some old BSD versions :
  ])
 ])
 
-dnl ###########################
-dnl # Configure external libs #
-dnl ###########################
+dnl *** ext plug-ins ***
+dnl keep this list sorted alphabetically !
+
+if test "x$BUILD_EXTERNAL" = "xyes"; then
+
+echo
+AC_MSG_NOTICE([Checking libraries for plugins in ext/])
+echo
 
 dnl *** aalib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
@@ -385,6 +334,14 @@ GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flacenc flacdec, [
   AC_SUBST(FLAC_LIBS)
 ])
 
+dnl *** GConf ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_GCONF, true)
+GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
+  PKG_CHECK_MODULES(GCONF, gconf-2.0, HAVE_GCONF="yes", HAVE_GCONF="no")
+  AC_SUBST(GCONF_CFLAGS)
+  AC_SUBST(GCONF_LIBS)
+])
+
 dnl *** jpeg ***
 dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG, true)
@@ -404,7 +361,6 @@ GST_CHECK_FEATURE(JPEG, [jpeg], jpegenc jpegdec, [
   fi
   AC_SUBST(JPEG_LIBS)
 ])
-
 
 dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
@@ -521,67 +477,46 @@ GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
   ])
 ])
 
-dnl also add builddir include for enumtypes and marshal
-GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $GST_ERROR"
+fi dnl of EXT plugins
 
-AC_SUBST(GST_LIBS)
-AC_SUBST(GST_CFLAGS)
+dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
-dnl check for "check", unit testing library/header
-AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
-AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+dnl Overview:
+dnl GST_OPTION_CFLAGS:  common flags for profiling, debugging, errors, ...
+dnl GST_*:              flags shared by all built objects
+dnl GST_LT_LDFLAGS:     library versioning of our libraries
+dnl GST_PLUGIN_LDFLAGS: flags to be used for all plugins
 
-dnl ######################
-dnl # Checks for gtk-doc #
-dnl ######################
-
-GTK_DOC_CHECK([1.3])
-AS_PATH_PYTHON([2.1])
-
-dnl ############################
-dnl # Set up some more defines #
-dnl ############################
-
-dnl set license and copyright notice
-AC_DEFINE(GST_LICENSE, "LGPL", [GStreamer license])
-
-dnl package name in plugins
-AC_ARG_WITH(package-name,
-AC_HELP_STRING([--with-package-name],[specify package name to use in plugins]),
-[case "${withval}" in
-  yes) AC_MSG_ERROR(bad value ${withval} for --with-package-name) ;;
-  no) AC_MSG_ERROR(bad value ${withval} for --with-package-name) ;;
-  *) GST_PACKAGE="${withval}" ;;
-esac], 
-[
-dnl default value
-if test "x$GST_CVS" = "xyes"
-then
-  dnl nano >= 1
-  GST_PACKAGE="GStreamer CVS/prerelease"
-else
-  GST_PACKAGE="GStreamer source release"
+dnl GST_OPTION_CFLAGS
+if test "x$USE_DEBUG" = xyes; then
+   PROFILE_CFLAGS="-g"
 fi
-]
-)
-AC_MSG_NOTICE(Using $GST_PACKAGE as package name)
-AC_DEFINE_UNQUOTED(GST_PACKAGE, "$GST_PACKAGE", [package name in plugins])
+AC_SUBST(PROFILE_CFLAGS)
 
-dnl package origin URL
-AC_ARG_WITH(package-origin,
-AC_HELP_STRING([--with-package-origin],[specify package origin URL to use in plugins]),
-[case "${withval}" in
-  yes) AC_MSG_ERROR(bad value ${withval} for --with-package-origin) ;;
-  no) AC_MSG_ERROR(bad value ${withval} for --with-package-origin) ;;
-  *) GST_ORIGIN="${withval}" ;;
-esac], 
-[GST_ORIGIN="http://gstreamer.freedesktop.org/"]) dnl Default value
-AC_MSG_NOTICE(Using $GST_ORIGIN as package origin)
-AC_DEFINE_UNQUOTED(GST_ORIGIN, "$GST_ORIGIN", [package origin])
+DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+AC_SUBST(DEPRECATED_CFLAGS)
 
-dnl #########################
-dnl # Make the output files #
-dnl #########################
+dnl every flag in GST_OPTION_CFLAGS can be overridden at make time
+GST_OPTION_CFLAGS="\$(ERROR_CFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
+AC_SUBST(GST_OPTION_CFLAGS)
+
+dnl our libraries need to be versioned correctly
+AC_SUBST(GST_LT_LDFLAGS)
+
+dnl FIXME: do we want to rename to GST_ALL_* ?
+dnl prefer internal headers to already installed ones
+dnl also add builddir include for enumtypes and marshal
+dnl add ERROR_CFLAGS, but overridable
+GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS \$(GST_OPTION_CFLAGS)"
+AC_SUBST(GST_CFLAGS)
+AC_SUBST(GST_LIBS)
+
+dnl this really should only contain flags, not libs - they get added before
+dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' -no-undefined"
+AC_SUBST(GST_PLUGIN_LDFLAGS)
+
+dnl *** output files ***
 
 dnl keep this alphabetic per directory, please
 AC_CONFIG_FILES(

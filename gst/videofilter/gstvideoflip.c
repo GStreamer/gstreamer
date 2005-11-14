@@ -231,7 +231,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "videoflip",
     "Flips and rotates video",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN);
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
 static void gst_videoflip_flip (GstVideoflip * videoflip,
     unsigned char *dest, unsigned char *src, int sw, int sh, int dw, int dh);

@@ -416,7 +416,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "cutter",
     "Audio Cutter to split audio into non-silent bits",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 
      void gst_cutter_get_caps (GstPad * pad, GstCutter * filter)
 {

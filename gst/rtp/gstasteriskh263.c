@@ -17,10 +17,17 @@
 #endif
 
 #include <string.h>
-#include <netinet/in.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstasteriskh263.h"
+
+#ifdef HAVE_NETINET_IN_H
+#  include <netinet/in.h>
+#endif
+
+#ifdef HAVE_WINSOCK2_H
+#  include <winsock2.h>
+#endif
 
 #define GST_ASTERISKH263_HEADER_LEN 6
 

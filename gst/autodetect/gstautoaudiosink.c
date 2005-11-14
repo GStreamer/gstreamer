@@ -108,7 +108,7 @@ gst_auto_audio_sink_factory_filter (GstPluginFeature * feature, gpointer data)
 
   /* audio sinks */
   klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
-  if (strcmp (klass, "Sink/Audio") != 0)
+  if (!(strstr (klass, "Sink") && strstr (klass, "Audio")))
     return FALSE;
 
   /* only select elements with autoplugging rank */
@@ -137,6 +137,9 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
   GList *list, *item;
   GstElement *choice = NULL;
   gboolean ss = TRUE;
+  GstMessage *message = NULL;
+  GSList *errors = NULL;
+  GstBus *bus = gst_bus_new ();
 
   list = gst_registry_feature_filter (gst_registry_get_default (),
       (GstPluginFeatureFilter) gst_auto_audio_sink_factory_filter, FALSE, sink);
@@ -145,17 +148,21 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
   /* FIXME:
    * - soundservers have no priority yet.
    * - soundserversinks should only be chosen if already running, or if
-   *    the user explicitely wants this to run... That is not easy.
+   *    the user explicitly wants this to run... That is not easy.
    */
 
   while (1) {
-    GST_LOG ("Trying to find %s", ss ? "soundservers" : "audio devices");
+    GST_DEBUG_OBJECT (sink, "Trying to find %s",
+        ss ? "soundservers" : "audio devices");
 
     for (item = list; item != NULL; item = item->next) {
       GstElementFactory *f = GST_ELEMENT_FACTORY (item->data);
       GstElement *el;
 
       if ((el = gst_element_factory_create (f, "actual-sink"))) {
+        /* FIXME: no element actually has this property as far as I can tell.
+         * also, this is a nasty uncheckable way of supporting something that
+         * amounts to being an interface. */
         gboolean has_p = g_object_class_find_property (G_OBJECT_GET_CLASS (el),
             "soundserver-running") ? TRUE : FALSE;
 
@@ -165,22 +172,32 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
 
             g_object_get (G_OBJECT (el), "soundserver-running", &r, NULL);
             if (r) {
-              GST_LOG ("%s - soundserver is running",
+              GST_DEBUG_OBJECT (sink, "%s - soundserver is running",
                   GST_PLUGIN_FEATURE (f)->name);
             } else {
-              GST_LOG ("%s - Soundserver is not running",
+              GST_DEBUG_OBJECT (sink, "%s - Soundserver is not running",
                   GST_PLUGIN_FEATURE (f)->name);
               goto next;
             }
           }
-          GST_LOG ("Testing %s", GST_PLUGIN_FEATURE (f)->name);
+          GST_DEBUG_OBJECT (sink, "Testing %s", GST_PLUGIN_FEATURE (f)->name);
+          gst_element_set_bus (el, bus);
           if (gst_element_set_state (el,
                   GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS) {
             gst_element_set_state (el, GST_STATE_NULL);
-            GST_LOG ("This worked!");
+            GST_DEBUG_OBJECT (sink, "This worked!");
             choice = el;
             goto done;
           } else {
+            /* collect all error messages */
+            while ((message = gst_bus_pop (bus))) {
+              if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
+                GST_DEBUG_OBJECT (sink, "appending error message %p", message);
+                errors = g_slist_append (errors, message);
+              } else {
+                gst_message_unref (message);
+              }
+            }
             gst_element_set_state (el, GST_STATE_NULL);
           }
         }
@@ -196,7 +213,24 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
   }
 
 done:
+  GST_DEBUG_OBJECT (sink, "done trying");
+  if (!choice) {
+    if (errors) {
+      /* FIXME: we forward the first error for now; but later on it might make
+       * sense to actually analyse them */
+      gst_message_ref (GST_MESSAGE (errors->data));
+      GST_DEBUG_OBJECT (sink, "reposting message %p", errors->data);
+      gst_element_post_message (GST_ELEMENT (sink), GST_MESSAGE (errors->data));
+    } else {
+      /* general fallback */
+      GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
+          ("Failed to find a supported audio sink"));
+    }
+  }
+  gst_object_unref (bus);
   g_list_free (list);
+  g_slist_foreach (errors, (GFunc) gst_mini_object_unref, NULL);
+  g_slist_free (errors);
 
   return choice;
 }
@@ -216,8 +250,6 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
   /* find element */
   GST_DEBUG_OBJECT (sink, "Creating new kid");
   if (!(esink = gst_auto_audio_sink_find_best (sink))) {
-    GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
-        ("Failed to find a supported audio sink"));
     return FALSE;
   }
   sink->kid = esink;

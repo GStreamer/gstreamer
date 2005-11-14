@@ -20,9 +20,15 @@ libgstrtp_la_SOURCES = \
 
 #gstrtpL16enc.c gstrtpL16parse.c gstrtpgsmenc.c gstrtpgsmparse.c 
 
+if HAVE_WINSOCK2_H
+WINSOCK2_LIBS = -lws2_32
+else
+WINSOCK2_LIBS =
+endif
+
 libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
-                -lgstrtp-@GST_MAJORMINOR@
+                -lgstrtp-@GST_MAJORMINOR@ $(WINSOCK2_LIBS)
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 
 noinst_HEADERS = gstrtpL16enc.h 	\
