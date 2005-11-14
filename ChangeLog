@@ -1,3 +1,8 @@
+2005-11-14  Wim Taymans  <wim@fluendo.com>
+
+	* common/gst.supp:
+	  add suppressions from Wim's Debian machine
+
 2005-11-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* common/gst.supp:
