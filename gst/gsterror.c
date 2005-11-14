@@ -50,6 +50,9 @@ gst_g_error_get_type (void)
   return type;
 }
 
+#define FILE_A_BUG "  Please file a bug at "\
+    "http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer."
+
 /* initialize the dynamic table of translated core errors */
 static gchar **
 _gst_core_errors_init (void)
@@ -62,26 +65,23 @@ _gst_core_errors_init (void)
       N_("GStreamer encountered a general core library error."));
   TABLE (t, CORE, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
-          "to this error.  Please file a bug."));
+          "to this error." FILE_A_BUG));
   TABLE (t, CORE, NOT_IMPLEMENTED,
-      N_
-      ("Internal GStreamer error: code not implemented.  Please file a bug."));
+      N_("Internal GStreamer error: code not implemented." FILE_A_BUG));
   TABLE (t, CORE, STATE_CHANGE,
-      N_("Internal GStreamer error: state change failed.  Please file a bug."));
-  TABLE (t, CORE, PAD,
-      N_("Internal GStreamer error: pad problem.  Please file a bug."));
+      N_("Internal GStreamer error: state change failed." FILE_A_BUG));
+  TABLE (t, CORE, PAD, N_("Internal GStreamer error: pad problem." FILE_A_BUG));
   TABLE (t, CORE, THREAD,
-      N_("Internal GStreamer error: thread problem.  Please file a bug."));
+      N_("Internal GStreamer error: thread problem." FILE_A_BUG));
   TABLE (t, CORE, NEGOTIATION,
-      N_("Internal GStreamer error: negotiation problem.  Please file a bug."));
+      N_("Internal GStreamer error: negotiation problem." FILE_A_BUG));
   TABLE (t, CORE, EVENT,
-      N_("Internal GStreamer error: event problem.  Please file a bug."));
+      N_("Internal GStreamer error: event problem." FILE_A_BUG));
   TABLE (t, CORE, SEEK,
-      N_("Internal GStreamer error: seek problem.  Please file a bug."));
+      N_("Internal GStreamer error: seek problem." FILE_A_BUG));
   TABLE (t, CORE, CAPS,
-      N_("Internal GStreamer error: caps problem.  Please file a bug."));
-  TABLE (t, CORE, TAG,
-      N_("Internal GStreamer error: tag problem.  Please file a bug."));
+      N_("Internal GStreamer error: caps problem." FILE_A_BUG));
+  TABLE (t, CORE, TAG, N_("Internal GStreamer error: tag problem." FILE_A_BUG));
 
   return t;
 }
@@ -98,7 +98,7 @@ _gst_library_errors_init (void)
       N_("GStreamer encountered a general supporting library error."));
   TABLE (t, LIBRARY, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
-          "to this error.  Please file a bug."));
+          "to this error." FILE_A_BUG));
   TABLE (t, LIBRARY, INIT, N_("Could not initialize supporting library."));
   TABLE (t, LIBRARY, SHUTDOWN, N_("Could not close supporting library."));
   TABLE (t, LIBRARY, SETTINGS, N_("Could not close supporting library."));
@@ -118,7 +118,7 @@ _gst_resource_errors_init (void)
       N_("GStreamer encountered a general resource error."));
   TABLE (t, RESOURCE, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
-          "to this error.  Please file a bug."));
+          "to this error." FILE_A_BUG));
   TABLE (t, RESOURCE, NOT_FOUND, N_("Resource not found."));
   TABLE (t, RESOURCE, BUSY, N_("Resource busy or not available."));
   TABLE (t, RESOURCE, OPEN_READ, N_("Could not open resource for reading."));
@@ -148,7 +148,7 @@ _gst_stream_errors_init (void)
       N_("GStreamer encountered a general stream error."));
   TABLE (t, STREAM, TOO_LAZY,
       N_("GStreamer developers were too lazy to assign an error code "
-          "to this error.  Please file a bug."));
+          "to this error." FILE_A_BUG));
   TABLE (t, STREAM, NOT_IMPLEMENTED,
       N_("Element doesn't implement handling of this stream. "
           "Please file a bug."));

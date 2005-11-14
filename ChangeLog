@@ -1,5 +1,8 @@
 2005-11-14  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gsterror.c (FILE_A_BUG): Be polite *and* helpful. Fixes
+	#305291.
+
 	* gst/gstindex.c (gst_index_add_object): Note in the docs that
 	this function is not implemented.
 
