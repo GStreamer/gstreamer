@@ -242,7 +242,13 @@ struct _GstObject {
  */
 #define GST_CLASS_UNLOCK(obj)           (g_static_rec_mutex_unlock(GST_CLASS_GET_LOCK(obj)))
 
-/* signal_object is used to signal to the whole class */
+/*
+ * GstObjectClass:
+ *
+ * @signal_object: is used to signal to the whole class
+ * @save_thyself: xml serialisation
+ * @restore_thyself: xml de-serialisation
+ */
 struct _GstObjectClass {
   GObjectClass	parent_class;
 
@@ -257,7 +263,8 @@ struct _GstObjectClass {
   void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
   void 		(*deep_notify)   	(GstObject *object, GstObject *orig, GParamSpec *pspec);
 
-  /* vtable */
+  /*< public >*/
+  /* virtual methods for subclasses */
   xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
   void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
 

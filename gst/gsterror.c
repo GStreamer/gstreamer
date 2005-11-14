@@ -21,6 +21,9 @@
  * SECTION:gsterror
  * @short_description: Categorized error messages
  *
+ * This module manages localizable error messages. Developers can use
+ * gst_error_get_message() to get a localized message from a error-code and
+ * -domain.
  */
 
 #ifdef HAVE_CONFIG_H

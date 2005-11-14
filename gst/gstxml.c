@@ -24,6 +24,14 @@
  * SECTION:gstxml
  * @short_description: XML save/restore operations of pipelines
  *
+ * GStreamer pipelines can be saved to xml files using gst_xml_write_file().
+ * They can be loaded back using gst_xml_parse_doc() / gst_xml_parse_file() / 
+ * gst_xml_parse_memory().
+ * Additionally one can load saved pipelines into the gst-editor to inspect the
+ * graph.
+ *
+ * #GstElement implementations need to override gst_object_save_thyself() and
+ * gst_object_restore_thyself().
  */
 
 #include "gst_private.h"

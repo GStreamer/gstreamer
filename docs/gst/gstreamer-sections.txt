@@ -707,9 +707,9 @@ gst_format_get_type
 <TITLE>GstGhostPad</TITLE>
 GstGhostPad
 gst_ghost_pad_new
+gst_ghost_pad_new_notarget
 gst_ghost_pad_set_target
 gst_ghost_pad_get_target
-gst_ghost_pad_new_notarget
 <SUBSECTION Standard>
 GstGhostPadClass
 GST_GHOST_PAD

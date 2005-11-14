@@ -746,7 +746,7 @@ gst_ghost_pad_dispose (GObject * object)
  *
  * Create a new ghostpad without a target with the given direction.
  * A target can be set on the ghostpad later with the
- * #gst_ghost_pad_set_target() function.
+ * gst_ghost_pad_set_target() function.
  *
  * The created ghostpad will not have a padtemplate.
  *
@@ -819,7 +819,7 @@ gst_ghost_pad_get_target (GstGhostPad * gpad)
  * @newtarget: the new pad target
  *
  * Set the new target of the ghostpad @gpad. Any existing target
- * is unlinked.
+ * is unlinked and links to the new target are established.
  *
  * Returns: TRUE if the new target could be set, FALSE otherwise.
  */
