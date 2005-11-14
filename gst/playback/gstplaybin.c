@@ -532,6 +532,17 @@ gen_audio_element (GstPlayBin * play_bin)
   if (play_bin->audio_sink) {
     sink = play_bin->audio_sink;
   } else {
+    sink = gst_element_factory_make ("autoaudiiosink", "audiosink");
+    if (sink == NULL) {
+      sink = gst_element_factory_make ("alsasink", "audiosink");
+    }
+    /* FIXME: this warrants adding a CORE error category for missing
+     * elements/plugins */
+    if (sink == NULL) {
+      GST_ELEMENT_ERROR (play_bin, CORE, FAILED,
+          (_("Both autoaudiosink and alsasink elements are missing.")), (NULL));
+      return NULL;
+    }
     sink = gst_element_factory_make ("alsasink", "audiosink");
     if (sink == NULL) {
       g_warning ("could not create autoaudiosink element");

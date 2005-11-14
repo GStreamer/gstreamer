@@ -1,3 +1,8 @@
+2005-11-14  Andy Wingo  <wingo@pobox.com>
+
+	* gst/playback/gstplaybin.c (gen_audio_element): Use autoaudiosink
+	as well if it is available. Fixes #316442.
+
 2005-11-14  Michael Smith <msmith@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_clear), (gst_ogg_mux_init),
