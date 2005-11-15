@@ -1,3 +1,11 @@
+2005-11-15  Johan Dahlin  <johan@gnome.org>
+
+	* ext/mad/gstid3tag.c (gst_mad_id3_to_tag_list): unset GValues after
+	calling transform.
+	(gst_id3_tag_do_typefind): Unref caps
+
+	* ext/mad/gstmad.c (gst_mad_check_caps_reset): Ditto
+
 2005-11-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (handle_slice),

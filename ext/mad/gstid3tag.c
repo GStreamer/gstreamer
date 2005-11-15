@@ -693,6 +693,7 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
 
           g_value_init (&src, G_TYPE_STRING);
           g_value_set_string (&src, (const gchar *) utf8);
+
           g_value_init (&dest, tag_type);
           if (g_value_transform (&src, &dest)) {
             gst_tag_list_add_values (tag_list, GST_TAG_MERGE_APPEND,
@@ -701,6 +702,8 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
             GST_WARNING ("Failed to transform tag from string to type '%s'",
                 g_type_name (tag_type));
           }
+          g_value_unset (&src);
+          g_value_unset (&dest);
           break;
         }
       }
@@ -990,7 +993,10 @@ simple_find_suggest (gpointer data, guint probability, const GstCaps * caps)
   SimpleTypeFind *find = (SimpleTypeFind *) data;
 
   if (probability > find->best_probability) {
-    gst_caps_replace (&find->caps, gst_caps_copy (caps));
+    GstCaps *copy = gst_caps_copy (caps);
+
+    gst_caps_replace (&find->caps, copy);
+    gst_caps_unref (copy);
     find->best_probability = probability;
   }
 }

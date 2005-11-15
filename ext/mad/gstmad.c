@@ -1218,6 +1218,8 @@ gst_mad_check_caps_reset (GstMad * mad)
         "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, nchannels, NULL);
 
     gst_pad_set_caps (mad->srcpad, caps);
+    gst_caps_unref (caps);
+
     mad->caps_set = TRUE;       /* set back to FALSE on discont */
     mad->channels = nchannels;
     mad->rate = rate;
