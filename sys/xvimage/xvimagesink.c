@@ -1444,6 +1444,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 static GstStateChangeReturn
 gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstXvImageSink *xvimagesink;
 
   xvimagesink = GST_XVIMAGESINK (element);
@@ -1472,6 +1473,15 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -1498,9 +1508,11 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
         xvimagesink->xcontext = NULL;
       }
       break;
+    default:
+      break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return ret;
 }
 
 static void

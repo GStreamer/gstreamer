@@ -1,3 +1,8 @@
+2005-11-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_change_state):
+	  Make state change function thread safe.
+
 2005-11-15  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_receive_event),
