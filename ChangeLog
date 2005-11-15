@@ -1,3 +1,13 @@
+2005-11-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/faac/gstfaac.c: (gst_faac_base_init), (gst_faac_init),
+	(gst_faac_sink_setcaps), (gst_faac_configure_source_pad),
+	(gst_faac_chain):
+	  Set proper caps on source pad (#320532).
+
+	* ext/faad/gstfaad.c:
+	  Don't use gtk-doc markers for comment block.
+
 2005-11-14  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac (GST_PLUGIN_LDFLAGS): -no-undefined for better

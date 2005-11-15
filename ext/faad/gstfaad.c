@@ -526,7 +526,7 @@ gst_faad_srcgetcaps (GstPad * pad)
   return templ;
 }
 
-/**
+/*
 static GstPadLinkReturn
 gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
 {

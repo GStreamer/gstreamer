@@ -83,12 +83,16 @@ static void gst_faac_get_property (GObject * object,
 
 static gboolean gst_faac_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_faac_src_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_faac_chain (GstPad * pad, GstBuffer * data);
 static GstStateChangeReturn gst_faac_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
+
+GST_DEBUG_CATEGORY_STATIC (faac_debug);
+#define GST_CAT_DEFAULT faac_debug
+
+#define FAAC_DEFAULT_MPEGVERSION 4
 
 GType
 gst_faac_get_type (void)
@@ -132,6 +136,8 @@ gst_faac_base_init (GstFaacClass * klass)
       gst_static_pad_template_get (&sink_template));
 
   gst_element_class_set_details (element_class, &gst_faac_details);
+
+  GST_DEBUG_CATEGORY_INIT (faac_debug, "faac", 0, "AAC encoding");
 }
 
 #define GST_TYPE_FAAC_PROFILE (gst_faac_profile_get_type ())
@@ -258,8 +264,6 @@ gst_faac_init (GstFaac * faac)
   faac->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
-  gst_pad_set_setcaps_function (faac->srcpad,
-      GST_DEBUG_FUNCPTR (gst_faac_src_setcaps));
   gst_pad_use_fixed_caps (faac->srcpad);
   gst_element_add_pad (GST_ELEMENT (faac), faac->srcpad);
 
@@ -339,14 +343,6 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   faac->samplerate = samplerate;
   GST_UNLOCK (faac);
 
-  /* if the other side was already set-up, redo that */
-  if (GST_PAD_CAPS (faac->srcpad)) {
-    result = gst_faac_src_setcaps (faac->srcpad,
-        gst_pad_get_allowed_caps (faac->srcpad));
-    goto done;
-  }
-
-  /* else, that'll be done later */
   result = TRUE;
 
 done:
@@ -355,33 +351,48 @@ done:
 }
 
 static gboolean
-gst_faac_src_setcaps (GstPad * pad, GstCaps * caps)
+gst_faac_configure_source_pad (GstFaac * faac)
 {
-  GstFaac *faac = GST_FAAC (gst_pad_get_parent (pad));
-  gint n;
-  gboolean result = FALSE;
+  GstCaps *allowed_caps;
+  GstCaps *src_caps;
+  gboolean ret = FALSE;
+  gint n, ver, mpegversion;
 
-  if (!faac->handle || (faac->samplerate == -1 || faac->channels == -1)) {
+  mpegversion = FAAC_DEFAULT_MPEGVERSION;
+
+  allowed_caps = gst_pad_get_allowed_caps (faac->srcpad);
+  GST_DEBUG_OBJECT (faac, "allowed caps: %" GST_PTR_FORMAT, allowed_caps);
+
+  if (allowed_caps == NULL)
+    return FALSE;
+
+  if (gst_caps_is_empty (allowed_caps))
     goto done;
+
+  if (!gst_caps_is_any (allowed_caps)) {
+    for (n = 0; n < gst_caps_get_size (allowed_caps); n++) {
+      GstStructure *s = gst_caps_get_structure (allowed_caps, n);
+
+      if (gst_structure_get_int (s, "mpegversion", &ver) &&
+          (ver == 4 || ver == 2)) {
+        mpegversion = ver;
+        break;
+      }
+    }
   }
 
-  /* we do samplerate/channels ourselves */
-  for (n = 0; n < gst_caps_get_size (caps); n++) {
-    GstStructure *structure = gst_caps_get_structure (caps, n);
+  src_caps = gst_caps_new_simple ("audio/mpeg",
+      "mpegversion", G_TYPE_INT, mpegversion,
+      "channels", G_TYPE_INT, faac->channels,
+      "rate", G_TYPE_INT, faac->samplerate, NULL);
 
-    gst_structure_remove_field (structure, "rate");
-    gst_structure_remove_field (structure, "channels");
-  }
+  GST_DEBUG_OBJECT (faac, "src pad caps: %" GST_PTR_FORMAT, src_caps);
 
-  /* go through list */
-  caps = gst_caps_normalize (caps);
-  for (n = 0; n < gst_caps_get_size (caps); n++) {
-    GstStructure *structure = gst_caps_get_structure (caps, n);
+  ret = gst_pad_set_caps (faac->srcpad, src_caps);
+  gst_caps_unref (src_caps);
+
+  if (ret) {
     faacEncConfiguration *conf;
-    gint mpegversion = 0;
-    GstCaps *newcaps;
-
-    gst_structure_get_int (structure, "mpegversion", &mpegversion);
 
     /* new conf */
     conf = faacEncGetCurrentConfiguration (faac->handle);
@@ -395,23 +406,16 @@ gst_faac_src_setcaps (GstPad * pad, GstCaps * caps)
     conf->outputFormat = faac->outputformat;
     conf->shortctl = faac->shortctl;
     if (!faacEncSetConfiguration (faac->handle, conf)) {
-      GST_WARNING ("Faac doesn't support the current conf");
-      continue;
+      GST_WARNING ("Faac doesn't support the current configuration");
+      ret = FALSE;
     }
-
-    newcaps = gst_caps_new_simple ("audio/mpeg",
-        "mpegversion", G_TYPE_INT, mpegversion,
-        "channels", G_TYPE_INT, faac->channels,
-        "rate", G_TYPE_INT, faac->samplerate, NULL);
-
-    /* negotiate with these caps */
-    GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, newcaps);
-    result = gst_pad_set_caps (faac->srcpad, newcaps);
   }
 
 done:
-  gst_object_unref (faac);
-  return result;
+
+  gst_caps_unref (allowed_caps);
+
+  return ret;
 }
 
 static gboolean
@@ -492,8 +496,7 @@ gst_faac_chain (GstPad * pad, GstBuffer * inbuf)
   }
 
   if (!GST_PAD_CAPS (faac->srcpad)) {
-    if (gst_faac_src_setcaps (faac->srcpad,
-            gst_pad_get_allowed_caps (faac->srcpad)) <= 0) {
+    if (!gst_faac_configure_source_pad (faac)) {
       GST_ELEMENT_ERROR (faac, CORE, NEGOTIATION, (NULL),
           ("failed to negotiate MPEG/AAC format with next element"));
       gst_buffer_unref (inbuf);
