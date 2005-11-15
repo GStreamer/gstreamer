@@ -694,6 +694,12 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * the position should not be updated. The currently configured playback
  * segment can be queried with #GST_QUERY_SEGMENT.
  *
+ * Note that updating the @cur position will actually move the current
+ * playback pointer to that new position. It is not possible to seek 
+ * relative to the current playing position, to do this, pause the pipeline,
+ * get the current position and perform a GST_SEEK_TYPE_SET to the desired
+ * position.
+ *
  * Returns: A new seek event.
  */
 GstEvent *
