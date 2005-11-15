@@ -1,3 +1,12 @@
+2005-11-15  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstpipeline.c (test_base_time): New test for buffer
+	timestamps with live capture.
+
+	* gst/elements/gstfakesrc.c (gst_fake_src_create): If the datarate
+	is 0 but we are a live source, timestamp the buffers using the
+	element's clock.
+
 2005-11-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:

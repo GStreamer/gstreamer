@@ -692,8 +692,6 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   buf = gst_fake_src_create_buffer (src);
   GST_BUFFER_OFFSET (buf) = src->buffer_count++;
 
-  time = GST_CLOCK_TIME_NONE;
-
   if (src->datarate > 0) {
     time = (src->bytes_sent * GST_SECOND) / src->datarate;
     if (src->sync) {
@@ -702,7 +700,20 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
 
     GST_BUFFER_DURATION (buf) =
         GST_BUFFER_SIZE (buf) * GST_SECOND / src->datarate;
+  } else if (gst_base_src_is_live (basesrc)) {
+    GstClock *clock;
+
+    clock = gst_element_get_clock (GST_ELEMENT (src));
+    g_return_val_if_fail (clock != NULL, GST_FLOW_ERROR);
+
+    time = gst_clock_get_time (clock);
+    time -= gst_element_get_base_time (GST_ELEMENT (src));
+
+    gst_object_unref (clock);
+  } else {
+    time = GST_CLOCK_TIME_NONE;
   }
+
   GST_BUFFER_TIMESTAMP (buf) = time;
 
   if (!src->silent) {
