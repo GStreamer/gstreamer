@@ -108,22 +108,22 @@ G_BEGIN_DECLS
     GstElementClass parent_class;
 
     /* process packet types */
-      gboolean (*parse_packhead) (GstMPEGParse * parse, GstBuffer * buffer);
-      gboolean (*parse_syshead) (GstMPEGParse * parse, GstBuffer * buffer);
-      gboolean (*parse_packet) (GstMPEGParse * parse, GstBuffer * buffer);
-      gboolean (*parse_pes) (GstMPEGParse * parse, GstBuffer * buffer);
+    gboolean      (*parse_packhead) (GstMPEGParse * parse, GstBuffer * buffer);
+    gboolean      (*parse_syshead)  (GstMPEGParse * parse, GstBuffer * buffer);
+    GstFlowReturn (*parse_packet)   (GstMPEGParse * parse, GstBuffer * buffer);
+    GstFlowReturn (*parse_pes)      (GstMPEGParse * parse, GstBuffer * buffer);
 
     /* process events */
     GstFlowReturn (*handle_discont) (GstMPEGParse * parse, GstEvent * event);
 
     /* optional method to send out the data */
-    GstFlowReturn (*send_buffer) (GstMPEGParse * parse, GstBuffer * buffer, GstClockTime time);
-    GstFlowReturn (*process_event) (GstMPEGParse * parse, GstEvent * event, GstClockTime time);
-    GstFlowReturn (*send_discont) (GstMPEGParse * parse, GstClockTime time);
-    GstFlowReturn (*send_event) (GstMPEGParse * parse, GstEvent *event, GstClockTime time);
+    GstFlowReturn (*send_buffer)    (GstMPEGParse * parse, GstBuffer * buffer, GstClockTime time);
+    gboolean      (*process_event)  (GstMPEGParse * parse, GstEvent * event, GstClockTime time);
+    gboolean      (*send_discont)   (GstMPEGParse * parse, GstClockTime time);
+    gboolean      (*send_event)     (GstMPEGParse * parse, GstEvent *event, GstClockTime time);
 
     /* signals */
-    void (*reached_offset) (GstMPEGParse *mpeg_parse, GstClockTime timeval);
+    void          (*reached_offset) (GstMPEGParse *parse, GstClockTime timeval);
   };
 
   GType gst_mpeg_parse_get_type (void);

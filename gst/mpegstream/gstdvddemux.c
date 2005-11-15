@@ -133,16 +133,16 @@ static void gst_dvd_demux_init (GstDVDDemux * dvd_demux);
 
 static GstFlowReturn gst_dvd_demux_send_buffer (GstMPEGParse * mpeg_parse,
     GstBuffer * buffer, GstClockTime time);
-static GstFlowReturn gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse,
+static gboolean gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse,
     GstEvent * event, GstClockTime time);
 
-static GstFlowReturn gst_dvd_demux_handle_discont
+static gboolean gst_dvd_demux_handle_discont
     (GstMPEGParse * mpeg_parse, GstEvent * event);
 #if 0
-static GstFlowReturn gst_dvd_demux_handle_dvd_event
+static gboolean gst_dvd_demux_handle_dvd_event
     (GstDVDDemux * dvd_demux, GstEvent * event);
 #endif
-static GstFlowReturn gst_dvd_demux_send_event
+static gboolean gst_dvd_demux_send_event
     (GstMPEGParse * mpeg_parse, GstEvent * event, GstClockTime time);
 
 static GstMPEGStream *gst_dvd_demux_get_video_stream
@@ -155,12 +155,12 @@ static GstMPEGStream *gst_dvd_demux_get_subpicture_stream
     (GstMPEGDemux * dvd_demux,
     guint8 stream_nr, gint type, const gpointer info);
 
-static void gst_dvd_demux_process_private
+static GstFlowReturn gst_dvd_demux_process_private
     (GstMPEGDemux * mpeg_demux,
     GstBuffer * buffer,
     guint stream_nr, GstClockTime timestamp, guint headerlen, guint datalen);
 
-static void gst_dvd_demux_send_subbuffer
+static GstFlowReturn gst_dvd_demux_send_subbuffer
     (GstMPEGDemux * mpeg_demux,
     GstMPEGStream * outstream,
     GstBuffer * buffer, GstClockTime timestamp, guint offset, guint size);
@@ -327,11 +327,12 @@ gst_dvd_demux_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
   return GST_FLOW_OK;
 }
 
-static GstFlowReturn
+static gboolean
 gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
     GstClockTime time)
 {
   GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_parse);
+  gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
 #if 0
@@ -345,16 +346,16 @@ gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
     case GST_EVENT_NEWSEGMENT:
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
-      return PARSE_CLASS (dvd_demux)->send_event (mpeg_parse, event,
+      ret = PARSE_CLASS (dvd_demux)->send_event (mpeg_parse, event,
           GST_CLOCK_TIME_NONE);
+      break;
     default:
       /* Propagate the event normally. */
-      if (!gst_pad_event_default (mpeg_parse->sinkpad, event))
-        return GST_FLOW_ERROR;
+      ret = gst_pad_event_default (mpeg_parse->sinkpad, event);
       break;
   }
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 #if 0
@@ -569,30 +570,22 @@ gst_dvd_demux_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
 
   for (i = 0; i < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS; i++) {
     if (dvd_demux->subpicture_stream[i]) {
-      if (GST_PAD_IS_USABLE (dvd_demux->subpicture_stream[i]->pad)) {
-        gst_event_ref (event);
-        gst_pad_push_event (dvd_demux->subpicture_stream[i]->pad, event);
-      }
+      gst_event_ref (event);
+      gst_pad_push_event (dvd_demux->subpicture_stream[i]->pad, event);
       if (GST_CLOCK_TIME_IS_VALID (ts))
         dvd_demux->subpicture_stream[i]->cur_ts = ts;
     }
   }
 
   /* Distribute the event to the "current" pads. */
-  if (GST_PAD_IS_USABLE (dvd_demux->cur_video)) {
-    gst_event_ref (event);
-    gst_pad_push_event (dvd_demux->cur_video, event);
-  }
+  gst_event_ref (event);
+  gst_pad_push_event (dvd_demux->cur_video, event);
 
-  if (GST_PAD_IS_USABLE (dvd_demux->cur_audio)) {
-    gst_event_ref (event);
-    gst_pad_push_event (dvd_demux->cur_audio, event);
-  }
+  gst_event_ref (event);
+  gst_pad_push_event (dvd_demux->cur_audio, event);
 
-  if (GST_PAD_IS_USABLE (dvd_demux->cur_subpicture)) {
-    gst_event_ref (event);
-    gst_pad_push_event (dvd_demux->cur_subpicture, event);
-  }
+  gst_event_ref (event);
+  gst_pad_push_event (dvd_demux->cur_subpicture, event);
 
   GST_MPEG_PARSE_CLASS (parent_class)->send_event (mpeg_parse, event, ts);
 
@@ -918,12 +911,13 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
   return str;
 }
 
-static void
+static GstFlowReturn
 gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
     GstBuffer * buffer,
     guint stream_nr, GstClockTime timestamp, guint headerlen, guint datalen)
 {
   GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_demux);
+  GstFlowReturn ret = GST_FLOW_OK;
   guint8 *basebuf;
   guint8 ps_id_code;
   GstMPEGStream *outstream = NULL;
@@ -1031,12 +1025,12 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
       break;
 
     default:
-      g_return_if_reached ();
+      g_return_val_if_reached (GST_FLOW_UNEXPECTED);
       break;
   }
 
   if (outstream == NULL) {
-    return;
+    return GST_FLOW_OK;
   }
 
   if (timestamp != GST_CLOCK_TIME_NONE && first_access > 1) {
@@ -1048,14 +1042,14 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
     len = first_access - 1;
     len -= len % align;
     if (len > 0) {
-      DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
+      ret = DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
           buffer, GST_CLOCK_TIME_NONE, off, len);
     }
     off += len;
     len = datalen - len;
     len -= len % align;
     if (len > 0) {
-      DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
+      ret = DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
           buffer, timestamp, off, len);
     }
   } else {
@@ -1063,19 +1057,22 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
     len = datalen;
     len -= len % align;
     if (len > 0) {
-      DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
+      ret = DEMUX_CLASS (dvd_demux)->send_subbuffer (mpeg_demux, outstream,
           buffer, timestamp, off, len);
     }
   }
+
+  return ret;
 }
 
-static void
+static GstFlowReturn
 gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
     GstMPEGStream * outstream, GstBuffer * buffer,
     GstClockTime timestamp, guint offset, guint size)
 {
   GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (mpeg_demux);
   GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_demux);
+  GstFlowReturn ret;
   GstPad *outpad;
   gint cur_nr;
 
@@ -1100,7 +1097,7 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
   gst_buffer_ref (buffer);
 
   /* Send the buffer to the standard output pad. */
-  parent_class->send_subbuffer (mpeg_demux, outstream, buffer,
+  ret = parent_class->send_subbuffer (mpeg_demux, outstream, buffer,
       timestamp, offset, size);
 
   /* Determine the current output pad and stream number for the given
@@ -1123,24 +1120,27 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
       cur_nr = dvd_demux->cur_subpicture_nr;
       break;
     default:
-      g_return_if_reached ();
+      g_return_val_if_reached (GST_FLOW_UNEXPECTED);
       break;
   }
 
-  if ((outpad != NULL) && (cur_nr == outstream->number) && (size > 0)) {
+  if (outpad != NULL && cur_nr == outstream->number && size > 0) {
     GstBuffer *outbuf;
 
     /* We have a packet of the current stream. Send it to the
        corresponding pad as well. */
     outbuf = gst_buffer_create_sub (buffer, offset, size);
+    g_return_val_if_fail (outbuf != NULL, GST_FLOW_UNEXPECTED);
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
     GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + offset;
 
-    gst_pad_push (outpad, outbuf);
+    ret = gst_pad_push (outpad, outbuf);
   }
 
   gst_buffer_unref (buffer);
+
+  return ret;
 }
 
 #if 0
@@ -1210,10 +1210,9 @@ gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
   GST_INFO ("Resetting the dvd demuxer");
   for (i = 0; i < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS; i++) {
     if (dvd_demux->subpicture_stream[i]) {
-      if (GST_PAD_IS_USABLE (dvd_demux->subpicture_stream[i]->pad)) {
-        gst_pad_push_event (dvd_demux->subpicture_stream[i]->pad,
-            gst_event_new_eos ());
-      }
+      gst_pad_push_event (dvd_demux->subpicture_stream[i]->pad,
+          gst_event_new_eos ());
+
       gst_element_remove_pad (GST_ELEMENT (dvd_demux),
           dvd_demux->subpicture_stream[i]->pad);
       g_free (dvd_demux->subpicture_stream[i]);
@@ -1303,7 +1302,7 @@ gst_dvd_demux_sync_stream_to_time (GstMPEGDemux * mpeg_demux,
       filler = gst_event_new_filler_stamped (last_ts, GST_CLOCK_TIME_NONE);
 
     if (filler) {
-      if (gst_pad_push_event (stream->pad, filler) != GST_FLOW_OK)
+      if (!gst_pad_push_event (stream->pad, filler))
         gst_event_unref (filler);
     }
   }

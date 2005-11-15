@@ -1,3 +1,33 @@
+2005-11-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (handle_slice),
+	(gst_mpeg2dec_sink_event):
+	  Set DELTA_UNIT flag on outgoing buffers if this is NOT a keyframe;
+	  nice-ify debug message in event handler; add CHECKME.
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_process_event),
+	(gst_dvd_demux_send_event), (gst_dvd_demux_process_private),
+	(gst_dvd_demux_send_subbuffer), (gst_dvd_demux_reset),
+	(gst_dvd_demux_sync_stream_to_time):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_class_init),
+	(gst_mpeg_demux_process_event), (gst_mpeg_demux_send_event),
+	(gst_mpeg_demux_handle_discont), (gst_mpeg_demux_new_output_pad),
+	(gst_mpeg_demux_parse_packet), (gst_mpeg_demux_parse_pes),
+	(gst_mpeg_demux_send_subbuffer), (gst_mpeg_demux_process_private),
+	(gst_mpeg_demux_sync_stream_to_time),
+	(gst_mpeg_demux_handle_src_event), (gst_mpeg_demux_reset):
+	* gst/mpegstream/gstmpegdemux.h:
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_init),
+	(gst_mpeg_parse_handle_discont), (gst_mpeg_parse_send_buffer),
+	(gst_mpeg_parse_process_event), (gst_mpeg_parse_send_discont),
+	(gst_mpeg_parse_send_event), (gst_mpeg_parse_event),
+	(gst_mpeg_parse_chain):
+	* gst/mpegstream/gstmpegparse.h:
+	  Get rid of GST_PAD_IS_USABLE and fix GstFlowReturn vs. gboolean
+	  return value confusion (gst_pad_push vs. gst_pad_send_event and
+	  gst_pad_push_event); pass flow return values to caller;
+	  miscellaneous fixes and clean-ups.
+
 2005-11-14  Martin Soto  <soto@localhost.localdomain>
 
 	* gst/mpegstream/Makefile.am (noinst_HEADERS): Add

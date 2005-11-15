@@ -633,7 +633,7 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 
     GST_DEBUG_OBJECT (mpeg2dec, "picture keyframe %d", key_frame);
 
-    if (key_frame)
+    if (!key_frame)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
     else
       GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -706,8 +706,11 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
           GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
       if ((mpeg2dec->decoded_height > mpeg2dec->height) ||
-          (mpeg2dec->decoded_width > mpeg2dec->width))
+          (mpeg2dec->decoded_width > mpeg2dec->width)) {
+        /* CHECKME: this might unref outbuf and return a new buffer.
+         * Does this affect the info->discard_fbuf stuff below? */
         outbuf = crop_buffer (mpeg2dec, outbuf);
+      }
 
       gst_buffer_ref (outbuf);
       ret = gst_pad_push (mpeg2dec->srcpad, outbuf);
@@ -883,6 +886,9 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (GST_PAD_PARENT (pad));
   gboolean ret = TRUE;
 
+  GST_DEBUG_OBJECT (mpeg2dec, "Got %s event on sink pad",
+      GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
     {
@@ -913,8 +919,6 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
       break;
 
     default:
-      GST_DEBUG_OBJECT (mpeg2dec, "Got event of type %d on sink pad",
-          GST_EVENT_TYPE (event));
       ret = gst_pad_event_default (pad, event);
       break;
   }

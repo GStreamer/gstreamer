@@ -179,7 +179,7 @@ struct _GstMPEGDemuxClass {
                                          gint type,
                                          const gpointer info);
 
-  void		(*send_subbuffer)	 (GstMPEGDemux *mpeg_demux,
+  GstFlowReturn (*send_subbuffer)	 (GstMPEGDemux *mpeg_demux,
                                           GstMPEGStream *outstream,
                                           GstBuffer *buffer,
                                           GstClockTime timestamp,
@@ -187,7 +187,7 @@ struct _GstMPEGDemuxClass {
                                           guint size);
 
 
-  void		(*process_private) 	(GstMPEGDemux *mpeg_demux,
+  GstFlowReturn (*process_private) 	(GstMPEGDemux *mpeg_demux,
                                          GstBuffer *buffer,
                                          guint stream_nr,
                                          GstClockTime timestamp,

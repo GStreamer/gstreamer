@@ -107,7 +107,7 @@ static GstFlowReturn gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse,
     GstEvent * event, GstClockTime time);
 static GstFlowReturn gst_mpeg_parse_send_discont (GstMPEGParse * mpeg_parse,
     GstClockTime time);
-static GstFlowReturn gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse,
+static gboolean gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse,
     GstEvent * event, GstClockTime time);
 
 static void gst_mpeg_parse_pad_added (GstElement * element, GstPad * pad);
@@ -244,9 +244,9 @@ gst_mpeg_parse_init (GstMPEGParse * mpeg_parse)
         GST_DEBUG_FUNCPTR (gst_mpeg_parse_handle_src_event));
 #if 0
     gst_pad_set_query_type_function (mpeg_parse->srcpad,
-        gst_mpeg_parse_get_src_query_types);
+        GST_DEBUG_FUNCPTR (gst_mpeg_parse_get_src_query_types));
     gst_pad_set_query_function (mpeg_parse->srcpad,
-        gst_mpeg_parse_handle_src_query);
+        GST_DEBUG_FUNCPTR (gst_mpeg_parse_handle_src_query));
 #endif
     gst_pad_use_fixed_caps (mpeg_parse->srcpad);
   }
@@ -326,11 +326,11 @@ gst_mpeg_parse_reset (GstMPEGParse * mpeg_parse)
   mpeg_parse->scr_pending = FALSE;
 }
 
-static GstFlowReturn
+static gboolean
 gst_mpeg_parse_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
 {
-  GstFlowReturn result = GST_FLOW_OK;;
   GstFormat format;
+  gboolean ret = TRUE;
   gint64 time;
 
 #if 0
@@ -346,7 +346,7 @@ gst_mpeg_parse_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
         (double) time / GST_SECOND);
 
     if (CLASS (mpeg_parse)->send_discont)
-      result = CLASS (mpeg_parse)->send_discont (mpeg_parse, time);
+      ret = CLASS (mpeg_parse)->send_discont (mpeg_parse, time);
   } else {
     /* Use the next SCR to send a discontinuous event. */
     GST_DEBUG_OBJECT (mpeg_parse, "Using next SCR to send discont");
@@ -356,7 +356,7 @@ gst_mpeg_parse_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
   mpeg_parse->packetize->resync = TRUE;
 
   gst_event_unref (event);
-  return result;
+  return ret;
 }
 
 static GstFlowReturn
@@ -365,7 +365,7 @@ gst_mpeg_parse_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
 {
   GstFlowReturn result = GST_FLOW_OK;
 
-  if (!gst_caps_is_fixed (gst_pad_get_caps (mpeg_parse->srcpad))) {
+  if (!gst_caps_is_fixed (GST_PAD_CAPS (mpeg_parse->srcpad))) {
     gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
     GstCaps *caps;
 
@@ -377,68 +377,46 @@ gst_mpeg_parse_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
     if (!gst_pad_set_caps (mpeg_parse->srcpad, caps)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_parse),
           CORE, NEGOTIATION, (NULL), ("failed to set caps"));
+      gst_caps_unref (caps);
       return GST_FLOW_ERROR;
     }
+    gst_caps_unref (caps);
   }
 
   GST_BUFFER_TIMESTAMP (buffer) = time;
   GST_DEBUG ("current_scr %" G_GINT64_FORMAT, time);
 
-  if (GST_PAD_IS_USABLE (mpeg_parse->srcpad))
-    result = gst_pad_push (mpeg_parse->srcpad, buffer);
-  else
-    gst_buffer_unref (buffer);
+  result = gst_pad_push (mpeg_parse->srcpad, buffer);
 
   return result;
 }
 
-static GstFlowReturn
+static gboolean
 gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
     GstClockTime time)
 {
-  switch (GST_EVENT_TYPE (event)) {
-    default:
-      if (!gst_pad_event_default (mpeg_parse->sinkpad, event))
-        return GST_FLOW_ERROR;
-      break;
-  }
-
-  return GST_FLOW_OK;
+  return gst_pad_event_default (mpeg_parse->sinkpad, event);
 }
 
-static GstFlowReturn
+static gboolean
 gst_mpeg_parse_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
 {
-  GstFlowReturn result = GST_FLOW_OK;
   GstEvent *event;
 
   event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, time,
       GST_CLOCK_TIME_NONE, (gint64) 0);
 
-  if (!event) {
-    GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_parse),
-        RESOURCE, FAILED, (NULL), ("Allocation failed"));
-    return GST_FLOW_ERROR;
-  }
-
   if (CLASS (mpeg_parse)->send_event)
-    result = CLASS (mpeg_parse)->send_event (mpeg_parse, event, time);
+    return CLASS (mpeg_parse)->send_event (mpeg_parse, event, time);
 
-  return result;
+  return FALSE;
 }
 
-static GstFlowReturn
+static gboolean
 gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
     GstClockTime time)
 {
-  GstFlowReturn result = GST_FLOW_OK;
-
-  if (GST_PAD_IS_USABLE (mpeg_parse->srcpad))
-    result = gst_pad_push_event (mpeg_parse->srcpad, event);
-  else
-    gst_event_unref (event);
-
-  return result;
+  return gst_pad_push_event (mpeg_parse->srcpad, event);
 }
 
 static void
@@ -633,9 +611,9 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 static gboolean
 gst_mpeg_parse_event (GstPad * pad, GstEvent * event)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
   GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
   GstClockTime time;
+  gboolean ret = FALSE;
 
   time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
 
@@ -643,6 +621,8 @@ gst_mpeg_parse_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
       if (CLASS (mpeg_parse)->handle_discont)
         ret = CLASS (mpeg_parse)->handle_discont (mpeg_parse, event);
+      else
+        gst_event_unref (event);
       break;
     default:
       if (CLASS (mpeg_parse)->process_event)
@@ -653,7 +633,7 @@ gst_mpeg_parse_event (GstPad * pad, GstEvent * event)
   }
 
   gst_object_unref (mpeg_parse);
-  return ret == GST_FLOW_OK;
+  return ret;
 }
 
 static GstFlowReturn
@@ -674,7 +654,7 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
   while (1) {
     result = gst_mpeg_packetize_read (mpeg_parse->packetize, &buffer);
     if (result == GST_FLOW_RESEND) {
-      // there was not enough data in packetizer cache
+      /* there was not enough data in packetizer cache */
       result = GST_FLOW_OK;
       goto done;
     }
@@ -705,11 +685,11 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
         } else {
           if (mpeg2) {
             if (CLASS (mpeg_parse)->parse_pes) {
-              CLASS (mpeg_parse)->parse_pes (mpeg_parse, buffer);
+              result = CLASS (mpeg_parse)->parse_pes (mpeg_parse, buffer);
             }
           } else {
             if (CLASS (mpeg_parse)->parse_packet) {
-              CLASS (mpeg_parse)->parse_packet (mpeg_parse, buffer);
+              result = CLASS (mpeg_parse)->parse_packet (mpeg_parse, buffer);
             }
           }
         }
@@ -727,13 +707,9 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
         }
 #endif
         if (CLASS (mpeg_parse)->send_discont) {
-          result = CLASS (mpeg_parse)->send_discont (mpeg_parse,
+          CLASS (mpeg_parse)->send_discont (mpeg_parse,
               MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr +
                   mpeg_parse->adjust));
-          if (result != GST_FLOW_OK) {
-            gst_buffer_unref (buffer);
-            goto done;
-          }
         }
         mpeg_parse->discont_pending = FALSE;
       } else {
@@ -805,7 +781,7 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
           ", next SCR: %" G_GINT64_FORMAT, size, bss, br, mpeg_parse->next_scr);
     }
 
-    if (result != GST_FLOW_OK) {
+    if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED) {
       gst_buffer_unref (buffer);
       goto done;
     }
@@ -813,6 +789,10 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
 
 done:
   gst_object_unref (mpeg_parse);
+
+  if (result == GST_FLOW_NOT_LINKED)
+    result = GST_FLOW_OK;
+
   return result;
 }
 
