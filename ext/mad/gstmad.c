@@ -322,10 +322,12 @@ gst_mad_class_init (GstMadClass * klass)
 static void
 gst_mad_init (GstMad * mad)
 {
+  GstPadTemplate *template;
+
   /* create the sink and src pads */
-  mad->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&mad_sink_template_factory), "sink");
+  template = gst_static_pad_template_get (&mad_sink_template_factory);
+  mad->sinkpad = gst_pad_new_from_template (template, "sink");
+  gst_object_unref (template);
   gst_element_add_pad (GST_ELEMENT (mad), mad->sinkpad);
   gst_pad_set_chain_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_chain));
   gst_pad_set_event_function (mad->sinkpad,
@@ -336,9 +338,9 @@ gst_mad_init (GstMad * mad)
   gst_pad_set_formats_function (mad->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mad_get_formats));
 #endif
-  mad->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&mad_src_template_factory), "src");
+  template = gst_static_pad_template_get (&mad_src_template_factory);
+  mad->srcpad = gst_pad_new_from_template (template, "src");
+  gst_object_unref (template);
   gst_element_add_pad (GST_ELEMENT (mad), mad->srcpad);
   gst_pad_set_event_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_src_event));
@@ -1278,10 +1280,13 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         MIN (MAD_BUFFER_MDLEN, MIN (size,
             MAD_BUFFER_MDLEN * 3 - mad->tempsize));
     if (tocopy == 0) {
+#if 0
       GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL),
           ("mad claims to need more data than %u bytes, we don't have that much",
               MAD_BUFFER_MDLEN * 3));
       result = GST_FLOW_ERROR;
+#endif
+      result = GST_FLOW_OK;
       goto end;
     }
 
