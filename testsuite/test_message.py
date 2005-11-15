@@ -30,5 +30,21 @@ class NewTest(TestCase):
         m = gst.message_new_eos(b)
         gst.info("got message : %s" % m)
 
+    def _testApplication(self):
+        gst.info("creating new pipeline")
+        bin = gst.Pipeline()
+        bus = bin.get_bus()
+        bus.add_signal_watch()
+        got_message = False
+        def message_application_cb(bus, message):
+            got_message = True
+        bus.connect('message::application', message_application_cb)
+
+        gst.info("creating new application message from that bin")
+        msg = gst.message_new_application(bin, gst.Structure('foo'))
+        bus.post(msg)
+        self.failUnless(got_message == True)
+        self.gccollect()
+
 if __name__ == "__main__":
     unittest.main()
