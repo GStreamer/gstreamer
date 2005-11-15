@@ -1,3 +1,11 @@
+2005-11-15  Vincent Torri  <torri at iecn dot u-nancy dot fr>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-demux.c: (gst_matroskademux_do_index_seek):
+	  When seeking, seek to closest index entry at or before the requested
+	  seek position, not just the closest one (#321001).
+
 2005-11-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/avi/gstavidemux.c: (swap_line), (gst_avi_demux_invert),

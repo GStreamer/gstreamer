@@ -992,27 +992,22 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
 static GstMatroskaIndex *
 gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, guint64 seek_pos)
 {
-  guint entry = (guint) - 1;
-  guint n;
+  guint entry = demux->num_indexes - 1;
+  guint n = 0;
 
-  for (n = 0; n < demux->num_indexes; n++) {
-    if (entry == (guint) - 1) {
+  if (!demux->num_indexes)
+    return NULL;
+
+  while (n < demux->num_indexes - 1) {
+    if ((demux->index[n].time <= seek_pos) &&
+        (demux->index[n + 1].time > seek_pos)) {
       entry = n;
-    } else {
-      gfloat diff_old = fabs (1. * (demux->index[entry].time - seek_pos)),
-          diff_new = fabs (1. * (demux->index[n].time - seek_pos));
-
-      if (diff_new < diff_old) {
-        entry = n;
-      }
+      break;
     }
+    n++;
   }
 
-  if (entry != (guint) - 1) {
-    return &demux->index[entry];
-  }
-
-  return NULL;
+  return &demux->index[entry];
 }
 
 /* takes ownership of the passed event! */
