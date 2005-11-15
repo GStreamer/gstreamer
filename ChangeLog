@@ -1,3 +1,11 @@
+2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_init):
+	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init):
+	* gst/gstqueue.c: (gst_queue_init):
+	* gst/gstregistryxml.c: (load_feature):
+	  Revert all these unrefs, they don't even pass make check !
+
 2005-11-15  Johan Dahlin  <johan@gnome.org>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_init):
@@ -1247,6 +1255,12 @@
 2005-10-18  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstelement.c (gst_element_dispose): More helpful message.
+
+2005-10-18  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	reviewed by: <delete if not using a buddy>
+
+	* common/gtk-doc.mak:
 
 2005-10-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 

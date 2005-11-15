@@ -195,7 +195,6 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
 
   GST_DEBUG_OBJECT (basesrc, "creating src pad");
   pad = gst_pad_new_from_template (pad_template, "src");
-  gst_object_unref (pad_template);
 
   GST_DEBUG_OBJECT (basesrc, "setting functions on src pad");
   gst_pad_set_activatepush_function (pad,

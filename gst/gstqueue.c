@@ -335,7 +335,6 @@ gst_queue_init (GstQueue * queue)
 
   sink_template = gst_static_pad_template_get (&sinktemplate);
   queue->sinkpad = gst_pad_new_from_template (sink_template, "sink");
-  gst_object_unref (sink_template);
 
   gst_pad_set_chain_function (queue->sinkpad,
       GST_DEBUG_FUNCPTR (gst_queue_chain));
@@ -353,7 +352,6 @@ gst_queue_init (GstQueue * queue)
 
   src_template = gst_static_pad_template_get (&srctemplate);
   queue->srcpad = gst_pad_new_from_template (src_template, "src");
-  gst_object_unref (src_template);
 
   gst_pad_set_activatepush_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_src_activate_push));

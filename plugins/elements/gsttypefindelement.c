@@ -209,7 +209,6 @@ gst_type_find_element_init (GstTypeFindElement * typefind,
   /* sinkpad */
   src_template = gst_static_pad_template_get (&type_find_element_sink_template);
   typefind->sink = gst_pad_new_from_template (src_template, "sink");
-  gst_object_unref (src_template);
 
   gst_pad_set_activate_function (typefind->sink,
       GST_DEBUG_FUNCPTR (gst_type_find_element_activate));
@@ -222,7 +221,6 @@ gst_type_find_element_init (GstTypeFindElement * typefind,
   /* srcpad */
   sink_template = gst_static_pad_template_get (&type_find_element_src_template);
   typefind->src = gst_pad_new_from_template (sink_template, "src");
-  gst_object_unref (sink_template);
 
   gst_pad_set_activatepull_function (typefind->src,
       GST_DEBUG_FUNCPTR (gst_type_find_element_activate_src_pull));
