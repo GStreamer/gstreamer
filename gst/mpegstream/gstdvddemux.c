@@ -1335,5 +1335,5 @@ gboolean
 gst_dvd_demux_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "dvddemux",
-      GST_RANK_PRIMARY, GST_TYPE_DVD_DEMUX);
+      GST_RANK_SECONDARY, GST_TYPE_DVD_DEMUX);
 }
