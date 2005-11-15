@@ -1,3 +1,8 @@
+2005-11-15  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstpipeline.c (test_base_time): Add check that the
+	base time and stream time are reset correctly.
+
 2005-11-15  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:

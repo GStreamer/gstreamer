@@ -226,21 +226,28 @@ GST_START_TEST (test_bus)
 
 GST_END_TEST;
 
+static void
+memory_barrier (void)
+{
+  gint foo = 1;
+  volatile gint bar;
+
+  /* make sure the other thread sees the update */
+  bar = g_atomic_int_get (&foo);
+}
+
 static gboolean
 sink_pad_probe (GstPad * pad, GstBuffer * buffer,
     GstClockTime * first_timestamp)
 {
-  gint memory_barrier = 1;
-  volatile gint foo;
-
   fail_if (GST_BUFFER_TIMESTAMP (buffer) == GST_CLOCK_TIME_NONE,
       "testing if buffer timestamps are right, but got CLOCK_TIME_NONE");
 
-  if (*first_timestamp == GST_CLOCK_TIME_NONE)
+  if (*first_timestamp == GST_CLOCK_TIME_NONE) {
     *first_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  }
 
-  /* make sure the other thread sees the update */
-  foo = g_atomic_int_get (&memory_barrier);
+  memory_barrier ();
 
   return TRUE;
 }
@@ -249,7 +256,7 @@ GST_START_TEST (test_base_time)
 {
   GstElement *pipeline, *fakesrc, *fakesink;
   GstPad *sink;
-  GstClockTime observed, lower, upper, base;
+  GstClockTime observed, lower, upper, base, stream;
   GstClock *clock;
 
   pipeline = gst_element_factory_make ("pipeline", "pipeline");
@@ -266,8 +273,6 @@ GST_START_TEST (test_base_time)
   sink = gst_element_get_pad (fakesink, "sink");
   gst_pad_add_buffer_probe (sink, G_CALLBACK (sink_pad_probe), &observed);
 
-  observed = GST_CLOCK_TIME_NONE;
-
   fail_unless (gst_element_set_state (pipeline, GST_STATE_PAUSED)
       == GST_STATE_CHANGE_NO_PREROLL, "expected no-preroll from live pipeline");
 
@@ -275,36 +280,123 @@ GST_START_TEST (test_base_time)
   fail_unless (clock && GST_IS_CLOCK (clock), "i want a clock dammit");
   gst_pipeline_use_clock (GST_PIPELINE (pipeline), clock);
 
-  lower = gst_clock_get_time (clock);
+  fail_unless (gst_pipeline_get_last_stream_time (GST_PIPELINE (pipeline)) == 0,
+      "stream time doesn't start off at 0");
 
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  fail_unless (gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE)
-      == GST_STATE_CHANGE_SUCCESS, "failed state change");
+  /* test the first: that base time is being distributed correctly, timestamps
+     are correct relative to the running clock and base time */
+  {
+    lower = gst_clock_get_time (clock);
 
-  /* now something a little more than lower was distributed as the base time,
-   * and the buffer was timestamped at the base time or a little bit afterwards
-   */
+    observed = GST_CLOCK_TIME_NONE;
 
-  base = gst_element_get_base_time (pipeline);
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    fail_unless (gst_element_get_state (pipeline, NULL, NULL,
+            GST_CLOCK_TIME_NONE)
+        == GST_STATE_CHANGE_SUCCESS, "failed state change");
 
-  upper = gst_clock_get_time (clock);
+    /* now something a little more than lower was distributed as the base time,
+     * and the buffer was timestamped between 0 and upper-base
+     */
 
-  /* make sure we don't have other threads running, makes errors nicer */
-  gst_element_set_state (pipeline, GST_STATE_NULL);
+    base = gst_element_get_base_time (pipeline);
 
-  fail_if (observed == GST_CLOCK_TIME_NONE, "no timestamp recorded");
+    /* set stream time */
+    gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
-  fail_unless (base >= lower, "early base time: %" GST_TIME_FORMAT " < %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (base), GST_TIME_ARGS (lower));
-  fail_unless (upper >= base, "bogus base time: %" GST_TIME_FORMAT " > %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (base), GST_TIME_ARGS (upper));
+    /* pulling upper here makes sure that the pipeline's new stream time has
+       already been computed */
+    upper = gst_clock_get_time (clock);
 
-  fail_unless (observed + base >= lower,
-      "early timestamp: %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (observed), GST_TIME_ARGS (lower));
-  fail_unless (observed + base <= upper,
-      "late timestamp: %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (observed), GST_TIME_ARGS (upper));
+    fail_unless (gst_element_get_state (pipeline, NULL, NULL,
+            GST_CLOCK_TIME_NONE)
+        == GST_STATE_CHANGE_NO_PREROLL, "failed state change");
+
+    fail_if (observed == GST_CLOCK_TIME_NONE, "no timestamp recorded");
+
+    fail_unless (base >= lower, "early base time: %" GST_TIME_FORMAT " < %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (base), GST_TIME_ARGS (lower));
+    fail_unless (upper >= base, "bogus base time: %" GST_TIME_FORMAT " > %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (base), GST_TIME_ARGS (upper));
+
+    stream = gst_pipeline_get_last_stream_time (GST_PIPELINE (pipeline));
+
+    fail_unless (stream > 0, "bogus new stream time: %" GST_TIME_FORMAT " > %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (stream), GST_TIME_ARGS (0));
+    fail_unless (stream <= upper,
+        "bogus new stream time: %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (stream), GST_TIME_ARGS (upper));
+
+    fail_unless (observed <= stream, "timestamps outrun stream time: %"
+        GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (observed), GST_TIME_ARGS (stream));
+    fail_unless (observed >= 0, "early timestamp: %" GST_TIME_FORMAT " < %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (observed),
+        GST_TIME_ARGS (lower - base));
+    fail_unless (observed <= upper - base,
+        "late timestamp: %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (observed), GST_TIME_ARGS (upper - base));
+  }
+
+  /* test the second: that the base time is redistributed when we go to PLAYING
+     again */
+  {
+    GstClockID clock_id;
+    GstClockTime oldbase = base, oldstream = stream;
+
+    /* let some time pass */
+    clock_id = gst_clock_new_single_shot_id (clock, upper + GST_SECOND);
+    fail_unless (gst_clock_id_wait (clock_id, NULL) == GST_CLOCK_OK,
+        "unexpected clock_id_wait return");
+
+    lower = gst_clock_get_time (clock);
+
+    observed = GST_CLOCK_TIME_NONE;
+    memory_barrier ();
+
+    fail_unless (lower >= upper + GST_SECOND, "clock did not advance?");
+
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    fail_unless (gst_element_get_state (pipeline, NULL, NULL,
+            GST_CLOCK_TIME_NONE)
+        == GST_STATE_CHANGE_SUCCESS, "failed state change");
+
+    /* now the base time should have advanced by more than GST_SECOND compared
+     * to what it was. The buffer will be timestamped between the last stream
+     * time and upper minus base.
+     */
+
+    base = gst_element_get_base_time (pipeline);
+
+    /* set stream time */
+    gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+    /* new stream time already set */
+    upper = gst_clock_get_time (clock);
+
+    fail_unless (gst_element_get_state (pipeline, NULL, NULL,
+            GST_CLOCK_TIME_NONE)
+        == GST_STATE_CHANGE_NO_PREROLL, "failed state change");
+
+    fail_if (observed == GST_CLOCK_TIME_NONE, "no timestamp recorded");
+
+    stream = gst_pipeline_get_last_stream_time (GST_PIPELINE (pipeline));
+
+    fail_unless (base >= oldbase + GST_SECOND, "base time not reset");
+    fail_unless (upper >= base + stream, "bogus base time: %"
+        GST_TIME_FORMAT " > %" GST_TIME_FORMAT, GST_TIME_ARGS (base),
+        GST_TIME_ARGS (upper));
+
+    fail_unless (observed >= lower - base, "early timestamp: %"
+        GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (observed), GST_TIME_ARGS (lower - base));
+    fail_unless (observed <= upper - base, "late timestamp: %"
+        GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (observed), GST_TIME_ARGS (upper - base));
+    fail_unless (stream - oldstream <= upper - lower,
+        "insufficient stream time: %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (observed), GST_TIME_ARGS (upper));
+  }
 
   gst_object_unref (sink);
   gst_object_unref (clock);
