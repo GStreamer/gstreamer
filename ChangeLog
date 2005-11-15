@@ -1,3 +1,12 @@
+2005-11-15  Daniel Fischer  <dan at f3c dot com>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstpad.c: (gst_pad_get_property):
+	  GST_PAD_PAD_TEMPLATE(pad) gets the pad template, while
+	  GST_PAD_TEMPLATE(pad) does a cast. We want the former here.
+	  (#321452)
+
 2005-11-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstevent.c:

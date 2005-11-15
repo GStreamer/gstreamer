@@ -440,7 +440,7 @@ gst_pad_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, GST_PAD_DIRECTION (object));
       break;
     case PAD_PROP_TEMPLATE:
-      g_value_set_object (value, GST_PAD_TEMPLATE (object));
+      g_value_set_object (value, GST_PAD_PAD_TEMPLATE (object));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
