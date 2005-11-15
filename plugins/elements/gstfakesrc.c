@@ -704,12 +704,15 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
     GstClock *clock;
 
     clock = gst_element_get_clock (GST_ELEMENT (src));
-    g_return_val_if_fail (clock != NULL, GST_FLOW_ERROR);
 
-    time = gst_clock_get_time (clock);
-    time -= gst_element_get_base_time (GST_ELEMENT (src));
-
-    gst_object_unref (clock);
+    if (clock) {
+      time = gst_clock_get_time (clock);
+      time -= gst_element_get_base_time (GST_ELEMENT (src));
+      gst_object_unref (clock);
+    } else {
+      /* not an error not to have a clock */
+      time = GST_CLOCK_TIME_NONE;
+    }
   } else {
     time = GST_CLOCK_TIME_NONE;
   }

@@ -1,5 +1,8 @@
 2005-11-15  Andy Wingo  <wingo@pobox.com>
 
+	* gst/elements/gstfakesrc.c (gst_fake_src_create): It's not an
+	error if the user selected "no clock" as the clocking method.
+
 	* check/gst/gstpipeline.c (test_base_time): New test for buffer
 	timestamps with live capture.
 
