@@ -1,3 +1,10 @@
+2005-11-15  Johan Dahlin  <johan@gnome.org>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_init):
+	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init):
+	* gst/gstqueue.c: (gst_queue_init): 
+	Free pad templates, fixes a couple of leaks.
+
 2005-11-15  Daniel Fischer  <dan at f3c dot com>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

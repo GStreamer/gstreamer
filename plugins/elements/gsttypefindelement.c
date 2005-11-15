@@ -204,10 +204,13 @@ static void
 gst_type_find_element_init (GstTypeFindElement * typefind,
     GstTypeFindElementClass * g_class)
 {
+  GstPadTemplate *sink_template, *src_template;
+
   /* sinkpad */
-  typefind->sink =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&type_find_element_sink_template), "sink");
+  src_template = gst_static_pad_template_get (&type_find_element_sink_template);
+  typefind->sink = gst_pad_new_from_template (src_template, "sink");
+  g_object_unref (src_template);
+
   gst_pad_set_activate_function (typefind->sink,
       GST_DEBUG_FUNCPTR (gst_type_find_element_activate));
   gst_pad_set_chain_function (typefind->sink,
@@ -215,10 +218,12 @@ gst_type_find_element_init (GstTypeFindElement * typefind,
   gst_pad_set_event_function (typefind->sink,
       GST_DEBUG_FUNCPTR (gst_type_find_element_handle_event));
   gst_element_add_pad (GST_ELEMENT (typefind), typefind->sink);
+
   /* srcpad */
-  typefind->src =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&type_find_element_src_template), "src");
+  sink_template = gst_static_pad_template_get (&type_find_element_src_template);
+  typefind->src = gst_pad_new_from_template (sink_template, "src");
+  g_object_unref (sink_template);
+
   gst_pad_set_activatepull_function (typefind->src,
       GST_DEBUG_FUNCPTR (gst_type_find_element_activate_src_pull));
   gst_pad_set_checkgetrange_function (typefind->src,
