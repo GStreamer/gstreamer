@@ -374,11 +374,15 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GST_LOCK (identity);
     if ((clock = GST_ELEMENT (identity)->clock)) {
       GstClockReturn cret;
+      GstClockTime timestamp;
+
+      timestamp = GST_BUFFER_TIMESTAMP (buf) - trans->segment_start;
+      timestamp += trans->segment_accum;
+      timestamp += GST_ELEMENT (identity)->base_time;
 
       /* save id if we need to unlock */
       /* FIXME: actually unlock this somewhere in the state changes */
-      identity->clock_id = gst_clock_new_single_shot_id (clock,
-          GST_BUFFER_TIMESTAMP (buf) + GST_ELEMENT (identity)->base_time);
+      identity->clock_id = gst_clock_new_single_shot_id (clock, timestamp);
       GST_UNLOCK (identity);
 
       cret = gst_clock_id_wait (identity->clock_id, NULL);

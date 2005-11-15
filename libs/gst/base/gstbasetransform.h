@@ -78,14 +78,17 @@ struct _GstBaseTransform {
   gint64         segment_stop;
   gint64         segment_base;
 
-  /* FIXME: When adjusting the padding, move this to a nice place in the structure */
-  /* Set if caps on each pad are equal */
-  gboolean	 have_same_caps;
-
-  GMutex	*transform_lock;
-
-  /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING - 2];
+  union {
+    /* FIXME: When adjusting the padding, move this to a nice place in the structure */
+    /* Set if caps on each pad are equal */
+    struct {
+      gboolean	 have_same_caps;
+      GMutex	*transform_lock;
+      gint64     segment_accum;
+    };
+    /*< private >*/
+    gpointer       _gst_reserved[GST_PADDING];
+  };
 };
 
 /**

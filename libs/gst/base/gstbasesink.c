@@ -584,7 +584,6 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         gint64 segment_time;
         GstClockTime duration;
 
-
         /* the newsegment event is needed to bring the buffer timestamps to the
          * stream time and to drop samples outside of the playback segment. */
         gst_event_parse_newsegment (event, &update, &rate, &format,
@@ -598,8 +597,10 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
           GST_DEBUG_OBJECT (basesink,
               "non-time newsegment with start 0, coaxing into FORMAT_TIME");
           format = GST_FORMAT_TIME;
-          segment_stop = -1;
-          segment_time = -1;
+          if (segment_stop != 0)
+            segment_stop = -1;
+          if (segment_time != 0)
+            segment_time = -1;
         }
 
         if (format != GST_FORMAT_TIME) {
