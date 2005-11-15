@@ -99,11 +99,11 @@ gst_vorbis_dec_base_init (gpointer g_class)
 
   src_template = gst_static_pad_template_get (&vorbis_dec_src_factory);
   gst_element_class_add_pad_template (element_class, src_template);
-  g_object_unref (src_template);
+  gst_object_unref (src_template);
 
   sink_template = gst_static_pad_template_get (&vorbis_dec_sink_factory);
   gst_element_class_add_pad_template (element_class, sink_template);
-  g_object_unref (sink_template);
+  gst_object_unref (sink_template);
 
   gst_element_class_set_details (element_class, &vorbis_dec_details);
 }
@@ -171,7 +171,7 @@ gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
 
   template = gst_static_pad_template_get (&vorbis_dec_sink_factory);
   dec->sinkpad = gst_pad_new_from_template (template, "sink");
-  g_object_unref (template);
+  gst_object_unref (template);
 
   gst_pad_set_event_function (dec->sinkpad, vorbis_dec_sink_event);
   gst_pad_set_chain_function (dec->sinkpad, vorbis_dec_chain);
@@ -180,7 +180,7 @@ gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
 
   template = gst_static_pad_template_get (&vorbis_dec_src_factory);
   dec->srcpad = gst_pad_new_from_template (template, "src");
-  g_object_unref (template);
+  gst_object_unref (template);
 
   gst_pad_set_event_function (dec->srcpad, vorbis_dec_src_event);
   gst_pad_set_query_type_function (dec->srcpad, vorbis_get_query_types);
