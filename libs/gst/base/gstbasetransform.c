@@ -1128,16 +1128,19 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
 
       if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (trans, "received NEW_SEGMENT %" GST_TIME_FORMAT
-            " -- %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
+            " -- %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT
+            ", accum %" GST_TIME_FORMAT,
             GST_TIME_ARGS (trans->segment_start),
-            GST_TIME_ARGS (trans->segment_start),
-            GST_TIME_ARGS (trans->segment_base));
+            GST_TIME_ARGS (trans->segment_stop),
+            GST_TIME_ARGS (trans->segment_base),
+            GST_TIME_ARGS (trans->segment_accum));
       } else {
         GST_DEBUG_OBJECT (trans, "received NEW_SEGMENT %" G_GINT64_FORMAT
-            " -- %" G_GINT64_FORMAT ", time %" G_GINT64_FORMAT,
-            trans->segment_start, trans->segment_stop, trans->segment_base);
+            " -- %" G_GINT64_FORMAT ", time %" G_GINT64_FORMAT
+            ", accum %" G_GINT64_FORMAT,
+            trans->segment_start, trans->segment_stop,
+            trans->segment_base, trans->segment_accum);
       }
-
       break;
     }
     default:
@@ -1427,6 +1430,12 @@ gst_base_transform_change_state (GstElement * element,
         trans->have_same_caps = trans->passthrough;
       GST_DEBUG_OBJECT (trans, "have_same_caps %d", trans->have_same_caps);
       trans->negotiated = FALSE;
+      trans->have_newsegment = FALSE;
+      trans->segment_rate = 1.0;
+      trans->segment_start = 0;
+      trans->segment_stop = -1;
+      trans->segment_base = 0;
+      trans->segment_accum = 0;
       GST_UNLOCK (trans);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

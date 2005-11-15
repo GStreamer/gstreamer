@@ -1,3 +1,12 @@
+2005-11-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_change_state):
+	segment_stop == -1 at startup.
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_event),
+	(gst_base_transform_change_state):
+	Init segment values at start.
+
 2005-11-15  Andy Wingo  <wingo@pobox.com>
 
 	* check/gst/gstpipeline.c (test_base_time): Punt around the
