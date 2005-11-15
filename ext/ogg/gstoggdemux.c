@@ -185,6 +185,8 @@ static gboolean gst_ogg_demux_activate_chain (GstOggDemux * ogg,
 static gboolean gst_ogg_demux_configure_segment (GstOggDemux * ogg,
     GstEvent * event, gboolean * running);
 static gboolean gst_ogg_demux_perform_seek (GstOggDemux * ogg);
+static gboolean gst_ogg_demux_receive_event (GstElement * element,
+    GstEvent * event);
 
 static void gst_ogg_pad_class_init (GstOggPadClass * klass);
 static void gst_ogg_pad_init (GstOggPad * pad);
@@ -383,6 +385,54 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
   }
 done:
   return res;
+}
+
+static gboolean
+gst_ogg_demux_receive_event (GstElement * element, GstEvent * event)
+{
+  gboolean res;
+  GstOggDemux *ogg;
+
+  ogg = GST_OGG_DEMUX (element);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      gboolean running;
+
+      /* can't seek if we are not seekable, FIXME could pass the
+       * seek query upstream after converting it to bytes using
+       * the average bitrate of the stream. */
+      if (!ogg->seekable) {
+        GST_DEBUG ("seek on non seekable stream");
+        goto error;
+      }
+
+      if (!gst_ogg_demux_configure_segment (ogg, event, &running)) {
+        GST_DEBUG ("configure segment failed");
+        goto error;
+      }
+
+      /* now do the seek */
+      if (running) {
+        res = gst_ogg_demux_perform_seek (ogg);
+      } else
+        res = TRUE;
+      break;
+
+    }
+    default:
+      GST_DEBUG ("We only handle seek events here");
+      goto error;
+      break;
+  }
+
+  return res;
+
+error:
+  GST_DEBUG ("error handling event");
+  gst_event_unref (event);
+  return FALSE;
 }
 
 static gboolean
@@ -1072,6 +1122,7 @@ gst_ogg_demux_class_init (GstOggDemuxClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gstelement_class->change_state = gst_ogg_demux_change_state;
+  gstelement_class->send_event = gst_ogg_demux_receive_event;
 
   gobject_class->finalize = gst_ogg_demux_finalize;
 }

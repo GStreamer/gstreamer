@@ -1,3 +1,10 @@
+2005-11-15  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_receive_event),
+	(gst_ogg_demux_class_init):
+	Implement GstElement::send_event, so we can send seek events
+	in GST_STATE_READY
+
 2005-11-14  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xwindow_new):
