@@ -524,7 +524,7 @@ load_feature (xmlTextReaderPtr reader)
     return NULL;
   }
   if (!GST_IS_PLUGIN_FEATURE (feature)) {
-    g_object_unref (feature);
+    gst_object_unref (feature);
     return NULL;
   }
   while ((ret = xmlTextReaderRead (reader)) == 1) {
