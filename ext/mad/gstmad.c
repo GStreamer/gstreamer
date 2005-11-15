@@ -1280,13 +1280,10 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         MIN (MAD_BUFFER_MDLEN, MIN (size,
             MAD_BUFFER_MDLEN * 3 - mad->tempsize));
     if (tocopy == 0) {
-#if 0
       GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL),
           ("mad claims to need more data than %u bytes, we don't have that much",
               MAD_BUFFER_MDLEN * 3));
       result = GST_FLOW_ERROR;
-#endif
-      result = GST_FLOW_OK;
       goto end;
     }
 
