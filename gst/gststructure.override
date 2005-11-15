@@ -55,7 +55,6 @@ _wrap_gst_structure_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 		PyErr_SetString(PyExc_RuntimeError, "could not create GstStructure object");
 		return -1;
 	}
-	self->free_on_dealloc = TRUE;
 	return 0;
 }
 %%

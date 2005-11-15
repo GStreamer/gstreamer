@@ -277,7 +277,7 @@
   (c-name "gst_bus_post")
   (return-type "gboolean")
   (parameters
-    '("GstMessage*" "message")
+    '("GstMessage*" "message" (keep-refcount))
   )
 )
 
@@ -3727,7 +3727,7 @@
     '("const-gchar*" "name_template")
     '("GstPadDirection" "direction")
     '("GstPadPresence" "presence")
-    '("GstCaps*" "caps")
+    '("GstCaps*" "caps" (keep-refcount))
   )
 )
 
