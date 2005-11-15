@@ -1,3 +1,19 @@
+2005-11-15  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstelement.c (gst_element_set_base_time): Add debugging.
+
+	* gst/gstpipeline.c (gst_pipeline_set_new_stream_time): Document
+	using GST_CLOCK_TIME_NONE to disable base time management.
+	(do_pipeline_seek, gst_pipeline_change_state): Don't reset stream
+	time if it was NONE before.
+	(gst_pipeline_change_state): Only munge the base time if
+	stream_time != GST_CLOCK_TIME_NONE.
+
+	* check/gst/gstpipeline.c (test_base_time): Punt around the
+	problem of the probe not being called, because that's not the
+	issue I'm looking at. Add a check that setting stream_time to NONE
+	disables base time management.
+	
 2005-11-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_change_state):
@@ -7,12 +23,6 @@
 	(gst_base_transform_change_state):
 	Init segment values at start.
 
-2005-11-15  Andy Wingo  <wingo@pobox.com>
-
-	* check/gst/gstpipeline.c (test_base_time): Punt around the
-	problem of the probe not being called, because that's not the
-	issue I'm looking at...
-	
 2005-11-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):

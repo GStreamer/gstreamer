@@ -21,6 +21,8 @@
 
 #include <gst/check/gstcheck.h>
 
+#define WAIT_TIME (100 * GST_MSECOND)
+
 /* an empty pipeline can go to PLAYING in one go */
 GST_START_TEST (test_async_state_change_empty)
 {
@@ -348,15 +350,16 @@ GST_START_TEST (test_base_time)
     GstClockTime oldbase = base, oldstream = stream;
 
     /* let some time pass */
-    clock_id = gst_clock_new_single_shot_id (clock, upper + GST_SECOND);
+    clock_id = gst_clock_new_single_shot_id (clock, upper + WAIT_TIME);
     fail_unless (gst_clock_id_wait (clock_id, NULL) == GST_CLOCK_OK,
         "unexpected clock_id_wait return");
+    gst_clock_id_unref (clock_id);
 
     lower = gst_clock_get_time (clock);
 
     observed = GST_CLOCK_TIME_NONE;
 
-    fail_unless (lower >= upper + GST_SECOND, "clock did not advance?");
+    fail_unless (lower >= upper + WAIT_TIME, "clock did not advance?");
 
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
     fail_unless (gst_element_get_state (pipeline, NULL, NULL,
@@ -368,7 +371,7 @@ GST_START_TEST (test_base_time)
       g_cond_wait (probe_cond, probe_lock);
     g_mutex_unlock (probe_lock);
 
-    /* now the base time should have advanced by more than GST_SECOND compared
+    /* now the base time should have advanced by more than WAIT_TIME compared
      * to what it was. The buffer will be timestamped between the last stream
      * time and upper minus base.
      */
@@ -389,7 +392,7 @@ GST_START_TEST (test_base_time)
 
     stream = gst_pipeline_get_last_stream_time (GST_PIPELINE (pipeline));
 
-    fail_unless (base >= oldbase + GST_SECOND, "base time not reset");
+    fail_unless (base >= oldbase + WAIT_TIME, "base time not reset");
     fail_unless (upper >= base + stream, "bogus base time: %"
         GST_TIME_FORMAT " > %" GST_TIME_FORMAT, GST_TIME_ARGS (base),
         GST_TIME_ARGS (upper));
@@ -403,6 +406,72 @@ GST_START_TEST (test_base_time)
     fail_unless (stream - oldstream <= upper - lower,
         "insufficient stream time: %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
         GST_TIME_ARGS (observed), GST_TIME_ARGS (upper));
+  }
+
+  /* test the third: that if I set CLOCK_TIME_NONE as the stream time, that the
+     base time is not changed */
+  {
+    GstClockID clock_id;
+    GstClockTime oldbase = base, oldobserved = observed;
+
+    /* let some time pass */
+    clock_id = gst_clock_new_single_shot_id (clock, upper + WAIT_TIME);
+    fail_unless (gst_clock_id_wait (clock_id, NULL) == GST_CLOCK_OK,
+        "unexpected clock_id_wait return");
+    gst_clock_id_unref (clock_id);
+
+    lower = gst_clock_get_time (clock);
+
+    observed = GST_CLOCK_TIME_NONE;
+
+    fail_unless (lower >= upper + WAIT_TIME, "clock did not advance?");
+
+    /* bling */
+    gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline),
+        GST_CLOCK_TIME_NONE);
+
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    fail_unless (gst_element_get_state (pipeline, NULL, NULL,
+            GST_CLOCK_TIME_NONE)
+        == GST_STATE_CHANGE_SUCCESS, "failed state change");
+
+    g_mutex_lock (probe_lock);
+    while (observed == GST_CLOCK_TIME_NONE)
+      g_cond_wait (probe_cond, probe_lock);
+    g_mutex_unlock (probe_lock);
+
+    /* now the base time should be the same as it was, and the timestamp should
+     * be more than WAIT_TIME past what it was.
+     */
+
+    base = gst_element_get_base_time (pipeline);
+
+    /* set stream time */
+    gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+    /* new stream time already set */
+    upper = gst_clock_get_time (clock);
+
+    fail_unless (gst_element_get_state (pipeline, NULL, NULL,
+            GST_CLOCK_TIME_NONE)
+        == GST_STATE_CHANGE_NO_PREROLL, "failed state change");
+
+    fail_if (observed == GST_CLOCK_TIME_NONE, "no timestamp recorded");
+
+    fail_unless (gst_pipeline_get_last_stream_time (GST_PIPELINE (pipeline))
+        == GST_CLOCK_TIME_NONE, "stream time was reset");
+
+    fail_unless (base == oldbase, "base time was reset");
+
+    fail_unless (observed >= lower - base, "early timestamp: %"
+        GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (observed), GST_TIME_ARGS (lower - base));
+    fail_unless (observed <= upper - base, "late timestamp: %"
+        GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (observed), GST_TIME_ARGS (upper - base));
+    fail_unless (observed - oldobserved >= WAIT_TIME,
+        "insufficient tstamp delta: %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (observed), GST_TIME_ARGS (oldobserved));
   }
 
   gst_object_unref (sink);

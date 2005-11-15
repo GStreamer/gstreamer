@@ -450,6 +450,9 @@ gst_element_set_base_time (GstElement * element, GstClockTime time)
   GST_LOCK (element);
   element->base_time = time;
   GST_UNLOCK (element);
+
+  GST_DEBUG_OBJECT (element, "set base_time=%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time));
 }
 
 /**
