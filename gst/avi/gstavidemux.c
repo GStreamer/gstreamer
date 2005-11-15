@@ -2048,6 +2048,37 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, gboolean update)
 
 }
 
+/*
+ * Invert DIB buffers... Takes existing buffer and
+ * returns either the buffer or a new one (with old
+ * one dereferenced).
+ */
+
+static inline void
+swap_line (guint8 * d1, guint8 * d2, guint8 * tmp, gint bytes)
+{
+  memcpy (tmp, d1, bytes);
+  memcpy (d1, d2, bytes);
+  memcpy (d2, tmp, bytes);
+}
+
+static GstBuffer *
+gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
+{
+  buf = gst_buffer_make_writable (buf);
+  gint y, h = stream->strf.vids->height, w = stream->strf.vids->width;
+  guint8 *tmp = g_malloc (w);
+
+  for (y = 0; y < h / 2; y++) {
+    swap_line (GST_BUFFER_DATA (buf) + w * y,
+        GST_BUFFER_DATA (buf) + w * (h - 1 - y), tmp, w);
+  }
+
+  g_free (tmp);
+
+  return buf;
+}
+
 static GstFlowReturn
 gst_avi_demux_process_next_entry (GstAviDemux * avi)
 {
@@ -2096,6 +2127,9 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
                   avi->index_offset, entry->size, &buf)) != GST_FLOW_OK)
         return res;
       else {
+        if (stream->strh->fcc_handler == GST_MAKE_FOURCC ('D', 'I', 'B', ' ')) {
+          buf = gst_avi_demux_invert (stream, buf);
+        }
         if (!(entry->flags & GST_RIFF_IF_KEYFRAME))
           GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
         GST_BUFFER_TIMESTAMP (buf) = entry->ts;
@@ -2174,6 +2208,10 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         gst_buffer_unref (buf);
       } else {
         GstClockTime dur_ts;
+
+        if (stream->strh->fcc_handler == GST_MAKE_FOURCC ('D', 'I', 'B', ' ')) {
+          buf = gst_avi_demux_invert (stream, buf);
+        }
 
         GST_BUFFER_TIMESTAMP (buf) = next_ts;
         gst_pad_query (stream->pad, GST_QUERY_POSITION, &format, &dur_ts);

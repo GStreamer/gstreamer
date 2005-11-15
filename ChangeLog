@@ -1,3 +1,9 @@
+2005-11-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/avi/gstavidemux.c: (swap_line), (gst_avi_demux_invert),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data):
+	  Invert DIB images again (see #132341).
+
 2005-11-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
