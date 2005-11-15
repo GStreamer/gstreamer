@@ -1,3 +1,8 @@
+2005-11-15  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	Some more TODO items.
+
 2005-11-15  Andy Wingo  <wingo@pobox.com>
 
 	* gst/elements/gstfakesrc.c (gst_fake_src_create): It's not an
