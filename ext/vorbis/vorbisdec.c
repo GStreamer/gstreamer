@@ -95,11 +95,16 @@ static void
 gst_vorbis_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstPadTemplate *src_template, *sink_template;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&vorbis_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&vorbis_dec_sink_factory));
+  src_template = gst_static_pad_template_get (&vorbis_dec_src_factory);
+  gst_element_class_add_pad_template (element_class, src_template);
+  g_object_unref (src_template);
+
+  sink_template = gst_static_pad_template_get (&vorbis_dec_sink_factory);
+  gst_element_class_add_pad_template (element_class, sink_template);
+  g_object_unref (sink_template);
+
   gst_element_class_set_details (element_class, &vorbis_dec_details);
 }
 
@@ -162,17 +167,21 @@ vorbis_get_query_types (GstPad * pad)
 static void
 gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
 {
-  dec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&vorbis_dec_sink_factory), "sink");
+  GstPadTemplate *template;
+
+  template = gst_static_pad_template_get (&vorbis_dec_sink_factory);
+  dec->sinkpad = gst_pad_new_from_template (template, "sink");
+  g_object_unref (template);
+
   gst_pad_set_event_function (dec->sinkpad, vorbis_dec_sink_event);
   gst_pad_set_chain_function (dec->sinkpad, vorbis_dec_chain);
   gst_pad_set_query_function (dec->sinkpad, vorbis_dec_sink_query);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
-  dec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&vorbis_dec_src_factory), "src");
+  template = gst_static_pad_template_get (&vorbis_dec_src_factory);
+  dec->srcpad = gst_pad_new_from_template (template, "src");
+  g_object_unref (template);
+
   gst_pad_set_event_function (dec->srcpad, vorbis_dec_src_event);
   gst_pad_set_query_type_function (dec->srcpad, vorbis_get_query_types);
   gst_pad_set_query_function (dec->srcpad, vorbis_dec_src_query);

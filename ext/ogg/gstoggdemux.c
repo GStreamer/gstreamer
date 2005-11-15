@@ -637,6 +637,8 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
           gst_element_factory_create (GST_ELEMENT_FACTORY (factories->data),
           NULL);
       if (element) {
+        GstPadTemplate *template;
+
         /* this is ours */
         gst_object_ref (element);
         gst_object_sink (GST_OBJECT (element));
@@ -644,9 +646,9 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
         /* FIXME, it might not be named "sink" */
         pad->elem_pad = gst_element_get_pad (element, "sink");
         gst_element_set_state (element, GST_STATE_PAUSED);
-        pad->elem_out =
-            gst_pad_new_from_template (gst_static_pad_template_get
-            (&internaltemplate), "internal");
+        template = gst_static_pad_template_get (&internaltemplate);
+        pad->elem_out = gst_pad_new_from_template (template, "internal");
+        g_object_unref (template);
         gst_pad_set_chain_function (pad->elem_out, gst_ogg_pad_internal_chain);
         gst_pad_set_element_private (pad->elem_out, pad);
         gst_pad_set_active (pad->elem_out, TRUE);
@@ -1131,9 +1133,11 @@ static void
 gst_ogg_demux_init (GstOggDemux * ogg, GstOggDemuxClass * g_class)
 {
   /* create the sink pad */
-  ogg->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&ogg_demux_sink_template_factory), "sink");
+  GstPadTemplate *template = gst_static_pad_template_get
+      (&ogg_demux_sink_template_factory);
+  ogg->sinkpad = gst_pad_new_from_template (template, "sink");
+  g_object_unref (template);
+
   gst_pad_set_event_function (ogg->sinkpad, gst_ogg_demux_handle_event);
   gst_pad_set_chain_function (ogg->sinkpad, gst_ogg_demux_chain);
   gst_pad_set_activate_function (ogg->sinkpad, gst_ogg_demux_sink_activate);

@@ -1,3 +1,11 @@
+2005-11-15  Johan Dahlin  <johan@gnome.org>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind),
+	(gst_ogg_demux_init), (gst_ogg_demux_finalize):
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_base_init),
+	(gst_vorbis_dec_init):
+	Fix pad template leaks.	
+
 2005-11-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_change_state):
