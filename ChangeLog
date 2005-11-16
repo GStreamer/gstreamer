@@ -1,3 +1,11 @@
+2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind),
+	(gst_ogg_demux_init):
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_base_init),
+	(gst_vorbis_dec_init):
+	  revert unrefs, they don't pass make check
+
 2005-11-15  Johan Dahlin  <johan@gnome.org>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind),
