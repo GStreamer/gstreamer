@@ -159,6 +159,8 @@ gst_net_time_provider_finalize (GObject * object)
   if (self->clock)
     gst_object_unref (self->clock);
   self->clock = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gpointer
