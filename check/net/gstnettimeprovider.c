@@ -22,6 +22,8 @@
 #include <gst/check/gstcheck.h>
 #include <gst/net/gstnet.h>
 
+#include <unistd.h>
+
 GST_START_TEST (test_refcounts)
 {
   GstNetTimeProvider *ntp;
@@ -49,25 +51,63 @@ GST_START_TEST (test_refcounts)
 
 GST_END_TEST;
 
-#if 0
 GST_START_TEST (test_functioning)
 {
   GstNetTimeProvider *ntp;
+  GstNetTimePacket *packet;
   GstClock *clock;
+  GstClockTime local;
+  struct sockaddr_in servaddr;
+  gint port = -1, sockfd, ret;
+  socklen_t len;
 
   clock = gst_system_clock_obtain ();
   fail_unless (clock != NULL, "failed to get system clock");
-  ntp = gst_net_time_provider_new (clock, NULL, -1);
+  ntp = gst_net_time_provider_new (clock, "127.0.0.1", -1);
   fail_unless (ntp != NULL, "failed to create net time provider");
 
+  g_object_get (ntp, "port", &port, NULL);
+  fail_unless (port > 0);
 
+  sockfd = socket (AF_INET, SOCK_DGRAM, 0);
+  fail_if (sockfd < 0, "socket failed");
+
+  memset (&servaddr, 0, sizeof (servaddr));
+  servaddr.sin_family = AF_INET;
+  servaddr.sin_port = port;
+  inet_aton ("127.0.0.1", &servaddr.sin_addr);
+
+  packet = gst_net_time_packet_new (NULL);
+  fail_unless (packet != NULL, "failed to create packet");
+
+  packet->local_time = local = gst_clock_get_time (clock);
+
+  len = sizeof (servaddr);
+  ret = gst_net_time_packet_send (packet, sockfd,
+      (struct sockaddr *) &servaddr, len);
+
+  fail_unless (ret == GST_NET_TIME_PACKET_SIZE, "failed to send packet");
+
+  g_free (packet);
+
+  packet = gst_net_time_packet_receive (sockfd, (struct sockaddr *) &servaddr,
+      &len);
+
+  fail_unless (packet != NULL, "failed to receive packet");
+  fail_unless (packet->local_time == local, "local time is not the same");
+  fail_unless (packet->remote_time > local, "remote time not after local time");
+  fail_unless (packet->remote_time < gst_clock_get_time (clock),
+      "remote time in the future");
+
+  g_free (packet);
+
+  close (sockfd);
 
   gst_object_unref (ntp);
   gst_object_unref (clock);
 }
 
 GST_END_TEST;
-#endif
 
 Suite *
 gst_net_time_provider_suite (void)
@@ -75,10 +115,9 @@ gst_net_time_provider_suite (void)
   Suite *s = suite_create ("GstNetTimeProvider");
   TCase *tc_chain = tcase_create ("generic tests");
 
-  tcase_set_timeout (tc_chain, 0);
-
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_refcounts);
+  tcase_add_test (tc_chain, test_functioning);
 
   return s;
 }
