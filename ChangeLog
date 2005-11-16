@@ -1,5 +1,16 @@
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_configure_segment),
+	(gst_ogg_demux_perform_seek):
+	Segment done must include stream time.
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_class_init),
+	(gst_ogg_mux_clear), (gst_ogg_mux_init), (gst_ogg_mux_finalize),
+	(gst_ogg_mux_change_state):
+	Fix ogg muxer again.
+
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstogmparse.c: (gst_ogm_audio_parse_init):
 	Fix compile again.
 

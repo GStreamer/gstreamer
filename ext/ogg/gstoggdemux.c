@@ -1777,7 +1777,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg)
     if (ogg->segment_flags & GST_SEEK_FLAG_SEGMENT) {
       gst_element_post_message (GST_ELEMENT (ogg),
           gst_message_new_segment_start (GST_OBJECT (ogg), GST_FORMAT_TIME,
-              ogg->segment_start));
+              start));
     }
     /* restart our task since it might have been stopped when we did the 
      * flush. */

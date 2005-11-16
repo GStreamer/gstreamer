@@ -163,6 +163,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
 static void gst_ogg_mux_base_init (gpointer g_class);
 static void gst_ogg_mux_class_init (GstOggMuxClass * klass);
 static void gst_ogg_mux_init (GstOggMux * ogg_mux);
+static void gst_ogg_mux_finalize (GObject * object);
 
 static GstFlowReturn
 gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux);
@@ -229,6 +230,7 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->finalize = gst_ogg_mux_finalize;
   gobject_class->get_property = gst_ogg_mux_get_property;
   gobject_class->set_property = gst_ogg_mux_set_property;
 
@@ -269,21 +271,6 @@ gst_ogg_mux_clear (GstOggMux * ogg_mux)
   ogg_mux->max_delay = DEFAULT_MAX_DELAY;
   ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
   ogg_mux->delta_pad = NULL;
-
-  if (ogg_mux->collect) {
-    gst_object_unref (ogg_mux->collect);
-    ogg_mux->collect = NULL;
-  }
-}
-
-static void
-gst_ogg_mux_reset (GstOggMux * ogg_mux)
-{
-  gst_ogg_mux_clear (ogg_mux);
-
-  ogg_mux->collect = gst_collectpads_new ();
-  gst_collectpads_set_function (ogg_mux->collect,
-      (GstCollectPadsFunction) gst_ogg_mux_collected, ogg_mux);
 }
 
 static void
@@ -302,9 +289,26 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   /* seed random number generator for creation of serial numbers */
   srand (time (NULL));
 
-  ogg_mux->collect = NULL;
+  ogg_mux->collect = gst_collectpads_new ();
+  gst_collectpads_set_function (ogg_mux->collect,
+      (GstCollectPadsFunction) gst_ogg_mux_collected, ogg_mux);
 
   gst_ogg_mux_clear (ogg_mux);
+}
+
+static void
+gst_ogg_mux_finalize (GObject * object)
+{
+  GstOggMux *ogg_mux;
+
+  ogg_mux = GST_OGG_MUX (object);
+
+  if (ogg_mux->collect) {
+    gst_object_unref (ogg_mux->collect);
+    ogg_mux->collect = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstPadLinkReturn
@@ -1382,13 +1386,13 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      gst_ogg_mux_reset (ogg_mux);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ogg_mux->next_ts = 0;
       ogg_mux->offset = 0;
       ogg_mux->pulling = NULL;
       gst_collectpads_start (ogg_mux->collect);
+      gst_ogg_mux_clear (ogg_mux);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -1403,10 +1407,9 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_collectpads_stop (ogg_mux->collect);
-      gst_ogg_mux_clear_collectpads (ogg_mux->collect);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_ogg_mux_clear (ogg_mux);
+      gst_ogg_mux_clear_collectpads (ogg_mux->collect);
       break;
     default:
       break;
