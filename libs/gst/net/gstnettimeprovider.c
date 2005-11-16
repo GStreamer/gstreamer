@@ -23,6 +23,8 @@
 #endif
 
 #include "gstnettimeprovider.h"
+#include "gstnettimepacket.h"
+
 #include <unistd.h>
 #include <sys/ioctl.h>
 
@@ -54,17 +56,6 @@ G_STMT_START {                                	\
 
 #define DEFAULT_ADDRESS		"0.0.0.0"
 #define DEFAULT_PORT		5637
-
-typedef struct
-{
-  GstClockTime slave_time_sent;
-  GstClockTime master_time_received;
-} NetworkTimePacket;
-
- /* 2 * sizeof(GstClockTime), verified in base_init */
-#define NETWORK_TIME_PACKET_SIZE 16
-#define NETWORK_TIME_PACKET_SET_MASTER_TIME(p, t) \
-  GST_WRITE_UINT64_BE(p+8, t)
 
 enum
 {
@@ -171,7 +162,7 @@ gst_net_time_provider_thread (gpointer data)
   socklen_t len;
   fd_set read_fds;
   guint max_sock;
-  gchar *pktdata;
+  GstNetTimePacket *packet;
   gint ret;
 
   while (TRUE) {
@@ -218,35 +209,22 @@ gst_net_time_provider_thread (gpointer data)
       continue;
     } else {
       /* got data in */
-      pktdata = g_malloc (NETWORK_TIME_PACKET_SIZE);
-
       len = sizeof (struct sockaddr);
-      while (TRUE) {
-        ret = recvfrom (self->sock, pktdata, NETWORK_TIME_PACKET_SIZE,
-            0, (struct sockaddr *) &tmpaddr, &len);
-        if (ret < 0) {
-          if (errno != EAGAIN && errno != EINTR)
-            goto receive_error;
-          else
-            continue;
-        } else if (ret < NETWORK_TIME_PACKET_SIZE) {
-          goto short_packet;
-        } else {
-          GstClockTime now;
 
-          now = gst_clock_get_time (self->clock);
+      packet = gst_net_time_packet_receive (self->sock,
+          (struct sockaddr *) &tmpaddr, &len);
 
-          NETWORK_TIME_PACKET_SET_MASTER_TIME (pktdata, time);
+      if (!packet)
+        goto receive_error;
 
-          /* ignore errors */
-          sendto (self->sock, pktdata, ret, MSG_DONTWAIT,
-              (struct sockaddr *) &tmpaddr, len);
+      /* do what we were asked to and send the packet back */
+      packet->remote_time = gst_clock_get_time (self->clock);
 
-          break;
-        }
+      /* ignore errors */
+      gst_net_time_packet_send (packet, self->sock,
+          (struct sockaddr *) &tmpaddr, len);
 
-        g_assert_not_reached ();
-      }
+      g_free (packet);
 
       continue;
     }
@@ -260,12 +238,6 @@ gst_net_time_provider_thread (gpointer data)
           g_strerror (errno), errno);
       continue;
     }
-  short_packet:
-    {
-      GST_DEBUG_OBJECT (self, "someone sent us a short packet (%d < %d)",
-          ret, NETWORK_TIME_PACKET_SIZE);
-      continue;
-    }
   stopped:
     {
       GST_DEBUG_OBJECT (self, "shutting down");
@@ -274,9 +246,7 @@ gst_net_time_provider_thread (gpointer data)
     }
   receive_error:
     {
-      g_free (pktdata);
-      GST_DEBUG_OBJECT (self, "receive error %d: %s (%d)", ret,
-          g_strerror (errno), errno);
+      GST_DEBUG_OBJECT (self, "receive error");
       continue;
     }
 

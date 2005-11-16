@@ -1,3 +1,15 @@
+2005-11-16  Andy Wingo  <wingo@pobox.com>
+
+	* gst/net/Makefile.am:
+	* gst/net/gstnet.h:
+	* gst/net/gstnettimeprovider.c: 
+	* gst/net/gstnettimeprovider.h: Use the timepacket stuff in the
+	provider, include it from gstnet.h, and add it to the build.
+
+	* gst/net/gstnettimepacket.h: 
+	* gst/net/gstnettimepacket.c: New files, abstracts out the packet
+	sending and receiving.
+
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 
 	* check/Makefile.am:

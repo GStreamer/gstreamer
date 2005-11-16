@@ -5,9 +5,11 @@ lib_LTLIBRARIES = libgstnet-tempname-@GST_MAJORMINOR@.la
 libgstnet_tempname_@GST_MAJORMINOR@_includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/net
 libgstnet_tempname_@GST_MAJORMINOR@_include_HEADERS = \
     gstnet.h \
+    gstnettimepacker.h \
     gstnettimeprovider.h
 
 libgstnet_tempname_@GST_MAJORMINOR@_la_SOURCES = \
+    gstnettimepacket.c \
     gstnettimeprovider.c
 
 libgstnet_tempname_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)

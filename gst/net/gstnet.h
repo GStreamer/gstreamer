@@ -22,6 +22,7 @@
 #define __GST_NET_H__
 
 
+#include <gst/net/gstnettimepacket.h>
 #include <gst/net/gstnettimeprovider.h>
 
 

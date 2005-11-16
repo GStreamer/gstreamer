@@ -49,6 +49,26 @@ GST_START_TEST (test_refcounts)
 
 GST_END_TEST;
 
+#if 0
+GST_START_TEST (test_functioning)
+{
+  GstNetTimeProvider *ntp;
+  GstClock *clock;
+
+  clock = gst_system_clock_obtain ();
+  fail_unless (clock != NULL, "failed to get system clock");
+  ntp = gst_net_time_provider_new (clock, NULL, -1);
+  fail_unless (ntp != NULL, "failed to create net time provider");
+
+
+
+  gst_object_unref (ntp);
+  gst_object_unref (clock);
+}
+
+GST_END_TEST;
+#endif
+
 Suite *
 gst_net_time_provider_suite (void)
 {
