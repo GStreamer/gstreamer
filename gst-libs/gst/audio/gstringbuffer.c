@@ -88,6 +88,7 @@ gst_ring_buffer_init (GstRingBuffer * ringbuffer)
   ringbuffer->cond = g_cond_new ();
   ringbuffer->waiting = 0;
   ringbuffer->empty_seg = NULL;
+  ringbuffer->flushing = TRUE;
 }
 
 static void
@@ -796,7 +797,6 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "stopping");
 
   GST_LOCK (buf);
-  buf->flushing = TRUE;
 
   /* if started, set to stopped */
   res = g_atomic_int_compare_and_exchange (&buf->state,

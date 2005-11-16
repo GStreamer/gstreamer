@@ -1,3 +1,17 @@
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_provide_clock),
+	(gst_base_audio_sink_change_state):
+	Set ringbuffer to non-flushing when going to PAUSED, set to
+	flushing again when going to READY.
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_init),
+	(gst_ring_buffer_stop):
+	Start in flushing mode by default.
+	Don't set flushing in the _stop method, let the app call
+	this explicitly.
+
 2005-11-16  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/video/gstvideosink.c: (gst_video_sink_center_rect):

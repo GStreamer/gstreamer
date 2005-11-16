@@ -162,10 +162,17 @@ static GstClock *
 gst_base_audio_sink_provide_clock (GstElement * elem)
 {
   GstBaseAudioSink *sink;
+  GstClock *clock;
 
   sink = GST_BASE_AUDIO_SINK (elem);
 
-  return GST_CLOCK (gst_object_ref (sink->clock));
+#if 1
+  clock = GST_CLOCK_CAST (gst_object_ref (sink->clock));
+#else
+  clock = gst_system_clock_obtain ();
+#endif
+
+  return clock;
 }
 
 static GstClockTime
@@ -534,6 +541,7 @@ gst_base_audio_sink_change_state (GstElement * element,
       sink->next_sample = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -548,9 +556,10 @@ gst_base_audio_sink_change_state (GstElement * element,
       gst_ring_buffer_pause (sink->ringbuffer);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
       gst_ring_buffer_stop (sink->ringbuffer);
-      gst_pad_set_caps (GST_BASE_SINK_PAD (sink), NULL);
       gst_ring_buffer_release (sink->ringbuffer);
+      gst_pad_set_caps (GST_BASE_SINK_PAD (sink), NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_ring_buffer_close_device (sink->ringbuffer);
