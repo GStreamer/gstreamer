@@ -264,15 +264,26 @@ gst_ogg_mux_get_sink_event_masks (GstPad * pad)
 static void
 gst_ogg_mux_clear (GstOggMux * ogg_mux)
 {
-  ogg_mux->collect = gst_collectpads_new ();
-  gst_collectpads_set_function (ogg_mux->collect,
-      (GstCollectPadsFunction) gst_ogg_mux_collected, ogg_mux);
   ogg_mux->pulling = NULL;
   ogg_mux->need_headers = TRUE;
   ogg_mux->max_delay = DEFAULT_MAX_DELAY;
   ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
-
   ogg_mux->delta_pad = NULL;
+
+  if (ogg_mux->collect) {
+    gst_object_unref (ogg_mux->collect);
+    ogg_mux->collect = NULL;
+  }
+}
+
+static void
+gst_ogg_mux_reset (GstOggMux * ogg_mux)
+{
+  gst_ogg_mux_clear (ogg_mux);
+
+  ogg_mux->collect = gst_collectpads_new ();
+  gst_collectpads_set_function (ogg_mux->collect,
+      (GstCollectPadsFunction) gst_ogg_mux_collected, ogg_mux);
 }
 
 static void
@@ -290,6 +301,8 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
 
   /* seed random number generator for creation of serial numbers */
   srand (time (NULL));
+
+  ogg_mux->collect = NULL;
 
   gst_ogg_mux_clear (ogg_mux);
 }
@@ -1369,6 +1382,7 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      gst_ogg_mux_reset (ogg_mux);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ogg_mux->next_ts = 0;
@@ -1390,9 +1404,9 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_collectpads_stop (ogg_mux->collect);
       gst_ogg_mux_clear_collectpads (ogg_mux->collect);
-      gst_ogg_mux_clear (ogg_mux);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_ogg_mux_clear (ogg_mux);
       break;
     default:
       break;
