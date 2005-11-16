@@ -7,26 +7,15 @@
 
 #include "gst_private.h" /* for g_warning */
 #include <glib.h>
-#if GLIB_CHECK_VERSION (2, 6, 0)
-#include <glib/gstdio.h>
-#endif
 
 G_BEGIN_DECLS
 
+/* copies */
 #if !GLIB_CHECK_VERSION (2, 8, 0)
 int g_mkdir_with_parents (const gchar *pathname, int          mode);
 #endif
 
-#if !GLIB_CHECK_VERSION (2, 6, 0)
-int g_mkdir (const gchar *filename, int          mode);
-#endif
-
-#if !GLIB_CHECK_VERSION (2, 6, 0)
-struct stat;
-
-int g_stat (const gchar *filename, struct stat *buf);
-#endif
-
+/* adaptations */
 #include <glib-object.h>
 GFlagsValue*
 gst_flags_get_first_value (GFlagsClass *flags_class,

@@ -1,3 +1,10 @@
+2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/glib-compat.c: (gst_flags_get_first_value):
+	* gst/glib-compat.h:
+	* gst/gstregistryxml.c:
+	  remove functions copied from GLib 2.6
+
 2005-11-16  Michael Smith <msmith@fluendo.com>
 
 	* gst/Makefile.am:
