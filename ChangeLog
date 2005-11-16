@@ -1,3 +1,9 @@
+2005-11-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videoscale/gstvideoscale.c:
+	(gst_videoscale_handle_src_event):
+	  Don't leak reference to pad parent.
+
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_stop):

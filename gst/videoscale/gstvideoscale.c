@@ -602,10 +602,14 @@ static gboolean
 gst_videoscale_handle_src_event (GstPad * pad, GstEvent * event)
 {
   GstVideoscale *videoscale;
+  gboolean ret;
   double a;
   GstStructure *structure;
 
   videoscale = GST_VIDEOSCALE (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (videoscale, "handling %s event",
+      GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
@@ -621,12 +625,16 @@ gst_videoscale_handle_src_event (GstPad * pad, GstEvent * event)
         gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
             a * videoscale->from_height / videoscale->to_height, NULL);
       }
-      return gst_pad_event_default (pad, event);
+      break;
     default:
-      GST_DEBUG_OBJECT (videoscale, "passing on non-NAVIGATION event %p",
-          event);
-      return gst_pad_event_default (pad, event);
+      break;
   }
+
+  ret = gst_pad_event_default (pad, event);
+
+  gst_object_unref (videoscale);
+
+  return ret;
 }
 
 static gboolean
