@@ -90,7 +90,8 @@ AC_SUBST(GST_PLUGINS_ALL)
 GST_PLUGINS_SELECTED=""
 
 AC_ARG_WITH(plugins,
-    AC_HELP_STRING([--with-plugins],[comma-separated list of plug-ins to compile]),
+    AC_HELP_STRING([--with-plugins],
+      [comma-separated list of plug-ins to compile]),
     [for i in `echo $withval | tr , ' '`; do
         if echo $GST_PLUGINS_ALL | grep $i > /dev/null
         then
@@ -102,7 +103,6 @@ AC_ARG_WITH(plugins,
     [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
 
 AC_SUBST(GST_PLUGINS_SELECTED)
-
 
 dnl ext plug-ins; plug-ins that have external dependencies
 GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
@@ -169,7 +169,6 @@ AC_CHECK_HEADERS([sys/socket.h],
   HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 
-
 dnl ffmpegcolorspace includes _stdint.h
 AX_CREATE_STDINT_H
 
@@ -221,7 +220,6 @@ dnl check for "check", unit testing library/header
 AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
 AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
 
-
 dnl GTK is optional and used in examples
 HAVE_GTK=NO
 PKG_CHECK_MODULES(GTK2, gtk+-2.0 >= 2.2.0, HAVE_GTK_22=yes, HAVE_GTK_22=no)
@@ -260,44 +258,8 @@ GST_SET_ERROR_CFLAGS($GST_CVS)
 dnl define correct level for debugging messages
 GST_SET_LEVEL_DEFAULT($GST_CVS)
 
-dnl decide on default elements
-dnl FIXME: provide configure-time options for this
-dnl FIXME: describe where exactly this gets used
-dnl FIXME: decide if it's a problem that this could point to sinks from
-dnl        depending plugin modules
-DEFAULT_AUDIOSINK="alsasink"
-DEFAULT_VIDEOSINK="xvimagesink"
-DEFAULT_AUDIOSRC="alsasrc"
-DEFAULT_VIDEOSRC="v4lsrc"
-DEFAULT_VISUALIZER="goom"
-case "$host" in 
-  *-sun-* | *pc-solaris* )
-    DEFAULT_AUDIOSINK="sunaudiosink"
-    DEFAULT_VIDEOSINK="ximagesink"
-    DEFAULT_AUDIOSRC="sunaudiosrc"
-    ;;
-  *-darwin* )
-    DEFAULT_AUDIOSINK="osxaudiosink"
-    DEFAULT_AUDIOSRC="osxaudiosrc"
-    DEFAULT_VIDEOSINK="osxvideosink"
-    ;;
-esac
-
-AC_SUBST(DEFAULT_AUDIOSINK)
-AC_DEFINE_UNQUOTED(DEFAULT_AUDIOSINK, "$DEFAULT_AUDIOSINK",
-  [Default audio sink])
-AC_SUBST(DEFAULT_AUDIOSRC)
-AC_DEFINE_UNQUOTED(DEFAULT_AUDIOSRC, "$DEFAULT_AUDIOSRC",
-  [Default audio source])
-AC_SUBST(DEFAULT_VIDEOSINK)
-AC_DEFINE_UNQUOTED(DEFAULT_VIDEOSINK, "$DEFAULT_VIDEOSINK",
-  [Default video sink])
-AC_SUBST(DEFAULT_VIDEOSRC)
-AC_DEFINE_UNQUOTED(DEFAULT_VIDEOSRC, "$DEFAULT_VIDEOSRC",
-  [Default video source])
-AC_SUBST(DEFAULT_VISUALIZER)
-AC_DEFINE_UNQUOTED(DEFAULT_VISUALIZER, "$DEFAULT_VISUALIZER",
-  [Default visualizer])
+dnl used in examples
+GST_DEFAULT_ELEMENTS
 
 dnl *** sys plug-ins ***
 
@@ -546,10 +508,6 @@ vorbis_synthesis_restart (v);
 fi
 
 fi dnl of EXT plugins
-
-dnl ######################################################################
-dnl # Check command line parameters, and set shell variables accordingly #
-dnl ######################################################################
 
 dnl seeking needs freetype, so check for it here
 PKG_CHECK_MODULES(FT2, freetype2 >= 2.0.9, HAVE_FT2="yes", [
