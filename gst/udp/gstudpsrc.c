@@ -58,19 +58,11 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-/* elementfactory information */
 static GstElementDetails gst_udpsrc_details =
 GST_ELEMENT_DETAILS ("UDP packet receiver",
     "Source/Network",
     "Receive data over the network via UDP",
     "Wim Taymans <wim@fluendo.com>");
-
-/* UDPSrc signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
 
 #define UDP_DEFAULT_PORT		4951
 #define UDP_DEFAULT_MULTICAST_GROUP	"0.0.0.0"
@@ -87,10 +79,6 @@ enum
   /* FILL ME */
 };
 
-static void gst_udpsrc_base_init (gpointer g_class);
-static void gst_udpsrc_class_init (GstUDPSrc * klass);
-static void gst_udpsrc_init (GstUDPSrc * udpsrc);
-
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
 static GstCaps *gst_udpsrc_getcaps (GstBaseSrc * src);
@@ -104,43 +92,22 @@ static void gst_udpsrc_set_property (GObject * object, guint prop_id,
 static void gst_udpsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_udpsrc_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_udpsrc_get_type (void)
+static void
+_do_init (GType type)
 {
-  static GType udpsrc_type = 0;
+  static const GInterfaceInfo urihandler_info = {
+    gst_udpsrc_uri_handler_init,
+    NULL,
+    NULL
+  };
 
-  if (!udpsrc_type) {
-    static const GTypeInfo udpsrc_info = {
-      sizeof (GstUDPSrcClass),
-      gst_udpsrc_base_init,
-      NULL,
-      (GClassInitFunc) gst_udpsrc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstUDPSrc),
-      0,
-      (GInstanceInitFunc) gst_udpsrc_init,
-      NULL
-    };
-    static const GInterfaceInfo urihandler_info = {
-      gst_udpsrc_uri_handler_init,
-      NULL,
-      NULL
-    };
+  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
 
-    udpsrc_type =
-        g_type_register_static (GST_TYPE_PUSH_SRC, "GstUDPSrc", &udpsrc_info,
-        0);
-
-    g_type_add_interface_static (udpsrc_type, GST_TYPE_URI_HANDLER,
-        &urihandler_info);
-  }
-  return udpsrc_type;
+  GST_DEBUG_CATEGORY_INIT (udpsrc_debug, "udpsrc", 0, "UDP src");
 }
+
+GST_BOILERPLATE_FULL (GstUDPSrc, gst_udpsrc, GstPushSrc, GST_TYPE_PUSH_SRC,
+    _do_init);
 
 static void
 gst_udpsrc_base_init (gpointer g_class)
@@ -154,19 +121,15 @@ gst_udpsrc_base_init (gpointer g_class)
 }
 
 static void
-gst_udpsrc_class_init (GstUDPSrc * klass)
+gst_udpsrc_class_init (GstUDPSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_PUSH_SRC);
 
   gobject_class->set_property = gst_udpsrc_set_property;
   gobject_class->get_property = gst_udpsrc_get_property;
@@ -193,12 +156,10 @@ gst_udpsrc_class_init (GstUDPSrc * klass)
   gstbasesrc_class->get_caps = gst_udpsrc_getcaps;
 
   gstpushsrc_class->create = gst_udpsrc_create;
-
-  GST_DEBUG_CATEGORY_INIT (udpsrc_debug, "udpsrc", 0, "UDP src");
 }
 
 static void
-gst_udpsrc_init (GstUDPSrc * udpsrc)
+gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
 {
   gst_base_src_set_live (GST_BASE_SRC (udpsrc), TRUE);
   udpsrc->port = UDP_DEFAULT_PORT;
@@ -388,9 +349,7 @@ static void
 gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstUDPSrc *udpsrc;
-
-  udpsrc = GST_UDPSRC (object);
+  GstUDPSrc *udpsrc = GST_UDPSRC (object);
 
   switch (prop_id) {
     case PROP_PORT:
@@ -436,9 +395,7 @@ static void
 gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstUDPSrc *udpsrc;
-
-  udpsrc = GST_UDPSRC (object);
+  GstUDPSrc *udpsrc = GST_UDPSRC (object);
 
   switch (prop_id) {
     case PROP_PORT:

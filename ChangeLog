@@ -1,3 +1,7 @@
+2005-11-16  Andy Wingo  <wingo@pobox.com>
+
+	* gst/udp/gstudpsrc.c: Clean up with the boilerplate macro.
+
 2005-11-15  Vincent Torri  <torri at iecn dot u-nancy dot fr>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
