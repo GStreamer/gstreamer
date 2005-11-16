@@ -1,5 +1,8 @@
 2005-11-16  Andy Wingo  <wingo@pobox.com>
 
+	* gst/net/gstnettimepacket.c (gst_net_time_packet_send): Free
+	buffer.
+
 	* check/net/gstnettimeprovider.c: Check to see that the time
 	provider actually provides times. Works, yo!
 

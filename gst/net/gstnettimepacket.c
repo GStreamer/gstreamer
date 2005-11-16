@@ -163,5 +163,7 @@ gst_net_time_packet_send (const GstNetTimePacket * packet, gint fd,
 
   ret = sendto (fd, buffer, GST_NET_TIME_PACKET_SIZE, MSG_DONTWAIT, addr, len);
 
+  g_free (buffer);
+
   return ret;
 }
