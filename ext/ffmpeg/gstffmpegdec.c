@@ -603,16 +603,19 @@ static void
 gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
 {
   gint i;
-  GstBuffer *buf = GST_BUFFER (picture->opaque);
+  GstBuffer *buf;
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) context->opaque;
-
-
+  
   g_return_if_fail (buf != NULL);
   g_return_if_fail (picture->type == FF_BUFFER_TYPE_USER);
+
+  buf = GST_BUFFER (picture->opaque);
 
   if (buf == ffmpegdec->last_buffer)
     ffmpegdec->last_buffer = NULL;
   gst_buffer_unref (buf);
+  
+  picture->opaque = NULL;
 
   /* zero out the reference in ffmpeg */
   for (i = 0; i < 4; i++) {
@@ -769,9 +772,13 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
               "Dropping frame for synctime %" GST_TIME_FORMAT
               ", expected(next_ts) %" GST_TIME_FORMAT,
               GST_TIME_ARGS (ffmpegdec->synctime),
-              GST_TIME_ARGS (ffmpegdec->next_ts));
-          if (ffmpegdec->last_buffer)
-            gst_buffer_unref (ffmpegdec->last_buffer);
+              GST_TIME_ARGS (ffmpegdec->next_ts));	  
+
+	  if (ffmpegdec->picture->opaque != NULL) {
+	    outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
+	    gst_buffer_unref (outbuf);
+	  }
+
           have_data = 0;
           /* don´t break here! Timestamps are updated below */
         }

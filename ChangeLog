@@ -1,3 +1,12 @@
+2005-11-16  Luca Ognibene  <luogni@tin.it>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_release_buffer),
+	(gst_ffmpegdec_frame):
+	 Fix some segfaults while seeking. When i have unreffed 
+	 the buffer in _release_buffer i should also set picture->opaque to
+	 NULL otherwise sometimes it can be unreffed another time in
+	 _frame causing an invalid read/write.
+
 2005-11-14  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac (GST_PLUGIN_LDFLAGS): -no-undefined for better
