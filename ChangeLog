@@ -1,5 +1,11 @@
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_stop):
+	Set ringbuffer to flushing when stopping so that we don't
+	block on wait_segment anymore and livelock.
+
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
 	* examples/seeking/seek.c: (send_event), (do_seek),
 	(loop_toggle_cb), (segment_done), (main):
 	Added looping checkbox.

@@ -796,8 +796,7 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "stopping");
 
   GST_LOCK (buf);
-  if (buf->flushing)
-    goto flushing;
+  buf->flushing = TRUE;
 
   /* if started, set to stopped */
   res = g_atomic_int_compare_and_exchange (&buf->state,
@@ -827,12 +826,6 @@ done:
   GST_UNLOCK (buf);
 
   return res;
-
-flushing:
-  {
-    GST_UNLOCK (buf);
-    return FALSE;
-  }
 }
 
 /**
