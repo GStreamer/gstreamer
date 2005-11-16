@@ -1132,9 +1132,9 @@ static void
 gst_ogg_demux_init (GstOggDemux * ogg, GstOggDemuxClass * g_class)
 {
   /* create the sink pad */
-  GstPadTemplate *template = gst_static_pad_template_get
-      (&ogg_demux_sink_template_factory);
-  ogg->sinkpad = gst_pad_new_from_template (template, "sink");
+  ogg->sinkpad =
+      gst_pad_new_from_static_template (&ogg_demux_sink_template_factory,
+      "sink");
 
   gst_pad_set_event_function (ogg->sinkpad, gst_ogg_demux_handle_event);
   gst_pad_set_chain_function (ogg->sinkpad, gst_ogg_demux_chain);

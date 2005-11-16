@@ -344,8 +344,9 @@ gst_ogm_audio_parse_init (GstOgmParse * ogm)
   GstPadTemplate *templ;
 
   /* create the pads */
-  templ = gst_static_pad_template_get (&ogm_audio_parse_sink_template_factory);
-  ogm->sinkpad = gst_pad_new_from_template (templ, "sink");
+  ogm->sinkpad =
+      gst_pad_new_from_template (&ogm_audio_parse_sink_template_factory,
+      "sink");
   gst_pad_set_query_function (ogm->sinkpad, gst_ogm_parse_sink_query);
   gst_pad_set_chain_function (ogm->sinkpad, gst_ogm_parse_chain);
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
@@ -361,11 +362,10 @@ gst_ogm_audio_parse_init (GstOgmParse * ogm)
 static void
 gst_ogm_video_parse_init (GstOgmParse * ogm)
 {
-  GstPadTemplate *templ;
-
   /* create the pads */
-  templ = gst_static_pad_template_get (&ogm_video_parse_sink_template_factory);
-  ogm->sinkpad = gst_pad_new_from_template (templ, "sink");
+  ogm->sinkpad =
+      gst_pad_new_from_static_template (&ogm_video_parse_sink_template_factory,
+      "sink");
   gst_pad_set_query_function (ogm->sinkpad, gst_ogm_parse_sink_query);
   gst_pad_set_chain_function (ogm->sinkpad, gst_ogm_parse_chain);
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
@@ -381,11 +381,10 @@ gst_ogm_video_parse_init (GstOgmParse * ogm)
 static void
 gst_ogm_text_parse_init (GstOgmParse * ogm)
 {
-  GstPadTemplate *templ;
-
   /* create the pads */
-  templ = gst_static_pad_template_get (&ogm_text_parse_sink_template_factory);
-  ogm->sinkpad = gst_pad_new_from_template (templ, "sink");
+  ogm->sinkpad =
+      gst_pad_new_from_static_template (&ogm_text_parse_sink_template_factory,
+      "sink");
   gst_pad_set_query_type_function (ogm->sinkpad,
       gst_ogm_parse_get_sink_querytypes);
   gst_pad_set_query_function (ogm->sinkpad, gst_ogm_parse_sink_query);

@@ -185,16 +185,12 @@ static void
 gst_visual_init (GstVisual * visual)
 {
   /* create the sink and src pads */
-  visual->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
+  visual->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_setcaps_function (visual->sinkpad, gst_visual_sink_setcaps);
   gst_pad_set_chain_function (visual->sinkpad, gst_visual_chain);
   gst_element_add_pad (GST_ELEMENT (visual), visual->sinkpad);
 
-  visual->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+  visual->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_setcaps_function (visual->srcpad, gst_visual_src_setcaps);
   gst_pad_set_getcaps_function (visual->srcpad, gst_visual_getcaps);
   gst_element_add_pad (GST_ELEMENT (visual), visual->srcpad);

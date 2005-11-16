@@ -90,16 +90,15 @@ static void
 gst_vorbis_parse_init (GstVorbisParse * parse, GstVorbisParseClass * g_class)
 {
   parse->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&vorbis_parse_sink_factory), "sink");
+      gst_pad_new_from_static_template (&vorbis_parse_sink_factory, "sink");
   gst_pad_set_chain_function (parse->sinkpad, vorbis_parse_chain);
   gst_element_add_pad (GST_ELEMENT (parse), parse->sinkpad);
 
   parse->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&vorbis_parse_src_factory), "src");
+      gst_pad_new_from_static_template (&vorbis_parse_src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 }
+
 static void
 vorbis_parse_set_header_on_caps (GstVorbisParse * parse, GstCaps * caps)
 {

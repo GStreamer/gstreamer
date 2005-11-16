@@ -165,18 +165,16 @@ vorbis_get_query_types (GstPad * pad)
 static void
 gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
 {
-  GstPadTemplate *template;
-
-  template = gst_static_pad_template_get (&vorbis_dec_sink_factory);
-  dec->sinkpad = gst_pad_new_from_template (template, "sink");
+  dec->sinkpad = gst_pad_new_from_static_template (&vorbis_dec_sink_factory,
+      "sink");
 
   gst_pad_set_event_function (dec->sinkpad, vorbis_dec_sink_event);
   gst_pad_set_chain_function (dec->sinkpad, vorbis_dec_chain);
   gst_pad_set_query_function (dec->sinkpad, vorbis_dec_sink_query);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
-  template = gst_static_pad_template_get (&vorbis_dec_src_factory);
-  dec->srcpad = gst_pad_new_from_template (template, "src");
+  dec->srcpad = gst_pad_new_from_static_template (&vorbis_dec_src_factory,
+      "src");
 
   gst_pad_set_event_function (dec->srcpad, vorbis_dec_src_event);
   gst_pad_set_query_type_function (dec->srcpad, vorbis_get_query_types);

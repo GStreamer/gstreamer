@@ -125,15 +125,11 @@ gst_subparse_class_init (GstSubparseClass * klass)
 static void
 gst_subparse_init (GstSubparse * subparse)
 {
-  subparse->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_templ),
-      "sink");
+  subparse->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
   gst_pad_set_chain_function (subparse->sinkpad, gst_subparse_chain);
   gst_element_add_pad (GST_ELEMENT (subparse), subparse->sinkpad);
 
-  subparse->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_templ),
-      "src");
+  subparse->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
   gst_pad_set_event_function (subparse->srcpad, gst_subparse_src_event);
   gst_element_add_pad (GST_ELEMENT (subparse), subparse->srcpad);
 

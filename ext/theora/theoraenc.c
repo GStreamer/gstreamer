@@ -213,16 +213,14 @@ static void
 gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
 {
   enc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&theora_enc_sink_factory), "sink");
+      gst_pad_new_from_static_template (&theora_enc_sink_factory, "sink");
   gst_pad_set_chain_function (enc->sinkpad, theora_enc_chain);
   gst_pad_set_event_function (enc->sinkpad, theora_enc_sink_event);
   gst_pad_set_setcaps_function (enc->sinkpad, theora_enc_sink_setcaps);
   gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
 
   enc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&theora_enc_src_factory), "src");
+      gst_pad_new_from_static_template (&theora_enc_src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
 
   enc->center = THEORA_DEF_CENTER;

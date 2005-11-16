@@ -176,16 +176,14 @@ static void
 gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
 {
   dec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&theora_dec_sink_factory), "sink");
+      gst_pad_new_from_static_template (&theora_dec_sink_factory, "sink");
   gst_pad_set_query_function (dec->sinkpad, theora_dec_sink_query);
   gst_pad_set_event_function (dec->sinkpad, theora_dec_sink_event);
   gst_pad_set_chain_function (dec->sinkpad, theora_dec_chain);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&theora_dec_src_factory), "src");
+      gst_pad_new_from_static_template (&theora_dec_src_factory, "src");
   gst_pad_set_getcaps_function (dec->srcpad, theora_dec_src_getcaps);
   gst_pad_set_event_function (dec->srcpad, theora_dec_src_event);
   gst_pad_set_query_type_function (dec->srcpad, theora_get_query_types);

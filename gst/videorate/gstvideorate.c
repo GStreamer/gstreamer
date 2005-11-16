@@ -361,8 +361,7 @@ gst_videorate_init (GstVideorate * videorate)
 {
   GST_DEBUG ("gst_videorate_init");
   videorate->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_videorate_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_videorate_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (videorate), videorate->sinkpad);
   gst_pad_set_event_function (videorate->sinkpad, gst_videorate_event);
   gst_pad_set_chain_function (videorate->sinkpad, gst_videorate_chain);
@@ -370,8 +369,7 @@ gst_videorate_init (GstVideorate * videorate)
   gst_pad_set_setcaps_function (videorate->sinkpad, gst_videorate_setcaps);
 
   videorate->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_videorate_src_template), "src");
+      gst_pad_new_from_static_template (&gst_videorate_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (videorate), videorate->srcpad);
   gst_pad_set_getcaps_function (videorate->srcpad, gst_videorate_getcaps);
   gst_pad_set_setcaps_function (videorate->srcpad, gst_videorate_setcaps);

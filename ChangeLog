@@ -1,5 +1,24 @@
 2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/libvisual/visual.c: (gst_visual_init):
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_init):
+	* ext/ogg/gstoggparse.c: (gst_ogg_parse_init),
+	(gst_ogg_parse_chain):
+	* ext/ogg/gstogmparse.c: (gst_ogm_audio_parse_init),
+	(gst_ogm_video_parse_init), (gst_ogm_text_parse_init):
+	* ext/theora/theoradec.c: (gst_theora_dec_init):
+	* ext/theora/theoraenc.c: (gst_theora_enc_init):
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_init):
+	* ext/vorbis/vorbisparse.c: (gst_vorbis_parse_init):
+	* gst/adder/gstadder.c: (gst_adder_class_init),
+	(gst_adder_dispose):
+	* gst/audiorate/gstaudiorate.c: (gst_audiorate_init):
+	* gst/subparse/gstsubparse.c: (gst_subparse_init):
+	* gst/videorate/gstvideorate.c: (gst_videorate_init):
+	  Fix a whole set of pad template leaks
+
+2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/generic/states.c: (GST_START_TEST):
 	  fix the test so that it only checks for elements that are part of
 	  this source module

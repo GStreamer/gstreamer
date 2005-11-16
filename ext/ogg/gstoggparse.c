@@ -243,11 +243,10 @@ gst_ogg_parse_init (GstOggParse * ogg)
 {
   /* create the sink and source pads */
   ogg->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&ogg_parse_sink_template_factory), "sink");
+      gst_pad_new_from_static_template (&ogg_parse_sink_template_factory,
+      "sink");
   ogg->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&ogg_parse_src_template_factory), "src");
+      gst_pad_new_from_static_template (&ogg_parse_src_template_factory, "src");
 
   /* TODO: Are there any events we must handle? */
   /* gst_pad_set_event_function (ogg->sinkpad, gst_ogg_parse_handle_event); */

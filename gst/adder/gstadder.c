@@ -71,6 +71,7 @@ static GstStaticPadTemplate gst_adder_sink_template =
 
 static void gst_adder_class_init (GstAdderClass * klass);
 static void gst_adder_init (GstAdder * adder);
+static void gst_adder_dispose (GObject * object);
 
 static GstPad *gst_adder_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused);
@@ -249,6 +250,9 @@ gst_adder_class_init (GstAdderClass * klass)
   GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
+
+  gobject_class->dispose = gst_adder_dispose;
+
   gstelement_class = (GstElementClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -284,6 +288,15 @@ gst_adder_init (GstAdder * adder)
   /* keep track of the sinkpads requested */
   adder->collect = gst_collectpads_new ();
   gst_collectpads_set_function (adder->collect, gst_adder_collected, adder);
+}
+
+static void
+gst_adder_dispose (GObject * object)
+{
+  GstAdder *adder = GST_ADDER (object);
+
+  gst_object_unref (adder->collect);
+  adder->collect = NULL;
 }
 
 static GstPad *
