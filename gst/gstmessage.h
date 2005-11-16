@@ -187,7 +187,7 @@ GQuark		gst_message_type_to_quark	(GstMessageType type);
  * gst_message_ref:
  * @msg: the message to ref
  *
- * Convinience macro to increase the reference count of the message. Returns the
+ * Convenience macro to increase the reference count of the message. Returns the
  * reffed message.
  */
 #define         gst_message_ref(msg)		GST_MESSAGE (gst_mini_object_ref (GST_MINI_OBJECT (msg)))
@@ -195,7 +195,7 @@ GQuark		gst_message_type_to_quark	(GstMessageType type);
  * gst_message_unref:
  * @msg: the message to unref
  *
- * Convinience macro to decrease the reference count of the message, possibly freeing
+ * Convenience macro to decrease the reference count of the message, possibly freeing
  * the it.
  */
 #define         gst_message_unref(msg)		gst_mini_object_unref (GST_MINI_OBJECT (msg))

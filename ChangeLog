@@ -1,5 +1,12 @@
 2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/base/gstbasesrc.c: (gst_base_src_default_negotiate):
+	  some debug changes
+	* gst/gstmessage.h:
+	  typo fixes
+
+2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/base/gstbasesrc.c: (gst_base_src_init):
 	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init):
 	* gst/gstqueue.c: (gst_queue_init):

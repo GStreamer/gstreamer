@@ -1174,20 +1174,20 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
 
   /* first see what is possible on our source pad */
   thiscaps = gst_pad_get_caps (GST_BASE_SRC_PAD (basesrc));
-  GST_DEBUG ("caps of src: %" GST_PTR_FORMAT, thiscaps);
+  GST_DEBUG_OBJECT (basesrc, "caps of src: %" GST_PTR_FORMAT, thiscaps);
   /* nothing or anything is allowed, we're done */
   if (thiscaps == NULL || gst_caps_is_any (thiscaps))
     goto no_nego_needed;
 
   /* get the peer caps */
   peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
-  GST_DEBUG ("caps of peer: %" GST_PTR_FORMAT, peercaps);
+  GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
   if (peercaps) {
     GstCaps *icaps;
 
     /* get intersection */
     icaps = gst_caps_intersect (thiscaps, peercaps);
-    GST_DEBUG ("intersect: %" GST_PTR_FORMAT, icaps);
+    GST_DEBUG_OBJECT (basesrc, "intersect: %" GST_PTR_FORMAT, icaps);
     gst_caps_unref (thiscaps);
     gst_caps_unref (peercaps);
     if (icaps) {
@@ -1205,7 +1205,7 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
 
     /* now fixate */
     gst_pad_fixate_caps (GST_BASE_SRC_PAD (basesrc), caps);
-    GST_DEBUG ("fixated to: %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (basesrc, "fixated to: %" GST_PTR_FORMAT, caps);
 
     if (gst_caps_is_any (caps)) {
       /* hmm, still anything, so element can do anything and
@@ -1223,7 +1223,7 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
 
 no_nego_needed:
   {
-    GST_DEBUG ("no negotiation needed");
+    GST_DEBUG_OBJECT (basesrc, "no negotiation needed");
     if (thiscaps)
       gst_caps_unref (thiscaps);
     return TRUE;
