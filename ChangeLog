@@ -1,3 +1,9 @@
+2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/generic/states.c: (GST_START_TEST):
+	  fix the test so that it only checks for elements that are part of
+	  this source module
+
 2005-11-16  Michael Smith <msmith@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_clear), (gst_ogg_mux_reset),
