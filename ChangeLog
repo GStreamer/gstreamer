@@ -1,5 +1,10 @@
 2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/elements/gsttee.c: (gst_tee_init):
+	  fix pad tempalte leak in tee
+
+2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/glib-compat.c: (g_value_dup_gst_object):
 	* gst/glib-compat.h:
 	* gst/gstpad.c: (gst_pad_set_property):
