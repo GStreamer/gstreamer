@@ -1,5 +1,12 @@
 2005-11-16  Luca Ognibene  <luogni@tin.it>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_get_buffer):
+	  My previous commit was not completly correct.. I've disabled
+	our _get_buffer function until we make it work 100%. I've opened a bug
+	(#321662) for this issue.
+
+2005-11-16  Luca Ognibene  <luogni@tin.it>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_release_buffer),
 	(gst_ffmpegdec_frame):
 	 Fix some segfaults while seeking. When i have unreffed 

@@ -547,7 +547,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
       bufsize = avpicture_get_size (context->pix_fmt, width, height);
 
-      if ((width != context->width) || (height != context->height)) {
+      if ((width != context->width) || (height != context->height) || 1) {
 #ifdef FORCE_OUR_GET_BUFFER
         context->width = width;
         context->height = height;
