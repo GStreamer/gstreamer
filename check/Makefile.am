@@ -88,7 +88,6 @@ net_gstnettimeprovider_LDADD = \
 VALGRIND_TO_FIX =				\
 	elements/fakesrc			\
 	gst/gstevent				\
-	generic/states				\
 	gst-libs/controller			\
 	pipelines/simple_launch_lines
 

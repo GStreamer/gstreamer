@@ -1,3 +1,12 @@
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
+	* check/Makefile.am:
+	Enable valgrind check that should work fine now.
+
+	* gst/elements/gsttypefindelement.c: (gst_type_find_element_init):
+	* gst/gstqueue.c: (gst_queue_init):
+	Fix memleaks in pad allocation.
+
 2005-11-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/net/Makefile.am:
