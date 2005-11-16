@@ -13,6 +13,7 @@ static GList *seekable_elements = NULL;
 
 static gboolean accurate_seek = FALSE;
 static gboolean keyframe_seek = FALSE;
+static gboolean loop_seek = FALSE;
 
 static GstElement *pipeline;
 static gint64 position;
@@ -1003,19 +1004,10 @@ end_scrub (GtkWidget * widget)
 }
 #endif
 
-static void
-do_seek (GtkWidget * widget)
+static gboolean
+send_event (GstEvent * event)
 {
-  gint64 real = gtk_range_get_value (GTK_RANGE (widget)) * duration / 100;
   gboolean res = FALSE;
-  GstEvent *s_event;
-  GstSeekFlags flags;
-
-  flags = GST_SEEK_FLAG_FLUSH;
-  if (accurate_seek)
-    flags |= GST_SEEK_FLAG_ACCURATE;
-  if (keyframe_seek)
-    flags |= GST_SEEK_FLAG_KEY_UNIT;
 
   if (!elem_seek) {
     GList *walk = seekable_pads;
@@ -1023,14 +1015,10 @@ do_seek (GtkWidget * widget)
     while (walk) {
       GstPad *seekable = GST_PAD (walk->data);
 
-      GST_DEBUG ("seek to %" GST_TIME_FORMAT " on pad %s:%s",
-          GST_TIME_ARGS (real), GST_DEBUG_PAD_NAME (seekable));
+      GST_DEBUG ("send event on pad %s:%s", GST_DEBUG_PAD_NAME (seekable));
 
-      s_event = gst_event_new_seek (1.0,
-          GST_FORMAT_TIME,
-          flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
-
-      res = gst_pad_send_event (seekable, s_event);
+      gst_event_ref (event);
+      res = gst_pad_send_event (seekable, event);
 
       walk = g_list_next (walk);
     }
@@ -1040,23 +1028,47 @@ do_seek (GtkWidget * widget)
     while (walk) {
       GstElement *seekable = GST_ELEMENT (walk->data);
 
-      GST_DEBUG ("seek to %" GST_TIME_FORMAT " on element %s",
-          GST_TIME_ARGS (real), GST_ELEMENT_NAME (seekable));
+      GST_DEBUG ("send event on element %s", GST_ELEMENT_NAME (seekable));
 
-      s_event = gst_event_new_seek (1.0,
-          GST_FORMAT_TIME,
-          flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
-
-      res = gst_element_send_event (seekable, s_event);
+      gst_event_ref (event);
+      res = gst_element_send_event (seekable, event);
 
       walk = g_list_next (walk);
     }
   }
+  gst_event_unref (event);
+  return res;
+}
+
+static void
+do_seek (GtkWidget * widget)
+{
+  gint64 real;
+  gboolean res = FALSE;
+  GstEvent *s_event;
+  GstSeekFlags flags;
+
+  real = gtk_range_get_value (GTK_RANGE (widget)) * duration / 100;
+
+  flags = GST_SEEK_FLAG_FLUSH;
+  if (accurate_seek)
+    flags |= GST_SEEK_FLAG_ACCURATE;
+  if (keyframe_seek)
+    flags |= GST_SEEK_FLAG_KEY_UNIT;
+  if (loop_seek)
+    flags |= GST_SEEK_FLAG_SEGMENT;
+
+  s_event = gst_event_new_seek (1.0,
+      GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
+
+  GST_DEBUG ("seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (real));
+
+  res = send_event (s_event);
 
   if (res) {
     gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
     gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
-        100 * GST_MSECOND);
+        50 * GST_MSECOND);
   } else
     g_print ("seek failed\n");
 }
@@ -1215,6 +1227,34 @@ key_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 }
 
 static void
+loop_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  loop_seek = gtk_toggle_button_get_active (button);
+}
+
+static void
+segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+{
+  GstEvent *event;
+  GstSeekFlags flags;
+  gboolean res;
+
+  flags = 0;
+  if (loop_seek)
+    flags |= GST_SEEK_FLAG_SEGMENT;
+
+  event = gst_event_new_seek (1.0,
+      GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_NONE, 0);
+
+  GST_DEBUG ("segmeent seek to start");
+
+  res = send_event (event);
+  if (!res) {
+    g_print ("segment seek failed\n");
+  }
+}
+
+static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *s;
@@ -1281,7 +1321,7 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *hbox, *vbox, *play_button, *pause_button, *stop_button;
-  GtkWidget *accurate_checkbox, *key_checkbox;
+  GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox;
   GOptionEntry options[] = {
     {"stats", 's', 0, G_OPTION_ARG_NONE, &stats,
         "Show pad stats", NULL},
@@ -1333,6 +1373,7 @@ main (int argc, char **argv)
 
   accurate_checkbox = gtk_check_button_new_with_label ("Accurate Seek");
   key_checkbox = gtk_check_button_new_with_label ("Key_unit Seek");
+  loop_checkbox = gtk_check_button_new_with_label ("Loop");
 
   adjustment =
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
@@ -1356,6 +1397,7 @@ main (int argc, char **argv)
   gtk_box_pack_start (GTK_BOX (hbox), stop_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), accurate_checkbox, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), key_checkbox, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (hbox), loop_checkbox, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
 
   /* connect things ... */
@@ -1369,6 +1411,8 @@ main (int argc, char **argv)
       G_CALLBACK (accurate_toggle_cb), pipeline);
   g_signal_connect (G_OBJECT (key_checkbox), "toggled",
       G_CALLBACK (key_toggle_cb), pipeline);
+  g_signal_connect (G_OBJECT (loop_checkbox), "toggled",
+      G_CALLBACK (loop_toggle_cb), pipeline);
 
   g_signal_connect (G_OBJECT (window), "delete_event", gtk_main_quit, NULL);
 
@@ -1393,6 +1437,10 @@ main (int argc, char **argv)
     g_signal_connect (bus, "message::warning", (GCallback) message_received,
         pipeline);
     g_signal_connect (bus, "message::eos", (GCallback) message_received,
+        pipeline);
+    g_signal_connect (bus, "message::segment-done",
+        (GCallback) message_received, pipeline);
+    g_signal_connect (bus, "message::segment-done", (GCallback) segment_done,
         pipeline);
   }
   gtk_main ();
