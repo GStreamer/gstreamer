@@ -598,6 +598,7 @@ static GstStateChangeReturn
 gst_flxdec_change_state (GstElement * element, GstStateChange transition)
 {
   GstFlxDec *flxdec;
+  GstStateChangeReturn ret;
 
   flxdec = GST_FLXDEC (element);
 
@@ -610,21 +611,31 @@ gst_flxdec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_buffer_unref (flxdec->frame);
-      flxdec->frame = NULL;
-      gst_buffer_unref (flxdec->delta);
-      flxdec->delta = NULL;
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
+    default:
       break;
   }
 
-  return parent_class->change_state (element, transition);
+  ret = parent_class->change_state (element, transition);
 
-  //return GST_STATE_CHANGE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (flxdec->frame) {
+        gst_buffer_unref (flxdec->frame);
+        flxdec->frame = NULL;
+      }
+      if (flxdec->delta) {
+        gst_buffer_unref (flxdec->delta);
+        flxdec->delta = NULL;
+      }
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+  return ret;
 }
 
 static void

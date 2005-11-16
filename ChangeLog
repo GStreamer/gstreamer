@@ -1,3 +1,8 @@
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/flx/gstflxdec.c: (gst_flxdec_change_state):
+	Fix state change.
+
 2005-11-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/udp/gstudpsrc.c: Clean up with the boilerplate macro.
