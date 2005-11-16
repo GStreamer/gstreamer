@@ -138,7 +138,6 @@ libgstreamer_@GST_MAJORMINOR@_la_CFLAGS =		\
 
 libgstreamer_@GST_MAJORMINOR@_la_LIBADD =		\
 	$(GST_PARSE_LA)					\
-	$(VALGRIND_LIBS)				\
 	$(GST_ALL_LIBS)					\
 	$(XML_LIBS)
 

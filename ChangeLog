@@ -1,3 +1,10 @@
+2005-11-16  Michael Smith <msmith@fluendo.com>
+
+	* gst/Makefile.am:
+	  Don't link against VALGRIND_LIBS. That was always the wrong thing to
+	  do, but only breaks with newer valgrind versions. We're not a
+	  valgrind tool, we have no link-time dependencies on libcoregrind.
+
 2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/base/gstbasesrc.c: (gst_base_src_default_negotiate):
