@@ -1,3 +1,11 @@
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buf),
+	(gst_base_transform_event):
+	Check if the caps are NULL, this can happen if the element
+	is shutting down and the pad caps are set to NULL.
+
 2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/gsttee.c: (gst_tee_init):

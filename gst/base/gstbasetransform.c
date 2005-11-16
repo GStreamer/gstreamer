@@ -812,7 +812,8 @@ gst_base_transform_prepare_output_buf (GstBaseTransform * trans,
   /* out_caps is the caps of the src pad gathered through the GST_PAD_CAPS 
      macro. If a set_caps occurs during this function this caps will become
      invalid. We want to keep them during preparation of the output buffer. */
-  gst_caps_ref (out_caps);
+  if (out_caps)
+    gst_caps_ref (out_caps);
 
   /* see if the subclass wants to alloc a buffer */
   if (bclass->prepare_output_buffer) {
@@ -873,7 +874,8 @@ gst_base_transform_prepare_output_buf (GstBaseTransform * trans,
   }
 
 done:
-  gst_caps_unref (out_caps);
+  if (out_caps)
+    gst_caps_unref (out_caps);
   trans->delay_configure = FALSE;
 
   return ret;
