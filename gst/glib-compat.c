@@ -28,9 +28,7 @@
 #include "config.h"
 
 #include <glib.h>
-#if GLIB_CHECK_VERSION (2, 6, 0)
 #include <glib/gstdio.h>
-#endif
 
 #include <stdio.h>
 #include <errno.h>
@@ -169,4 +167,20 @@ gst_flags_get_first_value (GFlagsClass * flags_class, guint value)
   }
 
   return NULL;
+}
+
+/* Adapted from g_value_dup_object to use gst_object_ref */
+#include "gstobject.h"
+GObject *
+g_value_dup_gst_object (const GValue * value)
+{
+  GObject *o;
+
+  g_return_val_if_fail (G_VALUE_HOLDS_OBJECT (value), NULL);
+
+  o = value->data[0].v_pointer;
+  if (!o)
+    return NULL;
+  g_return_val_if_fail (GST_IS_OBJECT (o), NULL);
+  return gst_object_ref (o);
 }

@@ -71,6 +71,7 @@
 #include "gstinfo.h"
 #include "gsterror.h"
 #include "gstvalue.h"
+#include "glib-compat.h"
 
 GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
 #define GST_CAT_DEFAULT GST_CAT_PADS
@@ -418,7 +419,7 @@ gst_pad_set_property (GObject * object, guint prop_id,
       break;
     case PAD_PROP_TEMPLATE:
       gst_pad_set_pad_template (GST_PAD_CAST (object),
-          (GstPadTemplate *) g_value_dup_object (value));
+          (GstPadTemplate *) g_value_dup_gst_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

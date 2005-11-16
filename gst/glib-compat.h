@@ -20,5 +20,8 @@ int g_mkdir_with_parents (const gchar *pathname, int          mode);
 GFlagsValue*
 gst_flags_get_first_value (GFlagsClass *flags_class,
                            guint        value);
+
+GObject*
+g_value_dup_gst_object (const GValue *value);
 G_END_DECLS
 

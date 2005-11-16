@@ -1,5 +1,13 @@
 2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/glib-compat.c: (g_value_dup_gst_object):
+	* gst/glib-compat.h:
+	* gst/gstpad.c: (gst_pad_set_property):
+	  use gst_object_ref when setting the pad template; this will
+	  trigger the pad template leaks on GLib 2.6 and the slaves
+
+2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/glib-compat.c: (gst_flags_get_first_value):
 	* gst/glib-compat.h:
 	* gst/gstregistryxml.c:
