@@ -341,11 +341,9 @@ gst_ogm_parse_init (GstOgmParse * ogm)
 static void
 gst_ogm_audio_parse_init (GstOgmParse * ogm)
 {
-  GstPadTemplate *templ;
-
   /* create the pads */
   ogm->sinkpad =
-      gst_pad_new_from_template (&ogm_audio_parse_sink_template_factory,
+      gst_pad_new_from_static_template (&ogm_audio_parse_sink_template_factory,
       "sink");
   gst_pad_set_query_function (ogm->sinkpad, gst_ogm_parse_sink_query);
   gst_pad_set_chain_function (ogm->sinkpad, gst_ogm_parse_chain);

@@ -1,3 +1,8 @@
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstogmparse.c: (gst_ogm_audio_parse_init):
+	Fix compile again.
+
 2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/libvisual/visual.c: (gst_visual_init):
