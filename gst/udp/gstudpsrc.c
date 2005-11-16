@@ -218,8 +218,8 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
       else
         try_again = TRUE;
     } else {
-      /* got control message */
       if (FD_ISSET (READ_SOCKET (udpsrc), &read_fds)) {
+        /* got control message */
         while (TRUE) {
           gchar command;
           int res;

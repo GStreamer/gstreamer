@@ -1,6 +1,7 @@
 2005-11-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/udp/gstudpsrc.c: Clean up with the boilerplate macro.
+	(gst_udpsrc_create): Move comment.
 
 2005-11-15  Vincent Torri  <torri at iecn dot u-nancy dot fr>
 
