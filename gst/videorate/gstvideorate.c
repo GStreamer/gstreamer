@@ -48,10 +48,16 @@ struct _GstVideorate
 
   /* video state */
   gdouble from_fps, to_fps;
-  guint64 next_ts;
-  guint64 first_ts;
+  guint64 next_ts;              /* Timestamp of next buffer to output */
+  guint64 first_ts;             /* Timestamp of first buffer */
   GstBuffer *prevbuf;
+  guint64 prev_ts;              /* Previous buffer timestamp */
   guint64 in, out, dup, drop;
+
+  /* segment handling */
+  gint64 segment_start;
+  gint64 segment_stop;
+  gint64 segment_accum;
 
   gboolean silent;
   gdouble new_pref;
@@ -343,6 +349,11 @@ gst_videorate_blank_data (GstVideorate * videorate)
   videorate->dup = 0;
   videorate->next_ts = 0LL;
   videorate->first_ts = 0LL;
+  videorate->prev_ts = 0LL;
+
+  videorate->segment_start = 0;
+  videorate->segment_stop = 0;
+  videorate->segment_accum = 0;
 }
 
 static void
@@ -377,34 +388,47 @@ gst_videorate_event (GstPad * pad, GstEvent * event)
 
   videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
 
-  if (!videorate->prevbuf)
-    goto done;
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
     {
-      gint64 start, stop;
+      gint64 start, stop, base;
+      gdouble rate;
+      gboolean update;
       GstFormat format;
 
       GST_STREAM_LOCK (pad);
 
-      gst_event_parse_newsegment (event, NULL, NULL, &format, &start, &stop,
-          NULL);
+      gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
+          &base);
 
       if (format != GST_FORMAT_TIME) {
         GST_WARNING ("Got discont but doesn't have GST_FORMAT_TIME value");
       } else {
-        gst_videorate_blank_data (videorate);
-        videorate->first_ts = start;
+        /* 
+           We just want to update the accumulated stream_time.
+         */
+        videorate->segment_accum +=
+            videorate->segment_stop - videorate->segment_start;
+        videorate->segment_start = start;
+        videorate->segment_stop = stop;
+        GST_DEBUG_OBJECT (videorate, "Updated segment_accum:%" GST_TIME_FORMAT
+            " segment_start:%" GST_TIME_FORMAT " segment_stop:%"
+            GST_TIME_FORMAT, GST_TIME_ARGS (videorate->segment_accum),
+            GST_TIME_ARGS (videorate->segment_start),
+            GST_TIME_ARGS (videorate->segment_stop));
       }
       GST_STREAM_UNLOCK (pad);
 
       break;
     }
+    case GST_EVENT_FLUSH_STOP:
+    {
+      gst_videorate_blank_data (videorate);
+    }
     default:
       break;
   }
-done:
+
   return gst_pad_event_default (pad, event);
 }
 
@@ -426,23 +450,21 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
   if (videorate->prevbuf == NULL) {
     /* We're sure it's a GstBuffer here */
     videorate->prevbuf = buffer;
-    videorate->next_ts = videorate->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    videorate->next_ts = videorate->first_ts = videorate->prev_ts =
+        GST_BUFFER_TIMESTAMP (buffer) - videorate->segment_start +
+        videorate->segment_accum;
   } else {
     GstClockTime prevtime, intime;
     gint count = 0;
     gint64 diff1, diff2;
 
-    prevtime = GST_BUFFER_TIMESTAMP (videorate->prevbuf);
-    /* If it's a GstEvent, we give him the time of the next outputed frame */
-#if 0
-    intime = (GST_IS_EVENT (data))
-        ? videorate->next_ts +
-        (1 / videorate->to_fps * GST_SECOND) : GST_BUFFER_TIMESTAMP (buffer);
-#endif
-    intime = GST_BUFFER_TIMESTAMP (buffer);
+    prevtime = videorate->prev_ts;
+    intime =
+        GST_BUFFER_TIMESTAMP (buffer) - videorate->segment_start +
+        videorate->segment_accum;
 
     GST_LOG_OBJECT (videorate,
-        "prev buf %" GST_TIME_FORMAT " new buf %" GST_TIME_FORMAT
+        "BEGINNING prev buf %" GST_TIME_FORMAT " new buf %" GST_TIME_FORMAT
         " outgoing ts %" GST_TIME_FORMAT, GST_TIME_ARGS (prevtime),
         GST_TIME_ARGS (intime), GST_TIME_ARGS (videorate->next_ts));
 
@@ -480,13 +502,22 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
             (videorate->out / videorate->to_fps * GST_SECOND);
         GST_BUFFER_DURATION (outbuf) =
             videorate->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
+        /* adapt for looping */
+        GST_BUFFER_TIMESTAMP (outbuf) -= videorate->segment_accum;
         gst_buffer_set_caps (outbuf, GST_PAD_CAPS (videorate->srcpad));
 
-        if ((res = gst_pad_push (videorate->srcpad, outbuf)) != GST_FLOW_OK)
+        GST_LOG_OBJECT (videorate,
+            "old is best, dup, pushing buffer outgoing ts %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (videorate->next_ts));
+
+        if ((res = gst_pad_push (videorate->srcpad, outbuf)) != GST_FLOW_OK) {
+          GST_WARNING_OBJECT (videorate, "couldn't push buffer on srcpad:%d",
+              res);
           goto done;
+        }
 
         GST_LOG_OBJECT (videorate,
-            "old is best, dup, outgoing ts %" GST_TIME_FORMAT,
+            "old is best, dup, pushed buffer outgoing ts %" GST_TIME_FORMAT,
             GST_TIME_ARGS (videorate->next_ts));
       }
       /* continue while the first one was the best */
@@ -509,7 +540,7 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
           GST_TIME_FORMAT, GST_TIME_ARGS (videorate->next_ts));
     }
     GST_LOG_OBJECT (videorate,
-        "left loop, putting new in old, diff1 %" GST_TIME_FORMAT
+        "END, putting new in old, diff1 %" GST_TIME_FORMAT
         ", diff2 %" GST_TIME_FORMAT ", next_ts %" GST_TIME_FORMAT
         ", in %lld, out %lld, drop %lld, dup %lld", GST_TIME_ARGS (diff1),
         GST_TIME_ARGS (diff2), GST_TIME_ARGS (videorate->next_ts),
@@ -518,6 +549,9 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
     /* swap in new one when it's the best */
     gst_buffer_unref (videorate->prevbuf);
     videorate->prevbuf = buffer;
+    videorate->prev_ts =
+        GST_BUFFER_TIMESTAMP (buffer) - videorate->segment_start +
+        videorate->segment_accum;
   }
 done:
 
