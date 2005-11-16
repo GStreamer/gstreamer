@@ -46,6 +46,14 @@ G_BEGIN_DECLS
   
 typedef struct _GstVideoSink GstVideoSink;
 typedef struct _GstVideoSinkClass GstVideoSinkClass;
+typedef struct _GstVideoRectangle GstVideoRectangle;
+
+struct _GstVideoRectangle {
+  gint x;
+  gint y;
+  gint w;
+  gint h;
+};
 
 struct _GstVideoSink {
   GstBaseSink element;
@@ -62,6 +70,9 @@ struct _GstVideoSinkClass {
 };
 
 GType gst_video_sink_get_type (void);
+
+void gst_video_sink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
+                                 GstVideoRectangle *result, gboolean scaling);
 
 G_END_DECLS
 

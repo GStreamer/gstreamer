@@ -27,6 +27,45 @@
 
 static GstElementClass *parent_class = NULL;
 
+void
+gst_video_sink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
+    GstVideoRectangle * result, gboolean scaling)
+{
+  g_return_if_fail (result != NULL);
+
+  if (!scaling) {
+    result->w = MIN (src.w, dst.w);
+    result->h = MIN (src.h, dst.h);
+    result->x = (dst.w - result->w) / 2;
+    result->y = (dst.h - result->h) / 2;
+  } else {
+    gdouble src_ratio, dst_ratio;
+
+    src_ratio = (gdouble) src.w / src.h;
+    dst_ratio = (gdouble) dst.w / dst.h;
+
+    if (src_ratio > dst_ratio) {
+      result->w = dst.w;
+      result->h = dst.w / src_ratio;
+      result->x = 0;
+      result->y = (dst.h - result->h) / 2;
+    } else if (src_ratio < dst_ratio) {
+      result->w = dst.h * src_ratio;
+      result->h = dst.h;
+      result->x = (dst.w - result->w) / 2;
+      result->y = 0;
+    } else {
+      result->x = 0;
+      result->y = 0;
+      result->w = dst.w;
+      result->h = dst.h;
+    }
+  }
+
+  GST_DEBUG ("source is %dx%d dest is %dx%d, result is %dx%d with x,y %dx%d",
+      src.w, src.h, dst.w, dst.h, result->w, result->h, result->x, result->y);
+}
+
 /* Initing stuff */
 
 static void
