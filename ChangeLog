@@ -1,5 +1,10 @@
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_pause_task):
+	Removed warning, it's not realy an error either.
+
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
 	* gst/base/gstbasetransform.c:
 	(gst_base_transform_prepare_output_buf),
 	(gst_base_transform_event):

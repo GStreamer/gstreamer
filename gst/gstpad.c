@@ -3714,8 +3714,7 @@ gst_pad_pause_task (GstPad * pad)
 
 no_task:
   {
-    GST_WARNING_OBJECT (pad,
-        "pad has no task -- very likely a programming error");
+    GST_DEBUG_OBJECT (pad, "pad has no task");
     GST_UNLOCK (pad);
     return FALSE;
   }
