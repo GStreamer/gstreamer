@@ -382,6 +382,7 @@ gst_fake_src_alloc_parent (GstFakeSrc * src)
 
   buf = gst_buffer_new ();
   GST_BUFFER_DATA (buf) = g_malloc (src->parentsize);
+  GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
   GST_BUFFER_SIZE (buf) = src->parentsize;
 
   src->parent = buf;
@@ -586,15 +587,18 @@ gst_fake_src_alloc_buffer (GstFakeSrc * src, guint size)
     switch (src->filltype) {
       case FAKE_SRC_FILLTYPE_NOTHING:
         GST_BUFFER_DATA (buf) = g_malloc (size);
+        GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
         break;
       case FAKE_SRC_FILLTYPE_NULL:
         GST_BUFFER_DATA (buf) = g_malloc0 (size);
+        GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
         break;
       case FAKE_SRC_FILLTYPE_RANDOM:
       case FAKE_SRC_FILLTYPE_PATTERN:
       case FAKE_SRC_FILLTYPE_PATTERN_CONT:
       default:
         GST_BUFFER_DATA (buf) = g_malloc (size);
+        GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
         gst_fake_src_prepare_buffer (src, buf);
         break;
     }

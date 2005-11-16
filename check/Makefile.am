@@ -86,7 +86,6 @@ net_gstnettimeprovider_LDADD = \
 # valgrind testing
 # these just need valgrind fixing, period
 VALGRIND_TO_FIX =				\
-	elements/fakesrc			\
 	gst/gstevent				\
 	gst-libs/controller			\
 	pipelines/simple_launch_lines

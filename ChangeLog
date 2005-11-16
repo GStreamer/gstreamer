@@ -1,5 +1,14 @@
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 
+	* check/Makefile.am:
+	Enable valgrind check.
+
+	* gst/elements/gstfakesrc.c: (gst_fake_src_alloc_parent),
+	(gst_fake_src_alloc_buffer):
+	Fix memleak.
+
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
 	* gst/net/gstnettimeprovider.c: (gst_net_time_provider_finalize):
 	Call parent finalize too.
 
