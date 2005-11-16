@@ -76,6 +76,8 @@ GST_CHECK_SUBSYSTEM_DISABLE(ENUMTYPES,[enum types])
 AM_CONDITIONAL(GST_DISABLE_ENUMTYPES, test "x$GST_DISABLE_ENUMTYPES" = "xyes")
 GST_CHECK_SUBSYSTEM_DISABLE(INDEX,[index])
 AM_CONDITIONAL(GST_DISABLE_INDEX, test "x$GST_DISABLE_INDEX" = "xyes")
+GST_CHECK_SUBSYSTEM_DISABLE(NET,[network distribution])
+AM_CONDITIONAL(GST_DISABLE_NET, test "x$GST_DISABLE_NET" = "xyes")
 GST_CHECK_SUBSYSTEM_DISABLE(PLUGIN,[plugin])
 AM_CONDITIONAL(GST_DISABLE_PLUGIN, test "x$GST_DISABLE_PLUGIN" = "xyes")
 GST_CHECK_SUBSYSTEM_DISABLE(URI,[uri handlers])
@@ -469,6 +471,7 @@ gst/gstversion.h
 gst/base/Makefile
 gst/check/Makefile
 gst/indexers/Makefile
+gst/net/Makefile
 gst/elements/Makefile
 gst/parse/Makefile
 libs/Makefile

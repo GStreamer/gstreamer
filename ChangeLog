@@ -1,3 +1,24 @@
+2005-11-16  Andy Wingo  <wingo@pobox.com>
+
+	* gst/net/Makefile.am:
+	* gst/net/gstnet.h: New part of core to hold network elements and
+	objects. Put in core because it exposes API that applications want
+	to use. The library is named libgstnet-tempname right now because
+	of the existing libgstnet in gst-plugins-base. Solution is
+	probably to rename the one in plugins-base; will file a bug for
+	the freeze break.
+
+	* gst/net/gstnettimeprovider.c: 
+	* gst/net/gstnettimeprovider.h: New object to export a GstClock's
+	get_time call over the network.
+
+	* configure.ac: 
+	* gst/Makefile.am (lib_LTLIBRARIES): Add gstnet to the build.
+
+	* check/Makefile.am:
+	* check/net/gstnettimeprovider.c: A most minimal test suite. Will
+	get additions shortly.
+
 2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstpad.c: (gst_pad_new_from_static_template):

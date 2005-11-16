@@ -54,8 +54,22 @@ else
 GST_URI_SRC = gsturi.c
 endif
 
-SUBDIRS = $(SUBDIRS_PARSE) . base elements $(SUBDIRS_INDEX) $(SUBDIRS_CHECK)
-DIST_SUBDIRS = base elements parse indexers check
+if GST_DISABLE_NET
+SUBDIRS_NET = 
+else
+SUBDIRS_NET = net
+endif
+
+SUBDIRS = \
+	$(SUBDIRS_PARSE) \
+	. \
+	base \
+	elements \
+	$(SUBDIRS_INDEX) \
+	$(SUBDIRS_NET) \
+	$(SUBDIRS_CHECK)
+
+DIST_SUBDIRS = base elements parse indexers net check
 
 # make variables for all generated source and header files to make the
 # distinction clear

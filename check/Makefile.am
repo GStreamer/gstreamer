@@ -56,7 +56,8 @@ check_PROGRAMS =				\
 	pipelines/cleanup			\
 	states/sinks				\
 	gst-libs/controller			\
-	gst-libs/gdp
+	gst-libs/gdp				\
+	net/gstnettimeprovider
 
 TESTS = $(check_PROGRAMS)
 
@@ -76,6 +77,10 @@ gst_libs_gdp_CFLAGS = $(AM_CFLAGS) -DGST_ENABLE_NEW
 
 gst_libs_controller_LDADD = \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
+	$(LDADD)
+
+net_gstnettimeprovider_LDADD = \
+	$(top_builddir)/gst/net/libgstnet-tempname-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
 # valgrind testing
