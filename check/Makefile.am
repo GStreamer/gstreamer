@@ -85,10 +85,7 @@ net_gstnettimeprovider_LDADD = \
 
 # valgrind testing
 # these just need valgrind fixing, period
-VALGRIND_TO_FIX =				\
-	gst/gstevent				\
-	gst-libs/controller			\
-	pipelines/simple_launch_lines
+VALGRIND_TO_FIX =
 
 # these need fixing because the threads cause segfaults under valgrind
 TESTS_THREADED =				\

@@ -88,6 +88,9 @@ GST_START_TEST (test_num_buffers)
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
 
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
   /* cleanup */
   cleanup_fakesrc (src);
 }
@@ -122,6 +125,9 @@ GST_START_TEST (test_sizetype_empty)
   }
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
+
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
 
   /* cleanup */
   cleanup_fakesrc (src);
@@ -158,6 +164,9 @@ GST_START_TEST (test_sizetype_fixed)
   }
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
+
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
 
   /* cleanup */
   cleanup_fakesrc (src);
@@ -197,6 +206,9 @@ GST_START_TEST (test_sizetype_random)
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
 
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
   /* cleanup */
   cleanup_fakesrc (src);
 }
@@ -221,6 +233,9 @@ GST_START_TEST (test_no_preroll)
 
   fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL,
       "error going to paused the second time");
+
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
 
   /* cleanup */
   cleanup_fakesrc (src);

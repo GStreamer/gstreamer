@@ -1,3 +1,11 @@
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
+	* check/Makefile.am:
+	Enable more tests.
+
+	* check/elements/fakesrc.c: (GST_START_TEST):
+	Set element to NULL before disposing it.
+
 2005-11-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/net/Makefile.am:
