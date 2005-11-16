@@ -1,5 +1,10 @@
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 
+	* check/elements/matroskamux.c: (setup_src_pad), (setup_sink_pad):
+	Fix leak in check.
+
+2005-11-16  Wim Taymans  <wim@fluendo.com>
+
 	* gst/flx/gstflxdec.c: (gst_flxdec_change_state):
 	Fix state change.
 
