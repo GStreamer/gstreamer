@@ -140,10 +140,7 @@ gst_tee_class_init (GstTeeClass * klass)
 static void
 gst_tee_init (GstTee * tee, GstTeeClass * g_class)
 {
-  GstPadTemplate *templ = gst_static_pad_template_get (&sinktemplate);
-
-  tee->sinkpad = gst_pad_new_from_template (templ, "sink");
-  gst_object_unref (templ);
+  tee->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   gst_pad_set_setcaps_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
   gst_pad_set_getcaps_function (tee->sinkpad,

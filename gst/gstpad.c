@@ -492,6 +492,31 @@ gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
 }
 
 /**
+ * gst_pad_new_from_static_template:
+ * @templ: the #GstStaticPadTemplate to use
+ * @name: the name of the element
+ *
+ * Creates a new pad with the given name from the given static template.
+ * If name is NULL, a guaranteed unique name (across all pads)
+ * will be assigned.
+ * This function makes a copy of the name so you can safely free the name.
+ *
+ * Returns: a new #GstPad, or NULL in case of an error.
+ */
+GstPad *
+gst_pad_new_from_static_template (GstStaticPadTemplate * templ,
+    const gchar * name)
+{
+  GstPad *pad;
+  GstPadTemplate *template;
+
+  template = gst_static_pad_template_get (templ);
+  pad = gst_pad_new_from_template (template, name);
+  gst_object_unref (template);
+  return pad;
+}
+
+/**
  * gst_pad_get_direction:
  * @pad: a #GstPad to get the direction of.
  *

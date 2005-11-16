@@ -152,15 +152,13 @@ gst_check_teardown_element (GstElement * element)
  */
 GstPad *
 gst_check_setup_src_pad (GstElement * element,
-    GstStaticPadTemplate * srctemplate, GstCaps * caps)
+    GstStaticPadTemplate * template, GstCaps * caps)
 {
   GstPad *srcpad, *sinkpad;
 
   GST_DEBUG_OBJECT (element, "setting up sending pad");
   /* sending pad */
-  srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (srctemplate),
-      "src");
+  srcpad = gst_pad_new_from_static_template (template, "src");
   fail_if (srcpad == NULL, "Could not create a srcpad");
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
 
@@ -211,9 +209,7 @@ gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
 
   GST_DEBUG_OBJECT (element, "setting up receiving pad");
   /* receiving pad */
-  sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (template),
-      "sink");
+  sinkpad = gst_pad_new_from_static_template (template, "sink");
   fail_if (sinkpad == NULL, "Could not create a sinkpad");
 
   srcpad = gst_element_get_pad (element, "src");

@@ -1,7 +1,17 @@
+2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstpad.c: (gst_pad_new_from_static_template):
+	* gst/gstpad.h:
+	  add gst_pad_new_from_static_template functions
+	* gst/check/gstcheck.c: (gst_check_setup_src_pad),
+	(gst_check_setup_sink_pad):
+	* gst/elements/gsttee.c: (gst_tee_init):
+	  and use them
+
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_pause_task):
-	Removed warning, it's not realy an error either.
+	Removed warning, it's not really an error either.
 
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 

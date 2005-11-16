@@ -498,6 +498,8 @@ GType			gst_pad_get_type			(void);
 /* creating pads */
 GstPad*			gst_pad_new				(const gchar *name, GstPadDirection direction);
 GstPad*			gst_pad_new_from_template		(GstPadTemplate *templ, const gchar *name);
+GstPad*			gst_pad_new_from_static_template	(GstStaticPadTemplate *templ, const gchar *name);
+
 
 /**
  * gst_pad_get_name:
