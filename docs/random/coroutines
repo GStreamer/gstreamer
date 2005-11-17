@@ -1,5 +1,0 @@
-In a cothread-based container, all elements are run as cothreads.
-Chain-function based elements are wrapped by a generic element-class
-function that just calls the chain function repeatedly after pulling a
-buffer for it.  (in reality, chain functions are only usable in the
-single-input case)

@@ -1,4 +1,0 @@
-NOTE TO SELF:
-
-there are a lot of routines here that should be returning gboolean's for
-status, rather than just plain failing.
