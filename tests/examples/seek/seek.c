@@ -148,7 +148,7 @@ make_dv_pipeline (const gchar * location)
   demux = gst_element_factory_make_or_warn ("dvdemux", "demuxer");
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   decoder = gst_element_factory_make_or_warn ("ffdec_dvvideo", "decoder");
-  videosink = gst_element_factory_make_or_warn ("xvimagesink", "v_sink");
+  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
   a_queue = gst_element_factory_make_or_warn ("queue", "a_queue");
   audiosink = gst_element_factory_make_or_warn ("alsasink", "a_sink");
 
@@ -401,7 +401,7 @@ make_vorbis_theora_pipeline (const gchar * location)
   GstElement *pipeline, *audio_bin, *video_bin;
   GstElement *src, *demux, *a_decoder, *a_convert, *v_decoder, *v_convert;
   GstElement *audiosink, *videosink;
-  GstElement *a_queue, *v_queue;
+  GstElement *a_queue, *v_queue, *v_scale;
   GstPad *seekable;
   GstPad *pad;
 
@@ -445,6 +445,7 @@ make_vorbis_theora_pipeline (const gchar * location)
   v_decoder = gst_element_factory_make_or_warn ("theoradec", "v_dec");
   v_convert =
       gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_convert");
+  v_scale = gst_element_factory_make_or_warn ("videoscale", "v_scale");
   videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
 
   gst_bin_add (GST_BIN (pipeline), video_bin);
@@ -452,9 +453,11 @@ make_vorbis_theora_pipeline (const gchar * location)
   gst_bin_add (GST_BIN (video_bin), v_queue);
   gst_bin_add (GST_BIN (video_bin), v_decoder);
   gst_bin_add (GST_BIN (video_bin), v_convert);
+  gst_bin_add (GST_BIN (video_bin), v_scale);
   gst_bin_add (GST_BIN (video_bin), videosink);
 
-  gst_element_link_many (v_queue, v_decoder, v_convert, videosink, NULL);
+  gst_element_link_many (v_queue, v_decoder, v_convert, v_scale, videosink,
+      NULL);
 
   pad = gst_element_get_pad (v_queue, "sink");
   gst_element_add_pad (video_bin, gst_ghost_pad_new ("sink", pad));
@@ -626,7 +629,7 @@ make_avi_pipeline (const gchar * location)
 
   video_bin = gst_bin_new ("v_decoder_bin");
   v_decoder = gst_element_factory_make_or_warn ("ffmpegdecall", "v_dec");
-  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
+  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
   v_queue = gst_element_factory_make_or_warn ("queue", "v_queue");
   gst_element_link (v_decoder, v_queue);
   gst_element_link (v_queue, videosink);
@@ -770,7 +773,7 @@ make_mpegnt_pipeline (const gchar * location)
   video_bin = gst_bin_new ("v_decoder_bin");
   v_decoder = gst_element_factory_make_or_warn ("mpeg2dec", "v_dec");
   v_filter = gst_element_factory_make_or_warn ("ffmpegcolorspace", "v_filter");
-  videosink = gst_element_factory_make_or_warn ("ximagesink", "v_sink");
+  videosink = gst_element_factory_make_or_warn (VSINK, "v_sink");
   gst_element_link_many (v_decoder, v_filter, videosink, NULL);
 
   gst_bin_add_many (GST_BIN (video_bin), v_decoder, v_filter, videosink, NULL);
