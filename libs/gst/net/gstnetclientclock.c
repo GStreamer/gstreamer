@@ -227,6 +227,8 @@ do_linear_regression (GstClockTime * x, GstClockTime * y, gint n, gdouble * m,
   gdouble sxx, syy, sxy, xbar, ybar;
   gint i;
 
+  sxx = syy = sxy = xbar = ybar = 0.0;
+
   /* we lose precision with the doubles, but there's no other way except to use
      ~80 bit arithmetic */
   for (i = 0; i < n; i++) {
@@ -307,7 +309,7 @@ bogus_observation:
 static gint
 gst_net_client_clock_do_select (GstNetClientClock * self, fd_set * readfds)
 {
-  guint max_sock;
+  gint max_sock;
   gint ret;
 
   while (TRUE) {
@@ -319,12 +321,12 @@ gst_net_client_clock_do_select (GstNetClientClock * self, fd_set * readfds)
     GST_LOG_OBJECT (self, "doing select");
     {
       GstClockTime diff;
-      GTimeVal tv;
+      GTimeVal tv, *ptv = &tv;
 
       diff = gst_clock_get_internal_time (GST_CLOCK (self));
       GST_TIME_TO_TIMEVAL (self->current_timeout, tv);
 
-      ret = select (max_sock + 1, readfds, NULL, NULL, (struct timeval *) &tv);
+      ret = select (max_sock + 1, readfds, NULL, NULL, (struct timeval *) ptv);
 
       diff = gst_clock_get_internal_time (GST_CLOCK (self)) - diff;
 
@@ -412,6 +414,7 @@ gst_net_client_clock_thread (gpointer data)
 
       /* reset timeout */
       self->current_timeout = self->timeout;
+      continue;
     } else if (FD_ISSET (READ_SOCKET (self), &read_fds)) {
       /* got data in */
       GstClockTime new_local = gst_clock_get_internal_time (GST_CLOCK (self));
