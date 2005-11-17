@@ -157,8 +157,12 @@ static xmlNodePtr gst_bin_save_thyself (GstObject * object, xmlNodePtr parent);
 static void gst_bin_restore_thyself (GstObject * object, xmlNodePtr self);
 #endif
 
+static void bin_remove_messages (GstBin * bin, GstObject * src,
+    GstMessageType types);
 static void gst_bin_recalc_func (GstBin * child, gpointer data);
 static gint bin_element_is_sink (GstElement * child, GstBin * bin);
+
+static GstIterator *gst_bin_sort_iterator_new (GstBin * bin);
 
 /* Bin signals and properties */
 enum
@@ -362,6 +366,29 @@ gst_bin_init (GstBin * bin)
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bin_bus_handler, bin);
 }
 
+static void
+gst_bin_dispose (GObject * object)
+{
+  GstBin *bin = GST_BIN (object);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
+
+  bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
+  gst_object_unref (bin->child_bus);
+  bin->child_bus = NULL;
+  gst_object_replace ((GstObject **) & bin->provided_clock, NULL);
+
+  while (bin->children) {
+    gst_bin_remove (bin, GST_ELEMENT_CAST (bin->children->data));
+  }
+  if (G_UNLIKELY (bin->children != NULL)) {
+    g_critical ("could not remove elements from bin %s",
+        GST_STR_NULL (GST_OBJECT_NAME (object)));
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
 /**
  * gst_bin_new:
  * @name: the name of the new bin
@@ -426,19 +453,18 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
  *
  * The ref of the returned clock in increased so unref after usage.
  *
+ * We loop the elements in state order and pick the last clock we can 
+ * get. This makes sure we get a clock from the source.
+ *
  * MT safe
- */
-/*
- * FIXME, clock selection is not correct here. We should loop the
- * elements in state order and pick the last clock we can get. This
- * makes sure we get a clock from the source.
  */
 static GstClock *
 gst_bin_provide_clock_func (GstElement * element)
 {
   GstClock *result = NULL;
   GstBin *bin;
-  GList *children;
+  GstIterator *it;
+  gpointer val;
 
   bin = GST_BIN (element);
 
@@ -446,17 +472,29 @@ gst_bin_provide_clock_func (GstElement * element)
   if (!bin->clock_dirty)
     goto not_dirty;
 
-  for (children = bin->children; children; children = g_list_next (children)) {
-    GstElement *child = GST_ELEMENT (children->data);
+  GST_DEBUG_OBJECT (bin, "finding new clock");
 
-    if ((result = gst_element_provide_clock (child)))
-      break;
+  it = gst_bin_sort_iterator_new (bin);
+
+  while (it->next (it, &val) == GST_ITERATOR_OK) {
+    GstElement *child = GST_ELEMENT_CAST (val);
+    GstClock *clock;
+
+    clock = gst_element_provide_clock (child);
+    if (clock || result == NULL) {
+      GST_DEBUG_OBJECT (bin, "found candidate clock %p", clock);
+      if (result)
+        gst_object_unref (result);
+      result = clock;
+    }
   }
   gst_object_replace ((GstObject **) & bin->provided_clock,
       (GstObject *) result);
   bin->clock_dirty = FALSE;
   GST_DEBUG_OBJECT (bin, "provided new clock %p", result);
   GST_UNLOCK (bin);
+
+  gst_iterator_free (it);
 
   return result;
 
@@ -1486,6 +1524,32 @@ gst_bin_sort_iterator_free (GstBinSortIterator * bit)
   g_free (bit);
 }
 
+/* should be called with the bin LOCK held */
+static GstIterator *
+gst_bin_sort_iterator_new (GstBin * bin)
+{
+  GstBinSortIterator *result;
+
+  /* we don't need an ItemFunction because we ref the items in the _next
+   * method already */
+  result = (GstBinSortIterator *)
+      gst_iterator_new (sizeof (GstBinSortIterator),
+      GST_TYPE_ELEMENT,
+      GST_GET_LOCK (bin),
+      &bin->children_cookie,
+      (GstIteratorNextFunction) gst_bin_sort_iterator_next,
+      (GstIteratorItemFunction) NULL,
+      (GstIteratorResyncFunction) gst_bin_sort_iterator_resync,
+      (GstIteratorFreeFunction) gst_bin_sort_iterator_free);
+  result->queue = g_queue_new ();
+  result->hash = g_hash_table_new (NULL, NULL);
+  gst_object_ref (bin);
+  result->bin = bin;
+  gst_bin_sort_iterator_resync (result);
+
+  return (GstIterator *) result;
+}
+
 /**
  * gst_bin_iterate_sorted:
  * @bin: a #GstBin
@@ -1507,30 +1571,15 @@ gst_bin_sort_iterator_free (GstBinSortIterator * bit)
 GstIterator *
 gst_bin_iterate_sorted (GstBin * bin)
 {
-  GstBinSortIterator *result;
+  GstIterator *result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
 
   GST_LOCK (bin);
-  gst_object_ref (bin);
-  /* we don't need a NextFunction because we ref the items in the _next
-   * method already */
-  result = (GstBinSortIterator *)
-      gst_iterator_new (sizeof (GstBinSortIterator),
-      GST_TYPE_ELEMENT,
-      GST_GET_LOCK (bin),
-      &bin->children_cookie,
-      (GstIteratorNextFunction) gst_bin_sort_iterator_next,
-      (GstIteratorItemFunction) NULL,
-      (GstIteratorResyncFunction) gst_bin_sort_iterator_resync,
-      (GstIteratorFreeFunction) gst_bin_sort_iterator_free);
-  result->queue = g_queue_new ();
-  result->hash = g_hash_table_new (NULL, NULL);
-  result->bin = bin;
-  gst_bin_sort_iterator_resync (result);
+  result = gst_bin_sort_iterator_new (bin);
   GST_UNLOCK (bin);
 
-  return (GstIterator *) result;
+  return result;
 }
 
 static GstStateChangeReturn
@@ -1681,29 +1730,6 @@ done:
       gst_element_state_get_name (GST_STATE (element)), ret);
 
   return ret;
-}
-
-static void
-gst_bin_dispose (GObject * object)
-{
-  GstBin *bin = GST_BIN (object);
-
-  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
-
-  bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
-  gst_object_unref (bin->child_bus);
-  bin->child_bus = NULL;
-  gst_object_replace ((GstObject **) & bin->provided_clock, NULL);
-
-  while (bin->children) {
-    gst_bin_remove (bin, GST_ELEMENT_CAST (bin->children->data));
-  }
-  if (G_UNLIKELY (bin->children != NULL)) {
-    g_critical ("could not remove elements from bin %s",
-        GST_STR_NULL (GST_OBJECT_NAME (object)));
-  }
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /*
