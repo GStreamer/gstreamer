@@ -1,5 +1,10 @@
 2005-11-17  Wim Taymans  <wim@fluendo.com>
 
+	* gst/net/gstnetclientclock.c: (gst_net_client_clock_finalize):
+	Free remote and local time arrays.
+
+2005-11-17  Wim Taymans  <wim@fluendo.com>
+
 	* gst/net/gstnetclientclock.c: (do_linear_regression),
 	(gst_net_client_clock_do_select), (gst_net_client_clock_thread):
 	Fix compilation, uninitialized vars and a forgotten continue.

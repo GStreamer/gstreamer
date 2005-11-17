@@ -162,6 +162,12 @@ gst_net_client_clock_finalize (GObject * object)
   g_free (self->servaddr);
   self->servaddr = NULL;
 
+  g_free (self->local_times);
+  self->local_times = NULL;
+
+  g_free (self->remote_times);
+  self->remote_times = NULL;
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
