@@ -770,7 +770,7 @@ gst_message_parse_clock_lost (GstMessage * message, GstClock ** clock)
   const GValue *clock_gvalue;
 
   g_return_if_fail (GST_IS_MESSAGE (message));
-  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_NEW_CLOCK);
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_CLOCK_LOST);
 
   clock_gvalue = gst_structure_get_value (message->structure, "clock");
   g_return_if_fail (clock_gvalue != NULL);

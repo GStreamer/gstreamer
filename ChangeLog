@@ -1,3 +1,14 @@
+2005-11-17  Torsten Schoenfeld  <kaffeetisch at gmx dot net>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstmessage.c: (gst_message_parse_clock_lost):
+	  Assertion should check for CLOCK_LOST, not NEW_CLOCK (#321648).
+
+	* gst/gstpadtemplate.h:
+	* gst/gstpluginfeature.h:
+	  Don't use c++ style comments in headers (#321638).
+
 2005-11-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/net/gstnettimepacket.c (gst_net_time_packet_send): Free

@@ -36,7 +36,7 @@
 G_BEGIN_DECLS
 
 /* FIXME: this awful circular dependency need to be resolved properly (see pad.h) */
-//typedef struct _GstPadTemplate GstPadTemplate;
+/*typedef struct _GstPadTemplate GstPadTemplate; */
 typedef struct _GstPadTemplateClass GstPadTemplateClass;
 typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
 
