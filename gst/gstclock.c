@@ -532,6 +532,9 @@ gst_clock_init (GstClock * clock)
   clock->entries_changed = g_cond_new ();
   clock->flags = 0;
   clock->stats = FALSE;
+
+  clock->rate = 1.0;
+  clock->offset = 0;
 }
 
 static void
@@ -600,10 +603,10 @@ gst_clock_get_resolution (GstClock * clock)
  * @clock: a #GstClock to use
  * @internal: a clock time
  *
- * Converts the given @internal clock time to the real time, adjusting
- * and making sure that the returned time is increasing.
- * This function should be called with the clock LOCK held and is
- * mainly used by clock subclasses.
+ * Converts the given @internal clock time to the real time, adjusting for the
+ * rate and offset set with gst_clock_set_rate_offset() and making sure that the
+ * returned time is increasing. This function should be called with the clock
+ * LOCK held and is mainly used by clock subclasses.
  *
  * Returns: the converted time of the clock.
  *
@@ -614,30 +617,46 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
 {
   GstClockTime ret;
 
-  ret = internal + clock->adjust;
-  /* make sure the time is increasing, else return last_time */
-  if ((gint64) ret < (gint64) clock->last_time) {
-    ret = clock->last_time;
+  /* internal is uint64, rate is double, offset is int64, ret is uint64 */
+
+  ret = internal * clock->rate;
+
+  if (clock->offset < 0) {
+    if ((clock->offset == G_MININT64 && ret <= G_MAXINT64)
+        || (clock->offset + ((gint64) ret) < 0))
+      /* underflow */
+      ret = 0;
+    else
+      ret -= (guint64) (-clock->offset);
   } else {
-    clock->last_time = ret;
+    if (clock->offset > 0 && ret >= G_MAXINT64
+        && G_MAXUINT64 - ret - 1 <= clock->offset)
+      /* overflow, but avoiding CLOCK_TIME_NONE which is MAXUINT64 */
+      ret = G_MAXUINT64 - 1;
+    else
+      ret += (guint64) clock->offset;
   }
-  return ret;
+
+  /* make sure the time is increasing */
+  clock->last_time = MAX (ret, clock->last_time);
+
+  return clock->last_time;
 }
 
 /**
- * gst_clock_get_time
+ * gst_clock_get_internal_time
  * @clock: a #GstClock to query
  *
- * Gets the current time of the given clock. The time is always
- * monotonically increasing.
+ * Gets the current internal time of the given clock. The time is returned
+ * unadjusted for the offset and the rate.
  *
- * Returns: the time of the clock. Or GST_CLOCK_TIME_NONE when
+ * Returns: the internal time of the clock. Or GST_CLOCK_TIME_NONE when
  * giving wrong input.
  *
  * MT safe.
  */
 GstClockTime
-gst_clock_get_time (GstClock * clock)
+gst_clock_get_internal_time (GstClock * clock)
 {
   GstClockTime ret;
   GstClockClass *cclass;
@@ -654,7 +673,33 @@ gst_clock_get_time (GstClock * clock)
   GST_CAT_DEBUG (GST_CAT_CLOCK, "internal time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ret));
 
+  return ret;
+}
+
+/**
+ * gst_clock_get_time
+ * @clock: a #GstClock to query
+ *
+ * Gets the current time of the given clock. The time is always
+ * monotonically increasing and adjusted according to the current
+ * offset and rate.
+ *
+ * Returns: the time of the clock. Or GST_CLOCK_TIME_NONE when
+ * giving wrong input.
+ *
+ * MT safe.
+ */
+GstClockTime
+gst_clock_get_time (GstClock * clock)
+{
+  GstClockTime ret;
+
+  g_return_val_if_fail (GST_IS_CLOCK (clock), GST_CLOCK_TIME_NONE);
+
+  ret = gst_clock_get_internal_time (clock);
+
   GST_LOCK (clock);
+  /* this will scale for rate and offset */
   ret = gst_clock_adjust_unlocked (clock, ret);
   GST_UNLOCK (clock);
 
@@ -667,13 +712,9 @@ gst_clock_get_time (GstClock * clock)
 /**
  * gst_clock_set_time_adjust
  * @clock: a #GstClock to adjust
- * @adjust: the adjust value
+ * @adjust: the new time
  *
- * Adjusts the current time of the clock with the adjust value.
- * A positive value moves the clock forwards and a backwards value
- * moves it backwards. Note that _get_time() always returns
- * increasing values so when you move the clock backwards, _get_time()
- * will report the previous value until the clock catches up.
+ * Adjusts the time of @clock. This function is buggy and is scheduled to die.
  *
  * MT safe.
  */
@@ -684,6 +725,70 @@ gst_clock_set_time_adjust (GstClock * clock, GstClockTime adjust)
 
   GST_LOCK (clock);
   clock->adjust = adjust;
+  GST_UNLOCK (clock);
+}
+
+/**
+ * gst_clock_set_rate_offset
+ * @clock: a #GstClock to adjust
+ * @rate: the new rate
+ * @offset: the "initial" offset of @clock relative to its internal time
+ *
+ * Adjusts the internal rate and offset of @clock.
+ *
+ * A @rate of 1.0 is the normal speed of the clock. Values bigger than 1.0 make
+ * the clock go faster. @rate must be positive.
+ *
+ * Subsequent calls to gst_clock_get_time() will return clock times computed as
+ * follows:
+ *
+ * <programlisting>
+ *   time = internal_time * @rate + @offset
+ * </programlisting>
+ *
+ * Note that gst_clock_get_time() always returns increasing values so when you
+ * move the clock backwards, gst_clock_get_time() will report the previous value
+ * until the clock catches up.
+ *
+ * MT safe.
+ */
+void
+gst_clock_set_rate_offset (GstClock * clock, gdouble rate,
+    GstClockTimeDiff offset)
+{
+  g_return_if_fail (GST_IS_CLOCK (clock));
+  g_return_if_fail (rate > 0.0);
+
+  GST_LOCK (clock);
+  clock->rate = rate;
+  clock->offset = offset;
+  GST_UNLOCK (clock);
+}
+
+/**
+ * gst_clock_get_rate_offset
+ * @clock: a #GstClock to adjust
+ * @rate: a location to store the rate
+ * @offset: a location to store the offset
+ *
+ * Gets the internal rate and offset of @clock. The rate and offset are relative
+ * to the clock's internal time.
+ *
+ * MT safe.
+ *
+ * See also: gst_clock_set_rate_offset().
+ */
+void
+gst_clock_get_rate_offset (GstClock * clock, gdouble * rate,
+    GstClockTimeDiff * offset)
+{
+  g_return_if_fail (GST_IS_CLOCK (clock));
+  g_return_if_fail (rate != NULL);
+  g_return_if_fail (offset != NULL);
+
+  GST_LOCK (clock);
+  *rate = clock->rate;
+  *offset = clock->offset;
   GST_UNLOCK (clock);
 }
 

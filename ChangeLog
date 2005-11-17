@@ -1,3 +1,20 @@
+2005-11-17  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstclock.h (GstClock): Add rate and offset properties,
+	preserving ABI stability. Add rate/offset accessors. Will file bug
+	for the freeze break.
+
+	* gst/gstclock.c (gst_clock_adjust_unlocked): Implement using rate
+	and offset, trying to keep precision and avoiding
+	underflow/overflow.
+	(gst_clock_set_rate_offset, gst_clock_get_rate_offset): New
+	functions. Make gst_clock_set_time_adjust obsolete.
+	(gst_clock_set_time_adjust): Note that this function is obsolete.
+	Will file bug soon.
+
+	* gst/base/gstbasetransform.h: Make the ABI-stability hack
+	greppable by using GST_PADDING-1+1.
+
 2005-11-17  Torsten Schoenfeld  <kaffeetisch at gmx dot net>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

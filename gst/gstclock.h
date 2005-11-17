@@ -373,7 +373,7 @@ struct _GstClock {
   GstClockFlags	 flags;
 
   /*< protected >*/ /* with LOCK */
-  GstClockTime	 adjust;
+  GstClockTime	 adjust; /* remove me */
   GstClockTime	 last_time;
   GList		*entries;
   GCond		*entries_changed;
@@ -382,7 +382,15 @@ struct _GstClock {
   guint64	 resolution;
   gboolean	 stats;
 
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    struct {
+      /* should be moved to protected -- note the padding is finished now, on 32
+       * bit machines at least */
+      gdouble	 rate;
+      GstClockTime offset;
+    };
+    gpointer _gst_reserved[GST_PADDING-1+1];
+  };
 };
 
 struct _GstClockClass {
@@ -411,8 +419,15 @@ guint64			gst_clock_set_resolution	(GstClock *clock, guint64 resolution);
 guint64			gst_clock_get_resolution	(GstClock *clock);
 
 GstClockTime		gst_clock_get_time		(GstClock *clock);
+void			gst_clock_set_rate_offset	(GstClock *clock, gdouble rate,
+                                                         GstClockTimeDiff offset);
+void			gst_clock_get_rate_offset	(GstClock *clock, gdouble *rate,
+                                                         GstClockTimeDiff *offset);
+
+/* remove me */
 void			gst_clock_set_time_adjust	(GstClock *clock, GstClockTime adjust);
 
+GstClockTime		gst_clock_get_internal_time	(GstClock *clock);
 GstClockTime		gst_clock_adjust_unlocked	(GstClock *clock, GstClockTime internal);
 
 

@@ -87,7 +87,7 @@ struct _GstBaseTransform {
       gint64     segment_accum;
     };
     /*< private >*/
-    gpointer       _gst_reserved[GST_PADDING];
+    gpointer       _gst_reserved[GST_PADDING-1+1];
   };
 };
 
