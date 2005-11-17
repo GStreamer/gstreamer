@@ -1,5 +1,11 @@
 2005-11-17  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (gst_bin_provide_clock_func),
+	(gst_bin_sort_iterator_new):
+	And unref the child too..
+
+2005-11-17  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_dispose), (gst_bin_provide_clock_func),
 	(gst_bin_sort_iterator_new), (gst_bin_iterate_sorted):
 	Refactor the sort iterator so it can be used while holding the

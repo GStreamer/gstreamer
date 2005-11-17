@@ -487,6 +487,7 @@ gst_bin_provide_clock_func (GstElement * element)
         gst_object_unref (result);
       result = clock;
     }
+    gst_object_unref (child);
   }
   gst_object_replace ((GstObject **) & bin->provided_clock,
       (GstObject *) result);
