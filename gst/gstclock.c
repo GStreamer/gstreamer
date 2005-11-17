@@ -533,8 +533,8 @@ gst_clock_init (GstClock * clock)
   clock->flags = 0;
   clock->stats = FALSE;
 
-  clock->rate = 1.0;
-  clock->offset = 0;
+  clock->A.rate = 1.0;
+  clock->A.offset = 0;
 }
 
 static void
@@ -619,22 +619,22 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
 
   /* internal is uint64, rate is double, offset is int64, ret is uint64 */
 
-  ret = internal * clock->rate;
+  ret = internal * clock->A.rate;
 
-  if (clock->offset < 0) {
-    if ((clock->offset == G_MININT64 && ret <= G_MAXINT64)
-        || (clock->offset + ((gint64) ret) < 0))
+  if (clock->A.offset < 0) {
+    if ((clock->A.offset == G_MININT64 && ret <= G_MAXINT64)
+        || (clock->A.offset + ((gint64) ret) < 0))
       /* underflow */
       ret = 0;
     else
-      ret -= (guint64) (-clock->offset);
+      ret -= (guint64) (-clock->A.offset);
   } else {
-    if (clock->offset > 0 && ret >= G_MAXINT64
-        && G_MAXUINT64 - ret - 1 <= clock->offset)
+    if (clock->A.offset > 0 && ret >= G_MAXINT64
+        && G_MAXUINT64 - ret - 1 <= clock->A.offset)
       /* overflow, but avoiding CLOCK_TIME_NONE which is MAXUINT64 */
       ret = G_MAXUINT64 - 1;
     else
-      ret += (guint64) clock->offset;
+      ret += (guint64) clock->A.offset;
   }
 
   /* make sure the time is increasing */
@@ -760,8 +760,8 @@ gst_clock_set_rate_offset (GstClock * clock, gdouble rate,
   g_return_if_fail (rate > 0.0);
 
   GST_LOCK (clock);
-  clock->rate = rate;
-  clock->offset = offset;
+  clock->A.rate = rate;
+  clock->A.offset = offset;
   GST_UNLOCK (clock);
 }
 
@@ -787,8 +787,8 @@ gst_clock_get_rate_offset (GstClock * clock, gdouble * rate,
   g_return_if_fail (offset != NULL);
 
   GST_LOCK (clock);
-  *rate = clock->rate;
-  *offset = clock->offset;
+  *rate = clock->A.rate;
+  *offset = clock->A.offset;
   GST_UNLOCK (clock);
 }
 

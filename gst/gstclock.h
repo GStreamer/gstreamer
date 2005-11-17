@@ -388,7 +388,7 @@ struct _GstClock {
        * bit machines at least */
       gdouble	 rate;
       GstClockTime offset;
-    };
+    } A;
     gpointer _gst_reserved[GST_PADDING-1+1];
   };
 };

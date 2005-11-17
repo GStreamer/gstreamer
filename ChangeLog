@@ -1,3 +1,14 @@
+2005-11-17  Michael Smith <msmith@fluendo.com>
+
+	* gst/gstclock.c: (gst_clock_init), (gst_clock_adjust_unlocked),
+	(gst_clock_set_rate_offset), (gst_clock_get_rate_offset):
+	* gst/gstclock.h:
+	  Anonymous structs are a gcc (and some other compilers) extension, so
+	  don't use them. Since this is only for ABI-compatibility, and our
+	  API/ABI freeze is over in a few days, this whole thing will only
+	  last a few days, so don't bother trying to think up a meaningful
+	  name for the struct.
+
 2005-11-17  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstclock.h (GstClock): Add rate and offset properties,
