@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
  *
- * gstnettimeprovider.c: Unit test for the network time provider
+ * gstnetclientclock.c: Unit test for the network client clock
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,33 +24,29 @@
 
 #include <unistd.h>
 
-GST_START_TEST (test_refcounts)
+GST_START_TEST (test_instantiation)
 {
-  GstNetTimeProvider *ntp;
-  GstClock *clock;
+  GstClock *client, *local;
 
-  clock = gst_system_clock_obtain ();
-  fail_unless (clock != NULL, "failed to get system clock");
+  local = gst_system_clock_obtain ();
+  client = gst_net_client_clock_new (NULL, "127.0.0.1", 1234, GST_SECOND);
+  fail_unless (local != NULL, "failed to get system clock");
+  fail_unless (client != NULL, "failed to get network client clock");
 
   /* one for gstreamer, one for us */
-  ASSERT_OBJECT_REFCOUNT (clock, "system clock", 2);
+  ASSERT_OBJECT_REFCOUNT (local, "system clock", 2);
+  ASSERT_OBJECT_REFCOUNT (client, "network client clock", 1);
 
-  ntp = gst_net_time_provider_new (clock, NULL, -1);
-  fail_unless (ntp != NULL, "failed to create net time provider");
+  gst_object_unref (client);
 
-  /* one for ntp, one for gstreamer, one for us */
-  ASSERT_OBJECT_REFCOUNT (clock, "system clock", 3);
-  /* one for us */
-  ASSERT_OBJECT_REFCOUNT (ntp, "net time provider", 1);
+  ASSERT_OBJECT_REFCOUNT (local, "net time provider", 2);
 
-  gst_object_unref (ntp);
-  ASSERT_OBJECT_REFCOUNT (clock, "net time provider", 2);
-
-  gst_object_unref (clock);
+  gst_object_unref (local);
 }
 
 GST_END_TEST;
 
+#if 0
 GST_START_TEST (test_functioning)
 {
   GstNetTimeProvider *ntp;
@@ -108,16 +104,17 @@ GST_START_TEST (test_functioning)
 }
 
 GST_END_TEST;
+#endif
 
 Suite *
-gst_net_time_provider_suite (void)
+gst_net_client_clock_suite (void)
 {
-  Suite *s = suite_create ("GstNetTimeProvider");
+  Suite *s = suite_create ("GstNetClientClock");
   TCase *tc_chain = tcase_create ("generic tests");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_refcounts);
-  tcase_add_test (tc_chain, test_functioning);
+  tcase_add_test (tc_chain, test_instantiation);
+  /* tcase_add_test (tc_chain, test_functioning); */
 
   return s;
 }
@@ -127,7 +124,7 @@ main (int argc, char **argv)
 {
   int nf;
 
-  Suite *s = gst_net_time_provider_suite ();
+  Suite *s = gst_net_client_clock_suite ();
   SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);

@@ -164,7 +164,7 @@
     (if (null? (q-tail q))
         (make-q tail)
         (let ((l (append! (q-head q) tail)))
-          (if (> (length (q-head q)) *queue-length*)
+          (if (> (length (q-head q)) *window-size*)
               (make-q (cdr (q-head q)))
               q)))))
 

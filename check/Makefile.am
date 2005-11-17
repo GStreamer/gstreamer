@@ -57,6 +57,7 @@ check_PROGRAMS =				\
 	states/sinks				\
 	gst-libs/controller			\
 	gst-libs/gdp				\
+	net/gstnetclientclock			\
 	net/gstnettimeprovider
 
 TESTS = $(check_PROGRAMS)
@@ -79,6 +80,9 @@ gst_libs_controller_LDADD = \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
+net_gstnetclientclock_LDADD = \
+	$(top_builddir)/gst/net/libgstnet-tempname-@GST_MAJORMINOR@.la \
+	$(LDADD)
 net_gstnettimeprovider_LDADD = \
 	$(top_builddir)/gst/net/libgstnet-tempname-@GST_MAJORMINOR@.la \
 	$(LDADD)

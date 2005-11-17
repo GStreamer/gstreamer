@@ -1,3 +1,22 @@
+2005-11-17  Andy Wingo  <wingo@pobox.com>
+
+	* check/Makefile.am (check_PROGRAMS): 
+	* check/net/gstnetclientclock.c: Add a most minimal test for the
+	net client clock. More to come later.
+
+	* gst/net/gstnet.h: 
+	* gst/net/Makefile.am: Add netclientclock.
+
+	* gst/net/gstnetclientclock.h:
+	* gst/net/gstnetclientclock.c: New files, implement an untested
+	GstClock that takes its time from a network time provider.
+	Implements the algorithm in network-clock.scm.
+
+	* tests/network-clock.scm (*window-size*): Rename from
+	*queue-length*.
+	* tests/network-clock.scm (network-time): 
+	* tests/network-clock-utils.scm (q-push): Update callers.
+
 2005-11-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_provide_clock_func),

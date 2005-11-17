@@ -74,7 +74,7 @@ GST_START_TEST (test_functioning)
 
   memset (&servaddr, 0, sizeof (servaddr));
   servaddr.sin_family = AF_INET;
-  servaddr.sin_port = port;
+  servaddr.sin_port = htons (port);
   inet_aton ("127.0.0.1", &servaddr.sin_addr);
 
   packet = gst_net_time_packet_new (NULL);

@@ -125,7 +125,7 @@ exec guile --debug -l $0 -e main -- "$@"
            (lambda (m b r-squared)
              (define (next-time) 
                (max
-                (if (< (length (q-head x)) *queue-length*)
+                (if (< (length (q-head x)) *window-size*)
                     0
                     (/ 1 (- 1 (min r-squared 0.99999)) 1000))
                 0.10))
@@ -188,7 +188,7 @@ exec guile --debug -l $0 -e main -- "$@"
 (define-parameter *packet-loss* 0.01)
 (define-parameter *send-jitter* 0.1)
 (define-parameter *recv-jitter* 0.1)
-(define-parameter *queue-length* 32)
+(define-parameter *window-size* 32)
 (define-parameter *local-rate* 1.0)
 (define-parameter *remote-rate* 1.1)
 (define-parameter *total-time* 5.0)
