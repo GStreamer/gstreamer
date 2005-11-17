@@ -16,8 +16,10 @@ libgstrtp_la_SOURCES = \
 	gstrtph263enc.c \
 	gstasteriskh263.c \
 	gstrtpmp4venc.c \
-	gstrtpmp4vdec.c
-
+	gstrtpmp4vdec.c \
+	gstrtpspeexenc.c \
+	gstrtpspeexdec.c
+	
 #gstrtpL16enc.c gstrtpL16parse.c gstrtpgsmenc.c gstrtpgsmparse.c 
 
 if HAVE_WINSOCK2_H
@@ -48,4 +50,6 @@ noinst_HEADERS = gstrtpL16enc.h 	\
 		 gstrtpmp4vdec.h	\
 		 gstrtpdec.h		\
 		 gstrtph263enc.h	\
-		 gstasteriskh263.h
+		 gstasteriskh263.h  \
+		 gstrtpspeexenc.h	\
+		 gstrtpspeexdec.h

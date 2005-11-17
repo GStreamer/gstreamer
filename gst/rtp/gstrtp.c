@@ -36,6 +36,8 @@
 #include "gstasteriskh263.h"
 #include "gstrtpmp4venc.h"
 #include "gstrtpmp4vdec.h"
+#include "gstrtpspeexenc.h"
+#include "gstrtpspeexdec.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -83,6 +85,12 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtpmp4vdec_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtpspeexenc_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtpspeexdec_plugin_init (plugin))
     return FALSE;
 
   return TRUE;

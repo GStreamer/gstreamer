@@ -18,6 +18,7 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -38,8 +39,10 @@ typedef struct _GstRtpG711EncClass GstRtpG711EncClass;
 struct _GstRtpG711Enc
 {
   GstBaseRTPPayload payload;
-
-  gint frequency;
+  GstAdapter *adapter;
+  
+  GstClockTime first_ts;
+  GstClockTime duration;  
 };
 
 struct _GstRtpG711EncClass

@@ -1,3 +1,20 @@
+2005-11-17  Edgard Lima <edgard.lima@indt.org.br>
+
+	* gst/rtp/Makefile.am
+	* gst/rtp/gstrtp.c
+	* gst/rtp/gstrtpg711enc.c: (gst_rtpg711enc_src_template),
+	(gst_rtpg711enc_class_init), (gst_rtpg711enc_init),
+	(gst_rtpg711enc_finalize), (gst_rtpg711enc_setcaps),
+	(gst_rtpg711enc_flush), (gst_rtpg711enc_handle_buffer):
+	* gst/rtp/gstrtpg711enc.h:
+	* gst/rtp/gstrtpg711dec.c: (gst_rtpg711dec_sink_template):
+	* gst/rtp/gstrtpspeexenc.c:
+	* gst/rtp/gstrtpspeexenc.h:
+	* gst/rtp/gstrtpspeexdec.c:
+	* gst/rtp/gstrtpspeexdec.h:
+	Created Speex payloader and depayloader; Optimize G711 payloader to
+	use adapter and send packets until MTU size.
+
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 
 	* check/elements/matroskamux.c: (setup_src_pad), (setup_sink_pad):

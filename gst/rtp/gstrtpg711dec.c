@@ -48,12 +48,12 @@ static GstStaticPadTemplate gst_rtpg711dec_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) 0, "
+        "payload = (int) [ 0, 255 ], "
         "clock-rate = (int) 8000, "
         "encoding-name = (string) \"PCMU\"; "
         "application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) 8, "
+        "payload = (int) [ 0, 255 ], "
         "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\"")
 
     );
