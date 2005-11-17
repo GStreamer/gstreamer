@@ -1,3 +1,11 @@
+2005-11-17  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_queue_pads),
+	(gst_ogg_mux_get_headers), (gst_ogg_mux_send_headers),
+	(gst_ogg_mux_collected), (gst_ogg_mux_change_state):
+	Fix EOS on multiple streams.
+	More debugging.
+
 2005-11-16  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_configure_segment),

@@ -434,78 +434,6 @@ gst_ogg_mux_handle_src_event (GstPad * pad, GstEvent * event)
   return gst_pad_event_default (pad, event);
 }
 
-#if 0
-static GstBuffer *
-gst_ogg_mux_next_buffer (GstOggPad * pad, gboolean * interrupt)
-{
-  GstData *data = NULL;
-  GstBuffer *buffer = NULL;
-
-  while (buffer == NULL) {
-    //gst_pad_pull (pad->pad, &buffer);
-    GST_DEBUG ("muxer: pulled %s:%s %p", GST_DEBUG_PAD_NAME (pad->pad), data);
-    /* if it's an event, handle it */
-    if (GST_IS_EVENT (data)) {
-      GstEventType type;
-      GstOggMux *ogg_mux;
-      GstEvent *event = GST_EVENT (data);
-
-      ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad->pad));
-      type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
-
-      switch (type) {
-        case GST_EVENT_EOS:
-          pad->eos = TRUE;
-          gst_event_unref (event);
-          return NULL;
-        case GST_EVENT_DISCONTINUOUS:
-        {
-          guint64 start_value, end_value;
-
-          if (gst_event_discont_get_value (event, GST_FORMAT_TIME,
-                  &start_value, &end_value)) {
-            GST_DEBUG_OBJECT (ogg_mux,
-                "got discont of %" G_GUINT64_FORMAT " and %" G_GUINT64_FORMAT
-                " on pad %s:%s", start_value, end_value,
-                GST_DEBUG_PAD_NAME (pad->pad));
-          }
-          pad->offset = start_value;
-          gst_event_unref (event);
-
-        }
-          break;
-        default:
-          gst_pad_event_default (pad->pad, event);
-          break;
-      }
-      data = NULL;
-    } else {
-      GstBuffer *buf = GST_BUFFER (data);
-      gboolean incaps;
-
-      incaps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_IN_CAPS);
-      /* if we need headers */
-      if (pad->state == GST_OGG_PAD_STATE_CONTROL) {
-        /* and we have one */
-        if (incaps) {
-          GST_DEBUG ("muxer: got incaps buffer in control state, ignoring");
-          /* just ignore */
-          gst_buffer_unref (buf);
-          /* pull next one in next iteration */
-          data = NULL;
-        } else {
-          GST_DEBUG
-              ("muxer: got data buffer in control state, switching to data mode");
-          /* this is a data buffer so switch to data state */
-          pad->state = GST_OGG_PAD_STATE_DATA;
-        }
-      }
-    }
-  }
-  return GST_BUFFER (data);
-}
-#endif
-
 static GstBuffer *
 gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page, gboolean delta)
 {
@@ -725,12 +653,15 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
     walk = g_slist_next (walk);
 
+    GST_DEBUG_OBJECT (ogg_mux, "looking at pad %p", pad);
+
     /* try to get a new buffer for this pad if needed and possible */
     if (pad->buffer == NULL) {
       GstBuffer *buf;
       gboolean incaps;
 
       buf = gst_collectpads_pop (ogg_mux->collect, data);
+      GST_DEBUG_OBJECT (ogg_mux, "popping buffer %p", buf);
 
       /* On EOS we get a NULL buffer */
       if (buf != NULL) {
@@ -739,19 +670,20 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
         if (pad->state == GST_OGG_PAD_STATE_CONTROL) {
           /* and we have one */
           if (incaps) {
-            GST_DEBUG ("muxer: got incaps buffer in control state, ignoring");
+            GST_DEBUG_OBJECT (ogg_mux,
+                "got incaps buffer in control state, ignoring");
             /* just ignore */
             gst_buffer_unref (buf);
             buf = NULL;
           } else {
-            GST_DEBUG ("muxer: got data buffer in control state, switching "
-                "to data mode");
+            GST_DEBUG_OBJECT (ogg_mux,
+                "got data buffer in control state, switching " "to data mode");
             /* this is a data buffer so switch to data state */
             pad->state = GST_OGG_PAD_STATE_DATA;
           }
         }
       } else {
-        GST_DEBUG ("EOS on pad");
+        GST_DEBUG_OBJECT (ogg_mux, "EOS on pad");
         pad->eos = TRUE;
       }
 
@@ -761,9 +693,12 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
     /* we should have a buffer now, see if it is the best pad to
      * pull on */
     if (pad->buffer) {
-      if (gst_ogg_mux_compare_pads (ogg_mux, bestpad, pad) > 0)
+      if (gst_ogg_mux_compare_pads (ogg_mux, bestpad, pad) > 0) {
+        GST_DEBUG_OBJECT (ogg_mux, "best pad now %p", pad);
         bestpad = pad;
+      }
     } else if (!pad->eos) {
+      GST_DEBUG_OBJECT (ogg_mux, "hungry pad %p", pad);
       still_hungry = pad;
     }
   }
@@ -788,7 +723,7 @@ gst_ogg_mux_get_headers (GstOggPad * pad)
 
   ogg_mux = GST_OGG_MUX (GST_PAD_PARENT (thepad));
 
-  GST_LOG ("getting headers from pad %s:%s", GST_DEBUG_PAD_NAME (thepad));
+  GST_LOG_OBJECT (thepad, "getting headers");
 
   caps = gst_pad_get_negotiated_caps (thepad);
   if (caps != NULL) {
@@ -797,34 +732,34 @@ gst_ogg_mux_get_headers (GstOggPad * pad)
     structure = gst_caps_get_structure (caps, 0);
     streamheader = gst_structure_get_value (structure, "streamheader");
     if (streamheader != NULL) {
-      GST_LOG ("got header");
+      GST_LOG_OBJECT (thepad, "got header");
       if (G_VALUE_TYPE (streamheader) == GST_TYPE_ARRAY) {
         GArray *bufarr = g_value_peek_pointer (streamheader);
         gint i;
 
-        GST_LOG ("got fixed list");
+        GST_LOG_OBJECT (thepad, "got fixed list");
 
         for (i = 0; i < bufarr->len; i++) {
           GValue *bufval = &g_array_index (bufarr, GValue, i);
 
-          GST_LOG ("item %d", i);
+          GST_LOG_OBJECT (thepad, "item %d", i);
           if (G_VALUE_TYPE (bufval) == GST_TYPE_BUFFER) {
             GstBuffer *buf = g_value_peek_pointer (bufval);
 
-            GST_LOG ("adding item %d to header list", i);
+            GST_LOG_OBJECT (thepad, "adding item %d to header list", i);
 
             gst_buffer_ref (buf);
             res = g_list_append (res, buf);
           }
         }
       } else {
-        GST_LOG ("streamheader is not fixed list");
+        GST_LOG_OBJECT (thepad, "streamheader is not fixed list");
       }
     } else {
-      GST_LOG ("caps done have streamheader");
+      GST_LOG_OBJECT (thepad, "caps done have streamheader");
     }
   } else {
-    GST_LOG ("got empty caps as negotiated format");
+    GST_LOG_OBJECT (thepad, "got empty caps as negotiated format");
   }
   return res;
 }
@@ -883,7 +818,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
   hbufs = NULL;
   ret = GST_FLOW_OK;
 
-  GST_LOG ("collecting headers");
+  GST_LOG_OBJECT (mux, "collecting headers");
 
   walk = mux->collect->data;
   while (walk) {
@@ -895,7 +830,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
     walk = g_slist_next (walk);
 
-    GST_LOG ("looking at pad %s:%s", GST_DEBUG_PAD_NAME (thepad));
+    GST_LOG_OBJECT (mux, "looking at pad %s:%s", GST_DEBUG_PAD_NAME (thepad));
 
     /* if the pad has no buffer, we don't care */
     if (pad->buffer == NULL)
@@ -905,7 +840,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     pad->headers = gst_ogg_mux_get_headers (pad);
   }
 
-  GST_LOG ("creating first headers");
+  GST_LOG_OBJECT (mux, "creating first headers");
   walk = mux->collect->data;
   while (walk) {
     GstOggPad *pad;
@@ -921,7 +856,8 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
     pad->packetno = 0;
 
-    GST_LOG ("looping over headers for pad %s:%s", GST_DEBUG_PAD_NAME (thepad));
+    GST_LOG_OBJECT (mux, "looping over headers for pad %s:%s",
+        GST_DEBUG_PAD_NAME (thepad));
 
     if (pad->headers) {
       buf = GST_BUFFER (pad->headers->data);
@@ -954,16 +890,16 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     ogg_stream_packetin (&pad->stream, &packet);
     gst_buffer_unref (buf);
 
-    GST_LOG ("flushing page with first packet");
+    GST_LOG_OBJECT (mux, "flushing page with first packet");
     while (ogg_stream_flush (&pad->stream, &page)) {
       GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
 
-      GST_LOG ("swapped out page");
+      GST_LOG_OBJECT (mux, "swapped out page");
       hbufs = g_list_append (hbufs, hbuf);
     }
   }
 
-  GST_LOG ("creating next headers");
+  GST_LOG_OBJECT (mux, "creating next headers");
   walk = mux->collect->data;
   while (walk) {
     GstOggPad *pad;
@@ -974,7 +910,8 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
     walk = walk->next;
 
-    GST_LOG ("looping over headers for pad %s:%s", GST_DEBUG_PAD_NAME (thepad));
+    GST_LOG_OBJECT (mux, "looping over headers for pad %s:%s",
+        GST_DEBUG_PAD_NAME (thepad));
 
     hwalk = pad->headers;
     while (hwalk) {
@@ -1002,21 +939,22 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
 
       /* if last header, flush page */
       if (hwalk == NULL) {
-        GST_LOG ("flushing page as packet %d is first or last packet",
+        GST_LOG_OBJECT (mux,
+            "flushing page as packet %d is first or last packet",
             pad->packetno);
         while (ogg_stream_flush (&pad->stream, &page)) {
           GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
 
-          GST_LOG ("swapped out page");
+          GST_LOG_OBJECT (mux, "swapped out page");
           hbufs = g_list_append (hbufs, hbuf);
         }
       } else {
-        GST_LOG ("try to swap out page");
+        GST_LOG_OBJECT (mux, "try to swap out page");
         /* just try to swap out a page then */
         while (ogg_stream_pageout (&pad->stream, &page) > 0) {
           GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
 
-          GST_LOG ("swapped out page");
+          GST_LOG_OBJECT (mux, "swapped out page");
           hbufs = g_list_append (hbufs, hbuf);
         }
       }
@@ -1079,18 +1017,18 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
   gint64 granulepos = 0;
   GstClockTime timestamp;
 
-  GST_DEBUG ("collected");
+  GST_DEBUG_OBJECT (ogg_mux, "collected");
 
   /* queue buffers on all pads; find a buffer with the lowest timestamp */
   best = gst_ogg_mux_queue_pads (ogg_mux);
   if (best && !best->buffer)
     return GST_FLOW_OK;
 
-  GST_DEBUG ("best pad %p", best);
+  GST_DEBUG_OBJECT (ogg_mux, "best pad %p, pulling %p", best, ogg_mux->pulling);
 
   if (!best) {                  /* EOS : FIXME !! We need to handle EOS correctly, and set EOS
                                    flags on the ogg pages. */
-    GST_DEBUG ("Pushing EOS");
+    GST_DEBUG_OBJECT (ogg_mux, "Pushing EOS");
     gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
     return GST_FLOW_WRONG_STATE;
   }
@@ -1132,6 +1070,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
   /* if we don't know which pad to pull on, use the best one */
   if (ogg_mux->pulling == NULL) {
     ogg_mux->pulling = best;
+    GST_DEBUG_OBJECT (ogg_mux, "pulling now %p", ogg_mux->pulling);
     /* remember timestamp of first buffer for this new pad */
     if (ogg_mux->pulling != NULL) {
       ogg_mux->next_ts = GST_BUFFER_TIMESTAMP (ogg_mux->pulling->buffer);
@@ -1152,8 +1091,15 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     gint64 duration;
     gboolean force_flush;
 
+    GST_DEBUG_OBJECT (ogg_mux, "pulling now %p", ogg_mux->pulling);
+
     /* now see if we have a buffer */
     buf = pad->buffer;
+    if (buf == NULL) {
+      GST_DEBUG_OBJECT (ogg_mux, "pad was EOS");
+      ogg_mux->pulling = NULL;
+      return GST_FLOW_OK;
+    }
 
     delta_unit = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     duration = GST_BUFFER_DURATION (buf);
@@ -1168,22 +1114,8 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     packet.b_o_s = (pad->packetno == 0);
     packet.packetno = pad->packetno++;
 
-#if 0
-    /* read ahead one more buffer to find EOS */
-    tmpbuf = gst_ogg_mux_next_buffer (pad, &interrupt);
-    if (interrupt)
-      return;
-    /* data exhausted on this pad */
-    if (tmpbuf == NULL) {
-      /* stop pulling from the pad */
-      ogg_mux->pulling = NULL;
-    }
-    /* mark EOS */
-    packet.e_o_s = (tmpbuf == NULL ? 1 : 0);
-#else
     packet.e_o_s = 0;
     tmpbuf = NULL;
-#endif
 
     /* we flush when we see a new keyframe */
     force_flush = (pad->prev_delta && !delta_unit);
@@ -1396,6 +1328,9 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_collectpads_stop (ogg_mux->collect);
+      break;
     default:
       break;
   }
@@ -1404,9 +1339,6 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collectpads_stop (ogg_mux->collect);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_ogg_mux_clear_collectpads (ogg_mux->collect);
