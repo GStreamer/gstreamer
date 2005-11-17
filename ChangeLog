@@ -1,3 +1,9 @@
+2005-11-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_change_state):
+	Fix the audiosrc base class again, we did not unflush.
+
 2005-11-17  Julien MOUTTE  <julien@moutte.net>
 
 	* examples/seeking/seek.c: (make_dv_pipeline),
