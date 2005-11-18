@@ -2177,8 +2177,9 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
  *
  * Creates a GValue cooresponding to the union of @value1 and @value2.
  *
- * Returns: TRUE if the values could be unioned
+ * Returns: %TRUE if a union was successful
  */
+/* FIXME: change return type to 'void'? */
 gboolean
 gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
 {
@@ -2363,7 +2364,7 @@ gst_value_register_intersect_func (GType type1, GType type2,
  * Subtracts @subtrahend from @minuend and stores the result in @dest.
  * Note that this means subtraction as in sets, not as in mathematics.
  *
- * Returns: TRUE if the subtraction is not empty
+ * Returns: %TRUE if the subtraction is not empty
  */
 gboolean
 gst_value_subtract (GValue * dest, const GValue * minuend,

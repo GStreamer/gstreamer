@@ -267,24 +267,86 @@ G_BEGIN_DECLS
 typedef int      (* GstValueCompareFunc)     (const GValue *value1,
 					      const GValue *value2);
 
+/**
+ * GstValueSerializeFunc:
+ * @value1: a #GValue
+ *
+ * Used by gst_value_serialize() to obtain a non-binary form of the #GValue.
+ *
+ * Returns: the string representation of the value
+ */
 typedef char *   (* GstValueSerializeFunc)   (const GValue *value1);
 
+/**
+ * GstValueDeserializeFunc:
+ * @dest: a #GValue
+ * @s: a string
+ *
+ * Used by gst_value_deserialize() to parse a non-binary form into the #GValue.
+ *
+ * Returns: %TRUE for success
+ */
 typedef gboolean (* GstValueDeserializeFunc) (GValue       *dest,
 					      const char   *s);
 
+/**
+ * GstValueUnionFunc:
+ * @dest: a #GValue for the result
+ * @value1: a #GValue operand
+ * @value2: a #GValue operand
+ *
+ * Used by gst_value_union() to perform unification for a specific #GValue
+ * type. Register a new implementation with gst_value_register_union_func().
+ *
+ * Returns: %TRUE if a union was successful
+ */
+/* FIXME: shouldn't the return value be gboolean ? */
 typedef int      (* GstValueUnionFunc)       (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
 
+/**
+ * GstValueIntersectFunc:
+ * @dest: a #GValue for the result
+ * @value1: a #GValue operand
+ * @value2: a #GValue operand
+ *
+ * Used by gst_value_intersect() to perform intersection for a specific #GValue
+ * type. Register a new implementation with gst_value_register_intersection_func().
+ *
+ * Returns: %TRUE if the values can intersect
+ */
+/* FIXME: shouldn't the return value be gboolean ? */
 typedef int      (* GstValueIntersectFunc)   (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
 
+/**
+ * GstValueSubtractFunc:
+ * @dest: a #GValue for the result
+ * @minuend: a #GValue operand
+ * @subtrahend: a #GValue operand
+ *
+ * Used by gst_value_subtract() to perform subtraction for a specific #GValue
+ * type. Register a new implementation with gst_value_register_subtract_func().
+ *
+ * Returns: %TRUE if the subtraction is not empty
+ */
+/* FIXME: shouldn't the return value be gboolean ? */
 typedef int      (* GstValueSubtractFunc)    (GValue       *dest,
 					      const GValue *minuend,
 					      const GValue *subtrahend);
 
 typedef struct _GstValueTable GstValueTable;
+/**
+ * GstValueTable:
+ * @type: a #GType
+ * @compare: a #GstValueCompareFunc
+ * @serialize: a #GstValueSerializeFunc
+ * @deserialize: a #GstValueDeserializeFunc
+ *
+ * VTable for the #GValue @type.
+ */
 struct _GstValueTable {
   GType type;
   GstValueCompareFunc compare;

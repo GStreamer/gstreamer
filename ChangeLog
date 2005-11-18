@@ -1,3 +1,12 @@
+2005-11-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstcaps.c:
+	* gst/gstghostpad.c:
+	* gst/gsttrace.c:
+	* gst/gstvalue.c:
+	* gst/gstvalue.h:
+	  docs fixes
+
 2005-11-18  Andy Wingo  <wingo@pobox.com>
 
 	* gst/net/gstnetclientclock.c: Turn off debugging.

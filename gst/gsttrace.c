@@ -24,6 +24,13 @@
  * SECTION:gsttrace
  * @short_description: Tracing functionality
  *
+ * Traces allows to track object allocation. They provide a instance counter per
+ * #GType. The counter is incremented for each object allocated and decremented
+ * it when it's freed.
+ *
+ * (FIXME: add example - see jamboree/tests/read-tags.c)
+ *
+ * Last reviewed on 2005-11-18 (0.9.5)
  */
 
 #ifdef HAVE_CONFIG_H

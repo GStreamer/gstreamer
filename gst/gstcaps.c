@@ -22,7 +22,7 @@
  * @short_description: Structure describing sets of media formats
  * @see_also: #GstStructure
  *
- * Caps are lighweight refcounted objects describing media types.
+ * Caps (capabilities) are lighweight refcounted objects describing media types.
  * They are composed of an array of #GstStructure.
  *
  * Caps are exposed on #GstPadTemplate to describe all possible types a
@@ -31,7 +31,7 @@
  *
  * Caps are exposed on the element pads using the gst_pad_get_caps() pad 
  * function. This function describes the possible types that the pad can 
- * handle or produce at runtime. 
+ * handle or produce at runtime.
  *
  * Caps are also attached to buffers to describe to content of the data
  * pointed to by the buffer with gst_buffer_set_caps(). Caps attached to
@@ -57,7 +57,7 @@
  * gst_caps_is_fixed() to test for fixed caps. Only fixed caps can be
  * set on a #GstPad or #GstBuffer.
  *
- * Various methods exist to work with the media types such as substracting
+ * Various methods exist to work with the media types such as subtracting
  * or intersecting.
  *
  * Last reviewed on 2005-11-09 (0.9.4)
