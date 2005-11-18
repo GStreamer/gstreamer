@@ -373,7 +373,7 @@ struct _GstClock {
   GstClockFlags	 flags;
 
   /*< protected >*/ /* with LOCK */
-  GstClockTime	 adjust; /* remove me */
+  GstClockTime	 adjust; /* rename me... */
   GstClockTime	 last_time;
   GList		*entries;
   GCond		*entries_changed;
@@ -423,6 +423,10 @@ void			gst_clock_set_rate_offset	(GstClock *clock, gdouble rate,
                                                          GstClockTimeDiff offset);
 void			gst_clock_get_rate_offset	(GstClock *clock, gdouble *rate,
                                                          GstClockTimeDiff *offset);
+void			gst_clock_set_calibration	(GstClock *clock, GstClockTime internal,
+                                                         GstClockTime external, gdouble rate);
+void			gst_clock_get_calibration	(GstClock *clock, GstClockTime *internal,
+                                                         GstClockTime *external, gdouble *rate);
 
 /* remove me */
 void			gst_clock_set_time_adjust	(GstClock *clock, GstClockTime adjust);

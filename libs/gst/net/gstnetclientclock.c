@@ -34,7 +34,7 @@
 GST_DEBUG_CATEGORY (ncc_debug);
 #define GST_CAT_DEFAULT (ncc_debug)
 
-/* #define DEBUGGING_ENABLED */
+#define DEBUGGING_ENABLED
 
 #ifdef DEBUGGING_ENABLED
 #define DEBUG(x, args...) g_print (x "\n", ##args)
@@ -236,14 +236,14 @@ gst_net_client_clock_get_property (GObject * object, guint prop_id,
 /* http://mathworld.wolfram.com/LeastSquaresFitting.html */
 static gboolean
 do_linear_regression (GstClockTime * x, GstClockTime * y, gint n, gdouble * m,
-    GstClockTimeDiff * b, gdouble * r_squared)
+    GstClockTime * b, GstClockTime * xbase, gdouble * r_squared)
 {
-  gint64 *newx, *newy;
-  gint64 xbar, ybar, sxx, sxy, syy;
-  GstClockTime xmin, ymin;
+  GstClockTime *newx, *newy;
+  GstClockTime xmin, ymin, xbar, ybar;
+  GstClockTimeDiff sxx, sxy, syy;
   gint i;
 
-  sxx = syy = sxy = xbar = ybar = 0;
+  xbar = ybar = sxx = syy = sxy = 0;
 
 #ifdef DEBUGGING_ENABLED
   DEBUG ("doing regression on:");
@@ -251,7 +251,7 @@ do_linear_regression (GstClockTime * x, GstClockTime * y, gint n, gdouble * m,
     DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, x[i], y[i]);
 #endif
 
-  xmin = ymin = G_MAXINT64;
+  xmin = ymin = G_MAXUINT64;
   for (i = 0; i < n; i++) {
     xmin = MIN (xmin, x[i]);
     ymin = MIN (ymin, y[i]);
@@ -260,8 +260,8 @@ do_linear_regression (GstClockTime * x, GstClockTime * y, gint n, gdouble * m,
   DEBUG ("min x: %" G_GUINT64_FORMAT, xmin);
   DEBUG ("min y: %" G_GUINT64_FORMAT, ymin);
 
-  newx = g_new (gint64, n);
-  newy = g_new (gint64, n);
+  newx = g_new (GstClockTime, n);
+  newy = g_new (GstClockTime, n);
 
   /* strip off unnecessary bits of precision */
   for (i = 0; i < n; i++) {
@@ -287,8 +287,8 @@ do_linear_regression (GstClockTime * x, GstClockTime * y, gint n, gdouble * m,
   xbar /= n;
   ybar /= n;
 
-  DEBUG ("  xbar  = %" G_GINT64_FORMAT, xbar);
-  DEBUG ("  ybar  = %" G_GINT64_FORMAT, ybar);
+  DEBUG ("  xbar  = %" G_GUINT64_FORMAT, xbar);
+  DEBUG ("  ybar  = %" G_GUINT64_FORMAT, ybar);
 
   /* multiplying directly would give quantities on the order of 1e20 -> 60 bits;
      times the window size that's 70 which is too much. Instead we (1) subtract
@@ -303,13 +303,14 @@ do_linear_regression (GstClockTime * x, GstClockTime * y, gint n, gdouble * m,
   }
 
   *m = ((double) sxy) / sxx;
-  *b = ((GstClockTimeDiff) (ybar + ymin)) - (GstClockTimeDiff) ((xbar +
-          xmin) * *m);
+  *xbase = xmin;
+  *b = (ybar + ymin) - (GstClockTime) (xbar * *m);
   *r_squared = ((double) sxy * (double) sxy) / ((double) sxx * (double) syy);
 
-  DEBUG ("  m  = %g", *m);
-  DEBUG ("  b  = %" G_GINT64_FORMAT, *b);
-  DEBUG ("  r2 = %g", *r_squared);
+  DEBUG ("  m      = %g", *m);
+  DEBUG ("  b      = %" G_GUINT64_FORMAT, *b);
+  DEBUG ("  xbase  = %" G_GUINT64_FORMAT, *xbase);
+  DEBUG ("  r2     = %g", *r_squared);
 
   g_free (newx);
   g_free (newy);
@@ -322,7 +323,7 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
     GstClockTime local_1, GstClockTime remote, GstClockTime local_2)
 {
   GstClockTime local_avg;
-  GstClockTimeDiff b;
+  GstClockTime b, xbase;
   gdouble m, r_squared;
 
   if (local_2 < local_1)
@@ -344,12 +345,12 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
      * before beginning to adjust the clock */
     do_linear_regression (self->local_times, self->remote_times,
         self->filling ? self->time_index : self->window_size, &m, &b,
-        &r_squared);
+        &xbase, &r_squared);
 
     GST_LOG_OBJECT (self, "adjusting clock to m=%g, b=%" G_GINT64_FORMAT
         " (rsquared=%g)", m, b, r_squared);
 
-    gst_clock_set_rate_offset (GST_CLOCK (self), m, b);
+    gst_clock_set_calibration (GST_CLOCK (self), xbase, b, m);
   }
 
   if (self->filling) {
@@ -633,7 +634,6 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
 {
   GstNetClientClock *ret;
   GstClockTime internal;
-  GstClockTimeDiff offset;
   gint iret;
 
   g_return_val_if_fail (remote_address != NULL, NULL);
@@ -653,16 +653,7 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
   /* update our internal time so get_time() give something around base_time.
      assume that the rate is 1 in the beginning. */
   internal = gst_clock_get_internal_time (GST_CLOCK (ret));
-  /* MAXINT64 + 1 so as to avoid overflow */
-  if ((base_time > internal
-          && base_time - internal > ((guint64) G_MAXINT64) + 1)
-      || (base_time < internal && internal - base_time > G_MAXINT64))
-    goto bad_base_time;
-
-  offset = base_time > internal ? (base_time - internal)
-      : -(gint64) (internal - base_time);
-
-  gst_clock_set_rate_offset (GST_CLOCK (ret), 1.0, offset);
+  gst_clock_set_calibration (GST_CLOCK (ret), internal, base_time, 1.0);
 
   {
     GstClockTime now = gst_clock_get_time (GST_CLOCK (ret));
@@ -684,14 +675,6 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
   /* all systems go, cap'n */
   return (GstClock *) ret;
 
-bad_base_time:
-  {
-    GST_ERROR_OBJECT (ret, "base time (%" GST_TIME_FORMAT ") too far off from "
-        "internal time (%" GST_TIME_FORMAT ")", GST_TIME_ARGS (base_time),
-        GST_TIME_ARGS (internal));
-    gst_object_unref (ret);
-    return NULL;
-  }
 no_socket_pair:
   {
     GST_ERROR_OBJECT (ret, "no socket pair %d: %s (%d)", iret,
