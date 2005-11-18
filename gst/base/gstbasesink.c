@@ -1590,6 +1590,9 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       basesink->segment_start = 0;
       basesink->segment_stop = -1;
       basesink->segment_time = 0;
+      basesink->current_start = -1;
+      basesink->current_duration = -1;
+      basesink->current_end = -1;
       basesink->segment_accum = 0;
       ret = GST_STATE_CHANGE_ASYNC;
       break;
