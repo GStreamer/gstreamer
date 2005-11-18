@@ -42,6 +42,8 @@ headers
 #include <gst/dataprotocol/dataprotocol.h>
 #include <gst/base/gstadapter.h>
 
+#include <gst/net/gstnet.h>
+
 #include "pygstvalue.h"
 #include "pygstminiobject.h"
 #include "pygstexception.h"

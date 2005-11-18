@@ -138,6 +138,20 @@
   (gtype-id "GST_TYPE_XML")
 )
 
+(define-object NetClientClock
+  (in-module "Gst")
+  (parent "GstSystemClock")
+  (c-name "GstNetClientClock")
+  (gtype-id "GST_TYPE_NET_CLIENT_CLOCK")
+)
+
+(define-object NetTimeProvider
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstNetTimeProvider")
+  (gtype-id "GST_TYPE_NET_TIME_PROVIDER")
+)
+
 ;;
 ;; MiniObject types
 ;;

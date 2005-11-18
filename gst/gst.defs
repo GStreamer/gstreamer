@@ -6624,3 +6624,30 @@
 )
 
 
+;; From ../gstreamer/gst/net/gstnetclientclock.h
+
+(define-function gst_net_client_clock_new
+  (c-name "gst_net_client_clock_new")
+  (is-constructor-of "GstNetClientClock")
+  (return-type "GstClock*")
+  (parameters
+    '("gchar*" "name")
+    '("gchar*" "remote_address")
+    '("gint" "remote_port")
+    '("GstClockTime" "base_time")
+  )
+)
+
+
+;; From ../gstreamer/gst/net/gstnettimeprovider.h
+
+(define-function gst_net_time_provider_new
+  (c-name "gst_net_time_provider_new")
+  (is-constructor-of "GstNetTimeProvider")
+  (return-type "GstNetTimeProvider*")
+  (parameters
+    '("GstClock*" "clock")
+    '("gchar*" "address" (null-ok) (default "NULL"))
+    '("gint" "port" (default 0))
+  )
+)

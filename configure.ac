@@ -81,6 +81,17 @@ fi
 AC_SUBST(GST_CONTROLLER_LIBS)
 AC_SUBST(GST_CONTROLLER_CFLAGS)
 
+dnl check for gstreamer-net
+PKG_CHECK_MODULES(GST_NET, gstreamer-net-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_NET="yes", HAVE_GST_NET="no")
+
+if test "x$HAVE_GST_NET" = "xno"; then
+  AC_MSG_ERROR(no GStreamer Networking Libs found)
+fi
+
+AC_SUBST(GST_NET_LIBS)
+AC_SUBST(GST_NET_CFLAGS)
+
 
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
