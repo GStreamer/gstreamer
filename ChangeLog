@@ -1,3 +1,9 @@
+2005-11-18  Michael Smith <msmith@fluendo.com>
+
+	* gst/iec958/ac3iec.c: (ac3iec_init), (ac3iec_chain_dvd):
+	  Remove some setcaps brokenness.
+	  Don't crash on bad input.
+
 2005-11-15  Johan Dahlin  <johan@gnome.org>
 
 	* ext/mad/gstid3tag.c (gst_mad_id3_to_tag_list): unset GValues after

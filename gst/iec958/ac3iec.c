@@ -86,7 +86,6 @@ static void ac3iec_get_property (GObject * object,
 
 static GstFlowReturn ac3iec_chain_dvd (GstPad * pad, GstBuffer * buf);
 static GstFlowReturn ac3iec_chain_raw (GstPad * pad, GstBuffer * buf);
-static gboolean ac3iec_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstStateChangeReturn ac3iec_change_state (GstElement * element,
     GstStateChange transition);
@@ -161,14 +160,15 @@ ac3iec_init (AC3IEC * ac3iec)
   ac3iec->sink =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->sink);
-  gst_pad_set_setcaps_function (ac3iec->sink, ac3iec_setcaps);
   gst_pad_set_chain_function (ac3iec->sink, ac3iec_chain_dvd);
+  gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->sink);
 
   ac3iec->src =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_src_template), "src");
+  gst_pad_use_fixed_caps (ac3iec->src);
   gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->src);
+
 
   ac3iec->cur_ts = GST_CLOCK_TIME_NONE;
 
@@ -182,25 +182,6 @@ ac3iec_finalize (GObject * object)
   AC3IEC *ac3iec = AC3IEC (object);
 
   g_free (ac3iec->padder);
-}
-
-static gboolean
-ac3iec_setcaps (GstPad * pad, GstCaps * caps)
-{
-  AC3IEC *ac3iec = AC3IEC (gst_pad_get_parent (pad));
-  gboolean res = TRUE;
-  GstCaps *src_caps;
-
-  src_caps = gst_caps_new_simple ("audio/x-iec958", NULL);
-
-  if (!gst_pad_set_caps (ac3iec->src, src_caps)) {
-    res = FALSE;
-  }
-
-  gst_caps_unref (src_caps);
-  gst_object_unref (ac3iec);
-
-  return res;
 }
 
 static void
@@ -260,6 +241,12 @@ ac3iec_chain_dvd (GstPad * pad, GstBuffer * buf)
     /* Length of data before first_access */
     len = first_access - 1;
 
+    /* Ensure we don't crash if fed totally invalid data */
+    if (offset + len > size) {
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+
     if (len > 0) {
       subbuf = gst_buffer_create_sub (buf, offset, len);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
@@ -276,6 +263,12 @@ ac3iec_chain_dvd (GstPad * pad, GstBuffer * buf)
 
     ret = ac3iec_chain_raw (pad, subbuf);
   } else {
+    /* Ensure we don't crash if fed totally invalid data */
+    if (size < 2) {
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+
     /* No first_access, so no timestamp */
     subbuf = gst_buffer_create_sub (buf, offset, size - offset);
     GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
