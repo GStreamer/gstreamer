@@ -1,3 +1,9 @@
+2005-11-18    <bilboed@dvdsrc.fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init): 
+	Unsetting IS_SINK flag from the fakesink, so decodebin
+	never behaves as a sink.
+
 2005-11-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:

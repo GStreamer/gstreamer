@@ -343,6 +343,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   if (!decode_bin->fakesink) {
     g_warning ("can't find fakesink element, decodebin will not work");
   } else {
+    GST_OBJECT_FLAG_UNSET (decode_bin->fakesink, GST_ELEMENT_IS_SINK);
     if (!gst_bin_add (GST_BIN (decode_bin), decode_bin->fakesink)) {
       g_warning ("Could not add fakesink element, decodebin will not work");
       gst_object_unref (decode_bin->fakesink);
