@@ -104,7 +104,7 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
           "as a dotted quad (x.x.x.x)", DEFAULT_ADDRESS, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "port",
-          "The port on which the remote server is listenind", 0, 32768,
+          "The port on which the remote server is listening", 0, 32768,
           DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WINDOW_SIZE,
       g_param_spec_int ("window-size", "Window size",
@@ -448,7 +448,7 @@ gst_net_client_clock_thread (gpointer data)
   stopped:
     {
       GST_DEBUG_OBJECT (self, "shutting down");
-      /* close socket */
+      /* socket gets closed in _stop() */
       return NULL;
     }
   receive_error:
@@ -562,6 +562,8 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
     gint remote_port, GstClockTime base_time)
 {
   GstNetClientClock *ret;
+  GstClockTime internal;
+  GstClockTimeDiff offset;
   gint iret;
 
   g_return_val_if_fail (remote_address != NULL, NULL);
@@ -571,6 +573,33 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
 
   ret = g_object_new (GST_TYPE_NET_CLIENT_CLOCK, "address", remote_address,
       "port", remote_port, NULL);
+
+  /* gst_clock_get_time() values are guaranteed to be increasing. because no one
+   * has called get_time on this clock yet we are free to adjust to any value
+   * without worrying about worrying about MAX() issues with the clock's
+   * internal time.
+   */
+
+  /* update our internal time so get_time() give something around base_time.
+     assume that the rate is 1 in the beginning. */
+  internal = gst_clock_get_internal_time (GST_CLOCK (ret));
+  /* MAXINT64 + 1 so as to avoid overflow */
+  if ((base_time > internal
+          && base_time - internal > ((guint64) G_MAXINT64) + 1)
+      || (base_time < internal && internal - base_time > G_MAXINT64))
+    goto bad_base_time;
+
+  offset = base_time > internal ? (base_time - internal)
+      : -(gint64) (internal - base_time);
+
+  gst_clock_set_rate_offset (GST_CLOCK (ret), 1.0, offset);
+
+  {
+    GstClockTime now = gst_clock_get_time (GST_CLOCK (ret));
+
+    if (now < base_time || now > base_time + GST_SECOND)
+      g_warning ("unable to set the base time, expect sync problems!");
+  }
 
   GST_DEBUG_OBJECT (ret, "creating socket pair");
   if ((iret = socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (ret))) < 0)
@@ -585,6 +614,14 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
   /* all systems go, cap'n */
   return (GstClock *) ret;
 
+bad_base_time:
+  {
+    GST_ERROR_OBJECT (ret, "base time (%" GST_TIME_FORMAT ") too far off from "
+        "internal time (%" GST_TIME_FORMAT ")", GST_TIME_ARGS (base_time),
+        GST_TIME_ARGS (internal));
+    gst_object_unref (ret);
+    return NULL;
+  }
 no_socket_pair:
   {
     GST_ERROR_OBJECT (ret, "no socket pair %d: %s (%d)", iret,
