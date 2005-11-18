@@ -12,14 +12,16 @@ pcfiles = 							\
 	gstreamer-base-@GST_MAJORMINOR@.pc			\
 	$(CHECK_PC_I)						\
 	gstreamer-controller-@GST_MAJORMINOR@.pc		\
-	gstreamer-dataprotocol-@GST_MAJORMINOR@.pc
+	gstreamer-dataprotocol-@GST_MAJORMINOR@.pc		\
+	gstreamer-net-@GST_MAJORMINOR@.pc
 
 pcfiles_uninstalled =						\
 	gstreamer-@GST_MAJORMINOR@-uninstalled.pc		\
 	gstreamer-base-@GST_MAJORMINOR@-uninstalled.pc		\
 	$(CHECK_PC_U)						\
 	gstreamer-controller-@GST_MAJORMINOR@-uninstalled.pc	\
-	gstreamer-dataprotocol-@GST_MAJORMINOR@-uninstalled.pc
+	gstreamer-dataprotocol-@GST_MAJORMINOR@-uninstalled.pc	\
+	gstreamer-net-@GST_MAJORMINOR@-uninstalled.pc
 
 all-local: $(pcfiles) $(pcfiles_uninstalled)
 
@@ -42,6 +44,8 @@ EXTRA_DIST =							\
 	gstreamer-controller.pc.in				\
 	gstreamer-controller-uninstalled.pc.in			\
 	gstreamer-dataprotocol.pc.in				\
-	gstreamer-dataprotocol-uninstalled.pc.in
+	gstreamer-dataprotocol-uninstalled.pc.in		\
+	gstreamer-net.pc.in					\
+	gstreamer-net-uninstalled.pc.in
 
 CLEANFILES = $(pcfiles) $(pcfiles_uninstalled)
