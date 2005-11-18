@@ -20,10 +20,74 @@
 /**
  * SECTION:gsterror
  * @short_description: Categorized error messages
+ * @see_also: #GstMessage
  *
- * This module manages localizable error messages. Developers can use
- * gst_error_get_message() to get a localized message from a error-code and
- * -domain.
+ * GStreamer elements can throw non-fatal warnings and fatal errors.
+ * Higher-level elements and applications can programatically filter
+ * the ones they are interested in or can recover from,
+ * and have a default handler handle the rest of them.
+ *
+ * The rest of this section will use the term <quote>error</quote>
+ * to mean both (non-fatal) warnings and (fatal) errors; they are treated
+ * similarly.
+ *
+ * Errors from elements are the combination of a #GError and a debug string.
+ * The #GError contains:
+ * - a domain type: CORE, LIBRARY, RESOURCE or STREAM
+ * - a code: an enum value specific to the domain
+ * - a translated, human-readable message
+ * - a non-translated additional debug string, which also contains
+ * - file and line information
+ *
+ * Elements do not have the context required to decide what to do with
+ * errors.  As such, they should only inform about errors, and stop their
+ * processing.  In short, an element doesn't know what it is being used for.
+ *
+ * It is the application or compound element using the given element that
+ * has more context about the use of the element.  The thrown errors should
+ * be inspected, and filtered if appropriate.
+ *
+ * An application is expected to, by default, present the user with a
+ * dialog box (or an equivalent) showing the error message.  The dialog
+ * should also allow a way to get at the additional debug information,
+ * so the user can provide bug reporting information.
+ *
+ * A compound element is expected to forward errors by default higher up
+ * the hierarchy; this is done by default in the same way as for other types
+ * of #GstMessage.
+ *
+ * When applications or compound elements trigger errors that they can
+ * recover from, they can filter out these errors and take appropriate action.
+ * For example, an application that gets an error from xvimagesink
+ * that indicates all XVideo ports are taken, the application can attempt
+ * to use another sink instead.
+ *
+ * Elements throw errors using the #GST_ELEMENT_ERROR convenience macro:
+ *
+ * <example>
+ * <title>Throwing an error</title>
+ *   <programlisting>
+ *     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+ *       (_("No file name specified for reading.")), (NULL));
+ *   </programlisting>
+ * </example>
+ *
+ * Things to keep in mind:
+ * <itemizedlist>
+ *   <listitem><para>Don't go off inventing new error codes.  The ones
+ *     currently provided should be enough.  If you find your type of error
+ *     does not fit the current codes, you should use FAILED.</para></listitem>
+ *   <listitem><para>Don't provide a message if the default one suffices.
+ *     this keeps messages more uniform.  Use (NULL) - not forgetting the
+ *     parentheses.</para></listitem>
+ *   <listitem><para>If you do supply a custom message, it should be
+ *     marked for translation.  The message should start with a capital
+ *     and end with a period.</para></listitem>
+ *   <listitem><para>The debug string can be as you like.  Again, use (NULL)
+ *     if there's nothing to add - file and line number will still be
+ *     passed.  #GST_ERROR_SYSTEM can be used as a shortcut to give
+ *     debug information on a system call error.</para></listitem>
+ * </itemizedlist>
  */
 
 #ifdef HAVE_CONFIG_H

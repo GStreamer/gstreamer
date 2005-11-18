@@ -53,7 +53,6 @@ G_BEGIN_DECLS
  * @GST_CORE_ERROR_NUM_ERRORS: the number of core error types.
  *
  * Core errors are errors inside the core GStreamer library.
- * the core GStreamer library
  */
 /* FIXME: should we divide in numerical blocks so we can easily add
           for example PAD errors later ? */
@@ -221,7 +220,8 @@ typedef enum
 /**
  * GST_ERROR_SYSTEM:
  *
- * Generates an human readable error message out of an errno number.
+ * Returns a string using errno describing the previously failed system
+ * call.  To be used as the debug argument in #GST_ELEMENT_ERROR.
  */
 #define GST_ERROR_SYSTEM    ("system error: %s", g_strerror (errno))
 
