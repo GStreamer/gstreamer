@@ -1,3 +1,15 @@
+2005-11-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_provide_clock_func), (gst_bin_add_func),
+	(gst_bin_remove_func), (bin_bus_handler):
+	* gst/gstbin.h:
+	Removing a clock provider from a bin, triggers a clock lost message
+	so that a new clock will be selected.
+	Adding a clock to a bin triggers a clock provider message.
+	Make sure we reselect a clock when we received a clock lost message.
+	Keep a reference to the element that provided the clock.
+
+
 2005-11-18  Andy Wingo  <wingo@pobox.com>
 
 	* gst/net/gstnetclientclock.c (gst_net_client_clock_new): Adjust

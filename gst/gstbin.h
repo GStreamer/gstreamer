@@ -112,7 +112,12 @@ struct _GstBin {
   GstClock	*provided_clock;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    struct {
+      GstElement *clock_provider;
+    } ABI;
+    gpointer _gst_reserved[GST_PADDING+1-1];
+  };
 };
 
 /**

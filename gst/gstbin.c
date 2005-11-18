@@ -462,6 +462,7 @@ static GstClock *
 gst_bin_provide_clock_func (GstElement * element)
 {
   GstClock *result = NULL;
+  GstElement *provider = NULL;
   GstBin *bin;
   GstIterator *it;
   gpointer val;
@@ -481,16 +482,23 @@ gst_bin_provide_clock_func (GstElement * element)
     GstClock *clock;
 
     clock = gst_element_provide_clock (child);
-    if (clock || result == NULL) {
-      GST_DEBUG_OBJECT (bin, "found candidate clock %p", clock);
-      if (result)
+    if (clock) {
+      GST_DEBUG_OBJECT (bin, "found candidate clock %p by element %s",
+          clock, GST_ELEMENT_NAME (child));
+      if (result) {
         gst_object_unref (result);
+        gst_object_unref (provider);
+      }
       result = clock;
+      provider = child;
+    } else {
+      gst_object_unref (child);
     }
-    gst_object_unref (child);
   }
   gst_object_replace ((GstObject **) & bin->provided_clock,
       (GstObject *) result);
+  gst_object_replace ((GstObject **) & bin->ABI.clock_provider,
+      (GstObject *) provider);
   bin->clock_dirty = FALSE;
   GST_DEBUG_OBJECT (bin, "provided new clock %p", result);
   GST_UNLOCK (bin);
@@ -668,6 +676,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gchar *elem_name;
   GstIterator *it;
   gboolean is_sink;
+  GstMessage *clock_message = NULL;
 
   /* we obviously can't add ourself to ourself */
   if (G_UNLIKELY (GST_ELEMENT_CAST (element) == GST_ELEMENT_CAST (bin)))
@@ -702,6 +711,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   if (gst_element_provides_clock (element)) {
     GST_DEBUG_OBJECT (bin, "element \"%s\" can provide a clock", elem_name);
     bin->clock_dirty = TRUE;
+    clock_message =
+        gst_message_new_clock_provide (GST_OBJECT_CAST (bin), NULL, TRUE);
   }
 
   bin->children = g_list_prepend (bin->children, element);
@@ -716,6 +727,10 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
   bin->state_dirty = TRUE;
   GST_UNLOCK (bin);
+
+  if (clock_message) {
+    gst_element_post_message (GST_ELEMENT_CAST (bin), clock_message);
+  }
 
   /* unlink all linked pads */
   it = gst_element_iterate_pads (element);
@@ -812,6 +827,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   gchar *elem_name;
   GstIterator *it;
   gboolean is_sink;
+  GstMessage *clock_message = NULL;
 
   GST_LOCK (element);
   /* Check if the element is already being removed and immediately
@@ -852,13 +868,21 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
     }
   }
-  if (gst_element_provides_clock (element)) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, bin,
-        "element \"%s\" could provide a clock", elem_name);
+  /* if the clock provider for this element is removed, we lost
+   * the clock as well, we need to inform the parent of this
+   * so that it can select a new clock */
+  if (bin->ABI.clock_provider == element) {
+    GST_DEBUG_OBJECT (bin, "element \"%s\" provided the clock", elem_name);
     bin->clock_dirty = TRUE;
+    clock_message =
+        gst_message_new_clock_lost (GST_OBJECT_CAST (bin), bin->provided_clock);
   }
   bin->state_dirty = TRUE;
   GST_UNLOCK (bin);
+
+  if (clock_message) {
+    gst_element_post_message (GST_ELEMENT_CAST (bin), clock_message);
+  }
 
   GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "removed child \"%s\"",
       elem_name);
@@ -1930,16 +1954,59 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       GST_LOCK (bin);
       bin_remove_messages (bin, NULL, GST_MESSAGE_DURATION);
       GST_UNLOCK (bin);
-      /* fallthrough */
+      goto forward;
+    }
+    case GST_MESSAGE_CLOCK_LOST:
+    {
+      gboolean playing, provided, forward;
+      GstClock *clock;
+
+      gst_message_parse_clock_lost (message, &clock);
+
+      GST_LOCK (bin);
+      bin->clock_dirty = TRUE;
+      /* if we lost the clock that we provided, post to parent but 
+       * only if we are PLAYING. */
+      provided = (clock == bin->provided_clock);
+      playing = (GST_STATE (bin) == GST_STATE_PLAYING);
+      forward = playing & provided;
+      GST_DEBUG_OBJECT (bin, "provided %d, playing %d, forward %d",
+          provided, playing, forward);
+      GST_UNLOCK (bin);
+
+      if (forward) {
+        goto forward;
+      }
+      break;
+    }
+    case GST_MESSAGE_CLOCK_PROVIDE:
+    {
+      gboolean forward;
+
+      GST_LOCK (bin);
+      bin->clock_dirty = TRUE;
+      /* a new clock is available, post to parent but not
+       * to the application */
+      forward = GST_OBJECT_PARENT (bin) != NULL;
+      GST_UNLOCK (bin);
+
+      if (forward)
+        goto forward;
+      break;
     }
     default:
-      /* Send all other messages upward */
-      GST_DEBUG_OBJECT (bin, "posting message upward");
-      gst_element_post_message (GST_ELEMENT_CAST (bin), message);
-      break;
+      goto forward;
   }
 
   return GST_BUS_DROP;
+
+forward:
+  {
+    /* Send all other messages upward */
+    GST_DEBUG_OBJECT (bin, "posting message upward");
+    gst_element_post_message (GST_ELEMENT_CAST (bin), message);
+    return GST_BUS_DROP;
+  }
 }
 
 /* generic struct passed to all query fold methods */
