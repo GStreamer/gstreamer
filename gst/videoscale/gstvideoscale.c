@@ -153,6 +153,8 @@ static gboolean gst_videoscale_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, guint * size);
 static GstFlowReturn gst_videoscale_transform (GstBaseTransform * trans,
     GstBuffer * in, GstBuffer * out);
+static void gst_videoscale_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 
 static void gst_videoscale_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -216,10 +218,12 @@ gst_videoscale_class_init (GstVideoscaleClass * klass)
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_VIDEOSCALE_METHOD, 0, G_PARAM_READWRITE));
 
-  trans_class->transform_caps = gst_videoscale_transform_caps;
-  trans_class->set_caps = gst_videoscale_set_caps;
-  trans_class->get_unit_size = gst_videoscale_get_unit_size;
-  trans_class->transform = gst_videoscale_transform;
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_videoscale_transform_caps);
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_videoscale_set_caps);
+  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_videoscale_get_unit_size);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_videoscale_transform);
+  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_videoscale_fixate_caps);
 
   trans_class->passthrough_on_same_caps = TRUE;
 
@@ -455,6 +459,101 @@ gst_videoscale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     return FALSE;
 
   return TRUE;
+}
+
+static void
+gst_videoscale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
+    GstCaps * caps, GstCaps * othercaps)
+{
+  GstStructure *ins, *outs;
+  const GValue *from_par, *to_par;
+
+  g_return_if_fail (gst_caps_is_fixed (caps));
+
+  GST_DEBUG_OBJECT (base, "trying to fixate othercaps %" GST_PTR_FORMAT
+      " based on caps %" GST_PTR_FORMAT, othercaps, caps);
+
+  ins = gst_caps_get_structure (caps, 0);
+  outs = gst_caps_get_structure (othercaps, 0);
+
+  from_par = gst_structure_get_value (ins, "pixel-aspect-ratio");
+  to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
+
+  if (from_par && to_par) {
+    GValue to_ratio = { 0, };   /* w/h of output video */
+    int from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
+    int count = 0, w = 0, h = 0, num, den;
+
+    /* if both width and height are already fixed, we can't do anything
+     * about it anymore */
+    if (gst_structure_get_int (outs, "width", &w))
+      ++count;
+    if (gst_structure_get_int (outs, "height", &h))
+      ++count;
+    if (count == 2) {
+      GST_DEBUG_OBJECT (base, "dimensions already set to %dx%d, not fixating",
+          w, h);
+      return;
+    }
+
+    gst_structure_get_int (ins, "width", &from_w);
+    gst_structure_get_int (ins, "height", &from_h);
+    from_par_n = gst_value_get_fraction_numerator (from_par);
+    from_par_d = gst_value_get_fraction_denominator (from_par);
+    to_par_n = gst_value_get_fraction_numerator (to_par);
+    to_par_d = gst_value_get_fraction_denominator (to_par);
+
+    g_value_init (&to_ratio, GST_TYPE_FRACTION);
+    gst_value_set_fraction (&to_ratio, from_w * from_par_n * to_par_d,
+        from_h * from_par_d * to_par_n);
+    num = gst_value_get_fraction_numerator (&to_ratio);
+    den = gst_value_get_fraction_denominator (&to_ratio);
+    GST_DEBUG_OBJECT (base,
+        "scaling input with %dx%d and PAR %d/%d to output PAR %d/%d",
+        from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d);
+    GST_DEBUG_OBJECT (base, "resulting output should respect ratio of %d/%d",
+        num, den);
+
+    /* now find a width x height that respects this display ratio.
+     * prefer those that have one of w/h the same as the incoming video
+     * using wd / hd = num / den */
+
+    /* start with same height, because of interlaced video */
+    /* check hd / den is an integer scale factor, and scale wd with the PAR */
+    if (from_h % den == 0) {
+      GST_DEBUG_OBJECT (base, "keeping video height");
+      h = from_h;
+      w = h * num / den;
+    } else if (from_w % num == 0) {
+      GST_DEBUG_OBJECT (base, "keeping video width");
+      w = from_w;
+      h = w * den / num;
+    } else {
+      GST_DEBUG_OBJECT (base, "approximating but keeping video height");
+      h = from_h;
+      w = h * num / den;
+    }
+    GST_DEBUG_OBJECT (base, "scaling to %dx%d", w, h);
+
+    /* now fixate */
+    gst_caps_structure_fixate_field_nearest_int (outs, "width", w);
+    gst_caps_structure_fixate_field_nearest_int (outs, "height", h);
+  } else {
+    gint width, height;
+
+    if (gst_structure_get_int (ins, "width", &width)) {
+      if (gst_structure_has_field (outs, "width")) {
+        gst_caps_structure_fixate_field_nearest_int (outs, "width", width);
+      }
+    }
+    if (gst_structure_get_int (ins, "height", &height)) {
+      if (gst_structure_has_field (outs, "height")) {
+        gst_caps_structure_fixate_field_nearest_int (outs, "height", height);
+      }
+    }
+  }
+
+  GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
 }
 
 static gboolean
