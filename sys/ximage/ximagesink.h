@@ -107,7 +107,8 @@ struct _GstXImageBuffer {
   XShmSegmentInfo SHMInfo;
 #endif /* HAVE_XSHM */
 
-  gint width, height, size;
+  gint width, height;
+  size_t size;
 };
 
 struct _GstXImageSink {
@@ -120,27 +121,23 @@ struct _GstXImageSink {
   GstXWindow *xwindow;
   GstXImageBuffer *ximage;
   GstXImageBuffer *cur_image;
-
-  GstCaps *desired_caps;
+  
+  GThread *event_thread;
+  gboolean running;
 
   gdouble framerate;
   GMutex *x_lock;
-  GMutex *stream_lock;
+  GMutex *flow_lock;
 
   /* Unused */
   gint pixel_width, pixel_height;
   GValue *par;                  /* object-set pixel aspect ratio */
 
-  GstClockTime time;
-
   GMutex *pool_lock;
-  GSList *image_pool;
+  GSList *buffer_pool;
 
   gboolean synchronous;
-  gboolean sw_scaling_failed;
-
-  GMutex *nav_lock;
-  GSList *pend_nav_events;
+  gboolean keep_aspect;
 };
 
 struct _GstXImageSinkClass {

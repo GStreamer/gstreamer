@@ -1,5 +1,30 @@
 2005-11-18  Julien MOUTTE  <julien@moutte.net>
 
+	* sys/ximage/ximagesink.c: (gst_ximage_buffer_finalize),
+	(gst_ximagesink_check_xshm_calls), (gst_ximagesink_ximage_new),
+	(gst_ximagesink_ximage_destroy),
+	(gst_ximagesink_xwindow_draw_borders), (gst_ximagesink_ximage_put),
+	(gst_ximagesink_xwindow_new),
+	(gst_ximagesink_xwindow_update_geometry),
+	(gst_ximagesink_handle_xevents), (gst_ximagesink_event_thread),
+	(gst_ximagesink_xcontext_get), (gst_ximagesink_xcontext_clear),
+	(gst_ximagesink_bufferpool_clear), (gst_ximagesink_getcaps),
+	(gst_ximagesink_setcaps), (gst_ximagesink_change_state),
+	(gst_ximagesink_show_frame), (gst_ximagesink_buffer_alloc),
+	(gst_ximagesink_navigation_send_event),
+	(gst_ximagesink_set_xwindow_id), (gst_ximagesink_expose),
+	(gst_ximagesink_set_property), (gst_ximagesink_get_property),
+	(gst_ximagesink_finalize), (gst_ximagesink_init),
+	(gst_ximagesink_class_init):
+	* sys/ximage/ximagesink.h: Refactoring of ximagesink.
+	This new version brings correct software scaling, non flickering
+	window while resizing, pixel aspect ratio handling, usage of
+	hardware buffer pools, out of data flow event thread for 
+	navigation and handling of expose events even when being PAUSED,
+	a new property to keep video aspect ratio when resizing, etc...
+
+2005-11-18  Julien MOUTTE  <julien@moutte.net>
+
 	* gst/videoscale/gstvideoscale.c: (gst_videoscale_class_init),
 	(gst_videoscale_fixate_caps): Introduce back caps fixate with
 	handling of PAR.
