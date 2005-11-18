@@ -280,8 +280,11 @@ gst_system_clock_async_thread (GstClock * clock)
          * entry */
         GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p unlocked", entry);
         if (entry->func) {
+          /* unlock before firing the callback */
+          GST_UNLOCK (clock);
           entry->func (clock, entry->time, (GstClockID) entry,
               entry->user_data);
+          GST_LOCK (clock);
         }
         if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
           /* adjust time now */

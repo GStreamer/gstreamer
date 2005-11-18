@@ -1480,7 +1480,8 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
         else
           segment_time = 0;
 
-        *cur = now - GST_ELEMENT_CAST (basesink)->base_time + segment_time;
+        *cur = now - GST_ELEMENT_CAST (basesink)->base_time -
+            basesink->segment_accum + segment_time;
 
         GST_DEBUG_OBJECT (basesink,
             "now %" GST_TIME_FORMAT " + segment_time %" GST_TIME_FORMAT " = %"
