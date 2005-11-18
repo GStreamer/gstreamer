@@ -1,0 +1,75 @@
+Moving around plug-ins between source modules
+---------------------------------------------
+
+Last updated: 2005-11-18
+
+How to get your plug-in out of -bad and into -good or -ugly
+-----------------------------------------------------------
+
+Since GStreamer 0.9.x, we have four plugin modules: -base, -good, -ugly,
+and -bad.  Plug-ins are by default added to -bad.  They can only move
+to -good or -ugly if a number of conditions are met:
+
+- People involved:
+  - There should be a person who is actively going to maintain this element;
+    presumably this is the person writing the plug-in in the first place
+  - There should be a GStreamer hacker who is willing to sponsor the element;
+    this would be someone who is going to help out getting all the conditions
+    met
+  - There should be a core developer who verifies the merge
+
+  The three roles can be filled by two people, but not just one.
+
+- The plug-in should be put in the correct location inside the module:
+  sys/: plug-ins that include system headers/link to system libraries;
+    usually platform-dependent as well
+  gst/: plug-ins with no external dependencies, only GLib/GStreamer/liboil
+  ext/: plug-ins with external dependencies
+
+- The plug-in is documented:
+  - the compiled-in descriptions should be correct
+  - every element in the plug-in should have gtk-doc documentation:
+    - longer description of element
+    - why you would use this element
+    - example launch line OR example source code
+      (for example, see
+       http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/gst-plugins-base-plugins-audiotestsrc.html
+       for the first and
+       http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-level.html
+       for the second)
+    - if the element has custom messages, they should be documented
+    - signals and properties should be documented
+
+- The plug-in should come with tests:
+  - preferably, a unit test should be written, testing things like:
+    - setup and teardown
+    - push in buffers in all supported formats and verify they are handled
+      properly
+    - push in buffers that trigger error cases, and verify errors are
+      correctly thrown
+
+    for example, see gst-plugins-base/check/elements/audioconvert
+
+    The unit test should be put in check/elements/(nameofelement)
+    and be added to check_PROGRAMS and Makefile.am
+
+  - if a unit test is not appropriate (for example, device elements),
+    a test application should be written that can be run manually
+
+- The tests should be leak-free, tested with valgrind
+  - the unit tests in check/ dirs are valgrinded by default
+  - the manual tests should have a valgrind target
+  - leaks in the supporting library (and verified to be in the supporting
+    library !) can be added to suppressions files
+
+- The elements should not segfault under any circumstance.  This includes:
+  - wrong pipelines
+  - bad data
+
+- The plugins need to be marked correctly for translations.
+- All error conditions should be correctly handled using GST_ELEMENT_ERROR
+  and following practice outlined in
+  http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/gstreamer-GstGError.html
+
+- Decision should be made if it should go into good (LGPL license,
+  LGPL dependencies, no patent issues) or ugly
