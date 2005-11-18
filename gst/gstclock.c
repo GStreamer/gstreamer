@@ -699,6 +699,8 @@ gst_clock_get_time (GstClock * clock)
  *
  * Adjusts the time of @clock. This function is buggy and is scheduled to die.
  *
+ * Obsolete, do not use.
+ *
  * MT safe.
  */
 void
@@ -718,6 +720,8 @@ gst_clock_set_time_adjust (GstClock * clock, GstClockTime adjust)
  * @offset: the "initial" offset of @clock relative to its internal time
  *
  * Adjusts the internal rate and offset of @clock. Obsolete, do not use.
+ *
+ * Obsolete, do not use.
  *
  * MT safe.
  */
@@ -793,7 +797,7 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
 {
   g_return_if_fail (GST_IS_CLOCK (clock));
   g_return_if_fail (rate > 0.0);
-  g_return_if_fail (internal < gst_clock_get_internal_time (clock));
+  g_return_if_fail (internal <= gst_clock_get_internal_time (clock));
 
   GST_LOCK (clock);
   /* these need to be reworked for the api freeze break, we're really abusing
@@ -805,13 +809,17 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
 }
 
 /**
- * gst_clock_get_rate_offset
- * @clock: a #GstClock to adjust
+ * gst_clock_get_calibration
+ * @clock: a #GstClock 
+ * @internal: a location to store the internal time
+ * @external: a location to store the external time
  * @rate: a location to store the rate
- * @offset: a location to store the offset
  *
  * Gets the internal rate and reference time of @clock. See
  * gst_clock_set_calibration() for more information.
+ *
+ * @internal, @external and @rate can be left NULL if the caller
+ * is not interested in the values.
  *
  * MT safe.
  */
@@ -820,14 +828,14 @@ gst_clock_get_calibration (GstClock * clock, GstClockTime * internal,
     GstClockTime * external, gdouble * rate)
 {
   g_return_if_fail (GST_IS_CLOCK (clock));
-  g_return_if_fail (rate != NULL);
-  g_return_if_fail (internal != NULL);
-  g_return_if_fail (external != NULL);
 
   GST_LOCK (clock);
-  *rate = clock->A.rate;
-  *external = clock->A.offset;
-  *internal = clock->adjust;
+  if (rate)
+    *rate = clock->A.rate;
+  if (external)
+    *external = clock->A.offset;
+  if (internal)
+    *internal = clock->adjust;
   GST_UNLOCK (clock);
 }
 

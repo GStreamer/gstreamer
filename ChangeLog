@@ -1,3 +1,11 @@
+2005-11-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstclock.c: (gst_clock_set_calibration),
+	(gst_clock_get_calibration):
+	Doc and API fixes.
+	Callibration can be set with internal time equal to current
+	internal time too.
+
 2005-11-18  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gsterror.c:
