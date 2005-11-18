@@ -35,7 +35,7 @@ GST_START_TEST (test_refcounts)
   /* one for gstreamer, one for us */
   ASSERT_OBJECT_REFCOUNT (clock, "system clock", 2);
 
-  ntp = gst_net_time_provider_new (clock, NULL, -1);
+  ntp = gst_net_time_provider_new (clock, NULL, 0);
   fail_unless (ntp != NULL, "failed to create net time provider");
 
   /* one for ntp, one for gstreamer, one for us */
@@ -63,7 +63,7 @@ GST_START_TEST (test_functioning)
 
   clock = gst_system_clock_obtain ();
   fail_unless (clock != NULL, "failed to get system clock");
-  ntp = gst_net_time_provider_new (clock, "127.0.0.1", -1);
+  ntp = gst_net_time_provider_new (clock, "127.0.0.1", 0);
   fail_unless (ntp != NULL, "failed to create net time provider");
 
   g_object_get (ntp, "port", &port, NULL);

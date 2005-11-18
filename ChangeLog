@@ -1,3 +1,18 @@
+2005-11-18  Andy Wingo  <wingo@pobox.com>
+
+	* gst/net/gstnetclientclock.c (gst_net_client_clock_class_init):
+	Port goes all the way to MAXUINT16.
+
+	* gst/net/gstnettimeprovider.c: Make the port range the same as
+	for the kernel: 0 assigns, otherwise ports are less than
+	MAXUINT16.
+
+	* check/net/gstnettimeprovider.c: Adapt for 0 == kernel assigns
+	port change.
+
+	* check/net/gstnetclientclock.c (test_functioning): Add the start
+	of another test. 
+
 2005-11-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_provide_clock_func), (gst_bin_add_func),
@@ -8,7 +23,6 @@
 	Adding a clock to a bin triggers a clock provider message.
 	Make sure we reselect a clock when we received a clock lost message.
 	Keep a reference to the element that provided the clock.
-
 
 2005-11-18  Andy Wingo  <wingo@pobox.com>
 

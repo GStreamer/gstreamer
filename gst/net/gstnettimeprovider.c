@@ -102,7 +102,7 @@ gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "port",
-          "The port to receive the packets from, -1=allocate", -1, 32768,
+          "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
           DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_ADDRESS,
       g_param_spec_string ("address", "address",
@@ -330,7 +330,7 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
 
   memset (&my_addr, 0, sizeof (my_addr));
   my_addr.sin_family = AF_INET; /* host byte order */
-  my_addr.sin_port = htons (self->port);        /* short, network byte order */
+  my_addr.sin_port = htons ((gint16) self->port);       /* short, network byte order */
   my_addr.sin_addr.s_addr = INADDR_ANY;
   if (self->address)
     inet_aton (self->address, &my_addr.sin_addr);
@@ -347,6 +347,7 @@ gst_net_time_provider_start (GstNetTimeProvider * self)
 
   port = ntohs (my_addr.sin_port);
   GST_DEBUG_OBJECT (self, "bound, on port %d", port);
+
   if (port != self->port) {
     self->port = port;
     GST_DEBUG_OBJECT (self, "notifying %d", port);
@@ -432,7 +433,7 @@ gst_net_time_provider_new (GstClock * clock, const gchar * address, gint port)
   gint iret;
 
   g_return_val_if_fail (clock && GST_IS_CLOCK (clock), NULL);
-  g_return_val_if_fail (port == -1 || port >= 0, NULL);
+  g_return_val_if_fail (port >= 0 && port <= G_MAXUINT16, NULL);
 
   ret = g_object_new (GST_TYPE_NET_TIME_PROVIDER, "clock", clock, "address",
       address, "port", port, NULL);

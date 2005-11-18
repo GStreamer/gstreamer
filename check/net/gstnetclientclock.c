@@ -39,72 +39,56 @@ GST_START_TEST (test_instantiation)
 
   gst_object_unref (client);
 
-  ASSERT_OBJECT_REFCOUNT (local, "net time provider", 2);
+  ASSERT_OBJECT_REFCOUNT (local, "system clock", 2);
 
   gst_object_unref (local);
 }
 
 GST_END_TEST;
 
-#if 0
 GST_START_TEST (test_functioning)
 {
   GstNetTimeProvider *ntp;
-  GstNetTimePacket *packet;
-  GstClock *clock;
-  GstClockTime local;
-  struct sockaddr_in servaddr;
-  gint port = -1, sockfd, ret;
-  socklen_t len;
+  GstClock *client, *server;
+  GstClockTimeDiff offset;
+  GstClockTime servint;         //, servtime, localtime;
+  gint port;
+  gdouble rate;
 
-  clock = gst_system_clock_obtain ();
-  fail_unless (clock != NULL, "failed to get system clock");
-  ntp = gst_net_time_provider_new (clock, "127.0.0.1", -1);
-  fail_unless (ntp != NULL, "failed to create net time provider");
+  server = gst_system_clock_obtain ();
+  fail_unless (server != NULL, "failed to get system clock");
+
+  /* move the clock ahead 1 minute */
+  gst_clock_get_rate_offset (server, &rate, &offset);
+  offset += 60 * GST_SECOND;
+  gst_clock_set_rate_offset (server, rate, offset);
+  servint = gst_clock_get_internal_time (GST_CLOCK (server));
+
+  ntp = gst_net_time_provider_new (server, "127.0.0.1", 0);
+  fail_unless (ntp != NULL, "failed to create network time provider");
 
   g_object_get (ntp, "port", &port, NULL);
-  fail_unless (port > 0);
+  /* g_print ("server port: %d\n", port); */
 
-  sockfd = socket (AF_INET, SOCK_DGRAM, 0);
-  fail_if (sockfd < 0, "socket failed");
+  client = gst_net_client_clock_new (NULL, "127.0.0.1", port, GST_SECOND);
+  fail_unless (client != NULL, "failed to get network client clock");
 
-  memset (&servaddr, 0, sizeof (servaddr));
-  servaddr.sin_family = AF_INET;
-  servaddr.sin_port = htons (port);
-  inet_aton ("127.0.0.1", &servaddr.sin_addr);
+  g_object_get (client, "port", &port, NULL);
+  /* g_print ("client connecting to server port %d\n", port); */
 
-  packet = gst_net_time_packet_new (NULL);
-  fail_unless (packet != NULL, "failed to create packet");
-
-  packet->local_time = local = gst_clock_get_time (clock);
-
-  len = sizeof (servaddr);
-  ret = gst_net_time_packet_send (packet, sockfd,
-      (struct sockaddr *) &servaddr, len);
-
-  fail_unless (ret == GST_NET_TIME_PACKET_SIZE, "failed to send packet");
-
-  g_free (packet);
-
-  packet = gst_net_time_packet_receive (sockfd, (struct sockaddr *) &servaddr,
-      &len);
-
-  fail_unless (packet != NULL, "failed to receive packet");
-  fail_unless (packet->local_time == local, "local time is not the same");
-  fail_unless (packet->remote_time > local, "remote time not after local time");
-  fail_unless (packet->remote_time < gst_clock_get_time (clock),
-      "remote time in the future");
-
-  g_free (packet);
-
-  close (sockfd);
+  /* one for gstreamer, one for ntp, one for us */
+  ASSERT_OBJECT_REFCOUNT (server, "system clock", 3);
+  ASSERT_OBJECT_REFCOUNT (client, "network client clock", 1);
 
   gst_object_unref (ntp);
-  gst_object_unref (clock);
+
+  ASSERT_OBJECT_REFCOUNT (server, "system clock", 2);
+
+  gst_object_unref (client);
+  gst_object_unref (server);
 }
 
 GST_END_TEST;
-#endif
 
 Suite *
 gst_net_client_clock_suite (void)
@@ -114,7 +98,7 @@ gst_net_client_clock_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_instantiation);
-  /* tcase_add_test (tc_chain, test_functioning); */
+  tcase_add_test (tc_chain, test_functioning);
 
   return s;
 }

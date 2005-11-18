@@ -104,7 +104,7 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
           "as a dotted quad (x.x.x.x)", DEFAULT_ADDRESS, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "port",
-          "The port on which the remote server is listening", 0, 32768,
+          "The port on which the remote server is listening", 0, G_MAXUINT16,
           DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WINDOW_SIZE,
       g_param_spec_int ("window-size", "Window size",
@@ -568,7 +568,7 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
 
   g_return_val_if_fail (remote_address != NULL, NULL);
   g_return_val_if_fail (remote_port > 0, NULL);
-  g_return_val_if_fail (remote_port < 32768, NULL);
+  g_return_val_if_fail (remote_port <= G_MAXUINT16, NULL);
   g_return_val_if_fail (base_time != GST_CLOCK_TIME_NONE, NULL);
 
   ret = g_object_new (GST_TYPE_NET_CLIENT_CLOCK, "address", remote_address,
