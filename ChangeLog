@@ -1,5 +1,10 @@
 2005-11-18  Andy Wingo  <wingo@pobox.com>
 
+	* gst/net/gstnetclientclock.c: Turn off debugging.
+
+	* check/net/gstnetclientclock.c (test_functioning): Assert that the
+	times connverge somewhat. Can't make a real test.
+
 	* gst/net/gstnetclientclock.c (do_linear_regression): Use all
 	integer arithmetic. Return the minimum of the domain, which can be
 	set as "internal" for gst_clock_set_calibration.

@@ -34,7 +34,7 @@
 GST_DEBUG_CATEGORY (ncc_debug);
 #define GST_CAT_DEFAULT (ncc_debug)
 
-#define DEBUGGING_ENABLED
+/* #define DEBUGGING_ENABLED */
 
 #ifdef DEBUGGING_ENABLED
 #define DEBUG(x, args...) g_print (x "\n", ##args)

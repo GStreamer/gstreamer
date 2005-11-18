@@ -51,7 +51,7 @@ GST_START_TEST (test_functioning)
   GstNetTimeProvider *ntp;
   GstClock *client, *server;
   GstClockTime basex, basey;
-  GstClockTime servint;         //, servtime, localtime;
+  GstClockTime servtime, clienttime;
   gint port;
   gdouble rate;
 
@@ -62,21 +62,40 @@ GST_START_TEST (test_functioning)
   gst_clock_get_calibration (server, &basex, &basey, &rate);
   basey += 100 * GST_SECOND;
   gst_clock_set_calibration (server, basex, basey, rate);
-  servint = gst_clock_get_internal_time (GST_CLOCK (server));
 
   ntp = gst_net_time_provider_new (server, "127.0.0.1", 0);
   fail_unless (ntp != NULL, "failed to create network time provider");
 
   g_object_get (ntp, "port", &port, NULL);
-  /* g_print ("server port: %d\n", port); */
 
   client = gst_net_client_clock_new (NULL, "127.0.0.1", port, GST_SECOND);
   fail_unless (client != NULL, "failed to get network client clock");
 
   g_object_get (client, "port", &port, NULL);
-  /* g_print ("client connecting to server port %d\n", port); */
 
-  g_usleep (G_USEC_PER_SEC * 60);
+  /* let the clocks synchronize */
+  g_usleep (G_USEC_PER_SEC / 2);
+
+  servtime = gst_clock_get_time (server);
+  clienttime = gst_clock_get_time (client);
+
+  /* can't in general make a precise assertion here, because this depends on
+   * system load and a lot of things. however within half a second they should
+   * at least be within 1/10 of a second of each other... */
+  if (servtime > clienttime)
+    fail_unless (servtime - clienttime < 100 * GST_MSECOND,
+        "clocks not in sync (%" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (servtime - clienttime));
+  else
+    fail_unless (clienttime - servtime < 100 * GST_MSECOND,
+        "clocks not in sync (%" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (clienttime - servtime));
+
+  /*
+     g_print ("diff: %" GST_TIME_FORMAT,
+     GST_TIME_ARGS (servtime > clienttime ? servtime - clienttime
+     : clienttime - servtime));
+   */
 
   /* one for gstreamer, one for ntp, one for us */
   ASSERT_OBJECT_REFCOUNT (server, "system clock", 3);
