@@ -1,3 +1,15 @@
+2005-11-18  Andy Wingo  <wingo@pobox.com>
+
+	* gst/net/gstnetclientclock.c (gst_net_client_clock_thread):
+	Whoops, check the right fd. Also add some debugging.
+	(gst_net_client_clock_observe_times): Adjust for int64 offset.
+	(do_linear_regression): Add a crapload of debugging. Subtract off
+	the minimum values from the input series to discard unneeded bits.
+	Use only int arithmetic. There is still double arithmetic when
+	calculating the intercept that needs fixing. Return boolean to
+	indicate success; FALSE would mean the domain or range is too
+	great. Still needs fixes.
+
 2005-11-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_get_position):

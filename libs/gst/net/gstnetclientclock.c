@@ -34,6 +34,14 @@
 GST_DEBUG_CATEGORY (ncc_debug);
 #define GST_CAT_DEFAULT (ncc_debug)
 
+/* #define DEBUGGING_ENABLED */
+
+#ifdef DEBUGGING_ENABLED
+#define DEBUG(x, args...) g_print (x "\n", ##args)
+#else
+#define DEBUG(x, args...)       /* nop */
+#endif
+
 /* the select call is also performed on the control sockets, that way
  * we can send special commands to unblock or restart the select call */
 #define CONTROL_RESTART        'R'      /* restart the select call */
@@ -226,36 +234,87 @@ gst_net_client_clock_get_property (GObject * object, guint prop_id,
 }
 
 /* http://mathworld.wolfram.com/LeastSquaresFitting.html */
-static void
+static gboolean
 do_linear_regression (GstClockTime * x, GstClockTime * y, gint n, gdouble * m,
-    gdouble * b, gdouble * r_squared)
+    GstClockTimeDiff * b, gdouble * r_squared)
 {
-  gdouble sxx, syy, sxy, xbar, ybar;
+  gint64 *newx, *newy;
+  gint64 xbar, ybar, sxx, sxy, syy;
+  GstClockTime xmin, ymin;
   gint i;
 
-  sxx = syy = sxy = xbar = ybar = 0.0;
+  sxx = syy = sxy = xbar = ybar = 0;
 
-  /* we lose precision with the doubles, but there's no other way except to use
-     ~80 bit arithmetic */
+#ifdef DEBUGGING_ENABLED
+  DEBUG ("doing regression on:");
+  for (i = 0; i < n; i++)
+    DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, x[i], y[i]);
+#endif
+
+  xmin = ymin = G_MAXINT64;
   for (i = 0; i < n; i++) {
-    xbar += x[i];
-    ybar += y[i];
+    xmin = MIN (xmin, x[i]);
+    ymin = MIN (ymin, y[i]);
+  }
+
+  DEBUG ("min x: %" G_GUINT64_FORMAT, xmin);
+  DEBUG ("min y: %" G_GUINT64_FORMAT, ymin);
+
+  newx = g_new (gint64, n);
+  newy = g_new (gint64, n);
+
+  /* strip off unnecessary bits of precision */
+  for (i = 0; i < n; i++) {
+    newx[i] = x[i] - xmin;
+    newy[i] = y[i] - ymin;
+  }
+
+#ifdef DEBUGGING_ENABLED
+  DEBUG ("reduced numbers:");
+  for (i = 0; i < n; i++)
+    DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, newx[i], newy[i]);
+#endif
+
+  /* have to do this precisely otherwise the results are pretty much useless.
+   * should guarantee that none of these accumulators can overflow */
+
+  /* quantities on the order of 1e10 -> 30 bits; window size a max of 2^10, so
+     this addition could end up around 2^40 or so -- ample headroom */
+  for (i = 0; i < n; i++) {
+    xbar += newx[i];
+    ybar += newy[i];
   }
   xbar /= n;
   ybar /= n;
 
-  for (i = 0; i < n; i++) {
-    sxx += ((double) x[i]) * x[i];
-    syy += ((double) y[i]) * y[i];
-    sxy += ((double) x[i]) * y[i];
-  }
-  sxx -= ((double) n) * xbar * xbar;
-  syy -= ((double) n) * ybar * ybar;
-  sxy -= ((double) n) * xbar * ybar;
+  DEBUG ("  xbar  = %" G_GINT64_FORMAT, xbar);
+  DEBUG ("  ybar  = %" G_GINT64_FORMAT, ybar);
 
-  *m = sxy / sxx;
-  *b = ybar - xbar * *m;
-  *r_squared = (sxy * sxy) / (sxx * syy);
+  /* multiplying directly would give quantities on the order of 1e20 -> 60 bits;
+     times the window size that's 70 which is too much. Instead we (1) subtract
+     off the xbar*ybar in the loop instead of after, to avoid accumulation; (2)
+     shift off 4 bits from each multiplicand, giving an expected ceiling of 52
+     bits, which should be enough. Need to check the incoming range and domain
+     to ensure this is an appropriate loss of precision though. */
+  for (i = 0; i < n; i++) {
+    sxx += (newx[i] >> 4) * (newx[i] >> 4) - (xbar >> 4) * (xbar >> 4);
+    syy += (newy[i] >> 4) * (newy[i] >> 4) - (ybar >> 4) * (ybar >> 4);
+    sxy += (newx[i] >> 4) * (newy[i] >> 4) - (xbar >> 4) * (ybar >> 4);
+  }
+
+  *m = ((double) sxy) / sxx;
+  *b = ((GstClockTimeDiff) (ybar + ymin)) - (GstClockTimeDiff) ((xbar +
+          xmin) * *m);
+  *r_squared = ((double) sxy * (double) sxy) / ((double) sxx * (double) syy);
+
+  DEBUG ("  m  = %g", *m);
+  DEBUG ("  b  = %" G_GINT64_FORMAT, *b);
+  DEBUG ("  r2 = %g", *r_squared);
+
+  g_free (newx);
+  g_free (newy);
+
+  return TRUE;
 }
 
 static void
@@ -263,12 +322,13 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
     GstClockTime local_1, GstClockTime remote, GstClockTime local_2)
 {
   GstClockTime local_avg;
-  gdouble m, b, r_squared;
+  GstClockTimeDiff b;
+  gdouble m, r_squared;
 
   if (local_2 < local_1)
     goto bogus_observation;
 
-  local_avg = (local_2 - local_1) / 2;
+  local_avg = (local_2 + local_1) / 2;
 
   self->local_times[self->time_index] = local_avg;
   self->remote_times[self->time_index] = remote;
@@ -286,8 +346,8 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
         self->filling ? self->time_index : self->window_size, &m, &b,
         &r_squared);
 
-    GST_LOG_OBJECT (self, "adjusting clock to m=%g, b=%g (rsquared=%g)", m, b,
-        r_squared);
+    GST_LOG_OBJECT (self, "adjusting clock to m=%g, b=%" G_GINT64_FORMAT
+        " (rsquared=%g)", m, b, r_squared);
 
     gst_clock_set_rate_offset (GST_CLOCK (self), m, b);
   }
@@ -392,6 +452,7 @@ gst_net_client_clock_thread (gpointer data)
           break;
         }
 
+        DEBUG ("control message: '%c'", command);
         switch (command) {
           case CONTROL_STOP:
             /* break out of the select loop */
@@ -409,10 +470,14 @@ gst_net_client_clock_thread (gpointer data)
       continue;
     } else if (ret == 0) {
       /* timed out, let's send another packet */
+      DEBUG ("timed out");
+
       packet = gst_net_time_packet_new (NULL);
 
       packet->local_time = gst_clock_get_internal_time (GST_CLOCK (self));
 
+      DEBUG ("sending packet, local time = %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (packet->local_time));
       gst_net_time_packet_send (packet, self->sock,
           (struct sockaddr *) self->servaddr, sizeof (struct sockaddr_in));
 
@@ -421,7 +486,7 @@ gst_net_client_clock_thread (gpointer data)
       /* reset timeout */
       self->current_timeout = self->timeout;
       continue;
-    } else if (FD_ISSET (READ_SOCKET (self), &read_fds)) {
+    } else if (FD_ISSET (self->sock, &read_fds)) {
       /* got data in */
       GstClockTime new_local = gst_clock_get_internal_time (GST_CLOCK (self));
 
@@ -431,6 +496,11 @@ gst_net_client_clock_thread (gpointer data)
 
       if (!packet)
         goto receive_error;
+
+      DEBUG ("got packet back");
+      DEBUG ("local_1 = %" GST_TIME_FORMAT, GST_TIME_ARGS (packet->local_time));
+      DEBUG ("remote = %" GST_TIME_FORMAT, GST_TIME_ARGS (packet->remote_time));
+      DEBUG ("local_2 = %" GST_TIME_FORMAT, GST_TIME_ARGS (new_local));
 
       /* observe_times will reset the timeout */
       gst_net_client_clock_observe_times (self, packet->local_time,

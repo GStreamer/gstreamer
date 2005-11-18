@@ -58,9 +58,9 @@ GST_START_TEST (test_functioning)
   server = gst_system_clock_obtain ();
   fail_unless (server != NULL, "failed to get system clock");
 
-  /* move the clock ahead 1 minute */
+  /* move the clock ahead 100 seconds */
   gst_clock_get_rate_offset (server, &rate, &offset);
-  offset += 60 * GST_SECOND;
+  offset += 100 * GST_SECOND;
   gst_clock_set_rate_offset (server, rate, offset);
   servint = gst_clock_get_internal_time (GST_CLOCK (server));
 
@@ -75,6 +75,8 @@ GST_START_TEST (test_functioning)
 
   g_object_get (client, "port", &port, NULL);
   /* g_print ("client connecting to server port %d\n", port); */
+
+  g_usleep (G_USEC_PER_SEC * 60);
 
   /* one for gstreamer, one for ntp, one for us */
   ASSERT_OBJECT_REFCOUNT (server, "system clock", 3);
@@ -95,6 +97,8 @@ gst_net_client_clock_suite (void)
 {
   Suite *s = suite_create ("GstNetClientClock");
   TCase *tc_chain = tcase_create ("generic tests");
+
+  tcase_set_timeout (tc_chain, 0);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_instantiation);
