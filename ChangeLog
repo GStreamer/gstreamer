@@ -1,3 +1,11 @@
+2005-11-18  Edward Hervey  <edward@fluendo.com>
+
+	* ext/libpng/gstpngenc.c: (gst_pngenc_class_init),
+	(gst_pngenc_chain):
+	Added debug category
+	Return GST_FLOW_UNEXPECTED when sending an EOS, so the whole pipeline
+	goes to EOS.
+
 2005-11-17  Edgard Lima <edgard.lima@indt.org.br>
 
 	* gst/rtp/Makefile.am

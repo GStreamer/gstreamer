@@ -28,13 +28,15 @@
 #define MAX_HEIGHT		4096
 
 
-GstElementDetails gst_pngenc_details = {
+static GstElementDetails gst_pngenc_details = {
   "PNG encoder",
   "Codec/Encoder/Image",
   "Encode a video frame to a .png image",
   "Jeremy SIMON <jsimon13@yahoo.fr>",
 };
 
+GST_DEBUG_CATEGORY (pngenc_debug);
+#define GST_CAT_DEFAULT pngenc_debug
 
 /* Filter signals and args */
 enum
@@ -136,6 +138,8 @@ gst_pngenc_class_init (GstPngEncClass * klass)
           "PNG compression level",
           Z_NO_COMPRESSION, Z_BEST_COMPRESSION,
           DEFAULT_COMPRESSION_LEVEL, (GParamFlags) G_PARAM_READWRITE));
+
+  GST_DEBUG_CATEGORY_INIT (pngenc_debug, "pngenc", 0, "PNG image encoder");
 }
 
 
@@ -247,6 +251,8 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 
   pngenc = GST_PNGENC (gst_pad_get_parent (pad));
 
+  GST_DEBUG_OBJECT (pngenc, "BEGINNING");
+
   pngenc->buffer_out = NULL;
 
   /* initialize png struct stuff */
@@ -315,11 +321,14 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
     goto done;
 
   if (pngenc->snapshot) {
+    GST_DEBUG_OBJECT (pngenc, "snapshot mode, sending EOS");
     /* send EOS event, since a frame has been pushed out */
     GstEvent *event = gst_event_new_eos ();
 
     ret = gst_pad_push_event (pngenc->srcpad, event);
 
+    if (!(GST_FLOW_IS_FATAL (ret)))
+      ret = GST_FLOW_UNEXPECTED;
   }
 /*  else if (pngenc->newmedia) { */
 /*     /\* send new media discont *\/ */
@@ -331,6 +340,9 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 /*     ret = gst_pad_push (pngenc->srcpad, GST_DATA (newmedia_event)); */
 /*   } */
 done:
+  GST_DEBUG_OBJECT (pngenc, "END, ret:%d", ret);
+
+  gst_object_unref (pngenc);
   return ret;
 }
 
