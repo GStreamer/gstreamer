@@ -1,5 +1,27 @@
 2005-11-19  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstvalue.h: 
+	* gst/gstvalue.c (gst_value_array_append_value) 
+	(gst_value_array_prepend_value, gst_value_array_get_size) 
+	(gst_value_array_get_value): New API, copied from
+	gst_value_list_*, only operates on arrays.
+	(gst_value_list_append_value, gst_value_list_prepend_value) 
+	(gst_value_list_concat, gst_value_list_get_size) 
+	(gst_value_list_get_value): Only operate on lists. Fixes #156633.
+
+	* gst/gstvalue.c (gst_value_init_list_or_array): Renamed from
+	init_list, because it works on both.
+	(copy_garray_of_gstvalue): Renamed from gst_value_list_copy_array.
+	(gst_value_copy_list_or_array): Renamed from copy_list.
+	(gst_value_free_list_or_array): Renamed from free_list.
+	(gst_value_collect_list_or_array): Renamed from collect_list.
+	(gst_value_lcopy_list_or_array): Renamed from lcopy_list.
+	(gst_value_list_or_array_peek_pointer): Renamed from
+	list_peek_pointer.
+	(_gst_value_array_value_table, _gst_value_list_value_table):
+	Update value table functions.
+	(gst_value_compare_list_or_array): Renamed from compare_list.
+
 	* gsttaglist.h: Whoops, foreach function returns void. Also fix
 	some constness.
 

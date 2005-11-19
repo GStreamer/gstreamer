@@ -157,13 +157,13 @@ gst_type_is_fixed (GType type)
 
 /* GValue functions usable for both regular lists and arrays */
 static void
-gst_value_init_list (GValue * value)
+gst_value_init_list_or_array (GValue * value)
 {
   value->data[0].v_pointer = g_array_new (FALSE, TRUE, sizeof (GValue));
 }
 
 static GArray *
-gst_value_list_array_copy (const GArray * src)
+copy_garray_of_gstvalue (const GArray * src)
 {
   GArray *dest;
   guint i;
@@ -179,14 +179,14 @@ gst_value_list_array_copy (const GArray * src)
 }
 
 static void
-gst_value_copy_list (const GValue * src_value, GValue * dest_value)
+gst_value_copy_list_or_array (const GValue * src_value, GValue * dest_value)
 {
   dest_value->data[0].v_pointer =
-      gst_value_list_array_copy ((GArray *) src_value->data[0].v_pointer);
+      copy_garray_of_gstvalue ((GArray *) src_value->data[0].v_pointer);
 }
 
 static void
-gst_value_free_list (GValue * value)
+gst_value_free_list_or_array (GValue * value)
 {
   guint i;
   GArray *src = (GArray *) value->data[0].v_pointer;
@@ -200,13 +200,13 @@ gst_value_free_list (GValue * value)
 }
 
 static gpointer
-gst_value_list_peek_pointer (const GValue * value)
+gst_value_list_or_array_peek_pointer (const GValue * value)
 {
   return value->data[0].v_pointer;
 }
 
 static gchar *
-gst_value_collect_list (GValue * value, guint n_collect_values,
+gst_value_collect_list_or_array (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
   if (collect_flags & G_VALUE_NOCOPY_CONTENTS) {
@@ -214,13 +214,13 @@ gst_value_collect_list (GValue * value, guint n_collect_values,
     value->data[1].v_uint = G_VALUE_NOCOPY_CONTENTS;
   } else {
     value->data[0].v_pointer =
-        gst_value_list_array_copy ((GArray *) collect_values[0].v_pointer);
+        copy_garray_of_gstvalue ((GArray *) collect_values[0].v_pointer);
   }
   return NULL;
 }
 
 static gchar *
-gst_value_lcopy_list (const GValue * value, guint n_collect_values,
+gst_value_lcopy_list_or_array (const GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
   GArray **dest = collect_values[0].v_pointer;
@@ -234,34 +234,14 @@ gst_value_lcopy_list (const GValue * value, guint n_collect_values,
   if (collect_flags & G_VALUE_NOCOPY_CONTENTS) {
     *dest = (GArray *) value->data[0].v_pointer;
   } else {
-    *dest = gst_value_list_array_copy ((GArray *) value->data[0].v_pointer);
+    *dest = copy_garray_of_gstvalue ((GArray *) value->data[0].v_pointer);
   }
   return NULL;
 }
 
 /**
- * gst_value_list_prepend_value:
- * @value: a GstValueList to prepend a value to
- * @prepend_value: the value to prepend
- *
- * Prepends @prepend_value to the GstValueList in @value.
- *
- */
-void
-gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
-{
-  GValue val = { 0, };
-
-  g_return_if_fail (GST_VALUE_HOLDS_LIST (value)
-      || GST_VALUE_HOLDS_ARRAY (value));
-
-  gst_value_init_and_copy (&val, prepend_value);
-  g_array_prepend_vals ((GArray *) value->data[0].v_pointer, &val, 1);
-}
-
-/**
  * gst_value_list_append_value:
- * @value: a GstValueList to append a value to
+ * @value: a #GValue of type #GST_TYPE_LIST
  * @append_value: the value to append
  *
  * Appends @append_value to the GstValueList in @value.
@@ -271,59 +251,39 @@ gst_value_list_append_value (GValue * value, const GValue * append_value)
 {
   GValue val = { 0, };
 
-  g_return_if_fail (GST_VALUE_HOLDS_LIST (value)
-      || GST_VALUE_HOLDS_ARRAY (value));
+  g_return_if_fail (GST_VALUE_HOLDS_LIST (value));
 
   gst_value_init_and_copy (&val, append_value);
   g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
 }
 
 /**
- * gst_value_list_get_size:
- * @value: a #GValue of type #GST_LIST_TYPE or #GST_ARRAY_TYPE
+ * gst_value_list_prepend_value:
+ * @value: a #GValue of type #GST_TYPE_LIST
+ * @prepend_value: the value to prepend
  *
- * Gets the number of values contained in @value.
- *
- * Returns: the number of values
+ * Prepends @prepend_value to the GstValueList in @value.
  */
-guint
-gst_value_list_get_size (const GValue * value)
+void
+gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
 {
-  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value)
-      || GST_VALUE_HOLDS_ARRAY (value), 0);
+  GValue val = { 0, };
 
-  return ((GArray *) value->data[0].v_pointer)->len;
-}
+  g_return_if_fail (GST_VALUE_HOLDS_LIST (value));
 
-/**
- * gst_value_list_get_value:
- * @value: a #GValue of type #GST_LIST_TYPE or #GST_ARRAY_TYPE
- * @index: index of value to get from the list
- *
- * Gets the value that is a member of the list contained in @value and
- * has the index @index.
- *
- * Returns: the value at the given index
- */
-const GValue *
-gst_value_list_get_value (const GValue * value, guint index)
-{
-  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value)
-      || GST_VALUE_HOLDS_ARRAY (value), NULL);
-  g_return_val_if_fail (index < gst_value_list_get_size (value), NULL);
-
-  return (const GValue *) &g_array_index ((GArray *) value->data[0].v_pointer,
-      GValue, index);
+  gst_value_init_and_copy (&val, prepend_value);
+  g_array_prepend_vals ((GArray *) value->data[0].v_pointer, &val, 1);
 }
 
 /**
  * gst_value_list_concat:
  * @dest: an uninitialized #GValue to take the result
- * @value1: first value to put into the union
- * @value2: second value to put into the union
+ * @value1: a #GValue
+ * @value1: a #GValue
  *
- * Concatenates copies of value1 and value2 into a list.  The value
- * @dest is initialized to the type GST_TYPE_LIST.
+ * Concatenates copies of @value1 and @value2 into a list.  Values that are not
+ * of type #GST_TYPE_LIST are treated as if they were lists of length 1.
+ * @dest will be initialized to the type #GST_TYPE_LIST.
  */
 void
 gst_value_list_concat (GValue * dest, const GValue * value1,
@@ -365,6 +325,114 @@ gst_value_list_concat (GValue * dest, const GValue * value1,
   }
 }
 
+/**
+ * gst_value_list_get_size:
+ * @value: a #GValue of type #GST_TYPE_LIST
+ *
+ * Gets the number of values contained in @value.
+ *
+ * Returns: the number of values
+ */
+guint
+gst_value_list_get_size (const GValue * value)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value), 0);
+
+  return ((GArray *) value->data[0].v_pointer)->len;
+}
+
+/**
+ * gst_value_list_get_value:
+ * @value: a #GValue of type #GST_TYPE_LIST
+ * @index: index of value to get from the list
+ *
+ * Gets the value that is a member of the list contained in @value and
+ * has the index @index.
+ *
+ * Returns: the value at the given index
+ */
+const GValue *
+gst_value_list_get_value (const GValue * value, guint index)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_LIST (value), NULL);
+  g_return_val_if_fail (index < gst_value_list_get_size (value), NULL);
+
+  return (const GValue *) &g_array_index ((GArray *) value->data[0].v_pointer,
+      GValue, index);
+}
+
+/**
+ * gst_value_array_append_value:
+ * @value: a #GValue of type #GST_TYPE_ARRAY
+ * @append_value: the value to append
+ *
+ * Appends @append_value to the GstValueArray in @value.
+ */
+void
+gst_value_array_append_value (GValue * value, const GValue * append_value)
+{
+  GValue val = { 0, };
+
+  g_return_if_fail (GST_VALUE_HOLDS_ARRAY (value));
+
+  gst_value_init_and_copy (&val, append_value);
+  g_array_append_vals ((GArray *) value->data[0].v_pointer, &val, 1);
+}
+
+/**
+ * gst_value_array_prepend_value:
+ * @value: a #GValue of type #GST_TYPE_ARRAY
+ * @prepend_value: the value to prepend
+ *
+ * Prepends @prepend_value to the GstValueArray in @value.
+ */
+void
+gst_value_array_prepend_value (GValue * value, const GValue * prepend_value)
+{
+  GValue val = { 0, };
+
+  g_return_if_fail (GST_VALUE_HOLDS_ARRAY (value));
+
+  gst_value_init_and_copy (&val, prepend_value);
+  g_array_prepend_vals ((GArray *) value->data[0].v_pointer, &val, 1);
+}
+
+/**
+ * gst_value_array_get_size:
+ * @value: a #GValue of type #GST_TYPE_ARRAY
+ *
+ * Gets the number of values contained in @value.
+ *
+ * Returns: the number of values
+ */
+guint
+gst_value_array_get_size (const GValue * value)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_ARRAY (value), 0);
+
+  return ((GArray *) value->data[0].v_pointer)->len;
+}
+
+/**
+ * gst_value_array_get_value:
+ * @value: a #GValue of type #GST_TYPE_ARRAY
+ * @index: index of value to get from the array
+ *
+ * Gets the value that is a member of the array contained in @value and
+ * has the index @index.
+ *
+ * Returns: the value at the given index
+ */
+const GValue *
+gst_value_array_get_value (const GValue * value, guint index)
+{
+  g_return_val_if_fail (GST_VALUE_HOLDS_ARRAY (value), NULL);
+  g_return_val_if_fail (index < gst_value_array_get_size (value), NULL);
+
+  return (const GValue *) &g_array_index ((GArray *) value->data[0].v_pointer,
+      GValue, index);
+}
+
 static void
 gst_value_transform_list_string (const GValue * src_value, GValue * dest_value)
 {
@@ -378,7 +446,7 @@ gst_value_transform_array_string (const GValue * src_value, GValue * dest_value)
 }
 
 static int
-gst_value_compare_list (const GValue * value1, const GValue * value2)
+gst_value_compare_list_or_array (const GValue * value1, const GValue * value2)
 {
   guint i, j;
   GArray *array1 = value1->data[0].v_pointer;
@@ -3158,27 +3226,27 @@ static const GTypeValueTable _gst_double_range_value_table = {
 FUNC_VALUE_GET_TYPE (double_range, "GstDoubleRange");
 
 static const GTypeValueTable _gst_value_list_value_table = {
-  gst_value_init_list,
-  gst_value_free_list,
-  gst_value_copy_list,
-  gst_value_list_peek_pointer,
+  gst_value_init_list_or_array,
+  gst_value_free_list_or_array,
+  gst_value_copy_list_or_array,
+  gst_value_list_or_array_peek_pointer,
   "p",
-  gst_value_collect_list,
+  gst_value_collect_list_or_array,
   "p",
-  gst_value_lcopy_list
+  gst_value_lcopy_list_or_array
 };
 
 FUNC_VALUE_GET_TYPE (value_list, "GstValueList");
 
 static const GTypeValueTable _gst_value_array_value_table = {
-  gst_value_init_list,
-  gst_value_free_list,
-  gst_value_copy_list,
-  gst_value_list_peek_pointer,
+  gst_value_init_list_or_array,
+  gst_value_free_list_or_array,
+  gst_value_copy_list_or_array,
+  gst_value_list_or_array_peek_pointer,
   "p",
-  gst_value_collect_list,
+  gst_value_collect_list_or_array,
   "p",
-  gst_value_lcopy_list
+  gst_value_lcopy_list_or_array
 };
 
 FUNC_VALUE_GET_TYPE (value_array, "GstValueArray");
@@ -3267,7 +3335,7 @@ _gst_value_initialize (void)
   {
     static GstValueTable gst_value = {
       0,
-      gst_value_compare_list,
+      gst_value_compare_list_or_array,
       gst_value_serialize_list,
       gst_value_deserialize_list,
     };
@@ -3279,7 +3347,7 @@ _gst_value_initialize (void)
   {
     static GstValueTable gst_value = {
       0,
-      gst_value_compare_list,
+      gst_value_compare_list_or_array,
       gst_value_serialize_array,
       gst_value_deserialize_array,
     };

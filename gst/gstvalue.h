@@ -387,6 +387,16 @@ G_CONST_RETURN GValue *
 		gst_value_list_get_value	(const GValue	*value,
 						 guint		index);
 
+/* array */
+void		gst_value_array_append_value	(GValue		*value,
+						 const GValue	*append_value);
+void		gst_value_array_prepend_value	(GValue		*value,
+						 const GValue	*prepend_value);
+guint		gst_value_array_get_size	(const GValue	*value);
+G_CONST_RETURN GValue *
+		gst_value_array_get_value	(const GValue	*value,
+						 guint		index);
+
 /* fourcc */
 void		gst_value_set_fourcc		(GValue		*value,
 						 guint32	fourcc);
