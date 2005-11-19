@@ -1912,35 +1912,6 @@ complete:
 }
 
 /**
- * gst_element_commit_state:
- * @element: a #GstElement to commit the state of.
- *
- * Commit the state change of the element. This function is used
- * by elements that do asynchronous state changes.
- * The core will normally call this method automatically when an
- * element returned SUCCESS from the state change function.
- * Elements that return ASYNC from the change_state function should
- * eventually call this method from the streaming thread to signal
- * successfull state change completion.
- *
- * If after calling this method the element still has not reached
- * the pending state, the next state change is performed.
- *
- * This function can only be called with the STATE_LOCK held.
- *
- * Returns: The result of the commit state change.
- *
- * MT safe.
- */
-GstStateChangeReturn
-gst_element_commit_state (GstElement * element)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
-
-  return gst_element_continue_state (element, GST_STATE_CHANGE_SUCCESS);
-}
-
-/**
  * gst_element_lost_state:
  * @element: a #GstElement the state is lost of
  *

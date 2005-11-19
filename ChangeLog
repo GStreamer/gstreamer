@@ -1,5 +1,17 @@
 2005-11-19  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstutils.h:
+	* gst/gstutils.c (g_static_rec_cond_wait)
+	(g_static_rec_cond_timed_wait): Removed, no longer needed.
+
+	* gst/gstbin.c: Remove terrible continue_state prototype.
+
+	* gst/gstelement.h (gst_element_continue_state): Make public.
+
+	* gst/gstelement.h:
+	* gst/gstelement.c (gst_element_commit_state): Removed, replaced
+	by continue_state. Fixes #319389.
+
 	* gst/gstindex.h (GstIndexFilter): Actually pass on the user_data.
 	Really fixes #168438. However I don't see anywhere where the
 	filter function is called... stupid GStreamer...

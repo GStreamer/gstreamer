@@ -588,7 +588,8 @@ GstStateChangeReturn	gst_element_get_state		(GstElement * element,
 GstStateChangeReturn	gst_element_set_state		(GstElement *element, GstState state);
 
 void			gst_element_abort_state		(GstElement * element);
-GstStateChangeReturn	gst_element_commit_state	(GstElement * element);
+GstStateChangeReturn	gst_element_continue_state	(GstElement * element,
+                                                         GstStateChangeReturn ret);
 void			gst_element_lost_state	        (GstElement * element);
 
 /* factory management */

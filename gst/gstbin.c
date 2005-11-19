@@ -1156,10 +1156,6 @@ gst_bin_get_state_func (GstElement * element, GstState * state,
   return ret;
 }
 
-/* FIXME, defined in gstelement.c but not yet in the header */
-GstStateChangeReturn
-gst_element_continue_state (GstElement * element, GstStateChangeReturn ret);
-
 static void
 gst_bin_recalc_state (GstBin * bin, gboolean force)
 {
