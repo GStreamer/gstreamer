@@ -1,3 +1,12 @@
+2005-11-19  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h (gst_tag_list_foreach): Operates on a const
+	GstTagList*. Fixes #143472.
+
+	* gst/gststructure.h: Clarify what the foreach/map functions can
+	or can't do to their arguments.
+
 2005-11-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstclock.c: (gst_clock_set_calibration),

@@ -801,7 +801,7 @@ structure_foreach_wrapper (GQuark field_id, const GValue * value,
  * is no tag, the function won't be called at all.
  */
 void
-gst_tag_list_foreach (GstTagList * list, GstTagForeachFunc func,
+gst_tag_list_foreach (const GstTagList * list, GstTagForeachFunc func,
     gpointer user_data)
 {
   TagForeachData data;

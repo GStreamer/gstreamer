@@ -56,7 +56,22 @@ typedef GstStructure GstTagList;
 #define GST_IS_TAG_LIST(x)	(gst_is_tag_list (GST_TAG_LIST (x)))
 #define GST_TYPE_TAG_LIST       (gst_tag_list_get_type ())
 
-typedef void		(* GstTagForeachFunc)	(const GstTagList *list, const gchar *tag, gpointer user_data);
+/**
+ * GstTagForeachFunc:
+ * @list: the #GstTagList
+ * @tag: a name of a tag in @list
+ * @user_data: user data
+ *
+ * A function that will be called in gst_tag_list_foreach(). The function may
+ * not modify the tag list.
+ *
+ * Returns: TRUE if the foreach operation should continue, FALSE if
+ * the foreach operation should stop with FALSE.
+ */
+typedef gboolean (*GstTagForeachFunc) (const GstTagList *list,
+				       const gchar * tag,
+				       gpointer user_data);
+
 typedef void		(* GstTagMergeFunc)	(GValue *dest, const GValue *src);
 
 /* initialize tagging system */
@@ -116,7 +131,7 @@ void		gst_tag_list_add_valist_values	(GstTagList *		list,
 						 va_list		var_args);
 void		gst_tag_list_remove_tag		(GstTagList *		list,
 						 const gchar *		tag);
-void		gst_tag_list_foreach		(GstTagList *		list,
+void		gst_tag_list_foreach		(const GstTagList *	list,
 						 GstTagForeachFunc	func,
 						 gpointer		user_data);
 

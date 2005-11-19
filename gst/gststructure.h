@@ -38,7 +38,8 @@ typedef struct _GstStructure GstStructure;
  * @value: the #GValue of the field
  * @user_data: user data
  *
- * A function that will be called in gst_structure_foreach()
+ * A function that will be called in gst_structure_foreach(). The function may
+ * not modify @value.
  *
  * Returns: TRUE if the foreach operation should continue, FALSE if
  * the foreach operation should stop with FALSE.
@@ -53,7 +54,8 @@ typedef gboolean (*GstStructureForeachFunc) (GQuark   field_id,
  * @value: the #GValue of the field
  * @user_data: user data
  *
- * A function that will be called in gst_structure_map_in_place()
+ * A function that will be called in gst_structure_map_in_place(). The function
+ * may modify @value.
  *
  * Returns: TRUE if the map operation should continue, FALSE if
  * the map operation should stop with FALSE.
