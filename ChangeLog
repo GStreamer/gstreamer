@@ -1,5 +1,14 @@
 2005-11-19  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstindex.h (GstIndex): Add field for user_data_destroy. We
+	don't have a dispose function, so it won't get called when the
+	object is unreffed, but oh well!
+
+	* gst/gstindex.c (gst_index_set_filter_full): New API function,
+	allows a destroy function to be set so user_data can be freed.
+	Fixes #168438.
+	(gst_index_set_filter): Call gst_index_set_filter_full.
+
 	* check/gst/gstvalue.c (test_string): Add test for bug #165650.
 
 	* gst/gstvalue.c (gst_string_wrap): Trying to serialize a NULL

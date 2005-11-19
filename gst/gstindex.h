@@ -327,6 +327,7 @@ struct _GstIndex {
 
   GstIndexFilter	 filter;
   gpointer		 filter_user_data;
+  GDestroyNotify	 filter_user_data_destroy;
 
   GHashTable		*writers;
   gint			 last_id;
@@ -369,6 +370,9 @@ GstIndexCertainty	gst_index_get_certainty		(GstIndex *index);
 
 void			gst_index_set_filter		(GstIndex *index,
 		                                         GstIndexFilter filter, gpointer user_data);
+void			gst_index_set_filter_full	(GstIndex *index,
+		                                         GstIndexFilter filter, gpointer user_data,
+                                                         GDestroyNotify user_data_destroy);
 void			gst_index_set_resolver		(GstIndex *index,
 		                                         GstIndexResolver resolver, gpointer user_data);
 

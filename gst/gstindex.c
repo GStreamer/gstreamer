@@ -402,8 +402,31 @@ gst_index_set_filter (GstIndex * index,
 {
   g_return_if_fail (GST_IS_INDEX (index));
 
+  gst_index_set_filter_full (index, filter, user_data, NULL);
+}
+
+/**
+ * gst_index_set_filter_full:
+ * @index: the index to register the filter on
+ * @filter: the filter to register
+ * @user_data: data passed to the filter function
+ * @user_data_destroy: function to call when @user_data is unset
+ *
+ * Lets the app register a custom filter function so that
+ * it can select what entries should be stored in the index.
+ */
+void
+gst_index_set_filter_full (GstIndex * index,
+    GstIndexFilter filter, gpointer user_data, GDestroyNotify user_data_destroy)
+{
+  g_return_if_fail (GST_IS_INDEX (index));
+
+  if (index->filter_user_data && index->filter_user_data_destroy)
+    index->filter_user_data_destroy (index->filter_user_data);
+
   index->filter = filter;
   index->filter_user_data = user_data;
+  index->filter_user_data_destroy = user_data_destroy;
 }
 
 /**
