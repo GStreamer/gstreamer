@@ -43,12 +43,12 @@ static GHashTable *_format_to_nick = NULL;
 static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for UNDEFINED */
 
 static GstFormatDefinition standard_definitions[] = {
-  {GST_FORMAT_DEFAULT, "default", "Default format for the media type"},
-  {GST_FORMAT_BYTES, "bytes", "Bytes"},
-  {GST_FORMAT_TIME, "time", "Time"},
-  {GST_FORMAT_BUFFERS, "buffers", "Buffers"},
-  {GST_FORMAT_PERCENT, "percent", "Percent"},
-  {0, NULL, NULL}
+  {GST_FORMAT_DEFAULT, "default", "Default format for the media type", 0},
+  {GST_FORMAT_BYTES, "bytes", "Bytes", 0},
+  {GST_FORMAT_TIME, "time", "Time", 0},
+  {GST_FORMAT_BUFFERS, "buffers", "Buffers", 0},
+  {GST_FORMAT_PERCENT, "percent", "Percent", 0},
+  {0, NULL, NULL, 0}
 };
 
 void
@@ -63,6 +63,7 @@ _gst_format_initialize (void)
   }
 
   while (standards->nick) {
+    standards->quark = g_quark_from_static_string (standards->nick);
     g_hash_table_insert (_nick_to_format, standards->nick, standards);
     g_hash_table_insert (_format_to_nick, GINT_TO_POINTER (standards->value),
         standards);
@@ -72,6 +73,26 @@ _gst_format_initialize (void)
     _n_values++;
   }
   g_static_mutex_unlock (&mutex);
+}
+
+const gchar *
+gst_format_get_name (GstFormat format)
+{
+  const GstFormatDefinition *def;
+
+  def = gst_format_get_details (format);
+
+  return def->nick;
+}
+
+GQuark
+gst_format_to_quark (GstFormat format)
+{
+  const GstFormatDefinition *def;
+
+  def = gst_format_get_details (format);
+
+  return def->quark;
 }
 
 /**
@@ -104,6 +125,7 @@ gst_format_register (const gchar * nick, const gchar * description)
   format->value = _n_values;
   format->nick = g_strdup (nick);
   format->description = g_strdup (description);
+  format->quark = g_quark_from_static_string (format->nick);
 
   g_static_mutex_lock (&mutex);
   g_hash_table_insert (_nick_to_format, format->nick, format);

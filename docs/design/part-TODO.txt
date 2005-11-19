@@ -11,8 +11,6 @@ API/ABI
 
 - make it possible to seek on other formats than bytes in basesrc.
 
-- GstFormat, GstQuery quarks, get_name. 
-
 - GstEvent, GstMessage register like GstFormat or GstQuery.
 
 - unblocking while seeking. gst_element_flush_pads (GstElement, gboolean);

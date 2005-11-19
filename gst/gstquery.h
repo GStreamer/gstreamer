@@ -49,6 +49,8 @@ G_BEGIN_DECLS
  *
  * Standard predefined Query types
  */
+/* NOTE: don't forget to update the table in gstquery.c when changing
+ * this enum */
 typedef enum {
   GST_QUERY_NONE = 0,
   GST_QUERY_POSITION,
@@ -86,6 +88,7 @@ struct _GstQueryTypeDefinition
   GstQueryType   value;
   gchar     	*nick;
   gchar     	*description;
+  GQuark         quark;
 };
 
 #define GST_TYPE_QUERY				(gst_query_get_type())
@@ -118,6 +121,10 @@ struct _GstQueryClass {
 };
 
 void            _gst_query_initialize          (void);
+
+const gchar*    gst_query_type_get_name        (GstQueryType query);
+GQuark          gst_query_type_to_quark        (GstQueryType query);
+
 GType		gst_query_get_type             (void);
 
 /* register a new query */

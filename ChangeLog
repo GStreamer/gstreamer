@@ -1,3 +1,15 @@
+2005-11-19  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	* gst/gstformat.c: (_gst_format_initialize), (gst_format_get_name),
+	(gst_format_to_quark), (gst_format_register):
+	* gst/gstformat.h:
+	* gst/gstquery.c: (_gst_query_initialize),
+	(gst_query_type_get_name), (gst_query_type_to_quark),
+	(gst_query_type_register):
+	* gst/gstquery.h:
+	Add type to quark and type to string conversions.
+
 2005-11-19  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbuffer.h (GST_BUFFER_FLAG_ORIGINAL): Removed. Fixes

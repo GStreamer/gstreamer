@@ -34,7 +34,8 @@ G_BEGIN_DECLS
 /**
  * GstFormat:
  * @GST_FORMAT_UNDEFINED: undefined format
- * @GST_FORMAT_DEFAULT: the default format of the pad/element
+ * @GST_FORMAT_DEFAULT: the default format of the pad/element. This can be
+ *    samples for raw audio, frames/fields for raw video.
  * @GST_FORMAT_BYTES: bytes
  * @GST_FORMAT_TIME: time in nanoseconds
  * @GST_FORMAT_BUFFERS: buffers
@@ -42,9 +43,11 @@ G_BEGIN_DECLS
  *
  * Standard predefined formats
  */
+/* NOTE: don't forget to update the table in gstformat.c when changing
+ * this enum */
 typedef enum {
   GST_FORMAT_UNDEFINED 	=  0, /* must be first in list */
-  GST_FORMAT_DEFAULT   	=  1, /* samples for raw audio, frames/fields for raw video */
+  GST_FORMAT_DEFAULT   	=  1,
   GST_FORMAT_BYTES   	=  2,
   GST_FORMAT_TIME 	=  3,
   GST_FORMAT_BUFFERS	=  4,
@@ -81,9 +84,13 @@ struct _GstFormatDefinition
   GstFormat  value;
   gchar     *nick;
   gchar     *description;
+  GQuark     quark;
 };
 
 void		_gst_format_initialize		(void);
+
+const gchar*    gst_format_get_name             (GstFormat format);
+GQuark          gst_format_to_quark             (GstFormat format);
 
 /* register a new format */
 GstFormat	gst_format_register		(const gchar *nick,

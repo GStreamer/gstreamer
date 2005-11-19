@@ -58,16 +58,16 @@ static GHashTable *_query_type_to_nick = NULL;
 static guint32 _n_values = 1;   /* we start from 1 because 0 reserved for NONE */
 
 static GstQueryTypeDefinition standard_definitions[] = {
-  {GST_QUERY_POSITION, "position", "Current position"},
-  {GST_QUERY_DURATION, "duration", "Total duration"},
-  {GST_QUERY_LATENCY, "latency", "Latency"},
-  {GST_QUERY_JITTER, "jitter", "Jitter"},
-  {GST_QUERY_RATE, "rate", "Configured rate 1000000 = 1"},
-  {GST_QUERY_SEEKING, "seeking", "Seeking capabilities and parameters"},
-  {GST_QUERY_SEGMENT, "segment", "currently configured segment"},
-  {GST_QUERY_CONVERT, "convert", "Converting between formats"},
-  {GST_QUERY_FORMATS, "formats", "Supported formats for conversion"},
-  {0, NULL, NULL}
+  {GST_QUERY_POSITION, "position", "Current position", 0},
+  {GST_QUERY_DURATION, "duration", "Total duration", 0},
+  {GST_QUERY_LATENCY, "latency", "Latency", 0},
+  {GST_QUERY_JITTER, "jitter", "Jitter", 0},
+  {GST_QUERY_RATE, "rate", "Configured rate 1000000 = 1", 0},
+  {GST_QUERY_SEEKING, "seeking", "Seeking capabilities and parameters", 0},
+  {GST_QUERY_SEGMENT, "segment", "currently configured segment", 0},
+  {GST_QUERY_CONVERT, "convert", "Converting between formats", 0},
+  {GST_QUERY_FORMATS, "formats", "Supported formats for conversion", 0},
+  {0, NULL, NULL, 0}
 };
 
 void
@@ -86,6 +86,7 @@ _gst_query_initialize (void)
   }
 
   while (standards->nick) {
+    standards->quark = g_quark_from_static_string (standards->nick);
     g_hash_table_insert (_nick_to_query, standards->nick, standards);
     g_hash_table_insert (_query_type_to_nick,
         GINT_TO_POINTER (standards->value), standards);
@@ -97,6 +98,26 @@ _gst_query_initialize (void)
   g_static_mutex_unlock (&mutex);
 
   gst_query_get_type ();
+}
+
+const gchar *
+gst_query_type_get_name (GstQueryType query)
+{
+  const GstQueryTypeDefinition *def;
+
+  def = gst_query_type_get_details (query);
+
+  return def->nick;
+}
+
+GQuark
+gst_query_type_to_quark (GstQueryType query)
+{
+  const GstQueryTypeDefinition *def;
+
+  def = gst_query_type_get_details (query);
+
+  return def->quark;
 }
 
 GType
@@ -201,6 +222,7 @@ gst_query_type_register (const gchar * nick, const gchar * description)
   query->value = _n_values;
   query->nick = g_strdup (nick);
   query->description = g_strdup (description);
+  query->quark = g_quark_from_static_string (query->nick);
 
   g_static_mutex_lock (&mutex);
   g_hash_table_insert (_nick_to_query, query->nick, query);
