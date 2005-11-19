@@ -1,5 +1,11 @@
 2005-11-19  Andy Wingo  <wingo@pobox.com>
 
+	* check/gst/gstvalue.c (test_string): Add test for bug #165650.
+
+	* gst/gstvalue.c (gst_string_wrap): Trying to serialize a NULL
+	string should produce an error, given the lack of a way to
+	represent NULL strings. Fixes #165650.
+	
 	* gst/gstvalue.h: 
 	* gst/gstvalue.c (gst_value_array_append_value) 
 	(gst_value_array_prepend_value, gst_value_array_get_size) 

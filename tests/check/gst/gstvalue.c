@@ -256,6 +256,9 @@ GST_START_TEST (test_string)
         "\nserialized  : %s\ndeserialized: %s", try[i],
         g_value_get_string (&v));
   }
+  /* NULL strings should not be serializable */
+  g_value_set_string (&v, NULL);
+  fail_unless (gst_value_serialize (&v) == NULL);
   g_value_unset (&v);
 }
 
