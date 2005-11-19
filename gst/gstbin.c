@@ -147,6 +147,7 @@ static void gst_bin_set_index_func (GstElement * element, GstIndex * index);
 static GstClock *gst_bin_provide_clock_func (GstElement * element);
 static void gst_bin_set_clock_func (GstElement * element, GstClock * clock);
 
+static void gst_bin_handle_message_func (GstBin * bin, GstMessage * message);
 static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
 static GstBusSyncReply bin_bus_handler (GstBus * bus,
     GstMessage * message, GstBin * bin);
@@ -336,6 +337,7 @@ gst_bin_class_init (GstBinClass * klass)
 
   klass->add_element = GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element = GST_DEBUG_FUNCPTR (gst_bin_remove_func);
+  klass->handle_message = GST_DEBUG_FUNCPTR (gst_bin_handle_message_func);
 
   GST_DEBUG ("creating bin thread pool");
   err = NULL;
@@ -497,7 +499,7 @@ gst_bin_provide_clock_func (GstElement * element)
   }
   gst_object_replace ((GstObject **) & bin->provided_clock,
       (GstObject *) result);
-  gst_object_replace ((GstObject **) & bin->ABI.clock_provider,
+  gst_object_replace ((GstObject **) & bin->clock_provider,
       (GstObject *) provider);
   bin->clock_dirty = FALSE;
   GST_DEBUG_OBJECT (bin, "provided new clock %p", result);
@@ -871,7 +873,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   /* if the clock provider for this element is removed, we lost
    * the clock as well, we need to inform the parent of this
    * so that it can select a new clock */
-  if (bin->ABI.clock_provider == element) {
+  if (bin->clock_provider == element) {
     GST_DEBUG_OBJECT (bin, "element \"%s\" provided the clock", elem_name);
     bin->clock_dirty = TRUE;
     clock_message =
@@ -1840,6 +1842,21 @@ gst_bin_recalc_func (GstBin * bin, gpointer data)
 static GstBusSyncReply
 bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 {
+
+  GstBinClass *bclass;
+
+  bclass = GST_BIN_GET_CLASS (bin);
+  if (bclass->handle_message)
+    bclass->handle_message (bin, message);
+  else
+    gst_message_unref (message);
+
+  return GST_BUS_DROP;
+}
+
+static void
+gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
+{
   GST_DEBUG_OBJECT (bin, "[msg %p] handling child message of type %s",
       message, gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
 
@@ -1994,14 +2011,14 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
       goto forward;
   }
 
-  return GST_BUS_DROP;
+  return;
 
 forward:
   {
     /* Send all other messages upward */
     GST_DEBUG_OBJECT (bin, "posting message upward");
     gst_element_post_message (GST_ELEMENT_CAST (bin), message);
-    return GST_BUS_DROP;
+    return;
   }
 }
 

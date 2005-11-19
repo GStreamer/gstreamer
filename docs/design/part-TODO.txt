@@ -9,17 +9,6 @@ API/ABI
 
 - convert framerate to GstFraction in GstCaps.
 
-- implement latency calculation for live sources.
-
-- implement master/slave clocks.
-
-- implement QOS.
-
-- implement BUFFERSIZE.
-
-- make bin_bus_handler a vmethod so subclasses can use their own implementation
-  or chain to the parent.
-
 - make it possible to seek on other formats than bytes in basesrc.
 
 - GstFormat, GstQuery quarks, get_name. 
@@ -47,7 +36,13 @@ API/ABI
 IMPLEMENTATION
 --------------
 
-- implement clock selection as explained in part-gstpipeline.txt. 
+- implement latency calculation for live sources.
+
+- implement master/slave clocks.
+
+- implement QOS.
+
+- implement BUFFERSIZE.
 
 
 DESIGN

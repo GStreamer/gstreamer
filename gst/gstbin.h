@@ -88,6 +88,7 @@ typedef struct _GstBinClass GstBinClass;
  * @state_dirty: the bin needs to recalculate its state
  * @clock_dirty: the bin needs to select a new clock
  * @provided_clock: the last clock selected
+ * @clock_provider: the element that provided @provided_clock
  *
  * The GstBin base class. Subclasses can access these fields provided
  * the LOCK is taken.
@@ -110,14 +111,10 @@ struct _GstBin {
 
   gboolean       clock_dirty;
   GstClock	*provided_clock;
+  GstElement    *clock_provider;
 
   /*< private >*/
-  union {
-    struct {
-      GstElement *clock_provider;
-    } ABI;
-    gpointer _gst_reserved[GST_PADDING+1-1];
-  };
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -125,9 +122,13 @@ struct _GstBin {
  * @parent_class: bin parent class
  * @add_element: method to add an element to a bin
  * @remove_element: method to remove an element from a bin
+ * @handle_message: method to handle a message from the children
  *
  * Subclasses can override the @add_element and @remove_element to
  * update the list of children in the bin.
+ *
+ * The @handle_message method can be overriden to implement custom
+ * message handling.
  */
 struct _GstBinClass {
   GstElementClass parent_class;
@@ -143,6 +144,8 @@ struct _GstBinClass {
   /* virtual methods for subclasses */
   gboolean	(*add_element)		(GstBin *bin, GstElement *element);
   gboolean	(*remove_element)	(GstBin *bin, GstElement *element);
+
+  void		(*handle_message)	(GstBin *bin, GstMessage *message);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

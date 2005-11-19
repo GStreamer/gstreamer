@@ -1,3 +1,12 @@
+2005-11-19  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_provide_clock_func),
+	(gst_bin_add_func), (gst_bin_remove_func), (bin_bus_handler),
+	(gst_bin_handle_message_func):
+	* gst/gstbin.h:
+	Make message handling overridable.
+
 2005-11-19  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.h (GST_PAD_IS_USABLE): Removed. Fixes #321235.
