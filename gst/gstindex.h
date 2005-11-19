@@ -252,7 +252,8 @@ struct _GstIndexGroup {
  *
  */
 typedef gboolean 	(*GstIndexFilter)	 	(GstIndex *index,
-							 GstIndexEntry *entry);
+							 GstIndexEntry *entry,
+                                                         gpointer user_data);
 /**
  * GstIndexResolverMethod:
  * @GST_INDEX_RESOLVER_CUSTOM: Use a custom resolver

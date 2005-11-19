@@ -1,5 +1,9 @@
 2005-11-19  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstindex.h (GstIndexFilter): Actually pass on the user_data.
+	Really fixes #168438. However I don't see anywhere where the
+	filter function is called... stupid GStreamer...
+	
 	* gst/gstindex.h (GstIndex): Add field for user_data_destroy. We
 	don't have a dispose function, so it won't get called when the
 	object is unreffed, but oh well!
