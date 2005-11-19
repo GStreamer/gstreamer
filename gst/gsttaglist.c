@@ -777,7 +777,7 @@ gst_tag_list_remove_tag (GstTagList * list, const gchar * tag)
 typedef struct
 {
   GstTagForeachFunc func;
-  GstTagList *tag_list;
+  const GstTagList *tag_list;
   gpointer data;
 }
 TagForeachData;

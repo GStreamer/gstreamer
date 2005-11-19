@@ -64,13 +64,10 @@ typedef GstStructure GstTagList;
  *
  * A function that will be called in gst_tag_list_foreach(). The function may
  * not modify the tag list.
- *
- * Returns: TRUE if the foreach operation should continue, FALSE if
- * the foreach operation should stop with FALSE.
  */
-typedef gboolean (*GstTagForeachFunc) (const GstTagList *list,
-				       const gchar * tag,
-				       gpointer user_data);
+typedef void (*GstTagForeachFunc) (const GstTagList *list,
+				   const gchar * tag,
+				   gpointer user_data);
 
 typedef void		(* GstTagMergeFunc)	(GValue *dest, const GValue *src);
 

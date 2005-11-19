@@ -1,5 +1,8 @@
 2005-11-19  Andy Wingo  <wingo@pobox.com>
 
+	* gsttaglist.h: Whoops, foreach function returns void. Also fix
+	some constness.
+
 	* gst/gsttaglist.c:
 	* gst/gsttaglist.h (gst_tag_list_foreach): Operates on a const
 	GstTagList*. Fixes #143472.
