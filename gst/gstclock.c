@@ -549,20 +549,20 @@ gst_clock_finalize (GObject * object)
 
 /**
  * gst_clock_set_resolution
- * @clock: The clock set the resolution on
+ * @clock: a #GstClock
  * @resolution: The resolution to set
  *
  * Set the accuracy of the clock.
  *
  * Returns: the new resolution of the clock.
  */
-guint64
-gst_clock_set_resolution (GstClock * clock, guint64 resolution)
+GstClockTime
+gst_clock_set_resolution (GstClock * clock, GstClockTime resolution)
 {
   GstClockClass *cclass;
 
-  g_return_val_if_fail (GST_IS_CLOCK (clock), G_GINT64_CONSTANT (0));
-  g_return_val_if_fail (resolution != 0, G_GINT64_CONSTANT (0));
+  g_return_val_if_fail (GST_IS_CLOCK (clock), 0);
+  g_return_val_if_fail (resolution != 0, 0);
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
@@ -575,27 +575,27 @@ gst_clock_set_resolution (GstClock * clock, guint64 resolution)
 
 /**
  * gst_clock_get_resolution
- * @clock: The clock get the resolution of
+ * @clock: a #GstClock
  *
  * Get the accuracy of the clock.
  *
- * Returns: the resolution of the clock in microseconds.
+ * Returns: the resolution of the clock in units of #GstClockTime.
  *
  * MT safe.
  */
-guint64
+GstClockTime
 gst_clock_get_resolution (GstClock * clock)
 {
   GstClockClass *cclass;
 
-  g_return_val_if_fail (GST_IS_CLOCK (clock), G_GINT64_CONSTANT (0));
+  g_return_val_if_fail (GST_IS_CLOCK (clock), 0);
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
   if (cclass->get_resolution)
     return cclass->get_resolution (clock);
 
-  return G_GINT64_CONSTANT (1);
+  return 1;
 }
 
 /**

@@ -381,7 +381,7 @@ struct _GstClock {
   GCond		*entries_changed;
 
   /*< private >*/
-  guint64	 resolution;
+  GstClockTime	 resolution;
   gboolean	 stats;
 
   GstClockTime	 _gst_reserved[GST_PADDING];
@@ -392,9 +392,10 @@ struct _GstClockClass {
 
   /*< protected >*/
   /* vtable */
-  guint64               (*change_resolution)    (GstClock *clock, guint64 old_resolution,
-						 guint64 new_resolution);
-  guint64               (*get_resolution)       (GstClock *clock);
+  GstClockTime          (*change_resolution)    (GstClock *clock,
+                                                 GstClockTime old_resolution,
+						 GstClockTime new_resolution);
+  GstClockTime          (*get_resolution)       (GstClock *clock);
 
   GstClockTime		(*get_internal_time)	(GstClock *clock);
 
@@ -409,8 +410,9 @@ struct _GstClockClass {
 
 GType			gst_clock_get_type		(void);
 
-guint64			gst_clock_set_resolution	(GstClock *clock, guint64 resolution);
-guint64			gst_clock_get_resolution	(GstClock *clock);
+GstClockTime		gst_clock_set_resolution	(GstClock *clock,
+                                                         GstClockTime resolution);
+GstClockTime		gst_clock_get_resolution	(GstClock *clock);
 
 GstClockTime		gst_clock_get_time		(GstClock *clock);
 void			gst_clock_set_calibration	(GstClock *clock, GstClockTime internal,
