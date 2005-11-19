@@ -1,5 +1,7 @@
 2005-11-19  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstpad.h (GST_PAD_IS_USABLE): Removed. Fixes #321235.
+
 	* gst/gstclock.h:
 	* gst/gstclock.c (GstClock, GstClockClass): Change resolution to
 	be a GstClockTime.

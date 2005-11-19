@@ -460,8 +460,6 @@ struct _GstPadClass {
 #define GST_PAD_IS_FLUSHING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING))
 #define GST_PAD_IS_IN_GETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS))
 #define GST_PAD_IS_IN_SETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS))
-#define GST_PAD_IS_USABLE(pad)		(GST_PAD_IS_LINKED (pad) && \
-		                         !GST_PAD_IS_FLUSHING(pad) && !GST_PAD_IS_FLUSHING(GST_PAD_PEER (pad)))
 #define GST_PAD_IS_SRC(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SRC)
 #define GST_PAD_IS_SINK(pad)		(GST_PAD_DIRECTION(pad) == GST_PAD_SINK)
 
