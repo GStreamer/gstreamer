@@ -1,3 +1,8 @@
+2005-11-19  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbuffer.h (GST_BUFFER_FLAG_ORIGINAL): Removed. Fixes
+	#320097.
+
 2005-11-19  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:
