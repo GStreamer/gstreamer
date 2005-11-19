@@ -526,15 +526,15 @@ gst_clock_class_init (GstClockClass * klass)
 static void
 gst_clock_init (GstClock * clock)
 {
-  clock->adjust = 0;
   clock->last_time = 0;
   clock->entries = NULL;
   clock->entries_changed = g_cond_new ();
   clock->flags = 0;
   clock->stats = FALSE;
 
-  clock->A.rate = 1.0;
-  clock->A.offset = 0;
+  clock->internal_calibration = 0;
+  clock->external_calibration = 0;
+  clock->rate = 1.0;
 }
 
 static void
@@ -617,8 +617,8 @@ gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
 {
   GstClockTime ret;
 
-  ret = (internal - clock->adjust) * clock->A.rate;
-  ret += clock->A.offset;
+  ret = (internal - clock->internal_calibration) * clock->rate;
+  ret += clock->external_calibration;
 
   /* make sure the time is increasing */
   clock->last_time = MAX (ret, clock->last_time);
@@ -693,76 +693,6 @@ gst_clock_get_time (GstClock * clock)
 }
 
 /**
- * gst_clock_set_time_adjust
- * @clock: a #GstClock to adjust
- * @adjust: the new time
- *
- * Adjusts the time of @clock. This function is buggy and is scheduled to die.
- *
- * Obsolete, do not use.
- *
- * MT safe.
- */
-void
-gst_clock_set_time_adjust (GstClock * clock, GstClockTime adjust)
-{
-  g_return_if_fail (GST_IS_CLOCK (clock));
-
-  GST_LOCK (clock);
-  clock->adjust = adjust;
-  GST_UNLOCK (clock);
-}
-
-/**
- * gst_clock_set_rate_offset
- * @clock: a #GstClock to adjust
- * @rate: the new rate
- * @offset: the "initial" offset of @clock relative to its internal time
- *
- * Adjusts the internal rate and offset of @clock. Obsolete, do not use.
- *
- * Obsolete, do not use.
- *
- * MT safe.
- */
-void
-gst_clock_set_rate_offset (GstClock * clock, gdouble rate,
-    GstClockTimeDiff offset)
-{
-  g_return_if_fail (GST_IS_CLOCK (clock));
-  g_return_if_fail (rate > 0.0);
-
-  GST_LOCK (clock);
-  clock->A.rate = rate;
-  clock->A.offset = offset;
-  GST_UNLOCK (clock);
-}
-
-/**
- * gst_clock_get_rate_offset
- * @clock: a #GstClock to adjust
- * @rate: a location to store the rate
- * @offset: a location to store the offset
- *
- * Obsolete, do not use.
- *
- * MT safe.
- */
-void
-gst_clock_get_rate_offset (GstClock * clock, gdouble * rate,
-    GstClockTimeDiff * offset)
-{
-  g_return_if_fail (GST_IS_CLOCK (clock));
-  g_return_if_fail (rate != NULL);
-  g_return_if_fail (offset != NULL);
-
-  GST_LOCK (clock);
-  *rate = clock->A.rate;
-  *offset = clock->A.offset;
-  GST_UNLOCK (clock);
-}
-
-/**
  * gst_clock_set_calibration
  * @clock: a #GstClock to calibrate
  * @internal: a reference internal time
@@ -800,11 +730,9 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
   g_return_if_fail (internal <= gst_clock_get_internal_time (clock));
 
   GST_LOCK (clock);
-  /* these need to be reworked for the api freeze break, we're really abusing
-   * them now */
-  clock->adjust = internal;
-  clock->A.rate = rate;
-  clock->A.offset = external;
+  clock->internal_calibration = internal;
+  clock->external_calibration = external;
+  clock->rate = rate;
   GST_UNLOCK (clock);
 }
 
@@ -831,11 +759,11 @@ gst_clock_get_calibration (GstClock * clock, GstClockTime * internal,
 
   GST_LOCK (clock);
   if (rate)
-    *rate = clock->A.rate;
+    *rate = clock->rate;
   if (external)
-    *external = clock->A.offset;
+    *external = clock->external_calibration;
   if (internal)
-    *internal = clock->adjust;
+    *internal = clock->internal_calibration;
   GST_UNLOCK (clock);
 }
 

@@ -1,5 +1,13 @@
 2005-11-19  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstclock.h (GstClock): Remove offset property. Add
+	internal_calibration and external_calibration. Fix padding. Pad
+	also by GstClockTime so we don't run into problems.
+
+	* gst/gstclock.c (gst_clock_set_rate_offset): Remove.
+	(gst_clock_get_rate_offset): Remove.
+	(gst_clock_set_time_adjust): Remove. Fixes #321712.
+
 	* gst/gstutils.h:
 	* gst/gstutils.c (g_static_rec_cond_wait)
 	(g_static_rec_cond_timed_wait): Removed, no longer needed.
