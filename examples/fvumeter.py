@@ -1,3 +1,6 @@
+# -*- Mode: Python -*-
+# vi:si:et:sw=4:sts=4:ts=4
+
 # gst-python
 # Copyright (C) 2005 Fluendo S.L.
 # Originally from the Flumotion streaming server.

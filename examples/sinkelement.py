@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- Mode: Python -*-
+# vi:si:et:sw=4:sts=4:ts=4
+
 # sinkelement.py
 # (c) 2005 Edward Hervey <edward@fluendo.com>
 # Licensed under LGPL

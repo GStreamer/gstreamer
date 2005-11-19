@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- Mode: Python -*-
+# vi:si:et:sw=4:sts=4:ts=4
 
 # gstfile.py
 # (c) 2005 Edward Hervey <edward at fluendo dot com>

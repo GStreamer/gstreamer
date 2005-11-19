@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- Mode: Python -*-
+# vi:si:et:sw=4:sts=4:ts=4
 
 # audio concat tool
 # takes in one or more audio files and creates one audio file of the combination

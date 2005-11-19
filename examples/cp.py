@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-#
+# -*- Mode: Python -*-
+# vi:si:et:sw=4:sts=4:ts=4
+
 # gst-python
 # Copyright (C) 2002 David I. Lehn <dlehn@users.sourceforge.net>
 #               2004 Johan Dahlin  <johan@gnome.org>
