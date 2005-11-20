@@ -1,3 +1,9 @@
+2005-11-20  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	* gst/gstcaps.h:
+	Make a proper enum of the flag.
+
 2005-11-19  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:

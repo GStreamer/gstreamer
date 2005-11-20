@@ -30,11 +30,15 @@ G_BEGIN_DECLS
 #define GST_IS_CAPS(object)       ((object) && (GST_CAPS(object)->type == GST_TYPE_CAPS))
 
 /**
- * GST_CAPS_FLAGS_ANY:
+ * GstCapsFlags:
+ * @GST_CAPS_FLAGS_ANY: Caps has no specific content, but can contain
+ *    anything.
  *
- * Flags that this caps has no specific content, but can contain anything.
+ * Extra flags for a caps.
  */
-#define GST_CAPS_FLAGS_ANY	  (1 << 0)
+typedef enum {
+  GST_CAPS_FLAGS_ANY	= (1 << 0)
+} GstCapsFlags;
 
 /**
  * GST_CAPS_ANY:
@@ -125,8 +129,7 @@ typedef struct _GstStaticCaps GstStaticCaps;
  * GstCaps:
  * @type: GType of the caps
  * @refcount: the atomic refcount value
- * @flags: extra flags for the caps
- * @structs: array of #GstStructure for this caps
+ * @flags: extra flags for the caps, read only.
  *
  * Object describing media types.
  */
@@ -137,7 +140,10 @@ struct _GstCaps {
   /* refcounting */
   gint           refcount;
 
-  guint16 flags;
+  /*< public >*/ /* read only */
+  GstCapsFlags flags;
+
+  /*< private >*/
   GPtrArray *structs;
 
   /*< private >*/
