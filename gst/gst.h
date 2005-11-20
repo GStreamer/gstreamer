@@ -51,6 +51,7 @@
 #include <gst/gstplugin.h>
 #include <gst/gstquery.h>
 #include <gst/gstregistry.h>
+#include <gst/gstsegment.h>
 #include <gst/gststructure.h>
 #include <gst/gstsystemclock.h>
 #include <gst/gsttaglist.h>

@@ -113,6 +113,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstqueue.c		\
 	gstregistry.c		\
 	gstregistryxml.c	\
+	gstsegment.c		\
 	gststructure.c		\
 	gstsystemclock.c	\
 	gsttaglist.c		\
@@ -193,6 +194,7 @@ gst_headers =			\
 	gstpluginfeature.h	\
 	gstquery.h		\
 	gstqueue.h		\
+	gstsegment.h		\
 	gststructure.h		\
 	gstsystemclock.h	\
 	gsttaglist.h		\
