@@ -819,25 +819,21 @@ gst_vorbisenc_buffer_from_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
 }
 
 /* push out the buffer and do internal bookkeeping */
-static void
+static GstFlowReturn
 gst_vorbisenc_push_buffer (GstVorbisEnc * vorbisenc, GstBuffer * buffer)
 {
   vorbisenc->bytes_out += GST_BUFFER_SIZE (buffer);
 
-  if (GST_PAD_IS_USABLE (vorbisenc->srcpad)) {
-    gst_pad_push (vorbisenc->srcpad, buffer);
-  } else {
-    gst_buffer_unref (buffer);
-  }
+  return gst_pad_push (vorbisenc->srcpad, buffer);
 }
 
-static void
+static GstFlowReturn
 gst_vorbisenc_push_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
 {
   GstBuffer *outbuf;
 
   outbuf = gst_vorbisenc_buffer_from_packet (vorbisenc, packet);
-  gst_vorbisenc_push_buffer (vorbisenc, outbuf);
+  return gst_vorbisenc_push_buffer (vorbisenc, outbuf);
 }
 
 static GstCaps *
