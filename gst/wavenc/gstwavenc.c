@@ -662,21 +662,29 @@ gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
     goto beach;
   }
 
-  if (GST_PAD_IS_USABLE (wavenc->srcpad)) {
-    if (wavenc->flush_header) {
-      GstBuffer *outbuf;
+  if (wavenc->flush_header) {
+    GstBuffer *outbuf;
 
-      outbuf = gst_buffer_new_and_alloc (WAV_HEADER_LEN);
-      memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
-      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-
-      gst_pad_push (wavenc->srcpad, outbuf);
-      wavenc->flush_header = FALSE;
+    result = gst_pad_alloc_buffer (wavenc->srcpad, GST_BUFFER_OFFSET_NONE,
+        WAV_HEADER_LEN, GST_PAD_CAPS (wavenc->srcpad), &outbuf);
+    if (result != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (wavenc, "failed when allocating a %d bytes buffer "
+          "for headers", WAV_HEADER_LEN);
+      goto beach;
     }
+    memcpy (GST_BUFFER_DATA (outbuf), wavenc->header, WAV_HEADER_LEN);
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
 
-    wavenc->length += GST_BUFFER_SIZE (buf);
-    gst_pad_push (wavenc->srcpad, buf);
+    result = gst_pad_push (wavenc->srcpad, outbuf);
+    if (result != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (wavenc, "failed when pushing header buffer");
+      goto beach;
+    }
+    wavenc->flush_header = FALSE;
   }
+
+  wavenc->length += GST_BUFFER_SIZE (buf);
+  result = gst_pad_push (wavenc->srcpad, buf);
 
 beach:
   gst_object_unref (wavenc);

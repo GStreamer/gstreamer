@@ -1,3 +1,11 @@
+2005-11-20  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_start): Fix for
+	API changes.
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_chain): Fix for API changes,
+	but also fix the code that was not checking return values from
+	pad_push neither using pad_alloc_buffer.
+
 2005-11-18  Edward Hervey  <edward@fluendo.com>
 
 	* ext/libpng/gstpngenc.c: (gst_pngenc_class_init),
