@@ -1,41 +1,15 @@
 2005-11-20  Wim Taymans  <wim@fluendo.com>
 
-	reviewed by: <delete if not using a buddy>
-
-	* docs/design/part-TODO.txt:
 	* docs/gst/gstreamer-sections.txt:
-	* gst/Makefile.am:
-	* gst/gst.h:
 	* gst/gstbuffer.h:
-	* gst/gstbus.c: (gst_bus_add_watch):
-	* gst/gstclock.c: (gst_clock_init), (gst_clock_set_master),
-	(gst_clock_get_master):
-	* gst/gstclock.h:
 	* gst/gstelement.c:
 	* gst/gstformat.c:
 	* gst/gstformat.h:
 	* gst/gstindex.h:
 	* gst/gstquery.c:
 	* gst/gstquery.h:
-	* gst/gstsystemclock.c: (gst_system_clock_init):
 	* gst/gstvalue.c:
-	* po/af.po:
-	* po/az.po:
-	* po/ca.po:
-	* po/cs.po:
-	* po/de.po:
-	* po/en_GB.po:
-	* po/fr.po:
-	* po/it.po:
-	* po/nb.po:
-	* po/nl.po:
-	* po/ru.po:
-	* po/sq.po:
-	* po/sr.po:
-	* po/sv.po:
-	* po/tr.po:
-	* po/uk.po:
-	* po/vi.po:
+	Doc fixes.
 
 2005-11-20  Wim Taymans  <wim@fluendo.com>
 
