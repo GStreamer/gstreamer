@@ -1645,17 +1645,24 @@ gst_ximagesink_set_property (GObject * object, guint prop_id,
       ximagesink->keep_aspect = g_value_get_boolean (value);
       break;
     case PROP_PIXEL_ASPECT_RATIO:
-      g_free (ximagesink->par);
-      ximagesink->par = g_new0 (GValue, 1);
-      g_value_init (ximagesink->par, GST_TYPE_FRACTION);
-      if (!g_value_transform (value, ximagesink->par)) {
+    {
+      GValue *tmp;
+
+      tmp = g_new0 (GValue, 1);
+      g_value_init (tmp, GST_TYPE_FRACTION);
+
+      if (!g_value_transform (value, tmp)) {
         GST_WARNING_OBJECT (ximagesink,
             "Could not transform string to aspect ratio");
-        gst_value_set_fraction (ximagesink->par, 1, 1);
+        g_free (tmp);
+      } else {
+        GST_DEBUG_OBJECT (ximagesink, "set PAR to %d/%d",
+            gst_value_get_fraction_numerator (tmp),
+            gst_value_get_fraction_denominator (tmp));
+        g_free (ximagesink->par);
+        ximagesink->par = tmp;
       }
-      GST_DEBUG_OBJECT (ximagesink, "set PAR to %d/%d",
-          gst_value_get_fraction_numerator (ximagesink->par),
-          gst_value_get_fraction_denominator (ximagesink->par));
+    }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

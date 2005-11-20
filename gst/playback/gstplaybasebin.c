@@ -463,9 +463,13 @@ check_queue (GstPad * pad, GstBuffer * data, gpointer user_data)
 
   g_object_get (G_OBJECT (queue), "current-level-time", &level, NULL);
   GST_DEBUG ("Queue size: %" GST_TIME_FORMAT, GST_TIME_ARGS (level));
-  level = level * 100 / play_base_bin->queue_threshold;
-  if (level > 100)
+  if (play_base_bin->queue_threshold > 0) {
+    level = level * 100 / play_base_bin->queue_threshold;
+    if (level > 100)
+      level = 100;
+  } else
     level = 100;
+
   fill_buffer (play_base_bin, level);
 
   /* continue! */
