@@ -80,6 +80,7 @@ typedef struct _GstQueryClass GstQueryClass;
  * @value: the unique id of the Query type
  * @nick: a short nick
  * @description: a longer description of the query type
+ * @quark: the quark for the nick
  *
  * A Query Type definition
  */

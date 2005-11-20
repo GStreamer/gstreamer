@@ -76,6 +76,7 @@ typedef struct _GstFormatDefinition GstFormatDefinition;
  * @value: The unique id of this format
  * @nick: A short nick of the format
  * @description: A longer description of the format
+ * @quark: A quark for the nick
  *
  * A format definition
  */

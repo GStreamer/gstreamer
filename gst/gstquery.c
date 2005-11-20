@@ -100,6 +100,14 @@ _gst_query_initialize (void)
   gst_query_get_type ();
 }
 
+/**
+ * gst_query_type_get_name:
+ * @query: the query type
+ *
+ * Get a printable name for the given query type. Do not modify or free.
+ *
+ * Returns: a reference to the static name of the query.
+ */
 const gchar *
 gst_query_type_get_name (GstQueryType query)
 {
@@ -110,6 +118,14 @@ gst_query_type_get_name (GstQueryType query)
   return def->nick;
 }
 
+/**
+ * gst_query_type_to_quark:
+ * @query: the query type
+ *
+ * Get the unique quark for the given query type.
+ *
+ * Returns: the quark associated with the query type
+ */
 GQuark
 gst_query_type_to_quark (GstQueryType query)
 {
@@ -238,6 +254,8 @@ gst_query_type_register (const gchar * nick, const gchar * description)
 /**
  * gst_query_type_get_by_nick:
  * @nick: The nick of the query
+ *
+ * Get the query type registered with @nick.
  *
  * Returns: The query registered with @nick or #GST_QUERY_NONE
  * if the query was not registered.

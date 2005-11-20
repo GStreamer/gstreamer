@@ -279,7 +279,7 @@ gst_value_list_prepend_value (GValue * value, const GValue * prepend_value)
  * gst_value_list_concat:
  * @dest: an uninitialized #GValue to take the result
  * @value1: a #GValue
- * @value1: a #GValue
+ * @value2: a #GValue
  *
  * Concatenates copies of @value1 and @value2 into a list.  Values that are not
  * of type #GST_TYPE_LIST are treated as if they were lists of length 1.

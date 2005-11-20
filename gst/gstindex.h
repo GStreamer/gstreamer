@@ -244,6 +244,7 @@ struct _GstIndexGroup {
  * GstIndexFilter:
  * @index: The index being queried
  * @entry: The entry to be added.
+ * @user_data: User data passed to the function.
  *
  * Function to filter out entries in the index.
  *

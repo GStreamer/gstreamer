@@ -1824,8 +1824,27 @@ nothing_aborted:
   }
 }
 
-/* FIXME, this function is to be put in the .h file,
- * gst_element_commit_state() should go away. */
+/**
+ * gst_element_continue_state: 	 
+ * @element: a #GstElement to continue the state change of. 	 
+ * @ret: The previous state return value
+ * 	 
+ * Commit the state change of the element and proceed to the next 
+ * pending state if any. This function is used 	 
+ * by elements that do asynchronous state changes. 	 
+ * The core will normally call this method automatically when an 	 
+ * element returned SUCCESS from the state change function. 	 
+ * Elements that return ASYNC from the change_state function should 	 
+ * eventually call this method from the streaming thread to signal 	 
+ * successfull state change completion. 	 
+ * 	 
+ * If after calling this method the element still has not reached 	 
+ * the pending state, the next state change is performed. 	 
+ * 	 
+ * Returns: The result of the commit state change. 	 
+ * 	 
+ * MT safe. 	 
+ */
 GstStateChangeReturn
 gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
 {

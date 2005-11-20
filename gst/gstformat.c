@@ -75,6 +75,14 @@ _gst_format_initialize (void)
   g_static_mutex_unlock (&mutex);
 }
 
+/**
+ * gst_format_get_name:
+ * @format: a #GstFormat
+ *
+ * Get a printable name for the given format. Do not modify or free.
+ *
+ * Returns: a reference to the static name of the format.
+ */
 const gchar *
 gst_format_get_name (GstFormat format)
 {
@@ -85,6 +93,14 @@ gst_format_get_name (GstFormat format)
   return def->nick;
 }
 
+/**
+ * gst_format_to_quark:
+ * @format: a #GstFormat
+ *
+ * Get the unique quark for the given format.
+ *
+ * Returns: the quark associated with the format
+ */
 GQuark
 gst_format_to_quark (GstFormat format)
 {

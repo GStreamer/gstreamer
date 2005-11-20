@@ -181,7 +181,6 @@ typedef struct _GstBufferClass GstBufferClass;
 /**
  * GstBufferFlag:
  * @GST_BUFFER_FLAG_READONLY: the buffer is read-only.
- * @GST_BUFFER_FLAG_ORIGINAL: buffer is not a copy of another buffer.
  * @GST_BUFFER_FLAG_PREROLL: the buffer is part of a preroll and should not be
  * displayed.
  * @GST_BUFFER_FLAG_DISCONT: the buffer marks a discontinuity in the stream.
