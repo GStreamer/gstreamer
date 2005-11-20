@@ -1085,7 +1085,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 
     GST_LOG_OBJECT (basesink,
         "waiting for clock, base time %" GST_TIME_FORMAT
-        "stream_start %" GST_TIME_FORMAT,
+        " stream_start %" GST_TIME_FORMAT,
         GST_TIME_ARGS (base_time), GST_TIME_ARGS (stream_start));
 
     /* also save end_time of this buffer so that we can wait

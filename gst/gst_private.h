@@ -37,6 +37,8 @@ extern const char             *g_log_domain_gstreamer;
 #include <stdlib.h>
 #include <string.h>
 
+G_BEGIN_DECLS
+
 gboolean __gst_in_valgrind (void);
 
 /*** debugging categories *****************************************************/
@@ -108,4 +110,5 @@ extern GstDebugCategory *GST_CAT_REGISTRY;
 
 #endif
 
+G_END_DECLS
 #endif /* __GST_PRIVATE_H__ */

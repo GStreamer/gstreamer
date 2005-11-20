@@ -1,3 +1,24 @@
+2005-11-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/gst/gstvalue.c: (GST_START_TEST), (gst_value_suite):
+	  Add a deserialisation test for fractions
+	* examples/metadata/read-metadata.c: (message_loop),
+	(make_pipeline), (main):
+	  Fix up metadata reading sample.
+	* gst/base/gstbasesink.c: (gst_base_sink_do_sync):
+	  Debug format fix
+	* gst/base/gstbasesrc.c: (gst_base_src_default_negotiate):
+	  Don't try and fixate empty caps
+	* gst/gst_private.h:
+	  Wrap in G_BEGIN_DECLS/G_END_DECLS
+	* gst/gstvalue.c: (gst_value_collect_fraction),
+	(gst_value_set_fraction), (gst_value_get_fraction_denominator),
+	(gst_value_transform_string_fraction),
+	(gst_value_compare_fraction):
+	  Add some extra guards to ensure that we don't end up 
+	  with an invalid denominator of 0 in a gstfraction and
+	  that fractions always get reduced.
+
 2005-11-20  Wim Taymans  <wim@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:

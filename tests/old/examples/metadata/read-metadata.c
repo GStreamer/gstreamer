@@ -38,59 +38,38 @@ GstElement *source = NULL;
 
 #define NEW_PIPE_PER_FILE
 
-static void
+static gboolean
 message_loop (GstElement * element, GstTagList ** tags)
 {
   GstBus *bus;
   gboolean done = FALSE;
 
   bus = gst_element_get_bus (element);
-  g_return_if_fail (bus != NULL);
-  g_return_if_fail (tags != NULL);
+  g_return_val_if_fail (bus != NULL, FALSE);
+  g_return_val_if_fail (tags != NULL, FALSE);
 
   while (!done) {
     GstMessage *message;
-    GstMessageType revent;
 
-    revent = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
-    if (revent == GST_MESSAGE_UNKNOWN) {
-      /* Messages ended */
-      gst_object_unref (bus);
-      return;
-    }
-
-    message = gst_bus_pop (bus);
+    message = gst_bus_poll (bus, GST_MESSAGE_ANY, 0);
     if (message == NULL)
-      continue;
+      /* All messages read, we're done */
+      break;
 
     switch (GST_MESSAGE_TYPE (message)) {
-      case GST_MESSAGE_EOS:
       case GST_MESSAGE_ERROR:
-        done = TRUE;
-        break;
+      case GST_MESSAGE_EOS:
+        gst_message_unref (message);
+        return TRUE;
       case GST_MESSAGE_TAG:
       {
         GstTagList *new_tags;
 
         gst_message_parse_tag (message, &new_tags);
-        if (tags) {
-          if (*tags)
-            *tags =
-                gst_tag_list_merge (*tags, new_tags, GST_TAG_MERGE_KEEP_ALL);
-          else
-            *tags = new_tags;
-        } else {
-          GST_WARNING ("Failed to extract tags list from message");
-        }
-        break;
-      }
-      case GST_MESSAGE_APPLICATION:
-      {
-        const GstStructure *s = gst_message_get_structure (message);
-
-        /* Application specific message used to mark end point */
-        if (strcmp (gst_structure_get_name (s), "gst-metadata-mark") == 0)
-          done = TRUE;
+        if (*tags)
+          *tags = gst_tag_list_merge (*tags, new_tags, GST_TAG_MERGE_KEEP_ALL);
+        else
+          *tags = new_tags;
         break;
       }
       default:
@@ -99,43 +78,26 @@ message_loop (GstElement * element, GstTagList ** tags)
     gst_message_unref (message);
   }
   gst_object_unref (bus);
-}
-
-void
-have_pad_handler (GstElement * decodebin, GstPad * pad, gboolean last,
-    GstElement * sink)
-{
-  GST_DEBUG ("New pad %" GST_PTR_FORMAT " - attempting link", pad);
-
-  gst_pad_link (pad, gst_element_get_pad (sink, "sink"));
+  return TRUE;
 }
 
 static void
 make_pipeline ()
 {
-  GstElement *decodebin, *fakesink;
+  GstElement *decodebin;
 
   if (pipeline != NULL)
     gst_object_unref (pipeline);
 
   pipeline = gst_pipeline_new (NULL);
 
-  g_object_set (G_OBJECT (pipeline), "play-timeout",
-      (GstClockTime) 5 * GST_SECOND, NULL);
-
   source = gst_element_factory_make ("filesrc", "source");
   g_assert (GST_IS_ELEMENT (source));
   decodebin = gst_element_factory_make ("decodebin", "decodebin");
   g_assert (GST_IS_ELEMENT (decodebin));
-  fakesink = gst_element_factory_make ("fakesink", "fakesink");
-  g_assert (GST_IS_ELEMENT (fakesink));
 
-  gst_bin_add_many (GST_BIN (pipeline), source, decodebin, fakesink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), source, decodebin, NULL);
   gst_element_link (source, decodebin);
-
-  /* Listen for pads from decodebin */
-  g_signal_connect (G_OBJECT (decodebin), "new-decoded-pad",
-      G_CALLBACK (have_pad_handler), fakesink);
 }
 
 static void
@@ -184,6 +146,7 @@ main (int argc, char *argv[])
   while (i < argc) {
     GstStateChangeReturn sret;
     GstState state;
+    GstTagList *tags = NULL;
 
     filename = argv[i];
     g_object_set (source, "location", filename, NULL);
@@ -195,47 +158,42 @@ main (int argc, char *argv[])
     sret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
 
     if (GST_STATE_CHANGE_ASYNC == sret) {
-      if (GST_STATE_CHANGE_FAILURE ==
-          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, NULL)) {
-        g_print ("State change failed. Aborting");
+      if (GST_STATE_CHANGE_SUCCESS !=
+          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
+              5 * GST_SECOND)) {
+        g_print ("State change failed for %s. Aborting\n", filename);
         break;
       }
     } else if (sret != GST_STATE_CHANGE_SUCCESS) {
-      g_print ("%s - Could not read file\n", argv[i]);
-    } else {
-      GstTagList *tags = NULL;
-      GstBus *bus;
-
-      /* Send message on the bus to mark end point of preroll. */
-      bus = gst_element_get_bus (GST_ELEMENT (pipeline));
-      if (bus) {
-        gst_bus_post (bus,
-            gst_message_new_application (NULL,
-                gst_structure_new ("gst-metadata-mark", NULL)));
-        gst_object_unref (bus);
-      }
-
-      message_loop (GST_ELEMENT (pipeline), &tags);
-
-      if (tags) {
-        g_print ("Metadata for %s:\n", argv[i]);
-        gst_tag_list_foreach (tags, print_tag, NULL);
-        gst_tag_list_free (tags);
-        tags = NULL;
-      } else
-        g_print ("No metadata found for %s\n", argv[i]);
-
-      sret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
-      if (GST_STATE_CHANGE_ASYNC == sret) {
-        if (GST_STATE_CHANGE_FAILURE ==
-            gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, NULL))
-        {
-          g_print ("State change failed. Aborting");
-          break;
-        }
-      }
+      g_print ("%s - Could not read file\n", filename);
+      goto next_file;
     }
 
+    if (!message_loop (GST_ELEMENT (pipeline), &tags)) {
+      g_print ("Failed in message reading for %s\n", argv[i]);
+    }
+
+    if (tags) {
+      g_print ("Metadata for %s:\n", argv[i]);
+      gst_tag_list_foreach (tags, print_tag, NULL);
+      gst_tag_list_free (tags);
+      tags = NULL;
+    } else
+      g_print ("No metadata found for %s\n", argv[i]);
+
+    sret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+#ifndef NEW_PIPE_PER_FILE
+    if (GST_STATE_CHANGE_ASYNC == sret) {
+      if (GST_STATE_CHANGE_FAILURE ==
+          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
+              GST_CLOCK_TIME_NONE)) {
+        g_print ("State change failed. Aborting");
+        break;
+      }
+    }
+#endif
+
+  next_file:
     i++;
 
 #ifdef NEW_PIPE_PER_FILE

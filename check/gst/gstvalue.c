@@ -61,7 +61,43 @@ GST_START_TEST (test_deserialize_gint64)
         "could not deserialize %s (%d)", strings[i], i);
     fail_unless (g_value_get_int64 (&value) == results[i],
         "resulting value is %" G_GINT64_FORMAT ", not %" G_GINT64_FORMAT
-        ", for string %s (%d)", value, results[i], strings[i], i);
+        ", for string %s (%d)", g_value_get_int64 (&value),
+        results[i], strings[i], i);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_deserialize_gstfraction)
+{
+  GValue value = { 0 };
+  const char *strings[] = {
+    "4/5",
+    "-8/9"
+  };
+  gint64 result_numers[] = {
+    4,
+    -8
+  };
+  gint64 result_denoms[] = {
+    5,
+    9
+  };
+
+  int i;
+
+  g_value_init (&value, GST_TYPE_FRACTION);
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_unless (gst_value_deserialize (&value, strings[i]),
+        "could not deserialize %s (%d)", strings[i], i);
+    fail_unless (gst_value_get_fraction_numerator (&value) == result_numers[i],
+        "resulting numerator value is %d, not %d"
+        ", for string %s (%d)", gst_value_get_fraction_numerator (&value),
+        result_numers[i], strings[i], i);
+    fail_unless (gst_value_get_fraction_denominator (&value) ==
+        result_denoms[i], "resulting denominator value is %d, not %d"
+        ", for string %s (%d)", gst_value_get_fraction_denominator (&value),
+        result_denoms[i], strings[i], i);
   }
 }
 
@@ -994,6 +1030,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_guint);
   tcase_add_test (tc_chain, test_deserialize_guint_failures);
   tcase_add_test (tc_chain, test_deserialize_gint64);
+  tcase_add_test (tc_chain, test_deserialize_gstfraction);
   tcase_add_test (tc_chain, test_string);
   tcase_add_test (tc_chain, test_deserialize_string);
   tcase_add_test (tc_chain, test_value_compare);

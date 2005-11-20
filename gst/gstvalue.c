@@ -2734,8 +2734,8 @@ static gchar *
 gst_value_collect_fraction (GValue * value, guint n_collect_values,
     GTypeCValue * collect_values, guint collect_flags)
 {
-  value->data[0].v_int = collect_values[0].v_int;
-  value->data[1].v_int = collect_values[1].v_int;
+  gst_value_set_fraction (value,
+      collect_values[0].v_int, collect_values[1].v_int);
 
   return NULL;
 }
@@ -2792,6 +2792,9 @@ gst_value_set_fraction (GValue * value, gint numerator, gint denominator)
     numerator /= gcd;
     denominator /= gcd;
   }
+
+  g_assert (denominator > 0);
+
   value->data[0].v_int = numerator;
   value->data[1].v_int = denominator;
 }
@@ -2823,7 +2826,7 @@ gst_value_get_fraction_numerator (const GValue * value)
 int
 gst_value_get_fraction_denominator (const GValue * value)
 {
-  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (value), 0);
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (value), 1);
 
   return value->data[1].v_int;
 }
@@ -2913,7 +2916,11 @@ static void
 gst_value_transform_string_fraction (const GValue * src_value,
     GValue * dest_value)
 {
-  gst_value_deserialize_fraction (dest_value, src_value->data[0].v_pointer);
+  if (!gst_value_deserialize_fraction (dest_value,
+          src_value->data[0].v_pointer))
+    /* If the deserialize fails, ensure we leave the fraction in a
+     * valid, if incorrect, state */
+    gst_value_set_fraction (dest_value, 0, 1);
 }
 
 #define MAX_TERMS       30
@@ -3031,6 +3038,9 @@ gst_value_compare_fraction (const GValue * value1, const GValue * value2)
   if (new_num_1 > new_num_2)
     return GST_VALUE_GREATER_THAN;
 
+  /* new_num_1 == new_num_2 implies that both denominators must have 
+   * been 0, beause otherwise simplification would have caught the
+   * equivalence */
   g_assert_not_reached ();
   return GST_VALUE_UNORDERED;
 }
