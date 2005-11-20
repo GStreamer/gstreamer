@@ -1087,7 +1087,8 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     collect_pad = (GstMatroskaPad *) collected->data;
     thepad = collect_pad->collect.pad;
 
-    if (collect_pad->track->codec_id != 0) {
+    if (gst_pad_is_linked (thepad) && gst_pad_is_active (thepad) &&
+        collect_pad->track->codec_id != 0) {
       collect_pad->track->num = tracknum++;
       child = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TRACKENTRY);
       gst_matroska_mux_track_header (mux, collect_pad->track);

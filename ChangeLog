@@ -1,5 +1,10 @@
 2005-11-20  Julien MOUTTE  <julien@moutte.net>
 
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_start): Replace
+	GST_PAD_IS_USABLE by something approaching it.
+
+2005-11-20  Julien MOUTTE  <julien@moutte.net>
+
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_start): Fix for
 	API changes.
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_chain): Fix for API changes,
