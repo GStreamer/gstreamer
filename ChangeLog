@@ -1,3 +1,15 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_iavs_caps):
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_parse_file_header),
+	(gst_riff_parse_strh), (gst_riff_parse_strf_vids),
+	(gst_riff_parse_info):
+	* gst/videotestsrc/videotestsrc.c: (paintinfo_find_by_structure):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_set_caps):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_setcaps):
+	  Fixes for GST_FOURCC_FORMAT API change.
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	patch by: Alessandro Dessina <alessandro nnva org>

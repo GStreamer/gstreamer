@@ -357,7 +357,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     default:
-      GST_WARNING ("Unknown video fourcc " GST_FOURCC_FORMAT,
+      GST_WARNING ("Unknown video fourcc %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
       return NULL;
   }
@@ -609,7 +609,7 @@ gst_riff_create_iavs_caps (guint32 codec_fcc,
       break;
 
     default:
-      GST_WARNING ("Unknown IAVS fourcc " GST_FOURCC_FORMAT,
+      GST_WARNING ("Unknown IAVS fourcc %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
       return NULL;
   }

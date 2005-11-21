@@ -386,7 +386,7 @@ paintinfo_find_by_structure (const GstStructure * structure)
       return NULL;
     for (i = 0; i < n_fourccs; i++) {
       s = fourcc_list[i].fourcc;
-      //g_print("testing " GST_FOURCC_FORMAT " and %s\n", GST_FOURCC_ARGS(format), s);
+      /* g_print("testing %" GST_FOURCC_FORMAT " and %s\n", GST_FOURCC_ARGS(format), s); */
       fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
       if (fourcc == format) {
         return fourcc_list + i;

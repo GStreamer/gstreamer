@@ -186,7 +186,7 @@ gst_riff_parse_file_header (GstElement * element,
   tag = GST_READ_UINT32_LE (data);
   if (tag != GST_RIFF_TAG_RIFF) {
     GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-        ("Stream is no RIFF stream: " GST_FOURCC_FORMAT,
+        ("Stream is no RIFF stream: %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (tag)));
     gst_buffer_unref (buf);
     return FALSE;
@@ -254,9 +254,9 @@ gst_riff_parse_strh (GstElement * element,
 
   /* debug */
   GST_INFO_OBJECT (element, "strh tag found:");
-  GST_INFO_OBJECT (element, " type        " GST_FOURCC_FORMAT,
+  GST_INFO_OBJECT (element, " type        %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (strh->type));
-  GST_INFO_OBJECT (element, " fcc_handler " GST_FOURCC_FORMAT,
+  GST_INFO_OBJECT (element, " fcc_handler %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (strh->fcc_handler));
   GST_INFO_OBJECT (element, " flags       0x%08x", strh->flags);
   GST_INFO_OBJECT (element, " priority    %d", strh->priority);
@@ -342,7 +342,7 @@ gst_riff_parse_strf_vids (GstElement * element,
   GST_INFO_OBJECT (element, " height      %d", strf->height);
   GST_INFO_OBJECT (element, " planes      %d", strf->planes);
   GST_INFO_OBJECT (element, " bit_cnt     %d", strf->bit_cnt);
-  GST_INFO_OBJECT (element, " compression " GST_FOURCC_FORMAT,
+  GST_INFO_OBJECT (element, " compression %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (strf->compression));
   GST_INFO_OBJECT (element, " image_size  %d", strf->image_size);
   GST_INFO_OBJECT (element, " xpels_meter %d", strf->xpels_meter);
@@ -615,7 +615,7 @@ gst_riff_parse_info (GstElement * element,
       default:
         type = NULL;
         GST_WARNING_OBJECT (element,
-            "Unknown INFO (metadata) tag entry " GST_FOURCC_FORMAT,
+            "Unknown INFO (metadata) tag entry %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (tag));
         break;
     }

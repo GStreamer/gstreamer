@@ -572,7 +572,7 @@ gst_v4lsrc_set_caps (GstBaseSrc * src, GstCaps * caps)
   }
 
   if (palette == -1) {
-    GST_WARNING_OBJECT (v4lsrc, "palette for fourcc " GST_FOURCC_FORMAT
+    GST_WARNING_OBJECT (v4lsrc, "palette for fourcc %" GST_FOURCC_FORMAT
         " is -1, refusing link", GST_FOURCC_ARGS (fourcc));
     return FALSE;
   }

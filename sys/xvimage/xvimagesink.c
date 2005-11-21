@@ -1425,7 +1425,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
           (video_width != xvimagesink->xvimage->width) ||
           (video_height != xvimagesink->xvimage->height))) {
     GST_DEBUG_OBJECT (xvimagesink,
-        "old format " GST_FOURCC_FORMAT ", new format " GST_FOURCC_FORMAT,
+        "old format %" GST_FOURCC_FORMAT ", new format %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (xvimagesink->xcontext->im_format),
         GST_FOURCC_ARGS (im_format));
     GST_DEBUG_OBJECT (xvimagesink, "renewing xvimage");
