@@ -278,14 +278,14 @@ gst_smpte_init (GstSMPTE * smpte)
       (&gst_smpte_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->srcpad);
 
-  smpte->collect = gst_collectpads_new ();
-  gst_collectpads_set_function (smpte->collect,
+  smpte->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_function (smpte->collect,
       (GstCollectPadsFunction) gst_smpte_collected, smpte);
-  gst_collectpads_start (smpte->collect);
+  gst_collect_pads_start (smpte->collect);
 
-  gst_collectpads_add_pad (smpte->collect, smpte->sinkpad1,
+  gst_collect_pads_add_pad (smpte->collect, smpte->sinkpad1,
       sizeof (GstCollectData));
-  gst_collectpads_add_pad (smpte->collect, smpte->sinkpad2,
+  gst_collect_pads_add_pad (smpte->collect, smpte->sinkpad2,
       sizeof (GstCollectData));
 
   smpte->width = 320;
@@ -357,9 +357,9 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
     data = (GstCollectData *) collected->data;
 
     if (data->pad == smpte->sinkpad1)
-      in1 = gst_collectpads_pop (pads, data);
+      in1 = gst_collect_pads_pop (pads, data);
     else if (data->pad == smpte->sinkpad2)
-      in2 = gst_collectpads_pop (pads, data);
+      in2 = gst_collect_pads_pop (pads, data);
   }
 
   if (in1 == NULL) {

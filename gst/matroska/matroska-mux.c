@@ -230,8 +230,8 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
   gst_pad_set_event_function (mux->srcpad, gst_matroska_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
 
-  mux->collect = gst_collectpads_new ();
-  gst_collectpads_set_function (mux->collect,
+  mux->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_function (mux->collect,
       (GstCollectPadsFunction) gst_matroska_mux_collected, mux);
 
   mux->ebml_write = gst_ebml_write_new (mux->srcpad);
@@ -339,7 +339,7 @@ gst_matroska_mux_reset (GstElement * element)
     }
 
     /* remove from collectpads */
-    gst_collectpads_remove_pad (mux->collect, thepad);
+    gst_collect_pads_remove_pad (mux->collect, thepad);
   }
   mux->num_streams = 0;
   mux->num_a_streams = 0;
@@ -873,7 +873,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   newpad = gst_pad_new_from_template (templ, name);
   g_free (name);
   collect_pad = (GstMatroskaPad *)
-      gst_collectpads_add_pad (mux->collect, newpad, sizeof (GstMatroskaPad));
+      gst_collect_pads_add_pad (mux->collect, newpad, sizeof (GstMatroskaPad));
   context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
   collect_pad->track = context;
   collect_pad->buffer = NULL;
@@ -1261,7 +1261,7 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux)
     collect_pad = (GstMatroskaPad *) collected->data;
     /* fetch a new buffer if needed */
     if (collect_pad->buffer == NULL) {
-      collect_pad->buffer = gst_collectpads_pop (mux->collect,
+      collect_pad->buffer = gst_collect_pads_pop (mux->collect,
           (GstCollectData *) collect_pad);
     }
 
@@ -1521,7 +1521,7 @@ gst_matroska_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collectpads_start (mux->collect);
+      gst_collect_pads_start (mux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -1535,7 +1535,7 @@ gst_matroska_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collectpads_stop (mux->collect);
+      gst_collect_pads_stop (mux->collect);
       gst_matroska_mux_reset (GST_ELEMENT (mux));
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:

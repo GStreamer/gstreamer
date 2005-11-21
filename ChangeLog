@@ -1,3 +1,20 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_finalize),
+	(gst_text_overlay_init), (gst_text_overlay_text_pad_linked),
+	(gst_text_overlay_text_pad_unlinked), (gst_text_overlay_pop_video),
+	(gst_text_overlay_pop_text), (gst_text_overlay_collected),
+	(gst_text_overlay_change_state):
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_init),
+	(gst_matroska_mux_reset), (gst_matroska_mux_request_new_pad),
+	(gst_matroska_mux_best_pad), (gst_matroska_mux_change_state):
+	* gst/smpte/gstsmpte.c: (gst_smpte_init), (gst_smpte_collected):
+	* gst/videomixer/videomixer.c: (gst_videomixer_init),
+	(gst_videomixer_request_new_pad), (gst_videomixer_fill_queues),
+	(gst_videomixer_change_state):
+	  Fix for collect pads API change. Also fix textoverlay state
+	  change function.
+
 2005-11-20  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_start): Replace

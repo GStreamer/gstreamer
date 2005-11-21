@@ -192,7 +192,7 @@ gst_text_overlay_finalize (GObject * object)
 {
   GstTextOverlay *overlay = GST_TEXT_OVERLAY (object);
 
-  gst_collectpads_stop (overlay->collect);
+  gst_collect_pads_stop (overlay->collect);
   gst_object_unref (overlay->collect);
 
   g_free (overlay->text_fill_image);
@@ -253,12 +253,12 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
 
   overlay->framerate = 0.0;
 
-  overlay->collect = gst_collectpads_new ();
+  overlay->collect = gst_collect_pads_new ();
 
-  gst_collectpads_set_function (overlay->collect,
+  gst_collect_pads_set_function (overlay->collect,
       GST_DEBUG_FUNCPTR (gst_text_overlay_collected), overlay);
 
-  overlay->video_collect_data = gst_collectpads_add_pad (overlay->collect,
+  overlay->video_collect_data = gst_collect_pads_add_pad (overlay->collect,
       overlay->video_sinkpad, sizeof (GstCollectData));
 
   /* text pad will be added when it is linked */
@@ -563,7 +563,7 @@ gst_text_overlay_text_pad_linked (GstPad * pad, GstPad * peer)
   GST_DEBUG_OBJECT (overlay, "Text pad linked");
 
   if (overlay->text_collect_data == NULL) {
-    overlay->text_collect_data = gst_collectpads_add_pad (overlay->collect,
+    overlay->text_collect_data = gst_collect_pads_add_pad (overlay->collect,
         overlay->text_sinkpad, sizeof (GstCollectData));
   }
 
@@ -583,7 +583,7 @@ gst_text_overlay_text_pad_unlinked (GstPad * pad)
   GST_DEBUG_OBJECT (overlay, "Text pad unlinked");
 
   if (overlay->text_collect_data) {
-    gst_collectpads_remove_pad (overlay->collect, overlay->text_sinkpad);
+    gst_collect_pads_remove_pad (overlay->collect, overlay->text_sinkpad);
     overlay->text_collect_data = NULL;
   }
 
@@ -724,7 +724,7 @@ gst_text_overlay_pop_video (GstTextOverlay * overlay)
 {
   GstBuffer *buf;
 
-  buf = gst_collectpads_pop (overlay->collect, overlay->video_collect_data);
+  buf = gst_collect_pads_pop (overlay->collect, overlay->video_collect_data);
   g_return_if_fail (buf != NULL);
   gst_buffer_unref (buf);
 }
@@ -735,7 +735,7 @@ gst_text_overlay_pop_text (GstTextOverlay * overlay)
   GstBuffer *buf;
 
   if (overlay->text_collect_data) {
-    buf = gst_collectpads_pop (overlay->collect, overlay->text_collect_data);
+    buf = gst_collect_pads_pop (overlay->collect, overlay->text_collect_data);
     g_return_if_fail (buf != NULL);
     gst_buffer_unref (buf);
   }
@@ -757,14 +757,14 @@ gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
 
   GST_DEBUG ("Collecting");
 
-  video_frame = gst_collectpads_peek (overlay->collect,
+  video_frame = gst_collect_pads_peek (overlay->collect,
       overlay->video_collect_data);
 
   /* send EOS if video stream EOSed regardless of text stream */
   if (video_frame == NULL) {
     GST_DEBUG ("Video stream at EOS");
     if (overlay->text_collect_data) {
-      text_buf = gst_collectpads_pop (overlay->collect,
+      text_buf = gst_collect_pads_pop (overlay->collect,
           overlay->text_collect_data);
     }
     gst_pad_push_event (overlay->srcpad, gst_event_new_eos ());
@@ -806,7 +806,7 @@ gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
     goto done;
   }
 
-  text_buf = gst_collectpads_peek (overlay->collect,
+  text_buf = gst_collect_pads_peek (overlay->collect,
       overlay->text_collect_data);
 
   /* just push the video frame if the text stream has EOSed */
@@ -880,7 +880,12 @@ gst_text_overlay_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_collectpads_start (overlay->collect);
+      gst_collect_pads_start (overlay->collect);
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* need to unblock the collectpads before calling the
+       * parent change_state so that streaming can finish */
+      gst_collect_pads_stop (overlay->collect);
       break;
     default:
       break;
@@ -891,9 +896,6 @@ gst_text_overlay_change_state (GstElement * element, GstStateChange transition)
     return ret;
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collectpads_stop (overlay->collect);
-      break;
     default:
       break;
   }

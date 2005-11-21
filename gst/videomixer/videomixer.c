@@ -490,14 +490,14 @@ gst_videomixer_init (GstVideoMixer * mix)
   gst_pad_set_getcaps_function (GST_PAD (mix->srcpad), gst_videomixer_getcaps);
   gst_element_add_pad (GST_ELEMENT (mix), mix->srcpad);
 
-  mix->collect = gst_collectpads_new ();
+  mix->collect = gst_collect_pads_new ();
   mix->background = DEFAULT_BACKGROUND;
   mix->in_width = 0;
   mix->in_height = 0;
   mix->out_width = 0;
   mix->out_height = 0;
 
-  gst_collectpads_set_function (mix->collect,
+  gst_collect_pads_set_function (mix->collect,
       (GstCollectPadsFunction) gst_videomixer_collected, mix);
 }
 
@@ -572,7 +572,7 @@ gst_videomixer_request_new_pad (GstElement * element,
     mixpad->alpha = DEFAULT_PAD_ALPHA;
 
     mixcol = (GstVideoMixerCollect *)
-        gst_collectpads_add_pad (mix->collect, GST_PAD (mixpad),
+        gst_collect_pads_add_pad (mix->collect, GST_PAD (mixpad),
         sizeof (GstVideoMixerCollect));
 
     /* Keep track of eachother */
@@ -885,7 +885,7 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
 
       GST_LOG ("we need a new buffer");
 
-      buf = gst_collectpads_pop (mix->collect, data);
+      buf = gst_collect_pads_pop (mix->collect, data);
 
       if (buf) {
         guint64 duration;
@@ -1175,11 +1175,11 @@ gst_videomixer_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LOG ("starting collectpads");
-      gst_collectpads_start (mix->collect);
+      gst_collect_pads_start (mix->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_LOG ("stopping collectpads");
-      gst_collectpads_stop (mix->collect);
+      gst_collect_pads_stop (mix->collect);
       break;
     default:
       break;
