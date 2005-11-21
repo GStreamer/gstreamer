@@ -104,7 +104,7 @@ vorbis_parse_set_header_on_caps (GstVorbisParse * parse, GstCaps * caps)
 {
   GstBuffer *buf1, *buf2, *buf3;
   GstStructure *structure;
-  GValue list = { 0 };
+  GValue array = { 0 };
   GValue value = { 0 };
 
   g_assert (parse);
@@ -126,21 +126,21 @@ vorbis_parse_set_header_on_caps (GstVorbisParse * parse, GstCaps * caps)
   GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_IN_CAPS);
 
   /* put buffers in a fixed list */
-  g_value_init (&list, GST_TYPE_ARRAY);
+  g_value_init (&array, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
   g_value_set_boxed (&value, buf1);
-  gst_value_list_append_value (&list, &value);
+  gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
   g_value_set_boxed (&value, buf2);
-  gst_value_list_append_value (&list, &value);
+  gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
   g_value_set_boxed (&value, buf3);
-  gst_value_list_append_value (&list, &value);
-  gst_structure_set_value (structure, "streamheader", &list);
+  gst_value_array_append_value (&array, &value);
+  gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&value);
-  g_value_unset (&list);
+  g_value_unset (&array);
 }
 
 static GstFlowReturn

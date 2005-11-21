@@ -1,3 +1,15 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	patch by: Alessandro Dessina <alessandro nnva org>
+
+	* ext/ogg/gstoggmux.c (gst_ogg_mux_set_header_on_caps):
+	* ext/ogg/gstoggparse.c (gst_ogg_parse_append_header)
+	(gst_ogg_parse_chain):
+	* ext/theora/theoraenc.c (theora_set_header_on_caps):
+	* ext/vorbis/vorbisenc.c (gst_vorbisenc_set_header_on_caps):
+	* ext/vorbis/vorbisparse.c (vorbis_parse_set_header_on_caps): Fix
+	gst_value_list calls on arrays. Fixes #321962.
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init),

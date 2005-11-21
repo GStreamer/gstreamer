@@ -845,7 +845,7 @@ gst_vorbisenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
     GstBuffer * buf2, GstBuffer * buf3)
 {
   GstStructure *structure;
-  GValue list = { 0 };
+  GValue array = { 0 };
   GValue value = { 0 };
 
   caps = gst_caps_make_writable (caps);
@@ -857,21 +857,21 @@ gst_vorbisenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_IN_CAPS);
 
   /* put buffers in a fixed list */
-  g_value_init (&list, GST_TYPE_ARRAY);
+  g_value_init (&array, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf1);
-  gst_value_list_append_value (&list, &value);
+  gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf2);
-  gst_value_list_append_value (&list, &value);
+  gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf3);
-  gst_value_list_append_value (&list, &value);
-  gst_structure_set_value (structure, "streamheader", &list);
+  gst_value_array_append_value (&array, &value);
+  gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&value);
-  g_value_unset (&list);
+  g_value_unset (&array);
 
   return caps;
 }

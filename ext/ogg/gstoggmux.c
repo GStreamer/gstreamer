@@ -768,7 +768,7 @@ static GstCaps *
 gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
 {
   GstStructure *structure;
-  GValue list = { 0 };
+  GValue array = { 0 };
   GList *walk = buffers;
 
   caps = gst_caps_make_writable (caps);
@@ -776,7 +776,7 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
   structure = gst_caps_get_structure (caps, 0);
 
   /* put buffers in a fixed list */
-  g_value_init (&list, GST_TYPE_ARRAY);
+  g_value_init (&array, GST_TYPE_ARRAY);
 
   while (walk) {
     GstBuffer *buf = GST_BUFFER (walk->data);
@@ -790,11 +790,11 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
 
     g_value_init (&value, GST_TYPE_BUFFER);
     gst_value_set_buffer (&value, buf);
-    gst_value_list_append_value (&list, &value);
+    gst_value_array_append_value (&array, &value);
     g_value_unset (&value);
   }
-  gst_structure_set_value (structure, "streamheader", &list);
-  g_value_unset (&list);
+  gst_structure_set_value (structure, "streamheader", &array);
+  g_value_unset (&array);
 
   return caps;
 }

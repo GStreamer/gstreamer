@@ -298,7 +298,7 @@ gst_ogg_parse_submit_buffer (GstOggParse * ogg, GstBuffer * buffer)
 }
 
 static void
-gst_ogg_parse_append_header (GValue * list, GstBuffer * buf)
+gst_ogg_parse_append_header (GValue * array, GstBuffer * buf)
 {
   GValue value = { 0 };
 
@@ -306,7 +306,7 @@ gst_ogg_parse_append_header (GValue * list, GstBuffer * buf)
 
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf);
-  gst_value_list_append_value (list, &value);
+  gst_value_array_append_value (array, &value);
   g_value_unset (&value);
 
 }
@@ -501,11 +501,11 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
              */
             GstCaps *caps;
             GstStructure *structure;
-            GValue list = { 0 };
+            GValue array = { 0 };
             gint i, count = 0;
             gboolean found_pending_headers = FALSE;
 
-            g_value_init (&list, GST_TYPE_ARRAY);
+            g_value_init (&array, GST_TYPE_ARRAY);
 
             for (i = 0; i < g_slist_length (ogg->oggstreams); i++) {
               GstOggStream *stream = g_slist_nth_data (ogg->oggstreams, i);
@@ -516,7 +516,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
                 goto failure;
               }
 
-              gst_ogg_parse_append_header (&list,
+              gst_ogg_parse_append_header (&array,
                   GST_BUFFER (stream->headers->data));
               count++;
             }
@@ -526,7 +526,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               int j;
 
               for (j = 1; j < g_slist_length (stream->headers); j++) {
-                gst_ogg_parse_append_header (&list,
+                gst_ogg_parse_append_header (&array,
                     GST_BUFFER (g_slist_nth_data (stream->headers, j)));
                 count++;
               }
@@ -536,11 +536,11 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             caps = gst_caps_make_writable (caps);
 
             structure = gst_caps_get_structure (caps, 0);
-            gst_structure_set_value (structure, "streamheader", &list);
+            gst_structure_set_value (structure, "streamheader", &array);
 
             gst_pad_set_caps (ogg->srcpad, caps);
 
-            g_value_unset (&list);
+            g_value_unset (&array);
 
 //            gst_caps_free(caps);
 
