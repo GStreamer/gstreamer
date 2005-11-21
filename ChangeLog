@@ -1,3 +1,13 @@
+2005-11-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init), (gst_base_audio_sink_init),
+	(gst_base_audio_sink_provide_clock),
+	(gst_base_audio_sink_set_clock), (gst_base_audio_sink_render),
+	(gst_base_audio_sink_change_state):
+	* gst/audioresample/gstaudioresample.c:
+	Segment update fix.
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* *.h:
