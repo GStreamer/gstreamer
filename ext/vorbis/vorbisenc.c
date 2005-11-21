@@ -96,7 +96,7 @@ enum
   ARG_LAST_MESSAGE
 };
 
-static void gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc);
+static GstFlowReturn gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc);
 
 /* FIXME:
  * vorbis_granule_time was added between 1.0 and 1.0.1; it's too silly
@@ -779,12 +779,14 @@ gst_vorbisenc_setup (GstVorbisEnc * vorbisenc)
   return TRUE;
 }
 
-static void
+static GstFlowReturn
 gst_vorbisenc_clear (GstVorbisEnc * vorbisenc)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
+
   if (vorbisenc->setup) {
     vorbis_analysis_wrote (&vorbisenc->vd, 0);
-    gst_vorbisenc_output_buffers (vorbisenc);
+    ret = gst_vorbisenc_output_buffers (vorbisenc);
 
     vorbisenc->setup = FALSE;
   }
@@ -795,6 +797,8 @@ gst_vorbisenc_clear (GstVorbisEnc * vorbisenc)
   vorbis_info_clear (&vorbisenc->vi);
 
   vorbisenc->header_sent = FALSE;
+
+  return ret;
 }
 
 /* prepare a buffer for transmission by passing data through libvorbis */
@@ -917,6 +921,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstBuffer *buf = GST_BUFFER (buffer);
   GstVorbisEnc *vorbisenc;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
@@ -969,9 +974,12 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
       gst_buffer_set_caps (buf3, caps);
 
       /* push out buffers */
-      gst_vorbisenc_push_buffer (vorbisenc, buf1);
-      gst_vorbisenc_push_buffer (vorbisenc, buf2);
-      gst_vorbisenc_push_buffer (vorbisenc, buf3);
+      if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf1)) != GST_FLOW_OK)
+        goto done;
+      if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf2)) != GST_FLOW_OK)
+        goto done;
+      if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf3)) != GST_FLOW_OK)
+        goto done;
 
       vorbisenc->header_sent = TRUE;
     }
@@ -998,14 +1006,17 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_unref (buf);
   }
 
-  gst_vorbisenc_output_buffers (vorbisenc);
+  ret = gst_vorbisenc_output_buffers (vorbisenc);
 
-  return GST_FLOW_OK;
+done:
+  return ret;
 }
 
-static void
+static GstFlowReturn
 gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc)
 {
+  GstFlowReturn ret;
+
   /* vorbis does some data preanalysis, then divides up blocks for
      more involved (potentially parallel) processing.  Get a single
      block for encoding now */
@@ -1020,9 +1031,14 @@ gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc)
 
     while (vorbis_bitrate_flushpacket (&vorbisenc->vd, &op)) {
       GST_LOG_OBJECT (vorbisenc, "pushing out a data packet");
-      gst_vorbisenc_push_packet (vorbisenc, &op);
+      ret = gst_vorbisenc_push_packet (vorbisenc, &op);
+
+      if (ret != GST_FLOW_OK)
+        return ret;
     }
   }
+
+  return GST_FLOW_OK;
 }
 
 static void

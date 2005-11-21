@@ -1,3 +1,9 @@
+2005-11-21  Michael Smith <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_clear),
+	(gst_vorbisenc_chain), (gst_vorbisenc_output_buffers):
+	  Properly handle pad_push return values.
+
 2005-11-20  Wim Taymans  <wim@fluendo.com>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_push_buffer),
