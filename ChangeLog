@@ -1,3 +1,8 @@
+2005-11-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/rtspconnection.c: (read_body):
+	Apply patch from Sebastien Cote to fix #319184.
+
 2005-11-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

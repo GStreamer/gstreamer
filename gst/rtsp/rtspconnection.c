@@ -360,7 +360,8 @@ read_body (gint fd, glong content_length, RTSPMessage * msg)
     goto done;
   }
 
-  body = g_malloc (content_length);
+  body = g_malloc (content_length + 1);
+  body[content_length] = '\0';
   bodyptr = body;
   to_read = content_length;
   while (to_read > 0) {
@@ -375,7 +376,7 @@ read_body (gint fd, glong content_length, RTSPMessage * msg)
   }
 
 done:
-  rtsp_message_set_body (msg, (guint8 *) body, content_length);
+  rtsp_message_set_body (msg, (guint8 *) body, content_length + 1);
 
   return RTSP_OK;
 
