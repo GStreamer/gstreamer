@@ -605,7 +605,7 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
   gint i;
   GstBuffer *buf;
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) context->opaque;
-  
+
   g_return_if_fail (buf != NULL);
   g_return_if_fail (picture->type == FF_BUFFER_TYPE_USER);
 
@@ -614,7 +614,7 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
   if (buf == ffmpegdec->last_buffer)
     ffmpegdec->last_buffer = NULL;
   gst_buffer_unref (buf);
-  
+
   picture->opaque = NULL;
 
   /* zero out the reference in ffmpeg */
@@ -772,12 +772,12 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
               "Dropping frame for synctime %" GST_TIME_FORMAT
               ", expected(next_ts) %" GST_TIME_FORMAT,
               GST_TIME_ARGS (ffmpegdec->synctime),
-              GST_TIME_ARGS (ffmpegdec->next_ts));	  
+              GST_TIME_ARGS (ffmpegdec->next_ts));
 
-	  if (ffmpegdec->picture->opaque != NULL) {
-	    outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
-	    gst_buffer_unref (outbuf);
-	  }
+          if (ffmpegdec->picture->opaque != NULL) {
+            outbuf = (GstBuffer *) ffmpegdec->picture->opaque;
+            gst_buffer_unref (outbuf);
+          }
 
           have_data = 0;
           /* don´t break here! Timestamps are updated below */
@@ -958,7 +958,6 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) GST_OBJECT_PARENT (pad);
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
-  gboolean unlock = FALSE;
   gboolean ret;
 
   GST_DEBUG_OBJECT (ffmpegdec, "Handling %s event",
@@ -966,9 +965,6 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:{
-      GST_STREAM_LOCK (pad);
-      unlock = TRUE;
-
       if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
         gint have_data, len, try = 0;
 
@@ -983,15 +979,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       }
       break;
     }
-    case GST_EVENT_TAG:{
-      GST_STREAM_LOCK (pad);
-      unlock = TRUE;
-      break;
-    }
     case GST_EVENT_FLUSH_STOP:{
-      GST_STREAM_LOCK (pad);
-      unlock = TRUE;
-
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
       }
@@ -1001,9 +989,6 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       gint64 base, start, end;
       gdouble rate;
       GstFormat fmt;
-
-      GST_STREAM_LOCK (pad);
-      unlock = TRUE;
 
       gst_event_parse_newsegment (event, NULL, &rate, &fmt, &start, &end,
           &base);
@@ -1048,9 +1033,6 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
   }
 
   ret = gst_pad_event_default (ffmpegdec->sinkpad, event);
-
-  if (unlock)
-    GST_STREAM_UNLOCK (pad);
 
   return ret;
 }

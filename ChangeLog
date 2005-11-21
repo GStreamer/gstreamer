@@ -1,3 +1,8 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_sink_event):
+	  Remove GST_STREAM_LOCK here, it is not needed any longer.
+
 2005-11-16  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_get_buffer):
