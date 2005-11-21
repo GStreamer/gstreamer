@@ -147,6 +147,49 @@ gst_audio_length (GstPad * pad, GstBuffer * buf)
   return length;
 }
 
+double
+gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
+{
+/* calculate length in nanoseconds
+ * of audio buffer buf
+ * based on capabilities of pad
+ */
+
+  long bytes = 0;
+  int width = 0;
+  int channels = 0;
+  int rate = 0;
+
+  GstClockTime length;
+
+  const GstCaps *caps = NULL;
+  GstStructure *structure;
+
+  g_assert (GST_IS_BUFFER (buf));
+  /* get caps of pad */
+  caps = GST_PAD_CAPS (pad);
+  if (caps == NULL) {
+    /* ERROR: could not get caps of pad */
+    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
+        GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+    length = GST_CLOCK_TIME_NONE;
+  } else {
+    structure = gst_caps_get_structure (caps, 0);
+    bytes = GST_BUFFER_SIZE (buf);
+    gst_structure_get_int (structure, "width", &width);
+    gst_structure_get_int (structure, "channels", &channels);
+    gst_structure_get_int (structure, "rate", &rate);
+
+    g_assert (bytes != 0);
+    g_assert (width != 0);
+    g_assert (channels != 0);
+    g_assert (rate != 0);
+    length = (bytes * 8.0 * GST_SECOND) / (rate * channels * width);
+  }
+  /* g_print ("DEBUG: audio: returning length of %f\n", length); */
+  return length;
+}
+
 long
 gst_audio_highest_sample_value (GstPad * pad)
 /* calculate highest possible sample value

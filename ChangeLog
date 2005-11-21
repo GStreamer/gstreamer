@@ -1,3 +1,10 @@
+2005-11-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	* gst-libs/gst/audio/audio.c: (gst_audio_duration_from_pad_buffer):
+	* gst-libs/gst/audio/audio.h:
+	  add a method that returns a proper GstClockTime
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/interfaces/xoverlay.c: (gst_x_overlay_base_init),

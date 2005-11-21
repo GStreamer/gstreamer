@@ -31,6 +31,7 @@ check_PROGRAMS = \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/volume \
+	generic/states \
         pipelines/simple_launch_lines \
 	clocks/selection \
 	$(check_vorbis)
@@ -38,12 +39,11 @@ check_PROGRAMS = \
 # tests to fix leaks in
 VALGRIND_TO_FIX = \
 	elements/audioresample \
+	generic/states \
         pipelines/simple_launch_lines
 
 # these tests don't even pass
-# generic/states: elements need state fixin' before this can be added
-noinst_PROGRAMS = \
-	generic/states
+noinst_PROGRAMS =
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
