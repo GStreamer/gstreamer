@@ -904,9 +904,6 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
       /* forward event */
       gst_pad_push_event (lame->srcpad, event);
 
-      /* make streaming stop */
-      GST_STREAM_LOCK (pad);
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_FLUSH_STOP:
     {
@@ -916,13 +913,11 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (lame, "handling FLUSH stop event");
 
       /* clear buffers */
-      GST_STREAM_LOCK (pad);
       mp3_buffer_size = 7200;
       mp3_data = g_malloc (mp3_buffer_size);
       mp3_size = lame_encode_flush (lame->lgf, mp3_data, mp3_buffer_size);
 
       gst_pad_push_event (lame->srcpad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     }
     case GST_EVENT_TAG:
