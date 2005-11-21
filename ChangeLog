@@ -1,5 +1,11 @@
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
+	* gst/base/gstbasesrc.c (GST_LIVE_BROADCAST, GST_LIVE_SIGNAL) 
+	(GST_LIVE_TIMED_WAIT, GST_LIVE_WAIT, GST_LIVE_GET_COND) 
+	(GST_LIVE_UNLOCK, GST_LIVE_TRYLOCK, GST_LIVE_LOCK) 
+	(GST_LIVE_GET_LOCK): Moved here from gstbasesrc.h. They are
+	private to the basesrc implementation.
+
 	* gst/gstpad.c (gst_pad_send_event): Doc more. Take stream lock on
 	behalf of event function if necessary. It should no longer be
 	necessary to take the stream lock in pad's event functions. Fixes
