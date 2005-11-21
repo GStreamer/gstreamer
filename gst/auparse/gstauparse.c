@@ -76,6 +76,7 @@ enum
 static void gst_auparse_base_init (gpointer g_class);
 static void gst_auparse_class_init (GstAuParseClass * klass);
 static void gst_auparse_init (GstAuParse * auparse);
+static void gst_auparse_dispose (GObject * object);
 
 static GstFlowReturn gst_auparse_chain (GstPad * pad, GstBuffer * buf);
 
@@ -128,11 +129,15 @@ gst_auparse_base_init (gpointer g_class)
 static void
 gst_auparse_class_init (GstAuParseClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
+  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  gobject_class->dispose = gst_auparse_dispose;
 
   gstelement_class->change_state = gst_auparse_change_state;
 }
@@ -152,10 +157,24 @@ gst_auparse_init (GstAuParse * auparse)
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
 
   auparse->offset = 0;
+  auparse->buffer_offset = 0;
+  auparse->adapter = gst_adapter_new ();
   auparse->size = 0;
   auparse->encoding = 0;
   auparse->frequency = 0;
   auparse->channels = 0;
+}
+
+static void
+gst_auparse_dispose (GObject * object)
+{
+  GstAuParse *au = GST_AUPARSE (object);
+
+  if (au->adapter != NULL) {
+    g_object_unref (au->adapter);
+    au->adapter = NULL;
+  }
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstFlowReturn
@@ -168,6 +187,8 @@ gst_auparse_chain (GstPad * pad, GstBuffer * buf)
   GstCaps *tempcaps;
   gint law = 0, depth = 0, ieee = 0;
   gchar layout[7];
+  GstBuffer *subbuf;
+  GstEvent *event;
 
   layout[0] = 0;
 
@@ -181,7 +202,6 @@ gst_auparse_chain (GstPad * pad, GstBuffer * buf)
 
   /* if we haven't seen any data yet... */
   if (auparse->size == 0) {
-    GstBuffer *newbuf;
     guint32 *head = (guint32 *) data;
 
     /* normal format is big endian (au is a Sparc format) */
@@ -316,16 +336,19 @@ Samples :
           gst_caps_new_simple ((law == 1) ? "audio/x-mulaw" : "audio/x-alaw",
           "rate", G_TYPE_INT, auparse->frequency,
           "channels", G_TYPE_INT, auparse->channels, NULL);
+      auparse->sample_size = auparse->channels;
     } else if (ieee) {
       tempcaps = gst_caps_new_simple ("audio/x-raw-float",
           "rate", G_TYPE_INT, auparse->frequency,
           "channels", G_TYPE_INT, auparse->channels,
           "endianness", G_TYPE_INT,
-          auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN, "width", G_TYPE_INT,
-          depth, "buffer-frames", G_TYPE_INT, 0, NULL);
+          auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN,
+          "width", G_TYPE_INT, depth, NULL);
+      auparse->sample_size = auparse->channels * depth / 8;
     } else if (layout[0]) {
       tempcaps = gst_caps_new_simple ("audio/x-adpcm",
           "layout", G_TYPE_STRING, layout, NULL);
+      auparse->sample_size = 0;
     } else {
       tempcaps = gst_caps_new_simple ("audio/x-raw-int",
           "rate", G_TYPE_INT, auparse->frequency,
@@ -334,44 +357,59 @@ Samples :
           auparse->le ? G_LITTLE_ENDIAN : G_BIG_ENDIAN, "depth", G_TYPE_INT,
           depth, "width", G_TYPE_INT, depth, "signed", G_TYPE_BOOLEAN, TRUE,
           NULL);
+      auparse->sample_size = auparse->channels * depth / 8;
     }
 
     gst_pad_set_active (auparse->srcpad, TRUE);
     gst_pad_set_caps (auparse->srcpad, tempcaps);
 
-    if ((ret = gst_pad_alloc_buffer (auparse->srcpad, GST_BUFFER_OFFSET_NONE,
-                size - (auparse->offset),
-                GST_PAD_CAPS (auparse->srcpad), &newbuf)) != GST_FLOW_OK) {
-      gst_buffer_unref (buf);
-      g_object_unref (auparse);
-      return ret;
-    }
-    ret = GST_FLOW_OK;
-
-
-    memcpy (GST_BUFFER_DATA (newbuf), data + (auparse->offset),
-        size - (auparse->offset));
-    GST_BUFFER_SIZE (newbuf) = size - (auparse->offset);
-
-    GstEvent *event;
-
-    event = NULL;
-
     event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_DEFAULT,
         0, GST_CLOCK_TIME_NONE, 0);
 
-
     gst_pad_push_event (auparse->srcpad, event);
 
-    gst_buffer_unref (buf);
-    g_object_unref (auparse);
-    return gst_pad_push (auparse->srcpad, newbuf);
+    subbuf = gst_buffer_create_sub (buf, auparse->offset,
+        size - auparse->offset);
 
+    gst_buffer_unref (buf);
+
+    gst_adapter_push (auparse->adapter, subbuf);
+  } else {
+    gst_adapter_push (auparse->adapter, buf);
+  }
+
+  if (auparse->sample_size) {
+    /* Ensure we push a buffer that's a multiple of the frame size downstream */
+    int avail = gst_adapter_available (auparse->adapter);
+
+    avail -= avail % auparse->sample_size;
+
+    if (avail > 0) {
+      const guint8 *data = gst_adapter_peek (auparse->adapter, avail);
+      GstBuffer *newbuf;
+
+      if ((ret = gst_pad_alloc_buffer (auparse->srcpad, auparse->buffer_offset,
+                  avail, GST_PAD_CAPS (auparse->srcpad),
+                  &newbuf)) == GST_FLOW_OK) {
+
+        memcpy (GST_BUFFER_DATA (newbuf), data, avail);
+        gst_adapter_flush (auparse->adapter, avail);
+
+        auparse->buffer_offset += avail;
+
+        ret = gst_pad_push (auparse->srcpad, newbuf);
+      }
+    } else
+      ret = GST_FLOW_OK;
+  } else {
+    /* It's something non-trivial (such as ADPCM), we don't understand it, so
+     * just push downstream and assume this will know what to do with it */
+    ret = gst_pad_push (auparse->srcpad, buf);
   }
 
   g_object_unref (auparse);
-  return gst_pad_push (auparse->srcpad, buf);
 
+  return ret;
 }
 
 static GstStateChangeReturn
@@ -385,6 +423,8 @@ gst_auparse_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_adapter_clear (auparse->adapter);
+      auparse->buffer_offset = 0;
       auparse->offset = 0;
       auparse->size = 0;
       auparse->encoding = 0;

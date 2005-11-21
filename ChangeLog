@@ -1,3 +1,14 @@
+2005-11-21  Michael Smith <msmith@fluendo.com>
+
+	* gst/auparse/Makefile.am:
+	* gst/auparse/gstauparse.c: (gst_auparse_class_init),
+	(gst_auparse_init), (gst_auparse_dispose), (gst_auparse_chain),
+	(gst_auparse_change_state):
+	* gst/auparse/gstauparse.h:
+	  Partially fix #161712. playbin still doesn't work on these files,
+	  (on the bug report, Andy says we aren't typefinding it for some
+	  reason?) but at least auparse isn't totally busted like it was before.
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* *.h:
