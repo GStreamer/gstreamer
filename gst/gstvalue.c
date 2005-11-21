@@ -2682,9 +2682,9 @@ gst_value_is_fixed (const GValue * value)
     const GValue *kid;
 
     /* check recursively */
-    size = gst_value_list_get_size (value);
+    size = gst_value_array_get_size (value);
     for (n = 0; n < size; n++) {
-      kid = gst_value_list_get_value (value, n);
+      kid = gst_value_array_get_value (value, n);
       fixed &= gst_value_is_fixed (kid);
     }
 

@@ -1,3 +1,10 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	patch by: Alessandro Dessina <alessandro nnva org>
+
+	* gst/gstvalue.c (gst_value_is_fixed): Use gst_value_array
+	functions to access arrays. Fixes #321962.
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer.types:
