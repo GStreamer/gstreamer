@@ -57,7 +57,7 @@ gst_segment_init (GstSegment * segment, GstFormat format)
   segment->stop = -1;
   segment->time = 0;
   segment->accum = 0;
-  segment->last_stop = 0;
+  segment->last_stop = -1;
   segment->duration = -1;
 }
 
@@ -79,6 +79,24 @@ gst_segment_set_duration (GstSegment * segment, GstFormat format,
   g_return_if_fail (segment->format == format);
 
   segment->duration = duration;
+}
+
+/**
+ * gst_segment_set_last_stop:
+ * @segment: a #GstSegment structure.
+ * @format: the format of the segment.
+ * @position: the position 
+ *
+ * Set the last observed stop position in the segment to @position.
+ */
+void
+gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
+    gint64 position)
+{
+  g_return_if_fail (segment != NULL);
+  g_return_if_fail (segment->format == format);
+
+  segment->last_stop = position;
 }
 
 /**
@@ -202,6 +220,17 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
 
   g_return_if_fail (rate != 0.0);
   g_return_if_fail (segment != NULL);
+
+  /* any other format with 0 also gives time 0, the other values are
+   * invalid in the format though. */
+  if (format != segment->format && start == 0) {
+    format = segment->format;
+    if (stop != 0)
+      stop = -1;
+    if (time != 0)
+      time = -1;
+  }
+
   g_return_if_fail (segment->format == format);
 
   if (update) {
@@ -212,13 +241,13 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
     /* the new segment has to be aligned with the old segment.
      * We first update the accumulated time of the previous
      * segment. the accumulated time is used when syncing to the
-     * clock. A flush event sets the accumulated time back to 0
+     * clock. 
      */
     if (GST_CLOCK_TIME_IS_VALID (segment->stop)) {
       duration = segment->stop - segment->start;
-    } else if (GST_CLOCK_TIME_IS_VALID (segment->duration)) {
+    } else if (GST_CLOCK_TIME_IS_VALID (segment->last_stop)) {
       /* else use last seen timestamp as segment stop */
-      duration = segment->duration - segment->start;
+      duration = segment->last_stop - segment->start;
     } else {
       /* else we don't know */
       duration = 0;
@@ -233,13 +262,6 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
   segment->start = start;
   segment->stop = stop;
   segment->time = time;
-
-  GST_DEBUG ("received NEWSEGMENT %" GST_TIME_FORMAT " -- %"
-      GST_TIME_FORMAT ", time %" GST_TIME_FORMAT ", accum %"
-      GST_TIME_FORMAT,
-      GST_TIME_ARGS (segment->start),
-      GST_TIME_ARGS (segment->stop),
-      GST_TIME_ARGS (segment->time), GST_TIME_ARGS (segment->accum));
 }
 
 /**

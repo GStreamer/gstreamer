@@ -67,6 +67,7 @@ struct _GstSegment {
 void		gst_segment_init		(GstSegment *segment, GstFormat format);
 
 void		gst_segment_set_duration	(GstSegment *segment, GstFormat format, gint64 duration);
+void		gst_segment_set_last_stop	(GstSegment *segment, GstFormat format, gint64 position);
 
 void		gst_segment_set_seek		(GstSegment *segment, gdouble rate, 
 						 GstFormat format, GstSeekFlags flags, 
