@@ -399,7 +399,7 @@ static GstFlowReturn
       outsize, outsamples);
 
   GST_BUFFER_OFFSET (outbuf) = audioresample->offset;
-  GST_BUFFER_TIMESTAMP (outbuf) = base->segment_start +
+  GST_BUFFER_TIMESTAMP (outbuf) = base->segment.start +
       audioresample->offset * GST_SECOND / audioresample->o_rate;
 
   audioresample->offset += outsamples;
@@ -408,7 +408,7 @@ static GstFlowReturn
   /* we calculate DURATION as the difference between "next" timestamp
    * and current timestamp so we ensure a contiguous stream, instead of
    * having rounding errors. */
-  GST_BUFFER_DURATION (outbuf) = base->segment_start +
+  GST_BUFFER_DURATION (outbuf) = base->segment.start +
       audioresample->offset * GST_SECOND / audioresample->o_rate -
       GST_BUFFER_TIMESTAMP (outbuf);
 
