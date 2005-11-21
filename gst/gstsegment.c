@@ -37,6 +37,62 @@
  * Last reviewed on 2005-20-09 (0.9.5)
  */
 
+static GstSegment *
+gst_segment_copy (GstSegment * segment)
+{
+  GstSegment *result = NULL;
+
+  if (segment) {
+    result = gst_segment_new ();
+    memcpy (result, segment, sizeof (GstSegment));
+  }
+  return NULL;
+}
+
+GType
+gst_segment_get_type (void)
+{
+  static GType gst_segment_type = 0;
+
+  if (!gst_segment_type) {
+    gst_segment_type = g_boxed_type_register_static ("GstSegment",
+        (GBoxedCopyFunc) gst_segment_copy, (GBoxedFreeFunc) gst_segment_free);
+  }
+
+  return gst_segment_type;
+}
+
+/**
+ * gst_segment_new:
+ *
+ * Allocate a new #GstSegment structure and initialize it using 
+ * gst_segment_init().
+ *
+ * Returns: a new #GstSegment, free with gst_segment_free().
+ */
+GstSegment *
+gst_segment_new (void)
+{
+  GstSegment *result;
+
+  result = g_new0 (GstSegment, 1);
+  gst_segment_init (result, GST_FORMAT_UNDEFINED);
+
+  return result;
+}
+
+/**
+ * gst_segment_free:
+ * @segment: a #GstSegment
+ *
+ * Free the allocated segment @segment.
+ */
+void
+gst_segment_free (GstSegment * segment)
+{
+  g_free (segment);
+}
+
 /**
  * gst_segment_init:
  * @segment: a #GstSegment structure.

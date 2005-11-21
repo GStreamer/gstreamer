@@ -64,6 +64,11 @@ struct _GstSegment {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GType           gst_segment_get_type 		(void);
+
+GstSegment *    gst_segment_new 		(void);
+void 		gst_segment_free 		(GstSegment *segment);
+
 void		gst_segment_init		(GstSegment *segment, GstFormat format);
 
 void		gst_segment_set_duration	(GstSegment *segment, GstFormat format, gint64 duration);
