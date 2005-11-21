@@ -1643,12 +1643,23 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
 
   bin = GST_BIN_CAST (element);
 
-  /* Clear message list on next PAUSED */
-  if (next == GST_STATE_PAUSED) {
-    GST_OBJECT_LOCK (bin);
-    GST_DEBUG_OBJECT (element, "clearing EOS elements");
-    bin_remove_messages (bin, NULL, GST_MESSAGE_EOS);
-    GST_OBJECT_UNLOCK (bin);
+  switch (next) {
+    case GST_STATE_PAUSED:
+      /* Clear EOS list on next PAUSED */
+      GST_OBJECT_LOCK (bin);
+      GST_DEBUG_OBJECT (element, "clearing EOS elements");
+      bin_remove_messages (bin, NULL, GST_MESSAGE_EOS);
+      GST_OBJECT_UNLOCK (bin);
+      break;
+    case GST_STATE_READY:
+      /* Clear message list on next READY */
+      GST_OBJECT_LOCK (bin);
+      GST_DEBUG_OBJECT (element, "clearing all cached messages");
+      bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
+      GST_OBJECT_UNLOCK (bin);
+      break;
+    default:
+      break;
   }
 
   /* iterate in state change order */

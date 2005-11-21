@@ -1,5 +1,10 @@
 2005-11-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (gst_bin_change_state_func):
+	Fix for #321595
+
+2005-11-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstsegment.h:
 	And add a nice define too.
 
