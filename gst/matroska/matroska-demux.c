@@ -954,9 +954,9 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
         break;
       }
 
-      GST_LOCK (demux);
+      GST_OBJECT_LOCK (demux);
       gst_query_set_position (query, GST_FORMAT_TIME, demux->pos);
-      GST_UNLOCK (demux);
+      GST_OBJECT_UNLOCK (demux);
 
       res = TRUE;
       break;
@@ -972,9 +972,9 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
         break;
       }
 
-      GST_LOCK (demux);
+      GST_OBJECT_LOCK (demux);
       gst_query_set_duration (query, GST_FORMAT_TIME, demux->duration);
-      GST_UNLOCK (demux);
+      GST_OBJECT_UNLOCK (demux);
 
       res = TRUE;
       break;
@@ -1079,14 +1079,14 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
   /* check sanity before we start flushing and all that */
   if (cur_type == GST_SEEK_TYPE_SET) {
-    GST_LOCK (demux);
+    GST_OBJECT_LOCK (demux);
     if (!gst_matroskademux_do_index_seek (demux, cur)) {
       GST_DEBUG ("No matching seek entry in index");
-      GST_UNLOCK (demux);
+      GST_OBJECT_UNLOCK (demux);
       return FALSE;
     }
     GST_DEBUG ("Seek position looks sane");
-    GST_UNLOCK (demux);
+    GST_OBJECT_UNLOCK (demux);
   }
 
   flush = !!(flags & GST_SEEK_FLAG_FLUSH);
@@ -1104,7 +1104,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
    * forever. */
   GST_STREAM_LOCK (demux->sinkpad);
 
-  GST_LOCK (demux);
+  GST_OBJECT_LOCK (demux);
 
   /* if nothing configured, play complete file */
   if (cur == GST_CLOCK_TIME_NONE)
@@ -1168,7 +1168,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   newsegment_event = gst_event_new_newsegment (FALSE, demux->segment_rate,
       GST_FORMAT_TIME, entry->time, demux->segment_stop, entry->time);
 
-  GST_UNLOCK (demux);
+  GST_OBJECT_UNLOCK (demux);
 
   GST_DEBUG ("Stopping flush");
   if (flush) {
@@ -1197,7 +1197,7 @@ seek_error:
   /* FIXME: shouldn't we either make it a real error or start the task
    * function again so that things can continue from where they left off? */
   GST_DEBUG ("Got a seek error");
-  GST_UNLOCK (demux);
+  GST_OBJECT_UNLOCK (demux);
   GST_STREAM_UNLOCK (demux->sinkpad);
 
   return FALSE;

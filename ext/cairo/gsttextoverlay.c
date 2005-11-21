@@ -292,7 +292,7 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
 {
   GstTextOverlay *overlay = GST_TEXT_OVERLAY (object);
 
-  GST_LOCK (overlay);
+  GST_OBJECT_LOCK (overlay);
 
   switch (prop_id) {
     case ARG_TEXT:{
@@ -362,7 +362,7 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
 
   overlay->need_render = TRUE;
 
-  GST_UNLOCK (overlay);
+  GST_OBJECT_UNLOCK (overlay);
 }
 
 static void

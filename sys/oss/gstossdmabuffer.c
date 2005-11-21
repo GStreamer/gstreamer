@@ -128,12 +128,12 @@ gst_ossdmabuffer_func (GstRingBuffer * buf)
   struct count_info count;
   GstOssDMABuffer *obuf = (GstOssDMABuffer *) buf;
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   while (obuf->running) {
     if (buf->state == GST_RINGBUFFER_STATE_PLAYING) {
       int segsize;
 
-      GST_UNLOCK (buf);
+      GST_OBJECT_UNLOCK (buf);
 
       segsize = buf->spec.segsize;
 
@@ -152,13 +152,13 @@ gst_ossdmabuffer_func (GstRingBuffer * buf)
 
       gst_ringbuffer_callback (buf, count.blocks);
 
-      GST_LOCK (buf);
+      GST_OBJECT_LOCK (buf);
     } else {
       GST_OSSDMABUFFER_SIGNAL (obuf);
       GST_OSSDMABUFFER_WAIT (obuf);
     }
   }
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 }
 
 static gboolean
@@ -256,12 +256,12 @@ gst_ossdmabuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     return FALSE;
   }
 
-  GST_LOCK (obuf);
+  GST_OBJECT_LOCK (obuf);
   obuf->running = TRUE;
   obuf->thread = g_thread_create ((GThreadFunc) gst_ossdmabuffer_func,
       buf, TRUE, NULL);
   GST_OSSDMABUFFER_WAIT (obuf);
-  GST_UNLOCK (obuf);
+  GST_OBJECT_UNLOCK (obuf);
 
   return TRUE;
 }
@@ -273,10 +273,10 @@ gst_ossdmabuffer_release (GstRingBuffer * buf)
 
   gst_buffer_unref (buf->data);
 
-  GST_LOCK (obuf);
+  GST_OBJECT_LOCK (obuf);
   obuf->running = FALSE;
   GST_OSSDMABUFFER_SIGNAL (obuf);
-  GST_UNLOCK (obuf);
+  GST_OBJECT_UNLOCK (obuf);
 
   g_thread_join (obuf->thread);
 

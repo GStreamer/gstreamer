@@ -263,9 +263,9 @@ gst_test_set_property (GObject * object, guint prop_id,
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   } else {
     /* expected values */
-    GST_LOCK (test);
+    GST_OBJECT_LOCK (test);
     g_value_copy (value, &test->values[prop_id / 2 - 1]);
-    GST_UNLOCK (test);
+    GST_OBJECT_UNLOCK (test);
   }
 }
 
@@ -281,7 +281,7 @@ gst_test_get_property (GObject * object, guint prop_id, GValue * value,
     return;
   }
 
-  GST_LOCK (test);
+  GST_OBJECT_LOCK (test);
 
   if (prop_id % 2) {
     /* real values */
@@ -291,7 +291,7 @@ gst_test_get_property (GObject * object, guint prop_id, GValue * value,
     g_value_copy (&test->values[id], value);
   }
 
-  GST_UNLOCK (test);
+  GST_OBJECT_UNLOCK (test);
 }
 
 gboolean

@@ -46,11 +46,11 @@ typedef struct _GstOssDMABuffer GstOssDMABuffer;
 typedef struct _GstOssDMABufferClass GstOssDMABufferClass;
 
 #define GST_OSSDMABUFFER_THREAD(buf)   (GST_OSSDMABUFFER(buf)->thread)
-#define GST_OSSDMABUFFER_LOCK	       GST_LOCK
-#define GST_OSSDMABUFFER_UNLOCK	       GST_UNLOCK
+#define GST_OSSDMABUFFER_LOCK	       GST_OBJECT_LOCK
+#define GST_OSSDMABUFFER_UNLOCK	       GST_OBJECT_UNLOCK
 #define GST_OSSDMABUFFER_COND(buf)     (GST_OSSDMABUFFER(buf)->cond)
 #define GST_OSSDMABUFFER_SIGNAL(buf)   (g_cond_signal (GST_OSSDMABUFFER_COND (buf)))
-#define GST_OSSDMABUFFER_WAIT(buf)     (g_cond_wait (GST_OSSDMABUFFER_COND (buf), GST_GET_LOCK (buf)))
+#define GST_OSSDMABUFFER_WAIT(buf)     (g_cond_wait (GST_OSSDMABUFFER_COND (buf), GST_OBJECT_GET_LOCK (buf)))
 
 struct _GstOssDMABuffer {
   GstRingBuffer  buffer;

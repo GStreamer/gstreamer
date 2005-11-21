@@ -254,9 +254,9 @@ gst_navseek_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_SEEKOFFSET:
-      GST_LOCK (navseek);
+      GST_OBJECT_LOCK (navseek);
       navseek->seek_offset = g_value_get_double (value);
-      GST_UNLOCK (navseek);
+      GST_OBJECT_UNLOCK (navseek);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -272,9 +272,9 @@ gst_navseek_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_SEEKOFFSET:
-      GST_LOCK (navseek);
+      GST_OBJECT_LOCK (navseek);
       g_value_set_double (value, navseek->seek_offset);
-      GST_UNLOCK (navseek);
+      GST_OBJECT_UNLOCK (navseek);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -289,10 +289,10 @@ gst_navseek_event (GstBaseTransform * trans, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      GST_LOCK (navseek);
+      GST_OBJECT_LOCK (navseek);
       if (navseek->loop)
         gst_navseek_segseek (navseek);
-      GST_UNLOCK (navseek);
+      GST_OBJECT_UNLOCK (navseek);
       break;
     default:
       break;
@@ -305,7 +305,7 @@ gst_navseek_transform_ip (GstBaseTransform * basetrans, GstBuffer * buf)
 {
   GstNavSeek *navseek = GST_NAVSEEK (basetrans);
 
-  GST_LOCK (navseek);
+  GST_OBJECT_LOCK (navseek);
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     if (navseek->grab_seg_start) {
@@ -321,7 +321,7 @@ gst_navseek_transform_ip (GstBaseTransform * basetrans, GstBuffer * buf)
     }
   }
 
-  GST_UNLOCK (navseek);
+  GST_OBJECT_UNLOCK (navseek);
 
   return GST_FLOW_OK;
 }

@@ -163,7 +163,7 @@ gst_break_my_data_set_property (GObject * object, guint prop_id,
 {
   GstBreakMyData *bmd = GST_BREAK_MY_DATA (object);
 
-  GST_LOCK (bmd);
+  GST_OBJECT_LOCK (bmd);
 
   switch (prop_id) {
     case ARG_SEED:
@@ -183,7 +183,7 @@ gst_break_my_data_set_property (GObject * object, guint prop_id,
       break;
   }
 
-  GST_UNLOCK (bmd);
+  GST_OBJECT_UNLOCK (bmd);
 }
 
 static void
@@ -192,7 +192,7 @@ gst_break_my_data_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstBreakMyData *bmd = GST_BREAK_MY_DATA (object);
 
-  GST_LOCK (bmd);
+  GST_OBJECT_LOCK (bmd);
 
   switch (prop_id) {
     case ARG_SEED:
@@ -212,7 +212,7 @@ gst_break_my_data_get_property (GObject * object, guint prop_id, GValue * value,
       break;
   }
 
-  GST_UNLOCK (bmd);
+  GST_OBJECT_UNLOCK (bmd);
 }
 
 static GstFlowReturn
@@ -223,7 +223,7 @@ gst_break_my_data_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   g_return_val_if_fail (gst_buffer_is_writable (buf), GST_FLOW_ERROR);
 
-  GST_LOCK (bmd);
+  GST_OBJECT_LOCK (bmd);
 
   if (bmd->skipped < bmd->skip) {
     i = bmd->skip - bmd->skipped;
@@ -256,7 +256,7 @@ gst_break_my_data_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   /* don't overflow */
   bmd->skipped += MIN (G_MAXUINT - bmd->skipped, GST_BUFFER_SIZE (buf));
 
-  GST_UNLOCK (bmd);
+  GST_OBJECT_UNLOCK (bmd);
 
   return GST_FLOW_OK;
 }
@@ -266,10 +266,10 @@ gst_break_my_data_start (GstBaseTransform * trans)
 {
   GstBreakMyData *bmd = GST_BREAK_MY_DATA (trans);
 
-  GST_LOCK (bmd);
+  GST_OBJECT_LOCK (bmd);
   bmd->rand = g_rand_new_with_seed (bmd->seed);
   bmd->skipped = 0;
-  GST_UNLOCK (bmd);
+  GST_OBJECT_UNLOCK (bmd);
 
   return TRUE;
 }
@@ -279,10 +279,10 @@ gst_break_my_data_stop (GstBaseTransform * trans)
 {
   GstBreakMyData *bmd = GST_BREAK_MY_DATA (trans);
 
-  GST_LOCK (bmd);
+  GST_OBJECT_LOCK (bmd);
   g_rand_free (bmd->rand);
   bmd->rand = NULL;
-  GST_UNLOCK (bmd);
+  GST_OBJECT_UNLOCK (bmd);
 
   return TRUE;
 }

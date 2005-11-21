@@ -707,7 +707,7 @@ gst_flacenc_set_property (GObject * object, guint prop_id,
 {
   GstFlacEnc *this = GST_FLACENC (object);
 
-  GST_LOCK (this);
+  GST_OBJECT_LOCK (this);
 
   switch (prop_id) {
     case PROP_QUALITY:
@@ -766,7 +766,7 @@ gst_flacenc_set_property (GObject * object, guint prop_id,
       break;
   }
 
-  GST_UNLOCK (this);
+  GST_OBJECT_UNLOCK (this);
 }
 
 static void
@@ -775,7 +775,7 @@ gst_flacenc_get_property (GObject * object, guint prop_id,
 {
   GstFlacEnc *this = GST_FLACENC (object);
 
-  GST_LOCK (this);
+  GST_OBJECT_LOCK (this);
 
   switch (prop_id) {
     case PROP_QUALITY:
@@ -841,7 +841,7 @@ gst_flacenc_get_property (GObject * object, guint prop_id,
       break;
   }
 
-  GST_UNLOCK (this);
+  GST_OBJECT_UNLOCK (this);
 }
 
 static GstStateChangeReturn

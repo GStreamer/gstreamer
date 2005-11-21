@@ -167,7 +167,7 @@ gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time)
   gint hh, mm, ss, i;
   glong run_time;
 
-  GST_LOCK (filter);
+  GST_OBJECT_LOCK (filter);
   run_time = cur_time.tv_sec - filter->start_time.tv_sec;
 
   hh = (run_time / 3600) % 100;
@@ -252,7 +252,7 @@ gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time)
         GST_OBJECT_NAME (filter), hh, mm, ss);
   }
 
-  GST_UNLOCK (filter);
+  GST_OBJECT_UNLOCK (filter);
 
   gst_object_unref (peer_pad);
 }
@@ -285,16 +285,16 @@ gst_progress_report_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   filter = GST_PROGRESS_REPORT (trans);
 
   /* Check if update_freq seconds have passed since the last update */
-  GST_LOCK (filter);
+  GST_OBJECT_LOCK (filter);
   need_update =
       ((cur_time.tv_sec - filter->last_report.tv_sec) >= filter->update_freq);
-  GST_UNLOCK (filter);
+  GST_OBJECT_UNLOCK (filter);
 
   if (need_update) {
     gst_progress_report_report (filter, cur_time);
-    GST_LOCK (filter);
+    GST_OBJECT_LOCK (filter);
     filter->last_report = cur_time;
-    GST_UNLOCK (filter);
+    GST_OBJECT_UNLOCK (filter);
   }
 
   return GST_FLOW_OK;
@@ -330,14 +330,14 @@ gst_progress_report_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_UPDATE_FREQ:
-      GST_LOCK (filter);
+      GST_OBJECT_LOCK (filter);
       filter->update_freq = g_value_get_int (value);
-      GST_UNLOCK (filter);
+      GST_OBJECT_UNLOCK (filter);
       break;
     case ARG_SILENT:
-      GST_LOCK (filter);
+      GST_OBJECT_LOCK (filter);
       filter->silent = g_value_get_boolean (value);
-      GST_UNLOCK (filter);
+      GST_OBJECT_UNLOCK (filter);
       break;
     default:
       break;
@@ -354,14 +354,14 @@ gst_progress_report_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_UPDATE_FREQ:
-      GST_LOCK (filter);
+      GST_OBJECT_LOCK (filter);
       g_value_set_int (value, filter->update_freq);
-      GST_UNLOCK (filter);
+      GST_OBJECT_UNLOCK (filter);
       break;
     case ARG_SILENT:
-      GST_LOCK (filter);
+      GST_OBJECT_LOCK (filter);
       g_value_set_boolean (value, filter->silent);
-      GST_UNLOCK (filter);
+      GST_OBJECT_UNLOCK (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

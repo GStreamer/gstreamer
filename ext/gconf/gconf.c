@@ -55,33 +55,33 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
   const GList *pads = NULL;
   GstElement *element = NULL;
 
-  GST_LOCK (bin);
+  GST_OBJECT_LOCK (bin);
   elements = bin->children;
   /* traverse all elements looking for unconnected pads */
   while (elements && pad == NULL) {
     element = GST_ELEMENT (elements->data);
-    GST_LOCK (element);
+    GST_OBJECT_LOCK (element);
     pads = element->pads;
     while (pads) {
       GstPad *testpad = GST_PAD (pads->data);
 
       /* check if the direction matches */
       if (GST_PAD_DIRECTION (testpad) == direction) {
-        GST_LOCK (testpad);
+        GST_OBJECT_LOCK (testpad);
         if (GST_PAD_PEER (testpad) == NULL) {
-          GST_UNLOCK (testpad);
+          GST_OBJECT_UNLOCK (testpad);
           /* found it ! */
           pad = testpad;
           break;
         }
-        GST_UNLOCK (testpad);
+        GST_OBJECT_UNLOCK (testpad);
       }
       pads = g_list_next (pads);
     }
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
     elements = g_list_next (elements);
   }
-  GST_UNLOCK (bin);
+  GST_OBJECT_UNLOCK (bin);
 
   return pad;
 }
