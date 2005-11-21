@@ -141,8 +141,6 @@ class Discoverer(gst.Pipeline):
             elif msg.type & gst.MESSAGE_ERROR:
                 print "whooops, error", msg.parse_error()
                 break
-            else:
-                print "unknown message type"
                 
         self.set_state(gst.STATE_PAUSED)
         self.set_state(gst.STATE_READY)

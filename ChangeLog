@@ -1,3 +1,12 @@
+2005-11-21  Edward Hervey  <edward@fluendo.com>
+
+	* examples/gstfile.py:
+	Cleanup
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	API update.
+	More fixes to follow.
+	
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gst.defs (net_client_clock_new): Add some defaults.

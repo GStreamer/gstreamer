@@ -724,6 +724,21 @@
   )
 )
 
+(define-method set_master
+  (of-object "GstClock")
+  (c-name "gst_clock_set_master")
+  (return-type "none")
+  (parameters
+    '("GstClock*" "master")
+  )
+)
+
+(define-method get_master
+  (of-object "GstClock")
+  (c-name "gst_clock_get_master")
+  (return-type "GstClock*")
+)
+
 (define-method get_internal_time
   (of-object "GstClock")
   (c-name "gst_clock_get_internal_time")
@@ -4507,12 +4522,6 @@
   )
 )
 
-(define-method scan_paths
-  (of-object "GstRegistry")
-  (c-name "gst_registry_scan_paths")
-  (return-type "none")
-)
-
 (define-function default_registry_check_feature_version
   (c-name "gst_default_registry_check_feature_version")
   (return-type "gboolean")
@@ -4567,6 +4576,7 @@
     '("gint64" "cur")
     '("GstSeekType" "stop_type")
     '("gint64" "stop")
+    '("gboolean*" "update")
   )
 )
 

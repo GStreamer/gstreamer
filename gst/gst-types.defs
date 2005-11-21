@@ -352,11 +352,12 @@
   (c-name "GstClockFlags")
   (gtype-id "GST_TYPE_CLOCK_FLAGS")
   (values
-    '("do-single-sync" "GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC")
-    '("do-single-async" "GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC")
-    '("do-periodic-sync" "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC")
-    '("do-periodic-async" "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC")
-    '("set-resolution" "GST_CLOCK_FLAG_CAN_SET_RESOLUTION")
+    '("can-do-single-sync" "GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC")
+    '("can-do-single-async" "GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC")
+    '("can-do-periodic-sync" "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC")
+    '("can-do-periodic-async" "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC")
+    '("can-set-resolution" "GST_CLOCK_FLAG_CAN_SET_RESOLUTION")
+    '("last" "GST_CLOCK_FLAG_LAST")
   )
 )
 
