@@ -1,3 +1,12 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstevent.h (GST_EVENT_FILLER): Removed. Can be added back
+	during the stable series if we need it. Fixes #319178.
+
+	* gst/gstevent.c (gst_event_new_filler): Removed.
+
+	* check/gst/gstevent.c: Update comment about filler events.
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstvalue.c: (gst_value_is_fixed):

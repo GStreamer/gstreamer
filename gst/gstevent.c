@@ -102,7 +102,6 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_EOS, "eos", 0},
   {GST_EVENT_NEWSEGMENT, "newsegment", 0},
   {GST_EVENT_TAG, "tag", 0},
-  {GST_EVENT_FILLER, "filler", 0},
   {GST_EVENT_BUFFERSIZE, "buffersize", 0},
   {GST_EVENT_QOS, "qos", 0},
   {GST_EVENT_SEEK, "seek", 0},
@@ -539,20 +538,6 @@ gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
 
   if (taglist)
     *taglist = (GstTagList *) event->structure;
-}
-
-/* filler event */
-/**
- * gst_event_new_filler:
- *
- * Create a new dummy event that should be ignored.
- *
- * Returns: a new #GstEvent
- */
-GstEvent *
-gst_event_new_filler (void)
-{
-  return gst_event_new (GST_EVENT_FILLER);
 }
 
 /* buffersize event */

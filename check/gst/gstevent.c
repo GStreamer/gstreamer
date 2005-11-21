@@ -102,7 +102,7 @@ GST_START_TEST (create_custom_events)
     gst_event_unref (event);
   }
 
-  /* FIXME: Add tests for FILLERS and QOS when they are implemented. */
+  /* FIXME: Add tests for QOS when it is implemented. */
 
   /* SEEK */
   {

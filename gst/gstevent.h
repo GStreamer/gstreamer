@@ -83,14 +83,13 @@ typedef enum {
  *                 without a NEWSEGMENT event.
  * @GST_EVENT_NEWSEGMENT: A new media segment follows in the dataflow.
  * @GST_EVENT_TAG: A new set of metadata tags has been found in the stream.
- * @GST_EVENT_FILLER: Filler for sparse data streams.
  * @GST_EVENT_BUFFERSIZE: Notification of buffering requirements
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements are being starved of or
  *                 flooded with data.
  * @GST_EVENT_SEEK: A request for a new playback position and rate.
  * @GST_EVENT_NAVIGATION: Navigation events are usually used for communicating
-                          user requests, such as mouse or keyboard movements,
+ *                        user requests, such as mouse or keyboard movements,
  *                        to upstream elements.
  * @GST_EVENT_CUSTOM_UPSTREAM: Upstream custom event
  * @GST_EVENT_CUSTOM_DOWNSTREAM: Downstream custom event that travels in the
@@ -118,8 +117,7 @@ typedef enum {
   GST_EVENT_EOS			= GST_EVENT_MAKE_TYPE (5, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
   GST_EVENT_NEWSEGMENT		= GST_EVENT_MAKE_TYPE (6, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
   GST_EVENT_TAG			= GST_EVENT_MAKE_TYPE (7, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_EVENT_FILLER		= GST_EVENT_MAKE_TYPE (8, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_EVENT_BUFFERSIZE		= GST_EVENT_MAKE_TYPE (9, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_EVENT_BUFFERSIZE		= GST_EVENT_MAKE_TYPE (8, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
   /* upstream events */
   GST_EVENT_QOS			= GST_EVENT_MAKE_TYPE (15, FLAG(UPSTREAM)),
   GST_EVENT_SEEK		= GST_EVENT_MAKE_TYPE (16, FLAG(UPSTREAM)),
@@ -350,10 +348,6 @@ void		gst_event_parse_newsegment	(GstEvent *event, gboolean *update, gdouble *ra
 /* tag event */
 GstEvent*	gst_event_new_tag		(GstTagList *taglist);
 void		gst_event_parse_tag		(GstEvent *event, GstTagList **taglist);
-
-/* filler event */
-/* FIXME: FILLER events need to be fully specified and implemented */
-GstEvent *	gst_event_new_filler		(void);
 
 /* buffer */
 GstEvent *	gst_event_new_buffersize	(GstFormat format, gint64 minsize, gint64 maxsize,
