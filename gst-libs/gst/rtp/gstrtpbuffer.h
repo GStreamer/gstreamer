@@ -120,6 +120,7 @@ void 		gst_rtpbuffer_set_seq		(GstBuffer *buffer, guint16 seq);
 guint32 	gst_rtpbuffer_get_timestamp	(GstBuffer *buffer);
 void 		gst_rtpbuffer_set_timestamp	(GstBuffer *buffer, guint32 timestamp);
 
+GstBuffer* gst_rtpbuffer_get_payload_buffer (GstBuffer *buffer);
 guint 		gst_rtpbuffer_get_payload_len	(GstBuffer *buffer);
 gpointer 	gst_rtpbuffer_get_payload	(GstBuffer *buffer);
 

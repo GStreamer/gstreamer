@@ -446,6 +446,19 @@ gst_rtpbuffer_set_timestamp (GstBuffer * buffer, guint32 timestamp)
   GST_RTP_HEADER_TIMESTAMP (buffer) = g_htonl (timestamp);
 }
 
+GstBuffer *
+gst_rtpbuffer_get_payload_buffer (GstBuffer * buffer)
+{
+  guint len;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
+
+  len = gst_rtpbuffer_get_payload_len (buffer);
+
+  return gst_buffer_create_sub (buffer, GST_RTP_HEADER_LEN
+      + GST_RTP_HEADER_CSRC_SIZE (buffer), len);
+}
 
 guint
 gst_rtpbuffer_get_payload_len (GstBuffer * buffer)

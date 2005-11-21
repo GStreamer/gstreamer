@@ -1,5 +1,13 @@
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
+	patch from: Sebastien Cote <sebas642@yahoo.ca>
+	
+	* gst-libs/gst/rtp/gstrtpbuffer.h: 
+	* gst-libs/gst/rtp/gstrtpbuffer.c
+	(gst_rtpbuffer_get_payload_buffer): New function.
+
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
 	* gst/playback/gstplaybin.c (gen_audio_element) 
 	(gen_video_element): Use the new MISSING_PLUGIN core error
 	category. Closes #320060.
