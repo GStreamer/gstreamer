@@ -372,23 +372,22 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
 
   if (gst_structure_get_int (ins, "channels", &channels)) {
     if (gst_structure_has_field (outs, "channels")) {
-      gst_caps_structure_fixate_field_nearest_int (outs, "channels", channels);
+      gst_structure_fixate_field_nearest_int (outs, "channels", channels);
     }
   }
   if (gst_structure_get_int (ins, "rate", &rate)) {
     if (gst_structure_has_field (outs, "rate")) {
-      gst_caps_structure_fixate_field_nearest_int (outs, "rate", rate);
+      gst_structure_fixate_field_nearest_int (outs, "rate", rate);
     }
   }
   if (gst_structure_get_int (ins, "endianness", &endianness)) {
     if (gst_structure_has_field (outs, "endianness")) {
-      gst_caps_structure_fixate_field_nearest_int (outs, "endianness",
-          endianness);
+      gst_structure_fixate_field_nearest_int (outs, "endianness", endianness);
     }
   }
   if (gst_structure_get_int (ins, "width", &width)) {
     if (gst_structure_has_field (outs, "width")) {
-      gst_caps_structure_fixate_field_nearest_int (outs, "width", width);
+      gst_structure_fixate_field_nearest_int (outs, "width", width);
     }
   } else {
     /* this is not allowed */
@@ -396,18 +395,18 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
 
   if (gst_structure_get_int (ins, "depth", &depth)) {
     if (gst_structure_has_field (outs, "depth")) {
-      gst_caps_structure_fixate_field_nearest_int (outs, "depth", depth);
+      gst_structure_fixate_field_nearest_int (outs, "depth", depth);
     }
   } else {
     /* set depth as width */
     if (gst_structure_has_field (outs, "depth")) {
-      gst_caps_structure_fixate_field_nearest_int (outs, "depth", width);
+      gst_structure_fixate_field_nearest_int (outs, "depth", width);
     }
   }
 
   if (gst_structure_get_boolean (ins, "signed", &signedness)) {
     if (gst_structure_has_field (outs, "signed")) {
-      gst_caps_structure_fixate_field_boolean (outs, "signed", signedness);
+      gst_structure_fixate_field_boolean (outs, "signed", signedness);
     }
   }
 

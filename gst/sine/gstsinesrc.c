@@ -161,7 +161,7 @@ gst_sinesrc_src_fixate (GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100);
+  gst_structure_fixate_field_nearest_int (structure, "rate", 44100);
 }
 
 static gboolean

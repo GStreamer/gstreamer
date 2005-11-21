@@ -234,12 +234,9 @@ gst_v4lsrc_fixate (GstPad * pad, GstCaps * caps)
     structure = gst_caps_get_structure (caps, i);
     const GValue *v;
 
-    gst_caps_structure_fixate_field_nearest_int (structure, "width",
-        targetwidth);
-    gst_caps_structure_fixate_field_nearest_int (structure, "height",
-        targetheight);
-    gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
-        7.5);
+    gst_structure_fixate_field_nearest_int (structure, "width", targetwidth);
+    gst_structure_fixate_field_nearest_int (structure, "height", targetheight);
+    gst_structure_fixate_field_nearest_double (structure, "framerate", 7.5);
 
     v = gst_structure_get_value (structure, "format");
     if (v && G_VALUE_TYPE (v) != GST_TYPE_FOURCC) {

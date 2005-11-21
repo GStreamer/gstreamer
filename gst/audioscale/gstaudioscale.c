@@ -256,7 +256,7 @@ gst_audioscale_fixate (GstPad * pad, const GstCaps * caps)
 
   copy = gst_caps_copy (caps);
   structure = gst_caps_get_structure (copy, 0);
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", rate))
+  if (gst_structure_fixate_field_nearest_int (structure, "rate", rate))
     return copy;
   gst_caps_free (copy);
   return NULL;

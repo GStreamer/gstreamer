@@ -207,13 +207,13 @@ gst_base_audio_src_fixate (GstPad * pad, GstCaps * caps)
 
   s = gst_caps_get_structure (caps, 0);
 
-  gst_caps_structure_fixate_field_nearest_int (s, "rate", 44100);
-  gst_caps_structure_fixate_field_nearest_int (s, "channels", 2);
-  gst_caps_structure_fixate_field_nearest_int (s, "depth", 16);
-  gst_caps_structure_fixate_field_nearest_int (s, "width", 16);
+  gst_structure_fixate_field_nearest_int (s, "rate", 44100);
+  gst_structure_fixate_field_nearest_int (s, "channels", 2);
+  gst_structure_fixate_field_nearest_int (s, "depth", 16);
+  gst_structure_fixate_field_nearest_int (s, "width", 16);
   gst_structure_set (s, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
   if (gst_structure_has_field (s, "endianness"))
-    gst_caps_structure_fixate_field_nearest_int (s, "endianness", G_BYTE_ORDER);
+    gst_structure_fixate_field_nearest_int (s, "endianness", G_BYTE_ORDER);
 }
 
 static gboolean

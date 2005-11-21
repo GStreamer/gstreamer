@@ -536,19 +536,19 @@ gst_videoscale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
     GST_DEBUG_OBJECT (base, "scaling to %dx%d", w, h);
 
     /* now fixate */
-    gst_caps_structure_fixate_field_nearest_int (outs, "width", w);
-    gst_caps_structure_fixate_field_nearest_int (outs, "height", h);
+    gst_structure_fixate_field_nearest_int (outs, "width", w);
+    gst_structure_fixate_field_nearest_int (outs, "height", h);
   } else {
     gint width, height;
 
     if (gst_structure_get_int (ins, "width", &width)) {
       if (gst_structure_has_field (outs, "width")) {
-        gst_caps_structure_fixate_field_nearest_int (outs, "width", width);
+        gst_structure_fixate_field_nearest_int (outs, "width", width);
       }
     }
     if (gst_structure_get_int (ins, "height", &height)) {
       if (gst_structure_has_field (outs, "height")) {
-        gst_caps_structure_fixate_field_nearest_int (outs, "height", height);
+        gst_structure_fixate_field_nearest_int (outs, "height", height);
       }
     }
   }

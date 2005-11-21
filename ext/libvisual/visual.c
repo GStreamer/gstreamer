@@ -326,9 +326,9 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
 
       s = gst_caps_get_structure (caps, 0);
 
-      gst_caps_structure_fixate_field_nearest_int (s, "width", 320);
-      gst_caps_structure_fixate_field_nearest_int (s, "height", 240);
-      gst_caps_structure_fixate_field_nearest_double (s, "framerate", 30.0);
+      gst_structure_fixate_field_nearest_int (s, "width", 320);
+      gst_structure_fixate_field_nearest_int (s, "height", 240);
+      gst_structure_fixate_field_nearest_double (s, "framerate", 30.0);
 
       gst_pad_fixate_caps (visual->srcpad, caps);
     } else

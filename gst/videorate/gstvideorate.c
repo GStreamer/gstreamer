@@ -315,7 +315,7 @@ gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
       structure = gst_caps_get_structure (caps, 0);
 
       /* and fixate */
-      gst_caps_structure_fixate_field_nearest_int (structure, "framerate", fps);
+      gst_structure_fixate_field_nearest_int (structure, "framerate", fps);
 
       gst_structure_get_double (structure, "framerate", &fps);
 
