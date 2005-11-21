@@ -134,6 +134,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstbase-%{majorminor}.so.*
 %{_libdir}/libgstcontroller-%{majorminor}.so.*
 %{_libdir}/libgstdataprotocol-%{majorminor}.so.*
+%{_libdir}/libgstnet-tempname-%{majorminor}.so.*
 
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstelements.so
@@ -179,7 +180,10 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_includedir}/gstreamer-%{majorminor}/gst
 %{_includedir}/gstreamer-%{majorminor}/gst/*.h
 %{_includedir}/gstreamer-%{majorminor}/gst/controller/gstcontroller.h
-
+%{_includedir}/gstreamer-%{majorminor}/gst/net/gstnet.h
+%{_includedir}/gstreamer-%{majorminor}/gst/net/gstnetclientclock.h
+%{_includedir}/gstreamer-%{majorminor}/gst/net/gstnettimepacket.h
+%{_includedir}/gstreamer-%{majorminor}/gst/net/gstnettimeprovider.h
 %{_includedir}/gstreamer-%{majorminor}/gst/base
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
 
@@ -187,6 +191,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstdataprotocol-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
 %{_libdir}/libgstcontroller-%{majorminor}.so
+%{_libdir}/libgstnet-tempname-%{majorminor}.so
 
 
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
@@ -194,6 +199,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/gstreamer-base-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-dataprotocol-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-controller-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-net-%{majorminor}.pc
 
 %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
 %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
