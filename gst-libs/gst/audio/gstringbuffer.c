@@ -325,10 +325,10 @@ gst_ring_buffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
 {
   g_return_if_fail (buf != NULL);
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   buf->callback = cb;
   buf->cb_data = user_data;
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 }
 
 
@@ -354,7 +354,7 @@ gst_ring_buffer_open_device (GstRingBuffer * buf)
 
   GST_DEBUG_OBJECT (buf, "opening device");
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   if (buf->open) {
     g_warning ("Device for ring buffer %p already open, fix your code", buf);
     res = TRUE;
@@ -377,7 +377,7 @@ gst_ring_buffer_open_device (GstRingBuffer * buf)
   }
 
 done:
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   return res;
 }
@@ -403,7 +403,7 @@ gst_ring_buffer_close_device (GstRingBuffer * buf)
 
   GST_DEBUG_OBJECT (buf, "closing device");
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   if (!buf->open) {
     g_warning ("Device for ring buffer %p already closed, fix your code", buf);
     res = TRUE;
@@ -430,7 +430,7 @@ gst_ring_buffer_close_device (GstRingBuffer * buf)
   }
 
 done:
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   return res;
 }
@@ -452,11 +452,11 @@ gst_ring_buffer_device_is_open (GstRingBuffer * buf)
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
 
   res = buf->open;
 
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   return res;
 }
@@ -485,7 +485,7 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   GST_DEBUG_OBJECT (buf, "acquiring device");
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   if (!buf->open) {
     g_critical ("Device for %p not opened", buf);
     res = FALSE;
@@ -527,7 +527,7 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     }
   }
 done:
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   return res;
 }
@@ -554,7 +554,7 @@ gst_ring_buffer_release (GstRingBuffer * buf)
 
   gst_ring_buffer_stop (buf);
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   if (!buf->acquired) {
     res = TRUE;
     GST_DEBUG_OBJECT (buf, "device was released");
@@ -582,7 +582,7 @@ gst_ring_buffer_release (GstRingBuffer * buf)
   }
 
 done:
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   return res;
 }
@@ -604,9 +604,9 @@ gst_ring_buffer_is_acquired (GstRingBuffer * buf)
 
   g_return_val_if_fail (buf != NULL, FALSE);
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   res = buf->acquired;
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   return res;
 }
@@ -622,7 +622,7 @@ gst_ring_buffer_is_acquired (GstRingBuffer * buf)
 void
 gst_ring_buffer_set_flushing (GstRingBuffer * buf, gboolean flushing)
 {
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   buf->flushing = flushing;
 
   gst_ring_buffer_clear_all (buf);
@@ -630,7 +630,7 @@ gst_ring_buffer_set_flushing (GstRingBuffer * buf, gboolean flushing)
     gst_ring_buffer_pause_unlocked (buf);
   }
 
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 }
 
 
@@ -655,7 +655,7 @@ gst_ring_buffer_start (GstRingBuffer * buf)
 
   GST_DEBUG_OBJECT (buf, "starting ringbuffer");
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   if (buf->flushing)
     goto flushing;
 
@@ -694,13 +694,13 @@ gst_ring_buffer_start (GstRingBuffer * buf)
   }
 
 done:
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   return res;
 
 flushing:
   {
-    GST_UNLOCK (buf);
+    GST_OBJECT_UNLOCK (buf);
     return FALSE;
   }
 }
@@ -759,19 +759,19 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
 
   g_return_val_if_fail (buf != NULL, FALSE);
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   if (buf->flushing)
     goto flushing;
 
   res = gst_ring_buffer_pause_unlocked (buf);
 
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   return res;
 
 flushing:
   {
-    GST_UNLOCK (buf);
+    GST_OBJECT_UNLOCK (buf);
     return FALSE;
   }
 }
@@ -796,7 +796,7 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
 
   GST_DEBUG_OBJECT (buf, "stopping");
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
 
   /* if started, set to stopped */
   res = g_atomic_int_compare_and_exchange (&buf->state,
@@ -823,7 +823,7 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
     GST_DEBUG_OBJECT (buf, "stopped");
   }
 done:
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   return res;
 }
@@ -969,7 +969,7 @@ wait_segment (GstRingBuffer * buf)
   }
 
   /* take lock first, then update our waiting flag */
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
   if (buf->flushing)
     goto flushing;
 
@@ -985,20 +985,20 @@ wait_segment (GstRingBuffer * buf)
     if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
       goto not_started;
   }
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   return TRUE;
 
   /* ERROR */
 not_started:
   {
-    GST_UNLOCK (buf);
+    GST_OBJECT_UNLOCK (buf);
     GST_DEBUG ("stopped processing");
     return FALSE;
   }
 flushing:
   {
-    GST_UNLOCK (buf);
+    GST_OBJECT_UNLOCK (buf);
     GST_DEBUG ("flushing");
     return FALSE;
   }
@@ -1286,10 +1286,10 @@ gst_ring_buffer_advance (GstRingBuffer * buf, guint advance)
    * we grab the lock as well to make sure the waiter is actually
    * waiting for the signal */
   if (g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0)) {
-    GST_LOCK (buf);
+    GST_OBJECT_LOCK (buf);
     GST_DEBUG ("signal waiter");
     GST_RING_BUFFER_SIGNAL (buf);
-    GST_UNLOCK (buf);
+    GST_OBJECT_UNLOCK (buf);
   }
 }
 

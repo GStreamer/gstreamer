@@ -579,11 +579,11 @@ theora_dec_src_getcaps (GstPad * pad)
 {
   GstCaps *caps;
 
-  GST_LOCK (pad);
+  GST_OBJECT_LOCK (pad);
   if (!(caps = GST_PAD_CAPS (pad)))
     caps = (GstCaps *) gst_pad_get_pad_template_caps (pad);
   caps = gst_caps_ref (caps);
-  GST_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (pad);
 
   return caps;
 }

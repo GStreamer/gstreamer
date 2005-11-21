@@ -856,10 +856,10 @@ new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
   GstDecodeBin *decode_bin = dynamic->decode_bin;
   GstCaps *caps;
 
-  GST_LOCK (decode_bin);
+  GST_OBJECT_LOCK (decode_bin);
   if (decode_bin->shutting_down)
     goto shutting_down1;
-  GST_UNLOCK (decode_bin);
+  GST_OBJECT_UNLOCK (decode_bin);
 
   GST_STATE_LOCK (decode_bin);
   if (decode_bin->shutting_down)
@@ -877,7 +877,7 @@ new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
   return;
 
 shutting_down1:
-  GST_UNLOCK (decode_bin);
+  GST_OBJECT_UNLOCK (decode_bin);
   return;
 
 shutting_down2:
@@ -1173,17 +1173,17 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       decode_bin->dynamics = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_LOCK (decode_bin);
+      GST_OBJECT_LOCK (decode_bin);
       decode_bin->shutting_down = FALSE;
-      GST_UNLOCK (decode_bin);
+      GST_OBJECT_UNLOCK (decode_bin);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      GST_LOCK (decode_bin);
+      GST_OBJECT_LOCK (decode_bin);
       decode_bin->shutting_down = TRUE;
-      GST_UNLOCK (decode_bin);
+      GST_OBJECT_UNLOCK (decode_bin);
       break;
     default:
       break;

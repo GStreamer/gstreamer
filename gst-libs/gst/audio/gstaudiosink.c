@@ -44,7 +44,7 @@ typedef struct _GstAudioRingBuffer GstAudioRingBuffer;
 typedef struct _GstAudioRingBufferClass GstAudioRingBufferClass;
 
 #define GST_AUDIORING_BUFFER_GET_COND(buf) (((GstAudioRingBuffer *)buf)->cond)
-#define GST_AUDIORING_BUFFER_WAIT(buf)     (g_cond_wait (GST_AUDIORING_BUFFER_GET_COND (buf), GST_GET_LOCK (buf)))
+#define GST_AUDIORING_BUFFER_WAIT(buf)     (g_cond_wait (GST_AUDIORING_BUFFER_GET_COND (buf), GST_OBJECT_GET_LOCK (buf)))
 #define GST_AUDIORING_BUFFER_SIGNAL(buf)   (g_cond_signal (GST_AUDIORING_BUFFER_GET_COND (buf)))
 #define GST_AUDIORING_BUFFER_BROADCAST(buf)(g_cond_broadcast (GST_AUDIORING_BUFFER_GET_COND (buf)))
 
@@ -190,7 +190,7 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
       /* we wrote one segment */
       gst_ring_buffer_advance (buf, 1);
     } else {
-      GST_LOCK (abuf);
+      GST_OBJECT_LOCK (abuf);
       if (!abuf->running)
         goto stop_running;
       GST_DEBUG ("signal wait");
@@ -201,7 +201,7 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
       if (!abuf->running)
         goto stop_running;
       GST_DEBUG ("continue running");
-      GST_UNLOCK (abuf);
+      GST_OBJECT_UNLOCK (abuf);
     }
   }
   GST_DEBUG ("exit thread");
@@ -216,7 +216,7 @@ no_function:
   }
 stop_running:
   {
-    GST_UNLOCK (abuf);
+    GST_OBJECT_UNLOCK (abuf);
     GST_DEBUG ("stop running, exit thread");
     return;
   }
@@ -346,12 +346,12 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
 
   abuf->running = FALSE;
   GST_AUDIORING_BUFFER_SIGNAL (buf);
-  GST_UNLOCK (buf);
+  GST_OBJECT_UNLOCK (buf);
 
   /* join the thread */
   g_thread_join (sink->thread);
 
-  GST_LOCK (buf);
+  GST_OBJECT_LOCK (buf);
 
   /* free the buffer */
   gst_buffer_unref (buf->data);

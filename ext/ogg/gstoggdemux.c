@@ -1505,7 +1505,7 @@ gst_ogg_demux_configure_segment (GstOggDemux * ogg, GstEvent * event,
   }
 
   /* store start and stop values */
-  GST_LOCK (ogg);
+  GST_OBJECT_LOCK (ogg);
   ogg->segment_rate = rate;
   ogg->segment_flags = flags;
   ogg->segment_start = cur;
@@ -1518,7 +1518,7 @@ gst_ogg_demux_configure_segment (GstOggDemux * ogg, GstEvent * event,
   /* check if we can do the seek now */
   if (running)
     *running = ogg->running;
-  GST_UNLOCK (ogg);
+  GST_OBJECT_UNLOCK (ogg);
 
   return TRUE;
 
@@ -1576,7 +1576,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg)
    * forever. */
   GST_STREAM_LOCK (ogg->sinkpad);
 
-  GST_LOCK (ogg);
+  GST_OBJECT_LOCK (ogg);
   /* nothing configured, play complete file */
   if (ogg->segment_start == GST_CLOCK_TIME_NONE)
     start = 0;
@@ -1587,7 +1587,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg)
     stop = ogg->total_time;
   else
     stop = CLAMP (ogg->segment_stop, 0, ogg->total_time);
-  GST_UNLOCK (ogg);
+  GST_OBJECT_UNLOCK (ogg);
 
   /* we need to stop flushing on the srcpad as we're going to use it
    * next. We can do this as we have the STREAM lock now. */
@@ -2400,9 +2400,9 @@ gst_ogg_demux_loop (GstOggPad * pad)
 
     ogg->need_chains = FALSE;
 
-    GST_LOCK (ogg);
+    GST_OBJECT_LOCK (ogg);
     ogg->running = TRUE;
-    GST_UNLOCK (ogg);
+    GST_OBJECT_UNLOCK (ogg);
 
     /* and seek to configured positions without FLUSH */
     gst_ogg_demux_perform_seek (ogg);
@@ -2562,13 +2562,13 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ogg_demux_clear_chains (ogg);
-      GST_LOCK (ogg);
+      GST_OBJECT_LOCK (ogg);
       ogg->running = FALSE;
       ogg->segment_rate = 1.0;
       ogg->segment_flags = GST_SEEK_FLAG_NONE;
       ogg->segment_start = GST_CLOCK_TIME_NONE;
       ogg->segment_stop = GST_CLOCK_TIME_NONE;
-      GST_UNLOCK (ogg);
+      GST_OBJECT_UNLOCK (ogg);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       ogg_sync_clear (&ogg->sync);

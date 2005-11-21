@@ -132,7 +132,7 @@ MAKE_FUNC (add_int32, gint32, gint64, MIN_INT_32, MAX_INT_32)
   adder = GST_ADDER (GST_PAD_PARENT (pad));
 
   /* see if the other pads can accept the format */
-  GST_LOCK (adder);
+  GST_OBJECT_LOCK (adder);
   pads = GST_ELEMENT (adder)->pads;
   while (pads) {
     GstPad *otherpad = GST_PAD (pads->data);
@@ -142,7 +142,7 @@ MAKE_FUNC (add_int32, gint32, gint64, MIN_INT_32, MAX_INT_32)
     }
     pads = g_list_next (pads);
   }
-  GST_UNLOCK (adder);
+  GST_OBJECT_UNLOCK (adder);
 
   /* parse caps now */
   structure = gst_caps_get_structure (caps, 0);
