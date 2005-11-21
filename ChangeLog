@@ -1,5 +1,9 @@
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gsterror.c (_gst_core_errors_init):
+	* gst/gsterror.h (GST_CORE_ERROR_MISSING_PLUGIN): New error
+	category.
+
 	* gst/Makefile.am (gst_headers): Add glib-compat.h.
 	(noinst_HEADERS): noinst the -private.
 
