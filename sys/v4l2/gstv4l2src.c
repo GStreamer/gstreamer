@@ -535,7 +535,7 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       break;
     default:
-      GST_DEBUG ("Unknown fourcc 0x%08x " GST_FOURCC_FORMAT,
+      GST_DEBUG ("Unknown fourcc 0x%08x %" GST_FOURCC_FORMAT,
           fourcc, GST_FOURCC_ARGS (fourcc));
       break;
   }

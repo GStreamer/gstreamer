@@ -755,7 +755,7 @@ gst_dfbvideosink_get_format_from_caps (GstCaps * caps)
         pixel_format = DSPF_UYVY;
         break;
       default:
-        GST_WARNING ("unhandled YUV format" GST_FOURCC_FORMAT,
+        GST_WARNING ("unhandled YUV format %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (fourcc));
         goto beach;
     }

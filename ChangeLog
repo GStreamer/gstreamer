@@ -1,3 +1,18 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/directfb/dfbvideosink.c:
+	(gst_dfbvideosink_get_format_from_caps):
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_create):
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(qtdemux_parse), (qtdemux_type_get), (qtdemux_node_dump_foreach),
+	(qtdemux_dump_hdlr), (qtdemux_dump_dref), (qtdemux_dump_stsd),
+	(qtdemux_dump_dcom), (qtdemux_parse_trak), (qtdemux_video_caps),
+	(qtdemux_audio_caps):
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_v4l2fourcc_to_caps):
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_fill_format_list),
+	(gst_v4l2src_capture_init), (gst_v4l2src_get_size_limits):
+	  Update for GST_FOURCC_FORMAT API change.
+
 2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/audioresample/gstaudioresample.c:

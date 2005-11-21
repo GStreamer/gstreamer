@@ -613,7 +613,7 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
     goto no_overlay;
 
 
-  GST_DEBUG ("Using a %dx%d %dbpp SDL screen with a %dx%d \'"
+  GST_DEBUG ("Using a %dx%d %dbpp SDL screen with a %dx%d \'%"
       GST_FOURCC_FORMAT "\' YUV overlay", GST_VIDEO_SINK_WIDTH (sdlvideosink),
       GST_VIDEO_SINK_HEIGHT (sdlvideosink),
       sdlvideosink->screen->format->BitsPerPixel, sdlvideosink->width,
@@ -626,7 +626,7 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
 
   /*SDL_DisplayYUVOverlay (sdlvideosink->overlay, &(sdlvideosink->rect)); */
 
-  GST_DEBUG ("sdlvideosink: setting %08x (" GST_FOURCC_FORMAT ")",
+  GST_DEBUG ("sdlvideosink: setting %08x (%" GST_FOURCC_FORMAT ")",
       sdlvideosink->format, GST_FOURCC_ARGS (sdlvideosink->format));
 
   g_mutex_unlock (sdlvideosink->lock);
@@ -645,7 +645,7 @@ no_screen:
 no_overlay:
   {
     GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
-        ("SDL: Couldn't create SDL YUV overlay (%dx%d \'" GST_FOURCC_FORMAT
+        ("SDL: Couldn't create SDL YUV overlay (%dx%d \'%" GST_FOURCC_FORMAT
             "\'): %s", sdlvideosink->width, sdlvideosink->height,
             GST_FOURCC_ARGS (sdlvideosink->format), SDL_GetError ()));
     g_mutex_unlock (sdlvideosink->lock);

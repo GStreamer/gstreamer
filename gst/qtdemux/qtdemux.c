@@ -507,7 +507,7 @@ gst_qtdemux_loop_header (GstPad * pad)
       length = GST_READ_UINT32_BE (data);
       GST_DEBUG ("length %08x", length);
       fourcc = GST_READ_UINT32_LE (data + 4);
-      GST_DEBUG ("atom type " GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+      GST_DEBUG ("atom type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
 
       if (length == 0) {
         length = G_MAXUINT32;   //gst_bytestream_length (qtdemux->bs) - cur_offset;
@@ -555,7 +555,7 @@ gst_qtdemux_loop_header (GstPad * pad)
         }
         ed_edd_and_eddy:
         default:{
-          GST_LOG ("unknown %08x '" GST_FOURCC_FORMAT "' at %d",
+          GST_LOG ("unknown %08x '%" GST_FOURCC_FORMAT "' at %d",
               fourcc, GST_FOURCC_ARGS (fourcc), cur_offset);
           cur_offset += length;
           qtdemux->offset += length;
@@ -1059,7 +1059,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
   if (fourcc == 0 || node_length == 8)
     return;
 
-  GST_LOG ("parsing '" GST_FOURCC_FORMAT "', length=%d",
+  GST_LOG ("parsing '%" GST_FOURCC_FORMAT "', length=%d",
       GST_FOURCC_ARGS (fourcc), node_length);
 
   if (type->flags & QT_CONTAINER) {
@@ -1333,7 +1333,7 @@ qtdemux_type_get (guint32 fourcc)
       return qt_node_types + i;
   }
 
-  GST_WARNING ("unknown QuickTime node type " GST_FOURCC_FORMAT,
+  GST_WARNING ("unknown QuickTime node type %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (fourcc));
   return qt_node_types + n_qt_node_types - 1;
 }
@@ -1353,7 +1353,7 @@ qtdemux_node_dump_foreach (GNode * node, gpointer data)
   type = qtdemux_type_get (fourcc);
 
   depth = (g_node_depth (node) - 1) * 2;
-  GST_LOG ("%*s'" GST_FOURCC_FORMAT "', [%d], %s",
+  GST_LOG ("%*s'%" GST_FOURCC_FORMAT "', [%d], %s",
       depth, "", GST_FOURCC_ARGS (fourcc), node_length, type->name);
 
   if (type->dump)
@@ -1471,11 +1471,11 @@ qtdemux_dump_hdlr (GstQTDemux * qtdemux, void *buffer, int depth)
 {
   GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
-  GST_LOG ("%*s  type:          " GST_FOURCC_FORMAT, depth, "",
+  GST_LOG ("%*s  type:          %" GST_FOURCC_FORMAT, depth, "",
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + 12)));
-  GST_LOG ("%*s  subtype:       " GST_FOURCC_FORMAT, depth, "",
+  GST_LOG ("%*s  subtype:       %" GST_FOURCC_FORMAT, depth, "",
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + 16)));
-  GST_LOG ("%*s  manufacturer:  " GST_FOURCC_FORMAT, depth, "",
+  GST_LOG ("%*s  manufacturer:  %" GST_FOURCC_FORMAT, depth, "",
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + 20)));
   GST_LOG ("%*s  flags:         %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 24));
@@ -1511,7 +1511,7 @@ qtdemux_dump_dref (GstQTDemux * qtdemux, void *buffer, int depth)
   for (i = 0; i < n; i++) {
     GST_LOG ("%*s    size:          %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset));
-    GST_LOG ("%*s    type:          " GST_FOURCC_FORMAT, depth, "",
+    GST_LOG ("%*s    type:          %" GST_FOURCC_FORMAT, depth, "",
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + offset + 4)));
     offset += QTDEMUX_GUINT32_GET (buffer + offset);
   }
@@ -1533,14 +1533,14 @@ qtdemux_dump_stsd (GstQTDemux * qtdemux, void *buffer, int depth)
   for (i = 0; i < n; i++) {
     GST_LOG ("%*s    size:          %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset));
-    GST_LOG ("%*s    type:          " GST_FOURCC_FORMAT, depth, "",
+    GST_LOG ("%*s    type:          %" GST_FOURCC_FORMAT, depth, "",
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + offset + 4)));
     GST_LOG ("%*s    data reference:%d", depth, "",
         QTDEMUX_GUINT16_GET (buffer + offset + 14));
 
     GST_LOG ("%*s    version/rev.:  %08x", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset + 16));
-    GST_LOG ("%*s    vendor:        " GST_FOURCC_FORMAT, depth, "",
+    GST_LOG ("%*s    vendor:        %" GST_FOURCC_FORMAT, depth, "",
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + offset + 20)));
     GST_LOG ("%*s    temporal qual: %u", depth, "",
         QTDEMUX_GUINT32_GET (buffer + offset + 24));
@@ -1719,7 +1719,7 @@ qtdemux_dump_co64 (GstQTDemux * qtdemux, void *buffer, int depth)
 static void
 qtdemux_dump_dcom (GstQTDemux * qtdemux, void *buffer, int depth)
 {
-  GST_LOG ("%*s  compression type: " GST_FOURCC_FORMAT, depth, "",
+  GST_LOG ("%*s  compression type: %" GST_FOURCC_FORMAT, depth, "",
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + 8)));
 }
 
@@ -1921,9 +1921,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   hdlr = qtdemux_tree_get_child_by_type (mdia, FOURCC_hdlr);
   g_assert (hdlr);
 
-  GST_LOG ("track type: " GST_FOURCC_FORMAT,
+  GST_LOG ("track type: %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (hdlr->data + 12)));
-  GST_LOG ("track subtype: " GST_FOURCC_FORMAT,
+  GST_LOG ("track subtype: %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (hdlr->data + 16)));
 
   stream->subtype = QTDEMUX_FOURCC_GET (hdlr->data + 16);
@@ -1941,7 +1941,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     guint32 fourcc;
 
     offset = 16;
-    GST_LOG ("st type:          " GST_FOURCC_FORMAT,
+    GST_LOG ("st type:          %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + offset + 4)));
 
     stream->width = QTDEMUX_GUINT16_GET (stsd->data + offset + 32);
@@ -2005,7 +2005,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       }
     }
 
-    GST_INFO ("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
+    GST_INFO ("type %" GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + offset + 4)),
         stream->caps);
   } else if (stream->subtype == FOURCC_soun) {
@@ -2014,7 +2014,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     int len;
 
     len = QTDEMUX_GUINT32_GET (stsd->data + 16);
-    GST_LOG ("st type:          " GST_FOURCC_FORMAT,
+    GST_LOG ("st type:          %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)));
 
     stream->fourcc = fourcc = QTDEMUX_FOURCC_GET (stsd->data + 16 + 4);
@@ -2143,11 +2143,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             "samplesize", G_TYPE_INT, samplesize, NULL);
       }
     }
-    GST_INFO ("type " GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
+    GST_INFO ("type %" GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
         GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)),
         stream->caps);
   } else {
-    GST_INFO ("unknown subtype " GST_FOURCC_FORMAT,
+    GST_INFO ("unknown subtype %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (stream->subtype));
     return;
   }
@@ -2665,14 +2665,14 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
 #if 0
-      g_critical ("Don't know how to convert fourcc '" GST_FOURCC_FORMAT
+      g_critical ("Don't know how to convert fourcc '%" GST_FOURCC_FORMAT
           "' to caps\n", GST_FOURCC_ARGS (fourcc));
       return NULL;
 #endif
       {
         char *s;
 
-        s = g_strdup_printf ("video/x-gst-fourcc-" GST_FOURCC_FORMAT,
+        s = g_strdup_printf ("video/x-gst-fourcc-%" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (fourcc));
         return gst_caps_new_simple (s, NULL);
       }
@@ -2803,14 +2803,14 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data,
       /* QUALCOMM PureVoice */
     default:
 #if 0
-      g_critical ("Don't know how to convert fourcc '" GST_FOURCC_FORMAT
+      g_critical ("Don't know how to convert fourcc '%" GST_FOURCC_FORMAT
           "' to caps\n", GST_FOURCC_ARGS (fourcc));
       return NULL;
 #endif
       {
         char *s;
 
-        s = g_strdup_printf ("audio/x-gst-fourcc-" GST_FOURCC_FORMAT,
+        s = g_strdup_printf ("audio/x-gst-fourcc-%" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (fourcc));
         return gst_caps_new_simple (s, NULL);
       }
