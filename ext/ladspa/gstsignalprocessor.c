@@ -287,7 +287,6 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
 {
   GstSignalProcessor *self;
   GstSignalProcessorClass *bclass;
-  gboolean ret = FALSE;
   gboolean unlock;
 
   self = GST_SIGNAL_PROCESSOR (GST_PAD_PARENT (pad));
@@ -296,20 +295,7 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
   if (bclass->event)
     bclass->event (self, event);
 
-  unlock = FALSE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_STOP:
-    case GST_EVENT_EOS:
-      GST_STREAM_LOCK (pad);
-      unlock = TRUE;
-      break;
-    default:
-      break;
-  }
   ret = gst_pad_event_default (pad, event);
-  if (unlock)
-    GST_STREAM_UNLOCK (pad);
 
   return ret;
 }
@@ -476,8 +462,6 @@ gst_signal_processor_getrange (GstPad * pad, guint64 offset,
 
   self = GST_SIGNAL_PROCESSOR (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
-
   if (spad->pen) {
     *buffer = spad->pen;
     spad->pen = NULL;
@@ -496,8 +480,6 @@ gst_signal_processor_getrange (GstPad * pad, guint64 offset,
       ret = GST_FLOW_OK;
     }
   }
-
-  GST_STREAM_UNLOCK (pad);
 
   return ret;
 }
@@ -547,8 +529,6 @@ gst_signal_processor_chain (GstPad * pad, GstBuffer * buffer)
 
   self = GST_SIGNAL_PROCESSOR (GST_PAD_PARENT (pad));
 
-  GST_STREAM_LOCK (pad);
-
   gst_signal_processor_pen_buffer (self, pad, buffer);
 
   if (self->pending_in == 0) {
@@ -556,8 +536,6 @@ gst_signal_processor_chain (GstPad * pad, GstBuffer * buffer)
 
     gst_signal_processor_do_pushes (self);
   }
-
-  GST_STREAM_UNLOCK (pad);
 
   return self->state;
 }

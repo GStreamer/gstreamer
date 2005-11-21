@@ -1102,7 +1102,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   /* now grab the stream lock so that streaming cannot continue, for
    * non flushing seeks when the element is in PAUSED this could block
    * forever. */
-  GST_STREAM_LOCK (demux->sinkpad);
+  GST_PAD_STREAM_LOCK (demux->sinkpad);
 
   GST_OBJECT_LOCK (demux);
 
@@ -1188,7 +1188,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
       demux->sinkpad);
 
   /* streaming can continue now */
-  GST_STREAM_UNLOCK (demux->sinkpad);
+  GST_PAD_STREAM_UNLOCK (demux->sinkpad);
 
   return TRUE;
 
@@ -1198,7 +1198,7 @@ seek_error:
    * function again so that things can continue from where they left off? */
   GST_DEBUG ("Got a seek error");
   GST_OBJECT_UNLOCK (demux);
-  GST_STREAM_UNLOCK (demux->sinkpad);
+  GST_PAD_STREAM_UNLOCK (demux->sinkpad);
 
   return FALSE;
 }

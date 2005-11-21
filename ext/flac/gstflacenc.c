@@ -600,7 +600,6 @@ gst_flacenc_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 start, stream_time;
 
-      GST_STREAM_LOCK (pad);
       if (flacenc->offset == 0) {
         gst_event_parse_newsegment (event, NULL, NULL, &format, &start, NULL,
             &stream_time);
@@ -623,14 +622,11 @@ gst_flacenc_sink_event (GstPad * pad, GstEvent * event)
       }
       gst_event_unref (event);
       /* don't push it downstream, we'll generate our own via seek to 0 */
-      GST_STREAM_UNLOCK (pad);
       break;
     }
     case GST_EVENT_EOS:
-      GST_STREAM_LOCK (pad);
       FLAC__seekable_stream_encoder_finish (flacenc->encoder);
       ret = gst_pad_event_default (pad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_TAG:
       if (flacenc->tags) {
@@ -639,9 +635,7 @@ gst_flacenc_sink_event (GstPad * pad, GstEvent * event)
       } else {
         g_assert_not_reached ();
       }
-      GST_STREAM_LOCK (pad);
       ret = gst_pad_event_default (pad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     default:
       ret = gst_pad_event_default (pad, event);

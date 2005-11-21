@@ -527,8 +527,6 @@ gst_flacdec_loop (GstPad * sinkpad)
 
   flacdec = GST_FLACDEC (GST_OBJECT_PARENT (sinkpad));
 
-  GST_STREAM_LOCK (sinkpad);
-
   GST_DEBUG ("flacdec: entering loop");
   if (flacdec->init) {
     GST_DEBUG ("flacdec: initializing decoder");
@@ -563,7 +561,6 @@ analyze_state:
     case FLAC__SEEKABLE_STREAM_DECODER_OK:
     case FLAC__SEEKABLE_STREAM_DECODER_SEEKING:
       GST_DEBUG ("flacdec: everything ok");
-      GST_STREAM_UNLOCK (sinkpad);
       return;
 
     case FLAC__SEEKABLE_STREAM_DECODER_END_OF_STREAM:{
@@ -577,8 +574,6 @@ analyze_state:
 
       GST_DEBUG ("pausing");
       gst_pad_pause_task (sinkpad);
-
-      GST_STREAM_UNLOCK (sinkpad);
       return;
     }
 
@@ -602,8 +597,6 @@ analyze_state:
 
       GST_DEBUG ("pausing");
       gst_pad_pause_task (sinkpad);
-
-      GST_STREAM_UNLOCK (sinkpad);
       return;
     }
   }
@@ -765,7 +758,7 @@ gst_flacdec_src_event (GstPad * pad, GstEvent * event)
         GST_DEBUG ("Initializing seek");
         g_print ("Grab seek lock\n");
         gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_start ());
-        GST_STREAM_LOCK (flacdec->sinkpad);
+        GST_PAD_STREAM_LOCK (flacdec->sinkpad);
         g_print ("Got seek lock\n");
         gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_stop ());
         GST_DEBUG ("Ready");
@@ -773,7 +766,7 @@ gst_flacdec_src_event (GstPad * pad, GstEvent * event)
         flacdec->seek_value = pos;
         gst_pad_start_task (flacdec->sinkpad,
             (GstTaskFunction) gst_flacdec_loop, flacdec->sinkpad);
-        GST_STREAM_UNLOCK (flacdec->sinkpad);
+        GST_PAD_STREAM_UNLOCK (flacdec->sinkpad);
       } else
         res = FALSE;
       break;

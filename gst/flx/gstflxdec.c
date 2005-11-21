@@ -176,32 +176,29 @@ static gboolean
 gst_flxdec_src_event_handler (GstPad * pad, GstEvent * event)
 {
   GstFlxDec *flxdec = (GstFlxDec *) gst_pad_get_parent (pad);
-
-  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+  gboolean ret;
 
   /* TODO: implement the seek and other event handling */
 
-  return gst_pad_push_event (flxdec->sinkpad, event);
+  ret = gst_pad_push_event (flxdec->sinkpad, event);
+
+  gst_object_unref (flxdec);
+
+  return ret;
 }
 
 static gboolean
 gst_flxdec_sink_event_handler (GstPad * pad, GstEvent * event)
 {
-  GstFlxDec *flxdec = (GstFlxDec *) gst_pad_get_parent (pad);
+  GstFlxDec *flxdec;
+  gboolean ret;
 
-  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+  flxdec = GST_FLXDEC (gst_pad_get_parent (pad));
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS ||
-      GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT)
-    GST_STREAM_LOCK (flxdec->srcpad);
+  ret = gst_pad_push_event (flxdec->srcpad, event);
 
-  gst_pad_push_event (flxdec->srcpad, gst_event_ref (event));
-
-  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS ||
-      GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT)
-    GST_STREAM_UNLOCK (flxdec->srcpad);
-
-  return TRUE;
+  gst_object_unref (flxdec);
+  return ret;
 }
 
 static void

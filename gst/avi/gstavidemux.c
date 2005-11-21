@@ -1995,7 +1995,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, gboolean update)
   } else
     gst_pad_pause_task (avi->sinkpad);
 
-  GST_STREAM_LOCK (avi->sinkpad);
+  GST_PAD_STREAM_LOCK (avi->sinkpad);
 
   /* fill current_entry according to flags and update */
   if (update) {
@@ -2043,7 +2043,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, gboolean update)
   gst_pad_start_task (avi->sinkpad, (GstTaskFunction) gst_avi_demux_loop,
       avi->sinkpad);
 
-  GST_STREAM_UNLOCK (avi->sinkpad);
+  GST_PAD_STREAM_UNLOCK (avi->sinkpad);
 
   return TRUE;
 

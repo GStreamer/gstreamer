@@ -1,3 +1,22 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_sink_event):
+	* ext/flac/gstflacdec.c: (gst_flacdec_loop),
+	(gst_flacdec_src_event):
+	* ext/flac/gstflacenc.c: (gst_flacenc_sink_event):
+	* ext/ladspa/gstsignalprocessor.c: (gst_signal_processor_event),
+	(gst_signal_processor_getrange), (gst_signal_processor_chain):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_seek):
+	* gst/flx/gstflxdec.c: (gst_flxdec_src_event_handler),
+	(gst_flxdec_sink_event_handler):
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_handle_seek_event):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_handle_seek):
+	  Update for stream lock API changes: don't take stream log
+	  in sink event handlers any longer and change GST_STREAM_LOCK
+	  to GST_PAD_STREAM_LOCK. Don't leak references in flxdec event
+	  functions.
+
 2005-11-21  Michael Smith <msmith@fluendo.com>
 
 	* gst/auparse/gstauparse.c: (gst_auparse_dispose):

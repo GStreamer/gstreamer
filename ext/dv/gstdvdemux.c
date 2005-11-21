@@ -596,24 +596,15 @@ gst_dvdemux_handle_sink_event (GstPad * pad, GstEvent * event)
        * to the peer which will be unblocked by forwarding the
        * event.*/
       res = gst_dvdemux_send_event (dvdemux, event);
-
-      /* and wait till streaming stops, not strictly needed as
-       * the peer calling us will do the same. */
-      GST_STREAM_LOCK (pad);
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_FLUSH_STOP:
-      GST_STREAM_LOCK (pad);
       gst_adapter_clear (dvdemux->adapter);
       GST_DEBUG ("cleared adapter");
       res = gst_dvdemux_send_event (dvdemux, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_NEWSEGMENT:
     {
       GstFormat format;
-
-      GST_STREAM_LOCK (pad);
 
       /* parse byte start and stop positions */
       gst_event_parse_newsegment (event, NULL, NULL, &format,
@@ -622,19 +613,16 @@ gst_dvdemux_handle_sink_event (GstPad * pad, GstEvent * event)
       /* and queue a DISCONT before sending the next set of buffers */
       dvdemux->need_discont = TRUE;
       gst_event_unref (event);
-      GST_STREAM_UNLOCK (pad);
       break;
     }
     case GST_EVENT_EOS:
     default:
-      GST_STREAM_LOCK (pad);
       /* flush any pending data */
       gst_dvdemux_flush (dvdemux);
       /* forward event */
       res = gst_dvdemux_send_event (dvdemux, event);
       /* and clear the adapter */
       gst_adapter_clear (dvdemux->adapter);
-      GST_STREAM_UNLOCK (pad);
       break;
   }
 

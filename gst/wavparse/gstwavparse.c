@@ -718,7 +718,7 @@ gst_wavparse_handle_seek (GstWavParse * wav, gboolean update)
   else
     gst_pad_pause_task (wav->sinkpad);
 
-  GST_STREAM_LOCK (wav->sinkpad);
+  GST_PAD_STREAM_LOCK (wav->sinkpad);
 
   if (update) {
     wav->offset = wav->segment_start + wav->datastart;
@@ -749,7 +749,7 @@ gst_wavparse_handle_seek (GstWavParse * wav, gboolean update)
   gst_pad_start_task (wav->sinkpad, (GstTaskFunction) gst_wavparse_loop,
       wav->sinkpad);
 
-  GST_STREAM_UNLOCK (wav->sinkpad);
+  GST_PAD_STREAM_UNLOCK (wav->sinkpad);
 
   return TRUE;
 
