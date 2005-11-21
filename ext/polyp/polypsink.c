@@ -575,10 +575,10 @@ gst_polypsink_sink_fixate (GstPad * pad, const GstCaps * caps)
       NULL);
   structure = gst_caps_get_structure (newcaps, 0);
 
-  if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100) ||
-      gst_caps_structure_fixate_field_nearest_int (structure, "depth", 16) ||
-      gst_caps_structure_fixate_field_nearest_int (structure, "width", 16) ||
-      gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2))
+  if (gst_structure_fixate_field_nearest_int (structure, "rate", 44100) ||
+      gst_structure_fixate_field_nearest_int (structure, "depth", 16) ||
+      gst_structure_fixate_field_nearest_int (structure, "width", 16) ||
+      gst_structure_fixate_field_nearest_int (structure, "channels", 2))
     return newcaps;
 
   gst_caps_free (newcaps);

@@ -292,8 +292,7 @@ gst_rfbsrc_fixate (GstPad * pad, const GstCaps * caps)
   newcaps = gst_caps_copy (caps);
   structure = gst_caps_get_structure (newcaps, 0);
 
-  if (gst_caps_structure_fixate_field_nearest_double (structure, "framerate",
-          30.0)) {
+  if (gst_structure_fixate_field_nearest_double (structure, "framerate", 30.0)) {
     return newcaps;
   }
 

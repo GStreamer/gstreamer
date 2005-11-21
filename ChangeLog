@@ -1,3 +1,14 @@
+2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/audioresample/gstaudioresample.c:
+	* ext/polyp/polypsink.c: (gst_polypsink_sink_fixate):
+	* gst/librfb/gstrfbsrc.c: (gst_rfbsrc_fixate):
+	* gst/modplug/gstmodplug.cc:
+	* sys/glsink/glimagesink.c: (gst_glimagesink_fixate):
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_fixate):
+        Rename gst_caps_structure_fixate_* to gst_structure_fixate_*
+        (#322027)
+
 2005-11-21  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/Makefile.am:

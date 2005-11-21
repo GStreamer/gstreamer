@@ -480,9 +480,9 @@ gst_modplug_fixate (GstPad * pad, const GstCaps * caps)
 
     copy = gst_caps_copy (caps);
     structure = gst_caps_get_structure (copy, 0);
-    if (gst_caps_structure_fixate_field_nearest_int (structure, "rate", 44100))
+    if (gst_structure_fixate_field_nearest_int (structure, "rate", 44100))
       return copy;
-    if (gst_caps_structure_fixate_field_nearest_int (structure, "channels", 2))
+    if (gst_structure_fixate_field_nearest_int (structure, "channels", 2))
       return copy;
     gst_caps_free (copy);
   }
