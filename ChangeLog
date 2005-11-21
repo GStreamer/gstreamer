@@ -1,3 +1,8 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	* *.h:
+	* *.c: Ran scripts/update-macros. Oh yes.
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/directfb/dfbvideosink.c:

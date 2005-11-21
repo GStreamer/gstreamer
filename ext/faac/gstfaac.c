@@ -289,7 +289,7 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_caps_is_fixed (caps))
     goto done;
 
-  GST_LOCK (faac);
+  GST_OBJECT_LOCK (faac);
   if (faac->handle) {
     faacEncClose (faac->handle);
     faac->handle = NULL;
@@ -298,7 +298,7 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
     gst_buffer_unref (faac->cache);
     faac->cache = NULL;
   }
-  GST_UNLOCK (faac);
+  GST_OBJECT_UNLOCK (faac);
 
   if (!gst_structure_get_int (structure, "channels", &channels) ||
       !gst_structure_get_int (structure, "rate", &samplerate)) {
@@ -333,7 +333,7 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
     goto done;
   }
 
-  GST_LOCK (faac);
+  GST_OBJECT_LOCK (faac);
   faac->format = fmt;
   faac->bps = bps;
   faac->handle = handle;
@@ -341,7 +341,7 @@ gst_faac_sink_setcaps (GstPad * pad, GstCaps * caps)
   faac->samples = samples;
   faac->channels = channels;
   faac->samplerate = samplerate;
-  GST_UNLOCK (faac);
+  GST_OBJECT_UNLOCK (faac);
 
   result = TRUE;
 
@@ -622,7 +622,7 @@ gst_faac_set_property (GObject * object,
 {
   GstFaac *faac = GST_FAAC (object);
 
-  GST_LOCK (faac);
+  GST_OBJECT_LOCK (faac);
 
   switch (prop_id) {
     case ARG_BITRATE:
@@ -648,7 +648,7 @@ gst_faac_set_property (GObject * object,
       break;
   }
 
-  GST_UNLOCK (faac);
+  GST_OBJECT_UNLOCK (faac);
 }
 
 static void
@@ -657,7 +657,7 @@ gst_faac_get_property (GObject * object,
 {
   GstFaac *faac = GST_FAAC (object);
 
-  GST_LOCK (faac);
+  GST_OBJECT_LOCK (faac);
 
   switch (prop_id) {
     case ARG_BITRATE:
@@ -683,7 +683,7 @@ gst_faac_get_property (GObject * object,
       break;
   }
 
-  GST_UNLOCK (faac);
+  GST_OBJECT_UNLOCK (faac);
 }
 
 static GstStateChangeReturn
@@ -704,7 +704,7 @@ gst_faac_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
-      GST_LOCK (faac);
+      GST_OBJECT_LOCK (faac);
       if (faac->handle) {
         faacEncClose (faac->handle);
         faac->handle = NULL;
@@ -717,7 +717,7 @@ gst_faac_change_state (GstElement * element, GstStateChange transition)
       faac->cache_duration = 0;
       faac->samplerate = -1;
       faac->channels = -1;
-      GST_UNLOCK (faac);
+      GST_OBJECT_UNLOCK (faac);
       break;
     }
     default:
