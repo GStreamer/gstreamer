@@ -581,7 +581,7 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
             g_assert (layer > 0);
             caps = gst_caps_copy (MP3_CAPS);
             gst_structure_set (gst_caps_get_structure (caps, 0), "layer",
-                G_TYPE_INT, layer, 0);
+                G_TYPE_INT, layer, NULL);
             gst_type_find_suggest (tf, probability, caps);
             gst_caps_unref (caps);
           }
@@ -711,13 +711,13 @@ mpeg2_sys_type_find (GstTypeFind * tf, gpointer unused)
       GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
 
       gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-          G_TYPE_INT, 2, 0);
+          G_TYPE_INT, 2, NULL);
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
     } else if ((data[4] & 0xF0) == 0x20) {
       GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
 
       gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-          G_TYPE_INT, 1, 0);
+          G_TYPE_INT, 1, NULL);
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
       gst_caps_unref (caps);
     }
@@ -726,7 +726,7 @@ mpeg2_sys_type_find (GstTypeFind * tf, gpointer unused)
     GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
 
     gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-        G_TYPE_INT, 2, 0);
+        G_TYPE_INT, 2, NULL);
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
   }
 
@@ -859,7 +859,7 @@ mpeg1_sys_type_find (GstTypeFind * tf, gpointer unused)
       if (found == GST_MPEG_TYPEFIND_TRY_HEADERS || packet_size == 1) {
         caps = gst_caps_copy (MPEG_SYS_CAPS);
         gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-            G_TYPE_INT, 1, 0);
+            G_TYPE_INT, 1, NULL);
         gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
         gst_caps_unref (caps);
         return;
@@ -888,7 +888,7 @@ mpeg_video_type_find (GstTypeFind * tf, gpointer unused)
     GstCaps *caps = gst_caps_copy (MPEG_VIDEO_CAPS);
 
     gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-        G_TYPE_INT, 1, 0);
+        G_TYPE_INT, 1, NULL);
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
     gst_caps_unref (caps);
   }
@@ -919,7 +919,7 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
       GstCaps *caps = gst_caps_copy (MPEG_VIDEO_CAPS);
 
       gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-          G_TYPE_INT, 1, 0);
+          G_TYPE_INT, 1, NULL);
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 2, caps);
       gst_caps_unref (caps);
       return;

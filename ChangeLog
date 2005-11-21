@@ -1,3 +1,11 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find),
+	(mpeg2_sys_type_find), (mpeg1_sys_type_find),
+	(mpeg_video_type_find), (mpeg_video_stream_type_find):
+	  Terminate vararg functions with NULL instead of 0 to 
+	  make gcc4 happy.
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	patch from: Sebastien Cote <sebas642@yahoo.ca>
