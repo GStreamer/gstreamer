@@ -1,5 +1,10 @@
 2005-11-21  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.override: (_wrap_GST_TIME_ARGS): 
+	Take either int or longs and return unsigned long long
+
+2005-11-21  Edward Hervey  <edward@fluendo.com>
+
 	* examples/gstfile.py:
 	Cleanup
 	* gst/gst-types.defs:

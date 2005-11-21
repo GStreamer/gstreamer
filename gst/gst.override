@@ -850,9 +850,9 @@ _wrap_GST_TIME_ARGS(PyObject *self, PyObject *args, PyObject *kwargs)
     gchar *ret;
     guint64 time;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:time_to_string", kwlist, &PyLong_Type, &py_time))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:time_to_string", kwlist, &py_time))
         return NULL;
-    time = PyLong_AsUnsignedLongLong(py_time);
+    time = PyInt_AsUnsignedLongLongMask(py_time);
     ret = g_strdup_printf("%"GST_TIME_FORMAT, GST_TIME_ARGS(time));
 
     if (!ret) {
