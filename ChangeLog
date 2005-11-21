@@ -1,3 +1,10 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (gst_pad_send_event): Doc more. Take stream lock on
+	behalf of event function if necessary. It should no longer be
+	necessary to take the stream lock in pad's event functions. Fixes
+	#320299.
+
 2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gststructure.c: (gst_structure_fixate_field_nearest_int),

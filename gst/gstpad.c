@@ -3550,6 +3550,21 @@ not_linked:
  * Sends the event to the pad. This function can be used
  * by applications to send events in the pipeline.
  *
+ * If @pad is a source pad, @event should be an upstream event. If @pad is a
+ * sink pad, @event should be a downstream event. For example, you would not
+ * send a #GST_EVENT_EOS on a src pad; EOS events only propagate downstream.
+ * Furthermore, some downstream events have to be serialized with data flow,
+ * like EOS, while some can travel out-of-band, like #GST_EVENT_FLUSH_START. If
+ * the event needs to be serialized with data flow, this function will take the
+ * pad's stream lock while calling its event function.
+ *
+ * To find out whether an event type is upstream, downstream, or downstream and
+ * serialized, see #GstEventTypeFlags, gst_event_type_get_flags(),
+ * #GST_EVENT_IS_UPSTREAM, #GST_EVENT_IS_DOWNSTREAM, and
+ * #GST_EVENT_IS_SERIALIZED. Note that in practice that an application or plugin
+ * doesn't need to bother itself with this information; the core handles all
+ * necessary locks and checks.
+ *
  * Returns: TRUE if the event was handled.
  */
 gboolean
@@ -3557,7 +3572,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 {
   gboolean result = FALSE;
   GstPadEventFunction eventfunc;
-  gboolean emit_signal;
+  gboolean emit_signal, serialized;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
@@ -3605,12 +3620,22 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   emit_signal = GST_PAD_DO_EVENT_SIGNALS (pad) > 0;
   GST_UNLOCK (pad);
 
+  /* have to check if it's a sink pad, because e.g. CUSTOM_BOTH is serialized
+     when going down but not when going up */
+  serialized = GST_EVENT_IS_SERIALIZED (event) && GST_PAD_IS_SINK (pad);
+
   if (G_UNLIKELY (emit_signal)) {
     if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event)))
       goto dropping;
   }
 
+  if (serialized)
+    GST_STREAM_LOCK (pad);
+
   result = eventfunc (GST_PAD_CAST (pad), event);
+
+  if (serialized)
+    GST_STREAM_UNLOCK (pad);
 
   return result;
 
