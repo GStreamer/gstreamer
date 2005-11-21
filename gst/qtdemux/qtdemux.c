@@ -2649,6 +2649,16 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
       _codec ("3ivX video");
       return gst_caps_from_string ("video/x-3ivx");
+    case GST_MAKE_FOURCC ('D', 'I', 'V', '3'):
+      _codec ("DivX 3");
+      return gst_caps_from_string ("video/x-divx," "divxversion= (int) 3");
+    case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
+      _codec ("DivX 4");
+      return gst_caps_from_string ("video/x-divx," "divxversion= (int) 4");
+
+    case GST_MAKE_FOURCC ('D', 'X', '5', '0'):
+      _codec ("DivX 5");
+      return gst_caps_from_string ("video/x-divx," "divxversion= (int) 5");
     case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):
       _codec ("Cinepak");
       return gst_caps_from_string ("video/x-cinepak");
