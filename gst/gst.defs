@@ -6824,10 +6824,10 @@
   (is-constructor-of "GstNetClientClock")
   (return-type "GstClock*")
   (parameters
-    '("gchar*" "name")
-    '("gchar*" "remote_address")
+    '("gchar*" "name" (null-ok) (default "NULL"))
+    '("gchar*" "remote_address" (default "127.0.0.1"))
     '("gint" "remote_port")
-    '("GstClockTime" "base_time")
+    '("GstClockTime" "base_time" (default 0))
   )
 )
 
