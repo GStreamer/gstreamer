@@ -20,6 +20,17 @@ to -good or -ugly if a number of conditions are met:
 
   The three roles can be filled by two people, but not just one.
 
+- The plug-in's code:
+  - should descend from an applicable base class if possible
+  - make use of GST_BOILERPLATE macros
+  - conform to the GStreamer coding style
+  - use a custom debug category
+  - use GST_(DEBUG/*)_OBJECT
+
+- The compiled plug-in:
+  - should show up correct in gst-inspect output; no warnings, no unknown
+    types, ...
+
 - The plug-in should be put in the correct location inside the module:
   sys/: plug-ins that include system headers/link to system libraries;
     usually platform-dependent as well
