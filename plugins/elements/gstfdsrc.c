@@ -396,7 +396,10 @@ gst_fdsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     return FALSE;
   }
   g_free (protocol);
-  sscanf (uri, "fd://%d", &fd);
+
+  if (sscanf (uri, "fd://%d", &fd) != 1)
+    return FALSE;
+
   src->fd = fd;
   g_free (src->uri);
   src->uri = g_strdup (uri);

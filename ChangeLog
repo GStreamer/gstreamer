@@ -1,3 +1,8 @@
+2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_uri_set_uri):
+	Don't ignore sscanf results
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.h (GST_IS_PAD_FAST): Removed.
