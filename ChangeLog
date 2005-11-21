@@ -1,3 +1,12 @@
+2005-11-21  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	API updates
+	* gst/pygstvalue.c: (pygst_value_as_pyobject),
+	(pygst_value_from_pyobject):
+	Fixes for gst_value_array and GST_FOURCC_FORMAT
+
 2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gst.defs:

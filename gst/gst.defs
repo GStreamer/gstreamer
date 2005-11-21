@@ -1446,6 +1446,11 @@
   (return-type "GType")
 )
 
+(define-function gst_event_type_flags_get_type
+  (c-name "gst_event_type_flags_get_type")
+  (return-type "GType")
+)
+
 (define-function event_type_get_type
   (c-name "gst_event_type_get_type")
   (return-type "GType")
@@ -1680,6 +1685,12 @@
   (return-type "GQuark")
 )
 
+(define-method get_flags
+  (of-object "GstEventType")
+  (c-name "gst_event_type_get_flags")
+  (return-type "GstEventTypeFlags")
+)
+
 (define-function event_get_type
   (c-name "gst_event_get_type")
   (return-type "GType")
@@ -1763,12 +1774,6 @@
   (parameters
     '("GstTagList**" "taglist")
   )
-)
-
-(define-function event_new_filler
-  (c-name "gst_event_new_filler")
-  (return-type "GstEvent*")
-  (caller-owns-return #t)
 )
 
 (define-function event_new_buffersize
@@ -4540,6 +4545,16 @@
   )
 )
 
+(define-method set_last_stop
+  (of-object "GstSegment")
+  (c-name "gst_segment_set_last_stop")
+  (return-type "none")
+  (parameters
+    '("GstFormat" "format")
+    '("gint64" "position")
+  )
+)
+
 (define-method set_seek
   (of-object "GstSegment")
   (c-name "gst_segment_set_seek")
@@ -4963,25 +4978,36 @@
   )
 )
 
-(define-function caps_structure_fixate_field_nearest_int
+(define-method fixate_field_nearest_int
+  (of-object "GstStructure")
   (c-name "gst_structure_fixate_field_nearest_int")
   (return-type "gboolean")
   (parameters
-    '("GstStructure*" "structure")
     '("const-char*" "field_name")
     '("int" "target")
   )
 )
 
-(define-function caps_structure_fixate_field_nearest_double
+(define-method fixate_field_nearest_double
+  (of-object "GstStructure")
   (c-name "gst_structure_fixate_field_nearest_double")
   (return-type "gboolean")
   (parameters
-    '("GstStructure*" "structure")
     '("const-char*" "field_name")
     '("double" "target")
   )
 )
+
+(define-method fixate_field_boolean
+  (of-object "GstStructure")
+  (c-name "gst_structure_fixate_field_boolean")
+  (return-type "gboolean")
+  (parameters
+    '("const-char*" "field_name")
+    '("gboolean" "target")
+  )
+)
+
 
 
 

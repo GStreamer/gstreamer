@@ -449,6 +449,17 @@
   )
 )
 
+(define-flags EventTypeFlags
+  (in-module "Gst")
+  (c-name "GstEventTypeFlags")
+  (gtype-id "GST_TYPE_EVENT_TYPE_FLAGS")
+  (values
+    '("upstream" "GST_EVENT_TYPE_UPSTREAM")
+    '("downstream" "GST_EVENT_TYPE_DOWNSTREAM")
+    '("serialized" "GST_EVENT_TYPE_SERIALIZED")
+  )
+)
+
 (define-enum EventType
   (in-module "Gst")
   (c-name "GstEventType")
@@ -465,9 +476,9 @@
     '("qos" "GST_EVENT_QOS")
     '("seek" "GST_EVENT_SEEK")
     '("navigation" "GST_EVENT_NAVIGATION")
-    '("custom-up" "GST_EVENT_CUSTOM_UP")
-    '("custom-ds" "GST_EVENT_CUSTOM_DS")
-    '("custom-ds-oob" "GST_EVENT_CUSTOM_DS_OOB")
+    '("custom-upstream" "GST_EVENT_CUSTOM_UPSTREAM")
+    '("custom-downstream" "GST_EVENT_CUSTOM_DOWNSTREAM")
+    '("custom-downstream-oob" "GST_EVENT_CUSTOM_DOWNSTREAM_OOB")
     '("custom-both" "GST_EVENT_CUSTOM_BOTH")
     '("custom-both-oob" "GST_EVENT_CUSTOM_BOTH_OOB")
   )

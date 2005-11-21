@@ -51,7 +51,7 @@ pygst_value_as_pyobject(const GValue *value, gboolean copy_boxed)
     PyErr_Clear();
     if (GST_VALUE_HOLDS_FOURCC (value)) {
       gchar str[5];
-      g_snprintf (str, 5, GST_FOURCC_FORMAT,
+      g_snprintf (str, 5, "%"GST_FOURCC_FORMAT,
                   GST_FOURCC_ARGS (gst_value_get_fourcc (value)));
       ret = PyObject_Call (gstfourcc_class, Py_BuildValue ("(s)", str), NULL);
     } else if (GST_VALUE_HOLDS_INT_RANGE (value)) {
@@ -79,12 +79,12 @@ pygst_value_as_pyobject(const GValue *value, gboolean copy_boxed)
       }
     } else if (GST_VALUE_HOLDS_ARRAY (value)) {
       int i, len;
-      len = gst_value_list_get_size (value);
+      len = gst_value_array_get_size (value);
       ret = PyTuple_New (len);
       for (i=0; i<len; i++) {
         PyTuple_SetItem (ret, i,
                          pygst_value_as_pyobject
-                         (gst_value_list_get_value (value, i), copy_boxed));
+                         (gst_value_array_get_value (value, i), copy_boxed));
       }
     } else if (GST_VALUE_HOLDS_FRACTION (value)) {
       ret = PyObject_Call
@@ -242,7 +242,7 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
         g_value_unset (&new);
         return -1;
       }
-      gst_value_list_append_value (value, &new);
+      gst_value_array_append_value (value, &new);
       g_value_unset (&new);
     }
     return 0;
