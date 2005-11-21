@@ -981,18 +981,14 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
       /* this isn't really correct? */
-      GST_STREAM_LOCK (pad);
       result = gst_pad_push_event (mad->srcpad, event);
       mad->tempsize = 0;
       /* we don't need to restart when we get here */
       mad->restart = FALSE;
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_EOS:
-      GST_STREAM_LOCK (pad);
       mad->caps_set = FALSE;    /* could be a new stream */
       result = gst_pad_push_event (mad->srcpad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     default:
       result = gst_pad_push_event (mad->srcpad, event);

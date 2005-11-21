@@ -1,5 +1,14 @@
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
+	* ext/sidplay/gstsiddec.cc (gst_siddec_sink_event): 
+	* ext/mpeg2dec/gstmpeg2dec.c (gst_mpeg2dec_sink_event): 
+	* ext/mad/gstmad.c (gst_mad_sink_event):
+	* ext/a52dec/gsta52dec.c (gst_a52dec_sink_event): Don't take the
+	stream lock.
+
+	* gst/realmedia/rmdemux.c (gst_rmdemux_perform_seek): Update for
+	stream lock changes.
+
 	* *.h:
 	* *.c: Ran scripts/update-macros. Oh yes.
 

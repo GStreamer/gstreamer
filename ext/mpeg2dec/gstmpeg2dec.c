@@ -892,30 +892,24 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
     {
-      GST_STREAM_LOCK (pad);
       mpeg2dec->next_time = -1;;
       ret = gst_pad_event_default (pad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     }
     case GST_EVENT_FLUSH_START:
       ret = gst_pad_event_default (pad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      GST_STREAM_LOCK (pad);
       mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
       mpeg2dec->next_time = -1;;
       mpeg2_reset (mpeg2dec->decoder, 0);
       ret = gst_pad_event_default (pad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_EOS:
-      GST_STREAM_LOCK (pad);
       if (mpeg2dec->index && mpeg2dec->closed) {
         gst_index_commit (mpeg2dec->index, mpeg2dec->index_id);
       }
       ret = gst_pad_event_default (pad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
 
     default:

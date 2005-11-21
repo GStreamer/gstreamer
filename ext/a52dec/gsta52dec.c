@@ -358,7 +358,6 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 val;
 
-      GST_STREAM_LOCK (pad);
       gst_event_parse_newsegment (event, NULL, NULL, &format, &val, NULL, NULL);
       if (format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (val)) {
         GST_WARNING ("No time in newsegment event %p", event);
@@ -371,27 +370,22 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
         a52dec->cache = NULL;
       }
       ret = gst_pad_event_default (pad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     }
     case GST_EVENT_TAG:
     case GST_EVENT_EOS:{
-      GST_STREAM_LOCK (pad);
       ret = gst_pad_event_default (pad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     }
     case GST_EVENT_FLUSH_START:
       ret = gst_pad_event_default (pad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      GST_STREAM_LOCK (pad);
       if (a52dec->cache) {
         gst_buffer_unref (a52dec->cache);
         a52dec->cache = NULL;
       }
       ret = gst_pad_event_default (pad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     default:
       ret = gst_pad_event_default (pad, event);

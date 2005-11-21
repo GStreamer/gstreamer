@@ -474,9 +474,7 @@ gst_siddec_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      GST_STREAM_LOCK (pad);
       res = start_play_tune (siddec);
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_NEWSEGMENT:
       res = FALSE;

@@ -534,7 +534,7 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
   /* now grab the stream lock so that streaming cannot continue, for
    * non flushing seeks when the element is in PAUSED this could block
    * forever. */
-  GST_STREAM_LOCK (rmdemux->sinkpad);
+  GST_PAD_STREAM_LOCK (rmdemux->sinkpad);
 
   GST_LOG_OBJECT (rmdemux, "Took streamlock");
 
@@ -609,7 +609,7 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
 done:
 
   /* streaming can continue now */
-  GST_STREAM_UNLOCK (rmdemux->sinkpad);
+  GST_PAD_STREAM_UNLOCK (rmdemux->sinkpad);
 
   return ret;
 }
