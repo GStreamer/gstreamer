@@ -1,5 +1,19 @@
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/aalib/gstaasink.c: (gst_aasink_setcaps):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_file_header),
+	(gst_avi_demux_read_subindexes), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_parse_odml), (gst_avi_demux_stream_index),
+	(gst_avi_demux_sync), (gst_avi_demux_stream_header),
+	(gst_avi_demux_stream_data):
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_video_caps):
+	* gst/wavenc/gstwavenc.c: (write_metadata):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_parse_adtl),
+	(gst_wavparse_parse_file_header), (gst_wavparse_stream_headers):
+	Fixes for GST_FOURCC_FORMAT API change.
+
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_finalize),
 	(gst_text_overlay_init), (gst_text_overlay_text_pad_linked),
 	(gst_text_overlay_text_pad_unlinked), (gst_text_overlay_pop_video),

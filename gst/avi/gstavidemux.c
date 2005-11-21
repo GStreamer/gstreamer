@@ -560,7 +560,7 @@ gst_avi_demux_parse_file_header (GstElement * element, GstBuffer * buf)
 
   if (doctype != GST_RIFF_RIFF_AVI) {
     GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-        ("File is not an AVI file: " GST_FOURCC_FORMAT,
+        ("File is not an AVI file: %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (doctype)));
     return FALSE;
   }
@@ -857,7 +857,8 @@ gst_avi_demux_read_subindexes (GstAviDemux * avi,
       else if (tag != GST_MAKE_FOURCC ('i', 'x', '0' + stream->num / 10,
               '0' + stream->num % 10)) {
         GST_ERROR_OBJECT (GST_ELEMENT (avi),
-            "Not an ix## chunk (" GST_FOURCC_FORMAT ")", GST_FOURCC_ARGS (tag));
+            "Not an ix## chunk (%" GST_FOURCC_FORMAT ")",
+            GST_FOURCC_ARGS (tag));
         gst_buffer_unref (buf);
         continue;
       }
@@ -910,7 +911,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   if (!buf || !gst_riff_parse_chunk (element, buf, &offset, &tag, &sub) ||
       tag != GST_RIFF_TAG_strh) {
     GST_ERROR_OBJECT (element,
-        "Failed to find strh chunk (tag: " GST_FOURCC_FORMAT ")",
+        "Failed to find strh chunk (tag: %" GST_FOURCC_FORMAT ")",
         buf ? GST_BUFFER_SIZE (buf) : 0, GST_FOURCC_ARGS (tag));
     goto fail;
   } else if (!gst_riff_parse_strh (element, sub, &stream->strh))
@@ -920,7 +921,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   if (!gst_riff_parse_chunk (element, buf, &offset, &tag, &sub) ||
       tag != GST_RIFF_TAG_strf) {
     GST_ERROR_OBJECT (element,
-        "Failed to find strh chunk (size: %d, tag: "
+        "Failed to find strh chunk (size: %d, tag: %"
         GST_FOURCC_FORMAT ")", buf ? GST_BUFFER_SIZE (buf) : 0,
         GST_FOURCC_ARGS (tag));
     goto fail;
@@ -942,7 +943,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
         break;
       default:
         GST_ERROR_OBJECT (element,
-            "Don´t know how to handle stream type " GST_FOURCC_FORMAT,
+            "Don´t know how to handle stream type %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (stream->strh->type));
         break;
     }
@@ -975,7 +976,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
           break;
         }
         GST_WARNING_OBJECT (element,
-            "Unknown stream header tag " GST_FOURCC_FORMAT ", ignoring",
+            "Unknown stream header tag %" GST_FOURCC_FORMAT ", ignoring",
             GST_FOURCC_ARGS (tag));
         /* fall-through */
       case GST_RIFF_TAG_JUNK:
@@ -1145,7 +1146,7 @@ gst_avi_demux_parse_odml (GstElement * element, GstBuffer * buf)
 
       default:
         GST_WARNING_OBJECT (element,
-            "Unknown tag " GST_FOURCC_FORMAT " in ODML header",
+            "Unknown tag %" GST_FOURCC_FORMAT " in ODML header",
             GST_FOURCC_ARGS (tag));
         /* fall-through */
       case GST_RIFF_TAG_JUNK:
@@ -1313,7 +1314,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
     return;
   else if (tag != GST_RIFF_TAG_idx1) {
     GST_ERROR_OBJECT (avi,
-        "No index data after movi chunk, but " GST_FOURCC_FORMAT,
+        "No index data after movi chunk, but %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (tag));
     gst_buffer_unref (buf);
     return;
@@ -1418,7 +1419,7 @@ gst_avi_demux_sync (GstAviDemux * avi, guint32 * ret_tag, gboolean prevent_eos)
             goto done;
 
           default:
-            GST_WARNING ("Unknown list " GST_FOURCC_FORMAT " before AVI data",
+            GST_WARNING ("Unknown list %" GST_FOURCC_FORMAT " before AVI data",
                 GST_FOURCC_ARGS (tag));
             /* fall-through */
 
@@ -1796,13 +1797,13 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
     return res;
   else if (tag != GST_RIFF_TAG_LIST) {
     GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
-        ("Invalid AVI header (no LIST at start): "
+        ("Invalid AVI header (no LIST at start): %"
             GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
     return GST_FLOW_ERROR;
   } else if (GST_BUFFER_SIZE (buf) < 4 ||
       GST_READ_UINT32_LE (GST_BUFFER_DATA (buf)) != GST_RIFF_LIST_hdrl) {
     GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
-        ("Invalid AVI header (no hdrl at start): "
+        ("Invalid AVI header (no hdrl at start): %"
             GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
@@ -1812,7 +1813,7 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
   if (!gst_riff_parse_chunk (GST_ELEMENT (avi), buf, &offset, &tag, &sub) ||
       tag != GST_RIFF_TAG_avih) {
     GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
-        ("Invalid AVI header (no avih at start): "
+        ("Invalid AVI header (no avih at start): %"
             GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
     if (sub)
       gst_buffer_unref (sub);
@@ -1843,7 +1844,7 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
             break;
           default:
             GST_WARNING_OBJECT (avi,
-                "Unknown list " GST_FOURCC_FORMAT " in AVI header",
+                "Unknown list %" GST_FOURCC_FORMAT " in AVI header",
                 GST_FOURCC_ARGS (GST_READ_UINT32_LE (GST_BUFFER_DATA (sub))));
             /* fall-through */
           case GST_RIFF_TAG_JUNK:
@@ -1853,7 +1854,7 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
         break;
       default:
         GST_WARNING_OBJECT (avi,
-            "Unknown off %d tag " GST_FOURCC_FORMAT " in AVI header",
+            "Unknown off %d tag %" GST_FOURCC_FORMAT " in AVI header",
             offset, GST_FOURCC_ARGS (tag));
         /* fall-through */
       case GST_RIFF_TAG_JUNK:
@@ -2172,7 +2173,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
 
   if (stream_nr < 0 || stream_nr >= avi->num_streams) {
     /* recoverable */
-    GST_WARNING ("Invalid stream ID %d (" GST_FOURCC_FORMAT ")",
+    GST_WARNING ("Invalid stream ID %d (%" GST_FOURCC_FORMAT ")",
         stream_nr, GST_FOURCC_ARGS (tag));
     if (!gst_riff_read_skip (riff))
       return FALSE;

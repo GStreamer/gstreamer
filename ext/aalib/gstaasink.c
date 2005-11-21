@@ -258,7 +258,7 @@ gst_aasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
   /* FIXME aasink->format is never set */
   g_print ("%d %d\n", aasink->width, aasink->height);
 
-  GST_DEBUG ("aasink: setting %08lx (" GST_FOURCC_FORMAT ")",
+  GST_DEBUG ("aasink: setting %08lx (%" GST_FOURCC_FORMAT ")",
       aasink->format, GST_FOURCC_ARGS (aasink->format));
 
   g_signal_emit (G_OBJECT (aasink), gst_aasink_signals[SIGNAL_HAVE_SIZE], 0,

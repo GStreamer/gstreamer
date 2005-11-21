@@ -429,7 +429,7 @@ gst_wavparse_parse_adtl (GstWavParse * wavparse, int len)
         break;
 
       default:
-        g_print ("Unknown chunk: " GST_FOURCC_FORMAT "\n",
+        g_print ("Unknown chunk: %" GST_FOURCC_FORMAT "\n",
             GST_FOURCC_ARGS (chunk.id));
         return;
     }
@@ -520,7 +520,7 @@ gst_wavparse_parse_file_header (GstElement * element, GstBuffer * buf)
 not_wav:
   {
     GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-        ("File is not an WAVE file: " GST_FOURCC_FORMAT,
+        ("File is not an WAVE file: %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (doctype)));
     return FALSE;
   }
@@ -842,7 +842,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         wav->dataleft = wav->datasize;
         break;
       default:
-        GST_DEBUG ("Ignoring tag" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag));
+        GST_DEBUG ("Ignoring tag %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag));
         wav->offset += 8 + ((size + 1) & ~1);
     }
     gst_buffer_unref (buf);
@@ -865,7 +865,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 invalid_wav:
   {
     GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL),
-        ("Invalid WAV header (no fmt at start): "
+        ("Invalid WAV header (no fmt at start): %"
             GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
     return GST_FLOW_ERROR;
   }

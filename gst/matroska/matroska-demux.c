@@ -2945,7 +2945,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
           break;
 
         default:
-          GST_DEBUG ("Unknown fourcc " GST_FOURCC_FORMAT,
+          GST_DEBUG ("Unknown fourcc %" GST_FOURCC_FORMAT,
               GST_FOURCC_ARGS (videocontext->fourcc));
           return NULL;
       }

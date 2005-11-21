@@ -388,7 +388,7 @@ write_metadata (GstWavEnc * wavenc)
       gst_props_entry_get_string (entry, &text);
       len = strlen (text) + 1;  /* The length in the file includes the \0 */
 
-      tmp = g_strdup_printf (GST_FOURCC_FORMAT "%d%s", GST_FOURCC_ARGS (id),
+      tmp = g_strdup_printf ("%" GST_FOURCC_FORMAT "%d%s", GST_FOURCC_ARGS (id),
           GUINT32_TO_LE (len), text);
       g_string_append (info_str, tmp);
       g_free (tmp);
