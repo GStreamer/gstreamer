@@ -39,6 +39,7 @@
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
 <!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
+<!ENTITY GstSegment SYSTEM "xml/gstsegment.xml">
 <!ENTITY GstStructure SYSTEM "xml/gststructure.xml">
 <!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
 <!ENTITY GstTagList SYSTEM "xml/gsttaglist.xml">
@@ -59,6 +60,10 @@
 <!ENTITY GstBaseTransform SYSTEM "xml/gstbasetransform.xml">
 <!ENTITY GstCollectPads SYSTEM "xml/gstcollectpads.xml">
 <!ENTITY GstPushSrc SYSTEM "xml/gstpushsrc.xml">
+
+<!ENTITY GstNetClientClock SYSTEM "xml/gstnetclientclock.xml">
+<!ENTITY GstNetTimePacket SYSTEM "xml/gstnettimepacket.xml">
+<!ENTITY GstNetTimeProvider SYSTEM "xml/gstnettimeprovider.xml">
 
 <!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
 <!ENTITY GstFakeSink SYSTEM "xml/gstfakesink.xml">
@@ -149,6 +154,7 @@ Windows.  It is released under the GNU Library General Public License
     &GstQuery;
     &GstQueue;
     &GstRegistry;
+    &GstSegment;
     &GstStructure;
     &GstSystemClock;
     &GstTagList;
@@ -238,7 +244,19 @@ Windows.  It is released under the GNU Library General Public License
 
   </chapter>
 
-
+  
+  <chapter id="gstreamer-net">
+    <title>GStreamer Network Classes</title>
+    <para>
+      libgstnet-&GST_MAJORMINOR;.so provides network elements and objects.
+    </para>
+    
+    &GstNetClientClock;
+    &GstNetTimePacket;
+    &GstNetTimeProvider;
+  </chapter>
+  
+  
   <chapter id="gstreamer-hierarchy">
     <title>Object Hierarchy</title>
     &gstreamer-tree-index;

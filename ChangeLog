@@ -1,3 +1,12 @@
+2005-11-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* gst/gstinfo.h:
+	  more docs fixes, add new api to the docs
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbin.c (gst_bin_remove_func): Wim claims I can remove this

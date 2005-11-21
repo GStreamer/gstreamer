@@ -56,7 +56,8 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 #	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
 SCANOBJ_DEPS = \
 	$(top_builddir)/gst/elements/libgstelements.la \
-	$(top_builddir)/gst/base/libgstbase-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst/net/libgstnet-tempname-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning. Use base file name, no paths
 IGNORE_HFILES= \

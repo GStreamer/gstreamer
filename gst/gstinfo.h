@@ -209,6 +209,22 @@ struct _GstDebugCategory {
 
 
 typedef struct _GstDebugMessage GstDebugMessage;
+
+/**
+ * GstLogFunction:
+ * @category: a #GstDebugCategory
+ * @level: a #GstDebugLevel
+ * @file: file name
+ * @function: function name
+ * @line: line number
+ * @object: a #GObject
+ * @message: the message
+ * @data: user data for the log function
+ *
+ * Function prototype for a logging function that can be registered with
+ * gst_debug_add_log_function().
+ * Use G_GNUC_NO_INSTRUMENT on that function.
+ */
 typedef void (*GstLogFunction)	(GstDebugCategory *	category,
 				 GstDebugLevel		level,
 				 const gchar *		file,
