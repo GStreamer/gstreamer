@@ -133,6 +133,15 @@ gst_plugin_feature_load (GstPluginFeature * feature)
   return real_feature;
 }
 
+/**
+ * gst_plugin_feature_type_name_filter:
+ * @feature: the #GstPluginFeature
+ * @data: the type and name to check against
+ *
+ * Compares type and name of plugin feature. Can be used with gst_filter_run().
+ *
+ * Returns: TRUE if equal.
+ */
 gboolean
 gst_plugin_feature_type_name_filter (GstPluginFeature * feature,
     GstTypeNameData * data)

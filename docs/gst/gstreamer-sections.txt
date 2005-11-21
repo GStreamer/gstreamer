@@ -360,8 +360,6 @@ gst_clock_get_internal_time
 gst_clock_adjust_unlocked
 gst_clock_get_calibration
 gst_clock_set_calibration
-gst_clock_get_master
-gst_clock_set_master
 gst_clock_id_get_time
 gst_clock_id_wait
 gst_clock_id_wait_async
@@ -1476,7 +1474,6 @@ gst_plugin_get_version
 gst_plugin_get_module
 gst_plugin_is_loaded
 gst_plugin_name_filter
-gst_plugin_check_file
 gst_plugin_load_file
 gst_plugin_load
 gst_plugin_load_by_name
@@ -1911,6 +1908,7 @@ gst_trace_new
 gst_trace_destroy
 gst_trace_flush
 gst_trace_text_flush
+gst_trace_add_entry
 gst_trace_get_size
 gst_trace_get_offset
 gst_trace_get_remaining
@@ -1930,7 +1928,6 @@ gst_alloc_trace_set_flags
 gst_alloc_trace_register
 gst_alloc_trace_new
 gst_alloc_trace_free
-gst_trace_add_entry
 <SUBSECTION Standard>
 GST_TYPE_ALLOC_TRACE_FLAGS
 <SUBSECTION Private>

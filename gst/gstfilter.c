@@ -21,6 +21,20 @@
  * SECTION:gstfilter
  * @short_description: A utility function to filter GLists.
  *
+ * <example>
+ * <title>Filtering a list</title>
+ *   <programlisting>
+ *     GList *node;
+ *     GstObject *result = NULL;
+ *     
+ *     node = gst_filter_run (list, (GstFilterFunc) my_filter, TRUE, NULL);
+ *     if (node) {
+ *       result = GST_OBJECT (node->data);
+ *       gst_object_ref (result);
+ *       gst_list_free (node);
+ *     }
+ *   </programlisting>
+ * </example>
  */
 #include "gst_private.h"
 #include <gst/gstfilter.h>

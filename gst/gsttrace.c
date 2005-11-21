@@ -28,9 +28,21 @@
  * #GType. The counter is incremented for each object allocated and decremented
  * it when it's freed.
  *
- * (FIXME: add example - see jamboree/tests/read-tags.c)
+ * <example>
+ * <title>Tracing object instances</title>
+ *   <programlisting>
+ *     // trace un-freed object instances
+ *     gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
+ *     if (!gst_alloc_trace_available ()) {
+ *       g_warning ("Trace not available (recompile with trace enabled).");
+ *     }
+ *     gst_alloc_trace_print_live ();
+ *     // do something here
+ *     gst_alloc_trace_print_live ();
+ *   </programlisting>
+ * </example>
  *
- * Last reviewed on 2005-11-18 (0.9.5)
+ * Last reviewed on 2005-11-21 (0.9.5)
  */
 
 #ifdef HAVE_CONFIG_H

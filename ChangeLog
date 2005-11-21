@@ -1,3 +1,18 @@
+2005-11-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/random/ensonic/media-device-daemon.txt:
+	  wild idea, can this be done?
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsterror.h:
+	* gst/gstfilter.c:
+	* gst/gstfilter.h:
+	* gst/gstplugin.h:
+	* gst/gstpluginfeature.c:
+	* gst/gsttrace.c:
+	* gst/gstvalue.c:
+	* gst/gstvalue.h:
+	  doc fixes and additions
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/base/gstbasesrc.c (GST_LIVE_BROADCAST, GST_LIVE_SIGNAL) 

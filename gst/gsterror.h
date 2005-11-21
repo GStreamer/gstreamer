@@ -220,7 +220,7 @@ typedef enum
 /**
  * GST_ERROR_SYSTEM:
  *
- * Returns a string using errno describing the previously failed system
+ * Builds a string using errno describing the previously failed system
  * call.  To be used as the debug argument in #GST_ELEMENT_ERROR.
  */
 #define GST_ERROR_SYSTEM    ("system error: %s", g_strerror (errno))

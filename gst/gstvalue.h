@@ -312,7 +312,10 @@ typedef int      (* GstValueUnionFunc)       (GValue       *dest,
  * @value2: a #GValue operand
  *
  * Used by gst_value_intersect() to perform intersection for a specific #GValue
- * type. Register a new implementation with gst_value_register_intersection_func().
+ * type. If the intersection is non-empty, the result is
+ * placed in @dest and TRUE is returned.  If the intersection is
+ * empty, @dest is unmodified and FALSE is returned.
+ * Register a new implementation with gst_value_register_intersection_func().
  *
  * Returns: %TRUE if the values can intersect
  */

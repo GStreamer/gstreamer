@@ -269,7 +269,9 @@ gboolean		gst_plugin_is_loaded		(GstPlugin *plugin);
 
 gboolean		gst_plugin_name_filter		(GstPlugin *plugin, const gchar *name);
 
+/* This is not implemented (yet|anymore)
 gboolean		gst_plugin_check_file		(const gchar *filename, GError** error);
+*/
 GstPlugin *		gst_plugin_load_file		(const gchar *filename, GError** error);
 
 GstPlugin *             gst_plugin_load                 (GstPlugin *plugin);

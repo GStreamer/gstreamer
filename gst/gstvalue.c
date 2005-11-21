@@ -2385,27 +2385,13 @@ gst_value_intersect (GValue * dest, const GValue * value1,
 }
 
 /**
- * gst_value_register_intersection_func:
+ * gst_value_register_intersect_func:
  * @type1: the first type to intersect
  * @type2: the second type to intersect
  * @func: the intersection function
  *
  * Registers a function that is called to calculate the intersection
  * of the values having the types @type1 and @type2.
- */
-/**
- * GstValueIntersectFunc:
- * @dest: a uninitialized #GValue that will hold the calculated
- * intersection value
- * @value1: a value to intersect
- * @value2: another value to intersect
- *
- * Functions having this type calculate the intersection of @value1
- * and @value2.  If the intersection is non-empty, the result is
- * placed in @dest and TRUE is returned.  If the intersection is
- * empty, @dest is unmodified and FALSE is returned.
- *
- * Returns: TRUE if the intersection is non-empty, FALSE otherwise
  */
 void
 gst_value_register_intersect_func (GType type1, GType type2,
