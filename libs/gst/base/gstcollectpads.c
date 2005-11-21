@@ -27,12 +27,12 @@
  * is given to the manager of this object when all pads have data.
  * <itemizedlist>
  *   <listitem><para>
- *     Collectpads are created with gst_collectpads_new(). A callback should then
- *     be installed with gst_collectpads_set_function (). 
+ *     Collectpads are created with gst_collect_pads_new(). A callback should then
+ *     be installed with gst_collect_pads_set_function (). 
  *   </para></listitem>
  *   <listitem><para>
- *     Pads are added to the collection with gst_collectpads_add_pad()/
- *     gst_collectpads_remove_pad(). The pad
+ *     Pads are added to the collection with gst_collect_pads_add_pad()/
+ *     gst_collect_pads_remove_pad(). The pad
  *     has to be a sinkpad. The chain function of the pad is
  *     overridden. The element_private of the pad is used to store
  *     private information.
@@ -45,26 +45,26 @@
  *     When data is queued on all pads, the callback function is called.
  *   </para></listitem>
  *   <listitem><para>
- *     Data can be dequeued from the pad with the gst_collectpads_pop() method.
- *     One can peek at the data with the gst_collectpads_peek() function.
+ *     Data can be dequeued from the pad with the gst_collect_pads_pop() method.
+ *     One can peek at the data with the gst_collect_pads_peek() function.
  *     These functions will return NULL if the pad received an EOS event. When all
- *     pads return NULL from a gst_collectpads_peek(), the element can emit an EOS
+ *     pads return NULL from a gst_collect_pads_peek(), the element can emit an EOS
  *     event itself.
  *   </para></listitem>
  *   <listitem><para>
- *     Data can also be dequeued in byte units using the gst_collectpads_available(), 
- *     gst_collectpads_read() and gst_collectpads_flush() calls.
+ *     Data can also be dequeued in byte units using the gst_collect_pads_available(), 
+ *     gst_collect_pads_read() and gst_collect_pads_flush() calls.
  *   </para></listitem>
  *   <listitem><para>
- *     Elements should call gst_collectpads_start() and gst_collectpads_stop() in
+ *     Elements should call gst_collect_pads_start() and gst_collect_pads_stop() in
  *     their state change functions to start and stop the processing of the collecpads.
- *     The gst_collectpads_stop() call should be called before calling the parent
+ *     The gst_collect_pads_stop() call should be called before calling the parent
  *     element state change function in the PAUSED_TO_READY state change to ensure
  *     no pad is blocked and the element can finish streaming.
  *   </para></listitem>
  *   <listitem><para>
- *     gst_collectpads_collect() and gst_collectpads_collect_range() can be used by
- *     elements that start a #GstTask to drive the collectpads.
+ *     gst_collect_pads_collect() and gst_collect_pads_collect_range() can be used by
+ *     elements that start a #GstTask to drive the collect_pads.
  *   </para></listitem>
  * </itemizedlist>
  */
@@ -74,31 +74,31 @@
 GST_DEBUG_CATEGORY_STATIC (collect_pads_debug);
 #define GST_CAT_DEFAULT collect_pads_debug
 
-GST_BOILERPLATE (GstCollectPads, gst_collectpads, GstObject, GST_TYPE_OBJECT)
+GST_BOILERPLATE (GstCollectPads, gst_collect_pads, GstObject, GST_TYPE_OBJECT)
 
-     static GstFlowReturn gst_collectpads_chain (GstPad * pad,
+     static GstFlowReturn gst_collect_pads_chain (GstPad * pad,
     GstBuffer * buffer);
-     static gboolean gst_collectpads_event (GstPad * pad, GstEvent * event);
-     static void gst_collectpads_finalize (GObject * object);
-     static void gst_collectpads_init (GstCollectPads * pads,
+     static gboolean gst_collect_pads_event (GstPad * pad, GstEvent * event);
+     static void gst_collect_pads_finalize (GObject * object);
+     static void gst_collect_pads_init (GstCollectPads * pads,
     GstCollectPadsClass * g_class);
 
-     static void gst_collectpads_base_init (gpointer g_class)
+     static void gst_collect_pads_base_init (gpointer g_class)
 {
-  GST_DEBUG_CATEGORY_INIT (collect_pads_debug, "collectpads", 0,
+  GST_DEBUG_CATEGORY_INIT (collect_pads_debug, "collect_pads", 0,
       "GstCollectPads");
 }
 
 static void
-gst_collectpads_class_init (GstCollectPadsClass * klass)
+gst_collect_pads_class_init (GstCollectPadsClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_collectpads_finalize);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_collect_pads_finalize);
 }
 
 static void
-gst_collectpads_init (GstCollectPads * pads, GstCollectPadsClass * g_class)
+gst_collect_pads_init (GstCollectPads * pads, GstCollectPadsClass * g_class)
 {
   pads->cond = g_cond_new ();
   pads->data = NULL;
@@ -110,11 +110,11 @@ gst_collectpads_init (GstCollectPads * pads, GstCollectPadsClass * g_class)
 }
 
 static void
-gst_collectpads_finalize (GObject * object)
+gst_collect_pads_finalize (GObject * object)
 {
-  GstCollectPads *pads = GST_COLLECTPADS (object);
+  GstCollectPads *pads = GST_COLLECT_PADS (object);
 
-  gst_collectpads_stop (pads);
+  gst_collect_pads_stop (pads);
   g_cond_free (pads->cond);
   /* FIXME, free data */
 
@@ -122,7 +122,7 @@ gst_collectpads_finalize (GObject * object)
 }
 
 /**
- * gst_collectpads_new:
+ * gst_collect_pads_new:
  *
  * Create a new instance of #GstCollectsPads.
  *
@@ -131,17 +131,17 @@ gst_collectpads_finalize (GObject * object)
  * MT safe.
  */
 GstCollectPads *
-gst_collectpads_new (void)
+gst_collect_pads_new (void)
 {
   GstCollectPads *newcoll;
 
-  newcoll = g_object_new (GST_TYPE_COLLECTPADS, NULL);
+  newcoll = g_object_new (GST_TYPE_COLLECT_PADS, NULL);
 
   return newcoll;
 }
 
 /**
- * gst_collectpads_set_function:
+ * gst_collect_pads_set_function:
  * @pads: the collectspads to use
  * @func: the function to set
  * @user_data: user data passed to the function
@@ -152,11 +152,11 @@ gst_collectpads_new (void)
  * MT safe.
  */
 void
-gst_collectpads_set_function (GstCollectPads * pads,
+gst_collect_pads_set_function (GstCollectPads * pads,
     GstCollectPadsFunction func, gpointer user_data)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECTPADS (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_LOCK (pads);
   pads->func = func;
@@ -165,7 +165,7 @@ gst_collectpads_set_function (GstCollectPads * pads,
 }
 
 /**
- * gst_collectpads_add_pad:
+ * gst_collect_pads_add_pad:
  * @pads: the collectspads to use
  * @pad: the pad to add
  * @size: the size of the returned GstCollectData structure
@@ -182,12 +182,12 @@ gst_collectpads_set_function (GstCollectPads * pads,
  * MT safe.
  */
 GstCollectData *
-gst_collectpads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
+gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
 {
   GstCollectData *data;
 
   g_return_val_if_fail (pads != NULL, NULL);
-  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), NULL);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), NULL);
   g_return_val_if_fail (pad != NULL, NULL);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), NULL);
   g_return_val_if_fail (size >= sizeof (GstCollectData), NULL);
@@ -199,8 +199,8 @@ gst_collectpads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
 
   GST_LOCK (pads);
   pads->data = g_slist_append (pads->data, data);
-  gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_collectpads_chain));
-  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_collectpads_event));
+  gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_chain));
+  gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_event));
   gst_pad_set_element_private (pad, data);
   pads->numpads++;
   pads->cookie++;
@@ -218,7 +218,7 @@ find_pad (GstCollectData * data, GstPad * pad)
 }
 
 /**
- * gst_collectpads_remove_pad:
+ * gst_collect_pads_remove_pad:
  * @pads: the collectspads to use
  * @pad: the pad to remove
  *
@@ -229,12 +229,12 @@ find_pad (GstCollectData * data, GstPad * pad)
  * MT safe.
  */
 gboolean
-gst_collectpads_remove_pad (GstCollectPads * pads, GstPad * pad)
+gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
 {
   GSList *list;
 
   g_return_val_if_fail (pads != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), FALSE);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), FALSE);
   g_return_val_if_fail (pad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
@@ -252,7 +252,7 @@ gst_collectpads_remove_pad (GstCollectPads * pads, GstPad * pad)
 }
 
 /**
- * gst_collectpads_is_active:
+ * gst_collect_pads_is_active:
  * @pads: the collectspads to use
  * @pad: the pad to check
  *
@@ -263,72 +263,80 @@ gst_collectpads_remove_pad (GstCollectPads * pads, GstPad * pad)
  * MT safe.
  */
 gboolean
-gst_collectpads_is_active (GstCollectPads * pads, GstPad * pad)
+gst_collect_pads_is_active (GstCollectPads * pads, GstPad * pad)
 {
   g_return_val_if_fail (pads != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), FALSE);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), FALSE);
   g_return_val_if_fail (pad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  g_warning ("gst_collect_pads_is_active() is not implemented");
 
   return FALSE;
 }
 
 /**
- * gst_collectpads_collect:
+ * gst_collect_pads_collect:
  * @pads: the collectspads to use
  *
  * Collect data on all pads. This function is usually called
- * from a GstTask function in an element.
+ * from a GstTask function in an element. This function is
+ * currently not implemented.
  *
  * Returns: GstFlowReturn of the operation.
  *
  * MT safe.
  */
 GstFlowReturn
-gst_collectpads_collect (GstCollectPads * pads)
+gst_collect_pads_collect (GstCollectPads * pads)
 {
   g_return_val_if_fail (pads != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), GST_FLOW_ERROR);
+
+  g_warning ("gst_collect_pads_collect() is not implemented");
 
   return GST_FLOW_ERROR;
 }
 
 /**
- * gst_collectpads_collect_range:
+ * gst_collect_pads_collect_range:
  * @pads: the collectspads to use
  * @offset: the offset to collect
  * @length: the length to collect
  *
  * Collect data with @offset and @length on all pads. This function
- * is typically called in the getrange function of an element.
+ * is typically called in the getrange function of an element. This
+ * function is currently not implemented.
  *
  * Returns: GstFlowReturn of the operation.
  *
  * MT safe.
  */
 GstFlowReturn
-gst_collectpads_collect_range (GstCollectPads * pads, guint64 offset,
+gst_collect_pads_collect_range (GstCollectPads * pads, guint64 offset,
     guint length)
 {
   g_return_val_if_fail (pads != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), GST_FLOW_ERROR);
+
+  g_warning ("gst_collect_pads_collect_range() is not implemented");
 
   return GST_FLOW_ERROR;
 }
 
 /**
- * gst_collectpads_start:
+ * gst_collect_pads_start:
  * @pads: the collectspads to use
  *
- * Starts the processing of data in the collectpads.
+ * Starts the processing of data in the collect_pads.
  *
  * MT safe.
  */
 void
-gst_collectpads_start (GstCollectPads * pads)
+gst_collect_pads_start (GstCollectPads * pads)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECTPADS (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_LOCK (pads);
   pads->started = TRUE;
@@ -336,28 +344,28 @@ gst_collectpads_start (GstCollectPads * pads)
 }
 
 /**
- * gst_collectpads_stop:
+ * gst_collect_pads_stop:
  * @pads: the collectspads to use
  *
- * Stops the processing of data in the collectpads. this function
+ * Stops the processing of data in the collect_pads. this function
  * will also unblock any blocking operations.
  *
  * MT safe.
  */
 void
-gst_collectpads_stop (GstCollectPads * pads)
+gst_collect_pads_stop (GstCollectPads * pads)
 {
   g_return_if_fail (pads != NULL);
-  g_return_if_fail (GST_IS_COLLECTPADS (pads));
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
   GST_LOCK (pads);
   pads->started = FALSE;
-  GST_COLLECTPADS_BROADCAST (pads);
+  GST_COLLECT_PADS_BROADCAST (pads);
   GST_UNLOCK (pads);
 }
 
 /**
- * gst_collectpads_peek:
+ * gst_collect_pads_peek:
  * @pads: the collectspads to peek
  * @data: the data to use
  *
@@ -371,12 +379,12 @@ gst_collectpads_stop (GstCollectPads * pads)
  * MT safe.
  */
 GstBuffer *
-gst_collectpads_peek (GstCollectPads * pads, GstCollectData * data)
+gst_collect_pads_peek (GstCollectPads * pads, GstCollectData * data)
 {
   GstBuffer *result;
 
   g_return_val_if_fail (pads != NULL, NULL);
-  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), NULL);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), NULL);
   g_return_val_if_fail (data != NULL, NULL);
 
   result = data->buffer;
@@ -391,7 +399,7 @@ gst_collectpads_peek (GstCollectPads * pads, GstCollectData * data)
 }
 
 /**
- * gst_collectpads_pop:
+ * gst_collect_pads_pop:
  * @pads: the collectspads to pop
  * @data: the data to use
  *
@@ -405,12 +413,12 @@ gst_collectpads_peek (GstCollectPads * pads, GstCollectData * data)
  * MT safe.
  */
 GstBuffer *
-gst_collectpads_pop (GstCollectPads * pads, GstCollectData * data)
+gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
 {
   GstBuffer *result;
 
   g_return_val_if_fail (pads != NULL, NULL);
-  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), NULL);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), NULL);
   g_return_val_if_fail (data != NULL, NULL);
 
   result = data->buffer;
@@ -420,7 +428,7 @@ gst_collectpads_pop (GstCollectPads * pads, GstCollectData * data)
     pads->queuedpads--;
   }
 
-  GST_COLLECTPADS_SIGNAL (pads);
+  GST_COLLECT_PADS_SIGNAL (pads);
 
   GST_DEBUG ("Pop buffer on pad %s:%s: buffer=%p",
       GST_DEBUG_PAD_NAME (data->pad), result);
@@ -429,7 +437,7 @@ gst_collectpads_pop (GstCollectPads * pads, GstCollectData * data)
 }
 
 /**
- * gst_collectpads_available:
+ * gst_collect_pads_available:
  * @pads: the collectspads to query
  *
  * Query how much bytes can be read from each queued buffer. This means
@@ -445,13 +453,13 @@ gst_collectpads_pop (GstCollectPads * pads, GstCollectData * data)
  * MT safe.
  */
 guint
-gst_collectpads_available (GstCollectPads * pads)
+gst_collect_pads_available (GstCollectPads * pads)
 {
   GSList *collected;
   guint result = G_MAXUINT;
 
   g_return_val_if_fail (pads != NULL, 0);
-  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), 0);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), 0);
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
     GstCollectData *pdata;
@@ -476,7 +484,7 @@ not_filled:
 }
 
 /**
- * gst_collectpads_read:
+ * gst_collect_pads_read:
  * @pads: the collectspads to query
  * @data: the data to use
  * @bytes: a pointer to a byte array
@@ -495,13 +503,13 @@ not_filled:
  * MT safe.
  */
 guint
-gst_collectpads_read (GstCollectPads * pads, GstCollectData * data,
+gst_collect_pads_read (GstCollectPads * pads, GstCollectData * data,
     guint8 ** bytes, guint size)
 {
   guint readsize;
 
   g_return_val_if_fail (pads != NULL, 0);
-  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), 0);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), 0);
   g_return_val_if_fail (data != NULL, 0);
   g_return_val_if_fail (bytes != NULL, 0);
 
@@ -513,7 +521,7 @@ gst_collectpads_read (GstCollectPads * pads, GstCollectData * data,
 }
 
 /**
- * gst_collectpads_flush:
+ * gst_collect_pads_flush:
  * @pads: the collectspads to query
  * @data: the data to use
  * @size: the number of bytes to flush
@@ -529,12 +537,13 @@ gst_collectpads_read (GstCollectPads * pads, GstCollectData * data,
  * MT safe.
  */
 guint
-gst_collectpads_flush (GstCollectPads * pads, GstCollectData * data, guint size)
+gst_collect_pads_flush (GstCollectPads * pads, GstCollectData * data,
+    guint size)
 {
   guint flushsize;
 
   g_return_val_if_fail (pads != NULL, 0);
-  g_return_val_if_fail (GST_IS_COLLECTPADS (pads), 0);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), 0);
   g_return_val_if_fail (data != NULL, 0);
 
   flushsize = MIN (size, GST_BUFFER_SIZE (data->buffer) - data->pos);
@@ -544,7 +553,7 @@ gst_collectpads_flush (GstCollectPads * pads, GstCollectData * data, guint size)
   if (data->pos >= GST_BUFFER_SIZE (data->buffer)) {
     GstBuffer *buf;
 
-    buf = gst_collectpads_pop (pads, data);
+    buf = gst_collect_pads_pop (pads, data);
     gst_buffer_unref (buf);
   }
 
@@ -552,12 +561,12 @@ gst_collectpads_flush (GstCollectPads * pads, GstCollectData * data, guint size)
 }
 
 static gboolean
-gst_collectpads_event (GstPad * pad, GstEvent * event)
+gst_collect_pads_event (GstPad * pad, GstEvent * event)
 {
   GstCollectData *data;
   GstCollectPads *pads;
 
-  /* some magic to get the managing collectpads */
+  /* some magic to get the managing collect_pads */
   data = (GstCollectData *) gst_pad_get_element_private (pad);
   if (data == NULL)
     goto not_ours;
@@ -616,14 +625,14 @@ beach:
   /* ERRORS */
 not_ours:
   {
-    GST_DEBUG ("collectpads not ours");
+    GST_DEBUG ("collect_pads not ours");
     return FALSE;
   }
 }
 
 
 static GstFlowReturn
-gst_collectpads_chain (GstPad * pad, GstBuffer * buffer)
+gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstCollectData *data;
   GstCollectPads *pads;
@@ -632,7 +641,7 @@ gst_collectpads_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_DEBUG ("Got buffer for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  /* some magic to get the managing collectpads */
+  /* some magic to get the managing collect_pads */
   data = (GstCollectData *) gst_pad_get_element_private (pad);
   if (data == NULL)
     goto not_ours;
@@ -654,7 +663,7 @@ gst_collectpads_chain (GstPad * pad, GstBuffer * buffer)
   while (data->buffer != NULL) {
     GST_DEBUG ("Pad %s:%s already has a buffer queued, waiting",
         GST_DEBUG_PAD_NAME (pad));
-    GST_COLLECTPADS_WAIT (pads);
+    GST_COLLECT_PADS_WAIT (pads);
     GST_DEBUG ("Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
     /* after a signal,  we could be stopped */
     if (!pads->started)
@@ -683,13 +692,13 @@ gst_collectpads_chain (GstPad * pad, GstBuffer * buffer)
   /* ERRORS */
 not_ours:
   {
-    GST_DEBUG ("collectpads not ours");
+    GST_DEBUG ("collect_pads not ours");
     return GST_FLOW_ERROR;
   }
 not_started:
   {
     GST_UNLOCK (pads);
-    GST_DEBUG ("collectpads not started");
+    GST_DEBUG ("collect_pads not started");
     return GST_FLOW_WRONG_STATE;
   }
 }

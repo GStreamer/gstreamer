@@ -7,9 +7,11 @@ EXPORTS
 	gst_base_src_is_live
 	gst_push_src_get_type
 	gst_type_find_helper
-	gst_collectpads_add_pad
-	gst_collectpads_pop
-	gst_collectpads_start
-	gst_collectpads_stop
-	gst_collectpads_set_function
-	gst_collectpads_new
+	gst_collect_pads_add_pad
+	gst_collect_pads_remove_pad
+	gst_collect_pads_peek
+	gst_collect_pads_pop
+	gst_collect_pads_start
+	gst_collect_pads_stop
+	gst_collect_pads_set_function
+	gst_collect_pads_new

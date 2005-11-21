@@ -1,5 +1,25 @@
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* win32/common/libgstbase.def:
+	* win32/libgstbase.def:
+	* gst/base/gstcollectpads.c: (gst_collect_pads_base_init),
+	(gst_collect_pads_class_init), (gst_collect_pads_init),
+	(gst_collect_pads_finalize), (gst_collect_pads_new),
+	(gst_collect_pads_set_function), (gst_collect_pads_add_pad),
+	(gst_collect_pads_remove_pad), (gst_collect_pads_is_active),
+	(gst_collect_pads_collect), (gst_collect_pads_collect_range),
+	(gst_collect_pads_start), (gst_collect_pads_stop),
+	(gst_collect_pads_peek), (gst_collect_pads_pop),
+	(gst_collect_pads_available), (gst_collect_pads_read),
+	(gst_collect_pads_flush), (gst_collect_pads_event),
+	(gst_collect_pads_chain):
+	* gst/base/gstcollectpads.h:
+	  Rename gst_collecpads_foo() => gst_collect_pads_foo(). Document
+	  unimplemented functions as unimplemented (#320766).
+
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstmessage.c:
 	  Improve docs for DURATION message (usage of duration parameter)
 	  (#320113)
