@@ -690,8 +690,7 @@ gst_v4l2src_fixate (GstPad * pad, const GstCaps * const_caps)
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
     changed |=
-        gst_caps_structure_fixate_field_nearest_int (structure, "width",
-        G_MAXINT);
+        gst_structure_fixate_field_nearest_int (structure, "width", G_MAXINT);
   }
   if (changed)
     return caps;
@@ -699,8 +698,7 @@ gst_v4l2src_fixate (GstPad * pad, const GstCaps * const_caps)
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
     changed |=
-        gst_caps_structure_fixate_field_nearest_int (structure, "height",
-        G_MAXINT);
+        gst_structure_fixate_field_nearest_int (structure, "height", G_MAXINT);
   }
   if (changed)
     return caps;
