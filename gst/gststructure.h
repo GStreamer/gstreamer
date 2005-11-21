@@ -23,6 +23,7 @@
 #include <gst/gstconfig.h>
 #include <glib-object.h>
 #include <gst/gstclock.h>
+#include <gst/glib-compat.h>
 
 G_BEGIN_DECLS
 

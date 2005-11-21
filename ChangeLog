@@ -1,3 +1,9 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gsttaglist.h: 
+	* gst/gstcaps.h: 
+	* gst/gststructure.h: Add glib-compat.h.
+
 2005-11-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_change_state_func):
@@ -25,7 +31,8 @@
 	* gst/gsttaglist.h: 
 	* gst/gststructure.h: 
 	* gst/gstcaps.h: 
-	* gst/gstutils.h: Sprinkle NULL_TERMINATED to taste.
+	* gst/gstutils.h: Sprinkle NULL_TERMINATED to taste. Fixes
+	#319940.
 
 	* gst/gsterror.c (_gst_core_errors_init):
 	* gst/gsterror.h (GST_CORE_ERROR_MISSING_PLUGIN): New error

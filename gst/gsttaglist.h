@@ -24,6 +24,7 @@
 #define __GST_TAGLIST_H__
 
 #include <gst/gststructure.h>
+#include <gst/glib-compat.h>
 
 G_BEGIN_DECLS
 
