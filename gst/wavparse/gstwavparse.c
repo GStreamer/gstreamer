@@ -209,9 +209,10 @@ gst_wavparse_init (GstWavParse * wavparse)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&sink_template_factory), "sink");
   gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->sinkpad);
-  gst_pad_set_activate_function (wavparse->sinkpad, gst_wavparse_sink_activate);
+  gst_pad_set_activate_function (wavparse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_wavparse_sink_activate));
   gst_pad_set_activatepull_function (wavparse->sinkpad,
-      gst_wavparse_sink_activate_pull);
+      GST_DEBUG_FUNCPTR (gst_wavparse_sink_activate_pull));
   gst_wavparse_reset (wavparse);
 }
 
@@ -235,9 +236,11 @@ gst_wavparse_create_sourcepad (GstWavParse * wavparse)
       (&src_template_factory), "src");
   gst_pad_use_fixed_caps (wavparse->srcpad);
   gst_pad_set_query_type_function (wavparse->srcpad,
-      gst_wavparse_get_query_types);
-  gst_pad_set_query_function (wavparse->srcpad, gst_wavparse_pad_query);
-  gst_pad_set_event_function (wavparse->srcpad, gst_wavparse_srcpad_event);
+      GST_DEBUG_FUNCPTR (gst_wavparse_get_query_types));
+  gst_pad_set_query_function (wavparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_wavparse_pad_query));
+  gst_pad_set_event_function (wavparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_wavparse_srcpad_event));
 }
 
 static void
@@ -1326,6 +1329,7 @@ gst_wavparse_sink_activate (GstPad * sinkpad)
   if (gst_pad_check_pull_range (sinkpad))
     return gst_pad_activate_pull (sinkpad, TRUE);
 
+  GST_DEBUG ("pull_range not supported on sinkpad");
   return FALSE;
 };
 

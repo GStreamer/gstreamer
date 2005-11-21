@@ -1,3 +1,9 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_init),
+	(gst_wavparse_create_sourcepad), (gst_wavparse_sink_activate):
+	  Use GST_DEBUG_FUNCPTR; add debug message in pad activate function.
+
 2005-11-21  Michael Smith <msmith@fluendo.com>
 
 	* gst/auparse/Makefile.am:
