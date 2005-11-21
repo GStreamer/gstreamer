@@ -932,7 +932,7 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
           break;
         }
 
-        GST_LOG_OBJECT (rmdemux, "header found with object_id="
+        GST_LOG_OBJECT (rmdemux, "header found with object_id=%"
             GST_FOURCC_FORMAT
             " size=%08x object_version=%d",
             GST_FOURCC_ARGS (rmdemux->object_id), rmdemux->size,
@@ -970,7 +970,7 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
         if (gst_adapter_available (rmdemux->adapter) < rmdemux->size)
           goto unlock;
 
-        GST_WARNING_OBJECT (rmdemux, "Unknown object_id " GST_FOURCC_FORMAT,
+        GST_WARNING_OBJECT (rmdemux, "Unknown object_id %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (rmdemux->object_id));
 
         gst_adapter_flush (rmdemux->adapter, rmdemux->size);
@@ -1297,7 +1297,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
       default:
         GST_WARNING_OBJECT (rmdemux,
-            "Unknown audio FOURCC code \"" GST_FOURCC_FORMAT "\"",
+            "Unknown audio FOURCC code \"%" GST_FOURCC_FORMAT "\"",
             stream->fourcc);
         break;
     }
@@ -1534,7 +1534,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
           ((double) RMDEMUX_GUINT16_GET (data + offset + 24) / 65536.0);
 
       GST_DEBUG_OBJECT (rmdemux,
-          "Video stream with fourcc=" GST_FOURCC_FORMAT
+          "Video stream with fourcc=%" GST_FOURCC_FORMAT
           " width=%d height=%d rate=%d frame_rate=%f subformat=%x format=%x extra_data_size=%d",
           GST_FOURCC_ARGS (stream->fourcc), stream->width, stream->height,
           stream->rate, stream->frame_rate, stream->subformat, stream->format,

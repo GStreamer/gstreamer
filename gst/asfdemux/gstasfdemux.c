@@ -1818,7 +1818,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * asf_demux,
   g_free (codec_name);
   if (extradata)
     gst_buffer_unref (extradata);
-  GST_INFO ("Adding video stream %u codec " GST_FOURCC_FORMAT " (0x%08x)",
+  GST_INFO ("Adding video stream %u codec %" GST_FOURCC_FORMAT " (0x%08x)",
       asf_demux->num_video_streams, GST_FOURCC_ARGS (video->tag), video->tag);
 
   asf_demux->num_video_streams++;
