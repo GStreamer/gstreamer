@@ -266,6 +266,24 @@
   )
 )
 
+(define-boxed Segment
+  (in-module "Gst")
+  (c-name "GstSegment")
+  (gtype-id "GST_TYPE_SEGMENT")
+  (fields
+   '("gdouble" "rate")
+   '("gdouble" "abs_rate")
+   '("GstFormat" "format")
+   '("GstSeekFlags" "flags")
+   '("gint64" "start")
+   '("gint64" "stop")
+   '("gint64" "time")
+   '("gint64" "accum")
+   '("gint64" "last_stop")
+   '("gint64" "duration")
+  )
+)
+
 ;; Enumerations and flags ...
 
 (define-flags BinFlags

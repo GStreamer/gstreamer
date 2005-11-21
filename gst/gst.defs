@@ -187,6 +187,14 @@
  )
 )
 
+(define-virtual handle_message
+  (of-object "GstBin")
+  (return-type "none")
+  (parameters
+   '("GstMessage*" "message")
+  )
+)
+
 ;; From ../gstreamer/gst/gstbuffer.h
 
 (define-function buffer_get_type

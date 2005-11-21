@@ -1,5 +1,12 @@
 2005-11-21  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst-types.defs:
+	GstSegment is properly wrapped
+	* gst/gst.defs:
+	Add GstBin::handle_message virtual method
+
+2005-11-21  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst.override: (_wrap_GST_TIME_ARGS): 
 	Take either int or longs and return unsigned long long
 
