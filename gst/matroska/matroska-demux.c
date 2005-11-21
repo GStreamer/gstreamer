@@ -1931,6 +1931,8 @@ gst_matroska_ebmlnum_sint (guint8 * data, guint size, gint64 * num)
 static void
 gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
 {
+  /* FIXME: add filler events or buffers back */
+#if 0
   gint stream_nr;
   GstMatroskaTrackContext *context;
 
@@ -1971,6 +1973,7 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
       gst_pad_push_event (context->pad, event);
     }
   }
+#endif
 }
 
 static gboolean

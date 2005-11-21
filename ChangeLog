@@ -1,3 +1,9 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_sync_streams):
+	  Filler events are gone for now, comment out section generating
+	  them.
+
 2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/aalib/gstaasink.c: (gst_aasink_fixate):
