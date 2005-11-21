@@ -1,3 +1,15 @@
+2005-11-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* gst/cutter/Makefile.am:
+	* gst/cutter/gstcutter.c: (gst_cutter_class_init),
+	(gst_cutter_init), (gst_cutter_message_new), (gst_cutter_chain),
+	(gst_cutter_set_property), (gst_cutter_get_property),
+	(plugin_init), (gst_cutter_get_caps):
+	  port cutter
+	* gst/level/gstlevel.c:
+	  fix up plugin details
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_sink_event):

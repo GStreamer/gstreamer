@@ -77,6 +77,7 @@ GST_PLUGINS_ALL="\
 		auparse \
 		autodetect \
 		avi \
+		cutter \
 		debug \
 		effectv \
 		flx \
@@ -526,6 +527,7 @@ gst/alpha/Makefile
 gst/auparse/Makefile
 gst/autodetect/Makefile
 gst/avi/Makefile
+gst/cutter/Makefile
 gst/debug/Makefile
 gst/effectv/Makefile
 gst/goom/Makefile

@@ -90,7 +90,7 @@ static GstElementDetails level_details = {
   "Level",
   "Filter/Analyzer/Audio",
   "RMS/Peak/Decaying Peak Level messager for audio/raw",
-  "Thomas <thomas@apestaart.org>"
+  "Thomas Vander Stichele <thomas at apestaart dot org>"
 };
 
 static GstStaticPadTemplate sink_template_factory =
@@ -117,7 +117,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "depth = (int) { 8, 16 }, " "signed = (boolean) true")
     );
 
-
 enum
 {
   PROP_0,
@@ -126,7 +125,6 @@ enum
   PROP_PEAK_TTL,
   PROP_PEAK_FALLOFF
 };
-
 
 GST_BOILERPLATE (GstLevel, gst_level, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM);
