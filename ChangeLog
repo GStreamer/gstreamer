@@ -1,3 +1,8 @@
+2005-11-21  Michael Smith <msmith@fluendo.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_setcaps), (gst_faad_event):
+	  Don't take STREAM_LOCK in sink event handlers any more.
+
 2005-11-21  Wim Taymans  <wim@fluendo.com>
 
 	* ext/faac/gstfaac.c: (gst_faac_sink_event):

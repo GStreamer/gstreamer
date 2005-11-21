@@ -37,8 +37,8 @@
  * but not all, hence this Truly Evil Hack. This hack will need updating if
  * upstream ever releases something with the new API.
  */
-#define faacDecInit faadDecInit_no_definition
-#define faacDecInit2 faadDecInit2_no_definition
+#define faacDecInit faacDecInit_no_definition
+#define faacDecInit2 faacDecInit2_no_definition
 #include "gstfaad.h"
 #undef faacDecInit
 #undef faacDecInit2
@@ -647,13 +647,11 @@ gst_faad_event (GstPad * pad, GstEvent * event)
    *  (when our newsegment was in BYTES) */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      GST_STREAM_LOCK (pad);
       if (faad->tempbuf != NULL) {
         gst_buffer_unref (faad->tempbuf);
         faad->tempbuf = NULL;
       }
       res = gst_pad_push_event (faad->srcpad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_NEWSEGMENT:
     {
@@ -696,9 +694,7 @@ gst_faad_event (GstPad * pad, GstEvent * event)
             GST_TIME_ARGS (new_end));
       }
 
-      GST_STREAM_LOCK (pad);
       res = gst_pad_push_event (faad->srcpad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     }
     default:
