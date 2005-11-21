@@ -34,6 +34,9 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef _MSC_VER
+#include <io.h>
+#endif
 #include <stdlib.h>
 #include <errno.h>
 
@@ -72,15 +75,28 @@ static GstElementDetails gst_fdsrc_details = GST_ELEMENT_DETAILS ("Disk Source",
     "Synchronous read from a file",
     "Erik Walthinsen <omega@cse.ogi.edu>");
 
-
 enum
 {
   PROP_0,
   PROP_FD,
 };
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_fdsrc_debug, "fdsrc", 0, "fdsrc element");
+static void gst_fdsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
+
+static void
+_do_init (GType fdsrc_type)
+{
+  static const GInterfaceInfo urihandler_info = {
+    gst_fdsrc_uri_handler_init,
+    NULL,
+    NULL
+  };
+
+  g_type_add_interface_static (fdsrc_type, GST_TYPE_URI_HANDLER,
+      &urihandler_info);
+
+  GST_DEBUG_CATEGORY_INIT (gst_fdsrc_debug, "fdsrc", 0, "fdsrc element");
+}
 
 GST_BOILERPLATE_FULL (GstFdSrc, gst_fdsrc, GstElement, GST_TYPE_PUSH_SRC,
     _do_init);
@@ -89,6 +105,7 @@ static void gst_fdsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_fdsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_fdsrc_dispose (GObject * obj);
 
 static gboolean gst_fdsrc_start (GstBaseSrc * bsrc);
 static gboolean gst_fdsrc_stop (GstBaseSrc * bsrc);
@@ -123,6 +140,7 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
 
   gobject_class->set_property = gst_fdsrc_set_property;
   gobject_class->get_property = gst_fdsrc_get_property;
+  gobject_class->dispose = gst_fdsrc_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
@@ -143,7 +161,19 @@ gst_fdsrc_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
   gst_base_src_set_live (GST_BASE_SRC (fdsrc), TRUE);
 
   fdsrc->fd = 0;
+  fdsrc->uri = g_strdup_printf ("fd://%d", fdsrc->fd);
   fdsrc->curoffset = 0;
+}
+
+static void
+gst_fdsrc_dispose (GObject * obj)
+{
+  GstFdSrc *src = GST_FDSRC (obj);
+
+  g_free (src->uri);
+  src->uri = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
 static gboolean
@@ -204,6 +234,8 @@ gst_fdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case PROP_FD:
       src->fd = g_value_get_int (value);
+      g_free (src->uri);
+      src->uri = g_strdup_printf ("fd://%d", src->fd);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -327,4 +359,58 @@ read_error:
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
+}
+
+/*** GSTURIHANDLER INTERFACE *************************************************/
+
+static guint
+gst_fdsrc_uri_get_type (void)
+{
+  return GST_URI_SRC;
+}
+static gchar **
+gst_fdsrc_uri_get_protocols (void)
+{
+  static gchar *protocols[] = { "fd", NULL };
+
+  return protocols;
+}
+static const gchar *
+gst_fdsrc_uri_get_uri (GstURIHandler * handler)
+{
+  GstFdSrc *src = GST_FDSRC (handler);
+
+  return src->uri;
+}
+
+static gboolean
+gst_fdsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  gchar *protocol;
+  GstFdSrc *src = GST_FDSRC (handler);
+  gint fd = src->fd;
+
+  protocol = gst_uri_get_protocol (uri);
+  if (strcmp (protocol, "fd") != 0) {
+    g_free (protocol);
+    return FALSE;
+  }
+  g_free (protocol);
+  sscanf (uri, "fd://%d", &fd);
+  src->fd = fd;
+  g_free (src->uri);
+  src->uri = g_strdup (uri);
+
+  return TRUE;
+}
+
+static void
+gst_fdsrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_fdsrc_uri_get_type;
+  iface->get_protocols = gst_fdsrc_uri_get_protocols;
+  iface->get_uri = gst_fdsrc_uri_get_uri;
+  iface->set_uri = gst_fdsrc_uri_set_uri;
 }

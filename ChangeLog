@@ -1,3 +1,13 @@
+2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/elements/gstfdsrc.c: (_do_init), (gst_fdsrc_class_init),
+	(gst_fdsrc_init), (gst_fdsrc_dispose), (gst_fdsrc_set_property),
+	(gst_fdsrc_uri_get_type), (gst_fdsrc_uri_get_protocols),
+	(gst_fdsrc_uri_get_uri), (gst_fdsrc_uri_set_uri),
+	(gst_fdsrc_uri_handler_init):
+	* gst/elements/gstfdsrc.h:
+	  Port fd:// URI handler from 0.8 to fdsrc
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstvalue.c: (gst_value_transform_fourcc_string),

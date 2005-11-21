@@ -55,6 +55,8 @@ struct _GstFdSrc {
   gint control_sock[2];
 
   gulong curoffset; /* current offset in file */
+
+  gchar *uri;
 };
 
 struct _GstFdSrcClass {
