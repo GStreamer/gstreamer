@@ -892,14 +892,6 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 
   gst_element_set_bus (element, NULL);
 
-  /* unlock any waiters for the state change. It is possible that
-   * we are waiting for an ASYNC state change on this element. The
-   * element cannot be added to another bin yet as it is not yet
-   * unparented. */
-  GST_LOCK (element);
-  GST_STATE_BROADCAST (element);
-  GST_UNLOCK (element);
-
   /* we ref here because after the _unparent() the element can be disposed
    * and we still need it to reset the UNPARENTING flag and fire a signal. */
   gst_object_ref (element);

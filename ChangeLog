@@ -1,5 +1,8 @@
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstbin.c (gst_bin_remove_func): Wim claims I can remove this
+	state_broadcast call.
+
 	* gst/gstsegment.c (gst_segment_init): Initialize abs_rate.
 
 2005-11-21  Julien MOUTTE  <julien@moutte.net>
