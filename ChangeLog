@@ -27,6 +27,20 @@
 	(gst_vorbisenc_chain), (gst_vorbisenc_output_buffers):
 	  Properly handle pad_push return values.
 
+2005-11-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/tag/gstvorbistag.c:
+	(gst_tag_list_to_vorbiscomment_buffer):
+	  Remove obsolete vorbistag element and debug category.
+
+	* gst/playback/gstplaybasebin.c: (check_queue):
+	  Don't divide by 0 when queue-threshold is 0.
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_set_property):
+	  Don't modify an existing pixel-aspect-ratio if we fail to read
+	  a new one.
+
 2005-11-20  Wim Taymans  <wim@fluendo.com>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_push_buffer),
