@@ -490,13 +490,13 @@ G_CONST_RETURN gchar*   gst_element_state_get_name      (GstState state);
 
 gboolean		gst_element_link                (GstElement *src, GstElement *dest);
 gboolean		gst_element_link_many           (GstElement *element_1,
-		                                         GstElement *element_2, ...);
+		                                         GstElement *element_2, ...) G_GNUC_NULL_TERMINATED;
 gboolean		gst_element_link_filtered	(GstElement * src,
                                                          GstElement * dest,
                                                          GstCaps *filter);
 void                    gst_element_unlink              (GstElement *src, GstElement *dest);
 void                    gst_element_unlink_many         (GstElement *element_1,
-		                                         GstElement *element_2, ...);
+		                                         GstElement *element_2, ...) G_GNUC_NULL_TERMINATED;
 
 gboolean		gst_element_link_pads           (GstElement *src, const gchar *srcpadname,
 		                                         GstElement *dest, const gchar *destpadname);
@@ -520,7 +520,7 @@ gboolean                gst_element_query_convert       (GstElement *element, Gs
 
 /* element class functions */
 void			gst_element_class_install_std_props (GstElementClass * klass,
-							 const gchar * first_name, ...);
+							 const gchar * first_name, ...) G_GNUC_NULL_TERMINATED;
 
 /* pad functions */
 gboolean                gst_pad_can_link                (GstPad *srcpad, GstPad *sinkpad);
@@ -541,8 +541,8 @@ gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat 
 		                                         GstFormat *dest_format, gint64 *dest_val);
 
 /* bin functions */
-void			gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...);
-void			gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...);
+void			gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
+void			gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
 
 /* buffer functions */
 GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);

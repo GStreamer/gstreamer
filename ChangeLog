@@ -1,5 +1,11 @@
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gsttagsetter.h: 
+	* gst/gsttaglist.h: 
+	* gst/gststructure.h: 
+	* gst/gstcaps.h: 
+	* gst/gstutils.h: Sprinkle NULL_TERMINATED to taste.
+
 	* gst/gsterror.c (_gst_core_errors_init):
 	* gst/gsterror.h (GST_CORE_ERROR_MISSING_PLUGIN): New error
 	category.

@@ -114,7 +114,7 @@ void                    gst_structure_set_value            (GstStructure        
 							    const GValue            *value);
 void                    gst_structure_set                  (GstStructure            *structure,
 							    const gchar             *fieldname,
-							    ...);
+							    ...) G_GNUC_NULL_TERMINATED;
 void                    gst_structure_set_valist           (GstStructure            *structure,
 							    const gchar             *fieldname,
 							    va_list varargs);
@@ -126,7 +126,7 @@ void                    gst_structure_remove_field         (GstStructure        
 							    const gchar             *fieldname);
 void                    gst_structure_remove_fields        (GstStructure            *structure,
 							     const gchar            *fieldname,
-							    ...);
+							    ...) G_GNUC_NULL_TERMINATED;
 void                    gst_structure_remove_fields_valist (GstStructure             *structure,
 							    const gchar             *fieldname,
 							    va_list                  varargs);

@@ -113,11 +113,11 @@ guint		gst_tag_list_get_tag_size	(const GstTagList *	list,
 void		gst_tag_list_add		(GstTagList *		list,
 						 GstTagMergeMode	mode,
 						 const gchar *		tag,
-						 ...);
+						 ...) G_GNUC_NULL_TERMINATED;
 void		gst_tag_list_add_values		(GstTagList *		list,
 						 GstTagMergeMode	mode,
 						 const gchar *		tag,
-						 ...);
+						 ...) G_GNUC_NULL_TERMINATED;
 void		gst_tag_list_add_valist		(GstTagList *		list,
 						 GstTagMergeMode	mode,
 						 const gchar *		tag,

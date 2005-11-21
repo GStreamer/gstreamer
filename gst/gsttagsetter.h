@@ -54,12 +54,12 @@ void		gst_tag_setter_merge		(GstTagSetter *		setter,
 void		gst_tag_setter_add		(GstTagSetter *		setter,
 						 GstTagMergeMode	mode,
 						 const gchar *		tag,
-					         ...);
+					         ...) G_GNUC_NULL_TERMINATED;
 
 void		gst_tag_setter_add_values	(GstTagSetter *		setter,
 						 GstTagMergeMode	mode,
 						 const gchar *		tag,
-					         ...);
+					         ...) G_GNUC_NULL_TERMINATED;
 
 void            gst_tag_setter_add_valist     	(GstTagSetter *		setter,
 						 GstTagMergeMode	mode,
