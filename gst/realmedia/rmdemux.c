@@ -316,7 +316,7 @@ gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
         goto done_unref;
       }
 
-      GST_LOCK (rmdemux);
+      GST_OBJECT_LOCK (rmdemux);
 
       if (cur_type == GST_SEEK_TYPE_SET)
         rmdemux->segment_start = cur;
@@ -334,7 +334,7 @@ gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
 
       /* Now do a sanity-check */
       if (rmdemux->segment_stop < rmdemux->segment_start) {
-        GST_UNLOCK (rmdemux);
+        GST_OBJECT_UNLOCK (rmdemux);
         ret = FALSE;
         GST_DEBUG_OBJECT (rmdemux, "Seek had stop " G_GUINT64_FORMAT " < start "
             G_GUINT64_FORMAT ", cannot perform seek",
@@ -352,7 +352,7 @@ gst_rmdemux_src_event (GstPad * pad, GstEvent * event)
 
       /* check if we can do the seek now */
       running = rmdemux->running;
-      GST_UNLOCK (rmdemux);
+      GST_OBJECT_UNLOCK (rmdemux);
 
       /* now do the seek */
       if (running) {
@@ -684,9 +684,9 @@ gst_rmdemux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_adapter_clear (rmdemux->adapter);
-      GST_LOCK (rmdemux);
+      GST_OBJECT_LOCK (rmdemux);
       rmdemux->running = FALSE;
-      GST_UNLOCK (rmdemux);
+      GST_OBJECT_UNLOCK (rmdemux);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -810,10 +810,10 @@ gst_rmdemux_loop (GstPad * pad)
       /* The index isn't available so forget about it */
       rmdemux->loop_state = RMDEMUX_LOOP_STATE_DATA;
       rmdemux->offset = rmdemux->data_offset;
-      GST_LOCK (rmdemux);
+      GST_OBJECT_LOCK (rmdemux);
       rmdemux->running = TRUE;
       rmdemux->seekable = FALSE;
-      GST_UNLOCK (rmdemux);
+      GST_OBJECT_UNLOCK (rmdemux);
       return;
     } else {
       GST_DEBUG_OBJECT (rmdemux,
@@ -848,9 +848,9 @@ gst_rmdemux_loop (GstPad * pad)
           /* We've read the last index */
           rmdemux->loop_state = RMDEMUX_LOOP_STATE_DATA;
           rmdemux->offset = rmdemux->data_offset;
-          GST_LOCK (rmdemux);
+          GST_OBJECT_LOCK (rmdemux);
           rmdemux->running = TRUE;
-          GST_UNLOCK (rmdemux);
+          GST_OBJECT_UNLOCK (rmdemux);
         } else {
           /* Get the next index */
           rmdemux->offset = rmdemux->index_offset;

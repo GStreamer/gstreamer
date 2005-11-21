@@ -459,9 +459,9 @@ gst_amrnbparse_sink_activate (GstPad * sinkpad)
 
   amrnbparse = GST_AMRNBPARSE (GST_OBJECT_PARENT (sinkpad));
 
-  GST_LOCK (sinkpad);
+  GST_OBJECT_LOCK (sinkpad);
   mode = GST_PAD_ACTIVATE_MODE (sinkpad);
-  GST_UNLOCK (sinkpad);
+  GST_OBJECT_UNLOCK (sinkpad);
 
   switch (mode) {
     case GST_ACTIVATE_PUSH:

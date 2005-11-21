@@ -615,9 +615,9 @@ gst_a52dec_set_property (GObject * object, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case ARG_DRC:
-      GST_LOCK (src);
+      GST_OBJECT_LOCK (src);
       src->dynamic_range_compression = g_value_get_boolean (value);
-      GST_UNLOCK (src);
+      GST_OBJECT_UNLOCK (src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -633,9 +633,9 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case ARG_DRC:
-      GST_LOCK (src);
+      GST_OBJECT_LOCK (src);
       g_value_set_boolean (value, src->dynamic_range_compression);
-      GST_UNLOCK (src);
+      GST_OBJECT_UNLOCK (src);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
