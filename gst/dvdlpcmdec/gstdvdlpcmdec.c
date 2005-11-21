@@ -442,9 +442,6 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
   if (dvdlpcmdec->rate == 0)
     goto not_negotiated;
 
-  if (!GST_PAD_IS_USABLE (dvdlpcmdec->srcpad))
-    goto disabled;
-
   /* We don't currently do anything at all regarding emphasis, mute or 
    * dynamic_range - I'm not sure what they're for */
   switch (dvdlpcmdec->width) {
@@ -559,13 +556,6 @@ not_negotiated:
         ("Buffer pushed before negotiation"));
     gst_buffer_unref (buf);
     ret = GST_FLOW_NOT_NEGOTIATED;
-    goto done;
-  }
-disabled:
-  {
-    GST_DEBUG_OBJECT (dvdlpcmdec, "Discarding buffer on disabled pad");
-    gst_buffer_unref (buf);
-    ret = GST_FLOW_NOT_LINKED;
     goto done;
   }
 buffer_alloc_failed:

@@ -1,3 +1,11 @@
+2005-11-21  Edward Hervey  <edward@fluendo.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain_raw):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_chain),
+	(gst_rmdemux_add_stream), (gst_rmdemux_parse_mdpr),
+	(gst_rmdemux_parse_packet):
+	Modifications for disapearance of GST_PAD_IS_USABLE()
+
 2005-11-18  Michael Smith <msmith@fluendo.com>
 
 	* gst/iec958/ac3iec.c: (ac3iec_init), (ac3iec_chain_dvd):
