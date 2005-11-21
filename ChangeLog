@@ -1,3 +1,7 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstsegment.c (gst_segment_init): Initialize abs_rate.
+
 2005-11-21  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/gstvalue.c: (gst_value_intersect_array): Fix wrong

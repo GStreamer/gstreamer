@@ -51,6 +51,7 @@ gst_segment_init (GstSegment * segment, GstFormat format)
   g_return_if_fail (segment != NULL);
 
   segment->rate = 1.0;
+  segment->abs_rate = 1.0;
   segment->format = format;
   segment->flags = 0;
   segment->start = 0;
