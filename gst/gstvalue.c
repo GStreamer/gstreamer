@@ -2691,21 +2691,6 @@ gst_value_is_fixed (const GValue * value)
     return fixed;
   }
 
-  if (type == GST_TYPE_LIST) {
-    gboolean fixed = TRUE;
-    gint size, n;
-    const GValue *kid;
-
-    /* check recursively */
-    size = gst_value_list_get_size (value);
-    for (n = 0; n < size; n++) {
-      kid = gst_value_list_get_value (value, n);
-      fixed &= gst_value_is_fixed (kid);
-    }
-
-    return fixed;
-  }
-
   return gst_type_is_fixed (type);
 }
 
