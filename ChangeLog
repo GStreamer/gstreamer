@@ -1,3 +1,11 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer.types:
+	  gst_collectpads_get_type => gst_collect_pads_get_type.
+	  
+	* gst/base/gstbasetransform.c:
+	  Remove unused SIGNAL_HANDOFF enum.
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstevent.h (GstEventTypeFlags): New data type, the flags of
@@ -32,7 +40,8 @@
 	(gst_collect_pads_chain):
 	* gst/base/gstcollectpads.h:
 	  Rename gst_collecpads_foo() => gst_collect_pads_foo(). Document
-	  unimplemented functions as unimplemented (#320766).
+	  unimplemented functions as unimplemented. Add padding to
+	  GstCollectData. (#320766, #320423)
 
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 

@@ -47,7 +47,7 @@ gst_adapter_get_type
 gst_base_src_get_type
 gst_base_sink_get_type
 gst_base_transform_get_type
-gst_collectpads_get_type
+gst_collect_pads_get_type
 gst_push_src_get_type
 
 % elements

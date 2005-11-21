@@ -198,7 +198,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_base_transform_debug);
 /* BaseTransform signals and args */
 enum
 {
-  SIGNAL_HANDOFF,
   /* FILL ME */
   LAST_SIGNAL
 };
