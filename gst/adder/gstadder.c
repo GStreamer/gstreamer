@@ -286,8 +286,8 @@ gst_adder_init (GstAdder * adder)
   adder->func = NULL;
 
   /* keep track of the sinkpads requested */
-  adder->collect = gst_collectpads_new ();
-  gst_collectpads_set_function (adder->collect, gst_adder_collected, adder);
+  adder->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_function (adder->collect, gst_adder_collected, adder);
 }
 
 static void
@@ -320,7 +320,7 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_pad_set_getcaps_function (newpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_setcaps_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_setcaps));
-  gst_collectpads_add_pad (adder->collect, newpad, sizeof (GstCollectData));
+  gst_collect_pads_add_pad (adder->collect, newpad, sizeof (GstCollectData));
   if (!gst_element_add_pad (GST_ELEMENT (adder), newpad))
     goto could_not_add;
 
@@ -336,7 +336,7 @@ not_sink:
   }
 could_not_add:
   {
-    gst_collectpads_remove_pad (adder->collect, newpad);
+    gst_collect_pads_remove_pad (adder->collect, newpad);
     gst_object_unref (newpad);
     return NULL;
   }
@@ -365,7 +365,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   adder = GST_ADDER (user_data);
 
   /* get available bytes for reading */
-  size = gst_collectpads_available (pads);
+  size = gst_collect_pads_available (pads);
   if (size == 0)
     return GST_FLOW_OK;
 
@@ -388,7 +388,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     GST_LOG_OBJECT (adder, "looking into channel %p", data);
 
     /* get pointer to copy size bytes */
-    len = gst_collectpads_read (pads, data, &bytes, size);
+    len = gst_collect_pads_read (pads, data, &bytes, size);
     if (len == 0)
       continue;
 
@@ -410,7 +410,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
       /* other buffers, need to add them */
       adder->func ((gpointer) outbytes, (gpointer) bytes, len);
     }
-    gst_collectpads_flush (pads, data, len);
+    gst_collect_pads_flush (pads, data, len);
   }
 
   /* set timestamps on the output buffer */
@@ -459,14 +459,14 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       adder->timestamp = 0;
       adder->offset = 0;
-      gst_collectpads_start (adder->collect);
+      gst_collect_pads_start (adder->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* need to unblock the collectpads before calling the
        * parent change_state so that streaming can finish */
-      gst_collectpads_stop (adder->collect);
+      gst_collect_pads_stop (adder->collect);
       break;
     default:
       break;

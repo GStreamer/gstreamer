@@ -289,8 +289,8 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
   /* seed random number generator for creation of serial numbers */
   srand (time (NULL));
 
-  ogg_mux->collect = gst_collectpads_new ();
-  gst_collectpads_set_function (ogg_mux->collect,
+  ogg_mux->collect = gst_collect_pads_new ();
+  gst_collect_pads_set_function (ogg_mux->collect,
       (GstCollectPadsFunction) gst_ogg_mux_collected, ogg_mux);
 
   gst_ogg_mux_clear (ogg_mux);
@@ -371,7 +371,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       GstOggPad *oggpad;
 
       oggpad = (GstOggPad *)
-          gst_collectpads_add_pad (ogg_mux->collect, newpad,
+          gst_collect_pads_add_pad (ogg_mux->collect, newpad,
           sizeof (GstOggPad));
 
       oggpad->serial = serial;
@@ -385,7 +385,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       oggpad->first_delta = FALSE;
       oggpad->prev_delta = FALSE;
       /* TODO: delete this queue (and the things contained within) later,
-       * possibly when doing gst_collectpads_remove_pad() (which we don't seem
+       * possibly when doing gst_collect_pads_remove_pad() (which we don't seem
        * to do at all?)
        */
       oggpad->pagebuffers = g_queue_new ();
@@ -660,7 +660,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
       GstBuffer *buf;
       gboolean incaps;
 
-      buf = gst_collectpads_pop (ogg_mux->collect, data);
+      buf = gst_collect_pads_pop (ogg_mux->collect, data);
       GST_DEBUG_OBJECT (ogg_mux, "popping buffer %p", buf);
 
       /* On EOS we get a NULL buffer */
@@ -1303,7 +1303,7 @@ gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
     }
     g_queue_free (pad->pagebuffers);
 
-    gst_collectpads_remove_pad (collect, ((GstCollectData *) pad)->pad);
+    gst_collect_pads_remove_pad (collect, ((GstCollectData *) pad)->pad);
     walk = collect->data;
   }
 }
@@ -1323,13 +1323,13 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
       ogg_mux->next_ts = 0;
       ogg_mux->offset = 0;
       ogg_mux->pulling = NULL;
-      gst_collectpads_start (ogg_mux->collect);
+      gst_collect_pads_start (ogg_mux->collect);
       gst_ogg_mux_clear (ogg_mux);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collectpads_stop (ogg_mux->collect);
+      gst_collect_pads_stop (ogg_mux->collect);
       break;
     default:
       break;

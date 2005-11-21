@@ -1,3 +1,14 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init),
+	(gst_ogg_mux_request_new_pad), (gst_ogg_mux_queue_pads),
+	(gst_ogg_mux_clear_collectpads), (gst_ogg_mux_change_state):
+	* gst/adder/gstadder.c: (gst_adder_init),
+	(gst_adder_request_new_pad), (gst_adder_collected),
+	(gst_adder_change_state):
+	  Update for gst_collectpads_foo() to gst_collect_pads_foo()
+	  API change.
+
 2005-11-21  Michael Smith <msmith@fluendo.com>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_clear),
