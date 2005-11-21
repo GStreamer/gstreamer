@@ -324,8 +324,6 @@ static void
 gst_fake_src_init (GstFakeSrc * fakesrc, GstFakeSrcClass * g_class)
 {
   fakesrc->output = FAKE_SRC_FIRST_LAST_LOOP;
-  fakesrc->segment_start = -1;
-  fakesrc->segment_end = -1;
   fakesrc->buffer_count = 0;
   fakesrc->silent = DEFAULT_SILENT;
   fakesrc->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
@@ -686,12 +684,6 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   GstClockTime time;
 
   src = GST_FAKE_SRC (basesrc);
-
-  if (src->buffer_count == src->segment_end) {
-    GST_INFO ("buffer_count reaches segment_end %d %d", src->buffer_count,
-        src->segment_end);
-    return GST_FLOW_UNEXPECTED;
-  }
 
   buf = gst_fake_src_create_buffer (src);
   GST_BUFFER_OFFSET (buf) = src->buffer_count++;

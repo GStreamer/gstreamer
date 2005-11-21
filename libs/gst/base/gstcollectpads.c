@@ -196,6 +196,7 @@ gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
   data->collect = pads;
   data->pad = pad;
   data->buffer = NULL;
+  gst_segment_init (&data->segment, GST_FORMAT_UNDEFINED);
 
   GST_OBJECT_LOCK (pads);
   pads->data = g_slist_append (pads->data, data);
@@ -599,20 +600,16 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_NEWSEGMENT:
     {
-      gint64 segment_start, segment_stop, stream_time;
-      gdouble segment_rate;
+      gint64 start, stop, time;
+      gdouble rate;
       GstFormat format;
       gboolean update;
 
-      gst_event_parse_newsegment (event, &update, &segment_rate, &format,
-          &segment_start, &segment_stop, &stream_time);
+      gst_event_parse_newsegment (event, &update, &rate, &format,
+          &start, &stop, &time);
 
-      if (format == GST_FORMAT_TIME) {
-        data->segment_start = segment_start;
-        data->segment_stop = segment_stop;
-        data->stream_time = stream_time;
-      }
-
+      gst_segment_set_newsegment (&data->segment, update, rate, format,
+          start, stop, time);
       goto beach;
     }
     default:

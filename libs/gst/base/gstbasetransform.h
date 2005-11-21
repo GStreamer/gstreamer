@@ -65,6 +65,7 @@ struct _GstBaseTransform {
   guint		 cache_caps1_size;
   GstCaps	*cache_caps2;
   guint		 cache_caps2_size;
+  gboolean	 have_same_caps;
 
   gboolean	 delay_configure;
   gboolean	 pending_configure;
@@ -73,22 +74,12 @@ struct _GstBaseTransform {
   gboolean       have_newsegment;
 
   /* MT-protected (with STREAM_LOCK) */
-  gdouble        segment_rate;
-  gint64         segment_start;
-  gint64         segment_stop;
-  gint64         segment_base;
+  GstSegment     segment;
 
-  union {
-    /* FIXME: When adjusting the padding, move this to a nice place in the structure */
-    /* Set if caps on each pad are equal */
-    struct {
-      gboolean	 have_same_caps;
-      GMutex	*transform_lock;
-      gint64     segment_accum;
-    };
-    /*< private >*/
-    gpointer       _gst_reserved[GST_PADDING-1+1];
-  };
+  GMutex	*transform_lock;
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -165,15 +156,16 @@ struct _GstBaseTransformClass {
   gpointer       _gst_reserved[GST_PADDING - 2];
 };
 
-void		gst_base_transform_set_passthrough (GstBaseTransform *trans,
-	            gboolean passthrough);
-gboolean	gst_base_transform_is_passthrough (GstBaseTransform *trans);
+GType           gst_base_transform_get_type         (void);
 
-void		gst_base_transform_set_in_place (GstBaseTransform *trans,
-	            gboolean in_place);
-gboolean	gst_base_transform_is_in_place (GstBaseTransform *trans);
+void		gst_base_transform_set_passthrough  (GstBaseTransform *trans,
+	                                             gboolean passthrough);
+gboolean	gst_base_transform_is_passthrough   (GstBaseTransform *trans);
 
-GType gst_base_transform_get_type (void);
+void		gst_base_transform_set_in_place     (GstBaseTransform *trans,
+	                                             gboolean in_place);
+gboolean	gst_base_transform_is_in_place      (GstBaseTransform *trans);
+
 
 G_END_DECLS
 

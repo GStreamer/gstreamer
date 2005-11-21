@@ -55,9 +55,7 @@ struct _GstCollectData
   GstPad		*pad;
   GstBuffer		*buffer;
   guint			 pos;
-  gint64		 segment_start;
-  gint64		 segment_stop;
-  gint64		 stream_time;
+  GstSegment             segment;
 
   /*< private >*/
   gpointer               _gst_reserved[GST_PADDING];

@@ -80,15 +80,7 @@ struct _GstBaseSink {
 
   /*< protected >*/ /* with STREAM_LOCK */
   gboolean	 have_newsegment;
-  gdouble	 segment_rate;
-  gint64	 segment_start;
-  gint64	 segment_stop;
-  gint64	 segment_time;
-  gint64	 segment_accum;
-
-  gint64	 current_start;
-  gint64	 current_duration;
-  gint64	 current_end;
+  GstSegment     segment;
 
   /*< private >*/ /* with LOCK */
   GstClock	*clock;

@@ -96,9 +96,7 @@ struct _GstFakeSrc {
   gint		 datarate;
   gboolean	 sync;
   GstClock	*clock;
-  gint64	 segment_start;
-  gint64	 segment_end;
-  gboolean	 segment_loop;
+
   gint		 num_buffers;
   gint		 rt_num_buffers; /* we are going to change this at runtime */
   gint64	 buffer_count;

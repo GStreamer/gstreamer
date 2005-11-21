@@ -72,7 +72,8 @@ void		gst_segment_set_last_stop	(GstSegment *segment, GstFormat format, gint64 p
 void		gst_segment_set_seek		(GstSegment *segment, gdouble rate, 
 						 GstFormat format, GstSeekFlags flags, 
 						 GstSeekType cur_type, gint64 cur,
-						 GstSeekType stop_type, gint64 stop);
+						 GstSeekType stop_type, gint64 stop,
+						 gboolean *update);
 
 void		gst_segment_set_newsegment	(GstSegment *segment, gboolean update, gdouble rate,
 						 GstFormat format, gint64 start, gint64 stop, gint64 time);

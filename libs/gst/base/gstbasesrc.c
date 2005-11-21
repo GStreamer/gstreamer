@@ -229,8 +229,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
 
   basesrc->blocksize = DEFAULT_BLOCKSIZE;
   basesrc->clock_id = NULL;
-  basesrc->segment_start = 0;
-  basesrc->segment_end = -1;
+  gst_segment_init (&basesrc->segment, GST_FORMAT_BYTES);
 
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
 
@@ -411,9 +410,9 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
     {
       gint64 start, stop;
 
-      start = src->segment_start;
+      start = src->segment.start;
       /* no end segment configured, current size then */
-      if ((stop = src->segment_end) == -1)
+      if ((stop = src->segment.stop) == -1)
         stop = src->size;
 
       /* FIXME, we can't report our rate as we did not store it, d'oh!.
@@ -448,11 +447,11 @@ gst_base_src_default_newsegment (GstBaseSrc * src)
   GstEvent *event;
 
   GST_DEBUG_OBJECT (src, "Sending newsegment from %" G_GINT64_FORMAT
-      " to %" G_GINT64_FORMAT, src->segment_start, src->segment_end);
+      " to %" G_GINT64_FORMAT, src->segment.start, src->segment.stop);
 
   event = gst_event_new_newsegment (FALSE, 1.0,
-      GST_FORMAT_BYTES, src->segment_start, src->segment_end,
-      src->segment_start);
+      GST_FORMAT_BYTES, src->segment.start, src->segment.stop,
+      src->segment.start);
 
   return gst_pad_push_event (src->srcpad, event);
 }
@@ -471,7 +470,7 @@ gst_base_src_newsegment (GstBaseSrc * src)
   return result;
 }
 
-/* based on the event parameters configure the segment_start/stop
+/* based on the event parameters configure the segment.start/stop
  * times. Called with STREAM_LOCK.
  */
 static gboolean
@@ -482,84 +481,20 @@ gst_base_src_configure_segment (GstBaseSrc * src, GstEvent * event)
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
-  gboolean update_stop, update_start;
+  gboolean update;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
 
-  /* parse the loop flag */
-  /* FIXME, need to store other flags and rate too */
-  src->segment_loop = (flags & GST_SEEK_FLAG_SEGMENT) != 0;
-
-  /* assume we'll update both start and stop values */
-  update_start = TRUE;
-  update_stop = TRUE;
-
-  /* perform the seek, segment_start is never invalid */
-  switch (cur_type) {
-    case GST_SEEK_TYPE_NONE:
-      /* no update to segment */
-      cur = src->segment_start;
-      update_start = FALSE;
-      break;
-    case GST_SEEK_TYPE_SET:
-      /* cur holds desired position */
-      break;
-    case GST_SEEK_TYPE_CUR:
-      /* add cur to currently configure segment */
-      cur = src->segment_start + cur;
-      break;
-    case GST_SEEK_TYPE_END:
-      /* add cur to total length */
-      cur = src->size + cur;
-      break;
-  }
-  /* bring in sane range */
-  if (src->size != -1)
-    cur = CLAMP (cur, 0, src->size);
-  else
-    cur = MAX (cur, 0);
-
-  /* segment_end can be -1 if we have not configured a stop. */
-  switch (stop_type) {
-    case GST_SEEK_TYPE_NONE:
-      stop = src->segment_end;
-      update_stop = FALSE;
-      break;
-    case GST_SEEK_TYPE_SET:
-      /* stop folds required value */
-      break;
-    case GST_SEEK_TYPE_CUR:
-      if (src->segment_end != -1)
-        stop = src->segment_end + stop;
-      else
-        stop = -1;
-      break;
-    case GST_SEEK_TYPE_END:
-      if (src->size != -1)
-        stop = src->size + stop;
-      else
-        stop = -1;
-      break;
-  }
-
-  /* if we have a valid stop time, make sure it is clipped */
-  if (stop != -1) {
-    if (src->size != -1)
-      stop = CLAMP (stop, 0, src->size);
-    else
-      stop = MAX (stop, 0);
-  }
-
-  src->segment_start = cur;
-  src->segment_end = stop;
+  gst_segment_set_seek (&src->segment, rate, format, flags,
+      cur_type, cur, stop_type, stop, &update);
 
   /* update our offset if it was updated */
-  if (update_start)
+  if (update)
     src->offset = cur;
 
   GST_DEBUG_OBJECT (src, "segment configured from %" G_GINT64_FORMAT
-      " to %" G_GINT64_FORMAT, src->segment_start, src->segment_end);
+      " to %" G_GINT64_FORMAT, src->segment.start, src->segment.stop);
 
   return TRUE;
 }
@@ -567,9 +502,9 @@ gst_base_src_configure_segment (GstBaseSrc * src, GstEvent * event)
 /* this code implements the seeking. It is a good example
  * handling all cases (modulo the FIXMEs).
  *
- * A seek updates the currently configured segment_start
- * and segment_stop values based on the SEEK_TYPE. If the
- * segment_start value is updated, a seek to this new position
+ * A seek updates the currently configured segment.start
+ * and segment.stop values based on the SEEK_TYPE. If the
+ * segment.start value is updated, a seek to this new position
  * should be performed.
  *
  * The seek can only be executed when we are not currently
@@ -592,13 +527,13 @@ gst_base_src_configure_segment (GstBaseSrc * src, GstEvent * event)
  * can continue the seek. A non-flushing seek is normally done in a 
  * running pipeline to perform seamless playback.
  *
- * After updating the segment_start/stop values, we prepare for
+ * After updating the segment.start/stop values, we prepare for
  * streaming again. We push out a FLUSH_STOP to make the peer pad
  * accept data again and we start our task again.
  *
  * A segment seek posts a message on the bus saying that the playback
  * of the segment started. We store the segment flag internally because
- * when we reach the segment_stop we have to post a segment_done
+ * when we reach the segment.stop we have to post a segment.done
  * instead of EOS when doing a segment seek.
  */
 static gboolean
@@ -648,11 +583,11 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
    * thread. We could opt to send it here too. */
   src->need_newsegment = TRUE;
 
-  if (src->segment_loop) {
+  if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
     /* FIXME subclasses should be able to provide other formats */
     gst_element_post_message (GST_ELEMENT (src),
         gst_message_new_segment_start (GST_OBJECT (src), GST_FORMAT_BYTES,
-            src->segment_start));
+            src->segment.start));
   }
 
   /* and restart the task in case it got paused explicitely or by
@@ -906,16 +841,16 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
     goto no_function;
 
   /* the max amount of bytes to read is the total size or
-   * up to the segment_end if present. */
-  if (src->segment_end != -1)
-    maxsize = MIN (src->size, src->segment_end);
+   * up to the segment.stop if present. */
+  if (src->segment.stop != -1)
+    maxsize = MIN (src->size, src->segment.stop);
   else
     maxsize = src->size;
 
   GST_DEBUG_OBJECT (src,
       "reading offset %" G_GUINT64_FORMAT ", length %u, size %" G_GINT64_FORMAT
-      ", segment_end %" G_GINT64_FORMAT ", maxsize %" G_GINT64_FORMAT, offset,
-      length, src->size, src->segment_end, maxsize);
+      ", segment.stop %" G_GINT64_FORMAT ", maxsize %" G_GINT64_FORMAT, offset,
+      length, src->size, src->segment.stop, maxsize);
 
   /* check size */
   if (maxsize != -1) {
@@ -927,8 +862,8 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
       if (bclass->get_size)
         bclass->get_size (src, &src->size);
 
-      if (src->segment_end != -1)
-        maxsize = MIN (src->size, src->segment_end);
+      if (src->segment.stop != -1)
+        maxsize = MIN (src->size, src->segment.stop);
       else
         maxsize = src->size;
 
@@ -1072,11 +1007,11 @@ eos:
   {
     GST_DEBUG_OBJECT (src, "going to EOS, getrange returned UNEXPECTED");
     gst_pad_pause_task (pad);
-    if (src->segment_loop) {
+    if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
       /* FIXME, subclass might want to use another format */
       gst_element_post_message (GST_ELEMENT (src),
           gst_message_new_segment_done (GST_OBJECT (src),
-              GST_FORMAT_BYTES, src->segment_end));
+              GST_FORMAT_BYTES, src->segment.stop));
     } else {
       gst_pad_push_event (pad, gst_event_new_eos ());
     }
@@ -1493,9 +1428,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       /* we always run from start to end when in READY, after putting
        * the element to READY a seek can be done on the element to
        * configure the segment when going to PAUSED. */
-      basesrc->segment_loop = FALSE;
-      basesrc->segment_start = 0;
-      basesrc->segment_end = -1;
+      gst_segment_init (&basesrc->segment, GST_FORMAT_BYTES);
       basesrc->offset = 0;
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -1510,9 +1443,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       if (!gst_base_src_stop (basesrc))
         goto error_stop;
       /* we always run from start to end when in READY */
-      basesrc->segment_loop = FALSE;
-      basesrc->segment_start = 0;
-      basesrc->segment_end = -1;
+      gst_segment_init (&basesrc->segment, GST_FORMAT_BYTES);
       basesrc->offset = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:

@@ -77,7 +77,11 @@ gst_segment_set_duration (GstSegment * segment, GstFormat format,
     gint64 duration)
 {
   g_return_if_fail (segment != NULL);
-  g_return_if_fail (segment->format == format);
+
+  if (segment->format == GST_FORMAT_UNDEFINED)
+    segment->format = format;
+  else
+    g_return_if_fail (segment->format == format);
 
   segment->duration = duration;
 }
@@ -95,7 +99,11 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
     gint64 position)
 {
   g_return_if_fail (segment != NULL);
-  g_return_if_fail (segment->format == format);
+
+  if (segment->format == GST_FORMAT_UNDEFINED)
+    segment->format = format;
+  else
+    g_return_if_fail (segment->format == format);
 
   segment->last_stop = position;
 }
@@ -110,19 +118,26 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
  * @cur: the seek start value
  * @stop_type: the seek method
  * @stop: the seek stop value
+ * @update: boolean holding whether an update the current segment is
+ *    needed.
  *
  * Update the segment structure with the field values of a seek event.
  */
 void
 gst_segment_set_seek (GstSegment * segment, gdouble rate,
     GstFormat format, GstSeekFlags flags,
-    GstSeekType cur_type, gint64 cur, GstSeekType stop_type, gint64 stop)
+    GstSeekType cur_type, gint64 cur,
+    GstSeekType stop_type, gint64 stop, gboolean * update)
 {
   gboolean update_stop, update_start;
 
   g_return_if_fail (rate != 0.0);
   g_return_if_fail (segment != NULL);
-  g_return_if_fail (segment->format == format);
+
+  if (segment->format == GST_FORMAT_UNDEFINED)
+    segment->format = format;
+  else
+    g_return_if_fail (segment->format == format);
 
   update_stop = update_start = TRUE;
 
@@ -199,6 +214,9 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
   segment->flags = flags;
   segment->start = cur;
   segment->stop = stop;
+
+  if (update)
+    *update = update_start || update_stop;
 }
 
 /**
@@ -221,6 +239,9 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
 
   g_return_if_fail (rate != 0.0);
   g_return_if_fail (segment != NULL);
+
+  if (segment->format == GST_FORMAT_UNDEFINED)
+    segment->format = format;
 
   /* any other format with 0 also gives time 0, the other values are
    * invalid in the format though. */
@@ -283,12 +304,22 @@ gint64
 gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
     gint64 position)
 {
-  gint64 result;
+  gint64 result, time;
 
   g_return_val_if_fail (segment != NULL, FALSE);
-  g_return_val_if_fail (segment->format == format, FALSE);
 
-  result = ((position - segment->start) / segment->abs_rate) + segment->time;
+  if (segment->format == GST_FORMAT_UNDEFINED)
+    segment->format = format;
+  else
+    g_return_val_if_fail (segment->format == format, FALSE);
+
+  if ((time = segment->time) == -1)
+    time = 0;
+
+  if (position != -1)
+    result = ((position - segment->start) / segment->abs_rate) + time;
+  else
+    result = -1;
 
   return result;
 }
@@ -313,10 +344,17 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
 {
   gint64 result;
 
-  g_return_val_if_fail (segment != NULL, FALSE);
-  g_return_val_if_fail (segment->format == format, FALSE);
+  g_return_val_if_fail (segment != NULL, -1);
 
-  result = ((position - segment->start) / segment->abs_rate) + segment->accum;
+  if (segment->format == GST_FORMAT_UNDEFINED)
+    segment->format = format;
+  else
+    g_return_val_if_fail (segment->format == format, -1);
+
+  if (position != -1)
+    result = ((position - segment->start) / segment->abs_rate) + segment->accum;
+  else
+    result = -1;
 
   return result;
 }
@@ -341,7 +379,11 @@ gst_segment_clip (GstSegment * segment, GstFormat format, gint64 start,
     gint64 stop, gint64 * clip_start, gint64 * clip_stop)
 {
   g_return_val_if_fail (segment != NULL, FALSE);
-  g_return_val_if_fail (segment->format == format, FALSE);
+
+  if (segment->format == GST_FORMAT_UNDEFINED)
+    segment->format = format;
+  else
+    g_return_val_if_fail (segment->format == format, FALSE);
 
   /* we need a valid start position */
   if (start == -1)

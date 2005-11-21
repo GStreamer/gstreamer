@@ -579,81 +579,28 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
         gboolean update;
         gdouble rate;
         GstFormat format;
-        gint64 segment_start;
-        gint64 segment_stop;
-        gint64 segment_time;
-        GstClockTime duration;
+        gint64 start;
+        gint64 stop;
+        gint64 time;
 
         /* the newsegment event is needed to bring the buffer timestamps to the
          * stream time and to drop samples outside of the playback segment. */
         gst_event_parse_newsegment (event, &update, &rate, &format,
-            &segment_start, &segment_stop, &segment_time);
+            &start, &stop, &time);
 
         basesink->have_newsegment = TRUE;
 
-        /* any other format with 0 also gives time 0, the other values are
-         * invalid as time though. */
-        if (format != GST_FORMAT_TIME && segment_start == 0) {
-          GST_DEBUG_OBJECT (basesink,
-              "non-time newsegment with start 0, coaxing into FORMAT_TIME");
-          format = GST_FORMAT_TIME;
-          if (segment_stop != 0)
-            segment_stop = -1;
-          if (segment_time != 0)
-            segment_time = -1;
-        }
-
-        if (format != GST_FORMAT_TIME) {
-          GST_DEBUG_OBJECT (basesink,
-              "received non time %d NEW_SEGMENT %" G_GINT64_FORMAT
-              " -- %" G_GINT64_FORMAT ", time %" G_GINT64_FORMAT,
-              format, segment_start, segment_stop, segment_time);
-
-          /* this means this sink will not be able to clip or drop samples
-           * and timestamps have to start from 0. */
-          basesink->segment_start = -1;
-          basesink->segment_stop = -1;
-          basesink->segment_time = -1;
-          goto done_newsegment;
-        }
-        /* check if we really have a new segment or the previous one is
-         * closed */
-        if (!update) {
-          /* the new segment has to be aligned with the old segment.
-           * We first update the accumulated time of the previous
-           * segment. the accumulated time is used when syncing to the
-           * clock. A flush event sets the accumulated time back to 0
-           */
-          if (GST_CLOCK_TIME_IS_VALID (basesink->segment_stop)) {
-            duration = basesink->segment_stop - basesink->segment_start;
-          } else if (GST_CLOCK_TIME_IS_VALID (basesink->current_end)) {
-            /* else use last seen timestamp as segment stop */
-            duration = basesink->current_end - basesink->segment_start;
-          } else {
-            duration = 0;
-          }
-        } else {
-          duration = segment_start - basesink->segment_start;
-        }
-
-        /* use previous rate to calculate duration */
-        basesink->segment_accum += gst_gdouble_to_guint64 (
-            (gst_guint64_to_gdouble (duration) / ABS (basesink->segment_rate)));
-        /* then update the current segment */
-        basesink->segment_rate = rate;
-        basesink->segment_start = segment_start;
-        basesink->segment_stop = segment_stop;
-        basesink->segment_time = segment_time;
+        gst_segment_set_newsegment (&basesink->segment, update, rate, format,
+            start, stop, time);
 
         GST_DEBUG_OBJECT (basesink,
             "received NEWSEGMENT %" GST_TIME_FORMAT " -- %"
             GST_TIME_FORMAT ", time %" GST_TIME_FORMAT ", accum %"
             GST_TIME_FORMAT,
-            GST_TIME_ARGS (basesink->segment_start),
-            GST_TIME_ARGS (basesink->segment_stop),
-            GST_TIME_ARGS (basesink->segment_time),
-            GST_TIME_ARGS (basesink->segment_accum));
-      done_newsegment:
+            GST_TIME_ARGS (basesink->segment.start),
+            GST_TIME_ARGS (basesink->segment.stop),
+            GST_TIME_ARGS (basesink->segment.time),
+            GST_TIME_ARGS (basesink->segment.accum));
         break;
       }
       default:
@@ -669,8 +616,8 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
           ("Received buffer without a new-segment. Cannot sync to clock."));
       basesink->have_newsegment = TRUE;
       /* this means this sink will not be able to sync to the clock */
-      basesink->segment_start = -1;
-      basesink->segment_stop = -1;
+      basesink->segment.start = -1;
+      basesink->segment.stop = -1;
     }
 
     /* check if the buffer needs to be dropped */
@@ -685,28 +632,10 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
           ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
           GST_TIME_ARGS (end));
 
-      /* need to drop if the timestamp is not between segment_start and
-       * segment_stop. we check if the complete sample is outside of the
-       * range since the sink might be able to clip the sample. */
-      if (GST_CLOCK_TIME_IS_VALID (end) &&
-          GST_CLOCK_TIME_IS_VALID (basesink->segment_start)) {
-        if (end <= basesink->segment_start) {
-          GST_DEBUG_OBJECT (basesink,
-              "buffer end %" GST_TIME_FORMAT " <= segment start %"
-              GST_TIME_FORMAT ", dropping buffer", GST_TIME_ARGS (end),
-              GST_TIME_ARGS (basesink->segment_start));
+      if (GST_CLOCK_TIME_IS_VALID (start)) {
+        if (!gst_segment_clip (&basesink->segment, GST_FORMAT_TIME,
+                (gint64) start, (gint64) end, NULL, NULL))
           goto dropping;
-        }
-      }
-      if (GST_CLOCK_TIME_IS_VALID (start) &&
-          GST_CLOCK_TIME_IS_VALID (basesink->segment_stop)) {
-        if (basesink->segment_stop <= start) {
-          GST_DEBUG_OBJECT (basesink,
-              "buffer start %" GST_TIME_FORMAT " >= segment stop %"
-              GST_TIME_FORMAT ", dropping buffer", GST_TIME_ARGS (start),
-              GST_TIME_ARGS (basesink->segment_stop));
-          goto dropping;
-        }
       }
     }
     basesink->preroll_queued++;
@@ -917,13 +846,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       basesink->flushing = FALSE;
       GST_OBJECT_UNLOCK (basesink);
       /* we need new segment info after the flush. */
-      basesink->segment_start = -1;
-      basesink->segment_stop = -1;
-      basesink->current_start = -1;
-      basesink->current_end = -1;
-      GST_DEBUG_OBJECT (basesink, "reset accum %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (basesink->segment_accum));
-      basesink->segment_accum = 0;
+      gst_segment_init (&basesink->segment, GST_FORMAT_TIME);
       GST_STREAM_UNLOCK (pad);
 
       GST_DEBUG_OBJECT (basesink, "event unref %p %p", basesink, event);
@@ -1004,9 +927,8 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 {
   GstClockReturn result = GST_CLOCK_OK;
   GstClockTime start, end;
-  GstClockTimeDiff stream_start, stream_end;
+  gint64 cstart, cend;
   GstBaseSinkClass *bclass;
-  gboolean start_valid, end_valid;
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
@@ -1014,61 +936,27 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
   if (bclass->get_times)
     bclass->get_times (basesink, buffer, &start, &end);
 
-  start_valid = GST_CLOCK_TIME_IS_VALID (start);
-  end_valid = GST_CLOCK_TIME_IS_VALID (end);
-
   GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
       ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
 
   /* if we don't have a timestamp, we don't sync */
-  if (!start_valid) {
+  if (!GST_CLOCK_TIME_IS_VALID (start)) {
     GST_DEBUG_OBJECT (basesink, "start not valid");
     goto done;
   }
 
   /* save last times seen. */
-  basesink->current_start = start;
-  if (end_valid)
-    basesink->current_end = end;
+  if (GST_CLOCK_TIME_IS_VALID (end))
+    gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_TIME,
+        (gint64) end);
   else
-    basesink->current_end = start;
+    gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_TIME,
+        (gint64) start);
 
-  if (GST_CLOCK_TIME_IS_VALID (basesink->segment_stop)) {
-    /* check if not outside of the segment range, start is
-     * always valid here. */
-    if (start > basesink->segment_stop)
-      goto out_of_segment;
-  }
-
-  /* bring timestamp to stream time using last segment offset. */
-  if (GST_CLOCK_TIME_IS_VALID (basesink->segment_start)) {
-    /* check if not outside of the segment range */
-    if (end_valid && end < basesink->segment_start)
-      goto out_of_segment;
-
-    stream_start = (gint64) start - basesink->segment_start;
-    stream_end = (gint64) end - basesink->segment_start;
-
-    if (stream_start < 0) {
-      GST_DEBUG_OBJECT (basesink, "stream_start negative, invalid");
-      goto done;
-    }
-  } else {
-    stream_start = (gint64) start;
-    stream_end = (gint64) end;
-  }
-
-
-  /* correct for rate */
-  if (basesink->segment_rate != 0.0) {
-    stream_start /= ABS (basesink->segment_rate);
-    if (end_valid)
-      stream_end /= ABS (basesink->segment_rate);
-  }
-
-  stream_start += basesink->segment_accum;
-  if (end_valid)
-    stream_end += basesink->segment_accum;
+  /* clip */
+  if (!gst_segment_clip (&basesink->segment, GST_FORMAT_TIME,
+          (gint64) start, (gint64) end, &cstart, &cend))
+    goto out_of_segment;
 
   if (!basesink->sync) {
     GST_DEBUG_OBJECT (basesink, "no need to sync");
@@ -1078,6 +966,13 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
   /* now do clocking */
   if (basesink->clock) {
     GstClockTime base_time;
+    GstClockTimeDiff stream_start, stream_end;
+
+    stream_start =
+        gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME,
+        cstart);
+    stream_end =
+        gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME, cend);
 
     GST_OBJECT_LOCK (basesink);
 
@@ -1090,7 +985,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 
     /* also save end_time of this buffer so that we can wait
      * to signal EOS */
-    if (end_valid)
+    if (GST_CLOCK_TIME_IS_VALID (stream_end))
       basesink->end_time = stream_end + base_time;
     else
       basesink->end_time = GST_CLOCK_TIME_NONE;
@@ -1386,7 +1281,7 @@ gst_base_sink_activate_pull (GstPad * pad, gboolean active)
       } else {
         if (gst_pad_activate_pull (peer, TRUE)) {
           basesink->have_newsegment = TRUE;
-          basesink->segment_start = basesink->segment_stop = 0;
+          gst_segment_init (&basesink->segment, GST_FORMAT_TIME);
 
           /* set the pad mode before starting the task so that it's in the
              correct state for the new thread... */
@@ -1467,7 +1362,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       GST_OBJECT_LOCK (basesink);
       if ((clock = GST_ELEMENT_CLOCK (basesink))) {
         GstClockTime now;
-        gint64 segment_time;
+        gint64 time;
 
         gst_object_ref (clock);
         GST_OBJECT_UNLOCK (basesink);
@@ -1475,18 +1370,18 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
         now = gst_clock_get_time (clock);
 
         GST_OBJECT_LOCK (basesink);
-        if (GST_CLOCK_TIME_IS_VALID (basesink->segment_time))
-          segment_time = basesink->segment_time;
+        if (GST_CLOCK_TIME_IS_VALID (basesink->segment.time))
+          time = basesink->segment.time;
         else
-          segment_time = 0;
+          time = 0;
 
         *cur = now - GST_ELEMENT_CAST (basesink)->base_time -
-            basesink->segment_accum + segment_time;
+            basesink->segment.accum + time;
 
         GST_DEBUG_OBJECT (basesink,
             "now %" GST_TIME_FORMAT " + segment_time %" GST_TIME_FORMAT " = %"
             GST_TIME_FORMAT, GST_TIME_ARGS (now),
-            GST_TIME_ARGS (segment_time), GST_TIME_ARGS (*cur));
+            GST_TIME_ARGS (time), GST_TIME_ARGS (*cur));
 
         gst_object_unref (clock);
 
@@ -1547,8 +1442,8 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
     case GST_QUERY_SEGMENT:
     {
       /* FIXME, bring start/stop to stream time */
-      gst_query_set_segment (query, basesink->segment_rate,
-          GST_FORMAT_TIME, basesink->segment_start, basesink->segment_stop);
+      gst_query_set_segment (query, basesink->segment.rate,
+          GST_FORMAT_TIME, basesink->segment.start, basesink->segment.stop);
       break;
     }
     case GST_QUERY_SEEKING:
@@ -1585,15 +1480,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (basesink, "READY to PAUSED, need preroll to FALSE");
       basesink->need_preroll = TRUE;
       GST_PREROLL_UNLOCK (basesink->sinkpad);
+      gst_segment_init (&basesink->segment, GST_FORMAT_TIME);
       basesink->have_newsegment = FALSE;
-      basesink->segment_rate = 1.0;
-      basesink->segment_start = 0;
-      basesink->segment_stop = -1;
-      basesink->segment_time = 0;
-      basesink->current_start = -1;
-      basesink->current_duration = -1;
-      basesink->current_end = -1;
-      basesink->segment_accum = 0;
       ret = GST_STATE_CHANGE_ASYNC;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

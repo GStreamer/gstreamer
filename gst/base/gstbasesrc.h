@@ -84,9 +84,7 @@ struct _GstBaseSrc {
   GstClockTime   end_time;
 
   /* MT-protected (with STREAM_LOCK) */
-  gint64	 segment_start;	/* start and end positions for seeking */
-  gint64	 segment_end;
-  gboolean	 segment_loop;
+  GstSegment     segment;
   gboolean	 need_newsegment;
 
   guint64	 offset;	/* current offset in the resource */

@@ -376,8 +376,8 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       GstClockReturn cret;
       GstClockTime timestamp;
 
-      timestamp = GST_BUFFER_TIMESTAMP (buf) - trans->segment_start;
-      timestamp += trans->segment_accum;
+      timestamp = gst_segment_to_running_time (&trans->segment,
+          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
       timestamp += GST_ELEMENT (identity)->base_time;
 
       /* save id if we need to unlock */

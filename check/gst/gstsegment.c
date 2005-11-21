@@ -27,13 +27,15 @@ GST_START_TEST (segment_seek_nosize)
   GstSegment segment;
   gboolean res;
   gint64 cstart, cstop;
+  gboolean update;
 
   gst_segment_init (&segment, GST_FORMAT_BYTES);
 
   /* configure segment to start 100 */
   gst_segment_set_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_SET, 100, GST_SEEK_TYPE_NONE, -1);
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_SET, 100, GST_SEEK_TYPE_NONE, -1, &update);
   fail_unless (segment.start == 100);
   fail_unless (segment.stop == -1);
 
@@ -41,7 +43,8 @@ GST_START_TEST (segment_seek_nosize)
    * size is unknown. */
   gst_segment_set_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_NONE, 200, GST_SEEK_TYPE_CUR, -100);
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, 200, GST_SEEK_TYPE_CUR, -100, &update);
   fail_unless (segment.start == 100);
   fail_unless (segment.stop == -1);
 
@@ -99,7 +102,8 @@ GST_START_TEST (segment_seek_nosize)
   /* add 100 to start, set stop to 300 */
   gst_segment_set_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 300);
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 300, &update);
   fail_unless (segment.start == 200);
   fail_unless (segment.stop == 300);
 
@@ -107,7 +111,8 @@ GST_START_TEST (segment_seek_nosize)
    * nothing should be updated in the segment. */
   ASSERT_CRITICAL (gst_segment_set_seek (&segment, 1.0,
           GST_FORMAT_BYTES,
-          GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 200));
+          GST_SEEK_FLAG_NONE,
+          GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 200, &update));
   fail_unless (segment.start == 200);
   fail_unless (segment.stop == 300);
 
@@ -115,7 +120,8 @@ GST_START_TEST (segment_seek_nosize)
    * unknown. */
   gst_segment_set_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_END, -300, GST_SEEK_TYPE_END, -100);
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_END, -300, GST_SEEK_TYPE_END, -100, &update);
   fail_unless (segment.start == 200);
   fail_unless (segment.stop == 300);
 
@@ -193,6 +199,7 @@ GST_START_TEST (segment_seek_size)
   GstSegment segment;
   gboolean res;
   gint64 cstart, cstop;
+  gboolean update;
 
   gst_segment_init (&segment, GST_FORMAT_BYTES);
   gst_segment_set_duration (&segment, GST_FORMAT_BYTES, 200);
@@ -200,7 +207,8 @@ GST_START_TEST (segment_seek_size)
   /* configure segment to start 100 */
   gst_segment_set_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_SET, 100, GST_SEEK_TYPE_NONE, -1);
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_SET, 100, GST_SEEK_TYPE_NONE, -1, &update);
   fail_unless (segment.start == 100);
   fail_unless (segment.stop == -1);
 
@@ -208,7 +216,8 @@ GST_START_TEST (segment_seek_size)
    * since we did not set it before. */
   gst_segment_set_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_NONE, 200, GST_SEEK_TYPE_CUR, -100);
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, 200, GST_SEEK_TYPE_CUR, -100, &update);
   fail_unless (segment.start == 100);
   fail_unless (segment.stop == -1);
 
@@ -273,7 +282,8 @@ GST_START_TEST (segment_seek_size)
   /* add 100 to start, set stop to 300, stop clips to 200 */
   gst_segment_set_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 300);
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 300, &update);
   fail_unless (segment.start == 200);
   fail_unless (segment.stop == 200);
 
@@ -281,14 +291,16 @@ GST_START_TEST (segment_seek_size)
    * to duration */
   gst_segment_set_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 200);
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 200, &update);
   fail_unless (segment.start == 200);
   fail_unless (segment.stop == 200);
 
   /* seek relative to end */
   gst_segment_set_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
-      GST_SEEK_FLAG_NONE, GST_SEEK_TYPE_END, -100, GST_SEEK_TYPE_END, -20);
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_END, -100, GST_SEEK_TYPE_END, -20, &update);
   fail_unless (segment.start == 100);
   fail_unless (segment.stop == 180);
 

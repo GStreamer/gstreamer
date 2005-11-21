@@ -854,6 +854,7 @@ gst_base_transform_prepare_output_buf (GstBaseTransform * trans,
     if (G_UNLIKELY (!gst_caps_is_equal (out_caps, GST_BUFFER_CAPS (*out_buf)))) {
       /* FIXME, it is possible we can reconfigure the transform with new caps at this
        * point but for now we just create a buffer ourselves */
+      gst_buffer_unref (*out_buf);
       *out_buf = gst_buffer_new_and_alloc (out_size);
       gst_buffer_set_caps (*out_buf, out_caps);
     }
@@ -1056,13 +1057,7 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
       GST_STREAM_LOCK (pad);
       unlock = TRUE;
       /* we need new segment info after the flush. */
-      trans->segment_rate = 1.0;
-      trans->segment_start = -1;
-      trans->segment_stop = -1;
-      trans->segment_base = -1;
-      GST_DEBUG_OBJECT (trans, "reset accum %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (trans->segment_accum));
-      trans->segment_accum = 0;
+      gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
       break;
     case GST_EVENT_EOS:
       GST_STREAM_LOCK (pad);
@@ -1076,7 +1071,7 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
     {
       GstFormat format;
       gdouble rate;
-      gint64 start, stop, time, duration;
+      gint64 start, stop, time;
       gboolean update;
 
       GST_STREAM_LOCK (pad);
@@ -1084,63 +1079,25 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
       gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
           &time);
 
-      /* any other format with 0 also gives time 0, the other values are
-       * invalid as time though. */
-      if (format != GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (trans,
-            "non-time newsegment with start 0, coaxing into FORMAT_TIME");
-        format = GST_FORMAT_TIME;
-        if (start != 0)
-          start = -1;
-        if (stop != 0)
-          stop = -1;
-        if (time != 0)
-          time = -1;
-      }
-
-      /* check if we really have a new segment or the previous one is
-       * closed */
-      if (!update) {
-        /* the new segment has to be aligned with the old segment.
-         * We first update the accumulated time of the previous
-         * segment. the accumulated time is used when syncing to the
-         * clock. A flush event sets the accumulated time back to 0
-         */
-        if (GST_CLOCK_TIME_IS_VALID (trans->segment_stop)) {
-          duration = trans->segment_stop - trans->segment_start;
-        } else {
-          duration = 0;
-        }
-      } else {
-        if (GST_CLOCK_TIME_IS_VALID (start))
-          duration = start - trans->segment_start;
-        else
-          duration = 0;
-      }
+      gst_segment_set_newsegment (&trans->segment, update, rate, format, start,
+          stop, time);
 
       trans->have_newsegment = TRUE;
-
-      trans->segment_accum += gst_gdouble_to_guint64 (
-          (gst_guint64_to_gdouble (duration) / ABS (trans->segment_rate)));;
-      trans->segment_rate = rate;
-      trans->segment_start = start;
-      trans->segment_stop = stop;
-      trans->segment_base = time;
 
       if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (trans, "received NEW_SEGMENT %" GST_TIME_FORMAT
             " -- %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT
             ", accum %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (trans->segment_start),
-            GST_TIME_ARGS (trans->segment_stop),
-            GST_TIME_ARGS (trans->segment_base),
-            GST_TIME_ARGS (trans->segment_accum));
+            GST_TIME_ARGS (trans->segment.start),
+            GST_TIME_ARGS (trans->segment.stop),
+            GST_TIME_ARGS (trans->segment.time),
+            GST_TIME_ARGS (trans->segment.accum));
       } else {
         GST_DEBUG_OBJECT (trans, "received NEW_SEGMENT %" G_GINT64_FORMAT
             " -- %" G_GINT64_FORMAT ", time %" G_GINT64_FORMAT
             ", accum %" G_GINT64_FORMAT,
-            trans->segment_start, trans->segment_stop,
-            trans->segment_base, trans->segment_accum);
+            trans->segment.start, trans->segment.stop,
+            trans->segment.time, trans->segment.accum);
       }
       break;
     }
@@ -1432,11 +1389,7 @@ gst_base_transform_change_state (GstElement * element,
       GST_DEBUG_OBJECT (trans, "have_same_caps %d", trans->have_same_caps);
       trans->negotiated = FALSE;
       trans->have_newsegment = FALSE;
-      trans->segment_rate = 1.0;
-      trans->segment_start = 0;
-      trans->segment_stop = -1;
-      trans->segment_base = 0;
-      trans->segment_accum = 0;
+      gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
       GST_OBJECT_UNLOCK (trans);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
