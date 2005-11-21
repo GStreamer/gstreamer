@@ -1,3 +1,10 @@
+2005-11-21  Wim Taymans  <wim@fluendo.com>
+
+	* ext/faac/gstfaac.c: (gst_faac_sink_event):
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_src_event):
+	* gst/tta/gstttaparse.c: (gst_tta_parse_src_event):
+	Fix for stream lock updates.
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):

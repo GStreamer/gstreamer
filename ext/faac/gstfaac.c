@@ -431,8 +431,6 @@ gst_faac_sink_event (GstPad * pad, GstEvent * event)
     {
       GstBuffer *outbuf;
 
-      GST_STREAM_LOCK (pad);
-
       /* flush first */
       ret = TRUE;
       do {
@@ -455,18 +453,13 @@ gst_faac_sink_event (GstPad * pad, GstEvent * event)
       } while (ret);
 
       ret = gst_pad_event_default (pad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
-      GST_STREAM_LOCK (pad);
       ret = gst_pad_push_event (faac->srcpad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_TAG:
-      GST_STREAM_LOCK (pad);
       ret = gst_pad_event_default (pad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     default:
       ret = gst_pad_event_default (pad, event);

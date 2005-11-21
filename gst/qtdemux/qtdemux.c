@@ -358,7 +358,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
           }
 
           gst_pad_event_default (pad, gst_event_new_flush_start ());
-          GST_STREAM_LOCK (pad);
+          GST_PAD_STREAM_LOCK (pad);
 
           /* resync to new time */
           for (n = 0; n < qtdemux->n_streams; n++) {
@@ -378,7 +378,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
           gst_pad_start_task (qtdemux->sinkpad,
               (GstTaskFunction) gst_qtdemux_loop_header, qtdemux->sinkpad);
 
-          GST_STREAM_UNLOCK (pad);
+          GST_PAD_STREAM_UNLOCK (pad);
           break;
         }
         default:

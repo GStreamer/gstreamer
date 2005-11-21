@@ -187,7 +187,7 @@ gst_tta_parse_src_event (GstPad * pad, GstEvent * event)
         } else {
           gst_pad_pause_task (ttaparse->sinkpad);
         }
-        GST_STREAM_LOCK (ttaparse->sinkpad);
+        GST_PAD_STREAM_LOCK (ttaparse->sinkpad);
 
         switch (start_type) {
           case GST_SEEK_TYPE_CUR:
@@ -216,7 +216,7 @@ gst_tta_parse_src_event (GstPad * pad, GstEvent * event)
         gst_pad_start_task (ttaparse->sinkpad,
             (GstTaskFunction) gst_tta_parse_loop, ttaparse);
 
-        GST_STREAM_UNLOCK (ttaparse->sinkpad);
+        GST_PAD_STREAM_UNLOCK (ttaparse->sinkpad);
 
       } else {
         res = FALSE;
