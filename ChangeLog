@@ -1,3 +1,9 @@
+2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/audio/audio.c: (gst_audio_duration_from_pad_buffer):
+	* gst-libs/gst/audio/audio.h:
+	  fix prototype - wondering why the test worked regardless
+
 2005-11-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

@@ -147,7 +147,7 @@ gst_audio_length (GstPad * pad, GstBuffer * buf)
   return length;
 }
 
-double
+GstClockTime
 gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
 {
 /* calculate length in nanoseconds
@@ -184,9 +184,8 @@ gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
     g_assert (width != 0);
     g_assert (channels != 0);
     g_assert (rate != 0);
-    length = (bytes * 8.0 * GST_SECOND) / (rate * channels * width);
+    length = (bytes * 8 * GST_SECOND) / (rate * channels * width);
   }
-  /* g_print ("DEBUG: audio: returning length of %f\n", length); */
   return length;
 }
 
