@@ -175,9 +175,9 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   tee = GST_TEE (element);
 
-  GST_LOCK (tee);
+  GST_OBJECT_LOCK (tee);
   name = g_strdup_printf ("src%d", tee->pad_counter++);
-  GST_UNLOCK (tee);
+  GST_OBJECT_UNLOCK (tee);
 
   srcpad = gst_pad_new_from_template (templ, name);
   g_free (name);
@@ -197,7 +197,7 @@ gst_tee_set_property (GObject * object, guint prop_id, const GValue * value,
 {
   GstTee *tee = GST_TEE (object);
 
-  GST_LOCK (tee);
+  GST_OBJECT_LOCK (tee);
   switch (prop_id) {
     case PROP_HAS_SINK_LOOP:
       tee->has_sink_loop = g_value_get_boolean (value);
@@ -214,7 +214,7 @@ gst_tee_set_property (GObject * object, guint prop_id, const GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_UNLOCK (tee);
+  GST_OBJECT_UNLOCK (tee);
 }
 
 static void
@@ -223,7 +223,7 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstTee *tee = GST_TEE (object);
 
-  GST_LOCK (tee);
+  GST_OBJECT_LOCK (tee);
   switch (prop_id) {
     case PROP_NUM_SRC_PADS:
       g_value_set_int (value, GST_ELEMENT (tee)->numsrcpads);
@@ -244,7 +244,7 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_UNLOCK (tee);
+  GST_OBJECT_UNLOCK (tee);
 }
 
 typedef struct

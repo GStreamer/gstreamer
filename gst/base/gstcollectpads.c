@@ -158,10 +158,10 @@ gst_collect_pads_set_function (GstCollectPads * pads,
   g_return_if_fail (pads != NULL);
   g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
-  GST_LOCK (pads);
+  GST_OBJECT_LOCK (pads);
   pads->func = func;
   pads->user_data = user_data;
-  GST_UNLOCK (pads);
+  GST_OBJECT_UNLOCK (pads);
 }
 
 /**
@@ -197,14 +197,14 @@ gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
   data->pad = pad;
   data->buffer = NULL;
 
-  GST_LOCK (pads);
+  GST_OBJECT_LOCK (pads);
   pads->data = g_slist_append (pads->data, data);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_chain));
   gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_event));
   gst_pad_set_element_private (pad, data);
   pads->numpads++;
   pads->cookie++;
-  GST_UNLOCK (pads);
+  GST_OBJECT_UNLOCK (pads);
 
   return data;
 }
@@ -238,7 +238,7 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   g_return_val_if_fail (pad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
-  GST_LOCK (pads);
+  GST_OBJECT_LOCK (pads);
   list = g_slist_find_custom (pads->data, pad, (GCompareFunc) find_pad);
   if (list) {
     g_free (list->data);
@@ -246,7 +246,7 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   }
   pads->numpads--;
   pads->cookie++;
-  GST_UNLOCK (pads);
+  GST_OBJECT_UNLOCK (pads);
 
   return list != NULL;
 }
@@ -338,9 +338,9 @@ gst_collect_pads_start (GstCollectPads * pads)
   g_return_if_fail (pads != NULL);
   g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
-  GST_LOCK (pads);
+  GST_OBJECT_LOCK (pads);
   pads->started = TRUE;
-  GST_UNLOCK (pads);
+  GST_OBJECT_UNLOCK (pads);
 }
 
 /**
@@ -358,10 +358,10 @@ gst_collect_pads_stop (GstCollectPads * pads)
   g_return_if_fail (pads != NULL);
   g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
-  GST_LOCK (pads);
+  GST_OBJECT_LOCK (pads);
   pads->started = FALSE;
   GST_COLLECT_PADS_BROADCAST (pads);
-  GST_UNLOCK (pads);
+  GST_OBJECT_UNLOCK (pads);
 }
 
 /**
@@ -581,7 +581,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
     {
       GstFlowReturn ret = GST_FLOW_OK;
 
-      GST_LOCK (pads);
+      GST_OBJECT_LOCK (pads);
 
       pads->eospads++;
 
@@ -590,7 +590,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
         ret = pads->func (pads, pads->user_data);
       }
 
-      GST_UNLOCK (pads);
+      GST_OBJECT_UNLOCK (pads);
 
       /* We eat this event */
       gst_event_unref (event);
@@ -649,7 +649,7 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   pads = data->collect;
   size = GST_BUFFER_SIZE (buffer);
 
-  GST_LOCK (pads);
+  GST_OBJECT_LOCK (pads);
 
   /* if not started, bail out */
   if (!pads->started)
@@ -685,7 +685,7 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
     GST_DEBUG ("Not all active pads have data, continuing");
     ret = GST_FLOW_OK;
   }
-  GST_UNLOCK (pads);
+  GST_OBJECT_UNLOCK (pads);
 
   return ret;
 
@@ -697,7 +697,7 @@ not_ours:
   }
 not_started:
   {
-    GST_UNLOCK (pads);
+    GST_OBJECT_UNLOCK (pads);
     GST_DEBUG ("collect_pads not started");
     return GST_FLOW_WRONG_STATE;
   }

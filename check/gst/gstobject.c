@@ -208,12 +208,12 @@ GST_START_TEST (test_fake_object_name_threaded_right)
 
   /* start looping and set/get name repeatedly */
   for (i = 0; i < 1000; ++i) {
-    GST_LOCK (object);
+    GST_OBJECT_LOCK (object);
     g_free (GST_OBJECT_NAME (object));
     GST_OBJECT_NAME (object) = g_strdup ("main");
     THREAD_SWITCH ();
     name = g_strdup (GST_OBJECT_NAME (object));
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
 
     fail_unless (strcmp (name, "main") == 0,
         "Name got changed while lock held during run %d", i);
@@ -261,8 +261,8 @@ gst_object_name_compare (GstObject * o, GstObject * p)
 {
   gint result;
 
-  GST_LOCK (o);
-  GST_LOCK (p);
+  GST_OBJECT_LOCK (o);
+  GST_OBJECT_LOCK (p);
 
   if (o->name == NULL && p->name == NULL) {
     result = 0;
@@ -274,8 +274,8 @@ gst_object_name_compare (GstObject * o, GstObject * p)
     result = strcmp (o->name, p->name);
   }
 
-  GST_UNLOCK (p);
-  GST_UNLOCK (o);
+  GST_OBJECT_UNLOCK (p);
+  GST_OBJECT_UNLOCK (o);
 
   return result;
 }

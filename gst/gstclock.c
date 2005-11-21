@@ -681,10 +681,10 @@ gst_clock_get_time (GstClock * clock)
 
   ret = gst_clock_get_internal_time (clock);
 
-  GST_LOCK (clock);
+  GST_OBJECT_LOCK (clock);
   /* this will scale for rate and offset */
   ret = gst_clock_adjust_unlocked (clock, ret);
-  GST_UNLOCK (clock);
+  GST_OBJECT_UNLOCK (clock);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "adjusted time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ret));
@@ -729,11 +729,11 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
   g_return_if_fail (rate > 0.0);
   g_return_if_fail (internal <= gst_clock_get_internal_time (clock));
 
-  GST_LOCK (clock);
+  GST_OBJECT_LOCK (clock);
   clock->internal_calibration = internal;
   clock->external_calibration = external;
   clock->rate = rate;
-  GST_UNLOCK (clock);
+  GST_OBJECT_UNLOCK (clock);
 }
 
 /**
@@ -757,14 +757,14 @@ gst_clock_get_calibration (GstClock * clock, GstClockTime * internal,
 {
   g_return_if_fail (GST_IS_CLOCK (clock));
 
-  GST_LOCK (clock);
+  GST_OBJECT_LOCK (clock);
   if (rate)
     *rate = clock->rate;
   if (external)
     *external = clock->external_calibration;
   if (internal)
     *internal = clock->internal_calibration;
-  GST_UNLOCK (clock);
+  GST_OBJECT_UNLOCK (clock);
 }
 
 static void

@@ -341,7 +341,7 @@ typedef enum {
  *
  * Wait on the clock until the entries changed.
  */
-#define GST_CLOCK_WAIT(clock)            g_cond_wait(GST_CLOCK_COND(clock),GST_GET_LOCK(clock))
+#define GST_CLOCK_WAIT(clock)            g_cond_wait(GST_CLOCK_COND(clock),GST_OBJECT_GET_LOCK(clock))
 /**
  * GST_CLOCK_TIMED_WAIT:
  * @clock: the clock to wait on
@@ -350,7 +350,7 @@ typedef enum {
  * Wait on the clock until the entries changed or the specified timeout
  * occured. 
  */
-#define GST_CLOCK_TIMED_WAIT(clock,tv)   g_cond_timed_wait(GST_CLOCK_COND(clock),GST_GET_LOCK(clock),tv)
+#define GST_CLOCK_TIMED_WAIT(clock,tv)   g_cond_timed_wait(GST_CLOCK_COND(clock),GST_OBJECT_GET_LOCK(clock),tv)
 /**
  * GST_CLOCK_BROADCAST:
  * @clock: the clock to broadcast

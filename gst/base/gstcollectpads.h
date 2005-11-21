@@ -75,7 +75,7 @@ struct _GstCollectData
 typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer user_data);
 
 #define GST_COLLECT_PADS_GET_COND(pads) (((GstCollectPads *)pads)->cond)
-#define GST_COLLECT_PADS_WAIT(pads)     (g_cond_wait (GST_COLLECT_PADS_GET_COND (pads), GST_GET_LOCK (pads)))
+#define GST_COLLECT_PADS_WAIT(pads)     (g_cond_wait (GST_COLLECT_PADS_GET_COND (pads), GST_OBJECT_GET_LOCK (pads)))
 #define GST_COLLECT_PADS_SIGNAL(pads)   (g_cond_signal (GST_COLLECT_PADS_GET_COND (pads)))
 #define GST_COLLECT_PADS_BROADCAST(pads)(g_cond_broadcast (GST_COLLECT_PADS_GET_COND (pads)))
 

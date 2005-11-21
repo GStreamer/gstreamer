@@ -354,7 +354,7 @@ gst_fake_src_event_handler (GstBaseSrc * basesrc, GstEvent * event)
     const GstStructure *s;
     gchar *sstr;
 
-    GST_LOCK (src);
+    GST_OBJECT_LOCK (src);
     g_free (src->last_message);
 
     if ((s = gst_event_get_structure (event)))
@@ -366,7 +366,7 @@ gst_fake_src_event_handler (GstBaseSrc * basesrc, GstEvent * event)
         g_strdup_printf ("event   ******* E (type: %d, %s) %p",
         GST_EVENT_TYPE (event), sstr, event);
     g_free (sstr);
-    GST_UNLOCK (src);
+    GST_OBJECT_UNLOCK (src);
 
     g_object_notify (G_OBJECT (src), "last_message");
   }
@@ -518,9 +518,9 @@ gst_fake_src_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, src->dump);
       break;
     case PROP_LAST_MESSAGE:
-      GST_LOCK (src);
+      GST_OBJECT_LOCK (src);
       g_value_set_string (value, src->last_message);
-      GST_UNLOCK (src);
+      GST_OBJECT_UNLOCK (src);
       break;
     case PROP_CAN_ACTIVATE_PUSH:
       g_value_set_boolean (value, GST_BASE_SRC (src)->can_activate_push);
@@ -726,7 +726,7 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   if (!src->silent) {
     gchar ts_str[64], dur_str[64];
 
-    GST_LOCK (src);
+    GST_OBJECT_LOCK (src);
     g_free (src->last_message);
 
     if (GST_BUFFER_TIMESTAMP (buf) != GST_CLOCK_TIME_NONE) {
@@ -749,7 +749,7 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
         G_GINT64_FORMAT ", flags: %d) %p", GST_BUFFER_SIZE (buf), ts_str,
         dur_str, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
         GST_MINI_OBJECT (buf)->flags, buf);
-    GST_UNLOCK (src);
+    GST_OBJECT_UNLOCK (src);
 
     g_object_notify (G_OBJECT (src), "last_message");
   }
@@ -788,14 +788,14 @@ gst_fake_src_stop (GstBaseSrc * basesrc)
 
   src = GST_FAKE_SRC (basesrc);
 
-  GST_LOCK (src);
+  GST_OBJECT_LOCK (src);
   if (src->parent) {
     gst_buffer_unref (src->parent);
     src->parent = NULL;
   }
   g_free (src->last_message);
   src->last_message = NULL;
-  GST_UNLOCK (src);
+  GST_OBJECT_UNLOCK (src);
 
   return TRUE;
 }

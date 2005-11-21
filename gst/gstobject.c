@@ -439,13 +439,13 @@ gst_object_sink (gpointer object)
 
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "sink");
 
-  GST_LOCK (object);
+  GST_OBJECT_LOCK (object);
   if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
     GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
     gst_object_unref (object);
   } else {
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
   }
 }
 
@@ -503,9 +503,9 @@ gst_object_dispose (GObject * object)
 {
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
-  GST_LOCK (object);
+  GST_OBJECT_LOCK (object);
   GST_OBJECT_PARENT (object) = NULL;
-  GST_UNLOCK (object);
+  GST_OBJECT_UNLOCK (object);
 
   /* need to patch refcount so it is finalized */
   PATCH_REFCOUNT1 (object);
@@ -725,7 +725,7 @@ gst_object_set_name (GstObject * object, const gchar * name)
 
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
 
-  GST_LOCK (object);
+  GST_OBJECT_LOCK (object);
 
   /* parented objects cannot be renamed */
   if (G_UNLIKELY (object->parent != NULL))
@@ -734,10 +734,10 @@ gst_object_set_name (GstObject * object, const gchar * name)
   if (name != NULL) {
     g_free (object->name);
     object->name = g_strdup (name);
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
     result = TRUE;
   } else {
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
     result = gst_object_set_name_default (object, G_OBJECT_TYPE_NAME (object));
   }
   return result;
@@ -745,7 +745,7 @@ gst_object_set_name (GstObject * object, const gchar * name)
   /* error */
 had_parent:
   {
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
     return FALSE;
   }
 }
@@ -770,9 +770,9 @@ gst_object_get_name (GstObject * object)
 
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-  GST_LOCK (object);
+  GST_OBJECT_LOCK (object);
   result = g_strdup (object->name);
-  GST_UNLOCK (object);
+  GST_OBJECT_UNLOCK (object);
 
   return result;
 }
@@ -793,10 +793,10 @@ gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
 {
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  GST_LOCK (object);
+  GST_OBJECT_LOCK (object);
   g_free (object->name_prefix);
   object->name_prefix = g_strdup (name_prefix); /* NULL gives NULL */
-  GST_UNLOCK (object);
+  GST_OBJECT_UNLOCK (object);
 }
 
 /**
@@ -819,9 +819,9 @@ gst_object_get_name_prefix (GstObject * object)
 
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-  GST_LOCK (object);
+  GST_OBJECT_LOCK (object);
   result = g_strdup (object->name_prefix);
-  GST_UNLOCK (object);
+  GST_OBJECT_UNLOCK (object);
 
   return result;
 }
@@ -852,7 +852,7 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object,
       "set parent (ref and sink)");
 
-  GST_LOCK (object);
+  GST_OBJECT_LOCK (object);
   if (G_UNLIKELY (object->parent != NULL))
     goto had_parent;
 
@@ -863,9 +863,9 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
   if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
     GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unsetting floating flag");
     GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
   } else {
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
     gst_object_ref (object);
   }
 
@@ -876,7 +876,7 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
   /* ERROR handling */
 had_parent:
   {
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
     return FALSE;
   }
 }
@@ -900,11 +900,11 @@ gst_object_get_parent (GstObject * object)
 
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-  GST_LOCK (object);
+  GST_OBJECT_LOCK (object);
   result = object->parent;
   if (G_LIKELY (result))
     gst_object_ref (result);
-  GST_UNLOCK (object);
+  GST_OBJECT_UNLOCK (object);
 
   return result;
 }
@@ -925,20 +925,20 @@ gst_object_unparent (GstObject * object)
 
   g_return_if_fail (GST_IS_OBJECT (object));
 
-  GST_LOCK (object);
+  GST_OBJECT_LOCK (object);
   parent = object->parent;
 
   if (G_LIKELY (parent != NULL)) {
     GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "unparent");
     object->parent = NULL;
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
 
     g_signal_emit (G_OBJECT (object), gst_object_signals[PARENT_UNSET], 0,
         parent);
 
     gst_object_unref (object);
   } else {
-    GST_UNLOCK (object);
+    GST_OBJECT_UNLOCK (object);
   }
 }
 
@@ -1003,9 +1003,9 @@ gst_object_check_uniqueness (GList * list, const gchar * name)
 
     child = GST_OBJECT (list->data);
 
-    GST_LOCK (child);
+    GST_OBJECT_LOCK (child);
     eq = strcmp (GST_OBJECT_NAME (child), name) == 0;
-    GST_UNLOCK (child);
+    GST_OBJECT_UNLOCK (child);
 
     if (G_UNLIKELY (eq)) {
       result = FALSE;

@@ -86,20 +86,20 @@ typedef enum
  * function with a valid object! */
 
 /**
- * GST_GET_LOCK:
+ * GST_OBJECT_GET_LOCK:
  * @obj: a #GstObject
  *
  * Acquire a reference to the mutex of this object.
  */
-#define GST_GET_LOCK(obj)               (GST_OBJECT_CAST(obj)->lock)
+#define GST_OBJECT_GET_LOCK(obj)               (GST_OBJECT_CAST(obj)->lock)
 /**
- * GST_LOCK:
+ * GST_OBJECT_LOCK:
  * @obj: a #GstObject to lock
  *
  * This macro will obtain a lock on the object, making serialization possible.
  * It blocks until the lock can be obtained.
  */
-#define GST_LOCK(obj)                   g_mutex_lock(GST_GET_LOCK(obj))
+#define GST_OBJECT_LOCK(obj)                   g_mutex_lock(GST_OBJECT_GET_LOCK(obj))
 /**
  * GST_TRYLOCK:
  * @obj: a #Object.
@@ -107,14 +107,14 @@ typedef enum
  * This macro will try to obtain a lock on the object, but will return with
  * FALSE if it can't get it immediately.
  */
-#define GST_TRYLOCK(obj)                g_mutex_trylock(GST_GET_LOCK(obj))
+#define GST_OBJECT_TRYLOCK(obj)                g_mutex_trylock(GST_OBJECT_GET_LOCK(obj))
 /**
- * GST_UNLOCK:
+ * GST_OBJECT_UNLOCK:
  * @obj: a #GstObject to unlock.
  *
  * This macro releases a lock on the object.
  */
-#define GST_UNLOCK(obj)                 g_mutex_unlock(GST_GET_LOCK(obj))
+#define GST_OBJECT_UNLOCK(obj)                 g_mutex_unlock(GST_OBJECT_GET_LOCK(obj))
 
 
 /**

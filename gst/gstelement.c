@@ -403,9 +403,9 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
   if (oclass->set_clock)
     oclass->set_clock (element, clock);
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   gst_object_replace ((GstObject **) & element->clock, (GstObject *) clock);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 }
 
 /**
@@ -425,10 +425,10 @@ gst_element_get_clock (GstElement * element)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   if ((result = element->clock))
     gst_object_ref (result);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return result;
 }
@@ -447,9 +447,9 @@ gst_element_set_base_time (GstElement * element, GstClockTime time)
 {
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   element->base_time = time;
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   GST_DEBUG_OBJECT (element, "set base_time=%" GST_TIME_FORMAT,
       GST_TIME_ARGS (time));
@@ -475,9 +475,9 @@ gst_element_get_base_time (GstElement * element)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_CLOCK_TIME_NONE);
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   result = element->base_time;
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return result;
 }
@@ -585,14 +585,14 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   /* locking pad to look at the name */
-  GST_LOCK (pad);
+  GST_OBJECT_LOCK (pad);
   pad_name = g_strdup (GST_PAD_NAME (pad));
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "adding pad '%s'",
       GST_STR_NULL (pad_name));
-  GST_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (pad);
 
   /* then check to see if there's already a pad by that name here */
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   if (G_UNLIKELY (!gst_object_check_uniqueness (element->pads, pad_name)))
     goto name_exists;
 
@@ -619,7 +619,7 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   element->pads = g_list_prepend (element->pads, pad);
   element->numpads++;
   element->pads_cookie++;
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   /* emit the NEW_PAD signal */
   g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);
@@ -631,7 +631,7 @@ name_exists:
   {
     g_critical ("Padname %s is not unique in element %s, not adding",
         pad_name, GST_ELEMENT_NAME (element));
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
     g_free (pad_name);
     return FALSE;
   }
@@ -640,18 +640,18 @@ had_parent:
     g_critical
         ("Pad %s already has parent when trying to add to element %s",
         pad_name, GST_ELEMENT_NAME (element));
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
     g_free (pad_name);
     return FALSE;
   }
 no_direction:
   {
-    GST_LOCK (pad);
+    GST_OBJECT_LOCK (pad);
     g_critical
         ("Trying to add pad %s to element %s, but it has no direction",
         GST_OBJECT_NAME (pad), GST_ELEMENT_NAME (element));
-    GST_UNLOCK (pad);
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (pad);
+    GST_OBJECT_UNLOCK (element);
     return FALSE;
   }
 }
@@ -678,13 +678,13 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   /* locking pad to look at the name and parent */
-  GST_LOCK (pad);
+  GST_OBJECT_LOCK (pad);
   GST_CAT_INFO_OBJECT (GST_CAT_ELEMENT_PADS, element, "removing pad '%s'",
       GST_STR_NULL (GST_PAD_NAME (pad)));
 
   if (G_UNLIKELY (GST_PAD_PARENT (pad) != element))
     goto not_our_pad;
-  GST_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (pad);
 
   /* unlink */
   if ((peer = gst_pad_get_peer (pad))) {
@@ -699,7 +699,7 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
     gst_object_unref (peer);
   }
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   /* remove it from the list */
   switch (gst_pad_get_direction (pad)) {
     case GST_PAD_SRC:
@@ -717,7 +717,7 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
   element->pads = g_list_remove (element->pads, pad);
   element->numpads--;
   element->pads_cookie++;
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   g_signal_emit (G_OBJECT (element), gst_element_signals[PAD_REMOVED], 0, pad);
 
@@ -728,12 +728,12 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
 not_our_pad:
   {
     /* FIXME, locking order? */
-    GST_LOCK (element);
+    GST_OBJECT_LOCK (element);
     g_critical ("Padname %s:%s does not belong to element %s when removing",
         GST_ELEMENT_NAME (GST_PAD_PARENT (pad)), GST_PAD_NAME (pad),
         GST_ELEMENT_NAME (element));
-    GST_UNLOCK (element);
-    GST_UNLOCK (pad);
+    GST_OBJECT_UNLOCK (element);
+    GST_OBJECT_UNLOCK (pad);
     return FALSE;
   }
 }
@@ -763,9 +763,9 @@ pad_compare_name (GstPad * pad1, const gchar * name)
 {
   gint result;
 
-  GST_LOCK (pad1);
+  GST_OBJECT_LOCK (pad1);
   result = strcmp (GST_PAD_NAME (pad1), name);
-  GST_UNLOCK (pad1);
+  GST_OBJECT_UNLOCK (pad1);
 
   return result;
 }
@@ -792,7 +792,7 @@ gst_element_get_static_pad (GstElement * element, const gchar * name)
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (name != NULL, NULL);
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   find =
       g_list_find_custom (element->pads, name, (GCompareFunc) pad_compare_name);
   if (find) {
@@ -807,7 +807,7 @@ gst_element_get_static_pad (GstElement * element, const gchar * name)
     GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "found pad %s:%s",
         GST_ELEMENT_NAME (element), name);
   }
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return result;
 }
@@ -943,16 +943,16 @@ gst_element_iterate_pad_list (GstElement * element, GList ** padlist)
 {
   GstIterator *result;
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   gst_object_ref (element);
   result = gst_iterator_new_list (GST_TYPE_PAD,
-      GST_GET_LOCK (element),
+      GST_OBJECT_GET_LOCK (element),
       &element->pads_cookie,
       padlist,
       element,
       (GstIteratorItemFunction) iterate_pad,
       (GstIteratorDisposeFunction) gst_object_unref);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return result;
 }
@@ -1120,11 +1120,11 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
 
   switch (dir) {
     case GST_PAD_SRC:
-      GST_LOCK (element);
+      GST_OBJECT_LOCK (element);
       pads = element->srcpads;
       break;
     case GST_PAD_SINK:
-      GST_LOCK (element);
+      GST_OBJECT_LOCK (element);
       pads = element->sinkpads;
       break;
     default:
@@ -1133,24 +1133,24 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
   for (; pads; pads = g_list_next (pads)) {
     GstPad *pad = GST_PAD (pads->data);
 
-    GST_LOCK (pad);
+    GST_OBJECT_LOCK (pad);
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "checking pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
 
     if (GST_PAD_IS_LINKED (pad)) {
-      GST_UNLOCK (pad);
+      GST_OBJECT_UNLOCK (pad);
       result = pad;
       break;
     } else {
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not linked",
           GST_DEBUG_PAD_NAME (pad));
     }
-    GST_UNLOCK (pad);
+    GST_OBJECT_UNLOCK (pad);
   }
   if (result)
     gst_object_ref (result);
 
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return result;
 
@@ -1361,14 +1361,14 @@ gst_element_post_message (GstElement * element, GstMessage * message)
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (message != NULL, FALSE);
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   bus = element->bus;
 
   if (G_UNLIKELY (bus == NULL))
     goto no_bus;
 
   gst_object_ref (bus);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   result = gst_bus_post (bus, message);
   gst_object_unref (bus);
@@ -1378,7 +1378,7 @@ gst_element_post_message (GstElement * element, GstMessage * message)
 no_bus:
   {
     GST_DEBUG ("not posting message %p: no bus", message);
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
     gst_message_unref (message);
     return FALSE;
   }
@@ -1511,9 +1511,9 @@ gst_element_is_locked_state (GstElement * element)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   result = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return result;
 }
@@ -1538,7 +1538,7 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   old = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
 
   if (G_UNLIKELY (old == locked_state))
@@ -1553,12 +1553,12 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
         GST_ELEMENT_NAME (element));
     GST_OBJECT_FLAG_UNSET (element, GST_ELEMENT_LOCKED_STATE);
   }
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return TRUE;
 
 was_ok:
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return FALSE;
 }
@@ -1585,10 +1585,10 @@ gst_element_sync_state_with_parent (GstElement * element)
     GstState parent_current, parent_pending;
     GstStateChangeReturn ret;
 
-    GST_LOCK (parent);
+    GST_OBJECT_LOCK (parent);
     parent_current = GST_STATE (parent);
     parent_pending = GST_STATE_PENDING (parent);
-    GST_UNLOCK (parent);
+    GST_OBJECT_UNLOCK (parent);
 
     GST_CAT_DEBUG (GST_CAT_STATES,
         "syncing state of element %s (%s) to %s (%s, %s)",
@@ -1624,7 +1624,7 @@ gst_element_get_state_func (GstElement * element,
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "getting state");
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   ret = GST_STATE_RETURN (element);
 
   /* we got an error, report immediatly */
@@ -1698,7 +1698,7 @@ done:
       "state current: %s, pending: %s, result: %d",
       gst_element_state_get_name (GST_STATE (element)),
       gst_element_state_get_name (GST_STATE_PENDING (element)), ret);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return ret;
 
@@ -1711,7 +1711,7 @@ interrupted:
 
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "get_state() interruped");
 
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
 
     return GST_STATE_CHANGE_FAILURE;
   }
@@ -1794,7 +1794,7 @@ gst_element_abort_state (GstElement * element)
 
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   pending = GST_STATE_PENDING (element);
 
   if (pending == GST_STATE_VOID_PENDING ||
@@ -1813,13 +1813,13 @@ gst_element_abort_state (GstElement * element)
   GST_STATE_RETURN (element) = GST_STATE_CHANGE_FAILURE;
 
   GST_STATE_BROADCAST (element);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return;
 
 nothing_aborted:
   {
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
     return;
   }
 }
@@ -1854,7 +1854,7 @@ gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
   GstMessage *message;
   GstStateChange transition;
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   old_ret = GST_STATE_RETURN (element);
   GST_STATE_RETURN (element) = ret;
   pending = GST_STATE_PENDING (element);
@@ -1877,7 +1877,7 @@ gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
   transition = GST_STATE_TRANSITION (current, next);
 
   GST_STATE_NEXT (element) = next;
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
       "committing state from %s to %s, pending %s",
@@ -1901,7 +1901,7 @@ gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
 nothing_pending:
   {
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "nothing pending");
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
     return ret;
   }
 complete:
@@ -1910,7 +1910,7 @@ complete:
     GST_STATE_NEXT (element) = GST_STATE_VOID_PENDING;
 
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "completed state change");
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
 
     /* don't post silly messages with the same state. This can happen
      * when an element state is changed to what it already was. For bins
@@ -1956,7 +1956,7 @@ gst_element_lost_state (GstElement * element)
 
   g_return_if_fail (GST_IS_ELEMENT (element));
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   if (GST_STATE_PENDING (element) != GST_STATE_VOID_PENDING ||
       GST_STATE_RETURN (element) == GST_STATE_CHANGE_FAILURE)
     goto nothing_lost;
@@ -1969,7 +1969,7 @@ gst_element_lost_state (GstElement * element)
   GST_STATE_NEXT (element) = current_state;
   GST_STATE_PENDING (element) = current_state;
   GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   message = gst_message_new_state_changed (GST_OBJECT (element),
       current_state, current_state, current_state);
@@ -1983,7 +1983,7 @@ gst_element_lost_state (GstElement * element)
 
 nothing_lost:
   {
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
     return;
   }
 }
@@ -2045,7 +2045,7 @@ gst_element_set_state_func (GstElement * element, GstState state)
   GST_STATE_LOCK (element);
 
   /* now calculate how to get to the new state */
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   old_ret = GST_STATE_RETURN (element);
   /* previous state change returned an error, remove all pending
    * and next states */
@@ -2099,7 +2099,7 @@ gst_element_set_state_func (GstElement * element, GstState state)
   /* now signal any waiters, they will error since the cookie was increased */
   GST_STATE_BROADCAST (element);
 
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   ret = gst_element_change_state (element, transition);
 
@@ -2114,7 +2114,7 @@ was_busy:
     GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
         "element was busy with async state change");
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
 
     GST_STATE_UNLOCK (element);
 
@@ -2190,25 +2190,25 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
   return ret;
 
 async:
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   GST_STATE_RETURN (element) = ret;
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "exit async state change %d",
       ret);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   return ret;
 
   /* ERROR */
 invalid_return:
   {
-    GST_LOCK (element);
+    GST_OBJECT_LOCK (element);
     /* somebody added a GST_STATE_ and forgot to do stuff here ! */
     g_critical ("%s: unknown return value %d from a state change function",
         GST_ELEMENT_NAME (element), ret);
 
     ret = GST_STATE_CHANGE_FAILURE;
     GST_STATE_RETURN (element) = ret;
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
 
     return ret;
   }
@@ -2350,12 +2350,12 @@ gst_element_change_state_func (GstElement * element, GstStateChange transition)
 
 was_ok:
   {
-    GST_LOCK (element);
+    GST_OBJECT_LOCK (element);
     result = GST_STATE_RETURN (element);
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
         "element is already in the %s state",
         gst_element_state_get_name (state));
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
 
     return result;
   }
@@ -2404,10 +2404,10 @@ gst_element_dispose (GObject * object)
         GST_STR_NULL (GST_OBJECT_NAME (object)));
   }
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   gst_object_replace ((GstObject **) & element->clock, NULL);
   gst_object_replace ((GstObject **) & element->bus, NULL);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "parent class dispose");
 
@@ -2578,10 +2578,10 @@ gst_element_set_bus_func (GstElement * element, GstBus * bus)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, element, "setting bus to %p", bus);
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   gst_object_replace ((GstObject **) & GST_ELEMENT_BUS (element),
       GST_OBJECT_CAST (bus));
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 }
 
 /**
@@ -2624,10 +2624,10 @@ gst_element_get_bus (GstElement * element)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), result);
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   result = GST_ELEMENT_BUS (element);
   gst_object_ref (result);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   GST_DEBUG_OBJECT (element, "got bus %" GST_PTR_FORMAT, result);
 

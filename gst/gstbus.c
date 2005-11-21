@@ -308,14 +308,14 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   GST_DEBUG_OBJECT (bus, "[msg %p] posting on bus, type %s",
       message, gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
 
-  GST_LOCK (bus);
+  GST_OBJECT_LOCK (bus);
   /* check if the bus is flushing */
   if (GST_OBJECT_FLAG_IS_SET (bus, GST_BUS_FLUSHING))
     goto is_flushing;
 
   handler = bus->sync_handler;
   handler_data = bus->sync_handler_data;
-  GST_UNLOCK (bus);
+  GST_OBJECT_UNLOCK (bus);
 
   /* first call the sync handler if it is installed */
   if (handler)
@@ -383,7 +383,7 @@ is_flushing:
   {
     GST_DEBUG_OBJECT (bus, "bus is flushing");
     gst_message_unref (message);
-    GST_UNLOCK (bus);
+    GST_OBJECT_UNLOCK (bus);
 
     return FALSE;
   }
@@ -432,7 +432,7 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
 {
   GstMessage *message;
 
-  GST_LOCK (bus);
+  GST_OBJECT_LOCK (bus);
 
   if (flushing) {
     GST_OBJECT_FLAG_SET (bus, GST_BUS_FLUSHING);
@@ -446,7 +446,7 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
     GST_OBJECT_FLAG_UNSET (bus, GST_BUS_FLUSHING);
   }
 
-  GST_UNLOCK (bus);
+  GST_OBJECT_UNLOCK (bus);
 }
 
 
@@ -531,7 +531,7 @@ gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func, gpointer data)
 {
   g_return_if_fail (GST_IS_BUS (bus));
 
-  GST_LOCK (bus);
+  GST_OBJECT_LOCK (bus);
 
   /* Assert if the user attempts to replace an existing sync_handler,
    * other than to clear it */
@@ -540,13 +540,13 @@ gst_bus_set_sync_handler (GstBus * bus, GstBusSyncHandler func, gpointer data)
 
   bus->sync_handler = func;
   bus->sync_handler_data = data;
-  GST_UNLOCK (bus);
+  GST_OBJECT_UNLOCK (bus);
 
   return;
 
 no_replace:
   {
-    GST_UNLOCK (bus);
+    GST_OBJECT_UNLOCK (bus);
     g_warning ("cannot replace existing sync handler");
     return;
   }
@@ -923,7 +923,7 @@ gst_bus_add_signal_watch (GstBus * bus)
   g_return_if_fail (GST_IS_BUS (bus));
 
   /* I know the callees don't take this lock, so go ahead and abuse it */
-  GST_LOCK (bus);
+  GST_OBJECT_LOCK (bus);
 
   if (bus->num_signal_watchers > 0)
     goto done;
@@ -937,7 +937,7 @@ done:
 
   bus->num_signal_watchers++;
 
-  GST_UNLOCK (bus);
+  GST_OBJECT_UNLOCK (bus);
 }
 
 /**
@@ -954,7 +954,7 @@ gst_bus_remove_signal_watch (GstBus * bus)
   g_return_if_fail (GST_IS_BUS (bus));
 
   /* I know the callees don't take this lock, so go ahead and abuse it */
-  GST_LOCK (bus);
+  GST_OBJECT_LOCK (bus);
 
   if (bus->num_signal_watchers == 0)
     goto error;
@@ -968,13 +968,13 @@ gst_bus_remove_signal_watch (GstBus * bus)
   bus->signal_watch_id = 0;
 
 done:
-  GST_UNLOCK (bus);
+  GST_OBJECT_UNLOCK (bus);
   return;
 
 error:
   {
     g_critical ("Bus %s has no signal watches attached", GST_OBJECT_NAME (bus));
-    GST_UNLOCK (bus);
+    GST_OBJECT_UNLOCK (bus);
     return;
   }
 }

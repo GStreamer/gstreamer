@@ -202,12 +202,12 @@ GST_START_TEST (test_ghost_pads)
   fail_unless (gst_bin_add (GST_BIN (b1), sink));
   fail_unless (gst_element_link_pads (src, NULL, i1, NULL));
   fail_unless (gst_element_link_pads (i1, NULL, sink, NULL));
-  GST_LOCK (b2);
+  GST_OBJECT_LOCK (b2);
   fail_unless (b2->numsinkpads == 1);
   fail_unless (GST_IS_GHOST_PAD (b2->sinkpads->data));
   fail_unless (b2->numsrcpads == 1);
   fail_unless (GST_IS_GHOST_PAD (b2->srcpads->data));
-  GST_UNLOCK (b2);
+  GST_OBJECT_UNLOCK (b2);
 
   fsrc = gst_element_get_pad (src, "src");
   fail_unless (fsrc != NULL);

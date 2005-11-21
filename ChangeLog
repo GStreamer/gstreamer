@@ -1,3 +1,16 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	* *.h:
+	* *.c: Ran scripts/update-macros. Oh yes.
+
+	* gst/gstobject.h (GST_OBJECT_GET_LOCK, GST_OBJECT_LOCK)
+	(GST_OBJECT_TRYLOCK, GST_OBJECT_UNLOCK): Renamed from
+	GST_GET_LOCK, etc.
+
+	* scripts/update-macros: New script. Run it on your files to
+	change GST_LOCK to GST_OBJECT_LOCK, and the same for UNLOCK as
+	well.
+
 2005-11-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/Makefile.am:

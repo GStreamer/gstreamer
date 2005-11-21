@@ -1126,12 +1126,12 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     srcpads = NULL;
   } else {
     /* no name given, get the first available pad */
-    GST_LOCK (src);
+    GST_OBJECT_LOCK (src);
     srcpads = GST_ELEMENT_PADS (src);
     srcpad = srcpads ? GST_PAD_CAST (srcpads->data) : NULL;
     if (srcpad)
       gst_object_ref (srcpad);
-    GST_UNLOCK (src);
+    GST_OBJECT_UNLOCK (src);
   }
 
   /* get a destination pad */
@@ -1159,12 +1159,12 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     destpads = NULL;
   } else {
     /* no name given, get the first available pad */
-    GST_LOCK (dest);
+    GST_OBJECT_LOCK (dest);
     destpads = GST_ELEMENT_PADS (dest);
     destpad = destpads ? GST_PAD_CAST (destpads->data) : NULL;
     if (destpad)
       gst_object_ref (destpad);
-    GST_UNLOCK (dest);
+    GST_OBJECT_UNLOCK (dest);
   }
 
   if (srcpadname && destpadname) {
@@ -2442,14 +2442,14 @@ gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
   g_return_val_if_fail (GST_IS_PAD (pad), 0);
   g_return_val_if_fail (handler != NULL, 0);
 
-  GST_LOCK (pad);
+  GST_OBJECT_LOCK (pad);
   sigid = g_signal_connect (pad, "have-data", handler, data);
   GST_PAD_DO_EVENT_SIGNALS (pad)++;
   GST_PAD_DO_BUFFER_SIGNALS (pad)++;
   GST_DEBUG ("adding data probe to pad %s:%s, now %d data, %d event probes",
       GST_DEBUG_PAD_NAME (pad),
       GST_PAD_DO_BUFFER_SIGNALS (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
-  GST_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (pad);
 
   return sigid;
 }
@@ -2473,12 +2473,12 @@ gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
   g_return_val_if_fail (GST_IS_PAD (pad), 0);
   g_return_val_if_fail (handler != NULL, 0);
 
-  GST_LOCK (pad);
+  GST_OBJECT_LOCK (pad);
   sigid = g_signal_connect (pad, "have-data::event", handler, data);
   GST_PAD_DO_EVENT_SIGNALS (pad)++;
   GST_DEBUG ("adding event probe to pad %s:%s, now %d probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
-  GST_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (pad);
 
   return sigid;
 }
@@ -2502,12 +2502,12 @@ gst_pad_add_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
   g_return_val_if_fail (GST_IS_PAD (pad), 0);
   g_return_val_if_fail (handler != NULL, 0);
 
-  GST_LOCK (pad);
+  GST_OBJECT_LOCK (pad);
   sigid = g_signal_connect (pad, "have-data::buffer", handler, data);
   GST_PAD_DO_BUFFER_SIGNALS (pad)++;
   GST_DEBUG ("adding buffer probe to pad %s:%s, now %d probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));
-  GST_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (pad);
 
   return sigid;
 }
@@ -2525,7 +2525,7 @@ gst_pad_remove_data_probe (GstPad * pad, guint handler_id)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (handler_id > 0);
 
-  GST_LOCK (pad);
+  GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);
   GST_PAD_DO_BUFFER_SIGNALS (pad)--;
   GST_PAD_DO_EVENT_SIGNALS (pad)--;
@@ -2533,7 +2533,7 @@ gst_pad_remove_data_probe (GstPad * pad, guint handler_id)
       ("removed data probe from pad %s:%s, now %d event, %d buffer probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_EVENT_SIGNALS (pad),
       GST_PAD_DO_BUFFER_SIGNALS (pad));
-  GST_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (pad);
 }
 
 /**
@@ -2549,12 +2549,12 @@ gst_pad_remove_event_probe (GstPad * pad, guint handler_id)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (handler_id > 0);
 
-  GST_LOCK (pad);
+  GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);
   GST_PAD_DO_EVENT_SIGNALS (pad)--;
   GST_DEBUG ("removed event probe from pad %s:%s, now %d event probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
-  GST_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (pad);
 }
 
 /**
@@ -2570,12 +2570,12 @@ gst_pad_remove_buffer_probe (GstPad * pad, guint handler_id)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (handler_id > 0);
 
-  GST_LOCK (pad);
+  GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);
   GST_PAD_DO_BUFFER_SIGNALS (pad)--;
   GST_DEBUG ("removed buffer probe from pad %s:%s, now %d buffer probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));
-  GST_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (pad);
 }
 
 /**

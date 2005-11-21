@@ -83,7 +83,7 @@ typedef enum {
  *
  * Wait for the task cond to be signalled
  */
-#define GST_TASK_WAIT(task)		g_cond_wait(GST_TASK_GET_COND (task), GST_GET_LOCK (task))
+#define GST_TASK_WAIT(task)		g_cond_wait(GST_TASK_GET_COND (task), GST_OBJECT_GET_LOCK (task))
 /**
  * GST_TASK_SIGNAL:
  * @task: Task to signal

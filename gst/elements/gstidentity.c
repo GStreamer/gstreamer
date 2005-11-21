@@ -243,7 +243,7 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
     const GstStructure *s;
     gchar *sstr;
 
-    GST_LOCK (identity);
+    GST_OBJECT_LOCK (identity);
     g_free (identity->last_message);
 
     if ((s = gst_event_get_structure (event)))
@@ -256,7 +256,7 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
         GST_DEBUG_PAD_NAME (trans->sinkpad), GST_EVENT_TYPE (event), sstr,
         event);
     g_free (sstr);
-    GST_UNLOCK (identity);
+    GST_OBJECT_UNLOCK (identity);
 
     g_object_notify (G_OBJECT (identity), "last_message");
   }
@@ -320,7 +320,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   if (identity->drop_probability > 0.0) {
     if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability) {
-      GST_LOCK (identity);
+      GST_OBJECT_LOCK (identity);
       g_free (identity->last_message);
       identity->last_message =
           g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, timestamp: %"
@@ -331,7 +331,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
           GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
           GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
           GST_BUFFER_FLAGS (buf), buf);
-      GST_UNLOCK (identity);
+      GST_OBJECT_UNLOCK (identity);
       g_object_notify (G_OBJECT (identity), "last-message");
       return GST_FLOW_OK;
     }
@@ -342,7 +342,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   }
 
   if (!identity->silent) {
-    GST_LOCK (identity);
+    GST_OBJECT_LOCK (identity);
     g_free (identity->last_message);
     identity->last_message =
         g_strdup_printf ("chain   ******* (%s:%s)i (%d bytes, timestamp: %"
@@ -353,7 +353,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
         GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
         GST_BUFFER_FLAGS (buf), buf);
-    GST_UNLOCK (identity);
+    GST_OBJECT_UNLOCK (identity);
     g_object_notify (G_OBJECT (identity), "last-message");
   }
 
@@ -371,7 +371,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   if (identity->sync) {
     GstClock *clock;
 
-    GST_LOCK (identity);
+    GST_OBJECT_LOCK (identity);
     if ((clock = GST_ELEMENT (identity)->clock)) {
       GstClockReturn cret;
       GstClockTime timestamp;
@@ -383,11 +383,11 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       /* save id if we need to unlock */
       /* FIXME: actually unlock this somewhere in the state changes */
       identity->clock_id = gst_clock_new_single_shot_id (clock, timestamp);
-      GST_UNLOCK (identity);
+      GST_OBJECT_UNLOCK (identity);
 
       cret = gst_clock_id_wait (identity->clock_id, NULL);
 
-      GST_LOCK (identity);
+      GST_OBJECT_LOCK (identity);
       if (identity->clock_id) {
         gst_clock_id_unref (identity->clock_id);
         identity->clock_id = NULL;
@@ -395,7 +395,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       if (cret == GST_CLOCK_UNSCHEDULED)
         ret = GST_FLOW_UNEXPECTED;
     }
-    GST_UNLOCK (identity);
+    GST_OBJECT_UNLOCK (identity);
   }
 
   identity->offset += GST_BUFFER_SIZE (buf);
@@ -473,9 +473,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, identity->dump);
       break;
     case PROP_LAST_MESSAGE:
-      GST_LOCK (identity);
+      GST_OBJECT_LOCK (identity);
       g_value_set_string (value, identity->last_message);
-      GST_UNLOCK (identity);
+      GST_OBJECT_UNLOCK (identity);
       break;
     case PROP_SYNC:
       g_value_set_boolean (value, identity->sync);
@@ -511,10 +511,10 @@ gst_identity_stop (GstBaseTransform * trans)
 
   identity = GST_IDENTITY (trans);
 
-  GST_LOCK (identity);
+  GST_OBJECT_LOCK (identity);
   g_free (identity->last_message);
   identity->last_message = NULL;
-  GST_UNLOCK (identity);
+  GST_OBJECT_UNLOCK (identity);
 
   return TRUE;
 }

@@ -1422,7 +1422,7 @@ gst_base_transform_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_LOCK (trans);
+      GST_OBJECT_LOCK (trans);
       if (GST_PAD_CAPS (trans->sinkpad) && GST_PAD_CAPS (trans->srcpad))
         trans->have_same_caps =
             gst_caps_is_equal (GST_PAD_CAPS (trans->sinkpad),
@@ -1437,7 +1437,7 @@ gst_base_transform_change_state (GstElement * element,
       trans->segment_stop = -1;
       trans->segment_base = 0;
       trans->segment_accum = 0;
-      GST_UNLOCK (trans);
+      GST_OBJECT_UNLOCK (trans);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -1489,7 +1489,7 @@ gst_base_transform_set_passthrough (GstBaseTransform * trans,
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  GST_LOCK (trans);
+  GST_OBJECT_LOCK (trans);
   if (passthrough == FALSE) {
     if (bclass->transform_ip || bclass->transform)
       trans->passthrough = FALSE;
@@ -1498,7 +1498,7 @@ gst_base_transform_set_passthrough (GstBaseTransform * trans,
   }
 
   GST_DEBUG_OBJECT (trans, "set passthrough %d", trans->passthrough);
-  GST_UNLOCK (trans);
+  GST_OBJECT_UNLOCK (trans);
 }
 
 /**
@@ -1518,9 +1518,9 @@ gst_base_transform_is_passthrough (GstBaseTransform * trans)
 
   g_return_val_if_fail (trans != NULL, FALSE);
 
-  GST_LOCK (trans);
+  GST_OBJECT_LOCK (trans);
   result = trans->passthrough;
-  GST_UNLOCK (trans);
+  GST_OBJECT_UNLOCK (trans);
 
   return result;
 }
@@ -1549,7 +1549,7 @@ gst_base_transform_set_in_place (GstBaseTransform * trans, gboolean in_place)
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  GST_LOCK (trans);
+  GST_OBJECT_LOCK (trans);
 
   if (in_place) {
     if (bclass->transform_ip) {
@@ -1563,7 +1563,7 @@ gst_base_transform_set_in_place (GstBaseTransform * trans, gboolean in_place)
     }
   }
 
-  GST_UNLOCK (trans);
+  GST_OBJECT_UNLOCK (trans);
 }
 
 /**
@@ -1583,9 +1583,9 @@ gst_base_transform_is_in_place (GstBaseTransform * trans)
 
   g_return_val_if_fail (trans != NULL, FALSE);
 
-  GST_LOCK (trans);
+  GST_OBJECT_LOCK (trans);
   result = trans->always_in_place;
-  GST_UNLOCK (trans);
+  GST_OBJECT_UNLOCK (trans);
 
   return result;
 }

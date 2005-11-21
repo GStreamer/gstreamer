@@ -104,7 +104,7 @@
           functions, e.g. object properties. Be sure to lock properly here,
           since applications will change those properties in a different thread
           than the thread which does the actual data passing! You can use the
-          <function>GST_LOCK ()</function> and <function>GST_UNLOCK
+          <function>GST_OBJECT_LOCK ()</function> and <function>GST_OBJECT_UNLOCK
           ()</function> helpers in most cases, fortunately, which grabs the
           default property lock of the element.
         </para>

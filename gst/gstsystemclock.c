@@ -126,7 +126,7 @@ gst_system_clock_init (GstSystemClock * clock)
       GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC |
       GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC;
 
-  GST_LOCK (clock);
+  GST_OBJECT_LOCK (clock);
   clock->thread = g_thread_create ((GThreadFunc) gst_system_clock_async_thread,
       clock, TRUE, &error);
   if (error)
@@ -134,13 +134,13 @@ gst_system_clock_init (GstSystemClock * clock)
 
   /* wait for it to spin up */
   GST_CLOCK_WAIT (clock);
-  GST_UNLOCK (clock);
+  GST_OBJECT_UNLOCK (clock);
   return;
 
 no_thread:
   {
     g_warning ("could not create async clock thread: %s", error->message);
-    GST_UNLOCK (clock);
+    GST_OBJECT_UNLOCK (clock);
   }
 }
 
@@ -153,7 +153,7 @@ gst_system_clock_dispose (GObject * object)
   GList *entries;
 
   /* else we have to stop the thread */
-  GST_LOCK (clock);
+  GST_OBJECT_LOCK (clock);
   sysclock->stopping = TRUE;
   /* unschedule all entries */
   for (entries = clock->entries; entries; entries = g_list_next (entries)) {
@@ -165,7 +165,7 @@ gst_system_clock_dispose (GObject * object)
   g_list_free (clock->entries);
   clock->entries = NULL;
   GST_CLOCK_BROADCAST (clock);
-  GST_UNLOCK (clock);
+  GST_OBJECT_UNLOCK (clock);
 
   if (sysclock->thread)
     g_thread_join (sysclock->thread);
@@ -238,7 +238,7 @@ gst_system_clock_async_thread (GstClock * clock)
   GstSystemClock *sysclock = GST_SYSTEM_CLOCK (clock);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "enter system clock thread");
-  GST_LOCK (clock);
+  GST_OBJECT_LOCK (clock);
   /* signal spinup */
   GST_CLOCK_BROADCAST (clock);
   /* now enter our (almost) infinite loop */
@@ -281,10 +281,10 @@ gst_system_clock_async_thread (GstClock * clock)
         GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p unlocked", entry);
         if (entry->func) {
           /* unlock before firing the callback */
-          GST_UNLOCK (clock);
+          GST_OBJECT_UNLOCK (clock);
           entry->func (clock, entry->time, (GstClockID) entry,
               entry->user_data);
-          GST_LOCK (clock);
+          GST_OBJECT_LOCK (clock);
         }
         if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
           /* adjust time now */
@@ -320,7 +320,7 @@ gst_system_clock_async_thread (GstClock * clock)
 exit:
   /* signal exit */
   GST_CLOCK_BROADCAST (clock);
-  GST_UNLOCK (clock);
+  GST_OBJECT_UNLOCK (clock);
   GST_CAT_DEBUG (GST_CAT_CLOCK, "exit system clock thread");
 }
 
@@ -413,9 +413,9 @@ gst_system_clock_id_wait (GstClock * clock, GstClockEntry * entry)
 {
   GstClockReturn ret;
 
-  GST_LOCK (clock);
+  GST_OBJECT_LOCK (clock);
   ret = gst_system_clock_id_wait_unlocked (clock, entry);
-  GST_UNLOCK (clock);
+  GST_OBJECT_UNLOCK (clock);
 
   return ret;
 }
@@ -432,7 +432,7 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
 {
   GST_CAT_DEBUG (GST_CAT_CLOCK, "adding entry %p", entry);
 
-  GST_LOCK (clock);
+  GST_OBJECT_LOCK (clock);
   /* need to take a ref */
   gst_clock_id_ref ((GstClockID) entry);
   /* insert the entry in sorted order */
@@ -446,7 +446,7 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
     GST_CAT_DEBUG (GST_CAT_CLOCK, "send signal");
     GST_CLOCK_BROADCAST (clock);
   }
-  GST_UNLOCK (clock);
+  GST_OBJECT_UNLOCK (clock);
 
   return GST_CLOCK_OK;
 }
@@ -463,9 +463,9 @@ gst_system_clock_id_unschedule (GstClock * clock, GstClockEntry * entry)
 {
   GST_CAT_DEBUG (GST_CAT_CLOCK, "unscheduling entry %p", entry);
 
-  GST_LOCK (clock);
+  GST_OBJECT_LOCK (clock);
   entry->status = GST_CLOCK_UNSCHEDULED;
   GST_CAT_DEBUG (GST_CAT_CLOCK, "send signal");
   GST_CLOCK_BROADCAST (clock);
-  GST_UNLOCK (clock);
+  GST_OBJECT_UNLOCK (clock);
 }

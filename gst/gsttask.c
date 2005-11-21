@@ -152,16 +152,16 @@ gst_task_func (GstTask * task, GstTaskClass * tclass)
   /* we have to grab the lock to get the mutex. We also
    * mark our state running so that nobody can mess with
    * the mutex. */
-  GST_LOCK (task);
+  GST_OBJECT_LOCK (task);
   if (task->state == GST_TASK_STOPPED)
     goto exit;
   lock = GST_TASK_GET_LOCK (task);
   task->running = TRUE;
-  GST_UNLOCK (task);
+  GST_OBJECT_UNLOCK (task);
 
   /* locking order is TASK_LOCK, LOCK */
   g_static_rec_mutex_lock (lock);
-  GST_LOCK (task);
+  GST_OBJECT_LOCK (task);
   while (G_LIKELY (task->state != GST_TASK_STOPPED)) {
     while (G_UNLIKELY (task->state == GST_TASK_PAUSED)) {
       gint t;
@@ -172,31 +172,31 @@ gst_task_func (GstTask * task, GstTaskClass * tclass)
       }
       GST_TASK_SIGNAL (task);
       GST_TASK_WAIT (task);
-      GST_UNLOCK (task);
+      GST_OBJECT_UNLOCK (task);
       /* locking order.. */
       if (t > 0)
         g_static_rec_mutex_lock_full (lock, t);
 
-      GST_LOCK (task);
+      GST_OBJECT_LOCK (task);
       if (G_UNLIKELY (task->state == GST_TASK_STOPPED))
         goto done;
     }
-    GST_UNLOCK (task);
+    GST_OBJECT_UNLOCK (task);
 
     task->func (task->data);
 
-    GST_LOCK (task);
+    GST_OBJECT_LOCK (task);
   }
 done:
-  GST_UNLOCK (task);
+  GST_OBJECT_UNLOCK (task);
   g_static_rec_mutex_unlock (lock);
 
   /* now we allow messing with the lock again */
-  GST_LOCK (task);
+  GST_OBJECT_LOCK (task);
   task->running = FALSE;
 exit:
   GST_TASK_SIGNAL (task);
-  GST_UNLOCK (task);
+  GST_OBJECT_UNLOCK (task);
 
   GST_DEBUG ("Exit task %p, thread %p", task, g_thread_self ());
 
@@ -272,11 +272,11 @@ gst_task_create (GstTaskFunction func, gpointer data)
 void
 gst_task_set_lock (GstTask * task, GStaticRecMutex * mutex)
 {
-  GST_LOCK (task);
+  GST_OBJECT_LOCK (task);
   if (task->running)
     goto is_running;
   GST_TASK_GET_LOCK (task) = mutex;
-  GST_UNLOCK (task);
+  GST_OBJECT_UNLOCK (task);
 
   return;
 
@@ -284,7 +284,7 @@ gst_task_set_lock (GstTask * task, GStaticRecMutex * mutex)
 is_running:
   {
     g_warning ("cannot call set_lock on a running task");
-    GST_UNLOCK (task);
+    GST_OBJECT_UNLOCK (task);
   }
 }
 
@@ -306,9 +306,9 @@ gst_task_get_state (GstTask * task)
 
   g_return_val_if_fail (GST_IS_TASK (task), GST_TASK_STOPPED);
 
-  GST_LOCK (task);
+  GST_OBJECT_LOCK (task);
   result = task->state;
-  GST_UNLOCK (task);
+  GST_OBJECT_UNLOCK (task);
 
   return result;
 }
@@ -333,7 +333,7 @@ gst_task_start (GstTask * task)
 
   GST_DEBUG_OBJECT (task, "Starting task %p", task);
 
-  GST_LOCK (task);
+  GST_OBJECT_LOCK (task);
   if (G_UNLIKELY (GST_TASK_GET_LOCK (task) == NULL))
     goto no_lock;
 
@@ -362,7 +362,7 @@ gst_task_start (GstTask * task)
       /* was OK */
       break;
   }
-  GST_UNLOCK (task);
+  GST_OBJECT_UNLOCK (task);
 
   return TRUE;
 
@@ -398,7 +398,7 @@ gst_task_stop (GstTask * task)
 
   GST_DEBUG_OBJECT (task, "Stopping task %p", task);
 
-  GST_LOCK (task);
+  GST_OBJECT_LOCK (task);
   old = task->state;
   task->state = GST_TASK_STOPPED;
   switch (old) {
@@ -410,7 +410,7 @@ gst_task_stop (GstTask * task)
     case GST_TASK_STARTED:
       break;
   }
-  GST_UNLOCK (task);
+  GST_OBJECT_UNLOCK (task);
 
   return TRUE;
 }
@@ -437,7 +437,7 @@ gst_task_pause (GstTask * task)
 
   GST_DEBUG_OBJECT (task, "Pausing task %p", task);
 
-  GST_LOCK (task);
+  GST_OBJECT_LOCK (task);
   old = task->state;
   task->state = GST_TASK_PAUSED;
   switch (old) {
@@ -458,7 +458,7 @@ gst_task_pause (GstTask * task)
     case GST_TASK_STARTED:
       break;
   }
-  GST_UNLOCK (task);
+  GST_OBJECT_UNLOCK (task);
 
   return TRUE;
 }
@@ -486,12 +486,12 @@ gst_task_join (GstTask * task)
 
   GST_DEBUG_OBJECT (task, "Joining task %p", task);
 
-  GST_LOCK (task);
+  GST_OBJECT_LOCK (task);
   task->state = GST_TASK_STOPPED;
   GST_TASK_SIGNAL (task);
   while (task->running)
     GST_TASK_WAIT (task);
-  GST_UNLOCK (task);
+  GST_OBJECT_UNLOCK (task);
 
   GST_DEBUG_OBJECT (task, "Joined task %p", task);
 

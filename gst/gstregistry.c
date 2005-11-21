@@ -236,16 +236,16 @@ gst_registry_add_path (GstRegistry * registry, const gchar * path)
     return;
   }
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   if (g_list_find_custom (registry->paths, path, (GCompareFunc) strcmp)) {
     g_warning ("path %s already added to registry", path);
-    GST_UNLOCK (registry);
+    GST_OBJECT_UNLOCK (registry);
     return;
   }
 
   GST_INFO ("Adding plugin path: \"%s\"", path);
   registry->paths = g_list_append (registry->paths, g_strdup (path));
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
 }
 
 /**
@@ -263,11 +263,11 @@ gst_registry_get_path_list (GstRegistry * registry)
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   /* We don't need to copy the strings, because they won't be deleted
    * as long as the GstRegistry is around */
   list = g_list_copy (registry->paths);
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
 
   return list;
 }
@@ -289,7 +289,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   existing_plugin = gst_registry_lookup_locked (registry, plugin->filename);
   if (existing_plugin) {
     GST_DEBUG_OBJECT (registry,
@@ -306,7 +306,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
 
   gst_object_ref (plugin);
   gst_object_sink (plugin);
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
 
   GST_DEBUG_OBJECT (registry, "emitting plugin-added for filename \"%s\"",
       GST_STR_NULL (plugin->filename));
@@ -328,9 +328,9 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   registry->plugins = g_list_remove (registry->plugins, plugin);
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
   gst_object_unref (plugin);
 }
 
@@ -353,7 +353,7 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   g_return_val_if_fail (feature->name != NULL, FALSE);
   g_return_val_if_fail (feature->plugin_name != NULL, FALSE);
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   existing_feature = gst_registry_lookup_feature_locked (registry,
       feature->name);
   if (existing_feature) {
@@ -369,7 +369,7 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
 
   gst_object_ref (feature);
   gst_object_sink (feature);
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
 
   GST_DEBUG_OBJECT (registry, "emitting feature-added for %s", feature->name);
   g_signal_emit (G_OBJECT (registry), gst_registry_signals[FEATURE_ADDED], 0,
@@ -392,9 +392,9 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
   GST_DEBUG_OBJECT (registry, "removing feature %p (%s)",
       feature, gst_plugin_feature_get_name (feature));
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   registry->features = g_list_remove (registry->features, feature);
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
   gst_object_unref (feature);
 }
 
@@ -422,13 +422,13 @@ gst_registry_plugin_filter (GstRegistry * registry,
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   list = gst_filter_run (registry->plugins, (GstFilterFunc) filter, first,
       user_data);
   for (g = list; g; g = g->next) {
     gst_object_ref (GST_PLUGIN (g->data));
   }
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
 
   return list;
 }
@@ -456,13 +456,13 @@ gst_registry_feature_filter (GstRegistry * registry,
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   list = gst_filter_run (registry->features, (GstFilterFunc) filter, first,
       user_data);
   for (g = list; g; g = g->next) {
     gst_object_ref (GST_PLUGIN_FEATURE (g->data));
   }
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
 
   return list;
 }
@@ -564,12 +564,12 @@ gst_registry_get_plugin_list (GstRegistry * registry)
   GList *list;
   GList *g;
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   list = g_list_copy (registry->plugins);
   for (g = list; g; g = g->next) {
     gst_object_ref (GST_PLUGIN (g->data));
   }
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
 
   return list;
 }
@@ -598,11 +598,11 @@ gst_registry_lookup_feature (GstRegistry * registry, const char *name)
 {
   GstPluginFeature *feature;
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   feature = gst_registry_lookup_feature_locked (registry, name);
   if (feature)
     gst_object_ref (feature);
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
 
   return feature;
 }
@@ -645,11 +645,11 @@ gst_registry_lookup (GstRegistry * registry, const char *filename)
 {
   GstPlugin *plugin;
 
-  GST_LOCK (registry);
+  GST_OBJECT_LOCK (registry);
   plugin = gst_registry_lookup_locked (registry, filename);
   if (plugin)
     gst_object_ref (plugin);
-  GST_UNLOCK (registry);
+  GST_OBJECT_UNLOCK (registry);
 
   return plugin;
 }

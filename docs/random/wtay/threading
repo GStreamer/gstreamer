@@ -481,7 +481,7 @@ Fixing Threading
      The following pseudo code shows an algorithm for commiting the state
      change in the streaming method.
 
-	  GST_LOCK (element);
+	  GST_OBJECT_LOCK (element);
 	  /* if we are going to PAUSED, we can commit the state change */
 	  if (GST_STATE_TRANSITION (element) == GST_STATE_READY_TO_PAUSED) {
 	    gst_element_commit_state (element);
@@ -491,18 +491,18 @@ Fixing Threading
 
             /* here we wait for the next state change */
 	    do {
-	      g_cond_wait (element->state_cond, GST_GET_LOCK (element));
+	      g_cond_wait (element->state_cond, GST_OBJECT_GET_LOCK (element));
 	    } while (GST_STATE (element) == GST_STATE_PAUSED);
 
             /* check if we got playing */
             if (GST_STATE (element) != GST_STATE_PLAYING) {
 	      /* not playing, we can't accept the buffer */
-	      GST_UNLOCK (element);
+	      GST_OBJECT_UNLOCK (element);
 	      gst_buffer_unref (buf);
 	      return GST_FLOW_WRONG_STATE;
 	    }
 	  }
-	  GST_UNLOCK (element);
+	  GST_OBJECT_UNLOCK (element);
 
      
 

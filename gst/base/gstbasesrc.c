@@ -812,11 +812,11 @@ gst_base_src_wait (GstBaseSrc * basesrc, GstClockTime time)
 
   basesrc->clock_id = id;
   /* release the object lock while waiting */
-  GST_UNLOCK (basesrc);
+  GST_OBJECT_UNLOCK (basesrc);
 
   ret = gst_clock_id_wait (id, NULL);
 
-  GST_LOCK (basesrc);
+  GST_OBJECT_LOCK (basesrc);
   gst_clock_id_unref (id);
   basesrc->clock_id = NULL;
 
@@ -853,7 +853,7 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
       ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
 
   /* now do clocking */
-  GST_LOCK (basesrc);
+  GST_OBJECT_LOCK (basesrc);
   base_time = GST_ELEMENT_CAST (basesrc)->base_time;
 
   GST_LOG_OBJECT (basesrc,
@@ -862,7 +862,7 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
       GST_TIME_ARGS (base_time), GST_TIME_ARGS (start));
 
   result = gst_base_src_wait (basesrc, start + base_time);
-  GST_UNLOCK (basesrc);
+  GST_OBJECT_UNLOCK (basesrc);
 
   GST_LOG_OBJECT (basesrc, "clock entry done: %d", result);
 
@@ -892,10 +892,10 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
       GST_DEBUG ("live source unlocked");
     }
     /* FIXME, use another variable to signal stopping */
-    GST_LOCK (src->srcpad);
+    GST_OBJECT_LOCK (src->srcpad);
     if (GST_PAD_IS_FLUSHING (src->srcpad))
       goto flushing;
-    GST_UNLOCK (src->srcpad);
+    GST_OBJECT_UNLOCK (src->srcpad);
   }
   GST_LIVE_UNLOCK (src);
 
@@ -974,7 +974,7 @@ done:
 flushing:
   {
     GST_DEBUG_OBJECT (src, "pad is flushing");
-    GST_UNLOCK (src->srcpad);
+    GST_OBJECT_UNLOCK (src->srcpad);
     GST_LIVE_UNLOCK (src);
     return GST_FLOW_WRONG_STATE;
   }
@@ -1129,11 +1129,11 @@ gst_base_src_unlock (GstBaseSrc * basesrc)
 
   GST_DEBUG ("unschedule clock");
   /* and unblock the clock as well, if any */
-  GST_LOCK (basesrc);
+  GST_OBJECT_LOCK (basesrc);
   if (basesrc->clock_id) {
     gst_clock_id_unschedule (basesrc->clock_id);
   }
-  GST_UNLOCK (basesrc);
+  GST_OBJECT_UNLOCK (basesrc);
 
   GST_DEBUG ("unlock done");
 

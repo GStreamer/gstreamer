@@ -151,7 +151,7 @@ Objects
   internal consistency when multiple threads call API function on the object.
 
   For objects that extend the GStreamer base object class this lock can be
-  obtained with the macros GST_LOCK() and GST_UNLOCK(). For other object that do
+  obtained with the macros GST_OBJECT_LOCK() and GST_OBJECT_UNLOCK(). For other object that do
   not extend from the base GstObject class these macros can be different.
 
 * refcounting
@@ -236,9 +236,9 @@ Objects
   
     Accessing the property is therefore allowed with the following code example:
 
-      GST_LOCK (pad);
+      GST_OBJECT_LOCK (pad);
       direction = GST_RPAD_DIRECTION (pad);
-      GST_UNLOCK (pad);
+      GST_OBJECT_UNLOCK (pad);
 
 * Property lifetime
 
@@ -263,11 +263,11 @@ Objects
     lock is released, the peer could be unreffed and disposed, making the
     pointer obtained in the critical section point to invalid memory.
 
-      GST_LOCK (pad);
+      GST_OBJECT_LOCK (pad);
       peer = GST_RPAD_PEER (pad);
       if (peer)
         gst_object_ref (GST_OBJECT (peer));
-      GST_UNLOCK (pad);
+      GST_OBJECT_UNLOCK (pad);
       ... use peer ...
 
       if (peer)
@@ -292,9 +292,9 @@ Objects
     Accessing the name of an object makes a copy of the name. The caller of the
     function should g_free() the name after usage.
 
-      GST_LOCK (object)
+      GST_OBJECT_LOCK (object)
       name = g_strdup (object->name);
-      GST_UNLOCK (object)
+      GST_OBJECT_UNLOCK (object)
       ... use name ...
 
       g_free (name);
@@ -350,7 +350,7 @@ Objects
      that whenever we reacquire the lock, we check for updates to the cookie to
      decide if we are still iterating the right list.
 
-     GST_LOCK (lock);
+     GST_OBJECT_LOCK (lock);
      /* grab list and cookie */
      cookie = object->list_cookie;
      list = object-list;
@@ -358,14 +358,14 @@ Objects
        GstObject *item = GST_OBJECT (list->data);
        /* need to ref the item before releasing the lock */
        gst_object_ref (item);
-       GST_UNLOCK (lock);
+       GST_OBJECT_UNLOCK (lock);
 
        ... use/change item here...
 
        /* release item here */
        gst_object_unref (item);
   
-       GST_LOCK (lock);
+       GST_OBJECT_LOCK (lock);
        if (cookie != object->list_cookie) {
          /* handle rollback caused by concurrent modification 
 	  * of the list here */
@@ -380,7 +380,7 @@ Objects
          list = g_list_next (list);
        }
      }
-     GST_UNLOCK (lock);
+     GST_OBJECT_UNLOCK (lock);
 
 * GstIterator
 

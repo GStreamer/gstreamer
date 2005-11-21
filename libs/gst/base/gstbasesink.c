@@ -368,7 +368,7 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstBaseSink *sink = GST_BASE_SINK (object);
 
-  GST_LOCK (sink);
+  GST_OBJECT_LOCK (sink);
   switch (prop_id) {
     case PROP_PREROLL_QUEUE_LEN:
       g_value_set_uint (value, sink->preroll_queue_max_len);
@@ -380,7 +380,7 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_UNLOCK (sink);
+  GST_OBJECT_UNLOCK (sink);
 }
 
 static GstCaps *
@@ -489,7 +489,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
     gboolean post_paused = FALSE;
     gboolean post_playing = FALSE;
 
-    GST_LOCK (basesink);
+    GST_OBJECT_LOCK (basesink);
     current = GST_STATE (basesink);
     next = GST_STATE_NEXT (basesink);
     pending = GST_STATE_PENDING (basesink);
@@ -521,7 +521,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
       GST_STATE_PENDING (basesink) = GST_STATE_VOID_PENDING;
       GST_STATE_RETURN (basesink) = GST_STATE_CHANGE_SUCCESS;
     }
-    GST_UNLOCK (basesink);
+    GST_OBJECT_UNLOCK (basesink);
 
     if (post_paused) {
       message = gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
@@ -546,7 +546,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
 stopping:
   {
     /* app is going to READY */
-    GST_UNLOCK (basesink);
+    GST_OBJECT_UNLOCK (basesink);
     return FALSE;
   }
 }
@@ -752,10 +752,10 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     if (!gst_base_sink_commit_state (basesink))
       goto stopping;
 
-    GST_LOCK (pad);
+    GST_OBJECT_LOCK (pad);
     if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
       goto flushing;
-    GST_UNLOCK (pad);
+    GST_OBJECT_UNLOCK (pad);
 
     /* it is possible that commiting the state made us go to PLAYING
      * now in which case we don't need to block anymore. */
@@ -781,10 +781,10 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     GST_DEBUG_OBJECT (basesink, "waiting to finish preroll");
     GST_PREROLL_WAIT (pad);
     GST_DEBUG_OBJECT (basesink, "done preroll");
-    GST_LOCK (pad);
+    GST_OBJECT_LOCK (pad);
     if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
       goto flushing;
-    GST_UNLOCK (pad);
+    GST_OBJECT_UNLOCK (pad);
   }
   GST_PREROLL_UNLOCK (pad);
 
@@ -816,7 +816,7 @@ dropping:
   }
 flushing:
   {
-    GST_UNLOCK (pad);
+    GST_OBJECT_UNLOCK (pad);
     gst_base_sink_preroll_queue_flush (basesink, pad);
     GST_PREROLL_UNLOCK (pad);
     GST_DEBUG_OBJECT (basesink, "pad is flushing");
@@ -883,12 +883,12 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       if (bclass->event)
         bclass->event (basesink, event);
 
-      GST_LOCK (basesink);
+      GST_OBJECT_LOCK (basesink);
       basesink->flushing = TRUE;
       if (basesink->clock_id) {
         gst_clock_id_unschedule (basesink->clock_id);
       }
-      GST_UNLOCK (basesink);
+      GST_OBJECT_UNLOCK (basesink);
 
       GST_PREROLL_LOCK (pad);
       /* we need preroll after the flush */
@@ -913,9 +913,9 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       /* now we are completely unblocked and the _chain method
        * will return */
       GST_STREAM_LOCK (pad);
-      GST_LOCK (basesink);
+      GST_OBJECT_LOCK (basesink);
       basesink->flushing = FALSE;
-      GST_UNLOCK (basesink);
+      GST_OBJECT_UNLOCK (basesink);
       /* we need new segment info after the flush. */
       basesink->segment_start = -1;
       basesink->segment_stop = -1;
@@ -979,11 +979,11 @@ gst_base_sink_wait (GstBaseSink * basesink, GstClockTime time)
 
   basesink->clock_id = id;
   /* release the object lock while waiting */
-  GST_UNLOCK (basesink);
+  GST_OBJECT_UNLOCK (basesink);
 
   ret = gst_clock_id_wait (id, NULL);
 
-  GST_LOCK (basesink);
+  GST_OBJECT_LOCK (basesink);
   gst_clock_id_unref (id);
   basesink->clock_id = NULL;
 
@@ -1079,7 +1079,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
   if (basesink->clock) {
     GstClockTime base_time;
 
-    GST_LOCK (basesink);
+    GST_OBJECT_LOCK (basesink);
 
     base_time = GST_ELEMENT_CAST (basesink)->base_time;
 
@@ -1097,7 +1097,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 
     result = gst_base_sink_wait (basesink, stream_start + base_time);
 
-    GST_UNLOCK (basesink);
+    GST_OBJECT_UNLOCK (basesink);
 
     GST_LOG_OBJECT (basesink, "clock entry done: %d", result);
   } else {
@@ -1128,7 +1128,7 @@ gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      GST_LOCK (basesink);
+      GST_OBJECT_LOCK (basesink);
       if (basesink->clock) {
         /* wait for last buffer to finish if we have a valid end time */
         if (GST_CLOCK_TIME_IS_VALID (basesink->end_time)) {
@@ -1136,7 +1136,7 @@ gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
           basesink->end_time = GST_CLOCK_TIME_NONE;
         }
       }
-      GST_UNLOCK (basesink);
+      GST_OBJECT_UNLOCK (basesink);
       break;
     default:
       break;
@@ -1217,10 +1217,10 @@ gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
   basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
   if (!(basesink->pad_mode == GST_ACTIVATE_PUSH)) {
-    GST_LOCK (pad);
+    GST_OBJECT_LOCK (pad);
     g_warning ("Push on pad %s:%s, but it was not activated in push mode",
         GST_DEBUG_PAD_NAME (pad));
-    GST_UNLOCK (pad);
+    GST_OBJECT_UNLOCK (pad);
     result = GST_FLOW_UNEXPECTED;
     goto done;
   }
@@ -1277,11 +1277,11 @@ gst_base_sink_deactivate (GstBaseSink * basesink, GstPad * pad)
 
   /* step 1, unblock clock sync (if any) or any other blocking thing */
   GST_PREROLL_LOCK (pad);
-  GST_LOCK (basesink);
+  GST_OBJECT_LOCK (basesink);
   if (basesink->clock_id) {
     gst_clock_id_unschedule (basesink->clock_id);
   }
-  GST_UNLOCK (basesink);
+  GST_OBJECT_UNLOCK (basesink);
 
   /* unlock any subclasses */
   if (bclass->unlock)
@@ -1428,10 +1428,10 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
   GstBaseSink *basesink = GST_BASE_SINK (element);
   gboolean result;
 
-  GST_LOCK (element);
+  GST_OBJECT_LOCK (element);
   pad = basesink->sinkpad;
   gst_object_ref (pad);
-  GST_UNLOCK (element);
+  GST_OBJECT_UNLOCK (element);
 
   result = gst_pad_push_event (pad, event);
 
@@ -1464,17 +1464,17 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
     case GST_FORMAT_TIME:
     {
       /* we can answer time format */
-      GST_LOCK (basesink);
+      GST_OBJECT_LOCK (basesink);
       if ((clock = GST_ELEMENT_CLOCK (basesink))) {
         GstClockTime now;
         gint64 segment_time;
 
         gst_object_ref (clock);
-        GST_UNLOCK (basesink);
+        GST_OBJECT_UNLOCK (basesink);
 
         now = gst_clock_get_time (clock);
 
-        GST_LOCK (basesink);
+        GST_OBJECT_LOCK (basesink);
         if (GST_CLOCK_TIME_IS_VALID (basesink->segment_time))
           segment_time = basesink->segment_time;
         else
@@ -1492,7 +1492,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
 
         res = TRUE;
       }
-      GST_UNLOCK (basesink);
+      GST_OBJECT_UNLOCK (basesink);
     }
     default:
       break;
@@ -1653,12 +1653,12 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
       GST_PREROLL_LOCK (basesink->sinkpad);
-      GST_LOCK (basesink);
+      GST_OBJECT_LOCK (basesink);
       /* unlock clock wait if any */
       if (basesink->clock_id) {
         gst_clock_id_unschedule (basesink->clock_id);
       }
-      GST_UNLOCK (basesink);
+      GST_OBJECT_UNLOCK (basesink);
 
       /* unlock any subclasses */
       if (bclass->unlock)

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -e
+
+if test -z "$1" -o -n "$2"; then
+    echo "Usage: $0 FILE" >&2
+    exit 1
+fi
+
+file=$1
+
+if grep -q GST_GET_LOCK $file; then
+    echo "$file: GST_GET_LOCK->GST_OBJECT_GET_LOCK"
+    perl -i -p -e 's/GST_GET_LOCK/GST_OBJECT_GET_LOCK/g' $file
+fi
+
+if egrep -q 'GST_LOCK' $file; then
+    echo "$file: GST_LOCK->GST_OBJECT_LOCK"
+    perl -i -p -e 's/GST_LOCK/GST_OBJECT_LOCK/g' $file
+fi
+
+if egrep -q 'GST_UNLOCK' $file; then
+    echo "$file: GST_UNLOCK->GST_OBJECT_UNLOCK"
+    perl -i -p -e 's/GST_UNLOCK/GST_OBJECT_UNLOCK/g' $file
+fi
+

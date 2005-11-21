@@ -669,9 +669,9 @@ on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 
   g_object_get (internal, "caps", &caps, NULL);
 
-  GST_LOCK (pad);
+  GST_OBJECT_LOCK (pad);
   gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
-  GST_UNLOCK (pad);
+  GST_OBJECT_UNLOCK (pad);
 
   g_object_notify (G_OBJECT (pad), "caps");
   if (caps)

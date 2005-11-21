@@ -184,7 +184,7 @@ gst_pipeline_set_property (GObject * object, guint prop_id,
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
-  GST_LOCK (pipeline);
+  GST_OBJECT_LOCK (pipeline);
   switch (prop_id) {
     case PROP_DELAY:
       pipeline->delay = g_value_get_uint64 (value);
@@ -193,7 +193,7 @@ gst_pipeline_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_UNLOCK (pipeline);
+  GST_OBJECT_UNLOCK (pipeline);
 }
 
 static void
@@ -202,7 +202,7 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
-  GST_LOCK (pipeline);
+  GST_OBJECT_LOCK (pipeline);
   switch (prop_id) {
     case PROP_DELAY:
       g_value_set_uint64 (value, pipeline->delay);
@@ -211,7 +211,7 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_UNLOCK (pipeline);
+  GST_OBJECT_UNLOCK (pipeline);
 }
 
 static gboolean
@@ -245,9 +245,9 @@ do_pipeline_seek (GstElement * element, GstEvent * event)
   if (flush && res) {
     gboolean need_reset;
 
-    GST_LOCK (element);
+    GST_OBJECT_LOCK (element);
     need_reset = GST_PIPELINE (element)->stream_time != GST_CLOCK_TIME_NONE;
-    GST_UNLOCK (element);
+    GST_OBJECT_UNLOCK (element);
 
     /* need to reset the stream time to 0 after a flushing seek, unless the user
        explicitly disabled this behavior by setting stream time to NONE */
@@ -308,10 +308,10 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      GST_LOCK (element);
+      GST_OBJECT_LOCK (element);
       if (element->bus)
         gst_bus_set_flushing (element->bus, FALSE);
-      GST_UNLOCK (element);
+      GST_OBJECT_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
@@ -328,11 +328,11 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 
         start_time = gst_clock_get_time (clock);
 
-        GST_LOCK (element);
+        GST_OBJECT_LOCK (element);
         new_clock = element->clock != clock;
         stream_time = pipeline->stream_time;
         delay = pipeline->delay;
-        GST_UNLOCK (element);
+        GST_OBJECT_UNLOCK (element);
 
         if (new_clock) {
           /* now distribute the clock (which could be NULL I guess) */
@@ -376,9 +376,9 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     {
       gboolean need_reset;
 
-      GST_LOCK (element);
+      GST_OBJECT_LOCK (element);
       need_reset = pipeline->stream_time != GST_CLOCK_TIME_NONE;
-      GST_UNLOCK (element);
+      GST_OBJECT_UNLOCK (element);
 
       if (need_reset)
         gst_pipeline_set_new_stream_time (pipeline, 0);
@@ -387,18 +387,18 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      GST_LOCK (element);
+      GST_OBJECT_LOCK (element);
       if ((clock = element->clock)) {
         GstClockTime now;
 
         gst_object_ref (clock);
-        GST_UNLOCK (element);
+        GST_OBJECT_UNLOCK (element);
 
         /* calculate the time when we stopped */
         now = gst_clock_get_time (clock);
         gst_object_unref (clock);
 
-        GST_LOCK (element);
+        GST_OBJECT_LOCK (element);
         /* store the current stream time */
         if (pipeline->stream_time != GST_CLOCK_TIME_NONE)
           pipeline->stream_time = now - element->base_time;
@@ -407,16 +407,16 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
             GST_TIME_ARGS (pipeline->stream_time),
             GST_TIME_ARGS (now), GST_TIME_ARGS (element->base_time));
       }
-      GST_UNLOCK (element);
+      GST_OBJECT_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      GST_LOCK (element);
+      GST_OBJECT_LOCK (element);
       if (element->bus) {
         gst_bus_set_flushing (element->bus, TRUE);
       }
-      GST_UNLOCK (element);
+      GST_OBJECT_UNLOCK (element);
       break;
   }
   return result;
@@ -460,9 +460,9 @@ gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
 {
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
 
-  GST_LOCK (pipeline);
+  GST_OBJECT_LOCK (pipeline);
   pipeline->stream_time = time;
-  GST_UNLOCK (pipeline);
+  GST_OBJECT_UNLOCK (pipeline);
 
   GST_DEBUG_OBJECT (pipeline, "set new stream_time to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time));
@@ -491,9 +491,9 @@ gst_pipeline_get_last_stream_time (GstPipeline * pipeline)
 
   g_return_val_if_fail (GST_IS_PIPELINE (pipeline), GST_CLOCK_TIME_NONE);
 
-  GST_LOCK (pipeline);
+  GST_OBJECT_LOCK (pipeline);
   result = pipeline->stream_time;
-  GST_UNLOCK (pipeline);
+  GST_OBJECT_UNLOCK (pipeline);
 
   return result;
 }
@@ -505,16 +505,16 @@ gst_pipeline_provide_clock_func (GstElement * element)
   GstPipeline *pipeline = GST_PIPELINE (element);
 
   /* if we have a fixed clock, use that one */
-  GST_LOCK (pipeline);
+  GST_OBJECT_LOCK (pipeline);
   if (GST_OBJECT_FLAG_IS_SET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK)) {
     clock = pipeline->fixed_clock;
     gst_object_ref (clock);
-    GST_UNLOCK (pipeline);
+    GST_OBJECT_UNLOCK (pipeline);
 
     GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using fixed clock %p (%s)",
         clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
   } else {
-    GST_UNLOCK (pipeline);
+    GST_OBJECT_UNLOCK (pipeline);
     clock =
         GST_ELEMENT_CLASS (parent_class)->
         provide_clock (GST_ELEMENT (pipeline));
@@ -565,12 +565,12 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
 {
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
 
-  GST_LOCK (pipeline);
+  GST_OBJECT_LOCK (pipeline);
   GST_OBJECT_FLAG_SET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
 
   gst_object_replace ((GstObject **) & pipeline->fixed_clock,
       (GstObject *) clock);
-  GST_UNLOCK (pipeline);
+  GST_OBJECT_UNLOCK (pipeline);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using fixed clock %p (%s)", clock,
       (clock ? GST_OBJECT_NAME (clock) : "nil"));
@@ -609,11 +609,11 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
   g_return_if_fail (pipeline != NULL);
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
 
-  GST_LOCK (pipeline);
+  GST_OBJECT_LOCK (pipeline);
   GST_OBJECT_FLAG_UNSET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
 
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
-  GST_UNLOCK (pipeline);
+  GST_OBJECT_UNLOCK (pipeline);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using automatic clock");
 }
