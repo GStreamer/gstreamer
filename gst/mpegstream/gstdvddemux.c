@@ -342,7 +342,7 @@ gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
         return GST_FLOW_ERROR;
       break;
 #endif
-    case GST_EVENT_FILLER:
+      /*  case GST_EVENT_FILLER: */
     case GST_EVENT_NEWSEGMENT:
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:

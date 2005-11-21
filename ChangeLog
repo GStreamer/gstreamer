@@ -1,5 +1,11 @@
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_process_event):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_process_event):
+	  Filler events have beem removed for now.
+
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_add_video_stream):
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_chain),
 	(gst_rmdemux_add_stream), (gst_rmdemux_parse_mdpr):

@@ -281,7 +281,7 @@ gst_mpeg_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
   gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FILLER:
+      /* case GST_EVENT_FILLER: */
     case GST_EVENT_NEWSEGMENT:
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
