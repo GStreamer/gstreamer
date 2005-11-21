@@ -283,7 +283,6 @@
   (gtype-id "GST_TYPE_BUFFER_FLAG")
   (values
     '("readonly" "GST_BUFFER_FLAG_READONLY")
-    '("original" "GST_BUFFER_FLAG_ORIGINAL")
     '("preroll" "GST_BUFFER_FLAG_PREROLL")
     '("discont" "GST_BUFFER_FLAG_DISCONT")
     '("in-caps" "GST_BUFFER_FLAG_IN_CAPS")
@@ -311,6 +310,15 @@
     '("drop" "GST_BUS_DROP")
     '("pass" "GST_BUS_PASS")
     '("async" "GST_BUS_ASYNC")
+  )
+)
+
+(define-flags CapsFlags
+  (in-module "Gst")
+  (c-name "GstCapsFlags")
+  (gtype-id "GST_TYPE_CAPS_FLAGS")
+  (values
+    '("y" "GST_CAPS_FLAGS_ANY")
   )
 )
 

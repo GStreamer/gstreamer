@@ -1,3 +1,10 @@
+2005-11-21  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	Update for latest API changes
+	Still have to make GstSegment properly wrappable (GBoxed?)
+
 2005-11-18  Andy Wingo  <wingo@pobox.com>
 
 	* gst/Makefile.am: Add GST_NET libs.
