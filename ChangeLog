@@ -4,7 +4,7 @@
 	
 	* gst-libs/gst/rtp/gstrtpbuffer.h: 
 	* gst-libs/gst/rtp/gstrtpbuffer.c
-	(gst_rtpbuffer_get_payload_buffer): New function.
+	(gst_rtpbuffer_get_payload_buffer): New function. Fixes #321451.
 
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
