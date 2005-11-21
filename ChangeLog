@@ -1,5 +1,13 @@
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstvalue.c: (gst_value_transform_fourcc_string),
+	(gst_value_serialize_fourcc):
+	* gst/gstvalue.h:
+	  Drop leading '%' from GST_FOURCC_FORMAT, thus making it
+	  consistent with our other format defines (#320324).
+
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstvalue.c: (gst_value_is_fixed):
 	  Revert previous commit. Value lists are by definition
 	  not fixed, as they are a list of possible values.

@@ -580,7 +580,7 @@ gst_value_transform_fourcc_string (const GValue * src_value,
       g_ascii_isprint ((fourcc >> 16) & 0xff) &&
       g_ascii_isprint ((fourcc >> 24) & 0xff)) {
     dest_value->data[0].v_pointer =
-        g_strdup_printf (GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+        g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
   } else {
     dest_value->data[0].v_pointer = g_strdup_printf ("0x%08x", fourcc);
   }
@@ -603,7 +603,7 @@ gst_value_serialize_fourcc (const GValue * value)
       g_ascii_isalnum ((fourcc >> 8) & 0xff) &&
       g_ascii_isalnum ((fourcc >> 16) & 0xff) &&
       g_ascii_isalnum ((fourcc >> 24) & 0xff)) {
-    return g_strdup_printf (GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+    return g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
   } else {
     return g_strdup_printf ("0x%08x", fourcc);
   }

@@ -69,7 +69,7 @@ G_BEGIN_DECLS
  * </programlisting>
  * </informalexample>
  */
-#define GST_FOURCC_FORMAT "%c%c%c%c"
+#define GST_FOURCC_FORMAT "c%c%c%c"
 
 /**
  * GST_FOURCC_ARGS:
