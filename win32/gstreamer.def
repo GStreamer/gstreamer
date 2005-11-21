@@ -34,8 +34,8 @@ EXPORTS
     gst_structure_set_name
     gst_structure_copy
     gst_structure_remove_field
-    gst_caps_structure_fixate_field_nearest_int
-    gst_caps_structure_fixate_field_nearest_double
+    gst_structure_fixate_field_nearest_int
+    gst_structure_fixate_field_nearest_double
     gst_caps_get_structure
     gst_caps_get_size
     gst_caps_set_simple

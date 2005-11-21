@@ -1747,7 +1747,7 @@ gst_structure_copy_conditional (const GstStructure * structure)
 /* fixate utility functions */
 
 /**
- * gst_caps_structure_fixate_field_nearest_int:
+ * gst_structure_fixate_field_nearest_int:
  * @structure: a #GstStructure
  * @field_name: a field in @structure
  * @target: the target value of the fixation
@@ -1757,9 +1757,8 @@ gst_structure_copy_conditional (const GstStructure * structure)
  *
  * Returns: TRUE if the structure could be fixated
  */
-/* FIXME: rename to gst_structure_... */
 gboolean
-gst_caps_structure_fixate_field_nearest_int (GstStructure * structure,
+gst_structure_fixate_field_nearest_int (GstStructure * structure,
     const char *field_name, int target)
 {
   const GValue *value;
@@ -1812,7 +1811,7 @@ gst_caps_structure_fixate_field_nearest_int (GstStructure * structure,
 }
 
 /**
- * gst_caps_structure_fixate_field_nearest_double:
+ * gst_structure_fixate_field_nearest_double:
  * @structure: a #GstStructure
  * @field_name: a field in @structure
  * @target: the target value of the fixation
@@ -1823,7 +1822,7 @@ gst_caps_structure_fixate_field_nearest_int (GstStructure * structure,
  * Returns: TRUE if the structure could be fixated
  */
 gboolean
-gst_caps_structure_fixate_field_nearest_double (GstStructure * structure,
+gst_structure_fixate_field_nearest_double (GstStructure * structure,
     const char *field_name, double target)
 {
   const GValue *value;
@@ -1877,7 +1876,7 @@ gst_caps_structure_fixate_field_nearest_double (GstStructure * structure,
 }
 
 /**
- * gst_caps_structure_fixate_field_boolean:
+ * gst_structure_fixate_field_boolean:
  * @structure: a #GstStructure
  * @field_name: a field in @structure
  * @target: the target value of the fixation
@@ -1887,9 +1886,8 @@ gst_caps_structure_fixate_field_nearest_double (GstStructure * structure,
  *
  * Returns: TRUE if the structure could be fixated
  */
-/* FIXME: rename to gst_structure_... */
 gboolean
-gst_caps_structure_fixate_field_boolean (GstStructure * structure,
+gst_structure_fixate_field_boolean (GstStructure * structure,
     const char *field_name, gboolean target)
 {
   const GValue *value;

@@ -178,14 +178,14 @@ gchar *                 gst_structure_to_string            (const GstStructure  
 GstStructure *          gst_structure_from_string          (const gchar             *string,
 							    gchar                  **end);
 
-gboolean                 gst_caps_structure_fixate_field_nearest_int    (GstStructure *structure,
+gboolean                 gst_structure_fixate_field_nearest_int    (GstStructure *structure,
 									 const char   *field_name,
 									 int           target);
-gboolean                 gst_caps_structure_fixate_field_nearest_double (GstStructure *structure,
+gboolean                 gst_structure_fixate_field_nearest_double (GstStructure *structure,
 									 const char   *field_name,
 									 double        target);
 
-gboolean                 gst_caps_structure_fixate_field_boolean (GstStructure *structure,
+gboolean                 gst_structure_fixate_field_boolean (GstStructure *structure,
 									 const char   *field_name,
 									 gboolean        target);
 

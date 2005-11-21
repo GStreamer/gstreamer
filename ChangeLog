@@ -1,4 +1,16 @@
 2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gststructure.c: (gst_structure_fixate_field_nearest_int),
+	(gst_structure_fixate_field_nearest_double),
+	(gst_structure_fixate_field_boolean):
+	* gst/gststructure.h:
+	* win32/common/libgstreamer.def:
+	* win32/gstreamer.def:
+
+	Rename gst_caps_structure_fixate_* to gst_structure_fixate_*
+	(#322027)
+
+2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/elements/gstfdsrc.c: (_do_init), (gst_fdsrc_class_init),
 	(gst_fdsrc_init), (gst_fdsrc_dispose), (gst_fdsrc_set_property),

@@ -234,7 +234,6 @@ gst_caps_from_string
 gst_caps_subtract
 gst_caps_make_writable
 gst_caps_ref
-gst_caps_structure_fixate_field_boolean
 gst_caps_truncate
 gst_caps_unref
 <SUBSECTION Standard>
@@ -1699,8 +1698,9 @@ gst_structure_nth_field_name
 gst_structure_set_parent_refcount
 gst_structure_to_string
 gst_structure_from_string
-gst_caps_structure_fixate_field_nearest_int
-gst_caps_structure_fixate_field_nearest_double
+gst_structure_fixate_field_nearest_int
+gst_structure_fixate_field_nearest_double
+gst_structure_fixate_field_boolean
 <SUBSECTION Standard>
 GST_STRUCTURE
 GST_IS_STRUCTURE
