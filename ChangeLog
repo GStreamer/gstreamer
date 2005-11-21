@@ -1,3 +1,10 @@
+2005-11-21  Michael Smith <msmith@fluendo.com>
+
+	* gst/gstplugin.h:
+	* gst/gstregistry.h:
+	  Remove unimplemented declarations for which we can see no sensible
+	  use.
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gst.h: Include glib-compat.h.

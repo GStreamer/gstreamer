@@ -100,7 +100,6 @@ GstPluginFeature * 	gst_registry_lookup_feature 	(GstRegistry *registry, const c
 gboolean 		gst_registry_xml_read_cache 	(GstRegistry * registry, const char *location);
 gboolean 		gst_registry_xml_write_cache 	(GstRegistry * registry, const char *location);
 
-void 			gst_registry_scan_paths 	(GstRegistry *registry);
 void 			_gst_registry_remove_cache_plugins (GstRegistry *registry);
 
 void                    _gst_registry_cleanup           (void);
