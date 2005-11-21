@@ -1851,18 +1851,18 @@ gst_value_intersect_array (GValue * dest, const GValue * src1,
   GValue val = { 0 };
 
   /* only works on similar-sized arrays */
-  size = gst_value_list_get_size (src1);
-  if (size != gst_value_list_get_size (src2))
+  size = gst_value_array_get_size (src1);
+  if (size != gst_value_array_get_size (src2))
     return FALSE;
   g_value_init (dest, GST_TYPE_ARRAY);
 
   for (n = 0; n < size; n++) {
-    if (!gst_value_intersect (&val, gst_value_list_get_value (src1, n),
-            gst_value_list_get_value (src2, n))) {
+    if (!gst_value_intersect (&val, gst_value_array_get_value (src1, n),
+            gst_value_array_get_value (src2, n))) {
       g_value_unset (dest);
       return FALSE;
     }
-    gst_value_list_append_value (dest, &val);
+    gst_value_array_append_value (dest, &val);
     g_value_unset (&val);
   }
 
