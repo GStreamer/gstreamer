@@ -23,6 +23,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 
 G_BEGIN_DECLS
@@ -48,10 +49,14 @@ struct _GstAuParse {
 
   guchar le;
   glong offset;
+  glong buffer_offset;
+  gint sample_size;
   glong size;
   glong encoding;
   glong frequency;
   glong channels;
+
+  GstAdapter *adapter;
 
 };
 
