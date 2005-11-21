@@ -1,3 +1,19 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstevent.h (GstEventTypeFlags): New data type, the flags of
+	the event type (upstream, downstream, serialized). Renamed
+	GST_EVDIR_* and GST_EVSER to GST_EVENT_TYPE_*.
+	(GstEventType): Use GstEventTypeFlags. Rename CUSTOM_UP to
+	CUSTOM_UPSTREAM, CUSTOM_DS to CUSTOM_DOWNSTREAM, etc.
+
+	* gst/gstevent.c: Update for new CUSTOM event names.
+
+	* check/gst/gstevent.c: Update check for new CUSTOM event names.
+
+	* gst/gstevent.h:
+	* gst/gstevent.c (gst_event_type_get_flags): New function. Fixes
+	bug #319392.
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:

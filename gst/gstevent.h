@@ -35,35 +35,31 @@
 G_BEGIN_DECLS
 
 /**
- * GST_EVDIR_US:
+ * GstEventTypeFlags:
+ * @GST_EVENT_TYPE_UPSTREAM:   Set if the event can travel upstream.
+ * @GST_EVENT_TYPE_DOWNSTREAM: Set if the event can travel downstream.
+ * @GST_EVENT_TYPE_SERIALIZED: Set if the event should be serialized with data
+ *                             flow.
  *
- * bitmask defining the event can travel upstream
+ * #GstEventTypeFlags indicate the aspects of the different #GstEventType
+ * values. You can get the type flags of a #GstEventType with the
+ * gst_event_type_get_flags() function.
  */
-#define GST_EVDIR_US	(1 << 0)
+typedef enum {
+  GST_EVENT_TYPE_UPSTREAM	= 1 << 0,
+  GST_EVENT_TYPE_DOWNSTREAM	= 1 << 1,
+  GST_EVENT_TYPE_SERIALIZED	= 1 << 2,
+} GstEventTypeFlags;
+
 /**
- * GST_EVDIR_DS:
+ * GST_EVENT_TYPE_BOTH:
  *
- * bitmask defining the event can travel downstream
+ * The same thing as #GST_EVENT_TYPE_UPSTREAM | #GST_EVENT_TYPE_DOWNSTREAM.
  */
-#define GST_EVDIR_DS	(1 << 1)
-/**
- * GST_EVDIR_BOTH:
- *
- * bitmask defining the event can travel both up and downstream
- */
-#define GST_EVDIR_BOTH	GST_EVDIR_US | GST_EVDIR_DS
-/**
- * GST_EVSER:
- *
- * mask defining if the event is serialized with the data stream
- */
-#define GST_EVSER	(1 << 2)
-/**
- * GST_EVSHIFT:
- *
- * shift for the bits in the serialize mask.
- */
-#define GST_EVSHIFT	4
+#define GST_EVENT_TYPE_BOTH \
+    (GST_EVENT_TYPE_UPSTREAM | GST_EVENT_TYPE_DOWNSTREAM)
+
+#define GST_EVENT_TYPE_SHIFT	4
 
 /**
  * GST_EVENT_MAKE_TYPE:
@@ -73,7 +69,10 @@ G_BEGIN_DECLS
  * when making custom event types, use this macro with the num and
  * the given flags
  */
-#define GST_EVENT_MAKE_TYPE(num,flags) (((num) << GST_EVSHIFT) | (flags))
+#define GST_EVENT_MAKE_TYPE(num,flags) \
+    (((num) << GST_EVENT_TYPE_SHIFT) | (flags))
+
+#define FLAG(name) GST_EVENT_TYPE_##name
 
 /**
  * GstEventType:
@@ -93,9 +92,10 @@ G_BEGIN_DECLS
  * @GST_EVENT_NAVIGATION: Navigation events are usually used for communicating
                           user requests, such as mouse or keyboard movements,
  *                        to upstream elements.
- * @GST_EVENT_CUSTOM_UP: Upstream custom event
- * @GST_EVENT_CUSTOM_DS: Downstream custom event that travels in the data flow.
- * @GST_EVENT_CUSTOM_DS_OOB: Custom out-of-band downstream event.
+ * @GST_EVENT_CUSTOM_UPSTREAM: Upstream custom event
+ * @GST_EVENT_CUSTOM_DOWNSTREAM: Downstream custom event that travels in the
+ *                        data flow.
+ * @GST_EVENT_CUSTOM_DOWNSTREAM_OOB: Custom out-of-band downstream event.
  * @GST_EVENT_CUSTOM_BOTH: Custom upstream or downstream event.
  *                         In-band when travelling downstream.
  * @GST_EVENT_CUSTOM_BOTH_OOB: Custom upstream or downstream out-of-band event.
@@ -112,26 +112,27 @@ G_BEGIN_DECLS
 typedef enum {
   GST_EVENT_UNKNOWN		= GST_EVENT_MAKE_TYPE (0, 0),
   /* bidirectional events */
-  GST_EVENT_FLUSH_START		= GST_EVENT_MAKE_TYPE (1, GST_EVDIR_BOTH),
-  GST_EVENT_FLUSH_STOP		= GST_EVENT_MAKE_TYPE (2, GST_EVDIR_BOTH),
+  GST_EVENT_FLUSH_START		= GST_EVENT_MAKE_TYPE (1, FLAG(BOTH)),
+  GST_EVENT_FLUSH_STOP		= GST_EVENT_MAKE_TYPE (2, FLAG(BOTH)),
   /* downstream serialized events */
-  GST_EVENT_EOS			= GST_EVENT_MAKE_TYPE (5, GST_EVDIR_DS | GST_EVSER),
-  GST_EVENT_NEWSEGMENT		= GST_EVENT_MAKE_TYPE (6, GST_EVDIR_DS | GST_EVSER),
-  GST_EVENT_TAG			= GST_EVENT_MAKE_TYPE (7, GST_EVDIR_DS | GST_EVSER),
-  GST_EVENT_FILLER		= GST_EVENT_MAKE_TYPE (8, GST_EVDIR_DS | GST_EVSER),
-  GST_EVENT_BUFFERSIZE		= GST_EVENT_MAKE_TYPE (9, GST_EVDIR_DS | GST_EVSER),
+  GST_EVENT_EOS			= GST_EVENT_MAKE_TYPE (5, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_EVENT_NEWSEGMENT		= GST_EVENT_MAKE_TYPE (6, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_EVENT_TAG			= GST_EVENT_MAKE_TYPE (7, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_EVENT_FILLER		= GST_EVENT_MAKE_TYPE (8, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_EVENT_BUFFERSIZE		= GST_EVENT_MAKE_TYPE (9, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
   /* upstream events */
-  GST_EVENT_QOS			= GST_EVENT_MAKE_TYPE (15, GST_EVDIR_US),
-  GST_EVENT_SEEK		= GST_EVENT_MAKE_TYPE (16, GST_EVDIR_US),
-  GST_EVENT_NAVIGATION		= GST_EVENT_MAKE_TYPE (17, GST_EVDIR_US),
+  GST_EVENT_QOS			= GST_EVENT_MAKE_TYPE (15, FLAG(UPSTREAM)),
+  GST_EVENT_SEEK		= GST_EVENT_MAKE_TYPE (16, FLAG(UPSTREAM)),
+  GST_EVENT_NAVIGATION		= GST_EVENT_MAKE_TYPE (17, FLAG(UPSTREAM)),
 
   /* custom events start here */
-  GST_EVENT_CUSTOM_UP		= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_US),
-  GST_EVENT_CUSTOM_DS		= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_DS | GST_EVSER),
-  GST_EVENT_CUSTOM_DS_OOB	= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_DS),
-  GST_EVENT_CUSTOM_BOTH		= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_BOTH | GST_EVSER),
-  GST_EVENT_CUSTOM_BOTH_OOB	= GST_EVENT_MAKE_TYPE (32, GST_EVDIR_BOTH)
+  GST_EVENT_CUSTOM_UPSTREAM	= GST_EVENT_MAKE_TYPE (32, FLAG(UPSTREAM)),
+  GST_EVENT_CUSTOM_DOWNSTREAM	= GST_EVENT_MAKE_TYPE (32, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
+  GST_EVENT_CUSTOM_DOWNSTREAM_OOB = GST_EVENT_MAKE_TYPE (32, FLAG(DOWNSTREAM)),
+  GST_EVENT_CUSTOM_BOTH		= GST_EVENT_MAKE_TYPE (32, FLAG(BOTH) | FLAG(SERIALIZED)),
+  GST_EVENT_CUSTOM_BOTH_OOB	= GST_EVENT_MAKE_TYPE (32, FLAG(BOTH))
 } GstEventType;
+#undef FLAG
 
 /**
  * GST_EVENT_TRACE_NAME:
@@ -190,21 +191,21 @@ typedef struct _GstEventClass GstEventClass;
  *
  * Check if an event can travel upstream.
  */
-#define GST_EVENT_IS_UPSTREAM(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVDIR_US)
+#define GST_EVENT_IS_UPSTREAM(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVENT_TYPE_UPSTREAM)
 /**
  * GST_EVENT_IS_DOWNSTREAM:
  * @ev: the event to query
  *
  * Check if an event can travel downstream.
  */
-#define GST_EVENT_IS_DOWNSTREAM(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVDIR_DS)
+#define GST_EVENT_IS_DOWNSTREAM(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVENT_TYPE_DOWNSTREAM)
 /**
  * GST_EVENT_IS_SERIALIZED:
  * @ev: the event to query
  *
  * Check if an event is serialized with the data stream.
  */
-#define GST_EVENT_IS_SERIALIZED(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVSER)
+#define GST_EVENT_IS_SERIALIZED(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVENT_TYPE_SERIALIZED)
 
 /**
  * GstSeekType:
@@ -295,6 +296,8 @@ void		_gst_event_initialize		(void);
 
 const gchar*    gst_event_type_get_name         (GstEventType type);
 GQuark          gst_event_type_to_quark		(GstEventType type);
+GstEventTypeFlags
+		gst_event_type_get_flags	(GstEventType type);
 
 
 GType		gst_event_get_type		(void);

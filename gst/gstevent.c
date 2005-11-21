@@ -107,9 +107,9 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_QOS, "qos", 0},
   {GST_EVENT_SEEK, "seek", 0},
   {GST_EVENT_NAVIGATION, "navigation", 0},
-  {GST_EVENT_CUSTOM_UP, "custom-up", 0},
-  {GST_EVENT_CUSTOM_DS, "custom-ds", 0},
-  {GST_EVENT_CUSTOM_DS_OOB, "custom-ds-oob", 0},
+  {GST_EVENT_CUSTOM_UPSTREAM, "custom-upstream", 0},
+  {GST_EVENT_CUSTOM_DOWNSTREAM, "custom-downstream", 0},
+  {GST_EVENT_CUSTOM_DOWNSTREAM_OOB, "custom-downstream-oob", 0},
   {GST_EVENT_CUSTOM_BOTH, "custom-both", 0},
   {GST_EVENT_CUSTOM_BOTH_OOB, "custom-both-oob", 0},
 
@@ -154,6 +154,24 @@ gst_event_type_to_quark (GstEventType type)
       return event_quarks[i].quark;
   }
   return 0;
+}
+
+/**
+ * gst_event_type_get_flags:
+ * @type: a #GstEventType
+ *
+ * Gets the #GstEventTypeFlags associated with @type.
+ *
+ * Returns: a #GstEventTypeFlags.
+ */
+GstEventTypeFlags
+gst_event_type_get_flags (GstEventType type)
+{
+  GstEventTypeFlags ret;
+
+  ret = type & ((1 << GST_EVENT_TYPE_SHIFT) - 1);
+
+  return ret;
 }
 
 GType
