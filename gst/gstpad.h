@@ -45,8 +45,6 @@ G_BEGIN_DECLS
 #define GST_PAD_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD, GstPadClass))
 #define GST_PAD_CAST(obj)		((GstPad*)(obj))
 
-/* FIXME: remove - its unused */
-#define GST_IS_PAD_FAST(obj)		(G_OBJECT_TYPE(obj) == GST_TYPE_PAD)
 
 typedef struct _GstPad GstPad;
 typedef struct _GstPadClass GstPadClass;

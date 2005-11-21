@@ -1,5 +1,7 @@
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstpad.h (GST_IS_PAD_FAST): Removed.
+
 	* *.h:
 	* *.c: Ran scripts/update-macros. Oh yes.
 
