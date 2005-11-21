@@ -32,7 +32,7 @@
 #include <ctype.h>
 
 #include "gst_private.h"
-#include "glib-compat.h"
+#include "glib-compat-private.h"
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
 

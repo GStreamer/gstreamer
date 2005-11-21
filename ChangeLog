@@ -1,5 +1,17 @@
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gst.h: Include glib-compat.h.
+
+	* gst/glib-compat.h: Add G_GNUC_NULL_TERMINATED.
+
+	* gst/glib-compat.c: Include the public and the private header.
+
+	* gst/glib-compat-private.h: Copied here from glib-compat.h.
+
+	* gst/gstvalue.c: 
+	* gst/gstpad.c: 
+	* gst/gstregistryxml.c: s/glib-compat/glib-compat-private/.
+
 	* check/gst/gstevent.c (create_custom_events): Check that
 	FLUSH_STOP is serialized.
 

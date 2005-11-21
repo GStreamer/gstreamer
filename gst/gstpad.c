@@ -71,7 +71,7 @@
 #include "gstinfo.h"
 #include "gsterror.h"
 #include "gstvalue.h"
-#include "glib-compat.h"
+#include "glib-compat-private.h"
 
 GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
 #define GST_CAT_DEFAULT GST_CAT_PADS

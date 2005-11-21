@@ -34,6 +34,7 @@
 #include <errno.h>
 
 #include "glib-compat.h"
+#include "glib-compat-private.h"
 
 #include <sys/stat.h>
 #ifdef HAVE_UNISTD_H

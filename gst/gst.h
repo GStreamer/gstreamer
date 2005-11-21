@@ -26,6 +26,8 @@
 
 #include <glib.h>
 
+#include <gst/glib-compat.h>
+
 #include <gst/gstenumtypes.h>
 #include <gst/gstversion.h>
 

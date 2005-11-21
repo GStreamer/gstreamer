@@ -46,7 +46,7 @@
 
 #include <libxml/xmlreader.h>
 
-#include "glib-compat.h"
+#include "glib-compat-private.h"
 #include <glib/gstdio.h>
 
 #define BLOCK_SIZE 1024*10
