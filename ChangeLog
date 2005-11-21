@@ -1,3 +1,9 @@
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
+	  Add DX50, DIVX and DIV3 fourccs (patch by
+	  j@bootlab.org, #321903).
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* *.h:
