@@ -48,33 +48,25 @@ typedef struct _GstXOverlayClass {
 
   /* virtual functions */
   void (* set_xwindow_id) (GstXOverlay *overlay,
-			   gulong	xwindow_id);
-  /* optional virtual functions */
-  void (* get_desired_size) (GstXOverlay *overlay,
-			     guint *width,
-			     guint *height);
-  void (* expose) (GstXOverlay *overlay);
-  
-  /* signals */
-  void (*have_xwindow_id) (GstXOverlay *overlay,
-                           gulong	xwindow_id);
-  void (* desired_size)	  (GstXOverlay *overlay,
-			   guint width,
-			   guint height);
+                           gulong       xwindow_id);
 
-  gpointer _gst_reserved[GST_PADDING];
+  void (* expose)         (GstXOverlay *overlay);
+
+  /*< private >*/
+  gpointer                 _gst_reserved[GST_PADDING];
 } GstXOverlayClass;
 
 GType	gst_x_overlay_get_type		(void);
 
 /* virtual class function wrappers */
-void gst_x_overlay_set_xwindow_id (GstXOverlay *overlay, gulong xwindow_id);
-void gst_x_overlay_get_desired_size (GstXOverlay *overlay, guint *width, guint *height);
-void gst_x_overlay_expose (GstXOverlay *overlay);
+void gst_x_overlay_set_xwindow_id     (GstXOverlay *overlay, gulong xwindow_id);
 
-/* public methods to fire signals */
-void gst_x_overlay_got_xwindow_id (GstXOverlay *overlay, gulong xwindow_id);
-void gst_x_overlay_got_desired_size (GstXOverlay *overlay, guint width, guint height);
+void gst_x_overlay_expose             (GstXOverlay *overlay);
+
+/* public methods to dispatch bus messages */
+void gst_x_overlay_got_xwindow_id     (GstXOverlay *overlay, gulong xwindow_id);
+
+void gst_x_overlay_prepare_xwindow_id (GstXOverlay *overlay);
 
 G_END_DECLS
 

@@ -1434,9 +1434,6 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   xvimagesink->xcontext->im_format = im_format;
 
-  gst_x_overlay_got_desired_size (GST_X_OVERLAY (xvimagesink),
-      GST_VIDEO_SINK_WIDTH (xvimagesink), GST_VIDEO_SINK_HEIGHT (xvimagesink));
-
   return TRUE;
 }
 
@@ -1833,16 +1830,6 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 }
 
 static void
-gst_xvimagesink_get_desired_size (GstXOverlay * overlay,
-    guint * width, guint * height)
-{
-  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
-
-  *width = GST_VIDEO_SINK_WIDTH (xvimagesink);
-  *height = GST_VIDEO_SINK_HEIGHT (xvimagesink);
-}
-
-static void
 gst_xvimagesink_expose (GstXOverlay * overlay)
 {
   XWindowAttributes attr;
@@ -1869,7 +1856,6 @@ static void
 gst_xvimagesink_xoverlay_init (GstXOverlayClass * iface)
 {
   iface->set_xwindow_id = gst_xvimagesink_set_xwindow_id;
-  iface->get_desired_size = gst_xvimagesink_get_desired_size;
   iface->expose = gst_xvimagesink_expose;
 }
 

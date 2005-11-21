@@ -1,7 +1,7 @@
 /* GStreamer X-based Overlay
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
- * tv-mixer.c: tv-mixer design virtual class function wrappers
+ * x-overlay.c: X-based overlay interface design
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,15 +24,6 @@
 #endif
 
 #include "xoverlay.h"
-
-enum
-{
-  HAVE_XWINDOW_ID,
-  DESIRED_SIZE,
-  LAST_SIGNAL
-};
-
-static guint gst_x_overlay_signals[LAST_SIGNAL] = { 0 };
 
 static void gst_x_overlay_base_init (gpointer g_class);
 
@@ -63,32 +54,10 @@ gst_x_overlay_get_type (void)
   return gst_x_overlay_type;
 }
 
-/* FIXME: evil hack, we should figure out our marshal handling in this interfaces some day */
-extern void gst_marshal_VOID__INT_INT (GClosure * closure,
-    GValue * return_value, guint n_param_values, const GValue * param_values,
-    gpointer invocation_hint, gpointer marshal_data);
-
 static void
 gst_x_overlay_base_init (gpointer g_class)
 {
   GstXOverlayClass *overlay_class = (GstXOverlayClass *) g_class;
-  static gboolean initialized = FALSE;
-
-  if (!initialized) {
-    gst_x_overlay_signals[HAVE_XWINDOW_ID] =
-        g_signal_new ("have-xwindow-id",
-        GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstXOverlayClass, have_xwindow_id),
-        NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
-    gst_x_overlay_signals[DESIRED_SIZE] =
-        g_signal_new ("desired-size-changed",
-        GST_TYPE_X_OVERLAY, G_SIGNAL_RUN_LAST,
-        G_STRUCT_OFFSET (GstXOverlayClass, desired_size),
-        NULL, NULL,
-        gst_marshal_VOID__INT_INT, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_INT);
-
-    initialized = TRUE;
-  }
 
   overlay_class->set_xwindow_id = NULL;
 }
@@ -118,70 +87,50 @@ gst_x_overlay_set_xwindow_id (GstXOverlay * overlay, gulong xwindow_id)
  * @overlay: a #GstXOverlay which got a XWindow.
  * @xwindow_id: a #XID referencing the XWindow.
  *
- * This will fire an have_xwindow_id signal.
+ * This will post a "have-xwindow-id" element message on the bus.
  *
- * This function should be used by video overlay developpers.
+ * This function should only be used by video overlay plugin developers.
  */
 void
 gst_x_overlay_got_xwindow_id (GstXOverlay * overlay, gulong xwindow_id)
 {
+  GstStructure *s;
+  GstMessage *msg;
+
   g_return_if_fail (overlay != NULL);
   g_return_if_fail (GST_IS_X_OVERLAY (overlay));
 
-  g_signal_emit (G_OBJECT (overlay),
-      gst_x_overlay_signals[HAVE_XWINDOW_ID], 0, (gint) xwindow_id);
+  GST_LOG_OBJECT (GST_OBJECT (overlay), "xwindow_id = %lu", xwindow_id);
+  s = gst_structure_new ("have-xwindow-id", "xwindow-id", G_TYPE_ULONG,
+      xwindow_id, NULL);
+  msg = gst_message_new_element (GST_OBJECT (overlay), s);
+  gst_element_post_message (GST_ELEMENT (overlay), msg);
 }
 
 /**
- * gst_x_overlay_get_desired_size:
- * @overlay: a #GstXOverlay which got a XWindow.
- * @width: pointer to a gint taking the width or NULL.
- * @height: pointer to a gint taking the height or NULL.
+ * gst_x_overlay_prepare_xwindow_id:
+ * @overlay: a #GstXOverlay which does not yet have an XWindow.
  *
- * Gets the desired size of the overlay. If the overlay doesn't know its desired
- * size, width and height are set to 0.
+ * This will post a "prepare-xwindow-id" element message on the bus
+ * to give applications an opportunity to call 
+ * gst_x_overlay_set_xwindow_id() before a plugin creates its own
+ * window.
+ *
+ * This function should only be used by video overlay plugin developers.
  */
 void
-gst_x_overlay_get_desired_size (GstXOverlay * overlay, guint * width,
-    guint * height)
+gst_x_overlay_prepare_xwindow_id (GstXOverlay * overlay)
 {
-  guint width_tmp, height_tmp;
-  GstXOverlayClass *klass;
+  GstStructure *s;
+  GstMessage *msg;
 
-  g_return_if_fail (G_TYPE_CHECK_INSTANCE_TYPE ((overlay), GST_TYPE_X_OVERLAY));
-
-  klass = GST_X_OVERLAY_GET_CLASS (overlay);
-  if (klass->get_desired_size && GST_IS_X_OVERLAY (overlay)) {
-    /* this ensures that elements don't need to check width and height for NULL 
-       but apps may use NULL */
-    klass->get_desired_size (overlay, width ? width : &width_tmp,
-        height ? height : &height_tmp);
-  } else {
-    if (width)
-      *width = 0;
-    if (height)
-      *height = 0;
-  }
-}
-
-/**
- * gst_x_overlay_got_desired_size:
- * @overlay: a #GstXOverlay which changed its desired size.
- * @width: The new desired width
- * @height: The new desired height
- *
- * This will fire a "desired_size_changed" signal.
- *
- * This function should be used by video overlay developpers.
- */
-void
-gst_x_overlay_got_desired_size (GstXOverlay * overlay, guint width,
-    guint height)
-{
+  g_return_if_fail (overlay != NULL);
   g_return_if_fail (GST_IS_X_OVERLAY (overlay));
 
-  g_signal_emit (G_OBJECT (overlay),
-      gst_x_overlay_signals[DESIRED_SIZE], 0, width, height);
+  GST_LOG_OBJECT (GST_OBJECT (overlay), "prepare xwindow_id");
+  s = gst_structure_new ("prepare-xwindow-id", NULL);
+  msg = gst_message_new_element (GST_OBJECT (overlay), s);
+  gst_element_post_message (GST_ELEMENT (overlay), msg);
 }
 
 /**

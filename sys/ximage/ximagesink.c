@@ -1583,16 +1583,6 @@ gst_ximagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 }
 
 static void
-gst_ximagesink_get_desired_size (GstXOverlay * overlay,
-    guint * width, guint * height)
-{
-  GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
-
-  *width = GST_VIDEO_SINK_WIDTH (ximagesink);
-  *height = GST_VIDEO_SINK_HEIGHT (ximagesink);
-}
-
-static void
 gst_ximagesink_expose (GstXOverlay * overlay)
 {
   GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
@@ -1607,7 +1597,6 @@ static void
 gst_ximagesink_xoverlay_init (GstXOverlayClass * iface)
 {
   iface->set_xwindow_id = gst_ximagesink_set_xwindow_id;
-  iface->get_desired_size = gst_ximagesink_get_desired_size;
   iface->expose = gst_ximagesink_expose;
 }
 

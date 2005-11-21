@@ -1,5 +1,20 @@
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/interfaces/xoverlay.c: (gst_x_overlay_base_init),
+	(gst_x_overlay_got_xwindow_id), (gst_x_overlay_prepare_xwindow_id):
+	* gst-libs/gst/interfaces/xoverlay.h:
+	  Remove everything having to do with the desired size; add 
+	  gst_x_overlay_prepare_xwindow_id() function; remove the
+	  'have-xwindow-id' signal and make gst_x_overlay_got_xwindow_id()
+	  post a message on the bus instead (#321816).
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xoverlay_init):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_setcaps),
+	(gst_xvimagesink_xoverlay_init):
+	  Remove desired size stuff (#321816).
+
+2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find),
 	(mpeg2_sys_type_find), (mpeg1_sys_type_find),
 	(mpeg_video_type_find), (mpeg_video_stream_type_find):
