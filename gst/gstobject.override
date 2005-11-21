@@ -71,7 +71,7 @@ _wrap_gst_object_tp_traverse (PyGObject * self, visitproc visit, void *arg)
   for (tmp = self->closures; tmp != NULL; tmp = tmp->next) {
     PyGClosure *closure = tmp->data;
 
-    GST_DEBUG_OBJECT (self->obj, "visiting closures");
+    GST_LOG_OBJECT (self->obj, "visiting closure %p", closure);
 
     if (closure->callback)
       ret = visit (closure->callback, arg);
