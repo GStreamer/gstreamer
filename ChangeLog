@@ -1,3 +1,8 @@
+2005-11-22  Edward Hervey  <edward@fluendo.com>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_event):
+	Don't take the stream lock
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* ext/sidplay/gstsiddec.cc (gst_siddec_sink_event): 
