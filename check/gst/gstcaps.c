@@ -128,14 +128,14 @@ GST_START_TEST (test_static_caps)
 GST_END_TEST;
 
 static const gchar non_simple_caps_string[] =
-    "video/x-raw-yuv, format=(fourcc)I420, framerate=(double)[ 1, 100 ], "
+    "video/x-raw-yuv, format=(fourcc)I420, framerate=(fraction)[ 1/100, 100 ], "
     "width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]; video/x-raw-yuv, "
-    "format=(fourcc)YUY2, framerate=(double)[ 1, 100 ], width=(int)[ 16, 4096 ], "
+    "format=(fourcc)YUY2, framerate=(fraction)[ 1/100, 100 ], width=(int)[ 16, 4096 ], "
     "height=(int)[ 16, 4096 ]; video/x-raw-rgb, bpp=(int)8, depth=(int)8, "
-    "endianness=(int)1234, framerate=(double)[ 1, 100 ], width=(int)[ 16, 4096 ], "
+    "endianness=(int)1234, framerate=(fraction)[ 1/100, 100 ], width=(int)[ 16, 4096 ], "
     "height=(int)[ 16, 4096 ]; video/x-raw-yuv, "
     "format=(fourcc){ I420, YUY2, YV12 }, width=(int)[ 16, 4096 ], "
-    "height=(int)[ 16, 4096 ], framerate=(double)[ 1, 100 ]";
+    "height=(int)[ 16, 4096 ], framerate=(fraction)[ 1/100, 100 ]";
 
 static gboolean
 check_fourcc_list (const GValue * format_value)
@@ -193,11 +193,11 @@ GST_START_TEST (test_simplify)
   /* check simplified caps, should be:
    *
    * video/x-raw-rgb, bpp=(int)8, depth=(int)8, endianness=(int)1234,
-   *     framerate=(double)[ 1, 100 ], width=(int)[ 16, 4096 ],
+   *     framerate=(fraction)[ 1/100, 100 ], width=(int)[ 16, 4096 ],
    *     height=(int)[ 16, 4096 ];
    * video/x-raw-yuv, format=(fourcc){ YV12, YUY2, I420 },
    *     width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ],
-   *     framerate=(double)[ 1, 100 ]
+   *     framerate=(fraction)[ 1/100, 100 ]
    */
   fail_unless (gst_caps_get_size (caps) == 2);
   s1 = gst_caps_get_structure (caps, 0);
@@ -218,7 +218,8 @@ GST_START_TEST (test_simplify)
     const GValue *framerate_value;
     const GValue *width_value;
     const GValue *height_value;
-    gdouble min_fps, max_fps;
+    const GValue *val_fps;
+    GValue test_fps = { 0, };
     gint bpp, depth, endianness;
     gint min_width, max_width;
     gint min_height, max_height;
@@ -232,12 +233,20 @@ GST_START_TEST (test_simplify)
     fail_unless (gst_structure_get_int (s1, "endianness", &endianness));
     fail_unless (endianness == G_LITTLE_ENDIAN);
 
+    g_value_init (&test_fps, GST_TYPE_FRACTION);
     framerate_value = gst_structure_get_value (s1, "framerate");
     fail_unless (framerate_value != NULL);
-    fail_unless (GST_VALUE_HOLDS_DOUBLE_RANGE (framerate_value));
-    min_fps = gst_value_get_double_range_min (framerate_value);
-    max_fps = gst_value_get_double_range_max (framerate_value);
-    fail_unless (min_fps == 1.0 && max_fps == 100.0);
+    fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (framerate_value));
+
+    val_fps = gst_value_get_fraction_range_min (framerate_value);
+    gst_value_set_fraction (&test_fps, 1, 100);
+    fail_unless (gst_value_compare (&test_fps, val_fps) == GST_VALUE_EQUAL);
+
+    val_fps = gst_value_get_fraction_range_max (framerate_value);
+    gst_value_set_fraction (&test_fps, 100, 1);
+    fail_unless (gst_value_compare (&test_fps, val_fps) == GST_VALUE_EQUAL);
+
+    g_value_unset (&test_fps);
 
     width_value = gst_structure_get_value (s1, "width");
     fail_unless (width_value != NULL);
@@ -260,7 +269,8 @@ GST_START_TEST (test_simplify)
     const GValue *format_value;
     const GValue *width_value;
     const GValue *height_value;
-    gdouble min_fps, max_fps;
+    const GValue *val_fps;
+    GValue test_fps = { 0, };
     gint min_width, max_width;
     gint min_height, max_height;
 
@@ -270,12 +280,20 @@ GST_START_TEST (test_simplify)
     fail_unless (gst_value_list_get_size (format_value) == 3);
     fail_unless (check_fourcc_list (format_value) == TRUE);
 
+    g_value_init (&test_fps, GST_TYPE_FRACTION);
     framerate_value = gst_structure_get_value (s2, "framerate");
     fail_unless (framerate_value != NULL);
-    fail_unless (GST_VALUE_HOLDS_DOUBLE_RANGE (framerate_value));
-    min_fps = gst_value_get_double_range_min (framerate_value);
-    max_fps = gst_value_get_double_range_max (framerate_value);
-    fail_unless (min_fps == 1.0 && max_fps == 100.0);
+    fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (framerate_value));
+
+    val_fps = gst_value_get_fraction_range_min (framerate_value);
+    gst_value_set_fraction (&test_fps, 1, 100);
+    fail_unless (gst_value_compare (&test_fps, val_fps) == GST_VALUE_EQUAL);
+
+    val_fps = gst_value_get_fraction_range_max (framerate_value);
+    gst_value_set_fraction (&test_fps, 100, 1);
+    fail_unless (gst_value_compare (&test_fps, val_fps) == GST_VALUE_EQUAL);
+
+    g_value_unset (&test_fps);
 
     width_value = gst_structure_get_value (s2, "width");
     fail_unless (width_value != NULL);

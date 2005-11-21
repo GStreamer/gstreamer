@@ -189,7 +189,9 @@ gboolean                 gst_structure_fixate_field_nearest_double (GstStructure
 gboolean                 gst_structure_fixate_field_boolean (GstStructure *structure,
 									 const char   *field_name,
 									 gboolean        target);
-
+gboolean                 gst_structure_fixate_field_nearest_fraction (GstStructure *structure,
+									 const char   *field_name,
+									 const GValue *target);
 
 G_END_DECLS
 

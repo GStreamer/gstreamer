@@ -435,6 +435,7 @@ GST_START_TEST (test_value_compare)
   fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL);
   g_value_unset (&value1);
   g_value_unset (&value2);
+
 }
 
 GST_END_TEST;
@@ -958,6 +959,280 @@ GST_START_TEST (test_value_subtract_double)
 
 GST_END_TEST;
 
+/* Test arithmetic subtraction of fractions */
+GST_START_TEST (test_value_subtract_fraction)
+{
+  GValue result = { 0 };
+  GValue src1 = { 0 };
+  GValue src2 = { 0 };
+
+  /* Subtract 1/4 from 1/2 */
+  g_value_init (&src1, GST_TYPE_FRACTION);
+  g_value_init (&src2, GST_TYPE_FRACTION);
+  g_value_init (&result, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&src1, 1, 2);
+  gst_value_set_fraction (&src2, 1, 4);
+  fail_unless (gst_value_fraction_subtract (&result, &src1, &src2) == TRUE);
+  fail_unless (gst_value_get_fraction_numerator (&result) == 1);
+  fail_unless (gst_value_get_fraction_denominator (&result) == 4);
+
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+  g_value_unset (&result);
+
+  /* Subtract 1/12 from 7/8 */
+  g_value_init (&src1, GST_TYPE_FRACTION);
+  g_value_init (&src2, GST_TYPE_FRACTION);
+  g_value_init (&result, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&src1, 7, 8);
+  gst_value_set_fraction (&src2, 1, 12);
+  fail_unless (gst_value_fraction_subtract (&result, &src1, &src2) == TRUE);
+  fail_unless (gst_value_get_fraction_numerator (&result) == 19);
+  fail_unless (gst_value_get_fraction_denominator (&result) == 24);
+
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+  g_value_unset (&result);
+}
+
+GST_END_TEST;
+
+/* Test set subtraction operations on fraction ranges */
+GST_START_TEST (test_value_subtract_fraction_range)
+{
+  GValue dest = { 0 };
+  GValue src1 = { 0 };
+  GValue src2 = { 0 };
+  GValue cmp = { 0 };
+  const GValue *tmp;
+  gboolean ret;
+
+  /* Value for tests */
+  g_value_init (&cmp, GST_TYPE_FRACTION);
+
+  /*  fraction <-> fraction
+   */
+  g_value_init (&src1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&src1, 10, 1);
+  g_value_init (&src2, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&src2, 20, 1);
+  gst_value_set_fraction (&src1, 10, 1);
+
+  /* subtract as in sets, result is 10 */
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (gst_value_compare (&dest, &src1) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+
+  /* same values, yields empty set */
+  ret = gst_value_subtract (&dest, &src1, &src1);
+  fail_unless (ret == FALSE);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /*  fraction <-> fraction_range
+   */
+
+  /* would yield an empty set */
+  g_value_init (&src1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&src1, 10, 1);
+  g_value_init (&src2, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src2, 0, 1, 20, 1);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == FALSE);
+
+  /* and the other way around, we cannot create open ranges
+   * so the result is the range again */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (&dest) == TRUE);
+  gst_value_set_fraction (&cmp, 0, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_min (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  gst_value_set_fraction (&cmp, 20, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_max (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* border case 1, empty set */
+  g_value_init (&src1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&src1, 10, 1);
+  g_value_init (&src2, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src2, 10, 1, 20, 1);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == FALSE);
+
+  /* and the other way around, should keep same range as
+   * we don't have open ranges. */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (&dest) == TRUE);
+  gst_value_set_fraction (&cmp, 10, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_min (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  gst_value_set_fraction (&cmp, 20, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_max (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* case 2, valid set */
+  g_value_init (&src1, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&src1, 0, 1);
+  g_value_init (&src2, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src2, 10, 1, 20, 1);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_FRACTION (&dest) == TRUE);
+  fail_unless (gst_value_compare (&dest, &src1) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+
+  /* and the other way around, should keep the range. */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (&dest) == TRUE);
+  fail_unless (gst_value_compare (&dest, &src2) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /*  fraction_range <-> fraction_range
+   */
+
+  /* same range, empty set */
+  g_value_init (&src1, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src1, 10, 2, 20, 2);
+  g_value_init (&src2, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src2, 10, 2, 20, 2);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == FALSE);
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == FALSE);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* non overlapping ranges */
+  g_value_init (&src1, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src1, 10, 2, 10, 1);
+  g_value_init (&src2, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src2, 30, 2, 40, 2);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (&dest) == TRUE);
+  gst_value_set_fraction (&cmp, 5, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_min (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  gst_value_set_fraction (&cmp, 10, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_max (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+
+  g_value_unset (&dest);
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (&dest) == TRUE);
+  gst_value_set_fraction (&cmp, 15, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_min (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  gst_value_set_fraction (&cmp, 20, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_max (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* completely overlapping ranges */
+  g_value_init (&src1, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src1, 10, 1, 20, 1);
+  g_value_init (&src2, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src2, 10, 1, 30, 1);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == FALSE);
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (&dest) == TRUE);
+  gst_value_set_fraction (&cmp, 20, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_min (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  gst_value_set_fraction (&cmp, 30, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_max (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* partially overlapping ranges */
+  g_value_init (&src1, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src1, 10, 1, 20, 1);
+  g_value_init (&src2, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src2, 15, 1, 30, 1);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (&dest) == TRUE);
+  gst_value_set_fraction (&cmp, 10, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_min (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  gst_value_set_fraction (&cmp, 15, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_max (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (&dest) == TRUE);
+  gst_value_set_fraction (&cmp, 20, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_min (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  gst_value_set_fraction (&cmp, 30, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_max (&dest),
+          &cmp) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  /* create a hole { double_range, double_range } */
+  g_value_init (&src1, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src1, 10, 1, 30, 1);
+  g_value_init (&src2, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (&src2, 15, 1, 20, 1);
+  ret = gst_value_subtract (&dest, &src1, &src2);
+  fail_unless (ret == TRUE);
+  fail_unless (GST_VALUE_HOLDS_LIST (&dest) == TRUE);
+  /* 1st list entry */
+  tmp = gst_value_list_get_value (&dest, 0);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (tmp) == TRUE);
+  gst_value_set_fraction (&cmp, 10, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_min (tmp),
+          &cmp) == GST_VALUE_EQUAL);
+  gst_value_set_fraction (&cmp, 15, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_max (tmp),
+          &cmp) == GST_VALUE_EQUAL);
+  /* 2nd list entry */
+  tmp = gst_value_list_get_value (&dest, 1);
+  fail_unless (GST_VALUE_HOLDS_FRACTION_RANGE (tmp) == TRUE);
+  gst_value_set_fraction (&cmp, 20, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_min (tmp),
+          &cmp) == GST_VALUE_EQUAL);
+  gst_value_set_fraction (&cmp, 30, 1);
+  fail_unless (gst_value_compare (gst_value_get_fraction_range_max (tmp),
+          &cmp) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+  /* the other way */
+  ret = gst_value_subtract (&dest, &src2, &src1);
+  fail_unless (ret == FALSE);
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+
+  g_value_unset (&cmp);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_date)
 {
   GstStructure *s;
@@ -1017,6 +1292,59 @@ GST_START_TEST (test_date)
 
 GST_END_TEST;
 
+GST_START_TEST (test_fraction_range)
+{
+  GValue range = { 0, };
+  GValue start = { 0, }, end = {
+  0,};
+  GValue src = { 0, }, dest = {
+  0,};
+  GValue range2 = { 0, };
+
+  g_value_init (&range, GST_TYPE_FRACTION_RANGE);
+  g_value_init (&range2, GST_TYPE_FRACTION_RANGE);
+  g_value_init (&start, GST_TYPE_FRACTION);
+  g_value_init (&end, GST_TYPE_FRACTION);
+  g_value_init (&src, GST_TYPE_FRACTION);
+
+  gst_value_set_fraction (&src, 1, 2);
+
+  /* Check that a intersection of fraction & range = fraction */
+  gst_value_set_fraction (&start, 1, 4);
+  gst_value_set_fraction (&end, 2, 3);
+  gst_value_set_fraction_range (&range, &start, &end);
+
+  fail_unless (gst_value_intersect (&dest, &src, &range) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_FRACTION);
+  fail_unless (gst_value_compare (&dest, &src) == GST_VALUE_EQUAL);
+
+  /* Check that a intersection selects the overlapping range */
+  gst_value_set_fraction (&start, 1, 3);
+  gst_value_set_fraction (&end, 2, 3);
+  gst_value_set_fraction_range (&range2, &start, &end);
+  g_value_unset (&dest);
+  fail_unless (gst_value_intersect (&dest, &range, &range2) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_FRACTION_RANGE);
+
+  gst_value_set_fraction_range (&range2, &start, &end);
+  fail_unless (gst_value_compare (&dest, &range2) == GST_VALUE_EQUAL);
+
+  /* Check that non intersection ranges don't intersect */
+  gst_value_set_fraction (&start, 4, 2);
+  gst_value_set_fraction (&end, 5, 2);
+  gst_value_set_fraction_range (&range2, &start, &end);
+  g_value_unset (&dest);
+  fail_unless (gst_value_intersect (&dest, &range, &range2) == FALSE);
+
+  g_value_unset (&start);
+  g_value_unset (&end);
+  g_value_unset (&range);
+  g_value_unset (&range2);
+  g_value_unset (&src);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_value_suite (void)
 {
@@ -1037,7 +1365,10 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_value_intersect);
   tcase_add_test (tc_chain, test_value_subtract_int);
   tcase_add_test (tc_chain, test_value_subtract_double);
+  tcase_add_test (tc_chain, test_value_subtract_fraction);
+  tcase_add_test (tc_chain, test_value_subtract_fraction_range);
   tcase_add_test (tc_chain, test_date);
+  tcase_add_test (tc_chain, test_fraction_range);
 
   return s;
 }

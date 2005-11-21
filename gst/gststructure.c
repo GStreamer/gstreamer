@@ -1427,19 +1427,20 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
 
   if (G_VALUE_TYPE (&value1) == G_TYPE_DOUBLE) {
     range_type = GST_TYPE_DOUBLE_RANGE;
-  } else if (G_VALUE_TYPE (&value1) == G_TYPE_INT) {
-    range_type = GST_TYPE_INT_RANGE;
-  } else {
-    return FALSE;
-  }
-
-  g_value_init (value, range_type);
-  if (range_type == GST_TYPE_DOUBLE_RANGE) {
+    g_value_init (value, range_type);
     gst_value_set_double_range (value, g_value_get_double (&value1),
         g_value_get_double (&value2));
-  } else {
+  } else if (G_VALUE_TYPE (&value1) == G_TYPE_INT) {
+    range_type = GST_TYPE_INT_RANGE;
+    g_value_init (value, range_type);
     gst_value_set_int_range (value, g_value_get_int (&value1),
         g_value_get_int (&value2));
+  } else if (G_VALUE_TYPE (&value1) == GST_TYPE_FRACTION) {
+    range_type = GST_TYPE_FRACTION_RANGE;
+    g_value_init (value, range_type);
+    gst_value_set_fraction_range (value, &value1, &value2);
+  } else {
+    return FALSE;
   }
 
   *after = s;
@@ -1920,6 +1921,83 @@ gst_structure_fixate_field_boolean (GstStructure * structure,
     }
     if (best_index != -1) {
       gst_structure_set (structure, field_name, G_TYPE_BOOLEAN, best, NULL);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_structure_fixate_field_nearest_fraction:
+ * @structure: a #GstStructure
+ * @field_name: a field in @structure
+ * @target: A GValue of GST_TYPE_FRACTION with the target value of the fixation
+ *
+ * Fixates a #GstStructure by changing the given field to the nearest
+ * integer to @target that is a subset of the existing field.
+ *
+ * Returns: TRUE if the structure could be fixated
+ */
+gboolean
+gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
+    const char *field_name, const GValue * target)
+{
+  const GValue *value;
+
+  g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
+  g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
+  g_return_val_if_fail (G_VALUE_TYPE (target) == GST_TYPE_FRACTION, FALSE);
+
+  value = gst_structure_get_value (structure, field_name);
+
+  if (G_VALUE_TYPE (value) == GST_TYPE_FRACTION) {
+    /* already fixed */
+    return FALSE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_FRACTION_RANGE) {
+    const GValue *x;
+
+    x = gst_value_get_fraction_range_min (value);
+    if (gst_value_compare (target, x) == GST_VALUE_LESS_THAN)
+      target = x;
+    x = gst_value_get_fraction_range_max (value);
+    if (gst_value_compare (target, x) == GST_VALUE_GREATER_THAN)
+      target = x;
+    gst_structure_set_value (structure, field_name, target);
+    return TRUE;
+  } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
+    const GValue *list_value;
+    int i, n;
+    const GValue *best = NULL;
+    GValue best_diff;
+    GValue cur_diff;
+
+    g_value_init (&best_diff, GST_TYPE_FRACTION);
+    g_value_init (&cur_diff, GST_TYPE_FRACTION);
+
+    n = gst_value_list_get_size (value);
+    for (i = 0; i < n; i++) {
+      list_value = gst_value_list_get_value (value, i);
+      if (G_VALUE_TYPE (list_value) == GST_TYPE_FRACTION) {
+        if (best == NULL) {
+          best = list_value;
+          gst_value_set_fraction (&best_diff, 0, 1);
+        } else {
+          if (gst_value_compare (list_value, target) == GST_VALUE_LESS_THAN)
+            gst_value_fraction_subtract (&cur_diff, target, list_value);
+          else
+            gst_value_fraction_subtract (&cur_diff, list_value, target);
+
+          if (gst_value_compare (&cur_diff, &best_diff) == GST_VALUE_LESS_THAN) {
+            best = list_value;
+            g_value_copy (&cur_diff, &best_diff);
+          }
+        }
+      }
+    }
+    if (best != NULL) {
+      gst_structure_set_value (structure, field_name, best);
       return TRUE;
     }
     return FALSE;

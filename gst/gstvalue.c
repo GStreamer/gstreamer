@@ -61,6 +61,7 @@ struct _GstValueSubtractInfo
 };
 
 GType gst_type_double_range;
+GType gst_type_fraction_range;
 GType gst_type_list;
 GType gst_type_array;
 GType gst_type_fraction;
@@ -70,6 +71,10 @@ static GArray *gst_value_table;
 static GArray *gst_value_union_funcs;
 static GArray *gst_value_intersect_funcs;
 static GArray *gst_value_subtract_funcs;
+
+/* Forward declarations */
+static gint gst_greatest_common_divisor (gint a, gint b);
+static char *gst_value_serialize_fraction (const GValue * value);
 
 /********
  * list *
@@ -891,6 +896,254 @@ gst_value_serialize_double_range (const GValue * value)
 
 static gboolean
 gst_value_deserialize_double_range (GValue * dest, const char *s)
+{
+  g_warning ("unimplemented");
+  return FALSE;
+}
+
+/****************
+ * fraction range *
+ ****************/
+
+static void
+gst_value_init_fraction_range (GValue * value)
+{
+  GValue *vals;
+
+  value->data[0].v_pointer = vals = g_new0 (GValue, 2);
+  g_value_init (&vals[0], GST_TYPE_FRACTION);
+  g_value_init (&vals[1], GST_TYPE_FRACTION);
+}
+
+static void
+gst_value_free_fraction_range (GValue * value)
+{
+  GValue *vals = (GValue *) value->data[0].v_pointer;
+
+  if (vals != NULL) {
+    g_value_unset (&vals[0]);
+    g_value_unset (&vals[1]);
+    g_free (vals);
+    value->data[0].v_pointer = NULL;
+  }
+}
+
+static void
+gst_value_copy_fraction_range (const GValue * src_value, GValue * dest_value)
+{
+  GValue *vals = (GValue *) dest_value->data[0].v_pointer;
+  GValue *src_vals = (GValue *) src_value->data[0].v_pointer;
+
+  if (vals == NULL) {
+    dest_value->data[0].v_pointer = vals = g_new0 (GValue, 2);
+    g_return_if_fail (vals != NULL);
+    g_value_init (&vals[0], GST_TYPE_FRACTION);
+    g_value_init (&vals[1], GST_TYPE_FRACTION);
+  }
+
+  if (src_vals != NULL) {
+    g_value_copy (&src_vals[0], &vals[0]);
+    g_value_copy (&src_vals[1], &vals[1]);
+  }
+}
+
+static gchar *
+gst_value_collect_fraction_range (GValue * value, guint n_collect_values,
+    GTypeCValue * collect_values, guint collect_flags)
+{
+  GValue *vals = (GValue *) value->data[0].v_pointer;
+
+  if (n_collect_values != 4)
+    return g_strdup_printf ("not enough value locations for `%s' passed",
+        G_VALUE_TYPE_NAME (value));
+  if (vals == NULL)
+    return g_strdup_printf ("Uninitialised `%s' passed",
+        G_VALUE_TYPE_NAME (value));
+
+  gst_value_set_fraction (&vals[0], collect_values[0].v_int,
+      collect_values[1].v_int);
+  gst_value_set_fraction (&vals[1], collect_values[2].v_int,
+      collect_values[3].v_int);
+
+  return NULL;
+}
+
+static gchar *
+gst_value_lcopy_fraction_range (const GValue * value, guint n_collect_values,
+    GTypeCValue * collect_values, guint collect_flags)
+{
+  int i;
+  int *dest_values[4];
+  GValue *vals = (GValue *) value->data[0].v_pointer;
+
+  if (n_collect_values != 4)
+    return g_strdup_printf ("not enough value locations for `%s' passed",
+        G_VALUE_TYPE_NAME (value));
+
+  for (i = 0; i < 4; i++) {
+    if (collect_values[i].v_pointer == NULL) {
+      return g_strdup_printf ("value location for `%s' passed as NULL",
+          G_VALUE_TYPE_NAME (value));
+    }
+    dest_values[i] = collect_values[i].v_pointer;
+  }
+
+  if (vals == NULL) {
+    return g_strdup_printf ("Uninitialised `%s' passed",
+        G_VALUE_TYPE_NAME (value));
+  }
+
+  dest_values[0][0] = gst_value_get_fraction_numerator (&vals[0]);
+  dest_values[1][0] = gst_value_get_fraction_denominator (&vals[0]);
+  dest_values[2][0] = gst_value_get_fraction_denominator (&vals[1]);
+  dest_values[3][0] = gst_value_get_fraction_denominator (&vals[1]);
+  return NULL;
+}
+
+/**
+ * gst_value_set_fraction_range:
+ * @value: a GValue initialized to GST_TYPE_FRACTION_RANGE
+ * @start: the start of the range (a GST_TYPE_FRACTION GValue)
+ * @end: the end of the range (a GST_TYPE_FRACTION GValue)
+ *
+ * Sets @value to the range specified by @start and @end.
+ */
+void
+gst_value_set_fraction_range (GValue * value, const GValue * start,
+    const GValue * end)
+{
+  GValue *vals;
+
+  g_return_if_fail (GST_VALUE_HOLDS_FRACTION_RANGE (value));
+
+  vals = (GValue *) value->data[0].v_pointer;
+  if (vals == NULL) {
+    value->data[0].v_pointer = vals = g_new0 (GValue, 2);
+    g_value_init (&vals[0], GST_TYPE_FRACTION);
+    g_value_init (&vals[1], GST_TYPE_FRACTION);
+  }
+
+  g_value_copy (start, &vals[0]);
+  g_value_copy (end, &vals[1]);
+}
+
+void
+gst_value_set_fraction_range_full (GValue * value,
+    int numerator_start, int denominator_start,
+    int numerator_end, int denominator_end)
+{
+  GValue start = { 0 };
+  GValue end = { 0 };
+
+  g_value_init (&start, GST_TYPE_FRACTION);
+  g_value_init (&end, GST_TYPE_FRACTION);
+
+  gst_value_set_fraction (&start, numerator_start, denominator_start);
+  gst_value_set_fraction (&end, numerator_end, denominator_end);
+  gst_value_set_fraction_range (value, &start, &end);
+
+  g_value_unset (&start);
+  g_value_unset (&end);
+}
+
+/**
+ * gst_value_get_fraction_range_min:
+ * @value: a GValue initialized to GST_TYPE_FRACTION_RANGE
+ *
+ * Gets the minimum of the range specified by @value.
+ *
+ * Returns: the minumum of the range
+ */
+const GValue *
+gst_value_get_fraction_range_min (const GValue * value)
+{
+  GValue *vals;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION_RANGE (value), FALSE);
+
+  vals = (GValue *) value->data[0].v_pointer;
+  if (vals != NULL) {
+    return &vals[0];
+  }
+
+  return NULL;
+}
+
+/**
+ * gst_value_get_fraction_range_max:
+ * @value: a GValue initialized to GST_TYPE_FRACTION_RANGE
+ *
+ * Gets the maximum of the range specified by @value.
+ *
+ * Returns: the maximum of the range
+ */
+const GValue *
+gst_value_get_fraction_range_max (const GValue * value)
+{
+  GValue *vals;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION_RANGE (value), FALSE);
+
+  vals = (GValue *) value->data[0].v_pointer;
+  if (vals != NULL) {
+    return &vals[1];
+  }
+
+  return NULL;
+}
+
+static char *
+gst_value_serialize_fraction_range (const GValue * value)
+{
+  GValue *vals = (GValue *) value->data[0].v_pointer;
+  gchar *retval;
+
+  if (vals == NULL) {
+    retval = g_strdup ("[ 0/1, 0/1 ]");
+  } else {
+    gchar *start, *end;
+
+    start = gst_value_serialize_fraction (&vals[0]);
+    end = gst_value_serialize_fraction (&vals[1]);
+
+    retval = g_strdup_printf ("[ %s, %s ]", start, end);
+    g_free (start);
+    g_free (end);
+  }
+
+  return retval;
+}
+
+static void
+gst_value_transform_fraction_range_string (const GValue * src_value,
+    GValue * dest_value)
+{
+  dest_value->data[0].v_pointer =
+      gst_value_serialize_fraction_range (src_value);
+}
+
+static int
+gst_value_compare_fraction_range (const GValue * value1, const GValue * value2)
+{
+  GValue *vals1, *vals2;
+
+  if (value2->data[0].v_pointer == value1->data[0].v_pointer)
+    return GST_VALUE_EQUAL;     /* Only possible if both are NULL */
+
+  if (value2->data[0].v_pointer == NULL || value1->data[0].v_pointer == NULL)
+    return GST_VALUE_UNORDERED;
+
+  vals1 = (GValue *) value1->data[0].v_pointer;
+  vals2 = (GValue *) value2->data[0].v_pointer;
+  if (gst_value_compare (&vals1[0], &vals2[0]) == GST_VALUE_EQUAL &&
+      gst_value_compare (&vals1[1], &vals2[1]) == GST_VALUE_EQUAL)
+    return GST_VALUE_EQUAL;
+
+  return GST_VALUE_UNORDERED;
+}
+
+static gboolean
+gst_value_deserialize_fraction_range (GValue * dest, const char *s)
 {
   g_warning ("unimplemented");
   return FALSE;
@@ -1869,6 +2122,76 @@ gst_value_intersect_array (GValue * dest, const GValue * src1,
   return TRUE;
 }
 
+static gboolean
+gst_value_intersect_fraction_fraction_range (GValue * dest, const GValue * src1,
+    const GValue * src2)
+{
+  int res1, res2;
+  GValue *vals;
+
+  vals = src2->data[0].v_pointer;
+
+  if (vals == NULL)
+    return FALSE;
+
+  res1 = gst_value_compare (&vals[0], src1);
+  res2 = gst_value_compare (&vals[1], src1);
+
+  if ((res1 == GST_VALUE_EQUAL || res1 == GST_VALUE_LESS_THAN) &&
+      (res2 == GST_VALUE_EQUAL || res2 == GST_VALUE_GREATER_THAN)) {
+    gst_value_init_and_copy (dest, src1);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+    gst_value_intersect_fraction_range_fraction_range
+    (GValue * dest, const GValue * src1, const GValue * src2)
+{
+  GValue *min;
+  GValue *max;
+  int res;
+  GValue *vals1, *vals2;
+
+  vals1 = src1->data[0].v_pointer;
+  vals2 = src2->data[0].v_pointer;
+  g_return_val_if_fail (vals1 != NULL && vals2 != NULL, FALSE);
+
+  /* min = MAX (src1.start, src2.start) */
+  res = gst_value_compare (&vals1[0], &vals2[0]);
+  g_return_val_if_fail (res != GST_VALUE_UNORDERED, FALSE);
+  if (res == GST_VALUE_LESS_THAN)
+    min = &vals2[0];            /* Take the max of the 2 */
+  else
+    min = &vals1[0];
+
+  /* max = MIN (src1.end, src2.end) */
+  res = gst_value_compare (&vals1[1], &vals2[1]);
+  g_return_val_if_fail (res != GST_VALUE_UNORDERED, FALSE);
+  if (res == GST_VALUE_GREATER_THAN)
+    max = &vals2[1];            /* Take the min of the 2 */
+  else
+    max = &vals1[1];
+
+  res = gst_value_compare (min, max);
+  g_return_val_if_fail (res != GST_VALUE_UNORDERED, FALSE);
+  if (res == GST_VALUE_LESS_THAN) {
+    g_value_init (dest, GST_TYPE_FRACTION_RANGE);
+    vals1 = dest->data[0].v_pointer;
+    g_value_copy (min, &vals1[0]);
+    g_value_copy (max, &vals1[1]);
+    return TRUE;
+  }
+  if (res == GST_VALUE_EQUAL) {
+    gst_value_init_and_copy (dest, min);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 /***************
  * subtraction *
  ***************/
@@ -2123,6 +2446,94 @@ gst_value_subtract_list (GValue * dest, const GValue * minuend,
   }
   gst_value_init_and_copy (dest, result);
   g_value_unset (result);
+  return TRUE;
+}
+
+static gboolean
+gst_value_subtract_fraction_fraction_range (GValue * dest,
+    const GValue * minuend, const GValue * subtrahend)
+{
+  const GValue *min = gst_value_get_fraction_range_min (subtrahend);
+  const GValue *max = gst_value_get_fraction_range_max (subtrahend);
+
+  /* subtracting a range from an fraction only works if the fraction
+   * is not in the range */
+  if (gst_value_compare (minuend, min) == GST_VALUE_LESS_THAN ||
+      gst_value_compare (minuend, max) == GST_VALUE_GREATER_THAN) {
+    /* and the result is the value */
+    gst_value_init_and_copy (dest, minuend);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
+gst_value_subtract_fraction_range_fraction (GValue * dest,
+    const GValue * minuend, const GValue * subtrahend)
+{
+  /* since we don't have open ranges, we cannot create a hole in
+   * a range. We return the original range */
+  gst_value_init_and_copy (dest, minuend);
+  return TRUE;
+}
+
+static gboolean
+gst_value_subtract_fraction_range_fraction_range (GValue * dest,
+    const GValue * minuend, const GValue * subtrahend)
+{
+  /* since we don't have open ranges, we have to approximate */
+  /* done like with ints and doubles. Creates a list of 2 fraction ranges */
+  const GValue *min1 = gst_value_get_fraction_range_min (minuend);
+  const GValue *max2 = gst_value_get_fraction_range_max (minuend);
+  const GValue *max1 = gst_value_get_fraction_range_min (subtrahend);
+  const GValue *min2 = gst_value_get_fraction_range_max (subtrahend);
+  int cmp1, cmp2;
+  GValue v1 = { 0, };
+  GValue v2 = { 0, };
+  GValue *pv1, *pv2;            /* yeah, hungarian! */
+
+  g_return_val_if_fail (min1 != NULL && max1 != NULL, FALSE);
+  g_return_val_if_fail (min2 != NULL && max2 != NULL, FALSE);
+
+  cmp1 = gst_value_compare (max2, max1);
+  g_return_val_if_fail (cmp1 != GST_VALUE_UNORDERED, FALSE);
+  if (cmp1 == GST_VALUE_LESS_THAN)
+    max1 = max2;
+  cmp1 = gst_value_compare (min1, min2);
+  g_return_val_if_fail (cmp1 != GST_VALUE_UNORDERED, FALSE);
+  if (cmp1 == GST_VALUE_GREATER_THAN)
+    min2 = min1;
+
+  cmp1 = gst_value_compare (min1, max1);
+  cmp2 = gst_value_compare (min2, max2);
+
+  if (cmp1 == GST_VALUE_LESS_THAN && cmp2 == GST_VALUE_LESS_THAN) {
+    pv1 = &v1;
+    pv2 = &v2;
+  } else if (cmp1 == GST_VALUE_LESS_THAN) {
+    pv1 = dest;
+    pv2 = NULL;
+  } else if (cmp2 == GST_VALUE_LESS_THAN) {
+    pv1 = NULL;
+    pv2 = dest;
+  } else {
+    return FALSE;
+  }
+
+  if (cmp1 == GST_VALUE_LESS_THAN) {
+    g_value_init (pv1, GST_TYPE_FRACTION_RANGE);
+    gst_value_set_fraction_range (pv1, min1, max1);
+  }
+  if (cmp2 == GST_VALUE_LESS_THAN) {
+    g_value_init (pv2, GST_TYPE_FRACTION_RANGE);
+    gst_value_set_fraction_range (pv2, min2, max2);
+  }
+
+  if (cmp1 == GST_VALUE_LESS_THAN && cmp2 == GST_VALUE_LESS_THAN) {
+    gst_value_list_concat (dest, pv1, pv2);
+    g_value_unset (pv1);
+    g_value_unset (pv2);
+  }
   return TRUE;
 }
 
@@ -2857,6 +3268,55 @@ gst_value_fraction_multiply (GValue * product, const GValue * factor1,
   return TRUE;
 }
 
+/**
+ * gst_value_fraction_subtract:
+ * @dest: a GValue initialized to #GST_TYPE_FRACTION
+ * @minued: a GValue initialized to #GST_TYPE_FRACTION
+ * @subtrahend: a GValue initialized to #GST_TYPE_FRACTION
+ *
+ * Subtracts the @subtrahend from the @minuend and sets @dest to the result.
+ *
+ * Returns: FALSE in case of an error (like integer overflow), TRUE otherwise.
+ */
+gboolean
+gst_value_fraction_subtract (GValue * dest,
+    const GValue * minuend, const GValue * subtrahend)
+{
+  gint gcd, n1, n2, d1, d2;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (minuend), FALSE);
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (subtrahend), FALSE);
+
+  n1 = minuend->data[0].v_int;
+  n2 = subtrahend->data[0].v_int;
+  d1 = minuend->data[1].v_int;
+  d2 = subtrahend->data[1].v_int;
+
+  if (n1 == 0) {
+    gst_value_set_fraction (dest, -n2, d2);
+    return TRUE;
+  }
+  if (n2 == 0) {
+    gst_value_set_fraction (dest, n1, d1);
+    return TRUE;
+  }
+
+  gcd = gst_greatest_common_divisor (n1, d2);
+  n1 /= gcd;
+  d2 /= gcd;
+  gcd = gst_greatest_common_divisor (n2, d1);
+  n2 /= gcd;
+  d1 /= gcd;
+
+  g_return_val_if_fail (n1 == 0 || G_MAXINT / ABS (n1) >= ABS (d2), FALSE);
+  g_return_val_if_fail (G_MAXINT / ABS (d1) >= ABS (n2), FALSE);
+  g_return_val_if_fail (G_MAXINT / ABS (d1) >= ABS (d2), FALSE);
+
+  gst_value_set_fraction (dest, (n1 * d2) - (n2 * d1), d1 * d2);
+
+  return TRUE;
+}
+
 static char *
 gst_value_serialize_fraction (const GValue * value)
 {
@@ -2885,6 +3345,10 @@ gst_value_deserialize_fraction (GValue * dest, const char *s)
 
   if (s && sscanf (s, "%d/%d", &num, &den) == 2) {
     gst_value_set_fraction (dest, num, den);
+    return TRUE;
+  }
+  if (s && sscanf (s, "%d", &num) == 1) {
+    gst_value_set_fraction (dest, num, 1);
     return TRUE;
   }
 
@@ -3221,6 +3685,19 @@ static const GTypeValueTable _gst_double_range_value_table = {
 
 FUNC_VALUE_GET_TYPE (double_range, "GstDoubleRange");
 
+static const GTypeValueTable _gst_fraction_range_value_table = {
+  gst_value_init_fraction_range,
+  gst_value_free_fraction_range,
+  gst_value_copy_fraction_range,
+  NULL,
+  "iiii",
+  gst_value_collect_fraction_range,
+  "pppp",
+  gst_value_lcopy_fraction_range
+};
+
+FUNC_VALUE_GET_TYPE (fraction_range, "GstFractionRange");
+
 static const GTypeValueTable _gst_value_list_value_table = {
   gst_value_init_list_or_array,
   gst_value_free_list_or_array,
@@ -3331,6 +3808,18 @@ _gst_value_initialize (void)
   {
     static GstValueTable gst_value = {
       0,
+      gst_value_compare_fraction_range,
+      gst_value_serialize_fraction_range,
+      gst_value_deserialize_fraction_range,
+    };
+
+    gst_value.type = gst_fraction_range_get_type ();
+    gst_value_register (&gst_value);
+  }
+
+  {
+    static GstValueTable gst_value = {
+      0,
       gst_value_compare_list_or_array,
       gst_value_serialize_list,
       gst_value_deserialize_list,
@@ -3433,6 +3922,8 @@ _gst_value_initialize (void)
       gst_value_transform_int_range_string);
   g_value_register_transform_func (GST_TYPE_DOUBLE_RANGE, G_TYPE_STRING,
       gst_value_transform_double_range_string);
+  g_value_register_transform_func (GST_TYPE_FRACTION_RANGE, G_TYPE_STRING,
+      gst_value_transform_fraction_range_string);
   g_value_register_transform_func (GST_TYPE_LIST, G_TYPE_STRING,
       gst_value_transform_list_string);
   g_value_register_transform_func (GST_TYPE_ARRAY, G_TYPE_STRING,
@@ -3460,6 +3951,11 @@ _gst_value_initialize (void)
       GST_TYPE_DOUBLE_RANGE, gst_value_intersect_double_range_double_range);
   gst_value_register_intersect_func (GST_TYPE_ARRAY,
       GST_TYPE_ARRAY, gst_value_intersect_array);
+  gst_value_register_intersect_func (GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE,
+      gst_value_intersect_fraction_fraction_range);
+  gst_value_register_intersect_func (GST_TYPE_FRACTION_RANGE,
+      GST_TYPE_FRACTION_RANGE,
+      gst_value_intersect_fraction_range_fraction_range);
 
   gst_value_register_subtract_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_subtract_int_int_range);
@@ -3474,6 +3970,14 @@ _gst_value_initialize (void)
   gst_value_register_subtract_func (GST_TYPE_DOUBLE_RANGE,
       GST_TYPE_DOUBLE_RANGE, gst_value_subtract_double_range_double_range);
 
+  gst_value_register_subtract_func (GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE,
+      gst_value_subtract_fraction_fraction_range);
+  gst_value_register_subtract_func (GST_TYPE_FRACTION_RANGE, GST_TYPE_FRACTION,
+      gst_value_subtract_fraction_range_fraction);
+  gst_value_register_subtract_func (GST_TYPE_FRACTION_RANGE,
+      GST_TYPE_FRACTION_RANGE,
+      gst_value_subtract_fraction_range_fraction_range);
+
 #if GLIB_CHECK_VERSION(2,8,0)
   /* see bug #317246, #64994, #65041 */
   {
@@ -3487,4 +3991,12 @@ _gst_value_initialize (void)
       gst_value_union_int_int_range);
   gst_value_register_union_func (GST_TYPE_INT_RANGE, GST_TYPE_INT_RANGE,
       gst_value_union_int_range_int_range);
+
+#if 0
+  /* Implement these if needed */
+  gst_value_register_union_func (GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE,
+      gst_value_union_fraction_fraction_range);
+  gst_value_register_union_func (GST_TYPE_FRACTION_RANGE,
+      GST_TYPE_FRACTION_RANGE, gst_value_union_fraction_range_fraction_range);
+#endif
 }

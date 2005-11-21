@@ -15,6 +15,10 @@ static const gchar *caps_list[] = {
   "video/x-raw-rgb, bpp = (int) 32, depth = (int) 24, endianness = (int) BIG_ENDIAN, red_mask = (int) 0x000000FF, framerate = (double) [ 0, max ]",
   "video/x-raw-rgb, bpp = (int) 32, depth = (int) 24, endianness = (int) BIG_ENDIAN, red_mask = (int) 0xFF000000, framerate = (double) [ 0, max ]",
   "video/x-raw-rgb,\\ bpp=(int)32",
+  "test/gst-fraction, fraction = (fraction) 1/8",
+  "test/gst-fraction-range, fraction = (fraction) [ 1/3, 1/4 ]",
+  "test/gst-fraction-range, fraction = (fraction) { [ 1/3, 1/4 ], 1/8 }",
+  "test/gst-fraction-range, fraction = (fraction) { [ 1/3, 1/4 ], [ 1/8, 2/8 ] }",
   "ANY",
   "EMPTY"
 };

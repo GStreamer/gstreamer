@@ -1,3 +1,36 @@
+2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/gst/capslist.h:
+	* check/gst/gstcaps.c: (GST_START_TEST):
+	* check/gst/gstvalue.c: (GST_START_TEST), (gst_value_suite):
+	* gst/gststructure.c: (gst_structure_parse_range),
+	(gst_structure_fixate_field_nearest_fraction):
+	* gst/gststructure.h:
+	* gst/gstvalue.c: (gst_value_init_fraction_range),
+	(gst_value_free_fraction_range), (gst_value_copy_fraction_range),
+	(gst_value_collect_fraction_range),
+	(gst_value_lcopy_fraction_range), (gst_value_set_fraction_range),
+	(gst_value_set_fraction_range_full),
+	(gst_value_get_fraction_range_min),
+	(gst_value_get_fraction_range_max),
+	(gst_value_serialize_fraction_range),
+	(gst_value_transform_fraction_range_string),
+	(gst_value_compare_fraction_range),
+	(gst_value_deserialize_fraction_range),
+	(gst_value_intersect_fraction_fraction_range),
+	(gst_value_intersect_fraction_range_fraction_range),
+	(gst_value_subtract_fraction_fraction_range),
+	(gst_value_subtract_fraction_range_fraction),
+	(gst_value_subtract_fraction_range_fraction_range),
+	(gst_value_collect_fraction), (gst_value_fraction_multiply),
+	(gst_value_fraction_subtract), (gst_value_deserialize_fraction),
+	(gst_value_transform_string_fraction), (_gst_value_initialize):
+	* gst/gstvalue.h:
+	  Implement fraction ranges and extend GstFraction to support
+	  arithmetic subtraction, as well as deserialization from integer
+	  strings such as "100"
+	  Add a testsuite as for int and double range set operations
+
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gsttaglist.h: 

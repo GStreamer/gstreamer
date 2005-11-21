@@ -109,6 +109,14 @@ G_BEGIN_DECLS
 #define GST_VALUE_HOLDS_DOUBLE_RANGE(x) (G_VALUE_HOLDS(x, gst_double_range_get_type ()))
 
 /**
+ * GST_VALUE_HOLDS_FRACTION_RANGE:
+ * @x: the #GValue to check
+ *
+ * Checks if the given #GValue contains a #GST_TYPE_FRACTION_RANGE value.
+ */
+#define GST_VALUE_HOLDS_FRACTION_RANGE(x)    (G_VALUE_HOLDS(x, gst_fraction_range_get_type ()))
+
+/**
  * GST_VALUE_HOLDS_LIST:
  * @x: the #GValue to check
  *
@@ -182,6 +190,15 @@ G_BEGIN_DECLS
  * Returns: the #GType of GstIntRange
  */
 #define GST_TYPE_DOUBLE_RANGE            gst_double_range_get_type ()
+
+/**
+ * GST_TYPE_FRACTION_RANGE:
+ *
+ * a #GValue type that represents a GstFraction range
+ *
+ * Returns: the #GType of GstFractionRange
+ */
+#define GST_TYPE_FRACTION_RANGE            gst_fraction_range_get_type ()
 
 /**
  * GST_TYPE_LIST:
@@ -362,6 +379,7 @@ struct _GstValueTable {
 
 GType gst_int_range_get_type (void);
 GType gst_double_range_get_type (void);
+GType gst_fraction_range_get_type (void);
 GType gst_fourcc_get_type (void);
 GType gst_fraction_get_type (void);
 GType gst_value_list_get_type (void);
@@ -434,6 +452,21 @@ int		gst_value_get_fraction_denominator(const GValue	*value);
 gboolean	gst_value_fraction_multiply	(GValue		*product,
 						 const GValue	*factor1,
 						 const GValue	*factor2);
+gboolean 	gst_value_fraction_subtract (GValue * dest,
+					     const GValue * minuend, 
+					     const GValue * subtrahend);
+
+/* fraction range */
+void		gst_value_set_fraction_range	(GValue		*value,
+						 const GValue 	*start,
+						 const GValue	*end);
+void		gst_value_set_fraction_range_full (GValue	*value,
+						 int numerator_start, 
+						 int denominator_start,
+						 int numerator_end, 
+						 int denominator_end);
+const GValue 	*gst_value_get_fraction_range_min (const GValue	*value);
+const GValue 	*gst_value_get_fraction_range_max (const GValue	*value);
 
 /* date */
 G_CONST_RETURN GDate *
