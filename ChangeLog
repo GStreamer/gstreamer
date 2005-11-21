@@ -1,3 +1,12 @@
+2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/aalib/gstaasink.c: (gst_aasink_fixate):
+	* ext/mikmod/gstmikmod.c: (gst_mikmod_srcfixate):
+	* gst/goom/gstgoom.c: (gst_goom_src_negotiate):
+	* sys/osxvideo/osxvideosink.m:
+        Rename gst_caps_structure_fixate_* to gst_structure_fixate_*
+        (#322027)
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/aalib/gstaasink.c: (gst_aasink_setcaps):

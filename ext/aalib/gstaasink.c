@@ -238,9 +238,9 @@ gst_aasink_fixate (GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_caps_structure_fixate_field_nearest_int (structure, "width", 320);
-  gst_caps_structure_fixate_field_nearest_int (structure, "height", 240);
-  gst_caps_structure_fixate_field_nearest_double (structure, "framerate", 30.0);
+  gst_structure_fixate_field_nearest_int (structure, "width", 320);
+  gst_structure_fixate_field_nearest_int (structure, "height", 240);
+  gst_structure_fixate_field_nearest_double (structure, "framerate", 30.0);
 }
 
 static gboolean
