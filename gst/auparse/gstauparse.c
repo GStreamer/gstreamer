@@ -171,7 +171,7 @@ gst_auparse_dispose (GObject * object)
   GstAuParse *au = GST_AUPARSE (object);
 
   if (au->adapter != NULL) {
-    g_object_unref (au->adapter);
+    gst_object_unref (au->adapter);
     au->adapter = NULL;
   }
   G_OBJECT_CLASS (parent_class)->dispose (object);

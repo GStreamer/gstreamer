@@ -1,3 +1,8 @@
+2005-11-21  Michael Smith <msmith@fluendo.com>
+
+	* gst/auparse/gstauparse.c: (gst_auparse_dispose):
+	  gst_object_unref, not g_object_unref
+
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_init),
