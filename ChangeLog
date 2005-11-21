@@ -1,3 +1,8 @@
+2005-11-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* examples/cutter.py:
+	  Add an example for the cutter element
+
 2005-11-21  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst-types.defs:
