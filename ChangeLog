@@ -1,5 +1,10 @@
 2005-11-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstsegment.h:
+	And add a nice define too.
+
+2005-11-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstsegment.c: (gst_segment_copy), (gst_segment_get_type),
 	(gst_segment_new), (gst_segment_free), (gst_segment_init),
 	(gst_segment_set_duration), (gst_segment_set_last_stop),

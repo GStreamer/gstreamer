@@ -28,6 +28,8 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_SEGMENT             (gst_segment_get_type())
+
 typedef struct _GstSegment GstSegment;
 
 /**
