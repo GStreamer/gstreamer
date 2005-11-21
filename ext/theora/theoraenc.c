@@ -423,7 +423,6 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      GST_STREAM_LOCK (pad);
       /* push last packet with eos flag */
       while (theora_encode_packetout (&enc->state, 1, &op)) {
         GstClockTime out_time =
@@ -432,7 +431,6 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
         theora_push_packet (enc, &op, out_time, GST_SECOND / enc->fps);
       }
       res = gst_pad_push_event (enc->srcpad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     default:
       res = gst_pad_push_event (enc->srcpad, event);

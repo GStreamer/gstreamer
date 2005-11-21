@@ -394,8 +394,6 @@ gst_videorate_event (GstPad * pad, GstEvent * event)
       gboolean update;
       GstFormat format;
 
-      GST_STREAM_LOCK (pad);
-
       gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
           &base);
 
@@ -415,7 +413,6 @@ gst_videorate_event (GstPad * pad, GstEvent * event)
             GST_TIME_ARGS (videorate->segment_start),
             GST_TIME_ARGS (videorate->segment_stop));
       }
-      GST_STREAM_UNLOCK (pad);
 
       break;
     }

@@ -428,9 +428,7 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (dec, "handling event");
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      GST_STREAM_LOCK (pad);
       ret = gst_pad_push_event (dec->srcpad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     case GST_EVENT_NEWSEGMENT:
     {
@@ -439,7 +437,6 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       gint64 start, stop, time;
       gboolean update;
 
-      GST_STREAM_LOCK (pad);
       gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
           &time);
 
@@ -463,7 +460,6 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       vorbis_synthesis_restart (&dec->vd);
 #endif
       ret = gst_pad_push_event (dec->srcpad, event);
-      GST_STREAM_UNLOCK (pad);
       break;
     }
     default:
@@ -477,13 +473,11 @@ done:
   /* ERRORS */
 newseg_wrong_format:
   {
-    GST_STREAM_UNLOCK (pad);
     GST_DEBUG ("received non TIME newsegment");
     goto done;
   }
 newseg_wrong_rate:
   {
-    GST_STREAM_UNLOCK (pad);
     GST_DEBUG ("negative rates not supported yet");
     goto done;
   }

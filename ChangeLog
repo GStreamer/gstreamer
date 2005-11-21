@@ -1,3 +1,15 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	* ext/vorbis/vorbisdec.c (vorbis_dec_sink_event): 
+	* gst/videorate/gstvideorate.c (gst_videorate_event):
+	* ext/theora/theoradec.c (theora_dec_sink_event): 
+	* ext/theora/theoraenc.c (theora_enc_sink_event): Don't take
+	stream lock.
+
+	* gst/subparse/gstsubparse.c (gst_subparse_src_event):
+	* ext/ogg/gstoggdemux.c (gst_ogg_demux_perform_seek): Update for
+	stream lock changes.
+
 2005-11-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

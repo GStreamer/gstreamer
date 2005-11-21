@@ -184,13 +184,13 @@ gst_subparse_src_event (GstPad * pad, GstEvent * event)
 
   gst_event_unref (event);
 
-  GST_STREAM_LOCK (self->sinkpad);
+  GST_PAD_STREAM_LOCK (self->sinkpad);
 
   /* just seek to 0, rely on the overlayer to throw away buffers until the right
      time -- and his mother cried... */
   self->next_offset = 0;
 
-  GST_STREAM_UNLOCK (self->sinkpad);
+  GST_PAD_STREAM_UNLOCK (self->sinkpad);
 
   gst_object_unref (self);
 

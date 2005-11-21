@@ -1574,7 +1574,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg)
   /* now grab the stream lock so that streaming cannot continue, for
    * non flushing seeks when the element is in PAUSED this could block
    * forever. */
-  GST_STREAM_LOCK (ogg->sinkpad);
+  GST_PAD_STREAM_LOCK (ogg->sinkpad);
 
   GST_OBJECT_LOCK (ogg);
   /* nothing configured, play complete file */
@@ -1786,21 +1786,21 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg)
   }
 
   /* streaming can continue now */
-  GST_STREAM_UNLOCK (ogg->sinkpad);
+  GST_PAD_STREAM_UNLOCK (ogg->sinkpad);
 
   return TRUE;
 
 no_chains:
   {
     GST_DEBUG_OBJECT (ogg, "no chains");
-    GST_STREAM_UNLOCK (ogg->sinkpad);
+    GST_PAD_STREAM_UNLOCK (ogg->sinkpad);
 
     return FALSE;
   }
 seek_error:
   {
     GST_DEBUG_OBJECT (ogg, "got a seek error");
-    GST_STREAM_UNLOCK (ogg->sinkpad);
+    GST_PAD_STREAM_UNLOCK (ogg->sinkpad);
 
     return FALSE;
   }
