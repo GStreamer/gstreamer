@@ -407,7 +407,7 @@ gen_video_element (GstPlayBin * play_bin)
     /* FIXME: this warrants adding a CORE error category for missing
      * elements/plugins */
     if (sink == NULL) {
-      GST_ELEMENT_ERROR (play_bin, CORE, FAILED,
+      GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
           (_("Both autovideosink and xvimagesink elements are missing.")),
           (NULL));
       return NULL;
@@ -536,10 +536,8 @@ gen_audio_element (GstPlayBin * play_bin)
     if (sink == NULL) {
       sink = gst_element_factory_make ("alsasink", "audiosink");
     }
-    /* FIXME: this warrants adding a CORE error category for missing
-     * elements/plugins */
     if (sink == NULL) {
-      GST_ELEMENT_ERROR (play_bin, CORE, FAILED,
+      GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
           (_("Both autoaudiosink and alsasink elements are missing.")), (NULL));
       return NULL;
     }

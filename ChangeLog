@@ -1,5 +1,9 @@
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
+	* gst/playback/gstplaybin.c (gen_audio_element) 
+	(gen_video_element): Use the new MISSING_PLUGIN core error
+	category.
+
 	* ext/vorbis/vorbisdec.c (vorbis_dec_sink_event): 
 	* gst/videorate/gstvideorate.c (gst_videorate_event):
 	* ext/theora/theoradec.c (theora_dec_sink_event): 
