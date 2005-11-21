@@ -164,6 +164,7 @@ libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINO
 
 gst_headers =			\
 	gst.h			\
+	glib-compat.h		\
 	gstobject.h		\
 	gstbin.h		\
 	gstbuffer.h		\
@@ -217,7 +218,7 @@ nodist_libgstreamer_@GST_MAJORMINOR@include_HEADERS = \
 
 noinst_HEADERS = 		\
 	gettext.h		\
-	glib-compat.h		\
+	glib-compat-private.h	\
 	gst-i18n-lib.h		\
 	gst-i18n-app.h		\
 	gst_private.h
