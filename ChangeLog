@@ -1,3 +1,9 @@
+2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gst.defs:
+        Rename gst_caps_structure_fixate_* to gst_structure_fixate_*
+        (#322027)
+
 2005-11-21  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst-types.defs:

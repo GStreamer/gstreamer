@@ -4964,7 +4964,7 @@
 )
 
 (define-function caps_structure_fixate_field_nearest_int
-  (c-name "gst_caps_structure_fixate_field_nearest_int")
+  (c-name "gst_structure_fixate_field_nearest_int")
   (return-type "gboolean")
   (parameters
     '("GstStructure*" "structure")
@@ -4974,7 +4974,7 @@
 )
 
 (define-function caps_structure_fixate_field_nearest_double
-  (c-name "gst_caps_structure_fixate_field_nearest_double")
+  (c-name "gst_structure_fixate_field_nearest_double")
   (return-type "gboolean")
   (parameters
     '("GstStructure*" "structure")
