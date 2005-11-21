@@ -1,3 +1,12 @@
+2005-11-21  Michael Smith <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_setup):
+	  Minimal fix for bug #320200: set the min/max bitrate in the correct
+	  units. A better fix would be to upgrade to the RATEMANAGE2
+	  interface, rather than using the deprecated interface used here, but
+	  that would require an update in our libvorbis dependency (to 1.1),
+	  which is probably undesirable.
+
 2005-11-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/libvisual/visual.c: (get_buffer):

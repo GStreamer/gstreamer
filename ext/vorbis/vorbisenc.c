@@ -732,10 +732,8 @@ gst_vorbisenc_setup (GstVorbisEnc * vorbisenc)
 
       vorbis_encode_ctl (&vorbisenc->vi, OV_ECTL_RATEMANAGE_GET, &ai);
 
-      /* the bitrates used by libvorbisenc are in kbit/sec, ours in bit/sec
-       * also remember that in telecom kbit/sec is 1000 bit/sec */
-      ai.bitrate_hard_min = vorbisenc->min_bitrate / 1000;
-      ai.bitrate_hard_max = vorbisenc->max_bitrate / 1000;
+      ai.bitrate_hard_min = vorbisenc->min_bitrate;
+      ai.bitrate_hard_max = vorbisenc->max_bitrate;
       ai.management_active = 1;
 
       vorbis_encode_ctl (&vorbisenc->vi, OV_ECTL_RATEMANAGE_SET, &ai);
