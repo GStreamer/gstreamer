@@ -1,21 +1,23 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- */
+
+
+* Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+*
+* This library is free software; you can redistribute it and/or
+* modify it under the terms of the GNU Library General Public
+* License as published by the Free Software Foundation; either
+* version 2 of the License, or (at your option) any later version.
+*
+* This library is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+* Library General Public License for more details.
+*
+* You should have received a copy of the GNU Library General Public
+* License along with this library; if not, write to the
+* Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+* Boston, MA 02111-1307, USA.
+*/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -110,6 +112,7 @@ enum
 static void gst_ivorbisfile_base_init (gpointer g_class);
 static void gst_ivorbisfile_class_init (IvorbisfileClass * klass);
 static void gst_ivorbisfile_init (Ivorbisfile * ivorbisfile);
+static void gst_ivorbisfile_finalize (GObject * object);
 
 static GstStateChangeReturn
 gst_ivorbisfile_change_state (GstElement * element, GstStateChange transition);
@@ -137,6 +140,7 @@ static void gst_ivorbisfile_get_property (GObject * object,
 static void gst_ivorbisfile_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 
+static GstFlowReturn gst_ivorbisfile_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_ivorbisfile_sink_activate (GstPad * sinkpad);
 
 static gboolean
@@ -252,7 +256,7 @@ gst_ivorbisfile_class_init (IvorbisfileClass * klass)
       g_param_spec_boxed ("streaminfo", "stream",
           "(logical) Stream information", GST_TYPE_CAPS, G_PARAM_READABLE));
 
-
+  gobject_class->finalize = gst_ivorbisfile_finalize;
   gstelement_class->change_state = gst_ivorbisfile_change_state;
 }
 
@@ -271,7 +275,7 @@ gst_ivorbisfile_init (Ivorbisfile * ivorbisfile)
       gst_ivorbisfile_sink_activate);
   gst_pad_set_activatepull_function (ivorbisfile->sinkpad,
       gst_ivorbisfile_sink_activate_pull);
-
+  gst_pad_set_chain_function (ivorbisfile->sinkpad, gst_ivorbisfile_chain);
   gst_pad_set_event_function (ivorbisfile->sinkpad, gst_ivorbisfile_sink_event);
 
   ivorbisfile->srcpad =
@@ -296,7 +300,27 @@ gst_ivorbisfile_init (Ivorbisfile * ivorbisfile)
   ivorbisfile->channels = -1;
   ivorbisfile->width = -1;
 
+  ivorbisfile->adapter = NULL;
+
 }
+
+
+static void
+gst_ivorbisfile_finalize (GObject * object)
+{
+  Ivorbisfile *ivorbisfile;
+
+  ivorbisfile = GST_IVORBISFILE (object);
+
+  if (ivorbisfile->adapter) {
+    g_object_unref (ivorbisfile->adapter);
+    ivorbisfile->adapter = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+
 
 /* the next four functions are the ov callbacks we provide to ivorbisfile
  * which interface between GStreamer's handling of the data flow and
@@ -305,7 +329,7 @@ static size_t
 gst_ivorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
 {
   size_t read_size = size * nmemb;
-  GstBuffer *buf = NULL;
+  guint buf_size = 0;
   Ivorbisfile *ivorbisfile = GST_IVORBISFILE (datasource);
   size_t ret;
 
@@ -318,20 +342,52 @@ gst_ivorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
     read_size = ivorbisfile->total_bytes - ivorbisfile->offset;
   }
 
-  if (read_size == 0 || ivorbisfile->eos)
-    return 0;
-
-  if (GST_FLOW_OK != gst_pad_pull_range (ivorbisfile->sinkpad,
-          ivorbisfile->offset, read_size, &buf)) {
+  if (read_size == 0 || ivorbisfile->eos) {
     return 0;
   }
 
-  memcpy (ptr, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  if (ivorbisfile->adapter) {
+    const guint8 *buf = NULL;
 
-  ivorbisfile->offset += GST_BUFFER_SIZE (buf);
+    buf_size = gst_adapter_available (ivorbisfile->adapter);
 
-  ret = GST_BUFFER_SIZE (buf) / size;
-  gst_buffer_unref (buf);
+    if (buf_size < read_size) {
+      return 0;
+    }
+
+    if (buf_size > read_size) {
+      buf_size = read_size;
+    } else if (buf_size == 0) {
+      return 0;
+    }
+
+
+    buf = gst_adapter_peek (ivorbisfile->adapter, buf_size);
+
+    memcpy (ptr, buf, buf_size);
+
+    gst_adapter_flush (ivorbisfile->adapter, buf_size);
+
+  } else {
+
+    GstBuffer *buf = NULL;
+
+    if (GST_FLOW_OK != gst_pad_pull_range (ivorbisfile->sinkpad,
+            ivorbisfile->offset, read_size, &buf)) {
+      return 0;
+    }
+
+    buf_size = GST_BUFFER_SIZE (buf);
+
+    memcpy (ptr, GST_BUFFER_DATA (buf), buf_size);
+
+    gst_buffer_unref (buf);
+
+  }
+
+  ivorbisfile->offset += buf_size;
+
+  ret = buf_size / size;
 
   return ret;
 }
@@ -532,10 +588,16 @@ gst_ivorbisfile_sink_activate (GstPad * sinkpad)
     /* ivorbisfile->vf.seekable = TRUE; */
     ivorbisfile->vf.seekable = FALSE;
     return gst_pad_activate_pull (sinkpad, TRUE);
-  }
+  } else {
 
-  ivorbisfile->vf.seekable = FALSE;
-  return FALSE;
+    if (ivorbisfile->adapter) {
+      gst_adapter_clear (ivorbisfile->adapter);
+    } else {
+      ivorbisfile->adapter = gst_adapter_new ();
+    }
+    ivorbisfile->vf.seekable = FALSE;
+    return gst_pad_activate_push (sinkpad, TRUE);
+  }
 
 
 }
@@ -560,22 +622,52 @@ gst_ivorbisfile_sink_activate_pull (GstPad * sinkpad, gboolean active)
 
 
 
+static GstFlowReturn
+gst_ivorbisfile_chain (GstPad * pad, GstBuffer * buffer)
+{
+
+  Ivorbisfile *ivorbisfile = GST_IVORBISFILE (GST_PAD_PARENT (pad));
+
+  if (NULL == ivorbisfile->adapter) {
+    GST_DEBUG ("pull expected! Chain func should not be called");
+    return GST_FLOW_UNEXPECTED;
+  }
+
+  gst_adapter_push (ivorbisfile->adapter, buffer);
+
+  gst_ivorbisfile_loop (pad);
+
+  return GST_FLOW_OK;
+
+}
+
+
 static void
 gst_ivorbisfile_loop (GstPad * pad)
 {
-  Ivorbisfile *ivorbisfile = GST_IVORBISFILE (GST_PAD_PARENT (pad));
+  Ivorbisfile *ivorbisfile = GST_IVORBISFILE (gst_pad_get_parent (pad));
   GstBuffer *outbuf;
   long ret;
   GstClockTime time;
   gint64 samples;
   gint link;
 
-  if (ivorbisfile->eos)
+  if (ivorbisfile->eos) {
+    g_object_unref (ivorbisfile);
     return;
+  }
 
   /* this function needs to go first since you don't want to be messing
    * with an unset vf ;) */
   if (ivorbisfile->restart) {
+    gint err;
+
+    if (ivorbisfile->adapter) {
+      if (gst_adapter_available (ivorbisfile->adapter) < 40960) {
+        g_object_unref (ivorbisfile);
+        return;
+      }
+    }
 
     ivorbisfile->offset = 0;
     ivorbisfile->total_bytes = 0;
@@ -585,11 +677,14 @@ gst_ivorbisfile_loop (GstPad * pad)
         ivorbisfile->vf.seekable ? "yes" : "no");
 
     /* open our custom ivorbisfile data object with the callbacks we provide */
-    if (ov_open_callbacks (ivorbisfile, &ivorbisfile->vf, NULL, 0,
-            ivorbisfile_ov_callbacks) < 0) {
+
+    if ((err = ov_open_callbacks (ivorbisfile, &ivorbisfile->vf, NULL, 0,
+                ivorbisfile_ov_callbacks)) < 0) {
       GST_ELEMENT_ERROR (ivorbisfile, STREAM, DECODE, (NULL), (NULL));
+      g_object_unref (ivorbisfile);
       return;
     }
+
     ivorbisfile->need_discont = TRUE;
     ivorbisfile->restart = FALSE;
     ivorbisfile->current_link = -1;
@@ -649,69 +744,82 @@ gst_ivorbisfile_loop (GstPad * pad)
     if (!gst_ivorbisfile_new_link (ivorbisfile, ivorbisfile->vf.current_link)) {
       GST_ELEMENT_ERROR (ivorbisfile, CORE, NEGOTIATION, (NULL), (NULL));
     }
+    g_object_unref (ivorbisfile);
     return;
   }
 
-  outbuf = gst_buffer_new ();
-  GST_BUFFER_DATA (outbuf) = g_malloc (4096);
-  GST_BUFFER_SIZE (outbuf) = 4096;
+  do {
 
-  ret = ov_read (&ivorbisfile->vf,
-      (char *) GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), &link);
+    outbuf = gst_buffer_new_and_alloc (4096);
 
-  /* get current time for discont and buffer timestamp */
-  time = (GstClockTime) (ov_time_tell (&ivorbisfile->vf) * GST_SECOND);
+    ret = ov_read (&ivorbisfile->vf,
+        (char *) GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), &link);
 
-  if (ret == 0) {
-    GST_DEBUG ("eos");
-    /* send EOS event */
+    /* get current time for discont and buffer timestamp */
+    time = (GstClockTime) (ov_time_tell (&ivorbisfile->vf) * GST_SECOND);
 
-    ivorbisfile->restart = TRUE;
-    gst_buffer_unref (outbuf);
-    /* if the pad is not usable, don't push it out */
-    gst_pad_push_event (ivorbisfile->srcpad, gst_event_new_eos ());
+    if (ret == 0) {
+      gst_buffer_unref (outbuf);
+      if (ivorbisfile->adapter == NULL) {
+        ivorbisfile->eos = TRUE;
+        ivorbisfile->restart = TRUE;
+        gst_pad_push_event (ivorbisfile->srcpad, gst_event_new_eos ());
+      }
+      g_object_unref (ivorbisfile);
+      return;
+    } else if (ret < 0) {
+      g_warning ("ivorbisfile: decoding error");
+      gst_buffer_unref (outbuf);
+      g_object_unref (ivorbisfile);
+      return;
+    } else {
+      if (ivorbisfile->need_discont) {
+        GstEvent *event;
 
-    return;
-  } else if (ret < 0) {
-    g_warning ("ivorbisfile: decoding error");
-    gst_buffer_unref (outbuf);
-    return;
-  } else {
-    if (ivorbisfile->need_discont) {
-      GstEvent *event;
+        ivorbisfile->need_discont = FALSE;
 
-      ivorbisfile->need_discont = FALSE;
+        /* get stream stats */
+        samples = (gint64) (ov_pcm_tell (&ivorbisfile->vf));
 
-      /* get stream stats */
-      samples = (gint64) (ov_pcm_tell (&ivorbisfile->vf));
+        event =
+            gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, time,
+            GST_CLOCK_TIME_NONE, 0);
 
-      event =
-          gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, time,
-          GST_CLOCK_TIME_NONE, 0);
+        gst_pad_push_event (ivorbisfile->srcpad, event);
 
-      gst_pad_push_event (ivorbisfile->srcpad, event);
+      }
+
+      if (NULL == GST_PAD_CAPS (ivorbisfile->srcpad)) {
+        gst_buffer_unref (outbuf);
+        g_object_unref (ivorbisfile);
+        return;
+      }
+
+      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ivorbisfile->srcpad));
+
+      GST_BUFFER_SIZE (outbuf) = ret;
+      /* FIX ME TO SET RIGHT TIMESTAMP
+         gint bufsize = ret / (ivorbisfile->width / 8);
+         GST_BUFFER_TIMESTAMP (outbuf) = time;
+         GST_BUFFER_DURATION (outbuf) =  GST_SECOND * bufsize / (ivorbisfile->rate * ivorbisfile->channels);
+       */
+
+
+      ivorbisfile->may_eos = TRUE;
+
+      if (!ivorbisfile->vf.seekable) {
+        ivorbisfile->total_bytes += GST_BUFFER_SIZE (outbuf);
+      }
+
+      if (GST_FLOW_OK != gst_pad_push (ivorbisfile->srcpad, outbuf)) {
+        gst_buffer_unref (outbuf);
+        return;
+      }
 
     }
 
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ivorbisfile->srcpad));
+  } while (TRUE);
 
-    GST_BUFFER_SIZE (outbuf) = ret;
-    /* FIX ME TO SET RIGHT TIMESTAMP
-       gint bufsize = ret / (ivorbisfile->width / 8);
-       GST_BUFFER_TIMESTAMP (outbuf) = time;
-       GST_BUFFER_DURATION (outbuf) =  GST_SECOND * bufsize / (ivorbisfile->rate * ivorbisfile->channels);
-     */
-
-
-    ivorbisfile->may_eos = TRUE;
-
-    if (!ivorbisfile->vf.seekable) {
-      ivorbisfile->total_bytes += GST_BUFFER_SIZE (outbuf);
-    }
-
-    gst_pad_push (ivorbisfile->srcpad, outbuf);
-
-  }
 
 }
 
@@ -1090,14 +1198,15 @@ gst_ivorbisfile_sink_event (GstPad * pad, GstEvent * event)
 {
 
   Ivorbisfile *ivorbisfile;
+  gboolean ret;
 
-  ivorbisfile = GST_IVORBISFILE (GST_PAD_PARENT (pad));
+  ivorbisfile = GST_IVORBISFILE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       GST_DEBUG ("eos");
-      ov_clear (&ivorbisfile->vf);
       ivorbisfile->eos = TRUE;
+      ivorbisfile->restart = TRUE;
       break;
     case GST_EVENT_NEWSEGMENT:
       GST_DEBUG ("discont");
@@ -1106,7 +1215,11 @@ gst_ivorbisfile_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  ret = gst_pad_event_default (pad, event);
+  gst_object_unref (ivorbisfile);
+
+  return ret;
+
 }
 
 
@@ -1132,6 +1245,7 @@ gst_ivorbisfile_src_event (GstPad * pad, GstEvent * event)
       if (!ivorbisfile->vf.seekable) {
         gst_event_unref (event);
         GST_DEBUG ("vorbis stream is not seekable");
+        gst_object_unref (ivorbisfile);
         return FALSE;
       }
 
@@ -1181,6 +1295,7 @@ gst_ivorbisfile_src_event (GstPad * pad, GstEvent * event)
 
 done:
   gst_event_unref (event);
+  gst_object_unref (ivorbisfile);
   return res;
 }
 
@@ -1194,6 +1309,9 @@ gst_ivorbisfile_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       /* fall through */
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (ivorbisfile->adapter) {
+        gst_adapter_clear (ivorbisfile->adapter);
+      }
       ivorbisfile->restart = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

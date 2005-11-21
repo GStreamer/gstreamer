@@ -1,3 +1,12 @@
+2005-11-21  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/Makefile.am:
+	* ext/ivorbis/vorbisfile.c:
+	Now it works in push-mode. Tested with gnomevfssrc location=http://..
+	! tremor ! alsasink. Some issues to be solved yet:
+	1- set correct timestamps
+	2- seek is forced to disabled in pull-mode
+	
 2005-11-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/faac/gstfaac.c: (gst_faac_base_init), (gst_faac_init),
@@ -61,11 +70,11 @@
 
 2005-11-08  Edgard Lima <edgard.lima@indt.org.br>
 
-	configure.ac:
-	PORTED_09:
-	ext/Makefile.am:
-	ext/ivorbis/vorbis.c:
-	ext/ivorbis/vorbisfile.c:
+	* configure.ac:
+	* PORTED_09:
+	* ext/Makefile.am:
+	* ext/ivorbis/vorbis.c:
+	* ext/ivorbis/vorbisfile.c:
 	Ported to 0.9. Some issues to be solved yet:
 	1- set correct timestamps
 	2- seg fault when eos
