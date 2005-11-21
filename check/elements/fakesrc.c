@@ -37,11 +37,7 @@ gboolean
 event_func (GstPad * pad, GstEvent * event)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    /* we take the lock here because it's good practice to so, even though
-     * no buffers will be pushed anymore anyway */
-    GST_STREAM_LOCK (pad);
     have_eos = TRUE;
-    GST_STREAM_UNLOCK (pad);
     gst_event_unref (event);
     return TRUE;
   }

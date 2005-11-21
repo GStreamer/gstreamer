@@ -947,10 +947,6 @@ gst_queue_sink_activate_push (GstPad * pad, gboolean active)
     queue->srcresult = GST_FLOW_WRONG_STATE;
     gst_queue_locked_flush (queue);
     GST_QUEUE_MUTEX_UNLOCK (queue);
-
-    /* and make sure the chain function finishes */
-    GST_STREAM_LOCK (pad);
-    GST_STREAM_UNLOCK (pad);
   }
 
   gst_object_unref (queue);

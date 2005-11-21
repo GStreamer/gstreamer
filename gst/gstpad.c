@@ -585,13 +585,13 @@ post_activate (GstPad * pad, GstActivateMode new_mode)
       break;
     case GST_ACTIVATE_NONE:
       /* ensures that streaming stops */
-      GST_STREAM_LOCK (pad);
+      GST_PAD_STREAM_LOCK (pad);
       /* while we're at it set activation mode */
       GST_OBJECT_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE %d", new_mode);
       GST_PAD_ACTIVATE_MODE (pad) = new_mode;
       GST_OBJECT_UNLOCK (pad);
-      GST_STREAM_UNLOCK (pad);
+      GST_PAD_STREAM_UNLOCK (pad);
       break;
   }
 }
@@ -3077,7 +3077,7 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  GST_STREAM_LOCK (pad);
+  GST_PAD_STREAM_LOCK (pad);
 
   GST_OBJECT_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
@@ -3122,7 +3122,7 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
       GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_DEBUG_PAD_NAME (pad),
       gst_flow_get_name (ret));
 
-  GST_STREAM_UNLOCK (pad);
+  GST_PAD_STREAM_UNLOCK (pad);
 
   return ret;
 
@@ -3133,14 +3133,14 @@ flushing:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
-    GST_STREAM_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_WRONG_STATE;
   }
 dropping:
   {
     gst_buffer_unref (buffer);
     GST_DEBUG_OBJECT (pad, "Dropping buffer due to FALSE probe return");
-    GST_STREAM_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_OK;
   }
 not_negotiated:
@@ -3148,7 +3148,7 @@ not_negotiated:
     gst_buffer_unref (buffer);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pushing buffer but pad did not accept");
-    GST_STREAM_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 no_function:
@@ -3159,7 +3159,7 @@ no_function:
     GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
         ("push on pad %s:%s but it has no chainfunction",
             GST_DEBUG_PAD_NAME (pad)));
-    GST_STREAM_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_ERROR;
   }
 }
@@ -3335,7 +3335,7 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
-  GST_STREAM_LOCK (pad);
+  GST_PAD_STREAM_LOCK (pad);
 
   GST_OBJECT_LOCK (pad);
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
@@ -3361,7 +3361,7 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
       goto dropping;
   }
 
-  GST_STREAM_UNLOCK (pad);
+  GST_PAD_STREAM_UNLOCK (pad);
 
   return ret;
 
@@ -3371,7 +3371,7 @@ flushing:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pulling range, but pad was flushing");
     GST_OBJECT_UNLOCK (pad);
-    GST_STREAM_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_WRONG_STATE;
   }
 no_function:
@@ -3379,13 +3379,13 @@ no_function:
     GST_ELEMENT_ERROR (GST_PAD_PARENT (pad), CORE, PAD, (NULL),
         ("pullrange on pad %s:%s but it has no getrangefunction",
             GST_DEBUG_PAD_NAME (pad)));
-    GST_STREAM_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
     return GST_FLOW_ERROR;
   }
 dropping:
   {
     GST_DEBUG ("Dropping data after FALSE probe return");
-    GST_STREAM_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
     gst_buffer_unref (*buffer);
     *buffer = NULL;
     return GST_FLOW_UNEXPECTED;
@@ -3630,12 +3630,12 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   }
 
   if (serialized)
-    GST_STREAM_LOCK (pad);
+    GST_PAD_STREAM_LOCK (pad);
 
   result = eventfunc (GST_PAD_CAST (pad), event);
 
   if (serialized)
-    GST_STREAM_UNLOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
 
   return result;
 
@@ -3724,7 +3724,7 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
   task = GST_PAD_TASK (pad);
   if (task == NULL) {
     task = gst_task_create (func, data);
-    gst_task_set_lock (task, GST_STREAM_GET_LOCK (pad));
+    gst_task_set_lock (task, GST_PAD_GET_STREAM_LOCK (pad));
     GST_PAD_TASK (pad) = task;
   }
   gst_task_start (task);
@@ -3757,8 +3757,8 @@ gst_pad_pause_task (GstPad * pad)
   gst_task_pause (task);
   GST_OBJECT_UNLOCK (pad);
 
-  GST_STREAM_LOCK (pad);
-  GST_STREAM_UNLOCK (pad);
+  GST_PAD_STREAM_LOCK (pad);
+  GST_PAD_STREAM_UNLOCK (pad);
 
   return TRUE;
 
@@ -3801,8 +3801,8 @@ gst_pad_stop_task (GstPad * pad)
   gst_task_stop (task);
   GST_OBJECT_UNLOCK (pad);
 
-  GST_STREAM_LOCK (pad);
-  GST_STREAM_UNLOCK (pad);
+  GST_PAD_STREAM_LOCK (pad);
+  GST_PAD_STREAM_UNLOCK (pad);
 
   gst_task_join (task);
 
@@ -3814,8 +3814,8 @@ no_task:
   {
     GST_OBJECT_UNLOCK (pad);
 
-    GST_STREAM_LOCK (pad);
-    GST_STREAM_UNLOCK (pad);
+    GST_PAD_STREAM_LOCK (pad);
+    GST_PAD_STREAM_UNLOCK (pad);
 
     return TRUE;
   }

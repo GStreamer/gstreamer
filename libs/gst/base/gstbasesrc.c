@@ -568,7 +568,7 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
   /* grab streaming lock, this should eventually be possible, either
    * because the task is paused or out streaming thread stopped 
    * because our peer is flushing. */
-  GST_STREAM_LOCK (src->srcpad);
+  GST_PAD_STREAM_LOCK (src->srcpad);
 
   /* now configure the segment */
   gst_base_src_configure_segment (src, event);
@@ -596,7 +596,7 @@ gst_base_src_do_seek (GstBaseSrc * src, GstEvent * event)
       src->srcpad);
 
   /* and release the lock again so we can continue streaming */
-  GST_STREAM_UNLOCK (src->srcpad);
+  GST_PAD_STREAM_UNLOCK (src->srcpad);
 
   return TRUE;
 

@@ -44,7 +44,7 @@ GST_START_TEST (create_custom_events)
     fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP);
     fail_unless (GST_EVENT_IS_UPSTREAM (event));
     fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
-    fail_if (GST_EVENT_IS_SERIALIZED (event));
+    fail_unless (GST_EVENT_IS_SERIALIZED (event));
     gst_event_unref (event);
   }
   /* EOS */

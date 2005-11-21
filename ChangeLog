@@ -1,3 +1,42 @@
+2005-11-21  Andy Wingo  <wingo@pobox.com>
+
+	* check/gst/gstevent.c (create_custom_events): Check that
+	FLUSH_STOP is serialized.
+
+	* check/elements/identity.c (event_func): 
+	* check/elements/fakesrc.c (event_func): No stream lock, the core
+	takes it.
+
+	* gst/base/gstbasetransform.c (gst_base_transform_event): No more
+	stream lock taking, yay.
+
+	* gst/gstevent.h (GST_EVENT_FLUSH_STOP): Marked as serialized to
+	ensure that core takes the stream lock.
+
+	* gst/base/gstbasesrc.c (gst_base_src_do_seek): Update for stream
+	lock name change.
+
+	* gst/base/gstbasesink.c (gst_base_sink_event): No need to take
+	the stream lock for EOS, NEWSEGMENT, or FLUSH_STOP, the core does
+	it already. For the flush start we do take it though so we get the
+	right preroll state change messages.
+
+	* gst/gstqueue.c (gst_queue_sink_activate_push): No need to take
+	the stream lock here, the core does it for us.
+
+	* gst/gstpad.h (GST_PAD_GET_STREAM_LOCK): Renamed from
+	GST_STREAM_GET_LOCK.
+	(GST_PAD_STREAM_LOCK, GST_PAD_STREAM_TRYLOCK) 
+	(GST_PAD_STREAM_UNLOCK, GST_PAD_STREAM_UNLOCK_FULL) 
+	(GST_PAD_STREAM_LOCK_FULL): Renamed from GST_STREAM_*.
+	(GST_PAD_GET_PREROLL_LOCK): Renamed from GST_PREROLL_GET_LOCK.
+	(GST_PAD_PREROLL_LOCK, GST_PAD_PREROLL_TRYLOCK) 
+	(GST_PAD_PREROLL_UNLOCK): Renamed from GST_PREROLL_*.
+
+	* gst/gstpad.c: Update for stream lock name change.
+
+	* gst/base/gstbasesink.c: Update for preroll lock name change.
+
 2005-11-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstclock.c: (gst_clock_init), (gst_clock_set_master),

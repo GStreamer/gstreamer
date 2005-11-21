@@ -1040,7 +1040,6 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
   gboolean ret = FALSE;
-  gboolean unlock;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
@@ -1048,24 +1047,16 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
   if (bclass->event)
     bclass->event (trans, event);
 
-  unlock = FALSE;
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       break;
     case GST_EVENT_FLUSH_STOP:
-      GST_STREAM_LOCK (pad);
-      unlock = TRUE;
       /* we need new segment info after the flush. */
       gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
       break;
     case GST_EVENT_EOS:
-      GST_STREAM_LOCK (pad);
-      unlock = TRUE;
       break;
     case GST_EVENT_TAG:
-      GST_STREAM_LOCK (pad);
-      unlock = TRUE;
       break;
     case GST_EVENT_NEWSEGMENT:
     {
@@ -1074,8 +1065,6 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
       gint64 start, stop, time;
       gboolean update;
 
-      GST_STREAM_LOCK (pad);
-      unlock = TRUE;
       gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
           &time);
 
@@ -1105,8 +1094,6 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
       break;
   }
   ret = gst_pad_event_default (pad, event);
-  if (unlock)
-    GST_STREAM_UNLOCK (pad);
 
   gst_object_unref (trans);
 
