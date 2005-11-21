@@ -308,15 +308,18 @@ struct _GstClockEntry {
  * @GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC: clock can do sync periodic timeout requests
  * @GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC: clock can do async periodic timeout callbacks
  * @GST_CLOCK_FLAG_CAN_SET_RESOLUTION: clock's resolution can be changed
+ * @GST_CLOCK_FLAG_LAST: subclasses can add additional flags starting from this flag
  *
  * The capabilities of this clock
  */
 typedef enum {
-  GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC     = (1 << 1),
-  GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC    = (1 << 2),
-  GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC   = (1 << 3),
-  GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC  = (1 << 4),
-  GST_CLOCK_FLAG_CAN_SET_RESOLUTION     = (1 << 5),
+  GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC     = (GST_OBJECT_FLAG_LAST << 0),
+  GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC    = (GST_OBJECT_FLAG_LAST << 1),
+  GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC   = (GST_OBJECT_FLAG_LAST << 2),
+  GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC  = (GST_OBJECT_FLAG_LAST << 3),
+  GST_CLOCK_FLAG_CAN_SET_RESOLUTION     = (GST_OBJECT_FLAG_LAST << 4),
+  /* padding */
+  GST_CLOCK_FLAG_LAST		        = (GST_OBJECT_FLAG_LAST << 8),
 } GstClockFlags;
 
 /**
@@ -369,9 +372,6 @@ typedef enum {
 struct _GstClock {
   GstObject	 object;
 
-  /*< public >*/
-  GstClockFlags	 flags;
-
   /*< protected >*/ /* with LOCK */
   GstClockTime	 internal_calibration; 
   GstClockTime	 external_calibration;
@@ -383,6 +383,8 @@ struct _GstClock {
   /*< private >*/
   GstClockTime	 resolution;
   gboolean	 stats;
+
+  GstClock      *master;
 
   GstClockTime	 _gst_reserved[GST_PADDING];
 };
@@ -419,6 +421,9 @@ void			gst_clock_set_calibration	(GstClock *clock, GstClockTime internal,
                                                          GstClockTime external, gdouble rate);
 void			gst_clock_get_calibration	(GstClock *clock, GstClockTime *internal,
                                                          GstClockTime *external, gdouble *rate);
+/* master/slave clocks */
+void			gst_clock_set_master		(GstClock *clock, GstClock *master);
+GstClock*		gst_clock_get_master		(GstClock *clock);
 
 GstClockTime		gst_clock_get_internal_time	(GstClock *clock);
 GstClockTime		gst_clock_adjust_unlocked	(GstClock *clock, GstClockTime internal);

@@ -529,7 +529,6 @@ gst_clock_init (GstClock * clock)
   clock->last_time = 0;
   clock->entries = NULL;
   clock->entries_changed = g_cond_new ();
-  clock->flags = 0;
   clock->stats = FALSE;
 
   clock->internal_calibration = 0;
@@ -765,6 +764,53 @@ gst_clock_get_calibration (GstClock * clock, GstClockTime * internal,
   if (internal)
     *internal = clock->internal_calibration;
   GST_OBJECT_UNLOCK (clock);
+}
+
+/**
+ * gst_clock_set_master
+ * @clock: a #GstClock 
+ * @master: a master #GstClock 
+ *
+ * Set @master as the master clock for @clock. @clock will be automatically
+ * calibrated so that gst_clock_get_time() reports the same time as the
+ * master clock.  
+ * 
+ * A clock provider that slaves its clock to a master can get the current
+ * calibration values with gst_clock_get_calibration().
+ *
+ * MT safe.
+ */
+void
+gst_clock_set_master (GstClock * clock, GstClock * master)
+{
+  GST_OBJECT_LOCK (clock);
+  gst_object_replace ((GstObject **) & clock->master, (GstObject *) master);
+  GST_OBJECT_UNLOCK (clock);
+}
+
+/**
+ * gst_clock_get_master
+ * @clock: a #GstClock 
+ *
+ * Get the master clock that @clock is slaved to or NULL when the clock is
+ * not slaved to any master clock.
+ *
+ * Returns: a master #GstClock or NULL when this clock is not slaved to a master
+ * clock. Unref after usage.
+ *
+ * MT safe.
+ */
+GstClock *
+gst_clock_get_master (GstClock * clock)
+{
+  GstClock *result = NULL;
+
+  GST_OBJECT_LOCK (clock);
+  if (clock->master)
+    result = gst_object_ref (clock->master);
+  GST_OBJECT_UNLOCK (clock);
+
+  return result;
 }
 
 static void

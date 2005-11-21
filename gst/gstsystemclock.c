@@ -120,11 +120,11 @@ gst_system_clock_init (GstSystemClock * clock)
 {
   GError *error = NULL;
 
-  GST_CLOCK_FLAGS (clock) =
+  GST_OBJECT_FLAG_SET (clock,
       GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC |
       GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC |
       GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC |
-      GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC;
+      GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC);
 
   GST_OBJECT_LOCK (clock);
   clock->thread = g_thread_create ((GThreadFunc) gst_system_clock_async_thread,

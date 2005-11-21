@@ -1,5 +1,14 @@
 2005-11-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstclock.c: (gst_clock_init), (gst_clock_set_master),
+	(gst_clock_get_master):
+	* gst/gstclock.h:
+	* gst/gstsystemclock.c: (gst_system_clock_init):
+	Convert Clock flags to object flags.
+	Added methods to manage master/slave clocks.
+
+2005-11-21  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst/gstsegment.c: (GST_START_TEST):
 	* docs/design/part-TODO.txt:
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
