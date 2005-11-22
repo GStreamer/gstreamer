@@ -147,7 +147,7 @@ gst_videofilter_format_get_structure (GstVideofilterFormat * format)
   gst_structure_set (structure,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
   return structure;
 }
@@ -221,7 +221,7 @@ gst_videofilter_setcaps (GstPad * pad, GstCaps * caps)
   GstVideofilter *videofilter;
   GstStructure *structure;
   int width, height;
-  double framerate;
+  const GValue *framerate;
   int ret;
 
   videofilter = GST_VIDEOFILTER (GST_PAD_PARENT (pad));
@@ -234,7 +234,9 @@ gst_videofilter_setcaps (GstPad * pad, GstCaps * caps)
 
   ret = gst_structure_get_int (structure, "width", &width);
   ret &= gst_structure_get_int (structure, "height", &height);
-  ret &= gst_structure_get_double (structure, "framerate", &framerate);
+
+  framerate = gst_structure_get_value (structure, "framerate");
+  ret &= (framerate != NULL && GST_VALUE_HOLDS_FRACTION (framerate));
 
   if (!ret)
     return FALSE;
@@ -256,7 +258,7 @@ gst_videofilter_setcaps (GstPad * pad, GstCaps * caps)
   videofilter->to_height = height;
   videofilter->from_width = width;
   videofilter->from_height = height;
-  videofilter->framerate = framerate;
+  g_value_copy (framerate, &videofilter->framerate);
 
   gst_videofilter_setup (videofilter);
 
@@ -288,6 +290,7 @@ gst_videofilter_init (GTypeInstance * instance, gpointer g_class)
   gst_pad_set_getcaps_function (videofilter->srcpad, gst_videofilter_getcaps);
 
   videofilter->inited = FALSE;
+  g_value_init (&videofilter->framerate, GST_TYPE_FRACTION);
 }
 
 static GstFlowReturn
