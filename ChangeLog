@@ -1,3 +1,15 @@
+2005-11-22  Edward Hervey  <edward@fluendo.com>
+
+	* gst/pygstvalue.c: (pygst_value_as_pyobject),
+	(pygst_value_init_for_pyobject), (pygst_value_from_pyobject),
+	(pygst_value_init):
+	* gst/__init__.py:
+	Added FractionRange type
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gst.override:
+	API updates
+
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gst.defs:

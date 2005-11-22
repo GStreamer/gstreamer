@@ -31,7 +31,7 @@ static PyObject *gstfourcc_class = NULL;
 static PyObject *gstintrange_class = NULL;
 static PyObject *gstdoublerange_class = NULL;
 static PyObject *gstfraction_class = NULL;
-
+static PyObject *gstfractionrange_class = NULL;
 
 /**
  * pygst_value_as_pyobject:
@@ -93,6 +93,16 @@ pygst_value_as_pyobject(const GValue *value, gboolean copy_boxed)
                         gst_value_get_fraction_numerator (value),
                         gst_value_get_fraction_denominator (value)),
          NULL);
+    } else if (GST_VALUE_HOLDS_FRACTION_RANGE (value)) {
+      const GValue	*min, *max;
+      min = gst_value_get_fraction_range_min (value);
+      max = gst_value_get_fraction_range_max (value);
+      ret = PyObject_Call
+	(gstfractionrange_class,
+	 Py_BuildValue ("OO",
+			pygst_value_as_pyobject (min, copy_boxed),
+			pygst_value_as_pyobject (max, copy_boxed)),
+	 NULL);
     } else {
       gchar buf[256];
       g_snprintf (buf, 256, "unknown type: %s", g_type_name (G_VALUE_TYPE (value)));
@@ -128,6 +138,8 @@ pygst_value_init_for_pyobject (GValue *value, PyObject *obj)
         t = GST_TYPE_DOUBLE_RANGE;
       else if (PyObject_IsInstance (obj, gstfraction_class))
         t = GST_TYPE_FRACTION;
+      else if (PyObject_IsInstance (obj, gstfractionrange_class))
+	t = GST_TYPE_FRACTION_RANGE;
       else {
         PyErr_SetString(PyExc_TypeError, "Unexpected gst.Value instance");
         return FALSE;
@@ -219,6 +231,27 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
       denom = PyInt_AsLong (pyval);
       g_assert (G_MININT <= denom && denom <= G_MAXINT);
       gst_value_set_fraction (value, (int)num, (int)denom);
+    } else if (PyObject_IsInstance (obj, gstfractionrange_class)) {
+      GValue	low = {0, };
+      GValue	high = {0, };
+      PyObject	*pylow, *pyhigh;
+
+      VALUE_TYPE_CHECK (value, GST_TYPE_FRACTION_RANGE);
+      if (!(pylow = PyObject_GetAttrString (obj, "low")))
+	return -1;
+      if (!pygst_value_init_for_pyobject (&low, pylow))
+	return -1;
+      if (pygst_value_from_pyobject (&low, pylow) != 0)
+	return -1;
+      
+      if (!(pyhigh = PyObject_GetAttrString (obj, "high")))
+	return -1;
+      if (!pygst_value_init_for_pyobject (&high, pyhigh))
+	return -1;
+      if (pygst_value_from_pyobject (&high, pyhigh) != 0)
+	return -1;
+
+      gst_value_set_fraction_range (value, &low, &high);
     } else {
       gchar buf[256];
       gchar *str = PyString_AsString (PyObject_Repr(obj));
@@ -292,6 +325,8 @@ pygst_value_init(void)
   NULL_CHECK (gstdoublerange_class);
   gstfraction_class = (PyObject*)PyDict_GetItemString (dict, "Fraction");
   NULL_CHECK (gstfraction_class);
+  gstfractionrange_class = (PyObject*)PyDict_GetItemString (dict, "FractionRange");
+  NULL_CHECK (gstfractionrange_class);
   return TRUE;
 
 err:

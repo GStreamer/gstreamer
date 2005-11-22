@@ -407,6 +407,7 @@
     '("seek" "GST_CORE_ERROR_SEEK")
     '("caps" "GST_CORE_ERROR_CAPS")
     '("tag" "GST_CORE_ERROR_TAG")
+    '("missing-plugin" "GST_CORE_ERROR_MISSING_PLUGIN")
     '("num-errors" "GST_CORE_ERROR_NUM_ERRORS")
   )
 )

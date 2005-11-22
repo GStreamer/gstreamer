@@ -45,7 +45,7 @@ except ImportError:
 
 class Value:
    def __init__(self, type):
-      assert type in ('fourcc', 'intrange', 'doublerange', 'fraction')
+      assert type in ('fourcc', 'intrange', 'doublerange', 'fractionrange', 'fraction')
       self.type = type
 
 class Fourcc(Value):
@@ -70,6 +70,17 @@ class DoubleRange(Value):
       self.high = high
    def __repr__(self):
       return '<gst.DoubleRange [%f, %f]>' % (self.low, self.high)
+
+class FractionRange(Value):
+   def __init__(self, low, high):
+      Value.__init__(self, 'fractionrange')
+      self.low = low
+      self.high = high
+   def __repr__(self):
+      return '<gst.FractionRange [%d/%d, %d/%d]>' % (self.low.num,
+                                                     self.low.denom,
+                                                     self.high.num,
+                                                     self.high.denom)
 
 class Fraction(Value):
    def __init__(self, num, denom):

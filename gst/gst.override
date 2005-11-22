@@ -648,13 +648,13 @@ _wrap_gst_xml_parse_memory(PyGObject *self, PyObject *args, PyObject *kwargs)
     return PyBool_FromLong(ret);
 }
 %%
-override gst_tag_setter_get_list noargs
+override gst_tag_setter_get_tag_list noargs
 static PyObject *
-_wrap_gst_tag_setter_get_list(PyGObject *self)
+_wrap_gst_tag_setter_get_tag_list(PyGObject *self)
 {
     GstTagList *ret;
 
-    ret = (GstTagList*)gst_tag_setter_get_list(GST_TAG_SETTER(self->obj));
+    ret = (GstTagList*)gst_tag_setter_get_tag_list(GST_TAG_SETTER(self->obj));
     /* pyg_boxed_new handles NULL checking */
     return pyg_boxed_new(GST_TYPE_TAG_LIST, ret, TRUE, TRUE);
 }

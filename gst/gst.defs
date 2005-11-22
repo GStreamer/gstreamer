@@ -393,6 +393,15 @@
   (return-type "none")
 )
 
+(define-method add_signal_watch_full
+  (of-object "GstBus")
+  (c-name "gst_bus_add_signal_watch_full")
+  (return-type "none")
+  (parameters
+    '("gint" "priority")
+  )
+)
+
 (define-method remove_signal_watch
   (of-object "GstBus")
   (c-name "gst_bus_remove_signal_watch")
@@ -1753,7 +1762,7 @@
   (caller-owns-return #t)
 )
 
-(define-function event_new_newsegment
+(define-function event_new_new_segment
   (c-name "gst_event_new_new_segment")
   (return-type "GstEvent*")
   (caller-owns-return #t)
@@ -1767,7 +1776,7 @@
   )
 )
 
-(define-method parse_newsegment
+(define-method parse_new_segment
   (of-object "GstEvent")
   (c-name "gst_event_parse_new_segment")
   (return-type "none")
@@ -1799,7 +1808,7 @@
   )
 )
 
-(define-function event_new_buffersize
+(define-function event_new_buffer_size
   (c-name "gst_event_new_buffer_size")
   (return-type "GstEvent*")
   (caller-owns-return #t)
@@ -1811,7 +1820,7 @@
   )
 )
 
-(define-method parse_buffersize
+(define-method parse_buffer_size
   (of-object "GstEvent")
   (c-name "gst_event_parse_buffer_size")
   (return-type "none")
@@ -4543,6 +4552,23 @@
 
 ;; From ../gstreamer/gst/gstsegment.h
 
+(define-function gst_segment_get_type
+  (c-name "gst_segment_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_segment_new
+  (c-name "gst_segment_new")
+  (is-constructor-of "GstSegment")
+  (return-type "GstSegment*")
+)
+
+(define-method free
+  (of-object "GstSegment")
+  (c-name "gst_segment_free")
+  (return-type "none")
+)
+
 (define-method init
   (of-object "GstSegment")
   (c-name "gst_segment_init")
@@ -5026,7 +5052,15 @@
   )
 )
 
-
+(define-method fixate_field_nearest_fraction
+  (of-object "GstStructure")
+  (c-name "gst_structure_fixate_field_nearest_fraction")
+  (return-type "gboolean")
+  (parameters
+    '("const-char*" "field_name")
+    '("const-GValue*" "target")
+  )
+)
 
 
 ;; From ../gstreamer/gst/gstsystemclock.h
@@ -5572,9 +5606,9 @@
   (return-type "GType")
 )
 
-(define-method merge
+(define-method merge_tags
   (of-object "GstTagSetter")
-  (c-name "gst_tag_setter_merge")
+  (c-name "gst_tag_setter_merge_tags")
   (return-type "none")
   (parameters
     '("const-GstTagList*" "list")
@@ -5582,9 +5616,9 @@
   )
 )
 
-(define-method add
+(define-method add_tags
   (of-object "GstTagSetter")
-  (c-name "gst_tag_setter_add")
+  (c-name "gst_tag_setter_add_tags")
   (return-type "none")
   (parameters
     '("GstTagMergeMode" "mode")
@@ -5593,9 +5627,9 @@
   (varargs #t)
 )
 
-(define-method add_values
+(define-method add_tag_values
   (of-object "GstTagSetter")
-  (c-name "gst_tag_setter_add_values")
+  (c-name "gst_tag_setter_add_tag_values")
   (return-type "none")
   (parameters
     '("GstTagMergeMode" "mode")
@@ -5604,9 +5638,9 @@
   (varargs #t)
 )
 
-(define-method add_valist
+(define-method add_tag_valist
   (of-object "GstTagSetter")
-  (c-name "gst_tag_setter_add_valist")
+  (c-name "gst_tag_setter_add_tag_valist")
   (return-type "none")
   (parameters
     '("GstTagMergeMode" "mode")
@@ -5615,9 +5649,9 @@
   )
 )
 
-(define-method add_valist_values
+(define-method add_tag_valist_values
   (of-object "GstTagSetter")
-  (c-name "gst_tag_setter_add_valist_values")
+  (c-name "gst_tag_setter_add_tag_valist_values")
   (return-type "none")
   (parameters
     '("GstTagMergeMode" "mode")
@@ -5626,24 +5660,24 @@
   )
 )
 
-(define-method get_list
+(define-method get_tag_list
   (of-object "GstTagSetter")
-  (c-name "gst_tag_setter_get_list")
+  (c-name "gst_tag_setter_get_tag_list")
   (return-type "const-GstTagList*")
 )
 
-(define-method set_merge_mode
+(define-method set_tag_merge_mode
   (of-object "GstTagSetter")
-  (c-name "gst_tag_setter_set_merge_mode")
+  (c-name "gst_tag_setter_set_tag_merge_mode")
   (return-type "none")
   (parameters
     '("GstTagMergeMode" "mode")
   )
 )
 
-(define-method get_merge_mode
+(define-method get_tag_merge_mode
   (of-object "GstTagSetter")
-  (c-name "gst_tag_setter_get_merge_mode")
+  (c-name "gst_tag_setter_get_tag_merge_mode")
   (return-type "GstTagMergeMode")
 )
 
@@ -5967,17 +6001,6 @@
     '("const-gchar*" "uri")
   )
 )
-
-
-
-;; From ../gstreamer/gst/gsturitype.h
-
-(define-function uri_get_uri_type
-  (c-name "gst_uri_get_uri_type")
-  (return-type "GType")
-)
-
-
 
 ;; From ../gstreamer/gst/gstutils.h
 
@@ -6615,6 +6638,54 @@
     '("GValue*" "product")
     '("const-GValue*" "factor1")
     '("const-GValue*" "factor2")
+  )
+)
+
+(define-function gst_value_fraction_subtract
+  (c-name "gst_value_fraction_subtract")
+  (return-type "gboolean")
+  (parameters
+    '("GValue*" "dest")
+    '("const-GValue*" "minuend")
+    '("const-GValue*" "subtrahend")
+  )
+)
+
+(define-function gst_value_set_fraction_range
+  (c-name "gst_value_set_fraction_range")
+  (return-type "none")
+  (parameters
+    '("GValue*" "value")
+    '("const-GValue*" "start")
+    '("const-GValue*" "end")
+  )
+)
+
+(define-function gst_value_set_fraction_range_full
+  (c-name "gst_value_set_fraction_range_full")
+  (return-type "none")
+  (parameters
+    '("GValue*" "value")
+    '("int" "numerator_start")
+    '("int" "denominator_start")
+    '("int" "numerator_end")
+    '("int" "denominator_end")
+  )
+)
+
+(define-function gst_value_get_fraction_range_min
+  (c-name "gst_value_get_fraction_range_min")
+  (return-type "const-GValue*")
+  (parameters
+    '("const-GValue*" "value")
+  )
+)
+
+(define-function gst_value_get_fraction_range_max
+  (c-name "gst_value_get_fraction_range_max")
+  (return-type "const-GValue*")
+  (parameters
+    '("const-GValue*" "value")
   )
 )
 
