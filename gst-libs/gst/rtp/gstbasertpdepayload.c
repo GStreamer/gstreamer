@@ -307,7 +307,7 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
   /* if this is the first buf send a discont */
   if (filter->need_newsegment) {
     /* send discont */
-    GstEvent *event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME,
+    GstEvent *event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
         GST_BUFFER_TIMESTAMP (buf), GST_CLOCK_TIME_NONE, 0);
 
     gst_pad_push_event (filter->srcpad, event);

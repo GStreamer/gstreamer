@@ -408,7 +408,8 @@ gst_sinesrc_newsegment (GstBaseSrc * basesrc)
   GST_DEBUG_OBJECT (basesrc, "Sending newsegment from %" GST_TIME_FORMAT
       " to %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
 
-  event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, start, end, 0);
+  event =
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, start, end, 0);
 
   return gst_pad_push_event (basesrc->srcpad, event);
 }

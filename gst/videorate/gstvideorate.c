@@ -394,8 +394,8 @@ gst_videorate_event (GstPad * pad, GstEvent * event)
       gboolean update;
       GstFormat format;
 
-      gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
-          &base);
+      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
+          &stop, &base);
 
       if (format != GST_FORMAT_TIME) {
         GST_WARNING ("Got discont but doesn't have GST_FORMAT_TIME value");

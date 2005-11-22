@@ -866,7 +866,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
             GST_TIME_ARGS (segment_stop));
 
         /* create the discont event we are going to send out */
-        event = gst_event_new_newsegment (FALSE, ogg->segment_rate,
+        event = gst_event_new_new_segment (FALSE, ogg->segment_rate,
             GST_FORMAT_TIME, segment_start, segment_stop, 0);
 
         gst_ogg_demux_activate_chain (ogg, chain, event);
@@ -1761,7 +1761,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg)
       gst_ogg_demux_send_event (ogg, gst_event_new_flush_stop ());
 
     /* create the discont event we are going to send out */
-    event = gst_event_new_newsegment (FALSE, 1.0,
+    event = gst_event_new_new_segment (FALSE, 1.0,
         GST_FORMAT_TIME,
         start + chain->segment_start, stop + chain->segment_start, start);
 

@@ -437,8 +437,8 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       gint64 start, stop, time;
       gboolean update;
 
-      gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
-          &time);
+      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
+          &stop, &time);
 
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;

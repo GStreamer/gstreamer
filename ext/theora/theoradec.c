@@ -607,7 +607,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       gdouble rate;
       gint64 start, stop, time;
 
-      gst_event_parse_newsegment (event, NULL, &rate, &format, &start, &stop,
+      gst_event_parse_new_segment (event, NULL, &rate, &format, &start, &stop,
           &time);
 
       /* we need TIME and a positive rate */
