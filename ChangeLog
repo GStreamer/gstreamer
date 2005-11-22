@@ -1,3 +1,9 @@
+2005-11-22  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gsttagsetter.c (gst_tag_setter_get_tag_merge_mode) 
+	(gst_tag_setter_set_tag_merge_mode, gst_tag_setter_get_tag_list):
+	Actually rename the function implementations. Grr.
+
 2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/gst/capslist.h:

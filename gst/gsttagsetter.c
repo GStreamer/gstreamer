@@ -232,7 +232,7 @@ gst_tag_setter_add_tag_valist_values (GstTagSetter * setter,
 }
 
 /**
- * gst_tag_setter_get_list:
+ * gst_tag_setter_get_tag_list:
  * @setter: a #GstTagSetter
  *
  * Returns the current list of tags the setter uses.  The list should not be
@@ -242,7 +242,7 @@ gst_tag_setter_add_tag_valist_values (GstTagSetter * setter,
  *	    or NULL if none is used.
  */
 G_CONST_RETURN GstTagList *
-gst_tag_setter_get_list (GstTagSetter * setter)
+gst_tag_setter_get_tag_list (GstTagSetter * setter)
 {
   g_return_val_if_fail (GST_IS_TAG_SETTER (setter), NULL);
 
@@ -250,7 +250,7 @@ gst_tag_setter_get_list (GstTagSetter * setter)
 }
 
 /**
- * gst_tag_setter_set_merge_mode:
+ * gst_tag_setter_set_tag_merge_mode:
  * @setter: a #GstTagSetter
  * @mode: The mode with which tags are added
  *
@@ -259,7 +259,7 @@ gst_tag_setter_get_list (GstTagSetter * setter)
  * the tags by this interface and discards tags from events.
  */
 void
-gst_tag_setter_set_merge_mode (GstTagSetter * setter, GstTagMergeMode mode)
+gst_tag_setter_set_tag_merge_mode (GstTagSetter * setter, GstTagMergeMode mode)
 {
   g_return_if_fail (GST_IS_TAG_SETTER (setter));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
@@ -268,7 +268,7 @@ gst_tag_setter_set_merge_mode (GstTagSetter * setter, GstTagMergeMode mode)
 }
 
 /**
- * gst_tag_setter_get_merge_mode:
+ * gst_tag_setter_get_tag_merge_mode:
  * @setter: a #GstTagSetter
  *
  * Queries the mode by which tags inside the setter are overwritten by tags
@@ -277,7 +277,7 @@ gst_tag_setter_set_merge_mode (GstTagSetter * setter, GstTagMergeMode mode)
  * Returns: the merge mode used inside the element.
  */
 GstTagMergeMode
-gst_tag_setter_get_merge_mode (GstTagSetter * setter)
+gst_tag_setter_get_tag_merge_mode (GstTagSetter * setter)
 {
   g_return_val_if_fail (GST_IS_TAG_SETTER (setter), FALSE);
 
