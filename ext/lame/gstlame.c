@@ -636,12 +636,12 @@ gst_lame_set_metadata (GstLame * lame)
 
   g_return_if_fail (lame != NULL);
 
-  user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (lame));
+  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (lame));
   if ((lame->tags == NULL) && (user_tags == NULL)) {
     return;
   }
   copy = gst_tag_list_merge (user_tags, lame->tags,
-      gst_tag_setter_get_merge_mode (GST_TAG_SETTER (lame)));
+      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (lame)));
   gst_tag_list_foreach ((GstTagList *) copy, add_one_tag, lame);
 
   gst_tag_list_free (copy);
@@ -927,7 +927,7 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
 
         gst_event_parse_tag (event, &taglist),
             gst_tag_list_insert (lame->tags, taglist,
-            gst_tag_setter_get_merge_mode (GST_TAG_SETTER (lame)));
+            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (lame)));
       } else {
         g_assert_not_reached ();
       }
