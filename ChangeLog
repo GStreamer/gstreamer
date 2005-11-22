@@ -1,3 +1,9 @@
+2005-11-22  Wim Taymans  <wim@fluendo.com>
+
+	* examples/seeking/seek.c: (main):
+	Give higher priority to bus signals than the gtk events
+	to fix a race condition in the segment looping.
+
 2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/theora/Makefile.am:

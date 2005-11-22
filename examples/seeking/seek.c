@@ -1430,7 +1430,7 @@ main (int argc, char **argv)
     GstBus *bus;
 
     bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-    gst_bus_add_signal_watch (bus);
+    gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
 //    g_signal_connect (bus, "message::state-changed", (GCallback) message_received, pipeline);
     g_signal_connect (bus, "message::new-clock", (GCallback) message_received,
