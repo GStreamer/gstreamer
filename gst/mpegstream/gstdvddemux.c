@@ -479,7 +479,7 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     if (dvd_demux->langcodes)
       gst_event_unref (dvd_demux->langcodes);
     PARSE_CLASS (dvd_demux)->handle_discont (mpeg_parse,
-        gst_event_new_newsegment (TRUE, 1.0, GST_FORMAT_UNDEFINED, 0, 0, 0));
+        gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_UNDEFINED, 0, 0, 0));
 
     /* see what kind of streams we have */
     dvd_demux->langcodes = event;

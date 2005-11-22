@@ -1,3 +1,16 @@
+2005-11-22  Andy Wingo  <wingo@pobox.com>
+
+	* ext/a52dec/gsta52dec.c (gst_a52dec_sink_event)
+	* ext/mad/gstid3tag.c (gst_id3_tag_sink_event)
+	* ext/mad/gstmad.c (gst_mad_chain)
+	* gst/mpegaudioparse/gstmpegaudioparse.c
+	(gst_mp3parse_sink_event)
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_handle_dvd_event)
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_handle_discont)
+	(gst_mpeg_parse_send_discont, gst_mpeg_parse_pad_added)
+	* gst/realmedia/rmdemux.c (gst_rmdemux_perform_seek)
+	(gst_rmdemux_chain, gst_rmdemux_add_stream): Run update-funcnames.
+
 2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/Makefile.am:

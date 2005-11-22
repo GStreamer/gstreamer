@@ -358,7 +358,8 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gint64 val;
 
-      gst_event_parse_newsegment (event, NULL, NULL, &format, &val, NULL, NULL);
+      gst_event_parse_new_segment (event, NULL, NULL, &format, &val, NULL,
+          NULL);
       if (format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (val)) {
         GST_WARNING ("No time in newsegment event %p", event);
       } else {

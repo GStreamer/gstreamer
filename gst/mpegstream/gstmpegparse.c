@@ -339,7 +339,7 @@ gst_mpeg_parse_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
   }
 #endif
 
-  gst_event_parse_newsegment (event, NULL, NULL, &format, &time, NULL, NULL);
+  gst_event_parse_new_segment (event, NULL, NULL, &format, &time, NULL, NULL);
 
   if (format == GST_FORMAT_TIME && (GST_CLOCK_TIME_IS_VALID (time))) {
     GST_DEBUG_OBJECT (mpeg_parse, "forwarding discontinuity, time: %0.3fs",
@@ -403,7 +403,7 @@ gst_mpeg_parse_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
 {
   GstEvent *event;
 
-  event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, time,
+  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, time,
       GST_CLOCK_TIME_NONE, (gint64) 0);
 
   if (CLASS (mpeg_parse)->send_event)
@@ -434,7 +434,7 @@ gst_mpeg_parse_pad_added (GstElement * element, GstPad * pad)
    * packets, including setting base time before defining streams or
    * even adding streams halfway a stream. */
   if (!mpeg_parse->scr_pending) {
-    GstEvent *event = gst_event_new_newsegment (FALSE, 1.0,
+    GstEvent *event = gst_event_new_new_segment (FALSE, 1.0,
         GST_FORMAT_TIME,
         (guint64) MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr +
             mpeg_parse->adjust),

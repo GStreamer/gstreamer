@@ -293,7 +293,8 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
     {
       GstFormat format;
 
-      gst_event_parse_newsegment (event, NULL, NULL, &format, NULL, NULL, NULL);
+      gst_event_parse_new_segment (event, NULL, NULL, &format, NULL, NULL,
+          NULL);
 
       if (format != GST_FORMAT_TIME)
         mp3parse->last_ts = 0;
