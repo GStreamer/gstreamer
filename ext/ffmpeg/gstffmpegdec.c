@@ -990,7 +990,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       gdouble rate;
       GstFormat fmt;
 
-      gst_event_parse_newsegment (event, NULL, &rate, &fmt, &start, &end,
+      gst_event_parse_new_segment (event, NULL, &rate, &fmt, &start, &end,
           &base);
       if (fmt == GST_FORMAT_TIME) {
         ffmpegdec->next_ts = start;
@@ -1007,7 +1007,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
             end,
             GST_TIME_ARGS (end * GST_SECOND / ffmpegdec->context->bit_rate));
         gst_event_unref (event);
-        event = gst_event_new_newsegment (FALSE, rate, fmt,
+        event = gst_event_new_new_segment (FALSE, rate, fmt,
             start * GST_SECOND / ffmpegdec->context->bit_rate,
             end == -1 ? -1 : end * GST_SECOND / ffmpegdec->context->bit_rate,
             base * GST_SECOND / ffmpegdec->context->bit_rate);
