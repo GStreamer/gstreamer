@@ -131,7 +131,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/jpeg, "
         "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 1, MAX ]")
+        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0/1, MAX ]")
     );
 
 static void
@@ -295,19 +295,28 @@ gst_jpegenc_setcaps (GstPad * pad, GstCaps * caps)
   GstCaps *othercaps;
   GstPad *otherpad;
   gboolean ret;
+  const GValue *framerate;
 
   otherpad = (pad == jpegenc->srcpad) ? jpegenc->sinkpad : jpegenc->srcpad;
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_double (structure, "framerate", &jpegenc->fps);
+  framerate = gst_structure_get_value (structure, "framerate");
   gst_structure_get_int (structure, "width", &jpegenc->width);
   gst_structure_get_int (structure, "height", &jpegenc->height);
 
   othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (otherpad));
-  gst_caps_set_simple (othercaps,
-      "width", G_TYPE_INT, jpegenc->width,
-      "height", G_TYPE_INT, jpegenc->height,
-      "framerate", G_TYPE_DOUBLE, jpegenc->fps, NULL);
+  if (framerate) {
+    gst_caps_set_simple (othercaps,
+        "width", G_TYPE_INT, jpegenc->width,
+        "height", G_TYPE_INT, jpegenc->height,
+        "framerate", GST_TYPE_FRACTION,
+        gst_value_get_fraction_numerator (framerate),
+        gst_value_get_fraction_denominator (framerate), NULL);
+  } else {
+    gst_caps_set_simple (othercaps,
+        "width", G_TYPE_INT, jpegenc->width,
+        "height", G_TYPE_INT, jpegenc->height, NULL);
+  }
 
   ret = gst_pad_set_caps (jpegenc->srcpad, othercaps);
   gst_caps_unref (othercaps);

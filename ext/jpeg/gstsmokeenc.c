@@ -116,7 +116,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-smoke, "
         "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 1, MAX ]")
+        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0/1, MAX ]")
     );
 
 static void
@@ -239,11 +239,20 @@ gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps)
   gboolean ret = TRUE;
   GstCaps *othercaps;
   GstPad *otherpad;
+  const GValue *framerate;
 
   otherpad = (pad == smokeenc->srcpad) ? smokeenc->sinkpad : smokeenc->srcpad;
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_double (structure, "framerate", &smokeenc->fps);
+  framerate = gst_structure_get_value (structure, "framerate");
+  if (framerate) {
+    smokeenc->fps_num = gst_value_get_fraction_numerator (framerate);
+    smokeenc->fps_denom = gst_value_get_fraction_denominator (framerate);
+  } else {
+    smokeenc->fps_num = 0;
+    smokeenc->fps_denom = 1;
+  }
+
   gst_structure_get_int (structure, "width", &smokeenc->width);
   gst_structure_get_int (structure, "height", &smokeenc->height);
 
@@ -251,7 +260,8 @@ gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps)
   gst_caps_set_simple (othercaps,
       "width", G_TYPE_INT, smokeenc->width,
       "height", G_TYPE_INT, smokeenc->height,
-      "framerate", G_TYPE_DOUBLE, smokeenc->fps, NULL);
+      "framerate", GST_TYPE_FRACTION, smokeenc->fps_num, smokeenc->fps_denom,
+      NULL);
 
   ret = gst_pad_set_caps (smokeenc->srcpad, othercaps);
   gst_caps_unref (othercaps);
@@ -266,18 +276,7 @@ gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps)
 static void
 gst_smokeenc_resync (GstSmokeEnc * smokeenc)
 {
-  GValue fps = { 0 };
-  GValue framerate = { 0 };
-
   GST_DEBUG ("gst_smokeenc_resync: resync");
-
-  g_value_init (&fps, G_TYPE_DOUBLE);
-  g_value_init (&framerate, GST_TYPE_FRACTION);
-  g_value_set_double (&fps, smokeenc->fps);
-  g_value_transform (&fps, &framerate);
-
-  smokeenc->fps_num = gst_value_get_fraction_numerator (&framerate);
-  smokeenc->fps_denom = gst_value_get_fraction_denominator (&framerate);
 
   smokecodec_encode_new (&smokeenc->info, smokeenc->width, smokeenc->height,
       smokeenc->fps_num, smokeenc->fps_denom);

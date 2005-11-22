@@ -1,3 +1,15 @@
+2005-11-23  Michael Smith <msmith@fluendo.com>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_setcaps),
+	(gst_jpeg_dec_chain), (gst_jpeg_dec_change_state):
+	* ext/jpeg/gstjpegdec.h:
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_setcaps):
+	* ext/jpeg/gstjpegenc.h:
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_setcaps),
+	(gst_smokeenc_resync):
+	* ext/jpeg/gstsmokeenc.h:
+	  JPEG fractiony goodness.
+
 2005-11-22  Michael Smith <msmith@fluendo.com>
 
 	* gst/goom/filters.c:

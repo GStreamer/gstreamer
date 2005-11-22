@@ -76,10 +76,13 @@ struct _GstJpegDec {
   guint64  next_ts;
 
   /* video state */
-  gdouble  fps;
+  gint framerate_numerator;
+  gint framerate_denominator;
+  gint frames_decoded;
 
   /* negotiated state */
-  gdouble  caps_fps;
+  gint     caps_framerate_numerator;
+  gint     caps_framerate_denominator;
   gint 	   caps_width;
   gint 	   caps_height;
 

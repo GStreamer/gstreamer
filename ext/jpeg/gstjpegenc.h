@@ -58,7 +58,6 @@ struct _GstJpegEnc {
   gint format;
   gint width;
   gint height;
-  gdouble fps;
   /* the video buffer */
   gint bufsize;
   GstBuffer *buffer;

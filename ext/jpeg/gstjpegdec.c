@@ -54,7 +54,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("image/jpeg, "
         "width = (int) [ " G_STRINGIFY (MIN_WIDTH) ", " G_STRINGIFY (MAX_WIDTH)
         " ], " "height = (int) [ " G_STRINGIFY (MIN_HEIGHT) ", "
-        G_STRINGIFY (MAX_HEIGHT) " ], " "framerate = (double) [ 0, MAX ]")
+        G_STRINGIFY (MAX_HEIGHT) " ], " "framerate = (fraction) [ 0/1, MAX ]")
     );
 
 GST_DEBUG_CATEGORY (jpeg_dec_debug);
@@ -588,15 +588,17 @@ gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstStructure *s;
   GstJpegDec *dec;
-  gdouble fps;
+  const GValue *framerate;
 
   dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
   s = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_get_double (s, "framerate", &fps)) {
-    dec->fps = fps;
+  if ((framerate = gst_structure_get_value (s, "framerate")) != NULL) {
+    dec->framerate_numerator = gst_value_get_fraction_numerator (framerate);
+    dec->framerate_denominator = gst_value_get_fraction_denominator (framerate);
     dec->packetized = TRUE;
-    GST_DEBUG ("got framerate of %f fps => packetized mode", fps);
+    GST_DEBUG ("got framerate of %d/%d fps => packetized mode",
+        dec->framerate_numerator, dec->framerate_denominator);
   }
 
   /* do not extract width/height here. we do that in the chain
@@ -783,15 +785,22 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     goto wrong_size;
 
   if (width != dec->caps_width || height != dec->caps_height ||
-      dec->fps != dec->caps_fps) {
+      dec->framerate_numerator != dec->caps_framerate_numerator ||
+      dec->framerate_denominator != dec->caps_framerate_denominator) {
     GstCaps *caps;
 
-    /* framerate == 0.0 is a still frame */
+    /* framerate == 0/1 is a still frame */
+    if (dec->framerate_denominator == 0) {
+      dec->framerate_numerator = 0;
+      dec->framerate_denominator = 1;
+    }
+
     caps = gst_caps_new_simple ("video/x-raw-yuv",
         "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
-        "framerate", G_TYPE_DOUBLE, (double) dec->fps, NULL);
+        "framerate", GST_TYPE_FRACTION, dec->framerate_numerator,
+        dec->framerate_denominator, NULL);
 
     GST_DEBUG_OBJECT (dec, "setting caps %" GST_PTR_FORMAT, caps);
     GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d",
@@ -802,7 +811,8 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 
     dec->caps_width = width;
     dec->caps_height = height;
-    dec->caps_fps = dec->fps;
+    dec->caps_framerate_numerator = dec->framerate_numerator;
+    dec->caps_framerate_denominator = dec->framerate_denominator;
   }
 
   ret = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
@@ -813,9 +823,15 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   outdata = GST_BUFFER_DATA (outbuf);
   GST_BUFFER_TIMESTAMP (outbuf) = dec->next_ts;
 
-  if (dec->packetized) {
-    duration = GST_SECOND / dec->fps;
-    dec->next_ts += duration;
+  if (dec->packetized && dec->framerate_numerator != 0) {
+    GstClockTime next_ts;
+
+    dec->frames_decoded++;
+    next_ts = dec->frames_decoded * GST_SECOND *
+        dec->framerate_denominator / dec->framerate_numerator;
+
+    duration = next_ts - dec->next_ts;
+    dec->next_ts = next_ts;
   } else {
     duration = GST_CLOCK_TIME_NONE;
     dec->next_ts = GST_CLOCK_TIME_NONE;
@@ -922,8 +938,10 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      dec->fps = 0.0;
-      dec->caps_fps = 0.0;
+      dec->framerate_numerator = 0;
+      dec->framerate_denominator = 1;
+      dec->caps_framerate_numerator = dec->caps_framerate_denominator = 0;
+      dec->frames_decoded = 0;
       dec->caps_width = -1;
       dec->caps_height = -1;
       dec->packetized = FALSE;

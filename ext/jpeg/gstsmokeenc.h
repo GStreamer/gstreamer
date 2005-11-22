@@ -56,7 +56,6 @@ struct _GstSmokeEnc {
   gint height;
   gint frame;
   gint keyframe;
-  gdouble fps;
   gint fps_num, fps_denom;
 
   SmokeCodecInfo *info;
