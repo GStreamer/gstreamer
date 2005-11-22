@@ -86,17 +86,14 @@ gst_ffmpeg_set_palette (GstCaps *caps, AVCodecContext *context)
     gst_caps_new_simple (mimetype,			      	\
 	"width",     G_TYPE_INT,   context->width,	      	\
 	"height",    G_TYPE_INT,   context->height,	  	\
-	"framerate", G_TYPE_DOUBLE, (double) 1. *		\
-				context->time_base.den /	\
-					context->time_base.num,	\
-	__VA_ARGS__, NULL)  					\
+	"framerate", GST_TYPE_FRACTION, context->time_base.den, \
+	context->time_base.num,	__VA_ARGS__, NULL)  					\
     :	  							\
     gst_caps_new_simple (mimetype,			      	\
 	"width",     GST_TYPE_INT_RANGE, 16, 4096,      	\
 	"height",    GST_TYPE_INT_RANGE, 16, 4096,	      	\
-	"framerate", GST_TYPE_DOUBLE_RANGE, (double) 1., 	\
-						G_MAXDOUBLE,	\
-	__VA_ARGS__, NULL)
+	"framerate", GST_TYPE_FRACTION_RANGE, 0, 1,             \
+        G_MAXINT, 1, __VA_ARGS__, NULL)
 
 /* same for audio - now with channels/sample rate
  */
@@ -1102,7 +1099,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
     AVCodecContext * context, gboolean raw)
 {
   GstStructure *structure;
-  gdouble fps;
+  const GValue *fps;
 
   g_return_if_fail (gst_caps_get_size (caps) == 1);
   structure = gst_caps_get_structure (caps, 0);
@@ -1111,23 +1108,16 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
   gst_structure_get_int (structure, "height", &context->height);
   gst_structure_get_int (structure, "bpp", &context->bits_per_sample);
 
-  if (gst_structure_get_double (structure, "framerate", &fps)) {
-    GValue dfps = { 0 };
-    GValue framerate = { 0 };
+  fps = gst_structure_get_value (structure, "framerate");
+  g_return_if_fail (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps));
 
-    /* convert double to fraction for the framerate */
-    g_value_init (&dfps, G_TYPE_DOUBLE);
-    g_value_init (&framerate, GST_TYPE_FRACTION);
-    g_value_set_double (&dfps, fps);
-    g_value_transform (&dfps, &framerate);
+  /* somehow these seem mixed up.. */
+  context->time_base.den = gst_value_get_fraction_numerator (fps);
+  context->time_base.num = gst_value_get_fraction_denominator (fps);
 
-    /* somehow these seem mixed up.. */
-    context->time_base.den = gst_value_get_fraction_numerator (&framerate);
-    context->time_base.num = gst_value_get_fraction_denominator (&framerate);
-
-    GST_DEBUG ("setting framerate %d/%d = %lf",
-		    context->time_base.den, context->time_base.num, fps);
-  }
+  GST_DEBUG ("setting framerate %d/%d = %lf",
+	    context->time_base.den, context->time_base.num, 
+	    1. * context->time_base.den / context->time_base.num);
 
   if (!raw)
     return;

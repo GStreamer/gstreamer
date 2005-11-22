@@ -195,19 +195,10 @@ Some notes on how ffmpeg wrapping inside GStreamer currently works:
 * gstffmpeg{dec,enc,demux,mux}.c are wrappers for specific element types from
     their ffmpeg counterpart. If you want to wrap a new type of element in
     wrapper file.
-
-* gstffmpegcolorspace.c is a wrapper for one specific function in ffmpeg:
-    colorspace conversion. This works different from the previously mentioned
-    ones, and we'll come to that in the next item. If you want to wrap one
-    specific function, then that, too, belongs in a new wrapper file.
-
-* the important difference between all those is that the colorspace element
-    contains one element, so there is a 1<->1 mapping. This makes for a fairly
-    basic element implementation. gstffmpegcolorspace.c, therefore, doesn't
-    differ much from other colorspace elements. The ffmpeg element types,
-    however, define a whole *list* of elements (in GStreamer, each decoder etc.
-    needs to be its own element). We use a set of tricks for that to keep
-    coding simple: codec mapping and dynamic type creation.
+    The ffmpeg element types, define a whole *list* of elements (in 
+    GStreamer, each decoder etc. needs to be its own element). 
+    We use a set of tricks for that to keep coding simple: codec 
+    mapping and dynamic type creation.
 
 * ffmpeg uses CODEC_ID_* enumerations for their codecs. GStreamer uses caps,
     which consists of a mimetype and a defined set of properties. In ffmpeg,
