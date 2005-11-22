@@ -1751,22 +1751,47 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
 
   if ((peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (xvimagesink)))) {
     GstEvent *event;
+    GstVideoRectangle src, dst, result;
     gdouble x, y, xscale = 1.0, yscale = 1.0;
 
-    event = gst_event_new_custom (GST_EVENT_NAVIGATION, structure);
+    event = gst_event_new_navigation (structure);
 
-    if (xvimagesink->xwindow) {
-      xscale = GST_VIDEO_SINK_WIDTH (xvimagesink) / xvimagesink->xwindow->width;
-      yscale =
-          GST_VIDEO_SINK_HEIGHT (xvimagesink) / xvimagesink->xwindow->height;
+    /* We take the flow_lock while we look at the window */
+    g_mutex_lock (xvimagesink->flow_lock);
+
+    if (!xvimagesink->xwindow) {
+      g_mutex_unlock (xvimagesink->flow_lock);
+      return;
     }
+
+    src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
+    src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
+    dst.w = xvimagesink->xwindow->width;
+    dst.h = xvimagesink->xwindow->height;
+
+    g_mutex_unlock (xvimagesink->flow_lock);
+
+    if (xvimagesink->keep_aspect) {
+      gst_video_sink_center_rect (src, dst, &result, TRUE);
+    } else {
+      result.x = result.y = 0;
+      result.w = dst.w;
+      result.h = dst.h;
+    }
+
+    xscale = (gdouble) GST_VIDEO_SINK_WIDTH (xvimagesink) / result.w;
+    yscale = (gdouble) GST_VIDEO_SINK_HEIGHT (xvimagesink) / result.h;
 
     /* Converting pointer coordinates to the non scaled geometry */
     if (gst_structure_get_double (structure, "pointer_x", &x)) {
+      x = MIN (x, result.x + result.w);
+      x = MAX (x - result.x, 0);
       gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
           (gdouble) x * xscale, NULL);
     }
     if (gst_structure_get_double (structure, "pointer_y", &y)) {
+      y = MIN (y, result.y + result.h);
+      y = MAX (y - result.y, 0);
       gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
           (gdouble) y * yscale, NULL);
     }
