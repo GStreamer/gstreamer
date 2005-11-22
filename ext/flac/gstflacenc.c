@@ -504,7 +504,7 @@ gst_flacenc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
   if (flacenc->stopped)
     return FLAC__STREAM_ENCODER_OK;
 
-  event = gst_event_new_newsegment (TRUE, 1.0, GST_FORMAT_BYTES,
+  event = gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_BYTES,
       absolute_byte_offset, GST_BUFFER_OFFSET_NONE, 0);
 
   if ((peerpad = gst_pad_get_peer (flacenc->srcpad))) {
@@ -601,7 +601,7 @@ gst_flacenc_sink_event (GstPad * pad, GstEvent * event)
       gint64 start, stream_time;
 
       if (flacenc->offset == 0) {
-        gst_event_parse_newsegment (event, NULL, NULL, &format, &start, NULL,
+        gst_event_parse_new_segment (event, NULL, NULL, &format, &start, NULL,
             &stream_time);
       } else {
         start = -1;
@@ -612,7 +612,7 @@ gst_flacenc_sink_event (GstPad * pad, GstEvent * event)
         else
           GST_DEBUG ("Not handling newsegment event with non-zero start");
       } else {
-        GstEvent *e = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_BYTES,
+        GstEvent *e = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
             0, -1, 0);
 
         ret = gst_pad_push_event (flacenc->srcpad, e);

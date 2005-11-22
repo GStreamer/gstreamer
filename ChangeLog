@@ -1,3 +1,28 @@
+2005-11-22  Andy Wingo  <wingo@pobox.com>
+
+	* ext/dv/gstdvdemux.c (gst_dvdemux_handle_sink_event)
+	(gst_dvdemux_demux_frame)
+	* ext/flac/gstflacdec.c (gst_flacdec_write)
+	* ext/flac/gstflacenc.c (gst_flacenc_seek_callback)
+	(gst_flacenc_sink_event)
+	* ext/gconf/gstgconfaudiosink.c (gst_gconf_audio_sink_init)
+	* ext/gconf/gstgconfvideosink.c (gst_gconf_video_sink_init)
+	* ext/libpng/gstpngdec.c (gst_pngdec_caps_create_and_set)
+	* ext/speex/gstspeexdec.c (speex_dec_event, speex_dec_chain)
+	* gst/auparse/gstauparse.c (gst_auparse_chain)
+	* gst/autodetect/gstautoaudiosink.c (gst_auto_audio_sink_init)
+	* gst/autodetect/gstautovideosink.c (gst_auto_video_sink_init)
+	* gst/avi/gstavidemux.c (gst_avi_demux_stream_header)
+	(gst_avi_demux_handle_seek)
+	* gst/goom/gstgoom.c (gst_goom_event)
+	* gst/matroska/ebml-write.c (gst_ebml_write_seek)
+	* gst/matroska/matroska-demux.c
+	(gst_matroska_demux_handle_seek_event)
+	(gst_matroska_demux_loop_stream_parse_id)
+	* gst/wavenc/gstwavenc.c (gst_wavenc_stop_file)
+	* gst/wavparse/gstwavparse.c (gst_wavparse_handle_seek)
+	(gst_wavparse_stream_headers): Run update-funcnames.
+
 2005-11-22  Edward Hervey  <edward@fluendo.com>
 
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_class_init),

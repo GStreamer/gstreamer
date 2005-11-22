@@ -291,7 +291,7 @@ gst_goom_event (GstPad * pad, GstEvent * event)
       gint64 start = 0, stop = 0;
       GstFormat format;
 
-      gst_event_parse_newsegment (event, NULL, NULL, &format, &start, &stop,
+      gst_event_parse_new_segment (event, NULL, NULL, &format, &start, &stop,
           NULL);
       gst_adapter_clear (goom->adapter);
       goom->audio_basetime = start;

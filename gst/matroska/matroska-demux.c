@@ -1165,7 +1165,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     gst_element_post_message (GST_ELEMENT (demux), msg);
   }
 
-  newsegment_event = gst_event_new_newsegment (FALSE, demux->segment_rate,
+  newsegment_event = gst_event_new_new_segment (FALSE, demux->segment_rate,
       GST_FORMAT_TIME, entry->time, demux->segment_stop, entry->time);
 
   GST_OBJECT_UNLOCK (demux);
@@ -2728,7 +2728,7 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
         /* FIXME: different streams might have different lengths! */
         /* send initial discont */
         gst_matroska_demux_send_event (demux,
-            gst_event_new_newsegment (FALSE, 1.0,
+            gst_event_new_new_segment (FALSE, 1.0,
                 GST_FORMAT_TIME, 0,
                 (demux->duration > 0) ? demux->duration : -1, 0));
 

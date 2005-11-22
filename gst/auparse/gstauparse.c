@@ -363,7 +363,7 @@ Samples :
     gst_pad_set_active (auparse->srcpad, TRUE);
     gst_pad_set_caps (auparse->srcpad, tempcaps);
 
-    event = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_DEFAULT,
+    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_DEFAULT,
         0, GST_CLOCK_TIME_NONE, 0);
 
     gst_pad_push_event (auparse->srcpad, event);

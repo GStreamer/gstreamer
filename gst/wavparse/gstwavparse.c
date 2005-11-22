@@ -734,7 +734,7 @@ gst_wavparse_handle_seek (GstWavParse * wav, gboolean update)
       wav->offset, wav->dataleft, GST_TIME_ARGS (start_time),
       GST_TIME_ARGS (stop_time));
 
-  wav->seek_event = gst_event_new_newsegment (!update, wav->segment_rate,
+  wav->seek_event = gst_event_new_new_segment (!update, wav->segment_rate,
       GST_FORMAT_TIME, start_time, stop_time, start_time);
 
   if (flush)
@@ -858,7 +858,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   wav->segment_stop = (gint64) GST_SECOND *wav->datasize / wav->bps;
 
   /* Initial discont */
-  wav->seek_event = gst_event_new_newsegment (FALSE, 1.0,
+  wav->seek_event = gst_event_new_new_segment (FALSE, 1.0,
       GST_FORMAT_TIME,
       wav->segment_start, wav->segment_stop, wav->segment_start);
 

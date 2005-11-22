@@ -1957,7 +1957,7 @@ done:
   avi->segment_start = 0;
   avi->segment_stop = (gint64) (((gfloat) avi->stream[0].strh->scale) *
       avi->stream[0].strh->length / avi->stream[0].strh->rate) * GST_SECOND;
-  avi->seek_event = gst_event_new_newsegment
+  avi->seek_event = gst_event_new_new_segment
       (FALSE, avi->segment_rate, GST_FORMAT_TIME,
       avi->segment_start, avi->segment_stop, avi->segment_start);
 
@@ -2024,7 +2024,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, gboolean update)
   else
     start_time = avi->segment_start;
 
-  avi->seek_event = gst_event_new_newsegment
+  avi->seek_event = gst_event_new_new_segment
       (!update, avi->segment_rate, GST_FORMAT_TIME,
       start_time, avi->segment_stop, start_time);
 

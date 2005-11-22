@@ -353,7 +353,7 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   gst_caps_unref (res);
 
   /* Push a newsegment event */
-  new_seg = gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  new_seg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
   if (GST_IS_EVENT (new_seg)) {
     gst_pad_push_event (pngdec->srcpad, new_seg);
   }
