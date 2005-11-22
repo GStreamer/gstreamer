@@ -75,7 +75,7 @@ struct _GstVideofilter {
   /* private */
   gint from_buf_size;
   gint to_buf_size;
-  gdouble framerate;
+  GValue framerate;
 
   GstBuffer *in_buf;
   GstBuffer *out_buf;

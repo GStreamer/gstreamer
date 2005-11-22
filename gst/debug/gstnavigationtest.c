@@ -147,6 +147,12 @@ gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NAVIGATION:
     {
       const GstStructure *s = gst_event_get_structure (event);
+      gint fps_n, fps_d;
+
+      fps_n = gst_value_get_fraction_numerator (
+          (&GST_VIDEOFILTER (navtest)->framerate));
+      fps_d = gst_value_get_fraction_denominator (
+          (&GST_VIDEOFILTER (navtest)->framerate));
 
       type = gst_structure_get_string (s, "event");
       if (g_str_equal (type, "mouse-move")) {
@@ -157,7 +163,7 @@ gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
 
         gst_structure_get_double (s, "pointer_x", &click->x);
         gst_structure_get_double (s, "pointer_y", &click->y);
-        click->images_left = ceil (GST_VIDEOFILTER (navtest)->framerate);
+        click->images_left = (fps_n + fps_d - 1) / fps_d;
         /* green */
         click->cy = 150;
         click->cu = 46;
@@ -168,7 +174,7 @@ gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
 
         gst_structure_get_double (s, "pointer_x", &click->x);
         gst_structure_get_double (s, "pointer_y", &click->y);
-        click->images_left = ceil (GST_VIDEOFILTER (navtest)->framerate);
+        click->images_left = (fps_n + fps_d - 1) / fps_d;
         /* red */
         click->cy = 76;
         click->cu = 85;

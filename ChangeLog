@@ -1,3 +1,14 @@
+2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/aalib/gstaasink.c: (gst_aasink_fixate):
+	* gst/debug/gstnavigationtest.c:
+	(gst_navigationtest_handle_src_event):
+	* gst/videofilter/gstvideofilter.c:
+	(gst_videofilter_format_get_structure), (gst_videofilter_setcaps),
+	(gst_videofilter_init):
+	* gst/videofilter/gstvideofilter.h:
+	  Convert to fractional framerates.
+
 2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/aalib/gstaasink.c:
