@@ -62,12 +62,12 @@ void gst_child_proxy_get_property (GstObject * object, const gchar *name, GValue
 void gst_child_proxy_get_valist (GstObject * object,
     const gchar * first_property_name, va_list var_args);
 void gst_child_proxy_get (GstObject * object, const gchar * first_property_name,
-    ...);
+    ...) G_GNUC_NULL_TERMINATED;
 void gst_child_proxy_set_property (GstObject * object, const gchar *name, const GValue *value);
 void gst_child_proxy_set_valist (GstObject* object,
     const gchar * first_property_name, va_list var_args);
 void gst_child_proxy_set (GstObject * object, const gchar * first_property_name,
-    ...);
+    ...) G_GNUC_NULL_TERMINATED;
 void gst_child_proxy_child_added (GstObject * object, GstObject *  child);
 void gst_child_proxy_child_removed (GstObject * object, GstObject *  child);
 

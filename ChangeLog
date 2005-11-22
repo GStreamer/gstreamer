@@ -1,3 +1,11 @@
+2005-11-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gst.h:
+	  include "gstchildproxy.h"
+	* gst/gstchildproxy.h:
+	* libs/gst/controller/gstcontroller.h:
+	  use G_GNUC_NULL_TERMINATED
+
 2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/gst/capslist.h:

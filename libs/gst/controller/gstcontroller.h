@@ -207,13 +207,13 @@ GType gst_controller_get_type (void);
 
 GstController *gst_controller_new_valist (GObject * object, va_list var_args);
 GstController *gst_controller_new_list (GObject * object, GList *list);
-GstController *gst_controller_new (GObject * object, ...);
+GstController *gst_controller_new (GObject * object, ...) G_GNUC_NULL_TERMINATED;
 
 gboolean gst_controller_remove_properties_valist (GstController * self,
     va_list var_args);
 gboolean gst_controller_remove_properties_list (GstController * self,
 						GList *list);
-gboolean gst_controller_remove_properties (GstController * self, ...);
+gboolean gst_controller_remove_properties (GstController * self, ...) G_GNUC_NULL_TERMINATED;
 
 gboolean gst_controller_set (GstController * self, gchar * property_name,
     GstClockTime timestamp, GValue * value);
@@ -244,8 +244,8 @@ gboolean gst_controller_set_interpolation_mode (GstController * self,
 
 /* GObject convenience functions */
 
-GstController *gst_object_control_properties (GObject * object, ...);
-gboolean gst_object_uncontrol_properties (GObject * object, ...);
+GstController *gst_object_control_properties (GObject * object, ...) G_GNUC_NULL_TERMINATED;
+gboolean gst_object_uncontrol_properties (GObject * object, ...) G_GNUC_NULL_TERMINATED;
 
 GstController *gst_object_get_controller (GObject * object);
 gboolean gst_object_set_controller (GObject * object, GstController * controller);
