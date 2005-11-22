@@ -63,7 +63,7 @@ Ghostpads
 
 * Creating a ghostpad without a target
 
-   gst_ghost_pad_new_notarget (char *name, GstPadDirection dir)
+   gst_ghost_pad_new_no_target (char *name, GstPadDirection dir)
 
    1) create new GstGhostPad X
    2) X name set to @name

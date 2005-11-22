@@ -400,7 +400,7 @@ gst_event_new_eos (void)
 }
 
 /**
- * gst_event_new_newsegment:
+ * gst_event_new_new_segment:
  * @update: is this segment an update to a previous one
  * @rate: a new rate for playback
  * @format: The format of the segment values
@@ -429,7 +429,7 @@ gst_event_new_eos (void)
  * Returns: A new newsegment event.
  */
 GstEvent *
-gst_event_new_newsegment (gboolean update, gdouble rate, GstFormat format,
+gst_event_new_new_segment (gboolean update, gdouble rate, GstFormat format,
     gint64 start_value, gint64 stop_value, gint64 stream_time)
 {
   g_return_val_if_fail (rate != 0.0, NULL);
@@ -467,7 +467,7 @@ gst_event_new_newsegment (gboolean update, gdouble rate, GstFormat format,
 }
 
 /**
- * gst_event_parse_newsegment:
+ * gst_event_parse_new_segment:
  * @event: The event to query
  * @update: A pointer to the update flag of the segment
  * @rate: A pointer to the rate of the segment
@@ -479,9 +479,9 @@ gst_event_new_newsegment (gboolean update, gdouble rate, GstFormat format,
  * Get the start, stop and format in the newsegment event.
  */
 void
-gst_event_parse_newsegment (GstEvent * event, gboolean * update, gdouble * rate,
-    GstFormat * format, gint64 * start_value, gint64 * stop_value,
-    gint64 * stream_time)
+gst_event_parse_new_segment (GstEvent * event, gboolean * update,
+    gdouble * rate, GstFormat * format, gint64 * start_value,
+    gint64 * stop_value, gint64 * stream_time)
 {
   const GstStructure *structure;
 
@@ -542,7 +542,7 @@ gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
 
 /* buffersize event */
 /**
- * gst_event_new_buffersize:
+ * gst_event_new_buffer_size:
  * @format: buffer format
  * @minsize: minimum buffer size
  * @maxsize: maximum buffer size
@@ -556,7 +556,7 @@ gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
  * Returns: a new #GstEvent
  */
 GstEvent *
-gst_event_new_buffersize (GstFormat format, gint64 minsize,
+gst_event_new_buffer_size (GstFormat format, gint64 minsize,
     gint64 maxsize, gboolean async)
 {
   GST_CAT_INFO (GST_CAT_EVENT,
@@ -573,7 +573,7 @@ gst_event_new_buffersize (GstFormat format, gint64 minsize,
 }
 
 /**
- * gst_event_parse_buffersize:
+ * gst_event_parse_buffer_size:
  * @event: The event to query
  * @format: A pointer to store the format in
  * @minsize: A pointer to store the minsize in
@@ -583,7 +583,7 @@ gst_event_new_buffersize (GstFormat format, gint64 minsize,
  * Get the format, minsize, maxsize and async-flag in the buffersize event.
  */
 void
-gst_event_parse_buffersize (GstEvent * event, GstFormat * format,
+gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
     gint64 * minsize, gint64 * maxsize, gboolean * async)
 {
   const GstStructure *structure;

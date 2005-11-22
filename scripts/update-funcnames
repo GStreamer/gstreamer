@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -e
+
+if test -z "$1" -o -n "$2"; then
+    echo "Usage: $0 FILE" >&2
+    exit 1
+fi
+
+file=$1
+
+function subst () {
+    from=$1
+    to=$2
+    if grep -q $from $file; then
+        echo "$file: $from->$to"
+        perl -i -p -e "s/$from/$to/g" $file
+    fi
+}
+
+subst gst_event_new_newsegment gst_event_new_new_segment
+subst gst_event_parse_newsegment gst_event_parse_new_segment
+subst gst_event_new_buffersize gst_event_new_buffer_size
+subst gst_event_parse_buffersize gst_event_parse_buffer_size
+subst gst_ghost_pad_new_notarget gst_ghost_pad_new_no_target

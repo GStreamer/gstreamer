@@ -119,7 +119,7 @@ GST_START_TEST (test_ghost_pad_notarget)
   fail_unless (gst_bin_add (GST_BIN (b1), sink));
   fail_unless (gst_bin_add (GST_BIN (b1), b2));
 
-  srcpad = gst_ghost_pad_new_notarget ("src", GST_PAD_SRC);
+  srcpad = gst_ghost_pad_new_no_target ("src", GST_PAD_SRC);
   fail_unless (srcpad != NULL);
   sinkpad = gst_element_get_pad (sink, "sink");
   fail_unless (sinkpad != NULL);

@@ -586,7 +586,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
 
         /* the newsegment event is needed to bring the buffer timestamps to the
          * stream time and to drop samples outside of the playback segment. */
-        gst_event_parse_newsegment (event, &update, &rate, &format,
+        gst_event_parse_new_segment (event, &update, &rate, &format,
             &start, &stop, &time);
 
         basesink->have_newsegment = TRUE;

@@ -43,7 +43,7 @@ typedef struct _GstGhostPadClass GstGhostPadClass;
 GType		 gst_ghost_pad_get_type 	(void);
 
 GstPad*		 gst_ghost_pad_new		(const gchar *name, GstPad *target);
-GstPad*		 gst_ghost_pad_new_notarget	(const gchar *name, GstPadDirection dir);
+GstPad*		 gst_ghost_pad_new_no_target	(const gchar *name, GstPadDirection dir);
 
 GstPad*		 gst_ghost_pad_get_target	(GstGhostPad *gpad);
 gboolean	 gst_ghost_pad_set_target	(GstGhostPad *gpad, GstPad *newtarget);

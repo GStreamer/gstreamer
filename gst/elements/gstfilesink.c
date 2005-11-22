@@ -345,7 +345,7 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
       gint64 soffset, eoffset;
       GstFormat format;
 
-      gst_event_parse_newsegment (event, NULL, NULL, &format, &soffset,
+      gst_event_parse_new_segment (event, NULL, NULL, &format, &soffset,
           &eoffset, NULL);
 
       if (format == GST_FORMAT_BYTES) {

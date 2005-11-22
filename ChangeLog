@@ -1,3 +1,13 @@
+2005-11-22  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstevent.h (gst_event_new_new_segment)
+	(gst_event_parse_new_segment, gst_event_new_buffer_size)
+	(gst_event_parse_buffer_size, gst_ghost_pad_new_no_target):
+	Renamed from *_newsegment, *_buffersize, *_notarget.
+
+	* scripts/update-funcnames: New script, performs the changes
+	listed above.
+
 2005-11-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):

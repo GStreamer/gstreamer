@@ -34,7 +34,7 @@
  * are accociated with sink and source pads of the child elements.
  *
  * If the target pad is known at creation time, gst_ghost_pad_new() is the
- * function to use to get a ghost-pad. Otherwise one can use gst_ghost_pad_new_notarget()
+ * function to use to get a ghost-pad. Otherwise one can use gst_ghost_pad_new_no_target()
  * to create the ghost-pad and use gst_ghost_pad_set_target() to establish the
  * accociation later on.
  *
@@ -753,7 +753,7 @@ gst_ghost_pad_dispose (GObject * object)
 }
 
 /**
- * gst_ghost_pad_new_notarget:
+ * gst_ghost_pad_new_no_target:
  * @name: the name of the new pad, or NULL to assign a default name.
  * @dir: the direction of the ghostpad
  *
@@ -766,7 +766,7 @@ gst_ghost_pad_dispose (GObject * object)
  * Returns: a new #GstPad, or NULL in case of an error.
  */
 GstPad *
-gst_ghost_pad_new_notarget (const gchar * name, GstPadDirection dir)
+gst_ghost_pad_new_no_target (const gchar * name, GstPadDirection dir)
 {
   GstPad *ret;
 
@@ -801,7 +801,7 @@ gst_ghost_pad_new (const gchar * name, GstPad * target)
   g_return_val_if_fail (GST_IS_PAD (target), NULL);
   g_return_val_if_fail (!gst_pad_is_linked (target), NULL);
 
-  if ((ret = gst_ghost_pad_new_notarget (name, GST_PAD_DIRECTION (target)))) {
+  if ((ret = gst_ghost_pad_new_no_target (name, GST_PAD_DIRECTION (target)))) {
     g_object_set (G_OBJECT (ret),
         "template", GST_PAD_PAD_TEMPLATE (target), NULL);
     gst_ghost_pad_set_target (GST_GHOST_PAD (ret), target);

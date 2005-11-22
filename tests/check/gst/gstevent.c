@@ -65,7 +65,7 @@ GST_START_TEST (create_custom_events)
     gboolean update;
 
     event =
-        gst_event_new_newsegment (FALSE, 0.5, GST_FORMAT_TIME, 1, G_MAXINT64,
+        gst_event_new_new_segment (FALSE, 0.5, GST_FORMAT_TIME, 1, G_MAXINT64,
         0xdeadbeef);
     fail_if (event == NULL);
     fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT);
@@ -73,7 +73,7 @@ GST_START_TEST (create_custom_events)
     fail_unless (GST_EVENT_IS_DOWNSTREAM (event));
     fail_unless (GST_EVENT_IS_SERIALIZED (event));
 
-    gst_event_parse_newsegment (event, &update, &rate, &format, &start, &end,
+    gst_event_parse_new_segment (event, &update, &rate, &format, &start, &end,
         &base);
     fail_unless (update == FALSE);
     fail_unless (rate == 0.5);

@@ -1065,8 +1065,8 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
       gint64 start, stop, time;
       gboolean update;
 
-      gst_event_parse_newsegment (event, &update, &rate, &format, &start, &stop,
-          &time);
+      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
+          &stop, &time);
 
       gst_segment_set_newsegment (&trans->segment, update, rate, format, start,
           stop, time);

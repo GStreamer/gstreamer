@@ -449,7 +449,7 @@ gst_base_src_default_newsegment (GstBaseSrc * src)
   GST_DEBUG_OBJECT (src, "Sending newsegment from %" G_GINT64_FORMAT
       " to %" G_GINT64_FORMAT, src->segment.start, src->segment.stop);
 
-  event = gst_event_new_newsegment (FALSE, 1.0,
+  event = gst_event_new_new_segment (FALSE, 1.0,
       GST_FORMAT_BYTES, src->segment.start, src->segment.stop,
       src->segment.start);
 

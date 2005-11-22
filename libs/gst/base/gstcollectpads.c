@@ -605,7 +605,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
       GstFormat format;
       gboolean update;
 
-      gst_event_parse_newsegment (event, &update, &rate, &format,
+      gst_event_parse_new_segment (event, &update, &rate, &format,
           &start, &stop, &time);
 
       gst_segment_set_newsegment (&data->segment, update, rate, format,
