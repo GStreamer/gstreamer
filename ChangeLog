@@ -1,3 +1,10 @@
+2005-11-22  Michael Smith <msmith@fluendo.com>
+
+	* gst/gstutils.c: (gst_util_clock_time_scale):
+	* gst/gstutils.h:
+	* docs/gst/gstreamer-sections.txt:
+	  Rename method to have extra underscore.
+
 2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/Makefile.am:

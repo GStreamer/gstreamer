@@ -43,7 +43,7 @@ gdouble         gst_guint64_to_gdouble          (guint64 value);
 
 guint64		gst_util_uint64_scale		(guint64 val, guint64 num, guint64 denom);
 
-GstClockTime    gst_util_clocktime_scale        (GstClockTime val, gint num, gint denom);
+GstClockTime    gst_util_clock_time_scale        (GstClockTime val, gint num, gint denom);
 
 void		gst_print_pad_caps		(GString *buf, gint indent, GstPad *pad);
 void		gst_print_element_args		(GString *buf, gint indent, GstElement *element);
