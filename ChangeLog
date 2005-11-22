@@ -1,3 +1,8 @@
+2005-11-22  Edward Hervey  <edward@fluendo.com>
+
+	* gst/xoverlay.defs:
+	Update for API changes in XOverlay interface
+
 2005-11-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* examples/cutter.py:

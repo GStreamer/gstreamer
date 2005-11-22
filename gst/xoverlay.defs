@@ -19,16 +19,6 @@
   )
 )
 
-(define-method get_desired_size
-  (of-object "GstXOverlay")
-  (c-name "gst_x_overlay_get_desired_size")
-  (return-type "none")
-  (parameters
-    '("guint*" "width")
-    '("guint*" "height")
-  )
-)
-
 (define-method expose
   (of-object "GstXOverlay")
   (c-name "gst_x_overlay_expose")
@@ -40,18 +30,12 @@
   (c-name "gst_x_overlay_got_xwindow_id")
   (return-type "none")
   (parameters
-    '("XID" "xwindow_id")
+    '("gulong" "xwindow_id")
   )
 )
 
-(define-method got_desired_size
+(define-method prepare_xwindow_id
   (of-object "GstXOverlay")
-  (c-name "gst_x_overlay_got_desired_size")
+  (c-name "gst_x_overlay_prepare_xwindow_id")
   (return-type "none")
-  (parameters
-    '("guint" "width")
-    '("guint" "height")
-  )
 )
-
-
