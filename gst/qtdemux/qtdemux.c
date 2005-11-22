@@ -643,7 +643,7 @@ gst_qtdemux_loop_header (GstPad * pad)
               stream->samples[stream->sample_index].duration;
         }
         if (qtdemux->need_discont) {
-          GstEvent *event = gst_event_new_newsegment (FALSE, 1.0,
+          GstEvent *event = gst_event_new_new_segment (FALSE, 1.0,
               GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf),
               GST_CLOCK_TIME_NONE, 0);
           gint n;
