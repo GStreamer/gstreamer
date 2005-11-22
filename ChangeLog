@@ -1,5 +1,12 @@
 2005-11-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init), (gst_base_audio_sink_set_clock),
+	(gst_base_audio_sink_render), (gst_base_audio_sink_change_state):
+	And we provide a clock by default, of course...
+
+2005-11-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstaudioclock.c: (gst_audio_clock_init):
 	This clock can be slaved to a master clock now.
 
