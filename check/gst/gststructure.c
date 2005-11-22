@@ -99,6 +99,13 @@ GST_START_TEST (test_from_string)
   fail_unless ((val = gst_structure_get_value (structure, "value")) != NULL);
   fail_unless (GST_VALUE_HOLDS_FRACTION (val));
   gst_structure_free (structure);
+
+  s = "test-string,value=bar";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  fail_unless ((val = gst_structure_get_value (structure, "value")) != NULL);
+  fail_unless (G_VALUE_HOLDS_STRING (val));
+  gst_structure_free (structure);
 }
 
 GST_END_TEST;

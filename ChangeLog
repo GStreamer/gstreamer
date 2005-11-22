@@ -1,3 +1,10 @@
+2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/gst/gststructure.c: (GST_START_TEST):
+	* gst/gststructure.c: (gst_structure_parse_value):
+        Oops, broke automatic string type parsing.
+	Add a test to catch it in future.
+
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gsttagsetter.c (gst_tag_setter_get_tag_merge_mode) 
