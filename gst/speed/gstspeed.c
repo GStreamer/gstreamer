@@ -589,7 +589,7 @@ speed_sink_event (GstPad * pad, GstEvent * event)
       GstFormat format, conv_format;
       gint64 start_value, stop_value, base;
 
-      gst_event_parse_newsegment (event, &update, &rate, &format, &start_value,
+      gst_event_parse_new_segment (event, &update, &rate, &format, &start_value,
           &stop_value, &base);
 
       g_assert (filter->speed > 0);
@@ -631,7 +631,7 @@ speed_sink_event (GstPad * pad, GstEvent * event)
 
       gst_event_unref (event);
       event =
-          gst_event_new_newsegment (update, rate, format, start_value,
+          gst_event_new_new_segment (update, rate, format, start_value,
           stop_value, base);
 
 

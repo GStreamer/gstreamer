@@ -660,7 +660,7 @@ gst_faad_event (GstPad * pad, GstEvent * event)
       gint64 start, end, base;
       gdouble rate;
 
-      gst_event_parse_newsegment (event, &is_update, &rate, &fmt, &start,
+      gst_event_parse_new_segment (event, &is_update, &rate, &fmt, &start,
           &end, &base);
       if (fmt == GST_FORMAT_TIME) {
         GST_DEBUG ("Got NEWSEGMENT event in GST_FORMAT_TIME, passing on (%"
@@ -685,7 +685,7 @@ gst_faad_event (GstPad * pad, GstEvent * event)
               ("no average bitrate yet, sending newsegment with start at 0");
         }
         new_ev =
-            gst_event_new_newsegment (is_update, rate, GST_FORMAT_TIME,
+            gst_event_new_new_segment (is_update, rate, GST_FORMAT_TIME,
             new_start, new_end, base);
         gst_event_unref (event);
         event = new_ev;

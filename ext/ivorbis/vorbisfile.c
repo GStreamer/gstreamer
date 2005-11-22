@@ -782,7 +782,7 @@ gst_ivorbisfile_loop (GstPad * pad)
         samples = (gint64) (ov_pcm_tell (&ivorbisfile->vf));
 
         event =
-            gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, time,
+            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, time,
             GST_CLOCK_TIME_NONE, 0);
 
         gst_pad_push_event (ivorbisfile->srcpad, event);

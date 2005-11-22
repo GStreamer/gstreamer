@@ -1,3 +1,12 @@
+2005-11-22  Andy Wingo  <wingo@pobox.com>
+
+	* ext/faad/gstfaad.c (gst_faad_event)
+	* ext/ivorbis/vorbisfile.c (gst_ivorbisfile_loop)
+	* gst/qtdemux/qtdemux.c (gst_qtdemux_loop_header)
+	* gst/speed/gstspeed.c (speed_sink_event)
+	* gst/tta/gstttaparse.c (gst_tta_parse_src_event)
+	(gst_tta_parse_parse_header): Run update-funcnames.
+
 2005-11-21  Michael Smith <msmith@fluendo.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_setcaps), (gst_faad_event):
