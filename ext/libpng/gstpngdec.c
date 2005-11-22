@@ -155,7 +155,8 @@ gst_pngdec_init (GstPngDec * pngdec)
   pngdec->width = -1;
   pngdec->height = -1;
   pngdec->bpp = -1;
-  pngdec->fps = 0.0;
+  pngdec->fps_n = 0;
+  pngdec->fps_d = 1;
 }
 
 static void
@@ -336,7 +337,7 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
       "width", G_TYPE_INT, pngdec->width,
       "height", G_TYPE_INT, pngdec->height,
       "bpp", G_TYPE_INT, pngdec->bpp,
-      "framerate", G_TYPE_DOUBLE, pngdec->fps, NULL);
+      "framerate", GST_TYPE_FRACTION, pngdec->fps_n, pngdec->fps_d, NULL);
 
   templ = gst_static_pad_template_get (&gst_pngdec_src_pad_template);
 

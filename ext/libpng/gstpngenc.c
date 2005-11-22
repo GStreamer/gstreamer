@@ -63,7 +63,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/png, "
         "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 0.0, MAX ]")
+        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0.0, MAX ]")
     );
 
 static GstStaticPadTemplate pngenc_sink_template =
@@ -147,7 +147,7 @@ static gboolean
 gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstPngEnc *pngenc;
-  gdouble fps;
+  const GValue *fps;
   GstStructure *structure;
   GstCaps *pcaps;
   gboolean ret = TRUE;
@@ -158,15 +158,17 @@ gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &pngenc->width);
   gst_structure_get_int (structure, "height", &pngenc->height);
-  gst_structure_get_double (structure, "framerate", &fps);
+  fps = gst_structure_get_value (structure, "framerate");
   gst_structure_get_int (structure, "bpp", &pngenc->bpp);
 
   opeer = gst_pad_get_peer (pngenc->srcpad);
   if (opeer) {
     pcaps = gst_caps_new_simple ("image/png",
-        "framerate", G_TYPE_DOUBLE, fps,
         "width", G_TYPE_INT, pngenc->width,
         "height", G_TYPE_INT, pngenc->height, NULL);
+    structure = gst_caps_get_structure (pcaps, 0);
+    gst_structure_set_value (structure, "framerate", fps);
+
     if (gst_pad_accept_caps (opeer, pcaps)) {
       gst_pad_set_caps (pngenc->srcpad, pcaps);
     } else

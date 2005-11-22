@@ -51,7 +51,8 @@ struct _GstTextOverlay {
 
     gint                  width;
     gint                  height;
-    gdouble               framerate;
+    gint                  fps_n;
+    gint                  fps_d;
 
     GstTextOverlayVAlign  valign;
     GstTextOverlayHAlign  halign;

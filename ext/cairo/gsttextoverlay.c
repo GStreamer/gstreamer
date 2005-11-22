@@ -251,7 +251,8 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   overlay->scale = 20;
   gst_text_overlay_font_init (overlay);
 
-  overlay->framerate = 0.0;
+  overlay->fps_n = 0;
+  overlay->fps_d = 1;
 
   overlay->collect = gst_collect_pads_new ();
 
@@ -530,7 +531,7 @@ gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
   GstTextOverlay *overlay;
   GstStructure *structure;
   gboolean ret = FALSE;
-  gdouble fps = 0.0;
+  const GValue *fps;
 
   if (!GST_PAD_IS_SINK (pad))
     return TRUE;
@@ -542,13 +543,16 @@ gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
   overlay->width = 0;
   overlay->height = 0;
   structure = gst_caps_get_structure (caps, 0);
+  fps = gst_structure_get_value (structure, "framerate");
+
   if (gst_structure_get_int (structure, "width", &overlay->width) &&
-      gst_structure_get_int (structure, "height", &overlay->height)) {
+      gst_structure_get_int (structure, "height", &overlay->height) &&
+      fps != NULL) {
     ret = gst_pad_set_caps (overlay->srcpad, caps);
   }
 
-  (void) gst_structure_get_double (structure, "framerate", &fps);
-  overlay->framerate = fps;
+  overlay->fps_n = gst_value_get_fraction_numerator (fps);
+  overlay->fps_d = gst_value_get_fraction_denominator (fps);
 
   return ret;
 }
@@ -780,8 +784,9 @@ gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
 
   if (GST_BUFFER_DURATION (video_frame) != GST_CLOCK_TIME_NONE) {
     frame_end = now + GST_BUFFER_DURATION (video_frame);
-  } else if (overlay->framerate > 0.0) {
-    frame_end = now + (GST_SECOND / overlay->framerate);
+  } else if (overlay->fps_n > 0) {
+    frame_end = now + gst_util_clock_time_scale (GST_SECOND,
+        overlay->fps_d, overlay->fps_n);
   } else {
     /* magic value, does not really matter since texts
      * tend to span quite a few frames in practice anyway */

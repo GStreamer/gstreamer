@@ -1,5 +1,30 @@
 2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_init),
+	(gst_text_overlay_setcaps), (gst_text_overlay_collected):
+	* ext/cairo/gsttextoverlay.h:
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_link):
+	* ext/gdk_pixbuf/gstgdkpixbuf.h:
+	* ext/libpng/gstpngdec.c: (gst_pngdec_init),
+	(gst_pngdec_caps_create_and_set):
+	* ext/libpng/gstpngdec.h:
+	* ext/libpng/gstpngenc.c: (gst_pngenc_setcaps):
+	* gst/alpha/gstalphacolor.c: (gst_alpha_color_set_caps):
+	* gst/avi/gstavimux.c: (gst_avimux_init),
+	(gst_avimux_vidsinkconnect):
+	* gst/flx/gstflxdec.c: (gst_flxdec_chain):
+	* gst/goom/gstgoom.c: (gst_goom_init), (gst_goom_src_setcaps),
+	(gst_goom_src_negotiate), (gst_goom_chain):
+	* gst/goom/gstgoom.h:
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_video_caps):
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_video_pad_setcaps):
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  More fractional framerate conversions 
+
+2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/aalib/gstaasink.c: (gst_aasink_fixate):
 	* gst/debug/gstnavigationtest.c:
 	(gst_navigationtest_handle_src_event):

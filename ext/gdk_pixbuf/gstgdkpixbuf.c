@@ -107,14 +107,18 @@ static GstPadLinkReturn
 gst_gdk_pixbuf_sink_link (GstPad * pad, const GstCaps * caps)
 {
   GstGdkPixbuf *filter;
+  const GValue *fps;
 
   filter = GST_GDK_PIXBUF (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, GST_PAD_LINK_REFUSED);
   g_return_val_if_fail (GST_IS_GDK_PIXBUF (filter), GST_PAD_LINK_REFUSED);
 
-  filter->framerate = 1.0;
-  gst_structure_get_double (gst_caps_get_structure (caps, 0), "framerate",
-      &filter->framerate);
+  fps = gst_structure_get_value (gst_caps_get_structure (caps, 0), "framerate");
+  if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
+    filter->fps_n = gst_value_get_fraction_numerator (fps);
+    filter->fps_d = gst_value_get_fraction_denominator (fps);
+  } else
+    return GST_PAD_LINK_REFUSED;
 
   return GST_PAD_LINK_OK;
 }

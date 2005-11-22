@@ -53,7 +53,8 @@ struct _GstGoom
   guint64 samples_consumed;
 
   /* video state */
-  gdouble fps;
+  gint fps_n;
+  gint fps_d;
   gint width;
   gint height;
   gint channels;

@@ -498,8 +498,8 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
       gst_caps_set_simple (caps,
           "width", G_TYPE_INT, flxh->width,
           "height", G_TYPE_INT, flxh->height,
-          "framerate", G_TYPE_DOUBLE,
-          (gdouble) (GST_SECOND / flxdec->frame_time), NULL);
+          "framerate", GST_TYPE_FRACTION, (gint) GST_MSECOND,
+          (gint) flxdec->frame_time / 1000, NULL);
 
       gst_pad_set_caps (flxdec->srcpad, caps);
       gst_caps_unref (caps);

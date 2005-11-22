@@ -58,7 +58,8 @@ struct _GstPngDec
   gint height;
   gint bpp;
   gint color_type;
-  gdouble fps;
+  gint fps_n;
+  gint fps_d;
 };
 
 struct _GstPngDecClass

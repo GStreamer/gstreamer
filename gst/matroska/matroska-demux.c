@@ -3069,21 +3069,29 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         }
 
         if (context->default_duration > 0) {
-          gdouble framerate = (gdouble) GST_SECOND / context->default_duration;
+          GValue fps_double = { 0 };
+          GValue fps_fraction = { 0 };
 
-          gst_structure_set (structure,
-              "framerate", G_TYPE_DOUBLE, framerate, NULL);
+          g_value_init (&fps_double, G_TYPE_DOUBLE);
+          g_value_init (&fps_fraction, GST_TYPE_FRACTION);
+          g_value_set_double (&fps_double,
+              GST_SECOND / context->default_duration);
+          g_value_transform (&fps_double, &fps_fraction);
+
+          gst_structure_set_value (structure, "framerate", &fps_fraction);
+          g_value_unset (&fps_double);
+          g_value_unset (&fps_fraction);
         } else {
           /* sort of a hack to get most codecs to support,
            * even if the default_duration is missing */
-          gst_structure_set (structure, "framerate", G_TYPE_DOUBLE,
-              (gdouble) 25.0, NULL);
+          gst_structure_set (structure, "framerate", GST_TYPE_FRACTION,
+              25, 1, NULL);
         }
       } else {
         gst_structure_set (structure,
             "width", GST_TYPE_INT_RANGE, 16, 4096,
             "height", GST_TYPE_INT_RANGE, 16, 4096,
-            "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
       }
     }
   }

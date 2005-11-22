@@ -193,7 +193,7 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   GstAlphaColor *alpha;
   GstStructure *structure;
   gboolean ret;
-  gdouble fps;
+  const GValue *fps;
   gint red_mask;
 
   alpha = GST_ALPHA_COLOR (btrans);
@@ -201,7 +201,8 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   ret = gst_structure_get_int (structure, "width", &alpha->in_width);
   ret &= gst_structure_get_int (structure, "height", &alpha->in_height);
-  ret &= gst_structure_get_double (structure, "framerate", &fps);
+  fps = gst_structure_get_value (structure, "framerate");
+  ret &= (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps));
   ret &= gst_structure_get_int (structure, "red_mask", &red_mask);
 
   if (!ret)

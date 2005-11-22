@@ -71,51 +71,51 @@ static GstStaticPadTemplate video_sink_factory =
         "format = (fourcc) { YUY2, I420 }, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) [ 0, MAX ]; "
+        "framerate = (fraction) [ 0, MAX ]; "
         "image/jpeg, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) [ 0, MAX ]; "
+        "framerate = (fraction) [ 0, MAX ]; "
         "video/x-divx, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) [ 0, MAX ], "
+        "framerate = (fraction) [ 0, MAX ], "
         "divxversion = (int) [ 3, 5 ]; "
         "video/x-xvid, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) [ 0, MAX ]; "
+        "framerate = (fraction) [ 0, MAX ]; "
         "video/x-3ivx, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) [ 0, MAX ]; "
+        "framerate = (fraction) [ 0, MAX ]; "
         "video/x-msmpeg, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) [ 0, MAX ], "
+        "framerate = (fraction) [ 0, MAX ], "
         "msmpegversion = (int) [ 41, 43 ]; "
         "video/mpeg, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) [ 0, MAX ], "
+        "framerate = (fraction) [ 0, MAX ], "
         "mpegversion = (int) 1, "
         "systemstream = (boolean) FALSE; "
         "video/x-h263, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) [ 0, MAX ]; "
+        "framerate = (fraction) [ 0, MAX ]; "
         "video/x-h264, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (double) [ 0, MAX ]; "
+        "framerate = (fraction) [ 0, MAX ]; "
         "video/x-dv, "
         "width = (int) 720, "
         "height = (int) { 576, 480 }, "
-        "framerate = (double) [ 0, MAX ], "
+        "framerate = (fraction) [ 0, MAX ], "
         "systemstream = (boolean) FALSE; "
         "video/x-huffyuv, "
         "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 0, MAX ]")
+        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [ 0, MAX ]")
     );
 
 static GstStaticPadTemplate audio_sink_factory =
@@ -277,7 +277,7 @@ gst_avimux_init (GstAviMux * avimux)
   memset (&(avimux->auds_hdr), 0, sizeof (gst_riff_strh));
   memset (&(avimux->auds), 0, sizeof (gst_riff_strf_auds));
   avimux->vids_hdr.type = GST_MAKE_FOURCC ('v', 'i', 'd', 's');
-  avimux->vids_hdr.rate = 1000000;
+  avimux->vids_hdr.rate = 1;
   avimux->avi_hdr.max_bps = 10000000;
   avimux->auds_hdr.type = GST_MAKE_FOURCC ('a', 'u', 'd', 's');
   avimux->vids_hdr.quality = 0xFFFFFFFF;
@@ -299,7 +299,7 @@ gst_avimux_vidsinkconnect (GstPad * pad, const GstCaps * vscaps)
   GstAviMux *avimux;
   GstStructure *structure;
   const gchar *mimetype;
-  gdouble fps = 0.;
+  const GValue *fps;
   gboolean ret;
 
   avimux = GST_AVIMUX (gst_pad_get_parent (pad));
@@ -315,12 +315,13 @@ gst_avimux_vidsinkconnect (GstPad * pad, const GstCaps * vscaps)
   avimux->vids.planes = 1;
   ret = gst_structure_get_int (structure, "width", &avimux->vids.width);
   ret &= gst_structure_get_int (structure, "height", &avimux->vids.height);
-  ret &= gst_structure_get_double (structure, "framerate", &fps);
+  fps = gst_structure_get_value (structure, "framerate");
+  ret &= (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps));
   if (!ret)
     return GST_PAD_LINK_REFUSED;
 
-  if (fps != 0.)
-    avimux->vids_hdr.scale = avimux->vids_hdr.rate / fps;
+  avimux->vids_hdr.rate = gst_value_get_fraction_numerator (fps);
+  avimux->vids_hdr.scale = gst_value_get_fraction_denominator (fps);
 
   if (!strcmp (mimetype, "video/x-raw-yuv")) {
     guint32 format;

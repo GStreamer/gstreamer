@@ -174,7 +174,8 @@ gst_goom_init (GstGoom * goom)
 
   goom->width = 320;
   goom->height = 200;
-  goom->fps = 25.;              /* desired frame rate */
+  goom->fps_n = 25;             /* desired frame rate */
+  goom->fps_d = 1;              /* desired frame rate */
   goom->channels = 0;
   goom->sample_rate = 0;
   goom->audio_basetime = GST_CLOCK_TIME_NONE;
@@ -221,14 +222,22 @@ gst_goom_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstGoom *goom;
   GstStructure *structure;
+  const GValue *fps;
 
   goom = GST_GOOM (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "width", &goom->width);
-  gst_structure_get_int (structure, "height", &goom->height);
-  gst_structure_get_double (structure, "framerate", &goom->fps);
+  if (!gst_structure_get_int (structure, "width", &goom->width) ||
+      !gst_structure_get_int (structure, "height", &goom->height))
+    return FALSE;
+
+  fps = gst_structure_get_value (structure, "framerate");
+  if (fps == NULL || !GST_VALUE_HOLDS_FRACTION (fps))
+    return FALSE;
+
+  goom->fps_n = gst_value_get_fraction_numerator (fps);
+  goom->fps_d = gst_value_get_fraction_denominator (fps);
 
   goom_set_resolution (goom->width, goom->height);
 
@@ -241,6 +250,7 @@ gst_goom_src_negotiate (GstGoom * goom)
   GstCaps *othercaps, *target, *intersect;
   GstStructure *structure;
   const GstCaps *templ;
+  GValue fps = { 0 };
 
   templ = gst_pad_get_pad_template_caps (goom->srcpad);
 
@@ -262,7 +272,11 @@ gst_goom_src_negotiate (GstGoom * goom)
   structure = gst_caps_get_structure (target, 0);
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
-  gst_structure_fixate_field_nearest_double (structure, "framerate", 30.0);
+
+  g_value_init (&fps, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&fps, 30, 1);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate", &fps);
+  g_value_unset (&fps);
 
   gst_pad_set_caps (goom->srcpad, target);
   gst_caps_unref (target);
@@ -326,7 +340,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
     goom->audio_basetime = 0;
 
   bytesperread = GOOM_SAMPLES * goom->channels * sizeof (gint16);
-  samples_per_frame = goom->sample_rate / goom->fps;
+  samples_per_frame = goom->sample_rate * goom->fps_d / goom->fps_n;
   data = (gint16 *) GST_BUFFER_DATA (bufin);
 
   gst_adapter_push (goom->adapter, bufin);
@@ -351,7 +365,8 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
     GstClockTimeDiff frame_duration;
     gint i;
 
-    frame_duration = GST_SECOND / goom->fps;
+    frame_duration = gst_util_clock_time_scale (GST_SECOND, goom->fps_d,
+        goom->fps_n);
     data = (const guint16 *) gst_adapter_peek (goom->adapter, bytesperread);
 
     if (goom->channels == 2) {

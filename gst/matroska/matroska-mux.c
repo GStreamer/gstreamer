@@ -56,7 +56,7 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
 #define COMMON_VIDEO_CAPS \
   "width = (int) [ 16, 4096 ], " \
   "height = (int) [ 16, 4096 ], " \
-  "framerate = (double) [ 0, MAX ]"
+  "framerate = (fraction) [ 0, MAX ]"
 
 static GstStaticPadTemplate videosink_templ =
     GST_STATIC_PAD_TEMPLATE ("video_%d",
@@ -424,7 +424,7 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstMatroskaPad *collect_pad;
   const gchar *mimetype;
   gint width, height, pixel_width, pixel_height;
-  gdouble framerate;
+  const GValue *framerate;
   GstStructure *structure;
   gboolean ret;
 
@@ -444,11 +444,15 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   /* get general properties */
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
-  gst_structure_get_double (structure, "framerate", &framerate);
+  framerate = gst_structure_get_value (structure, "framerate");
+  if (framerate == NULL || !GST_VALUE_HOLDS_FRACTION (framerate))
+    return FALSE;
 
   videocontext->pixel_width = width;
   videocontext->pixel_height = height;
-  context->default_duration = GST_SECOND / framerate;
+  context->default_duration = gst_util_clock_time_scale (GST_SECOND,
+      gst_value_get_fraction_numerator (framerate),
+      gst_value_get_fraction_denominator (framerate));
 
   ret = gst_structure_get_int (structure, "pixel_width", &pixel_width);
   ret &= gst_structure_get_int (structure, "pixel_height", &pixel_height);
