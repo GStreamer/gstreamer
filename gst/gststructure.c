@@ -1633,7 +1633,8 @@ gst_structure_parse_value (gchar * str,
     c = *value_end;
     *value_end = 0;
     if (type == G_TYPE_INVALID) {
-      GType try_types[] = { G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_STRING };
+      GType try_types[] =
+          { G_TYPE_INT, G_TYPE_DOUBLE, GST_TYPE_FRACTION, G_TYPE_STRING };
       int i;
 
       for (i = 0; i < 3; i++) {

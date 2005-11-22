@@ -1,3 +1,14 @@
+2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/gst/capslist.h:
+	  Comment test cases
+	* check/gst/gststructure.c: (GST_START_TEST),
+	(gst_structure_suite):
+	  Test automatic value type detection in gst_structure_from_string.
+	* gst/gststructure.c: (gst_structure_parse_value):
+	  Add fraction as a type we try and guess automatically in
+	  caps/structure strings.
+
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
 	patch by: Torsten Schoenfeld <kaffeetisch gmx de>

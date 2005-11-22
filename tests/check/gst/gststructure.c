@@ -72,6 +72,37 @@ GST_START_TEST (test_from_string_int)
 
 GST_END_TEST;
 
+/* Test type conversions from string */
+GST_START_TEST (test_from_string)
+{
+  GstStructure *structure;
+  const gchar *s;
+  const GValue *val;
+
+  s = "test-string,value=1";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  fail_unless ((val = gst_structure_get_value (structure, "value")) != NULL);
+  fail_unless (G_VALUE_HOLDS_INT (val));
+  gst_structure_free (structure);
+
+  s = "test-string,value=1.0";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  fail_unless ((val = gst_structure_get_value (structure, "value")) != NULL);
+  fail_unless (G_VALUE_HOLDS_DOUBLE (val));
+  gst_structure_free (structure);
+
+  s = "test-string,value=1/1";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  fail_unless ((val = gst_structure_get_value (structure, "value")) != NULL);
+  fail_unless (GST_VALUE_HOLDS_FRACTION (val));
+  gst_structure_free (structure);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_value_suite (void)
 {
@@ -110,6 +141,7 @@ gst_structure_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_from_string_int);
+  tcase_add_test (tc_chain, test_from_string);
   tcase_add_test (tc_chain, test_structure_new);
   return s;
 }
