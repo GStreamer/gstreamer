@@ -93,9 +93,9 @@ gst_videotestsrc_pattern_get_type (void)
 {
   static GType videotestsrc_pattern_type = 0;
   static GEnumValue pattern_types[] = {
-    {GST_VIDEOTESTSRC_SMPTE, "smpte", "SMPTE 100% color bars"},
-    {GST_VIDEOTESTSRC_SNOW, "snow", "Random (television snow)"},
-    {GST_VIDEOTESTSRC_BLACK, "black", "100% Black"},
+    {GST_VIDEOTESTSRC_SMPTE, "SMPTE 100% color bars", "smpte"},
+    {GST_VIDEOTESTSRC_SNOW, "Random (television snow)", "snow"},
+    {GST_VIDEOTESTSRC_BLACK, "100% Black", "black"},
     {0, NULL, NULL},
   };
 

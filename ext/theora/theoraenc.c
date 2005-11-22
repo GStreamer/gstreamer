@@ -52,9 +52,9 @@ gst_border_mode_get_type (void)
 {
   static GType border_mode_type = 0;
   static GEnumValue border_mode[] = {
-    {BORDER_NONE, "BORDER_NONE", "No Border"},
-    {BORDER_BLACK, "BORDER_BLACK", "Black Border"},
-    {BORDER_MIRROR, "BORDER_MIRROR", "Mirror image in borders"},
+    {BORDER_NONE, "No Border", "none"},
+    {BORDER_BLACK, "Black Border", "black"},
+    {BORDER_MIRROR, "Mirror image in borders", "mirror"},
     {0, NULL, NULL},
   };
 

@@ -56,12 +56,12 @@ gst_stream_type_get_type (void)
 {
   static GType stream_type_type = 0;
   static GEnumValue stream_type[] = {
-    {GST_STREAM_TYPE_UNKNOWN, "GST_STREAM_TYPE_UNKNOWN", "Unknown stream"},
-    {GST_STREAM_TYPE_AUDIO, "GST_STREAM_TYPE_AUDIO", "Audio stream"},
-    {GST_STREAM_TYPE_VIDEO, "GST_STREAM_TYPE_VIDEO", "Video stream"},
-    {GST_STREAM_TYPE_TEXT, "GST_STREAM_TYPE_TEXT", "Text stream"},
-    {GST_STREAM_TYPE_ELEMENT, "GST_STREAM_TYPE_ELEMENT",
-        "Stream handled by element"},
+    {GST_STREAM_TYPE_UNKNOWN, "Unknown stream", "unknown"},
+    {GST_STREAM_TYPE_AUDIO, "Audio stream", "audio"},
+    {GST_STREAM_TYPE_VIDEO, "Video stream", "video"},
+    {GST_STREAM_TYPE_TEXT, "Text stream", "text"},
+    {GST_STREAM_TYPE_ELEMENT,
+        "Stream handled by element", "element"},
     {0, NULL, NULL},
   };
 

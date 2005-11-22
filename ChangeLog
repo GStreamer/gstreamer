@@ -1,3 +1,28 @@
+2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/libs/tmpl/gstaudio.sgml:
+	  update
+	* ext/cdparanoia/gstcdparanoia.c: (gst_paranoia_mode_get_type),
+	(gst_paranoia_endian_get_type):
+	* ext/theora/theoraenc.c: (gst_border_mode_get_type):
+	* gst/audioscale/gstaudioscale.c: (gst_audioscale_method_get_type):
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audiostestsrc_wave_get_type):
+	* gst/playback/gststreaminfo.c: (gst_stream_type_get_type):
+	* gst/tcp/gstfdset.c: (gst_fdset_mode_get_type):
+	* gst/tcp/gstmultifdsink.c: (gst_recover_policy_get_type),
+	(gst_sync_method_get_type), (gst_unit_type_get_type),
+	(gst_client_status_get_type), (gst_multifdsink_class_init),
+	(gst_multifdsink_new_client), (gst_multifdsink_recover_client),
+	(gst_multifdsink_queue_buffer), (gst_multifdsink_set_property),
+	(gst_multifdsink_get_property):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/videoscale/gstvideoscale.c: (gst_videoscale_method_get_type):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_pattern_get_type):
+	  remove deprecated properties
+	  fix up enums to correctly have short lowercase dashed nicks
+
 2005-11-22  Michael Smith <msmith@fluendo.com>
 
 	* gst/videorate/gstvideorate.c: (gst_videorate_chain):

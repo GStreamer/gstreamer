@@ -95,13 +95,13 @@ gst_audiostestsrc_wave_get_type (void)
 {
   static GType audiostestsrc_wave_type = 0;
   static GEnumValue audiostestsrc_waves[] = {
-    {GST_AUDIOTESTSRC_WAVE_SINE, "0", "Sine"},
-    {GST_AUDIOTESTSRC_WAVE_SQUARE, "1", "Square"},
-    {GST_AUDIOTESTSRC_WAVE_SAW, "2", "Saw"},
-    {GST_AUDIOTESTSRC_WAVE_TRIANGLE, "3", "Triangle"},
-    {GST_AUDIOTESTSRC_WAVE_SILENCE, "4", "Silence"},
-    {GST_AUDIOTESTSRC_WAVE_WHITE_NOISE, "5", "White noise"},
-    {GST_AUDIOTESTSRC_WAVE_PINK_NOISE, "6", "Pink noise"},
+    {GST_AUDIOTESTSRC_WAVE_SINE, "Sine", "sine"},
+    {GST_AUDIOTESTSRC_WAVE_SQUARE, "Square", "square"},
+    {GST_AUDIOTESTSRC_WAVE_SAW, "Saw", "saw"},
+    {GST_AUDIOTESTSRC_WAVE_TRIANGLE, "Triangle", "triangle"},
+    {GST_AUDIOTESTSRC_WAVE_SILENCE, "Silence", "silence"},
+    {GST_AUDIOTESTSRC_WAVE_WHITE_NOISE, "White noise", "white-noise"},
+    {GST_AUDIOTESTSRC_WAVE_PINK_NOISE, "Pink noise", "pink-noise"},
     {0, NULL, NULL},
   };
 

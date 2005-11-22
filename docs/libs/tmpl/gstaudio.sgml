@@ -48,34 +48,6 @@ a support library for audio elements
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_audio_frame_rate ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_audio_length ##### -->
-<para>
-
-</para>
-
-@pad: 
-@buf: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gst_audio_highest_sample_value ##### -->
-<para>
-
-</para>
-
-@pad: 
-@Returns: 
-
-
 <!-- ##### FUNCTION gst_audio_is_buffer_framed ##### -->
 <para>
 

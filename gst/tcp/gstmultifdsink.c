@@ -105,7 +105,7 @@ enum
 #define DEFAULT_UNITS_SOFT_MAX		-1
 #define DEFAULT_RECOVER_POLICY		 GST_RECOVER_POLICY_NONE
 #define DEFAULT_TIMEOUT			 0
-#define DEFAULT_SYNC_METHOD		 GST_SYNC_METHOD_NONE
+#define DEFAULT_SYNC_METHOD		 GST_SYNC_METHOD_LATEST
 
 enum
 {
@@ -125,7 +125,6 @@ enum
 
   ARG_RECOVER_POLICY,
   ARG_TIMEOUT,
-  ARG_SYNC_CLIENTS,             /* deprecated */
   ARG_SYNC_METHOD,
   ARG_BYTES_TO_SERVE,
   ARG_BYTES_SERVED,
@@ -137,14 +136,14 @@ gst_recover_policy_get_type (void)
 {
   static GType recover_policy_type = 0;
   static GEnumValue recover_policy[] = {
-    {GST_RECOVER_POLICY_NONE, "GST_RECOVER_POLICY_NONE",
-        "Do not try to recover"},
-    {GST_RECOVER_POLICY_RESYNC_START, "GST_RECOVER_POLICY_RESYNC_START",
-        "Resync client to most recent buffer"},
-    {GST_RECOVER_POLICY_RESYNC_SOFT, "GST_RECOVER_POLICY_RESYNC_SOFT",
-        "Resync client to soft limit"},
-    {GST_RECOVER_POLICY_RESYNC_KEYFRAME, "GST_RECOVER_POLICY_RESYNC_KEYFRAME",
-        "Resync client to most recent keyframe"},
+    {GST_RECOVER_POLICY_NONE,
+        "Do not try to recover", "none"},
+    {GST_RECOVER_POLICY_RESYNC_LATEST,
+        "Resync client to latest buffer", "latest"},
+    {GST_RECOVER_POLICY_RESYNC_SOFT_LIMIT,
+        "Resync client to soft limit", "soft-limit"},
+    {GST_RECOVER_POLICY_RESYNC_KEYFRAME,
+        "Resync client to most recent keyframe", "keyframe"},
     {0, NULL, NULL},
   };
 
@@ -161,12 +160,13 @@ gst_sync_method_get_type (void)
 {
   static GType sync_method_type = 0;
   static GEnumValue sync_method[] = {
-    {GST_SYNC_METHOD_NONE, "GST_SYNC_METHOD_NONE",
-        "Serve new client the latest buffer"},
-    {GST_SYNC_METHOD_WAIT, "GST_SYNC_METHOD_WAIT",
-        "Make the new client wait for the next keyframe"},
-    {GST_SYNC_METHOD_BURST, "GST_SYNC_METHOD_BURST",
-        "Serve the new client the last keyframe, aka burst"},
+    {GST_SYNC_METHOD_LATEST,
+        "Serve starting from the latest buffer", "latest"},
+    {GST_SYNC_METHOD_NEXT_KEYFRAME,
+        "Serve starting from the next keyframe", "next-keyframe"},
+    {GST_SYNC_METHOD_LATEST_KEYFRAME,
+        "Serve everything since the latest keyframe (burst)",
+          "latest-keyframe"},
     {0, NULL, NULL},
   };
 
@@ -183,9 +183,9 @@ gst_unit_type_get_type (void)
 {
   static GType unit_type_type = 0;
   static GEnumValue unit_type[] = {
-    {GST_UNIT_TYPE_BUFFERS, "GST_UNIT_TYPE_BUFFERS", "Buffers"},
-    {GST_UNIT_TYPE_BYTES, "GST_UNIT_TYPE_BYTES", "Bytes"},
-    {GST_UNIT_TYPE_TIME, "GST_UNIT_TYPE_TIME", "Time"},
+    {GST_UNIT_TYPE_BUFFERS, "Buffers", "buffers"},
+    {GST_UNIT_TYPE_BYTES, "Bytes", "bytes"},
+    {GST_UNIT_TYPE_TIME, "Time", "time"},
     {0, NULL, NULL},
   };
 
@@ -202,12 +202,12 @@ gst_client_status_get_type (void)
 {
   static GType client_status_type = 0;
   static GEnumValue client_status[] = {
-    {GST_CLIENT_STATUS_OK, "GST_CLIENT_STATUS_OK", "OK"},
-    {GST_CLIENT_STATUS_CLOSED, "GST_CLIENT_STATUS_CLOSED", "Closed"},
-    {GST_CLIENT_STATUS_REMOVED, "GST_CLIENT_STATUS_REMOVED", "Removed"},
-    {GST_CLIENT_STATUS_SLOW, "GST_CLIENT_STATUS_SLOW", "Too slow"},
-    {GST_CLIENT_STATUS_ERROR, "GST_CLIENT_STATUS_ERROR", "Error"},
-    {GST_CLIENT_STATUS_DUPLICATE, "GST_CLIENT_STATUS_DUPLICATE", "Duplicate"},
+    {GST_CLIENT_STATUS_OK, "ok"},
+    {GST_CLIENT_STATUS_CLOSED, "Closed", "closed"},
+    {GST_CLIENT_STATUS_REMOVED, "Removed", "removed"},
+    {GST_CLIENT_STATUS_SLOW, "Too slow", "slow"},
+    {GST_CLIENT_STATUS_ERROR, "Error", "error"},
+    {GST_CLIENT_STATUS_DUPLICATE, "Duplicate", "duplicate"},
     {0, NULL, NULL},
   };
 
@@ -322,10 +322,6 @@ gst_multifdsink_class_init (GstMultiFdSinkClass * klass)
       g_param_spec_uint64 ("timeout", "Timeout",
           "Maximum inactivity timeout in nanoseconds for a client (0 = no limit)",
           0, G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC_CLIENTS,
-      g_param_spec_boolean ("sync-clients", "Sync clients",
-          "(DEPRECATED) Sync clients to a keyframe",
-          DEFAULT_SYNC_METHOD == GST_SYNC_METHOD_WAIT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC_METHOD,
       g_param_spec_enum ("sync-method", "Sync Method",
           "How to sync new clients to the stream",
@@ -860,7 +856,7 @@ gst_multifdsink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
   gint result;
 
   switch (sink->sync_method) {
-    case GST_SYNC_METHOD_WAIT:
+    case GST_SYNC_METHOD_NEXT_KEYFRAME:
     {
       /* if the buffer at the head of the queue is a sync point we can proceed,
        * else we need to skip the buffer and wait for a new one */
@@ -895,12 +891,12 @@ gst_multifdsink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
       }
       break;
     }
-    case GST_SYNC_METHOD_BURST:
+    case GST_SYNC_METHOD_LATEST_KEYFRAME:
     {
       /* FIXME for new clients we constantly scan the complete
        * buffer queue for sync point whenever a buffer is added. This is
        * suboptimal because if we cannot find a sync point the first time,
-       * the algorithm should behave as GST_SYNC_METHOD_WAIT */
+       * the algorithm should behave as GST_SYNC_METHOD_NEXT_KEYFRAME */
       gint i, len;
 
       GST_LOG_OBJECT (sink, "[fd %5d] new client, bufpos %d, bursting keyframe",
@@ -1142,11 +1138,11 @@ gst_multifdsink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
        * the hard max */
       newbufpos = client->bufpos;
       break;
-    case GST_RECOVER_POLICY_RESYNC_START:
+    case GST_RECOVER_POLICY_RESYNC_LATEST:
       /* move to beginning of queue */
       newbufpos = -1;
       break;
-    case GST_RECOVER_POLICY_RESYNC_SOFT:
+    case GST_RECOVER_POLICY_RESYNC_SOFT_LIMIT:
       /* move to beginning of soft max */
       newbufpos = sink->units_soft_max;
       break;
@@ -1268,7 +1264,7 @@ gst_multifdsink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
   /* now look for sync points and make sure there is at least one
    * sync point in the queue. We only do this if the burst mode
    * is enabled. */
-  if (sink->sync_method == GST_SYNC_METHOD_BURST) {
+  if (sink->sync_method == GST_SYNC_METHOD_LATEST_KEYFRAME) {
     /* no point in searching beyond the queue length */
     gint limit = queuelen;
     GstBuffer *buf;
@@ -1575,13 +1571,6 @@ gst_multifdsink_set_property (GObject * object, guint prop_id,
     case ARG_TIMEOUT:
       multifdsink->timeout = g_value_get_uint64 (value);
       break;
-    case ARG_SYNC_CLIENTS:
-      if (g_value_get_boolean (value) == TRUE) {
-        multifdsink->sync_method = GST_SYNC_METHOD_WAIT;
-      } else {
-        multifdsink->sync_method = GST_SYNC_METHOD_NONE;
-      }
-      break;
     case ARG_SYNC_METHOD:
       multifdsink->sync_method = g_value_get_enum (value);
       break;
@@ -1637,10 +1626,6 @@ gst_multifdsink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_TIMEOUT:
       g_value_set_uint64 (value, multifdsink->timeout);
-      break;
-    case ARG_SYNC_CLIENTS:
-      g_value_set_boolean (value,
-          multifdsink->sync_method == GST_SYNC_METHOD_WAIT);
       break;
     case ARG_SYNC_METHOD:
       g_value_set_enum (value, multifdsink->sync_method);

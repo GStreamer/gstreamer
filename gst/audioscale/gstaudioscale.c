@@ -85,9 +85,9 @@ gst_audioscale_method_get_type (void)
 {
   static GType audioscale_method_type = 0;
   static GEnumValue audioscale_methods[] = {
-    {GST_RESAMPLE_NEAREST, "0", "Nearest"},
-    {GST_RESAMPLE_BILINEAR, "1", "Bilinear"},
-    {GST_RESAMPLE_SINC, "2", "Sinc"},
+    {GST_RESAMPLE_NEAREST, "Nearest", "nearest"},
+    {GST_RESAMPLE_BILINEAR, "Bilinear", "bilinear"},
+    {GST_RESAMPLE_SINC, "Sinc", "sinc"},
     {0, NULL, NULL},
   };
 

@@ -91,10 +91,11 @@ gst_videoscale_method_get_type (void)
 {
   static GType videoscale_method_type = 0;
   static GEnumValue videoscale_methods[] = {
-    {GST_VIDEOSCALE_POINT_SAMPLE, "0", "Point Sample (not implemented)"},
-    {GST_VIDEOSCALE_NEAREST, "1", "Nearest"},
-    {GST_VIDEOSCALE_BILINEAR, "2", "Bilinear"},
-    {GST_VIDEOSCALE_BICUBIC, "3", "Bicubic (not implemented)"},
+    {GST_VIDEOSCALE_POINT_SAMPLE, "Point Sample (not implemented)",
+          "point-sample"},
+    {GST_VIDEOSCALE_NEAREST, "Nearest Neighbour", "nearest-neighbour"},
+    {GST_VIDEOSCALE_BILINEAR, "Bilinear", "bilinear"},
+    {GST_VIDEOSCALE_BICUBIC, "Bicubic (not implemented)", "bicubic"},
     {0, NULL, NULL},
   };
 

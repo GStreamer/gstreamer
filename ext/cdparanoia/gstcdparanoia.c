@@ -72,9 +72,9 @@ gst_paranoia_mode_get_type (void)
 {
   static GType paranoia_mode_type = 0;
   static GEnumValue paranoia_modes[] = {
-    {PARANOIA_MODE_DISABLE, "0", "Disable paranoid checking"},
-    {PARANOIA_MODE_OVERLAP, "4", "cdda2wav-style overlap checking"},
-    {PARANOIA_MODE_FULL, "255", "Full paranoia"},
+    {PARANOIA_MODE_DISABLE, "Disable paranoid checking", "disable"},
+    {PARANOIA_MODE_OVERLAP, "cdda2wav-style overlap checking", "overlap"},
+    {PARANOIA_MODE_FULL, "Full paranoia", "full"},
     {0, NULL, NULL},
   };
 
@@ -91,8 +91,8 @@ gst_paranoia_endian_get_type (void)
 {
   static GType paranoia_endian_type = 0;
   static GEnumValue paranoia_endians[] = {
-    {0, "0", "treat drive as little endian"},
-    {1, "1", "treat drive as big endian"},
+    {0, "treat drive as little endian", "little-endian"},
+    {1, "treat drive as big endian", "big-endian"},
     {0, NULL, NULL},
   };
 
