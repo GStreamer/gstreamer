@@ -135,8 +135,6 @@ gst_base_sink_get_type (void)
   return base_sink_type;
 }
 
-static void gst_base_sink_set_clock (GstElement * element, GstClock * clock);
-
 static void gst_base_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_base_sink_get_property (GObject * object, guint prop_id,
@@ -200,7 +198,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
           G_PARAM_READWRITE));
 
-  gstelement_class->set_clock = GST_DEBUG_FUNCPTR (gst_base_sink_set_clock);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_sink_send_event);
@@ -328,16 +325,6 @@ gst_base_sink_finalize (GObject * object)
   g_queue_free (basesink->preroll_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_base_sink_set_clock (GstElement * element, GstClock * clock)
-{
-  GstBaseSink *sink;
-
-  sink = GST_BASE_SINK (element);
-
-  sink->clock = clock;
 }
 
 static void
@@ -890,7 +877,7 @@ gst_base_sink_wait (GstBaseSink * basesink, GstClockTime time)
   g_assert (basesink->clock_id == NULL);
   g_assert (GST_CLOCK_TIME_IS_VALID (time));
 
-  id = gst_clock_new_single_shot_id (basesink->clock, time);
+  id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (basesink), time);
 
   basesink->clock_id = id;
   /* release the object lock while waiting */
@@ -956,7 +943,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
   }
 
   /* now do clocking */
-  if (basesink->clock) {
+  if (GST_ELEMENT_CLOCK (basesink)) {
     GstClockTime base_time;
     GstClockTimeDiff stream_start, stream_end;
 
@@ -1016,7 +1003,7 @@ gst_base_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       GST_OBJECT_LOCK (basesink);
-      if (basesink->clock) {
+      if (GST_ELEMENT_CLOCK (basesink)) {
         /* wait for last buffer to finish if we have a valid end time */
         if (GST_CLOCK_TIME_IS_VALID (basesink->end_time)) {
           gst_base_sink_wait (basesink, basesink->end_time);

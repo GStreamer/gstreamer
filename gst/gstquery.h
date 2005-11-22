@@ -209,11 +209,11 @@ GstQuery *	gst_query_new_application 	(GstQueryType type,
 GstStructure *  gst_query_get_structure		(GstQuery *query);
 
 /* moved from old gstqueryutils.h */
-void gst_query_set_seeking              (GstQuery *query, GstFormat format,
-                                         gboolean seekable,
-                                         gint64 segment_start,
-                                         gint64 segment_end);
-void gst_query_set_formats              (GstQuery *query, gint n_formats, ...);
+void            gst_query_set_seeking           (GstQuery *query, GstFormat format,
+                                                 gboolean seekable,
+                                                 gint64 segment_start,
+                                                 gint64 segment_end);
+void            gst_query_set_formats           (GstQuery *query, gint n_formats, ...);
 
 G_END_DECLS
 

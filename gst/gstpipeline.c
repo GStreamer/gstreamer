@@ -336,7 +336,8 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 
         if (new_clock) {
           /* now distribute the clock (which could be NULL I guess) */
-          gst_element_set_clock (element, clock);
+          if (!gst_element_set_clock (element, clock))
+            goto invalid_clock;
 
           /* if we selected a new clock, let the app know about it */
           gst_element_post_message (element,
@@ -402,10 +403,11 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
         /* store the current stream time */
         if (pipeline->stream_time != GST_CLOCK_TIME_NONE)
           pipeline->stream_time = now - element->base_time;
-        GST_DEBUG ("stream_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
+        GST_DEBUG_OBJECT (element,
+            "stream_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
             ", base time %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (pipeline->stream_time),
-            GST_TIME_ARGS (now), GST_TIME_ARGS (element->base_time));
+            GST_TIME_ARGS (pipeline->stream_time), GST_TIME_ARGS (now),
+            GST_TIME_ARGS (element->base_time));
       }
       GST_OBJECT_UNLOCK (element);
       break;
@@ -420,6 +422,14 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       break;
   }
   return result;
+
+invalid_clock:
+  {
+    /* FIXME, post error message */
+    GST_DEBUG_OBJECT (pipeline,
+        "Pipeline cannot operate with selected clock %p", clock);
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
 
 /**
@@ -584,15 +594,18 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
  * Set the clock for the pipeline. The clock will be distributed
  * to all the elements managed by the pipeline.
  *
+ * Returns: TRUE if the clock could be set on the pipeline.
+ *
  * MT safe.
  */
-void
+gboolean
 gst_pipeline_set_clock (GstPipeline * pipeline, GstClock * clock)
 {
-  g_return_if_fail (pipeline != NULL);
-  g_return_if_fail (GST_IS_PIPELINE (pipeline));
+  g_return_val_if_fail (pipeline != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_PIPELINE (pipeline), FALSE);
 
-  GST_ELEMENT_CLASS (parent_class)->set_clock (GST_ELEMENT (pipeline), clock);
+  return GST_ELEMENT_CLASS (parent_class)->set_clock (GST_ELEMENT (pipeline),
+      clock);
 }
 
 /**

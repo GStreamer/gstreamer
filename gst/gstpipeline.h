@@ -79,7 +79,7 @@ void		gst_pipeline_set_new_stream_time  (GstPipeline *pipeline, GstClockTime tim
 GstClockTime	gst_pipeline_get_last_stream_time (GstPipeline *pipeline);
 
 void            gst_pipeline_use_clock          (GstPipeline *pipeline, GstClock *clock);
-void            gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);
+gboolean        gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);
 GstClock*       gst_pipeline_get_clock          (GstPipeline *pipeline);
 void            gst_pipeline_auto_clock         (GstPipeline *pipeline);
 

@@ -387,25 +387,31 @@ gst_element_provide_clock (GstElement * element)
  * refcount on the clock. Any previously set clock on the object
  * is unreffed.
  *
+ * Returns: TRUE if the element accepted the clock.
+ *
  * MT safe.
  */
-void
+gboolean
 gst_element_set_clock (GstElement * element, GstClock * clock)
 {
   GstElementClass *oclass;
+  gboolean res = TRUE;
 
-  g_return_if_fail (GST_IS_ELEMENT (element));
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   GST_DEBUG_OBJECT (element, "setting clock %p", clock);
 
   if (oclass->set_clock)
-    oclass->set_clock (element, clock);
+    res = oclass->set_clock (element, clock);
 
-  GST_OBJECT_LOCK (element);
-  gst_object_replace ((GstObject **) & element->clock, (GstObject *) clock);
-  GST_OBJECT_UNLOCK (element);
+  if (res) {
+    GST_OBJECT_LOCK (element);
+    gst_object_replace ((GstObject **) & element->clock, (GstObject *) clock);
+    GST_OBJECT_UNLOCK (element);
+  }
+  return res;
 }
 
 /**

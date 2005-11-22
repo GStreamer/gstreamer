@@ -71,15 +71,11 @@ struct _GstNetClientClock {
 
   GstClockTime current_timeout;
 
-  gboolean filling;
-  gint time_index;
-  GstClockTime *local_times;
-  GstClockTime *remote_times;
-
   struct sockaddr_id *servaddr;
 
   GThread *thread;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

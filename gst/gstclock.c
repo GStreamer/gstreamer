@@ -98,15 +98,26 @@
 static GstAllocTrace *_gst_clock_entry_trace;
 #endif
 
-#define DEFAULT_EVENT_DIFF	(GST_SECOND)
-#define DEFAULT_MAX_DIFF	(2 * GST_SECOND)
+/* #define DEBUGGING_ENABLED */
+
+#ifdef DEBUGGING_ENABLED
+#define DEBUG(x, args...) g_print (x "\n", ##args)
+#else
+#define DEBUG(x, args...)       /* nop */
+#endif
+
+#define DEFAULT_STATS			FALSE
+#define DEFAULT_WINDOW_SIZE		32
+#define DEFAULT_WINDOW_THRESHOLD	4
+#define DEFAULT_TIMEOUT         	GST_SECOND / 10
 
 enum
 {
-  ARG_0,
-  ARG_STATS,
-  ARG_MAX_DIFF,
-  ARG_EVENT_DIFF
+  PROP_0,
+  PROP_STATS,
+  PROP_WINDOW_SIZE,
+  PROP_WINDOW_THRESHOLD,
+  PROP_TIMEOUT
 };
 
 static void gst_clock_class_init (GstClockClass * klass);
@@ -134,8 +145,8 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_clock_entry_trace, entry);
 #endif
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "created entry %p, time %" GST_TIME_FORMAT,
-      entry, GST_TIME_ARGS (time));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+      "created entry %p, time %" GST_TIME_FORMAT, entry, GST_TIME_ARGS (time));
 
   gst_atomic_int_set (&entry->refcount, 1);
   entry->clock = clock;
@@ -327,20 +338,22 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   entry = (GstClockEntry *) id;
   requested = GST_CLOCK_ENTRY_TIME (entry);
 
+  clock = GST_CLOCK_ENTRY_CLOCK (entry);
+
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
     goto invalid_time;
 
   if (G_UNLIKELY (entry->status == GST_CLOCK_UNSCHEDULED))
     goto unscheduled;
 
-  clock = GST_CLOCK_ENTRY_CLOCK (entry);
   cclass = GST_CLOCK_GET_CLASS (clock);
 
   if (G_LIKELY (cclass->wait)) {
 
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "waiting on clock entry %p", id);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "waiting on clock entry %p",
+        id);
     res = cclass->wait (clock, entry);
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "done waiting entry %p", id);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "done waiting entry %p", id);
 
     if (jitter) {
       GstClockTime now = gst_clock_get_time (clock);
@@ -362,12 +375,14 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   /* ERRORS */
 invalid_time:
   {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "invalid time requested, returning _BADTIME");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "invalid time requested, returning _BADTIME");
     return GST_CLOCK_BADTIME;
   }
 unscheduled:
   {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "entry was unscheduled return _UNSCHEDULED");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "entry was unscheduled return _UNSCHEDULED");
     return GST_CLOCK_UNSCHEDULED;
   }
 }
@@ -427,12 +442,14 @@ gst_clock_id_wait_async (GstClockID id,
 invalid_time:
   {
     (func) (clock, GST_CLOCK_TIME_NONE, id, user_data);
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "invalid time requested, returning _BADTIME");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "invalid time requested, returning _BADTIME");
     return GST_CLOCK_BADTIME;
   }
 unscheduled:
   {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "entry was unscheduled return _UNSCHEDULED");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "entry was unscheduled return _UNSCHEDULED");
     return GST_CLOCK_UNSCHEDULED;
   }
 }
@@ -518,9 +535,22 @@ gst_clock_class_init (GstClockClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_clock_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_clock_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STATS,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_STATS,
       g_param_spec_boolean ("stats", "Stats", "Enable clock stats",
-          FALSE, G_PARAM_READWRITE));
+          DEFAULT_STATS, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WINDOW_SIZE,
+      g_param_spec_int ("window-size", "Window size",
+          "The size of the window used to calculate rate and offset", 2, 1024,
+          DEFAULT_WINDOW_SIZE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_WINDOW_THRESHOLD, g_param_spec_int ("window-threshold",
+          "Window threshold",
+          "The threshold to start calculating rate and offset", 2, 1024,
+          DEFAULT_WINDOW_THRESHOLD, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMEOUT,
+      g_param_spec_uint64 ("timeout", "Timeout",
+          "The amount of time, in nanoseconds, to sample master and slave clocks",
+          0, G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READWRITE));
 }
 
 static void
@@ -534,6 +564,12 @@ gst_clock_init (GstClock * clock)
   clock->internal_calibration = 0;
   clock->external_calibration = 0;
   clock->rate = 1.0;
+  clock->filling = TRUE;
+  clock->window_size = DEFAULT_WINDOW_SIZE;
+  clock->window_threshold = DEFAULT_WINDOW_THRESHOLD;
+  clock->time_index = 0;
+  clock->timeout = DEFAULT_TIMEOUT;
+  clock->times = g_new0 (GstClockTime, 4 * clock->window_size);
 }
 
 static void
@@ -541,7 +577,18 @@ gst_clock_finalize (GObject * object)
 {
   GstClock *clock = GST_CLOCK (object);
 
+  GST_OBJECT_LOCK (clock);
+  if (clock->clockid) {
+    gst_clock_id_unschedule (clock->clockid);
+    gst_clock_id_unref (clock->clockid);
+    clock->clockid = NULL;
+  }
+
   g_cond_free (clock->entries_changed);
+
+  g_free (clock->times);
+  clock->times = NULL;
+  GST_OBJECT_UNLOCK (clock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -652,7 +699,7 @@ gst_clock_get_internal_time (GstClock * clock)
   } else {
     ret = G_GINT64_CONSTANT (0);
   }
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "internal time %" GST_TIME_FORMAT,
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "internal time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ret));
 
   return ret;
@@ -685,7 +732,7 @@ gst_clock_get_time (GstClock * clock)
   ret = gst_clock_adjust_unlocked (clock, ret);
   GST_OBJECT_UNLOCK (clock);
 
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "adjusted time %" GST_TIME_FORMAT,
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "adjusted time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ret));
 
   return ret;
@@ -766,6 +813,30 @@ gst_clock_get_calibration (GstClock * clock, GstClockTime * internal,
   GST_OBJECT_UNLOCK (clock);
 }
 
+/* will be called repeadedly to sample the master and slave clock
+ * to recalibrate the clock */
+static gboolean
+gst_clock_slave_callback (GstClock * master, GstClockTime time,
+    GstClockID id, GstClock * clock)
+{
+  GstClockTime stime, mtime;
+  gdouble r_squared;
+
+  stime = gst_clock_get_internal_time (clock);
+  mtime = gst_clock_get_time (master);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+      "master %" GST_TIME_FORMAT ", slave %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (mtime), GST_TIME_ARGS (stime));
+
+  gst_clock_add_observation (clock, stime, mtime, &r_squared);
+
+  /* FIXME, we can use the r_squared value to adjust the timeout
+   * value of the clockid */
+
+  return TRUE;
+}
+
 /**
  * gst_clock_set_master
  * @clock: a #GstClock 
@@ -778,14 +849,47 @@ gst_clock_get_calibration (GstClock * clock, GstClockTime * internal,
  * A clock provider that slaves its clock to a master can get the current
  * calibration values with gst_clock_get_calibration().
  *
+ * Returns: TRUE if the clock is capable of being slaved to a master clock.
+ *
  * MT safe.
  */
-void
+gboolean
 gst_clock_set_master (GstClock * clock, GstClock * master)
 {
+  g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
+
   GST_OBJECT_LOCK (clock);
+  /* we always allow setting the master to NULL */
+  if (master && !GST_OBJECT_FLAG_IS_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER))
+    goto not_supported;
+
+  GST_DEBUG_OBJECT (clock, "slaving to master clock %p", master);
   gst_object_replace ((GstObject **) & clock->master, (GstObject *) master);
+
+  if (clock->clockid) {
+    gst_clock_id_unschedule (clock->clockid);
+    gst_clock_id_unref (clock->clockid);
+    clock->clockid = NULL;
+  }
+  if (master) {
+    clock->filling = TRUE;
+    clock->time_index = 0;
+    /* use the master periodic id to schedule sampling and
+     * clock calibration. */
+    clock->clockid = gst_clock_new_periodic_id (master,
+        gst_clock_get_time (master), clock->timeout);
+    gst_clock_id_wait_async (clock->clockid,
+        (GstClockCallback) gst_clock_slave_callback, clock);
+  }
   GST_OBJECT_UNLOCK (clock);
+
+  return TRUE;
+
+not_supported:
+  {
+    GST_DEBUG_OBJECT (clock, "cannot be slaved to a master clock");
+    return FALSE;
+  }
 }
 
 /**
@@ -805,12 +909,168 @@ gst_clock_get_master (GstClock * clock)
 {
   GstClock *result = NULL;
 
+  g_return_val_if_fail (GST_IS_CLOCK (clock), NULL);
+
   GST_OBJECT_LOCK (clock);
   if (clock->master)
     result = gst_object_ref (clock->master);
   GST_OBJECT_UNLOCK (clock);
 
   return result;
+}
+
+/* http://mathworld.wolfram.com/LeastSquaresFitting.html */
+static gboolean
+do_linear_regression (GstClock * clock, gdouble * m,
+    GstClockTime * b, GstClockTime * xbase, gdouble * r_squared)
+{
+  GstClockTime *newx, *newy;
+  GstClockTime xmin, ymin, xbar, ybar, xbar4, ybar4;
+  GstClockTimeDiff sxx, sxy, syy;
+  GstClockTime *x, *y;
+  gint i, j;
+  guint n;
+
+  xbar = ybar = sxx = syy = sxy = 0;
+
+  x = clock->times;
+  y = clock->times + 2,
+      n = clock->filling ? clock->time_index : clock->window_size;
+
+#ifdef DEBUGGING_ENABLED
+  DEBUG ("doing regression on:");
+  for (i = 0; i < n; i++)
+    DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, x[i], y[i]);
+#endif
+
+  xmin = ymin = G_MAXUINT64;
+  for (i = j = 0; i < n; i++, j += 4) {
+    xmin = MIN (xmin, x[j]);
+    ymin = MIN (ymin, y[j]);
+  }
+
+  DEBUG ("min x: %" G_GUINT64_FORMAT, xmin);
+  DEBUG ("min y: %" G_GUINT64_FORMAT, ymin);
+
+  newx = clock->times + 1;
+  newy = clock->times + 3;
+
+  /* strip off unnecessary bits of precision */
+  for (i = j = 0; i < n; i++, j += 4) {
+    newx[j] = x[j] - xmin;
+    newy[j] = y[j] - ymin;
+  }
+
+#ifdef DEBUGGING_ENABLED
+  DEBUG ("reduced numbers:");
+  for (i = j = 0; i < n; i++, j += 4)
+    DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, newx[j], newy[j]);
+#endif
+
+  /* have to do this precisely otherwise the results are pretty much useless.
+   * should guarantee that none of these accumulators can overflow */
+
+  /* quantities on the order of 1e10 -> 30 bits; window size a max of 2^10, so
+     this addition could end up around 2^40 or so -- ample headroom */
+  for (i = j = 0; i < n; i++, j += 4) {
+    xbar += newx[j];
+    ybar += newy[j];
+  }
+  xbar /= n;
+  ybar /= n;
+
+  DEBUG ("  xbar  = %" G_GUINT64_FORMAT, xbar);
+  DEBUG ("  ybar  = %" G_GUINT64_FORMAT, ybar);
+
+  /* multiplying directly would give quantities on the order of 1e20 -> 60 bits;
+     times the window size that's 70 which is too much. Instead we (1) subtract
+     off the xbar*ybar in the loop instead of after, to avoid accumulation; (2)
+     shift off 4 bits from each multiplicand, giving an expected ceiling of 52
+     bits, which should be enough. Need to check the incoming range and domain
+     to ensure this is an appropriate loss of precision though. */
+  xbar4 = xbar >> 4;
+  ybar4 = ybar >> 4;
+  for (i = j = 0; i < n; i++, j += 4) {
+    GstClockTime newx4, newy4;
+
+    newx4 = newx[j] >> 4;
+    newy4 = newy[j] >> 4;
+
+    sxx += newx4 * newx4 - xbar4 * xbar4;
+    syy += newy4 * newy4 - ybar4 * ybar4;
+    sxy += newx4 * newy4 - xbar4 * ybar4;
+  }
+
+  *m = ((double) sxy) / sxx;
+  *xbase = xmin;
+  *b = (ybar + ymin) - (GstClockTime) (xbar * *m);
+  *r_squared = ((double) sxy * (double) sxy) / ((double) sxx * (double) syy);
+
+  DEBUG ("  m      = %g", *m);
+  DEBUG ("  b      = %" G_GUINT64_FORMAT, *b);
+  DEBUG ("  xbase  = %" G_GUINT64_FORMAT, *xbase);
+  DEBUG ("  r2     = %g", *r_squared);
+
+  return TRUE;
+}
+
+/**
+ * gst_clock_add_observation
+ * @clock: a #GstClock 
+ * @slave: an time on the slave
+ * @master: an time on the master
+ * @r_squared: a pointer to hold the result
+ *
+ * The time @master of the master clock and the time @slave of the slave
+ * clock are added to the list of observations. If enough observations
+ * are available, a linear regression algorithm is run on the
+ * observations and @clock is recalibrated.
+ *
+ * This function should be called with @clock OBJECT_LOCK.
+ *
+ * Returns: TRUE if enough observations were added to run the 
+ * regression algorithm.
+ *
+ * MT safe.
+ */
+gboolean
+gst_clock_add_observation (GstClock * clock, GstClockTime slave,
+    GstClockTime master, gdouble * r_squared)
+{
+  GstClockTime b, xbase;
+  gdouble m;
+
+  g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
+  g_return_val_if_fail (r_squared != NULL, FALSE);
+
+  clock->times[(4 * clock->time_index)] = slave;
+  clock->times[(4 * clock->time_index) + 2] = master;
+
+  clock->time_index++;
+  if (clock->time_index == clock->window_size) {
+    clock->filling = FALSE;
+    clock->time_index = 0;
+  }
+
+  if (clock->filling && clock->time_index < clock->window_threshold)
+    goto filling;
+
+  do_linear_regression (clock, &m, &b, &xbase, r_squared);
+
+  GST_CAT_LOG_OBJECT (GST_CAT_CLOCK, clock,
+      "adjusting clock to m=%g, b=%" G_GINT64_FORMAT " (rsquared=%g)", m, b,
+      *r_squared);
+
+  clock->internal_calibration = xbase;
+  clock->external_calibration = b;
+  clock->rate = m;
+
+  return TRUE;
+
+filling:
+  {
+    return FALSE;
+  }
 }
 
 static void
@@ -827,9 +1087,31 @@ gst_clock_set_property (GObject * object, guint prop_id,
   clock = GST_CLOCK (object);
 
   switch (prop_id) {
-    case ARG_STATS:
+    case PROP_STATS:
+      GST_OBJECT_LOCK (clock);
       clock->stats = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (clock);
       g_object_notify (object, "stats");
+      break;
+    case PROP_WINDOW_SIZE:
+      GST_OBJECT_LOCK (clock);
+      clock->window_size = g_value_get_int (value);
+      clock->window_threshold =
+          MIN (clock->window_threshold, clock->window_size);
+      clock->times =
+          g_renew (GstClockTime, clock->times, 4 * clock->window_size);
+      GST_OBJECT_UNLOCK (clock);
+      break;
+    case PROP_WINDOW_THRESHOLD:
+      GST_OBJECT_LOCK (clock);
+      clock->window_threshold =
+          MIN (g_value_get_int (value), clock->window_size);
+      GST_OBJECT_UNLOCK (clock);
+      break;
+    case PROP_TIMEOUT:
+      GST_OBJECT_LOCK (clock);
+      clock->timeout = g_value_get_uint64 (value);
+      GST_OBJECT_UNLOCK (clock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -846,8 +1128,25 @@ gst_clock_get_property (GObject * object, guint prop_id,
   clock = GST_CLOCK (object);
 
   switch (prop_id) {
-    case ARG_STATS:
+    case PROP_STATS:
+      GST_OBJECT_LOCK (clock);
       g_value_set_boolean (value, clock->stats);
+      GST_OBJECT_UNLOCK (clock);
+      break;
+    case PROP_WINDOW_SIZE:
+      GST_OBJECT_LOCK (clock);
+      g_value_set_int (value, clock->window_size);
+      GST_OBJECT_UNLOCK (clock);
+      break;
+    case PROP_WINDOW_THRESHOLD:
+      GST_OBJECT_LOCK (clock);
+      g_value_set_int (value, clock->window_threshold);
+      GST_OBJECT_UNLOCK (clock);
+      break;
+    case PROP_TIMEOUT:
+      GST_OBJECT_LOCK (clock);
+      g_value_set_uint64 (value, clock->timeout);
+      GST_OBJECT_UNLOCK (clock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

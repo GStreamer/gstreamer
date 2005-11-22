@@ -145,7 +145,7 @@ static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
 static void gst_bin_set_index_func (GstElement * element, GstIndex * index);
 #endif
 static GstClock *gst_bin_provide_clock_func (GstElement * element);
-static void gst_bin_set_clock_func (GstElement * element, GstClock * clock);
+static gboolean gst_bin_set_clock_func (GstElement * element, GstClock * clock);
 
 static void gst_bin_handle_message_func (GstBin * bin, GstMessage * message);
 static gboolean gst_bin_send_event (GstElement * element, GstEvent * event);
@@ -432,11 +432,12 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
  *
  * MT safe
  */
-static void
+static gboolean
 gst_bin_set_clock_func (GstElement * element, GstClock * clock)
 {
   GList *children;
   GstBin *bin;
+  gboolean res = TRUE;
 
   bin = GST_BIN (element);
 
@@ -445,10 +446,12 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
     for (children = bin->children; children; children = g_list_next (children)) {
       GstElement *child = GST_ELEMENT (children->data);
 
-      gst_element_set_clock (child, clock);
+      res &= gst_element_set_clock (child, clock);
     }
   }
   GST_OBJECT_UNLOCK (bin);
+
+  return res;
 }
 
 /* get the clock for this bin by asking all of the children in this bin
@@ -726,6 +729,9 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 
   /* propagate the current base time and clock */
   gst_element_set_base_time (element, GST_ELEMENT (bin)->base_time);
+  /* it's possible that the element did not accept the clock but
+   * that is not important right now. When the pipeline goes to PLAYING,
+   * a new clock will be selected */
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
   bin->state_dirty = TRUE;
   GST_OBJECT_UNLOCK (bin);

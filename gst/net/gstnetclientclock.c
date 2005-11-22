@@ -63,7 +63,6 @@ G_STMT_START {                                	\
 
 #define DEFAULT_ADDRESS		"127.0.0.1"
 #define DEFAULT_PORT		5637
-#define DEFAULT_WINDOW_SIZE	32
 #define DEFAULT_TIMEOUT		GST_SECOND
 
 enum
@@ -71,8 +70,6 @@ enum
   PROP_0,
   PROP_ADDRESS,
   PROP_PORT,
-  PROP_WINDOW_SIZE,
-  PROP_TIMEOUT
 };
 
 #define _do_init(type) \
@@ -114,32 +111,21 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
       g_param_spec_int ("port", "port",
           "The port on which the remote server is listening", 0, G_MAXUINT16,
           DEFAULT_PORT, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WINDOW_SIZE,
-      g_param_spec_int ("window-size", "Window size",
-          "The size of the window used to calculate rate and offset", 2, 1024,
-          DEFAULT_WINDOW_SIZE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMEOUT,
-      g_param_spec_uint64 ("timeout", "Timeout",
-          "The amount of time, in nanoseconds, to wait for replies", 0,
-          G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READWRITE));
 }
 
 static void
 gst_net_client_clock_init (GstNetClientClock * self,
     GstNetClientClockClass * g_class)
 {
+  GstClock *clock = GST_CLOCK_CAST (self);
+
   self->port = DEFAULT_PORT;
   self->address = g_strdup (DEFAULT_ADDRESS);
-  self->window_size = DEFAULT_WINDOW_SIZE;
-  self->timeout = DEFAULT_TIMEOUT;
+
+  clock->timeout = DEFAULT_TIMEOUT;
 
   self->sock = -1;
   self->thread = NULL;
-
-  self->filling = TRUE;
-  self->time_index = 0;
-  self->local_times = g_new0 (GstClockTime, self->window_size);
-  self->remote_times = g_new0 (GstClockTime, self->window_size);
 
   self->servaddr = NULL;
 
@@ -170,12 +156,6 @@ gst_net_client_clock_finalize (GObject * object)
   g_free (self->servaddr);
   self->servaddr = NULL;
 
-  g_free (self->local_times);
-  self->local_times = NULL;
-
-  g_free (self->remote_times);
-  self->remote_times = NULL;
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -196,12 +176,6 @@ gst_net_client_clock_set_property (GObject * object, guint prop_id,
     case PROP_PORT:
       self->port = g_value_get_int (value);
       break;
-    case PROP_WINDOW_SIZE:
-      self->window_size = g_value_get_int (value);
-      break;
-    case PROP_TIMEOUT:
-      self->timeout = g_value_get_uint64 (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -221,101 +195,10 @@ gst_net_client_clock_get_property (GObject * object, guint prop_id,
     case PROP_PORT:
       g_value_set_int (value, self->port);
       break;
-    case PROP_WINDOW_SIZE:
-      g_value_set_int (value, self->window_size);
-      break;
-    case PROP_TIMEOUT:
-      g_value_set_uint64 (value, self->timeout);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-/* http://mathworld.wolfram.com/LeastSquaresFitting.html */
-static gboolean
-do_linear_regression (GstClockTime * x, GstClockTime * y, gint n, gdouble * m,
-    GstClockTime * b, GstClockTime * xbase, gdouble * r_squared)
-{
-  GstClockTime *newx, *newy;
-  GstClockTime xmin, ymin, xbar, ybar;
-  GstClockTimeDiff sxx, sxy, syy;
-  gint i;
-
-  xbar = ybar = sxx = syy = sxy = 0;
-
-#ifdef DEBUGGING_ENABLED
-  DEBUG ("doing regression on:");
-  for (i = 0; i < n; i++)
-    DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, x[i], y[i]);
-#endif
-
-  xmin = ymin = G_MAXUINT64;
-  for (i = 0; i < n; i++) {
-    xmin = MIN (xmin, x[i]);
-    ymin = MIN (ymin, y[i]);
-  }
-
-  DEBUG ("min x: %" G_GUINT64_FORMAT, xmin);
-  DEBUG ("min y: %" G_GUINT64_FORMAT, ymin);
-
-  newx = g_new (GstClockTime, n);
-  newy = g_new (GstClockTime, n);
-
-  /* strip off unnecessary bits of precision */
-  for (i = 0; i < n; i++) {
-    newx[i] = x[i] - xmin;
-    newy[i] = y[i] - ymin;
-  }
-
-#ifdef DEBUGGING_ENABLED
-  DEBUG ("reduced numbers:");
-  for (i = 0; i < n; i++)
-    DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, newx[i], newy[i]);
-#endif
-
-  /* have to do this precisely otherwise the results are pretty much useless.
-   * should guarantee that none of these accumulators can overflow */
-
-  /* quantities on the order of 1e10 -> 30 bits; window size a max of 2^10, so
-     this addition could end up around 2^40 or so -- ample headroom */
-  for (i = 0; i < n; i++) {
-    xbar += newx[i];
-    ybar += newy[i];
-  }
-  xbar /= n;
-  ybar /= n;
-
-  DEBUG ("  xbar  = %" G_GUINT64_FORMAT, xbar);
-  DEBUG ("  ybar  = %" G_GUINT64_FORMAT, ybar);
-
-  /* multiplying directly would give quantities on the order of 1e20 -> 60 bits;
-     times the window size that's 70 which is too much. Instead we (1) subtract
-     off the xbar*ybar in the loop instead of after, to avoid accumulation; (2)
-     shift off 4 bits from each multiplicand, giving an expected ceiling of 52
-     bits, which should be enough. Need to check the incoming range and domain
-     to ensure this is an appropriate loss of precision though. */
-  for (i = 0; i < n; i++) {
-    sxx += (newx[i] >> 4) * (newx[i] >> 4) - (xbar >> 4) * (xbar >> 4);
-    syy += (newy[i] >> 4) * (newy[i] >> 4) - (ybar >> 4) * (ybar >> 4);
-    sxy += (newx[i] >> 4) * (newy[i] >> 4) - (xbar >> 4) * (ybar >> 4);
-  }
-
-  *m = ((double) sxy) / sxx;
-  *xbase = xmin;
-  *b = (ybar + ymin) - (GstClockTime) (xbar * *m);
-  *r_squared = ((double) sxy * (double) sxy) / ((double) sxx * (double) syy);
-
-  DEBUG ("  m      = %g", *m);
-  DEBUG ("  b      = %" G_GUINT64_FORMAT, *b);
-  DEBUG ("  xbase  = %" G_GUINT64_FORMAT, *xbase);
-  DEBUG ("  r2     = %g", *r_squared);
-
-  g_free (newx);
-  g_free (newy);
-
-  return TRUE;
 }
 
 static void
@@ -323,44 +206,28 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
     GstClockTime local_1, GstClockTime remote, GstClockTime local_2)
 {
   GstClockTime local_avg;
-  GstClockTime b, xbase;
-  gdouble m, r_squared;
+  gdouble r_squared;
+  GstClock *clock;
 
   if (local_2 < local_1)
     goto bogus_observation;
 
   local_avg = (local_2 + local_1) / 2;
 
-  self->local_times[self->time_index] = local_avg;
-  self->remote_times[self->time_index] = remote;
+  clock = GST_CLOCK_CAST (self);
 
-  self->time_index++;
-  if (self->time_index == self->window_size) {
-    self->filling = FALSE;
-    self->time_index = 0;
-  }
+  GST_OBJECT_LOCK (self);
+  gst_clock_add_observation (GST_CLOCK (self), local_avg, remote, &r_squared);
 
-  if (!self->filling || self->time_index >= 4) {
-    /* need to allow tuning of the "4" parameter -- means that we need 4 samples
-     * before beginning to adjust the clock */
-    do_linear_regression (self->local_times, self->remote_times,
-        self->filling ? self->time_index : self->window_size, &m, &b,
-        &xbase, &r_squared);
-
-    GST_LOG_OBJECT (self, "adjusting clock to m=%g, b=%" G_GINT64_FORMAT
-        " (rsquared=%g)", m, b, r_squared);
-
-    gst_clock_set_calibration (GST_CLOCK (self), xbase, b, m);
-  }
-
-  if (self->filling) {
+  if (clock->filling) {
     self->current_timeout = 0;
   } else {
     /* geto formula */
     self->current_timeout =
         (1e-3 / (1 - MIN (r_squared, 0.99999))) * GST_SECOND;
-    self->current_timeout = MIN (self->current_timeout, self->timeout);
+    self->current_timeout = MIN (self->current_timeout, clock->timeout);
   }
+  GST_OBJECT_UNLOCK (clock);
 
   return;
 

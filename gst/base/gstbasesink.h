@@ -37,13 +37,6 @@ G_BEGIN_DECLS
 #define GST_BASE_SINK_CAST(obj)		((GstBaseSink *) (obj))
 
 /**
- * GST_BASE_SINK_CLOCK:
- * @obj: base sink instance
- *
- * Gives the pointer to the #GstClock object of the element.
- */
-#define GST_BASE_SINK_CLOCK(obj)	(GST_BASE_SINK_CAST (obj)->clock)
-/**
  * GST_BASE_SINK_PAD:
  * @obj: base sink instance
  *
@@ -83,7 +76,6 @@ struct _GstBaseSink {
   GstSegment     segment;
 
   /*< private >*/ /* with LOCK */
-  GstClock	*clock;
   GstClockID     clock_id;
   GstClockTime   end_time;
   gboolean       sync;

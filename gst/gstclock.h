@@ -308,6 +308,7 @@ struct _GstClockEntry {
  * @GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC: clock can do sync periodic timeout requests
  * @GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC: clock can do async periodic timeout callbacks
  * @GST_CLOCK_FLAG_CAN_SET_RESOLUTION: clock's resolution can be changed
+ * @GST_CLOCK_FLAG_CAN_SET_MASTER: clock can be slaved to a master clock
  * @GST_CLOCK_FLAG_LAST: subclasses can add additional flags starting from this flag
  *
  * The capabilities of this clock
@@ -318,6 +319,7 @@ typedef enum {
   GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC   = (GST_OBJECT_FLAG_LAST << 2),
   GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC  = (GST_OBJECT_FLAG_LAST << 3),
   GST_CLOCK_FLAG_CAN_SET_RESOLUTION     = (GST_OBJECT_FLAG_LAST << 4),
+  GST_CLOCK_FLAG_CAN_SET_MASTER         = (GST_OBJECT_FLAG_LAST << 5),
   /* padding */
   GST_CLOCK_FLAG_LAST		        = (GST_OBJECT_FLAG_LAST << 8),
 } GstClockFlags;
@@ -384,8 +386,17 @@ struct _GstClock {
   GstClockTime	 resolution;
   gboolean	 stats;
 
+  /* for master/slave clocks */
   GstClock      *master;
+  gboolean       filling;
+  gint           window_size;
+  gint           window_threshold;
+  gint           time_index;
+  GstClockTime   timeout;
+  GstClockTime  *times;
+  GstClockID     clockid;
 
+  /*< private >*/
   GstClockTime	 _gst_reserved[GST_PADDING];
 };
 
@@ -422,9 +433,13 @@ void			gst_clock_set_calibration	(GstClock *clock, GstClockTime internal,
 void			gst_clock_get_calibration	(GstClock *clock, GstClockTime *internal,
                                                          GstClockTime *external, gdouble *rate);
 /* master/slave clocks */
-void			gst_clock_set_master		(GstClock *clock, GstClock *master);
+gboolean		gst_clock_set_master		(GstClock *clock, GstClock *master);
 GstClock*		gst_clock_get_master		(GstClock *clock);
+gboolean		gst_clock_add_observation       (GstClock *clock, GstClockTime slave, 
+							 GstClockTime master, gdouble *r_squared);
 
+
+/* getting and adjusting internal time */
 GstClockTime		gst_clock_get_internal_time	(GstClock *clock);
 GstClockTime		gst_clock_adjust_unlocked	(GstClock *clock, GstClockTime internal);
 
@@ -450,6 +465,7 @@ GstClockReturn		gst_clock_id_wait_async		(GstClockID id,
 							 GstClockCallback func,
 							 gpointer user_data);
 void			gst_clock_id_unschedule		(GstClockID id);
+
 
 G_END_DECLS
 

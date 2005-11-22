@@ -462,7 +462,7 @@ struct _GstElementClass
 
   /* set/get clocks */
   GstClock*		(*provide_clock)	(GstElement *element);
-  void			(*set_clock)		(GstElement *element, GstClock *clock);
+  gboolean		(*set_clock)		(GstElement *element, GstClock *clock);
 
   /* index */
   GstIndex*		(*get_index)		(GstElement *element);
@@ -529,7 +529,7 @@ gboolean		gst_element_requires_clock	(GstElement *element);
 gboolean		gst_element_provides_clock	(GstElement *element);
 GstClock*		gst_element_provide_clock	(GstElement *element);
 GstClock*		gst_element_get_clock		(GstElement *element);
-void			gst_element_set_clock		(GstElement *element, GstClock *clock);
+gboolean		gst_element_set_clock		(GstElement *element, GstClock *clock);
 void			gst_element_set_base_time	(GstElement *element, GstClockTime time);
 GstClockTime		gst_element_get_base_time	(GstElement *element);
 

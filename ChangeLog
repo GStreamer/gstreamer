@@ -1,3 +1,52 @@
+2005-11-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_class_init),
+	(gst_base_sink_wait), (gst_base_sink_do_sync),
+	(gst_base_sink_handle_event):
+	* gst/base/gstbasesink.h:
+	No need to store the clock, the parent element class already
+	has it.
+
+	* gst/gstbin.c: (gst_bin_set_clock_func), (gst_bin_add_func):
+	Updates for clock_set returning a gboolean
+
+	* gst/gstclock.c: (gst_clock_entry_new), (gst_clock_id_wait),
+	(gst_clock_id_wait_async), (gst_clock_class_init),
+	(gst_clock_init), (gst_clock_finalize),
+	(gst_clock_get_internal_time), (gst_clock_get_time),
+	(gst_clock_slave_callback), (gst_clock_set_master),
+	(gst_clock_get_master), (do_linear_regression),
+	(gst_clock_add_observation), (gst_clock_set_property),
+	(gst_clock_get_property):
+	* gst/gstclock.h:
+	Implement master/slave. When setting a clock as a slave, a
+	periodic timeout is scheduled to sample master and slave times.
+	Then the slave clock is recalibrated to match offset and rate
+	of the master clock.
+	Update logging a bit.
+	Add flag so that a clock can state that is cannot be slaved to
+	another clock.
+
+	* gst/gstelement.c: (gst_element_set_clock):
+	* gst/gstelement.h:
+	The set clock returns a gboolean for when an element cannot
+	deal with the selected clock in the pipeline. 
+
+	* gst/gstpipeline.c: (gst_pipeline_change_state),
+	(gst_pipeline_set_clock):
+	* gst/gstpipeline.h:
+	Handle the case where the selected clock cannot be set on
+	the pipeline.
+
+	* gst/net/gstnetclientclock.c: (gst_net_client_clock_class_init),
+	(gst_net_client_clock_init), (gst_net_client_clock_finalize),
+	(gst_net_client_clock_set_property),
+	(gst_net_client_clock_get_property),
+	(gst_net_client_clock_observe_times):
+	* gst/net/gstnetclientclock.h:
+	Use regression code in GstClock parent, remove duplicated
+	functionality.
+
 2005-11-22  Michael Smith <msmith@fluendo.com>
 
 	* gst/gstutils.c: (gst_util_clock_time_scale):
