@@ -459,13 +459,13 @@ gst_videotestsrc_create (GstPushSrc * psrc, GstBuffer ** buffer)
 
   GST_BUFFER_TIMESTAMP (outbuf) = src->timestamp_offset + src->running_time;
   if (src->rate_numerator != 0) {
-    GST_BUFFER_DURATION (outbuf) = gst_utils_clocktime_scale (GST_SECOND,
+    GST_BUFFER_DURATION (outbuf) = gst_utils_clock_time_scale (GST_SECOND,
         src->rate_denominator, src->rate_numerator);
   }
 
   src->n_frames++;
   if (src->rate_numerator != 0) {
-    src->running_time = gst_utils_clocktime_scale (src->n_frames * GST_SECOND,
+    src->running_time = gst_utils_clock_time_scale (src->n_frames * GST_SECOND,
         src->rate_denominator, src->rate_numerator);
   }
 

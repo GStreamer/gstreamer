@@ -2,6 +2,12 @@
 
 	* gst/videorate/gstvideorate.c: (gst_videorate_chain):
 	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_create):
+	  Add underscore.
+
+2005-11-22  Michael Smith <msmith@fluendo.com>
+
+	* gst/videorate/gstvideorate.c: (gst_videorate_chain):
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_videotestsrc_create):
 	  Use utility method for scaling clocktime for fractional framerates.
 
 2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>

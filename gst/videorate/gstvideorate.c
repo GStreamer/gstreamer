@@ -510,7 +510,7 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
         if (videorate->to_rate_numerator) {
           videorate->next_ts =
               videorate->first_ts +
-              gst_util_clocktime_scale (videorate->out * GST_SECOND,
+              gst_util_clock_time_scale (videorate->out * GST_SECOND,
               videorate->to_rate_denominator, videorate->to_rate_numerator);
           GST_BUFFER_DURATION (outbuf) =
               videorate->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
