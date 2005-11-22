@@ -1503,6 +1503,11 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_DEBUG_OBJECT (xvimagesink, "scaling to %dx%d",
       GST_VIDEO_SINK_WIDTH (xvimagesink), GST_VIDEO_SINK_HEIGHT (xvimagesink));
 
+  /* Notify application to set xwindow id now */
+  if (!xvimagesink->xwindow) {
+    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (xvimagesink));
+  }
+
   /* Creating our window and our image with the display size in pixels */
   g_assert (GST_VIDEO_SINK_WIDTH (xvimagesink) > 0);
   g_assert (GST_VIDEO_SINK_HEIGHT (xvimagesink) > 0);

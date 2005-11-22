@@ -1,3 +1,11 @@
+2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_setcaps):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_setcaps):
+	  Call gst_x_overlay_prepare_xwindow_id() to give applications
+	  a final chance to set their own xwindow id before the video
+	  sink creates its own window.
+
 2005-11-22  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/xvimage/xvimagesink.c:

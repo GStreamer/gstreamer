@@ -1124,6 +1124,11 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_VIDEO_SINK_HEIGHT (ximagesink) = new_height;
   ximagesink->framerate = fps;
 
+  /* Notify application to set xwindow id now */
+  if (!ximagesink->xwindow) {
+    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (ximagesink));
+  }
+
   /* Creating our window and our image */
   g_assert (GST_VIDEO_SINK_WIDTH (ximagesink) > 0);
   g_assert (GST_VIDEO_SINK_HEIGHT (ximagesink) > 0);
