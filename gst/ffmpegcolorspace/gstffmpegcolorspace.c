@@ -92,6 +92,7 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
   int i;
   GstStructure *structure;
   GstCaps *rgbcaps;
+  GstCaps *graycaps;
 
   caps = gst_caps_copy (caps);
 
@@ -117,7 +118,15 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
 
     gst_structure_set_name (structure, "video/x-raw-rgb");
   }
+  graycaps = gst_caps_copy (caps);
 
+  for (i = 0; i < gst_caps_get_size (graycaps); i++) {
+    structure = gst_caps_get_structure (graycaps, i);
+
+    gst_structure_set_name (structure, "video/x-raw-gray");
+  }
+
+  gst_caps_append (caps, graycaps);
   gst_caps_append (caps, rgbcaps);
 
   return caps;

@@ -1674,6 +1674,7 @@ bitcopy_n (unsigned int a, int n)
 /* bgra32 handling */
 
 #define RGB_NAME bgra32
+#define FMT_BGRA32
 
 #define RGB_IN(r, g, b, s)\
 {\
@@ -1903,6 +1904,7 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_RGBA32, PIX_FMT_YUV420P, rgba32_to_yuv420p},
   {PIX_FMT_RGBA32, PIX_FMT_GRAY8, rgba32_to_gray},
   {PIX_FMT_RGBA32, PIX_FMT_AYUV4444, rgba32_to_ayuv4444},
+  {PIX_FMT_BGRA32, PIX_FMT_AYUV4444, bgra32_to_ayuv4444},
 
   {PIX_FMT_BGR24, PIX_FMT_RGB24, bgr24_to_rgb24},
   {PIX_FMT_BGR24, PIX_FMT_YUV420P, bgr24_to_yuv420p},

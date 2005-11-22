@@ -1,3 +1,14 @@
+2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_caps_remove_format_info):
+	* gst/ffmpegcolorspace/imgconvert.c:
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	  Forward-port fixes from the 0.8 branch (patch by Luca Ognibene,
+	  #318353); use gst_structure_has_name().
+
 2005-11-22  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_event_thread),

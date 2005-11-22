@@ -467,6 +467,9 @@ static void glue(RGB_NAME, _to_rgba32)(AVPicture *dst, const AVPicture *src,
         d += dst_wrap;
     }
 }
+#endif /* !defined(FMT_RGBA32) && defined(RGBA_OUT) */
+
+#if defined(FMT_RGBA32)
 
 #if !defined(rgba32_fcts_done)
 #define rgba32_fcts_done
@@ -527,7 +530,42 @@ static void rgba32_to_ayuv4444(AVPicture *dst, const AVPicture *src,
 
 #endif /* !defined(rgba32_fcts_done) */
 
-#endif /* !defined(FMT_RGBA32) && defined(RGBA_OUT) */
+#endif /* defined(FMT_RGBA32) */
+
+#if defined(FMT_BGRA32)
+#if !defined(bgra32_fcts_done)
+#define bgra32_fcts_done
+
+static void bgra32_to_ayuv4444(AVPicture *dst, const AVPicture *src,
+			       int width, int height)
+{
+  int src_wrap, dst_wrap, x, y;
+  int r, g, b, a;
+  uint8_t *d;
+  const uint8_t *p;
+  
+  src_wrap = src->linesize[0] - width * BPP;
+  dst_wrap = dst->linesize[0] - width * 4;
+  d = dst->data[0];
+  p = src->data[0];
+  for(y=0;y<height;y++) {
+    for(x=0;x<width;x++) {
+      RGBA_IN(r, g, b, a, p);
+      d[0] = a;
+      d[1] = RGB_TO_Y_CCIR(r, g, b);
+      d[2] = RGB_TO_U_CCIR(r, g, b, 0);
+      d[3] = RGB_TO_V_CCIR(r, g, b, 0);
+      p += BPP;
+      d += 4;
+    }
+    p += src_wrap;
+    d += dst_wrap;
+  }
+}
+
+#endif /* !defined(bgra32_fcts_done) */
+
+#endif /* defined(FMT_BGRA32) */
 
 #ifndef FMT_RGB24
 
