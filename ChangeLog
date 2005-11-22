@@ -1,5 +1,9 @@
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
+	* Update for gst_tag_setter API changes.
+
+2005-11-22  Andy Wingo  <wingo@pobox.com>
+
 	* ext/ogg/gstoggdemux.c (gst_ogg_pad_submit_packet)
 	(gst_ogg_demux_perform_seek):
 	* ext/theora/theoradec.c (theora_dec_sink_event):
