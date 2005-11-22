@@ -21,9 +21,9 @@
 #define __GST_MUSEPACK_DEC_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
-#include <musepack/musepack.h>
-#include "gstmusepackreader.h"
+//#include <gst/bytestream/bytestream.h>
+#include <mpcdec/mpcdec.h>
+//#include "gstmusepackreader.h"
 
 G_BEGIN_DECLS
 
@@ -45,7 +45,8 @@ typedef struct _GstMusepackDec {
 
   /* pads */
   GstPad *srcpad, *sinkpad;
-  GstByteStream *bs;
+  //  GstByteStream *bs;
+  guint64 offset;
 
   /* MUSEPACK_DEC object */
   mpc_decoder *d;
@@ -59,7 +60,7 @@ typedef struct _GstMusepackDec {
   guint64 pos, len;
 
   /* seeks */
-  gdouble flush_pending, seek_pending;
+  gdouble flush_pending, seek_pending, eos;
   guint64 seek_time;
 } GstMusepackDec;
 
@@ -68,6 +69,10 @@ typedef struct _GstMusepackDecClass {
 } GstMusepackDecClass;
 
 GType gst_musepackdec_get_type (void);
+
+extern gboolean gst_musepackdec_src_convert (GstPad * pad,
+					     GstFormat src_format,
+					     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
 G_END_DECLS
 

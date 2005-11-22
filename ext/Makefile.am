@@ -118,11 +118,11 @@ MPEG2ENC_DIR=
 MPLEX_DIR=
 # endif
 
-# if USE_MUSEPACK
-# MUSEPACK_DIR=musepack
-# else
+if USE_MUSEPACK
+MUSEPACK_DIR=musepack
+else
 MUSEPACK_DIR=
-# endif
+endif
 
 # if USE_MUSICBRAINZ
 # MUSICBRAINZ_DIR=musicbrainz
@@ -228,6 +228,7 @@ DIST_SUBDIRS= \
 	faac \
 	faad \
 	gsm \
+	musepack \
 	sdl \
 	directfb \
 	ivorbis

@@ -1,3 +1,14 @@
+2005-11-22  Edgard Lima <edgard.lima@indt.org.br>
+	* configure.ac:
+	* PORTED_09:
+	* extt/Makefile.am:
+	* ext/musepack/gstmusepackdec.c:
+	* ext/musepack/gstmusepackdec.h:
+	* ext/musepack/gstmusepackreader.c:
+	* ext/musepack/gstmusepackreader.h:
+	Musepackdec ported to 0.9. There is still a small problem to be
+	solved, after the end of file, the pipeline doens't stop.
+
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
 	* ext/faad/gstfaad.c (gst_faad_event)

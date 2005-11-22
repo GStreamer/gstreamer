@@ -57,16 +57,15 @@ static void gst_musepackdec_init (GstMusepackDec * musepackdec);
 static void gst_musepackdec_dispose (GObject * obj);
 
 static gboolean gst_musepackdec_src_event (GstPad * pad, GstEvent * event);
-static const GstFormat *gst_musepackdec_get_formats (GstPad * pad);
-static const GstEventMask *gst_musepackdec_get_event_masks (GstPad * pad);
-static const GstQueryType *gst_musepackdec_get_query_types (GstPad * pad);
-static gboolean gst_musepackdec_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value);
-static gboolean gst_musepackdec_src_convert (GstPad * pad,
-    GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
+static const GstQueryType *gst_musepackdec_get_src_query_types (GstPad * pad);
+static gboolean gst_musepackdec_src_query (GstPad * pad, GstQuery * query);
 
-static void gst_musepackdec_loop (GstElement * element);
+static gboolean gst_musepackdec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_musepackdec_sink_activate (GstPad * sinkpad);
+static gboolean
+gst_musepackdec_sink_activate_pull (GstPad * sinkpad, gboolean active);
+
+static void gst_musepackdec_loop (GstPad * sinkpad);
 static GstStateChangeReturn
 gst_musepackdec_change_state (GstElement * element, GstStateChange transition);
 
@@ -129,38 +128,41 @@ gst_musepackdec_class_init (GstMusepackDecClass * klass)
 static void
 gst_musepackdec_init (GstMusepackDec * musepackdec)
 {
-  GST_OBJECT_FLAG_SET (musepackdec, GST_ELEMENT_EVENT_AWARE);
+  musepackdec->offset = 0;
 
   musepackdec->r = g_new (mpc_reader, 1);
   musepackdec->d = g_new (mpc_decoder, 1);
   musepackdec->init = FALSE;
   musepackdec->seek_pending = FALSE;
+  musepackdec->flush_pending = FALSE;
+  musepackdec->eos = FALSE;
 
   musepackdec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
       "sink");
+  gst_pad_set_event_function (musepackdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_musepackdec_sink_event));
   gst_element_add_pad (GST_ELEMENT (musepackdec), musepackdec->sinkpad);
+
+  gst_pad_set_activate_function (musepackdec->sinkpad,
+      gst_musepackdec_sink_activate);
+  gst_pad_set_activatepull_function (musepackdec->sinkpad,
+      gst_musepackdec_sink_activate_pull);
 
   musepackdec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
   gst_pad_set_event_function (musepackdec->srcpad,
       GST_DEBUG_FUNCPTR (gst_musepackdec_src_event));
-  gst_pad_set_event_mask_function (musepackdec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_musepackdec_get_event_masks));
+
   gst_pad_set_query_function (musepackdec->srcpad,
       GST_DEBUG_FUNCPTR (gst_musepackdec_src_query));
   gst_pad_set_query_type_function (musepackdec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_musepackdec_get_query_types));
-  gst_pad_set_convert_function (musepackdec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_musepackdec_src_convert));
-  gst_pad_set_formats_function (musepackdec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_musepackdec_get_formats));
-  gst_pad_use_explicit_caps (musepackdec->srcpad);
+      GST_DEBUG_FUNCPTR (gst_musepackdec_get_src_query_types));
+  gst_pad_use_fixed_caps (musepackdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (musepackdec), musepackdec->srcpad);
 
-  gst_element_set_loop_function (GST_ELEMENT (musepackdec),
-      gst_musepackdec_loop);
+
 }
 
 static void
@@ -177,6 +179,40 @@ gst_musepackdec_dispose (GObject * obj)
 }
 
 static gboolean
+gst_musepackdec_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (gst_pad_get_parent (pad));
+  gboolean res = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      musepackdec->flush_pending = TRUE;
+      goto done;
+      break;
+    case GST_EVENT_NEWSEGMENT:
+      musepackdec->flush_pending = TRUE;
+      musepackdec->seek_pending = TRUE;
+      goto done;
+      break;
+    case GST_EVENT_EOS:
+      musepackdec->eos = TRUE;
+      /* fall through */
+    default:
+      res = gst_pad_event_default (pad, event);
+      gst_object_unref (musepackdec);
+      return res;
+      break;
+  }
+
+done:
+  gst_event_unref (event);
+  gst_object_unref (musepackdec);
+  return res;
+
+}
+
+
+static gboolean
 gst_musepackdec_src_event (GstPad * pad, GstEvent * event)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (gst_pad_get_parent (pad));
@@ -184,31 +220,44 @@ gst_musepackdec_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
+
+      gdouble rate;
+      GstFormat format;
+      GstSeekFlags flags;
+      GstSeekType cur_type;
+      gint64 cur;
+      GstSeekType stop_type;
+      gint64 stop;
+
+      gst_event_parse_seek (event, &rate, &format, &flags,
+          &cur_type, &cur, &stop_type, &stop);
+
+
       gint64 offset, len, pos;
       GstFormat fmt = GST_FORMAT_TIME;
 
-      /* in time */
-      if (!gst_pad_convert (pad,
-              (GstFormat) GST_EVENT_SEEK_FORMAT (event),
-              GST_EVENT_SEEK_OFFSET (event),
-              &fmt, &offset) ||
-          !gst_pad_convert (pad,
-              GST_FORMAT_DEFAULT, musepackdec->len,
-              &fmt, &len) ||
-          !gst_pad_convert (pad,
-              GST_FORMAT_DEFAULT, musepackdec->pos, &fmt, &pos)) {
+      if (!gst_musepackdec_src_convert (pad, format, cur, &fmt, &offset)) {
+
+      }
+      if (!gst_musepackdec_src_convert (pad, GST_FORMAT_DEFAULT,
+              musepackdec->len, &fmt, &len)) {
+        res = FALSE;
+        break;
+      }
+      if (!gst_musepackdec_src_convert (pad, GST_FORMAT_DEFAULT,
+              musepackdec->pos, &fmt, &pos)) {
         res = FALSE;
         break;
       }
 
       /* offset from start */
-      switch (GST_EVENT_SEEK_METHOD (event)) {
-        case GST_SEEK_METHOD_SET:
+      switch (cur_type) {
+        case GST_SEEK_TYPE_SET:
           break;
-        case GST_SEEK_METHOD_CUR:
+        case GST_SEEK_TYPE_CUR:
           offset += pos;
           break;
-        case GST_SEEK_METHOD_END:
+        case GST_SEEK_TYPE_END:
           offset = len - offset;
           break;
         default:
@@ -224,54 +273,31 @@ gst_musepackdec_src_event (GstPad * pad, GstEvent * event)
 
       /* store */
       musepackdec->seek_pending = TRUE;
-      musepackdec->flush_pending =
-          GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
+      musepackdec->flush_pending = flags & GST_SEEK_FLAG_FLUSH;
       musepackdec->seek_time = offset;
       res = TRUE;
       break;
     }
     default:
-      res = FALSE;
+      res = gst_pad_event_default (pad, event);
+      gst_object_unref (musepackdec);
+      return res;
       break;
   }
 
 done:
   gst_event_unref (event);
-
+  gst_object_unref (musepackdec);
   return res;
 }
 
-static const GstFormat *
-gst_musepackdec_get_formats (GstPad * pad)
-{
-  static const GstFormat formats[] = {
-    GST_FORMAT_BYTES,
-    GST_FORMAT_DEFAULT,
-    GST_FORMAT_TIME,
-    (GstFormat) 0
-  };
-
-  return formats;
-}
-
-static const GstEventMask *
-gst_musepackdec_get_event_masks (GstPad * pad)
-{
-  static const GstEventMask event_masks[] = {
-    {GST_EVENT_SEEK,
-        (GstEventFlag) (GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH)},
-    {(GstEventType) 0, (GstEventFlag) 0}
-  };
-
-  return event_masks;
-}
-
 static const GstQueryType *
-gst_musepackdec_get_query_types (GstPad * pad)
+gst_musepackdec_get_src_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
-    GST_QUERY_TOTAL,
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_CONVERT,
     (GstQueryType) 0
   };
 
@@ -279,41 +305,67 @@ gst_musepackdec_get_query_types (GstPad * pad)
 }
 
 static gboolean
-gst_musepackdec_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
+gst_musepackdec_src_query (GstPad * pad, GstQuery * query)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (gst_pad_get_parent (pad));
-  gboolean res;
+  GstFormat format = GST_FORMAT_DEFAULT;
+  GstFormat dest_format;
+  gint64 value, dest_value;
+  gboolean res = TRUE;
 
-  if (!musepackdec->init)
-    return FALSE;
+  if (!musepackdec->init) {
+    res = FALSE;
+    goto done;
+  }
 
-  switch (type) {
-    case GST_QUERY_TOTAL:
-      res = gst_pad_convert (pad,
-          GST_FORMAT_DEFAULT, musepackdec->len, format, value);
-      break;
+  switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      res = gst_pad_convert (pad,
-          GST_FORMAT_DEFAULT, musepackdec->pos, format, value);
+      gst_query_parse_position (query, &dest_format, NULL);
+      if (!gst_musepackdec_src_convert (pad, format, musepackdec->pos,
+              &dest_format, &dest_value)) {
+        res = FALSE;
+      }
+      gst_query_set_position (query, dest_format, dest_value);
+      break;
+    case GST_QUERY_DURATION:
+      gst_query_parse_duration (query, &dest_format, NULL);
+      if (!gst_musepackdec_src_convert (pad, format, musepackdec->len,
+              &dest_format, &dest_value)) {
+        res = FALSE;
+        break;
+      }
+      gst_query_set_duration (query, dest_format, dest_value);
+      break;
+    case GST_QUERY_CONVERT:
+      gst_query_parse_convert (query, &format, &value, &dest_format,
+          &dest_value);
+      if (!gst_musepackdec_src_convert (pad, format, value, &dest_format,
+              &dest_value)) {
+        res = FALSE;
+      }
+      gst_query_set_convert (query, format, value, dest_format, dest_value);
       break;
     default:
       res = FALSE;
       break;
   }
 
+done:
+  g_object_unref (musepackdec);
   return res;
 }
 
-static gboolean
+gboolean
 gst_musepackdec_src_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (gst_pad_get_parent (pad));
   gboolean res = TRUE;
 
-  if (!musepackdec->init)
+  if (!musepackdec->init) {
+    gst_object_unref (musepackdec);
     return FALSE;
+  }
 
   switch (src_format) {
     case GST_FORMAT_DEFAULT:
@@ -365,6 +417,7 @@ gst_musepackdec_src_convert (GstPad * pad, GstFormat src_format,
       break;
   }
 
+  gst_object_unref (musepackdec);
   return TRUE;
 }
 
@@ -375,7 +428,7 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
   GstCaps *caps;
 
   /* set up reading */
-  gst_musepack_init_reader (musepackdec->r, musepackdec->bs);
+  gst_musepack_init_reader (musepackdec->r, musepackdec);
 
   /* streaminfo */
   mpc_streaminfo_init (&i);
@@ -398,7 +451,8 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "channels", G_TYPE_INT, i.channels,
       "rate", G_TYPE_INT, i.sample_freq, NULL);
-  if (!gst_pad_set_explicit_caps (musepackdec->srcpad, caps)) {
+  gst_pad_use_fixed_caps (musepackdec->srcpad);
+  if (!gst_pad_set_caps (musepackdec->srcpad, caps)) {
     GST_ELEMENT_ERROR (musepackdec, CORE, NEGOTIATION, (NULL), (NULL));
     return FALSE;
   }
@@ -412,10 +466,38 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
   return TRUE;
 }
 
-static void
-gst_musepackdec_loop (GstElement * element)
+static gboolean
+gst_musepackdec_sink_activate (GstPad * sinkpad)
 {
-  GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (element);
+
+  if (gst_pad_check_pull_range (sinkpad)) {
+    return gst_pad_activate_pull (sinkpad, TRUE);
+  } else {
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_musepackdec_sink_activate_pull (GstPad * sinkpad, gboolean active)
+{
+
+  gboolean result;
+
+  if (active) {
+
+    result = gst_pad_start_task (sinkpad,
+        (GstTaskFunction) gst_musepackdec_loop, sinkpad);
+  } else {
+    result = gst_pad_stop_task (sinkpad);
+  }
+
+  return result;
+}
+
+static void
+gst_musepackdec_loop (GstPad * sinkpad)
+{
+  GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (GST_PAD_PARENT (sinkpad));
   GstBuffer *out;
   GstFormat fmt;
   gint ret;
@@ -424,6 +506,9 @@ gst_musepackdec_loop (GstElement * element)
   if (!musepackdec->init) {
     if (!gst_musepack_stream_init (musepackdec))
       return;
+    gst_pad_push_event (musepackdec->srcpad,
+        gst_event_new_newsegment (FALSE, 1.0,
+            GST_FORMAT_TIME, musepackdec->pos, GST_CLOCK_TIME_NONE, 0));
   }
 
   if (musepackdec->seek_pending) {
@@ -433,15 +518,13 @@ gst_musepackdec_loop (GstElement * element)
     if (mpc_decoder_seek_seconds (musepackdec->d, seek_time)) {
       if (musepackdec->flush_pending) {
         musepackdec->flush_pending = FALSE;
-        gst_pad_push (musepackdec->srcpad,
-            GST_DATA (gst_event_new (GST_EVENT_FLUSH)));
+        gst_pad_push_event (musepackdec->srcpad, gst_event_new_flush_start ());
       }
-      gst_pad_push (musepackdec->srcpad,
-          GST_DATA (gst_event_new_discontinuous (FALSE,
-                  GST_FORMAT_TIME, musepackdec->seek_time,
-                  GST_FORMAT_UNDEFINED)));
+      gst_pad_push_event (musepackdec->srcpad,
+          gst_event_new_newsegment (FALSE, 1.0,
+              GST_FORMAT_TIME, musepackdec->seek_time, GST_CLOCK_TIME_NONE, 0));
       fmt = GST_FORMAT_DEFAULT;
-      gst_pad_convert (musepackdec->srcpad,
+      gst_musepackdec_src_convert (musepackdec->srcpad,
           GST_FORMAT_TIME, musepackdec->seek_time,
           &fmt, (gint64 *) & musepackdec->pos);
     }
@@ -450,13 +533,12 @@ gst_musepackdec_loop (GstElement * element)
   out = gst_buffer_new_and_alloc (MPC_DECODER_BUFFER_LENGTH * 4);
   ret = mpc_decoder_decode (musepackdec->d,
       (MPC_SAMPLE_FORMAT *) GST_BUFFER_DATA (out), &update_acc, &update_bits);
-  if (ret <= 0) {
-    if (ret == 0) {
-      gst_element_set_eos (element);
-      gst_pad_push (musepackdec->srcpad,
-          GST_DATA (gst_event_new (GST_EVENT_EOS)));
-    } else {
+  if (ret <= 0 || musepackdec->eos) {
+    if (ret < 0) {
       GST_ERROR_OBJECT (musepackdec, "Failed to decode sample");
+    } else if (!musepackdec->eos) {
+      musepackdec->eos = TRUE;
+      gst_pad_push_event (musepackdec->sinkpad, gst_event_new_eos ());
     }
     gst_buffer_unref (out);
     return;
@@ -464,46 +546,49 @@ gst_musepackdec_loop (GstElement * element)
 
   GST_BUFFER_SIZE (out) = ret * musepackdec->bps;
   fmt = GST_FORMAT_TIME;
-  gst_pad_query (musepackdec->srcpad,
-      GST_QUERY_POSITION, &fmt, (gint64 *) & GST_BUFFER_TIMESTAMP (out));
-  gst_pad_convert (musepackdec->srcpad,
-      GST_FORMAT_BYTES, GST_BUFFER_SIZE (out),
-      &fmt, (gint64 *) & GST_BUFFER_DURATION (out));
+
+  gint64 value;
+
+  gst_musepackdec_src_convert (musepackdec->srcpad,
+      GST_FORMAT_BYTES, GST_BUFFER_SIZE (out), &fmt, &value);
+  GST_BUFFER_DURATION (out) = value;
+
+  gst_musepackdec_src_convert (musepackdec->srcpad,
+      GST_FORMAT_DEFAULT, musepackdec->pos, &fmt, &value);
+  GST_BUFFER_TIMESTAMP (out) = value;
+
   musepackdec->pos += GST_BUFFER_SIZE (out) / musepackdec->bps;
-  gst_pad_push (musepackdec->srcpad, GST_DATA (out));
+  gst_buffer_set_caps (out, GST_PAD_CAPS (musepackdec->srcpad));
+  gst_pad_push (musepackdec->srcpad, out);
 }
 
 static GstStateChangeReturn
 gst_musepackdec_change_state (GstElement * element, GstStateChange transition)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (element);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      musepackdec->bs = gst_bytestream_new (musepackdec->sinkpad);
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       musepackdec->seek_pending = FALSE;
       musepackdec->init = FALSE;
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_bytestream_destroy (musepackdec->bs);
       break;
     default:
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return ret;
 
-  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_library_load ("gstbytestream") &&
-      gst_element_register (plugin, "musepackdec",
+  return gst_element_register (plugin, "musepackdec",
       GST_RANK_PRIMARY, GST_TYPE_MUSEPACK_DEC);
 }
 

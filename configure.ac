@@ -399,6 +399,18 @@ else
   AC_SUBST(X_LIBS)
 fi
 
+dnl *** musepack ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
+GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
+  AC_LANG_CPLUSPLUS
+  AC_CHECK_HEADER([mpcdec/mpcdec.h], [
+    HAVE_MUSEPACK="yes"
+    MUSEPACK_LIBS="-lmpcdec"
+    AC_SUBST(MUSEPACK_LIBS)
+    ], [HAVE_MUSEPACK="no"])
+  AC_LANG_C
+])
+
 
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
@@ -508,6 +520,7 @@ ext/faac/Makefile
 ext/faad/Makefile
 ext/ivorbis/Makefile
 ext/gsm/Makefile
+ext/musepack/Makefile
 ext/sdl/Makefile
 docs/Makefile
 docs/plugins/Makefile
