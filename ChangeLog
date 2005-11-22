@@ -1,3 +1,8 @@
+2005-11-22  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gst.defs:
+	* gst/gstevent.override: Run update-funcnames.
+
 2005-11-22  Edward Hervey  <edward@fluendo.com>
 
 	* gst/xoverlay.defs:

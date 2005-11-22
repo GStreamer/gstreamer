@@ -50,9 +50,9 @@ _wrap_gst_event_tp_repr (PyGObject *self)
      return retval;
 }
 %%
-override gst_event_parse_newsegment noargs
+override gst_event_parse_new_segment noargs
 static PyObject *
-_wrap_gst_event_parse_newsegment (PyGstMiniObject *self)
+_wrap_gst_event_parse_new_segment (PyGstMiniObject *self)
 {
      PyObject	*ret;
      gboolean   update;
@@ -65,7 +65,7 @@ _wrap_gst_event_parse_newsegment (PyGstMiniObject *self)
 	  return NULL;
      }
      
-     gst_event_parse_newsegment (GST_EVENT(self->obj), &update, &rate, &format,
+     gst_event_parse_new_segment (GST_EVENT(self->obj), &update, &rate, &format,
 				 &start_value, &stop_value, &base);
      
      ret = PyList_New (6);

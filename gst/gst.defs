@@ -1754,7 +1754,7 @@
 )
 
 (define-function event_new_newsegment
-  (c-name "gst_event_new_newsegment")
+  (c-name "gst_event_new_new_segment")
   (return-type "GstEvent*")
   (caller-owns-return #t)
   (parameters
@@ -1769,7 +1769,7 @@
 
 (define-method parse_newsegment
   (of-object "GstEvent")
-  (c-name "gst_event_parse_newsegment")
+  (c-name "gst_event_parse_new_segment")
   (return-type "none")
   (parameters
     '("gboolean*" "update")
@@ -1800,7 +1800,7 @@
 )
 
 (define-function event_new_buffersize
-  (c-name "gst_event_new_buffersize")
+  (c-name "gst_event_new_buffer_size")
   (return-type "GstEvent*")
   (caller-owns-return #t)
   (parameters
@@ -1813,7 +1813,7 @@
 
 (define-method parse_buffersize
   (of-object "GstEvent")
-  (c-name "gst_event_parse_buffersize")
+  (c-name "gst_event_parse_buffer_size")
   (return-type "none")
   (parameters
     '("GstFormat*" "format")
@@ -1971,7 +1971,7 @@
 )
 
 (define-function ghost_pad_new_notarget
-  (c-name "gst_ghost_pad_new_notarget")
+  (c-name "gst_ghost_pad_new_no_target")
   (return-type "GstPad*")
   (caller-owns-return #t)
   (parameters
