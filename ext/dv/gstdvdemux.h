@@ -61,7 +61,8 @@ struct _GstDVDemux {
   /* PAL or NTSC flag */
   gboolean       PAL;
   /* video params */
-  gdouble	 framerate;
+  gint           framerate_numerator;
+  gint           framerate_denominator;
   gint		 height;
   gboolean	 wide;
   /* audio params */
@@ -72,6 +73,7 @@ struct _GstDVDemux {
   
   guint64	 timestamp;
   guint64	 duration;
+  guint          total_frames;
   guint64	 audio_offset;
   guint64	 video_offset;
 

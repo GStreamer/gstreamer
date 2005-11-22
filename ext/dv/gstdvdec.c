@@ -67,7 +67,7 @@ static GstStaticPadTemplate src_temp = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-raw-yuv, "
         "format = (fourcc) YUY2, "
         "width = (int) 720, "
-        "framerate = (double) [ 1.0, 60.0 ];"
+        "framerate = (fraction) [ 1/1, 60/1 ];"
         "video/x-raw-rgb, "
         "bpp = (int) 32, "
         "depth = (int) 24, "
@@ -76,7 +76,7 @@ static GstStaticPadTemplate src_temp = GST_STATIC_PAD_TEMPLATE ("src",
         "green_mask = (int) 0x00ff0000, "
         "blue_mask =  (int) 0xff000000, "
         "width = (int) 720, "
-        "framerate = (double) [ 1.0, 60.0 ];"
+        "framerate = (fraction) [ 1/1, 60/1 ];"
         "video/x-raw-rgb, "
         "bpp = (int) 24, "
         "depth = (int) 24, "
@@ -84,7 +84,7 @@ static GstStaticPadTemplate src_temp = GST_STATIC_PAD_TEMPLATE ("src",
         "red_mask =   (int) 0x00ff0000, "
         "green_mask = (int) 0x0000ff00, "
         "blue_mask =  (int) 0x000000ff, "
-        "width = (int) 720, " "framerate = (double) [ 1.0, 60.0 ]")
+        "width = (int) 720, " "framerate = (fraction) [ 1/1, 60/1 ]")
     );
 
 #define GST_TYPE_DVDEC_QUALITY (gst_dvdec_quality_get_type())
@@ -186,7 +186,8 @@ gst_dvdec_init (GstDVDec * dvdec, GstDVDecClass * g_class)
 
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->srcpad);
 
-  dvdec->framerate = 0;
+  dvdec->framerate_numerator = 0;
+  dvdec->framerate_denominator = 0;
   dvdec->height = 0;
   dvdec->wide = FALSE;
   dvdec->drop_factor = 1;
@@ -203,7 +204,7 @@ gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstDVDec *dvdec;
   GstStructure *s;
   GstCaps *othercaps;
-  const GValue *v;
+  const GValue *par, *rate;
 
   dvdec = GST_DVDEC (gst_pad_get_parent (pad));
 
@@ -212,10 +213,13 @@ gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   if (!gst_structure_get_int (s, "height", &dvdec->height))
     goto error;
-  if (!(v = gst_structure_get_value (s, "pixel-aspect-ratio")))
+  if (!(par = gst_structure_get_value (s, "pixel-aspect-ratio")))
     goto error;
-  if (!gst_structure_get_double (s, "framerate", &dvdec->framerate))
+  if (!(rate = gst_structure_get_value (s, "framerate")))
     goto error;
+
+  dvdec->framerate_numerator = gst_value_get_fraction_numerator (rate);
+  dvdec->framerate_denominator = gst_value_get_fraction_denominator (rate);
 
   /* ignoring rgb, bgr0 for now */
 
@@ -225,9 +229,10 @@ gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
       "format", GST_TYPE_FOURCC, GST_STR_FOURCC ("YUY2"),
       "width", G_TYPE_INT, 720,
       "height", G_TYPE_INT, dvdec->height,
-      "framerate", G_TYPE_DOUBLE, dvdec->framerate, NULL);
+      "framerate", GST_TYPE_FRACTION, dvdec->framerate_numerator,
+      dvdec->framerate_denominator, NULL);
   gst_structure_set_value (gst_caps_get_structure (othercaps, 0),
-      "pixel-aspect-ratio", v);
+      "pixel-aspect-ratio", par);
 
   gst_pad_set_caps (dvdec->srcpad, othercaps);
 

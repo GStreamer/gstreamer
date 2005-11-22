@@ -1,3 +1,14 @@
+2005-11-22  Michael Smith <msmith@fluendo.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_sink_setcaps):
+	* ext/dv/gstdvdec.h:
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_init),
+	(gst_dvdemux_src_convert), (gst_dvdemux_sink_convert),
+	(gst_dvdemux_demux_video), (gst_dvdemux_demux_frame),
+	(gst_dvdemux_flush):
+	* ext/dv/gstdvdemux.h:
+	  Fractional framerates for DV. 
+
 2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/autodetect/gstautoaudiosink.c:

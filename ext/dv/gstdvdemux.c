@@ -66,11 +66,13 @@
 
 #define NTSC_HEIGHT 480
 #define NTSC_BUFFER 120000
-#define NTSC_FRAMERATE 30000/1001.
+#define NTSC_FRAMERATE_NUMERATOR 30000
+#define NTSC_FRAMERATE_DENOMINATOR 1001
 
 #define PAL_HEIGHT 576
 #define PAL_BUFFER 144000
-#define PAL_FRAMERATE 25.0
+#define PAL_FRAMERATE_NUMERATOR 25
+#define PAL_FRAMERATE_DENOMINATOR 1
 
 #define PAL_NORMAL_PAR_X	59
 #define PAL_NORMAL_PAR_Y	54
@@ -187,7 +189,9 @@ gst_dvdemux_init (GstDVDemux * dvdemux, GstDVDemuxClass * g_class)
   dvdemux->stop_timestamp = -1LL;
   dvdemux->need_discont = FALSE;
   dvdemux->new_media = FALSE;
-  dvdemux->framerate = 0;
+  dvdemux->framerate_numerator = 0;
+  dvdemux->framerate_denominator = 0;
+  dvdemux->total_frames = 0;
   dvdemux->height = 0;
   dvdemux->frequency = 0;
   dvdemux->channels = 0;
@@ -263,8 +267,9 @@ gst_dvdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_TIME:
           *dest_format = GST_FORMAT_TIME;
           if (pad == dvdemux->videosrcpad)
-            *dest_value = src_value * GST_SECOND /
-                (dvdemux->frame_len * dvdemux->framerate);
+            *dest_value = src_value * GST_SECOND *
+                dvdemux->framerate_denominator /
+                (dvdemux->frame_len * dvdemux->framerate_numerator);
           else if (pad == dvdemux->audiosrcpad)
             *dest_value = src_value * GST_SECOND /
                 (2 * dvdemux->frequency * dvdemux->channels);
@@ -277,8 +282,9 @@ gst_dvdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
           if (pad == dvdemux->videosrcpad)
-            *dest_value = src_value * dvdemux->frame_len * dvdemux->framerate
-                / GST_SECOND;
+            *dest_value = src_value * dvdemux->frame_len *
+                dvdemux->framerate_numerator /
+                (dvdemux->framerate_denominator * GST_SECOND);
           else if (pad == dvdemux->audiosrcpad)
             *dest_value = 2 * src_value * dvdemux->frequency *
                 dvdemux->channels / GST_SECOND;
@@ -286,7 +292,8 @@ gst_dvdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_DEFAULT:
           if (pad == dvdemux->videosrcpad) {
             if (src_value)
-              *dest_value = src_value * dvdemux->framerate / GST_SECOND;
+              *dest_value = src_value * dvdemux->framerate_numerator /
+                  (dvdemux->framerate_denominator * GST_SECOND);
             else
               *dest_value = 0;
           } else if (pad == dvdemux->audiosrcpad) {
@@ -303,7 +310,8 @@ gst_dvdemux_src_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
       switch (*dest_format) {
         case GST_FORMAT_TIME:
           if (pad == dvdemux->videosrcpad) {
-            *dest_value = src_value * GST_SECOND / dvdemux->framerate;
+            *dest_value = src_value * GST_SECOND *
+                dvdemux->framerate_denominator / dvdemux->framerate_numerator;
           } else if (pad == dvdemux->audiosrcpad) {
             if (src_value)
               *dest_value =
@@ -376,7 +384,8 @@ gst_dvdemux_sink_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
           /* get frame number */
           frame = src_value / dvdemux->frame_len;
 
-          *dest_value = (frame * GST_SECOND) / dvdemux->framerate;
+          *dest_value = (frame * GST_SECOND * dvdemux->framerate_denominator) /
+              dvdemux->framerate_numerator;
           break;
         }
         default:
@@ -390,7 +399,8 @@ gst_dvdemux_sink_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
           guint64 frame;
 
           /* calculate the frame */
-          frame = src_value * dvdemux->framerate / GST_SECOND;
+          frame = src_value * dvdemux->framerate_numerator /
+              (dvdemux->framerate_denominator * GST_SECOND);
           /* calculate the offset */
           *dest_value = frame * dvdemux->frame_len;
           break;
@@ -825,7 +835,8 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, const guint8 * data)
         "systemstream", G_TYPE_BOOLEAN, FALSE,
         "width", G_TYPE_INT, 720,
         "height", G_TYPE_INT, height,
-        "framerate", G_TYPE_DOUBLE, dvdemux->framerate,
+        "framerate", GST_TYPE_FRACTION, dvdemux->framerate_numerator,
+        dvdemux->framerate_denominator,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, par_x, par_y, NULL);
     gst_pad_set_caps (dvdemux->videosrcpad, caps);
     gst_caps_unref (caps);
@@ -893,7 +904,10 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, const guint8 * data)
     dvdemux->need_discont = FALSE;
   }
 
-  next_ts = dvdemux->timestamp + GST_SECOND / dvdemux->framerate;
+  dvdemux->total_frames++;
+
+  next_ts = dvdemux->total_frames * GST_SECOND *
+      dvdemux->framerate_denominator / dvdemux->framerate_numerator;
   dvdemux->duration = next_ts - dvdemux->timestamp;
 
   dv_parse_packs (dvdemux->decoder, data);
@@ -948,7 +962,13 @@ gst_dvdemux_flush (GstDVDemux * dvdemux)
     /* after parsing the header we know the length of the data */
     dvdemux->PAL = dv_system_50_fields (dvdemux->decoder);
     length = dvdemux->frame_len = (dvdemux->PAL ? PAL_BUFFER : NTSC_BUFFER);
-    dvdemux->framerate = dvdemux->PAL ? PAL_FRAMERATE : NTSC_FRAMERATE;
+    if (dvdemux->PAL) {
+      dvdemux->framerate_numerator = PAL_FRAMERATE_NUMERATOR;
+      dvdemux->framerate_denominator = PAL_FRAMERATE_DENOMINATOR;
+    } else {
+      dvdemux->framerate_numerator = NTSC_FRAMERATE_NUMERATOR;
+      dvdemux->framerate_denominator = NTSC_FRAMERATE_DENOMINATOR;
+    }
     /* let demux_video set the height, it needs to detect when things change so
      * it can reset caps */
 
