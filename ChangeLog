@@ -1,5 +1,9 @@
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
+	* Update for gst_tag_setter API changes.
+
+2005-11-22  Andy Wingo  <wingo@pobox.com>
+
 	* ext/dv/gstdvdemux.c (gst_dvdemux_handle_sink_event)
 	(gst_dvdemux_demux_frame)
 	* ext/flac/gstflacdec.c (gst_flacdec_write)

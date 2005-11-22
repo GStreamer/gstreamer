@@ -652,7 +652,7 @@ gst_speexenc_set_metadata (GstSpeexEnc * speexenc)
   GstTagList *copy;
   const GstTagList *user_tags;
 
-  user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (speexenc));
+  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (speexenc));
   if (!(speexenc->tags || user_tags))
     return;
 
@@ -660,7 +660,7 @@ gst_speexenc_set_metadata (GstSpeexEnc * speexenc)
       "Encoded with GStreamer Speexenc");
   copy =
       gst_tag_list_merge (user_tags, speexenc->tags,
-      gst_tag_setter_get_merge_mode (GST_TAG_SETTER (speexenc)));
+      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (speexenc)));
   gst_tag_list_foreach (copy, gst_speexenc_metadata_set1, speexenc);
   gst_tag_list_free (copy);
 }
@@ -874,7 +874,7 @@ gst_speexenc_sinkevent (GstPad * pad, GstEvent * event)
       gst_event_parse_tag (event, &list);
       if (speexenc->tags) {
         gst_tag_list_insert (speexenc->tags, list,
-            gst_tag_setter_get_merge_mode (GST_TAG_SETTER (speexenc)));
+            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (speexenc)));
       } else {
         g_assert_not_reached ();
       }

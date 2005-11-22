@@ -349,12 +349,12 @@ gst_flacenc_set_metadata (GstFlacEnc * flacenc)
   GstTagList *copy;
 
   g_return_if_fail (flacenc != NULL);
-  user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (flacenc));
+  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (flacenc));
   if ((flacenc->tags == NULL) && (user_tags == NULL)) {
     return;
   }
   copy = gst_tag_list_merge (user_tags, flacenc->tags,
-      gst_tag_setter_get_merge_mode (GST_TAG_SETTER (flacenc)));
+      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (flacenc)));
   flacenc->meta = g_malloc (sizeof (FLAC__StreamMetadata **));
 
   flacenc->meta[0] =

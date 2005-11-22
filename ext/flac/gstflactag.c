@@ -475,9 +475,9 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
 
     g_assert (tag->only_output_tags == FALSE);
 
-    user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (tag));
+    user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag));
     merged_tags = gst_tag_list_merge (tag->tags, user_tags,
-        gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
+        gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (tag)));
 
     if (merged_tags == NULL) {
       /* If we get a NULL list of tags, we must generate a padding block

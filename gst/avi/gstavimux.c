@@ -639,7 +639,7 @@ gst_avimux_riff_get_avi_header (GstAviMux * avimux)
   size += 12;                   /* avi data header */
 
   /* tags */
-  iface_tags = gst_tag_setter_get_list (GST_TAG_SETTER (avimux));
+  iface_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (avimux));
   if (iface_tags || avimux->tags) {
     size += 1024;
     if (iface_tags && avimux->tags) {

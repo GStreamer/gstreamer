@@ -291,13 +291,13 @@ gst_shout2send_set_metadata (GstShout2send * shout2send)
   shout_metadata_t *pmetadata;
 
   g_return_if_fail (shout2send != NULL);
-  user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (shout2send));
+  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (shout2send));
 
   if ((shout2send->tags == NULL) && (user_tags == NULL)) {
     return;
   }
   copy = gst_tag_list_merge (user_tags, shout2send->tags,
-      gst_tag_setter_get_merge_mode (GST_TAG_SETTER (shout2send)));
+      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (shout2send)));
 
   /* lets get the artist and song tags */
   tempmetadata = NULL;
@@ -334,7 +334,8 @@ gst_shout2send_event (GstBaseSink * sink, GstEvent * event)
         gst_event_parse_tag (event, &list);
 
         gst_tag_list_insert (shout2send->tags,
-            list, gst_tag_setter_get_merge_mode (GST_TAG_SETTER (shout2send)));
+            list,
+            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (shout2send)));
         /* lets get the artist and song tags */
         tempmetadata = NULL;
         gst_tag_list_foreach ((GstTagList *) shout2send->tags,
