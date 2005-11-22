@@ -1,3 +1,11 @@
+2005-11-22  Michael Smith <msmith@fluendo.com>
+
+	* gst/gstutils.c: (gst_util_clocktime_scale):
+	* gst/gstutils.h:
+	* docs/gst/gstreamer-sections.txt:
+	  Add util method for scaling a clocktime by a fraction. Useful 
+	  implementation is left as an exercise for the reader.
+
 2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstvalue.c: (gst_value_collect_fraction_range):

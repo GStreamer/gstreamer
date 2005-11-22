@@ -358,6 +358,23 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
       ((gst_guint64_to_gdouble (num)) / gst_guint64_to_gdouble (denom)));
 }
 
+/**
+ * gst_util_clocktime_scale:
+ * @val: GstClockTime to scale.
+ * @num: numerator of the scale factor.
+ * @denum: denominator of the scale factor.
+ *
+ * Scale a clocktime by a factor expressed as a fraction (num/denom), avoiding
+ * overflows and loss of precision.
+ *
+ * Returns: @val * @num / @denom, avoiding overflow and loss of precision
+ */
+GstClockTime
+gst_util_clocktime_scale (GstClockTime val, gint num, gint denom)
+{
+  return val * num / denom;
+}
+
 /* -----------------------------------------------------
  *
  *  The following code will be moved out of the main

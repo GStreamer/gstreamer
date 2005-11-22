@@ -2060,6 +2060,7 @@ gst_guint64_to_gdouble
 gst_gdouble_to_guint64
 gst_util_dump_mem
 gst_util_uint64_scale
+gst_util_clocktime_scale
 gst_util_set_object_arg
 gst_util_set_value_from_string
 <SUBSECTION Private>
