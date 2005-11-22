@@ -80,7 +80,7 @@ static void
 gst_tuner_norm_init (GstTunerNorm * norm)
 {
   norm->label = NULL;
-  norm->fps = 0.;
+  g_value_init (&norm->framerate, GST_TYPE_FRACTION);
 }
 
 static void

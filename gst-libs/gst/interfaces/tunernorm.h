@@ -41,7 +41,7 @@ typedef struct _GstTunerNorm {
   GObject parent;
 
   gchar  *label;
-  gfloat  fps;
+  GValue  framerate;
 } GstTunerNorm;
 
 typedef struct _GstTunerNormClass {
