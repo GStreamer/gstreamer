@@ -212,10 +212,10 @@ gst_mad_layer_get_type (void)
 {
   static GType mad_layer_type = 0;
   static GEnumValue mad_layer[] = {
-    {0, "0", "Unknown"},
-    {MAD_LAYER_I, "1", "I"},
-    {MAD_LAYER_II, "2", "II"},
-    {MAD_LAYER_III, "3", "III"},
+    {0, "Unknown", "unknown"},
+    {MAD_LAYER_I, "Layer I", "1"},
+    {MAD_LAYER_II, "Layer II", "2"},
+    {MAD_LAYER_III, "Layer III", "3"},
     {0, NULL, NULL},
   };
 
@@ -231,11 +231,11 @@ gst_mad_mode_get_type (void)
 {
   static GType mad_mode_type = 0;
   static GEnumValue mad_mode[] = {
-    {-1, "-1", "Unknown"},
-    {MAD_MODE_SINGLE_CHANNEL, "0", "Single Channel"},
-    {MAD_MODE_DUAL_CHANNEL, "1", "Dual Channel"},
-    {MAD_MODE_JOINT_STEREO, "2", "Joint Stereo"},
-    {MAD_MODE_STEREO, "3", "Stereo"},
+    {-1, "Unknown", "unknown"},
+    {MAD_MODE_MONO, "Mono", "mono"},
+    {MAD_MODE_DUAL_CHANNEL, "Dual Channel", "dual"},
+    {MAD_MODE_JOINT_STEREO, "Joint Stereo", "joint"},
+    {MAD_MODE_STEREO, "Stereo", "stereo"},
     {0, NULL, NULL},
   };
 
@@ -251,11 +251,11 @@ gst_mad_emphasis_get_type (void)
 {
   static GType mad_emphasis_type = 0;
   static GEnumValue mad_emphasis[] = {
-    {-1, "-1", "Unknown"},
-    {MAD_EMPHASIS_NONE, "0", "None"},
-    {MAD_EMPHASIS_50_15_US, "1", "50/15 Microseconds"},
-    {MAD_EMPHASIS_CCITT_J_17, "2", "CCITT J.17"},
-    {MAD_EMPHASIS_RESERVED, "3", "Reserved"},
+    {-1, "Unknown", "unknown"},
+    {MAD_EMPHASIS_NONE, "None", "none"},
+    {MAD_EMPHASIS_50_15_US, "50/15 Microseconds", "50-15"},
+    {MAD_EMPHASIS_CCITT_J_17, "CCITT J.17", "j-17"},
+    {MAD_EMPHASIS_RESERVED, "Reserved", "reserved"},
     {0, NULL, NULL},
   };
 

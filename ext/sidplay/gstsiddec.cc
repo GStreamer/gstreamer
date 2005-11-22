@@ -72,8 +72,8 @@ gst_sid_clock_get_type (void)
 {
   static GType sid_clock_type = 0;
   static GEnumValue sid_clock[] = {
-    {SIDTUNE_CLOCK_PAL, "0", "PAL"},
-    {SIDTUNE_CLOCK_NTSC, "1", "NTSC"},
+    {SIDTUNE_CLOCK_PAL, "PAL", "pal"},
+    {SIDTUNE_CLOCK_NTSC, "NTSC", "ntsc"},
     {0, NULL, NULL},
   };
 
@@ -89,9 +89,9 @@ gst_sid_memory_get_type (void)
 {
   static GType sid_memory_type = 0;
   static GEnumValue sid_memory[] = {
-    {MPU_BANK_SWITCHING, "32", "Bank Switching"},
-    {MPU_TRANSPARENT_ROM, "33", "Transparent ROM"},
-    {MPU_PLAYSID_ENVIRONMENT, "34", "Playsid Environment"},
+    {MPU_BANK_SWITCHING, "Bank Switching", "bank-switching"},
+    {MPU_TRANSPARENT_ROM, "Transparent ROM", "transparent-rom"},
+    {MPU_PLAYSID_ENVIRONMENT, "Playsid Environment", "playsid-environment"},
     {0, NULL, NULL},
   };
 

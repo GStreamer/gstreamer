@@ -1,3 +1,10 @@
+2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/lame/gstlame.c:
+	* ext/mad/gstmad.c:
+	* ext/sidplay/gstsiddec.cc:
+	  fix up GValueEnum
+
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
 	* Update for gst_tag_setter API changes.
