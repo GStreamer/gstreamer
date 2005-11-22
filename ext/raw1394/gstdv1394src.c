@@ -114,6 +114,7 @@ static void gst_dv1394src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_dv1394src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_dv1394src_dispose (GObject * object);
 
 static gboolean gst_dv1394src_start (GstBaseSrc * bsrc);
 static gboolean gst_dv1394src_stop (GstBaseSrc * bsrc);
@@ -173,6 +174,7 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
 
   gobject_class->set_property = gst_dv1394src_set_property;
   gobject_class->get_property = gst_dv1394src_get_property;
+  gobject_class->dispose = gst_dv1394src_dispose;
 
   gst_dv1394src_signals[SIGNAL_FRAME_DROPPED] =
       g_signal_new ("frame-dropped", G_TYPE_FROM_CLASS (klass),
@@ -232,6 +234,7 @@ gst_dv1394src_init (GstDV1394Src * dv1394src, GstDV1394SrcClass * klass)
   dv1394src->drop_incomplete = DEFAULT_DROP_INCOMPLETE;
   dv1394src->use_avc = DEFAULT_USE_AVC;
   dv1394src->guid = DEFAULT_GUID;
+  dv1394src->uri = g_strdup_printf ("dv://%d", dv1394src->port);
 
   READ_SOCKET (dv1394src) = -1;
   WRITE_SOCKET (dv1394src) = -1;
@@ -245,6 +248,17 @@ gst_dv1394src_init (GstDV1394Src * dv1394src, GstDV1394SrcClass * klass)
 }
 
 static void
+gst_dv1394src_dispose (GObject * object)
+{
+  GstDV1394Src *src = GST_DV1394SRC (object);
+
+  g_free (src->uri);
+  src->uri = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
 gst_dv1394src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -253,6 +267,8 @@ gst_dv1394src_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PORT:
       filter->port = g_value_get_int (value);
+      g_free (filter->uri);
+      filter->uri = g_strdup_printf ("dv://%d", filter->port);
       break;
     case PROP_CHANNEL:
       filter->channel = g_value_get_int (value);
@@ -565,6 +581,8 @@ gst_dv1394src_discover_avc_node (GstDV1394Src * src)
         if (src->guid == rom1394_get_guid (handle, i)) {
           node = i;
           src->port = j;
+          g_free (src->uri);
+          src->uri = g_strdup_printf ("dv://%d", src->port);
           break;
         }
       } else {
@@ -579,6 +597,8 @@ gst_dv1394src_discover_avc_node (GstDV1394Src * src)
             avc1394_check_subunit_type (handle, i, AVC1394_SUBUNIT_TYPE_VCR)) {
           node = i;
           src->port = j;
+          g_free (src->uri);
+          src->uri = g_strdup_printf ("dv://%d", src->port);
           break;
         }
       }
@@ -865,8 +885,13 @@ gst_dv1394src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   g_free (protocol);
 
   location = gst_uri_get_location (uri);
-  gst_dv1394src->port = strtol (location, NULL, 10);
+  if (location && (!(location == "")))
+    gst_dv1394src->port = strtol (location, NULL, 10);
+  else
+    gst_dv1394src->port = DEFAULT_PORT;
   g_free (location);
+  g_free (gst_dv1394src->uri);
+  gst_dv1394src->uri = g_strdup_printf ("dv://%d", gst_dv1394src->port);
 
   return ret;
 }

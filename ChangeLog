@@ -1,3 +1,15 @@
+2005-11-22  Edward Hervey  <edward@fluendo.com>
+
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_class_init),
+	(gst_dv1394src_init), (gst_dv1394src_dispose),
+	(gst_dv1394src_set_property), (gst_dv1394src_discover_avc_node),
+	(gst_dv1394src_uri_set_uri):
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init),
+	(gst_udpsrc_update_uri), (gst_udpsrc_set_uri),
+	(gst_udpsrc_set_property), (gst_udpsrc_uri_get_uri):
+	URIHandler interface and element properties are now properly
+	synchronized for DV1394src and UDPSrc
+
 2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/Makefile.am:

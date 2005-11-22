@@ -144,7 +144,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_URI,
       g_param_spec_string ("uri", "URI",
-          "URI in the form of udp://hostname:port", UDP_DEFAULT_URI,
+          "URI in the form of udp://multicast_group:port", UDP_DEFAULT_URI,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",
@@ -312,6 +312,15 @@ receive_error:
   }
 }
 
+/* Call this function when multicastgroup and/or port are updated */
+
+static void
+gst_udpsrc_update_uri (GstUDPSrc * src)
+{
+  g_free (src->uri);
+  src->uri = g_strdup_printf ("udp://%s:%d", src->multi_group, src->port);
+}
+
 static gboolean
 gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri)
 {
@@ -325,14 +334,21 @@ gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri)
   g_free (protocol);
 
   location = gst_uri_get_location (uri);
+  if (!location)
+    return FALSE;
   colptr = strstr (location, ":");
   if (colptr != NULL) {
+    g_free (src->multi_group);
+    src->multi_group = g_strndup (location, colptr - location);
     src->port = atoi (colptr + 1);
+  } else {
+    g_free (src->multi_group);
+    src->multi_group = g_strdup (location);
+    src->port = UDP_DEFAULT_PORT;
   }
   g_free (location);
-  g_free (src->uri);
 
-  src->uri = g_strdup (uri);
+  gst_udpsrc_update_uri (src);
 
   return TRUE;
 
@@ -354,6 +370,7 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case PROP_PORT:
       udpsrc->port = g_value_get_int (value);
+      gst_udpsrc_update_uri (udpsrc);
       break;
     case PROP_MULTICAST_GROUP:
       g_free (udpsrc->multi_group);
@@ -362,7 +379,7 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
         udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
       else
         udpsrc->multi_group = g_strdup (g_value_get_string (value));
-
+      gst_udpsrc_update_uri (udpsrc);
       break;
     case PROP_URI:
       gst_udpsrc_set_uri (udpsrc, g_value_get_string (value));
@@ -594,7 +611,7 @@ gst_udpsrc_uri_get_uri (GstURIHandler * handler)
 {
   GstUDPSrc *src = GST_UDPSRC (handler);
 
-  return g_strdup (src->uri);
+  return src->uri;
 }
 
 static gboolean
