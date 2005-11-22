@@ -993,6 +993,22 @@ GST_START_TEST (test_value_subtract_fraction)
   g_value_unset (&src1);
   g_value_unset (&src2);
   g_value_unset (&result);
+
+  /* Subtract 12/13 from 4/3 */
+  g_value_init (&src1, GST_TYPE_FRACTION);
+  g_value_init (&src2, GST_TYPE_FRACTION);
+  g_value_init (&result, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&src1, 4, 3);
+  gst_value_set_fraction (&src2, 12, 13);
+  fail_unless (gst_value_fraction_subtract (&result, &src1, &src2) == TRUE);
+  fail_unless (gst_value_get_fraction_numerator (&result) == 16);
+  fail_unless (gst_value_get_fraction_denominator (&result) == 39);
+
+  g_value_unset (&src1);
+  g_value_unset (&src2);
+  g_value_unset (&result);
+
+  /* Subtract 1/12 from 7/8 */
 }
 
 GST_END_TEST;

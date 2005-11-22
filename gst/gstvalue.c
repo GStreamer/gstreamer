@@ -3282,7 +3282,7 @@ gboolean
 gst_value_fraction_subtract (GValue * dest,
     const GValue * minuend, const GValue * subtrahend)
 {
-  gint gcd, n1, n2, d1, d2;
+  gint n1, n2, d1, d2;
 
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (minuend), FALSE);
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (subtrahend), FALSE);
@@ -3300,13 +3300,6 @@ gst_value_fraction_subtract (GValue * dest,
     gst_value_set_fraction (dest, n1, d1);
     return TRUE;
   }
-
-  gcd = gst_greatest_common_divisor (n1, d2);
-  n1 /= gcd;
-  d2 /= gcd;
-  gcd = gst_greatest_common_divisor (n2, d1);
-  n2 /= gcd;
-  d1 /= gcd;
 
   g_return_val_if_fail (n1 == 0 || G_MAXINT / ABS (n1) >= ABS (d2), FALSE);
   g_return_val_if_fail (G_MAXINT / ABS (d1) >= ABS (n2), FALSE);
