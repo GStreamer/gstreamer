@@ -87,19 +87,19 @@ gst_fake_sink_state_error_get_type (void)
 {
   static GType fakesink_state_error_type = 0;
   static GEnumValue fakesink_state_error[] = {
-    {FAKE_SINK_STATE_ERROR_NONE, "0", "No state change errors"},
-    {FAKE_SINK_STATE_ERROR_NULL_READY, "1",
-        "Fail state change from NULL to READY"},
-    {FAKE_SINK_STATE_ERROR_READY_PAUSED, "2",
-        "Fail state change from READY to PAUSED"},
-    {FAKE_SINK_STATE_ERROR_PAUSED_PLAYING, "3",
-        "Fail state change from PAUSED to PLAYING"},
-    {FAKE_SINK_STATE_ERROR_PLAYING_PAUSED, "4",
-        "Fail state change from PLAYING to PAUSED"},
-    {FAKE_SINK_STATE_ERROR_PAUSED_READY, "5",
-        "Fail state change from PAUSED to READY"},
-    {FAKE_SINK_STATE_ERROR_READY_NULL, "6",
-        "Fail state change from READY to NULL"},
+    {FAKE_SINK_STATE_ERROR_NONE, "No state change errors", "none"},
+    {FAKE_SINK_STATE_ERROR_NULL_READY,
+        "Fail state change from NULL to READY", "null-to-ready"},
+    {FAKE_SINK_STATE_ERROR_READY_PAUSED,
+        "Fail state change from READY to PAUSED", "ready-to-paused"},
+    {FAKE_SINK_STATE_ERROR_PAUSED_PLAYING,
+        "Fail state change from PAUSED to PLAYING", "paused-to-playing"},
+    {FAKE_SINK_STATE_ERROR_PLAYING_PAUSED,
+        "Fail state change from PLAYING to PAUSED", "playing-to-paused"},
+    {FAKE_SINK_STATE_ERROR_PAUSED_READY,
+        "Fail state change from PAUSED to READY", "paused-to-ready"},
+    {FAKE_SINK_STATE_ERROR_READY_NULL,
+        "Fail state change from READY to NULL", "ready-to-null"},
     {0, NULL, NULL},
   };
 

@@ -63,10 +63,10 @@ enum
 
 #define DEFAULT_OUTPUT		FAKE_SRC_FIRST_LAST_LOOP
 #define DEFAULT_DATA		FAKE_SRC_DATA_ALLOCATE
-#define DEFAULT_SIZETYPE	FAKE_SRC_SIZETYPE_NULL
+#define DEFAULT_SIZETYPE	FAKE_SRC_SIZETYPE_EMPTY
 #define DEFAULT_SIZEMIN		0
 #define DEFAULT_SIZEMAX		4096
-#define DEFAULT_FILLTYPE	FAKE_SRC_FILLTYPE_NULL
+#define DEFAULT_FILLTYPE	FAKE_SRC_FILLTYPE_ZERO
 #define DEFAULT_DATARATE	0
 #define DEFAULT_SYNC		FALSE
 #define DEFAULT_PATTERN		NULL
@@ -133,8 +133,8 @@ gst_fake_src_data_get_type (void)
 {
   static GType fakesrc_data_type = 0;
   static GEnumValue fakesrc_data[] = {
-    {FAKE_SRC_DATA_ALLOCATE, "1", "Allocate data"},
-    {FAKE_SRC_DATA_SUBBUFFER, "2", "Subbuffer data"},
+    {FAKE_SRC_DATA_ALLOCATE, "Allocate data", "allocate"},
+    {FAKE_SRC_DATA_SUBBUFFER, "Subbuffer data", "subbuffer"},
     {0, NULL, NULL},
   };
 
@@ -150,10 +150,10 @@ gst_fake_src_sizetype_get_type (void)
 {
   static GType fakesrc_sizetype_type = 0;
   static GEnumValue fakesrc_sizetype[] = {
-    {FAKE_SRC_SIZETYPE_NULL, "1", "Send empty buffers"},
-    {FAKE_SRC_SIZETYPE_FIXED, "2", "Fixed size buffers (sizemax sized)"},
-    {FAKE_SRC_SIZETYPE_RANDOM, "3",
-        "Random sized buffers (sizemin <= size <= sizemax)"},
+    {FAKE_SRC_SIZETYPE_EMPTY, "Send empty buffers", "empty"},
+    {FAKE_SRC_SIZETYPE_FIXED, "Fixed size buffers (sizemax sized)", "fixed"},
+    {FAKE_SRC_SIZETYPE_RANDOM,
+        "Random sized buffers (sizemin <= size <= sizemax)", "random"},
     {0, NULL, NULL},
   };
 
@@ -170,12 +170,14 @@ gst_fake_src_filltype_get_type (void)
 {
   static GType fakesrc_filltype_type = 0;
   static GEnumValue fakesrc_filltype[] = {
-    {FAKE_SRC_FILLTYPE_NOTHING, "1", "Leave data as malloced"},
-    {FAKE_SRC_FILLTYPE_NULL, "2", "Fill buffers with zeros"},
-    {FAKE_SRC_FILLTYPE_RANDOM, "3", "Fill buffers with random crap"},
-    {FAKE_SRC_FILLTYPE_PATTERN, "4", "Fill buffers with pattern 0x00 -> 0xff"},
-    {FAKE_SRC_FILLTYPE_PATTERN_CONT, "5",
-        "Fill buffers with pattern 0x00 -> 0xff that spans buffers"},
+    {FAKE_SRC_FILLTYPE_NOTHING, "Leave data as malloced", "nothing"},
+    {FAKE_SRC_FILLTYPE_ZERO, "Fill buffers with zeros", "zero"},
+    {FAKE_SRC_FILLTYPE_RANDOM, "Fill buffers with random crap", "random"},
+    {FAKE_SRC_FILLTYPE_PATTERN, "Fill buffers with pattern 0x00 -> 0xff",
+          "pattern"},
+    {FAKE_SRC_FILLTYPE_PATTERN_CONT,
+        "Fill buffers with pattern 0x00 -> 0xff that spans buffers",
+          "pattern-span"},
     {0, NULL, NULL},
   };
 
@@ -330,7 +332,7 @@ gst_fake_src_init (GstFakeSrc * fakesrc, GstFakeSrcClass * g_class)
   fakesrc->dump = DEFAULT_DUMP;
   fakesrc->pattern_byte = 0x00;
   fakesrc->data = FAKE_SRC_DATA_ALLOCATE;
-  fakesrc->sizetype = FAKE_SRC_SIZETYPE_NULL;
+  fakesrc->sizetype = FAKE_SRC_SIZETYPE_EMPTY;
   fakesrc->filltype = FAKE_SRC_FILLTYPE_NOTHING;
   fakesrc->sizemin = DEFAULT_SIZEMIN;
   fakesrc->sizemax = DEFAULT_SIZEMAX;
@@ -542,7 +544,7 @@ gst_fake_src_prepare_buffer (GstFakeSrc * src, GstBuffer * buf)
     return;
 
   switch (src->filltype) {
-    case FAKE_SRC_FILLTYPE_NULL:
+    case FAKE_SRC_FILLTYPE_ZERO:
       memset (GST_BUFFER_DATA (buf), 0, GST_BUFFER_SIZE (buf));
       break;
     case FAKE_SRC_FILLTYPE_RANDOM:
@@ -587,7 +589,7 @@ gst_fake_src_alloc_buffer (GstFakeSrc * src, guint size)
         GST_BUFFER_DATA (buf) = g_malloc (size);
         GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
         break;
-      case FAKE_SRC_FILLTYPE_NULL:
+      case FAKE_SRC_FILLTYPE_ZERO:
         GST_BUFFER_DATA (buf) = g_malloc0 (size);
         GST_BUFFER_MALLOCDATA (buf) = GST_BUFFER_DATA (buf);
         break;
@@ -620,7 +622,7 @@ gst_fake_src_get_size (GstFakeSrc * src)
           (guint8) (((gfloat) src->sizemax) * rand () / (RAND_MAX +
               (gfloat) src->sizemin));
       break;
-    case FAKE_SRC_SIZETYPE_NULL:
+    case FAKE_SRC_SIZETYPE_EMPTY:
     default:
       size = 0;
       break;

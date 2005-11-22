@@ -171,9 +171,9 @@ queue_leaky_get_type (void)
 {
   static GType queue_leaky_type = 0;
   static GEnumValue queue_leaky[] = {
-    {GST_QUEUE_NO_LEAK, "0", "Not Leaky"},
-    {GST_QUEUE_LEAK_UPSTREAM, "1", "Leaky on Upstream"},
-    {GST_QUEUE_LEAK_DOWNSTREAM, "2", "Leaky on Downstream"},
+    {GST_QUEUE_NO_LEAK, "Not Leaky", "no"},
+    {GST_QUEUE_LEAK_UPSTREAM, "Leaky on Upstream", "upstream"},
+    {GST_QUEUE_LEAK_DOWNSTREAM, "Leaky on Downstream", "downstream"},
     {0, NULL, NULL},
   };
 

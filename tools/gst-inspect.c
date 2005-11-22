@@ -453,8 +453,9 @@ print_element_properties_info (GstElement * element)
 
           j = 0;
           while (values[j].value_name) {
-            g_print ("\n%s%-23.23s    (%d): \t%s", "",
-                _name, values[j].value, values[j].value_nick);
+            g_print ("\n%s%-23.23s    %d) %-16s - %s", "",
+                _name, values[j].value, values[j].value_nick,
+                values[j].value_name);
             j++;
           }
           /* g_type_class_unref (ec); */

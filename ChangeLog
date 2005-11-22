@@ -1,3 +1,20 @@
+2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/elements/Makefile.am:
+	* gst/elements/gstfakesink.c: (gst_fake_sink_state_error_get_type):
+	* gst/elements/gstfakesrc.c: (gst_fake_src_data_get_type),
+	(gst_fake_src_sizetype_get_type), (gst_fake_src_filltype_get_type),
+	(gst_fake_src_init), (gst_fake_src_prepare_buffer),
+	(gst_fake_src_alloc_buffer), (gst_fake_src_get_size):
+	* gst/elements/gstfakesrc.h:
+	* gst/gstqueue.c: (queue_leaky_get_type):
+	  correctly fix GEnumValues so that nick is the short lowercase
+	  dashed tag
+	* tools/gst-inspect.c: (print_element_properties_info):
+	  also show the nick, since it's useful to use from parse_launch
+	  syntax
+	  Fixes #322139
+
 2005-11-22  Michael Smith <msmith@fluendo.com>
 
 	* gst/gstutils.c: (gst_util_clocktime_scale):
