@@ -1,5 +1,12 @@
 2005-11-22  Michael Smith <msmith@fluendo.com>
 
+	* gst/videomixer/videomixer.c: (gst_videomixer_pad_sink_setcaps),
+	(gst_videomixer_getcaps), (gst_videomixer_fill_queues),
+	(gst_videomixer_update_queues):
+	  Fractional framerates, videomixer.
+
+2005-11-22  Michael Smith <msmith@fluendo.com>
+
 	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_sink_setcaps):
 	* ext/dv/gstdvdec.h:
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_init),

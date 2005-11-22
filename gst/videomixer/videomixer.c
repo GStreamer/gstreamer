@@ -99,7 +99,8 @@ struct _GstVideoMixerPad
   guint64 queued;
 
   guint in_width, in_height;
-  gdouble in_framerate;
+  gint in_framerate_numerator;
+  gint in_framerate_denominator;
 
   gint xpos, ypos;
   guint zorder;
@@ -256,7 +257,8 @@ struct _GstVideoMixer
 
   GstVideoMixerBackground background;
 
-  gdouble in_framerate;
+  gint in_framerate_numerator;
+  gint in_framerate_denominator;
 };
 
 struct _GstVideoMixerClass
@@ -272,6 +274,7 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   GstStructure *structure;
   gint in_width, in_height;
   gboolean ret = FALSE;
+  const GValue *framerate;
 
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
   mixpad = GST_VIDEO_MIXER_PAD (pad);
@@ -282,9 +285,12 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
 
   if (!gst_structure_get_int (structure, "width", &in_width)
       || !gst_structure_get_int (structure, "height", &in_height)
-      || !gst_structure_get_double (structure, "framerate",
-          &mixpad->in_framerate))
+      || (framerate = gst_structure_get_value (structure, "framerate")) != NULL)
     goto beach;
+
+  mixpad->in_framerate_numerator = gst_value_get_fraction_numerator (framerate);
+  mixpad->in_framerate_denominator =
+      gst_value_get_fraction_denominator (framerate);
 
   mixpad->in_width = in_width;
   mixpad->in_height = in_height;
@@ -294,8 +300,12 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
 
   mix->in_width = MAX (mix->in_width, mixpad->in_width);
   mix->in_height = MAX (mix->in_height, mixpad->in_height);
-  if (mix->in_framerate < mixpad->in_framerate) {
-    mix->in_framerate = mixpad->in_framerate;
+
+  /* If mix framerate < mixpad framerate, using fractions */
+  if ((gint64) mix->in_framerate_numerator * mixpad->in_framerate_denominator <
+      (gint64) mixpad->in_framerate_numerator * mix->in_framerate_denominator) {
+    mix->in_framerate_numerator = mixpad->in_framerate_numerator;
+    mix->in_framerate_denominator = mixpad->in_framerate_denominator;
     mix->master = mixpad;
   }
 
@@ -385,7 +395,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-raw-yuv,"
         "format = (fourcc) AYUV,"
         "width = (int) [ 1, max ],"
-        "height = (int) [ 1, max ]," "framerate = (double) [ 0, max ]")
+        "height = (int) [ 1, max ]," "framerate = (fraction) [ 0/1, MAX ]")
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
@@ -394,7 +404,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_STATIC_CAPS ("video/x-raw-yuv,"
         "format = (fourcc) AYUV,"
         "width = (int) [ 1, max ],"
-        "height = (int) [ 1, max ]," "framerate = (double) [ 0, max ]")
+        "height = (int) [ 1, max ]," "framerate = (fraction) [ 0/1, MAX ]")
     );
 
 static void gst_videomixer_base_init (gpointer g_class);
@@ -519,9 +529,10 @@ gst_videomixer_getcaps (GstPad * pad)
   if (mix->out_height != 0) {
     gst_structure_set (structure, "height", G_TYPE_INT, mix->out_height, NULL);
   }
-  if (mix->in_framerate != 0) {
+  if (mix->in_framerate_denominator != 0) {
     gst_structure_set (structure,
-        "framerate", G_TYPE_DOUBLE, mix->in_framerate, NULL);
+        "framerate", GST_TYPE_FRACTION, mix->in_framerate_numerator,
+        mix->in_framerate_denominator, NULL);
   }
 
   gst_object_unref (mix);
@@ -896,10 +907,11 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
         duration = GST_BUFFER_DURATION (mixcol->buffer);
         /* no duration on the buffer, use the framerate */
         if (!GST_CLOCK_TIME_IS_VALID (duration)) {
-          if (mixpad->in_framerate == 0.0) {
+          if (mixpad->in_framerate_numerator == 0) {
             duration = GST_CLOCK_TIME_NONE;
           } else {
-            duration = GST_SECOND / mixpad->in_framerate;
+            duration = GST_SECOND * mixpad->in_framerate_denominator /
+                mixpad->in_framerate_numerator;
           }
         }
         if (GST_CLOCK_TIME_IS_VALID (duration))
@@ -958,10 +970,11 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
 
   interval = mix->master->queued;
   if (interval <= 0) {
-    if (mix->in_framerate == 0.0) {
+    if (mix->in_framerate_numerator == 0) {
       interval = G_MAXINT64;
     } else {
-      interval = GST_SECOND / mix->in_framerate;
+      interval = GST_SECOND * mix->in_framerate_denominator /
+          mix->in_framerate_numerator;
     }
   }
 
