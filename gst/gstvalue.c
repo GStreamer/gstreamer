@@ -3344,6 +3344,13 @@ gst_value_deserialize_fraction (GValue * dest, const char *s)
     gst_value_set_fraction (dest, num, 1);
     return TRUE;
   }
+  if (g_ascii_strcasecmp (s, "min") == 0) {
+    gst_value_set_fraction (dest, -G_MAXINT, 1);
+    return TRUE;
+  } else if (g_ascii_strcasecmp (s, "max") == 0) {
+    gst_value_set_fraction (dest, G_MAXINT, 1);
+    return TRUE;
+  }
 
   return FALSE;
 }

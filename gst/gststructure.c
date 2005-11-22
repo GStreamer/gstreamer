@@ -1286,6 +1286,8 @@ gst_structure_value_get_generic_type (GValue * val)
     return G_TYPE_INT;
   } else if (G_VALUE_TYPE (val) == GST_TYPE_DOUBLE_RANGE) {
     return G_TYPE_DOUBLE;
+  } else if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION_RANGE) {
+    return GST_TYPE_FRACTION;
   }
   return G_VALUE_TYPE (val);
 }

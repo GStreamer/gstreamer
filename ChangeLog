@@ -1,3 +1,16 @@
+2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/gst/gstcaps.c: (GST_START_TEST):
+	  Extend caps string tests to check that a caps to string
+	  conversion is reversible and produces the same caps.
+
+	* gst/gststructure.c: (gst_structure_value_get_generic_type):
+	  Output "fraction" as the generic type fraction range, so caps
+	  serialisation and deserialisation works.
+	* check/gst/capslist.h:
+	* gst/gstvalue.c: (gst_value_deserialize_fraction):
+	  Support 'MIN' and 'MAX' for deserialising fractions.
+
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstevent.h (gst_event_new_new_segment)

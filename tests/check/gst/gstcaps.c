@@ -27,13 +27,25 @@
 GST_START_TEST (test_from_string)
 {
   GstCaps *caps;
+  GstCaps *caps2;
+  gchar *to_str;
   int i;
 
   for (i = 0; i < G_N_ELEMENTS (caps_list); i++) {
     caps = gst_caps_from_string (caps_list[i]);
     fail_if (caps == NULL,
         "Could not create caps from string %s\n", caps_list[i]);
+    to_str = gst_caps_to_string (caps);
+    fail_if (to_str == NULL,
+        "Could not convert caps back to string %s\n", caps_list[i]);
+    caps2 = gst_caps_from_string (caps_list[i]);
+    fail_if (caps2 == NULL, "Could not create caps from string %s\n", to_str);
+
+    fail_unless (gst_caps_is_equal (caps, caps2));
+
     g_free (caps);
+    g_free (caps2);
+    g_free (to_str);
   }
 }
 
