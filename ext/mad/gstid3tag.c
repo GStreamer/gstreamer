@@ -823,11 +823,13 @@ gst_id3_tag_get_tag_to_render (GstID3Tag * tag)
   } else if (tag->parsed_tags) {
     ret = gst_tag_list_copy (tag->parsed_tags);
   }
-  if (ret && gst_tag_setter_get_list (GST_TAG_SETTER (tag))) {
-    gst_tag_list_insert (ret, gst_tag_setter_get_list (GST_TAG_SETTER (tag)),
-        gst_tag_setter_get_merge_mode (GST_TAG_SETTER (tag)));
-  } else if (gst_tag_setter_get_list (GST_TAG_SETTER (tag))) {
-    ret = gst_tag_list_copy (gst_tag_setter_get_list (GST_TAG_SETTER (tag)));
+  if (ret && gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag))) {
+    gst_tag_list_insert (ret,
+        gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag)),
+        gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (tag)));
+  } else if (gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag))) {
+    ret =
+        gst_tag_list_copy (gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag)));
   }
   return ret;
 }
@@ -1314,7 +1316,7 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
       tag->v1tag_size_new = (tag->v1tag_render &&
           IS_MUXER (tag) &&
           (tag->parsed_tags != NULL ||
-              gst_tag_setter_get_list (GST_TAG_SETTER (tag)) !=
+              gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag)) !=
               NULL)) ? 128 : 0;
       /* fall through */
     case GST_ID3_TAG_STATE_NORMAL:

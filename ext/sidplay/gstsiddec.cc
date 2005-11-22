@@ -437,7 +437,7 @@ start_play_tune (GstSidDec * siddec)
     goto could_not_init;
 
   gst_pad_push_event (siddec->srcpad,
-      gst_event_new_newsegment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
 
   res = gst_pad_start_task (siddec->srcpad,
       (GstTaskFunction) play_loop, siddec->srcpad);

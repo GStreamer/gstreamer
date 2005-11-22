@@ -1,5 +1,9 @@
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
+	* Update for gst_tag_setter API changes.
+
+2005-11-22  Andy Wingo  <wingo@pobox.com>
+
 	* ext/a52dec/gsta52dec.c (gst_a52dec_sink_event)
 	* ext/mad/gstid3tag.c (gst_id3_tag_sink_event)
 	* ext/mad/gstmad.c (gst_mad_chain)
