@@ -93,16 +93,16 @@ gst_lame_quality_get_type (void)
 {
   static GType lame_quality_type = 0;
   static GEnumValue lame_quality[] = {
-    {0, "0 - Best", 0},
+    {0, "0 - Best", "0"},
     {1, "1", "1"},
     {2, "2", "2"},
     {3, "3", "3"},
     {4, "4", "4"},
-    {5, "5 - Default", 5},
+    {5, "5 - Default", "5"},
     {6, "6", "6"},
     {7, "7", "7"},
     {8, "8", "8"},
-    {9, "9 - Worst", 9},
+    {9, "9 - Worst", "9"},
     {0, NULL, NULL}
   };
 
