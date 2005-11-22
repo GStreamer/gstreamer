@@ -168,6 +168,7 @@ GstBusSyncReply		gst_bus_sync_signal_handler	(GstBus *bus, GstMessage *message,
 
 /* convenience api to add/remove a gsource that emits the async signals */
 void 			gst_bus_add_signal_watch 	(GstBus * bus);
+void 			gst_bus_add_signal_watch_full 	(GstBus * bus, gint priority);
 void 			gst_bus_remove_signal_watch 	(GstBus * bus);
 
 G_END_DECLS

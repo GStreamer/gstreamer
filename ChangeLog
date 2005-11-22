@@ -1,3 +1,16 @@
+2005-11-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	Make sure the GstFlowReturn is returned.
+
+	* gst/gstbus.c: (gst_bus_add_signal_watch_full),
+	(gst_bus_add_signal_watch):
+	* gst/gstbus.h:
+	add gst_bus_add_signal_watch_full.
+
+	* gst/gstplugin.c: (gst_plugin_load_file):
+	Small style cleanup.
+
 2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/gst/gstevent.c: (test_event), (GST_START_TEST):

@@ -904,6 +904,45 @@ gst_bus_sync_signal_handler (GstBus * bus, GstMessage * message, gpointer data)
 }
 
 /**
+ * gst_bus_add_signal_watch_full:
+ * @bus: a #GstBus on which you want to recieve the "message" signal
+ * @priority: The priority of the watch.
+ *
+ * Adds a bus signal watch to the default main context with the given priority.
+ * After calling this statement, the bus will emit the message signal for each
+ * message posted on the bus.
+ *
+ * This function may be called multiple times. To clean up, the caller is
+ * responsible for calling gst_bus_remove_signal_watch() as many times as this
+ * function is called.
+ *
+ * MT safe.
+ */
+void
+gst_bus_add_signal_watch_full (GstBus * bus, gint priority)
+{
+  g_return_if_fail (GST_IS_BUS (bus));
+
+  /* I know the callees don't take this lock, so go ahead and abuse it */
+  GST_OBJECT_LOCK (bus);
+
+  if (bus->num_signal_watchers > 0)
+    goto done;
+
+  g_assert (bus->signal_watch_id == 0);
+
+  bus->signal_watch_id =
+      gst_bus_add_watch_full (bus, priority, gst_bus_async_signal_func, NULL,
+      NULL);
+
+done:
+
+  bus->num_signal_watchers++;
+
+  GST_OBJECT_UNLOCK (bus);
+}
+
+/**
  * gst_bus_add_signal_watch:
  * @bus: a #GstBus on which you want to recieve the "message" signal
  *
@@ -920,24 +959,7 @@ gst_bus_sync_signal_handler (GstBus * bus, GstMessage * message, gpointer data)
 void
 gst_bus_add_signal_watch (GstBus * bus)
 {
-  g_return_if_fail (GST_IS_BUS (bus));
-
-  /* I know the callees don't take this lock, so go ahead and abuse it */
-  GST_OBJECT_LOCK (bus);
-
-  if (bus->num_signal_watchers > 0)
-    goto done;
-
-  g_assert (bus->signal_watch_id == 0);
-
-  bus->signal_watch_id =
-      gst_bus_add_watch (bus, gst_bus_async_signal_func, NULL);
-
-done:
-
-  bus->num_signal_watchers++;
-
-  GST_OBJECT_UNLOCK (bus);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_DEFAULT);
 }
 
 /**

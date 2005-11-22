@@ -558,6 +558,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
 {
   gint length;
   gboolean have_event;
+  GstFlowReturn ret;
 
   GST_PAD_PREROLL_LOCK (pad);
   /* push object on the queue */
@@ -658,7 +659,6 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
     /* if it's a buffer, we need to call the preroll method */
     if (GST_IS_BUFFER (obj)) {
       GstBaseSinkClass *bclass;
-      GstFlowReturn pres;
       GstBuffer *buf = GST_BUFFER (obj);
 
       GST_DEBUG_OBJECT (basesink, "preroll buffer %" GST_TIME_FORMAT,
@@ -666,7 +666,7 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
 
       bclass = GST_BASE_SINK_GET_CLASS (basesink);
       if (bclass->preroll)
-        if ((pres = bclass->preroll (basesink, buf)) != GST_FLOW_OK)
+        if ((ret = bclass->preroll (basesink, buf)) != GST_FLOW_OK)
           goto preroll_failed;
     }
   }
@@ -721,8 +721,6 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
 
 no_preroll:
   {
-    GstFlowReturn ret;
-
     GST_DEBUG_OBJECT (basesink, "no preroll needed");
     /* maybe it was another sink that blocked in preroll, need to check for
        buffers to drain */
@@ -767,7 +765,7 @@ preroll_failed:
     GST_DEBUG_OBJECT (basesink, "abort state");
     gst_element_abort_state (GST_ELEMENT (basesink));
 
-    return GST_FLOW_ERROR;
+    return ret;
   }
 }
 

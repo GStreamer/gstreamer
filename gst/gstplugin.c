@@ -467,11 +467,14 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
 
   g_static_mutex_unlock (&gst_plugin_loading_mutex);
   return plugin;
+
 return_error:
-  if (plugin)
-    gst_object_unref (plugin);
-  g_static_mutex_unlock (&gst_plugin_loading_mutex);
-  return NULL;
+  {
+    if (plugin)
+      gst_object_unref (plugin);
+    g_static_mutex_unlock (&gst_plugin_loading_mutex);
+    return NULL;
+  }
 }
 
 static void
