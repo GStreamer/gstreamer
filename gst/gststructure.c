@@ -1936,7 +1936,7 @@ gst_structure_fixate_field_boolean (GstStructure * structure,
  * @target: A GValue of GST_TYPE_FRACTION with the target value of the fixation
  *
  * Fixates a #GstStructure by changing the given field to the nearest
- * integer to @target that is a subset of the existing field.
+ * fraction to @target that is a subset of the existing field.
  *
  * Returns: TRUE if the structure could be fixated
  */
