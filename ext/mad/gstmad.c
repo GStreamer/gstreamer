@@ -1533,14 +1533,19 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         }
 
         if (do_send_discont) {
+          gint64 start = GST_BUFFER_TIMESTAMP (outbuffer);
+
+          GST_DEBUG ("Sending NEWSEGMENT event, start=%" GST_TIME_FORMAT,
+              GST_TIME_ARGS (start));
+
           gst_pad_push_event (mad->srcpad,
               gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-                  GST_BUFFER_TIMESTAMP (outbuffer), GST_CLOCK_TIME_NONE, 0));
+                  start, GST_CLOCK_TIME_NONE, start));
           do_send_discont = FALSE;
         }
 
         result = gst_pad_push (mad->srcpad, outbuffer);
-        if (result != GST_FLOW_OK) {
+        if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED) {
           goto end;
         }
       }

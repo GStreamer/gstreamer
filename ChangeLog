@@ -1,5 +1,12 @@
 2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	  Fix seeking even more by sending the newsegment event with the
+	  right parameters. Should fix querying in playbin/totem after
+	  a seek.
+
+2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/mad/gstmad.c: (gst_mad_mode_get_type), (gst_mad_src_query),
 	(normal_seek), (gst_mad_sink_event), (gst_mad_chain):
 	  Fix seeking in stand-alone mode. Fix nonexistant enum value 
