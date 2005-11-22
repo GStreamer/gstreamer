@@ -30,7 +30,6 @@
 GST_DEBUG_CATEGORY (cutter_debug);
 #define GST_CAT_DEFAULT cutter_debug
 
-
 #define CUTTER_DEFAULT_THRESHOLD_LEVEL    0.1
 #define CUTTER_DEFAULT_THRESHOLD_LENGTH  (500 * GST_MSECOND)
 #define CUTTER_DEFAULT_PRE_LENGTH        (200 * GST_MSECOND)
@@ -45,16 +44,24 @@ static GstElementDetails cutter_details = {
 static GstStaticPadTemplate cutter_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, " "signed = (boolean) true")
     );
 
 static GstStaticPadTemplate cutter_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) { 8, 16 }, "
+        "depth = (int) { 8, 16 }, " "signed = (boolean) true")
     );
 
 enum
@@ -75,8 +82,6 @@ static void gst_cutter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_cutter_chain (GstPad * pad, GstBuffer * buffer);
-static double inline gst_cutter_16bit_ms (gint16 * data, guint numsamples);
-static double inline gst_cutter_8bit_ms (gint8 * data, guint numsamples);
 
 void gst_cutter_get_caps (GstPad * pad, GstCutter * filter);
 
@@ -171,13 +176,46 @@ gst_cutter_message_new (GstCutter * c, gboolean above, GstClockTime timestamp)
   return gst_message_new_element (GST_OBJECT (c), s);
 }
 
+/* Calculate the Normalized Cumulative Square over a buffer of the given type
+ * and over all channels combined */
+
+#define DEFINE_CUTTER_CALCULATOR(TYPE, RESOLUTION)                            \
+static void inline                                                            \
+gst_cutter_calculate_##TYPE (TYPE * in, guint num,                            \
+                            double *NCS)                                      \
+{                                                                             \
+  register int j;                                                             \
+  double squaresum = 0.0;           /* square sum of the integer samples */   \
+  register double square = 0.0;     /* Square */                              \
+  gdouble normalizer;               /* divisor to get a [-1.0, 1.0] range */  \
+                                                                              \
+  *NCS = 0.0;                       /* Normalized Cumulative Square */        \
+                                                                              \
+  normalizer = (double) (1 << (RESOLUTION * 2));                              \
+                                                                              \
+  for (j = 0; j < num; j++)                                                   \
+  {                                                                           \
+    square = ((double) in[j]) * in[j];                                        \
+    squaresum += square;                                                      \
+  }                                                                           \
+                                                                              \
+                                                                              \
+  *NCS = squaresum / normalizer;                                              \
+}
+
+DEFINE_CUTTER_CALCULATOR (gint16, 15);
+DEFINE_CUTTER_CALCULATOR (gint8, 7);
+
+
 static GstFlowReturn
 gst_cutter_chain (GstPad * pad, GstBuffer * buf)
 {
   GstCutter *filter;
   gint16 *in_data;
-  double RMS = 0.0;             /* RMS of signal in buffer */
-  double ms = 0.0;              /* mean square value of buffer */
+  guint num_samples;
+  gdouble NCS = 0.0;            /* Normalized Cumulative Square of buffer */
+  gdouble RMS = 0.0;            /* RMS of signal in buffer */
+  gdouble NMS = 0.0;            /* Normalized Mean Square of buffer */
   static gboolean silent_prev = FALSE;  /* previous value of silent */
   GstBuffer *prebuf;            /* pointer to a prebuffer element */
 
@@ -204,10 +242,14 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
   /* calculate mean square value on buffer */
   switch (filter->width) {
     case 16:
-      ms = gst_cutter_16bit_ms (in_data, GST_BUFFER_SIZE (buf) / 2);
+      num_samples = GST_BUFFER_SIZE (buf) / 2;
+      gst_cutter_calculate_gint16 (in_data, num_samples, &NCS);
+      NMS = NCS / num_samples;
       break;
     case 8:
-      ms = gst_cutter_8bit_ms ((gint8 *) in_data, GST_BUFFER_SIZE (buf));
+      num_samples = GST_BUFFER_SIZE (buf);
+      gst_cutter_calculate_gint8 ((gint8 *) in_data, num_samples, &NCS);
+      NMS = NCS / num_samples;
       break;
     default:
       /* this shouldn't happen */
@@ -217,12 +259,12 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
 
   silent_prev = filter->silent;
 
-  RMS = sqrt (ms) / (double) filter->max_sample;
+  RMS = sqrt (NMS);
   /* if RMS below threshold, add buffer length to silent run length count
    * if not, reset
    */
-  GST_LOG_OBJECT (filter, "buffer stats: ms %f, RMS %f, audio length %f",
-      ms, RMS, gst_audio_duration_from_pad_buffer (filter->sinkpad, buf));
+  GST_LOG_OBJECT (filter, "buffer stats: NMS %f, RMS %f, audio length %f",
+      NMS, RMS, gst_audio_duration_from_pad_buffer (filter->sinkpad, buf));
   if (RMS < filter->threshold_level)
     filter->silent_run_length +=
         gst_audio_duration_from_pad_buffer (filter->sinkpad, buf);
@@ -267,13 +309,6 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
   /* now check if we have to send the new buffer to the internal buffer cache
    * or to the srcpad */
   if (filter->silent) {
-    /* we ref it before putting it in the pre_buffer */
-    /* FIXME: we shouldn't probably do this, because the buffer
-     * arrives reffed already; the plugin should just push it
-     * or unref it to make it disappear */
-    /*
-       gst_buffer_ref (buf);
-     */
     filter->pre_buffer = g_list_append (filter->pre_buffer, buf);
     filter->pre_run_length +=
         gst_audio_duration_from_pad_buffer (filter->sinkpad, buf);
@@ -293,13 +328,8 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
-static double inline
-gst_cutter_16bit_ms (gint16 * data, guint num_samples)
-#include "filter.func"
-     static double inline gst_cutter_8bit_ms (gint8 * data, guint num_samples)
-#include "filter.func"
-     static void
-         gst_cutter_set_property (GObject * object, guint prop_id,
+static void
+gst_cutter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstCutter *filter;
@@ -309,7 +339,6 @@ gst_cutter_16bit_ms (gint16 * data, guint num_samples)
 
   switch (prop_id) {
     case PROP_THRESHOLD:
-      /* set the level */
       filter->threshold_level = g_value_get_double (value);
       GST_DEBUG ("DEBUG: set threshold level to %f", filter->threshold_level);
       break;
@@ -319,7 +348,8 @@ gst_cutter_16bit_ms (gint16 * data, guint num_samples)
        * values in dB < 0 result in values between 0 and 1
        */
       filter->threshold_level = pow (10, g_value_get_double (value) / 20);
-      GST_DEBUG ("DEBUG: set threshold level to %f", filter->threshold_level);
+      GST_DEBUG_OBJECT (filter, "set threshold level to %f",
+          filter->threshold_level);
       break;
     case PROP_RUN_LENGTH:
       /* set the minimum length of the silent run required */
@@ -397,6 +427,6 @@ gst_cutter_get_caps (GstPad * pad, GstCutter * filter)
   g_assert (caps != NULL);
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &filter->width);
-  filter->max_sample = gst_audio_highest_sample_value (pad);
+  filter->max_sample = 1 << (filter->width - 1);        /* signed */
   filter->have_caps = TRUE;
 }

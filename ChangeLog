@@ -1,3 +1,10 @@
+2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/cutter/gstcutter.c: (gst_cutter_chain),
+	(gst_cutter_set_property), (gst_cutter_get_caps):
+	  copy calculation code from level; remove use of some audio
+	  functions
+
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
 	* Update for gst_tag_setter API changes.
