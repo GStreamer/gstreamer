@@ -95,8 +95,8 @@ gst_smpte_transition_type_get_type (void)
       definitions = g_list_next (definitions);
 
       smpte_transitions[i].value = definition->type;
-      smpte_transitions[i].value_name = definition->short_name;
-      smpte_transitions[i].value_nick = definition->long_name;
+      smpte_transitions[i].value_nick = definition->short_name;
+      smpte_transitions[i].value_name = definition->long_name;
 
       i++;
     }

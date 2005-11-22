@@ -171,10 +171,10 @@ gst_alpha_method_get_type (void)
 {
   static GType alpha_method_type = 0;
   static GEnumValue alpha_method[] = {
-    {ALPHA_METHOD_SET, "0", "Set/adjust alpha channel"},
-    {ALPHA_METHOD_GREEN, "1", "Chroma Key green"},
-    {ALPHA_METHOD_BLUE, "2", "Chroma Key blue"},
-    {ALPHA_METHOD_CUSTOM, "3", "Chroma Key on target_r/g/b"},
+    {ALPHA_METHOD_SET, "Set/adjust alpha channel", "set"},
+    {ALPHA_METHOD_GREEN, "Chroma Key green", "green"},
+    {ALPHA_METHOD_BLUE, "Chroma Key blue", "blue"},
+    {ALPHA_METHOD_CUSTOM, "Chroma Key on target_r/g/b", "custom"},
     {0, NULL, NULL},
   };
 

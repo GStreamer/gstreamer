@@ -108,28 +108,17 @@ gst_cacasink_dither_get_type (void)
 {
   static GType dither_type = 0;
 
+  static GEnumValue dither_types[] = {
+    {CACA_DITHERING_NONE, "No dithering", "none"},
+    {CACA_DITHERING_ORDERED2, "Ordered 2x2 Bayer dithering", "2x2"},
+    {CACA_DITHERING_ORDERED4, "Ordered 4x4 Bayer dithering", "4x4"},
+    {CACA_DITHERING_ORDERED8, "Ordered 8x8 Bayer dithering", "8x8"},
+    {CACA_DITHERING_RANDOM, "Random dithering", "random"},
+    {0, NULL, NULL},
+  };
+
   if (!dither_type) {
-    GEnumValue *dithers;
-    gint n_dithers;
-    gint i;
-    gchar *caca_dithernames[] = {
-      "NONE", "ORDERED2", "ORDERED4", "ORDERED8", "RANDOM", NULL
-    };
-
-    n_dithers = 5;
-
-    dithers = g_new0 (GEnumValue, n_dithers + 1);
-
-    for (i = 0; i < n_dithers; i++) {
-      dithers[i].value = i;
-      dithers[i].value_name = g_strdup (caca_dithernames[i]);
-      dithers[i].value_nick = g_strdup (caca_dithernames[i]);
-    }
-    dithers[i].value = 0;
-    dithers[i].value_name = NULL;
-    dithers[i].value_nick = NULL;
-
-    dither_type = g_enum_register_static ("GstCACASinkDithers", dithers);
+    dither_type = g_enum_register_static ("GstCACASinkDithering", dither_types);
   }
   return dither_type;
 }
@@ -161,13 +150,13 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
   gobject_class->get_property = gst_cacasink_get_property;
   gstelement_class->change_state = gst_cacasink_change_state;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_WIDTH, g_param_spec_int ("screen_width", "screen_width", "screen_width", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_HEIGHT, g_param_spec_int ("screen_height", "screen_height", "screen_height", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));   /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_WIDTH, g_param_spec_int ("screen-width", "screen_width", "screen_width", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_HEIGHT, g_param_spec_int ("screen-height", "screen_height", "screen_height", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));   /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DITHER,
       g_param_spec_enum ("dither", "Dither Type", "Set type of Dither",
-          GST_TYPE_CACADITHER, 0, G_PARAM_READWRITE));
+          GST_TYPE_CACADITHER, CACA_DITHERING_NONE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ANTIALIASING,
-      g_param_spec_boolean ("anti_aliasing", "Anti-Aliasing",
+      g_param_spec_boolean ("anti-aliasing", "Anti-Aliasing",
           "Enables Anti-Aliasing", TRUE, G_PARAM_READWRITE));
 
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_cacasink_setcaps);

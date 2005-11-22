@@ -68,16 +68,17 @@ gst_videoflip_method_get_type (void)
 {
   static GType videoflip_method_type = 0;
   static GEnumValue videoflip_methods[] = {
-    {GST_VIDEOFLIP_METHOD_IDENTITY, "0", "Identity (no rotation)"},
-    {GST_VIDEOFLIP_METHOD_90R, "1", "Rotate clockwise 90 degrees"},
-    {GST_VIDEOFLIP_METHOD_180, "2", "Rotate 180 degrees"},
-    {GST_VIDEOFLIP_METHOD_90L, "3", "Rotate counter-clockwise 90 degrees"},
-    {GST_VIDEOFLIP_METHOD_HORIZ, "4", "Flip horizontally"},
-    {GST_VIDEOFLIP_METHOD_VERT, "5", "Flip vertically"},
-    {GST_VIDEOFLIP_METHOD_TRANS, "6",
-        "Flip across upper left/lower right diagonal"},
-    {GST_VIDEOFLIP_METHOD_OTHER, "7",
-        "Flip across upper right/lower left diagonal"},
+    {GST_VIDEOFLIP_METHOD_IDENTITY, "Identity (no rotation)", "none"},
+    {GST_VIDEOFLIP_METHOD_90R, "Rotate clockwise 90 degrees", "clockwise"},
+    {GST_VIDEOFLIP_METHOD_180, "Rotate 180 degrees", "rotate-180"},
+    {GST_VIDEOFLIP_METHOD_90L, "Rotate counter-clockwise 90 degrees",
+          "counterclockwise"},
+    {GST_VIDEOFLIP_METHOD_HORIZ, "Flip horizontally", "horizontal-flip"},
+    {GST_VIDEOFLIP_METHOD_VERT, "Flip vertically", "vertical-flip"},
+    {GST_VIDEOFLIP_METHOD_TRANS,
+        "Flip across upper left/lower right diagonal", "upper-left-diagonal"},
+    {GST_VIDEOFLIP_METHOD_OTHER,
+        "Flip across upper right/lower left diagonal", "upper-right-diagonal"},
     {0, NULL, NULL},
   };
 

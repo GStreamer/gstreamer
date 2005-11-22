@@ -159,16 +159,16 @@ gst_flacenc_quality_get_type (void)
 
   if (qtype == 0) {
     static const GEnumValue values[] = {
-      {0, "0", "0 - Fastest compression"},
+      {0, "0 - Fastest compression", "0"},
       {1, "1", "1"},
       {2, "2", "2"},
       {3, "3", "3"},
       {4, "4", "4"},
-      {5, "5", "5 - Default"},
+      {5, "5 - Default", "5"},
       {6, "6", "6"},
       {7, "7", "7"},
-      {8, "8", "8 - Highest compression "},
-      {9, "9", "9 - Insane"},
+      {8, "8 - Highest compression", "8"},
+      {9, "9 - Insane", "9"},
       {0, NULL, NULL}
     };
 

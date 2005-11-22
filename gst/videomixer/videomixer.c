@@ -375,9 +375,9 @@ gst_video_mixer_background_get_type (void)
 {
   static GType video_mixer_background_type = 0;
   static GEnumValue video_mixer_background[] = {
-    {VIDEO_MIXER_BACKGROUND_CHECKER, "0", "Checker pattern"},
-    {VIDEO_MIXER_BACKGROUND_BLACK, "1", "Black"},
-    {VIDEO_MIXER_BACKGROUND_WHITE, "2", "White"},
+    {VIDEO_MIXER_BACKGROUND_CHECKER, "Checker pattern", "checker"},
+    {VIDEO_MIXER_BACKGROUND_BLACK, "Black", "black"},
+    {VIDEO_MIXER_BACKGROUND_WHITE, "White", "white"},
     {0, NULL, NULL},
   };
 

@@ -133,8 +133,8 @@ gst_aasink_drivers_get_type (void)
     for (i = 0; i < n_drivers; i++) {
       driver = aa_drivers[i];
       drivers[i].value = i;
-      drivers[i].value_name = g_strdup (driver->shortname);
-      drivers[i].value_nick = g_strdup (driver->name);
+      drivers[i].value_name = g_strdup (driver->name);
+      drivers[i].value_nick = g_utf8_strdown (driver->shortname, -1);
     }
     drivers[i].value = 0;
     drivers[i].value_name = NULL;
@@ -165,7 +165,8 @@ gst_aasink_dither_get_type (void)
     for (i = 0; i < n_ditherers; i++) {
       ditherers[i].value = i;
       ditherers[i].value_name = g_strdup (aa_dithernames[i]);
-      ditherers[i].value_nick = g_strdup (aa_dithernames[i]);
+      ditherers[i].value_nick =
+          g_strdelimit (g_strdup (aa_dithernames[i]), " _", '-');
     }
     ditherers[i].value = 0;
     ditherers[i].value_name = NULL;
@@ -547,4 +548,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "aasink",
     "ASCII Art video sink",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

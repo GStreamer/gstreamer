@@ -77,8 +77,8 @@ gst_shaper_policy_get_type (void)
 {
   static GType shaper_policy_type = 0;
   static GEnumValue shaper_policy[] = {
-    {SHAPER_POLICY_TIMESTAMPS, "1", "sync on timestamps"},
-    {SHAPER_POLICY_BUFFERSIZE, "2", "sync on buffer size"},
+    {SHAPER_POLICY_TIMESTAMPS, "sync on timestamps", "timestamp"},
+    {SHAPER_POLICY_BUFFERSIZE, "sync on buffer size", "size"},
     {0, NULL, NULL},
   };
 

@@ -81,10 +81,10 @@ gst_pixbufscale_method_get_type (void)
 {
   static GType pixbufscale_method_type = 0;
   static GEnumValue pixbufscale_methods[] = {
-    {GST_PIXBUFSCALE_NEAREST, "0", "Nearest Neighbour"},
-    {GST_PIXBUFSCALE_TILES, "1", "Tiles"},
-    {GST_PIXBUFSCALE_BILINEAR, "2", "Bilinear"},
-    {GST_PIXBUFSCALE_HYPER, "3", "Hyper"},
+    {GST_PIXBUFSCALE_NEAREST, "Nearest Neighbour", "nearest"},
+    {GST_PIXBUFSCALE_TILES, "Tiles", "tiles"},
+    {GST_PIXBUFSCALE_BILINEAR, "Bilinear", "bilinear"},
+    {GST_PIXBUFSCALE_HYPER, "Hyper", "hyper"},
     {0, NULL, NULL},
   };
 

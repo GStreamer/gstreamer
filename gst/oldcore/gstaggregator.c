@@ -69,9 +69,9 @@ gst_aggregator_sched_get_type (void)
 {
   static GType aggregator_sched_type = 0;
   static GEnumValue aggregator_sched[] = {
-    {AGGREGATOR_LOOP, "1", "Loop Based"},
-    {AGGREGATOR_LOOP_SELECT, "3", "Loop Based Select"},
-    {AGGREGATOR_CHAIN, "4", "Chain Based"},
+    {AGGREGATOR_LOOP, "Loop Based", "loop"},
+    {AGGREGATOR_LOOP_SELECT, "Loop Based Select", "loop-select"},
+    {AGGREGATOR_CHAIN, "Chain Based", "chain"},
     {0, NULL, NULL},
   };
 

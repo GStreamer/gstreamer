@@ -1,3 +1,22 @@
+2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/aalib/gstaasink.c:
+	* ext/dv/gstdvdec.c:
+	* ext/esd/esdmon.c:
+	* ext/flac/gstflacenc.c:
+	* ext/gdk_pixbuf/pixbufscale.c:
+	* ext/libcaca/gstcacasink.c:
+	* ext/shout2/gstshout2.c:
+	* gst/alpha/gstalpha.c:
+	* gst/oldcore/gstaggregator.c:
+	* gst/oldcore/gstshaper.c:
+	* gst/smpte/barboxwipes.c:
+	* gst/smpte/gstsmpte.c:
+	* gst/videobox/gstvideobox.c:
+	* gst/videofilter/gstvideoflip.c:
+	* gst/videomixer/videomixer.c:
+	  fix up more enums
+
 2005-11-22  Michael Smith <msmith@fluendo.com>
 
 	* gst/videomixer/videomixer.c: (gst_videomixer_pad_sink_setcaps),

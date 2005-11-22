@@ -96,10 +96,10 @@ gst_shout2send_protocol_get_type (void)
 {
   static GType shout2send_protocol_type = 0;
   static GEnumValue shout2send_protocol[] = {
-    {SHOUT2SEND_PROTOCOL_XAUDIOCAST, "1",
-        "Xaudiocast Protocol (icecast 1.3.x)"},
-    {SHOUT2SEND_PROTOCOL_ICY, "2", "Icy Protocol (ShoutCast)"},
-    {SHOUT2SEND_PROTOCOL_HTTP, "3", "Http Protocol (icecast 2.x)"},
+    {SHOUT2SEND_PROTOCOL_XAUDIOCAST,
+        "Xaudiocast Protocol (icecast 1.3.x)", "xaudiocast"},
+    {SHOUT2SEND_PROTOCOL_ICY, "Icy Protocol (ShoutCast)", "icy"},
+    {SHOUT2SEND_PROTOCOL_HTTP, "Http Protocol (icecast 2.x)", "http"},
     {0, NULL, NULL},
   };
 
