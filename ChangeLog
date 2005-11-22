@@ -1,3 +1,8 @@
+2005-11-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_set_clock):
+	set_clock returns a boolean.
+
 2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstmad.c: (gst_mad_chain):

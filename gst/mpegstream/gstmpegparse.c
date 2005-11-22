@@ -92,7 +92,8 @@ static void gst_mpeg_parse_init (GstMPEGParse * mpeg_parse);
 static GstStateChangeReturn gst_mpeg_parse_change_state (GstElement * element,
     GstStateChange transition);
 
-static void gst_mpeg_parse_set_clock (GstElement * element, GstClock * clock);
+static gboolean gst_mpeg_parse_set_clock (GstElement * element,
+    GstClock * clock);
 
 static gboolean gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse,
     GstBuffer * buffer);
@@ -269,12 +270,14 @@ gst_mpeg_parse_init (GstMPEGParse * mpeg_parse)
   gst_mpeg_parse_reset (mpeg_parse);
 }
 
-static void
+static gboolean
 gst_mpeg_parse_set_clock (GstElement * element, GstClock * clock)
 {
   GstMPEGParse *parse = GST_MPEG_PARSE (element);
 
   parse->clock = clock;
+
+  return TRUE;
 }
 
 #if 0
