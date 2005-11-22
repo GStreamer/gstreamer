@@ -608,7 +608,8 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
           gst_caps_set_simple (caps,
               "width", G_TYPE_INT, ogm->hdr.s.video.width,
               "height", G_TYPE_INT, ogm->hdr.s.video.height,
-              "framerate", G_TYPE_DOUBLE, 10000000. / ogm->hdr.time_unit, NULL);
+              "framerate", GST_TYPE_FRACTION, 10000000, ogm->hdr.time_unit,
+              NULL);
           break;
         }
         case 't':

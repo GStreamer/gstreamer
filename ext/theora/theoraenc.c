@@ -113,7 +113,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
         "format = (fourcc) I420, "
-        "framerate = (double) [0, MAX], "
+        "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
@@ -244,12 +244,11 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstTheoraEnc *enc = GST_THEORA_ENC (gst_pad_get_parent (pad));
   const GValue *par;
-  GValue fps = { 0 };
-  GValue framerate = { 0 };
+  const GValue *framerate;
 
   gst_structure_get_int (structure, "width", &enc->width);
   gst_structure_get_int (structure, "height", &enc->height);
-  gst_structure_get_double (structure, "framerate", &enc->fps);
+  framerate = gst_structure_get_value (structure, "framerate");
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   theora_info_init (&enc->info);
@@ -272,14 +271,8 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info.offset_x = enc->offset_x;
   enc->info.offset_y = enc->offset_y;
 
-  /* convert double to fraction for the framerate */
-  g_value_init (&fps, G_TYPE_DOUBLE);
-  g_value_init (&framerate, GST_TYPE_FRACTION);
-  g_value_set_double (&fps, enc->fps);
-  g_value_transform (&fps, &framerate);
-
-  enc->info.fps_numerator = gst_value_get_fraction_numerator (&framerate);
-  enc->info.fps_denominator = gst_value_get_fraction_denominator (&framerate);
+  enc->info.fps_numerator = gst_value_get_fraction_numerator (framerate);
+  enc->info.fps_denominator = gst_value_get_fraction_denominator (framerate);
 
   if (par) {
     enc->info.aspect_numerator = gst_value_get_fraction_numerator (par);
@@ -471,6 +464,9 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
     /* create the remaining theora headers */
     theora_comment_init (&enc->comment);
+    /* Currently leaks due to libtheora API brokenness, I don't think we can
+     * portably work around it. Leaks ~50 bytes per encoder instance, so not a
+     * huge problem. */
     theora_encode_comment (&enc->comment, &op);
     ret = theora_buffer_from_packet (enc, &op, 0, 0, &buf2);
     if (ret != GST_FLOW_OK) {

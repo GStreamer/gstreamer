@@ -173,12 +173,16 @@ static void
 gst_videotestsrc_src_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
+  GValue value = { 0 };
+
+  g_value_init (&value, GST_TYPE_FRACTION);
+  gst_value_set_fraction (&value, 30, 1);
 
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
-  gst_structure_fixate_field_nearest_double (structure, "framerate", 30.0);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate", &value);
 }
 
 static void
@@ -263,7 +267,7 @@ gst_videotestsrc_getcaps (GstBaseSrc * unused)
       gst_structure_set (structure,
           "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-          "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
       gst_caps_append_structure (caps, structure);
     }
 
@@ -275,11 +279,12 @@ gst_videotestsrc_getcaps (GstBaseSrc * unused)
 
 static gboolean
 gst_videotestsrc_parse_caps (const GstCaps * caps,
-    gint * width, gint * height, gdouble * rate,
+    gint * width, gint * height, gint * rate_numerator, gint * rate_denominator,
     struct fourcc_list_struct **fourcc)
 {
   const GstStructure *structure;
   GstPadLinkReturn ret;
+  const GValue *framerate;
 
   GST_DEBUG ("parsing caps");
 
@@ -296,7 +301,14 @@ gst_videotestsrc_parse_caps (const GstCaps * caps,
 
   ret = gst_structure_get_int (structure, "width", width);
   ret &= gst_structure_get_int (structure, "height", height);
-  ret &= gst_structure_get_double (structure, "framerate", rate);
+
+  framerate = gst_structure_get_value (structure, "framerate");
+
+  if (framerate) {
+    *rate_numerator = gst_value_get_fraction_numerator (framerate);
+    *rate_denominator = gst_value_get_fraction_denominator (framerate);
+  } else
+    ret = FALSE;
 
   return ret;
 }
@@ -305,24 +317,26 @@ static gboolean
 gst_videotestsrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   gboolean res;
-  gint width, height;
-  gdouble rate;
+  gint width, height, rate_denominator, rate_numerator;
   struct fourcc_list_struct *fourcc;
   GstVideoTestSrc *videotestsrc;
 
   videotestsrc = GST_VIDEOTESTSRC (bsrc);
 
-  res = gst_videotestsrc_parse_caps (caps, &width, &height, &rate, &fourcc);
+  res = gst_videotestsrc_parse_caps (caps, &width, &height,
+      &rate_numerator, &rate_denominator, &fourcc);
   if (res) {
     /* looks ok here */
     videotestsrc->fourcc = fourcc;
     videotestsrc->width = width;
     videotestsrc->height = height;
-    videotestsrc->rate = rate;
+    videotestsrc->rate_numerator = rate_numerator;
+    videotestsrc->rate_denominator = rate_denominator;
     videotestsrc->bpp = videotestsrc->fourcc->bitspp;
 
-    GST_DEBUG_OBJECT (videotestsrc, "size %dx%d, %f fps", videotestsrc->width,
-        videotestsrc->height, videotestsrc->rate);
+    GST_DEBUG_OBJECT (videotestsrc, "size %dx%d, %d/%d fps",
+        videotestsrc->width, videotestsrc->height,
+        videotestsrc->rate_numerator, videotestsrc->rate_denominator);
   }
   return res;
 }
@@ -350,10 +364,12 @@ gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event)
 
       switch (format) {
         case GST_FORMAT_TIME:
-          new_n_frames = cur * (double) videotestsrc->rate / GST_SECOND;
+          new_n_frames = cur * videotestsrc->rate_numerator /
+              (videotestsrc->rate_denominator * GST_SECOND);
           videotestsrc->segment_start_frame = new_n_frames;
           videotestsrc->segment_end_frame =
-              stop * (double) videotestsrc->rate / GST_SECOND;
+              stop * videotestsrc->rate_numerator /
+              (videotestsrc->rate_denominator * GST_SECOND);
           videotestsrc->segment = flags & GST_SEEK_FLAG_SEGMENT;
           break;
         case GST_FORMAT_DEFAULT:
@@ -442,10 +458,16 @@ gst_videotestsrc_create (GstPushSrc * psrc, GstBuffer ** buffer)
       src->width, src->height);
 
   GST_BUFFER_TIMESTAMP (outbuf) = src->timestamp_offset + src->running_time;
-  GST_BUFFER_DURATION (outbuf) = GST_SECOND / (double) src->rate;
+  if (src->rate_numerator != 0) {
+    GST_BUFFER_DURATION (outbuf) = GST_SECOND * src->rate_denominator /
+        src->rate_numerator;
+  }
 
   src->n_frames++;
-  src->running_time += GST_BUFFER_DURATION (outbuf);
+  if (src->rate_numerator != 0) {
+    src->running_time = src->n_frames * GST_SECOND * src->rate_denominator /
+        src->rate_numerator;
+  }
 
   *buffer = outbuf;
 

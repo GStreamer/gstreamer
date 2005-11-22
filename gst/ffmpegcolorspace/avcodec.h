@@ -88,8 +88,6 @@ enum SampleFormat {
     SAMPLE_FMT_S16 = 0,         ///< signed 16 bits
 };
 
-#define DEFAULT_FRAME_RATE_BASE 1001000
-
 /* thomas: extracted from imgconvert.c since it's also used in
  * gstffmpegcodecmap.c */
 

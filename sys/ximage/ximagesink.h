@@ -125,7 +125,10 @@ struct _GstXImageSink {
   GThread *event_thread;
   gboolean running;
 
-  gdouble framerate;
+  /* Framerate numerator and denominator */
+  gint fps_n;
+  gint fps_d;
+
   GMutex *x_lock;
   GMutex *flow_lock;
 

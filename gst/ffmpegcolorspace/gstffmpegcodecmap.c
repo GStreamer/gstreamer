@@ -83,14 +83,14 @@ gst_ffmpeg_set_palette (GstCaps * caps, AVCodecContext * context)
     gst_caps_new_simple (mimetype,			      	\
 	"width",     G_TYPE_INT,   context->width,	      	\
 	"height",    G_TYPE_INT,   context->height,	  	\
-	"framerate", G_TYPE_DOUBLE, 1. * context->frame_rate /  \
-				   context->frame_rate_base,    \
+	"framerate", GST_TYPE_FRACTION, 			\
+        (gint) context->frame_rate, (gint) context->frame_rate_base, \
 	__VA_ARGS__, NULL)  					\
     :	  							\
     gst_caps_new_simple (mimetype,			      	\
 	"width",     GST_TYPE_INT_RANGE, 1, G_MAXINT,      	\
 	"height",    GST_TYPE_INT_RANGE, 1, G_MAXINT,	      	\
-	"framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE,	\
+	"framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,\
 	__VA_ARGS__, NULL)
 
 /* same for audio - now with channels/sample rate
@@ -447,19 +447,22 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
     AVCodecContext * context, gboolean raw)
 {
   GstStructure *structure;
-  gdouble fps;
+  const GValue *fps;
+  gboolean ret;
 
   g_return_if_fail (gst_caps_get_size (caps) == 1);
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "width", &context->width);
-  gst_structure_get_int (structure, "height", &context->height);
+  ret = gst_structure_get_int (structure, "width", &context->width);
+  ret &= gst_structure_get_int (structure, "height", &context->height);
+  g_return_if_fail (ret == TRUE);
+
+  fps = gst_structure_get_value (structure, "framerate");
+  g_return_if_fail (GST_VALUE_HOLDS_FRACTION (fps));
 
   /* framerate does not really matter */
-  if (gst_structure_get_double (structure, "framerate", &fps)) {
-    context->frame_rate = fps * DEFAULT_FRAME_RATE_BASE;
-    context->frame_rate_base = DEFAULT_FRAME_RATE_BASE;
-  }
+  context->frame_rate = gst_value_get_fraction_numerator (fps);
+  context->frame_rate_base = gst_value_get_fraction_denominator (fps);
 
   if (!raw)
     return;

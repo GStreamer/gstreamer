@@ -163,7 +163,8 @@ gst_ffmpegcsp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   GstStructure *structure;
   gint in_height, in_width;
   gint out_height, out_width;
-  gdouble in_framerate, out_framerate;
+  const GValue *in_framerate = NULL;
+  const GValue *out_framerate = NULL;
   const GValue *in_par = NULL;
   const GValue *out_par = NULL;
   AVCodecContext *ctx;
@@ -177,9 +178,13 @@ gst_ffmpegcsp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   /* we have to have width and height */
   res = gst_structure_get_int (structure, "width", &in_width);
   res &= gst_structure_get_int (structure, "height", &in_height);
-  res &= gst_structure_get_double (structure, "framerate", &in_framerate);
   if (!res)
     goto no_width_height;
+
+  /* and framerate */
+  in_framerate = gst_structure_get_value (structure, "framerate");
+  if (in_framerate == NULL || !GST_VALUE_HOLDS_FRACTION (in_framerate))
+    goto no_framerate;
 
   /* this is optional */
   in_par = gst_structure_get_value (structure, "pixel-aspect-ratio");
@@ -189,16 +194,20 @@ gst_ffmpegcsp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   /* we have to have width and height */
   res = gst_structure_get_int (structure, "width", &out_width);
   res &= gst_structure_get_int (structure, "height", &out_height);
-  res &= gst_structure_get_double (structure, "framerate", &out_framerate);
   if (!res)
     goto no_width_height;
+
+  /* and framerate */
+  out_framerate = gst_structure_get_value (structure, "framerate");
+  if (out_framerate == NULL || !GST_VALUE_HOLDS_FRACTION (out_framerate))
+    goto no_framerate;
 
   /* this is optional */
   out_par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   /* these must match */
   if (in_width != out_width || in_height != out_height ||
-      in_framerate != out_framerate)
+      gst_value_compare (in_framerate, out_framerate) != GST_VALUE_EQUAL)
     goto format_mismatch;
 
   /* if present, these must match too */
@@ -240,6 +249,13 @@ gst_ffmpegcsp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 no_width_height:
   {
     GST_DEBUG ("did not specify width or height");
+    space->from_pixfmt = PIX_FMT_NB;
+    space->to_pixfmt = PIX_FMT_NB;
+    return FALSE;
+  }
+no_framerate:
+  {
+    GST_DEBUG ("did not specify framerate");
     space->from_pixfmt = PIX_FMT_NB;
     space->to_pixfmt = PIX_FMT_NB;
     return FALSE;

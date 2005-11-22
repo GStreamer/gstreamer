@@ -136,7 +136,8 @@ struct _GstXvImageSink {
   GstXvImageBuffer *xvimage;
   GstXvImageBuffer *cur_image;
 
-  gdouble framerate;
+  gint fps_n;
+  gint fps_d;
 
   gint brightness;
   gint contrast;

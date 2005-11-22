@@ -47,7 +47,8 @@ struct _GstVideorate
   GstPad *sinkpad, *srcpad;
 
   /* video state */
-  gdouble from_fps, to_fps;
+  gint from_rate_numerator, from_rate_denominator;
+  gint to_rate_numerator, to_rate_denominator;
   guint64 next_ts;              /* Timestamp of next buffer to output */
   guint64 first_ts;             /* Timestamp of first buffer */
   GstBuffer *prevbuf;
@@ -220,7 +221,7 @@ gst_videorate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
     structure = gst_caps_get_structure (intersect, i);
 
     gst_structure_set (structure,
-        "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
   }
   *out_caps = intersect;
 
@@ -261,20 +262,27 @@ gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
   GstVideorate *videorate;
   GstStructure *structure;
   gboolean ret = TRUE;
-  double fps;
   GstPad *otherpad, *opeer;
+  const GValue *rate;
+  gint rate_numerator, rate_denominator;
 
   videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
-  if (!(ret = gst_structure_get_double (structure, "framerate", &fps)))
+  rate = gst_structure_get_value (structure, "framerate");
+  if (!rate)
     goto done;
 
+  rate_numerator = gst_value_get_fraction_numerator (rate);
+  rate_denominator = gst_value_get_fraction_denominator (rate);
+
   if (pad == videorate->srcpad) {
-    videorate->to_fps = fps;
+    videorate->to_rate_numerator = rate_numerator;
+    videorate->to_rate_denominator = rate_denominator;
     otherpad = videorate->sinkpad;
   } else {
-    videorate->from_fps = fps;
+    videorate->from_rate_numerator = rate_numerator;
+    videorate->from_rate_denominator = rate_denominator;
     otherpad = videorate->srcpad;
   }
   /* now try to find something for the peer */
@@ -315,14 +323,20 @@ gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
       structure = gst_caps_get_structure (caps, 0);
 
       /* and fixate */
-      gst_structure_fixate_field_nearest_int (structure, "framerate", fps);
+      gst_structure_fixate_field_nearest_fraction (structure, "framerate",
+          rate);
 
-      gst_structure_get_double (structure, "framerate", &fps);
+      rate = gst_structure_get_value (structure, "framerate");
+
+      rate_numerator = gst_value_get_fraction_numerator (rate);
+      rate_denominator = gst_value_get_fraction_denominator (rate);
 
       if (otherpad == videorate->srcpad) {
-        videorate->to_fps = fps;
+        videorate->to_rate_numerator = rate_numerator;
+        videorate->to_rate_denominator = rate_denominator;
       } else {
-        videorate->from_fps = fps;
+        videorate->from_rate_numerator = rate_numerator;
+        videorate->from_rate_denominator = rate_denominator;
       }
       gst_pad_set_caps (otherpad, caps);
       ret = TRUE;
@@ -341,8 +355,10 @@ gst_videorate_blank_data (GstVideorate * videorate)
     gst_buffer_unref (videorate->prevbuf);
   videorate->prevbuf = NULL;
 
-  videorate->from_fps = 0;
-  videorate->to_fps = 0;
+  videorate->from_rate_numerator = 0;
+  videorate->from_rate_denominator = 0;
+  videorate->to_rate_numerator = 0;
+  videorate->to_rate_denominator = 0;
   videorate->in = 0;
   videorate->out = 0;
   videorate->drop = 0;
@@ -435,10 +451,9 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
 
   videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
 
-  if (videorate->from_fps == 0)
-    return GST_FLOW_NOT_NEGOTIATED;
-
-  if (videorate->to_fps == 0)
+  if (videorate->from_rate_numerator == 0 ||
+      videorate->from_rate_denominator == 0 ||
+      videorate->to_rate_denominator == 0 || videorate->to_rate_numerator == 0)
     return GST_FLOW_NOT_NEGOTIATED;
 
   /* pull in 2 buffers */
@@ -494,7 +509,8 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
         videorate->out++;
         videorate->next_ts =
             videorate->first_ts +
-            (videorate->out / videorate->to_fps * GST_SECOND);
+            (videorate->out * GST_SECOND *
+            videorate->to_rate_denominator / videorate->to_rate_numerator);
         GST_BUFFER_DURATION (outbuf) =
             videorate->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
         /* adapt for looping */

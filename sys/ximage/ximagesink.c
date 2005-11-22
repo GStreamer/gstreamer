@@ -64,7 +64,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
-        "framerate = (double) [ 0.0, MAX ], "
+        "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
@@ -968,7 +968,7 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
       "blue_mask", G_TYPE_INT, xcontext->visual->blue_mask,
       "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
   if (ximagesink->par) {
     int nom, den;
 
@@ -1076,7 +1076,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstCaps *intersection;
   const GValue *par;
   gint new_width, new_height;
-  gdouble fps;
+  const GValue *fps;
 
   ximagesink = GST_XIMAGESINK (bsink);
 
@@ -1101,7 +1101,8 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   ret &= gst_structure_get_int (structure, "width", &new_width);
   ret &= gst_structure_get_int (structure, "height", &new_height);
-  ret &= gst_structure_get_double (structure, "framerate", &fps);
+  fps = gst_structure_get_value (structure, "framerate");
+  ret &= (fps != NULL);
   if (!ret)
     return FALSE;
 
@@ -1122,7 +1123,8 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   GST_VIDEO_SINK_WIDTH (ximagesink) = new_width;
   GST_VIDEO_SINK_HEIGHT (ximagesink) = new_height;
-  ximagesink->framerate = fps;
+  ximagesink->fps_n = gst_value_get_fraction_numerator (fps);
+  ximagesink->fps_d = gst_value_get_fraction_denominator (fps);
 
   /* Notify application to set xwindow id now */
   if (!ximagesink->xwindow) {
@@ -1199,7 +1201,8 @@ gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (ximagesink->xwindow)
         gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
-      ximagesink->framerate = 0;
+      ximagesink->fps_n = 0;
+      ximagesink->fps_d = 1;
       GST_VIDEO_SINK_WIDTH (ximagesink) = 0;
       GST_VIDEO_SINK_HEIGHT (ximagesink) = 0;
       break;
@@ -1247,8 +1250,8 @@ gst_ximagesink_get_times (GstBaseSink * bsink, GstBuffer * buf,
     if (GST_BUFFER_DURATION_IS_VALID (buf)) {
       *end = *start + GST_BUFFER_DURATION (buf);
     } else {
-      if (ximagesink->framerate > 0) {
-        *end = *start + GST_SECOND / ximagesink->framerate;
+      if (ximagesink->fps_n > 0) {
+        *end = *start + (GST_SECOND * ximagesink->fps_d) / ximagesink->fps_n;
       }
     }
   }
@@ -1736,7 +1739,8 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
   ximagesink->event_thread = NULL;
   ximagesink->running = FALSE;
 
-  ximagesink->framerate = 0;
+  ximagesink->fps_n = 0;
+  ximagesink->fps_d = 1;
 
   ximagesink->x_lock = g_mutex_new ();
   ximagesink->flow_lock = g_mutex_new ();

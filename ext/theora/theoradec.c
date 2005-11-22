@@ -99,7 +99,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
         "format = (fourcc) I420, "
-        "framerate = (double) [0, MAX], "
+        "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
@@ -747,8 +747,8 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
 
   caps = gst_caps_new_simple ("video/x-raw-yuv",
       "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
-      "framerate", G_TYPE_DOUBLE,
-      ((gdouble) dec->info.fps_numerator) / dec->info.fps_denominator,
+      "framerate", GST_TYPE_FRACTION,
+      dec->info.fps_numerator, dec->info.fps_denominator,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, par_num, par_den,
       "width", G_TYPE_INT, dec->width, "height", G_TYPE_INT, dec->height, NULL);
   gst_pad_set_caps (dec->srcpad, caps);

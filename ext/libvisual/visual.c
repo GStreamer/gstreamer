@@ -56,7 +56,10 @@ struct _GstVisual
 
   /* audio/video state */
   gint rate;                    /* Input samplerate */
-  gdouble fps;
+
+  /* framerate numerator & denominator */
+  gint fps_n;
+  gint fps_d;
   gint width;
   gint height;
 
@@ -268,6 +271,7 @@ gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
   GstStructure *structure;
   gint depth;
+  const GValue *fps;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -275,10 +279,14 @@ gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
     return FALSE;
   if (!gst_structure_get_int (structure, "height", &visual->height))
     return FALSE;
-  if (!gst_structure_get_double (structure, "framerate", &visual->fps))
-    return FALSE;
   if (!gst_structure_get_int (structure, "bpp", &depth))
     return FALSE;
+  fps = gst_structure_get_value (structure, "framerate");
+  if (fps == NULL || !GST_VALUE_HOLDS_FRACTION (fps))
+    return FALSE;
+
+  visual->fps_n = gst_value_get_fraction_numerator (fps);
+  visual->fps_d = gst_value_get_fraction_denominator (fps);
 
   visual_video_set_depth (visual->video,
       visual_video_depth_enum_from_value (depth));
@@ -310,6 +318,7 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
     gint width, height, bpp;
     GstStructure *s;
     GstCaps *caps;
+    GValue target_fps = { 0 };
 
     /* No output caps current set up. Try and pick some */
     caps = gst_pad_get_allowed_caps (visual->srcpad);
@@ -328,7 +337,9 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
 
       gst_structure_fixate_field_nearest_int (s, "width", 320);
       gst_structure_fixate_field_nearest_int (s, "height", 240);
-      gst_structure_fixate_field_nearest_double (s, "framerate", 30.0);
+      g_value_init (&target_fps, GST_TYPE_FRACTION);
+      gst_value_set_fraction (&target_fps, 25, 1);
+      gst_structure_fixate_field_nearest_fraction (s, "framerate", &target_fps);
 
       gst_pad_fixate_caps (visual->srcpad, caps);
     } else
@@ -380,11 +391,12 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     }
   }
 
+  /* Match timestamps from the incoming audio */
   if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE)
     visual->next_ts = GST_BUFFER_TIMESTAMP (buffer);
 
   /* spf = samples per frame */
-  spf = visual->rate / visual->fps;
+  spf = ((guint64) (visual->rate) * visual->fps_n) / visual->fps_d;
   gst_adapter_push (visual->adapter, buffer);
 
   while (gst_adapter_available (visual->adapter) > MAX (512, spf) * 4 &&
@@ -410,9 +422,8 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
       visual_audio_analyze (&visual->audio);
       visual_actor_run (visual->actor, &visual->audio);
 
-      /* FIXME: Match timestamps from the incoming audio */
       GST_BUFFER_TIMESTAMP (outbuf) = visual->next_ts;
-      GST_BUFFER_DURATION (outbuf) = GST_SECOND / visual->fps;
+      GST_BUFFER_DURATION (outbuf) = GST_SECOND * visual->fps_n / visual->fps_d;
       visual->next_ts += GST_BUFFER_DURATION (outbuf);
       ret = gst_pad_push (visual->srcpad, outbuf);
       outbuf = NULL;
@@ -420,7 +431,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
     /* Flush out the number of samples per frame * channels * sizeof (gint16) */
     /* Recompute spf in case caps changed */
-    spf = visual->rate / visual->fps;
+    spf = ((guint64) (visual->rate) * visual->fps_n) / visual->fps_d;
     GST_DEBUG_OBJECT (visual, "finished frame, flushing %u samples from input",
         spf);
     gst_adapter_flush (visual->adapter,

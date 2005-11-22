@@ -60,7 +60,7 @@ G_BEGIN_DECLS
 #define GST_VIDEO_BLUE_MASK_15_INT 0x001f
 
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, max ]"
-#define GST_VIDEO_FPS_RANGE "(double) [ 0.0, max ]"
+#define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
 
 /* consider the next 2 protected */
 #define __GST_VIDEO_CAPS_MAKE_32A(R, G, B, A)				\
@@ -184,7 +184,7 @@ G_BEGIN_DECLS
 	"framerate = " GST_VIDEO_FPS_RANGE
 
 /* functions */
-gdouble  gst_video_frame_rate (GstPad *pad);
+const GValue *gst_video_frame_rate (GstPad *pad);
 gboolean gst_video_get_size   (GstPad *pad,
                                gint   *width,
                                gint   *height);

@@ -1,3 +1,38 @@
+2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/libvisual/visual.c: (gst_visual_src_setcaps), (get_buffer),
+	(gst_visual_chain):
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):
+	* ext/theora/theoradec.c: (theora_handle_type_packet):
+	* ext/theora/theoraenc.c: (theora_enc_sink_setcaps),
+	(theora_enc_chain):
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	* gst-libs/gst/video/video.c: (gst_video_frame_rate):
+	* gst-libs/gst/video/video.h:
+	* gst/ffmpegcolorspace/avcodec.h:
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_caps_to_pixfmt):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_set_caps):
+	* gst/videorate/gstvideorate.c: (gst_videorate_transformcaps),
+	(gst_videorate_setcaps), (gst_videorate_blank_data),
+	(gst_videorate_chain):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_src_fixate), (gst_videotestsrc_getcaps),
+	(gst_videotestsrc_parse_caps), (gst_videotestsrc_setcaps),
+	(gst_videotestsrc_event), (gst_videotestsrc_create):
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get),
+	(gst_ximagesink_setcaps), (gst_ximagesink_change_state),
+	(gst_ximagesink_get_times), (gst_ximagesink_init):
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
+	(gst_xvimagesink_setcaps), (gst_xvimagesink_change_state),
+	(gst_xvimagesink_get_times), (gst_xvimagesink_init):
+	* sys/xvimage/xvimagesink.h:
+	  Convert elements to use fractions for their framerate.
+          V4L elements to come later tonight.
+
 2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/audio/audio.c:

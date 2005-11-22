@@ -363,12 +363,11 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   }
 
   if (strh != NULL) {
-    gdouble fps = 1. * strh->rate / strh->scale;
-
-    gst_caps_set_simple (caps, "framerate", G_TYPE_DOUBLE, fps, NULL);
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
+        strh->rate, strh->scale, NULL);
   } else {
     gst_caps_set_simple (caps,
-        "framerate", GST_TYPE_DOUBLE_RANGE, 0., G_MAXDOUBLE, NULL);
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
   }
 
   if (strf != NULL) {

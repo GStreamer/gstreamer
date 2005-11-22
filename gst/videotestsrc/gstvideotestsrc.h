@@ -58,7 +58,8 @@ struct _GstVideoTestSrc {
   gint height;
   struct fourcc_list_struct *fourcc;
   gint bpp;
-  gdouble rate;
+  gint rate_numerator;
+  gint rate_denominator;
 
   /* private */
   gint64 timestamp_offset;		/* base offset */
