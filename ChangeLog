@@ -1,3 +1,17 @@
+2005-11-22  Andy Wingo  <wingo@pobox.com>
+
+	patch by: Torsten Schoenfeld <kaffeetisch gmx de>
+
+	* gst/gsttagsetter.h:
+	* gst/gsttagsetter.c: (gst_tag_setter_merge_tags)
+	(gst_tag_setter_add_tags, gst_tag_setter_add_tag_values)
+	(gst_tag_setter_add_tag_valist)
+	(gst_tag_setter_add_tag_valist_values): Renamed from _merge, _add,
+	_add_values, _add_valist, and _add_valist_values. Since this is an
+	interface the function suffixes should be more explicit so
+	language binding don't end up with element.add_valist ->
+	gst_tag_setter_add_valist, for example. Fixes #322069.
+
 2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/gst/gstcaps.c: (GST_START_TEST):

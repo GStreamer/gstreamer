@@ -107,7 +107,7 @@ gst_tag_setter_get_data (GstTagSetter * setter)
 }
 
 /**
- * gst_tag_setter_merge:
+ * gst_tag_setter_merge_tags:
  * @setter: a #GstTagSetter
  * @list: a tag list to merge from
  * @mode: the mode to merge with
@@ -115,7 +115,7 @@ gst_tag_setter_get_data (GstTagSetter * setter)
  * Merges the given list into the setter's list using the given mode.
  */
 void
-gst_tag_setter_merge (GstTagSetter * setter, const GstTagList * list,
+gst_tag_setter_merge_tags (GstTagSetter * setter, const GstTagList * list,
     GstTagMergeMode mode)
 {
   GstTagData *data;
@@ -132,7 +132,7 @@ gst_tag_setter_merge (GstTagSetter * setter, const GstTagList * list,
 }
 
 /**
- * gst_tag_setter_add:
+ * gst_tag_setter_add_tags:
  * @setter: a #GstTagSetter
  * @mode: the mode to use
  * @tag: tag to set
@@ -142,7 +142,7 @@ gst_tag_setter_merge (GstTagSetter * setter, const GstTagList * list,
  * The list must be terminated with NULL.
  */
 void
-gst_tag_setter_add (GstTagSetter * setter, GstTagMergeMode mode,
+gst_tag_setter_add_tags (GstTagSetter * setter, GstTagMergeMode mode,
     const gchar * tag, ...)
 {
   va_list args;
@@ -151,12 +151,12 @@ gst_tag_setter_add (GstTagSetter * setter, GstTagMergeMode mode,
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
 
   va_start (args, tag);
-  gst_tag_setter_add_valist (setter, mode, tag, args);
+  gst_tag_setter_add_tag_valist (setter, mode, tag, args);
   va_end (args);
 }
 
 /**
- * gst_tag_setter_add_values:
+ * gst_tag_setter_add_tag_values:
  * @setter: a #GstTagSetter
  * @mode: the mode to use
  * @tag: tag to set
@@ -166,7 +166,7 @@ gst_tag_setter_add (GstTagSetter * setter, GstTagMergeMode mode,
  * The list must be terminated with NULL.
  */
 void
-gst_tag_setter_add_values (GstTagSetter * setter, GstTagMergeMode mode,
+gst_tag_setter_add_tag_values (GstTagSetter * setter, GstTagMergeMode mode,
     const gchar * tag, ...)
 {
   va_list args;
@@ -175,12 +175,12 @@ gst_tag_setter_add_values (GstTagSetter * setter, GstTagMergeMode mode,
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
 
   va_start (args, tag);
-  gst_tag_setter_add_valist_values (setter, mode, tag, args);
+  gst_tag_setter_add_tag_valist_values (setter, mode, tag, args);
   va_end (args);
 }
 
 /**
- * gst_tag_setter_add_valist:
+ * gst_tag_setter_tag_add_valist:
  * @setter: a #GstTagSetter
  * @mode: the mode to use
  * @tag: tag to set
@@ -190,7 +190,7 @@ gst_tag_setter_add_values (GstTagSetter * setter, GstTagMergeMode mode,
  * The list must be terminated with NULL.
  */
 void
-gst_tag_setter_add_valist (GstTagSetter * setter, GstTagMergeMode mode,
+gst_tag_setter_add_tag_valist (GstTagSetter * setter, GstTagMergeMode mode,
     const gchar * tag, va_list var_args)
 {
   GstTagData *data;
@@ -206,7 +206,7 @@ gst_tag_setter_add_valist (GstTagSetter * setter, GstTagMergeMode mode,
 }
 
 /**
- * gst_tag_setter_add_valist_values:
+ * gst_tag_setter_add_tag_valist_values:
  * @setter: a #GstTagSetter
  * @mode: the mode to use
  * @tag: tag to set
@@ -216,8 +216,8 @@ gst_tag_setter_add_valist (GstTagSetter * setter, GstTagMergeMode mode,
  * The list must be terminated with NULL.
  */
 void
-gst_tag_setter_add_valist_values (GstTagSetter * setter, GstTagMergeMode mode,
-    const gchar * tag, va_list var_args)
+gst_tag_setter_add_tag_valist_values (GstTagSetter * setter,
+    GstTagMergeMode mode, const gchar * tag, va_list var_args)
 {
   GstTagData *data;
 

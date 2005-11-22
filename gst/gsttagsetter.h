@@ -46,37 +46,37 @@ struct _GstTagSetterIFace
   /* virtual table */
 };
 
-GType		gst_tag_setter_get_type		(void);
+GType		gst_tag_setter_get_type		    (void);
 
-void		gst_tag_setter_merge		(GstTagSetter *		setter,
-						 const GstTagList *	list,
-						 GstTagMergeMode	mode);
-void		gst_tag_setter_add		(GstTagSetter *		setter,
-						 GstTagMergeMode	mode,
-						 const gchar *		tag,
-					         ...) G_GNUC_NULL_TERMINATED;
+void		gst_tag_setter_merge_tags	    (GstTagSetter *	setter,
+						     const GstTagList *	list,
+						     GstTagMergeMode	mode);
+void		gst_tag_setter_add_tags		    (GstTagSetter *	setter,
+						     GstTagMergeMode	mode,
+						     const gchar *	tag,
+						     ...) G_GNUC_NULL_TERMINATED;
 
-void		gst_tag_setter_add_values	(GstTagSetter *		setter,
-						 GstTagMergeMode	mode,
-						 const gchar *		tag,
-					         ...) G_GNUC_NULL_TERMINATED;
+void		gst_tag_setter_add_tag_values	    (GstTagSetter *	setter,
+						     GstTagMergeMode	mode,
+						     const gchar *	tag,
+						     ...) G_GNUC_NULL_TERMINATED;
 
-void            gst_tag_setter_add_valist     	(GstTagSetter *		setter,
-						 GstTagMergeMode	mode,
-						 const gchar *		tag,
-						 va_list		var_args);
+void            gst_tag_setter_add_tag_valist  	    (GstTagSetter *	setter,
+						     GstTagMergeMode	mode,
+						     const gchar *	tag,
+						     va_list		var_args);
 
-void            gst_tag_setter_add_valist_values(GstTagSetter *		setter,
-						 GstTagMergeMode	mode,
-						 const gchar *		tag,
-						 va_list		var_args);
+void            gst_tag_setter_add_tag_valist_values(GstTagSetter *	setter,
+						     GstTagMergeMode	mode,
+						     const gchar *	tag,
+						     va_list		var_args);
 
 G_CONST_RETURN GstTagList *
-		gst_tag_setter_get_list	(GstTagSetter *		setter);
+		gst_tag_setter_get_tag_list	     (GstTagSetter *	setter);
 
-void		gst_tag_setter_set_merge_mode	(GstTagSetter *		setter,
-						 GstTagMergeMode	mode);
-GstTagMergeMode	gst_tag_setter_get_merge_mode	(GstTagSetter *		setter);
+void		gst_tag_setter_set_tag_merge_mode    (GstTagSetter *	setter,
+						      GstTagMergeMode	mode);
+GstTagMergeMode	gst_tag_setter_get_tag_merge_mode    (GstTagSetter *	setter);
 
 G_END_DECLS
 
