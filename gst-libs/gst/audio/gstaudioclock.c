@@ -83,6 +83,7 @@ gst_audio_clock_init (GstAudioClock * clock)
   gst_object_set_name (GST_OBJECT (clock), "GstAudioClock");
 
   clock->last_time = 0;
+  GST_OBJECT_FLAG_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER);
 }
 
 GstClock *

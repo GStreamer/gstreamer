@@ -78,8 +78,6 @@ struct _GstBaseRTPDepayload
    */
   GQueue *queue;
 
-  GstClock *clock;
-
   /*< private >*/
   union {
     gboolean need_newsegment;

@@ -41,11 +41,15 @@ enum
 
 #define DEFAULT_BUFFER_TIME	500 * GST_USECOND
 #define DEFAULT_LATENCY_TIME	10 * GST_USECOND
+//#define DEFAULT_PROVIDE_CLOCK TRUE
+#define DEFAULT_PROVIDE_CLOCK	FALSE
+
 enum
 {
   PROP_0,
   PROP_BUFFER_TIME,
   PROP_LATENCY_TIME,
+  PROP_PROVIDE_CLOCK,
 };
 
 #define _do_init(bla) \
@@ -65,7 +69,8 @@ static GstStateChangeReturn gst_base_audio_sink_change_state (GstElement *
     element, GstStateChange transition);
 
 static GstClock *gst_base_audio_sink_provide_clock (GstElement * elem);
-static void gst_base_audio_sink_set_clock (GstElement * elem, GstClock * clock);
+static gboolean gst_base_audio_sink_set_clock (GstElement * elem,
+    GstClock * clock);
 static GstClockTime gst_base_audio_sink_get_time (GstClock * clock,
     GstBaseAudioSink * sink);
 static void gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data,
@@ -114,6 +119,10 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
       g_param_spec_int64 ("latency-time", "Latency Time",
           "Audio latency in milliseconds (-1 = default)",
           -1, G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PROVIDE_CLOCK,
+      g_param_spec_boolean ("provide-clock", "Provide Clock",
+          "Provide a clock to be used as the global pipeline clock",
+          DEFAULT_PROVIDE_CLOCK, G_PARAM_READWRITE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_change_state);
@@ -136,8 +145,9 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
 {
   baseaudiosink->buffer_time = DEFAULT_BUFFER_TIME;
   baseaudiosink->latency_time = DEFAULT_LATENCY_TIME;
+  baseaudiosink->provide_clock = DEFAULT_PROVIDE_CLOCK;
 
-  baseaudiosink->clock = gst_audio_clock_new ("clock",
+  baseaudiosink->provided_clock = gst_audio_clock_new ("clock",
       (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
 }
 
@@ -148,9 +158,9 @@ gst_base_audio_sink_dispose (GObject * object)
 
   sink = GST_BASE_AUDIO_SINK (object);
 
-  if (sink->clock)
-    gst_object_unref (sink->clock);
-  sink->clock = NULL;
+  if (sink->provided_clock)
+    gst_object_unref (sink->provided_clock);
+  sink->provided_clock = NULL;
 
   if (sink->ringbuffer)
     gst_object_unref (sink->ringbuffer);
@@ -167,25 +177,31 @@ gst_base_audio_sink_provide_clock (GstElement * elem)
 
   sink = GST_BASE_AUDIO_SINK (elem);
 
-  clock = GST_CLOCK_CAST (gst_object_ref (sink->clock));
+  if (sink->provide_clock)
+    clock = GST_CLOCK_CAST (gst_object_ref (sink->provided_clock));
+  else
+    clock = NULL;
 
   return clock;
 }
 
-static void
+static gboolean
 gst_base_audio_sink_set_clock (GstElement * elem, GstClock * clock)
 {
   GstBaseAudioSink *sink;
+  gboolean ret;
 
   sink = GST_BASE_AUDIO_SINK (elem);
 
   GST_OBJECT_LOCK (sink);
-  if (clock != sink->clock) {
-    gst_clock_set_master (sink->clock, clock);
+  if (clock != sink->provided_clock) {
+    ret = gst_clock_set_master (sink->provided_clock, clock);
   } else {
-    gst_clock_set_master (sink->clock, NULL);
+    ret = gst_clock_set_master (sink->provided_clock, NULL);
   }
   GST_OBJECT_UNLOCK (sink);
+
+  return ret;
 }
 
 static GstClockTime
@@ -220,6 +236,9 @@ gst_base_audio_sink_set_property (GObject * object, guint prop_id,
     case PROP_LATENCY_TIME:
       sink->latency_time = g_value_get_int64 (value);
       break;
+    case PROP_PROVIDE_CLOCK:
+      sink->provide_clock = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -240,6 +259,9 @@ gst_base_audio_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_LATENCY_TIME:
       g_value_set_int64 (value, sink->latency_time);
+      break;
+    case PROP_PROVIDE_CLOCK:
+      g_value_set_boolean (value, sink->provide_clock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -350,8 +372,8 @@ wrong_state:
   {
     GST_DEBUG ("ringbuffer in wrong state");
     GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
-        ("sink not negotiated."), (NULL));
-    return GST_FLOW_ERROR;
+        ("sink not negotiated."), ("sink not negotiated."));
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
@@ -441,7 +463,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (render_diff < 0)
     goto out_of_segment;
 
-  gst_clock_get_calibration (sink->clock, &cinternal, &cexternal, &crate);
+  gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
+      &crate);
   GST_DEBUG_OBJECT (sink,
       "internal %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", rate %g",
       cinternal, cexternal, crate);
@@ -567,18 +590,23 @@ gst_base_audio_sink_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
-      GstClockTime time;
-      gdouble rate;
+      /* if we are slaved to a clock, we need to set the initial
+       * calibration */
+      /* FIXME, this is not yet accurate enough for smooth playback */
+      if (gst_clock_get_master (sink->provided_clock)) {
+        GstClockTime time;
+        gdouble rate;
 
-      time = gst_clock_get_internal_time (sink->clock);
+        time = gst_clock_get_internal_time (sink->provided_clock);
 
-      GST_DEBUG_OBJECT (sink, "time: %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
+        GST_DEBUG_OBJECT (sink, "time: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (time));
 
-      gst_clock_get_calibration (sink->clock, NULL, NULL, &rate);
-      /* Does not work yet.
-         gst_clock_set_calibration (sink->clock, 
-         time, element->base_time, rate);
-       */
+        gst_clock_get_calibration (sink->provided_clock, NULL, NULL, &rate);
+        /* Does not work yet. */
+        gst_clock_set_calibration (sink->provided_clock,
+            time, element->base_time, rate);
+      }
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:

@@ -1,3 +1,26 @@
+2005-11-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstaudioclock.c: (gst_audio_clock_init):
+	This clock can be slaved to a master clock now.
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init), (gst_base_audio_sink_init),
+	(gst_base_audio_sink_dispose), (gst_base_audio_sink_provide_clock),
+	(gst_base_audio_sink_set_clock),
+	(gst_base_audio_sink_set_property),
+	(gst_base_audio_sink_get_property), (gst_base_audio_sink_preroll),
+	(gst_base_audio_sink_render), (gst_base_audio_sink_change_state):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	Handle slaving the internal clock to the clock selected in the
+	pipeline.
+	Add property to make the basesink not provide a clock.
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_class_init), (gst_base_rtp_depayload_init),
+	(gst_base_rtp_depayload_wait):
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	We can use the clock in GstElement, no need to store it ourselves.
+
 2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/libs/tmpl/gstaudio.sgml:

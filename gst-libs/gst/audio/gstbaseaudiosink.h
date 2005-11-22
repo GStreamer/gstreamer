@@ -84,7 +84,8 @@ struct _GstBaseAudioSink {
   guint64	 next_sample;
 
   /* clock */
-  GstClock	*clock;
+  gboolean       provide_clock;
+  GstClock	*provided_clock;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

@@ -80,8 +80,6 @@ static gboolean gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_base_rtp_depayload_chain (GstPad * pad,
     GstBuffer * in);
 
-static void gst_base_rtp_depayload_set_clock (GstElement * element,
-    GstClock * clock);
 static GstStateChangeReturn gst_base_rtp_depayload_change_state (GstElement *
     element, GstStateChange transition);
 static GstFlowReturn gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload *
@@ -118,8 +116,6 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
 
   gobject_class->finalize = gst_base_rtp_depayload_finalize;
 
-  gstelement_class->set_clock =
-      GST_DEBUG_FUNCPTR (gst_base_rtp_depayload_set_clock);
   gstelement_class->change_state = gst_base_rtp_depayload_change_state;
 
   klass->add_to_queue = gst_base_rtp_depayload_add_to_queue;
@@ -158,7 +154,6 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter, gpointer g_class)
 
   /* this one needs to be overwritten by child */
   filter->clock_rate = 0;
-  filter->clock = NULL;
 }
 
 static void
@@ -399,25 +394,15 @@ gst_base_rtp_depayload_wait (GstBaseRTPDepayload * filter, GstClockTime time)
   GstClockID id;
 
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (time));
-  if (filter->clock == NULL) {
+  if (GST_ELEMENT_CLOCK (filter) == NULL) {
     GST_DEBUG_OBJECT (filter, "No clock given yet");
     return;
   }
 
-  id = gst_clock_new_single_shot_id (filter->clock, time);
+  id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (filter), time);
 
   gst_clock_id_wait (id, NULL);
   gst_clock_id_unref (id);
-}
-
-static void
-gst_base_rtp_depayload_set_clock (GstElement * element, GstClock * clock)
-{
-  GstBaseRTPDepayload *sink;
-
-  sink = GST_BASE_RTP_DEPAYLOAD (element);
-
-  sink->clock = clock;
 }
 
 static GstStateChangeReturn
