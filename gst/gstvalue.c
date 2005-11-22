@@ -956,9 +956,14 @@ gst_value_collect_fraction_range (GValue * value, guint n_collect_values,
   if (n_collect_values != 4)
     return g_strdup_printf ("not enough value locations for `%s' passed",
         G_VALUE_TYPE_NAME (value));
-  if (vals == NULL)
-    return g_strdup_printf ("Uninitialised `%s' passed",
-        G_VALUE_TYPE_NAME (value));
+  if (vals == NULL) {
+    value->data[0].v_pointer = vals = g_new0 (GValue, 2);
+    if (vals == NULL)
+      return g_strdup_printf ("Could not initialise`%s' during collect",
+          G_VALUE_TYPE_NAME (value));
+    g_value_init (&vals[0], GST_TYPE_FRACTION);
+    g_value_init (&vals[1], GST_TYPE_FRACTION);
+  }
 
   gst_value_set_fraction (&vals[0], collect_values[0].v_int,
       collect_values[1].v_int);
