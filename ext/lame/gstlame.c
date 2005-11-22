@@ -73,11 +73,11 @@ gst_lame_mode_get_type (void)
 {
   static GType lame_mode_type = 0;
   static GEnumValue lame_modes[] = {
-    {0, "0", "Stereo"},
-    {1, "1", "Joint-Stereo"},
-    {2, "2", "Dual channel"},
-    {3, "3", "Mono"},
-    {4, "4", "Auto"},
+    {0, "Stereo", "stereo"},
+    {1, "Joint Stereo", "joint"},
+    {2, "Dual Channel", "dual"},
+    {3, "Mono", "mono"},
+    {4, "Auto", "auto"},
     {0, NULL, NULL}
   };
 
@@ -93,16 +93,16 @@ gst_lame_quality_get_type (void)
 {
   static GType lame_quality_type = 0;
   static GEnumValue lame_quality[] = {
-    {0, "0", "0 - Best"},
+    {0, "0 - Best", 0},
     {1, "1", "1"},
     {2, "2", "2"},
     {3, "3", "3"},
     {4, "4", "4"},
-    {5, "5", "5 - Default"},
+    {5, "5 - Default", 5},
     {6, "6", "6"},
     {7, "7", "7"},
     {8, "8", "8"},
-    {9, "9", "9 - Worst"},
+    {9, "9 - Worst", 9},
     {0, NULL, NULL}
   };
 
@@ -118,9 +118,9 @@ gst_lame_padding_get_type (void)
 {
   static GType lame_padding_type = 0;
   static GEnumValue lame_padding[] = {
-    {0, "0", "No Padding"},
-    {1, "1", "Always Pad"},
-    {2, "2", "Adjust Padding"},
+    {0, "No Padding", "never"},
+    {1, "Always Pad", "always"},
+    {2, "Adjust Padding", "adjust"},
     {0, NULL, NULL}
   };
 
@@ -136,10 +136,10 @@ gst_lame_vbrmode_get_type (void)
 {
   static GType lame_vbrmode_type = 0;
   static GEnumValue lame_vbrmode[] = {
-    {vbr_off, "cbr", "No VBR (Constant Bitrate)"},
-    {vbr_rh, "old", "Lame's old VBR algorithm"},
-    {vbr_abr, "abr", "VBR Average Bitrate"},
-    {vbr_mtrh, "new", "Lame's new VBR algorithm"},
+    {vbr_off, "No VBR (Constant Bitrate)", "none"},
+    {vbr_rh, "Lame's old VBR algorithm", "old"},
+    {vbr_abr, "VBR Average Bitrate", "abr"},
+    {vbr_mtrh, "Lame's new VBR algorithm", "new"},
     {0, NULL, NULL}
   };
 
@@ -157,11 +157,11 @@ gst_lame_preset_get_type (void)
 {
   static GType gst_lame_preset = 0;
   static GEnumValue gst_lame_presets[] = {
-    {0, "none", "None"},
-    {MEDIUM, "medium", "Medium"},
-    {STANDARD, "standard", "Standard"},
-    {EXTREME, "extreme", "Extreme"},
-    {INSANE, "insane", "Insane"},
+    {0, "None", "none"},
+    {MEDIUM, "Medium", "medium"},
+    {STANDARD, "Standard", "standard"},
+    {EXTREME, "Extreme", "extreme"},
+    {INSANE, "Insane", "insane"},
     {0, NULL, NULL}
   };
 
