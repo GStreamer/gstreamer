@@ -1109,18 +1109,21 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
   gst_structure_get_int (structure, "bpp", &context->bits_per_sample);
 
   fps = gst_structure_get_value (structure, "framerate");
-  g_return_if_fail (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps));
+  if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
 
-  /* somehow these seem mixed up.. */
-  context->time_base.den = gst_value_get_fraction_numerator (fps);
-  context->time_base.num = gst_value_get_fraction_denominator (fps);
+    /* somehow these seem mixed up.. */
+    context->time_base.den = gst_value_get_fraction_numerator (fps);
+    context->time_base.num = gst_value_get_fraction_denominator (fps);
 
-  GST_DEBUG ("setting framerate %d/%d = %lf",
+    GST_DEBUG ("setting framerate %d/%d = %lf",
 	    context->time_base.den, context->time_base.num, 
 	    1. * context->time_base.den / context->time_base.num);
+  }
 
   if (!raw)
     return;
+
+  g_return_if_fail (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)); 
 
   if (strcmp (gst_structure_get_name (structure), "video/x-raw-yuv") == 0) {
     guint32 fourcc;

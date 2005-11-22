@@ -1,5 +1,10 @@
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_pixfmt):
+	Whoops - handle input video caps that don't have a framerate
+
+2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* HACKING:
 	* ext/ffmpeg/gstffmpegcolorspace.c:
           Remove mentions of ffmpegcolorspace now that it's in 
