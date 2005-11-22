@@ -4,11 +4,11 @@ libgsttagincludedir = \
 libgsttaginclude_HEADERS = \
 	tag.h
 
-lib_LTLIBRARIES = libgsttagedit-@GST_MAJORMINOR@.la
+lib_LTLIBRARIES = libgsttag-@GST_MAJORMINOR@.la
 
-libgsttagedit_@GST_MAJORMINOR@_la_SOURCES = gstvorbistag.c gstid3tag.c
-libgsttagedit_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) -I$(top_srcdir)/gst/tags
-libgsttagedit_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) 
-libgsttagedit_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LT_LDFLAGS) 
+libgsttag_@GST_MAJORMINOR@_la_SOURCES = gstvorbistag.c gstid3tag.c
+libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) -I$(top_srcdir)/gst/tags
+libgsttag_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) 
+libgsttag_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LT_LDFLAGS) 
 
 noinst_HEADERS = gsttageditingprivate.h

@@ -82,7 +82,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstaudio-%{majorminor}.so.*
 %{_libdir}/libgstaudiofilter-%{majorminor}.so.*
 %{_libdir}/libgstriff-%{majorminor}.so.*
-%{_libdir}/libgsttagedit-%{majorminor}.so.*
+%{_libdir}/libgsttag-%{majorminor}.so.*
 %{_libdir}/libgstvideo-%{majorminor}.so.*
 %{_libdir}/libgstnet-%{majorminor}.so.*
 %{_libdir}/libgstrtp-%{majorminor}.so*
@@ -186,7 +186,7 @@ GStreamer Plugins Base library development and header files.
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstaudiofilter-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
-%{_libdir}/libgsttagedit-%{majorminor}.so
+%{_libdir}/libgsttag-%{majorminor}.so
 %{_libdir}/libgstvideo-%{majorminor}.so
 %{_libdir}/libgstnet-%{majorminor}.so
 %{_libdir}/libgstrtp-%{majorminor}.so

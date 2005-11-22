@@ -1,5 +1,13 @@
 2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/theora/Makefile.am:
+	* ext/vorbis/Makefile.am:
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-plugins-base.spec.in:
+	  Rename libgsttagedit to libgsttag (#322117).
+
+2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_setcaps):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_setcaps):
 	  Call gst_x_overlay_prepare_xwindow_id() to give applications
