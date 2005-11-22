@@ -92,6 +92,9 @@ net_gstnettimeprovider_LDADD = \
 # these just need valgrind fixing, period
 VALGRIND_TO_FIX =
 
+VALGRIND_IGNORE = \
+	pipelines/stress
+
 # these need fixing because the threads cause segfaults under valgrind
 TESTS_THREADED =				\
 	gst/gstminiobject 			\
@@ -99,4 +102,5 @@ TESTS_THREADED =				\
 
 VALGRIND_TESTS_DISABLE = 					\
 	$(TESTS_THREADED)					\
+	$(VALGRIND_IGNORE)					\
 	$(VALGRIND_TO_FIX)
