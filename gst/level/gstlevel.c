@@ -324,27 +324,28 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 #define DEFINE_LEVEL_CALCULATOR(TYPE, RESOLUTION)                             \
 static void inline                                                            \
 gst_level_calculate_##TYPE (TYPE * in, guint num, gint channels,              \
-                            double *CS, double *peak)                         \
+                            double *NCS, double *NPS)                         \
 {                                                                             \
   register int j;                                                             \
-  double squaresum = 0.0;        /* square sum of the integer samples */      \
-  register double square = 0.0;	 /* Square */                                 \
-  register double PSS = 0.0;     /* Peak Square Sample */                     \
-  gdouble normalizer;            /* divisor to get a [-1.0, 1.0] range */     \
+  double squaresum = 0.0;           /* square sum of the integer samples */   \
+  register double square = 0.0;	    /* Square */                              \
+  register double peaksquare = 0.0; /* Peak Square Sample */                  \
+  gdouble normalizer;               /* divisor to get a [-1.0, 1.0] range */  \
                                                                               \
-  *CS = 0.0;                     /* Cumulative Square for this block */       \
+  *NCS = 0.0;                       /* Normalized Cumulative Square */        \
+  *NPS = 0.0;                       /* Normalized Peask Square */             \
                                                                               \
-  normalizer = (double) (1 << RESOLUTION);                                    \
+  normalizer = (double) (1 << (RESOLUTION * 2));                              \
                                                                               \
   for (j = 0; j < num; j += channels)                                         \
   {                                                                           \
     square = ((double) in[j]) * in[j];                                        \
-    if (square > PSS) PSS = square;                                           \
+    if (square > peaksquare) peaksquare = square;                             \
     squaresum += square;                                                      \
   }                                                                           \
                                                                               \
-  *CS = squaresum / (normalizer * normalizer);                                \
-  *peak = PSS / (normalizer * normalizer);                                    \
+  *NCS = squaresum / normalizer;                                              \
+  *NPS = peaksquare / normalizer;                                             \
 }
 
 DEFINE_LEVEL_CALCULATOR (gint16, 15);
