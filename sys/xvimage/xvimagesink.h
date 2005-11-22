@@ -145,6 +145,9 @@ struct _GstXvImageSink {
   gboolean cb_changed;
 
   GMutex *x_lock;
+  GMutex *flow_lock;
+  
+  GThread *event_thread;
 
   guint video_width, video_height;     /* size of incoming video;
                                         * used as the size for XvImage */
@@ -154,6 +157,8 @@ struct _GstXvImageSink {
   GSList *image_pool;
 
   gboolean synchronous;
+  gboolean running;
+  gboolean keep_aspect;
 };
 
 struct _GstXvImageSinkClass {

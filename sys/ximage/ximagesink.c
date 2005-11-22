@@ -792,7 +792,6 @@ gst_ximagesink_handle_xevents (GstXImageSink * ximagesink)
 static gpointer
 gst_ximagesink_event_thread (GstXImageSink * ximagesink)
 {
-
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
 
   while (ximagesink->running) {
@@ -1791,12 +1790,13 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
 
   gstelement_class->change_state = gst_ximagesink_change_state;
 
-  gstbasesink_class->get_caps = gst_ximagesink_getcaps;
-  gstbasesink_class->set_caps = gst_ximagesink_setcaps;
-  gstbasesink_class->buffer_alloc = gst_ximagesink_buffer_alloc;
-  gstbasesink_class->get_times = gst_ximagesink_get_times;
-  gstbasesink_class->preroll = gst_ximagesink_show_frame;
-  gstbasesink_class->render = gst_ximagesink_show_frame;
+  gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_ximagesink_getcaps);
+  gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_ximagesink_setcaps);
+  gstbasesink_class->buffer_alloc =
+      GST_DEBUG_FUNCPTR (gst_ximagesink_buffer_alloc);
+  gstbasesink_class->get_times = GST_DEBUG_FUNCPTR (gst_ximagesink_get_times);
+  gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_ximagesink_show_frame);
+  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_ximagesink_show_frame);
 }
 
 /* ============================================================= */

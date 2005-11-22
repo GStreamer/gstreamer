@@ -1,3 +1,23 @@
+2005-11-22  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_event_thread),
+	(gst_ximagesink_class_init): Add debug macros on functions.
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_xwindow_draw_borders),
+	(gst_xvimagesink_xvimage_put),
+	(gst_xvimagesink_xwindow_update_geometry),
+	(gst_xvimagesink_handle_xevents), (gst_xvimagesink_get_xv_support),
+	(gst_xvimagesink_event_thread), (gst_xvimagesink_xcontext_get),
+	(gst_xvimagesink_xcontext_clear),
+	(gst_xvimagesink_get_format_from_caps), (gst_xvimagesink_setcaps),
+	(gst_xvimagesink_change_state), (gst_xvimagesink_show_frame),
+	(gst_xvimagesink_buffer_alloc), (gst_xvimagesink_set_xwindow_id),
+	(gst_xvimagesink_expose), (gst_xvimagesink_set_property),
+	(gst_xvimagesink_get_property), (gst_xvimagesink_finalize),
+	(gst_xvimagesink_init), (gst_xvimagesink_class_init):
+	* sys/xvimage/xvimagesink.h: Refactoring to handle aspect ratio,
+	expose while being PAUSED, out of data flow navigation events, etc..
+
 2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/audio/audio.c: (gst_audio_duration_from_pad_buffer):
