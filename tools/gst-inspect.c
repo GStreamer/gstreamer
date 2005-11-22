@@ -425,9 +425,6 @@ print_element_properties_info (GstElement * element)
         break;
       }
       default:
-        if (param->value_type == GST_TYPE_URI) {
-          n_print ("%-23.23s URI", "");
-        }
         if (param->value_type == GST_TYPE_CAPS) {
           const GstCaps *caps = gst_value_get_caps (&value);
 

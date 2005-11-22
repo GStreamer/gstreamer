@@ -1996,7 +1996,6 @@ gst_type_find_factory_get_type
 <TITLE>GstUriHandler</TITLE>
 GstURIHandler
 GstURIHandlerInterface
-GstURIType
 GST_URI_TYPE_IS_VALID
 gst_uri_protocol_is_valid
 gst_uri_is_valid
@@ -2016,11 +2015,9 @@ GST_IS_URI_HANDLER
 GST_URI_HANDLER_CLASS
 GST_URI_HANDLER_GET_INTERFACE
 GST_TYPE_URI_HANDLER
-GST_TYPE_URI
 GST_TYPE_URI_TYPE
 <SUBSECTION Private>
 gst_uri_handler_get_type
-gst_uri_get_uri_type
 gst_uri_type_get_type
 </SECTION>
 

@@ -103,9 +103,7 @@ main (int argc, char *argv[])
 
       argnode = xmlNewChild (factorynode, NULL, (xmlChar *) "argument",
           (xmlChar *) param->name);
-      if (param->value_type == GST_TYPE_URI) {
-        xmlNewChild (argnode, NULL, (xmlChar *) "filename", NULL);
-      } else if (G_IS_PARAM_SPEC_ENUM (param) == G_TYPE_ENUM) {
+      if (G_IS_PARAM_SPEC_ENUM (param) == G_TYPE_ENUM) {
         GEnumValue *values;
         gint j;
 

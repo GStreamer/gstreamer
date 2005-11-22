@@ -33,7 +33,6 @@
 #include "gst_private.h"
 #include "gstghostpad.h"
 #include "gstutils.h"
-#include "gsturitype.h"
 #include "gstinfo.h"
 #include "gst-i18n-lib.h"
 
@@ -291,8 +290,6 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
             sscanf_ret = sscanf (value, "%d", &i);
             g_return_if_fail (sscanf_ret == 1);
             g_object_set (G_OBJECT (object), name, i, NULL);
-          } else if (paramspec->value_type == GST_TYPE_URI) {
-            g_object_set (G_OBJECT (object), name, value, NULL);
           }
           break;
       }

@@ -123,7 +123,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gsttypefind.c		\
 	gsttypefindfactory.c	\
 	$(GST_URI_SRC)		\
-	gsturitype.c		\
 	gstutils.c		\
 	gstvalue.c		\
 	$(GST_PARSE_SRC)	\
@@ -205,7 +204,6 @@ gst_headers =			\
 	gsttypefind.h		\
 	gsttypefindfactory.h	\
 	gsturi.h		\
-	gsturitype.h		\
 	gstutils.h		\
 	gstvalue.h		\
 	gstregistry.h		\
