@@ -1,5 +1,11 @@
 2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* check/gst/gstevent.c: (test_event), (GST_START_TEST):
+	  Block the fakesrc srcpad when we send an event, to avoid
+	  contention on the stream_lock causing random test failures.
+
+2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* check/gst/gstvalue.c: (GST_START_TEST):
 	* gst/gstvalue.c: (gst_value_fraction_subtract):
 	  Fix subtraction.
