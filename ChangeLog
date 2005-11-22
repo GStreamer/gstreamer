@@ -1,3 +1,9 @@
+2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/audio/audio.c:
+	* gst-libs/gst/audio/audio.h:
+	  remove some deprecated functions
+
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
 	* Update for gst_tag_setter API changes.

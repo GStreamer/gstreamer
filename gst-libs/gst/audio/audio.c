@@ -78,75 +78,6 @@ gst_audio_frame_length (GstPad * pad, GstBuffer * buf)
   return GST_BUFFER_SIZE (buf) / frame_byte_size;
 }
 
-long
-gst_audio_frame_rate (GstPad * pad)
-/*
- * calculate frame rate (based on caps of pad)
- * returns 0 if failed, rate if success
- */
-{
-  const GstCaps *caps = NULL;
-  gint rate;
-  GstStructure *structure;
-
-  /* get caps of pad */
-  caps = GST_PAD_CAPS (pad);
-
-  if (caps == NULL) {
-    /* ERROR: could not get caps of pad */
-    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
-        GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
-    return 0;
-  } else {
-    structure = gst_caps_get_structure (caps, 0);
-    gst_structure_get_int (structure, "rate", &rate);
-    return rate;
-  }
-}
-
-double
-gst_audio_length (GstPad * pad, GstBuffer * buf)
-{
-/* calculate length in seconds
- * of audio buffer buf
- * based on capabilities of pad
- */
-
-  long bytes = 0;
-  int width = 0;
-  int channels = 0;
-  int rate = 0;
-
-  double length;
-
-  const GstCaps *caps = NULL;
-  GstStructure *structure;
-
-  g_assert (GST_IS_BUFFER (buf));
-  /* get caps of pad */
-  caps = GST_PAD_CAPS (pad);
-  if (caps == NULL) {
-    /* ERROR: could not get caps of pad */
-    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
-        GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
-    length = 0.0;
-  } else {
-    structure = gst_caps_get_structure (caps, 0);
-    bytes = GST_BUFFER_SIZE (buf);
-    gst_structure_get_int (structure, "width", &width);
-    gst_structure_get_int (structure, "channels", &channels);
-    gst_structure_get_int (structure, "rate", &rate);
-
-    g_assert (bytes != 0);
-    g_assert (width != 0);
-    g_assert (channels != 0);
-    g_assert (rate != 0);
-    length = (bytes * 8.0) / (double) (rate * channels * width);
-  }
-  /* g_print ("DEBUG: audio: returning length of %f\n", length); */
-  return length;
-}
-
 GstClockTime
 gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
 {
@@ -187,33 +118,6 @@ gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
     length = (bytes * 8 * GST_SECOND) / (rate * channels * width);
   }
   return length;
-}
-
-long
-gst_audio_highest_sample_value (GstPad * pad)
-/* calculate highest possible sample value
- * based on capabilities of pad
- */
-{
-  gboolean is_signed = FALSE;
-  gint width = 0;
-  const GstCaps *caps = NULL;
-  GstStructure *structure;
-
-  caps = GST_PAD_CAPS (pad);
-  if (caps == NULL) {
-    g_warning ("gstaudio: could not get caps of pad %s:%s\n",
-        GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
-  }
-
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_boolean (structure, "signed", &is_signed);
-
-  if (is_signed)
-    --width;
-  /* example : 16 bit, signed : samples between -32768 and 32767 */
-  return ((long) (1 << width));
 }
 
 gboolean
