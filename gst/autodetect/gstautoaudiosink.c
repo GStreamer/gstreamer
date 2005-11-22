@@ -170,7 +170,7 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
           if (ss) {
             gboolean r;
 
-            g_object_get (G_OBJECT (el), "soundserver-running", &r, NULL);
+            g_object_get (el, "soundserver-running", &r, NULL);
             if (r) {
               GST_DEBUG_OBJECT (sink, "%s - soundserver is running",
                   GST_PLUGIN_FEATURE (f)->name);
@@ -192,7 +192,8 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
             /* collect all error messages */
             while ((message = gst_bus_pop (bus))) {
               if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
-                GST_DEBUG_OBJECT (sink, "appending error message %p", message);
+                GST_DEBUG_OBJECT (sink, "appending error message %"
+                    GST_PTR_FORMAT, message);
                 errors = g_slist_append (errors, message);
               } else {
                 gst_message_unref (message);
@@ -203,7 +204,7 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
         }
 
       next:
-        gst_object_unref (GST_OBJECT (el));
+        gst_object_unref (el);
       }
     }
 
@@ -228,7 +229,7 @@ done:
     }
   }
   gst_object_unref (bus);
-  g_list_free (list);
+  gst_plugin_feature_list_free (list);
   g_slist_foreach (errors, (GFunc) gst_mini_object_unref, NULL);
   g_slist_free (errors);
 
@@ -252,7 +253,9 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
   if (!(esink = gst_auto_audio_sink_find_best (sink))) {
     return FALSE;
   }
+
   sink->kid = esink;
+  gst_element_set_state (sink->kid, GST_STATE (sink));
   gst_bin_add (GST_BIN (sink), esink);
 
   /* attach ghost pad */

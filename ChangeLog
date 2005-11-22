@@ -1,3 +1,13 @@
+2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_find_best), (gst_auto_audio_sink_detect):
+	* gst/autodetect/gstautovideosink.c:
+	(gst_auto_video_sink_find_best), (gst_auto_video_sink_detect):
+	  Use gst_plugin_feature_list_free() to free feature list and
+	  in the case of autovideosink free the list at all. Also
+	  miscellaneous cosmetic fixes.
+
 2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/cutter/gstcutter.c: (gst_cutter_chain),

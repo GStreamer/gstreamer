@@ -134,14 +134,15 @@ gst_auto_video_sink_compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 static GstElement *
 gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
 {
-  GList *list;
+  GstElement *choice = NULL;
+  GList *list, *walk;
 
   list = gst_registry_feature_filter (gst_registry_get_default (),
       (GstPluginFeatureFilter) gst_auto_video_sink_factory_filter, FALSE, sink);
   list = g_list_sort (list, (GCompareFunc) gst_auto_video_sink_compare_ranks);
 
-  for (; list != NULL; list = list->next) {
-    GstElementFactory *f = GST_ELEMENT_FACTORY (list->data);
+  for (walk = list; walk != NULL; walk = walk->next) {
+    GstElementFactory *f = GST_ELEMENT_FACTORY (walk->data);
     GstElement *el;
 
     GST_DEBUG_OBJECT (sink, "Trying %s", GST_PLUGIN_FEATURE (f)->name);
@@ -153,7 +154,8 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
       ret = gst_element_set_state (el, GST_STATE_READY);
       if (ret == GST_STATE_CHANGE_SUCCESS) {
         GST_DEBUG_OBJECT (sink, "success");
-        return el;
+        choice = el;
+        goto done;
       }
 
       GST_WARNING_OBJECT (sink, "Couldn't set READY: %d", ret);
@@ -162,11 +164,14 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
         GST_WARNING_OBJECT (sink,
             "Couldn't set element to NULL prior to disposal.");
 
-      gst_object_unref (GST_OBJECT (el));
+      gst_object_unref (el);
     }
   }
 
-  return NULL;
+done:
+  gst_plugin_feature_list_free (list);
+
+  return choice;
 }
 
 static gboolean
@@ -188,6 +193,7 @@ gst_auto_video_sink_detect (GstAutoVideoSink * sink)
         ("Failed to find a supported video sink"));
     return FALSE;
   }
+
   sink->kid = esink;
   gst_bin_add (GST_BIN (sink), esink);
 
