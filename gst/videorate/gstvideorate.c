@@ -507,12 +507,14 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
             GST_BUFFER_SIZE (videorate->prevbuf));
         GST_BUFFER_TIMESTAMP (outbuf) = videorate->next_ts;
         videorate->out++;
-        videorate->next_ts =
-            videorate->first_ts +
-            (videorate->out * GST_SECOND *
-            videorate->to_rate_denominator / videorate->to_rate_numerator);
-        GST_BUFFER_DURATION (outbuf) =
-            videorate->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
+        if (videorate->to_rate_numerator) {
+          videorate->next_ts =
+              videorate->first_ts +
+              gst_util_clocktime_scale (videorate->out * GST_SECOND,
+              videorate->to_rate_denominator, videorate->to_rate_numerator);
+          GST_BUFFER_DURATION (outbuf) =
+              videorate->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
+        }
         /* adapt for looping */
         GST_BUFFER_TIMESTAMP (outbuf) -= videorate->segment_accum;
         gst_buffer_set_caps (outbuf, GST_PAD_CAPS (videorate->srcpad));
