@@ -624,13 +624,13 @@ gst_vorbisenc_set_metadata (GstVorbisEnc * vorbisenc)
   GstTagList *copy;
   const GstTagList *user_tags;
 
-  user_tags = gst_tag_setter_get_list (GST_TAG_SETTER (vorbisenc));
+  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (vorbisenc));
   if (!(vorbisenc->tags || user_tags))
     return;
 
   copy =
       gst_tag_list_merge (user_tags, vorbisenc->tags,
-      gst_tag_setter_get_merge_mode (GST_TAG_SETTER (vorbisenc)));
+      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (vorbisenc)));
   vorbis_comment_init (&vorbisenc->vc);
   gst_tag_list_foreach (copy, gst_vorbisenc_metadata_set1, vorbisenc);
   gst_tag_list_free (copy);
@@ -897,7 +897,7 @@ gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
 
         gst_event_parse_tag (event, &list);
         gst_tag_list_insert (vorbisenc->tags, list,
-            gst_tag_setter_get_merge_mode (GST_TAG_SETTER (vorbisenc)));
+            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (vorbisenc)));
       } else {
         g_assert_not_reached ();
       }
