@@ -1,3 +1,10 @@
+2005-11-22  Michael Smith <msmith@fluendo.com>
+
+	* gst/goom/filters.c:
+	* gst/goom/graphic.h:
+	  Fix compilation by making some functions static inline instead of
+	  extern inline, matching the way they're used.
+
 2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_init),

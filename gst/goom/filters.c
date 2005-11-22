@@ -182,7 +182,7 @@ calculatePXandPY (int x, int y, int *px, int *py)
 
 /*#define _DEBUG */
 
-extern inline void
+static inline void
 setPixelRGB (Uint * buffer, Uint x, Uint y, Color c)
 {
 /*		buffer[ y*WIDTH + x ] = (c.r<<16)|(c.v<<8)|c.b */
@@ -220,7 +220,7 @@ setPixelRGB_ (Uint * buffer, Uint x, Color c)
 
 
 
-extern inline void
+static inline void
 getPixelRGB (Uint * buffer, Uint x, Uint y, Color * c)
 {
   register unsigned char *tmp8;

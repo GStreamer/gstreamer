@@ -20,7 +20,4 @@ extern const Color YELLOW;
 extern const Color ORANGE;
 extern const Color VIOLET;
 
-extern inline void setPixelRGB (Uint *buffer, Uint x, Uint y, Color c) ;
-extern inline void getPixelRGB (Uint *buffer, Uint x, Uint y, Color *c) ;
-
 #endif /*GRAPHIC_H*/
