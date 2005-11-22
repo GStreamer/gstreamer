@@ -143,7 +143,7 @@ gst_v4lmjpegsrc_base_init (gpointer g_class)
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS ("image/jpeg, "
           "width = (int) [ 0, MAX ], "
-          "height = (int) [ 0, MAX ], " "framerate = (double) [ 0, MAX ]")
+          "height = (int) [ 0, MAX ], " "framerate = (fraction) [ 0, MAX ]")
       );
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
@@ -268,11 +268,12 @@ gst_v4lmjpegsrc_init (GstV4lMjpegSrc * v4lmjpegsrc)
 }
 
 
-static gfloat
-gst_v4lmjpegsrc_get_fps (GstV4lMjpegSrc * v4lmjpegsrc)
+static gboolean
+gst_v4lmjpegsrc_get_fps (GstV4lMjpegSrc * v4lmjpegsrc, GValue * fps)
 {
   gint norm;
-  gfloat fps;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (fps), FALSE);
 
   if (!v4lmjpegsrc->use_fixed_fps &&
       v4lmjpegsrc->clock != NULL && v4lmjpegsrc->handled > 0) {
@@ -285,17 +286,17 @@ gst_v4lmjpegsrc_get_fps (GstV4lMjpegSrc * v4lmjpegsrc)
   /* if that failed ... */
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lmjpegsrc)))
-    return 0.;
+    return FALSE;
 
   if (!gst_v4l_get_chan_norm (GST_V4LELEMENT (v4lmjpegsrc), NULL, &norm))
-    return 0.;
+    return FALSE;
 
   if (norm == VIDEO_MODE_NTSC)
-    fps = 30000 / 1001;
+    gst_value_set_fraction (fps, 30000, 1001);
   else
-    fps = 25.;
+    gst_value_set_fraction (fps, 25, 1);
 
-  return fps;
+  return TRUE;
 }
 
 static gboolean
@@ -304,39 +305,46 @@ gst_v4lmjpegsrc_src_convert (GstPad * pad,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
 {
   GstV4lMjpegSrc *v4lmjpegsrc;
-  gdouble fps;
+  GValue fps = { 0 };
+  gboolean result = TRUE;
 
   v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
 
-  if ((fps = gst_v4lmjpegsrc_get_fps (v4lmjpegsrc)) == 0)
+  g_value_init (&fps, GST_VALUE_FRACTION);
+  if (!gst_v4lmjpegsrc_get_fps (v4lmjpegsrc, &fps))
     return FALSE;
 
   switch (src_format) {
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value * fps / GST_SECOND;
+          *dest_value = gst_util_uint64_scale (src_value,
+              gst_value_get_fraction_numerator (&fps),
+              gst_value_get_fraction_denominator (&fps) * GST_SECOND);
           break;
         default:
-          return FALSE;
+          result = FALSE;
       }
       break;
 
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_TIME:
-          *dest_value = src_value * GST_SECOND / fps;
+          *dest_value = src_value * gst_util_clock_time_scale (GST_SECOND,
+              gst_value_get_fraction_denominator (&fps),
+              gst_value_get_fraction_numerator (&fps));
           break;
         default:
-          return FALSE;
+          result = FALSE;
       }
       break;
 
     default:
-      return FALSE;
+      result = FALSE;
   }
 
-  return TRUE;
+  g_value_unset (&fps);
+  return result;
 }
 
 static gboolean
@@ -345,16 +353,19 @@ gst_v4lmjpegsrc_src_query (GstPad * pad,
 {
   GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
   gboolean res = TRUE;
-  gdouble fps;
+  GValue fps = { 0 };
 
-  if ((fps = gst_v4lmjpegsrc_get_fps (v4lmjpegsrc)) == 0)
+  g_value_init (&fps, GST_VALUE_FRACTION);
+  if (!gst_v4lmjpegsrc_get_fps (v4lmjpegsrc, &fps))
     return FALSE;
 
   switch (type) {
     case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_TIME:
-          *value = v4lmjpegsrc->handled * GST_SECOND / fps;
+          *value = v4lmjpegsrc->handled * gst_util_clock_time_scale (GST_SECOND,
+              gst_value_get_fraction_denominator (&fps),
+              gst_value_get_fraction_numerator (&fps));
           break;
         case GST_FORMAT_DEFAULT:
           *value = v4lmjpegsrc->handled;
@@ -369,6 +380,7 @@ gst_v4lmjpegsrc_src_query (GstPad * pad,
       break;
   }
 
+  g_value_unset (&fps);
   return res;
 }
 
@@ -497,15 +509,30 @@ gst_v4lmjpegsrc_get (GstPad * pad)
   GstV4lMjpegSrc *v4lmjpegsrc;
   GstBuffer *buf;
   gint num;
-  gdouble fps = 0;
+  GValue fps = { 0 };
+  GstClockTime duration;
+  GstClockTime cur_frame_time;
 
   g_return_val_if_fail (pad != NULL, NULL);
 
   v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
 
-  if (v4lmjpegsrc->use_fixed_fps &&
-      (fps = gst_v4lmjpegsrc_get_fps (v4lmjpegsrc)) == 0)
-    return NULL;
+  if (v4lmjpegsrc->use_fixed_fps) {
+    g_value_init (&fps, GST_VALUE_FRACTION);
+    duration = gst_util_clock_time_scale (GST_SECOND,
+        gst_value_get_fraction_denominator (&fps),
+        gst_value_get_fraction_numerator (&fps));
+    cur_frame_time =
+        gst_util_clock_time_scale (v4lmjpegsrc->handled * GST_SECOND,
+        gst_value_get_fraction_denominator (&fps),
+        gst_value_get_fraction_numerator (&fps));
+
+
+    if (!gst_v4lmjpegsrc_get_fps (v4lmjpegsrc, &fps)) {
+      g_value_unset (&fps);
+      return NULL;
+    }
+  }
 
   if (v4lmjpegsrc->need_writes > 0) {
     /* use last frame */
@@ -550,14 +577,12 @@ gst_v4lmjpegsrc_get (GstPad * pad)
        * timeframe. This means that if time - begin_time = X sec,
        * we want to have written X*fps frames. If we've written
        * more - drop, if we've written less - dup... */
-      if (v4lmjpegsrc->handled * (GST_SECOND / fps) - time >
-          1.5 * (GST_SECOND / fps)) {
+      if (cur_frame_time - time > 1.5 * duration) {
         /* yo dude, we've got too many frames here! Drop! DROP! */
         v4lmjpegsrc->need_writes--;     /* -= (v4lmjpegsrc->handled - (time / fps)); */
         g_signal_emit (G_OBJECT (v4lmjpegsrc),
             gst_v4lmjpegsrc_signals[SIGNAL_FRAME_DROP], 0);
-      } else if (v4lmjpegsrc->handled * (GST_SECOND / fps) - time <
-          -1.5 * (GST_SECOND / fps)) {
+      } else if (cur_frame_time - time < -1.5 * duration) {
         /* this means we're lagging far behind */
         v4lmjpegsrc->need_writes++;     /* += ((time / fps) - v4lmjpegsrc->handled); */
         g_signal_emit (G_OBJECT (v4lmjpegsrc),
@@ -590,7 +615,7 @@ gst_v4lmjpegsrc_get (GstPad * pad)
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_READONLY);
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_DONTFREE);
   if (v4lmjpegsrc->use_fixed_fps)
-    GST_BUFFER_TIMESTAMP (buf) = v4lmjpegsrc->handled * GST_SECOND / fps;
+    GST_BUFFER_TIMESTAMP (buf) = cur_frame_time;
   else                          /* calculate time based on our own clock */
     GST_BUFFER_TIMESTAMP (buf) =
         GST_TIMEVAL_TO_TIME (v4lmjpegsrc->bsync.timestamp) -
@@ -609,23 +634,27 @@ gst_v4lmjpegsrc_getcaps (GstPad * pad)
 {
   GstV4lMjpegSrc *v4lmjpegsrc = GST_V4LMJPEGSRC (gst_pad_get_parent (pad));
   struct video_capability *vcap = &GST_V4LELEMENT (v4lmjpegsrc)->vcap;
-  gdouble fps;
   GstCaps *caps;
   GstStructure *str;
   gint i;
   GValue w = { 0 }, h = {
   0}, w1 = {
   0}, h1 = {
+  0}, fps = {
   0};
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lmjpegsrc))) {
     return gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
 
-  fps = gst_v4lmjpegsrc_get_fps (v4lmjpegsrc);
-  caps = gst_caps_new_simple ("image/jpeg",
-      "framerate", G_TYPE_DOUBLE, fps, NULL);
+  g_value_init (&fps, GST_TYPE_FRACTION);
+  gst_return_val_if_fail (gst_v4lmjpegsrc_get_fps (v4lmjpegsrc, &fps), NULL);
+
+  caps = gst_caps_new_simple ("image/jpeg", NULL);
   str = gst_caps_get_structure (caps, 0);
+  gst_structure_set_value (str, "framerate", &fps);
+  g_value_unset (&fps);
+
   g_value_init (&w, GST_TYPE_LIST);
   g_value_init (&h, GST_TYPE_LIST);
   g_value_init (&w1, G_TYPE_INT);

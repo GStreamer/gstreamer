@@ -205,7 +205,11 @@ gst_v4l_open (GstV4lElement * v4lelement)
     GstTunerNorm *norm = GST_TUNER_NORM (v4lnorm);
 
     norm->label = g_strdup (norm_name[num]);
-    norm->fps = (num == 1) ? (30000. / 1001) : 25.;
+    if (num == 1)
+      gst_value_set_fraction (&norm->framerate, 30000, 1001);
+    else
+      gst_value_set_fraction (&norm->framerate, 25, 1);
+
     v4lnorm->index = num;
     v4lelement->norms = g_list_append (v4lelement->norms, (gpointer) norm);
   }

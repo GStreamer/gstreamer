@@ -396,7 +396,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     visual->next_ts = GST_BUFFER_TIMESTAMP (buffer);
 
   /* spf = samples per frame */
-  spf = ((guint64) (visual->rate) * visual->fps_n) / visual->fps_d;
+  spf = ((guint64) (visual->rate) * visual->fps_d) / visual->fps_n;
   gst_adapter_push (visual->adapter, buffer);
 
   while (gst_adapter_available (visual->adapter) > MAX (512, spf) * 4 &&
@@ -423,7 +423,8 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
       visual_actor_run (visual->actor, &visual->audio);
 
       GST_BUFFER_TIMESTAMP (outbuf) = visual->next_ts;
-      GST_BUFFER_DURATION (outbuf) = GST_SECOND * visual->fps_n / visual->fps_d;
+      GST_BUFFER_DURATION (outbuf) = gst_util_clock_time_scale (GST_SECOND,
+          visual->fps_d, visual->fps_n);
       visual->next_ts += GST_BUFFER_DURATION (outbuf);
       ret = gst_pad_push (visual->srcpad, outbuf);
       outbuf = NULL;
@@ -431,7 +432,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
     /* Flush out the number of samples per frame * channels * sizeof (gint16) */
     /* Recompute spf in case caps changed */
-    spf = ((guint64) (visual->rate) * visual->fps_n) / visual->fps_d;
+    spf = ((guint64) (visual->rate) * visual->fps_d) / visual->fps_n;
     GST_DEBUG_OBJECT (visual, "finished frame, flushing %u samples from input",
         spf);
     gst_adapter_flush (visual->adapter,

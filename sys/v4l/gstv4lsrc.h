@@ -82,7 +82,6 @@ struct _GstV4lSrc
   gboolean quit;
 
   gint offset;
-  gfloat fps;
 
   /* list of supported colorspaces (as integers) */
   GList *colorspaces;

@@ -114,7 +114,7 @@ gst_v4lmjpegsink_base_init (gpointer g_class)
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS ("image/jpeg, "
           "width = (int) [ 1, MAX ], "
-          "height = (int) [ 1, MAX ], " "framerate = (double) [ 0, MAX ]")
+          "height = (int) [ 1, MAX ], " "framerate = (fraction) [ 0, MAX ]")
       );
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 

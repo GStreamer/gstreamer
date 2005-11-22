@@ -133,6 +133,14 @@ typedef struct AVCodecContext {
     int frame_rate;
     
     /**
+     * frame_rate_base.
+     * for variable fps this is 1
+     * - encoding: set by user.
+     * - decoding: set by lavc.
+     */
+
+    int frame_rate_base;
+    /**
      * picture width / height.
      * - encoding: MUST be set by user. 
      * - decoding: set by lavc.
@@ -162,16 +170,6 @@ typedef struct AVCodecContext {
      * - decoding: set by user.
      */
     struct AVPaletteControl *palctrl;
-
-    /**
-     * frame_rate_base.
-     * for variable fps this is 1
-     * - encoding: set by user.
-     * - decoding: set by lavc.
-     * @todo move this after frame_rate
-     */
-
-    int frame_rate_base;
 } AVCodecContext;
 
 /**

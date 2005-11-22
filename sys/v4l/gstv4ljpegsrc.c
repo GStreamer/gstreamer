@@ -117,7 +117,7 @@ gst_v4ljpegsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
   GstV4lJpegSrc *v4ljpegsrc;
   GstV4lSrc *v4lsrc;
   gint w, h, palette = -1;
-  gdouble fps;
+  const GValue *fps;
   GstStructure *structure;
   gboolean was_capturing;
   struct video_window *vwin;
@@ -144,9 +144,11 @@ gst_v4ljpegsrc_src_link (GstPad * pad, const GstCaps * vscapslist)
 
   gst_structure_get_int (structure, "width", &w);
   gst_structure_get_int (structure, "height", &h);
-  gst_structure_get_double (structure, "framerate", &fps);
+  fps = gst_structure_get_value (structure, "framerate");
 
-  GST_DEBUG_OBJECT (v4ljpegsrc, "linking with %dx%d at %f fps", w, h, fps);
+  GST_DEBUG_OBJECT (v4ljpegsrc, "linking with %dx%d at %d/%d fps", w, h,
+      gst_value_get_fraction_numerator (fps),
+      gst_value_get_fraction_denominator (fps));
 
   /* set framerate if it's not already correct */
   if (fps != gst_v4lsrc_get_fps (v4lsrc)) {
