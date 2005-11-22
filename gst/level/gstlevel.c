@@ -173,11 +173,11 @@ gst_level_class_init (GstLevelClass * klass)
           "Interval of time between message posts (in nanoseconds)",
           1, G_MAXUINT64, GST_SECOND / 10, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PEAK_TTL,
-      g_param_spec_uint64 ("peak_ttl", "Peak TTL",
+      g_param_spec_uint64 ("peak-ttl", "Peak TTL",
           "Time To Live of decay peak before it falls back (in nanoseconds)",
           0, G_MAXUINT64, GST_SECOND / 10 * 3, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PEAK_FALLOFF,
-      g_param_spec_double ("peak_falloff", "Peak Falloff",
+      g_param_spec_double ("peak-falloff", "Peak Falloff",
           "Decay rate of decay peak after TTL (in dB/sec)",
           0.0, G_MAXDOUBLE, 10.0, G_PARAM_READWRITE));
 
@@ -308,7 +308,8 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 /* process one (interleaved) channel of incoming samples
  * calculate square sum of samples
  * normalize and average over number of samples
- * returns a normalized average power value as CS, as a double between 0 and 1
+ * returns a normalized cumulative square value, which can be averaged
+ * to return the average power as a double between 0 and 1
  * also returns the normalized peak power (square of the highest amplitude)
  *
  * caller must assure num is a multiple of channels
@@ -320,10 +321,10 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
  * full-scale; so 32767 will not map to 1.0
  */
 
-#define DEFINE_LEVEL_CALCULATOR(TYPE)                                         \
+#define DEFINE_LEVEL_CALCULATOR(TYPE, RESOLUTION)                             \
 static void inline                                                            \
 gst_level_calculate_##TYPE (TYPE * in, guint num, gint channels,              \
-                            gint resolution, double *CS, double *peak)        \
+                            double *CS, double *peak)                         \
 {                                                                             \
   register int j;                                                             \
   double squaresum = 0.0;        /* square sum of the integer samples */      \
@@ -333,7 +334,7 @@ gst_level_calculate_##TYPE (TYPE * in, guint num, gint channels,              \
                                                                               \
   *CS = 0.0;                     /* Cumulative Square for this block */       \
                                                                               \
-  normalizer = (double) (1 << resolution);                                    \
+  normalizer = (double) (1 << RESOLUTION);                                    \
                                                                               \
   for (j = 0; j < num; j += channels)                                         \
   {                                                                           \
@@ -346,8 +347,8 @@ gst_level_calculate_##TYPE (TYPE * in, guint num, gint channels,              \
   *peak = PSS / (normalizer * normalizer);                                    \
 }
 
-DEFINE_LEVEL_CALCULATOR (gint16);
-DEFINE_LEVEL_CALCULATOR (gint8);
+DEFINE_LEVEL_CALCULATOR (gint16, 15);
+DEFINE_LEVEL_CALCULATOR (gint8, 7);
 
 static GstMessage *
 gst_level_message_new (GstLevel * l, GstClockTime endtime)
@@ -421,11 +422,11 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     switch (filter->width) {
       case 16:
         gst_level_calculate_gint16 (((gint16 *) in_data) + i, num_int_samples,
-            filter->channels, filter->width - 1, &CS, &filter->peak[i]);
+            filter->channels, &CS, &filter->peak[i]);
         break;
       case 8:
         gst_level_calculate_gint8 (((gint8 *) in_data) + i, num_int_samples,
-            filter->channels, filter->width - 1, &CS, &filter->peak[i]);
+            filter->channels, &CS, &filter->peak[i]);
         break;
     }
     GST_LOG_OBJECT (filter,
