@@ -1,3 +1,12 @@
+2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/gstmad.c: (gst_mad_mode_get_type), (gst_mad_src_query),
+	(normal_seek), (gst_mad_sink_event), (gst_mad_chain):
+	  Fix seeking in stand-alone mode. Fix nonexistant enum value 
+	  introduced in previous commit. Improve debug messages here and 
+	  there. Actually return a proper return value in the sink event
+	  handler.
+
 2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/lame/gstlame.c:

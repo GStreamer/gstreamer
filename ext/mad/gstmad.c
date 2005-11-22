@@ -179,8 +179,6 @@ static GstIndex *gst_mad_get_index (GstElement * element);
 
 static GstElementClass *parent_class = NULL;
 
-/* static guint gst_mad_signals[LAST_SIGNAL] = { 0 }; */
-
 GType
 gst_mad_get_type (void)
 {
@@ -232,7 +230,7 @@ gst_mad_mode_get_type (void)
   static GType mad_mode_type = 0;
   static GEnumValue mad_mode[] = {
     {-1, "Unknown", "unknown"},
-    {MAD_MODE_MONO, "Mono", "mono"},
+    {MAD_MODE_SINGLE_CHANNEL, "Mono", "mono"},
     {MAD_MODE_DUAL_CHANNEL, "Dual Channel", "dual"},
     {MAD_MODE_JOINT_STEREO, "Joint Stereo", "joint"},
     {MAD_MODE_STEREO, "Stereo", "stereo"},
@@ -573,8 +571,11 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_set_position (query, format, cur);
 
-      GST_LOG_OBJECT (mad,
-          "position query: we return %llu (format %u)", cur, format);
+      if (format == GST_FORMAT_TIME) {
+        GST_LOG ("position=%" GST_TIME_FORMAT, GST_TIME_ARGS (cur));
+      } else {
+        GST_LOG ("position=%" G_GINT64_FORMAT ", format=%u", cur, format);
+      }
       break;
     }
     case GST_QUERY_DURATION:
@@ -601,10 +602,12 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
 
       /* get the returned format */
       gst_query_parse_duration (query, &rformat, &total_bytes);
-      if (rformat == GST_FORMAT_BYTES)
+      if (rformat == GST_FORMAT_BYTES) {
         GST_LOG_OBJECT (mad, "peer pad returned total=%lld bytes", total_bytes);
-      else if (rformat == GST_FORMAT_TIME)
-        GST_LOG_OBJECT (mad, "peer pad returned time=%lld", total_bytes);
+      } else if (rformat == GST_FORMAT_TIME) {
+        GST_LOG_OBJECT (mad, "peer pad returned total time=%", GST_TIME_FORMAT,
+            GST_TIME_ARGS (total_bytes));
+      }
 
       /* Check if requested format is returned format */
       if (format == rformat)
@@ -623,9 +626,11 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
       }
 
       gst_query_set_duration (query, format, total);
-
-      GST_LOG_OBJECT (mad,
-          "position query: we return %llu (format %u)", total, format);
+      if (format == GST_FORMAT_TIME) {
+        GST_LOG ("duration=%" GST_TIME_FORMAT, GST_TIME_ARGS (total));
+      } else {
+        GST_LOG ("duration=%" G_GINT64_FORMAT ", format=%u", total, format);
+      }
       break;
     }
     case GST_QUERY_CONVERT:
@@ -730,7 +735,7 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
   gint64 cur, stop;
   gint64 time_cur, time_stop;
   gint64 bytes_cur, bytes_stop;
-  guint flush;
+  gboolean flush;
 
   /* const GstFormat *peer_formats; */
   gboolean res;
@@ -755,7 +760,7 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
       GST_TIME_ARGS (time_cur), GST_TIME_ARGS (time_stop));
 
   /* shave off the flush flag, we'll need it later */
-  flush = flags & GST_SEEK_FLAG_FLUSH;
+  flush = ((flags & GST_SEEK_FLAG_FLUSH) != 0);
 
   /* assume the worst */
   res = FALSE;
@@ -777,6 +782,13 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
 
     /* do the seek */
     res = gst_pad_push_event (mad->sinkpad, seek_event);
+
+    if (res) {
+      /* we need to break out of the processing loop on flush */
+      mad->restart = flush;
+      mad->segment_start = time_cur;
+      mad->last_ts = time_cur;
+    }
   }
 #if 0
   peer_formats = gst_pad_get_formats (GST_PAD_PEER (mad->sinkpad));
@@ -976,25 +988,42 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
   GstMad *mad = GST_MAD (GST_PAD_PARENT (pad));
   gboolean result;
 
-  GST_DEBUG ("handling event %d", GST_EVENT_TYPE (event));
+  GST_DEBUG ("handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-      /* this isn't really correct? */
-      result = gst_pad_push_event (mad->srcpad, event);
-      mad->tempsize = 0;
-      /* we don't need to restart when we get here */
-      mad->restart = FALSE;
+    case GST_EVENT_NEWSEGMENT:{
+      GstFormat format;
+
+      gst_event_parse_new_segment (event, NULL, NULL, &format, NULL, NULL,
+          NULL);
+
+      if (format == GST_FORMAT_TIME) {
+        /* FIXME: is this really correct? */
+        mad->tempsize = 0;
+        result = gst_pad_push_event (mad->srcpad, event);
+        /* we don't need to restart when we get here */
+        mad->restart = FALSE;
+      } else {
+        GST_DEBUG ("dropping newsegment event in format %s",
+            gst_format_get_name (format));
+        /* on restart the chain function will generate a new
+         * newsegment event, so we can just drop this one */
+        mad->restart = TRUE;
+        gst_event_unref (event);
+        mad->tempsize = 0;
+        result = TRUE;
+      }
       break;
+    }
     case GST_EVENT_EOS:
       mad->caps_set = FALSE;    /* could be a new stream */
       result = gst_pad_push_event (mad->srcpad, event);
       break;
     default:
-      result = gst_pad_push_event (mad->srcpad, event);
+      result = gst_pad_event_default (pad, event);
       break;
   }
-  return TRUE;
+  return result;
 }
 
 static gboolean
@@ -1250,8 +1279,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
      * we can set this timestamp on the next outgoing buffer */
     if (mad->tempsize == 0) {
       /* we have to save the result here because we can't yet convert
-       * the timestamp to a sample offset yet,
-       * the samplerate might not be known yet */
+       * the timestamp to a sample offset, as the samplerate might not
+       * be known yet */
       mad->last_ts = timestamp;
       mad->base_byte_offset = GST_BUFFER_OFFSET (buffer);
       mad->bytes_consumed = 0;
