@@ -37,6 +37,9 @@ G_BEGIN_DECLS
 #define GST_CLOCK_GET_CLASS(clock)	(G_TYPE_INSTANCE_GET_CLASS ((clock), GST_TYPE_CLOCK, GstClockClass))
 #define GST_CLOCK_CAST(clock)		((GstClock*)(clock))
 
+#define GST_CLOCK_SLAVE_LOCK(clock)	g_mutex_lock (GST_CLOCK_CAST (clock)->slave_lock)
+#define GST_CLOCK_SLAVE_UNLOCK(clock)	g_mutex_unlock (GST_CLOCK_CAST (clock)->slave_lock)
+
 /**
  * GstClockTime:
  *
@@ -374,20 +377,25 @@ typedef enum {
 struct _GstClock {
   GstObject	 object;
 
+  GMutex	*slave_lock; /* order: SLAVE_LOCK, OBJECT_LOCK */
+
   /*< protected >*/ /* with LOCK */
   GstClockTime	 internal_calibration; 
   GstClockTime	 external_calibration;
-  gdouble	 rate;
+  GstClockTime	 rate_numerator;
+  GstClockTime	 rate_denominator;
   GstClockTime	 last_time;
   GList		*entries;
   GCond		*entries_changed;
 
-  /*< private >*/
+  /*< private >*/ /* with LOCK */
   GstClockTime	 resolution;
   gboolean	 stats;
 
   /* for master/slave clocks */
   GstClock      *master;
+
+  /* with SLAVE_LOCK */
   gboolean       filling;
   gint           window_size;
   gint           window_threshold;
@@ -429,9 +437,14 @@ GstClockTime		gst_clock_get_resolution	(GstClock *clock);
 
 GstClockTime		gst_clock_get_time		(GstClock *clock);
 void			gst_clock_set_calibration	(GstClock *clock, GstClockTime internal,
-                                                         GstClockTime external, gdouble rate);
+                                                         GstClockTime external,
+                                                         GstClockTime rate_num,
+                                                         GstClockTime rate_denom);
 void			gst_clock_get_calibration	(GstClock *clock, GstClockTime *internal,
-                                                         GstClockTime *external, gdouble *rate);
+                                                         GstClockTime *external,
+                                                         GstClockTime *rate_num,
+                                                         GstClockTime *rate_denom);
+
 /* master/slave clocks */
 gboolean		gst_clock_set_master		(GstClock *clock, GstClock *master);
 GstClock*		gst_clock_get_master		(GstClock *clock);

@@ -1,3 +1,39 @@
+2005-11-23  Andy Wingo  <wingo@pobox.com>
+
+	* check/net/gstnetclientclock.c (test_functioning): Adjust to
+	rate_num/rate_denom change.
+
+	* gst/net/gstnetclientclock.c
+	(gst_net_client_clock_observe_times): Take the SLAVE_LOCK not the
+	OBJECT_LOCK. Don't call add_observation with the lock.
+
+	* gst/gstclock.c (gst_clock_init): Initialize the rate as a
+	fraction.
+	(gst_clock_adjust_unlocked): Adjust using uint64_scale and the
+	rate fraction.
+	(gst_clock_set_calibration, gst_clock_get_calibration): Change to
+	deal with rate as a fraction whose numerator and denominator are
+	GstClockTime values.
+	(gst_clock_set_master): Only use the OBJECT_LOCK to set the
+	master; the other fields are protected by the SLAVE_LOCK.
+	(do_linear_regression): Note that this must be called with the
+	SLAVE_LOCK.
+	(gst_clock_add_observation): Take the SLAVE_LOCK, not the
+	OBJECT_LOCK. Call set_calibration instead of touching the
+	variables directly.
+	(gst_clock_set_property, gst_clock_get_property): Protect
+	master/slave parameters with the SLAVE_LOCK.
+
+	* gst/gstclock.h (GstClock): Remove rate, add rate_numerator and
+	rate_denominator. PR3C1S3. Add a new lock, the SLAVE_LOCK, and
+	note that all of the instance variables that add_observation and
+	the set_master functions use are protected by that lock and not
+	the OBJECT_LOCK.
+	(GST_CLOCK_SLAVE_LOCK, GST_CLOCK_SLAVE_UNLOCK): New macros.
+
+	* gst/gstclock.c (gst_clock_add_observation): No longer requires
+	the caller to take the object lock.
+
 2005-11-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gsterror.c: (_gst_core_errors_init):

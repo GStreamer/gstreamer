@@ -50,18 +50,17 @@ GST_START_TEST (test_functioning)
 {
   GstNetTimeProvider *ntp;
   GstClock *client, *server;
-  GstClockTime basex, basey;
+  GstClockTime basex, basey, rate_num, rate_denom;
   GstClockTime servtime, clienttime;
   gint port;
-  gdouble rate;
 
   server = gst_system_clock_obtain ();
   fail_unless (server != NULL, "failed to get system clock");
 
   /* move the clock ahead 100 seconds */
-  gst_clock_get_calibration (server, &basex, &basey, &rate);
+  gst_clock_get_calibration (server, &basex, &basey, &rate_num, &rate_denom);
   basey += 100 * GST_SECOND;
-  gst_clock_set_calibration (server, basex, basey, rate);
+  gst_clock_set_calibration (server, basex, basey, rate_num, rate_denom);
 
   ntp = gst_net_time_provider_new (server, "127.0.0.1", 0);
   fail_unless (ntp != NULL, "failed to create network time provider");

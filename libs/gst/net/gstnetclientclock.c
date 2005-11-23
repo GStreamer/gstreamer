@@ -216,9 +216,9 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
 
   clock = GST_CLOCK_CAST (self);
 
-  GST_OBJECT_LOCK (self);
   gst_clock_add_observation (GST_CLOCK (self), local_avg, remote, &r_squared);
 
+  GST_CLOCK_SLAVE_LOCK (self);
   if (clock->filling) {
     self->current_timeout = 0;
   } else {
@@ -227,7 +227,7 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
         (1e-3 / (1 - MIN (r_squared, 0.99999))) * GST_SECOND;
     self->current_timeout = MIN (self->current_timeout, clock->timeout);
   }
-  GST_OBJECT_UNLOCK (clock);
+  GST_CLOCK_SLAVE_UNLOCK (clock);
 
   return;
 
@@ -520,7 +520,7 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
   /* update our internal time so get_time() give something around base_time.
      assume that the rate is 1 in the beginning. */
   internal = gst_clock_get_internal_time (GST_CLOCK (ret));
-  gst_clock_set_calibration (GST_CLOCK (ret), internal, base_time, 1.0);
+  gst_clock_set_calibration (GST_CLOCK (ret), internal, base_time, 1, 1);
 
   {
     GstClockTime now = gst_clock_get_time (GST_CLOCK (ret));
