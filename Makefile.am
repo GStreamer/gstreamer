@@ -120,6 +120,9 @@ endif
 check-valgrind:
 	cd check && make check-valgrind
 
+check-torture:
+	cd check && make torture
+
 win32-update:
 	for f in gstversion.h gstenumtypes.c gstenumtypes.h; do \
 		cp $(top_builddir)/gst/$$f win32/common; done
