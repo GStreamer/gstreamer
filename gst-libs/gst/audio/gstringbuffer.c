@@ -1183,6 +1183,12 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
       if (diff > 0 && diff < segtotal)
         break;
 
+      /* flush if diff has grown bigger than ringbuffer */
+      if (diff >= segtotal) {
+        gst_ring_buffer_clear_all (buf);
+        buf->segdone = readseg;
+      }
+
       /* else we need to wait for the segment to become readable. */
       if (!wait_segment (buf))
         goto not_started;

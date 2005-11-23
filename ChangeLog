@@ -1,3 +1,9 @@
+2005-11-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_read):
+	If we are reading too slowly, jump forward in the ringbuffer
+	instead of blocking.
+
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/libvisual/visual.c: (gst_visual_src_setcaps), (get_buffer),
