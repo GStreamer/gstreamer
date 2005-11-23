@@ -482,7 +482,6 @@ po/Makefile.in
 check/Makefile
 tests/Makefile
 tests/instantiate/Makefile
-tests/muxing/Makefile
 tests/seeking/Makefile
 tests/sched/Makefile
 tests/threadstate/Makefile
@@ -497,7 +496,6 @@ testsuite/plugin/Makefile
 testsuite/refcounting/Makefile
 testsuite/states/Makefile
 testsuite/threads/Makefile
-testsuite/trigger/Makefile
 examples/Makefile
 examples/controller/Makefile
 examples/cutter/Makefile
