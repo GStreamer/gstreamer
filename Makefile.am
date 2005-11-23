@@ -40,3 +40,6 @@ uninstall-local:
 
 check-valgrind:
 	@true
+
+check-torture:
+	@true
