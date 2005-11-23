@@ -726,7 +726,8 @@
   (parameters
     '("GstClockTime" "internal")
     '("GstClockTime" "external")
-    '("gdouble" "rate")
+    '("GstClockTime" "rate_num")
+    '("GstClockTime" "rate_denom")
   )
 )
 
@@ -737,7 +738,8 @@
   (parameters
     '("GstClockTime*" "internal")
     '("GstClockTime*" "external")
-    '("gdouble*" "rate")
+    '("GstClockTime*" "rate_num")
+    '("GstClockTime*" "rate_denom")
   )
 )
 
@@ -5017,6 +5019,17 @@
   )
 )
 
+(define-method get_fraction
+  (of-object "GstStructure")
+  (c-name "gst_structure_get_fraction")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "fieldname")
+    '("gint*" "value_numerator")
+    '("gint*" "value_denominator")
+  )
+)
+
 (define-method to_string
   (of-object "GstStructure")
   (c-name "gst_structure_to_string")
@@ -5069,7 +5082,8 @@
   (return-type "gboolean")
   (parameters
     '("const-char*" "field_name")
-    '("const-GValue*" "target")
+    '("const-gint" "target_numerator")
+    '("const-gint" "target_denominator")
   )
 )
 
@@ -6069,11 +6083,11 @@
   )
 )
 
-(define-function util_clock_time_scale
-  (c-name "gst_util_clock_time_scale")
-  (return-type "GstClockTime")
+(define-function gst_util_uint64_scale_int
+  (c-name "gst_util_uint64_scale_int")
+  (return-type "guint64")
   (parameters
-    '("GstClockTime" "val")
+    '("guint64" "val")
     '("gint" "num")
     '("gint" "denom")
   )

@@ -1,5 +1,11 @@
 2005-11-23  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	And more API updated, pom po do pom pom pom....
+
+2005-11-23  Edward Hervey  <edward@fluendo.com>
+
 	* gst/interfaces.defs:
 	Update for Interfaces API changes
 
