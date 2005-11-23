@@ -1,3 +1,10 @@
+2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(gst_qtdemux_add_stream), (qtdemux_dump_mvhd),
+	(qtdemux_parse_trak):
+	Convert to fractional framerates
+
 2005-11-23  Edward Hervey  <edward@fluendo.com>
 
 	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_loop):
