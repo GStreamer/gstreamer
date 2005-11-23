@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-11 17:35+0100\n"
+"POT-Creation-Date: 2005-11-14 12:10+0100\n"
 "PO-Revision-Date: 2005-02-12 23:37+0300\n"
 "Last-Translator: Peter Astakhov <astakhovp@mail.ru>\n"
 "Language-Team: Russian <ru@li.org>\n"
@@ -254,12 +254,12 @@ msgstr ""
 msgid "Could not multiplex stream."
 msgstr ""
 
-#: gst/gsterror.c:213
+#: gst/gsterror.c:214
 #, c-format
 msgid "No error message for domain %s."
 msgstr ""
 
-#: gst/gsterror.c:221
+#: gst/gsterror.c:222
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr ""

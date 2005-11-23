@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-11 17:35+0100\n"
+"POT-Creation-Date: 2005-11-14 12:10+0100\n"
 "PO-Revision-Date: 2004-12-21 08:23+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -378,12 +378,12 @@ msgstr "Impossibile de-multiplare lo stream."
 msgid "Could not multiplex stream."
 msgstr "Impossibile multiplare lo stream."
 
-#: gst/gsterror.c:213
+#: gst/gsterror.c:214
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Nessun messaggio d'errore per il dominio %s."
 
-#: gst/gsterror.c:221
+#: gst/gsterror.c:222
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Nessun messaggio d'errore standard per il dominio %s ed il codice %d."

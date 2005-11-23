@@ -151,6 +151,8 @@ _gst_core_errors_init (void)
   TABLE (t, CORE, TAG, N_("Internal GStreamer error: tag problem." FILE_A_BUG));
   TABLE (t, CORE, MISSING_PLUGIN,
       N_("Your GStreamer installation is missing a plug-in."));
+  TABLE (t, CORE, CLOCK,
+      N_("Internal GStreamer error: clock problem." FILE_A_BUG));
 
   return t;
 }

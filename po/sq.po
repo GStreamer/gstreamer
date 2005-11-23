@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-11 17:35+0100\n"
+"POT-Creation-Date: 2005-11-14 12:10+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -273,12 +273,12 @@ msgstr "I pamundur demultipleksimi i stream."
 msgid "Could not multiplex stream."
 msgstr "I pamundur multipleksimi i vazhdës."
 
-#: gst/gsterror.c:213
+#: gst/gsterror.c:214
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Asnjë mesazh gabimi për domain %s."
 
-#: gst/gsterror.c:221
+#: gst/gsterror.c:222
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Asnjë mesazh gabimi standart për domain %s dhe kodin %d."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-11 17:35+0100\n"
+"POT-Creation-Date: 2005-11-14 12:10+0100\n"
 "PO-Revision-Date: 2005-02-17 12:00+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -248,12 +248,12 @@ msgstr "Kunne ikke bryte opp strøm."
 msgid "Could not multiplex stream."
 msgstr "Kunne ikke sette sammen strøm."
 
-#: gst/gsterror.c:213
+#: gst/gsterror.c:214
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Ingen feilmelding for domene %s."
 
-#: gst/gsterror.c:221
+#: gst/gsterror.c:222
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Ingen standard feilmelding for domene %s og kode %d."

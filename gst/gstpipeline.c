@@ -44,6 +44,8 @@
  */
 
 #include "gst_private.h"
+#include "gsterror.h"
+#include "gst-i18n-lib.h"
 
 #include "gstpipeline.h"
 #include "gstinfo.h"
@@ -425,7 +427,9 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 
 invalid_clock:
   {
-    /* FIXME, post error message */
+    GST_ELEMENT_ERROR (pipeline, CORE, CLOCK,
+        (_("Selected clock cannot be used in pipeline.")),
+        ("Pipeline cannot operate with selected clock"));
     GST_DEBUG_OBJECT (pipeline,
         "Pipeline cannot operate with selected clock %p", clock);
     return GST_STATE_CHANGE_FAILURE;

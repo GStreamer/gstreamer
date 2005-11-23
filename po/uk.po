@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-11 17:35+0100\n"
+"POT-Creation-Date: 2005-11-14 12:10+0100\n"
 "PO-Revision-Date: 2004-08-03 10:53+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -278,12 +278,12 @@ msgstr "Не вдається демультиплексувати потік."
 msgid "Could not multiplex stream."
 msgstr "Не вдається мультиплексувати потік."
 
-#: gst/gsterror.c:213
+#: gst/gsterror.c:214
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Немає повідомлення про помилку для домену %s."
 
-#: gst/gsterror.c:221
+#: gst/gsterror.c:222
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Немає стандартного повідомлення про помилку для домену %s та коду %d."
