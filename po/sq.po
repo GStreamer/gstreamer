@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-14 12:10+0100\n"
+"POT-Creation-Date: 2005-11-23 18:52+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -116,174 +116,183 @@ msgstr ""
 "Informacione shtesë të debug:\n"
 "%s\n"
 
-#: gst/gsterror.c:62
+#: gst/gsterror.c:132
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer ndeshi në një gabim të përgjithshëm të librarisë bazë."
 
-#: gst/gsterror.c:64 gst/gsterror.c:100 gst/gsterror.c:120 gst/gsterror.c:150
+#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
+#, fuzzy
 msgid ""
-"GStreamer developers were too lazy to assign an error code to this error.  "
-"Please file a bug."
+"GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
 "Zhvilluesit e GStreamer ishin tepër të lodhur për t'i caktuar një kod gabimi "
 "këtij difekti.  Ju lutem dërgoni një raport."
 
-#: gst/gsterror.c:68
+#: gst/gsterror.c:137
 #, fuzzy
-msgid "Internal GStreamer error: code not implemented.  Please file a bug."
+msgid "Internal GStreamer error: code not implemented."
 msgstr "Gabim i brendshëm i GStreamer: kodi mungon.  Raporto bug."
 
-#: gst/gsterror.c:70
+#: gst/gsterror.c:139
 #, fuzzy
-msgid "Internal GStreamer error: state change failed.  Please file a bug."
+msgid "Internal GStreamer error: state change failed."
 msgstr ""
 "Gabim i brendshëm i GStreamer: ndryshimi i gjendjes dështoi.  Raporto bug."
 
-#: gst/gsterror.c:72
+#: gst/gsterror.c:140
 #, fuzzy
-msgid "Internal GStreamer error: pad problem.  Please file a bug."
+msgid "Internal GStreamer error: pad problem."
 msgstr "Gabim i brendshëm i GStreamer: problem me shtegun.  Raporto bug."
 
-#: gst/gsterror.c:74
+#: gst/gsterror.c:142
 #, fuzzy
-msgid "Internal GStreamer error: thread problem.  Please file a bug."
+msgid "Internal GStreamer error: thread problem."
 msgstr "Gabim i brendshëm i GStreamer: problem i thread.  Raporto bug."
 
-#: gst/gsterror.c:76
+#: gst/gsterror.c:144
 #, fuzzy
-msgid "Internal GStreamer error: negotiation problem.  Please file a bug."
+msgid "Internal GStreamer error: negotiation problem."
 msgstr "Gabim i brendshëm i GStreamer: problem negocimi.  Raporto bug."
 
-#: gst/gsterror.c:78
+#: gst/gsterror.c:146
 #, fuzzy
-msgid "Internal GStreamer error: event problem.  Please file a bug."
+msgid "Internal GStreamer error: event problem."
 msgstr "Gabim i brendshëm i GStreamer: problem ndodhie.  Raporto bug."
 
-#: gst/gsterror.c:80
+#: gst/gsterror.c:148
 #, fuzzy
-msgid "Internal GStreamer error: seek problem.  Please file a bug."
+msgid "Internal GStreamer error: seek problem."
 msgstr "Gabim i brendshëm i GStreamer: problem kërkimi.  Raporto bug."
 
-#: gst/gsterror.c:82
+#: gst/gsterror.c:150
 #, fuzzy
-msgid "Internal GStreamer error: caps problem.  Please file a bug."
+msgid "Internal GStreamer error: caps problem."
 msgstr "Gabim i brendshëm i GStreamer: problem drejtimi.  Raporto bug."
 
-#: gst/gsterror.c:84
+#: gst/gsterror.c:151
 #, fuzzy
-msgid "Internal GStreamer error: tag problem.  Please file a bug."
+msgid "Internal GStreamer error: tag problem."
 msgstr "Gabim i brendshëm i GStreamer: problem me tag.  Raporto bug."
 
-#: gst/gsterror.c:98
+#: gst/gsterror.c:153
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr ""
+
+#: gst/gsterror.c:155
+#, fuzzy
+msgid "Internal GStreamer error: clock problem."
+msgstr "Gabim i brendshëm i GStreamer: problem planifikimi.  Raporto bug."
+
+#: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer ndeshi në një gabim librarie të suportit të përgjithshëm."
 
-#: gst/gsterror.c:102
+#: gst/gsterror.c:173
 msgid "Could not initialize supporting library."
 msgstr "E pamundur nisja e librarisë mbështetëse."
 
-#: gst/gsterror.c:103 gst/gsterror.c:104
+#: gst/gsterror.c:174 gst/gsterror.c:175
 msgid "Could not close supporting library."
 msgstr "E pamundur mbyllja e librarisë mbështetëse."
 
-#: gst/gsterror.c:118
+#: gst/gsterror.c:189
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer ndeshi në një gabim të përgjithshëm të librarisë bazë."
 
-#: gst/gsterror.c:122
+#: gst/gsterror.c:193
 msgid "Resource not found."
 msgstr "Burimi nuk u gjet."
 
-#: gst/gsterror.c:123
+#: gst/gsterror.c:194
 msgid "Resource busy or not available."
 msgstr "Burimi është i zënë ose jo në dispozicion."
 
-#: gst/gsterror.c:124
+#: gst/gsterror.c:195
 msgid "Could not open resource for reading."
 msgstr "E pamundur hapja e burimit për lexim."
 
-#: gst/gsterror.c:125
+#: gst/gsterror.c:196
 msgid "Could not open resource for writing."
 msgstr "E pamundur hapja e burimit për shkrim."
 
-#: gst/gsterror.c:127
+#: gst/gsterror.c:198
 msgid "Could not open resource for reading and writing."
 msgstr "E pamundur hapja e burimit për lexim dhe shkrim."
 
-#: gst/gsterror.c:128
+#: gst/gsterror.c:199
 msgid "Could not close resource."
 msgstr "E pamundur mbyllja e burimit."
 
-#: gst/gsterror.c:129
+#: gst/gsterror.c:200
 msgid "Could not read from resource."
 msgstr "I pamundur leximi nga burimi."
 
-#: gst/gsterror.c:130
+#: gst/gsterror.c:201
 msgid "Could not write to resource."
 msgstr "I pamundur hkrimi në burim."
 
-#: gst/gsterror.c:131
+#: gst/gsterror.c:202
 msgid "Could not perform seek on resource."
 msgstr "E pamundur kryerja e kërkimit në burim."
 
-#: gst/gsterror.c:132
+#: gst/gsterror.c:203
 msgid "Could not synchronize on resource."
 msgstr "Sinkronizim i pamundur në burim."
 
-#: gst/gsterror.c:134
+#: gst/gsterror.c:205
 msgid "Could not get/set settings from/on resource."
 msgstr "E pamundur marrja/vendosja e rregullimeve nga/në burim."
 
-#: gst/gsterror.c:148
+#: gst/gsterror.c:219
 #, fuzzy
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer ndeshi në një gabim të përgjithshëm të librarisë bazë."
 
-#: gst/gsterror.c:153
+#: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 "Elementi nuk suporton trajtimin e kësaj vazhde. Ju lutem raporto një bug."
 
-#: gst/gsterror.c:155
+#: gst/gsterror.c:226
 msgid "Could not determine type of stream."
 msgstr "I pamundur përcaktimi i llojit të vazhdës."
 
-#: gst/gsterror.c:157
+#: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
 msgstr "Vazhda është e një lloji të ndryshëm nga të trajtuarit nga ky element."
 
-#: gst/gsterror.c:159
+#: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Asnjë kodues/dekodues në dispozicion për të trajtuar llojin e vazhdës."
 
-#: gst/gsterror.c:160
+#: gst/gsterror.c:231
 msgid "Could not decode stream."
 msgstr "I pamundur dekodifikimi i vazhdës."
 
-#: gst/gsterror.c:161
+#: gst/gsterror.c:232
 msgid "Could not encode stream."
 msgstr "I pamundur kodifikimi i vazhdës."
 
-#: gst/gsterror.c:162
+#: gst/gsterror.c:233
 msgid "Could not demultiplex stream."
 msgstr "I pamundur demultipleksimi i stream."
 
-#: gst/gsterror.c:163
+#: gst/gsterror.c:234
 msgid "Could not multiplex stream."
 msgstr "I pamundur multipleksimi i vazhdës."
 
-#: gst/gsterror.c:214
+#: gst/gsterror.c:285
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Asnjë mesazh gabimi për domain %s."
 
-#: gst/gsterror.c:222
+#: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Asnjë mesazh gabimi standart për domain %s dhe kodin %d."
 
-#: gst/gstqueue.c:820 gst/base/gstbasesrc.c:1085 gst/base/gstbasesrc.c:1095
+#: gst/gstqueue.c:818 gst/base/gstbasesrc.c:1031 gst/base/gstbasesrc.c:1041
 msgid "Internal data flow error."
 msgstr ""
 
@@ -569,7 +578,7 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/base/gstbasesink.c:667
+#: gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -704,7 +713,7 @@ msgstr "e pamundur lidhja e elementit sink për URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "nuk lejohet konduktori bosh"
 
-#: tools/gst-inspect.c:1101
+#: tools/gst-inspect.c:1098
 msgid "Print all elements"
 msgstr "Printo të gjithë elementët"
 
@@ -924,9 +933,6 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Planifikuesi që duhet përdorur (i prezgjedhuri është '%s')"
-
-#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
-#~ msgstr "Gabim i brendshëm i GStreamer: problem planifikimi.  Raporto bug."
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"

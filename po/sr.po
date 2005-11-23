@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-14 12:10+0100\n"
+"POT-Creation-Date: 2005-11-23 18:52+0100\n"
 "PO-Revision-Date: 2004-03-13 01:47+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -113,180 +113,190 @@ msgstr ""
 "Додатни подаци за исправку грешака:\n"
 "%s\n"
 
-#: gst/gsterror.c:62
+#: gst/gsterror.c:132
 msgid "GStreamer encountered a general core library error."
 msgstr "ГСтример је наишао на општу грешку у основној библиотеци."
 
-#: gst/gsterror.c:64 gst/gsterror.c:100 gst/gsterror.c:120 gst/gsterror.c:150
+#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
+#, fuzzy
 msgid ""
-"GStreamer developers were too lazy to assign an error code to this error.  "
-"Please file a bug."
+"GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
 "Програмери ГСтримера су били сувише лењи да доделе код за ову грешку. "
 "Пријавите грешку."
 
-#: gst/gsterror.c:68
+#: gst/gsterror.c:137
 #, fuzzy
-msgid "Internal GStreamer error: code not implemented.  Please file a bug."
+msgid "Internal GStreamer error: code not implemented."
 msgstr "Унутрашња грешка у ГСтримеру: код није написан.  Пријавите грешку."
 
-#: gst/gsterror.c:70
+#: gst/gsterror.c:139
 #, fuzzy
-msgid "Internal GStreamer error: state change failed.  Please file a bug."
+msgid "Internal GStreamer error: state change failed."
 msgstr ""
 "Унутрашња грешка у ГСтримеру: неуспешна промена стања.  Пријавите грешку."
 
-#: gst/gsterror.c:72
+#: gst/gsterror.c:140
 #, fuzzy
-msgid "Internal GStreamer error: pad problem.  Please file a bug."
+msgid "Internal GStreamer error: pad problem."
 msgstr "Унутрашња грешка у ГСтримеру: неприлика са попуном.  Пријавите грешку."
 
-#: gst/gsterror.c:74
+#: gst/gsterror.c:142
 #, fuzzy
-msgid "Internal GStreamer error: thread problem.  Please file a bug."
+msgid "Internal GStreamer error: thread problem."
 msgstr "Унутрашња грешка у ГСтримеру: неприлика са нитима.  Пријавите грешку."
 
-#: gst/gsterror.c:76
+#: gst/gsterror.c:144
 #, fuzzy
-msgid "Internal GStreamer error: negotiation problem.  Please file a bug."
+msgid "Internal GStreamer error: negotiation problem."
 msgstr ""
 "Унутрашња грешка у ГСтримеру: неприлика у преговарању.  Пријавите грешку."
 
-#: gst/gsterror.c:78
+#: gst/gsterror.c:146
 #, fuzzy
-msgid "Internal GStreamer error: event problem.  Please file a bug."
+msgid "Internal GStreamer error: event problem."
 msgstr ""
 "Унутрашња грешка у ГСтримеру: неприлика са догађајем.  Пријавите грешку."
 
-#: gst/gsterror.c:80
+#: gst/gsterror.c:148
 #, fuzzy
-msgid "Internal GStreamer error: seek problem.  Please file a bug."
+msgid "Internal GStreamer error: seek problem."
 msgstr ""
 "Унутрашња грешка у ГСтримеру: неприлика са тражењем.  Пријавите грешку."
 
 # bug: is "caps" short for "capabilities"? if so, it should be spelled completely
-#: gst/gsterror.c:82
+#: gst/gsterror.c:150
 #, fuzzy
-msgid "Internal GStreamer error: caps problem.  Please file a bug."
+msgid "Internal GStreamer error: caps problem."
 msgstr ""
 "Унутрашња грешка у ГСтримеру: неприлика са могућностима.  Пријавите грешку."
 
-#: gst/gsterror.c:84
+#: gst/gsterror.c:151
 #, fuzzy
-msgid "Internal GStreamer error: tag problem.  Please file a bug."
+msgid "Internal GStreamer error: tag problem."
 msgstr "Унутрашња грешка у ГСтримеру: неприлика са ознаком.  Пријавите грешку."
 
-#: gst/gsterror.c:98
+#: gst/gsterror.c:153
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr ""
+
+#: gst/gsterror.c:155
+#, fuzzy
+msgid "Internal GStreamer error: clock problem."
+msgstr ""
+"Унутрашња грешка у ГСтримеру: неприлика са распоређивачем.  Пријавите грешку."
+
+#: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
 msgstr "ГСтример је наишао на општу грешку у библиотеци за подршку."
 
-#: gst/gsterror.c:102
+#: gst/gsterror.c:173
 msgid "Could not initialize supporting library."
 msgstr "Не могу да покренем библиотеку за подршку."
 
-#: gst/gsterror.c:103 gst/gsterror.c:104
+#: gst/gsterror.c:174 gst/gsterror.c:175
 msgid "Could not close supporting library."
 msgstr "Не могу да затворим библиотеку за подршку."
 
-#: gst/gsterror.c:118
+#: gst/gsterror.c:189
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
 msgstr "ГСтример је наишао на општу грешку у основној библиотеци."
 
-#: gst/gsterror.c:122
+#: gst/gsterror.c:193
 msgid "Resource not found."
 msgstr "Ресурс није нађен."
 
-#: gst/gsterror.c:123
+#: gst/gsterror.c:194
 msgid "Resource busy or not available."
 msgstr "Ресурс је заузет или недоступан."
 
-#: gst/gsterror.c:124
+#: gst/gsterror.c:195
 msgid "Could not open resource for reading."
 msgstr "Не могу отворити ресурс ради читања."
 
-#: gst/gsterror.c:125
+#: gst/gsterror.c:196
 msgid "Could not open resource for writing."
 msgstr "Не могу отворити ресурс ради уписа."
 
-#: gst/gsterror.c:127
+#: gst/gsterror.c:198
 msgid "Could not open resource for reading and writing."
 msgstr "Не могу отворити ресурс ради читања и писања."
 
-#: gst/gsterror.c:128
+#: gst/gsterror.c:199
 msgid "Could not close resource."
 msgstr "Не могу затворити ресурс."
 
-#: gst/gsterror.c:129
+#: gst/gsterror.c:200
 msgid "Could not read from resource."
 msgstr "Не могу читати из ресурса."
 
-#: gst/gsterror.c:130
+#: gst/gsterror.c:201
 msgid "Could not write to resource."
 msgstr "Не могу уписати у ресурс."
 
-#: gst/gsterror.c:131
+#: gst/gsterror.c:202
 msgid "Could not perform seek on resource."
 msgstr "Не могу да поставим положај у ресурсу."
 
-#: gst/gsterror.c:132
+#: gst/gsterror.c:203
 msgid "Could not synchronize on resource."
 msgstr "Не могу да ускладим са ресурсом."
 
-#: gst/gsterror.c:134
+#: gst/gsterror.c:205
 msgid "Could not get/set settings from/on resource."
 msgstr "Не могу да сазнам/поставим подешавања из/у ресурсу."
 
-#: gst/gsterror.c:148
+#: gst/gsterror.c:219
 #, fuzzy
 msgid "GStreamer encountered a general stream error."
 msgstr "ГСтример је наишао на општу грешку у основној библиотеци."
 
-#: gst/gsterror.c:153
+#: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr "Елемент не обезбеђује баратање овим током. Пријавите грешку."
 
-#: gst/gsterror.c:155
+#: gst/gsterror.c:226
 msgid "Could not determine type of stream."
 msgstr "Не могу да одредим врсту тока."
 
-#: gst/gsterror.c:157
+#: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
 msgstr "Ток је врсте различите од оне којим барата овај елемент."
 
-#: gst/gsterror.c:159
+#: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Није присутно кодирање које може да барата током ове врсте."
 
-#: gst/gsterror.c:160
+#: gst/gsterror.c:231
 msgid "Could not decode stream."
 msgstr "Не могу да декодирам ток."
 
-#: gst/gsterror.c:161
+#: gst/gsterror.c:232
 msgid "Could not encode stream."
 msgstr "Не могу да кодирам ток."
 
 # несигурно
-#: gst/gsterror.c:162
+#: gst/gsterror.c:233
 msgid "Could not demultiplex stream."
 msgstr "Не могу да разградим ток."
 
 # несигурно
-#: gst/gsterror.c:163
+#: gst/gsterror.c:234
 msgid "Could not multiplex stream."
 msgstr "Не могу да изградим ток."
 
-#: gst/gsterror.c:214
+#: gst/gsterror.c:285
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Нема поруке о грешци за домен %s."
 
-#: gst/gsterror.c:222
+#: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Нема обичне поруке о грешци за домен %s и код %d."
 
-#: gst/gstqueue.c:820 gst/base/gstbasesrc.c:1085 gst/base/gstbasesrc.c:1095
+#: gst/gstqueue.c:818 gst/base/gstbasesrc.c:1031 gst/base/gstbasesrc.c:1041
 msgid "Internal data flow error."
 msgstr ""
 
@@ -575,7 +585,7 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/base/gstbasesink.c:667
+#: gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -711,7 +721,7 @@ msgstr "не могу да вежем завршни елемент за адр�
 msgid "empty pipeline not allowed"
 msgstr "није допуштен празан цевовод"
 
-#: tools/gst-inspect.c:1101
+#: tools/gst-inspect.c:1098
 #, fuzzy
 msgid "Print all elements"
 msgstr "нема елемента „%s“"
@@ -915,11 +925,6 @@ msgstr "Покрећем цевовод...\n"
 #, fuzzy
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Користи распоређивач („"
-
-#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
-#~ msgstr ""
-#~ "Унутрашња грешка у ГСтримеру: неприлика са распоређивачем.  Пријавите "
-#~ "грешку."
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Искључи убрзане инструкције процесора"

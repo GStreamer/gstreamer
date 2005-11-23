@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-14 12:10+0100\n"
+"POT-Creation-Date: 2005-11-23 18:52+0100\n"
 "PO-Revision-Date: 2004-12-27 17:23+0100\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -117,173 +117,182 @@ msgstr ""
 "Přídavné ladicí informace:\n"
 "%s\n"
 
-#: gst/gsterror.c:62
+#: gst/gsterror.c:132
 msgid "GStreamer encountered a general core library error."
 msgstr "V GStreamer došlo k obecné chybě hlavní knihovny."
 
-#: gst/gsterror.c:64 gst/gsterror.c:100 gst/gsterror.c:120 gst/gsterror.c:150
+#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
+#, fuzzy
 msgid ""
-"GStreamer developers were too lazy to assign an error code to this error.  "
-"Please file a bug."
+"GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
 "Vývojáři GStreamer byli příliš líní na to, aby této chybě přiřadili kód. "
 "Ohlaste prosím tuto chybu."
 
-#: gst/gsterror.c:68
+#: gst/gsterror.c:137
 #, fuzzy
-msgid "Internal GStreamer error: code not implemented.  Please file a bug."
+msgid "Internal GStreamer error: code not implemented."
 msgstr "Interní chyba GStreamer: kód neimplementován. Ohlaste tuto chybu."
 
-#: gst/gsterror.c:70
+#: gst/gsterror.c:139
 #, fuzzy
-msgid "Internal GStreamer error: state change failed.  Please file a bug."
+msgid "Internal GStreamer error: state change failed."
 msgstr "Interní chyba GStreamer: změna stavu selhala. Ohlaste tuto chybu."
 
-#: gst/gsterror.c:72
+#: gst/gsterror.c:140
 #, fuzzy
-msgid "Internal GStreamer error: pad problem.  Please file a bug."
+msgid "Internal GStreamer error: pad problem."
 msgstr "Interní chyba GStreamer: problém při vyplňování. Ohlaste tuto chybu."
 
-#: gst/gsterror.c:74
+#: gst/gsterror.c:142
 #, fuzzy
-msgid "Internal GStreamer error: thread problem.  Please file a bug."
+msgid "Internal GStreamer error: thread problem."
 msgstr "Interní chyba GStreamer: problém s vlákny. Ohlaste tuto chybu."
 
-#: gst/gsterror.c:76
+#: gst/gsterror.c:144
 #, fuzzy
-msgid "Internal GStreamer error: negotiation problem.  Please file a bug."
+msgid "Internal GStreamer error: negotiation problem."
 msgstr "Interní chyba GStreamer: problém při vyjednávání. Ohlaste tuto chybu."
 
-#: gst/gsterror.c:78
+#: gst/gsterror.c:146
 #, fuzzy
-msgid "Internal GStreamer error: event problem.  Please file a bug."
+msgid "Internal GStreamer error: event problem."
 msgstr "Interní chyba GStreamer: problém s událostmi. Ohlaste tuto chybu."
 
-#: gst/gsterror.c:80
+#: gst/gsterror.c:148
 #, fuzzy
-msgid "Internal GStreamer error: seek problem.  Please file a bug."
+msgid "Internal GStreamer error: seek problem."
 msgstr "Interní chyba GStreamer: problém s posunem. Ohlaste tuto chybu."
 
-#: gst/gsterror.c:82
+#: gst/gsterror.c:150
 #, fuzzy
-msgid "Internal GStreamer error: caps problem.  Please file a bug."
+msgid "Internal GStreamer error: caps problem."
 msgstr "Interní chyba GStreamer: problém se schopnostmi. Ohlaste tuto chybu."
 
-#: gst/gsterror.c:84
+#: gst/gsterror.c:151
 #, fuzzy
-msgid "Internal GStreamer error: tag problem.  Please file a bug."
+msgid "Internal GStreamer error: tag problem."
 msgstr "Interní chyba GStreamer: problém s tagy. Ohlaste tuto chybu."
 
-#: gst/gsterror.c:98
+#: gst/gsterror.c:153
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr ""
+
+#: gst/gsterror.c:155
+#, fuzzy
+msgid "Internal GStreamer error: clock problem."
+msgstr "Interní chyba GStreamer: problém s plánovačem. Ohlaste tuto chybu."
+
+#: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
 msgstr "V GStreamer došlo k chybě obecné podpůrné knihovny."
 
-#: gst/gsterror.c:102
+#: gst/gsterror.c:173
 msgid "Could not initialize supporting library."
 msgstr "Nemohu inicializovat podpůrnou knihovnu."
 
-#: gst/gsterror.c:103 gst/gsterror.c:104
+#: gst/gsterror.c:174 gst/gsterror.c:175
 msgid "Could not close supporting library."
 msgstr "Nemohu zavřít podpůrou knihovnu."
 
-#: gst/gsterror.c:118
+#: gst/gsterror.c:189
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
 msgstr "V GStreamer došlo k obecné chybě hlavní knihovny."
 
-#: gst/gsterror.c:122
+#: gst/gsterror.c:193
 msgid "Resource not found."
 msgstr "Zdroj nenalezen."
 
-#: gst/gsterror.c:123
+#: gst/gsterror.c:194
 msgid "Resource busy or not available."
 msgstr "Zdroj se používá nebo není k dispozici."
 
-#: gst/gsterror.c:124
+#: gst/gsterror.c:195
 msgid "Could not open resource for reading."
 msgstr "Nemohu otevřít zdroj pro čtení."
 
-#: gst/gsterror.c:125
+#: gst/gsterror.c:196
 msgid "Could not open resource for writing."
 msgstr "Nemohu otevřít zdroj pro zápis."
 
-#: gst/gsterror.c:127
+#: gst/gsterror.c:198
 msgid "Could not open resource for reading and writing."
 msgstr "Nemohu otevřít zdroj pro čtení a zápis."
 
-#: gst/gsterror.c:128
+#: gst/gsterror.c:199
 msgid "Could not close resource."
 msgstr "Nemohu zavřít zdroj."
 
-#: gst/gsterror.c:129
+#: gst/gsterror.c:200
 msgid "Could not read from resource."
 msgstr "Nemohu číst ze zdroje."
 
-#: gst/gsterror.c:130
+#: gst/gsterror.c:201
 msgid "Could not write to resource."
 msgstr "Nemohu zapisovat do zdroje."
 
-#: gst/gsterror.c:131
+#: gst/gsterror.c:202
 msgid "Could not perform seek on resource."
 msgstr "Nemohu se posunovat ve zdroji."
 
-#: gst/gsterror.c:132
+#: gst/gsterror.c:203
 msgid "Could not synchronize on resource."
 msgstr "Nemohu se synchronizovat se zdrojem."
 
-#: gst/gsterror.c:134
+#: gst/gsterror.c:205
 msgid "Could not get/set settings from/on resource."
 msgstr "Nemohu získat/změnit nastavení zdroje."
 
-#: gst/gsterror.c:148
+#: gst/gsterror.c:219
 #, fuzzy
 msgid "GStreamer encountered a general stream error."
 msgstr "V GStreamer došlo k obecné chybě hlavní knihovny."
 
-#: gst/gsterror.c:153
+#: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 "Element neimplementuje obsluhu tohoto proudu. Ohlaste prosím tuto chybu."
 
-#: gst/gsterror.c:155
+#: gst/gsterror.c:226
 msgid "Could not determine type of stream."
 msgstr "Nemohu zjistit typ proudu."
 
-#: gst/gsterror.c:157
+#: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
 msgstr "Proud je jiného typu, než který tento element obsluhuje."
 
-#: gst/gsterror.c:159
+#: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Není přítomen žádný kodek, který umí obsloužit typ tohoto proudu."
 
-#: gst/gsterror.c:160
+#: gst/gsterror.c:231
 msgid "Could not decode stream."
 msgstr "Nemohu dekódovat proud."
 
-#: gst/gsterror.c:161
+#: gst/gsterror.c:232
 msgid "Could not encode stream."
 msgstr "Nemohu kódovat proud."
 
-#: gst/gsterror.c:162
+#: gst/gsterror.c:233
 msgid "Could not demultiplex stream."
 msgstr "Nemohu demultiplexovat proud."
 
-#: gst/gsterror.c:163
+#: gst/gsterror.c:234
 msgid "Could not multiplex stream."
 msgstr "Nemohu multiplexovat proud."
 
-#: gst/gsterror.c:214
+#: gst/gsterror.c:285
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Pro doménu %s není zpráva o chybě."
 
-#: gst/gsterror.c:222
+#: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Pro doménu %s a kód %d není standardní zpráva o chybě."
 
-#: gst/gstqueue.c:820 gst/base/gstbasesrc.c:1085 gst/base/gstbasesrc.c:1095
+#: gst/gstqueue.c:818 gst/base/gstbasesrc.c:1031 gst/base/gstbasesrc.c:1041
 msgid "Internal data flow error."
 msgstr ""
 
@@ -568,7 +577,7 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/base/gstbasesink.c:667
+#: gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -703,7 +712,7 @@ msgstr "nemohu připojit element spotřebiče pro URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
 
-#: tools/gst-inspect.c:1101
+#: tools/gst-inspect.c:1098
 msgid "Print all elements"
 msgstr "Vypsat všechny elementy"
 
@@ -927,9 +936,6 @@ msgstr "SPOUŠTÍM rouru ...\n"
 
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Plánovač, který používat (implicitní je '%s')"
-
-#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
-#~ msgstr "Interní chyba GStreamer: problém s plánovačem. Ohlaste tuto chybu."
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Zakázat akcelerované instrukce CPU"

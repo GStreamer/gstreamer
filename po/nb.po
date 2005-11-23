@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-14 12:10+0100\n"
+"POT-Creation-Date: 2005-11-23 18:52+0100\n"
 "PO-Revision-Date: 2005-02-17 12:00+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -106,159 +106,166 @@ msgstr ""
 "Tilleggsinformasjon for feilsøking:\n"
 "%s\n"
 
-#: gst/gsterror.c:62
+#: gst/gsterror.c:132
 msgid "GStreamer encountered a general core library error."
 msgstr ""
 
-#: gst/gsterror.c:64 gst/gsterror.c:100 gst/gsterror.c:120 gst/gsterror.c:150
+#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
 msgid ""
-"GStreamer developers were too lazy to assign an error code to this error.  "
-"Please file a bug."
+"GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
 
-#: gst/gsterror.c:68
-msgid "Internal GStreamer error: code not implemented.  Please file a bug."
+#: gst/gsterror.c:137
+msgid "Internal GStreamer error: code not implemented."
 msgstr ""
 
-#: gst/gsterror.c:70
-msgid "Internal GStreamer error: state change failed.  Please file a bug."
+#: gst/gsterror.c:139
+msgid "Internal GStreamer error: state change failed."
 msgstr ""
 
-#: gst/gsterror.c:72
-msgid "Internal GStreamer error: pad problem.  Please file a bug."
+#: gst/gsterror.c:140
+msgid "Internal GStreamer error: pad problem."
 msgstr ""
 
-#: gst/gsterror.c:74
-msgid "Internal GStreamer error: thread problem.  Please file a bug."
+#: gst/gsterror.c:142
+msgid "Internal GStreamer error: thread problem."
 msgstr ""
 
-#: gst/gsterror.c:76
-msgid "Internal GStreamer error: negotiation problem.  Please file a bug."
+#: gst/gsterror.c:144
+msgid "Internal GStreamer error: negotiation problem."
 msgstr ""
 
-#: gst/gsterror.c:78
-msgid "Internal GStreamer error: event problem.  Please file a bug."
+#: gst/gsterror.c:146
+msgid "Internal GStreamer error: event problem."
 msgstr ""
-
-#: gst/gsterror.c:80
-msgid "Internal GStreamer error: seek problem.  Please file a bug."
-msgstr ""
-
-#: gst/gsterror.c:82
-msgid "Internal GStreamer error: caps problem.  Please file a bug."
-msgstr ""
-
-#: gst/gsterror.c:84
-msgid "Internal GStreamer error: tag problem.  Please file a bug."
-msgstr ""
-
-#: gst/gsterror.c:98
-msgid "GStreamer encountered a general supporting library error."
-msgstr ""
-
-#: gst/gsterror.c:102
-msgid "Could not initialize supporting library."
-msgstr "Kunne ikke initiere støttebibliotek."
-
-#: gst/gsterror.c:103 gst/gsterror.c:104
-msgid "Could not close supporting library."
-msgstr "Kunne ikke lukke støttebibliotek."
-
-#: gst/gsterror.c:118
-msgid "GStreamer encountered a general resource error."
-msgstr ""
-
-#: gst/gsterror.c:122
-msgid "Resource not found."
-msgstr "Ressursen ble ikke funnet."
-
-#: gst/gsterror.c:123
-msgid "Resource busy or not available."
-msgstr "Ressursen er opptatt eller ikke tilgjengelig."
-
-#: gst/gsterror.c:124
-msgid "Could not open resource for reading."
-msgstr "Kunne ikke åpne ressurs for lesing."
-
-#: gst/gsterror.c:125
-msgid "Could not open resource for writing."
-msgstr "Kunne ikke åpne ressurs for skriving."
-
-#: gst/gsterror.c:127
-msgid "Could not open resource for reading and writing."
-msgstr "Kunne ikke åpne ressurs for lesing og skriving."
-
-#: gst/gsterror.c:128
-msgid "Could not close resource."
-msgstr "Kunne ikke luke ressurs."
-
-#: gst/gsterror.c:129
-msgid "Could not read from resource."
-msgstr "Kunne ikke lese fra ressurs."
-
-#: gst/gsterror.c:130
-msgid "Could not write to resource."
-msgstr "Kunne ikke skrive til ressurs."
-
-#: gst/gsterror.c:131
-msgid "Could not perform seek on resource."
-msgstr "Kunne ikke søke i ressurs."
-
-#: gst/gsterror.c:132
-msgid "Could not synchronize on resource."
-msgstr "Kunne ikke synkronisere på ressurs."
-
-#: gst/gsterror.c:134
-msgid "Could not get/set settings from/on resource."
-msgstr "Kunne ikke hente/sette innstillinger fra/på ressurs."
 
 #: gst/gsterror.c:148
-msgid "GStreamer encountered a general stream error."
+msgid "Internal GStreamer error: seek problem."
+msgstr ""
+
+#: gst/gsterror.c:150
+msgid "Internal GStreamer error: caps problem."
+msgstr ""
+
+#: gst/gsterror.c:151
+msgid "Internal GStreamer error: tag problem."
 msgstr ""
 
 #: gst/gsterror.c:153
-msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgid "Your GStreamer installation is missing a plug-in."
 msgstr ""
 
 #: gst/gsterror.c:155
+msgid "Internal GStreamer error: clock problem."
+msgstr ""
+
+#: gst/gsterror.c:169
+msgid "GStreamer encountered a general supporting library error."
+msgstr ""
+
+#: gst/gsterror.c:173
+msgid "Could not initialize supporting library."
+msgstr "Kunne ikke initiere støttebibliotek."
+
+#: gst/gsterror.c:174 gst/gsterror.c:175
+msgid "Could not close supporting library."
+msgstr "Kunne ikke lukke støttebibliotek."
+
+#: gst/gsterror.c:189
+msgid "GStreamer encountered a general resource error."
+msgstr ""
+
+#: gst/gsterror.c:193
+msgid "Resource not found."
+msgstr "Ressursen ble ikke funnet."
+
+#: gst/gsterror.c:194
+msgid "Resource busy or not available."
+msgstr "Ressursen er opptatt eller ikke tilgjengelig."
+
+#: gst/gsterror.c:195
+msgid "Could not open resource for reading."
+msgstr "Kunne ikke åpne ressurs for lesing."
+
+#: gst/gsterror.c:196
+msgid "Could not open resource for writing."
+msgstr "Kunne ikke åpne ressurs for skriving."
+
+#: gst/gsterror.c:198
+msgid "Could not open resource for reading and writing."
+msgstr "Kunne ikke åpne ressurs for lesing og skriving."
+
+#: gst/gsterror.c:199
+msgid "Could not close resource."
+msgstr "Kunne ikke luke ressurs."
+
+#: gst/gsterror.c:200
+msgid "Could not read from resource."
+msgstr "Kunne ikke lese fra ressurs."
+
+#: gst/gsterror.c:201
+msgid "Could not write to resource."
+msgstr "Kunne ikke skrive til ressurs."
+
+#: gst/gsterror.c:202
+msgid "Could not perform seek on resource."
+msgstr "Kunne ikke søke i ressurs."
+
+#: gst/gsterror.c:203
+msgid "Could not synchronize on resource."
+msgstr "Kunne ikke synkronisere på ressurs."
+
+#: gst/gsterror.c:205
+msgid "Could not get/set settings from/on resource."
+msgstr "Kunne ikke hente/sette innstillinger fra/på ressurs."
+
+#: gst/gsterror.c:219
+msgid "GStreamer encountered a general stream error."
+msgstr ""
+
+#: gst/gsterror.c:224
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr ""
+
+#: gst/gsterror.c:226
 msgid "Could not determine type of stream."
 msgstr "Kunne ikke bestemme type strøm."
 
-#: gst/gsterror.c:157
+#: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
 msgstr ""
 
-#: gst/gsterror.c:159
+#: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
 msgstr ""
 
-#: gst/gsterror.c:160
+#: gst/gsterror.c:231
 msgid "Could not decode stream."
 msgstr "Kunne ikke dekode strøm."
 
-#: gst/gsterror.c:161
+#: gst/gsterror.c:232
 msgid "Could not encode stream."
 msgstr "Kunne ikke kode strøm."
 
-#: gst/gsterror.c:162
+#: gst/gsterror.c:233
 msgid "Could not demultiplex stream."
 msgstr "Kunne ikke bryte opp strøm."
 
-#: gst/gsterror.c:163
+#: gst/gsterror.c:234
 msgid "Could not multiplex stream."
 msgstr "Kunne ikke sette sammen strøm."
 
-#: gst/gsterror.c:214
+#: gst/gsterror.c:285
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Ingen feilmelding for domene %s."
 
-#: gst/gsterror.c:222
+#: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Ingen standard feilmelding for domene %s og kode %d."
 
-#: gst/gstqueue.c:820 gst/base/gstbasesrc.c:1085 gst/base/gstbasesrc.c:1095
+#: gst/gstqueue.c:818 gst/base/gstbasesrc.c:1031 gst/base/gstbasesrc.c:1041
 msgid "Internal data flow error."
 msgstr ""
 
@@ -544,7 +551,7 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/base/gstbasesink.c:667
+#: gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -679,7 +686,7 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr ""
 
-#: tools/gst-inspect.c:1101
+#: tools/gst-inspect.c:1098
 msgid "Print all elements"
 msgstr ""
 

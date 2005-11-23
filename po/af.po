@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-14 12:10+0100\n"
+"POT-Creation-Date: 2005-11-23 18:52+0100\n"
 "PO-Revision-Date: 2004-03-24 11:28+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -114,181 +114,190 @@ msgstr ""
 "Addisionele ontfout-inligting:\n"
 "%s\n"
 
-#: gst/gsterror.c:62
+#: gst/gsterror.c:132
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer het 'n fout teëgekom in die algemene kernbiblioteek."
 
-#: gst/gsterror.c:64 gst/gsterror.c:100 gst/gsterror.c:120 gst/gsterror.c:150
+#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
+#, fuzzy
 msgid ""
-"GStreamer developers were too lazy to assign an error code to this error.  "
-"Please file a bug."
+"GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
 "GStreamer ontwikkelaars was te lui om 'n foutkode vir hierdie fout toe te "
 "ken.  Meld asb. die fout aan."
 
-#: gst/gsterror.c:68
+#: gst/gsterror.c:137
 #, fuzzy
-msgid "Internal GStreamer error: code not implemented.  Please file a bug."
+msgid "Internal GStreamer error: code not implemented."
 msgstr ""
 "Interne GStreamer-fout: \"code not implemented\".  Meld die fout aan asb."
 
-#: gst/gsterror.c:70
+#: gst/gsterror.c:139
 #, fuzzy
-msgid "Internal GStreamer error: state change failed.  Please file a bug."
+msgid "Internal GStreamer error: state change failed."
 msgstr ""
 "Interne GStreamer-fout: \"state change failed\". Meld die fout aan asb."
 
-#: gst/gsterror.c:72
+#: gst/gsterror.c:140
 #, fuzzy
-msgid "Internal GStreamer error: pad problem.  Please file a bug."
+msgid "Internal GStreamer error: pad problem."
 msgstr "Interne GStreamer-fout: \"pad problem.\" Meld die fout aan asb."
 
-#: gst/gsterror.c:74
+#: gst/gsterror.c:142
 #, fuzzy
-msgid "Internal GStreamer error: thread problem.  Please file a bug."
+msgid "Internal GStreamer error: thread problem."
 msgstr "Interne GStreamer-fout: \"thread problem\".  Meld die fout aan asb."
 
-#: gst/gsterror.c:76
+#: gst/gsterror.c:144
 #, fuzzy
-msgid "Internal GStreamer error: negotiation problem.  Please file a bug."
+msgid "Internal GStreamer error: negotiation problem."
 msgstr ""
 "Interne GStreamer-fout: \"negotiation problem\".  Meld die fout aan asb."
 
-#: gst/gsterror.c:78
+#: gst/gsterror.c:146
 #, fuzzy
-msgid "Internal GStreamer error: event problem.  Please file a bug."
+msgid "Internal GStreamer error: event problem."
 msgstr "Interne GStreamer-fout: \"event problem\". Meld die fout aan asb."
 
-#: gst/gsterror.c:80
+#: gst/gsterror.c:148
 #, fuzzy
-msgid "Internal GStreamer error: seek problem.  Please file a bug."
+msgid "Internal GStreamer error: seek problem."
 msgstr "Interne GStreamer-fout: \"seek problem\". Meld die fout aan asb."
 
-#: gst/gsterror.c:82
+#: gst/gsterror.c:150
 #, fuzzy
-msgid "Internal GStreamer error: caps problem.  Please file a bug."
+msgid "Internal GStreamer error: caps problem."
 msgstr "Interne GStreamer-fout: \"caps problem\".  Meld die fout aan asb."
 
-#: gst/gsterror.c:84
+#: gst/gsterror.c:151
 #, fuzzy
-msgid "Internal GStreamer error: tag problem.  Please file a bug."
+msgid "Internal GStreamer error: tag problem."
 msgstr "Interne GStreamer-fout: \"tag problem\". Meld die fout aan asb."
 
-#: gst/gsterror.c:98
+#: gst/gsterror.c:153
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr ""
+
+#: gst/gsterror.c:155
+#, fuzzy
+msgid "Internal GStreamer error: clock problem."
+msgstr "Interne GStreamer-fout: \"scheduler problem\". Meld die fout aan asb."
+
+#: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
 msgstr ""
 "GStreamer het 'n fout teëgekom in 'n algemene ondersteuningsbiblioteek."
 
-#: gst/gsterror.c:102
+#: gst/gsterror.c:173
 msgid "Could not initialize supporting library."
 msgstr "Ondersteuningsbiblioteek kon nie aan die gang gesit word nie."
 
-#: gst/gsterror.c:103 gst/gsterror.c:104
+#: gst/gsterror.c:174 gst/gsterror.c:175
 msgid "Could not close supporting library."
 msgstr "Kon nie ondersteunende biblioteek toemaak nie."
 
-#: gst/gsterror.c:118
+#: gst/gsterror.c:189
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer het 'n fout teëgekom in die algemene kernbiblioteek."
 
-#: gst/gsterror.c:122
+#: gst/gsterror.c:193
 msgid "Resource not found."
 msgstr "Hulpbron nie gevind nie."
 
-#: gst/gsterror.c:123
+#: gst/gsterror.c:194
 msgid "Resource busy or not available."
 msgstr "Hulpbron is besig of nie beskikbaar nie."
 
-#: gst/gsterror.c:124
+#: gst/gsterror.c:195
 msgid "Could not open resource for reading."
 msgstr "Kon nie hulpbron oopmaak om te lees nie."
 
-#: gst/gsterror.c:125
+#: gst/gsterror.c:196
 msgid "Could not open resource for writing."
 msgstr "Kon nie hulpbron oopmaak om te skryf nie."
 
-#: gst/gsterror.c:127
+#: gst/gsterror.c:198
 msgid "Could not open resource for reading and writing."
 msgstr "Kon nie hulpbron oopmaak vir lees en skryf nie."
 
-#: gst/gsterror.c:128
+#: gst/gsterror.c:199
 msgid "Could not close resource."
 msgstr "Kon nie hulpbron toemaak nie."
 
-#: gst/gsterror.c:129
+#: gst/gsterror.c:200
 msgid "Could not read from resource."
 msgstr "Kon nie uit hulpbron lees nie."
 
-#: gst/gsterror.c:130
+#: gst/gsterror.c:201
 msgid "Could not write to resource."
 msgstr "Kon nie na hulpbron skryf nie."
 
-#: gst/gsterror.c:131
+#: gst/gsterror.c:202
 msgid "Could not perform seek on resource."
 msgstr "Kon nie soekopdrag uitvoer op hulpbron nie."
 
-#: gst/gsterror.c:132
+#: gst/gsterror.c:203
 msgid "Could not synchronize on resource."
 msgstr "Kon nie hulpbron sinkroniseer nie."
 
-#: gst/gsterror.c:134
+#: gst/gsterror.c:205
 msgid "Could not get/set settings from/on resource."
 msgstr "Kon nie hulpbronstellings verkry/verander nie."
 
-#: gst/gsterror.c:148
+#: gst/gsterror.c:219
 #, fuzzy
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer het 'n fout teëgekom in die algemene kernbiblioteek."
 
-#: gst/gsterror.c:153
+#: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 "Element implementeer nie die hantering van hierdie stroom nie.  Meld asb. 'n "
 "fout aan."
 
-#: gst/gsterror.c:155
+#: gst/gsterror.c:226
 msgid "Could not determine type of stream."
 msgstr "Kon nie die stroomtipe bepaal nie."
 
-#: gst/gsterror.c:157
+#: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
 msgstr ""
 "Die stroom is nie van dieselfde tipe as wat deur die element hanteer word "
 "nie."
 
-#: gst/gsterror.c:159
+#: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
 msgstr ""
 "Daar is nie 'n kodek beskikbaar om hierdie stroom se tipe te hanteer nie."
 
-#: gst/gsterror.c:160
+#: gst/gsterror.c:231
 msgid "Could not decode stream."
 msgstr "Kon nie stroom dekodeer nie."
 
-#: gst/gsterror.c:161
+#: gst/gsterror.c:232
 msgid "Could not encode stream."
 msgstr "Kon nie stroom enkodeer nie."
 
-#: gst/gsterror.c:162
+#: gst/gsterror.c:233
 msgid "Could not demultiplex stream."
 msgstr "Kon nie stroom demultiplekseer nie."
 
-#: gst/gsterror.c:163
+#: gst/gsterror.c:234
 msgid "Could not multiplex stream."
 msgstr "Kon nie stroom multiplekseer nie."
 
-#: gst/gsterror.c:214
+#: gst/gsterror.c:285
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Geen foutboodskap vir domein %s."
 
-#: gst/gsterror.c:222
+#: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Geen standaard foutboodskap vir domein %s en kode %d."
 
-#: gst/gstqueue.c:820 gst/base/gstbasesrc.c:1085 gst/base/gstbasesrc.c:1095
+#: gst/gstqueue.c:818 gst/base/gstbasesrc.c:1031 gst/base/gstbasesrc.c:1041
 msgid "Internal data flow error."
 msgstr ""
 
@@ -573,7 +582,7 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/base/gstbasesink.c:667
+#: gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -708,7 +717,7 @@ msgstr "kon nie aan bestemming-element vir  URI \"%s\" verbind nie"
 msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
 
-#: tools/gst-inspect.c:1101
+#: tools/gst-inspect.c:1098
 #, fuzzy
 msgid "Print all elements"
 msgstr "geen element \"%s\""
@@ -911,10 +920,6 @@ msgstr "LOOP pyplyn ...\n"
 #, fuzzy
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Skeduleerder om te gebruik ('"
-
-#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
-#~ msgstr ""
-#~ "Interne GStreamer-fout: \"scheduler problem\". Meld die fout aan asb."
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Skakel versnelde SVE-instruksies af"

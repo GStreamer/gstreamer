@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-14 12:10+0100\n"
+"POT-Creation-Date: 2005-11-23 18:52+0100\n"
 "PO-Revision-Date: 2004-12-21 08:23+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -217,178 +217,188 @@ msgstr ""
 "Informazioni di debug aggiuntive:\n"
 "%s\n"
 
-#: gst/gsterror.c:62
+#: gst/gsterror.c:132
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer ha incontrato un errore generale delle librerie di base."
 
-#: gst/gsterror.c:64 gst/gsterror.c:100 gst/gsterror.c:120 gst/gsterror.c:150
+#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
+#, fuzzy
 msgid ""
-"GStreamer developers were too lazy to assign an error code to this error.  "
-"Please file a bug."
+"GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
 "Gli sviluppatori di GStreamer sono stati troppo pigri per assegnare un "
 "codice d'errore a questo errore. Si prega di notificare un bug."
 
-#: gst/gsterror.c:68
+#: gst/gsterror.c:137
 #, fuzzy
-msgid "Internal GStreamer error: code not implemented.  Please file a bug."
+msgid "Internal GStreamer error: code not implemented."
 msgstr ""
 "Errore interno di GStreamer: codice non implementato. Notificare un bug."
 
-#: gst/gsterror.c:70
+#: gst/gsterror.c:139
 #, fuzzy
-msgid "Internal GStreamer error: state change failed.  Please file a bug."
+msgid "Internal GStreamer error: state change failed."
 msgstr ""
 "Errore interno di GStreamer: cambio di stato fallito. Notificare un bug."
 
-#: gst/gsterror.c:72
+#: gst/gsterror.c:140
 #, fuzzy
-msgid "Internal GStreamer error: pad problem.  Please file a bug."
+msgid "Internal GStreamer error: pad problem."
 msgstr "Errore interno di GStreamer: problema di pad. Notificare un bug."
 
-#: gst/gsterror.c:74
+#: gst/gsterror.c:142
 #, fuzzy
-msgid "Internal GStreamer error: thread problem.  Please file a bug."
+msgid "Internal GStreamer error: thread problem."
 msgstr "Errore interno di GStreamer: problema di thread. Notificare un bug."
 
-#: gst/gsterror.c:76
+#: gst/gsterror.c:144
 #, fuzzy
-msgid "Internal GStreamer error: negotiation problem.  Please file a bug."
+msgid "Internal GStreamer error: negotiation problem."
 msgstr ""
 "Errore interno di GStreamer: problema di negoziazione. Notificare un bug."
 
-#: gst/gsterror.c:78
+#: gst/gsterror.c:146
 #, fuzzy
-msgid "Internal GStreamer error: event problem.  Please file a bug."
+msgid "Internal GStreamer error: event problem."
 msgstr "Errore interno di GStreamer: problema di evento. Notificare un bug."
 
-#: gst/gsterror.c:80
+#: gst/gsterror.c:148
 #, fuzzy
-msgid "Internal GStreamer error: seek problem.  Please file a bug."
+msgid "Internal GStreamer error: seek problem."
 msgstr "Errore interno di GStreamer: problema nel seek. Notificare un bug."
 
-#: gst/gsterror.c:82
+#: gst/gsterror.c:150
 #, fuzzy
-msgid "Internal GStreamer error: caps problem.  Please file a bug."
+msgid "Internal GStreamer error: caps problem."
 msgstr "Errore interno di GStreamer: problema di caps. Notificare un bug."
 
-#: gst/gsterror.c:84
+#: gst/gsterror.c:151
 #, fuzzy
-msgid "Internal GStreamer error: tag problem.  Please file a bug."
+msgid "Internal GStreamer error: tag problem."
 msgstr "Errore interno di GStreamer: problema di tag. Notificare un bug."
 
-#: gst/gsterror.c:98
+#: gst/gsterror.c:153
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr ""
+
+#: gst/gsterror.c:155
+#, fuzzy
+msgid "Internal GStreamer error: clock problem."
+msgstr ""
+"Errore interno di GStreamer: problema dello scheduler. Notificare un bug."
+
+#: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer ha incontrato un errore generale nelle librerie di supporto."
 
-#: gst/gsterror.c:102
+#: gst/gsterror.c:173
 msgid "Could not initialize supporting library."
 msgstr "Impossibile inizializzare la libreria di supporto."
 
-#: gst/gsterror.c:103 gst/gsterror.c:104
+#: gst/gsterror.c:174 gst/gsterror.c:175
 msgid "Could not close supporting library."
 msgstr "Impossibile chiudere la libreria di supporto."
 
-#: gst/gsterror.c:118
+#: gst/gsterror.c:189
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer ha incontrato un errore generale delle librerie di base."
 
-#: gst/gsterror.c:122
+#: gst/gsterror.c:193
 msgid "Resource not found."
 msgstr "Risorsa non trovata."
 
-#: gst/gsterror.c:123
+#: gst/gsterror.c:194
 msgid "Resource busy or not available."
 msgstr "Risorsa occupata o non disponibile."
 
-#: gst/gsterror.c:124
+#: gst/gsterror.c:195
 msgid "Could not open resource for reading."
 msgstr "Impossibile aprire la risorsa in lettura."
 
-#: gst/gsterror.c:125
+#: gst/gsterror.c:196
 msgid "Could not open resource for writing."
 msgstr "Impossibile aprire la risorsa in scrittura."
 
-#: gst/gsterror.c:127
+#: gst/gsterror.c:198
 msgid "Could not open resource for reading and writing."
 msgstr "Impossibile aprire la risorsa in lettura e scrittura."
 
-#: gst/gsterror.c:128
+#: gst/gsterror.c:199
 msgid "Could not close resource."
 msgstr "Impossibile chiudere la risorsa."
 
-#: gst/gsterror.c:129
+#: gst/gsterror.c:200
 msgid "Could not read from resource."
 msgstr "Impossibile leggere dalla risorsa."
 
-#: gst/gsterror.c:130
+#: gst/gsterror.c:201
 msgid "Could not write to resource."
 msgstr "Impossibile scrivere sulla risorsa."
 
-#: gst/gsterror.c:131
+#: gst/gsterror.c:202
 msgid "Could not perform seek on resource."
 msgstr "Impossibile effettuare un seek sulla risorsa."
 
-#: gst/gsterror.c:132
+#: gst/gsterror.c:203
 msgid "Could not synchronize on resource."
 msgstr "Impossibile effettuare una sincronizzazione sulla risorsa."
 
-#: gst/gsterror.c:134
+#: gst/gsterror.c:205
 msgid "Could not get/set settings from/on resource."
 msgstr "Impossibile impostare o ottenere le impostazioni dalla risorsa."
 
-#: gst/gsterror.c:148
+#: gst/gsterror.c:219
 #, fuzzy
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer ha incontrato un errore generale delle librerie di base."
 
-#: gst/gsterror.c:153
+#: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 "L'elemento non implementa la gestione di questo stream. Si prega di "
 "notificare un bug."
 
-#: gst/gsterror.c:155
+#: gst/gsterror.c:226
 msgid "Could not determine type of stream."
 msgstr "Impossibile determinare in tipo di stream."
 
-#: gst/gsterror.c:157
+#: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
 msgstr ""
 "Lo stream è di un tipo differente da quello gestito da questo elemento."
 
-#: gst/gsterror.c:159
+#: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Non vi è alcun codec presente che possa gestire questo tipo di stream."
 
-#: gst/gsterror.c:160
+#: gst/gsterror.c:231
 msgid "Could not decode stream."
 msgstr "Impossibile decodificare lo stream."
 
-#: gst/gsterror.c:161
+#: gst/gsterror.c:232
 msgid "Could not encode stream."
 msgstr "Impossibile fare l'encoding dello stream."
 
-#: gst/gsterror.c:162
+#: gst/gsterror.c:233
 msgid "Could not demultiplex stream."
 msgstr "Impossibile de-multiplare lo stream."
 
-#: gst/gsterror.c:163
+#: gst/gsterror.c:234
 msgid "Could not multiplex stream."
 msgstr "Impossibile multiplare lo stream."
 
-#: gst/gsterror.c:214
+#: gst/gsterror.c:285
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Nessun messaggio d'errore per il dominio %s."
 
-#: gst/gsterror.c:222
+#: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Nessun messaggio d'errore standard per il dominio %s ed il codice %d."
 
-#: gst/gstqueue.c:820 gst/base/gstbasesrc.c:1085 gst/base/gstbasesrc.c:1095
+#: gst/gstqueue.c:818 gst/base/gstbasesrc.c:1031 gst/base/gstbasesrc.c:1041
 msgid "Internal data flow error."
 msgstr ""
 
@@ -679,7 +689,7 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
-#: gst/base/gstbasesink.c:667
+#: gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -814,7 +824,7 @@ msgstr "impossibile collegare l'elemento sink per l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "pipeline vuota non consentito"
 
-#: tools/gst-inspect.c:1101
+#: tools/gst-inspect.c:1098
 msgid "Print all elements"
 msgstr "Stampa tutti gli elementi"
 
@@ -1034,10 +1044,6 @@ msgstr "ESECUZIONE della pipeline...\n"
 
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Scheduler da usare (predefinito è '%s')"
-
-#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
-#~ msgstr ""
-#~ "Errore interno di GStreamer: problema dello scheduler. Notificare un bug."
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Disabilita istruzioni accelerate CPU"
