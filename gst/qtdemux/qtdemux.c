@@ -70,8 +70,8 @@ struct _QtDemuxSample
   int chunk;
   int size;
   guint32 offset;
-  guint64 timestamp;
-  guint64 duration;
+  guint64 timestamp;            /* In GstClockTime */
+  guint32 duration;             /* in stream->timescale units */
 };
 
 struct _QtDemuxStream
@@ -88,7 +88,9 @@ struct _QtDemuxStream
 
   int width;
   int height;
-  float fps;
+  /* Numerator/denominator framerate */
+  gint fps_n;
+  gint fps_d;
 
   double rate;
   int n_channels;
@@ -640,7 +642,8 @@ gst_qtdemux_loop_header (GstPad * pad)
               stream->samples[stream->sample_index].timestamp;
           qtdemux->last_ts = GST_BUFFER_TIMESTAMP (buf);
           GST_BUFFER_DURATION (buf) =
-              stream->samples[stream->sample_index].duration;
+              GST_SECOND * stream->samples[stream->sample_index].duration
+              / stream->timescale;
         }
         if (qtdemux->need_discont) {
           GstEvent *event = gst_event_new_new_segment (FALSE, 1.0,
@@ -722,12 +725,14 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
         gst_pad_new_from_template (gst_static_pad_template_get
         (&gst_qtdemux_videosrc_template), name);
     g_free (name);
-    stream->fps = 1. * GST_SECOND / stream->samples[0].duration;
+    stream->fps_n = stream->timescale;
+    stream->fps_d = stream->samples[0].duration;
+
     if (stream->caps) {
       gst_caps_set_simple (stream->caps,
           "width", G_TYPE_INT, stream->width,
           "height", G_TYPE_INT, stream->height,
-          "framerate", G_TYPE_DOUBLE, stream->fps, NULL);
+          "framerate", GST_TYPE_FRACTION, stream->fps_n, stream->fps_d, NULL);
     }
     qtdemux->n_video_streams++;
   } else {
@@ -1378,12 +1383,10 @@ qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth)
       QTDEMUX_GUINT32_GET (buffer + 12));
   GST_LOG ("%*s  modify time:   %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 16));
-  GST_LOG ("%*s  time scale:    1/%u sec", depth, "",
-      QTDEMUX_GUINT32_GET (buffer + 20));
-  GST_LOG ("%*s  duration:      %u", depth, "",
-      QTDEMUX_GUINT32_GET (buffer + 24));
   qtdemux->duration = QTDEMUX_GUINT32_GET (buffer + 24);
   qtdemux->timescale = QTDEMUX_GUINT32_GET (buffer + 20);
+  GST_LOG ("%*s  time scale:    1/%u sec", depth, "", qtdemux->timescale);
+  GST_LOG ("%*s  duration:      %u", depth, "", qtdemux->duration);
   GST_LOG ("%*s  pref. rate:    %g", depth, "", QTDEMUX_FP32_GET (buffer + 28));
   GST_LOG ("%*s  pref. volume:  %g", depth, "", QTDEMUX_FP16_GET (buffer + 32));
   GST_LOG ("%*s  preview time:  %u", depth, "",
@@ -1946,7 +1949,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     stream->width = QTDEMUX_GUINT16_GET (stsd->data + offset + 32);
     stream->height = QTDEMUX_GUINT16_GET (stsd->data + offset + 34);
-    stream->fps = 0.;           /* this is filled in later */
+    stream->fps_n = 0;          /* this is filled in later */
+    stream->fps_d = 0;          /* this is filled in later */
 
     GST_LOG ("frame count:   %u",
         QTDEMUX_GUINT16_GET (stsd->data + offset + 48));
@@ -2225,7 +2229,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       for (j = 0; j < n; j++) {
         //GST_INFO("moo %lld", timestamp);
         samples[index].timestamp = timestamp;
-        samples[index].duration = time;
+        samples[index].duration = duration;
         timestamp += time;
         index++;
       }
@@ -2282,7 +2286,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         else
           samples[j].size = stream->bytes_per_frame;
         samples[j].duration =
-            samples_per_chunk * GST_SECOND / (stream->rate / 2);
+            samples_per_chunk * stream->timescale / (stream->rate / 2);
         samples[j].timestamp = timestamp;
         timestamp += (samples_per_chunk * GST_SECOND) / stream->rate;
 #if 0
