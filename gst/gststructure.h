@@ -174,6 +174,10 @@ gboolean                gst_structure_get_enum             (const GstStructure  
 							    const gchar             *fieldname,
 							    GType                    enumtype,
 							    gint                    *value);
+gboolean                gst_structure_get_fraction         (const GstStructure      *structure,
+							    const gchar             *fieldname,
+							    gint *value_numerator,
+							    gint *value_denominator);
 
 gchar *                 gst_structure_to_string            (const GstStructure      *structure);
 GstStructure *          gst_structure_from_string          (const gchar             *string,
@@ -191,7 +195,8 @@ gboolean                 gst_structure_fixate_field_boolean (GstStructure *struc
 									 gboolean        target);
 gboolean                 gst_structure_fixate_field_nearest_fraction (GstStructure *structure,
 									 const char   *field_name,
-									 const GValue *target);
+									 const gint target_numerator,
+									 const gint target_denominator);
 
 G_END_DECLS
 

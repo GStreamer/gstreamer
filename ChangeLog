@@ -1,3 +1,18 @@
+2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gststructure.c: (gst_structure_get_fraction),
+	(gst_structure_parse_value),
+	(gst_structure_fixate_field_nearest_fraction):
+	* gst/gststructure.h:
+	* gst/gstutils.c: (gst_util_uint64_scale_int):
+	* gst/gstutils.h:
+	* scripts/update-funcnames:
+	API Changes. 
+	Rename gst_util_clock_time_scale to gst_util_uint64_scale_int
+	Make gst_structure_fixate_field_nearest_fraction take a numerator
+	and denominator argument instead of a GValue
+	add gst_structure_get_fraction helper function.
+
 2005-11-23  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:

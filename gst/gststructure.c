@@ -1169,6 +1169,45 @@ gst_structure_get_enum (const GstStructure * structure,
   return TRUE;
 }
 
+/**
+ * gst_structure_get_fraction:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @value_numerator: a pointer to an int to set
+ * @value_denominator: a pointer to an int to set
+ *
+ * Sets the integers pointed to by @value_numerator and @value_denominator 
+ * corresponding to the value of the given field.  Caller is responsible 
+ * for making sure the field exists and has the correct type.
+ *
+ * Returns: TRUE if the values could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain a GstFraction, this 
+ * function returns FALSE.
+ */
+gboolean
+gst_structure_get_fraction (const GstStructure * structure,
+    const gchar * fieldname, gint * value_numerator, gint * value_denominator)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+  g_return_val_if_fail (value_numerator != NULL, FALSE);
+  g_return_val_if_fail (value_denominator != NULL, FALSE);
+
+  field = gst_structure_get_field (structure, fieldname);
+
+  if (field == NULL)
+    return FALSE;
+  if (!GST_VALUE_HOLDS_FRACTION (&field->value))
+    return FALSE;
+
+  *value_numerator = gst_value_get_fraction_numerator (&field->value);
+  *value_denominator = gst_value_get_fraction_denominator (&field->value);
+
+  return TRUE;
+}
+
 typedef struct _GstStructureAbbreviation
 {
   char *type_name;
@@ -1936,22 +1975,24 @@ gst_structure_fixate_field_boolean (GstStructure * structure,
  * gst_structure_fixate_field_nearest_fraction:
  * @structure: a #GstStructure
  * @field_name: a field in @structure
- * @target: A GValue of GST_TYPE_FRACTION with the target value of the fixation
+ * @target_numerator: The numerator of the target value of the fixation
+ * @target_denominator: The denominator of the target value of the fixation
  *
  * Fixates a #GstStructure by changing the given field to the nearest
- * fraction to @target that is a subset of the existing field.
+ * fraction to @target_numerator/@target_denominator that is a subset 
+ * of the existing field.
  *
  * Returns: TRUE if the structure could be fixated
  */
 gboolean
 gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
-    const char *field_name, const GValue * target)
+    const char *field_name, const gint target_numerator,
+    const gint target_denominator)
 {
   const GValue *value;
 
   g_return_val_if_fail (gst_structure_has_field (structure, field_name), FALSE);
   g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
-  g_return_val_if_fail (G_VALUE_TYPE (target) == GST_TYPE_FRACTION, FALSE);
 
   value = gst_structure_get_value (structure, field_name);
 
@@ -1959,25 +2000,36 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
     /* already fixed */
     return FALSE;
   } else if (G_VALUE_TYPE (value) == GST_TYPE_FRACTION_RANGE) {
-    const GValue *x;
+    const GValue *x, *new_value;
+    GValue target = { 0 };
+    g_value_init (&target, GST_TYPE_FRACTION);
+    gst_value_set_fraction (&target, target_numerator, target_denominator);
 
+    new_value = &target;
     x = gst_value_get_fraction_range_min (value);
-    if (gst_value_compare (target, x) == GST_VALUE_LESS_THAN)
-      target = x;
+    if (gst_value_compare (&target, x) == GST_VALUE_LESS_THAN)
+      new_value = x;
     x = gst_value_get_fraction_range_max (value);
-    if (gst_value_compare (target, x) == GST_VALUE_GREATER_THAN)
-      target = x;
-    gst_structure_set_value (structure, field_name, target);
+    if (gst_value_compare (&target, x) == GST_VALUE_GREATER_THAN)
+      new_value = x;
+
+    gst_structure_set_value (structure, field_name, new_value);
+    g_value_unset (&target);
     return TRUE;
   } else if (G_VALUE_TYPE (value) == GST_TYPE_LIST) {
     const GValue *list_value;
     int i, n;
     const GValue *best = NULL;
-    GValue best_diff;
-    GValue cur_diff;
+    GValue best_diff = { 0 };
+    GValue cur_diff = { 0 };
+    GValue target = { 0 };
+    gboolean res = FALSE;
 
     g_value_init (&best_diff, GST_TYPE_FRACTION);
     g_value_init (&cur_diff, GST_TYPE_FRACTION);
+    g_value_init (&target, GST_TYPE_FRACTION);
+
+    gst_value_set_fraction (&target, target_numerator, target_denominator);
 
     n = gst_value_list_get_size (value);
     for (i = 0; i < n; i++) {
@@ -1987,10 +2039,10 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
           best = list_value;
           gst_value_set_fraction (&best_diff, 0, 1);
         } else {
-          if (gst_value_compare (list_value, target) == GST_VALUE_LESS_THAN)
-            gst_value_fraction_subtract (&cur_diff, target, list_value);
+          if (gst_value_compare (list_value, &target) == GST_VALUE_LESS_THAN)
+            gst_value_fraction_subtract (&cur_diff, &target, list_value);
           else
-            gst_value_fraction_subtract (&cur_diff, list_value, target);
+            gst_value_fraction_subtract (&cur_diff, list_value, &target);
 
           if (gst_value_compare (&cur_diff, &best_diff) == GST_VALUE_LESS_THAN) {
             best = list_value;
@@ -2001,9 +2053,12 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
     }
     if (best != NULL) {
       gst_structure_set_value (structure, field_name, best);
-      return TRUE;
+      res = TRUE;
     }
-    return FALSE;
+    g_value_unset (&best_diff);
+    g_value_unset (&cur_diff);
+    g_value_unset (&target);
+    return res;
   }
 
   return FALSE;
