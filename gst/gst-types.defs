@@ -375,6 +375,7 @@
     '("can-do-periodic-sync" "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC")
     '("can-do-periodic-async" "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC")
     '("can-set-resolution" "GST_CLOCK_FLAG_CAN_SET_RESOLUTION")
+    '("can-set-master" "GST_CLOCK_FLAG_CAN_SET_MASTER")
     '("last" "GST_CLOCK_FLAG_LAST")
   )
 )

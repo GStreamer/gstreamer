@@ -744,7 +744,7 @@
 (define-method set_master
   (of-object "GstClock")
   (c-name "gst_clock_set_master")
-  (return-type "none")
+  (return-type "gboolean")
   (parameters
     '("GstClock*" "master")
   )
@@ -754,6 +754,17 @@
   (of-object "GstClock")
   (c-name "gst_clock_get_master")
   (return-type "GstClock*")
+)
+
+(define-method add_observation
+  (of-object "GstClock")
+  (c-name "gst_clock_add_observation")
+  (return-type "gboolean")
+  (parameters
+    '("GstClockTime" "slave")
+    '("GstClockTime" "master")
+    '("gdouble*" "r_squared")
+  )
 )
 
 (define-method get_internal_time
@@ -949,7 +960,7 @@
 (define-method set_clock
   (of-object "GstElement")
   (c-name "gst_element_set_clock")
-  (return-type "none")
+  (return-type "gboolean")
   (parameters
     '("GstClock*" "clock")
   )
@@ -1284,7 +1295,7 @@
 
 (define-virtual set_clock
   (of-object "GstElement")
-  (return-type "none")
+  (return-type "gboolean")
   (parameters
     '("GstClock*" "clock")
   )
@@ -3932,7 +3943,7 @@
 (define-method set_clock
   (of-object "GstPipeline")
   (c-name "gst_pipeline_set_clock")
-  (return-type "none")
+  (return-type "gboolean")
   (parameters
     '("GstClock*" "clock")
   )
@@ -6055,6 +6066,16 @@
     '("guint64" "val")
     '("guint64" "num")
     '("guint64" "denom")
+  )
+)
+
+(define-function util_clock_time_scale
+  (c-name "gst_util_clock_time_scale")
+  (return-type "GstClockTime")
+  (parameters
+    '("GstClockTime" "val")
+    '("gint" "num")
+    '("gint" "denom")
   )
 )
 
