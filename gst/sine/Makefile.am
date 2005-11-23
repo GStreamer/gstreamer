@@ -1,8 +1,0 @@
-plugin_LTLIBRARIES = libgstsinesrc.la
-
-libgstsinesrc_la_SOURCES = gstsinesrc.c
-libgstsinesrc_la_CFLAGS = $(GST_CFLAGS) $(GST_CONTROLLER_CFLAGS)
-libgstsinesrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsinesrc_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(GST_CONTROLLER_LIBS)
-
-noinst_HEADERS = gstsinesrc.h

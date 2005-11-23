@@ -1,5 +1,14 @@
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/sine/.cvsignore:
+	* gst/sine/Makefile.am:
+	* gst/sine/gstsinesrc.c:
+	* gst/sine/gstsinesrc.h:
+	* gst/sine/sinesrc.vcproj:
+	  and remove sinesrc from the repository.  Closes #321446
+
+2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	* gst-plugins-base.spec.in:
 	  remove sinesrc from the build
