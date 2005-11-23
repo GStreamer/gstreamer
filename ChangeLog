@@ -1,3 +1,10 @@
+=== release 0.9.6 ===
+
+2005-11-23  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.6, "Always On Time"
+
 2005-11-23  Wim Taymans  <wim@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:
@@ -207,14 +214,14 @@
 	* gst/gstutils.c: (gst_util_set_object_arg):
 	* tools/gst-compprep.c: (main):
 	* tools/gst-inspect.c: (print_element_properties_info):
-	Removed GstURI , closes bug #321061
+	Removed GstURI, closes bug #321061
 
 2005-11-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/gst/gststructure.c: (GST_START_TEST):
 	* gst/gststructure.c: (gst_structure_parse_value):
-        Oops, broke automatic string type parsing.
-	Add a test to catch it in future.
+	  Oops, broke automatic string type parsing.
+	  Add a test to catch it in future.
 
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 
@@ -825,7 +832,7 @@
 	* gst/gstclock.c: (gst_clock_set_calibration),
 	(gst_clock_get_calibration):
 	Doc and API fixes.
-	Callibration can be set with internal time equal to current
+	Calibration can be set with internal time equal to current
 	internal time too.
 
 2005-11-18  Thomas Vander Stichele  <thomas at apestaart dot org>
@@ -1118,7 +1125,7 @@
 2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/elements/gsttee.c: (gst_tee_init):
-	  fix pad tempalte leak in tee
+	  fix pad template leak in tee
 
 2005-11-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 

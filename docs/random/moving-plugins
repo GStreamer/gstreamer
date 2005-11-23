@@ -86,3 +86,7 @@ to -good or -ugly if a number of conditions are met:
 
 - Decision should be made if it should go into good (LGPL license,
   LGPL dependencies, no patent issues) or ugly
+
+- plugin documentation needs to be added:
+  - "make update" in docs/plugins and commit the new file
+  - edit -docs.sgml and add an include for the file

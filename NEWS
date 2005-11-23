@@ -1,4 +1,56 @@
-This is GStreamer 0.9.5, "Bike Lunch Day".
+This is GStreamer 0.9.6, "Always On Time".
+
+Changes since 0.9.5:
+    
+      * API changes and clean-up
+      * Extensive documentation updates
+      * remove GLib 2.4 compatibility
+      * added clock selection
+      * added network clocking
+      * added fd:// URI handler
+      * added more fraction functionality
+
+Bugs fixed since 0.9.5:
+    
+      * 143472 : [api] gst_tag_list_foreach() takes a non-const GstTagList*
+      * 156633 : [API] don't use same API for arrays as for normal lists
+      * 164168 : circular pipeline fails to negotiate
+      * 165650 : [API] gst_value_deserialize doesn't work correctly for NU...
+      * 168438 : [API] GstIndexFilter doesn't receive user_data
+      * 168494 : [API] gst_index_add_object() does nothing
+      * 305291 : Obnoxious bug-filing request
+      * 311489 : Possible gstghostpad locking problems
+      * 319178 : [API] finish filler events and support them in GstCollect...
+      * 319388 : 0.9 API changes tracker
+      * 319389 : state change updates obsolete some functions
+      * 319392 : GstEventType is not bindings-friendly
+      * 319395 : Macro name/visibility API bugs
+      * 319940 : Use GLIB macros for GCC extensions
+      * 320060 : add a CORE error category for missing ELEMENTS/PLUGINS
+      * 320097 : GST_BUFFER_FLAG_ORIGINAL should die
+      * 320113 : [API] duration message changes
+      * 320299 : gst_pad_send_event should take stream lock for serialized...
+      * 320324 : [API] GST_FOURCC_FORMAT should drop leading '%'
+      * 320423 : [API] padding for GstCollectData
+      * 320766 : [API] collect pads API changes
+      * 321061 : GstURI not used
+      * 321235 : [API] GST_PAD_IS_USABLE should be removed
+      * 321386 : [SEGFAULT] basetransform when doing reverse caps negotiation
+      * 321452 : GstPad's " template " property is b0rked
+      * 321528 : capsfilter: assertion `caps != NULL' failed
+      * 321595 : GstBin doesn't clean the message queue when changing stat...
+      * 321638 : Don't use // style comments in headers
+      * 321648 : Wrong type check in gst_message_parse_clock_lost
+      * 321710 : GstClock resolution functions should take a GstClockTime
+      * 321712 : GstClock adjust function changes
+      * 321875 : gst_plugin_check_file disappeared
+      * 321950 : gst_registry_scan_paths lacks implementation
+      * 321962 : [easyfix] gst_value_is_fixed uses gst_value_list_* on GST...
+      * 322027 : [API] Rename gst_caps_structure_fixate_* to gst_structure...
+      * 322034 : Elements should be updated not to take the stream lock in...
+      * 322069 : Names of GstTagSetter methods should be more descriptive
+      * 322134 : API master/slave clocks
+      * 322139 : our elements are confused about GEnumValue and which is t...
   
 Changes since 0.9.4:
     
