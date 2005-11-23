@@ -1,5 +1,13 @@
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_base_init),
+	(gst_sdlvideosink_get_times), (gst_sdlvideosink_init),
+	(gst_sdlvideosink_setcaps), (gst_sdlvideosink_change_state):
+	* ext/sdl/sdlvideosink.h:
+	Updates for fractional framerates and XOverlay interface changes
+
+2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
 	(gst_qtdemux_add_stream), (qtdemux_dump_mvhd),
 	(qtdemux_parse_trak):

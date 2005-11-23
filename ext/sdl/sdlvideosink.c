@@ -164,8 +164,7 @@ gst_sdlvideosink_base_init (gpointer g_class)
             "format", GST_TYPE_FOURCC, formats[i],
             "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
             "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "framerate", GST_TYPE_DOUBLE_RANGE, (gdouble) 1.0,
-            (gdouble) 100.0, NULL));
+            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL));
   }
 
   sink_template = gst_pad_template_new ("sink",
@@ -200,8 +199,10 @@ gst_sdlvideosink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
       *end = timestamp + duration;
     } else {
-      if (sdlvideosink->framerate > 0) {
-        *end = timestamp + GST_SECOND / sdlvideosink->framerate;
+      if (sdlvideosink->framerate_n > 0) {
+        *end = timestamp +
+            gst_util_uint64_scale_int (GST_SECOND, sdlvideosink->framerate_d,
+            sdlvideosink->framerate_n);
       }
     }
   }
@@ -307,7 +308,8 @@ gst_sdlvideosink_init (GstSDLVideoSink * sdlvideosink)
 
   sdlvideosink->width = -1;
   sdlvideosink->height = -1;
-  sdlvideosink->framerate = 0;
+  sdlvideosink->framerate_n = 0;
+  sdlvideosink->framerate_d = 1;
   sdlvideosink->full_screen = FALSE;
 
   sdlvideosink->overlay = NULL;
@@ -668,13 +670,11 @@ gst_sdlvideosink_setcaps (GstBaseSink * bsink, GstCaps * vscapslist)
       gst_sdlvideosink_get_sdl_from_fourcc (sdlvideosink, sdlvideosink->fourcc);
   gst_structure_get_int (structure, "width", &sdlvideosink->width);
   gst_structure_get_int (structure, "height", &sdlvideosink->height);
-  gst_structure_get_double (structure, "framerate", &sdlvideosink->framerate);
+  gst_structure_get_fraction (structure, "framerate",
+      &sdlvideosink->framerate_n, &sdlvideosink->framerate_d);
 
   if (!sdlvideosink->format || !gst_sdlvideosink_create (sdlvideosink))
     return FALSE;
-
-  gst_x_overlay_got_desired_size (GST_X_OVERLAY (sdlvideosink),
-      sdlvideosink->width, sdlvideosink->height);
 
   return TRUE;
 }
@@ -824,7 +824,8 @@ gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      sdlvideosink->framerate = 0;
+      sdlvideosink->framerate_n = 0;
+      sdlvideosink->framerate_d = 1;
       gst_sdlvideosink_destroy (sdlvideosink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
