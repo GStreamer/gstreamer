@@ -2,13 +2,102 @@
 
 (include "xoverlay.defs")
 
-; object definitions ...
-;(define-object XWindowListener
-;  (in-module "Gst")
-;  (parent "GObject")
-;  (c-name "GstXWindowListener")
-;  (gtype-id "GST_TYPE_X_WINDOW_LISTENER")
-;)
+;; object definitions ...
+
+;;
+;; interface definitions ...
+;;
+
+(define-interface ColorBalance
+   (in-module "Gst")
+   (c-name "GstColorBalance")
+   (gtype-id "GST_TYPE_COLOR_BALANCE")
+)
+
+(define-object ColorBalanceChannel
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstColorBalanceChannel")
+  (gtype-id "GST_TYPE_COLOR_BALANCE_CHANNEL")
+  (fields
+    '("gchar*" "label")
+    '("gint" "min_value")
+    '("gint" "max_value")
+  )
+)
+
+(define-interface Mixer
+   (in-module "Gst")
+   (c-name "GstMixer")
+   (gtype-id "GST_TYPE_MIXER")
+   (fields
+     '("GstMixerType" "mixer_type")
+    )
+)
+
+(define-object MixerTrack
+   (in-module "Gst")
+   (parent "GObject")
+   (c-name "GstMixerTrack")
+   (gtype-id "GST_TYPE_MIXER_TRACK")
+   (fields
+     '("gchar*" "label")
+     '("GstMixerTrackFlags" "flags")
+     '("gint" "num_channels")
+     '("gint" "min_volume")
+     '("gint" "max_volume")
+    )
+)
+
+(define-object MixerOptions
+  (in-module "Gst")
+  (parent "GstMixerTrack")
+  (c-name "GstMixerOptions")
+  (gtype-id "GST_TYPE_MIXER_OPTIONS")
+)
+
+(define-interface Navigation
+   (in-module "Gst")
+   (c-name "GstNavigation")
+   (gtype-id "GST_TYPE_NAVIGATION")
+)
+
+(define-interface PropertyProbe
+   (in-module "Gst")
+   (c-name "GstPropertyProbe")
+   (gtype-id "GST_TYPE_PROPERTY_PROBE")
+)
+
+(define-interface Tuner
+   (in-module "Gst")
+   (c-name "GstTuner")
+   (gtype-id "GST_TYPE_TUNER")
+)
+
+(define-object TunerChannel
+   (in-module "Gst")
+   (parent "GstObject")
+   (c-name "GstTunerChannel")
+   (gtype-id "GST_TYPE_TUNER_CHANNEL")
+   (fields
+    '("gchar*" "label")
+    '("GstTunerChannelFlags" "flags")
+    '("gfloat" "freq_multiplicator")
+    '("gulong" "min_frequency")
+    '("gulong" "max_frequency")
+    '("gint" "min_signal")
+    '("gint" "max_signal"))
+)
+
+(define-object TunerNorm
+   (in-module "Gst")
+   (parent "GstObject")
+   (c-name "GstTunerNorm")
+   (gtype-id "GST_TYPE_TUNER_NORM")
+   (fields
+    '("gchar*" "label")
+    '("GValue*" "framerate"))
+)
 
 ;; Enumerations and flags ...
 
@@ -204,6 +293,28 @@
   )
 )
 
+(define-method option_changed
+  (of-object "GstMixer")
+  (c-name "gst_mixer_option_changed")
+  (return-type "none")
+  (parameters
+    '("GstMixerOptions*" "opts")
+    '("gchar*" "value")
+  )
+)
+
+;; From ../gst-plugins-base/gst-libs/gst/interfaces/mixeroptions.h
+
+(define-function gst_mixer_options_get_type
+  (c-name "gst_mixer_options_get_type")
+  (return-type "GType")
+)
+
+(define-method get_values
+  (of-object "GstMixerOptions")
+  (c-name "gst_mixer_options_get_values")
+  (return-type "GList*")
+)
 
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/navigation/navigation.h
@@ -507,97 +618,3 @@
 )
 
 
-;;
-;; interface definitions ...
-;;
-
-(define-interface ColorBalance
-   (in-module "Gst")
-   (c-name "GstColorBalance")
-   (gtype-id "GST_TYPE_COLOR_BALANCE")
-)
-
-(define-object ColorBalanceChannel
-  (in-module "Gst")
-  (parent "GstObject")
-  (c-name "GstColorBalanceChannel")
-  (gtype-id "GST_TYPE_COLOR_BALANCE_CHANNEL")
-  (fields
-    '("gchar*" "label")
-    '("gint" "min_value")
-    '("gint" "max_value")
-  )
-)
-
-(define-interface Mixer
-   (in-module "Gst")
-   (c-name "GstMixer")
-   (gtype-id "GST_TYPE_MIXER")
-   (fields
-     '("GstMixerType" "mixer_type")
-    )
-)
-
-(define-object MixerTrack
-   (in-module "Gst")
-   (parent "GObject")
-   (c-name "GstMixerTrack")
-   (gtype-id "GST_TYPE_MIXER_TRACK")
-   (fields
-     '("gchar*" "label")
-     '("GstMixerTrackFlags" "flags")
-     '("gint" "num_channels")
-     '("gint" "min_volume")
-     '("gint" "max_volume")
-    )
-)
-
-(define-object MixerOptions
-  (in-module "Gst")
-  (parent "GstMixerTrack")
-  (c-name "GstMixerOptions")
-  (gtype-id "GST_TYPE_MIXER_OPTIONS")
-)
-
-(define-interface Navigation
-   (in-module "Gst")
-   (c-name "GstNavigation")
-   (gtype-id "GST_TYPE_NAVIGATION")
-)
-
-(define-interface PropertyProbe
-   (in-module "Gst")
-   (c-name "GstPropertyProbe")
-   (gtype-id "GST_TYPE_PROPERTY_PROBE")
-)
-
-(define-interface Tuner
-   (in-module "Gst")
-   (c-name "GstTuner")
-   (gtype-id "GST_TYPE_TUNER")
-)
-
-(define-object TunerChannel
-   (in-module "Gst")
-   (parent "GstObject")
-   (c-name "GstTunerChannel")
-   (gtype-id "GST_TYPE_TUNER_CHANNEL")
-   (fields
-    '("gchar*" "label")
-    '("GstTunerChannelFlags" "flags")
-    '("gfloat" "freq_multiplicator")
-    '("gulong" "min_frequency")
-    '("gulong" "max_frequency")
-    '("gint" "min_signal")
-    '("gint" "max_signal"))
-)
-
-(define-object TunerNorm
-   (in-module "Gst")
-   (parent "GstObject")
-   (c-name "GstTunerNorm")
-   (gtype-id "GST_TYPE_TUNER_NORM")
-   (fields
-    '("gchar*" "label")
-    '("gfloat" "fps"))
-)

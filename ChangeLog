@@ -1,3 +1,8 @@
+2005-11-23  Edward Hervey  <edward@fluendo.com>
+
+	* gst/interfaces.defs:
+	Update for Interfaces API changes
+
 2005-11-22  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst-types.defs:
