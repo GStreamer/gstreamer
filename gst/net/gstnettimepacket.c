@@ -90,7 +90,7 @@ gst_net_time_packet_serialize (const GstNetTimePacket * packet)
 
 /**
  * gst_net_time_packet_receive:
- * @sockfd: a file descriptor created by socket(2)
+ * @fd: a file descriptor created by socket(2)
  * @addr: a pointer to a sockaddr to hold the address of the sender
  * @len: a pointer to the size of the data pointed to by @addr
  *
@@ -139,7 +139,7 @@ short_packet:
 /**
  * gst_net_time_packet_send:
  * @packet: the #GstNetTimePacket
- * @sockfd: a file descriptor created by socket(2)
+ * @fd: a file descriptor created by socket(2)
  * @addr: a pointer to a sockaddr to hold the address of the sender
  * @len: the size of the data pointed to by @addr
  *

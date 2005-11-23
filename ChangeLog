@@ -1,3 +1,14 @@
+2005-11-23  Michael Smith <msmith@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	  Update for new API and API changes.
+	* gst/gstobject.h:
+	  Documentation fix: GST_TRYLOCK -> GST_OBJECT_TRYLOCK
+	* gst/gstvalue.c:
+	  Documentation typo fix.
+	* gst/net/gstnettimepacket.c:
+	  Documentation fixes for arguments.
+
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gststructure.c: (gst_structure_get_fraction),

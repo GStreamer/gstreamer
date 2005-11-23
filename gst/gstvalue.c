@@ -3276,7 +3276,7 @@ gst_value_fraction_multiply (GValue * product, const GValue * factor1,
 /**
  * gst_value_fraction_subtract:
  * @dest: a GValue initialized to #GST_TYPE_FRACTION
- * @minued: a GValue initialized to #GST_TYPE_FRACTION
+ * @minuend: a GValue initialized to #GST_TYPE_FRACTION
  * @subtrahend: a GValue initialized to #GST_TYPE_FRACTION
  *
  * Subtracts the @subtrahend from the @minuend and sets @dest to the result.
