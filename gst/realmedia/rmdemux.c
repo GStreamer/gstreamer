@@ -52,7 +52,8 @@ struct _GstRMDemuxStream
   int sample_index;
   GstRMDemuxIndex *index;
   int index_length;
-  double frame_rate;
+  gint framerate_numerator;
+  gint framerate_denominator;
   guint32 seek_offset;
 
   guint16 width;
@@ -432,6 +433,9 @@ find_seek_offset_bytes (GstRMDemux * rmdemux, guint target)
   int i, n;
   gboolean ret = FALSE;
 
+  if (target < 0)
+    return FALSE;
+
   for (n = 0; n < rmdemux->n_streams; n++) {
     GstRMDemuxStream *stream;
 
@@ -547,8 +551,8 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
   /* For each stream, find the first index offset equal to or before our seek 
    * target. Of these, find the smallest offset. That's where we seek to.
    *
-   * Then we pull 4 bytes from that offset, validate that we've seeked to a
-   * DATA chunk (with the DATA fourcc). 
+   * Then we pull 4 bytes from that offset, and validate that we've seeked to a
+   * what looks like a plausible packet.
    * If that fails, restart, with the seek target set to one less than the
    * offset we just tried. If we run out of places to try, treat that as a fatal
    * error.
@@ -627,10 +631,13 @@ gst_rmdemux_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_POSITION:
       GST_DEBUG_OBJECT (rmdemux, "src_query position");
       gst_query_set_position (query, GST_FORMAT_TIME, -1);      //rmdemux->cur_timestamp, 
+      GST_DEBUG_OBJECT (rmdemux, "Position query: no idea from demuxer!");
       break;
     case GST_QUERY_DURATION:
       GST_DEBUG_OBJECT (rmdemux, "src_query duration");
       gst_query_set_duration (query, GST_FORMAT_TIME,   //rmdemux->cur_timestamp, 
+          rmdemux->duration);
+      GST_DEBUG_OBJECT (rmdemux, "Duration query: set to %lld in demuxer",
           rmdemux->duration);
       break;
     default:
@@ -1233,7 +1240,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
       gst_caps_set_simple (stream->caps,
           "width", G_TYPE_INT, stream->width,
           "height", G_TYPE_INT, stream->height,
-          "framerate", G_TYPE_DOUBLE, stream->frame_rate, NULL);
+          "framerate", GST_TYPE_FRACTION, stream->framerate_numerator,
+          stream->framerate_denominator, NULL);
     }
     rmdemux->n_video_streams++;
 
@@ -1530,14 +1538,27 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
       stream->format = RMDEMUX_GUINT32_GET (data + offset + 30);
       stream->extra_data_size = length - (offset + 34);
       stream->extra_data = (guint8 *) data + offset + 34;
-      stream->frame_rate = (double) RMDEMUX_GUINT16_GET (data + offset + 22) +
-          ((double) RMDEMUX_GUINT16_GET (data + offset + 24) / 65536.0);
+      /* Natural way to represent framerates here requires unsigned 32 bit
+       * numerator, which we don't have. For the nasty case, approximate...
+       */
+      {
+        guint32 numerator = RMDEMUX_GUINT16_GET (data + offset + 22) * 65536 +
+            RMDEMUX_GUINT16_GET (data + offset + 24);
+        if (numerator > G_MAXINT) {
+          stream->framerate_numerator = (gint) (numerator >> 1);
+          stream->framerate_denominator = 32768;
+        } else {
+          stream->framerate_numerator = (gint) numerator;
+          stream->framerate_denominator = 65536;
+        }
+      }
 
       GST_DEBUG_OBJECT (rmdemux,
           "Video stream with fourcc=%" GST_FOURCC_FORMAT
-          " width=%d height=%d rate=%d frame_rate=%f subformat=%x format=%x extra_data_size=%d",
+          " width=%d height=%d rate=%d framerate=%d/%d subformat=%x format=%x extra_data_size=%d",
           GST_FOURCC_ARGS (stream->fourcc), stream->width, stream->height,
-          stream->rate, stream->frame_rate, stream->subformat, stream->format,
+          stream->rate, stream->framerate_numerator,
+          stream->framerate_denominator, stream->subformat, stream->format,
           stream->extra_data_size);
       break;
     case GST_RMDEMUX_STREAM_AUDIO:{
@@ -1697,11 +1718,11 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
   rmdemux->cur_timestamp = RMDEMUX_GUINT32_GET (data + 2) * GST_MSECOND;
 
   GST_DEBUG_OBJECT (rmdemux,
-      "Parsing a packet for stream=%d, timestamp=" GST_TIME_FORMAT
+      "Parsing a packet for stream=%d, timestamp=%" GST_TIME_FORMAT
       ", version=%d", id, GST_TIME_ARGS (rmdemux->cur_timestamp), version);
 
-  // TODO: This is skipping over either 2 or 3 bytes (version dependent)
-  // without even reading it. What are these for?
+  // TODO: We read 6 bytes previously; this is skipping over either 2 or 3 
+  // bytes (version dependent) // without even reading it. What are these for?
   if (version == 0) {
     data += 8;
     packet_size = length - 8;
