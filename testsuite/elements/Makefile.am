@@ -1,11 +1,11 @@
 include ../Rules
 
 # disable gst-compprep-check until it doesn't leave stray files for distcheck
-tests_pass = name tee property fake gst-inspect-check struct_size
+tests_pass = gst-inspect-check struct_size
 tests_fail =
 tests_ignore =
 
-noinst_HEADERS = property.h struct_i386.h
+noinst_HEADERS = struct_i386.h
 
 gst_inspect_check_SOURCES =
 gst-inspect-check$(EXEEXT): $(srcdir)/gst-inspect-check.in
