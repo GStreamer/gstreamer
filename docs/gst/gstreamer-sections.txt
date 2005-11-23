@@ -621,7 +621,6 @@ GST_EVENT_TRACE_NAME
 GST_EVENT_TYPE
 GST_EVENT_TYPE_NAME
 GST_EVENT_TYPE_BOTH
-GST_EVENT_TYPE_SHIFT
 GST_EVENT_TIMESTAMP
 GST_EVENT_SRC
 GST_EVENT_IS_DOWNSTREAM
@@ -669,6 +668,8 @@ GST_TYPE_SEEK_TYPE
 GST_TYPE_SEEK_FLAGS
 GST_TYPE_EVENT_TYPE_FLAGS
 <SUBSECTION Private>
+GST_EVENT_TYPE_SHIFT
+FLAG
 gst_event_get_type
 gst_event_type_get_type
 gst_seek_type_get_type
@@ -831,8 +832,6 @@ GstDebugCategory
 GST_STR_NULL
 GST_DEBUG_PAD_NAME
 GST_FUNCTION
-GstDebugMessage
-GstDebugFuncPtr
 GstLogFunction
 gst_debug_log
 gst_debug_log_valist
@@ -897,6 +896,8 @@ GST_TYPE_DEBUG_LEVEL
 GST_DEBUG_FG_MASK
 GST_DEBUG_BG_MASK
 GST_DEBUG_FORMAT_MASK
+GstDebugFuncPtr
+GstDebugMessage
 gst_debug_color_flags_get_type
 gst_debug_level_get_type
 </SECTION>

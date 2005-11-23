@@ -43,9 +43,7 @@ typedef struct _GstCollectPadsClass GstCollectPadsClass;
  * @pad: #GstPad managed by this data
  * @buffer: currently queued buffer.
  * @pos: position in the buffer
- * @segment_start: last segment start received.
- * @segment_stop: last segment stop received.
- * @stream_time: stream time of last segment.
+ * @segment: last segment received.
  *
  * Structure used by the collect_pads.
  */

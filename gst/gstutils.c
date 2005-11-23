@@ -362,7 +362,7 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
  * gst_util_clock_time_scale:
  * @val: GstClockTime to scale.
  * @num: numerator of the scale factor.
- * @denum: denominator of the scale factor.
+ * @denom: denominator of the scale factor.
  *
  * Scale a clocktime by a factor expressed as a fraction (num/denom), avoiding
  * overflows and loss of precision.
