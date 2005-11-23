@@ -496,6 +496,20 @@ gst_net_client_clock_stop (GstNetClientClock * self)
   }
 }
 
+/**
+ * gst_net_client_clock_new:
+ * @name: a name for the clock
+ * @remote_address: the address of the remote clock provider
+ * @remote_port: the port of the remote clock provider
+ * @base_time: initial time of the clock
+ *
+ * Create a new #GstNetClientClock that will report the time
+ * provided by the #GstNetClockProvider on @remote_address and 
+ * @remote_port.
+ *
+ * Returns: a new #GstClock that receives a time from the remote
+ * clock.
+ */
 GstClock *
 gst_net_client_clock_new (gchar * name, const gchar * remote_address,
     gint remote_port, GstClockTime base_time)

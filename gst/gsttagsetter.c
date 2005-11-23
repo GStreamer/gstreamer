@@ -180,7 +180,7 @@ gst_tag_setter_add_tag_values (GstTagSetter * setter, GstTagMergeMode mode,
 }
 
 /**
- * gst_tag_setter_tag_add_valist:
+ * gst_tag_setter_add_tag_valist:
  * @setter: a #GstTagSetter
  * @mode: the mode to use
  * @tag: tag to set

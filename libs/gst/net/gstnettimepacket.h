@@ -33,10 +33,22 @@ G_BEGIN_DECLS
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+/**
+ * GST_NET_TIME_PACKET_SIZE:
+ *
+ * The size of the packets sent between network clocks.
+ */
 #define GST_NET_TIME_PACKET_SIZE 16
 
 typedef struct _GstNetTimePacket GstNetTimePacket;
 
+/**
+ * GstNetTimePacket:
+ * @local_time: the local time when this packet was sent
+ * @remote_time: the remote time observation
+ *
+ * Content of a #GstNetTimePacket.
+ */
 struct _GstNetTimePacket {
   GstClockTime local_time;
   GstClockTime remote_time;

@@ -141,9 +141,18 @@ g_mkdir_with_parents (const gchar * pathname, int mode)
 #endif
 
 
-/* This version is copied from GLib 2.8.
+/**
+ * gst_flags_get_first_value:
+ * @flags_class: a #GFlagsClass
+ * @value: the value
+ *
+ * Returns the first GFlagsValue which is set in value.
+ *
+ * This version is copied from GLib 2.8.
  * In GLib 2.6, it didn't check for a flag value being NULL, hence it
  * hits an infinite loop in our flags serialize function
+ *
+ * Returns: the first GFlagsValue which is set in value, or NULL if none is set.
  */
 GFlagsValue *
 gst_flags_get_first_value (GFlagsClass * flags_class, guint value)
@@ -172,6 +181,16 @@ gst_flags_get_first_value (GFlagsClass * flags_class, guint value)
 
 /* Adapted from g_value_dup_object to use gst_object_ref */
 #include "gstobject.h"
+/**
+ * g_value_dup_gst_object:
+ * @value: the #GstObject value to dup
+ *
+ * Get the contents of a G_TYPE_OBJECT derived GValue, increasing its reference count.
+ * This function exists because of unsafe reference counting in old glib versions.
+ *
+ * Returns: object content of value, should be unreferenced with gst_object_unref()
+ * when no longer needed.
+ */
 GObject *
 g_value_dup_gst_object (const GValue * value)
 {

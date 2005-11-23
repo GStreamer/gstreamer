@@ -32,7 +32,6 @@ sync_cond
 thread_list
 </SECTION>
 
-
 <SECTION>
 <FILE>gstbin</FILE>
 <TITLE>GstBin</TITLE>
@@ -352,8 +351,6 @@ GST_CLOCK_BROADCAST
 GST_CLOCK_COND
 GST_CLOCK_TIMED_WAIT
 GST_CLOCK_WAIT
-GST_CLOCK_SLAVE_LOCK
-GST_CLOCK_SLAVE_UNLOCK
 gst_clock_add_observation
 gst_clock_set_master
 gst_clock_get_master
@@ -389,6 +386,8 @@ GST_TYPE_CLOCK_FLAGS
 GST_TYPE_CLOCK_RETURN
 GST_TYPE_CLOCK_TIME
 <SUBSECTION Private>
+GST_CLOCK_SLAVE_LOCK
+GST_CLOCK_SLAVE_UNLOCK
 gst_clock_get_type
 gst_clock_entry_type_get_type
 gst_clock_flags_get_type
@@ -401,8 +400,10 @@ gst_clock_return_get_type
 <TITLE>GstCompat</TITLE>
 <SUBSECTION Standard>
 <SUBSECTION Private>
+g_mkdir_with_parents
+gst_flags_get_first_value
+g_value_dup_gst_object
 </SECTION>
-
 
 <SECTION>
 <FILE>gstconfig</FILE>
@@ -1664,7 +1665,6 @@ gst_segment_clip
 gst_segment_init
 gst_segment_new
 gst_segment_free
-gst_segment_get_type
 gst_segment_set_duration
 gst_segment_set_last_stop
 gst_segment_set_newsegment
@@ -1673,6 +1673,7 @@ gst_segment_to_running_time
 gst_segment_to_stream_time
 <SUBSECTION Standard>
 GST_TYPE_SEGMENT
+gst_segment_get_type
 <SUBSECTION Private>
 </SECTION>
 

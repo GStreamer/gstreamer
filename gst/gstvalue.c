@@ -1032,6 +1032,17 @@ gst_value_set_fraction_range (GValue * value, const GValue * start,
   g_value_copy (end, &vals[1]);
 }
 
+/**
+ * gst_value_set_fraction_range_full:
+ * @value: a GValue initialized to GST_TYPE_FRACTION_RANGE
+ * @numerator_start: the numerator start of the range
+ * @denominator_start: the denominator start of the range
+ * @numerator_end: the numerator end of the range
+ * @denominator_end: the denominator end of the range
+ *
+ * Sets @value to the range specified by @numerator_start/@denominator_start
+ * and @numerator_end/@denominator_end.
+ */
 void
 gst_value_set_fraction_range_full (GValue * value,
     int numerator_start, int denominator_start,
