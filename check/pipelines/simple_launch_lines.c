@@ -103,7 +103,7 @@ GST_START_TEST (test_element_negotiation)
       GST_MESSAGE_UNKNOWN);
 
 #ifdef HAVE_LIBVISUAL
-  s = "sinesrc ! tee name=t ! alsasink t. ! audioconvert ! libvisual_lv_scope ! ffmpegcolorspace ! xvimagesink";
+  s = "audiotestsrc ! tee name=t ! alsasink t. ! audioconvert ! libvisual_lv_scope ! ffmpegcolorspace ! xvimagesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
@@ -124,23 +124,25 @@ GST_START_TEST (test_basetransform_based)
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
 
-  /* Test that ffmpegcolorspace can pick an output format that isn't passthrough without 
-   * completely specified output caps */
-  s = "videotestsrc ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! " "ffmpegcolorspace ! video/x-raw-rgb ! fakesink";
+  /* Test that ffmpegcolorspace can pick an output format that isn't
+   * passthrough without completely specified output caps */
+  s = "videotestsrc ! "
+      "video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! "
+      "ffmpegcolorspace ! video/x-raw-rgb ! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
 
-  /* Check that audioresample can pick a samplerate to use from a 
+  /* Check that audioresample can pick a samplerate to use from a
    * range that doesn't include the input */
-  s = "sinesrc ! audio/x-raw-int,width=16,depth=16,rate=8000 ! audioresample ! "
-      "audio/x-raw-int,rate=[16000,48000] ! fakesink";
+  s = "audiotestsrc ! audio/x-raw-int,width=16,depth=16,rate=8000 ! "
+      "audioresample ! audio/x-raw-int,rate=[16000,48000] ! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
 
   /* Check that audioconvert can pick a depth to use, given a width */
-  s = "sinesrc ! audio/x-raw-int,width=16,depth=16 ! audioconvert ! "
+  s = "audiotestsrc ! audio/x-raw-int,width=16,depth=16 ! audioconvert ! "
       "audio/x-raw-int,width=32 ! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
