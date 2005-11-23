@@ -3,11 +3,11 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.9.5</version>
+  <version>0.9.6</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer source release</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Good Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>asteriskh263</name>
@@ -113,6 +113,20 @@
       <class>Codec/Encoder/Network</class>
       <description>Encode MPEG audio as RTP packets (RFC 2038)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpspeexdec</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Extracts Speex audio from RTP packets</description>
+      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+    </element>
+    <element>
+      <name>rtpspeexenc</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Encoder/Network</class>
+      <description>Encodes Speex audio into a RTP packet</description>
+      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
     </element>
   </elements>
 </plugin>

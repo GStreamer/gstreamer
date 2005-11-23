@@ -3,17 +3,17 @@
   <description>Template for a video filter</description>
   <filename>../../gst/debug/.libs/libgstnavigationtest.so</filename>
   <basename>libgstnavigationtest.so</basename>
-  <version>0.9.5</version>
+  <version>0.9.6</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer source release</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Good Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>navigationtest</name>
-      <longname>Video Filter Template</longname>
-      <class>Filter/Video</class>
-      <description>Template for a video filter</description>
+      <longname>Video Navigation test</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Handle navigation events showing a black square following mouse pointer</description>
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
     </element>
   </elements>

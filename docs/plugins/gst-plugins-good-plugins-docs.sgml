@@ -26,6 +26,7 @@
     <xi:include href="xml/plugin-autodetect.xml" />
     <xi:include href="xml/plugin-avi.xml" />
     <xi:include href="xml/plugin-cacasink.xml" />
+    <xi:include href="xml/plugin-cutter.xml" />
     <xi:include href="xml/plugin-dv.xml" />
     <xi:include href="xml/plugin-effectv.xml" />
     <xi:include href="xml/plugin-esdsink.xml" />

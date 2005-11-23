@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Good Plug-ins 0.9.5 "Phone Alarm"
+GStreamer: Release notes for GStreamer Good Plug-ins 0.9.6 "Everything's Not Lost"
         
 
 The GStreamer team is petrified to announce a new release
@@ -53,17 +53,16 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * matroskamux fixes
-      * wavenc fixes
-      * cairotextoverlay ported
+      * added speex RTP payloader/depayloader
+      * ported cutter
+      * fractional framerates
+      * more video filters now use BaseTransform
 
 Bugs fixed in this release
     
-      * 315194 : Licence information inconsistency of gst-plugins-good/gst...
-      * 319731 : [matroska] SimpleBlock support for muxer and demuxer
-      * 320308 : [matroska] set timestamps for buffers with ebml elements
-      * 320920 : [osssink] tries to reuse a bad file descriptor
-      * 321136 : [matroska-mux] avoid reading from unref'ed buffer
+      * 319184 : rtspsrc: invalid read in sdp_message_parse_buffer ()
+      * 321001 : [matroskademux] should seek to nearest preceding index en...
+      * 321430 : goom fails to register on amd64
 
 Download
 
@@ -93,16 +92,14 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
       * Andy Wingo
-      * Christian Schaller
       * Edgard Lima
       * Edward Hervey
-      * Josef Zlomek
-      * Julien MOUTTE
-      * Michal Benes
+      * Jan Schmidt
+      * Julien Moutte
+      * Michael Smith
       * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Vincent Torri
       * Wim Taymans
-      * Zeeshan Ali
  

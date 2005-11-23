@@ -1,3 +1,10 @@
+=== release 0.9.6 ===
+
+2005-11-23  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.6, "Everything's Not Lost"
+
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/debug/gstnavigationtest.c: (gst_navigationtest_init):
@@ -317,8 +324,8 @@
 	* ext/mikmod/gstmikmod.c: (gst_mikmod_srcfixate):
 	* gst/goom/gstgoom.c: (gst_goom_src_negotiate):
 	* sys/osxvideo/osxvideosink.m:
-        Rename gst_caps_structure_fixate_* to gst_structure_fixate_*
-        (#322027)
+	  Rename gst_caps_structure_fixate_* to gst_structure_fixate_*
+	  (#322027)
 
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 

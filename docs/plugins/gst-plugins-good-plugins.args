@@ -3925,7 +3925,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>method</NICK>
 <BLURB>method.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>Rotate clockwise 90 degrees</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3965,7 +3965,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Fill</NICK>
 <BLURB>How to fill the borders.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Black</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4054,7 +4054,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>URI</NICK>
-<BLURB>URI in the form of udp://hostname:port.</BLURB>
+<BLURB>URI in the form of udp://multicast_group:port.</BLURB>
 <DEFAULT>"udp://0.0.0.0:4951"</DEFAULT>
 </ARG>
 
@@ -4095,7 +4095,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Type</NICK>
 <BLURB>The type of transition to use.</BLURB>
-<DEFAULT>bar_wipe_lr</DEFAULT>
+<DEFAULT>A bar moves from left to right</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4425,7 +4425,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Method</NICK>
 <BLURB>How the alpha channels should be created.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Set/adjust alpha channel</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4535,7 +4535,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>protocol</NICK>
 <BLURB>Connection Protocol to use.</BLURB>
-<DEFAULT>3</DEFAULT>
+<DEFAULT>Http Protocol (icecast 2.x)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4680,12 +4680,12 @@
 
 <ARG>
 <NAME>GstCACASink::dither</NAME>
-<TYPE>GstCACASinkDithers</TYPE>
+<TYPE>GstCACASinkDithering</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Dither Type</NICK>
 <BLURB>Set type of Dither.</BLURB>
-<DEFAULT>NONE</DEFAULT>
+<DEFAULT>No dithering</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4805,7 +4805,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Quality</NICK>
 <BLURB>Decoding quality.</BLURB>
-<DEFAULT>DV_QUALITY_BEST</DEFAULT>
+<DEFAULT>Highest quality colour decoding</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4845,7 +4845,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>driver</NICK>
 <BLURB>driver.</BLURB>
-<DEFAULT>X11</DEFAULT>
+<DEFAULT>X11 driver 1.1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -6785,7 +6785,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Quality</NICK>
 <BLURB>Speed versus compression tradeoff.</BLURB>
-<DEFAULT>5</DEFAULT>
+<DEFAULT>5 - Default</DEFAULT>
 </ARG>
 
 <ARG>
@@ -6825,7 +6825,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Background</NICK>
 <BLURB>Background type.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Checker pattern</DEFAULT>
 </ARG>
 
 <ARG>
@@ -7086,5 +7086,55 @@
 <NICK>vertical padding</NICK>
 <BLURB>Vertical padding when using top/bottom alignment.</BLURB>
 <DEFAULT>25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCutter::leaky</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Leaky</NICK>
+<BLURB>do we leak buffers when below threshold ?.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCutter::pre-length</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre-recording buffer length</NICK>
+<BLURB>Length of pre-recording buffer (in nanoseconds).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCutter::run-length</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Run length</NICK>
+<BLURB>Length of drop below threshold before cut_stop (in nanoseconds).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCutter::threshold</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>Volume threshold before trigger.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCutter::threshold-dB</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold (dB)</NICK>
+<BLURB>Volume threshold before trigger (in dB).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

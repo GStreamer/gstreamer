@@ -3,24 +3,17 @@
   <description>Cairo-based overlaying</description>
   <filename>../../ext/cairo/.libs/libgstcairo.so</filename>
   <basename>libgstcairo.so</basename>
-  <version>0.9.5</version>
+  <version>0.9.6</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer source release</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Good Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>cairotextoverlay</name>
       <longname>Text Overlay</longname>
       <class>Filter/Editor/Video</class>
       <description>Adds text strings on top of a video buffer</description>
-      <author>David Schleef &lt;ds@schleef.org&gt;</author>
-    </element>
-    <element>
-      <name>cairotimeoverlay</name>
-      <longname>Time Overlay</longname>
-      <class>Filter/Editor/Video</class>
-      <description>Overlays the time on a video stream</description>
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
     </element>
   </elements>
