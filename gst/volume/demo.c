@@ -100,7 +100,7 @@ main (int argc, char *argv[])
   if (error) {
     g_print ("pipeline could not be constructed: %s\n", error->message);
     g_print ("Please give a complete pipeline  with a 'volume' element.\n");
-    g_print ("Example: sinesrc ! volume ! %s\n", DEFAULT_AUDIOSINK);
+    g_print ("Example: audiotestsrc ! volume ! %s\n", DEFAULT_AUDIOSINK);
     g_error_free (error);
     return 1;
   }

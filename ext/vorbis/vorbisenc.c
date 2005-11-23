@@ -34,7 +34,7 @@
  * will be really small because a sine signal compresses very well.
  * </para>
  * <programlisting>
- * gst-launch -v sinesrc num-buffers=100 ! audioconvert ! vorbisenc ! oggmux ! filesink location=sinesrc.ogg
+ * gst-launch -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! vorbisenc ! oggmux ! filesink location=sine.ogg
  * </programlisting>
  * <para>
  * Record from a sound card using ALSA and encode to Ogg/Vorbis.
