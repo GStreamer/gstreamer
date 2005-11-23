@@ -1,3 +1,14 @@
+2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/aalib/gstaasink.c: (gst_aasink_fixate):
+	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_collected):
+	* gst/goom/gstgoom.c: (gst_goom_init), (gst_goom_src_setcaps),
+	(gst_goom_src_negotiate), (gst_goom_chain):
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_video_pad_setcaps):
+	* sys/osxvideo/osxvideosink.m:
+	  Fixes for API changes
+
 2005-11-23  Michael Smith <msmith@fluendo.com>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_setcaps),

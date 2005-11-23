@@ -785,7 +785,7 @@ gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
   if (GST_BUFFER_DURATION (video_frame) != GST_CLOCK_TIME_NONE) {
     frame_end = now + GST_BUFFER_DURATION (video_frame);
   } else if (overlay->fps_n > 0) {
-    frame_end = now + gst_util_clock_time_scale (GST_SECOND,
+    frame_end = now + gst_util_uint64_scale_int (GST_SECOND,
         overlay->fps_d, overlay->fps_n);
   } else {
     /* magic value, does not really matter since texts

@@ -236,17 +236,12 @@ static void
 gst_aasink_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
-  GValue fps = { 0 };
 
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
-
-  g_value_init (&fps, GST_TYPE_FRACTION);
-  gst_value_set_fraction (&fps, 30, 1);
-  gst_structure_fixate_field_nearest_fraction (structure, "framerate", &fps);
-  g_value_unset (&fps);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
 }
 
 static gboolean

@@ -222,22 +222,16 @@ gst_goom_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstGoom *goom;
   GstStructure *structure;
-  const GValue *fps;
 
   goom = GST_GOOM (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (structure, "width", &goom->width) ||
-      !gst_structure_get_int (structure, "height", &goom->height))
+      !gst_structure_get_int (structure, "height", &goom->height) ||
+      !gst_structure_get_fraction (structure, "framerate", &goom->fps_n,
+          &goom->fps_d))
     return FALSE;
-
-  fps = gst_structure_get_value (structure, "framerate");
-  if (fps == NULL || !GST_VALUE_HOLDS_FRACTION (fps))
-    return FALSE;
-
-  goom->fps_n = gst_value_get_fraction_numerator (fps);
-  goom->fps_d = gst_value_get_fraction_denominator (fps);
 
   goom_set_resolution (goom->width, goom->height);
 
@@ -250,7 +244,6 @@ gst_goom_src_negotiate (GstGoom * goom)
   GstCaps *othercaps, *target, *intersect;
   GstStructure *structure;
   const GstCaps *templ;
-  GValue fps = { 0 };
 
   templ = gst_pad_get_pad_template_caps (goom->srcpad);
 
@@ -272,11 +265,7 @@ gst_goom_src_negotiate (GstGoom * goom)
   structure = gst_caps_get_structure (target, 0);
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
-
-  g_value_init (&fps, GST_TYPE_FRACTION);
-  gst_value_set_fraction (&fps, 30, 1);
-  gst_structure_fixate_field_nearest_fraction (structure, "framerate", &fps);
-  g_value_unset (&fps);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
 
   gst_pad_set_caps (goom->srcpad, target);
   gst_caps_unref (target);
@@ -365,7 +354,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
     GstClockTimeDiff frame_duration;
     gint i;
 
-    frame_duration = gst_util_clock_time_scale (GST_SECOND, goom->fps_d,
+    frame_duration = gst_util_uint64_scale_int (GST_SECOND, goom->fps_d,
         goom->fps_n);
     data = (const guint16 *) gst_adapter_peek (goom->adapter, bytesperread);
 
