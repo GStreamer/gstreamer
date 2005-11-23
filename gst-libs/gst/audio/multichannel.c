@@ -166,17 +166,17 @@ gst_audio_get_channel_positions (GstStructure * str)
     return pos;
   }
   g_return_val_if_fail (pos_val_arr != NULL, NULL);
-  g_return_val_if_fail (gst_value_list_get_size (pos_val_arr) == channels,
+  g_return_val_if_fail (gst_value_array_get_size (pos_val_arr) == channels,
       NULL);
   for (n = 0; n < channels; n++) {
-    t = G_VALUE_TYPE (gst_value_list_get_value (pos_val_arr, n));
+    t = G_VALUE_TYPE (gst_value_array_get_value (pos_val_arr, n));
     g_return_val_if_fail (t == GST_TYPE_AUDIO_CHANNEL_POSITION, NULL);
   }
 
   /* ... and fill array */
   pos = g_new (GstAudioChannelPosition, channels);
   for (n = 0; n < channels; n++) {
-    pos_val_entry = gst_value_list_get_value (pos_val_arr, n);
+    pos_val_entry = gst_value_array_get_value (pos_val_arr, n);
     pos[n] = g_value_get_enum (pos_val_entry);
   }
 
@@ -223,7 +223,7 @@ gst_audio_set_channel_positions (GstStructure * str,
   g_value_init (&pos_val_arr, GST_TYPE_ARRAY);
   for (n = 0; n < channels; n++) {
     g_value_set_enum (&pos_val_entry, pos[n]);
-    gst_value_list_append_value (&pos_val_arr, &pos_val_entry);
+    gst_value_array_append_value (&pos_val_arr, &pos_val_entry);
   }
   g_value_unset (&pos_val_entry);
 
@@ -284,7 +284,7 @@ gst_audio_set_structure_channel_positions_list (GstStructure * str,
       g_value_set_enum (&pos_val_entry, pos[c]);
       gst_value_list_append_value (&pos_val_list, &pos_val_entry);
     }
-    gst_value_list_append_value (&pos_val_arr, &pos_val_list);
+    gst_value_array_append_value (&pos_val_arr, &pos_val_list);
     g_value_unset (&pos_val_list);
   }
   g_value_unset (&pos_val_entry);
@@ -471,10 +471,10 @@ gst_audio_fixate_channel_positions (GstStructure * str)
     return pos;
   }
   g_return_val_if_fail (pos_val_arr != NULL, NULL);
-  g_return_val_if_fail (gst_value_list_get_size (pos_val_arr) == channels,
+  g_return_val_if_fail (gst_value_array_get_size (pos_val_arr) == channels,
       NULL);
   for (n = 0; n < channels; n++) {
-    t = G_VALUE_TYPE (gst_value_list_get_value (pos_val_arr, n));
+    t = G_VALUE_TYPE (gst_value_array_get_value (pos_val_arr, n));
     g_return_val_if_fail (t == GST_TYPE_LIST ||
         t == GST_TYPE_AUDIO_CHANNEL_POSITION, NULL);
   }
@@ -507,7 +507,7 @@ gst_audio_fixate_channel_positions (GstStructure * str)
       if (pos[n] != GST_AUDIO_CHANNEL_POSITION_INVALID)
         continue;
 
-      pos_val_entry = gst_value_list_get_value (pos_val_arr, n);
+      pos_val_entry = gst_value_array_get_value (pos_val_arr, n);
       t = G_VALUE_TYPE (pos_val_entry);
       if (t == GST_TYPE_LIST) {
         /* This algorhythm is suboptimal. */
@@ -522,7 +522,7 @@ gst_audio_fixate_channel_positions (GstStructure * str)
             if (opt.num_opt[0] != -1) {
               gint c1;
 
-              pos_val_entry = gst_value_list_get_value (pos_val_arr,
+              pos_val_entry = gst_value_array_get_value (pos_val_arr,
                   opt.num_opt[0]);
               if (G_VALUE_TYPE (pos_val_entry) == GST_TYPE_LIST) {
                 for (c1 = 0; c1 < gst_value_list_get_size (pos_val_entry); c1++) {
@@ -535,7 +535,7 @@ gst_audio_fixate_channel_positions (GstStructure * str)
                 }
                 pos_val = gst_value_list_get_value (pos_val_entry, c);
               }
-              pos_val_entry = gst_value_list_get_value (pos_val_arr, n);
+              pos_val_entry = gst_value_array_get_value (pos_val_arr, n);
             }
 
             /* and save values */

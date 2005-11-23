@@ -1,3 +1,13 @@
+2005-11-23  msmith,,,  <set EMAIL_ADDRESS environment variable>
+
+	* gst-libs/gst/audio/multichannel.c:
+	(gst_audio_get_channel_positions),
+	(gst_audio_set_channel_positions),
+	(gst_audio_set_structure_channel_positions_list),
+	(gst_audio_fixate_channel_positions):
+	  Use gst_value_array_*() functions on value arrays, not
+	  gst_value_list_*().
+
 2005-11-23  Edward Hervey  <edward@fluendo.com>
 
 	* autogen.sh:
