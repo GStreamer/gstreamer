@@ -73,9 +73,13 @@ struct _GstDfbVideoSink {
   /* Our element stuff */
   GstVideoSink videosink;
   
+  GMutex *pool_lock;
   GSList *buffer_pool;
   
-  gdouble framerate;
+  /* Framerate numerator and denominator */
+  gint fps_n;
+  gint fps_d;
+  
   gint video_width, video_height; /* size of incoming video */
   gint out_width, out_height;
   

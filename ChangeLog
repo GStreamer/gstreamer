@@ -1,3 +1,19 @@
+2005-11-23  Julien MOUTTE  <julien@moutte.net>
+
+	* docs/plugins/gst-plugins-bad-plugins-decl.txt:
+	* ext/directfb/dfb-example.c: (main):
+	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_surface_destroy),
+	(gst_dfbvideosink_event_thread), (gst_dfbvideosink_setup),
+	(gst_dfbvideosink_getcaps), (gst_dfbvideosink_setcaps),
+	(gst_dfbvideosink_change_state), (gst_dfbvideosink_get_times),
+	(gst_dfbvideosink_bufferpool_clear),
+	(gst_dfbvideosink_buffer_alloc), (gst_dfbsurface_finalize),
+	(gst_dfbvideosink_navigation_send_event),
+	(gst_dfbvideosink_finalize), (gst_dfbvideosink_init),
+	(gst_dfbvideosink_class_init):
+	* ext/directfb/dfbvideosink.h: Use fraction for framerate, various
+	fixes.
+
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_base_init),

@@ -107,11 +107,11 @@ static GstStaticPadTemplate gst_dfbvideosink_sink_template_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
-        "framerate = (double) [ 0.0, MAX ], "
+        "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], "
         "height = (int) [ 1, MAX ]; "
         "video/x-raw-yuv, "
-        "framerate = (double) [ 0.0, MAX ], "
+        "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
@@ -275,18 +275,12 @@ gst_dfbvideosink_surface_destroy (GstDfbVideoSink * dfbvideosink,
     GST_BUFFER (surface)->malloc_data = NULL;
   }
 
-  if (!surface->dfbvideosink) {
-    goto no_sink;
+  if (surface->dfbvideosink) {
+    /* Release the ref to our sink */
+    surface->dfbvideosink = NULL;
+    gst_object_unref (dfbvideosink);
   }
 
-  /* Release the ref to our sink */
-  surface->dfbvideosink = NULL;
-  gst_object_unref (dfbvideosink);
-
-  return;
-
-no_sink:
-  GST_WARNING ("no sink found in surface");
   return;
 }
 
@@ -346,18 +340,11 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
           gst_navigation_send_mouse_event (GST_NAVIGATION (dfbvideosink),
               "mouse-button-release", event.input.button, x, y);
         } else if (event.input.type == DIET_AXISMOTION) {
-          /* Mouse moves have no abs nor rel values */
-          if ((event.input.flags & DIEF_AXISABS) ||
-              (event.input.flags & DIEF_AXISREL)) {
-            GST_DEBUG ("joypad move ?");
-          } else {
-            gint x, y;
+          gint x, y;
 
-            dfbvideosink->layer->GetCursorPosition (dfbvideosink->layer, &x,
-                &y);
-            gst_navigation_send_mouse_event (GST_NAVIGATION (dfbvideosink),
-                "mouse-move", 0, x, y);
-          }
+          dfbvideosink->layer->GetCursorPosition (dfbvideosink->layer, &x, &y);
+          gst_navigation_send_mouse_event (GST_NAVIGATION (dfbvideosink),
+              "mouse-move", 0, x, y);
         } else {
           GST_WARNING ("unhandled event type %d", event.input.type);
         }
@@ -507,7 +494,8 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
   dfbvideosink->video_height = 0;
   dfbvideosink->out_width = 0;
   dfbvideosink->out_height = 0;
-  dfbvideosink->framerate = 0.0;
+  dfbvideosink->fps_d = 0;
+  dfbvideosink->fps_n = 0;
   dfbvideosink->hw_scaling = FALSE;
   dfbvideosink->backbuffer = FALSE;
   dfbvideosink->pixel_format = DSPF_UNKNOWN;
@@ -1045,7 +1033,7 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink)
     gst_structure_set (structure,
         "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "framerate", GST_TYPE_DOUBLE_RANGE, 0.0, G_MAXDOUBLE, NULL);
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
   }
 
   GST_DEBUG ("returning our caps %" GST_PTR_FORMAT, caps);
@@ -1061,6 +1049,7 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstStructure *structure;
   gboolean res, result = FALSE;
   gint video_width, video_height;
+  const GValue *framerate;
   DFBSurfacePixelFormat pixel_format = DSPF_UNKNOWN;
 
   dfbvideosink = GST_DFBVIDEOSINK (bsink);
@@ -1068,17 +1057,20 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   res = gst_structure_get_int (structure, "width", &video_width);
   res &= gst_structure_get_int (structure, "height", &video_height);
-  res &= gst_structure_get_double (structure, "framerate",
-      &dfbvideosink->framerate);
+  framerate = gst_structure_get_value (structure, "framerate");
+  res &= (framerate != NULL);
   if (!res) {
     goto beach;
   }
 
+  dfbvideosink->fps_n = gst_value_get_fraction_numerator (framerate);
+  dfbvideosink->fps_d = gst_value_get_fraction_denominator (framerate);
+
   pixel_format = gst_dfbvideosink_get_format_from_caps (caps);
 
-  GST_DEBUG ("setcaps called, %dx%d %s video at %f fps", video_width,
+  GST_DEBUG ("setcaps called, %dx%d %s video at %d/%d fps", video_width,
       video_height, gst_dfbvideosink_get_format_name (pixel_format),
-      dfbvideosink->framerate);
+      dfbvideosink->fps_n, dfbvideosink->fps_d);
 
   /* Try to adapt the video mode to the video geometry */
   if (dfbvideosink->dfb) {
@@ -1142,7 +1134,7 @@ static GstStateChangeReturn
 gst_dfbvideosink_change_state (GstElement * element, GstStateChange transition)
 {
   GstDfbVideoSink *dfbvideosink;
-  GstStateChangeReturn ret;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   dfbvideosink = GST_DFBVIDEOSINK (element);
 
@@ -1166,10 +1158,20 @@ gst_dfbvideosink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      dfbvideosink->framerate = 0;
+      dfbvideosink->fps_d = 0;
+      dfbvideosink->fps_n = 0;
       dfbvideosink->video_width = 0;
       dfbvideosink->video_height = 0;
 
@@ -1183,9 +1185,9 @@ gst_dfbvideosink_change_state (GstElement * element, GstStateChange transition)
         gst_dfbvideosink_cleanup (dfbvideosink);
       }
       break;
+    default:
+      break;
   }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
 }
@@ -1203,8 +1205,9 @@ gst_dfbvideosink_get_times (GstBaseSink * bsink, GstBuffer * buf,
     if (GST_BUFFER_DURATION_IS_VALID (buf)) {
       *end = *start + GST_BUFFER_DURATION (buf);
     } else {
-      if (dfbvideosink->framerate > 0) {
-        *end = *start + GST_SECOND / dfbvideosink->framerate;
+      if (dfbvideosink->fps_n > 0) {
+        *end =
+            *start + (GST_SECOND * dfbvideosink->fps_d) / dfbvideosink->fps_n;
       }
     }
   }
@@ -1374,6 +1377,7 @@ beach:
 static void
 gst_dfbvideosink_bufferpool_clear (GstDfbVideoSink * dfbvideosink)
 {
+  g_mutex_lock (dfbvideosink->pool_lock);
   while (dfbvideosink->buffer_pool) {
     GstDfbSurface *surface = dfbvideosink->buffer_pool->data;
 
@@ -1381,6 +1385,7 @@ gst_dfbvideosink_bufferpool_clear (GstDfbVideoSink * dfbvideosink)
         dfbvideosink->buffer_pool);
     gst_dfbvideosink_surface_destroy (dfbvideosink, surface);
   }
+  g_mutex_unlock (dfbvideosink->pool_lock);
 }
 
 /* For every buffer request we create a custom buffer containing and
@@ -1439,7 +1444,7 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
     gst_dfbvideosink_center_rect (src, dst, &result, TRUE);
 
-    if (width != result.w && height != result.h) {
+    if (width != result.w || height != result.h) {
       GstPad *peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (dfbvideosink));
 
       if (!GST_IS_PAD (peer)) {
@@ -1474,6 +1479,7 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
 alloc:
   /* Inspect our buffer pool */
+  g_mutex_lock (dfbvideosink->pool_lock);
   while (dfbvideosink->buffer_pool) {
     surface = (GstDfbSurface *) dfbvideosink->buffer_pool->data;
 
@@ -1513,12 +1519,12 @@ alloc:
       gst_buffer_set_caps (GST_BUFFER (surface), caps);
     }
   }
+  g_mutex_unlock (dfbvideosink->pool_lock);
 
   gst_caps_unref (desired_caps);
 
   *buf = GST_BUFFER (surface);
 
-beach:
   return ret;
 }
 
@@ -1532,8 +1538,10 @@ gst_dfbsurface_finalize (GstDfbSurface * surface)
   g_return_if_fail (surface != NULL);
 
   dfbvideosink = surface->dfbvideosink;
-  if (!dfbvideosink)
-    goto no_sink;
+  if (!dfbvideosink) {
+    GST_WARNING ("no sink found");
+    goto beach;
+  }
 
   /* If our geometry changed we can't reuse that image. */
   if ((surface->width != dfbvideosink->video_width) ||
@@ -1548,13 +1556,13 @@ gst_dfbsurface_finalize (GstDfbSurface * surface)
     GST_DEBUG ("recycling image in pool");
     /* need to increment the refcount again to recycle */
     gst_buffer_ref (GST_BUFFER (surface));
+    g_mutex_lock (dfbvideosink->pool_lock);
     dfbvideosink->buffer_pool = g_slist_prepend (dfbvideosink->buffer_pool,
         surface);
+    g_mutex_unlock (dfbvideosink->pool_lock);
   }
-  return;
 
-no_sink:
-  GST_WARNING ("no sink found");
+beach:
   return;
 }
 
@@ -1670,7 +1678,7 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
 
   pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (dfbvideosink));
 
-  if (GST_IS_PAD (pad)) {
+  if (GST_IS_PAD (pad) && GST_IS_EVENT (event)) {
     gst_pad_send_event (pad, event);
 
     gst_object_unref (pad);
@@ -1725,19 +1733,46 @@ gst_dfbvideosink_get_property (GObject * object, guint prop_id,
 /*              Init & Class init              */
 /*                                             */
 /* =========================================== */
+static void
+gst_dfbvideosink_finalize (GObject * object)
+{
+  GstDfbVideoSink *dfbvideosink;
+
+  dfbvideosink = GST_DFBVIDEOSINK (object);
+
+  if (dfbvideosink->pool_lock) {
+    g_mutex_free (dfbvideosink->pool_lock);
+    dfbvideosink->pool_lock = NULL;
+  }
+  if (dfbvideosink->setup) {
+    gst_dfbvideosink_cleanup (dfbvideosink);
+  }
+}
 
 static void
 gst_dfbvideosink_init (GstDfbVideoSink * dfbvideosink)
 {
-  dfbvideosink->pixel_format = DSPF_UNKNOWN;
-  dfbvideosink->video_height = 0;
-  dfbvideosink->video_width = 0;
-  dfbvideosink->framerate = 0;
+  dfbvideosink->pool_lock = g_mutex_new ();
+  dfbvideosink->buffer_pool = NULL;
+  dfbvideosink->video_height = dfbvideosink->out_width = 0;
+  dfbvideosink->video_width = dfbvideosink->out_height = 0;
+  dfbvideosink->fps_d = 0;
+  dfbvideosink->fps_n = 0;
 
   dfbvideosink->dfb = NULL;
+  dfbvideosink->vmodes = NULL;
+  dfbvideosink->layer_id = 0;
   dfbvideosink->layer = NULL;
-  dfbvideosink->ext_surface = NULL;
   dfbvideosink->primary = NULL;
+  dfbvideosink->event_buffer = NULL;
+  dfbvideosink->event_thread = NULL;
+
+  dfbvideosink->ext_surface = NULL;
+
+  dfbvideosink->pixel_format = DSPF_UNKNOWN;
+
+  dfbvideosink->hw_scaling = FALSE;
+  dfbvideosink->backbuffer = FALSE;
   dfbvideosink->setup = FALSE;
   dfbvideosink->running = FALSE;
 }
@@ -1766,6 +1801,7 @@ gst_dfbvideosink_class_init (GstDfbVideoSinkClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_VIDEO_SINK);
 
+  gobject_class->finalize = gst_dfbvideosink_finalize;
   gobject_class->set_property = gst_dfbvideosink_set_property;
   gobject_class->get_property = gst_dfbvideosink_get_property;
 

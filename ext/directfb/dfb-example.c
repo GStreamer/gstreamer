@@ -70,6 +70,9 @@ main (int argc, char *argv[])
   /* Release elements and stop playback */
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
+  /* Free the main loop */
+  g_main_loop_unref (loop);
+
   /* Release DirectFB context and surface */
   primary->Release (primary);
   dfb->Release (dfb);
