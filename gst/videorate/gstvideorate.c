@@ -263,18 +263,14 @@ gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   gboolean ret = TRUE;
   GstPad *otherpad, *opeer;
-  const GValue *rate;
   gint rate_numerator, rate_denominator;
 
   videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
-  rate = gst_structure_get_value (structure, "framerate");
-  if (!rate)
+  if (!gst_structure_get_fraction (structure, "framerate",
+          &rate_numerator, &rate_denominator))
     goto done;
-
-  rate_numerator = gst_value_get_fraction_numerator (rate);
-  rate_denominator = gst_value_get_fraction_denominator (rate);
 
   if (pad == videorate->srcpad) {
     videorate->to_rate_numerator = rate_numerator;
@@ -324,12 +320,10 @@ gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
 
       /* and fixate */
       gst_structure_fixate_field_nearest_fraction (structure, "framerate",
-          rate);
+          rate_numerator, rate_denominator);
 
-      rate = gst_structure_get_value (structure, "framerate");
-
-      rate_numerator = gst_value_get_fraction_numerator (rate);
-      rate_denominator = gst_value_get_fraction_denominator (rate);
+      gst_structure_get_fraction (structure, "framerate",
+          &rate_numerator, &rate_denominator);
 
       if (otherpad == videorate->srcpad) {
         videorate->to_rate_numerator = rate_numerator;
@@ -510,7 +504,7 @@ gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
         if (videorate->to_rate_numerator) {
           videorate->next_ts =
               videorate->first_ts +
-              gst_util_clock_time_scale (videorate->out * GST_SECOND,
+              gst_util_uint64_scale_int (videorate->out * GST_SECOND,
               videorate->to_rate_denominator, videorate->to_rate_numerator);
           GST_BUFFER_DURATION (outbuf) =
               videorate->next_ts - GST_BUFFER_TIMESTAMP (outbuf);

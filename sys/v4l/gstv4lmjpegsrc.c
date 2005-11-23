@@ -330,7 +330,7 @@ gst_v4lmjpegsrc_src_convert (GstPad * pad,
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_TIME:
-          *dest_value = src_value * gst_util_clock_time_scale (GST_SECOND,
+          *dest_value = src_value * gst_util_uint64_scale_int (GST_SECOND,
               gst_value_get_fraction_denominator (&fps),
               gst_value_get_fraction_numerator (&fps));
           break;
@@ -363,7 +363,7 @@ gst_v4lmjpegsrc_src_query (GstPad * pad,
     case GST_QUERY_POSITION:
       switch (*format) {
         case GST_FORMAT_TIME:
-          *value = v4lmjpegsrc->handled * gst_util_clock_time_scale (GST_SECOND,
+          *value = v4lmjpegsrc->handled * gst_util_uint64_scale_int (GST_SECOND,
               gst_value_get_fraction_denominator (&fps),
               gst_value_get_fraction_numerator (&fps));
           break;
@@ -519,11 +519,11 @@ gst_v4lmjpegsrc_get (GstPad * pad)
 
   if (v4lmjpegsrc->use_fixed_fps) {
     g_value_init (&fps, GST_VALUE_FRACTION);
-    duration = gst_util_clock_time_scale (GST_SECOND,
+    duration = gst_util_uint64_scale_int (GST_SECOND,
         gst_value_get_fraction_denominator (&fps),
         gst_value_get_fraction_numerator (&fps));
     cur_frame_time =
-        gst_util_clock_time_scale (v4lmjpegsrc->handled * GST_SECOND,
+        gst_util_uint64_scale_int (v4lmjpegsrc->handled * GST_SECOND,
         gst_value_get_fraction_denominator (&fps),
         gst_value_get_fraction_numerator (&fps));
 

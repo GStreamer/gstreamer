@@ -244,11 +244,11 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstTheoraEnc *enc = GST_THEORA_ENC (gst_pad_get_parent (pad));
   const GValue *par;
-  const GValue *framerate;
+  gint fps_n, fps_d;
 
   gst_structure_get_int (structure, "width", &enc->width);
   gst_structure_get_int (structure, "height", &enc->height);
-  framerate = gst_structure_get_value (structure, "framerate");
+  gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d);
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
   theora_info_init (&enc->info);
@@ -271,9 +271,8 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info.offset_x = enc->offset_x;
   enc->info.offset_y = enc->offset_y;
 
-  enc->info.fps_numerator = gst_value_get_fraction_numerator (framerate);
-  enc->info.fps_denominator = gst_value_get_fraction_denominator (framerate);
-
+  enc->info.fps_numerator = fps_n;
+  enc->info.fps_denominator = fps_d;
   if (par) {
     enc->info.aspect_numerator = gst_value_get_fraction_numerator (par);
     enc->info.aspect_denominator = gst_value_get_fraction_denominator (par);

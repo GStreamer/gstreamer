@@ -713,7 +713,7 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
   GST_BUFFER_TIMESTAMP (buf) -= GST_ELEMENT (v4lsrc)->base_time;
   /* FIXME: this is a most ghetto timestamp/duration */
 
-  GST_BUFFER_DURATION (buf) = gst_util_clock_time_scale (GST_SECOND,
+  GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (GST_SECOND,
       fps_n, fps_d);
 
   /* the negotiate() method already set caps on the source pad */

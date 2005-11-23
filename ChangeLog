@@ -1,3 +1,19 @@
+2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/libvisual/visual.c: (gst_visual_src_setcaps), (get_buffer),
+	(gst_visual_chain):
+	* ext/theora/theoraenc.c: (theora_enc_sink_setcaps):
+	* gst/videorate/gstvideorate.c: (gst_videorate_setcaps),
+	(gst_videorate_chain):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_videotestsrc_src_fixate), (gst_videotestsrc_create):
+	* sys/v4l/gstv4lmjpegsrc.c: (gst_v4lmjpegsrc_get_fps),
+	(gst_v4lmjpegsrc_src_convert), (gst_v4lmjpegsrc_src_query),
+	(gst_v4lmjpegsrc_get), (gst_v4lmjpegsrc_getcaps):
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_get_fps),
+	(gst_v4lsrc_get_fps_list), (gst_v4lsrc_buffer_new):
+	  Updates for API changes
+
 2005-11-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

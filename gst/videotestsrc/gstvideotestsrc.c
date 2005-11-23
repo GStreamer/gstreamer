@@ -173,16 +173,12 @@ static void
 gst_videotestsrc_src_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
-  GValue value = { 0 };
-
-  g_value_init (&value, GST_TYPE_FRACTION);
-  gst_value_set_fraction (&value, 30, 1);
 
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
-  gst_structure_fixate_field_nearest_fraction (structure, "framerate", &value);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
 }
 
 static void
@@ -459,13 +455,13 @@ gst_videotestsrc_create (GstPushSrc * psrc, GstBuffer ** buffer)
 
   GST_BUFFER_TIMESTAMP (outbuf) = src->timestamp_offset + src->running_time;
   if (src->rate_numerator != 0) {
-    GST_BUFFER_DURATION (outbuf) = gst_util_clock_time_scale (GST_SECOND,
+    GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (GST_SECOND,
         src->rate_denominator, src->rate_numerator);
   }
 
   src->n_frames++;
   if (src->rate_numerator != 0) {
-    src->running_time = gst_util_clock_time_scale (src->n_frames * GST_SECOND,
+    src->running_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
         src->rate_denominator, src->rate_numerator);
   }
 
