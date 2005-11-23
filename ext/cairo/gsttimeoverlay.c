@@ -27,179 +27,47 @@
 #include "config.h"
 #endif
 
-/*#define DEBUG_ENABLED */
 #include <gsttimeoverlay.h>
+
 #include <string.h>
 #include <math.h>
 
 #include <cairo.h>
 
+#include <gst/video/video.h>
 
-/* GstTimeoverlay signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
+static GstElementDetails timeoverlay_details =
+GST_ELEMENT_DETAILS ("Time Overlay",
+    "Filter/Editor/Video",
+    "Overlays the time on a video stream",
+    "David Schleef <ds@schleef.org>");
 
-enum
-{
-  ARG_0
-      /* FILL ME */
-};
+static GstStaticPadTemplate gst_timeoverlay_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    );
 
-static void gst_timeoverlay_base_init (gpointer g_class);
-static void gst_timeoverlay_class_init (gpointer g_class, gpointer class_data);
-static void gst_timeoverlay_init (GTypeInstance * instance, gpointer g_class);
+static GstStaticPadTemplate gst_timeoverlay_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    );
 
-static void gst_timeoverlay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_timeoverlay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
-static void gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest,
-    void *src);
-static void gst_timeoverlay_setup (GstVideofilter * videofilter);
-
-GType
-gst_timeoverlay_get_type (void)
-{
-  static GType timeoverlay_type = 0;
-
-  if (!timeoverlay_type) {
-    static const GTypeInfo timeoverlay_info = {
-      sizeof (GstTimeoverlayClass),
-      gst_timeoverlay_base_init,
-      NULL,
-      gst_timeoverlay_class_init,
-      NULL,
-      NULL,
-      sizeof (GstTimeoverlay),
-      0,
-      gst_timeoverlay_init,
-    };
-
-    timeoverlay_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
-        "GstTimeoverlay", &timeoverlay_info, 0);
-  }
-  return timeoverlay_type;
-}
-
-static GstVideofilterFormat gst_timeoverlay_formats[] = {
-  {"I420", 12, gst_timeoverlay_planar411,},
-};
-
+static GstVideofilterClass *parent_class = NULL;
 
 static void
-gst_timeoverlay_base_init (gpointer g_class)
+gst_timeoverlay_update_font_height (GstTimeoverlay * timeoverlay)
 {
-  static GstElementDetails timeoverlay_details =
-      GST_ELEMENT_DETAILS ("Time Overlay",
-      "Filter/Editor/Video",
-      "Overlays the time on a video stream",
-      "David Schleef <ds@schleef.org>");
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
-  int i;
-
-  gst_element_class_set_details (element_class, &timeoverlay_details);
-
-  for (i = 0; i < G_N_ELEMENTS (gst_timeoverlay_formats); i++) {
-    gst_videofilter_class_add_format (videofilter_class,
-        gst_timeoverlay_formats + i);
-  }
-
-  gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
-}
-
-static void
-gst_timeoverlay_class_init (gpointer g_class, gpointer class_data)
-{
-  GObjectClass *gobject_class;
-  GstVideofilterClass *videofilter_class;
-
-  gobject_class = G_OBJECT_CLASS (g_class);
-  videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
-
-#if 0
-  g_object_class_install_property (gobject_class, ARG_METHOD,
-      g_param_spec_enum ("method", "method", "method",
-          GST_TYPE_TIMEOVERLAY_METHOD, GST_TIMEOVERLAY_METHOD_1,
-          G_PARAM_READWRITE));
-#endif
-
-  gobject_class->set_property = gst_timeoverlay_set_property;
-  gobject_class->get_property = gst_timeoverlay_get_property;
-
-  videofilter_class->setup = gst_timeoverlay_setup;
-}
-
-static void
-gst_timeoverlay_init (GTypeInstance * instance, gpointer g_class)
-{
-  GstTimeoverlay *timeoverlay = GST_TIMEOVERLAY (instance);
-  GstVideofilter *videofilter;
-
-  GST_DEBUG ("gst_timeoverlay_init");
-
-  videofilter = GST_VIDEOFILTER (timeoverlay);
-
-  /* do stuff */
-}
-
-static void
-gst_timeoverlay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstTimeoverlay *src;
-
-  g_return_if_fail (GST_IS_TIMEOVERLAY (object));
-  src = GST_TIMEOVERLAY (object);
-
-  GST_DEBUG ("gst_timeoverlay_set_property");
-  switch (prop_id) {
-#if 0
-    case ARG_METHOD:
-      src->method = g_value_get_enum (value);
-      break;
-#endif
-    default:
-      break;
-  }
-}
-
-static void
-gst_timeoverlay_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstTimeoverlay *src;
-
-  g_return_if_fail (GST_IS_TIMEOVERLAY (object));
-  src = GST_TIMEOVERLAY (object);
-
-  switch (prop_id) {
-#if 0
-    case ARG_METHOD:
-      g_value_set_enum (value, src->method);
-      break;
-#endif
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_timeoverlay_update_font_height (GstVideofilter * videofilter)
-{
-  GstTimeoverlay *timeoverlay = GST_TIMEOVERLAY (videofilter);
   gint width, height;
   cairo_surface_t *font_surface;
   cairo_t *font_cairo;
   cairo_font_extents_t font_extents;
 
-  width = gst_videofilter_get_input_width (videofilter);
-  height = gst_videofilter_get_input_height (videofilter);
+  width = timeoverlay->width;
+  height = timeoverlay->height;
 
   font_surface =
       cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
@@ -216,15 +84,58 @@ gst_timeoverlay_update_font_height (GstVideofilter * videofilter)
   font_cairo = NULL;
 }
 
-static void
-gst_timeoverlay_setup (GstVideofilter * videofilter)
+static gboolean
+gst_timeoverlay_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
+    GstCaps * outcaps)
 {
-  GstTimeoverlay *timeoverlay;
+  GstTimeoverlay *filter = GST_TIMEOVERLAY (btrans);
+  GstStructure *structure;
+  gboolean ret = FALSE;
 
-  g_return_if_fail (GST_IS_TIMEOVERLAY (videofilter));
-  timeoverlay = GST_TIMEOVERLAY (videofilter);
+  structure = gst_caps_get_structure (incaps, 0);
 
-  gst_timeoverlay_update_font_height (videofilter);
+  if (gst_structure_get_int (structure, "width", &filter->width) &&
+      gst_structure_get_int (structure, "height", &filter->height)) {
+    gst_timeoverlay_update_font_height (filter);
+    ret = TRUE;
+  }
+
+  return ret;
+}
+
+/* Useful macros */
+#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
+#define GST_VIDEO_I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
+#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
+
+#define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
+#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
+#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+
+#define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+
+static gboolean
+gst_timeoverlay_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
+    guint * size)
+{
+  GstTimeoverlay *filter;
+  GstStructure *structure;
+  gboolean ret = FALSE;
+  gint width, height;
+
+  filter = GST_TIMEOVERLAY (btrans);
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_get_int (structure, "width", &width) &&
+      gst_structure_get_int (structure, "height", &height)) {
+    *size = GST_VIDEO_I420_SIZE (width, height);
+    ret = TRUE;
+    GST_DEBUG_OBJECT (filter, "our frame size is %d bytes (%dx%d)", *size,
+        width, height);
+  }
+
+  return ret;
 }
 
 static char *
@@ -250,8 +161,9 @@ gst_timeoverlay_print_smpte_time (guint64 time)
 }
 
 
-static void
-gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
+static GstFlowReturn
+gst_timeoverlay_transform (GstBaseTransform * trans, GstBuffer * in,
+    GstBuffer * out)
 {
   GstTimeoverlay *timeoverlay;
   int width;
@@ -261,15 +173,20 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   int i, j;
   unsigned char *image;
   cairo_text_extents_t extents;
-
+  gpointer dest, src;
   cairo_surface_t *font_surface;
   cairo_t *text_cairo;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  g_return_if_fail (GST_IS_TIMEOVERLAY (videofilter));
-  timeoverlay = GST_TIMEOVERLAY (videofilter);
+  timeoverlay = GST_TIMEOVERLAY (trans);
 
-  width = gst_videofilter_get_input_width (videofilter);
-  height = gst_videofilter_get_input_height (videofilter);
+  gst_buffer_stamp (out, in);
+
+  src = GST_BUFFER_DATA (in);
+  dest = GST_BUFFER_DATA (out);
+
+  width = timeoverlay->width;
+  height = timeoverlay->height;
 
   /* create surface for font rendering */
   /* FIXME: preparation of the surface could also be done once when settings
@@ -292,9 +209,7 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   cairo_fill (text_cairo);
   cairo_restore (text_cairo);
 
-  string =
-      gst_timeoverlay_print_smpte_time (GST_BUFFER_TIMESTAMP (videofilter->
-          in_buf));
+  string = gst_timeoverlay_print_smpte_time (GST_BUFFER_TIMESTAMP (in));
   cairo_save (text_cairo);
   cairo_select_font_face (text_cairo, "monospace", 0, 0);
   cairo_set_font_size (text_cairo, 20);
@@ -303,12 +218,6 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   cairo_move_to (text_cairo, 0, timeoverlay->text_height - 2);
   cairo_show_text (text_cairo, string);
   g_free (string);
-#if 0
-  cairo_text_path (timeoverlay->cr, string);
-  cairo_set_rgb_color (timeoverlay->cr, 1, 1, 1);
-  cairo_set_line_width (timeoverlay->cr, 1.0);
-  cairo_stroke (timeoverlay->cr);
-#endif
 
   cairo_restore (text_cairo);
 
@@ -317,7 +226,7 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   if (b_width > width)
     b_width = width;
 
-  memcpy (dest, src, videofilter->from_buf_size);
+  memcpy (dest, src, GST_BUFFER_SIZE (in));
   for (i = 0; i < timeoverlay->text_height; i++) {
     for (j = 0; j < b_width; j++) {
       ((unsigned char *) dest)[i * width + j] = image[(i * width + j) * 4 + 0];
@@ -332,4 +241,67 @@ gst_timeoverlay_planar411 (GstVideofilter * videofilter, void *dest, void *src)
   cairo_destroy (text_cairo);
   text_cairo = NULL;
   g_free (image);
+
+  return ret;
+}
+
+static void
+gst_timeoverlay_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &timeoverlay_details);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_timeoverlay_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_timeoverlay_src_template));
+}
+
+static void
+gst_timeoverlay_class_init (gpointer klass, gpointer class_data)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+  GstBaseTransformClass *trans_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
+  trans_class = (GstBaseTransformClass *) klass;
+
+  parent_class = g_type_class_peek_parent (klass);
+
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_timeoverlay_set_caps);
+  trans_class->get_unit_size =
+      GST_DEBUG_FUNCPTR (gst_timeoverlay_get_unit_size);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_timeoverlay_transform);
+}
+
+static void
+gst_timeoverlay_init (GTypeInstance * instance, gpointer g_class)
+{
+}
+
+GType
+gst_timeoverlay_get_type (void)
+{
+  static GType timeoverlay_type = 0;
+
+  if (!timeoverlay_type) {
+    static const GTypeInfo timeoverlay_info = {
+      sizeof (GstTimeoverlayClass),
+      gst_timeoverlay_base_init,
+      NULL,
+      gst_timeoverlay_class_init,
+      NULL,
+      NULL,
+      sizeof (GstTimeoverlay),
+      0,
+      gst_timeoverlay_init,
+    };
+
+    timeoverlay_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+        "GstTimeoverlay", &timeoverlay_info, 0);
+  }
+  return timeoverlay_type;
 }

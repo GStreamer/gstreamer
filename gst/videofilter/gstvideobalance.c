@@ -27,7 +27,6 @@
 #include "config.h"
 #endif
 
-/*#define DEBUG_ENABLED */
 #include "gstvideobalance.h"
 #ifdef HAVE_LIBOIL
 #include <liboil/liboil.h>
@@ -38,12 +37,6 @@
 #include <gst/colorbalance/colorbalance.h>
 
 /* GstVideobalance signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 enum
 {
   ARG_0,
@@ -116,11 +109,6 @@ gst_videobalance_get_type (void)
   }
   return videobalance_type;
 }
-
-static GstVideofilterFormat gst_videobalance_formats[] = {
-  {"I420", 12, gst_videobalance_planar411,},
-};
-
 
 static void
 gst_videobalance_base_init (gpointer g_class)

@@ -43,10 +43,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <gstvideofilter.h>
+
 #include <math.h>
 #include <string.h>
-#include <gst/gst.h>
-#include <gstvideofilter.h>
+
+#include <gst/video/video.h>
 
 #define GST_TYPE_REVTV \
   (gst_revtv_get_type())
@@ -78,15 +81,6 @@ struct _GstRevTV
 struct _GstRevTVClass
 {
   GstVideofilterClass parent_class;
-
-  void (*reset) (GstElement * element);
-};
-
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
 };
 
 enum
@@ -97,132 +91,87 @@ enum
   ARG_GAIN
 };
 
-static void gst_revtv_base_init (gpointer g_class);
-static void gst_revtv_class_init (gpointer g_class, gpointer class_data);
-static void gst_revtv_init (GTypeInstance * instance, gpointer g_class);
+GType gst_revtv_get_type (void);
 
-static void gst_revtv_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_revtv_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static void gst_revtv_setup (GstVideofilter * videofilter);
-static void gst_revtv_rgb32 (GstVideofilter * videofilter, void *d, void *s);
+static GstElementDetails gst_revtv_details = GST_ELEMENT_DETAILS ("RevTV",
+    "Filter/Effect/Video",
+    "A video waveform monitor for each line of video processed",
+    "Wim Taymans <wim.taymans@chello.be>");
 
-/* static guint gst_revtv_signals[LAST_SIGNAL] = { 0 }; */
+static GstStaticPadTemplate gst_revtv_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
+    );
 
-GType
-gst_revtv_get_type (void)
+static GstStaticPadTemplate gst_revtv_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
+    );
+
+static GstVideofilterClass *parent_class = NULL;
+
+static gboolean
+gst_revtv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
+    GstCaps * outcaps)
 {
-  static GType revtv_type = 0;
+  GstRevTV *filter = GST_REVTV (btrans);
+  GstStructure *structure;
+  gboolean ret = FALSE;
 
-  if (!revtv_type) {
-    static const GTypeInfo revtv_info = {
-      sizeof (GstRevTVClass),
-      gst_revtv_base_init,
-      NULL,
-      (GClassInitFunc) gst_revtv_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRevTV),
-      0,
-      (GInstanceInitFunc) gst_revtv_init,
-    };
+  structure = gst_caps_get_structure (incaps, 0);
 
-    revtv_type =
-        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstRevTV", &revtv_info,
-        0);
-  }
-  return revtv_type;
-}
-
-static GstVideofilterFormat gst_revtv_formats[] = {
-  {"RGB ", 32, gst_revtv_rgb32, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000,
-      0xff000000}
-};
-
-static void
-gst_revtv_base_init (gpointer g_class)
-{
-  /* elementfactory information */
-  static GstElementDetails gst_revtv_details = GST_ELEMENT_DETAILS ("RevTV",
-      "Filter/Effect/Video",
-      "A video waveform monitor for each line of video processed",
-      "Wim Taymans <wim.taymans@chello.be>");
-
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
-  int i;
-
-  gst_element_class_set_details (element_class, &gst_revtv_details);
-
-  for (i = 0; i < G_N_ELEMENTS (gst_revtv_formats); i++) {
-    gst_videofilter_class_add_format (videofilter_class, gst_revtv_formats + i);
+  if (gst_structure_get_int (structure, "width", &filter->width) &&
+      gst_structure_get_int (structure, "height", &filter->height)) {
+    ret = TRUE;
   }
 
-  gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
+  return ret;
 }
 
-static void
-gst_revtv_class_init (gpointer klass, gpointer class_data)
+static gboolean
+gst_revtv_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
+    guint * size)
 {
-  GObjectClass *gobject_class;
-  GstVideofilterClass *videofilter_class;
+  GstRevTV *filter;
+  GstStructure *structure;
+  gboolean ret = FALSE;
+  gint width, height;
 
-  gobject_class = G_OBJECT_CLASS (klass);
-  videofilter_class = GST_VIDEOFILTER_CLASS (klass);
+  filter = GST_REVTV (btrans);
 
-  gobject_class->set_property = gst_revtv_set_property;
-  gobject_class->get_property = gst_revtv_get_property;
+  structure = gst_caps_get_structure (caps, 0);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELAY,
-      g_param_spec_int ("delay", "Delay", "Delay in frames between updates",
-          1, 100, 1, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LINESPACE,
-      g_param_spec_int ("linespace", "Linespace", "Control line spacing",
-          1, 100, 6, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GAIN,
-      g_param_spec_int ("gain", "Gain", "Control gain",
-          1, 200, 50, G_PARAM_READWRITE));
+  if (gst_structure_get_int (structure, "width", &width) &&
+      gst_structure_get_int (structure, "height", &height)) {
+    *size = width * height * 32 / 8;
+    ret = TRUE;
+    GST_DEBUG_OBJECT (filter, "our frame size is %d bytes (%dx%d)", *size,
+        width, height);
+  }
 
-  videofilter_class->setup = gst_revtv_setup;
+  return ret;
 }
 
-static void
-gst_revtv_init (GTypeInstance * instance, gpointer g_class)
-{
-  GstRevTV *restv = GST_REVTV (instance);
-
-  restv->vgrabtime = 1;
-  restv->vgrab = 0;
-  restv->linespace = 6;
-  restv->vscale = 50;
-}
-
-static void
-gst_revtv_setup (GstVideofilter * videofilter)
-{
-  GstRevTV *revtv;
-
-  g_return_if_fail (GST_IS_REVTV (videofilter));
-  revtv = GST_REVTV (videofilter);
-
-  revtv->width = gst_videofilter_get_input_width (videofilter);
-  revtv->height = gst_videofilter_get_input_height (videofilter);
-}
-
-static void
-gst_revtv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
+static GstFlowReturn
+gst_revtv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
 {
   GstRevTV *filter;
   guint32 *src, *dest;
   gint width, height;
   guint32 *nsrc;
   gint y, x, R, G, B, yval;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  filter = GST_REVTV (videofilter);
+  filter = GST_REVTV (trans);
 
-  src = (guint32 *) s;
-  dest = (guint32 *) d;
+  gst_buffer_stamp (out, in);
+
+  src = (guint32 *) GST_BUFFER_DATA (in);
+  dest = (guint32 *) GST_BUFFER_DATA (out);
 
   width = filter->width;
   height = filter->height;
@@ -247,6 +196,8 @@ gst_revtv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
       }
     }
   }
+
+  return ret;
 }
 
 static void
@@ -298,4 +249,84 @@ gst_revtv_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_revtv_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_revtv_details);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_revtv_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_revtv_src_template));
+}
+
+static void
+gst_revtv_class_init (gpointer klass, gpointer class_data)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+  GstBaseTransformClass *trans_class;
+
+  gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
+  trans_class = (GstBaseTransformClass *) klass;
+
+  parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->set_property = gst_revtv_set_property;
+  gobject_class->get_property = gst_revtv_get_property;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELAY,
+      g_param_spec_int ("delay", "Delay", "Delay in frames between updates",
+          1, 100, 1, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LINESPACE,
+      g_param_spec_int ("linespace", "Linespace", "Control line spacing",
+          1, 100, 6, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GAIN,
+      g_param_spec_int ("gain", "Gain", "Control gain",
+          1, 200, 50, G_PARAM_READWRITE));
+
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_revtv_set_caps);
+  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_revtv_get_unit_size);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_revtv_transform);
+}
+
+static void
+gst_revtv_init (GTypeInstance * instance, gpointer g_class)
+{
+  GstRevTV *restv = GST_REVTV (instance);
+
+  restv->vgrabtime = 1;
+  restv->vgrab = 0;
+  restv->linespace = 6;
+  restv->vscale = 50;
+}
+
+GType
+gst_revtv_get_type (void)
+{
+  static GType revtv_type = 0;
+
+  if (!revtv_type) {
+    static const GTypeInfo revtv_info = {
+      sizeof (GstRevTVClass),
+      gst_revtv_base_init,
+      NULL,
+      (GClassInitFunc) gst_revtv_class_init,
+      NULL,
+      NULL,
+      sizeof (GstRevTV),
+      0,
+      (GInstanceInitFunc) gst_revtv_init,
+    };
+
+    revtv_type =
+        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstRevTV", &revtv_info,
+        0);
+  }
+  return revtv_type;
 }

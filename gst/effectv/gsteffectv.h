@@ -31,6 +31,3 @@ GType gst_shagadelictv_get_type (void);
 GType gst_vertigotv_get_type (void);
 GType gst_revtv_get_type (void);
 GType gst_quarktv_get_type (void);
-
-extern GstStaticPadTemplate gst_effectv_sink_template;
-extern GstStaticPadTemplate gst_effectv_src_template;

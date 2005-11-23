@@ -21,11 +21,7 @@
 #ifndef __GST_NAVIGATIONTEST_H__
 #define __GST_NAVIGATIONTEST_H__
 
-
-#include <gst/gst.h>
-
 #include "gstvideofilter.h"
-
 
 G_BEGIN_DECLS
 
@@ -43,11 +39,21 @@ G_BEGIN_DECLS
 typedef struct _GstNavigationtest GstNavigationtest;
 typedef struct _GstNavigationtestClass GstNavigationtestClass;
 
+typedef struct
+{
+  gdouble x;
+  gdouble y;
+  gint images_left;
+  guint8 cy, cu, cv;
+} ButtonClick;
+
 struct _GstNavigationtest {
   GstVideofilter videofilter;
 
-  double x;
-  double y;
+  gint width, height;
+  
+  GValue framerate;
+  gdouble x, y;
 
   GSList *clicks;
 };
@@ -61,4 +67,3 @@ GType gst_navigationtest_get_type(void);
 G_END_DECLS
 
 #endif /* __GST_NAVIGATIONTEST_H__ */
-

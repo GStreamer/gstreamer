@@ -1,3 +1,75 @@
+2005-11-23  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/cairo/gsttimeoverlay.c: (gst_timeoverlay_update_font_height),
+	(gst_timeoverlay_set_caps), (gst_timeoverlay_get_unit_size),
+	(gst_timeoverlay_transform), (gst_timeoverlay_base_init),
+	(gst_timeoverlay_class_init), (gst_timeoverlay_init),
+	(gst_timeoverlay_get_type):
+	* ext/cairo/gsttimeoverlay.h:
+	* gst/debug/Makefile.am:
+	* gst/debug/gstnavigationtest.c:
+	(gst_navigationtest_handle_src_event),
+	(gst_navigationtest_get_unit_size), (gst_navigationtest_set_caps),
+	(gst_navigationtest_transform), (gst_navigationtest_change_state),
+	(gst_navigationtest_base_init), (gst_navigationtest_class_init),
+	(gst_navigationtest_init), (gst_navigationtest_get_type),
+	(plugin_init):
+	* gst/debug/gstnavigationtest.h:
+	* gst/effectv/Makefile.am:
+	* gst/effectv/gstaging.c: (gst_agingtv_set_caps),
+	(gst_agingtv_get_unit_size), (gst_agingtv_transform),
+	(gst_agingtv_base_init), (gst_agingtv_class_init),
+	(gst_agingtv_init), (gst_agingtv_get_type):
+	* gst/effectv/gstdice.c: (gst_dicetv_set_caps),
+	(gst_dicetv_get_unit_size), (gst_dicetv_transform),
+	(gst_dicetv_base_init), (gst_dicetv_class_init), (gst_dicetv_init),
+	(gst_dicetv_get_type):
+	* gst/effectv/gstedge.c: (gst_edgetv_set_caps),
+	(gst_edgetv_get_unit_size), (gst_edgetv_transform),
+	(gst_edgetv_base_init), (gst_edgetv_class_init), (gst_edgetv_init),
+	(gst_edgetv_get_type):
+	* gst/effectv/gsteffectv.c:
+	* gst/effectv/gsteffectv.h:
+	* gst/effectv/gstquark.c: (gst_quarktv_set_caps),
+	(gst_quarktv_get_unit_size), (fastrand), (gst_quarktv_transform),
+	(gst_quarktv_change_state), (gst_quarktv_base_init),
+	(gst_quarktv_class_init), (gst_quarktv_init),
+	(gst_quarktv_get_type):
+	* gst/effectv/gstrev.c: (gst_revtv_set_caps),
+	(gst_revtv_get_unit_size), (gst_revtv_transform),
+	(gst_revtv_base_init), (gst_revtv_class_init), (gst_revtv_init),
+	(gst_revtv_get_type):
+	* gst/effectv/gstshagadelic.c: (gst_shagadelictv_set_caps),
+	(gst_shagadelictv_get_unit_size), (gst_shagadelictv_transform),
+	(gst_shagadelictv_base_init), (gst_shagadelictv_class_init),
+	(gst_shagadelictv_init), (gst_shagadelictv_get_type):
+	* gst/effectv/gstvertigo.c: (gst_vertigotv_set_caps),
+	(gst_vertigotv_get_unit_size), (gst_vertigotv_transform),
+	(gst_vertigotv_base_init), (gst_vertigotv_class_init),
+	(gst_vertigotv_init), (gst_vertigotv_get_type):
+	* gst/effectv/gstwarp.c: (gst_warptv_set_caps),
+	(gst_warptv_get_unit_size), (gst_warptv_transform),
+	(gst_warptv_base_init), (gst_warptv_class_init), (gst_warptv_init),
+	(gst_warptv_get_type):
+	* gst/videofilter/Makefile.am:
+	* gst/videofilter/gstvideobalance.c:
+	* gst/videofilter/gstvideobalance.h:
+	* gst/videofilter/gstvideofilter.c: (gst_videofilter_get_type),
+	(gst_videofilter_class_init), (gst_videofilter_init):
+	* gst/videofilter/gstvideofilter.h:
+	* gst/videofilter/gstvideoflip.c: (gst_videoflip_set_caps),
+	(gst_videoflip_transform_caps), (gst_videoflip_get_unit_size),
+	(gst_videoflip_flip), (gst_videoflip_transform),
+	(gst_videoflip_handle_src_event), (gst_videoflip_set_property),
+	(gst_videoflip_base_init), (gst_videoflip_class_init),
+	(gst_videoflip_init), (plugin_init), (gst_videoflip_get_type):
+	* gst/videofilter/gstvideoflip.h: VideoFilter inherits from
+	BaseTransform, it's just a place holder for now and every video
+	effect plugin has been ported to use BaseTransform features 
+	directly. QuarkTV was fixed too (was broken), navigationtest works
+	and best for the end, videoflip converts navigation events depending
+	on flip method ! Fixes #320953
+
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/aalib/gstaasink.c: (gst_aasink_fixate):

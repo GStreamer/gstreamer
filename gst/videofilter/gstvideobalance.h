@@ -21,11 +21,7 @@
 #ifndef __GST_VIDEOBALANCE_H__
 #define __GST_VIDEOBALANCE_H__
 
-
-#include <gst/gst.h>
-
 #include "gstvideofilter.h"
-
 
 G_BEGIN_DECLS
 

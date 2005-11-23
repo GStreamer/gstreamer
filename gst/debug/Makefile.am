@@ -14,8 +14,12 @@ libgstefence_la_LIBADD = $(GST_LIBS)
 libgstefence_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 libgstnavigationtest_la_SOURCES = gstnavigationtest.c
-libgstnavigationtest_la_CFLAGS = $(GST_CFLAGS) -I$(top_srcdir)/gst/videofilter
-libgstnavigationtest_la_LIBADD = $(GST_LIBS) $(top_builddir)/gst/videofilter/libgstvideofilter-@GST_MAJORMINOR@.la
+libgstnavigationtest_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
+				 $(GST_PLUGINS_BASE_CFLAGS) \
+				 -I$(top_srcdir)/gst/videofilter
+libgstnavigationtest_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) \
+	$(top_builddir)/gst/videofilter/libgstvideofilter-@GST_MAJORMINOR@.la
 libgstnavigationtest_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
  
 libgstdebug_la_SOURCES = \

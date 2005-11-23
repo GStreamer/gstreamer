@@ -21,12 +21,10 @@
 #ifndef __GST_TIMEOVERLAY_H__
 #define __GST_TIMEOVERLAY_H__
 
-
 #include <gst/gst.h>
 #include <cairo.h>
 
 #include "gstvideofilter.h"
-
 
 G_BEGIN_DECLS
 
@@ -47,6 +45,8 @@ typedef struct _GstTimeoverlayClass GstTimeoverlayClass;
 struct _GstTimeoverlay {
   GstVideofilter videofilter;
 
+  gint width, height;
+  
   cairo_surface_t *surface;
   cairo_t *cr;
   int text_height;
@@ -62,4 +62,3 @@ GType gst_timeoverlay_get_type(void);
 G_END_DECLS
 
 #endif /* __GST_TIMEOVERLAY_H__ */
-

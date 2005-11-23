@@ -25,10 +25,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <gstvideofilter.h>
+
 #include <math.h>
 #include <string.h>
-#include <gst/gst.h>
-#include <gstvideofilter.h>
+
+#include <gst/video/video.h>
 
 #define GST_TYPE_SHAGADELICTV \
   (gst_shagadelictv_get_type())
@@ -64,135 +67,81 @@ struct _GstShagadelicTVClass
   GstVideofilterClass parent_class;
 };
 
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-};
-
-static void gst_shagadelictv_base_init (gpointer g_class);
-static void gst_shagadelictv_class_init (gpointer g_class, gpointer class_data);
-static void gst_shagadelictv_init (GTypeInstance * instance, gpointer g_class);
+GType gst_shagadelictv_get_type (void);
 
 static void gst_shagadelic_initialize (GstShagadelicTV * filter);
 
-static void gst_shagadelictv_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_shagadelictv_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static void gst_shagadelictv_setup (GstVideofilter * videofilter);
-static void gst_shagadelictv_rgb32 (GstVideofilter * videofilter, void *d,
-    void *s);
+static GstElementDetails shagadelictv_details =
+GST_ELEMENT_DETAILS ("ShagadelicTV",
+    "Filter/Effect/Video",
+    "Oh behave, ShagedelicTV makes images shagadelic!",
+    "Wim Taymans <wim.taymans@chello.be>");
 
-/*static guint gst_shagadelictv_signals[LAST_SIGNAL] = { 0 }; */
+static GstStaticPadTemplate gst_shagadelictv_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
+    );
 
-GType
-gst_shagadelictv_get_type (void)
+static GstStaticPadTemplate gst_shagadelictv_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
+    );
+
+static GstVideofilterClass *parent_class = NULL;
+
+static gboolean
+gst_shagadelictv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
+    GstCaps * outcaps)
 {
-  static GType shagadelictv_type = 0;
+  GstShagadelicTV *filter = GST_SHAGADELICTV (btrans);
+  GstStructure *structure;
+  gboolean ret = FALSE;
 
-  if (!shagadelictv_type) {
-    static const GTypeInfo shagadelictv_info = {
-      sizeof (GstShagadelicTVClass),
-      gst_shagadelictv_base_init,
-      NULL,
-      (GClassInitFunc) gst_shagadelictv_class_init,
-      NULL,
-      NULL,
-      sizeof (GstShagadelicTV),
-      0,
-      (GInstanceInitFunc) gst_shagadelictv_init,
-    };
+  structure = gst_caps_get_structure (incaps, 0);
 
-    shagadelictv_type =
-        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstShagadelicTV",
-        &shagadelictv_info, 0);
-  }
-  return shagadelictv_type;
-}
+  if (gst_structure_get_int (structure, "width", &filter->width) &&
+      gst_structure_get_int (structure, "height", &filter->height)) {
+    gint area = filter->width * filter->height;
 
-static GstVideofilterFormat gst_shagadelictv_formats[] = {
-  {"RGB ", 32, gst_shagadelictv_rgb32, 24, G_BIG_ENDIAN, 0x0000ff00, 0x00ff0000,
-      0xff000000}
-};
+    g_free (filter->ripple);
+    g_free (filter->spiral);
 
-static void
-gst_shagadelictv_base_init (gpointer g_class)
-{
-  /* elementfactory information */
-  static GstElementDetails gst_shagadelictv_details =
-      GST_ELEMENT_DETAILS ("ShagadelicTV",
-      "Filter/Effect/Video",
-      "Oh behave, ShagedelicTV makes images shagadelic!",
-      "Wim Taymans <wim.taymans@chello.be>");
+    filter->ripple = (gchar *) g_malloc (area * 4);
+    filter->spiral = (gchar *) g_malloc (area);
 
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
-  int i;
-
-  gst_element_class_set_details (element_class, &gst_shagadelictv_details);
-
-  for (i = 0; i < G_N_ELEMENTS (gst_shagadelictv_formats); i++) {
-    gst_videofilter_class_add_format (videofilter_class,
-        gst_shagadelictv_formats + i);
+    gst_shagadelic_initialize (filter);
+    ret = TRUE;
   }
 
-  gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
+  return ret;
 }
 
-static void
-gst_shagadelictv_class_init (gpointer g_class, gpointer class_data)
-{
-  GObjectClass *gobject_class;
-  GstVideofilterClass *videofilter_class;
-
-  gobject_class = G_OBJECT_CLASS (g_class);
-  videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
-
-  gobject_class->set_property = gst_shagadelictv_set_property;
-  gobject_class->get_property = gst_shagadelictv_get_property;
-
-  videofilter_class->setup = gst_shagadelictv_setup;
-}
-
-static void
-gst_shagadelictv_init (GTypeInstance * instance, gpointer g_class)
-{
-  GstShagadelicTV *filter = GST_SHAGADELICTV (instance);
-
-  filter->ripple = NULL;
-  filter->spiral = NULL;
-}
-
-static void
-gst_shagadelictv_setup (GstVideofilter * videofilter)
+static gboolean
+gst_shagadelictv_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
+    guint * size)
 {
   GstShagadelicTV *filter;
-  int width = gst_videofilter_get_input_width (videofilter);
-  int height = gst_videofilter_get_input_height (videofilter);
-  int area;
+  GstStructure *structure;
+  gboolean ret = FALSE;
+  gint width, height;
 
-  g_return_if_fail (GST_IS_SHAGADELICTV (videofilter));
-  filter = GST_SHAGADELICTV (videofilter);
+  filter = GST_SHAGADELICTV (btrans);
 
-  filter->width = width;
-  filter->height = height;
+  structure = gst_caps_get_structure (caps, 0);
 
-  area = filter->width * filter->height;
+  if (gst_structure_get_int (structure, "width", &width) &&
+      gst_structure_get_int (structure, "height", &height)) {
+    *size = width * height * 32 / 8;
+    ret = TRUE;
+    GST_DEBUG_OBJECT (filter, "our frame size is %d bytes (%dx%d)", *size,
+        width, height);
+  }
 
-  g_free (filter->ripple);
-  g_free (filter->spiral);
-
-  filter->ripple = (gchar *) g_malloc (area * 4);
-  filter->spiral = (gchar *) g_malloc (area);
-
-  gst_shagadelic_initialize (filter);
+  return ret;
 }
 
 static unsigned int
@@ -261,8 +210,9 @@ gst_shagadelic_initialize (GstShagadelicTV * filter)
   filter->phase = 0;
 }
 
-static void
-gst_shagadelictv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
+static GstFlowReturn
+gst_shagadelictv_transform (GstBaseTransform * trans, GstBuffer * in,
+    GstBuffer * out)
 {
   GstShagadelicTV *filter;
   guint32 *src, *dest;
@@ -270,11 +220,14 @@ gst_shagadelictv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
   guint32 v;
   guchar r, g, b;
   gint width, height;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  filter = GST_SHAGADELICTV (videofilter);
+  filter = GST_SHAGADELICTV (trans);
 
-  src = (guint32 *) s;
-  dest = (guint32 *) d;
+  gst_buffer_stamp (out, in);
+
+  src = (guint32 *) GST_BUFFER_DATA (in);
+  dest = (guint32 *) GST_BUFFER_DATA (out);
 
   width = filter->width;
   height = filter->height;
@@ -310,37 +263,72 @@ gst_shagadelictv_rgb32 (GstVideofilter * videofilter, void *d, void *s)
   filter->ry += filter->rvy;
   filter->bx += filter->bvx;
   filter->by += filter->bvy;
+
+  return ret;
 }
 
 static void
-gst_shagadelictv_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
+gst_shagadelictv_base_init (gpointer g_class)
 {
-  GstShagadelicTV *filter;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  g_return_if_fail (GST_IS_SHAGADELICTV (object));
+  gst_element_class_set_details (element_class, &shagadelictv_details);
 
-  filter = GST_SHAGADELICTV (object);
-
-  switch (prop_id) {
-    default:
-      break;
-  }
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_shagadelictv_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_shagadelictv_src_template));
 }
 
 static void
-gst_shagadelictv_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+gst_shagadelictv_class_init (gpointer klass, gpointer class_data)
 {
-  GstShagadelicTV *filter;
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+  GstBaseTransformClass *trans_class;
 
-  g_return_if_fail (GST_IS_SHAGADELICTV (object));
+  gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
+  trans_class = (GstBaseTransformClass *) klass;
 
-  filter = GST_SHAGADELICTV (object);
+  parent_class = g_type_class_peek_parent (klass);
 
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_shagadelictv_set_caps);
+  trans_class->get_unit_size =
+      GST_DEBUG_FUNCPTR (gst_shagadelictv_get_unit_size);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_shagadelictv_transform);
+}
+
+static void
+gst_shagadelictv_init (GTypeInstance * instance, gpointer g_class)
+{
+  GstShagadelicTV *filter = GST_SHAGADELICTV (instance);
+
+  filter->ripple = NULL;
+  filter->spiral = NULL;
+}
+
+GType
+gst_shagadelictv_get_type (void)
+{
+  static GType shagadelictv_type = 0;
+
+  if (!shagadelictv_type) {
+    static const GTypeInfo shagadelictv_info = {
+      sizeof (GstShagadelicTVClass),
+      gst_shagadelictv_base_init,
+      NULL,
+      (GClassInitFunc) gst_shagadelictv_class_init,
+      NULL,
+      NULL,
+      sizeof (GstShagadelicTV),
+      0,
+      (GInstanceInitFunc) gst_shagadelictv_init,
+    };
+
+    shagadelictv_type =
+        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstShagadelicTV",
+        &shagadelictv_info, 0);
   }
+  return shagadelictv_type;
 }

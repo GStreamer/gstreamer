@@ -17,15 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_VIDEOFLIP_H__
 #define __GST_VIDEOFLIP_H__
 
-
-#include <gst/gst.h>
-
 #include "gstvideofilter.h"
-
 
 G_BEGIN_DECLS
 
@@ -37,7 +32,7 @@ typedef enum {
   GST_VIDEOFLIP_METHOD_HORIZ,
   GST_VIDEOFLIP_METHOD_VERT,
   GST_VIDEOFLIP_METHOD_TRANS,
-  GST_VIDEOFLIP_METHOD_OTHER,
+  GST_VIDEOFLIP_METHOD_OTHER
 } GstVideoflipMethod;
 
 #define GST_TYPE_VIDEOFLIP \
@@ -56,7 +51,10 @@ typedef struct _GstVideoflipClass GstVideoflipClass;
 
 struct _GstVideoflip {
   GstVideofilter videofilter;
-
+  
+  gint from_width, from_height;
+  gint to_width, to_height;
+  
   GstVideoflipMethod method;
 };
 
@@ -69,4 +67,3 @@ GType gst_videoflip_get_type(void);
 G_END_DECLS
 
 #endif /* __GST_VIDEOFLIP_H__ */
-
