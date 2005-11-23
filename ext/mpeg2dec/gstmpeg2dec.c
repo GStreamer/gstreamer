@@ -43,9 +43,10 @@ GST_DEBUG_CATEGORY_STATIC (mpeg2dec_debug);
 #define GST_CAT_DEFAULT (mpeg2dec_debug)
 
 /* table with framerates expressed as fractions */
-static gdouble fpss[] = { 24.0 / 1.001, 24.0, 25.0,
-  30.0 / 1.001, 30.0, 50.0,
-  60.0 / 1.001, 60.0, 0
+static gint fpss[][2] = { {24000, 1001},
+{24, 1}, {25, 1}, {30000, 1001},
+{30, 1}, {50, 1}, {60000, 1001},
+{60, 1}, {0, 1}
 };
 
 /* frame periods */
@@ -77,6 +78,8 @@ enum
 /*
  * We can't use fractions in static pad templates, so
  * we do something manual...
+ * FIXME: This is no longer true. We could use a normal pad template
+ * now
  */
 static GstPadTemplate *
 src_templ (void)
@@ -103,9 +106,9 @@ src_templ (void)
     structure = gst_caps_get_structure (caps, 0);
 
     g_value_init (&list, GST_TYPE_LIST);
-    g_value_init (&fps, G_TYPE_DOUBLE);
-    for (n = 0; fpss[n] != 0; n++) {
-      g_value_set_double (&fps, fpss[n]);
+    g_value_init (&fps, GST_TYPE_FRACTION);
+    for (n = 0; fpss[n][0] != 0; n++) {
+      gst_value_set_fraction (&fps, fpss[n][0], fpss[n][1]);
       gst_value_list_append_value (&list, &fps);
     }
     gst_structure_set_value (structure, "framerate", &list);
@@ -510,7 +513,7 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
       "height", G_TYPE_INT, mpeg2dec->height,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, mpeg2dec->pixel_width,
       mpeg2dec->pixel_height,
-      "framerate", G_TYPE_DOUBLE, mpeg2dec->frame_rate, NULL);
+      "framerate", GST_TYPE_FRACTION, mpeg2dec->fps_n, mpeg2dec->fps_d, NULL);
 
   gst_pad_set_caps (mpeg2dec->srcpad, caps);
   gst_caps_unref (caps);
@@ -536,15 +539,17 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   /* find framerate */
   for (i = 0; i < 9; i++) {
     if (info->sequence->frame_period == frame_periods[i]) {
-      mpeg2dec->frame_rate = fpss[i];
+      mpeg2dec->fps_n = fpss[i][0];
+      mpeg2dec->fps_d = fpss[i][1];
     }
   }
   mpeg2dec->frame_period = info->sequence->frame_period * GST_USECOND / 27;
 
   GST_DEBUG_OBJECT (mpeg2dec,
-      "sequence flags: %d, frame period: %d (%g), frame rate: %g",
+      "sequence flags: %d, frame period: %d (%g), frame rate: %d/%d",
       info->sequence->flags, info->sequence->frame_period,
-      (double) (mpeg2dec->frame_period) / GST_SECOND, mpeg2dec->frame_rate);
+      (double) (mpeg2dec->frame_period) / GST_SECOND, mpeg2dec->fps_n,
+      mpeg2dec->fps_d);
   GST_DEBUG_OBJECT (mpeg2dec, "profile: %02x, colour_primaries: %d",
       info->sequence->profile_level_id, info->sequence->colour_primaries);
   GST_DEBUG_OBJECT (mpeg2dec, "transfer chars: %d, matrix coef: %d",
@@ -911,7 +916,6 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
       }
       ret = gst_pad_event_default (pad, event);
       break;
-
     default:
       ret = gst_pad_event_default (pad, event);
       break;

@@ -1,3 +1,11 @@
+2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (src_templ),
+	(gst_mpeg2dec_negotiate_format), (handle_sequence),
+	(gst_mpeg2dec_sink_event):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	Use fractional framerates
+
 2005-11-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_set_clock):
