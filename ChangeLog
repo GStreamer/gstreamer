@@ -1,3 +1,12 @@
+2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/Makefile.am:
+	* check/elements/audiotestsrc.c: (setup_audiotestsrc),
+	(cleanup_audiotestsrc), (GST_START_TEST), (audiotestsrc_suite),
+	(main):
+	  add a test for audiotestsrc, testing all waves.  Even seems
+	  leak-free at first glance, nice job Stefan
+
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* po/af.po:

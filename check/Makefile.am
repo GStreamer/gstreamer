@@ -30,13 +30,13 @@ endif
 check_PROGRAMS = \
 	elements/audioconvert \
 	elements/audioresample \
+	elements/audiotestsrc \
 	elements/volume \
 	generic/states \
         pipelines/simple_launch_lines \
 	clocks/selection \
 	$(check_vorbis)
 
-# tests to fix leaks in
 VALGRIND_TO_FIX = \
 	elements/audioresample \
 	generic/states \
