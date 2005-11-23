@@ -25,3 +25,6 @@ include $(top_srcdir)/common/release.mak
 
 check-valgrind:
 	@true
+
+check-torture:
+	@true
