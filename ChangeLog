@@ -1,3 +1,10 @@
+2005-11-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init), (gst_base_audio_sink_set_clock),
+	(gst_base_audio_sink_render), (gst_base_audio_sink_change_state):
+	Fix for calibration API change.
+
 2005-11-23  msmith,,,  <set EMAIL_ADDRESS environment variable>
 
 	* gst-libs/gst/audio/multichannel.c:

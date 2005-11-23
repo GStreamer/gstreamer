@@ -420,6 +420,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   guint samples;
   gint bps;
   gdouble crate;
+  GstClockTime crate_num;
+  GstClockTime crate_denom;
   GstClockTime cinternal, cexternal;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
@@ -463,10 +465,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     goto out_of_segment;
 
   gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
-      &crate);
-  GST_DEBUG_OBJECT (sink,
-      "internal %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", rate %g",
-      cinternal, cexternal, crate);
+      &crate_num, &crate_denom);
 
   /* bring buffer timestamp to stream time */
   render_time = render_diff;
@@ -504,6 +503,11 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
 no_sync:
+  crate = ((gdouble) crate_num) / crate_denom;
+  GST_DEBUG_OBJECT (sink,
+      "internal %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", rate %g",
+      cinternal, cexternal, crate);
+
   /* clip length based on rate */
   samples = MIN (samples, samples / (crate * ABS (bsink->segment.rate)));
 
@@ -594,17 +598,18 @@ gst_base_audio_sink_change_state (GstElement * element,
       /* FIXME, this is not yet accurate enough for smooth playback */
       if (gst_clock_get_master (sink->provided_clock)) {
         GstClockTime time;
-        gdouble rate;
+        GstClockTime rate_num, rate_denom;
 
         time = gst_clock_get_internal_time (sink->provided_clock);
 
         GST_DEBUG_OBJECT (sink, "time: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (time));
 
-        gst_clock_get_calibration (sink->provided_clock, NULL, NULL, &rate);
+        gst_clock_get_calibration (sink->provided_clock, NULL, NULL, &rate_num,
+            &rate_denom);
         /* Does not work yet. */
         gst_clock_set_calibration (sink->provided_clock,
-            time, element->base_time, rate);
+            time, element->base_time, rate_num, rate_denom);
       }
       break;
     }
