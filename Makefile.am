@@ -44,3 +44,6 @@ include $(top_srcdir)/common/release.mak
 
 check-valgrind:
 	cd check && make check-valgrind
+
+check-torture:
+	cd check && make check-torture
