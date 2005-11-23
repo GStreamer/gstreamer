@@ -15,3 +15,6 @@ include $(top_srcdir)/common/po.mak
 
 check-valgrind:
 	@true
+
+check-torture:
+	@true
