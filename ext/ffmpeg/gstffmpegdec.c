@@ -848,7 +848,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           if (ffmpegdec->context->time_base.num != 0 &&
               ffmpegdec->context->time_base.den != 0) {
             GST_BUFFER_DURATION (outbuf) = 
-		gst_util_clock_time_scale (GST_SECOND, 
+		gst_util_uint64_scale_int (GST_SECOND, 
 		    ffmpegdec->context->time_base.num, 
 		    ffmpegdec->context->time_base.den);
 

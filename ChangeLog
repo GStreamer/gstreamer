@@ -1,5 +1,10 @@
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
+	Updated API 
+
+2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_pixfmt):
 	Whoops - handle input video caps that don't have a framerate
 
