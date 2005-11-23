@@ -19,7 +19,7 @@ SUBDIRS = \
 	dlopen \
 	elements indexers \
 	$(GST_PARSE_DIRS) \
-	plugin refcounting states threads trigger
+	plugin refcounting states threads
 
 DIST_SUBDIRS = \
 	caps \
@@ -27,7 +27,7 @@ DIST_SUBDIRS = \
 	dlopen \
 	elements indexers \
 	parse \
-	plugin refcounting states threads trigger
+	plugin refcounting states threads
 
 tests_pass =
 tests_fail = 
