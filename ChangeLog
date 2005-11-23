@@ -1,3 +1,10 @@
+=== release 0.9.6 ===
+
+2005-11-23  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.6, "White Eight"
+
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/pipelines/simple_launch_lines.c: (GST_START_TEST):
@@ -33,7 +40,7 @@
 	(gst_base_audio_sink_render), (gst_base_audio_sink_change_state):
 	Fix for calibration API change.
 
-2005-11-23  msmith,,,  <set EMAIL_ADDRESS environment variable>
+2005-11-23  Michael Smith <msmith@fluendo.com>
 
 	* gst-libs/gst/audio/multichannel.c:
 	(gst_audio_get_channel_positions),
@@ -231,7 +238,7 @@
 	(gst_xvimagesink_get_times), (gst_xvimagesink_init):
 	* sys/xvimage/xvimagesink.h:
 	  Convert elements to use fractions for their framerate.
-          V4L elements to come later tonight.
+	  V4L elements to come later tonight.
 
 2005-11-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -280,6 +287,8 @@
 	events correcly with borders if applicable.
 
 2005-11-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Luca Ognibene
 
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
 	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt):
@@ -348,7 +357,7 @@
 
 2005-11-21  Andy Wingo  <wingo@pobox.com>
 
-	patch from: Sebastien Cote <sebas642@yahoo.ca>
+	patch by: Sebastien Cote <sebas642@yahoo.ca>
 	
 	* gst-libs/gst/rtp/gstrtpbuffer.h: 
 	* gst-libs/gst/rtp/gstrtpbuffer.c
@@ -418,8 +427,8 @@
 	(gst_videotestsrc_src_fixate):
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_fixate):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_fixate):
-        Rename gst_caps_structure_fixate_* to gst_structure_fixate_*
-        (#322027)
+	  Rename gst_caps_structure_fixate_* to gst_structure_fixate_*
+	  (#322027)
 
 
 2005-11-21  Tim-Philipp Müller  <tim at centricular dot net>

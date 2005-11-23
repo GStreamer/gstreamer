@@ -6,7 +6,7 @@ AC_INIT
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-base, GST_PLUGINS_BASE_VERSION, 0, 9, 5, 1,
+AS_VERSION(gst-plugins-base, GST_PLUGINS_BASE_VERSION, 0, 9, 6, 0,
     GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
@@ -38,7 +38,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 2, 0, 0)
+AS_LIBTOOL(GST, 3, 0, 0)
 AS_LIBTOOL_TAGS
 AM_PROG_LIBTOOL
 
