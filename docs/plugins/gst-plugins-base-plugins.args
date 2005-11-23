@@ -69,6 +69,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstXvImageSink::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstXImageSink::display</NAME>
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>
@@ -95,6 +105,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Synchronous</NICK>
 <BLURB>When enabled, runs the X display in synchronous mode. (used only for debugging).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSink::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, reverse caps negotiation (scaling) will respect original aspect ratio.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -175,7 +195,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Pattern</NICK>
 <BLURB>Type of test pattern to generate.</BLURB>
-<DEFAULT>snow</DEFAULT>
+<DEFAULT>Random (television snow)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -205,7 +225,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>method</NICK>
 <BLURB>method.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Point Sample (not implemented)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -435,7 +455,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mode</NICK>
 <BLURB>The mode for selecting activity on the fds.</BLURB>
-<DEFAULT>GST_FDSET_MODE_POLL</DEFAULT>
+<DEFAULT>Poll</DEFAULT>
 </ARG>
 
 <ARG>
@@ -455,7 +475,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Recover Policy</NICK>
 <BLURB>How to recover when client reaches the soft max.</BLURB>
-<DEFAULT>GST_RECOVER_POLICY_NONE</DEFAULT>
+<DEFAULT>Do not try to recover</DEFAULT>
 </ARG>
 
 <ARG>
@@ -475,7 +495,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Sync Method</NICK>
 <BLURB>How to sync new clients to the stream.</BLURB>
-<DEFAULT>GST_SYNC_METHOD_NONE</DEFAULT>
+<DEFAULT>Serve starting from the latest buffer</DEFAULT>
 </ARG>
 
 <ARG>
@@ -695,7 +715,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Border</NICK>
 <BLURB>Border color to add when sizes not multiple of 16.</BLURB>
-<DEFAULT>BORDER_BLACK</DEFAULT>
+<DEFAULT>Black Border</DEFAULT>
 </ARG>
 
 <ARG>
@@ -985,6 +1005,6 @@
 <FLAGS>rw</FLAGS>
 <NICK>Waveform</NICK>
 <BLURB>Oscillator waveform.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Sine</DEFAULT>
 </ARG>
 

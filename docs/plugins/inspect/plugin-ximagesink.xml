@@ -1,9 +1,9 @@
 <plugin>
-  <name>ximage</name>
-  <description>XFree86 video output and input elements based on standard Xlib calls</description>
-  <filename>../../sys/ximage/.libs/libgstximage.so</filename>
-  <basename>libgstximage.so</basename>
-  <version>0.9.5</version>
+  <name>ximagesink</name>
+  <description>X11 video output element based on standard Xlib calls</description>
+  <filename>../../sys/ximage/.libs/libgstximagesink.so</filename>
+  <basename>libgstximagesink.so</basename>
+  <version>0.9.6</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

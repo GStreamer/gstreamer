@@ -48,7 +48,7 @@
     <xi:include href="xml/plugin-videotestsrc.xml" />
     <xi:include href="xml/plugin-volume.xml" />
     <xi:include href="xml/plugin-vorbis.xml" />
-    <xi:include href="xml/plugin-ximage.xml" />
+    <xi:include href="xml/plugin-ximagesink.xml" />
     <xi:include href="xml/plugin-xvimagesink.xml" />
   </chapter>
 </book>
