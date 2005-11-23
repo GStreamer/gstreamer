@@ -1,3 +1,9 @@
+2005-11-23  Edward Hervey  <edward@fluendo.com>
+
+	* autogen.sh:
+	eheh, sinesrc is gone. Replacing sample srcfile by existing one.
+	Fixes autogen
+
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

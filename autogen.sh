@@ -3,7 +3,7 @@
 
 DIE=0
 package=gst-plugins-base
-srcfile=gst/sine/gstsinesrc.c
+srcfile=gst/audiotestsrc/gstaudiotestsrc.c
 
 # a quick cvs co to ease the transition
 if test ! -d common;
