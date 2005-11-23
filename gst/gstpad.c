@@ -675,7 +675,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
  *
  * If you don't know what this is, you probably don't want to call it.
  *
- * Returns: TRUE if the operation was successfull.
+ * Returns: TRUE if the operation was successful.
  *
  * MT safe.
  */

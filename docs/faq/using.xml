@@ -53,7 +53,7 @@ GStreamer itself is running correctly.
       <answer>
         <para>
 You can test this by trying to play a sine tone.  For this, you need to
-link the sinesrc plug-in to an output plug-in that matches your hardware.
+link the audiotestsrc element to an output element that matches your hardware.
 A (non-complete) list of output plug-ins for audio is
 <itemizedlist>
 <listitem><para>osssink for OSS output</para></listitem>
@@ -72,7 +72,7 @@ and see if that prints out a bunch of properties for the plug-in.
         <para>
 Then try to play the sine tone by running
 <programlisting>
-$ gst-launch sinesrc ! osssink
+$ gst-launch audiotestsrc ! osssink
 </programlisting>
 and see if you hear something.  Make sure your volume is turned up,
 but also make sure it is not too loud and you are not wearing your headphones.

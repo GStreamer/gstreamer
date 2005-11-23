@@ -26,6 +26,8 @@ to -good or -ugly if a number of conditions are met:
   - conform to the GStreamer coding style
   - use a custom debug category
   - use GST_(DEBUG/*)_OBJECT
+  - use dashes in object property names to separate words
+  - use correct value, name, nick for enums
 
 - The compiled plug-in:
   - should show up correct in gst-inspect output; no warnings, no unknown

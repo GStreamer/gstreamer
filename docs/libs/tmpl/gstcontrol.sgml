@@ -61,7 +61,7 @@ gst_dpman_attach_dparam(dparam_manager,g_param_spec_get_name(pspecs),dparam);
 For a full example look at the <file>gst-plugins/gst/sine/demo-dparams.c</file>
 </para>
 <para>
-To add dparam support to a plugin look at <file>gst-plugins/gst/sine/gstsinesrc.c</file>
+To add dparam support to a plugin look at <file>gst-plugins/gst/audiotestsrc/gstaudiotestsrc.c</file>
 or <file>gst-plugins/gst/volume/gstvolume.c</file>.
 The key concept is to call GST_DPMAN_PREPROCESS() before processing data and to
 wrap the data processing (chain or loop function) by GST_DPMAN_PROCESS().

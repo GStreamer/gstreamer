@@ -347,9 +347,9 @@ main (int   argc,
   gst_init (&argc, &argv);
 
   /* get factory */
-  factory = gst_element_factory_find ("sinesrc");
+  factory = gst_element_factory_find ("audiotestsrc");
   if (!factory) {
-    g_print ("You don't have the 'sinesrc' element installed, go get it!\n");
+    g_print ("You don't have the 'audiotestsrc' element installed!\n");
     return -1;
   }
 

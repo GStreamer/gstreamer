@@ -338,7 +338,7 @@ This command would be run on the transmitter
 Generate a null stream and ignore it
 
 .B
-        gst\-launch sinesrc ! osssink
+        gst\-launch audiotestsrc ! osssink
 .br
 Generate a pure tone to test the audio output
 

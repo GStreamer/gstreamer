@@ -49,12 +49,12 @@
       <filename>"asynchronous"</filename> because parameter changes may happen in the middle of a buffer being processed.
     </para>
     <programlisting>
-  GstElement *sinesrc;
+  GstElement *audiotestsrc;
   GstDParamManager *dpman;
   ...
-  sinesrc = gst_element_factory_make("sinesrc","sine-source");
+  audiotestsrc = gst_element_factory_make("audiotestsrc", NULL);
   ...
-  dpman = gst_dpman_get_manager (sinesrc);
+  dpman = gst_dpman_get_manager (audiotestsrc);
   gst_dpman_set_mode(dpman, "synchronous");
     </programlisting>
     <para>

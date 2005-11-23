@@ -1,3 +1,16 @@
+2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/faq/using.xml:
+	* docs/libs/tmpl/gstcontrol.sgml:
+	* docs/manual/advanced-dparams.xml:
+	* docs/manual/appendix-checklist.xml:
+	* docs/manual/basics-elements.xml:
+	* docs/pwg/other-source.xml:
+	* docs/random/moving-plugins:
+	* gst/gstpad.c:
+	* tools/gst-launch.1.in:
+	  remove mentions of sinesrc
+
 2005-11-23  Michael Smith <msmith@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:

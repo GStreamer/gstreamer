@@ -150,7 +150,7 @@
       <para>
         <command>gst-launch</command> is a simple script-like commandline
         application that can be used to test pipelines. For example, the
-        command <command>gst-launch sinesrc ! alsasink</command> will run
+        command <command>gst-launch audiotestsrc ! alsasink</command> will run
         a pipeline which generates a sine-wave audio stream and plays it
         to your ALSA audio card. <command>gst-launch</command> also allows
         the use of threads (using curly brackets, so <quote>{</quote>
