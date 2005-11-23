@@ -507,7 +507,7 @@ gst_musepackdec_loop (GstPad * sinkpad)
     if (!gst_musepack_stream_init (musepackdec))
       return;
     gst_pad_push_event (musepackdec->srcpad,
-        gst_event_new_newsegment (FALSE, 1.0,
+        gst_event_new_new_segment (FALSE, 1.0,
             GST_FORMAT_TIME, musepackdec->pos, GST_CLOCK_TIME_NONE, 0));
   }
 
@@ -521,7 +521,7 @@ gst_musepackdec_loop (GstPad * sinkpad)
         gst_pad_push_event (musepackdec->srcpad, gst_event_new_flush_start ());
       }
       gst_pad_push_event (musepackdec->srcpad,
-          gst_event_new_newsegment (FALSE, 1.0,
+          gst_event_new_new_segment (FALSE, 1.0,
               GST_FORMAT_TIME, musepackdec->seek_time, GST_CLOCK_TIME_NONE, 0));
       fmt = GST_FORMAT_DEFAULT;
       gst_musepackdec_src_convert (musepackdec->srcpad,
