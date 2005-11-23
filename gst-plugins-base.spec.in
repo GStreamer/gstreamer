@@ -133,7 +133,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_GNOME_VFS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgnomevfs.so
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvorbis.so
 @USE_VORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstogg.so
-@USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximage.so
+@USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximage*.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
 @USE_LIBVISUAL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibvisual.so
                                                                                 
