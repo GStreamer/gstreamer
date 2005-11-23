@@ -31,6 +31,7 @@ check_PROGRAMS = \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/audiotestsrc \
+	elements/videotestsrc \
 	elements/volume \
 	generic/states \
         pipelines/simple_launch_lines \

@@ -1,5 +1,13 @@
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/Makefile.am:
+	* check/elements/videotestsrc.c: (setup_videotestsrc),
+	(cleanup_videotestsrc), (GST_START_TEST), (videotestsrc_suite),
+	(main):
+	  add a test for videotestsrc
+
+2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/sine/.cvsignore:
 	* gst/sine/Makefile.am:
 	* gst/sine/gstsinesrc.c:
