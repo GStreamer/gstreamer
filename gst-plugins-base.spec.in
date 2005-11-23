@@ -1,7 +1,7 @@
 %define majorminor  @GST_MAJORMINOR@
 %define gstreamer   gstreamer09
 
-%define gst_minver  0.9.1
+%define gst_minver  0.9.5
 
 Name: 		%{gstreamer}-plugins-base
 Version: 	@VERSION@
@@ -91,7 +91,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioconvert.so
 %{_libdir}/gstreamer-%{majorminor}/libgstffmpegcolorspace.so
-%{_libdir}/gstreamer-%{majorminor}/libgstsinesrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdecodebin.so
 %{_libdir}/gstreamer-%{majorminor}/libgstplaybin.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttypefindfunctions.so

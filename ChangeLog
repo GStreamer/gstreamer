@@ -1,5 +1,11 @@
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* gst-plugins-base.spec.in:
+	  remove sinesrc from the build
+
+2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* check/Makefile.am:
 	* check/elements/audiotestsrc.c: (setup_audiotestsrc),
 	(cleanup_audiotestsrc), (GST_START_TEST), (audiotestsrc_suite),

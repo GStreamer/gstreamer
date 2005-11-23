@@ -10,7 +10,7 @@ AS_VERSION(gst-plugins-base, GST_PLUGINS_BASE_VERSION, 0, 9, 5, 1,
     GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
-AC_CONFIG_SRCDIR([gst/sine/gstsinesrc.c])
+AC_CONFIG_SRCDIR([gst/audiotestsrc/gstaudiotestsrc.c])
 
 dnl define the output header for config
 AM_CONFIG_HEADER([config.h])
@@ -78,7 +78,6 @@ GST_PLUGINS_ALL="\
 	audiotestsrc \
 	ffmpegcolorspace \
 	playback \
-	sine \
 	typefind \
 	videotestsrc \
 	videorate \
@@ -568,7 +567,6 @@ gst/audioresample/Makefile
 gst/audiotestsrc/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/playback/Makefile
-gst/sine/Makefile
 gst/subparse/Makefile
 gst/tcp/Makefile
 gst/typefind/Makefile
