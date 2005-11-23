@@ -310,6 +310,7 @@ gst_navigationtest_init (GTypeInstance * instance, gpointer g_class)
 
   navtest->x = -1;
   navtest->y = -1;
+  g_value_init (&navtest->framerate, GST_TYPE_FRACTION);
 }
 
 GType
