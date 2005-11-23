@@ -1,3 +1,10 @@
+=== release 0.9.6 ===
+
+2005-11-23  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.6, "Cold Cat"
+
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
@@ -12,16 +19,16 @@
 
 	* HACKING:
 	* ext/ffmpeg/gstffmpegcolorspace.c:
-          Remove mentions of ffmpegcolorspace now that it's in 
-          gst-plugins-base
+	  Remove mentions of ffmpegcolorspace now that it's in 
+	  gst-plugins-base
 
 	* ext/ffmpeg/Makefile.am:
-          Link to gstreamer libraries
+	  Link to gstreamer libraries
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_pixfmt):
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
 	(gst_ffmpegdec_close), (gst_ffmpegdec_setcaps),
 	(gst_ffmpegdec_negotiate), (gst_ffmpegdec_frame):
-          Convert to fractional framerate
+	  Convert to fractional framerate
 
 2005-11-22  Andy Wingo  <wingo@pobox.com>
 

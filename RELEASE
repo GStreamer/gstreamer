@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer FFmpeg Plug-ins 0.9.5 "Sound Of Silence"
+GStreamer: Release notes for GStreamer FFmpeg Plug-ins 0.9.6 "Cold Cat"
         
 
 The GStreamer team is petrified to announce a new release
@@ -35,7 +35,6 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * DivX fix
 
 Bugs fixed in this release
     
@@ -68,8 +67,9 @@ Applications
   
 Contributors to this release
     
-      * Edward Hervey
-      * Ronald S. Bultje
+      * Andy Wingo
+      * Jan Schmidt
+      * Luca Ognibene
       * Thomas Vander Stichele
       * Tim-Philipp Müller
  
