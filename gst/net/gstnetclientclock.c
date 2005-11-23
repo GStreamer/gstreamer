@@ -304,6 +304,7 @@ gst_net_client_clock_thread (gpointer data)
   fd_set read_fds;
   GstNetTimePacket *packet;
   gint ret;
+  GstClock *clock = data;
 
   while (TRUE) {
     ret = gst_net_client_clock_do_select (self, &read_fds);
@@ -352,7 +353,7 @@ gst_net_client_clock_thread (gpointer data)
       g_free (packet);
 
       /* reset timeout */
-      self->current_timeout = self->timeout;
+      self->current_timeout = clock->timeout;
       continue;
     } else if (FD_ISSET (self->sock, &read_fds)) {
       /* got data in */

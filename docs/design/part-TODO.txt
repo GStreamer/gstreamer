@@ -7,13 +7,9 @@ API/ABI
   after the seek you want to get the new stream time that will actually be used to
   update the slider bar.
 
-- convert framerate to GstFraction in GstCaps.
-
 - make it possible to seek on other formats than bytes in basesrc.
 
 - GstEvent, GstMessage register like GstFormat or GstQuery.
-
-- unblocking while seeking. gst_element_flush_pads (GstElement, gboolean);
 
 - query POSITION/DURATION return accuracy. Just a flag or accuracy percentage.
 
@@ -30,11 +26,11 @@ IMPLEMENTATION
 
 - implement latency calculation for live sources.
 
-- implement master/slave clocks.
-
 - implement QOS.
 
 - implement BUFFERSIZE.
+
+- implement pad_block with probes.
 
 
 DESIGN
@@ -43,8 +39,4 @@ DESIGN
 - unlinking pads in the PAUSED state needs to make sure the stream thread is not
   executing code. Can this be done with a flush to unlock all downstream chain
   functions? Do we do this automatically or let the app handle this?
-
-- when a pipeline with a live source goes to PAUSED again, a sample is prerolled
-  in the sinks. This sample should be discarded, possibly with a flush event
-  started from the source.
 

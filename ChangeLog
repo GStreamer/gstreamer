@@ -1,3 +1,12 @@
+2005-11-23  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	Update TODO.
+
+	* gst/net/gstnetclientclock.c: (gst_net_client_clock_thread):
+	* gst/net/gstnetclientclock.h:
+	Use parent fields for timeout and window_size.
+
 2005-11-23  Andy Wingo  <wingo@pobox.com>
 
 	* check/net/gstnetclientclock.c (test_functioning): Adjust to

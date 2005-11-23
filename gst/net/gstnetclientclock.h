@@ -62,9 +62,6 @@ struct _GstNetClientClock {
   gchar *address;
   gint port;
   
-  gint window_size;
-  GstClockTime timeout;
-
   /*< private >*/
   int sock;
   int control_sock[2];
