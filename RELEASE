@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Python bindings 0.9.5 "96-bit Audio"
+GStreamer: Release notes for GStreamer Python bindings 0.9.6 "We'll always have Paris. We got it back last night."
         
 
 The GStreamer team is petrified to announce a new release
@@ -16,14 +16,13 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * Remove mini-object caching, fixes crashes
-      * added gst.TagList
-      * added gst.TIME_ARGS
+      * added FractionRange
+      * updated for API changes
 
 Bugs fixed in this release
     
-      * 306817 : No way to set tags in gst-python
-      * 320357 : element_query_duration not wrapped
+      * 318793 : check whether new date/tag API needs wrapping
+      * 321839 : pipeline hangs in get_state after changing trival pipeline
 
 Download
 
@@ -53,6 +52,8 @@ Applications
   
 Contributors to this release
     
+      * Andy Wingo
       * Edward Hervey
+      * Jan Schmidt
       * Thomas Vander Stichele
  
