@@ -501,13 +501,11 @@ gst_v4lsrc_palette_name (int i)
 }
 
 gboolean
-gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc, GValue * fps)
+gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc, gint * fps_n, gint * fps_d)
 {
   gint norm;
   gint fps_index;
   struct video_window *vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
-
-  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (fps), FALSE);
 
   /* check if we have vwin window properties giving a framerate,
    * as is done for webcams
@@ -521,7 +519,11 @@ gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc, GValue * fps)
     GST_DEBUG_OBJECT (v4lsrc, "device reports fps of %d/%d (%.4f)",
         fps_index * 15, 16, fps_index * 15.0 / 16);
 
-    gst_value_set_fraction (fps, fps_index * 15, 16);
+    if (fps_n)
+      *fps_n = fps_index * 15;
+    if (fps_d)
+      *fps_d = 16;
+
     return TRUE;
   }
 
@@ -535,10 +537,17 @@ gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc, GValue * fps)
   if (!gst_v4l_get_chan_norm (GST_V4LELEMENT (v4lsrc), NULL, &norm))
     return FALSE;
 
-  if (norm == VIDEO_MODE_NTSC)
-    gst_value_set_fraction (fps, 30000, 1001);
-  else
-    gst_value_set_fraction (fps, 25, 1);
+  if (norm == VIDEO_MODE_NTSC) {
+    if (fps_n)
+      *fps_n = 30000;
+    if (fps_d)
+      *fps_d = 1001;
+  } else {
+    if (fps_n)
+      *fps_n = 25;
+    if (fps_d)
+      *fps_d = 1;
+  }
 
   return TRUE;
 }
@@ -685,12 +694,11 @@ GstBuffer *
 gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
 {
   GstBuffer *buf;
-  GValue fps = { 0 };
+  gint fps_n, fps_d;
 
   GST_DEBUG_OBJECT (v4lsrc, "creating buffer for frame %d", num);
 
-  g_value_init (&fps, GST_TYPE_FRACTION);
-  g_return_val_if_fail (gst_v4lsrc_get_fps (v4lsrc, &fps), NULL);
+  g_return_val_if_fail (gst_v4lsrc_get_fps (v4lsrc, &fps_n, &fps_d), NULL);
 
   buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_V4LSRC_BUFFER);
 
@@ -706,12 +714,10 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
   /* FIXME: this is a most ghetto timestamp/duration */
 
   GST_BUFFER_DURATION (buf) = gst_util_clock_time_scale (GST_SECOND,
-      gst_value_get_fraction_numerator (&fps),
-      gst_value_get_fraction_denominator (&fps));
+      fps_n, fps_d);
 
   /* the negotiate() method already set caps on the source pad */
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (v4lsrc)));
 
-  g_value_unset (&fps);
   return buf;
 }

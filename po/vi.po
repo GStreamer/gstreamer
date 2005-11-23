@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-11 18:35+0100\n"
+"POT-Creation-Date: 2005-11-21 15:41+0100\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -87,42 +87,46 @@ msgstr "Chưa nhập tên tập tin "
 msgid "Could not close vfs file \"%s\"."
 msgstr "Đã không đóng được tập tin vfs \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2401
+#: ext/ogg/gstoggdemux.c:2454
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1327
+#: gst/playback/gstplaybasebin.c:1331
 msgid "No URI specified to play from."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:1333
-#, c-format
-msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
 #: gst/playback/gstplaybasebin.c:1337
 #, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1341
+#, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1344
+#: gst/playback/gstplaybasebin.c:1348
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1410
+#: gst/playback/gstplaybasebin.c:1414
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1413
+#: gst/playback/gstplaybasebin.c:1417
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "Thiết bị \"%s\" không bắt gì được."
 
 #: gst/playback/gstplaybin.c:411
 msgid "Both autovideosink and xvimagesink elements are missing."
+msgstr ""
+
+#: gst/playback/gstplaybin.c:543
+msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
 #~ msgid "No device specified."

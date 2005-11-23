@@ -39,7 +39,7 @@ guint8 * gst_v4lsrc_get_buffer     (GstV4lSrc *v4lsrc, gint  num);
 gboolean gst_v4lsrc_requeue_frame  (GstV4lSrc *v4lsrc, gint  num);
 gboolean gst_v4lsrc_capture_stop   (GstV4lSrc *v4lsrc);
 gboolean gst_v4lsrc_capture_deinit (GstV4lSrc *v4lsrc);
-gboolean gst_v4lsrc_get_fps        (GstV4lSrc * v4lsrc, GValue *fps);
+gboolean gst_v4lsrc_get_fps        (GstV4lSrc * v4lsrc, gint *fps_n, gint *fps_d);
 GValue * gst_v4lsrc_get_fps_list   (GstV4lSrc * v4lsrc);
 GstBuffer *gst_v4lsrc_buffer_new   (GstV4lSrc * v4lsrc, gint num);
 

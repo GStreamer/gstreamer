@@ -1,5 +1,30 @@
 2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	  Translation string updates
+
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_fixate), (gst_v4lsrc_get_caps),
+	(gst_v4lsrc_set_caps):
+	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_get_fps),
+	(gst_v4lsrc_get_fps_list), (gst_v4lsrc_buffer_new):
+	* sys/v4l/v4lsrc_calls.h:
+	  Improve v4lsrc, by making it work again.
+
+2005-11-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/libvisual/visual.c: (gst_visual_chain):
 	  Fix the fps calculations.
 

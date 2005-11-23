@@ -371,7 +371,7 @@ gst_v4lsrc_get_caps (GstBaseSrc * src)
   gint width = GST_V4LELEMENT (src)->vcap.minwidth;
   gint height = GST_V4LELEMENT (src)->vcap.minheight;
   gint i;
-  GValue fps = { 0 };
+  gint fps_n, fps_d;
   GList *item;
 
   if (!GST_V4L_IS_OPEN (GST_V4LELEMENT (v4lsrc))) {
@@ -403,8 +403,10 @@ gst_v4lsrc_get_caps (GstBaseSrc * src)
   }
 
 
-  if (!gst_v4lsrc_get_fps (v4lsrc, &fps))
-    gst_value_set_fraction (&fps, 0, 1);
+  if (!gst_v4lsrc_get_fps (v4lsrc, &fps_n, &fps_d)) {
+    fps_n = 0;
+    fps_d = 1;
+  }
 
   list = gst_caps_new_empty ();
   for (item = v4lsrc->colorspaces; item != NULL; item = item->next) {
@@ -420,9 +422,7 @@ gst_v4lsrc_get_caps (GstBaseSrc * src)
     GST_DEBUG_OBJECT (v4lsrc,
         "Device reports w: %d-%d, h: %d-%d, fps: %d/%d for palette %d",
         vcap->minwidth, vcap->maxwidth, vcap->minheight, vcap->maxheight,
-        gst_value_get_fraction_numerator (&fps),
-        gst_value_get_fraction_denominator (&fps),
-        GPOINTER_TO_INT (item->data));
+        fps_n, fps_d, GPOINTER_TO_INT (item->data));
 
     if (vcap->minwidth < vcap->maxwidth) {
       gst_caps_set_simple (one, "width", GST_TYPE_INT_RANGE, vcap->minwidth,
@@ -443,7 +443,8 @@ gst_v4lsrc_get_caps (GstBaseSrc * src)
       if (v4lsrc->fps_list) {
         gst_structure_set_value (structure, "framerate", v4lsrc->fps_list);
       } else {
-        gst_structure_set_value (structure, "framerate", &fps);
+        gst_structure_set (structure, "framerate", GST_TYPE_FRACTION,
+            fps_n, fps_d, NULL);
       }
     } else {
       gst_caps_set_simple (one, "framerate", GST_TYPE_FRACTION_RANGE,
@@ -453,7 +454,6 @@ gst_v4lsrc_get_caps (GstBaseSrc * src)
     GST_DEBUG_OBJECT (v4lsrc, "caps: %" GST_PTR_FORMAT, one);
     gst_caps_append (list, one);
   }
-  g_value_unset (&fps);
 
   return list;
 }
@@ -465,7 +465,7 @@ gst_v4lsrc_set_caps (GstBaseSrc * src, GstCaps * caps)
   guint32 fourcc;
   gint bpp, depth, w, h, palette = -1;
   const GValue *new_fps;
-  GValue cur_fps = { 0 };
+  gint cur_fps_n, cur_fps_d;
   GstStructure *structure;
   struct video_window *vwin;
 
@@ -501,10 +501,11 @@ gst_v4lsrc_set_caps (GstBaseSrc * src, GstCaps * caps)
       gst_value_get_fraction_denominator (new_fps));
 
   /* set framerate if it's not already correct */
-  if (!gst_v4lsrc_get_fps (v4lsrc, &cur_fps))
+  if (!gst_v4lsrc_get_fps (v4lsrc, &cur_fps_n, &cur_fps_d))
     return FALSE;
 
-  if (gst_value_compare (new_fps, &cur_fps) != GST_VALUE_EQUAL) {
+  if (gst_value_get_fraction_numerator (new_fps) != cur_fps_n ||
+      gst_value_get_fraction_denominator (new_fps) != cur_fps_d) {
     int fps_index = (gst_value_get_fraction_numerator (new_fps) * 16) /
         (gst_value_get_fraction_denominator (new_fps) * 15);
 
@@ -514,11 +515,9 @@ gst_v4lsrc_set_caps (GstBaseSrc * src, GstCaps * caps)
     /* set bits 16 to 21 to the index */
     vwin->flags |= fps_index << 16;
     if (!gst_v4l_set_window_properties (GST_V4LELEMENT (v4lsrc))) {
-      g_value_unset (&cur_fps);
       return FALSE;
     }
   }
-  g_value_unset (&cur_fps);
 
   switch (fourcc) {
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
