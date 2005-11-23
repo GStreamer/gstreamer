@@ -1,1 +1,6 @@
+<SIGNAL>
+<NAME>GstMPEGParse::reached-offset</NAME>
+<RETURNS>void</RETURNS>
+GstMPEGParse *gstmpegparse
+</SIGNAL>
 

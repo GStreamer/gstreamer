@@ -185,7 +185,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mode</NICK>
 <BLURB>Encoding mode.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>Stereo</DEFAULT>
 </ARG>
 
 <ARG>
@@ -225,7 +225,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Padding type</NICK>
 <BLURB>Padding type.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>No Padding</DEFAULT>
 </ARG>
 
 <ARG>
@@ -235,7 +235,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Lame Preset</NICK>
 <BLURB>Lame Preset.</BLURB>
-<DEFAULT>none</DEFAULT>
+<DEFAULT>None</DEFAULT>
 </ARG>
 
 <ARG>
@@ -245,7 +245,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Quality</NICK>
 <BLURB>Quality of algorithm used for encoding.</BLURB>
-<DEFAULT>5</DEFAULT>
+<DEFAULT>5 - Default</DEFAULT>
 </ARG>
 
 <ARG>
@@ -265,7 +265,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>VBR</NICK>
 <BLURB>Specify bitrate mode.</BLURB>
-<DEFAULT>cbr</DEFAULT>
+<DEFAULT>No VBR (Constant Bitrate)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -315,7 +315,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>VBR Quality</NICK>
 <BLURB>VBR Quality.</BLURB>
-<DEFAULT>5</DEFAULT>
+<DEFAULT>5 - Default</DEFAULT>
 </ARG>
 
 <ARG>
@@ -526,5 +526,55 @@
 <NICK>Dynamic Range Compression</NICK>
 <BLURB>Use Dynamic Range Compression.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMPEGParse::adjust</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>adjust</NICK>
+<BLURB>Adjust timestamps to smooth discontinuities.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMPEGParse::byte-offset</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Byte Offset</NICK>
+<BLURB>Emit reached-offset signal when the byte offset is reached.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMPEGParse::max-discont</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Discont</NICK>
+<BLURB>The maximum allowed SCR discontinuity.</BLURB>
+<DEFAULT>120000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMPEGParse::sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync</NICK>
+<BLURB>Synchronize on the stream SCR.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMPEGParse::time-offset</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Time Offset</NICK>
+<BLURB>Time offset in the stream.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
 </ARG>
 

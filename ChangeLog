@@ -1,3 +1,10 @@
+=== release 0.9.6 ===
+
+2005-11-23  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.9.6, "The Marshals Are Dead"
+
 2005-11-23  Michael Smith <msmith@fluendo.com>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_sink_event),

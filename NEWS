@@ -1,4 +1,14 @@
-This is GStreamer Ugly Plug-ins 0.9.5, "Zero-Test Patching".
+This is GStreamer Ugly Plug-ins 0.9.6, "The Marshals Are Dead".
+  
+Changes since 0.9.5:
+    
+      * mpegstream ported
+      * fractional framerates
+
+Bugs fixed since 0.9.5:
+    
+      * 319862 : Partial mpegstream/dvddemux port
+      * 321955 : gst-plugins-ugly fail to compile
 
 Changes since 0.9.3:
 
