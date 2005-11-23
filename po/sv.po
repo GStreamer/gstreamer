@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.30 2005/11/23 10:40:42 thaytan Exp $
+# $Id: sv.po,v 1.31 2005/11/23 18:37:51 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-21 15:41+0100\n"
+"POT-Creation-Date: 2005-11-23 16:23+0100\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -128,7 +128,7 @@ msgstr "%s är ingen cdrom-enhet"
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:543
+#: gst/playback/gstplaybin.c:541
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
