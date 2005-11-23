@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.5 "Thrice Belgian Bar"
+GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.6 "Hot Tea"
         
 
 The GStreamer team is petrified to announce a new release
@@ -60,13 +60,12 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * qtdemux supports custom genre tags
-      * tremor integer vorbis decoder ported
-      * directfb video sink ported (with examples and documentation!)
+      * Fractional framerates
 
 Bugs fixed in this release
     
-      * 321241 : faad compile fix
+      * 320532 : [faac] set output samplerate and number of channels
+      * 321903 : [qtdemux] does not know fourcc DX50, as produced by DivX 5
 
 Download
 
@@ -96,13 +95,13 @@ Applications
   
 Contributors to this release
     
-      * Christian Schaller
-      * Daniel Amelang
+      * Andy Wingo
       * Edgard Lima
+      * Edward Hervey
+      * Jan Schmidt
       * Julien MOUTTE
       * Michael Smith
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans
-      * Zeeshan Ali
  

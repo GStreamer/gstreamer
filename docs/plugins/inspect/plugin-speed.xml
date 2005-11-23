@@ -1,0 +1,20 @@
+<plugin>
+  <name>speed</name>
+  <description>Set speed/pitch on audio/raw streams (resampler)</description>
+  <filename>../../gst/speed/.libs/libgstspeed.so</filename>
+  <basename>libgstspeed.so</basename>
+  <version>0.9.6</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>speed</name>
+      <longname>Speed</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Set speed/pitch on audio/raw streams (resampler)</description>
+      <author>Andy Wingo &lt;apwingo@eos.ncsu.edu&gt;, Tim-Philipp Müller &lt;tim@centricular.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

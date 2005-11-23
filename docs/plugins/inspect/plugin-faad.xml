@@ -1,0 +1,20 @@
+<plugin>
+  <name>faad</name>
+  <description>Free AAC Decoder (FAAD)</description>
+  <filename>../../ext/faad/.libs/libgstfaad.so</filename>
+  <basename>libgstfaad.so</basename>
+  <version>0.9.6</version>
+  <license>GPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>faad</name>
+      <longname>Free AAC Decoder (FAAD)</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Free MPEG-2/4 AAC decoder</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

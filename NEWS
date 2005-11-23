@@ -1,4 +1,13 @@
-This is GStreamer Bad Plug-ins 0.9.5, "Thrice Belgian Bar"
+This is GStreamer Bad Plug-ins 0.9.6, "Hot Tea"
+
+Changes since 0.9.5:
+    
+      * Fractional framerates
+
+Bugs fixed since 0.9.5:
+    
+      * 320532 : [faac] set output samplerate and number of channels
+      * 321903 : [qtdemux] does not know fourcc DX50, as produced by DivX 5
 
 Changes since 0.9.4:
     

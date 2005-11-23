@@ -1,0 +1,27 @@
+<plugin>
+  <name>tta</name>
+  <description>TTA lossless audio format handling</description>
+  <filename>../../gst/tta/.libs/libgsttta.so</filename>
+  <basename>libgsttta.so</basename>
+  <version>0.9.6</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>gst-tta</package>
+  <origin>http://www.true-audio.com</origin>
+  <elements>
+    <element>
+      <name>ttadec</name>
+      <longname>TTA decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Decode TTA audio data</description>
+      <author>Arwed v. Merkatz &lt;v.merkatz@gmx.net&gt;</author>
+    </element>
+    <element>
+      <name>ttaparse</name>
+      <longname>TTA file parser</longname>
+      <class>Codec/Demuxer/Audio</class>
+      <description>Parses TTA files</description>
+      <author>Arwed v. Merkatz &lt;v.merkatz@gmx.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

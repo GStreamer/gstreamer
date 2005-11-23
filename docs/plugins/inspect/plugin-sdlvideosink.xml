@@ -1,0 +1,20 @@
+<plugin>
+  <name>sdlvideosink</name>
+  <description>SDL Video Sink</description>
+  <filename>../../ext/sdl/.libs/libgstsdlvideosink.so</filename>
+  <basename>libgstsdlvideosink.so</basename>
+  <version>0.9.6</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer source release</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>sdlvideosink</name>
+      <longname>Video sink</longname>
+      <class>Sink/Video</class>
+      <description>An SDL-based videosink</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>
