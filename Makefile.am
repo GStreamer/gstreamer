@@ -56,4 +56,4 @@ check-valgrind:
 	cd check && make check-valgrind
 
 check-torture:
-	cd check && make check-torture
+	cd check && make torture
