@@ -369,9 +369,19 @@ typedef union
 guint64
 gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 {
-  /* implement me with fixed point, if you care */
-  return gst_gdouble_to_guint64 (gst_guint64_to_gdouble (val) *
-      ((gst_guint64_to_gdouble (num)) / gst_guint64_to_gdouble (denom)));
+  guint64 result;
+
+  g_return_val_if_fail (denom != 0, G_MAXUINT64);
+
+  if (num <= G_MAXINT32 && denom <= G_MAXINT32) {
+    result = gst_util_uint64_scale_int (val, (gint) num, (gint) denom);
+  } else {
+    /* implement me with fixed point, if you care */
+    result = gst_gdouble_to_guint64 (gst_guint64_to_gdouble (val) *
+        ((gst_guint64_to_gdouble (num)) / gst_guint64_to_gdouble (denom)));
+  }
+
+  return result;
 }
 
 /**

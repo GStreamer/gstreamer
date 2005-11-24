@@ -1,5 +1,11 @@
 2005-11-24  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstutils.c: (gst_util_uint64_scale),
+	(gst_util_uint64_scale_int):
+	Chain trivial case to _scale_int.
+
+2005-11-24  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst/gstutils.c: (GST_START_TEST), (gst_utils_suite):
 	Added test for scaling.
 
