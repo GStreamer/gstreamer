@@ -184,11 +184,11 @@ gst_mini_object_suite (void)
   tcase_set_timeout (tc_chain, 60);
 
   suite_add_tcase (s, tc_chain);
-  //tcase_add_test (tc_chain, test_copy);
-  //tcase_add_test (tc_chain, test_is_writable);
-  //tcase_add_test (tc_chain, test_make_writable);
+  tcase_add_test (tc_chain, test_copy);
+  tcase_add_test (tc_chain, test_is_writable);
+  tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_ref_threaded);
-//  tcase_add_test (tc_chain, test_unref_threaded);
+  tcase_add_test (tc_chain, test_unref_threaded);
   return s;
 }
 
