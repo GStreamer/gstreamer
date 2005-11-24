@@ -29,7 +29,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl for 0.8.3 release, gst_play_get_all_by_interface was added, so update
-AS_LIBTOOL(GST_PLUGINS_GOOD, 0, 0, 0)
+AS_LIBTOOL(GST_PLUGINS_UGLY, 0, 0, 0)
 AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
