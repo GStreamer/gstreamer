@@ -1,10 +1,10 @@
 
-GStreamer: Release notes for GStreamer Ugly Plug-ins 0.9.3 "Athos"
+GStreamer: Release notes for GStreamer Good Plug-ins 0.9.6 "Everything's Not Lost"
         
 
 The GStreamer team is petrified to announce a new release
 in the 0.9.x development series of the
-GStreamer Ugly Plug-ins.
+GStreamer Good Plug-ins.
 
 
 The 0.9.x series is a development series and not recommended for end users.
@@ -12,38 +12,35 @@ It is not API or ABI compatible with the stable 0.8.x series.
 It is, however, parallel installable with the 0.8.x series.
 
 
-"When you have to shoot, shoot.  Don't talk."
+"Such ingratitude.  After all the times I've saved your life."
 
 
-There are times when the world needs a color between black and white.
-Quality code to match the good's, but two-timing, backstabbing and ready to
-sell your freedom down the river.  These plug-ins might have a patent noose
-around their neck, or a lock-up license, or any other problem that makes you
-think twice about shipping them.
+A collection of plug-ins you'd want to have right next to you on the
+battlefield.  Shooting sharp and making no mistakes, these plug-ins have it
+all: good looks, good code, and good licensing.  Documented and dressed up
+in tests.  If you're looking for a role model to base your own plug-in on,
+here it is.
 
 
-We don't call them ugly because we like them less.  Does a mother love her
-son less because he's not as pretty as the other ones ? No  - she commends
-him on his great personality.  These plug-ins are the life of the party.
-And we'll still step in and set them straight if you report any unacceptable
-behaviour - because there are two kinds of people in the world, my friend:
-those with a rope around their neck and the people who do the cutting.
+If you find a plot hole or a badly lip-synced line of code in them,
+let us know - it is a matter of honour for us to ensure Blondie doesn't look
+like he's been walking 100 miles through the desert without water.
 
 
-This module contains a set of plug-ins that have good quality and correct
-functionality, but distributing them might pose problems.  The license
-on either the plug-ins or the supporting libraries might not be how we'd
-like. The code might be widely known to present patent problems.
-Distributors should check if they want/can ship these plug-ins.
-
+This module contains a set of plug-ins that we consider to have good quality
+  code, correct functionality, our preferred license (LGPL for the plug-in
+  code, LGPL or LGPL-compatible for the supporting library).
+We believe distributors can safely ship these plug-ins.
+People writing elements should base their code on these elements.
 
 Other modules containing plug-ins are:
 
 
 gst-plugins-base
 contains a basic set of well-supported plug-ins
-gst-plugins-good
-contains a set of well-supported plug-ins under our preferred license
+gst-plugins-ugly
+contains a set of well-supported plug-ins, but might pose problems for
+    distributors
 gst-plugins-bad
 contains a set of less supported plug-ins that haven't passed the
     rigorous quality testing we expect
@@ -55,15 +52,18 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * lame, rmdemux, iec958 fixes
+      * added speex RTP payloader/depayloader
+      * ported cutter
+      * fractional framerates
+      * more video filters now use BaseTransform
 
 Bugs fixed in this release
     
 
 Download
 
-You can find source releases of gst-plugins-ugly in the download directory:
-http://gstreamer.freedesktop.org/src/gst-plugins-ugly/
+You can find source releases of gst-plugins-good in the download directory:
+http://gstreamer.freedesktop.org/src/gst-plugins-good/
 
 GStreamer Homepage
 
@@ -88,9 +88,14 @@ Applications
   
 Contributors to this release
     
-      * Flavio Oliveira
+      * Andy Wingo
+      * Edgard Lima
+      * Edward Hervey
+      * Jan Schmidt
+      * Julien Moutte
       * Michael Smith
-      * Stefan Kost
       * Thomas Vander Stichele
+      * Tim-Philipp Müller
+      * Vincent Torri
       * Wim Taymans
  
