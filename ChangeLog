@@ -1,3 +1,8 @@
+2005-11-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstinfo.h:
+	  do not crash on pad==NULL
+
 2005-11-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Patch by: Stefan Kost

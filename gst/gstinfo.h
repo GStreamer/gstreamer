@@ -185,9 +185,11 @@ struct _GstDebugCategory {
  * statements.
  */
 #define GST_DEBUG_PAD_NAME(pad) \
-  (GST_OBJECT_PARENT(pad) != NULL) ? \
+  (pad != NULL) ?  \
+  ((GST_OBJECT_PARENT(pad) != NULL) ? \
   GST_STR_NULL (GST_OBJECT_NAME (GST_OBJECT_PARENT(pad))) : \
-  "''", GST_OBJECT_NAME (pad)
+  "''" ) : "''", \
+  (pad==NULL) ? GST_OBJECT_NAME (pad) : "''"
 
 /**
  * GST_FUNCTION:
