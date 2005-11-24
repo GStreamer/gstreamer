@@ -117,13 +117,19 @@ G_BEGIN_DECLS
     GstFlowReturn (*handle_discont) (GstMPEGParse * parse, GstEvent * event);
 
     /* optional method to send out the data */
-    GstFlowReturn (*send_buffer)    (GstMPEGParse * parse, GstBuffer * buffer, GstClockTime time);
-    gboolean      (*process_event)  (GstMPEGParse * parse, GstEvent * event, GstClockTime time);
-    gboolean      (*send_discont)   (GstMPEGParse * parse, GstClockTime time);
-    gboolean      (*send_event)     (GstMPEGParse * parse, GstEvent *event, GstClockTime time);
+    GstFlowReturn (*send_buffer)    (GstMPEGParse * parse,
+				     GstBuffer * buffer, GstClockTime time);
+    gboolean      (*process_event)  (GstMPEGParse * parse,
+				     GstEvent * event, GstClockTime time);
+    gboolean      (*send_newsegment)(GstMPEGParse * parse, gdouble rate,
+				     GstClockTime start_time,
+				     GstClockTime stop_time);
+    gboolean      (*send_event)     (GstMPEGParse * parse, GstEvent *event,
+				     GstClockTime time);
 
     /* signals */
-    void          (*reached_offset) (GstMPEGParse *parse, GstClockTime timeval);
+    void          (*reached_offset) (GstMPEGParse *parse,
+				     GstClockTime timeval);
   };
 
   GType gst_mpeg_parse_get_type (void);

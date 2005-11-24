@@ -1,3 +1,20 @@
+2005-11-23  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_class_init) 
+	(gst_mpeg_parse_handle_discont, gst_mpeg_parse_send_newsegment) 
+	(gst_mpeg_parse_chain): 
+	* gst/mpegstream/gstmpegdemux.c (gst_mpeg_demux_class_init) 
+	(gst_mpeg_demux_send_newsegment): 
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_send_subbuffer): 
+	* gst/mpegstream/gstmpegparse.h: 
+	Rename send_discont method to send_newsegment and add parameters
+	to handle actual segments. Adapt code all around to run with the
+	new name and signature.
+	* gst/mpegstream/gstmpegdemux.c: 
+	* gst/mpegstream/gstmpegparse.c: 
+	* gst/mpegstream/gstdvddemux.c:
+	Convert to GST_BOILERPLATE.
+
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD
@@ -79,6 +96,7 @@
 	* ext/mad/Makefile.am:
 	  libgsttagedit => libgsttag
 
+>>>>>>> 1.1895
 2005-11-22  Edward Hervey  <edward@fluendo.com>
 
 	* ext/lame/gstlame.c: (gst_lame_sink_event):

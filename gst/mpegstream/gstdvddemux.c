@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2004 Martin Soto <martinsoto@users.sourceforge.net>
+ * Copyright (C) 2005 Martin Soto <martinsoto@users.sourceforge.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -47,7 +47,7 @@ static GstElementDetails dvd_demux_details = {
   "DVD Demuxer",
   "Codec/Demuxer",
   "Demultiplexes DVD (VOB) MPEG2 streams",
-  "Martin Soto <soto@informatik.uni-kl.de>"
+  "Martin Soto <martinsoto@users.sourceforge.net>"
 };
 
 /* DVDDemux signals and args */
@@ -127,9 +127,17 @@ GST_STATIC_PAD_TEMPLATE ("current_subpicture",
     GST_PAD_ALWAYS,
     SUBPICTURE_CAPS);
 
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gstdvddemux_debug, "dvddemux", 0, \
+        "DVD (VOB) demultiplexer element");
+
+GST_BOILERPLATE_FULL (GstDVDDemux, gst_dvd_demux, GstMPEGDemux,
+    GST_TYPE_MPEG_DEMUX, _do_init);
+
 static void gst_dvd_demux_class_init (GstDVDDemuxClass * klass);
-static void gst_dvd_demux_base_init (GstDVDDemuxClass * klass);
-static void gst_dvd_demux_init (GstDVDDemux * dvd_demux);
+static void gst_dvd_demux_base_init (gpointer klass);
+static void gst_dvd_demux_init (GstDVDDemux * dvd_demux,
+    GstDVDDemuxClass * klass);
 
 static GstFlowReturn gst_dvd_demux_send_buffer (GstMPEGParse * mpeg_parse,
     GstBuffer * buffer, GstClockTime time);
@@ -181,46 +189,16 @@ static void gst_dvd_demux_sync_stream_to_time (GstMPEGDemux * mpeg_demux,
 static GstStateChangeReturn gst_dvd_demux_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstMPEGDemuxClass *parent_class = NULL;
-
 /*static guint gst_dvd_demux_signals[LAST_SIGNAL] = { 0 };*/
 
 
-GType
-gst_dvd_demux_get_type (void)
-{
-  static GType dvd_demux_type = 0;
-
-  if (!dvd_demux_type) {
-    static const GTypeInfo dvd_demux_info = {
-      sizeof (GstDVDDemuxClass),
-      (GBaseInitFunc) gst_dvd_demux_base_init,
-      NULL,
-      (GClassInitFunc) gst_dvd_demux_class_init,
-      NULL,
-      NULL,
-      sizeof (GstDVDDemux),
-      0,
-      (GInstanceInitFunc) gst_dvd_demux_init,
-    };
-
-    dvd_demux_type = g_type_register_static (GST_TYPE_MPEG_DEMUX,
-        "GstDVDDemux", &dvd_demux_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (gstdvddemux_debug, "dvddemux", 0,
-        "DVD (VOB) demultiplexer element");
-  }
-
-  return dvd_demux_type;
-}
-
-
 static void
-gst_dvd_demux_base_init (GstDVDDemuxClass * klass)
+gst_dvd_demux_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstMPEGParseClass *mpeg_parse_class = GST_MPEG_PARSE_CLASS (klass);
   GstMPEGDemuxClass *demux_class = GST_MPEG_DEMUX_CLASS (klass);
-  GstMPEGParseClass *mpeg_parse_class = (GstMPEGParseClass *) klass;
+  GstDVDDemuxClass *dvd_demux_class = GST_DVD_DEMUX_CLASS (klass);
 
   mpeg_parse_class->send_buffer = gst_dvd_demux_send_buffer;
   mpeg_parse_class->process_event = gst_dvd_demux_process_event;
@@ -231,23 +209,27 @@ gst_dvd_demux_base_init (GstDVDDemuxClass * klass)
 
   demux_class->audio_template = gst_static_pad_template_get (&audio_template);
 
-  klass->cur_video_template = gst_static_pad_template_get (&cur_video_template);
-  klass->cur_audio_template = gst_static_pad_template_get (&cur_audio_template);
-  klass->subpicture_template =
+  dvd_demux_class->cur_video_template =
+      gst_static_pad_template_get (&cur_video_template);
+  dvd_demux_class->cur_audio_template =
+      gst_static_pad_template_get (&cur_audio_template);
+  dvd_demux_class->subpicture_template =
       gst_static_pad_template_get (&subpicture_template);
-  klass->cur_subpicture_template =
+  dvd_demux_class->cur_subpicture_template =
       gst_static_pad_template_get (&cur_subpicture_template);
 
   gst_element_class_add_pad_template (element_class,
       demux_class->audio_template);
 
-  gst_element_class_add_pad_template (element_class, klass->cur_video_template);
-  gst_element_class_add_pad_template (element_class, klass->cur_audio_template);
+  gst_element_class_add_pad_template (element_class,
+      dvd_demux_class->cur_video_template);
+  gst_element_class_add_pad_template (element_class,
+      dvd_demux_class->cur_audio_template);
 
   gst_element_class_add_pad_template (element_class,
-      klass->subpicture_template);
+      dvd_demux_class->subpicture_template);
   gst_element_class_add_pad_template (element_class,
-      klass->cur_subpicture_template);
+      dvd_demux_class->cur_subpicture_template);
 
   gst_element_class_set_details (element_class, &dvd_demux_details);
 }
@@ -283,7 +265,7 @@ gst_dvd_demux_class_init (GstDVDDemuxClass * klass)
 
 
 static void
-gst_dvd_demux_init (GstDVDDemux * dvd_demux)
+gst_dvd_demux_init (GstDVDDemux * dvd_demux, GstDVDDemuxClass * klass)
 {
   GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (dvd_demux);
   gint i;
@@ -1084,8 +1066,8 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
       GST_ERROR ("DVD Discont < 0! % " G_GINT64_FORMAT,
           (gint64) dvd_demux->discont_time);
     }
-    PARSE_CLASS (mpeg_demux)->send_discont (mpeg_parse,
-        dvd_demux->discont_time);
+    PARSE_CLASS (mpeg_demux)->send_newsegment (mpeg_parse, 1.0,
+        dvd_demux->discont_time, GST_CLOCK_TIME_NONE);
     dvd_demux->discont_time = GST_CLOCK_TIME_NONE;
   }
 

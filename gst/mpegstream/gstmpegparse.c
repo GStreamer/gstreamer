@@ -86,9 +86,14 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "mpegversion = (int) [ 1, 2 ], " "systemstream = (boolean) TRUE")
     );
 
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gstmpegparse_debug, "mpegparse", 0, \
+        "MPEG parser element");
+
+GST_BOILERPLATE_FULL (GstMPEGParse, gst_mpeg_parse, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
+
 static void gst_mpeg_parse_class_init (GstMPEGParseClass * klass);
-static void gst_mpeg_parse_base_init (GstMPEGParseClass * klass);
-static void gst_mpeg_parse_init (GstMPEGParse * mpeg_parse);
 static GstStateChangeReturn gst_mpeg_parse_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -106,8 +111,8 @@ static GstFlowReturn gst_mpeg_parse_send_buffer (GstMPEGParse * mpeg_parse,
     GstBuffer * buffer, GstClockTime time);
 static GstFlowReturn gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse,
     GstEvent * event, GstClockTime time);
-static GstFlowReturn gst_mpeg_parse_send_discont (GstMPEGParse * mpeg_parse,
-    GstClockTime time);
+static GstFlowReturn gst_mpeg_parse_send_newsegment (GstMPEGParse * parse,
+    gdouble rate, GstClockTime start_time, GstClockTime stop_time);
 static gboolean gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse,
     GstEvent * event, GstClockTime time);
 
@@ -123,40 +128,10 @@ static void gst_mpeg_parse_set_property (GObject * object, guint prop_id,
 static void gst_mpeg_parse_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mpeg_parse_get_index (GstElement * element);
 
-static GstElementClass *parent_class = NULL;
-
 static guint gst_mpeg_parse_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_mpeg_parse_get_type (void)
-{
-  static GType mpeg_parse_type = 0;
-
-  if (!mpeg_parse_type) {
-    static const GTypeInfo mpeg_parse_info = {
-      sizeof (GstMPEGParseClass),
-      (GBaseInitFunc) gst_mpeg_parse_base_init,
-      NULL,
-      (GClassInitFunc) gst_mpeg_parse_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMPEGParse),
-      0,
-      (GInstanceInitFunc) gst_mpeg_parse_init,
-    };
-
-    mpeg_parse_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstMPEGParse",
-        &mpeg_parse_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (gstmpegparse_debug, "mpegparse", 0,
-        "MPEG parser element");
-  }
-  return mpeg_parse_type;
-}
-
 static void
-gst_mpeg_parse_base_init (GstMPEGParseClass * klass)
+gst_mpeg_parse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -195,7 +170,7 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
   klass->handle_discont = gst_mpeg_parse_handle_discont;
   klass->send_buffer = gst_mpeg_parse_send_buffer;
   klass->process_event = gst_mpeg_parse_process_event;
-  klass->send_discont = gst_mpeg_parse_send_discont;
+  klass->send_newsegment = gst_mpeg_parse_send_newsegment;
   klass->send_event = gst_mpeg_parse_send_event;
 
   /* FIXME: this is a hack.  We add the pad templates here instead
@@ -229,16 +204,18 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
 }
 
 static void
-gst_mpeg_parse_init (GstMPEGParse * mpeg_parse)
+gst_mpeg_parse_init (GstMPEGParse * mpeg_parse, GstMPEGParseClass * klass)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (mpeg_parse);
+  GstElementClass *gstelement_class;
   GstPadTemplate *templ;
 
-  templ = gst_element_class_get_pad_template (klass, "sink");
+  gstelement_class = GST_ELEMENT_GET_CLASS (mpeg_parse);
+
+  templ = gst_element_class_get_pad_template (gstelement_class, "sink");
   mpeg_parse->sinkpad = gst_pad_new_from_template (templ, "sink");
   gst_element_add_pad (GST_ELEMENT (mpeg_parse), mpeg_parse->sinkpad);
 
-  if ((templ = gst_element_class_get_pad_template (klass, "src"))) {
+  if ((templ = gst_element_class_get_pad_template (gstelement_class, "src"))) {
     mpeg_parse->srcpad = gst_pad_new_from_template (templ, "src");
     gst_element_add_pad (GST_ELEMENT (mpeg_parse), mpeg_parse->srcpad);
     gst_pad_set_event_function (mpeg_parse->srcpad,
@@ -348,8 +325,9 @@ gst_mpeg_parse_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
     GST_DEBUG_OBJECT (mpeg_parse, "forwarding discontinuity, time: %0.3fs",
         (double) time / GST_SECOND);
 
-    if (CLASS (mpeg_parse)->send_discont)
-      ret = CLASS (mpeg_parse)->send_discont (mpeg_parse, time);
+    if (CLASS (mpeg_parse)->send_newsegment)
+      ret = CLASS (mpeg_parse)->send_newsegment (mpeg_parse, 1.0, time,
+          GST_CLOCK_TIME_NONE);
   } else {
     /* Use the next SCR to send a discontinuous event. */
     GST_DEBUG_OBJECT (mpeg_parse, "Using next SCR to send discont");
@@ -402,15 +380,17 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
 }
 
 static gboolean
-gst_mpeg_parse_send_discont (GstMPEGParse * mpeg_parse, GstClockTime time)
+gst_mpeg_parse_send_newsegment (GstMPEGParse * mpeg_parse, gdouble rate,
+    GstClockTime start_time, GstClockTime stop_time)
 {
   GstEvent *event;
 
-  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, time,
-      GST_CLOCK_TIME_NONE, (gint64) 0);
+  event = gst_event_new_new_segment (FALSE, rate, GST_FORMAT_TIME, start_time,
+      stop_time, (gint64) 0);
 
-  if (CLASS (mpeg_parse)->send_event)
-    return CLASS (mpeg_parse)->send_event (mpeg_parse, event, time);
+  if (CLASS (mpeg_parse)->send_event) {
+    return CLASS (mpeg_parse)->send_event (mpeg_parse, event, start_time);
+  }
 
   return FALSE;
 }
@@ -709,10 +689,10 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
               MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
         }
 #endif
-        if (CLASS (mpeg_parse)->send_discont) {
-          CLASS (mpeg_parse)->send_discont (mpeg_parse,
+        if (CLASS (mpeg_parse)->send_newsegment) {
+          CLASS (mpeg_parse)->send_newsegment (mpeg_parse, 1.0,
               MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr +
-                  mpeg_parse->adjust));
+                  mpeg_parse->adjust), GST_CLOCK_TIME_NONE);
         }
         mpeg_parse->discont_pending = FALSE;
       } else {
