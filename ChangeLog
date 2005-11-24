@@ -1,3 +1,14 @@
+2005-11-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* check/gst/gstminiobject.c: (thread_ref), (GST_START_TEST),
+	(gst_mini_object_suite):
+	  don't use check calls from threads; check probably isn't
+	  threadsafe and using a lock to make it threadsafe would
+	  defeat the purpose of this check
+	* gst/check/gstcheck.c:
+	* gst/check/gstcheck.h:
+	  use GST_DEBUG some more
+
 2005-11-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstutils.c: (gst_util_uint64_scale),

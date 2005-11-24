@@ -138,12 +138,12 @@ G_STMT_START {							\
 #define MAIN_START_THREAD_FUNCTION(i, function, data)		\
 G_STMT_START {							\
     GThread *thread = NULL;					\
-    g_message ("MAIN: creating thread %d\n", i);		\
+    GST_DEBUG ("MAIN: creating thread %d", i);			\
     g_mutex_lock (mutex);					\
     thread = g_thread_create ((GThreadFunc) function, data,	\
 	TRUE, NULL);						\
     /* wait for thread to signal us that it's ready */		\
-    g_message ("MAIN: waiting for thread %d\n", i);		\
+    GST_DEBUG ("MAIN: waiting for thread %d", i);		\
     g_cond_wait (start_cond, mutex);				\
     g_mutex_unlock (mutex);					\
 								\
@@ -153,9 +153,9 @@ G_STMT_START {							\
 
 #define MAIN_SYNCHRONIZE()		\
 G_STMT_START {				\
-  g_message ("MAIN: synchronizing\n");	\
+  GST_DEBUG ("MAIN: synchronizing");	\
   g_cond_broadcast (sync_cond);		\
-  g_message ("MAIN: synchronized\n");	\
+  GST_DEBUG ("MAIN: synchronized");	\
 } G_STMT_END;
 
 #define MAIN_STOP_THREADS()					\
@@ -163,9 +163,9 @@ G_STMT_START {							\
   _gst_check_threads_running = FALSE;				\
 								\
   /* join all threads */					\
-  g_message ("MAIN: joining\n");				\
+  GST_DEBUG ("MAIN: joining");					\
   g_list_foreach (thread_list, (GFunc) g_thread_join, NULL);	\
-  g_message ("MAIN: joined\n");					\
+  GST_DEBUG ("MAIN: joined");					\
 } G_STMT_END;
 
 #define THREAD_START()						\
@@ -175,7 +175,7 @@ THREAD_SYNCHRONIZE();
 #define THREAD_STARTED()					\
 G_STMT_START {							\
   /* signal main thread that we started */			\
-  g_message ("THREAD %p: started\n", g_thread_self ());		\
+  GST_DEBUG ("THREAD %p: started", g_thread_self ());		\
   g_mutex_lock (mutex);						\
   g_cond_signal (start_cond);					\
 } G_STMT_END;
@@ -183,9 +183,9 @@ G_STMT_START {							\
 #define THREAD_SYNCHRONIZE()					\
 G_STMT_START {							\
   /* synchronize everyone */					\
-  g_message ("THREAD %p: syncing\n", g_thread_self ());		\
+  GST_DEBUG ("THREAD %p: syncing", g_thread_self ());		\
   g_cond_wait (sync_cond, mutex);				\
-  g_message ("THREAD %p: synced\n", g_thread_self ());		\
+  GST_DEBUG ("THREAD %p: synced", g_thread_self ());		\
   g_mutex_unlock (mutex);					\
 } G_STMT_END;
 

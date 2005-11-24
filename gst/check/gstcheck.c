@@ -21,10 +21,10 @@
  */
 /**
  * SECTION:gstcheck
- * @short_description: Common code for GStreamer unittests
+ * @short_description: Common code for GStreamer unit tests
  *
- * These macros and functions are for internal use of the unittests found inside
- * the 'check' directories of various GStreamer packages.
+ * These macros and functions are for internal use of the unit tests found
+ * inside the 'check' directories of various GStreamer packages.
  */
 
 #include "gstcheck.h"

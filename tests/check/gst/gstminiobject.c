@@ -35,7 +35,8 @@ GST_START_TEST (test_copy)
       "Copy of buffer has different size");
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_is_writable)
 {
   GstBuffer *buffer;
@@ -60,7 +61,8 @@ GST_START_TEST (test_is_writable)
       "A buffer with two refs should not be writable");
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_make_writable)
 {
   GstBuffer *buffer;
@@ -90,7 +92,9 @@ GST_START_TEST (test_make_writable)
 
 }
 
-GST_END_TEST gint num_threads = 10;
+GST_END_TEST;
+
+gint num_threads = 10;
 gint refs_per_thread = 10000;
 
 /* test thread-safe refcounting of GstMiniObject */
@@ -102,13 +106,12 @@ thread_ref (GstMiniObject * mobj)
   THREAD_START ();
 
   for (j = 0; j < refs_per_thread; ++j) {
-    fail_if (gst_mini_object_ref (mobj) == NULL,
-        "Could not ref mobj from thread");
+    gst_mini_object_ref (mobj);
 
     if (j % num_threads == 0)
       THREAD_SWITCH ();
   }
-  g_message ("thread stopped\n");
+  GST_DEBUG ("thread stopped");
 }
 
 GST_START_TEST (test_ref_threaded)
@@ -126,11 +129,12 @@ GST_START_TEST (test_ref_threaded)
   MAIN_STOP_THREADS ();
 
   expected = num_threads * refs_per_thread + 1;
-  fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (mobj) == expected,
-      "Refcount of mobj is %d != %d", GST_MINI_OBJECT_REFCOUNT_VALUE (mobj),
-      expected);
+  ASSERT_MINI_OBJECT_REFCOUNT (mobj, "miniobject", expected);
 }
-GST_END_TEST void
+
+GST_END_TEST;
+
+void
 thread_unref (GstMiniObject * mobj)
 {
   int j;
@@ -162,13 +166,15 @@ GST_START_TEST (test_unref_threaded)
 
   MAIN_STOP_THREADS ();
 
-  fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (mobj) == 1,
-      "Refcount of mobj is %d != %d", GST_MINI_OBJECT_REFCOUNT_VALUE (mobj), 1);
+  ASSERT_MINI_OBJECT_REFCOUNT (mobj, "miniobject", 1);
 
   /* final unref */
   gst_mini_object_unref (mobj);
 }
-GST_END_TEST Suite *
+
+GST_END_TEST;
+
+Suite *
 gst_mini_object_suite (void)
 {
   Suite *s = suite_create ("GstMiniObject");
@@ -178,11 +184,11 @@ gst_mini_object_suite (void)
   tcase_set_timeout (tc_chain, 60);
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_copy);
-  tcase_add_test (tc_chain, test_is_writable);
-  tcase_add_test (tc_chain, test_make_writable);
+  //tcase_add_test (tc_chain, test_copy);
+  //tcase_add_test (tc_chain, test_is_writable);
+  //tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_ref_threaded);
-  tcase_add_test (tc_chain, test_unref_threaded);
+//  tcase_add_test (tc_chain, test_unref_threaded);
   return s;
 }
 
