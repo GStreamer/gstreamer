@@ -1,3 +1,14 @@
+2005-11-24  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstutils.c: (GST_START_TEST), (gst_utils_suite):
+	Added test for scaling.
+
+	* gst/gstclock.h:
+	Small doc fix.
+
+	* gst/gstutils.c: (gst_util_uint64_scale_int):
+	Implemented high precision scaling code.
+
 2005-11-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstinfo.h:

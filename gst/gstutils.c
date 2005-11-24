@@ -340,6 +340,22 @@ gst_gdouble_to_guint64 (gdouble value)
 }
 #endif
 
+
+/* convenience struct for getting high an low uint32 parts of
+ * a guint64 */
+typedef union
+{
+  guint64 ll;
+  struct
+  {
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+    guint32 high, low;
+#else
+    guint32 low, high;
+#endif
+  } l;
+} GstUInt64;
+
 /**
  * gst_util_uint64_scale:
  * @val: the number to scale
@@ -360,19 +376,54 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 
 /**
  * gst_util_uint64_scale_int:
- * @val: GstClockTime to scale.
+ * @val: guint64 (such as a #GstClockTime) to scale.
  * @num: numerator of the scale factor.
  * @denom: denominator of the scale factor.
  *
- * Scale a clocktime by a factor expressed as a fraction (num/denom), avoiding
+ * Scale a guint64 by a factor expressed as a fraction (num/denom), avoiding
  * overflows and loss of precision.
+ *
+ * @num and @denom must be positive integers. @denom cannot be 0.
  *
  * Returns: @val * @num / @denom, avoiding overflow and loss of precision
  */
 guint64
 gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 {
-  return val * num / denom;
+  GstUInt64 result;
+
+  g_return_val_if_fail (denom > 0, G_MAXUINT64);
+  g_return_val_if_fail (num >= 0, G_MAXUINT64);
+
+  if (val <= G_MAXUINT32) {
+    /* simple case */
+    result.ll = val * num / denom;
+  } else {
+    GstUInt64 gval, low, high, temp;
+
+    /* do 96 bits mult/div */
+    gval.ll = val;
+    low.ll = ((guint64) gval.l.low) * num;
+    high.ll = ((guint64) gval.l.high) * num + (low.l.high);
+    result.ll = (high.ll / denom);
+    temp.l.high = (high.ll % denom);
+    temp.l.low = (low.l.low);
+    temp.ll /= denom;
+
+    /* avoid overflow */
+    if (result.ll + temp.l.high > G_MAXUINT32)
+      goto overflow;
+
+    result.l.high = result.l.low;
+    result.l.low = 0;
+    result.ll += temp.ll;
+  }
+  return result.ll;
+
+overflow:
+  {
+    return G_MAXUINT64;
+  }
 }
 
 /* -----------------------------------------------------

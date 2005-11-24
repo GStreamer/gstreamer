@@ -63,7 +63,7 @@ typedef gint64 GstClockTimeDiff;
 /**
  * GstClockID:
  *
- * A datatype to hold the handle to an outstanding async clock callback.
+ * A datatype to hold the handle to an outstanding sync or async clock callback.
  */
 typedef gpointer GstClockID;
 

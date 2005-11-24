@@ -167,6 +167,37 @@ GST_START_TEST (test_buffer_probe_once)
   g_assert (n_data_probes_once == 1);   /* let's hit it and quit!!! */
 } GST_END_TEST;
 
+GST_START_TEST (test_math_scale)
+{
+  fail_if (gst_util_uint64_scale_int (1, 1, 1) != 1);
+
+  fail_if (gst_util_uint64_scale_int (10, 10, 1) != 100);
+  fail_if (gst_util_uint64_scale_int (10, 10, 2) != 50);
+
+  fail_if (gst_util_uint64_scale_int (0, 10, 2) != 0);
+  fail_if (gst_util_uint64_scale_int (0, 0, 2) != 0);
+
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT32, 5, 1) != G_MAXUINT32 * 5LL);
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT32, 10, 2) != G_MAXUINT32 * 5LL);
+
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT32, 1, 5) != G_MAXUINT32 / 5LL);
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT32, 2, 10) != G_MAXUINT32 / 5LL);
+
+  /* not quite overflow */
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT64 - 1, 10,
+          10) != G_MAXUINT64 - 1);
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT64 - 1, G_MAXINT32,
+          G_MAXINT32) != G_MAXUINT64 - 1);
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT64 - 100, G_MAXINT32,
+          G_MAXINT32) != G_MAXUINT64 - 100);
+
+  /* overflow */
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT64 - 1, 10, 1) != G_MAXUINT64);
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT64 - 1, G_MAXINT32,
+          1) != G_MAXUINT64);
+
+} GST_END_TEST;
+
 Suite *
 gst_utils_suite (void)
 {
@@ -176,6 +207,7 @@ gst_utils_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_buffer_probe_n_times);
   tcase_add_test (tc_chain, test_buffer_probe_once);
+  tcase_add_test (tc_chain, test_math_scale);
   return s;
 }
 
