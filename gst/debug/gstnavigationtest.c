@@ -169,6 +169,7 @@ draw_box_planar411 (guint8 * dest, int width, int height, int x, int y,
     guint8 colory, guint8 coloru, guint8 colorv)
 {
   int x1, x2, y1, y2;
+  guint8 *d = dest;
 
   if (x < 0 || y < 0 || x >= width || y >= height)
     return;
@@ -180,27 +181,25 @@ draw_box_planar411 (guint8 * dest, int width, int height, int x, int y,
 
   for (y = y1; y < y2; y++) {
     for (x = x1; x < x2; x++) {
-      ((guint8 *) dest)[y * width + x] = colory;
+      ((guint8 *) d)[y * GST_VIDEO_I420_Y_ROWSTRIDE (width) + x] = colory;
     }
   }
 
-  dest += height * width;
-  width /= 2;
-  height /= 2;
+  d = dest + GST_VIDEO_I420_U_OFFSET (width, height);
   x1 /= 2;
   x2 /= 2;
   y1 /= 2;
   y2 /= 2;
   for (y = y1; y < y2; y++) {
     for (x = x1; x < x2; x++) {
-      ((guint8 *) dest)[y * width + x] = coloru;
+      ((guint8 *) d)[y * GST_VIDEO_I420_U_ROWSTRIDE (width) + x] = coloru;
     }
   }
 
-  dest += height * width;
+  d = dest + GST_VIDEO_I420_V_OFFSET (width, height);
   for (y = y1; y < y2; y++) {
     for (x = x1; x < x2; x++) {
-      ((guint8 *) dest)[y * width + x] = colorv;
+      ((guint8 *) d)[y * GST_VIDEO_I420_V_ROWSTRIDE (width) + x] = colorv;
     }
   }
 }

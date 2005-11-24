@@ -1,3 +1,15 @@
+2005-11-24  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/debug/gstnavigationtest.c: (draw_box_planar411):
+	* gst/videofilter/gstvideoflip.c: (gst_videoflip_method_get_type),
+	(gst_videoflip_set_caps), (gst_videoflip_transform_caps),
+	(gst_videoflip_get_unit_size), (gst_videoflip_flip),
+	(gst_videoflip_transform), (gst_videoflip_handle_src_event),
+	(gst_videoflip_set_property), (gst_videoflip_base_init),
+	(gst_videoflip_class_init), (gst_videoflip_init): Handle strides
+	correctly, fix identity flipping, convert navigation event 
+	correctly again.
+
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD
