@@ -165,8 +165,8 @@ gst_sync_method_get_type (void)
     {GST_SYNC_METHOD_NEXT_KEYFRAME,
         "Serve starting from the next keyframe", "next-keyframe"},
     {GST_SYNC_METHOD_LATEST_KEYFRAME,
-        "Serve everything since the latest keyframe (burst)",
-          "latest-keyframe"},
+          "Serve everything since the latest keyframe (burst)",
+        "latest-keyframe"},
     {0, NULL, NULL},
   };
 
@@ -797,6 +797,8 @@ gst_multifdsink_client_queue_caps (GstMultiFdSink * sink, GstTCPClient * client,
   guint length;
   gchar *string;
 
+  g_return_val_if_fail (caps != NULL, FALSE);
+
   string = gst_caps_to_string (caps);
   GST_DEBUG_OBJECT (sink, "[fd %5d] Queueing caps %s through GDP",
       client->fd.fd, string);
@@ -974,11 +976,23 @@ gst_multifdsink_handle_client_write (GstMultiFdSink * sink,
   /* when using GDP, first check if we have queued caps yet */
   if (sink->protocol == GST_TCP_PROTOCOL_GDP) {
     if (!client->caps_sent) {
-      const GstCaps *caps =
-          GST_PAD_CAPS (GST_PAD_PEER (GST_BASE_SINK_PAD (sink)));
+      GstPad *peer;
+      GstCaps *caps;
+
+      peer = gst_pad_get_peer (GST_BASE_SINK_PAD (sink));
+      if (!peer) {
+        GST_WARNING_OBJECT (sink, "pad has no peer");
+        return FALSE;
+      }
+
+      caps = gst_pad_get_negotiated_caps (peer);
+      gst_object_unref (peer);
 
       /* queue caps for sending */
       res = gst_multifdsink_client_queue_caps (sink, client, caps);
+
+      gst_caps_unref (caps);
+
       if (!res) {
         GST_DEBUG_OBJECT (sink, "Failed queueing caps, removing client");
         return FALSE;

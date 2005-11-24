@@ -1,3 +1,8 @@
+2005-11-24  Andy Wingo  <wingo@pobox.com>
+
+	* gst/tcp/gstmultifdsink.c (gst_multifdsink_handle_client_write):
+	Be threadsafe.
+
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD
