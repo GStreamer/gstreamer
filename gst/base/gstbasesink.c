@@ -748,6 +748,7 @@ preroll_failed:
   {
     GST_DEBUG_OBJECT (basesink, "preroll failed");
     gst_base_sink_preroll_queue_flush (basesink, pad);
+    GST_PAD_PREROLL_UNLOCK (pad);
 
     GST_DEBUG_OBJECT (basesink, "abort state");
     gst_element_abort_state (GST_ELEMENT (basesink));
