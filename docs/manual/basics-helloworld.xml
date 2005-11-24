@@ -104,9 +104,14 @@ new_pad (GstElement *element,
 	 GstPad     *pad,
 	 gpointer    data)
 {
+  GstPad *sinkpad;
   /* We can now link this pad with the audio decoder */
   g_print ("Dynamic pad created, linking parser/decoder\n");
-  gst_pad_link (pad, gst_element_get_pad (decoder, "sink"));
+
+  sinkpad = gst_element_get_pad (decoder, "sink"));
+  gst_pad_link (pad, sinkpad);
+
+  gst_object_unref (sinkpad);
 }
 
 int

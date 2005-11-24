@@ -1,3 +1,8 @@
+2005-11-24  msmith,,,  <set EMAIL_ADDRESS environment variable>
+
+	* docs/manual/basics-helloworld.xml:
+	  Fix bug #315027: memory leak in example code in docs.
+
 2005-11-24  Michael Smith <msmith@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object):
