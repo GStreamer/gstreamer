@@ -1,3 +1,11 @@
+2005-11-24  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.override:
+	Ignore all *_full functions/methods
+	* gst/gstbus.override:
+	Wrapper for gst_bus_add_signal_watch that now takes an optional
+	priority argument
+
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD

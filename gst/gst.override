@@ -296,6 +296,7 @@ ignore-glob
   *_unref
   *_init
   *_deinit
+  *_full
   gst_class_*
   gst_init*
   gst_interface_*
