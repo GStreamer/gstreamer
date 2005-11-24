@@ -51,6 +51,16 @@ typedef enum {
   GST_PIPELINE_FLAG_LAST               = (GST_BIN_FLAG_LAST << 4)
 } GstPipelineFlags;
 
+/**
+ * GstPipeline:
+ * @fixed_clock: The fixed clock of the pipeline, used when 
+ *               GST_PIPELINE_FLAG_FIXED_CLOCK is set.
+ * @stream_time: The stream time of the pipeline.
+ * @delay: Extra delay added to base time to compensate for delay
+ *         when setting elements to PLAYING.
+ *
+ * The #GstPipeline structure.
+ */
 struct _GstPipeline {
   GstBin 	 bin;
 

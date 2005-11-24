@@ -101,6 +101,11 @@ typedef GstBusSyncReply (*GstBusSyncHandler) 	(GstBus * bus, GstMessage * messag
  */
 typedef gboolean 	(*GstBusFunc)	 	(GstBus * bus, GstMessage * message, gpointer data);
 
+/**
+ * GstBus:
+ *
+ * The opaque #GstBus data structure.
+ */
 struct _GstBus
 {
   GstObject 	    object;

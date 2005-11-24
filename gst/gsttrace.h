@@ -33,7 +33,13 @@ G_BEGIN_DECLS
 typedef struct _GstTrace 	GstTrace;
 typedef struct _GstTraceEntry 	GstTraceEntry;
 
+/**
+ * GstTrace:
+ *
+ * Opaque #GstTrace structure.
+ */
 struct _GstTrace {
+  /*< private >*/
   /* where this trace is going */
   gchar *filename;
   int fd;
@@ -58,8 +64,26 @@ GstTrace*	gst_trace_new			(gchar *filename, gint size);
 void 		gst_trace_destroy		(GstTrace *trace);
 void 		gst_trace_flush			(GstTrace *trace);
 void 		gst_trace_text_flush		(GstTrace *trace);
+/**
+ * gst_trace_get_size:
+ * @trace: a #GstTrace
+ *
+ * Retrieve the buffer size of @trace.
+ */
 #define 	gst_trace_get_size(trace) 	((trace)->bufsize)
+/**
+ * gst_trace_get_offset:
+ * @trace: a #GstTrace
+ *
+ * Retrieve the current buffer offset of @trace.
+ */
 #define 	gst_trace_get_offset(trace) 	((trace)->bufoffset)
+/**
+ * gst_trace_get_remaining:
+ * @trace: a #GstTrace
+ *
+ * Retrieve the remaining size in the @trace buffer.
+ */
 #define 	gst_trace_get_remaining(trace) 	((trace)->bufsize - (trace)->bufoffset)
 void 		gst_trace_set_default		(GstTrace *trace);
 
@@ -163,6 +187,16 @@ G_STMT_START {						\
 
 
 extern gint _gst_trace_on;
+/**
+ * gst_trace_add_entry:
+ * @trace: a #GstTrace
+ * @seq: a sequence number
+ * @data: the data to trace
+ * @msg: the trace message
+ *
+ * Add an entry to @trace with sequence number @seq, @data and @msg.
+ * If @trace is NULL, the entry will be added to the default #GstTrace.
+ */
 #define gst_trace_add_entry(trace,seq,data,msg) \
   if (_gst_trace_on) { \
     _gst_trace_add_entry(trace,(guint32)seq,(guint32)data,msg); \

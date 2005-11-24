@@ -50,15 +50,29 @@ typedef struct _GstQueue GstQueue;
 typedef struct _GstQueueSize GstQueueSize;
 typedef struct _GstQueueClass GstQueueClass;
 
+/**
+ * GstQueueSize:
+ * @buffers: number of buffers
+ * @bytes: number of bytes
+ * @time: amount of time
+ *
+ * Structure describing the size of a queue.
+ */
 struct _GstQueueSize {
-    guint   buffers;	/* no. of buffers */
-    guint   bytes;	/* no. of bytes */
-    guint64 time;	/* amount of time */
+    guint   buffers;
+    guint   bytes;
+    guint64 time;
 };
 
+/**
+ * GstQueue:
+ *
+ * Opaque #GstQueue structure.
+ */
 struct _GstQueue {
   GstElement element;
 
+  /*< private >*/
   GstPad *sinkpad;
   GstPad *srcpad;
 

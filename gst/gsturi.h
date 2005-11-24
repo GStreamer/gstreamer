@@ -60,6 +60,11 @@ typedef enum {
 #define GST_URI_HANDLER_GET_INTERFACE(obj)	(G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_URI_HANDLER, GstURIHandlerInterface))
 #define GST_URI_HANDLER_CLASS(obj)	(G_TYPE_CHECK_CLASS_CAST ((obj), GST_TYPE_URI_HANDLER, GstURIHandler))
 
+/**
+ * GstURIHandler:
+ *
+ * Opaque #GstURIHandler structure.
+ */
 typedef struct _GstURIHandler GstURIHandler;
 typedef struct _GstURIHandlerInterface GstURIHandlerInterface;
 

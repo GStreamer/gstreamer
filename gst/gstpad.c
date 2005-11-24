@@ -36,7 +36,7 @@
  * gst_pad_new_from_template().
  *
  * Pads have #GstCaps attached to it to describe the media type they are
- * capable of dealing with.  gst_pad_get_caps() and gst_pad_try_set_caps() are
+ * capable of dealing with.  gst_pad_get_caps() and gst_pad_set_caps() are
  * used to manipulate the caps of the pads.
  * Pads created from a pad template cannot set capabilities that are
  * incompatible with the pad template capabilities.
@@ -51,14 +51,13 @@
  * gst_pad_set_*_function() calls to register callbacks for various events
  * on the pads.
  *
- * GstElements will use gst_pad_push() and gst_pad_pull() to push out
+ * GstElements will use gst_pad_push() and gst_pad_pull_range() to push out
  * or pull in a buffer.
- * gst_pad_select() and gst_pad_selectv() are used by plugins to wait for the
- * first incoming buffer or event on any of the given set of pads.
  *
  * To send a #GstEvent on a pad, use gst_pad_send_event().
  *
- * Last reviewed on December 13th, 2002 (0.5.0.1)
+ * Last reviewed on 2005-11-23 (0.9.5)
+ *
  */
 
 #include "gst_private.h"
@@ -3678,6 +3677,7 @@ dropping:
  *
  * Set the given private data gpointer on the pad.
  * This function can only be used by the element that owns the pad.
+ * No locking is performed in this function.
  */
 void
 gst_pad_set_element_private (GstPad * pad, gpointer priv)
@@ -3690,6 +3690,7 @@ gst_pad_set_element_private (GstPad * pad, gpointer priv)
  * @pad: the #GstPad to get the private data of.
  *
  * Gets the private data of a pad.
+ * No locking is performed in this function.
  *
  * Returns: a #gpointer to the private data.
  */

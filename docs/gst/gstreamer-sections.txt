@@ -1294,6 +1294,7 @@ GST_PAD_STREAM_LOCK_FULL
 GST_PAD_STREAM_TRYLOCK
 GST_PAD_STREAM_UNLOCK
 GST_PAD_STREAM_UNLOCK_FULL
+
 GST_FLOW_IS_FATAL
 
 <SUBSECTION Standard>
@@ -1932,7 +1933,6 @@ gst_task_state_get_type
 <FILE>gsttrace</FILE>
 <TITLE>GstTrace</TITLE>
 GstTrace
-GstTraceEntry
 gst_trace_new
 gst_trace_destroy
 gst_trace_flush
@@ -1959,8 +1959,9 @@ gst_alloc_trace_new
 gst_alloc_trace_free
 <SUBSECTION Standard>
 GST_TYPE_ALLOC_TRACE_FLAGS
-<SUBSECTION Private>
 gst_alloc_trace_flags_get_type
+<SUBSECTION Private>
+GstTraceEntry
 </SECTION>
 
 

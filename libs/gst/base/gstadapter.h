@@ -42,6 +42,11 @@ G_BEGIN_DECLS
 typedef struct _GstAdapter GstAdapter;
 typedef struct _GstAdapterClass GstAdapterClass;
 
+/**
+ * GstAdapter:
+ *
+ * The opaque #GstAdapter data structure.
+ */
 struct _GstAdapter {
   GObject	object;
 

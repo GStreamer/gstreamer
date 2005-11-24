@@ -43,9 +43,15 @@ G_BEGIN_DECLS
 typedef struct _GstFileSink GstFileSink;
 typedef struct _GstFileSinkClass GstFileSinkClass;
 
+/**
+ * GstFileSink:
+ *
+ * Opaque #GstFileSink structure.
+ */
 struct _GstFileSink {
   GstBaseSink parent;
 
+  /*< private >*/
   gchar *filename;
   gchar *uri;
   FILE *file;

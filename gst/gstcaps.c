@@ -60,7 +60,7 @@
  * Various methods exist to work with the media types such as subtracting
  * or intersecting.
  *
- * Last reviewed on 2005-11-09 (0.9.4)
+ * Last reviewed on 2005-11-23 (0.9.5)
  */
 
 #ifdef HAVE_CONFIG_H

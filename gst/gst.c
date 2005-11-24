@@ -91,11 +91,14 @@
  * </example>
  *
  * Use gst_version() to query the library version at runtime or use the
- * GST_VERSION_* macros to find the version at compile time.
+ * GST_VERSION_* macros to find the version at compile time. Optionally
+ * gst_version_string() returns a printable string.
  *
- * The functions gst_main() and gst_main_quit() enter and exit the main loop.
- * GStreamer doesn't currently require you to use a mainloop but can intergrate
- * with it without problems.
+ * The gst_deinit() call is used to clean up all internal resources used
+ * by <application>GStreamer</application>. It is mostly used in unit tests 
+ * to check for leaks.
+ *
+ * Last reviewed on 2005-11-23 (0.9.5)
  */
 
 #include <stdlib.h>

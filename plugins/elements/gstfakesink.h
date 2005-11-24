@@ -41,6 +41,18 @@ G_BEGIN_DECLS
 #define GST_IS_FAKE_SINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKE_SINK))
 
+/**
+ * GstFakeSinkStateError:
+ * @FAKE_SINK_STATE_ERROR_NONE: no error
+ * @FAKE_SINK_STATE_ERROR_NULL_READY: cause the NULL to READY state change to fail
+ * @FAKE_SINK_STATE_ERROR_READY_PAUSED: cause the READY to PAUSED state change to fail:
+ * @FAKE_SINK_STATE_ERROR_PAUSED_PLAYING: cause the PAUSED to PLAYING state change to fail:
+ * @FAKE_SINK_STATE_ERROR_PLAYING_PAUSED: cause the PLAYING to PAUSED state change to fail:
+ * @FAKE_SINK_STATE_ERROR_PAUSED_READY: cause the PAUSED to READY state change to fail:
+ * @FAKE_SINK_STATE_ERROR_READY_NULL: cause the READY to NULL state change to fail:
+ *
+ * Possible state change errors for the state-error property.
+ */
 typedef enum {
   FAKE_SINK_STATE_ERROR_NONE = 0,
   FAKE_SINK_STATE_ERROR_NULL_READY,
@@ -54,6 +66,11 @@ typedef enum {
 typedef struct _GstFakeSink GstFakeSink;
 typedef struct _GstFakeSinkClass GstFakeSinkClass;
 
+/**
+ * GstFakeSink:
+ *
+ * The opaque #GstFakeSink data structure.
+ */
 struct _GstFakeSink {
   GstBaseSink		element;
 

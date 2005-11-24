@@ -16,7 +16,24 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstnettimeprovider
+ * @short_description: Special object that exposed the time of a clock
+ *                     on the network.
+ * @see_also: #GstClock, #GstNetClientClock, #GstPipeline
+ *
+ * This object exposes the time of a #GstClock on the network.
+ *
+ * A #GstNetTimeProvider is created with gst_net_time_provider_new() which
+ * takes a #GstClock, an address and a port numner as arguments.
+ *
+ * After creating the object, a client clock such as #GstNetClientClock can
+ * query the exposed clock for its values.
+ *
+ * The #GstNetTimeProvider typically wraps the clock used by a #GstPipeline.
+ *
+ * Last reviewed on 2005-11-23 (0.9.5)
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

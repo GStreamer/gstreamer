@@ -54,7 +54,10 @@ typedef GstMiniObject * (*GstMiniObjectCopyFunction) (const GstMiniObject *obj);
  * @obj: MiniObject to finalize
  *
  * Virtual function prototype for methods to free ressources used by
- * mini-objects.
+ * mini-objects. Subclasses of the mini object are allowed to revive the
+ * passed object by doing a gst_mini_object_ref(). If the object is not
+ * revived after the finalize function, the memory associated with the
+ * object is freed.
  */
 typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *obj);
 

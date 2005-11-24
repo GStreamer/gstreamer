@@ -16,7 +16,17 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:gstnettimepacket
+ * @short_description: Helper structure to construct clock packets used
+ *                     by network clocks.
+ * @see_also: #GstClock, #GstNetClientClock, #GstNetTimeProvider
+ *
+ * Various functions for receiving, sending an serializing #GstNetTimePacket
+ * structures.
+ *
+ * Last reviewed on 2005-11-23 (0.9.5)
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

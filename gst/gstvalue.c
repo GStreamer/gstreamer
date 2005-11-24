@@ -21,6 +21,9 @@
  * SECTION:gstvalue
  * @short_description: GValue implementations specific to GStreamer
  *
+ * GValue implementations specific to GStreamer.
+ *
+ * Last reviewed on 2005-11-23 (0.9.5)
  */
 
 #ifdef HAVE_CONFIG_H

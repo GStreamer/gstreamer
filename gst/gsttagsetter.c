@@ -24,8 +24,10 @@
  * @short_description: Element interface that allows setting and retrieval
  *                     of media metadata
  *
+ * Element interface that allows setting and retrieval of media metadata.
+ *
+ * Last reviewed on 2005-11-23 (0.9.5)
  */
-
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"

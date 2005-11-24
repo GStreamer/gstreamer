@@ -71,6 +71,8 @@
  * Note that clock slection and distribution is normally handled by the
  * toplevel #GstPipeline so the clock functions are only to be used in very
  * specific situations.
+ *
+ * Last reviewed on 2005-11-23 (0.9.5)
  */
 
 #include "gst_private.h"

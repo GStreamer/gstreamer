@@ -43,6 +43,11 @@ G_BEGIN_DECLS
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_IMPLEMENTS_INTERFACE, \
 				  GstImplementsInterfaceClass))
 
+/**
+ * GstImplementsInterface:
+ *
+ * Opaque #GstImplementsInterface structure.
+ */
 typedef struct _GstImplementsInterface GstImplementsInterface;
 
 typedef struct _GstImplementsInterfaceClass GstImplementsInterfaceClass;

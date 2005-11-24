@@ -61,11 +61,17 @@ typedef struct _GstBaseSrcClass GstBaseSrcClass;
 #define GST_BASE_SRC_PAD(obj)                 (GST_BASE_SRC_CAST (obj)->srcpad)
 
 
+/**
+ * GstBaseSrc:
+ *
+ * The opaque #GstBaseSrc data structure.
+ */
 struct _GstBaseSrc {
   GstElement     element;
+
+  /*< protected >*/
   GstPad	*srcpad;
 
-  /*< public >*/
   /* available to subclass implementations */
   /* MT-protected (with LIVE_LOCK) */
   GMutex	*live_lock;

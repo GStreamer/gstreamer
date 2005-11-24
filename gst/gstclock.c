@@ -81,6 +81,15 @@
  * running. Some clocks however do not progress when the element that provided
  * the clock is not PLAYING.
  *
+ * When a clock has the GST_CLOCK_FLAG_CAN_SET_MASTER flag set, it can be slaved to
+ * another #GstClock with the gst_clock_set_master(). The clock will then 
+ * automatically be synchronized to this master clock by repeadedly sampling the
+ * master clock and the slave clock and recalibrating the slave clock with
+ * gst_clock_set_calibration(). This feature is mostly usefull for plugins that have
+ * an internal clock but must operate with another clock selected by the #GstPipeline.
+ * They can track the offset and rate difference of their internal clock relative to
+ * the master clock by using the gst_clock_get_calibration() function.
+ *
  * Last reviewed on 2005-10-28 (0.9.4)
  */
 

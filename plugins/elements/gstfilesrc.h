@@ -45,9 +45,15 @@ G_BEGIN_DECLS
 typedef struct _GstFileSrc GstFileSrc;
 typedef struct _GstFileSrcClass GstFileSrcClass;
 
+/**
+ * GstFileSrc:
+ *
+ * Opaque #GstFileSrc structure.
+ */
 struct _GstFileSrc {
   GstBaseSrc element;
 
+  /*< private >*/
   guint pagesize;			/* system page size */
 
   gchar *filename;			/* filename */

@@ -49,14 +49,19 @@ G_BEGIN_DECLS
 typedef struct _GstBaseTransform GstBaseTransform;
 typedef struct _GstBaseTransformClass GstBaseTransformClass;
 
+/**
+ * GstBaseTransform:
+ *
+ * The opaque #GstBaseTransform data structure.
+ */
 struct _GstBaseTransform {
   GstElement	 element;
 
+  /*< protected >*/
   /* source and sink pads */
   GstPad	*sinkpad;
   GstPad	*srcpad;
 
-  /*< public >*/
   /* Set by sub-class */
   gboolean	 passthrough;
   gboolean	 always_in_place;

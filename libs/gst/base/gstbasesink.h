@@ -47,6 +47,11 @@ G_BEGIN_DECLS
 typedef struct _GstBaseSink GstBaseSink;
 typedef struct _GstBaseSinkClass GstBaseSinkClass;
 
+/**
+ * GstBaseSink:
+ *
+ * The opaque #GstBaseSink data structure.
+ */
 struct _GstBaseSink {
   GstElement	 element;
 

@@ -21,6 +21,30 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstnetclientclock
+ * @short_description: Special clock that synchronizes to a remote time
+ *                     provider.
+ * @see_also: #GstClock, #GstNetTimeProvider, #GstPipeline
+ *
+ * This object implements a custom #GstClock that synchronizes its time
+ * to a remote time provider such as #GstNetTimeProvider.
+ *
+ * A new clock is created with gst_net_client_clock_new() which takes the
+ * address and port of the remote time provider along with a name and
+ * an initial time.
+ *
+ * This clock will poll the time provider and will update its calibration
+ * parameters based on the local and remote observations.
+ *
+ * Various parameters of the clock can be configured with the parent #GstClock
+ * "timeout", "window-size" and "window-threshold" object properties.
+ *
+ * A #GstNetClientClock is typically set on a #GstPipeline with 
+ * gst_pipeline_use_clock().
+ *
+ * Last reviewed on 2005-11-23 (0.9.5)
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

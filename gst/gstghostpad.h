@@ -37,6 +37,11 @@ G_BEGIN_DECLS
 #define GST_GHOST_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GHOST_PAD, GstGhostPad))
 #define GST_GHOST_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GHOST_PAD, GstGhostPadClass))
 
+/**
+ * GstGhostPad:
+ *
+ * Opaque #GstGhostPad structure.
+ */
 typedef struct _GstGhostPad GstGhostPad;
 typedef struct _GstGhostPadClass GstGhostPadClass;
 

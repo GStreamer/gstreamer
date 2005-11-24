@@ -101,11 +101,19 @@ struct _GstQueryTypeDefinition
 
 #define GST_QUERY_TYPE(query)  (((GstQuery*)(query))->type)
 
+/**
+ * GstQuery:
+ * @mini_object: The parent #GstMiniObject type
+ * @type: the #GstQueryType
+ * @structure: the #GstStructure containing the query details.
+ *
+ * The #GstQuery structure.
+ */
 struct _GstQuery
 {
   GstMiniObject mini_object;
 
-  /*< public > */
+  /*< public > *//* with COW */
   GstQueryType type;
 
   GstStructure *structure;

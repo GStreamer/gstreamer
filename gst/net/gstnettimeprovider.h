@@ -49,9 +49,15 @@ G_BEGIN_DECLS
 typedef struct _GstNetTimeProvider GstNetTimeProvider;
 typedef struct _GstNetTimeProviderClass GstNetTimeProviderClass;
 
+/**
+ * GstNetTimeProvider:
+ *
+ * Opaque #GstNetTimeProvider structure.
+ */
 struct _GstNetTimeProvider {
   GstObject parent;
 
+  /*< private >*/
   gchar *address;
   int port;
 
@@ -61,6 +67,9 @@ struct _GstNetTimeProvider {
   GThread *thread;
 
   GstClock *clock;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstNetTimeProviderClass {

@@ -28,6 +28,19 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstTagMergeMode:
+ * @GST_TAG_MERGE_UNDEFINED: undefined merge mode
+ * @GST_TAG_MERGE_REPLACE_ALL: replace all tags
+ * @GST_TAG_MERGE_REPLACE: replace tags
+ * @GST_TAG_MERGE_APPEND: append tags
+ * @GST_TAG_MERGE_PREPEND: prepend tags
+ * @GST_TAG_MERGE_KEEP: keep existing tags
+ * @GST_TAG_MERGE_KEEP_ALL: keep all existing tags
+ * @GST_TAG_MERGE_COUNT: the number of merge modes
+ *
+ * The different tag merging modes.
+ */
 typedef enum {
   GST_TAG_MERGE_UNDEFINED,
   GST_TAG_MERGE_REPLACE_ALL,
@@ -42,6 +55,16 @@ typedef enum {
 
 #define GST_TAG_MODE_IS_VALID(mode)     (((mode) > GST_TAG_MERGE_UNDEFINED) && ((mode) < GST_TAG_MERGE_COUNT))
 
+/**
+ * GstTagFlag:
+ * @GST_TAG_FLAG_UNDEFINED: undefined flag
+ * @GST_TAG_FLAG_META: tag is meta data
+ * @GST_TAG_FLAG_ENCODED: tag is encoded
+ * @GST_TAG_FLAG_DECODED: tag is decoded
+ * @GST_TAG_FLAG_COUNT: number of tag flags
+ *
+ * Extra tag flags used when registering tags.
+ */
 typedef enum {
   GST_TAG_FLAG_UNDEFINED,
   GST_TAG_FLAG_META,
@@ -52,6 +75,11 @@ typedef enum {
 
 #define GST_TAG_FLAG_IS_VALID(flag)     (((flag) > GST_TAG_FLAG_UNDEFINED) && ((flag) < GST_TAG_FLAG_COUNT))
 
+/**
+ * GstTagList:
+ *
+ * Opaque #GstTagList data structure.
+ */
 typedef GstStructure GstTagList;
 #define GST_TAG_LIST(x)		((GstTagList *) (x))
 #define GST_IS_TAG_LIST(x)	(gst_is_tag_list (GST_TAG_LIST (x)))
@@ -70,6 +98,14 @@ typedef void (*GstTagForeachFunc) (const GstTagList *list,
 				   const gchar * tag,
 				   gpointer user_data);
 
+/**
+ * GstTagMergeFunc:
+ * @dest: the destination #GValue
+ * @src: the source #GValue
+ *
+ * A function for merging multiple values of a tag used when registering
+ * tags.
+ */
 typedef void		(* GstTagMergeFunc)	(GValue *dest, const GValue *src);
 
 /* initialize tagging system */

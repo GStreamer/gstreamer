@@ -29,6 +29,19 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstFakeSrcOutputType:
+ * @FAKE_SRC_FIRST_LAST_LOOP: first pad then last pad
+ * @FAKE_SRC_LAST_FIRST_LOOP: last pad then first pad
+ * @FAKE_SRC_PING_PONG: ping pong between pads
+ * @FAKE_SRC_ORDERED_RANDOM: ordered random pad
+ * @FAKE_SRC_RANDOM: random pad
+ * @FAKE_SRC_PATTERN_LOOP: loop between pads in a particular pattern
+ * @FAKE_SRC_PING_PONG_PATTERN: ping pong based on a pattern
+ * @FAKE_SRC_GET_ALWAYS_SUCEEDS: a get always succeeds on a pad
+ *
+ * The different output types. Unused currently.
+ */
 typedef enum {
   FAKE_SRC_FIRST_LAST_LOOP = 1,
   FAKE_SRC_LAST_FIRST_LOOP,
@@ -40,17 +53,42 @@ typedef enum {
   FAKE_SRC_GET_ALWAYS_SUCEEDS
 } GstFakeSrcOutputType;
 
+/**
+ * GstFakeSrcDataType:
+ * @FAKE_SRC_DATA_ALLOCATE: allocate buffers
+ * @FAKE_SRC_DATA_SUBBUFFER: subbuffer each buffer
+ *
+ * The different ways buffers are allocated.
+ */
 typedef enum {
   FAKE_SRC_DATA_ALLOCATE = 1,
   FAKE_SRC_DATA_SUBBUFFER
 } GstFakeSrcDataType;
 
+/**
+ * GstFakeSrcSizeType:
+ * @FAKE_SRC_SIZETYPE_EMPTY: create empty buffers
+ * @FAKE_SRC_SIZETYPE_FIXED: fixed buffer size
+ * @FAKE_SRC_SIZETYPE_RANDOM: random buffer size
+ *
+ * The different size of the allocated buffers.
+ */
 typedef enum {
   FAKE_SRC_SIZETYPE_EMPTY = 1,
   FAKE_SRC_SIZETYPE_FIXED,
   FAKE_SRC_SIZETYPE_RANDOM
 } GstFakeSrcSizeType;
 
+/**
+ * GstFakeSrcFillType:
+ * @FAKE_SRC_FILLTYPE_NOTHING: do not fill buffers 
+ * @FAKE_SRC_FILLTYPE_ZERO: fill buffers with 0
+ * @FAKE_SRC_FILLTYPE_RANDOM: fill buffers with random bytes
+ * @FAKE_SRC_FILLTYPE_PATTERN: fill buffers with a pattern
+ * @FAKE_SRC_FILLTYPE_PATTERN_CONT: fill buffers with a continuous pattern
+ *
+ * The different ways of filling the buffers.
+ */
 typedef enum {
   FAKE_SRC_FILLTYPE_NOTHING = 1,
   FAKE_SRC_FILLTYPE_ZERO,
@@ -73,6 +111,11 @@ typedef enum {
 typedef struct _GstFakeSrc GstFakeSrc;
 typedef struct _GstFakeSrcClass GstFakeSrcClass;
 
+/**
+ * GstFakeSrc:
+ *
+ * Opaque #GstFakeSrc data structure.
+ */
 struct _GstFakeSrc {
   GstBaseSrc     element;
 

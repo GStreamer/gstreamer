@@ -1,3 +1,55 @@
+2005-11-24  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/base/gstadapter.h:
+	* gst/base/gstbasesink.h:
+	* gst/base/gstbasesrc.h:
+	* gst/base/gstbasetransform.h:
+	* gst/base/gstpushsrc.h:
+	* gst/elements/gstfakesink.h:
+	* gst/elements/gstfakesrc.c: (gst_fake_src_data_get_type):
+	* gst/elements/gstfakesrc.h:
+	* gst/elements/gstfilesink.h:
+	* gst/elements/gstfilesrc.h:
+	* gst/gst.c:
+	* gst/gstbin.c:
+	* gst/gstbuffer.c: (_gst_buffer_copy):
+	* gst/gstbus.h:
+	* gst/gstcaps.c:
+	* gst/gstchildproxy.c:
+	* gst/gstclock.c:
+	* gst/gstelement.c:
+	* gst/gstelementfactory.c:
+	* gst/gstelementfactory.h:
+	* gst/gstevent.c:
+	* gst/gstghostpad.h:
+	* gst/gstindex.h:
+	* gst/gstinterface.h:
+	* gst/gstminiobject.c:
+	* gst/gstminiobject.h:
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* gst/gstpadtemplate.h:
+	* gst/gstpipeline.h:
+	* gst/gstpluginfeature.h:
+	* gst/gstquery.h:
+	* gst/gstqueue.h:
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	* gst/gsttagsetter.c:
+	* gst/gsttagsetter.h:
+	* gst/gsttrace.c:
+	* gst/gsttrace.h:
+	* gst/gsttypefind.h:
+	* gst/gsturi.h:
+	* gst/gstvalue.c:
+	* gst/net/gstnetclientclock.c:
+	* gst/net/gstnetclientclock.h:
+	* gst/net/gstnettimepacket.c:
+	* gst/net/gstnettimeprovider.c:
+	* gst/net/gstnettimeprovider.h:
+	Doc fixes.
+
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD

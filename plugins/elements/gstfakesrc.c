@@ -139,7 +139,8 @@ gst_fake_src_data_get_type (void)
   };
 
   if (!fakesrc_data_type) {
-    fakesrc_data_type = g_enum_register_static ("GstFakeSrcData", fakesrc_data);
+    fakesrc_data_type =
+        g_enum_register_static ("GstFakeSrcDataType", fakesrc_data);
   }
   return fakesrc_data_type;
 }
@@ -174,10 +175,10 @@ gst_fake_src_filltype_get_type (void)
     {FAKE_SRC_FILLTYPE_ZERO, "Fill buffers with zeros", "zero"},
     {FAKE_SRC_FILLTYPE_RANDOM, "Fill buffers with random crap", "random"},
     {FAKE_SRC_FILLTYPE_PATTERN, "Fill buffers with pattern 0x00 -> 0xff",
-          "pattern"},
+        "pattern"},
     {FAKE_SRC_FILLTYPE_PATTERN_CONT,
-        "Fill buffers with pattern 0x00 -> 0xff that spans buffers",
-          "pattern-span"},
+          "Fill buffers with pattern 0x00 -> 0xff that spans buffers",
+        "pattern-span"},
     {0, NULL, NULL},
   };
 

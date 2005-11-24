@@ -102,7 +102,7 @@
  * the refcount drops to 0, any data pointed to by GST_BUFFER_MALLOCDATA() will
  * also be freed.
  *
- * Last reviewed on October 28th, 2005 (0.9.4)
+ * Last reviewed on November 23th, 2005 (0.9.5)
  */
 #include "gst_private.h"
 

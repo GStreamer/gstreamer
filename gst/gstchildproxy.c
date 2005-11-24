@@ -26,7 +26,7 @@
  *
  * This interface abstracts handling of property sets for child elements.
  * Imagine elements such as mixers or polyphonic generators. They all have
- * multiple #GstPads or some kind of voice objects. The element acts as a
+ * multiple #GstPad or some kind of voice objects. The element acts as a
  * parent for those child objects. Each child has the same properties.
  *
  * By implementing this interface the child properties can be accessed from the

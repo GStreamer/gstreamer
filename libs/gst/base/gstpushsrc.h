@@ -39,6 +39,11 @@ G_BEGIN_DECLS
 typedef struct _GstPushSrc GstPushSrc;
 typedef struct _GstPushSrcClass GstPushSrcClass;
 
+/**
+ * GstPushSrc:
+ *
+ * The opaque #GstPushSrc data structure.
+ */
 struct _GstPushSrc {
   GstBaseSrc     parent;
 

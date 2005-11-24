@@ -27,13 +27,13 @@
  * SECTION:gstbin
  * @short_description: Base class and element that can contain other elements
  *
- * GstBin is an element that can contain other elements, allowing them to be
+ * #GstBin is an element that can contain other #GstElement, allowing them to be
  * managed as a group.
- * Pads from the child elements can be ghosted to the bin.
+ * Pads from the child elements can be ghosted to the bin, see #GstGhostPad.
  * This makes the bin look like any other elements and enables creation of
  * higher-level abstraction elements.
  *
- * A new GstBin is created with gst_bin_new(). Use a #GstPipeline instead if you
+ * A new #GstBin is created with gst_bin_new(). Use a #GstPipeline instead if you
  * want to create a toplevel bin because a normal bin doesn't have a bus or
  * handle clock distribution of its own.
  *
@@ -58,7 +58,7 @@
  *
  * <refsect2><title>Notes</title>
  * <para>
- * A GstBin internally intercepts every #GstMessage posted by its children and
+ * A #GstBin internally intercepts every #GstMessage posted by its children and
  * implements the following default behaviour for each of them:
  * <variablelist>
  *   <varlistentry>
@@ -75,7 +75,7 @@
  *   </varlistentry>
  *   <varlistentry>
  *     <term>GST_MESSAGE_SEGMENT_DONE</term>
- *     <listitem><para> Is posted by GstBin when all elements that posted
+ *     <listitem><para> Is posted by #GstBin when all elements that posted
  *     a SEGMENT_START have posted a SEGMENT_DONE.</para></listitem>
  *   </varlistentry>
  *   <varlistentry>
@@ -84,7 +84,7 @@
  *   </varlistentry>
  * </variablelist>
  *
- * A GstBin implements the following default behaviour for answering to a
+ * A #GstBin implements the following default behaviour for answering to a
  * #GstQuery:
  * <variablelist>
  *   <varlistentry>
@@ -105,7 +105,7 @@
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2005-10-28 (0.9.4)
+ * Last reviewed on 2005-11-23 (0.9.5)
  */
 
 #include "gst_private.h"

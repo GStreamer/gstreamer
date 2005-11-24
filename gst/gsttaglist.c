@@ -23,6 +23,9 @@
  * SECTION:gsttaglist
  * @short_description: List of tags and values used to describe media metadata
  *
+ * List of tags and values used to describe media metadata.
+ *
+ * Last reviewed on 2005-11-23 (0.9.5)
  */
 
 #ifdef HAVE_CONFIG_H

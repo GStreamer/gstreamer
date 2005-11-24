@@ -78,6 +78,13 @@ read_tsc (gint64 * dst)
 #endif
 }
 
+/**
+ * gst_trace_read_tsc:
+ * @dst: pointer to hold the result.
+ *
+ * Read a platform independent timer value that can be used in
+ * benchmarks.
+ */
 void
 gst_trace_read_tsc (gint64 * dst)
 {
@@ -87,6 +94,16 @@ gst_trace_read_tsc (gint64 * dst)
 GstTrace *_gst_trace_default = NULL;
 gint _gst_trace_on = 1;
 
+/**
+ * gst_trace_new:
+ * @filename: a filename
+ * @size: the max size of the file
+ *
+ * Create a ringbuffer of @size in the file with @filename to 
+ * store trace results in.
+ *
+ * Returns: a new #GstTrace.
+ */
 GstTrace *
 gst_trace_new (gchar * filename, gint size)
 {
@@ -113,6 +130,12 @@ gst_trace_new (gchar * filename, gint size)
   return trace;
 }
 
+/**
+ * gst_trace_destroy:
+ * @trace: the #GstTrace to destroy
+ *
+ * Flush an close the previously allocated @trace.
+ */
 void
 gst_trace_destroy (GstTrace * trace)
 {
@@ -126,6 +149,14 @@ gst_trace_destroy (GstTrace * trace)
   g_free (trace);
 }
 
+/**
+ * gst_trace_flush:
+ * @trace: the #GstTrace to flush.
+ *
+ * Flush any pending trace entries in @trace to the trace file.
+ * @trace can be NULL in which case the default #GstTrace will be
+ * flushed.
+ */
 void
 gst_trace_flush (GstTrace * trace)
 {
@@ -140,6 +171,15 @@ gst_trace_flush (GstTrace * trace)
   trace->bufoffset = 0;
 }
 
+/**
+ * gst_trace_text_flush:
+ * @trace: the #GstTrace to flush.
+ *
+ * Flush any pending trace entries in @trace to the trace file, 
+ * formatted as a text line with timestamp and sequence numbers.
+ * @trace can be NULL in which case the default #GstTrace will be
+ * flushed.
+ */
 void
 gst_trace_text_flush (GstTrace * trace)
 {
@@ -164,6 +204,12 @@ gst_trace_text_flush (GstTrace * trace)
 #undef STRSIZE
 }
 
+/**
+ * gst_trace_set_default:
+ * @trace: the #GstTrace to set as the default.
+ *
+ * Set the default #GstTrace to @trace.
+ */
 void
 gst_trace_set_default (GstTrace * trace)
 {

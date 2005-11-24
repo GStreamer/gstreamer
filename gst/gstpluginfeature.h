@@ -69,6 +69,11 @@ typedef enum {
   GST_RANK_PRIMARY              = 256
 } GstRank;
 
+/**
+ * GstPluginFeature:
+ *
+ * Opaque #GstPluginFeature structure.
+ */
 struct _GstPluginFeature {
   GstObject 	 object;
 
@@ -91,6 +96,13 @@ struct _GstPluginFeatureClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstTypeNameData:
+ * @name: a name
+ * @type: a GType
+ *
+ * Structure used for filtering based on @name and @type.
+ */
 typedef struct {
   const gchar 	*name;
   GType		 type;

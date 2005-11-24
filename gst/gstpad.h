@@ -58,6 +58,8 @@ typedef struct _GstPadClass GstPadClass;
  * @GST_PAD_LINK_NOFORMAT	: pads do not have common format
  * @GST_PAD_LINK_NOSCHED	: pads cannot cooperate in scheduling
  * @GST_PAD_LINK_REFUSED	: refused for some reason
+ *
+ * Result values from gst_pad_link and friends.
  */
 typedef enum {
   GST_PAD_LINK_OK               =  0,
@@ -152,7 +154,27 @@ typedef enum {
 #define GST_PAD_MODE_ACTIVATE(mode) ((mode) != GST_ACTIVATE_NONE)
 
 /* pad states */
+/**
+ * GstPadActivateFunction:
+ * @pad: a #GstPad
+ *
+ * This function is called when the pad is activated during the element
+ * READY to PAUSED state change. By default this function will call the
+ * activate function that puts the pad in push mode but elements can
+ * override this function to activate the pad in pull mode if they wish.
+ *
+ * Returns: TRUE if the pad could be activated.
+ */
 typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad);
+/**
+ * GstPadActivateModeFunction:
+ * @pad: a #GstPad
+ * @active: activate or deactivate the pad.
+ *
+ * The prototype of the push and pull activate functions. 
+ *
+ * Returns: TRUE if the pad could be activated or deactivated.
+ */
 typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
 
 
@@ -197,8 +219,18 @@ typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 
 
 /* deprecate me, check range should use seeking query */
+/**
+ * GstPadCheckGetRangeFunction:
+ * @pad: a #GstPad
+ *
+ * Check if @pad can be activated in pull mode.
+ *
+ * Returns: TRUE if the pad can operate in pull mode.
+ *
+ * Deprecated: use the seeking query to check if a pad can support
+ * random access.
+ */
 typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad);
-
 
 /* internal links */
 /**
@@ -264,14 +296,74 @@ typedef void			(*GstPadUnlinkFunction)		(GstPad *pad);
  *
  * Returns a copy of the capabilities of the specified pad. By default this
  * function will return the pad template capabilities, but can optionally
- * be overridden.
+ * be overridden by elements.
  *
  * Returns: a newly allocated copy #GstCaps of the pad.
  */
 typedef GstCaps*		(*GstPadGetCapsFunction)	(GstPad *pad);
+
+/**
+ * GstPadSetCapsFunction:
+ * @pad: the #GstPad to set the capabilities of.
+ * @caps: the #GstCaps to set
+ *
+ * Set @caps on @pad. By default this function updates the caps of the
+ * pad but the function can be overriden by elements to perform extra 
+ * actions or verifications.
+ *
+ * Returns: TRUE if the caps could be set on the pad.
+ */
 typedef gboolean		(*GstPadSetCapsFunction)	(GstPad *pad, GstCaps *caps);
+/**
+ * GstPadAcceptCapsFunction:
+ * @pad: the #GstPad to check
+ * @caps: the #GstCaps to check
+ *
+ * Check if @pad can accept @caps. By default this function will see if @caps
+ * intersect with the result from gst_pad_get_caps() by can be overridden to
+ * perform extra checks.
+ *
+ * Returns: TRUE if the caps can be accepted by the pad.
+ */
 typedef gboolean		(*GstPadAcceptCapsFunction)	(GstPad *pad, GstCaps *caps);
+/**
+ * GstPadFixateCapsFunction:
+ * @pad: a #GstPad  
+ * @caps: the #GstCaps to fixate
+ *
+ * Given possibly unfixed caps @caps, let @pad use its default prefered 
+ * format to make a fixed caps. @caps should be writable. By default this
+ * function will pick the first value of any ranges or lists in the caps but
+ * elements can override this function to perform other behaviour.
+ */
 typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
+/**
+ * GstPadBufferAllocFunction:
+ * @pad: a sink #GstPad  
+ * @offset: the desired offset of the buffer
+ * @size: the desired size of the buffer
+ * @caps: the desired caps of the buffer
+ * @buf: pointer to hold the allocated buffer.
+ *
+ * Ask the sinkpad @pad to allocate a buffer with @offset, @size and @caps.
+ * The result will be stored in @buf.
+ *
+ * The purpose of this function is to allocate a buffer that is optimal to
+ * be processed by @pad. The function is mostly overridden by elements that can
+ * provide a hardware buffer in order to avoid additional memcpy operations.
+ *
+ * The function can return a buffer that does not have @caps, in which case the
+ * upstream element requests a format change. 
+ *
+ * When this function returns anything else than GST_FLOW_OK, the buffer allocation
+ * failed and @buf does not contain valid data.
+ *
+ * By default this function returns a new buffer of @size and with @caps containing
+ * purely malloced data.
+ *
+ * Returns: GST_FLOW_OK if @buf contains a valid buffer, any other return
+ *  value means @buf does not hold a valid buffer.
+ */
 typedef GstFlowReturn		(*GstPadBufferAllocFunction)	(GstPad *pad, guint64 offset, guint size,
 								 GstCaps *caps, GstBuffer **buf);
 
@@ -335,14 +427,54 @@ typedef enum {
 /* FIXME: this awful circular dependency need to be resolved properly (see padtemplate.h) */
 typedef struct _GstPadTemplate GstPadTemplate;
 
+/**
+ * GstPad:
+ * @element_private: private data owned by the parent element
+ * @padtemplate: padtemplate for this pad
+ * @direction: the direction of the pad, cannot change after creating
+ *             the pad.
+ * @stream_rec_lock: recursive stream lock of the pad, used to protect
+ *                   the data used in streaming.
+ * @task: task for this pad if the pad is actively driving dataflow.
+ * @preroll_lock: lock used when prerolling
+ * @preroll_cond: conf to signal preroll
+ * @block_cond: conditional to signal pad block
+ * @block_callback: callback for the pad block if any
+ * @block_data: user data for @block_callback
+ * @caps: the current caps of the pad
+ * @getcapsfunc: function to get caps of the pad
+ * @setcapsfunc: function to set caps on the pad
+ * @acceptcapsfunc: function to check if pad can accept caps
+ * @fixatecapsfunc: function to fixate caps
+ * @activatefunc: pad activation function
+ * @activatepushfunc: function to activate/deactivate pad in push mode
+ * @activatepullfunc: function to activate/deactivate pad in pull mode
+ * @linkfunc: function called when pad is linked
+ * @unlinkfunc: function called when pad is unlinked
+ * @peer: the pad this pad is linked to
+ * @sched_private: private storage for the scheduler
+ * @chainfunc: function to chain data to pad
+ * @checkgetrangefunc: function to check if pad can operate in pull mode
+ * @getrangefunc: function to get a range of data from a pad
+ * @eventfunc: function to send an event to a pad
+ * @mode: current activation mode of the pad
+ * @querytypefunc: get list of supported queries
+ * @queryfunc: perform a query on the pad
+ * @intlinkfunc: get the internal links of this pad
+ * @bufferallocfunc: function to allocate a buffer for this pad
+ * @do_buffer_signals: counter counting installed buffer signals
+ * @do_event_signals: counter counting installed event signals
+ * 
+ * The #GstPad structure. Use the functions to update the variables.
+ */
 struct _GstPad {
   GstObject			object;
 
+  /*< public >*/
   gpointer			element_private;
 
   GstPadTemplate		*padtemplate;
 
-  /* direction cannot change after creating the pad */
   GstPadDirection		 direction;
 
   /*< public >*/ /* with STREAM_LOCK */
@@ -464,12 +596,52 @@ struct _GstPadClass {
 #define GST_PAD_SET_FLUSHING(pad)	(GST_OBJECT_FLAG_SET (pad, GST_PAD_FLUSHING))
 #define GST_PAD_UNSET_FLUSHING(pad)	(GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLUSHING))
 
+/**
+ * GST_PAD_GET_STREAM_LOCK:
+ * @pad: a #GstPad
+ *
+ * Get the stream lock of @pad. The stream lock is protecting the
+ * resources used in the data processing functions of @pad.
+ */
 #define GST_PAD_GET_STREAM_LOCK(pad)    (GST_PAD_CAST(pad)->stream_rec_lock)
+/**
+ * GST_PAD_STREAM_LOCK:
+ * @pad: a #GstPad
+ *
+ * Lock the stream lock of @pad.
+ */
 #define GST_PAD_STREAM_LOCK(pad)        (g_static_rec_mutex_lock(GST_PAD_GET_STREAM_LOCK(pad)))
-#define GST_PAD_STREAM_TRYLOCK(pad)     (g_static_rec_mutex_trylock(GST_PAD_GET_STREAM_LOCK(pad)))
-#define GST_PAD_STREAM_UNLOCK(pad)      (g_static_rec_mutex_unlock(GST_PAD_GET_STREAM_LOCK(pad)))
-#define GST_PAD_STREAM_UNLOCK_FULL(pad) (g_static_rec_mutex_unlock_full(GST_PAD_GET_STREAM_LOCK(pad)))
+/**
+ * GST_PAD_STREAM_LOCK_FULL:
+ * @pad: a #GstPad
+ * @t: the number of times to recursively lock
+ *
+ * Lock the stream lock of @pad @t times.
+ */
 #define GST_PAD_STREAM_LOCK_FULL(pad,t) (g_static_rec_mutex_lock_full(GST_PAD_GET_STREAM_LOCK(pad), t))
+/**
+ * GST_PAD_STREAM_TRYLOCK:
+ * @pad: a #GstPad
+ *
+ * Try to Lock the stream lock of the pad, return TRUE if the lock could be
+ * taken.
+ */
+#define GST_PAD_STREAM_TRYLOCK(pad)     (g_static_rec_mutex_trylock(GST_PAD_GET_STREAM_LOCK(pad)))
+/**
+ * GST_PAD_STREAM_UNLOCK:
+ * @pad: a #GstPad
+ *
+ * Unlock the stream lock of @pad.
+ */
+#define GST_PAD_STREAM_UNLOCK(pad)      (g_static_rec_mutex_unlock(GST_PAD_GET_STREAM_LOCK(pad)))
+/**
+ * GST_PAD_STREAM_UNLOCK_FULL:
+ * @pad: a #GstPad
+ *
+ * Fully unlock the recursive stream lock of @pad, return the number of times
+ * @pad was locked.
+ */
+#define GST_PAD_STREAM_UNLOCK_FULL(pad) (g_static_rec_mutex_unlock_full(GST_PAD_GET_STREAM_LOCK(pad)))
 
 #define GST_PAD_GET_PREROLL_LOCK(pad)   (GST_PAD_CAST(pad)->preroll_lock)
 #define GST_PAD_PREROLL_LOCK(pad)       (g_mutex_lock(GST_PAD_GET_PREROLL_LOCK(pad)))

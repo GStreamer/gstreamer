@@ -55,6 +55,11 @@ G_BEGIN_DECLS
 typedef struct _GstNetClientClock GstNetClientClock;
 typedef struct _GstNetClientClockClass GstNetClientClockClass;
 
+/**
+ * GstNetClientClock:
+ *
+ * Opaque #GstNetClientClock structure.
+ */
 struct _GstNetClientClock {
   GstSystemClock clock;
 

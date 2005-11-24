@@ -316,9 +316,15 @@ typedef enum {
  */
 #define GST_INDEX_IS_WRITABLE(obj)    (GST_OBJECT_FLAG_IS_SET (obj, GST_INDEX_WRITABLE))
 
+/**
+ * GstIndex:
+ * 
+ * Opaque #GstIndex structure.
+ */
 struct _GstIndex {
   GstObject		 object;
 
+  /*< private >*/
   GList			*groups;
   GstIndexGroup		*curgroup;
   gint			 maxgroup;
@@ -334,12 +340,14 @@ struct _GstIndex {
   GHashTable		*writers;
   gint			 last_id;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstIndexClass {
   GstObjectClass parent_class;
 
+  /*< protected >*/
   gboolean	(*get_writer_id)	(GstIndex *index, gint *writer_id, gchar *writer_string);
 
   void		(*commit)		(GstIndex *index, gint id);
@@ -355,6 +363,7 @@ struct _GstIndexClass {
   /* signals */
   void		(*entry_added)		(GstIndex *index, GstIndexEntry *entry);
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

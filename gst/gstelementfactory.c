@@ -26,16 +26,9 @@
  * @short_description: Create GstElements from a factory
  * @see_also: #GstElement, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
  *
- * GstElementFactory is used to create instances of elements. A
+ * #GstElementFactory is used to create instances of elements. A
  * GstElementfactory can be added to a #GstPlugin as it is also a
  * #GstPluginFeature.
- *
- * Use gst_element_factory_new() to create a new factory which can be added to
- * a plugin with gst_plugin_add_feature().
- *
- * gst_element_factory_add_pad_template() is used to add a padtemplate to the
- * factory.  This function will enable the application to query for
- * elementfactories that handle a specific media type.
  *
  * Use the gst_element_factory_find() and gst_element_factory_create()
  * functions to create element instances or use gst_element_factory_make() as a
@@ -58,8 +51,7 @@
  * </programlisting>
  * </example>
  *
- * An elementfactory can be assigned a rank with gst_element_factory_set_rank()
- * so that the autopluggers can select a plugin more appropriatly
+ * Last reviewed on 2005-11-23 (0.9.5)
  */
 
 #include "gst_private.h"
