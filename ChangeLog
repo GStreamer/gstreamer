@@ -1,5 +1,15 @@
 2005-11-24  Julien MOUTTE  <julien@moutte.net>
 
+	* gst/effectv/gstquark.c: (gst_quarktv_set_caps),
+	(gst_quarktv_get_unit_size), (gst_quarktv_transform),
+	(gst_quarktv_planetable_clear), (gst_quarktv_change_state),
+	(gst_quarktv_base_init), (gst_quarktv_class_init),
+	(gst_quarktv_init): Flush the planes list on reverse caps
+	negotiation. This was crashing because of differently sized
+	buffers.
+
+2005-11-24  Julien MOUTTE  <julien@moutte.net>
+
 	* gst/debug/gstnavigationtest.c: (draw_box_planar411):
 	* gst/videofilter/gstvideoflip.c: (gst_videoflip_method_get_type),
 	(gst_videoflip_set_caps), (gst_videoflip_transform_caps),

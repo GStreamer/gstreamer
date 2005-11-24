@@ -74,6 +74,8 @@ enum
 
 GType gst_quarktv_get_type (void);
 
+static void gst_quarktv_planetable_clear (GstQuarkTV * filter);
+
 static GstElementDetails quarktv_details = GST_ELEMENT_DETAILS ("QuarkTV",
     "Filter/Effect/Video",
     "Motion dissolver",
@@ -107,6 +109,7 @@ gst_quarktv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 
   if (gst_structure_get_int (structure, "width", &filter->width) &&
       gst_structure_get_int (structure, "height", &filter->height)) {
+    gst_quarktv_planetable_clear (filter);
     filter->area = filter->width * filter->height;
     ret = TRUE;
   }
@@ -188,6 +191,19 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
   return ret;
 }
 
+static void
+gst_quarktv_planetable_clear (GstQuarkTV * filter)
+{
+  gint i;
+
+  for (i = 0; i < filter->planes; i++) {
+    if (GST_IS_BUFFER (filter->planetable[i])) {
+      gst_buffer_unref (filter->planetable[i]);
+    }
+    filter->planetable[i] = NULL;
+  }
+}
+
 static GstStateChangeReturn
 gst_quarktv_change_state (GstElement * element, GstStateChange transition)
 {
@@ -198,8 +214,7 @@ gst_quarktv_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
       filter->planetable =
-          (GstBuffer **) g_malloc (filter->planes * sizeof (GstBuffer *));
-      memset (filter->planetable, 0, filter->planes * sizeof (GstBuffer *));
+          (GstBuffer **) g_malloc0 (filter->planes * sizeof (GstBuffer *));
       break;
     }
     default:
@@ -212,13 +227,7 @@ gst_quarktv_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
-      gint i;
-
-      for (i = 0; i < filter->planes; i++) {
-        if (filter->planetable[i])
-          gst_buffer_unref (filter->planetable[i]);
-        filter->planetable[i] = NULL;
-      }
+      gst_quarktv_planetable_clear (filter);
       g_free (filter->planetable);
       filter->planetable = NULL;
       break;
