@@ -369,19 +369,30 @@ typedef union
 guint64
 gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 {
-  guint64 result;
-
   g_return_val_if_fail (denom != 0, G_MAXUINT64);
 
-  if (num <= G_MAXINT32 && denom <= G_MAXINT32) {
-    result = gst_util_uint64_scale_int (val, (gint) num, (gint) denom);
-  } else {
-    /* implement me with fixed point, if you care */
-    result = gst_gdouble_to_guint64 (gst_guint64_to_gdouble (val) *
-        ((gst_guint64_to_gdouble (num)) / gst_guint64_to_gdouble (denom)));
-  }
+  /* if the denom is high, we need to do a 64 muldiv */
+  if (denom > G_MAXINT32)
+    goto do_int64;
 
-  return result;
+  /* if num and denom are low we can do a 32 bit muldiv */
+  if (num <= G_MAXINT32)
+    goto do_int32;
+
+  /* val and num are high, we need 64 muldiv */
+  if (val > G_MAXINT32)
+    goto do_int64;
+
+  /* val is low and num is high, we can swap them and do 32 muldiv */
+  return gst_util_uint64_scale_int (num, (gint) val, (gint) denom);
+
+do_int32:
+  return gst_util_uint64_scale_int (val, (gint) num, (gint) denom);
+
+do_int64:
+  /* implement me with fixed point, if you care */
+  return gst_gdouble_to_guint64 (gst_guint64_to_gdouble (val) *
+      ((gst_guint64_to_gdouble (num)) / gst_guint64_to_gdouble (denom)));
 }
 
 /**

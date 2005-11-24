@@ -352,7 +352,7 @@ gst_base_src_query (GstPad * pad, GstQuery * query)
           guint64 ui64;
 
           b = gst_base_src_get_size (src, &ui64);
-          if (b && src->offset > ui64)
+          if (b && src->offset < ui64)
             i64 = gst_util_uint64_scale (GST_FORMAT_PERCENT_MAX, src->offset,
                 ui64);
           else

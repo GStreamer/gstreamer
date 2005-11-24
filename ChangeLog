@@ -1,3 +1,13 @@
+2005-11-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/base/gstbasesrc.c: (gst_base_src_query):
+	Fix wrong percentage query.
+
+	* gst/gstutils.c: (gst_util_uint64_scale),
+	(gst_util_uint64_scale_int):
+	Add some more common cases that can be handled 
+	efficiently to _scale.
+
 2005-11-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/gst/gstminiobject.c: (thread_ref), (GST_START_TEST),
