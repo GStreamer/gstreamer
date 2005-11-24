@@ -96,7 +96,6 @@
 	* ext/mad/Makefile.am:
 	  libgsttagedit => libgsttag
 
->>>>>>> 1.1895
 2005-11-22  Edward Hervey  <edward@fluendo.com>
 
 	* ext/lame/gstlame.c: (gst_lame_sink_event):
