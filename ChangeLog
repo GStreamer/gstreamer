@@ -1,4 +1,14 @@
-2005-11-24  msmith,,,  <set EMAIL_ADDRESS environment variable>
+2005-11-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Patch by: Stefan Kost
+
+	* common/gtk-doc.mak:
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	  Fix distcheck issues for the libraries docs build
+	  Closes #319599.
+
+2005-11-24  Michael Smith <msmith@fluendo.com>
 
 	* docs/manual/basics-helloworld.xml:
 	  Fix bug #315027: memory leak in example code in docs.

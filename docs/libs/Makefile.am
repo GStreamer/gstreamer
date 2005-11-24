@@ -37,6 +37,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting functions and macros.
 DOC_SOURCE_DIR=$(top_srcdir)/libs/gst
+DOC_BUILD_DIR=$(top_builddir)/libs/gst
 
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
