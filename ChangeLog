@@ -1,3 +1,27 @@
+2005-11-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/wavpack/Makefile.am:
+	* ext/wavpack/gstwavpack.c: (plugin_init):
+	* ext/wavpack/gstwavpackcommon.c: (gst_wavpack_read_header):
+	* ext/wavpack/gstwavpackcommon.h:
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_link),
+	(gst_wavpack_dec_wvclink), (gst_wavpack_dec_get_type),
+	(gst_wavpack_dec_base_init), (gst_wavpack_dec_dispose),
+	(gst_wavpack_dec_class_init), (gst_wavpack_dec_src_query),
+	(gst_wavpack_dec_init), (gst_wavpack_dec_setup_context),
+	(gst_wavpack_dec_format_samples), (gst_wavpack_dec_loop),
+	(gst_wavpack_dec_plugin_init):
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_get_type),
+	(gst_wavpack_parse_base_init), (gst_wavpack_parse_dispose),
+	(gst_wavpack_parse_class_init), (gst_wavpack_parse_src_query),
+	(gst_wavpack_parse_src_event), (find_header), (find_sample),
+	(gst_wavpack_parse_seek), (gst_wavpack_parse_init),
+	(gst_wavpack_parse_handle_event), (gst_wavpack_parse_loop),
+	(gst_wavpack_parse_change_state), (gst_wavpack_parse_plugin_init):
+	* ext/wavpack/gstwavpackparse.h:
+	  put back wavpack - still needs porting
+
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD
