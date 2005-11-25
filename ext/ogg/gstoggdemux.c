@@ -739,7 +739,9 @@ gst_ogg_pad_query_convert (GstOggPad * ogg_pad, GstFormat from_format,
     return TRUE;
   }
 
-  g_return_val_if_fail (ogg_pad->elem_pad != NULL, FALSE);
+  /* If we don't know the stream type, we won't have an internal pad to ask */
+  if (!ogg_pad->elem_pad)
+    return FALSE;
 
   return gst_pad_query_convert (ogg_pad->elem_pad,
       from_format, from_value, to_format, to_value);
@@ -777,7 +779,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
       if (!gst_ogg_pad_query_convert (pad,
               GST_FORMAT_DEFAULT, packet->granulepos, &format,
               (gint64 *) & ogg->current_time)) {
-        g_warning ("could not convert granulepos to time");
+        GST_WARNING_OBJECT (ogg, "could not convert granulepos to time");
       } else {
         GST_DEBUG ("ogg current time %" GST_TIME_FORMAT,
             GST_TIME_ARGS (ogg->current_time));
@@ -1706,7 +1708,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg)
         if (!gst_ogg_pad_query_convert (pad,
                 GST_FORMAT_DEFAULT, granulepos, &format,
                 (gint64 *) & granuletime)) {
-          g_warning ("could not convert granulepos to time");
+          GST_WARNING_OBJECT (ogg, "could not convert granulepos to time");
           granuletime = target;
         } else {
           granuletime -= pad->first_time;
@@ -1755,6 +1757,15 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg)
   /* now we have a new position, prepare for streaming again */
   {
     GstEvent *event;
+    gint64 start_value = start + chain->segment_start;
+    gint64 stop_value;
+
+    if (start_value == GST_CLOCK_TIME_NONE)
+      start_value = 0;
+    if (chain->segment_start == GST_CLOCK_TIME_NONE)
+      stop_value = GST_CLOCK_TIME_NONE;
+    else
+      stop_value = stop + chain->segment_start;
 
     /* we have to send the flush to the old chain, not the new one */
     if (flush)
@@ -1762,8 +1773,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg)
 
     /* create the discont event we are going to send out */
     event = gst_event_new_new_segment (FALSE, 1.0,
-        GST_FORMAT_TIME,
-        start + chain->segment_start, stop + chain->segment_start, start);
+        GST_FORMAT_TIME, start_value, stop_value, start);
 
     if (chain != ogg->current_chain) {
       /* switch to different chain, send discont on new chain */
@@ -1991,7 +2001,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
     if (!gst_ogg_pad_query_convert (pad,
             GST_FORMAT_DEFAULT, pad->first_granule, &target,
             (gint64 *) & pad->first_time)) {
-      g_warning ("could not convert granule to time");
+      GST_WARNING_OBJECT (ogg, "could not convert granulepos to time");
     }
 
     pad->mode = GST_OGG_PAD_MODE_STREAMING;
@@ -2055,7 +2065,7 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
   if (last_granule == -1 || !gst_ogg_pad_query_convert (last_pad,
           GST_FORMAT_DEFAULT, last_granule, &target,
           (gint64 *) & chain->segment_stop)) {
-    g_warning ("could not convert granule to time");
+    GST_WARNING_OBJECT (ogg, "could not convert granulepos to time");
     chain->segment_stop = GST_CLOCK_TIME_NONE;
   }
 
@@ -2364,6 +2374,7 @@ gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
       GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
       gst_event_ref (event);
+      GST_DEBUG_OBJECT (ogg, "Pushing event on pad %p", pad);
       gst_pad_push_event (GST_PAD (pad), event);
     }
   }
@@ -2416,24 +2427,30 @@ gst_ogg_demux_loop (GstOggPad * pad)
     /* FIXME, need to be done somewhere else where we
      * can check against segment_stop time. */
     if (ogg->segment_flags & GST_SEEK_FLAG_SEGMENT) {
+      GST_LOG_OBJECT (ogg, "Sending segment done, at end of segment");
       gst_element_post_message (GST_ELEMENT (ogg),
           gst_message_new_segment_done (GST_OBJECT (ogg), GST_FORMAT_TIME,
               ogg->total_time));
     } else {
+      GST_LOG_OBJECT (ogg, "Sending EOS, at end of stream");
       gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
     }
     goto pause;
   }
 
   ret = gst_pad_pull_range (ogg->sinkpad, ogg->offset, CHUNKSIZE, &buffer);
-  if (ret != GST_FLOW_OK)
+  if (ret != GST_FLOW_OK) {
+    GST_LOG_OBJECT (ogg, "Failed pull_range");
     goto pause;
+  }
 
   ogg->offset += GST_BUFFER_SIZE (buffer);
 
   ret = gst_ogg_demux_chain (ogg->sinkpad, buffer);
-  if (ret != GST_FLOW_OK)
+  if (ret != GST_FLOW_OK) {
+    GST_LOG_OBJECT (ogg, "Failed demux_chain");
     goto pause;
+  }
 
   return;
 

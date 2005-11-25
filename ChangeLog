@@ -1,3 +1,12 @@
+2005-11-25  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_query_convert),
+	(gst_ogg_demux_chain_peer), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_read_chain), (gst_ogg_demux_read_end_chain),
+	(gst_ogg_demux_send_event), (gst_ogg_demux_loop):
+	  Handle various conditions better when we don't understand a stream.
+	  Removes a heap of CRITICALs on ogg streams containing unknown data.
+
 2005-11-24  Andy Wingo  <wingo@pobox.com>
 
 	* gst/tcp/gstmultifdsink.c (gst_multifdsink_handle_client_write):
