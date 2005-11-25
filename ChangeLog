@@ -1,3 +1,11 @@
+2005-11-25  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/mad/gstmad.c: (gst_mad_chain):
+        When pad_alloc returns other-than-GST_FLOW_OK and mad exits early,
+	skip frame synthesis and consume input data as if we'd done the 
+	decode. Makes mad not error when the src pad is not connected.
+	(#319784)
+
 2005-11-23  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_class_init) 

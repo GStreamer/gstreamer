@@ -1333,6 +1333,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
       guint64 time_offset;
       guint64 time_duration;
       unsigned char const *before_sync, *after_sync;
+      gboolean goto_exit = FALSE;
 
       mad->in_error = FALSE;
 
@@ -1359,7 +1360,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
             break;
           } else {
             GST_LOG ("sync error, flushing unneeded data");
-            goto next;
+            goto next_no_samples;
           }
         }
         /* we are in an error state */
@@ -1426,10 +1427,9 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         GST_DEBUG ("synced to data: 0x%0x 0x%0x", *mad->stream.ptr.byte,
             *(mad->stream.ptr.byte + 1));
 
-
         mad_stream_sync (&mad->stream);
         /* recoverable errors pass */
-        goto next;
+        goto next_no_samples;
       }
 
       if (mad->check_for_xing) {
@@ -1450,7 +1450,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         }
 
         mad->check_for_xing = FALSE;
-        goto next;
+        goto next_no_samples;
       }
 
       /* if we're not resyncing/in error, check if caps need to be set again */
@@ -1492,20 +1492,24 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         /* for sample accurate seeking, calculate how many samples
            to skip and send the remaining pcm samples */
 
-        GstBuffer *outbuffer;
+        GstBuffer *outbuffer = NULL;
         gint16 *outdata;
         mad_fixed_t const *left_ch, *right_ch;
-
-        mad_synth_frame (&mad->synth, &mad->frame);
-        left_ch = mad->synth.pcm.samples[0];
-        right_ch = mad->synth.pcm.samples[1];
 
         /* will attach the caps to the buffer */
         result =
             gst_pad_alloc_buffer (mad->srcpad, 0, nsamples * mad->channels * 2,
             GST_PAD_CAPS (mad->srcpad), &outbuffer);
-        if (result != GST_FLOW_OK)
-          goto end;
+        if (result != GST_FLOW_OK) {
+          /* Head for the exit, dropping samples as we go */
+          GST_LOG ("Skipping frame synthesis due to pad_alloc return value");
+          goto_exit = TRUE;
+          goto skip_frame;
+        }
+
+        mad_synth_frame (&mad->synth, &mad->frame);
+        left_ch = mad->synth.pcm.samples[0];
+        right_ch = mad->synth.pcm.samples[1];
 
         outdata = (gint16 *) GST_BUFFER_DATA (outbuffer);
 
@@ -1546,10 +1550,12 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 
         result = gst_pad_push (mad->srcpad, outbuffer);
         if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED) {
-          goto end;
+          /* Head for the exit, dropping samples as we go */
+          goto_exit = TRUE;
         }
       }
 
+    skip_frame:
       mad->total_samples += nsamples;
 
       /* we have a queued timestamp on the incoming buffer that we should
@@ -1565,7 +1571,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         goto end;
       }
 
-    next:
+    next_no_samples:
       /* figure out how many bytes mad consumed */
       /* if consumed is already set, it's from the resync higher up, so
          we need to use that value instead.  Otherwise, recalculate from
@@ -1578,6 +1584,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
       mad_input_buffer += consumed;
       mad->tempsize -= consumed;
       mad->bytes_consumed += consumed;
+      if (goto_exit == TRUE)
+        goto end;
     }
     /* we only get here from breaks, tempsize never actually drops below 0 */
     memmove (mad->tempbuffer, mad_input_buffer, mad->tempsize);
