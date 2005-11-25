@@ -1,3 +1,8 @@
+2005-11-25  Michael Smith  <msmith@fluendo.com>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_stop):
+	  Patch from Sebastien Cote to close control sockets in udpsrc.
+
 2005-11-24  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/effectv/gstquark.c: (gst_quarktv_set_caps),

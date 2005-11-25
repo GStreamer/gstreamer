@@ -588,6 +588,15 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
     close (src->sock);
     src->sock = -1;
   }
+
+  if (src->control_sock[0] != -1) {
+    close (src->control_sock[0]);
+    src->control_sock[0] = -1;
+  }
+  if (src->control_sock[1] != -1) {
+    close (src->control_sock[1]);
+    src->control_sock[1] = -1;
+  }
   return TRUE;
 }
 
