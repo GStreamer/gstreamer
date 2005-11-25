@@ -1,3 +1,9 @@
+2005-11-25  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (handle_sequence):
+	  Prime libmpeg2's pumps with some null custom buffers
+	  to ensure it ask us to discard garbage later yay.
+
 2005-11-25  Michael Smith  <msmith@fluendo.com>
 
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_init),

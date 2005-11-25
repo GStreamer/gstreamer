@@ -527,6 +527,7 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   gint i;
   GstBuffer *buf;
   GstFlowReturn ret;
+  guint8 *dummybuf[3] = { NULL, NULL, NULL };
 
   mpeg2dec->width = info->sequence->picture_width;
   mpeg2dec->height = info->sequence->picture_height;
@@ -560,6 +561,11 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
     goto negotiate_failed;
 
   mpeg2_custom_fbuf (mpeg2dec->decoder, 1);
+  /* Pump in some null buffers, because otherwise libmpeg2 doesn't 
+   * initialise the discard_fbuf->id */
+  mpeg2_set_buf (mpeg2dec->decoder, dummybuf, NULL);
+  mpeg2_set_buf (mpeg2dec->decoder, dummybuf, NULL);
+  mpeg2_set_buf (mpeg2dec->decoder, dummybuf, NULL);
 
   ret = gst_mpeg2dec_alloc_buffer (mpeg2dec, mpeg2dec->offset, &buf);
   if (ret != GST_FLOW_OK)
