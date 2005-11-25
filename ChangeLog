@@ -1,3 +1,15 @@
+2005-11-25  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* PORTED_09:
+	* ext/Makefile.am:
+	* ext/wavpack/Makefile.am:
+	* ext/wavpack/gstwavpackdec.c:
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackparse.c:
+	* ext/wavpack/gstwavpackparse.h:
+	Wavpack ported to 0.9. No support for correction file yet.
+
 2005-11-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/wavpack/Makefile.am:

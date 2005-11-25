@@ -76,6 +76,12 @@ endif
 HERMES_DIR=
 # endif
 
+if USE_WAVPACK
+WAVPACK_DIR=wavpack
+else
+WAVPACK_DIR=
+endif
+
 if USE_IVORBIS
  IVORBIS_DIR=ivorbis
 else
@@ -231,4 +237,6 @@ DIST_SUBDIRS= \
 	musepack \
 	sdl \
 	directfb \
+	musepack \
+	wavpack \
 	ivorbis

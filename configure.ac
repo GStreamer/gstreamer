@@ -418,6 +418,15 @@ GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink, [
     AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
 ])
 
+dnl *** wavpack ***
+dnl We ship our own version of the library
+translit(dnm, m, l) AM_CONDITIONAL(USE_WAVPACK, true)
+GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
+  PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.2, HAVE_WAVPACK=yes, HAVE_WAVPACK=no)
+  AC_SUBST(WAVPACK_CFLAGS)
+  AC_SUBST(WAVPACK_LIBS)
+])
+
 dnl *** ivorbis ***
 dnl AM_PATH_IVORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
@@ -518,6 +527,7 @@ ext/Makefile
 ext/directfb/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
+ext/wavpack/Makefile
 ext/ivorbis/Makefile
 ext/gsm/Makefile
 ext/musepack/Makefile
