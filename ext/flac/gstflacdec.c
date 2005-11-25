@@ -17,6 +17,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-flacdec
+ * @seealso: flacenc
+ *
+ * <refsect2>
+ * <para>
+ * flacdec decodes FLAC streams.
+ * <ulink url="http://flac.sourceforge.net/">FLAC</ulink>
+ * is a Free Lossless Audio Codec.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=media/small/dark.441-16-s.flac ! flacdec ! autoaudiosink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
+/*
+ * FIXME: this pipeline doesn't work, but we want to use it as example
+ * gst-launch gnomevfssrc location=http://gstreamer.freedesktop.org/media/small/dark.441-16-s.flac ! flacdec ! autoaudiosink
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

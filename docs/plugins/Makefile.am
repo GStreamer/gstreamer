@@ -78,7 +78,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/autodetect/gstautovideosink.h \
 	$(top_srcdir)/gst/level/gstlevel.h \
 	$(top_srcdir)/gst/goom/gstgoom.h \
-	$(top_srcdir)/ext/cairo/gsttimeoverlay.h
+	$(top_srcdir)/ext/cairo/gsttimeoverlay.h \
+	$(top_srcdir)/ext/flac/gstflacdec.h
 
 # example code that needs to be converted to xml and placed in xml/
 EXAMPLE_CFILES = \

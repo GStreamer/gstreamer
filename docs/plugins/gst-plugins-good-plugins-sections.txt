@@ -23,6 +23,14 @@ GstCairoTimeOverlayClass
 </SECTION>
 
 <SECTION>
+<FILE>element-flacdec</FILE>
+GstFlacDec
+<TITLE>flacdec</TITLE>
+<SUBSECTION Standard>
+GstFlacDecClass
+</SECTION>
+
+<SECTION>
 <FILE>element-goom</FILE>
 GstGoom
 <TITLE>goom</TITLE>

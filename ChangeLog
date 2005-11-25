@@ -3,6 +3,14 @@
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* ext/flac/gstflacdec.c:
+	  document flacdec
+
+2005-11-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
 	* docs/plugins/inspect/plugin-autodetect.xml:
 	* ext/cairo/gstcairo.c: (plugin_init):
 	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_base_init),
