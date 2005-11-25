@@ -43,7 +43,7 @@
 GST_DEBUG_CATEGORY_EXTERN (cairo_debug);
 #define GST_CAT_DEFAULT cairo_debug
 
-static GstElementDetails textoverlay_details = {
+static GstElementDetails cairo_text_overlay_details = {
   "Text Overlay",
   "Filter/Editor/Video",
   "Adds text strings on top of a video buffer",
@@ -68,7 +68,7 @@ enum
 #define DEFAULT_XPAD 25
 #define DEFAULT_FONT "sans"
 
-static GstStaticPadTemplate textoverlay_src_template_factory =
+static GstStaticPadTemplate cairo_text_overlay_src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -101,7 +101,7 @@ static void gst_text_overlay_text_pad_unlinked (GstPad * pad);
 static GstFlowReturn gst_text_overlay_collected (GstCollectPads * pads,
     gpointer data);
 static void gst_text_overlay_finalize (GObject * object);
-static void gst_text_overlay_font_init (GstTextOverlay * overlay);
+static void gst_text_overlay_font_init (GstCairoTextOverlay * overlay);
 
 /* These macros are adapted from videotestsrc.c */
 #define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
@@ -114,24 +114,25 @@ static void gst_text_overlay_font_init (GstTextOverlay * overlay);
 
 #define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
-GST_BOILERPLATE (GstTextOverlay, gst_text_overlay, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstCairoTextOverlay, gst_text_overlay, GstElement,
+    GST_TYPE_ELEMENT)
 
      static void gst_text_overlay_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&textoverlay_src_template_factory));
+      gst_static_pad_template_get (&cairo_text_overlay_src_template_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&text_sink_template_factory));
 
-  gst_element_class_set_details (element_class, &textoverlay_details);
+  gst_element_class_set_details (element_class, &cairo_text_overlay_details);
 }
 
 static void
-gst_text_overlay_class_init (GstTextOverlayClass * klass)
+gst_text_overlay_class_init (GstCairoTextOverlayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -190,7 +191,7 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
 static void
 gst_text_overlay_finalize (GObject * object)
 {
-  GstTextOverlay *overlay = GST_TEXT_OVERLAY (object);
+  GstCairoTextOverlay *overlay = GST_CAIRO_TEXT_OVERLAY (object);
 
   gst_collect_pads_stop (overlay->collect);
   gst_object_unref (overlay->collect);
@@ -205,7 +206,8 @@ gst_text_overlay_finalize (GObject * object)
 }
 
 static void
-gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
+gst_text_overlay_init (GstCairoTextOverlay * overlay,
+    GstCairoTextOverlayClass * klass)
 {
   /* video sink */
   overlay->video_sinkpad =
@@ -230,13 +232,13 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   /* (video) source */
   overlay->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&textoverlay_src_template_factory), "src");
+      (&cairo_text_overlay_src_template_factory), "src");
   gst_pad_set_getcaps_function (overlay->srcpad,
       GST_DEBUG_FUNCPTR (gst_text_overlay_getcaps));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
-  overlay->halign = GST_TEXT_OVERLAY_HALIGN_CENTER;
-  overlay->valign = GST_TEXT_OVERLAY_VALIGN_BASELINE;
+  overlay->halign = GST_CAIRO_TEXT_OVERLAY_HALIGN_CENTER;
+  overlay->valign = GST_CAIRO_TEXT_OVERLAY_VALIGN_BASELINE;
   overlay->xpad = DEFAULT_XPAD;
   overlay->ypad = DEFAULT_YPAD;
   overlay->deltax = 0;
@@ -267,7 +269,7 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
 }
 
 static void
-gst_text_overlay_font_init (GstTextOverlay * overlay)
+gst_text_overlay_font_init (GstCairoTextOverlay * overlay)
 {
   cairo_font_extents_t font_extents;
   cairo_surface_t *surface;
@@ -291,7 +293,7 @@ static void
 gst_text_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstTextOverlay *overlay = GST_TEXT_OVERLAY (object);
+  GstCairoTextOverlay *overlay = GST_CAIRO_TEXT_OVERLAY (object);
 
   GST_OBJECT_LOCK (overlay);
 
@@ -309,11 +311,11 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       const gchar *s = g_value_get_string (value);
 
       if (strcasecmp (s, "baseline") == 0)
-        overlay->valign = GST_TEXT_OVERLAY_VALIGN_BASELINE;
+        overlay->valign = GST_CAIRO_TEXT_OVERLAY_VALIGN_BASELINE;
       else if (strcasecmp (s, "bottom") == 0)
-        overlay->valign = GST_TEXT_OVERLAY_VALIGN_BOTTOM;
+        overlay->valign = GST_CAIRO_TEXT_OVERLAY_VALIGN_BOTTOM;
       else if (strcasecmp (s, "top") == 0)
-        overlay->valign = GST_TEXT_OVERLAY_VALIGN_TOP;
+        overlay->valign = GST_CAIRO_TEXT_OVERLAY_VALIGN_TOP;
       else
         g_warning ("Invalid 'valign' property value: %s", s);
       break;
@@ -322,11 +324,11 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       const gchar *s = g_value_get_string (value);
 
       if (strcasecmp (s, "left") == 0)
-        overlay->halign = GST_TEXT_OVERLAY_HALIGN_LEFT;
+        overlay->halign = GST_CAIRO_TEXT_OVERLAY_HALIGN_LEFT;
       else if (strcasecmp (s, "right") == 0)
-        overlay->halign = GST_TEXT_OVERLAY_HALIGN_RIGHT;
+        overlay->halign = GST_CAIRO_TEXT_OVERLAY_HALIGN_RIGHT;
       else if (strcasecmp (s, "center") == 0)
-        overlay->halign = GST_TEXT_OVERLAY_HALIGN_CENTER;
+        overlay->halign = GST_CAIRO_TEXT_OVERLAY_HALIGN_CENTER;
       else
         g_warning ("Invalid 'halign' property value: %s", s);
       break;
@@ -367,7 +369,7 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_text_overlay_render_text (GstTextOverlay * overlay, gchar * text,
+gst_text_overlay_render_text (GstCairoTextOverlay * overlay, gchar * text,
     gint textlen)
 {
   cairo_text_extents_t extents;
@@ -416,13 +418,13 @@ gst_text_overlay_render_text (GstTextOverlay * overlay, gchar * text,
   cairo_set_source_rgba (cr, 1, 1, 1, 1.0);
 
   switch (overlay->halign) {
-    case GST_TEXT_OVERLAY_HALIGN_LEFT:
+    case GST_CAIRO_TEXT_OVERLAY_HALIGN_LEFT:
       x = overlay->xpad;
       break;
-    case GST_TEXT_OVERLAY_HALIGN_CENTER:
+    case GST_CAIRO_TEXT_OVERLAY_HALIGN_CENTER:
       x = (overlay->width - extents.width) / 2;
       break;
-    case GST_TEXT_OVERLAY_HALIGN_RIGHT:
+    case GST_CAIRO_TEXT_OVERLAY_HALIGN_RIGHT:
       x = overlay->width - extents.width - overlay->xpad;
       break;
     default:
@@ -484,11 +486,11 @@ gst_text_overlay_render_text (GstTextOverlay * overlay, gchar * text,
 static GstCaps *
 gst_text_overlay_getcaps (GstPad * pad)
 {
-  GstTextOverlay *overlay;
+  GstCairoTextOverlay *overlay;
   GstPad *otherpad;
   GstCaps *caps;
 
-  overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  overlay = GST_CAIRO_TEXT_OVERLAY (gst_pad_get_parent (pad));
 
   if (pad == overlay->srcpad)
     otherpad = overlay->video_sinkpad;
@@ -528,7 +530,7 @@ gst_text_overlay_getcaps (GstPad * pad)
 static gboolean
 gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstTextOverlay *overlay;
+  GstCairoTextOverlay *overlay;
   GstStructure *structure;
   gboolean ret = FALSE;
   const GValue *fps;
@@ -538,7 +540,7 @@ gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
 
   g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
 
-  overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  overlay = GST_CAIRO_TEXT_OVERLAY (gst_pad_get_parent (pad));
 
   overlay->width = 0;
   overlay->height = 0;
@@ -560,9 +562,9 @@ gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
 static GstPadLinkReturn
 gst_text_overlay_text_pad_linked (GstPad * pad, GstPad * peer)
 {
-  GstTextOverlay *overlay;
+  GstCairoTextOverlay *overlay;
 
-  overlay = GST_TEXT_OVERLAY (GST_PAD_PARENT (pad));
+  overlay = GST_CAIRO_TEXT_OVERLAY (GST_PAD_PARENT (pad));
 
   GST_DEBUG_OBJECT (overlay, "Text pad linked");
 
@@ -579,10 +581,10 @@ gst_text_overlay_text_pad_linked (GstPad * pad, GstPad * peer)
 static void
 gst_text_overlay_text_pad_unlinked (GstPad * pad)
 {
-  GstTextOverlay *overlay;
+  GstCairoTextOverlay *overlay;
 
   /* don't use gst_pad_get_parent() here, will deadlock */
-  overlay = GST_TEXT_OVERLAY (GST_PAD_PARENT (pad));
+  overlay = GST_CAIRO_TEXT_OVERLAY (GST_PAD_PARENT (pad));
 
   GST_DEBUG_OBJECT (overlay, "Text pad unlinked");
 
@@ -599,7 +601,7 @@ gst_text_overlay_text_pad_unlinked (GstPad * pad)
 #define BOX_YPAD         6
 
 static inline void
-gst_text_overlay_shade_y (GstTextOverlay * overlay, guchar * dest,
+gst_text_overlay_shade_y (GstCairoTextOverlay * overlay, guchar * dest,
     guint dest_stride, gint y0, gint y1)
 {
   gint i, j, x0, x1;
@@ -620,7 +622,7 @@ gst_text_overlay_shade_y (GstTextOverlay * overlay, guchar * dest,
 }
 
 static inline void
-gst_text_overlay_blit_1 (GstTextOverlay * overlay, guchar * dest,
+gst_text_overlay_blit_1 (GstCairoTextOverlay * overlay, guchar * dest,
     guchar * text_image, gint val, guint dest_stride)
 {
   gint i, j;
@@ -639,7 +641,7 @@ gst_text_overlay_blit_1 (GstTextOverlay * overlay, guchar * dest,
 }
 
 static inline void
-gst_text_overlay_blit_sub2x2 (GstTextOverlay * overlay, guchar * dest,
+gst_text_overlay_blit_sub2x2 (GstCairoTextOverlay * overlay, guchar * dest,
     guchar * text_image, gint val, guint dest_stride)
 {
   gint i, j;
@@ -662,7 +664,8 @@ gst_text_overlay_blit_sub2x2 (GstTextOverlay * overlay, guchar * dest,
 
 
 static GstFlowReturn
-gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
+gst_text_overlay_push_frame (GstCairoTextOverlay * overlay,
+    GstBuffer * video_frame)
 {
   guchar *y, *u, *v;
   gint ypos;
@@ -670,14 +673,14 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
   video_frame = gst_buffer_make_writable (video_frame);
 
   switch (overlay->valign) {
-    case GST_TEXT_OVERLAY_VALIGN_BOTTOM:
+    case GST_CAIRO_TEXT_OVERLAY_VALIGN_BOTTOM:
       ypos = overlay->height - overlay->font_height - overlay->ypad;
       break;
-    case GST_TEXT_OVERLAY_VALIGN_BASELINE:
+    case GST_CAIRO_TEXT_OVERLAY_VALIGN_BASELINE:
       ypos = overlay->height - (overlay->font_height - overlay->text_dy)
           - overlay->ypad;
       break;
-    case GST_TEXT_OVERLAY_VALIGN_TOP:
+    case GST_CAIRO_TEXT_OVERLAY_VALIGN_TOP:
       ypos = overlay->ypad;
       break;
     default:
@@ -724,7 +727,7 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
 }
 
 static void
-gst_text_overlay_pop_video (GstTextOverlay * overlay)
+gst_text_overlay_pop_video (GstCairoTextOverlay * overlay)
 {
   GstBuffer *buf;
 
@@ -734,7 +737,7 @@ gst_text_overlay_pop_video (GstTextOverlay * overlay)
 }
 
 static void
-gst_text_overlay_pop_text (GstTextOverlay * overlay)
+gst_text_overlay_pop_text (GstCairoTextOverlay * overlay)
 {
   GstBuffer *buf;
 
@@ -751,13 +754,13 @@ gst_text_overlay_pop_text (GstTextOverlay * overlay)
 static GstFlowReturn
 gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
 {
-  GstTextOverlay *overlay;
+  GstCairoTextOverlay *overlay;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime now, txt_end, frame_end;
   GstBuffer *video_frame = NULL;
   GstBuffer *text_buf = NULL;
 
-  overlay = GST_TEXT_OVERLAY (data);
+  overlay = GST_CAIRO_TEXT_OVERLAY (data);
 
   GST_DEBUG ("Collecting");
 
@@ -881,7 +884,7 @@ static GstStateChangeReturn
 gst_text_overlay_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstTextOverlay *overlay = GST_TEXT_OVERLAY (element);
+  GstCairoTextOverlay *overlay = GST_CAIRO_TEXT_OVERLAY (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:

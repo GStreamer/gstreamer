@@ -33,9 +33,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gst_element_register (plugin, "cairotextoverlay", GST_RANK_NONE,
-      GST_TYPE_TEXT_OVERLAY);
+      GST_TYPE_CAIRO_TEXT_OVERLAY);
   gst_element_register (plugin, "cairotimeoverlay", GST_RANK_NONE,
-      GST_TYPE_TIMEOVERLAY);
+      GST_TYPE_CAIRO_TIME_OVERLAY);
 
   GST_DEBUG_CATEGORY_INIT (cairo_debug, "cairo", 0, "Cairo elements");
 

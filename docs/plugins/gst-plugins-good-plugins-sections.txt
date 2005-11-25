@@ -15,6 +15,14 @@ GstAutoVideoSinkClass
 </SECTION>
 
 <SECTION>
+<FILE>element-cairotimeoverlay</FILE>
+GstCairoTimeOverlay
+<TITLE>cairotimeoverlay</TITLE>
+<SUBSECTION Standard>
+GstCairoTimeOverlayClass
+</SECTION>
+
+<SECTION>
 <FILE>element-goom</FILE>
 GstGoom
 <TITLE>goom</TITLE>

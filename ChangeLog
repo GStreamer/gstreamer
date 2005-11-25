@@ -3,6 +3,38 @@
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* ext/cairo/gstcairo.c: (plugin_init):
+	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_base_init),
+	(gst_text_overlay_class_init), (gst_text_overlay_finalize),
+	(gst_text_overlay_init), (gst_text_overlay_font_init),
+	(gst_text_overlay_set_property), (gst_text_overlay_render_text),
+	(gst_text_overlay_getcaps), (gst_text_overlay_setcaps),
+	(gst_text_overlay_text_pad_linked),
+	(gst_text_overlay_text_pad_unlinked), (gst_text_overlay_shade_y),
+	(gst_text_overlay_blit_1), (gst_text_overlay_blit_sub2x2),
+	(gst_text_overlay_push_frame), (gst_text_overlay_pop_video),
+	(gst_text_overlay_pop_text), (gst_text_overlay_collected),
+	(gst_text_overlay_change_state):
+	* ext/cairo/gsttextoverlay.h:
+	* ext/cairo/gsttimeoverlay.c:
+	(gst_cairo_time_overlay_update_font_height),
+	(gst_cairo_time_overlay_set_caps),
+	(gst_cairo_time_overlay_get_unit_size),
+	(gst_cairo_time_overlay_print_smpte_time),
+	(gst_cairo_time_overlay_transform),
+	(gst_cairo_time_overlay_base_init),
+	(gst_cairo_time_overlay_class_init), (gst_cairo_time_overlay_init),
+	(gst_cairo_time_overlay_get_type):
+	* ext/cairo/gsttimeoverlay.h:
+	  do some name borgifying
+	  document
+
+2005-11-25  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
 	* gst/autodetect/gstautoaudiosink.c:
 	(gst_auto_audio_sink_base_init):
 	* gst/autodetect/gstautovideosink.c:

@@ -13,14 +13,14 @@
       <name>autoaudiosink</name>
       <longname>Auto audio sink</longname>
       <class>Sink/Audio</class>
-      <description>Audio sink embedding the Auto-settings for audio output</description>
+      <description>Wrapper audio sink for automatically detected audio sink</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
     </element>
     <element>
       <name>autovideosink</name>
       <longname>Auto video sink</longname>
       <class>Sink/Video</class>
-      <description>Video sink embedding the Auto-settings for video output</description>
+      <description>Wrapper video sink for automatically detected video sink</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
     </element>
   </elements>

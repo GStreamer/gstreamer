@@ -17,48 +17,43 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
-#ifndef __GST_TIMEOVERLAY_H__
-#define __GST_TIMEOVERLAY_H__
+#ifndef __GST_CAIRO_TIME_OVERLAY_H__
+#define __GST_CAIRO_TIME_OVERLAY_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <cairo.h>
-
-#include "gstvideofilter.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_TIMEOVERLAY \
-  (gst_timeoverlay_get_type())
-#define GST_TIMEOVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TIMEOVERLAY,GstTimeoverlay))
-#define GST_TIMEOVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TIMEOVERLAY,GstTimeoverlayClass))
-#define GST_IS_TIMEOVERLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TIMEOVERLAY))
-#define GST_IS_TIMEOVERLAY_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TIMEOVERLAY))
+#define GST_TYPE_CAIRO_TIME_OVERLAY \
+  (gst_cairo_time_overlay_get_type())
+#define GST_CAIRO_TIME_OVERLAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CAIRO_TIME_OVERLAY,GstCairoTimeOverlay))
+#define GST_CAIRO_TIME_OVERLAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CAIRO_TIME_OVERLAY,GstCairoTimeOverlayClass))
+#define GST_IS_CAIRO_TIME_OVERLAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CAIRO_TIME_OVERLAY))
+#define GST_IS_CAIRO_TIME_OVERLAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAIRO_TIME_OVERLAY))
 
-typedef struct _GstTimeoverlay GstTimeoverlay;
-typedef struct _GstTimeoverlayClass GstTimeoverlayClass;
-
-struct _GstTimeoverlay {
-  GstVideofilter videofilter;
+typedef struct _GstCairoTimeOverlay {
+  GstBaseTransform basetransform;
 
   gint width, height;
-  
+
   cairo_surface_t *surface;
   cairo_t *cr;
   int text_height;
 
-};
+} GstCairoTimeOverlay;
 
-struct _GstTimeoverlayClass {
-  GstVideofilterClass parent_class;
-};
+typedef struct _GstCairoTimeOverlayClass {
+  GstBaseTransformClass parent_class;
+} GstCairoTimeOverlayClass;
 
-GType gst_timeoverlay_get_type(void);
+GType gst_cairo_time_overlay_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_TIMEOVERLAY_H__ */
+#endif /* __GST_CAIRO_TIME_OVERLAY_H__ */
