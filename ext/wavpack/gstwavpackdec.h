@@ -48,11 +48,14 @@ struct _GstWavpackDec
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
+#if 0
   GstPad *wvcsinkpad;
+#endif
 
   WavpackContext *context;
 
   int32_t *decodebuf;
+  guint decodebuf_size;
 
   WavpackStream *stream;
 
@@ -60,6 +63,10 @@ struct _GstWavpackDec
   guint channels;
   guint width;
   long frame_length;
+
+  guint64 wvcflushed_bytes;
+  guint64 duration;
+  guint64 wvcduration;
 
   guchar *decdata;
   long *cache;

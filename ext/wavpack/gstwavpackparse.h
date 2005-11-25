@@ -23,7 +23,6 @@
 #define __GST_WAVPACK_PARSE_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 
 G_BEGIN_DECLS
 
@@ -48,17 +47,19 @@ struct _GstWavpackParse
 
   GstPad *sinkpad, *srcpad;
   
-  GstByteStream* bs;
-
   guint32 samplerate;
   guint32 channels;
   guint32 total_samples;
   guint64 timestamp;
 
+  guint64 flushed_bytes;
+  guint64 duration;
+
   guint64 seek_offset;
   gboolean seek_pending;
   gboolean need_discont;
   gboolean need_flush;
+  gboolean eos;
 };
 
 struct _GstWavpackParseClass 
