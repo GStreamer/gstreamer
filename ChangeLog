@@ -2,7 +2,7 @@
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (handle_sequence):
 	  Prime libmpeg2's pumps with some null custom buffers
-	  to ensure it ask us to discard garbage later yay.
+	  to ensure it doesn't ask us to discard garbage later yay.
 
 2005-11-25  Michael Smith  <msmith@fluendo.com>
 
