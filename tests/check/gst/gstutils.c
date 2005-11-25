@@ -192,12 +192,49 @@ GST_START_TEST (test_math_scale)
           G_MAXINT32) != G_MAXUINT64 - 100);
 
   /* overflow */
-  fail_if (gst_util_uint64_scale_int (G_MAXUINT64 - 1, 10, 1) != G_MAXUINT64);
-  fail_if (gst_util_uint64_scale_int (G_MAXUINT64 - 1, G_MAXINT32,
+  ASSERT_WARNING (gst_util_uint64_scale_int (G_MAXUINT64 - 1, 10,
+          1) != G_MAXUINT64);
+  ASSERT_WARNING (gst_util_uint64_scale_int (G_MAXUINT64 - 1, G_MAXINT32,
           1) != G_MAXUINT64);
 
 } GST_END_TEST;
 
+GST_START_TEST (test_math_scale_uint64)
+{
+  fail_if (gst_util_uint64_scale (1, 1, 1) != 1);
+
+  fail_if (gst_util_uint64_scale (10, 10, 1) != 100);
+  fail_if (gst_util_uint64_scale (10, 10, 2) != 50);
+
+  fail_if (gst_util_uint64_scale (0, 10, 2) != 0);
+  fail_if (gst_util_uint64_scale (0, 0, 2) != 0);
+
+  fail_if (gst_util_uint64_scale (G_MAXUINT32, 5, 1) != G_MAXUINT32 * 5LL);
+  fail_if (gst_util_uint64_scale (G_MAXUINT32, 10, 2) != G_MAXUINT32 * 5LL);
+
+  fail_if (gst_util_uint64_scale (G_MAXUINT32, 1, 5) != G_MAXUINT32 / 5LL);
+  fail_if (gst_util_uint64_scale (G_MAXUINT32, 2, 10) != G_MAXUINT32 / 5LL);
+
+  /* not quite overflow */
+  fail_if (gst_util_uint64_scale (G_MAXUINT64 - 1, 10, 10) != G_MAXUINT64 - 1);
+  fail_if (gst_util_uint64_scale (G_MAXUINT64 - 1, G_MAXUINT32,
+          G_MAXUINT32) != G_MAXUINT64 - 1);
+  fail_if (gst_util_uint64_scale (G_MAXUINT64 - 100, G_MAXUINT32,
+          G_MAXUINT32) != G_MAXUINT64 - 100);
+
+  fail_if (gst_util_uint64_scale (G_MAXUINT64 - 1, 10, 10) != G_MAXUINT64 - 1);
+  fail_if (gst_util_uint64_scale (G_MAXUINT64 - 1, G_MAXUINT64,
+          G_MAXUINT64) != G_MAXUINT64 - 1);
+  fail_if (gst_util_uint64_scale (G_MAXUINT64 - 100, G_MAXUINT64,
+          G_MAXUINT64) != G_MAXUINT64 - 100);
+
+  /* overflow */
+  ASSERT_WARNING (gst_util_uint64_scale (G_MAXUINT64 - 1, 10,
+          1) != G_MAXUINT64);
+  ASSERT_WARNING (gst_util_uint64_scale (G_MAXUINT64 - 1, G_MAXUINT64,
+          1) != G_MAXUINT64);
+
+} GST_END_TEST;
 Suite *
 gst_utils_suite (void)
 {
@@ -208,6 +245,7 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_buffer_probe_n_times);
   tcase_add_test (tc_chain, test_buffer_probe_once);
   tcase_add_test (tc_chain, test_math_scale);
+  tcase_add_test (tc_chain, test_math_scale_uint64);
   return s;
 }
 

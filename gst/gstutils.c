@@ -356,6 +356,89 @@ typedef union
   } l;
 } GstUInt64;
 
+static guint64
+gst_util_uint64_scale_int64 (guint64 val, guint64 num, guint64 denom)
+{
+  GstUInt64 a0, a1, b0, b1, c0, ct, c1, result;
+  GstUInt64 v, n, d;
+
+  /* prepare input */
+  v.ll = val;
+  n.ll = num;
+  d.ll = denom;
+
+  /* do 128 bits multiply 
+   *                   nh   nl
+   *                *  vh   vl
+   *                ----------
+   * a0 =              vl * nl
+   * a1 =         vl * nh
+   * b0 =         vh * nl
+   * b1 =  + vh * nh
+   *       -------------------
+   * c1,c0
+   */
+  a0.ll = (guint64) v.l.low * n.l.low;
+  a1.ll = (guint64) v.l.low * n.l.high;
+  b0.ll = (guint64) v.l.high * n.l.low;
+  b1.ll = (guint64) v.l.high * n.l.high;
+
+  /* and sum together with carry into 128 bits c1, c0 */
+  c0.l.low = a0.l.low;
+  ct.ll = (guint64) a0.l.high + a1.l.low + b0.l.low;
+  c0.l.high = ct.l.low;
+  c1.ll = (guint64) a1.l.high + b0.l.high + ct.l.high + b1.ll;
+
+  /* if high bits bigger than denom, we overflow */
+  if (c1.ll >= denom)
+    goto overflow;
+
+  /* and 128/64 bits division, result fits 64 bits */
+  if (denom <= G_MAXUINT32) {
+    guint32 den = (guint32) denom;
+
+    /* easy case, (c1,c0)128/(den)32 division */
+    c1.l.high %= den;
+    c1.l.high = c1.ll % den;
+    c1.l.low = c0.l.high;
+    c0.l.high = c1.ll % den;
+    result.l.high = c1.ll / den;
+    result.l.low = c0.ll / den;
+  } else {
+    gint i;
+    gint64 mask;
+
+    /* full 128/64 case, very slow... */
+    /* quotient is c1, c0 */
+    a0.ll = 0;                  /* remainder a0 */
+
+    /* This can be done faster, inspiration in Hacker's Delight p152 */
+    for (i = 0; i < 128; i++) {
+      /* shift 192 bits remainder:quotient, we only need to
+       * check the top bit since denom is only 64 bits. */
+      /* sign extend top bit into mask */
+      mask = ((gint32) a0.l.high) >> 31;
+      mask |= (a0.ll = (a0.ll << 1) | (c1.l.high >> 31));
+      c1.ll = (c1.ll << 1) | (c0.l.high >> 31);
+      c0.ll <<= 1;
+
+      /* if remainder >= denom or top bit was set */
+      if (mask >= denom) {
+        a0.ll -= denom;
+        c0.ll += 1;
+      }
+    }
+    result.ll = c0.ll;
+  }
+  return result.ll;
+
+overflow:
+  {
+    g_warning ("int64 scaling overflow");
+    return G_MAXUINT64;
+  }
+}
+
 /**
  * gst_util_uint64_scale:
  * @val: the number to scale
@@ -363,6 +446,8 @@ typedef union
  * @denom: the denominator of the scale ratio
  *
  * Scale @val by @num / @denom, trying to avoid overflows.
+ *
+ * This function can potentially be very slow if denom > G_MAXUINT32.
  *
  * Returns: @val * @num / @denom, trying to avoid overflows.
  */
@@ -390,9 +475,8 @@ do_int32:
   return gst_util_uint64_scale_int (val, (gint) num, (gint) denom);
 
 do_int64:
-  /* implement me with fixed point, if you care */
-  return gst_gdouble_to_guint64 (gst_guint64_to_gdouble (val) *
-      ((gst_guint64_to_gdouble (num)) / gst_guint64_to_gdouble (denom)));
+  /* to the more heavy implementations... */
+  return gst_util_uint64_scale_int64 (val, num, denom);
 }
 
 /**
@@ -443,6 +527,7 @@ gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 
 overflow:
   {
+    g_warning ("int scaling overflow");
     return G_MAXUINT64;
   }
 }
