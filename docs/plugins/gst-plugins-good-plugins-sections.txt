@@ -1,4 +1,20 @@
 <SECTION>
+<FILE>element-autoaudiosink</FILE>
+GstAutoAudioSink
+<TITLE>autoaudiosink</TITLE>
+<SUBSECTION Standard>
+GstAutoAudioSinkClass
+</SECTION>
+
+<SECTION>
+<FILE>element-autovideosink</FILE>
+GstAutoVideoSink
+<TITLE>autovideosink</TITLE>
+<SUBSECTION Standard>
+GstAutoVideoSinkClass
+</SECTION>
+
+<SECTION>
 <FILE>element-goom</FILE>
 GstGoom
 <TITLE>goom</TITLE>

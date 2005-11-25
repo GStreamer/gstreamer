@@ -17,6 +17,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-autovideosink
+ * @see_also: autoaudiosink, ximagesink, xvimagesink, sdlvideosink
+ *
+ * <refsect2>
+ * <para>
+ * autovideosink is a video sink that automatically detects an appropriate
+ * video sink to use.  It does so by scanning the registry for all elements
+ * that have <quote>Sink</quote> and <quote>Audio</quote> in the class field
+ * of their element information, and also have a non-zero autoplugging rank.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v -m videotestsrc ! autovideosink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -39,7 +59,7 @@ gst_auto_video_sink_base_init (gpointer klass)
   GstElementDetails gst_auto_video_sink_details = {
     "Auto video sink",
     "Sink/Video",
-    "Video sink embedding the Auto-settings for video output",
+    "Wrapper video sink for automatically detected video sink",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>"
   };
   GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -108,7 +128,7 @@ gst_auto_video_sink_factory_filter (GstPluginFeature * feature, gpointer data)
 
   /* video sinks */
   klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
-  if (strcmp (klass, "Sink/Video") != 0)
+  if (!(strstr (klass, "Sink") && strstr (klass, "Video")))
     return FALSE;
 
   /* only select elements with autoplugging rank */

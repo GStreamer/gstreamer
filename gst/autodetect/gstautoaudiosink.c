@@ -17,6 +17,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-autoaudiosink
+ * @see_also: autovideosink, alsasink, osssink
+ *
+ * <refsect2>
+ * <para>
+ * autoaudiosink is an audio sink that automatically detects an appropriate
+ * audio sink to use.  It does so by scanning the registry for all elements
+ * that have <quote>Sink</quote> and <quote>Audio</quote> in the class field
+ * of their element information, and also have a non-zero autoplugging rank.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v -m audiotestsrc ! autoaudiosink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -39,7 +59,7 @@ gst_auto_audio_sink_base_init (gpointer klass)
   GstElementDetails gst_auto_audio_sink_details = {
     "Auto audio sink",
     "Sink/Audio",
-    "Audio sink embedding the Auto-settings for audio output",
+    "Wrapper audio sink for automatically detected audio sink",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>"
   };
   GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

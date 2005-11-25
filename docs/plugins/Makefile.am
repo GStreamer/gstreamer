@@ -74,6 +74,8 @@ IGNORE_CFILES =
 # the registry won't have the element
 
 EXTRA_HFILES = \
+	$(top_srcdir)/gst/autodetect/gstautoaudiosink.h \
+	$(top_srcdir)/gst/autodetect/gstautovideosink.h \
 	$(top_srcdir)/gst/level/gstlevel.h \
 	$(top_srcdir)/gst/goom/gstgoom.h
 
