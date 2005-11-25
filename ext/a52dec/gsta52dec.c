@@ -64,7 +64,7 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-ac3")
+    GST_STATIC_CAPS ("audio/x-ac3; audio/ac3; audio/x-private1-ac3")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -81,6 +81,8 @@ static void gst_a52dec_class_init (GstA52DecClass * klass);
 static void gst_a52dec_init (GstA52Dec * a52dec);
 
 static GstFlowReturn gst_a52dec_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf);
+static gboolean gst_a52dec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_a52dec_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_a52dec_change_state (GstElement * element,
     GstStateChange transition);
@@ -175,6 +177,8 @@ gst_a52dec_init (GstA52Dec * a52dec)
   a52dec->sinkpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "sink"), "sink");
+  gst_pad_set_setcaps_function (a52dec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_a52dec_sink_setcaps));
   gst_pad_set_chain_function (a52dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_a52dec_chain));
   gst_pad_set_event_function (a52dec->sinkpad,
@@ -480,8 +484,93 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
   return GST_FLOW_OK;
 }
 
+static gboolean
+gst_a52dec_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (structure && gst_structure_has_name (structure, "audio/x-private1-ac3"))
+    a52dec->dvdmode = TRUE;
+  else
+    a52dec->dvdmode = FALSE;
+
+  gst_object_unref (a52dec);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
+  GstFlowReturn ret;
+
+  if (a52dec->dvdmode) {
+    gint size = GST_BUFFER_SIZE (buf);
+    guchar *data = GST_BUFFER_DATA (buf);
+    gint first_access;
+    gint offset;
+    gint len;
+    GstBuffer *subbuf;
+
+    if (size < 2) {
+      GST_ERROR_OBJECT (pad, "Insufficient data in buffer. "
+          "Can't determine first_acess");
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+
+    first_access = (data[0] << 8) | data[1];
+
+    /* Skip the first_access header */
+    offset = 2;
+
+    if (first_access > 1) {
+      /* Length of data before first_access */
+      len = first_access - 1;
+
+      if (len <= 0 || offset + len > size) {
+        GST_ERROR_OBJECT (pad, "Bad first_access parameter in buffer");
+        ret = GST_FLOW_ERROR;
+        goto done;
+      }
+
+      subbuf = gst_buffer_create_sub (buf, offset, len);
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+      ret = gst_a52dec_chain_raw (pad, subbuf);
+      if (ret != GST_FLOW_OK)
+        goto done;
+
+      offset += len;
+      len = size - offset;
+
+      if (len > 0) {
+        subbuf = gst_buffer_create_sub (buf, offset, len);
+        GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
+
+        ret = gst_a52dec_chain_raw (pad, subbuf);
+      }
+    } else {
+      /* No first_access, so no timestamp */
+      subbuf = gst_buffer_create_sub (buf, offset, size - offset);
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+      ret = gst_a52dec_chain_raw (pad, subbuf);
+    }
+  } else {
+    ret = gst_a52dec_chain_raw (pad, buf);
+  }
+
+done:
+  gst_object_unref (a52dec);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
 {
   GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
   guint8 *data;

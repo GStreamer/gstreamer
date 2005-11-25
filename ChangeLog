@@ -1,3 +1,13 @@
+2005-11-25  Michael Smith  <msmith@fluendo.com>
+
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_init),
+	(gst_a52dec_sink_setcaps), (gst_a52dec_chain),
+	(gst_a52dec_chain_raw):
+	* ext/a52dec/gsta52dec.h:
+	  Accept AC3 in audio/x-private1-ac3 format, which includes
+	  DVD-specific headers, as well as raw AC3, for compatibility with
+	  some demuxers.
+
 2005-11-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mad/gstmad.c: (gst_mad_chain):

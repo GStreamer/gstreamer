@@ -45,6 +45,9 @@ struct _GstA52Dec {
   /* pads */
   GstPad 	*sinkpad,
   		*srcpad;
+
+  gboolean       dvdmode;
+
   int 		 bit_rate;
   int 		 sample_rate;
   int 		 stream_channels;
