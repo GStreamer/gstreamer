@@ -1999,6 +1999,9 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       if (forward) {
         goto forward;
       }
+      /* free message */
+      gst_message_unref (message);
+
       break;
     }
     case GST_MESSAGE_CLOCK_PROVIDE:
@@ -2014,6 +2017,9 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 
       if (forward)
         goto forward;
+      /* free message */
+      gst_message_unref (message);
+
       break;
     }
     default:

@@ -1,3 +1,8 @@
+2005-11-25  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstbin.c: (gst_bin_handle_message_func):
+	Don't leak clock messages.
+
 2005-11-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstutils.c: (gst_util_uint64_scale_int64),
