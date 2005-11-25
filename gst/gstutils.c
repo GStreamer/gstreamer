@@ -504,24 +504,22 @@ gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
     /* simple case */
     result.ll = val * num / denom;
   } else {
-    GstUInt64 gval, low, high, temp;
+    GstUInt64 low, high;
 
     /* do 96 bits mult/div */
-    gval.ll = val;
-    low.ll = ((guint64) gval.l.low) * num;
-    high.ll = ((guint64) gval.l.high) * num + (low.l.high);
-    result.ll = (high.ll / denom);
-    temp.l.high = (high.ll % denom);
-    temp.l.low = (low.l.low);
-    temp.ll /= denom;
+    low.ll = val;
+    result.ll = ((guint64) low.l.low) * num;
+    high.ll = ((guint64) low.l.high) * num + (result.l.high);
+
+    low.ll = high.ll / denom;
+    result.l.high = high.ll % denom;
+    result.ll /= denom;
 
     /* avoid overflow */
-    if (result.ll + temp.l.high > G_MAXUINT32)
+    if (low.ll + result.l.high > G_MAXUINT32)
       goto overflow;
 
-    result.l.high = result.l.low;
-    result.l.low = 0;
-    result.ll += temp.ll;
+    result.l.high += low.l.low;
   }
   return result.ll;
 

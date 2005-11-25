@@ -1,5 +1,11 @@
 2005-11-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstutils.c: (gst_util_uint64_scale_int64),
+	(gst_util_uint64_scale_int):
+	Optimisations, remove unneeded vars.
+
+2005-11-25  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst/gstutils.c: (GST_START_TEST), (gst_utils_suite):
 	Added more checks for the high precision uint64 cases.
 
