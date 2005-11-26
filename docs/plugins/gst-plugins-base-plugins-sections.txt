@@ -87,6 +87,13 @@ GstVorbisEnc
 GstVorbisEncClass
 </SECTION>
 
+<SECTION>
+<FILE>element-ximagesink</FILE>
+<TITLE>ximagesink</TITLE>
+GstXImageSink
+<SUBSECTION Standard>
+GstXImagesSinkClass
+</SECTION>
 
 <SECTION>
 <FILE>private</FILE>
