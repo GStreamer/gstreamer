@@ -1,3 +1,9 @@
+2005-11-26  Edward Hervey  <edward@fluendo.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_sink_setcaps):
+	Handle the case where the incoming Video dv stream doesn't have
+	a pixel aspect ratio set.
+
 2005-11-25  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/Makefile.am:

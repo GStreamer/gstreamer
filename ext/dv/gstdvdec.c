@@ -203,7 +203,8 @@ gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstDVDec *dvdec;
   GstStructure *s;
   GstCaps *othercaps;
-  const GValue *par, *rate;
+  gboolean gotpar = FALSE;
+  const GValue *par = NULL, *rate = NULL;
 
   dvdec = GST_DVDEC (gst_pad_get_parent (pad));
 
@@ -212,8 +213,8 @@ gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   if (!gst_structure_get_int (s, "height", &dvdec->height))
     goto error;
-  if (!(par = gst_structure_get_value (s, "pixel-aspect-ratio")))
-    goto error;
+  if ((par = gst_structure_get_value (s, "pixel-aspect-ratio")))
+    gotpar = TRUE;
   if (!(rate = gst_structure_get_value (s, "framerate")))
     goto error;
 
@@ -230,8 +231,9 @@ gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
       "height", G_TYPE_INT, dvdec->height,
       "framerate", GST_TYPE_FRACTION, dvdec->framerate_numerator,
       dvdec->framerate_denominator, NULL);
-  gst_structure_set_value (gst_caps_get_structure (othercaps, 0),
-      "pixel-aspect-ratio", par);
+  if (gotpar)
+    gst_structure_set_value (gst_caps_get_structure (othercaps, 0),
+        "pixel-aspect-ratio", par);
 
   gst_pad_set_caps (dvdec->srcpad, othercaps);
 
