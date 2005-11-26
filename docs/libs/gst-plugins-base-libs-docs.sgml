@@ -11,6 +11,7 @@
 <!ENTITY GstMixer SYSTEM "xml/gstmixer.xml">
 <!ENTITY GstRingBuffer SYSTEM "xml/gstringbuffer.xml">
 <!ENTITY GstTuner SYSTEM "xml/gsttuner.xml">
+<!ENTITY GstXOverlay SYSTEM "xml/gstxoverlay.xml">
 
 ]>
 <book id="index">
@@ -48,6 +49,7 @@ This library should be linked to by getting cflags and libs from
     &GstColorBalance;
     &GstMixer;
     &GstTuner;
+    &GstXOverlay;
   </chapter>
 
   <chapter id="gstreamer-gconf">

@@ -1,0 +1,70 @@
+<!-- ##### SECTION Title ##### -->
+gstxoverlay
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### STRUCT GstXOverlay ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### STRUCT GstXOverlayClass ##### -->
+<para>
+
+</para>
+
+@klass: 
+@set_xwindow_id: 
+@expose: 
+
+<!-- ##### FUNCTION gst_x_overlay_set_xwindow_id ##### -->
+<para>
+
+</para>
+
+@overlay: 
+@xwindow_id: 
+
+
+<!-- ##### FUNCTION gst_x_overlay_got_xwindow_id ##### -->
+<para>
+
+</para>
+
+@overlay: 
+@xwindow_id: 
+
+
+<!-- ##### FUNCTION gst_x_overlay_prepare_xwindow_id ##### -->
+<para>
+
+</para>
+
+@overlay: 
+
+
+<!-- ##### FUNCTION gst_x_overlay_expose ##### -->
+<para>
+
+</para>
+
+@overlay: 
+
+
