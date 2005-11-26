@@ -3,6 +3,13 @@
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* sys/xvimage/xvimagesink.c: Added doc for xvimagesink.
+
+2005-11-26  Julien MOUTTE  <julien@moutte.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
 	* docs/plugins/inspect/plugin-adder.xml:
 	* docs/plugins/inspect/plugin-alsa.xml:
 	* docs/plugins/inspect/plugin-audioconvert.xml:

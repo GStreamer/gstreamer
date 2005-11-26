@@ -96,6 +96,14 @@ GstXImagesSinkClass
 </SECTION>
 
 <SECTION>
+<FILE>element-xvimagesink</FILE>
+<TITLE>xvimagesink</TITLE>
+GstXvImageSink
+<SUBSECTION Standard>
+GstXvImagesSinkClass
+</SECTION>
+
+<SECTION>
 <FILE>private</FILE>
 
 CLIENTS_UNLOCK

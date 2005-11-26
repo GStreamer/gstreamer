@@ -85,7 +85,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/tcp/gsttcpserversink.h \
 	$(top_srcdir)/gst/videotestsrc/gstvideotestsrc.h \
 	$(top_srcdir)/gst/volume/gstvolume.h \
-	$(top_srcdir)/sys/ximage/ximagesink.h
+	$(top_srcdir)/sys/ximage/ximagesink.h \
+	$(top_srcdir)/sys/xvimage/xvimagesink.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =
