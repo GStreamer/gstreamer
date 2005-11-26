@@ -247,6 +247,7 @@ gst_audiorate_chain (GstPad * pad, GstBuffer * buf)
   GstClockTime in_time, in_duration;
   guint64 in_offset, in_offset_end;
   gint in_size;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   audiorate = GST_AUDIORATE (gst_pad_get_parent (pad));
 
@@ -281,7 +282,8 @@ gst_audiorate_chain (GstPad * pad, GstBuffer * buf)
     GST_BUFFER_OFFSET (fill) = audiorate->next_offset;
     GST_BUFFER_OFFSET_END (fill) = in_offset;
 
-    gst_pad_push (audiorate->srcpad, fill);
+    if ((ret = gst_pad_push (audiorate->srcpad, fill) != GST_FLOW_OK))
+      goto beach;
     audiorate->out++;
     audiorate->add += fillsamples;
 
@@ -302,7 +304,7 @@ gst_audiorate_chain (GstPad * pad, GstBuffer * buf)
       if (!audiorate->silent)
         g_object_notify (G_OBJECT (audiorate), "drop");
 
-      return GST_FLOW_OK;
+      goto beach;
     } else {
       guint64 truncsamples, truncsize, leftsize;
       GstBuffer *trunc;
@@ -327,11 +329,12 @@ gst_audiorate_chain (GstPad * pad, GstBuffer * buf)
       audiorate->drop += truncsamples;
     }
   }
-  gst_pad_push (audiorate->srcpad, buf);
+  ret = gst_pad_push (audiorate->srcpad, buf);
   audiorate->out++;
 
   audiorate->next_offset = in_offset_end;
-  return GST_FLOW_OK;
+beach:
+  return ret;
 }
 
 static void

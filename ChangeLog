@@ -1,3 +1,8 @@
+2005-11-26  Edward Hervey  <edward@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audiorate_chain):
+	Properly return GstFlowReturn from gst_pad_push in chain functions.
+
 2005-11-25  Michael Smith  <msmith@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_query_convert),
