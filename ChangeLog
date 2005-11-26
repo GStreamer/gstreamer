@@ -1,3 +1,10 @@
+2005-11-26  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstpluginfeature.c: (gst_plugin_feature_load):
+	This shouldn't issue a g_warning since it returns NULL if it
+	couldn't find the plugin, and all functions using this behave
+	properly on a NULL return. Switching to a GST_WARNING.
+
 2005-11-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstbin.c: (gst_bin_handle_message_func):
