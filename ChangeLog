@@ -1,3 +1,8 @@
+2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/m4/gst-doc.m4:
+	  Fixes #312589
+
 2005-11-26  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstpluginfeature.c: (gst_plugin_feature_load):
