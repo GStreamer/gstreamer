@@ -1,5 +1,15 @@
 2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/base/Makefile.am:
+	* gst/check/Makefile.am:
+	* gst/elements/Makefile.am:
+	* gst/net/Makefile.am:
+	  update LDFLAGS use some more
+
+2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* common/m4/gst-doc.m4:
 	  Fixes #312589
 

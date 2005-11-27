@@ -1,5 +1,5 @@
 # FIXME:
-# need to get gstbufferstore.[ch] into its own lib, preferrably 
+# need to get gstbufferstore.[ch] into its own lib, preferably 
 # libs/gst/bufferstore
 # This requires building libs/gst before this dir, which we currently don't
 # do.

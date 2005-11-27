@@ -157,7 +157,7 @@ libgstreamer_@GST_MAJORMINOR@_la_LIBADD =		\
 
 libgstreamer_@GST_MAJORMINOR@_la_LDFLAGS =		\
 	$(GST_LT_LDFLAGS)				\
-	$(GST_ALL_LDFLAGS)
+	$(GST_LIB_LDFLAGS)
 
 libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst
 

@@ -16,4 +16,5 @@ libgstnet_tempname_@GST_MAJORMINOR@_la_SOURCES = \
 
 libgstnet_tempname_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstnet_tempname_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS)
-libgstnet_tempname_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_OBJ_LDFLAGS)
+libgstnet_tempname_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+

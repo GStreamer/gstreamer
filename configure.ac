@@ -400,9 +400,10 @@ GST_SET_LEVEL_DEFAULT($GST_CVS)
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
 dnl Overview:
-dnl GST_OPTION_CFLAGS:  common flags for profiling, debugging, errors, ...
-dnl GST_ALL_*:          flags shared by all built objects
-dnl GST_OBJ_*:          additional flags to link to the core library
+dnl GST_OPTION_CFLAGS:  common cflags for profiling, debugging, errors, ...
+dnl GST_ALL_*:          vars shared by all built objects
+dnl GST_LIB_LDFLAGS:    additional linker flags for all libaries
+dnl GST_OBJ_*:          additional vars to link to the core library
 dnl			include GST_ALL_*
 dnl GST_LT_LDFLAGS:	library versioning of our libraries
 dnl GST_PLUGIN_LDFLAGS: flags to be used for all plugins
@@ -427,32 +428,36 @@ dnl - XML needs to be added because xmlPtr is used in core
 dnl - src and build dirs need to be added because every piece that gets built
 dnl   will need the GStreamer source and generated headers
 dnl LIBS: XML doesn't need to be added because we don't explicitly use symbols
-dnl       from LibXML
+dnl       from LibXML except for in the core library
 GST_ALL_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir) $GLIB_CFLAGS $XML_CFLAGS \$(GST_OPTION_CFLAGS)"
 dnl FIXME: check if LTLIBINTL is needed everywhere
 dnl I presume it is given that it contains the symbols that _() stuff maps to
 GST_ALL_LIBS="$GLIB_LIBS $LTLIBINTL"
-dnl LDFLAGS modifier defining exported symbols from built shared objects
-EXPORT_LDFLAGS="-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*"
 dnl LDFLAGS really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
-GST_ALL_LDFLAGS="$EXPORT_LDFLAGS -no-undefined"
+GST_ALL_LDFLAGS="-no-undefined"
+
 AC_SUBST(GST_ALL_CFLAGS)
 AC_SUBST(GST_ALL_LIBS)
 AC_SUBST(GST_ALL_LDFLAGS)
 
+dnl GST_LIB_LDFLAGS
+dnl linker flags shared by all libraries
+dnl LDFLAGS modifier defining exported symbols from built libraries
+GST_LIB_LDFLAGS="-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*"
+AC_SUBST(GST_LIB_LDFLAGS)
+
 dnl GST_OBJ_*
 dnl default vars for all internal objects built on libgstreamer
+dnl includes GST_ALL_*
 GST_OBJ_CFLAGS="\$(GST_ALL_CFLAGS)"
 GST_OBJ_LIBS="\$(top_builddir)/gst/libgstreamer-$GST_MAJORMINOR.la \$(GST_ALL_LIBS)"
-GST_OBJ_LDFLAGS="$GST_LT_LDFLAGS $GST_ALL_LDFLAGS"
 AC_SUBST(GST_OBJ_CFLAGS)
 AC_SUBST(GST_OBJ_LIBS)
-AC_SUBST(GST_OBJ_LDFLAGS)
 
 dnl GST_PLUGIN_LDFLAGS
-dnl LDFLAGS for plugins; include GST_ALL_LDFLAGS
-GST_PLUGIN_LDFLAGS="-module -avoid-version $GST_ALL_LDFLAGS"
+dnl LDFLAGS for plugins; includes GST_ALL_LDFLAGS
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
 dnl ##################################################
