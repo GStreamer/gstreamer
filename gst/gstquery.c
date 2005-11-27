@@ -714,6 +714,31 @@ gst_query_get_structure (GstQuery * query)
 }
 
 /**
+ * gst_query_new_seeking (GstFormat *format)
+ * @format: the default #GstFormat for the new query
+ *
+ * Constructs a new query object for querying seeking properties of
+ * the stream. 
+ *
+ * Returns: A #GstQuery
+ */
+GstQuery *
+gst_query_new_seeking (GstFormat format)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new ("GstQuerySeeking",
+      "format", GST_TYPE_FORMAT, format,
+      "seekable", G_TYPE_BOOLEAN, FALSE,
+      "segment-start", G_TYPE_INT64, (gint64) - 1,
+      "segment-end", G_TYPE_INT64, (gint64) - 1, NULL);
+  query = gst_query_new (GST_QUERY_SEEKING, structure);
+
+  return query;
+}
+
+/**
  * gst_query_set_seeking:
  * @query: a #GstQuery
  * @format: the format to set for the @segment_start and @segment_end values
@@ -737,6 +762,41 @@ gst_query_set_seeking (GstQuery * query, GstFormat format,
       "seekable", G_TYPE_BOOLEAN, seekable,
       "segment-start", G_TYPE_INT64, segment_start,
       "segment-end", G_TYPE_INT64, segment_end, NULL);
+}
+
+/**
+ * gst_query_parse_seeking:
+ * @query: a GST_QUERY_SEEKING type query #GstQuery
+ * @format: the format to set for the @segment_start and @segment_end values
+ * @seekable: the seekable flag to set
+ * @segment_start: the segment_start to set
+ * @segment_end: the segment_end to set
+ *
+ * Parse a seeking query, writing the format into @format, and 
+ * other results into the passed parameters, if the respective parameters
+ * are non-NULL
+ */
+void
+gst_query_parse_seeking (GstQuery * query, GstFormat * format,
+    gboolean * seekable, gint64 * segment_start, gint64 * segment_end)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SEEKING);
+
+  structure = gst_query_get_structure (query);
+  if (format)
+    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+  if (seekable)
+    *seekable =
+        g_value_get_boolean (gst_structure_get_value (structure, "seekable"));
+  if (segment_start)
+    *segment_start =
+        g_value_get_int64 (gst_structure_get_value (structure,
+            "segment-start"));
+  if (segment_end)
+    *segment_end =
+        g_value_get_int64 (gst_structure_get_value (structure, "segment-end"));
 }
 
 /**

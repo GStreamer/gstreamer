@@ -51,6 +51,7 @@ check_PROGRAMS =				\
 	gst/gstvalue				\
 	elements/fakesrc			\
 	elements/identity			\
+	elements/fdsrc		          	\
 	generic/states				\
 	pipelines/simple_launch_lines		\
 	pipelines/stress			\

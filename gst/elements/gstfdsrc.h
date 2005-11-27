@@ -49,14 +49,18 @@ typedef struct _GstFdSrcClass GstFdSrcClass;
 struct _GstFdSrc {
   GstPushSrc element;
 
-  /* fd */
+  /* new_fd is copied to fd on READY->PAUSED */
+  gint new_fd;
+
+  /* fd and flag indicating whether fd is seekable */
   gint fd;
+  gboolean seekable_fd;
+
+  gchar *uri;
 
   gint control_sock[2];
 
   gulong curoffset; /* current offset in file */
-
-  gchar *uri;
 };
 
 struct _GstFdSrcClass {

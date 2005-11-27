@@ -1,3 +1,24 @@
+2005-11-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/Makefile.am:
+	* check/elements/fdsrc.c: (event_func), (setup_fdsrc),
+	(cleanup_fdsrc), (GST_START_TEST), (fdsrc_suite), (main):
+	  Add tests for fdsrc seekability
+
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_class_init),
+	(gst_fdsrc_init), (gst_fdsrc_update_fd), (gst_fdsrc_start),
+	(gst_fdsrc_set_property), (gst_fdsrc_is_seekable),
+	(gst_fdsrc_get_size), (gst_fdsrc_uri_set_uri):
+	* gst/elements/gstfdsrc.h:
+	  fdsrc should not be a 'live' source.
+	  Implement seeking on seekable fd's.
+
+	* gst/gstquery.c: (gst_query_new_seeking),
+	(gst_query_parse_seeking):
+	* gst/gstquery.h:
+	  Implement SEEKING query functions: 
+	    *_new_seeking and *_parse_seeking
+
 2005-11-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstelement.c: (gst_element_dispose):
