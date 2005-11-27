@@ -1,3 +1,10 @@
+2005-11-27  Edward Hervey  <edward@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init),
+	(gst_decode_bin_init), (close_pad_link), (try_to_link_1):
+	Remove unused properties, and add queues between demuxers and decoders
+	so that a lot more files can preroll properly.
+
 2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/net/Makefile.am:

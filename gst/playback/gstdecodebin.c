@@ -58,14 +58,11 @@ struct _GstDecodeBin
   GstElement *typefind;         /* this holds the typefind object */
   GstElement *fakesink;
 
-  gboolean threaded;            /* indicating threaded execution is desired */
   GList *dynamics;              /* list of dynamic connections */
 
   GList *factories;             /* factories we can use for selecting elements */
   gint numpads;
   gint numwaiting;
-
-  GList *elements;              /* elements we added in autoplugging */
 
   guint have_type_id;           /* signal id for the typefind element */
 
@@ -82,15 +79,6 @@ struct _GstDecodeBinClass
   void (*removed_decoded_pad) (GstElement * element, GstPad * pad);
   /* signal fired when we found a pad that we cannot decode */
   void (*unknown_type) (GstElement * element, GstPad * pad, GstCaps * caps);
-};
-
-#define DEFAULT_THREADED	FALSE
-
-/* props */
-enum
-{
-  ARG_0,
-  ARG_THREADED,
 };
 
 /* signals */
@@ -119,18 +107,14 @@ static void gst_decode_bin_class_init (GstDecodeBinClass * klass);
 static void gst_decode_bin_init (GstDecodeBin * decode_bin);
 static void gst_decode_bin_dispose (GObject * object);
 
-static void gst_decode_bin_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * spec);
-static void gst_decode_bin_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * spec);
 static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
     GstStateChange transition);
 
 static void free_dynamics (GstDecodeBin * decode_bin);
 static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin);
-static GstElement *try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad,
-    GList * factories);
+static GstElement *try_to_link_1 (GstDecodeBin * decode_bin,
+    GstElement * origelement, GstPad * pad, GList * factories);
 static void close_link (GstElement * element, GstDecodeBin * decode_bin);
 static void close_pad_link (GstElement * element, GstPad * pad,
     GstCaps * caps, GstDecodeBin * decode_bin, gboolean more);
@@ -189,13 +173,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gstbin_klass = (GstBinClass *) klass;
 
   parent_class = g_type_class_ref (gst_bin_get_type ());
-
-  gobject_klass->set_property = gst_decode_bin_set_property;
-  gobject_klass->get_property = gst_decode_bin_get_property;
-
-  g_object_class_install_property (gobject_klass, ARG_THREADED,
-      g_param_spec_boolean ("threaded", "Threaded", "Use threads",
-          DEFAULT_THREADED, G_PARAM_READWRITE));
 
   gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD] =
       g_signal_new ("new-decoded-pad", G_TYPE_FROM_CLASS (klass),
@@ -351,7 +328,6 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     }
   }
 
-  decode_bin->threaded = DEFAULT_THREADED;
   decode_bin->dynamics = NULL;
 }
 
@@ -597,7 +573,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
       /* no compatible elements, we cannot go on */
       goto unknown_type;
 
-    try_to_link_1 (decode_bin, pad, to_try);
+    try_to_link_1 (decode_bin, element, pad, to_try);
     /* can free the list again now */
     g_list_free (to_try);
   }
@@ -630,17 +606,29 @@ many_types:
  * pad.
  */
 static GstElement *
-try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
+try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
+    GList * factories)
 {
   GList *walk;
+  GstElementFactory *srcfactory = NULL;
   GstElement *result = NULL;
+  gboolean isdemux = FALSE;
+  const gchar *klass;
+
+  /* Check if the parent of the src pad is a demuxer */
+  srcfactory = gst_element_get_factory (srcelement);
+  klass = gst_element_factory_get_klass (srcfactory);
+  isdemux = !!(strstr (klass, "Demux"));
 
   /* loop over the factories */
   for (walk = factories; walk; walk = g_list_next (walk)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (walk->data);
     GstElement *element;
+    GstElement *queue = NULL;
     GstPadLinkReturn ret;
     GstPad *sinkpad;
+    GstPad *usedsrcpad = pad;
+    GstPad *queuesinkpad = NULL, *queuesrcpad = NULL;
 
     GST_DEBUG_OBJECT (decode_bin, "trying to link %s",
         gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
@@ -669,42 +657,53 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
     /* set to ready first so it is ready */
     gst_element_set_state (element, GST_STATE_READY);
 
-    /* keep our own list of elements */
-    decode_bin->elements = g_list_prepend (decode_bin->elements, element);
+    if (isdemux) {
+      /* Insert a queue between demuxer and decoder */
+      GST_DEBUG_OBJECT (decode_bin,
+          "Element %s is a demuxer, inserting a queue",
+          GST_OBJECT_NAME (srcelement));
 
-    if ((ret = gst_pad_link (pad, sinkpad)) != GST_PAD_LINK_OK) {
+      queue = gst_element_factory_make ("queue", NULL);
+      g_object_set (G_OBJECT (queue), (const gchar *) "max-size-buffers", 0,
+          NULL);
+      g_object_set (G_OBJECT (queue), (const gchar *) "max-size-time", 0LL,
+          NULL);
+      gst_bin_add (GST_BIN (decode_bin), queue);
+      gst_element_set_state (queue, GST_STATE_READY);
+      queuesinkpad = gst_element_get_pad (queue, "sink");
+      usedsrcpad = queuesrcpad = gst_element_get_pad (queue, "src");
+
+      gst_pad_link (pad, queuesinkpad);
+    }
+
+    if ((ret = gst_pad_link (usedsrcpad, sinkpad)) != GST_PAD_LINK_OK) {
       GST_DEBUG_OBJECT (decode_bin, "link failed on pad %s:%s, reason %d",
           GST_DEBUG_PAD_NAME (pad), ret);
       /* get rid of the sinkpad */
       gst_object_unref (sinkpad);
       /* this element did not work, remove it again and continue trying
        * other elements, the element will be disposed. */
+      if (isdemux)
+        gst_element_set_state (queue, GST_STATE_NULL);
       gst_element_set_state (element, GST_STATE_NULL);
+      if (isdemux) {
+        gst_pad_unlink (pad, queuesrcpad);
+        gst_object_unref (queuesrcpad);
+        gst_object_unref (queuesinkpad);
+        gst_bin_remove (GST_BIN (decode_bin), queue);
+      }
       gst_bin_remove (GST_BIN (decode_bin), element);
+
     } else {
-      const gchar *klass;
-      GstElementFactory *factory;
       guint sig;
 
       GST_DEBUG_OBJECT (decode_bin, "linked on pad %s:%s",
-          GST_DEBUG_PAD_NAME (pad));
+          GST_DEBUG_PAD_NAME (usedsrcpad));
 
       /* The link worked, now figure out what it was that we connected */
-      factory = gst_element_get_factory (element);
-      klass = gst_element_factory_get_klass (factory);
-
-      /* check if we can use threads */
-      if (decode_bin->threaded) {
-        if (strstr (klass, "Demux") != NULL) {
-          /* FIXME, do something with threads here. Not sure that it 
-           * really matters here but in general it is better to preroll
-           * on encoded data from the muxer than on raw encoded streams
-           * because that would consume less memory. */
-        }
-      }
 
       /* make sure we catch unlink signals */
-      sig = g_signal_connect (G_OBJECT (pad), "unlinked",
+      sig = g_signal_connect (G_OBJECT (usedsrcpad), "unlinked",
           G_CALLBACK (unlinked), decode_bin);
 
       /* keep a ref to the signal id so that we can disconnect the signal callback */
@@ -720,6 +719,11 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstPad * pad, GList * factories)
 
       /* get rid of the sinkpad now */
       gst_object_unref (sinkpad);
+      if (isdemux) {
+        gst_element_set_state (queue, GST_STATE_PAUSED);
+        gst_object_unref (queuesrcpad);
+        gst_object_unref (queuesinkpad);
+      }
 
       /* and exit */
       goto done;
@@ -1116,46 +1120,6 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
 shutting_down:
   GST_STATE_UNLOCK (decode_bin);
   return;
-}
-
-static void
-gst_decode_bin_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstDecodeBin *decode_bin;
-
-  g_return_if_fail (GST_IS_DECODE_BIN (object));
-
-  decode_bin = GST_DECODE_BIN (object);
-
-  switch (prop_id) {
-    case ARG_THREADED:
-      decode_bin->threaded = g_value_get_boolean (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_decode_bin_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstDecodeBin *decode_bin;
-
-  g_return_if_fail (GST_IS_DECODE_BIN (object));
-
-  decode_bin = GST_DECODE_BIN (object);
-
-  switch (prop_id) {
-    case ARG_THREADED:
-      g_value_set_boolean (value, decode_bin->threaded);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstStateChangeReturn
