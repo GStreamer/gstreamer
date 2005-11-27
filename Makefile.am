@@ -39,6 +39,8 @@ noinst_HEADERS = \
 	gst-libs/gst/gettext.h \
 	gst-libs/gst/gst-i18n-plugin.h
 
+ACLOCAL_AMFLAGS = -I m4 -I common/m4
+
 include $(top_srcdir)/common/release.mak
 # include $(top_srcdir)/common/po.mak
 
