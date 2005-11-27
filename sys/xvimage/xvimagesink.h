@@ -63,7 +63,35 @@ typedef struct _GstXvImageBufferClass GstXvImageBufferClass;
 typedef struct _GstXvImageSink GstXvImageSink;
 typedef struct _GstXvImageSinkClass GstXvImageSinkClass;
 
-/* Global X Context stuff */
+/**
+ * GstXContext:
+ * @disp: the X11 Display of this context
+ * @screen: the default Screen of Display @disp
+ * @screen_num: the Screen number of @screen
+ * @visual: the default Visual of Screen @screen
+ * @root: the root Window of Display @disp
+ * @white: the value of a white pixel on Screen @screen
+ * @black: the value of a black pixel on Screen @screen
+ * @depth: the color depth of Display @disp
+ * @bpp: the number of bits per pixel on Display @disp
+ * @endianness: the endianness of image bytes on Display @disp
+ * @width: the width in pixels of Display @disp
+ * @height: the height in pixels of Display @disp
+ * @widthmm: the width in millimeters of Display @disp
+ * @heightmm: the height in millimeters of Display @disp
+ * @par: the pixel aspect ratio calculated from @width, @widthmm and @height, 
+ * @heightmm ratio
+ * @use_xshm: used to known wether of not XShm extension is usable or not even
+ * if the Extension is present
+ * @xv_port_id: the XVideo port ID
+ * @im_format: used to store at least a valid format for XShm calls checks
+ * @formats_list: list of supported image formats on @xv_port_id
+ * @channels_list: list of #GstColorBalanceChannels
+ * @caps: the #GstCaps that Display @disp can accept
+ *
+ * Structure used to store various informations collected/calculated for a
+ * Display.
+ */
 struct _GstXContext {
   Display *disp;
 
@@ -95,7 +123,17 @@ struct _GstXContext {
   GstCaps *caps;
 };
 
-/* XWindow stuff */
+/**
+ * GstXWindow:
+ * @win: the Window ID of this X11 window
+ * @width: the width in pixels of Window @win
+ * @height: the height in pixels of Window @win
+ * @internal: used to remember if Window @win was created internally or passed
+ * through the #GstXOverlay interface
+ * @gc: the Graphical Context of Window @win
+ *
+ * Structure used to store informations about a Window.
+ */
 struct _GstXWindow {
   Window win;
   gint width, height;
@@ -103,13 +141,29 @@ struct _GstXWindow {
   GC gc;
 };
 
-/* XvImage format stuff */
+/**
+ * GstXvImageFormat:
+ * @format: the image format
+ * @caps: generated #GstCaps for this image format
+ *
+ * Structure storing image format to #GstCaps association.
+ */
 struct _GstXvImageFormat {
   gint format;
   GstCaps *caps;
 };
 
-/* XvImage stuff */
+/**
+ * GstXImageBuffer:
+ * @xvimagesink: a reference to our #GstXvImageSink
+ * @xvimage: the XvImage of this buffer
+ * @width: the width in pixels of XvImage @xvimage
+ * @height: the height in pixels of XvImage @xvimage
+ * @im_format: the image format of XvImage @xvimage
+ * @size: the size in bytes of XvImage @xvimage
+ *
+ * Subclass of #GstBuffer containing additional information about an XvImage.
+ */
 struct _GstXvImageBuffer {
   GstBuffer   buffer;
 
@@ -122,9 +176,45 @@ struct _GstXvImageBuffer {
   XShmSegmentInfo SHMInfo;
 #endif /* HAVE_XSHM */
 
-  gint width, height, size, im_format;
+  gint width, height, im_format;
+  size_t size;
 };
 
+/**
+ * GstXvImageSink:
+ * @display_name: the name of the Display we want to render to
+ * @xcontext: our instance's #GstXContext
+ * @xwindow: the #GstXWindow we are rendering to
+ * @xvimage: internal #GstXvImage used to store incoming buffers and render when
+ * not using the buffer_alloc optimization mechanism
+ * @cur_image: a reference to the last #GstXvImage that was put to @xwindow. It
+ * is used when Expose events are received to redraw the latest video frame
+ * @event_thread: a thread listening for events on @xwindow and handling them
+ * @running: used to inform @event_thread if it should run/shutdown
+ * @fps_n: the framerate fraction numerator
+ * @fps_d: the framerate fraction denominator
+ * @x_lock: used to protect X calls as we are not using the XLib in threaded
+ * mode
+ * @flow_lock: used to protect data flow routines from external calls such as
+ * events from @event_thread or methods from the #GstXOverlay interface
+ * @par: used to override calculated pixel aspect ratio from @xcontext
+ * @pool_lock: used to protect the buffer pool
+ * @image_pool: a list of #GstXvImageBuffer that could be reused at next buffer
+ * allocation call
+ * @synchronous: used to store if XSynchronous should be used or not (for 
+ * debugging purpose only)
+ * @keep_aspect: used to remember if reverse negotiation scaling should respect
+ * aspect ratio
+ * @brightness: used to store the user settings for color balance brightness
+ * @contrast: used to store the user settings for color balance contrast
+ * @hue: used to store the user settings for color balance hue
+ * @saturation: used to store the user settings for color balance saturation
+ * @cb_changed: used to store if the color balance settings where changed
+ * @video_width: the width of incoming video frames in pixels
+ * @video_height: the height of incoming video frames in pixels
+ *
+ * The #GstXvImageSink data structure.
+ */
 struct _GstXvImageSink {
   /* Our element stuff */
   GstVideoSink videosink;
@@ -135,31 +225,33 @@ struct _GstXvImageSink {
   GstXWindow *xwindow;
   GstXvImageBuffer *xvimage;
   GstXvImageBuffer *cur_image;
+  
+  GThread *event_thread;
+  gboolean running;
 
   gint fps_n;
   gint fps_d;
+  
+  GMutex *x_lock;
+  GMutex *flow_lock;
 
+  /* object-set pixel aspect ratio */
+  GValue *par;
+  
+  GMutex *pool_lock;
+  GSList *image_pool;
+  
+  gboolean synchronous;
+  gboolean keep_aspect;
+  
   gint brightness;
   gint contrast;
   gint hue;
   gint saturation;
   gboolean cb_changed;
 
-  GMutex *x_lock;
-  GMutex *flow_lock;
-  
-  GThread *event_thread;
-
   guint video_width, video_height;     /* size of incoming video;
                                         * used as the size for XvImage */
-  GValue *par;                         /* object-set pixel aspect ratio */
-
-  GMutex *pool_lock;
-  GSList *image_pool;
-
-  gboolean synchronous;
-  gboolean running;
-  gboolean keep_aspect;
 };
 
 struct _GstXvImageSinkClass {

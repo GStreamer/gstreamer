@@ -1516,6 +1516,7 @@ alloc:
       }
     }
   }
+  g_mutex_unlock (ximagesink->pool_lock);
 
   /* We haven't found anything, creating a new one */
   if (!ximage) {
@@ -1533,7 +1534,6 @@ alloc:
       gst_buffer_set_caps (GST_BUFFER (ximage), caps);
     }
   }
-  g_mutex_unlock (ximagesink->pool_lock);
 
   gst_caps_unref (desired_caps);
 
