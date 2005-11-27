@@ -478,6 +478,8 @@ dnl *** finalize CFLAGS, LDFLAGS, LIBS
 dnl Overview:
 dnl GST_OPTION_CFLAGS:  common flags for profiling, debugging, errors, ...
 dnl GST_*:              flags shared by all built objects
+dnl GST_ALL_LDFLAGS:    linker flags shared by all
+dnl GST_LIB_LDFLAGS:    not needed, we don't install libraries
 dnl GST_LT_LDFLAGS:     library versioning of our libraries
 dnl GST_PLUGIN_LDFLAGS: flags to be used for all plugins
 
@@ -505,9 +507,14 @@ GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS \$
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
+dnl LDFLAGS really should only contain flags, not libs - they get added before
+dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
+GST_ALL_LDFLAGS="-no-undefined"
+AC_SUBST(GST_ALL_LDFLAGS)
+
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' -no-undefined"
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl *** output files ***

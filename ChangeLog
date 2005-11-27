@@ -1,3 +1,12 @@
+2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  fix up GST_PLUGIN_LDFLAGS
+	* gst/rtsp/rtspconnection.c:
+	  fix includes (see #317043)
+	* gst/videofilter/Makefile.am:
+	  stop installing this library
+
 2005-11-26  Edward Hervey  <edward@fluendo.com>
 
 	* ext/dv/gstdvdec.c: (gst_dvdec_sink_setcaps):
