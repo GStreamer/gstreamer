@@ -1,5 +1,12 @@
 2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/Makefile.am:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/dataprotocol/Makefile.am:
+	  fix up Makefile.am and remove GST_ENABLE_NEW
+
+2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	* gst/Makefile.am:
 	* gst/base/Makefile.am:
