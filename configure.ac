@@ -41,7 +41,7 @@ AC_CONFIG_SRCDIR(configure.ac)
 AM_CONFIG_HEADER(config.h)
 
 dnl Add parameters for aclocal
-AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4 $ACLOCAL_FLAGS")
+AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4")
 
 AC_PROG_CC
 AM_PROG_CC_STDC
