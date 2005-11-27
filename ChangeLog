@@ -1,5 +1,14 @@
 2005-11-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstvalue.c:
+	  Improve documentation for gst_value_union().
+
+	* gst/gstvalue.h:
+	  Change return value for union, intersect and subtract functions
+	  from gint to gboolean.
+
+2005-11-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstvalue.c: (gst_value_serialize_any_list),
 	(gst_value_transform_any_list_string),
 	(gst_value_deserialize_list), (gst_value_deserialize_array),

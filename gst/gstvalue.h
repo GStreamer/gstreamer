@@ -317,8 +317,7 @@ typedef gboolean (* GstValueDeserializeFunc) (GValue       *dest,
  *
  * Returns: %TRUE if a union was successful
  */
-/* FIXME: shouldn't the return value be gboolean ? */
-typedef gint     (* GstValueUnionFunc)       (GValue       *dest,
+typedef gboolean (* GstValueUnionFunc)       (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
 
@@ -336,8 +335,7 @@ typedef gint     (* GstValueUnionFunc)       (GValue       *dest,
  *
  * Returns: %TRUE if the values can intersect
  */
-/* FIXME: shouldn't the return value be gboolean ? */
-typedef gint     (* GstValueIntersectFunc)   (GValue       *dest,
+typedef gboolean (* GstValueIntersectFunc)   (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
 
@@ -352,8 +350,7 @@ typedef gint     (* GstValueIntersectFunc)   (GValue       *dest,
  *
  * Returns: %TRUE if the subtraction is not empty
  */
-/* FIXME: shouldn't the return value be gboolean ? */
-typedef gint     (* GstValueSubtractFunc)    (GValue       *dest,
+typedef gboolean (* GstValueSubtractFunc)    (GValue       *dest,
 					      const GValue *minuend,
 					      const GValue *subtrahend);
 

@@ -2675,7 +2675,7 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
  *
  * Creates a GValue cooresponding to the union of @value1 and @value2.
  *
- * Returns: %TRUE if a union was successful
+ * Returns: always returns %TRUE
  */
 /* FIXME: change return type to 'void'? */
 gboolean
