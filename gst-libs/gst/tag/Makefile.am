@@ -7,7 +7,7 @@ libgsttaginclude_HEADERS = \
 lib_LTLIBRARIES = libgsttag-@GST_MAJORMINOR@.la
 
 libgsttag_@GST_MAJORMINOR@_la_SOURCES = gstvorbistag.c gstid3tag.c
-libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) -I$(top_srcdir)/gst/tags
+libgsttag_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
 libgsttag_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) 
 libgsttag_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 

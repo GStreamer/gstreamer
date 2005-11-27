@@ -1,5 +1,17 @@
 2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/gst/net/Makefile.am:
+	* gst-libs/gst/rtp/Makefile.am:
+	* gst-libs/gst/tag/Makefile.am:
+	  remove silly include
+	* gst/tags/Makefile.am:
+	* gst/tags/gsttagediting.c:
+	* gst/tags/gsttageditingprivate.h:
+	* gst/tags/tagedit.vcproj:
+	  remove directory, is as good as empty
+
+2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  added GST_LIB_LDFLAGS and GST_ALL_LDFLAGS
 	* gst-libs/Makefile.am:
