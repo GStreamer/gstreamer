@@ -49,6 +49,8 @@ EXTRA_DIST = \
 
 DISTCLEANFILES = _stdint.h
 
+ACLOCAL_AMFLAGS = -I m4 -I common/m4
+
 include $(top_srcdir)/common/release.mak
 include $(top_srcdir)/common/po.mak
 
