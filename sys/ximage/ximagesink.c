@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2003> Julien Moutte <julien@moutte.net>
+ * Copyright (C) <2005> Julien Moutte <julien@moutte.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -226,6 +226,15 @@ gst_ximage_buffer_finalize (GstXImageBuffer * ximage)
 
 beach:
   return;
+}
+
+static void
+gst_ximage_buffer_free (GstXImageBuffer * ximage)
+{
+  /* make sure it is not recycled */
+  ximage->width = -1;
+  ximage->height = -1;
+  gst_buffer_unref (GST_BUFFER (ximage));
 }
 
 static void
@@ -456,7 +465,7 @@ beach:
   g_mutex_unlock (ximagesink->x_lock);
 
   if (!succeeded) {
-    gst_buffer_unref (GST_BUFFER (ximage));
+    gst_ximage_buffer_free (ximage);
     ximage = NULL;
   }
 
@@ -555,21 +564,27 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
 
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
 
-  if (!ximage) {
-    return;
-  }
-
   /* We take the flow_lock. If expose is in there we don't want to run 
      concurrently from the data flow thread */
   g_mutex_lock (ximagesink->flow_lock);
 
   /* Store a reference to the last image we put, loose the previous one */
-  if (ximagesink->cur_image != ximage) {
+  if (ximage && ximagesink->cur_image != ximage) {
     if (ximagesink->cur_image) {
       GST_DEBUG_OBJECT (ximagesink, "unreffing %p", ximagesink->cur_image);
       gst_buffer_unref (ximagesink->cur_image);
     }
     ximagesink->cur_image = GST_XIMAGE_BUFFER (gst_buffer_ref (ximage));
+  }
+
+  /* Expose sends a NULL image, we take the latest frame */
+  if (!ximage) {
+    if (ximagesink->cur_image) {
+      ximage = ximagesink->cur_image;
+    } else {
+      g_mutex_unlock (ximagesink->flow_lock);
+      return;
+    }
   }
 
   gst_ximagesink_xwindow_update_geometry (ximagesink, ximagesink->xwindow);
@@ -1117,7 +1132,7 @@ gst_ximagesink_bufferpool_clear (GstXImageSink * ximagesink)
 
     ximagesink->buffer_pool = g_slist_delete_link (ximagesink->buffer_pool,
         ximagesink->buffer_pool);
-    gst_ximagesink_ximage_destroy (ximagesink, ximage);
+    gst_ximage_buffer_free (ximage);
   }
 
   g_mutex_unlock (ximagesink->pool_lock);
@@ -1508,7 +1523,7 @@ alloc:
 
       /* If the ximage is invalid for our need, destroy */
       if ((ximage->width != width) || (ximage->height != height)) {
-        gst_ximagesink_ximage_destroy (ximagesink, ximage);
+        gst_ximage_buffer_free (ximage);
         ximage = NULL;
       } else {
         /* We found a suitable ximage */
@@ -1687,7 +1702,7 @@ gst_ximagesink_expose (GstXOverlay * overlay)
   if (!ximagesink->xwindow)
     return;
 
-  gst_ximagesink_ximage_put (ximagesink, ximagesink->cur_image);
+  gst_ximagesink_ximage_put (ximagesink, NULL);
 }
 
 static void

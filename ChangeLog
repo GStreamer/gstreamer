@@ -1,3 +1,14 @@
+2005-11-27  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximage_buffer_free),
+	(gst_ximagesink_ximage_new), (gst_ximagesink_ximage_put),
+	(gst_ximagesink_bufferpool_clear), (gst_ximagesink_buffer_alloc),
+	(gst_ximagesink_expose): Fixed a tricky race.
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_put),
+	(gst_xvimagesink_expose): Fixed a tricky race.
+	* sys/xvimage/xvimagesink.h:
+
 2005-11-27  Edward Hervey  <edward@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init),
