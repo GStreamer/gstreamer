@@ -42,12 +42,12 @@ nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 
 libgstaudio_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
 libgstaudio_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
-libgstaudio_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LT_LDFLAGS)
+libgstaudio_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 libgstaudiofilter_@GST_MAJORMINOR@_la_SOURCES = gstaudiofilter.c gstaudiofilter.h
 libgstaudiofilter_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
 libgstaudiofilter_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS)
-libgstaudiofilter_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LT_LDFLAGS)
+libgstaudiofilter_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 libgstaudiofilterexample_la_SOURCES = gstaudiofilterexample.c
 libgstaudiofilterexample_la_CFLAGS = $(GST_CFLAGS)
@@ -59,6 +59,6 @@ gstaudiofilterexample.c: $(srcdir)/make_filter $(srcdir)/gstaudiofiltertemplate.
 noinst_PROGRAMS = testchannels
 testchannels_SOURCES = testchannels.c
 testchannels_CFLAGS = $(GST_CFLAGS)
-testchannels_LDFLAGS = $(GST_LIBS)
+testchannels_LDADD = $(GST_LIBS)
 
 include $(top_srcdir)/common/glib-gen.mak

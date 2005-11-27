@@ -521,7 +521,9 @@ dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
 dnl Overview:
 dnl GST_OPTION_CFLAGS:  common flags for profiling, debugging, errors, ...
-dnl GST_*:              flags shared by all built objects
+dnl GST_*:              flags shared by built objects to link against GStreamer
+dnl GST_ALL_LDFLAGS:    linker flags shared by all
+dnl GST_LIB_LDFLAGS:    additional linker flags for all libaries
 dnl GST_LT_LDFLAGS:     library versioning of our libraries
 dnl GST_PLUGIN_LDFLAGS: flags to be used for all plugins
 
@@ -544,14 +546,25 @@ AC_SUBST(GST_LT_LDFLAGS)
 dnl FIXME: do we want to rename to GST_ALL_* ?
 dnl prefer internal headers to already installed ones
 dnl also add builddir include for enumtypes and marshal
-dnl add ERROR_CFLAGS, but overridable
+dnl add GST_OPTION_CFLAGS, but overridable
 GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS \$(GST_OPTION_CFLAGS)"
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
+dnl LDFLAGS really should only contain flags, not libs - they get added before
+dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
+GST_ALL_LDFLAGS="-no-undefined"
+AC_SUBST(GST_ALL_LDFLAGS)
+
+dnl GST_LIB_LDFLAGS
+dnl linker flags shared by all libraries
+dnl LDFLAGS modifier defining exported symbols from built libraries
+GST_LIB_LDFLAGS="-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*"
+AC_SUBST(GST_LIB_LDFLAGS)
+
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' -no-undefined"
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl *** output files ***
@@ -596,7 +609,6 @@ gst-libs/gst/riff/Makefile
 gst-libs/gst/rtp/Makefile
 gst-libs/gst/tag/Makefile
 gst-libs/gst/video/Makefile
-gst-libs/ext/Makefile
 examples/seeking/Makefile
 examples/Makefile
 tools/Makefile
