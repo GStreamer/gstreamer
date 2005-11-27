@@ -1,3 +1,30 @@
+2005-11-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstvalue.c: (gst_value_serialize_any_list),
+	(gst_value_transform_any_list_string),
+	(gst_value_deserialize_list), (gst_value_deserialize_array),
+	(gst_value_set_int_range), (gst_value_deserialize_int_range),
+	(gst_value_set_double_range), (gst_value_deserialize_double_range),
+	(gst_value_set_fraction_range_full),
+	(gst_value_deserialize_fraction_range),
+	(gst_value_deserialize_caps), (gst_value_deserialize_buffer),
+	(gst_value_deserialize_boolean),
+	(gst_value_deserialize_int_helper), (gst_value_deserialize_double),
+	(gst_value_serialize_float), (gst_value_deserialize_float),
+	(gst_string_wrap), (gst_value_deserialize_string),
+	(gst_value_deserialize_enum), (gst_value_deserialize_flags),
+	(gst_value_union_int_range_int_range),
+	(gst_value_intersect_int_range_int_range),
+	(gst_value_intersect_double_range_double_range),
+	(gst_value_create_new_range), (gst_value_subtract_int_range_int),
+	(gst_value_subtract_int_range_int_range),
+	(gst_value_subtract_double_double_range),
+	(gst_value_subtract_double_range_double_range),
+	(gst_value_deserialize_fraction):
+	* gst/gstvalue.h:
+	  Use gint, gdouble and gchar in our API instead of int, double and
+	  char (and make usage in gstvalue.c more consistent).
+
 2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/Makefile.am:

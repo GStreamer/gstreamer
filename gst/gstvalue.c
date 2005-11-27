@@ -77,7 +77,7 @@ static GArray *gst_value_subtract_funcs;
 
 /* Forward declarations */
 static gint gst_greatest_common_divisor (gint a, gint b);
-static char *gst_value_serialize_fraction (const GValue * value);
+static gchar *gst_value_serialize_fraction (const GValue * value);
 
 /********
  * list *
@@ -86,9 +86,9 @@ static char *gst_value_serialize_fraction (const GValue * value);
 /* two helper functions to serialize/stringify any type of list
  * regular lists are done with { }, arrays with < >
  */
-static char *
-gst_value_serialize_any_list (const GValue * value, const char *begin,
-    const char *end)
+static gchar *
+gst_value_serialize_any_list (const GValue * value, const gchar * begin,
+    const gchar * end)
 {
   guint i;
   GArray *array = value->data[0].v_pointer;
@@ -112,13 +112,13 @@ gst_value_serialize_any_list (const GValue * value, const char *begin,
 
 static void
 gst_value_transform_any_list_string (const GValue * src_value,
-    GValue * dest_value, const char *begin, const char *end)
+    GValue * dest_value, const gchar * begin, const gchar * end)
 {
   GValue *list_value;
   GArray *array;
   GString *s;
   guint i;
-  char *list_s;
+  gchar *list_s;
 
   array = src_value->data[0].v_pointer;
 
@@ -480,27 +480,27 @@ gst_value_compare_list_or_array (const GValue * value1, const GValue * value2)
   return GST_VALUE_EQUAL;
 }
 
-static char *
+static gchar *
 gst_value_serialize_list (const GValue * value)
 {
   return gst_value_serialize_any_list (value, "{ ", " }");
 }
 
 static gboolean
-gst_value_deserialize_list (GValue * dest, const char *s)
+gst_value_deserialize_list (GValue * dest, const gchar * s)
 {
   g_warning ("unimplemented");
   return FALSE;
 }
 
-static char *
+static gchar *
 gst_value_serialize_array (const GValue * value)
 {
   return gst_value_serialize_any_list (value, "< ", " >");
 }
 
 static gboolean
-gst_value_deserialize_array (GValue * dest, const char *s)
+gst_value_deserialize_array (GValue * dest, const gchar * s)
 {
   g_warning ("unimplemented");
   return FALSE;
@@ -594,7 +594,7 @@ gst_value_transform_fourcc_string (const GValue * src_value,
   }
 }
 
-static int
+static gint
 gst_value_compare_fourcc (const GValue * value1, const GValue * value2)
 {
   if (value2->data[0].v_int == value1->data[0].v_int)
@@ -602,7 +602,7 @@ gst_value_compare_fourcc (const GValue * value1, const GValue * value2)
   return GST_VALUE_UNORDERED;
 }
 
-static char *
+static gchar *
 gst_value_serialize_fourcc (const GValue * value)
 {
   guint32 fourcc = value->data[0].v_int;
@@ -695,7 +695,7 @@ gst_value_lcopy_int_range (const GValue * value, guint n_collect_values,
  * Sets @value to the range specified by @start and @end.
  */
 void
-gst_value_set_int_range (GValue * value, int start, int end)
+gst_value_set_int_range (GValue * value, gint start, gint end)
 {
   g_return_if_fail (GST_VALUE_HOLDS_INT_RANGE (value));
   g_return_if_fail (start < end);
@@ -712,7 +712,7 @@ gst_value_set_int_range (GValue * value, int start, int end)
  *
  * Returns: the minimum of the range
  */
-int
+gint
 gst_value_get_int_range_min (const GValue * value)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_INT_RANGE (value), 0);
@@ -728,7 +728,7 @@ gst_value_get_int_range_min (const GValue * value)
  *
  * Returns: the maxumum of the range
  */
-int
+gint
 gst_value_get_int_range_max (const GValue * value)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_INT_RANGE (value), 0);
@@ -744,7 +744,7 @@ gst_value_transform_int_range_string (const GValue * src_value,
       (int) src_value->data[0].v_int, (int) src_value->data[1].v_int);
 }
 
-static int
+static gint
 gst_value_compare_int_range (const GValue * value1, const GValue * value2)
 {
   if (value2->data[0].v_int == value1->data[0].v_int &&
@@ -753,7 +753,7 @@ gst_value_compare_int_range (const GValue * value1, const GValue * value2)
   return GST_VALUE_UNORDERED;
 }
 
-static char *
+static gchar *
 gst_value_serialize_int_range (const GValue * value)
 {
   return g_strdup_printf ("[ %d, %d ]", value->data[0].v_int,
@@ -761,7 +761,7 @@ gst_value_serialize_int_range (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_int_range (GValue * dest, const char *s)
+gst_value_deserialize_int_range (GValue * dest, const gchar * s)
 {
   g_warning ("unimplemented");
   return FALSE;
@@ -824,7 +824,7 @@ gst_value_lcopy_double_range (const GValue * value, guint n_collect_values,
  * Sets @value to the range specified by @start and @end.
  */
 void
-gst_value_set_double_range (GValue * value, double start, double end)
+gst_value_set_double_range (GValue * value, gdouble start, gdouble end)
 {
   g_return_if_fail (GST_VALUE_HOLDS_DOUBLE_RANGE (value));
 
@@ -840,7 +840,7 @@ gst_value_set_double_range (GValue * value, double start, double end)
  *
  * Returns: the minumum of the range
  */
-double
+gdouble
 gst_value_get_double_range_min (const GValue * value)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_DOUBLE_RANGE (value), 0);
@@ -856,7 +856,7 @@ gst_value_get_double_range_min (const GValue * value)
  *
  * Returns: the maxumum of the range
  */
-double
+gdouble
 gst_value_get_double_range_max (const GValue * value)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_DOUBLE_RANGE (value), 0);
@@ -877,7 +877,7 @@ gst_value_transform_double_range_string (const GValue * src_value,
           src_value->data[1].v_double));
 }
 
-static int
+static gint
 gst_value_compare_double_range (const GValue * value1, const GValue * value2)
 {
   if (value2->data[0].v_double == value1->data[0].v_double &&
@@ -886,7 +886,7 @@ gst_value_compare_double_range (const GValue * value1, const GValue * value2)
   return GST_VALUE_UNORDERED;
 }
 
-static char *
+static gchar *
 gst_value_serialize_double_range (const GValue * value)
 {
   char d1[G_ASCII_DTOSTR_BUF_SIZE];
@@ -898,7 +898,7 @@ gst_value_serialize_double_range (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_double_range (GValue * dest, const char *s)
+gst_value_deserialize_double_range (GValue * dest, const gchar * s)
 {
   g_warning ("unimplemented");
   return FALSE;
@@ -1048,8 +1048,8 @@ gst_value_set_fraction_range (GValue * value, const GValue * start,
  */
 void
 gst_value_set_fraction_range_full (GValue * value,
-    int numerator_start, int denominator_start,
-    int numerator_end, int denominator_end)
+    gint numerator_start, gint denominator_start,
+    gint numerator_end, gint denominator_end)
 {
   GValue start = { 0 };
   GValue end = { 0 };
@@ -1141,7 +1141,7 @@ gst_value_transform_fraction_range_string (const GValue * src_value,
       gst_value_serialize_fraction_range (src_value);
 }
 
-static int
+static gint
 gst_value_compare_fraction_range (const GValue * value1, const GValue * value2)
 {
   GValue *vals1, *vals2;
@@ -1162,7 +1162,7 @@ gst_value_compare_fraction_range (const GValue * value1, const GValue * value2)
 }
 
 static gboolean
-gst_value_deserialize_fraction_range (GValue * dest, const char *s)
+gst_value_deserialize_fraction_range (GValue * dest, const gchar * s)
 {
   g_warning ("unimplemented");
   return FALSE;
@@ -1213,7 +1213,7 @@ gst_value_serialize_caps (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_caps (GValue * dest, const char *s)
+gst_value_deserialize_caps (GValue * dest, const gchar * s)
 {
   GstCaps *caps;
 
@@ -1272,7 +1272,7 @@ gst_value_serialize_buffer (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_buffer (GValue * dest, const char *s)
+gst_value_deserialize_buffer (GValue * dest, const gchar * s)
 {
   GstBuffer *buffer;
   gboolean ret = TRUE;
@@ -1330,7 +1330,7 @@ gst_value_serialize_boolean (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_boolean (GValue * dest, const char *s)
+gst_value_deserialize_boolean (GValue * dest, const gchar * s)
 {
   gboolean ret = FALSE;
 
@@ -1379,8 +1379,8 @@ gst_value_serialize_ ## _type (const GValue * value)			\
  * bytes.
  */
 static gboolean
-gst_value_deserialize_int_helper (gint64 * to, const char *s,
-    gint64 min, gint64 max, int size)
+gst_value_deserialize_int_helper (gint64 * to, const gchar * s,
+    gint64 min, gint64 max, gint size)
 {
   gboolean ret = FALSE;
   char *end;
@@ -1440,7 +1440,7 @@ gst_value_deserialize_int_helper (gint64 * to, const char *s,
 CREATE_SERIALIZATION_START(_type,_macro)				\
 									\
 static gboolean								\
-gst_value_deserialize_ ## _type (GValue * dest, const char *s)		\
+gst_value_deserialize_ ## _type (GValue * dest, const gchar *s)		\
 {									\
   gint64 x;								\
 									\
@@ -1457,7 +1457,7 @@ gst_value_deserialize_ ## _type (GValue * dest, const char *s)		\
 CREATE_SERIALIZATION_START(_type,_macro)				\
 									\
 static gboolean								\
-gst_value_deserialize_ ## _type (GValue * dest, const char *s)		\
+gst_value_deserialize_ ## _type (GValue * dest, const gchar *s)		\
 {									\
   gint64 x;								\
   char *end;								\
@@ -1546,7 +1546,7 @@ gst_value_serialize_double (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_double (GValue * dest, const char *s)
+gst_value_deserialize_double (GValue * dest, const gchar * s)
 {
   double x;
   gboolean ret = FALSE;
@@ -1574,7 +1574,7 @@ gst_value_deserialize_double (GValue * dest, const char *s)
  * float *
  *********/
 
-static int
+static gint
 gst_value_compare_float (const GValue * value1, const GValue * value2)
 {
   if (value1->data[0].v_float > value2->data[0].v_float)
@@ -1586,17 +1586,17 @@ gst_value_compare_float (const GValue * value1, const GValue * value2)
   return GST_VALUE_UNORDERED;
 }
 
-static char *
+static gchar *
 gst_value_serialize_float (const GValue * value)
 {
-  char d[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar d[G_ASCII_DTOSTR_BUF_SIZE];
 
   g_ascii_dtostr (d, G_ASCII_DTOSTR_BUF_SIZE, value->data[0].v_float);
   return g_strdup (d);
 }
 
 static gboolean
-gst_value_deserialize_float (GValue * dest, const char *s)
+gst_value_deserialize_float (GValue * dest, const gchar * s)
 {
   double x;
   gboolean ret = FALSE;
@@ -1626,7 +1626,7 @@ gst_value_deserialize_float (GValue * dest, const char *s)
  * string *
  **********/
 
-static int
+static gint
 gst_value_compare_string (const GValue * value1, const GValue * value2)
 {
   int x = strcmp (value1->data[0].v_pointer, value2->data[0].v_pointer);
@@ -1643,7 +1643,7 @@ gst_value_compare_string (const GValue * value1, const GValue * value2)
     ((c) == '.'))
 
 static gchar *
-gst_string_wrap (const char *s)
+gst_string_wrap (const gchar * s)
 {
   const gchar *t;
   int len;
@@ -1705,7 +1705,7 @@ gst_string_wrap (const char *s)
  *
  * the input string must be \0 terminated.
  */
-static char *
+static gchar *
 gst_string_unwrap (const gchar * s)
 {
   gchar *ret;
@@ -1778,14 +1778,14 @@ beach:
   return NULL;
 }
 
-static char *
+static gchar *
 gst_value_serialize_string (const GValue * value)
 {
   return gst_string_wrap (value->data[0].v_pointer);
 }
 
 static gboolean
-gst_value_deserialize_string (GValue * dest, const char *s)
+gst_value_deserialize_string (GValue * dest, const gchar * s)
 {
   if (*s != '"') {
     if (!g_utf8_validate (s, -1, NULL))
@@ -1807,7 +1807,7 @@ gst_value_deserialize_string (GValue * dest, const char *s)
  * enum *
  ********/
 
-static int
+static gint
 gst_value_compare_enum (const GValue * value1, const GValue * value2)
 {
   GEnumValue *en1, *en2;
@@ -1830,7 +1830,7 @@ gst_value_compare_enum (const GValue * value1, const GValue * value2)
   return GST_VALUE_EQUAL;
 }
 
-static char *
+static gchar *
 gst_value_serialize_enum (const GValue * value)
 {
   GEnumValue *en;
@@ -1844,7 +1844,7 @@ gst_value_serialize_enum (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_enum (GValue * dest, const char *s)
+gst_value_deserialize_enum (GValue * dest, const gchar * s)
 {
   GEnumValue *en;
   gchar *endptr = NULL;
@@ -1871,7 +1871,7 @@ gst_value_deserialize_enum (GValue * dest, const char *s)
  ********/
 
 /* we just compare the value here */
-static int
+static gint
 gst_value_compare_flags (const GValue * value1, const GValue * value2)
 {
   guint fl1, fl2;
@@ -1895,7 +1895,7 @@ gst_value_compare_flags (const GValue * value1, const GValue * value2)
 }
 
 /* the different flags are serialized separated with a + */
-static char *
+static gchar *
 gst_value_serialize_flags (const GValue * value)
 {
   guint flags;
@@ -1925,7 +1925,7 @@ gst_value_serialize_flags (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_flags (GValue * dest, const char *s)
+gst_value_deserialize_flags (GValue * dest, const gchar * s)
 {
   GFlagsValue *fl;
   gchar *endptr = NULL;
@@ -1985,8 +1985,8 @@ static gboolean
 gst_value_union_int_range_int_range (GValue * dest, const GValue * src1,
     const GValue * src2)
 {
-  int min;
-  int max;
+  gint min;
+  gint max;
 
   min = MAX (src1->data[0].v_int, src2->data[0].v_int);
   max = MIN (src1->data[1].v_int, src2->data[1].v_int);
@@ -2023,8 +2023,8 @@ static gboolean
 gst_value_intersect_int_range_int_range (GValue * dest, const GValue * src1,
     const GValue * src2)
 {
-  int min;
-  int max;
+  gint min;
+  gint max;
 
   min = MAX (src1->data[0].v_int, src2->data[0].v_int);
   max = MIN (src1->data[1].v_int, src2->data[1].v_int);
@@ -2060,8 +2060,8 @@ static gboolean
 gst_value_intersect_double_range_double_range (GValue * dest,
     const GValue * src1, const GValue * src2)
 {
-  double min;
-  double max;
+  gdouble min;
+  gdouble max;
 
   min = MAX (src1->data[0].v_double, src2->data[0].v_double);
   max = MIN (src1->data[1].v_double, src2->data[1].v_double);
@@ -2236,8 +2236,8 @@ gst_value_subtract_int_int_range (GValue * dest, const GValue * minuend,
 /* creates a new int range based on input values.
  */
 static gboolean
-gst_value_create_new_range (GValue * dest, int min1, int max1, int min2,
-    int max2)
+gst_value_create_new_range (GValue * dest, gint min1, gint max1, gint min2,
+    gint max2)
 {
   GValue v1 = { 0, };
   GValue v2 = { 0, };
@@ -2283,9 +2283,9 @@ static gboolean
 gst_value_subtract_int_range_int (GValue * dest, const GValue * minuend,
     const GValue * subtrahend)
 {
-  int min = gst_value_get_int_range_min (minuend);
-  int max = gst_value_get_int_range_max (minuend);
-  int val = g_value_get_int (subtrahend);
+  gint min = gst_value_get_int_range_min (minuend);
+  gint max = gst_value_get_int_range_max (minuend);
+  gint val = g_value_get_int (subtrahend);
 
   g_return_val_if_fail (min < max, FALSE);
 
@@ -2313,10 +2313,10 @@ static gboolean
 gst_value_subtract_int_range_int_range (GValue * dest, const GValue * minuend,
     const GValue * subtrahend)
 {
-  int min1 = gst_value_get_int_range_min (minuend);
-  int max1 = gst_value_get_int_range_max (minuend);
-  int min2 = gst_value_get_int_range_min (subtrahend);
-  int max2 = gst_value_get_int_range_max (subtrahend);
+  gint min1 = gst_value_get_int_range_min (minuend);
+  gint max1 = gst_value_get_int_range_max (minuend);
+  gint min2 = gst_value_get_int_range_min (subtrahend);
+  gint max2 = gst_value_get_int_range_max (subtrahend);
 
   if (max2 == G_MAXINT && min2 == G_MININT) {
     return FALSE;
@@ -2334,9 +2334,9 @@ static gboolean
 gst_value_subtract_double_double_range (GValue * dest, const GValue * minuend,
     const GValue * subtrahend)
 {
-  double min = gst_value_get_double_range_min (subtrahend);
-  double max = gst_value_get_double_range_max (subtrahend);
-  double val = g_value_get_double (minuend);
+  gdouble min = gst_value_get_double_range_min (subtrahend);
+  gdouble max = gst_value_get_double_range_max (subtrahend);
+  gdouble val = g_value_get_double (minuend);
 
   if (val < min || val > max) {
     gst_value_init_and_copy (dest, minuend);
@@ -2361,10 +2361,10 @@ gst_value_subtract_double_range_double_range (GValue * dest,
 {
   /* since we don't have open ranges, we have to approximate */
   /* done like with ints */
-  double min1 = gst_value_get_double_range_min (minuend);
-  double max2 = gst_value_get_double_range_max (minuend);
-  double max1 = MIN (gst_value_get_double_range_min (subtrahend), max2);
-  double min2 = MAX (gst_value_get_double_range_max (subtrahend), min1);
+  gdouble min1 = gst_value_get_double_range_min (minuend);
+  gdouble max2 = gst_value_get_double_range_max (minuend);
+  gdouble max1 = MIN (gst_value_get_double_range_min (subtrahend), max2);
+  gdouble min2 = MAX (gst_value_get_double_range_max (subtrahend), min1);
   GValue v1 = { 0, };
   GValue v2 = { 0, };
   GValue *pv1, *pv2;            /* yeah, hungarian! */
@@ -3223,7 +3223,7 @@ gst_value_set_fraction (GValue * value, gint numerator, gint denominator)
  *
  * Returns: the numerator of the fraction.
  */
-int
+gint
 gst_value_get_fraction_numerator (const GValue * value)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (value), 0);
@@ -3239,7 +3239,7 @@ gst_value_get_fraction_numerator (const GValue * value)
  *
  * Returns: the denominator of the fraction.
  */
-int
+gint
 gst_value_get_fraction_denominator (const GValue * value)
 {
   g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (value), 1);
@@ -3329,7 +3329,7 @@ gst_value_fraction_subtract (GValue * dest,
   return TRUE;
 }
 
-static char *
+static gchar *
 gst_value_serialize_fraction (const GValue * value)
 {
   gint32 numerator = value->data[0].v_int;
@@ -3351,7 +3351,7 @@ gst_value_serialize_fraction (const GValue * value)
 }
 
 static gboolean
-gst_value_deserialize_fraction (GValue * dest, const char *s)
+gst_value_deserialize_fraction (GValue * dest, const gchar * s)
 {
   gint num, den;
 
@@ -3481,7 +3481,7 @@ gst_value_transform_fraction_double (const GValue * src_value,
       ((double) src_value->data[1].v_int);
 }
 
-static int
+static gint
 gst_value_compare_fraction (const GValue * value1, const GValue * value2)
 {
   gint n1, n2;
@@ -3558,7 +3558,7 @@ gst_date_copy (gpointer boxed)
   return g_date_new_julian (g_date_get_julian (date));
 }
 
-static int
+static gint
 gst_value_compare_date (const GValue * value1, const GValue * value2)
 {
   const GDate *date1 = (const GDate *) g_value_get_boxed (value1);
@@ -3594,7 +3594,7 @@ gst_value_compare_date (const GValue * value1, const GValue * value2)
     return GST_VALUE_GREATER_THAN;
 }
 
-static char *
+static gchar *
 gst_value_serialize_date (const GValue * val)
 {
   const GDate *date = (const GDate *) g_value_get_boxed (val);

@@ -281,7 +281,7 @@ G_BEGIN_DECLS
  * Returns: one of GST_VALUE_LESS_THAN, GST_VALUE_EQUAL, GST_VALUE_GREATER_THAN
  * or GST_VALUE_UNORDERED
  */
-typedef int      (* GstValueCompareFunc)     (const GValue *value1,
+typedef gint     (* GstValueCompareFunc)     (const GValue *value1,
 					      const GValue *value2);
 
 /**
@@ -292,7 +292,7 @@ typedef int      (* GstValueCompareFunc)     (const GValue *value1,
  *
  * Returns: the string representation of the value
  */
-typedef char *   (* GstValueSerializeFunc)   (const GValue *value1);
+typedef gchar *  (* GstValueSerializeFunc)   (const GValue *value1);
 
 /**
  * GstValueDeserializeFunc:
@@ -304,7 +304,7 @@ typedef char *   (* GstValueSerializeFunc)   (const GValue *value1);
  * Returns: %TRUE for success
  */
 typedef gboolean (* GstValueDeserializeFunc) (GValue       *dest,
-					      const char   *s);
+					      const gchar  *s);
 
 /**
  * GstValueUnionFunc:
@@ -318,7 +318,7 @@ typedef gboolean (* GstValueDeserializeFunc) (GValue       *dest,
  * Returns: %TRUE if a union was successful
  */
 /* FIXME: shouldn't the return value be gboolean ? */
-typedef int      (* GstValueUnionFunc)       (GValue       *dest,
+typedef gint     (* GstValueUnionFunc)       (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
 
@@ -337,7 +337,7 @@ typedef int      (* GstValueUnionFunc)       (GValue       *dest,
  * Returns: %TRUE if the values can intersect
  */
 /* FIXME: shouldn't the return value be gboolean ? */
-typedef int      (* GstValueIntersectFunc)   (GValue       *dest,
+typedef gint     (* GstValueIntersectFunc)   (GValue       *dest,
 					      const GValue *value1,
 					      const GValue *value2);
 
@@ -353,7 +353,7 @@ typedef int      (* GstValueIntersectFunc)   (GValue       *dest,
  * Returns: %TRUE if the subtraction is not empty
  */
 /* FIXME: shouldn't the return value be gboolean ? */
-typedef int      (* GstValueSubtractFunc)    (GValue       *dest,
+typedef gint     (* GstValueSubtractFunc)    (GValue       *dest,
 					      const GValue *minuend,
 					      const GValue *subtrahend);
 
@@ -425,17 +425,17 @@ guint32		gst_value_get_fourcc		(const GValue   *value);
 
 /* int range */
 void		gst_value_set_int_range		(GValue		*value,
-						 int		start,
-						 int		end);
-int		gst_value_get_int_range_min	(const GValue	*value);
-int		gst_value_get_int_range_max	(const GValue	*value);
+						 gint		start,
+						 gint		end);
+gint		gst_value_get_int_range_min	(const GValue	*value);
+gint		gst_value_get_int_range_max	(const GValue	*value);
 
 /* double range */
 void		gst_value_set_double_range	(GValue		*value,
-						 double		start,
-						 double		end);
-double		gst_value_get_double_range_min	(const GValue	*value);
-double		gst_value_get_double_range_max	(const GValue	*value);
+						 gdouble	start,
+						 gdouble	end);
+gdouble		gst_value_get_double_range_min	(const GValue	*value);
+gdouble		gst_value_get_double_range_max	(const GValue	*value);
 
 /* caps */
 G_CONST_RETURN GstCaps *
@@ -445,10 +445,10 @@ void		gst_value_set_caps		(GValue		*value,
 
 /* fraction */
 void		gst_value_set_fraction		(GValue		*value,
-						 int		numerator,
-						 int		denominator);
-int		gst_value_get_fraction_numerator (const GValue	*value);
-int		gst_value_get_fraction_denominator(const GValue	*value);
+						 gint		numerator,
+						 gint		denominator);
+gint		gst_value_get_fraction_numerator (const GValue	*value);
+gint		gst_value_get_fraction_denominator(const GValue	*value);
 gboolean	gst_value_fraction_multiply	(GValue		*product,
 						 const GValue	*factor1,
 						 const GValue	*factor2);
@@ -461,10 +461,10 @@ void		gst_value_set_fraction_range	(GValue		*value,
 						 const GValue 	*start,
 						 const GValue	*end);
 void		gst_value_set_fraction_range_full (GValue	*value,
-						 int numerator_start, 
-						 int denominator_start,
-						 int numerator_end, 
-						 int denominator_end);
+						 gint numerator_start, 
+						 gint denominator_start,
+						 gint numerator_end, 
+						 gint denominator_end);
 const GValue 	*gst_value_get_fraction_range_min (const GValue	*value);
 const GValue 	*gst_value_get_fraction_range_max (const GValue	*value);
 
@@ -475,7 +475,7 @@ void		gst_value_set_date		(GValue		*value,
 						 const GDate    *date);
 
 /* compare */
-int		gst_value_compare		(const GValue	*value1,
+gint		gst_value_compare		(const GValue	*value1,
 						 const GValue	*value2);
 gboolean	gst_value_can_compare		(const GValue	*value1,
 						 const GValue	*value2);
