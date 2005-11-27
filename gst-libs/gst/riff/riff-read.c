@@ -415,7 +415,8 @@ gst_riff_parse_strf_auds (GstElement * element,
           len, GST_BUFFER_SIZE (buf) - 2 - sizeof (gst_riff_strf_auds));
       len = GST_BUFFER_SIZE (buf) - 2 - sizeof (gst_riff_strf_auds);
     }
-    *data = gst_buffer_create_sub (buf, sizeof (gst_riff_strf_auds) + 2, len);
+    if (len)
+      *data = gst_buffer_create_sub (buf, sizeof (gst_riff_strf_auds) + 2, len);
   }
 
   /* debug */
