@@ -2403,8 +2403,10 @@ gst_element_dispose (GObject * object)
   }
   g_return_if_fail (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING);
 
+  GST_DEBUG ("removing %d pads", g_list_length (element->pads));
   /* first we break all our links with the outside */
-  while (element->pads) {
+  while (element->pads && element->pads->data) {
+    /* don't call _remove_pad with NULL */
     gst_element_remove_pad (element, GST_PAD_CAST (element->pads->data));
   }
   if (G_UNLIKELY (element->pads != 0)) {

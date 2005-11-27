@@ -48,6 +48,10 @@
  *          ...rollback changes to items...
  *          gst_iterator_resync (it);
  *          break;
+ *        case GST_ITERATOR_ERROR:
+ *          ...wrong parameter were given...
+ *          done = TRUE;
+ *          break;
  *        case GST_ITERATOR_DONE:
  *          done = TRUE;
  *          break;

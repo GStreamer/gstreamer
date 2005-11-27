@@ -115,22 +115,41 @@ DEFINE_NONE_GET (float)
 DEFINE_NONE_GET (double)
 DEFINE_NONE_GET (boolean)
 
-     static GstInterpolateMethod interpolate_none = {
-       interpolate_none_get,
-       interpolate_none_get_int_value_array,
-       interpolate_none_get,
-       interpolate_none_get_uint_value_array,
-       interpolate_none_get,
-       interpolate_none_get_long_value_array,
-       interpolate_none_get,
-       interpolate_none_get_ulong_value_array,
-       interpolate_none_get,
-       interpolate_none_get_float_value_array,
-       interpolate_none_get,
-       interpolate_none_get_double_value_array,
-       interpolate_none_get,
-       interpolate_none_get_boolean_value_array
-     };
+     static gboolean
+         interpolate_none_get_enum_value_array (GstControlledProperty * prop,
+    GstClockTime timestamp, GstValueArray * value_array)
+{
+  gint i;
+  GstClockTime ts = timestamp;
+  gint *values = (gint *) value_array->values;
+
+  for (i = 0; i < value_array->nbsamples; i++) {
+    *values = g_value_get_enum (interpolate_none_get (prop, ts));
+    ts += value_array->sample_interval;
+    values++;
+  }
+  return (TRUE);
+}
+
+
+static GstInterpolateMethod interpolate_none = {
+  interpolate_none_get,
+  interpolate_none_get_int_value_array,
+  interpolate_none_get,
+  interpolate_none_get_uint_value_array,
+  interpolate_none_get,
+  interpolate_none_get_long_value_array,
+  interpolate_none_get,
+  interpolate_none_get_ulong_value_array,
+  interpolate_none_get,
+  interpolate_none_get_float_value_array,
+  interpolate_none_get,
+  interpolate_none_get_double_value_array,
+  interpolate_none_get,
+  interpolate_none_get_boolean_value_array,
+  interpolate_none_get,
+  interpolate_none_get_enum_value_array
+};
 
 /*  returns the default value of the property, except for times with specific values */
 /*  needed for one-shot events, such as notes and triggers */
@@ -162,6 +181,8 @@ interpolate_trigger_get_value_array (GstControlledProperty * prop,
 static GstInterpolateMethod interpolate_trigger = {
   interpolate_trigger_get,
   interpolate_trigger_get_value_array,
+  interpolate_trigger_get,
+  NULL,
   interpolate_trigger_get,
   NULL,
   interpolate_trigger_get,
@@ -252,6 +273,8 @@ DEFINE_LINEAR_GET (double)
        interpolate_linear_get_float_value_array,
        interpolate_linear_get_double,
        interpolate_linear_get_double_value_array,
+       NULL,
+       NULL,
        NULL,
        NULL
      };

@@ -170,6 +170,11 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
 
   self->interpolation = mode;
   if (mode != GST_INTERPOLATE_USER) {
+    /* @todo: if it is not a fundamental type, recursively check parent
+     * until we found the fundamental one
+     * GType base=self->type;
+     * while( base=g_type_get_parent(self->base) ) self->base = base;
+     */
     switch (self->type) {
       case G_TYPE_INT:
         self->get = interpolation_methods[mode]->get_int;
@@ -206,13 +211,23 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
         self->get_value_array =
             interpolation_methods[mode]->get_boolean_value_array;
         break;
-        break;
+      case G_TYPE_ENUM:
+        self->get = interpolation_methods[mode]->get_uint;
+        self->get_value_array =
+            interpolation_methods[mode]->get_enum_value_array;
       default:
-        self->get = NULL;
-        self->get_value_array = NULL;
+        if (g_type_is_a (self->type, G_TYPE_ENUM)) {
+          self->get = interpolation_methods[mode]->get_uint;
+          self->get_value_array =
+              interpolation_methods[mode]->get_enum_value_array;
+        } else {
+          self->get = NULL;
+          self->get_value_array = NULL;
+        }
     }
     if (!self->get) {           /* || !self->get_value_array) */
-      GST_WARNING ("incomplete implementation for type '%d'", self->type);
+      GST_WARNING ("incomplete implementation for type '%d':'%s'", self->type,
+          g_type_name (self->type));
       res = FALSE;
     }
   } else {
@@ -316,6 +331,12 @@ gst_controlled_property_new (GObject * object, const gchar * name)
           GParamSpecBoolean *tpspec = G_PARAM_SPEC_BOOLEAN (pspec);
 
           g_value_set_boolean (&prop->default_value, tpspec->default_value);
+        }
+          break;
+        case G_TYPE_ENUM:{
+          GParamSpecEnum *tpspec = G_PARAM_SPEC_ENUM (pspec);
+
+          g_value_set_enum (&prop->default_value, tpspec->default_value);
         }
           break;
         default:

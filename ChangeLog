@@ -1,3 +1,19 @@
+2005-11-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstelement.c: (gst_element_dispose):
+	  don't loop forever
+
+	* gst/gstiterator.c:
+	* gst/gststructure.c:
+	  doc fixes
+
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_set_interpolation_mode):
+	* libs/gst/controller/gstcontroller.h:
+	* libs/gst/controller/gstinterpolation.c:
+	(interpolate_none_get_enum_value_array):
+	  support controlling enums
+
 2005-11-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstvalue.c:

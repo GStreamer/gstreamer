@@ -1341,7 +1341,7 @@ gst_structure_value_get_generic_type (GValue * val)
  *
  * Converts @structure to a human-readable string representation.
  *
- * Returns: a pointer to string allocated by g_malloc(). g_free after
+ * Returns: a pointer to string allocated by g_malloc(). g_free() after
  * usage.
  */
 gchar *
