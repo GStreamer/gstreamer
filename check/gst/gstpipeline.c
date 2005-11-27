@@ -305,6 +305,7 @@ GST_START_TEST (test_base_time)
      */
 
     base = gst_element_get_base_time (pipeline);
+    fail_if (base == GST_CLOCK_TIME_NONE);
 
     /* set stream time */
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
@@ -356,6 +357,7 @@ GST_START_TEST (test_base_time)
     gst_clock_id_unref (clock_id);
 
     lower = gst_clock_get_time (clock);
+    fail_if (lower == GST_CLOCK_TIME_NONE);
 
     observed = GST_CLOCK_TIME_NONE;
 
@@ -377,6 +379,7 @@ GST_START_TEST (test_base_time)
      */
 
     base = gst_element_get_base_time (pipeline);
+    fail_if (base == GST_CLOCK_TIME_NONE);
 
     /* set stream time */
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
@@ -397,6 +400,7 @@ GST_START_TEST (test_base_time)
         GST_TIME_FORMAT " > %" GST_TIME_FORMAT, GST_TIME_ARGS (base),
         GST_TIME_ARGS (upper));
 
+    fail_unless (lower >= base);
     fail_unless (observed >= lower - base, "early timestamp: %"
         GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
         GST_TIME_ARGS (observed), GST_TIME_ARGS (lower - base));
@@ -413,11 +417,13 @@ GST_START_TEST (test_base_time)
   {
     GstClockID clock_id;
     GstClockTime oldbase = base, oldobserved = observed;
+    GstClockReturn ret;
 
     /* let some time pass */
     clock_id = gst_clock_new_single_shot_id (clock, upper + WAIT_TIME);
-    fail_unless (gst_clock_id_wait (clock_id, NULL) == GST_CLOCK_OK,
-        "unexpected clock_id_wait return");
+    ret = gst_clock_id_wait (clock_id, NULL);
+    fail_unless (ret == GST_CLOCK_OK,
+        "unexpected clock_id_wait return %d", ret);
     gst_clock_id_unref (clock_id);
 
     lower = gst_clock_get_time (clock);
