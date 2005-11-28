@@ -1,3 +1,10 @@
+2005-11-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/Makefile.am:
+	* check/elements/fdsrc.c: (GST_START_TEST):
+	Use a cmdline define to specify the location of a file to use for
+	testing, to avoid breaking distcheck.
+
 2005-11-28  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.c (fixate_value): Use array functions for arrays.

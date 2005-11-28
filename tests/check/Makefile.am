@@ -76,6 +76,8 @@ gst_libs_gdp_SOURCES = \
 	$(top_srcdir)/libs/gst/dataprotocol/dataprotocol.c
 gst_libs_gdp_CFLAGS = $(AM_CFLAGS)
 
+elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) $(CHECK_CFLAGS) -DTESTFILE=\"$(top_builddir)/configure.ac\"
+
 gst_libs_controller_LDADD = \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
 	$(LDADD)

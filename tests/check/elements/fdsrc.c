@@ -150,7 +150,10 @@ GST_START_TEST (test_seeking)
   GstQuery *seeking_query;
   gboolean seekable;
 
-  fail_if ((in_fd = open ("elements/fdsrc.c", O_RDONLY)) < 0);
+#ifndef TESTFILE
+#error TESTFILE not defined
+#endif
+  fail_if ((in_fd = open (TESTFILE, O_RDONLY)) < 0);
   src = setup_fdsrc ();
 
   g_object_set (G_OBJECT (src), "fd", in_fd, NULL);
