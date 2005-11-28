@@ -2137,8 +2137,6 @@ gst_value_set_fraction_range
 gst_value_get_fraction_range_min
 gst_value_get_fraction_range_max
 gst_value_set_fraction_range_full
-gst_value_fraction_multiply
-
 
 <SUBSECTION date>
 GST_VALUE_HOLDS_DATE

@@ -1,3 +1,14 @@
+2005-11-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  don't run checks if we don't have check
+	* common/check.mak:
+	  remove the registry when running make torture
+	* docs/gst/gstreamer-sections.txt:
+	  remove second multiply
+	* gst/gstqueue.c: (gst_queue_loop):
+	  fix a compile warning when disabling debug
+
 2005-11-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstinfo.h:

@@ -117,11 +117,21 @@ check-coverage:
 	echo "Need to reconfigure with --enable-gcov"
 endif
 
+if HAVE_CHECK
 check-valgrind:
 	cd check && make check-valgrind
 
 check-torture:
 	cd check && make torture
+else
+check-valgrind:
+	echo "You need to install the 'check' library"
+	exit 1
+
+check-torture:
+	echo "You need to install the 'check' library"
+	exit 1
+endif
 
 win32-update:
 	for f in gstversion.h gstenumtypes.c gstenumtypes.h; do \
