@@ -1884,6 +1884,8 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
       return;
     }
 
+    /* We get the frame position using the calculated geometry from _setcaps 
+       that respect pixel aspect ratios */
     src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
     src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
     dst.w = xvimagesink->xwindow->width;
@@ -1899,8 +1901,10 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
       result.h = dst.h;
     }
 
-    xscale = (gdouble) GST_VIDEO_SINK_WIDTH (xvimagesink) / result.w;
-    yscale = (gdouble) GST_VIDEO_SINK_HEIGHT (xvimagesink) / result.h;
+    /* We calculate scaling using the original video frames geometry to include
+       pixel aspect ratio scaling. */
+    xscale = (gdouble) xvimagesink->video_width / result.w;
+    yscale = (gdouble) xvimagesink->video_height / result.h;
 
     /* Converting pointer coordinates to the non scaled geometry */
     if (gst_structure_get_double (structure, "pointer_x", &x)) {
