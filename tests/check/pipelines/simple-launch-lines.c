@@ -37,22 +37,22 @@ setup_pipeline (gchar * pipe_descr)
  * run_pipeline:
  * @pipe: the pipeline to run
  * @desc: the description for use in messages
- * @events: is a mask of expected events
- * @tevent: is the expected terminal event.
+ * @message_types: is a mask of expected message_types
+ * @tmessage: is the expected terminal message
  *
  * the poll call will time out after half a second.
  */
 static void
 run_pipeline (GstElement * pipeline, gchar * descr,
-    GstMessageType events, GstMessageType tevent)
+    GstMessageType message_types, GstMessageType tmessage)
 {
   GstBus *bus;
-  GstMessageType revent;
+  GstMessageType rmessage;
   GstStateChangeReturn ret;
 
-  g_assert (pipeline);
+  fail_if (pipeline == NULL);
   bus = gst_element_get_bus (pipeline);
-  g_assert (bus);
+  fail_if (bus == NULL);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   ret = gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
@@ -66,23 +66,23 @@ run_pipeline (GstElement * pipeline, gchar * descr,
     GstMessage *message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 2);
 
     if (message) {
-      revent = GST_MESSAGE_TYPE (message);
+      rmessage = GST_MESSAGE_TYPE (message);
       gst_message_unref (message);
     } else {
-      revent = GST_MESSAGE_UNKNOWN;
+      rmessage = GST_MESSAGE_UNKNOWN;
     }
 
-    if (revent == tevent) {
+    if (rmessage == tmessage) {
       break;
-    } else if (revent == GST_MESSAGE_UNKNOWN) {
+    } else if (rmessage == GST_MESSAGE_UNKNOWN) {
       g_critical ("Unexpected timeout in gst_bus_poll, looking for %d: %s",
-          tevent, descr);
+          tmessage, descr);
       break;
-    } else if (revent & events) {
+    } else if (rmessage & message_types) {
       continue;
     }
     g_critical ("Unexpected message received of type %d, looking for %d: %s",
-        revent, tevent, descr);
+        rmessage, tmessage, descr);
   }
 
 done:
@@ -135,7 +135,7 @@ assert_live_count (GType type, gint live)
 
   if (gst_alloc_trace_available ()) {
     name = g_type_name (type);
-    g_assert (name);
+    fail_if (name == NULL);
     trace = gst_alloc_trace_get (name);
     if (trace) {
       g_return_if_fail (trace->live == live);
@@ -149,7 +149,7 @@ GST_START_TEST (test_stop_from_app)
 {
   GstElement *fakesrc, *fakesink, *pipeline;
   GstBus *bus;
-  GstMessageType revent;
+  GstMessageType rmessage;
   GstMessage *message;
 
   assert_live_count (GST_TYPE_BUFFER, 0);
@@ -169,17 +169,17 @@ GST_START_TEST (test_stop_from_app)
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   bus = gst_element_get_bus (pipeline);
-  g_assert (bus);
+  fail_if (bus == NULL);
 
   /* will time out after half a second */
   message = gst_bus_poll (bus, GST_MESSAGE_APPLICATION, GST_SECOND / 2);
   if (message) {
-    revent = GST_MESSAGE_TYPE (message);
+    rmessage = GST_MESSAGE_TYPE (message);
     gst_message_unref (message);
   } else {
-    revent = GST_MESSAGE_UNKNOWN;
+    rmessage = GST_MESSAGE_UNKNOWN;
   }
-  g_return_if_fail (revent == GST_MESSAGE_APPLICATION);
+  g_return_if_fail (rmessage == GST_MESSAGE_APPLICATION);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
@@ -187,7 +187,10 @@ GST_START_TEST (test_stop_from_app)
 
   assert_live_count (GST_TYPE_BUFFER, 0);
 }
-GST_END_TEST Suite *
+
+GST_END_TEST;
+
+Suite *
 simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
