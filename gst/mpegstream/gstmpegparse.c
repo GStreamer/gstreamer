@@ -52,7 +52,7 @@ static GstElementDetails mpeg_parse_details = {
 
 #define CLASS(o)	GST_MPEG_PARSE_CLASS (G_OBJECT_GET_CLASS (o))
 
-#define DEFAULT_MAX_DISCONT	120000
+#define DEFAULT_MAX_SCR_GAP	120000
 
 /* GstMPEGParse signals and args */
 enum
@@ -64,9 +64,7 @@ enum
 enum
 {
   ARG_0,
-  ARG_SYNC,
-  ARG_MAX_DISCONT,
-  ARG_DO_ADJUST,
+  ARG_MAX_SCR_GAP,
   ARG_BYTE_OFFSET,
   ARG_TIME_OFFSET
       /* FILL ME */
@@ -96,9 +94,6 @@ GST_BOILERPLATE_FULL (GstMPEGParse, gst_mpeg_parse, GstElement,
 static void gst_mpeg_parse_class_init (GstMPEGParseClass * klass);
 static GstStateChangeReturn gst_mpeg_parse_change_state (GstElement * element,
     GstStateChange transition);
-
-static gboolean gst_mpeg_parse_set_clock (GstElement * element,
-    GstClock * clock);
 
 static gboolean gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse,
     GstBuffer * buffer);
@@ -159,7 +154,6 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
 
   gstelement_class->pad_added = gst_mpeg_parse_pad_added;
   gstelement_class->change_state = gst_mpeg_parse_change_state;
-  gstelement_class->set_clock = gst_mpeg_parse_set_clock;
   gstelement_class->get_index = gst_mpeg_parse_get_index;
   gstelement_class->set_index = gst_mpeg_parse_set_index;
 
@@ -181,18 +175,11 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
-      g_param_spec_boolean ("sync", "Sync", "Synchronize on the stream SCR",
-          FALSE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_DISCONT,
-      g_param_spec_int ("max_discont", "Max Discont",
-          "The maximum allowed SCR discontinuity", 0, G_MAXINT,
-          DEFAULT_MAX_DISCONT, G_PARAM_READWRITE));
-  /* FIXME: Default is TRUE to make the behavior backwards compatible.
-     It probably should be FALSE. */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DO_ADJUST,
-      g_param_spec_boolean ("adjust", "adjust", "Adjust timestamps to "
-          "smooth discontinuities", TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_SCR_GAP,
+      g_param_spec_int ("max_scr_gap", "Max SCR gap",
+          "Maximum allowed gap between expected and actual "
+          "SCR values. -1 means never adjust.", -1, G_MAXINT,
+          DEFAULT_MAX_SCR_GAP, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BYTE_OFFSET,
       g_param_spec_uint64 ("byte-offset", "Byte Offset",
           "Emit reached-offset signal when the byte offset is reached.",
@@ -235,26 +222,11 @@ gst_mpeg_parse_init (GstMPEGParse * mpeg_parse, GstMPEGParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_mpeg_parse_chain));
 
   mpeg_parse->packetize = NULL;
-  mpeg_parse->sync = FALSE;
-  mpeg_parse->id = NULL;
-  mpeg_parse->max_discont = DEFAULT_MAX_DISCONT;
-
-  mpeg_parse->do_adjust = TRUE;
-  mpeg_parse->use_adjust = TRUE;
+  mpeg_parse->max_scr_gap = DEFAULT_MAX_SCR_GAP;
 
   mpeg_parse->byte_offset = G_MAXUINT64;
 
   gst_mpeg_parse_reset (mpeg_parse);
-}
-
-static gboolean
-gst_mpeg_parse_set_clock (GstElement * element, GstClock * clock)
-{
-  GstMPEGParse *parse = GST_MPEG_PARSE (element);
-
-  parse->clock = clock;
-
-  return TRUE;
 }
 
 #if 0
@@ -302,7 +274,7 @@ gst_mpeg_parse_reset (GstMPEGParse * mpeg_parse)
   mpeg_parse->next_scr = 0;
   mpeg_parse->mux_rate = 0;
 
-  mpeg_parse->discont_pending = FALSE;
+  mpeg_parse->newsegment_pending = FALSE;
   mpeg_parse->scr_pending = FALSE;
 }
 
@@ -331,7 +303,7 @@ gst_mpeg_parse_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
   } else {
     /* Use the next SCR to send a discontinuous event. */
     GST_DEBUG_OBJECT (mpeg_parse, "Using next SCR to send discont");
-    mpeg_parse->discont_pending = TRUE;
+    mpeg_parse->newsegment_pending = TRUE;
     mpeg_parse->scr_pending = TRUE;
   }
   mpeg_parse->packetize->resync = TRUE;
@@ -399,7 +371,33 @@ static gboolean
 gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
     GstClockTime time)
 {
-  return gst_pad_push_event (mpeg_parse->srcpad, event);
+  GstIterator *it;
+  gpointer pad;
+  gboolean ret = TRUE;
+
+  /* Send event to all source pads of this element. */
+  it = gst_element_iterate_src_pads (GST_ELEMENT (mpeg_parse));
+  while (TRUE) {
+    switch (gst_iterator_next (it, &pad)) {
+      case GST_ITERATOR_OK:
+        gst_pad_push_event (GST_PAD (pad), event);
+        gst_object_unref (GST_OBJECT (pad));
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        break;
+      case GST_ITERATOR_DONE:
+        goto done;
+      case GST_ITERATOR_ERROR:
+        ret = FALSE;
+        goto done;
+    }
+  }
+
+done:
+  gst_iterator_free (it);
+
+  return ret;
 }
 
 static void
@@ -521,20 +519,18 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
     diff = scr - mpeg_parse->next_scr;
   }
 
-  if (diff > mpeg_parse->max_discont) {
+  if (diff > mpeg_parse->max_scr_gap) {
     GST_DEBUG ("discontinuity detected; expected: %" G_GUINT64_FORMAT " got: %"
         G_GUINT64_FORMAT " adjusted:%" G_GINT64_FORMAT " adjust:%"
         G_GINT64_FORMAT, mpeg_parse->next_scr, mpeg_parse->current_scr,
         mpeg_parse->current_scr + mpeg_parse->adjust, mpeg_parse->adjust);
 
-    if (mpeg_parse->do_adjust) {
-      if (mpeg_parse->use_adjust) {
-        mpeg_parse->adjust +=
-            (gint64) mpeg_parse->next_scr - (gint64) mpeg_parse->current_scr;
-        GST_DEBUG ("new adjust: %" G_GINT64_FORMAT, mpeg_parse->adjust);
-      }
+    if (mpeg_parse->max_scr_gap >= 0) {
+      mpeg_parse->adjust +=
+          (gint64) mpeg_parse->next_scr - (gint64) mpeg_parse->current_scr;
+      GST_DEBUG ("new adjust: %" G_GINT64_FORMAT, mpeg_parse->adjust);
     } else {
-      mpeg_parse->discont_pending = TRUE;
+      mpeg_parse->newsegment_pending = TRUE;
     }
   }
 
@@ -555,7 +551,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
         GST_FORMAT_TIME, MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr), 0);
   }
 
-  if ((mpeg_parse->current_scr > prev_scr) && (diff < mpeg_parse->max_discont)) {
+  if ((mpeg_parse->current_scr > prev_scr) && (diff < mpeg_parse->max_scr_gap)) {
     mpeg_parse->avg_bitrate_time +=
         MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr - prev_scr);
     mpeg_parse->avg_bitrate_bytes += mpeg_parse->bytes_since_scr;
@@ -681,20 +677,14 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
     time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
 
     /* we're not sending data as long as no new SCR was found */
-    if (mpeg_parse->discont_pending) {
+    if (mpeg_parse->newsegment_pending) {
       if (!mpeg_parse->scr_pending) {
-#if 0
-        if (mpeg_parse->clock && mpeg_parse->sync) {
-          gst_element_set_time (GST_ELEMENT (mpeg_parse),
-              MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
-        }
-#endif
         if (CLASS (mpeg_parse)->send_newsegment) {
           CLASS (mpeg_parse)->send_newsegment (mpeg_parse, 1.0,
               MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr +
                   mpeg_parse->adjust), GST_CLOCK_TIME_NONE);
         }
-        mpeg_parse->discont_pending = FALSE;
+        mpeg_parse->newsegment_pending = FALSE;
       } else {
         GST_DEBUG ("waiting for SCR");
         gst_buffer_unref (buffer);
@@ -723,13 +713,6 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
 
     if (CLASS (mpeg_parse)->send_buffer)
       result = CLASS (mpeg_parse)->send_buffer (mpeg_parse, buffer, time);
-
-#if 0
-    if (mpeg_parse->clock && mpeg_parse->sync && !mpeg_parse->discont_pending) {
-      GST_DEBUG ("syncing mpegparse");
-      gst_element_wait (GST_ELEMENT (mpeg_parse), time);
-    }
-#endif
 
     if (mpeg_parse->current_scr != MP_INVALID_SCR) {
       guint64 scr, bss, br;
@@ -1092,7 +1075,7 @@ gst_mpeg_parse_handle_src_event (GstPad * pad, GstEvent * event)
 
       if (gst_bytestream_seek (mpeg_parse->packetize->bs, desired_offset,
               GST_SEEK_METHOD_SET)) {
-        mpeg_parse->discont_pending = TRUE;
+        mpeg_parse->newsegment_pending = TRUE;
         mpeg_parse->scr_pending = TRUE;
         mpeg_parse->next_scr = expected_scr;
         mpeg_parse->current_scr = MP_INVALID_SCR;
@@ -1156,14 +1139,8 @@ gst_mpeg_parse_get_property (GObject * object, guint prop_id, GValue * value,
   mpeg_parse = GST_MPEG_PARSE (object);
 
   switch (prop_id) {
-    case ARG_SYNC:
-      g_value_set_boolean (value, mpeg_parse->sync);
-      break;
-    case ARG_MAX_DISCONT:
-      g_value_set_int (value, mpeg_parse->max_discont);
-      break;
-    case ARG_DO_ADJUST:
-      g_value_set_boolean (value, mpeg_parse->do_adjust);
+    case ARG_MAX_SCR_GAP:
+      g_value_set_int (value, mpeg_parse->max_scr_gap);
       break;
     case ARG_BYTE_OFFSET:
       g_value_set_uint64 (value, mpeg_parse->byte_offset);
@@ -1186,15 +1163,8 @@ gst_mpeg_parse_set_property (GObject * object, guint prop_id,
   mpeg_parse = GST_MPEG_PARSE (object);
 
   switch (prop_id) {
-    case ARG_SYNC:
-      mpeg_parse->sync = g_value_get_boolean (value);
-      break;
-    case ARG_MAX_DISCONT:
-      mpeg_parse->max_discont = g_value_get_int (value);
-      break;
-    case ARG_DO_ADJUST:
-      mpeg_parse->do_adjust = g_value_get_boolean (value);
-      mpeg_parse->adjust = 0;
+    case ARG_MAX_SCR_GAP:
+      mpeg_parse->max_scr_gap = g_value_get_int (value);
       break;
     case ARG_BYTE_OFFSET:
       mpeg_parse->byte_offset = g_value_get_uint64 (value);

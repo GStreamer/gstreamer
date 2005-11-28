@@ -308,40 +308,12 @@ gst_mpeg_demux_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
    * Distribute the event to all active pads
    */
   GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (mpeg_parse);
-  gint i;
 
   GST_DEBUG_OBJECT (mpeg_demux, "Sending %s event",
       GST_EVENT_TYPE_NAME (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START)
     mpeg_demux->just_flushed = TRUE;
-
-  for (i = 0; i < GST_MPEG_DEMUX_NUM_VIDEO_STREAMS; i++) {
-    if (mpeg_demux->video_stream[i]) {
-      gst_event_ref (event);
-      gst_pad_push_event (mpeg_demux->video_stream[i]->pad, event);
-      if (GST_CLOCK_TIME_IS_VALID (time))
-        mpeg_demux->video_stream[i]->cur_ts = time;
-    }
-  }
-
-  for (i = 0; i < GST_MPEG_DEMUX_NUM_AUDIO_STREAMS; i++) {
-    if (mpeg_demux->audio_stream[i]) {
-      gst_event_ref (event);
-      gst_pad_push_event (mpeg_demux->audio_stream[i]->pad, event);
-      if (GST_CLOCK_TIME_IS_VALID (time))
-        mpeg_demux->audio_stream[i]->cur_ts = time;
-    }
-  }
-
-  for (i = 0; i < GST_MPEG_DEMUX_NUM_PRIVATE_STREAMS; i++) {
-    if (mpeg_demux->private_stream[i]) {
-      gst_event_ref (event);
-      gst_pad_push_event (mpeg_demux->private_stream[i]->pad, event);
-      if (GST_CLOCK_TIME_IS_VALID (time))
-        mpeg_demux->private_stream[i]->cur_ts = time;
-    }
-  }
 
   if (parent_class->send_event)
     return parent_class->send_event (mpeg_parse, event, time);

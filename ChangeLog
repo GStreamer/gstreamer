@@ -1,3 +1,37 @@
+2005-11-28  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_handle_dvd_event)
+	(gst_dvd_demux_handle_dvd_event): Erase code to prevent mpegparse
+	from making timestamp adjustments. This will have to be re-added
+	in some form in the near future, but in order to do that, some nav
+	packet parsing will be necessary in mpegdemux.
+	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParse):
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_init) 
+	(g_value_set_int, gst_mpeg_parse_set_property)
+	Get rid of do_adjust and use_adjust. Rename max_discont to
+	max_src_gap.
+	(gst_mpeg_parse_parse_packhead): When max_scr_gap has a value of
+	-1, no adjustment is made.
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_class_init): 
+	Rename max_discont property to max_scr_gap. Erase "adjust"
+	property.
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_send_event): Don't
+	override send_event anymore, base class does the job.
+	* gst/mpegstream/gstmpegdemux.c (gst_mpeg_demux_send_event):
+	Base class now does most of the work.
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_send_event):
+	Generalize to forwarding the event to all source pads in the
+	element.
+
+	* gst/mpegstream/gstmpegparse.h: 
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_class_init) 
+	(gst_mpeg_parse_init, gst_mpeg_parse_set_clock) 
+	(gst_mpeg_parse_chain, gst_mpeg_parse_get_property) 
+	(gst_mpeg_parse_set_property):
+	Clock synchronization doesn't make sense anymore for a
+	demultiplexer.
+
 2005-11-28  Michael Smith  <msmith@fluendo.com>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_loop):

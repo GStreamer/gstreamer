@@ -150,8 +150,6 @@ static gboolean gst_dvd_demux_handle_discont
 static gboolean gst_dvd_demux_handle_dvd_event
     (GstDVDDemux * dvd_demux, GstEvent * event);
 #endif
-static gboolean gst_dvd_demux_send_event
-    (GstMPEGParse * mpeg_parse, GstEvent * event, GstClockTime time);
 
 static GstMPEGStream *gst_dvd_demux_get_video_stream
     (GstMPEGDemux * mpeg_demux,
@@ -251,7 +249,6 @@ gst_dvd_demux_class_init (GstDVDDemuxClass * klass)
   gstelement_class->change_state = gst_dvd_demux_change_state;
 
   mpeg_parse_class->handle_discont = gst_dvd_demux_handle_discont;
-  mpeg_parse_class->send_event = gst_dvd_demux_send_event;
 
   mpeg_demux_class->get_audio_stream = gst_dvd_demux_get_audio_stream;
   mpeg_demux_class->get_video_stream = gst_dvd_demux_get_video_stream;
@@ -421,11 +418,6 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
       else
         mpeg_demux->adjust = 0;
 
-      /* Try to prevent the mpegparse infrastructure from doing timestamp
-         adjustment, and enable synchronising filler events. */
-      mpeg_parse->use_adjust = FALSE;
-      mpeg_parse->adjust = 0;
-
       /* Keep video/audio/subtitle pads within 1/2 sec of the SCR */
       mpeg_demux->max_gap = 0.5 * GST_SECOND;
       mpeg_demux->max_gap_tolerance = 0.05 * GST_SECOND;
@@ -523,11 +515,6 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     gst_element_no_more_pads (GST_ELEMENT (dvd_demux));
     dvd_demux->ignore_next_newmedia_discont = TRUE;
 
-    /* Try to prevent the mpegparse infrastructure from doing timestamp
-       adjustment, and enable synchronising filler events. */
-    mpeg_parse->use_adjust = FALSE;
-    mpeg_parse->adjust = 0;
-
     /* Keep video/audio/subtitle pads within 1/2 sec of the SCR */
     mpeg_demux->max_gap = 0.5 * GST_SECOND;
     mpeg_demux->max_gap_tolerance = 0.05 * GST_SECOND;
@@ -542,37 +529,6 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
   return TRUE;
 }
 #endif
-
-static GstFlowReturn
-gst_dvd_demux_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
-    GstClockTime ts)
-{
-  GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_parse);
-  gint i;
-
-  for (i = 0; i < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS; i++) {
-    if (dvd_demux->subpicture_stream[i]) {
-      gst_event_ref (event);
-      gst_pad_push_event (dvd_demux->subpicture_stream[i]->pad, event);
-      if (GST_CLOCK_TIME_IS_VALID (ts))
-        dvd_demux->subpicture_stream[i]->cur_ts = ts;
-    }
-  }
-
-  /* Distribute the event to the "current" pads. */
-  gst_event_ref (event);
-  gst_pad_push_event (dvd_demux->cur_video, event);
-
-  gst_event_ref (event);
-  gst_pad_push_event (dvd_demux->cur_audio, event);
-
-  gst_event_ref (event);
-  gst_pad_push_event (dvd_demux->cur_subpicture, event);
-
-  GST_MPEG_PARSE_CLASS (parent_class)->send_event (mpeg_parse, event, ts);
-
-  return GST_FLOW_OK;
-}
 
 static GstFlowReturn
 gst_dvd_demux_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
