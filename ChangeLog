@@ -1,3 +1,11 @@
+2005-11-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_audio_template_caps):
+	Add ATRAC3 to the list of riff-possible audio caps.
+	I know we still don't have a plugin for atrac3, but it's saner to output
+	that than a cryptic mimetype.
+
 2005-11-27  Edward Hervey  <edward@fluendo.com>
 
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_parse_strf_auds):

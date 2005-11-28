@@ -684,6 +684,7 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_WMAV1,
     GST_RIFF_WAVE_FORMAT_WMAV2,
     GST_RIFF_WAVE_FORMAT_WMAV3,
+    GST_RIFF_WAVE_FORMAT_SONY_ATRAC3,
     /* FILL ME */
     0
   };
