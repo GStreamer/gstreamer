@@ -1,3 +1,9 @@
+2005-11-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstinfo.h:
+	Hey! Let's print the pad name if the pointer != NULL instead
+	of when it == NULL :-)
+
 2005-11-28  Wim Taymans  <wim@fluendo.com>
 
 	* check/gst/gstutils.c: (GST_START_TEST):
