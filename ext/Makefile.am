@@ -231,12 +231,11 @@ SUBDIRS=\
 	$(XVID_DIR)
 
 DIST_SUBDIRS= \
+	directfb \
 	faac \
 	faad \
 	gsm \
+	ivorbis
 	musepack \
 	sdl \
-	directfb \
-	musepack \
-	wavpack \
-	ivorbis
+	wavpack
