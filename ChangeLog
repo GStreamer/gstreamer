@@ -1,6 +1,11 @@
 2005-11-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/Makefile.am:
+	Oops, that should have been top_srcdir
+
+2005-11-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* check/Makefile.am:
 	* check/elements/fdsrc.c: (GST_START_TEST):
 	Use a cmdline define to specify the location of a file to use for
 	testing, to avoid breaking distcheck.
