@@ -574,6 +574,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
       GST_DEBUG_OBJECT (ximagesink, "unreffing %p", ximagesink->cur_image);
       gst_buffer_unref (ximagesink->cur_image);
     }
+    GST_DEBUG_OBJECT (ximagesink, "reffing %p as our current image", ximage);
     ximagesink->cur_image = GST_XIMAGE_BUFFER (gst_buffer_ref (ximage));
   }
 
@@ -1249,7 +1250,9 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if ((ximagesink->ximage) &&
       ((GST_VIDEO_SINK_WIDTH (ximagesink) != ximagesink->ximage->width) ||
           (GST_VIDEO_SINK_HEIGHT (ximagesink) != ximagesink->ximage->height))) {
-    gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
+    GST_DEBUG_OBJECT (ximagesink, "our image is not usable anymore, unref %p",
+        ximagesink->ximage);
+    gst_buffer_unref (GST_BUFFER (ximagesink->ximage));
     ximagesink->ximage = NULL;
   }
 

@@ -598,6 +598,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
       GST_DEBUG_OBJECT (xvimagesink, "unreffing %p", xvimagesink->cur_image);
       gst_buffer_unref (xvimagesink->cur_image);
     }
+    GST_DEBUG_OBJECT (xvimagesink, "reffing %p as our current image", xvimage);
     xvimagesink->cur_image = GST_XVIMAGE_BUFFER (gst_buffer_ref (xvimage));
   }
 
@@ -1641,7 +1642,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
         GST_FOURCC_ARGS (xvimagesink->xcontext->im_format),
         GST_FOURCC_ARGS (im_format));
     GST_DEBUG_OBJECT (xvimagesink, "renewing xvimage");
-    gst_xvimage_buffer_free (xvimagesink->xvimage);
+    gst_buffer_unref (GST_BUFFER (xvimagesink->xvimage));
     xvimagesink->xvimage = NULL;
   }
 

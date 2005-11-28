@@ -1,3 +1,15 @@
+2005-11-28  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_put),
+	(gst_ximagesink_setcaps):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_put),
+	(gst_xvimagesink_setcaps): Fixed a tricky bug. When caps renegotiation
+	happens (only visible on ximagesink but bug is in xv too) set_caps was
+	destroying the internal x[v]image used to memcpy non locally alloced
+	buffers so that it got renewed on next _chain. The issue is that 
+	_expose will try to put that image as it reffed it in _put.
+	Using gst_buffer_unref instead of destroy fixes it !
+
 2005-11-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
