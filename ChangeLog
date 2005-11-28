@@ -1,3 +1,8 @@
+2005-11-28  Michael Smith  <msmith@fluendo.com>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_loop):
+	  Don't treat normal EOS as a fatal error.
+
 2005-11-28  Edward Hervey  <edward@fluendo.com>
 
 	* ext/mad/gstmad.c: (gst_mad_chain):

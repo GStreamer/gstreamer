@@ -877,9 +877,11 @@ need_pause:
     if (GST_FLOW_IS_FATAL (ret)) {
       gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
       /* FIXME: add translations */
-      GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED,
-          (("Internal data stream error.")),
-          ("stream stopped, reason %d", ret));
+      if (ret != GST_FLOW_UNEXPECTED) {
+        GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED,
+            (("Internal data stream error.")),
+            ("stream stopped, reason %d", ret));
+      }
     }
     return;
   }
