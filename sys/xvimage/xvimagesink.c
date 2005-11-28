@@ -613,8 +613,10 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
 
   gst_xvimagesink_xwindow_update_geometry (xvimagesink, xvimagesink->xwindow);
 
-  src.w = xvimage->width;
-  src.h = xvimage->height;
+  /* We use the calculated geometry from _setcaps as a source to respect 
+     source and screen pixel aspect ratios. */
+  src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
+  src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
   dst.w = xvimagesink->xwindow->width;
   dst.h = xvimagesink->xwindow->height;
 

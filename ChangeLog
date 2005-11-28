@@ -1,5 +1,11 @@
 2005-11-28  Julien MOUTTE  <julien@moutte.net>
 
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_put):
+	Use calculated video geometry from _setcaps instead of buffer
+	caps to respect pixel aspect ratio. (fixes #322388)
+
+2005-11-28  Julien MOUTTE  <julien@moutte.net>
+
 	* docs/libs/tmpl/gstcolorbalance.sgml:
 	* docs/libs/tmpl/gstmixer.sgml:
 	* docs/libs/tmpl/gstxoverlay.sgml:
