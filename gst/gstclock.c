@@ -31,64 +31,64 @@
  * base class.
  *
  * The #GstClock returns a monotonically increasing time with the method
- * gst_clock_get_time(). Its accuracy and base time depends on the specific clock
- * implementation but time is always expessed in nanoseconds. Since the
+ * gst_clock_get_time(). Its accuracy and base time depends on the specific
+ * clock implementation but time is always expessed in nanoseconds. Since the
  * baseline of the clock is undefined, the clock time returned is not
- * meaningfull in itself, what matters are the deltas between two clock
- * times.
+ * meaningful in itself, what matters are the deltas between two clock times.
  *
- * The pipeline uses the clock to calculate the stream time.
- * Usually all renderers synchronize to the global clock using the buffer timestamps,
- * the newsegment events and the element's base time.
+ * The pipeline uses the clock to calculate the stream time.  Usually all
+ * renderers synchronize to the global clock using the buffer timestamps, the
+ * newsegment events and the element's base time.
  *
  * The time of the clock in itself is not very useful for an application.
  *
- * A clock implementation can support periodic and single shot clock notifications 
- * both synchronous and asynchronous.
+ * A clock implementation can support periodic and single shot clock
+ * notifications both synchronous and asynchronous.
  *
  * One first needs to create a #GstClockID for the periodic or single shot
- * notification using gst_clock_new_single_shot_id() or gst_clock_new_periodic_id().
+ * notification using gst_clock_new_single_shot_id() or
+ * gst_clock_new_periodic_id().
  *
  * To perform a blocking wait for the specific time of the #GstClockID use the
  * gst_clock_id_wait(). To receive a callback when the specific time is reached
- * in the clock use gst_clock_id_wait_async(). Both these calls can be interrupted
- * with the gst_clock_id_unschedule() call. If the blocking wait is unscheduled
- * a return value of GST_CLOCK_UNSCHEDULED is returned.
+ * in the clock use gst_clock_id_wait_async(). Both these calls can be
+ * interrupted with the gst_clock_id_unschedule() call. If the blocking wait is
+ * unscheduled a return value of GST_CLOCK_UNSCHEDULED is returned.
  *
- * Periodic callbacks scheduled async will be repeadedly called automatically until
- * it is unscheduled. To schedule an async periodic callback, gst_clock_id_wait() 
- * should be called repeadedly.
+ * Periodic callbacks scheduled async will be repeadedly called automatically
+ * until it is unscheduled. To schedule an async periodic callback,
+ * gst_clock_id_wait() should be called repeadedly.
  *
- * The async callbacks can happen from any thread, either provided by the
- * core or from a streaming thread. The application should be prepared for this.
+ * The async callbacks can happen from any thread, either provided by the core
+ * or from a streaming thread. The application should be prepared for this.
  *
  * A #GstClockID that has been unscheduled cannot be used again for any wait
  * operation.
  *
- * It is possible to perform a blocking wait on the same #GstClockID from multiple
- * threads. However, registering the same #GstClockID for multiple async notifications is
- * not possible, the callback will only be called once.
+ * It is possible to perform a blocking wait on the same #GstClockID from
+ * multiple threads. However, registering the same #GstClockID for multiple
+ * async notifications is not possible, the callback will only be called once.
  *
- * None of the wait operations unref the #GstClockID, the owner is
- * responsible for unreffing the ids itself. This holds for both periodic and
- * single shot notifications. The reason being that the owner of the #GstClockID
- * has to keep a handle to the #GstClockID to unblock the wait on FLUSHING events
- * or state changes and if we unref it automatically, the handle might be
- * invalid.
+ * None of the wait operations unref the #GstClockID, the owner is responsible
+ * for unreffing the ids itself. This holds for both periodic and single shot
+ * notifications. The reason being that the owner of the #GstClockID has to
+ * keep a handle to the #GstClockID to unblock the wait on FLUSHING events or
+ * state changes and if we unref it automatically, the handle might be invalid.
  *
  * These clock operations do not operate on the stream time, so the callbacks
  * will also occur when not in PLAYING state as if the clock just keeps on
  * running. Some clocks however do not progress when the element that provided
  * the clock is not PLAYING.
  *
- * When a clock has the GST_CLOCK_FLAG_CAN_SET_MASTER flag set, it can be slaved to
- * another #GstClock with the gst_clock_set_master(). The clock will then 
- * automatically be synchronized to this master clock by repeadedly sampling the
- * master clock and the slave clock and recalibrating the slave clock with
- * gst_clock_set_calibration(). This feature is mostly usefull for plugins that have
- * an internal clock but must operate with another clock selected by the #GstPipeline.
- * They can track the offset and rate difference of their internal clock relative to
- * the master clock by using the gst_clock_get_calibration() function.
+ * When a clock has the GST_CLOCK_FLAG_CAN_SET_MASTER flag set, it can be
+ * slaved to another #GstClock with the gst_clock_set_master(). The clock will
+ * then automatically be synchronized to this master clock by repeadedly
+ * sampling the master clock and the slave clock and recalibrating the slave
+ * clock with gst_clock_set_calibration(). This feature is mostly usefull for
+ * plugins that have an internal clock but must operate with another clock
+ * selected by the #GstPipeline.  They can track the offset and rate difference
+ * of their internal clock relative to the master clock by using the
+ * gst_clock_get_calibration() function.
  *
  * Last reviewed on 2005-10-28 (0.9.4)
  */
@@ -118,7 +118,7 @@ static GstAllocTrace *_gst_clock_entry_trace;
 #define DEFAULT_STATS			FALSE
 #define DEFAULT_WINDOW_SIZE		32
 #define DEFAULT_WINDOW_THRESHOLD	4
-#define DEFAULT_TIMEOUT         	GST_SECOND / 10
+#define DEFAULT_TIMEOUT			GST_SECOND / 10
 
 enum
 {
