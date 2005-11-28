@@ -474,13 +474,13 @@ gst_faad_srcgetcaps (GstPad * pad)
       if (!str)
         continue;
 
-      if (faad->samplerate != -1) {
+      if (faad->samplerate > 0) {
         gst_structure_set (str, "rate", G_TYPE_INT, faad->samplerate, NULL);
       } else {
         gst_structure_set (str, "rate", GST_TYPE_INT_RANGE, 8000, 96000, NULL);
       }
 
-      if (faad->channels != -1) {
+      if (faad->channels > 0) {
         gst_structure_set (str, "channels", G_TYPE_INT, faad->channels, NULL);
 
         /* put channel information here */
