@@ -170,12 +170,7 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
 
   self->interpolation = mode;
   if (mode != GST_INTERPOLATE_USER) {
-    /* @todo: if it is not a fundamental type, recursively check parent
-     * until we found the fundamental one
-     * GType base=self->type;
-     * while( base=g_type_get_parent(self->base) ) self->base = base;
-     */
-    switch (self->type) {
+    switch (self->base) {
       case G_TYPE_INT:
         self->get = interpolation_methods[mode]->get_int;
         self->get_value_array =
@@ -215,19 +210,15 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
         self->get = interpolation_methods[mode]->get_uint;
         self->get_value_array =
             interpolation_methods[mode]->get_enum_value_array;
+        break;
       default:
-        if (g_type_is_a (self->type, G_TYPE_ENUM)) {
-          self->get = interpolation_methods[mode]->get_uint;
-          self->get_value_array =
-              interpolation_methods[mode]->get_enum_value_array;
-        } else {
-          self->get = NULL;
-          self->get_value_array = NULL;
-        }
+        self->get = NULL;
+        self->get_value_array = NULL;
     }
     if (!self->get) {           /* || !self->get_value_array) */
-      GST_WARNING ("incomplete implementation for type '%d':'%s'", self->type,
-          g_type_name (self->type));
+      GST_WARNING ("incomplete implementation for type %d/%d:'%s'/'%s'",
+          self->type, self->base,
+          g_type_name (self->type), g_type_name (self->base));
       res = FALSE;
     }
   } else {
@@ -282,16 +273,24 @@ gst_controlled_property_new (GObject * object, const gchar * name)
 
     if ((prop = g_new0 (GstControlledProperty, 1))) {
       gchar *signal_name;
+      GType base;
 
       prop->name = pspec->name; /* so we don't use the same mem twice */
       prop->type = G_PARAM_SPEC_VALUE_TYPE (pspec);
-      gst_controlled_property_set_interpolation_mode (prop,
-          GST_INTERPOLATE_NONE);
+      /* get the fundamental base type */
+      prop->base = prop->type;
+      while ((base = g_type_parent (prop->base))) {
+        prop->base = base;
+      }
+      /* initialize mode specific accessor callbacks */
+      if (!gst_controlled_property_set_interpolation_mode (prop,
+              GST_INTERPOLATE_NONE))
+        goto Error;
       /* prepare our gvalues */
       g_value_init (&prop->default_value, prop->type);
       g_value_init (&prop->result_value, prop->type);
       g_value_init (&prop->last_value.value, prop->type);
-      switch (prop->type) {
+      switch (prop->base) {
         case G_TYPE_INT:{
           GParamSpecInt *tpspec = G_PARAM_SPEC_INT (pspec);
 
@@ -360,8 +359,11 @@ gst_controlled_property_new (GObject * object, const gchar * name)
     GST_WARNING ("class '%s' has no property '%s'", G_OBJECT_TYPE_NAME (object),
         name);
   }
-
   return (prop);
+Error:
+  if (prop)
+    g_free (prop);
+  return (NULL);
 }
 
 /*

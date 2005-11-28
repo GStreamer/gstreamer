@@ -1,3 +1,13 @@
+2005-11-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/random/ensonic/dparams.txt:
+	  some TODOs for the next dev cycle
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_set_interpolation_mode),
+	(gst_controlled_property_new):
+	* libs/gst/controller/gstcontroller.h:
+	  use base type to assign acccessor functions
+
 2005-11-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/Makefile.am:

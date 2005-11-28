@@ -140,6 +140,7 @@ typedef struct _GstControlledProperty
 {
   gchar *name;                  /* name of the property */
   GType type;                   /* type of the handled property */
+  GType base;                   /* base-type of the handled property */
   GValue default_value;         /* default value for the handled property */
   GValue result_value;          /* result value location for the interpolation method */
   GstTimedValue last_value;     /* the last value a _sink call wrote */

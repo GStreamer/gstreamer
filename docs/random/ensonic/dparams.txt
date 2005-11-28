@@ -1,43 +1,14 @@
 $Id$
 
-* cleanup of dparams
-  * library "namespace"
-    * even though it is long try to stick to the prefix "dparam" for the whole library
-    * e.g. avoid namespace clashes with "dataprotocol" which is using "dp" as well :-(
-    * use a new namespace "ctrl" for control
-  * resolve g_return_if_fail() into GST_WARNING and return()
-    in cases where the caller has to handle the problem
-  * rename
-    GST_TYPE_DPSMOOTH to GST_TYPE_DPARAM_SMOOTH
-    GST_TYPE_DP_LININT to GST_TYPE_DPARAM_LININT
-    there seems to be nobody using them, as they still look unfinished
-  * move modes into extra modules
-    dparam_mode_synchronous
-    dparam_mode_asynchronous
-    dparam_mode_disabled
-  * split dparam manager api (like e.g. GConf does it)
-    * plugin api : GstCtrlManagerServer
-    * application api  : GstCtrlManagerClient
-  * remove "value-changed" signal from DParam?
-    * one can connect to e.g. "notify::value-double" as well
-  * dparam update callback needs to pass more info
-    * GstElement as the first arg
-    * GstDPram as the second arg
+* controller changes
+  * handling of G_TYPE_XXX is distributed over
+    gst-controller.c::gst_controlled_property_set_interpolation_mode()
+    gst-controller.c::gst_controlled_property_new
+    gst-interpolation.c 
+  * it would be better to put handlers for each type into a struct
+    and register it into a hashmap with the G_TYPE as the key
+  * functions in  gst-controller.c could try the key,
+    if no handler is registered the try the type_parent and so on
 
-* documentation
-  * state of unitconvert
-  * state of sychronous params
-  * dpman_set/get_rate
-    if element_sampling_rate is 44100 and dpman_rate is 22050, dparams are updated twice a second
-
-* dparams ng
-  * concept for global, voice params
-    one plugin instance can repeate the processing for the same input, but with
-    different parameter sets (sound synthesizers, effects)
-  * based on gobject params, so that e.g. the GUI can connect to "notify:param"
-    events and update the GUI
-  * implement timelined dparams via queues
-    * the queue contains dparams and timestamps
-    * GST_DPARAM_DO_UPDATE() checks the head of the queue for events that are due now
-      and sets the values
+* implement quadric/qubic interpolation
 
