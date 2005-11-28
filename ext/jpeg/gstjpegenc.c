@@ -41,20 +41,17 @@ GST_DEBUG_CATEGORY (jpegenc_debug);
 
 /* These macros are adapted from videotestsrc.c 
  *  and/or gst-plugins/gst/games/gstvideoimage.c */
-#define ROUND_UP_2(x)  (((x)+1)&~1)
-#define ROUND_UP_4(x)  (((x)+3)&~3)
-#define ROUND_UP_8(x)  (((x)+7)&~7)
 
 /* I420 */
-#define I420_Y_ROWSTRIDE(width) (ROUND_UP_4(width))
-#define I420_U_ROWSTRIDE(width) (ROUND_UP_8(width)/2)
-#define I420_V_ROWSTRIDE(width) ((ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
+#define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
+#define I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
+#define I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
 
 #define I420_Y_OFFSET(w,h) (0)
-#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*ROUND_UP_2(h)))
-#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
+#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
-#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
 /* JpegEnc signals and args */
 enum
@@ -333,13 +330,13 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
 {
   gint width, height;
 
-  GST_DEBUG ("gst_jpegenc_resync: resync");
+  GST_DEBUG_OBJECT (jpegenc, "resync");
 
   jpegenc->cinfo.image_width = width = jpegenc->width;
   jpegenc->cinfo.image_height = height = jpegenc->height;
   jpegenc->cinfo.input_components = 3;
 
-  GST_DEBUG ("gst_jpegenc_resync: wdith %d, height %d", width, height);
+  GST_DEBUG_OBJECT (jpegenc, "width %d, height %d", width, height);
 
   jpeg_set_defaults (&jpegenc->cinfo);
   jpegenc->cinfo.dct_method = JDCT_FASTEST;
@@ -360,7 +357,7 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
       jpegenc->bufsize = I420_SIZE (jpegenc->width, jpegenc->height);
       jpegenc->cinfo.raw_data_in = TRUE;
       jpegenc->cinfo.in_color_space = JCS_YCbCr;
-      GST_DEBUG ("gst_jpegenc_resync: setting format to YUV420P");
+      GST_DEBUG_OBJECT (jpegenc, "setting format to YUV420P");
       jpegenc->cinfo.comp_info[0].h_samp_factor = 2;
       jpegenc->cinfo.comp_info[0].v_samp_factor = 2;
       jpegenc->cinfo.comp_info[1].h_samp_factor = 1;
@@ -377,7 +374,7 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
             g_realloc (jpegenc->line[2], height * sizeof (char *) / 2);
       }
 
-      GST_DEBUG ("gst_jpegenc_resync: setting format done");
+      GST_DEBUG_OBJECT (jpegenc, "setting format done");
 #if 0
       break;
     default:
@@ -392,36 +389,35 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
   //jpeg_suppress_tables(&jpegenc->cinfo, FALSE);
 
   jpegenc->buffer = NULL;
-  GST_DEBUG ("gst_jpegenc_resync: resync done");
+  GST_DEBUG_OBJECT (jpegenc, "resync done");
 }
 
 static GstFlowReturn
 gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
 {
+  GstFlowReturn ret;
   GstJpegEnc *jpegenc;
-  guchar *data, *outdata;
-  gulong size, outsize;
+  guchar *data;
+  gulong size;
   GstBuffer *outbuf;
-
-/*  GstMeta *meta; */
   guint height, width;
   guchar *base[3];
   gint i, j, k;
 
-  /*usleep(10000); */
   jpegenc = GST_JPEGENC (GST_OBJECT_PARENT (pad));
 
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  GST_DEBUG ("gst_jpegenc_chain: got buffer of %ld bytes in '%s'", size,
-      GST_OBJECT_NAME (jpegenc));
+  GST_DEBUG_OBJECT (jpegenc, "got buffer of %u bytes", size);
 
-  outbuf = gst_buffer_new ();
-  outsize = GST_BUFFER_SIZE (outbuf) = jpegenc->bufsize;
-  outdata = GST_BUFFER_DATA (outbuf) = g_malloc (outsize);
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
+  ret = gst_pad_alloc_buffer (jpegenc->srcpad, GST_BUFFER_OFFSET_NONE,
+      jpegenc->bufsize, GST_PAD_CAPS (jpegenc->srcpad), &outbuf);
+
+  if (ret != GST_FLOW_OK)
+    goto done;
+
+  gst_buffer_stamp (outbuf, buf);
 
   width = jpegenc->width;
   height = jpegenc->height;
@@ -430,14 +426,14 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   base[1] = data + I420_U_OFFSET (width, height);
   base[2] = data + I420_V_OFFSET (width, height);
 
-  jpegenc->jdest.next_output_byte = outdata;
-  jpegenc->jdest.free_in_buffer = outsize;
+  jpegenc->jdest.next_output_byte = GST_BUFFER_DATA (outbuf);
+  jpegenc->jdest.free_in_buffer = GST_BUFFER_SIZE (outbuf);
 
   jpegenc->cinfo.smoothing_factor = jpegenc->smoothing;
   jpeg_set_quality (&jpegenc->cinfo, jpegenc->quality, TRUE);
   jpeg_start_compress (&jpegenc->cinfo, TRUE);
 
-  GST_DEBUG ("gst_jpegdec_chain: compressing");
+  GST_DEBUG_OBJECT (jpegenc, "compressing");
 
   for (i = 0; i < height; i += 2 * DCTSIZE) {
     /*g_print ("next scanline: %d\n", jpegenc->cinfo.next_scanline); */
@@ -455,28 +451,28 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   }
 
   jpeg_finish_compress (&jpegenc->cinfo);
-  GST_DEBUG ("gst_jpegdec_chain: compressing done");
+  GST_DEBUG_OBJECT (jpegenc, "compressing done");
 
   GST_BUFFER_SIZE (outbuf) =
-      (((outsize - jpegenc->jdest.free_in_buffer) + 3) & ~3);
-
-  gst_pad_push (jpegenc->srcpad, outbuf);
+      GST_ROUND_UP_4 (jpegenc->bufsize - jpegenc->jdest.free_in_buffer);
 
   g_signal_emit (G_OBJECT (jpegenc), gst_jpegenc_signals[FRAME_ENCODED], 0);
 
-  /*gst_buffer_unref (buf); */
+  ret = gst_pad_push (jpegenc->srcpad, outbuf);
 
-  return GST_FLOW_OK;
+done:
+  gst_buffer_unref (buf);
+
+  return ret;
 }
 
 static void
 gst_jpegenc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstJpegEnc *jpegenc;
+  GstJpegEnc *jpegenc = GST_JPEGENC (object);
 
-  g_return_if_fail (GST_IS_JPEGENC (object));
-  jpegenc = GST_JPEGENC (object);
+  GST_OBJECT_LOCK (jpegenc);
 
   switch (prop_id) {
     case ARG_QUALITY:
@@ -486,18 +482,20 @@ gst_jpegenc_set_property (GObject * object, guint prop_id,
       jpegenc->smoothing = g_value_get_int (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_OBJECT_UNLOCK (jpegenc);
 }
 
 static void
 gst_jpegenc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstJpegEnc *jpegenc;
+  GstJpegEnc *jpegenc = GST_JPEGENC (object);
 
-  g_return_if_fail (GST_IS_JPEGENC (object));
-  jpegenc = GST_JPEGENC (object);
+  GST_OBJECT_LOCK (jpegenc);
 
   switch (prop_id) {
     case ARG_QUALITY:
@@ -510,22 +508,33 @@ gst_jpegenc_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_OBJECT_UNLOCK (jpegenc);
 }
 
 static GstStateChangeReturn
 gst_jpegenc_change_state (GstElement * element, GstStateChange transition)
 {
-
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstJpegEnc *filter = GST_JPEGENC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      GST_DEBUG ("gst_jpegenc_change_state: setting line buffers");
+      GST_DEBUG_OBJECT (element, "setting line buffers");
       filter->line[0] = NULL;
       filter->line[1] = NULL;
       filter->line[2] = NULL;
       gst_jpegenc_resync (filter);
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       g_free (filter->line[0]);
       g_free (filter->line[1]);
@@ -538,8 +547,5 @@ gst_jpegenc_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }

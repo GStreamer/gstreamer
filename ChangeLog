@@ -1,3 +1,13 @@
+2005-11-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_resync), (gst_jpegenc_chain),
+	(gst_jpegenc_set_property), (gst_jpegenc_get_property),
+	(gst_jpegenc_change_state):
+	  Don't leak input buffer in chain function (fixes #322667); make 
+	  state change function thread-safe; don't repeat the current function
+	  name in GST_DEBUG statements; use GST_ROUND_UP_* macros; use
+	  gst_pad_alloc_buffer(); misc. minor cleanups.
+
 2005-11-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/matroska/matroska-mux.c:
