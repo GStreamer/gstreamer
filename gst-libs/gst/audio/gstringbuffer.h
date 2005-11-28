@@ -41,12 +41,29 @@ typedef struct _GstRingBufferSpec GstRingBufferSpec;
 /* called to fill data with len bytes of samples */
 typedef void (*GstRingBufferCallback) (GstRingBuffer *rbuf, guint8* data, guint len, gpointer user_data);
 
+/**
+ * GstRingBufferState:
+ * @GST_RING_BUFFER_STATE_STOPPED: The ringbuffer is stopped
+ * @GST_RING_BUFFER_STATE_PAUSED: The ringbuffer is paused
+ * @GST_RING_BUFFER_STATE_STARTED: The ringbuffer is started
+ *
+ * The state of the ringbuffer.
+ */
 typedef enum {
   GST_RING_BUFFER_STATE_STOPPED,
   GST_RING_BUFFER_STATE_PAUSED,
   GST_RING_BUFFER_STATE_STARTED,
 } GstRingBufferState;
 
+/**
+ * GstRingBufferSegState:
+ * @GST_SEGSTATE_INVALID: The content of the segment is invalid
+ * @GST_SEGSTATE_EMPTY: The segment is empty
+ * @GST_SEGSTATE_FILLED: The segment contains valid data
+ * @GST_SEGSTATE_PARTIAL: The segment partially contains valid data
+ *
+ * The state of a segment in the ringbuffer.
+ */
 typedef enum {
   GST_SEGSTATE_INVALID,
   GST_SEGSTATE_EMPTY,
@@ -54,6 +71,18 @@ typedef enum {
   GST_SEGSTATE_PARTIAL,
 } GstRingBufferSegState;
 
+/**
+ * GstBufferFormatType:
+ * @GST_BUFTYPE_LINEAR: samples in linear PCM
+ * @GST_BUFTYPE_FLOAT: samples in float 
+ * @GST_BUFTYPE_MU_LAW: samples in mulaw
+ * @GST_BUFTYPE_A_LAW: samples in alaw
+ * @GST_BUFTYPE_IMA_ADPCM: samples in ima adpcm
+ * @GST_BUFTYPE_MPEG: samples in mpeg audio format
+ * @GST_BUFTYPE_GSM: samples in gsm format
+ *
+ * The format of the samples in the ringbuffer.
+ */
 typedef enum
 {
   GST_BUFTYPE_LINEAR,
@@ -116,8 +145,29 @@ typedef enum
 
 } GstBufferFormat;
 
+/**
+ * GstRingBufferSpec:
+ * @caps: The caps that generated the Spec.
+ * @type: the sample type
+ * @format: the sample format
+ * @sign: the sample sign
+ * @bigend: the endianness of the samples
+ * @width: the width of the samples
+ * @depth: th depth of the samples
+ * @rate: the samplerate
+ * @channels: the number of channels
+ * @latency_time: the latency in time units
+ * @buffer_time: the total buffer size in time units
+ * @segsize: the size of one segment in bytes
+ * @segtotal: the total number of segments
+ * @bytes_per_sample: number of bytes in one sample
+ * @silence_sample: bytes representing one sample of silence
+ *
+ * The structure containing the format specification of the ringbuffer.
+ */
 struct _GstRingBufferSpec
 {
+  /*< public >*/
   /* in */
   GstCaps  *caps;		/* the caps of the buffer */
 
@@ -215,8 +265,8 @@ void     	gst_ring_buffer_set_callback   	(GstRingBuffer *buf, GstRingBufferCall
 						 gpointer user_data);
 
 gboolean	gst_ring_buffer_parse_caps	(GstRingBufferSpec *spec, GstCaps *caps);
-void 		gst_ring_buffer_debug_spec_caps  (GstRingBufferSpec *spec);
-void 		gst_ring_buffer_debug_spec_buff  (GstRingBufferSpec *spec);
+void 		gst_ring_buffer_debug_spec_caps (GstRingBufferSpec *spec);
+void 		gst_ring_buffer_debug_spec_buff (GstRingBufferSpec *spec);
 
 /* device state */
 gboolean 	gst_ring_buffer_open_device 	(GstRingBuffer *buf);

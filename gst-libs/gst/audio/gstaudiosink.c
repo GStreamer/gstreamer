@@ -264,6 +264,7 @@ gst_audioringbuffer_open_device (GstRingBuffer * buf)
 
 could_not_open:
   {
+    GST_DEBUG ("could not open device");
     return FALSE;
   }
 }
@@ -282,12 +283,13 @@ gst_audioringbuffer_close_device (GstRingBuffer * buf)
     result = csink->close (sink);
 
   if (!result)
-    goto could_not_open;
+    goto could_not_close;
 
   return result;
 
-could_not_open:
+could_not_close:
   {
+    GST_DEBUG ("could not close device");
     return FALSE;
   }
 }
@@ -307,7 +309,7 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     result = csink->prepare (sink, spec);
 
   if (!result)
-    goto could_not_open;
+    goto could_not_prepare;
 
   /* allocate one more segment as we need some headroom */
   spec->segtotal++;
@@ -325,8 +327,9 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   return result;
 
-could_not_open:
+could_not_prepare:
   {
+    GST_DEBUG ("could not prepare device");
     return FALSE;
   }
 }
@@ -360,7 +363,16 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
   if (csink->unprepare)
     result = csink->unprepare (sink);
 
+  if (!result)
+    goto could_not_unprepare;
+
   return result;
+
+could_not_unprepare:
+  {
+    GST_DEBUG ("could not unprepare device");
+    return FALSE;
+  }
 }
 
 static gboolean

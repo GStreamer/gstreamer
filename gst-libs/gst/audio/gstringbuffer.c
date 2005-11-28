@@ -18,6 +18,15 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:gstringbuffer
+ * @short_description: Base class for audio ringbuffer implementations
+ *
+ * This object is the base class for audio ringbuffers used by the base
+ * audio source and sink classes.
+ *
+ * Last reviewed on 2005-11-24 (0.9.6)
+ */
 
 #include <string.h>
 
@@ -183,6 +192,12 @@ build_linear_format (int depth, int width, int unsignd, int big_endian)
   return ((int (*)[2][2]) linear_formats)[depth][!!unsignd][!!big_endian];
 }
 
+/**
+ * gst_ring_buffer_debug_spec_caps:
+ * @spec: the spec to debug
+ *
+ * Print debug info about the parsed caps in @spec to the debug log.
+ */
 void
 gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
 {
@@ -198,6 +213,12 @@ gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
   GST_DEBUG ("parsed caps: sample bytes: %d", spec->bytes_per_sample);
 }
 
+/**
+ * gst_ring_buffer_debug_spec_buff:
+ * @spec: the spec to debug
+ *
+ * Print debug info about the buffer sized in @spec to the debug log.
+ */
 void
 gst_ring_buffer_debug_spec_buff (GstRingBufferSpec * spec)
 {
@@ -213,6 +234,15 @@ gst_ring_buffer_debug_spec_buff (GstRingBufferSpec * spec)
       spec->segsize * spec->segtotal / spec->bytes_per_sample);
 }
 
+/**
+ * gst_ring_buffer_parse_caps:
+ * @spec: a spec
+ * @caps: a #GstCaps
+ *
+ * Parse @caps into @spec.
+ *
+ * Returns: TRUE if the caps could be parsed.
+ */
 gboolean
 gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
 {
@@ -355,11 +385,9 @@ gst_ring_buffer_open_device (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "opening device");
 
   GST_OBJECT_LOCK (buf);
-  if (buf->open) {
-    g_warning ("Device for ring buffer %p already open, fix your code", buf);
-    res = TRUE;
-    goto done;
-  }
+  if (buf->open)
+    goto was_opened;
+
   buf->open = TRUE;
 
   /* if this fails, something is wrong in this file */
@@ -369,17 +397,30 @@ gst_ring_buffer_open_device (GstRingBuffer * buf)
   if (rclass->open_device)
     res = rclass->open_device (buf);
 
-  if (!res) {
-    buf->open = FALSE;
-    GST_DEBUG_OBJECT (buf, "failed opening device");
-  } else {
-    GST_DEBUG_OBJECT (buf, "opened device");
-  }
+  if (!res)
+    goto open_failed;
+
+  GST_DEBUG_OBJECT (buf, "opened device");
 
 done:
   GST_OBJECT_UNLOCK (buf);
 
   return res;
+
+  /* ERRORS */
+was_opened:
+  {
+    GST_DEBUG_OBJECT (buf, "Device for ring buffer already open");
+    g_warning ("Device for ring buffer %p already open, fix your code", buf);
+    res = TRUE;
+    goto done;
+  }
+open_failed:
+  {
+    buf->open = FALSE;
+    GST_DEBUG_OBJECT (buf, "failed opening device");
+    goto done;
+  }
 }
 
 /**
@@ -404,17 +445,11 @@ gst_ring_buffer_close_device (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "closing device");
 
   GST_OBJECT_LOCK (buf);
-  if (!buf->open) {
-    g_warning ("Device for ring buffer %p already closed, fix your code", buf);
-    res = TRUE;
-    goto done;
-  }
+  if (!buf->open)
+    goto was_closed;
 
-  if (buf->acquired) {
-    g_critical ("Resources for ring buffer %p still acquired", buf);
-    res = FALSE;
-    goto done;
-  }
+  if (buf->acquired)
+    goto was_acquired;
 
   buf->open = FALSE;
 
@@ -422,17 +457,37 @@ gst_ring_buffer_close_device (GstRingBuffer * buf)
   if (rclass->close_device)
     res = rclass->close_device (buf);
 
-  if (!res) {
-    buf->open = TRUE;
-    GST_DEBUG_OBJECT (buf, "error closing device");
-  } else {
-    GST_DEBUG_OBJECT (buf, "closed device");
-  }
+  if (!res)
+    goto close_error;
+
+  GST_DEBUG_OBJECT (buf, "closed device");
 
 done:
   GST_OBJECT_UNLOCK (buf);
 
   return res;
+
+  /* ERRORS */
+was_closed:
+  {
+    GST_DEBUG_OBJECT (buf, "Device for ring buffer already closed");
+    g_warning ("Device for ring buffer %p already closed, fix your code", buf);
+    res = TRUE;
+    goto done;
+  }
+was_acquired:
+  {
+    GST_DEBUG_OBJECT (buf, "Resources for ring buffer still acquired");
+    g_critical ("Resources for ring buffer %p still acquired", buf);
+    res = FALSE;
+    goto done;
+  }
+close_error:
+  {
+    buf->open = TRUE;
+    GST_DEBUG_OBJECT (buf, "error closing device");
+    goto done;
+  }
 }
 
 /**
@@ -480,56 +535,78 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 {
   gboolean res = FALSE;
   GstRingBufferClass *rclass;
+  gint i, j;
+  gint segsize, bps;
 
   g_return_val_if_fail (buf != NULL, FALSE);
 
   GST_DEBUG_OBJECT (buf, "acquiring device");
 
   GST_OBJECT_LOCK (buf);
-  if (!buf->open) {
-    g_critical ("Device for %p not opened", buf);
-    res = FALSE;
-    goto done;
-  }
-  if (buf->acquired) {
-    res = TRUE;
-    GST_DEBUG_OBJECT (buf, "device was acquired");
-    goto done;
-  }
+  if (!buf->open)
+    goto not_opened;
+
+  if (buf->acquired)
+    goto was_acquired;
+
   buf->acquired = TRUE;
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (rclass->acquire)
     res = rclass->acquire (buf, spec);
 
-  if (!res) {
-    buf->acquired = FALSE;
-    GST_DEBUG_OBJECT (buf, "failed to acquire device");
-  } else {
-    if (buf->spec.bytes_per_sample != 0) {
-      gint i, j;
+  if (!res)
+    goto acquire_failed;
 
-      buf->samples_per_seg = buf->spec.segsize / buf->spec.bytes_per_sample;
+  if ((bps = buf->spec.bytes_per_sample) == 0)
+    goto invalid_bps;
 
-      /* create an empty segment */
-      g_free (buf->empty_seg);
-      buf->empty_seg = g_malloc (buf->spec.segsize);
-      for (i = 0, j = 0; i < buf->spec.segsize; i++) {
-        buf->empty_seg[i] = buf->spec.silence_sample[j];
-        j = (j + 1) % buf->spec.bytes_per_sample;
-      }
-      GST_DEBUG_OBJECT (buf, "acquired device");
-    } else {
-      g_warning
-          ("invalid bytes_per_sample from acquire ringbuffer, fix the element");
-      buf->acquired = FALSE;
-      res = FALSE;
-    }
+  segsize = buf->spec.segsize;
+
+  buf->samples_per_seg = segsize / bps;
+
+  /* create an empty segment */
+  g_free (buf->empty_seg);
+  buf->empty_seg = g_malloc (segsize);
+  for (i = 0, j = 0; i < segsize; i++) {
+    buf->empty_seg[i] = buf->spec.silence_sample[j];
+    j = (j + 1) % bps;
   }
+  GST_DEBUG_OBJECT (buf, "acquired device");
+
 done:
   GST_OBJECT_UNLOCK (buf);
 
   return res;
+
+  /* ERRORS */
+not_opened:
+  {
+    GST_DEBUG_OBJECT (buf, "device not opened");
+    g_critical ("Device for %p not opened", buf);
+    res = FALSE;
+    goto done;
+  }
+was_acquired:
+  {
+    res = TRUE;
+    GST_DEBUG_OBJECT (buf, "device was acquired");
+    goto done;
+  }
+acquire_failed:
+  {
+    buf->acquired = FALSE;
+    GST_DEBUG_OBJECT (buf, "failed to acquire device");
+    goto done;
+  }
+invalid_bps:
+  {
+    g_warning
+        ("invalid bytes_per_sample from acquire ringbuffer, fix the element");
+    buf->acquired = FALSE;
+    res = FALSE;
+    goto done;
+  }
 }
 
 /**
@@ -555,11 +632,9 @@ gst_ring_buffer_release (GstRingBuffer * buf)
   gst_ring_buffer_stop (buf);
 
   GST_OBJECT_LOCK (buf);
-  if (!buf->acquired) {
-    res = TRUE;
-    GST_DEBUG_OBJECT (buf, "device was released");
-    goto done;
-  }
+  if (!buf->acquired)
+    goto was_released;
+
   buf->acquired = FALSE;
 
   /* if this fails, something is wrong in this file */
@@ -572,19 +647,31 @@ gst_ring_buffer_release (GstRingBuffer * buf)
   /* signal any waiters */
   GST_RING_BUFFER_SIGNAL (buf);
 
-  if (!res) {
-    buf->acquired = TRUE;
-    GST_DEBUG_OBJECT (buf, "failed to release device");
-  } else {
-    g_free (buf->empty_seg);
-    buf->empty_seg = NULL;
-    GST_DEBUG_OBJECT (buf, "released device");
-  }
+  if (!res)
+    goto release_failed;
+
+  g_free (buf->empty_seg);
+  buf->empty_seg = NULL;
+  GST_DEBUG_OBJECT (buf, "released device");
 
 done:
   GST_OBJECT_UNLOCK (buf);
 
   return res;
+
+  /* ERRORS */
+was_released:
+  {
+    res = TRUE;
+    GST_DEBUG_OBJECT (buf, "device was released");
+    goto done;
+  }
+release_failed:
+  {
+    buf->acquired = TRUE;
+    GST_DEBUG_OBJECT (buf, "failed to release device");
+    goto done;
+  }
 }
 
 /**
@@ -891,8 +978,8 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
   if (samples >= delay)
     samples -= delay;
 
-  GST_DEBUG ("processed samples: raw %llu, delay %u, real %llu", raw, delay,
-      samples);
+  GST_DEBUG_OBJECT (buf, "processed samples: raw %llu, delay %u, real %llu",
+      raw, delay, samples);
 
   return samples;
 }
@@ -929,7 +1016,8 @@ gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
 
   gst_ring_buffer_clear_all (buf);
 
-  GST_DEBUG ("set sample to %llu, segbase %d", sample, buf->segbase);
+  GST_DEBUG_OBJECT (buf, "set sample to %llu, segbase %d", sample,
+      buf->segbase);
 }
 
 /**
@@ -951,7 +1039,7 @@ gst_ring_buffer_clear_all (GstRingBuffer * buf)
   if (buf->spec.segtotal <= 0)
     return;
 
-  GST_DEBUG ("clear all segments");
+  GST_DEBUG_OBJECT (buf, "clear all segments");
 
   for (i = 0; i < buf->spec.segtotal; i++) {
     gst_ring_buffer_clear (buf, i);
@@ -964,7 +1052,7 @@ wait_segment (GstRingBuffer * buf)
 {
   /* buffer must be started now or we deadlock since nobody is reading */
   if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED) {
-    GST_DEBUG ("start!");
+    GST_DEBUG_OBJECT (buf, "start!");
     gst_ring_buffer_start (buf);
   }
 
@@ -974,7 +1062,7 @@ wait_segment (GstRingBuffer * buf)
     goto flushing;
 
   if (g_atomic_int_compare_and_exchange (&buf->waiting, 0, 1)) {
-    GST_DEBUG ("waiting..");
+    GST_DEBUG_OBJECT (buf, "waiting..");
     if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
       goto not_started;
 
@@ -993,13 +1081,13 @@ wait_segment (GstRingBuffer * buf)
 not_started:
   {
     GST_OBJECT_UNLOCK (buf);
-    GST_DEBUG ("stopped processing");
+    GST_DEBUG_OBJECT (buf, "stopped processing");
     return FALSE;
   }
 flushing:
   {
     GST_OBJECT_UNLOCK (buf);
-    GST_DEBUG ("flushing");
+    GST_DEBUG_OBJECT (buf, "flushing");
     return FALSE;
   }
 }
@@ -1016,7 +1104,7 @@ flushing:
  * the ringbuffer.
  *
  * @len not needs to be a multiple of the segment size of the ringbuffer
- * although it is recommended.
+ * although it is recommended for optimal performance.
  *
  * Returns: The number of samples written to the ringbuffer or -1 on
  * error.
@@ -1086,7 +1174,7 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
     writeseg = writeseg % segtotal;
     sampleslen = MIN (sps - sampleoff, len);
 
-    GST_DEBUG ("write @%p seg %d, off %d, len %d",
+    GST_DEBUG_OBJECT (buf, "write @%p seg %d, off %d, len %d",
         dest + writeseg * segsize, writeseg, sampleoff, sampleslen);
 
     memcpy (dest + (writeseg * segsize) + (sampleoff * bps), data,
@@ -1103,7 +1191,7 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
   /* ERRORS */
 not_started:
   {
-    GST_DEBUG ("stopped processing");
+    GST_DEBUG_OBJECT (buf, "stopped processing");
     return -1;
   }
 }
@@ -1198,7 +1286,7 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
     readseg = readseg % segtotal;
     sampleslen = MIN (sps - sampleoff, len);
 
-    GST_DEBUG ("read @%p seg %d, off %d, len %d",
+    GST_DEBUG_OBJECT (buf, "read @%p seg %d, off %d, len %d",
         dest + readseg * segsize, readseg, sampleoff, sampleslen);
 
     memcpy (data, dest + (readseg * segsize) + (sampleoff * bps),
@@ -1215,7 +1303,7 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
   /* ERRORS */
 not_started:
   {
-    GST_DEBUG ("stopped processing");
+    GST_DEBUG_OBJECT (buf, "stopped processing");
     return -1;
   }
 }
@@ -1293,7 +1381,7 @@ gst_ring_buffer_advance (GstRingBuffer * buf, guint advance)
    * waiting for the signal */
   if (g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0)) {
     GST_OBJECT_LOCK (buf);
-    GST_DEBUG ("signal waiter");
+    GST_DEBUG_OBJECT (buf, "signal waiter");
     GST_RING_BUFFER_SIGNAL (buf);
     GST_OBJECT_UNLOCK (buf);
   }

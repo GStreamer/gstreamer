@@ -68,8 +68,6 @@ static GstStateChangeReturn gst_base_audio_sink_change_state (GstElement *
     element, GstStateChange transition);
 
 static GstClock *gst_base_audio_sink_provide_clock (GstElement * elem);
-static gboolean gst_base_audio_sink_set_clock (GstElement * elem,
-    GstClock * clock);
 static GstClockTime gst_base_audio_sink_get_time (GstClock * clock,
     GstBaseAudioSink * sink);
 static void gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data,
@@ -127,8 +125,6 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_change_state);
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_provide_clock);
-  gstelement_class->set_clock =
-      GST_DEBUG_FUNCPTR (gst_base_audio_sink_set_clock);
 
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_base_audio_sink_event);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_base_audio_sink_preroll);
@@ -182,25 +178,6 @@ gst_base_audio_sink_provide_clock (GstElement * elem)
     clock = NULL;
 
   return clock;
-}
-
-static gboolean
-gst_base_audio_sink_set_clock (GstElement * elem, GstClock * clock)
-{
-  GstBaseAudioSink *sink;
-  gboolean ret;
-
-  sink = GST_BASE_AUDIO_SINK (elem);
-
-  GST_OBJECT_LOCK (sink);
-  if (clock != sink->provided_clock) {
-    ret = gst_clock_set_master (sink->provided_clock, clock);
-  } else {
-    ret = gst_clock_set_master (sink->provided_clock, NULL);
-  }
-  GST_OBJECT_UNLOCK (sink);
-
-  return ret;
 }
 
 static GstClockTime
@@ -593,10 +570,13 @@ gst_base_audio_sink_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
+      GstClock *clock;
+
+      GST_OBJECT_LOCK (sink);
+      clock = GST_ELEMENT_CLOCK (sink);
       /* if we are slaved to a clock, we need to set the initial
        * calibration */
-      /* FIXME, this is not yet accurate enough for smooth playback */
-      if (gst_clock_get_master (sink->provided_clock)) {
+      if (clock != sink->provided_clock) {
         GstClockTime time;
         GstClockTime rate_num, rate_denom;
 
@@ -605,12 +585,15 @@ gst_base_audio_sink_change_state (GstElement * element,
         GST_DEBUG_OBJECT (sink, "time: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (time));
 
+        gst_clock_set_master (sink->provided_clock, clock);
+        /* FIXME, this is not yet accurate enough for smooth playback */
         gst_clock_get_calibration (sink->provided_clock, NULL, NULL, &rate_num,
             &rate_denom);
         /* Does not work yet. */
         gst_clock_set_calibration (sink->provided_clock,
             time, element->base_time, rate_num, rate_denom);
       }
+      GST_OBJECT_UNLOCK (sink);
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -625,6 +608,8 @@ gst_base_audio_sink_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       gst_ring_buffer_pause (sink->ringbuffer);
+      /* slop slaving ourselves to the master, if any */
+      gst_clock_set_master (sink->provided_clock, NULL);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ring_buffer_release (sink->ringbuffer);
