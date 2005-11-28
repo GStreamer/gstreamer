@@ -1,3 +1,13 @@
+2005-11-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/video/Makefile.am:
+	  compile in copied-over videofilter into the video library
+	* gst-libs/gst/video/videosink.h:
+	  rename the header to gstvideosink.h since it's a base GstObject class
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.h:
+	  use the new header
+
 2005-11-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (group_commit), (probe_triggered):
