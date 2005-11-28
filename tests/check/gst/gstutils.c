@@ -236,19 +236,35 @@ GST_START_TEST (test_math_scale_uint64)
 
 GST_START_TEST (test_math_scale_random)
 {
-  guint64 val, num, denom, res;;
+  guint64 val, num, denom, res;
   GRand *rand;
   gint i;
 
   rand = g_rand_new ();
 
-  i = 1000;
+  i = 1000000;
   while (i--) {
+    guint64 check, diff;
+
     val = ((guint64) g_rand_int (rand)) << 32 | g_rand_int (rand);
     num = ((guint64) g_rand_int (rand)) << 32 | g_rand_int (rand);
     denom = ((guint64) g_rand_int (rand)) << 32 | g_rand_int (rand);
 
     res = gst_util_uint64_scale (val, num, denom);
+    check = gst_gdouble_to_guint64 (gst_guint64_to_gdouble (val) *
+        gst_guint64_to_gdouble (num) / gst_guint64_to_gdouble (denom));
+
+    if (res < G_MAXUINT64 && check < G_MAXUINT64) {
+      if (res > check)
+        diff = res - check;
+      else
+        diff = check - res;
+
+      /* some arbitrary value, really.. someone do the proper math to get
+       * the upper bound */
+      if (diff > 20000)
+        fail_if (diff > 20000);
+    }
   }
   g_rand_free (rand);
 

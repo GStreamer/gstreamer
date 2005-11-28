@@ -356,36 +356,6 @@ typedef union
   } l;
 } GstUInt64;
 
-static guint64
-gst_util_div128_64_iterate (GstUInt64 c1, GstUInt64 c0, guint64 denom)
-{
-  gint i;
-  gint64 mask;
-  GstUInt64 a0;
-
-  /* full 128/64 case, very slow... */
-  /* quotient is c1, c0 */
-  a0.ll = 0;                    /* remainder a0 */
-
-  /* This can be done faster, inspiration in Hacker's Delight p152 */
-  for (i = 0; i < 128; i++) {
-    /* shift 192 bits remainder:quotient, we only need to
-     * check the top bit since denom is only 64 bits. */
-    /* sign extend top bit into mask */
-    mask = ((gint32) a0.l.high) >> 31;
-    mask |= (a0.ll = (a0.ll << 1) | (c1.l.high >> 31));
-    c1.ll = (c1.ll << 1) | (c0.l.high >> 31);
-    c0.ll <<= 1;
-
-    /* if remainder >= denom or top bit was set */
-    if (mask >= denom) {
-      a0.ll -= denom;
-      c0.ll += 1;
-    }
-  }
-  return c0.ll;
-}
-
 /* based on Hacker's Delight p152 */
 static guint64
 gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
@@ -409,10 +379,12 @@ gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
   s += (s >> 8);
   s = (s + (s >> 16)) & 0x3f;
 
-  /* normalize divisor and dividend */
-  v.ll <<= s;
-  c1.ll = (c1.ll << s) | ((c0.l.high >> (32 - s)) & (-s >> 31));
-  c0.ll <<= s;
+  if (s > 0) {
+    /* normalize divisor and dividend */
+    v.ll <<= s;
+    c1.ll = (c1.ll << s) | (c0.l.high >> (32 - s));
+    c0.ll <<= s;
+  }
 
   q1.ll = c1.ll / v.l.high;
   rhat.ll = c1.ll - q1.ll * v.l.high;
@@ -489,6 +461,11 @@ gst_util_uint64_scale_int64 (guint64 val, guint64 num, guint64 denom)
   if (c1.ll >= denom)
     goto overflow;
 
+  /* shortcut for division by 1, c1.ll should be 0 because of the
+   * overflow check above. */
+  if (denom == 1)
+    return c0.ll;
+
   /* and 128/64 bits division, result fits 64 bits */
   if (denom <= G_MAXUINT32) {
     guint32 den = (guint32) denom;
@@ -501,10 +478,7 @@ gst_util_uint64_scale_int64 (guint64 val, guint64 num, guint64 denom)
     result.l.high = c1.ll / den;
     result.l.low = c0.ll / den;
   } else {
-    if (TRUE)
-      result.ll = gst_util_div128_64_iterate (c1, c0, denom);
-    else
-      result.ll = gst_util_div128_64 (c1, c0, denom);
+    result.ll = gst_util_div128_64 (c1, c0, denom);
   }
   return result.ll;
 
@@ -533,6 +507,9 @@ gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
 
   if (num == 0)
     return 0;
+
+  if (num == 1 && denom == 1)
+    return val;
 
   /* if the denom is high, we need to do a 64 muldiv */
   if (denom > G_MAXINT32)
@@ -580,6 +557,9 @@ gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 
   if (num == 0)
     return 0;
+
+  if (num == 1 && denom == 1)
+    return val;
 
   if (val <= G_MAXUINT32) {
     /* simple case */

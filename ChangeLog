@@ -1,5 +1,16 @@
 2005-11-28  Wim Taymans  <wim@fluendo.com>
 
+	* check/gst/gstutils.c: (GST_START_TEST):
+	Updated check, add some scaling accuracy checking code.
+
+	* gst/gstutils.c: (gst_util_div128_64),
+	(gst_util_uint64_scale_int64), (gst_util_uint64_scale),
+	(gst_util_uint64_scale_int):
+	Fix 6 times faster division code. Optimize for common 
+	1/1 and less common X/1 cases.
+
+2005-11-28  Wim Taymans  <wim@fluendo.com>
+
 	* check/gst/gstutils.c: (GST_START_TEST), (gst_utils_suite):
 	More checks.
 
