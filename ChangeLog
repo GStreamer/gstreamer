@@ -1,3 +1,8 @@
+2005-11-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_send_headers):
+	  Don't leak caps.
+
 2005-11-28  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_put),

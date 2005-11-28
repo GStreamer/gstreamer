@@ -969,6 +969,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
   if (caps) {
     caps = gst_ogg_mux_set_header_on_caps (caps, hbufs);
     gst_pad_set_caps (mux->srcpad, caps);
+    gst_caps_unref (caps);
   }
   /* and send the buffers */
   hwalk = hbufs;
