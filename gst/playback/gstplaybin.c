@@ -95,7 +95,7 @@ static void gst_play_bin_class_init (GstPlayBinClass * klass);
 static void gst_play_bin_init (GstPlayBin * play_bin);
 static void gst_play_bin_dispose (GObject * object);
 
-static void setup_sinks (GstPlayBaseBin * play_base_bin,
+static gboolean setup_sinks (GstPlayBaseBin * play_base_bin,
     GstPlayBaseGroup * group);
 static void remove_sinks (GstPlayBin * play_bin);
 
@@ -762,15 +762,9 @@ static gboolean
 add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
 {
   GstPad *sinkpad;
-  GstPadLinkReturn res;
+  GstPadLinkReturn linkres;
   GstElement *parent;
-
-  gst_bin_add (GST_BIN (play_bin), sink);
-
-  /* we found a sink for this stream, now try to install it */
-  sinkpad = gst_element_get_pad (sink, "sink");
-  res = gst_pad_link (srcpad, sinkpad);
-  gst_object_unref (sinkpad);
+  GstStateChangeReturn stateret;
 
   /* this is only for debugging */
   parent = gst_pad_get_parent_element (srcpad);
@@ -780,30 +774,56 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
     gst_object_unref (parent);
   }
 
+  /* bring it to the PAUSED state so we can link to the peer without
+   * breaking the flow */
+  if ((stateret = gst_element_set_state (sink, GST_STATE_PAUSED)) ==
+      GST_STATE_CHANGE_FAILURE)
+    goto state_failed;
+
+  gst_bin_add (GST_BIN (play_bin), sink);
+
+  /* we found a sink for this stream, now try to install it */
+  sinkpad = gst_element_get_pad (sink, "sink");
+  linkres = gst_pad_link (srcpad, sinkpad);
+  gst_object_unref (sinkpad);
+
   /* try to link the pad of the sink to the stream */
-  if (res < 0) {
+  if (GST_PAD_LINK_FAILED (linkres))
+    goto link_failed;
+
+  /* we got the sink succesfully linked, now keep the sink
+   * in out internal list */
+  play_bin->sinks = g_list_prepend (play_bin->sinks, sink);
+
+  return TRUE;
+
+  /* ERRORS */
+state_failed:
+  {
+    GST_DEBUG_OBJECT (play_bin, "state change failure when adding sink");
+    return FALSE;
+  }
+link_failed:
+  {
     gchar *capsstr;
+    GstCaps *caps;
 
     /* could not link this stream */
-    capsstr = gst_caps_to_string (gst_pad_get_caps (srcpad));
-    g_warning ("could not link %s: %d", capsstr, res);
+    caps = gst_pad_get_caps (srcpad);
+    capsstr = gst_caps_to_string (caps);
+    g_warning ("could not link %s: %d", capsstr, linkres);
+    GST_DEBUG_OBJECT (play_bin,
+        "link failed when adding sink, caps %s, reason %d", capsstr, linkres);
     g_free (capsstr);
+    g_free (caps);
 
     gst_element_set_state (sink, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (play_bin), sink);
-  } else {
-    /* we got the sink succesfully linked, now keep the sink
-     * in out internal list */
-    play_bin->sinks = g_list_prepend (play_bin->sinks, sink);
-    gst_element_set_state (sink,
-        (GST_STATE (play_bin) == GST_STATE_PLAYING) ?
-        GST_STATE_PLAYING : GST_STATE_PAUSED);
+    return FALSE;
   }
-
-  return res;
 }
 
-static void
+static gboolean
 setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
 {
   GstPlayBin *play_bin = GST_PLAY_BIN (play_base_bin);
@@ -812,6 +832,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   gboolean need_text = FALSE;
   GstPad *textsrcpad = NULL, *textsinkpad = NULL, *pad;
   GstElement *sink;
+  gboolean res = TRUE;
 
   /* get rid of existing sinks */
   if (play_bin->sinks) {
@@ -849,7 +870,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     }
     pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_AUDIO - 1].preroll,
         "src");
-    add_sink (play_bin, sink, pad);
+    res = add_sink (play_bin, sink, pad);
     gst_object_unref (pad);
   }
 
@@ -870,7 +891,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     }
     pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_VIDEO - 1].preroll,
         "src");
-    add_sink (play_bin, sink, pad);
+    res = add_sink (play_bin, sink, pad);
     gst_object_unref (pad);
   }
 
@@ -881,6 +902,8 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     gst_bin_remove (GST_BIN (play_bin), play_bin->fakesink);
     play_bin->fakesink = NULL;
   }
+
+  return res;
 }
 
 /* Send an event to our sinks until one of them works; don't then send to the
