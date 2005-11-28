@@ -373,8 +373,10 @@ gst_ffmpegdec_event (GstPad * pad, GstEvent * event)
 static void
 gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
 {
+  GST_OBJECT_LOCK (ffmpegdec);
+
   if (!ffmpegdec->opened)
-    return;
+    goto done;
 
   if (ffmpegdec->par) {
     g_free (ffmpegdec->par);
@@ -406,6 +408,9 @@ gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
 
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
+
+done:
+  GST_OBJECT_UNLOCK (ffmpegdec);
 }
 
 static gboolean
@@ -469,11 +474,14 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   const GValue *par;
   const GValue *fps;
+  gboolean ret = TRUE;
 
   GST_DEBUG ("setcaps called");
 
   /* close old session */
   gst_ffmpegdec_close (ffmpegdec);
+
+  GST_OBJECT_LOCK (ffmpegdec);
 
   /* set defaults */
   avcodec_get_context_defaults (ffmpegdec->context);
@@ -496,7 +504,9 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
   if (par) {
-    GST_DEBUG_OBJECT (ffmpegdec, "sink caps have pixel-aspect-ratio");
+    GST_DEBUG_OBJECT (ffmpegdec, "sink caps have pixel-aspect-ratio of %d:%d",
+        gst_value_get_fraction_numerator (par),
+        gst_value_get_fraction_denominator (par));
     ffmpegdec->par = g_new0 (GValue, 1);
     gst_value_init_and_copy (ffmpegdec->par, par);
   }
@@ -527,10 +537,12 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
       g_free (ffmpegdec->par);
       ffmpegdec->par = NULL;
     }
-    return FALSE;
+    ret = FALSE;
   }
 
-  return TRUE;
+  GST_OBJECT_UNLOCK (ffmpegdec);
+
+  return ret;
 }
 
 static int
@@ -626,6 +638,78 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
   }
 }
 
+static void
+gst_ffmpegdec_add_pixel_aspect_ratio (GstFFMpegDec * ffmpegdec,
+    GstStructure * s)
+{
+  gboolean demuxer_par_set = FALSE;
+  gboolean decoder_par_set = FALSE;
+  gint demuxer_num, demuxer_denom;
+  gint decoder_num, decoder_denom;
+
+  GST_OBJECT_LOCK (ffmpegdec);
+
+  if (ffmpegdec->par) {
+    demuxer_num = gst_value_get_fraction_numerator (ffmpegdec->par);
+    demuxer_denom = gst_value_get_fraction_denominator (ffmpegdec->par);
+    demuxer_par_set = TRUE;
+    GST_DEBUG ("Demuxer PAR: %d:%d", demuxer_num, demuxer_denom);
+  }
+
+  if (ffmpegdec->context->sample_aspect_ratio.num &&
+      ffmpegdec->context->sample_aspect_ratio.den) {
+    decoder_num = ffmpegdec->context->sample_aspect_ratio.num;
+    decoder_denom = ffmpegdec->context->sample_aspect_ratio.den;
+    decoder_par_set = TRUE;
+    GST_DEBUG ("Decoder PAR: %d:%d", decoder_num, decoder_denom);
+  }
+
+  GST_OBJECT_UNLOCK (ffmpegdec);
+
+  if (!demuxer_par_set && !decoder_par_set) {
+    GST_DEBUG ("Neither demuxer nor codec provide a pixel-aspect-ratio");
+    return;
+  }
+
+  if (demuxer_par_set && !decoder_par_set)
+    goto use_demuxer_par;
+
+  if (decoder_par_set && !demuxer_par_set)
+    goto use_decoder_par;
+
+  /* Both the demuxer and the decoder provide a PAR. If one of
+   * the two PARs is 1:1 and the other one is not, use the one
+   * that is not 1:1. If both are non-1:1, use the pixel aspect
+   * ratio provided by the codec */
+
+  if (demuxer_num == demuxer_denom && decoder_num != decoder_denom)
+    goto use_decoder_par;
+
+  if (decoder_num == decoder_denom && demuxer_num != demuxer_denom)
+    goto use_demuxer_par;
+
+  /* fall through and use decoder pixel aspect ratio */
+
+use_decoder_par:
+  {
+    GST_DEBUG ("Setting decoder provided pixel-aspect-ratio of %u:%u",
+        decoder_num, decoder_denom);
+    gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        decoder_num, decoder_denom, NULL);
+    return;
+  }
+
+use_demuxer_par:
+  {
+    GST_DEBUG ("Setting demuxer provided pixel-aspect-ratio of %u:%u",
+        demuxer_num, demuxer_denom);
+    gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        demuxer_num, demuxer_denom, NULL);
+    return;
+  }
+
+}
+
 static gboolean
 gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
 {
@@ -641,11 +725,12 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
           ffmpegdec->format.video.fps_d == ffmpegdec->format.video.old_fps_d &&
           ffmpegdec->format.video.pix_fmt == ffmpegdec->context->pix_fmt)
         return TRUE;
-      GST_DEBUG ("Renegotiating video from %dx%d@ %d/%d fps to %dx%d@ %d/%d fps",
+      GST_DEBUG
+          ("Renegotiating video from %dx%d@ %d/%d fps to %dx%d@ %d/%d fps",
           ffmpegdec->format.video.width, ffmpegdec->format.video.height,
           ffmpegdec->format.video.old_fps_n, ffmpegdec->format.video.old_fps_n,
-	  ffmpegdec->context->width, ffmpegdec->context->height, 
-	  ffmpegdec->format.video.fps_n, ffmpegdec->format.video.fps_d);
+          ffmpegdec->context->width, ffmpegdec->context->height,
+          ffmpegdec->format.video.fps_n, ffmpegdec->format.video.fps_d);
       ffmpegdec->format.video.width = ffmpegdec->context->width;
       ffmpegdec->format.video.height = ffmpegdec->context->height;
       ffmpegdec->format.video.old_fps_n = ffmpegdec->format.video.fps_n;
@@ -674,28 +759,12 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
     /* If a demuxer provided a framerate then use it (#313970) */
     if (ffmpegdec->format.video.fps_n != -1) {
       gst_structure_set (gst_caps_get_structure (caps, 0), "framerate",
-          GST_TYPE_FRACTION, ffmpegdec->format.video.fps_n, 
-	  ffmpegdec->format.video.fps_d, NULL);
+          GST_TYPE_FRACTION, ffmpegdec->format.video.fps_n,
+          ffmpegdec->format.video.fps_d, NULL);
     }
 
-    /* Add pixel-aspect-ratio if we have it. Prefer
-     * ffmpeg PAR over sink PAR (since it's provided
-     * by the codec, which is more often correct).
-     */
-    if (ffmpegdec->context->sample_aspect_ratio.num &&
-        ffmpegdec->context->sample_aspect_ratio.den) {
-      GST_DEBUG ("setting ffmpeg provided pixel-aspect-ratio");
-      gst_structure_set (gst_caps_get_structure (caps, 0),
-          "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          ffmpegdec->context->sample_aspect_ratio.num,
-          ffmpegdec->context->sample_aspect_ratio.den, NULL);
-    } else if (ffmpegdec->par) {
-      GST_DEBUG ("passing on pixel-aspect-ratio from sink");
-      gst_structure_set (gst_caps_get_structure (caps, 0),
-          "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          gst_value_get_fraction_numerator (ffmpegdec->par),
-          gst_value_get_fraction_denominator (ffmpegdec->par), NULL);
-    }
+    gst_ffmpegdec_add_pixel_aspect_ratio (ffmpegdec,
+        gst_caps_get_structure (caps, 0));
   }
 
   if (caps == NULL || !gst_pad_set_caps (ffmpegdec->srcpad, caps)) {
@@ -847,10 +916,10 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           GST_BUFFER_TIMESTAMP (outbuf) = ffmpegdec->next_ts;
           if (ffmpegdec->context->time_base.num != 0 &&
               ffmpegdec->context->time_base.den != 0) {
-            GST_BUFFER_DURATION (outbuf) = 
-		gst_util_uint64_scale_int (GST_SECOND, 
-		    ffmpegdec->context->time_base.num, 
-		    ffmpegdec->context->time_base.den);
+            GST_BUFFER_DURATION (outbuf) =
+                gst_util_uint64_scale_int (GST_SECOND,
+                ffmpegdec->context->time_base.num,
+                ffmpegdec->context->time_base.den);
 
             /* Take repeat_pict into account */
             GST_BUFFER_DURATION (outbuf) += GST_BUFFER_DURATION (outbuf)

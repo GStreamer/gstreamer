@@ -1,3 +1,14 @@
+2005-11-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_close),
+	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_add_pixel_aspect_ratio),
+	(gst_ffmpegdec_negotiate):
+	  Improve pixel aspect ratio handling when both the demuxer and the
+	  decoder provide a pixel aspect ratio: if one of the two ratios is
+	  1:1, use the other one; if both are non-1:1, use the one provided
+	  by the decoder (fixes matroska starwars test files); also add some
+	  locking here and there.
+
 2005-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD
