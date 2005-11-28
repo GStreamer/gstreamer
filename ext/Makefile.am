@@ -235,7 +235,7 @@ DIST_SUBDIRS= \
 	faac \
 	faad \
 	gsm \
-	ivorbis
+	ivorbis \
 	musepack \
 	sdl \
 	wavpack
