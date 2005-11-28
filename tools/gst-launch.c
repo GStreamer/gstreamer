@@ -623,24 +623,24 @@ main (int argc, char *argv[])
       gst_bin_add (GST_BIN (real_pipeline), pipeline);
       pipeline = real_pipeline;
     }
-    fprintf (stderr, _("PAUSE pipeline ...\n"));
+    fprintf (stderr, _("Setting pipeline to PAUSED ...\n"));
     ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
     switch (ret) {
       case GST_STATE_CHANGE_FAILURE:
-        fprintf (stderr, _("ERROR: pipeline doesn't want to pause.\n"));
+        fprintf (stderr, _("ERROR: Pipeline doesn't want to pause.\n"));
         res = -1;
         event_loop (pipeline, FALSE);
         goto end;
       case GST_STATE_CHANGE_NO_PREROLL:
-        fprintf (stderr, _("NO_PREROLL pipeline ...\n"));
+        fprintf (stderr, _("ERROR: Pipeline can't PREROLL ...\n"));
         break;
       case GST_STATE_CHANGE_ASYNC:
-        fprintf (stderr, _("PREROLL pipeline ...\n"));
+        fprintf (stderr, _("Pipeline is PREROLLING ...\n"));
         gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
         /* fallthrough */
       case GST_STATE_CHANGE_SUCCESS:
-        fprintf (stderr, _("PREROLLED pipeline ...\n"));
+        fprintf (stderr, _("Pipeline is PREROLLED ...\n"));
         break;
     }
 
@@ -652,7 +652,7 @@ main (int argc, char *argv[])
       GTimeVal tfthen, tfnow;
       GstClockTimeDiff diff;
 
-      fprintf (stderr, _("RUNNING pipeline ...\n"));
+      fprintf (stderr, _("Setting pipeline to PLAYING ...\n"));
       if (gst_element_set_state (pipeline,
               GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
         fprintf (stderr, _("ERROR: pipeline doesn't want to play.\n"));
@@ -670,15 +670,15 @@ main (int argc, char *argv[])
     }
     while (g_main_context_iteration (NULL, FALSE));
 
-    fprintf (stderr, _("PAUSE pipeline ...\n"));
+    fprintf (stderr, _("Setting pipeline to PAUSED ...\n"));
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
-    fprintf (stderr, _("READY pipeline ...\n"));
+    fprintf (stderr, _("Setting pipeline to READY ...\n"));
     gst_element_set_state (pipeline, GST_STATE_READY);
     gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
 
   end:
-    fprintf (stderr, _("NULL pipeline ...\n"));
+    fprintf (stderr, _("Setting pipeline to NULL ...\n"));
     gst_element_set_state (pipeline, GST_STATE_NULL);
     gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
   }

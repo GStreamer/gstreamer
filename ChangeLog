@@ -1,3 +1,9 @@
+2005-11-28  Edward Hervey  <edward@fluendo.com>
+
+	* tools/gst-launch.c: (main):
+	Clarify the output strings, makes it easier to translate.
+	Fixes #322626
+
 2005-11-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/Makefile.am:
