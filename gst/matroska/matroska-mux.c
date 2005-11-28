@@ -451,8 +451,8 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   videocontext->pixel_width = width;
   videocontext->pixel_height = height;
   context->default_duration = gst_util_uint64_scale_int (GST_SECOND,
-      gst_value_get_fraction_numerator (framerate),
-      gst_value_get_fraction_denominator (framerate));
+      gst_value_get_fraction_denominator (framerate),
+      gst_value_get_fraction_numerator (framerate));
 
   ret = gst_structure_get_int (structure, "pixel_width", &pixel_width);
   ret &= gst_structure_get_int (structure, "pixel_height", &pixel_height);

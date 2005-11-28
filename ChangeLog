@@ -1,3 +1,11 @@
+2005-11-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_video_pad_setcaps):
+	From Michal Benes:
+	frame duration should be GST_SECOND / framerate, not
+	GST_SECOND * framerate. (Fixes: #322643)
+
 2005-11-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
