@@ -1,5 +1,11 @@
 2005-11-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* check/pipelines/simple_launch_lines.c: (setup_pipeline),
+	(GST_START_TEST):
+	  use more check API and less GLib API
+
+2005-11-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	  don't run checks if we don't have check
 	* common/check.mak:

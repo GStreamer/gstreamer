@@ -29,7 +29,7 @@ setup_pipeline (gchar * pipe_descr)
   GstElement *pipeline;
 
   pipeline = gst_parse_launch (pipe_descr, NULL);
-  g_return_val_if_fail (GST_IS_PIPELINE (pipeline), NULL);
+  fail_unless (GST_IS_PIPELINE (pipeline));
   return pipeline;
 }
 
@@ -158,7 +158,7 @@ GST_START_TEST (test_stop_from_app)
   fakesink = gst_element_factory_make ("fakesink", NULL);
   pipeline = gst_element_factory_make ("pipeline", NULL);
 
-  g_return_if_fail (fakesrc && fakesink && pipeline);
+  fail_unless (fakesrc && fakesink && pipeline);
 
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
   gst_element_link (fakesrc, fakesink);
@@ -179,7 +179,9 @@ GST_START_TEST (test_stop_from_app)
   } else {
     rmessage = GST_MESSAGE_UNKNOWN;
   }
-  g_return_if_fail (rmessage == GST_MESSAGE_APPLICATION);
+  fail_unless (rmessage == GST_MESSAGE_APPLICATION,
+      "polled message is not APPLICATION but %s",
+      gst_message_type_get_name (rmessage));
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
