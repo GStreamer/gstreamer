@@ -1,3 +1,10 @@
+2005-11-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
+	(try_to_link_1), (queue_filled_cb):
+	Better use of the queues. Start with a small size queue and only increase
+	the size of the queues when the other queues are empty.
+
 2005-11-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/video/Makefile.am:

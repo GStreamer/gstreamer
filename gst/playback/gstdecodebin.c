@@ -60,6 +60,8 @@ struct _GstDecodeBin
 
   GList *dynamics;              /* list of dynamic connections */
 
+  GList *queues;                /* list of demuxer-decoder queues */
+
   GList *factories;             /* factories we can use for selecting elements */
   gint numpads;
   gint numwaiting;
@@ -122,6 +124,8 @@ static void unlinked (GstPad * pad, GstPad * peerpad,
     GstDecodeBin * decode_bin);
 static void new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic);
 static void no_more_pads (GstElement * element, GstDynamic * dynamic);
+
+static void queue_filled_cb (GstElement * queue, GstDecodeBin * decode_bin);
 
 static GstElementClass *parent_class;
 static guint gst_decode_bin_signals[LAST_SIGNAL] = { 0 };
@@ -329,6 +333,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   }
 
   decode_bin->dynamics = NULL;
+  decode_bin->queues = NULL;
 }
 
 static void dynamic_free (GstDynamic * dyn);
@@ -664,10 +669,9 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
           GST_OBJECT_NAME (srcelement));
 
       queue = gst_element_factory_make ("queue", NULL);
-      g_object_set (G_OBJECT (queue), (const gchar *) "max-size-buffers", 0,
-          NULL);
-      g_object_set (G_OBJECT (queue), (const gchar *) "max-size-time", 0LL,
-          NULL);
+      g_object_set (G_OBJECT (queue), "max-size-buffers", 0, NULL);
+      g_object_set (G_OBJECT (queue), "max-size-time", 0LL, NULL);
+      g_object_set (G_OBJECT (queue), "max-size-bytes", 8192, NULL);
       gst_bin_add (GST_BIN (decode_bin), queue);
       gst_element_set_state (queue, GST_STATE_READY);
       queuesinkpad = gst_element_get_pad (queue, "sink");
@@ -699,6 +703,12 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
 
       GST_DEBUG_OBJECT (decode_bin, "linked on pad %s:%s",
           GST_DEBUG_PAD_NAME (usedsrcpad));
+
+      if (isdemux) {
+        decode_bin->queues = g_list_append (decode_bin->queues, queue);
+        g_signal_connect (G_OBJECT (queue),
+            "overrun", G_CALLBACK (queue_filled_cb), decode_bin);
+      }
 
       /* The link worked, now figure out what it was that we connected */
 
@@ -850,6 +860,53 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
   gst_element_set_state (elem, GST_STATE_NULL);
 
   gst_bin_remove (GST_BIN (decode_bin), elem);
+}
+
+/* Make sure we don't have a full queue and empty queue situation */
+static void
+queue_filled_cb (GstElement * queue, GstDecodeBin * decode_bin)
+{
+  GList *tmp;
+  gboolean increase = FALSE;
+  guint bytes;
+
+  g_object_get (G_OBJECT (queue), "current-level-bytes", &bytes, NULL);
+  GST_DEBUG_OBJECT (decode_bin, "One of the queues is full at %d bytes", bytes);
+
+  if (bytes > (20 * 1024 * 1024)) {
+    GST_WARNING_OBJECT (decode_bin,
+        "Queue is bigger than 20Mbytes, something else is going wrong");
+    return;
+  }
+
+  for (tmp = decode_bin->queues; tmp; tmp = g_list_next (tmp)) {
+    GstElement *aqueue = GST_ELEMENT (tmp->data);
+    guint levelbytes = -1;
+
+    if (aqueue != queue) {
+      g_object_get (G_OBJECT (aqueue),
+          "current-level-bytes", &levelbytes, NULL);
+      if (levelbytes == 0) {
+        increase = TRUE;
+      }
+    }
+  }
+
+  if (increase) {
+    /* 
+     * Increase the queue size by 1Mbyte if it is over 1Mb, else double its current limit
+     */
+    if (bytes > 1024 * 1024)
+      bytes += 1024 * 1024;
+    else
+      bytes *= 2;
+    GST_DEBUG_OBJECT (decode_bin,
+        "One of the other queues is empty, increasing queue byte limit to %d",
+        bytes);
+    g_object_set (G_OBJECT (queue), "max-size-bytes", bytes, NULL);
+  } else
+    GST_DEBUG_OBJECT (decode_bin,
+        "Queue is full but other queues are not empty, not doing anything");
 }
 
 /* This function will be called when a dynamic pad is created on an element.
