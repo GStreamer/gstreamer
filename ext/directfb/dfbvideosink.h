@@ -20,7 +20,7 @@
 #ifndef __GST_DFBVIDEOSINK_H__
 #define __GST_DFBVIDEOSINK_H__
 
-#include <gst/video/videosink.h>
+#include <gst/video/gstvideosink.h>
 
 #include <directfb.h>
 
