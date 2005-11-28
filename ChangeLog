@@ -1,3 +1,8 @@
+2005-11-28  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new):
+	Refuse to create an XvImage if we can't find the format.
+
 2005-11-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst-libs/gst/riff/riff-media.c:

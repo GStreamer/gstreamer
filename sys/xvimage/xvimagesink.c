@@ -456,11 +456,11 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
   GST_LOG_OBJECT (xvimagesink, "creating %dx%d", xvimage->width,
       xvimage->height);
 
-  /* We should probably get that from the caps as well */
   xvimage->im_format = gst_xvimagesink_get_format_from_caps (xvimagesink, caps);
   if (!xvimage->im_format) {
     GST_WARNING_OBJECT (xvimagesink, "failed to get format from caps %"
         GST_PTR_FORMAT, caps);
+    goto beach_unlocked;
   }
   xvimage->xvimagesink = gst_object_ref (xvimagesink);
 
@@ -533,6 +533,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
 beach:
   g_mutex_unlock (xvimagesink->x_lock);
 
+beach_unlocked:
   if (!succeeded) {
     gst_xvimage_buffer_free (xvimage);
     xvimage = NULL;
