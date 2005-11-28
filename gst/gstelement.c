@@ -1740,24 +1740,25 @@ interrupted:
  * #gst_element_set_state(), this function will block up to the
  * specified timeout value for the state change to complete.
  * If the element completes the state change or goes into
- * an error, this function returns immediatly with a return value of
+ * an error, this function returns immediately with a return value of
  * #GST_STATE_CHANGE_SUCCESS or #GST_STATE_CHANGE_FAILURE respectively.
  *
- * For elements that did not return #GST_STATE_CHANGE_ASYNC, this function 
- * returns the current and pending state immediatly.
+ * For elements that did not return #GST_STATE_CHANGE_ASYNC, this function
+ * returns the current and pending state immediately.
  *
- * This function returns #GST_STATE_CHANGE_NO_PREROLL if the element 
- * successfully changed its state but is not able to provide data yet. This mostly
- * happens for live sources that only produce data in the PLAYING state. 
+ * This function returns #GST_STATE_CHANGE_NO_PREROLL if the element
+ * successfully changed its state but is not able to provide data yet.
+ * This mostly
+ * happens for live sources that only produce data in the PLAYING state.
  * While the state change return is equivalent to #GST_STATE_CHANGE_SUCCESS, it
  * is returned to the application to signal that some sink elements might not
  * be able to complete their state change because an element is not producing
- * data to complete the preroll. When setting the element to playing, the preroll
- * will complete and playback will start.
+ * data to complete the preroll. When setting the element to playing,
+ * the preroll will complete and playback will start.
  *
- * Returns: #GST_STATE_CHANGE_SUCCESS if the element has no more pending state and
- *          the last state change succeeded, #GST_STATE_CHANGE_ASYNC
- *          if the element is still performing a state change or
+ * Returns: #GST_STATE_CHANGE_SUCCESS if the element has no more pending state
+ *          and the last state change succeeded, #GST_STATE_CHANGE_ASYNC if the
+ *          element is still performing a state change or
  *          #GST_STATE_CHANGE_FAILURE if the last state change failed.
  *
  * MT safe.
