@@ -1,3 +1,10 @@
+2005-11-28  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_class_init),
+	(gst_ffmpegenc_init), (gst_ffmpegenc_getcaps),
+	(gst_ffmpegenc_setcaps), (gst_ffmpegenc_set_property),
+	(gst_ffmpegenc_get_property): Add rtp-payload-size property.
+
 2005-11-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_close),

@@ -55,6 +55,7 @@ struct _GstFFMpegEnc
   gint me_method;
   gint gop_size;
   gulong buffer_size;
+  gulong rtp_payload_size;
 };
 
 typedef struct _GstFFMpegEncClass GstFFMpegEncClass;
@@ -99,8 +100,9 @@ enum
   ARG_BIT_RATE,
   ARG_GOP_SIZE,
   ARG_ME_METHOD,
-  ARG_BUFSIZE
-      /* FILL ME */
+  ARG_BUFSIZE,
+  ARG_RTP_PAYLOAD_SIZE
+  /* FILL ME */
 };
 
 #define GST_TYPE_ME_METHOD (gst_ffmpegenc_me_method_get_type())
@@ -224,6 +226,10 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
         g_param_spec_ulong ("buffer_size", "Buffer Size",
             "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
+    g_object_class_install_property (G_OBJECT_CLASS (klass),
+        ARG_RTP_PAYLOAD_SIZE,
+	g_param_spec_ulong ("rtp_payload_size", "RTP Payload Size",
+            "Target GOB length", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
   } else if (klass->in_plugin->type == CODEC_TYPE_AUDIO) {
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
         g_param_spec_ulong ("bitrate", "Bit Rate",
@@ -259,6 +265,7 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
     ffmpegenc->bitrate = 300000;
     ffmpegenc->buffer_size = 512 * 1024;
     ffmpegenc->gop_size = 15;
+    ffmpegenc->rtp_payload_size = 0;
   } else if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_audio);
 
@@ -314,7 +321,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   }
 
   /* set some default properties */
-  ctx->width = 384;
+  ctx->width = 352;
   ctx->height = 288;
   ctx->time_base.num = DEFAULT_FRAME_RATE_BASE;
   ctx->time_base.den = 25 * DEFAULT_FRAME_RATE_BASE;
@@ -384,6 +391,15 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   ffmpegenc->context->bit_rate_tolerance = ffmpegenc->bitrate;
   ffmpegenc->context->gop_size = ffmpegenc->gop_size;
   ffmpegenc->context->me_method = ffmpegenc->me_method;
+
+  /* RTP payload used for GOB production (for Asterisk) */
+  if (ffmpegenc->rtp_payload_size) {
+    ffmpegenc->context->rtp_mode = 1;
+    ffmpegenc->context->rtp_payload_size = ffmpegenc->rtp_payload_size;
+  } else {
+    ffmpegenc->context->rtp_mode = 0;
+    ffmpegenc->context->rtp_payload_size = 512;
+  }
 
   /* general properties */
   ffmpegenc->context->qmin = 1;
@@ -638,6 +654,9 @@ gst_ffmpegenc_set_property (GObject * object,
     case ARG_BUFSIZE:
       ffmpegenc->buffer_size = g_value_get_ulong (value);
       break;
+    case ARG_RTP_PAYLOAD_SIZE:
+      ffmpegenc->rtp_payload_size = g_value_get_ulong (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -666,6 +685,9 @@ gst_ffmpegenc_get_property (GObject * object,
       break;
     case ARG_BUFSIZE:
       g_value_set_ulong (value, ffmpegenc->buffer_size);
+      break;
+    case ARG_RTP_PAYLOAD_SIZE:
+      g_value_set_ulong (value, ffmpegenc->rtp_payload_size);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
