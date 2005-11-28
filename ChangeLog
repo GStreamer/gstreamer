@@ -1,3 +1,8 @@
+2005-11-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/Makefile.am:
+	  don't try and build net if we don't even have <sys/socket.h>
+
 2005-11-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* check/Makefile.am:

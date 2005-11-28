@@ -57,7 +57,11 @@ endif
 if GST_DISABLE_NET
 SUBDIRS_NET = 
 else
+if HAVE_SYS_SOCKET_H
 SUBDIRS_NET = net
+else
+SUBDIRS_NET = 
+endif
 endif
 
 SUBDIRS = \
