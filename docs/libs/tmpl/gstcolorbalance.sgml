@@ -2,7 +2,7 @@
 gstcolorbalance
 
 <!-- ##### SECTION Short_Description ##### -->
-
+interface for adjusting color balance settings
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

@@ -1,5 +1,13 @@
 2005-11-28  Julien MOUTTE  <julien@moutte.net>
 
+	* docs/libs/tmpl/gstcolorbalance.sgml:
+	* docs/libs/tmpl/gstmixer.sgml:
+	* docs/libs/tmpl/gstxoverlay.sgml:
+	* gst-libs/gst/interfaces/xoverlay.c: Add docs for the Xoverlay
+	interface.
+
+2005-11-28  Julien MOUTTE  <julien@moutte.net>
+
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new):
 	Refuse to create an XvImage if we can't find the format.
 

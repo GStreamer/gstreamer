@@ -2,7 +2,7 @@
 gstmixer
 
 <!-- ##### SECTION Short_Description ##### -->
-
+interface for elements that provide mixer operations
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

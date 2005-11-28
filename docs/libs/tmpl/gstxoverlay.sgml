@@ -2,7 +2,7 @@
 gstxoverlay
 
 <!-- ##### SECTION Short_Description ##### -->
-
+interface for setting/getting a Window on elements supporting it.
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>

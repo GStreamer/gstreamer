@@ -19,6 +19,88 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstxoverlay
+ * @short_description: Interface for setting/getting a Window on elements
+ * supporting it.
+ *
+ * <refsect2>
+ * <para>
+ * The XOverlay interface is used for 2 main purposes :
+ * <itemizedlist>
+ * <listitem>
+ * <para>
+ * To get a grab on the Window where the video sink element is going to render.
+ * This is achieved by either being informed about the Window identifier that
+ * the video sink element generated, or by forcing the video sink element to use
+ * a specific Window identifier for rendering.
+ * </para>
+ * </listitem>
+ * <listitem>
+ * <para>
+ * To force a redrawing of the latest video frame the video sink element 
+ * displayed on the Window. Indeed if the #GstPipeline is in #GST_STATE_PAUSED
+ * state, moving the Window around will damage its content. Application
+ * developers will want to handle the Expose events themselves and force the 
+ * video sink element to refresh the Window's content.
+ * </para>
+ * </listitem>
+ * </itemizedlist>
+ * </para>
+ * <para>
+ * Using the Window created by the video sink is probably the simplest scenario,
+ * in some cases, though, it might not be flexible enough for application 
+ * developers if they need to catch events such as mouse moves and button
+ * clicks.
+ * </para>
+ * <para>
+ * Setting a specific Window identifier on the video sink element is the most
+ * flexible solution but it has some issues. Indeed the application needs to set
+ * its Window identifier at the right time to avoid internal Window creation
+ * from the video sink element. To solve this issue a #GstMessage is posted on
+ * the bus to inform the application that it should set the Window identifier 
+ * immediately. Here is an example on how to do that correctly:
+ * <programlisting>
+ * static GstBusSyncReply
+ * create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+ * {
+ *  XGCValues values;
+ *  const GstStructure *s;
+ *  
+ *  s = gst_message_get_structure (message);
+ *  if (!gst_structure_has_name (s, "prepare-xwindow-id")) {
+ *    return GST_BUS_PASS;
+ *  }
+ *  
+ *  win = XCreateSimpleWindow (disp, root, 0, 0, 320, 240, 0, 0, 0);
+ *  
+ *  XSetWindowBackgroundPixmap (disp, win, None);
+ *  
+ *  gc = XCreateGC (disp, win, 0, &amp;values);
+ *  
+ *  XMapRaised (disp, win);
+ *  
+ *  XSync (disp, FALSE);
+ *   
+ *  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
+ *      win);
+ *   
+ *  return GST_BUS_DROP;
+ * }
+ * ...
+ * int
+ * main (int argc, char **argv)
+ * {
+ * ...
+ *  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+ *  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, pipeline);
+ * ...
+ * }
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
