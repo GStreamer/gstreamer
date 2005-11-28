@@ -21,7 +21,7 @@
 
 #include <gst/check/gstcheck.h>
 
-#define WAIT_TIME (100 * GST_MSECOND)
+#define WAIT_TIME (300 * GST_MSECOND)
 
 /* an empty pipeline can go to PLAYING in one go */
 GST_START_TEST (test_async_state_change_empty)
@@ -516,6 +516,7 @@ main (int argc, char **argv)
 
   gst_check_init (&argc, &argv);
 
+  srunner_set_log (sr, "test.log");
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);
   srunner_free (sr);
