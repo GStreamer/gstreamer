@@ -1943,15 +1943,15 @@ fixate_value (GValue * dest, const GValue * src)
     guint n;
 
     g_value_init (dest, GST_TYPE_ARRAY);
-    for (n = 0; n < gst_value_list_get_size (src); n++) {
+    for (n = 0; n < gst_value_array_get_size (src); n++) {
       GValue kid = { 0 };
-      const GValue *orig_kid = gst_value_list_get_value (src, n);
+      const GValue *orig_kid = gst_value_array_get_value (src, n);
 
       if (!fixate_value (&kid, orig_kid))
         gst_value_init_and_copy (&kid, orig_kid);
       else
         res = TRUE;
-      gst_value_list_append_value (dest, &kid);
+      gst_value_array_append_value (dest, &kid);
       g_value_unset (&kid);
     }
 

@@ -1,3 +1,7 @@
+2005-11-28  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (fixate_value): Use array functions for arrays.
+
 2005-11-28  Edward Hervey  <edward@fluendo.com>
 
 	* tools/gst-launch.c: (main):
