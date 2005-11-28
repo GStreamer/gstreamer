@@ -2116,12 +2116,6 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
         GST_DEBUG_OBJECT (avi, "Skipping entry %d (%d, %p)",
             avi->current_entry - 1, entry->size, stream->pad);
         goto next;
-      } else if (GST_CLOCK_TIME_IS_VALID (avi->segment_start)) {
-        if (stream->strh->type != GST_RIFF_FCC_vids &&
-            entry->ts < avi->segment_start) {
-          GST_DEBUG_OBJECT (avi, "Doing keyframe sync");
-          goto next;
-        }
       }
 
       if ((res = gst_pad_pull_range (avi->sinkpad, entry->offset +

@@ -1,3 +1,8 @@
+2005-11-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_process_next_entry):
+	Useless check now we're setting the current entry correctly.
+
 2005-11-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_resync), (gst_jpegenc_chain),
