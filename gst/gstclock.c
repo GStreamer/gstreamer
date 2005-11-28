@@ -589,19 +589,17 @@ gst_clock_finalize (GObject * object)
 {
   GstClock *clock = GST_CLOCK (object);
 
-  GST_OBJECT_LOCK (clock);
+  GST_CLOCK_SLAVE_LOCK (clock);
   if (clock->clockid) {
     gst_clock_id_unschedule (clock->clockid);
     gst_clock_id_unref (clock->clockid);
     clock->clockid = NULL;
   }
-
-  g_cond_free (clock->entries_changed);
-
   g_free (clock->times);
   clock->times = NULL;
-  GST_OBJECT_UNLOCK (clock);
+  GST_CLOCK_SLAVE_UNLOCK (clock);
 
+  g_cond_free (clock->entries_changed);
   g_mutex_free (clock->slave_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -883,18 +881,15 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
   g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
 
   GST_OBJECT_LOCK (clock);
-
   /* we always allow setting the master to NULL */
   if (master && !GST_OBJECT_FLAG_IS_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER))
     goto not_supported;
 
   GST_DEBUG_OBJECT (clock, "slaving to master clock %p", master);
   gst_object_replace ((GstObject **) & clock->master, (GstObject *) master);
-
   GST_OBJECT_UNLOCK (clock);
 
   GST_CLOCK_SLAVE_LOCK (clock);
-
   if (clock->clockid) {
     gst_clock_id_unschedule (clock->clockid);
     gst_clock_id_unref (clock->clockid);
@@ -910,7 +905,6 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
     gst_clock_id_wait_async (clock->clockid,
         (GstClockCallback) gst_clock_slave_callback, clock);
   }
-
   GST_CLOCK_SLAVE_UNLOCK (clock);
 
   return TRUE;
@@ -918,6 +912,7 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
 not_supported:
   {
     GST_DEBUG_OBJECT (clock, "cannot be slaved to a master clock");
+    GST_OBJECT_UNLOCK (clock);
     return FALSE;
   }
 }
@@ -1034,6 +1029,9 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
     sxy += newx4 * newy4 - xbar4 * ybar4;
   }
 
+  if (sxx == 0)
+    goto invalid;
+
   *m_num = sxy;
   *m_denom = sxx;
   *xbase = xmin;
@@ -1046,6 +1044,11 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   DEBUG ("  r2     = %g", *r_squared);
 
   return TRUE;
+
+invalid:
+  {
+    return FALSE;
+  }
 }
 
 /**
@@ -1088,7 +1091,8 @@ gst_clock_add_observation (GstClock * clock, GstClockTime slave,
   if (clock->filling && clock->time_index < clock->window_threshold)
     goto filling;
 
-  do_linear_regression (clock, &m_num, &m_denom, &b, &xbase, r_squared);
+  if (!do_linear_regression (clock, &m_num, &m_denom, &b, &xbase, r_squared))
+    goto invalid;
 
   GST_CLOCK_SLAVE_UNLOCK (clock);
 
@@ -1096,6 +1100,7 @@ gst_clock_add_observation (GstClock * clock, GstClockTime slave,
       "adjusting clock to m=%" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT ", b=%"
       G_GUINT64_FORMAT " (rsquared=%g)", m_num, m_denom, b, *r_squared);
 
+  /* if we have a valid regression, adjust the clock */
   gst_clock_set_calibration (clock, xbase, b, m_num, m_denom);
 
   return TRUE;
@@ -1103,8 +1108,13 @@ gst_clock_add_observation (GstClock * clock, GstClockTime slave,
 filling:
   {
     GST_CLOCK_SLAVE_UNLOCK (clock);
-
     return FALSE;
+  }
+invalid:
+  {
+    /* no valid regression has been done, ignore the result then */
+    GST_CLOCK_SLAVE_UNLOCK (clock);
+    return TRUE;
   }
 }
 

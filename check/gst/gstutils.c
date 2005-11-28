@@ -192,9 +192,8 @@ GST_START_TEST (test_math_scale)
           G_MAXINT32) != G_MAXUINT64 - 100);
 
   /* overflow */
-  ASSERT_WARNING (gst_util_uint64_scale_int (G_MAXUINT64 - 1, 10,
-          1) != G_MAXUINT64);
-  ASSERT_WARNING (gst_util_uint64_scale_int (G_MAXUINT64 - 1, G_MAXINT32,
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT64 - 1, 10, 1) != G_MAXUINT64);
+  fail_if (gst_util_uint64_scale_int (G_MAXUINT64 - 1, G_MAXINT32,
           1) != G_MAXUINT64);
 
 } GST_END_TEST;
@@ -229,12 +228,34 @@ GST_START_TEST (test_math_scale_uint64)
           G_MAXUINT64) != G_MAXUINT64 - 100);
 
   /* overflow */
-  ASSERT_WARNING (gst_util_uint64_scale (G_MAXUINT64 - 1, 10,
-          1) != G_MAXUINT64);
-  ASSERT_WARNING (gst_util_uint64_scale (G_MAXUINT64 - 1, G_MAXUINT64,
+  fail_if (gst_util_uint64_scale (G_MAXUINT64 - 1, 10, 1) != G_MAXUINT64);
+  fail_if (gst_util_uint64_scale (G_MAXUINT64 - 1, G_MAXUINT64,
           1) != G_MAXUINT64);
 
 } GST_END_TEST;
+
+GST_START_TEST (test_math_scale_random)
+{
+  guint64 val, num, denom, res;;
+  GRand *rand;
+  gint i;
+
+  rand = g_rand_new ();
+
+  i = 1000;
+  while (i--) {
+    val = ((guint64) g_rand_int (rand)) << 32 | g_rand_int (rand);
+    num = ((guint64) g_rand_int (rand)) << 32 | g_rand_int (rand);
+    denom = ((guint64) g_rand_int (rand)) << 32 | g_rand_int (rand);
+
+    res = gst_util_uint64_scale (val, num, denom);
+  }
+  g_rand_free (rand);
+
+}
+
+GST_END_TEST;
+
 Suite *
 gst_utils_suite (void)
 {
@@ -246,6 +267,7 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_buffer_probe_once);
   tcase_add_test (tc_chain, test_math_scale);
   tcase_add_test (tc_chain, test_math_scale_uint64);
+  tcase_add_test (tc_chain, test_math_scale_random);
   return s;
 }
 

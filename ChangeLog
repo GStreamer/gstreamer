@@ -1,3 +1,22 @@
+2005-11-28  Wim Taymans  <wim@fluendo.com>
+
+	* check/gst/gstutils.c: (GST_START_TEST), (gst_utils_suite):
+	More checks.
+
+	* gst/gstclock.c: (gst_clock_finalize), (gst_clock_set_master),
+	(do_linear_regression), (gst_clock_add_observation):
+	Cleanups.
+	Release lock when the clock cannot be slaved.
+	Catch the case where the regression returned an invalid denominator.
+
+	* gst/gstutils.c: (gst_util_div128_64_iterate),
+	(gst_util_div128_64), (gst_util_uint64_scale_int64),
+	(gst_util_uint64_scale), (gst_util_uint64_scale_int):
+	Add protentially more performant non-iterative 128/64 divide function
+	that unfortunatly does not work yet.
+	Shortcut the trivial 0/X = 0 case.
+	Remove the warnings on overflow.
+
 2005-11-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstplugin.c: (gst_plugin_register_func):
