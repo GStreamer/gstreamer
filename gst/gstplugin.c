@@ -232,7 +232,7 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
 {
   if (!gst_plugin_check_version (desc->major_version, desc->minor_version)) {
     if (GST_CAT_DEFAULT)
-      GST_INFO ("plugin \"%s\" has incompatible version, not loading",
+      GST_WARNING ("plugin \"%s\" has incompatible version, not loading",
           plugin->filename);
     return NULL;
   }
@@ -240,14 +240,14 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
   if (!desc->license || !desc->description || !desc->source ||
       !desc->package || !desc->origin) {
     if (GST_CAT_DEFAULT)
-      GST_INFO ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
+      GST_WARNING ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
           plugin->filename);
     return NULL;
   }
 
   if (!gst_plugin_check_license (desc->license)) {
     if (GST_CAT_DEFAULT)
-      GST_INFO ("plugin \"%s\" has invalid license \"%s\", not loading",
+      GST_WARNING ("plugin \"%s\" has invalid license \"%s\", not loading",
           plugin->filename, desc->license);
     return NULL;
   }
@@ -259,7 +259,7 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
 
   if (!((desc->plugin_init) (plugin))) {
     if (GST_CAT_DEFAULT)
-      GST_INFO ("plugin \"%s\" failed to initialise", plugin->filename);
+      GST_WARNING ("plugin \"%s\" failed to initialise", plugin->filename);
     plugin->module = NULL;
     return NULL;
   }

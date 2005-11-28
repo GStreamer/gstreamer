@@ -1,3 +1,8 @@
+2005-11-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstplugin.c: (gst_plugin_register_func):
+	  everything causing a plugin not to load should be at least a WARNING
+
 2005-11-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/dparams.txt:
