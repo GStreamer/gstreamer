@@ -154,9 +154,9 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_FILTER_CAPS:{
-      const GstCaps *new_caps_val = gst_value_get_caps (value);
       GstCaps *new_caps;
       GstCaps *old_caps;
+      const GstCaps *new_caps_val = gst_value_get_caps (value);
 
       if (new_caps_val == NULL) {
         new_caps = gst_caps_new_any ();
@@ -167,6 +167,8 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
       old_caps = capsfilter->filter_caps;
       capsfilter->filter_caps = new_caps;
       gst_caps_unref (old_caps);
+
+      GST_DEBUG_OBJECT (capsfilter, "set new caps %" GST_PTR_FORMAT, new_caps);
 
       /* FIXME: Need to activate these caps on the pads */
       break;
