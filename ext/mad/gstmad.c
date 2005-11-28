@@ -1343,7 +1343,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
        * some weird decoding errors... */
       GST_LOG ("decoding the header now");
       if (mad_header_decode (&mad->frame.header, &mad->stream) == -1) {
-        GST_DEBUG ("mad_frame_decode had an error: %s",
+        GST_WARNING ("mad_frame_decode had an error: %s",
             mad_stream_errorstr (&mad->stream));
       }
 
@@ -1365,7 +1365,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         }
         /* we are in an error state */
         mad->in_error = TRUE;
-        GST_DEBUG ("mad_frame_decode had an error: %s",
+        GST_WARNING ("mad_frame_decode had an error: %s",
             mad_stream_errorstr (&mad->stream));
         if (!MAD_RECOVERABLE (mad->stream.error)) {
           GST_ELEMENT_ERROR (mad, STREAM, DECODE, (NULL), (NULL));
@@ -1549,7 +1549,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         }
 
         result = gst_pad_push (mad->srcpad, outbuffer);
-        if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED) {
+        if (result != GST_FLOW_OK) {
           /* Head for the exit, dropping samples as we go */
           goto_exit = TRUE;
         }

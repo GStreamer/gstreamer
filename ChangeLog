@@ -1,3 +1,11 @@
+2005-11-28  Edward Hervey  <edward@fluendo.com>
+
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	Proper warning statements,
+	Don't error if the src pad isn't linked when pushing.
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_change_state):
+	Proper state_change, avoids borkage when going to READY
+
 2005-11-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (handle_sequence):

@@ -1114,6 +1114,7 @@ static GstStateChangeReturn
 gst_mpeg_parse_change_state (GstElement * element, GstStateChange transition)
 {
   GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (element);
+  GstStateChangeReturn result = GST_STATE_CHANGE_FAILURE;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -1125,6 +1126,13 @@ gst_mpeg_parse_change_state (GstElement * element, GstStateChange transition)
       /* initialize parser state */
       gst_mpeg_parse_reset (mpeg_parse);
       break;
+    default:
+      break;
+  }
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (mpeg_parse->packetize) {
         gst_mpeg_packetize_destroy (mpeg_parse->packetize);
@@ -1136,7 +1144,7 @@ gst_mpeg_parse_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return result;
 }
 
 static void
