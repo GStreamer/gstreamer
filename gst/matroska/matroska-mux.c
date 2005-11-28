@@ -426,7 +426,6 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   gint width, height, pixel_width, pixel_height;
   const GValue *framerate;
   GstStructure *structure;
-  gboolean ret;
 
   /* find context */
   collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
@@ -454,9 +453,8 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
       gst_value_get_fraction_denominator (framerate),
       gst_value_get_fraction_numerator (framerate));
 
-  ret = gst_structure_get_int (structure, "pixel_width", &pixel_width);
-  ret &= gst_structure_get_int (structure, "pixel_height", &pixel_height);
-  if (ret) {
+  if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
+          &pixel_width, &pixel_height)) {
     if (pixel_width > pixel_height) {
       videocontext->display_width = width * pixel_width / pixel_height;
       videocontext->display_height = height;
