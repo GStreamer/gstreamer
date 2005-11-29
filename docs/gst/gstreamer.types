@@ -59,10 +59,10 @@ gst_net_time_provider_get_type
 
 % elements
 
-#include <gst/elements/gstfakesrc.h>
-#include <gst/elements/gstfakesink.h>
-#include <gst/elements/gstfilesrc.h>
-#include <gst/elements/gstfilesink.h>
+#include <plugins/elements/gstfakesrc.h>
+#include <plugins/elements/gstfakesink.h>
+#include <plugins/elements/gstfilesrc.h>
+#include <plugins/elements/gstfilesink.h>
 
 gst_fake_src_get_type
 gst_fake_sink_get_type

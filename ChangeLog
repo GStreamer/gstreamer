@@ -1,3 +1,8 @@
+2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer.types:
+	  fix includes, though they are a little dinky
+
 2005-11-29  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* check/Makefile.am:
