@@ -1,5 +1,14 @@
 2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tools/Makefile.am:
+	* tools/gst-complete.1.in:
+	* tools/gst-complete.c:
+	* tools/gst-compprep.1.in:
+	* tools/gst-compprep.c:
+	  removing -compprep and -complete
+
+2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstevent.c: (gst_event_new_new_segment),
 	(gst_event_parse_new_segment):
 	* gst/gstevent.h:

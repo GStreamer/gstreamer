@@ -4,10 +4,8 @@ if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC = 
 GST_LOADSAVE_SRC_V = 
 else
-GST_LOADSAVE_SRC = gst-complete gst-compprep gst-xmllaunch
+GST_LOADSAVE_SRC = gst-xmllaunch
 GST_LOADSAVE_SRC_V = \
-	gst-complete-@GST_MAJORMINOR@ \
-	gst-compprep-@GST_MAJORMINOR@ \
 	gst-xmllaunch-@GST_MAJORMINOR@
 endif
 
@@ -33,12 +31,6 @@ bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 
 # make sure each versioned tool has the right source file and flags
 if !GST_DISABLE_LOADSAVE
-gst_complete_@GST_MAJORMINOR@_SOURCES = gst-complete.c
-gst_complete_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
-gst_complete_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
-gst_compprep_@GST_MAJORMINOR@_SOURCES = gst-compprep.c
-gst_compprep_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
-gst_compprep_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_xmllaunch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
 gst_xmllaunch_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_xmllaunch_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
@@ -65,8 +57,6 @@ gst-feedback-@GST_MAJORMINOR@: gst-feedback-m.m
 
 # make sure each unversioned tool comes from gst-run.c
 if !GST_DISABLE_LOADSAVE
-gst_complete_SOURCES = gst-run.c
-gst_compprep_SOURCES = gst-run.c
 gst_xmllaunch_SOURCES = gst-run.c
 endif
 gst_feedback_SOURCES = gst-run.c
@@ -87,8 +77,6 @@ if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_MAN=
 else
 GST_LOADSAVE_MAN = \
-	gst-complete-@GST_MAJORMINOR@.1 \
-	gst-compprep-@GST_MAJORMINOR@.1 \
 	gst-xmllaunch-@GST_MAJORMINOR@.1
 endif
 
@@ -110,8 +98,6 @@ noinst_SCRIPTS = gst-indent
 
 EXTRA_DIST = \
 	$(noinst_SCRIPTS) \
-	gst-complete.1.in \
-	gst-compprep.1.in \
 	gst-feedback.1.in \
 	gst-inspect.1.in \
 	gst-launch.1.in \
@@ -123,8 +109,6 @@ EXTRA_DIST = \
 
 %-@GST_MAJORMINOR@.1: %.1.in
 	sed \
-		-e s,gst-complete,gst-complete-@GST_MAJORMINOR@,g \
-		-e s,gst-compprep,gst-compprep-@GST_MAJORMINOR@,g \
 		-e s,gst-feedback,gst-feedback-@GST_MAJORMINOR@,g \
 		-e s,gst-inspect,gst-inspect-@GST_MAJORMINOR@,g \
 		-e s,gst-launch,gst-launch-@GST_MAJORMINOR@,g \
