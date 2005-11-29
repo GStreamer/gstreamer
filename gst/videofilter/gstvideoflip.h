@@ -17,53 +17,53 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_VIDEOFLIP_H__
-#define __GST_VIDEOFLIP_H__
+#ifndef __GST_VIDEO_FLIP_H__
+#define __GST_VIDEO_FLIP_H__
 
 #include "gstvideofilter.h"
 
 G_BEGIN_DECLS
 
 typedef enum {
-  GST_VIDEOFLIP_METHOD_IDENTITY,
-  GST_VIDEOFLIP_METHOD_90R,
-  GST_VIDEOFLIP_METHOD_180,
-  GST_VIDEOFLIP_METHOD_90L,
-  GST_VIDEOFLIP_METHOD_HORIZ,
-  GST_VIDEOFLIP_METHOD_VERT,
-  GST_VIDEOFLIP_METHOD_TRANS,
-  GST_VIDEOFLIP_METHOD_OTHER
-} GstVideoflipMethod;
+  GST_VIDEO_FLIP_METHOD_IDENTITY,
+  GST_VIDEO_FLIP_METHOD_90R,
+  GST_VIDEO_FLIP_METHOD_180,
+  GST_VIDEO_FLIP_METHOD_90L,
+  GST_VIDEO_FLIP_METHOD_HORIZ,
+  GST_VIDEO_FLIP_METHOD_VERT,
+  GST_VIDEO_FLIP_METHOD_TRANS,
+  GST_VIDEO_FLIP_METHOD_OTHER
+} GstVideoFlipMethod;
 
-#define GST_TYPE_VIDEOFLIP \
-  (gst_videoflip_get_type())
-#define GST_VIDEOFLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEOFLIP,GstVideoflip))
-#define GST_VIDEOFLIP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEOFLIP,GstVideoflipClass))
-#define GST_IS_VIDEOFLIP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEOFLIP))
-#define GST_IS_VIDEOFLIP_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOFLIP))
+#define GST_TYPE_VIDEO_FLIP \
+  (gst_video_flip_get_type())
+#define GST_VIDEO_FLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_FLIP,GstVideoFlip))
+#define GST_VIDEO_FLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_FLIP,GstVideoFlipClass))
+#define GST_IS_VIDEO_FLIP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_FLIP))
+#define GST_IS_VIDEO_FLIP_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_FLIP))
 
-typedef struct _GstVideoflip GstVideoflip;
-typedef struct _GstVideoflipClass GstVideoflipClass;
+typedef struct _GstVideoFlip GstVideoFlip;
+typedef struct _GstVideoFlipClass GstVideoFlipClass;
 
-struct _GstVideoflip {
+struct _GstVideoFlip {
   GstVideofilter videofilter;
   
   gint from_width, from_height;
   gint to_width, to_height;
   
-  GstVideoflipMethod method;
+  GstVideoFlipMethod method;
 };
 
-struct _GstVideoflipClass {
+struct _GstVideoFlipClass {
   GstVideofilterClass parent_class;
 };
 
-GType gst_videoflip_get_type(void);
+GType gst_video_flip_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_VIDEOFLIP_H__ */
+#endif /* __GST_VIDEO_FLIP_H__ */

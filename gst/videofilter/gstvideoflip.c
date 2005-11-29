@@ -33,7 +33,7 @@
 
 #include <gst/video/video.h>
 
-/* GstVideoflip signals and args */
+/* GstVideoFlip signals and args */
 enum
 {
   ARG_0,
@@ -41,23 +41,23 @@ enum
       /* FILL ME */
 };
 
-GST_DEBUG_CATEGORY (videoflip_debug);
-#define GST_CAT_DEFAULT videoflip_debug
+GST_DEBUG_CATEGORY (video_flip_debug);
+#define GST_CAT_DEFAULT video_flip_debug
 
-static GstElementDetails videoflip_details =
+static GstElementDetails video_flip_details =
 GST_ELEMENT_DETAILS ("Video Flipper",
     "Filter/Effect/Video",
     "Flips and rotates video",
     "David Schleef <ds@schleef.org>");
 
-static GstStaticPadTemplate gst_videoflip_src_template =
+static GstStaticPadTemplate gst_video_flip_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, YV12 }"))
     );
 
-static GstStaticPadTemplate gst_videoflip_sink_template =
+static GstStaticPadTemplate gst_video_flip_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -66,43 +66,43 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 static GstVideofilterClass *parent_class = NULL;
 
-#define GST_TYPE_VIDEOFLIP_METHOD (gst_videoflip_method_get_type())
+#define GST_TYPE_VIDEO_FLIP_METHOD (gst_video_flip_method_get_type())
 
 static GType
-gst_videoflip_method_get_type (void)
+gst_video_flip_method_get_type (void)
 {
-  static GType videoflip_method_type = 0;
-  static GEnumValue videoflip_methods[] = {
-    {GST_VIDEOFLIP_METHOD_IDENTITY, "Identity (no rotation)", "none"},
-    {GST_VIDEOFLIP_METHOD_90R, "Rotate clockwise 90 degrees", "clockwise"},
-    {GST_VIDEOFLIP_METHOD_180, "Rotate 180 degrees", "rotate-180"},
-    {GST_VIDEOFLIP_METHOD_90L, "Rotate counter-clockwise 90 degrees",
+  static GType video_flip_method_type = 0;
+  static GEnumValue video_flip_methods[] = {
+    {GST_VIDEO_FLIP_METHOD_IDENTITY, "Identity (no rotation)", "none"},
+    {GST_VIDEO_FLIP_METHOD_90R, "Rotate clockwise 90 degrees", "clockwise"},
+    {GST_VIDEO_FLIP_METHOD_180, "Rotate 180 degrees", "rotate-180"},
+    {GST_VIDEO_FLIP_METHOD_90L, "Rotate counter-clockwise 90 degrees",
         "counterclockwise"},
-    {GST_VIDEOFLIP_METHOD_HORIZ, "Flip horizontally", "horizontal-flip"},
-    {GST_VIDEOFLIP_METHOD_VERT, "Flip vertically", "vertical-flip"},
-    {GST_VIDEOFLIP_METHOD_TRANS,
+    {GST_VIDEO_FLIP_METHOD_HORIZ, "Flip horizontally", "horizontal-flip"},
+    {GST_VIDEO_FLIP_METHOD_VERT, "Flip vertically", "vertical-flip"},
+    {GST_VIDEO_FLIP_METHOD_TRANS,
         "Flip across upper left/lower right diagonal", "upper-left-diagonal"},
-    {GST_VIDEOFLIP_METHOD_OTHER,
+    {GST_VIDEO_FLIP_METHOD_OTHER,
         "Flip across upper right/lower left diagonal", "upper-right-diagonal"},
     {0, NULL, NULL},
   };
 
-  if (!videoflip_method_type) {
-    videoflip_method_type = g_enum_register_static ("GstVideoflipMethod",
-        videoflip_methods);
+  if (!video_flip_method_type) {
+    video_flip_method_type = g_enum_register_static ("GstVideoFlipMethod",
+        video_flip_methods);
   }
-  return videoflip_method_type;
+  return video_flip_method_type;
 }
 
 static gboolean
-gst_videoflip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
+gst_video_flip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  GstVideoflip *vf;
+  GstVideoFlip *vf;
   GstStructure *in_s, *out_s;
   gboolean ret = FALSE;
 
-  vf = GST_VIDEOFLIP (btrans);
+  vf = GST_VIDEO_FLIP (btrans);
 
   in_s = gst_caps_get_structure (incaps, 0);
   out_s = gst_caps_get_structure (outcaps, 0);
@@ -113,10 +113,10 @@ gst_videoflip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
       gst_structure_get_int (out_s, "height", &vf->to_height)) {
     /* Check that they are correct */
     switch (vf->method) {
-      case GST_VIDEOFLIP_METHOD_90R:
-      case GST_VIDEOFLIP_METHOD_90L:
-      case GST_VIDEOFLIP_METHOD_TRANS:
-      case GST_VIDEOFLIP_METHOD_OTHER:
+      case GST_VIDEO_FLIP_METHOD_90R:
+      case GST_VIDEO_FLIP_METHOD_90L:
+      case GST_VIDEO_FLIP_METHOD_TRANS:
+      case GST_VIDEO_FLIP_METHOD_OTHER:
         if ((vf->from_width != vf->to_height) ||
             (vf->from_height != vf->to_width)) {
           GST_DEBUG_OBJECT (vf, "we are inverting width and height but caps "
@@ -125,12 +125,12 @@ gst_videoflip_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
           goto beach;
         }
         break;
-      case GST_VIDEOFLIP_METHOD_IDENTITY:
+      case GST_VIDEO_FLIP_METHOD_IDENTITY:
 
         break;
-      case GST_VIDEOFLIP_METHOD_180:
-      case GST_VIDEOFLIP_METHOD_HORIZ:
-      case GST_VIDEOFLIP_METHOD_VERT:
+      case GST_VIDEO_FLIP_METHOD_180:
+      case GST_VIDEO_FLIP_METHOD_HORIZ:
+      case GST_VIDEO_FLIP_METHOD_VERT:
         if ((vf->from_width != vf->to_width) ||
             (vf->from_height != vf->to_height)) {
           GST_DEBUG_OBJECT (vf, "we are keeping width and height but caps "
@@ -152,14 +152,14 @@ beach:
 }
 
 static GstCaps *
-gst_videoflip_transform_caps (GstBaseTransform * trans,
+gst_video_flip_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstVideoflip *videoflip;
+  GstVideoFlip *videoflip;
   GstCaps *ret;
   gint width, height, i;
 
-  videoflip = GST_VIDEOFLIP (trans);
+  videoflip = GST_VIDEO_FLIP (trans);
 
   ret = gst_caps_copy (caps);
 
@@ -170,17 +170,17 @@ gst_videoflip_transform_caps (GstBaseTransform * trans,
         gst_structure_get_int (structure, "height", &height)) {
 
       switch (videoflip->method) {
-        case GST_VIDEOFLIP_METHOD_90R:
-        case GST_VIDEOFLIP_METHOD_90L:
-        case GST_VIDEOFLIP_METHOD_TRANS:
-        case GST_VIDEOFLIP_METHOD_OTHER:
+        case GST_VIDEO_FLIP_METHOD_90R:
+        case GST_VIDEO_FLIP_METHOD_90L:
+        case GST_VIDEO_FLIP_METHOD_TRANS:
+        case GST_VIDEO_FLIP_METHOD_OTHER:
           gst_structure_set (structure, "width", G_TYPE_INT, height,
               "height", G_TYPE_INT, width, NULL);
           break;
-        case GST_VIDEOFLIP_METHOD_IDENTITY:
-        case GST_VIDEOFLIP_METHOD_180:
-        case GST_VIDEOFLIP_METHOD_HORIZ:
-        case GST_VIDEOFLIP_METHOD_VERT:
+        case GST_VIDEO_FLIP_METHOD_IDENTITY:
+        case GST_VIDEO_FLIP_METHOD_180:
+        case GST_VIDEO_FLIP_METHOD_HORIZ:
+        case GST_VIDEO_FLIP_METHOD_VERT:
           gst_structure_set (structure, "width", G_TYPE_INT, width,
               "height", G_TYPE_INT, height, NULL);
           break;
@@ -209,15 +209,15 @@ gst_videoflip_transform_caps (GstBaseTransform * trans,
 #define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
 static gboolean
-gst_videoflip_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
+gst_video_flip_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     guint * size)
 {
-  GstVideoflip *videoflip;
+  GstVideoFlip *videoflip;
   GstStructure *structure;
   gboolean ret = FALSE;
   gint width, height;
 
-  videoflip = GST_VIDEOFLIP (btrans);
+  videoflip = GST_VIDEO_FLIP (btrans);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -233,7 +233,7 @@ gst_videoflip_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
 }
 
 static GstFlowReturn
-gst_videoflip_flip (GstVideoflip * videoflip, guint8 * dest,
+gst_video_flip_flip (GstVideoFlip * videoflip, guint8 * dest,
     guint8 * src, int sw, int sh, int dw, int dh)
 {
   GstFlowReturn ret = GST_FLOW_OK;
@@ -241,7 +241,7 @@ gst_videoflip_flip (GstVideoflip * videoflip, guint8 * dest,
   guint8 *s = src, *d = dest;
 
   switch (videoflip->method) {
-    case GST_VIDEOFLIP_METHOD_90R:
+    case GST_VIDEO_FLIP_METHOD_90R:
       /* Flip Y */
       for (y = 0; y < dh; y++) {
         for (x = 0; x < dw; x++) {
@@ -268,7 +268,7 @@ gst_videoflip_flip (GstVideoflip * videoflip, guint8 * dest,
         }
       }
       break;
-    case GST_VIDEOFLIP_METHOD_90L:
+    case GST_VIDEO_FLIP_METHOD_90L:
       /* Flip Y */
       for (y = 0; y < dh; y++) {
         for (x = 0; x < dw; x++) {
@@ -295,7 +295,7 @@ gst_videoflip_flip (GstVideoflip * videoflip, guint8 * dest,
         }
       }
       break;
-    case GST_VIDEOFLIP_METHOD_180:
+    case GST_VIDEO_FLIP_METHOD_180:
       /* Flip Y */
       for (y = 0; y < dh; y++) {
         for (x = 0; x < dw; x++) {
@@ -324,7 +324,7 @@ gst_videoflip_flip (GstVideoflip * videoflip, guint8 * dest,
         }
       }
       break;
-    case GST_VIDEOFLIP_METHOD_HORIZ:
+    case GST_VIDEO_FLIP_METHOD_HORIZ:
       /* Flip Y */
       for (y = 0; y < dh; y++) {
         for (x = 0; x < dw; x++) {
@@ -351,7 +351,7 @@ gst_videoflip_flip (GstVideoflip * videoflip, guint8 * dest,
         }
       }
       break;
-    case GST_VIDEOFLIP_METHOD_VERT:
+    case GST_VIDEO_FLIP_METHOD_VERT:
       /* Flip Y */
       for (y = 0; y < dh; y++) {
         for (x = 0; x < dw; x++) {
@@ -378,7 +378,7 @@ gst_videoflip_flip (GstVideoflip * videoflip, guint8 * dest,
         }
       }
       break;
-    case GST_VIDEOFLIP_METHOD_TRANS:
+    case GST_VIDEO_FLIP_METHOD_TRANS:
       /* Flip Y */
       for (y = 0; y < dh; y++) {
         for (x = 0; x < dw; x++) {
@@ -405,7 +405,7 @@ gst_videoflip_flip (GstVideoflip * videoflip, guint8 * dest,
         }
       }
       break;
-    case GST_VIDEOFLIP_METHOD_OTHER:
+    case GST_VIDEO_FLIP_METHOD_OTHER:
       /* Flip Y */
       for (y = 0; y < dh; y++) {
         for (x = 0; x < dw; x++) {
@@ -434,7 +434,7 @@ gst_videoflip_flip (GstVideoflip * videoflip, guint8 * dest,
         }
       }
       break;
-    case GST_VIDEOFLIP_METHOD_IDENTITY:
+    case GST_VIDEO_FLIP_METHOD_IDENTITY:
       memcpy (d, s, GST_VIDEO_I420_SIZE (dw, dh));
       break;
     default:
@@ -446,15 +446,15 @@ gst_videoflip_flip (GstVideoflip * videoflip, guint8 * dest,
 }
 
 static GstFlowReturn
-gst_videoflip_transform (GstBaseTransform * trans, GstBuffer * in,
+gst_video_flip_transform (GstBaseTransform * trans, GstBuffer * in,
     GstBuffer * out)
 {
-  GstVideoflip *videoflip;
+  GstVideoFlip *videoflip;
   gpointer dest, src;
   int sw, sh, dw, dh;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  videoflip = GST_VIDEOFLIP (trans);
+  videoflip = GST_VIDEO_FLIP (trans);
 
   gst_buffer_stamp (out, in);
 
@@ -468,20 +468,20 @@ gst_videoflip_transform (GstBaseTransform * trans, GstBuffer * in,
   GST_LOG_OBJECT (videoflip, "videoflip: scaling planar 4:1:1 %dx%d to %dx%d",
       sw, sh, dw, dh);
 
-  ret = gst_videoflip_flip (videoflip, dest, src, sw, sh, dw, dh);
+  ret = gst_video_flip_flip (videoflip, dest, src, sw, sh, dw, dh);
 
   return ret;
 }
 
 static gboolean
-gst_videoflip_handle_src_event (GstPad * pad, GstEvent * event)
+gst_video_flip_handle_src_event (GstPad * pad, GstEvent * event)
 {
-  GstVideoflip *vf;
+  GstVideoFlip *vf;
   gboolean ret;
   gdouble new_x, new_y, x, y;
   GstStructure *structure;
 
-  vf = GST_VIDEOFLIP (gst_pad_get_parent (pad));
+  vf = GST_VIDEO_FLIP (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (vf, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
@@ -495,31 +495,31 @@ gst_videoflip_handle_src_event (GstPad * pad, GstEvent * event)
           gst_structure_get_double (structure, "pointer_y", &y)) {
         GST_DEBUG_OBJECT (vf, "converting %fx%f", x, y);
         switch (vf->method) {
-          case GST_VIDEOFLIP_METHOD_90R:
+          case GST_VIDEO_FLIP_METHOD_90R:
             new_x = y;
             new_y = vf->to_width - x;
             break;
-          case GST_VIDEOFLIP_METHOD_90L:
+          case GST_VIDEO_FLIP_METHOD_90L:
             new_x = vf->to_height - y;
             new_y = x;
             break;
-          case GST_VIDEOFLIP_METHOD_OTHER:
+          case GST_VIDEO_FLIP_METHOD_OTHER:
             new_x = vf->to_height - y;
             new_y = vf->to_width - x;
             break;
-          case GST_VIDEOFLIP_METHOD_TRANS:
+          case GST_VIDEO_FLIP_METHOD_TRANS:
             new_x = y;
             new_y = x;
             break;
-          case GST_VIDEOFLIP_METHOD_180:
+          case GST_VIDEO_FLIP_METHOD_180:
             new_x = vf->to_width - x;
             new_y = vf->to_height - y;
             break;
-          case GST_VIDEOFLIP_METHOD_HORIZ:
+          case GST_VIDEO_FLIP_METHOD_HORIZ:
             new_x = vf->to_width - x;
             new_y = y;
             break;
-          case GST_VIDEOFLIP_METHOD_VERT:
+          case GST_VIDEO_FLIP_METHOD_VERT:
             new_x = x;
             new_y = vf->to_height - y;
             break;
@@ -545,20 +545,20 @@ gst_videoflip_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static void
-gst_videoflip_set_property (GObject * object, guint prop_id,
+gst_video_flip_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideoflip *videoflip;
+  GstVideoFlip *videoflip;
   GstVideofilter *videofilter;
 
-  g_return_if_fail (GST_IS_VIDEOFLIP (object));
-  videoflip = GST_VIDEOFLIP (object);
+  g_return_if_fail (GST_IS_VIDEO_FLIP (object));
+  videoflip = GST_VIDEO_FLIP (object);
   videofilter = GST_VIDEOFILTER (object);
 
   switch (prop_id) {
     case ARG_METHOD:
     {
-      GstVideoflipMethod method;
+      GstVideoFlipMethod method;
 
       method = g_value_get_enum (value);
       if (method != videoflip->method) {
@@ -579,13 +579,13 @@ gst_videoflip_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_videoflip_get_property (GObject * object, guint prop_id, GValue * value,
+gst_video_flip_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstVideoflip *videoflip;
+  GstVideoFlip *videoflip;
 
-  g_return_if_fail (GST_IS_VIDEOFLIP (object));
-  videoflip = GST_VIDEOFLIP (object);
+  g_return_if_fail (GST_IS_VIDEO_FLIP (object));
+  videoflip = GST_VIDEO_FLIP (object);
 
   switch (prop_id) {
     case ARG_METHOD:
@@ -598,20 +598,20 @@ gst_videoflip_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_videoflip_base_init (gpointer g_class)
+gst_video_flip_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &videoflip_details);
+  gst_element_class_set_details (element_class, &video_flip_details);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_videoflip_sink_template));
+      gst_static_pad_template_get (&gst_video_flip_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_videoflip_src_template));
+      gst_static_pad_template_get (&gst_video_flip_src_template));
 }
 
 static void
-gst_videoflip_class_init (gpointer klass, gpointer class_data)
+gst_video_flip_class_init (gpointer klass, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
@@ -621,66 +621,66 @@ gst_videoflip_class_init (gpointer klass, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->set_property = gst_videoflip_set_property;
-  gobject_class->get_property = gst_videoflip_get_property;
+  gobject_class->set_property = gst_video_flip_set_property;
+  gobject_class->get_property = gst_video_flip_get_property;
 
   g_object_class_install_property (gobject_class, ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
-          GST_TYPE_VIDEOFLIP_METHOD, GST_VIDEOFLIP_METHOD_90R,
+          GST_TYPE_VIDEO_FLIP_METHOD, GST_VIDEO_FLIP_METHOD_90R,
           G_PARAM_READWRITE));
 
   trans_class->transform_caps =
-      GST_DEBUG_FUNCPTR (gst_videoflip_transform_caps);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_videoflip_set_caps);
-  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_videoflip_get_unit_size);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_videoflip_transform);
+      GST_DEBUG_FUNCPTR (gst_video_flip_transform_caps);
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_flip_set_caps);
+  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_video_flip_get_unit_size);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_flip_transform);
 }
 
 static void
-gst_videoflip_init (GTypeInstance * instance, gpointer g_class)
+gst_video_flip_init (GTypeInstance * instance, gpointer g_class)
 {
-  GstVideoflip *videoflip = GST_VIDEOFLIP (instance);
+  GstVideoFlip *videoflip = GST_VIDEO_FLIP (instance);
   GstBaseTransform *btrans = GST_BASE_TRANSFORM (instance);
 
-  GST_DEBUG_OBJECT (videoflip, "gst_videoflip_init");
+  GST_DEBUG_OBJECT (videoflip, "gst_video_flip_init");
 
-  videoflip->method = GST_VIDEOFLIP_METHOD_90R;
+  videoflip->method = GST_VIDEO_FLIP_METHOD_90R;
 
   gst_pad_set_event_function (btrans->srcpad,
-      GST_DEBUG_FUNCPTR (gst_videoflip_handle_src_event));
+      GST_DEBUG_FUNCPTR (gst_video_flip_handle_src_event));
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (videoflip_debug, "videoflip", 0, "videoflip");
+  GST_DEBUG_CATEGORY_INIT (video_flip_debug, "videoflip", 0, "videoflip");
 
   return gst_element_register (plugin, "videoflip", GST_RANK_NONE,
-      GST_TYPE_VIDEOFLIP);
+      GST_TYPE_VIDEO_FLIP);
 }
 
 GType
-gst_videoflip_get_type (void)
+gst_video_flip_get_type (void)
 {
-  static GType videoflip_type = 0;
+  static GType video_flip_type = 0;
 
-  if (!videoflip_type) {
-    static const GTypeInfo videoflip_info = {
-      sizeof (GstVideoflipClass),
-      gst_videoflip_base_init,
+  if (!video_flip_type) {
+    static const GTypeInfo video_flip_info = {
+      sizeof (GstVideoFlipClass),
+      gst_video_flip_base_init,
       NULL,
-      gst_videoflip_class_init,
+      gst_video_flip_class_init,
       NULL,
       NULL,
-      sizeof (GstVideoflip),
+      sizeof (GstVideoFlip),
       0,
-      gst_videoflip_init,
+      gst_video_flip_init,
     };
 
-    videoflip_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
-        "GstVideoflip", &videoflip_info, 0);
+    video_flip_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+        "GstVideoFlip", &video_flip_info, 0);
   }
-  return videoflip_type;
+  return video_flip_type;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
