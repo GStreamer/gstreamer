@@ -1,3 +1,10 @@
+2005-11-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_buffer_alloc):
+	  Treat a pad alloc with new caps the same as if we were not
+	  negotiated, in order to allow a changing upstream output
+	  to produce a new format of data.
+
 2005-11-29  Edward Hervey  <edward@fluendo.com>
 
 	* gst/base/gstbasetransform.c: (gst_base_transform_class_init),
@@ -22,6 +29,7 @@
 	* gst/gstghostpad.c: (gst_proxy_pad_get_target):
 	  Don't ref NULL target pad (#322751). Improve docs.
 
+>>>>>>> 1.2041
 2005-11-29  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gstregistryxml.c: (load_plugin):

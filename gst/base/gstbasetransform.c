@@ -960,9 +960,19 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   } else {
     /* if we are configured, request a buffer with the src caps */
     GstCaps *srccaps = gst_pad_get_negotiated_caps (trans->srcpad);
+    GstCaps *sinkcaps = gst_pad_get_negotiated_caps (trans->sinkpad);
 
     if (!srccaps)
       goto not_configured;
+
+    if (sinkcaps != NULL) {
+      if (sinkcaps != caps || !gst_caps_is_equal (sinkcaps, caps)) {
+        gst_caps_unref (sinkcaps);
+        gst_caps_unref (srccaps);
+        goto not_configured;
+      }
+      gst_caps_unref (sinkcaps);
+    }
 
     GST_DEBUG_OBJECT (trans, "calling transform_size");
     if (!gst_base_transform_transform_size (trans,
