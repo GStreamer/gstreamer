@@ -140,8 +140,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstelements.so
 %{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
 
-%{_bindir}/gst-complete-%{majorminor}
-%{_bindir}/gst-compprep-%{majorminor}
 %{_bindir}/gst-feedback-%{majorminor}
 %{_bindir}/gst-inspect-%{majorminor}
 %{_bindir}/gst-launch-%{majorminor}
@@ -149,8 +147,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-typefind-%{majorminor}
 %{_bindir}/gst-xmlinspect-%{majorminor}
 %{_bindir}/gst-xmllaunch-%{majorminor}
-%{_mandir}/man1/gst-complete-%{majorminor}.*
-%{_mandir}/man1/gst-compprep-%{majorminor}.*
 %{_mandir}/man1/gst-feedback-%{majorminor}.*
 %{_mandir}/man1/gst-inspect-%{majorminor}.*
 %{_mandir}/man1/gst-launch-%{majorminor}.*
@@ -163,8 +159,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -n %{gstreamer}-tools
 %defattr(-, root, root, -)
-%{_bindir}/gst-complete
-%{_bindir}/gst-compprep
 %{_bindir}/gst-feedback
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
