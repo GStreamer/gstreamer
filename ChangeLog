@@ -1,3 +1,12 @@
+2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* gst-libs/gst/Makefile.am:
+	  moved gst-libs/gst/net to netbuffer through CVS surgery
+	  remove old directory
+	  updating build to accomodate
+	  (#322257)
+
 2005-11-29  Andy Wingo  <wingo@pobox.com>
 
 	* pkgconfig/gstreamer-plugins-base.pc.in:

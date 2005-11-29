@@ -604,7 +604,7 @@ gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
 gst-libs/gst/floatcast/Makefile
 gst-libs/gst/interfaces/Makefile
-gst-libs/gst/net/Makefile
+gst-libs/gst/netbuffer/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/rtp/Makefile
 gst-libs/gst/tag/Makefile
