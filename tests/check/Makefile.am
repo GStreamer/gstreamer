@@ -86,10 +86,10 @@ gst_libs_controller_LDADD = \
 	$(LDADD)
 
 net_gstnetclientclock_LDADD = \
-	$(top_builddir)/gst/net/libgstnet-tempname-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst/net/libgstnet-@GST_MAJORMINOR@.la \
 	$(LDADD)
 net_gstnettimeprovider_LDADD = \
-	$(top_builddir)/gst/net/libgstnet-tempname-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst/net/libgstnet-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
 # valgrind testing

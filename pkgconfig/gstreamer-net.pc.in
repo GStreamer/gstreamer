@@ -7,5 +7,5 @@ Name: GStreamer networking library
 Description: Network-enabled GStreamer plug-ins and clocking
 Requires: gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
-Libs: -L${libdir} -lgstnet-tempname-@GST_MAJORMINOR@
+Libs: -L${libdir} -lgstnet-@GST_MAJORMINOR@
 Cflags: -I${includedir}

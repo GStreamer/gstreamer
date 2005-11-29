@@ -1,3 +1,11 @@
+2005-11-29  Andy Wingo  <wingo@pobox.com>
+
+	* check/Makefile.am:
+	* pkgconfig/gstreamer-net-uninstalled.pc.in:
+	* pkgconfig/gstreamer-net.pc.in:
+	* gst/net/Makefile.am: Rename gstnet-tempname to gstnet. Fixes
+	#322257.
+
 2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tools/Makefile.am:

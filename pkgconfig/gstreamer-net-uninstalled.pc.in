@@ -9,5 +9,5 @@ Description: Network-enabled GStreamer plug-ins and clocking, uninstalled
 Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 
-Libs: ${libdir}/gst/net/libgstnet-tempname-@GST_MAJORMINOR@.la
+Libs: ${libdir}/gst/net/libgstnet-@GST_MAJORMINOR@.la
 Cflags: -I${includedir}
