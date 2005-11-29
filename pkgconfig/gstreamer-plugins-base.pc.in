@@ -10,4 +10,4 @@ Version: @VERSION@
 Libs: 
 Cflags: -I${includedir}
 
-libraries=audio floatcast interfaces net riff rtp tag video
+libraries=audio floatcast interfaces netbuffer riff rtp tag video

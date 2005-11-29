@@ -1,3 +1,10 @@
+2005-11-29  Andy Wingo  <wingo@pobox.com>
+
+	* pkgconfig/gstreamer-plugins-base.pc.in:
+	* pkgconfig/gstreamer-plugins-base-uninstalled.pc.in:
+	* gst-libs/gst/net/Makefile.am: Rename gstnet to gstnetbuffer
+	(#322257).
+
 2005-11-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gststreamselector.c: (gst_stream_selector_chain):
