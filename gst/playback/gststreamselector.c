@@ -52,6 +52,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+enum
+{
+  PROP_ACTIVE_PAD = 1
+};
+
 static void gst_stream_selector_dispose (GObject * object);
 static void gst_stream_selector_init (GstStreamSelector * sel);
 static void gst_stream_selector_base_init (GstStreamSelectorClass * klass);
@@ -62,6 +67,10 @@ static GList *gst_stream_selector_get_linked_pads (GstPad * pad);
 static GstPad *gst_stream_selector_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * unused);
 static GstFlowReturn gst_stream_selector_chain (GstPad * pad, GstBuffer * buf);
+static void gst_stream_selector_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_stream_selector_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstElementClass *parent_class = NULL;
 
@@ -121,6 +130,15 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_stream_selector_set_property);
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_stream_selector_get_property);
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ACTIVE_PAD,
+      g_param_spec_string ("active-pad", "Active pad", "Name of the currently"
+          " active sink pad", NULL, G_PARAM_READWRITE));
+
   gobject_class->dispose = gst_stream_selector_dispose;
 
   gstelement_class->request_new_pad = gst_stream_selector_request_new_pad;
@@ -137,7 +155,7 @@ gst_stream_selector_init (GstStreamSelector * sel)
   gst_element_add_pad (GST_ELEMENT (sel), sel->srcpad);
 
   /* sinkpad management */
-  sel->last_active_sinkpad = NULL;
+  sel->active_sinkpad = NULL;
   sel->nb_sinkpads = 0;
 
   //GST_OBJECT_FLAG_SET (sel, GST_ELEMENT_WORK_IN_PLACE);
@@ -148,9 +166,52 @@ gst_stream_selector_dispose (GObject * object)
 {
   GstStreamSelector *sel = GST_STREAM_SELECTOR (object);
 
-  sel->last_active_sinkpad = NULL;
+  gst_object_unref (sel->active_sinkpad);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_stream_selector_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstStreamSelector *sel = GST_STREAM_SELECTOR (object);
+
+  switch (prop_id) {
+    case PROP_ACTIVE_PAD:{
+      const gchar *pad_name = g_value_get_string (value);
+      GstObject *pad_obj;
+      GstPad *pad;
+
+      pad = gst_element_get_pad (GST_ELEMENT (object), pad_name);
+      pad_obj = GST_OBJECT (sel->active_sinkpad);
+      gst_object_replace (&pad_obj, GST_OBJECT (pad));
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_stream_selector_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstStreamSelector *sel = GST_STREAM_SELECTOR (object);
+
+  switch (prop_id) {
+    case PROP_ACTIVE_PAD:{
+      if (sel->active_sinkpad != NULL) {
+        g_value_set_string (value, gst_pad_get_name (sel->active_sinkpad));
+      } else
+        g_value_set_string (value, "");
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstPad *
@@ -160,8 +221,8 @@ gst_stream_selector_get_linked_pad (GstPad * pad, gboolean strict)
   GstPad *otherpad = NULL;
 
   if (pad == sel->srcpad)
-    otherpad = sel->last_active_sinkpad;
-  else if (pad == sel->last_active_sinkpad || !strict)
+    otherpad = sel->active_sinkpad;
+  else if (pad == sel->active_sinkpad || !strict)
     otherpad = sel->srcpad;
 
   gst_object_unref (sel);
@@ -218,9 +279,12 @@ gst_stream_selector_request_new_pad (GstElement * element,
 
   name = g_strdup_printf ("sink%d", sel->nb_sinkpads++);
   sinkpad = gst_pad_new_from_template (templ, name);
-  if (sel->nb_sinkpads == 1)
-    sel->last_active_sinkpad = sinkpad;
   g_free (name);
+
+  GST_OBJECT_LOCK (sel);
+  if (sel->active_sinkpad == NULL)
+    sel->active_sinkpad = gst_object_ref (sinkpad);
+  GST_OBJECT_UNLOCK (sel);
 
   gst_pad_set_getcaps_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_selector_getcaps));
@@ -230,11 +294,11 @@ gst_stream_selector_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_stream_selector_get_linked_pads));
   gst_element_add_pad (GST_ELEMENT (sel), sinkpad);
 
-  GST_STATE_LOCK (sel);
+  GST_OBJECT_LOCK (sel);
   if (GST_STATE (sel) >= GST_STATE_PAUSED) {
     gst_pad_set_active (sinkpad, GST_ACTIVATE_PUSH);
   }
-  GST_STATE_UNLOCK (sel);
+  GST_OBJECT_UNLOCK (sel);
 
   return sinkpad;
 }
@@ -245,14 +309,12 @@ gst_stream_selector_chain (GstPad * pad, GstBuffer * buf)
   GstStreamSelector *sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
   GstFlowReturn res;
 
-  /* first, check if the active pad changed. If so, redo
-   * negotiation and fail if that fails. */
-  if (pad != sel->last_active_sinkpad) {
-    GST_LOG_OBJECT (sel, "stream change detected, switching from %s to %s:%s",
-        sel->last_active_sinkpad ?
-        GST_OBJECT_NAME (sel->last_active_sinkpad) : "none",
-        GST_DEBUG_PAD_NAME (pad));
-    sel->last_active_sinkpad = pad;
+  /* Ignore buffers from pads except the selected one */
+  if (pad != sel->active_sinkpad) {
+    GST_DEBUG_OBJECT (sel, "Ignoring buffer %p from pad %s:%s",
+        buf, GST_DEBUG_PAD_NAME (pad));
+    gst_buffer_unref (buf);
+    return GST_FLOW_NOT_LINKED;
   }
 
   /* forward */
