@@ -57,6 +57,7 @@ struct _GstIdentity {
   gboolean 	 dump;
   gboolean 	 sync;
   gboolean 	 check_perfect;
+  gboolean	 single_segment;
   GstClockTime   prev_timestamp;
   GstClockTime   prev_duration;
   guint64        prev_offset_end;

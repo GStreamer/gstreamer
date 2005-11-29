@@ -256,6 +256,8 @@ static GstStateChangeReturn gst_base_transform_change_state (GstElement *
     element, GstStateChange transition);
 
 static gboolean gst_base_transform_event (GstPad * pad, GstEvent * event);
+static gboolean gst_base_transform_eventfunc (GstBaseTransform * trans,
+    GstEvent * event);
 static GstFlowReturn gst_base_transform_getrange (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buffer);
 static GstFlowReturn gst_base_transform_chain (GstPad * pad,
@@ -308,6 +310,7 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_transform_change_state);
 
   klass->passthrough_on_same_caps = FALSE;
+  klass->event = GST_DEBUG_FUNCPTR (gst_base_transform_eventfunc);
 }
 
 static void
@@ -1039,14 +1042,25 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
 {
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->event)
-    bclass->event (trans, event);
+    ret = bclass->event (trans, event);
 
+  if (ret)
+    ret = gst_pad_event_default (pad, event);
+
+  gst_object_unref (trans);
+
+  return ret;
+}
+
+static gboolean
+gst_base_transform_eventfunc (GstBaseTransform * trans, GstEvent * event)
+{
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       break;
@@ -1093,11 +1107,8 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
-  ret = gst_pad_event_default (pad, event);
 
-  gst_object_unref (trans);
-
-  return ret;
+  return TRUE;
 }
 
 static GstFlowReturn

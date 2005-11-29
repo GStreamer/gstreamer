@@ -65,6 +65,7 @@ enum
 #define DEFAULT_DROP_PROBABILITY	0.0
 #define DEFAULT_DATARATE		0
 #define DEFAULT_SILENT			FALSE
+#define DEFAULT_SINGLE_SEGMENT		FALSE
 #define DEFAULT_DUMP			FALSE
 #define DEFAULT_SYNC			FALSE
 #define DEFAULT_CHECK_PERFECT		FALSE
@@ -77,6 +78,7 @@ enum
   PROP_DROP_PROBABILITY,
   PROP_DATARATE,
   PROP_SILENT,
+  PROP_SINGLE_SEGMENT,
   PROP_LAST_MESSAGE,
   PROP_DUMP,
   PROP_SYNC,
@@ -188,6 +190,10 @@ gst_identity_class_init (GstIdentityClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
       g_param_spec_boolean ("silent", "silent", "silent", DEFAULT_SILENT,
           G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SINGLE_SEGMENT,
+      g_param_spec_boolean ("single-segment", "Single Segment",
+          "Timestamp buffers and eat newsegments so as to appear as one segment",
+          DEFAULT_SINGLE_SEGMENT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message", "last-message", NULL,
           G_PARAM_READABLE));
@@ -226,6 +232,7 @@ gst_identity_init (GstIdentity * identity, GstIdentityClass * g_class)
   identity->drop_probability = DEFAULT_DROP_PROBABILITY;
   identity->datarate = DEFAULT_DATARATE;
   identity->silent = DEFAULT_SILENT;
+  identity->single_segment = DEFAULT_SINGLE_SEGMENT;
   identity->sync = DEFAULT_SYNC;
   identity->check_perfect = DEFAULT_CHECK_PERFECT;
   identity->dump = DEFAULT_DUMP;
@@ -236,6 +243,7 @@ static gboolean
 gst_identity_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstIdentity *identity;
+  gboolean ret = TRUE;
 
   identity = GST_IDENTITY (trans);
 
@@ -260,7 +268,33 @@ gst_identity_event (GstBaseTransform * trans, GstEvent * event)
 
     g_object_notify (G_OBJECT (identity), "last_message");
   }
-  return TRUE;
+
+  if (identity->single_segment
+      && (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT)) {
+    if (trans->have_newsegment == FALSE) {
+      GstEvent *news;
+      GstFormat format;
+
+      gst_event_parse_new_segment (event, NULL, NULL, &format, NULL, NULL,
+          NULL);
+
+      /* This is the first newsegment, send out a (0, -1) newsegment */
+      news = gst_event_new_new_segment (TRUE, 1.0, format, 0, -1, 0);
+
+      if (!(gst_pad_event_default (trans->sinkpad, news)))
+        return FALSE;
+    }
+  }
+
+  GST_BASE_TRANSFORM_CLASS (parent_class)->event (trans, event);
+
+  if (identity->single_segment
+      && (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT)) {
+    /* eat up segments */
+    ret = FALSE;
+  }
+
+  return ret;
 }
 
 static void
@@ -305,6 +339,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstIdentity *identity = GST_IDENTITY (trans);
+  GstClockTime runtimestamp;
 
   if (identity->check_perfect)
     gst_identity_check_perfect (identity, buf);
@@ -368,6 +403,9 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
       buf);
 
+  runtimestamp = gst_segment_to_running_time (&trans->segment,
+      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
+
   if (identity->sync) {
     GstClock *clock;
 
@@ -376,9 +414,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       GstClockReturn cret;
       GstClockTime timestamp;
 
-      timestamp = gst_segment_to_running_time (&trans->segment,
-          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
-      timestamp += GST_ELEMENT (identity)->base_time;
+      timestamp = runtimestamp + GST_ELEMENT (identity)->base_time;
 
       /* save id if we need to unlock */
       /* FIXME: actually unlock this somewhere in the state changes */
@@ -403,6 +439,9 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   if (identity->sleep_time && ret == GST_FLOW_OK)
     g_usleep (identity->sleep_time);
 
+  if (identity->single_segment && ret == GST_FLOW_OK)
+    GST_BUFFER_TIMESTAMP (buf) = runtimestamp;
+
   return ret;
 }
 
@@ -420,6 +459,9 @@ gst_identity_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SILENT:
       identity->silent = g_value_get_boolean (value);
+      break;
+    case PROP_SINGLE_SEGMENT:
+      identity->single_segment = g_value_get_boolean (value);
       break;
     case PROP_DUMP:
       identity->dump = g_value_get_boolean (value);
@@ -468,6 +510,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SILENT:
       g_value_set_boolean (value, identity->silent);
+      break;
+    case PROP_SINGLE_SEGMENT:
+      g_value_set_boolean (value, identity->single_segment);
       break;
     case PROP_DUMP:
       g_value_set_boolean (value, identity->dump);

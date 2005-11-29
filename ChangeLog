@@ -1,3 +1,22 @@
+2005-11-29  Edward Hervey  <edward@fluendo.com>
+
+	* gst/base/gstbasetransform.c: (gst_base_transform_class_init),
+	(gst_base_transform_event), (gst_base_transform_eventfunc):
+	The event virtual method is now properly implemented, with a default
+	handler
+	Sub classes should call the parent_class event method. They should
+	return FALSE if they had a problem handling the given event, or don't
+	want GstBaseTransform to send that even downstream
+	* gst/elements/gstidentity.c: (gst_identity_class_init),
+	(gst_identity_init), (gst_identity_event),
+	(gst_identity_transform_ip), (gst_identity_set_property),
+	(gst_identity_get_property):
+	* gst/elements/gstidentity.h:
+	Added the single-segment boolean property.
+	If set to TRUE, it will output a single segment of data, starting from
+	0, will eat up all incoming newsegment, and modify the timestamp of the
+	buffers accordingly
+
 2005-11-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstghostpad.c: (gst_proxy_pad_get_target):
