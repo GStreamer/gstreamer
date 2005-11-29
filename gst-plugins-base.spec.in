@@ -80,7 +80,6 @@ rm -rf $RPM_BUILD_ROOT
 # libraries
 %{_libdir}/libgstinterfaces-%{majorminor}.so.*
 %{_libdir}/libgstaudio-%{majorminor}.so.*
-%{_libdir}/libgstaudiofilter-%{majorminor}.so.*
 %{_libdir}/libgstriff-%{majorminor}.so.*
 %{_libdir}/libgsttag-%{majorminor}.so.*
 %{_libdir}/libgstvideo-%{majorminor}.so.*
@@ -156,7 +155,6 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-media.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-read.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video.h
-%{_includedir}/gstreamer-%{majorminor}/gst/video/videosink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/colorbalance.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/colorbalancechannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/interfaces-enumtypes.h
@@ -181,9 +179,11 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/net/gstnetbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstbasertppayload.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideofilter.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideosink.h
+
 
 %{_libdir}/libgstaudio-%{majorminor}.so
-%{_libdir}/libgstaudiofilter-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
 %{_libdir}/libgsttag-%{majorminor}.so
 %{_libdir}/libgstvideo-%{majorminor}.so
