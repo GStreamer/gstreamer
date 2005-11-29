@@ -1,3 +1,8 @@
+2005-11-30  Edward Hervey  <edward@fluendo.com>
+
+	* gst-libs/gst/netbuffer/Makefile.am: (libgstnetbufferincludedir): 
+	Let's not override libgstnet from core for no reason...
+
 2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
