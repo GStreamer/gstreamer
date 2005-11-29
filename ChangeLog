@@ -2,6 +2,8 @@
 
 	* gst-libs/gst/netbuffer/Makefile.am: (libgstnetbufferincludedir): 
 	Let's not override libgstnet from core for no reason...
+	(libgstnetbuffer_@GST_MAJORMINOR@_la_SOURCES):
+	Ok, maybe not so quick next time.
 
 2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
