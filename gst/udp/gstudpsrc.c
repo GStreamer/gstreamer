@@ -25,7 +25,7 @@
 #include "gstudpsrc.h"
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <gst/net/gstnetbuffer.h>
+#include <gst/netbuffer/gstnetbuffer.h>
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
 #include <sys/filio.h>

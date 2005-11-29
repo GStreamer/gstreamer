@@ -22,7 +22,7 @@
 #endif
 #include "gstudp-marshal.h"
 #include "gstdynudpsink.h"
-#include <gst/net/gstnetbuffer.h>
+#include <gst/netbuffer/gstnetbuffer.h>
 
 GST_DEBUG_CATEGORY (dynudpsink_debug);
 #define GST_CAT_DEFAULT (dynudpsink_debug)

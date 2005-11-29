@@ -1,3 +1,9 @@
+2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/udp/gstdynudpsink.c:
+	* gst/udp/gstudpsrc.c:
+	  the old gstnet lib was renamed gstnetbuffer (#322257)
+
 2005-11-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_render_text),
