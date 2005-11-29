@@ -53,6 +53,7 @@ struct _GstTypeFindFactory {
   GstCaps *			caps; /* FIXME: not yet saved in registry */
 
   gpointer			user_data;
+  GDestroyNotify		user_data_notify;
 
   gpointer _gst_reserved[GST_PADDING];
 };

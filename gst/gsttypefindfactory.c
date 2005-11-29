@@ -141,6 +141,7 @@ gst_type_find_factory_init (GTypeInstance * instance, gpointer g_class)
   GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (instance);
 
   factory->user_data = factory;
+  factory->user_data_notify = NULL;
 }
 
 static void
@@ -155,6 +156,10 @@ gst_type_find_factory_dispose (GObject * object)
   if (factory->extensions) {
     g_strfreev (factory->extensions);
     factory->extensions = NULL;
+  }
+  if (factory->user_data_notify && factory->user_data) {
+    factory->user_data_notify (factory->user_data);
+    factory->user_data = NULL;
   }
 }
 

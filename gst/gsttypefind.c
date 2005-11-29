@@ -48,6 +48,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_type_find_debug);
  * @possible_caps: Optionally the caps that could be returned when typefinding succeeds
  * @data: Optional user data. This user data must be available until the plugin
  *	  is unloaded.
+ * @data_notify: a #GDestroyNotify that will be called on @data when the plugin
+ *	  is unloaded.
  *
  * Registers a new typefind function to be used for typefinding. After
  * registering this function will be available for typefinding.
@@ -58,7 +60,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_type_find_debug);
 gboolean
 gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
     GstTypeFindFunction func, gchar ** extensions,
-    const GstCaps * possible_caps, gpointer data)
+    const GstCaps * possible_caps, gpointer data, GDestroyNotify data_notify)
 {
   GstTypeFindFactory *factory;
 
@@ -81,6 +83,7 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   gst_caps_replace (&factory->caps, (GstCaps *) possible_caps);
   factory->function = func;
   factory->user_data = data;
+  factory->user_data_notify = data_notify;
   GST_PLUGIN_FEATURE (factory)->plugin_name = g_strdup (plugin->desc.name);
   GST_PLUGIN_FEATURE (factory)->loaded = TRUE;
 

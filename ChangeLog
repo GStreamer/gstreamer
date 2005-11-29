@@ -1,3 +1,12 @@
+2005-11-30  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gsttypefind.c: (gst_type_find_register):
+	* gst/gsttypefind.h:
+	* gst/gsttypefindfactory.c: (gst_type_find_factory_init),
+	(gst_type_find_factory_dispose):
+	* gst/gsttypefindfactory.h:
+	Fix memory leak in GstTypeFindFactory.
+
 2005-11-29  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* gst/gst.c:
