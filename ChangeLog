@@ -1,5 +1,10 @@
 2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/gst/audio/Makefile.am:
+	  folded audiofilter into the audio library
+
+2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/videoscale/gstvideoscale.h:
 	* gst/videoscale/gstvideoscale.c:
 	  remove unimplemented scale methods
