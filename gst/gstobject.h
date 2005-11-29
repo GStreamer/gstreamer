@@ -209,7 +209,7 @@ struct _GstObject {
   guint32        flags;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved;
 };
 
 /**

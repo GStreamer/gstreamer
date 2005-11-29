@@ -82,7 +82,7 @@ struct _GstStructure {
 
   GArray *fields;
 
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved;
 };
 
 GType                   gst_structure_get_type             (void);

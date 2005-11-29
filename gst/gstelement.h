@@ -439,7 +439,6 @@ struct _GstElementClass
 
   /*< private >*/
   /* signal callbacks */
-  void (*state_changed)	(GstElement *element, GstState old, GstState state); /* FIXME, ABI unused */
   void (*pad_added)	(GstElement *element, GstPad *pad);
   void (*pad_removed)	(GstElement *element, GstPad *pad);
   void (*no_more_pads)	(GstElement *element);

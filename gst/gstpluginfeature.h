@@ -82,7 +82,6 @@ struct _GstPluginFeature {
   gchar 	*name;
   guint   	 rank;
 
-  /* struct _GstPlugin     *plugin; */
   gchar *plugin_name;
 
   /*< private >*/

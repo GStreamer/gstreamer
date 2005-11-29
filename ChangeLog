@@ -1,3 +1,28 @@
+2005-11-29  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstevent.h (struct _GstEvent): Only one pointer of padding.
+
+	* gst/gststructure.h (struct _GstStructure): Only one pointer of
+	padding.
+
+	* gst/gstquery.h (struct _GstQuery): Only one pointer of padding.
+
+	* gst/gstpluginfeature.h: Remove a comment in PluginFeature.
+
+	* gst/gstplugin.h (struct _GstPluginClass): Add some padding.
+
+	* gst/gstobject.h: (struct _GstObject): Only one pointer of
+	padding; reduces object size by about 30%. We don't expect
+	anything else to go into gstobject.
+
+	* gst/gstminiobject.h (struct _GstMiniObject)
+	(struct _GstMiniObjectClass): Only one pointer of padding; the
+	payload is only a pointer and two ints anyway. For the class there
+	are only two methods as well.
+	
+	* gst/gstelement.h (struct _GstElementClass): Removed
+	the state_changed signal callback, it is not used.
+
 2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/gst/gstreamer.types:

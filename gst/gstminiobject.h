@@ -146,7 +146,7 @@ struct _GstMiniObject {
   guint flags;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved;
 };
 
 struct _GstMiniObjectClass {
@@ -156,7 +156,7 @@ struct _GstMiniObjectClass {
   GstMiniObjectFinalizeFunction finalize;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved;
 };
 
 GType 		gst_mini_object_get_type 	(void);

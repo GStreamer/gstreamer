@@ -159,6 +159,7 @@ struct _GstPluginClass {
   GstObjectClass  object_class;
 
   /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
