@@ -21,7 +21,7 @@
 #ifndef __GST_NAVIGATIONTEST_H__
 #define __GST_NAVIGATIONTEST_H__
 
-#include "gstvideofilter.h"
+#include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
 

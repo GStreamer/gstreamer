@@ -1,3 +1,22 @@
+2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/debug/Makefile.am:
+	* gst/debug/gstnavigationtest.h:
+	* gst/effectv/Makefile.am:
+	* gst/effectv/gstaging.c:
+	* gst/effectv/gstdice.c:
+	* gst/effectv/gstedge.c:
+	* gst/effectv/gstquark.c:
+	* gst/effectv/gstrev.c:
+	* gst/effectv/gstshagadelic.c:
+	* gst/effectv/gstvertigo.c:
+	* gst/effectv/gstwarp.c:
+	* gst/videofilter/Makefile.am:
+	* gst/videofilter/gstvideofilter.c:
+	* gst/videofilter/gstvideofilter.h:
+	* gst/videofilter/gstvideoflip.h:
+	  remove the videofilter library and link to the one in base
+
 2005-11-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_process_next_entry):

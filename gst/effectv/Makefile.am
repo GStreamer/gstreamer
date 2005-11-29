@@ -9,10 +9,9 @@ libgsteffectv_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	-I$(top_srcdir)/gst/videofilter
 libgsteffectv_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) \
-	$(GST_LIBS) \
-	$(top_builddir)/gst/videofilter/libgstvideofilter-@GST_MAJORMINOR@.la
+	$(GST_LIBS)
 libgsteffectv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gsteffectv.h

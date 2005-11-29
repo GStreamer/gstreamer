@@ -20,7 +20,7 @@
 #ifndef __GST_VIDEO_FLIP_H__
 #define __GST_VIDEO_FLIP_H__
 
-#include "gstvideofilter.h"
+#include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
 
