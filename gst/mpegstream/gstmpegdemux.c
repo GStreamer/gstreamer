@@ -317,6 +317,8 @@ gst_mpeg_demux_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
 
   if (parent_class->send_event)
     return parent_class->send_event (mpeg_parse, event, time);
+  else
+    gst_event_unref (event);
 
   return TRUE;
 }

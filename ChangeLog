@@ -1,3 +1,14 @@
+2005-11-29  Michal Benes  <michal dot benes at xeris dot cz>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_event):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_send_newsegment),
+	(gst_mpeg_parse_send_event):
+	  Ref events before sending them to multiple pads, after all
+	  gst_pad_send_event() takes ownership of events. Don't leak
+	  events that have not been handled (fixes #322745).
+
 2005-11-28  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_handle_dvd_event)

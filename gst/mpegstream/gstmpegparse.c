@@ -364,6 +364,7 @@ gst_mpeg_parse_send_newsegment (GstMPEGParse * mpeg_parse, gdouble rate,
     return CLASS (mpeg_parse)->send_event (mpeg_parse, event, start_time);
   }
 
+  gst_event_unref (event);
   return FALSE;
 }
 
@@ -380,6 +381,7 @@ gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
   while (TRUE) {
     switch (gst_iterator_next (it, &pad)) {
       case GST_ITERATOR_OK:
+        gst_event_ref (event);
         gst_pad_push_event (GST_PAD (pad), event);
         gst_object_unref (GST_OBJECT (pad));
         break;
@@ -396,6 +398,7 @@ gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
 
 done:
   gst_iterator_free (it);
+  gst_event_unref (event);
 
   return ret;
 }
