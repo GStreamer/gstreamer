@@ -297,7 +297,7 @@ gst_navseek_event (GstBaseTransform * trans, GstEvent * event)
     default:
       break;
   }
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->event (trans, event);
 }
 
 static GstFlowReturn

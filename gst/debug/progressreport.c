@@ -270,7 +270,7 @@ gst_progress_report_event (GstBaseTransform * trans, GstEvent * event)
     g_get_current_time (&cur_time);
     gst_progress_report_report (filter, cur_time);
   }
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->event (trans, event);
 }
 
 static GstFlowReturn

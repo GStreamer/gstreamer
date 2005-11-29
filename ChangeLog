@@ -1,3 +1,9 @@
+2005-11-29  Edward Hervey  <edward@fluendo.com>
+
+	* gst/debug/gstnavseek.c: (gst_navseek_event):
+	* gst/debug/progressreport.c: (gst_progress_report_event):
+	Update for GstBaseTransform event virtual method
+
 2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/cairo/Makefile.am:
