@@ -1,5 +1,11 @@
 2005-11-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	Add gst_query_new_seeking and gst_query_parse_seeking to the
+	docs.
+
+2005-11-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/base/gstbasetransform.c: (gst_base_transform_buffer_alloc):
 	  Treat a pad alloc with new caps the same as if we were not
 	  negotiated, in order to allow a changing upstream output
