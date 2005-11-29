@@ -91,11 +91,8 @@ gst_videoscale_method_get_type (void)
 {
   static GType videoscale_method_type = 0;
   static GEnumValue videoscale_methods[] = {
-    {GST_VIDEOSCALE_POINT_SAMPLE, "Point Sample (not implemented)",
-          "point-sample"},
     {GST_VIDEOSCALE_NEAREST, "Nearest Neighbour", "nearest-neighbour"},
     {GST_VIDEOSCALE_BILINEAR, "Bilinear", "bilinear"},
-    {GST_VIDEOSCALE_BICUBIC, "Bicubic (not implemented)", "bicubic"},
     {0, NULL, NULL},
   };
 
@@ -241,7 +238,6 @@ gst_videoscale_init (GstVideoscale * videoscale)
   videoscale->tmp_buf = NULL;
   videoscale->method = GST_VIDEOSCALE_NEAREST;
   /*videoscale->method = GST_VIDEOSCALE_BILINEAR; */
-  /*videoscale->method = GST_VIDEOSCALE_POINT_SAMPLE; */
 }
 
 
@@ -646,7 +642,6 @@ gst_videoscale_transform (GstBaseTransform * trans, GstBuffer * in,
       }
       break;
     case GST_VIDEOSCALE_BILINEAR:
-    case GST_VIDEOSCALE_BICUBIC:
       switch (videoscale->format) {
         case GST_VIDEOSCALE_RGBx:
         case GST_VIDEOSCALE_xRGB:
