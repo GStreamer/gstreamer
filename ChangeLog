@@ -1,5 +1,10 @@
 2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/cairo/Makefile.am:
+	  no need to link to videofilter
+
+2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/debug/Makefile.am:
 	* gst/debug/gstnavigationtest.h:
 	* gst/effectv/Makefile.am:
