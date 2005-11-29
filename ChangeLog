@@ -1,3 +1,8 @@
+2005-11-29  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_type_find): Free the list,
+	patch from bug #322704 (Alessandro Decina).
+
 2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/audio/Makefile.am:
