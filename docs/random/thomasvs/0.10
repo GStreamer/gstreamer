@@ -1,0 +1,59 @@
+gstreamer
+---------
+- reorganize tests and examples into
+  - testsuite
+    - check: unit tests
+    - examples: example code
+    - tests: interactive tests
+- move gst/base to libs/gst/base ?
+  (but elements link against them)
+- move elements out of gst/ dir ?
+
+gst-plugins-base
+----------------
+- gst-libs/gst/audio:
+  - is audiofilter still needed ? any reason not to fold it into audio ?
+
+- gst:
+  - adder: needs docs, an example, and a test
+  - audioconvert: ok
+  - audiorate: needs docs
+  - audioresample: David needs to fix this
+  - audioscale: needs to go
+  - audiotestsrc: ok
+  - ffmpegcolorspace: needs a test
+  - playback: example
+  - sine: removed
+  - subparse: needs work
+  - tags:
+    - contained a very small code file that wasn't built, and a copy of a header
+      that was in the tag lib; removed
+
+gst-plugins-good
+----------------
+
+- gst:
+  - alpha, alphacolor: document with example
+  - auparse: crashes on e.g.
+  gst-launch -v filesrc location=/usr/share/emacs/site-lisp/emacspeak/sounds/default-8k/ask-short-question.au ! auparse ! osssink
+    -> will move to bad
+  - autodetect: OK
+  - videofilter:
+    - is the lib still needed, given basetransform ?
+    - currently installs a lib; should not install, or move to a dir, with pc
+      file, possibly in -base
+    - if we install it, get AS_LIBTOOL back and use it
+- ext:
+  - aasink: properties need looking at
+    - width, height: why are they there ? caps don't match
+    - frames-displayed: in base class ?
+    - frame-time: what's this ?
+  - cairo:
+    - cairotimeoverlay works
+    - cairotextoverlay ? pipeline ?
+  - flac:
+    - flacenc:
+gst-launch -v audiotestsrc wave=white-noise ! flacenc ! filesink location=white-noise.flac does not produce a correct file
+    - flacdec works, but
+gst-launch gnomevfssrc location=http://gstreamer.freedesktop.org/media/small/dark.441-16-s.flac ! flacdec ! autoaudiosink
+      does not
