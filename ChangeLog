@@ -29,7 +29,6 @@
 	* gst/gstghostpad.c: (gst_proxy_pad_get_target):
 	  Don't ref NULL target pad (#322751). Improve docs.
 
->>>>>>> 1.2041
 2005-11-29  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gstregistryxml.c: (load_plugin):
