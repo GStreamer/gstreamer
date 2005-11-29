@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-23 18:52+0100\n"
+"POT-Creation-Date: 2005-11-29 21:14+0100\n"
 "PO-Revision-Date: 2004-03-13 01:47+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -14,30 +14,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:266
+#: gst/gst.c:269
 msgid "Print the GStreamer version"
 msgstr "Испиши издање Гстримера"
 
-#: gst/gst.c:268
+#: gst/gst.c:271
 msgid "Make all warnings fatal"
 msgstr "Учини сва упозорења кобним"
 
-#: gst/gst.c:271
+#: gst/gst.c:274
 msgid "Print available debug categories and exit"
 msgstr "Испиши доступне категорије за налажење грешака и заврши"
 
-#: gst/gst.c:274
+#: gst/gst.c:277
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Подразумевани ниво опширности од 1 (само грешке) до 5 (све) или 0 (без "
 "излаза)"
 
-#: gst/gst.c:276
+#: gst/gst.c:279
 msgid "LEVEL"
 msgstr "НИВО"
 
-#: gst/gst.c:278
+#: gst/gst.c:281
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -45,31 +45,31 @@ msgstr ""
 "Запетом раздвојени списак парова име_категорије:ниво за постављање нарочитих "
 "нивоа за појединачне категорије. Пример: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:281
+#: gst/gst.c:284
 msgid "LIST"
 msgstr "СПИСАК"
 
-#: gst/gst.c:283
+#: gst/gst.c:286
 msgid "Disable colored debugging output"
 msgstr "Искључи обојени излаз за исправљање грешака"
 
-#: gst/gst.c:285
+#: gst/gst.c:288
 msgid "Disable debugging"
 msgstr "Искључи исправљање грешака"
 
-#: gst/gst.c:288
+#: gst/gst.c:291
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Укључи опширну дијагностику при учитавању додатка"
 
-#: gst/gst.c:291
+#: gst/gst.c:294
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:291
+#: gst/gst.c:294
 msgid "PATHS"
 msgstr "ПУТАЊЕ"
 
-#: gst/gst.c:293
+#: gst/gst.c:296
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -78,33 +78,33 @@ msgstr ""
 "Запетом раздвојен списак додатака који се предучитавају поред списка из "
 "променљиве окружења GST_PLUGIN_PATH"
 
-#: gst/gst.c:295
+#: gst/gst.c:298
 msgid "PLUGINS"
 msgstr "ДОДАЦИ"
 
-#: gst/gst.c:298
+#: gst/gst.c:301
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Искључи пресретање погрешних приступа меморији при учитавању додатака"
 
-#: gst/gst.c:303
+#: gst/gst.c:306
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:304
+#: gst/gst.c:307
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "Испиши издање Гстримера"
 
-#: gst/gst.c:786
+#: gst/gst.c:789
 msgid "Unknown option"
 msgstr ""
 
-#: gst/gstelement.c:276
+#: gst/gstelement.c:278
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ГРЕШКА: из елемента %s: %s\n"
 
-#: gst/gstelement.c:278
+#: gst/gstelement.c:280
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -300,358 +300,290 @@ msgstr "Нема обичне поруке о грешци за домен %s и
 msgid "Internal data flow error."
 msgstr ""
 
-#: gst/gsttaglist.c:89
+#: gst/gsttaglist.c:92
 msgid "title"
 msgstr "наслов"
 
-#: gst/gsttaglist.c:89
+#: gst/gsttaglist.c:92
 msgid "commonly used title"
 msgstr "обично коришћен наслов"
 
-#: gst/gsttaglist.c:92
+#: gst/gsttaglist.c:95
 msgid "artist"
 msgstr "уметник"
 
-#: gst/gsttaglist.c:93
+#: gst/gsttaglist.c:96
 msgid "person(s) responsible for the recording"
 msgstr "особе одговорне за снимак"
 
-#: gst/gsttaglist.c:97
+#: gst/gsttaglist.c:100
 msgid "album"
 msgstr "албум"
 
-#: gst/gsttaglist.c:98
+#: gst/gsttaglist.c:101
 msgid "album containing this data"
 msgstr "албум који садржи ове податке"
 
-#: gst/gsttaglist.c:100
+#: gst/gsttaglist.c:103
 msgid "date"
 msgstr "датум"
 
-#: gst/gsttaglist.c:100
+#: gst/gsttaglist.c:103
 #, fuzzy
 msgid "date the data was created (as a GDate structure)"
 msgstr "датум прављења података (као број Јулијанског дана)"
 
-#: gst/gsttaglist.c:103
+#: gst/gsttaglist.c:106
 msgid "genre"
 msgstr "жанр"
 
-#: gst/gsttaglist.c:104
+#: gst/gsttaglist.c:107
 msgid "genre this data belongs to"
 msgstr "жанр којем ови подаци припадају"
 
-#: gst/gsttaglist.c:107
+#: gst/gsttaglist.c:110
 msgid "comment"
 msgstr "напомена"
 
-#: gst/gsttaglist.c:108
+#: gst/gsttaglist.c:111
 msgid "free text commenting the data"
 msgstr "текст у слободном облику о овим подацима"
 
 # можда „нумере“ уместо „песме“, пошто можемо имати и видео снимке
-#: gst/gsttaglist.c:111
+#: gst/gsttaglist.c:114
 msgid "track number"
 msgstr "број песме"
 
-#: gst/gsttaglist.c:112
+#: gst/gsttaglist.c:115
 msgid "track number inside a collection"
 msgstr "број песме у скупу"
 
-#: gst/gsttaglist.c:115
+#: gst/gsttaglist.c:118
 msgid "track count"
 msgstr "укупно песама"
 
-#: gst/gsttaglist.c:116
+#: gst/gsttaglist.c:119
 msgid "count of tracks inside collection this track belongs to"
 msgstr "укупно песама у скупу којем припада ова песма"
 
-#: gst/gsttaglist.c:120
+#: gst/gsttaglist.c:123
 msgid "disc number"
 msgstr "број диска"
 
-#: gst/gsttaglist.c:121
+#: gst/gsttaglist.c:124
 msgid "disc number inside a collection"
 msgstr "број диска у скупу"
 
-#: gst/gsttaglist.c:124
+#: gst/gsttaglist.c:127
 msgid "disc count"
 msgstr "укупно дискова"
 
-#: gst/gsttaglist.c:125
+#: gst/gsttaglist.c:128
 msgid "count of discs inside collection this disc belongs to"
 msgstr "укупно дискова у скупу којем припада овај диск"
 
-#: gst/gsttaglist.c:129
+#: gst/gsttaglist.c:132
 msgid "location"
 msgstr "положај"
 
-#: gst/gsttaglist.c:130
+#: gst/gsttaglist.c:133
 msgid "original location of file as a URI"
 msgstr "изворни положај датотеке као адреса"
 
-#: gst/gsttaglist.c:134
+#: gst/gsttaglist.c:137
 msgid "description"
 msgstr "опис"
 
-#: gst/gsttaglist.c:135
+#: gst/gsttaglist.c:138
 msgid "short text describing the content of the data"
 msgstr "кратак текст који описује садржај података"
 
 #
-#: gst/gsttaglist.c:138
+#: gst/gsttaglist.c:141
 msgid "version"
 msgstr "издање"
 
-#: gst/gsttaglist.c:138
+#: gst/gsttaglist.c:141
 msgid "version of this data"
 msgstr "издање ових података"
 
-#: gst/gsttaglist.c:141
+#: gst/gsttaglist.c:144
 msgid "ISRC"
 msgstr "МСКС"
 
-#: gst/gsttaglist.c:143
+#: gst/gsttaglist.c:146
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
 "Међународни стандардни код за снимање — видети http://www.ifpi.org/isrc/"
 
-#: gst/gsttaglist.c:145
+#: gst/gsttaglist.c:148
 msgid "organization"
 msgstr "организација"
 
-#: gst/gsttaglist.c:148
+#: gst/gsttaglist.c:151
 msgid "copyright"
 msgstr "ауторска права"
 
-#: gst/gsttaglist.c:148
+#: gst/gsttaglist.c:151
 msgid "copyright notice of the data"
 msgstr "порука о ауторским правима за податке"
 
-#: gst/gsttaglist.c:151
+#: gst/gsttaglist.c:154
 msgid "contact"
 msgstr "контакт"
 
-#: gst/gsttaglist.c:151
+#: gst/gsttaglist.c:154
 msgid "contact information"
 msgstr "подаци за ступање у везу"
 
-#: gst/gsttaglist.c:153
+#: gst/gsttaglist.c:156
 msgid "license"
 msgstr "дозвола"
 
-#: gst/gsttaglist.c:153
+#: gst/gsttaglist.c:156
 msgid "license of data"
 msgstr "дозвола за употребу података"
 
-#: gst/gsttaglist.c:156
+#: gst/gsttaglist.c:159
 msgid "performer"
 msgstr "извођач"
 
-#: gst/gsttaglist.c:157
+#: gst/gsttaglist.c:160
 msgid "person(s) performing"
 msgstr "особе које изводе"
 
-#: gst/gsttaglist.c:160
+#: gst/gsttaglist.c:163
 msgid "duration"
 msgstr "трајање"
 
-#: gst/gsttaglist.c:160
+#: gst/gsttaglist.c:163
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "дужина у временским јединицама ГСтримера (наносекундама)"
 
-#: gst/gsttaglist.c:163
+#: gst/gsttaglist.c:166
 msgid "codec"
 msgstr "кодирање"
 
-#: gst/gsttaglist.c:164
+#: gst/gsttaglist.c:167
 msgid "codec the data is stored in"
 msgstr "на који начин су подаци кодирани"
 
-#: gst/gsttaglist.c:167
+#: gst/gsttaglist.c:170
 msgid "video codec"
 msgstr "видео кодирање"
 
-#: gst/gsttaglist.c:167
+#: gst/gsttaglist.c:170
 msgid "codec the video data is stored in"
 msgstr "на који начин су видео подаци кодирани"
 
-#: gst/gsttaglist.c:170
+#: gst/gsttaglist.c:173
 msgid "audio codec"
 msgstr "звучно кодирање"
 
-#: gst/gsttaglist.c:170
+#: gst/gsttaglist.c:173
 msgid "codec the audio data is stored in"
 msgstr "на који начин су звучни подаци кодирани"
 
-#: gst/gsttaglist.c:172
+#: gst/gsttaglist.c:175
 msgid "bitrate"
 msgstr "брзина битова"
 
-#: gst/gsttaglist.c:172
+#: gst/gsttaglist.c:175
 msgid "exact or average bitrate in bits/s"
 msgstr "тачна или просечна брзина битова у битовима по секунди"
 
-#: gst/gsttaglist.c:174
+#: gst/gsttaglist.c:177
 msgid "nominal bitrate"
 msgstr "наведена брзина битова"
 
-#: gst/gsttaglist.c:174
+#: gst/gsttaglist.c:177
 msgid "nominal bitrate in bits/s"
 msgstr "наведена брзина битова у битовима по секунди"
 
-#: gst/gsttaglist.c:176
+#: gst/gsttaglist.c:179
 msgid "minimum bitrate"
 msgstr "најмања брзина битова"
 
-#: gst/gsttaglist.c:176
+#: gst/gsttaglist.c:179
 msgid "minimum bitrate in bits/s"
 msgstr "најмања брзина битова у битовима по секунди"
 
-#: gst/gsttaglist.c:178
+#: gst/gsttaglist.c:181
 msgid "maximum bitrate"
 msgstr "највећа брзина битова"
 
-#: gst/gsttaglist.c:178
+#: gst/gsttaglist.c:181
 msgid "maximum bitrate in bits/s"
 msgstr "највећа брзина битова у битовима по секунди"
 
-#: gst/gsttaglist.c:181
+#: gst/gsttaglist.c:184
 msgid "encoder"
 msgstr "кодирати"
 
-#: gst/gsttaglist.c:181
+#: gst/gsttaglist.c:184
 msgid "encoder used to encode this stream"
 msgstr "како кодирати овај ток"
 
-#: gst/gsttaglist.c:184
+#: gst/gsttaglist.c:187
 msgid "encoder version"
 msgstr "издање кодирања"
 
-#: gst/gsttaglist.c:185
+#: gst/gsttaglist.c:188
 msgid "version of the encoder used to encode this stream"
 msgstr "издање кодирања којим се кодира овај ток"
 
-#: gst/gsttaglist.c:187
+#: gst/gsttaglist.c:190
 msgid "serial"
 msgstr "серија"
 
-#: gst/gsttaglist.c:187
+#: gst/gsttaglist.c:190
 msgid "serial number of track"
 msgstr "серијски број траке"
 
 # bug: this is something strange
-#: gst/gsttaglist.c:189
+#: gst/gsttaglist.c:192
 msgid "replaygain track gain"
 msgstr "појачање песме при поновном пуштању"
 
-#: gst/gsttaglist.c:189
+#: gst/gsttaglist.c:192
 msgid "track gain in db"
 msgstr "појачање песме у децибелима"
 
-#: gst/gsttaglist.c:191
+#: gst/gsttaglist.c:194
 msgid "replaygain track peak"
 msgstr "врхунац при поновном пуштању"
 
-#: gst/gsttaglist.c:191
+#: gst/gsttaglist.c:194
 msgid "peak of the track"
 msgstr "врхунац песме"
 
-#: gst/gsttaglist.c:193
+#: gst/gsttaglist.c:196
 msgid "replaygain album gain"
 msgstr "појачање албума при поновном пуштању"
 
-#: gst/gsttaglist.c:193
+#: gst/gsttaglist.c:196
 msgid "album gain in db"
 msgstr "појачање албума у децибелима"
 
-#: gst/gsttaglist.c:195
+#: gst/gsttaglist.c:198
 msgid "replaygain album peak"
 msgstr "врхунац албума при поновном пуштању"
 
-#: gst/gsttaglist.c:195
+#: gst/gsttaglist.c:198
 msgid "peak of the album"
 msgstr "врхунац албума"
 
-#: gst/gsttaglist.c:197
+#: gst/gsttaglist.c:200
 msgid "language code"
 msgstr ""
 
-#: gst/gsttaglist.c:198
+#: gst/gsttaglist.c:201
 msgid "language code for this stream, conforming to ISO-639-1"
 msgstr ""
 
-#: gst/gsttaglist.c:237
+#: gst/gsttaglist.c:240
 msgid ", "
 msgstr ", "
-
-#: gst/base/gstbasesink.c:603
-msgid "Internal data flow problem."
-msgstr ""
-
-#: gst/elements/gstfilesink.c:230
-msgid "No file name specified for writing."
-msgstr "Није наведено име датотеке за упис."
-
-#: gst/elements/gstfilesink.c:237
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Не могу да отворим датотеку „%s“ ради уписа."
-
-#: gst/elements/gstfilesink.c:253
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Грешка при затварању датотеке „%s“."
-
-#: gst/elements/gstfilesink.c:361 gst/elements/gstfilesink.c:425
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Грешка при упису у датотеку „%s“."
-
-#: gst/elements/gstfilesrc.c:910
-msgid "No file name specified for reading."
-msgstr "Није наведено име датотеке за читање."
-
-#: gst/elements/gstfilesrc.c:922
-#, fuzzy, c-format
-msgid "Could not open file \"%s\" for reading: %s."
-msgstr "Не могу да отворим датотеку „%s“ ради читања."
-
-#: gst/elements/gstfilesrc.c:931
-#, fuzzy, c-format
-msgid "could not get info on \"%s\"."
-msgstr "не могу да вежем %s са %s"
-
-#: gst/elements/gstfilesrc.c:938
-#, c-format
-msgid "\"%s\" is a directory."
-msgstr ""
-
-#: gst/elements/gstfilesrc.c:945
-#, fuzzy, c-format
-msgid "File \"%s\" is a socket."
-msgstr "Датотека „%s“ није обична датотека."
-
-#: gst/elements/gstidentity.c:316
-msgid "Failed after iterations as requested."
-msgstr "Неуспех након траженог броја покушаја."
-
-# bug: this should be full word
-#: gst/elements/gsttypefindelement.c:182
-msgid "caps"
-msgstr "могућности"
-
-#: gst/elements/gsttypefindelement.c:183
-msgid "detected capabilities in stream"
-msgstr "препознате могућности у току"
-
-#: gst/elements/gsttypefindelement.c:186
-msgid "minimum"
-msgstr "најмање"
-
-#: gst/elements/gsttypefindelement.c:190
-msgid "maximum"
-msgstr "највише"
 
 #: gst/parse/grammar.y:206
 #, c-format
@@ -720,6 +652,74 @@ msgstr "не могу да вежем завршни елемент за адр�
 #: gst/parse/grammar.y:767
 msgid "empty pipeline not allowed"
 msgstr "није допуштен празан цевовод"
+
+#: gst/base/gstbasesink.c:603
+msgid "Internal data flow problem."
+msgstr ""
+
+#: plugins/elements/gstfilesink.c:230
+msgid "No file name specified for writing."
+msgstr "Није наведено име датотеке за упис."
+
+#: plugins/elements/gstfilesink.c:237
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Не могу да отворим датотеку „%s“ ради уписа."
+
+#: plugins/elements/gstfilesink.c:253
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Грешка при затварању датотеке „%s“."
+
+#: plugins/elements/gstfilesink.c:361 plugins/elements/gstfilesink.c:425
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Грешка при упису у датотеку „%s“."
+
+#: plugins/elements/gstfilesrc.c:910
+msgid "No file name specified for reading."
+msgstr "Није наведено име датотеке за читање."
+
+#: plugins/elements/gstfilesrc.c:922
+#, fuzzy, c-format
+msgid "Could not open file \"%s\" for reading: %s."
+msgstr "Не могу да отворим датотеку „%s“ ради читања."
+
+#: plugins/elements/gstfilesrc.c:931
+#, fuzzy, c-format
+msgid "could not get info on \"%s\"."
+msgstr "не могу да вежем %s са %s"
+
+#: plugins/elements/gstfilesrc.c:938
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr ""
+
+#: plugins/elements/gstfilesrc.c:945
+#, fuzzy, c-format
+msgid "File \"%s\" is a socket."
+msgstr "Датотека „%s“ није обична датотека."
+
+#: plugins/elements/gstidentity.c:351
+msgid "Failed after iterations as requested."
+msgstr "Неуспех након траженог броја покушаја."
+
+# bug: this should be full word
+#: plugins/elements/gsttypefindelement.c:182
+msgid "caps"
+msgstr "могућности"
+
+#: plugins/elements/gsttypefindelement.c:183
+msgid "detected capabilities in stream"
+msgstr "препознате могућности у току"
+
+#: plugins/elements/gsttypefindelement.c:186
+msgid "minimum"
+msgstr "најмање"
+
+#: plugins/elements/gsttypefindelement.c:190
+msgid "maximum"
+msgstr "највише"
 
 #: tools/gst-inspect.c:1098
 #, fuzzy
@@ -834,28 +834,28 @@ msgstr "ГРЕШКА: елемент „pipeline“ није нађен.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
 #, fuzzy, c-format
-msgid "PAUSE pipeline ...\n"
+msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Покрећем цевовод...\n"
 
 #: tools/gst-launch.c:631
 #, fuzzy, c-format
-msgid "ERROR: pipeline doesn't want to pause.\n"
+msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
 
 #: tools/gst-launch.c:636
 #, fuzzy, c-format
-msgid "NO_PREROLL pipeline ...\n"
-msgstr "Покрећем цевовод...\n"
+msgid "ERROR: Pipeline can't PREROLL ...\n"
+msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
 
 #: tools/gst-launch.c:639
-#, fuzzy, c-format
-msgid "PREROLL pipeline ...\n"
-msgstr "Покрећем цевовод...\n"
+#, c-format
+msgid "Pipeline is PREROLLING ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:643
-#, fuzzy, c-format
-msgid "PREROLLED pipeline ...\n"
-msgstr "Покрећем цевовод...\n"
+#, c-format
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:650
 #, fuzzy, c-format
@@ -864,8 +864,8 @@ msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
 
 #: tools/gst-launch.c:655
 #, c-format
-msgid "RUNNING pipeline ...\n"
-msgstr "Покрећем цевовод...\n"
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:658
 #, c-format
@@ -883,18 +883,41 @@ msgstr " ns).\n"
 
 #: tools/gst-launch.c:676
 #, fuzzy, c-format
-msgid "READY pipeline ...\n"
+msgid "Setting pipeline to READY ...\n"
 msgstr "Покрећем цевовод...\n"
 
 #: tools/gst-launch.c:681
 #, fuzzy, c-format
-msgid "NULL pipeline ...\n"
+msgid "Setting pipeline to NULL ...\n"
 msgstr "Покрећем цевовод...\n"
 
 #: tools/gst-launch.c:686
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "Покрећем цевовод...\n"
+
+#, fuzzy
+#~ msgid "NO_PREROLL pipeline ...\n"
+#~ msgstr "Покрећем цевовод...\n"
+
+#, fuzzy
+#~ msgid "PREROLL pipeline ...\n"
+#~ msgstr "Покрећем цевовод...\n"
+
+#, fuzzy
+#~ msgid "PREROLLED pipeline ...\n"
+#~ msgstr "Покрећем цевовод...\n"
+
+#~ msgid "RUNNING pipeline ...\n"
+#~ msgstr "Покрећем цевовод...\n"
+
+#, fuzzy
+#~ msgid "READY pipeline ...\n"
+#~ msgstr "Покрећем цевовод...\n"
+
+#, fuzzy
+#~ msgid "NULL pipeline ...\n"
+#~ msgstr "Покрећем цевовод...\n"
 
 #~ msgid "Number of times to iterate pipeline"
 #~ msgstr "Број покушаја пуштања цевовода"
