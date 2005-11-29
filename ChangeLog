@@ -1,3 +1,9 @@
+2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/videoscale/gstvideoscale.h:
+	* gst/videoscale/gstvideoscale.c:
+	  remove unimplemented scale methods
+
 2005-11-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_send_headers):
