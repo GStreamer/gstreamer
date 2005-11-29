@@ -339,12 +339,16 @@ GstEvent *	gst_event_new_flush_stop	(void);
 GstEvent *	gst_event_new_eos		(void);
 
 /* newsegment events */
-GstEvent*	gst_event_new_new_segment	(gboolean update, gdouble rate, GstFormat format,
-                                                 gint64 start_value, gint64 stop_value,
-						 gint64 stream_time);
-void		gst_event_parse_new_segment	(GstEvent *event, gboolean *update, gdouble *rate,
-						 GstFormat *format, gint64 *start_value, gint64 *stop_value,
-						 gint64 *stream_time);
+GstEvent*	gst_event_new_new_segment	(gboolean update, gdouble rate,
+                                                 GstFormat format,
+                                                 gint64 start, gint64 stop,
+						 gint64 position);
+void		gst_event_parse_new_segment	(GstEvent *event,
+                                                 gboolean *update,
+                                                 gdouble *rate,
+						 GstFormat *format,
+                                                 gint64 *start, gint64 *stop,
+						 gint64 *position);
 /* tag event */
 GstEvent*	gst_event_new_tag		(GstTagList *taglist);
 void		gst_event_parse_tag		(GstEvent *event, GstTagList **taglist);

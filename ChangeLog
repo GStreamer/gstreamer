@@ -1,3 +1,11 @@
+2005-11-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstevent.c: (gst_event_new_new_segment),
+	(gst_event_parse_new_segment):
+	* gst/gstevent.h:
+	  fix #320529 - clean up new_segment API and structure.
+	  Let's hope everyone was using the methods, and not the structure.
+
 2005-11-29  Edward Hervey  <edward@fluendo.com>
 
 	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),

@@ -407,9 +407,9 @@ gst_event_new_eos (void)
  * @update: is this segment an update to a previous one
  * @rate: a new rate for playback
  * @format: The format of the segment values
- * @start_value: the start value of the segment
- * @stop_value: the stop value of the segment
- * @stream_time: stream time for buffer timestamps.
+ * @start: the start value of the segment
+ * @stop: the stop value of the segment
+ * @position: stream position
  *
  * Allocate a new newsegment event with the given format/values tripplets.
  *
@@ -419,21 +419,21 @@ gst_event_new_eos (void)
  * unneeded packets.
  *
  * The stream time of the segment is used to convert the buffer timestamps
- * into the stream time again, this is usually done in sinks to report the 
+ * into the stream time again, this is usually done in sinks to report the
  * current stream_time. @stream_time cannot be -1.
  *
- * The @start_value cannot be -1, the @stop_value can be -1. If there
- * is a valid @stop_value given, it must be greater or equal than @start_value.
+ * @start cannot be -1, @stop can be -1. If there
+ * is a valid @stop given, it must be greater or equal than @start.
  *
  * After a newsegment event, the buffer stream time is calculated with:
  *
- *   stream_time + (TIMESTAMP(buf) - start_value) * ABS (rate)
+ *   stream_time + (TIMESTAMP(buf) - start) * ABS (rate)
  *
  * Returns: A new newsegment event.
  */
 GstEvent *
 gst_event_new_new_segment (gboolean update, gdouble rate, GstFormat format,
-    gint64 start_value, gint64 stop_value, gint64 stream_time)
+    gint64 start, gint64 stop, gint64 position)
 {
   g_return_val_if_fail (rate != 0.0, NULL);
 
@@ -441,32 +441,28 @@ gst_event_new_new_segment (gboolean update, gdouble rate, GstFormat format,
     GST_CAT_INFO (GST_CAT_EVENT,
         "creating newsegment update %d, rate %lf, format GST_FORMAT_TIME, "
         "start %" GST_TIME_FORMAT ", stop %" GST_TIME_FORMAT
-        ", stream_time %" GST_TIME_FORMAT,
-        update, rate, GST_TIME_ARGS (start_value),
-        GST_TIME_ARGS (stop_value), GST_TIME_ARGS (stream_time));
+        ", position %" GST_TIME_FORMAT,
+        update, rate, GST_TIME_ARGS (start),
+        GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
   } else {
     GST_CAT_INFO (GST_CAT_EVENT,
         "creating newsegment update %d, rate %lf, format %d, "
-        "start %lld, stop %lld, stream_time %lld",
-        update, rate, format, start_value, stop_value, stream_time);
+        "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", position %"
+        G_GINT64_FORMAT, update, rate, format, start, stop, position);
   }
-  if (stream_time == -1)
-    g_return_val_if_fail (stream_time != -1, NULL);
-
-  if (start_value == -1)
-    g_return_val_if_fail (start_value != -1, NULL);
-
-  if (stop_value != -1)
-    g_return_val_if_fail (start_value <= stop_value, NULL);
+  g_return_val_if_fail (position != -1, NULL);
+  g_return_val_if_fail (start != -1, NULL);
+  if (stop != -1)
+    g_return_val_if_fail (start <= stop, NULL);
 
   return gst_event_new_custom (GST_EVENT_NEWSEGMENT,
       gst_structure_new ("GstEventNewsegment",
           "update", G_TYPE_BOOLEAN, update,
           "rate", G_TYPE_DOUBLE, rate,
           "format", GST_TYPE_FORMAT, format,
-          "start_val", G_TYPE_INT64, start_value,
-          "stop_val", G_TYPE_INT64, stop_value,
-          "stream_time", G_TYPE_INT64, stream_time, NULL));
+          "start", G_TYPE_INT64, start,
+          "stop", G_TYPE_INT64, stop,
+          "position", G_TYPE_INT64, position, NULL));
 }
 
 /**
@@ -475,16 +471,16 @@ gst_event_new_new_segment (gboolean update, gdouble rate, GstFormat format,
  * @update: A pointer to the update flag of the segment
  * @rate: A pointer to the rate of the segment
  * @format: A pointer to the format of the newsegment values
- * @start_value: A pointer to store the start value in
- * @stop_value: A pointer to store the stop value in
- * @stream_time: A pointer to store the stream time in
+ * @start: A pointer to store the start value in
+ * @stop: A pointer to store the stop value in
+ * @position: A pointer to store the stream time in
  *
- * Get the start, stop and format in the newsegment event.
+ * Get the format, start, stop and position in the newsegment event.
  */
 void
 gst_event_parse_new_segment (GstEvent * event, gboolean * update,
-    gdouble * rate, GstFormat * format, gint64 * start_value,
-    gint64 * stop_value, gint64 * stream_time)
+    gdouble * rate, GstFormat * format, gint64 * start,
+    gint64 * stop, gint64 * position)
 {
   const GstStructure *structure;
 
@@ -499,15 +495,13 @@ gst_event_parse_new_segment (GstEvent * event, gboolean * update,
     *rate = g_value_get_double (gst_structure_get_value (structure, "rate"));
   if (format)
     *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
-  if (start_value)
-    *start_value =
-        g_value_get_int64 (gst_structure_get_value (structure, "start_val"));
-  if (stop_value)
-    *stop_value =
-        g_value_get_int64 (gst_structure_get_value (structure, "stop_val"));
-  if (stream_time)
-    *stream_time =
-        g_value_get_int64 (gst_structure_get_value (structure, "stream_time"));
+  if (start)
+    *start = g_value_get_int64 (gst_structure_get_value (structure, "start"));
+  if (stop)
+    *stop = g_value_get_int64 (gst_structure_get_value (structure, "stop"));
+  if (position)
+    *position =
+        g_value_get_int64 (gst_structure_get_value (structure, "position"));
 }
 
 /**

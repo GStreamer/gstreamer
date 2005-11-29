@@ -4,7 +4,7 @@ gstreamer
   - testsuite
     - check: unit tests
     - examples: example code
-    - tests: interactive tests
+    - interactive: interactive tests
 - move gst/base to libs/gst/base ?
   (but elements link against them)
 - move elements out of gst/ dir ?
@@ -13,9 +13,7 @@ gstreamer
 gst-plugins-base
 ----------------
 - gst-libs/gst/audio:
-  - is audiofilter still needed ? any reason not to fold it into audio ?
-    folded, DONE
-
+  - DONE: audiofilter folded in
 - gst:
   - adder: needs docs, an example, and a test
   - audioconvert: ok
@@ -26,8 +24,10 @@ gst-plugins-base
   - ffmpegcolorspace: needs a test
   - playback: example
   - sine: removed, DONE
-  - subparse: needs work
-    -> check if it works ? clean up dead code ? move to bad ?
+  - subparse:
+    - works, but how do we link it so we can display it ?
+    - example ?
+    - test with different files/sources ? can be inlined
   - tags:
     - contained a very small code file that wasn't built, and a copy of a header
       that was in the tag lib; removed; DONE
@@ -35,7 +35,7 @@ gst-plugins-base
     - works
     - need tests
     - need docs
-    - need possible porting to GNet
+    - need possible porting to GNet (later)
   - typefind:
     - works
     - need tests - this definately could use it
@@ -80,8 +80,6 @@ gst-plugins-base
   - xvimage
     - interactive test should go somewhere
     - docs ok
-
-
 
 gst-plugins-good
 ----------------
