@@ -1,3 +1,8 @@
+2005-11-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/subparse/gstsubparse.c: (feed_textbuf):
+	  Don't access already unref'ed buffer.
+
 2005-11-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gststreamselector.c:

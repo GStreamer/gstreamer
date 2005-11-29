@@ -537,10 +537,10 @@ feed_textbuf (GstSubparse * self, GstBuffer * buf)
 
   self->textbuf = g_string_append_len (self->textbuf,
       (gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-  gst_buffer_unref (buf);
-
   self->offset = GST_BUFFER_OFFSET (buf) + GST_BUFFER_SIZE (buf);
   self->next_offset = self->offset;
+
+  gst_buffer_unref (buf);
 }
 
 static GstFlowReturn
