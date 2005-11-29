@@ -118,3 +118,30 @@ _wrap_gst_query_parse_segment (PyGstMiniObject *self)
 
 	return ret;
 }
+%%
+override gst_query_parse_seeking noargs
+static PyObject *
+_wrap_gst_query_parse_seeking (PyGstMiniObject *self)
+{
+	PyObject	*ret;
+	GstFormat	format;
+	gboolean	seekable;
+	gint64		segment_start, segment_end;
+
+	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_SEEKING) {
+		PyErr_SetString(PyExc_TypeError, "Query is not a 'Seeking' query");
+		return NULL;
+	}
+
+	gst_query_parse_seeking (GST_QUERY(self->obj),
+				 &format, &seekable,
+				 &segment_start, &segment_end);
+	
+	ret = PyList_New(4);
+	PyList_SetItem (ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
+	PyList_SetItem (ret, 1, PyBool_FromLong (seekable));
+	PyList_SetItem (ret, 2, PyLong_FromLongLong(segment_start));
+	PyList_SetItem (ret, 3, PyLong_FromLongLong(segment_end));
+
+	return ret;
+}

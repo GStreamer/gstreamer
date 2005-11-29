@@ -1,3 +1,10 @@
+2005-11-29  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	Update for API changes
+	* gst/gstquery.override:
+	wrapper for query_parse_seeking()
+
 2005-11-24  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override:

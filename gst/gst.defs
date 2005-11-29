@@ -4351,6 +4351,14 @@
 )
 
 
+(define-function query_new_seeking
+  (c-name "gst_query_new_seeking")
+  (return-type "GstQuery*")
+  (parameters
+    '("GstFormat" "format")
+  )
+)
+
 (define-method set_seeking
   (of-object "GstQuery")
   (c-name "gst_query_set_seeking")
@@ -4360,6 +4368,18 @@
     '("gboolean" "seekable")
     '("gint64" "segment_start")
     '("gint64" "segment_end")
+  )
+)
+
+(define-method parse_seeking
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_seeking")
+  (return-type "none")
+  (parameters
+    '("GstFormat*" "format")
+    '("gboolean*" "seekable")
+    '("gint64*" "segment_start")
+    '("gint64*" "segment_end")
   )
 )
 
@@ -6576,14 +6596,14 @@
   (return-type "none")
   (parameters
     '("GValue*" "value")
-    '("int" "start")
-    '("int" "end")
+    '("gint" "start")
+    '("gint" "end")
   )
 )
 
 (define-function value_get_int_range_min
   (c-name "gst_value_get_int_range_min")
-  (return-type "int")
+  (return-type "gint")
   (parameters
     '("const-GValue*" "value")
   )
@@ -6591,7 +6611,7 @@
 
 (define-function value_get_int_range_max
   (c-name "gst_value_get_int_range_max")
-  (return-type "int")
+  (return-type "gint")
   (parameters
     '("const-GValue*" "value")
   )
@@ -6602,14 +6622,14 @@
   (return-type "none")
   (parameters
     '("GValue*" "value")
-    '("double" "start")
-    '("double" "end")
+    '("gdouble" "start")
+    '("gdouble" "end")
   )
 )
 
 (define-function value_get_double_range_min
   (c-name "gst_value_get_double_range_min")
-  (return-type "double")
+  (return-type "gdouble")
   (parameters
     '("const-GValue*" "value")
   )
@@ -6617,7 +6637,7 @@
 
 (define-function value_get_double_range_max
   (c-name "gst_value_get_double_range_max")
-  (return-type "double")
+  (return-type "gdouble")
   (parameters
     '("const-GValue*" "value")
   )
@@ -6645,14 +6665,14 @@
   (return-type "none")
   (parameters
     '("GValue*" "value")
-    '("int" "numerator")
-    '("int" "denominator")
+    '("gint" "numerator")
+    '("gint" "denominator")
   )
 )
 
 (define-function value_get_fraction_numerator
   (c-name "gst_value_get_fraction_numerator")
-  (return-type "int")
+  (return-type "gint")
   (parameters
     '("const-GValue*" "value")
   )
@@ -6660,7 +6680,7 @@
 
 (define-function value_get_fraction_denominator
   (c-name "gst_value_get_fraction_denominator")
-  (return-type "int")
+  (return-type "gint")
   (parameters
     '("const-GValue*" "value")
   )
@@ -6701,10 +6721,10 @@
   (return-type "none")
   (parameters
     '("GValue*" "value")
-    '("int" "numerator_start")
-    '("int" "denominator_start")
-    '("int" "numerator_end")
-    '("int" "denominator_end")
+    '("gint" "numerator_start")
+    '("gint" "denominator_start")
+    '("gint" "numerator_end")
+    '("gint" "denominator_end")
   )
 )
 
@@ -6743,7 +6763,7 @@
 
 (define-function value_compare
   (c-name "gst_value_compare")
-  (return-type "int")
+  (return-type "gint")
   (parameters
     '("const-GValue*" "value1")
     '("const-GValue*" "value2")
