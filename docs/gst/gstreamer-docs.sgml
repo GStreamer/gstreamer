@@ -8,7 +8,6 @@
 <!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
 <!ENTITY GstBus SYSTEM "xml/gstbus.xml">
 <!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
-<!ENTITY GstCheck SYSTEM "xml/gstcheck.xml">
 <!ENTITY GstChildProxy SYSTEM "xml/gstchildproxy.xml">
 <!ENTITY GstClock SYSTEM "xml/gstclock.xml">
 <!--
@@ -53,17 +52,6 @@
 <!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
 <!ENTITY GstVersion SYSTEM "xml/gstversion.xml">
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
-
-<!ENTITY GstAdapter SYSTEM "xml/gstadapter.xml">
-<!ENTITY GstBaseSrc SYSTEM "xml/gstbasesrc.xml">
-<!ENTITY GstBaseSink SYSTEM "xml/gstbasesink.xml">
-<!ENTITY GstBaseTransform SYSTEM "xml/gstbasetransform.xml">
-<!ENTITY GstCollectPads SYSTEM "xml/gstcollectpads.xml">
-<!ENTITY GstPushSrc SYSTEM "xml/gstpushsrc.xml">
-
-<!ENTITY GstNetClientClock SYSTEM "xml/gstnetclientclock.xml">
-<!ENTITY GstNetTimePacket SYSTEM "xml/gstnettimepacket.xml">
-<!ENTITY GstNetTimeProvider SYSTEM "xml/gstnettimeprovider.xml">
 
 <!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
 <!ENTITY GstFakeSink SYSTEM "xml/gstfakesink.xml">
@@ -177,7 +165,6 @@ Windows.  It is released under the GNU Library General Public License
       Application developers will rarely need to know about it.
     </para>
 
-    &GstCheck;
     &GstInfo;
     &GstTrace;
 
@@ -227,36 +214,6 @@ Windows.  It is released under the GNU Library General Public License
 -->
   </chapter>
 
-  <chapter id="gstreamer-base">
-    <title>GStreamer Base and Utillity Classes</title>
-    <para>
-      libgstbase-&GST_MAJORMINOR;.so provides some base classes to be extended
-      by elements and utillity classes that are most useful for plugin developers.
-    </para>
-
-    &GstBaseSrc;
-    &GstBaseSink;
-    &GstBaseTransform;
-    &GstPushSrc;
-
-    &GstAdapter;
-    &GstCollectPads;
-
-  </chapter>
-
-  
-  <chapter id="gstreamer-net">
-    <title>GStreamer Network Classes</title>
-    <para>
-      libgstnet-&GST_MAJORMINOR;.so provides network elements and objects.
-    </para>
-    
-    &GstNetClientClock;
-    &GstNetTimePacket;
-    &GstNetTimeProvider;
-  </chapter>
-  
-  
   <chapter id="gstreamer-hierarchy">
     <title>Object Hierarchy</title>
     &gstreamer-tree-index;

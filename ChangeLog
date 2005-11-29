@@ -1,5 +1,13 @@
 2005-11-29  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	  moving documentation from core to lib
+
+2005-11-29  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* check/Makefile.am:
 	* configure.ac:
 	* docs/gst/Makefile.am:
