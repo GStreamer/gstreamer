@@ -1,7 +1,7 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst/base
+libdir=${pcfiledir}/../libs/gst/base
 includedir=${pcfiledir}/..
 
 Name: GStreamer base classes, uninstalled

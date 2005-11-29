@@ -1,7 +1,7 @@
 # the standard variables don't make sense for an uninstalled copy
 prefix=
 exec_prefix=
-libdir=${pcfiledir}/../gst/check
+libdir=${pcfiledir}/../libs/gst/check
 includedir=${pcfiledir}/..
 
 Name: GStreamer check unit testing, uninstalled
