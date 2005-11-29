@@ -369,8 +369,8 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_text_overlay_render_text (GstCairoTextOverlay * overlay, gchar * text,
-    gint textlen)
+gst_text_overlay_render_text (GstCairoTextOverlay * overlay,
+    const gchar * text, gint textlen)
 {
   cairo_text_extents_t extents;
   cairo_surface_t *surface;
@@ -759,6 +759,8 @@ gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
   GstClockTime now, txt_end, frame_end;
   GstBuffer *video_frame = NULL;
   GstBuffer *text_buf = NULL;
+  gchar *text;
+  gint text_len;
 
   overlay = GST_CAIRO_TEXT_OVERLAY (data);
 
@@ -861,10 +863,23 @@ gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
   }
 
   /* text duration overlaps video frame duration */
-  GST_DEBUG ("Rendering '%*s'",
-      GST_BUFFER_SIZE (text_buf), GST_BUFFER_DATA (text_buf));
+  text = g_strndup ((gchar *) GST_BUFFER_DATA (text_buf),
+      GST_BUFFER_SIZE (text_buf));
+  g_strdelimit (text, "\n\r\t", ' ');
+  text_len = strlen (text);
+
+  if (text_len > 0) {
+    GST_DEBUG ("Rendering text '%*s'", text_len, text);;
+    gst_text_overlay_render_text (overlay, text, text_len);
+  } else {
+    GST_DEBUG ("No text to render (empty buffer)");
+    gst_text_overlay_render_text (overlay, " ", 1);
+  }
+
+  g_free (text);
+
   gst_text_overlay_pop_video (overlay);
-  ret = gst_pad_push (overlay->srcpad, video_frame);
+  ret = gst_text_overlay_push_frame (overlay, video_frame);
   video_frame = NULL;
   goto done;
 

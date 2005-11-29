@@ -1,3 +1,9 @@
+2005-11-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_render_text),
+	(gst_text_overlay_collected):
+	  Actually render the text from the text pad.
+
 2005-11-29  Edward Hervey  <edward@fluendo.com>
 
 	* gst/debug/gstnavseek.c: (gst_navseek_event):
