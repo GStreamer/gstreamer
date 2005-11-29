@@ -404,7 +404,7 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
 
   if (segment->format == GST_FORMAT_UNDEFINED)
     segment->format = format;
-  else
+  else if (segment->accum)
     g_return_val_if_fail (segment->format == format, -1);
 
   if (position != -1)

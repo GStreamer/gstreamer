@@ -620,7 +620,8 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
           ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
           GST_TIME_ARGS (end));
 
-      if (GST_CLOCK_TIME_IS_VALID (start)) {
+      if (GST_CLOCK_TIME_IS_VALID (start) &&
+          (basesink->segment.format == GST_FORMAT_TIME)) {
         if (!gst_segment_clip (&basesink->segment, GST_FORMAT_TIME,
                 (gint64) start, (gint64) end, NULL, NULL))
           goto dropping;
@@ -827,7 +828,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       basesink->flushing = FALSE;
       GST_OBJECT_UNLOCK (basesink);
       /* we need new segment info after the flush. */
-      gst_segment_init (&basesink->segment, GST_FORMAT_TIME);
+      gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
 
       GST_DEBUG_OBJECT (basesink, "event unref %p %p", basesink, event);
       gst_event_unref (event);
@@ -925,18 +926,24 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
     goto done;
   }
 
-  /* save last times seen. */
-  if (GST_CLOCK_TIME_IS_VALID (end))
-    gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_TIME,
-        (gint64) end);
-  else
-    gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_TIME,
-        (gint64) start);
+  if (basesink->segment.format == GST_FORMAT_TIME) {
+    /* save last times seen. */
+    if (GST_CLOCK_TIME_IS_VALID (end))
+      gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_TIME,
+          (gint64) end);
+    else
+      gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_TIME,
+          (gint64) start);
 
-  /* clip */
-  if (!gst_segment_clip (&basesink->segment, GST_FORMAT_TIME,
-          (gint64) start, (gint64) end, &cstart, &cend))
-    goto out_of_segment;
+    /* clip */
+    if (!gst_segment_clip (&basesink->segment, GST_FORMAT_TIME,
+            (gint64) start, (gint64) end, &cstart, &cend))
+      goto out_of_segment;
+  } else {
+    /* no clipping for formats different from GST_FORMAT_TIME */
+    cstart = start;
+    cend = end;
+  }
 
   if (!basesink->sync) {
     GST_DEBUG_OBJECT (basesink, "no need to sync");
@@ -944,7 +951,9 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
   }
 
   /* now do clocking */
-  if (GST_ELEMENT_CLOCK (basesink)) {
+  if (GST_ELEMENT_CLOCK (basesink)
+      && ((basesink->segment.format == GST_FORMAT_TIME)
+          || (basesink->segment.accum == 0))) {
     GstClockTime base_time;
     GstClockTimeDiff stream_start, stream_end;
 
@@ -1261,7 +1270,7 @@ gst_base_sink_activate_pull (GstPad * pad, gboolean active)
       } else {
         if (gst_pad_activate_pull (peer, TRUE)) {
           basesink->have_newsegment = TRUE;
-          gst_segment_init (&basesink->segment, GST_FORMAT_TIME);
+          gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
 
           /* set the pad mode before starting the task so that it's in the
              correct state for the new thread... */
@@ -1460,7 +1469,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (basesink, "READY to PAUSED, need preroll to FALSE");
       basesink->need_preroll = TRUE;
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
-      gst_segment_init (&basesink->segment, GST_FORMAT_TIME);
+      gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
       basesink->have_newsegment = FALSE;
       ret = GST_STATE_CHANGE_ASYNC;
       break;
@@ -1490,7 +1499,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         /* queue a commit_state */
         basesink->need_preroll = TRUE;
         GST_DEBUG_OBJECT (basesink,
-            "PAUSED to PLAYING, !eos, !have_preroll, need preroll to FALSE");
+            "PAUSED to PLAYING, !eos, !have_preroll, need preroll to TRUE");
         ret = GST_STATE_CHANGE_ASYNC;
         /* we know it's not waiting, no need to signal */
       } else {

@@ -339,7 +339,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstIdentity *identity = GST_IDENTITY (trans);
-  GstClockTime runtimestamp;
+  GstClockTime runtimestamp = 0LL;
 
   if (identity->check_perfect)
     gst_identity_check_perfect (identity, buf);
@@ -403,10 +403,11 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
       buf);
 
-  runtimestamp = gst_segment_to_running_time (&trans->segment,
-      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
+  if (trans->segment.format == GST_FORMAT_TIME)
+    runtimestamp = gst_segment_to_running_time (&trans->segment,
+        GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
 
-  if (identity->sync) {
+  if ((identity->sync) && (trans->segment.format == GST_FORMAT_TIME)) {
     GstClock *clock;
 
     GST_OBJECT_LOCK (identity);
@@ -439,7 +440,8 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   if (identity->sleep_time && ret == GST_FLOW_OK)
     g_usleep (identity->sleep_time);
 
-  if (identity->single_segment && ret == GST_FLOW_OK)
+  if (identity->single_segment && (trans->segment.format == GST_FORMAT_TIME)
+      && (ret == GST_FLOW_OK))
     GST_BUFFER_TIMESTAMP (buf) = runtimestamp;
 
   return ret;

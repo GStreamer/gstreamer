@@ -1,3 +1,15 @@
+2005-11-29  Edward Hervey  <edward@fluendo.com>
+
+	* gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_event), (gst_base_sink_do_sync),
+	(gst_base_sink_activate_pull), (gst_base_sink_change_state):
+	Properly handle non GST_FORMAT_TIME segment
+	* gst/elements/gstidentity.c: (gst_identity_transform_ip):
+	Properly handle non GST_FORMAT_TIME segment
+	* gst/gstsegment.c:
+	This function is valid if the accumulator is 0 and the format
+	is different from the requested format.
+	
 2005-11-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/gst/gstreamer-sections.txt:
