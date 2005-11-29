@@ -180,12 +180,28 @@ gst_stream_selector_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_ACTIVE_PAD:{
       const gchar *pad_name = g_value_get_string (value);
-      GstObject *pad_obj;
       GstPad *pad;
 
+      GST_OBJECT_LOCK (object);
       pad = gst_element_get_pad (GST_ELEMENT (object), pad_name);
-      pad_obj = GST_OBJECT (sel->active_sinkpad);
-      gst_object_replace (&pad_obj, GST_OBJECT (pad));
+      if (pad == sel->active_sinkpad) {
+        GST_OBJECT_UNLOCK (object);
+        gst_object_unref (pad);
+        break;
+      }
+
+      if (sel->active_sinkpad && (GST_STATE (sel) >= GST_STATE_PAUSED)) {
+        gst_pad_set_active (sel->active_sinkpad, FALSE);
+      }
+
+      gst_object_replace ((GstObject **) (&sel->active_sinkpad),
+          GST_OBJECT (pad));
+      gst_object_unref (pad);
+
+      if (sel->active_sinkpad && (GST_STATE (sel) >= GST_STATE_PAUSED)) {
+        gst_pad_set_active (sel->active_sinkpad, TRUE);
+      }
+      GST_OBJECT_UNLOCK (object);
       break;
     }
     default:
@@ -202,10 +218,12 @@ gst_stream_selector_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_ACTIVE_PAD:{
+      GST_OBJECT_LOCK (object);
       if (sel->active_sinkpad != NULL) {
         g_value_set_string (value, gst_pad_get_name (sel->active_sinkpad));
       } else
         g_value_set_string (value, "");
+      GST_OBJECT_UNLOCK (object);
       break;
     }
     default:
@@ -296,7 +314,7 @@ gst_stream_selector_request_new_pad (GstElement * element,
 
   GST_OBJECT_LOCK (sel);
   if (GST_STATE (sel) >= GST_STATE_PAUSED) {
-    gst_pad_set_active (sinkpad, GST_ACTIVATE_PUSH);
+    gst_pad_set_active (sinkpad, TRUE);
   }
   GST_OBJECT_UNLOCK (sel);
 
@@ -313,7 +331,7 @@ gst_stream_selector_chain (GstPad * pad, GstBuffer * buf)
   if (pad != sel->active_sinkpad) {
     GST_DEBUG_OBJECT (sel, "Ignoring buffer %p from pad %s:%s",
         buf, GST_DEBUG_PAD_NAME (pad));
-    gst_buffer_unref (buf);
+    gst_object_unref (sel);
     return GST_FLOW_NOT_LINKED;
   }
 
