@@ -1,3 +1,46 @@
+2005-11-29  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* check/Makefile.am:
+	* configure.ac:
+	* docs/gst/Makefile.am:
+	* gst/Makefile.am:
+	* gst/base/.cvsignore:
+	* gst/base/Makefile.am:
+	* gst/base/README:
+	* gst/base/gstadapter.c:
+	* gst/base/gstadapter.h:
+	* gst/base/gstbasesink.c:
+	* gst/base/gstbasesink.h:
+	* gst/base/gstbasesrc.c:
+	* gst/base/gstbasesrc.h:
+	* gst/base/gstbasetransform.c:
+	* gst/base/gstbasetransform.h:
+	* gst/base/gstcollectpads.c:
+	* gst/base/gstcollectpads.h:
+	* gst/base/gstpushsrc.c:
+	* gst/base/gstpushsrc.h:
+	* gst/base/gsttypefindhelper.c:
+	* gst/base/gsttypefindhelper.h:
+	* gst/check/Makefile.am:
+	* gst/check/gstcheck.c:
+	* gst/check/gstcheck.h:
+	* gst/net/Makefile.am:
+	* gst/net/gstnet.h:
+	* gst/net/gstnetclientclock.c:
+	* gst/net/gstnetclientclock.h:
+	* gst/net/gstnettimepacket.c:
+	* gst/net/gstnettimepacket.h:
+	* gst/net/gstnettimeprovider.c:
+	* gst/net/gstnettimeprovider.h:
+	* libs/gst/Makefile.am:
+	* libs/gst/base/Makefile.am:
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/check/Makefile.am:
+	* plugins/elements/Makefile.am:
+	* po/POTFILES.in:
+	  CVS surgery + support to move base, check, and net out of gst
+	  and into libs/gst
+
 2005-11-29  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstevent.h (struct _GstEvent): Only one pointer of padding.

@@ -1,1 +1,20 @@
-SUBDIRS = controller dataprotocol
+if HAVE_CHECK
+SUBDIRS_CHECK = check
+else
+SUBDIRS_CHECK =
+endif
+
+if GST_DISABLE_NET
+SUBDIRS_NET =
+else
+if HAVE_SYS_SOCKET_H
+SUBDIRS_NET = net
+else
+SUBDIRS_NET =
+endif
+endif
+
+SUBDIRS_ALWAYS = base controller dataprotocol
+
+SUBDIRS = $(SUBDIRS_ALWAYS) $(SUBDIRS_CHECK) $(SUBDIRS_NET)
+DIST_SUBDIRS = $(SUBDIRS_ALWAYS) check net

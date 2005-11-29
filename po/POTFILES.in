@@ -6,8 +6,8 @@ gst/gsterror.c
 gst/gstqueue.c
 gst/gsttaglist.c
 gst/parse/grammar.y
-gst/base/gstbasesrc.c
-gst/base/gstbasesink.c
+libs/gst/base/gstbasesrc.c
+libs/gst/base/gstbasesink.c
 plugins/elements/gstfakesink.c
 plugins/elements/gstfilesink.c
 plugins/elements/gstfilesrc.c

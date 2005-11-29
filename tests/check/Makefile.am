@@ -70,7 +70,7 @@ TESTS = $(check_PROGRAMS)
 noinst_HEADERS = gst/capslist.h
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(CHECK_CFLAGS)
-LDADD = $(top_builddir)/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
+LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS) \
 	$(CHECK_LIBS)
 
@@ -86,10 +86,10 @@ gst_libs_controller_LDADD = \
 	$(LDADD)
 
 net_gstnetclientclock_LDADD = \
-	$(top_builddir)/gst/net/libgstnet-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
 	$(LDADD)
 net_gstnettimeprovider_LDADD = \
-	$(top_builddir)/gst/net/libgstnet-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
 # valgrind testing

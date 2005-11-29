@@ -188,7 +188,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../gst-i18n-lib.h"
+#include "../../../gst/gst-i18n-lib.h"
 #include "gstbasetransform.h"
 #include <gst/gstmarshal.h>
 

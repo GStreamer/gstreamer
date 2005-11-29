@@ -473,14 +473,14 @@ Makefile
 gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
-gst/base/Makefile
-gst/check/Makefile
-gst/net/Makefile
 gst/parse/Makefile
 libs/Makefile
 libs/gst/Makefile
+libs/gst/base/Makefile
+libs/gst/check/Makefile
 libs/gst/controller/Makefile
 libs/gst/dataprotocol/Makefile
+libs/gst/net/Makefile
 plugins/Makefile
 plugins/indexers/Makefile
 plugins/elements/Makefile

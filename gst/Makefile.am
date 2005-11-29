@@ -1,11 +1,5 @@
 lib_LTLIBRARIES = libgstreamer-@GST_MAJORMINOR@.la
 
-if HAVE_CHECK
-SUBDIRS_CHECK = check
-else
-SUBDIRS_CHECK =
-endif
-
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC = 
 else
@@ -52,24 +46,9 @@ else
 GST_URI_SRC = gsturi.c
 endif
 
-if GST_DISABLE_NET
-SUBDIRS_NET = 
-else
-if HAVE_SYS_SOCKET_H
-SUBDIRS_NET = net
-else
-SUBDIRS_NET = 
-endif
-endif
+SUBDIRS = $(SUBDIRS_PARSE)
 
-SUBDIRS = \
-	$(SUBDIRS_PARSE) \
-	. \
-	base \
-	$(SUBDIRS_NET) \
-	$(SUBDIRS_CHECK)
-
-DIST_SUBDIRS = base parse net check
+DIST_SUBDIRS = parse
 
 # make variables for all generated source and header files to make the
 # distinction clear

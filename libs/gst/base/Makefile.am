@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libgstbase-@GST_MAJORMINOR@.la
 
 libgstbase_@GST_MAJORMINOR@_la_DEPENDENCIES = \
-	../libgstreamer-@GST_MAJORMINOR@.la
+	$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
 libgstbase_@GST_MAJORMINOR@_la_SOURCES =	\
 	gstadapter.c		\
 	gstbasesink.c		\

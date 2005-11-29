@@ -28,7 +28,7 @@ libgstelements_la_SOURCES =	\
 
 libgstelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstelements_la_LIBADD = \
-	$(top_builddir)/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS)
 libgstelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 

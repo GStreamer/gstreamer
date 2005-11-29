@@ -33,12 +33,6 @@ include $(srcdir)/../upload.mak
 # The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 
-# The directory containing the source code. Relative to $(top_srcdir).
-# gtk-doc will search all .c & .h files beneath here for inline comments
-# documenting functions and macros.
-DOC_SOURCE_DIR=$(top_srcdir)/gst
-DOC_BUILD_DIR=$(top_builddir)/gst
-
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
 
@@ -48,17 +42,22 @@ MKDB_OPTIONS=--sgml-mode --ignore-files=parse
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=
 
-# Used for dependencies.
-HFILE_GLOB=$(DOC_SOURCE_DIR)/*.h
-CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
+# The files containing the source code. Relative to $(top_srcdir).
+# gtk-doc will search all .c & .h files beneath here for inline comments
+# documenting functions and macros.
+DOC_SOURCE_DIR = $(top_srcdir)/gst
+DOC_BUILD_DIR = $(top_builddir)/gst
+
+HFILE_GLOB=$(top_srcdir)/gst/*.h $(top_srcdir)/libs/gst/*/*.h
+CFILE_GLOB=$(top_srcdir)/gst/*.c $(top_srcdir)/libs/gst/*/*.c
 
 # Dependencies for the intermediate scanobj tool
 #SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
 #	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
 SCANOBJ_DEPS = \
 	$(top_builddir)/plugins/elements/libgstelements.la \
-	$(top_builddir)/gst/base/libgstbase-@GST_MAJORMINOR@.la \
-	$(top_builddir)/gst/net/libgstnet-@GST_MAJORMINOR@.la
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning. Use base file name, no paths
 IGNORE_HFILES= \
