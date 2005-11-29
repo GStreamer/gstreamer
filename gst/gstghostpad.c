@@ -360,7 +360,8 @@ gst_proxy_pad_get_target (GstPad * pad)
 
   GST_PROXY_LOCK (pad);
   target = GST_PROXY_PAD_TARGET (pad);
-  gst_object_ref (target);
+  if (target)
+    gst_object_ref (target);
   GST_PROXY_UNLOCK (pad);
 
   return target;
@@ -813,10 +814,10 @@ gst_ghost_pad_new (const gchar * name, GstPad * target)
  * gst_ghost_pad_get_target:
  * @gpad: the #GstGhostpad
  *
- * Get the target pad of #gpad. Unref after usage.
+ * Get the target pad of #gpad. Unref target pad after usage.
  *
  * Returns: the target #GstPad, can be NULL if the ghostpad
- * has no target set. Unref after usage.
+ * has no target set. Unref target pad after usage.
  */
 GstPad *
 gst_ghost_pad_get_target (GstGhostPad * gpad)
