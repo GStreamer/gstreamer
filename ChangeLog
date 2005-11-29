@@ -1,5 +1,15 @@
 2005-11-29  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* check/Makefile.am:
+	  look in the right place for elements, a lot more chance of
+	  success
+	* gst/Makefile.am:
+	  remove indexers and elements subdirs
+	* plugins/Makefile.am:
+	  make indexers conditional
+
+2005-11-29  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* Makefile.am:
 	* configure.ac:
 	* plugins/elements/Makefile.am:

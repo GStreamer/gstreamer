@@ -10,7 +10,7 @@ REGISTRY_ENVIRONMENT = \
 TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
         GST_PLUGIN_SYSTEM_PATH=					\
-        GST_PLUGIN_PATH=$(top_builddir)/gst/elements:$(top_builddir)/gst/indexers
+        GST_PLUGIN_PATH=$(top_builddir)/plugins
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 

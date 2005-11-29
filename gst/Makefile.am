@@ -36,10 +36,8 @@ endif
 
 if GST_DISABLE_INDEX
 GST_INDEX_SRC = 
-SUBDIRS_INDEX =
 else
 GST_INDEX_SRC = gstindex.c gstindexfactory.c
-SUBDIRS_INDEX = indexers
 endif
 
 if GST_DISABLE_PLUGIN
@@ -68,12 +66,10 @@ SUBDIRS = \
 	$(SUBDIRS_PARSE) \
 	. \
 	base \
-	elements \
-	$(SUBDIRS_INDEX) \
 	$(SUBDIRS_NET) \
 	$(SUBDIRS_CHECK)
 
-DIST_SUBDIRS = base elements parse indexers net check
+DIST_SUBDIRS = base parse net check
 
 # make variables for all generated source and header files to make the
 # distinction clear
