@@ -7,6 +7,7 @@
 
 #include <gst/gst.h>
 #include <libmms/mms.h>
+#include <gst/base/gstpushsrc.h>
 
 G_BEGIN_DECLS
 
@@ -27,9 +28,7 @@ typedef struct _GstMMSClass GstMMSClass;
 
 struct _GstMMS
 {
-  GstElement element;
-
-  GstPad *srcpad;
+  GstPushSrc parent;
 
   gchar *uri_name;
   gpointer connection;
@@ -38,7 +37,7 @@ struct _GstMMS
 
 struct _GstMMSClass 
 {
-  GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 };
 
 GType gst_mms_get_type (void);

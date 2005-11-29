@@ -411,6 +411,14 @@ GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
   AC_LANG_C
 ])
 
+dnl *** libmms ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
+GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
+  dnl check with pkg-config first
+  PKG_CHECK_MODULES(LIBMMS, libmms >= 0.1, HAVE_LIBMMS="yes", HAVE_LIBMMS="no")
+])
+AC_SUBST(LIBMMS_LIBS)
+
 
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
@@ -530,6 +538,7 @@ ext/faad/Makefile
 ext/wavpack/Makefile
 ext/ivorbis/Makefile
 ext/gsm/Makefile
+ext/libmms/Makefile
 ext/musepack/Makefile
 ext/sdl/Makefile
 docs/Makefile

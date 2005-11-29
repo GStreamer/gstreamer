@@ -1,3 +1,14 @@
+2005-11-28  Edgard Lima <edgard.lima@indt.org.br>
+
+	* PORTED_09:
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/libmms/Makefile.am:
+	* ext/libmms/gstmms.c:
+	* ext/libmms/gstmms.h:
+	libmm ported to 0.9. It works fine, but print some error messages. I
+	ll fix them soon. Tested with  mmssrc location=mms:// ! filesink.
+	
 2005-11-28  Edward Hervey  <edward@fluendo.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_srcgetcaps):

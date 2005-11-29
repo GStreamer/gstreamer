@@ -106,11 +106,11 @@ LCS_DIR=
 LIBFAME_DIR=
 # endif
 
-# if USE_LIBMMS
-# LIBMMS_DIR=libmms
-# else 
+if USE_LIBMMS
+LIBMMS_DIR=libmms
+else 
 LIBMMS_DIR=
-# endif
+endif
 
 # if USE_MPEG2ENC
 # MPEG2ENC_DIR=mpeg2enc
@@ -236,6 +236,7 @@ DIST_SUBDIRS= \
 	faad \
 	gsm \
 	ivorbis \
+	libmms \
 	musepack \
 	sdl \
 	wavpack
