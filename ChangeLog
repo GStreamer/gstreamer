@@ -1,3 +1,8 @@
+2005-11-29  Michael Smith  <msmith@fluendo.com>
+
+	* gst/gstregistryxml.c: (load_plugin):
+	  Don't crash if we failed to load a feature from a plugin. 
+
 2005-11-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* check/pipelines/simple_launch_lines.c: (setup_pipeline),

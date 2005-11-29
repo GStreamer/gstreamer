@@ -699,9 +699,8 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
       } else if (g_str_equal (tag, "feature")) {
         GstPluginFeature *feature = load_feature (reader);
 
-        feature->plugin_name = g_strdup (plugin->desc.name);
-
         if (feature) {
+          feature->plugin_name = g_strdup (plugin->desc.name);
           *feature_list = g_list_prepend (*feature_list, feature);
         }
       } else {
