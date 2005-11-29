@@ -87,7 +87,7 @@ struct _GstBaseSink {
   gboolean       flushing;
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 struct _GstBaseSinkClass {
@@ -120,7 +120,7 @@ struct _GstBaseSinkClass {
   GstFlowReturn (*render)       (GstBaseSink *sink, GstBuffer *buffer);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType gst_base_sink_get_type(void);

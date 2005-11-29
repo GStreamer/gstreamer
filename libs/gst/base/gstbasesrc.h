@@ -100,7 +100,7 @@ struct _GstBaseSrc {
   gint           num_buffers_left;
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
@@ -151,7 +151,7 @@ struct _GstBaseSrcClass {
 		                 GstBuffer **buf);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType gst_base_src_get_type (void);

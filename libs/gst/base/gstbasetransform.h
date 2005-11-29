@@ -84,7 +84,7 @@ struct _GstBaseTransform {
   GMutex	*transform_lock;
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
@@ -158,7 +158,7 @@ struct _GstBaseTransformClass {
      GstBuffer *input, gint size, GstCaps *caps, GstBuffer **buf);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING - 2];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType           gst_base_transform_get_type         (void);

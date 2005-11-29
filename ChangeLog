@@ -1,3 +1,13 @@
+2005-11-29  Andy Wingo  <wingo@pobox.com>
+
+	* libs/gst/base/gstbasetransform.h: 
+	* libs/gst/base/gstbasesrc.h: 
+	* libs/gst/base/gstbasesink.h: en-LARGE the padding.
+
+	* gst/gstconfig.h.in (GST_PADDING_LARGE): New define, the number
+	of pointers by which to pad very extensible base classes (like the
+	ones in libs/gst/base).
+
 2005-11-29  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* docs/gst/gstreamer-docs.sgml:

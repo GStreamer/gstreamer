@@ -71,6 +71,9 @@
 #define GST_PADDING		4
 #define GST_PADDING_INIT	{0}
 
+/***** padding for very extensible base classes *****/
+#define GST_PADDING_LARGE	20
+
 /***** disabling of subsystems *****/
 
 /* wether or not the debugging subsystem is enabled */
