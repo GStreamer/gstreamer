@@ -1,3 +1,11 @@
+2005-11-29  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* gst/gst.c:
+	* plugins/elements/Makefile.am:
+	* plugins/elements/gstelements.c:
+	* plugins/elements/gstqueue.c:
+	  move queue from core to the elements plugin
+
 2005-11-29  Andy Wingo  <wingo@pobox.com>
 
 	* libs/gst/base/gstbasetransform.h: 

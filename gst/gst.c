@@ -109,7 +109,6 @@
 #include <locale.h>             /* for LC_ALL */
 
 #include "gst.h"
-#include "gstqueue.h"
 
 #define GST_CAT_DEFAULT GST_CAT_GST_INIT
 
@@ -505,8 +504,7 @@ gst_register_core_elements (GstPlugin * plugin)
   if (!gst_element_register (plugin, "bin", GST_RANK_PRIMARY,
           GST_TYPE_BIN) ||
       !gst_element_register (plugin, "pipeline", GST_RANK_PRIMARY,
-          GST_TYPE_PIPELINE) ||
-      !gst_element_register (plugin, "queue", GST_RANK_NONE, GST_TYPE_QUEUE)
+          GST_TYPE_PIPELINE)
       )
     g_assert_not_reached ();
 

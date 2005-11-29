@@ -37,14 +37,12 @@
  * The queue blocks by default.
  */
 
-#include "gst_private.h"
+#include "gst/gst_private.h"
 
+#include <gst/gst.h>
 #include "gstqueue.h"
-#include "gstevent.h"
-#include "gstinfo.h"
-#include "gsterror.h"
-#include "gstutils.h"
-#include "gst-i18n-lib.h"
+
+#include "../../gst/gst-i18n-lib.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

@@ -16,13 +16,14 @@ libgstelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_MAJORMINO
 libgstelements_la_SOURCES =	\
 	gstbufferstore.c	\
 	gstcapsfilter.c		\
+	gstelements.c		\
 	gstfakesrc.c		\
 	gstfakesink.c		\
 	$(GSTFDSRC)		\
 	gstfilesink.c		\
 	gstfilesrc.c		\
 	gstidentity.c		\
-	gstelements.c		\
+	gstqueue.c		\
 	gsttee.c		\
 	gsttypefindelement.c
 
@@ -40,6 +41,7 @@ noinst_HEADERS =		\
 	gstfilesink.h		\
 	gstfilesrc.h		\
 	gstidentity.h		\
+	gstqueue.h		\
 	gsttee.h		\
 	gsttypefindelement.h
 

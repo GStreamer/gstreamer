@@ -33,6 +33,7 @@
 #include "gstfilesink.h"
 #include "gstfilesrc.h"
 #include "gstidentity.h"
+#include "gstqueue.h"
 #include "gsttee.h"
 #include "gsttypefindelement.h"
 
@@ -56,6 +57,7 @@ static struct _elements_entry _elements[] = {
 #endif
   {"filesrc", GST_RANK_NONE, gst_file_src_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
+  {"queue", GST_RANK_NONE, gst_queue_get_type},
   {"filesink", GST_RANK_NONE, gst_file_sink_get_type},
   {"tee", GST_RANK_NONE, gst_tee_get_type},
   {"typefind", GST_RANK_NONE, gst_type_find_element_get_type},
