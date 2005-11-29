@@ -1,5 +1,10 @@
 2005-11-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/playback/gststreamselector.c: (gst_stream_selector_chain):
+	3rd time's the charm. Correct ref-counting for discarded buffers.
+
+2005-11-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/playback/gststreamselector.c:
 	(gst_stream_selector_class_init),
 	(gst_stream_selector_set_property),

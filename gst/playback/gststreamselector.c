@@ -326,12 +326,19 @@ gst_stream_selector_chain (GstPad * pad, GstBuffer * buf)
 {
   GstStreamSelector *sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
   GstFlowReturn res;
+  GstPad *active_sinkpad;
+
+  GST_OBJECT_LOCK (sel);
+  active_sinkpad = sel->active_sinkpad;
+  GST_OBJECT_UNLOCK (sel);
 
   /* Ignore buffers from pads except the selected one */
-  if (pad != sel->active_sinkpad) {
+  if (pad != active_sinkpad) {
     GST_DEBUG_OBJECT (sel, "Ignoring buffer %p from pad %s:%s",
         buf, GST_DEBUG_PAD_NAME (pad));
+
     gst_object_unref (sel);
+    gst_buffer_unref (buf);
     return GST_FLOW_NOT_LINKED;
   }
 
