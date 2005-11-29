@@ -12,7 +12,7 @@ else
 GSTFDSRC =
 endif
 
-libgstelements_la_DEPENDENCIES = ../libgstreamer-@GST_MAJORMINOR@.la
+libgstelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
 libgstelements_la_SOURCES =	\
 	gstbufferstore.c	\
 	gstcapsfilter.c		\

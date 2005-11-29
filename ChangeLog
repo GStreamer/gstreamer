@@ -1,3 +1,17 @@
+2005-11-29  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* Makefile.am:
+	* configure.ac:
+	* plugins/elements/Makefile.am:
+	* plugins/elements/gstcapsfilter.c:
+	* plugins/elements/gstfilesink.c:
+	* plugins/elements/gstfilesrc.c:
+	* plugins/elements/gstidentity.c:
+	* plugins/indexers/Makefile.am:
+	  do CVS surgery and related build fixery to move elements
+	  and indexers in a new gstreamer/plugins directory, out of the
+	  gst/ directory
+
 2005-11-29  Andy Wingo  <wingo@pobox.com>
 
 	* check/Makefile.am:

@@ -33,7 +33,7 @@ aclocaldir = $(datadir)/aclocal
 aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 
 SUBDIRS = \
-	gst libs tools \
+	gst libs plugins tools \
 	$(SUBDIRS_CHECK) \
 	$(SUBDIRS_TESTS) \
 	$(SUBDIRS_EXAMPLES) \
@@ -43,7 +43,7 @@ SUBDIRS = \
 
 # These are all the possible subdirs
 DIST_SUBDIRS = \
-	gst libs tools \
+	gst libs plugins tools \
 	check \
 	tests testsuite \
 	examples \

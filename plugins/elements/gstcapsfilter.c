@@ -24,7 +24,7 @@
 #include "config.h"
 #endif
 
-#include "../gst-i18n-lib.h"
+#include "../../gst/gst-i18n-lib.h"
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 
