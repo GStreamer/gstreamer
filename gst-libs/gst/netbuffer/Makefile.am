@@ -1,4 +1,4 @@
-libgstnetincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/net
+libgstnetincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/netbuffer
 
 libgstnetinclude_HEADERS = gstnetbuffer.h
 
