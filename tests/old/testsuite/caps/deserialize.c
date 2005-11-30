@@ -18,7 +18,7 @@ main (int argc, char *argv[])
   char *data;
   char **list;
   int i;
-  int length;
+  guint length;
   GstCaps *caps;
 
   gst_init (&argc, &argv);
