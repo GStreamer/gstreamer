@@ -413,6 +413,15 @@ GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], dv1394src, [
   fi
 ])
 
+dnl *** pango ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
+GST_CHECK_FEATURE(PANGO, [pango], pango, [
+  PKG_CHECK_MODULES(PANGO, pango pangoft2,
+      HAVE_PANGO="yes", HAVE_PANGO="no")
+  AC_SUBST(PANGO_CFLAGS)
+  AC_SUBST(PANGO_LIBS)
+])
+
 dnl *** shout2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
 GST_CHECK_FEATURE(SHOUT2, [shout2 plug-in], shout2send, [
@@ -557,6 +566,7 @@ ext/gconf/Makefile
 ext/ladspa/Makefile
 ext/libcaca/Makefile
 ext/libpng/Makefile
+ext/pango/Makefile
 ext/raw1394/Makefile
 ext/shout2/Makefile
 ext/speex/Makefile

@@ -1,3 +1,34 @@
+2005-11-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/pango/Makefile.am:
+	* ext/pango/gstclockoverlay.c: (gst_clock_overlay_base_init),
+	(gst_clock_overlay_render_time), (gst_clock_overlay_get_text),
+	(gst_clock_overlay_class_init), (gst_clock_overlay_init):
+	* ext/pango/gstclockoverlay.h:
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_base_init),
+	(gst_text_overlay_get_text), (gst_text_overlay_class_init),
+	(gst_text_overlay_finalize), (gst_text_overlay_init),
+	(gst_text_overlay_update_wrap_mode), (gst_text_overlay_setcaps),
+	(gst_text_overlay_text_pad_linked),
+	(gst_text_overlay_text_pad_unlinked),
+	(gst_text_overlay_set_property), (gst_text_overlay_getcaps),
+	(gst_text_overlay_shade_y), (gst_text_overlay_blit_yuv420),
+	(gst_text_overlay_resize_bitmap), (gst_text_overlay_render_text),
+	(gst_text_overlay_push_frame), (gst_text_overlay_pop_video),
+	(gst_text_overlay_pop_text), (gst_text_overlay_collected),
+	(gst_text_overlay_change_state), (plugin_init):
+	* ext/pango/gsttextoverlay.h:
+	* ext/pango/gsttimeoverlay.c: (gst_time_overlay_base_init),
+	(gst_time_overlay_render_time), (gst_time_overlay_get_text),
+	(gst_time_overlay_class_init), (gst_time_overlay_init):
+	* ext/pango/gsttimeoverlay.h:
+	  Port pango-based textoverlay, timeoverlay and textrender to 0.9 
+	  and add background shading and text wrapping modes. Make 
+	  timoverlay derive from textoverlay. Also add new clockoverlay
+	  element.
+
 2005-11-30  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/udp/Makefile.am: Moved to netbuffer.
