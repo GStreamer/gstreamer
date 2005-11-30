@@ -1,5 +1,13 @@
 2005-11-30  Edward Hervey  <edward@fluendo.com>
 
+	* configure.ac:
+	* gst/Makefile.am:
+	gst-interfaces-0.9.pc is no more, update to new use
+	* testsuite/test_element.py:
+	Fix for queue modification
+
+2005-11-30  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst-types.defs:
 	* gst/gst.defs:
 	* gst/gst.override:

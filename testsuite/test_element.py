@@ -204,7 +204,6 @@ class QueryTest(TestCase):
 class QueueTest(TestCase):
     def testConstruct(self):
         queue = gst.element_factory_make('queue')
-        assert isinstance(queue, gst.Queue)
         assert queue.get_name() == 'queue0'
         self.assertEquals(queue.__gstrefcount__, 1)
 

@@ -113,14 +113,6 @@ dnl PYGTK_CODEGEN="$PYTHON \$(top_srcdir)/codegen/codegen.py"
 AC_SUBST(PYGTK_CODEGEN)
 AC_MSG_RESULT($PYGTK_CODEGEN)
 
-dnl Interfaces
-AC_MSG_CHECKING(for GStreamer interfaces include dir)
-PKG_CHECK_MODULES(GST_INTERFACES, gstreamer-plugins-base-$GST_MAJORMINOR,
-                  HAVE_INTERFACES=yes,HAVE_INTERFACES=no)
-AM_CONDITIONAL(BUILD_INTERFACES, test "x$HAVE_INTERFACES" = "xyes")
-AC_SUBST(GST_INTERFACES_CFLAGS)
-AC_SUBST(GST_INTERFACES_LIBS)
-
 dnl decide on error flags
 dnl if we support -Wall, set it unconditionally
 AS_COMPILER_FLAG(-Wall,

@@ -11,11 +11,7 @@ pygst_PYTHON = __init__.py
 pygstexecdir = $(pkgpyexecdir)
 pygstexec_LTLIBRARIES = _gst.la $(interface_lib)
 
-if BUILD_INTERFACES
 interface_lib = interfaces.la
-else
-interface_lib =
-endif
 
 defs_DATA = gst-types.defs \
 	gst-extrafuncs.defs \
@@ -67,9 +63,9 @@ EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)
 
 # GStreamer interfaces bindings
-interfaces_la_CFLAGS = $(common_cflags) $(GST_INTERFACES_CFLAGS) 
-interfaces_la_LIBADD = $(common_libadd) $(GST_INTERFACES_LIBS) -lgstinterfaces-0.9 
-interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface
+interfaces_la_CFLAGS = $(common_cflags) $(GST_BASE_CFLAGS)
+interfaces_la_LIBADD = $(common_libadd) -lgstinterfaces-0.9 
+interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface $(GST_BASE_LIBS)
 interfaces_la_SOURCES = interfacesmodule.c
 nodist_interfaces_la_SOURCES = interfaces.c
 INTERFACES_OVERRIDES = interfaces.override xoverlay.override
