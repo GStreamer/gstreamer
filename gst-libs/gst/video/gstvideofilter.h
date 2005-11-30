@@ -18,39 +18,39 @@
  */
 
 
-#ifndef __GST_VIDEOFILTER_H__
-#define __GST_VIDEOFILTER_H__
+#ifndef __GST_VIDEO_FILTER_H__
+#define __GST_VIDEO_FILTER_H__
 
 #include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstVideofilter GstVideofilter;
-typedef struct _GstVideofilterClass GstVideofilterClass;
+typedef struct _GstVideoFilter GstVideoFilter;
+typedef struct _GstVideoFilterClass GstVideoFilterClass;
 
-#define GST_TYPE_VIDEOFILTER \
-  (gst_videofilter_get_type())
-#define GST_VIDEOFILTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEOFILTER,GstVideofilter))
-#define GST_VIDEOFILTER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEOFILTER,GstVideofilterClass))
-#define GST_IS_VIDEOFILTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEOFILTER))
-#define GST_IS_VIDEOFILTER_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOFILTER))
+#define GST_TYPE_VIDEO_FILTER \
+  (gst_video_filter_get_type())
+#define GST_VIDEO_FILTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_FILTER,GstVideoFilter))
+#define GST_VIDEO_FILTER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_FILTER,GstVideoFilterClass))
+#define GST_IS_VIDEO_FILTER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_FILTER))
+#define GST_IS_VIDEO_FILTER_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_FILTER))
 
-struct _GstVideofilter {
+struct _GstVideoFilter {
   GstBaseTransform element;
 
   gboolean inited;
 };
 
-struct _GstVideofilterClass {
+struct _GstVideoFilterClass {
   GstBaseTransformClass parent_class;
 };
 
-GType gst_videofilter_get_type(void);
+GType gst_video_filter_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_VIDEOFILTER_H__ */
+#endif /* __GST_VIDEO_FILTER_H__ */

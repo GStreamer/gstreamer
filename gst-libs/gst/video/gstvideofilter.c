@@ -24,63 +24,63 @@
 
 #include "gstvideofilter.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_videofilter_debug);
-#define GST_CAT_DEFAULT gst_videofilter_debug
+GST_DEBUG_CATEGORY_STATIC (gst_video_filter_debug);
+#define GST_CAT_DEFAULT gst_video_filter_debug
 
-static void gst_videofilter_class_init (gpointer g_class, gpointer class_data);
-static void gst_videofilter_init (GTypeInstance * instance, gpointer g_class);
+static void gst_video_filter_class_init (gpointer g_class, gpointer class_data);
+static void gst_video_filter_init (GTypeInstance * instance, gpointer g_class);
 
 static GstBaseTransformClass *parent_class = NULL;
 
 GType
-gst_videofilter_get_type (void)
+gst_video_filter_get_type (void)
 {
-  static GType videofilter_type = 0;
+  static GType video_filter_type = 0;
 
-  if (!videofilter_type) {
-    static const GTypeInfo videofilter_info = {
-      sizeof (GstVideofilterClass),
+  if (!video_filter_type) {
+    static const GTypeInfo video_filter_info = {
+      sizeof (GstVideoFilterClass),
       NULL,
       NULL,
-      gst_videofilter_class_init,
+      gst_video_filter_class_init,
       NULL,
       NULL,
-      sizeof (GstVideofilter),
+      sizeof (GstVideoFilter),
       0,
-      gst_videofilter_init,
+      gst_video_filter_init,
     };
 
-    videofilter_type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
-        "GstVideofilter", &videofilter_info, G_TYPE_FLAG_ABSTRACT);
+    video_filter_type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
+        "GstVideoFilter", &video_filter_info, G_TYPE_FLAG_ABSTRACT);
   }
-  return videofilter_type;
+  return video_filter_type;
 }
 
 static void
-gst_videofilter_class_init (gpointer g_class, gpointer class_data)
+gst_video_filter_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseTransformClass *trans_class;
-  GstVideofilterClass *klass;
+  GstVideoFilterClass *klass;
 
-  klass = (GstVideofilterClass *) g_class;
+  klass = (GstVideoFilterClass *) g_class;
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
-  GST_DEBUG_CATEGORY_INIT (gst_videofilter_debug, "videofilter", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_video_filter_debug, "videofilter", 0,
       "videofilter");
 }
 
 static void
-gst_videofilter_init (GTypeInstance * instance, gpointer g_class)
+gst_video_filter_init (GTypeInstance * instance, gpointer g_class)
 {
-  GstVideofilter *videofilter = GST_VIDEOFILTER (instance);
+  GstVideoFilter *videofilter = GST_VIDEO_FILTER (instance);
 
-  GST_DEBUG_OBJECT (videofilter, "gst_videofilter_init");
+  GST_DEBUG_OBJECT (videofilter, "gst_video_filter_init");
 
   videofilter->inited = FALSE;
 }

@@ -1,5 +1,12 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/gst/video/gstvideofilter.c: (gst_video_filter_get_type),
+	(gst_video_filter_class_init), (gst_video_filter_init):
+	* gst-libs/gst/video/gstvideofilter.h:
+	  borgify name to bring in line with other classes
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/audioscale/.cvsignore:
 	* gst/audioscale/Makefile.am:
 	* gst/audioscale/README:
