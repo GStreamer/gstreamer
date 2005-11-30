@@ -1,4 +1,0 @@
-#! /bin/sh
-for loc in "$@"; do
-../../tools/gst-launch filesrc location="$loc" ! mp3parse ! mad ! osssink
-done

@@ -51,15 +51,15 @@ check_PROGRAMS =				\
 	elements/fakesrc			\
 	elements/identity			\
 	elements/fdsrc		          	\
+	generic/sinks				\
 	generic/states				\
-	pipelines/simple_launch_lines		\
+	pipelines/simple-launch-lines		\
 	pipelines/stress			\
 	pipelines/cleanup			\
-	states/sinks				\
-	gst-libs/controller			\
-	gst-libs/gdp				\
-	net/gstnetclientclock			\
-	net/gstnettimeprovider
+	libs/controller				\
+	libs/gdp				\
+	libs/gstnetclientclock			\
+	libs/gstnettimeprovider
 
 # failing tests
 noinst_PROGRAMS =				\
@@ -74,21 +74,21 @@ LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS) \
 	$(CHECK_LIBS)
 
-gst_libs_gdp_SOURCES = \
-	gst-libs/gdp.c \
+libs_gdp_SOURCES = \
+	libs/gdp.c \
 	$(top_srcdir)/libs/gst/dataprotocol/dataprotocol.c
-gst_libs_gdp_CFLAGS = $(AM_CFLAGS)
+libs_gdp_CFLAGS = $(AM_CFLAGS)
 
 elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) $(CHECK_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
 
-gst_libs_controller_LDADD = \
+libs_controller_LDADD = \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
-net_gstnetclientclock_LDADD = \
+libs_gstnetclientclock_LDADD = \
 	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
 	$(LDADD)
-net_gstnettimeprovider_LDADD = \
+libs_gstnettimeprovider_LDADD = \
 	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
 	$(LDADD)
 

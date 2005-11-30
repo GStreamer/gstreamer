@@ -1,27 +1,5 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc --enable-docbook
 
-if BUILD_TESTS
-## SUBDIRS_TESTS = tests testsuite
-## FIXME: write tests from scratch
-SUBDIRS_TESTS =
-if HAVE_CHECK
-SUBDIRS_CHECK = check
-else
-SUBDIRS_CHECK =
-endif
-else
-SUBDIRS_TESTS =
-SUBDIRS_CHECK =
-endif
-
-if BUILD_EXAMPLES
-## FIXME: write examples from scratch
-# SUBDIRS_EXAMPLES = examples
-SUBDIRS_EXAMPLES =
-else
-SUBDIRS_EXAMPLES =
-endif
-
 all-local: gst-element-check-@GST_MAJORMINOR@.m4
 
 gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
@@ -34,9 +12,6 @@ aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 
 SUBDIRS = \
 	gst libs plugins tools \
-	$(SUBDIRS_CHECK) \
-	$(SUBDIRS_TESTS) \
-	$(SUBDIRS_EXAMPLES) \
 	docs \
 	pkgconfig po \
 	common
@@ -44,9 +19,6 @@ SUBDIRS = \
 # These are all the possible subdirs
 DIST_SUBDIRS = \
 	gst libs plugins tools \
-	check \
-	tests testsuite \
-	examples \
 	docs \
 	pkgconfig po \
 	common
@@ -119,10 +91,10 @@ endif
 
 if HAVE_CHECK
 check-valgrind:
-	cd check && make check-valgrind
+	cd tests/check && make check-valgrind
 
 check-torture:
-	cd check && make torture
+	cd tests/check && make torture
 else
 check-valgrind:
 	echo "'check' library not installed, skipping"
