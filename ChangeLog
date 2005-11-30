@@ -1,3 +1,10 @@
+2005-11-30  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_chain):
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_demux_frame):
+	* ext/dv/gstdvdemux.h:
+	Fix seeking in dvdemux again, add some more debug info.
+
 2005-11-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:

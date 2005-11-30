@@ -293,6 +293,7 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
     outframe_pitches[2] = outframe_pitches[1];
   }
 
+  GST_DEBUG_OBJECT (dvdec, "decoding and pushing buffer");
   dv_decode_full_frame (dvdec->decoder, inframe,
       e_dv_color_yuv, outframe_ptrs, outframe_pitches);
 
@@ -310,6 +311,7 @@ skip:
   /* ERRORS */
 no_buffer:
   {
+    GST_DEBUG_OBJECT (dvdec, "could not allocate buffer");
     gst_buffer_unref (buf);
     gst_object_unref (dvdec);
     return ret;

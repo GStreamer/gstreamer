@@ -73,7 +73,7 @@ struct _GstDVDemux {
   
   guint64	 timestamp;
   guint64	 duration;
-  guint          total_frames;
+  gint64         total_frames;
   guint64	 audio_offset;
   guint64	 video_offset;
 

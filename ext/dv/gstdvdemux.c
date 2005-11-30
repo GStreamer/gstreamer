@@ -882,8 +882,15 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, const guint8 * data)
                 dvdemux->start_byte, &format, &dvdemux->start_timestamp))) {
       goto discont_error;
     }
-
     dvdemux->timestamp = dvdemux->start_timestamp;
+
+    /* calculate current frame number */
+    format = GST_FORMAT_DEFAULT;
+    if (!(res = gst_pad_query_convert (dvdemux->videosrcpad,
+                GST_FORMAT_TIME,
+                dvdemux->start_timestamp, &format, &dvdemux->total_frames))) {
+      goto discont_error;
+    }
 
     if (dvdemux->stop_byte == -1) {
       dvdemux->stop_timestamp = -1;
@@ -904,10 +911,9 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, const guint8 * data)
     dvdemux->need_discont = FALSE;
   }
 
-  dvdemux->total_frames++;
-
-  next_ts = dvdemux->total_frames * GST_SECOND *
-      dvdemux->framerate_denominator / dvdemux->framerate_numerator;
+  next_ts = gst_util_uint64_scale_int (
+      (dvdemux->total_frames + 1) * GST_SECOND,
+      dvdemux->framerate_denominator, dvdemux->framerate_numerator);
   dvdemux->duration = next_ts - dvdemux->timestamp;
 
   dv_parse_packs (dvdemux->decoder, data);
@@ -929,6 +935,7 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, const guint8 * data)
 
   ret = GST_FLOW_OK;
   dvdemux->timestamp = next_ts;
+  dvdemux->total_frames++;
 
 done:
   return ret;
