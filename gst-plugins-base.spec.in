@@ -83,8 +83,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstriff-%{majorminor}.so.*
 %{_libdir}/libgsttag-%{majorminor}.so.*
 %{_libdir}/libgstvideo-%{majorminor}.so.*
-%{_libdir}/libgstnet-%{majorminor}.so.*
 %{_libdir}/libgstrtp-%{majorminor}.so*
+%{_libdir}/libgstnetbuffer-%{majorminor}.so*
 
 # base plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
@@ -176,20 +176,19 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiosink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstbaseaudiosink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstringbuffer.h
-%{_includedir}/gstreamer-%{majorminor}/gst/net/gstnetbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/tag/tag.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstbasertppayload.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideofilter.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideosink.h
-
+%{_includedir}/gstreamer-%{majorminor}/gst/netbuffer/gstnetbuffer.h
 
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
 %{_libdir}/libgsttag-%{majorminor}.so
 %{_libdir}/libgstvideo-%{majorminor}.so
-%{_libdir}/libgstnet-%{majorminor}.so
 %{_libdir}/libgstrtp-%{majorminor}.so
 %{_libdir}/libgstinterfaces-%{majorminor}.so
+%{_libdir}/libgstnetbuffer-%{majorminor}.so
 
 # pkg-config files
 %{_libdir}/pkgconfig/gstreamer-plugins-base-%{majorminor}.pc
