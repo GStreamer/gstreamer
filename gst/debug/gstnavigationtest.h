@@ -48,7 +48,7 @@ typedef struct
 } ButtonClick;
 
 struct _GstNavigationtest {
-  GstVideofilter videofilter;
+  GstVideoFilter videofilter;
 
   gint width, height;
   
@@ -59,7 +59,7 @@ struct _GstNavigationtest {
 };
 
 struct _GstNavigationtestClass {
-  GstVideofilterClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 GType gst_navigationtest_get_type(void);

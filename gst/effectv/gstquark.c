@@ -52,7 +52,7 @@ typedef struct _GstQuarkTVClass GstQuarkTVClass;
 
 struct _GstQuarkTV
 {
-  GstVideofilter element;
+  GstVideoFilter element;
 
   gint width, height;
   gint area;
@@ -63,7 +63,7 @@ struct _GstQuarkTV
 
 struct _GstQuarkTVClass
 {
-  GstVideofilterClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 enum
@@ -95,7 +95,7 @@ static GstStaticPadTemplate gst_quarktv_sink_template =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_RGBx)
     );
 
-static GstVideofilterClass *parent_class = NULL;
+static GstVideoFilterClass *parent_class = NULL;
 
 static gboolean
 gst_quarktv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
@@ -365,7 +365,7 @@ gst_quarktv_get_type (void)
       gst_quarktv_init,
     };
 
-    quarktv_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+    quarktv_type = g_type_register_static (GST_TYPE_VIDEO_FILTER,
         "GstQuarkTV", &quarktv_info, 0);
   }
   return quarktv_type;

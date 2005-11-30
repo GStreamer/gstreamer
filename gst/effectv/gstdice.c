@@ -50,7 +50,7 @@ DiceDir;
 
 struct _GstDiceTV
 {
-  GstVideofilter videofilter;
+  GstVideoFilter videofilter;
 
   gint width, height;
   gchar *dicemap;
@@ -63,7 +63,7 @@ struct _GstDiceTV
 
 struct _GstDiceTVClass
 {
-  GstVideofilterClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 GType gst_dicetv_get_type (void);
@@ -91,7 +91,7 @@ static GstStaticPadTemplate gst_dicetv_sink_template =
         GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xBGR)
     );
 
-static GstVideofilterClass *parent_class = NULL;
+static GstVideoFilterClass *parent_class = NULL;
 
 enum
 {
@@ -358,8 +358,8 @@ gst_dicetv_get_type (void)
     };
 
     dicetv_type =
-        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstDiceTV", &dicetv_info,
-        0);
+        g_type_register_static (GST_TYPE_VIDEO_FILTER, "GstDiceTV",
+        &dicetv_info, 0);
   }
   return dicetv_type;
 }

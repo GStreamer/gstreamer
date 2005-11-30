@@ -73,7 +73,7 @@ typedef struct _GstAgingTVClass GstAgingTVClass;
 
 struct _GstAgingTV
 {
-  GstVideofilter videofilter;
+  GstVideoFilter videofilter;
 
   gint width, height;
   gint aging_mode;
@@ -88,7 +88,7 @@ struct _GstAgingTV
 
 struct _GstAgingTVClass
 {
-  GstVideofilterClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 GType gst_agingtv_get_type (void);
@@ -112,7 +112,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
     );
 
-static GstVideofilterClass *parent_class = NULL;
+static GstVideoFilterClass *parent_class = NULL;
 
 static gboolean
 gst_agingtv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
@@ -383,7 +383,7 @@ gst_agingtv_get_type (void)
       gst_agingtv_init,
     };
 
-    agingtv_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+    agingtv_type = g_type_register_static (GST_TYPE_VIDEO_FILTER,
         "GstAgingTV", &agingtv_info, 0);
   }
   return agingtv_type;

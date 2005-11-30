@@ -49,7 +49,7 @@ typedef struct _GstVertigoTVClass GstVertigoTVClass;
 
 struct _GstVertigoTV
 {
-  GstVideofilter videofilter;
+  GstVideoFilter videofilter;
 
   gint width, height;
   guint32 *buffer;
@@ -63,7 +63,7 @@ struct _GstVertigoTV
 
 struct _GstVertigoTVClass
 {
-  GstVideofilterClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 GType gst_vertigotv_get_type (void);
@@ -95,7 +95,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
     );
 
-static GstVideofilterClass *parent_class = NULL;
+static GstVideoFilterClass *parent_class = NULL;
 
 static gboolean
 gst_vertigotv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
@@ -368,7 +368,7 @@ gst_vertigotv_get_type (void)
     };
 
     vertigotv_type =
-        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstVertigoTV",
+        g_type_register_static (GST_TYPE_VIDEO_FILTER, "GstVertigoTV",
         &vertigotv_info, 0);
   }
   return vertigotv_type;

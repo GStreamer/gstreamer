@@ -47,7 +47,7 @@ typedef struct _GstEdgeTVClass GstEdgeTVClass;
 
 struct _GstEdgeTV
 {
-  GstVideofilter videofilter;
+  GstVideoFilter videofilter;
 
   gint width, height;
   gint map_width, map_height;
@@ -57,7 +57,7 @@ struct _GstEdgeTV
 
 struct _GstEdgeTVClass
 {
-  GstVideofilterClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 GType gst_edgetv_get_type (void);
@@ -81,7 +81,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
     );
 
-static GstVideofilterClass *parent_class = NULL;
+static GstVideoFilterClass *parent_class = NULL;
 
 static gboolean
 gst_edgetv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
@@ -291,8 +291,8 @@ gst_edgetv_get_type (void)
     };
 
     edgetv_type =
-        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstEdgeTV", &edgetv_info,
-        0);
+        g_type_register_static (GST_TYPE_VIDEO_FILTER, "GstEdgeTV",
+        &edgetv_info, 0);
   }
   return edgetv_type;
 }

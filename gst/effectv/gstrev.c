@@ -69,7 +69,7 @@ typedef struct _GstRevTVClass GstRevTVClass;
 
 struct _GstRevTV
 {
-  GstVideofilter videofilter;
+  GstVideoFilter videofilter;
 
   gint width, height;
   gint vgrabtime;
@@ -80,7 +80,7 @@ struct _GstRevTV
 
 struct _GstRevTVClass
 {
-  GstVideofilterClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 enum
@@ -112,7 +112,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx)
     );
 
-static GstVideofilterClass *parent_class = NULL;
+static GstVideoFilterClass *parent_class = NULL;
 
 static gboolean
 gst_revtv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
@@ -325,7 +325,7 @@ gst_revtv_get_type (void)
     };
 
     revtv_type =
-        g_type_register_static (GST_TYPE_VIDEOFILTER, "GstRevTV", &revtv_info,
+        g_type_register_static (GST_TYPE_VIDEO_FILTER, "GstRevTV", &revtv_info,
         0);
   }
   return revtv_type;

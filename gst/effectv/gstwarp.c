@@ -64,7 +64,7 @@ typedef struct _GstWarpTVClass GstWarpTVClass;
 
 struct _GstWarpTV
 {
-  GstVideofilter videofilter;
+  GstVideoFilter videofilter;
 
   gint width, height;
   gint *offstable;
@@ -76,7 +76,7 @@ struct _GstWarpTV
 
 struct _GstWarpTVClass
 {
-  GstVideofilterClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
 GType gst_warptv_get_type (void);
@@ -106,7 +106,7 @@ static GstStaticPadTemplate gst_warptv_sink_template =
         GST_VIDEO_CAPS_BGRx ";" GST_VIDEO_CAPS_xBGR)
     );
 
-static GstVideofilterClass *parent_class = NULL;
+static GstVideoFilterClass *parent_class = NULL;
 
 static gboolean
 gst_warptv_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
@@ -330,7 +330,7 @@ gst_warptv_get_type (void)
       gst_warptv_init,
     };
 
-    warptv_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+    warptv_type = g_type_register_static (GST_TYPE_VIDEO_FILTER,
         "GstWarpTV", &warptv_info, 0);
   }
   return warptv_type;

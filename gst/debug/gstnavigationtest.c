@@ -51,7 +51,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
 
-static GstVideofilterClass *parent_class = NULL;
+static GstVideoFilterClass *parent_class = NULL;
 
 static gboolean
 gst_navigationtest_handle_src_event (GstPad * pad, GstEvent * event)
@@ -330,7 +330,7 @@ gst_navigationtest_get_type (void)
       gst_navigationtest_init,
     };
 
-    navigationtest_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+    navigationtest_type = g_type_register_static (GST_TYPE_VIDEO_FILTER,
         "GstNavigationtest", &navigationtest_info, 0);
   }
   return navigationtest_type;

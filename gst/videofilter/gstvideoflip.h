@@ -50,7 +50,7 @@ typedef struct _GstVideoFlip GstVideoFlip;
 typedef struct _GstVideoFlipClass GstVideoFlipClass;
 
 struct _GstVideoFlip {
-  GstVideofilter videofilter;
+  GstVideoFilter videofilter;
   
   gint from_width, from_height;
   gint to_width, to_height;
@@ -59,10 +59,10 @@ struct _GstVideoFlip {
 };
 
 struct _GstVideoFlipClass {
-  GstVideofilterClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
-GType gst_video_flip_get_type(void);
+GType gst_video_flip_get_type (void);
 
 G_END_DECLS
 

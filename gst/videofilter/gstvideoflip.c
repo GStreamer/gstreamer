@@ -64,7 +64,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, YV12 }"))
     );
 
-static GstVideofilterClass *parent_class = NULL;
+static GstVideoFilterClass *parent_class = NULL;
 
 #define GST_TYPE_VIDEO_FLIP_METHOD (gst_video_flip_method_get_type())
 
@@ -549,11 +549,11 @@ gst_video_flip_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVideoFlip *videoflip;
-  GstVideofilter *videofilter;
+  GstVideoFilter *videofilter;
 
   g_return_if_fail (GST_IS_VIDEO_FLIP (object));
   videoflip = GST_VIDEO_FLIP (object);
-  videofilter = GST_VIDEOFILTER (object);
+  videofilter = GST_VIDEO_FILTER (object);
 
   switch (prop_id) {
     case ARG_METHOD:
@@ -677,7 +677,7 @@ gst_video_flip_get_type (void)
       gst_video_flip_init,
     };
 
-    video_flip_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
+    video_flip_type = g_type_register_static (GST_TYPE_VIDEO_FILTER,
         "GstVideoFlip", &video_flip_info, 0);
   }
   return video_flip_type;
