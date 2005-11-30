@@ -1,3 +1,0 @@
-SUBDIRS = 
-
-DIST_SUBDIRS = 
