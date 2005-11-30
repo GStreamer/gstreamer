@@ -11,6 +11,7 @@ libcaca	(zeeshan)
 law	(wim)
 shout2  (zaheer) - not fully tested
 esdsink (arwed)
+multipart (dolphy)
 
 osssink is partially done in the threaded branch (wim)
 

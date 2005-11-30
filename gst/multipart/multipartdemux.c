@@ -22,6 +22,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <gst/gst.h>
 
 #include <string.h>
@@ -114,13 +115,10 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("multipart/x-mixed-replace")
     );
 
-
-static void gst_multipart_demux_finalize (GObject * object);
-
-static void gst_multipart_demux_chain (GstPad * pad, GstData * buffer);
+static GstFlowReturn gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf);
 
 static GstStateChangeReturn gst_multipart_demux_change_state (GstElement *
-    element);
+    element, GstStateChange transition);
 
 
 GST_BOILERPLATE (GstMultipartDemux, gst_multipart_demux, GstElement,
@@ -144,11 +142,8 @@ static void
 gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gstelement_class->change_state = gst_multipart_demux_change_state;
-
-  gobject_class->finalize = gst_multipart_demux_finalize;
 }
 
 static void
@@ -163,8 +158,6 @@ gst_multipart_demux_init (GstMultipartDemux * multipart,
   gst_pad_set_chain_function (multipart->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multipart_demux_chain));
 
-  GST_OBJECT_FLAG_SET (multipart, GST_ELEMENT_EVENT_AWARE);
-
   multipart->maxlen = 4096;
   multipart->parsing_mime = NULL;
   multipart->numpads = 0;
@@ -172,31 +165,9 @@ gst_multipart_demux_init (GstMultipartDemux * multipart,
   multipart->lastpos = 0;
 }
 
-static void
-gst_multipart_demux_finalize (GObject * object)
-{
-  GstMultipartDemux *multipart;
-
-  multipart = GST_MULTIPART_DEMUX (object);
-}
-
-static void
-gst_multipart_demux_handle_event (GstPad * pad, GstEvent * event)
-{
-  //GstMultipartDemux *multipart = GST_MULTIPART_DEMUX (gst_pad_get_parent (pad));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_DISCONTINUOUS:
-    case GST_EVENT_EOS:
-    default:
-      gst_pad_event_default (pad, event);
-      break;
-  }
-  return;
-}
-
 static GstMultipartPad *
-gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime)
+gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
+    gboolean * created)
 {
   GSList *walk;
 
@@ -205,12 +176,15 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime)
     GstMultipartPad *pad = (GstMultipartPad *) walk->data;
 
     if (!strcmp (pad->mime, mime)) {
+      if (created) {
+        *created = FALSE;
+      }
       return pad;
     }
 
     walk = walk->next;
   }
-  // pad not found, create it
+  /* pad not found, create it */
   {
     GstPad *pad;
     GstMultipartPad *mppad;
@@ -224,8 +198,8 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime)
         (&multipart_demux_src_template_factory), name);
     g_free (name);
     caps = gst_caps_from_string (mime);
-    gst_pad_use_explicit_caps (pad);
-    gst_pad_set_explicit_caps (pad, caps);
+    gst_pad_use_fixed_caps (pad);
+    gst_pad_set_caps (pad, caps);
 
     mppad->pad = pad;
     mppad->mime = g_strdup (mime);
@@ -235,41 +209,39 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime)
 
     gst_element_add_pad (GST_ELEMENT (demux), pad);
 
+    if (created) {
+      *created = TRUE;
+    }
+
     return mppad;
   }
 }
 
-static void
-gst_multipart_demux_chain (GstPad * pad, GstData * buffer)
+static GstFlowReturn
+gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstMultipartDemux *multipart;
-  gint size;
-  gchar *data;
-  gint matchpos;
-
-  /* handle events */
-  if (GST_IS_EVENT (buffer)) {
-    gst_multipart_demux_handle_event (pad, GST_EVENT (buffer));
-    return;
-  }
+  gint size, matchpos;
+  guchar *data;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   multipart = GST_MULTIPART_DEMUX (gst_pad_get_parent (pad));
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
 
-  // first make sure our buffer is long enough
+  /* first make sure our buffer is long enough */
   if (multipart->bufsize + size > multipart->maxlen) {
     gint newsize = (multipart->bufsize + size) * 2;
 
     multipart->buffer = g_realloc (multipart->buffer, newsize);
     multipart->maxlen = newsize;
   }
-  // copy bytes into the buffer
+  /* copy bytes into the buffer */
   memcpy (multipart->buffer + multipart->bufsize, data, size);
   multipart->bufsize += size;
 
-  // find \n
+  /* find \n */
   while (multipart->scanpos < multipart->bufsize) {
     if (multipart->buffer[multipart->scanpos] == '\n') {
       break;
@@ -277,7 +249,7 @@ gst_multipart_demux_chain (GstPad * pad, GstData * buffer)
     multipart->scanpos++;
   }
 
-  // then scan for the boundary
+  /* then scan for the boundary */
   for (matchpos = 0;
       multipart->scanpos + toFindLen + MAX_LINE_LEN - matchpos <
       multipart->bufsize; multipart->scanpos++) {
@@ -291,7 +263,7 @@ gst_multipart_demux_chain (GstPad * pad, GstData * buffer)
         multipart->scanpos++;
 
         start = multipart->scanpos;
-        // find \n
+        /* find \n */
         for (i = 0; i < MAX_LINE_LEN; i++) {
           if (multipart->buffer[multipart->scanpos] == '\n')
             break;
@@ -307,19 +279,37 @@ gst_multipart_demux_chain (GstPad * pad, GstData * buffer)
         if (datalen > 0 && multipart->parsing_mime) {
           GstBuffer *outbuf;
           GstMultipartPad *srcpad;
+          gboolean created = FALSE;
 
           srcpad =
               gst_multipart_find_pad_by_mime (multipart,
-              multipart->parsing_mime);
+              multipart->parsing_mime, &created);
           if (srcpad != NULL) {
-            outbuf = gst_buffer_new_and_alloc (datalen);
+            ret = gst_pad_alloc_buffer (srcpad->pad, GST_BUFFER_OFFSET_NONE,
+                datalen, GST_PAD_CAPS (srcpad->pad), &outbuf);
+            if (ret != GST_FLOW_OK) {
+              GST_WARNING_OBJECT (multipart, "failed allocating a %d bytes "
+                  "buffer", datalen);
+            } else {
+              memcpy (GST_BUFFER_DATA (outbuf), multipart->buffer, datalen);
+              if (created) {
+                GstEvent *event;
 
-            memcpy (GST_BUFFER_DATA (outbuf), multipart->buffer, datalen);
-            GST_BUFFER_TIMESTAMP (outbuf) = 0;
-            gst_pad_push (srcpad->pad, GST_DATA (outbuf));
+                /* Push new segment */
+                event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+                    0, -1, 0);
+                if (GST_IS_EVENT (event)) {
+                  gst_pad_push_event (srcpad->pad, event);
+                }
+                GST_BUFFER_TIMESTAMP (outbuf) = 0;
+              } else {
+                GST_BUFFER_TIMESTAMP (outbuf) = -1;
+              }
+              gst_pad_push (srcpad->pad, outbuf);
+            }
           }
         }
-        // move rest downward
+        /* move rest downward */
         multipart->bufsize -= multipart->scanpos;
         memmove (multipart->buffer, multipart->buffer + multipart->scanpos,
             multipart->bufsize);
@@ -333,7 +323,10 @@ gst_multipart_demux_chain (GstPad * pad, GstData * buffer)
     }
   }
 
-  gst_buffer_unref (buffer);
+  gst_buffer_unref (buf);
+  gst_object_unref (multipart);
+
+  return ret;
 }
 
 static GstStateChangeReturn
@@ -341,6 +334,7 @@ gst_multipart_demux_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstMultipartDemux *multipart;
+  GstStateChangeReturn ret;
 
   multipart = GST_MULTIPART_DEMUX (element);
 
@@ -352,6 +346,15 @@ gst_multipart_demux_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -366,11 +369,11 @@ gst_multipart_demux_change_state (GstElement * element,
       break;
   }
 
-  return parent_class->change_state (element, transition);
+  return ret;
 }
 
 gboolean
-gst_multipart_demux_plugin_init (GstPlugin * plugin, GstPluginClass * g_class)
+gst_multipart_demux_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_multipart_demux_debug,
       "multipartdemux", 0, "multipart demuxer");

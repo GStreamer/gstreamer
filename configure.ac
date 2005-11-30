@@ -78,6 +78,7 @@ GST_PLUGINS_ALL="\
 		law \
 		level \
 		matroska \
+		multipart \
 		rtp	\
 		rtsp	\
 		smpte	\
@@ -534,6 +535,7 @@ gst/goom/Makefile
 gst/law/Makefile
 gst/level/Makefile
 gst/matroska/Makefile
+gst/multipart/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
 gst/smpte/Makefile

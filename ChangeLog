@@ -1,3 +1,22 @@
+2005-11-30  Julien MOUTTE  <julien@moutte.net>
+
+	* configure.ac:
+	* PORTED_O9:
+	* gst/multipart/Makefile.am:
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_base_init),
+	(gst_multipart_demux_class_init), (gst_multipart_demux_init),
+	(gst_multipart_find_pad_by_mime), (gst_multipart_demux_chain),
+	(gst_multipart_demux_change_state),
+	(gst_multipart_demux_plugin_init):
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_class_init),
+	(gst_multipart_mux_init), (gst_multipart_mux_finalize),
+	(gst_multipart_mux_sinkconnect),
+	(gst_multipart_mux_request_new_pad),
+	(gst_multipart_mux_handle_src_event),
+	(gst_multipart_mux_queue_pads), (gst_multipart_mux_collected),
+	(gst_multipart_mux_change_state): Ported multipart mux/demux to
+	0.9.
+
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/debug/gstnavigationtest.c: (gst_navigationtest_get_type):
