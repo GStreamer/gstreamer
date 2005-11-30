@@ -1,6 +1,0 @@
-TODO
-----
-
-Thomas:
-- figure out if gstgetbits can be removed; otherwise decide on plugin vs lib
-- figure out if dataprotocol can be used lib-only; make it install as a lib
