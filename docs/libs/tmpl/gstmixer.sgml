@@ -14,9 +14,6 @@ interface for elements that provide mixer operations
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstMixer ##### -->
 <para>
 
@@ -47,18 +44,12 @@ interface for elements that provide mixer operations
 
 </para>
 
-@parent: 
-@values: 
-@_gst_reserved: 
 
 <!-- ##### STRUCT GstMixerTrack ##### -->
 <para>
 
 </para>
 
-@parent: 
-@label: 
-@flags: 
 
 <!-- ##### FUNCTION gst_mixer_list_tracks ##### -->
 <para>

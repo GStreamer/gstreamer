@@ -12,18 +12,11 @@ else
 SUBDIRS_EXAMPLES =
 endif
 
-if HAVE_CHECK
-SUBDIRS_CHECK = check
-else
-SUBDIRS_CHECK =
-endif
-
 SUBDIRS = 			\
 	gst-libs 		\
 	gst sys $(SUBDIRS_EXT) 	\
 	$(SUBDIRS_EXAMPLES) 	\
 	tools 			\
-	$(SUBDIRS_CHECK)	\
 	docs			\
 	po 			\
 	common 			\
@@ -31,7 +24,6 @@ SUBDIRS = 			\
 	pkgconfig
 
 DIST_SUBDIRS = 			\
-	check			\
 	docs			\
 	gst-libs		\
 	gst sys ext		\
@@ -55,7 +47,7 @@ include $(top_srcdir)/common/release.mak
 include $(top_srcdir)/common/po.mak
 
 check-valgrind:
-	cd check && make check-valgrind
+	cd tests/check && make check-valgrind
 
 check-torture:
-	cd check && make torture
+	cd tests/check && make torture

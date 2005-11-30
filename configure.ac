@@ -615,7 +615,8 @@ tools/Makefile
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-base.pc
 pkgconfig/gstreamer-plugins-base-uninstalled.pc
-check/Makefile
+tests/Makefile
+tests/check/Makefile
 docs/Makefile
 docs/libs/Makefile
 docs/plugins/Makefile

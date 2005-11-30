@@ -1,6 +1,6 @@
 include $(top_srcdir)/common/check.mak
 
-CHECK_REGISTRY = $(top_builddir)/check/test-registry.xml
+CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.xml
 
 REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY=$(CHECK_REGISTRY)
@@ -33,15 +33,15 @@ check_PROGRAMS = \
 	elements/audiotestsrc \
 	elements/videotestsrc \
 	elements/volume \
+	generic/clock-selection \
 	generic/states \
-        pipelines/simple_launch_lines \
-	clocks/selection \
+        pipelines/simple-launch-lines
 	$(check_vorbis)
 
 VALGRIND_TO_FIX = \
 	elements/audioresample \
 	generic/states \
-        pipelines/simple_launch_lines
+        pipelines/simple-launch-lines
 
 # these tests don't even pass
 noinst_PROGRAMS =

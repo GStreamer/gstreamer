@@ -14,9 +14,6 @@ interface for adjusting color balance settings
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstColorBalance ##### -->
 <para>
 
