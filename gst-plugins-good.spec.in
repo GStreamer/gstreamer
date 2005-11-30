@@ -33,7 +33,7 @@ BuildRequires:  gcc-c++
 @USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
 # @USE_MIKMOD_TRUE@BuildRequires: mikmod
 @USE_OSS_TRUE@BuildRequires: glibc-devel
-# @USE_PANGO_TRUE@BuildRequires:   pango-devel
+@USE_PANGO_TRUE@BuildRequires:   pango-devel
 # @USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
 # @USE_RAW1394_TRUE@BuildRequires: libavc1394-devel
 @USE_SPEEX_TRUE@BuildRequires:	speex-devel
@@ -110,6 +110,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmatroska.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideomixer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcutter.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmultipart.so
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
@@ -120,8 +121,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
 ## @USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
-# @USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttextoverlay.so
-# @USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimeoverlay.so
+@USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpango.so
 @USE_SPEEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstspeex.so
 @USE_GCONF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgconfelements.so
 
@@ -131,8 +131,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdv.so
 @USE_DV1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 
-## Libraries
-%{_libdir}/libgstvideofilter-%{majorminor}.*
 
 # schema files
 @USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas
