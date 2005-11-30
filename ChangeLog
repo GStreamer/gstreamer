@@ -1,5 +1,10 @@
 2005-11-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* configure.ac:
+	  fix tests
+
+2005-11-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* PORTED_09:
 	* docs/random/PORTED_09:
 	  move
