@@ -34,7 +34,6 @@ headers
 
 #include <gst/gst.h>
 #include <gst/gsterror.h>
-#include <gst/gstqueue.h>
 #include <gst/gsttypefind.h>
 #include <gst/gsttagsetter.h>
 

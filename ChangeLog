@@ -1,3 +1,10 @@
+2005-11-30  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gst.override:
+	Queue is now a plugin, remove static references
+
 2005-11-29  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:

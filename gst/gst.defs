@@ -4395,15 +4395,6 @@
 
 
 
-;; From ../gstreamer/gst/gstqueue.h
-
-(define-function queue_get_type
-  (c-name "gst_queue_get_type")
-  (return-type "GType")
-)
-
-
-
 ;; From ../gstreamer/gst/gstregistry.h
 
 (define-function registry_get_type

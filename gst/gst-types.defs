@@ -96,13 +96,6 @@
   (gtype-id "GST_TYPE_ELEMENT_FACTORY")
 )
 
-(define-object Queue
-  (in-module "Gst")
-  (parent "GstElement")
-  (c-name "GstQueue")
-  (gtype-id "GST_TYPE_QUEUE")
-)
-
 (define-object Registry
   (in-module "Gst")
   (parent "GstObject")
