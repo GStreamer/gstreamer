@@ -1,5 +1,16 @@
 2005-11-30  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/pango/gsttextrender.c: (gst_text_render_base_init),
+	(gst_text_render_class_init), (resize_bitmap),
+	(gst_text_render_render_text), (gst_text_render_setcaps),
+	(gst_text_render_fixate_caps), (gst_text_renderer_bitmap_to_ayuv),
+	(gst_text_render_chain), (gst_text_render_finalize),
+	(gst_text_render_init), (gst_text_render_set_property):
+	* ext/pango/gsttextrender.h:
+	  Add missing files.
+
+2005-11-30  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/pango/Makefile.am:
