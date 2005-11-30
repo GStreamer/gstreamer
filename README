@@ -1,105 +1,223 @@
+WHAT IT IS
+----------
 
-GStreamer: Release notes for GStreamer 0.9.3 "Unregistered"
-        
+This is GStreamer, a framework for streaming media.
 
-The GStreamer team is petrified to announce a new release
-in the 0.9.x development series of the
-core of the GStreamer streaming media framework.
+This package is in the 0.9.x series.  This means that this is a
+development series leading up to a stable 0.10.x series.
+You have been warned.
 
+GStreamer 0.9 development series - Hung by a Thread
+---------------------------------------------------
 
-The 0.9.x series is a development series and not recommended for end users.
-It is not API or ABI compatible with the stable 0.8.x series.
-It is, however, parallel installable with the 0.8.x series.
+Starring
 
+  GSTREAMER
 
-The main focus of the 0.9 series is to make GStreamer threadsafe.
+The core around which all other modules revolve.  Base functionality and
+libraries, some essential elements, documentation, and testing.
 
+  BASE
 
-This module, gstreamer, only contains core functionality.
-For actual media playback, you will need other modules.
+A well-groomed and well-maintained collection of GStreamer plug-ins and
+elements, spanning the range of possible types of elements one would want
+to write for GStreamer.  
 
-gst-plugins-base
-contains a basic set of well-supported plug-ins
-gst-plugins-good
-contains a set of well-supported plug-ins under our preferred license
-gst-plugins-ugly
-contains a set of well-supported plug-ins, but might pose problems for
-    distributors
-gst-plugins-bad
-contains a set of less supported plug-ins that haven't passed the
-    rigorous quality testing we expect
+And introducing, for the first time ever, on the development screen ...
 
+  THE GOOD
 
+ --- "Such ingratitude.  After all the times I've saved your life."
 
-  
-Features of this release
-    
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
-      * gst-register has been removed
-      * Extensive documentation updates
-      * BaseTransform reworked
-      * Bus reworked; signal API added
+A collection of plug-ins you'd want to have right next to you on the
+battlefield.  Shooting sharp and making no mistakes, these plug-ins have it
+all: good looks, good code, and good licensing.  Documented and dressed up
+in tests.  If you're looking for a role model to base your own plug-in on,
+here it is.
 
-Bugs fixed in this release
-    
-      * 102980 : support incremental gst-register/compprep updates
-      * 313897 : [0.9] registry rewrite
-      * 314710 : gst_buffer_create_sub doesn't copy the GST_BUFFER_FLAGS
-      * 315895 : gst_pad_query_convert src_val check
-      * 316155 : MinGW compilation: glib-mkenums root path subtitution pro...
-      * 316157 : MinGW compilation: Plugin exports
+If you find a plot hole or a badly lip-synced line of code in them,
+let us know - it is a matter of honour for us to ensure Blondie doesn't look
+like he's been walking 100 miles through the desert without water.
 
-Download
+  THE UGLY
 
-You can find source releases of gstreamer in the download directory:
-http://gstreamer.freedesktop.org/src/gstreamer/
+  --- "When you have to shoot, shoot.  Don't talk."
 
-GStreamer Homepage
+There are times when the world needs a color between black and white.
+Quality code to match the good's, but two-timing, backstabbing and ready to
+sell your freedom down the river.  These plug-ins might have a patent noose
+around their neck, or a lock-up license, or any other problem that makes you
+think twice about shipping them.
 
-More details can be found on the project's website:
-http://gstreamer.freedesktop.org/
+We don't call them ugly because we like them less.  Does a mother love her
+son less because he's not as pretty as the other ones ? No  - she commends
+him on his great personality.  These plug-ins are the life of the party.
+And we'll still step in and set them straight if you report any unacceptable
+behaviour - because there are two kinds of people in the world, my friend:
+those with a rope around their neck and the people who do the cutting.
 
-Support and Bugs
+  THE BAD
 
-We use GNOME's bugzilla for bug reports and feature requests:
-http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+  --- "That an accusation?"
 
-Developers
+No perfectly groomed moustache or any amount of fine clothing is going to
+cover up the truth - these plug-ins are Bad with a capital B. 
+They look fine on the outside, and might even appear to get the job done, but
+at the end of the day they're a black sheep. Without a golden-haired angel
+to watch over them, they'll probably land in an unmarked grave at the final
+showdown.
 
-CVS is hosted on cvs.freedesktop.org.
-All code is in CVS and can be checked out from there.
-Interested developers of the core library, plug-ins, and applications should
-subscribe to the gstreamer-devel list. If there is sufficient interest we
-will create more lists as necessary.
+Don't bug us about their quality - exercise your Free Software rights,
+patch up the offender and send us the patch on the fastest steed you can
+steal from the Confederates. Because you see, in this world, there's two
+kinds of people, my friend: those with loaded guns and those who dig.
+You dig.
 
-        
-Applications
+The Lowdown
+-----------
 
-At this point, ports of existing applications to 0.9 are still experimental.
-A patch for Totem is maintained at
+  --- "I've never seen so many plug-ins wasted so badly."
 
-http://bugzilla.gnome.org/show_bug.cgi?id=313086.
-A patch for Rhythmbox is maintained at
+GStreamer Plug-ins has grown so big that it's hard to separate the wheat from
+the chaff.  Also, distributors have brought up issues about the legal status
+of some of the plug-ins we ship.  To remedy this, we've divided the previous
+set of available plug-ins into four modules:
 
-http://bugzilla.gnome.org/show_bug.cgi?id=309609.
-Jamboree has a branch with the tag "jamboree-gst-0.9" that works against
-GStreamer 0.9.
-Flumotion has been mostly ported to 0.9 as well.
+- gst-plugins-base: a small and fixed set of plug-ins, covering a wide range
+  of possible types of elements; these are continuously kept up-to-date
+  with any core changes during the development series.
 
-  
-Contributors to this release
-    
-      * Alessandro Decina
-      * Andy Wingo
-      * David Schleef
-      * Edward Hervey
-      * Francis Labonte
-      * Jan Schmidt
-      * Johan Dahlin
-      * Michael Smith
-      * Stefan Kost
-      * Thomas Vander Stichele
-      * Tim-Philipp Müller
-      * Wim Taymans
- 
+  - We believe distributors can safely ship these plug-ins.
+  - People writing elements should base their code on these elements.
+  - These elements come with examples, documentation, and regression tests.
+
+- gst-plugins-good: a set of plug-ins that we consider to have good quality
+  code, correct functionality, our preferred license (LGPL for the plug-in
+  code, LGPL or LGPL-compatible for the supporting library).
+
+  - We believe distributors can safely ship these plug-ins.
+  - People writing elements should base their code on these elements.
+ 
+- gst-plugins-ugly: a set of plug-ins that have good quality and correct
+  functionality, but distributing them might pose problems.  The license
+  on either the plug-ins or the supporting libraries might not be how we'd
+  like. The code might be widely known to present patent problems.
+
+  - Distributors should check if they want/can ship these plug-ins.
+  - People writing elements should base their code on these elements.
+
+- gst-plugins-bad: a set of plug-ins that aren't up to par compared to the
+  rest.  They might be close to being good quality, but they're missing
+  something - be it a good code review, some documentation, a set of tests,
+  a real live maintainer, or some actual wide use.
+  If the blanks are filled in they might be upgraded to become part of
+  either gst-plugins-good or gst-plugins-ugly, depending on the other factors.
+
+  - If the plug-ins break, you can't complain - instead, you can fix the
+    problem and send us a patch, or bribe someone into fixing them for you.
+  - New contributors can start here for things to work on.
+
+INSTALLING FROM PACKAGES
+------------------------
+
+You should always prefer installing from packages first.  GStreamer is
+well-maintained for a number of distributions, including Fedora, Debian,
+Ubuntu, Mandrake, Gentoo, ...
+
+Only in cases where you:
+- want to hack on GStreamer
+- want to verify that a bug has been fixed
+- do not have a sane distribution
+should you choose to build from source tarballs or CVS.
+
+Find more information about the various packages at
+http://gstreamer.freedesktop.org/download/
+
+COMPILING FROM SOURCE TARBALLS
+------------------------------
+
+- again, make sure that you really need to install from source !
+  If GStreamer is one of your first projects ever that you build from source,
+  consider taking on an easier project.
+
+- check output of ./configure --help to see if any options apply to you
+- run
+  ./configure
+  make
+
+  to build GStreamer.
+- if you want to install it (not required), run
+  make install
+- You should create a registry for things to work.
+  If you ran make install in the previous step, run
+  gst-register
+  as root.
+
+  If you didn't install, run
+  tools/gst-register
+  as a normal user.
+
+- try out a simple test:
+  gst-launch fakesrc num_buffers=5 ! fakesink
+  (If you didn't install GStreamer, again prefix gst-launch with tools/)
+
+  If it outputs a bunch of messages from fakesrc and fakesink, everything is
+  ok.
+
+- After this, you're ready to install gst-plugins, which will provide the
+  functionality you're probably looking for by now, so go on and read
+  that README.
+
+COMPILING FROM CVS
+------------------
+
+When building from CVS sources, you will need to run autogen.sh to generate 
+the build system files.
+
+You will need a set of additional tools typical for building from CVS,
+including:
+- autoconf
+- automake
+- libtool
+
+autogen.sh will check for recent enough versions and complain if you don't have
+them.  You can also specify specific versions of automake and autoconf with
+--with-automake and --with-autoconf
+
+Check autogen.sh options by running autogen.sh --help
+
+autogen.sh can pass on arguments to configure - you just need to separate them
+from autogen.sh with -- between the two.
+prefix has been added to autogen.sh but will be passed on to configure because
+some build scripts like that.
+
+When you have done this once, you can use autoregen.sh to re-autogen with
+the last passed options as a handy shortcut.  Use it.
+
+After the autogen.sh stage, you can follow the directions listed in
+"COMPILING FROM SOURCE"
+
+You can also run your whole cvs stack uninstalled.  The script in
+the gstreamer module /docs/faq/gst-uninstalled) is helpful in setting
+up your environment for this.
+
+PLUG-IN DEPENDENCIES AND LICENSES
+---------------------------------
+
+GStreamer is developed under the terms of the LGPL (see LICENSE file for
+details). Some of our plug-ins however rely on libraries which are available
+under other licenses. This means that if you are using an application which
+has a non-GPL compatible license (for instance a closed-source application)
+with GStreamer, you have to make sure not to use GPL-linked plug-ins.
+When using GPL-linked plug-ins, GStreamer is for all practical reasons
+under the GPL itself.
+
+HISTORY
+-------
+
+The fundamental design comes from the video pipeline at Oregon Graduate
+Institute, as well as some ideas from DirectMedia.  It's based on plug-ins that
+will provide the various codec and other functionality.  The interface
+hopefully is generic enough for various companies (ahem, Apple) to release
+binary codecs for Linux, until such time as they get a clue and release the
+source.
