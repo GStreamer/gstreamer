@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-30 16:25+0100\n"
+"POT-Creation-Date: 2005-11-30 18:09+0100\n"
 "PO-Revision-Date: 2005-02-12 23:37+0300\n"
 "Last-Translator: Peter Astakhov <astakhovp@mail.ru>\n"
 "Language-Team: Russian <ru@li.org>\n"
@@ -691,7 +691,7 @@ msgstr ""
 msgid "maximum"
 msgstr ""
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:1099
 msgid "Print all elements"
 msgstr "Печатать все элементы"
 

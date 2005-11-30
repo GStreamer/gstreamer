@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-30 16:25+0100\n"
+"POT-Creation-Date: 2005-11-30 18:09+0100\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -685,7 +685,7 @@ msgstr "minimal"
 msgid "maximum"
 msgstr "maksimal"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:1099
 msgid "Print all elements"
 msgstr ""
 

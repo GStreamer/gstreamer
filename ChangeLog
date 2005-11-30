@@ -1,3 +1,10 @@
+2005-11-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer.types.in:
+	* gst/Makefile.am:
+	  fix the docs build
+
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

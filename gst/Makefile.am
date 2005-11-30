@@ -111,8 +111,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstutils.c		\
 	gstvalue.c		\
 	$(GST_PARSE_SRC)	\
-	$(GSTARCH_SRCS)		\
-	$(GSTREGISTRY_SRC)	\
+	$(GST_REGISTRY_SRC)	\
 	$(GST_LOADSAVE_SRC)
 
 # do not put files in the distribution that are generated

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-30 16:25+0100\n"
+"POT-Creation-Date: 2005-11-30 18:09+0100\n"
 "PO-Revision-Date: 2005-02-17 12:00+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -687,7 +687,7 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maksimum"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:1099
 msgid "Print all elements"
 msgstr ""
 

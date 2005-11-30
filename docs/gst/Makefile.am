@@ -4,6 +4,8 @@
 # DOC_MODULE=gstreamer-@GST_MAJORMINOR@
 DOC_MODULE=gstreamer
 
+BUILT_SOURCES=gstreamer.types
+
 # for upload.mak
 DOC=gstreamer
 FORMATS=html

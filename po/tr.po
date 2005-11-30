@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-30 16:25+0100\n"
+"POT-Creation-Date: 2005-11-30 18:09+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -715,7 +715,7 @@ msgstr "asgari"
 msgid "maximum"
 msgstr "azami"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:1099
 #, fuzzy
 msgid "Print all elements"
 msgstr "\"%s\" öğesi yok"

@@ -57,11 +57,11 @@ gst_net_time_provider_get_type
 
 % elements
 
-@GST_REGISTRY_DOC_TYPES@#include <gst/elements/gstfakesrc.h>
-@GST_REGISTRY_DOC_TYPES@#include <gst/elements/gstfakesink.h>
-@GST_REGISTRY_DOC_TYPES@#include <gst/elements/gstfilesrc.h>
-@GST_REGISTRY_DOC_TYPES@#include <gst/elements/gstfilesink.h>
-@GST_REGISTRY_DOC_TYPES@#include <gst/elements/gstqueue.h>
+@GST_REGISTRY_DOC_TYPES@#include <plugins/elements/gstfakesrc.h>
+@GST_REGISTRY_DOC_TYPES@#include <plugins/elements/gstfakesink.h>
+@GST_REGISTRY_DOC_TYPES@#include <plugins/elements/gstfilesrc.h>
+@GST_REGISTRY_DOC_TYPES@#include <plugins/elements/gstfilesink.h>
+@GST_REGISTRY_DOC_TYPES@#include <plugins/elements/gstqueue.h>
 
 @GST_REGISTRY_DOC_TYPES@gst_fake_src_get_type
 @GST_REGISTRY_DOC_TYPES@gst_fake_sink_get_type
