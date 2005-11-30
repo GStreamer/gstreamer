@@ -1,5 +1,10 @@
 2005-11-30  Edward Hervey  <edward@fluendo.com>
 
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	Update for new GstTypeFindFactory _register()
+
+2005-11-30  Edward Hervey  <edward@fluendo.com>
+
 	* gst-libs/gst/netbuffer/Makefile.am: (libgstnetbufferincludedir): 
 	Let's not override libgstnet from core for no reason...
 	(libgstnetbuffer_@GST_MAJORMINOR@_la_SOURCES):
