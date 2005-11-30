@@ -78,11 +78,11 @@ struct _GstBaseRTPDepayload
    */
   GQueue *queue;
 
+  GstSegment segment;
+  gboolean need_newsegment;
+
   /*< private >*/
-  union {
-    gboolean need_newsegment;
-    gpointer _gst_reserved[GST_PADDING-1+1];
-  };
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBaseRTPDepayloadClass

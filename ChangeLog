@@ -1,3 +1,12 @@
+2005-11-30  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_init),
+	(gst_basertppayload_event), (gst_basertppayload_push),
+	(gst_basertppayload_change_state):
+	* gst-libs/gst/rtp/gstbasertppayload.h:
+	closed #320644.
+
 2005-11-30  Julien MOUTTE  <julien@moutte.net>
 
 	* docs/libs/gst-plugins-base-libs-docs.sgml:

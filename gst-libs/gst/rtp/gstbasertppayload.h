@@ -50,6 +50,7 @@ struct _GstBaseRTPPayload
 {
   GstElement element;
 
+  /*< private >*/
   GstPad  *sinkpad;
   GstPad  *srcpad;
 
@@ -74,6 +75,11 @@ struct _GstBaseRTPPayload
   guint    ssrc;
   guint    current_ssrc;
   guint    mtu;
+
+  GstSegment segment;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBaseRTPPayloadClass
@@ -86,6 +92,9 @@ struct _GstBaseRTPPayloadClass
    * the RTP buffers */
   GstFlowReturn (*handle_buffer)	(GstBaseRTPPayload *payload, 
 		  			 GstBuffer *buffer);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType 		gst_basertppayload_get_type 		(void);

@@ -59,6 +59,7 @@ static void gst_basertppayload_init (GstBaseRTPPayload * basertppayload,
 static void gst_basertppayload_finalize (GObject * object);
 
 static gboolean gst_basertppayload_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_basertppayload_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_basertppayload_chain (GstPad * pad,
     GstBuffer * buffer);
 
@@ -178,6 +179,8 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
   basertppayload->sinkpad = gst_pad_new_from_template (templ, "sink");
   gst_pad_set_setcaps_function (basertppayload->sinkpad,
       gst_basertppayload_setcaps);
+  gst_pad_set_event_function (basertppayload->sinkpad,
+      gst_basertppayload_event);
   gst_pad_set_chain_function (basertppayload->sinkpad,
       gst_basertppayload_chain);
   gst_element_add_pad (GST_ELEMENT (basertppayload), basertppayload->sinkpad);
@@ -230,6 +233,46 @@ gst_basertppayload_setcaps (GstPad * pad, GstCaps * caps)
 
   return ret;
 }
+
+static gboolean
+gst_basertppayload_event (GstPad * pad, GstEvent * event)
+{
+  GstBaseRTPPayload *basertppayload;
+  gboolean res;
+
+  basertppayload = GST_BASE_RTP_PAYLOAD (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      res = gst_pad_event_default (pad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      res = gst_pad_event_default (pad, event);
+      gst_segment_init (&basertppayload->segment, GST_FORMAT_UNDEFINED);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gboolean update;
+      gdouble rate;
+      GstFormat fmt;
+      gint64 start, stop, position;
+
+      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
+          &position);
+      gst_segment_set_newsegment (&basertppayload->segment, update, rate, fmt,
+          start, stop, position);
+    }
+      /* fallthrough */
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (basertppayload);
+
+  return res;
+}
+
 
 static GstFlowReturn
 gst_basertppayload_chain (GstPad * pad, GstBuffer * buffer)
@@ -333,21 +376,32 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
   gst_rtpbuffer_set_payload_type (buffer, payload->pt);
 
-  /* can warp around, which is perfectly fine */
+  /* can wrap around, which is perfectly fine */
   gst_rtpbuffer_set_seq (buffer, payload->seqnum++);
 
   /* add our random offset to the timestamp */
   ts = payload->ts_base;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    ts += timestamp * payload->clock_rate / GST_SECOND;
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    gint64 rtime;
+
+    rtime =
+        gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
+        timestamp);
+    rtime = gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
+
+    ts += rtime;
+  }
   gst_rtpbuffer_set_timestamp (buffer, ts);
 
   payload->timestamp = ts;
 
   /* set caps */
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (payload->srcpad));
+
+  GST_DEBUG_OBJECT (payload, "Pushing packet size %d, seq=%d, ts=%u",
+      GST_BUFFER_SIZE (buffer), payload->seqnum - 1, ts);
 
   res = gst_pad_push (payload->srcpad, buffer);
 
@@ -448,6 +502,7 @@ gst_basertppayload_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_segment_init (&basertppayload->segment, GST_FORMAT_UNDEFINED);
 
       if (basertppayload->seqnum_offset == -1)
         basertppayload->seqnum_base =
