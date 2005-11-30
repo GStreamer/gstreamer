@@ -1,3 +1,5 @@
 .dirstamp
 gdp
 controller
+gstnetclientclock
+gstnettimeprovider
