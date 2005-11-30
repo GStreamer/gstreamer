@@ -1,5 +1,10 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* win32/common/gstconfig.h:
+	  add large padding
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* win32/common/libgstreamer.def:
 	  rename symbols; sort base section
 

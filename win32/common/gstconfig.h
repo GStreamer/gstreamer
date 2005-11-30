@@ -24,14 +24,15 @@
  * @short_description: Build configuration options
  *
  * This describes the configuration options for GStreamer. When building
- * GStreamer there are a lot of parts (known internally as "subsystems" ) that can
- * be disabled for various reasons. The most common reasons are speed and size,
- * which is important because GStreamer is designed to run on embedded systems.
+ * GStreamer there are a lot of parts (known internally as "subsystems" ) that
+ * can be disabled for various reasons. The most common reasons are speed and
+ * size, which is important because GStreamer is designed to run on embedded
+ * systems.
  *
- * If a subsystem is disabled, most of this changes are done in an API compatible
- * way, so you don't need to adapt your code in most cases. It is never done in an
- * ABI compatible way though. So if you want to disable a suybsystem, you have to
- * rebuild all programs depending on GStreamer, too.
+ * If a subsystem is disabled, most of this changes are done in an API
+ * compatible way, so you don't need to adapt your code in most cases. It is
+ * never done in an ABI compatible way though. So if you want to disable a
+ * suybsystem, you have to rebuild all programs depending on GStreamer, too.
  *
  * If a subsystem is disabled in GStreamer, a value is defined in
  * &lt;gst/gst.h&gt;. You can check this if you do subsystem-specific stuff.
@@ -48,7 +49,7 @@
 #ifndef __GST_CONFIG_H__
 #define __GST_CONFIG_H__
 
-/***** trick gtk-doc into believing these symbols are defined (yes, it's ugly) */
+/*** trick gtk-doc into believing these symbols are defined (yes, it's ugly) */
 
 #if 0
 #define GST_DISABLE_LOADSAVE_REGISTRY 1
@@ -68,6 +69,10 @@
 /***** default padding of structures *****/
 #define GST_PADDING		4
 #define GST_PADDING_INIT	{0}
+
+/***** padding for very extensible base classes *****/
+#define GST_PADDING_LARGE       20
+
 
 /***** disabling of subsystems *****/
 
