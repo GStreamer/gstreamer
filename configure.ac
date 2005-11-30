@@ -487,6 +487,7 @@ plugins/elements/Makefile
 po/Makefile.in
 check/Makefile
 tests/Makefile
+tests/benchmarks/Makefile
 testsuite/Makefile
 testsuite/caps/Makefile
 testsuite/debug/Makefile

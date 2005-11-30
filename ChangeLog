@@ -1,5 +1,11 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* tests/Makefile.am:
+	  fix distcheck
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
 	* tests/sched/.cvsignore:
 	* tests/sched/Makefile.am:
