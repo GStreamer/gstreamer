@@ -1,3 +1,12 @@
+general
+-------
+- write script to check for:
+  invalid // comments
+  invalid %lld
+  invalid LL for 64bit ints
+  wrong whitespacing
+  trailing space
+
 gstreamer
 ---------
 - reorganize tests and examples into

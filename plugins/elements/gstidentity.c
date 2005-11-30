@@ -339,7 +339,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstIdentity *identity = GST_IDENTITY (trans);
-  GstClockTime runtimestamp = 0LL;
+  GstClockTime runtimestamp = G_GINT64_CONSTANT (0);
 
   if (identity->check_perfect)
     gst_identity_check_perfect (identity, buf);

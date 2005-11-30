@@ -1,5 +1,10 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* plugins/elements/gstidentity.c: (gst_identity_transform_ip):
+	  make initialization portable, using LL is not
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* win32/common/gstconfig.h:
 	  add large padding
 
