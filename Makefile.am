@@ -8,6 +8,7 @@ endif
 
 ALWAYS_SUBDIRS =		\
 	gst sys ext 		\
+	tests			\
 	docs			\
 	po			\
 	m4 common
