@@ -115,3 +115,20 @@ gst_x_overlay_prepare_xwindow_id
 gst_x_overlay_expose
 </SECTION>
 
+<SECTION>
+<FILE>element-videosink</FILE>
+<INCLUDE>gst/video/gstvideosink.h</INCLUDE>
+GstVideoSink
+GstVideoSinkClass
+GstVideoRectangle
+gst_video_sink_center_rect
+</SECTION>
+
+<SECTION>
+<FILE>element-videofilter</FILE>
+<INCLUDE>gst/video/gstvideofilter.h</INCLUDE>
+GstVideoFilter
+GstVideoFilterClass
+</SECTION>
+
+

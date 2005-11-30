@@ -48,6 +48,15 @@ typedef struct _GstVideoSink GstVideoSink;
 typedef struct _GstVideoSinkClass GstVideoSinkClass;
 typedef struct _GstVideoRectangle GstVideoRectangle;
 
+/**
+ * GstVideoRectangle:
+ * @x: X coordinate of rectangle's top-left point
+ * @y: Y coordinate of rectangle's top-left point
+ * @w: width of the rectangle
+ * @h: height of the rectangle
+ *
+ * Helper structure representing a rectangular area.
+ */
 struct _GstVideoRectangle {
   gint x;
   gint y;

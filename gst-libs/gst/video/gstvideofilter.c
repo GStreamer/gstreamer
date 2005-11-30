@@ -18,6 +18,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+ /**
+ * SECTION:element-videofilter
+ * @short_description: Base class for video filters.
+ * 
+ * <refsect2>
+ * <para>
+ * Provides useful functions and a base class for video filters. Right now it's 
+ * mostly used as a place holder for adding common code later on.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

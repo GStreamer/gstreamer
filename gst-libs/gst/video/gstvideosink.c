@@ -19,6 +19,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-videosink
+ * @short_description: Base class for video sinks.
+ * 
+ * <refsect2>
+ * <para>
+ * Provides useful functions and a base class for video sinks. Right now it's 
+ * mostly used as a place holder for adding common code later on.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -27,6 +39,17 @@
 
 static GstElementClass *parent_class = NULL;
 
+/**
+ * gst_video_sink_center_rect:
+ * @src: the #GstVideoRectangle describing the source area
+ * @dst: the #GstVideoRectangle describing the destination area
+ * @result: a pointer to a #GstVideoRectangle which will receive the result area
+ * @scaling: a #gboolean indicating if scaling should be applied or not
+ * 
+ * Takes @src rectangle and position it at the center of @dst rectangle with or
+ * without @scaling. It handles clipping if the @src rectangle is bigger than
+ * the @dst one and @scaling is set to FALSE.
+ */
 void
 gst_video_sink_center_rect (GstVideoRectangle src, GstVideoRectangle dst,
     GstVideoRectangle * result, gboolean scaling)
