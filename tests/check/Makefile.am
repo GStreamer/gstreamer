@@ -1,6 +1,6 @@
 include $(top_srcdir)/common/check.mak
 
-CHECK_REGISTRY = $(top_builddir)/check/test-registry.xml
+CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.xml
 
 REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY=$(CHECK_REGISTRY)
