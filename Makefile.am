@@ -125,12 +125,10 @@ check-torture:
 	cd check && make torture
 else
 check-valgrind:
-	echo "You need to install the 'check' library"
-	exit 1
+	echo "'check' library not installed, skipping"
 
 check-torture:
-	echo "You need to install the 'check' library"
-	exit 1
+	echo "'check' library not installed, skipping"
 endif
 
 win32-update:
