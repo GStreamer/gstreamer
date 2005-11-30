@@ -2182,7 +2182,7 @@ gst_xml_get_type
 <SECTION>
 <FILE>gstfakesrc</FILE>
 <TITLE>GstFakeSrc</TITLE>
-<INCLUDE>gst/elements/gstfakesrc.h</INCLUDE>
+<INCLUDE>plugins/elements/gstfakesrc.h</INCLUDE>
 GstFakeSrc
 GstFakeSrcDataType
 GstFakeSrcFillType
@@ -2203,7 +2203,7 @@ gst_fake_src_get_type
 <SECTION>
 <FILE>gstfakesink</FILE>
 <TITLE>GstFakeSink</TITLE>
-<INCLUDE>gst/elements/gstfakesink.h</INCLUDE>
+<INCLUDE>plugins/elements/gstfakesink.h</INCLUDE>
 GstFakeSink
 GstFakeSinkStateError
 <SUBSECTION Standard>
@@ -2221,7 +2221,7 @@ gst_fake_sink_get_type
 <SECTION>
 <FILE>gstfilesrc</FILE>
 <TITLE>GstFileSrc</TITLE>
-<INCLUDE>gst/elements/gstfilesrc.h</INCLUDE>
+<INCLUDE>plugins/elements/gstfilesrc.h</INCLUDE>
 GstFileSrc
 <SUBSECTION Standard>
 GstFileSrcClass
@@ -2238,7 +2238,7 @@ gst_file_src_get_type
 <SECTION>
 <FILE>gstfilesink</FILE>
 <TITLE>GstFileSink</TITLE>
-<INCLUDE>gst/elements/gstfilesink.h</INCLUDE>
+<INCLUDE>plugins/elements/gstfilesink.h</INCLUDE>
 GstFileSink
 <SUBSECTION Standard>
 GstFileSinkClass
