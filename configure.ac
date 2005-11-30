@@ -609,14 +609,14 @@ gst-libs/gst/riff/Makefile
 gst-libs/gst/rtp/Makefile
 gst-libs/gst/tag/Makefile
 gst-libs/gst/video/Makefile
-examples/seeking/Makefile
-examples/Makefile
 tools/Makefile
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-base.pc
 pkgconfig/gstreamer-plugins-base-uninstalled.pc
 tests/Makefile
 tests/check/Makefile
+tests/examples/Makefile
+tests/examples/seek/Makefile
 docs/Makefile
 docs/libs/Makefile
 docs/plugins/Makefile

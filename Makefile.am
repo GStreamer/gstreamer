@@ -6,16 +6,9 @@ else
 SUBDIRS_EXT =
 endif
 
-if BUILD_EXAMPLES
-SUBDIRS_EXAMPLES = examples
-else
-SUBDIRS_EXAMPLES =
-endif
-
 SUBDIRS = 			\
 	gst-libs 		\
 	gst sys $(SUBDIRS_EXT) 	\
-	$(SUBDIRS_EXAMPLES) 	\
 	tools 			\
 	docs			\
 	po 			\
@@ -27,7 +20,6 @@ DIST_SUBDIRS = 			\
 	docs			\
 	gst-libs		\
 	gst sys ext		\
-	examples		\
 	tools 			\
 	po 			\
 	common 			\

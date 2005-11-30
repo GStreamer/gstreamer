@@ -1,6 +1,0 @@
-noinst_PROGRAMS = mp2ogg
-
-LDADD = $(GST_LIBS)
-AM_CFLAGS = $(GST_CFLAGS)
-
-

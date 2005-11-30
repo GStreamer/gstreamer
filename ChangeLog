@@ -1,3 +1,34 @@
+2005-11-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* Makefile.am:
+	* configure.ac:
+	* examples/Makefile.am:
+	* examples/capsfilter/Makefile.am:
+	* examples/capsfilter/capsfilter1.c:
+	* examples/gob/Makefile.am:
+	* examples/gob/gst-identity2.gob:
+	* examples/indexing/.cvsignore:
+	* examples/indexing/Makefile.am:
+	* examples/indexing/indexmpeg.c:
+	* examples/seeking/.cvsignore:
+	* examples/seeking/Makefile.am:
+	* examples/seeking/cdparanoia.c:
+	* examples/seeking/cdplayer.c:
+	* examples/seeking/chained.c:
+	* examples/seeking/scrubby.c:
+	* examples/seeking/seek.c:
+	* examples/stats/Makefile.am:
+	* examples/stats/mp2ogg.c:
+	* examples/switch/.cvsignore:
+	* examples/switch/Makefile.am:
+	* examples/switch/switcher.c:
+	* tests/Makefile.am:
+	* tests/check/generic/.cvsignore:
+	* tests/check/pipelines/.cvsignore:
+	* tests/examples/Makefile.am:
+	* tests/examples/seek/Makefile.am:
+	  reorganize stuff under tests/
+
 2005-11-30  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind):
