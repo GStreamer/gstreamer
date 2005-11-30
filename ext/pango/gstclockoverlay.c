@@ -22,62 +22,51 @@
 #include "config.h"
 #endif
 
+#include <gstclockoverlay.h>
 #include <gst/video/video.h>
+#include <time.h>
 
-#include <gsttimeoverlay.h>
-
-static GstElementDetails time_overlay_details =
+static GstElementDetails clock_overlay_details =
 GST_ELEMENT_DETAILS ("Time Overlay",
     "Filter/Editor/Video",
     "Overlays the time on a video stream",
     "Tim-Philipp Müller <tim@centricular.net>");
 
-GST_BOILERPLATE (GstTimeOverlay, gst_time_overlay, GstTextOverlay,
+GST_BOILERPLATE (GstClockOverlay, gst_clock_overlay, GstTextOverlay,
     GST_TYPE_TEXT_OVERLAY)
 
-     static void gst_time_overlay_base_init (gpointer g_class)
+     static void gst_clock_overlay_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &time_overlay_details);
+  gst_element_class_set_details (element_class, &clock_overlay_details);
 }
 
 static gchar *
-gst_time_overlay_render_time (GstTimeOverlay * overlay, GstClockTime time)
+gst_clock_overlay_render_time (GstClockOverlay * overlay)
 {
-  guint hours, mins, secs, msecs;
+  struct tm t;
+  time_t now;
 
-  if (!GST_CLOCK_TIME_IS_VALID (time))
-    return g_strdup ("");
+  now = time (NULL);
+  if (localtime_r (&now, &t) == NULL)
+    return g_strdup ("--:--:--");
 
-  hours = (guint) (time / (GST_SECOND * 60 * 60));
-  mins = (guint) ((time / (GST_SECOND * 60)) % 60);
-  secs = (guint) ((time / GST_SECOND) % 60);
-  msecs = (guint) ((time % GST_SECOND) / (1000 * 1000));
-
-  return g_strdup_printf ("%u:%02u:%02u.%03u", hours, mins, secs, msecs);
+  return g_strdup_printf ("%02u:%02u:%02u", t.tm_hour, t.tm_min, t.tm_sec);
 }
 
 static gchar *
-gst_time_overlay_get_text (GstTextOverlay * overlay, GstBuffer * video_frame)
+gst_clock_overlay_get_text (GstTextOverlay * overlay, GstBuffer * video_frame)
 {
-  GstClockTime time = GST_BUFFER_TIMESTAMP (video_frame);
   gchar *time_str, *txt, *ret;
 
   overlay->need_render = TRUE;
-
-  if (!GST_CLOCK_TIME_IS_VALID (time)) {
-    GST_DEBUG ("buffer without valid timestamp");
-    return g_strdup ("");
-  }
-
-  GST_DEBUG ("buffer with timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
 
   GST_OBJECT_LOCK (overlay);
   txt = g_strdup (overlay->default_text);
   GST_OBJECT_UNLOCK (overlay);
 
-  time_str = gst_time_overlay_render_time (GST_TIME_OVERLAY (overlay), time);
+  time_str = gst_clock_overlay_render_time (GST_CLOCK_OVERLAY (overlay));
   if (txt != NULL && *txt != '\0') {
     ret = g_strdup_printf ("%s %s", txt, time_str);
   } else {
@@ -92,17 +81,17 @@ gst_time_overlay_get_text (GstTextOverlay * overlay, GstBuffer * video_frame)
 }
 
 static void
-gst_time_overlay_class_init (GstTimeOverlayClass * klass)
+gst_clock_overlay_class_init (GstClockOverlayClass * klass)
 {
   GstTextOverlayClass *gsttextoverlay_class;
 
   gsttextoverlay_class = (GstTextOverlayClass *) klass;
 
-  gsttextoverlay_class->get_text = gst_time_overlay_get_text;
+  gsttextoverlay_class->get_text = gst_clock_overlay_get_text;
 }
 
 static void
-gst_time_overlay_init (GstTimeOverlay * overlay, GstTimeOverlayClass * klass)
+gst_clock_overlay_init (GstClockOverlay * overlay, GstClockOverlayClass * klass)
 {
   PangoFontDescription *font_description;
   GstTextOverlay *textoverlay;
