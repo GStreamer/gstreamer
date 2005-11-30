@@ -1,5 +1,15 @@
 2005-11-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* PORTED_09:
+	* docs/random/PORTED_09:
+	  move
+	* tests/Makefile.am:
+	  add
+	* win32/gst.sln:
+	  remove
+
+2005-11-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* Makefile.am:
 	* check/.cvsignore:
 	* check/Makefile.am:
