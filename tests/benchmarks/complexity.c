@@ -17,6 +17,7 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <stdlib.h>
 #include <gst/gst.h>
 
 #define BUFFER_COUNT (1000)

@@ -30,6 +30,7 @@
 
 #include "gst/gst-i18n-app.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <locale.h>
 #include <glib/gprintf.h>

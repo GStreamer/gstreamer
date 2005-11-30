@@ -64,6 +64,14 @@ GST_CHECK_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
 AM_CONDITIONAL(GST_DISABLE_GST_DEBUG, test "x$GST_GST_DISABLE_DEBUG" = "xyes")
 GST_CHECK_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
 AM_CONDITIONAL(GST_DISABLE_LOADSAVE, test "x$GST_DISABLE_LOADSAVE" = "xyes")
+dnl define a substitution to use in docs/gst/gstreamer.types
+if test "x$GST_DISABLE_LOADSAVE" = "xyes"
+then
+  GST_LOADSAVE_DOC_TYPES="%"
+else
+  GST_LOADSAVE_DOC_TYPES=
+fi
+AC_SUBST(GST_LOADSAVE_DOC_TYPES)
 GST_CHECK_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
 AM_CONDITIONAL(GST_DISABLE_PARSE, test "x$GST_DISABLE_PARSE" = "xyes")
 GST_CHECK_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
@@ -72,6 +80,14 @@ GST_CHECK_SUBSYSTEM_DISABLE(ALLOC_TRACE,[allocation tracing])
 AM_CONDITIONAL(GST_DISABLE_ALLOC_TRACE, test "x$GST_DISABLE_ALLOC_TRACE" = "xyes")
 GST_CHECK_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
 AM_CONDITIONAL(GST_DISABLE_REGISTRY, test "x$GST_DISABLE_REGISTRY" = "xyes")
+dnl define a substitution to use in docs/gst/gstreamer.types
+if test "x$GST_DISABLE_REGISTRY" = "xyes"
+then
+  GST_REGISTRY_DOC_TYPES="%"
+else
+  GST_REGISTRY_DOC_TYPES=
+fi
+AC_SUBST(GST_REGISTRY_DOC_TYPES)
 GST_CHECK_SUBSYSTEM_DISABLE(ENUMTYPES,[enum types])
 AM_CONDITIONAL(GST_DISABLE_ENUMTYPES, test "x$GST_DISABLE_ENUMTYPES" = "xyes")
 GST_CHECK_SUBSYSTEM_DISABLE(INDEX,[index])
@@ -495,6 +511,7 @@ common/m4/Makefile
 docs/Makefile
 docs/faq/Makefile
 docs/gst/Makefile
+docs/gst/gstreamer.types
 docs/libs/Makefile
 docs/manual/Makefile
 docs/pwg/Makefile

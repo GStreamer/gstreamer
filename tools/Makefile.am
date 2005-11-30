@@ -9,23 +9,31 @@ GST_LOADSAVE_SRC_V = \
 	gst-xmllaunch-@GST_MAJORMINOR@
 endif
 
+if GST_DISABLE_PARSE
+GST_PARSE_SRC = 
+GST_PARSE_SRC_V = 
+else
+GST_PARSE_SRC = gst-launch gst-md5sum
+GST_PARSE_SRC_V = \
+	gst-launch-@GST_MAJORMINOR@ \
+	gst-md5sum-@GST_MAJORMINOR@
+endif
+
+
 GST_OTHER_SRC = \
 	gst-feedback \
 	gst-inspect \
-	gst-launch \
-	gst-md5sum \
 	gst-typefind \
 	gst-xmlinspect
 GST_OTHER_SRC_V = \
 	gst-inspect-@GST_MAJORMINOR@ \
-	gst-launch-@GST_MAJORMINOR@ \
-	gst-md5sum-@GST_MAJORMINOR@ \
 	gst-typefind-@GST_MAJORMINOR@ \
 	gst-xmlinspect-@GST_MAJORMINOR@
 
 ### so all of the programs we want to build
 bin_PROGRAMS = \
 	$(GST_LOADSAVE_SRC) $(GST_LOADSAVE_SRC_V) \
+	$(GST_PARSE_SRC) $(GST_PARSE_SRC_V) \
 	$(GST_OTHER_SRC) $(GST_OTHER_SRC_V)
 bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 
@@ -35,15 +43,19 @@ gst_xmllaunch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
 gst_xmllaunch_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_xmllaunch_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 endif
-gst_inspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
-gst_inspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
-gst_inspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
+
+if !GST_DISABLE_PARSE
 gst_launch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
 gst_launch_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_launch_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_md5sum_@GST_MAJORMINOR@_SOURCES = gst-md5sum.c
 gst_md5sum_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_md5sum_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
+endif
+
+gst_inspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
+gst_inspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
+gst_inspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 gst_typefind_@GST_MAJORMINOR@_SOURCES = gst-typefind.c
 gst_typefind_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_typefind_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
@@ -59,10 +71,14 @@ gst-feedback-@GST_MAJORMINOR@: gst-feedback-m.m
 if !GST_DISABLE_LOADSAVE
 gst_xmllaunch_SOURCES = gst-run.c
 endif
-gst_feedback_SOURCES = gst-run.c
-gst_inspect_SOURCES = gst-run.c
+
+if !GST_DISABLE_PARSE
 gst_launch_SOURCES = gst-run.c
 gst_md5sum_SOURCES = gst-run.c
+endif
+
+gst_feedback_SOURCES = gst-run.c
+gst_inspect_SOURCES = gst-run.c
 gst_typefind_SOURCES = gst-run.c
 gst_xmlinspect_SOURCES = gst-run.c
 
@@ -80,15 +96,22 @@ GST_LOADSAVE_MAN = \
 	gst-xmllaunch-@GST_MAJORMINOR@.1
 endif
 
+if GST_DISABLE_PARSE
+GST_PARSE_MAN=
+else
+GST_PARSE_MAN = \
+	gst-launch-@GST_MAJORMINOR@.1 \
+	gst-md5sum-@GST_MAJORMINOR@.1
+endif
+
+
 GST_OTHER_MAN = \
 	gst-feedback-@GST_MAJORMINOR@.1 \
 	gst-inspect-@GST_MAJORMINOR@.1 \
-	gst-launch-@GST_MAJORMINOR@.1 \
-	gst-md5sum-@GST_MAJORMINOR@.1 \
 	gst-typefind-@GST_MAJORMINOR@.1 \
 	gst-xmlinspect-@GST_MAJORMINOR@.1
 
-manpages = $(GST_LOADSAVE_MAN) $(GST_OTHER_MAN)
+manpages = $(GST_LOADSAVE_MAN) $(GST_PARSE_MAN) $(GST_OTHER_MAN)
 
 CLEANFILES = $(manpages) $(bin_SCRIPTS)
 man_MANS = $(manpages)

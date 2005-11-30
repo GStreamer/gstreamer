@@ -1,5 +1,23 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst.c:
+	* gst/gstplugin.h:
+	* gst/gstregistry.h:
+	* tests/benchmarks/complexity.c:
+	* tests/benchmarks/mass-elements.c:
+	* tests/check/Makefile.am:
+	* tools/Makefile.am:
+	* tools/gst-inspect.c:
+	* tools/gst-xmlinspect.c:
+	  various fixes to make
+	  --disable-nls --disable-registry --disable-loadsave
+	  --disable-parse --disable-gst-debug
+	  work and get the core .so down to 360444 bytes after stripping
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	* configure.ac:
 	  descend into tests

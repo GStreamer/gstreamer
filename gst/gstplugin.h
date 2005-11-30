@@ -27,6 +27,7 @@
 #include <gst/gstconfig.h>
 
 #include <time.h> /* time_t */
+#include <sys/types.h> /* off_t */
 #include <sys/stat.h> /* off_t */
 #include <gmodule.h>
 #include <gst/gstobject.h>

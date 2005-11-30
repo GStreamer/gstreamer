@@ -170,6 +170,7 @@ enum
 #define NUL '\0'
 #endif
 
+#ifndef GST_DISABLE_GST_DEBUG
 static gboolean
 parse_debug_category (gchar * str, const gchar ** category)
 {
@@ -239,6 +240,7 @@ parse_debug_list (const gchar * list)
 
   g_strfreev (split);
 }
+#endif
 
 #ifndef GST_HAVE_GLIB_2_8
 #define G_OPTION_FLAG_NO_ARG 0
@@ -476,7 +478,7 @@ init_pre (void)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #endif /* ENABLE_NLS */
 
-#ifndef GST_DISABLE_REGISTRY
+#ifndef GST_DISABLE_GST_DEBUG
   {
     const gchar *debug_list;
 

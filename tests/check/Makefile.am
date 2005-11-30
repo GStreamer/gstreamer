@@ -27,6 +27,12 @@ clean-local: clean-local-check
 # checks to fix
 #	gst/gstplugin
 
+if GST_DISABLE_PARSE
+PARSE_CHECKS =
+else
+PARSE_CHECKS = pipelines/simple-launch-lines pipelines/cleanup
+endif
+
 check_PROGRAMS =				\
 	gst/gst				     	\
 	gst/gstbin			     	\
@@ -53,9 +59,8 @@ check_PROGRAMS =				\
 	elements/fdsrc		          	\
 	generic/sinks				\
 	generic/states				\
-	pipelines/simple-launch-lines		\
+	$(PARSE_CHECKS)				\
 	pipelines/stress			\
-	pipelines/cleanup			\
 	libs/controller				\
 	libs/gdp				\
 	libs/gstnetclientclock			\

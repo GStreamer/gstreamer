@@ -6,12 +6,20 @@ else
 GST_LOADSAVE_SRC = gstxml.c
 endif
 
+if GST_DISABLE_REGISTRY
+GST_REGISTRY_SRC = 
+else
+GST_REGISTRY_SRC = gstregistryxml.c
+endif
+
 if GST_DISABLE_PARSE
 GST_PARSE_SRC = 
+GST_PARSE_H =
 SUBDIRS_PARSE = 
 GST_PARSE_LA = 
 else
 GST_PARSE_SRC = gstparse.c
+GST_PARSE_H = gstparse.h
 SUBDIRS_PARSE = parse
 GST_PARSE_LA = parse/libgstparse.la 
 endif
@@ -58,7 +66,7 @@ built_header_make = gstenumtypes.h gstmarshal.h
 built_source_make = $(GST_ENUMTYPES_SRC) gstmarshal.c
 
 EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
-	gstmarshal.list gstxml.c gstparse.c gsttrace.c
+	gstmarshal.list gstxml.c gstparse.c gsttrace.c gstregistryxml.c
 
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	glib-compat.c		\
@@ -90,7 +98,6 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstpluginfeature.c	\
 	gstquery.c		\
 	gstregistry.c		\
-	gstregistryxml.c	\
 	gstsegment.c		\
 	gststructure.c		\
 	gstsystemclock.c	\
@@ -105,6 +112,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstvalue.c		\
 	$(GST_PARSE_SRC)	\
 	$(GSTARCH_SRCS)		\
+	$(GSTREGISTRY_SRC)	\
 	$(GST_LOADSAVE_SRC)
 
 # do not put files in the distribution that are generated
@@ -183,7 +191,7 @@ gst_headers =			\
 	gstutils.h		\
 	gstvalue.h		\
 	gstregistry.h		\
-	gstparse.h		\
+	$(GST_PARSE_H)		\
 	gstxml.h
 
 libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers)
