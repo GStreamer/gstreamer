@@ -6,12 +6,6 @@ else
 GCONF_DIR =
 endif
 
-if HAVE_CHECK
-SUBDIRS_CHECK = check
-else
-SUBDIRS_CHECK =
-endif
-
 ALWAYS_SUBDIRS =		\
 	gst sys ext 		\
 	docs			\
@@ -20,12 +14,10 @@ ALWAYS_SUBDIRS =		\
 
 SUBDIRS = 			\
 	$(ALWAYS_SUBDIRS)	\
-	$(SUBDIRS_CHECK)	\
 	$(GCONF_DIR)
 
 DIST_SUBDIRS = 			\
 	$(ALWAYS_SUBDIRS)	\
-	check			\
 	gconf
 
 EXTRA_DIST = \
@@ -45,7 +37,7 @@ include $(top_srcdir)/common/release.mak
 # include $(top_srcdir)/common/po.mak
 
 check-valgrind:
-	cd check && make check-valgrind
+	cd tests/check && make check-valgrind
 
 check-torture:
-	cd check && make torture
+	cd tests/check && make torture

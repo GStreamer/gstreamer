@@ -578,7 +578,7 @@ gconf/gstreamer.schemas
 docs/Makefile
 docs/plugins/Makefile
 docs/version.entities
-check/Makefile
+tests/check/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile
