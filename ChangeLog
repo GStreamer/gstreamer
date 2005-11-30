@@ -1,5 +1,31 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* win32/GStreamer.vcproj:
+	* win32/MANIFEST:
+	* win32/Makefile:
+	* win32/Makefile.inspect:
+	* win32/Makefile.launch:
+	* win32/Makefile.register:
+	* win32/README.txt:
+	* win32/gst-inspect.vcproj:
+	* win32/gst-launch.vcproj:
+	* win32/gst-register.vcproj:
+	* win32/gstelements.vcproj:
+	* win32/gstgetbits.def:
+	* win32/gstgetbits.vcproj:
+	* win32/gstreamer-dbg.def:
+	* win32/gstreamer.def:
+	* win32/libgstbase.def:
+	* win32/libgstbase.vcproj:
+	* win32/link_oldruntime.c:
+	* win32/mman.c:
+	* win32/mman.h:
+	* win32/mman.inl:
+	* win32/msvc71.sln:
+	  move even more stuff, win32/ is nice and clean now
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* libs/gst/control/.cvsignore:
 	* win32/MANIFEST:
 	* win32/config.h:
