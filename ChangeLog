@@ -1,3 +1,20 @@
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/audioscale/.cvsignore:
+	* gst/audioscale/Makefile.am:
+	* gst/audioscale/README:
+	* gst/audioscale/audioscale.vcproj:
+	* gst/audioscale/dtof.c:
+	* gst/audioscale/dtos.c:
+	* gst/audioscale/functable.c:
+	* gst/audioscale/gstaudioscale.c:
+	* gst/audioscale/gstaudioscale.h:
+	* gst/audioscale/private.h:
+	* gst/audioscale/resample.c:
+	* gst/audioscale/resample.h:
+	* gst/audioscale/test.c:
+	  remove
+
 2005-11-30  Edward Hervey  <edward@fluendo.com>
 
 	* gst-libs/gst/netbuffer/Makefile.am:
