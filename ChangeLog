@@ -1,5 +1,9 @@
 2005-11-30  Julien MOUTTE  <julien@moutte.net>
 
+	* gst/udp/Makefile.am: Moved to netbuffer.
+
+2005-11-30  Julien MOUTTE  <julien@moutte.net>
+
 	* configure.ac:
 	* PORTED_O9:
 	* gst/multipart/Makefile.am:
