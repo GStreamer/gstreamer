@@ -3,7 +3,6 @@
 gst/gst.c
 gst/gstelement.c
 gst/gsterror.c
-gst/gstqueue.c
 gst/gsttaglist.c
 gst/parse/grammar.y
 libs/gst/base/gstbasesrc.c
@@ -12,6 +11,7 @@ plugins/elements/gstfakesink.c
 plugins/elements/gstfilesink.c
 plugins/elements/gstfilesrc.c
 plugins/elements/gstidentity.c
+plugins/elements/gstqueue.c
 plugins/elements/gsttypefindelement.c
 tools/gst-inspect.c
 tools/gst-launch.c

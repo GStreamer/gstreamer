@@ -1,5 +1,10 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/POTFILES.in:
+	  queue has moved, update
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
 	  remove double entries from the docs
 	* gst/gst_private.h:
