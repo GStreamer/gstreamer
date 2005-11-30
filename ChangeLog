@@ -1,5 +1,13 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst-libs/gst/net/Makefile.am:
+	* gst-libs/gst/net/README:
+	* gst-libs/gst/net/gstnetbuffer.c:
+	* gst-libs/gst/net/gstnetbuffer.h:
+	  this was moved to "netbuffer"
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/video/gstvideofilter.c: (gst_video_filter_get_type),
 	(gst_video_filter_class_init), (gst_video_filter_init):
 	* gst-libs/gst/video/gstvideofilter.h:
