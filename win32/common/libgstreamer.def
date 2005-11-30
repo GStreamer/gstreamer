@@ -52,7 +52,6 @@ EXPORTS
     gst_value_get_fraction_denominator
     gst_value_set_fraction
     gst_caps_get_type
-    gst_uri_get_uri_type
     gst_plugin_feature_get_name
     gst_element_factory_get_type
     gst_object_get_name
@@ -214,135 +213,134 @@ EXPORTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;exports needed by libgstbase.dll
-	gst_pad_set_activatepull_function
-	_gst_debug_category_new
-	gst_debug_log_valist
-	_gst_debug_register_funcptr
-	gst_pad_set_setcaps_function
+	gst_buffer_join
+	gst_buffer_set_caps
+	gst_caps_copy_nth
+	gst_caps_is_equal
+	gst_caps_make_writable
 	gst_caps_ref
+	gst_caps_truncate
+	gst_caps_unref
+	gst_clock_get_time
 	gst_clock_id_unref
-	gst_pad_set_activatepush_function
-	gst_pad_set_activate_function
-	gst_pad_set_bufferalloc_function
-	gst_element_lost_state
 	gst_clock_id_unschedule
-	gst_element_abort_state
-	gst_element_commit_state
-	gst_element_message_full
-	gst_event_parse_newsegment
-	gst_element_post_message
 	gst_clock_id_wait
 	gst_clock_new_single_shot_id
-	gst_clock_get_time
-	gst_pad_activate_push
-	gst_pad_activate_pull
-	gst_pad_check_pull_range
-	gst_pad_stop_task
-	gst_pad_start_task
-	gst_pad_pause_task
-	gst_message_new_eos
-	gst_pad_pull_range
-	gst_pad_set_getrange_function
-	gst_pad_set_checkgetrange_function
-	gst_query_set_position
-	gst_query_set_duration
-	gst_query_parse_position
-	gst_query_parse_duration
-	gst_event_new_flush_stop
-	gst_pad_push_event
-	gst_event_new_flush_start
-	gst_event_parse_seek
-	gst_flow_get_name
-	gst_event_new_newsegment
-	gst_pad_set_caps
-	gst_pad_fixate_caps
-	gst_caps_truncate
-	gst_caps_make_writable
-	gst_caps_copy_nth
-	gst_caps_unref
-	gst_pad_peer_get_caps
+	_gst_debug_category_new
+	gst_debug_log_valist
+	_gst_debug_nameof_funcptr
+	_gst_debug_register_funcptr
+	gst_element_abort_state
+	gst_element_factory_get_klass
+	gst_element_factory_get_static_pad_templates
+	gst_element_get_base_time
+	gst_element_iterate_pads
+	gst_element_iterate_src_pads
+	gst_element_lost_state
+	gst_element_message_full
+	gst_element_post_message
+	gst_event_get_structure
 	gst_event_new_eos
-	gst_caps_is_equal
-	gst_pad_accept_caps
-	gst_buffer_set_caps
+	gst_event_new_flush_start
+	gst_event_new_flush_stop
+	gst_event_new_new_segment
+	gst_event_parse_new_segment
+	gst_event_parse_seek
+	gst_event_parse_tag
+	gst_flags_get_first_value
+	gst_flow_get_name
+	gst_flow_return_get_type
+	gst_gdouble_to_guint64
+	gst_guint64_to_gdouble
+	gst_is_tag_list
+	gst_iterator_fold
+	gst_iterator_free
+	gst_message_new_eos
+	gst_message_new_segment_done
+	gst_message_new_segment_start
+	gst_message_new_tag
+	gst_message_parse_new_clock
+	gst_message_type_get_name
 	gst_mini_object_copy
 	gst_mini_object_is_writable
 	gst_mini_object_replace
-	gst_query_set_seeking
-	gst_query_set_formats
-	gst_event_get_structure
-	gst_value_set_caps
-	gst_value_get_mini_object
-	gst_pad_proxy_setcaps
-	gst_buffer_join
-	gst_pad_is_active
-	gst_pad_use_fixed_caps
-	gst_iterator_free
-	gst_iterator_fold
-	gst_element_iterate_pads
-	gst_flow_return_get_type
-	gst_pad_query_position
-	gst_pad_query_duration
-	gst_type_find_factory_call_function
-	gst_type_find_factory_get_type
-	gst_type_find_factory_get_list
-	gst_plugin_feature_list_free
-	gst_tag_get_nick
-	gst_tag_list_get_value_index
-	gst_tag_list_get_string_index
-	gst_tag_get_type
-	gst_tag_list_get_tag_size
-	gst_tag_list_free
-	gst_tag_list_foreach
-	gst_query_set_segment
-	gst_element_iterate_src_pads
-	gst_element_factory_get_static_pad_templates
-	gst_plugin_feature_get_rank
-	gst_element_factory_get_klass
-	gst_pad_chain
-	gst_pad_query_convert
+	gst_object_set_parent
+	gst_object_set_parent
 	gst_object_sink
-	gst_registry_feature_filter
-	gst_registry_get_default
-	gst_message_new_segment_done
-	gst_message_new_segment_start
-	gst_tag_list_add
-	gst_tag_list_new
-	gst_value_list_append_value
-	gst_value_set_mini_object
-	gst_query_set_convert
-	gst_query_parse_convert
-	gst_tag_setter_get_type
-	gst_tag_setter_get_list
-	gst_tag_setter_get_merge_mode
-	gst_tag_list_get_uint_index
-	gst_tag_list_get_double_index
-	gst_is_tag_list
-	gst_tag_list_insert
-	gst_util_uint64_scale
-	gst_message_new_tag
-	gst_event_parse_tag
-	gst_tag_list_merge
-	gst_value_list_get_value
-	gst_value_list_get_size
-	gst_value_get_int_range_max
-	gst_value_get_int_range_min
-	gst_element_get_base_time
-	gst_object_set_parent
-	gst_object_set_parent
+	gst_pad_accept_caps
+	gst_pad_activate_pull
+	gst_pad_activate_push
+	gst_pad_chain
+	gst_pad_check_pull_range
+	gst_pad_fixate_caps
+	gst_pad_is_active
+	gst_pad_pause_task
+	gst_pad_peer_get_caps
+	gst_pad_proxy_setcaps
+	gst_pad_pull_range
+	gst_pad_push_event
+	gst_pad_query_convert
+	gst_pad_query_duration
+	gst_pad_query_position
+	gst_pad_set_activate_function
+	gst_pad_set_activatepull_function
+	gst_pad_set_activatepush_function
+	gst_pad_set_bufferalloc_function
+	gst_pad_set_caps
+	gst_pad_set_checkgetrange_function
 	gst_pad_set_fixatecaps_function
-	gst_registry_get_feature_list_by_plugin
-	gst_registry_find_feature
-	gst_registry_find_plugin
+	gst_pad_set_getrange_function
+	gst_pad_set_setcaps_function
+	gst_pad_start_task
+	gst_pad_stop_task
+	gst_pad_use_fixed_caps
+	gst_plugin_feature_get_rank
+	gst_plugin_feature_list_free
 	gst_plugin_feature_load
 	gst_plugin_list_free
-	gst_registry_get_plugin_list
 	gst_plugin_load_file
-	_gst_debug_nameof_funcptr
-	gst_guint64_to_gdouble
-	gst_gdouble_to_guint64
-	gst_message_parse_new_clock
-	gst_message_type_get_name
-	gst_flags_get_first_value
+	gst_query_parse_convert
+	gst_query_parse_duration
+	gst_query_parse_position
+	gst_query_set_convert
+	gst_query_set_duration
+	gst_query_set_formats
+	gst_query_set_position
+	gst_query_set_seeking
+	gst_query_set_segment
+	gst_registry_feature_filter
+	gst_registry_find_feature
+	gst_registry_find_plugin
+	gst_registry_get_default
+	gst_registry_get_feature_list_by_plugin
+	gst_registry_get_plugin_list
+	gst_tag_get_nick
+	gst_tag_get_type
+	gst_tag_list_add
+	gst_tag_list_foreach
+	gst_tag_list_free
+	gst_tag_list_get_double_index
+	gst_tag_list_get_string_index
+	gst_tag_list_get_tag_size
+	gst_tag_list_get_uint_index
+	gst_tag_list_get_value_index
+	gst_tag_list_insert
+	gst_tag_list_merge
+	gst_tag_list_new
+	gst_tag_setter_get_tag_list
+	gst_tag_setter_get_tag_merge_mode
+	gst_tag_setter_get_type
+	gst_type_find_factory_call_function
+	gst_type_find_factory_get_list
+	gst_type_find_factory_get_type
+	gst_util_uint64_scale
+	gst_value_get_int_range_max
+	gst_value_get_int_range_min
+	gst_value_get_mini_object
+	gst_value_list_append_value
+	gst_value_list_get_size
+	gst_value_list_get_value
+	gst_value_set_caps
+	gst_value_set_mini_object
 	gst_version
 	gst_version_string
