@@ -140,7 +140,7 @@ PLATFORMS
 
 - Linux is of course fully supported
 - FreeBSD is reported to work; other BSD's should work too
-- Solaris is reported to work; a specific sunaudiosink plugin have been written
+- Solaris is reported to work; a specific sunaudiosink plugin has been written
 - MacOSX is reported to work; specific audio and video sinks have been written
 - Windows support is experimental but improving.  Output sinks have been
   written but are not yet included in the code. We support
