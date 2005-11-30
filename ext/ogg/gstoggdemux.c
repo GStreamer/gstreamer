@@ -651,6 +651,7 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
         gst_pad_set_chain_function (pad->elem_out, gst_ogg_pad_internal_chain);
         gst_pad_set_element_private (pad->elem_out, pad);
         gst_pad_set_active (pad->elem_out, TRUE);
+        gst_object_unref (template);
 
         /* and this pad may not be named src.. */
         {

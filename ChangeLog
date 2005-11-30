@@ -1,3 +1,8 @@
+2005-11-30  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind):
+	Go away you stupid GstStaticPadTemplate memleak.
+
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/net/Makefile.am:
