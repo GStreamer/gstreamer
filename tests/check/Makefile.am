@@ -17,7 +17,7 @@ plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 # override to _not_ install the test plugins
 install-pluginLTLIBRARIES:
 
-# ths core dumps of some machines have PIDs appended
+# the core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.xml
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
