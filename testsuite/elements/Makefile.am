@@ -1,6 +1,5 @@
 include ../Rules
 
-# disable gst-compprep-check until it doesn't leave stray files for distcheck
 tests_pass = gst-inspect-check struct_size
 tests_fail =
 tests_ignore =
@@ -13,8 +12,4 @@ gst-inspect-check$(EXEEXT): $(srcdir)/gst-inspect-check.in
 		$(srcdir)/gst-inspect-check.in >gst-inspect-check$(EXEEXT)
 	chmod +x gst-inspect-check$(EXEEXT)
 
-#gst_compprep_check_SOURCES =
-#gst-compprep-check$(EXEEXT):
-#	cp $(srcdir)/gst-compprep-check.in gst-compprep-check$(EXEEXT)
-	
-EXTRA_DIST = gst-inspect-check.in gst-compprep-check.in
+EXTRA_DIST = gst-inspect-check.in
