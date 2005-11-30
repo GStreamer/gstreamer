@@ -1,5 +1,20 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-sections.txt:
+	  remove double entries from the docs
+	* gst/gst_private.h:
+	* gst/gstinfo.c: (_gst_debug_init):
+	  remove the THREAD debug category
+	* gst/Makefile.am:
+	* gst/gstqueue.c:
+	* gst/gstqueue.h:
+	* docs/gst/gstreamer.types:
+	* plugins/elements/gstqueue.c: (gst_queue_get_type),
+	(gst_queue_init), (gst_queue_finalize), (gst_queue_change_state):
+	  completely move queue and fix up debugging categories
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* plugins/elements/gstidentity.c: (gst_identity_transform_ip):
 	  make initialization portable, using LL is not
 

@@ -63,7 +63,6 @@ extern GstDebugCategory *GST_CAT_PIPELINE;
 extern GstDebugCategory *GST_CAT_PLUGIN_LOADING;
 extern GstDebugCategory *GST_CAT_PLUGIN_INFO;
 extern GstDebugCategory *GST_CAT_PROPERTIES;
-extern GstDebugCategory *GST_CAT_THREAD;
 extern GstDebugCategory *GST_CAT_XML;
 extern GstDebugCategory *GST_CAT_NEGOTIATION;
 extern GstDebugCategory *GST_CAT_REFCOUNTING;
@@ -95,7 +94,6 @@ extern GstDebugCategory *GST_CAT_REGISTRY;
 #define GST_CAT_PLUGIN_LOADING   NULL
 #define GST_CAT_PLUGIN_INFO      NULL
 #define GST_CAT_PROPERTIES       NULL
-#define GST_CAT_THREAD           NULL
 #define GST_CAT_XML              NULL
 #define GST_CAT_NEGOTIATION      NULL
 #define GST_CAT_REFCOUNTING      NULL

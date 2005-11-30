@@ -54,8 +54,9 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+GST_DEBUG_CATEGORY_STATIC (queue_debug);
+#define GST_CAT_DEFAULT (queue_debug)
 GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
-#define GST_CAT_DEFAULT (queue_dataflow)
 
 #define STATUS(queue, msg) \
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, \
@@ -205,6 +206,7 @@ gst_queue_get_type (void)
 
     queue_type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstQueue", &queue_info, 0);
+    GST_DEBUG_CATEGORY_INIT (queue_debug, "queue", 0, "queue element");
     GST_DEBUG_CATEGORY_INIT (queue_dataflow, "queue_dataflow", 0,
         "dataflow inside the queue element");
   }
@@ -377,7 +379,7 @@ gst_queue_init (GstQueue * queue)
   queue->item_del = g_cond_new ();
   queue->queue = g_queue_new ();
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_THREAD, queue,
+  GST_DEBUG_OBJECT (queue,
       "initialized queue's not_empty & not_full conditions");
 }
 
@@ -395,9 +397,9 @@ gst_queue_finalize (GObject * object)
     gst_mini_object_unref (data);
   }
   g_queue_free (queue->queue);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_THREAD, queue, "free mutex");
+  GST_DEBUG_OBJECT (queue, "free mutex");
   g_mutex_free (queue->qlock);
-  GST_CAT_DEBUG_OBJECT (GST_CAT_THREAD, queue, "done free mutex");
+  GST_DEBUG_OBJECT (queue, "done free mutex");
   g_cond_free (queue->item_add);
   g_cond_free (queue->item_del);
 
@@ -995,8 +997,6 @@ gst_queue_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   queue = GST_QUEUE (element);
-
-  GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "starting state change");
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:

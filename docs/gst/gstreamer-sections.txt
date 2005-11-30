@@ -1552,23 +1552,6 @@ gst_query_type_get_type
 
 
 <SECTION>
-<FILE>gstqueue</FILE>
-<TITLE>GstQueue</TITLE>
-GstQueue
-GstQueueSize
-<SUBSECTION Standard>
-GstQueueClass
-GST_QUEUE
-GST_IS_QUEUE
-GST_QUEUE_CLASS
-GST_IS_QUEUE_CLASS
-GST_TYPE_QUEUE
-<SUBSECTION Private>
-gst_queue_get_type
-</SECTION>
-<SUBSECTION Standard>
-
-<SECTION>
 <FILE>gstregistry</FILE>
 <TITLE>GstRegistry</TITLE>
 GstRegistry
@@ -1585,15 +1568,10 @@ gst_registry_find_plugin
 gst_registry_find_feature
 gst_registry_lookup_feature
 gst_registry_scan_path
-gst_registry_get_feature_list
 gst_registry_xml_read_cache
 gst_registry_xml_write_cache
-gst_registry_get_default
 gst_registry_lookup
 gst_registry_remove_feature
-gst_registry_get_feature_list_by_plugin
-gst_registry_lookup_feature
-gst_registry_get_plugin_list
 gst_registry_add_feature
 <SUBSECTION Default Registry>
 gst_default_registry_check_feature_version
@@ -2272,3 +2250,20 @@ GST_IS_FILE_SINK_CLASS
 <SUBSECTION Private>
 gst_file_sink_get_type
 </SECTION>
+
+<SECTION>
+<FILE>gstqueue</FILE>
+<TITLE>GstQueue</TITLE>
+GstQueue
+GstQueueSize
+<SUBSECTION Standard>
+GstQueueClass
+GST_QUEUE
+GST_IS_QUEUE
+GST_QUEUE_CLASS
+GST_IS_QUEUE_CLASS
+GST_TYPE_QUEUE
+<SUBSECTION Private>
+gst_queue_get_type
+</SECTION>
+<SUBSECTION Standard>

@@ -7,7 +7,6 @@
 % - document properties and signals
 
 #include <gst/gst.h>
-#include <gst/gstqueue.h>
 
 gst_bin_get_type
 gst_bus_get_type
@@ -28,7 +27,6 @@ gst_pad_get_type
 gst_pad_template_get_type
 gst_pipeline_get_type
 gst_plugin_feature_get_type
-gst_queue_get_type
 gst_tag_setter_get_type
 gst_task_get_type
 gst_type_find_factory_get_type
@@ -63,8 +61,10 @@ gst_net_time_provider_get_type
 #include <plugins/elements/gstfakesink.h>
 #include <plugins/elements/gstfilesrc.h>
 #include <plugins/elements/gstfilesink.h>
+#include <plugins/elements/gstqueue.h>
 
 gst_fake_src_get_type
 gst_fake_sink_get_type
 gst_file_src_get_type
 gst_file_sink_get_type
+gst_queue_get_type
