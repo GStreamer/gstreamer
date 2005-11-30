@@ -1,3 +1,11 @@
+2005-11-30  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac (GST_PKG_DEPS): Revert previous patch, makes
+	loading the gst.interfaces python module bork.
+
+	* configure.ac (GST_PKG_DEPS): Use gmodule-no-export-2.0.pc,
+	available since GLib 2.2. Fixes #318031.
+
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

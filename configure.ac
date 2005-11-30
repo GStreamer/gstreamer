@@ -388,7 +388,7 @@ dnl set location of plugin directory
 GST_SET_PLUGINDIR
 
 dnl FIXME: add LIBXML_PKG here
-GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-no-export-2.0, gthread-2.0"
+GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
 
 dnl define an ERROR_CFLAGS Makefile variable
