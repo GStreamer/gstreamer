@@ -1,3 +1,40 @@
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* libs/gst/control/.cvsignore:
+	* win32/MANIFEST:
+	* win32/config.h:
+	* win32/dirent.c:
+	* win32/dirent.h:
+	* win32/gstbytestream.def:
+	* win32/gstbytestream.vcproj:
+	* win32/gstconfig.h:
+	* win32/gstenumtypes.c:
+	* win32/gstenumtypes.h:
+	* win32/gstoptimalscheduler.vcproj:
+	* win32/gstversion.h:
+	* win32/gtchar.h:
+	* win32/testsuite/bins.vcproj:
+	* win32/testsuite/bytestream.vcproj:
+	* win32/testsuite/caps.vcproj:
+	* win32/testsuite/cleanup.vcproj:
+	* win32/testsuite/clock.vcproj:
+	* win32/testsuite/debug.vcproj:
+	* win32/testsuite/dlopen.vcproj:
+	* win32/testsuite/dynparams.vcproj:
+	* win32/testsuite/elements.vcproj:
+	* win32/testsuite/ghostpads.vcproj:
+	* win32/testsuite/indexers.vcproj:
+	* win32/testsuite/negotiation.vcproj:
+	* win32/testsuite/parse.vcproj:
+	* win32/testsuite/plugin.vcproj:
+	* win32/testsuite/refcounting.vcproj:
+	* win32/testsuite/schedulers.vcproj:
+	* win32/testsuite/states.vcproj:
+	* win32/testsuite/tags.vcproj:
+	* win32/testsuite/threads.vcproj:
+	  remove old win32 stuff that isn't maintained and should be
+	  reorganized
+
 2005-11-30  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac (GST_PKG_DEPS): Revert previous patch, makes

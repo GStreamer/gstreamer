@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-29 21:14+0100\n"
+"POT-Creation-Date: 2005-11-30 16:25+0100\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:269
+#: gst/gst.c:268
 msgid "Print the GStreamer version"
 msgstr "Afficher la version de GStreamer"
 
-#: gst/gst.c:271
+#: gst/gst.c:270
 msgid "Make all warnings fatal"
 msgstr "Rendre tout les avertissements bloquants"
 
-#: gst/gst.c:274
+#: gst/gst.c:273
 msgid "Print available debug categories and exit"
 msgstr "Afficher les catégories de deboguage disponibles et quitter"
 
-#: gst/gst.c:277
+#: gst/gst.c:276
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Niveau de deboguage par defaut de 1 (que les erreurs) a 5 (tout) ou 0 pour "
 "n'avoir aucun affichage"
 
-#: gst/gst.c:279
+#: gst/gst.c:278
 msgid "LEVEL"
 msgstr "NIVEAU"
 
-#: gst/gst.c:281
+#: gst/gst.c:280
 #, fuzzy
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
@@ -48,32 +48,32 @@ msgstr ""
 "des niveaux spécifiques pour chaque catégorie.\n"
 "Exemple: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:284
+#: gst/gst.c:283
 msgid "LIST"
 msgstr ""
 
-#: gst/gst.c:286
+#: gst/gst.c:285
 #, fuzzy
 msgid "Disable colored debugging output"
 msgstr "Désactiver la couleur dans la sortie de deboguage"
 
-#: gst/gst.c:288
+#: gst/gst.c:287
 msgid "Disable debugging"
 msgstr "Désactiver la sortie de deboguage"
 
-#: gst/gst.c:291
+#: gst/gst.c:290
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Activer un diagnostique détaillé du chargement des plugins"
 
-#: gst/gst.c:294
+#: gst/gst.c:293
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:294
+#: gst/gst.c:293
 msgid "PATHS"
 msgstr "CHEMINS"
 
-#: gst/gst.c:296
+#: gst/gst.c:295
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -82,26 +82,26 @@ msgstr ""
 "Liste séparée par des virgules de plugins a precharger en plus de la liste "
 "contenue dans la variable d'environnement GST_PLUGIN_PATH"
 
-#: gst/gst.c:298
+#: gst/gst.c:297
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:301
+#: gst/gst.c:300
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Désactiver la detection des erreurs de segmentation pendant le chargement "
 "des plugins"
 
-#: gst/gst.c:306
+#: gst/gst.c:305
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:307
+#: gst/gst.c:306
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "Afficher la version de GStreamer"
 
-#: gst/gst.c:789
+#: gst/gst.c:787
 msgid "Unknown option"
 msgstr ""
 
@@ -290,10 +290,6 @@ msgstr ""
 #: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr ""
-
-#: gst/gstqueue.c:818 gst/base/gstbasesrc.c:1031 gst/base/gstbasesrc.c:1041
-msgid "Internal data flow error."
 msgstr ""
 
 #: gst/gsttaglist.c:92
@@ -660,7 +656,12 @@ msgstr "impossible de lier un element destination pour l'URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tube vide non autorisé"
 
-#: gst/base/gstbasesink.c:603
+#: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
+#: plugins/elements/gstqueue.c:818
+msgid "Internal data flow error."
+msgstr ""
+
+#: libs/gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
 msgstr ""
 

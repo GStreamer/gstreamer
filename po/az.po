@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-29 21:14+0100\n"
+"POT-Creation-Date: 2005-11-30 16:25+0100\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -16,81 +16,81 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.0.2\n"
 
-#: gst/gst.c:269
+#: gst/gst.c:268
 msgid "Print the GStreamer version"
 msgstr "GStreamer buraxılışını göstər"
 
-#: gst/gst.c:271
+#: gst/gst.c:270
 msgid "Make all warnings fatal"
 msgstr "Bütün xətaları ölümcül et"
 
-#: gst/gst.c:274
+#: gst/gst.c:273
 msgid "Print available debug categories and exit"
 msgstr ""
 
-#: gst/gst.c:277
+#: gst/gst.c:276
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 
-#: gst/gst.c:279
+#: gst/gst.c:278
 msgid "LEVEL"
 msgstr "SƏVİYYƏ"
 
-#: gst/gst.c:281
+#: gst/gst.c:280
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
 
-#: gst/gst.c:284
+#: gst/gst.c:283
 msgid "LIST"
 msgstr "SİYAHI"
 
-#: gst/gst.c:286
+#: gst/gst.c:285
 msgid "Disable colored debugging output"
 msgstr ""
 
-#: gst/gst.c:288
+#: gst/gst.c:287
 msgid "Disable debugging"
 msgstr "Xəta ayırmasını bağla"
 
-#: gst/gst.c:291
+#: gst/gst.c:290
 msgid "Enable verbose plugin loading diagnostics"
 msgstr ""
 
-#: gst/gst.c:294
+#: gst/gst.c:293
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:294
+#: gst/gst.c:293
 msgid "PATHS"
 msgstr "CIĞIRLAR"
 
-#: gst/gst.c:296
+#: gst/gst.c:295
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
 
-#: gst/gst.c:298
+#: gst/gst.c:297
 msgid "PLUGINS"
 msgstr "ƏLAVƏLƏR"
 
-#: gst/gst.c:301
+#: gst/gst.c:300
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 
-#: gst/gst.c:306
+#: gst/gst.c:305
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:307
+#: gst/gst.c:306
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "GStreamer buraxılışını göstər"
 
-#: gst/gst.c:789
+#: gst/gst.c:787
 msgid "Unknown option"
 msgstr ""
 
@@ -263,10 +263,6 @@ msgstr ""
 #: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr ""
-
-#: gst/gstqueue.c:818 gst/base/gstbasesrc.c:1031 gst/base/gstbasesrc.c:1041
-msgid "Internal data flow error."
 msgstr ""
 
 #: gst/gsttaglist.c:92
@@ -617,7 +613,12 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr ""
 
-#: gst/base/gstbasesink.c:603
+#: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
+#: plugins/elements/gstqueue.c:818
+msgid "Internal data flow error."
+msgstr ""
+
+#: libs/gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
 msgstr ""
 

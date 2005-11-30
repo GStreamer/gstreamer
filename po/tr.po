@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-29 21:14+0100\n"
+"POT-Creation-Date: 2005-11-30 16:25+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -14,30 +14,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:269
+#: gst/gst.c:268
 msgid "Print the GStreamer version"
 msgstr "GStreamer sürünümü yazdır"
 
-#: gst/gst.c:271
+#: gst/gst.c:270
 msgid "Make all warnings fatal"
 msgstr "Tüm uyarıları ölümcül yap"
 
-#: gst/gst.c:274
+#: gst/gst.c:273
 msgid "Print available debug categories and exit"
 msgstr "Geçerli hata ayıklama sınıflarını yazdır ve çık"
 
-#: gst/gst.c:277
+#: gst/gst.c:276
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Öntanımlı hata ayıklama seviyesi 1'den (sadece hatalar) 5'e (her şey) kadar "
 "ya da çıktı olmaması için 0"
 
-#: gst/gst.c:279
+#: gst/gst.c:278
 msgid "LEVEL"
 msgstr "SEVİYE"
 
-#: gst/gst.c:281
+#: gst/gst.c:280
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -45,31 +45,31 @@ msgstr ""
 "Ayrı sınıfların belirli seviyeleri için sınıf_ismi:seviye çiftlerinin virgül "
 "ile ayrılmış listesi. Örnek: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:284
+#: gst/gst.c:283
 msgid "LIST"
 msgstr "LİSTE"
 
-#: gst/gst.c:286
+#: gst/gst.c:285
 msgid "Disable colored debugging output"
 msgstr "Renkli hata ayıklama çıktısını kapat"
 
-#: gst/gst.c:288
+#: gst/gst.c:287
 msgid "Disable debugging"
 msgstr "Hata ayıklamayı kapat"
 
-#: gst/gst.c:291
+#: gst/gst.c:290
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Ayrıntılı eklenti yükleme detaylarını etkinleştir"
 
-#: gst/gst.c:294
+#: gst/gst.c:293
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:294
+#: gst/gst.c:293
 msgid "PATHS"
 msgstr "YOLLAR"
 
-#: gst/gst.c:296
+#: gst/gst.c:295
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -78,24 +78,24 @@ msgstr ""
 "Çevre değişkeni GST_PLUGIN_PATH içinde saklanan listeye ek olarak önceden "
 "yüklenecek eklentilerin virgün ile ayırılmış listesi"
 
-#: gst/gst.c:298
+#: gst/gst.c:297
 msgid "PLUGINS"
 msgstr "EKLENTİLER"
 
-#: gst/gst.c:301
+#: gst/gst.c:300
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Eklenti yüklenirken kesimleme hatalarını yakalamayı kapat"
 
-#: gst/gst.c:306
+#: gst/gst.c:305
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:307
+#: gst/gst.c:306
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "GStreamer sürünümü yazdır"
 
-#: gst/gst.c:789
+#: gst/gst.c:787
 msgid "Unknown option"
 msgstr ""
 
@@ -292,10 +292,6 @@ msgstr "%s etki alanı için hiç hata iletisi yok."
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "%s etki alanı ve %d kodu için standart hata iletisi yok."
-
-#: gst/gstqueue.c:818 gst/base/gstbasesrc.c:1031 gst/base/gstbasesrc.c:1041
-msgid "Internal data flow error."
-msgstr ""
 
 #: gst/gsttaglist.c:92
 msgid "title"
@@ -647,7 +643,12 @@ msgstr "\"%s\" URI'si için 'sink' öğesi bağlanamadı"
 msgid "empty pipeline not allowed"
 msgstr "boş boruhattına izin verilmiyor"
 
-#: gst/base/gstbasesink.c:603
+#: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
+#: plugins/elements/gstqueue.c:818
+msgid "Internal data flow error."
+msgstr ""
+
+#: libs/gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
 msgstr ""
 

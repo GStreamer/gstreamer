@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-29 21:14+0100\n"
+"POT-Creation-Date: 2005-11-30 16:25+0100\n"
 "PO-Revision-Date: 2005-11-28 10:24+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n!=1;\n"
 
-#: gst/gst.c:269
+#: gst/gst.c:268
 msgid "Print the GStreamer version"
 msgstr "Imprimeix la versió de GStreamer"
 
-#: gst/gst.c:271
+#: gst/gst.c:270
 msgid "Make all warnings fatal"
 msgstr "Fes fatals tots els avisos"
 
-#: gst/gst.c:274
+#: gst/gst.c:273
 msgid "Print available debug categories and exit"
 msgstr "Imprimeix les categories de depuració disponibles i surt"
 
-#: gst/gst.c:277
+#: gst/gst.c:276
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Nivell de depuració per defecte des de 1 (només errors) a 5 (tot) o 0 per a "
 "cap sortida"
 
-#: gst/gst.c:279
+#: gst/gst.c:278
 msgid "LEVEL"
 msgstr "NIVELL"
 
-#: gst/gst.c:281
+#: gst/gst.c:280
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "nivells específics per a les categories individuals. Per exemple: "
 "GST_AUTOPLUG:5, GST_ELEMENT_*:3"
 
-#: gst/gst.c:284
+#: gst/gst.c:283
 msgid "LIST"
 msgstr "LLISTA"
 
-#: gst/gst.c:286
+#: gst/gst.c:285
 msgid "Disable colored debugging output"
 msgstr "Inhabilita la sortida de depuració colorejada"
 
-#: gst/gst.c:288
+#: gst/gst.c:287
 msgid "Disable debugging"
 msgstr "Inhabilita la depuració"
 
-#: gst/gst.c:291
+#: gst/gst.c:290
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Habilita els diagnòstics detallats de càrrega de connectors"
 
-#: gst/gst.c:294
+#: gst/gst.c:293
 msgid "Colon-separated paths containing plugins"
 msgstr "Camins separats per dos punts que contenen connectors"
 
-#: gst/gst.c:294
+#: gst/gst.c:293
 msgid "PATHS"
 msgstr "CAMINS"
 
-#: gst/gst.c:296
+#: gst/gst.c:295
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -80,25 +80,25 @@ msgstr ""
 "Llista separada per comes de connectors a precarregar a més de la llista "
 "emmagatzemada en la variable d'entorn GST_PLUGIN_PATH"
 
-#: gst/gst.c:298
+#: gst/gst.c:297
 msgid "PLUGINS"
 msgstr "CONNECTORS"
 
-#: gst/gst.c:301
+#: gst/gst.c:300
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Inhabilita la captura de violacions de segment durant la càrrega de "
 "connectors"
 
-#: gst/gst.c:306
+#: gst/gst.c:305
 msgid "GStreamer Options"
 msgstr "Opcions del GStreamer"
 
-#: gst/gst.c:307
+#: gst/gst.c:306
 msgid "Show GStreamer Options"
 msgstr "Mostra les opcions del GStreamer"
 
-#: gst/gst.c:789
+#: gst/gst.c:787
 msgid "Unknown option"
 msgstr "Opció desconeguda"
 
@@ -279,10 +279,6 @@ msgstr "No hi ha cap missatge d'error per al domini %s."
 msgid "No standard error message for domain %s and code %d."
 msgstr ""
 "No s'ha trobat cap missatge d'error estàndard per al domini %s i el codi %d."
-
-#: gst/gstqueue.c:818 gst/base/gstbasesrc.c:1031 gst/base/gstbasesrc.c:1041
-msgid "Internal data flow error."
-msgstr "S'ha produït un error intern de flux de dades."
 
 #: gst/gsttaglist.c:92
 msgid "title"
@@ -633,7 +629,12 @@ msgstr "No s'ha pogut enllaçar l'element de sortida per a l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "no es permet un conducte buit"
 
-#: gst/base/gstbasesink.c:603
+#: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
+#: plugins/elements/gstqueue.c:818
+msgid "Internal data flow error."
+msgstr "S'ha produït un error intern de flux de dades."
+
+#: libs/gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
 msgstr "Hi ha un problema intern de flux de dades."
 
