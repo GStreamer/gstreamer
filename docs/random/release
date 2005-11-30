@@ -98,6 +98,8 @@ TODO :
     the output in the release notes
     bin/bugzilla gstreamer 0.7.5 >> src/htdocs/releases/gstreamer/0.7.5.xml
     then edit it
+  - verify all new translations are in and po files are updated
+  - run win32-update from toplevel to copy new versions and enum files
   - copy  www/htdocs/releases/$(module)/$(version) to RELEASE
   - copy the list of changes, bugs fixed, and API changes and add them to NEWS
   - update the ChangeLog to account for NEWS, RELEASE, and configure.ac,

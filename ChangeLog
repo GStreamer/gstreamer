@@ -1,5 +1,69 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/random/release:
+	  update notes
+	* win32/common/gstenumtypes.c: (register_gst_object_flags),
+	(gst_object_flags_get_type), (register_gst_bin_flags),
+	(gst_bin_flags_get_type), (register_gst_buffer_flag),
+	(gst_buffer_flag_get_type), (register_gst_bus_flags),
+	(gst_bus_flags_get_type), (register_gst_bus_sync_reply),
+	(gst_bus_sync_reply_get_type), (register_gst_caps_flags),
+	(gst_caps_flags_get_type), (register_gst_clock_return),
+	(gst_clock_return_get_type), (register_gst_clock_entry_type),
+	(gst_clock_entry_type_get_type), (register_gst_clock_flags),
+	(gst_clock_flags_get_type), (register_gst_state),
+	(gst_state_get_type), (register_gst_state_change_return),
+	(gst_state_change_return_get_type), (register_gst_state_change),
+	(gst_state_change_get_type), (register_gst_element_flags),
+	(gst_element_flags_get_type), (register_gst_core_error),
+	(gst_core_error_get_type), (register_gst_library_error),
+	(gst_library_error_get_type), (register_gst_resource_error),
+	(gst_resource_error_get_type), (register_gst_stream_error),
+	(gst_stream_error_get_type), (register_gst_event_type_flags),
+	(gst_event_type_flags_get_type), (register_gst_event_type),
+	(gst_event_type_get_type), (register_gst_seek_type),
+	(gst_seek_type_get_type), (register_gst_seek_flags),
+	(gst_seek_flags_get_type), (register_gst_format),
+	(gst_format_get_type), (register_gst_index_certainty),
+	(gst_index_certainty_get_type), (register_gst_index_entry_type),
+	(gst_index_entry_type_get_type),
+	(register_gst_index_lookup_method),
+	(gst_index_lookup_method_get_type), (register_gst_assoc_flags),
+	(gst_assoc_flags_get_type), (register_gst_index_resolver_method),
+	(gst_index_resolver_method_get_type), (register_gst_index_flags),
+	(gst_index_flags_get_type), (register_gst_debug_level),
+	(gst_debug_level_get_type), (register_gst_debug_color_flags),
+	(gst_debug_color_flags_get_type), (register_gst_iterator_result),
+	(gst_iterator_result_get_type), (register_gst_iterator_item),
+	(gst_iterator_item_get_type), (register_gst_message_type),
+	(gst_message_type_get_type), (register_gst_mini_object_flags),
+	(gst_mini_object_flags_get_type), (register_gst_pad_link_return),
+	(gst_pad_link_return_get_type), (register_gst_flow_return),
+	(gst_flow_return_get_type), (register_gst_activate_mode),
+	(gst_activate_mode_get_type), (register_gst_pad_direction),
+	(gst_pad_direction_get_type), (register_gst_pad_flags),
+	(gst_pad_flags_get_type), (register_gst_pad_presence),
+	(gst_pad_presence_get_type), (register_gst_pad_template_flags),
+	(gst_pad_template_flags_get_type), (register_gst_pipeline_flags),
+	(gst_pipeline_flags_get_type), (register_gst_plugin_error),
+	(gst_plugin_error_get_type), (register_gst_plugin_flags),
+	(gst_plugin_flags_get_type), (register_gst_rank),
+	(gst_rank_get_type), (register_gst_query_type),
+	(gst_query_type_get_type), (register_gst_tag_merge_mode),
+	(gst_tag_merge_mode_get_type), (register_gst_tag_flag),
+	(gst_tag_flag_get_type), (register_gst_task_state),
+	(gst_task_state_get_type), (register_gst_alloc_trace_flags),
+	(gst_alloc_trace_flags_get_type),
+	(register_gst_type_find_probability),
+	(gst_type_find_probability_get_type), (register_gst_uri_type),
+	(gst_uri_type_get_type), (register_gst_parse_error),
+	(gst_parse_error_get_type):
+	* win32/common/gstenumtypes.h:
+	* win32/common/gstversion.h:
+	  update visual studio generated files
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* win32/vs6/libgstbase.dsp:
 	* win32/vs6/libgstelements.dsp:
 	  update project files for new locations

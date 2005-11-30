@@ -54,7 +54,6 @@ register_gst_buffer_flag (GType * id)
 {
   static const GFlagsValue values[] = {
     {GST_BUFFER_FLAG_READONLY, "GST_BUFFER_FLAG_READONLY", "readonly"},
-    {GST_BUFFER_FLAG_ORIGINAL, "GST_BUFFER_FLAG_ORIGINAL", "original"},
     {GST_BUFFER_FLAG_PREROLL, "GST_BUFFER_FLAG_PREROLL", "preroll"},
     {GST_BUFFER_FLAG_DISCONT, "GST_BUFFER_FLAG_DISCONT", "discont"},
     {GST_BUFFER_FLAG_IN_CAPS, "GST_BUFFER_FLAG_IN_CAPS", "in-caps"},
@@ -119,6 +118,27 @@ gst_bus_sync_reply_get_type (void)
   return id;
 }
 
+/* enumerations from "gstcaps.h" */
+static void
+register_gst_caps_flags (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {GST_CAPS_FLAGS_ANY, "GST_CAPS_FLAGS_ANY", "any"},
+    {0, NULL, NULL}
+  };
+  *id = g_flags_register_static ("GstCapsFlags", values);
+}
+
+GType
+gst_caps_flags_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_caps_flags, &id);
+  return id;
+}
+
 /* enumerations from "gstclock.h" */
 static void
 register_gst_clock_return (GType * id)
@@ -170,15 +190,18 @@ register_gst_clock_flags (GType * id)
 {
   static const GFlagsValue values[] = {
     {GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC, "GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC",
-          "do-single-sync"},
+          "can-do-single-sync"},
     {GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC, "GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC",
-          "do-single-async"},
+          "can-do-single-async"},
     {GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC, "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC",
-          "do-periodic-sync"},
+          "can-do-periodic-sync"},
     {GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC,
-          "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC", "do-periodic-async"},
+          "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC", "can-do-periodic-async"},
     {GST_CLOCK_FLAG_CAN_SET_RESOLUTION, "GST_CLOCK_FLAG_CAN_SET_RESOLUTION",
-          "set-resolution"},
+          "can-set-resolution"},
+    {GST_CLOCK_FLAG_CAN_SET_MASTER, "GST_CLOCK_FLAG_CAN_SET_MASTER",
+          "can-set-master"},
+    {GST_CLOCK_FLAG_LAST, "GST_CLOCK_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
   *id = g_flags_register_static ("GstClockFlags", values);
@@ -311,6 +334,9 @@ register_gst_core_error (GType * id)
     {GST_CORE_ERROR_SEEK, "GST_CORE_ERROR_SEEK", "seek"},
     {GST_CORE_ERROR_CAPS, "GST_CORE_ERROR_CAPS", "caps"},
     {GST_CORE_ERROR_TAG, "GST_CORE_ERROR_TAG", "tag"},
+    {GST_CORE_ERROR_MISSING_PLUGIN, "GST_CORE_ERROR_MISSING_PLUGIN",
+          "missing-plugin"},
+    {GST_CORE_ERROR_CLOCK, "GST_CORE_ERROR_CLOCK", "clock"},
     {GST_CORE_ERROR_NUM_ERRORS, "GST_CORE_ERROR_NUM_ERRORS", "num-errors"},
     {0, NULL, NULL}
   };
@@ -423,6 +449,27 @@ gst_stream_error_get_type (void)
 
 /* enumerations from "gstevent.h" */
 static void
+register_gst_event_type_flags (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {GST_EVENT_TYPE_UPSTREAM, "GST_EVENT_TYPE_UPSTREAM", "upstream"},
+    {GST_EVENT_TYPE_DOWNSTREAM, "GST_EVENT_TYPE_DOWNSTREAM", "downstream"},
+    {GST_EVENT_TYPE_SERIALIZED, "GST_EVENT_TYPE_SERIALIZED", "serialized"},
+    {0, NULL, NULL}
+  };
+  *id = g_flags_register_static ("GstEventTypeFlags", values);
+}
+
+GType
+gst_event_type_flags_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_event_type_flags, &id);
+  return id;
+}
+static void
 register_gst_event_type (GType * id)
 {
   static const GEnumValue values[] = {
@@ -432,14 +479,15 @@ register_gst_event_type (GType * id)
     {GST_EVENT_EOS, "GST_EVENT_EOS", "eos"},
     {GST_EVENT_NEWSEGMENT, "GST_EVENT_NEWSEGMENT", "newsegment"},
     {GST_EVENT_TAG, "GST_EVENT_TAG", "tag"},
-    {GST_EVENT_FILLER, "GST_EVENT_FILLER", "filler"},
     {GST_EVENT_BUFFERSIZE, "GST_EVENT_BUFFERSIZE", "buffersize"},
     {GST_EVENT_QOS, "GST_EVENT_QOS", "qos"},
     {GST_EVENT_SEEK, "GST_EVENT_SEEK", "seek"},
     {GST_EVENT_NAVIGATION, "GST_EVENT_NAVIGATION", "navigation"},
-    {GST_EVENT_CUSTOM_UP, "GST_EVENT_CUSTOM_UP", "custom-up"},
-    {GST_EVENT_CUSTOM_DS, "GST_EVENT_CUSTOM_DS", "custom-ds"},
-    {GST_EVENT_CUSTOM_DS_OOB, "GST_EVENT_CUSTOM_DS_OOB", "custom-ds-oob"},
+    {GST_EVENT_CUSTOM_UPSTREAM, "GST_EVENT_CUSTOM_UPSTREAM", "custom-upstream"},
+    {GST_EVENT_CUSTOM_DOWNSTREAM, "GST_EVENT_CUSTOM_DOWNSTREAM",
+          "custom-downstream"},
+    {GST_EVENT_CUSTOM_DOWNSTREAM_OOB, "GST_EVENT_CUSTOM_DOWNSTREAM_OOB",
+          "custom-downstream-oob"},
     {GST_EVENT_CUSTOM_BOTH, "GST_EVENT_CUSTOM_BOTH", "custom-both"},
     {GST_EVENT_CUSTOM_BOTH_OOB, "GST_EVENT_CUSTOM_BOTH_OOB", "custom-both-oob"},
     {0, NULL, NULL}

@@ -26,6 +26,10 @@ GType gst_bus_flags_get_type (void);
 GType gst_bus_sync_reply_get_type (void);
 #define GST_TYPE_BUS_SYNC_REPLY (gst_bus_sync_reply_get_type())
 
+/* enumerations from "gstcaps.h" */
+GType gst_caps_flags_get_type (void);
+#define GST_TYPE_CAPS_FLAGS (gst_caps_flags_get_type())
+
 /* enumerations from "gstclock.h" */
 GType gst_clock_return_get_type (void);
 #define GST_TYPE_CLOCK_RETURN (gst_clock_return_get_type())
@@ -55,6 +59,8 @@ GType gst_stream_error_get_type (void);
 #define GST_TYPE_STREAM_ERROR (gst_stream_error_get_type())
 
 /* enumerations from "gstevent.h" */
+GType gst_event_type_flags_get_type (void);
+#define GST_TYPE_EVENT_TYPE_FLAGS (gst_event_type_flags_get_type())
 GType gst_event_type_get_type (void);
 #define GST_TYPE_EVENT_TYPE (gst_event_type_get_type())
 GType gst_seek_type_get_type (void);
