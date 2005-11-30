@@ -487,10 +487,6 @@ plugins/elements/Makefile
 po/Makefile.in
 check/Makefile
 tests/Makefile
-tests/instantiate/Makefile
-tests/seeking/Makefile
-tests/sched/Makefile
-tests/threadstate/Makefile
 testsuite/Makefile
 testsuite/caps/Makefile
 testsuite/debug/Makefile

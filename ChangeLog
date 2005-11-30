@@ -1,5 +1,52 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-sections.txt:
+	* tests/sched/.cvsignore:
+	* tests/sched/Makefile.am:
+	* tests/sched/cases/(fs-fs).xml:
+	* tests/sched/cases/(fs-i-fs).xml:
+	* tests/sched/cases/(fs-i-i-fs).xml:
+	* tests/sched/cases/(fs-i-q[i-fs]).xml:
+	* tests/sched/dynamic-pipeline.c:
+	* tests/sched/interrupt1.c:
+	* tests/sched/interrupt2.c:
+	* tests/sched/interrupt3.c:
+	* tests/sched/runtestcases:
+	* tests/sched/runxml.c:
+	* tests/sched/sched-stress.c:
+	* tests/sched/sort.c:
+	* tests/sched/testcases:
+	* tests/sched/testcases1.tc:
+	* tests/seeking/.cvsignore:
+	* tests/seeking/Makefile.am:
+	* tests/seeking/seeking1.c:
+	* tests/threadstate/.cvsignore:
+	* tests/threadstate/Makefile.am:
+	* tests/threadstate/test1.c:
+	* tests/threadstate/test2.c:
+	* tests/threadstate/threadstate1.c:
+	* tests/threadstate/threadstate2.c:
+	* tests/threadstate/threadstate3.c:
+	* tests/threadstate/threadstate4.c:
+	* tests/threadstate/threadstate5.c:
+	  remove obsolete tests
+	* configure.ac:
+	* tests/bench-complexity.scm:
+	* tests/bench-mass_elements.scm:
+	* tests/complexity.c:
+	* tests/complexity.gnuplot:
+	* tests/instantiate/.cvsignore:
+	* tests/instantiate/Makefile.am:
+	* tests/instantiate/caps.c:
+	* tests/mass_elements.c:
+	* tests/network-clock-utils.scm:
+	* tests/network-clock.scm:
+	* tests/plot-data:
+	First pass at cleaning up tests/ dir before moving the rest
+	Combined with CVS surgery
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/POTFILES.in:
 	  queue has moved, update
 
