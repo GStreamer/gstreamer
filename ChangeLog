@@ -1,5 +1,10 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstclock.c: (do_linear_regression):
+	  remove crack non-portable handrolled DEBUG macro
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/random/release:
 	  update notes
 	* win32/common/gstenumtypes.c: (register_gst_object_flags),

@@ -109,12 +109,6 @@ static GstAllocTrace *_gst_clock_entry_trace;
 
 /* #define DEBUGGING_ENABLED */
 
-#ifdef DEBUGGING_ENABLED
-#define DEBUG(x, args...) g_print (x "\n", ##args)
-#else
-#define DEBUG(x, args...)       /* nop */
-#endif
-
 #define DEFAULT_STATS			FALSE
 #define DEFAULT_WINDOW_SIZE		32
 #define DEFAULT_WINDOW_THRESHOLD	4
@@ -966,9 +960,9 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   n = clock->filling ? clock->time_index : clock->window_size;
 
 #ifdef DEBUGGING_ENABLED
-  DEBUG ("doing regression on:");
+  GST_DEBUG ("doing regression on:");
   for (i = j = 0; i < n; i++, j += 4)
-    DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, x[j], y[j]);
+    GST_DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, x[j], y[j]);
 #endif
 
   xmin = ymin = G_MAXUINT64;
@@ -977,8 +971,10 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
     ymin = MIN (ymin, y[j]);
   }
 
-  DEBUG ("min x: %" G_GUINT64_FORMAT, xmin);
-  DEBUG ("min y: %" G_GUINT64_FORMAT, ymin);
+#ifdef DEBUGGING_ENABLED
+  GST_DEBUG ("min x: %" G_GUINT64_FORMAT, xmin);
+  GST_DEBUG ("min y: %" G_GUINT64_FORMAT, ymin);
+#endif
 
   newx = clock->times + 1;
   newy = clock->times + 3;
@@ -990,9 +986,9 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   }
 
 #ifdef DEBUGGING_ENABLED
-  DEBUG ("reduced numbers:");
+  GST_DEBUG ("reduced numbers:");
   for (i = j = 0; i < n; i++, j += 4)
-    DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, newx[j], newy[j]);
+    GST_DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, newx[j], newy[j]);
 #endif
 
   /* have to do this precisely otherwise the results are pretty much useless.
@@ -1007,8 +1003,10 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   xbar /= n;
   ybar /= n;
 
-  DEBUG ("  xbar  = %" G_GUINT64_FORMAT, xbar);
-  DEBUG ("  ybar  = %" G_GUINT64_FORMAT, ybar);
+#ifdef DEBUGGING_ENABLED
+  GST_DEBUG ("  xbar  = %" G_GUINT64_FORMAT, xbar);
+  GST_DEBUG ("  ybar  = %" G_GUINT64_FORMAT, ybar);
+#endif
 
   /* multiplying directly would give quantities on the order of 1e20 -> 60 bits;
      times the window size that's 70 which is too much. Instead we (1) subtract
@@ -1038,10 +1036,12 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   *b = (ybar + ymin) - gst_util_uint64_scale (xbar, *m_num, *m_denom);
   *r_squared = ((double) sxy * (double) sxy) / ((double) sxx * (double) syy);
 
-  DEBUG ("  m      = %g", ((double) *m_num) / *m_denom);
-  DEBUG ("  b      = %" G_GUINT64_FORMAT, *b);
-  DEBUG ("  xbase  = %" G_GUINT64_FORMAT, *xbase);
-  DEBUG ("  r2     = %g", *r_squared);
+#ifdef DEBUGGING_ENABLED
+  GST_DEBUG ("  m      = %g", ((double) *m_num) / *m_denom);
+  GST_DEBUG ("  b      = %" G_GUINT64_FORMAT, *b);
+  GST_DEBUG ("  xbase  = %" G_GUINT64_FORMAT, *xbase);
+  GST_DEBUG ("  r2     = %g", *r_squared);
+#endif
 
   return TRUE;
 
