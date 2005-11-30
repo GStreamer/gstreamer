@@ -247,6 +247,7 @@ EXPORTS
 	gst_event_parse_new_segment
 	gst_event_parse_seek
 	gst_event_parse_tag
+	gst_event_type_get_name
 	gst_flags_get_first_value
 	gst_flow_get_name
 	gst_flow_return_get_type
@@ -314,6 +315,12 @@ EXPORTS
 	gst_registry_get_default
 	gst_registry_get_feature_list_by_plugin
 	gst_registry_get_plugin_list
+	gst_segment_init
+	gst_segment_clip
+	gst_segment_set_newsegment
+	gst_segment_to_running_time
+	gst_segment_set_last_stop
+	gst_segment_set_seek
 	gst_tag_get_nick
 	gst_tag_get_type
 	gst_tag_list_add
