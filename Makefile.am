@@ -11,14 +11,14 @@ aclocaldir = $(datadir)/aclocal
 aclocal_DATA = gst-element-check-@GST_MAJORMINOR@.m4
 
 SUBDIRS = \
-	gst libs plugins tools \
+	gst libs plugins tools tests \
 	docs \
 	pkgconfig po \
 	common
 
 # These are all the possible subdirs
 DIST_SUBDIRS = \
-	gst libs plugins tools \
+	gst libs plugins tools tests \
 	docs \
 	pkgconfig po \
 	common

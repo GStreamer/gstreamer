@@ -1,3 +1,13 @@
-This directory contains various tests designed to test GStreamer's
-behavior. When these tests work, they should be recast in the form
-of regression tests and moved to ../testsuite.
+This directory contains regression tests, functionality tests, examples,
+benchmarks, ...
+
+check/
+   unit tests using the check library, non-interactive
+benchmarks/
+   benchmarks to profile pieces of GStreamer
+misc/
+   prototypes, random bits, ...
+
+old/
+   outdated tests that need to be converted to this new layout,
+   possibly use check, ported, ...

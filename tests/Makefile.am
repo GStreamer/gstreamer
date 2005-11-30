@@ -25,10 +25,12 @@ endif
 SUBDIRS = \
 	benchmarks	\
 	$(SUBDIRS_CHECK) \
+	misc		\
 	$(SUBDIRS_TESTS) \
 	$(SUBDIRS_EXAMPLES)
 
 # These are all the possible subdirs
 DIST_SUBDIRS = \
 	benchmarks \
-	check
+	check \
+	misc

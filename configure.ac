@@ -488,6 +488,7 @@ po/Makefile.in
 tests/Makefile
 tests/benchmarks/Makefile
 tests/check/Makefile
+tests/misc/Makefile
 tools/Makefile
 common/Makefile
 common/m4/Makefile
