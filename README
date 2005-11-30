@@ -7,6 +7,24 @@ This package is in the 0.9.x series.  This means that this is a
 development series leading up to a stable 0.10.x series.
 You have been warned.
 
+WHERE TO START
+--------------
+
+We have a website at
+http://gstreamer.freedesktop.org/
+
+You should start by going through our FAQ at
+http://gstreamer.freedesktop.org/data/doc/gstreamer/head/faq/html/
+
+There is more documentation; go to
+http://gstreamer.freedesktop.org/documentation
+
+You can subscribe to our mailing lists; see the website for details.
+
+We track bugs in GNOME's bugzilla; see the website for details.
+
+You can join us on IRC - #gstreamer on irc.freenode.org
+
 GStreamer 0.9 development series - Hung by a Thread
 ---------------------------------------------------
 
@@ -117,6 +135,18 @@ set of available plug-ins into four modules:
     problem and send us a patch, or bribe someone into fixing them for you.
   - New contributors can start here for things to work on.
 
+PLATFORMS
+---------
+
+- Linux is of course fully supported
+- FreeBSD is reported to work; other BSD's should work too
+- Solaris is reported to work; a specific sunaudiosink plugin have been written
+- MacOSX is reported to work; specific audio and video sinks have been written
+- Windows support is experimental but improving.  Output sinks have been
+  written but are not yet included in the code. We support
+  - MSys/MingW builds
+  - Microsoft Visual Studio 6 builds (see win32/)
+
 INSTALLING FROM PACKAGES
 ------------------------
 
@@ -206,9 +236,11 @@ PLUG-IN DEPENDENCIES AND LICENSES
 
 GStreamer is developed under the terms of the LGPL (see LICENSE file for
 details). Some of our plug-ins however rely on libraries which are available
-under other licenses. This means that if you are using an application which
-has a non-GPL compatible license (for instance a closed-source application)
-with GStreamer, you have to make sure not to use GPL-linked plug-ins.
+under other licenses. This means that if you are distributing an application
+which has a non-GPL compatible license (for instance a closed-source
+application) with GStreamer, you have to make sure not to distribute GPL-linked
+plug-ins.
+
 When using GPL-linked plug-ins, GStreamer is for all practical reasons
 under the GPL itself.
 

@@ -58,7 +58,7 @@ debug:
 EXTRA_DIST = \
 	gstreamer.spec gstreamer.spec.in gst-element-check.m4 \
 	configure.ac autogen.sh depcomp \
-	REQUIREMENTS ABOUT-NLS DOCBUILDING DEVEL RELEASE \
+	ABOUT-NLS RELEASE \
 	$(win32)
 
 CLEANFILES = gst-element-check-@GST_MAJORMINOR@.m4

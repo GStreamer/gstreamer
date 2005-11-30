@@ -1,3 +1,16 @@
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  remove some files
+	* README:
+	  reinstate and update
+	* DEVEL:
+	* REQUIREMENTS:
+	  removed
+	* LICENSE:
+	* docs/random/LICENSE:
+	  moved to random
+
 2005-11-30  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gsttypefind.c: (gst_type_find_register):
