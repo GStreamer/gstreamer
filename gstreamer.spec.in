@@ -128,13 +128,12 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f gstreamer-%{majorminor}.lang
 %defattr(-, root, root, -)
-%doc AUTHORS COPYING NEWS README TODO RELEASE
-%doc ABOUT-NLS REQUIREMENTS DOCBUILDING
+# %doc AUTHORS COPYING ABOUT-NLS README RELEASE MAINTAINERS ChangeLog CHANGES-0.9 DOCBUILDING INSTALL
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstbase-%{majorminor}.so.*
 %{_libdir}/libgstcontroller-%{majorminor}.so.*
 %{_libdir}/libgstdataprotocol-%{majorminor}.so.*
-%{_libdir}/libgstnet-tempname-%{majorminor}.so.*
+%{_libdir}/libgstnet-%{majorminor}.so.*
 
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstelements.so
@@ -185,7 +184,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstdataprotocol-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
 %{_libdir}/libgstcontroller-%{majorminor}.so
-%{_libdir}/libgstnet-tempname-%{majorminor}.so
+%{_libdir}/libgstnet-%{majorminor}.so
 
 
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
