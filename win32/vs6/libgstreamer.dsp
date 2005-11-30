@@ -75,7 +75,7 @@ PostBuild_Cmds=mkdir c:\gstreamer	mkdir c:\gstreamer\bin	copy /Y $(TargetPath) c
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTREAMER_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "." /I ".." /I "../.." /I "../common" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTREAMER_EXPORTS" /D "HAVE_CONFIG_H" /D "HAVE_WIN32" /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "." /I "../.." /I "../common" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTREAMER_EXPORTS" /D "HAVE_CONFIG_H" /D "HAVE_WIN32" /FR /FD /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -86,11 +86,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib /nologo /dll /debug /machine:I386 /out:"Debug/libgstreamer-0.9.dll" /pdbtype:sept
+# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib gthread-2.0D.lib gmodule-2.0D.lib libxml2.lib wsock32.lib intl.lib /nologo /dll /debug /machine:I386 /out:"Debug/libgstreamer-0.9.dll" /pdbtype:sept
 # Begin Special Build Tool
 TargetPath=.\Debug\libgstreamer-0.9.dll
 SOURCE="$(InputPath)"
-PostBuild_Cmds=mkdir c:\gstreamer	mkdir c:\gstreamer\bin	copy /Y $(TargetPath) c:\gstreamer\bin
+PostBuild_Cmds=mkdir c:\gstreamer\debug	mkdir c:\gstreamer\debug\bin	copy /Y $(TargetPath) c:\gstreamer\debug\bin
 # End Special Build Tool
 
 !ENDIF 
@@ -105,6 +105,10 @@ PostBuild_Cmds=mkdir c:\gstreamer	mkdir c:\gstreamer\bin	copy /Y $(TargetPath) c
 # Begin Source File
 
 SOURCE=..\common\dirent.c
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\gst\glib-compat.c"
 # End Source File
 # Begin Source File
 
@@ -196,10 +200,6 @@ SOURCE=..\..\gst\gstmarshal.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\gstmemchunk.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\gst\gstmessage.c
 # End Source File
 # Begin Source File
@@ -240,15 +240,15 @@ SOURCE=..\..\gst\gstquery.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\gstqueue.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\gst\gstregistry.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\gst\gstregistryxml.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstsegment.c
 # End Source File
 # Begin Source File
 
@@ -276,10 +276,6 @@ SOURCE=..\..\gst\gsttrace.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\gsttrashstack.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\gst\gsttypefind.c
 # End Source File
 # Begin Source File
@@ -289,10 +285,6 @@ SOURCE=..\..\gst\gsttypefindfactory.c
 # Begin Source File
 
 SOURCE=..\..\gst\gsturi.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\gsturitype.c
 # End Source File
 # Begin Source File
 
@@ -484,11 +476,11 @@ SOURCE=..\..\gst\gstquery.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\gstqueue.h
+SOURCE=..\..\gst\gstregistry.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\gstregistry.h
+SOURCE=..\..\gst\gstsegment.h
 # End Source File
 # Begin Source File
 
@@ -529,10 +521,6 @@ SOURCE=..\..\gst\gsttypefindfactory.h
 # Begin Source File
 
 SOURCE=..\..\gst\gsturi.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\gsturitype.h
 # End Source File
 # Begin Source File
 

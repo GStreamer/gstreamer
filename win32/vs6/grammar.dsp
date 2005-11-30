@@ -68,11 +68,19 @@ SOURCE=..\..\gst\parse\grammar.y
 # Begin Custom Build
 InputPath=..\..\gst\parse\grammar.y
 
-"..\..\gst\parse\lex._gst_parse_yy.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	bison -d -v -p_gst_parse__yy ..\..\gst\parse\grammar.y -o ..\..\gst\parse\grammar.tab.c 
-	flex -P_gst_parse_yy ..\..\gst\parse\parse.l 
-	move lex._gst_parse_yy.c ..\..\gst\parse\lex._gst_parse_yy.c 
+BuildCmds= \
+	bison -d -v -p_gst_parse__yy ..\..\gst\parse\grammar.y -o ..\..\gst\parse\grammar.tab.c \
+	flex -P_gst_parse_yy -o..\..\gst\parse\lex._gst_parse_yy.c ..\..\gst\parse\parse.l \
 	
+
+"..\..\gst\parse\lex._gst_parse_yy.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst\parse\grammar.tab.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst\parse\grammar.tab.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
@@ -80,10 +88,19 @@ InputPath=..\..\gst\parse\grammar.y
 # Begin Custom Build
 InputPath=..\..\gst\parse\grammar.y
 
-"..\..\gst\parse\lex._gst_parse_yy.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	bison -d -v -p_gst_parse__yy ..\..\gst\parse\grammar.y -o ..\..\gst\parse\grammar.tab.c 
-	flex -P_gst_parse_yy -o..\..\gst\parse\lex._gst_parse_yy.c ..\..\gst\parse\parse.l 
+BuildCmds= \
+	bison -d -v -p_gst_parse__yy ..\..\gst\parse\grammar.y -o ..\..\gst\parse\grammar.tab.c \
+	flex -P_gst_parse_yy -o..\..\gst\parse\lex._gst_parse_yy.c ..\..\gst\parse\parse.l \
 	
+
+"..\..\gst\parse\lex._gst_parse_yy.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst\parse\grammar.tab.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst\parse\grammar.tab.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
 # End Custom Build
 
 !ENDIF 

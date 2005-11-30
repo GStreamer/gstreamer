@@ -57,7 +57,7 @@ LINK32=link.exe
 # Begin Special Build Tool
 TargetPath=.\Release\libgstelements.dll
 SOURCE="$(InputPath)"
-PostBuild_Cmds=mkdir c:\gstreamer\lib	mkdir c:\gstreamer\lib\gstreamer-0.9	copy /Y $(TargetPath) c:\gstreamer\plugins
+PostBuild_Cmds=mkdir c:\gstreamer\lib	mkdir c:\gstreamer\lib\gstreamer-0.9	copy /Y $(TargetPath) c:\gstreamer\lib\gstreamer-0.9
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libgstelements - Win32 Debug"
@@ -84,11 +84,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib gthread-2.0D.lib gmodule-2.0D.lib libxml2.lib wsock32.lib intl.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
 # Begin Special Build Tool
 TargetPath=.\Debug\libgstelements.dll
 SOURCE="$(InputPath)"
-PostBuild_Cmds=mkdir c:\gstreamer\lib	mkdir c:\gstreamer\lib\gstreamer-0.9	copy /Y $(TargetPath) c:\gstreamer\plugins
+PostBuild_Cmds=mkdir c:\gstreamer\debug\lib	mkdir c:\gstreamer\debug\lib\gstreamer-0.9	copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.9
 # End Special Build Tool
 
 !ENDIF 
@@ -131,6 +131,10 @@ SOURCE=..\..\plugins\elements\gstfilesrc.c
 # Begin Source File
 
 SOURCE=..\..\plugins\elements\gstidentity.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\plugins\elements\gstqueue.c
 # End Source File
 # Begin Source File
 

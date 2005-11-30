@@ -1295,7 +1295,7 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
     ts[1] = s[i * 2 + 1];
     ts[2] = 0;
 
-    data[i] = strtoul (ts, NULL, 16);
+    data[i] = (guint8) strtoul (ts, NULL, 16);
   }
 
   if (ret) {
@@ -1617,7 +1617,7 @@ gst_value_deserialize_float (GValue * dest, const gchar * s)
   if (x > G_MAXFLOAT || x < -G_MAXFLOAT)
     ret = FALSE;
   if (ret) {
-    g_value_set_float (dest, x);
+    g_value_set_float (dest, (float) x);
   }
   return ret;
 }
@@ -2073,7 +2073,7 @@ gst_value_intersect_double_range_double_range (GValue * dest,
   }
   if (min == max) {
     g_value_init (dest, G_TYPE_DOUBLE);
-    g_value_set_int (dest, min);
+    g_value_set_int (dest, (int) min);
     return TRUE;
   }
 
