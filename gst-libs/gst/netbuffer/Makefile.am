@@ -1,6 +1,6 @@
 libgstnetbufferincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/netbuffer
 
-libgstnetbufferinclude_HEADERS = gstnetbufferbuffer.h
+libgstnetbufferinclude_HEADERS = gstnetbuffer.h
 
 lib_LTLIBRARIES = libgstnetbuffer-@GST_MAJORMINOR@.la
 
