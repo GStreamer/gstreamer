@@ -10,6 +10,7 @@ SUBDIRS = 			\
 	gst-libs 		\
 	gst sys $(SUBDIRS_EXT) 	\
 	tools 			\
+	tests 			\
 	docs			\
 	po 			\
 	common 			\
@@ -21,6 +22,7 @@ DIST_SUBDIRS = 			\
 	gst-libs		\
 	gst sys ext		\
 	tools 			\
+	tests 			\
 	po 			\
 	common 			\
 	m4 			\

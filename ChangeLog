@@ -1,5 +1,28 @@
 2005-11-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* LICENSE:
+	  move
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* Makefile.am:
+	  update
+	* scripts/autoplugins.sh:
+	  remove
+
+2005-11-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* Makefile.am:
 	* configure.ac:
 	* examples/Makefile.am:
