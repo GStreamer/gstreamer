@@ -102,31 +102,31 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\gst\base\gstadapter.c
+SOURCE=..\..\libs\gst\base\gstadapter.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\base\gstbasesink.c
+SOURCE=..\..\libs\gst\base\gstbasesink.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\base\gstbasesrc.c
+SOURCE=..\..\libs\gst\base\gstbasesrc.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\base\gstbasetransform.c
+SOURCE=..\..\libs\gst\base\gstbasetransform.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\base\gstcollectpads.c
+SOURCE=..\..\libs\gst\base\gstcollectpads.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\base\gstpushsrc.c
+SOURCE=..\..\libs\gst\base\gstpushsrc.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\base\gsttypefindhelper.c
+SOURCE=..\..\libs\gst\base\gsttypefindhelper.c
 # End Source File
 # Begin Source File
 

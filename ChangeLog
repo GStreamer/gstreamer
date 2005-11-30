@@ -1,5 +1,11 @@
 2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* win32/vs6/libgstbase.dsp:
+	* win32/vs6/libgstelements.dsp:
+	  update project files for new locations
+
+2005-11-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	  remove some files
 	* README:

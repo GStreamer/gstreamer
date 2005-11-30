@@ -102,43 +102,43 @@ PostBuild_Cmds=mkdir c:\gstreamer\lib	mkdir c:\gstreamer\lib\gstreamer-0.9	copy 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\gst\elements\gstbufferstore.c
+SOURCE=..\..\plugins\elements\gstbufferstore.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\elements\gstcapsfilter.c
+SOURCE=..\..\plugins\elements\gstcapsfilter.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\elements\gstelements.c
+SOURCE=..\..\plugins\elements\gstelements.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\elements\gstfakesink.c
+SOURCE=..\..\plugins\elements\gstfakesink.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\elements\gstfakesrc.c
+SOURCE=..\..\plugins\elements\gstfakesrc.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\elements\gstfilesink.c
+SOURCE=..\..\plugins\elements\gstfilesink.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\elements\gstfilesrc.c
+SOURCE=..\..\plugins\elements\gstfilesrc.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\elements\gstidentity.c
+SOURCE=..\..\plugins\elements\gstidentity.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\elements\gsttee.c
+SOURCE=..\..\plugins\elements\gsttee.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\elements\gsttypefindelement.c
+SOURCE=..\..\plugins\elements\gsttypefindelement.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
