@@ -1128,3 +1128,113 @@
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstTextRender::font-desc</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>font description</NICK>
+<BLURB>Pango font description of font to be used for rendering. See documentation of pango_font_description_from_string for syntax.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::deltax</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>X position modifier</NICK>
+<BLURB>Shift X position to the left or to the right. Unit is pixels.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::deltay</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Y position modifier</NICK>
+<BLURB>Shift Y position up or down. Unit is pixels.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::font-desc</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>font description</NICK>
+<BLURB>Pango font description of font to be used for rendering. See documentation of pango_font_description_from_string for syntax.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::halign</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>horizontal alignment</NICK>
+<BLURB>Horizontal alignment of the text. Can be either 'left', 'right', or 'center'.</BLURB>
+<DEFAULT>"center"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::shaded-background</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>shaded background</NICK>
+<BLURB>Whether to shade the background under the text area.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::text</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>text</NICK>
+<BLURB>Text to be display.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::valign</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>vertical alignment</NICK>
+<BLURB>Vertical alignment of the text. Can be either 'baseline', 'bottom', or 'top'.</BLURB>
+<DEFAULT>"baseline"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::wrap-mode</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>wrap mode</NICK>
+<BLURB>Whether to wrap the text and if so how.Can be either 'none', 'word', 'char' or 'wordchar'.</BLURB>
+<DEFAULT>"wordchar"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::xpad</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>w</FLAGS>
+<NICK>horizontal paddding</NICK>
+<BLURB>Horizontal paddding when using left/right alignment.</BLURB>
+<DEFAULT>25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::ypad</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>w</FLAGS>
+<NICK>vertical padding</NICK>
+<BLURB>Vertical padding when using top/bottom alignment.</BLURB>
+<DEFAULT>25</DEFAULT>
+</ARG>
+

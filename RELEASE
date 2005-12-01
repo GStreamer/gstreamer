@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Base Plug-ins 0.9.6 "White Eight"
+GStreamer: Release notes for GStreamer Base Plug-ins 0.9.7 "Mi Perro No Tiene Ninguna Nariz"
         
 
 The GStreamer team is petrified to announce a new release
@@ -53,23 +53,18 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * lots of leak fixes
-      * flicker-free and rewritten X sinks
-      * fractional framerates
-      * removed sinesrc, replaced by audiotestsrc
+      * ximagesink and xvimagesink updates and interactive test
+      * added pango
+      * rename net to netbuffer library
+      * rtp element renaming
+      * stream selector fixes
 
 Bugs fixed in this release
     
-      * 316442 : playbin should use autoaudiosink/autovideosink by default
-      * 318353 : [ffmpegcolorspace] forward-port fixes from 0.8 branch
-      * 320200 : vorbisenc: min-bitrate and max-bitrate are 1/1000 bps rat...
-      * 321164 : gstringbuffer stops working under load
-      * 321426 : ximage plugin should be renamed to ximagesink
-      * 321446 : sinesrc should be dropped in favour of audiotestsrc
-      * 321451 : GstRtpBuffer: no way to create a sub buffer with only the...
-      * 321816 : [API] xoverlay API to post prepare-xwindow-id message
-      * 321894 : vorbisenc doesn't compile
-      * 322117 : Rename libgsttagedit to libgsttag
+      * 319618 : [decodebin] some ogg videos don't play
+      * 320644 : RTP packetizer does't set the packet timestamps correctly
+      * 322388 : xvimagesink force-aspect-ratio=True always displays squar...
+      * 322704 : oggdemux typefind list leak
 
 Download
 
@@ -99,16 +94,11 @@ Applications
   
 Contributors to this release
     
-      * 
-      * Alessandro Dessina
       * Andy Wingo
       * Edward Hervey
       * Jan Schmidt
-      * Johan Dahlin
       * Julien Moutte
-      * Luca Ocgibene
       * Michael Smith
-      * Sebastien Cote
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans

@@ -1,4 +1,21 @@
-This is GStreamer Base Plug-ins 0.9.6, "White Eight".
+This is GStreamer Base Plug-ins 0.9.7, "Mi Perro No Tiene Ninguna Nariz".
+  
+Changes since 0.9.6:
+    
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+      * ximagesink and xvimagesink updates and interactive test
+      * added pango
+      * rename net to netbuffer library
+      * rtp element renaming
+      * stream selector fixes
+
+Bugs fixed since 0.9.6:
+    
+      * 319618 : [decodebin] some ogg videos don't play
+      * 320644 : RTP packetizer does't set the packet timestamps correctly
+      * 322388 : xvimagesink force-aspect-ratio=True always displays squar...
+      * 322704 : oggdemux typefind list leak
 
 Changes since 0.9.5:
     

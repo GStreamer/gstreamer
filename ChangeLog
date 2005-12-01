@@ -1,3 +1,10 @@
+=== release 0.9.7 ===
+
+2005-12-01   <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	  releasing 0.9.7, "Mi Perro No Tiene Ninguna Nariz"
+
 2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
