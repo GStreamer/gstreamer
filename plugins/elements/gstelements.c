@@ -53,7 +53,7 @@ static struct _elements_entry _elements[] = {
   {"fakesrc", GST_RANK_NONE, gst_fake_src_get_type},
   {"fakesink", GST_RANK_NONE, gst_fake_sink_get_type},
 #if HAVE_SYS_SOCKET_H
-  {"fdsrc", GST_RANK_NONE, gst_fdsrc_get_type},
+  {"fdsrc", GST_RANK_NONE, gst_fd_src_get_type},
 #endif
   {"filesrc", GST_RANK_NONE, gst_file_src_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},

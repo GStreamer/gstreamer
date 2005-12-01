@@ -22,8 +22,8 @@
  */
 
 
-#ifndef __GST_FDSRC_H__
-#define __GST_FDSRC_H__
+#ifndef __GST_FD_SRC_H__
+#define __GST_FD_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
@@ -31,16 +31,16 @@
 G_BEGIN_DECLS
 
 
-#define GST_TYPE_FDSRC \
-  (gst_fdsrc_get_type())
-#define GST_FDSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FDSRC,GstFdSrc))
-#define GST_FDSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FDSRC,GstFdSrcClass))
-#define GST_IS_FDSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FDSRC))
-#define GST_IS_FDSRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FDSRC))
+#define GST_TYPE_FD_SRC \
+  (gst_fd_src_get_type())
+#define GST_FD_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FD_SRC,GstFdSrc))
+#define GST_FD_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FD_SRC,GstFdSrcClass))
+#define GST_IS_FD_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FD_SRC))
+#define GST_IS_FD_SRC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FD_SRC))
 
 
 typedef struct _GstFdSrc GstFdSrc;
@@ -70,8 +70,8 @@ struct _GstFdSrcClass {
   void (*timeout) (GstElement *element);
 };
 
-GType gst_fdsrc_get_type(void);
+GType gst_fd_src_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_FDSRC_H__ */
+#endif /* __GST_FD_SRC_H__ */

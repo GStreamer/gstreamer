@@ -1,3 +1,24 @@
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* plugins/elements/gstelements.c:
+	* plugins/elements/gstfdsink.c: (gst_fd_sink__base_init),
+	(gst_fd_sink__class_init), (gst_fd_sink__init),
+	(gst_fd_sink__chain), (gst_fd_sink__set_property),
+	(gst_fd_sink__get_property):
+	* plugins/elements/gstfdsink.h:
+	* plugins/elements/gstfdsrc.c: (_do_init), (gst_fd_src_base_init),
+	(gst_fd_src_class_init), (gst_fd_src_init), (gst_fd_src_dispose),
+	(gst_fd_src_update_fd), (gst_fd_src_start), (gst_fd_src_stop),
+	(gst_fd_src_unlock), (gst_fd_src_set_property),
+	(gst_fd_src_get_property), (gst_fd_src_create),
+	(gst_fd_src_is_seekable), (gst_fd_src_get_size),
+	(gst_fd_src_uri_get_type), (gst_fd_src_uri_get_protocols),
+	(gst_fd_src_uri_get_uri), (gst_fd_src_uri_set_uri),
+	(gst_fd_src_uri_handler_init):
+	* plugins/elements/gstfdsrc.h:
+	* plugins/elements/gstqueue.c: (gst_queue_get_type):
+	  more anal cleanup
+
 2005-11-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* docs/gst/Makefile.am:

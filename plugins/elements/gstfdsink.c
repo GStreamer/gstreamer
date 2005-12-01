@@ -34,10 +34,10 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY_STATIC (gst_fdsink_debug);
-#define GST_CAT_DEFAULT gst_fdsink_debug
+GST_DEBUG_CATEGORY_STATIC (gst_fd_sink__debug);
+#define GST_CAT_DEFAULT gst_fd_sink__debug
 
-static GstElementDetails gst_fdsink_details =
+static GstElementDetails gst_fd_sink__details =
 GST_ELEMENT_DETAILS ("Filedescriptor Sink",
     "Sink/File",
     "Write data to a file descriptor",
@@ -59,37 +59,37 @@ enum
 
 
 #define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_fdsink_debug, "fdsink", 0, "fdsink element");
+    GST_DEBUG_CATEGORY_INIT (gst_fd_sink__debug, "fdsink", 0, "fdsink element");
 
-GST_BOILERPLATE_FULL (GstFdSink, gst_fdsink, GstElement, GST_TYPE_ELEMENT,
+GST_BOILERPLATE_FULL (GstFdSink, gst_fd_sink_, GstElement, GST_TYPE_ELEMENT,
     _do_init);
 
-static void gst_fdsink_set_property (GObject * object, guint prop_id,
+static void gst_fd_sink__set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_fdsink_get_property (GObject * object, guint prop_id,
+static void gst_fd_sink__get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_fdsink_chain (GstPad * pad, GstData * _data);
+static void gst_fd_sink__chain (GstPad * pad, GstData * _data);
 
 
 static void
-gst_fdsink_base_init (gpointer g_class)
+gst_fd_sink__base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (gstelement_class, &gst_fdsink_details);
+  gst_element_class_set_details (gstelement_class, &gst_fd_sink__details);
 }
 static void
-gst_fdsink_class_init (GstFdSinkClass * klass)
+gst_fd_sink__class_init (GstFdSinkClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->set_property = gst_fdsink_set_property;
-  gobject_class->get_property = gst_fdsink_get_property;
+  gobject_class->set_property = gst_fd_sink__set_property;
+  gobject_class->get_property = gst_fd_sink__get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to write to",
@@ -97,19 +97,19 @@ gst_fdsink_class_init (GstFdSinkClass * klass)
 }
 
 static void
-gst_fdsink_init (GstFdSink * fdsink)
+gst_fd_sink__init (GstFdSink * fdsink)
 {
   fdsink->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sinktemplate),
       "sink");
   gst_element_add_pad (GST_ELEMENT (fdsink), fdsink->sinkpad);
-  gst_pad_set_chain_function (fdsink->sinkpad, gst_fdsink_chain);
+  gst_pad_set_chain_function (fdsink->sinkpad, gst_fd_sink__chain);
 
   fdsink->fd = 1;
 }
 
 static void
-gst_fdsink_chain (GstPad * pad, GstData * _data)
+gst_fd_sink__chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
   GstFdSink *fdsink;
@@ -118,7 +118,7 @@ gst_fdsink_chain (GstPad * pad, GstData * _data)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  fdsink = GST_FDSINK (gst_pad_get_parent (pad));
+  fdsink = GST_FD_SINK (gst_pad_get_parent (pad));
 
   g_return_if_fail (fdsink->fd >= 0);
 
@@ -132,14 +132,14 @@ gst_fdsink_chain (GstPad * pad, GstData * _data)
 }
 
 static void
-gst_fdsink_set_property (GObject * object, guint prop_id, const GValue * value,
-    GParamSpec * pspec)
+gst_fd_sink__set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
   GstFdSink *fdsink;
 
-  g_return_if_fail (GST_IS_FDSINK (object));
+  g_return_if_fail (GST_IS_FD_SINK (object));
 
-  fdsink = GST_FDSINK (object);
+  fdsink = GST_FD_SINK (object);
 
   switch (prop_id) {
     case ARG_FD:
@@ -151,14 +151,14 @@ gst_fdsink_set_property (GObject * object, guint prop_id, const GValue * value,
 }
 
 static void
-gst_fdsink_get_property (GObject * object, guint prop_id, GValue * value,
+gst_fd_sink__get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstFdSink *fdsink;
 
-  g_return_if_fail (GST_IS_FDSINK (object));
+  g_return_if_fail (GST_IS_FD_SINK (object));
 
-  fdsink = GST_FDSINK (object);
+  fdsink = GST_FD_SINK (object);
 
   switch (prop_id) {
     case ARG_FD:

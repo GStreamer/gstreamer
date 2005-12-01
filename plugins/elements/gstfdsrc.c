@@ -67,10 +67,11 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY_STATIC (gst_fdsrc_debug);
-#define GST_CAT_DEFAULT gst_fdsrc_debug
+GST_DEBUG_CATEGORY_STATIC (gst_fd_src_debug);
+#define GST_CAT_DEFAULT gst_fd_src_debug
 
-static GstElementDetails gst_fdsrc_details = GST_ELEMENT_DETAILS ("Disk Source",
+static GstElementDetails gst_fd_src_details =
+GST_ELEMENT_DETAILS ("Disk Source",
     "Source/File",
     "Synchronous read from a file",
     "Erik Walthinsen <omega@cse.ogi.edu>");
@@ -81,52 +82,52 @@ enum
   PROP_FD,
 };
 
-static void gst_fdsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
+static void gst_fd_src_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
 static void
-_do_init (GType fdsrc_type)
+_do_init (GType fd_src_type)
 {
   static const GInterfaceInfo urihandler_info = {
-    gst_fdsrc_uri_handler_init,
+    gst_fd_src_uri_handler_init,
     NULL,
     NULL
   };
 
-  g_type_add_interface_static (fdsrc_type, GST_TYPE_URI_HANDLER,
+  g_type_add_interface_static (fd_src_type, GST_TYPE_URI_HANDLER,
       &urihandler_info);
 
-  GST_DEBUG_CATEGORY_INIT (gst_fdsrc_debug, "fdsrc", 0, "fdsrc element");
+  GST_DEBUG_CATEGORY_INIT (gst_fd_src_debug, "fdsrc", 0, "fdsrc element");
 }
 
-GST_BOILERPLATE_FULL (GstFdSrc, gst_fdsrc, GstElement, GST_TYPE_PUSH_SRC,
+GST_BOILERPLATE_FULL (GstFdSrc, gst_fd_src, GstElement, GST_TYPE_PUSH_SRC,
     _do_init);
 
-static void gst_fdsrc_set_property (GObject * object, guint prop_id,
+static void gst_fd_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_fdsrc_get_property (GObject * object, guint prop_id,
+static void gst_fd_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_fdsrc_dispose (GObject * obj);
+static void gst_fd_src_dispose (GObject * obj);
 
-static gboolean gst_fdsrc_start (GstBaseSrc * bsrc);
-static gboolean gst_fdsrc_stop (GstBaseSrc * bsrc);
-static gboolean gst_fdsrc_unlock (GstBaseSrc * bsrc);
-static gboolean gst_fdsrc_is_seekable (GstBaseSrc * bsrc);
-static gboolean gst_fdsrc_get_size (GstBaseSrc * src, guint64 * size);
+static gboolean gst_fd_src_start (GstBaseSrc * bsrc);
+static gboolean gst_fd_src_stop (GstBaseSrc * bsrc);
+static gboolean gst_fd_src_unlock (GstBaseSrc * bsrc);
+static gboolean gst_fd_src_is_seekable (GstBaseSrc * bsrc);
+static gboolean gst_fd_src_get_size (GstBaseSrc * src, guint64 * size);
 
-static GstFlowReturn gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf);
+static GstFlowReturn gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf);
 
 static void
-gst_fdsrc_base_init (gpointer g_class)
+gst_fd_src_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
-  gst_element_class_set_details (gstelement_class, &gst_fdsrc_details);
+  gst_element_class_set_details (gstelement_class, &gst_fd_src_details);
 }
 
 static void
-gst_fdsrc_class_init (GstFdSrcClass * klass)
+gst_fd_src_class_init (GstFdSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseSrcClass *gstbasesrc_class;
@@ -140,25 +141,25 @@ gst_fdsrc_class_init (GstFdSrcClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_PUSH_SRC);
 
-  gobject_class->set_property = gst_fdsrc_set_property;
-  gobject_class->get_property = gst_fdsrc_get_property;
-  gobject_class->dispose = gst_fdsrc_dispose;
+  gobject_class->set_property = gst_fd_src_set_property;
+  gobject_class->get_property = gst_fd_src_get_property;
+  gobject_class->dispose = gst_fd_src_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
 
-  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_fdsrc_start);
-  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_fdsrc_stop);
-  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_fdsrc_unlock);
-  gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fdsrc_is_seekable);
-  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_fdsrc_get_size);
+  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_fd_src_start);
+  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_fd_src_stop);
+  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_fd_src_unlock);
+  gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fd_src_is_seekable);
+  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_fd_src_get_size);
 
-  gstpush_src_class->create = GST_DEBUG_FUNCPTR (gst_fdsrc_create);
+  gstpush_src_class->create = GST_DEBUG_FUNCPTR (gst_fd_src_create);
 }
 
 static void
-gst_fdsrc_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
+gst_fd_src_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
 {
   fdsrc->fd = 0;
   fdsrc->new_fd = 0;
@@ -168,9 +169,9 @@ gst_fdsrc_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
 }
 
 static void
-gst_fdsrc_dispose (GObject * obj)
+gst_fd_src_dispose (GObject * obj)
 {
-  GstFdSrc *src = GST_FDSRC (obj);
+  GstFdSrc *src = GST_FD_SRC (obj);
 
   g_free (src->uri);
   src->uri = NULL;
@@ -179,7 +180,7 @@ gst_fdsrc_dispose (GObject * obj)
 }
 
 static void
-gst_fdsrc_update_fd (GstFdSrc * src)
+gst_fd_src_update_fd (GstFdSrc * src)
 {
   struct stat stat_results;
 
@@ -205,14 +206,14 @@ not_seekable:
 }
 
 static gboolean
-gst_fdsrc_start (GstBaseSrc * bsrc)
+gst_fd_src_start (GstBaseSrc * bsrc)
 {
-  GstFdSrc *src = GST_FDSRC (bsrc);
+  GstFdSrc *src = GST_FD_SRC (bsrc);
   gint control_sock[2];
 
   src->curoffset = 0;
 
-  gst_fdsrc_update_fd (src);
+  gst_fd_src_update_fd (src);
 
   if (socketpair (PF_UNIX, SOCK_STREAM, 0, control_sock) < 0)
     goto socket_pair;
@@ -235,9 +236,9 @@ socket_pair:
 }
 
 static gboolean
-gst_fdsrc_stop (GstBaseSrc * bsrc)
+gst_fd_src_stop (GstBaseSrc * bsrc)
 {
-  GstFdSrc *src = GST_FDSRC (bsrc);
+  GstFdSrc *src = GST_FD_SRC (bsrc);
 
   close (READ_SOCKET (src));
   close (WRITE_SOCKET (src));
@@ -246,9 +247,9 @@ gst_fdsrc_stop (GstBaseSrc * bsrc)
 }
 
 static gboolean
-gst_fdsrc_unlock (GstBaseSrc * bsrc)
+gst_fd_src_unlock (GstBaseSrc * bsrc)
 {
-  GstFdSrc *src = GST_FDSRC (bsrc);
+  GstFdSrc *src = GST_FD_SRC (bsrc);
 
   SEND_COMMAND (src, CONTROL_STOP);
 
@@ -256,10 +257,10 @@ gst_fdsrc_unlock (GstBaseSrc * bsrc)
 }
 
 static void
-gst_fdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
+gst_fd_src_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstFdSrc *src = GST_FDSRC (object);
+  GstFdSrc *src = GST_FD_SRC (object);
 
   switch (prop_id) {
     case PROP_FD:
@@ -269,7 +270,7 @@ gst_fdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
        * so it is reflected in get_properties and uri */
       GST_OBJECT_LOCK (object);
       if (GST_STATE (GST_ELEMENT (src)) <= GST_STATE_READY) {
-        gst_fdsrc_update_fd (src);
+        gst_fd_src_update_fd (src);
       }
       GST_OBJECT_UNLOCK (object);
       break;
@@ -280,10 +281,10 @@ gst_fdsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 }
 
 static void
-gst_fdsrc_get_property (GObject * object, guint prop_id, GValue * value,
+gst_fd_src_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstFdSrc *src = GST_FDSRC (object);
+  GstFdSrc *src = GST_FD_SRC (object);
 
   switch (prop_id) {
     case PROP_FD:
@@ -296,7 +297,7 @@ gst_fdsrc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstFlowReturn
-gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
+gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstFdSrc *src;
   GstBuffer *buf;
@@ -308,7 +309,7 @@ gst_fdsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   gint retval;
 #endif
 
-  src = GST_FDSRC (psrc);
+  src = GST_FD_SRC (psrc);
 
 #ifndef HAVE_WIN32
   FD_ZERO (&readfds);
@@ -398,17 +399,17 @@ read_error:
 }
 
 gboolean
-gst_fdsrc_is_seekable (GstBaseSrc * bsrc)
+gst_fd_src_is_seekable (GstBaseSrc * bsrc)
 {
-  GstFdSrc *src = GST_FDSRC (bsrc);
+  GstFdSrc *src = GST_FD_SRC (bsrc);
 
   return src->seekable_fd;
 }
 
 gboolean
-gst_fdsrc_get_size (GstBaseSrc * bsrc, guint64 * size)
+gst_fd_src_get_size (GstBaseSrc * bsrc, guint64 * size)
 {
-  GstFdSrc *src = GST_FDSRC (bsrc);
+  GstFdSrc *src = GST_FD_SRC (bsrc);
   struct stat stat_results;
 
   if (!src->seekable_fd) {
@@ -435,30 +436,30 @@ could_not_stat:
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
 static guint
-gst_fdsrc_uri_get_type (void)
+gst_fd_src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
 static gchar **
-gst_fdsrc_uri_get_protocols (void)
+gst_fd_src_uri_get_protocols (void)
 {
   static gchar *protocols[] = { "fd", NULL };
 
   return protocols;
 }
 static const gchar *
-gst_fdsrc_uri_get_uri (GstURIHandler * handler)
+gst_fd_src_uri_get_uri (GstURIHandler * handler)
 {
-  GstFdSrc *src = GST_FDSRC (handler);
+  GstFdSrc *src = GST_FD_SRC (handler);
 
   return src->uri;
 }
 
 static gboolean
-gst_fdsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_fd_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   gchar *protocol;
-  GstFdSrc *src = GST_FDSRC (handler);
+  GstFdSrc *src = GST_FD_SRC (handler);
   gint fd;
 
   protocol = gst_uri_get_protocol (uri);
@@ -475,7 +476,7 @@ gst_fdsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 
   GST_OBJECT_LOCK (src);
   if (GST_STATE (GST_ELEMENT (src)) <= GST_STATE_READY) {
-    gst_fdsrc_update_fd (src);
+    gst_fd_src_update_fd (src);
   }
   GST_OBJECT_UNLOCK (src);
 
@@ -483,12 +484,12 @@ gst_fdsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 }
 
 static void
-gst_fdsrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
+gst_fd_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 {
   GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
 
-  iface->get_type = gst_fdsrc_uri_get_type;
-  iface->get_protocols = gst_fdsrc_uri_get_protocols;
-  iface->get_uri = gst_fdsrc_uri_get_uri;
-  iface->set_uri = gst_fdsrc_uri_set_uri;
+  iface->get_type = gst_fd_src_uri_get_type;
+  iface->get_protocols = gst_fd_src_uri_get_protocols;
+  iface->get_uri = gst_fd_src_uri_get_uri;
+  iface->set_uri = gst_fd_src_uri_set_uri;
 }
