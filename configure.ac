@@ -462,6 +462,15 @@ GST_CHECK_FEATURE(OGG, [ogg de/encoder], oggdemux oggmux, [
   ])
 ])
 
+dnl *** pango ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
+GST_CHECK_FEATURE(PANGO, [pango], pango, [
+  PKG_CHECK_MODULES(PANGO, pango pangoft2,
+      HAVE_PANGO="yes", HAVE_PANGO="no")
+  AC_SUBST(PANGO_CFLAGS)
+  AC_SUBST(PANGO_LIBS)
+])
+
 dnl *** theora ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORA, true)
 GST_CHECK_FEATURE(THEORA, [ogg theora codec], theoradec theoraenc, [
@@ -597,6 +606,7 @@ ext/cdparanoia/Makefile
 ext/gnomevfs/Makefile
 ext/libvisual/Makefile
 ext/ogg/Makefile
+ext/pango/Makefile
 ext/theora/Makefile
 ext/vorbis/Makefile
 gst-libs/Makefile

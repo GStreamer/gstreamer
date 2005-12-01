@@ -29,6 +29,12 @@ else
 OGG_DIR=
 endif
 
+if USE_PANGO
+PANGO_DIR = pango
+else
+PANGO_DIR =
+endif
+
 if USE_VORBIS
 VORBIS_DIR=vorbis
 else
@@ -56,5 +62,6 @@ DIST_SUBDIRS = \
   gnomevfs \
   libvisual \
   ogg \
+  pango \
   theora \
   vorbis
