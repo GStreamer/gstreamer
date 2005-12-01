@@ -26,10 +26,6 @@ gst_deinit
 gst_version
 gst_version_string
 <SUBSECTION Private>
-mutex
-start_cond
-sync_cond
-thread_list
 </SECTION>
 
 <SECTION>
@@ -381,6 +377,7 @@ GST_PTR_FORMAT
 GST_EXPORT
 GST_PLUGIN_EXPORT
 GST_PADDING
+GST_PADDING_LARGE
 GST_PADDING_INIT
 </SECTION>
 
@@ -826,7 +823,6 @@ gst_debug_category_get_color
 gst_debug_category_get_description
 gst_debug_get_all_categories
 gst_debug_construct_term_color
-GST_CAT_DEFAULT
 GST_CAT_LEVEL_LOG
 GST_CAT_ERROR_OBJECT
 GST_CAT_WARNING_OBJECT
@@ -1912,7 +1908,6 @@ gst_type_find_peek
 gst_type_find_suggest
 gst_type_find_get_length
 gst_type_find_register
-gst_type_find_helper
 <SUBSECTION Standard>
 GST_TYPE_TYPE_FIND_PROBABILITY
 <SUBSECTION Private>

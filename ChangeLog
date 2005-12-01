@@ -1,5 +1,10 @@
 2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/gst/gstreamer-sections.txt:
+	  update docs
+
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* plugins/elements/gstelements.c:
 	* plugins/elements/gstfdsink.c: (gst_fd_sink__base_init),
 	(gst_fd_sink__class_init), (gst_fd_sink__init),
