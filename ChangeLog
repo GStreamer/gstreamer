@@ -1,5 +1,20 @@
 2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/pango/Makefile.am:
+	* ext/pango/gstclockoverlay.c:
+	* ext/pango/gstclockoverlay.h:
+	* ext/pango/gsttextoverlay.c:
+	* ext/pango/gsttextoverlay.h:
+	* ext/pango/gsttextrender.c:
+	* ext/pango/gsttextrender.h:
+	* ext/pango/gsttimeoverlay.c:
+	* ext/pango/gsttimeoverlay.h:
+	  move pango to base
+
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtpL16depay.c:
 	* gst/rtp/gstrtpL16depay.h:

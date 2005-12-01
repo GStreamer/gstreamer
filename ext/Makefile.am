@@ -76,12 +76,6 @@ endif
 MIKMOD_DIR =
 # endif
 
-if USE_PANGO
-PANGO_DIR = pango
-else
-PANGO_DIR =
-endif
-
 if USE_DV1394
 DV1394_DIR = raw1394
 else
@@ -115,7 +109,6 @@ SUBDIRS = \
 	$(LIBMNG_DIR) \
 	$(LIBPNG_DIR) \
 	$(MIKMOD_DIR) \
-	$(PANGO_DIR) \
 	$(SHOUT2_DIR) \
 	$(SPEEX_DIR)
 
@@ -130,7 +123,6 @@ DIST_SUBDIRS = \
 	ladspa \
 	libcaca \
 	libpng \
-	pango \
 	raw1394 \
 	shout2 \
 	speex
