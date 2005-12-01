@@ -29,6 +29,15 @@ interface for adjusting color balance settings
 @arg1: 
 @arg2: 
 
+<!-- ##### SIGNAL GstColorBalance::value-changed ##### -->
+<para>
+
+</para>
+
+@gstcolorbalance: the object which received the signal.
+@arg1: 
+@arg2: 
+
 <!-- ##### STRUCT GstColorBalanceClass ##### -->
 <para>
 

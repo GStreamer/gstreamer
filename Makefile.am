@@ -28,10 +28,12 @@ DIST_SUBDIRS = 			\
 	m4 			\
 	pkgconfig
 
+win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
+
 EXTRA_DIST = \
 	gst-plugins-base.spec depcomp \
 	AUTHORS COPYING COPYING.LIB NEWS README RELEASE REQUIREMENTS \
-	ChangeLog autogen.sh
+	ChangeLog autogen.sh $(win32)
 
 DISTCLEANFILES = _stdint.h
 

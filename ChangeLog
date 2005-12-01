@@ -1,3 +1,12 @@
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* po/hu.po:
+	* win32/MANIFEST:
+	* win32/gst.sln:
+	  add win32 MANIFEST file
+	  do something to the hungarian translation
+
 2005-12-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/Makefile.am:
