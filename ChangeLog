@@ -1,5 +1,13 @@
 2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* libs/gst/controller/gstcontroller.c:
+	* libs/gst/controller/gsthelper.c:
+	* libs/gst/controller/gstinterpolation.c:
+	* libs/gst/controller/lib.c:
+	  wrap config.h include
+
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
 	  update docs
 

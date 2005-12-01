@@ -29,7 +29,9 @@
  * the #GObject class.
  */
 
-#include "config.h"
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 #include "gstcontroller.h"
 
 #define GST_CAT_DEFAULT gst_controller_debug
