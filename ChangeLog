@@ -1,5 +1,11 @@
 2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* po/LINGUAS:
+	* po/bg.po:
+	  Added Bulgarian translation by (Alexander Shopov)
+
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* tests/check/gst/gstplugin.c:
 	  fix test
 
