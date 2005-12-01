@@ -12,21 +12,21 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 9, 6, 1,
+AS_VERSION(gst-ffmpeg, GST_FFMPEG_VERSION, 0, 9, 7, 0,
     GST_CVS="no", GST_CVS="yes")
 
 dnl we cheat here so we don't have to change the actual configure code bit
 GST_PLUGINS_VERSION_NANO=$GST_FFMPEG_VERSION_NANO
 
 dnl required GStreamer version
-GST_REQ=0.9.1
+GST_REQ=0.9.7
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
 dnl our libraries and install dirs use major.minor as a version
 #GST_MAJORMINOR=$GST_FFMPEG_VERSION_MAJOR.$GST_FFMPEG_VERSION_MINOR
 dnl hack while GST_MAJORMINOR doesn't match the release
-GST_MAJORMINOR=0.9
+GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
                                                                                 
 dnl CURRENT, REVISION, AGE
@@ -34,7 +34,7 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
-AS_LIBTOOL(GST_FFMPEG, 1, 0, 0)
+AS_LIBTOOL(GST_FFMPEG, 0, 0, 0)
 AM_PROG_LIBTOOL()
 
 AC_CONFIG_SRCDIR(configure.ac)

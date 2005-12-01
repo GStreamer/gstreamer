@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer FFmpeg Plug-ins 0.9.6 "Cold Cat"
+GStreamer: Release notes for GStreamer FFmpeg Plug-ins 0.9.7 "Mein Hund Hat Keine Nase"
         
 
 The GStreamer team is petrified to announce a new release
@@ -35,6 +35,7 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
+      * Improved pixel aspect ratio handling
 
 Bugs fixed in this release
     
@@ -67,9 +68,7 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
-      * Jan Schmidt
-      * Luca Ognibene
+      * Julien Moutte
       * Thomas Vander Stichele
       * Tim-Philipp Müller
  
