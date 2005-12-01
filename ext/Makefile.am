@@ -53,6 +53,7 @@ SUBDIRS = \
   $(GNOMEVFS_DIR) \
   $(LIBVISUAL_DIR) \
   $(OGG_DIR) \
+  $(PANGO_DIR) \
   $(THEORA_DIR) \
   $(VORBIS_DIR)
 

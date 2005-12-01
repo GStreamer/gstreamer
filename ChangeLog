@@ -1,3 +1,12 @@
+2005-12-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/Makefile.am:
+	  Add $(PANGO_DIR) to SUBDIRS
+
+	* ext/pango/gstclockoverlay.c:
+	* ext/pango/gsttimeoverlay.c:
+	  Fix and improve element descriptions.
+
 2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:

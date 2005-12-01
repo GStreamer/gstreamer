@@ -29,7 +29,7 @@
 static GstElementDetails time_overlay_details =
 GST_ELEMENT_DETAILS ("Time Overlay",
     "Filter/Editor/Video",
-    "Overlays the time on a video stream",
+    "Overlays buffer time stamps on a video stream",
     "Tim-Philipp Müller <tim@centricular.net>");
 
 GST_BOILERPLATE (GstTimeOverlay, gst_time_overlay, GstTextOverlay,

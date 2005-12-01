@@ -27,9 +27,9 @@
 #include <time.h>
 
 static GstElementDetails clock_overlay_details =
-GST_ELEMENT_DETAILS ("Time Overlay",
+GST_ELEMENT_DETAILS ("Clock Overlay",
     "Filter/Editor/Video",
-    "Overlays the time on a video stream",
+    "Overlays the current clock time on a video stream",
     "Tim-Philipp Müller <tim@centricular.net>");
 
 GST_BOILERPLATE (GstClockOverlay, gst_clock_overlay, GstTextOverlay,
