@@ -196,6 +196,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
 %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
+%doc %{_datadir}/gtk-doc/html/gstreamer-plugins-%{majorminor}
                                                                                 
 %changelog
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>

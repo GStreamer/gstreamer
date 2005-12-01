@@ -36,7 +36,6 @@
 <!ENTITY GstPlugin SYSTEM "xml/gstplugin.xml">
 <!ENTITY GstPluginFeature SYSTEM "xml/gstpluginfeature.xml">
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
-<!ENTITY GstQueue SYSTEM "xml/gstqueue.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
 <!ENTITY GstSegment SYSTEM "xml/gstsegment.xml">
 <!ENTITY GstStructure SYSTEM "xml/gststructure.xml">
@@ -53,10 +52,6 @@
 <!ENTITY GstVersion SYSTEM "xml/gstversion.xml">
 <!ENTITY GstXML SYSTEM "xml/gstxml.xml">
 
-<!ENTITY GstFakeSrc SYSTEM "xml/gstfakesrc.xml">
-<!ENTITY GstFakeSink SYSTEM "xml/gstfakesink.xml">
-<!ENTITY GstFileSrc SYSTEM "xml/gstfilesrc.xml">
-<!ENTITY GstFileSink SYSTEM "xml/gstfilesink.xml">
 <!--
 <!ENTITY GstAggregator SYSTEM "xml/gstaggregator.xml">
 <!ENTITY GstFdSrc SYSTEM "xml/gstfdsrc.xml">
@@ -140,7 +135,6 @@ Windows.  It is released under the GNU Library General Public License
     &GstPlugin;
     &GstPluginFeature;
     &GstQuery;
-    &GstQueue;
     &GstRegistry;
     &GstSegment;
     &GstStructure;
@@ -182,37 +176,6 @@ Windows.  It is released under the GNU Library General Public License
 
   </chapter>
 -->
-
-  <chapter id="element-types">
-    <title>GStreamer Core Elements</title>
-
-    <para>
-      libgstelements.so provide some basic elements like a file source
-      and sink. The use of these elements is strictly though the g_object_get() and
-      g_object_set() functions and the GStreamer Core Library functions.
-    </para>
-
-
-    &GstFakeSrc;
-    &GstFakeSink;
-    &GstFileSrc;
-    &GstFileSink;
-<!--
-
-    &GstAggregator;
-
-    &GstFdSrc;
-    &GstFdSink;
-
-    &GstPipefilter;
-    &GstIdentity;
-
-    &GstStatistics;
-    &GstMD5Sink;
-
-    &GstTee;
--->
-  </chapter>
 
   <chapter id="gstreamer-hierarchy">
     <title>Object Hierarchy</title>

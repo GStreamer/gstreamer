@@ -1,0 +1,84 @@
+<SECTION>
+<FILE>element-fakesrc</FILE>
+<TITLE>fakesrc</TITLE>
+GstFakeSrc
+GstFakeSrcDataType
+GstFakeSrcFillType
+GstFakeSrcOutputType
+GstFakeSrcSizeType
+<SUBSECTION Standard>
+GstFakeSrcClass
+GST_FAKE_SRC
+GST_IS_FAKE_SRC
+GST_TYPE_FAKE_SRC
+GST_FAKE_SRC_CLASS
+GST_IS_FAKE_SRC_CLASS
+<SUBSECTION Private>
+gst_fake_src_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>element-fakesink</FILE>
+<TITLE>fakesink</TITLE>
+GstFakeSink
+GstFakeSinkStateError
+<SUBSECTION Standard>
+GstFakeSinkClass
+GST_FAKE_SINK
+GST_IS_FAKE_SINK
+GST_TYPE_FAKE_SINK
+GST_FAKE_SINK_CLASS
+GST_IS_FAKE_SINK_CLASS
+<SUBSECTION Private>
+gst_fake_sink_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>element-filesrc</FILE>
+<TITLE>filesrc</TITLE>
+GstFileSrc
+<SUBSECTION Standard>
+GstFileSrcClass
+GST_FILE_SRC
+GST_IS_FILE_SRC
+GST_TYPE_FILE_SRC
+GST_FILE_SRC_CLASS
+GST_IS_FILE_SRC_CLASS
+<SUBSECTION Private>
+gst_file_src_get_type
+</SECTION>
+
+
+<SECTION>
+<FILE>element-filesink</FILE>
+<TITLE>filesink</TITLE>
+GstFileSink
+<SUBSECTION Standard>
+GstFileSinkClass
+GST_FILE_SINK
+GST_IS_FILE_SINK
+GST_TYPE_FILE_SINK
+GST_FILE_SINK_CLASS
+GST_IS_FILE_SINK_CLASS
+<SUBSECTION Private>
+gst_file_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-queue</FILE>
+<TITLE>queue</TITLE>
+GstQueue
+GstQueueSize
+<SUBSECTION Standard>
+GstQueueClass
+GST_QUEUE
+GST_IS_QUEUE
+GST_QUEUE_CLASS
+GST_IS_QUEUE_CLASS
+GST_TYPE_QUEUE
+<SUBSECTION Private>
+gst_queue_get_type
+</SECTION>
+<SUBSECTION Standard>

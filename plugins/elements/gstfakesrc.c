@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstfakesrc
+ * SECTION:element-fakesrc
  * @short_description: Push empty (no data) buffers around
  * @see_also: #GstFakeSink
  *

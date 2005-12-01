@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstfilesink
+ * SECTION:element-filesink
  * @short_description: write stream to a file
  * @see_also: #GstFileSrc
  *

@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstfakesink
+ * SECTION:element-fakesink
  * @short_description: black hole for data
  * @see_also: #GstFakeSrc
  *

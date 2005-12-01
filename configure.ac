@@ -261,6 +261,7 @@ AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 dnl check for documentation tools
 GST_DOCBOOK_CHECK
 GTK_DOC_CHECK([1.3])
+AS_PATH_PYTHON([2.1])
 
 dnl *** checks for libraries ***
 
@@ -513,6 +514,7 @@ docs/faq/Makefile
 docs/gst/Makefile
 docs/gst/gstreamer.types
 docs/libs/Makefile
+docs/plugins/Makefile
 docs/manual/Makefile
 docs/pwg/Makefile
 docs/xsl/Makefile

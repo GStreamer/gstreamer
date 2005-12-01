@@ -1,3 +1,36 @@
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* common/gst-xmlinspect.py:
+	* common/gtk-doc-plugins.mak:
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types:
+	* docs/gst/gstreamer.types.in:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gstreamer-plugins-docs.sgml:
+	* docs/plugins/gstreamer-plugins-sections.txt:
+	* docs/plugins/gstreamer-plugins.types:
+	* docs/plugins/inspect.stamp:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* docs/plugins/inspect/plugin-coreindexers.xml:
+	* docs/plugins/scanobj-build.stamp:
+	* gstreamer.spec.in:
+	* plugins/elements/Makefile.am:
+	* plugins/elements/gstelements.c:
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstfilesink.c:
+	* plugins/elements/gstfilesrc.c:
+	* plugins/elements/gstqueue.c:
+	* plugins/indexers/Makefile.am:
+	* plugins/indexers/gstindexers.c:
+	  document core plugins in a separate document just like all the
+	  others
+	  rename these plugins to something starting with core
+
 2005-12-01  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstevent.h (struct _GstEvent): Meant to remove the extra

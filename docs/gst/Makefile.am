@@ -53,11 +53,7 @@ DOC_BUILD_DIR = $(top_builddir)/gst
 HFILE_GLOB=$(top_srcdir)/gst/*.h $(top_srcdir)/libs/gst/*/*.h
 CFILE_GLOB=$(top_srcdir)/gst/*.c $(top_srcdir)/libs/gst/*/*.c
 
-# Dependencies for the intermediate scanobj tool
-#SCANOBJ_DEPS = $(top_builddir)/gst/elements/libgstelements.la \
-#	$(top_builddir)/gst/schedulers/libgstbasicomegascheduler.la
 SCANOBJ_DEPS = \
-	$(top_builddir)/plugins/elements/libgstelements.la \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la
 

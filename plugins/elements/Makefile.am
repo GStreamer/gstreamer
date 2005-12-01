@@ -4,7 +4,7 @@
 # This requires building libs/gst before this dir, which we currently don't
 # do.
 
-plugin_LTLIBRARIES = libgstelements.la
+plugin_LTLIBRARIES = libgstcoreelements.la
 
 if HAVE_SYS_SOCKET_H
 GSTFDSRC = gstfdsrc.c
@@ -12,8 +12,8 @@ else
 GSTFDSRC =
 endif
 
-libgstelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
-libgstelements_la_SOURCES =	\
+libgstcoreelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
+libgstcoreelements_la_SOURCES =	\
 	gstbufferstore.c	\
 	gstcapsfilter.c		\
 	gstelements.c		\
@@ -27,11 +27,11 @@ libgstelements_la_SOURCES =	\
 	gsttee.c		\
 	gsttypefindelement.c
 
-libgstelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
-libgstelements_la_LIBADD = \
+libgstcoreelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
+libgstcoreelements_la_LIBADD = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS)
-libgstelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstcoreelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS =		\
 	gstbufferstore.h	\

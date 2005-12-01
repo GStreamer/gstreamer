@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:gstfilesrc
+ * SECTION:element-filesrc
  * @short_description: read from arbitrary point in a file
  * @see_also: #GstFileSrc
  *

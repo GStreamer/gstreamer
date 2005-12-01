@@ -1,0 +1,83 @@
+<plugin>
+  <name>coreelements</name>
+  <description>standard GStreamer elements</description>
+  <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
+  <basename>libgstcoreelements.so</basename>
+  <version>0.9.6.1</version>
+  <license>LGPL</license>
+  <source>gstreamer</source>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>capsfilter</name>
+      <longname>CapsFilter</longname>
+      <class>Generic</class>
+      <description>Pass data without modification, limiting formats</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+    </element>
+    <element>
+      <name>fakesink</name>
+      <longname>Fake Sink</longname>
+      <class>Sink</class>
+      <description>Black hole for data</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;, Mr. 'frag-me-more' Vanderwingo &lt;wingo@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>fakesrc</name>
+      <longname>Fake Source</longname>
+      <class>Source</class>
+      <description>Push empty (no data) buffers around</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+    <element>
+      <name>fdsrc</name>
+      <longname>Disk Source</longname>
+      <class>Source/File</class>
+      <description>Synchronous read from a file</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+    </element>
+    <element>
+      <name>filesink</name>
+      <longname>File Sink</longname>
+      <class>Sink/File</class>
+      <description>Write stream to a file</description>
+      <author>Thomas &lt;thomas@apestaart.org&gt;</author>
+    </element>
+    <element>
+      <name>filesrc</name>
+      <longname>File Source</longname>
+      <class>Source/File</class>
+      <description>Read from arbitrary point in a file</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+    </element>
+    <element>
+      <name>identity</name>
+      <longname>Identity</longname>
+      <class>Generic</class>
+      <description>Pass data without modification</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+    </element>
+    <element>
+      <name>queue</name>
+      <longname>Queue</longname>
+      <class>Generic</class>
+      <description>Simple data queue</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+    </element>
+    <element>
+      <name>tee</name>
+      <longname>Tee pipe fitting</longname>
+      <class>Generic</class>
+      <description>1-to-N pipe fitting</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim "Tim" Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>typefind</name>
+      <longname>TypeFind</longname>
+      <class>Generic</class>
+      <description>Finds the media type of a stream</description>
+      <author>Benjamin Otte &lt;in7y118@public.uni-hamburg.de&gt;</author>
+    </element>
+  </elements>
+</plugin>

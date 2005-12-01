@@ -23,7 +23,7 @@
  */
 
 /**
- * SECTION:gstqueue
+ * SECTION:element-queue
  * @short_description: Simple asynchronous data queue.
  *
  * Data is queued till max_level buffers have been stored. Any subsequent

@@ -54,17 +54,3 @@ gst_push_src_get_type
 
 gst_net_client_clock_get_type
 gst_net_time_provider_get_type
-
-% elements
-
-#include <plugins/elements/gstfakesrc.h>
-#include <plugins/elements/gstfakesink.h>
-#include <plugins/elements/gstfilesrc.h>
-#include <plugins/elements/gstfilesink.h>
-#include <plugins/elements/gstqueue.h>
-
-gst_fake_src_get_type
-gst_fake_sink_get_type
-gst_file_src_get_type
-gst_file_sink_get_type
-gst_queue_get_type

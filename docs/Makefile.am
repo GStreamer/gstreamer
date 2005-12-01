@@ -1,5 +1,5 @@
 if ENABLE_GTK_DOC
-SUBDIRS_GTK_DOC = gst libs
+SUBDIRS_GTK_DOC = gst libs plugins
 else
 SUBDIRS_GTK_DOC =
 endif
@@ -13,7 +13,7 @@ endif
 BUILT_SOURCES = version.entities
 
 SUBDIRS = $(SUBDIRS_DOCBOOK) $(SUBDIRS_GTK_DOC)
-DIST_SUBDIRS = gst faq manual pwg libs xsl
+DIST_SUBDIRS = gst libs plugins faq manual pwg xsl
 
 EXTRA_DIST = \
 	slides manuals.mak htmlinstall.mak upload.mak \

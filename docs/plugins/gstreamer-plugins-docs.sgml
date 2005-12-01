@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY % version-entities SYSTEM "version.entities">
+%version-entities;
+]>
+
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
+  <bookinfo>
+    <title>GStreamer Core Plugins &GST_MAJORMINOR; Plugins Reference Manual</title>
+  </bookinfo>
+
+  <chapter>
+    <title>gstreamer Elements</title>
+    <xi:include href="xml/element-fakesrc.xml" />
+    <xi:include href="xml/element-fakesink.xml" />
+    <xi:include href="xml/element-filesrc.xml" />
+    <xi:include href="xml/element-filesink.xml" />
+    <xi:include href="xml/element-queue.xml" />
+  </chapter>
+
+  <chapter>
+    <title>gstreamer Plugins</title>
+    <xi:include href="xml/plugin-coreelements.xml" />
+    <xi:include href="xml/plugin-coreindexers.xml" />
+  </chapter>
+</book>
+
