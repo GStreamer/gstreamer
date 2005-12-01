@@ -31,7 +31,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_amrdepay_details = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Depayr/Network",
   "Extracts AMR audio from RTP packets (RFC 3267)",
   "Wim Taymans <wim@fluendo.com>"
 };
@@ -277,7 +277,7 @@ gst_rtp_amr_depay_chain (GstPad * pad, GstBuffer * buf)
     goto bad_packet;
 
   /* when we get here, 1 channel, 8000 Hz, octet aligned, no CRC, 
-   * no robust sorting, no interleaving data is to be parsed */
+   * no robust sorting, no interleaving data is to be depayd */
   {
     gint payload_len;
     guint8 *payload, *p, *dp;
@@ -295,7 +295,7 @@ gst_rtp_amr_depay_chain (GstPad * pad, GstBuffer * buf)
 
     payload = gst_rtp_buffer_get_payload (buf);
 
-    /* parse CMR. The CMR is used by the sender to request
+    /* depay CMR. The CMR is used by the sender to request
      * a new encoding mode.
      *
      *  0 1 2 3 4 5 6 7 

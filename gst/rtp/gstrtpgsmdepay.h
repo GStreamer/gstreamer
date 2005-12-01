@@ -17,40 +17,40 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_RTP_GSM_PARSE_H__
-#define __GST_RTP_GSM_PARSE_H__
+#ifndef __GST_RTP_GSM_DEPAY_H__
+#define __GST_RTP_GSM_DEPAY_H__
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertpdepayload.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstRTPGSMParse GstRTPGSMParse;
-typedef struct _GstRTPGSMParseClass GstRTPGSMParseClass;
+typedef struct _GstRTPGSMDepay GstRTPGSMDepay;
+typedef struct _GstRTPGSMDepayClass GstRTPGSMDepayClass;
 
-#define GST_TYPE_RTP_GSM_PARSE \
-  (gst_rtp_gsm_parse_get_type())
-#define GST_RTP_GSM_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_GSM_PARSE,GstRTPGSMParse))
-#define GST_RTP_GSM_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_GSM_PARSE,GstRTPGSMParse))
-#define GST_IS_RTP_GSM_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_GSM_PARSE))
-#define GST_IS_RTP_GSM_PARSE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_GSM_PARSE))
+#define GST_TYPE_RTP_GSM_DEPAY \
+  (gst_rtp_gsm_depay_get_type())
+#define GST_RTP_GSM_DEPAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_GSM_DEPAY,GstRTPGSMDepay))
+#define GST_RTP_GSM_DEPAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_GSM_DEPAY,GstRTPGSMDepay))
+#define GST_IS_RTP_GSM_DEPAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_GSM_DEPAY))
+#define GST_IS_RTP_GSM_DEPAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_GSM_DEPAY))
 
-struct _GstRTPGSMParse
+struct _GstRTPGSMDepay
 {
   GstBaseRTPDepayload _depayload;
 };
 
-struct _GstRTPGSMParseClass
+struct _GstRTPGSMDepayClass
 {
   GstBaseRTPDepayloadClass parent_class;
 };
 
-gboolean gst_rtp_gsm_parse_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_gsm_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_RTP_GSM_PARSE_H__ */
+#endif /* __GST_RTP_GSM_DEPAY_H__ */

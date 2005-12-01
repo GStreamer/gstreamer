@@ -263,7 +263,7 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
 #define VOP_STARTCODE                  	0x000001B6
 
 static gboolean
-gst_rtp_mp4v_pay_parse_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
+gst_rtp_mp4v_pay_depay_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
     gint * strip)
 {
   guint32 code;
@@ -363,9 +363,9 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     rtpmp4vpay->duration = 0;
   }
 
-  /* parse incomming data and see if we need to start a new RTP
+  /* depay incomming data and see if we need to start a new RTP
    * packet */
-  flush = gst_rtp_mp4v_pay_parse_data (rtpmp4vpay, data, size, &strip);
+  flush = gst_rtp_mp4v_pay_depay_data (rtpmp4vpay, data, size, &strip);
   if (strip) {
     /* strip off config if requested */
     if (!rtpmp4vpay->send_config) {

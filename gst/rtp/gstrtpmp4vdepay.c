@@ -24,7 +24,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_mp4vdepay_details = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Depayr/Network",
   "Extracts MPEG4 video from RTP packets (RFC 3016)",
   "Wim Taymans <wim@fluendo.com>"
 };

@@ -16,18 +16,18 @@
 #include "config.h"
 #endif
 #include <string.h>
-#include "gstrtpL16parse.h"
+#include "gstrtpL16depay.h"
 #include "gstrtp-common.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_L16parse_details = {
+static GstElementDetails gst_rtp_L16depay_details = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Depayr/Network",
   "Extracts raw audio from RTP packets",
   "Zeeshan Ali <zak147@yahoo.com>"
 };
 
-/* RtpL16Parse signals and args */
+/* RtpL16Depay signals and args */
 enum
 {
   /* FILL ME */
@@ -41,7 +41,7 @@ enum
   ARG_PAYLOAD_TYPE
 };
 
-static GstStaticPadTemplate gst_rtp_L16parse_src_template =
+static GstStaticPadTemplate gst_rtp_L16depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -53,67 +53,67 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
-static GstStaticPadTemplate gst_rtp_L16parse_sink_template =
+static GstStaticPadTemplate gst_rtp_L16depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
-static void gst_rtp_L16parse_class_init (GstRtpL16ParseClass * klass);
-static void gst_rtp_L16parse_base_init (GstRtpL16ParseClass * klass);
-static void gst_rtp_L16parse_init (GstRtpL16Parse * rtpL16parse);
+static void gst_rtp_L16depay_class_init (GstRtpL16DepayClass * klass);
+static void gst_rtp_L16depay_base_init (GstRtpL16DepayClass * klass);
+static void gst_rtp_L16depay_init (GstRtpL16Depay * rtpL16depay);
 
-static void gst_rtp_L16parse_chain (GstPad * pad, GstData * _data);
+static void gst_rtp_L16depay_chain (GstPad * pad, GstData * _data);
 
-static void gst_rtp_L16parse_set_property (GObject * object, guint prop_id,
+static void gst_rtp_L16depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_rtp_L16parse_get_property (GObject * object, guint prop_id,
+static void gst_rtp_L16depay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstStateChangeReturn gst_rtp_L16parse_change_state (GstElement *
+static GstStateChangeReturn gst_rtp_L16depay_change_state (GstElement *
     element);
 
 static GstElementClass *parent_class = NULL;
 
 static GType
-gst_rtp_L16parse_get_type (void)
+gst_rtp_L16depay_get_type (void)
 {
-  static GType rtpL16parse_type = 0;
+  static GType rtpL16depay_type = 0;
 
-  if (!rtpL16parse_type) {
-    static const GTypeInfo rtpL16parse_info = {
-      sizeof (GstRtpL16ParseClass),
-      (GBaseInitFunc) gst_rtp_L16parse_base_init,
+  if (!rtpL16depay_type) {
+    static const GTypeInfo rtpL16depay_info = {
+      sizeof (GstRtpL16DepayClass),
+      (GBaseInitFunc) gst_rtp_L16depay_base_init,
       NULL,
-      (GClassInitFunc) gst_rtp_L16parse_class_init,
+      (GClassInitFunc) gst_rtp_L16depay_class_init,
       NULL,
       NULL,
-      sizeof (GstRtpL16Parse),
+      sizeof (GstRtpL16Depay),
       0,
-      (GInstanceInitFunc) gst_rtp_L16parse_init,
+      (GInstanceInitFunc) gst_rtp_L16depay_init,
     };
 
-    rtpL16parse_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Parse",
-        &rtpL16parse_info, 0);
+    rtpL16depay_type =
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Depay",
+        &rtpL16depay_info, 0);
   }
-  return rtpL16parse_type;
+  return rtpL16depay_type;
 }
 
 static void
-gst_rtp_L16parse_base_init (GstRtpL16ParseClass * klass)
+gst_rtp_L16depay_base_init (GstRtpL16DepayClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_L16parse_src_template));
+      gst_static_pad_template_get (&gst_rtp_L16depay_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_L16parse_sink_template));
-  gst_element_class_set_details (element_class, &gst_rtp_L16parse_details);
+      gst_static_pad_template_get (&gst_rtp_L16depay_sink_template));
+  gst_element_class_set_details (element_class, &gst_rtp_L16depay_details);
 }
 
 static void
-gst_rtp_L16parse_class_init (GstRtpL16ParseClass * klass)
+gst_rtp_L16depay_class_init (GstRtpL16DepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -130,33 +130,33 @@ gst_rtp_L16parse_class_init (GstRtpL16ParseClass * klass)
       g_param_spec_int ("frequency", "frequency", "frequency",
           G_MININT, G_MAXINT, 44100, G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_rtp_L16parse_set_property;
-  gobject_class->get_property = gst_rtp_L16parse_get_property;
+  gobject_class->set_property = gst_rtp_L16depay_set_property;
+  gobject_class->get_property = gst_rtp_L16depay_get_property;
 
-  gstelement_class->change_state = gst_rtp_L16parse_change_state;
+  gstelement_class->change_state = gst_rtp_L16depay_change_state;
 }
 
 static void
-gst_rtp_L16parse_init (GstRtpL16Parse * rtpL16parse)
+gst_rtp_L16depay_init (GstRtpL16Depay * rtpL16depay)
 {
-  rtpL16parse->srcpad =
+  rtpL16depay->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtp_L16parse_src_template), "src");
-  rtpL16parse->sinkpad =
+      (&gst_rtp_L16depay_src_template), "src");
+  rtpL16depay->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtp_L16parse_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (rtpL16parse), rtpL16parse->srcpad);
-  gst_element_add_pad (GST_ELEMENT (rtpL16parse), rtpL16parse->sinkpad);
-  gst_pad_set_chain_function (rtpL16parse->sinkpad, gst_rtp_L16parse_chain);
+      (&gst_rtp_L16depay_sink_template), "sink");
+  gst_element_add_pad (GST_ELEMENT (rtpL16depay), rtpL16depay->srcpad);
+  gst_element_add_pad (GST_ELEMENT (rtpL16depay), rtpL16depay->sinkpad);
+  gst_pad_set_chain_function (rtpL16depay->sinkpad, gst_rtp_L16depay_chain);
 
-  rtpL16parse->frequency = 44100;
-  rtpL16parse->channels = 2;
+  rtpL16depay->frequency = 44100;
+  rtpL16depay->channels = 2;
 
-  rtpL16parse->payload_type = PAYLOAD_L16_STEREO;
+  rtpL16depay->payload_type = PAYLOAD_L16_STEREO;
 }
 
 void
-gst_rtp_L16parse_ntohs (GstBuffer * buf)
+gst_rtp_L16depay_ntohs (GstBuffer * buf)
 {
   gint16 *i, *len;
 
@@ -170,46 +170,46 @@ gst_rtp_L16parse_ntohs (GstBuffer * buf)
 }
 
 void
-gst_rtp_L16_caps_nego (GstRtpL16Parse * rtpL16parse)
+gst_rtp_L16_caps_nego (GstRtpL16Depay * rtpL16depay)
 {
   GstCaps *caps;
 
   caps =
-      gst_caps_copy (gst_static_caps_get (&gst_rtp_L16parse_src_template.
+      gst_caps_copy (gst_static_caps_get (&gst_rtp_L16depay_src_template.
           static_caps));
 
   gst_caps_set_simple (caps,
-      "rate", G_TYPE_INT, rtpL16parse->frequency,
-      "channel", G_TYPE_INT, rtpL16parse->channels, NULL);
+      "rate", G_TYPE_INT, rtpL16depay->frequency,
+      "channel", G_TYPE_INT, rtpL16depay->channels, NULL);
 
-  gst_pad_try_set_caps (rtpL16parse->srcpad, caps);
+  gst_pad_try_set_caps (rtpL16depay->srcpad, caps);
 }
 
 void
-gst_rtp_L16parse_payloadtype_change (GstRtpL16Parse * rtpL16parse,
+gst_rtp_L16depay_payloadtype_change (GstRtpL16Depay * rtpL16depay,
     rtp_payload_t pt)
 {
-  rtpL16parse->payload_type = pt;
+  rtpL16depay->payload_type = pt;
 
   switch (pt) {
     case PAYLOAD_L16_MONO:
-      rtpL16parse->channels = 1;
+      rtpL16depay->channels = 1;
       break;
     case PAYLOAD_L16_STEREO:
-      rtpL16parse->channels = 2;
+      rtpL16depay->channels = 2;
       break;
     default:
       g_warning ("unknown payload_t %d\n", pt);
   }
 
-  gst_rtp_L16_caps_nego (rtpL16parse);
+  gst_rtp_L16_caps_nego (rtpL16depay);
 }
 
 static void
-gst_rtp_L16parse_chain (GstPad * pad, GstData * _data)
+gst_rtp_L16depay_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
-  GstRtpL16Parse *rtpL16parse;
+  GstRtpL16Depay *rtpL16depay;
   GstBuffer *outbuf;
   Rtp_Packet packet;
   rtp_payload_t pt;
@@ -218,10 +218,10 @@ gst_rtp_L16parse_chain (GstPad * pad, GstData * _data)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  rtpL16parse = GST_RTP_L16_PARSE (GST_OBJECT_PARENT (pad));
+  rtpL16depay = GST_RTP_L16_DEPAY (GST_OBJECT_PARENT (pad));
 
-  g_return_if_fail (rtpL16parse != NULL);
-  g_return_if_fail (GST_IS_RTP_L16_PARSE (rtpL16parse));
+  g_return_if_fail (rtpL16depay != NULL);
+  g_return_if_fail (GST_IS_RTP_L16_DEPAY (rtpL16depay));
 
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
@@ -231,8 +231,8 @@ gst_rtp_L16parse_chain (GstPad * pad, GstData * _data)
     return;
   }
 
-  if (GST_PAD_CAPS (rtpL16parse->srcpad) == NULL) {
-    gst_rtp_L16_caps_nego (rtpL16parse);
+  if (GST_PAD_CAPS (rtpL16depay->srcpad) == NULL) {
+    gst_rtp_L16_caps_nego (rtpL16depay);
   }
 
   packet =
@@ -240,8 +240,8 @@ gst_rtp_L16parse_chain (GstPad * pad, GstData * _data)
 
   pt = rtp_packet_get_payload_type (packet);
 
-  if (pt != rtpL16parse->payload_type) {
-    gst_rtp_L16parse_payloadtype_change (rtpL16parse, pt);
+  if (pt != rtpL16depay->payload_type) {
+    gst_rtp_L16depay_payloadtype_change (rtpL16depay, pt);
   }
 
   outbuf = gst_buffer_new ();
@@ -253,36 +253,36 @@ gst_rtp_L16parse_chain (GstPad * pad, GstData * _data)
   memcpy (GST_BUFFER_DATA (outbuf), rtp_packet_get_payload (packet),
       GST_BUFFER_SIZE (outbuf));
 
-  GST_DEBUG ("gst_rtp_L16parse_chain: pushing buffer of size %d",
+  GST_DEBUG ("gst_rtp_L16depay_chain: pushing buffer of size %d",
       GST_BUFFER_SIZE (outbuf));
 
   /* FIXME: According to RFC 1890, this is required, right? */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  gst_rtp_L16parse_ntohs (outbuf);
+  gst_rtp_L16depay_ntohs (outbuf);
 #endif
 
-  gst_pad_push (rtpL16parse->srcpad, GST_DATA (outbuf));
+  gst_pad_push (rtpL16depay->srcpad, GST_DATA (outbuf));
 
   rtp_packet_free (packet);
   gst_buffer_unref (buf);
 }
 
 static void
-gst_rtp_L16parse_set_property (GObject * object, guint prop_id,
+gst_rtp_L16depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRtpL16Parse *rtpL16parse;
+  GstRtpL16Depay *rtpL16depay;
 
-  g_return_if_fail (GST_IS_RTP_L16_PARSE (object));
-  rtpL16parse = GST_RTP_L16_PARSE (object);
+  g_return_if_fail (GST_IS_RTP_L16_DEPAY (object));
+  rtpL16depay = GST_RTP_L16_DEPAY (object);
 
   switch (prop_id) {
     case ARG_PAYLOAD_TYPE:
-      gst_rtp_L16parse_payloadtype_change (rtpL16parse,
+      gst_rtp_L16depay_payloadtype_change (rtpL16depay,
           g_value_get_int (value));
       break;
     case ARG_FREQUENCY:
-      rtpL16parse->frequency = g_value_get_int (value);
+      rtpL16depay->frequency = g_value_get_int (value);
       break;
     default:
       break;
@@ -290,20 +290,20 @@ gst_rtp_L16parse_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_rtp_L16parse_get_property (GObject * object, guint prop_id, GValue * value,
+gst_rtp_L16depay_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstRtpL16Parse *rtpL16parse;
+  GstRtpL16Depay *rtpL16depay;
 
-  g_return_if_fail (GST_IS_RTP_L16_PARSE (object));
-  rtpL16parse = GST_RTP_L16_PARSE (object);
+  g_return_if_fail (GST_IS_RTP_L16_DEPAY (object));
+  rtpL16depay = GST_RTP_L16_DEPAY (object);
 
   switch (prop_id) {
     case ARG_PAYLOAD_TYPE:
-      g_value_set_int (value, rtpL16parse->payload_type);
+      g_value_set_int (value, rtpL16depay->payload_type);
       break;
     case ARG_FREQUENCY:
-      g_value_set_int (value, rtpL16parse->frequency);
+      g_value_set_int (value, rtpL16depay->frequency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -312,14 +312,14 @@ gst_rtp_L16parse_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstStateChangeReturn
-gst_rtp_L16parse_change_state (GstElement * element, GstStateChange transition)
+gst_rtp_L16depay_change_state (GstElement * element, GstStateChange transition)
 {
-  GstRtpL16Parse *rtpL16parse;
+  GstRtpL16Depay *rtpL16depay;
 
-  g_return_val_if_fail (GST_IS_RTP_L16_PARSE (element),
+  g_return_val_if_fail (GST_IS_RTP_L16_DEPAY (element),
       GST_STATE_CHANGE_FAILURE);
 
-  rtpL16parse = GST_RTP_L16_PARSE (element);
+  rtpL16depay = GST_RTP_L16_DEPAY (element);
 
   GST_DEBUG ("state pending %d\n", GST_STATE_PENDING (element));
 
@@ -340,8 +340,8 @@ gst_rtp_L16parse_change_state (GstElement * element, GstStateChange transition)
 }
 
 gboolean
-gst_rtp_L16parse_plugin_init (GstPlugin * plugin)
+gst_rtp_L16depay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpL16parse",
-      GST_RANK_NONE, GST_TYPE_RTP_L16_PARSE);
+  return gst_element_register (plugin, "rtpL16depay",
+      GST_RANK_NONE, GST_TYPE_RTP_L16_DEPAY);
 }

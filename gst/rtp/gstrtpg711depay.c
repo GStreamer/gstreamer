@@ -25,7 +25,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_g711depay_details = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Depayr/Network",
   "Extracts PCMU/PCMA audio from RTP packets",
   "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>"
 };

@@ -25,7 +25,7 @@
 #include "gstrtpg711pay.h"
 #include "gstrtpg711depay.h"
 #include "gstrtpgsmpay.h"
-#include "gstrtpgsmparse.h"
+#include "gstrtpgsmdepay.h"
 #include "gstrtpamrpay.h"
 #include "gstrtpamrdepay.h"
 #include "gstrtpmpapay.h"
@@ -45,7 +45,7 @@ plugin_init (GstPlugin * plugin)
   if (!gst_rtp_depay_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_rtp_gsm_parse_plugin_init (plugin))
+  if (!gst_rtp_gsm_depay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_gsm_pay_plugin_init (plugin))

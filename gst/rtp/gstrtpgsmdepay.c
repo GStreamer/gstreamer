@@ -19,31 +19,31 @@
 
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
-#include "gstrtpgsmparse.h"
+#include "gstrtpgsmdepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_gsmparse_details = {
+static GstElementDetails gst_rtp_gsmdepay_details = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Depayr/Network",
   "Extracts GSM audio from RTP packets",
   "Zeeshan Ali <zeenix@gmail.com>"
 };
 
-/* RTPGSMParse signals and args */
+/* RTPGSMDepay signals and args */
 enum
 {
   /* FILL ME */
   LAST_SIGNAL
 };
 
-static GstStaticPadTemplate gst_rtp_gsm_parse_src_template =
+static GstStaticPadTemplate gst_rtp_gsm_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-gsm, " "rate = (int) 8000, " "channels = 1")
     );
 
-static GstStaticPadTemplate gst_rtp_gsm_parse_sink_template =
+static GstStaticPadTemplate gst_rtp_gsm_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -53,28 +53,28 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "clock-rate = (int) 8000, " "encoding-name = (string) \"GSM\"")
     );
 
-static GstBuffer *gst_rtp_gsm_parse_process (GstBaseRTPDepayload * _depayload,
+static GstBuffer *gst_rtp_gsm_depay_process (GstBaseRTPDepayload * _depayload,
     GstBuffer * buf);
-static gboolean gst_rtp_gsm_parse_setcaps (GstBaseRTPDepayload * _depayload,
+static gboolean gst_rtp_gsm_depay_setcaps (GstBaseRTPDepayload * _depayload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRTPGSMParse, gst_rtp_gsm_parse, GstBaseRTPDepayload,
+GST_BOILERPLATE (GstRTPGSMDepay, gst_rtp_gsm_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void
-gst_rtp_gsm_parse_base_init (gpointer klass)
+gst_rtp_gsm_depay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_gsm_parse_src_template));
+      gst_static_pad_template_get (&gst_rtp_gsm_depay_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_gsm_parse_sink_template));
-  gst_element_class_set_details (element_class, &gst_rtp_gsmparse_details);
+      gst_static_pad_template_get (&gst_rtp_gsm_depay_sink_template));
+  gst_element_class_set_details (element_class, &gst_rtp_gsmdepay_details);
 }
 
 static void
-gst_rtp_gsm_parse_class_init (GstRTPGSMParseClass * klass)
+gst_rtp_gsm_depay_class_init (GstRTPGSMDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -86,24 +86,24 @@ gst_rtp_gsm_parse_class_init (GstRTPGSMParseClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_DEPAYLOAD);
 
-  gstbasertp_depayload_class->process = gst_rtp_gsm_parse_process;
-  gstbasertp_depayload_class->set_caps = gst_rtp_gsm_parse_setcaps;
+  gstbasertp_depayload_class->process = gst_rtp_gsm_depay_process;
+  gstbasertp_depayload_class->set_caps = gst_rtp_gsm_depay_setcaps;
 }
 
 static void
-gst_rtp_gsm_parse_init (GstRTPGSMParse * rtpgsmparse,
-    GstRTPGSMParseClass * klass)
+gst_rtp_gsm_depay_init (GstRTPGSMDepay * rtpgsmdepay,
+    GstRTPGSMDepayClass * klass)
 {
-  GST_BASE_RTP_DEPAYLOAD (rtpgsmparse)->clock_rate = 8000;
+  GST_BASE_RTP_DEPAYLOAD (rtpgsmdepay)->clock_rate = 8000;
 }
 
 static gboolean
-gst_rtp_gsm_parse_setcaps (GstBaseRTPDepayload * _depayload, GstCaps * caps)
+gst_rtp_gsm_depay_setcaps (GstBaseRTPDepayload * _depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
   gboolean ret;
 
-  srccaps = gst_static_pad_template_get_caps (&gst_rtp_gsm_parse_src_template);
+  srccaps = gst_static_pad_template_get_caps (&gst_rtp_gsm_depay_src_template);
   ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (_depayload), srccaps);
 
   gst_caps_unref (srccaps);
@@ -111,7 +111,7 @@ gst_rtp_gsm_parse_setcaps (GstBaseRTPDepayload * _depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_gsm_parse_process (GstBaseRTPDepayload * _depayload, GstBuffer * buf)
+gst_rtp_gsm_depay_process (GstBaseRTPDepayload * _depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf = NULL;
   gint payload_len;
@@ -131,8 +131,8 @@ gst_rtp_gsm_parse_process (GstBaseRTPDepayload * _depayload, GstBuffer * buf)
 }
 
 gboolean
-gst_rtp_gsm_parse_plugin_init (GstPlugin * plugin)
+gst_rtp_gsm_depay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpgsmparse",
-      GST_RANK_NONE, GST_TYPE_RTP_GSM_PARSE);
+  return gst_element_register (plugin, "rtpgsmdepay",
+      GST_RANK_NONE, GST_TYPE_RTP_GSM_DEPAY);
 }

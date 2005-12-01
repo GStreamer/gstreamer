@@ -43,7 +43,7 @@ typedef struct _GstAsteriskH263Header
 /* elementfactory information */
 static GstElementDetails gst_rtp_h263p_depaydetails = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Depayr/Network",
   "Extracts H263 video from RTP and encodes in Asterisk H263 format",
   "Neil Stratford <neils@vipadia.com>"
 };

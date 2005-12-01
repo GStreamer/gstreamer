@@ -1,6 +1,19 @@
 2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtpL16depay.c:
+	* gst/rtp/gstrtpL16depay.h:
+	* gst/rtp/gstrtpL16parse.c:
+	* gst/rtp/gstrtpL16parse.h:
+	* gst/rtp/gstrtpgsmdepay.c:
+	* gst/rtp/gstrtpgsmdepay.h:
+	* gst/rtp/gstrtpgsmparse.c:
+	* gst/rtp/gstrtpgsmparse.h:
+	  parsers are depayers
+
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* gst/rtp/Makefile.am:
 	* gst/rtp/gstasteriskh263.c:
 	* gst/rtp/gstrtp.c:
 	* gst/rtp/gstrtpL16enc.c:

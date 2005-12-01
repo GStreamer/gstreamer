@@ -24,7 +24,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_mpadepay_details = {
   "RTP packet parser",
-  "Codec/Parser/Network",
+  "Codec/Depayr/Network",
   "Extracts MPEG audio from RTP packets (RFC 2038)",
   "Wim Taymans <wim@fluendo.com>"
 };
