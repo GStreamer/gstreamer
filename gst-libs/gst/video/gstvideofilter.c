@@ -19,12 +19,12 @@
  */
 
  /**
- * SECTION:element-videofilter
- * @short_description: Base class for video filters.
+ * SECTION:gstvideofilter
+ * @short_description: Base class for video filters
  * 
  * <refsect2>
  * <para>
- * Provides useful functions and a base class for video filters. Right now it's 
+ * Provides useful functions and a base class for video filters. Right now it's
  * mostly used as a place holder for adding common code later on.
  * </para>
  * </refsect2>

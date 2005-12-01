@@ -1,5 +1,16 @@
 2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* docs/libs/tmpl/gstaudio.sgml:
+	* docs/libs/tmpl/gstringbuffer.sgml:
+	* gst-libs/gst/interfaces/xoverlay.c:
+	* gst-libs/gst/video/gstvideofilter.c:
+	* gst-libs/gst/video/gstvideosink.c:
+	  update documentation
+
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_base_init),
 	(gst_multi_fd_sink_class_init), (gst_multi_fd_sink_init),
 	(gst_multi_fd_sink_finalize), (gst_multi_fd_sink_add),

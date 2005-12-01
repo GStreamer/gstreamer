@@ -22,7 +22,7 @@
 /**
  * SECTION:gstxoverlay
  * @short_description: Interface for setting/getting a Window on elements
- * supporting it.
+ * supporting it
  *
  * <refsect2>
  * <para>

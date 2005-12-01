@@ -6,8 +6,8 @@
 
 <!ENTITY GstCompiling SYSTEM "compiling.sgml">
 <!ENTITY GstAudio SYSTEM "xml/gstaudio.xml">
-<!ENTITY GstVideoSink SYSTEM "xml/element-videosink.xml">
-<!ENTITY GstVideoFilter SYSTEM "xml/element-videofilter.xml">
+<!ENTITY GstVideoSink SYSTEM "xml/gstvideosink.xml">
+<!ENTITY GstVideoFilter SYSTEM "xml/gstvideofilter.xml">
 <!ENTITY GstColorBalance SYSTEM "xml/gstcolorbalance.xml">
 <!ENTITY GstGConf SYSTEM "xml/gstgconf.xml">
 <!ENTITY GstMixer SYSTEM "xml/gstmixer.xml">

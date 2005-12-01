@@ -51,3 +51,137 @@ an implementation of an audio ringbuffer
 @stop: 
 @delay: 
 
+<!-- ##### FUNCTION gst_ring_buffer_set_callback ##### -->
+<para>
+
+</para>
+
+@buf: 
+@cb: 
+@user_data: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_acquire ##### -->
+<para>
+
+</para>
+
+@buf: 
+@spec: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_release ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_is_acquired ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_start ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_pause ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_stop ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_delay ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_samples_done ##### -->
+<para>
+
+</para>
+
+@buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_set_sample ##### -->
+<para>
+
+</para>
+
+@buf: 
+@sample: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_commit ##### -->
+<para>
+
+</para>
+
+@buf: 
+@sample: 
+@data: 
+@len: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_prepare_read ##### -->
+<para>
+
+</para>
+
+@buf: 
+@segment: 
+@readptr: 
+@len: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_clear ##### -->
+<para>
+
+</para>
+
+@buf: 
+@segment: 
+
+
+<!-- ##### FUNCTION gst_ring_buffer_advance ##### -->
+<para>
+
+</para>
+
+@buf: 
+@advance: 
+
+

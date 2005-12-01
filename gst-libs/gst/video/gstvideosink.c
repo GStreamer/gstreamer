@@ -20,12 +20,12 @@
  */
 
 /**
- * SECTION:element-videosink
- * @short_description: Base class for video sinks.
+ * SECTION:gstvideosink
+ * @short_description: Base class for video sinks
  * 
  * <refsect2>
  * <para>
- * Provides useful functions and a base class for video sinks. Right now it's 
+ * Provides useful functions and a base class for video sinks. Right now it's
  * mostly used as a place holder for adding common code later on.
  * </para>
  * </refsect2>

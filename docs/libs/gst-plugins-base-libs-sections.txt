@@ -4,9 +4,7 @@
 GstAudioFieldFlag
 gst_audio_frame_byte_size
 gst_audio_frame_length
-gst_audio_frame_rate
-gst_audio_length
-gst_audio_highest_sample_value
+gst_audio_duration_from_pad_buffer
 gst_audio_is_buffer_framed
 gst_audio_structure_set_int
 </SECTION>
@@ -58,24 +56,24 @@ gst_mixer_options_get_values
 GstRingBuffer
 GstRingBufferClass
 
-gst_ringbuffer_set_callback
+gst_ring_buffer_set_callback
 
-gst_ringbuffer_acquire
-gst_ringbuffer_release
-gst_ringbuffer_is_acquired
+gst_ring_buffer_acquire
+gst_ring_buffer_release
+gst_ring_buffer_is_acquired
 
-gst_ringbuffer_start
-gst_ringbuffer_pause
-gst_ringbuffer_stop
+gst_ring_buffer_start
+gst_ring_buffer_pause
+gst_ring_buffer_stop
 
-gst_ringbuffer_delay
-gst_ringbuffer_samples_done
-gst_ringbuffer_set_sample
-gst_ringbuffer_commit
+gst_ring_buffer_delay
+gst_ring_buffer_samples_done
+gst_ring_buffer_set_sample
+gst_ring_buffer_commit
 
-gst_ringbuffer_prepare_read
-gst_ringbuffer_clear
-gst_ringbuffer_advance
+gst_ring_buffer_prepare_read
+gst_ring_buffer_clear
+gst_ring_buffer_advance
 
 </SECTION>
 
@@ -116,7 +114,7 @@ gst_x_overlay_expose
 </SECTION>
 
 <SECTION>
-<FILE>element-videosink</FILE>
+<FILE>gstvideosink</FILE>
 <INCLUDE>gst/video/gstvideosink.h</INCLUDE>
 GstVideoSink
 GstVideoSinkClass
@@ -125,7 +123,7 @@ gst_video_sink_center_rect
 </SECTION>
 
 <SECTION>
-<FILE>element-videofilter</FILE>
+<FILE>gstvideofilter</FILE>
 <INCLUDE>gst/video/gstvideofilter.h</INCLUDE>
 GstVideoFilter
 GstVideoFilterClass

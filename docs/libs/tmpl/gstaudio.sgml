@@ -48,6 +48,16 @@ a support library for audio elements
 @Returns: 
 
 
+<!-- ##### FUNCTION gst_audio_duration_from_pad_buffer ##### -->
+<para>
+
+</para>
+
+@pad: 
+@buf: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_audio_is_buffer_framed ##### -->
 <para>
 
