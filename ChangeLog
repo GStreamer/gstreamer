@@ -1,5 +1,10 @@
 2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* win32/:
+	  add Visual Studio 6 build files
+
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/libs/gst-plugins-base-libs-docs.sgml:
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* docs/libs/tmpl/gstaudio.sgml:

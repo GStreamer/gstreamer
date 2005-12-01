@@ -1,0 +1,5 @@
+EXPORTS
+	gst_audio_set_channel_positions
+	gst_audio_get_channel_positions
+	gst_audio_sink_get_type
+	
