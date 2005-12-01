@@ -98,27 +98,29 @@ interpolate_none_get_##type##_value_array (GstControlledProperty * prop, \
     GstClockTime timestamp, GstValueArray * value_array) \
 { \
   gint i; \
-  GstClockTime ts=timestamp; \
-  g##type *values=(g##type *)value_array->values; \
+  GstClockTime ts = timestamp; \
+  g##type *values = (g##type *) value_array->values; \
   \
-  for(i=0;i<value_array->nbsamples;i++) { \
-    *values=g_value_get_##type (interpolate_none_get (prop,ts)); \
-    ts+=value_array->sample_interval; \
+  for(i = 0; i < value_array->nbsamples; i++) { \
+    *values = g_value_get_##type (interpolate_none_get (prop,ts)); \
+    ts += value_array->sample_interval; \
     values++; \
   } \
   return (TRUE); \
 }
 
-DEFINE_NONE_GET (int)
-    DEFINE_NONE_GET (uint)
-    DEFINE_NONE_GET (long)
-DEFINE_NONE_GET (ulong)
-DEFINE_NONE_GET (float)
-DEFINE_NONE_GET (double)
-DEFINE_NONE_GET (boolean)
+DEFINE_NONE_GET (int);
+DEFINE_NONE_GET (uint);
+DEFINE_NONE_GET (long);
 
-     static gboolean
-         interpolate_none_get_enum_value_array (GstControlledProperty * prop,
+DEFINE_NONE_GET (ulong);
+DEFINE_NONE_GET (float);
+DEFINE_NONE_GET (double);
+
+DEFINE_NONE_GET (boolean);
+
+static gboolean
+interpolate_none_get_enum_value_array (GstControlledProperty * prop,
     GstClockTime timestamp, GstValueArray * value_array)
 {
   gint i;
@@ -218,12 +220,12 @@ _interpolate_linear_get_##type (GstControlledProperty * prop, GstClockTime times
       \
       tv2 = node->data; \
       \
-      timediff = (gdouble)(tv2->timestamp - tv1->timestamp); \
+      timediff = gst_guint64_to_gdouble (tv2->timestamp - tv1->timestamp); \
       value1 = g_value_get_##type (&tv1->value); \
       value2 = g_value_get_##type (&tv2->value); \
-      valuediff = (gdouble)(value2-value1); \
+      valuediff = (gdouble) (value2 - value1); \
       \
-      return((g##type)(value1+valuediff*((timestamp-tv1->timestamp)/timediff))); \
+      return ((g##type) (value1 + valuediff * ((timestamp - tv1->timestamp) / timediff))); \
     } \
     else { \
       return (g_value_get_##type (&tv1->value)); \
@@ -244,42 +246,44 @@ interpolate_linear_get_##type##_value_array (GstControlledProperty * prop, \
     GstClockTime timestamp, GstValueArray * value_array) \
 { \
   gint i; \
-  GstClockTime ts=timestamp; \
-  gint *values=(gint *)value_array->values; \
+  GstClockTime ts = timestamp; \
+  gint *values = (gint *) value_array->values; \
   \
-  for(i=0;i<value_array->nbsamples;i++) { \
-    *values=_interpolate_linear_get_##type (prop,ts); \
-    ts+=value_array->sample_interval; \
+  for(i = 0; i < value_array->nbsamples; i++) { \
+    *values = _interpolate_linear_get_##type (prop, ts); \
+    ts += value_array->sample_interval; \
     values++; \
   } \
   return (TRUE); \
 }
 
-DEFINE_LINEAR_GET (int)
-DEFINE_LINEAR_GET (uint)
-DEFINE_LINEAR_GET (long)
-DEFINE_LINEAR_GET (ulong)
-DEFINE_LINEAR_GET (float)
-DEFINE_LINEAR_GET (double)
+DEFINE_LINEAR_GET (int);
 
-     static GstInterpolateMethod interpolate_linear = {
-       interpolate_linear_get_int,
-       interpolate_linear_get_int_value_array,
-       interpolate_linear_get_uint,
-       interpolate_linear_get_uint_value_array,
-       interpolate_linear_get_long,
-       interpolate_linear_get_long_value_array,
-       interpolate_linear_get_ulong,
-       interpolate_linear_get_ulong_value_array,
-       interpolate_linear_get_float,
-       interpolate_linear_get_float_value_array,
-       interpolate_linear_get_double,
-       interpolate_linear_get_double_value_array,
-       NULL,
-       NULL,
-       NULL,
-       NULL
-     };
+DEFINE_LINEAR_GET (uint);
+DEFINE_LINEAR_GET (long);
+
+DEFINE_LINEAR_GET (ulong);
+DEFINE_LINEAR_GET (float);
+DEFINE_LINEAR_GET (double);
+
+static GstInterpolateMethod interpolate_linear = {
+  interpolate_linear_get_int,
+  interpolate_linear_get_int_value_array,
+  interpolate_linear_get_uint,
+  interpolate_linear_get_uint_value_array,
+  interpolate_linear_get_long,
+  interpolate_linear_get_long_value_array,
+  interpolate_linear_get_ulong,
+  interpolate_linear_get_ulong_value_array,
+  interpolate_linear_get_float,
+  interpolate_linear_get_float_value_array,
+  interpolate_linear_get_double,
+  interpolate_linear_get_double_value_array,
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
 
 /*  square interpolation */
 

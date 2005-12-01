@@ -1,5 +1,11 @@
 2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* libs/gst/controller/gstinterpolation.c:
+	  whitespace prices have crashed, we should feel free to use some now
+	  use gst_guint64_to_gdouble
+
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* libs/gst/controller/gstcontroller.c:
 	* libs/gst/controller/gsthelper.c:
 	* libs/gst/controller/gstinterpolation.c:
