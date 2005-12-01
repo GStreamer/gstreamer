@@ -1008,3 +1008,123 @@
 <DEFAULT>Sine</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstVideoScale::method</NAME>
+<TYPE>GstVideoScaleMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>method</NICK>
+<BLURB>method.</BLURB>
+<DEFAULT>Nearest Neighbour</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoRate::drop</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drop</NICK>
+<BLURB>Number of dropped frames.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoRate::duplicate</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Duplicate</NICK>
+<BLURB>Number of duplicated frames.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoRate::in</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>Number of input frames.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoRate::new-pref</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>New Pref</NICK>
+<BLURB>Value indicating how much to prefer new frames.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoRate::out</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Out</NICK>
+<BLURB>Number of output frames.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoRate::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>silent</NICK>
+<BLURB>Don't emit notify for dropped and duplicated frames.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioRate::add</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Add</NICK>
+<BLURB>Number of added samples.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioRate::drop</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Drop</NICK>
+<BLURB>Number of dropped samples.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioRate::in</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>In</NICK>
+<BLURB>Number of input samples.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioRate::out</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Out</NICK>
+<BLURB>Number of output samples.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioRate::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>silent</NICK>
+<BLURB>Don't emit notify for dropped and duplicated frames.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+

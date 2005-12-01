@@ -23,24 +23,24 @@
 
 #include <gst/gst.h>
 
-GST_DEBUG_CATEGORY (videorate_debug);
-#define GST_CAT_DEFAULT videorate_debug
+GST_DEBUG_CATEGORY (video_rate_debug);
+#define GST_CAT_DEFAULT video_rate_debug
 
-#define GST_TYPE_VIDEORATE \
-  (gst_videorate_get_type())
-#define GST_VIDEORATE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEORATE,GstVideorate))
-#define GST_VIDEORATE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEORATE,GstVideorate))
-#define GST_IS_VIDEORATE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEORATE))
-#define GST_IS_VIDEORATE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEORATE))
+#define GST_TYPE_VIDEO_RATE \
+  (gst_video_rate_get_type())
+#define GST_VIDEO_RATE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_RATE,GstVideoRate))
+#define GST_VIDEO_RATE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_RATE,GstVideoRate))
+#define GST_IS_VIDEO_RATE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_RATE))
+#define GST_IS_VIDEO_RATE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_RATE))
 
-typedef struct _GstVideorate GstVideorate;
-typedef struct _GstVideorateClass GstVideorateClass;
+typedef struct _GstVideoRate GstVideoRate;
+typedef struct _GstVideoRateClass GstVideoRateClass;
 
-struct _GstVideorate
+struct _GstVideoRate
 {
   GstElement element;
 
@@ -64,19 +64,19 @@ struct _GstVideorate
   gdouble new_pref;
 };
 
-struct _GstVideorateClass
+struct _GstVideoRateClass
 {
   GstElementClass parent_class;
 };
 
 /* elementfactory information */
-static GstElementDetails videorate_details =
+static GstElementDetails video_rate_details =
 GST_ELEMENT_DETAILS ("Video rate adjuster",
     "Filter/Effect/Video",
     "Drops/duplicates/adjusts timestamps on video frames to make a perfect stream",
     "Wim Taymans <wim@fluendo.com>");
 
-/* GstVideorate signals and args */
+/* GstVideoRate signals and args */
 enum
 {
   /* FILL ME */
@@ -98,85 +98,85 @@ enum
   /* FILL ME */
 };
 
-static GstStaticPadTemplate gst_videorate_src_template =
+static GstStaticPadTemplate gst_video_rate_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv; video/x-raw-rgb")
     );
 
-static GstStaticPadTemplate gst_videorate_sink_template =
+static GstStaticPadTemplate gst_video_rate_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv; video/x-raw-rgb")
     );
 
-static void gst_videorate_base_init (gpointer g_class);
-static void gst_videorate_class_init (GstVideorateClass * klass);
-static void gst_videorate_init (GstVideorate * videorate);
-static gboolean gst_videorate_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_videorate_chain (GstPad * pad, GstBuffer * buffer);
+static void gst_video_rate_base_init (gpointer g_class);
+static void gst_video_rate_class_init (GstVideoRateClass * klass);
+static void gst_video_rate_init (GstVideoRate * videorate);
+static gboolean gst_video_rate_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_video_rate_chain (GstPad * pad, GstBuffer * buffer);
 
-static void gst_videorate_set_property (GObject * object,
+static void gst_video_rate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_videorate_get_property (GObject * object,
+static void gst_video_rate_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_videorate_change_state (GstElement * element,
+static GstStateChangeReturn gst_video_rate_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_videorate_signals[LAST_SIGNAL] = { 0 }; */
+/*static guint gst_video_rate_signals[LAST_SIGNAL] = { 0 }; */
 
 static GType
-gst_videorate_get_type (void)
+gst_video_rate_get_type (void)
 {
-  static GType videorate_type = 0;
+  static GType video_rate_type = 0;
 
-  if (!videorate_type) {
-    static const GTypeInfo videorate_info = {
-      sizeof (GstVideorateClass),
-      gst_videorate_base_init,
+  if (!video_rate_type) {
+    static const GTypeInfo video_rate_info = {
+      sizeof (GstVideoRateClass),
+      gst_video_rate_base_init,
       NULL,
-      (GClassInitFunc) gst_videorate_class_init,
+      (GClassInitFunc) gst_video_rate_class_init,
       NULL,
       NULL,
-      sizeof (GstVideorate),
+      sizeof (GstVideoRate),
       0,
-      (GInstanceInitFunc) gst_videorate_init,
+      (GInstanceInitFunc) gst_video_rate_init,
     };
 
-    videorate_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstVideorate", &videorate_info, 0);
+    video_rate_type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstVideoRate", &video_rate_info, 0);
   }
 
-  return videorate_type;
+  return video_rate_type;
 }
 
 static void
-gst_videorate_base_init (gpointer g_class)
+gst_video_rate_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &videorate_details);
+  gst_element_class_set_details (element_class, &video_rate_details);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_videorate_sink_template));
+      gst_static_pad_template_get (&gst_video_rate_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_videorate_src_template));
+      gst_static_pad_template_get (&gst_video_rate_src_template));
 }
 static void
-gst_videorate_class_init (GstVideorateClass * klass)
+gst_video_rate_class_init (GstVideoRateClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
-  object_class->set_property = gst_videorate_set_property;
-  object_class->get_property = gst_videorate_get_property;
+  object_class->set_property = gst_video_rate_set_property;
+  object_class->get_property = gst_video_rate_get_property;
 
   g_object_class_install_property (object_class, ARG_IN,
       g_param_spec_uint64 ("in", "In",
@@ -199,12 +199,12 @@ gst_videorate_class_init (GstVideorateClass * klass)
           "Value indicating how much to prefer new frames",
           0.0, 1.0, DEFAULT_NEW_PREF, G_PARAM_READWRITE));
 
-  element_class->change_state = gst_videorate_change_state;
+  element_class->change_state = gst_video_rate_change_state;
 }
 
 /* return the caps that can be used on out_pad given in_caps on in_pad */
 static gboolean
-gst_videorate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
+gst_video_rate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
     GstPad * out_pad, GstCaps ** out_caps)
 {
   GstCaps *intersect;
@@ -229,13 +229,13 @@ gst_videorate_transformcaps (GstPad * in_pad, GstCaps * in_caps,
 }
 
 static GstCaps *
-gst_videorate_getcaps (GstPad * pad)
+gst_video_rate_getcaps (GstPad * pad)
 {
-  GstVideorate *videorate;
+  GstVideoRate *videorate;
   GstPad *otherpad;
   GstCaps *caps;
 
-  videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
+  videorate = GST_VIDEO_RATE (GST_PAD_PARENT (pad));
 
   otherpad = (pad == videorate->srcpad) ? videorate->sinkpad :
       videorate->srcpad;
@@ -245,7 +245,7 @@ gst_videorate_getcaps (GstPad * pad)
   if (caps) {
     GstCaps *transform;
 
-    gst_videorate_transformcaps (otherpad, caps, pad, &transform);
+    gst_video_rate_transformcaps (otherpad, caps, pad, &transform);
     gst_caps_unref (caps);
     caps = transform;
   } else {
@@ -257,15 +257,15 @@ gst_videorate_getcaps (GstPad * pad)
 }
 
 static gboolean
-gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
+gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstVideorate *videorate;
+  GstVideoRate *videorate;
   GstStructure *structure;
   gboolean ret = TRUE;
   GstPad *otherpad, *opeer;
   gint rate_numerator, rate_denominator;
 
-  videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
+  videorate = GST_VIDEO_RATE (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_fraction (structure, "framerate",
@@ -297,7 +297,7 @@ gst_videorate_setcaps (GstPad * pad, GstCaps * caps)
       ret = FALSE;
 
       /* see how we can transform the input caps */
-      if (!gst_videorate_transformcaps (pad, caps, otherpad, &transform))
+      if (!gst_video_rate_transformcaps (pad, caps, otherpad, &transform))
         goto done;
 
       /* see what the peer can do */
@@ -342,7 +342,7 @@ done:
 }
 
 static void
-gst_videorate_blank_data (GstVideorate * videorate)
+gst_video_rate_blank_data (GstVideoRate * videorate)
 {
   GST_DEBUG ("resetting data");
   if (videorate->prevbuf)
@@ -367,34 +367,34 @@ gst_videorate_blank_data (GstVideorate * videorate)
 }
 
 static void
-gst_videorate_init (GstVideorate * videorate)
+gst_video_rate_init (GstVideoRate * videorate)
 {
-  GST_DEBUG ("gst_videorate_init");
+  GST_DEBUG ("gst_video_rate_init");
   videorate->sinkpad =
-      gst_pad_new_from_static_template (&gst_videorate_sink_template, "sink");
+      gst_pad_new_from_static_template (&gst_video_rate_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (videorate), videorate->sinkpad);
-  gst_pad_set_event_function (videorate->sinkpad, gst_videorate_event);
-  gst_pad_set_chain_function (videorate->sinkpad, gst_videorate_chain);
-  gst_pad_set_getcaps_function (videorate->sinkpad, gst_videorate_getcaps);
-  gst_pad_set_setcaps_function (videorate->sinkpad, gst_videorate_setcaps);
+  gst_pad_set_event_function (videorate->sinkpad, gst_video_rate_event);
+  gst_pad_set_chain_function (videorate->sinkpad, gst_video_rate_chain);
+  gst_pad_set_getcaps_function (videorate->sinkpad, gst_video_rate_getcaps);
+  gst_pad_set_setcaps_function (videorate->sinkpad, gst_video_rate_setcaps);
 
   videorate->srcpad =
-      gst_pad_new_from_static_template (&gst_videorate_src_template, "src");
+      gst_pad_new_from_static_template (&gst_video_rate_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (videorate), videorate->srcpad);
-  gst_pad_set_getcaps_function (videorate->srcpad, gst_videorate_getcaps);
-  gst_pad_set_setcaps_function (videorate->srcpad, gst_videorate_setcaps);
+  gst_pad_set_getcaps_function (videorate->srcpad, gst_video_rate_getcaps);
+  gst_pad_set_setcaps_function (videorate->srcpad, gst_video_rate_setcaps);
 
-  gst_videorate_blank_data (videorate);
+  gst_video_rate_blank_data (videorate);
   videorate->silent = DEFAULT_SILENT;
   videorate->new_pref = DEFAULT_NEW_PREF;
 }
 
 static GstFlowReturn
-gst_videorate_event (GstPad * pad, GstEvent * event)
+gst_video_rate_event (GstPad * pad, GstEvent * event)
 {
-  GstVideorate *videorate;
+  GstVideoRate *videorate;
 
-  videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
+  videorate = GST_VIDEO_RATE (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
@@ -428,7 +428,7 @@ gst_videorate_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_FLUSH_STOP:
     {
-      gst_videorate_blank_data (videorate);
+      gst_video_rate_blank_data (videorate);
     }
     default:
       break;
@@ -438,12 +438,12 @@ gst_videorate_event (GstPad * pad, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_videorate_chain (GstPad * pad, GstBuffer * buffer)
+gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstVideorate *videorate;
+  GstVideoRate *videorate;
   GstFlowReturn res = GST_FLOW_OK;
 
-  videorate = GST_VIDEORATE (GST_PAD_PARENT (pad));
+  videorate = GST_VIDEO_RATE (GST_PAD_PARENT (pad));
 
   if (videorate->from_rate_numerator == 0 ||
       videorate->from_rate_denominator == 0 ||
@@ -566,10 +566,10 @@ done:
 }
 
 static void
-gst_videorate_set_property (GObject * object,
+gst_video_rate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstVideorate *videorate = GST_VIDEORATE (object);
+  GstVideoRate *videorate = GST_VIDEO_RATE (object);
 
   switch (prop_id) {
     case ARG_SILENT:
@@ -585,10 +585,10 @@ gst_videorate_set_property (GObject * object,
 }
 
 static void
-gst_videorate_get_property (GObject * object,
+gst_video_rate_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstVideorate *videorate = GST_VIDEORATE (object);
+  GstVideoRate *videorate = GST_VIDEO_RATE (object);
 
   switch (prop_id) {
     case ARG_IN:
@@ -616,12 +616,12 @@ gst_videorate_get_property (GObject * object,
 }
 
 static GstStateChangeReturn
-gst_videorate_change_state (GstElement * element, GstStateChange transition)
+gst_video_rate_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstVideorate *videorate;
+  GstVideoRate *videorate;
 
-  videorate = GST_VIDEORATE (element);
+  videorate = GST_VIDEO_RATE (element);
 
   switch (transition) {
     default:
@@ -632,7 +632,7 @@ gst_videorate_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_videorate_blank_data (videorate);
+      gst_video_rate_blank_data (videorate);
       break;
     default:
       break;
@@ -644,11 +644,11 @@ gst_videorate_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (videorate_debug, "videorate", 0,
-      "Videorate stream fixer");
+  GST_DEBUG_CATEGORY_INIT (video_rate_debug, "videorate", 0,
+      "VideoRate stream fixer");
 
   return gst_element_register (plugin, "videorate", GST_RANK_NONE,
-      GST_TYPE_VIDEORATE);
+      GST_TYPE_VIDEO_RATE);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

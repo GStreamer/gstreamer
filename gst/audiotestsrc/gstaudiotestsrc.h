@@ -21,8 +21,8 @@
  */
 
 
-#ifndef __GST_AUDIOTESTSRC_H__
-#define __GST_AUDIOTESTSRC_H__
+#ifndef __GST_AUDIO_TEST_SRC_H__
+#define __GST_AUDIO_TEST_SRC_H__
 
 
 #include <gst/gst.h>
@@ -31,25 +31,25 @@
 G_BEGIN_DECLS
 
 
-#define GST_TYPE_AUDIOTESTSRC \
-  (gst_audiotestsrc_get_type())
-#define GST_AUDIOTESTSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIOTESTSRC,GstAudioTestSrc))
-#define GST_AUDIOTESTSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIOTESTSRC,GstAudioTestSrcClass))
-#define GST_IS_AUDIOTESTSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIOTESTSRC))
-#define GST_IS_AUDIOTESTSRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIOTESTSRC))
+#define GST_TYPE_AUDIO_TEST_SRC \
+  (gst_audio_test_src_get_type())
+#define GST_AUDIO_TEST_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_TEST_SRC,GstAudioTestSrc))
+#define GST_AUDIO_TEST_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_TEST_SRC,GstAudioTestSrcClass))
+#define GST_IS_AUDIO_TEST_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_TEST_SRC))
+#define GST_IS_AUDIO_TEST_SRC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_TEST_SRC))
 
 typedef enum {
-  GST_AUDIOTESTSRC_WAVE_SINE,
-  GST_AUDIOTESTSRC_WAVE_SQUARE,
-  GST_AUDIOTESTSRC_WAVE_SAW,
-  GST_AUDIOTESTSRC_WAVE_TRIANGLE,
-  GST_AUDIOTESTSRC_WAVE_SILENCE,
-  GST_AUDIOTESTSRC_WAVE_WHITE_NOISE,
-  GST_AUDIOTESTSRC_WAVE_PINK_NOISE,
+  GST_AUDIO_TEST_SRC_WAVE_SINE,
+  GST_AUDIO_TEST_SRC_WAVE_SQUARE,
+  GST_AUDIO_TEST_SRC_WAVE_SAW,
+  GST_AUDIO_TEST_SRC_WAVE_TRIANGLE,
+  GST_AUDIO_TEST_SRC_WAVE_SILENCE,
+  GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE,
+  GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE,
 } GstAudioTestSrcWaves; 
 
 #define PINK_MAX_RANDOM_ROWS   (30)
@@ -102,9 +102,9 @@ struct _GstAudioTestSrcClass {
   GstBaseSrcClass parent_class;
 };
 
-GType gst_audiotestsrc_get_type(void);
-gboolean gst_audiotestsrc_factory_init (GstElementFactory *factory);
+GType gst_audio_test_src_get_type(void);
+gboolean gst_audio_test_src_factory_init (GstElementFactory *factory);
 
 G_END_DECLS
 
-#endif /* __GST_AUDIOTESTSRC_H__ */
+#endif /* __GST_AUDIO_TEST_SRC_H__ */

@@ -1,3 +1,85 @@
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* gst/audioconvert/plugin.h:
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_get_type),
+	(gst_audio_rate_base_init), (gst_audio_rate_class_init),
+	(gst_audio_rate_setcaps), (gst_audio_rate_init),
+	(gst_audio_rate_chain), (gst_audio_rate_set_property),
+	(gst_audio_rate_get_property), (gst_audio_rate_change_state),
+	(plugin_init):
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audiostestsrc_wave_get_type), (gst_audio_test_src_base_init),
+	(gst_audio_test_src_class_init), (gst_audio_test_src_init),
+	(gst_audio_test_src_src_fixate), (gst_audio_test_src_setcaps),
+	(gst_audio_test_src_get_query_types),
+	(gst_audio_test_src_src_query), (gst_audio_test_src_create_sine),
+	(gst_audio_test_src_create_square),
+	(gst_audio_test_src_create_saw),
+	(gst_audio_test_src_create_triangle),
+	(gst_audio_test_src_create_silence),
+	(gst_audio_test_src_create_white_noise),
+	(gst_audio_test_src_init_pink_noise),
+	(gst_audio_test_src_generate_pink_noise_value),
+	(gst_audio_test_src_create_pink_noise),
+	(gst_audio_test_src_change_wave), (gst_audio_test_src_get_times),
+	(gst_audio_test_src_create), (gst_audio_test_src_set_property),
+	(gst_audio_test_src_get_property), (gst_audio_test_src_start),
+	(plugin_init):
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_get_type),
+	(gst_sub_parse_base_init), (gst_sub_parse_class_init),
+	(gst_sub_parse_init), (gst_sub_parse_formats),
+	(gst_sub_parse_src_eventmask), (gst_sub_parse_src_event),
+	(convert_encoding), (get_next_line),
+	(gst_sub_parse_data_format_autodetect),
+	(gst_sub_parse_format_autodetect), (feed_textbuf), (handle_buffer),
+	(gst_sub_parse_loop), (gst_sub_parse_chain),
+	(gst_sub_parse_change_state), (gst_sub_parse_type_find),
+	(plugin_init):
+	* gst/subparse/gstsubparse.h:
+	* gst/videorate/gstvideorate.c: (gst_video_rate_get_type),
+	(gst_video_rate_base_init), (gst_video_rate_class_init),
+	(gst_video_rate_transformcaps), (gst_video_rate_getcaps),
+	(gst_video_rate_setcaps), (gst_video_rate_blank_data),
+	(gst_video_rate_init), (gst_video_rate_event),
+	(gst_video_rate_chain), (gst_video_rate_set_property),
+	(gst_video_rate_get_property), (gst_video_rate_change_state),
+	(plugin_init):
+	* gst/videoscale/gstvideoscale.c:
+	(gst_video_scale_method_get_type), (gst_video_scale_get_capslist),
+	(gst_video_scale_src_template_factory),
+	(gst_video_scale_sink_template_factory),
+	(gst_video_scale_get_type), (gst_video_scale_base_init),
+	(gst_video_scale_class_init), (gst_video_scale_init),
+	(gst_video_scale_set_property), (gst_video_scale_get_property),
+	(gst_video_scale_transform_caps), (gst_video_scale_get_format),
+	(gst_video_scale_prepare_size), (parse_caps),
+	(gst_video_scale_set_caps), (gst_video_scale_get_unit_size),
+	(gst_video_scale_fixate_caps), (gst_video_scale_prepare_image),
+	(gst_video_scale_transform), (gst_video_scale_handle_src_event),
+	(plugin_init):
+	* gst/videoscale/gstvideoscale.h:
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_video_test_src_pattern_get_type),
+	(gst_video_test_src_base_init), (gst_video_test_src_class_init),
+	(gst_video_test_src_init), (gst_video_test_src_src_fixate),
+	(gst_video_test_src_set_pattern),
+	(gst_video_test_src_set_property),
+	(gst_video_test_src_get_property), (gst_video_test_src_getcaps),
+	(gst_video_test_src_parse_caps), (gst_video_test_src_setcaps),
+	(gst_video_test_src_event), (gst_video_test_src_get_times),
+	(gst_video_test_src_create), (plugin_init):
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/videotestsrc/videotestsrc.c: (gst_video_test_src_get_size),
+	(gst_video_test_src_smpte), (gst_video_test_src_snow),
+	(gst_video_test_src_black):
+	* gst/videotestsrc/videotestsrc.h:
+	  borgify further
+	  clean up docs a little
+
 2005-11-30  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.h:

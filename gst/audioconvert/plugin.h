@@ -20,8 +20,8 @@
  */
 
 
-#ifndef __GST_PLUGIN_AUDIOCONVERT_H__
-#define __GST_PLUGIN_AUDIOCONVERT_H__
+#ifndef __GST_PLUGIN_AUDIO_CONVERT_H__
+#define __GST_PLUGIN_AUDIO_CONVERT_H__
 
 
 #include <gst/gst.h>
@@ -32,4 +32,4 @@ GType gst_audio_convert_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_PLUGIN_AUDIOCONVERT_H__ */
+#endif /* __GST_PLUGIN_AUDIO_CONVERT_H__ */

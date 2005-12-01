@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __VIDEOTESTSRC_H__
-#define __VIDEOTESTSRC_H__
+#ifndef __VIDEO_TEST_SRC_H__
+#define __VIDEO_TEST_SRC_H__
 
 #include "_stdint.h"
 
@@ -66,12 +66,12 @@ struct fourcc_list_struct *
 	paintinfo_find_by_structure	(const GstStructure *structure);
 GstStructure *
 	paint_get_structure		(struct fourcc_list_struct *format);
-int	gst_videotestsrc_get_size	(GstVideoTestSrc * v, int w, int h);
-void	gst_videotestsrc_smpte		(GstVideoTestSrc * v,
+int	gst_video_test_src_get_size	(GstVideoTestSrc * v, int w, int h);
+void	gst_video_test_src_smpte		(GstVideoTestSrc * v,
 					 unsigned char *dest, int w, int h);
-void	gst_videotestsrc_snow		(GstVideoTestSrc * v,
+void	gst_video_test_src_snow		(GstVideoTestSrc * v,
 					 unsigned char *dest, int w, int h);
-void	gst_videotestsrc_black		(GstVideoTestSrc * v,
+void	gst_video_test_src_black		(GstVideoTestSrc * v,
 					 unsigned char *dest, int w, int h);
 
 extern struct fourcc_list_struct fourcc_list[];

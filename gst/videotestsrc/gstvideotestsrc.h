@@ -18,29 +18,29 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_VIDEOTESTSRC_H__
-#define __GST_VIDEOTESTSRC_H__
+#ifndef __GST_VIDEO_TEST_SRC_H__
+#define __GST_VIDEO_TEST_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEOTESTSRC \
-  (gst_videotestsrc_get_type())
-#define GST_VIDEOTESTSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEOTESTSRC,GstVideoTestSrc))
-#define GST_VIDEOTESTSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEOTESTSRC,GstVideoTestSrc))
-#define GST_IS_VIDEOTESTSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEOTESTSRC))
-#define GST_IS_VIDEOTESTSRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOTESTSRC))
+#define GST_TYPE_VIDEO_TEST_SRC \
+  (gst_video_test_src_get_type())
+#define GST_VIDEO_TEST_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_TEST_SRC,GstVideoTestSrc))
+#define GST_VIDEO_TEST_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_TEST_SRC,GstVideoTestSrc))
+#define GST_IS_VIDEO_TEST_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_TEST_SRC))
+#define GST_IS_VIDEO_TEST_SRC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_TEST_SRC))
 
 typedef enum {
-  GST_VIDEOTESTSRC_SMPTE,
-  GST_VIDEOTESTSRC_SNOW,
-  GST_VIDEOTESTSRC_BLACK,
+  GST_VIDEO_TEST_SRC_SMPTE,
+  GST_VIDEO_TEST_SRC_SNOW,
+  GST_VIDEO_TEST_SRC_BLACK,
 } GstVideoTestSrcPattern;
 
 typedef struct _GstVideoTestSrc GstVideoTestSrc;
@@ -77,8 +77,8 @@ struct _GstVideoTestSrcClass {
   GstPushSrcClass parent_class;
 };
 
-GType gst_videotestsrc_get_type (void);
+GType gst_video_test_src_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_VIDEOTESTSRC_H__ */
+#endif /* __GST_VIDEO_TEST_SRC_H__ */

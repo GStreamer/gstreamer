@@ -25,21 +25,21 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
-#define GST_TYPE_AUDIORATE \
-  (gst_audiorate_get_type())
-#define GST_AUDIORATE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIORATE,GstAudiorate))
-#define GST_AUDIORATE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIORATE,GstAudiorate))
-#define GST_IS_AUDIORATE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIORATE))
-#define GST_IS_AUDIORATE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIORATE))
+#define GST_TYPE_AUDIO_RATE \
+  (gst_audio_rate_get_type())
+#define GST_AUDIO_RATE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_RATE,GstAudioRate))
+#define GST_AUDIO_RATE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_RATE,GstAudioRate))
+#define GST_IS_AUDIO_RATE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_RATE))
+#define GST_IS_AUDIO_RATE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_RATE))
 
-typedef struct _GstAudiorate GstAudiorate;
-typedef struct _GstAudiorateClass GstAudiorateClass;
+typedef struct _GstAudioRate GstAudioRate;
+typedef struct _GstAudioRateClass GstAudioRateClass;
 
-struct _GstAudiorate
+struct _GstAudioRate
 {
   GstElement element;
 
@@ -54,19 +54,19 @@ struct _GstAudiorate
   gboolean silent;
 };
 
-struct _GstAudiorateClass
+struct _GstAudioRateClass
 {
   GstElementClass parent_class;
 };
 
 /* elementfactory information */
-static GstElementDetails audiorate_details =
+static GstElementDetails audio_rate_details =
 GST_ELEMENT_DETAILS ("Audio rate adjuster",
     "Filter/Effect/Audio",
     "Drops/duplicates/adjusts timestamps on audio samples to make a perfect stream",
     "Wim Taymans <wim@fluendo.com>");
 
-/* GstAudiorate signals and args */
+/* GstAudioRate signals and args */
 enum
 {
   /* FILL ME */
@@ -86,84 +86,84 @@ enum
   /* FILL ME */
 };
 
-static GstStaticPadTemplate gst_audiorate_src_template =
+static GstStaticPadTemplate gst_audio_rate_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
     );
 
-static GstStaticPadTemplate gst_audiorate_sink_template =
+static GstStaticPadTemplate gst_audio_rate_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
     );
 
-static void gst_audiorate_base_init (gpointer g_class);
-static void gst_audiorate_class_init (GstAudiorateClass * klass);
-static void gst_audiorate_init (GstAudiorate * audiorate);
-static GstFlowReturn gst_audiorate_chain (GstPad * pad, GstBuffer * buf);
+static void gst_audio_rate_base_init (gpointer g_class);
+static void gst_audio_rate_class_init (GstAudioRateClass * klass);
+static void gst_audio_rate_init (GstAudioRate * audiorate);
+static GstFlowReturn gst_audio_rate_chain (GstPad * pad, GstBuffer * buf);
 
-static void gst_audiorate_set_property (GObject * object,
+static void gst_audio_rate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_audiorate_get_property (GObject * object,
+static void gst_audio_rate_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_audiorate_change_state (GstElement * element,
+static GstStateChangeReturn gst_audio_rate_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_audiorate_signals[LAST_SIGNAL] = { 0 }; */
+/*static guint gst_audio_rate_signals[LAST_SIGNAL] = { 0 }; */
 
 static GType
-gst_audiorate_get_type (void)
+gst_audio_rate_get_type (void)
 {
-  static GType audiorate_type = 0;
+  static GType audio_rate_type = 0;
 
-  if (!audiorate_type) {
-    static const GTypeInfo audiorate_info = {
-      sizeof (GstAudiorateClass),
-      gst_audiorate_base_init,
+  if (!audio_rate_type) {
+    static const GTypeInfo audio_rate_info = {
+      sizeof (GstAudioRateClass),
+      gst_audio_rate_base_init,
       NULL,
-      (GClassInitFunc) gst_audiorate_class_init,
+      (GClassInitFunc) gst_audio_rate_class_init,
       NULL,
       NULL,
-      sizeof (GstAudiorate),
+      sizeof (GstAudioRate),
       0,
-      (GInstanceInitFunc) gst_audiorate_init,
+      (GInstanceInitFunc) gst_audio_rate_init,
     };
 
-    audiorate_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstAudiorate", &audiorate_info, 0);
+    audio_rate_type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstAudioRate", &audio_rate_info, 0);
   }
 
-  return audiorate_type;
+  return audio_rate_type;
 }
 
 static void
-gst_audiorate_base_init (gpointer g_class)
+gst_audio_rate_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &audiorate_details);
+  gst_element_class_set_details (element_class, &audio_rate_details);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audiorate_sink_template));
+      gst_static_pad_template_get (&gst_audio_rate_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_audiorate_src_template));
+      gst_static_pad_template_get (&gst_audio_rate_src_template));
 }
 static void
-gst_audiorate_class_init (GstAudiorateClass * klass)
+gst_audio_rate_class_init (GstAudioRateClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
-  object_class->set_property = gst_audiorate_set_property;
-  object_class->get_property = gst_audiorate_get_property;
+  object_class->set_property = gst_audio_rate_set_property;
+  object_class->get_property = gst_audio_rate_get_property;
 
   g_object_class_install_property (object_class, ARG_IN,
       g_param_spec_uint64 ("in", "In",
@@ -182,18 +182,18 @@ gst_audiorate_class_init (GstAudiorateClass * klass)
           "Don't emit notify for dropped and duplicated frames",
           DEFAULT_SILENT, G_PARAM_READWRITE));
 
-  element_class->change_state = gst_audiorate_change_state;
+  element_class->change_state = gst_audio_rate_change_state;
 }
 
 static gboolean
-gst_audiorate_setcaps (GstPad * pad, GstCaps * caps)
+gst_audio_rate_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstAudiorate *audiorate;
+  GstAudioRate *audiorate;
   GstStructure *structure;
   GstPad *otherpad;
   gint ret, channels, depth;
 
-  audiorate = GST_AUDIORATE (gst_pad_get_parent (pad));
+  audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
 
   otherpad = (pad == audiorate->srcpad) ? audiorate->sinkpad :
       audiorate->srcpad;
@@ -217,19 +217,19 @@ gst_audiorate_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_audiorate_init (GstAudiorate * audiorate)
+gst_audio_rate_init (GstAudioRate * audiorate)
 {
   audiorate->sinkpad =
-      gst_pad_new_from_static_template (&gst_audiorate_sink_template, "sink");
+      gst_pad_new_from_static_template (&gst_audio_rate_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->sinkpad);
-  gst_pad_set_chain_function (audiorate->sinkpad, gst_audiorate_chain);
-  gst_pad_set_setcaps_function (audiorate->sinkpad, gst_audiorate_setcaps);
+  gst_pad_set_chain_function (audiorate->sinkpad, gst_audio_rate_chain);
+  gst_pad_set_setcaps_function (audiorate->sinkpad, gst_audio_rate_setcaps);
   gst_pad_set_getcaps_function (audiorate->sinkpad, gst_pad_proxy_getcaps);
 
   audiorate->srcpad =
-      gst_pad_new_from_static_template (&gst_audiorate_src_template, "src");
+      gst_pad_new_from_static_template (&gst_audio_rate_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->srcpad);
-  gst_pad_set_setcaps_function (audiorate->srcpad, gst_audiorate_setcaps);
+  gst_pad_set_setcaps_function (audiorate->srcpad, gst_audio_rate_setcaps);
   gst_pad_set_getcaps_function (audiorate->srcpad, gst_pad_proxy_getcaps);
 
   audiorate->bytes_per_sample = 1;
@@ -241,15 +241,15 @@ gst_audiorate_init (GstAudiorate * audiorate)
 }
 
 static GstFlowReturn
-gst_audiorate_chain (GstPad * pad, GstBuffer * buf)
+gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstAudiorate *audiorate;
+  GstAudioRate *audiorate;
   GstClockTime in_time, in_duration;
   guint64 in_offset, in_offset_end;
   gint in_size;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  audiorate = GST_AUDIORATE (gst_pad_get_parent (pad));
+  audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
 
   audiorate->in++;
 
@@ -338,10 +338,10 @@ beach:
 }
 
 static void
-gst_audiorate_set_property (GObject * object,
+gst_audio_rate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstAudiorate *audiorate = GST_AUDIORATE (object);
+  GstAudioRate *audiorate = GST_AUDIO_RATE (object);
 
   switch (prop_id) {
     case ARG_SILENT:
@@ -354,10 +354,10 @@ gst_audiorate_set_property (GObject * object,
 }
 
 static void
-gst_audiorate_get_property (GObject * object,
+gst_audio_rate_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstAudiorate *audiorate = GST_AUDIORATE (object);
+  GstAudioRate *audiorate = GST_AUDIO_RATE (object);
 
   switch (prop_id) {
     case ARG_IN:
@@ -382,9 +382,9 @@ gst_audiorate_get_property (GObject * object,
 }
 
 static GstStateChangeReturn
-gst_audiorate_change_state (GstElement * element, GstStateChange transition)
+gst_audio_rate_change_state (GstElement * element, GstStateChange transition)
 {
-  GstAudiorate *audiorate = GST_AUDIORATE (element);
+  GstAudioRate *audiorate = GST_AUDIO_RATE (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -406,7 +406,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "audiorate", GST_RANK_NONE,
-      GST_TYPE_AUDIORATE);
+      GST_TYPE_AUDIO_RATE);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -43,11 +43,11 @@
 
 #define USE_PEER_BUFFERALLOC
 
-GST_DEBUG_CATEGORY (videotestsrc_debug);
-#define GST_CAT_DEFAULT videotestsrc_debug
+GST_DEBUG_CATEGORY (video_test_src_debug);
+#define GST_CAT_DEFAULT video_test_src_debug
 
 
-static GstElementDetails videotestsrc_details =
+static GstElementDetails video_test_src_details =
 GST_ELEMENT_DETAILS ("Video test source",
     "Source/Video",
     "Creates a test video stream",
@@ -64,62 +64,62 @@ enum
 };
 
 
-GST_BOILERPLATE (GstVideoTestSrc, gst_videotestsrc, GstPushSrc,
+GST_BOILERPLATE (GstVideoTestSrc, gst_video_test_src, GstPushSrc,
     GST_TYPE_PUSH_SRC);
 
 
-static void gst_videotestsrc_set_pattern (GstVideoTestSrc * videotestsrc,
+static void gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
     int pattern_type);
-static void gst_videotestsrc_set_property (GObject * object, guint prop_id,
+static void gst_video_test_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_videotestsrc_get_property (GObject * object, guint prop_id,
+static void gst_video_test_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_videotestsrc_getcaps (GstBaseSrc * bsrc);
-static gboolean gst_videotestsrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
-static void gst_videotestsrc_src_fixate (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_video_test_src_getcaps (GstBaseSrc * bsrc);
+static gboolean gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
+static void gst_video_test_src_src_fixate (GstPad * pad, GstCaps * caps);
 
-static gboolean gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event);
+static gboolean gst_video_test_src_event (GstBaseSrc * bsrc, GstEvent * event);
 
-static void gst_videotestsrc_get_times (GstBaseSrc * basesrc,
+static void gst_video_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
-static GstFlowReturn gst_videotestsrc_create (GstPushSrc * psrc,
+static GstFlowReturn gst_video_test_src_create (GstPushSrc * psrc,
     GstBuffer ** buffer);
 
 
-#define GST_TYPE_VIDEOTESTSRC_PATTERN (gst_videotestsrc_pattern_get_type ())
+#define GST_TYPE_VIDEO_TEST_SRC_PATTERN (gst_video_test_src_pattern_get_type ())
 static GType
-gst_videotestsrc_pattern_get_type (void)
+gst_video_test_src_pattern_get_type (void)
 {
-  static GType videotestsrc_pattern_type = 0;
+  static GType video_test_src_pattern_type = 0;
   static GEnumValue pattern_types[] = {
-    {GST_VIDEOTESTSRC_SMPTE, "SMPTE 100% color bars", "smpte"},
-    {GST_VIDEOTESTSRC_SNOW, "Random (television snow)", "snow"},
-    {GST_VIDEOTESTSRC_BLACK, "100% Black", "black"},
+    {GST_VIDEO_TEST_SRC_SMPTE, "SMPTE 100% color bars", "smpte"},
+    {GST_VIDEO_TEST_SRC_SNOW, "Random (television snow)", "snow"},
+    {GST_VIDEO_TEST_SRC_BLACK, "100% Black", "black"},
     {0, NULL, NULL},
   };
 
-  if (!videotestsrc_pattern_type) {
-    videotestsrc_pattern_type =
+  if (!video_test_src_pattern_type) {
+    video_test_src_pattern_type =
         g_enum_register_static ("GstVideoTestSrcPattern", pattern_types);
   }
-  return videotestsrc_pattern_type;
+  return video_test_src_pattern_type;
 }
 
 static void
-gst_videotestsrc_base_init (gpointer g_class)
+gst_video_test_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &videotestsrc_details);
+  gst_element_class_set_details (element_class, &video_test_src_details);
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_videotestsrc_getcaps (NULL)));
+          gst_video_test_src_getcaps (NULL)));
 }
 
 static void
-gst_videotestsrc_class_init (GstVideoTestSrcClass * klass)
+gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseSrcClass *gstbasesrc_class;
@@ -129,13 +129,13 @@ gst_videotestsrc_class_init (GstVideoTestSrcClass * klass)
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
-  gobject_class->set_property = gst_videotestsrc_set_property;
-  gobject_class->get_property = gst_videotestsrc_get_property;
+  gobject_class->set_property = gst_video_test_src_set_property;
+  gobject_class->get_property = gst_video_test_src_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PATTERN,
       g_param_spec_enum ("pattern", "Pattern",
-          "Type of test pattern to generate", GST_TYPE_VIDEOTESTSRC_PATTERN, 1,
-          G_PARAM_READWRITE));
+          "Type of test pattern to generate", GST_TYPE_VIDEO_TEST_SRC_PATTERN,
+          1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_TIMESTAMP_OFFSET, g_param_spec_int64 ("timestamp-offset",
           "Timestamp offset",
@@ -145,22 +145,22 @@ gst_videotestsrc_class_init (GstVideoTestSrcClass * klass)
       g_param_spec_boolean ("is-live", "Is Live",
           "Whether to act as a live source", FALSE, G_PARAM_READWRITE));
 
-  gstbasesrc_class->get_caps = gst_videotestsrc_getcaps;
-  gstbasesrc_class->set_caps = gst_videotestsrc_setcaps;
-  gstbasesrc_class->event = gst_videotestsrc_event;
+  gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
+  gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
+  gstbasesrc_class->event = gst_video_test_src_event;
 
-  gstbasesrc_class->get_times = gst_videotestsrc_get_times;
-  gstpushsrc_class->create = gst_videotestsrc_create;
+  gstbasesrc_class->get_times = gst_video_test_src_get_times;
+  gstpushsrc_class->create = gst_video_test_src_create;
 }
 
 static void
-gst_videotestsrc_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
+gst_video_test_src_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
 {
   GstPad *pad = GST_BASE_SRC_PAD (src);
 
-  gst_pad_set_fixatecaps_function (pad, gst_videotestsrc_src_fixate);
+  gst_pad_set_fixatecaps_function (pad, gst_video_test_src_src_fixate);
 
-  gst_videotestsrc_set_pattern (src, GST_VIDEOTESTSRC_SMPTE);
+  gst_video_test_src_set_pattern (src, GST_VIDEO_TEST_SRC_SMPTE);
 
   src->segment_start_frame = -1;
   src->segment_end_frame = -1;
@@ -170,7 +170,7 @@ gst_videotestsrc_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
 }
 
 static void
-gst_videotestsrc_src_fixate (GstPad * pad, GstCaps * caps)
+gst_video_test_src_src_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
 
@@ -182,21 +182,22 @@ gst_videotestsrc_src_fixate (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_videotestsrc_set_pattern (GstVideoTestSrc * videotestsrc, int pattern_type)
+gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
+    int pattern_type)
 {
   videotestsrc->pattern_type = pattern_type;
 
   GST_DEBUG_OBJECT (videotestsrc, "setting pattern to %d", pattern_type);
 
   switch (pattern_type) {
-    case GST_VIDEOTESTSRC_SMPTE:
-      videotestsrc->make_image = gst_videotestsrc_smpte;
+    case GST_VIDEO_TEST_SRC_SMPTE:
+      videotestsrc->make_image = gst_video_test_src_smpte;
       break;
-    case GST_VIDEOTESTSRC_SNOW:
-      videotestsrc->make_image = gst_videotestsrc_snow;
+    case GST_VIDEO_TEST_SRC_SNOW:
+      videotestsrc->make_image = gst_video_test_src_snow;
       break;
-    case GST_VIDEOTESTSRC_BLACK:
-      videotestsrc->make_image = gst_videotestsrc_black;
+    case GST_VIDEO_TEST_SRC_BLACK:
+      videotestsrc->make_image = gst_video_test_src_black;
       break;
     default:
       g_assert_not_reached ();
@@ -204,14 +205,14 @@ gst_videotestsrc_set_pattern (GstVideoTestSrc * videotestsrc, int pattern_type)
 }
 
 static void
-gst_videotestsrc_set_property (GObject * object, guint prop_id,
+gst_video_test_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVideoTestSrc *src = GST_VIDEOTESTSRC (object);
+  GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (object);
 
   switch (prop_id) {
     case PROP_PATTERN:
-      gst_videotestsrc_set_pattern (src, g_value_get_enum (value));
+      gst_video_test_src_set_pattern (src, g_value_get_enum (value));
       break;
     case PROP_TIMESTAMP_OFFSET:
       src->timestamp_offset = g_value_get_int64 (value);
@@ -225,10 +226,10 @@ gst_videotestsrc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+gst_video_test_src_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
-  GstVideoTestSrc *src = GST_VIDEOTESTSRC (object);
+  GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (object);
 
   switch (prop_id) {
     case PROP_PATTERN:
@@ -248,7 +249,7 @@ gst_videotestsrc_get_property (GObject * object, guint prop_id, GValue * value,
 
 /* threadsafe because this gets called as the plugin is loaded */
 static GstCaps *
-gst_videotestsrc_getcaps (GstBaseSrc * unused)
+gst_video_test_src_getcaps (GstBaseSrc * unused)
 {
   static GstCaps *capslist = NULL;
 
@@ -274,7 +275,7 @@ gst_videotestsrc_getcaps (GstBaseSrc * unused)
 }
 
 static gboolean
-gst_videotestsrc_parse_caps (const GstCaps * caps,
+gst_video_test_src_parse_caps (const GstCaps * caps,
     gint * width, gint * height, gint * rate_numerator, gint * rate_denominator,
     struct fourcc_list_struct **fourcc)
 {
@@ -310,16 +311,16 @@ gst_videotestsrc_parse_caps (const GstCaps * caps,
 }
 
 static gboolean
-gst_videotestsrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
+gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   gboolean res;
   gint width, height, rate_denominator, rate_numerator;
   struct fourcc_list_struct *fourcc;
   GstVideoTestSrc *videotestsrc;
 
-  videotestsrc = GST_VIDEOTESTSRC (bsrc);
+  videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
 
-  res = gst_videotestsrc_parse_caps (caps, &width, &height,
+  res = gst_video_test_src_parse_caps (caps, &width, &height,
       &rate_numerator, &rate_denominator, &fourcc);
   if (res) {
     /* looks ok here */
@@ -338,13 +339,13 @@ gst_videotestsrc_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 }
 
 static gboolean
-gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event)
+gst_video_test_src_event (GstBaseSrc * bsrc, GstEvent * event)
 {
   gboolean res = TRUE;
   GstVideoTestSrc *videotestsrc;
   gint64 new_n_frames;
 
-  videotestsrc = GST_VIDEOTESTSRC (bsrc);
+  videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
   new_n_frames = videotestsrc->n_frames;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -393,7 +394,7 @@ gst_videotestsrc_event (GstBaseSrc * bsrc, GstEvent * event)
 }
 
 static void
-gst_videotestsrc_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
+gst_video_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
   /* for live sources, sync on the timestamp of the buffer */
@@ -416,19 +417,19 @@ gst_videotestsrc_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
 }
 
 static GstFlowReturn
-gst_videotestsrc_create (GstPushSrc * psrc, GstBuffer ** buffer)
+gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 {
   GstVideoTestSrc *src;
   gulong newsize;
   GstBuffer *outbuf;
   GstFlowReturn res;
 
-  src = GST_VIDEOTESTSRC (psrc);
+  src = GST_VIDEO_TEST_SRC (psrc);
 
   if (src->fourcc == NULL)
     goto not_negotiated;
 
-  newsize = gst_videotestsrc_get_size (src, src->width, src->height);
+  newsize = gst_video_test_src_get_size (src, src->width, src->height);
 
   g_return_val_if_fail (newsize > 0, GST_FLOW_ERROR);
 
@@ -487,11 +488,11 @@ plugin_init (GstPlugin * plugin)
 {
   oil_init ();
 
-  GST_DEBUG_CATEGORY_INIT (videotestsrc_debug, "videotestsrc", 0,
+  GST_DEBUG_CATEGORY_INIT (video_test_src_debug, "videotestsrc", 0,
       "Video Test Source");
 
   return gst_element_register (plugin, "videotestsrc", GST_RANK_NONE,
-      GST_TYPE_VIDEOTESTSRC);
+      GST_TYPE_VIDEO_TEST_SRC);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

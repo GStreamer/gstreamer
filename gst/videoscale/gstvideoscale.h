@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_VIDEOSCALE_H__
-#define __GST_VIDEOSCALE_H__
+#ifndef __GST_VIDEO_SCALE_H__
+#define __GST_VIDEO_SCALE_H__
 
 
 #include <gst/gst.h>
@@ -30,33 +30,33 @@
 G_BEGIN_DECLS
 
 
-GST_DEBUG_CATEGORY_EXTERN (videoscale_debug);
-#define GST_CAT_DEFAULT videoscale_debug
+GST_DEBUG_CATEGORY_EXTERN (video_scale_debug);
+#define GST_CAT_DEFAULT video_scale_debug
 
 
-#define GST_TYPE_VIDEOSCALE \
-  (gst_videoscale_get_type())
-#define GST_VIDEOSCALE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEOSCALE,GstVideoscale))
-#define GST_VIDEOSCALE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEOSCALE,GstVideoscale))
-#define GST_IS_VIDEOSCALE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEOSCALE))
-#define GST_IS_VIDEOSCALE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOSCALE))
+#define GST_TYPE_VIDEO_SCALE \
+  (gst_video_scale_get_type())
+#define GST_VIDEO_SCALE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_SCALE,GstVideoScale))
+#define GST_VIDEO_SCALE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_SCALE,GstVideoScale))
+#define GST_IS_VIDEO_SCALE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_SCALE))
+#define GST_IS_VIDEO_SCALE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_SCALE))
 
 
 typedef enum {
-  GST_VIDEOSCALE_NEAREST,
-  GST_VIDEOSCALE_BILINEAR,
+  GST_VIDEO_SCALE_NEAREST,
+  GST_VIDEO_SCALE_BILINEAR,
 } GstVideoScaleMethod;
 
 
-typedef struct _GstVideoscale GstVideoscale;
-typedef struct _GstVideoscaleClass GstVideoscaleClass;
+typedef struct _GstVideoScale GstVideoScale;
+typedef struct _GstVideoScaleClass GstVideoScaleClass;
 
 
-struct _GstVideoscale {
+struct _GstVideoScale {
   GstBaseTransform element;
 
   GstVideoScaleMethod method;
@@ -76,15 +76,15 @@ struct _GstVideoscale {
   guint8 *tmp_buf;
 };
 
-struct _GstVideoscaleClass {
+struct _GstVideoScaleClass {
   GstBaseTransformClass parent_class;
 };
 
 
-GType gst_videoscale_get_type(void);
+GType gst_video_scale_get_type(void);
 
 
 G_END_DECLS
 
 
-#endif /* __GST_VIDEOSCALE_H__ */
+#endif /* __GST_VIDEO_SCALE_H__ */

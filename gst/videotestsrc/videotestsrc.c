@@ -495,7 +495,7 @@ paint_get_structure (struct fourcc_list_struct * format)
 /* returns the size in bytes for one video frame of the given dimensions
  * given the fourcc in GstVideoTestSrc */
 int
-gst_videotestsrc_get_size (GstVideoTestSrc * v, int w, int h)
+gst_video_test_src_get_size (GstVideoTestSrc * v, int w, int h)
 {
   paintinfo pi = { 0 };
   paintinfo *p = &pi;
@@ -513,7 +513,8 @@ gst_videotestsrc_get_size (GstVideoTestSrc * v, int w, int h)
 }
 
 void
-gst_videotestsrc_smpte (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
+gst_video_test_src_smpte (GstVideoTestSrc * v, unsigned char *dest, int w,
+    int h)
 {
   int i;
   int y1, y2;
@@ -622,7 +623,7 @@ gst_videotestsrc_smpte (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 }
 
 void
-gst_videotestsrc_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
+gst_video_test_src_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 {
   int i;
   int j;
@@ -656,7 +657,8 @@ gst_videotestsrc_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 }
 
 void
-gst_videotestsrc_black (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
+gst_video_test_src_black (GstVideoTestSrc * v, unsigned char *dest, int w,
+    int h)
 {
   int i;
   paintinfo pi;

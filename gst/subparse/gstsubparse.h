@@ -26,18 +26,18 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_SUBPARSE \
-  (gst_subparse_get_type ())
+  (gst_sub_parse_get_type ())
 #define GST_SUBPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SUBPARSE, GstSubparse))
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SUBPARSE, GstSubParse))
 #define GST_SUBPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SUBPARSE, GstSubparse))
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SUBPARSE, GstSubParse))
 #define GST_IS_SUBPARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SUBPARSE))
 #define GST_IS_SUBPARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SUBPARSE))
 
-typedef struct _GstSubparse GstSubparse;
-typedef struct _GstSubparseClass GstSubparseClass;
+typedef struct _GstSubParse GstSubParse;
+typedef struct _GstSubParseClass GstSubParseClass;
 
 /* format enum */
 typedef enum
@@ -57,7 +57,7 @@ typedef struct {
 
 typedef gchar* (*Parser) (ParserState *state, const gchar *line);
 
-struct _GstSubparse {
+struct _GstSubParse {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
@@ -75,11 +75,11 @@ struct _GstSubparse {
   guint64 next_offset;
 };
 
-struct _GstSubparseClass {
+struct _GstSubParseClass {
   GstElementClass parent_class;
 };
 
-GType gst_subparse_get_type (void);
+GType gst_sub_parse_get_type (void);
 
 G_END_DECLS
 

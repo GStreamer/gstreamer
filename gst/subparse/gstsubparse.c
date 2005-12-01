@@ -29,8 +29,8 @@
 
 #include "gstsubparse.h"
 
-GST_DEBUG_CATEGORY_STATIC (subparse_debug);
-#define GST_CAT_DEFAULT subparse_debug
+GST_DEBUG_CATEGORY_STATIC (sub_parse_debug);
+#define GST_CAT_DEFAULT sub_parse_debug
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -44,60 +44,60 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("text/plain; text/x-pango-markup")
     );
 
-static void gst_subparse_base_init (GstSubparseClass * klass);
-static void gst_subparse_class_init (GstSubparseClass * klass);
-static void gst_subparse_init (GstSubparse * subparse);
+static void gst_sub_parse_base_init (GstSubParseClass * klass);
+static void gst_sub_parse_class_init (GstSubParseClass * klass);
+static void gst_sub_parse_init (GstSubParse * subparse);
 
 #if 0
-static const GstFormat *gst_subparse_formats (GstPad * pad);
-static const GstEventMask *gst_subparse_src_eventmask (GstPad * pad);
+static const GstFormat *gst_sub_parse_formats (GstPad * pad);
+static const GstEventMask *gst_sub_parse_src_eventmask (GstPad * pad);
 #endif
-static gboolean gst_subparse_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_sub_parse_src_event (GstPad * pad, GstEvent * event);
 
-static GstStateChangeReturn gst_subparse_change_state (GstElement * element,
+static GstStateChangeReturn gst_sub_parse_change_state (GstElement * element,
     GstStateChange transition);
 
 #if 0
-static void gst_subparse_loop (GstPad * sinkpad);
+static void gst_sub_parse_loop (GstPad * sinkpad);
 #endif
-static GstFlowReturn gst_subparse_chain (GstPad * sinkpad, GstBuffer * buf);
+static GstFlowReturn gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf);
 
 #if 0
-static GstCaps *gst_subparse_type_find (GstBuffer * buf, gpointer private);
+static GstCaps *gst_sub_parse_type_find (GstBuffer * buf, gpointer private);
 #endif
 
 static GstElementClass *parent_class = NULL;
 
 GType
-gst_subparse_get_type (void)
+gst_sub_parse_get_type (void)
 {
-  static GType subparse_type = 0;
+  static GType sub_parse_type = 0;
 
-  if (!subparse_type) {
-    static const GTypeInfo subparse_info = {
-      sizeof (GstSubparseClass),
-      (GBaseInitFunc) gst_subparse_base_init,
+  if (!sub_parse_type) {
+    static const GTypeInfo sub_parse_info = {
+      sizeof (GstSubParseClass),
+      (GBaseInitFunc) gst_sub_parse_base_init,
       NULL,
-      (GClassInitFunc) gst_subparse_class_init,
+      (GClassInitFunc) gst_sub_parse_class_init,
       NULL,
       NULL,
-      sizeof (GstSubparse),
+      sizeof (GstSubParse),
       0,
-      (GInstanceInitFunc) gst_subparse_init,
+      (GInstanceInitFunc) gst_sub_parse_init,
     };
 
-    subparse_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstSubparse", &subparse_info, 0);
+    sub_parse_type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstSubParse", &sub_parse_info, 0);
   }
 
-  return subparse_type;
+  return sub_parse_type;
 }
 
 static void
-gst_subparse_base_init (GstSubparseClass * klass)
+gst_sub_parse_base_init (GstSubParseClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  static GstElementDetails subparse_details = {
+  static GstElementDetails sub_parse_details = {
     "Subtitle parsers",
     "Codec/Parser/Subtitle",
     "Parses subtitle (.sub) files into text streams",
@@ -109,28 +109,28 @@ gst_subparse_base_init (GstSubparseClass * klass)
       gst_static_pad_template_get (&sink_templ));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details (element_class, &subparse_details);
+  gst_element_class_set_details (element_class, &sub_parse_details);
 }
 
 static void
-gst_subparse_class_init (GstSubparseClass * klass)
+gst_sub_parse_class_init (GstSubParseClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  element_class->change_state = gst_subparse_change_state;
+  element_class->change_state = gst_sub_parse_change_state;
 }
 
 static void
-gst_subparse_init (GstSubparse * subparse)
+gst_sub_parse_init (GstSubParse * subparse)
 {
   subparse->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
-  gst_pad_set_chain_function (subparse->sinkpad, gst_subparse_chain);
+  gst_pad_set_chain_function (subparse->sinkpad, gst_sub_parse_chain);
   gst_element_add_pad (GST_ELEMENT (subparse), subparse->sinkpad);
 
   subparse->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
-  gst_pad_set_event_function (subparse->srcpad, gst_subparse_src_event);
+  gst_pad_set_event_function (subparse->srcpad, gst_sub_parse_src_event);
   gst_element_add_pad (GST_ELEMENT (subparse), subparse->srcpad);
 
   subparse->textbuf = g_string_new (NULL);
@@ -143,7 +143,7 @@ gst_subparse_init (GstSubparse * subparse)
 
 #if 0
 static const GstFormat *
-gst_subparse_formats (GstPad * pad)
+gst_sub_parse_formats (GstPad * pad)
 {
   static const GstFormat formats[] = {
     GST_FORMAT_TIME,
@@ -154,7 +154,7 @@ gst_subparse_formats (GstPad * pad)
 }
 
 static const GstEventMask *
-gst_subparse_src_eventmask (GstPad * pad)
+gst_sub_parse_src_eventmask (GstPad * pad)
 {
   static const GstEventMask masks[] = {
     {GST_EVENT_SEEK, GST_SEEK_METHOD_SET},
@@ -166,9 +166,9 @@ gst_subparse_src_eventmask (GstPad * pad)
 #endif
 
 static gboolean
-gst_subparse_src_event (GstPad * pad, GstEvent * event)
+gst_sub_parse_src_event (GstPad * pad, GstEvent * event)
 {
-  GstSubparse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
+  GstSubParse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
   GstFormat format;
   GstSeekType type;
 
@@ -198,7 +198,7 @@ gst_subparse_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gchar *
-convert_encoding (GstSubparse * self, const gchar * str, gsize len)
+convert_encoding (GstSubParse * self, const gchar * str, gsize len)
 {
   gsize bytes_read, bytes_written;
   gchar *rv;
@@ -235,7 +235,7 @@ convert_encoding (GstSubparse * self, const gchar * str, gsize len)
 }
 
 static gchar *
-get_next_line (GstSubparse * self)
+get_next_line (GstSubParse * self)
 {
   char *line = NULL;
   const char *line_end;
@@ -449,7 +449,7 @@ parser_state_dispose (ParserState * state)
  */
 
 static GstSubParseFormat
-gst_subparse_data_format_autodetect (gchar * match_str)
+gst_sub_parse_data_format_autodetect (gchar * match_str)
 {
   static gboolean need_init_regexps = TRUE;
   static regex_t mdvd_rx;
@@ -490,7 +490,7 @@ gst_subparse_data_format_autodetect (gchar * match_str)
 }
 
 static GstCaps *
-gst_subparse_format_autodetect (GstSubparse * self)
+gst_sub_parse_format_autodetect (GstSubParse * self)
 {
   gchar *data;
   GstSubParseFormat format;
@@ -501,7 +501,7 @@ gst_subparse_format_autodetect (GstSubparse * self)
   }
 
   data = g_strndup (self->textbuf->str, 35);
-  format = gst_subparse_data_format_autodetect (data);
+  format = gst_sub_parse_data_format_autodetect (data);
   g_free (data);
 
   self->parser_type = format;
@@ -527,7 +527,7 @@ gst_subparse_format_autodetect (GstSubparse * self)
 }
 
 static void
-feed_textbuf (GstSubparse * self, GstBuffer * buf)
+feed_textbuf (GstSubParse * self, GstBuffer * buf)
 {
   if (GST_BUFFER_OFFSET (buf) != self->offset) {
     /* flush the parser state */
@@ -544,7 +544,7 @@ feed_textbuf (GstSubparse * self, GstBuffer * buf)
 }
 
 static GstFlowReturn
-handle_buffer (GstSubparse * self, GstBuffer * buf)
+handle_buffer (GstSubParse * self, GstBuffer * buf)
 {
   GstCaps *caps = NULL;
   gchar *line, *subtitle;
@@ -553,7 +553,7 @@ handle_buffer (GstSubparse * self, GstBuffer * buf)
 
   /* make sure we know the format */
   if (G_UNLIKELY (self->parser_type == GST_SUB_PARSE_FORMAT_UNKNOWN)) {
-    if (!(caps = gst_subparse_format_autodetect (self))) {
+    if (!(caps = gst_sub_parse_format_autodetect (self))) {
       return GST_FLOW_UNEXPECTED;
     }
   }
@@ -590,13 +590,13 @@ handle_buffer (GstSubparse * self, GstBuffer * buf)
 
 #if 0
 static void
-gst_subparse_loop (GstPad * sinkpad)
+gst_sub_parse_loop (GstPad * sinkpad)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstSubparse *self;
+  GstSubParse *self;
   GstBuffer *buf;
 
-  GST_DEBUG ("gst_subparse_loop");
+  GST_DEBUG ("gst_sub_parse_loop");
   self = GST_SUBPARSE (GST_OBJECT_PARENT (sinkpad));
 
   GST_STREAM_LOCK (sinkpad);
@@ -614,12 +614,12 @@ gst_subparse_loop (GstPad * sinkpad)
 #endif
 
 static GstFlowReturn
-gst_subparse_chain (GstPad * sinkpad, GstBuffer * buf)
+gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  GstSubparse *self;
+  GstSubParse *self;
 
-  GST_DEBUG ("gst_subparse_chain");
+  GST_DEBUG ("gst_sub_parse_chain");
   self = GST_SUBPARSE (GST_OBJECT_PARENT (sinkpad));
 
   ret = handle_buffer (self, buf);
@@ -628,9 +628,9 @@ gst_subparse_chain (GstPad * sinkpad, GstBuffer * buf)
 }
 
 static GstStateChangeReturn
-gst_subparse_change_state (GstElement * element, GstStateChange transition)
+gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
 {
-  GstSubparse *self = GST_SUBPARSE (element);
+  GstSubParse *self = GST_SUBPARSE (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -651,25 +651,25 @@ gst_subparse_change_state (GstElement * element, GstStateChange transition)
 
 #if 0
 /* typefinding stuff */
-static GstTypeDefinition subparse_definition = {
+static GstTypeDefinition sub_parse_definition = {
   "subparse/x-text",
   "text/plain",
   ".sub",
-  gst_subparse_type_find,
+  gst_sub_parse_type_find,
 };
 static GstCaps *
-gst_subparse_type_find (GstBuffer * buf, gpointer private)
+gst_sub_parse_type_find (GstBuffer * buf, gpointer private)
 {
   GstSubParseFormat format;
 
-  format = gst_subparse_data_format_autodetect (buf);
+  format = gst_sub_parse_data_format_autodetect (buf);
   switch (format) {
     case GST_SUB_PARSE_FORMAT_MDVDSUB:
       GST_DEBUG (GST_CAT_PLUGIN_INFO, "MicroDVD format detected");
-      return gst_caps_new ("subparse_type_find", "text/plain", NULL);
+      return gst_caps_new ("sub_parse_type_find", "text/plain", NULL);
     case GST_SUB_PARSE_FORMAT_SUBRIP:
       GST_DEBUG (GST_CAT_PLUGIN_INFO, "SubRip format detected");
-      return gst_caps_new ("subparse_type_find", "text/plain", NULL);
+      return gst_caps_new ("sub_parse_type_find", "text/plain", NULL);
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
       GST_DEBUG (GST_CAT_PLUGIN_INFO, "no subtitle format detected");
       break;
@@ -682,7 +682,7 @@ gst_subparse_type_find (GstBuffer * buf, gpointer private)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (subparse_debug, "subparse", 0, ".sub parser");
+  GST_DEBUG_CATEGORY_INIT (sub_parse_debug, "subparse", 0, ".sub parser");
 
   return gst_element_register (plugin, "subparse",
       GST_RANK_PRIMARY, GST_TYPE_SUBPARSE);
