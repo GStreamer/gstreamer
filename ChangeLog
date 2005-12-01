@@ -1,3 +1,8 @@
+2005-12-02  Michael Smith  <msmith@fluendo.com>
+
+	* gst/gst.c:
+	  Escape a % to make gtkdoc happier; bug 322958.
+
 === release 0.9.7 ===
 
 2005-12-01   <thomas (at) apestaart (dot) org>

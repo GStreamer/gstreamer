@@ -81,7 +81,7 @@
  *  g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
  *  g_option_context_add_group (ctx, gst_init_get_option_group ());
  *  if (!g_option_context_parse (ctx, &amp;argc, &amp;argv, &amp;err)) {
- *    g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+ *    g_print ("Error initializing: &percnt;s\n", GST_STR_NULL (err->message));
  *    exit (1);
  *  }
  *  g_option_context_free (ctx);
