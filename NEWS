@@ -1,5 +1,13 @@
-This is GStreamer Python Bindings 0.9.6,
-"We'll always have Paris. We got it back last night."
+This is GStreamer Python Bindings 0.9.7,
+"Mon Chien N'a Pas De Nez."
+
+Changes since 0.9.6:
+    
+      * Updates for API changes
+
+Bugs fixed since 0.9.6:
+    
+      * 322250 : Remove *_full wrappers
 
 Changes since 0.9.5:
     

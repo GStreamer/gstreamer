@@ -26,7 +26,7 @@
 import sys
 
 import pygst
-pygst.require('0.9')
+pygst.require('0.10')
 
 import gst
 

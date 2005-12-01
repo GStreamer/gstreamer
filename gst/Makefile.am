@@ -16,7 +16,7 @@ interface_lib = interfaces.la
 defs_DATA = gst-types.defs \
 	gst-extrafuncs.defs \
 	libs.defs
-defsdir = $(pkgdatadir)/0.9/defs
+defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 
 noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstobject.h pygstexception.h
 
@@ -64,7 +64,7 @@ gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)
 
 # GStreamer interfaces bindings
 interfaces_la_CFLAGS = $(common_cflags) $(GST_PLUGINS_BASE_CFLAGS)
-interfaces_la_LIBADD = $(common_libadd) -lgstinterfaces-0.9 
+interfaces_la_LIBADD = $(common_libadd) -lgstinterfaces-$(GST_MAJORMINOR) 
 interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface $(GST_PLUGINS_BASE_LIBS)
 interfaces_la_SOURCES = interfacesmodule.c
 nodist_interfaces_la_SOURCES = interfaces.c

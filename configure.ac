@@ -8,7 +8,7 @@ dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
                                                                                 
 dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(gst-python, PYGST_VERSION, 0, 9, 6, 1,
+AS_VERSION(gst-python, PYGST_VERSION, 0, 9, 7, 0,
     GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
@@ -27,7 +27,7 @@ dnl required versions of other packages
 AC_SUBST(PYGTK_REQ, 2.6.3)
 AC_SUBST(GLIB_REQ,  2.6.0)
 AC_SUBST(GTK_REQ,   2.6.0)
-AC_SUBST(GST_REQ,   0.9.0)
+AC_SUBST(GST_REQ,   0.9.7)
 
 
 AC_DISABLE_STATIC
@@ -53,7 +53,7 @@ fi
 AM_CHECK_PYTHON_HEADERS(,[AC_MSG_ERROR(could not find Python headers)])
 
 dnl check for GStreamer
-GST_MAJORMINOR=0.9
+GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ)
 AC_SUBST(GST_CFLAGS)

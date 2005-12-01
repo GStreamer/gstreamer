@@ -10,7 +10,7 @@ import sys
 import gobject
 
 import pygst
-pygst.require('0.9')
+pygst.require('0.10')
 import gst
 import gst.interfaces
 import gtk

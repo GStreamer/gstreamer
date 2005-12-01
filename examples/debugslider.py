@@ -27,7 +27,7 @@ from gtk import gdk
 import gobject
 
 import pygst
-pygst.require('0.9')
+pygst.require('0.10')
 import gst
 
 class DebugSlider(gtk.HScale):

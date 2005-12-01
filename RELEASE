@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Python bindings 0.9.6 "We'll always have Paris. We got it back last night."
+GStreamer: Release notes for GStreamer Python bindings 0.9.7 "Mon Chien N'a Pas De Nez"
         
 
 The GStreamer team is petrified to announce a new release
@@ -16,13 +16,11 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * added FractionRange
-      * updated for API changes
+      * Updates for API changes
 
 Bugs fixed in this release
     
-      * 318793 : check whether new date/tag API needs wrapping
-      * 321839 : pipeline hangs in get_state after changing trival pipeline
+      * 322250 : Remove *_full wrappers
 
 Download
 
@@ -54,6 +52,5 @@ Contributors to this release
     
       * Andy Wingo
       * Edward Hervey
-      * Jan Schmidt
       * Thomas Vander Stichele
  

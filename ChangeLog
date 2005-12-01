@@ -1,3 +1,10 @@
+=== release 0.9.7 ===
+
+2005-12-01   <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	  releasing 0.9.7, "Mon Chien N'a Pas De Nez"
+
 2005-12-01  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac (GST_PLUGINS_BASE_LIBS): Check for
