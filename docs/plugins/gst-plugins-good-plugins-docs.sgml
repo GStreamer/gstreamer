@@ -47,6 +47,7 @@
     <xi:include href="xml/plugin-level.xml" />
     <xi:include href="xml/plugin-matroska.xml" />
     <xi:include href="xml/plugin-mulaw.xml" />
+    <xi:include href="xml/plugin-multipart.xml" />
     <xi:include href="xml/plugin-navigationtest.xml" />
     <xi:include href="xml/plugin-ossaudio.xml" />
     <xi:include href="xml/plugin-png.xml" />

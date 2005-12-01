@@ -1,5 +1,13 @@
 2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* docs/plugins/.cvsignore:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	  add multipart plugin to docs
+
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/pango/Makefile.am:

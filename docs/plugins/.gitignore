@@ -5,7 +5,10 @@ Makefile.in
 *-decl-list.txt
 *-undocumented.txt
 *-unused.txt
+*-overrides.txt
 
+
+tmpl
 html
 sgml
 xml
