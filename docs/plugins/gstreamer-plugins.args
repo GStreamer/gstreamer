@@ -1,0 +1,590 @@
+<ARG>
+<NAME>GstPipeline::delay</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Delay</NICK>
+<BLURB>Expected delay needed for elements to spin up to PLAYING in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCapsFilter::caps</NAME>
+<TYPE>GstCaps</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filter caps</NICK>
+<BLURB>Restrict the possible allowed capabilities (NULL means ANY).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::can-activate-pull</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Can activate pull</NICK>
+<BLURB>Can activate in pull mode.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::can-activate-push</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Can activate push</NICK>
+<BLURB>Can activate in push mode.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::data</NAME>
+<TYPE>GstFakeSrcDataType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>data</NICK>
+<BLURB>Data allocation method.</BLURB>
+<DEFAULT>Allocate data</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::datarate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Datarate</NICK>
+<BLURB>Timestamps buffers with number of bytes per second (0 = none).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::dump</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dump</NICK>
+<BLURB>Dump produced bytes to stdout.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::filltype</NAME>
+<TYPE>GstFakeSrcFillType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>filltype</NICK>
+<BLURB>How to fill the buffer, if at all.</BLURB>
+<DEFAULT>Fill buffers with zeros</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::is-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Is this a live source</NICK>
+<BLURB>True if the element cannot produce data in PAUSED.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::last-message</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>last-message</NICK>
+<BLURB>The last status message.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::parentsize</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>parentsize</NICK>
+<BLURB>Size of parent buffer for sub-buffered allocation.</BLURB>
+<DEFAULT>40960</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::pattern</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>pattern</NICK>
+<BLURB>pattern.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::signal-handoffs</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Signal handoffs</NICK>
+<BLURB>Send a signal before pushing the buffer.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Silent</NICK>
+<BLURB>Don't produce last_message events.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::sizemax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>sizemax</NICK>
+<BLURB>Maximum buffer size.</BLURB>
+<DEFAULT>4096</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::sizemin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>sizemin</NICK>
+<BLURB>Minimum buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::sizetype</NAME>
+<TYPE>GstFakeSrcSizeType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>sizetype</NICK>
+<BLURB>How to determine buffer sizes.</BLURB>
+<DEFAULT>Send empty buffers</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSrc::sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync</NICK>
+<BLURB>Sync to the clock to the datarate.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSink::can-activate-pull</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Can activate pull</NICK>
+<BLURB>Can activate in pull mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSink::can-activate-push</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Can activate push</NICK>
+<BLURB>Can activate in push mode.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSink::dump</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dump</NICK>
+<BLURB>Dump received bytes to stdout.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSink::last-message</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Last Message</NICK>
+<BLURB>The message describing current status.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSink::signal-handoffs</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Signal handoffs</NICK>
+<BLURB>Send a signal before unreffing the buffer.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSink::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Silent</NICK>
+<BLURB>Don't produce last_message events.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFakeSink::state-error</NAME>
+<TYPE>GstFakeSinkStateError</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>State Error</NICK>
+<BLURB>Generate a state change error.</BLURB>
+<DEFAULT>No state change errors</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFdSrc::fd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>fd</NICK>
+<BLURB>An open file descriptor to read from.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFileSrc::fd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>File-descriptor</NICK>
+<BLURB>File-descriptor for the file being mmap()d.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFileSrc::location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Location of the file to read.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFileSrc::mmapsize</NAME>
+<TYPE>gulong</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>mmap() Block Size</NICK>
+<BLURB>Size in bytes of mmap()d regions.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFileSrc::touch</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Touch read data</NICK>
+<BLURB>Touch data to force disk read.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::check-perfect</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Check For Perfect Stream</NICK>
+<BLURB>Verify that the stream is time- and data-contiguous.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::datarate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Datarate</NICK>
+<BLURB>(Re)timestamps buffers with number of bytes per second (0 = inactive).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::drop-probability</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop Probability</NICK>
+<BLURB>The Probability a buffer is dropped.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::dump</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dump</NICK>
+<BLURB>Dump buffer contents.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::error-after</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Error After</NICK>
+<BLURB>Error after N buffers.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::last-message</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>last-message</NICK>
+<BLURB>last-message.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>silent</NICK>
+<BLURB>silent.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::single-segment</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Single Segment</NICK>
+<BLURB>Timestamp buffers and eat newsegments so as to appear as one segment.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::sleep-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sleep time</NICK>
+<BLURB>Microseconds to sleep between processing.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synchronize</NICK>
+<BLURB>Synchronize to pipeline clock.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::current-level-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current level (buffers)</NICK>
+<BLURB>Current number of buffers in the queue.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::current-level-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current level (kB)</NICK>
+<BLURB>Current amount of data in the queue (bytes).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::current-level-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current level (ns)</NICK>
+<BLURB>Current amount of data in the queue (in ns).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::leaky</NAME>
+<TYPE>GstQueueLeaky</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Leaky</NICK>
+<BLURB>Where the queue leaks, if at all.</BLURB>
+<DEFAULT>Not Leaky</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::max-size-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (buffers)</NICK>
+<BLURB>Max. number of buffers in the queue (0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::max-size-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (kB)</NICK>
+<BLURB>Max. amount of data in the queue (bytes, 0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::max-size-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (ns)</NICK>
+<BLURB>Max. amount of data in the queue (in ns, 0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::min-threshold-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min. threshold (buffers)</NICK>
+<BLURB>Min. number of buffers in the queue to allow reading (0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::min-threshold-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min. threshold (kB)</NICK>
+<BLURB>Min. amount of data in the queue to allow reading (bytes, 0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue::min-threshold-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min. threshold (ns)</NICK>
+<BLURB>Min. amount of data in the queue to allow reading (in ns, 0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFileSink::location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Location of the file to write.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTee::has-chain</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>has-chain</NICK>
+<BLURB>has-chain.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTee::has-sink-loop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>has-sink-loop</NICK>
+<BLURB>has-sink-loop.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTee::last-message</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>last_message</NICK>
+<BLURB>last_message.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTee::num-src-pads</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>num-src-pads</NICK>
+<BLURB>num-src-pads.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTee::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>silent</NICK>
+<BLURB>silent.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTypeFindElement::caps</NAME>
+<TYPE>GstCaps</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>caps</NICK>
+<BLURB>detected capabilities in stream.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTypeFindElement::maximum</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>maximum</NICK>
+<BLURB>probability to stop typefinding.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTypeFindElement::minimum</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>minimum</NICK>
+<BLURB>minimum probability required to accept caps.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
