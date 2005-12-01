@@ -1,3 +1,8 @@
+2005-12-01  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstevent.h (struct _GstEvent): Meant to remove the extra
+	padding here before, but it missed the commit.
+
 2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* libs/gst/controller/gstinterpolation.c:

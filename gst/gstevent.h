@@ -280,7 +280,7 @@ struct _GstEvent {
   GstStructure	*structure;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved;
 };
 
 struct _GstEventClass {
