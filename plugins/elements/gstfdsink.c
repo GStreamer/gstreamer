@@ -66,7 +66,7 @@ GST_BOILERPLATE_FULL (GstFdSink, gst_fd_sink_, GstElement, GST_TYPE_ELEMENT,
 
 static void gst_fd_sink__set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_fd_sink__get_property (GObject * object, guint prop_id,
+static void gst_fd_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void gst_fd_sink__chain (GstPad * pad, GstData * _data);
@@ -89,7 +89,7 @@ gst_fd_sink__class_init (GstFdSinkClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->set_property = gst_fd_sink__set_property;
-  gobject_class->get_property = gst_fd_sink__get_property;
+  gobject_class->get_property = gst_fd_sink_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to write to",
@@ -151,7 +151,7 @@ gst_fd_sink__set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_fd_sink__get_property (GObject * object, guint prop_id, GValue * value,
+gst_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstFdSink *fdsink;

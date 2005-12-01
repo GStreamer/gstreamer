@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 
 
 #define GST_TYPE_FD_SINK \
-  (gst_fd_sink__get_type())
+  (gst_fd_sink_get_type())
 #define GST_FD_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FD_SINK,GstFdSink))
 #define GST_FD_SINK_CLASS(klass) \
@@ -55,7 +55,7 @@ struct _GstFdSinkClass {
   GstElementClass parent_class;
 };
 
-GType gst_fd_sink__get_type(void);
+GType gst_fd_sink_get_type(void);
 
 G_END_DECLS
 
