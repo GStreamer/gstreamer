@@ -220,8 +220,8 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
     guint16 seqnum, queueseq;
     guint32 timestamp;
 
-    seqnum = gst_rtpbuffer_get_seq (in);
-    queueseq = gst_rtpbuffer_get_seq (GST_BUFFER (g_queue_peek_head (queue)));
+    seqnum = gst_rtp_buffer_get_seq (in);
+    queueseq = gst_rtp_buffer_get_seq (GST_BUFFER (g_queue_peek_head (queue)));
 
     /* look for right place to insert it */
     int i = 0;
@@ -234,14 +234,14 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
       if (!data)
         break;
 
-      queueseq = gst_rtpbuffer_get_seq (GST_BUFFER (data));
+      queueseq = gst_rtp_buffer_get_seq (GST_BUFFER (data));
     }
 
     /* now insert it at that place */
     g_queue_push_nth (queue, in, i);
     QUEUE_UNLOCK (filter);
 
-    timestamp = gst_rtpbuffer_get_timestamp (in);
+    timestamp = gst_rtp_buffer_get_timestamp (in);
 
     GST_DEBUG_OBJECT (filter,
         "Packet added to queue %d at pos %d timestamp %u sn %d",
@@ -272,7 +272,7 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * rtp_buf)
      * maybe i should add a way to override this timestamp from the
      * depayloader child class
      */
-    bclass->set_gst_timestamp (filter, gst_rtpbuffer_get_timestamp (rtp_buf),
+    bclass->set_gst_timestamp (filter, gst_rtp_buffer_get_timestamp (rtp_buf),
         out_buf);
     /* push it */
     GST_DEBUG_OBJECT (filter, "Pushing buffer size %d, timestamp %u",
@@ -333,8 +333,10 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
   guint maxtsunits = (gfloat) filter->clock_rate * q_size_secs;
 
   QUEUE_LOCK (filter);
-  headts = gst_rtpbuffer_get_timestamp (GST_BUFFER (g_queue_peek_head (queue)));
-  tailts = gst_rtpbuffer_get_timestamp (GST_BUFFER (g_queue_peek_tail (queue)));
+  headts =
+      gst_rtp_buffer_get_timestamp (GST_BUFFER (g_queue_peek_head (queue)));
+  tailts =
+      gst_rtp_buffer_get_timestamp (GST_BUFFER (g_queue_peek_tail (queue)));
 
   bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
@@ -347,7 +349,7 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
       gst_base_rtp_depayload_push (filter, in);
     }
     headts =
-        gst_rtpbuffer_get_timestamp (GST_BUFFER (g_queue_peek_head (queue)));
+        gst_rtp_buffer_get_timestamp (GST_BUFFER (g_queue_peek_head (queue)));
   }
   QUEUE_UNLOCK (filter);
 }

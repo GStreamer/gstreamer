@@ -372,12 +372,12 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
   if (payload->clock_rate == 0)
     goto no_rate;
 
-  gst_rtpbuffer_set_ssrc (buffer, payload->current_ssrc);
+  gst_rtp_buffer_set_ssrc (buffer, payload->current_ssrc);
 
-  gst_rtpbuffer_set_payload_type (buffer, payload->pt);
+  gst_rtp_buffer_set_payload_type (buffer, payload->pt);
 
   /* can wrap around, which is perfectly fine */
-  gst_rtpbuffer_set_seq (buffer, payload->seqnum++);
+  gst_rtp_buffer_set_seq (buffer, payload->seqnum++);
 
   /* add our random offset to the timestamp */
   ts = payload->ts_base;
@@ -393,7 +393,7 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
     ts += rtime;
   }
-  gst_rtpbuffer_set_timestamp (buffer, ts);
+  gst_rtp_buffer_set_timestamp (buffer, ts);
 
   payload->timestamp = ts;
 
