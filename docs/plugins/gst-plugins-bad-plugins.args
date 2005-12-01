@@ -28,3 +28,23 @@
 <DEFAULT>1</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstMMS::blocksize</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65536]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>blocksize</NICK>
+<BLURB>How many bytes should be read at once.</BLURB>
+<DEFAULT>2048</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMMS::location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>location</NICK>
+<BLURB>Host URL to connect to. Accepted are mms://, mmsu://, mmst:// URL types.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+

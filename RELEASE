@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.6 "Hot Tea"
+GStreamer: Release notes for GStreamer Bad Plug-ins 0.9.7 "Arrigato Gasuimas Skebisan"
         
 
 The GStreamer team is petrified to announce a new release
@@ -60,12 +60,11 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * Fractional framerates
+      * wavpack ported
+      * libmms ported
 
 Bugs fixed in this release
     
-      * 320532 : [faac] set output samplerate and number of channels
-      * 321903 : [qtdemux] does not know fourcc DX50, as produced by DivX 5
 
 Download
 
@@ -95,13 +94,7 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
       * Edgard Lima
       * Edward Hervey
-      * Jan Schmidt
-      * Julien MOUTTE
-      * Michael Smith
       * Thomas Vander Stichele
-      * Tim-Philipp Müller
-      * Wim Taymans
  

@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-bad, GST_PLUGINS_BAD_VERSION, 0, 9, 6, 1,
+AS_VERSION(gst-plugins-bad, GST_PLUGINS_BAD_VERSION, 0, 9, 7, 0,
     GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
@@ -20,16 +20,9 @@ AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_PLUGINS_BAD_VERSION_MAJOR.$GST_PLUGINS_BAD_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
-GST_MAJORMINOR=0.9
+GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
 
-dnl CURRENT, REVISION, AGE
-dnl - library source changed -> increment REVISION
-dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
-dnl - interfaces added -> increment AGE
-dnl - interfaces removed -> AGE = 0
-dnl for 0.8.3 release, gst_play_get_all_by_interface was added, so update
-AS_LIBTOOL(GST_PLUGINS, 1, 0, 1)
 AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
@@ -212,7 +205,7 @@ GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
 
 dnl check for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_REQ=0.9.0.1
+GST_REQ=0.9.7
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST="yes", HAVE_GST="no")
 

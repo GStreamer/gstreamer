@@ -1,4 +1,9 @@
-This is GStreamer Bad Plug-ins 0.9.6, "Hot Tea"
+This is GStreamer Bad Plug-ins 0.9.7, "Arrigato Gasuimas Skebisan"
+
+Changes since 0.9.6:
+
+      * wavpack ported
+      * libmms ported
 
 Changes since 0.9.5:
     

@@ -3,7 +3,7 @@
   <description>SDL Video Sink</description>
   <filename>../../ext/sdl/.libs/libgstsdlvideosink.so</filename>
   <basename>libgstsdlvideosink.so</basename>
-  <version>0.9.6</version>
+  <version>0.9.7</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer source release</package>
