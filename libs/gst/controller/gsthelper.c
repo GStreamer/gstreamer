@@ -32,6 +32,9 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
+
+#include <stdarg.h>
+
 #include "gstcontroller.h"
 
 #define GST_CAT_DEFAULT gst_controller_debug
@@ -58,10 +61,9 @@ GstController *
 gst_object_control_properties (GObject * object, ...)
 {
   GstController *ctrl;
+  va_list var_args;
 
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
-
-  va_list var_args;
 
   va_start (var_args, object);
   ctrl = gst_controller_new_valist (object, var_args);
