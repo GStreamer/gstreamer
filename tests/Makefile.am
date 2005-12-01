@@ -12,8 +12,10 @@ endif
 
 SUBDIRS = 			\
 	$(SUBDIRS_CHECK)	\
-	$(SUBDIRS_EXAMPLES)
+	$(SUBDIRS_EXAMPLES)	\
+	icles
 
 DIST_SUBDIRS = 			\
 	check			\
-	examples
+	examples		\
+	icles

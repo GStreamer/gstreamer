@@ -1,3 +1,14 @@
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* tests/Makefile.am:
+	* tests/icles/.cvsignore:
+	* tests/icles/Makefile.am:
+	* tests/icles/stress-xoverlay.c: (myclock), (open_display),
+	(close_display), (resize_window), (move_window), (create_window),
+	(terminate_playback), (pause_playback), (start_playback), (main):
+	  add stress test for xoverlay from Julien
+
 2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* docs/libs/tmpl/gstcolorbalance.sgml:
