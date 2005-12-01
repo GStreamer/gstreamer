@@ -20,24 +20,24 @@
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include "gstrtpspeexenc.h"
+#include "gstrtpspeexpay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtpspeexenc_details = {
+static GstElementDetails gst_rtp_speex_pay_details = {
   "RTP packet parser",
-  "Codec/Encoder/Network",
-  "Encodes Speex audio into a RTP packet",
+  "Codec/Payloader/Network",
+  "Payodes Speex audio into a RTP packet",
   "Edgard Lima <edgard.lima@indt.org.br>"
 };
 
-static GstStaticPadTemplate gst_rtpspeexenc_sink_template =
+static GstStaticPadTemplate gst_rtp_speex_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-speex")
     );
 
-static GstStaticPadTemplate gst_rtpspeexenc_src_template =
+static GstStaticPadTemplate gst_rtp_speex_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -48,28 +48,28 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "encoding-params = (string) \"1\"")
     );
 
-static gboolean gst_rtpspeexenc_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_speex_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtpspeexenc_handle_buffer (GstBaseRTPPayload * payload,
-    GstBuffer * buffer);
+static GstFlowReturn gst_rtp_speex_pay_handle_buffer (GstBaseRTPPayload *
+    payload, GstBuffer * buffer);
 
-GST_BOILERPLATE (GstRtpSPEEXEnc, gst_rtpspeexenc, GstBaseRTPPayload,
+GST_BOILERPLATE (GstRtpSPEEXPay, gst_rtp_speex_pay, GstBaseRTPPayload,
     GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
-gst_rtpspeexenc_base_init (gpointer klass)
+gst_rtp_speex_pay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpspeexenc_sink_template));
+      gst_static_pad_template_get (&gst_rtp_speex_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpspeexenc_src_template));
-  gst_element_class_set_details (element_class, &gst_rtpspeexenc_details);
+      gst_static_pad_template_get (&gst_rtp_speex_pay_src_template));
+  gst_element_class_set_details (element_class, &gst_rtp_speex_pay_details);
 }
 
 static void
-gst_rtpspeexenc_class_init (GstRtpSPEEXEncClass * klass)
+gst_rtp_speex_pay_class_init (GstRtpSPEEXPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -81,19 +81,20 @@ gst_rtpspeexenc_class_init (GstRtpSPEEXEncClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
-  gstbasertppayload_class->set_caps = gst_rtpspeexenc_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtpspeexenc_handle_buffer;
+  gstbasertppayload_class->set_caps = gst_rtp_speex_pay_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtp_speex_pay_handle_buffer;
 }
 
 static void
-gst_rtpspeexenc_init (GstRtpSPEEXEnc * rtpspeexenc, GstRtpSPEEXEncClass * klass)
+gst_rtp_speex_pay_init (GstRtpSPEEXPay * rtpspeexpay,
+    GstRtpSPEEXPayClass * klass)
 {
-  GST_BASE_RTP_PAYLOAD (rtpspeexenc)->clock_rate = 8000;
-  GST_BASE_RTP_PAYLOAD_PT (rtpspeexenc) = 110;  /* Create String */
+  GST_BASE_RTP_PAYLOAD (rtpspeexpay)->clock_rate = 8000;
+  GST_BASE_RTP_PAYLOAD_PT (rtpspeexpay) = 110;  /* Create String */
 }
 
 static gboolean
-gst_rtpspeexenc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_speex_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   gst_basertppayload_set_options (payload, "audio", FALSE, "speex", 8000);
   gst_basertppayload_set_outcaps (payload, NULL);
@@ -102,17 +103,17 @@ gst_rtpspeexenc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtpspeexenc_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_speex_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
-  GstRtpSPEEXEnc *rtpspeexenc;
+  GstRtpSPEEXPay *rtpspeexpay;
   guint size, payload_len;
   GstBuffer *outbuf;
   guint8 *payload, *data;
   GstClockTime timestamp;
   GstFlowReturn ret;
 
-  rtpspeexenc = GST_RTP_SPEEX_ENC (basepayload);
+  rtpspeexpay = GST_RTP_SPEEX_PAY (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
@@ -120,14 +121,14 @@ gst_rtpspeexenc_handle_buffer (GstBaseRTPPayload * basepayload,
   /* FIXME, only one SPEEX frame per RTP packet for now */
   payload_len = size;
 
-  outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
+  outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
   /* FIXME, assert for now */
-  g_assert (payload_len <= GST_BASE_RTP_PAYLOAD_MTU (rtpspeexenc));
+  g_assert (payload_len <= GST_BASE_RTP_PAYLOAD_MTU (rtpspeexpay));
 
   /* copy timestamp */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   /* get payload */
-  payload = gst_rtpbuffer_get_payload (outbuf);
+  payload = gst_rtp_buffer_get_payload (outbuf);
 
   data = GST_BUFFER_DATA (buffer);
 
@@ -142,8 +143,8 @@ gst_rtpspeexenc_handle_buffer (GstBaseRTPPayload * basepayload,
 }
 
 gboolean
-gst_rtpspeexenc_plugin_init (GstPlugin * plugin)
+gst_rtp_speex_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpspeexenc",
-      GST_RANK_NONE, GST_TYPE_RTP_SPEEX_ENC);
+  return gst_element_register (plugin, "rtpspeexpay",
+      GST_RANK_NONE, GST_TYPE_RTP_SPEEX_PAY);
 }

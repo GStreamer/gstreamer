@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_RTP_H263_ENC_H__
-#define __GST_RTP_H263_ENC_H__
+#ifndef __GST_RTP_H263_PAY_H__
+#define __GST_RTP_H263_PAY_H__
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
@@ -26,21 +26,21 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RTP_H263_ENC \
-  (gst_rtph263enc_get_type())
-#define GST_RTP_H263_ENC(obj) \
- (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_H263_ENC,GstRtpH263Enc))
-#define GST_RTP_H263_ENC_CLASS(klass) \
- (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_H263_ENC,GstRtpH263Enc))
-#define GST_IS_RTP_H263_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_H263_ENC))
-#define GST_IS_RTP_H263_ENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_H263_ENC))
+#define GST_TYPE_RTP_H263_PAY \
+  (gst_rtp_h263_pay_get_type())
+#define GST_RTP_H263_PAY(obj) \
+ (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_H263_PAY,GstRtpH263Pay))
+#define GST_RTP_H263_PAY_CLASS(klass) \
+ (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_H263_PAY,GstRtpH263Pay))
+#define GST_IS_RTP_H263_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_H263_PAY))
+#define GST_IS_RTP_H263_PAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_H263_PAY))
 
-typedef struct _GstRtpH263Enc GstRtpH263Enc;
-typedef struct _GstRtpH263EncClass GstRtpH263EncClass;
+typedef struct _GstRtpH263Pay GstRtpH263Pay;
+typedef struct _GstRtpH263PayClass GstRtpH263PayClass;
 
-struct _GstRtpH263Enc
+struct _GstRtpH263Pay
 {
   GstBaseRTPPayload payload;
 
@@ -48,13 +48,13 @@ struct _GstRtpH263Enc
   GstClockTime first_ts;
 };
 
-struct _GstRtpH263EncClass
+struct _GstRtpH263PayClass
 {
   GstBaseRTPPayloadClass parent_class;
 };
 
-gboolean gst_rtph263enc_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_h263_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_RTP_H263_ENC_H__ */
+#endif /* __GST_RTP_H263_PAY_H__ */

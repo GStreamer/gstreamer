@@ -17,28 +17,28 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_RTP_AMR_DEC_H__
-#define __GST_RTP_AMR_DEC_H__
+#ifndef __GST_RTP_AMR_DEPAY_H__
+#define __GST_RTP_AMR_DEPAY_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RTP_AMR_DEC \
-  (gst_rtpamrdec_get_type())
-#define GST_RTP_AMR_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_AMR_DEC,GstRtpAMRDec))
-#define GST_RTP_AMR_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_AMR_DEC,GstRtpAMRDec))
-#define GST_IS_RTP_AMR_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_AMR_DEC))
-#define GST_IS_RTP_AMR_DEC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_AMR_DEC))
+#define GST_TYPE_RTP_AMR_DEPAY \
+  (gst_rtp_amr_depay_get_type())
+#define GST_RTP_AMR_DEPAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_AMR_DEPAY,GstRtpAMRDepay))
+#define GST_RTP_AMR_DEPAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_AMR_DEPAY,GstRtpAMRDepay))
+#define GST_IS_RTP_AMR_DEPAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_AMR_DEPAY))
+#define GST_IS_RTP_AMR_DEPAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_AMR_DEPAY))
 
-typedef struct _GstRtpAMRDec GstRtpAMRDec;
-typedef struct _GstRtpAMRDecClass GstRtpAMRDecClass;
+typedef struct _GstRtpAMRDepay GstRtpAMRDepay;
+typedef struct _GstRtpAMRDepayClass GstRtpAMRDepayClass;
 
-struct _GstRtpAMRDec
+struct _GstRtpAMRDepay
 {
   GstElement element;
 
@@ -60,13 +60,13 @@ struct _GstRtpAMRDec
   gint     rate;
 };
 
-struct _GstRtpAMRDecClass
+struct _GstRtpAMRDepayClass
 {
   GstElementClass parent_class;
 };
 
-gboolean gst_rtpamrdec_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_amr_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_RTP_AMR_DEC_H__ */
+#endif /* __GST_RTP_AMR_DEPAY_H__ */

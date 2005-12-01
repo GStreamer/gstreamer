@@ -20,17 +20,17 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include "gstrtpmp4venc.h"
+#include "gstrtpmp4vpay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_mp4venc_details = {
+static GstElementDetails gst_rtp_mp4vpay_details = {
   "RTP packet parser",
-  "Codec/Encoder/Network",
-  "Encode MPEG4 video as RTP packets (RFC 3016)",
+  "Codec/Payloader/Network",
+  "Payode MPEG4 video as RTP packets (RFC 3016)",
   "Wim Taymans <wim@fluendo.com>"
 };
 
-static GstStaticPadTemplate gst_rtpmp4venc_sink_template =
+static GstStaticPadTemplate gst_rtp_mp4v_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -38,7 +38,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "mpegversion=(int) 4," "systemstream=(boolean)false")
     );
 
-static GstStaticPadTemplate gst_rtpmp4venc_src_template =
+static GstStaticPadTemplate gst_rtp_mp4v_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -63,63 +63,63 @@ enum
 };
 
 
-static void gst_rtpmp4venc_class_init (GstRtpMP4VEncClass * klass);
-static void gst_rtpmp4venc_base_init (GstRtpMP4VEncClass * klass);
-static void gst_rtpmp4venc_init (GstRtpMP4VEnc * rtpmp4venc);
-static void gst_rtpmp4venc_finalize (GObject * object);
+static void gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass);
+static void gst_rtp_mp4v_pay_base_init (GstRtpMP4VPayClass * klass);
+static void gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay);
+static void gst_rtp_mp4v_pay_finalize (GObject * object);
 
-static void gst_rtpmp4venc_set_property (GObject * object, guint prop_id,
+static void gst_rtp_mp4v_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_rtpmp4venc_get_property (GObject * object, guint prop_id,
+static void gst_rtp_mp4v_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_rtpmp4venc_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtpmp4venc_handle_buffer (GstBaseRTPPayload * payload,
-    GstBuffer * buffer);
+static GstFlowReturn gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload *
+    payload, GstBuffer * buffer);
 
 static GstBaseRTPPayloadClass *parent_class = NULL;
 
 static GType
-gst_rtpmp4venc_get_type (void)
+gst_rtp_mp4v_pay_get_type (void)
 {
-  static GType rtpmp4venc_type = 0;
+  static GType rtpmp4vpay_type = 0;
 
-  if (!rtpmp4venc_type) {
-    static const GTypeInfo rtpmp4venc_info = {
-      sizeof (GstRtpMP4VEncClass),
-      (GBaseInitFunc) gst_rtpmp4venc_base_init,
+  if (!rtpmp4vpay_type) {
+    static const GTypeInfo rtpmp4vpay_info = {
+      sizeof (GstRtpMP4VPayClass),
+      (GBaseInitFunc) gst_rtp_mp4v_pay_base_init,
       NULL,
-      (GClassInitFunc) gst_rtpmp4venc_class_init,
+      (GClassInitFunc) gst_rtp_mp4v_pay_class_init,
       NULL,
       NULL,
-      sizeof (GstRtpMP4VEnc),
+      sizeof (GstRtpMP4VPay),
       0,
-      (GInstanceInitFunc) gst_rtpmp4venc_init,
+      (GInstanceInitFunc) gst_rtp_mp4v_pay_init,
     };
 
-    rtpmp4venc_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpMP4VEnc",
-        &rtpmp4venc_info, 0);
+    rtpmp4vpay_type =
+        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpMP4VPay",
+        &rtpmp4vpay_info, 0);
   }
-  return rtpmp4venc_type;
+  return rtpmp4vpay_type;
 }
 
 static void
-gst_rtpmp4venc_base_init (GstRtpMP4VEncClass * klass)
+gst_rtp_mp4v_pay_base_init (GstRtpMP4VPayClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpmp4venc_src_template));
+      gst_static_pad_template_get (&gst_rtp_mp4v_pay_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpmp4venc_sink_template));
+      gst_static_pad_template_get (&gst_rtp_mp4v_pay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_mp4venc_details);
+  gst_element_class_set_details (element_class, &gst_rtp_mp4vpay_details);
 }
 
 static void
-gst_rtpmp4venc_class_init (GstRtpMP4VEncClass * klass)
+gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -131,54 +131,54 @@ gst_rtpmp4venc_class_init (GstRtpMP4VEncClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
-  gobject_class->set_property = gst_rtpmp4venc_set_property;
-  gobject_class->get_property = gst_rtpmp4venc_get_property;
+  gobject_class->set_property = gst_rtp_mp4v_pay_set_property;
+  gobject_class->get_property = gst_rtp_mp4v_pay_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SEND_CONFIG,
       g_param_spec_boolean ("send-config", "Send Config",
           "Send the config parameters in RTP packets as well",
           DEFAULT_SEND_CONFIG, G_PARAM_READWRITE));
 
-  gobject_class->finalize = gst_rtpmp4venc_finalize;
+  gobject_class->finalize = gst_rtp_mp4v_pay_finalize;
 
-  gstbasertppayload_class->set_caps = gst_rtpmp4venc_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtpmp4venc_handle_buffer;
+  gstbasertppayload_class->set_caps = gst_rtp_mp4v_pay_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtp_mp4v_pay_handle_buffer;
 }
 
 static void
-gst_rtpmp4venc_init (GstRtpMP4VEnc * rtpmp4venc)
+gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay)
 {
-  rtpmp4venc->adapter = gst_adapter_new ();
-  rtpmp4venc->rate = 90000;
-  rtpmp4venc->profile = 1;
-  rtpmp4venc->send_config = DEFAULT_SEND_CONFIG;
+  rtpmp4vpay->adapter = gst_adapter_new ();
+  rtpmp4vpay->rate = 90000;
+  rtpmp4vpay->profile = 1;
+  rtpmp4vpay->send_config = DEFAULT_SEND_CONFIG;
 }
 
 static void
-gst_rtpmp4venc_finalize (GObject * object)
+gst_rtp_mp4v_pay_finalize (GObject * object)
 {
-  GstRtpMP4VEnc *rtpmp4venc;
+  GstRtpMP4VPay *rtpmp4vpay;
 
-  rtpmp4venc = GST_RTP_MP4V_ENC (object);
+  rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
-  g_object_unref (rtpmp4venc->adapter);
-  rtpmp4venc->adapter = NULL;
+  g_object_unref (rtpmp4vpay->adapter);
+  rtpmp4vpay->adapter = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
-gst_rtpmp4venc_new_caps (GstRtpMP4VEnc * rtpmp4venc)
+gst_rtp_mp4v_pay_new_caps (GstRtpMP4VPay * rtpmp4vpay)
 {
   gchar *profile, *config;
   GValue v = { 0 };
 
-  profile = g_strdup_printf ("%d", rtpmp4venc->profile);
+  profile = g_strdup_printf ("%d", rtpmp4vpay->profile);
   g_value_init (&v, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&v, rtpmp4venc->config);
+  gst_value_set_buffer (&v, rtpmp4vpay->config);
   config = gst_value_serialize (&v);
 
-  gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4venc),
+  gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4vpay),
       "profile-level-id", G_TYPE_STRING, profile,
       "config", G_TYPE_STRING, config, NULL);
 
@@ -189,20 +189,20 @@ gst_rtpmp4venc_new_caps (GstRtpMP4VEnc * rtpmp4venc)
 }
 
 static gboolean
-gst_rtpmp4venc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  GstRtpMP4VEnc *rtpmp4venc;
+  GstRtpMP4VPay *rtpmp4vpay;
 
-  rtpmp4venc = GST_RTP_MP4V_ENC (payload);
+  rtpmp4vpay = GST_RTP_MP4V_PAY (payload);
 
   gst_basertppayload_set_options (payload, "video", TRUE, "MP4V-ES",
-      rtpmp4venc->rate);
+      rtpmp4vpay->rate);
 
   return TRUE;
 }
 
 static GstFlowReturn
-gst_rtpmp4venc_flush (GstRtpMP4VEnc * rtpmp4venc)
+gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
 {
   guint avail;
   GstBuffer *outbuf;
@@ -213,7 +213,7 @@ gst_rtpmp4venc_flush (GstRtpMP4VEnc * rtpmp4venc)
    * adapter contents can be put in one packet. In the case the
    * adapter has more than one MTU, we need to split the MP4V data
    * over multiple packets. */
-  avail = gst_adapter_available (rtpmp4venc->adapter);
+  avail = gst_adapter_available (rtpmp4vpay->adapter);
 
   ret = GST_FLOW_OK;
 
@@ -225,31 +225,31 @@ gst_rtpmp4venc_flush (GstRtpMP4VEnc * rtpmp4venc)
     guint packet_len;
 
     /* this will be the total lenght of the packet */
-    packet_len = gst_rtpbuffer_calc_packet_len (avail, 0, 0);
+    packet_len = gst_rtp_buffer_calc_packet_len (avail, 0, 0);
 
     /* fill one MTU or all available bytes */
-    towrite = MIN (packet_len, GST_BASE_RTP_PAYLOAD_MTU (rtpmp4venc));
+    towrite = MIN (packet_len, GST_BASE_RTP_PAYLOAD_MTU (rtpmp4vpay));
 
     /* this is the payload length */
-    payload_len = gst_rtpbuffer_calc_payload_len (towrite, 0, 0);
+    payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
 
     /* create buffer to hold the payload */
-    outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
 
     /* copy payload */
-    payload = gst_rtpbuffer_get_payload (outbuf);
-    data = (guint8 *) gst_adapter_peek (rtpmp4venc->adapter, payload_len);
+    payload = gst_rtp_buffer_get_payload (outbuf);
+    data = (guint8 *) gst_adapter_peek (rtpmp4vpay->adapter, payload_len);
     memcpy (payload, data, payload_len);
 
-    gst_adapter_flush (rtpmp4venc->adapter, payload_len);
+    gst_adapter_flush (rtpmp4vpay->adapter, payload_len);
 
     avail -= payload_len;
 
-    gst_rtpbuffer_set_marker (outbuf, avail == 0);
+    gst_rtp_buffer_set_marker (outbuf, avail == 0);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4venc->first_ts;
+    GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4vpay->first_ts;
 
-    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp4venc), outbuf);
+    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp4vpay), outbuf);
   }
 
   return ret;
@@ -263,7 +263,7 @@ gst_rtpmp4venc_flush (GstRtpMP4VEnc * rtpmp4venc)
 #define VOP_STARTCODE                  	0x000001B6
 
 static gboolean
-gst_rtpmp4venc_parse_data (GstRtpMP4VEnc * enc, guint8 * data, guint size,
+gst_rtp_mp4v_pay_parse_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
     gint * strip)
 {
   guint32 code;
@@ -314,7 +314,7 @@ gst_rtpmp4venc_parse_data (GstRtpMP4VEnc * enc, guint8 * data, guint size,
           gst_buffer_unref (enc->config);
         enc->config = gst_buffer_new_and_alloc (i);
         memcpy (GST_BUFFER_DATA (enc->config), data, i);
-        gst_rtpmp4venc_new_caps (enc);
+        gst_rtp_mp4v_pay_new_caps (enc);
       }
       *strip = i;
       /* we need to flush out the current packet. */
@@ -336,10 +336,10 @@ gst_rtpmp4venc_parse_data (GstRtpMP4VEnc * enc, guint8 * data, guint size,
 /* we expect buffers starting on startcodes. 
  */
 static GstFlowReturn
-gst_rtpmp4venc_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
-  GstRtpMP4VEnc *rtpmp4venc;
+  GstRtpMP4VPay *rtpmp4vpay;
   GstFlowReturn ret;
   guint size, avail;
   guint packet_len;
@@ -350,25 +350,25 @@ gst_rtpmp4venc_handle_buffer (GstBaseRTPPayload * basepayload,
 
   ret = GST_FLOW_OK;
 
-  rtpmp4venc = GST_RTP_MP4V_ENC (basepayload);
+  rtpmp4vpay = GST_RTP_MP4V_PAY (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
   duration = GST_BUFFER_DURATION (buffer);
-  avail = gst_adapter_available (rtpmp4venc->adapter);
+  avail = gst_adapter_available (rtpmp4vpay->adapter);
 
   /* empty buffer, take timestamp */
   if (avail == 0) {
-    rtpmp4venc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtpmp4venc->duration = 0;
+    rtpmp4vpay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    rtpmp4vpay->duration = 0;
   }
 
   /* parse incomming data and see if we need to start a new RTP
    * packet */
-  flush = gst_rtpmp4venc_parse_data (rtpmp4venc, data, size, &strip);
+  flush = gst_rtp_mp4v_pay_parse_data (rtpmp4vpay, data, size, &strip);
   if (strip) {
     /* strip off config if requested */
-    if (!rtpmp4venc->send_config) {
+    if (!rtpmp4vpay->send_config) {
       GstBuffer *subbuf;
 
       /* strip off header */
@@ -384,40 +384,40 @@ gst_rtpmp4venc_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* if we need to flush, do so now */
   if (flush) {
-    ret = gst_rtpmp4venc_flush (rtpmp4venc);
-    rtpmp4venc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtpmp4venc->duration = 0;
+    ret = gst_rtp_mp4v_pay_flush (rtpmp4vpay);
+    rtpmp4vpay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    rtpmp4vpay->duration = 0;
     avail = 0;
   }
 
   /* get packet length of data and see if we exceeded MTU. */
-  packet_len = gst_rtpbuffer_calc_packet_len (avail + size, 0, 0);
+  packet_len = gst_rtp_buffer_calc_packet_len (avail + size, 0, 0);
 
   if (gst_basertppayload_is_filled (basepayload,
-          packet_len, rtpmp4venc->duration + duration)) {
-    ret = gst_rtpmp4venc_flush (rtpmp4venc);
-    rtpmp4venc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtpmp4venc->duration = 0;
+          packet_len, rtpmp4vpay->duration + duration)) {
+    ret = gst_rtp_mp4v_pay_flush (rtpmp4vpay);
+    rtpmp4vpay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    rtpmp4vpay->duration = 0;
   }
 
   /* push new data */
-  gst_adapter_push (rtpmp4venc->adapter, buffer);
-  rtpmp4venc->duration += duration;
+  gst_adapter_push (rtpmp4vpay->adapter, buffer);
+  rtpmp4vpay->duration += duration;
 
   return ret;
 }
 
 static void
-gst_rtpmp4venc_set_property (GObject * object, guint prop_id,
+gst_rtp_mp4v_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRtpMP4VEnc *rtpmp4venc;
+  GstRtpMP4VPay *rtpmp4vpay;
 
-  rtpmp4venc = GST_RTP_MP4V_ENC (object);
+  rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
   switch (prop_id) {
     case ARG_SEND_CONFIG:
-      rtpmp4venc->send_config = g_value_get_boolean (value);
+      rtpmp4vpay->send_config = g_value_get_boolean (value);
       break;
     default:
       break;
@@ -425,16 +425,16 @@ gst_rtpmp4venc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_rtpmp4venc_get_property (GObject * object, guint prop_id,
+gst_rtp_mp4v_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstRtpMP4VEnc *rtpmp4venc;
+  GstRtpMP4VPay *rtpmp4vpay;
 
-  rtpmp4venc = GST_RTP_MP4V_ENC (object);
+  rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
   switch (prop_id) {
     case ARG_SEND_CONFIG:
-      g_value_set_boolean (value, rtpmp4venc->send_config);
+      g_value_set_boolean (value, rtpmp4vpay->send_config);
       break;
     default:
       break;
@@ -442,8 +442,8 @@ gst_rtpmp4venc_get_property (GObject * object, guint prop_id,
 }
 
 gboolean
-gst_rtpmp4venc_plugin_init (GstPlugin * plugin)
+gst_rtp_mp4v_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpmp4venc",
-      GST_RANK_NONE, GST_TYPE_RTP_MP4V_ENC);
+  return gst_element_register (plugin, "rtpmp4vpay",
+      GST_RANK_NONE, GST_TYPE_RTP_MP4V_PAY);
 }

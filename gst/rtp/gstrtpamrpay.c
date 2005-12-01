@@ -20,7 +20,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include "gstrtpamrenc.h"
+#include "gstrtpamrpay.h"
 
 /* references:
  *
@@ -30,21 +30,21 @@
  */
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_amrenc_details = {
+static GstElementDetails gst_rtp_amrpay_details = {
   "RTP packet parser",
-  "Codec/Encoder/Network",
-  "Encode AMR audio into RTP packets (RFC 3267)",
+  "Codec/Payloader/Network",
+  "Payode AMR audio into RTP packets (RFC 3267)",
   "Wim Taymans <wim@fluendo.com>"
 };
 
-static GstStaticPadTemplate gst_rtpamrenc_sink_template =
+static GstStaticPadTemplate gst_rtp_amr_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/AMR, channels=(int)1, rate=(int)8000")
     );
 
-static GstStaticPadTemplate gst_rtpamrenc_src_template =
+static GstStaticPadTemplate gst_rtp_amr_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -64,57 +64,57 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "maxptime = (int) [ 20, MAX ], " "ptime = (int) [ 20, MAX ]")
     );
 
-static void gst_rtpamrenc_class_init (GstRtpAMREncClass * klass);
-static void gst_rtpamrenc_base_init (GstRtpAMREncClass * klass);
-static void gst_rtpamrenc_init (GstRtpAMREnc * rtpamrenc);
+static void gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass);
+static void gst_rtp_amr_pay_base_init (GstRtpAMRPayClass * klass);
+static void gst_rtp_amr_pay_init (GstRtpAMRPay * rtpamrpay);
 
-static gboolean gst_rtpamrenc_setcaps (GstBaseRTPPayload * basepayload,
+static gboolean gst_rtp_amr_pay_setcaps (GstBaseRTPPayload * basepayload,
     GstCaps * caps);
-static GstFlowReturn gst_rtpamrenc_handle_buffer (GstBaseRTPPayload * pad,
+static GstFlowReturn gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * pad,
     GstBuffer * buffer);
 
 static GstBaseRTPPayloadClass *parent_class = NULL;
 
 static GType
-gst_rtpamrenc_get_type (void)
+gst_rtp_amr_pay_get_type (void)
 {
-  static GType rtpamrenc_type = 0;
+  static GType rtpamrpay_type = 0;
 
-  if (!rtpamrenc_type) {
-    static const GTypeInfo rtpamrenc_info = {
-      sizeof (GstRtpAMREncClass),
-      (GBaseInitFunc) gst_rtpamrenc_base_init,
+  if (!rtpamrpay_type) {
+    static const GTypeInfo rtpamrpay_info = {
+      sizeof (GstRtpAMRPayClass),
+      (GBaseInitFunc) gst_rtp_amr_pay_base_init,
       NULL,
-      (GClassInitFunc) gst_rtpamrenc_class_init,
+      (GClassInitFunc) gst_rtp_amr_pay_class_init,
       NULL,
       NULL,
-      sizeof (GstRtpAMREnc),
+      sizeof (GstRtpAMRPay),
       0,
-      (GInstanceInitFunc) gst_rtpamrenc_init,
+      (GInstanceInitFunc) gst_rtp_amr_pay_init,
     };
 
-    rtpamrenc_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpAMREnc",
-        &rtpamrenc_info, 0);
+    rtpamrpay_type =
+        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpAMRPay",
+        &rtpamrpay_info, 0);
   }
-  return rtpamrenc_type;
+  return rtpamrpay_type;
 }
 
 static void
-gst_rtpamrenc_base_init (GstRtpAMREncClass * klass)
+gst_rtp_amr_pay_base_init (GstRtpAMRPayClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpamrenc_src_template));
+      gst_static_pad_template_get (&gst_rtp_amr_pay_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpamrenc_sink_template));
+      gst_static_pad_template_get (&gst_rtp_amr_pay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_amrenc_details);
+  gst_element_class_set_details (element_class, &gst_rtp_amrpay_details);
 }
 
 static void
-gst_rtpamrenc_class_init (GstRtpAMREncClass * klass)
+gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -126,21 +126,21 @@ gst_rtpamrenc_class_init (GstRtpAMREncClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
-  gstbasertppayload_class->set_caps = gst_rtpamrenc_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtpamrenc_handle_buffer;
+  gstbasertppayload_class->set_caps = gst_rtp_amr_pay_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtp_amr_pay_handle_buffer;
 }
 
 static void
-gst_rtpamrenc_init (GstRtpAMREnc * rtpamrenc)
+gst_rtp_amr_pay_init (GstRtpAMRPay * rtpamrpay)
 {
 }
 
 static gboolean
-gst_rtpamrenc_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
+gst_rtp_amr_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 {
-  GstRtpAMREnc *rtpamrenc;
+  GstRtpAMRPay *rtpamrpay;
 
-  rtpamrenc = GST_RTP_AMR_ENC (basepayload);
+  rtpamrpay = GST_RTP_AMR_PAY (basepayload);
 
   gst_basertppayload_set_options (basepayload, "audio", TRUE, "AMR", 8000);
   gst_basertppayload_set_outcaps (basepayload,
@@ -157,17 +157,17 @@ gst_rtpamrenc_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtpamrenc_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
-  GstRtpAMREnc *rtpamrenc;
+  GstRtpAMRPay *rtpamrpay;
   GstFlowReturn ret;
   guint size, payload_len;
   GstBuffer *outbuf;
   guint8 *payload, *data;
   GstClockTime timestamp;
 
-  rtpamrenc = GST_RTP_AMR_ENC (basepayload);
+  rtpamrpay = GST_RTP_AMR_PAY (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
@@ -180,15 +180,15 @@ gst_rtpamrenc_handle_buffer (GstBaseRTPPayload * basepayload,
    * data */
   payload_len = size + 1;
 
-  outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
+  outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
   /* FIXME, assert for now */
-  g_assert (GST_BUFFER_SIZE (outbuf) < GST_BASE_RTP_PAYLOAD_MTU (rtpamrenc));
+  g_assert (GST_BUFFER_SIZE (outbuf) < GST_BASE_RTP_PAYLOAD_MTU (rtpamrpay));
 
   /* copy timestamp */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
   /* get payload */
-  payload = gst_rtpbuffer_get_payload (outbuf);
+  payload = gst_rtp_buffer_get_payload (outbuf);
 
   /*   0 1 2 3 4 5 6 7 
    *  +-+-+-+-+-+-+-+-+
@@ -218,8 +218,8 @@ gst_rtpamrenc_handle_buffer (GstBaseRTPPayload * basepayload,
 }
 
 gboolean
-gst_rtpamrenc_plugin_init (GstPlugin * plugin)
+gst_rtp_amr_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpamrenc",
-      GST_RANK_NONE, GST_TYPE_RTP_AMR_ENC);
+  return gst_element_register (plugin, "rtpamrpay",
+      GST_RANK_NONE, GST_TYPE_RTP_AMR_PAY);
 }

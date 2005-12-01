@@ -41,7 +41,7 @@ typedef struct _GstAsteriskH263Header
 #define GST_ASTERISKH263_HEADER_LENGTH(buf) (((GstAsteriskH263Header *)(GST_BUFFER_DATA (buf)))->length)
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_h263pdec_details = {
+static GstElementDetails gst_rtp_h263p_depaydetails = {
   "RTP packet parser",
   "Codec/Parser/Network",
   "Extracts H263 video from RTP and encodes in Asterisk H263 format",
@@ -130,7 +130,7 @@ gst_asteriskh263_base_init (GstAsteriskh263Class * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_asteriskh263_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_h263pdec_details);
+  gst_element_class_set_details (element_class, &gst_rtp_h263p_depaydetails);
 }
 
 static void
@@ -191,7 +191,7 @@ gst_asteriskh263_chain (GstPad * pad, GstBuffer * buf)
 
   asteriskh263 = GST_ASTERISK_H263 (GST_OBJECT_PARENT (pad));
 
-  if (!gst_rtpbuffer_validate (buf))
+  if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
 
   {
@@ -202,11 +202,11 @@ gst_asteriskh263_chain (GstPad * pad, GstBuffer * buf)
     guint32 samples;
     guint16 asterisk_len;
 
-    payload_len = gst_rtpbuffer_get_payload_len (buf);
-    payload = gst_rtpbuffer_get_payload (buf);
+    payload_len = gst_rtp_buffer_get_payload_len (buf);
+    payload = gst_rtp_buffer_get_payload (buf);
 
-    M = gst_rtpbuffer_get_marker (buf);
-    timestamp = gst_rtpbuffer_get_timestamp (buf);
+    M = gst_rtp_buffer_get_marker (buf);
+    timestamp = gst_rtp_buffer_get_timestamp (buf);
 
     outbuf = gst_buffer_new_and_alloc (payload_len +
         GST_ASTERISKH263_HEADER_LEN);

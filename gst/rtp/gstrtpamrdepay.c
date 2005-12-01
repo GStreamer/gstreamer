@@ -19,7 +19,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include <string.h>
-#include "gstrtpamrdec.h"
+#include "gstrtpamrdepay.h"
 
 /* references:
  *
@@ -29,14 +29,14 @@
  */
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_amrdec_details = {
+static GstElementDetails gst_rtp_amrdepay_details = {
   "RTP packet parser",
   "Codec/Parser/Network",
   "Extracts AMR audio from RTP packets (RFC 3267)",
   "Wim Taymans <wim@fluendo.com>"
 };
 
-/* RtpAMRDec signals and args */
+/* RtpAMRDepay signals and args */
 enum
 {
   /* FILL ME */
@@ -53,7 +53,7 @@ enum
  *
  * params see RFC 3267, section 8.1
  */
-static GstStaticPadTemplate gst_rtpamrdec_sink_template =
+static GstStaticPadTemplate gst_rtp_amr_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -77,70 +77,70 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     )
     );
 
-static GstStaticPadTemplate gst_rtpamrdec_src_template =
+static GstStaticPadTemplate gst_rtp_amr_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/AMR, " "channels = (int) 1," "rate = (int) 8000")
     );
 
-static void gst_rtpamrdec_class_init (GstRtpAMRDecClass * klass);
-static void gst_rtpamrdec_base_init (GstRtpAMRDecClass * klass);
-static void gst_rtpamrdec_init (GstRtpAMRDec * rtpamrdec);
+static void gst_rtp_amr_depay_class_init (GstRtpAMRDepayClass * klass);
+static void gst_rtp_amr_depay_base_init (GstRtpAMRDepayClass * klass);
+static void gst_rtp_amr_depay_init (GstRtpAMRDepay * rtpamrdepay);
 
-static gboolean gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_rtp_amr_depay_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_rtp_amr_depay_chain (GstPad * pad, GstBuffer * buffer);
 
-static void gst_rtpamrdec_set_property (GObject * object, guint prop_id,
+static void gst_rtp_amr_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_rtpamrdec_get_property (GObject * object, guint prop_id,
+static void gst_rtp_amr_depay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_rtpamrdec_change_state (GstElement * element,
-    GstStateChange transition);
+static GstStateChangeReturn gst_rtp_amr_depay_change_state (GstElement *
+    element, GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
 static GType
-gst_rtpamrdec_get_type (void)
+gst_rtp_amr_depay_get_type (void)
 {
-  static GType rtpamrdec_type = 0;
+  static GType rtpamrdepay_type = 0;
 
-  if (!rtpamrdec_type) {
-    static const GTypeInfo rtpamrdec_info = {
-      sizeof (GstRtpAMRDecClass),
-      (GBaseInitFunc) gst_rtpamrdec_base_init,
+  if (!rtpamrdepay_type) {
+    static const GTypeInfo rtpamrdepay_info = {
+      sizeof (GstRtpAMRDepayClass),
+      (GBaseInitFunc) gst_rtp_amr_depay_base_init,
       NULL,
-      (GClassInitFunc) gst_rtpamrdec_class_init,
+      (GClassInitFunc) gst_rtp_amr_depay_class_init,
       NULL,
       NULL,
-      sizeof (GstRtpAMRDec),
+      sizeof (GstRtpAMRDepay),
       0,
-      (GInstanceInitFunc) gst_rtpamrdec_init,
+      (GInstanceInitFunc) gst_rtp_amr_depay_init,
     };
 
-    rtpamrdec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpAMRDec",
-        &rtpamrdec_info, 0);
+    rtpamrdepay_type =
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpAMRDepay",
+        &rtpamrdepay_info, 0);
   }
-  return rtpamrdec_type;
+  return rtpamrdepay_type;
 }
 
 static void
-gst_rtpamrdec_base_init (GstRtpAMRDecClass * klass)
+gst_rtp_amr_depay_base_init (GstRtpAMRDepayClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpamrdec_src_template));
+      gst_static_pad_template_get (&gst_rtp_amr_depay_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpamrdec_sink_template));
+      gst_static_pad_template_get (&gst_rtp_amr_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_amrdec_details);
+  gst_element_class_set_details (element_class, &gst_rtp_amrdepay_details);
 }
 
 static void
-gst_rtpamrdec_class_init (GstRtpAMRDecClass * klass)
+gst_rtp_amr_depay_class_init (GstRtpAMRDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -150,106 +150,107 @@ gst_rtpamrdec_class_init (GstRtpAMRDecClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->set_property = gst_rtpamrdec_set_property;
-  gobject_class->get_property = gst_rtpamrdec_get_property;
+  gobject_class->set_property = gst_rtp_amr_depay_set_property;
+  gobject_class->get_property = gst_rtp_amr_depay_get_property;
 
-  gstelement_class->change_state = gst_rtpamrdec_change_state;
+  gstelement_class->change_state = gst_rtp_amr_depay_change_state;
 }
 
 static void
-gst_rtpamrdec_init (GstRtpAMRDec * rtpamrdec)
+gst_rtp_amr_depay_init (GstRtpAMRDepay * rtpamrdepay)
 {
-  rtpamrdec->srcpad =
+  rtpamrdepay->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpamrdec_src_template), "src");
+      (&gst_rtp_amr_depay_src_template), "src");
 
-  gst_element_add_pad (GST_ELEMENT (rtpamrdec), rtpamrdec->srcpad);
+  gst_element_add_pad (GST_ELEMENT (rtpamrdepay), rtpamrdepay->srcpad);
 
-  rtpamrdec->sinkpad =
+  rtpamrdepay->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpamrdec_sink_template), "sink");
-  gst_pad_set_setcaps_function (rtpamrdec->sinkpad, gst_rtpamrdec_sink_setcaps);
-  gst_pad_set_chain_function (rtpamrdec->sinkpad, gst_rtpamrdec_chain);
-  gst_element_add_pad (GST_ELEMENT (rtpamrdec), rtpamrdec->sinkpad);
+      (&gst_rtp_amr_depay_sink_template), "sink");
+  gst_pad_set_setcaps_function (rtpamrdepay->sinkpad,
+      gst_rtp_amr_depay_sink_setcaps);
+  gst_pad_set_chain_function (rtpamrdepay->sinkpad, gst_rtp_amr_depay_chain);
+  gst_element_add_pad (GST_ELEMENT (rtpamrdepay), rtpamrdepay->sinkpad);
 }
 
 static gboolean
-gst_rtpamrdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_rtp_amr_depay_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
   GstCaps *srccaps;
-  GstRtpAMRDec *rtpamrdec;
+  GstRtpAMRDepay *rtpamrdepay;
   const gchar *params;
   const gchar *str;
 
-  rtpamrdec = GST_RTP_AMR_DEC (GST_OBJECT_PARENT (pad));
+  rtpamrdepay = GST_RTP_AMR_DEPAY (GST_OBJECT_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
   if (!(str = gst_structure_get_string (structure, "octet-align")))
-    rtpamrdec->octet_align = FALSE;
+    rtpamrdepay->octet_align = FALSE;
   else
-    rtpamrdec->octet_align = (atoi (str) == 1);
+    rtpamrdepay->octet_align = (atoi (str) == 1);
 
   if (!(str = gst_structure_get_string (structure, "crc")))
-    rtpamrdec->crc = FALSE;
+    rtpamrdepay->crc = FALSE;
   else
-    rtpamrdec->crc = (atoi (str) == 1);
+    rtpamrdepay->crc = (atoi (str) == 1);
 
-  if (rtpamrdec->crc) {
+  if (rtpamrdepay->crc) {
     /* crc mode implies octet aligned mode */
-    rtpamrdec->octet_align = TRUE;
+    rtpamrdepay->octet_align = TRUE;
   }
 
   if (!(str = gst_structure_get_string (structure, "robust-sorting")))
-    rtpamrdec->robust_sorting = FALSE;
+    rtpamrdepay->robust_sorting = FALSE;
   else
-    rtpamrdec->robust_sorting = (atoi (str) == 1);
+    rtpamrdepay->robust_sorting = (atoi (str) == 1);
 
-  if (rtpamrdec->robust_sorting) {
+  if (rtpamrdepay->robust_sorting) {
     /* robust_sorting mode implies octet aligned mode */
-    rtpamrdec->octet_align = TRUE;
+    rtpamrdepay->octet_align = TRUE;
   }
 
   if (!(str = gst_structure_get_string (structure, "interleaving")))
-    rtpamrdec->interleaving = FALSE;
+    rtpamrdepay->interleaving = FALSE;
   else
-    rtpamrdec->interleaving = (atoi (str) == 1);
+    rtpamrdepay->interleaving = (atoi (str) == 1);
 
-  if (rtpamrdec->interleaving) {
+  if (rtpamrdepay->interleaving) {
     /* interleaving mode implies octet aligned mode */
-    rtpamrdec->octet_align = TRUE;
+    rtpamrdepay->octet_align = TRUE;
   }
 
   if (!(params = gst_structure_get_string (structure, "encoding-params")))
-    rtpamrdec->channels = 1;
+    rtpamrdepay->channels = 1;
   else {
-    rtpamrdec->channels = atoi (params);
+    rtpamrdepay->channels = atoi (params);
   }
 
-  if (!gst_structure_get_int (structure, "clock-rate", &rtpamrdec->rate))
-    rtpamrdec->rate = 8000;
+  if (!gst_structure_get_int (structure, "clock-rate", &rtpamrdepay->rate))
+    rtpamrdepay->rate = 8000;
 
   /* we require 1 channel, 8000 Hz, octet aligned, no CRC,
    * no robust sorting, no interleaving for now */
-  if (rtpamrdec->channels != 1)
+  if (rtpamrdepay->channels != 1)
     return FALSE;
-  if (rtpamrdec->rate != 8000)
+  if (rtpamrdepay->rate != 8000)
     return FALSE;
-  if (rtpamrdec->octet_align != TRUE)
+  if (rtpamrdepay->octet_align != TRUE)
     return FALSE;
-  if (rtpamrdec->robust_sorting != FALSE)
+  if (rtpamrdepay->robust_sorting != FALSE)
     return FALSE;
-  if (rtpamrdec->interleaving != FALSE)
+  if (rtpamrdepay->interleaving != FALSE)
     return FALSE;
 
   srccaps = gst_caps_new_simple ("audio/AMR",
-      "channels", G_TYPE_INT, rtpamrdec->channels,
-      "rate", G_TYPE_INT, rtpamrdec->rate, NULL);
-  gst_pad_set_caps (rtpamrdec->srcpad, srccaps);
+      "channels", G_TYPE_INT, rtpamrdepay->channels,
+      "rate", G_TYPE_INT, rtpamrdepay->rate, NULL);
+  gst_pad_set_caps (rtpamrdepay->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
-  rtpamrdec->negotiated = TRUE;
+  rtpamrdepay->negotiated = TRUE;
 
   return TRUE;
 }
@@ -261,18 +262,18 @@ static gint frame_size[16] = {
 };
 
 static GstFlowReturn
-gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
+gst_rtp_amr_depay_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstRtpAMRDec *rtpamrdec;
+  GstRtpAMRDepay *rtpamrdepay;
   GstBuffer *outbuf;
   GstFlowReturn ret;
 
-  rtpamrdec = GST_RTP_AMR_DEC (GST_OBJECT_PARENT (pad));
+  rtpamrdepay = GST_RTP_AMR_DEPAY (GST_OBJECT_PARENT (pad));
 
-  if (!rtpamrdec->negotiated)
+  if (!rtpamrdepay->negotiated)
     goto not_negotiated;
 
-  if (!gst_rtpbuffer_validate (buf))
+  if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
 
   /* when we get here, 1 channel, 8000 Hz, octet aligned, no CRC, 
@@ -286,13 +287,13 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
     gint amr_len;
     gint ILL, ILP;
 
-    payload_len = gst_rtpbuffer_get_payload_len (buf);
+    payload_len = gst_rtp_buffer_get_payload_len (buf);
 
     /* need at least 2 bytes for the header */
     if (payload_len < 2)
       goto bad_packet;
 
-    payload = gst_rtpbuffer_get_payload (buf);
+    payload = gst_rtp_buffer_get_payload (buf);
 
     /* parse CMR. The CMR is used by the sender to request
      * a new encoding mode.
@@ -308,7 +309,7 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
     payload_len -= 1;
     payload += 1;
 
-    if (rtpamrdec->interleaving) {
+    if (rtpamrdepay->interleaving) {
       ILL = (payload[0] & 0xf0) >> 4;
       ILP = (payload[0] & 0x0f);
 
@@ -355,7 +356,7 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
     if (num_packets == payload_len)
       goto bad_packet;
 
-    if (rtpamrdec->crc) {
+    if (rtpamrdepay->crc) {
       /* data len + CRC len + header bytes should be smaller than payload_len */
       if (num_packets + num_nonempty_packets + amr_len > payload_len)
         goto bad_packet;
@@ -365,16 +366,16 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
         goto bad_packet;
     }
 
-    timestamp = gst_rtpbuffer_get_timestamp (buf);
+    timestamp = gst_rtp_buffer_get_timestamp (buf);
 
     outbuf = gst_buffer_new_and_alloc (payload_len);
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / rtpamrdec->rate;
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / rtpamrdepay->rate;
 
     /* point to destination */
     p = GST_BUFFER_DATA (outbuf);
     /* point to first data packet */
     dp = payload + num_packets;
-    if (rtpamrdec->crc) {
+    if (rtpamrdepay->crc) {
       /* skip CRC if present */
       dp += num_nonempty_packets;
     }
@@ -393,11 +394,11 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
         dp += fr_size;
       }
     }
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (rtpamrdec->srcpad));
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (rtpamrdepay->srcpad));
 
-    GST_DEBUG ("gst_rtpamrdec_chain: pushing buffer of size %d",
+    GST_DEBUG ("gst_rtp_amr_depay_chain: pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));
-    ret = gst_pad_push (rtpamrdec->srcpad, outbuf);
+    ret = gst_pad_push (rtpamrdepay->srcpad, outbuf);
 
     gst_buffer_unref (buf);
   }
@@ -406,14 +407,14 @@ gst_rtpamrdec_chain (GstPad * pad, GstBuffer * buf)
 
 not_negotiated:
   {
-    GST_ELEMENT_ERROR (rtpamrdec, STREAM, NOT_IMPLEMENTED,
+    GST_ELEMENT_ERROR (rtpamrdepay, STREAM, NOT_IMPLEMENTED,
         ("not negotiated"), (NULL));
     gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 bad_packet:
   {
-    GST_ELEMENT_WARNING (rtpamrdec, STREAM, DECODE,
+    GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
         ("amr packet did not validate"), (NULL));
     gst_buffer_unref (buf);
     return GST_FLOW_OK;
@@ -421,12 +422,12 @@ bad_packet:
 }
 
 static void
-gst_rtpamrdec_set_property (GObject * object, guint prop_id,
+gst_rtp_amr_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRtpAMRDec *rtpamrdec;
+  GstRtpAMRDepay *rtpamrdepay;
 
-  rtpamrdec = GST_RTP_AMR_DEC (object);
+  rtpamrdepay = GST_RTP_AMR_DEPAY (object);
 
   switch (prop_id) {
     default:
@@ -436,12 +437,12 @@ gst_rtpamrdec_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_rtpamrdec_get_property (GObject * object, guint prop_id, GValue * value,
+gst_rtp_amr_depay_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstRtpAMRDec *rtpamrdec;
+  GstRtpAMRDepay *rtpamrdepay;
 
-  rtpamrdec = GST_RTP_AMR_DEC (object);
+  rtpamrdepay = GST_RTP_AMR_DEPAY (object);
 
   switch (prop_id) {
     default:
@@ -451,12 +452,12 @@ gst_rtpamrdec_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstStateChangeReturn
-gst_rtpamrdec_change_state (GstElement * element, GstStateChange transition)
+gst_rtp_amr_depay_change_state (GstElement * element, GstStateChange transition)
 {
-  GstRtpAMRDec *rtpamrdec;
+  GstRtpAMRDepay *rtpamrdepay;
   GstStateChangeReturn ret;
 
-  rtpamrdec = GST_RTP_AMR_DEC (element);
+  rtpamrdepay = GST_RTP_AMR_DEPAY (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -479,8 +480,8 @@ gst_rtpamrdec_change_state (GstElement * element, GstStateChange transition)
 }
 
 gboolean
-gst_rtpamrdec_plugin_init (GstPlugin * plugin)
+gst_rtp_amr_depay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpamrdec",
-      GST_RANK_NONE, GST_TYPE_RTP_AMR_DEC);
+  return gst_element_register (plugin, "rtpamrdepay",
+      GST_RANK_NONE, GST_TYPE_RTP_AMR_DEPAY);
 }

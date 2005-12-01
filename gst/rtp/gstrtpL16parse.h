@@ -53,7 +53,7 @@ struct _GstRtpL16ParseClass
 
 /* Standard macros for defining types for this element.  */
 #define GST_TYPE_RTP_L16_PARSE \
-  (gst_rtpL16parse_get_type())
+  (gst_rtp_L16parse_get_type())
 #define GST_RTP_L16_PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_L16_PARSE,GstRtpL16Parse))
 #define GST_RTP_L16_PARSE_CLASS(klass) \
@@ -63,7 +63,7 @@ struct _GstRtpL16ParseClass
 #define GST_IS_RTP_L16_PARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_L16_PARSE))
 
-gboolean gst_rtpL16parse_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_L16parse_plugin_init (GstPlugin * plugin);
 
 #ifdef __cplusplus
 }

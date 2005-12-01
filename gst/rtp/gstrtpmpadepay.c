@@ -19,17 +19,17 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include <string.h>
-#include "gstrtpmpadec.h"
+#include "gstrtpmpadepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_mpadec_details = {
+static GstElementDetails gst_rtp_mpadepay_details = {
   "RTP packet parser",
   "Codec/Parser/Network",
   "Extracts MPEG audio from RTP packets (RFC 2038)",
   "Wim Taymans <wim@fluendo.com>"
 };
 
-/* RtpMPADec signals and args */
+/* RtpMPADepay signals and args */
 enum
 {
   /* FILL ME */
@@ -42,14 +42,14 @@ enum
   ARG_FREQUENCY
 };
 
-static GstStaticPadTemplate gst_rtpmpadec_src_template =
+static GstStaticPadTemplate gst_rtp_mpa_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg")
     );
 
-static GstStaticPadTemplate gst_rtpmpadec_sink_template =
+static GstStaticPadTemplate gst_rtp_mpa_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -60,62 +60,62 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 
-static void gst_rtpmpadec_class_init (GstRtpMPADecClass * klass);
-static void gst_rtpmpadec_base_init (GstRtpMPADecClass * klass);
-static void gst_rtpmpadec_init (GstRtpMPADec * rtpmpadec);
+static void gst_rtp_mpa_depay_class_init (GstRtpMPADepayClass * klass);
+static void gst_rtp_mpa_depay_base_init (GstRtpMPADepayClass * klass);
+static void gst_rtp_mpa_depay_init (GstRtpMPADepay * rtpmpadepay);
 
-static GstFlowReturn gst_rtpmpadec_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_rtp_mpa_depay_chain (GstPad * pad, GstBuffer * buffer);
 
-static void gst_rtpmpadec_set_property (GObject * object, guint prop_id,
+static void gst_rtp_mpa_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_rtpmpadec_get_property (GObject * object, guint prop_id,
+static void gst_rtp_mpa_depay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_rtpmpadec_change_state (GstElement * element,
-    GstStateChange transition);
+static GstStateChangeReturn gst_rtp_mpa_depay_change_state (GstElement *
+    element, GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
 static GType
-gst_rtpmpadec_get_type (void)
+gst_rtp_mpa_depay_get_type (void)
 {
-  static GType rtpmpadec_type = 0;
+  static GType rtpmpadepay_type = 0;
 
-  if (!rtpmpadec_type) {
-    static const GTypeInfo rtpmpadec_info = {
-      sizeof (GstRtpMPADecClass),
-      (GBaseInitFunc) gst_rtpmpadec_base_init,
+  if (!rtpmpadepay_type) {
+    static const GTypeInfo rtpmpadepay_info = {
+      sizeof (GstRtpMPADepayClass),
+      (GBaseInitFunc) gst_rtp_mpa_depay_base_init,
       NULL,
-      (GClassInitFunc) gst_rtpmpadec_class_init,
+      (GClassInitFunc) gst_rtp_mpa_depay_class_init,
       NULL,
       NULL,
-      sizeof (GstRtpMPADec),
+      sizeof (GstRtpMPADepay),
       0,
-      (GInstanceInitFunc) gst_rtpmpadec_init,
+      (GInstanceInitFunc) gst_rtp_mpa_depay_init,
     };
 
-    rtpmpadec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpMPADec",
-        &rtpmpadec_info, 0);
+    rtpmpadepay_type =
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpMPADepay",
+        &rtpmpadepay_info, 0);
   }
-  return rtpmpadec_type;
+  return rtpmpadepay_type;
 }
 
 static void
-gst_rtpmpadec_base_init (GstRtpMPADecClass * klass)
+gst_rtp_mpa_depay_base_init (GstRtpMPADepayClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpmpadec_src_template));
+      gst_static_pad_template_get (&gst_rtp_mpa_depay_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpmpadec_sink_template));
+      gst_static_pad_template_get (&gst_rtp_mpa_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_mpadec_details);
+  gst_element_class_set_details (element_class, &gst_rtp_mpadepay_details);
 }
 
 static void
-gst_rtpmpadec_class_init (GstRtpMPADecClass * klass)
+gst_rtp_mpa_depay_class_init (GstRtpMPADepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -125,41 +125,41 @@ gst_rtpmpadec_class_init (GstRtpMPADecClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->set_property = gst_rtpmpadec_set_property;
-  gobject_class->get_property = gst_rtpmpadec_get_property;
+  gobject_class->set_property = gst_rtp_mpa_depay_set_property;
+  gobject_class->get_property = gst_rtp_mpa_depay_get_property;
 
-  gstelement_class->change_state = gst_rtpmpadec_change_state;
+  gstelement_class->change_state = gst_rtp_mpa_depay_change_state;
 }
 
 static void
-gst_rtpmpadec_init (GstRtpMPADec * rtpmpadec)
+gst_rtp_mpa_depay_init (GstRtpMPADepay * rtpmpadepay)
 {
-  rtpmpadec->srcpad =
+  rtpmpadepay->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpmpadec_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (rtpmpadec), rtpmpadec->srcpad);
+      (&gst_rtp_mpa_depay_src_template), "src");
+  gst_element_add_pad (GST_ELEMENT (rtpmpadepay), rtpmpadepay->srcpad);
 
-  rtpmpadec->sinkpad =
+  rtpmpadepay->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpmpadec_sink_template), "sink");
-  gst_pad_set_chain_function (rtpmpadec->sinkpad, gst_rtpmpadec_chain);
-  gst_element_add_pad (GST_ELEMENT (rtpmpadec), rtpmpadec->sinkpad);
+      (&gst_rtp_mpa_depay_sink_template), "sink");
+  gst_pad_set_chain_function (rtpmpadepay->sinkpad, gst_rtp_mpa_depay_chain);
+  gst_element_add_pad (GST_ELEMENT (rtpmpadepay), rtpmpadepay->sinkpad);
 }
 
 static GstFlowReturn
-gst_rtpmpadec_chain (GstPad * pad, GstBuffer * buf)
+gst_rtp_mpa_depay_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstRtpMPADec *rtpmpadec;
+  GstRtpMPADepay *rtpmpadepay;
   GstBuffer *outbuf;
   guint8 pt;
   GstFlowReturn ret;
 
-  rtpmpadec = GST_RTP_MPA_DEC (GST_OBJECT_PARENT (pad));
+  rtpmpadepay = GST_RTP_MPA_DEPAY (GST_OBJECT_PARENT (pad));
 
-  if (!gst_rtpbuffer_validate (buf))
+  if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
 
-  if ((pt = gst_rtpbuffer_get_payload_type (buf)) != GST_RTP_PAYLOAD_MPA)
+  if ((pt = gst_rtp_buffer_get_payload_type (buf)) != GST_RTP_PAYLOAD_MPA)
     goto bad_payload;
 
 
@@ -169,8 +169,8 @@ gst_rtpmpadec_chain (GstPad * pad, GstBuffer * buf)
     guint16 frag_offset;
     guint32 timestamp;
 
-    payload_len = gst_rtpbuffer_get_payload_len (buf);
-    payload = gst_rtpbuffer_get_payload (buf);
+    payload_len = gst_rtp_buffer_get_payload_len (buf);
+    payload = gst_rtp_buffer_get_payload (buf);
 
     frag_offset = (payload[2] << 8) | payload[3];
 
@@ -185,7 +185,7 @@ gst_rtpmpadec_chain (GstPad * pad, GstBuffer * buf)
     payload_len -= 4;
     payload += 4;
 
-    timestamp = gst_rtpbuffer_get_timestamp (buf);
+    timestamp = gst_rtp_buffer_get_timestamp (buf);
 
     outbuf = gst_buffer_new_and_alloc (payload_len);
 
@@ -193,14 +193,14 @@ gst_rtpmpadec_chain (GstPad * pad, GstBuffer * buf)
 
     memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
 
-    GST_DEBUG ("gst_rtpmpadec_chain: pushing buffer of size %d",
+    GST_DEBUG ("gst_rtp_mpa_depay_chain: pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));
 
     gst_buffer_unref (buf);
 
     /* FIXME, we can push half mpeg frames when they are split over multiple
      * RTP packets */
-    ret = gst_pad_push (rtpmpadec->srcpad, outbuf);
+    ret = gst_pad_push (rtpmpadepay->srcpad, outbuf);
   }
 
   return ret;
@@ -220,12 +220,12 @@ bad_payload:
 }
 
 static void
-gst_rtpmpadec_set_property (GObject * object, guint prop_id,
+gst_rtp_mpa_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRtpMPADec *rtpmpadec;
+  GstRtpMPADepay *rtpmpadepay;
 
-  rtpmpadec = GST_RTP_MPA_DEC (object);
+  rtpmpadepay = GST_RTP_MPA_DEPAY (object);
 
   switch (prop_id) {
     default:
@@ -235,12 +235,12 @@ gst_rtpmpadec_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_rtpmpadec_get_property (GObject * object, guint prop_id, GValue * value,
+gst_rtp_mpa_depay_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstRtpMPADec *rtpmpadec;
+  GstRtpMPADepay *rtpmpadepay;
 
-  rtpmpadec = GST_RTP_MPA_DEC (object);
+  rtpmpadepay = GST_RTP_MPA_DEPAY (object);
 
   switch (prop_id) {
     default:
@@ -250,12 +250,12 @@ gst_rtpmpadec_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstStateChangeReturn
-gst_rtpmpadec_change_state (GstElement * element, GstStateChange transition)
+gst_rtp_mpa_depay_change_state (GstElement * element, GstStateChange transition)
 {
-  GstRtpMPADec *rtpmpadec;
+  GstRtpMPADepay *rtpmpadepay;
   GstStateChangeReturn ret;
 
-  rtpmpadec = GST_RTP_MPA_DEC (element);
+  rtpmpadepay = GST_RTP_MPA_DEPAY (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -276,8 +276,8 @@ gst_rtpmpadec_change_state (GstElement * element, GstStateChange transition)
 }
 
 gboolean
-gst_rtpmpadec_plugin_init (GstPlugin * plugin)
+gst_rtp_mpa_depay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpmpadec",
-      GST_RANK_NONE, GST_TYPE_RTP_MPA_DEC);
+  return gst_element_register (plugin, "rtpmpadepay",
+      GST_RANK_NONE, GST_TYPE_RTP_MPA_DEPAY);
 }

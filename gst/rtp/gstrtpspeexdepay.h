@@ -12,40 +12,40 @@
  * Library General Public License for more 
  */
  
-#ifndef __GST_RTP_SPEEX_DEC_H__
-#define __GST_RTP_SPEEX_DEC_H__
+#ifndef __GST_RTP_SPEEX_DEPAY_H__
+#define __GST_RTP_SPEEX_DEPAY_H__
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertpdepayload.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstRtpSPEEXDec GstRtpSPEEXDec;
-typedef struct _GstRtpSPEEXDecClass GstRtpSPEEXDecClass;
+typedef struct _GstRtpSPEEXDepay GstRtpSPEEXDepay;
+typedef struct _GstRtpSPEEXDepayClass GstRtpSPEEXDepayClass;
 
-#define GST_TYPE_RTP_SPEEX_DEC \
-  (gst_rtpspeexdec_get_type())
-#define GST_RTP_SPEEX_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_SPEEX_DEC,GstRtpSPEEXDec))
-#define GST_RTP_SPEEX_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_SPEEX_DEC,GstRtpSPEEXDec))
-#define GST_IS_RTP_SPEEX_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_SPEEX_DEC))
-#define GST_IS_RTP_SPEEX_DEC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_SPEEX_DEC))
+#define GST_TYPE_RTP_SPEEX_DEPAY \
+  (gst_rtp_speex_depay_get_type())
+#define GST_RTP_SPEEX_DEPAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_SPEEX_DEPAY,GstRtpSPEEXDepay))
+#define GST_RTP_SPEEX_DEPAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_SPEEX_DEPAY,GstRtpSPEEXDepay))
+#define GST_IS_RTP_SPEEX_DEPAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_SPEEX_DEPAY))
+#define GST_IS_RTP_SPEEX_DEPAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_SPEEX_DEPAY))
 
-struct _GstRtpSPEEXDec
+struct _GstRtpSPEEXDepay
 {
   GstBaseRTPDepayload depayload;
 };
 
-struct _GstRtpSPEEXDecClass
+struct _GstRtpSPEEXDepayClass
 {
   GstBaseRTPDepayloadClass parent_class;
 };
 
-gboolean gst_rtpspeexdec_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_speex_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_RTP_SPEEX_DEC_H__ */
+#endif /* __GST_RTP_SPEEX_DEPAY_H__ */

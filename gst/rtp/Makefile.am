@@ -2,25 +2,25 @@ plugin_LTLIBRARIES = libgstrtp.la
 
 libgstrtp_la_SOURCES = \
 	gstrtp.c \
-	gstrtpdec.c \
-	gstrtpmpadec.c \
-	gstrtpmpaenc.c \
-	gstrtpg711enc.c \
-	gstrtpg711dec.c \
-	gstrtpgsmenc.c \
+	gstrtpdepay.c \
+	gstrtpmpadepay.c \
+	gstrtpmpapay.c \
+	gstrtpg711pay.c \
+	gstrtpg711depay.c \
+	gstrtpgsmpay.c \
 	gstrtpgsmparse.c \
-	gstrtpamrdec.c \
-	gstrtpamrenc.c \
-	gstrtph263pdec.c \
-	gstrtph263penc.c \
-	gstrtph263enc.c \
+	gstrtpamrdepay.c \
+	gstrtpamrpay.c \
+	gstrtph263pdepay.c \
+	gstrtph263ppay.c \
+	gstrtph263pay.c \
 	gstasteriskh263.c \
-	gstrtpmp4venc.c \
-	gstrtpmp4vdec.c \
-	gstrtpspeexenc.c \
-	gstrtpspeexdec.c
+	gstrtpmp4vpay.c \
+	gstrtpmp4vdepay.c \
+	gstrtpspeexpay.c \
+	gstrtpspeexdepay.c
 	
-#gstrtpL16enc.c gstrtpL16parse.c gstrtpgsmenc.c gstrtpgsmparse.c 
+#gstrtpL16pay.c gstrtpL16parse.c gstrtpgsmpay.c gstrtpgsmparse.c 
 
 if HAVE_WINSOCK2_H
 WINSOCK2_LIBS = -lws2_32
@@ -33,23 +33,23 @@ libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
                 -lgstrtp-@GST_MAJORMINOR@ $(WINSOCK2_LIBS)
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 
-noinst_HEADERS = gstrtpL16enc.h 	\
+noinst_HEADERS = gstrtpL16pay.h 	\
 		 gstrtpL16parse.h 	\
-		 gstrtpamrdec.h 	\
-		 gstrtpamrenc.h 	\
-		 gstrtpg711enc.h 	\
-		 gstrtpg711dec.h 	\
-		 gstrtpgsmenc.h 	\
+		 gstrtpamrdepay.h 	\
+		 gstrtpamrpay.h 	\
+		 gstrtpg711pay.h 	\
+		 gstrtpg711depay.h 	\
+		 gstrtpgsmpay.h 	\
 		 gstrtpgsmparse.h 	\
-		 gstrtpmpadec.h 	\
-		 gstrtpmpaenc.h 	\
-		 gstrtph263pdec.h 	\
-		 gstrtph263penc.h 	\
-		 gstrtph263enc.h 	\
-		 gstrtpmp4venc.h	\
-		 gstrtpmp4vdec.h	\
-		 gstrtpdec.h		\
-		 gstrtph263enc.h	\
+		 gstrtpmpadepay.h 	\
+		 gstrtpmpapay.h 	\
+		 gstrtph263pdepay.h 	\
+		 gstrtph263ppay.h 	\
+		 gstrtph263pay.h 	\
+		 gstrtpmp4vpay.h	\
+		 gstrtpmp4vdepay.h	\
+		 gstrtpdepay.h		\
+		 gstrtph263pay.h	\
 		 gstasteriskh263.h  \
-		 gstrtpspeexenc.h	\
-		 gstrtpspeexdec.h
+		 gstrtpspeexpay.h	\
+		 gstrtpspeexdepay.h

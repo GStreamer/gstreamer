@@ -18,18 +18,19 @@
  */
 /* Element-Checklist-Version: 5 */
 
-#include "gstrtpdec.h"
+#include "gstrtpdepay.h"
 
-GST_DEBUG_CATEGORY (rtpdec_debug);
-#define GST_CAT_DEFAULT (rtpdec_debug)
+GST_DEBUG_CATEGORY (rtpdepay_debug);
+#define GST_CAT_DEFAULT (rtpdepay_debug)
 
 /* elementfactory information */
-static GstElementDetails rtpdec_details = GST_ELEMENT_DETAILS ("RTP Decoder",
+static GstElementDetails rtpdepay_details =
+GST_ELEMENT_DETAILS ("RTP Payloader",
     "Codec/Parser/Network",
     "Accepts raw RTP and RTCP packets and sends them forward",
     "Wim Taymans <wim@fluendo.com>");
 
-/* GstRTPDec signals and args */
+/* GstRTPDepay signals and args */
 enum
 {
   /* FILL ME */
@@ -43,149 +44,151 @@ enum
       /* FILL ME */
 };
 
-static GstStaticPadTemplate gst_rtpdec_src_rtp_template =
+static GstStaticPadTemplate gst_rtp_depay_src_rtp_template =
 GST_STATIC_PAD_TEMPLATE ("srcrtp",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
-static GstStaticPadTemplate gst_rtpdec_src_rtcp_template =
+static GstStaticPadTemplate gst_rtp_depay_src_rtcp_template =
 GST_STATIC_PAD_TEMPLATE ("srcrtcp",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
-static GstStaticPadTemplate gst_rtpdec_sink_rtp_template =
+static GstStaticPadTemplate gst_rtp_depay_sink_rtp_template =
 GST_STATIC_PAD_TEMPLATE ("sinkrtp",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
-static GstStaticPadTemplate gst_rtpdec_sink_rtcp_template =
+static GstStaticPadTemplate gst_rtp_depay_sink_rtcp_template =
 GST_STATIC_PAD_TEMPLATE ("sinkrtcp",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtcp")
     );
 
-static void gst_rtpdec_class_init (gpointer g_class);
-static void gst_rtpdec_init (GstRTPDec * rtpdec);
+static void gst_rtp_depay_class_init (gpointer g_class);
+static void gst_rtp_depay_init (GstRTPDepay * rtpdepay);
 
-static GstCaps *gst_rtpdec_getcaps (GstPad * pad);
-static GstFlowReturn gst_rtpdec_chain_rtp (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_rtpdec_chain_rtcp (GstPad * pad, GstBuffer * buffer);
+static GstCaps *gst_rtp_depay_getcaps (GstPad * pad);
+static GstFlowReturn gst_rtp_depay_chain_rtp (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_rtp_depay_chain_rtcp (GstPad * pad,
+    GstBuffer * buffer);
 
-static void gst_rtpdec_set_property (GObject * object,
+static void gst_rtp_depay_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_rtpdec_get_property (GObject * object,
+static void gst_rtp_depay_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_rtpdec_change_state (GstElement * element,
+static GstStateChangeReturn gst_rtp_depay_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_rtpdec_signals[LAST_SIGNAL] = { 0 };*/
+/*static guint gst_rtp_depay_signals[LAST_SIGNAL] = { 0 };*/
 
 GType
-gst_rtpdec_get_type (void)
+gst_rtp_depay_get_type (void)
 {
-  static GType rtpdec_type = 0;
+  static GType rtpdepay_type = 0;
 
-  if (!rtpdec_type) {
-    static const GTypeInfo rtpdec_info = {
-      sizeof (GstRTPDecClass), NULL,
+  if (!rtpdepay_type) {
+    static const GTypeInfo rtpdepay_info = {
+      sizeof (GstRTPDepayClass), NULL,
       NULL,
-      (GClassInitFunc) gst_rtpdec_class_init,
+      (GClassInitFunc) gst_rtp_depay_class_init,
       NULL,
       NULL,
-      sizeof (GstRTPDec),
+      sizeof (GstRTPDepay),
       0,
-      (GInstanceInitFunc) gst_rtpdec_init,
+      (GInstanceInitFunc) gst_rtp_depay_init,
     };
 
-    rtpdec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRTPDec", &rtpdec_info, 0);
+    rtpdepay_type =
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRTPDepay", &rtpdepay_info,
+        0);
   }
-  return rtpdec_type;
+  return rtpdepay_type;
 }
 
 static void
-gst_rtpdec_class_init (gpointer g_class)
+gst_rtp_depay_class_init (gpointer g_class)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstRTPDecClass *klass;
+  GstRTPDepayClass *klass;
 
-  klass = (GstRTPDecClass *) g_class;
+  klass = (GstRTPDepayClass *) g_class;
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtpdec_src_rtp_template));
+      gst_static_pad_template_get (&gst_rtp_depay_src_rtp_template));
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtpdec_src_rtcp_template));
+      gst_static_pad_template_get (&gst_rtp_depay_src_rtcp_template));
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtpdec_sink_rtp_template));
+      gst_static_pad_template_get (&gst_rtp_depay_sink_rtp_template));
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_rtpdec_sink_rtcp_template));
-  gst_element_class_set_details (gstelement_class, &rtpdec_details);
+      gst_static_pad_template_get (&gst_rtp_depay_sink_rtcp_template));
+  gst_element_class_set_details (gstelement_class, &rtpdepay_details);
 
-  gobject_class->set_property = gst_rtpdec_set_property;
-  gobject_class->get_property = gst_rtpdec_get_property;
+  gobject_class->set_property = gst_rtp_depay_set_property;
+  gobject_class->get_property = gst_rtp_depay_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP, g_param_spec_int ("skip", "skip", "skip", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gstelement_class->change_state = gst_rtpdec_change_state;
+  gstelement_class->change_state = gst_rtp_depay_change_state;
 
-  GST_DEBUG_CATEGORY_INIT (rtpdec_debug, "rtpdec", 0, "RTP decoder");
+  GST_DEBUG_CATEGORY_INIT (rtpdepay_debug, "rtpdepay", 0, "RTP decoder");
 }
 
 static void
-gst_rtpdec_init (GstRTPDec * rtpdec)
+gst_rtp_depay_init (GstRTPDepay * rtpdepay)
 {
   /* the input rtp pad */
-  rtpdec->sink_rtp =
+  rtpdepay->sink_rtp =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpdec_sink_rtp_template), "sinkrtp");
-  gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->sink_rtp);
-  gst_pad_set_getcaps_function (rtpdec->sink_rtp, gst_rtpdec_getcaps);
-  gst_pad_set_chain_function (rtpdec->sink_rtp, gst_rtpdec_chain_rtp);
+      (&gst_rtp_depay_sink_rtp_template), "sinkrtp");
+  gst_element_add_pad (GST_ELEMENT (rtpdepay), rtpdepay->sink_rtp);
+  gst_pad_set_getcaps_function (rtpdepay->sink_rtp, gst_rtp_depay_getcaps);
+  gst_pad_set_chain_function (rtpdepay->sink_rtp, gst_rtp_depay_chain_rtp);
 
   /* the input rtcp pad */
-  rtpdec->sink_rtcp =
+  rtpdepay->sink_rtcp =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpdec_sink_rtcp_template), "sinkrtcp");
-  gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->sink_rtcp);
-  gst_pad_set_chain_function (rtpdec->sink_rtcp, gst_rtpdec_chain_rtcp);
+      (&gst_rtp_depay_sink_rtcp_template), "sinkrtcp");
+  gst_element_add_pad (GST_ELEMENT (rtpdepay), rtpdepay->sink_rtcp);
+  gst_pad_set_chain_function (rtpdepay->sink_rtcp, gst_rtp_depay_chain_rtcp);
 
   /* the output rtp pad */
-  rtpdec->src_rtp =
+  rtpdepay->src_rtp =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpdec_src_rtp_template), "srcrtp");
-  gst_pad_set_getcaps_function (rtpdec->src_rtp, gst_rtpdec_getcaps);
-  gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->src_rtp);
+      (&gst_rtp_depay_src_rtp_template), "srcrtp");
+  gst_pad_set_getcaps_function (rtpdepay->src_rtp, gst_rtp_depay_getcaps);
+  gst_element_add_pad (GST_ELEMENT (rtpdepay), rtpdepay->src_rtp);
 
   /* the output rtcp pad */
-  rtpdec->src_rtcp =
+  rtpdepay->src_rtcp =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpdec_src_rtcp_template), "srcrtcp");
-  gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->src_rtcp);
+      (&gst_rtp_depay_src_rtcp_template), "srcrtcp");
+  gst_element_add_pad (GST_ELEMENT (rtpdepay), rtpdepay->src_rtcp);
 }
 
 static GstCaps *
-gst_rtpdec_getcaps (GstPad * pad)
+gst_rtp_depay_getcaps (GstPad * pad)
 {
-  GstRTPDec *src;
+  GstRTPDepay *src;
   GstPad *other;
   GstCaps *caps;
 
-  src = GST_RTPDEC (GST_PAD_PARENT (pad));
+  src = GST_RTP_DEPAY (GST_PAD_PARENT (pad));
 
   other = pad == src->src_rtp ? src->sink_rtp : src->src_rtp;
 
@@ -198,18 +201,18 @@ gst_rtpdec_getcaps (GstPad * pad)
 }
 
 static GstFlowReturn
-gst_rtpdec_chain_rtp (GstPad * pad, GstBuffer * buffer)
+gst_rtp_depay_chain_rtp (GstPad * pad, GstBuffer * buffer)
 {
-  GstRTPDec *src;
+  GstRTPDepay *src;
 
-  src = GST_RTPDEC (GST_PAD_PARENT (pad));
+  src = GST_RTP_DEPAY (GST_PAD_PARENT (pad));
 
   GST_DEBUG ("got rtp packet");
   return gst_pad_push (src->src_rtp, buffer);
 }
 
 static GstFlowReturn
-gst_rtpdec_chain_rtcp (GstPad * pad, GstBuffer * buffer)
+gst_rtp_depay_chain_rtcp (GstPad * pad, GstBuffer * buffer)
 {
   GST_DEBUG ("got rtcp packet");
 
@@ -218,12 +221,12 @@ gst_rtpdec_chain_rtcp (GstPad * pad, GstBuffer * buffer)
 }
 
 static void
-gst_rtpdec_set_property (GObject * object, guint prop_id,
+gst_rtp_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRTPDec *src;
+  GstRTPDepay *src;
 
-  src = GST_RTPDEC (object);
+  src = GST_RTP_DEPAY (object);
 
   switch (prop_id) {
     case ARG_SKIP:
@@ -234,12 +237,12 @@ gst_rtpdec_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_rtpdec_get_property (GObject * object, guint prop_id, GValue * value,
+gst_rtp_depay_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstRTPDec *src;
+  GstRTPDepay *src;
 
-  src = GST_RTPDEC (object);
+  src = GST_RTP_DEPAY (object);
 
   switch (prop_id) {
     case ARG_SKIP:
@@ -250,12 +253,12 @@ gst_rtpdec_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstStateChangeReturn
-gst_rtpdec_change_state (GstElement * element, GstStateChange transition)
+gst_rtp_depay_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstRTPDec *rtpdec;
+  GstRTPDepay *rtpdepay;
 
-  rtpdec = GST_RTPDEC (element);
+  rtpdepay = GST_RTP_DEPAY (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -277,8 +280,8 @@ gst_rtpdec_change_state (GstElement * element, GstStateChange transition)
 }
 
 gboolean
-gst_rtpdec_plugin_init (GstPlugin * plugin)
+gst_rtp_depay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpdec",
-      GST_RANK_NONE, GST_TYPE_RTPDEC);
+  return gst_element_register (plugin, "rtpdepay",
+      GST_RANK_NONE, GST_TYPE_RTP_DEPAY);
 }

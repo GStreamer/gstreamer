@@ -29,7 +29,7 @@ typedef struct _GstRTPGSMParse GstRTPGSMParse;
 typedef struct _GstRTPGSMParseClass GstRTPGSMParseClass;
 
 #define GST_TYPE_RTP_GSM_PARSE \
-  (gst_rtpgsmparse_get_type())
+  (gst_rtp_gsm_parse_get_type())
 #define GST_RTP_GSM_PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_GSM_PARSE,GstRTPGSMParse))
 #define GST_RTP_GSM_PARSE_CLASS(klass) \
@@ -41,7 +41,7 @@ typedef struct _GstRTPGSMParseClass GstRTPGSMParseClass;
 
 struct _GstRTPGSMParse
 {
-  GstBaseRTPDepayload depayload;
+  GstBaseRTPDepayload _depayload;
 };
 
 struct _GstRTPGSMParseClass
@@ -49,7 +49,7 @@ struct _GstRTPGSMParseClass
   GstBaseRTPDepayloadClass parent_class;
 };
 
-gboolean gst_rtpgsmparse_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_gsm_parse_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

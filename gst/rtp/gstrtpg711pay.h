@@ -13,8 +13,8 @@
  */
 
 
-#ifndef __GST_RTP_G711_ENC_H__
-#define __GST_RTP_G711_ENC_H__
+#ifndef __GST_RTP_G711_PAY_H__
+#define __GST_RTP_G711_PAY_H__
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
@@ -22,21 +22,21 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstRtpG711Enc GstRtpG711Enc;
-typedef struct _GstRtpG711EncClass GstRtpG711EncClass;
+typedef struct _GstRtpG711Pay GstRtpG711Pay;
+typedef struct _GstRtpG711PayClass GstRtpG711PayClass;
 
-#define GST_TYPE_RTP_G711_ENC \
-  (gst_rtpg711enc_get_type())
-#define GST_RTP_G711_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_G711_ENC,GstRtpG711Enc))
-#define GST_RTP_G711_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_G711_ENC,GstRtpG711Enc))
-#define GST_IS_RTP_G711_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_G711_ENC))
-#define GST_IS_RTP_G711_ENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_G711_ENC))
+#define GST_TYPE_RTP_G711_PAY \
+  (gst_rtp_g711_pay_get_type())
+#define GST_RTP_G711_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_G711_PAY,GstRtpG711Pay))
+#define GST_RTP_G711_PAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_G711_PAY,GstRtpG711Pay))
+#define GST_IS_RTP_G711_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_G711_PAY))
+#define GST_IS_RTP_G711_PAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_G711_PAY))
 
-struct _GstRtpG711Enc
+struct _GstRtpG711Pay
 {
   GstBaseRTPPayload payload;
   GstAdapter *adapter;
@@ -45,13 +45,13 @@ struct _GstRtpG711Enc
   GstClockTime duration;  
 };
 
-struct _GstRtpG711EncClass
+struct _GstRtpG711PayClass
 {
   GstBaseRTPPayloadClass parent_class;
 };
 
-gboolean gst_rtpg711enc_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_g711_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_RTP_G711_ENC_H__ */
+#endif /* __GST_RTP_G711_PAY_H__ */

@@ -18,40 +18,40 @@
  */
 
 
-#ifndef __GST_RTP_GSM_ENC_H__
-#define __GST_RTP_GSM_ENC_H__
+#ifndef __GST_RTP_GSM_PAY_H__
+#define __GST_RTP_GSM_PAY_H__
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstRTPGSMEnc GstRTPGSMEnc;
-typedef struct _GstRTPGSMEncClass GstRTPGSMEncClass;
+typedef struct _GstRTPGSMPay GstRTPGSMPay;
+typedef struct _GstRTPGSMPayClass GstRTPGSMPayClass;
 
-#define GST_TYPE_RTP_GSM_ENC \
-  (gst_rtpgsmenc_get_type())
-#define GST_RTP_GSM_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_GSM_ENC,GstRTPGSMEnc))
-#define GST_RTP_GSM_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_GSM_ENC,GstRTPGSMEnc))
-#define GST_IS_RTP_GSM_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_GSM_ENC))
-#define GST_IS_RTP_GSM_ENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_GSM_ENC))
+#define GST_TYPE_RTP_GSM_PAY \
+  (gst_rtp_gsm_pay_get_type())
+#define GST_RTP_GSM_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_GSM_PAY,GstRTPGSMPay))
+#define GST_RTP_GSM_PAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_GSM_PAY,GstRTPGSMPay))
+#define GST_IS_RTP_GSM_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_GSM_PAY))
+#define GST_IS_RTP_GSM_PAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_GSM_PAY))
 
-struct _GstRTPGSMEnc
+struct _GstRTPGSMPay
 {
   GstBaseRTPPayload payload;
 };
 
-struct _GstRTPGSMEncClass
+struct _GstRTPGSMPayClass
 {
   GstBaseRTPPayloadClass parent_class;
 };
 
-gboolean gst_rtpgsmenc_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_gsm_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_RTP_GSM_ENC_H__ */
+#endif /* __GST_RTP_GSM_PAY_H__ */

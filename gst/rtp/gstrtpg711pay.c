@@ -21,17 +21,17 @@
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include "gstrtpg711enc.h"
+#include "gstrtpg711pay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtpg711enc_details = {
+static GstElementDetails gst_rtp_g711_pay_details = {
   "RTP packet parser",
-  "Codec/Encoder/Network",
-  "Encodes PCMU/PCMA audio into a RTP packet",
+  "Codec/Payloader/Network",
+  "Payodes PCMU/PCMA audio into a RTP packet",
   "Edgard Lima <edgard.lima@indt.org.br>"
 };
 
-static GstStaticPadTemplate gst_rtpg711enc_sink_template =
+static GstStaticPadTemplate gst_rtp_g711_pay_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -39,7 +39,7 @@ static GstStaticPadTemplate gst_rtpg711enc_sink_template =
         "audio/x-alaw, channels=(int)1, rate=(int)8000")
     );
 
-static GstStaticPadTemplate gst_rtpg711enc_src_template =
+static GstStaticPadTemplate gst_rtp_g711_pay_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -54,29 +54,29 @@ static GstStaticPadTemplate gst_rtpg711enc_src_template =
         "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\"")
     );
 
-static gboolean gst_rtpg711enc_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_g711_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtpg711enc_handle_buffer (GstBaseRTPPayload * payload,
-    GstBuffer * buffer);
-static void gst_rtpg711enc_finalize (GObject * object);
+static GstFlowReturn gst_rtp_g711_pay_handle_buffer (GstBaseRTPPayload *
+    payload, GstBuffer * buffer);
+static void gst_rtp_g711_pay_finalize (GObject * object);
 
-GST_BOILERPLATE (GstRtpG711Enc, gst_rtpg711enc, GstBaseRTPPayload,
+GST_BOILERPLATE (GstRtpG711Pay, gst_rtp_g711_pay, GstBaseRTPPayload,
     GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
-gst_rtpg711enc_base_init (gpointer klass)
+gst_rtp_g711_pay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpg711enc_sink_template));
+      gst_static_pad_template_get (&gst_rtp_g711_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpg711enc_src_template));
-  gst_element_class_set_details (element_class, &gst_rtpg711enc_details);
+      gst_static_pad_template_get (&gst_rtp_g711_pay_src_template));
+  gst_element_class_set_details (element_class, &gst_rtp_g711_pay_details);
 }
 
 static void
-gst_rtpg711enc_class_init (GstRtpG711EncClass * klass)
+gst_rtp_g711_pay_class_init (GstRtpG711PayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -87,34 +87,34 @@ gst_rtpg711enc_class_init (GstRtpG711EncClass * klass)
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
-  gobject_class->finalize = gst_rtpg711enc_finalize;
+  gobject_class->finalize = gst_rtp_g711_pay_finalize;
 
-  gstbasertppayload_class->set_caps = gst_rtpg711enc_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtpg711enc_handle_buffer;
+  gstbasertppayload_class->set_caps = gst_rtp_g711_pay_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtp_g711_pay_handle_buffer;
 }
 
 static void
-gst_rtpg711enc_init (GstRtpG711Enc * rtpg711enc, GstRtpG711EncClass * klass)
+gst_rtp_g711_pay_init (GstRtpG711Pay * rtpg711pay, GstRtpG711PayClass * klass)
 {
-  rtpg711enc->adapter = gst_adapter_new ();
-  GST_BASE_RTP_PAYLOAD (rtpg711enc)->clock_rate = 8000;
+  rtpg711pay->adapter = gst_adapter_new ();
+  GST_BASE_RTP_PAYLOAD (rtpg711pay)->clock_rate = 8000;
 }
 
 static void
-gst_rtpg711enc_finalize (GObject * object)
+gst_rtp_g711_pay_finalize (GObject * object)
 {
-  GstRtpG711Enc *rtpg711enc;
+  GstRtpG711Pay *rtpg711pay;
 
-  rtpg711enc = GST_RTP_G711_ENC (object);
+  rtpg711pay = GST_RTP_G711_PAY (object);
 
-  g_object_unref (rtpg711enc->adapter);
-  rtpg711enc->adapter = NULL;
+  g_object_unref (rtpg711pay->adapter);
+  rtpg711pay->adapter = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_rtpg711enc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_g711_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
 
   const char *stname;
@@ -140,7 +140,7 @@ gst_rtpg711enc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtpg711enc_flush (GstRtpG711Enc * rtpg711enc)
+gst_rtp_g711_pay_flush (GstRtpG711Pay * rtpg711pay)
 {
   guint avail;
   GstBuffer *outbuf;
@@ -149,7 +149,7 @@ gst_rtpg711enc_flush (GstRtpG711Enc * rtpg711enc)
   /* the data available in the adapter is either smaller
    * than the MTU or bigger. In the case it is smaller, the complete
    * adapter contents can be put in one packet.  */
-  avail = gst_adapter_available (rtpg711enc->adapter);
+  avail = gst_adapter_available (rtpg711pay->adapter);
 
   ret = GST_FLOW_OK;
 
@@ -161,74 +161,74 @@ gst_rtpg711enc_flush (GstRtpG711Enc * rtpg711enc)
     guint packet_len;
 
     /* this will be the total lenght of the packet */
-    packet_len = gst_rtpbuffer_calc_packet_len (avail, 0, 0);
+    packet_len = gst_rtp_buffer_calc_packet_len (avail, 0, 0);
     /* fill one MTU or all available bytes */
-    towrite = MIN (packet_len, GST_BASE_RTP_PAYLOAD_MTU (rtpg711enc));
+    towrite = MIN (packet_len, GST_BASE_RTP_PAYLOAD_MTU (rtpg711pay));
     /* this is the payload length */
-    payload_len = gst_rtpbuffer_calc_payload_len (towrite, 0, 0);
+    payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
     /* create buffer to hold the payload */
-    outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
 
     /* copy payload */
-    gst_rtpbuffer_set_payload_type (outbuf,
-        GST_BASE_RTP_PAYLOAD_PT (rtpg711enc));
-    payload = gst_rtpbuffer_get_payload (outbuf);
-    data = (guint8 *) gst_adapter_peek (rtpg711enc->adapter, payload_len);
+    gst_rtp_buffer_set_payload_type (outbuf,
+        GST_BASE_RTP_PAYLOAD_PT (rtpg711pay));
+    payload = gst_rtp_buffer_get_payload (outbuf);
+    data = (guint8 *) gst_adapter_peek (rtpg711pay->adapter, payload_len);
     memcpy (payload, data, payload_len);
-    gst_adapter_flush (rtpg711enc->adapter, payload_len);
+    gst_adapter_flush (rtpg711pay->adapter, payload_len);
 
     avail -= payload_len;
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtpg711enc->first_ts;
-    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpg711enc), outbuf);
+    GST_BUFFER_TIMESTAMP (outbuf) = rtpg711pay->first_ts;
+    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpg711pay), outbuf);
   }
 
   return ret;
 }
 
 static GstFlowReturn
-gst_rtpg711enc_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_g711_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
-  GstRtpG711Enc *rtpg711enc;
+  GstRtpG711Pay *rtpg711pay;
   guint size, packet_len, avail;
   GstFlowReturn ret;
   GstClockTime duration;
 
-  rtpg711enc = GST_RTP_G711_ENC (basepayload);
+  rtpg711pay = GST_RTP_G711_PAY (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
   duration = GST_BUFFER_TIMESTAMP (buffer);
 
-  avail = gst_adapter_available (rtpg711enc->adapter);
+  avail = gst_adapter_available (rtpg711pay->adapter);
   if (avail == 0) {
-    rtpg711enc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtpg711enc->duration = 0;
+    rtpg711pay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    rtpg711pay->duration = 0;
   }
 
   /* get packet length of data and see if we exceeded MTU. */
-  packet_len = gst_rtpbuffer_calc_packet_len (avail + size, 0, 0);
+  packet_len = gst_rtp_buffer_calc_packet_len (avail + size, 0, 0);
 
   /* if this buffer is going to overflow the packet, flush what we
    * have. */
   if (gst_basertppayload_is_filled (basepayload,
-          packet_len, rtpg711enc->duration + duration)) {
-    ret = gst_rtpg711enc_flush (rtpg711enc);
-    rtpg711enc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtpg711enc->duration = 0;
+          packet_len, rtpg711pay->duration + duration)) {
+    ret = gst_rtp_g711_pay_flush (rtpg711pay);
+    rtpg711pay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    rtpg711pay->duration = 0;
   } else {
     ret = GST_FLOW_OK;
   }
 
-  gst_adapter_push (rtpg711enc->adapter, buffer);
-  rtpg711enc->duration += duration;
+  gst_adapter_push (rtpg711pay->adapter, buffer);
+  rtpg711pay->duration += duration;
 
   return ret;
 }
 
 gboolean
-gst_rtpg711enc_plugin_init (GstPlugin * plugin)
+gst_rtp_g711_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpg711enc",
-      GST_RANK_NONE, GST_TYPE_RTP_G711_ENC);
+  return gst_element_register (plugin, "rtpg711pay",
+      GST_RANK_NONE, GST_TYPE_RTP_G711_PAY);
 }

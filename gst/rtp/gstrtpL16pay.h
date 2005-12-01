@@ -18,16 +18,16 @@
  */
 
 
-#ifndef __GST_RTP_L16_ENC_H__
-#define __GST_RTP_L16_ENC_H__
+#ifndef __GST_RTP_L16_PAY_H__
+#define __GST_RTP_L16_PAY_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
 /* Definition of structure storing data for this element. */
-typedef struct _GstRtpL16Enc GstRtpL16Enc;
-struct _GstRtpL16Enc
+typedef struct _GstRtpL16Pay GstRtpL16Pay;
+struct _GstRtpL16Pay
 {
   GstElement element;
 
@@ -47,26 +47,26 @@ struct _GstRtpL16Enc
 };
 
 /* Standard definition defining a class for this element. */
-typedef struct _GstRtpL16EncClass GstRtpL16EncClass;
-struct _GstRtpL16EncClass
+typedef struct _GstRtpL16PayClass GstRtpL16PayClass;
+struct _GstRtpL16PayClass
 {
   GstElementClass parent_class;
 };
 
 /* Standard macros for defining types for this element.  */
-#define GST_TYPE_RTP_L16_ENC \
-  (gst_rtpL16enc_get_type())
-#define GST_RTP_L16_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_L16_ENC,GstRtpL16Enc))
-#define GST_RTP_L16_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_L16_ENC,GstRtpL16Enc))
-#define GST_IS_RTP_L16_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_L16_ENC))
-#define GST_IS_RTP_L16_ENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_L16_ENC))
+#define GST_TYPE_RTP_L16_PAY \
+  (gst_rtpL16pay_get_type())
+#define GST_RTP_L16_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_L16_PAY,GstRtpL16Pay))
+#define GST_RTP_L16_PAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_L16_PAY,GstRtpL16Pay))
+#define GST_IS_RTP_L16_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_L16_PAY))
+#define GST_IS_RTP_L16_PAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_L16_PAY))
 
-gboolean gst_rtpL16enc_plugin_init (GstPlugin * plugin);
+gboolean gst_rtpL16pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif				/* __GST_RTP_L16_ENC_H__ */
+#endif				/* __GST_RTP_L16_PAY_H__ */

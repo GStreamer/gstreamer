@@ -20,7 +20,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include "gstrtph263enc.h"
+#include "gstrtph263pay.h"
 
 #define GST_RFC2190A_HEADER_LEN 4
 
@@ -139,21 +139,21 @@ typedef struct _GstH263PictureLayer
 
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_h263enc_details = {
+static GstElementDetails gst_rtp_h263pay_details = {
   "RTP packet parser",
-  "Codec/Encoder/Network",
-  "Encodes H263 video in RTP packets (RFC 2190)",
+  "Codec/Payloader/Network",
+  "Payodes H263 video in RTP packets (RFC 2190)",
   "Neil Stratford <neils@vipadia.com>"
 };
 
-static GstStaticPadTemplate gst_rtph263enc_sink_template =
+static GstStaticPadTemplate gst_rtp_h263_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h263")
     );
 
-static GstStaticPadTemplate gst_rtph263enc_src_template =
+static GstStaticPadTemplate gst_rtp_h263_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -163,58 +163,58 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"")
     );
 
-static void gst_rtph263enc_class_init (GstRtpH263EncClass * klass);
-static void gst_rtph263enc_base_init (GstRtpH263EncClass * klass);
-static void gst_rtph263enc_init (GstRtpH263Enc * rtph263enc);
-static void gst_rtph263enc_finalize (GObject * object);
+static void gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass);
+static void gst_rtp_h263_pay_base_init (GstRtpH263PayClass * klass);
+static void gst_rtp_h263_pay_init (GstRtpH263Pay * rtph263pay);
+static void gst_rtp_h263_pay_finalize (GObject * object);
 
-static gboolean gst_rtph263enc_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_h263_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtph263enc_handle_buffer (GstBaseRTPPayload * payload,
-    GstBuffer * buffer);
+static GstFlowReturn gst_rtp_h263_pay_handle_buffer (GstBaseRTPPayload *
+    payload, GstBuffer * buffer);
 
 static GstBaseRTPPayloadClass *parent_class = NULL;
 
 static GType
-gst_rtph263enc_get_type (void)
+gst_rtp_h263_pay_get_type (void)
 {
-  static GType rtph263enc_type = 0;
+  static GType rtph263pay_type = 0;
 
-  if (!rtph263enc_type) {
-    static const GTypeInfo rtph263enc_info = {
-      sizeof (GstRtpH263EncClass),
-      (GBaseInitFunc) gst_rtph263enc_base_init,
+  if (!rtph263pay_type) {
+    static const GTypeInfo rtph263pay_info = {
+      sizeof (GstRtpH263PayClass),
+      (GBaseInitFunc) gst_rtp_h263_pay_base_init,
       NULL,
-      (GClassInitFunc) gst_rtph263enc_class_init,
+      (GClassInitFunc) gst_rtp_h263_pay_class_init,
       NULL,
       NULL,
-      sizeof (GstRtpH263Enc),
+      sizeof (GstRtpH263Pay),
       0,
-      (GInstanceInitFunc) gst_rtph263enc_init,
+      (GInstanceInitFunc) gst_rtp_h263_pay_init,
     };
 
-    rtph263enc_type =
-        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpH263Enc",
-        &rtph263enc_info, 0);
+    rtph263pay_type =
+        g_type_register_static (GST_TYPE_BASE_RTP_PAYLOAD, "GstRtpH263Pay",
+        &rtph263pay_info, 0);
   }
-  return rtph263enc_type;
+  return rtph263pay_type;
 }
 
 static void
-gst_rtph263enc_base_init (GstRtpH263EncClass * klass)
+gst_rtp_h263_pay_base_init (GstRtpH263PayClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtph263enc_src_template));
+      gst_static_pad_template_get (&gst_rtp_h263_pay_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtph263enc_sink_template));
+      gst_static_pad_template_get (&gst_rtp_h263_pay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_h263enc_details);
+  gst_element_class_set_details (element_class, &gst_rtp_h263pay_details);
 }
 
 static void
-gst_rtph263enc_class_init (GstRtpH263EncClass * klass)
+gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -226,33 +226,33 @@ gst_rtph263enc_class_init (GstRtpH263EncClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
-  gobject_class->finalize = gst_rtph263enc_finalize;
+  gobject_class->finalize = gst_rtp_h263_pay_finalize;
 
-  gstbasertppayload_class->set_caps = gst_rtph263enc_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtph263enc_handle_buffer;
+  gstbasertppayload_class->set_caps = gst_rtp_h263_pay_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtp_h263_pay_handle_buffer;
 }
 
 static void
-gst_rtph263enc_init (GstRtpH263Enc * rtph263enc)
+gst_rtp_h263_pay_init (GstRtpH263Pay * rtph263pay)
 {
-  rtph263enc->adapter = gst_adapter_new ();
+  rtph263pay->adapter = gst_adapter_new ();
 }
 
 static void
-gst_rtph263enc_finalize (GObject * object)
+gst_rtp_h263_pay_finalize (GObject * object)
 {
-  GstRtpH263Enc *rtph263enc;
+  GstRtpH263Pay *rtph263pay;
 
-  rtph263enc = GST_RTP_H263_ENC (object);
+  rtph263pay = GST_RTP_H263_PAY (object);
 
-  g_object_unref (rtph263enc->adapter);
-  rtph263enc->adapter = NULL;
+  g_object_unref (rtph263pay->adapter);
+  rtph263pay->adapter = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_rtph263enc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_h263_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   gst_basertppayload_set_options (payload, "video", TRUE, "H263-1998", 90000);
   gst_basertppayload_set_outcaps (payload, NULL);
@@ -261,7 +261,7 @@ gst_rtph263enc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static guint
-gst_rtph263enc_gobfiner (guint8 * data, guint len, guint curpos)
+gst_rtp_h263_pay_gobfiner (guint8 * data, guint len, guint curpos)
 {
   guint16 test = 0xffff;
   guint i;
@@ -281,7 +281,7 @@ gst_rtph263enc_gobfiner (guint8 * data, guint len, guint curpos)
 }
 
 static GstFlowReturn
-gst_rtph263enc_flush (GstRtpH263Enc * rtph263enc)
+gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 {
   guint avail;
   GstBuffer *outbuf;
@@ -293,14 +293,14 @@ gst_rtph263enc_flush (GstRtpH263Enc * rtph263enc)
   guint payload_len, total_len;
   guint curpos, nextgobpos;
 
-  avail = gst_adapter_available (rtph263enc->adapter);
+  avail = gst_adapter_available (rtph263pay->adapter);
   if (avail == 0)
     return GST_FLOW_OK;
 
   fragmented = FALSE;
 
   /* Get a pointer to all the data for the frame */
-  data = (guint8 *) gst_adapter_peek (rtph263enc->adapter, avail);
+  data = (guint8 *) gst_adapter_peek (rtph263pay->adapter, avail);
 
   /* Start at the begining and loop looking for gobs */
   curpos = 0;
@@ -308,14 +308,14 @@ gst_rtph263enc_flush (GstRtpH263Enc * rtph263enc)
   /* Picture header */
   piclayer = (GstH263PictureLayer *) data;
 
-  while ((nextgobpos = gst_rtph263enc_gobfiner (data, avail, curpos)) > 0) {
+  while ((nextgobpos = gst_rtp_h263_pay_gobfiner (data, avail, curpos)) > 0) {
 
     payload_len = nextgobpos - curpos;
     total_len = payload_len + GST_RFC2190A_HEADER_LEN;
 
-    outbuf = gst_rtpbuffer_new_allocate (total_len, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (total_len, 0, 0);
 
-    header = gst_rtpbuffer_get_payload (outbuf);
+    header = gst_rtp_buffer_get_payload (outbuf);
     payload = header + GST_RFC2190A_HEADER_LEN;
 
     /* Build the headers */
@@ -336,45 +336,45 @@ gst_rtph263enc_flush (GstRtpH263Enc * rtph263enc)
     GST_RFC2190A_HEADER_TR (header) = 0;
 
     /* last fragment gets the marker bit set */
-    gst_rtpbuffer_set_marker (outbuf, nextgobpos < avail ? 0 : 1);
+    gst_rtp_buffer_set_marker (outbuf, nextgobpos < avail ? 0 : 1);
 
     memcpy (payload, data + curpos, payload_len);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtph263enc->first_ts;
+    GST_BUFFER_TIMESTAMP (outbuf) = rtph263pay->first_ts;
 
-    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtph263enc), outbuf);
+    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtph263pay), outbuf);
 
     curpos = nextgobpos;
   }
 
   /* Flush the whole packet */
-  gst_adapter_flush (rtph263enc->adapter, avail);
+  gst_adapter_flush (rtph263pay->adapter, avail);
 
   return ret;
 }
 
 static GstFlowReturn
-gst_rtph263enc_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
+gst_rtp_h263_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 {
-  GstRtpH263Enc *rtph263enc;
+  GstRtpH263Pay *rtph263pay;
   GstFlowReturn ret;
   guint size;
 
-  rtph263enc = GST_RTP_H263_ENC (payload);
+  rtph263pay = GST_RTP_H263_PAY (payload);
 
   size = GST_BUFFER_SIZE (buffer);
-  rtph263enc->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+  rtph263pay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
 
   /* we always encode and flush a full picture */
-  gst_adapter_push (rtph263enc->adapter, buffer);
-  ret = gst_rtph263enc_flush (rtph263enc);
+  gst_adapter_push (rtph263pay->adapter, buffer);
+  ret = gst_rtp_h263_pay_flush (rtph263pay);
 
   return ret;
 }
 
 gboolean
-gst_rtph263enc_plugin_init (GstPlugin * plugin)
+gst_rtp_h263_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtph263enc",
-      GST_RANK_NONE, GST_TYPE_RTP_H263_ENC);
+  return gst_element_register (plugin, "rtph263pay",
+      GST_RANK_NONE, GST_TYPE_RTP_H263_PAY);
 }

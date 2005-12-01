@@ -26,24 +26,24 @@
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include "gstrtpgsmenc.h"
+#include "gstrtpgsmpay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtpgsmenc_details = {
-  "RTP GSM Audio Encoder",
-  "Codec/Encoder/Network",
-  "Encodes GSM audio into a RTP packet",
+static GstElementDetails gst_rtp_gsm_pay_details = {
+  "RTP GSM Audio Payloader",
+  "Codec/Payloader/Network",
+  "Payodes GSM audio into a RTP packet",
   "Zeeshan Ali <zeenix@gmail.com>"
 };
 
-static GstStaticPadTemplate gst_rtpgsmenc_sink_template =
+static GstStaticPadTemplate gst_rtp_gsm_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-gsm, " "rate = (int) 8000, " "channels = (int) 1")
     );
 
-static GstStaticPadTemplate gst_rtpgsmenc_src_template =
+static GstStaticPadTemplate gst_rtp_gsm_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -53,28 +53,28 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) 8000, " "encoding-name = (string) \"GSM\"")
     );
 
-static gboolean gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload,
+static gboolean gst_rtp_gsm_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * payload,
+static GstFlowReturn gst_rtp_gsm_pay_handle_buffer (GstBaseRTPPayload * payload,
     GstBuffer * buffer);
 
-GST_BOILERPLATE (GstRTPGSMEnc, gst_rtpgsmenc, GstBaseRTPPayload,
+GST_BOILERPLATE (GstRTPGSMPay, gst_rtp_gsm_pay, GstBaseRTPPayload,
     GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
-gst_rtpgsmenc_base_init (gpointer klass)
+gst_rtp_gsm_pay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpgsmenc_sink_template));
+      gst_static_pad_template_get (&gst_rtp_gsm_pay_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpgsmenc_src_template));
-  gst_element_class_set_details (element_class, &gst_rtpgsmenc_details);
+      gst_static_pad_template_get (&gst_rtp_gsm_pay_src_template));
+  gst_element_class_set_details (element_class, &gst_rtp_gsm_pay_details);
 }
 
 static void
-gst_rtpgsmenc_class_init (GstRTPGSMEncClass * klass)
+gst_rtp_gsm_pay_class_init (GstRTPGSMPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -86,19 +86,19 @@ gst_rtpgsmenc_class_init (GstRTPGSMEncClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
-  gstbasertppayload_class->set_caps = gst_rtpgsmenc_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtpgsmenc_handle_buffer;
+  gstbasertppayload_class->set_caps = gst_rtp_gsm_pay_setcaps;
+  gstbasertppayload_class->handle_buffer = gst_rtp_gsm_pay_handle_buffer;
 }
 
 static void
-gst_rtpgsmenc_init (GstRTPGSMEnc * rtpgsmenc, GstRTPGSMEncClass * klass)
+gst_rtp_gsm_pay_init (GstRTPGSMPay * rtpgsmpay, GstRTPGSMPayClass * klass)
 {
-  GST_BASE_RTP_PAYLOAD (rtpgsmenc)->clock_rate = 8000;
-  GST_BASE_RTP_PAYLOAD_PT (rtpgsmenc) = GST_RTP_PAYLOAD_GSM;
+  GST_BASE_RTP_PAYLOAD (rtpgsmpay)->clock_rate = 8000;
+  GST_BASE_RTP_PAYLOAD_PT (rtpgsmpay) = GST_RTP_PAYLOAD_GSM;
 }
 
 static gboolean
-gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
+gst_rtp_gsm_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   const char *stname;
   GstStructure *structure;
@@ -119,17 +119,17 @@ gst_rtpgsmenc_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_rtp_gsm_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
-  GstRTPGSMEnc *rtpgsmenc;
+  GstRTPGSMPay *rtpgsmpay;
   guint size, payload_len;
   GstBuffer *outbuf;
   guint8 *payload, *data;
   GstClockTime timestamp;
   GstFlowReturn ret;
 
-  rtpgsmenc = GST_RTP_GSM_ENC (basepayload);
+  rtpgsmpay = GST_RTP_GSM_PAY (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
@@ -137,15 +137,15 @@ gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * basepayload,
   /* FIXME, only one GSM frame per RTP packet for now */
   payload_len = size;
 
-  outbuf = gst_rtpbuffer_new_allocate (payload_len, 0, 0);
+  outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
   /* FIXME, assert for now */
-  g_assert (payload_len <= GST_BASE_RTP_PAYLOAD_MTU (rtpgsmenc));
+  g_assert (payload_len <= GST_BASE_RTP_PAYLOAD_MTU (rtpgsmpay));
 
   /* copy timestamp */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
   /* get payload */
-  payload = gst_rtpbuffer_get_payload (outbuf);
+  payload = gst_rtp_buffer_get_payload (outbuf);
 
   data = GST_BUFFER_DATA (buffer);
 
@@ -154,7 +154,7 @@ gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * basepayload,
 
   gst_buffer_unref (buffer);
 
-  GST_DEBUG ("gst_rtpgsmenc_chain: pushing buffer of size %d",
+  GST_DEBUG ("gst_rtp_gsm_pay_chain: pushing buffer of size %d",
       GST_BUFFER_SIZE (outbuf));
 
   ret = gst_basertppayload_push (basepayload, outbuf);
@@ -163,8 +163,8 @@ gst_rtpgsmenc_handle_buffer (GstBaseRTPPayload * basepayload,
 }
 
 gboolean
-gst_rtpgsmenc_plugin_init (GstPlugin * plugin)
+gst_rtp_gsm_pay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpgsmenc",
-      GST_RANK_NONE, GST_TYPE_RTP_GSM_ENC);
+  return gst_element_register (plugin, "rtpgsmpay",
+      GST_RANK_NONE, GST_TYPE_RTP_GSM_PAY);
 }

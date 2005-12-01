@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_RTP_MP4V_ENC_H__
-#define __GST_RTP_MP4V_ENC_H__
+#ifndef __GST_RTP_MP4V_PAY_H__
+#define __GST_RTP_MP4V_PAY_H__
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
@@ -26,21 +26,21 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RTP_MP4V_ENC \
-  (gst_rtpmp4venc_get_type())
-#define GST_RTP_MP4V_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_MP4V_ENC,GstRtpMP4VEnc))
-#define GST_RTP_MP4V_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_MP4V_ENC,GstRtpMP4VEnc))
-#define GST_IS_RTP_MP4V_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_MP4V_ENC))
-#define GST_IS_RTP_MP4V_ENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_MP4V_ENC))
+#define GST_TYPE_RTP_MP4V_PAY \
+  (gst_rtp_mp4v_pay_get_type())
+#define GST_RTP_MP4V_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_MP4V_PAY,GstRtpMP4VPay))
+#define GST_RTP_MP4V_PAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_MP4V_PAY,GstRtpMP4VPay))
+#define GST_IS_RTP_MP4V_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_MP4V_PAY))
+#define GST_IS_RTP_MP4V_PAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_MP4V_PAY))
 
-typedef struct _GstRtpMP4VEnc GstRtpMP4VEnc;
-typedef struct _GstRtpMP4VEncClass GstRtpMP4VEncClass;
+typedef struct _GstRtpMP4VPay GstRtpMP4VPay;
+typedef struct _GstRtpMP4VPayClass GstRtpMP4VPayClass;
 
-struct _GstRtpMP4VEnc
+struct _GstRtpMP4VPay
 {
   GstBaseRTPPayload    payload;
 
@@ -54,13 +54,13 @@ struct _GstRtpMP4VEnc
   gboolean      send_config;
 };
 
-struct _GstRtpMP4VEncClass
+struct _GstRtpMP4VPayClass
 {
   GstBaseRTPPayloadClass parent_class;
 };
 
-gboolean gst_rtpmp4venc_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_mp4v_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_RTP_MP4V_ENC_H__ */
+#endif /* __GST_RTP_MP4V_PAY_H__ */

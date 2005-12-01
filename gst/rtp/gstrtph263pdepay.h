@@ -17,29 +17,29 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_RTP_H263P_DEC_H__
-#define __GST_RTP_H263P_DEC_H__
+#ifndef __GST_RTP_H263P_DEPAY_H__
+#define __GST_RTP_H263P_DEPAY_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RTP_H263P_DEC \
-  (gst_rtph263pdec_get_type())
-#define GST_RTP_H263P_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_H263P_DEC,GstRtpH263PDec))
-#define GST_RTP_H263P_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_H263P_DEC,GstRtpH263PDec))
-#define GST_IS_RTP_H263P_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_H263P_DEC))
-#define GST_IS_RTP_H263P_DEC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_H263P_DEC))
+#define GST_TYPE_RTP_H263P_DEPAY \
+  (gst_rtp_h263p_depay_get_type())
+#define GST_RTP_H263P_DEPAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_H263P_DEPAY,GstRtpH263PDepay))
+#define GST_RTP_H263P_DEPAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_H263P_DEPAY,GstRtpH263PDepay))
+#define GST_IS_RTP_H263P_DEPAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_H263P_DEPAY))
+#define GST_IS_RTP_H263P_DEPAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_H263P_DEPAY))
 
-typedef struct _GstRtpH263PDec GstRtpH263PDec;
-typedef struct _GstRtpH263PDecClass GstRtpH263PDecClass;
+typedef struct _GstRtpH263PDepay GstRtpH263PDepay;
+typedef struct _GstRtpH263PDepayClass GstRtpH263PDepayClass;
 
-struct _GstRtpH263PDec
+struct _GstRtpH263PDepay
 {
   GstElement element;
 
@@ -51,13 +51,13 @@ struct _GstRtpH263PDec
   guint frequency;
 };
 
-struct _GstRtpH263PDecClass
+struct _GstRtpH263PDepayClass
 {
   GstElementClass parent_class;
 };
 
-gboolean gst_rtph263pdec_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_h263p_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_RTP_H263P_DEC_H__ */
+#endif /* __GST_RTP_H263P_DEPAY_H__ */

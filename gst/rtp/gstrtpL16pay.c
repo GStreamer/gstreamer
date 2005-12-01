@@ -22,17 +22,17 @@
 #endif
 #include <string.h>
 #include <stdlib.h>
-#include "gstrtpL16enc.h"
+#include "gstrtpL16pay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtpL16enc_details = {
-  "RTP RAW Audio Encoder",
-  "Codec/Encoder/Network",
-  "Encodes Raw Audio into a RTP packet",
+static GstElementDetails gst_rtpL16pay_details = {
+  "RTP RAW Audio Payloader",
+  "Codec/Payloader/Network",
+  "Payodes Raw Audio into a RTP packet",
   "Zeeshan Ali <zak147@yahoo.com>"
 };
 
-/* RtpL16Enc signals and args */
+/* RtpL16Pay signals and args */
 enum
 {
   /* FILL ME */
@@ -45,7 +45,7 @@ enum
   ARG_0
 };
 
-static GstStaticPadTemplate gst_rtpL16enc_sink_template =
+static GstStaticPadTemplate gst_rtpL16pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -57,67 +57,67 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "rate = (int) [ 1000, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
-static GstStaticPadTemplate gst_rtpL16enc_src_template =
+static GstStaticPadTemplate gst_rtpL16pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
-static void gst_rtpL16enc_class_init (GstRtpL16EncClass * klass);
-static void gst_rtpL16enc_base_init (GstRtpL16EncClass * klass);
-static void gst_rtpL16enc_init (GstRtpL16Enc * rtpL16enc);
-static void gst_rtpL16enc_chain (GstPad * pad, GstData * _data);
-static void gst_rtpL16enc_set_property (GObject * object, guint prop_id,
+static void gst_rtpL16pay_class_init (GstRtpL16PayClass * klass);
+static void gst_rtpL16pay_base_init (GstRtpL16PayClass * klass);
+static void gst_rtpL16pay_init (GstRtpL16Pay * rtpL16enc);
+static void gst_rtpL16pay_chain (GstPad * pad, GstData * _data);
+static void gst_rtpL16pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_rtpL16enc_get_property (GObject * object, guint prop_id,
+static void gst_rtpL16pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstPadLinkReturn gst_rtpL16enc_sinkconnect (GstPad * pad,
+static GstPadLinkReturn gst_rtpL16pay_sinkconnect (GstPad * pad,
     const GstCaps * caps);
-static GstStateChangeReturn gst_rtpL16enc_change_state (GstElement * element,
+static GstStateChangeReturn gst_rtpL16pay_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
 static GType
-gst_rtpL16enc_get_type (void)
+gst_rtpL16pay_get_type (void)
 {
-  static GType rtpL16enc_type = 0;
+  static GType rtpL16pay_type = 0;
 
-  if (!rtpL16enc_type) {
-    static const GTypeInfo rtpL16enc_info = {
-      sizeof (GstRtpL16EncClass),
-      (GBaseInitFunc) gst_rtpL16enc_base_init,
+  if (!rtpL16pay_type) {
+    static const GTypeInfo rtpL16pay_info = {
+      sizeof (GstRtpL16PayClass),
+      (GBaseInitFunc) gst_rtpL16pay_base_init,
       NULL,
-      (GClassInitFunc) gst_rtpL16enc_class_init,
+      (GClassInitFunc) gst_rtpL16pay_class_init,
       NULL,
       NULL,
-      sizeof (GstRtpL16Enc),
+      sizeof (GstRtpL16Pay),
       0,
-      (GInstanceInitFunc) gst_rtpL16enc_init,
+      (GInstanceInitFunc) gst_rtpL16pay_init,
     };
 
-    rtpL16enc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Enc",
-        &rtpL16enc_info, 0);
+    rtpL16pay_type =
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpL16Pay",
+        &rtpL16pay_info, 0);
   }
-  return rtpL16enc_type;
+  return rtpL16pay_type;
 }
 
 static void
-gst_rtpL16enc_base_init (GstRtpL16EncClass * klass)
+gst_rtpL16pay_base_init (GstRtpL16PayClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpL16enc_sink_template));
+      gst_static_pad_template_get (&gst_rtpL16pay_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpL16enc_src_template));
-  gst_element_class_set_details (element_class, &gst_rtpL16enc_details);
+      gst_static_pad_template_get (&gst_rtpL16pay_src_template));
+  gst_element_class_set_details (element_class, &gst_rtpL16pay_details);
 }
 
 static void
-gst_rtpL16enc_class_init (GstRtpL16EncClass * klass)
+gst_rtpL16pay_class_init (GstRtpL16PayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -127,25 +127,25 @@ gst_rtpL16enc_class_init (GstRtpL16EncClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->set_property = gst_rtpL16enc_set_property;
-  gobject_class->get_property = gst_rtpL16enc_get_property;
+  gobject_class->set_property = gst_rtpL16pay_set_property;
+  gobject_class->get_property = gst_rtpL16pay_get_property;
 
-  gstelement_class->change_state = gst_rtpL16enc_change_state;
+  gstelement_class->change_state = gst_rtpL16pay_change_state;
 }
 
 static void
-gst_rtpL16enc_init (GstRtpL16Enc * rtpL16enc)
+gst_rtpL16pay_init (GstRtpL16Pay * rtpL16enc)
 {
   rtpL16enc->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpL16enc_sink_template), "sink");
+      (&gst_rtpL16pay_sink_template), "sink");
   rtpL16enc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpL16enc_src_template), "src");
+      (&gst_rtpL16pay_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (rtpL16enc), rtpL16enc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (rtpL16enc), rtpL16enc->srcpad);
-  gst_pad_set_chain_function (rtpL16enc->sinkpad, gst_rtpL16enc_chain);
-  gst_pad_set_link_function (rtpL16enc->sinkpad, gst_rtpL16enc_sinkconnect);
+  gst_pad_set_chain_function (rtpL16enc->sinkpad, gst_rtpL16pay_chain);
+  gst_pad_set_link_function (rtpL16enc->sinkpad, gst_rtpL16pay_sinkconnect);
 
   rtpL16enc->frequency = 44100;
   rtpL16enc->channels = 2;
@@ -158,13 +158,13 @@ gst_rtpL16enc_init (GstRtpL16Enc * rtpL16enc)
 }
 
 static GstPadLinkReturn
-gst_rtpL16enc_sinkconnect (GstPad * pad, const GstCaps * caps)
+gst_rtpL16pay_sinkconnect (GstPad * pad, const GstCaps * caps)
 {
-  GstRtpL16Enc *rtpL16enc;
+  GstRtpL16Pay *rtpL16enc;
   GstStructure *structure;
   gboolean ret;
 
-  rtpL16enc = GST_RTP_L16_ENC (gst_pad_get_parent (pad));
+  rtpL16enc = GST_RTP_L16_PAY (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -183,7 +183,7 @@ gst_rtpL16enc_sinkconnect (GstPad * pad, const GstCaps * caps)
 
 
 void
-gst_rtpL16enc_htons (GstBuffer * buf)
+gst_rtpL16pay_htons (GstBuffer * buf)
 {
   gint16 *i, *len;
 
@@ -197,10 +197,10 @@ gst_rtpL16enc_htons (GstBuffer * buf)
 }
 
 static void
-gst_rtpL16enc_chain (GstPad * pad, GstData * _data)
+gst_rtpL16pay_chain (GstPad * pad, GstData * _data)
 {
   GstBuffer *buf = GST_BUFFER (_data);
-  GstRtpL16Enc *rtpL16enc;
+  GstRtpL16Pay *rtpL16enc;
   GstBuffer *outbuf;
   Rtp_Packet packet;
 
@@ -208,10 +208,10 @@ gst_rtpL16enc_chain (GstPad * pad, GstData * _data)
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (buf != NULL);
 
-  rtpL16enc = GST_RTP_L16_ENC (GST_OBJECT_PARENT (pad));
+  rtpL16enc = GST_RTP_L16_PAY (GST_OBJECT_PARENT (pad));
 
   g_return_if_fail (rtpL16enc != NULL);
-  g_return_if_fail (GST_IS_RTP_L16_ENC (rtpL16enc));
+  g_return_if_fail (GST_IS_RTP_L16_PAY (rtpL16enc));
 
   if (GST_IS_EVENT (buf)) {
     GstEvent *event = GST_EVENT (buf);
@@ -251,7 +251,7 @@ gst_rtpL16enc_chain (GstPad * pad, GstData * _data)
 
   /* FIXME: According to RFC 1890, this is required, right? */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  gst_rtpL16enc_htons (buf);
+  gst_rtpL16pay_htons (buf);
 #endif
 
   outbuf = gst_buffer_new ();
@@ -265,7 +265,7 @@ gst_rtpL16enc_chain (GstPad * pad, GstData * _data)
   memcpy (GST_BUFFER_DATA (outbuf) + rtp_packet_get_packet_len (packet),
       GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
-  GST_DEBUG ("gst_rtpL16enc_chain: pushing buffer of size %d",
+  GST_DEBUG ("gst_rtpL16pay_chain: pushing buffer of size %d",
       GST_BUFFER_SIZE (outbuf));
   gst_pad_push (rtpL16enc->srcpad, GST_DATA (outbuf));
 
@@ -277,13 +277,13 @@ gst_rtpL16enc_chain (GstPad * pad, GstData * _data)
 }
 
 static void
-gst_rtpL16enc_set_property (GObject * object, guint prop_id,
+gst_rtpL16pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRtpL16Enc *rtpL16enc;
+  GstRtpL16Pay *rtpL16enc;
 
-  g_return_if_fail (GST_IS_RTP_L16_ENC (object));
-  rtpL16enc = GST_RTP_L16_ENC (object);
+  g_return_if_fail (GST_IS_RTP_L16_PAY (object));
+  rtpL16enc = GST_RTP_L16_PAY (object);
 
   switch (prop_id) {
     default:
@@ -292,13 +292,13 @@ gst_rtpL16enc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_rtpL16enc_get_property (GObject * object, guint prop_id, GValue * value,
+gst_rtpL16pay_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstRtpL16Enc *rtpL16enc;
+  GstRtpL16Pay *rtpL16enc;
 
-  g_return_if_fail (GST_IS_RTP_L16_ENC (object));
-  rtpL16enc = GST_RTP_L16_ENC (object);
+  g_return_if_fail (GST_IS_RTP_L16_PAY (object));
+  rtpL16enc = GST_RTP_L16_PAY (object);
 
   switch (prop_id) {
     default:
@@ -308,13 +308,13 @@ gst_rtpL16enc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstStateChangeReturn
-gst_rtpL16enc_change_state (GstElement * element, GstStateChange transition)
+gst_rtpL16pay_change_state (GstElement * element, GstStateChange transition)
 {
-  GstRtpL16Enc *rtpL16enc;
+  GstRtpL16Pay *rtpL16enc;
 
-  g_return_val_if_fail (GST_IS_RTP_L16_ENC (element), GST_STATE_CHANGE_FAILURE);
+  g_return_val_if_fail (GST_IS_RTP_L16_PAY (element), GST_STATE_CHANGE_FAILURE);
 
-  rtpL16enc = GST_RTP_L16_ENC (element);
+  rtpL16enc = GST_RTP_L16_PAY (element);
 
   GST_DEBUG ("state pending %d\n", GST_STATE_PENDING (element));
 
@@ -338,8 +338,8 @@ gst_rtpL16enc_change_state (GstElement * element, GstStateChange transition)
 }
 
 gboolean
-gst_rtpL16enc_plugin_init (GstPlugin * plugin)
+gst_rtpL16pay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpL16enc",
-      GST_RANK_NONE, GST_TYPE_RTP_L16_ENC);
+      GST_RANK_NONE, GST_TYPE_RTP_L16_PAY);
 }

@@ -19,17 +19,17 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include <string.h>
-#include "gstrtpmp4vdec.h"
+#include "gstrtpmp4vdepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_mp4vdec_details = {
+static GstElementDetails gst_rtp_mp4vdepay_details = {
   "RTP packet parser",
   "Codec/Parser/Network",
   "Extracts MPEG4 video from RTP packets (RFC 3016)",
   "Wim Taymans <wim@fluendo.com>"
 };
 
-/* RtpMP4VDec signals and args */
+/* RtpMP4VDepay signals and args */
 enum
 {
   /* FILL ME */
@@ -42,7 +42,7 @@ enum
   ARG_FREQUENCY
 };
 
-static GstStaticPadTemplate gst_rtpmp4vdec_src_template =
+static GstStaticPadTemplate gst_rtp_mp4v_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -50,7 +50,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "mpegversion=(int) 4," "systemstream=(boolean)false")
     );
 
-static GstStaticPadTemplate gst_rtpmp4vdec_sink_template =
+static GstStaticPadTemplate gst_rtp_mp4v_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -67,63 +67,64 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 
-static void gst_rtpmp4vdec_class_init (GstRtpMP4VDecClass * klass);
-static void gst_rtpmp4vdec_base_init (GstRtpMP4VDecClass * klass);
-static void gst_rtpmp4vdec_init (GstRtpMP4VDec * rtpmp4vdec);
+static void gst_rtp_mp4v_depay_class_init (GstRtpMP4VDepayClass * klass);
+static void gst_rtp_mp4v_depay_base_init (GstRtpMP4VDepayClass * klass);
+static void gst_rtp_mp4v_depay_init (GstRtpMP4VDepay * rtpmp4vdepay);
 
-static gboolean gst_rtpmp4vdec_setcaps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_rtpmp4vdec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_rtp_mp4v_depay_setcaps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_rtp_mp4v_depay_chain (GstPad * pad,
+    GstBuffer * buffer);
 
-static void gst_rtpmp4vdec_set_property (GObject * object, guint prop_id,
+static void gst_rtp_mp4v_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_rtpmp4vdec_get_property (GObject * object, guint prop_id,
+static void gst_rtp_mp4v_depay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_rtpmp4vdec_change_state (GstElement * element,
-    GstStateChange transition);
+static GstStateChangeReturn gst_rtp_mp4v_depay_change_state (GstElement *
+    element, GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
 static GType
-gst_rtpmp4vdec_get_type (void)
+gst_rtp_mp4v_depay_get_type (void)
 {
-  static GType rtpmp4vdec_type = 0;
+  static GType rtpmp4vdepay_type = 0;
 
-  if (!rtpmp4vdec_type) {
-    static const GTypeInfo rtpmp4vdec_info = {
-      sizeof (GstRtpMP4VDecClass),
-      (GBaseInitFunc) gst_rtpmp4vdec_base_init,
+  if (!rtpmp4vdepay_type) {
+    static const GTypeInfo rtpmp4vdepay_info = {
+      sizeof (GstRtpMP4VDepayClass),
+      (GBaseInitFunc) gst_rtp_mp4v_depay_base_init,
       NULL,
-      (GClassInitFunc) gst_rtpmp4vdec_class_init,
+      (GClassInitFunc) gst_rtp_mp4v_depay_class_init,
       NULL,
       NULL,
-      sizeof (GstRtpMP4VDec),
+      sizeof (GstRtpMP4VDepay),
       0,
-      (GInstanceInitFunc) gst_rtpmp4vdec_init,
+      (GInstanceInitFunc) gst_rtp_mp4v_depay_init,
     };
 
-    rtpmp4vdec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpMP4VDec",
-        &rtpmp4vdec_info, 0);
+    rtpmp4vdepay_type =
+        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpMP4VDepay",
+        &rtpmp4vdepay_info, 0);
   }
-  return rtpmp4vdec_type;
+  return rtpmp4vdepay_type;
 }
 
 static void
-gst_rtpmp4vdec_base_init (GstRtpMP4VDecClass * klass)
+gst_rtp_mp4v_depay_base_init (GstRtpMP4VDepayClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpmp4vdec_src_template));
+      gst_static_pad_template_get (&gst_rtp_mp4v_depay_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtpmp4vdec_sink_template));
+      gst_static_pad_template_get (&gst_rtp_mp4v_depay_sink_template));
 
-  gst_element_class_set_details (element_class, &gst_rtp_mp4vdec_details);
+  gst_element_class_set_details (element_class, &gst_rtp_mp4vdepay_details);
 }
 
 static void
-gst_rtpmp4vdec_class_init (GstRtpMP4VDecClass * klass)
+gst_rtp_mp4v_depay_class_init (GstRtpMP4VDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -133,47 +134,48 @@ gst_rtpmp4vdec_class_init (GstRtpMP4VDecClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gobject_class->set_property = gst_rtpmp4vdec_set_property;
-  gobject_class->get_property = gst_rtpmp4vdec_get_property;
+  gobject_class->set_property = gst_rtp_mp4v_depay_set_property;
+  gobject_class->get_property = gst_rtp_mp4v_depay_get_property;
 
-  gstelement_class->change_state = gst_rtpmp4vdec_change_state;
+  gstelement_class->change_state = gst_rtp_mp4v_depay_change_state;
 }
 
 static void
-gst_rtpmp4vdec_init (GstRtpMP4VDec * rtpmp4vdec)
+gst_rtp_mp4v_depay_init (GstRtpMP4VDepay * rtpmp4vdepay)
 {
-  rtpmp4vdec->srcpad =
+  rtpmp4vdepay->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpmp4vdec_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (rtpmp4vdec), rtpmp4vdec->srcpad);
+      (&gst_rtp_mp4v_depay_src_template), "src");
+  gst_element_add_pad (GST_ELEMENT (rtpmp4vdepay), rtpmp4vdepay->srcpad);
 
-  rtpmp4vdec->sinkpad =
+  rtpmp4vdepay->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpmp4vdec_sink_template), "sink");
-  gst_pad_set_setcaps_function (rtpmp4vdec->sinkpad, gst_rtpmp4vdec_setcaps);
-  gst_pad_set_chain_function (rtpmp4vdec->sinkpad, gst_rtpmp4vdec_chain);
-  gst_element_add_pad (GST_ELEMENT (rtpmp4vdec), rtpmp4vdec->sinkpad);
+      (&gst_rtp_mp4v_depay_sink_template), "sink");
+  gst_pad_set_setcaps_function (rtpmp4vdepay->sinkpad,
+      gst_rtp_mp4v_depay_setcaps);
+  gst_pad_set_chain_function (rtpmp4vdepay->sinkpad, gst_rtp_mp4v_depay_chain);
+  gst_element_add_pad (GST_ELEMENT (rtpmp4vdepay), rtpmp4vdepay->sinkpad);
 }
 
 static gboolean
-gst_rtpmp4vdec_setcaps (GstPad * pad, GstCaps * caps)
+gst_rtp_mp4v_depay_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstStructure *structure;
-  GstRtpMP4VDec *rtpmp4vdec;
+  GstRtpMP4VDepay *rtpmp4vdepay;
   GstCaps *srccaps;
   const gchar *str;
 
-  rtpmp4vdec = GST_RTP_MP4V_DEC (GST_OBJECT_PARENT (pad));
+  rtpmp4vdepay = GST_RTP_MP4V_DEPAY (GST_OBJECT_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (structure, "clock-rate", &rtpmp4vdec->rate))
-    rtpmp4vdec->rate = 90000;
+  if (!gst_structure_get_int (structure, "clock-rate", &rtpmp4vdepay->rate))
+    rtpmp4vdepay->rate = 90000;
 
   srccaps = gst_caps_new_simple ("video/mpeg",
       "mpegversion", G_TYPE_INT, 4,
       "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-  gst_pad_set_caps (rtpmp4vdec->srcpad, srccaps);
+  gst_pad_set_caps (rtpmp4vdepay->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
   if ((str = gst_structure_get_string (structure, "config"))) {
@@ -187,9 +189,9 @@ gst_rtpmp4vdec_setcaps (GstPad * pad, GstCaps * caps)
       gst_buffer_ref (buffer);
       g_value_unset (&v);
 
-      gst_buffer_set_caps (buffer, GST_PAD_CAPS (rtpmp4vdec->srcpad));
+      gst_buffer_set_caps (buffer, GST_PAD_CAPS (rtpmp4vdepay->srcpad));
 
-      gst_pad_push (rtpmp4vdec->srcpad, buffer);
+      gst_pad_push (rtpmp4vdepay->srcpad, buffer);
     } else {
       g_warning ("cannot convert config to buffer");
     }
@@ -199,15 +201,15 @@ gst_rtpmp4vdec_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtpmp4vdec_chain (GstPad * pad, GstBuffer * buf)
+gst_rtp_mp4v_depay_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstRtpMP4VDec *rtpmp4vdec;
+  GstRtpMP4VDepay *rtpmp4vdepay;
   GstBuffer *outbuf;
   GstFlowReturn ret;
 
-  rtpmp4vdec = GST_RTP_MP4V_DEC (gst_pad_get_parent (pad));
+  rtpmp4vdepay = GST_RTP_MP4V_DEPAY (gst_pad_get_parent (pad));
 
-  if (!gst_rtpbuffer_validate (buf))
+  if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
 
   {
@@ -215,58 +217,59 @@ gst_rtpmp4vdec_chain (GstPad * pad, GstBuffer * buf)
     guint8 *payload;
     guint32 timestamp;
 
-    payload_len = gst_rtpbuffer_get_payload_len (buf);
-    payload = gst_rtpbuffer_get_payload (buf);
+    payload_len = gst_rtp_buffer_get_payload_len (buf);
+    payload = gst_rtp_buffer_get_payload (buf);
 
-    timestamp = gst_rtpbuffer_get_timestamp (buf);
+    timestamp = gst_rtp_buffer_get_timestamp (buf);
 
     outbuf = gst_buffer_new_and_alloc (payload_len);
     memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
 
-    gst_adapter_push (rtpmp4vdec->adapter, outbuf);
+    gst_adapter_push (rtpmp4vdepay->adapter, outbuf);
 
     /* if this was the last packet of the VOP, create and push a buffer */
-    if (gst_rtpbuffer_get_marker (buf)) {
+    if (gst_rtp_buffer_get_marker (buf)) {
       guint avail;
 
-      avail = gst_adapter_available (rtpmp4vdec->adapter);
+      avail = gst_adapter_available (rtpmp4vdepay->adapter);
 
       outbuf = gst_buffer_new_and_alloc (avail);
       GST_BUFFER_MALLOCDATA (outbuf) =
-          gst_adapter_take (rtpmp4vdec->adapter, avail);
+          gst_adapter_take (rtpmp4vdepay->adapter, avail);
       GST_BUFFER_DATA (outbuf) = GST_BUFFER_MALLOCDATA (outbuf);
-      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (rtpmp4vdec->srcpad));
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / rtpmp4vdec->rate;
+      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (rtpmp4vdepay->srcpad));
+      GST_BUFFER_TIMESTAMP (outbuf) =
+          timestamp * GST_SECOND / rtpmp4vdepay->rate;
 
-      GST_DEBUG ("gst_rtpmp4vdec_chain: pushing buffer of size %d",
+      GST_DEBUG ("gst_rtp_mp4v_depay_chain: pushing buffer of size %d",
           GST_BUFFER_SIZE (outbuf));
 
-      ret = gst_pad_push (rtpmp4vdec->srcpad, outbuf);
+      ret = gst_pad_push (rtpmp4vdepay->srcpad, outbuf);
     } else {
       ret = GST_FLOW_OK;
     }
     gst_buffer_unref (buf);
   }
-  gst_object_unref (rtpmp4vdec);
+  gst_object_unref (rtpmp4vdepay);
 
   return ret;
 bad_packet:
   {
     GST_DEBUG ("Packet did not validate");
     gst_buffer_unref (buf);
-    gst_object_unref (rtpmp4vdec);
+    gst_object_unref (rtpmp4vdepay);
 
     return GST_FLOW_ERROR;
   }
 }
 
 static void
-gst_rtpmp4vdec_set_property (GObject * object, guint prop_id,
+gst_rtp_mp4v_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRtpMP4VDec *rtpmp4vdec;
+  GstRtpMP4VDepay *rtpmp4vdepay;
 
-  rtpmp4vdec = GST_RTP_MP4V_DEC (object);
+  rtpmp4vdepay = GST_RTP_MP4V_DEPAY (object);
 
   switch (prop_id) {
     default:
@@ -276,12 +279,12 @@ gst_rtpmp4vdec_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_rtpmp4vdec_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+gst_rtp_mp4v_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
-  GstRtpMP4VDec *rtpmp4vdec;
+  GstRtpMP4VDepay *rtpmp4vdepay;
 
-  rtpmp4vdec = GST_RTP_MP4V_DEC (object);
+  rtpmp4vdepay = GST_RTP_MP4V_DEPAY (object);
 
   switch (prop_id) {
     default:
@@ -291,19 +294,20 @@ gst_rtpmp4vdec_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstStateChangeReturn
-gst_rtpmp4vdec_change_state (GstElement * element, GstStateChange transition)
+gst_rtp_mp4v_depay_change_state (GstElement * element,
+    GstStateChange transition)
 {
-  GstRtpMP4VDec *rtpmp4vdec;
+  GstRtpMP4VDepay *rtpmp4vdepay;
   GstStateChangeReturn ret;
 
-  rtpmp4vdec = GST_RTP_MP4V_DEC (element);
+  rtpmp4vdepay = GST_RTP_MP4V_DEPAY (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      rtpmp4vdec->adapter = gst_adapter_new ();
+      rtpmp4vdepay->adapter = gst_adapter_new ();
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_adapter_clear (rtpmp4vdec->adapter);
+      gst_adapter_clear (rtpmp4vdepay->adapter);
       break;
     default:
       break;
@@ -313,8 +317,8 @@ gst_rtpmp4vdec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      g_object_unref (rtpmp4vdec->adapter);
-      rtpmp4vdec->adapter = NULL;
+      g_object_unref (rtpmp4vdepay->adapter);
+      rtpmp4vdepay->adapter = NULL;
       break;
     default:
       break;
@@ -323,8 +327,8 @@ gst_rtpmp4vdec_change_state (GstElement * element, GstStateChange transition)
 }
 
 gboolean
-gst_rtpmp4vdec_plugin_init (GstPlugin * plugin)
+gst_rtp_mp4v_depay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpmp4vdec",
-      GST_RANK_NONE, GST_TYPE_RTP_MP4V_DEC);
+  return gst_element_register (plugin, "rtpmp4vdepay",
+      GST_RANK_NONE, GST_TYPE_RTP_MP4V_DEPAY);
 }

@@ -13,40 +13,40 @@
  */
 
 
-#ifndef __GST_RTP_SPEEX_ENC_H__
-#define __GST_RTP_SPEEX_ENC_H__
+#ifndef __GST_RTP_SPEEX_PAY_H__
+#define __GST_RTP_SPEEX_PAY_H__
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstRtpSPEEXEnc GstRtpSPEEXEnc;
-typedef struct _GstRtpSPEEXEncClass GstRtpSPEEXEncClass;
+typedef struct _GstRtpSPEEXPay GstRtpSPEEXPay;
+typedef struct _GstRtpSPEEXPayClass GstRtpSPEEXPayClass;
 
-#define GST_TYPE_RTP_SPEEX_ENC \
-  (gst_rtpspeexenc_get_type())
-#define GST_RTP_SPEEX_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_SPEEX_ENC,GstRtpSPEEXEnc))
-#define GST_RTP_SPEEX_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_SPEEX_ENC,GstRtpSPEEXEnc))
-#define GST_IS_RTP_SPEEX_ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_SPEEX_ENC))
-#define GST_IS_RTP_SPEEX_ENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_SPEEX_ENC))
+#define GST_TYPE_RTP_SPEEX_PAY \
+  (gst_rtp_speex_pay_get_type())
+#define GST_RTP_SPEEX_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_SPEEX_PAY,GstRtpSPEEXPay))
+#define GST_RTP_SPEEX_PAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_SPEEX_PAY,GstRtpSPEEXPay))
+#define GST_IS_RTP_SPEEX_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_SPEEX_PAY))
+#define GST_IS_RTP_SPEEX_PAY_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_SPEEX_PAY))
 
-struct _GstRtpSPEEXEnc
+struct _GstRtpSPEEXPay
 {
   GstBaseRTPPayload payload;
 };
 
-struct _GstRtpSPEEXEncClass
+struct _GstRtpSPEEXPayClass
 {
   GstBaseRTPPayloadClass parent_class;
 };
 
-gboolean gst_rtpspeexenc_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_speex_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif /* __GST_RTP_SPEEX_ENC_H__ */
+#endif /* __GST_RTP_SPEEX_PAY_H__ */
