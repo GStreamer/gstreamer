@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-30 18:09+0100\n"
+"POT-Creation-Date: 2005-12-01 15:47+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -14,29 +14,29 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:268
+#: gst/gst.c:270
 msgid "Print the GStreamer version"
 msgstr "Print the GStreamer version"
 
-#: gst/gst.c:270
+#: gst/gst.c:272
 msgid "Make all warnings fatal"
 msgstr "Make all warnings fatal"
 
-#: gst/gst.c:273
+#: gst/gst.c:275
 msgid "Print available debug categories and exit"
 msgstr "Print available debug categories and exit"
 
-#: gst/gst.c:276
+#: gst/gst.c:278
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 
-#: gst/gst.c:278
+#: gst/gst.c:280
 msgid "LEVEL"
 msgstr "LEVEL"
 
-#: gst/gst.c:280
+#: gst/gst.c:282
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -44,31 +44,31 @@ msgstr ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:283
+#: gst/gst.c:285
 msgid "LIST"
 msgstr "LIST"
 
-#: gst/gst.c:285
+#: gst/gst.c:287
 msgid "Disable colored debugging output"
 msgstr "Disable coloured debugging output"
 
-#: gst/gst.c:287
+#: gst/gst.c:289
 msgid "Disable debugging"
 msgstr "Disable debugging"
 
-#: gst/gst.c:290
+#: gst/gst.c:292
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Enable verbose plugin loading diagnostics"
 
-#: gst/gst.c:293
+#: gst/gst.c:295
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:293
+#: gst/gst.c:295
 msgid "PATHS"
 msgstr "PATHS"
 
-#: gst/gst.c:295
+#: gst/gst.c:297
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -77,24 +77,24 @@ msgstr ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 
-#: gst/gst.c:297
+#: gst/gst.c:299
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:300
+#: gst/gst.c:302
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Disable trapping of segmentation faults during plugin loading"
 
-#: gst/gst.c:305
+#: gst/gst.c:307
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:306
+#: gst/gst.c:308
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "Print the GStreamer version"
 
-#: gst/gst.c:787
+#: gst/gst.c:789
 msgid "Unknown option"
 msgstr ""
 
@@ -707,7 +707,7 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
-#: tools/gst-inspect.c:1099
+#: tools/gst-inspect.c:1100
 #, fuzzy
 msgid "Print all elements"
 msgstr "no element \"%s\""

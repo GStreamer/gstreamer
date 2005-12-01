@@ -1,0 +1,5 @@
+GstBin GstChildProxy
+GstPipeline GstChildProxy
+GstFdSrc GstURIHandler
+GstFileSrc GstURIHandler
+GstFileSink GstURIHandler

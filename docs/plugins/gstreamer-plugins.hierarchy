@@ -1,0 +1,34 @@
+GObject
+  GstObject
+    GstPad
+    GstPluginFeature
+      GstElementFactory
+      GstTypeFindFactory
+      GstIndexFactory
+    GstElement
+      GstBin
+        GstPipeline
+      GstBaseTransform
+        GstCapsFilter
+        GstIdentity
+      GstBaseSrc
+        GstFakeSrc
+        GstPushSrc
+          GstFdSrc
+        GstFileSrc
+      GstBaseSink
+        GstFakeSink
+        GstFileSink
+      GstQueue
+      GstTee
+      GstTypeFindElement
+    GstPlugin
+    GstRegistry
+    GstIndex
+      GstMemIndex
+      GstFileIndex
+    GstPadTemplate
+  GstSignalObject
+GInterface
+  GstChildProxy
+  GstURIHandler

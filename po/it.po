@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-30 18:09+0100\n"
+"POT-Creation-Date: 2005-12-01 15:47+0100\n"
 "PO-Revision-Date: 2004-12-21 08:23+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -117,30 +117,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:268
+#: gst/gst.c:270
 msgid "Print the GStreamer version"
 msgstr "Stampa la versione di GStreamer"
 
-#: gst/gst.c:270
+#: gst/gst.c:272
 msgid "Make all warnings fatal"
 msgstr "Rende tutti i warning fatali"
 
-#: gst/gst.c:273
+#: gst/gst.c:275
 msgid "Print available debug categories and exit"
 msgstr "Stampa le categorie di debug disponibili ed esce"
 
-#: gst/gst.c:276
+#: gst/gst.c:278
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Livello di debug predefinito da 1 (solo errori) a 5 (tutto), oppure 0 per "
 "nessun output"
 
-#: gst/gst.c:278
+#: gst/gst.c:280
 msgid "LEVEL"
 msgstr "LIVELLO"
 
-#: gst/gst.c:280
+#: gst/gst.c:282
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -149,31 +149,31 @@ msgstr ""
 "impostare i livelli specifici per ogni singola categoria. Esempio: "
 "GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:283
+#: gst/gst.c:285
 msgid "LIST"
 msgstr "ELENCO"
 
-#: gst/gst.c:285
+#: gst/gst.c:287
 msgid "Disable colored debugging output"
 msgstr "Disabilita output di debug colorato"
 
-#: gst/gst.c:287
+#: gst/gst.c:289
 msgid "Disable debugging"
 msgstr "Disabilita debug"
 
-#: gst/gst.c:290
+#: gst/gst.c:292
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Abilita diagnostica prolissa del caricamento plugin"
 
-#: gst/gst.c:293
+#: gst/gst.c:295
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:293
+#: gst/gst.c:295
 msgid "PATHS"
 msgstr "PERCORSI"
 
-#: gst/gst.c:295
+#: gst/gst.c:297
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -182,24 +182,24 @@ msgstr ""
 "Elenco separato da virgole dei plugin da pre-caricare in aggiunta all'elenco "
 "memorizzato nella variabile d'ambiente GST_PLUGIN_PATH"
 
-#: gst/gst.c:297
+#: gst/gst.c:299
 msgid "PLUGINS"
 msgstr "PLUGIN"
 
-#: gst/gst.c:300
+#: gst/gst.c:302
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Disabilita il trapping dei segfault durante il caricamento dei plugin"
 
-#: gst/gst.c:305
+#: gst/gst.c:307
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:306
+#: gst/gst.c:308
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "Stampa la versione di GStreamer"
 
-#: gst/gst.c:787
+#: gst/gst.c:789
 msgid "Unknown option"
 msgstr ""
 
@@ -825,7 +825,7 @@ msgstr "minimo"
 msgid "maximum"
 msgstr "massimo"
 
-#: tools/gst-inspect.c:1099
+#: tools/gst-inspect.c:1100
 msgid "Print all elements"
 msgstr "Stampa tutti gli elementi"
 

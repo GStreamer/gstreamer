@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-30 18:09+0100\n"
+"POT-Creation-Date: 2005-12-01 15:47+0100\n"
 "PO-Revision-Date: 2004-03-24 11:28+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=ISO-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:268
+#: gst/gst.c:270
 msgid "Print the GStreamer version"
 msgstr "Vertoon die GStreamer weergawe"
 
-#: gst/gst.c:270
+#: gst/gst.c:272
 msgid "Make all warnings fatal"
 msgstr "Maak alle waarskuwings fataal"
 
-#: gst/gst.c:273
+#: gst/gst.c:275
 msgid "Print available debug categories and exit"
 msgstr "Vertoon beskikbare ontfoutkategorië en stop"
 
-#: gst/gst.c:276
+#: gst/gst.c:278
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Verstek ontfoutvlak vanaf 1 (slegs fout) tot 5 (enigiets) of 0 vir geen "
 "afvoer"
 
-#: gst/gst.c:278
+#: gst/gst.c:280
 msgid "LEVEL"
 msgstr "VLAK"
 
-#: gst/gst.c:280
+#: gst/gst.c:282
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -46,31 +46,31 @@ msgstr ""
 "Komma-geskeide lys van kategorie_naam:vlak pare om die individuele "
 "kategorieë op te stel. Byvoorbeeld: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:283
+#: gst/gst.c:285
 msgid "LIST"
 msgstr "LYS"
 
-#: gst/gst.c:285
+#: gst/gst.c:287
 msgid "Disable colored debugging output"
 msgstr "Skakel gekleurde ontfout-afvoer af"
 
-#: gst/gst.c:287
+#: gst/gst.c:289
 msgid "Disable debugging"
 msgstr "Skakel ontfouting af"
 
-#: gst/gst.c:290
+#: gst/gst.c:292
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktiveer volledige diagnostiese boodskappe vir inproplaaiing"
 
-#: gst/gst.c:293
+#: gst/gst.c:295
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:293
+#: gst/gst.c:295
 msgid "PATHS"
 msgstr "PAAIE"
 
-#: gst/gst.c:295
+#: gst/gst.c:297
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -79,24 +79,24 @@ msgstr ""
 "Komma-geskeide lys van inproppe om vooraf te laai by die lys gestoor in die "
 "omgewingsveranderlike GST_PLUGIN_PATH"
 
-#: gst/gst.c:297
+#: gst/gst.c:299
 msgid "PLUGINS"
 msgstr "INPROPPE"
 
-#: gst/gst.c:300
+#: gst/gst.c:302
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Moenie segmenteringsfoute tydens inproplaaiing ondervang nie"
 
-#: gst/gst.c:305
+#: gst/gst.c:307
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:306
+#: gst/gst.c:308
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "Vertoon die GStreamer weergawe"
 
-#: gst/gst.c:787
+#: gst/gst.c:789
 msgid "Unknown option"
 msgstr ""
 
@@ -718,7 +718,7 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maksimum"
 
-#: tools/gst-inspect.c:1099
+#: tools/gst-inspect.c:1100
 #, fuzzy
 msgid "Print all elements"
 msgstr "geen element \"%s\""

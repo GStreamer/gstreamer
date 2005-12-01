@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-11-30 18:09+0100\n"
+"POT-Creation-Date: 2005-12-01 15:47+0100\n"
 "PO-Revision-Date: 2005-11-26 15:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -17,30 +17,30 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
 "10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: gst/gst.c:268
+#: gst/gst.c:270
 msgid "Print the GStreamer version"
 msgstr "Вивести версію GStreamer"
 
-#: gst/gst.c:270
+#: gst/gst.c:272
 msgid "Make all warnings fatal"
 msgstr "Вважати всі попередження помилками"
 
-#: gst/gst.c:273
+#: gst/gst.c:275
 msgid "Print available debug categories and exit"
 msgstr "Вивести наявні категорії налагодження та вийти"
 
-#: gst/gst.c:276
+#: gst/gst.c:278
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Типовий рівень налагодження від 1 (лише помилки) до 5 (усе), або 0 - без "
 "налагодження"
 
-#: gst/gst.c:278
+#: gst/gst.c:280
 msgid "LEVEL"
 msgstr "РІВЕНЬ"
 
-#: gst/gst.c:280
+#: gst/gst.c:282
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "Перелік розділених комою пар \"назва_категорії:рівень\" для встановлення "
 "певних рівнів окремим категоріям. Наприклад: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:283
+#: gst/gst.c:285
 msgid "LIST"
 msgstr "ПЕРЕЛІК"
 
-#: gst/gst.c:285
+#: gst/gst.c:287
 msgid "Disable colored debugging output"
 msgstr "Вимкнути оформлення кольором налагоджувальних повідомлень"
 
-#: gst/gst.c:287
+#: gst/gst.c:289
 msgid "Disable debugging"
 msgstr "Вимкнути налагодження"
 
-#: gst/gst.c:290
+#: gst/gst.c:292
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Вимкнути докладну діагностику завантаження модулів"
 
-#: gst/gst.c:293
+#: gst/gst.c:295
 msgid "Colon-separated paths containing plugins"
 msgstr "Список розділених крапкою з комою шляхів, які містять модулі"
 
-#: gst/gst.c:293
+#: gst/gst.c:295
 msgid "PATHS"
 msgstr "ШЛЯХИ"
 
-#: gst/gst.c:295
+#: gst/gst.c:297
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -80,23 +80,23 @@ msgstr ""
 "Перелік розділених комою назв модулів, що попередньо завантажуються, які є "
 "додатковими до переліку, що зберігається у змінній оточення GST_PLUGIN_PATH"
 
-#: gst/gst.c:297
+#: gst/gst.c:299
 msgid "PLUGINS"
 msgstr "МОДУЛІ"
 
-#: gst/gst.c:300
+#: gst/gst.c:302
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Вимкнути перехоплення помилок сегментації при завантаженні модулів"
 
-#: gst/gst.c:305
+#: gst/gst.c:307
 msgid "GStreamer Options"
 msgstr "Параметри GStreamer"
 
-#: gst/gst.c:306
+#: gst/gst.c:308
 msgid "Show GStreamer Options"
 msgstr "Показати параметри GStreamer"
 
-#: gst/gst.c:787
+#: gst/gst.c:789
 msgid "Unknown option"
 msgstr "Невідомий параметр"
 
@@ -697,7 +697,7 @@ msgstr "мінімум"
 msgid "maximum"
 msgstr "максимум"
 
-#: tools/gst-inspect.c:1099
+#: tools/gst-inspect.c:1100
 msgid "Print all elements"
 msgstr "Вивести усі елементи"
 
