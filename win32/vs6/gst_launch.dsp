@@ -50,9 +50,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib /nologo /subsystem:console /machine:I386 /out:"Release/gst-launch-0.9.exe"
+# ADD LINK32 glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib /nologo /subsystem:console /machine:I386 /out:"Release/gst-launch-0.10.exe"
 # Begin Special Build Tool
-TargetPath=.\Release\gst-launch-0.9.exe
+TargetPath=.\Release\gst-launch-0.10.exe
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\bin
 # End Special Build Tool
@@ -79,9 +79,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib gthread-2.0D.lib gmodule-2.0D.lib libxml2.lib wsock32.lib intl.lib /nologo /subsystem:console /debug /machine:I386 /out:"Debug/gst-launch-0.9.exe" /pdbtype:sept
+# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib gthread-2.0D.lib gmodule-2.0D.lib libxml2.lib wsock32.lib intl.lib /nologo /subsystem:console /debug /machine:I386 /out:"Debug/gst-launch-0.10.exe" /pdbtype:sept
 # Begin Special Build Tool
-TargetPath=.\Debug\gst-launch-0.9.exe
+TargetPath=.\Debug\gst-launch-0.10.exe
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\bin
 # End Special Build Tool

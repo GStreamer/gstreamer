@@ -1,5 +1,43 @@
 2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* common/gst-xmlinspect.py:
+	* configure.ac:
+	* docs/libs/tmpl/gstdataprotocol.sgml:
+	* docs/random/release:
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/de.po:
+	* po/en_GB.po:
+	* po/fr.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/ru.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* win32/common/config.h:
+	* win32/common/config.h.in:
+	* win32/vs6/gst_inspect.dsp:
+	* win32/vs6/gst_launch.dsp:
+	* win32/vs6/libgstbase.dsp:
+	* win32/vs6/libgstelements.dsp:
+	* win32/vs6/libgstreamer.dsp:
+	* win32/vs7/GStreamer.vcproj:
+	* win32/vs7/gst-inspect.vcproj:
+	* win32/vs7/gst-launch.vcproj:
+	* win32/vs7/libgstbase.vcproj:
+	  bump GST_MAJORMINOR to 0.10
+	  reset libtool version
+
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* po/LINGUAS:
 	* po/bg.po:
 	  Added Bulgarian translation by (Alexander Shopov)

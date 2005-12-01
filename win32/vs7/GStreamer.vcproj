@@ -123,7 +123,7 @@ type gstreamer-dbg.def &gt;&gt; gst.def
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="libpopt.lib glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib"
-				OutputFile="$(OutDir)/libgtreamer-0.9.dll"
+				OutputFile="$(OutDir)/libgtreamer-0.10.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="c:\usr\lib"

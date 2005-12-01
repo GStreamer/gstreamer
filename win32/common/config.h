@@ -6,7 +6,7 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gstreamer-0.9"
+#define GETTEXT_PACKAGE "gstreamer-0.10"
 
 /* PREFIX - specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
@@ -196,7 +196,7 @@
 #undef PACKAGE_VERSION
 
 /* Define the plugin directory */
-#define PLUGINDIR PREFIX "\\lib\\gstreamer-0.9"
+#define PLUGINDIR PREFIX "\\lib\\gstreamer-0.10"
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS

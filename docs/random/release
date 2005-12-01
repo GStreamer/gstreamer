@@ -177,3 +177,20 @@ Some various random comments that might or might not make sense :
     Update major when code and api hit new level of stability or major features.
     Update minor on API changes.
     Update micro on API-compatible changes.
+
+NOTES ON STARTING A NEW STABLE SERIES
+-------------------------------------
+- Given x.y.z being the last devel release, where y is an odd number
+- all API/ABI/renaming changes should be done
+- for every module:
+  - get a completely fresh checkout
+  - set GST_MAJORMINOR to x.(y + 1)
+  - reset libtool versioning to 0, 0, 0
+  - build every piece
+  - grep for possible non-updates of MAJORMINOR:
+    grep -r "0\.9" * | grep -v "0\.9\.6" | less -R
+    change stuff:
+    perl -i -p -e 's@0\.9(\.[^0-9])@0.10$1@g' (file) changes 0.9. -> 0.10.
+    perl -i -p -e 's@0\.9([^.])@0.10$1@g' (file) changes 0.9 -> 0.10
+
+

@@ -53,9 +53,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib /nologo /dll /machine:I386 /out:"Release/libgstbase-0.9.dll"
+# ADD LINK32 glib-2.0.lib gobject-2.0.lib gthread-2.0.lib gmodule-2.0.lib libxml2.lib wsock32.lib intl.lib /nologo /dll /machine:I386 /out:"Release/libgstbase-0.10.dll"
 # Begin Special Build Tool
-TargetPath=.\Release\libgstbase-0.9.dll
+TargetPath=.\Release\libgstbase-0.10.dll
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\bin
 # End Special Build Tool
@@ -84,9 +84,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib gthread-2.0D.lib gmodule-2.0D.lib libxml2.lib wsock32.lib intl.lib /nologo /dll /debug /machine:I386 /out:"Debug/libgstbase-0.9.dll" /pdbtype:sept
+# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib gthread-2.0D.lib gmodule-2.0D.lib libxml2.lib wsock32.lib intl.lib /nologo /dll /debug /machine:I386 /out:"Debug/libgstbase-0.10.dll" /pdbtype:sept
 # Begin Special Build Tool
-TargetPath=.\Debug\libgstbase-0.9.dll
+TargetPath=.\Debug\libgstbase-0.10.dll
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\bin
 # End Special Build Tool

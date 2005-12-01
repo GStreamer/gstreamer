@@ -85,7 +85,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib intl.lib"
-				OutputFile="$(OutDir)/libgstbase-0.9.dll"
+				OutputFile="$(OutDir)/libgstbase-0.10.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="c:\usr\lib"

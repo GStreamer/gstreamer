@@ -29,7 +29,7 @@ AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_VERSION_MAJOR.$GST_VERSION_MINOR
 dnl we override it here for release candidates for a new series
-# GST_MAJORMINOR=0.9
+GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
 
 dnl CURRENT, REVISION, AGE
@@ -38,7 +38,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 8, 0, 0)
+AS_LIBTOOL(GST, 0, 0, 0)
 AS_LIBTOOL_TAGS
 AM_PROG_LIBTOOL
 
