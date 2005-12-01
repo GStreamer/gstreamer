@@ -92,6 +92,17 @@ fi
 AC_SUBST(GST_NET_LIBS)
 AC_SUBST(GST_NET_CFLAGS)
 
+dnl check for gstreamer-net
+PKG_CHECK_MODULES(GST_PLUGINS_BASE, gstreamer-plugins-base-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_PLUGINS_BASE="yes", HAVE_GST_PLUGINS_BASE="no")
+
+if test "x$HAVE_GST_PLUGINS_BASE" = "xno"; then
+  AC_MSG_ERROR(no gst-plugins-base found)
+fi
+
+AC_SUBST(GST_PLUGINS_BASE_LIBS)
+AC_SUBST(GST_PLUGINS_BASE_CFLAGS)
+
 
 dnl check for pygtk
 PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)

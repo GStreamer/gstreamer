@@ -1,3 +1,11 @@
+2005-12-01  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac (GST_PLUGINS_BASE_LIBS): Check for
+	gstreamer-plugins-base.pc, the one that has the interfaces etc.
+
+	* gst/Makefile.am (interfaces_la_CFLAGS, interfaces_la_LDFLAGS):
+	PLUGINS_BASE, not BASE.
+
 2005-11-30  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

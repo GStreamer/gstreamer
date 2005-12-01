@@ -63,9 +63,9 @@ EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)
 
 # GStreamer interfaces bindings
-interfaces_la_CFLAGS = $(common_cflags) $(GST_BASE_CFLAGS)
+interfaces_la_CFLAGS = $(common_cflags) $(GST_PLUGINS_BASE_CFLAGS)
 interfaces_la_LIBADD = $(common_libadd) -lgstinterfaces-0.9 
-interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface $(GST_BASE_LIBS)
+interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface $(GST_PLUGINS_BASE_LIBS)
 interfaces_la_SOURCES = interfacesmodule.c
 nodist_interfaces_la_SOURCES = interfaces.c
 INTERFACES_OVERRIDES = interfaces.override xoverlay.override
