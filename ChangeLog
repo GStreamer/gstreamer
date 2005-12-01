@@ -1,5 +1,10 @@
 2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* tests/check/gst/gstplugin.c:
+	  fix test
+
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* common/gst-xmlinspect.py:
 	* common/gtk-doc-plugins.mak:
 	* configure.ac:

@@ -85,13 +85,13 @@ GST_START_TEST (test_registry)
 
 GST_END_TEST;
 
-GST_START_TEST (test_load_gstelements)
+GST_START_TEST (test_load_coreelements)
 {
   GstPlugin *unloaded_plugin;
   GstPlugin *loaded_plugin;
 
-  unloaded_plugin = gst_default_registry_find_plugin ("gstelements");
-  fail_if (unloaded_plugin == NULL, "Failed to find gstelements plugin");
+  unloaded_plugin = gst_default_registry_find_plugin ("coreelements");
+  fail_if (unloaded_plugin == NULL, "Failed to find coreelements plugin");
   fail_if (GST_OBJECT_REFCOUNT_VALUE (unloaded_plugin) != 2,
       "Refcount of unloaded plugin in registry initially should be 2");
   GST_DEBUG ("refcount %d", GST_OBJECT_REFCOUNT_VALUE (unloaded_plugin));
@@ -119,7 +119,7 @@ GST_START_TEST (test_registry_get_plugin_list)
   GList *list;
   GstPlugin *plugin;
 
-  plugin = gst_default_registry_find_plugin ("gstelements");
+  plugin = gst_default_registry_find_plugin ("coreelements");
   fail_if (GST_OBJECT_REFCOUNT_VALUE (plugin) != 2,
       "Refcount of plugin in registry should be 2");
 
@@ -143,8 +143,8 @@ GST_START_TEST (test_find_plugin)
   GstPlugin *plugin;
 
   plugin = gst_registry_find_plugin (gst_registry_get_default (),
-      "gstelements");
-  fail_if (plugin == NULL, "Failed to find gstelements plugin");
+      "coreelements");
+  fail_if (plugin == NULL, "Failed to find coreelements plugin");
   ASSERT_OBJECT_REFCOUNT (plugin, "plugin", 2);
 
   fail_unless_equals_string (plugin->desc.version, VERSION);
@@ -166,8 +166,8 @@ GST_START_TEST (test_find_feature)
   feature = gst_registry_find_feature (gst_registry_get_default (),
       "identity", GST_TYPE_ELEMENT_FACTORY);
   fail_if (feature == NULL, "Failed to find identity element factory");
-  fail_if (strcmp (feature->plugin_name, "gstelements"),
-      "Expected identity to be from gstelements plugin");
+  fail_if (strcmp (feature->plugin_name, "coreelements"),
+      "Expected identity to be from coreelements plugin");
 
   fail_if (GST_OBJECT_REFCOUNT_VALUE (feature) != 2,
       "Refcount of feature should be 2");
@@ -228,7 +228,7 @@ GST_START_TEST (test_typefind)
       "audio/x-au", GST_TYPE_TYPE_FIND_FACTORY);
   fail_if (feature == NULL, "Failed to find audio/x-aw typefind factory");
   fail_if (feature->plugin != plugin,
-      "Expected identity to be from gstelements plugin");
+      "Expected identity to be from coreelements plugin");
 
   fail_if (GST_OBJECT_REFCOUNT_VALUE (plugin) != 3,
       "Refcount of plugin in registry+feature should be 3");
@@ -302,7 +302,7 @@ gst_plugin_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_register_static);
   tcase_add_test (tc_chain, test_registry);
-  tcase_add_test (tc_chain, test_load_gstelements);
+  tcase_add_test (tc_chain, test_load_coreelements);
   tcase_add_test (tc_chain, test_registry_get_plugin_list);
   tcase_add_test (tc_chain, test_find_plugin);
   tcase_add_test (tc_chain, test_find_feature);
