@@ -27,29 +27,29 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstAudiofilter GstAudiofilter;
-typedef struct _GstAudiofilterClass GstAudiofilterClass;
+typedef struct _GstAudioFilter GstAudioFilter;
+typedef struct _GstAudioFilterClass GstAudioFilterClass;
 
-typedef void (*GstAudiofilterFilterFunc)(GstAudiofilter *filter,
+typedef void (*GstAudioFilterFilterFunc)(GstAudioFilter *filter,
     GstBuffer *outbuf, GstBuffer *inbuf);
-typedef void (*GstAudiofilterInplaceFilterFunc)(GstAudiofilter *filter,
+typedef void (*GstAudioFilterInplaceFilterFunc)(GstAudioFilter *filter,
     GstBuffer *buffer);
 
-typedef void (*GstAudiofilterSetupFunc) (GstAudiofilter *filter);
+typedef void (*GstAudioFilterSetupFunc) (GstAudioFilter *filter);
 
 
 #define GST_TYPE_AUDIO_FILTER \
   (gst_audio_filter_get_type())
 #define GST_AUDIO_FILTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_FILTER,GstAudiofilter))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_FILTER,GstAudioFilter))
 #define GST_AUDIO_FILTER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_FILTER,GstAudiofilterClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_FILTER,GstAudioFilterClass))
 #define GST_IS_AUDIO_FILTER(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_FILTER))
 #define GST_IS_AUDIO_FILTER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_FILTER))
 
-struct _GstAudiofilter {
+struct _GstAudioFilter {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
@@ -71,13 +71,13 @@ struct _GstAudiofilter {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstAudiofilterClass {
+struct _GstAudioFilterClass {
   GstElementClass parent_class;
 
   GstCaps *caps;
-  GstAudiofilterSetupFunc setup;
-  GstAudiofilterInplaceFilterFunc filter_inplace;
-  GstAudiofilterFilterFunc filter;
+  GstAudioFilterSetupFunc setup;
+  GstAudioFilterInplaceFilterFunc filter_inplace;
+  GstAudioFilterFilterFunc filter;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -85,7 +85,7 @@ struct _GstAudiofilterClass {
 
 GType gst_audio_filter_get_type(void);
 
-void gst_audio_filter_class_add_pad_templates (GstAudiofilterClass *audiofilterclass, const GstCaps *caps);
+void gst_audio_filter_class_add_pad_templates (GstAudioFilterClass *audiofilterclass, const GstCaps *caps);
 
 G_END_DECLS
 

@@ -34,29 +34,29 @@
 #include <gst/audio/gstaudiofilter.h>
 #include <string.h>
 
-typedef struct _GstAudiofilterTemplate GstAudiofilterTemplate;
-typedef struct _GstAudiofilterTemplateClass GstAudiofilterTemplateClass;
+typedef struct _GstAudioFilterTemplate GstAudioFilterTemplate;
+typedef struct _GstAudioFilterTemplateClass GstAudioFilterTemplateClass;
 
 #define GST_TYPE_AUDIO_FILTER_TEMPLATE \
   (gst_audio_filter_template_get_type())
 #define GST_AUDIO_FILTER_TEMPLATE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_FILTER_TEMPLATE,GstAudiofilterTemplate))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_FILTER_TEMPLATE,GstAudioFilterTemplate))
 #define GST_AUDIO_FILTER_TEMPLATE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_FILTER_TEMPLATE,GstAudiofilterTemplateClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_FILTER_TEMPLATE,GstAudioFilterTemplateClass))
 #define GST_IS_AUDIO_FILTER_TEMPLATE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_FILTER_TEMPLATE))
 #define GST_IS_AUDIO_FILTER_TEMPLATE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_FILTER_TEMPLATE))
 
-struct _GstAudiofilterTemplate
+struct _GstAudioFilterTemplate
 {
-  GstAudiofilter audiofilter;
+  GstAudioFilter audiofilter;
 
 };
 
-struct _GstAudiofilterTemplateClass
+struct _GstAudioFilterTemplateClass
 {
-  GstAudiofilterClass parent_class;
+  GstAudioFilterClass parent_class;
 
 };
 
@@ -84,49 +84,49 @@ static void gst_audio_filter_template_set_property (GObject * object,
 static void gst_audio_filter_template_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static void gst_audio_filter_template_setup (GstAudiofilter * audiofilter);
-static void gst_audio_filter_template_filter (GstAudiofilter * audiofilter,
+static void gst_audio_filter_template_setup (GstAudioFilter * audiofilter);
+static void gst_audio_filter_template_filter (GstAudioFilter * audiofilter,
     GstBuffer * outbuf, GstBuffer * inbuf);
-static void gst_audio_filter_template_filter_inplace (GstAudiofilter *
+static void gst_audio_filter_template_filter_inplace (GstAudioFilter *
     audiofilter, GstBuffer * buf);
 
 GType
 gst_audio_filter_template_get_type (void)
 {
-  static GType audiofilter_template_type = 0;
+  static GType audio_filter_template_type = 0;
 
-  if (!audiofilter_template_type) {
-    static const GTypeInfo audiofilter_template_info = {
-      sizeof (GstAudiofilterTemplateClass),
+  if (!audio_filter_template_type) {
+    static const GTypeInfo audio_filter_template_info = {
+      sizeof (GstAudioFilterTemplateClass),
       gst_audio_filter_template_base_init,
       NULL,
       gst_audio_filter_template_class_init,
       NULL,
       gst_audio_filter_template_init,
-      sizeof (GstAudiofilterTemplate),
+      sizeof (GstAudioFilterTemplate),
       0,
       NULL,
     };
 
-    audiofilter_template_type = g_type_register_static (GST_TYPE_AUDIO_FILTER,
-        "GstAudiofilterTemplate", &audiofilter_template_info, 0);
+    audio_filter_template_type = g_type_register_static (GST_TYPE_AUDIO_FILTER,
+        "GstAudioFilterTemplate", &audio_filter_template_info, 0);
   }
-  return audiofilter_template_type;
+  return audio_filter_template_type;
 }
 
 static void
 gst_audio_filter_template_base_init (gpointer g_class)
 {
-  static GstElementDetails audiofilter_template_details = {
+  static GstElementDetails audio_filter_template_details = {
     "Audio filter template",
     "Filter/Effect/Audio",
     "Filters audio",
     "David Schleef <ds@schleef.org>"
   };
-  GstAudiofilterTemplateClass *klass = (GstAudiofilterTemplateClass *) g_class;
+  GstAudioFilterTemplateClass *klass = (GstAudioFilterTemplateClass *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &audiofilter_template_details);
+  gst_element_class_set_details (element_class, &audio_filter_template_details);
 
   gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
       gst_caps_from_string (GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS));
@@ -137,13 +137,13 @@ gst_audio_filter_template_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstAudiofilterTemplateClass *klass;
-  GstAudiofilterClass *audiofilter_class;
+  GstAudioFilterTemplateClass *klass;
+  GstAudioFilterClass *audio_filter_class;
 
-  klass = (GstAudiofilterTemplateClass *) g_class;
+  klass = (GstAudioFilterTemplateClass *) g_class;
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  audiofilter_class = (GstAudiofilterClass *) g_class;
+  audio_filter_class = (GstAudioFilterClass *) g_class;
 
 #if 0
   g_object_class_install_property (gobject_class, ARG_METHOD,
@@ -155,17 +155,17 @@ gst_audio_filter_template_class_init (gpointer g_class, gpointer class_data)
   gobject_class->set_property = gst_audio_filter_template_set_property;
   gobject_class->get_property = gst_audio_filter_template_get_property;
 
-  audiofilter_class->setup = gst_audio_filter_template_setup;
-  audiofilter_class->filter = gst_audio_filter_template_filter;
-  audiofilter_class->filter_inplace = gst_audio_filter_template_filter_inplace;
-  audiofilter_class->filter = NULL;
+  audio_filter_class->setup = gst_audio_filter_template_setup;
+  audio_filter_class->filter = gst_audio_filter_template_filter;
+  audio_filter_class->filter_inplace = gst_audio_filter_template_filter_inplace;
+  audio_filter_class->filter = NULL;
 }
 
 static void
 gst_audio_filter_template_init (GTypeInstance * instance, gpointer g_class)
 {
-  //GstAudiofilterTemplate *audiofilter_template = GST_AUDIO_FILTER_TEMPLATE (instance);
-  //GstAudiofilter *audiofilter = GST_AUDIO_FILTER (instance);
+  //GstAudioFilterTemplate *audio_filter_template = GST_AUDIO_FILTER_TEMPLATE (instance);
+  //GstAudioFilter *audiofilter = GST_AUDIO_FILTER (instance);
 
   GST_DEBUG ("gst_audio_filter_template_init");
 
@@ -177,7 +177,7 @@ static void
 gst_audio_filter_template_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAudiofilterTemplate *src;
+  GstAudioFilterTemplate *src;
 
   g_return_if_fail (GST_IS_AUDIO_FILTER_TEMPLATE (object));
   src = GST_AUDIO_FILTER_TEMPLATE (object);
@@ -193,7 +193,7 @@ static void
 gst_audio_filter_template_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAudiofilterTemplate *src;
+  GstAudioFilterTemplate *src;
 
   g_return_if_fail (GST_IS_AUDIO_FILTER_TEMPLATE (object));
   src = GST_AUDIO_FILTER_TEMPLATE (object);
@@ -214,16 +214,16 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "gstaudiofilter_template",
+    "gstaudio_filter_template",
     "Audio filter template",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 
-     static void gst_audio_filter_template_setup (GstAudiofilter * audiofilter)
+     static void gst_audio_filter_template_setup (GstAudioFilter * audiofilter)
 {
-  GstAudiofilterTemplate *audiofilter_template;
+  GstAudioFilterTemplate *audio_filter_template;
 
   g_return_if_fail (GST_IS_AUDIO_FILTER_TEMPLATE (audiofilter));
-  audiofilter_template = GST_AUDIO_FILTER_TEMPLATE (audiofilter);
+  audio_filter_template = GST_AUDIO_FILTER_TEMPLATE (audiofilter);
 
   /* if any setup needs to be done, do it here */
 
@@ -236,13 +236,13 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
  * with a minimum of memory copies. */
 
 static void
-gst_audio_filter_template_filter (GstAudiofilter * audiofilter,
+gst_audio_filter_template_filter (GstAudioFilter * audiofilter,
     GstBuffer * outbuf, GstBuffer * inbuf)
 {
-  GstAudiofilterTemplate *audiofilter_template;
+  GstAudioFilterTemplate *audio_filter_template;
 
   g_return_if_fail (GST_IS_AUDIO_FILTER_TEMPLATE (audiofilter));
-  audiofilter_template = GST_AUDIO_FILTER_TEMPLATE (audiofilter);
+  audio_filter_template = GST_AUDIO_FILTER_TEMPLATE (audiofilter);
 
   /* do something interesting here.  This simply copies the source
    * to the destination. */
@@ -251,13 +251,13 @@ gst_audio_filter_template_filter (GstAudiofilter * audiofilter,
 }
 
 static void
-gst_audio_filter_template_filter_inplace (GstAudiofilter * audiofilter,
+gst_audio_filter_template_filter_inplace (GstAudioFilter * audiofilter,
     GstBuffer * buf)
 {
-  GstAudiofilterTemplate *audiofilter_template;
+  GstAudioFilterTemplate *audio_filter_template;
 
   g_return_if_fail (GST_IS_AUDIO_FILTER_TEMPLATE (audiofilter));
-  audiofilter_template = GST_AUDIO_FILTER_TEMPLATE (audiofilter);
+  audio_filter_template = GST_AUDIO_FILTER_TEMPLATE (audiofilter);
 
   /* do something interesting here.  This simply copies the source
    * to the destination. */
