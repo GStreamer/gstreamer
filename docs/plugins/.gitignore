@@ -1,0 +1,17 @@
+gstreamer-plugins-decl-list.txt
+gstreamer-plugins-decl.txt
+gstreamer-plugins-overrides.txt
+gstreamer-plugins-undocumented.txt
+gstreamer-plugins.args.new
+gstreamer-plugins.signals.new
+gstreamer-plugins-unused.txt
+html
+html-build.stamp
+html.stamp
+scan-build.stamp
+sgml-build.stamp
+sgml.stamp
+tmpl
+tmpl-build.stamp
+tmpl.stamp
+xml
