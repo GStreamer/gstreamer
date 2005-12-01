@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_TCPCLIENTSINK_H__
-#define __GST_TCPCLIENTSINK_H__
+#ifndef __GST_TCP_CLIENT_SINK_H__
+#define __GST_TCP_CLIENT_SINK_H__
 
 
 #include <gst/gst.h>
@@ -44,24 +44,24 @@ G_BEGIN_DECLS
 #include <arpa/inet.h>
 #include "gsttcp.h"
 
-#define GST_TYPE_TCPCLIENTSINK \
-  (gst_tcpclientsink_get_type())
-#define GST_TCPCLIENTSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TCPCLIENTSINK,GstTCPClientSink))
-#define GST_TCPCLIENTSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TCPCLIENTSINK,GstTCPClientSink))
-#define GST_IS_TCPCLIENTSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TCPCLIENTSINK))
-#define GST_IS_TCPCLIENTSINK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TCPCLIENTSINK))
+#define GST_TYPE_TCP_CLIENT_SINK \
+  (gst_tcp_client_sink_get_type())
+#define GST_TCP_CLIENT_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TCP_CLIENT_SINK,GstTCPClientSink))
+#define GST_TCP_CLIENT_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TCP_CLIENT_SINK,GstTCPClientSink))
+#define GST_IS_TCP_CLIENT_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TCP_CLIENT_SINK))
+#define GST_IS_TCP_CLIENT_SINK_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TCP_CLIENT_SINK))
 
 typedef struct _GstTCPClientSink GstTCPClientSink;
 typedef struct _GstTCPClientSinkClass GstTCPClientSinkClass;
 
 typedef enum {
-  GST_TCPCLIENTSINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
+  GST_TCP_CLIENT_SINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_TCPCLIENTSINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2),
+  GST_TCP_CLIENT_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2),
 } GstTCPClientSinkFlags;
 
 struct _GstTCPClientSink {
@@ -84,8 +84,8 @@ struct _GstTCPClientSinkClass {
   GstBaseSinkClass parent_class;
 };
 
-GType gst_tcpclientsink_get_type(void);
+GType gst_tcp_client_sink_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_TCPCLIENTSINK_H__ */
+#endif /* __GST_TCP_CLIENT_SINK_H__ */

@@ -19,8 +19,8 @@
  */
 
 
-#ifndef __GST_TCPSERVERSRC_H__
-#define __GST_TCPSERVERSRC_H__
+#ifndef __GST_TCP_SERVER_SRC_H__
+#define __GST_TCP_SERVER_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
@@ -38,24 +38,24 @@ G_END_DECLS
 
 #include <fcntl.h>
 
-#define GST_TYPE_TCPSERVERSRC \
-  (gst_tcpserversrc_get_type())
-#define GST_TCPSERVERSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TCPSERVERSRC,GstTCPServerSrc))
-#define GST_TCPSERVERSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TCPSERVERSRC,GstTCPServerSrc))
-#define GST_IS_TCPSERVERSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TCPSERVERSRC))
-#define GST_IS_TCPSERVERSRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TCPSERVERSRC))
+#define GST_TYPE_TCP_SERVER_SRC \
+  (gst_tcp_server_src_get_type())
+#define GST_TCP_SERVER_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TCP_SERVER_SRC,GstTCPServerSrc))
+#define GST_TCP_SERVER_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TCP_SERVER_SRC,GstTCPServerSrc))
+#define GST_IS_TCP_SERVER_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TCP_SERVER_SRC))
+#define GST_IS_TCP_SERVER_SRC_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TCP_SERVER_SRC))
 
 typedef struct _GstTCPServerSrc GstTCPServerSrc;
 typedef struct _GstTCPServerSrcClass GstTCPServerSrcClass;
 
 typedef enum {
-  GST_TCPSERVERSRC_OPEN       = (GST_ELEMENT_FLAG_LAST << 0),
+  GST_TCP_SERVER_SRC_OPEN       = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_TCPSERVERSRC_FLAG_LAST  = (GST_ELEMENT_FLAG_LAST << 2)
+  GST_TCP_SERVER_SRC_FLAG_LAST  = (GST_ELEMENT_FLAG_LAST << 2)
 } GstTCPServerSrcFlags;
 
 struct _GstTCPServerSrc {
@@ -82,8 +82,8 @@ struct _GstTCPServerSrcClass {
   GstPushSrcClass parent_class;
 };
 
-GType gst_tcpserversrc_get_type (void);
+GType gst_tcp_server_src_get_type (void);
 
 G_BEGIN_DECLS
 
-#endif /* __GST_TCPSERVERSRC_H__ */
+#endif /* __GST_TCP_SERVER_SRC_H__ */

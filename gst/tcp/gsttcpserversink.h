@@ -19,8 +19,8 @@
  */
 
 
-#ifndef __GST_TCPSERVERSINK_H__
-#define __GST_TCPSERVERSINK_H__
+#ifndef __GST_TCP_SERVER_SINK_H__
+#define __GST_TCP_SERVER_SINK_H__
 
 
 #include <gst/gst.h>
@@ -42,24 +42,24 @@ G_BEGIN_DECLS
 #include <arpa/inet.h>
 #include "gstmultifdsink.h"
 
-#define GST_TYPE_TCPSERVERSINK \
-  (gst_tcpserversink_get_type())
-#define GST_TCPSERVERSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TCPSERVERSINK,GstTCPServerSink))
-#define GST_TCPSERVERSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TCPSERVERSINK,GstTCPServerSink))
-#define GST_IS_TCPSERVERSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TCPSERVERSINK))
-#define GST_IS_TCPSERVERSINK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TCPSERVERSINK))
+#define GST_TYPE_TCP_SERVER_SINK \
+  (gst_tcp_server_sink_get_type())
+#define GST_TCP_SERVER_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TCP_SERVER_SINK,GstTCPServerSink))
+#define GST_TCP_SERVER_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TCP_SERVER_SINK,GstTCPServerSink))
+#define GST_IS_TCP_SERVER_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TCP_SERVER_SINK))
+#define GST_IS_TCP_SERVER_SINK_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TCP_SERVER_SINK))
 
 typedef struct _GstTCPServerSink GstTCPServerSink;
 typedef struct _GstTCPServerSinkClass GstTCPServerSinkClass;
 
 typedef enum {
-  GST_TCPSERVERSINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
+  GST_TCP_SERVER_SINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_TCPSERVERSINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
+  GST_TCP_SERVER_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
 } GstTCPServerSinkFlags;
 
 struct _GstTCPServerSink {
@@ -78,8 +78,8 @@ struct _GstTCPServerSinkClass {
   GstMultiFdSinkClass parent_class;
 };
 
-GType gst_tcpserversink_get_type (void);
+GType gst_tcp_server_sink_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_TCPSERVERSINK_H__ */
+#endif /* __GST_TCP_SERVER_SINK_H__ */

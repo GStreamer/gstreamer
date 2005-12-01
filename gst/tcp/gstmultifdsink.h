@@ -19,8 +19,8 @@
  */
 
 
-#ifndef __GST_MULTIFDSINK_H__
-#define __GST_MULTIFDSINK_H__
+#ifndef __GST_MULTI_FD_SINK_H__
+#define __GST_MULTI_FD_SINK_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
@@ -30,27 +30,27 @@ G_BEGIN_DECLS
 #include "gsttcp.h"
 #include "gstfdset.h"
 
-#define GST_TYPE_MULTIFDSINK \
-  (gst_multifdsink_get_type())
-#define GST_MULTIFDSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTIFDSINK,GstMultiFdSink))
-#define GST_MULTIFDSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTIFDSINK,GstMultiFdSink))
-#define GST_IS_MULTIFDSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTIFDSINK))
-#define GST_IS_MULTIFDSINK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIFDSINK))
-#define GST_MULTIFDSINK_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MULTIFDSINK, GstMultiFdSinkClass))
+#define GST_TYPE_MULTI_FD_SINK \
+  (gst_multi_fd_sink_get_type())
+#define GST_MULTI_FD_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTI_FD_SINK,GstMultiFdSink))
+#define GST_MULTI_FD_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTI_FD_SINK,GstMultiFdSink))
+#define GST_IS_MULTI_FD_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTI_FD_SINK))
+#define GST_IS_MULTI_FD_SINK_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTI_FD_SINK))
+#define GST_MULTI_FD_SINK_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MULTI_FD_SINK, GstMultiFdSinkClass))
 	
 
 typedef struct _GstMultiFdSink GstMultiFdSink;
 typedef struct _GstMultiFdSinkClass GstMultiFdSinkClass;
 
 typedef enum {
-  GST_MULTIFDSINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
+  GST_MULTI_FD_SINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_MULTIFDSINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2),
+  GST_MULTI_FD_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2),
 } GstMultiFdSinkFlags;
 
 typedef enum
@@ -180,13 +180,13 @@ struct _GstMultiFdSinkClass {
   void (*client_removed) (GstElement *element, gchar *host, gint fd);
 };
 
-GType gst_multifdsink_get_type (void);
+GType gst_multi_fd_sink_get_type (void);
 
-void gst_multifdsink_add (GstMultiFdSink *sink, int fd);
-void gst_multifdsink_remove (GstMultiFdSink *sink, int fd);
-void gst_multifdsink_clear (GstMultiFdSink *sink);
-GValueArray* gst_multifdsink_get_stats (GstMultiFdSink *sink, int fd);
+void gst_multi_fd_sink_add (GstMultiFdSink *sink, int fd);
+void gst_multi_fd_sink_remove (GstMultiFdSink *sink, int fd);
+void gst_multi_fd_sink_clear (GstMultiFdSink *sink);
+GValueArray* gst_multi_fd_sink_get_stats (GstMultiFdSink *sink, int fd);
 
 G_END_DECLS
 
-#endif /* __GST_MULTIFDSINK_H__ */
+#endif /* __GST_MULTI_FD_SINK_H__ */

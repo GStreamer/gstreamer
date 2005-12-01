@@ -43,7 +43,7 @@
 #define TCP_BACKLOG		5
 
 /* elementfactory information */
-static GstElementDetails gst_tcpserversink_details =
+static GstElementDetails gst_tcp_server_sink_details =
 GST_ELEMENT_DETAILS ("TCP Server sink",
     "Sink/Network",
     "Send data as a server over the network via TCP",
@@ -59,34 +59,34 @@ enum
   ARG_PORT,
 };
 
-static void gst_tcpserversink_finalize (GObject * gobject);
+static void gst_tcp_server_sink_finalize (GObject * gobject);
 
-static gboolean gst_tcpserversink_handle_wait (GstMultiFdSink * sink,
+static gboolean gst_tcp_server_sink_handle_wait (GstMultiFdSink * sink,
     GstFDSet * set);
-static gboolean gst_tcpserversink_init_send (GstMultiFdSink * this);
-static gboolean gst_tcpserversink_close (GstMultiFdSink * this);
-static void gst_tcpserversink_removed (GstMultiFdSink * sink, int fd);
+static gboolean gst_tcp_server_sink_init_send (GstMultiFdSink * this);
+static gboolean gst_tcp_server_sink_close (GstMultiFdSink * this);
+static void gst_tcp_server_sink_removed (GstMultiFdSink * sink, int fd);
 
-static void gst_tcpserversink_set_property (GObject * object, guint prop_id,
+static void gst_tcp_server_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_tcpserversink_get_property (GObject * object, guint prop_id,
+static void gst_tcp_server_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 
-GST_BOILERPLATE (GstTCPServerSink, gst_tcpserversink, GstMultiFdSink,
-    GST_TYPE_MULTIFDSINK);
+GST_BOILERPLATE (GstTCPServerSink, gst_tcp_server_sink, GstMultiFdSink,
+    GST_TYPE_MULTI_FD_SINK);
 
 
 static void
-gst_tcpserversink_base_init (gpointer g_class)
+gst_tcp_server_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_tcpserversink_details);
+  gst_element_class_set_details (element_class, &gst_tcp_server_sink_details);
 }
 
 static void
-gst_tcpserversink_class_init (GstTCPServerSinkClass * klass)
+gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstMultiFdSinkClass *gstmultifdsink_class;
@@ -94,9 +94,9 @@ gst_tcpserversink_class_init (GstTCPServerSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstmultifdsink_class = (GstMultiFdSinkClass *) klass;
 
-  gobject_class->set_property = gst_tcpserversink_set_property;
-  gobject_class->get_property = gst_tcpserversink_get_property;
-  gobject_class->finalize = gst_tcpserversink_finalize;
+  gobject_class->set_property = gst_tcp_server_sink_set_property;
+  gobject_class->get_property = gst_tcp_server_sink_get_property;
+  gobject_class->finalize = gst_tcp_server_sink_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
       g_param_spec_string ("host", "host", "The host/IP to send the packets to",
@@ -105,16 +105,17 @@ gst_tcpserversink_class_init (GstTCPServerSinkClass * klass)
       g_param_spec_int ("port", "port", "The port to send the packets to",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
 
-  gstmultifdsink_class->init = gst_tcpserversink_init_send;
-  gstmultifdsink_class->wait = gst_tcpserversink_handle_wait;
-  gstmultifdsink_class->close = gst_tcpserversink_close;
-  gstmultifdsink_class->removed = gst_tcpserversink_removed;
+  gstmultifdsink_class->init = gst_tcp_server_sink_init_send;
+  gstmultifdsink_class->wait = gst_tcp_server_sink_handle_wait;
+  gstmultifdsink_class->close = gst_tcp_server_sink_close;
+  gstmultifdsink_class->removed = gst_tcp_server_sink_removed;
 
   GST_DEBUG_CATEGORY_INIT (tcpserversink_debug, "tcpserversink", 0, "TCP sink");
 }
 
 static void
-gst_tcpserversink_init (GstTCPServerSink * this, GstTCPServerSinkClass * klass)
+gst_tcp_server_sink_init (GstTCPServerSink * this,
+    GstTCPServerSinkClass * klass)
 {
   this->server_port = TCP_DEFAULT_PORT;
   /* should support as minimum 576 for IPV4 and 1500 for IPV6 */
@@ -125,9 +126,9 @@ gst_tcpserversink_init (GstTCPServerSink * this, GstTCPServerSinkClass * klass)
 }
 
 static void
-gst_tcpserversink_finalize (GObject * gobject)
+gst_tcp_server_sink_finalize (GObject * gobject)
 {
-  GstTCPServerSink *this = GST_TCPSERVERSINK (gobject);
+  GstTCPServerSink *this = GST_TCP_SERVER_SINK (gobject);
 
   g_free (this->host);
 }
@@ -135,7 +136,7 @@ gst_tcpserversink_finalize (GObject * gobject)
 /* handle a read request on the server,
  * which indicates a new client connection */
 static gboolean
-gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
+gst_tcp_server_sink_handle_server_read (GstTCPServerSink * sink)
 {
   /* new client */
   int client_sock_fd;
@@ -157,7 +158,7 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
     return FALSE;
   }
 
-  gst_multifdsink_add (GST_MULTIFDSINK (sink), client_sock_fd);
+  gst_multi_fd_sink_add (GST_MULTI_FD_SINK (sink), client_sock_fd);
 
   GST_DEBUG_OBJECT (sink, "added new client ip %s with fd %d",
       inet_ntoa (client_address.sin_addr), client_sock_fd);
@@ -166,9 +167,9 @@ gst_tcpserversink_handle_server_read (GstTCPServerSink * sink)
 }
 
 static void
-gst_tcpserversink_removed (GstMultiFdSink * sink, int fd)
+gst_tcp_server_sink_removed (GstMultiFdSink * sink, int fd)
 {
-  GstTCPServerSink *this = GST_TCPSERVERSINK (sink);
+  GstTCPServerSink *this = GST_TCP_SERVER_SINK (sink);
 
   GST_LOG_OBJECT (this, "closing fd %d", fd);
   if (close (fd) < 0) {
@@ -178,13 +179,13 @@ gst_tcpserversink_removed (GstMultiFdSink * sink, int fd)
 }
 
 static gboolean
-gst_tcpserversink_handle_wait (GstMultiFdSink * sink, GstFDSet * set)
+gst_tcp_server_sink_handle_wait (GstMultiFdSink * sink, GstFDSet * set)
 {
-  GstTCPServerSink *this = GST_TCPSERVERSINK (sink);
+  GstTCPServerSink *this = GST_TCP_SERVER_SINK (sink);
 
   if (gst_fdset_fd_can_read (set, &this->server_sock)) {
     /* handle new client connection on server socket */
-    if (!gst_tcpserversink_handle_server_read (this)) {
+    if (!gst_tcp_server_sink_handle_server_read (this)) {
       GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
           ("client connection failed: %s", g_strerror (errno)));
       return FALSE;
@@ -194,13 +195,13 @@ gst_tcpserversink_handle_wait (GstMultiFdSink * sink, GstFDSet * set)
 }
 
 static void
-gst_tcpserversink_set_property (GObject * object, guint prop_id,
+gst_tcp_server_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstTCPServerSink *sink;
 
-  g_return_if_fail (GST_IS_TCPSERVERSINK (object));
-  sink = GST_TCPSERVERSINK (object);
+  g_return_if_fail (GST_IS_TCP_SERVER_SINK (object));
+  sink = GST_TCP_SERVER_SINK (object);
 
   switch (prop_id) {
     case ARG_HOST:
@@ -222,13 +223,13 @@ gst_tcpserversink_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_tcpserversink_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+gst_tcp_server_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstTCPServerSink *sink;
 
-  g_return_if_fail (GST_IS_TCPSERVERSINK (object));
-  sink = GST_TCPSERVERSINK (object);
+  g_return_if_fail (GST_IS_TCP_SERVER_SINK (object));
+  sink = GST_TCP_SERVER_SINK (object);
 
   switch (prop_id) {
     case ARG_HOST:
@@ -247,10 +248,10 @@ gst_tcpserversink_get_property (GObject * object, guint prop_id, GValue * value,
 
 /* create a socket for sending to remote machine */
 static gboolean
-gst_tcpserversink_init_send (GstMultiFdSink * parent)
+gst_tcp_server_sink_init_send (GstMultiFdSink * parent)
 {
   int ret;
-  GstTCPServerSink *this = GST_TCPSERVERSINK (parent);
+  GstTCPServerSink *this = GST_TCP_SERVER_SINK (parent);
 
   /* create sending server socket */
   if ((this->server_sock.fd = socket (AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -324,9 +325,9 @@ gst_tcpserversink_init_send (GstMultiFdSink * parent)
 }
 
 static gboolean
-gst_tcpserversink_close (GstMultiFdSink * parent)
+gst_tcp_server_sink_close (GstMultiFdSink * parent)
 {
-  GstTCPServerSink *this = GST_TCPSERVERSINK (parent);
+  GstTCPServerSink *this = GST_TCP_SERVER_SINK (parent);
 
   if (this->server_sock.fd != -1) {
     gst_fdset_remove_fd (parent->fdset, &this->server_sock);

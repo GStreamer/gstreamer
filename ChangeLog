@@ -1,5 +1,60 @@
 2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_base_init),
+	(gst_multi_fd_sink_class_init), (gst_multi_fd_sink_init),
+	(gst_multi_fd_sink_finalize), (gst_multi_fd_sink_add),
+	(gst_multi_fd_sink_remove), (gst_multi_fd_sink_clear),
+	(gst_multi_fd_sink_get_stats),
+	(gst_multi_fd_sink_remove_client_link),
+	(gst_multi_fd_sink_handle_client_read),
+	(gst_multi_fd_sink_client_queue_data),
+	(gst_multi_fd_sink_client_queue_caps),
+	(gst_multi_fd_sink_client_queue_buffer),
+	(gst_multi_fd_sink_new_client),
+	(gst_multi_fd_sink_handle_client_write),
+	(gst_multi_fd_sink_recover_client),
+	(gst_multi_fd_sink_queue_buffer),
+	(gst_multi_fd_sink_handle_clients), (gst_multi_fd_sink_thread),
+	(gst_multi_fd_sink_render), (gst_multi_fd_sink_set_property),
+	(gst_multi_fd_sink_get_property), (gst_multi_fd_sink_start),
+	(gst_multi_fd_sink_stop), (gst_multi_fd_sink_change_state):
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcpclientsink.c: (gst_tcp_client_sink_get_type),
+	(gst_tcp_client_sink_base_init), (gst_tcp_client_sink_class_init),
+	(gst_tcp_client_sink_init), (gst_tcp_client_sink_finalize),
+	(gst_tcp_client_sink_setcaps), (gst_tcp_client_sink_render),
+	(gst_tcp_client_sink_set_property),
+	(gst_tcp_client_sink_get_property), (gst_tcp_client_sink_start),
+	(gst_tcp_client_sink_stop), (gst_tcp_client_sink_change_state):
+	* gst/tcp/gsttcpclientsink.h:
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcp_client_src_base_init),
+	(gst_tcp_client_src_class_init), (gst_tcp_client_src_init),
+	(gst_tcp_client_src_finalize), (gst_tcp_client_src_getcaps),
+	(gst_tcp_client_src_create), (gst_tcp_client_src_set_property),
+	(gst_tcp_client_src_get_property), (gst_tcp_client_src_start),
+	(gst_tcp_client_src_stop), (gst_tcp_client_src_unlock):
+	* gst/tcp/gsttcpclientsrc.h:
+	* gst/tcp/gsttcpplugin.c: (plugin_init):
+	* gst/tcp/gsttcpserversink.c: (gst_tcp_server_sink_base_init),
+	(gst_tcp_server_sink_class_init), (gst_tcp_server_sink_init),
+	(gst_tcp_server_sink_finalize),
+	(gst_tcp_server_sink_handle_server_read),
+	(gst_tcp_server_sink_removed), (gst_tcp_server_sink_handle_wait),
+	(gst_tcp_server_sink_set_property),
+	(gst_tcp_server_sink_get_property),
+	(gst_tcp_server_sink_init_send), (gst_tcp_server_sink_close):
+	* gst/tcp/gsttcpserversink.h:
+	* gst/tcp/gsttcpserversrc.c: (gst_tcp_server_src_base_init),
+	(gst_tcp_server_src_class_init), (gst_tcp_server_src_init),
+	(gst_tcp_server_src_finalize), (gst_tcp_server_src_create),
+	(gst_tcp_server_src_set_property),
+	(gst_tcp_server_src_get_property), (gst_tcp_server_src_start),
+	(gst_tcp_server_src_stop), (gst_tcp_server_src_unlock):
+	* gst/tcp/gsttcpserversrc.h:
+	  more borgifying
+
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-base-plugins.args:
 	* docs/plugins/inspect/plugin-libvisual.xml:

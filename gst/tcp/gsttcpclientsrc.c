@@ -56,7 +56,7 @@ GST_DEBUG_CATEGORY (tcpclientsrc_debug);
 #define MAX_READ_SIZE			4 * 1024
 
 
-static GstElementDetails gst_tcpclientsrc_details =
+static GstElementDetails gst_tcp_client_src_details =
 GST_ELEMENT_DETAILS ("TCP Client source",
     "Source/Network",
     "Receive data as a client over the network via TCP",
@@ -77,39 +77,39 @@ enum
 };
 
 
-GST_BOILERPLATE (GstTCPClientSrc, gst_tcpclientsrc, GstPushSrc,
+GST_BOILERPLATE (GstTCPClientSrc, gst_tcp_client_src, GstPushSrc,
     GST_TYPE_PUSH_SRC);
 
 
-static void gst_tcpclientsrc_finalize (GObject * gobject);
+static void gst_tcp_client_src_finalize (GObject * gobject);
 
-static GstCaps *gst_tcpclientsrc_getcaps (GstBaseSrc * psrc);
+static GstCaps *gst_tcp_client_src_getcaps (GstBaseSrc * psrc);
 
-static GstFlowReturn gst_tcpclientsrc_create (GstPushSrc * psrc,
+static GstFlowReturn gst_tcp_client_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
-static gboolean gst_tcpclientsrc_stop (GstBaseSrc * bsrc);
-static gboolean gst_tcpclientsrc_start (GstBaseSrc * bsrc);
-static gboolean gst_tcpclientsrc_unlock (GstBaseSrc * bsrc);
+static gboolean gst_tcp_client_src_stop (GstBaseSrc * bsrc);
+static gboolean gst_tcp_client_src_start (GstBaseSrc * bsrc);
+static gboolean gst_tcp_client_src_unlock (GstBaseSrc * bsrc);
 
-static void gst_tcpclientsrc_set_property (GObject * object, guint prop_id,
+static void gst_tcp_client_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_tcpclientsrc_get_property (GObject * object, guint prop_id,
+static void gst_tcp_client_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 
 static void
-gst_tcpclientsrc_base_init (gpointer g_class)
+gst_tcp_client_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_details (element_class, &gst_tcpclientsrc_details);
+  gst_element_class_set_details (element_class, &gst_tcp_client_src_details);
 }
 
 static void
-gst_tcpclientsrc_class_init (GstTCPClientSrcClass * klass)
+gst_tcp_client_src_class_init (GstTCPClientSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseSrcClass *gstbasesrc_class;
@@ -119,9 +119,9 @@ gst_tcpclientsrc_class_init (GstTCPClientSrcClass * klass)
   gstbasesrc_class = (GstBaseSrcClass *) klass;
   gstpush_src_class = (GstPushSrcClass *) klass;
 
-  gobject_class->set_property = gst_tcpclientsrc_set_property;
-  gobject_class->get_property = gst_tcpclientsrc_get_property;
-  gobject_class->finalize = gst_tcpclientsrc_finalize;
+  gobject_class->set_property = gst_tcp_client_src_set_property;
+  gobject_class->get_property = gst_tcp_client_src_get_property;
+  gobject_class->finalize = gst_tcp_client_src_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HOST,
       g_param_spec_string ("host", "Host",
@@ -134,19 +134,19 @@ gst_tcpclientsrc_class_init (GstTCPClientSrcClass * klass)
       g_param_spec_enum ("protocol", "Protocol", "The protocol to wrap data in",
           GST_TYPE_TCP_PROTOCOL, GST_TCP_PROTOCOL_NONE, G_PARAM_READWRITE));
 
-  gstbasesrc_class->get_caps = gst_tcpclientsrc_getcaps;
-  gstbasesrc_class->start = gst_tcpclientsrc_start;
-  gstbasesrc_class->stop = gst_tcpclientsrc_stop;
-  gstbasesrc_class->unlock = gst_tcpclientsrc_unlock;
+  gstbasesrc_class->get_caps = gst_tcp_client_src_getcaps;
+  gstbasesrc_class->start = gst_tcp_client_src_start;
+  gstbasesrc_class->stop = gst_tcp_client_src_stop;
+  gstbasesrc_class->unlock = gst_tcp_client_src_unlock;
 
-  gstpush_src_class->create = gst_tcpclientsrc_create;
+  gstpush_src_class->create = gst_tcp_client_src_create;
 
   GST_DEBUG_CATEGORY_INIT (tcpclientsrc_debug, "tcpclientsrc", 0,
       "TCP Client Source");
 }
 
 static void
-gst_tcpclientsrc_init (GstTCPClientSrc * this, GstTCPClientSrcClass * g_class)
+gst_tcp_client_src_init (GstTCPClientSrc * this, GstTCPClientSrcClass * g_class)
 {
   this->port = TCP_DEFAULT_PORT;
   this->host = g_strdup (TCP_DEFAULT_HOST);
@@ -159,26 +159,26 @@ gst_tcpclientsrc_init (GstTCPClientSrc * this, GstTCPClientSrcClass * g_class)
 
   gst_base_src_set_live (GST_BASE_SRC (this), TRUE);
 
-  GST_OBJECT_FLAG_UNSET (this, GST_TCPCLIENTSRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (this, GST_TCP_CLIENT_SRC_OPEN);
 }
 
 static void
-gst_tcpclientsrc_finalize (GObject * gobject)
+gst_tcp_client_src_finalize (GObject * gobject)
 {
-  GstTCPClientSrc *this = GST_TCPCLIENTSRC (gobject);
+  GstTCPClientSrc *this = GST_TCP_CLIENT_SRC (gobject);
 
   g_free (this->host);
 }
 
 static GstCaps *
-gst_tcpclientsrc_getcaps (GstBaseSrc * bsrc)
+gst_tcp_client_src_getcaps (GstBaseSrc * bsrc)
 {
   GstTCPClientSrc *src;
   GstCaps *caps = NULL;
 
-  src = GST_TCPCLIENTSRC (bsrc);
+  src = GST_TCP_CLIENT_SRC (bsrc);
 
-  if (!GST_OBJECT_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (src, GST_TCP_CLIENT_SRC_OPEN))
     caps = gst_caps_new_any ();
   else if (src->caps)
     caps = gst_caps_copy (src->caps);
@@ -190,14 +190,14 @@ gst_tcpclientsrc_getcaps (GstBaseSrc * bsrc)
 }
 
 static GstFlowReturn
-gst_tcpclientsrc_create (GstPushSrc * psrc, GstBuffer ** outbuf)
+gst_tcp_client_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstTCPClientSrc *src;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  src = GST_TCPCLIENTSRC (psrc);
+  src = GST_TCP_CLIENT_SRC (psrc);
 
-  if (!GST_OBJECT_FLAG_IS_SET (src, GST_TCPCLIENTSRC_OPEN))
+  if (!GST_OBJECT_FLAG_IS_SET (src, GST_TCP_CLIENT_SRC_OPEN))
     goto wrong_state;
 
   GST_LOG_OBJECT (src, "asked for a buffer");
@@ -263,10 +263,10 @@ no_caps:
 }
 
 static void
-gst_tcpclientsrc_set_property (GObject * object, guint prop_id,
+gst_tcp_client_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstTCPClientSrc *tcpclientsrc = GST_TCPCLIENTSRC (object);
+  GstTCPClientSrc *tcpclientsrc = GST_TCP_CLIENT_SRC (object);
 
   switch (prop_id) {
     case PROP_HOST:
@@ -291,10 +291,10 @@ gst_tcpclientsrc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_tcpclientsrc_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+gst_tcp_client_src_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
-  GstTCPClientSrc *tcpclientsrc = GST_TCPCLIENTSRC (object);
+  GstTCPClientSrc *tcpclientsrc = GST_TCP_CLIENT_SRC (object);
 
   switch (prop_id) {
     case PROP_HOST:
@@ -315,11 +315,11 @@ gst_tcpclientsrc_get_property (GObject * object, guint prop_id, GValue * value,
 
 /* create a socket for connecting to remote server */
 static gboolean
-gst_tcpclientsrc_start (GstBaseSrc * bsrc)
+gst_tcp_client_src_start (GstBaseSrc * bsrc)
 {
   int ret;
   gchar *ip;
-  GstTCPClientSrc *src = GST_TCPCLIENTSRC (bsrc);
+  GstTCPClientSrc *src = GST_TCP_CLIENT_SRC (bsrc);
 
   /* create the control sockets before anything */
   if (socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (src)) < 0)
@@ -337,7 +337,7 @@ gst_tcpclientsrc_start (GstBaseSrc * bsrc)
 
   GST_DEBUG_OBJECT (src, "opened receiving client socket with fd %d",
       src->sock_fd);
-  GST_OBJECT_FLAG_SET (src, GST_TCPCLIENTSRC_OPEN);
+  GST_OBJECT_FLAG_SET (src, GST_TCP_CLIENT_SRC_OPEN);
 
   /* look up name if we need to */
   if (!(ip = gst_tcp_host_to_ip (GST_ELEMENT (src), src->host)))
@@ -357,7 +357,7 @@ gst_tcpclientsrc_start (GstBaseSrc * bsrc)
       sizeof (src->server_sin));
 
   if (ret) {
-    gst_tcpclientsrc_stop (GST_BASE_SRC (src));
+    gst_tcp_client_src_stop (GST_BASE_SRC (src));
     switch (errno) {
       case ECONNREFUSED:
         GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
@@ -388,7 +388,7 @@ no_socket:
   }
 name_resolv:
   {
-    gst_tcpclientsrc_stop (GST_BASE_SRC (src));
+    gst_tcp_client_src_stop (GST_BASE_SRC (src));
     return FALSE;
   }
 }
@@ -397,11 +397,11 @@ name_resolv:
  * unset OPEN flag
  * used both to recover from errors and go to NULL state */
 static gboolean
-gst_tcpclientsrc_stop (GstBaseSrc * bsrc)
+gst_tcp_client_src_stop (GstBaseSrc * bsrc)
 {
   GstTCPClientSrc *src;
 
-  src = GST_TCPCLIENTSRC (bsrc);
+  src = GST_TCP_CLIENT_SRC (bsrc);
 
   GST_DEBUG_OBJECT (src, "closing socket");
   if (src->sock_fd != -1) {
@@ -413,7 +413,7 @@ gst_tcpclientsrc_stop (GstBaseSrc * bsrc)
     gst_caps_unref (src->caps);
     src->caps = NULL;
   }
-  GST_OBJECT_FLAG_UNSET (src, GST_TCPCLIENTSRC_OPEN);
+  GST_OBJECT_FLAG_UNSET (src, GST_TCP_CLIENT_SRC_OPEN);
 
   close (READ_SOCKET (src));
   close (WRITE_SOCKET (src));
@@ -425,9 +425,9 @@ gst_tcpclientsrc_stop (GstBaseSrc * bsrc)
 
 /* will be called only between calls to start() and stop() */
 static gboolean
-gst_tcpclientsrc_unlock (GstBaseSrc * bsrc)
+gst_tcp_client_src_unlock (GstBaseSrc * bsrc)
 {
-  GstTCPClientSrc *src = GST_TCPCLIENTSRC (bsrc);
+  GstTCPClientSrc *src = GST_TCP_CLIENT_SRC (bsrc);
 
   SEND_COMMAND (src, CONTROL_STOP);
 
