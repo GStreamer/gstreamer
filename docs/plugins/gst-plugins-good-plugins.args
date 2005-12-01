@@ -7138,3 +7138,43 @@
 <DEFAULT>0</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstVideoFlip::method</NAME>
+<TYPE>GstVideoFlipMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>method</NICK>
+<BLURB>method.</BLURB>
+<DEFAULT>Rotate clockwise 90 degrees</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpMP4VPay::send-config</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Send Config</NICK>
+<BLURB>Send the config parameters in RTP packets as well.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPDepay::skip</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>skip</NICK>
+<BLURB>skip.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultipartMux::boundary</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Boundary</NICK>
+<BLURB>Boundary string.</BLURB>
+<DEFAULT>"ThisRandomString"</DEFAULT>
+</ARG>
+

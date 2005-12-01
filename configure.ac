@@ -6,7 +6,7 @@ AC_INIT
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-good, GST_PLUGINS_GOOD_VERSION, 0, 9, 6, 1,
+AS_VERSION(gst-plugins-good, GST_PLUGINS_GOOD_VERSION, 0, 9, 7, 0,
     GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
@@ -29,7 +29,7 @@ AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_PLUGINS_GOOD_VERSION_MAJOR.$GST_PLUGINS_GOOD_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
-# GST_MAJORMINOR=0.9
+GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
 
 AS_LIBTOOL_TAGS([CXX])
@@ -193,8 +193,8 @@ fi
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_REQ=0.9.5
-GSTPB_REQ=0.9.5
+GST_REQ=0.9.7
+GSTPB_REQ=0.9.7
 GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])

@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Good Plug-ins 0.9.6 "Everything's Not Lost"
+GStreamer: Release notes for GStreamer Good Plug-ins 0.9.7 "Mijn Hond Heeft Geen Neus"
         
 
 The GStreamer team is petrified to announce a new release
@@ -53,16 +53,19 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * added speex RTP payloader/depayloader
-      * ported cutter
-      * fractional framerates
-      * more video filters now use BaseTransform
+      * effectv elements ported
+      * videoflip updated
+      * multipart ported
+      * dv seeking fixed
+      * rtp elements renamed
 
 Bugs fixed in this release
     
-      * 319184 : rtspsrc: invalid read in sdp_message_parse_buffer ()
-      * 321001 : [matroskademux] should seek to nearest preceding index en...
-      * 321430 : goom fails to register on amd64
+      * 322377 : udpsrc leaks sockets
+      * 322643 : Incorrect matroska frame default duration
+      * 322645 : Matroska muxer: wrong pixel aspect ratio
+      * 322667 : [jpegenc] leaks input buffer
+      * 322794 : udp plugin linked against gstnet instead of gstnetbuffer
 
 Download
 
@@ -92,14 +95,11 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
-      * Edgard Lima
       * Edward Hervey
       * Jan Schmidt
       * Julien Moutte
       * Michael Smith
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Vincent Torri
       * Wim Taymans
  

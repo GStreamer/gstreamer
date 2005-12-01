@@ -1,4 +1,22 @@
-This is GStreamer Good Plug-ins 0.9.6, "Everything's Not Lost"
+This is GStreamer Good Plug-ins 0.9.7, "Mijn Hond Heeft Geen Neus"
+
+Changes since 0.9.6:
+    
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+      * effectv elements ported
+      * videoflip updated
+      * multipart ported
+      * dv seeking fixed
+      * rtp elements renamed
+
+Bugs fixed since 0.9.6:
+    
+      * 322377 : udpsrc leaks sockets
+      * 322643 : Incorrect matroska frame default duration
+      * 322645 : Matroska muxer: wrong pixel aspect ratio
+      * 322667 : [jpegenc] leaks input buffer
+      * 322794 : udp plugin linked against gstnet instead of gstnetbuffer
   
 Changes since 0.9.5:
     
