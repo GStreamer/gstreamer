@@ -1,3 +1,10 @@
+=== release 0.9.7 ===
+
+2005-12-01   <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	  releasing 0.9.7, "My Dog Has No Nose"
+
 2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* common/gst-xmlinspect.py:
@@ -1051,7 +1058,7 @@
 
 	* gst/gstutils.c: (gst_util_uint64_scale_int64),
 	(gst_util_uint64_scale), (gst_util_uint64_scale_int):
-	Implement high precission (guint64 * guint64) / guint64.
+	Implement high precision (guint64 * guint64) / guint64.
 
 2005-11-24  Wim Taymans  <wim@fluendo.com>
 
