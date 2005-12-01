@@ -14,9 +14,6 @@ interface for setting/getting a Window on elements supporting it.
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstXOverlay ##### -->
 <para>
 

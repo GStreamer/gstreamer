@@ -1,5 +1,12 @@
 2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	  add pango plugin to docs
+
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	  moved pango to base

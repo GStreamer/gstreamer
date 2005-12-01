@@ -14,9 +14,6 @@ interface for elements that provide mixer operations
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstMixer ##### -->
 <para>
 

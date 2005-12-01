@@ -1,0 +1,41 @@
+<plugin>
+  <name>pango</name>
+  <description>Pango-based text rendering and overlay</description>
+  <filename>../../ext/pango/.libs/libgstpango.so</filename>
+  <basename>libgstpango.so</basename>
+  <version>0.9.6.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>clockoverlay</name>
+      <longname>Time Overlay</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Overlays the time on a video stream</description>
+      <author>Tim-Philipp Müller &lt;tim@centricular.net&gt;</author>
+    </element>
+    <element>
+      <name>textoverlay</name>
+      <longname>Text Overlay</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Adds text strings on top of a video buffer</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+    </element>
+    <element>
+      <name>textrender</name>
+      <longname>Text Render</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Renders a text string to an image bitmap</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;, Ronald S. Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>timeoverlay</name>
+      <longname>Time Overlay</longname>
+      <class>Filter/Editor/Video</class>
+      <description>Overlays the time on a video stream</description>
+      <author>Tim-Philipp Müller &lt;tim@centricular.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

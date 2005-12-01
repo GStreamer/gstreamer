@@ -39,6 +39,7 @@
     <xi:include href="xml/plugin-gnomevfs.xml" />
     <xi:include href="xml/plugin-libvisual.xml" />
     <xi:include href="xml/plugin-ogg.xml" />
+    <xi:include href="xml/plugin-pango.xml" />
     <xi:include href="xml/plugin-playbin.xml" />
     <xi:include href="xml/plugin-subparse.xml" />
     <xi:include href="xml/plugin-tcp.xml" />

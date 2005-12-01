@@ -14,14 +14,20 @@ interface for adjusting color balance settings
 
 </para>
 
-<!-- ##### SECTION Stability_Level ##### -->
-
-
 <!-- ##### STRUCT GstColorBalance ##### -->
 <para>
 
 </para>
 
+
+<!-- ##### SIGNAL GstColorBalance::value-changed ##### -->
+<para>
+
+</para>
+
+@gstcolorbalance: the object which received the signal.
+@arg1: 
+@arg2: 
 
 <!-- ##### STRUCT GstColorBalanceClass ##### -->
 <para>
