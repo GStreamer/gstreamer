@@ -578,3 +578,13 @@
 <DEFAULT>18446744073709551615</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstMPEGParse::max-scr-gap</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max SCR gap</NICK>
+<BLURB>Maximum allowed gap between expected and actual SCR values. -1 means never adjust.</BLURB>
+<DEFAULT>120000</DEFAULT>
+</ARG>
+

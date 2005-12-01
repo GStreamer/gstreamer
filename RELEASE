@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Ugly Plug-ins 0.9.6 "The Marshals Are Dead"
+GStreamer: Release notes for GStreamer Ugly Plug-ins 0.9.7 "Canis Meus Naso Non Habet"
         
 
 The GStreamer team is petrified to announce a new release
@@ -55,13 +55,12 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * mpegstream ported
-      * fractional framerates
+      * mpegstream fixes
 
 Bugs fixed in this release
     
-      * 319862 : Partial mpegstream/dvddemux port
-      * 321955 : gst-plugins-ugly fail to compile
+      * 319784 : mad claims to need more data
+      * 322745 : [mpegdemux] segfaults
 
 Download
 
@@ -91,13 +90,11 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
       * Edward Hervey
       * Jan Schmidt
-      * Johan Dahlin
       * Martin Soto
       * Michael Smith
+      * Michal Benes
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Wim Taymans
  

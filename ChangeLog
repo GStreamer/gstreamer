@@ -1,3 +1,10 @@
+=== release 0.9.7 ===
+
+2005-12-01   <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	  releasing 0.9.7, "Canis Meus Naso Non Habet"
+
 2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/amrnb/Makefile.am:

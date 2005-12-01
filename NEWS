@@ -1,4 +1,13 @@
-This is GStreamer Ugly Plug-ins 0.9.6, "The Marshals Are Dead".
+This is GStreamer Ugly Plug-ins 0.9.7, "Canis Meus Naso Non Habet".
+
+Changes since 0.9.6:
+    
+      * mpegstream fixes
+
+Bugs fixed since 0.9.6:
+    
+      * 319784 : mad claims to need more data
+      * 322745 : [mpegdemux] segfaults
   
 Changes since 0.9.5:
     

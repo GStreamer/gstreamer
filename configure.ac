@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-ugly, GST_PLUGINS_UGLY_VERSION, 0, 9, 6, 1,
+AS_VERSION(gst-plugins-ugly, GST_PLUGINS_UGLY_VERSION, 0, 9, 7, 0,
   GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
@@ -20,7 +20,7 @@ AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 dnl our libraries and install dirs use major.minor as a version
 GST_MAJORMINOR=$GST_PLUGINS_UGLY_VERSION_MAJOR.$GST_PLUGINS_UGLY_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
-GST_MAJORMINOR=0.9
+GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
 
 AS_LIBTOOL_TAGS([CXX])
@@ -134,7 +134,7 @@ GST_ARCH()
 
 dnl check for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_REQ=0.9.0.1
+GST_REQ=0.9.7
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST="yes", HAVE_GST="no")
 
