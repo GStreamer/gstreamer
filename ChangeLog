@@ -1,3 +1,9 @@
+2005-12-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/amrnb/Makefile.am:
+	* gst/realmedia/Makefile.am:
+	  Don't know how these escaped my eye before.  Fix link flags.
+
 2005-11-29  Michal Benes  <michal dot benes at xeris dot cz>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
