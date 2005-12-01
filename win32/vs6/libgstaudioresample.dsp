@@ -53,11 +53,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 libgstreamer-0.9.lib libgstbase-0.9.lib glib-2.0.lib gobject-2.0.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release"
+# ADD LINK32 libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release"
 # Begin Special Build Tool
 TargetPath=.\Release\libgstaudioresample.dll
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\lib\gstreamer-0.9
+PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\lib\gstreamer-0.10
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "libgstaudioresample - Win32 Debug"
@@ -84,11 +84,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libgstreamer-0.9.lib libgstbase-0.9.lib glib-2.0.lib gobject-2.0.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"./debug"
+# ADD LINK32 libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"./debug"
 # Begin Special Build Tool
 TargetPath=.\Debug\libgstaudioresample.dll
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\lib\gstreamer-0.9
+PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\lib\gstreamer-0.10
 # End Special Build Tool
 
 !ENDIF 
