@@ -75,7 +75,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstelements"=.\libgstelements.dsp - Package Owner=<4>
+Project: "libgstcoreelements"=.\libgstcoreelements.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

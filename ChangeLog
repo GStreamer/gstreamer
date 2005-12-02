@@ -1,5 +1,14 @@
 2005-12-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* win32/MANIFEST:
+	* win32/common/config.h:
+	* win32/vs6/gstreamer.dsw:
+	* win32/vs6/libgstcoreelements.dsp:
+	* win32/vs6/libgstelements.dsp:
+	  renamed core elements plugin
+
+2005-12-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* tools/gst-run.c: (compare_major_minor), (find_highest_version),
 	(get_candidates):
 	  do piece-wise major/minor comparison so 0.9 < 0.10
