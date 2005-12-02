@@ -1,5 +1,21 @@
 2005-12-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/audioresample/buffer.c: (audioresample_buffer_queue_flush):
+	* gst/audioresample/buffer.h:
+	* gst/audioresample/gstaudioresample.c:
+	* gst/audioresample/gstaudioresample.h:
+	* gst/audioresample/resample.c: (resample_input_flush),
+	(resample_input_pushthrough), (resample_input_eos),
+	(resample_get_output_size_for_input),
+	(resample_get_input_size_for_output), (resample_get_output_size),
+	(resample_get_output_data):
+	* gst/audioresample/resample.h:
+	* gst/audioresample/resample_ref.c: (resample_scale_ref):
+	Fix audioresample, seek torture, new segments, reverse negotiation
+	etc.. work fine.
+
+2005-12-02  Wim Taymans  <wim@fluendo.com>
+
 	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):
 	Small cleanups.
 

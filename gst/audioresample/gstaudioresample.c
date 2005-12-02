@@ -48,6 +48,8 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_FILTERLEN	16
+
 enum
 {
   ARG_0,
@@ -97,8 +99,12 @@ GST_STATIC_CAPS ( \
          GstCaps * outcaps, guint * outsize);
      gboolean audioresample_set_caps (GstBaseTransform * base, GstCaps * incaps,
          GstCaps * outcaps);
+     static GstFlowReturn audioresample_pushthrough (GstAudioresample *
+         audioresample);
      static GstFlowReturn audioresample_transform (GstBaseTransform * base,
          GstBuffer * inbuf, GstBuffer * outbuf);
+     static gboolean audioresample_event (GstBaseTransform * base,
+         GstEvent * event);
 
 /*static guint gst_audioresample_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -133,7 +139,8 @@ static void gst_audioresample_class_init (GstAudioresampleClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FILTERLEN,
       g_param_spec_int ("filter_length", "filter_length", "filter_length",
-          0, G_MAXINT, 16, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXINT, DEFAULT_FILTERLEN,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   GST_BASE_TRANSFORM_CLASS (klass)->transform_size =
       GST_DEBUG_FUNCPTR (audioresample_transform_size);
@@ -145,19 +152,32 @@ static void gst_audioresample_class_init (GstAudioresampleClass * klass)
       GST_DEBUG_FUNCPTR (audioresample_set_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->transform =
       GST_DEBUG_FUNCPTR (audioresample_transform);
+  GST_BASE_TRANSFORM_CLASS (klass)->event =
+      GST_DEBUG_FUNCPTR (audioresample_event);
 
   GST_BASE_TRANSFORM_CLASS (klass)->passthrough_on_same_caps = TRUE;
 }
 
-static void gst_audioresample_init (GstAudioresample * audioresample,
+static void
+    gst_audioresample_init (GstAudioresample * audioresample,
     GstAudioresampleClass * klass)
 {
   ResampleState *r;
+  GstBaseTransform *trans;
+
+  trans = GST_BASE_TRANSFORM (audioresample);
+
+  /* buffer alloc passthrough is too impossible. FIXME, it
+   * is trivial in the passtrough case. */
+  gst_pad_set_bufferalloc_function (trans->sinkpad, NULL);
 
   r = resample_new ();
   audioresample->resample = r;
+  audioresample->ts_offset = -1;
+  audioresample->offset = -1;
+  audioresample->next_ts = -1;
 
-  resample_set_filter_length (r, 64);
+  resample_set_filter_length (r, DEFAULT_FILTERLEN);
   resample_set_format (r, RESAMPLE_FORMAT_S16);
 }
 
@@ -197,16 +217,14 @@ gboolean
 GstCaps *audioresample_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstCaps *temp, *res;
-  const GstCaps *templcaps;
+  GstCaps *res;
   GstStructure *structure;
 
-  temp = gst_caps_copy (caps);
-  structure = gst_caps_get_structure (temp, 0);
-  gst_structure_remove_field (structure, "rate");
-  templcaps = gst_pad_get_pad_template_caps (base->srcpad);
-  res = gst_caps_intersect (templcaps, temp);
-  gst_caps_unref (temp);
+  /* transform caps gives one single caps so we can just replace
+   * the rate property with our range. */
+  res = gst_caps_copy (caps);
+  structure = gst_caps_get_structure (res, 0);
+  gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
   return res;
 }
@@ -286,6 +304,7 @@ gboolean
     GST_DEBUG_OBJECT (audioresample,
         "caps are not the set caps, creating state");
     state = resample_new ();
+    resample_set_filter_length (state, audioresample->filter_length);
     resample_set_state_from_caps (state, sinkcaps, srccaps, NULL, NULL, NULL);
   }
 
@@ -293,12 +312,9 @@ gboolean
     /* asked to convert size of an incoming buffer */
     *othersize = resample_get_output_size_for_input (state, size);
   } else {
-    /* take a best guess, this is called cheating */
-    *othersize = floor (size * state->i_rate / state->o_rate);
-    *othersize -= *othersize % state->sample_size;
+    /* asked to convert size of an outgoing buffer */
+    *othersize = resample_get_input_size_for_output (state, size);
   }
-  *othersize += state->sample_size;
-
   g_assert (*othersize % state->sample_size == 0);
 
   /* we make room for one extra sample, given that the resampling filter
@@ -346,34 +362,49 @@ gboolean
   return TRUE;
 }
 
+static gboolean audioresample_event (GstBaseTransform * base, GstEvent * event)
+{
+  GstAudioresample *audioresample;
+
+  audioresample = GST_AUDIORESAMPLE (base);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      resample_input_flush (audioresample->resample);
+      audioresample->ts_offset = -1;
+      audioresample->next_ts = -1;
+      audioresample->offset = -1;
+      break;
+    case GST_EVENT_NEWSEGMENT:
+      resample_input_pushthrough (audioresample->resample);
+      audioresample_pushthrough (audioresample);
+      audioresample->ts_offset = -1;
+      audioresample->next_ts = -1;
+      audioresample->offset = -1;
+      break;
+    case GST_EVENT_EOS:
+      resample_input_eos (audioresample->resample);
+      audioresample_pushthrough (audioresample);
+      break;
+    default:
+      break;
+  }
+  parent_class->event (base, event);
+
+  return TRUE;
+}
+
 static GstFlowReturn
-    audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
+    audioresample_do_output (GstAudioresample * audioresample,
     GstBuffer * outbuf)
 {
-  /* FIXME: this-> */
-  GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
-  ResampleState *r;
-  guchar *data;
-  gulong size;
   int outsize;
   int outsamples;
-
-  /* FIXME: move to _inplace */
-#if 0
-  if (audioresample->passthru) {
-    gst_pad_push (audioresample->srcpad, GST_DATA (buf));
-    return;
-  }
-#endif
+  ResampleState *r;
 
   r = audioresample->resample;
-
-  data = GST_BUFFER_DATA (inbuf);
-  size = GST_BUFFER_SIZE (inbuf);
-
-  GST_DEBUG_OBJECT (audioresample, "got buffer of %ld bytes", size);
-
-  resample_add_input_data (r, data, size, NULL, NULL);
 
   outsize = resample_get_output_size (r);
   GST_DEBUG_OBJECT (audioresample, "audioresample can give me %d bytes",
@@ -399,18 +430,27 @@ static GstFlowReturn
       outsize, outsamples);
 
   GST_BUFFER_OFFSET (outbuf) = audioresample->offset;
-  GST_BUFFER_TIMESTAMP (outbuf) = base->segment.start +
-      audioresample->offset * GST_SECOND / audioresample->o_rate;
+  GST_BUFFER_TIMESTAMP (outbuf) = audioresample->next_ts;
 
-  audioresample->offset += outsamples;
-  GST_BUFFER_OFFSET_END (outbuf) = audioresample->offset;
+  if (audioresample->ts_offset != -1) {
+    audioresample->offset += outsamples;
+    audioresample->ts_offset += outsamples;
+    audioresample->next_ts =
+        gst_util_uint64_scale_int (audioresample->ts_offset, GST_SECOND,
+        audioresample->o_rate);
+    GST_BUFFER_OFFSET_END (outbuf) = audioresample->offset;
 
-  /* we calculate DURATION as the difference between "next" timestamp
-   * and current timestamp so we ensure a contiguous stream, instead of
-   * having rounding errors. */
-  GST_BUFFER_DURATION (outbuf) = base->segment.start +
-      audioresample->offset * GST_SECOND / audioresample->o_rate -
-      GST_BUFFER_TIMESTAMP (outbuf);
+    /* we calculate DURATION as the difference between "next" timestamp
+     * and current timestamp so we ensure a contiguous stream, instead of
+     * having rounding errors. */
+    GST_BUFFER_DURATION (outbuf) = audioresample->next_ts -
+        GST_BUFFER_TIMESTAMP (outbuf);
+  } else {
+    /* no valid offset know, we can still sortof calculate the duration though */
+    GST_BUFFER_DURATION (outbuf) =
+        gst_util_uint64_scale_int (outsamples, GST_SECOND,
+        audioresample->o_rate);
+  }
 
   /* check for possible mem corruption */
   if (outsize > GST_BUFFER_SIZE (outbuf)) {
@@ -429,9 +469,86 @@ static GstFlowReturn
         "audioresample's written outsize %d too far from outbuffer's size %d",
         outsize, GST_BUFFER_SIZE (outbuf));
   }
+  GST_BUFFER_SIZE (outbuf) = outsize;
 
   return GST_FLOW_OK;
 }
+
+static GstFlowReturn
+    audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  GstAudioresample *audioresample;
+  ResampleState *r;
+  guchar *data;
+  gulong size;
+  GstClockTime timestamp;
+
+  audioresample = GST_AUDIORESAMPLE (base);
+  r = audioresample->resample;
+
+  data = GST_BUFFER_DATA (inbuf);
+  size = GST_BUFFER_SIZE (inbuf);
+  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+
+  GST_DEBUG_OBJECT (audioresample, "got buffer of %ld bytes", size);
+
+  if (audioresample->ts_offset == -1) {
+    /* if we don't know the initial offset yet, calculate it based on the 
+     * input timestamp. */
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      GstClockTime stime;
+
+      /* offset used to calculate the timestamps. We use the sample offset for this
+       * to make it more accurate. We want the first buffer to have the same timestamp
+       * as the incomming timestamp. */
+      audioresample->next_ts = timestamp;
+      audioresample->ts_offset =
+          gst_util_uint64_scale_int (timestamp, r->o_rate, GST_SECOND);
+      /* offset used to set as the buffer offset, this offset is always relative
+       * to the stream time, note that timestamp is not... */
+      stime = (timestamp - base->segment.start) + base->segment.time;
+      audioresample->offset =
+          gst_util_uint64_scale_int (stime, r->o_rate, GST_SECOND);
+    }
+  }
+
+  /* need to memdup, resample takes ownership. */
+  resample_add_input_data (r, g_memdup (data, size), size, NULL, NULL);
+
+  return audioresample_do_output (audioresample, outbuf);
+}
+
+/* push remaining data in the buffers out */
+static GstFlowReturn
+    audioresample_pushthrough (GstAudioresample * audioresample)
+{
+  int outsize;
+  ResampleState *r;
+  GstBuffer *outbuf;
+  GstFlowReturn res = GST_FLOW_OK;
+  GstBaseTransform *trans;
+
+  r = audioresample->resample;
+
+  outsize = resample_get_output_size (r);
+  if (outsize == 0)
+    goto done;
+
+  outbuf = gst_buffer_new_and_alloc (outsize);
+
+  res = audioresample_do_output (audioresample, outbuf);
+  if (res != GST_FLOW_OK)
+    goto done;
+
+  trans = GST_BASE_TRANSFORM (audioresample);
+
+  res = gst_pad_push (trans->srcpad, outbuf);
+
+done:
+  return res;
+}
+
 
 static void
     gst_audioresample_set_property (GObject * object, guint prop_id,

@@ -63,6 +63,7 @@ resample_scale_ref (ResampleState * r)
     r->buffer_len = r->sample_size * r->filter_length;
     r->buffer = malloc (r->buffer_len);
     memset (r->buffer, 0, r->buffer_len);
+    r->buffer_filled = 0;
 
     r->i_inc = r->o_rate / r->i_rate;
     r->o_inc = r->i_rate / r->o_rate;
@@ -127,6 +128,8 @@ resample_scale_ref (ResampleState * r)
 
       memcpy (r->buffer + r->buffer_len - r->sample_size, buffer->data,
           r->sample_size);
+      r->buffer_filled = MIN (r->buffer_filled + r->sample_size, r->buffer_len);
+
       audioresample_buffer_unref (buffer);
     }
 

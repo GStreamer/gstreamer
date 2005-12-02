@@ -121,19 +121,50 @@ resample_add_input_data (ResampleState * r, void *data, int size,
 }
 
 void
-resample_input_eos (ResampleState * r)
+resample_input_flush (ResampleState * r)
+{
+  RESAMPLE_DEBUG ("flush");
+
+  audioresample_buffer_queue_flush (r->queue);
+  r->buffer_filled = 0;
+  r->need_reinit = 1;
+}
+
+void
+resample_input_pushthrough (ResampleState * r)
 {
   AudioresampleBuffer *buffer;
-  int sample_size;
+  int filter_bytes;
+  int buffer_filled;
 
-  sample_size = r->n_channels * resample_format_size (r->format);
+  if (r->sample_size == 0)
+    return;
 
-  buffer = audioresample_buffer_new_and_alloc (sample_size *
-      (r->filter_length / 2));
+  filter_bytes = r->filter_length * r->sample_size;
+  buffer_filled = r->buffer_filled;
+
+  RESAMPLE_DEBUG ("pushthrough filter_bytes %d, filled %d",
+      filter_bytes, buffer_filled);
+
+  /* if we have no pending samples, we don't need to do anything. */
+  if (buffer_filled <= 0)
+    return;
+
+  /* send filter_length/2 number of samples so we can get to the
+   * last queued samples */
+  buffer = audioresample_buffer_new_and_alloc (filter_bytes / 2);
   memset (buffer->data, 0, buffer->length);
 
-  audioresample_buffer_queue_push (r->queue, buffer);
+  RESAMPLE_DEBUG ("pushthrough", buffer->length);
 
+  audioresample_buffer_queue_push (r->queue, buffer);
+}
+
+void
+resample_input_eos (ResampleState * r)
+{
+  RESAMPLE_DEBUG ("EOS");
+  resample_input_pushthrough (r);
   r->eos = 1;
 }
 
@@ -142,22 +173,61 @@ resample_get_output_size_for_input (ResampleState * r, int size)
 {
   int outsize;
   double outd;
+  int avail;
+  int filter_bytes;
+  int buffer_filled;
 
-  g_return_val_if_fail (r->sample_size != 0, 0);
+  if (r->sample_size == 0)
+    return 0;
 
-  RESAMPLE_DEBUG ("size %d, o_rate %f, i_rate %f", size, r->o_rate, r->i_rate);
-  outd = (double) size / r->i_rate * r->o_rate;
+  filter_bytes = r->filter_length * r->sample_size;
+  buffer_filled = filter_bytes / 2 - r->buffer_filled / 2;
+
+  avail =
+      audioresample_buffer_queue_get_depth (r->queue) + size - buffer_filled;
+
+  RESAMPLE_DEBUG ("avail %d, o_rate %f, i_rate %f, filter_bytes %d, filled %d",
+      avail, r->o_rate, r->i_rate, filter_bytes, buffer_filled);
+  if (avail <= 0)
+    return 0;
+
+  outd = (double) avail *r->o_rate / r->i_rate;
+
   outsize = (int) floor (outd);
 
   /* round off for sample size */
-  return outsize - (outsize % r->sample_size);
+  outsize -= outsize % r->sample_size;
+
+  return outsize;
+}
+
+int
+resample_get_input_size_for_output (ResampleState * r, int size)
+{
+  int outsize;
+  double outd;
+  int avail;
+
+  if (r->sample_size == 0)
+    return 0;
+
+  avail = size;
+
+  RESAMPLE_DEBUG ("size %d, o_rate %f, i_rate %f", avail, r->o_rate, r->i_rate);
+  outd = (double) avail *r->i_rate / r->o_rate;
+
+  outsize = (int) ceil (outd);
+
+  /* round off for sample size */
+  outsize -= outsize % r->sample_size;
+
+  return outsize;
 }
 
 int
 resample_get_output_size (ResampleState * r)
 {
-  return resample_get_output_size_for_input (r,
-      audioresample_buffer_queue_get_depth (r->queue));
+  return resample_get_output_size_for_input (r, 0);
 }
 
 int
@@ -165,6 +235,9 @@ resample_get_output_data (ResampleState * r, void *data, int size)
 {
   r->o_buf = data;
   r->o_size = size;
+
+  if (size == 0)
+    return 0;
 
   switch (r->method) {
     case 0:
