@@ -67,6 +67,7 @@ struct _ResampleState {
 
 	void *buffer;
 	int buffer_len;
+	int buffer_filled;
 
 	double i_start;
 	double o_start;
@@ -98,8 +99,12 @@ void resample_free (ResampleState *state);
 void resample_add_input_data (ResampleState * r, void *data, int size,
     ResampleCallback free_func, void *closure);
 void resample_input_eos (ResampleState *r);
+void resample_input_flush (ResampleState *r);
+void resample_input_pushthrough (ResampleState *r);
 
 int resample_get_output_size_for_input (ResampleState * r, int size);
+int resample_get_input_size_for_output (ResampleState * r, int size);
+
 int resample_get_output_size (ResampleState *r);
 int resample_get_output_data (ResampleState *r, void *data, int size);
 

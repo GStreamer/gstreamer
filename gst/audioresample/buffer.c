@@ -237,3 +237,17 @@ audioresample_buffer_queue_peek (AudioresampleBufferQueue * queue, int length)
 
   return newbuffer;
 }
+
+void
+audioresample_buffer_queue_flush (AudioresampleBufferQueue * queue)
+{
+  GList *g;
+
+  for (g = g_list_first (queue->buffers); g; g = g_list_next (g)) {
+    audioresample_buffer_unref ((AudioresampleBuffer *) g->data);
+  }
+  g_list_free (queue->buffers);
+  queue->buffers = NULL;
+  queue->depth = 0;
+  queue->offset = 0;
+}
