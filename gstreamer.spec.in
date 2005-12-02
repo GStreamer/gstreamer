@@ -1,5 +1,5 @@
 %define         majorminor      @GST_MAJORMINOR@
-%define		gstreamer	gstreamer09
+%define		gstreamer	gstreamer10
 
 Name: 		%{gstreamer}
 Version: 	@VERSION@
@@ -136,8 +136,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstnet-%{majorminor}.so.*
 
 %dir %{_libdir}/gstreamer-%{majorminor}
-%{_libdir}/gstreamer-%{majorminor}/libgstelements.so
-%{_libdir}/gstreamer-%{majorminor}/libgstindexers.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcoreelements.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcoreindexers.so
 
 %{_bindir}/gst-feedback-%{majorminor}
 %{_bindir}/gst-inspect-%{majorminor}
