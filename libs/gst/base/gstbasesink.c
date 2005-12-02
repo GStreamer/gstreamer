@@ -722,6 +722,7 @@ dropping:
   {
     GstBuffer *buf;
 
+    GST_DEBUG_OBJECT (basesink, "dropping buffer");
     buf = GST_BUFFER (g_queue_pop_tail (basesink->preroll_queue));
 
     gst_buffer_unref (buf);

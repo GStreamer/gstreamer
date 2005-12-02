@@ -1,3 +1,15 @@
+2005-12-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstutils.c: (gst_util_uint64_scale_int64),
+	(gst_util_uint64_scale_int):
+	Small cleanup.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_handle_object):
+	Add debug log line.
+
+	* libs/gst/base/gstbasetransform.c: (gst_base_transform_event):
+	Add FIXME.
+
 2005-12-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* win32/MANIFEST:

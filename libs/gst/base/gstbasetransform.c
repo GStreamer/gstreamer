@@ -1060,6 +1060,8 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
   if (bclass->event)
     ret = bclass->event (trans, event);
 
+  /* FIXME, do this in the default event handler so the subclass can do
+   * something different. */
   if (ret)
     ret = gst_pad_event_default (pad, event);
 

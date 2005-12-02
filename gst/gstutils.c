@@ -428,12 +428,11 @@ static guint64
 gst_util_uint64_scale_int64 (guint64 val, guint64 num, guint64 denom)
 {
   GstUInt64 a0, a1, b0, b1, c0, ct, c1, result;
-  GstUInt64 v, n, d;
+  GstUInt64 v, n;
 
   /* prepare input */
   v.ll = val;
   n.ll = num;
-  d.ll = denom;
 
   /* do 128 bits multiply 
    *                   nh   nl
@@ -551,6 +550,7 @@ guint64
 gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
 {
   GstUInt64 result;
+  GstUInt64 low, high;
 
   g_return_val_if_fail (denom > 0, G_MAXUINT64);
   g_return_val_if_fail (num >= 0, G_MAXUINT64);
@@ -561,27 +561,25 @@ gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
   if (num == 1 && denom == 1)
     return val;
 
-  if (val <= G_MAXUINT32) {
+  if (val <= G_MAXUINT32)
     /* simple case */
-    result.ll = val * num / denom;
-  } else {
-    GstUInt64 low, high;
+    return val * num / denom;
 
-    /* do 96 bits mult/div */
-    low.ll = val;
-    result.ll = ((guint64) low.l.low) * num;
-    high.ll = ((guint64) low.l.high) * num + (result.l.high);
+  /* do 96 bits mult/div */
+  low.ll = val;
+  result.ll = ((guint64) low.l.low) * num;
+  high.ll = ((guint64) low.l.high) * num + (result.l.high);
 
-    low.ll = high.ll / denom;
-    result.l.high = high.ll % denom;
-    result.ll /= denom;
+  low.ll = high.ll / denom;
+  result.l.high = high.ll % denom;
+  result.ll /= denom;
 
-    /* avoid overflow */
-    if (low.ll + result.l.high > G_MAXUINT32)
-      goto overflow;
+  /* avoid overflow */
+  if (low.ll + result.l.high > G_MAXUINT32)
+    goto overflow;
 
-    result.l.high += low.l.low;
-  }
+  result.l.high += low.l.low;
+
   return result.ll;
 
 overflow:
