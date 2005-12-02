@@ -1,3 +1,9 @@
+2005-12-02  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* ext/amrnb/Makefile.am:
+	* gst/realmedia/Makefile.am:
+	  fix silly Makefile.am bug so they link correctly again
+
 === release 0.9.7 ===
 
 2005-12-01   <thomas (at) apestaart (dot) org>

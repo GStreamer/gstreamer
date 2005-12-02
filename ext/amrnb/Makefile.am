@@ -7,7 +7,7 @@ libgstamrnb_la_SOURCES = \
 	amrnbparse.c
 
 libgstamrnb_la_CFLAGS = $(GST_CFLAGS) $(AMRNB_CFLAGS)
-libgstamrnb_la_LIBS = $(GST_BASE_LIBS) $(AMRNB_LIBS)
+libgstamrnb_la_LIBADD = $(GST_BASE_LIBS) $(AMRNB_LIBS)
 libgstamrnb_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
