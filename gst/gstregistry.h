@@ -40,9 +40,15 @@ G_BEGIN_DECLS
 typedef struct _GstRegistry GstRegistry;
 typedef struct _GstRegistryClass GstRegistryClass;
 
+/**
+ * GstRegistry:
+ *
+ * Opaque #GstRegistry structure.
+ */
 struct _GstRegistry {
   GstObject 	 object;
 
+  /*< private >*/
   GList		*plugins;
   GList *features;
 
@@ -51,6 +57,7 @@ struct _GstRegistry {
   /* FIXME move elsewhere */
   FILE          *cache_file;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

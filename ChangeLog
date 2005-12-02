@@ -1,5 +1,12 @@
 2005-12-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstregistry.c: (gst_registry_add_path):
+	* gst/gstregistry.h:
+	* gst/gstregistryxml.c:
+	Fix docs again.
+
+2005-12-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstutils.c: (gst_util_uint64_scale_int64),
 	(gst_util_uint64_scale_int):
 	Small cleanup.

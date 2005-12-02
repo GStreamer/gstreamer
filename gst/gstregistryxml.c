@@ -55,291 +55,6 @@
 
 #define CLASS(registry)  GST_XML_REGISTRY_CLASS (G_OBJECT_GET_CLASS (registry))
 
-
-//static gboolean gst_registry_xml_load (GstRegistry * registry);
-//static gboolean gst_registry_xml_save (GstRegistry * registry);
-//static gboolean gst_registry_xml_rebuild (GstRegistry * registry);
-
-
-#if 0
-static void
-gst_registry_xml_class_init (GstRegistryClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstRegistryClass *gstregistry_class;
-  GstRegistryClass *gstxmlregistry_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstregistry_class = (GstRegistryClass *) klass;
-  gstxmlregistry_class = (GstRegistryClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_REGISTRY);
-
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_registry_xml_get_property);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_registry_xml_set_property);
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LOCATION,
-      g_param_spec_string ("location", "Location",
-          "Location of the registry file", NULL, G_PARAM_READWRITE));
-
-  gstregistry_class->load = GST_DEBUG_FUNCPTR (gst_registry_xml_load);
-  gstregistry_class->save = GST_DEBUG_FUNCPTR (gst_registry_xml_save);
-  gstregistry_class->rebuild = GST_DEBUG_FUNCPTR (gst_registry_xml_rebuild);
-
-  gstregistry_class->load_plugin =
-      GST_DEBUG_FUNCPTR (gst_registry_xml_load_plugin);
-
-  gstxmlregistry_class->get_perms_func =
-      GST_DEBUG_FUNCPTR (gst_registry_xml_get_perms_func);
-  gstxmlregistry_class->open_func =
-      GST_DEBUG_FUNCPTR (gst_registry_xml_open_func);
-  gstxmlregistry_class->load_func =
-      GST_DEBUG_FUNCPTR (gst_registry_xml_load_func);
-}
-
-static void
-gst_registry_xml_init (GstRegistry * registry)
-{
-  registry->location = NULL;
-}
-#endif
-
-/* this function returns the biggest of the path's mtime and ctime
- * mtime is updated through an actual write (data)
- * ctime is updated through changing inode information
- * so this function returns the last time *anything* changed to this path
- * it also sets the given boolean to TRUE if the given path is a directory
- */
-#if 0
-static time_t
-get_time (const char *path, gboolean * is_dir)
-{
-  struct stat statbuf;
-
-  if (stat (path, &statbuf)) {
-    *is_dir = FALSE;
-    return 0;
-  }
-
-  if (is_dir)
-    *is_dir = S_ISDIR (statbuf.st_mode);
-
-  if (statbuf.st_mtime > statbuf.st_ctime)
-    return statbuf.st_mtime;
-  return statbuf.st_ctime;
-}
-#endif
-
-
-#if 0
-static void
-gst_registry_xml_get_perms_func (GstRegistry * registry)
-{
-  gchar *dirname;
-
-  /* if the dir does not exist, make it. if that can't be done, flags = 0x0.
-     if the file can be appended to, it's writable. if it can then be read,
-     it's readable.
-     After that check if it exists. */
-
-  if (make_dir (registry->location) != TRUE) {
-    /* we can't do anything with it, leave flags as 0x0 */
-    return;
-  }
-
-  dirname = g_path_get_dirname (registry->location);
-
-  if (g_file_test (registry->location, G_FILE_TEST_EXISTS)) {
-    GST_REGISTRY (registry)->flags |= GST_REGISTRY_EXISTS;
-  }
-
-  if (!access (dirname, W_OK)) {
-    GST_REGISTRY (registry)->flags |= GST_REGISTRY_WRITABLE;
-  }
-
-  if (!access (dirname, R_OK)) {
-    GST_REGISTRY (registry)->flags |= GST_REGISTRY_READABLE;
-  }
-
-  g_free (dirname);
-}
-#endif
-
-#if 0
-/* return TRUE iff regtime is more recent than the times of all the .so files
- * in the plugin dirs; ie return TRUE if this path does not need to trigger
- * a rebuild of registry
- *
- * - if it's a directory, recurse on subdirs
- * - if it's a file
- *   - if entry is not newer, return TRUE.
- *   - if it's newer
- *     - and it's a plugin, return FALSE
- *     - otherwise return TRUE
- */
-static gboolean
-plugin_times_older_than_recurse (gchar * path, time_t regtime)
-{
-  DIR *dir;
-  struct dirent *dirent;
-  gboolean is_dir;
-  gchar *new_path;
-
-  time_t pathtime = get_time (path, &is_dir);
-
-  if (is_dir) {
-    dir = opendir (path);
-    if (dir) {
-      while ((dirent = readdir (dir))) {
-        /* don't want to recurse in place or backwards */
-        if (strcmp (dirent->d_name, ".") && strcmp (dirent->d_name, "..")) {
-          new_path = g_build_filename (path, dirent->d_name, NULL);
-          if (!plugin_times_older_than_recurse (new_path, regtime)) {
-            GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
-                "path %s is more recent than registry time of %ld",
-                new_path, (long) regtime);
-            g_free (new_path);
-            closedir (dir);
-            return FALSE;
-          }
-          g_free (new_path);
-        }
-      }
-      closedir (dir);
-    }
-    return TRUE;
-  }
-
-  /* it's a file */
-  if (pathtime <= regtime) {
-    return TRUE;
-  }
-
-  /* it's a file, and it's more recent */
-  if (g_str_has_suffix (path, ".so") || g_str_has_suffix (path, ".dll")) {
-    if (!gst_plugin_check_file (path, NULL))
-      return TRUE;
-
-    /* it's a newer GStreamer plugin */
-    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
-        "%s looks like a plugin and is more recent than registry time of %ld",
-        path, (long) regtime);
-    return FALSE;
-  }
-  return TRUE;
-}
-#endif
-
-#if 0
-/* return TRUE iff regtime is more recent than the times of all the .so files
- * in the plugin dirs; ie return TRUE if registry is up to date.
- */
-static gboolean
-plugin_times_older_than (GList * paths, time_t regtime)
-{
-  while (paths) {
-    GST_CAT_LOG (GST_CAT_PLUGIN_LOADING,
-        "comparing plugin times from %s with %ld",
-        (gchar *) paths->data, (long) regtime);
-    if (!plugin_times_older_than_recurse (paths->data, regtime))
-      return FALSE;
-    paths = g_list_next (paths);
-  }
-  GST_CAT_LOG (GST_CAT_PLUGIN_LOADING,
-      "everything's fine, no registry rebuild needed.");
-  return TRUE;
-}
-#endif
-
-#if 0
-static gboolean
-gst_registry_xml_open_func (GstRegistry * registry, GstRegistryMode mode)
-{
-  GstRegistry *gst_registry;
-  GList *paths;
-
-  gst_registry = GST_REGISTRY (registry);
-  paths = gst_registry->paths;
-  GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s", registry->location);
-
-  g_return_val_if_fail (registry->open == FALSE, FALSE);
-
-  /* if it doesn't exist, first try to build it, and check if it worked
-   * if it's not readable, return false
-   * if it's out of date, rebuild it */
-  if (mode == GST_XML_REGISTRY_READ) {
-    if (!(gst_registry->flags & GST_REGISTRY_EXISTS)) {
-      /* if it's not writable, then don't bother */
-      if (!(gst_registry->flags & GST_REGISTRY_WRITABLE)) {
-        GST_CAT_INFO (GST_CAT_GST_INIT, "Registry isn't writable");
-        return FALSE;
-      }
-      GST_CAT_INFO (GST_CAT_GST_INIT,
-          "Registry doesn't exist, trying to build...");
-      gst_registry_rebuild (gst_registry);
-      gst_registry_save (gst_registry);
-      /* FIXME: verify that the flags actually get updated ! */
-      if (!(gst_registry->flags & GST_REGISTRY_EXISTS)) {
-        return FALSE;
-      }
-    }
-    /* at this point we know it exists */
-    g_return_val_if_fail (gst_registry->flags & GST_REGISTRY_READABLE, FALSE);
-
-    if (!plugin_times_older_than (paths, get_time (registry->location, NULL))) {
-      if (gst_registry->flags & GST_REGISTRY_WRITABLE) {
-        GST_CAT_INFO (GST_CAT_GST_INIT, "Registry out of date, rebuilding...");
-
-        gst_registry_rebuild (gst_registry);
-
-        gst_registry_save (gst_registry);
-
-        if (!plugin_times_older_than (paths, get_time (registry->location,
-                    NULL))) {
-          GST_CAT_INFO (GST_CAT_GST_INIT,
-              "Registry still out of date, something is wrong...");
-          return FALSE;
-        }
-      } else {
-        GST_CAT_INFO (GST_CAT_GST_INIT,
-            "Can't write to this registry and it's out of date, ignoring it");
-        return FALSE;
-      }
-    }
-
-    GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s for reading",
-        registry->location);
-    registry->cache_file = fopen (registry->location, "r");
-  } else if (mode == GST_XML_REGISTRY_WRITE) {
-    char *tmploc;
-    int fd;
-
-    g_return_val_if_fail (gst_registry->flags & GST_REGISTRY_WRITABLE, FALSE);
-
-    tmploc = g_strconcat (registry->location, ".tmp", NULL);
-
-    GST_CAT_DEBUG (GST_CAT_GST_INIT, "opening registry %s for writing", tmploc);
-
-    if ((fd = open (tmploc, O_WRONLY | O_CREAT, 0644)) < 0) {
-      g_free (tmploc);
-      return FALSE;
-    }
-    g_free (tmploc);
-
-    registry->cache_file = fdopen (fd, "w");
-  }
-
-  if (!registry->cache_file)
-    return FALSE;
-
-  registry->open = TRUE;
-
-  return TRUE;
-}
-#endif
-
 static gboolean
 gst_registry_xml_save (GstRegistry * registry, gchar * format, ...)
 {
@@ -715,6 +430,16 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
   return NULL;
 }
 
+/**
+ * gst_registry_xml_read_cache:
+ * @registry: a #GstRegistry
+ * @location: a filename
+ *
+ * Read the contents of the XML cache file at location 
+ * @location into @registry.
+ *
+ * Returns: TRUE on success.
+ */
 gboolean
 gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
 {
@@ -790,30 +515,6 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
 
   return TRUE;
 }
-
-#if 0
-static gboolean
-gst_registry_xml_load_plugin (GstRegistry * registry, GstPlugin * plugin)
-{
-  GError *error = NULL;
-  GstPlugin *loaded_plugin;
-
-  /* FIXME: add gerror support */
-  loaded_plugin = gst_plugin_load_file (plugin->filename, &error);
-  if (!plugin) {
-    if (error) {
-      g_warning ("could not load plugin %s: %s", plugin->desc.name,
-          error->message);
-      g_error_free (error);
-    }
-    return FALSE;
-  } else if (loaded_plugin != plugin) {
-    g_critical ("how to remove plugins?");
-  }
-
-  return TRUE;
-}
-#endif
 
 /*
  * Save
@@ -985,6 +686,16 @@ gst_registry_xml_save_plugin (GstRegistry * registry, GstPlugin * plugin)
   return TRUE;
 }
 
+/**
+ * gst_registry_xml_write_cache:
+ * @registry: a #GstRegistry
+ * @location: a filename
+ *
+ * Write @registry in an XML format at the location given by
+ * @location. Directories are automatically created.
+ *
+ * Returns: TRUE on success.
+ */
 gboolean
 gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
 {
@@ -1051,116 +762,3 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
 
   return TRUE;
 }
-
-#if 0
-static GList *
-gst_registry_xml_rebuild_recurse (GstRegistry * registry,
-    const gchar * directory)
-{
-  GList *ret = NULL;
-  gint dr_len, sf_len;
-
-  if (g_file_test (directory, G_FILE_TEST_IS_DIR)) {
-    GDir *dir = g_dir_open (directory, 0, NULL);
-
-    if (dir) {
-      const gchar *dirent;
-
-      while ((dirent = g_dir_read_name (dir))) {
-        gchar *dirname;
-
-        if (*dirent == '=') {
-          /* =build, =inst, etc. -- automake distcheck directories */
-          continue;
-        }
-
-        dirname = g_strjoin ("/", directory, dirent, NULL);
-        ret =
-            g_list_concat (ret, gst_registry_xml_rebuild_recurse (registry,
-                dirname));
-        g_free (dirname);
-      }
-      g_dir_close (dir);
-    }
-  } else {
-    dr_len = strlen (directory);
-    sf_len = strlen (G_MODULE_SUFFIX);
-    if (dr_len >= sf_len &&
-        strcmp (directory + dr_len - sf_len, G_MODULE_SUFFIX) == 0) {
-      ret = g_list_prepend (ret, g_strdup (directory));
-    }
-  }
-
-  return ret;
-}
-
-static gboolean
-gst_registry_xml_rebuild (GstRegistry * registry)
-{
-  GList *walk = NULL, *plugins = NULL, *prune = NULL;
-  GError *error = NULL;
-  guint length;
-  GstPlugin *plugin;
-  GstRegistry *registry = GST_XML_REGISTRY (registry);
-
-  walk = registry->paths;
-
-  while (walk) {
-    gchar *path = (gchar *) walk->data;
-
-    GST_CAT_INFO (GST_CAT_PLUGIN_LOADING,
-        "Rebuilding registry %p in directory %s...", registry, path);
-
-    plugins = g_list_concat (plugins,
-        gst_registry_xml_rebuild_recurse (registry, path));
-
-    walk = g_list_next (walk);
-  }
-
-  plugins = g_list_reverse (plugins);
-
-  do {
-    length = g_list_length (plugins);
-
-    walk = plugins;
-    while (walk) {
-      g_assert (walk->data);
-      plugin = gst_plugin_load_file ((gchar *) walk->data, NULL);
-      if (plugin) {
-        prune = g_list_prepend (prune, walk->data);
-        gst_registry_add_plugin (registry, plugin);
-      }
-
-      walk = g_list_next (walk);
-    }
-
-    walk = prune;
-    while (walk) {
-      plugins = g_list_remove (plugins, walk->data);
-      g_free (walk->data);
-      walk = g_list_next (walk);
-    }
-    g_list_free (prune);
-    prune = NULL;
-  } while (g_list_length (plugins) != length);
-
-  walk = plugins;
-  while (walk) {
-    if ((plugin = gst_plugin_load_file ((gchar *) walk->data, &error))) {
-      g_warning ("Bizarre behavior: plugin %s actually loaded",
-          (gchar *) walk->data);
-      gst_registry_add_plugin (registry, plugin);
-    } else {
-      GST_CAT_INFO (GST_CAT_PLUGIN_LOADING, "Plugin %s failed to load: %s",
-          (gchar *) walk->data, error->message);
-
-      g_free (walk->data);
-      g_error_free (error);
-      error = NULL;
-    }
-
-    walk = g_list_next (walk);
-  }
-  return TRUE;
-}
-#endif

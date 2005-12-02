@@ -206,6 +206,8 @@ gst_registry_finalize (GObject * object)
  *
  * Retrieves the default registry. The caller does not own a reference on the
  * registry, as it is alive as long as GStreamer is initialized.
+ *
+ * Returns: The default #GstRegistry.
  */
 GstRegistry *
 gst_registry_get_default (void)
@@ -231,21 +233,30 @@ gst_registry_add_path (GstRegistry * registry, const gchar * path)
   g_return_if_fail (GST_IS_REGISTRY (registry));
   g_return_if_fail (path != NULL);
 
-  if (strlen (path) == 0) {
-    GST_INFO ("Ignoring empty plugin path");
-    return;
-  }
+  if (strlen (path) == 0)
+    goto empty_path;
 
   GST_OBJECT_LOCK (registry);
-  if (g_list_find_custom (registry->paths, path, (GCompareFunc) strcmp)) {
-    g_warning ("path %s already added to registry", path);
-    GST_OBJECT_UNLOCK (registry);
-    return;
-  }
+  if (g_list_find_custom (registry->paths, path, (GCompareFunc) strcmp))
+    goto was_added;
 
   GST_INFO ("Adding plugin path: \"%s\"", path);
   registry->paths = g_list_append (registry->paths, g_strdup (path));
   GST_OBJECT_UNLOCK (registry);
+
+  return;
+
+empty_path:
+  {
+    GST_INFO ("Ignoring empty plugin path");
+    return;
+  }
+was_added:
+  {
+    g_warning ("path %s already added to registry", path);
+    GST_OBJECT_UNLOCK (registry);
+    return;
+  }
 }
 
 /**
@@ -255,6 +266,8 @@ gst_registry_add_path (GstRegistry * registry, const gchar * path)
  * Get the list of paths for the given registry.
  *
  * Returns: A Glist of paths as strings. g_list_free after use.
+ *
+ * MT safe.
  */
 GList *
 gst_registry_get_path_list (GstRegistry * registry)
@@ -279,8 +292,11 @@ gst_registry_get_path_list (GstRegistry * registry)
  * @plugin: the plugin to add
  *
  * Add the plugin to the registry. The plugin-added signal will be emitted.
+ * This function will sink @plugin.
  *
  * Returns: TRUE on success.
+ *
+ * MT safe.
  */
 gboolean
 gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
@@ -322,6 +338,8 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
  * @plugin: the plugin to remove
  *
  * Remove the plugin from the registry.
+ *
+ * MT safe.
  */
 void
 gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
@@ -340,8 +358,11 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
  * @feature: the feature to add
  *
  * Add the feature to the registry. The feature-added signal will be emitted.
+ * This function sinks @feature.
  *
  * Returns: TRUE on success.
+ *
+ * MT safe.
  */
 gboolean
 gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
@@ -384,6 +405,8 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
  * @feature: the feature to remove
  *
  * Remove the feature from the registry.
+ *
+ * MT safe.
  */
 void
 gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
@@ -405,13 +428,15 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
  * @first: only return first match
  * @user_data: user data passed to the filter function
  *
- * Runs a filter against all plugins in the registry and returns a GList with
+ * Runs a filter against all plugins in the registry and returns a #GList with
  * the results. If the first flag is set, only the first match is
  * returned (as a list with a single object).
  * Every plugin is reffed; use gst_plugin_list_free() after use, which
  * will unref again.
  *
- * Returns: a #GList of #GstPlugin
+ * Returns: a #GList of #GstPlugin. Use gst_plugin_list_free() after usage.
+ *
+ * MT safe.
  */
 GList *
 gst_registry_plugin_filter (GstRegistry * registry,
@@ -446,6 +471,8 @@ gst_registry_plugin_filter (GstRegistry * registry,
  * returned (as a list with a single object).
  *
  * Returns: a GList of plugin features, gst_plugin_feature_list_free after use.
+ *
+ * MT safe.
  */
 GList *
 gst_registry_feature_filter (GstRegistry * registry,
@@ -476,6 +503,9 @@ gst_registry_feature_filter (GstRegistry * registry,
  * The plugin will be reffed; caller is responsible for unreffing.
  *
  * Returns: The plugin with the given name or NULL if the plugin was not found.
+ * gst_object_unref() after usage.
+ *
+ * MT safe.
  */
 GstPlugin *
 gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
@@ -507,7 +537,9 @@ gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
  * Find the pluginfeature with the given name and type in the registry.
  *
  * Returns: The pluginfeature with the given name and type or NULL
- * if the plugin was not found.
+ * if the plugin was not found. gst_object_unref() after usage.
+ *
+ * MT safe.
  */
 GstPluginFeature *
 gst_registry_find_feature (GstRegistry * registry, const gchar * name,
@@ -537,6 +569,18 @@ gst_registry_find_feature (GstRegistry * registry, const gchar * name,
   return feature;
 }
 
+/**
+ * gst_registry_get_feature_list:
+ * @registry: a #GstRegistry
+ * @type: a #GType.
+ *
+ * Retrieves a #GList of #GstPluginFeature of @type.
+ *
+ * Returns: a #GList of #GstPluginFeature of @type. gst_plugin_feature_list_free
+ * after usage.
+ *
+ * MT safe.
+ */
 GList *
 gst_registry_get_feature_list (GstRegistry * registry, GType type)
 {
@@ -554,9 +598,12 @@ gst_registry_get_feature_list (GstRegistry * registry, GType type)
  * gst_registry_get_plugin_list:
  * @registry: the registry to search
  *
- * Get a copy of all plugins registered in the given registry.
+ * Get a copy of all plugins registered in the given registry. The refcount
+ * of each element in the list in incremented.
  *
- * Returns: a copy of the list. Free after use.
+ * Returns: a #GList of #GstPlugin. gst_plugin_list_free after use.
+ *
+ * MT safe.
  */
 GList *
 gst_registry_get_plugin_list (GstRegistry * registry)
@@ -593,6 +640,18 @@ gst_registry_lookup_feature_locked (GstRegistry * registry, const char *name)
   return NULL;
 }
 
+/**
+ * gst_registry_lookup_feature:
+ * @registry: a #GstRegistry
+ * @name: a #GstPluginFeature name
+ *
+ * Find a #GstPluginFeature with @name in @registry.
+ * 
+ * Returns: a #GstPluginFeature with its refcount incremented, use
+ * gst_object_unref() after usage.
+ *
+ * MT safe.
+ */
 GstPluginFeature *
 gst_registry_lookup_feature (GstRegistry * registry, const char *name)
 {
@@ -636,9 +695,10 @@ gst_registry_lookup_locked (GstRegistry * registry, const char *filename)
  * @filename: the name of the file to look up
  *
  * Look up a plugin in the given registry with the given filename.
- * If found, plugin is reffed.  Caller must unref after use.
+ * If found, plugin is reffed.
  *
- * Returns: the #GstPlugin if found, or NULL if not.
+ * Returns: the #GstPlugin if found, or NULL if not. gst_object_unref()
+ * after usage.
  */
 GstPlugin *
 gst_registry_lookup (GstRegistry * registry, const char *filename)
@@ -801,6 +861,15 @@ _gst_plugin_feature_filter_plugin_name (GstPluginFeature * feature,
   return (strcmp (feature->plugin_name, (gchar *) user_data) == 0);
 }
 
+/**
+ * gst_registry_get_feature_list_by_plugin:
+ * @registry: a #GstRegistry.
+ * @name: a plugin name.
+ *
+ * Retrieves a #GList of features of the plugin with name @name.
+ *
+ * Returns: a #GList of #GstPluginFeature. gst_plugin_feature_list_free() after usage.
+ */
 GList *
 gst_registry_get_feature_list_by_plugin (GstRegistry * registry,
     const gchar * name)
