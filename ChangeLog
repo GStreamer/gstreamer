@@ -1,3 +1,10 @@
+2005-12-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tools/gst-run.c: (compare_major_minor), (find_highest_version),
+	(get_candidates):
+	  do piece-wise major/minor comparison so 0.9 < 0.10
+	  also allow .exe extensions for tools
+
 2005-12-02  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gst.c:

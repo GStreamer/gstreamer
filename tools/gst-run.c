@@ -52,6 +52,57 @@ hash_print_key (gchar * key, gchar * value)
   g_print ("%s\n", (gchar *) key);
 }
 
+/* return value like strcmp, but compares major/minor numerically */
+static gint
+compare_major_minor (const gchar * first, const gchar * second)
+{
+  gchar **firsts, **seconds;
+  gint fmaj, fmin, smaj, smin;
+  gint ret = 0;
+
+  firsts = g_strsplit (first, ".", 0);
+  seconds = g_strsplit (second, ".", 0);
+
+  if (firsts[0] == NULL || firsts[1] == NULL) {
+    ret = -1;
+    goto beach;
+  }
+  if (seconds[0] == NULL || seconds[1] == NULL) {
+    ret = 1;
+    goto beach;
+  }
+
+  fmaj = atoi (firsts[0]);
+  fmin = atoi (firsts[1]);
+  smaj = atoi (seconds[0]);
+  smin = atoi (seconds[1]);
+
+  if (fmaj < smaj) {
+    ret = -1;
+    goto beach;
+  }
+  if (fmaj > smaj) {
+    ret = 1;
+    goto beach;
+  }
+
+  /* fmaj == smaj */
+  if (fmin < smin) {
+    ret = -1;
+    goto beach;
+  }
+  if (fmin > smin) {
+    ret = 1;
+    goto beach;
+  }
+  ret = 0;
+
+beach:
+  g_strfreev (firsts);
+  g_strfreev (seconds);
+  return ret;
+}
+
 static void
 find_highest_version (gchar * key, gchar * value, gchar ** highest)
 {
@@ -59,7 +110,7 @@ find_highest_version (gchar * key, gchar * value, gchar ** highest)
     /* first value, so just set it */
     *highest = key;
   }
-  if (strcmp (key, *highest) > 0)
+  if (compare_major_minor (key, *highest) > 0)
     *highest = key;
 }
 
@@ -148,13 +199,10 @@ get_candidates (const gchar * dir, const gchar * base)
   GError *error = NULL;
   const gchar *entry;
   gchar *path;
-  gchar *suffix;
+  gchar *suffix, *copy;
 
   gchar *pattern;
-  GPatternSpec *spec;
-
-
-  gchar *test;
+  GPatternSpec *spec, *specexe;
 
   gchar **dirs;
   gchar **cur;
@@ -163,9 +211,12 @@ get_candidates (const gchar * dir, const gchar * base)
 
   candidates = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
-  /* compile our pattern spec */
+  /* compile our pattern specs */
   pattern = g_strdup_printf ("%s-*.*", base);
   spec = g_pattern_spec_new (pattern);
+  g_free (pattern);
+  pattern = g_strdup_printf ("%s-*.*.exe", base);
+  specexe = g_pattern_spec_new (pattern);
   g_free (pattern);
 
   /* get all dirs from the path and prepend with given dir */
@@ -191,7 +242,8 @@ get_candidates (const gchar * dir, const gchar * base)
       return NULL;
     }
     while ((entry = g_dir_read_name (gdir))) {
-      if (g_pattern_match_string (spec, entry)) {
+      if (g_pattern_match_string (spec, entry)
+          || g_pattern_match_string (specexe, entry)) {
         gchar *full;
 
         /* is it executable ? */
@@ -204,15 +256,20 @@ get_candidates (const gchar * dir, const gchar * base)
 
         /* strip base and dash from it */
         suffix = g_strdup (&(entry[strlen (base) + 1]));
+        copy = g_strdup (suffix);
+
+        /* strip possible .exe from copy */
+        if (g_strrstr (copy, ".exe"))
+          g_strrstr (copy, ".exe")[0] = '\0';
 
         /* stricter pattern check: check if it only contains digits or dots */
-        test = g_strdup (suffix);
-        g_strcanon (test, "0123456789.", 'X');
-        if (strstr (test, "X")) {
-          g_free (test);
+        g_strcanon (copy, "0123456789.", 'X');
+        if (strstr (copy, "X")) {
+          g_free (suffix);
+          g_free (copy);
           continue;
         }
-        g_free (test);
+        g_free (copy);
         g_hash_table_insert (candidates, suffix, g_strdup (*cur));
       }
     }
