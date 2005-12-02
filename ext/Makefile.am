@@ -227,6 +227,7 @@ SUBDIRS=\
 	$(SNDFILE_DIR) \
 	$(SWFDEC_DIR) \
 	$(TARKIN_DIR) \
+	$(WAVPACK_DIR) \
 	$(XINE_DIR) \
 	$(XVID_DIR)
 
