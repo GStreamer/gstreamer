@@ -1,3 +1,15 @@
+2005-12-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* ext/pango/gstclockoverlay.c:
+	* ext/pango/gsttextoverlay.c: 
+	* ext/pango/gsttextrender.c:
+	* ext/pango/gsttimeoverlay.c:
+	  Add gtk-doc blurbs to pango elements.
+
 2005-12-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/audioresample/buffer.c: (audioresample_buffer_queue_flush):

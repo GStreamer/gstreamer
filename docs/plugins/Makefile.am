@@ -77,6 +77,10 @@ IGNORE_CFILES = utils.c mem.c imgconvert.c
 #	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.c 
 
 EXTRA_HFILES = \
+	$(top_srcdir)/ext/pango/gstclockoverlay.h \
+	$(top_srcdir)/ext/pango/gsttextoverlay.h \
+	$(top_srcdir)/ext/pango/gsttextrender.h \
+	$(top_srcdir)/ext/pango/gsttimeoverlay.h \
 	$(top_srcdir)/ext/theora/gsttheoraenc.h \
 	$(top_srcdir)/ext/vorbis/vorbisenc.h \
 	$(top_srcdir)/gst/audioconvert/gstaudioconvert.h \

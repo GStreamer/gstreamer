@@ -47,6 +47,10 @@ GObject
       GstVorbisEnc
       GstVorbisDec
       GstVorbisParse
+      GstTextOverlay
+        GstTimeOverlay
+        GstClockOverlay
+      GstTextRender
       GstTheoraDec
       GstTheoraEnc
       GstVisual

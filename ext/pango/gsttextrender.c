@@ -18,6 +18,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
+
+/**
+ * SECTION:element-textrender
+ * @see_also: #GstTextOverlay
+ *
+ * <refsect2>
+ * <para>
+ * This plugin renders text received on the text sink pad to a video
+ * buffer (retaining the alpha channel), so it can later be overlayed
+ * on top of video streams using other elements.
+ * </para>
+ * <para>
+ * The text can contain newline characters. (FIXME: What about text 
+ * wrapping? It does not make sense in this context)
+ * </para>
+ * <para>
+ * Example pipeline:
+ * <programlisting>
+ * gst-launch -v filesrc location=subtitles.srt ! subparse ! textrender ! xvimagesink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
