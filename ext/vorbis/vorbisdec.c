@@ -749,6 +749,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   guint sample_count;
   GstBuffer *out;
   GstFlowReturn result;
+  gint size;
 
   if (!vd->initialized)
     goto not_initialized;
@@ -767,10 +768,11 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   if ((sample_count = vorbis_synthesis_pcmout (&vd->vd, NULL)) == 0)
     goto done;
 
+  size = sample_count * vd->vi.channels * sizeof (float);
+
   /* alloc buffer for it */
   result = gst_pad_alloc_buffer (vd->srcpad, GST_BUFFER_OFFSET_NONE,
-      sample_count * vd->vi.channels * sizeof (float),
-      GST_PAD_CAPS (vd->srcpad), &out);
+      size, GST_PAD_CAPS (vd->srcpad), &out);
   if (result != GST_FLOW_OK)
     goto done;
 
@@ -782,6 +784,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   copy_samples ((float *) GST_BUFFER_DATA (out), pcm, sample_count,
       vd->vi.channels);
 
+  GST_BUFFER_SIZE (out) = size;
   GST_BUFFER_OFFSET (out) = vd->granulepos;
   if (vd->granulepos != -1) {
     GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
