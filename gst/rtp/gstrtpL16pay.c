@@ -28,7 +28,7 @@
 static GstElementDetails gst_rtpL16pay_details = {
   "RTP RAW Audio Payloader",
   "Codec/Payloader/Network",
-  "Payodes Raw Audio into a RTP packet",
+  "Payload-encodes Raw Audio into a RTP packet",
   "Zeeshan Ali <zak147@yahoo.com>"
 };
 

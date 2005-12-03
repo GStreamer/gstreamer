@@ -26,7 +26,7 @@
 static GstElementDetails gst_rtp_speex_pay_details = {
   "RTP packet parser",
   "Codec/Payloader/Network",
-  "Payodes Speex audio into a RTP packet",
+  "Payload-encodes Speex audio into a RTP packet",
   "Edgard Lima <edgard.lima@indt.org.br>"
 };
 

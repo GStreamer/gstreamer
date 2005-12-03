@@ -32,7 +32,7 @@
 static GstElementDetails gst_rtp_gsm_pay_details = {
   "RTP GSM Audio Payloader",
   "Codec/Payloader/Network",
-  "Payodes GSM audio into a RTP packet",
+  "Payload-encodes GSM audio into a RTP packet",
   "Zeeshan Ali <zeenix@gmail.com>"
 };
 

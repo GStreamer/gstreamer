@@ -27,7 +27,7 @@
 static GstElementDetails gst_rtp_g711_pay_details = {
   "RTP packet parser",
   "Codec/Payloader/Network",
-  "Payodes PCMU/PCMA audio into a RTP packet",
+  "Payload-encodes PCMU/PCMA audio into a RTP packet",
   "Edgard Lima <edgard.lima@indt.org.br>"
 };
 
