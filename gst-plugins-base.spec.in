@@ -1,7 +1,7 @@
 %define majorminor  @GST_MAJORMINOR@
-%define gstreamer   gstreamer09
+%define gstreamer   gstreamer010
 
-%define gst_minver  0.9.6
+%define gst_minver  0.9.7
 
 Name: 		%{gstreamer}-plugins-base
 Version: 	@VERSION@
@@ -135,7 +135,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximage*.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
 @USE_LIBVISUAL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibvisual.so
-                                                                                
+@USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpango.so                                                                     
 %package devel
 Summary: 	GStreamer Plugin Library Headers
 Group: 		Development/Libraries
