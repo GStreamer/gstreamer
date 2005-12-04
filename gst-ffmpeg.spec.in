@@ -1,4 +1,10 @@
-Name: 		gstreamer-ffmpeg
+%define majorminor  @GST_MAJORMINOR@
+%define gstreamer   gstreamer010
+%define gst_minver  0.9.7
+%define gst_majorminor  0.10
+
+
+Name: 		%{gstreamer}-ffmpeg
 Version: 	@VERSION@
 Release:	@GST_FFMPEG_VERSION_RELEASE@	
 Summary: 	GStreamer Streaming-media framework plug-in using FFmpeg.
@@ -10,11 +16,8 @@ Vendor:		GStreamer Backpackers Team <package@gstreamer.net>
 Source:		http://gstreamer.freedesktop.org/src/gst-ffmpeg/gst-ffmpeg/gst-ffmpeg-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-%define		gst_majorminor 	@GST_FFMPEG_VERSION_MAJOR@.@GST_FFMPEG_VERSION_MINOR@
-
-Requires: 	gstreamer >= 0.7.5
-Requires:	gstreamer-tools >= 0.7.5
-BuildRequires: 	gstreamer-devel >= 0.7.5
+Requires:  	%{gstreamer} >= 0.9.7
+BuildRequires: 	%{gstreamer}-devel >= 0.9.7
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
