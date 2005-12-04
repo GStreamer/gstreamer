@@ -33,12 +33,32 @@ void		gst_util_set_value_from_string	(GValue *value, const gchar *value_str);
 void		gst_util_set_object_arg		(GObject *object, const gchar *name, const gchar *value);
 void		gst_util_dump_mem		(const guchar *mem, guint size);
 
+guint64         gst_util_gdouble_to_guint64     (gdouble value);
+gdouble         gst_util_guint64_to_gdouble     (guint64 value);
+
+/**
+ * gst_guint64_to_gdouble:
+ * @value: the #guint64 value to convert
+ *
+ * Convert @value to a gdouble.
+ *
+ * Returns: @value converted to a #gdouble.
+ */
+
+/**
+ * gst_gdouble_to_guint64:
+ * @value: the #gdouble value to convert
+ *
+ * Convert @value to a guint64.
+ *
+ * Returns: @value converted to a #guint64.
+ */
 #ifdef WIN32
-guint64         gst_gdouble_to_guint64          (gdouble value);
-gdouble         gst_guint64_to_gdouble          (guint64 value);
+#define         gst_gdouble_to_guint64(v)       gst_util_gdouble_to_guint64(v)
+#define         gst_guint64_to_gdouble(v)       gst_util_guint64_to_gdouble(v)
 #else
-#define gst_gdouble_to_guint64(value) ((guint64) (value))
-#define gst_guint64_to_gdouble(value) ((gdouble) (value))
+#define         gst_gdouble_to_guint64(value)   ((guint64) (value))
+#define         gst_guint64_to_gdouble(value)   ((gdouble) (value))
 #endif
 
 guint64		gst_util_uint64_scale		(guint64 val, guint64 num, guint64 denom);

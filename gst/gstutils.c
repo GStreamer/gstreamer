@@ -297,40 +297,40 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
   }
 }
 
-#ifdef WIN32
 /* work around error C2520: conversion from unsigned __int64 to double
  * not implemented, use signed __int64 */
+
 /**
- * gst_guint64_to_gdouble:
- * @value: the value to convert
+ * gst_util_guint64_to_gdouble:
+ * @value: the #guint64 value to convert
  *
  * Convert @value to a gdouble. This is implemented as a function
  * because on some platforms a 64bit int to double conversion is
  * not defined/implemented.
  *
- * Returns: @value converted to a double.
+ * Returns: @value converted to a #gdouble.
  */
 gdouble
-gst_guint64_to_gdouble (guint64 value)
+gst_util_guint64_to_gdouble (guint64 value)
 {
-  if (value & 0x8000000000000000)
+  if (value & G_GINT64_CONSTANT (0x8000000000000000))
     return (gdouble) ((gint64) value) + (gdouble) 18446744073709551616.;
   else
     return (gdouble) ((gint64) value);
 }
 
 /**
- * gst_gdouble_to_guint64:
- * @value: the value to convert
+ * gst_util_gdouble_to_guint64:
+ * @value: the #gdouble value to convert
  *
  * Convert @value to a guint64. This is implemented as a function
  * because on some platforms a double to guint64 conversion is not
  * defined/implemented.
  *
- * Returns: @value converted to a double.
+ * Returns: @value converted to a #guint64.
  */
 guint64
-gst_gdouble_to_guint64 (gdouble value)
+gst_util_gdouble_to_guint64 (gdouble value)
 {
   if (value < (gdouble) 9223372036854775808.)   /* 1 << 63 */
     return ((guint64) ((gint64) value));
@@ -338,10 +338,8 @@ gst_gdouble_to_guint64 (gdouble value)
   value -= (gdouble) 18446744073709551616.;
   return ((guint64) ((gint64) value));
 }
-#endif
 
-
-/* convenience struct for getting high an low uint32 parts of
+/* convenience struct for getting high and low uint32 parts of
  * a guint64 */
 typedef union
 {
@@ -434,7 +432,7 @@ gst_util_uint64_scale_int64 (guint64 val, guint64 num, guint64 denom)
   v.ll = val;
   n.ll = num;
 
-  /* do 128 bits multiply 
+  /* do 128 bits multiply
    *                   nh   nl
    *                *  vh   vl
    *                ----------

@@ -1,3 +1,12 @@
+2005-12-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstutils.c: (gst_util_guint64_to_gdouble),
+	(gst_util_gdouble_to_guint64), (gst_util_uint64_scale_int64):
+	* gst/gstutils.h:
+	* tests/check/gst/gstutils.c: (GST_START_TEST), (gst_utils_suite):
+	  add tests that seem to show that the guint64/gdouble conversions
+	  are correct.
+
 2005-12-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstregistry.c: (gst_registry_add_path):
