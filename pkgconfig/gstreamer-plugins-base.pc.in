@@ -7,7 +7,7 @@ Name: GStreamer Base Plugins Libraries
 Description: Streaming media framework, base plugins libraries
 Requires: gstreamer-@GST_MAJORMINOR@ 
 Version: @VERSION@
-Libs: 
+Libs: -L${libdir}
 Cflags: -I${includedir}
 
 libraries=audio floatcast interfaces netbuffer riff rtp tag video

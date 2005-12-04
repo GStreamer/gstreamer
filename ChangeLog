@@ -1,3 +1,10 @@
+2005-12-04  Andy Wingo  <wingo@pobox.com>
+
+	patch by: Sebastien Cote <sebas642 yahoo ca>
+	
+	* pkgconfig/gstreamer-plugins-base.pc.in (Libs): Add -L flag.
+	Fixes #319172.
+
 2005-12-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/Makefile.am:
