@@ -225,7 +225,7 @@ _interpolate_linear_get_##type (GstControlledProperty * prop, GstClockTime times
       value2 = g_value_get_##type (&tv2->value); \
       valuediff = (gdouble) (value2 - value1); \
       \
-      return ((g##type) (value1 + valuediff * ((timestamp - tv1->timestamp) / timediff))); \
+      return ((g##type) (value1 + valuediff * (gst_guint64_to_gdouble (timestamp - tv1->timestamp) / timediff))); \
     } \
     else { \
       return (g_value_get_##type (&tv1->value)); \

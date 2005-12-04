@@ -1,5 +1,14 @@
 2005-12-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: Sebastien Moutte
+
+	* libs/gst/controller/gstinterpolation.c:
+	  use convert function for uint64/double
+	* win32/vs6/libgstcontroller.dsp:
+	  link to GLib
+
+2005-12-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstutils.c: (gst_util_guint64_to_gdouble),
 	(gst_util_gdouble_to_guint64), (gst_util_uint64_scale_int64):
 	* gst/gstutils.h:
