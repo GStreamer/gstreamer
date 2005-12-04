@@ -514,10 +514,6 @@ EXPORTS
 
 	gst_flow_return_get_type
 
-	gst_gdouble_to_guint64
-
-	gst_guint64_to_gdouble
-
 	gst_is_tag_list
 
 	gst_iterator_fold
@@ -691,6 +687,10 @@ EXPORTS
 	gst_type_find_factory_get_list
 
 	gst_type_find_factory_get_type
+
+	gst_util_gdouble_to_guint64
+
+	gst_util_guint64_to_gdouble
 
 	gst_util_uint64_scale
 
