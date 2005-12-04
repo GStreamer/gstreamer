@@ -1,7 +1,7 @@
 %define majorminor  @GST_MAJORMINOR@
-%define gstreamer   gstreamer09
+%define gstreamer   gstreamer010
 
-%define gst_minver   0.9.6
+%define gst_minver   0.9.7
 
 Name: 		%{gstreamer}-plugins-good
 Version: 	@VERSION@
@@ -33,7 +33,6 @@ BuildRequires:  gcc-c++
 @USE_LIBPNG_TRUE@BuildRequires: libpng-devel >= 1.2.0
 # @USE_MIKMOD_TRUE@BuildRequires: mikmod
 @USE_OSS_TRUE@BuildRequires: glibc-devel
-@USE_PANGO_TRUE@BuildRequires:   pango-devel
 # @USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
 # @USE_RAW1394_TRUE@BuildRequires: libavc1394-devel
 @USE_SPEEX_TRUE@BuildRequires:	speex-devel
@@ -121,7 +120,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_LIBPNG_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpng.so
 @USE_OSS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstossaudio.so
 ## @USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
-@USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpango.so
 @USE_SPEEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstspeex.so
 @USE_GCONF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgconfelements.so
 
