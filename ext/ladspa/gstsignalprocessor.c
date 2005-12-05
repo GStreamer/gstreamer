@@ -325,8 +325,9 @@ gst_signal_processor_process (GstSignalProcessor * self)
 
         srcpad = (GstSignalProcessorPad *) l2->data;
 
-        ret = gst_pad_alloc_buffer (GST_PAD (srcpad), -1, self->buffer_frames,
-            GST_PAD_CAPS (srcpad), &srcpad->pen);
+        ret =
+            gst_pad_alloc_buffer_and_set_caps (GST_PAD (srcpad), -1,
+            self->buffer_frames, GST_PAD_CAPS (srcpad), &srcpad->pen);
 
         if (ret != GST_FLOW_OK) {
           self->state = ret;
