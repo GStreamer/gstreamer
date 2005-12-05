@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-05 15:48+0100\n"
+"POT-Creation-Date: 2005-12-05 17:15+0100\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -87,7 +87,7 @@ msgstr "Chưa nhập tên tập tin "
 msgid "Could not close vfs file \"%s\"."
 msgstr "Đã không đóng được tập tin vfs \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2472
+#: ext/ogg/gstoggdemux.c:2473
 msgid "Internal data stream error."
 msgstr ""
 
