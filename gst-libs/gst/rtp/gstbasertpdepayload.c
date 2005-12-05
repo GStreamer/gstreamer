@@ -361,7 +361,8 @@ gst_base_rtp_depayload_thread (GstBaseRTPDepayload * filter)
   while (filter->thread_running) {
     gst_base_rtp_depayload_queue_release (filter);
     /* i want to run this thread clock_rate times per second */
-    gst_base_rtp_depayload_wait (filter, GST_NSECOND / filter->clock_rate);
+    /* sleep for 5msec */
+    gst_base_rtp_depayload_wait (filter, GST_MSECOND * 5);
   }
   return NULL;
 }

@@ -1,3 +1,10 @@
+2005-12-05  Andy Wingo  <wingo@pobox.com>
+
+	patch by: Kai Vehmanen <kv2004 eca cx>
+	
+	* gst-libs/gst/rtp/gstbasertpdepayload.c
+	(gst_base_rtp_depayload_thread): Fix busy loop (#323017).
+
 2005-12-04  Andy Wingo  <wingo@pobox.com>
 
 	patch by: Sebastien Cote <sebas642 yahoo ca>
