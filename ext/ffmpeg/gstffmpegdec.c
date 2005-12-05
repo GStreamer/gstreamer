@@ -581,7 +581,7 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
         return avcodec_default_get_buffer (context, picture);
       }
 
-      if (gst_pad_alloc_buffer (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE,
+      if (gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad, GST_BUFFER_OFFSET_NONE,
               bufsize, GST_PAD_CAPS (ffmpegdec->srcpad), &buf) != GST_FLOW_OK)
         return -1;
       ffmpegdec->last_buffer = buf;
@@ -881,7 +881,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
             return -1;
 
           if ((*ret =
-                  gst_pad_alloc_buffer (ffmpegdec->srcpad,
+                  gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad,
                       GST_BUFFER_OFFSET_NONE, fsize,
                       GST_PAD_CAPS (ffmpegdec->srcpad),
                       &outbuf)) != GST_FLOW_OK)

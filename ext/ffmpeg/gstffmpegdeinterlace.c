@@ -284,7 +284,7 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstData * data)
     return;
   }
 
-  outbuf = gst_pad_alloc_buffer (deinterlace->srcpad, 
+  outbuf = gst_pad_alloc_buffer_and_set_caps (deinterlace->srcpad, 
 				 GST_BUFFER_OFFSET_NONE, deinterlace->to_size);
 
   gst_ffmpeg_avpicture_fill (&deinterlace->from_frame,

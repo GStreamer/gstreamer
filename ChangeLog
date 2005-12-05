@@ -1,3 +1,11 @@
+2005-12-05  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_get_buffer),
+	(gst_ffmpegdec_frame):
+	* ext/ffmpeg/gstffmpegdeinterlace.c: (gst_ffmpegdeinterlace_chain):
+	* ext/ffmpeg/gstffmpegscale.c: (gst_ffmpegscale_chain): Update for
+	alloc_buffer changes.
+
 === release 0.9.7 ===
 
 2005-12-01   <thomas (at) apestaart (dot) org>

@@ -367,7 +367,7 @@ gst_ffmpegscale_chain (GstPad * pad, GstData * data)
     return ;
   }
   
-  outbuf = gst_pad_alloc_buffer (scale->srcpad, GST_BUFFER_OFFSET_NONE, scale->to_size);
+  outbuf = gst_pad_alloc_buffer_and_set_caps (scale->srcpad, GST_BUFFER_OFFSET_NONE, scale->to_size);
 
   gst_ffmpeg_avpicture_fill (&scale->from_frame,
 			     GST_BUFFER_DATA (inbuf),
