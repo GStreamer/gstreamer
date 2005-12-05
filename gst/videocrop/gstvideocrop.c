@@ -521,8 +521,9 @@ gst_video_crop_chain (GstPad * pad, GstData * _data)
   g_return_if_fail (GST_BUFFER_SIZE (buffer) >=
       GST_VIDEO_I420_SIZE (video_crop->width, video_crop->height));
 
-  outbuf = gst_pad_alloc_buffer (video_crop->srcpad, GST_BUFFER_OFFSET (buffer),
-      GST_VIDEO_I420_SIZE (new_width, new_height));
+  outbuf =
+      gst_pad_alloc_buffer_and_set_caps (video_crop->srcpad,
+      GST_BUFFER_OFFSET (buffer), GST_VIDEO_I420_SIZE (new_width, new_height));
 
   gst_buffer_stamp (outbuf, buffer);
 
