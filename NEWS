@@ -1,4 +1,8 @@
-This is GStreamer Ugly Plug-ins 0.9.7, "Canis Meus Naso Non Habet".
+This is GStreamer Ugly Plug-ins 0.10.0, "Brie".
+
+Bugs fixed since 0.9.7:
+    
+      * 323199 : Remove id3tag element (replaced by id3demux and id3mux)
 
 Changes since 0.9.6:
     

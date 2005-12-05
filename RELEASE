@@ -1,15 +1,16 @@
 
-GStreamer: Release notes for GStreamer Ugly Plug-ins 0.9.7 "Canis Meus Naso Non Habet"
+GStreamer: Release notes for GStreamer Ugly Plug-ins 0.10.0 "Brie"
         
 
-The GStreamer team is petrified to announce a new release
-in the 0.9.x development series of the
+The GStreamer team is proud to announce a new release
+in the 0.10.x stable series of the
 GStreamer Ugly Plug-ins.
 
 
-The 0.9.x series is a development series and not recommended for end users.
+The 0.10.x series is a stable series targeted at end users.
 It is not API or ABI compatible with the stable 0.8.x series.
 It is, however, parallel installable with the 0.8.x series.
+
 
 
 "When you have to shoot, shoot.  Don't talk."
@@ -55,12 +56,10 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * mpegstream fixes
 
 Bugs fixed in this release
     
-      * 319784 : mad claims to need more data
-      * 322745 : [mpegdemux] segfaults
+      * 323199 : Remove id3tag element (replaced by id3demux and id3mux)
 
 Download
 
@@ -90,11 +89,6 @@ Applications
   
 Contributors to this release
     
-      * Edward Hervey
-      * Jan Schmidt
-      * Martin Soto
-      * Michael Smith
-      * Michal Benes
+      * Andy Wingo
       * Thomas Vander Stichele
-      * Tim-Philipp Müller
  
