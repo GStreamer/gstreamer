@@ -2215,7 +2215,7 @@ not_accepted:
 
 /* returns TRUE if the src pad could be configured to accept the given caps */
 static gboolean
-gst_pad_configure_src (GstPad * pad, GstCaps * caps)
+gst_pad_configure_src (GstPad * pad, GstCaps * caps, gboolean dosetcaps)
 {
   GstPadAcceptCapsFunction acceptcaps;
   GstPadSetCapsFunction setcaps;
@@ -2230,10 +2230,10 @@ gst_pad_configure_src (GstPad * pad, GstCaps * caps)
     if (!acceptcaps (pad, caps))
       goto not_accepted;
   }
-  /* set caps on pad if call succeeds */
-  res = gst_pad_set_caps (pad, caps);
-  /* no need to unref the caps here, set_caps takes a ref and
-   * our ref goes away when we leave this function. */
+  if (dosetcaps)
+    res = gst_pad_set_caps (pad, caps);
+  else
+    res = TRUE;
 
   return res;
 
@@ -2405,33 +2405,9 @@ no_peer:
   }
 }
 
-/**
- * gst_pad_alloc_buffer:
- * @pad: a source #GstPad
- * @offset: the offset of the new buffer in the stream
- * @size: the size of the new buffer
- * @caps: the caps of the new buffer
- * @buf: a newly allocated buffer
- *
- * Allocates a new, empty buffer optimized to push to pad @pad.  This
- * function only works if @pad is a source pad and has a peer.
- *
- * You need to check the caps of the buffer after performing this
- * function and renegotiate to the format if needed.
- *
- * A new, empty #GstBuffer will be put in the @buf argument.
- *
- * Returns: a result code indicating success of the operation. Any
- * result code other than GST_FLOW_OK is an error and @buf should
- * not be used.
- * An error can occur if the pad is not connected or when the downstream
- * peer elements cannot provide an acceptable buffer.
- *
- * MT safe.
- */
-GstFlowReturn
-gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
-    GstBuffer ** buf)
+static GstFlowReturn
+gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
+    GstCaps * caps, GstBuffer ** buf, gboolean setcaps)
 {
   GstPad *peer;
   GstFlowReturn ret;
@@ -2499,7 +2475,7 @@ do_caps:
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
     GST_DEBUG ("caps changed to %" GST_PTR_FORMAT, caps);
-    if (G_UNLIKELY (!gst_pad_configure_src (pad, caps)))
+    if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, setcaps)))
       goto not_negotiated;
   }
   return ret;
@@ -2556,6 +2532,64 @@ peer_error:
         "alloc function returned error %s", gst_flow_get_name (ret));
     return ret;
   }
+}
+
+/**
+ * gst_pad_alloc_buffer:
+ * @pad: a source #GstPad
+ * @offset: the offset of the new buffer in the stream
+ * @size: the size of the new buffer
+ * @caps: the caps of the new buffer
+ * @buf: a newly allocated buffer
+ *
+ * Allocates a new, empty buffer optimized to push to pad @pad.  This
+ * function only works if @pad is a source pad and has a peer.
+ *
+ * You need to check the caps of the buffer after performing this
+ * function and renegotiate to the format if needed.
+ *
+ * A new, empty #GstBuffer will be put in the @buf argument.
+ *
+ * Returns: a result code indicating success of the operation. Any
+ * result code other than GST_FLOW_OK is an error and @buf should
+ * not be used.
+ * An error can occur if the pad is not connected or when the downstream
+ * peer elements cannot provide an acceptable buffer.
+ *
+ * MT safe.
+ */
+GstFlowReturn
+gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
+    GstBuffer ** buf)
+{
+  return gst_pad_alloc_buffer_full (pad, offset, size, caps, buf, FALSE);
+}
+
+/**
+ * gst_pad_alloc_buffer_and_set_caps:
+ * @pad: a source #GstPad
+ * @offset: the offset of the new buffer in the stream
+ * @size: the size of the new buffer
+ * @caps: the caps of the new buffer
+ * @buf: a newly allocated buffer
+ *
+ * In addition to the function gst_pad_alloc_buffer(), this function
+ * automatically calls gst_pad_set_caps() when the caps of the
+ * newly allocated buffer are different from the @pad caps.
+ *
+ * Returns: a result code indicating success of the operation. Any
+ * result code other than GST_FLOW_OK is an error and @buf should
+ * not be used.
+ * An error can occur if the pad is not connected or when the downstream
+ * peer elements cannot provide an acceptable buffer.
+ *
+ * MT safe.
+ */
+GstFlowReturn
+gst_pad_alloc_buffer_and_set_caps (GstPad * pad, guint64 offset, gint size,
+    GstCaps * caps, GstBuffer ** buf)
+{
+  return gst_pad_alloc_buffer_full (pad, offset, size, caps, buf, TRUE);
 }
 
 /**

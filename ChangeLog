@@ -1,3 +1,23 @@
+2005-12-05  Andy Wingo  <wingo@pobox.com>
+
+	patch by: Wim Taymans <wim@fluendo.com>
+
+	* libs/gst/base/gstbasetransform.c
+	(gst_base_transform_prepare_output_buf)
+	(gst_base_transform_buffer_alloc):
+	* plugins/elements/gstqueue.c (gst_queue_bufferalloc): Call
+	alloc_buffer_and_set_caps.
+
+	* gst/gstpad.c (gst_pad_alloc_buffer): Changed to not call
+	set_caps on the source pad.
+	(gst_pad_alloc_buffer_and_set_caps): New function, does what
+	alloc_buffer used to do. Fixes #322874.
+
+	* docs/gst/gstreamer-sections.txt: 
+	* docs/design/part-negotiation.txt: 
+	* docs/pwg/advanced-negotiation.xml: Update for the alloc_buffer
+	changes.
+
 2005-12-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Sebastien Moutte

@@ -1151,6 +1151,7 @@ gst_pad_new_from_template
 gst_pad_new_from_static_template
 
 gst_pad_alloc_buffer
+gst_pad_alloc_buffer_and_set_caps
 gst_pad_set_bufferalloc_function
 GstPadBufferAllocFunction
 

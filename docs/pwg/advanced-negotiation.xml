@@ -346,9 +346,9 @@ gst_my_filter_chain (GstPad    *pad,
       ()</function>-function. The idea here is that an element requesting a
       buffer from downstream, has to specify the type of that buffer. If
       renegotiation is to take place, this type will no longer apply, and the
-      downstream element will set a new caps on the provided buffer. Next,
-      &GStreamer; will trigger renegotiation on the sourcepad of the element
-      before the function returns.
+      downstream element will set a new caps on the provided buffer. The element
+      should then reconfigure itself to push buffers with the returned caps. The
+      source pad's setcaps will be called once the buffer is pushed.
     </para>
     <para>
       It is important to note here that different elements actually have

@@ -469,7 +469,9 @@ gst_queue_bufferalloc (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
 
   queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
-  result = gst_pad_alloc_buffer (queue->srcpad, offset, size, caps, buf);
+  result =
+      gst_pad_alloc_buffer_and_set_caps (queue->srcpad, offset, size, caps,
+      buf);
 
   return result;
 }

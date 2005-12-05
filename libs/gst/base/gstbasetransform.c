@@ -787,7 +787,7 @@ failed_configure:
   }
 }
 
-/* Allocate a buffer using gst_pad_alloc_buffer.
+/* Allocate a buffer using gst_pad_alloc_buffer_and_set_caps.
  *
  * This function can trigger a renegotiation on the source pad when the
  * peer alloc_buffer function sets new caps. Since we currently are
@@ -848,8 +848,9 @@ gst_base_transform_prepare_output_buf (GstBaseTransform * trans,
 
   if (*out_buf == NULL) {
     /* Sub-class didn't already provide a buffer for us. Make one */
-    ret = gst_pad_alloc_buffer (trans->srcpad, GST_BUFFER_OFFSET (in_buf),
-        out_size, out_caps, out_buf);
+    ret =
+        gst_pad_alloc_buffer_and_set_caps (trans->srcpad,
+        GST_BUFFER_OFFSET (in_buf), out_size, out_caps, out_buf);
     if (ret != GST_FLOW_OK || *out_buf == NULL)
       goto done;
 
@@ -956,7 +957,9 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     /* request a buffer with the same caps */
     GST_DEBUG_OBJECT (trans, "requesting buffer with same caps, size %d", size);
 
-    res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
+    res =
+        gst_pad_alloc_buffer_and_set_caps (trans->srcpad, offset, size, caps,
+        buf);
   } else {
     /* if we are configured, request a buffer with the src caps */
     GstCaps *srccaps = gst_pad_get_negotiated_caps (trans->srcpad);
@@ -981,7 +984,9 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
       goto unknown_size;
     }
 
-    res = gst_pad_alloc_buffer (trans->srcpad, offset, new_size, srccaps, buf);
+    res =
+        gst_pad_alloc_buffer_and_set_caps (trans->srcpad, offset, new_size,
+        srccaps, buf);
     gst_caps_unref (srccaps);
   }
 

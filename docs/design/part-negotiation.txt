@@ -82,8 +82,8 @@ The general flow for a source pad starting the negotiation.
    done
  endif
 
- # if the type is different, this will call the setcaps function of 
- # the pad.
+ # if the type is different, the buffer will have different caps from
+ # the src pad -- setcaps will get called on the pad_push
  buffer = gst_pad_alloc_buffer (srcpad, 0, size, GST_PAD_CAPS (fixedcaps));
  if buffer
    [fill buffer and push]
