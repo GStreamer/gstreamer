@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
-"PO-Revision-Date: 2005-02-12 23:37+0300\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
+"PO-Revision-Date: 2005-02-15 22:33+0300\n"
 "Last-Translator: Peter Astakhov <astakhovp@mail.ru>\n"
 "Language-Team: Russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -24,7 +24,7 @@ msgstr "Печатает версию GStreamer"
 
 #: gst/gst.c:272
 msgid "Make all warnings fatal"
-msgstr ""
+msgstr "Расценивать все предупреждения как фатальные"
 
 #: gst/gst.c:275
 msgid "Print available debug categories and exit"
@@ -46,6 +46,8 @@ msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
+"Список пар, разделенных запятыми вида имя_категории:уровень для установки "
+"уровнейотдельных категорий. Пример: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:285
 msgid "LIST"
@@ -72,10 +74,13 @@ msgid "PATHS"
 msgstr "ПУТИ"
 
 #: gst/gst.c:297
+#, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
+"Список расширений (через запятую) для загрузки, вдобавок к списку, "
+"сохраненному в переменной окружения GST_PLUGIN_PATH"
 
 #: gst/gst.c:299
 msgid "PLUGINS"
@@ -122,48 +127,78 @@ msgid ""
 msgstr ""
 
 #: gst/gsterror.c:137
+#, fuzzy
 msgid "Internal GStreamer error: code not implemented."
 msgstr ""
+"Внутренняя ошибка GStreamer: проблема с событиями.  Отправьте сообщение об "
+"ошибке."
 
 #: gst/gsterror.c:139
+#, fuzzy
 msgid "Internal GStreamer error: state change failed."
 msgstr ""
+"Внутренняя ошибка GStreamer: проблема с тэгами.  Отправьте сообщение об "
+"ошибке."
 
 #: gst/gsterror.c:140
+#, fuzzy
 msgid "Internal GStreamer error: pad problem."
 msgstr ""
+"Внутренняя ошибка GStreamer: проблема с тэгами.  Отправьте сообщение об "
+"ошибке."
 
 #: gst/gsterror.c:142
+#, fuzzy
 msgid "Internal GStreamer error: thread problem."
 msgstr ""
+"Внутренняя ошибка GStreamer: проблема с тредами (thread).  Отправьте "
+"сообщение об ошибке."
 
 #: gst/gsterror.c:144
+#, fuzzy
 msgid "Internal GStreamer error: negotiation problem."
 msgstr ""
+"Внутренняя ошибка GStreamer: проблема с тэгами.  Отправьте сообщение об "
+"ошибке."
 
 #: gst/gsterror.c:146
+#, fuzzy
 msgid "Internal GStreamer error: event problem."
 msgstr ""
+"Внутренняя ошибка GStreamer: проблема с событиями.  Отправьте сообщение об "
+"ошибке."
 
 #: gst/gsterror.c:148
+#, fuzzy
 msgid "Internal GStreamer error: seek problem."
 msgstr ""
+"Внутренняя ошибка GStreamer: проблема с поиском.  Отправьте сообщение об "
+"ошибке."
 
 #: gst/gsterror.c:150
+#, fuzzy
 msgid "Internal GStreamer error: caps problem."
 msgstr ""
+"Внутренняя ошибка GStreamer: проблема с тэгами.  Отправьте сообщение об "
+"ошибке."
 
 #: gst/gsterror.c:151
+#, fuzzy
 msgid "Internal GStreamer error: tag problem."
 msgstr ""
+"Внутренняя ошибка GStreamer: проблема с тэгами.  Отправьте сообщение об "
+"ошибке."
 
 #: gst/gsterror.c:153
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr ""
 
 #: gst/gsterror.c:155
+#, fuzzy
 msgid "Internal GStreamer error: clock problem."
 msgstr ""
+"Внутренняя ошибка GStreamer: проблема с поиском.  Отправьте сообщение об "
+"ошибке."
 
 #: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
@@ -215,15 +250,15 @@ msgstr "Не могу записать в ресурс."
 
 #: gst/gsterror.c:202
 msgid "Could not perform seek on resource."
-msgstr ""
+msgstr "Не могу произвести поиск в ресурсе."
 
 #: gst/gsterror.c:203
 msgid "Could not synchronize on resource."
-msgstr ""
+msgstr "Не могу провести синхронизацию в ресурсе."
 
 #: gst/gsterror.c:205
 msgid "Could not get/set settings from/on resource."
-msgstr ""
+msgstr "Не могу получить/установить параметры для ресурса."
 
 #: gst/gsterror.c:219
 msgid "GStreamer encountered a general stream error."
@@ -243,23 +278,23 @@ msgstr "Тип потока отличается от обрабатываемо
 
 #: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
-msgstr ""
+msgstr "Нет кодека для обработки данного типа потока."
 
 #: gst/gsterror.c:231
 msgid "Could not decode stream."
-msgstr ""
+msgstr "Не могу декодировать поток."
 
 #: gst/gsterror.c:232
 msgid "Could not encode stream."
-msgstr ""
+msgstr "Не могу кодировать поток."
 
 #: gst/gsterror.c:233
 msgid "Could not demultiplex stream."
-msgstr ""
+msgstr "Не могу демультиплексировать поток."
 
 #: gst/gsterror.c:234
 msgid "Could not multiplex stream."
-msgstr ""
+msgstr "Не могу мультиплексировать поток."
 
 #: gst/gsterror.c:285
 #, c-format
@@ -273,39 +308,40 @@ msgstr ""
 
 #: gst/gsttaglist.c:92
 msgid "title"
-msgstr ""
+msgstr "заголовок"
 
 #: gst/gsttaglist.c:92
 msgid "commonly used title"
-msgstr ""
+msgstr "обычно используемый заголовок"
 
 #: gst/gsttaglist.c:95
 msgid "artist"
-msgstr ""
+msgstr "исполнитель"
 
 #: gst/gsttaglist.c:96
 msgid "person(s) responsible for the recording"
-msgstr ""
+msgstr "лицо(лица) отвечающее за запись"
 
 #: gst/gsttaglist.c:100
 msgid "album"
-msgstr ""
+msgstr "альбом"
 
 #: gst/gsttaglist.c:101
 msgid "album containing this data"
-msgstr ""
+msgstr "альбом содержит эти данные"
 
 #: gst/gsttaglist.c:103
 msgid "date"
-msgstr ""
+msgstr "дата"
 
 #: gst/gsttaglist.c:103
+#, fuzzy
 msgid "date the data was created (as a GDate structure)"
-msgstr ""
+msgstr "дата создания данных (по Юлианскому календарю)"
 
 #: gst/gsttaglist.c:106
 msgid "genre"
-msgstr ""
+msgstr "стиль"
 
 #: gst/gsttaglist.c:107
 msgid "genre this data belongs to"
@@ -313,23 +349,23 @@ msgstr ""
 
 #: gst/gsttaglist.c:110
 msgid "comment"
-msgstr ""
+msgstr "комментарий"
 
 #: gst/gsttaglist.c:111
 msgid "free text commenting the data"
-msgstr ""
+msgstr "комментарии к данным"
 
 #: gst/gsttaglist.c:114
 msgid "track number"
-msgstr ""
+msgstr "номер трэка"
 
 #: gst/gsttaglist.c:115
 msgid "track number inside a collection"
-msgstr ""
+msgstr "номер трэка внутри коллекции"
 
 #: gst/gsttaglist.c:118
 msgid "track count"
-msgstr ""
+msgstr "количество трэков"
 
 #: gst/gsttaglist.c:119
 msgid "count of tracks inside collection this track belongs to"
@@ -337,15 +373,15 @@ msgstr ""
 
 #: gst/gsttaglist.c:123
 msgid "disc number"
-msgstr ""
+msgstr "номер диска"
 
 #: gst/gsttaglist.c:124
 msgid "disc number inside a collection"
-msgstr ""
+msgstr "номер диска в коллекции"
 
 #: gst/gsttaglist.c:127
 msgid "disc count"
-msgstr ""
+msgstr "номер диска"
 
 #: gst/gsttaglist.c:128
 msgid "count of discs inside collection this disc belongs to"
@@ -353,43 +389,43 @@ msgstr ""
 
 #: gst/gsttaglist.c:132
 msgid "location"
-msgstr ""
+msgstr "местоположение"
 
 #: gst/gsttaglist.c:133
 msgid "original location of file as a URI"
-msgstr ""
+msgstr "оригинальное месторасположение файла в виде URI"
 
 #: gst/gsttaglist.c:137
 msgid "description"
-msgstr ""
+msgstr "описание"
 
 #: gst/gsttaglist.c:138
 msgid "short text describing the content of the data"
-msgstr ""
+msgstr "короткое описание содержимого данных"
 
 #: gst/gsttaglist.c:141
 msgid "version"
-msgstr ""
+msgstr "версия"
 
 #: gst/gsttaglist.c:141
 msgid "version of this data"
-msgstr ""
+msgstr "версия данных"
 
 #: gst/gsttaglist.c:144
 msgid "ISRC"
-msgstr ""
+msgstr "ISRC "
 
 #: gst/gsttaglist.c:146
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr ""
+msgstr "International Standard Recording Code - см http://www.ifpi.org/isrc/ "
 
 #: gst/gsttaglist.c:148
 msgid "organization"
-msgstr ""
+msgstr "организация"
 
 #: gst/gsttaglist.c:151
 msgid "copyright"
-msgstr ""
+msgstr "copyright "
 
 #: gst/gsttaglist.c:151
 msgid "copyright notice of the data"
@@ -397,19 +433,19 @@ msgstr ""
 
 #: gst/gsttaglist.c:154
 msgid "contact"
-msgstr ""
+msgstr "контакт"
 
 #: gst/gsttaglist.c:154
 msgid "contact information"
-msgstr ""
+msgstr "контактная информация"
 
 #: gst/gsttaglist.c:156
 msgid "license"
-msgstr ""
+msgstr "лицензия"
 
 #: gst/gsttaglist.c:156
 msgid "license of data"
-msgstr ""
+msgstr "лицензия"
 
 #: gst/gsttaglist.c:159
 msgid "performer"
@@ -421,15 +457,15 @@ msgstr ""
 
 #: gst/gsttaglist.c:163
 msgid "duration"
-msgstr ""
+msgstr "продолжительность"
 
 #: gst/gsttaglist.c:163
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr ""
+msgstr "продолжительность в наносекундах"
 
 #: gst/gsttaglist.c:166
 msgid "codec"
-msgstr ""
+msgstr "кодек"
 
 #: gst/gsttaglist.c:167
 msgid "codec the data is stored in"
@@ -437,7 +473,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:170
 msgid "video codec"
-msgstr ""
+msgstr "видеокодек"
 
 #: gst/gsttaglist.c:170
 msgid "codec the video data is stored in"
@@ -445,7 +481,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:173
 msgid "audio codec"
-msgstr ""
+msgstr "аудиокодек"
 
 #: gst/gsttaglist.c:173
 msgid "codec the audio data is stored in"
@@ -453,35 +489,35 @@ msgstr ""
 
 #: gst/gsttaglist.c:175
 msgid "bitrate"
-msgstr ""
+msgstr "битрейт"
 
 #: gst/gsttaglist.c:175
 msgid "exact or average bitrate in bits/s"
-msgstr ""
+msgstr "точный средний битрейт в битах/сек"
 
 #: gst/gsttaglist.c:177
 msgid "nominal bitrate"
-msgstr ""
+msgstr "номинальный битрейт"
 
 #: gst/gsttaglist.c:177
 msgid "nominal bitrate in bits/s"
-msgstr ""
+msgstr "номинальный битрейт в битах/сек"
 
 #: gst/gsttaglist.c:179
 msgid "minimum bitrate"
-msgstr ""
+msgstr "минимальный битрейт"
 
 #: gst/gsttaglist.c:179
 msgid "minimum bitrate in bits/s"
-msgstr ""
+msgstr "минимальный битрейт в битах/сек"
 
 #: gst/gsttaglist.c:181
 msgid "maximum bitrate"
-msgstr ""
+msgstr "максимальный битрейт"
 
 #: gst/gsttaglist.c:181
 msgid "maximum bitrate in bits/s"
-msgstr ""
+msgstr "максимальный битрейт в битах/сек"
 
 #: gst/gsttaglist.c:184
 msgid "encoder"
@@ -549,7 +585,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:240
 msgid ", "
-msgstr ""
+msgstr ",  "
 
 #: gst/parse/grammar.y:206
 #, c-format
@@ -564,22 +600,22 @@ msgstr ""
 #: gst/parse/grammar.y:294
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr ""
+msgstr "нет поля \"%s\" у элемента \"%s\""
 
 #: gst/parse/grammar.y:309
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
+msgstr "не могу установить поле \"%s\" элемента \"%s\" в \"%s\""
 
 #: gst/parse/grammar.y:532
 #, c-format
 msgid "could not link %s to %s"
-msgstr ""
+msgstr "не могу присоединить %s к %s"
 
 #: gst/parse/grammar.y:578
 #, c-format
 msgid "no element \"%s\""
-msgstr ""
+msgstr "нет элемента \"%s\""
 
 #: gst/parse/grammar.y:629
 #, c-format
@@ -598,7 +634,7 @@ msgstr ""
 #: gst/parse/grammar.y:733
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr ""
+msgstr "нет исходного элемента для URI \"%s\""
 
 #: gst/parse/grammar.y:743
 #, c-format
@@ -620,7 +656,7 @@ msgid "empty pipeline not allowed"
 msgstr ""
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -630,46 +666,46 @@ msgstr ""
 
 #: plugins/elements/gstfilesink.c:230
 msgid "No file name specified for writing."
-msgstr ""
+msgstr "Не указано имя файла для записи."
 
 #: plugins/elements/gstfilesink.c:237
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr ""
+msgstr "Не могу открыть файл \"%s\" для записи."
 
 #: plugins/elements/gstfilesink.c:253
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr ""
+msgstr "Ошибка закрытия файла \"%s\"."
 
 #: plugins/elements/gstfilesink.c:361 plugins/elements/gstfilesink.c:425
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr ""
+msgstr "Ошибка записи в файл \"%s\"."
 
 #: plugins/elements/gstfilesrc.c:910
 msgid "No file name specified for reading."
-msgstr ""
+msgstr "Не указано имя файла для чтения."
 
 #: plugins/elements/gstfilesrc.c:922
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading: %s."
-msgstr "Не могу открыть ресурс для чтения."
+msgstr "Не могу открыть файл \"%s\" для чтения."
 
 #: plugins/elements/gstfilesrc.c:931
-#, c-format
+#, fuzzy, c-format
 msgid "could not get info on \"%s\"."
-msgstr ""
+msgstr "не могу присоединить %s к %s"
 
 #: plugins/elements/gstfilesrc.c:938
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr ""
+msgstr "\"%s\" - это каталог."
 
 #: plugins/elements/gstfilesrc.c:945
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr ""
+msgstr "Файл \"%s\" является сокетом."
 
 #: plugins/elements/gstidentity.c:351
 msgid "Failed after iterations as requested."
@@ -685,11 +721,11 @@ msgstr ""
 
 #: plugins/elements/gsttypefindelement.c:186
 msgid "minimum"
-msgstr ""
+msgstr "минимум"
 
 #: plugins/elements/gsttypefindelement.c:190
 msgid "maximum"
-msgstr ""
+msgstr "максимум"
 
 #: tools/gst-inspect.c:1100
 msgid "Print all elements"
@@ -864,8 +900,32 @@ msgstr ""
 msgid "FREEING pipeline ...\n"
 msgstr ""
 
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Отключить специфические команды процессора"
+
+#~ msgid "SCHEDULER"
+#~ msgstr "ПЛАНИРОВЩИК"
+
 #~ msgid "path list for loading plugins (separated by '%s')"
 #~ msgstr "список путей для загрузки расширений (разделенных '%s')"
+
+#~ msgid "Scheduler to use (default is '%s')"
+#~ msgstr "Планировщик для использования (по умолчанию -  '%s')"
+
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr ""
+#~ "Внутренняя ошибка GStreamer: проблема с планировщиком.  Отправьте "
+#~ "сообщение об ошибке."
+
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "Неправильный формат потока."
+
+#~ msgid ""
+#~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+#~ "max %s ns).\n"
+#~ msgstr ""
+#~ "Выполнение завершилось после %s итераций (всего %s ns, среднее %s ns, "
+#~ "минимум %s ns, максимум %s ns).\n"
 
 #~ msgid "         Trying to run anyway.\n"
 #~ msgstr "         Все равно пытаюсь запустить.\n"
@@ -887,9 +947,3 @@ msgstr ""
 
 #~ msgid "Loaded %d plugins with %d %s.\n"
 #~ msgstr "Загружено %d расширений с %d %s.\n"
-
-#~ msgid "SCHEDULER"
-#~ msgstr "ПЛАНИРОВЩИК"
-
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Отключить специфические команды процессора"

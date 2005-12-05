@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -614,7 +614,7 @@ msgid "empty pipeline not allowed"
 msgstr ""
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -857,14 +857,14 @@ msgstr ""
 msgid "FREEING pipeline ...\n"
 msgstr ""
 
+#~ msgid "')"
+#~ msgstr "')"
+
+#~ msgid "SCHEDULER"
+#~ msgstr "VAXTLAŞDIRICI"
+
 #~ msgid "Registry to use"
 #~ msgstr "İşlədiləcək qeyd bazası"
 
 #~ msgid "REGISTRY"
 #~ msgstr "QEYDBAZASI"
-
-#~ msgid "SCHEDULER"
-#~ msgstr "VAXTLAŞDIRICI"
-
-#~ msgid "')"
-#~ msgstr "')"

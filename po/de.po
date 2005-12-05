@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
 "PO-Revision-Date: 2004-06-05 09:32+0100\n"
 "Last-Translator: Roland Illig <roland.illig@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
@@ -199,7 +199,7 @@ msgstr ""
 #, fuzzy
 msgid "Internal GStreamer error: clock problem."
 msgstr ""
-"Internet GStreamer-Fehler: Schedulerproblem. Bitte schicken Sie einen "
+"Internet GStreamer-Fehler: Seekproblem. Bitte schicken Sie einen "
 "Fehlerbericht."
 
 #: gst/gsterror.c:169
@@ -674,7 +674,7 @@ msgid "empty pipeline not allowed"
 msgstr "Leere Leitung ist nicht erlaubt"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -857,9 +857,9 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEHLER: Das »pipeline«-Element wurde nicht gefunden.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "FÜHRE Leitung AUS ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:631
 #, fuzzy, c-format
@@ -906,54 +906,25 @@ msgid " ns.\n"
 msgstr " Nanosekunden.\n"
 
 #: tools/gst-launch.c:676
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "FÜHRE Leitung AUS ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:681
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "FÜHRE Leitung AUS ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:686
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "FÜHRE Leitung AUS ...\n"
 
-#, fuzzy
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "FÜHRE Leitung AUS ...\n"
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Beschleunigte CPU-Befehle deaktivieren"
 
-#, fuzzy
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "FÜHRE Leitung AUS ...\n"
-
-#, fuzzy
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "FÜHRE Leitung AUS ...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "FÜHRE Leitung AUS ...\n"
-
-#, fuzzy
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "FÜHRE Leitung AUS ...\n"
-
-#, fuzzy
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "FÜHRE Leitung AUS ...\n"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Anzahl, wie oft die Leitung durchlaufen wird"
-
-#~ msgid "path list for loading plugins (separated by '%s')"
-#~ msgstr "Pfadliste zum Laden von Plugins (Durch »%s« getrennt)"
-
-#~ msgid "Stream is of the wrong format."
-#~ msgstr "Der Datenstrom hat das falsche Format."
-
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Versuche trotzdem zu laufen.\n"
+#~ msgid "SCHEDULER"
+#~ msgstr "SCHEDULER"
 
 #~ msgid "Registry to use"
 #~ msgstr "Zu benutzende Registry"
@@ -961,18 +932,19 @@ msgstr "FÜHRE Leitung AUS ...\n"
 #~ msgid "REGISTRY"
 #~ msgstr "REGISTRY"
 
-#, fuzzy
-#~ msgid "Error loading %s\n"
-#~ msgstr "Fehler beim Schließen der Datei »%s«."
-
-#~ msgid "SCHEDULER"
-#~ msgstr "SCHEDULER"
+#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgstr "Pfadliste zum Laden von Plugins (Durch »%s« getrennt)"
 
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Zu benutzender Scheduler (Standard: »%s«)"
 
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Beschleunigte CPU-Befehle deaktivieren"
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr ""
+#~ "Internet GStreamer-Fehler: Schedulerproblem. Bitte schicken Sie einen "
+#~ "Fehlerbericht."
+
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "Der Datenstrom hat das falsche Format."
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr ""
@@ -1002,3 +974,9 @@ msgstr "FÜHRE Leitung AUS ...\n"
 
 #~ msgid " ns, max %"
 #~ msgstr " Nanosekunden, maximal %"
+
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "Anzahl, wie oft die Leitung durchlaufen wird"
+
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Versuche trotzdem zu laufen.\n"

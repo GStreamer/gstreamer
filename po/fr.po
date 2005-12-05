@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -657,7 +657,7 @@ msgid "empty pipeline not allowed"
 msgstr "tube vide non autorisé"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -851,9 +851,9 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERREUR: l'element 'tube' est introuvable.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "EXECUTION du tube en cours ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:631
 #, fuzzy, c-format
@@ -900,52 +900,37 @@ msgid " ns.\n"
 msgstr "ns).\n"
 
 #: tools/gst-launch.c:676
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "EXECUTION du tube en cours ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:681
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "EXECUTION du tube en cours ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:686
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "EXECUTION du tube en cours ...\n"
 
-#, fuzzy
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "EXECUTION du tube en cours ...\n"
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Désactiver les instructions accélerées du processeur"
 
-#, fuzzy
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "EXECUTION du tube en cours ...\n"
-
-#, fuzzy
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "EXECUTION du tube en cours ...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "EXECUTION du tube en cours ...\n"
-
-#, fuzzy
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "EXECUTION du tube en cours ...\n"
-
-#, fuzzy
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "EXECUTION du tube en cours ...\n"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Nombres d'iterations du tube a accomplir"
-
-#, fuzzy
-#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgid "path list for loading plugins (separated by '"
 #~ msgstr "liste de chemins pour le chargement des plugins (séparés par '"
 
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Tentative d'execution malgrè tout.\n"
+#~ msgid "')"
+#~ msgstr "')"
+
+#~ msgid "Scheduler to use ('"
+#~ msgstr "Planificateur a utiliser ('"
+
+#~ msgid "' is the default)"
+#~ msgstr "' est la valeur par defaut)"
+
+#~ msgid "SCHEDULER"
+#~ msgstr "PLANIFICATEUR"
 
 #~ msgid "Registry to use"
 #~ msgstr "Registre a utiliser"
@@ -953,15 +938,11 @@ msgstr "EXECUTION du tube en cours ...\n"
 #~ msgid "REGISTRY"
 #~ msgstr "REGISTRE"
 
-#~ msgid "SCHEDULER"
-#~ msgstr "PLANIFICATEUR"
-
-#, fuzzy
-#~ msgid "Scheduler to use (default is '%s')"
-#~ msgstr "Planificateur a utiliser ('"
-
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Désactiver les instructions accélerées du processeur"
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "impossible de convertir \"%s\" de manière a correspondre avec la "
+#~ "proprieté \"%s\" dans l'element \"%s\" "
 
 #~ msgid " iterations (sum %"
 #~ msgstr "itérations (somme %"
@@ -975,17 +956,11 @@ msgstr "EXECUTION du tube en cours ...\n"
 #~ msgid " ns, max %"
 #~ msgstr "ns, max %"
 
-#~ msgid "')"
-#~ msgstr "')"
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "Nombres d'iterations du tube a accomplir"
 
-#~ msgid "' is the default)"
-#~ msgstr "' est la valeur par defaut)"
-
-#~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr ""
-#~ "impossible de convertir \"%s\" de manière a correspondre avec la "
-#~ "proprieté \"%s\" dans l'element \"%s\" "
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Tentative d'execution malgrè tout.\n"
 
 #~ msgid "CATEGORIES"
 #~ msgstr "CATEGORIES"

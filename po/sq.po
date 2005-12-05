@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -181,7 +181,7 @@ msgstr ""
 #: gst/gsterror.c:155
 #, fuzzy
 msgid "Internal GStreamer error: clock problem."
-msgstr "Gabim i brendshëm i GStreamer: problem planifikimi.  Raporto bug."
+msgstr "Gabim i brendshëm i GStreamer: problem kërkimi.  Raporto bug."
 
 #: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
@@ -643,7 +643,7 @@ msgid "empty pipeline not allowed"
 msgstr "nuk lejohet konduktori bosh"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -825,9 +825,9 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GABIM: elementi 'konduktor' nuk u gjet.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "DUKE ZBATUAR pipeline ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:631
 #, fuzzy, c-format
@@ -874,60 +874,65 @@ msgid " ns.\n"
 msgstr " ns).\n"
 
 #: tools/gst-launch.c:676
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "DUKE ZBATUAR pipeline ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:681
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "DUKE ZBATUAR pipeline ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:686
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "DUKE ZBATUAR pipeline ...\n"
 
-#, fuzzy
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "DUKE ZBATUAR pipeline ...\n"
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"
 
-#, fuzzy
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "DUKE ZBATUAR pipeline ...\n"
-
-#, fuzzy
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "DUKE ZBATUAR pipeline ...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "DUKE ZBATUAR pipeline ...\n"
-
-#, fuzzy
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "DUKE ZBATUAR pipeline ...\n"
-
-#, fuzzy
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "DUKE ZBATUAR pipeline ...\n"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Numri i herëve të përsëritjes së kanalit"
-
-#~ msgid "path list for loading plugins (separated by '%s')"
-#~ msgstr "pozicioni i listës për ngarkimin e plugins (ndarë me '%s')"
-
-#~ msgid "Stream is of the wrong format."
-#~ msgstr "Vazhda është në një format të gabuar."
-
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Duke u përpjekur të zbatohet sidoqoftë.\n"
+#~ msgid "SCHEDULER"
+#~ msgstr "PLANIFIKUES"
 
 #~ msgid "Registry to use"
 #~ msgstr "Regjistri që duhet përdorur"
 
 #~ msgid "REGISTRY"
 #~ msgstr "REGJISTRI"
+
+#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgstr "pozicioni i listës për ngarkimin e plugins (ndarë me '%s')"
+
+#~ msgid "Scheduler to use (default is '%s')"
+#~ msgstr "Planifikuesi që duhet përdorur (i prezgjedhuri është '%s')"
+
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr "Gabim i brendshëm i GStreamer: problem planifikimi.  Raporto bug."
+
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "Vazhda është në një format të gabuar."
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr ""
+#~ "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
+
+#~ msgid " iterations (sum %"
+#~ msgstr " përsëritjet (shuma %"
+
+#~ msgid " ns, average %"
+#~ msgstr " ns, mesatarja %"
+
+#~ msgid " ns, min %"
+#~ msgstr " ns, min %"
+
+#~ msgid " ns, max %"
+#~ msgstr " ns, max %"
+
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "Numri i herëve të përsëritjes së kanalit"
+
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Duke u përpjekur të zbatohet sidoqoftë.\n"
 
 #~ msgid "Added plugin %s with %d %s.\n"
 #~ msgstr "U shtua plugin %s me %d %s.\n"
@@ -951,28 +956,3 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 
 #~ msgid "Loaded %d plugins with %d %s.\n"
 #~ msgstr "U ngarkuan %d plugins me %d %s.\n"
-
-#~ msgid "SCHEDULER"
-#~ msgstr "PLANIFIKUES"
-
-#~ msgid "Scheduler to use (default is '%s')"
-#~ msgstr "Planifikuesi që duhet përdorur (i prezgjedhuri është '%s')"
-
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"
-
-#~ msgid "There is no element present to handle the stream's mime type %s."
-#~ msgstr ""
-#~ "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
-
-#~ msgid " iterations (sum %"
-#~ msgstr " përsëritjet (shuma %"
-
-#~ msgid " ns, average %"
-#~ msgstr " ns, mesatarja %"
-
-#~ msgid " ns, min %"
-#~ msgstr " ns, min %"
-
-#~ msgid " ns, max %"
-#~ msgstr " ns, max %"

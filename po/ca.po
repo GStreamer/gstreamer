@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.9.6\n"
+"Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
-"PO-Revision-Date: 2005-11-28 10:24+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
+"PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
 "MIME-Version: 1.0\n"
@@ -137,7 +137,8 @@ msgstr "S'ha produït un error intern de GStreamer: ha fallat el canvi d'estat."
 
 #: gst/gsterror.c:140
 msgid "Internal GStreamer error: pad problem."
-msgstr "S'ha produït un error intern de GStreamer: problema de separació."
+msgstr ""
+"S'ha produït un error intern de GStreamer: problema de punt de connexió."
 
 #: gst/gsterror.c:142
 msgid "Internal GStreamer error: thread problem."
@@ -630,7 +631,7 @@ msgid "empty pipeline not allowed"
 msgstr "no es permet un conducte buit"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr "S'ha produït un error intern de flux de dades."
 
@@ -812,29 +813,29 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERROR: l'element «conducte» no s'ha trobat.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "POSA EN PAUSA el conducte ...\n"
+msgstr "S'està establint el conducte a EN PAUSA ...\n"
 
 #: tools/gst-launch.c:631
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ERROR: el conducte no es vol posar en pausa.\n"
 
 #: tools/gst-launch.c:636
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: Pipeline can't PREROLL ...\n"
-msgstr "ERROR: el conducte no vol reproduir-se.\n"
+msgstr "ERROR: el conducte no pot PREPARAR-SE.\n"
 
 #: tools/gst-launch.c:639
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
+msgstr "El conducte s'està PREPARANT ...\n"
 
 #: tools/gst-launch.c:643
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
+msgstr "El conducte s'ha PREPARAT ...\n"
 
 #: tools/gst-launch.c:650
 #, c-format
@@ -844,7 +845,7 @@ msgstr "ERROR: el conducte no vol preparar-se.\n"
 #: tools/gst-launch.c:655
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "S'està establint el conducte a REPRODUCCIÓ ...\n"
 
 #: tools/gst-launch.c:658
 #, c-format
@@ -860,14 +861,16 @@ msgid " ns.\n"
 msgstr " ns.\n"
 
 #: tools/gst-launch.c:676
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "POSA EN PAUSA el conducte ...\n"
+msgstr ""
+"S'està establint el conducte a LLEST ...\n"
+"\n"
 
 #: tools/gst-launch.c:681
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "POSA EN PAUSA el conducte ...\n"
+msgstr "S'està establint el conducte a NUL ...\n"
 
 #: tools/gst-launch.c:686
 #, c-format

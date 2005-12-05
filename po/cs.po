@@ -1,15 +1,15 @@
 # Czech translation of gstreamer.
-# Copyright (C) 2004 gst-plugins' COPYRIGHT HOLDER
-# Copyright (C) 2004 Miloslav Trmac <mitr@volny.cz>
+# Copyright (C) 2004, 2005 gstreamer's COPYRIGHT HOLDER
+# Copyright (C) 2004, 2005 Miloslav Trmac <mitr@volny.cz>
 # This file is put in the public domain.
-# Miloslav Trmac <mitr@volny.cz>, 2004.
+# Miloslav Trmac <mitr@volny.cz>, 2004, 2005.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.7pre2\n"
+"Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
-"PO-Revision-Date: 2004-12-27 17:23+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
+"PO-Revision-Date: 2005-04-15 14:36+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -106,7 +106,7 @@ msgstr ""
 #: gst/gstelement.c:278
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "CHYBA: od eleemntu %s: %s\n"
+msgstr "CHYBA: od elementu %s: %s\n"
 
 #: gst/gstelement.c:280
 #, c-format
@@ -181,7 +181,7 @@ msgstr ""
 #: gst/gsterror.c:155
 #, fuzzy
 msgid "Internal GStreamer error: clock problem."
-msgstr "Interní chyba GStreamer: problém s plánovačem. Ohlaste tuto chybu."
+msgstr "Interní chyba GStreamer: problém s posunem. Ohlaste tuto chybu."
 
 #: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
@@ -642,7 +642,7 @@ msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -751,12 +751,12 @@ msgstr "VAROVÁNÍ: element nazvaný '%s' nenalezen.\n"
 #: tools/gst-launch.c:380
 #, fuzzy, c-format
 msgid "Got Message from element \"%s\" (%s): "
-msgstr "CHYBA: od eleemntu %s: %s\n"
+msgstr "CHYBA: od elementu %s: %s\n"
 
 #: tools/gst-launch.c:407
 #, fuzzy, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "CHYBA: od eleemntu %s: %s\n"
+msgstr "CHYBA: od elementu %s: %s\n"
 
 #: tools/gst-launch.c:417
 #, c-format
@@ -825,21 +825,21 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "CHYBA: element 'pipeline' nebyl nalezen.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "SPOUŠTÍM rouru ...\n"
+msgstr ""
 
 # On strike?
 #: tools/gst-launch.c:631
 #, fuzzy, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "chyba: roura nechce hrát.\n"
+msgstr "CHYBA: roura nechce hrát.\n"
 
 # On strike?
 #: tools/gst-launch.c:636
 #, fuzzy, c-format
 msgid "ERROR: Pipeline can't PREROLL ...\n"
-msgstr "chyba: roura nechce hrát.\n"
+msgstr "CHYBA: roura nechce hrát.\n"
 
 #: tools/gst-launch.c:639
 #, c-format
@@ -855,7 +855,7 @@ msgstr ""
 #: tools/gst-launch.c:650
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "chyba: roura nechce hrát.\n"
+msgstr "CHYBA: roura nechce hrát.\n"
 
 #: tools/gst-launch.c:655
 #, c-format
@@ -866,7 +866,7 @@ msgstr ""
 #: tools/gst-launch.c:658
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "chyba: roura nechce hrát.\n"
+msgstr "CHYBA: roura nechce hrát.\n"
 
 #: tools/gst-launch.c:669
 msgid "Execution ended after %"
@@ -877,60 +877,59 @@ msgid " ns.\n"
 msgstr ""
 
 #: tools/gst-launch.c:676
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "SPOUŠTÍM rouru ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:681
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "SPOUŠTÍM rouru ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:686
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "SPOUŠTÍM rouru ...\n"
 
-#, fuzzy
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "SPOUŠTÍM rouru ...\n"
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Zakázat akcelerované instrukce CPU"
 
-#, fuzzy
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "SPOUŠTÍM rouru ...\n"
-
-#, fuzzy
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "SPOUŠTÍM rouru ...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "SPOUŠTÍM rouru ...\n"
-
-#, fuzzy
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "SPOUŠTÍM rouru ...\n"
-
-#, fuzzy
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "SPOUŠTÍM rouru ...\n"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Kolikrát iterovat rouru"
-
-#~ msgid "path list for loading plugins (separated by '%s')"
-#~ msgstr "seznam cest pro načítání modulů (oddělený '%s')"
-
-#~ msgid "Stream is of the wrong format."
-#~ msgstr "Proud je ve špatném formátu."
-
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Přesto se ji pokouším spustit.\n"
+#~ msgid "SCHEDULER"
+#~ msgstr "PLÁNOVAČ"
 
 #~ msgid "Registry to use"
 #~ msgstr "Registr, který používat"
 
 #~ msgid "REGISTRY"
 #~ msgstr "REGISTR"
+
+#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgstr "seznam cest pro načítání modulů (oddělený '%s')"
+
+#~ msgid "Scheduler to use (default is '%s')"
+#~ msgstr "Plánovač, který používat (implicitní je '%s')"
+
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr "Interní chyba GStreamer: problém s plánovačem. Ohlaste tuto chybu."
+
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "Proud je ve špatném formátu."
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr "Není přítomen žádý element pro obsloužení proudu s typem mime %s."
+
+#~ msgid ""
+#~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+#~ "max %s ns).\n"
+#~ msgstr ""
+#~ "Provádění skončilo po %s iteracích (celkem %s ns, průměr %s ns, min %s "
+#~ "ns, max %s ns).\n"
+
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "Kolikrát iterovat rouru"
+
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Přesto se ji pokouším spustit.\n"
 
 #~ msgid "Added plugin %s with %d %s.\n"
 #~ msgstr "Přidán modul %s s %d %s.\n"
@@ -955,22 +954,3 @@ msgstr "SPOUŠTÍM rouru ...\n"
 
 #~ msgid "Loaded %d plugins with %d %s.\n"
 #~ msgstr "Načteno %d modulů s %d %s.\n"
-
-#~ msgid "SCHEDULER"
-#~ msgstr "PLÁNOVAČ"
-
-#~ msgid "Scheduler to use (default is '%s')"
-#~ msgstr "Plánovač, který používat (implicitní je '%s')"
-
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Zakázat akcelerované instrukce CPU"
-
-#~ msgid "There is no element present to handle the stream's mime type %s."
-#~ msgstr "Není přítomen žádý element pro obsloužení proudu s typem mime %s."
-
-#~ msgid ""
-#~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
-#~ "max %s ns).\n"
-#~ msgstr ""
-#~ "Provádění skončilo po %s iteracích (celkem %s ns, průměr %s ns, min %s "
-#~ "ns, max %s ns).\n"

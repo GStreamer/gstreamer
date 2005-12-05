@@ -1,18 +1,20 @@
 # Serbian translation of gstreamer
-# Copyright (C) 2004 Free Software Foundation, Inc.
-# Danilo Segan <dsegan@gmx.net>, 2004.
+# Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+# Danilo Segan <dsegan@gmx.net>, 2004, 2005.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.7.6\n"
+"Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
-"PO-Revision-Date: 2004-03-13 01:47+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
+"PO-Revision-Date: 2005-01-27 16:58+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :    n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
 #: gst/gst.c:270
 msgid "Print the GStreamer version"
@@ -184,7 +186,7 @@ msgstr ""
 #, fuzzy
 msgid "Internal GStreamer error: clock problem."
 msgstr ""
-"Унутрашња грешка у ГСтримеру: неприлика са распоређивачем.  Пријавите грешку."
+"Унутрашња грешка у ГСтримеру: неприлика са тражењем.  Пријавите грешку."
 
 #: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
@@ -650,7 +652,7 @@ msgid "empty pipeline not allowed"
 msgstr "није допуштен празан цевовод"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -694,12 +696,12 @@ msgstr "не могу да вежем %s са %s"
 #: plugins/elements/gstfilesrc.c:938
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr ""
+msgstr "\"%s\" је директоријум."
 
 #: plugins/elements/gstfilesrc.c:945
-#, fuzzy, c-format
+#, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Датотека „%s“ није обична датотека."
+msgstr "Датотека „%s“ је сокет."
 
 #: plugins/elements/gstidentity.c:351
 msgid "Failed after iterations as requested."
@@ -723,9 +725,8 @@ msgid "maximum"
 msgstr "највише"
 
 #: tools/gst-inspect.c:1100
-#, fuzzy
 msgid "Print all elements"
-msgstr "нема елемента „%s“"
+msgstr "Испиши све елементе"
 
 #: tools/gst-launch.c:82
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
@@ -735,7 +736,7 @@ msgstr ""
 #: tools/gst-launch.c:91
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ГРЕШКА: неуспешно рашлањивање xml датотеке „%s“.\n"
+msgstr "ГРЕШКА: неуспешно рашчлањивање xml датотеке „%s“.\n"
 
 #: tools/gst-launch.c:97
 #, c-format
@@ -834,9 +835,9 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ГРЕШКА: елемент „pipeline“ није нађен.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "Покрећем цевовод...\n"
+msgstr ""
 
 #: tools/gst-launch.c:631
 #, fuzzy, c-format
@@ -875,63 +876,32 @@ msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
 
 #: tools/gst-launch.c:669
 msgid "Execution ended after %"
-msgstr "Извршавање завршено након %"
+msgstr ""
 
 #: tools/gst-launch.c:669
-#, fuzzy
 msgid " ns.\n"
-msgstr " ns).\n"
+msgstr ""
 
 #: tools/gst-launch.c:676
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "Покрећем цевовод...\n"
+msgstr ""
 
 #: tools/gst-launch.c:681
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "Покрећем цевовод...\n"
+msgstr ""
 
 #: tools/gst-launch.c:686
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "Покрећем цевовод...\n"
 
-#, fuzzy
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "Покрећем цевовод...\n"
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Искључи убрзане инструкције процесора"
 
-#, fuzzy
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "Покрећем цевовод...\n"
-
-#, fuzzy
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "Покрећем цевовод...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "Покрећем цевовод...\n"
-
-#, fuzzy
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "Покрећем цевовод...\n"
-
-#, fuzzy
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "Покрећем цевовод...\n"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Број покушаја пуштања цевовода"
-
-#, fuzzy
-#~ msgid "path list for loading plugins (separated by '%s')"
-#~ msgstr "списак путања за учитавање додатака (раздвојених са „"
-
-#~ msgid "Stream is of the wrong format."
-#~ msgstr "Ток је погрешног облика."
-
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Ипак покушавам да покренем.\n"
+#~ msgid "SCHEDULER"
+#~ msgstr "РАСПОРЕЂИВАЧ"
 
 #~ msgid "Registry to use"
 #~ msgstr "Користи регистар"
@@ -939,48 +909,56 @@ msgstr "Покрећем цевовод...\n"
 #~ msgid "REGISTRY"
 #~ msgstr "РЕГИСТАР"
 
-#, fuzzy
-#~ msgid "Error loading %s\n"
-#~ msgstr "Грешка при затварању датотеке „%s“."
+#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgstr "списак путања за учитавање додатака (раздвојених са '%s')"
 
-#~ msgid "SCHEDULER"
-#~ msgstr "РАСПОРЕЂИВАЧ"
-
-#, fuzzy
 #~ msgid "Scheduler to use (default is '%s')"
-#~ msgstr "Користи распоређивач („"
+#~ msgstr "Користи распоређивач (подразумева се '%s')"
 
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Искључи убрзане инструкције процесора"
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr ""
+#~ "Унутрашња грешка у ГСтримеру: неприлика са распоређивачем.  Пријавите "
+#~ "грешку."
+
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "Ток је погрешног облика."
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr "Није присутан елемент за баратање током МИМЕ врсте %s."
 
-#~ msgid " iterations (sum %"
-#~ msgstr " покушаја (збир %"
-
-#~ msgid " ns, average %"
-#~ msgstr " ns, просечно %"
-
-#~ msgid " ns, min %"
-#~ msgstr " ns, најмање %"
-
-#~ msgid " ns, max %"
-#~ msgstr " ns, највише %"
-
-#~ msgid "')"
-#~ msgstr "“)"
-
-#~ msgid "' is the default)"
-#~ msgstr "“ је подразумеван)"
-
 #~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+#~ "max %s ns).\n"
 #~ msgstr ""
-#~ "не могу да претворим „%s“ тако да одговара особини „%s“ у елементу „%s“"
+#~ "Извршавање завршено након %s покушаја (збир %s ns, просек %s ns, мин %s "
+#~ "ns, макс %s ns).\n"
 
-#~ msgid "Show plugin details"
-#~ msgstr "Прикажи детаље о додатку"
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "Број покушаја пуштања цевовода"
 
-#~ msgid "Show scheduler details"
-#~ msgstr "Прикажи детаље о распоређивачу"
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Ипак покушавам да покренем.\n"
+
+#~ msgid "Added plugin %s with %d %s.\n"
+#~ msgstr "Придодат додатак %s са %d %s.\n"
+
+#~ msgid "feature"
+#~ msgid_plural "features"
+#~ msgstr[0] "одлика"
+#~ msgstr[1] "одлике"
+#~ msgstr[2] "одлика"
+
+#~ msgid "Added path   %s to %s \n"
+#~ msgstr "Додао путању %s ка %s \n"
+
+#~ msgid "Rebuilding %s (%s) ...\n"
+#~ msgstr "Обнављам %s (%s) ...\n"
+
+#~ msgid "Trying to load %s ...\n"
+#~ msgstr "Покушавам да учитам %s ...\n"
+
+#~ msgid "Error loading %s\n"
+#~ msgstr "Грешка при учитавању датотеке „%s“.\n"
+
+#~ msgid "Loaded %d plugins with %d %s.\n"
+#~ msgstr "Учитано %d додатака са %d %s.\n"

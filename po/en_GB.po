@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -176,7 +176,7 @@ msgstr ""
 #: gst/gsterror.c:155
 #, fuzzy
 msgid "Internal GStreamer error: clock problem."
-msgstr "Internal GStreamer error: scheduler problem.  File a bug."
+msgstr "Internal GStreamer error: seek problem.  File a bug."
 
 #: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
@@ -636,7 +636,7 @@ msgid "empty pipeline not allowed"
 msgstr "empty pipeline not allowed"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -818,9 +818,9 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERROR: the 'pipeline' element wasn't found.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "RUNNING pipeline ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:631
 #, fuzzy, c-format
@@ -867,54 +867,25 @@ msgid " ns.\n"
 msgstr " ns).\n"
 
 #: tools/gst-launch.c:676
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "RUNNING pipeline ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:681
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "RUNNING pipeline ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:686
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "RUNNING pipeline ...\n"
 
-#, fuzzy
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "RUNNING pipeline ...\n"
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Disable accelerated CPU instructions"
 
-#, fuzzy
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "RUNNING pipeline ...\n"
-
-#, fuzzy
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "RUNNING pipeline ...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "RUNNING pipeline ...\n"
-
-#, fuzzy
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "RUNNING pipeline ...\n"
-
-#, fuzzy
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "RUNNING pipeline ...\n"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Number of times to iterate pipeline"
-
-#~ msgid "path list for loading plugins (separated by '%s')"
-#~ msgstr "path list for loading plugins (separated by '%s')"
-
-#~ msgid "Stream is of the wrong format."
-#~ msgstr "Stream is of the wrong format."
-
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Trying to run anyway.\n"
+#~ msgid "SCHEDULER"
+#~ msgstr "SCHEDULER"
 
 #~ msgid "Registry to use"
 #~ msgstr "Registry to use"
@@ -922,21 +893,31 @@ msgstr "RUNNING pipeline ...\n"
 #~ msgid "REGISTRY"
 #~ msgstr "REGISTRY"
 
-#, fuzzy
-#~ msgid "Error loading %s\n"
-#~ msgstr "Error closing file \"%s\"."
-
-#~ msgid "SCHEDULER"
-#~ msgstr "SCHEDULER"
+#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgstr "path list for loading plugins (separated by '%s')"
 
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Scheduler to use (default is '%s')"
 
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Disable accelerated CPU instructions"
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr "Internal GStreamer error: scheduler problem.  File a bug."
+
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "Stream is of the wrong format."
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr "There is no element present to handle the stream's mime type %s."
+
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+
+#~ msgid "Show plugin details"
+#~ msgstr "Show plugin details"
+
+#~ msgid "Show scheduler details"
+#~ msgstr "Show scheduler details"
 
 #~ msgid " iterations (sum %"
 #~ msgstr " iterations (sum %"
@@ -950,16 +931,11 @@ msgstr "RUNNING pipeline ...\n"
 #~ msgid " ns, max %"
 #~ msgstr " ns, max %"
 
-#~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "Number of times to iterate pipeline"
 
-#~ msgid "Show plugin details"
-#~ msgstr "Show plugin details"
-
-#~ msgid "Show scheduler details"
-#~ msgstr "Show scheduler details"
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Trying to run anyway.\n"
 
 #~ msgid "')"
 #~ msgstr "')"

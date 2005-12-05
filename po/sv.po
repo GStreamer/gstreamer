@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
 "PO-Revision-Date: 2004-12-21 14:49+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -186,7 +186,7 @@ msgstr ""
 #: gst/gsterror.c:155
 #, fuzzy
 msgid "Internal GStreamer error: clock problem."
-msgstr "Internt GStreamer-fel: schedulerarproblem. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: spolningsproblem. Skicka en felrapport."
 
 #: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
@@ -652,7 +652,7 @@ msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -836,9 +836,9 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEL: \"pipeline\"-elementet hittades inte.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "KÖR rörledning...\n"
+msgstr ""
 
 #: tools/gst-launch.c:631
 #, fuzzy, c-format
@@ -887,61 +887,68 @@ msgid " ns.\n"
 msgstr " ns).\n"
 
 #: tools/gst-launch.c:676
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "KÖR rörledning...\n"
+msgstr ""
 
 #: tools/gst-launch.c:681
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "KÖR rörledning...\n"
+msgstr ""
 
 #: tools/gst-launch.c:686
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "KÖR rörledning...\n"
 
-#, fuzzy
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "KÖR rörledning...\n"
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Inaktivera accelererade processorinstruktioner"
 
-#, fuzzy
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "KÖR rörledning...\n"
+#~ msgid ""
+#~ "Comma-separated list of plugins to preload in addition to the list stored "
+#~ "in envronment variable GST_PLUGIN_PATH"
+#~ msgstr ""
+#~ "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
+#~ "som lagras i miljövariabeln GST_PLUGIN_PATH"
 
-#, fuzzy
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "KÖR rörledning...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "KÖR rörledning...\n"
-
-#, fuzzy
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "KÖR rörledning...\n"
-
-#, fuzzy
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "KÖR rörledning...\n"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Antalet gånger som rörledningen ska itereras"
-
-#~ msgid "path list for loading plugins (separated by '%s')"
-#~ msgstr "sökvägslista för inläsning av insticksmoduler (åtskild av \"%s\")"
-
-#~ msgid "Stream is of the wrong format."
-#~ msgstr "Flödet är av fel format."
-
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Försöker köra ändå.\n"
+#~ msgid "SCHEDULER"
+#~ msgstr "SCHEMALÄGGARE"
 
 #~ msgid "Registry to use"
 #~ msgstr "Register att använda"
 
 #~ msgid "REGISTRY"
 #~ msgstr "REGISTER"
+
+#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgstr "sökvägslista för inläsning av insticksmoduler (åtskild av \"%s\")"
+
+#~ msgid "Scheduler to use (default is '%s')"
+#~ msgstr "Schemaläggare att använda (standardvärdet är \"%s\")"
+
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr "Internt GStreamer-fel: schedulerarproblem. Skicka en felrapport."
+
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "Flödet är av fel format."
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr ""
+#~ "Det finns inget element tillgängligt för att hantera flödets mime-typ %s."
+
+#~ msgid ""
+#~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+#~ "max %s ns).\n"
+#~ msgstr ""
+#~ "Körning avslutades efter %s iterationer (totalt %s ns, medel %s ns, min %"
+#~ "s ns, max %s ns).\n"
+
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "Antalet gånger som rörledningen ska itereras"
+
+# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Försöker köra ändå.\n"
 
 #~ msgid "Added plugin %s with %d %s.\n"
 #~ msgstr "Lade till insticksmodul %s med %d %s.\n"
@@ -965,33 +972,6 @@ msgstr "KÖR rörledning...\n"
 
 #~ msgid "Loaded %d plugins with %d %s.\n"
 #~ msgstr "Läste in %d insticksmoduler med %d %s.\n"
-
-#~ msgid "SCHEDULER"
-#~ msgstr "SCHEMALÄGGARE"
-
-#~ msgid "Scheduler to use (default is '%s')"
-#~ msgstr "Schemaläggare att använda (standardvärdet är \"%s\")"
-
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Inaktivera accelererade processorinstruktioner"
-
-#~ msgid "There is no element present to handle the stream's mime type %s."
-#~ msgstr ""
-#~ "Det finns inget element tillgängligt för att hantera flödets mime-typ %s."
-
-#~ msgid ""
-#~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
-#~ "max %s ns).\n"
-#~ msgstr ""
-#~ "Körning avslutades efter %s iterationer (totalt %s ns, medel %s ns, min %"
-#~ "s ns, max %s ns).\n"
-
-#~ msgid ""
-#~ "Comma-separated list of plugins to preload in addition to the list stored "
-#~ "in envronment variable GST_PLUGIN_PATH"
-#~ msgstr ""
-#~ "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
-#~ "som lagras i miljövariabeln GST_PLUGIN_PATH"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #~ msgid " iterations (sum %"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -180,8 +180,7 @@ msgstr ""
 #: gst/gsterror.c:155
 #, fuzzy
 msgid "Internal GStreamer error: clock problem."
-msgstr ""
-"Dahili GStreamer hatası: zamanlandırıcı sorunu.  Hata bildiriminde bulunun."
+msgstr "Dahili GStreamer hatası: atlama sorunu.  Hata bildiriminde bulunun."
 
 #: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
@@ -644,7 +643,7 @@ msgid "empty pipeline not allowed"
 msgstr "boş boruhattına izin verilmiyor"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -826,9 +825,9 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "HATA: 'pipeline' öğesi bulunamadı.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "BORUHATTI çalıştırılıyor ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:631
 #, fuzzy, c-format
@@ -875,55 +874,37 @@ msgid " ns.\n"
 msgstr " ns) \n"
 
 #: tools/gst-launch.c:676
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "BORUHATTI çalıştırılıyor ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:681
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "BORUHATTI çalıştırılıyor ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:686
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "BORUHATTI çalıştırılıyor ...\n"
 
-#, fuzzy
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "BORUHATTI çalıştırılıyor ...\n"
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Hızlandırılmış CPU işlemlerini kapat"
 
-#, fuzzy
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "BORUHATTI çalıştırılıyor ...\n"
-
-#, fuzzy
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "BORUHATTI çalıştırılıyor ...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "BORUHATTI çalıştırılıyor ...\n"
-
-#, fuzzy
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "BORUHATTI çalıştırılıyor ...\n"
-
-#, fuzzy
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "BORUHATTI çalıştırılıyor ...\n"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Boruhattının kaç defa tekrarlanacağı"
-
-#, fuzzy
-#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgid "path list for loading plugins (separated by '"
 #~ msgstr "eklenti yüklemek için yol listesi (' ile ayırılmış"
 
-#~ msgid "Stream is of the wrong format."
-#~ msgstr "Akım yanlış biçimde."
+#~ msgid "')"
+#~ msgstr "')"
 
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Gene de çalıştırma deneniyor.\n"
+#~ msgid "Scheduler to use ('"
+#~ msgstr "Kullanılacak zamanlandırıcı ('"
+
+#~ msgid "' is the default)"
+#~ msgstr "' ön tanımlı olanı)"
+
+#~ msgid "SCHEDULER"
+#~ msgstr "ZAMANLANDIRICI"
 
 #~ msgid "Registry to use"
 #~ msgstr "Kullanılacak kayıt"
@@ -931,22 +912,28 @@ msgstr "BORUHATTI çalıştırılıyor ...\n"
 #~ msgid "REGISTRY"
 #~ msgstr "KAYIT"
 
-#, fuzzy
-#~ msgid "Error loading %s\n"
-#~ msgstr "\"%s\" kapatılırken hata."
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr ""
+#~ "Dahili GStreamer hatası: zamanlandırıcı sorunu.  Hata bildiriminde "
+#~ "bulunun."
 
-#~ msgid "SCHEDULER"
-#~ msgstr "ZAMANLANDIRICI"
-
-#, fuzzy
-#~ msgid "Scheduler to use (default is '%s')"
-#~ msgstr "Kullanılacak zamanlandırıcı ('"
-
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Hızlandırılmış CPU işlemlerini kapat"
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "Akım yanlış biçimde."
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr "Akımın %s mime türünü işleyebilecek hiç bir öğe yok."
+
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "\"%1$s\", \"%3$s\" öğesindeki \"%2$s\" özelliğinine uyacak şekilde "
+#~ "dönüştürülemedi"
+
+#~ msgid "Show plugin details"
+#~ msgstr "Eklenti detaylarını göster"
+
+#~ msgid "Show scheduler details"
+#~ msgstr "Zamanlandırıcı detaylarını göster"
 
 #~ msgid " iterations (sum %"
 #~ msgstr " tekrarlar (toplam %"
@@ -960,20 +947,8 @@ msgstr "BORUHATTI çalıştırılıyor ...\n"
 #~ msgid " ns, max %"
 #~ msgstr " ns, en fazla %"
 
-#~ msgid "')"
-#~ msgstr "')"
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "Boruhattının kaç defa tekrarlanacağı"
 
-#~ msgid "' is the default)"
-#~ msgstr "' ön tanımlı olanı)"
-
-#~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr ""
-#~ "\"%1$s\", \"%3$s\" öğesindeki \"%2$s\" özelliğinine uyacak şekilde "
-#~ "dönüştürülemedi"
-
-#~ msgid "Show plugin details"
-#~ msgstr "Eklenti detaylarını göster"
-
-#~ msgid "Show scheduler details"
-#~ msgstr "Zamanlandırıcı detaylarını göster"
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Gene de çalıştırma deneniyor.\n"

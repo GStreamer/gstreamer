@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"POT-Creation-Date: 2005-12-05 14:08+0100\n"
 "PO-Revision-Date: 2004-03-24 11:28+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -181,7 +181,7 @@ msgstr ""
 #: gst/gsterror.c:155
 #, fuzzy
 msgid "Internal GStreamer error: clock problem."
-msgstr "Interne GStreamer-fout: \"scheduler problem\". Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: \"seek problem\". Meld die fout aan asb."
 
 #: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
@@ -647,7 +647,7 @@ msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
@@ -829,9 +829,9 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FOUT: die pyplynelement kon nie gevind word nie.\n"
 
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "LOOP pyplyn ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:631
 #, fuzzy, c-format
@@ -878,55 +878,37 @@ msgid " ns.\n"
 msgstr " ns).\n"
 
 #: tools/gst-launch.c:676
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "LOOP pyplyn ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:681
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "LOOP pyplyn ...\n"
+msgstr ""
 
 #: tools/gst-launch.c:686
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "LOOP pyplyn ...\n"
 
-#, fuzzy
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "LOOP pyplyn ...\n"
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Skakel versnelde SVE-instruksies af"
 
-#, fuzzy
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "LOOP pyplyn ...\n"
-
-#, fuzzy
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "LOOP pyplyn ...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "LOOP pyplyn ...\n"
-
-#, fuzzy
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "LOOP pyplyn ...\n"
-
-#, fuzzy
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "LOOP pyplyn ...\n"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Aantal kere wat pyplyn herhaal moet word"
-
-#, fuzzy
-#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgid "path list for loading plugins (separated by '"
 #~ msgstr "lys van paaie waaruit inproppe gelaai word (geskei met '"
 
-#~ msgid "Stream is of the wrong format."
-#~ msgstr "Stroom het die verkeerde formaat."
+#~ msgid "')"
+#~ msgstr "')"
 
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Probeer om weg te hardloop.\n"
+#~ msgid "Scheduler to use ('"
+#~ msgstr "Skeduleerder om te gebruik ('"
+
+#~ msgid "' is the default)"
+#~ msgstr "' is die verstekwaarde)"
+
+#~ msgid "SCHEDULER"
+#~ msgstr "SKEDULEERDER"
 
 #~ msgid "Registry to use"
 #~ msgstr "Register om te gebruik"
@@ -934,24 +916,29 @@ msgstr "LOOP pyplyn ...\n"
 #~ msgid "REGISTRY"
 #~ msgstr "REGISTER"
 
-#, fuzzy
-#~ msgid "Error loading %s\n"
-#~ msgstr "Fout met toemaak van lêer \"%s\"."
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr ""
+#~ "Interne GStreamer-fout: \"scheduler problem\". Meld die fout aan asb."
 
-#~ msgid "SCHEDULER"
-#~ msgstr "SKEDULEERDER"
-
-#, fuzzy
-#~ msgid "Scheduler to use (default is '%s')"
-#~ msgstr "Skeduleerder om te gebruik ('"
-
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Skakel versnelde SVE-instruksies af"
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "Stroom het die verkeerde formaat."
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr ""
 #~ "Daar is geen element beskikbaar om die stroom se mime-tipe %s te hanteer "
 #~ "nie."
+
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "kon nie \"%s\" omskakel sodat dit pas by eienskap \"%s\" in element \"%s"
+#~ "\" nie"
+
+#~ msgid "Show plugin details"
+#~ msgstr "Vertoon details van inproppe"
+
+#~ msgid "Show scheduler details"
+#~ msgstr "Vertoon details van skeduleerder"
 
 #~ msgid " iterations (sum %"
 #~ msgstr " iterasies (som %"
@@ -965,20 +952,8 @@ msgstr "LOOP pyplyn ...\n"
 #~ msgid " ns, max %"
 #~ msgstr " ns, maks %"
 
-#~ msgid "')"
-#~ msgstr "')"
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "Aantal kere wat pyplyn herhaal moet word"
 
-#~ msgid "' is the default)"
-#~ msgstr "' is die verstekwaarde)"
-
-#~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr ""
-#~ "kon nie \"%s\" omskakel sodat dit pas by eienskap \"%s\" in element \"%s"
-#~ "\" nie"
-
-#~ msgid "Show plugin details"
-#~ msgstr "Vertoon details van inproppe"
-
-#~ msgid "Show scheduler details"
-#~ msgstr "Vertoon details van skeduleerder"
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Probeer om weg te hardloop.\n"
