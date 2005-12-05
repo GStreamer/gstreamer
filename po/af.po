@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.0\n"
+"Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-05 14:08+0100\n"
-"PO-Revision-Date: 2004-03-24 11:28+0200\n"
+"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
 "MIME-Version: 1.0\n"
@@ -28,23 +28,16 @@ msgid "Print available debug categories and exit"
 msgstr "Vertoon beskikbare ontfoutkategorië en stop"
 
 #: gst/gst.c:278
-msgid ""
-"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr ""
-"Verstek ontfoutvlak vanaf 1 (slegs fout) tot 5 (enigiets) of 0 vir geen "
-"afvoer"
+msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr "Verstek ontfoutvlak vanaf 1 (slegs fout) tot 5 (enigiets) of 0 vir geen afvoer"
 
 #: gst/gst.c:280
 msgid "LEVEL"
 msgstr "VLAK"
 
 #: gst/gst.c:282
-msgid ""
-"Comma-separated list of category_name:level pairs to set specific levels for "
-"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr ""
-"Komma-geskeide lys van kategorie_naam:vlak pare om die individuele "
-"kategorieë op te stel. Byvoorbeeld: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr "Komma-geskeide lys van kategorie_naam:vlak pare om die individuele kategorieë op te stel. Byvoorbeeld: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:285
 msgid "LIST"
@@ -64,20 +57,15 @@ msgstr "Aktiveer volledige diagnostiese boodskappe vir inproplaaiing"
 
 #: gst/gst.c:295
 msgid "Colon-separated paths containing plugins"
-msgstr ""
+msgstr "Dubbelpunt-geskeide paaie wat inproppe bevat"
 
 #: gst/gst.c:295
 msgid "PATHS"
 msgstr "PAAIE"
 
 #: gst/gst.c:297
-#, fuzzy
-msgid ""
-"Comma-separated list of plugins to preload in addition to the list stored in "
-"environment variable GST_PLUGIN_PATH"
-msgstr ""
-"Komma-geskeide lys van inproppe om vooraf te laai by die lys gestoor in die "
-"omgewingsveranderlike GST_PLUGIN_PATH"
+msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
+msgstr "Komma-geskeide lys van inproppe om vooraf te laai by die lys gestoor in die omgewingsveranderlike GST_PLUGIN_PATH"
 
 #: gst/gst.c:299
 msgid "PLUGINS"
@@ -89,16 +77,15 @@ msgstr "Moenie segmenteringsfoute tydens inproplaaiing ondervang nie"
 
 #: gst/gst.c:307
 msgid "GStreamer Options"
-msgstr ""
+msgstr "GStreamer Opsies"
 
 #: gst/gst.c:308
-#, fuzzy
 msgid "Show GStreamer Options"
-msgstr "Vertoon die GStreamer weergawe"
+msgstr "Wys GStreamer opsies"
 
 #: gst/gst.c:789
 msgid "Unknown option"
-msgstr ""
+msgstr "Onbekende opsie"
 
 #: gst/gstelement.c:278
 #, c-format
@@ -119,74 +106,56 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer het 'n fout teëgekom in die algemene kernbiblioteek."
 
 #: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
-#, fuzzy
-msgid ""
-"GStreamer developers were too lazy to assign an error code to this error."
-msgstr ""
-"GStreamer ontwikkelaars was te lui om 'n foutkode vir hierdie fout toe te "
-"ken.  Meld asb. die fout aan."
+msgid "GStreamer developers were too lazy to assign an error code to this error."
+msgstr "GStreamer ontwikkelaars was te lui om 'n foutkode vir hierdie fout toe te ken.  "
 
 #: gst/gsterror.c:137
-#, fuzzy
 msgid "Internal GStreamer error: code not implemented."
-msgstr ""
-"Interne GStreamer-fout: \"code not implemented\".  Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: code not implemented."
 
 #: gst/gsterror.c:139
-#, fuzzy
 msgid "Internal GStreamer error: state change failed."
-msgstr ""
-"Interne GStreamer-fout: \"state change failed\". Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: state change failed."
 
 #: gst/gsterror.c:140
-#, fuzzy
 msgid "Internal GStreamer error: pad problem."
-msgstr "Interne GStreamer-fout: \"pad problem.\" Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: pad problem."
 
 #: gst/gsterror.c:142
-#, fuzzy
 msgid "Internal GStreamer error: thread problem."
-msgstr "Interne GStreamer-fout: \"thread problem\".  Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: thread problem."
 
 #: gst/gsterror.c:144
-#, fuzzy
 msgid "Internal GStreamer error: negotiation problem."
-msgstr ""
-"Interne GStreamer-fout: \"negotiation problem\".  Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: negotiation problem."
 
 #: gst/gsterror.c:146
-#, fuzzy
 msgid "Internal GStreamer error: event problem."
-msgstr "Interne GStreamer-fout: \"event problem\". Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: event problem."
 
 #: gst/gsterror.c:148
-#, fuzzy
 msgid "Internal GStreamer error: seek problem."
-msgstr "Interne GStreamer-fout: \"seek problem\". Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: seek problem."
 
 #: gst/gsterror.c:150
-#, fuzzy
 msgid "Internal GStreamer error: caps problem."
-msgstr "Interne GStreamer-fout: \"caps problem\".  Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: caps problem."
 
 #: gst/gsterror.c:151
-#, fuzzy
 msgid "Internal GStreamer error: tag problem."
-msgstr "Interne GStreamer-fout: \"tag problem\". Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: tag problem."
 
 #: gst/gsterror.c:153
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr ""
+msgstr "Jou GStreamer-installasie kort 'n inprop."
 
 #: gst/gsterror.c:155
-#, fuzzy
 msgid "Internal GStreamer error: clock problem."
-msgstr "Interne GStreamer-fout: \"seek problem\". Meld die fout aan asb."
+msgstr "Interne GStreamer-fout: seek problem."
 
 #: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
-msgstr ""
-"GStreamer het 'n fout teëgekom in 'n algemene ondersteuningsbiblioteek."
+msgstr "GStreamer het 'n fout teëgekom in 'n algemene ondersteuningsbiblioteek."
 
 #: gst/gsterror.c:173
 msgid "Could not initialize supporting library."
@@ -197,9 +166,8 @@ msgid "Could not close supporting library."
 msgstr "Kon nie ondersteunende biblioteek toemaak nie."
 
 #: gst/gsterror.c:189
-#, fuzzy
 msgid "GStreamer encountered a general resource error."
-msgstr "GStreamer het 'n fout teëgekom in die algemene kernbiblioteek."
+msgstr "GStreamer het 'n algemene hulpbronfout teëgekom."
 
 #: gst/gsterror.c:193
 msgid "Resource not found."
@@ -246,15 +214,12 @@ msgid "Could not get/set settings from/on resource."
 msgstr "Kon nie hulpbronstellings verkry/verander nie."
 
 #: gst/gsterror.c:219
-#, fuzzy
 msgid "GStreamer encountered a general stream error."
-msgstr "GStreamer het 'n fout teëgekom in die algemene kernbiblioteek."
+msgstr "GStreamer het 'n algemene stroomfout teëgekom."
 
 #: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr ""
-"Element implementeer nie die hantering van hierdie stroom nie.  Meld asb. 'n "
-"fout aan."
+msgstr "Element implementeer nie die hantering van hierdie stroom nie.  Meld asb. 'n fout aan."
 
 #: gst/gsterror.c:226
 msgid "Could not determine type of stream."
@@ -262,14 +227,11 @@ msgstr "Kon nie die stroomtipe bepaal nie."
 
 #: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
-msgstr ""
-"Die stroom is nie van dieselfde tipe as wat deur die element hanteer word "
-"nie."
+msgstr "Die stroom is nie van dieselfde tipe as wat deur die element hanteer word nie."
 
 #: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
-msgstr ""
-"Daar is nie 'n kodek beskikbaar om hierdie stroom se tipe te hanteer nie."
+msgstr "Daar is nie 'n kodek beskikbaar om hierdie stroom se tipe te hanteer nie."
 
 #: gst/gsterror.c:231
 msgid "Could not decode stream."
@@ -326,9 +288,8 @@ msgid "date"
 msgstr "datum"
 
 #: gst/gsttaglist.c:103
-#, fuzzy
 msgid "date the data was created (as a GDate structure)"
-msgstr "die datum waarop die data vasgelê is (in Juliaanse kalenderdae)"
+msgstr "die datum waarop die data geskep is (as 'n GDate-struktuur)"
 
 #: gst/gsttaglist.c:106
 msgid "genre"
@@ -568,11 +529,11 @@ msgstr "toppunt van die album"
 
 #: gst/gsttaglist.c:200
 msgid "language code"
-msgstr ""
+msgstr "taalkode"
 
 #: gst/gsttaglist.c:201
 msgid "language code for this stream, conforming to ISO-639-1"
-msgstr ""
+msgstr "taalkode vir hierdie stroom, wat voldoen aan ISO-639-1"
 
 #: gst/gsttaglist.c:240
 msgid ", "
@@ -647,13 +608,13 @@ msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:820
+#: plugins/elements/gstqueue.c:818
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Interne datavloeifout."
 
 #: libs/gst/base/gstbasesink.c:603
 msgid "Internal data flow problem."
-msgstr ""
+msgstr "Interne datavloeiprobleem."
 
 #: plugins/elements/gstfilesink.c:230
 msgid "No file name specified for writing."
@@ -679,24 +640,24 @@ msgid "No file name specified for reading."
 msgstr "Geen lêernaam om uit te lees nie."
 
 #: plugins/elements/gstfilesrc.c:922
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open file \"%s\" for reading: %s."
-msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."
+msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie. %s."
 
 #: plugins/elements/gstfilesrc.c:931
-#, fuzzy, c-format
+#, c-format
 msgid "could not get info on \"%s\"."
-msgstr "Kon nie %s aan %s verbind nie"
+msgstr "kon nie inligting oor \"%s\" kry nie."
 
 #: plugins/elements/gstfilesrc.c:938
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr ""
+msgstr "\"%s\" is 'n gids."
 
 #: plugins/elements/gstfilesrc.c:945
-#, fuzzy, c-format
+#, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Lêer \"%s\" is nie 'n gewone lêer nie."
+msgstr "Lêer \"%s\" is 'n sok."
 
 #: plugins/elements/gstidentity.c:351
 msgid "Failed after iterations as requested."
@@ -719,9 +680,8 @@ msgid "maximum"
 msgstr "maksimum"
 
 #: tools/gst-inspect.c:1100
-#, fuzzy
 msgid "Print all elements"
-msgstr "geen element \"%s\""
+msgstr "Druk alle elemente"
 
 #: tools/gst-launch.c:82
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
@@ -753,14 +713,14 @@ msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSKUWING: element genaamd '%s' nie gevind nie.\n"
 
 #: tools/gst-launch.c:380
-#, fuzzy, c-format
+#, c-format
 msgid "Got Message from element \"%s\" (%s): "
-msgstr "FOUT: vanaf element %s: %s\n"
+msgstr "Boodskap vanaf element \"%s\" (%s):"
 
 #: tools/gst-launch.c:407
-#, fuzzy, c-format
+#, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "FOUT: vanaf element %s: %s\n"
+msgstr "EOS gekry vanaf element \"%s\".\n"
 
 #: tools/gst-launch.c:417
 #, c-format
@@ -770,7 +730,7 @@ msgstr "ETIKET GEVIND  : gevind by element \"%s\".\n"
 #: tools/gst-launch.c:463
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
-msgstr ""
+msgstr "Element \"%s\" het verander van SPEEL na POUSE, verlaat dus.\n"
 
 #: tools/gst-launch.c:494
 msgid "Output tags (also known as metadata)"
@@ -782,7 +742,7 @@ msgstr "Wys statusinligting en kennisgewings van eienskappe"
 
 #: tools/gst-launch.c:498
 msgid "Output messages"
-msgstr ""
+msgstr "Afvoerboodskappe"
 
 #: tools/gst-launch.c:500
 msgid "Do not output status information of TYPE"
@@ -831,37 +791,37 @@ msgstr "FOUT: die pyplynelement kon nie gevind word nie.\n"
 #: tools/gst-launch.c:626 tools/gst-launch.c:673
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "Stel pyplyn na POUSEER ...\n"
 
 #: tools/gst-launch.c:631
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "FOUT: pyplyn wil nie speel nie.\n"
+msgstr "FOUT: pyplyn wil nie pouseer nie.\n"
 
 #: tools/gst-launch.c:636
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: Pipeline can't PREROLL ...\n"
-msgstr "FOUT: pyplyn wil nie speel nie.\n"
+msgstr "FOUT: pyplyn kan nie VOORROL nie ...\n"
 
 #: tools/gst-launch.c:639
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
+msgstr "Pyplyn doen VOORROLLING ...\n"
 
 #: tools/gst-launch.c:643
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
+msgstr "Pyplyn is VOORGEROL ...\n"
 
 #: tools/gst-launch.c:650
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "FOUT: pyplyn wil nie speel nie.\n"
+msgstr "FOUT: pyplyn wil nie voorrol nie.\n"
 
 #: tools/gst-launch.c:655
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "Pyplyn word gestel na SPEEL ...\n"
 
 #: tools/gst-launch.c:658
 #, c-format
@@ -873,87 +833,20 @@ msgid "Execution ended after %"
 msgstr "Uitvoering het geëindig na %"
 
 #: tools/gst-launch.c:669
-#, fuzzy
 msgid " ns.\n"
-msgstr " ns).\n"
+msgstr " ns.\n"
 
 #: tools/gst-launch.c:676
 #, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr ""
+msgstr "Pyplyn word gestel na GEREED ...\n"
 
 #: tools/gst-launch.c:681
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr ""
+msgstr "Pyplyn word gestel na NULL ...\n"
 
 #: tools/gst-launch.c:686
-#, fuzzy, c-format
+#, c-format
 msgid "FREEING pipeline ...\n"
-msgstr "LOOP pyplyn ...\n"
-
-#~ msgid "Disable accelerated CPU instructions"
-#~ msgstr "Skakel versnelde SVE-instruksies af"
-
-#~ msgid "path list for loading plugins (separated by '"
-#~ msgstr "lys van paaie waaruit inproppe gelaai word (geskei met '"
-
-#~ msgid "')"
-#~ msgstr "')"
-
-#~ msgid "Scheduler to use ('"
-#~ msgstr "Skeduleerder om te gebruik ('"
-
-#~ msgid "' is the default)"
-#~ msgstr "' is die verstekwaarde)"
-
-#~ msgid "SCHEDULER"
-#~ msgstr "SKEDULEERDER"
-
-#~ msgid "Registry to use"
-#~ msgstr "Register om te gebruik"
-
-#~ msgid "REGISTRY"
-#~ msgstr "REGISTER"
-
-#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
-#~ msgstr ""
-#~ "Interne GStreamer-fout: \"scheduler problem\". Meld die fout aan asb."
-
-#~ msgid "Stream is of the wrong format."
-#~ msgstr "Stroom het die verkeerde formaat."
-
-#~ msgid "There is no element present to handle the stream's mime type %s."
-#~ msgstr ""
-#~ "Daar is geen element beskikbaar om die stroom se mime-tipe %s te hanteer "
-#~ "nie."
-
-#~ msgid ""
-#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr ""
-#~ "kon nie \"%s\" omskakel sodat dit pas by eienskap \"%s\" in element \"%s"
-#~ "\" nie"
-
-#~ msgid "Show plugin details"
-#~ msgstr "Vertoon details van inproppe"
-
-#~ msgid "Show scheduler details"
-#~ msgstr "Vertoon details van skeduleerder"
-
-#~ msgid " iterations (sum %"
-#~ msgstr " iterasies (som %"
-
-#~ msgid " ns, average %"
-#~ msgstr " ns, gemiddelde %"
-
-#~ msgid " ns, min %"
-#~ msgstr " ns, min %"
-
-#~ msgid " ns, max %"
-#~ msgstr " ns, maks %"
-
-#~ msgid "Number of times to iterate pipeline"
-#~ msgstr "Aantal kere wat pyplyn herhaal moet word"
-
-#~ msgid "         Trying to run anyway.\n"
-#~ msgstr "         Probeer om weg te hardloop.\n"
+msgstr "pyplyn word VRYGEMAAK ...\n"
