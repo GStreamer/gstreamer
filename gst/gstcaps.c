@@ -872,8 +872,10 @@ gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
   if (caps1 == caps2)
     return TRUE;
 
-  g_return_val_if_fail (caps1 != NULL, FALSE);
-  g_return_val_if_fail (caps2 != NULL, FALSE);
+  /* one of them NULL => they are different (can't be both NULL because
+   * we checked that above) */
+  if (caps1 == NULL || caps2 == NULL)
+    return FALSE;
 
   if (gst_caps_is_fixed (caps1) && gst_caps_is_fixed (caps2))
     return gst_caps_is_equal_fixed (caps1, caps2);

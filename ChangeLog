@@ -1,5 +1,11 @@
 2005-12-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstcaps.c: (gst_caps_is_equal):
+	Comparing NULL against !NULL yields different caps, not a
+	failure.
+
+2005-12-05  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpipeline.c:
 	Fix small typo in docs.
 
