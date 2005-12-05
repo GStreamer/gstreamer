@@ -40,7 +40,7 @@
  *
  * gst_pipeline_new() is used to create a pipeline. when you are done with
  * the pipeline, use gst_object_unref() to free its resources including all
- * added #GstElement objects (if not otherwiese referenced).
+ * added #GstElement objects (if not otherwise referenced).
  */
 
 #include "gst_private.h"
