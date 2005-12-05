@@ -1,3 +1,8 @@
+2005-12-05  Michael Smith  <msmith@fluendo.com>
+
+	* docs/plugins/gst-plugins-good-plugins.args:
+	  Remove args for plugins that aren't in -good.
+
 === release 0.9.7 ===
 
 2005-12-01   <thomas (at) apestaart (dot) org>
