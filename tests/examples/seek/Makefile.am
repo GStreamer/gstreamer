@@ -1,4 +1,8 @@
-examples = seek scrubby
+if HAVE_GTK
+GTK_EXAMPLES=seek scrubby
+endif
+
+examples = $(GTK_EXAMPLES)
 
 noinst_PROGRAMS = $(examples)
 

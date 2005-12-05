@@ -1,3 +1,8 @@
+2005-12-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/examples/seek/Makefile.am:
+	Build fix for when gtk is not available.
+
 2005-12-05  Andy Wingo  <wingo@pobox.com>
 
 	* ext/libvisual/visual.c: (get_buffer):
