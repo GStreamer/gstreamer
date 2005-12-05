@@ -1,3 +1,10 @@
+=== release 0.10.0 ===
+
+2005-12-05   <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	  releasing 0.10.0, "Rocamadour"
+
 2005-12-05  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_get_buffer),
