@@ -21,10 +21,30 @@
  */
 /**
  * SECTION:element-fakesrc
- * @short_description: Push empty (no data) buffers around
+ * @short_description: Generate (meaningless) buffers
  * @see_also: #GstFakeSink
  *
- * Dummy source that generates empty buffers.
+ * <refsect2>
+ * <para>
+ * The fakesrc element is a multipurpose element that can generate
+ * a wide range of buffers and can operate in various scheduling modes.
+ * </para>
+ * <para>
+ * It is mostly used as a testing element, one trivial example for testing
+ * basic <application>GStreamer</application> core functionality is:
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v fakesrc num-buffers=5 ! fakesink
+ * </programlisting>
+ * This pipeline will push 5 empty buffers to the fakesink element and then
+ * sends an EOS.
+ * </para>
+ * <para>
+ * Last reviewed on 2005-12-02 (0.9.7)
+ * </para>
+ * </refsect2>
  */
 
 #include <stdlib.h>
@@ -205,6 +225,8 @@ static gboolean gst_fake_src_stop (GstBaseSrc * basesrc);
 static gboolean gst_fake_src_is_seekable (GstBaseSrc * basesrc);
 
 static gboolean gst_fake_src_event_handler (GstBaseSrc * src, GstEvent * event);
+static void gst_fake_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end);
 static GstFlowReturn gst_fake_src_create (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer ** buf);
 
@@ -320,6 +342,7 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
   gstbase_src_class->start = GST_DEBUG_FUNCPTR (gst_fake_src_start);
   gstbase_src_class->stop = GST_DEBUG_FUNCPTR (gst_fake_src_stop);
   gstbase_src_class->event = GST_DEBUG_FUNCPTR (gst_fake_src_event_handler);
+  gstbase_src_class->get_times = GST_DEBUG_FUNCPTR (gst_fake_src_get_times);
   gstbase_src_class->create = GST_DEBUG_FUNCPTR (gst_fake_src_create);
 }
 
@@ -678,6 +701,33 @@ gst_fake_src_create_buffer (GstFakeSrc * src)
   return buf;
 }
 
+static void
+gst_fake_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
+{
+  GstFakeSrc *src;
+
+  src = GST_FAKE_SRC (basesrc);
+
+  /* sync on the timestamp of the buffer if requested. */
+  if (src->sync) {
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      /* get duration to calculate end time */
+      GstClockTime duration = GST_BUFFER_DURATION (buffer);
+
+      if (GST_CLOCK_TIME_IS_VALID (duration)) {
+        *end = timestamp + duration;
+      }
+      *start = timestamp;
+    }
+  } else {
+    *start = -1;
+    *end = -1;
+  }
+}
+
 static GstFlowReturn
 gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
     GstBuffer ** ret)
@@ -693,9 +743,6 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
 
   if (src->datarate > 0) {
     time = (src->bytes_sent * GST_SECOND) / src->datarate;
-    if (src->sync) {
-      /* gst_element_wait (GST_ELEMENT (src), time); */
-    }
 
     GST_BUFFER_DURATION (buf) =
         GST_BUFFER_SIZE (buf) * GST_SECOND / src->datarate;

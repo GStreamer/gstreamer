@@ -68,8 +68,8 @@ typedef enum {
 /**
  * GstFakeSrcSizeType:
  * @FAKE_SRC_SIZETYPE_EMPTY: create empty buffers
- * @FAKE_SRC_SIZETYPE_FIXED: fixed buffer size
- * @FAKE_SRC_SIZETYPE_RANDOM: random buffer size
+ * @FAKE_SRC_SIZETYPE_FIXED: fixed buffer size (sizemax sized)
+ * @FAKE_SRC_SIZETYPE_RANDOM: random buffer size (sizemin <= size <= sizemax)
  *
  * The different size of the allocated buffers.
  */
