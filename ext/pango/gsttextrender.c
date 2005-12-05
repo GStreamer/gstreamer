@@ -281,7 +281,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   GST_DEBUG ("Allocating AYUV buffer WxH = %dx%d", render->width,
       render->height);
   ret =
-      gst_pad_alloc_buffer (render->srcpad, GST_BUFFER_OFFSET_NONE,
+      gst_pad_alloc_buffer_and_set_caps (render->srcpad, GST_BUFFER_OFFSET_NONE,
       render->width * render->height * 4, caps, &outbuf);
 
   if (ret != GST_FLOW_OK)

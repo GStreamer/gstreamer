@@ -888,8 +888,9 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
 
   /* now copy over the area contained in offset_x,offset_y,
    * frame_width, frame_height */
-  result = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE, out_size,
-      GST_PAD_CAPS (dec->srcpad), &out);
+  result =
+      gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+      out_size, GST_PAD_CAPS (dec->srcpad), &out);
   if (result != GST_FLOW_OK)
     goto no_buffer;
 

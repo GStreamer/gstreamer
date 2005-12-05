@@ -771,7 +771,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   size = sample_count * vd->vi.channels * sizeof (float);
 
   /* alloc buffer for it */
-  result = gst_pad_alloc_buffer (vd->srcpad, GST_BUFFER_OFFSET_NONE,
+  result =
+      gst_pad_alloc_buffer_and_set_caps (vd->srcpad, GST_BUFFER_OFFSET_NONE,
       size, GST_PAD_CAPS (vd->srcpad), &out);
   if (result != GST_FLOW_OK)
     goto done;

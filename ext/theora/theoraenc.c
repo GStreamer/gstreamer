@@ -311,7 +311,7 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
   GstBuffer *buf;
   GstFlowReturn ret;
 
-  ret = gst_pad_alloc_buffer (enc->srcpad,
+  ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
       GST_BUFFER_OFFSET_NONE, packet->bytes, GST_PAD_CAPS (enc->srcpad), &buf);
   if (ret != GST_FLOW_OK)
     goto no_buffer;
@@ -556,7 +556,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       dst_y_stride = enc->info_width;
       dst_uv_stride = enc->info_width / 2;
 
-      ret = gst_pad_alloc_buffer (enc->srcpad,
+      ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
           GST_BUFFER_OFFSET_NONE, y_size * 3 / 2, GST_PAD_CAPS (enc->srcpad),
           &newbuf);
       if (ret != GST_FLOW_OK)

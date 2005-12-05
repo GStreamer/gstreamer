@@ -1,5 +1,17 @@
 2005-12-05  Andy Wingo  <wingo@pobox.com>
 
+	* ext/libvisual/visual.c: (get_buffer):
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer):
+	* ext/pango/gsttextrender.c: (gst_text_render_chain):
+	* ext/theora/theoradec.c: (theora_handle_data_packet):
+	* ext/theora/theoraenc.c: (theora_buffer_from_packet),
+	(theora_enc_chain):
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_video_test_src_create):
+	Update for alloc_buffer changes.
+
+2005-12-05  Andy Wingo  <wingo@pobox.com>
+
 	patch by: Kai Vehmanen <kv2004 eca cx>
 	
 	* gst-libs/gst/rtp/gstbasertpdepayload.c

@@ -438,8 +438,9 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 
 #ifdef USE_PEER_BUFFERALLOC
   res =
-      gst_pad_alloc_buffer (GST_BASE_SRC_PAD (psrc), GST_BUFFER_OFFSET_NONE,
-      newsize, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)), &outbuf);
+      gst_pad_alloc_buffer_and_set_caps (GST_BASE_SRC_PAD (psrc),
+      GST_BUFFER_OFFSET_NONE, newsize, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)),
+      &outbuf);
   if (res != GST_FLOW_OK)
     goto no_buffer;
 #else

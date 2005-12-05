@@ -756,7 +756,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   GstFlowReturn ret;
   GstOggDemux *ogg = pad->ogg;
 
-  ret = gst_pad_alloc_buffer (GST_PAD (pad), GST_BUFFER_OFFSET_NONE,
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (GST_PAD (pad), GST_BUFFER_OFFSET_NONE,
       packet->bytes, GST_PAD_CAPS (pad), &buf);
 
   GST_DEBUG_OBJECT (ogg,

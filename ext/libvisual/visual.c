@@ -346,15 +346,19 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
         !gst_structure_get_int (s, "bpp", &bpp)) {
       ret = FALSE;
     } else {
-      ret = gst_pad_alloc_buffer (visual->srcpad, GST_BUFFER_OFFSET_NONE,
-          height * GST_ROUND_UP_4 (width) * bpp, caps, outbuf);
+      ret =
+          gst_pad_alloc_buffer_and_set_caps (visual->srcpad,
+          GST_BUFFER_OFFSET_NONE, height * GST_ROUND_UP_4 (width) * bpp, caps,
+          outbuf);
     }
 
     if (GST_PAD_CAPS (visual->srcpad) == NULL)
       gst_pad_set_caps (visual->srcpad, caps);
     gst_caps_unref (caps);
   } else {
-    ret = gst_pad_alloc_buffer (visual->srcpad, GST_BUFFER_OFFSET_NONE,
+    ret =
+        gst_pad_alloc_buffer_and_set_caps (visual->srcpad,
+        GST_BUFFER_OFFSET_NONE,
         visual->video->height * GST_ROUND_UP_4 (visual->video->width) *
         visual->video->bpp, GST_PAD_CAPS (visual->srcpad), outbuf);
   }
