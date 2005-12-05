@@ -272,6 +272,58 @@ GST_START_TEST (test_math_scale_random)
 
 GST_END_TEST;
 
+GST_START_TEST (test_guint64_to_gdouble)
+{
+  guint64 from[] = { 0, 1, 100, 10000, G_GINT64_CONSTANT (1) << 63,
+    (G_GINT64_CONSTANT (1) << 63) + 1,
+    (G_GINT64_CONSTANT (1) << 63) + (G_GINT64_CONSTANT (1) << 62)
+  };
+  gdouble to[] = { 0., 1., 100., 10000., 9223372036854775808.,
+    9223372036854775809., 13835058055282163712.
+  };
+  gdouble tolerance[] = { 0., 0., 0., 0., 0., 1., 1. };
+  gint i;
+  gdouble result;
+  gdouble delta;
+
+  for (i = 0; i < G_N_ELEMENTS (from); ++i) {
+    result = gst_util_guint64_to_gdouble (from[i]);
+    delta = ABS (to[i] - result);
+    fail_unless (delta <= tolerance[i],
+        "Could not convert %d: %" G_GUINT64_FORMAT
+        " -> %f, got %f instead, delta of %e with tolerance of %e",
+        i, from[i], to[i], result, delta, tolerance[i]);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_gdouble_to_guint64)
+{
+  gdouble from[] = { 0., 1., 100., 10000., 9223372036854775808.,
+    9223372036854775809., 13835058055282163712.
+  };
+  guint64 to[] = { 0, 1, 100, 10000, G_GINT64_CONSTANT (1) << 63,
+    (G_GINT64_CONSTANT (1) << 63) + 1,
+    (G_GINT64_CONSTANT (1) << 63) + (G_GINT64_CONSTANT (1) << 62)
+  };
+  guint64 tolerance[] = { 0, 0, 0, 0, 0, 1, 1 };
+  gint i;
+  gdouble result;
+  guint64 delta;
+
+  for (i = 0; i < G_N_ELEMENTS (from); ++i) {
+    result = gst_util_gdouble_to_guint64 (from[i]);
+    delta = ABS (to[i] - result);
+    fail_unless (delta <= tolerance[i],
+        "Could not convert %f: %" G_GUINT64_FORMAT
+        " -> %d, got %d instead, delta of %e with tolerance of %e",
+        i, from[i], to[i], result, delta, tolerance[i]);
+  }
+}
+
+GST_END_TEST;
+
 Suite *
 gst_utils_suite (void)
 {
@@ -284,6 +336,8 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_math_scale);
   tcase_add_test (tc_chain, test_math_scale_uint64);
   tcase_add_test (tc_chain, test_math_scale_random);
+  tcase_add_test (tc_chain, test_guint64_to_gdouble);
+  tcase_add_test (tc_chain, test_gdouble_to_guint64);
   return s;
 }
 
