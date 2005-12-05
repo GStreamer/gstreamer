@@ -1,26 +1,26 @@
 
-GStreamer: Release notes for GStreamer Python bindings 0.9.7 "Mon Chien N'a Pas De Nez"
+GStreamer: Release notes for GStreamer Python bindings 0.10.0 "Reblochon"
         
 
-The GStreamer team is petrified to announce a new release
-in the 0.9.x development series of the
+
+The GStreamer team is proud to announce a new release
+in the 0.10.x stable series of the
 GStreamer Python Bindings.
 
 
-The 0.9.x series is a development series and not recommended for end users.
+The 0.10.x series is a stable series targeted at end users.
 It is not API or ABI compatible with the stable 0.8.x series.
 It is, however, parallel installable with the 0.8.x series.
+
 
   
 Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * Updates for API changes
 
 Bugs fixed in this release
     
-      * 322250 : Remove *_full wrappers
 
 Download
 
@@ -52,5 +52,4 @@ Contributors to this release
     
       * Andy Wingo
       * Edward Hervey
-      * Thomas Vander Stichele
  

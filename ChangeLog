@@ -1,3 +1,10 @@
+=== release 0.10.0 ===
+
+2005-12-05   <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	  releasing 0.10.0, "Reblochon"
+
 2005-12-05  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs: (alloc_buffer_and_set_caps): 
