@@ -411,7 +411,9 @@ gst_colorspace_chain (GstPad * pad, GstData * _data)
     lcs_format_buffer_size (lcs_converter_get_dest_format (space->converter),
         space->width, space->height, &size);
 
-    outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE, size);
+    outbuf =
+        gst_pad_alloc_buffer_and_set_caps (space->srcpad,
+        GST_BUFFER_OFFSET_NONE, size);
 
     lcs_convert_auto (space->converter,
         GST_BUFFER_DATA (buf),

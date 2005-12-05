@@ -580,7 +580,8 @@ gst_hermes_colorspace_chain (GstPad * pad, GstData * _data)
     g_critical ("input size is smaller than expected");
   }
 
-  outbuf = gst_pad_alloc_buffer (space->srcpad, GST_BUFFER_OFFSET_NONE,
+  outbuf =
+      gst_pad_alloc_buffer_and_set_caps (space->srcpad, GST_BUFFER_OFFSET_NONE,
       space->src_size);
 
   Hermes_ConverterCopy (space->h_handle,

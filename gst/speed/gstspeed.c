@@ -686,7 +686,7 @@ speed_chain (GstPad * pad, GstBuffer * in_buf)
       filter->sample_size;
 
   result =
-      gst_pad_alloc_buffer (filter->srcpad, -1, out_size,
+      gst_pad_alloc_buffer_and_set_caps (filter->srcpad, -1, out_size,
       GST_PAD_CAPS (filter->srcpad), &out_buf);
 
   if (result != GST_FLOW_OK) {

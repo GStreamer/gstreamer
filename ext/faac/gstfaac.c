@@ -434,9 +434,9 @@ gst_faac_sink_event (GstPad * pad, GstEvent * event)
       /* flush first */
       ret = TRUE;
       do {
-        if (gst_pad_alloc_buffer (faac->srcpad, GST_BUFFER_OFFSET_NONE,
-                faac->bytes, GST_PAD_CAPS (faac->srcpad),
-                &outbuf) == GST_FLOW_OK) {
+        if (gst_pad_alloc_buffer_and_set_caps (faac->srcpad,
+                GST_BUFFER_OFFSET_NONE, faac->bytes,
+                GST_PAD_CAPS (faac->srcpad), &outbuf) == GST_FLOW_OK) {
           gint ret_size;
 
           if ((ret_size = faacEncEncode (faac->handle, NULL, 0,
@@ -556,7 +556,8 @@ gst_faac_chain (GstPad * pad, GstBuffer * inbuf)
           (size - in_size) / size);
     }
 
-    result = gst_pad_alloc_buffer (faac->srcpad, GST_BUFFER_OFFSET_NONE,
+    result =
+        gst_pad_alloc_buffer_and_set_caps (faac->srcpad, GST_BUFFER_OFFSET_NONE,
         faac->bytes, GST_PAD_CAPS (faac->srcpad), &outbuf);
     if (result != GST_FLOW_OK)
       goto done;

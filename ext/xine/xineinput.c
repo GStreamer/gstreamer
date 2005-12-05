@@ -168,7 +168,7 @@ gst_xine_input_get (GstPad * pad)
   }
 
   buf =
-      gst_pad_alloc_buffer (xine->srcpad, GST_BUFFER_OFFSET_NONE,
+      gst_pad_alloc_buffer_and_set_caps (xine->srcpad, GST_BUFFER_OFFSET_NONE,
       xine->blocksize);
   GST_BUFFER_OFFSET (buf) = position;
   real_size =

@@ -1,3 +1,15 @@
+2005-12-05  Andy Wingo  <wingo@pobox.com>
+
+	* ext/faac/gstfaac.c: (gst_faac_sink_event), (gst_faac_chain):
+	* ext/faad/gstfaad.c: (gst_faad_chain):
+	* ext/hermes/gsthermescolorspace.c: (gst_hermes_colorspace_chain):
+	* ext/lcs/gstcolorspace.c: (gst_colorspace_chain):
+	* ext/xine/xineinput.c: (gst_xine_input_get):
+	* gst/colorspace/gstcolorspace.c: (gst_colorspace_chain):
+	* gst/speed/gstspeed.c: (speed_chain):
+	* gst/videocrop/gstvideocrop.c: (gst_video_crop_chain): Update for
+	alloc_buffer changes.
+
 2005-12-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/Makefile.am:
