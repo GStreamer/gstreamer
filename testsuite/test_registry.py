@@ -35,7 +35,7 @@ class RegistryTest(TestCase):
 
     def testPluginList(self):
         names = map(lambda p: p.get_name(), self.plugins)
-        self.failUnless('gstcoreelements' in names)
+        self.failUnless('staticelements' in names)
 
     def testGetPathList(self):
         # FIXME: this returns an empty list; probably due to core;

@@ -1,3 +1,8 @@
+2005-12-05  Andy Wingo  <wingo@pobox.com>
+
+	* testsuite/test_registry.py (RegistryTest.testPluginList): Look
+	for staticelements, not gstcoreelements.
+
 === release 0.9.7 ===
 
 2005-12-01   <thomas (at) apestaart (dot) org>
