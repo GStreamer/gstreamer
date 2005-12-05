@@ -1,15 +1,17 @@
 
-GStreamer: Release notes for GStreamer Base Plug-ins 0.9.7 "Mi Perro No Tiene Ninguna Nariz"
+GStreamer: Release notes for GStreamer Base Plug-ins 0.10.0 "Mont-d'or"
         
 
-The GStreamer team is petrified to announce a new release
-in the 0.9.x development series of the
+
+The GStreamer team is proud to announce a new release
+in the 0.10.x stable series of the
 GStreamer Base Plug-ins.
 
 
-The 0.9.x series is a development series and not recommended for end users.
+The 0.10.x series is a stable series targeted at end users.
 It is not API or ABI compatible with the stable 0.8.x series.
 It is, however, parallel installable with the 0.8.x series.
+
 
 
 This module contains a set of reference plugins, base classes for other
@@ -53,18 +55,11 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * ximagesink and xvimagesink updates and interactive test
-      * added pango
-      * rename net to netbuffer library
-      * rtp element renaming
-      * stream selector fixes
 
 Bugs fixed in this release
     
-      * 319618 : [decodebin] some ogg videos don't play
-      * 320644 : RTP packetizer does't set the packet timestamps correctly
-      * 322388 : xvimagesink force-aspect-ratio=True always displays squar...
-      * 322704 : oggdemux typefind list leak
+      * 319172 : gstreamer-plugins-base-0.9.pc doesn't export linking flags
+      * 323017 : While(1) loop with sleep(0) in basertpdepayload.c
 
 Download
 
@@ -94,12 +89,11 @@ Applications
   
 Contributors to this release
     
+      * 
       * Andy Wingo
-      * Edward Hervey
       * Jan Schmidt
-      * Julien Moutte
-      * Michael Smith
-      * Thomas Vander Stichele
+      * Kai Vehmanen
+      * Sebastien Cote
       * Tim-Philipp Müller
       * Wim Taymans
  

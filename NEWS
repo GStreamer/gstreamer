@@ -1,4 +1,9 @@
-This is GStreamer Base Plug-ins 0.9.7, "Mi Perro No Tiene Ninguna Nariz".
+This is GStreamer Base Plug-ins 0.10.0, "Mont-d'or"
+
+Bugs fixed since 0.9.7:
+    
+      * 319172 : gstreamer-plugins-base-0.9.pc doesn't export linking flags
+      * 323017 : While(1) loop with sleep(0) in basertpdepayload.c
   
 Changes since 0.9.6:
     
