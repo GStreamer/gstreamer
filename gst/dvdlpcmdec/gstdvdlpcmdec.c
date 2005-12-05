@@ -464,7 +464,7 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
       GstBuffer *outbuf;
       GstCaps *bufcaps = GST_PAD_CAPS (dvdlpcmdec->srcpad);
 
-      ret = gst_pad_alloc_buffer (dvdlpcmdec->srcpad, 0,
+      ret = gst_pad_alloc_buffer_and_set_caps (dvdlpcmdec->srcpad, 0,
           samples * 3, bufcaps, &outbuf);
 
       if (ret != GST_FLOW_OK)

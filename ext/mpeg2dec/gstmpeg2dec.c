@@ -423,8 +423,9 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
 
   if (mpeg2dec->format == MPEG2DEC_FORMAT_I422) {
     ret =
-        gst_pad_alloc_buffer (mpeg2dec->srcpad, GST_BUFFER_OFFSET_NONE,
-        size * 2, GST_PAD_CAPS (mpeg2dec->srcpad), &outbuf);
+        gst_pad_alloc_buffer_and_set_caps (mpeg2dec->srcpad,
+        GST_BUFFER_OFFSET_NONE, size * 2, GST_PAD_CAPS (mpeg2dec->srcpad),
+        &outbuf);
     if (ret != GST_FLOW_OK)
       goto no_buffer;
 
@@ -436,8 +437,9 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
 
   } else {
     ret =
-        gst_pad_alloc_buffer (mpeg2dec->srcpad, GST_BUFFER_OFFSET_NONE,
-        (size * 3) / 2, GST_PAD_CAPS (mpeg2dec->srcpad), &outbuf);
+        gst_pad_alloc_buffer_and_set_caps (mpeg2dec->srcpad,
+        GST_BUFFER_OFFSET_NONE, (size * 3) / 2, GST_PAD_CAPS (mpeg2dec->srcpad),
+        &outbuf);
     if (ret != GST_FLOW_OK)
       goto no_buffer;
 
@@ -464,7 +466,7 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
 done:
   if (ret != GST_FLOW_OK) {
     outbuf = NULL;              /* just to asure NULL return, looking the path
-                                   above it happens only when gst_pad_alloc_buffer
+                                   above it happens only when gst_pad_alloc_buffer_and_set_caps
                                    fails to alloc outbf */
   }
   *obuf = outbuf;

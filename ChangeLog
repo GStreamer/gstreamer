@@ -1,5 +1,15 @@
 2005-12-05  Andy Wingo  <wingo@pobox.com>
 
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_push):
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_alloc_buffer):
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain_raw):
+	* gst/iec958/ac3iec.c: (ac3iec_chain_raw):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream),
+	(gst_rmdemux_parse_packet): Update for alloc_buffer changes.
+
+2005-12-05  Andy Wingo  <wingo@pobox.com>
+
 	* ext/mad/gstid3tag.c (plugin_init): Remove id3tag -- there's just
 	id3demux and id3mux now. Fixes #323199.
 

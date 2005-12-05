@@ -1498,8 +1498,9 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 
         /* will attach the caps to the buffer */
         result =
-            gst_pad_alloc_buffer (mad->srcpad, 0, nsamples * mad->channels * 2,
-            GST_PAD_CAPS (mad->srcpad), &outbuffer);
+            gst_pad_alloc_buffer_and_set_caps (mad->srcpad, 0,
+            nsamples * mad->channels * 2, GST_PAD_CAPS (mad->srcpad),
+            &outbuffer);
         if (result != GST_FLOW_OK) {
           /* Head for the exit, dropping samples as we go */
           GST_LOG ("Skipping frame synthesis due to pad_alloc return value");

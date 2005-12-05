@@ -1367,7 +1367,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     if (stream->extra_data_size > 0) {
       GstBuffer *buffer;
 
-      if ((ret = gst_pad_alloc_buffer
+      if ((ret = gst_pad_alloc_buffer_and_set_caps
               (stream->pad, GST_BUFFER_OFFSET_NONE, stream->extra_data_size,
                   stream->caps, &buffer))
           != GST_FLOW_OK) {
@@ -1743,8 +1743,10 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
 
   if ((rmdemux->offset + packet_size) > stream->seek_offset &&
       stream && stream->pad) {
-    if ((ret = gst_pad_alloc_buffer (stream->pad, GST_BUFFER_OFFSET_NONE,
-                packet_size, stream->caps, &buffer)) != GST_FLOW_OK) {
+    if ((ret =
+            gst_pad_alloc_buffer_and_set_caps (stream->pad,
+                GST_BUFFER_OFFSET_NONE, packet_size, stream->caps,
+                &buffer)) != GST_FLOW_OK) {
       GST_WARNING_OBJECT (rmdemux, "failed to alloc src buffer for stream %d",
           id);
       return ret;

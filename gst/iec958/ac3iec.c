@@ -312,8 +312,9 @@ ac3iec_chain_raw (GstPad * pad, GstBuffer * buf)
       GstCaps *bufcaps = GST_PAD_CAPS (ac3iec->src);
 
       /* Create a new buffer, and copy the frame data into it. */
-      ret = gst_pad_alloc_buffer (ac3iec->src, 0, AC3P_IEC_FRAME_SIZE,
-          bufcaps, &new);
+      ret =
+          gst_pad_alloc_buffer_and_set_caps (ac3iec->src, 0,
+          AC3P_IEC_FRAME_SIZE, bufcaps, &new);
       if (ret != GST_FLOW_OK)
         goto buffer_alloc_failed;
 

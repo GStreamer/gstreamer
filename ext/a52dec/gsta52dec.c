@@ -292,8 +292,9 @@ gst_a52dec_push (GstA52Dec * a52dec,
     return GST_FLOW_ERROR;
   }
 
-  result = gst_pad_alloc_buffer (srcpad, 0, 256 * chans * (SAMPLE_WIDTH / 8),
-      GST_PAD_CAPS (srcpad), &buf);
+  result =
+      gst_pad_alloc_buffer_and_set_caps (srcpad, 0,
+      256 * chans * (SAMPLE_WIDTH / 8), GST_PAD_CAPS (srcpad), &buf);
   if (result != GST_FLOW_OK)
     return result;
 
