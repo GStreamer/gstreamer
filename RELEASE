@@ -1,25 +1,20 @@
 
-GStreamer: Release notes for GStreamer 0.9.7 "My Dog Has No Nose"
+GStreamer: Release notes for GStreamer 0.10.0 "Maroilles"
         
 
-The GStreamer team is petrified to announce a new release
-in the 0.9.x development series of the
+
+The GStreamer team is proud to announce a new release
+in the 0.10.x stable series of the
 core of the GStreamer streaming media framework.
 
 
-The 0.9.x series is a development series and not recommended for end users.
+The 0.10.x series is a stable series targeted at end users.
 It is not API or ABI compatible with the stable 0.8.x series.
 It is, however, parallel installable with the 0.8.x series.
 
 
-
-This release is a pre-release for the new 0.10 stable series.
-
-The major/minor has been bumped to 0.10 - update your pkg-config magic if
-you're developing applications..
-
-
-The main focus of the 0.9 series is to make GStreamer threadsafe.
+The 0.10.x series has been reworked for threadsafety.  It also features
+various feature additions and enchancements.
 
 
 This module, gstreamer, only contains core functionality.
@@ -43,24 +38,13 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * bumped major/minor to 0.10
-      * API cleanup
-      * PluginFeature and TypeFind leak fixes
-      * cleaned up source tree
-      * added plugin documentation for core elements
-      * fixes for stripped core
+      * new Chinese/Traditional translation
 
 Bugs fixed in this release
     
-      * 320529 : [API] gst_event_new_segment mentions " stream_time " as an ...
-      * 321917 : quicktime with two video tracks and extra foo, makes tote...
-      * 322257 : Fix gstnet library name
-      * 322427 : gst-compprep aborts with 'double free or corruption'
-      * 322429 : Filesink seeking problem
-      * 322626 : Strings in gst-launch.c adn gstdebug.c are horrid
-      * 322708 : gst_plugin_load_file leaks a reference to a GstPlugin
-      * 322751 : gst_ghost_pad_get_target borks on pads without target
-      * 322842 : GStreamer-CRITICAL in GstBaseSink and GstBaseTransform
+      * 322874 : [PAD] pad_alloc_buffer should not call set_caps
+      * 323222 : GStreamer 0.9.7 still checks in dirs containing 0.9
+      * 323250 : [collectpads] debug category should be called 'collectpad...
 
 Download
 
@@ -88,26 +72,21 @@ will create more lists as necessary.
         
 Applications
 
-At this point, ports of existing applications to 0.9 are still experimental.
-A patch for Totem is maintained at
-
-http://bugzilla.gnome.org/show_bug.cgi?id=313086.
+At this point, ports of existing applications to 0.10 are still experimental.
+Totem HEAD has a configure option to build the 0.10 backend.
 A patch for Rhythmbox is maintained at
 
 http://bugzilla.gnome.org/show_bug.cgi?id=309609.
-Jamboree has a branch with the tag "jamboree-gst-0.9" that works against
-GStreamer 0.9.
-Flumotion has been mostly ported to 0.9 as well.
+Jamboree builds against GStreamer 0.10.
+Flumotion has been ported to 0.10 as well.
 
   
 Contributors to this release
     
       * 
       * Andy Wingo
-      * Edward Hervey
-      * Jan Schmidt
+      * Funda Wang
       * Michael Smith
-      * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans

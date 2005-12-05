@@ -1,4 +1,4 @@
-This is GStreamer 0.9.7, "My Dog Has No Nose".
+This is GStreamer 0.10.0, "Maroilles".
 
 Changes from the 0.8 series to 0.10 series:
 
@@ -40,6 +40,16 @@ Changes from the 0.8 series to 0.10 series:
 
       * Addition of base classes and helper functions in the core to abstract
         away the harder parts of plugin development.
+
+Changes since 0.9.7:
+
+      * added Traditional Chinese translation
+
+Bugs fixed since 0.9.7:
+    
+      * 322874 : [PAD] pad_alloc_buffer should not call set_caps
+      * 323222 : GStreamer 0.9.7 still checks in dirs containing 0.9
+      * 323250 : [collectpads] debug category should be called 'collectpad...
 
 Changes since 0.9.6:
     

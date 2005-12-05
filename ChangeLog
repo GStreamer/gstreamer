@@ -1,3 +1,10 @@
+=== release 0.10.0 ===
+
+2005-12-05   <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	  releasing 0.10.0, "Maroilles"
+
 2005-12-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	submitted by: Funda Wang <fundawang@linux.net.cn>
