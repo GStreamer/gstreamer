@@ -218,17 +218,17 @@ typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
 typedef gboolean		(*GstPadEventFunction)		(GstPad *pad, GstEvent *event);
 
 
-/* deprecate me, check range should use seeking query */
+/* FIXME: 0.11: deprecate me, check range should use seeking query */
 /**
  * GstPadCheckGetRangeFunction:
  * @pad: a #GstPad
  *
  * Check if @pad can be activated in pull mode.
  *
- * Returns: TRUE if the pad can operate in pull mode.
+ * This function will be deprecated after 0.10; use the seeking query to check
+ * if a pad can support random access.
  *
- * Deprecated: use the seeking query to check if a pad can support
- * random access.
+ * Returns: TRUE if the pad can operate in pull mode.
  */
 typedef gboolean		(*GstPadCheckGetRangeFunction)	(GstPad *pad);
 
