@@ -54,8 +54,8 @@ gdouble         gst_util_guint64_to_gdouble     (guint64 value);
  * Returns: @value converted to a #guint64.
  */
 #ifdef WIN32
-#define         gst_gdouble_to_guint64(v)       gst_util_gdouble_to_guint64(v)
-#define         gst_guint64_to_gdouble(v)       gst_util_guint64_to_gdouble(v)
+#define         gst_gdouble_to_guint64(value)   gst_util_gdouble_to_guint64(value)
+#define         gst_guint64_to_gdouble(value)   gst_util_guint64_to_gdouble(value)
 #else
 #define         gst_gdouble_to_guint64(value)   ((guint64) (value))
 #define         gst_guint64_to_gdouble(value)   ((gdouble) (value))

@@ -1,3 +1,12 @@
+2005-12-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* docs/libs/tmpl/gstdataprotocol.sgml:
+	* docs/random/thomasvs/TODO:
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	  fix docs
+
 2005-12-05  Andy Wingo  <wingo@pobox.com>
 
 	patch by: Wim Taymans <wim@fluendo.com>

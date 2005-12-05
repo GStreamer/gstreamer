@@ -1,5 +1,3 @@
 GSTREAMER
 ---------
-- make plugins be documented just like in the plugins modules
-- do not link against them directly for the docs build
 - gst-i18n-lib.h is included funnily from base classes and elements

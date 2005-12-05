@@ -298,18 +298,12 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
 }
 
 /* work around error C2520: conversion from unsigned __int64 to double
- * not implemented, use signed __int64 */
-
-/**
- * gst_util_guint64_to_gdouble:
- * @value: the #guint64 value to convert
+ * not implemented, use signed __int64
  *
- * Convert @value to a gdouble. This is implemented as a function
- * because on some platforms a 64bit int to double conversion is
- * not defined/implemented.
- *
- * Returns: @value converted to a #gdouble.
+ * These are implemented as functions because on some platforms a 64bit int to
+ * double conversion is not defined/implemented.
  */
+
 gdouble
 gst_util_guint64_to_gdouble (guint64 value)
 {
@@ -319,16 +313,6 @@ gst_util_guint64_to_gdouble (guint64 value)
     return (gdouble) ((gint64) value);
 }
 
-/**
- * gst_util_gdouble_to_guint64:
- * @value: the #gdouble value to convert
- *
- * Convert @value to a guint64. This is implemented as a function
- * because on some platforms a double to guint64 conversion is not
- * defined/implemented.
- *
- * Returns: @value converted to a #guint64.
- */
 guint64
 gst_util_gdouble_to_guint64 (gdouble value)
 {
