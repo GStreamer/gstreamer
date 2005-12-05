@@ -1,4 +1,8 @@
-This is GStreamer Bad Plug-ins 0.9.7, "Arrigato Gasuimas Skebisan"
+This is GStreamer Bad Plug-ins 0.10.0, "Camembert"
+
+Bugs fixed since 0.9.7:
+    
+      * 322962 : wavpack plugins don't get built
 
 Changes since 0.9.6:
 
