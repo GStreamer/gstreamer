@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"POT-Creation-Date: 2005-12-05 16:45+0100\n"
 "PO-Revision-Date: 2005-12-03 00:05+0800\n"
 "Last-Translator: Funda Wang <fundawang@linux.net.cn>\n"
 "Language-Team: Chinese (simplified) <i18n-translation@lists.linux.net.cn>\n"
@@ -27,7 +27,8 @@ msgid "Print available debug categories and exit"
 msgstr "打印可用的调试类别并退出"
 
 #: gst/gst.c:278
-msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr "默认调试级别，从 1(仅有错误)到 5(所有内容)，0代表无输出"
 
 #: gst/gst.c:280
@@ -35,7 +36,9 @@ msgid "LEVEL"
 msgstr "级别"
 
 #: gst/gst.c:282
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
 
 #: gst/gst.c:285
@@ -63,7 +66,9 @@ msgid "PATHS"
 msgstr "路径"
 
 #: gst/gst.c:297
-msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
 msgstr ""
 
 #: gst/gst.c:299
@@ -105,7 +110,8 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer 遇到了常规核心库错误。"
 
 #: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
-msgid "GStreamer developers were too lazy to assign an error code to this error."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
 msgstr "GStreamer 开发者未对此错误指派错误代码。"
 
 #: gst/gsterror.c:137
@@ -607,7 +613,7 @@ msgid "empty pipeline not allowed"
 msgstr ""
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr "内部数据流错误。"
 

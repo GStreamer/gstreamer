@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-01 17:25+0100\n"
+"POT-Creation-Date: 2005-12-05 16:45+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -28,16 +28,23 @@ msgid "Print available debug categories and exit"
 msgstr "Vertoon beskikbare ontfoutkategorië en stop"
 
 #: gst/gst.c:278
-msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "Verstek ontfoutvlak vanaf 1 (slegs fout) tot 5 (enigiets) of 0 vir geen afvoer"
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Verstek ontfoutvlak vanaf 1 (slegs fout) tot 5 (enigiets) of 0 vir geen "
+"afvoer"
 
 #: gst/gst.c:280
 msgid "LEVEL"
 msgstr "VLAK"
 
 #: gst/gst.c:282
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Komma-geskeide lys van kategorie_naam:vlak pare om die individuele kategorieë op te stel. Byvoorbeeld: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Komma-geskeide lys van kategorie_naam:vlak pare om die individuele "
+"kategorieë op te stel. Byvoorbeeld: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:285
 msgid "LIST"
@@ -64,8 +71,12 @@ msgid "PATHS"
 msgstr "PAAIE"
 
 #: gst/gst.c:297
-msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
-msgstr "Komma-geskeide lys van inproppe om vooraf te laai by die lys gestoor in die omgewingsveranderlike GST_PLUGIN_PATH"
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Komma-geskeide lys van inproppe om vooraf te laai by die lys gestoor in die "
+"omgewingsveranderlike GST_PLUGIN_PATH"
 
 #: gst/gst.c:299
 msgid "PLUGINS"
@@ -106,8 +117,11 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer het 'n fout teëgekom in die algemene kernbiblioteek."
 
 #: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
-msgid "GStreamer developers were too lazy to assign an error code to this error."
-msgstr "GStreamer ontwikkelaars was te lui om 'n foutkode vir hierdie fout toe te ken.  "
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+"GStreamer ontwikkelaars was te lui om 'n foutkode vir hierdie fout toe te "
+"ken.  "
 
 #: gst/gsterror.c:137
 msgid "Internal GStreamer error: code not implemented."
@@ -155,7 +169,8 @@ msgstr "Interne GStreamer-fout: seek problem."
 
 #: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
-msgstr "GStreamer het 'n fout teëgekom in 'n algemene ondersteuningsbiblioteek."
+msgstr ""
+"GStreamer het 'n fout teëgekom in 'n algemene ondersteuningsbiblioteek."
 
 #: gst/gsterror.c:173
 msgid "Could not initialize supporting library."
@@ -219,7 +234,9 @@ msgstr "GStreamer het 'n algemene stroomfout teëgekom."
 
 #: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "Element implementeer nie die hantering van hierdie stroom nie.  Meld asb. 'n fout aan."
+msgstr ""
+"Element implementeer nie die hantering van hierdie stroom nie.  Meld asb. 'n "
+"fout aan."
 
 #: gst/gsterror.c:226
 msgid "Could not determine type of stream."
@@ -227,11 +244,14 @@ msgstr "Kon nie die stroomtipe bepaal nie."
 
 #: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
-msgstr "Die stroom is nie van dieselfde tipe as wat deur die element hanteer word nie."
+msgstr ""
+"Die stroom is nie van dieselfde tipe as wat deur die element hanteer word "
+"nie."
 
 #: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Daar is nie 'n kodek beskikbaar om hierdie stroom se tipe te hanteer nie."
+msgstr ""
+"Daar is nie 'n kodek beskikbaar om hierdie stroom se tipe te hanteer nie."
 
 #: gst/gsterror.c:231
 msgid "Could not decode stream."
@@ -608,7 +628,7 @@ msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
 
 #: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
-#: plugins/elements/gstqueue.c:818
+#: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr "Interne datavloeifout."
 
