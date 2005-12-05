@@ -1,3 +1,12 @@
+2005-12-05  Andy Wingo  <wingo@pobox.com>
+
+	patch by: Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.c (init_post): remove hard-coded 0.9 location for
+	registries/plugins with a MAJORMINOR one.
+	(plugin_desc): Rename library from gstcoreleements to
+	staticelements. Fixes #323222.
+
 2005-12-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_base_init):

@@ -516,8 +516,8 @@ gst_register_core_elements (GstPlugin * plugin)
 static GstPluginDesc plugin_desc = {
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
-  "gstcoreelements",
-  "core elements of the GStreamer library",
+  "staticelements",
+  "core elements linked into the GStreamer library",
   gst_register_core_elements,
   VERSION,
   GST_LICENSE,
@@ -589,7 +589,7 @@ init_post (void)
     registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
     if (registry_file == NULL) {
       registry_file = g_build_filename (g_get_home_dir (),
-          ".gstreamer-0.9", "registry.xml", NULL);
+          ".gstreamer-" GST_MAJORMINOR, "registry.xml", NULL);
     }
     GST_DEBUG ("Reading registry cache");
     gst_registry_xml_read_cache (default_registry, registry_file);
@@ -623,7 +623,7 @@ init_post (void)
       /* plugins in the user's home directory take precedence over
        * system-installed ones */
       home_plugins = g_build_filename (g_get_home_dir (),
-          ".gstreamer-0.9", "plugins", NULL);
+          ".gstreamer-" GST_MAJORMINOR, "plugins", NULL);
       gst_registry_scan_path (default_registry, home_plugins);
       g_free (home_plugins);
 
