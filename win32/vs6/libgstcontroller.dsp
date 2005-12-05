@@ -108,6 +108,10 @@ SOURCE=..\..\libs\gst\controller\gstinterpolation.c
 
 SOURCE=..\..\libs\gst\controller\lib.c
 # End Source File
+# Begin Source File
+
+SOURCE=..\common\libgstcontroller.def
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

@@ -172,7 +172,11 @@
 #define HAVE_WIN32 1
 
 /* library dir */
-#define LIBDIR PREFIX "\\lib"
+#ifdef _DEBUG
+#  define LIBDIR PREFIX "\\debug\\lib"
+#else
+#  define LIBDIR PREFIX "\\lib"
+#endif
 
 /* gettext locale dir */
 #define LOCALEDIR PREFIX "\\share\\locale"
@@ -196,7 +200,11 @@
 #undef PACKAGE_VERSION
 
 /* Define the plugin directory */
-#define PLUGINDIR PREFIX "\\lib\\gstreamer-0.10"
+#ifdef _DEBUG
+#  define PLUGINDIR PREFIX "\\debug\\lib\\gstreamer-0.10"
+#else
+#  define PLUGINDIR PREFIX "\\lib\\gstreamer-0.10"
+#endif
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS

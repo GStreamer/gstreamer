@@ -1,3 +1,12 @@
+2005-12-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Sebastien Moutte
+
+	* win32/MANIFEST:
+	* win32/common/config.h.in:
+	* win32/vs6/libgstcontroller.dsp:
+	  win32 build fixes
+
 2005-12-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstcaps.c: (gst_caps_is_equal):
