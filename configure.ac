@@ -6,7 +6,7 @@ AC_INIT
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-good, GST_PLUGINS_GOOD_VERSION, 0, 10, 0, 0,
+AS_VERSION(gst-plugins-good, GST_PLUGINS_GOOD_VERSION, 0, 10, 0, 1,
     GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
