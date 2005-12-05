@@ -1,3 +1,9 @@
+2005-12-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_base_init):
+	  Change debug category to 'collectpads' from 'collect_pads'
+	  (fixes #323250).
+
 2005-12-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Sebastien Moutte

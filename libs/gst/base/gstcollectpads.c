@@ -85,7 +85,7 @@ GST_BOILERPLATE (GstCollectPads, gst_collect_pads, GstObject, GST_TYPE_OBJECT)
 
      static void gst_collect_pads_base_init (gpointer g_class)
 {
-  GST_DEBUG_CATEGORY_INIT (collect_pads_debug, "collect_pads", 0,
+  GST_DEBUG_CATEGORY_INIT (collect_pads_debug, "collectpads", 0,
       "GstCollectPads");
 }
 
