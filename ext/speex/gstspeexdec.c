@@ -478,7 +478,9 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
       if (dec->header->nb_channels == 2)
         speex_decode_stereo (dec->output, dec->frame_size, &dec->stereo);
 
-      if ((res = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+      if ((res =
+              gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
+                  GST_BUFFER_OFFSET_NONE,
                   dec->frame_size * dec->header->nb_channels * 2,
                   GST_PAD_CAPS (dec->srcpad), &outbuf)) != GST_FLOW_OK)
         return res;

@@ -285,8 +285,10 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
               gst_multipart_find_pad_by_mime (multipart,
               multipart->parsing_mime, &created);
           if (srcpad != NULL) {
-            ret = gst_pad_alloc_buffer (srcpad->pad, GST_BUFFER_OFFSET_NONE,
-                datalen, GST_PAD_CAPS (srcpad->pad), &outbuf);
+            ret =
+                gst_pad_alloc_buffer_and_set_caps (srcpad->pad,
+                GST_BUFFER_OFFSET_NONE, datalen, GST_PAD_CAPS (srcpad->pad),
+                &outbuf);
             if (ret != GST_FLOW_OK) {
               GST_WARNING_OBJECT (multipart, "failed allocating a %d bytes "
                   "buffer", datalen);

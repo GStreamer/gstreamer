@@ -461,8 +461,9 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   headerlen = strlen (header);
   newlen = headerlen + GST_BUFFER_SIZE (best->buffer);
 
-  ret = gst_pad_alloc_buffer (mux->srcpad, GST_BUFFER_OFFSET_NONE, newlen,
-      GST_PAD_CAPS (mux->srcpad), &newbuf);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (mux->srcpad, GST_BUFFER_OFFSET_NONE,
+      newlen, GST_PAD_CAPS (mux->srcpad), &newbuf);
   if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (mux, "failed allocating a %d bytes buffer", newlen);
     g_free (header);

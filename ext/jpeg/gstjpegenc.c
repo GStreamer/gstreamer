@@ -411,8 +411,10 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (jpegenc, "got buffer of %u bytes", size);
 
-  ret = gst_pad_alloc_buffer (jpegenc->srcpad, GST_BUFFER_OFFSET_NONE,
-      jpegenc->bufsize, GST_PAD_CAPS (jpegenc->srcpad), &outbuf);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (jpegenc->srcpad,
+      GST_BUFFER_OFFSET_NONE, jpegenc->bufsize, GST_PAD_CAPS (jpegenc->srcpad),
+      &outbuf);
 
   if (ret != GST_FLOW_OK)
     goto done;

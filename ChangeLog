@@ -1,3 +1,28 @@
+2005-12-05  Andy Wingo  <wingo@pobox.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_chain):
+	* ext/flac/gstflacdec.c: (gst_flacdec_write):
+	* ext/flac/gstflacenc.c: (gst_flacenc_write_callback):
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_chain):
+	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_chain):
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_chain):
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_chain):
+	* ext/ladspa/gstsignalprocessor.c: (gst_signal_processor_process):
+	* ext/libpng/gstpngdec.c: (user_info_callback), (gst_pngdec_task):
+	* ext/speex/gstspeexdec.c: (speex_dec_chain):
+	* ext/speex/gstspeexenc.c: (gst_speexenc_chain):
+	* gst/auparse/gstauparse.c: (gst_auparse_chain):
+	* gst/flx/gstflxdec.c: (gst_flxdec_chain):
+	* gst/goom/gstgoom.c: (gst_goom_chain):
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_push_vorbis_codec_priv_data),
+	(gst_matroska_demux_add_wvpk_header):
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_chain):
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_collected):
+	* gst/videomixer/videomixer.c: (gst_videomixer_collected):
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_chain): Update for
+	alloc_buffer changes.
+
 2005-12-05  Michael Smith  <msmith@fluendo.com>
 
 	* docs/plugins/gst-plugins-good-plugins.args:

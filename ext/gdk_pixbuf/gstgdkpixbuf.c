@@ -329,8 +329,9 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstData * _data)
         gst_pad_set_explicit_caps (filter->srcpad, caps);
       }
 
-      outbuf = gst_pad_alloc_buffer (filter->srcpad, GST_BUFFER_OFFSET_NONE,
-          filter->image_size);
+      outbuf =
+          gst_pad_alloc_buffer_and_set_caps (filter->srcpad,
+          GST_BUFFER_OFFSET_NONE, filter->image_size);
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
       GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
 

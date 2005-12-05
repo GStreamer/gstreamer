@@ -2005,7 +2005,7 @@ gst_matroska_demux_push_vorbis_codec_priv_data (GstMatroskaDemux * demux,
 
   for (i = 0; i < 2; i++) {
     length = p[i + 1];
-    if (gst_pad_alloc_buffer (stream->pad, GST_BUFFER_OFFSET_NONE,
+    if (gst_pad_alloc_buffer_and_set_caps (stream->pad, GST_BUFFER_OFFSET_NONE,
             length, stream->caps, &priv) == GST_FLOW_OK) {
       memcpy (GST_BUFFER_DATA (priv), &p[offset], length);
 
@@ -2016,8 +2016,8 @@ gst_matroska_demux_push_vorbis_codec_priv_data (GstMatroskaDemux * demux,
     offset += length;
   }
   length = stream->codec_priv_size - offset;
-  if (gst_pad_alloc_buffer (stream->pad, GST_BUFFER_OFFSET_NONE, length,
-          stream->caps, &priv) == GST_FLOW_OK) {
+  if (gst_pad_alloc_buffer_and_set_caps (stream->pad, GST_BUFFER_OFFSET_NONE,
+          length, stream->caps, &priv) == GST_FLOW_OK) {
     memcpy (GST_BUFFER_DATA (priv), &p[offset], length);
     ret = gst_pad_push (stream->pad, priv);
     if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
@@ -2063,8 +2063,8 @@ gst_matroska_demux_add_wvpk_header (GstMatroskaTrackContext * stream,
 
   /* block_samples, flags and crc are already in the buffer */
   newlen = block_length + sizeof (Wavpack4Header) - 12;
-  if (gst_pad_alloc_buffer (stream->pad, GST_BUFFER_OFFSET_NONE, newlen,
-          stream->caps, &newbuf) != GST_FLOW_OK) {
+  if (gst_pad_alloc_buffer_and_set_caps (stream->pad, GST_BUFFER_OFFSET_NONE,
+          newlen, stream->caps, &newbuf) != GST_FLOW_OK) {
     return TRUE;                /* not an error, pad might not be linked */
   }
 

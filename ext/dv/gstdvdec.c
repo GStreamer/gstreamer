@@ -273,7 +273,7 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
     goto skip;
 
   ret =
-      gst_pad_alloc_buffer (dvdec->srcpad, 0,
+      gst_pad_alloc_buffer_and_set_caps (dvdec->srcpad, 0,
       (720 * dvdec->height) * dvdec->bpp,
       GST_PAD_CAPS (dvdec->srcpad), &outbuf);
   if (ret != GST_FLOW_OK)

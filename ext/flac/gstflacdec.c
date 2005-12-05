@@ -488,9 +488,10 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
     flacdec->frequency = frame->header.sample_rate;
   }
 
-  ret = gst_pad_alloc_buffer (flacdec->srcpad, flacdec->total_samples,
-      samples * channels * ((width + 7) >> 3), GST_PAD_CAPS (flacdec->srcpad),
-      &outbuf);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
+      flacdec->total_samples, samples * channels * ((width + 7) >> 3),
+      GST_PAD_CAPS (flacdec->srcpad), &outbuf);
   if (ret != GST_FLOW_NOT_LINKED && ret != GST_FLOW_OK) {
     GST_DEBUG ("stopping flac decoder engine (%d)", (gint) ret);
     return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;

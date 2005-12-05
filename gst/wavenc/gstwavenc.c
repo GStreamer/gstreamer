@@ -665,8 +665,10 @@ gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
   if (wavenc->flush_header) {
     GstBuffer *outbuf;
 
-    result = gst_pad_alloc_buffer (wavenc->srcpad, GST_BUFFER_OFFSET_NONE,
-        WAV_HEADER_LEN, GST_PAD_CAPS (wavenc->srcpad), &outbuf);
+    result =
+        gst_pad_alloc_buffer_and_set_caps (wavenc->srcpad,
+        GST_BUFFER_OFFSET_NONE, WAV_HEADER_LEN, GST_PAD_CAPS (wavenc->srcpad),
+        &outbuf);
     if (result != GST_FLOW_OK) {
       GST_WARNING_OBJECT (wavenc, "failed when allocating a %d bytes buffer "
           "for headers", WAV_HEADER_LEN);

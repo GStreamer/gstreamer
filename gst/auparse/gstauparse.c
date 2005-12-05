@@ -388,8 +388,9 @@ Samples :
       const guint8 *data = gst_adapter_peek (auparse->adapter, avail);
       GstBuffer *newbuf;
 
-      if ((ret = gst_pad_alloc_buffer (auparse->srcpad, auparse->buffer_offset,
-                  avail, GST_PAD_CAPS (auparse->srcpad),
+      if ((ret =
+              gst_pad_alloc_buffer_and_set_caps (auparse->srcpad,
+                  auparse->buffer_offset, avail, GST_PAD_CAPS (auparse->srcpad),
                   &newbuf)) == GST_FLOW_OK) {
 
         memcpy (GST_BUFFER_DATA (newbuf), data, avail);

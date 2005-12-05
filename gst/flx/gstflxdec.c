@@ -554,7 +554,7 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
             break;
 
           /* create 32 bits output frame */
-          res = gst_pad_alloc_buffer (flxdec->srcpad,
+          res = gst_pad_alloc_buffer_and_set_caps (flxdec->srcpad,
               GST_BUFFER_OFFSET_NONE,
               flxdec->size * 4, GST_PAD_CAPS (flxdec->srcpad), &out);
 

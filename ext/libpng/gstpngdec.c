@@ -192,7 +192,8 @@ user_info_callback (png_structp png_ptr, png_infop info)
   /* Allocate output buffer */
   pngdec->rowbytes = png_get_rowbytes (pngdec->png, pngdec->info);
   buffer_size = pngdec->height * GST_ROUND_UP_4 (pngdec->rowbytes);
-  ret = gst_pad_alloc_buffer (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
       buffer_size, GST_PAD_CAPS (pngdec->srcpad), &buffer);
   if (ret != GST_FLOW_OK) {
     goto beach;
@@ -397,7 +398,8 @@ gst_pngdec_task (GstPad * pad)
   /* Allocate output buffer */
   rowbytes = png_get_rowbytes (pngdec->png, pngdec->info);
   buffer_size = pngdec->height * GST_ROUND_UP_4 (rowbytes);
-  ret = gst_pad_alloc_buffer (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
       buffer_size, GST_PAD_CAPS (pngdec->srcpad), &buffer);
   if (ret != GST_FLOW_OK) {
     goto pause;

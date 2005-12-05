@@ -1044,7 +1044,7 @@ gst_videomixer_loop (GstElement * element)
 
   outsize = ROUND_UP_2 (mix->out_width) * ROUND_UP_2 (mix->out_height) * 4;
 
-  outbuf = gst_pad_alloc_buffer (mix->srcpad, GST_BUFFER_OFFSET_NONE, outsize);
+  outbuf = gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE, outsize);
   switch (mix->background) {
     case VIDEO_MIXER_BACKGROUND_CHECKER:
       gst_videomixer_fill_checker (GST_BUFFER_DATA (outbuf),
@@ -1106,12 +1106,14 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
     mix->out_width = mix->in_width;
     mix->out_height = mix->in_height;
 
-    ret = gst_pad_alloc_buffer (mix->srcpad, GST_BUFFER_OFFSET_NONE, outsize,
-        newcaps, &outbuf);
+    ret =
+        gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
+        outsize, newcaps, &outbuf);
     gst_caps_unref (newcaps);
   } else {                      /* Otherwise we just allocate a buffer from current caps */
-    ret = gst_pad_alloc_buffer (mix->srcpad, GST_BUFFER_OFFSET_NONE, outsize,
-        GST_PAD_CAPS (mix->srcpad), &outbuf);
+    ret =
+        gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
+        outsize, GST_PAD_CAPS (mix->srcpad), &outbuf);
   }
 
   if (ret != GST_FLOW_OK) {

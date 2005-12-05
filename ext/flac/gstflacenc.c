@@ -538,8 +538,8 @@ gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
   if (flacenc->stopped)
     return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 
-  if (gst_pad_alloc_buffer (flacenc->srcpad, flacenc->offset, bytes,
-          GST_PAD_CAPS (flacenc->srcpad), &outbuf) != GST_FLOW_OK) {
+  if (gst_pad_alloc_buffer_and_set_caps (flacenc->srcpad, flacenc->offset,
+          bytes, GST_PAD_CAPS (flacenc->srcpad), &outbuf) != GST_FLOW_OK) {
     return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
   }
 

@@ -409,7 +409,7 @@ gst_pixbufscale_chain (GstPad * pad, GstData * _data)
     return;
   }
 
-  outbuf = gst_pad_alloc_buffer (pixbufscale->srcpad,
+  outbuf = gst_pad_alloc_buffer_and_set_caps (pixbufscale->srcpad,
       GST_BUFFER_OFFSET_NONE, pixbufscale->to_buf_size);
 
   gst_buffer_stamp (outbuf, buf);

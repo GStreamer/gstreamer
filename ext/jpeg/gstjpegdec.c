@@ -815,7 +815,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     dec->caps_framerate_denominator = dec->framerate_denominator;
   }
 
-  ret = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+  ret = gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
       I420_SIZE (width, height), GST_PAD_CAPS (dec->srcpad), &outbuf);
   if (ret != GST_FLOW_OK)
     goto alloc_failed;

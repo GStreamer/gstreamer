@@ -996,7 +996,7 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
       speex_bits_insert_terminator (&speexenc->bits);
       outsize = speex_bits_nbytes (&speexenc->bits);
 
-      ret = gst_pad_alloc_buffer (speexenc->srcpad,
+      ret = gst_pad_alloc_buffer_and_set_caps (speexenc->srcpad,
           GST_BUFFER_OFFSET_NONE, outsize, GST_PAD_CAPS (speexenc->srcpad),
           &outbuf);
 
