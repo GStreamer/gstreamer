@@ -1,3 +1,10 @@
+=== release 0.10.0 ===
+
+2005-12-05   <thomas (at) apestaart (dot) org>
+
+	* configure.ac:
+	  releasing 0.10.0, "Abondance"
+
 2005-12-05  Andy Wingo  <wingo@pobox.com>
 
 	* ext/dv/gstdvdec.c: (gst_dvdec_chain):

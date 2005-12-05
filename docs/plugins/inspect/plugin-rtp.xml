@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.9.7</version>
+  <version>0.10.0</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -48,7 +48,7 @@
       <name>rtpg711pay</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Payloader/Network</class>
-      <description>Payodes PCMU/PCMA audio into a RTP packet</description>
+      <description>Payload-encodes PCMU/PCMA audio into a RTP packet</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
     </element>
     <element>
@@ -62,14 +62,14 @@
       <name>rtpgsmpay</name>
       <longname>RTP GSM Audio Payloader</longname>
       <class>Codec/Payloader/Network</class>
-      <description>Payodes GSM audio into a RTP packet</description>
+      <description>Payload-encodes GSM audio into a RTP packet</description>
       <author>Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
     </element>
     <element>
       <name>rtph263pay</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Payloader/Network</class>
-      <description>Payodes H263 video in RTP packets (RFC 2190)</description>
+      <description>Payload-encodes H263 video in RTP packets (RFC 2190)</description>
       <author>Neil Stratford &lt;neils@vipadia.com&gt;</author>
     </element>
     <element>
@@ -83,7 +83,7 @@
       <name>rtph263ppay</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Payloader/Network</class>
-      <description>Payodes H263+ video in RTP packets (RFC 2429)</description>
+      <description>Payload-encodes H263+ video in RTP packets (RFC 2429)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
@@ -125,7 +125,7 @@
       <name>rtpspeexpay</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Payloader/Network</class>
-      <description>Payodes Speex audio into a RTP packet</description>
+      <description>Payload-encodes Speex audio into a RTP packet</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
     </element>
   </elements>

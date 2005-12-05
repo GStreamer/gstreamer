@@ -1,15 +1,17 @@
 
-GStreamer: Release notes for GStreamer Good Plug-ins 0.9.7 "Mijn Hond Heeft Geen Neus"
+GStreamer: Release notes for GStreamer Good Plug-ins 0.10.0 "Abondance"
         
 
-The GStreamer team is petrified to announce a new release
-in the 0.9.x development series of the
+
+The GStreamer team is proud to announce a new release
+in the 0.10.x stable series of the
 GStreamer Good Plug-ins.
 
 
-The 0.9.x series is a development series and not recommended for end users.
+The 0.10.x series is a stable series targeted at end users.
 It is not API or ABI compatible with the stable 0.8.x series.
 It is, however, parallel installable with the 0.8.x series.
+
 
 
 "Such ingratitude.  After all the times I've saved your life."
@@ -53,19 +55,9 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * effectv elements ported
-      * videoflip updated
-      * multipart ported
-      * dv seeking fixed
-      * rtp elements renamed
 
 Bugs fixed in this release
     
-      * 322377 : udpsrc leaks sockets
-      * 322643 : Incorrect matroska frame default duration
-      * 322645 : Matroska muxer: wrong pixel aspect ratio
-      * 322667 : [jpegenc] leaks input buffer
-      * 322794 : udp plugin linked against gstnet instead of gstnetbuffer
 
 Download
 
@@ -95,11 +87,6 @@ Applications
   
 Contributors to this release
     
-      * Edward Hervey
-      * Jan Schmidt
-      * Julien Moutte
+      * Andy Wingo
       * Michael Smith
-      * Thomas Vander Stichele
-      * Tim-Philipp Müller
-      * Wim Taymans
  
