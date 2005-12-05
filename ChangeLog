@@ -1,5 +1,13 @@
 2005-12-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	submitted by: Funda Wang <fundawang@linux.net.cn>
+
+	* po/LINGUAS:
+	* po/zh_CN.po:
+	  added Chinese (Traditional) translation
+
+2005-12-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/gst/gstreamer-sections.txt:
 	* docs/libs/tmpl/gstdataprotocol.sgml:
 	* docs/random/thomasvs/TODO:
