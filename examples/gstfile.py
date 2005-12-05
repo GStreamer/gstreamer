@@ -160,9 +160,9 @@ class Discoverer(gst.Pipeline):
         print "\tAudio:", time_to_string(self.audiolength), "\tVideo:", time_to_string(self.videolength)
         if self.is_video:
             print "Video :"
-            print "\t%d x %d @ %.2f fps" % (self.videowidth,
+            print "\t%d x %d @ %d/%d fps" % (self.videowidth,
                                             self.videoheight,
-                                            self.videorate)
+                                            self.videorate.num, self.videorate.denom)
             if self.tags.has_key("video-codec"):
                 print "\tCodec :", self.tags.pop("video-codec")
         if self.is_audio:
