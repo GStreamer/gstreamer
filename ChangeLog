@@ -1,3 +1,8 @@
+2005-12-05  Andy Wingo  <wingo@pobox.com>
+
+	* ext/mad/gstid3tag.c (plugin_init): Remove id3tag -- there's just
+	id3demux and id3mux now. Fixes #323199.
+
 2005-12-02  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* ext/amrnb/Makefile.am:
