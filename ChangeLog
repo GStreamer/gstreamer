@@ -1,5 +1,8 @@
 2005-12-05  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.defs: (alloc_buffer_and_set_caps): 
+	Wrapped last pre-0.10 API update (I hope...)
+
 	* examples/gstfile.py: (Discoverer._new_decoded_pad_cb): 
 	Fix for fractional framerates.
 

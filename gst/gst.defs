@@ -3360,6 +3360,18 @@
   )
 )
 
+(define-method alloc_buffer_and_set_caps
+  (of-object "GstPad")
+  (c-name "gst_pad_alloc_buffer_and_set_caps")
+  (return-type "GstFlowReturn")
+  (parameters
+    '("guint64" "offset")
+    '("gint" "size")
+    '("GstCaps*" "caps")
+    '("GstBuffer**" "buf")
+  )
+)
+
 (define-method set_activate_function
   (of-object "GstPad")
   (c-name "gst_pad_set_activate_function")
