@@ -46,18 +46,18 @@ typedef struct _GstRTPHeader
   guint32 csrc[1];              /* optional CSRC list */
 } GstRTPHeader;
 
-#define GST_RTP_HEADER_VERSION(buf)	(((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->version)
-#define GST_RTP_HEADER_PADDING(buf)	(((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->padding)
-#define GST_RTP_HEADER_EXTENSION(buf)	(((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->extension)
-#define GST_RTP_HEADER_CSRC_COUNT(buf)	(((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->csrc_count)
-#define GST_RTP_HEADER_MARKER(buf)	(((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->marker)
+#define GST_RTP_HEADER_VERSION(buf)     (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->version)
+#define GST_RTP_HEADER_PADDING(buf)     (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->padding)
+#define GST_RTP_HEADER_EXTENSION(buf)   (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->extension)
+#define GST_RTP_HEADER_CSRC_COUNT(buf)  (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->csrc_count)
+#define GST_RTP_HEADER_MARKER(buf)      (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->marker)
 #define GST_RTP_HEADER_PAYLOAD_TYPE(buf)(((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->payload_type)
-#define GST_RTP_HEADER_SEQ(buf)		(((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->seq)
-#define GST_RTP_HEADER_TIMESTAMP(buf)	(((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->timestamp)
-#define GST_RTP_HEADER_SSRC(buf)	(((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->ssrc)
-#define GST_RTP_HEADER_CSRC(buf,i)	(((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->csrc[i])
+#define GST_RTP_HEADER_SEQ(buf)         (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->seq)
+#define GST_RTP_HEADER_TIMESTAMP(buf)   (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->timestamp)
+#define GST_RTP_HEADER_SSRC(buf)        (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->ssrc)
+#define GST_RTP_HEADER_CSRC(buf,i)      (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->csrc[i])
 
-#define GST_RTP_HEADER_CSRC_SIZE(buf)	(GST_RTP_HEADER_CSRC_COUNT(buf) * sizeof (guint32))
+#define GST_RTP_HEADER_CSRC_SIZE(buf)   (GST_RTP_HEADER_CSRC_COUNT(buf) * sizeof (guint32))
 
 void
 gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,

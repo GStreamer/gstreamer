@@ -41,26 +41,26 @@ typedef struct _GstAlsaSrc GstAlsaSrc;
 typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
 
 struct _GstAlsaSrc {
-  GstAudioSrc    	src;
+  GstAudioSrc           src;
 
-  gchar			*device;
+  gchar                 *device;
 
-  snd_pcm_t 		*handle;
-  snd_pcm_hw_params_t 	*hwparams;
-  snd_pcm_sw_params_t 	*swparams;
+  snd_pcm_t             *handle;
+  snd_pcm_hw_params_t   *hwparams;
+  snd_pcm_sw_params_t   *swparams;
 
-  snd_pcm_access_t 	access;
-  snd_pcm_format_t 	format;
-  guint 		rate;
-  guint 		channels;
-  gint 			bytes_per_sample;
+  snd_pcm_access_t      access;
+  snd_pcm_format_t      format;
+  guint                 rate;
+  guint                 channels;
+  gint                  bytes_per_sample;
 
-  guint 		buffer_time;
-  guint 		period_time;
-  snd_pcm_uframes_t	buffer_size;
-  snd_pcm_uframes_t	period_size;
+  guint                 buffer_time;
+  guint                 period_time;
+  snd_pcm_uframes_t     buffer_size;
+  snd_pcm_uframes_t     period_size;
 
-  GstAlsaMixer		*mixer;
+  GstAlsaMixer          *mixer;
 };
 
 struct _GstAlsaSrcClass {

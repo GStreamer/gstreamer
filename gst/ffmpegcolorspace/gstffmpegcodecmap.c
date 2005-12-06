@@ -78,33 +78,33 @@ gst_ffmpeg_set_palette (GstCaps * caps, AVCodecContext * context)
  * but I'm too lazy today. Maybe later.
  */
 
-#define GST_FF_VID_CAPS_NEW(mimetype, ...)			\
-    (context != NULL) ?						\
-    gst_caps_new_simple (mimetype,			      	\
-	"width",     G_TYPE_INT,   context->width,	      	\
-	"height",    G_TYPE_INT,   context->height,	  	\
-	"framerate", GST_TYPE_FRACTION, 			\
+#define GST_FF_VID_CAPS_NEW(mimetype, ...)                      \
+    (context != NULL) ?                                         \
+    gst_caps_new_simple (mimetype,                              \
+        "width",     G_TYPE_INT,   context->width,              \
+        "height",    G_TYPE_INT,   context->height,             \
+        "framerate", GST_TYPE_FRACTION,                         \
         (gint) context->frame_rate, (gint) context->frame_rate_base, \
-	__VA_ARGS__, NULL)  					\
-    :	  							\
-    gst_caps_new_simple (mimetype,			      	\
-	"width",     GST_TYPE_INT_RANGE, 1, G_MAXINT,      	\
-	"height",    GST_TYPE_INT_RANGE, 1, G_MAXINT,	      	\
-	"framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,\
-	__VA_ARGS__, NULL)
+        __VA_ARGS__, NULL)                                      \
+    :                                                           \
+    gst_caps_new_simple (mimetype,                              \
+        "width",     GST_TYPE_INT_RANGE, 1, G_MAXINT,           \
+        "height",    GST_TYPE_INT_RANGE, 1, G_MAXINT,           \
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,\
+        __VA_ARGS__, NULL)
 
 /* same for audio - now with channels/sample rate
  */
 
-#define GST_FF_AUD_CAPS_NEW(mimetype, ...)			\
-    (context != NULL) ?					      	\
-    gst_caps_new_simple (mimetype,	      			\
-	"rate", G_TYPE_INT, context->sample_rate,		\
-	"channels", G_TYPE_INT, context->channels,		\
-	__VA_ARGS__, NULL)					\
-    :								\
-    gst_caps_new_simple (mimetype,	      			\
-	__VA_ARGS__, NULL)
+#define GST_FF_AUD_CAPS_NEW(mimetype, ...)                      \
+    (context != NULL) ?                                         \
+    gst_caps_new_simple (mimetype,                              \
+        "rate", G_TYPE_INT, context->sample_rate,               \
+        "channels", G_TYPE_INT, context->channels,              \
+        __VA_ARGS__, NULL)                                      \
+    :                                                           \
+    gst_caps_new_simple (mimetype,                              \
+        __VA_ARGS__, NULL)
 
 /* Convert a FFMPEG Pixel Format and optional AVCodecContext
  * to a GstCaps. If the context is ommitted, no fixed values

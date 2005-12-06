@@ -37,11 +37,11 @@ enum
 /* we tollerate a 10th of a second diff before we start resyncing. This
  * should be enough to compensate for various rounding errors in the timestamp
  * and sample offset position. */
-#define DIFF_TOLERANCE	10
+#define DIFF_TOLERANCE  10
 
-#define DEFAULT_BUFFER_TIME	500 * GST_USECOND
-#define DEFAULT_LATENCY_TIME	10 * GST_USECOND
-#define DEFAULT_PROVIDE_CLOCK	TRUE
+#define DEFAULT_BUFFER_TIME     500 * GST_USECOND
+#define DEFAULT_LATENCY_TIME    10 * GST_USECOND
+#define DEFAULT_PROVIDE_CLOCK   TRUE
 
 enum
 {

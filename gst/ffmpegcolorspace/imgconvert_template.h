@@ -488,7 +488,7 @@ static void ayuv4444_to_rgba32(AVPicture *dst, const AVPicture *src,
         d1 = d;
         s1 = s;
         for(w = width; w > 0; w--) {
-	    a = s1[0];
+            a = s1[0];
             YUV_TO_RGB1_CCIR(s1[2], s1[3]);
 
             YUV_TO_RGB2_CCIR(r, g, b, s1[1]);
@@ -516,12 +516,12 @@ static void rgba32_to_ayuv4444(AVPicture *dst, const AVPicture *src,
     for(y=0;y<height;y++) {
         for(x=0;x<width;x++) {
             RGBA_IN(r, g, b, a, p);
-	    d[0] = a;
+            d[0] = a;
             d[1] = RGB_TO_Y_CCIR(r, g, b);
             d[2] = RGB_TO_U_CCIR(r, g, b, 0);
             d[3] = RGB_TO_V_CCIR(r, g, b, 0);
             p += BPP;
-	    d += 4;
+            d += 4;
         }
         p += src_wrap;
         d += dst_wrap;
@@ -537,7 +537,7 @@ static void rgba32_to_ayuv4444(AVPicture *dst, const AVPicture *src,
 #define bgra32_fcts_done
 
 static void bgra32_to_ayuv4444(AVPicture *dst, const AVPicture *src,
-			       int width, int height)
+                               int width, int height)
 {
   int src_wrap, dst_wrap, x, y;
   int r, g, b, a;
@@ -907,12 +907,12 @@ static void rgb24_to_ayuv4444(AVPicture *dst, const AVPicture *src,
     for(y=0;y<height;y++) {
         for(x=0;x<width;x++) {
             RGB_IN(r, g, b, p);
-	    d[0] = 0xff;
+            d[0] = 0xff;
             d[1] = RGB_TO_Y_CCIR(r, g, b);
             d[2] = RGB_TO_U_CCIR(r, g, b, 0);
             d[3] = RGB_TO_V_CCIR(r, g, b, 0);
             p += BPP;
-	    d += 4;
+            d += 4;
         }
         p += src_wrap;
         d += dst_wrap;
@@ -971,7 +971,7 @@ static void glue(RGB_NAME, _to_pal8)(AVPicture *dst, const AVPicture *src,
 #ifdef RGBA_IN
 
 static int glue(get_alpha_info_, RGB_NAME)(const AVPicture *src,
-					   int width, int height)
+                                           int width, int height)
 {
     const unsigned char *p;
     int src_wrap, ret, x, y;

@@ -64,8 +64,8 @@ struct _GstAudioClockClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType           gst_audio_clock_get_type	(void);
-GstClock*	gst_audio_clock_new		(gchar *name, GstAudioClockGetTimeFunc func,
+GType           gst_audio_clock_get_type        (void);
+GstClock*       gst_audio_clock_new             (gchar *name, GstAudioClockGetTimeFunc func,
                                                  gpointer user_data);
 
 G_END_DECLS

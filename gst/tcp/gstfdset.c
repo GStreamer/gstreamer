@@ -20,8 +20,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#define MIN_POLLFDS	32
-#define INIT_POLLFDS	MIN_POLLFDS
+#define MIN_POLLFDS     32
+#define INIT_POLLFDS    MIN_POLLFDS
 
 #include <sys/poll.h>
 #include <sys/time.h>

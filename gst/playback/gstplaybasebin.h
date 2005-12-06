@@ -25,14 +25,14 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_PLAY_BASE_BIN 		(gst_play_base_bin_get_type())
-#define GST_PLAY_BASE_BIN(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PLAY_BASE_BIN,GstPlayBaseBin))
-#define GST_PLAY_BASE_BIN_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PLAY_BASE_BIN,GstPlayBaseBinClass))
-#define GST_IS_PLAY_BASE_BIN(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PLAY_BASE_BIN))
-#define GST_IS_PLAY_BASE_BIN_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BASE_BIN))
+#define GST_TYPE_PLAY_BASE_BIN          (gst_play_base_bin_get_type())
+#define GST_PLAY_BASE_BIN(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PLAY_BASE_BIN,GstPlayBaseBin))
+#define GST_PLAY_BASE_BIN_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PLAY_BASE_BIN,GstPlayBaseBinClass))
+#define GST_IS_PLAY_BASE_BIN(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PLAY_BASE_BIN))
+#define GST_IS_PLAY_BASE_BIN_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BASE_BIN))
 #define GST_PLAY_BASE_BIN_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PLAY_BASE_BIN, \
-			      GstPlayBaseBinClass))
+                              GstPlayBaseBinClass))
 
 typedef struct _GstPlayBaseBin GstPlayBaseBin;
 typedef struct _GstPlayBaseBinClass GstPlayBaseBinClass;
@@ -49,51 +49,51 @@ typedef struct _GstPlayBaseBinClass GstPlayBaseBinClass;
  */
 typedef struct
 {
-  GstPlayBaseBin *bin;	/* ref to the owner */
+  GstPlayBaseBin *bin;  /* ref to the owner */
 
-  gint		 nstreams;
-  GList		*streaminfo;
+  gint           nstreams;
+  GList         *streaminfo;
 
   /* contained decoded elementary streams */
   struct {
-    gint	 npads;
+    gint         npads;
     GstBin      *bin;
-    GstElement	*preroll;
-    GstElement	*selector;
-    gboolean	 done;
+    GstElement  *preroll;
+    GstElement  *selector;
+    gboolean     done;
 #define NUM_TYPES 3
   } type[NUM_TYPES]; /* AUDIO, VIDEO, TEXT */
 } GstPlayBaseGroup;
 
 struct _GstPlayBaseBin {
-  GstPipeline	 pipeline;
-	
+  GstPipeline    pipeline;
+        
   /* properties */
-  guint64	 queue_size;
-  guint		 queue_threshold;
+  guint64        queue_size;
+  guint          queue_threshold;
 
   /* currently loaded media */
-  gint		 current[NUM_TYPES];
-  gchar 	*uri, *suburi;
-  gboolean	 is_stream;
-  GstElement	*source;
-  GstElement	*decoder;
-  GstElement	*subtitle; /* additional filesrc ! subparse bin */
-  gboolean	 need_rebuild;
+  gint           current[NUM_TYPES];
+  gchar         *uri, *suburi;
+  gboolean       is_stream;
+  GstElement    *source;
+  GstElement    *decoder;
+  GstElement    *subtitle; /* additional filesrc ! subparse bin */
+  gboolean       need_rebuild;
 
   /* group management - using own lock */
-  GMutex	*group_lock;		/* lock and mutex to signal availability of new group */
-  GCond		*group_cond;
-  GstPlayBaseGroup *building_group; 	/* the group that we are constructing */
-  GList		*queued_groups;      	/* the constructed groups, head is the active one */
+  GMutex        *group_lock;            /* lock and mutex to signal availability of new group */
+  GCond         *group_cond;
+  GstPlayBaseGroup *building_group;     /* the group that we are constructing */
+  GList         *queued_groups;         /* the constructed groups, head is the active one */
 };
 
 struct _GstPlayBaseBinClass {
   GstPipelineClass parent_class;
 
   /* virtual fuctions */
-  gboolean (*setup_output_pads)	(GstPlayBaseBin *play_base_bin,
-				 GstPlayBaseGroup *group);
+  gboolean (*setup_output_pads) (GstPlayBaseBin *play_base_bin,
+                                 GstPlayBaseGroup *group);
 };
 
 GType gst_play_base_bin_get_type (void);

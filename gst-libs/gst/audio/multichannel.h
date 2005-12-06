@@ -59,22 +59,22 @@ typedef enum {
  * works with fixed caps, caller should check for that! Caller
  * g_free()s result of the getter. */
 GstAudioChannelPosition *
-	gst_audio_get_channel_positions	(GstStructure *str);
-void	gst_audio_set_channel_positions	(GstStructure *str,
-					 const GstAudioChannelPosition *pos);
+        gst_audio_get_channel_positions (GstStructure *str);
+void    gst_audio_set_channel_positions (GstStructure *str,
+                                         const GstAudioChannelPosition *pos);
 
 /* Sets a (non-fixed) list of possible audio channel positions
  * on a structure (this requires the "channels" property to
  * be fixed!) or on a caps (here, the "channels" property may be
  * unfixed and the caps may even contain multiple structures). */
-void	gst_audio_set_structure_channel_positions_list
-					(GstStructure *str,
-					 const GstAudioChannelPosition *pos,
-					 gint          num_positions);
-void	gst_audio_set_caps_channel_positions_list
-					(GstCaps      *caps,
-					 const GstAudioChannelPosition *pos,
-					 gint          num_positions);
+void    gst_audio_set_structure_channel_positions_list
+                                        (GstStructure *str,
+                                         const GstAudioChannelPosition *pos,
+                                         gint          num_positions);
+void    gst_audio_set_caps_channel_positions_list
+                                        (GstCaps      *caps,
+                                         const GstAudioChannelPosition *pos,
+                                         gint          num_positions);
 
 /* Custom fixate function. Elements that implement some sort of
  * channel conversion algorhithm should use this function for
@@ -83,7 +83,7 @@ void	gst_audio_set_caps_channel_positions_list
  * the return value. The input properties may be (and are supposed
  * to be) unfixed. */
 GstAudioChannelPosition *
-	gst_audio_fixate_channel_positions (GstStructure *str);
+        gst_audio_fixate_channel_positions (GstStructure *str);
 
 G_END_DECLS
 

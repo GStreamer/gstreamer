@@ -42,7 +42,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTI_FD_SINK))
 #define GST_MULTI_FD_SINK_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MULTI_FD_SINK, GstMultiFdSinkClass))
-	
+        
 
 typedef struct _GstMultiFdSink GstMultiFdSink;
 typedef struct _GstMultiFdSinkClass GstMultiFdSinkClass;
@@ -77,12 +77,12 @@ typedef enum
 
 typedef enum
 {
-  GST_CLIENT_STATUS_OK		= 0,
-  GST_CLIENT_STATUS_CLOSED	= 1,
-  GST_CLIENT_STATUS_REMOVED	= 2,
-  GST_CLIENT_STATUS_SLOW	= 3,
-  GST_CLIENT_STATUS_ERROR	= 4,
-  GST_CLIENT_STATUS_DUPLICATE	= 5,
+  GST_CLIENT_STATUS_OK          = 0,
+  GST_CLIENT_STATUS_CLOSED      = 1,
+  GST_CLIENT_STATUS_REMOVED     = 2,
+  GST_CLIENT_STATUS_SLOW        = 3,
+  GST_CLIENT_STATUS_ERROR       = 4,
+  GST_CLIENT_STATUS_DUPLICATE   = 5,
 } GstClientStatus;
 
 /* structure for a client
@@ -116,10 +116,10 @@ typedef struct {
 
 } GstTCPClient;
 
-#define CLIENTS_LOCK_INIT(fdsink)	(g_static_rec_mutex_init(&fdsink->clientslock))
-#define CLIENTS_LOCK_FREE(fdsink)	(g_static_rec_mutex_free(&fdsink->clientslock))
-#define CLIENTS_LOCK(fdsink)		(g_static_rec_mutex_lock(&fdsink->clientslock))
-#define CLIENTS_UNLOCK(fdsink)		(g_static_rec_mutex_unlock(&fdsink->clientslock))
+#define CLIENTS_LOCK_INIT(fdsink)       (g_static_rec_mutex_init(&fdsink->clientslock))
+#define CLIENTS_LOCK_FREE(fdsink)       (g_static_rec_mutex_free(&fdsink->clientslock))
+#define CLIENTS_LOCK(fdsink)            (g_static_rec_mutex_lock(&fdsink->clientslock))
+#define CLIENTS_UNLOCK(fdsink)          (g_static_rec_mutex_unlock(&fdsink->clientslock))
 
 struct _GstMultiFdSink {
   GstBaseSink element;
@@ -127,8 +127,8 @@ struct _GstMultiFdSink {
   guint64 bytes_to_serve; /* how much bytes we must serve */
   guint64 bytes_served; /* how much bytes have we served */
 
-  GStaticRecMutex clientslock;	/* lock to protect the clients list */
-  GList *clients;	/* list of clients we are serving */
+  GStaticRecMutex clientslock;  /* lock to protect the clients list */
+  GList *clients;       /* list of clients we are serving */
   GHashTable *fd_hash;  /* index on fd to client */
 
   GstFDSetMode mode;
@@ -142,32 +142,32 @@ struct _GstMultiFdSink {
   GstTCPProtocol protocol;
   guint mtu;
 
-  GArray *bufqueue;	/* global queue of buffers */
+  GArray *bufqueue;     /* global queue of buffers */
 
-  gboolean running;	/* the thread state */
-  GThread *thread;	/* the sender thread */
+  gboolean running;     /* the thread state */
+  GThread *thread;      /* the sender thread */
 
   GstUnitType unit_type;/* the type of the units */
-  gint units_max;	/* max units to queue */
-  gint units_soft_max;	/* max units a client can lag before recovery starts */
+  gint units_max;       /* max units to queue */
+  gint units_soft_max;  /* max units a client can lag before recovery starts */
   GstRecoverPolicy recover_policy;
-  GstClockTime timeout;	/* max amount of nanoseconds to remain idle */
-  GstSyncMethod sync_method;	/* what method to use for connecting clients */
+  GstClockTime timeout; /* max amount of nanoseconds to remain idle */
+  GstSyncMethod sync_method;    /* what method to use for connecting clients */
 
   /* stats */
-  gint buffers_queued;	/* number of queued buffers */
-  gint bytes_queued;	/* number of queued bytes */
-  gint time_queued;	/* number of queued time */
+  gint buffers_queued;  /* number of queued buffers */
+  gint bytes_queued;    /* number of queued bytes */
+  gint time_queued;     /* number of queued time */
 };
 
 struct _GstMultiFdSinkClass {
   GstBaseSinkClass parent_class;
 
   /* element methods */
-  void 		(*add)    	(GstMultiFdSink *sink, int fd);
-  void 		(*remove) 	(GstMultiFdSink *sink, int fd);
-  void 		(*clear)  	(GstMultiFdSink *sink);
-  GValueArray* 	(*get_stats)  	(GstMultiFdSink *sink, int fd);
+  void          (*add)          (GstMultiFdSink *sink, int fd);
+  void          (*remove)       (GstMultiFdSink *sink, int fd);
+  void          (*clear)        (GstMultiFdSink *sink);
+  GValueArray*  (*get_stats)    (GstMultiFdSink *sink, int fd);
 
   /* vtable */
   gboolean (*init)   (GstMultiFdSink *sink);

@@ -82,16 +82,16 @@ static GstStaticCaps uri_caps = GST_STATIC_CAPS ("text/uri-list");
 
 #define URI_CAPS (gst_static_caps_get(&uri_caps))
 #define BUFFER_SIZE 16          /* If the string is < 16 bytes we're screwed */
-#define INC_BUFFER {							\
-  pos++;								\
-  if (pos == BUFFER_SIZE) {						\
-    pos = 0;								\
-    offset += BUFFER_SIZE;						\
-    data = gst_type_find_peek (tf, offset, BUFFER_SIZE);		\
-    if (data == NULL) return;						\
-  } else {								\
-    data++;								\
-  }									\
+#define INC_BUFFER {                                                    \
+  pos++;                                                                \
+  if (pos == BUFFER_SIZE) {                                             \
+    pos = 0;                                                            \
+    offset += BUFFER_SIZE;                                              \
+    data = gst_type_find_peek (tf, offset, BUFFER_SIZE);                \
+    if (data == NULL) return;                                           \
+  } else {                                                              \
+    data++;                                                             \
+  }                                                                     \
 }
 static void
 uri_type_find (GstTypeFind * tf, gpointer unused)
@@ -144,16 +144,16 @@ uri_type_find (GstTypeFind * tf, gpointer unused)
 /*** application/xml **********************************************************/
 
 #define XML_BUFFER_SIZE 256
-#define XML_INC_BUFFER {						\
-  pos++;								\
-  if (pos == XML_BUFFER_SIZE) {						\
-    pos = 0;								\
-    offset += XML_BUFFER_SIZE;						\
-    data = gst_type_find_peek (tf, offset, XML_BUFFER_SIZE);		\
-    if (data == NULL) return FALSE;					\
-  } else {								\
-    data++;								\
-  }									\
+#define XML_INC_BUFFER {                                                \
+  pos++;                                                                \
+  if (pos == XML_BUFFER_SIZE) {                                         \
+    pos = 0;                                                            \
+    offset += XML_BUFFER_SIZE;                                          \
+    data = gst_type_find_peek (tf, offset, XML_BUFFER_SIZE);            \
+    if (data == NULL) return FALSE;                                     \
+  } else {                                                              \
+    data++;                                                             \
+  }                                                                     \
 }
 
 static gboolean
@@ -354,12 +354,12 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
  * (0.024%) per try. This makes the function for calculating false positives
  *   1 - (1 - ((63 / 2 ^18) ^ GST_MP3_TYPEFIND_MIN_HEADERS)) ^ buffersize)
  * This has the following probabilities of false positives:
- * datasize	          MIN_HEADERS
- * (bytes)	1	2	3	4
- * 4096		62.6%	 0.02%	 0%	 0%
- * 16384	98%	 0.09%	 0%	 0%
- * 1 MiB       100%	 5.88%	 0%	 0%
- * 1 GiB       100%    100%	 1.44%   0%
+ * datasize               MIN_HEADERS
+ * (bytes)      1       2       3       4
+ * 4096         62.6%    0.02%   0%      0%
+ * 16384        98%      0.09%   0%      0%
+ * 1 MiB       100%      5.88%   0%      0%
+ * 1 GiB       100%    100%      1.44%   0%
  * 1 TiB       100%    100%    100%      0.35%
  * This means that the current choice (3 headers by most of the time 4096 byte
  * buffers is pretty safe for now.
@@ -469,7 +469,7 @@ static GstStaticCaps mp3_caps = GST_STATIC_CAPS ("audio/mpeg, "
  * random values for typefinding
  * if no more data is available, we will return a probability of
  * (found_headers/TRY_HEADERS) * (MAXIMUM * (TRY_SYNC - bytes_skipped)
- *	  / TRY_SYNC)
+ *        / TRY_SYNC)
  * if found_headers >= MIN_HEADERS
  */
 #define GST_MP3_TYPEFIND_MIN_HEADERS (2)
@@ -681,24 +681,24 @@ wavpack_type_find (GstTypeFind * tf, gpointer unused)
 static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
     "systemstream = (boolean) true, mpegversion = (int) [ 1, 2 ]");
 #define MPEG_SYS_CAPS gst_static_caps_get(&mpeg_sys_caps)
-#define IS_MPEG_HEADER(data)		((((guint8 *)data)[0] == 0x00) &&	\
-					 (((guint8 *)data)[1] == 0x00) &&	\
-					 (((guint8 *)data)[2] == 0x01) &&	\
-					 (((guint8 *)data)[3] == 0xBA))
-#define IS_MPEG_SYSTEM_HEADER(data)	((((guint8 *)data)[0] == 0x00) &&	\
-					 (((guint8 *)data)[1] == 0x00) &&	\
-					 (((guint8 *)data)[2] == 0x01) &&	\
-					 (((guint8 *)data)[3] == 0xBB))
-#define IS_MPEG_PACKET_HEADER(data)	((((guint8 *)data)[0] == 0x00) &&	\
-					 (((guint8 *)data)[1] == 0x00) &&	\
-					 (((guint8 *)data)[2] == 0x01) &&	\
-					 ((((guint8 *)data)[3] & 0x80) == 0x80))
-#define IS_MPEG_PES_HEADER(data)        ((((guint8 *)data)[0] == 0x00) &&	\
-					 (((guint8 *)data)[1] == 0x00) &&	\
-					 (((guint8 *)data)[2] == 0x01) && \
-					 ((((guint8 *)data)[3] == 0xE0) || \
-					  (((guint8 *)data)[3] == 0xC0) || \
-					  (((guint8 *)data)[3] == 0xBD)))
+#define IS_MPEG_HEADER(data)            ((((guint8 *)data)[0] == 0x00) &&       \
+                                         (((guint8 *)data)[1] == 0x00) &&       \
+                                         (((guint8 *)data)[2] == 0x01) &&       \
+                                         (((guint8 *)data)[3] == 0xBA))
+#define IS_MPEG_SYSTEM_HEADER(data)     ((((guint8 *)data)[0] == 0x00) &&       \
+                                         (((guint8 *)data)[1] == 0x00) &&       \
+                                         (((guint8 *)data)[2] == 0x01) &&       \
+                                         (((guint8 *)data)[3] == 0xBB))
+#define IS_MPEG_PACKET_HEADER(data)     ((((guint8 *)data)[0] == 0x00) &&       \
+                                         (((guint8 *)data)[1] == 0x00) &&       \
+                                         (((guint8 *)data)[2] == 0x01) &&       \
+                                         ((((guint8 *)data)[3] & 0x80) == 0x80))
+#define IS_MPEG_PES_HEADER(data)        ((((guint8 *)data)[0] == 0x00) &&       \
+                                         (((guint8 *)data)[1] == 0x00) &&       \
+                                         (((guint8 *)data)[2] == 0x01) && \
+                                         ((((guint8 *)data)[3] == 0xE0) || \
+                                          (((guint8 *)data)[3] == 0xC0) || \
+                                          (((guint8 *)data)[3] == 0xBD)))
 
 static void
 mpeg2_sys_type_find (GstTypeFind * tf, gpointer unused)
@@ -814,15 +814,15 @@ mpeg1_parse_header (GstTypeFind * tf, guint64 offset)
 }
 
 /* calculation of possibility to identify random data as mpeg systemstream:
- * bits that must match in header detection:		32 (or more)
- * chance that random data is identifed:		1/2^32
+ * bits that must match in header detection:            32 (or more)
+ * chance that random data is identifed:                1/2^32
  * chance that GST_MPEG_TYPEFIND_TRY_HEADERS headers are identified:
- *					1/2^(32*GST_MPEG_TYPEFIND_TRY_HEADERS)
+ *                                      1/2^(32*GST_MPEG_TYPEFIND_TRY_HEADERS)
  * chance that this happens in GST_MPEG_TYPEFIND_TRY_SYNC bytes:
- *					1-(1+1/2^(32*GST_MPEG_TYPEFIND_TRY_HEADERS)^GST_MPEG_TYPEFIND_TRY_SYNC)
+ *                                      1-(1+1/2^(32*GST_MPEG_TYPEFIND_TRY_HEADERS)^GST_MPEG_TYPEFIND_TRY_SYNC)
  * for current values:
- *					1-(1+1/2^(32*4)^101024)
- *				      = <some_number>
+ *                                      1-(1+1/2^(32*4)^101024)
+ *                                    = <some_number>
  */
 #define GST_MPEG_TYPEFIND_TRY_HEADERS 4
 #define GST_MPEG_TYPEFIND_TRY_SYNC (100 * 1024) /* 100kB */
@@ -1797,17 +1797,17 @@ start_with_type_find (GstTypeFind * tf, gpointer private)
 }
 
 #define TYPE_FIND_REGISTER_START_WITH(plugin,name,rank,ext,_data,_size,_probability)\
-G_BEGIN_DECLS{								\
-  GstTypeFindData *sw_data = g_new (GstTypeFindData, 1);		\
-  sw_data->data = (gpointer)_data;					\
-  sw_data->size = _size;						\
-  sw_data->probability = _probability;					\
-  sw_data->caps = gst_caps_new_simple (name, NULL);			\
+G_BEGIN_DECLS{                                                          \
+  GstTypeFindData *sw_data = g_new (GstTypeFindData, 1);                \
+  sw_data->data = (gpointer)_data;                                      \
+  sw_data->size = _size;                                                \
+  sw_data->probability = _probability;                                  \
+  sw_data->caps = gst_caps_new_simple (name, NULL);                     \
   if (!gst_type_find_register (plugin, name, rank, start_with_type_find,\
-		      ext, sw_data->caps, sw_data, (GDestroyNotify) (g_free))) {	\
-    gst_caps_unref (sw_data->caps);					\
-    g_free (sw_data);							\
-  }									\
+                      ext, sw_data->caps, sw_data, (GDestroyNotify) (g_free))) {        \
+    gst_caps_unref (sw_data->caps);                                     \
+    g_free (sw_data);                                                   \
+  }                                                                     \
 }G_END_DECLS
 
 /*** same for riff types ***/
@@ -1825,18 +1825,18 @@ riff_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
-#define TYPE_FIND_REGISTER_RIFF(plugin,name,rank,ext,_data)		\
-G_BEGIN_DECLS{								\
-  GstTypeFindData *sw_data = g_new (GstTypeFindData, 1);		\
-  sw_data->data = (gpointer)_data;					\
-  sw_data->size = 4;							\
-  sw_data->probability = GST_TYPE_FIND_MAXIMUM;				\
-  sw_data->caps = gst_caps_new_simple (name, NULL);			\
-  if (!gst_type_find_register (plugin, name, rank, riff_type_find,	\
-		      ext, sw_data->caps, sw_data, (GDestroyNotify) (g_free))) {			\
-    gst_caps_unref (sw_data->caps);					\
-    g_free (sw_data);							\
-  }									\
+#define TYPE_FIND_REGISTER_RIFF(plugin,name,rank,ext,_data)             \
+G_BEGIN_DECLS{                                                          \
+  GstTypeFindData *sw_data = g_new (GstTypeFindData, 1);                \
+  sw_data->data = (gpointer)_data;                                      \
+  sw_data->size = 4;                                                    \
+  sw_data->probability = GST_TYPE_FIND_MAXIMUM;                         \
+  sw_data->caps = gst_caps_new_simple (name, NULL);                     \
+  if (!gst_type_find_register (plugin, name, rank, riff_type_find,      \
+                      ext, sw_data->caps, sw_data, (GDestroyNotify) (g_free))) {                        \
+    gst_caps_unref (sw_data->caps);                                     \
+    g_free (sw_data);                                                   \
+  }                                                                     \
 }G_END_DECLS
 
 /*** plugin initialization ***/

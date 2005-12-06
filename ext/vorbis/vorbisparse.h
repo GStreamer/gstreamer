@@ -45,14 +45,14 @@ typedef struct _GstVorbisParse GstVorbisParse;
 typedef struct _GstVorbisParseClass GstVorbisParseClass;
 
 struct _GstVorbisParse {
-  GstElement		element;
+  GstElement            element;
 
-  GstPad *		sinkpad;
-  GstPad *		srcpad;
+  GstPad *              sinkpad;
+  GstPad *              srcpad;
 
-  guint			packetno;
-  gboolean		streamheader_sent;
-  GList	*		streamheader;
+  guint                 packetno;
+  gboolean              streamheader_sent;
+  GList *               streamheader;
 };
 
 struct _GstVorbisParseClass {

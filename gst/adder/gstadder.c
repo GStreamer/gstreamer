@@ -106,11 +106,11 @@ gst_adder_get_type (void)
   return adder_type;
 }
 
-#define MAKE_FUNC(name,type,ttype,min,max) 			\
-static void name (type *out, type *in, gint bytes) {		\
-  gint i;							\
-  for (i = 0; i < bytes / sizeof (type); i++)			\
-    out[i] = CLAMP ((ttype)out[i] + (ttype)in[i], min, max);	\
+#define MAKE_FUNC(name,type,ttype,min,max)                      \
+static void name (type *out, type *in, gint bytes) {            \
+  gint i;                                                       \
+  for (i = 0; i < bytes / sizeof (type); i++)                   \
+    out[i] = CLAMP ((ttype)out[i] + (ttype)in[i], min, max);    \
 }
 
 MAKE_FUNC (add_int32, gint32, gint64, MIN_INT_32, MAX_INT_32)

@@ -1027,7 +1027,7 @@ yuv420p_to_yuv422 (AVPicture * dst, const AVPicture * src,
 
 #define SCALEBITS 10
 #define ONE_HALF  (1 << (SCALEBITS - 1))
-#define FIX(x)	  ((int) ((x) * (1<<SCALEBITS) + 0.5))
+#define FIX(x)    ((int) ((x) * (1<<SCALEBITS) + 0.5))
 
 #define YUV_TO_RGB1_CCIR(cb1, cr1)\
 {\

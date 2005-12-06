@@ -78,7 +78,7 @@ struct _GstTextOverlay {
     gint                     bitmap_buffer_size;
     gint                     baseline_y;
 
-    gboolean		     need_render;
+    gboolean                 need_render;
 
     gint                     shading_value;  /* for timeoverlay subclass */
 };

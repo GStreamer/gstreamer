@@ -43,11 +43,11 @@ typedef struct _GstAlsaSinkClass GstAlsaSinkClass;
 struct _GstAlsaSink {
   GstAudioSink    sink;
 
-  gchar			*device;
+  gchar                 *device;
 
-  snd_pcm_t 		*handle;
-  snd_pcm_hw_params_t 	*hwparams;
-  snd_pcm_sw_params_t 	*swparams;
+  snd_pcm_t             *handle;
+  snd_pcm_hw_params_t   *hwparams;
+  snd_pcm_sw_params_t   *swparams;
 
   snd_pcm_access_t access;
   snd_pcm_format_t format;

@@ -22,9 +22,9 @@ extern "C" {
 #define LIBAVCODEC_VERSION_INT FFMPEG_VERSION_INT
 #define LIBAVCODEC_VERSION     FFMPEG_VERSION
 
-#define AV_STRINGIFY(s)	AV_TOSTRING(s)
+#define AV_STRINGIFY(s) AV_TOSTRING(s)
 #define AV_TOSTRING(s) #s
-#define LIBAVCODEC_IDENT	"FFmpeg" LIBAVCODEC_VERSION "b" AV_STRINGIFY(LIBAVCODEC_BUILD)
+#define LIBAVCODEC_IDENT        "FFmpeg" LIBAVCODEC_VERSION "b" AV_STRINGIFY(LIBAVCODEC_BUILD)
 
 enum CodecType {
     CODEC_TYPE_UNKNOWN = -1,
@@ -224,7 +224,7 @@ int avcodec_find_best_pix_fmt(int pix_fmt_mask, int src_pix_fmt,
 #define FF_ALPHA_TRANSP       0x0001 /* image has some totally transparent pixels */
 #define FF_ALPHA_SEMI_TRANSP  0x0002 /* image has some transparent pixels */
 int img_get_alpha_info(const AVPicture *src,
-		       int pix_fmt, int width, int height);
+                       int pix_fmt, int width, int height);
 
 /* convert among pixel formats */
 int img_convert(AVPicture *dst, int dst_pix_fmt,

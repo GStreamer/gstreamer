@@ -30,10 +30,10 @@
 
 G_BEGIN_DECLS
 
-void	gst_v4l_xoverlay_interface_init	(GstXOverlayClass *klass);
+void    gst_v4l_xoverlay_interface_init (GstXOverlayClass *klass);
 
-void	gst_v4l_xoverlay_start		(GstV4lElement * v4lelement);
-void	gst_v4l_xoverlay_stop		(GstV4lElement * v4lelement);
+void    gst_v4l_xoverlay_start          (GstV4lElement * v4lelement);
+void    gst_v4l_xoverlay_stop           (GstV4lElement * v4lelement);
 
 G_END_DECLS
 

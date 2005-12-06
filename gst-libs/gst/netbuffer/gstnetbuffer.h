@@ -46,12 +46,12 @@ typedef enum {
 
 typedef struct
 {
-  GstNetType 	type;
+  GstNetType    type;
   union {
     guint8        ip6[16];
-    guint32	  ip4;
+    guint32       ip4;
   } address;
-  guint16	port;
+  guint16       port;
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 } GstNetAddress;
@@ -74,17 +74,17 @@ struct _GstNetBufferClass {
 };
 
 /* creating buffers */
-GType		gst_netbuffer_get_type		(void);
+GType           gst_netbuffer_get_type          (void);
 
-GstNetBuffer*	gst_netbuffer_new		(void);
+GstNetBuffer*   gst_netbuffer_new               (void);
 
 /* address operations */
-void		gst_netaddress_set_ip4_address	(GstNetAddress *nadd, guint32 address, guint16 port);
-void		gst_netaddress_set_ip6_address	(GstNetAddress *nadd, guint8 address[16], guint16 port);
+void            gst_netaddress_set_ip4_address  (GstNetAddress *nadd, guint32 address, guint16 port);
+void            gst_netaddress_set_ip6_address  (GstNetAddress *nadd, guint8 address[16], guint16 port);
 
-GstNetType	gst_netaddress_get_net_type	(GstNetAddress *nadd);
-gboolean	gst_netaddress_get_ip4_address	(GstNetAddress *nadd, guint32 *address, guint16 *port);
-gboolean	gst_netaddress_get_ip6_address	(GstNetAddress *nadd, guint8 address[16], guint16 *port);
+GstNetType      gst_netaddress_get_net_type     (GstNetAddress *nadd);
+gboolean        gst_netaddress_get_ip4_address  (GstNetAddress *nadd, guint32 *address, guint16 *port);
+gboolean        gst_netaddress_get_ip6_address  (GstNetAddress *nadd, guint8 address[16], guint16 *port);
 
 G_END_DECLS
 

@@ -42,48 +42,48 @@ G_BEGIN_DECLS
   (GST_V4LELEMENT (element)->vcap.type & VID_TYPE_OVERLAY)
 
 /* checks whether the current v4lelement has already been open()'ed or not */
-#define GST_V4L_CHECK_OPEN(element)				\
-  if (!GST_V4L_IS_OPEN (element))				\
-  {								\
-    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
-      (_("Device is not open.")), (NULL));			\
-    return FALSE;						\
+#define GST_V4L_CHECK_OPEN(element)                             \
+  if (!GST_V4L_IS_OPEN (element))                               \
+  {                                                             \
+    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,             \
+      (_("Device is not open.")), (NULL));                      \
+    return FALSE;                                               \
   }
 
 /* checks whether the current v4lelement is close()'ed or whether it is still open */
-#define GST_V4L_CHECK_NOT_OPEN(element)				\
-  if (GST_V4L_IS_OPEN (element))				\
-  {								\
-    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
-      (_("Device is open.")), (NULL));				\
-    return FALSE;						\
+#define GST_V4L_CHECK_NOT_OPEN(element)                         \
+  if (GST_V4L_IS_OPEN (element))                                \
+  {                                                             \
+    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,             \
+      (_("Device is open.")), (NULL));                          \
+    return FALSE;                                               \
   }
 
 /* checks whether the current v4lelement does video overlay */
-#define GST_V4L_CHECK_OVERLAY(element)				\
-  if (!(element->vcap.type & VID_TYPE_OVERLAY))			\
-  {								\
-    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
-      (NULL), ("Device cannot handle overlay"));		\
-    return FALSE;						\
+#define GST_V4L_CHECK_OVERLAY(element)                          \
+  if (!(element->vcap.type & VID_TYPE_OVERLAY))                 \
+  {                                                             \
+    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,             \
+      (NULL), ("Device cannot handle overlay"));                \
+    return FALSE;                                               \
   }
 
 /* checks whether we're in capture mode or not */
-#define GST_V4L_CHECK_ACTIVE(element)				\
-  if (!GST_V4L_IS_ACTIVE (element))				\
-  {								\
-    GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,		\
-      (NULL), ("Device is not in streaming mode"));		\
-    return FALSE;						\
+#define GST_V4L_CHECK_ACTIVE(element)                           \
+  if (!GST_V4L_IS_ACTIVE (element))                             \
+  {                                                             \
+    GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,             \
+      (NULL), ("Device is not in streaming mode"));             \
+    return FALSE;                                               \
   }
 
 /* checks whether we're out of capture mode or not */
-#define GST_V4L_CHECK_NOT_ACTIVE(element)			\
-  if (GST_V4L_IS_ACTIVE (element))				\
-  {								\
-    GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,		\
-      (NULL), ("Device is in streaming mode"));			\
-    return FALSE;						\
+#define GST_V4L_CHECK_NOT_ACTIVE(element)                       \
+  if (GST_V4L_IS_ACTIVE (element))                              \
+  {                                                             \
+    GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,             \
+      (NULL), ("Device is in streaming mode"));                 \
+    return FALSE;                                               \
   }
 
 
@@ -107,41 +107,41 @@ gboolean gst_v4l_close          (GstV4lElement *v4lelement);
 
 /* norm control (norm = VIDEO_MODE_{PAL|NTSC|SECAM|AUTO}) */
 gboolean gst_v4l_get_chan_norm  (GstV4lElement *v4lelement,
-				 gint          *channel,
-				 gint          *norm);
+                                 gint          *channel,
+                                 gint          *norm);
 gboolean gst_v4l_set_chan_norm  (GstV4lElement *v4lelement,
-				 gint           channel,
-				 gint           norm);
+                                 gint           channel,
+                                 gint           norm);
 GList   *gst_v4l_get_chan_names (GstV4lElement *v4lelement);
 
 /* frequency control */
 gboolean gst_v4l_get_signal     (GstV4lElement *v4lelement,
-				 gint           tunernum,
-				 guint         *signal);
+                                 gint           tunernum,
+                                 guint         *signal);
 gboolean gst_v4l_get_frequency  (GstV4lElement *v4lelement,
-				 gint           tunernum,
-				 gulong        *frequency);
+                                 gint           tunernum,
+                                 gulong        *frequency);
 gboolean gst_v4l_set_frequency  (GstV4lElement *v4lelement,
-				 gint           tunernum,
-				 gulong         frequency);
+                                 gint           tunernum,
+                                 gulong         frequency);
 
 /* picture control */
 gboolean gst_v4l_get_picture    (GstV4lElement *v4lelement,
-				 GstV4lPictureType type,
-				 gint          *value);
+                                 GstV4lPictureType type,
+                                 gint          *value);
 gboolean gst_v4l_set_picture    (GstV4lElement *v4lelement,
-				 GstV4lPictureType type,
-				 gint           value);
+                                 GstV4lPictureType type,
+                                 gint           value);
 
 /* audio control */
 gboolean gst_v4l_get_audio      (GstV4lElement *v4lelement,
-				 gint           audionum,
-				 GstV4lAudioType type,
-				 gint          *value);
+                                 gint           audionum,
+                                 GstV4lAudioType type,
+                                 gint          *value);
 gboolean gst_v4l_set_audio      (GstV4lElement *v4lelement,
-				 gint           audionum,
-				 GstV4lAudioType type,
-				 gint           value);
+                                 gint           audionum,
+                                 GstV4lAudioType type,
+                                 gint           value);
 
 /* functions that v4lsrc needs */
 gboolean gst_v4l_set_window_properties (GstV4lElement * v4lelement);

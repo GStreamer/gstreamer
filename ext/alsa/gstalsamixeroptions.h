@@ -28,12 +28,12 @@
 G_BEGIN_DECLS
 
 
-#define GST_ALSA_MIXER_OPTIONS_TYPE		(gst_alsa_mixer_options_get_type ())
-#define GST_ALSA_MIXER_OPTIONS(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_OPTIONS,GstAlsaMixerOptions))
-#define GST_ALSA_MIXER_OPTIONS_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_MIXER_OPTIONS,GstAlsaMixerOptionsClass))
-#define GST_IS_ALSA_MIXER_OPTIONS(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_MIXER_OPTIONS))
-#define GST_IS_ALSA_MIXER_OPTIONS_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER_OPTIONS))
-#define GST_TYPE_ALSA_MIXER_OPTIONS		(gst_alsa_mixer_options_get_type())
+#define GST_ALSA_MIXER_OPTIONS_TYPE             (gst_alsa_mixer_options_get_type ())
+#define GST_ALSA_MIXER_OPTIONS(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_OPTIONS,GstAlsaMixerOptions))
+#define GST_ALSA_MIXER_OPTIONS_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_MIXER_OPTIONS,GstAlsaMixerOptionsClass))
+#define GST_IS_ALSA_MIXER_OPTIONS(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_MIXER_OPTIONS))
+#define GST_IS_ALSA_MIXER_OPTIONS_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER_OPTIONS))
+#define GST_TYPE_ALSA_MIXER_OPTIONS             (gst_alsa_mixer_options_get_type())
 
 
 typedef struct _GstAlsaMixerOptions GstAlsaMixerOptions;
@@ -41,9 +41,9 @@ typedef struct _GstAlsaMixerOptionsClass GstAlsaMixerOptionsClass;
 
 
 struct _GstAlsaMixerOptions {
-  GstMixerOptions	 parent;
-  snd_mixer_elem_t	*element; /* the ALSA mixer element for this track */
-  gint			track_num;
+  GstMixerOptions        parent;
+  snd_mixer_elem_t      *element; /* the ALSA mixer element for this track */
+  gint                  track_num;
 };
 
 struct _GstAlsaMixerOptionsClass {
@@ -51,9 +51,9 @@ struct _GstAlsaMixerOptionsClass {
 };
 
 
-GType		gst_alsa_mixer_options_get_type	(void);
-GstMixerOptions *gst_alsa_mixer_options_new	(snd_mixer_elem_t *	element,
-						 gint			track_num);
+GType           gst_alsa_mixer_options_get_type (void);
+GstMixerOptions *gst_alsa_mixer_options_new     (snd_mixer_elem_t *     element,
+                                                 gint                   track_num);
 
 
 G_END_DECLS

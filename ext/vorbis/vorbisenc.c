@@ -131,12 +131,12 @@ gst_vorbisenc_get_formats (GstPad * pad)
 }
 #endif
 
-#define MAX_BITRATE_DEFAULT 	-1
-#define BITRATE_DEFAULT 	-1
-#define MIN_BITRATE_DEFAULT 	-1
-#define QUALITY_DEFAULT 	0.3
-#define LOWEST_BITRATE 		6000    /* lowest allowed for a 8 kHz stream */
-#define HIGHEST_BITRATE 	250001  /* highest allowed for a 44 kHz stream */
+#define MAX_BITRATE_DEFAULT     -1
+#define BITRATE_DEFAULT         -1
+#define MIN_BITRATE_DEFAULT     -1
+#define QUALITY_DEFAULT         0.3
+#define LOWEST_BITRATE          6000    /* lowest allowed for a 8 kHz stream */
+#define HIGHEST_BITRATE         250001  /* highest allowed for a 44 kHz stream */
 
 static void gst_vorbisenc_base_init (gpointer g_class);
 static void gst_vorbisenc_class_init (GstVorbisEncClass * klass);

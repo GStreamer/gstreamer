@@ -25,7 +25,7 @@
 
 G_BEGIN_DECLS
 
-gchar **gst_gnomevfs_get_supported_uris	(void);
+gchar **gst_gnomevfs_get_supported_uris (void);
 
 G_END_DECLS
 

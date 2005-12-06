@@ -32,28 +32,28 @@ G_BEGIN_DECLS
 
 #if (HAVE_LRINT && HAVE_LRINTF)
 
-	/*	These defines enable functionality introduced with the 1999 ISO C
-	**	standard. They must be defined before the inclusion of math.h to
-	**	engage them. If optimisation is enabled, these functions will be 
-	**	inlined. With optimisation switched off, you have to link in the
-	**	maths library using -lm.
-	*/
+        /*      These defines enable functionality introduced with the 1999 ISO C
+        **      standard. They must be defined before the inclusion of math.h to
+        **      engage them. If optimisation is enabled, these functions will be 
+        **      inlined. With optimisation switched off, you have to link in the
+        **      maths library using -lm.
+        */
 
-	#define	_ISOC9X_SOURCE	1
-	#define _ISOC99_SOURCE	1
+        #define _ISOC9X_SOURCE  1
+        #define _ISOC99_SOURCE  1
 
-	#define	__USE_ISOC9X	1
-	#define	__USE_ISOC99	1
+        #define __USE_ISOC9X    1
+        #define __USE_ISOC99    1
 
-	#include	<math.h>
+        #include        <math.h>
 
-	#define gst_cast_float(x)	((gint)lrintf(x))
-	#define gst_cast_double(x)	((gint)lrint(x))
+        #define gst_cast_float(x)       ((gint)lrintf(x))
+        #define gst_cast_double(x)      ((gint)lrint(x))
 
 #else
-	/* use a standard c cast, but do rounding correctly */
-	#define gst_cast_float(x)	((gint)floor((x)+0.5))
-	#define gst_cast_double(x)	((gint)floor((x)+0.5))
+        /* use a standard c cast, but do rounding correctly */
+        #define gst_cast_float(x)       ((gint)floor((x)+0.5))
+        #define gst_cast_double(x)      ((gint)floor((x)+0.5))
 
 #endif
 

@@ -33,10 +33,10 @@ G_BEGIN_DECLS
   (gst_mixer_options_get_type ())
 #define GST_MIXER_OPTIONS(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MIXER_OPTIONS, \
-			       GstMixerOptions))
+                               GstMixerOptions))
 #define GST_MIXER_OPTIONS_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MIXER_OPTIONS, \
-			    GstMixerOptionsClass))
+                            GstMixerOptionsClass))
 #define GST_IS_MIXER_OPTIONS(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MIXER_OPTIONS))
 #define GST_IS_MIXER_OPTIONS_CLASS(klass) \
@@ -59,12 +59,12 @@ struct _GstMixerOptionsClass {
 
   /* signals */
   void (* option_changed) (GstMixerOptions *opts,
-			   gchar           *value);
+                           gchar           *value);
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType		gst_mixer_options_get_type	(void);
+GType           gst_mixer_options_get_type      (void);
 
 GList * gst_mixer_options_get_values (GstMixerOptions *mixer_options);
 

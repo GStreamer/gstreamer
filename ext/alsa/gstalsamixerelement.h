@@ -28,11 +28,11 @@
 G_BEGIN_DECLS
 
 
-#define GST_ALSA_MIXER_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_ELEMENT,GstAlsaMixerElement))
-#define GST_ALSA_MIXER_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_MIXER_ELEMENT,GstAlsaMixerElementClass))
-#define GST_IS_ALSA_MIXER_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_MIXER_ELEMENT))
-#define GST_IS_ALSA_MIXER_ELEMENT_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER_ELEMENT))
-#define GST_TYPE_ALSA_MIXER_ELEMENT		(gst_alsa_mixer_element_get_type())
+#define GST_ALSA_MIXER_ELEMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_ELEMENT,GstAlsaMixerElement))
+#define GST_ALSA_MIXER_ELEMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_MIXER_ELEMENT,GstAlsaMixerElementClass))
+#define GST_IS_ALSA_MIXER_ELEMENT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_MIXER_ELEMENT))
+#define GST_IS_ALSA_MIXER_ELEMENT_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER_ELEMENT))
+#define GST_TYPE_ALSA_MIXER_ELEMENT             (gst_alsa_mixer_element_get_type())
 
 
 typedef struct _GstAlsaMixerElement GstAlsaMixerElement;
@@ -40,17 +40,17 @@ typedef struct _GstAlsaMixerElementClass GstAlsaMixerElementClass;
 
 
 struct _GstAlsaMixerElement {
-  GstElement		parent;
+  GstElement            parent;
 
-  GstAlsaMixer		*mixer;
+  GstAlsaMixer          *mixer;
 };
 
 struct _GstAlsaMixerElementClass {
-  GstElementClass	parent;
+  GstElementClass       parent;
 };
 
 
-GType		gst_alsa_mixer_element_get_type		(void);
+GType           gst_alsa_mixer_element_get_type         (void);
 
 
 G_END_DECLS

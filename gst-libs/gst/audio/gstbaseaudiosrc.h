@@ -33,21 +33,21 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_BASE_AUDIO_SRC			(gst_base_audio_src_get_type())
-#define GST_BASE_AUDIO_SRC(obj)			(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_AUDIO_SRC,GstBaseAudioSrc))
-#define GST_BASE_AUDIO_SRC_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_AUDIO_SRC,GstBaseAudioSrcClass))
-#define GST_BASE_AUDIO_SRC_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_AUDIO_SRC, GstBaseAudioSrcClass))
-#define GST_IS_BASE_AUDIO_SRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_AUDIO_SRC))
-#define GST_IS_BASE_AUDIO_SRC_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_AUDIO_SRC))
+#define GST_TYPE_BASE_AUDIO_SRC                 (gst_base_audio_src_get_type())
+#define GST_BASE_AUDIO_SRC(obj)                 (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_AUDIO_SRC,GstBaseAudioSrc))
+#define GST_BASE_AUDIO_SRC_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_AUDIO_SRC,GstBaseAudioSrcClass))
+#define GST_BASE_AUDIO_SRC_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_BASE_AUDIO_SRC, GstBaseAudioSrcClass))
+#define GST_IS_BASE_AUDIO_SRC(obj)              (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_AUDIO_SRC))
+#define GST_IS_BASE_AUDIO_SRC_CLASS(obj)        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_AUDIO_SRC))
 
-#define GST_BASE_AUDIO_SRC_CLOCK(obj)	 (GST_BASE_AUDIO_SRC (obj)->clock)
-#define GST_BASE_AUDIO_SRC_PAD(obj)	 (GST_BASE_SRC (obj)->srcpad)
+#define GST_BASE_AUDIO_SRC_CLOCK(obj)    (GST_BASE_AUDIO_SRC (obj)->clock)
+#define GST_BASE_AUDIO_SRC_PAD(obj)      (GST_BASE_SRC (obj)->srcpad)
 
 typedef struct _GstBaseAudioSrc GstBaseAudioSrc;
 typedef struct _GstBaseAudioSrcClass GstBaseAudioSrcClass;
 
 struct _GstBaseAudioSrc {
-  GstPushSrc	 element;
+  GstPushSrc     element;
 
   /*< protected >*/ /* with LOCK */
   /* our ringbuffer */
@@ -58,10 +58,10 @@ struct _GstBaseAudioSrc {
   GstClockTime   latency_time;
 
   /* the next sample to write */
-  guint64	 next_sample;
+  guint64        next_sample;
 
   /* clock */
-  GstClock	*clock;
+  GstClock      *clock;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

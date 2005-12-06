@@ -25,43 +25,43 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_STREAM_INFO 		(gst_stream_info_get_type())
-#define GST_STREAM_INFO(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_STREAM_INFO,GstStreamInfo))
-#define GST_STREAM_INFO_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_STREAM_INFO,GstStreamInfoClass))
-#define GST_IS_STREAM_INFO(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_STREAM_INFO))
-#define GST_IS_STREAM_INFO_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_STREAM_INFO))
+#define GST_TYPE_STREAM_INFO            (gst_stream_info_get_type())
+#define GST_STREAM_INFO(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_STREAM_INFO,GstStreamInfo))
+#define GST_STREAM_INFO_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_STREAM_INFO,GstStreamInfoClass))
+#define GST_IS_STREAM_INFO(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_STREAM_INFO))
+#define GST_IS_STREAM_INFO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_STREAM_INFO))
 
 typedef struct _GstStreamInfo GstStreamInfo;
 typedef struct _GstStreamInfoClass GstStreamInfoClass;
 
 typedef enum {
   GST_STREAM_TYPE_UNKNOWN = 0,
-  GST_STREAM_TYPE_AUDIO   = 1,	/* an audio stream */
-  GST_STREAM_TYPE_VIDEO   = 2,	/* a video stream */
-  GST_STREAM_TYPE_TEXT    = 3,	/* a subtitle/text stream */
-  GST_STREAM_TYPE_ELEMENT = 4,	/* stream handled by an element */
+  GST_STREAM_TYPE_AUDIO   = 1,  /* an audio stream */
+  GST_STREAM_TYPE_VIDEO   = 2,  /* a video stream */
+  GST_STREAM_TYPE_TEXT    = 3,  /* a subtitle/text stream */
+  GST_STREAM_TYPE_ELEMENT = 4,  /* stream handled by an element */
 } GstStreamType;
 
 struct _GstStreamInfo {
-  GObject 	 parent;
+  GObject        parent;
 
-  GstObject 	*object;	/* pad/element providing/handling this stream */
-  GstStreamType	 type;		/* the type of the provided stream */
-  gchar 	*decoder;	/* string describing the decoder */
-  gboolean	 mute;		/* is the stream muted or not */
-  GstObject 	*origin;	/* the real object providing this stream, this can
-				   be different from the object as the object can be
-				   a queue pad, inserted for preroll. */
-  GstCaps	*caps;		/* the caps of the stream */
+  GstObject     *object;        /* pad/element providing/handling this stream */
+  GstStreamType  type;          /* the type of the provided stream */
+  gchar         *decoder;       /* string describing the decoder */
+  gboolean       mute;          /* is the stream muted or not */
+  GstObject     *origin;        /* the real object providing this stream, this can
+                                   be different from the object as the object can be
+                                   a queue pad, inserted for preroll. */
+  GstCaps       *caps;          /* the caps of the stream */
 
   /* this is tream information cached here because the streaminfo may be
    * created before the app can know about it. */
-  gchar		*langcode,
-		*codec;
+  gchar         *langcode,
+                *codec;
 };
 
 struct _GstStreamInfoClass {
-  GObjectClass 	 parent_class;
+  GObjectClass   parent_class;
 
   /* signals */
   void (*muted) (GstStreamInfo *info, gboolean mute);
@@ -69,14 +69,14 @@ struct _GstStreamInfoClass {
 
 GType gst_stream_info_get_type (void);
 
-GstStreamInfo* 	gst_stream_info_new 		(GstObject     *object,
-				    		 GstStreamType  type,
-				    		 const gchar   *decoder,
-				    		 const GstCaps *caps);
+GstStreamInfo*  gst_stream_info_new             (GstObject     *object,
+                                                 GstStreamType  type,
+                                                 const gchar   *decoder,
+                                                 const GstCaps *caps);
 
-gboolean 	gst_stream_info_set_mute 	(GstStreamInfo *stream_info, 
-						 gboolean mute);
-gboolean 	gst_stream_info_is_mute 	(GstStreamInfo *stream_info);
+gboolean        gst_stream_info_set_mute        (GstStreamInfo *stream_info, 
+                                                 gboolean mute);
+gboolean        gst_stream_info_is_mute         (GstStreamInfo *stream_info);
 
 
 G_END_DECLS

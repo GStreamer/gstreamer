@@ -33,11 +33,11 @@ gboolean have_eos = FALSE;
 GstPad *mysinkpad;
 
 
-#define CAPS_TEMPLATE_STRING		\
-    "video/x-raw-yuv, "			\
-    "format = (fourcc) Y422, "	        \
-    "width = (int) [ 1,  MAX ], "	\
-    "height = (int) [ 1,  MAX ], "	\
+#define CAPS_TEMPLATE_STRING            \
+    "video/x-raw-yuv, "                 \
+    "format = (fourcc) Y422, "          \
+    "width = (int) [ 1,  MAX ], "       \
+    "height = (int) [ 1,  MAX ], "      \
     "framerate = (fraction) [ 0/1, MAX ]"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",

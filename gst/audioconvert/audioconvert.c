@@ -32,24 +32,24 @@
 #define INT2FLOAT(i) (4.6566128752457969e-10 * ((gfloat)i))
 
 /* sign bit in the intermediate format */
-#define SIGNED	(1<<31)
+#define SIGNED  (1<<31)
 
 /*** 
  * unpack code
  */
-#define MAKE_UNPACK_FUNC_NAME(name)					\
+#define MAKE_UNPACK_FUNC_NAME(name)                                     \
 audio_convert_unpack_##name
 
-#define MAKE_UNPACK_FUNC(name, stride, sign, READ_FUNC)			\
-static void								\
-MAKE_UNPACK_FUNC_NAME (name) (gpointer src, gint32 *dst,  		\
-	gint scale, gint count)						\
-{									\
-  guint8* p = (guint8 *) src;						\
-  for (;count; count--) {						\
-    *dst++ = (((gint32) READ_FUNC (p)) << scale) ^ (sign);		\
-    p+=stride;								\
-  }									\
+#define MAKE_UNPACK_FUNC(name, stride, sign, READ_FUNC)                 \
+static void                                                             \
+MAKE_UNPACK_FUNC_NAME (name) (gpointer src, gint32 *dst,                \
+        gint scale, gint count)                                         \
+{                                                                       \
+  guint8* p = (guint8 *) src;                                           \
+  for (;count; count--) {                                               \
+    *dst++ = (((gint32) READ_FUNC (p)) << scale) ^ (sign);              \
+    p+=stride;                                                          \
+  }                                                                     \
 }
 
 /* special unpack code for float */
@@ -92,21 +92,21 @@ MAKE_UNPACK_FUNC (s32_be, 4, 0, READ32_FROM_BE);
 /*** 
  * packing code
  */
-#define MAKE_PACK_FUNC_NAME(name)					\
+#define MAKE_PACK_FUNC_NAME(name)                                       \
 audio_convert_pack_##name
 
-#define MAKE_PACK_FUNC(name, stride, sign, WRITE_FUNC)			\
-static void								\
-MAKE_PACK_FUNC_NAME (name) (gint32 *src, gpointer dst,	 		\
-	gint scale, gint count)						\
-{									\
-  guint8 *p = (guint8 *)dst;						\
-  guint32 tmp;								\
-  for (;count; count--) {						\
-    tmp = (*src++ ^ (sign)) >> scale;					\
-    WRITE_FUNC (p, tmp);						\
-    p+=stride;								\
-  }									\
+#define MAKE_PACK_FUNC(name, stride, sign, WRITE_FUNC)                  \
+static void                                                             \
+MAKE_PACK_FUNC_NAME (name) (gint32 *src, gpointer dst,                  \
+        gint scale, gint count)                                         \
+{                                                                       \
+  guint8 *p = (guint8 *)dst;                                            \
+  guint32 tmp;                                                          \
+  for (;count; count--) {                                               \
+    tmp = (*src++ ^ (sign)) >> scale;                                   \
+    WRITE_FUNC (p, tmp);                                                \
+    p+=stride;                                                          \
+  }                                                                     \
 }
 
 /* special float pack function */

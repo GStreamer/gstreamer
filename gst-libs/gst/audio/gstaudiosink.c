@@ -27,18 +27,18 @@
 GST_DEBUG_CATEGORY_STATIC (gst_audio_sink_debug);
 #define GST_CAT_DEFAULT gst_audio_sink_debug
 
-#define GST_TYPE_AUDIORING_BUFFER  	 \
-	(gst_audioringbuffer_get_type())
-#define GST_AUDIORING_BUFFER(obj) 	 \
-	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIORING_BUFFER,GstAudioRingBuffer))
+#define GST_TYPE_AUDIORING_BUFFER        \
+        (gst_audioringbuffer_get_type())
+#define GST_AUDIORING_BUFFER(obj)        \
+        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIORING_BUFFER,GstAudioRingBuffer))
 #define GST_AUDIORING_BUFFER_CLASS(klass) \
-	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIORING_BUFFER,GstAudioRingBufferClass))
+        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIORING_BUFFER,GstAudioRingBufferClass))
 #define GST_AUDIORING_BUFFER_GET_CLASS(obj) \
-	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_AUDIORING_BUFFER, GstAudioRingBufferClass))
-#define GST_IS_AUDIORING_BUFFER(obj)  	 \
-	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIORING_BUFFER))
+        (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_AUDIORING_BUFFER, GstAudioRingBufferClass))
+#define GST_IS_AUDIORING_BUFFER(obj)     \
+        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIORING_BUFFER))
 #define GST_IS_AUDIORING_BUFFER_CLASS(obj)\
-	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIORING_BUFFER))
+        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIORING_BUFFER))
 
 typedef struct _GstAudioRingBuffer GstAudioRingBuffer;
 typedef struct _GstAudioRingBufferClass GstAudioRingBufferClass;

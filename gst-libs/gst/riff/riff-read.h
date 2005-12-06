@@ -34,10 +34,10 @@ G_BEGIN_DECLS
  */
 
 GstFlowReturn gst_riff_read_chunk   (GstElement * element,
-				     GstPad     * pad,
-				     guint64    * offset,
-				     guint32    * fourcc,
-				     GstBuffer ** chunk_data);
+                                     GstPad     * pad,
+                                     guint64    * offset,
+                                     guint32    * fourcc,
+                                     GstBuffer ** chunk_data);
 
 /*
  * These functions operate on provided data (the caller is
@@ -46,41 +46,41 @@ GstFlowReturn gst_riff_read_chunk   (GstElement * element,
  * by the function.
  */
 
-gboolean gst_riff_parse_chunk	    (GstElement * element,
-				     GstBuffer  * buf,
-				     guint      * offset,
-				     guint32    * fourcc,
-				     GstBuffer ** chunk_data);
+gboolean gst_riff_parse_chunk       (GstElement * element,
+                                     GstBuffer  * buf,
+                                     guint      * offset,
+                                     guint32    * fourcc,
+                                     GstBuffer ** chunk_data);
 
 gboolean gst_riff_parse_file_header (GstElement * element,
-				     GstBuffer  * buf,
-				     guint32    * doctype);
+                                     GstBuffer  * buf,
+                                     guint32    * doctype);
 
-gboolean gst_riff_parse_strh	    (GstElement     * element,
-				     GstBuffer      * buf,
-				     gst_riff_strh ** strh);
+gboolean gst_riff_parse_strh        (GstElement     * element,
+                                     GstBuffer      * buf,
+                                     gst_riff_strh ** strh);
 
 gboolean gst_riff_parse_strf_vids   (GstElement          * element,
-				     GstBuffer           * buf,
-				     gst_riff_strf_vids ** strf,
-				     GstBuffer          ** data);
+                                     GstBuffer           * buf,
+                                     gst_riff_strf_vids ** strf,
+                                     GstBuffer          ** data);
 gboolean gst_riff_parse_strf_auds   (GstElement          * element,
-				     GstBuffer           * buf,
-				     gst_riff_strf_auds ** strf,
-				     GstBuffer          ** data);
+                                     GstBuffer           * buf,
+                                     gst_riff_strf_auds ** strf,
+                                     GstBuffer          ** data);
 gboolean gst_riff_parse_strf_iavs   (GstElement          * element,
-				     GstBuffer           * buf,
-				     gst_riff_strf_iavs ** strf,
-				     GstBuffer          ** data);
+                                     GstBuffer           * buf,
+                                     gst_riff_strf_iavs ** strf,
+                                     GstBuffer          ** data);
 
-void gst_riff_parse_info	    (GstElement  * element,
-				     GstBuffer   * buf,
-				     GstTagList ** taglist);
+void gst_riff_parse_info            (GstElement  * element,
+                                     GstBuffer   * buf,
+                                     GstTagList ** taglist);
 
 /*
  * Init.
  */
-void gst_riff_init		    (void);
+void gst_riff_init                  (void);
 
 G_END_DECLS
 

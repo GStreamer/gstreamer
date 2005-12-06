@@ -43,21 +43,21 @@ typedef struct _GstVorbisDec GstVorbisDec;
 typedef struct _GstVorbisDecClass GstVorbisDecClass;
 
 struct _GstVorbisDec {
-  GstElement		element;
+  GstElement            element;
 
-  GstPad *		sinkpad;
-  GstPad *		srcpad;
+  GstPad *              sinkpad;
+  GstPad *              srcpad;
 
-  vorbis_dsp_state	vd;
-  vorbis_info		vi;
-  vorbis_comment	vc;
-  vorbis_block		vb;
-  guint			packetno;
-  guint64     		granulepos;
+  vorbis_dsp_state      vd;
+  vorbis_info           vi;
+  vorbis_comment        vc;
+  vorbis_block          vb;
+  guint                 packetno;
+  guint64               granulepos;
 
-  gboolean		initialized;
+  gboolean              initialized;
 
-  GList 		*queued;
+  GList                 *queued;
 
   gdouble segment_rate;
   gint64  segment_start;

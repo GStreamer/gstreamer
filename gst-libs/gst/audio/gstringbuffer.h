@@ -27,11 +27,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RING_BUFFER	         (gst_ring_buffer_get_type())
-#define GST_RING_BUFFER(obj)		 (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RING_BUFFER,GstRingBuffer))
-#define GST_RING_BUFFER_CLASS(klass) 	 (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RING_BUFFER,GstRingBufferClass))
+#define GST_TYPE_RING_BUFFER             (gst_ring_buffer_get_type())
+#define GST_RING_BUFFER(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RING_BUFFER,GstRingBuffer))
+#define GST_RING_BUFFER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RING_BUFFER,GstRingBufferClass))
 #define GST_RING_BUFFER_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RING_BUFFER, GstRingBufferClass))
-#define GST_IS_RING_BUFFER(obj)  	 (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RING_BUFFER))
+#define GST_IS_RING_BUFFER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RING_BUFFER))
 #define GST_IS_RING_BUFFER_CLASS(obj)     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RING_BUFFER))
 
 typedef struct _GstRingBuffer GstRingBuffer;
@@ -169,25 +169,25 @@ struct _GstRingBufferSpec
 {
   /*< public >*/
   /* in */
-  GstCaps  *caps;		/* the caps of the buffer */
+  GstCaps  *caps;               /* the caps of the buffer */
 
   /* in/out */
   GstBufferFormatType   type;
   GstBufferFormat format;
   gboolean  sign;
   gboolean  bigend;
-  gint	    width;
-  gint	    depth;
+  gint      width;
+  gint      depth;
   gint      rate;
   gint      channels;
   
-  GstClockTime latency_time;	/* the required/actual latency time */
-  GstClockTime buffer_time;	/* the required/actual time of the buffer */
-  gint     segsize;		/* size of one buffer segement */
-  gint     segtotal;		/* total number of segments */
+  GstClockTime latency_time;    /* the required/actual latency time */
+  GstClockTime buffer_time;     /* the required/actual time of the buffer */
+  gint     segsize;             /* size of one buffer segement */
+  gint     segtotal;            /* total number of segments */
 
   /* out */
-  gint     bytes_per_sample;	/* number of bytes of one sample */
+  gint     bytes_per_sample;    /* number of bytes of one sample */
   guint8   silence_sample[32];  /* bytes representing silence */
 
   /*< private >*/
@@ -200,7 +200,7 @@ struct _GstRingBufferSpec
 #define GST_RING_BUFFER_BROADCAST(buf)(g_cond_broadcast (GST_RING_BUFFER_GET_COND (buf)))
 
 struct _GstRingBuffer {
-  GstObject 	         object;
+  GstObject              object;
 
   /*< public >*/ /* with LOCK */
   GCond                 *cond;
@@ -209,14 +209,14 @@ struct _GstRingBuffer {
   GstBuffer             *data;
   GstRingBufferSpec      spec;
   GstRingBufferSegState *segstate;
-  gint     		 samples_per_seg;     /* number of samples per segment */
-  guint8		*empty_seg;
+  gint                   samples_per_seg;     /* number of samples per segment */
+  guint8                *empty_seg;
 
   /*< public >*/ /* ATOMIC */
-  gint			 state;		/* state of the buffer */
-  gint			 segdone;       /* number of segments processed since last start */
-  gint			 segbase;	/* segment corresponding to segment 0 */
-  gint			 waiting;	/* when waiting for a segment to be freed */
+  gint                   state;         /* state of the buffer */
+  gint                   segdone;       /* number of segments processed since last start */
+  gint                   segbase;       /* segment corresponding to segment 0 */
+  gint                   waiting;       /* when waiting for a segment to be freed */
 
   /*< private >*/
   GstRingBufferCallback  callback;
@@ -225,7 +225,7 @@ struct _GstRingBuffer {
   /*< private >*/
   union {
     struct {
-      gboolean		 flushing;
+      gboolean           flushing;
     };
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING + 0];
@@ -261,54 +261,54 @@ struct _GstRingBufferClass {
 GType gst_ring_buffer_get_type(void);
 
 /* callback stuff */
-void     	gst_ring_buffer_set_callback   	(GstRingBuffer *buf, GstRingBufferCallback cb, 
-						 gpointer user_data);
+void            gst_ring_buffer_set_callback    (GstRingBuffer *buf, GstRingBufferCallback cb, 
+                                                 gpointer user_data);
 
-gboolean	gst_ring_buffer_parse_caps	(GstRingBufferSpec *spec, GstCaps *caps);
-void 		gst_ring_buffer_debug_spec_caps (GstRingBufferSpec *spec);
-void 		gst_ring_buffer_debug_spec_buff (GstRingBufferSpec *spec);
+gboolean        gst_ring_buffer_parse_caps      (GstRingBufferSpec *spec, GstCaps *caps);
+void            gst_ring_buffer_debug_spec_caps (GstRingBufferSpec *spec);
+void            gst_ring_buffer_debug_spec_buff (GstRingBufferSpec *spec);
 
 /* device state */
-gboolean 	gst_ring_buffer_open_device 	(GstRingBuffer *buf);
-gboolean 	gst_ring_buffer_close_device 	(GstRingBuffer *buf);
+gboolean        gst_ring_buffer_open_device     (GstRingBuffer *buf);
+gboolean        gst_ring_buffer_close_device    (GstRingBuffer *buf);
 
-gboolean 	gst_ring_buffer_device_is_open	(GstRingBuffer *buf);
+gboolean        gst_ring_buffer_device_is_open  (GstRingBuffer *buf);
 
 /* allocate resources */
-gboolean 	gst_ring_buffer_acquire 	(GstRingBuffer *buf, GstRingBufferSpec *spec);
-gboolean 	gst_ring_buffer_release 	(GstRingBuffer *buf);
+gboolean        gst_ring_buffer_acquire         (GstRingBuffer *buf, GstRingBufferSpec *spec);
+gboolean        gst_ring_buffer_release         (GstRingBuffer *buf);
 
-gboolean 	gst_ring_buffer_is_acquired	(GstRingBuffer *buf);
+gboolean        gst_ring_buffer_is_acquired     (GstRingBuffer *buf);
 
 /* flushing */
-void	 	gst_ring_buffer_set_flushing	(GstRingBuffer *buf, gboolean flushing);
+void            gst_ring_buffer_set_flushing    (GstRingBuffer *buf, gboolean flushing);
 
 /* playback/pause */
-gboolean 	gst_ring_buffer_start 		(GstRingBuffer *buf);
-gboolean 	gst_ring_buffer_pause 		(GstRingBuffer *buf);
-gboolean 	gst_ring_buffer_stop 		(GstRingBuffer *buf);
+gboolean        gst_ring_buffer_start           (GstRingBuffer *buf);
+gboolean        gst_ring_buffer_pause           (GstRingBuffer *buf);
+gboolean        gst_ring_buffer_stop            (GstRingBuffer *buf);
 
 /* get status */
-guint	 	gst_ring_buffer_delay 		(GstRingBuffer *buf);
-guint64	 	gst_ring_buffer_samples_done	(GstRingBuffer *buf);
+guint           gst_ring_buffer_delay           (GstRingBuffer *buf);
+guint64         gst_ring_buffer_samples_done    (GstRingBuffer *buf);
 
-void	 	gst_ring_buffer_set_sample	(GstRingBuffer *buf, guint64 sample);
+void            gst_ring_buffer_set_sample      (GstRingBuffer *buf, guint64 sample);
 
 /* clear all segments */
-void		gst_ring_buffer_clear_all	(GstRingBuffer *buf);
+void            gst_ring_buffer_clear_all       (GstRingBuffer *buf);
 
 /* commit samples */
-guint 		gst_ring_buffer_commit 		(GstRingBuffer *buf, guint64 sample, 
-						 guchar *data, guint len);
+guint           gst_ring_buffer_commit          (GstRingBuffer *buf, guint64 sample, 
+                                                 guchar *data, guint len);
 /* read samples */
-guint 		gst_ring_buffer_read 		(GstRingBuffer *buf, guint64 sample, 
-						 guchar *data, guint len);
+guint           gst_ring_buffer_read            (GstRingBuffer *buf, guint64 sample, 
+                                                 guchar *data, guint len);
 
 /* mostly protected */
-gboolean	gst_ring_buffer_prepare_write	(GstRingBuffer *buf, gint *segment, guint8 **writeptr, gint *len);
-gboolean	gst_ring_buffer_prepare_read	(GstRingBuffer *buf, gint *segment, guint8 **readptr, gint *len);
-void		gst_ring_buffer_clear		(GstRingBuffer *buf, gint segment);
-void	 	gst_ring_buffer_advance	 	(GstRingBuffer *buf, guint advance);
+gboolean        gst_ring_buffer_prepare_write   (GstRingBuffer *buf, gint *segment, guint8 **writeptr, gint *len);
+gboolean        gst_ring_buffer_prepare_read    (GstRingBuffer *buf, gint *segment, guint8 **readptr, gint *len);
+void            gst_ring_buffer_clear           (GstRingBuffer *buf, gint segment);
+void            gst_ring_buffer_advance         (GstRingBuffer *buf, guint advance);
 
 G_END_DECLS
 

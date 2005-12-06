@@ -58,7 +58,7 @@ struct _GstAdder {
 
   GstPad         *srcpad;
   GstCollectPads *collect;
-  gint		  numpads;
+  gint            numpads;
 
   /* the next are valid for both int and float */
   GstAdderFormat  format;
@@ -75,8 +75,8 @@ struct _GstAdder {
   GstAdderFunction func;
 
   /* counters to keep track of timestamps */
-  gint64     	  timestamp;
-  gint64     	  offset;
+  gint64          timestamp;
+  gint64          offset;
 };
 
 struct _GstAdderClass {

@@ -28,12 +28,12 @@
 G_BEGIN_DECLS
 
 
-#define GST_ALSA_MIXER_TRACK_TYPE		(gst_alsa_mixer_track_get_type ())
-#define GST_ALSA_MIXER_TRACK(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_TRACK,GstAlsaMixerTrack))
-#define GST_ALSA_MIXER_TRACK_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_MIXER_TRACK,GstAlsaMixerTrackClass))
-#define GST_IS_ALSA_MIXER_TRACK(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_MIXER_TRACK))
-#define GST_IS_ALSA_MIXER_TRACK_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER_TRACK))
-#define GST_TYPE_ALSA_MIXER_TRACK		(gst_alsa_mixer_track_get_type())
+#define GST_ALSA_MIXER_TRACK_TYPE               (gst_alsa_mixer_track_get_type ())
+#define GST_ALSA_MIXER_TRACK(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_TRACK,GstAlsaMixerTrack))
+#define GST_ALSA_MIXER_TRACK_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_MIXER_TRACK,GstAlsaMixerTrackClass))
+#define GST_IS_ALSA_MIXER_TRACK(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_MIXER_TRACK))
+#define GST_IS_ALSA_MIXER_TRACK_CLASS(obj)      (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER_TRACK))
+#define GST_TYPE_ALSA_MIXER_TRACK               (gst_alsa_mixer_track_get_type())
 
 typedef struct _GstAlsaMixerTrack GstAlsaMixerTrack;
 typedef struct _GstAlsaMixerTrackClass GstAlsaMixerTrackClass;
@@ -41,26 +41,26 @@ typedef struct _GstAlsaMixerTrackClass GstAlsaMixerTrackClass;
 #define GST_ALSA_MIXER_TRACK_CAPTURE  (1<<0)
 #define GST_ALSA_MIXER_TRACK_PLAYBACK (1<<1)
 
-#define GST_ALSA_MAX_CHANNELS	32 /* tracks can have up to 32 channels */
+#define GST_ALSA_MAX_CHANNELS   32 /* tracks can have up to 32 channels */
 struct _GstAlsaMixerTrack {
-  GstMixerTrack		 parent;
-  snd_mixer_elem_t	*element; /* the ALSA mixer element for this track */
-  gint			track_num;
-  gint			alsa_flags;
-  gint			volumes[GST_ALSA_MAX_CHANNELS];
+  GstMixerTrack          parent;
+  snd_mixer_elem_t      *element; /* the ALSA mixer element for this track */
+  gint                  track_num;
+  gint                  alsa_flags;
+  gint                  volumes[GST_ALSA_MAX_CHANNELS];
 };
 
 struct _GstAlsaMixerTrackClass {
   GstMixerTrackClass parent;
 };
 
-GType		gst_alsa_mixer_track_get_type	(void);
-GstMixerTrack *	gst_alsa_mixer_track_new	(snd_mixer_elem_t *	element,
-						 gint                   num,
-						 gint			track_num,
-						 gint			channels,
-						 gint			flags,
-						 gint			alsa_flags);
+GType           gst_alsa_mixer_track_get_type   (void);
+GstMixerTrack * gst_alsa_mixer_track_new        (snd_mixer_elem_t *     element,
+                                                 gint                   num,
+                                                 gint                   track_num,
+                                                 gint                   channels,
+                                                 gint                   flags,
+                                                 gint                   alsa_flags);
 
 
 G_END_DECLS

@@ -131,12 +131,12 @@ GST_STATIC_CAPS ( \
     "width = (int) 32, " \
     "depth = (int) [ 1, 32 ], " \
     "signed = (boolean) { true, false }; " \
-  "audio/x-raw-int, "	\
-    "rate = (int) [ 1, MAX ], "	\
-    "channels = (int) [ 1, 8 ], "	\
-    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "	\
-    "width = (int) 24, "	\
-    "depth = (int) [ 1, 24 ], " "signed = (boolean) { true, false }; "	\
+  "audio/x-raw-int, "   \
+    "rate = (int) [ 1, MAX ], " \
+    "channels = (int) [ 1, 8 ], "       \
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "        \
+    "width = (int) 24, "        \
+    "depth = (int) [ 1, 24 ], " "signed = (boolean) { true, false }; "  \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \

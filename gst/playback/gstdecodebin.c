@@ -42,11 +42,11 @@ GST_STATIC_PAD_TEMPLATE ("src%d",
 GST_DEBUG_CATEGORY_STATIC (gst_decode_bin_debug);
 #define GST_CAT_DEFAULT gst_decode_bin_debug
 
-#define GST_TYPE_DECODE_BIN 		(gst_decode_bin_get_type())
-#define GST_DECODE_BIN(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECODE_BIN,GstDecodeBin))
-#define GST_DECODE_BIN_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DECODE_BIN,GstDecodeBinClass))
-#define GST_IS_DECODE_BIN(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DECODE_BIN))
-#define GST_IS_DECODE_BIN_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DECODE_BIN))
+#define GST_TYPE_DECODE_BIN             (gst_decode_bin_get_type())
+#define GST_DECODE_BIN(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECODE_BIN,GstDecodeBin))
+#define GST_DECODE_BIN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DECODE_BIN,GstDecodeBinClass))
+#define GST_IS_DECODE_BIN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DECODE_BIN))
+#define GST_IS_DECODE_BIN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DECODE_BIN))
 
 typedef struct _GstDecodeBin GstDecodeBin;
 typedef struct _GstDecodeBinClass GstDecodeBinClass;

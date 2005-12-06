@@ -24,17 +24,17 @@
 
 
 struct vts_color_struct {
-	uint8_t Y, U, V;
-	uint8_t R, G, B;
+        uint8_t Y, U, V;
+        uint8_t R, G, B;
 };
 
 typedef struct paintinfo_struct paintinfo;
 struct paintinfo_struct
 {
-  unsigned char *dest;		/* pointer to first byte of video data */
+  unsigned char *dest;          /* pointer to first byte of video data */
   unsigned char *yp, *up, *vp;  /* pointers to first byte of each component
-				 * for both packed/planar YUV and RGB */
-  unsigned char *endptr;	/* pointer to byte beyond last video data */
+                                 * for both packed/planar YUV and RGB */
+  unsigned char *endptr;        /* pointer to byte beyond last video data */
   int ystride;
   int ustride;
   int vstride;
@@ -59,20 +59,20 @@ struct fourcc_list_struct
 };
 
 struct fourcc_list_struct *
-	paintrect_find_fourcc		(int find_fourcc);
+        paintrect_find_fourcc           (int find_fourcc);
 struct fourcc_list_struct *
-	paintrect_find_name		(const char *name);
+        paintrect_find_name             (const char *name);
 struct fourcc_list_struct *
-	paintinfo_find_by_structure	(const GstStructure *structure);
+        paintinfo_find_by_structure     (const GstStructure *structure);
 GstStructure *
-	paint_get_structure		(struct fourcc_list_struct *format);
-int	gst_video_test_src_get_size	(GstVideoTestSrc * v, int w, int h);
-void	gst_video_test_src_smpte		(GstVideoTestSrc * v,
-					 unsigned char *dest, int w, int h);
-void	gst_video_test_src_snow		(GstVideoTestSrc * v,
-					 unsigned char *dest, int w, int h);
-void	gst_video_test_src_black		(GstVideoTestSrc * v,
-					 unsigned char *dest, int w, int h);
+        paint_get_structure             (struct fourcc_list_struct *format);
+int     gst_video_test_src_get_size     (GstVideoTestSrc * v, int w, int h);
+void    gst_video_test_src_smpte                (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_snow         (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_black                (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
 
 extern struct fourcc_list_struct fourcc_list[];
 extern int n_fourccs;

@@ -248,9 +248,9 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
 }
 
 #define CHECK(call, error) \
-G_STMT_START {			\
-if ((err = call) < 0)		\
-  goto error;			\
+G_STMT_START {                  \
+if ((err = call) < 0)           \
+  goto error;                   \
 } G_STMT_END;
 
 static int

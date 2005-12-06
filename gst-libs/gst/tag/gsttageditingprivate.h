@@ -28,8 +28,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstTagEntryMatch GstTagEntryMatch;
 struct _GstTagEntryMatch {
-  gchar *	gstreamer_tag;
-  gchar *	original_tag;
+  gchar *       gstreamer_tag;
+  gchar *       original_tag;
 };
 
 

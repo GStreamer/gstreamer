@@ -25,9 +25,9 @@
 #include "buffer.h"
 
 typedef enum {
-	RESAMPLE_FORMAT_S16 = 0,
-	RESAMPLE_FORMAT_S32,
-	RESAMPLE_FORMAT_F32,
+        RESAMPLE_FORMAT_S16 = 0,
+        RESAMPLE_FORMAT_S32,
+        RESAMPLE_FORMAT_F32,
         RESAMPLE_FORMAT_F64
 } ResampleFormat;
 
@@ -36,25 +36,25 @@ typedef void (*ResampleCallback) (void *);
 typedef struct _ResampleState ResampleState;
 
 struct _ResampleState {
-	/* parameters */
+        /* parameters */
 
-	int n_channels;
-	ResampleFormat format;
+        int n_channels;
+        ResampleFormat format;
 
-	int filter_length;
+        int filter_length;
 
-	double i_rate;
-	double o_rate;
+        double i_rate;
+        double o_rate;
 
         int method;
 
-	/* internal parameters */
+        /* internal parameters */
 
         int need_reinit;
 
-	double halftaps;
+        double halftaps;
 
-	/* filter state */
+        /* filter state */
 
         void *o_buf;
         int o_size;
@@ -63,27 +63,27 @@ struct _ResampleState {
         int eos;
         int started;
 
-	int sample_size;
+        int sample_size;
 
-	void *buffer;
-	int buffer_len;
-	int buffer_filled;
+        void *buffer;
+        int buffer_len;
+        int buffer_filled;
 
-	double i_start;
-	double o_start;
+        double i_start;
+        double o_start;
 
-	double i_inc;
-	double o_inc;
+        double i_inc;
+        double o_inc;
 
         double sinc_scale;
 
-	double i_end;
-	double o_end;
+        double i_end;
+        double o_end;
 
-	int i_samples;
-	int o_samples;
+        int i_samples;
+        int o_samples;
 
-	//void *i_buf;
+        //void *i_buf;
 
         Functable *ft;
 

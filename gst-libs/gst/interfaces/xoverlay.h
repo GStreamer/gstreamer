@@ -31,7 +31,7 @@ G_BEGIN_DECLS
   (gst_x_overlay_get_type ())
 #define GST_X_OVERLAY(obj) \
   (GST_IMPLEMENTS_INTERFACE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_X_OVERLAY, \
-						 GstXOverlay))
+                                                 GstXOverlay))
 #define GST_X_OVERLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_X_OVERLAY, GstXOverlayClass))
 #define GST_IS_X_OVERLAY(obj) \
@@ -56,7 +56,7 @@ typedef struct _GstXOverlayClass {
   gpointer                 _gst_reserved[GST_PADDING];
 } GstXOverlayClass;
 
-GType	gst_x_overlay_get_type		(void);
+GType   gst_x_overlay_get_type          (void);
 
 /* virtual class function wrappers */
 void gst_x_overlay_set_xwindow_id     (GstXOverlay *overlay, gulong xwindow_id);

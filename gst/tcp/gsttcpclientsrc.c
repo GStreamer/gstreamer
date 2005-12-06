@@ -53,7 +53,7 @@ G_STMT_START {                                 \
 GST_DEBUG_CATEGORY (tcpclientsrc_debug);
 #define GST_CAT_DEFAULT tcpclientsrc_debug
 
-#define MAX_READ_SIZE			4 * 1024
+#define MAX_READ_SIZE                   4 * 1024
 
 
 static GstElementDetails gst_tcp_client_src_details =

@@ -1305,7 +1305,7 @@ static Pipeline pipelines[] = {
   {NULL, NULL},
 };
 
-#define NUM_TYPES	((sizeof (pipelines) / sizeof (Pipeline)) - 1)
+#define NUM_TYPES       ((sizeof (pipelines) / sizeof (Pipeline)) - 1)
 
 static void
 print_usage (int argc, char **argv)

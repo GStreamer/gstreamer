@@ -42,55 +42,55 @@ typedef struct _GstPropertyProbeInterface {
 
   /* signals */
   void          (*probe_needed)   (GstPropertyProbe *probe,
-				   const GParamSpec *pspec);
+                                   const GParamSpec *pspec);
 
   /* virtual functions */
   const GList * (*get_properties) (GstPropertyProbe *probe);
   gboolean      (*needs_probe)    (GstPropertyProbe *probe,
-				   guint             prop_id,
-				   const GParamSpec *pspec);
+                                   guint             prop_id,
+                                   const GParamSpec *pspec);
   void          (*probe_property) (GstPropertyProbe *probe,
-				   guint             prop_id,
-				   const GParamSpec *pspec);
+                                   guint             prop_id,
+                                   const GParamSpec *pspec);
   GValueArray * (*get_values)     (GstPropertyProbe *probe,
-				   guint             prop_id,
-				   const GParamSpec *pspec);
+                                   guint             prop_id,
+                                   const GParamSpec *pspec);
 
   gpointer _gst_reserved[GST_PADDING];
 } GstPropertyProbeInterface;
 
-GType	     gst_property_probe_get_type       (void);
+GType        gst_property_probe_get_type       (void);
 
 /* virtual class function wrappers */
 
 /* returns list of GParamSpecs */
 const GList *     gst_property_probe_get_properties      (GstPropertyProbe *probe);
 const GParamSpec *gst_property_probe_get_property        (GstPropertyProbe *probe,
-							  const gchar      *name);
+                                                          const gchar      *name);
 
 /* probe one property */
-void		  gst_property_probe_probe_property      (GstPropertyProbe *probe,
-							  const GParamSpec *pspec);
-void		  gst_property_probe_probe_property_name (GstPropertyProbe *probe,
-						          const gchar      *name);
+void              gst_property_probe_probe_property      (GstPropertyProbe *probe,
+                                                          const GParamSpec *pspec);
+void              gst_property_probe_probe_property_name (GstPropertyProbe *probe,
+                                                          const gchar      *name);
 
 /* do we need a probe? */
-gboolean	  gst_property_probe_needs_probe         (GstPropertyProbe *probe,
-							  const GParamSpec *pspec);
-gboolean	  gst_property_probe_needs_probe_name    (GstPropertyProbe *probe,
-							  const gchar      *name);
+gboolean          gst_property_probe_needs_probe         (GstPropertyProbe *probe,
+                                                          const GParamSpec *pspec);
+gboolean          gst_property_probe_needs_probe_name    (GstPropertyProbe *probe,
+                                                          const gchar      *name);
 
 /* returns list of GValues */
 GValueArray *     gst_property_probe_get_values          (GstPropertyProbe *probe,
-							  const GParamSpec *pspec);
+                                                          const GParamSpec *pspec);
 GValueArray *     gst_property_probe_get_values_name     (GstPropertyProbe *probe,
-							  const gchar      *name);
+                                                          const gchar      *name);
 
 /* sugar */
 GValueArray *     gst_property_probe_probe_and_get_values (GstPropertyProbe *probe,
-							  const GParamSpec *pspec);
+                                                          const GParamSpec *pspec);
 GValueArray *     gst_property_probe_probe_and_get_values_name (GstPropertyProbe *probe,
-							  const gchar      *name);
+                                                          const gchar      *name);
 
 G_END_DECLS
 

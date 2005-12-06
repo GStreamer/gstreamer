@@ -62,79 +62,79 @@ struct _GstMixerClass {
   const GList *  (* list_tracks)   (GstMixer      *mixer);
 
   void           (* set_volume)    (GstMixer      *mixer,
-				    GstMixerTrack *track,
-				    gint          *volumes);
+                                    GstMixerTrack *track,
+                                    gint          *volumes);
   void           (* get_volume)    (GstMixer      *mixer,
-				    GstMixerTrack *track,
-				    gint          *volumes);
+                                    GstMixerTrack *track,
+                                    gint          *volumes);
 
   void           (* set_mute)      (GstMixer      *mixer,
-				    GstMixerTrack *track,
-				    gboolean       mute);
+                                    GstMixerTrack *track,
+                                    gboolean       mute);
   void           (* set_record)    (GstMixer      *mixer,
-				    GstMixerTrack *track,
-				    gboolean       record);
+                                    GstMixerTrack *track,
+                                    gboolean       record);
 
   /* signals */
   void (* mute_toggled)   (GstMixer      *mixer,
-			   GstMixerTrack *channel,
-			   gboolean       mute);
+                           GstMixerTrack *channel,
+                           gboolean       mute);
   void (* record_toggled) (GstMixer      *mixer,
-			   GstMixerTrack *channel,
-			   gboolean       record);
+                           GstMixerTrack *channel,
+                           gboolean       record);
   void (* volume_changed) (GstMixer      *mixer,
-			   GstMixerTrack *channel,
-			   gint          *volumes);
+                           GstMixerTrack *channel,
+                           gint          *volumes);
 
-  void		(* set_option)     (GstMixer      *mixer,
-				    GstMixerOptions *opts,
-				    gchar         *value);
-  const gchar *	(* get_option)     (GstMixer      *mixer,
-				    GstMixerOptions *opts);
+  void          (* set_option)     (GstMixer      *mixer,
+                                    GstMixerOptions *opts,
+                                    gchar         *value);
+  const gchar * (* get_option)     (GstMixer      *mixer,
+                                    GstMixerOptions *opts);
 
   void (* option_changed) (GstMixer      *mixer,
-			   GstMixerOptions *opts,
-			   gchar         *option);
+                           GstMixerOptions *opts,
+                           gchar         *option);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType		gst_mixer_get_type	(void);
+GType           gst_mixer_get_type      (void);
 
 /* virtual class function wrappers */
-const GList *	gst_mixer_list_tracks	 (GstMixer      *mixer);
-void		gst_mixer_set_volume	 (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gint          *volumes);
-void		gst_mixer_get_volume	 (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gint          *volumes);
-void		gst_mixer_set_mute	 (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gboolean       mute);
-void		gst_mixer_set_record	 (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gboolean       record);
-void		gst_mixer_set_option	 (GstMixer      *mixer,
-					  GstMixerOptions *opts,
-					  gchar         *value);
-const gchar *	gst_mixer_get_option	 (GstMixer      *mixer,
-					  GstMixerOptions *opts);
+const GList *   gst_mixer_list_tracks    (GstMixer      *mixer);
+void            gst_mixer_set_volume     (GstMixer      *mixer,
+                                          GstMixerTrack *track,
+                                          gint          *volumes);
+void            gst_mixer_get_volume     (GstMixer      *mixer,
+                                          GstMixerTrack *track,
+                                          gint          *volumes);
+void            gst_mixer_set_mute       (GstMixer      *mixer,
+                                          GstMixerTrack *track,
+                                          gboolean       mute);
+void            gst_mixer_set_record     (GstMixer      *mixer,
+                                          GstMixerTrack *track,
+                                          gboolean       record);
+void            gst_mixer_set_option     (GstMixer      *mixer,
+                                          GstMixerOptions *opts,
+                                          gchar         *value);
+const gchar *   gst_mixer_get_option     (GstMixer      *mixer,
+                                          GstMixerOptions *opts);
 
 /* trigger signals */
-void		gst_mixer_mute_toggled   (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gboolean       mute);
-void		gst_mixer_record_toggled (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gboolean       record);
-void		gst_mixer_volume_changed (GstMixer      *mixer,
-					  GstMixerTrack *track,
-					  gint          *volumes);
-void		gst_mixer_option_changed (GstMixer      *mixer,
-					  GstMixerOptions *opts,
-					  gchar         *value);
+void            gst_mixer_mute_toggled   (GstMixer      *mixer,
+                                          GstMixerTrack *track,
+                                          gboolean       mute);
+void            gst_mixer_record_toggled (GstMixer      *mixer,
+                                          GstMixerTrack *track,
+                                          gboolean       record);
+void            gst_mixer_volume_changed (GstMixer      *mixer,
+                                          GstMixerTrack *track,
+                                          gint          *volumes);
+void            gst_mixer_option_changed (GstMixer      *mixer,
+                                          GstMixerOptions *opts,
+                                          gchar         *value);
 
 G_END_DECLS
 

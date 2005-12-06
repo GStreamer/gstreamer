@@ -31,11 +31,11 @@
 
 /* GLib < 2.4 compatibility */
 #ifndef G_MININT32
-#define G_MININT32	((gint32)  0x80000000)
+#define G_MININT32      ((gint32)  0x80000000)
 #endif
 
 #ifndef G_MAXINT32
-#define G_MAXINT32	((gint32)  0x7fffffff)
+#define G_MAXINT32      ((gint32)  0x7fffffff)
 #endif
 
 /*

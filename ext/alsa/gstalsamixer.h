@@ -31,7 +31,7 @@
 G_BEGIN_DECLS
 
 
-#define GST_ALSA_MIXER(obj)		((GstAlsaMixer*)(obj))
+#define GST_ALSA_MIXER(obj)             ((GstAlsaMixer*)(obj))
 
 
 typedef enum {
@@ -45,38 +45,38 @@ typedef struct _GstAlsaMixer GstAlsaMixer;
 
 
 struct _GstAlsaMixer {
-  GList *		tracklist;	/* list of available tracks */
+  GList *               tracklist;      /* list of available tracks */
 
-  snd_mixer_t *		handle;
+  snd_mixer_t *         handle;
 
-  gchar *		device;
-  gchar *		cardname;
+  gchar *               device;
+  gchar *               cardname;
 
   GstAlsaMixerDirection dir;
 };
 
 
-GstAlsaMixer*	gst_alsa_mixer_new		(const gchar *device,
+GstAlsaMixer*   gst_alsa_mixer_new              (const gchar *device,
                                                  GstAlsaMixerDirection dir);
-void		gst_alsa_mixer_free		(GstAlsaMixer *mixer);
+void            gst_alsa_mixer_free             (GstAlsaMixer *mixer);
 
-const GList*	gst_alsa_mixer_list_tracks 	(GstAlsaMixer * mixer);
-void		gst_alsa_mixer_set_volume	(GstAlsaMixer * mixer,
+const GList*    gst_alsa_mixer_list_tracks      (GstAlsaMixer * mixer);
+void            gst_alsa_mixer_set_volume       (GstAlsaMixer * mixer,
                                                  GstMixerTrack * track,
                                                  gint * volumes);
-void		gst_alsa_mixer_get_volume	(GstAlsaMixer * mixer,
+void            gst_alsa_mixer_get_volume       (GstAlsaMixer * mixer,
                                                  GstMixerTrack * track,
                                                  gint * volumes);
-void		gst_alsa_mixer_set_record	(GstAlsaMixer * mixer,
+void            gst_alsa_mixer_set_record       (GstAlsaMixer * mixer,
                                                  GstMixerTrack * track,
                                                  gboolean record);
-void		gst_alsa_mixer_set_mute		(GstAlsaMixer * mixer,
+void            gst_alsa_mixer_set_mute         (GstAlsaMixer * mixer,
                                                  GstMixerTrack * track,
                                                  gboolean mute);
-void		gst_alsa_mixer_set_option	(GstAlsaMixer * mixer,
+void            gst_alsa_mixer_set_option       (GstAlsaMixer * mixer,
                                                  GstMixerOptions * opts,
                                                  gchar * value);
-const gchar*	gst_alsa_mixer_get_option	(GstAlsaMixer * mixer,
+const gchar*    gst_alsa_mixer_get_option       (GstAlsaMixer * mixer,
                                                  GstMixerOptions * opts);
 
 

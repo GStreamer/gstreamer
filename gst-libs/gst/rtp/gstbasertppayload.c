@@ -32,12 +32,12 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_MTU			1024
-#define DEFAULT_PT			96
-#define DEFAULT_SSRC			-1
-#define DEFAULT_TIMESTAMP_OFFSET	-1
-#define DEFAULT_SEQNUM_OFFSET		-1
-#define DEFAULT_MAX_PTIME		-1
+#define DEFAULT_MTU                     1024
+#define DEFAULT_PT                      96
+#define DEFAULT_SSRC                    -1
+#define DEFAULT_TIMESTAMP_OFFSET        -1
+#define DEFAULT_SEQNUM_OFFSET           -1
+#define DEFAULT_MAX_PTIME               -1
 
 enum
 {

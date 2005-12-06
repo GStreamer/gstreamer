@@ -30,10 +30,10 @@ G_BEGIN_DECLS
   (gst_tuner_channel_get_type ())
 #define GST_TUNER_CHANNEL(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TUNER_CHANNEL, \
-			       GstTunerChannel))
+                               GstTunerChannel))
 #define GST_TUNER_CHANNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TUNER_CHANNEL, \
-			    GstTunerChannelClass))
+                            GstTunerChannelClass))
 #define GST_IS_TUNER_CHANNEL(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TUNER_CHANNEL))
 #define GST_IS_TUNER_CHANNEL_CLASS(klass) \
@@ -56,9 +56,9 @@ typedef struct _GstTunerChannel {
   GstTunerChannelFlags flags;
   gfloat               freq_multiplicator;
   gulong               min_frequency,
-		       max_frequency;
+                       max_frequency;
   gint                 min_signal,
-		       max_signal;
+                       max_signal;
 } GstTunerChannel;
 
 typedef struct _GstTunerChannelClass {
@@ -66,14 +66,14 @@ typedef struct _GstTunerChannelClass {
 
   /* signals */
   void (*frequency_changed) (GstTunerChannel *channel,
-			     gulong           frequency);
+                             gulong           frequency);
   void (*signal_changed)    (GstTunerChannel *channel,
-			     gint             signal);
+                             gint             signal);
 
   gpointer _gst_reserved[GST_PADDING];
 } GstTunerChannelClass;
 
-GType		gst_tuner_channel_get_type	(void);
+GType           gst_tuner_channel_get_type      (void);
 
 G_END_DECLS
 

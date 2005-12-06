@@ -30,10 +30,10 @@ G_BEGIN_DECLS
   (gst_mixer_track_get_type ())
 #define GST_MIXER_TRACK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MIXER_TRACK, \
-			       GstMixerTrack))
+                               GstMixerTrack))
 #define GST_MIXER_TRACK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_MIXER_TRACK, \
-			    GstMixerTrackClass))
+                            GstMixerTrackClass))
 #define GST_IS_MIXER_TRACK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MIXER_TRACK))
 #define GST_IS_MIXER_TRACK_CLASS(klass) \
@@ -77,8 +77,8 @@ struct _GstMixerTrack {
   /* FIXME: flags should be guint32. Change in 0.9 */
   GstMixerTrackFlags flags;
   gint               num_channels,
-	             min_volume,
-	             max_volume;
+                     min_volume,
+                     max_volume;
 };
 
 struct _GstMixerTrackClass {
@@ -86,16 +86,16 @@ struct _GstMixerTrackClass {
 
   /* signals */
   void (* mute_toggled)   (GstMixerTrack *channel,
-			   gboolean       mute);
+                           gboolean       mute);
   void (* record_toggled) (GstMixerTrack *channel,
-			   gboolean       record);
+                           gboolean       record);
   void (* volume_changed) (GstMixerTrack *channel,
-			   gint          *volumes);
+                           gint          *volumes);
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType		gst_mixer_track_get_type	(void);
+GType           gst_mixer_track_get_type        (void);
 
 G_END_DECLS
 

@@ -51,7 +51,7 @@ double functable_evaluate (Functable *t,double x);
 
 double functable_fir(Functable *t,double x0,int n,double *data,int len);
 void functable_fir2(Functable *t,double *r0, double *r1, double x0,
-	int n,double *data,int len);
+        int n,double *data,int len);
 
 void functable_func_sinc(double *fx, double *dfx, double x, void *closure);
 void functable_func_boxcar(double *fx, double *dfx, double x, void *closure);

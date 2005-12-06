@@ -73,7 +73,7 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_SILENT	TRUE
+#define DEFAULT_SILENT  TRUE
 
 enum
 {

@@ -63,41 +63,41 @@ G_BEGIN_DECLS
 #define GST_VIDEO_FPS_RANGE "(fraction) [ 0, max ]"
 
 /* consider the next 2 protected */
-#define __GST_VIDEO_CAPS_MAKE_32A(R, G, B, A)				\
-    "video/x-raw-rgb, "							\
-    "bpp = (int) 32, "							\
-    "depth = (int) 32, "						\
-    "endianness = (int) BIG_ENDIAN, "					\
-    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_32 ", "		\
-    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_32 ", "		\
-    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_32 ", "		\
-    "alpha_mask = (int) " GST_VIDEO_BYTE ## A ## _MASK_32 ", "		\
-    "width = " GST_VIDEO_SIZE_RANGE ", "				\
-    "height = " GST_VIDEO_SIZE_RANGE ", "				\
+#define __GST_VIDEO_CAPS_MAKE_32A(R, G, B, A)                           \
+    "video/x-raw-rgb, "                                                 \
+    "bpp = (int) 32, "                                                  \
+    "depth = (int) 32, "                                                \
+    "endianness = (int) BIG_ENDIAN, "                                   \
+    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_32 ", "            \
+    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_32 ", "          \
+    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_32 ", "           \
+    "alpha_mask = (int) " GST_VIDEO_BYTE ## A ## _MASK_32 ", "          \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE
 
-#define __GST_VIDEO_CAPS_MAKE_32(R, G, B)				\
-    "video/x-raw-rgb, "							\
-    "bpp = (int) 32, "							\
-    "depth = (int) 24, "						\
-    "endianness = (int) BIG_ENDIAN, "					\
-    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_32 ", "		\
-    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_32 ", "		\
-    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_32 ", "		\
-    "width = " GST_VIDEO_SIZE_RANGE ", "				\
-    "height = " GST_VIDEO_SIZE_RANGE ", "				\
+#define __GST_VIDEO_CAPS_MAKE_32(R, G, B)                               \
+    "video/x-raw-rgb, "                                                 \
+    "bpp = (int) 32, "                                                  \
+    "depth = (int) 24, "                                                \
+    "endianness = (int) BIG_ENDIAN, "                                   \
+    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_32 ", "            \
+    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_32 ", "          \
+    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_32 ", "           \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE
 
-#define __GST_VIDEO_CAPS_MAKE_24(R, G, B)				\
-    "video/x-raw-rgb, "							\
-    "bpp = (int) 24, "							\
-    "depth = (int) 24, "						\
-    "endianness = (int) BIG_ENDIAN, "					\
-    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_24 ", "		\
-    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_24 ", "		\
-    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_24 ", "		\
-    "width = " GST_VIDEO_SIZE_RANGE ", "				\
-    "height = " GST_VIDEO_SIZE_RANGE ", "				\
+#define __GST_VIDEO_CAPS_MAKE_24(R, G, B)                               \
+    "video/x-raw-rgb, "                                                 \
+    "bpp = (int) 24, "                                                  \
+    "depth = (int) 24, "                                                \
+    "endianness = (int) BIG_ENDIAN, "                                   \
+    "red_mask = (int) " GST_VIDEO_BYTE ## R ## _MASK_24 ", "            \
+    "green_mask = (int) " GST_VIDEO_BYTE ## G ## _MASK_24 ", "          \
+    "blue_mask = (int) " GST_VIDEO_BYTE ## B ## _MASK_24 ", "           \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE
 
 
@@ -152,36 +152,36 @@ G_BEGIN_DECLS
       
 /* 15/16 bit */
   
-#define GST_VIDEO_CAPS_RGB_16						\
-	    "video/x-raw-rgb, "						\
-            "bpp = (int) 16, "						\
-            "depth = (int) 16, "					\
-            "endianness = (int) BYTE_ORDER, "				\
-            "red_mask = (int) " GST_VIDEO_RED_MASK_16 ", "		\
-            "green_mask = (int) " GST_VIDEO_GREEN_MASK_16 ", "		\
-            "blue_mask = (int) " GST_VIDEO_BLUE_MASK_16 ", "		\
-            "width = " GST_VIDEO_SIZE_RANGE ", "			\
-            "height = " GST_VIDEO_SIZE_RANGE ", "			\
+#define GST_VIDEO_CAPS_RGB_16                                           \
+            "video/x-raw-rgb, "                                         \
+            "bpp = (int) 16, "                                          \
+            "depth = (int) 16, "                                        \
+            "endianness = (int) BYTE_ORDER, "                           \
+            "red_mask = (int) " GST_VIDEO_RED_MASK_16 ", "              \
+            "green_mask = (int) " GST_VIDEO_GREEN_MASK_16 ", "          \
+            "blue_mask = (int) " GST_VIDEO_BLUE_MASK_16 ", "            \
+            "width = " GST_VIDEO_SIZE_RANGE ", "                        \
+            "height = " GST_VIDEO_SIZE_RANGE ", "                       \
             "framerate = " GST_VIDEO_FPS_RANGE
 
-#define GST_VIDEO_CAPS_RGB_15						\
-	    "video/x-raw-rgb, "						\
-            "bpp = (int) 16, "						\
-            "depth = (int) 15, "					\
-            "endianness = (int) BYTE_ORDER, "				\
-            "red_mask = (int) " GST_VIDEO_RED_MASK_15 ", "		\
-            "green_mask = (int) " GST_VIDEO_GREEN_MASK_15 ", "		\
-            "blue_mask = (int) " GST_VIDEO_BLUE_MASK_15 ", "		\
-            "width = " GST_VIDEO_SIZE_RANGE ", "			\
-            "height = " GST_VIDEO_SIZE_RANGE ", "			\
+#define GST_VIDEO_CAPS_RGB_15                                           \
+            "video/x-raw-rgb, "                                         \
+            "bpp = (int) 16, "                                          \
+            "depth = (int) 15, "                                        \
+            "endianness = (int) BYTE_ORDER, "                           \
+            "red_mask = (int) " GST_VIDEO_RED_MASK_15 ", "              \
+            "green_mask = (int) " GST_VIDEO_GREEN_MASK_15 ", "          \
+            "blue_mask = (int) " GST_VIDEO_BLUE_MASK_15 ", "            \
+            "width = " GST_VIDEO_SIZE_RANGE ", "                        \
+            "height = " GST_VIDEO_SIZE_RANGE ", "                       \
             "framerate = " GST_VIDEO_FPS_RANGE
 
-#define GST_VIDEO_CAPS_YUV(fourcc)					\
-	"video/x-raw-yuv, "						\
-	"format = (fourcc) " fourcc ", "				\
-	"width = " GST_VIDEO_SIZE_RANGE ", "				\
-	"height = " GST_VIDEO_SIZE_RANGE ", "				\
-	"framerate = " GST_VIDEO_FPS_RANGE
+#define GST_VIDEO_CAPS_YUV(fourcc)                                      \
+        "video/x-raw-yuv, "                                             \
+        "format = (fourcc) " fourcc ", "                                \
+        "width = " GST_VIDEO_SIZE_RANGE ", "                            \
+        "height = " GST_VIDEO_SIZE_RANGE ", "                           \
+        "framerate = " GST_VIDEO_FPS_RANGE
 
 /* functions */
 const GValue *gst_video_frame_rate (GstPad *pad);

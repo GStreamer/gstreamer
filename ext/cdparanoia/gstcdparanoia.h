@@ -58,9 +58,9 @@ extern "C" {
 
 /* NOTE: per-element flags start with 16 for now */
 typedef enum {
-  CDPARANOIA_OPEN		= (GST_ELEMENT_FLAG_LAST << 0),
+  CDPARANOIA_OPEN               = (GST_ELEMENT_FLAG_LAST << 0),
 
-  CDPARANOIA_FLAG_LAST		= (GST_ELEMENT_FLAG_LAST << 2),
+  CDPARANOIA_FLAG_LAST          = (GST_ELEMENT_FLAG_LAST << 2),
 } CDParanoiaFlags;
 
 typedef struct _CDParanoia CDParanoia;
@@ -113,9 +113,9 @@ struct _CDParanoiaClass {
   GstElementClass parent_class;
 
   /* signal callbacks */
-  void (*smilie_change)		(CDParanoia *cdparanoia, gchar *smilie);
-  void (*transport_error)	(CDParanoia *cdparanoia, gint offset);
-  void (*uncorrected_error)	(CDParanoia *cdparanoia, gint offset);
+  void (*smilie_change)         (CDParanoia *cdparanoia, gchar *smilie);
+  void (*transport_error)       (CDParanoia *cdparanoia, gint offset);
+  void (*uncorrected_error)     (CDParanoia *cdparanoia, gint offset);
 };
 
 GType cdparanoia_get_type(void);

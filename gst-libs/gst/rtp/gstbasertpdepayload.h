@@ -32,7 +32,7 @@ G_BEGIN_DECLS
 #define GST_BASE_RTP_DEPAYLOAD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_RTP_DEPAYLOAD,GstBaseRTPDepayload))
 #define GST_BASE_RTP_DEPAYLOAD_GET_CLASS(obj) \
-	(G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_BASE_RTP_DEPAYLOAD,GstBaseRTPDepayloadClass))
+        (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_BASE_RTP_DEPAYLOAD,GstBaseRTPDepayloadClass))
 #define GST_IS_BASE_RTP_DEPAYLOAD(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_RTP_DEPAYLOAD))
 #define GST_IS_BASE_RTP_DEPAYLOAD_CLASS(obj) \
@@ -44,10 +44,10 @@ G_BEGIN_DECLS
 /* in milliseconds */
 #define RTP_QUEUE_DELAY 100;
 
-#define QUEUE_LOCK_INIT(base)	(g_static_rec_mutex_init(&base->queuelock))
-#define QUEUE_LOCK_FREE(base)	(g_static_rec_mutex_free(&base->queuelock))
-#define QUEUE_LOCK(base)		(g_static_rec_mutex_lock(&base->queuelock))
-#define QUEUE_UNLOCK(base)		(g_static_rec_mutex_unlock(&base->queuelock))
+#define QUEUE_LOCK_INIT(base)   (g_static_rec_mutex_init(&base->queuelock))
+#define QUEUE_LOCK_FREE(base)   (g_static_rec_mutex_free(&base->queuelock))
+#define QUEUE_LOCK(base)                (g_static_rec_mutex_lock(&base->queuelock))
+#define QUEUE_UNLOCK(base)              (g_static_rec_mutex_unlock(&base->queuelock))
 
 typedef struct _GstBaseRTPDepayload      GstBaseRTPDepayload;
 typedef struct _GstBaseRTPDepayloadClass GstBaseRTPDepayloadClass;

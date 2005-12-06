@@ -33,13 +33,13 @@ gboolean have_eos = FALSE;
 GstPad *mysrcpad, *mysinkpad;
 
 
-#define RESAMPLE_CAPS_TEMPLATE_STRING	\
-    "audio/x-raw-int, "			\
-    "channels = (int) [ 1, MAX ], "	\
-    "rate = (int) [ 1,  MAX ], "	\
-    "endianness = (int) BYTE_ORDER, "	\
-    "width = (int) 16, "		\
-    "depth = (int) 16, "		\
+#define RESAMPLE_CAPS_TEMPLATE_STRING   \
+    "audio/x-raw-int, "                 \
+    "channels = (int) [ 1, MAX ], "     \
+    "rate = (int) [ 1,  MAX ], "        \
+    "endianness = (int) BYTE_ORDER, "   \
+    "width = (int) 16, "                \
+    "depth = (int) 16, "                \
     "signed = (bool) TRUE"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",

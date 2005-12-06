@@ -32,7 +32,7 @@ gboolean have_eos = FALSE;
  * get_peer, and then remove references in every test function */
 GstPad *mysrcpad, *mysinkpad;
 
-#define CONVERT_CAPS_TEMPLATE_STRING	\
+#define CONVERT_CAPS_TEMPLATE_STRING    \
   "audio/x-raw-float, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
@@ -190,8 +190,8 @@ verify_convert (void *in, int inlength,
 
 
 #define RUN_CONVERSION(inarray, in_get_caps, outarray, out_get_caps)    \
-  verify_convert (inarray, sizeof (inarray),				\
-	in_get_caps, outarray, sizeof (outarray), out_get_caps)
+  verify_convert (inarray, sizeof (inarray),                            \
+        in_get_caps, outarray, sizeof (outarray), out_get_caps)
 
 GST_START_TEST (test_int16)
 {

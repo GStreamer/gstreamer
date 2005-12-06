@@ -28,24 +28,24 @@ struct _AudioresampleBufferQueue
   int offset;
 };
 
-AudioresampleBuffer *	audioresample_buffer_new 		(void);
-AudioresampleBuffer *	audioresample_buffer_new_and_alloc 	(int size);
-AudioresampleBuffer *	audioresample_buffer_new_with_data 	(void *data, int size);
-AudioresampleBuffer *	audioresample_buffer_new_subbuffer 	(AudioresampleBuffer * buffer, 
-								 int offset,
-   								 int length);
-void 			audioresample_buffer_ref 		(AudioresampleBuffer * buffer);
-void 			audioresample_buffer_unref 		(AudioresampleBuffer * buffer);
+AudioresampleBuffer *   audioresample_buffer_new                (void);
+AudioresampleBuffer *   audioresample_buffer_new_and_alloc      (int size);
+AudioresampleBuffer *   audioresample_buffer_new_with_data      (void *data, int size);
+AudioresampleBuffer *   audioresample_buffer_new_subbuffer      (AudioresampleBuffer * buffer, 
+                                                                 int offset,
+                                                                 int length);
+void                    audioresample_buffer_ref                (AudioresampleBuffer * buffer);
+void                    audioresample_buffer_unref              (AudioresampleBuffer * buffer);
 
-AudioresampleBufferQueue *	
-			audioresample_buffer_queue_new 		(void);
-void 			audioresample_buffer_queue_free 	(AudioresampleBufferQueue * queue);
-int 			audioresample_buffer_queue_get_depth 	(AudioresampleBufferQueue * queue);
-int 			audioresample_buffer_queue_get_offset 	(AudioresampleBufferQueue * queue);
-void 			audioresample_buffer_queue_push 	(AudioresampleBufferQueue * queue,
-   								 AudioresampleBuffer * buffer);
-AudioresampleBuffer *	audioresample_buffer_queue_pull 	(AudioresampleBufferQueue * queue, int len);
-AudioresampleBuffer *	audioresample_buffer_queue_peek 	(AudioresampleBufferQueue * queue, int len);
-void	 		audioresample_buffer_queue_flush 	(AudioresampleBufferQueue * queue);
+AudioresampleBufferQueue *      
+                        audioresample_buffer_queue_new          (void);
+void                    audioresample_buffer_queue_free         (AudioresampleBufferQueue * queue);
+int                     audioresample_buffer_queue_get_depth    (AudioresampleBufferQueue * queue);
+int                     audioresample_buffer_queue_get_offset   (AudioresampleBufferQueue * queue);
+void                    audioresample_buffer_queue_push         (AudioresampleBufferQueue * queue,
+                                                                 AudioresampleBuffer * buffer);
+AudioresampleBuffer *   audioresample_buffer_queue_pull         (AudioresampleBufferQueue * queue, int len);
+AudioresampleBuffer *   audioresample_buffer_queue_peek         (AudioresampleBufferQueue * queue, int len);
+void                    audioresample_buffer_queue_flush        (AudioresampleBufferQueue * queue);
 
 #endif

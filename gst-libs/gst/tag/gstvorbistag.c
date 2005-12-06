@@ -201,27 +201,27 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
  * @id_data: identification data at start of stream
  * @id_data_length: length of identification data
  * @ vendor_string: pointer to a string that should take the vendor string of this
- *		    vorbis comment or NULL if you don't need it.
+ *                  vorbis comment or NULL if you don't need it.
  *
  * Creates a new tag list that contains the information parsed out of a 
  * vorbiscomment packet.
  *
  * Returns: A new #GstTagList with all tags that could be extracted from the 
- *	    given vorbiscomment buffer or NULL on error.
+ *          given vorbiscomment buffer or NULL on error.
  */
 GstTagList *
 gst_tag_list_from_vorbiscomment_buffer (const GstBuffer * buffer,
     const guint8 * id_data, const guint id_data_length, gchar ** vendor_string)
 {
-#define ADVANCE(x) G_STMT_START{						\
-  data += x;									\
-  size -= x;									\
-  if (size < 4) goto error;							\
-  cur_size = GST_READ_UINT32_LE (data);						\
-  data += 4;									\
-  size -= 4;									\
-  if (cur_size > size) goto error;						\
-  cur = (gchar*)data;									\
+#define ADVANCE(x) G_STMT_START{                                                \
+  data += x;                                                                    \
+  size -= x;                                                                    \
+  if (size < 4) goto error;                                                     \
+  cur_size = GST_READ_UINT32_LE (data);                                         \
+  data += 4;                                                                    \
+  size -= 4;                                                                    \
+  if (cur_size > size) goto error;                                              \
+  cur = (gchar*)data;                                                                   \
 }G_STMT_END
   gchar *cur, *value;
   guint cur_size;
@@ -376,7 +376,7 @@ write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
  * Creates a new vorbiscomment buffer from a tag list.
  *
  * Returns: A new #GstBuffer containing a vorbiscomment buffer with all tags that 
- *	    could be converted from the given tag list.
+ *          could be converted from the given tag list.
  */
 GstBuffer *
 gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,

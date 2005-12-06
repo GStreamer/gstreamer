@@ -52,8 +52,8 @@ G_STMT_START {                                 \
 GST_DEBUG_CATEGORY (tcpserversrc_debug);
 #define GST_CAT_DEFAULT tcpserversrc_debug
 
-#define TCP_DEFAULT_LISTEN_HOST		NULL    /* listen on all interfaces */
-#define TCP_BACKLOG			1       /* client connection queue */
+#define TCP_DEFAULT_LISTEN_HOST         NULL    /* listen on all interfaces */
+#define TCP_BACKLOG                     1       /* client connection queue */
 
 
 static GstElementDetails gst_tcp_server_src_details =

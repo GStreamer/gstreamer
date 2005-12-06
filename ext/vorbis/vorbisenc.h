@@ -45,13 +45,13 @@ typedef struct _GstVorbisEnc GstVorbisEnc;
 typedef struct _GstVorbisEncClass GstVorbisEncClass;
 
 struct _GstVorbisEnc {
-  GstElement	   element;
+  GstElement       element;
 
   GstPad          *sinkpad;
   GstPad          *srcpad;
 
   vorbis_info      vi; /* struct that stores all the static vorbis bitstream
-				                            settings */
+                                                            settings */
   vorbis_comment   vc; /* struct that stores all the user comments */
 
   vorbis_dsp_state vd; /* central working state for the packet->PCM decoder */
@@ -62,20 +62,20 @@ struct _GstVorbisEnc {
   gint             min_bitrate;
   gint             max_bitrate;
   gfloat           quality;
-  gboolean	   quality_set;
+  gboolean         quality_set;
 
   gint             channels;
   gint             frequency;
 
-  guint64	   samples_in;
-  guint64	   bytes_out;
+  guint64          samples_in;
+  guint64          bytes_out;
   GstClockTime     prev_ts;
 
-  GstTagList *	   tags;
+  GstTagList *     tags;
 
   gboolean         setup;
   gboolean         header_sent;
-  gchar		  *last_message;
+  gchar           *last_message;
 };
 
 struct _GstVorbisEncClass {

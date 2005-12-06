@@ -50,7 +50,7 @@ typedef struct _GstTunerNormClass {
   gpointer _gst_reserved[GST_PADDING];
 } GstTunerNormClass;
 
-GType		gst_tuner_norm_get_type		(void);
+GType           gst_tuner_norm_get_type         (void);
 
 G_END_DECLS
 

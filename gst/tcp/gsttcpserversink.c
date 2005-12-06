@@ -40,7 +40,7 @@
 #include "gsttcpserversink.h"
 #include "gsttcp-marshal.h"
 
-#define TCP_BACKLOG		5
+#define TCP_BACKLOG             5
 
 /* elementfactory information */
 static GstElementDetails gst_tcp_server_sink_details =

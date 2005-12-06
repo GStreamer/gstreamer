@@ -46,21 +46,21 @@
 
 /* the select call is also performed on the control sockets, that way
  * we can send special commands to unblock or restart the select call */
-#define CONTROL_RESTART		'R'     /* restart the select call */
-#define CONTROL_STOP		'S'     /* stop the select call */
-#define CONTROL_SOCKETS(sink)	sink->control_sock
-#define WRITE_SOCKET(sink)	sink->control_sock[1]
-#define READ_SOCKET(sink)	sink->control_sock[0]
+#define CONTROL_RESTART         'R'     /* restart the select call */
+#define CONTROL_STOP            'S'     /* stop the select call */
+#define CONTROL_SOCKETS(sink)   sink->control_sock
+#define WRITE_SOCKET(sink)      sink->control_sock[1]
+#define READ_SOCKET(sink)       sink->control_sock[0]
 
-#define SEND_COMMAND(sink, command)		\
-G_STMT_START {					\
-  unsigned char c; c = command;			\
-  write (WRITE_SOCKET(sink).fd, &c, 1);		\
+#define SEND_COMMAND(sink, command)             \
+G_STMT_START {                                  \
+  unsigned char c; c = command;                 \
+  write (WRITE_SOCKET(sink).fd, &c, 1);         \
 } G_STMT_END
 
-#define READ_COMMAND(sink, command, res)	\
-G_STMT_START {					\
-  res = read(READ_SOCKET(sink).fd, &command, 1);	\
+#define READ_COMMAND(sink, command, res)        \
+G_STMT_START {                                  \
+  res = read(READ_SOCKET(sink).fd, &command, 1);        \
 } G_STMT_END
 
 /* elementfactory information */
@@ -96,16 +96,16 @@ enum
 };
 
 /* this is really arbitrarily chosen */
-#define DEFAULT_PROTOCOL		 GST_TCP_PROTOCOL_NONE
-#define DEFAULT_MODE			 GST_FDSET_MODE_POLL
-#define DEFAULT_BUFFERS_MAX		-1
-#define DEFAULT_BUFFERS_SOFT_MAX	-1
-#define DEFAULT_UNIT_TYPE		GST_UNIT_TYPE_BUFFERS
-#define DEFAULT_UNITS_MAX		-1
-#define DEFAULT_UNITS_SOFT_MAX		-1
-#define DEFAULT_RECOVER_POLICY		 GST_RECOVER_POLICY_NONE
-#define DEFAULT_TIMEOUT			 0
-#define DEFAULT_SYNC_METHOD		 GST_SYNC_METHOD_LATEST
+#define DEFAULT_PROTOCOL                 GST_TCP_PROTOCOL_NONE
+#define DEFAULT_MODE                     GST_FDSET_MODE_POLL
+#define DEFAULT_BUFFERS_MAX             -1
+#define DEFAULT_BUFFERS_SOFT_MAX        -1
+#define DEFAULT_UNIT_TYPE               GST_UNIT_TYPE_BUFFERS
+#define DEFAULT_UNITS_MAX               -1
+#define DEFAULT_UNITS_SOFT_MAX          -1
+#define DEFAULT_RECOVER_POLICY           GST_RECOVER_POLICY_NONE
+#define DEFAULT_TIMEOUT                  0
+#define DEFAULT_SYNC_METHOD              GST_SYNC_METHOD_LATEST
 
 enum
 {

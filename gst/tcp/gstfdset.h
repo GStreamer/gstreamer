@@ -45,24 +45,24 @@ typedef enum {
 GType gst_fdset_mode_get_type (void);
 
 
-GstFDSet*	gst_fdset_new (GstFDSetMode mode);
-void		gst_fdset_free (GstFDSet *set);
+GstFDSet*       gst_fdset_new (GstFDSetMode mode);
+void            gst_fdset_free (GstFDSet *set);
 
-void		gst_fdset_set_mode (GstFDSet *set, GstFDSetMode mode);
-GstFDSetMode	gst_fdset_get_mode (GstFDSet *set);
+void            gst_fdset_set_mode (GstFDSet *set, GstFDSetMode mode);
+GstFDSetMode    gst_fdset_get_mode (GstFDSet *set);
 
-gboolean       	gst_fdset_add_fd (GstFDSet *set, GstFD *fd); 
-gboolean       	gst_fdset_remove_fd (GstFDSet *set, GstFD *fd); 
+gboolean        gst_fdset_add_fd (GstFDSet *set, GstFD *fd); 
+gboolean        gst_fdset_remove_fd (GstFDSet *set, GstFD *fd); 
 
-void       	gst_fdset_fd_ctl_write (GstFDSet *set, GstFD *fd, gboolean active); 
-void       	gst_fdset_fd_ctl_read (GstFDSet *set, GstFD *fd, gboolean active); 
+void            gst_fdset_fd_ctl_write (GstFDSet *set, GstFD *fd, gboolean active); 
+void            gst_fdset_fd_ctl_read (GstFDSet *set, GstFD *fd, gboolean active); 
 
-gboolean       	gst_fdset_fd_has_closed (GstFDSet *set, GstFD *fd); 
-gboolean       	gst_fdset_fd_has_error (GstFDSet *set, GstFD *fd); 
-gboolean       	gst_fdset_fd_can_read (GstFDSet *set, GstFD *fd); 
-gboolean       	gst_fdset_fd_can_write (GstFDSet *set, GstFD *fd); 
+gboolean        gst_fdset_fd_has_closed (GstFDSet *set, GstFD *fd); 
+gboolean        gst_fdset_fd_has_error (GstFDSet *set, GstFD *fd); 
+gboolean        gst_fdset_fd_can_read (GstFDSet *set, GstFD *fd); 
+gboolean        gst_fdset_fd_can_write (GstFDSet *set, GstFD *fd); 
 
-gint		gst_fdset_wait (GstFDSet *set, int timeout);
+gint            gst_fdset_wait (GstFDSet *set, int timeout);
 
 G_END_DECLS
 

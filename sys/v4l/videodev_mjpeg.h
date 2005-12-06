@@ -84,7 +84,7 @@ struct mjpeg_params
 
    /* Misc */
 
-	char reserved[312];  /* Makes 512 bytes for this structure */
+        char reserved[312];  /* Makes 512 bytes for this structure */
 };
 
 struct mjpeg_requestbuffers

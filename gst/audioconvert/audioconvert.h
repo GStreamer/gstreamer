@@ -73,16 +73,16 @@ struct _AudioConvertCtx
   gint out_scale;
 };
 
-gboolean	audio_convert_clean_fmt		(AudioConvertFmt *fmt); 
+gboolean        audio_convert_clean_fmt         (AudioConvertFmt *fmt); 
 
-gboolean	audio_convert_prepare_context	(AudioConvertCtx *ctx, AudioConvertFmt *in, 
-						 AudioConvertFmt *out);
-gboolean 	audio_convert_get_sizes 	(AudioConvertCtx *ctx, gint samples, gint *srcsize,
-		                		 gint *dstsize);
+gboolean        audio_convert_prepare_context   (AudioConvertCtx *ctx, AudioConvertFmt *in, 
+                                                 AudioConvertFmt *out);
+gboolean        audio_convert_get_sizes         (AudioConvertCtx *ctx, gint samples, gint *srcsize,
+                                                 gint *dstsize);
 
-gboolean	audio_convert_clean_context	(AudioConvertCtx *ctx);
+gboolean        audio_convert_clean_context     (AudioConvertCtx *ctx);
 
-gboolean	audio_convert_convert		(AudioConvertCtx *ctx, gpointer src, 
-						 gpointer dst, gint samples, gboolean src_writable);
+gboolean        audio_convert_convert           (AudioConvertCtx *ctx, gpointer src, 
+                                                 gpointer dst, gint samples, gboolean src_writable);
 
 #endif /* __AUDIO_CONVERT_H__ */

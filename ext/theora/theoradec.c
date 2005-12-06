@@ -78,7 +78,7 @@ struct _GstTheoraDecClass
   GstElementClass parent_class;
 };
 
-#define THEORA_DEF_CROP		TRUE
+#define THEORA_DEF_CROP         TRUE
 enum
 {
   ARG_0,

@@ -83,8 +83,8 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_SILENT		TRUE
-#define DEFAULT_NEW_PREF	1.0
+#define DEFAULT_SILENT          TRUE
+#define DEFAULT_NEW_PREF        1.0
 
 enum
 {

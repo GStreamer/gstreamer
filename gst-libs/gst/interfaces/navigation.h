@@ -47,15 +47,15 @@ typedef struct _GstNavigationInterface {
   gpointer _gst_reserved[GST_PADDING];
 } GstNavigationInterface;
 
-GType		gst_navigation_get_type	(void);
+GType           gst_navigation_get_type (void);
 
 /* virtual class function wrappers */
 void gst_navigation_send_event (GstNavigation *navigation, GstStructure *structure);
 
 void gst_navigation_send_key_event (GstNavigation *navigation, 
-	const char *event, const char *key);
+        const char *event, const char *key);
 void gst_navigation_send_mouse_event (GstNavigation *navigation, 
-	const char *event, int button, double x, double y);
+        const char *event, int button, double x, double y);
 
 G_END_DECLS
 

@@ -31,24 +31,24 @@ GST_DEBUG_CATEGORY_EXTERN (audio_convert_debug);
 /*
  * Delete channel mixer matrix.
  */
-void		gst_channel_mix_unset_matrix	(AudioConvertCtx * this);
+void            gst_channel_mix_unset_matrix    (AudioConvertCtx * this);
 
 /*
  * Setup channel mixer matrix.
  */
-void		gst_channel_mix_setup_matrix	(AudioConvertCtx * this);
+void            gst_channel_mix_setup_matrix    (AudioConvertCtx * this);
 
 /*
  * Checks for passthrough (= identity matrix).
  */
-gboolean	gst_channel_mix_passthrough	(AudioConvertCtx * this);
+gboolean        gst_channel_mix_passthrough     (AudioConvertCtx * this);
 
 /*
  * Do actual mixing.
  */
-void		gst_channel_mix_mix		(AudioConvertCtx * this,
-						 gint32          * in_data,
-						 gint32          * out_data,
-						 gint              samples);
+void            gst_channel_mix_mix             (AudioConvertCtx * this,
+                                                 gint32          * in_data,
+                                                 gint32          * out_data,
+                                                 gint              samples);
 
 #endif /* __GST_CHANNEL_MIX_H__ */

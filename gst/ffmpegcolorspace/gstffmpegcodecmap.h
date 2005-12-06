@@ -48,10 +48,10 @@ gst_ffmpegcsp_caps_with_codectype (enum CodecType  type,
 
 int
 gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
-			      uint8_t *   ptr,
-			      enum PixelFormat pix_fmt,
-			      int         width,
-			      int         height);
+                              uint8_t *   ptr,
+                              enum PixelFormat pix_fmt,
+                              int         width,
+                              int         height);
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */
 
