@@ -48,7 +48,7 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_FILTERLEN	16
+#define DEFAULT_FILTERLEN       16
 
 enum
 {
