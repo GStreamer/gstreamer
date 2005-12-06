@@ -340,57 +340,57 @@ gst_iir_equalizer_get_property (GObject * object, guint prop_id,
 
 /* start of code that is type specific */
 
-#define CREATE_OPTIMIZED_FUNCTIONS(TYPE,BIG_TYPE,MIN_VAL,MAX_VAL)	\
-typedef struct {							\
-  TYPE x1, x2;		/* history of input values for a filter */	\
-  TYPE y1, y2;		/* history of output values for a filter */	\
-} SecondOrderHistory ## TYPE;						\
-									\
-static inline TYPE							\
-one_step_ ## TYPE (SecondOrderFilter *filter,				\
-    SecondOrderHistory ## TYPE *history, TYPE input)			\
-{									\
-  /* calculate output */						\
-  TYPE output = filter->alpha * (input - history->x2) +			\
-    filter->gamma * history->y1 - filter->beta * history->y2;		\
-  /* update history */							\
-  history->y2 = history->y1;						\
-  history->y1 = output;							\
-  history->x2 = history->x1;						\
-  history->x1 = input;							\
-									\
-  return output;							\
-}									\
-									\
-static const guint							\
-history_size_ ## TYPE = sizeof (SecondOrderHistory ## TYPE);		\
-									\
-static void								\
-gst_iir_equ_process_ ## TYPE (GstIirEqualizer *equ, guint8 *data,	\
-guint size, guint channels)						\
-{									\
-  guint frames = size / channels / sizeof (TYPE);			\
-  guint i, c, f;							\
-  BIG_TYPE cur;								\
-  TYPE val;								\
-									\
-  for (i = 0; i < frames; i++) {					\
-    for (c = 0; c < channels; c++) {					\
-      SecondOrderHistory ## TYPE *history = equ->history;		\
-      val = *((TYPE *) data);						\
-      cur = 0;								\
-      for (f = 0; f < equ->freq_count; f++) {				\
-	SecondOrderFilter *filter = &equ->filter[f];			\
-									\
-	cur += one_step_ ## TYPE (filter, history, val);		\
-	history++;							\
-      }									\
-      cur += val * 0.25;						\
-      cur = CLAMP (cur, MIN_VAL, MAX_VAL);				\
-      *((TYPE *) data) = (TYPE) cur;					\
-      data += sizeof (TYPE);						\
-    }									\
-  }									\
+#define CREATE_OPTIMIZED_FUNCTIONS(TYPE,BIG_TYPE,MIN_VAL,MAX_VAL)       \
+typedef struct {                                                        \
+  TYPE x1, x2;          /* history of input values for a filter */      \
+  TYPE y1, y2;          /* history of output values for a filter */     \
+} SecondOrderHistory ## TYPE;                                           \
+                                                                        \
+static inline TYPE                                                      \
+one_step_ ## TYPE (SecondOrderFilter *filter,                           \
+    SecondOrderHistory ## TYPE *history, TYPE input)                    \
+{                                                                       \
+  /* calculate output */                                                \
+  TYPE output = filter->alpha * (input - history->x2) +                 \
+    filter->gamma * history->y1 - filter->beta * history->y2;           \
+  /* update history */                                                  \
+  history->y2 = history->y1;                                            \
+  history->y1 = output;                                                 \
+  history->x2 = history->x1;                                            \
+  history->x1 = input;                                                  \
+                                                                        \
+  return output;                                                        \
+}                                                                       \
+                                                                        \
+static const guint                                                      \
+history_size_ ## TYPE = sizeof (SecondOrderHistory ## TYPE);            \
+                                                                        \
+static void                                                             \
+gst_iir_equ_process_ ## TYPE (GstIirEqualizer *equ, guint8 *data,       \
+guint size, guint channels)                                             \
+{                                                                       \
+  guint frames = size / channels / sizeof (TYPE);                       \
+  guint i, c, f;                                                        \
+  BIG_TYPE cur;                                                         \
+  TYPE val;                                                             \
+                                                                        \
+  for (i = 0; i < frames; i++) {                                        \
+    for (c = 0; c < channels; c++) {                                    \
+      SecondOrderHistory ## TYPE *history = equ->history;               \
+      val = *((TYPE *) data);                                           \
+      cur = 0;                                                          \
+      for (f = 0; f < equ->freq_count; f++) {                           \
+        SecondOrderFilter *filter = &equ->filter[f];                    \
+                                                                        \
+        cur += one_step_ ## TYPE (filter, history, val);                \
+        history++;                                                      \
+      }                                                                 \
+      cur += val * 0.25;                                                \
+      cur = CLAMP (cur, MIN_VAL, MAX_VAL);                              \
+      *((TYPE *) data) = (TYPE) cur;                                    \
+      data += sizeof (TYPE);                                            \
+    }                                                                   \
+  }                                                                     \
 }
 
 CREATE_OPTIMIZED_FUNCTIONS (gint16, gint, -32768, 32767);

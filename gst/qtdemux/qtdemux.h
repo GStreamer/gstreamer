@@ -39,7 +39,7 @@ extern "C" {
 #define GST_IS_QTDEMUX_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QTDEMUX))
 
-#define GST_QTDEMUX_MAX_STREAMS		8
+#define GST_QTDEMUX_MAX_STREAMS         8
 
 typedef struct _GstQTDemux GstQTDemux;
 typedef struct _GstQTDemuxClass GstQTDemuxClass;

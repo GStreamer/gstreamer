@@ -37,9 +37,9 @@
 #include "gstv4l2src.h"
 
 #define DEBUG(format, args...) \
-	GST_DEBUG_OBJECT (\
-		GST_ELEMENT(v4l2element), \
-		"V4L2: " format, ##args)
+        GST_DEBUG_OBJECT (\
+                GST_ELEMENT(v4l2element), \
+                "V4L2: " format, ##args)
 
 
 /******************************************************

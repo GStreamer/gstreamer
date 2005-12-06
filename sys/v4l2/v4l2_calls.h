@@ -36,86 +36,86 @@
   (element->vcap.capabilities & V4L2_CAP_VIDEO_OVERLAY)
 
 /* checks whether the current v4lelement has already been open()'ed or not */
-#define GST_V4L2_CHECK_OPEN(element)				\
-  if (!GST_V4L2_IS_OPEN(element))				\
-  {								\
-    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
+#define GST_V4L2_CHECK_OPEN(element)                            \
+  if (!GST_V4L2_IS_OPEN(element))                               \
+  {                                                             \
+    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,             \
       (_("Device is not open.")), (NULL));                      \
-    return FALSE;						\
+    return FALSE;                                               \
   }
 
 /* checks whether the current v4lelement is close()'ed or whether it is still open */
-#define GST_V4L2_CHECK_NOT_OPEN(element)			\
-  if (GST_V4L2_IS_OPEN(element))				\
-  {								\
-    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,		\
+#define GST_V4L2_CHECK_NOT_OPEN(element)                        \
+  if (GST_V4L2_IS_OPEN(element))                                \
+  {                                                             \
+    GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,             \
       (_("Device is open.")), (NULL));                          \
-    return FALSE;						\
+    return FALSE;                                               \
   }
 
 /* checks whether the current v4lelement does video overlay */
-#define GST_V4L2_CHECK_OVERLAY(element)				\
-  if (!GST_V4L2_IS_OVERLAY(element))				\
-  {								\
+#define GST_V4L2_CHECK_OVERLAY(element)                         \
+  if (!GST_V4L2_IS_OVERLAY(element))                            \
+  {                                                             \
     GST_ELEMENT_ERROR (element, RESOURCE, TOO_LAZY,             \
       (NULL), ("Device cannot handle overlay"));                \
-    return FALSE;						\
+    return FALSE;                                               \
   }
 
 /* checks whether we're in capture mode or not */
-#define GST_V4L2_CHECK_ACTIVE(element)				\
-  if (!GST_V4L2_IS_ACTIVE(element))				\
-  {								\
+#define GST_V4L2_CHECK_ACTIVE(element)                          \
+  if (!GST_V4L2_IS_ACTIVE(element))                             \
+  {                                                             \
     GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,             \
       (NULL), ("Device is not in streaming mode"));             \
-    return FALSE;						\
+    return FALSE;                                               \
   }
 
 /* checks whether we're out of capture mode or not */
-#define GST_V4L2_CHECK_NOT_ACTIVE(element)			\
-  if (GST_V4L2_IS_ACTIVE(element))				\
-  {								\
+#define GST_V4L2_CHECK_NOT_ACTIVE(element)                      \
+  if (GST_V4L2_IS_ACTIVE(element))                              \
+  {                                                             \
     GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS,             \
       (NULL), ("Device is in streaming mode"));                 \
-    return FALSE;						\
+    return FALSE;                                               \
   }
 
 
 /* open/close the device */
-gboolean	gst_v4l2_open			(GstV4l2Element *v4l2element);
-gboolean	gst_v4l2_close			(GstV4l2Element *v4l2element);
+gboolean        gst_v4l2_open                   (GstV4l2Element *v4l2element);
+gboolean        gst_v4l2_close                  (GstV4l2Element *v4l2element);
 
 /* norm/input/output */
-gboolean	gst_v4l2_get_norm		(GstV4l2Element *v4l2element,
-						 v4l2_std_id    *norm);
-gboolean	gst_v4l2_set_norm		(GstV4l2Element *v4l2element,
-						 v4l2_std_id     norm);
-gboolean	gst_v4l2_get_input		(GstV4l2Element *v4l2element,
-						 gint           *input);
-gboolean	gst_v4l2_set_input		(GstV4l2Element *v4l2element,
-						 gint            input);
-gboolean	gst_v4l2_get_output		(GstV4l2Element *v4l2element,
-						 gint           *output);
-gboolean	gst_v4l2_set_output		(GstV4l2Element *v4l2element,
-						 gint            output);
+gboolean        gst_v4l2_get_norm               (GstV4l2Element *v4l2element,
+                                                 v4l2_std_id    *norm);
+gboolean        gst_v4l2_set_norm               (GstV4l2Element *v4l2element,
+                                                 v4l2_std_id     norm);
+gboolean        gst_v4l2_get_input              (GstV4l2Element *v4l2element,
+                                                 gint           *input);
+gboolean        gst_v4l2_set_input              (GstV4l2Element *v4l2element,
+                                                 gint            input);
+gboolean        gst_v4l2_get_output             (GstV4l2Element *v4l2element,
+                                                 gint           *output);
+gboolean        gst_v4l2_set_output             (GstV4l2Element *v4l2element,
+                                                 gint            output);
 
 /* frequency control */
-gboolean	gst_v4l2_get_frequency		(GstV4l2Element *v4l2element,
-						 gint            tunernum,
-						 gulong         *frequency);
-gboolean	gst_v4l2_set_frequency		(GstV4l2Element *v4l2element,
-						 gint            tunernum,
-					 	 gulong          frequency);
-gboolean	gst_v4l2_signal_strength	(GstV4l2Element *v4l2element,
-						 gint            tunernum,
-						 gulong         *signal);
+gboolean        gst_v4l2_get_frequency          (GstV4l2Element *v4l2element,
+                                                 gint            tunernum,
+                                                 gulong         *frequency);
+gboolean        gst_v4l2_set_frequency          (GstV4l2Element *v4l2element,
+                                                 gint            tunernum,
+                                                 gulong          frequency);
+gboolean        gst_v4l2_signal_strength        (GstV4l2Element *v4l2element,
+                                                 gint            tunernum,
+                                                 gulong         *signal);
 
 /* attribute control */
-gboolean	gst_v4l2_get_attribute		(GstV4l2Element *v4l2element,
-						 int             attribute,
-						 int            *value);
-gboolean	gst_v4l2_set_attribute		(GstV4l2Element *v4l2element,
-						 int             attribute,
-						 const int       value);
+gboolean        gst_v4l2_get_attribute          (GstV4l2Element *v4l2element,
+                                                 int             attribute,
+                                                 int            *value);
+gboolean        gst_v4l2_set_attribute          (GstV4l2Element *v4l2element,
+                                                 int             attribute,
+                                                 const int       value);
 
 #endif /* __V4L2_CALLS_H__ */
