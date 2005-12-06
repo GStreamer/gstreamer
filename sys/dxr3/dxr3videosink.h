@@ -52,31 +52,31 @@ typedef enum {
 struct _Dxr3VideoSink {
   GstElement element;
 
-  int card_number;		/* The number of the card to open. */
+  int card_number;              /* The number of the card to open. */
 
-  gchar *video_filename;	/* File name for the video device. */
-  int video_fd;			/* File descriptor for the video device. */
+  gchar *video_filename;        /* File name for the video device. */
+  int video_fd;                 /* File descriptor for the video device. */
 
-  gchar *control_filename;	/* File name for the control device. */
-  int control_fd;          	/* File descriptor for the control
+  gchar *control_filename;      /* File name for the control device. */
+  int control_fd;               /* File descriptor for the control
                                    device. */
 
-  GstClock *clock;		/* The clock for this element. */
+  GstClock *clock;              /* The clock for this element. */
 
-  GstClockTime last_ts;		/* Last timestamp received. */
+  GstClockTime last_ts;         /* Last timestamp received. */
 
-  GstBuffer *cur_buf;		/* The buffer we are currently
+  GstBuffer *cur_buf;           /* The buffer we are currently
                                    building. */
-  GstClockTime cur_ts;		/* Timestamp associated to the
+  GstClockTime cur_ts;          /* Timestamp associated to the
                                    current buffer. */
 
-  guchar scan_state;		/* The current state of the MPEG start
+  guchar scan_state;            /* The current state of the MPEG start
                                    code scanner. */
-  guint scan_pos;		/* The current position of the MPEG
+  guint scan_pos;               /* The current position of the MPEG
                                    start code scanner (with respect to
                                    the start of the current buffer. */
 
-  guchar parse_state;		/* The current state of the MPEG
+  guchar parse_state;           /* The current state of the MPEG
                                    sequence parser. */
 };
 
@@ -89,8 +89,8 @@ struct _Dxr3VideoSinkClass {
 };
 
 
-extern GType	dxr3videosink_get_type		(void);
-extern gboolean	dxr3videosink_factory_init	(GstPlugin *plugin);
+extern GType    dxr3videosink_get_type          (void);
+extern gboolean dxr3videosink_factory_init      (GstPlugin *plugin);
 
 G_END_DECLS
 

@@ -648,7 +648,7 @@ RTjpeg_dctY (__u8 * idata, __s16 * odata, int rskip)
   movq_r2r (mm3, mm4);          /* write result 4 */
 
 /************************************************************************************************
-					End of Transpose
+                                        End of Transpose
 ************************************************************************************************/
 
 
@@ -743,8 +743,8 @@ RTjpeg_dctY (__u8 * idata, __s16 * odata, int rskip)
   movq_r2m (mm0, *(dataptr + 14));      /*save y7 */
 
         /************************************************
-	 *  End of 1st 4 rows
-	 ************************************************/
+         *  End of 1st 4 rows
+         ************************************************/
 
   movq_m2r (*(dataptr + 3), mm1);       /* load x1: stage 1 */
   movq_r2r (mm7, mm0);          /* copy x0 */
@@ -864,7 +864,7 @@ RTjpeg_dctY (__u8 * idata, __s16 * odata, int rskip)
   psubw_r2r (mm2, mm0);         /* y7 */
 
 /************************************************************************************************
-					Start of Transpose
+                                        Start of Transpose
 ************************************************************************************************/
 
   movq_m2r (*(dataptr + 13), mm6);      /* m23:m22|m21:m20 - third line (line 6)and copy into m2 */
@@ -999,7 +999,7 @@ RTjpeg_dctY (__u8 * idata, __s16 * odata, int rskip)
   movq_r2r (mm3, mm4);          /* write result 4 */
 
 /************************************************************************************************
-					End of Transpose 2
+                                        End of Transpose 2
 ************************************************************************************************/
 
   paddw_m2r (*(dataptr + 8), mm3);      /* tmp03=x3+x4: stage 1 */
@@ -1092,8 +1092,8 @@ RTjpeg_dctY (__u8 * idata, __s16 * odata, int rskip)
   movq_r2m (mm0, *(dataptr + 14));      /*save y7 */
 
         /************************************************
-	 *  End of 1st 4 rows
-	 ************************************************/
+         *  End of 1st 4 rows
+         ************************************************/
 
   movq_m2r (*(dataptr + 3), mm1);       /* load x1  : stage 1 */
   movq_r2r (mm7, mm0);          /* copy x0 */
@@ -1585,8 +1585,8 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
 
   /*ok */
 
-/*	mm0 = 	;wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13] */
-/*	mm1 =	;wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14] */
+/*      mm0 =   ;wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13] */
+/*      mm1 =   ;wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14] */
 
 
   movq_r2r (mm0, mm2);
@@ -1718,8 +1718,8 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
   movq_r2r (mm5, mm1);
 
   punpckldq_r2r (mm2, mm3);     /* wsptr[0,z12],[1,z12],[2,z12],[3,z12] */
-/*    tmp7 = z11 + z13;		: phase 5 */
-/*    tmp8 = z11 - z13;		: phase 5 */
+/*    tmp7 = z11 + z13;         : phase 5 */
+/*    tmp8 = z11 - z13;         : phase 5 */
   psubw_r2r (mm4, mm1);         /* tmp8 */
 
   paddw_r2r (mm4, mm5);         /* tmp7 */
@@ -1730,7 +1730,7 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
 
   pmulhw_m2r (fix_141, mm1);    /* tmp21 */
 /*    tmp20 = MULTIPLY(z12, (FIX_1_082392200- FIX_1_847759065))  2*(c2-c6) */
-/*			+ MULTIPLY(z10, - FIX_1_847759065); : 2*c2 */
+/*                      + MULTIPLY(z10, - FIX_1_847759065); : 2*c2 */
   psllw_i2r (2, mm3);
   movq_r2r (mm0, mm7);
 
@@ -1740,8 +1740,8 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
   movq_m2r (*(wsptr), mm2);     /* tmp0,final1 */
 
   pmulhw_m2r (fix_108n184, mm6);
-/*	 tmp22 = MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) : -2*(c2+c6) */
-/*			+ MULTIPLY(z12, FIX_1_847759065); 2*c2 */
+/*       tmp22 = MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) : -2*(c2+c6) */
+/*                      + MULTIPLY(z12, FIX_1_847759065); 2*c2 */
   movq_r2r (mm2, mm4);          /* final1 */
 
   pmulhw_m2r (fix_184n261, mm0);
@@ -1750,7 +1750,7 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
   pmulhw_m2r (fix_184, mm3);
   psubw_r2r (mm5, mm4);         /* tmp0-tmp7,final1 */
 
-/*    tmp6 = tmp22 - tmp7;	phase 2 */
+/*    tmp6 = tmp22 - tmp7;      phase 2 */
   psraw_i2r (3, mm2);           /* outptr[0,0],[1,0],[2,0],[3,0],final1 */
 
   paddw_r2r (mm6, mm7);         /* tmp20 */
@@ -1772,15 +1772,15 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
 
 
 /*    outptr[0] = range_limit[IDESCALE(tmp0 + tmp7, PASS1_BITS+3) */
-/*			    & RANGE_MASK]; */
+/*                          & RANGE_MASK]; */
 /*    outptr[7] = range_limit[IDESCALE(tmp0 - tmp7, PASS1_BITS+3) */
-/*			    & RANGE_MASK];	final1 */
+/*                          & RANGE_MASK];      final1 */
 
 
 /*    outptr[1] = range_limit[IDESCALE(tmp1 + tmp6, PASS1_BITS+3) */
-/*			    & RANGE_MASK]; */
+/*                          & RANGE_MASK]; */
 /*    outptr[6] = range_limit[IDESCALE(tmp1 - tmp6, PASS1_BITS+3) */
-/*			    & RANGE_MASK];	final2 */
+/*                          & RANGE_MASK];      final2 */
   psubw_r2r (mm3, mm6);         /* tmp1-tmp6,final2 */
   psraw_i2r (3, mm0);           /* outptr[0,1],[1,1],[2,1],[3,1] */
 
@@ -1792,9 +1792,9 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
   packuswb_r2r (mm6, mm2);      /* out[0,0],[1,0],[2,0],[3,0],[0,6],[1,6],[2,6],[3,6] */
 
 /*    outptr[2] = range_limit[IDESCALE(tmp2 + tmp5, PASS1_BITS+3) */
-/*			    & RANGE_MASK]; */
+/*                          & RANGE_MASK]; */
 /*    outptr[5] = range_limit[IDESCALE(tmp2 - tmp5, PASS1_BITS+3) */
-/*			    & RANGE_MASK];	final3 */
+/*                          & RANGE_MASK];      final3 */
   paddw_r2r (mm1, mm7);         /* tmp4 */
   movq_r2r (mm5, mm3);
 
@@ -1809,9 +1809,9 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
 
 
 /*    outptr[4] = range_limit[IDESCALE(tmp3 + tmp4, PASS1_BITS+3) */
-/*			    & RANGE_MASK]; */
+/*                          & RANGE_MASK]; */
 /*    outptr[3] = range_limit[IDESCALE(tmp3 - tmp4, PASS1_BITS+3) */
-/*			    & RANGE_MASK];	final4 */
+/*                          & RANGE_MASK];      final4 */
   movq_r2r (mm4, mm6);
   paddw_r2r (mm7, mm4);         /* tmp3+tmp4 */
 
@@ -1946,8 +1946,8 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
 
   /*OK */
 
-/*	mm0 = 	;wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13] */
-/*	mm1 =	;wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14] */
+/*      mm0 =   ;wsptr[0,tmp10],[1,tmp10],[0,tmp13],[1,tmp13] */
+/*      mm1 =   ;wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14] */
 
   movq_r2r (mm0, mm2);
   punpckhdq_r2r (mm4, mm6);     /* wsptr[0,tmp14],[1,tmp14],[2,tmp14],[3,tmp14] */
@@ -2079,8 +2079,8 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
   movq_r2r (mm5, mm1);
 
   punpckldq_r2r (mm2, mm3);     /* wsptr[0,z12],[1,z12],[2,z12],[3,z12] */
-/*    tmp7 = z11 + z13;		: phase 5 */
-/*    tmp8 = z11 - z13;		: phase 5 */
+/*    tmp7 = z11 + z13;         : phase 5 */
+/*    tmp8 = z11 - z13;         : phase 5 */
   psubw_r2r (mm4, mm1);         /* tmp8 */
 
   paddw_r2r (mm4, mm5);         /* tmp7 */
@@ -2091,7 +2091,7 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
 
   pmulhw_m2r (fix_141, mm1);    /* tmp21 */
 /*    tmp20 = MULTIPLY(z12, (FIX_1_082392200- FIX_1_847759065)) :  2*(c2-c6) */
-/*			+ MULTIPLY(z10, - FIX_1_847759065); : 2*c2 */
+/*                      + MULTIPLY(z10, - FIX_1_847759065); : 2*c2 */
   psllw_i2r (2, mm3);
   movq_r2r (mm0, mm7);
 
@@ -2101,8 +2101,8 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
   movq_m2r (*(wsptr), mm2);     /* tmp0,final1 */
 
   pmulhw_m2r (fix_108n184, mm6);
-/*	 tmp22 = MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) : -2*(c2+c6) */
-/*			+ MULTIPLY(z12, FIX_1_847759065); : 2*c2 */
+/*       tmp22 = MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) : -2*(c2+c6) */
+/*                      + MULTIPLY(z12, FIX_1_847759065); : 2*c2 */
   movq_r2r (mm2, mm4);          /* final1 */
 
   pmulhw_m2r (fix_184n261, mm0);
@@ -2111,7 +2111,7 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
   pmulhw_m2r (fix_184, mm3);
   psubw_r2r (mm5, mm4);         /* tmp0-tmp7,final1 */
 
-/*    tmp6 = tmp22 - tmp7;	phase 2 */
+/*    tmp6 = tmp22 - tmp7;      phase 2 */
   psraw_i2r (3, mm2);           /* outptr[0,0],[1,0],[2,0],[3,0],final1 */
 
   paddw_r2r (mm6, mm7);         /* tmp20 */
@@ -2132,15 +2132,15 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
   /* Final output stage: scale down by a factor of 8 and range-limit */
 
 /*    outptr[0] = range_limit[IDESCALE(tmp0 + tmp7, PASS1_BITS+3) */
-/*			    & RANGE_MASK]; */
+/*                          & RANGE_MASK]; */
 /*    outptr[7] = range_limit[IDESCALE(tmp0 - tmp7, PASS1_BITS+3) */
-/*			    & RANGE_MASK];	final1 */
+/*                          & RANGE_MASK];      final1 */
 
 
 /*    outptr[1] = range_limit[IDESCALE(tmp1 + tmp6, PASS1_BITS+3) */
-/*			    & RANGE_MASK]; */
+/*                          & RANGE_MASK]; */
 /*    outptr[6] = range_limit[IDESCALE(tmp1 - tmp6, PASS1_BITS+3) */
-/*			    & RANGE_MASK];	final2 */
+/*                          & RANGE_MASK];      final2 */
   psubw_r2r (mm3, mm6);         /* tmp1-tmp6,final2 */
   psraw_i2r (3, mm0);           /* outptr[0,1],[1,1],[2,1],[3,1] */
 
@@ -2152,9 +2152,9 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
   packuswb_r2r (mm6, mm2);      /* out[0,0],[1,0],[2,0],[3,0],[0,6],[1,6],[2,6],[3,6] */
 
 /*    outptr[2] = range_limit[IDESCALE(tmp2 + tmp5, PASS1_BITS+3) */
-/*			    & RANGE_MASK]; */
+/*                          & RANGE_MASK]; */
 /*    outptr[5] = range_limit[IDESCALE(tmp2 - tmp5, PASS1_BITS+3) */
-/*			    & RANGE_MASK];	final3 */
+/*                          & RANGE_MASK];      final3 */
   paddw_r2r (mm1, mm7);         /* tmp4 */
   movq_r2r (mm5, mm3);
 
@@ -2169,9 +2169,9 @@ RTjpeg_idct (__u8 * odata, __s16 * data, int rskip)
 
 
 /*    outptr[4] = range_limit[IDESCALE(tmp3 + tmp4, PASS1_BITS+3) */
-/*			    & RANGE_MASK]; */
+/*                          & RANGE_MASK]; */
 /*    outptr[3] = range_limit[IDESCALE(tmp3 - tmp4, PASS1_BITS+3) */
-/*			    & RANGE_MASK];	final4 */
+/*                          & RANGE_MASK];      final4 */
   movq_r2r (mm4, mm6);
   paddw_r2r (mm7, mm4);         /* tmp3+tmp4 */
 

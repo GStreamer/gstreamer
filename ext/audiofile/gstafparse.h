@@ -27,7 +27,7 @@
 
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
-#include <audiofile.h>			/* what else are we to do */
+#include <audiofile.h>                  /* what else are we to do */
 #include <af_vfs.h>
 
 
@@ -56,7 +56,7 @@ typedef struct _GstAFParseClass GstAFParseClass;
 typedef enum {
   GST_AFPARSE_OPEN              = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_AFPARSE_FLAG_LAST 	= (GST_ELEMENT_FLAG_LAST << 2),
+  GST_AFPARSE_FLAG_LAST         = (GST_ELEMENT_FLAG_LAST << 2),
 } GstAFParseFlags;
 
 struct _GstAFParse {
@@ -71,9 +71,9 @@ struct _GstAFParse {
   int width;
   unsigned int rate;
   gboolean is_signed;
-  int type;				/* type of output, compare to audiofile.h 
-  						 * RAW, AIFF, AIFFC, NEXTSND, WAVE
-  						 */ 
+  int type;                             /* type of output, compare to audiofile.h 
+                                                 * RAW, AIFF, AIFFC, NEXTSND, WAVE
+                                                 */ 
   /* blocking */
   gulong curoffset;
   gulong bytes_per_read;
@@ -82,7 +82,7 @@ struct _GstAFParse {
   gulong seq;
   gint64 timestamp;
   /* FIXME : endianness is a little cryptic at this point */
-  int endianness_data;		/* 4321 or 1234 */
+  int endianness_data;          /* 4321 or 1234 */
   int endianness_wanted; /* same thing, but what the output format wants */
   int endianness_output; /* what the output endianness will be */
 };
@@ -94,7 +94,7 @@ struct _GstAFParseClass {
   void (*handoff) (GstElement *element,GstPad *pad);
 };
 
-gboolean 	gst_afparse_plugin_init 	(GstPlugin *plugin);
+gboolean        gst_afparse_plugin_init         (GstPlugin *plugin);
 
 #ifdef __cplusplus
 }

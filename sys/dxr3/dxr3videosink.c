@@ -120,7 +120,7 @@ static void dxr3videosink_chain (GstPad * pad, GstData * _data);
 static GstStateChangeReturn dxr3videosink_change_state (GstElement * element,
     GstStateChange transition);
 
-/* static void	dxr3videosink_wait		(Dxr3VideoSink *sink, */
+/* static void  dxr3videosink_wait              (Dxr3VideoSink *sink, */
 /*                                                  GstClockTime time); */
 static int dxr3videosink_mvcommand (Dxr3VideoSink * sink, int command);
 

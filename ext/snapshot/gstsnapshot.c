@@ -26,7 +26,7 @@
 #include "gstsnapshot.h"
 #include <gst/video/video.h>
 
-#define MAX_HEIGHT	2048
+#define MAX_HEIGHT      2048
 
 /* elementfactory information */
 static GstElementDetails snapshot_details = {

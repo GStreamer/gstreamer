@@ -29,23 +29,23 @@
 #define CDPLAYER_MAX_TRACKS 128
 
 typedef enum {
-	CD_PLAYING,
-	CD_COMPLETED,
-	CD_ERROR
+        CD_PLAYING,
+        CD_COMPLETED,
+        CD_ERROR
 } CDStatus;
 
 struct cd_msf {
-	guint8 minute;
-	guint8 second;
-	guint8 frame;
+        guint8 minute;
+        guint8 second;
+        guint8 frame;
 
-	gboolean data_track;
+        gboolean data_track;
 };
 
 struct cd {
-	gint fd;
-	gint num_tracks;
-	struct cd_msf tracks[CDPLAYER_MAX_TRACKS];
+        gint fd;
+        gint num_tracks;
+        struct cd_msf tracks[CDPLAYER_MAX_TRACKS];
 };
 
 

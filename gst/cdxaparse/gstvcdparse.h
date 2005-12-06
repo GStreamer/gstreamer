@@ -35,9 +35,9 @@ G_BEGIN_DECLS
 #define GST_IS_CDXASTRIP_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDXASTRIP))
 
-#define GST_CDXA_SECTOR_SIZE  	2352
-#define GST_CDXA_DATA_SIZE  	2324
-#define GST_CDXA_HEADER_SIZE	24
+#define GST_CDXA_SECTOR_SIZE    2352
+#define GST_CDXA_DATA_SIZE      2324
+#define GST_CDXA_HEADER_SIZE    24
 
 typedef struct _GstCDXAStrip GstCDXAStrip;
 typedef struct _GstCDXAStripClass GstCDXAStripClass;
@@ -54,13 +54,13 @@ struct _GstCDXAStripClass {
   GstElementClass parent_class;
 };
 
-GType	 	gst_cdxastrip_get_type	(void);
+GType           gst_cdxastrip_get_type  (void);
 
 /*
  * Also useful for CDXAparse.
  */
-GstBuffer *	gst_cdxastrip_strip	(GstBuffer * buf);
-gint		gst_cdxastrip_sync	(GstBuffer * buf);
+GstBuffer *     gst_cdxastrip_strip     (GstBuffer * buf);
+gint            gst_cdxastrip_sync      (GstBuffer * buf);
 
 G_END_DECLS
 

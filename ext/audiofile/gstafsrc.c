@@ -364,7 +364,7 @@ gst_afsrc_close_file (GstAFSrc * src)
 /*  g_print ("DEBUG: closing srcfile...\n"); */
   g_return_if_fail (GST_OBJECT_FLAG_IS_SET (src, GST_AFSRC_OPEN));
 /*  g_print ("DEBUG: past flag test\n"); */
-/*  if (fclose (src->file) != 0) 	*/
+/*  if (fclose (src->file) != 0)        */
   if (afCloseFile (src->file) != 0) {
     GST_ELEMENT_ERROR (src, RESOURCE, CLOSE,
         (_("Error closing file \"%s\"."), src->filename), GST_ERROR_SYSTEM);

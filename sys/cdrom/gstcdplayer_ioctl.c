@@ -51,14 +51,14 @@ irix cdaudio works quite a bit differently than ioctl(), so its not ready
 #endif
 
 /* these headers define low level functions:
-	gboolean cd_init(struct cd *cd,const gchar *device);
-	gboolean cd_start(struct cd *cd,gint start_track,gint end_track);
-	gboolean cd_pause(struct cd *cd);
-	gboolean cd_resume(struct cd *cd);
-	gboolean cd_stop(struct cd *cd);
-	CDStatus cd_status(struct cd *cd);
-	gint cd_current_track(struct cd *cd);
-	gboolean cd_close(struct cd *cd);
+        gboolean cd_init(struct cd *cd,const gchar *device);
+        gboolean cd_start(struct cd *cd,gint start_track,gint end_track);
+        gboolean cd_pause(struct cd *cd);
+        gboolean cd_resume(struct cd *cd);
+        gboolean cd_stop(struct cd *cd);
+        CDStatus cd_status(struct cd *cd);
+        gint cd_current_track(struct cd *cd);
+        gboolean cd_close(struct cd *cd);
 */
 #if defined(HAVE_CDROM_SOLARIS)
 #include "gstcdplayer_ioctl_solaris.h"

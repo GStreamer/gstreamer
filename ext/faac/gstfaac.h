@@ -52,9 +52,9 @@ typedef struct _GstFaac {
        shortctl,
        outputformat;
   gboolean tns,
-	   midside;
+           midside;
   gulong bytes,
-	 samples;
+         samples;
 
   /* FAAC object */
   faacEncHandle handle;

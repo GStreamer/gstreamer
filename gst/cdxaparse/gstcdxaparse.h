@@ -67,7 +67,7 @@ struct _GstCDXAParseClass {
   GstElementClass parent_class;
 };
 
-GType 		gst_cdxaparse_get_type		(void);
+GType           gst_cdxaparse_get_type          (void);
 
 G_END_DECLS
 

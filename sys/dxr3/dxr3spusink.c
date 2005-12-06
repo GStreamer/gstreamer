@@ -90,7 +90,7 @@ static void dxr3spusink_chain (GstPad * pad, GstData * _data);
 static GstStateChangeReturn dxr3spusink_change_state (GstElement * element,
     GstStateChange transition);
 
-/* static void	dxr3spusink_wait		(Dxr3SpuSink *sink, */
+/* static void  dxr3spusink_wait                (Dxr3SpuSink *sink, */
 /*                                                  GstClockTime time); */
 
 static void dxr3spusink_set_clut (Dxr3SpuSink * sink, const guint32 * clut);

@@ -50,87 +50,87 @@
 #ifdef GST_V4L2_MISSING_BUFDECL
 struct v4l2_buffer
 {
-	__u32			index;
-	enum v4l2_buf_type      type;
-	__u32			bytesused;
-	__u32			flags;
-	enum v4l2_field		field;
-	struct timeval		timestamp;
-	struct v4l2_timecode	timecode;
-	__u32			sequence;
+        __u32                   index;
+        enum v4l2_buf_type      type;
+        __u32                   bytesused;
+        __u32                   flags;
+        enum v4l2_field         field;
+        struct timeval          timestamp;
+        struct v4l2_timecode    timecode;
+        __u32                   sequence;
 
-	/* memory location */
-	enum v4l2_memory        memory;
-	union {
-		__u32           offset;
-		unsigned long   userptr;
-	} m;
-	__u32			length;
+        /* memory location */
+        enum v4l2_memory        memory;
+        union {
+                __u32           offset;
+                unsigned long   userptr;
+        } m;
+        __u32                   length;
 
-	__u32			reserved[2];
+        __u32                   reserved[2];
 };
 #endif /* GST_V4L2_MISSING_BUFDECL */
 
 
 #define GST_TYPE_V4L2ELEMENT \
-		(gst_v4l2element_get_type())
+                (gst_v4l2element_get_type())
 #define GST_V4L2ELEMENT(obj) \
-		(G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_V4L2ELEMENT, GstV4l2Element))
+                (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_V4L2ELEMENT, GstV4l2Element))
 #define GST_V4L2ELEMENT_CLASS(klass) \
-		(G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_V4L2ELEMENT, GstV4l2ElementClass))
+                (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_V4L2ELEMENT, GstV4l2ElementClass))
 #define GST_IS_V4L2ELEMENT(obj) \
-		(G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_V4L2ELEMENT))
+                (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_V4L2ELEMENT))
 #define GST_IS_V4L2ELEMENT_CLASS(obj) \
-		(G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_V4L2ELEMENT))
+                (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_V4L2ELEMENT))
 #define GST_V4L2ELEMENT_GET_CLASS(obj) \
-		(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4L2ELEMENT, GstV4l2ElementClass))
+                (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4L2ELEMENT, GstV4l2ElementClass))
 
 
-typedef	struct _GstV4l2Element		GstV4l2Element;
-typedef	struct _GstV4l2ElementClass	GstV4l2ElementClass;
-typedef struct _GstV4l2Xv		GstV4l2Xv;
+typedef struct _GstV4l2Element          GstV4l2Element;
+typedef struct _GstV4l2ElementClass     GstV4l2ElementClass;
+typedef struct _GstV4l2Xv               GstV4l2Xv;
 
 struct _GstV4l2Element {
-	GstElement element;
+        GstElement element;
 
-	/* the video device */
-	char *device;
+        /* the video device */
+        char *device;
 
-	/* the video-device's file descriptor */
-	gint video_fd;
+        /* the video-device's file descriptor */
+        gint video_fd;
 
-	/* the video buffer (mmap()'ed) */
-	guint8 **buffer;
+        /* the video buffer (mmap()'ed) */
+        guint8 **buffer;
 
-	/* the video-device's capabilities */
-	struct v4l2_capability vcap;
+        /* the video-device's capabilities */
+        struct v4l2_capability vcap;
 
-	/* the toys available to us */
-	GList *channels;
-	GList *norms;
-	GList *colors;
+        /* the toys available to us */
+        GList *channels;
+        GList *norms;
+        GList *colors;
 
-	/* X-overlay */
-	GstV4l2Xv *xv;
-	XID xwindow_id;
+        /* X-overlay */
+        GstV4l2Xv *xv;
+        XID xwindow_id;
 
-	/* properties */
-	gchar *norm;
-	gchar *channel;
-	gulong frequency;
+        /* properties */
+        gchar *norm;
+        gchar *channel;
+        gulong frequency;
 };
 
 struct _GstV4l2ElementClass {
-	GstElementClass parent_class;
+        GstElementClass parent_class;
 
-	/* probed devices */
-	GList *devices;
+        /* probed devices */
+        GList *devices;
 
-	/* signals */
-	void     (*open)            (GstElement  *element,
-	                             const gchar *device);
-	void     (*close)           (GstElement  *element,
-	                             const gchar *device);
+        /* signals */
+        void     (*open)            (GstElement  *element,
+                                     const gchar *device);
+        void     (*close)           (GstElement  *element,
+                                     const gchar *device);
 };
 
 

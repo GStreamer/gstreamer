@@ -1,3 +1,86 @@
+2005-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/gst-plugins-bad-plugins-undocumented.txt:
+	* ext/audiofile/gstafparse.h:
+	* ext/audiofile/gstafsink.c: (gst_afsink_chain):
+	* ext/audiofile/gstafsink.h:
+	* ext/audiofile/gstafsrc.c: (gst_afsrc_close_file):
+	* ext/audiofile/gstafsrc.h:
+	* ext/cdaudio/gstcdaudio.c:
+	* ext/divx/gstdivxenc.c:
+	* ext/dts/gstdtsdec.h:
+	* ext/faac/gstfaac.h:
+	* ext/ivorbis/vorbisenc.h:
+	* ext/ivorbis/vorbisfile.c:
+	* ext/musepack/gstmusepackdec.h:
+	* ext/nas/nassink.c:
+	* ext/snapshot/gstsnapshot.c:
+	* ext/sndfile/gstsf.h:
+	* ext/tarkin/gsttarkindec.h:
+	* ext/tarkin/gsttarkinenc.h:
+	* ext/xine/gstxine.h:
+	* ext/xine/xinecaps.c:
+	* ext/xvid/gstxvid.h:
+	* gst-libs/gst/play/play.h:
+	* gst/apetag/apedemux.h:
+	* gst/cdxaparse/gstcdxaparse.h:
+	* gst/cdxaparse/gstcdxastrip.h:
+	* gst/colorspace/yuv2rgb.c:
+	* gst/colorspace/yuv2rgb.h:
+	* gst/equalizer/gstiirequalizer.c:
+	* gst/festival/gstfestival.h:
+	* gst/games/gstpuzzle.c:
+	* gst/games/gstvideoimage.c:
+	* gst/games/gstvideoimage.h:
+	* gst/modplug/gstmodplug.h:
+	* gst/modplug/libmodplug/it_defs.h:
+	* gst/modplug/libmodplug/modplug.h:
+	* gst/modplug/libmodplug/sndfile.h:
+	* gst/modplug/libmodplug/stdafx.h:
+	* gst/mpeg1sys/buffer.c:
+	* gst/mpeg1sys/gstmpeg1systemencode.h:
+	* gst/mpeg1sys/main.h:
+	* gst/mpeg1sys/systems.c:
+	* gst/mpeg1videoparse/gstmp1videoparse.h:
+	* gst/mpeg2sub/gstmpeg2subt.h:
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	* gst/multifilesink/gstmultifilesink.h:
+	* gst/overlay/gstoverlay.h:
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux.h:
+	* gst/rtjpeg/RTjpeg.c: (RTjpeg_dctY), (RTjpeg_idct):
+	* gst/rtjpeg/RTjpeg.h:
+	* gst/tta/crc32.h:
+	* gst/tta/filters.h:
+	* gst/tta/ttadec.h:
+	* gst/videodrop/gstvideodrop.h:
+	* sys/cdrom/gstcdplayer.h:
+	* sys/cdrom/gstcdplayer_ioctl.c:
+	* sys/cdrom/gstcdplayer_ioctl.h:
+	* sys/cdrom/gstcdplayer_ioctl_bsd.h:
+	* sys/cdrom/gstcdplayer_ioctl_irix.h:
+	* sys/cdrom/gstcdplayer_ioctl_solaris.h:
+	* sys/dxr3/dxr3audiosink.c:
+	* sys/dxr3/dxr3audiosink.h:
+	* sys/dxr3/dxr3spusink.c:
+	* sys/dxr3/dxr3spusink.h:
+	* sys/dxr3/dxr3videosink.c:
+	* sys/dxr3/dxr3videosink.h:
+	* sys/qcam/dark.c:
+	* sys/qcam/gstqcamsrc.c:
+	* sys/v4l2/gstv4l2colorbalance.h:
+	* sys/v4l2/gstv4l2element.h:
+	* sys/v4l2/gstv4l2src.h:
+	* sys/v4l2/gstv4l2tuner.h:
+	* sys/v4l2/gstv4l2xoverlay.h:
+	* sys/v4l2/v4l2_calls.c:
+	* sys/v4l2/v4l2_calls.h:
+	* sys/v4l2/v4l2src_calls.c:
+	* sys/v4l2/v4l2src_calls.h:
+	* sys/vcd/vcdsrc.h:
+	  expand tabs
+
 === release 0.10.0 ===
 
 2005-12-05   <thomas (at) apestaart (dot) org>

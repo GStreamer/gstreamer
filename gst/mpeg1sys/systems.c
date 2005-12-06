@@ -29,10 +29,10 @@ buffer_timecode (timecode, marker, buffer)
 }
 
 /*************************************************************************
-	creates a complete sector.
-	Also copies Pack and Sys_Header informations into the
-	sector buffer, then reads a packet full of data from
-	the input stream into the sector buffer.
+        creates a complete sector.
+        Also copies Pack and Sys_Header informations into the
+        sector buffer, then reads a packet full of data from
+        the input stream into the sector buffer.
 *************************************************************************/
 
 
@@ -170,8 +170,8 @@ create_sector (sector, pack, sys_header,
 
 /* zero byte stuffing in the last Packet of a stream */
 /* we don't need this any more, since we shortenend the packet */
-/* 	    for (j=tmp; j<i; j++) */
-/* 		*(index++)=(unsigned char) ZERO_STUFFING_BYTE; */
+/*          for (j=tmp; j<i; j++) */
+/*              *(index++)=(unsigned char) ZERO_STUFFING_BYTE; */
     }
   }
 
@@ -184,9 +184,9 @@ create_sector (sector, pack, sys_header,
 }
 
 /*************************************************************************
-	writes specifical pack header information into a buffer
-	later this will be copied from the sector routine into
-	the sector buffer
+        writes specifical pack header information into a buffer
+        later this will be copied from the sector routine into
+        the sector buffer
 *************************************************************************/
 
 void
@@ -214,9 +214,9 @@ create_pack (pack, SCR, mux_rate)
 
 
 /*************************************************************************
-	writes specifical system header information into a buffer
-	later this will be copied from the sector routine into
-	the sector buffer
+        writes specifical system header information into a buffer
+        later this will be copied from the sector routine into
+        the sector buffer
 *************************************************************************/
 
 void

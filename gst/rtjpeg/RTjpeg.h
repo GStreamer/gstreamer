@@ -49,4 +49,4 @@ extern void RTjpeg_yuvrgb8(__u8 *buf, __u8 *rgb);
 extern void RTjpeg_yuvrgb16(__u8 *buf, __u8 *rgb);
 extern void RTjpeg_yuvrgb24(__u8 *buf, __u8 *rgb);
 extern void RTjpeg_yuvrgb32(__u8 *buf, __u8 *rgb);
-		  
+                  

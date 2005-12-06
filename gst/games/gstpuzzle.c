@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- *		 <2003> David Schleef <ds@schleef.org>
- *		 <2004> Benjamin Otte <otte@gnome.org>
+ *               <2003> David Schleef <ds@schleef.org>
+ *               <2004> Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

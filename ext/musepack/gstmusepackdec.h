@@ -71,8 +71,8 @@ typedef struct _GstMusepackDecClass {
 GType gst_musepackdec_get_type (void);
 
 extern gboolean gst_musepackdec_src_convert (GstPad * pad,
-					     GstFormat src_format,
-					     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
+                                             GstFormat src_format,
+                                             gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
 G_END_DECLS
 

@@ -26,7 +26,7 @@
 
 
 #include <gst/gst.h>
-#include <audiofile.h>			/* what else are we to do */
+#include <audiofile.h>                  /* what else are we to do */
 
 
 #ifdef __cplusplus
@@ -54,7 +54,7 @@ typedef struct _GstAFSrcClass GstAFSrcClass;
 typedef enum {
   GST_AFSRC_OPEN        = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_AFSRC_FLAG_LAST 	= (GST_ELEMENT_FLAG_LAST << 2),
+  GST_AFSRC_FLAG_LAST   = (GST_ELEMENT_FLAG_LAST << 2),
 } GstAFSrcFlags;
 
 struct _GstAFSrc {
@@ -71,9 +71,9 @@ struct _GstAFSrc {
   int width;
   unsigned int rate;
   gboolean is_signed;
-  int type;				/* type of output, compare to audiofile.h 
-  						 * RAW, AIFF, AIFFC, NEXTSND, WAVE
-  						 */ 
+  int type;                             /* type of output, compare to audiofile.h 
+                                                 * RAW, AIFF, AIFFC, NEXTSND, WAVE
+                                                 */ 
   /* blocking */
   gulong curoffset;
   gulong bytes_per_read;
@@ -81,7 +81,7 @@ struct _GstAFSrc {
   gulong seq;
   guint64 framestamp;
   /* FIXME : endianness is a little cryptic at this point */
-  int endianness_data;		/* 4321 or 1234 */
+  int endianness_data;          /* 4321 or 1234 */
   int endianness_wanted; /* same thing, but what the output format wants */
   int endianness_output; /* what the output endianness will be */
 };
@@ -93,7 +93,7 @@ struct _GstAFSrcClass {
   void (*handoff) (GstElement *element,GstPad *pad);
 };
 
-GType 		gst_afsrc_get_type	(void);
+GType           gst_afsrc_get_type      (void);
 gboolean        gst_afsrc_plugin_init  (GstPlugin *plugin);
 
 

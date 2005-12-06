@@ -52,16 +52,16 @@ typedef enum {
 struct _Dxr3SpuSink {
   GstElement element;
 
-  int card_number;     		/* The number of the card to open. */
+  int card_number;              /* The number of the card to open. */
 
-  gchar *spu_filename; 		/* File name for the spu device. */
-  int spu_fd;          		/* File descriptor for the spu device. */
+  gchar *spu_filename;          /* File name for the spu device. */
+  int spu_fd;                   /* File descriptor for the spu device. */
 
-  gchar *control_filename;	/* File name for the control device. */
-  int control_fd;		/* File descriptor for the control
+  gchar *control_filename;      /* File name for the control device. */
+  int control_fd;               /* File descriptor for the control
                                    device. */
 
-  GstClock *clock;		/* The clock for this element. */
+  GstClock *clock;              /* The clock for this element. */
 };
 
 
@@ -79,8 +79,8 @@ struct _Dxr3SpuSinkClass {
 };
 
 
-extern GType	dxr3spusink_get_type		(void);
-extern gboolean	dxr3spusink_factory_init	(GstPlugin *plugin);
+extern GType    dxr3spusink_get_type            (void);
+extern gboolean dxr3spusink_factory_init        (GstPlugin *plugin);
 
 G_END_DECLS
 

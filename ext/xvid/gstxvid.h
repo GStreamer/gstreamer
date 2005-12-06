@@ -42,11 +42,11 @@ G_BEGIN_DECLS
   "green_mask = (int) " G_STRINGIFY (g_mask) ", " \
   "blue_mask = (int) " G_STRINGIFY (b_mask)
 
-extern gchar *	gst_xvid_error (int errorcode);
-extern gboolean	gst_xvid_init  (void);
+extern gchar *  gst_xvid_error (int errorcode);
+extern gboolean gst_xvid_init  (void);
 
 extern gint     gst_xvid_structure_to_csp (GstStructure *structure,
-					   gint w, gint *stride, gint *bpp);
+                                           gint w, gint *stride, gint *bpp);
 extern GstCaps *gst_xvid_csp_to_caps      (gint csp, gint w, gint h, gdouble fps);
 
 G_END_DECLS

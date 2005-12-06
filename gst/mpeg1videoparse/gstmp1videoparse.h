@@ -49,7 +49,7 @@ struct _Mp1VideoParse {
 
   GstPad *sinkpad,*srcpad;
 
-  GstBuffer *partialbuf;	/* previous buffer (if carryover) */
+  GstBuffer *partialbuf;        /* previous buffer (if carryover) */
   gulong next_buffer_offset;
   gboolean need_resync;
   gboolean in_flush;

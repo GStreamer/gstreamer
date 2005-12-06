@@ -1,7 +1,7 @@
 /*
  * ttadec.h
  *
- * Description:	 TTAv1 decoder definitions and prototypes
+ * Description:  TTAv1 decoder definitions and prototypes
  * Developed by: Alexander Djourik <sasha@iszf.irk.ru>
  *               Pavel Zhilin <pzh@iszf.irk.ru>
  *
@@ -35,21 +35,21 @@
 #pragma pack(1)
 #define __ATTRIBUTE_PACKED__
 #else
-#define __ATTRIBUTE_PACKED__	__attribute__((packed))
+#define __ATTRIBUTE_PACKED__    __attribute__((packed))
 #endif
 
-#define TTA1_SIGN	0x31415454
-#define FRAME_TIME	1.04489795918367346939
-#define MAX_ORDER	8
+#define TTA1_SIGN       0x31415454
+#define FRAME_TIME      1.04489795918367346939
+#define MAX_ORDER       8
 
 #ifndef WAVE_FORMAT_PCM
-#define WAVE_FORMAT_PCM	1
+#define WAVE_FORMAT_PCM 1
 #endif
 
 #ifdef _WIN32
-	typedef unsigned __int64 uint64;
+        typedef unsigned __int64 uint64;
 #else
-	typedef unsigned long long uint64;
+        typedef unsigned long long uint64;
 #endif
 
 /**
@@ -87,23 +87,23 @@ static const unsigned long *shift_16 = bit_shift + 4;
 typedef unsigned char byte;
 
 #ifdef _BIG_ENDIAN
-#define	ENDSWAP_INT16(x)	(((((x)>>8)&0xFF)|(((x)&0xFF)<<8)))
-#define	ENDSWAP_INT32(x)	(((((x)>>24)&0xFF)|(((x)>>8)&0xFF00)|(((x)&0xFF00)<<8)|(((x)&0xFF)<<24)))
+#define ENDSWAP_INT16(x)        (((((x)>>8)&0xFF)|(((x)&0xFF)<<8)))
+#define ENDSWAP_INT32(x)        (((((x)>>24)&0xFF)|(((x)>>8)&0xFF00)|(((x)&0xFF00)<<8)|(((x)&0xFF)<<24)))
 #define WRITE_BUFFER(x, bsize, out) { \
-	if (bsize > 2) *out++ = (byte)(*x >> 16); \
-	if (bsize > 1) *out++ = (byte)(*x >> 8); \
-	*out++ = (byte) *x; }
+        if (bsize > 2) *out++ = (byte)(*x >> 16); \
+        if (bsize > 1) *out++ = (byte)(*x >> 8); \
+        *out++ = (byte) *x; }
 #else
-#define	ENDSWAP_INT16(x)	(x)
-#define	ENDSWAP_INT32(x)	(x)
+#define ENDSWAP_INT16(x)        (x)
+#define ENDSWAP_INT32(x)        (x)
 #define WRITE_BUFFER(x, bsize, out) { \
-	*out++ = (byte) *x; \
-	if (bsize > 1) *out++ = (byte)(*x >> 8); \
-	if (bsize > 2) *out++ = (byte)(*x >> 16); }
+        *out++ = (byte) *x; \
+        if (bsize > 1) *out++ = (byte)(*x >> 8); \
+        if (bsize > 2) *out++ = (byte)(*x >> 16); }
 #endif
 
-#define PREDICTOR1(x, k)	((long)((((uint64)x << k) - x) >> k))
-#define DEC(x)			(((x)&1)?(++(x)>>1):(-(x)>>1))
+#define PREDICTOR1(x, k)        ((long)((((uint64)x << k) - x) >> k))
+#define DEC(x)                  (((x)&1)?(++(x)>>1):(-(x)>>1))
 
 #if 0
 /* This doesn't compile on non-gcc compilers */
@@ -119,26 +119,26 @@ typedef struct {
 #endif
 
 typedef struct {
-	unsigned long k0;
-	unsigned long k1;
-	unsigned long sum0;
-	unsigned long sum1;
+        unsigned long k0;
+        unsigned long k1;
+        unsigned long sum0;
+        unsigned long sum1;
 } adapt;
 
 typedef struct {
-	long shift;
-	long round;
-	long error;
-	long mutex;
-	long qm[MAX_ORDER+1];
-	long dx[MAX_ORDER+1];
-	long dl[MAX_ORDER+1];
+        long shift;
+        long round;
+        long error;
+        long mutex;
+        long qm[MAX_ORDER+1];
+        long dx[MAX_ORDER+1];
+        long dl[MAX_ORDER+1];
 } fltst;
 
 typedef struct {
-	fltst fst;
-	adapt rice;
-	long last;
+        fltst fst;
+        adapt rice;
+        long last;
 } decoder;
 
 #endif /* TTADEC_H_ */

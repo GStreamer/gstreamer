@@ -85,10 +85,10 @@ GstColorspaceYUVTables * gst_colorspace_init_yuv(long depth,
 
 
 #if 0
-GstColorspaceConverter* 	gst_colorspace_yuv2rgb_get_converter	(const GstCaps *from, const GstCaps *to);
-#define 			gst_colorspace_convert(converter, src, dest) \
-								(converter)->convert((converter), (src), (dest))
-void 				gst_colorspace_converter_destroy	(GstColorspaceConverter *space);
+GstColorspaceConverter*         gst_colorspace_yuv2rgb_get_converter    (const GstCaps *from, const GstCaps *to);
+#define                         gst_colorspace_convert(converter, src, dest) \
+                                                                (converter)->convert((converter), (src), (dest))
+void                            gst_colorspace_converter_destroy        (GstColorspaceConverter *space);
 #endif
 
 G_END_DECLS

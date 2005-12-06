@@ -93,7 +93,7 @@ struct _Dxr3AudioSink {
 
   ac3_padder *padder;      /* AC3 to SPDIF padder object. */
 
-  GstClock *clock;	   /* The clock for this element. */
+  GstClock *clock;         /* The clock for this element. */
 };
 
 
@@ -105,8 +105,8 @@ struct _Dxr3AudioSinkClass {
 };
 
 
-extern GType	dxr3audiosink_get_type		(void);
-extern gboolean	dxr3audiosink_factory_init	(GstPlugin *plugin);
+extern GType    dxr3audiosink_get_type          (void);
+extern gboolean dxr3audiosink_factory_init      (GstPlugin *plugin);
 
 G_END_DECLS
 

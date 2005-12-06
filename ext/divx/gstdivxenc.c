@@ -366,14 +366,14 @@ gst_divxenc_chain (GstPad * pad, GstData * _data)
     case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
       gst_caps_get_int (caps, "depth", &d);
       switch (d) {
-	case 24:
-	  divx_cs = 0;
-	  bitcnt = 24;
-	  break;
-	case 32:
-	  divx_cs = 0;
-	  bitcnt = 32;
-	  break;
+        case 24:
+          divx_cs = 0;
+          bitcnt = 24;
+          break;
+        case 32:
+          divx_cs = 0;
+          bitcnt = 32;
+          break;
 */
 
 static GstPadLinkReturn

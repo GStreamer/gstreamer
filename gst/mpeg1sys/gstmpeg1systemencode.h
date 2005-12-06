@@ -87,7 +87,7 @@ struct _GstMPEG1SystemEncode {
   GList *mta;
 
   /* stream input pads */
-  GstPad *private_1_pad[8];	/* up to 8 ac3 audio tracks <grumble> */
+  GstPad *private_1_pad[8];     /* up to 8 ac3 audio tracks <grumble> */
   GstPad *private_2_pad;
   GstPad *video_pad[16];
   GstPad *audio_pad[32];

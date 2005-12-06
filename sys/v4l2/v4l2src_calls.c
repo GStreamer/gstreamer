@@ -40,9 +40,9 @@
 #define GST_V4L2_SET_INACTIVE(element) (element)->buffer = NULL
 
 #define DEBUG(format, args...) \
-	GST_CAT_DEBUG_OBJECT (\
-		v4l2src_debug, v4l2src, \
-		"V4L2SRC: " format, ##args)
+        GST_CAT_DEBUG_OBJECT (\
+                v4l2src_debug, v4l2src, \
+                "V4L2SRC: " format, ##args)
 
 /* On some systems MAP_FAILED seems to be missing */
 #ifndef MAP_FAILED

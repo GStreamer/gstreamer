@@ -49,18 +49,18 @@ struct _TarkinDec {
 
   GstPad *sinkpad,*srcpad;
 
-  ogg_sync_state 	 oy;
-  ogg_stream_state 	 os;
-  ogg_page 		 og;
-  ogg_packet 		 op;
+  ogg_sync_state         oy;
+  ogg_stream_state       os;
+  ogg_page               og;
+  ogg_packet             op;
 
-  TarkinStream 		*tarkin_stream;
-  TarkinComment 	 tc;
-  TarkinInfo 		 ti;
-  TarkinVideoLayerDesc 	 layer[1];
+  TarkinStream          *tarkin_stream;
+  TarkinComment          tc;
+  TarkinInfo             ti;
+  TarkinVideoLayerDesc   layer[1];
 
-  gint 			 frame_num;
-  gint			 nheader;
+  gint                   frame_num;
+  gint                   nheader;
         
   gboolean eos;
   gint bitrate;

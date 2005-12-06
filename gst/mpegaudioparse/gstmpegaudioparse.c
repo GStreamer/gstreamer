@@ -180,12 +180,12 @@ mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
  * (0.024%) per try. This makes the function for calculating false positives
  *   1 - (1 - ((63 / 2 ^18) ^ GST_MP3_TYPEFIND_MIN_HEADERS)) ^ buffersize)
  * This has the following probabilities of false positives:
- * bufsize	          MIN_HEADERS
- * (bytes)	1	2	3	4
- * 4096		62.6%	 0.02%	 0%	 0%
- * 16384	98%	 0.09%	 0%	 0%
- * 1 MiB       100%	 5.88%	 0%	 0%
- * 1 GiB       100%    100%	 1.44%   0%
+ * bufsize                MIN_HEADERS
+ * (bytes)      1       2       3       4
+ * 4096         62.6%    0.02%   0%      0%
+ * 16384        98%      0.09%   0%      0%
+ * 1 MiB       100%      5.88%   0%      0%
+ * 1 GiB       100%    100%      1.44%   0%
  * 1 TiB       100%    100%    100%      0.35%
  * This means that the current choice (3 headers by most of the time 4096 byte
  * buffers is pretty safe for now.
@@ -361,8 +361,8 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 
 /* mask the bits which are allowed to differ between frames */
 #define HDRMASK ~((0xF << 12)  /* bitrate */ | \
-		  (0x1 <<  9)  /* padding */ | \
-		  (0x3 <<  4))  /*mode extension */
+                  (0x1 <<  9)  /* padding */ | \
+                  (0x3 <<  4))  /*mode extension */
 
         if ((header2 & HDRMASK) != (header & HDRMASK)) {        /* require 2 matching headers in a row */
           GST_DEBUG

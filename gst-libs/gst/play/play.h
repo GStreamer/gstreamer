@@ -28,7 +28,7 @@ G_BEGIN_DECLS
 
 /* GError stuff */
 
-#define GST_PLAY_ERROR		gst_play_error_quark ()
+#define GST_PLAY_ERROR          gst_play_error_quark ()
 /* GObject stuff */
 
 #define GST_TYPE_PLAY            (gst_play_get_type())

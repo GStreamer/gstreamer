@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <2003> David A. Schleef <ds@schleef.org>
- *		 <2004> Benjamin Otte <otte@gnome.org
+ *               <2004> Benjamin Otte <otte@gnome.org
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -31,8 +31,8 @@ typedef struct _GstVideoImage GstVideoImage;
 typedef struct _GstVideoFormat GstVideoFormat;
 
 struct _GstVideoColor {
-  int		Y, U, V;
-  int		R, G, B;
+  int           Y, U, V;
+  int           R, G, B;
 };
 extern const GstVideoColor GST_VIDEO_COLOR_WHITE;
 extern const GstVideoColor GST_VIDEO_COLOR_YELLOW;
@@ -50,64 +50,64 @@ extern const GstVideoColor GST_VIDEO_COLOR_DARK_GREY;
 
 struct _GstVideoImage
 {
-  guint8 *	dest;		/* pointer to first byte of video data */
-  guint8 *	yp, *up, *vp;	/* pointers to first byte of each component
-				 * for both packed/planar YUV and RGB */
-  guint8 *	endptr;		/* pointer to byte beyond last video data */
-  guint		ystride;
-  guint		ustride;
-  guint		vstride;
-  guint		width;
-  guint		height;
+  guint8 *      dest;           /* pointer to first byte of video data */
+  guint8 *      yp, *up, *vp;   /* pointers to first byte of each component
+                                 * for both packed/planar YUV and RGB */
+  guint8 *      endptr;         /* pointer to byte beyond last video data */
+  guint         ystride;
+  guint         ustride;
+  guint         vstride;
+  guint         width;
+  guint         height;
   const GstVideoFormat * format;
 };
 
 struct _GstVideoFormat
 {
-  char *	fourcc;
-  char *	name;
-  int		bitspp;
-  void		(* paint_setup) (GstVideoImage * p, char *dest);
-  void		(* paint_hline) (GstVideoImage * p, int x, int y, int w, const GstVideoColor *c);
-  void		(* copy_hline) (GstVideoImage * dest, int destx, int desty,
+  char *        fourcc;
+  char *        name;
+  int           bitspp;
+  void          (* paint_setup) (GstVideoImage * p, char *dest);
+  void          (* paint_hline) (GstVideoImage * p, int x, int y, int w, const GstVideoColor *c);
+  void          (* copy_hline) (GstVideoImage * dest, int destx, int desty,
       GstVideoImage * src, int srcx, int srcy, int w);
-  int		ext_caps;
-  int		depth;
-  guint		red_mask;
-  guint		green_mask;
-  guint		blue_mask;
+  int           ext_caps;
+  int           depth;
+  guint         red_mask;
+  guint         green_mask;
+  guint         blue_mask;
 };
 
-const GstVideoFormat *	gst_video_format_find_by_fourcc		(int find_fourcc);
-const GstVideoFormat *	gst_video_format_find_by_name		(const char *name);
-const GstVideoFormat *	gst_video_format_find_by_structure 	(const GstStructure *structure);
-GstStructure *		gst_video_format_get_structure    	(const GstVideoFormat *format);
-guint			gst_video_format_get_size		(const GstVideoFormat *format, 
-								 guint w, guint h);
+const GstVideoFormat *  gst_video_format_find_by_fourcc         (int find_fourcc);
+const GstVideoFormat *  gst_video_format_find_by_name           (const char *name);
+const GstVideoFormat *  gst_video_format_find_by_structure      (const GstStructure *structure);
+GstStructure *          gst_video_format_get_structure          (const GstVideoFormat *format);
+guint                   gst_video_format_get_size               (const GstVideoFormat *format, 
+                                                                 guint w, guint h);
 
 extern const GstVideoFormat gst_video_format_list[];
 extern const guint gst_video_format_count;
 
-void			gst_video_image_setup			(GstVideoImage *image, 
-								 const GstVideoFormat *format,
-								 guint8 *data, guint w, guint h);
-									 
+void                    gst_video_image_setup                   (GstVideoImage *image, 
+                                                                 const GstVideoFormat *format,
+                                                                 guint8 *data, guint w, guint h);
+                                                                         
 /* drawing operations */
-void			gst_video_image_draw_hline		(GstVideoImage *image,
-								 gint x, gint y, gint w,
-								 const GstVideoColor *c);
-void			gst_video_image_draw_rectangle		(GstVideoImage *image,
-								 gint x, gint y, gint w, gint h,
-								 const GstVideoColor *c, gboolean filled);
-void			gst_video_image_copy_hline		(GstVideoImage *dest,
-								 gint xdest, gint ydest,
-								 GstVideoImage *src,
-								 gint xsrc, gint ysrc, gint w);
-void			gst_video_image_copy_area		(GstVideoImage *dest,
-								 gint xdest, gint ydest,
-								 GstVideoImage *src,
-								 gint xsrc, gint ysrc, 
-								 gint w, gint h);
+void                    gst_video_image_draw_hline              (GstVideoImage *image,
+                                                                 gint x, gint y, gint w,
+                                                                 const GstVideoColor *c);
+void                    gst_video_image_draw_rectangle          (GstVideoImage *image,
+                                                                 gint x, gint y, gint w, gint h,
+                                                                 const GstVideoColor *c, gboolean filled);
+void                    gst_video_image_copy_hline              (GstVideoImage *dest,
+                                                                 gint xdest, gint ydest,
+                                                                 GstVideoImage *src,
+                                                                 gint xsrc, gint ysrc, gint w);
+void                    gst_video_image_copy_area               (GstVideoImage *dest,
+                                                                 gint xdest, gint ydest,
+                                                                 GstVideoImage *src,
+                                                                 gint xsrc, gint ysrc, 
+                                                                 gint w, gint h);
 
 G_END_DECLS
 

@@ -24,55 +24,55 @@
 
 gboolean cd_init(struct cd *cd,const gchar *device)
 {
-	CDPLAYER *cdplayer;
-	CDSTATUS status;
-	CDTRACKINFO info;
-	guint i;
+        CDPLAYER *cdplayer;
+        CDSTATUS status;
+        CDTRACKINFO info;
+        guint i;
 
-	cdplayer = CDOpen(device,"r");
+        cdplayer = CDOpen(device,"r");
 
-	if (cdplayer == NULL) {
-		return FALSE;
-	}
+        if (cdplayer == NULL) {
+                return FALSE;
+        }
 
-	cd->fd = FD(cdplayer);
+        cd->fd = FD(cdplayer);
 
-	if (CDgetstatus(cdplayer,&status) == 0) {
-		CDclose(cdplayer);
-		cd->fd = 0;
-		return FALSE;
-	}
+        if (CDgetstatus(cdplayer,&status) == 0) {
+                CDclose(cdplayer);
+                cd->fd = 0;
+                return FALSE;
+        }
 
-	for (i = 1; i < status.last; i++) {
-		if (CDgettrackinfo(cdplayer,i,&info) == 0) {
-			CDclose(cdplayer);
-			cd->fd = 0;
-			return FALSE;
-		}
+        for (i = 1; i < status.last; i++) {
+                if (CDgettrackinfo(cdplayer,i,&info) == 0) {
+                        CDclose(cdplayer);
+                        cd->fd = 0;
+                        return FALSE;
+                }
 
-		cd->tracks[i].minute = info.start_min;
-		cd->tracks[i].second = info.start_sec;
-		cd->tracks[i].frame = info.start_frame;
+                cd->tracks[i].minute = info.start_min;
+                cd->tracks[i].second = info.start_sec;
+                cd->tracks[i].frame = info.start_frame;
 
-	}
+        }
 
-	/* there is no leadout information */
-	
+        /* there is no leadout information */
+        
 
-	cd->num_tracks = status.last;
+        cd->num_tracks = status.last;
 
-	return TRUE;
+        return TRUE;
 }
 
 gboolean cd_start(struct cd *cd,gint start_track,gint end_track)
 {
-	if (cd->fd == 0) {
-		return FALSE;
-	}
+        if (cd->fd == 0) {
+                return FALSE;
+        }
 
-	cd_fix_track_range(cd,&start_track,&end_track);
+        cd_fix_track_range(cd,&start_track,&end_track);
 
-	
+        
 
 }
 

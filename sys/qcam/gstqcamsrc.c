@@ -40,19 +40,19 @@ GST_ELEMENT_DETAILS ("QCam Source",
     "Read from a QuickCam device",
     "Wim Taymans <wim.taymans@chello.be>");
 
-#define AE_NONE			3
+#define AE_NONE                 3
 
-#define DEF_WIDTH 		320
-#define DEF_HEIGHT 		224
-#define DEF_BRIGHTNESS		226
-#define DEF_WHITEBAL		128
-#define DEF_CONTRAST		72
-#define DEF_TOP			1
-#define DEF_LEFT		14
-#define DEF_TRANSFER_SCALE	2
-#define DEF_DEPTH		6
-#define DEF_PORT		0x378
-#define DEF_AUTOEXP		AE_NONE
+#define DEF_WIDTH               320
+#define DEF_HEIGHT              224
+#define DEF_BRIGHTNESS          226
+#define DEF_WHITEBAL            128
+#define DEF_CONTRAST            72
+#define DEF_TOP                 1
+#define DEF_LEFT                14
+#define DEF_TRANSFER_SCALE      2
+#define DEF_DEPTH               6
+#define DEF_PORT                0x378
+#define DEF_AUTOEXP             AE_NONE
 
 static GstStaticPadTemplate gst_qcamsrc_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",

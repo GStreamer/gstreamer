@@ -25,40 +25,40 @@
 
 #include "gstcdplayer_ioctl.h"
 
-#define GST_TYPE_CDPLAYER 		(cdplayer_get_type())
-#define CDPLAYER(obj)			(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CDPLAYER,CDPlayer))
-#define CDPLAYER_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CDPLAYER,CDPlayerClass))
-#define GST_IS_CDPLAYER(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CDPLAYER))
-#define GST_IS_CDPLAYER_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDPLAYER))
+#define GST_TYPE_CDPLAYER               (cdplayer_get_type())
+#define CDPLAYER(obj)                   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CDPLAYER,CDPlayer))
+#define CDPLAYER_CLASS(klass)           (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CDPLAYER,CDPlayerClass))
+#define GST_IS_CDPLAYER(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CDPLAYER))
+#define GST_IS_CDPLAYER_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDPLAYER))
 
 
 typedef struct _CDPlayer CDPlayer;
 typedef struct _CDPlayerClass CDPlayerClass;
 
 struct _CDPlayer {
-	GstBin element;
-	
-	/* properties */
-	gchar *device;
-	gint num_tracks;
-	gint start_track;
-	gint end_track;
-	gint current_track;
-	guint32 cddb_discid;
+        GstBin element;
+        
+        /* properties */
+        gchar *device;
+        gint num_tracks;
+        gint start_track;
+        gint end_track;
+        gint current_track;
+        guint32 cddb_discid;
 
-	/* private */
-	struct cd cd;
-	gboolean paused;
+        /* private */
+        struct cd cd;
+        gboolean paused;
 };
 
 struct _CDPlayerClass {
-	GstBinClass parent_class;
+        GstBinClass parent_class;
 
-	/* signal callbacks */
-	void (*track_change) (GstElement *element,guint track);
+        /* signal callbacks */
+        void (*track_change) (GstElement *element,guint track);
 };
 
 GType cdplayer_get_type(void);
 
-#endif	
+#endif  
 

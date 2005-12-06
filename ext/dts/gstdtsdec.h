@@ -41,31 +41,31 @@ typedef struct _GstDtsDec GstDtsDec;
 typedef struct _GstDtsDecClass GstDtsDecClass;
 
 struct _GstDtsDec {
-  GstElement 	 element;
+  GstElement     element;
 
   /* pads */
-  GstPad 	*sinkpad,
-  		*srcpad;
+  GstPad        *sinkpad,
+                *srcpad;
 
   /* stream properties */
-  gint 		 bit_rate;
-  gint 		 sample_rate;
-  gint 		 stream_channels;
-  gint 		 request_channels;
-  gint 		 using_channels;
+  gint           bit_rate;
+  gint           sample_rate;
+  gint           stream_channels;
+  gint           request_channels;
+  gint           using_channels;
 
   /* decoding properties */
-  sample_t 	 level;
-  sample_t 	 bias;
-  gboolean 	 dynamic_range_compression;
-  sample_t 	*samples;
-  dts_state_t 	*state;
+  sample_t       level;
+  sample_t       bias;
+  gboolean       dynamic_range_compression;
+  sample_t      *samples;
+  dts_state_t   *state;
 
   /* Data left over from the previous buffer */
-  GstBuffer	*cache;
+  GstBuffer     *cache;
   
   /* keep track of time */
-  GstClockTime	current_ts;
+  GstClockTime  current_ts;
 };
 
 struct _GstDtsDecClass {

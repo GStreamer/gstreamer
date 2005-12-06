@@ -31,15 +31,15 @@
 GST_DEBUG_CATEGORY_STATIC (ivorbisfile_debug);
 #define GST_CAT_DEFAULT ivorbisfile_debug
 
-#define GST_TYPE_IVORBISFILE			\
+#define GST_TYPE_IVORBISFILE                    \
   (ivorbisfile_get_type())
-#define GST_IVORBISFILE(obj)						\
+#define GST_IVORBISFILE(obj)                                            \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_IVORBISFILE,Ivorbisfile))
-#define GST_IVORBISFILE_CLASS(klass)					\
+#define GST_IVORBISFILE_CLASS(klass)                                    \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_IVORBISFILE,IvorbisfileClass))
-#define GST_IS_IVORBISFILE(obj)					\
+#define GST_IS_IVORBISFILE(obj)                                 \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_IVORBISFILE))
-#define GST_IS_IVORBISFILE_CLASS(obj)				\
+#define GST_IS_IVORBISFILE_CLASS(obj)                           \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_IVORBISFILE))
 
 typedef struct _Ivorbisfile Ivorbisfile;

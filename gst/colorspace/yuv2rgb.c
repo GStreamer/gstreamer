@@ -46,17 +46,17 @@ static int U_b_tab[256];
 
 #define GAMMA_CORRECTION(x) ((int)(pow((x) / 255.0, 1.0 / gammaCorrect) * 255.0))
 #define CHROMA_CORRECTION256(x) ((x) >= 128 \
-	                        ? 128 + Min(127, (int)(((x) - 128.0) * chromaCorrect)) \
-	                        : 128 - Min(128, (int)((128.0 - (x)) * chromaCorrect)))
+                                ? 128 + Min(127, (int)(((x) - 128.0) * chromaCorrect)) \
+                                : 128 - Min(128, (int)((128.0 - (x)) * chromaCorrect)))
 #define CHROMA_CORRECTION128(x) ((x) >= 0 \
-	                        ? Min(127,  (int)(((x) * chromaCorrect))) \
-	                        : Max(-128, (int)(((x) * chromaCorrect))))
+                                ? Min(127,  (int)(((x) * chromaCorrect))) \
+                                : Max(-128, (int)(((x) * chromaCorrect))))
 #define CHROMA_CORRECTION256D(x) ((x) >= 128 \
-	                        ? 128.0 + Min(127.0, (((x) - 128.0) * chromaCorrect)) \
-	                        : 128.0 - Min(128.0, (((128.0 - (x)) * chromaCorrect))))
+                                ? 128.0 + Min(127.0, (((x) - 128.0) * chromaCorrect)) \
+                                : 128.0 - Min(128.0, (((128.0 - (x)) * chromaCorrect))))
 #define CHROMA_CORRECTION128D(x) ((x) >= 0 \
-	                        ? Min(127.0,  ((x) * chromaCorrect)) \
-	                        : Max(-128.0, ((x) * chromaCorrect)))
+                                ? Min(127.0,  ((x) * chromaCorrect)) \
+                                : Max(-128.0, ((x) * chromaCorrect)))
 
 
 void gst_colorspace_I420_to_rgb16 (GstColorspace * space, unsigned char *src,
@@ -345,14 +345,14 @@ free_bits_at_bottom (a)
  *
  * InitColor16Dither --
  *
- *	To get rid of the multiply and other conversions in color
- *	dither, we use a lookup table.
+ *      To get rid of the multiply and other conversions in color
+ *      dither, we use a lookup table.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The lookup tables are initialized.
+ *      The lookup tables are initialized.
  *
  *--------------------------------------------------------------
  */

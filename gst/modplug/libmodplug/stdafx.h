@@ -79,15 +79,15 @@ inline void ProcessPlugins(int n) {}
 
 #define GlobalFreePtr(p) free((void *)(p))
 
-#define strnicmp(a,b,c)		strncasecmp(a,b,c)
-#define wsprintf			sprintf
+#define strnicmp(a,b,c)         strncasecmp(a,b,c)
+#define wsprintf                        sprintf
 
 #ifndef FALSE
-#define FALSE	false
+#define FALSE   false
 #endif
 
 #ifndef TRUE
-#define TRUE	true
+#define TRUE    true
 #endif
 
 #endif /* MSC_VER */

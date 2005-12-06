@@ -27,7 +27,7 @@ extern "C" {
 
 #include <gst/gst.h>
 #include <gst/bytestream/bytestream.h>
-	
+        
 #define GST_TYPE_MODPLUG \
   (gst_modplug_get_type())
   

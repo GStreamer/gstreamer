@@ -25,11 +25,11 @@
 
 #include <gst/gst.h>
 
-#define GST_TYPE_CDAUDIO 		(gst_cdaudio_get_type())
-#define GST_CDAUDIO(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CDAUDIO,GstCDAudio))
-#define GST_CDAUDIO_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CDAUDIO,GstCDAudioClass))
-#define GST_IS_CDAUDIO(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CDAUDIO))
-#define GST_IS_CDAUDIO_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDAUDIO))
+#define GST_TYPE_CDAUDIO                (gst_cdaudio_get_type())
+#define GST_CDAUDIO(obj)                (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CDAUDIO,GstCDAudio))
+#define GST_CDAUDIO_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CDAUDIO,GstCDAudioClass))
+#define GST_IS_CDAUDIO(obj)             (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CDAUDIO))
+#define GST_IS_CDAUDIO_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDAUDIO))
 
 typedef struct _GstCDAudio GstCDAudio;
 typedef struct _GstCDAudioClass GstCDAudioClass;

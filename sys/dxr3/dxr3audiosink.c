@@ -113,9 +113,9 @@ static gboolean dxr3audiosink_handle_event (GstPad * pad, GstEvent * event);
 static void dxr3audiosink_chain_pcm (GstPad * pad, GstData * buf);
 static void dxr3audiosink_chain_ac3 (GstPad * pad, GstData * buf);
 
-/* static void	dxr3audiosink_wait		(Dxr3AudioSink *sink, */
+/* static void  dxr3audiosink_wait              (Dxr3AudioSink *sink, */
 /*                                                  GstClockTime time); */
-/* static int	dxr3audiosink_mvcommand		(Dxr3AudioSink *sink, */
+/* static int   dxr3audiosink_mvcommand         (Dxr3AudioSink *sink, */
 /*                                                  int command); */
 
 static GstStateChangeReturn dxr3audiosink_change_state (GstElement * element,

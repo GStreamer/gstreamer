@@ -25,17 +25,17 @@ OTHER DEALINGS IN THE SOFTWARE.
 ******************************************************************/
 
 /* Fixdark
-	Routine to repair dark current artifacts in qcam output.
-	Basic idea: the Qcam CCD suffers from "dark current";
-	that is, some of the CCD pixels will leak current under
-	long exposures, even if they're in the dark, and this
-	shows up as ugly speckling on images taken in low light.
+        Routine to repair dark current artifacts in qcam output.
+        Basic idea: the Qcam CCD suffers from "dark current";
+        that is, some of the CCD pixels will leak current under
+        long exposures, even if they're in the dark, and this
+        shows up as ugly speckling on images taken in low light.
 
-	Fortunately, the leaky pixels are the same from shot to
-	shot.  So, we can figure out which pixels are leaky by
-	taking some establishing shots in the dark, and try to
-	fix those pixels on subsequent shots.  The dark
-	establishing shots need only be done once per camera.
+        Fortunately, the leaky pixels are the same from shot to
+        shot.  So, we can figure out which pixels are leaky by
+        taking some establishing shots in the dark, and try to
+        fix those pixels on subsequent shots.  The dark
+        establishing shots need only be done once per camera.
 */
 
 #ifdef HAVE_CONFIG_H
@@ -77,7 +77,7 @@ read_darkmask()
   }
 
   if (fread(master_darkmask1, sizeof(unsigned char), MAX_WIDTH*MAX_HEIGHT, fp) !=
-	MAX_WIDTH*MAX_HEIGHT) {
+        MAX_WIDTH*MAX_HEIGHT) {
 #ifdef DEBUG
     fprintf(stderr, "Error reading darkfile\n");
 #endif
@@ -88,14 +88,14 @@ read_darkmask()
     for (x = 0; x < MAX_WIDTH; x += 2) {
       min_bright = master_darkmask1[y][x];
       if (y < MAX_HEIGHT-1 && master_darkmask1[y+1][x] < min_bright)
-	min_bright = master_darkmask1[y+1][x];
+        min_bright = master_darkmask1[y+1][x];
       if (x < MAX_WIDTH-1 && master_darkmask1[y][x+1] < min_bright)
-	min_bright = master_darkmask1[y][x+1];
+        min_bright = master_darkmask1[y][x+1];
       if (y < MAX_HEIGHT-1 && x < MAX_WIDTH-1 && master_darkmask1[y+1][x+1] < min_bright)
-	min_bright = master_darkmask1[y+1][x+1];
+        min_bright = master_darkmask1[y+1][x+1];
       master_darkmask2[y/2][x/2] = min_bright;
-	assert(y/2 < MAX_HEIGHT/2+1);
-	assert(x/2 < MAX_WIDTH/2+1);
+        assert(y/2 < MAX_HEIGHT/2+1);
+        assert(x/2 < MAX_WIDTH/2+1);
     }
   }
 
@@ -103,14 +103,14 @@ read_darkmask()
     for (x = 0; x < MAX_WIDTH/2; x += 2) {
       min_bright = master_darkmask2[y][x];
       if (y < MAX_HEIGHT/2-1 && master_darkmask2[y+1][x] < min_bright)
-	min_bright = master_darkmask2[y+1][x];
+        min_bright = master_darkmask2[y+1][x];
       if (x < MAX_WIDTH/2-1 && master_darkmask2[y][x+1] < min_bright)
-	min_bright = master_darkmask2[y][x+1];
+        min_bright = master_darkmask2[y][x+1];
       if (y < MAX_HEIGHT/2-1 && x < MAX_WIDTH-1 && master_darkmask2[y+1][x+1] < min_bright)
-	min_bright = master_darkmask2[y+1][x+1];
+        min_bright = master_darkmask2[y+1][x+1];
       master_darkmask4[y/2][x/2] = min_bright;
-	assert(y/2 < MAX_HEIGHT/4+1);
-	assert(x/2 < MAX_WIDTH/4+1);
+        assert(y/2 < MAX_HEIGHT/4+1);
+        assert(x/2 < MAX_WIDTH/4+1);
     }
   }
 
@@ -121,15 +121,15 @@ read_darkmask()
 
 
 /* fixdark
-		We first record a list of bad leaky pixels, by making a
-		number of exposures in the dark.  master_darkmask holds
-		this information.  It's a map of the CCD.
-		master_darkmask[y][x] == val means that the pixel is
-		unreliable for brightnesses of "val" and above.
+                We first record a list of bad leaky pixels, by making a
+                number of exposures in the dark.  master_darkmask holds
+                this information.  It's a map of the CCD.
+                master_darkmask[y][x] == val means that the pixel is
+                unreliable for brightnesses of "val" and above.
 
-		We go over the image.  If a pixel is bad, look at the
-		adjacent four pixels, average the ones that have good
-		values, and use that instead.
+                We go over the image.  If a pixel is bad, look at the
+                adjacent four pixels, average the ones that have good
+                values, and use that instead.
 */
 
 int

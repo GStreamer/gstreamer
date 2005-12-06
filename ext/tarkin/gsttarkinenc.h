@@ -49,17 +49,17 @@ struct _TarkinEnc {
 
   GstPad *sinkpad,*srcpad;
 
-  ogg_stream_state	 os; /* take physical pages, weld into a logical
-			                              stream of packets */
-  ogg_page        	 og; /* one Ogg bitstream page.  Tarkin packets are inside */
-  ogg_packet       	 op[3]; /* one raw packet of data for decode */
+  ogg_stream_state       os; /* take physical pages, weld into a logical
+                                                      stream of packets */
+  ogg_page               og; /* one Ogg bitstream page.  Tarkin packets are inside */
+  ogg_packet             op[3]; /* one raw packet of data for decode */
 
-  TarkinStream 		*tarkin_stream;
-  TarkinComment 	 tc;
-  TarkinInfo 		 ti;
-  TarkinVideoLayerDesc 	 layer[1];
+  TarkinStream          *tarkin_stream;
+  TarkinComment          tc;
+  TarkinInfo             ti;
+  TarkinVideoLayerDesc   layer[1];
 
-  gint 			 frame_num;
+  gint                   frame_num;
         
   gboolean eos;
   gint bitrate;

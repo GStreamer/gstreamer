@@ -57,7 +57,7 @@ typedef struct _GstApeDemuxClass {
   GstElementClass parent_class;
 } GstApeDemuxClass;
 
-GType 		gst_ape_demux_get_type		(void);
+GType           gst_ape_demux_get_type          (void);
 
 G_END_DECLS
 

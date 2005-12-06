@@ -1,7 +1,9 @@
-50% symbol docs coverage.
-1 symbols documented.
+75% symbol docs coverage.
+3 symbols documented.
+0 symbols incomplete.
 1 not documented.
 
 
 GstDfbVideoSink
+
 

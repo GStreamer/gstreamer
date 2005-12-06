@@ -30,7 +30,7 @@
 #include <audio/soundlib.h>
 #include "nassink.h"
 
-#define NAS_SOUND_PORT_DURATION	(2)
+#define NAS_SOUND_PORT_DURATION (2)
 
 GST_DEBUG_CATEGORY (NAS);
 /* Signals and args */

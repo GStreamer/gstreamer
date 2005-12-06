@@ -57,8 +57,8 @@ struct _GstMpeg2Subt {
 
   GstPad *videopad,*subtitlepad,*srcpad;
 
-  GstBuffer *partialbuf;	/* Collect together subtitle buffers until we have a full control sequence */
-  GstBuffer *hold_frame;	/* Hold back one frame of video */
+  GstBuffer *partialbuf;        /* Collect together subtitle buffers until we have a full control sequence */
+  GstBuffer *hold_frame;        /* Hold back one frame of video */
   GstBuffer *still_frame;
 
   guint16 packet_size;

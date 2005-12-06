@@ -399,7 +399,7 @@ gst_afsink_chain (GstPad * pad, GstData * _data)
     if (bytes_written < GST_BUFFER_SIZE (buf))
     {
       printf ("afsink : Warning : %d bytes should be written, only %d bytes written\n",
-      		  GST_BUFFER_SIZE (buf), bytes_written);
+                  GST_BUFFER_SIZE (buf), bytes_written);
     }
   }
 */
