@@ -56,9 +56,9 @@ struct _GstMPEGClockClass {
   GstSystemClockClass parent_class;
 };
 
-GType                   gst_mpeg_clock_get_type 	(void);
-GstClock*		gst_mpeg_clock_new		(gchar *name, GstMPEGClockGetTimeFunc func,
-							 gpointer user_data);
+GType                   gst_mpeg_clock_get_type         (void);
+GstClock*               gst_mpeg_clock_new              (gchar *name, GstMPEGClockGetTimeFunc func,
+                                                         gpointer user_data);
 
 G_END_DECLS
 

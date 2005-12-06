@@ -81,14 +81,14 @@ while (running) { \
     guint val; \
     gint val2; \
     unsigned char *outptr = output; \
-	int w; \
+        int w; \
 \
     synaescope_coreGo(); \
 \
     outptr = output; \
     for (w=0; w < syn_width * syn_height; w++) { \
-	bits[w] = colEq[(outptr[0] >> 4) + (outptr[1] & 0xf0)]; \
-	outptr += 2; \
+        bits[w] = colEq[(outptr[0] >> 4) + (outptr[1] & 0xf0)]; \
+        outptr += 2; \
     } \
 \
     GDK_THREADS_ENTER(); \

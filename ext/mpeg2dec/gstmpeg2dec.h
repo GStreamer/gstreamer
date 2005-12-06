@@ -56,55 +56,55 @@ typedef enum
 
 typedef enum 
 {
-  MPEG2DEC_DISC_NONE 		= 0,
+  MPEG2DEC_DISC_NONE            = 0,
   MPEG2DEC_DISC_NEW_PICTURE,
   MPEG2DEC_DISC_NEW_KEYFRAME
 } DiscontState;
 
 struct _GstMpeg2dec {
-  GstElement 	 element;
+  GstElement     element;
 
   /* pads */
-  GstPad 	*sinkpad,
-  		*srcpad,
-  		*userdatapad;
+  GstPad        *sinkpad,
+                *srcpad,
+                *userdatapad;
 
-  mpeg2dec_t 	*decoder;
+  mpeg2dec_t    *decoder;
   const mpeg2_info_t *info;
 
-  gboolean	 closed;
-  gboolean	 have_fbuf;
+  gboolean       closed;
+  gboolean       have_fbuf;
 
   GstBuffer  *buffers[GST_MPEG2DEC_NUM_BUFS];
 
-  DiscontState	 discont_state;
+  DiscontState   discont_state;
 
   /* the timestamp of the next frame */
   GstClockTime   next_time;
-  gint64	 segment_start;
-  gint64	 segment_end;
+  gint64         segment_start;
+  gint64         segment_end;
 
   /* video state */
   Mpeg2decFormat format;
-  gint		 width;
-  gint		 height;
-  gint		 decoded_width;
-  gint		 decoded_height;
-  gint		 pixel_width;
-  gint		 pixel_height;
-  gint		 frame_rate_code;
-  gint64	 total_frames;
-  gint64	 frame_period;
+  gint           width;
+  gint           height;
+  gint           decoded_width;
+  gint           decoded_height;
+  gint           pixel_width;
+  gint           pixel_height;
+  gint           frame_rate_code;
+  gint64         total_frames;
+  gint64         frame_period;
   
   guint64  offset;
-  gint		 fps_n;
-  gint		 fps_d;
-  gboolean	 need_sequence;
+  gint           fps_n;
+  gint           fps_d;
+  gboolean       need_sequence;
 
-  GstEvent	*pending_event;
+  GstEvent      *pending_event;
 
-  GstIndex	*index;
-  gint		 index_id;
+  GstIndex      *index;
+  gint           index_id;
 };
 
 struct _GstMpeg2decClass {

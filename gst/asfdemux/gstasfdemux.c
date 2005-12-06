@@ -308,26 +308,26 @@ _read_var_length (GstASFDemux * asf_demux, guint8 type, guint32 * rsize)
   return ret;
 }
 
-#define READ_UINT_BITS_FUNCTION(bits)						\
-static gboolean									\
-_read_uint ## bits (GstASFDemux *asf_demux, guint ## bits *ret)	        	\
-{										\
-  GstEvent *event;								\
-  guint32 remaining;								\
-  guint8* data;									\
-										\
-  g_return_val_if_fail (ret != NULL, FALSE);					\
-										\
-  do {										\
+#define READ_UINT_BITS_FUNCTION(bits)                                           \
+static gboolean                                                                 \
+_read_uint ## bits (GstASFDemux *asf_demux, guint ## bits *ret)                 \
+{                                                                               \
+  GstEvent *event;                                                              \
+  guint32 remaining;                                                            \
+  guint8* data;                                                                 \
+                                                                                \
+  g_return_val_if_fail (ret != NULL, FALSE);                                    \
+                                                                                \
+  do {                                                                          \
     if (gst_bytestream_peek_bytes (asf_demux->bs, &data, bits / 8) == bits / 8) { \
-      *ret = GST_READ_UINT ## bits ## _LE (data);				\
-      gst_bytestream_flush (asf_demux->bs, bits / 8);				\
-      return TRUE;								\
-    }										\
-    gst_bytestream_get_status (asf_demux->bs, &remaining, &event);		\
-  } while (gst_asf_demux_handle_sink_event (asf_demux, event, remaining));	\
-										\
-  return FALSE;									\
+      *ret = GST_READ_UINT ## bits ## _LE (data);                               \
+      gst_bytestream_flush (asf_demux->bs, bits / 8);                           \
+      return TRUE;                                                              \
+    }                                                                           \
+    gst_bytestream_get_status (asf_demux->bs, &remaining, &event);              \
+  } while (gst_asf_demux_handle_sink_event (asf_demux, event, remaining));      \
+                                                                                \
+  return FALSE;                                                                 \
 }
 
 #define GST_READ_UINT8_LE(x) GST_READ_UINT8(x)

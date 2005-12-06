@@ -1,3 +1,33 @@
+2005-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/a52dec/gsta52dec.h:
+	* ext/dvdread/dvdreadsrc.h:
+	* ext/lame/gstlame.h:
+	* ext/mad/gstid3tag.c:
+	* ext/mad/gstmad.c: (gst_mad_update_info):
+	* ext/mad/gstmad.h:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	* ext/sidplay/gstsiddec.h:
+	* gst/ac3parse/gstac3parse.c:
+	* gst/ac3parse/gstac3parse.h:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	* gst/iec958/ac3iec.h:
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	* gst/mpegstream/gstdvddemux.h:
+	* gst/mpegstream/gstmpegclock.h:
+	* gst/mpegstream/gstmpegdemux.h:
+	* gst/mpegstream/gstmpegpacketize.h:
+	* gst/mpegstream/gstmpegparse.c:
+	* gst/mpegstream/gstmpegparse.h:
+	* gst/mpegstream/gstrfc2250enc.c:
+	* gst/mpegstream/gstrfc2250enc.h:
+	* gst/realmedia/rmdemux.c:
+	* gst/realmedia/rmdemux.h:
+	* gst/synaesthesia/synaescope.c:
+	  expand tabs
+
 === release 0.10.0 ===
 
 2005-12-05   <thomas (at) apestaart (dot) org>

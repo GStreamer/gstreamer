@@ -401,9 +401,9 @@ gst_id3_tag_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-#define gst_id3_tag_set_state(tag,new_state) G_STMT_START {				\
-  GST_LOG_OBJECT (tag, "setting state to %s", #new_state );				\
-  tag->state = new_state;								\
+#define gst_id3_tag_set_state(tag,new_state) G_STMT_START {                             \
+  GST_LOG_OBJECT (tag, "setting state to %s", #new_state );                             \
+  tag->state = new_state;                                                               \
 }G_STMT_END
 
 static const GstQueryType *

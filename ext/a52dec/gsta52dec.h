@@ -40,28 +40,28 @@ typedef struct _GstA52Dec GstA52Dec;
 typedef struct _GstA52DecClass GstA52DecClass;
 
 struct _GstA52Dec {
-  GstElement 	 element;
+  GstElement     element;
 
   /* pads */
-  GstPad 	*sinkpad,
-  		*srcpad;
+  GstPad        *sinkpad,
+                *srcpad;
 
   gboolean       dvdmode;
 
-  int 		 bit_rate;
-  int 		 sample_rate;
-  int 		 stream_channels;
-  int 		 request_channels;
-  int 		 using_channels;
+  int            bit_rate;
+  int            sample_rate;
+  int            stream_channels;
+  int            request_channels;
+  int            using_channels;
 
-  sample_t 	 level;
-  sample_t 	 bias;
-  gboolean 	 dynamic_range_compression;
-  sample_t 	*samples;
-  a52_state_t 	*state;
+  sample_t       level;
+  sample_t       bias;
+  gboolean       dynamic_range_compression;
+  sample_t      *samples;
+  a52_state_t   *state;
 
-  GstBuffer	*cache;
-  GstClockTime	 time;
+  GstBuffer     *cache;
+  GstClockTime   time;
 };
 
 struct _GstA52DecClass {

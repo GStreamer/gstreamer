@@ -57,35 +57,35 @@ struct _GstMPEGParse
   GstMPEGPacketize *packetize;
 
   /* Keep track of total rate using SCR and use hysteresis */
-  guint64 first_scr;		/* Earliest SCR value for reference */
-  guint64 first_scr_pos;	/* Byte position of reference SCR */
-  guint64 last_scr;		/* Latest SCR value for reference */
-  guint64 last_scr_pos;		/* Byte position of reference SCR */
-  guint64 scr_rate;		/* Remember the last rate for hysteresis */
+  guint64 first_scr;            /* Earliest SCR value for reference */
+  guint64 first_scr_pos;        /* Byte position of reference SCR */
+  guint64 last_scr;             /* Latest SCR value for reference */
+  guint64 last_scr_pos;         /* Byte position of reference SCR */
+  guint64 scr_rate;             /* Remember the last rate for hysteresis */
 
   /* Compute a rolling average for SCR interpolation (for MPEG1) */
-  guint64 avg_bitrate_time;	/* Time total for local average bitrate */
-  guint64 avg_bitrate_bytes;	/* Bytes total for local average bitrate */
+  guint64 avg_bitrate_time;     /* Time total for local average bitrate */
+  guint64 avg_bitrate_bytes;    /* Bytes total for local average bitrate */
 
   /* Pack header values */
-  guint32 mux_rate;		/* Mux rate in bytes/sec derived from Pack 
-			           header */
-  guint64 current_scr;		/* Current SCR from the stream */
-  guint64 next_scr;		/* Expected next SCR */
-  guint64 bytes_since_scr;	/* Bytes since current_scr */
+  guint32 mux_rate;             /* Mux rate in bytes/sec derived from Pack 
+                                   header */
+  guint64 current_scr;          /* Current SCR from the stream */
+  guint64 next_scr;             /* Expected next SCR */
+  guint64 bytes_since_scr;      /* Bytes since current_scr */
 
-  GstClockTime current_ts;	/* Current timestamp (i.e., SCR
-				   adjusted with the value of
-				   'adjust') */
+  GstClockTime current_ts;      /* Current timestamp (i.e., SCR
+                                   adjusted with the value of
+                                   'adjust') */
 
-  gint64 adjust;              	/* Value added to SCR values to
-				   produce buffer timestamps */
-  gint max_scr_gap;		/* The maximum allowed SCR gap without
-				   making a timestamp adjustment */
+  gint64 adjust;                /* Value added to SCR values to
+                                   produce buffer timestamps */
+  gint max_scr_gap;             /* The maximum allowed SCR gap without
+                                   making a timestamp adjustment */
 
-  gboolean newsegment_pending;	/* If true, the element should send a
-				   NEWSEGMENT event as soon as there
-				   is SCR information available */
+  gboolean newsegment_pending;  /* If true, the element should send a
+                                   NEWSEGMENT event as soon as there
+                                   is SCR information available */
 
   gboolean scr_pending;
 
@@ -110,18 +110,18 @@ struct _GstMPEGParseClass
 
   /* Optional method to send out the data */
   GstFlowReturn (*send_buffer)    (GstMPEGParse * parse,
-				   GstBuffer * buffer, GstClockTime time);
+                                   GstBuffer * buffer, GstClockTime time);
   gboolean      (*process_event)  (GstMPEGParse * parse,
-				   GstEvent * event, GstClockTime time);
+                                   GstEvent * event, GstClockTime time);
   gboolean      (*send_newsegment)(GstMPEGParse * parse, gdouble rate,
-				   GstClockTime start_time,
-				   GstClockTime stop_time);
+                                   GstClockTime start_time,
+                                   GstClockTime stop_time);
   gboolean      (*send_event)     (GstMPEGParse * parse, GstEvent *event,
-				   GstClockTime time);
+                                   GstClockTime time);
 
   /* Signals */
   void          (*reached_offset) (GstMPEGParse *parse,
-				   GstClockTime timeval);
+                                   GstClockTime timeval);
 };
 
 GType gst_mpeg_parse_get_type (void);

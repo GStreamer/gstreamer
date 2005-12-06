@@ -47,9 +47,9 @@ enum {
 };
 
 /* Supported number of streams. */
-#define GST_MPEG_DEMUX_NUM_VIDEO_STREAMS 	16
-#define GST_MPEG_DEMUX_NUM_AUDIO_STREAMS 	32
-#define GST_MPEG_DEMUX_NUM_PRIVATE_STREAMS 	2
+#define GST_MPEG_DEMUX_NUM_VIDEO_STREAMS        16
+#define GST_MPEG_DEMUX_NUM_AUDIO_STREAMS        32
+#define GST_MPEG_DEMUX_NUM_PRIVATE_STREAMS      2
 
 /* How to make stream type values. */
 #define GST_MPEG_DEMUX_STREAM_TYPE(kind, serial) \
@@ -88,11 +88,11 @@ typedef struct _GstMPEGDemuxClass GstMPEGDemuxClass;
 
 /* Information associated to a single MPEG stream. */
 struct _GstMPEGStream {
-  gint		type;
-  gint		number;
-  GstPad 	*pad;
-  gint	 	index_id;
-  gint		size_bound;
+  gint          type;
+  gint          number;
+  GstPad        *pad;
+  gint          index_id;
+  gint          size_bound;
   GstClockTime  cur_ts;
   GstClockTimeDiff scr_offs;
 };
@@ -100,29 +100,29 @@ struct _GstMPEGStream {
 /* Extended structure to hold additional information for video
    streams. */
 struct _GstMPEGVideoStream {
-  GstMPEGStream	parent;
-  gint		mpeg_version;
+  GstMPEGStream parent;
+  gint          mpeg_version;
 };
 
 struct _GstMPEGDemux {
-  GstMPEGParse	 parent;
+  GstMPEGParse   parent;
 
   /* previous partial chunk and bytes remaining in it */
-  gboolean 	 in_flush;
+  gboolean       in_flush;
 
   /* program stream header values */
-  guint16	 header_length;
-  guint32	 rate_bound;
-  guint8 	 audio_bound;
-  gboolean 	 fixed;
-  gboolean 	 constrained;
-  gboolean 	 audio_lock;
-  gboolean 	 video_lock;
-  guint8 	 video_bound;
-  gboolean 	 packet_rate_restriction;
-  gint64	 total_size_bound;
+  guint16        header_length;
+  guint32        rate_bound;
+  guint8         audio_bound;
+  gboolean       fixed;
+  gboolean       constrained;
+  gboolean       audio_lock;
+  gboolean       video_lock;
+  guint8         video_bound;
+  gboolean       packet_rate_restriction;
+  gint64         total_size_bound;
 
-  GstIndex	*index;
+  GstIndex      *index;
 
   /* stream output */
   GstMPEGStream *video_stream[GST_MPEG_DEMUX_NUM_VIDEO_STREAMS];
@@ -134,11 +134,11 @@ struct _GstMPEGDemux {
                                    there for the benefit of subclasses. */
 
   GstClockTime max_gap; /* Maximum timestamp difference to allow 
-			 * between pads before using a filler to catch up
-			 */
+                         * between pads before using a filler to catch up
+                         */
   GstClockTime max_gap_tolerance; /* When catching a pad up, how far behind
-				     to make it
-				   */
+                                     to make it
+                                   */
 
   GstClockTime max_ts; /* Highest timestamp of all pads */
   GstPad      *max_pad; /* Pad with highest timestamp */
@@ -153,10 +153,10 @@ struct _GstMPEGDemuxClass {
   GstPadTemplate *audio_template;
   GstPadTemplate *private_template;
 
-  GstPad *	(*new_output_pad)	(GstMPEGDemux *mpeg_demux,
+  GstPad *      (*new_output_pad)       (GstMPEGDemux *mpeg_demux,
                                          const gchar *name,
                                          GstPadTemplate *temp);
-  void		(*init_stream)		(GstMPEGDemux *mpeg_demux,
+  void          (*init_stream)          (GstMPEGDemux *mpeg_demux,
                                          gint type,
                                          GstMPEGStream *str,
                                          gint number,
@@ -164,22 +164,22 @@ struct _GstMPEGDemuxClass {
                                          GstPadTemplate *temp);
 
   GstMPEGStream *
-  		(*get_video_stream)	(GstMPEGDemux *mpeg_demux,
+                (*get_video_stream)     (GstMPEGDemux *mpeg_demux,
                                          guint8 stream_nr,
                                          gint type,
                                          const gpointer info);
   GstMPEGStream *
-  		(*get_audio_stream)	(GstMPEGDemux *mpeg_demux,
+                (*get_audio_stream)     (GstMPEGDemux *mpeg_demux,
                                          guint8 stream_nr,
                                          gint type,
                                          const gpointer info);
   GstMPEGStream *
-  		(*get_private_stream)	(GstMPEGDemux *mpeg_demux,
+                (*get_private_stream)   (GstMPEGDemux *mpeg_demux,
                                          guint8 stream_nr,
                                          gint type,
                                          const gpointer info);
 
-  GstFlowReturn (*send_subbuffer)	 (GstMPEGDemux *mpeg_demux,
+  GstFlowReturn (*send_subbuffer)        (GstMPEGDemux *mpeg_demux,
                                           GstMPEGStream *outstream,
                                           GstBuffer *buffer,
                                           GstClockTime timestamp,
@@ -187,24 +187,24 @@ struct _GstMPEGDemuxClass {
                                           guint size);
 
 
-  GstFlowReturn (*process_private) 	(GstMPEGDemux *mpeg_demux,
+  GstFlowReturn (*process_private)      (GstMPEGDemux *mpeg_demux,
                                          GstBuffer *buffer,
                                          guint stream_nr,
                                          GstClockTime timestamp,
                                          guint headerlen, guint datalen);
 
-  void		(*synchronise_pads)    (GstMPEGDemux *mpeg_demux,
+  void          (*synchronise_pads)    (GstMPEGDemux *mpeg_demux,
                                         GstClockTime threshold,
-					GstClockTime new_ts);
+                                        GstClockTime new_ts);
 
-  void		(*sync_stream_to_time) (GstMPEGDemux *mpeg_demux,
-		  			GstMPEGStream *stream,
-					GstClockTime last_ts);
+  void          (*sync_stream_to_time) (GstMPEGDemux *mpeg_demux,
+                                        GstMPEGStream *stream,
+                                        GstClockTime last_ts);
 };
 
-GType		gst_mpeg_demux_get_type		(void);
+GType           gst_mpeg_demux_get_type         (void);
 
-gboolean	gst_mpeg_demux_plugin_init 	(GstPlugin *plugin);
+gboolean        gst_mpeg_demux_plugin_init      (GstPlugin *plugin);
 
 G_END_DECLS
 

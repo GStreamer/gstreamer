@@ -47,7 +47,7 @@ enum {
 };
 
 /* Supported number of streams. */
-#define GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS 	32
+#define GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS    32
 #define GST_DVD_DEMUX_MAX_SUBPICTURE_DELAY 0
 
 typedef struct _GstDVDLPCMStream GstDVDLPCMStream ;
@@ -76,8 +76,8 @@ enum {
 /* Extended structure to hold additional information for linear PCM
    streams. */
 struct _GstDVDLPCMStream {
-  GstMPEGStream	 parent;
-  guint32	 sample_info;	/* The type of linear PCM samples
+  GstMPEGStream  parent;
+  guint32        sample_info;   /* The type of linear PCM samples
                                    associated to this stream. The
                                    values are bit fields with the same
                                    format of the sample_info field in
@@ -89,28 +89,28 @@ struct _GstDVDLPCMStream {
 
 
 struct _GstDVDDemux {
-  GstMPEGDemux	 parent;
+  GstMPEGDemux   parent;
 
   GstPad *cur_video;           /* Current video stream pad. */
   GstPad *cur_audio;           /* Current audio stream pad. */
   GstPad *cur_subpicture;      /* Current subpicture stream pad. */
 
-  gint cur_video_nr;		/* Current video stream number. */
-  gint cur_audio_nr;		/* Current audio stream number. */
-  gint cur_subpicture_nr;	/* Current subpicture stream number. */
+  gint cur_video_nr;            /* Current video stream number. */
+  gint cur_audio_nr;            /* Current audio stream number. */
+  gint cur_subpicture_nr;       /* Current subpicture stream number. */
 
-  GstClockTime last_end_ptm;	/* End presentation time of the last nav packet
+  GstClockTime last_end_ptm;    /* End presentation time of the last nav packet
                                    event received. */
 
-  GstClockTime discont_time;	/* If different from GST_CLOCK_TIME_NONE, a
+  GstClockTime discont_time;    /* If different from GST_CLOCK_TIME_NONE, a
                                    discontinuous event should be sent with the
                                    given time, before sending the next data
                                    block.. */
 
-  gint mpeg_version;		/* Version of the MPEG video stream */
+  gint mpeg_version;            /* Version of the MPEG video stream */
 
   GstMPEGStream *subpicture_stream[GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS];
-				/* Subpicture output streams. */
+                                /* Subpicture output streams. */
 
   GstEvent *langcodes;
 
@@ -127,16 +127,16 @@ struct _GstDVDDemuxClass {
   GstPadTemplate *cur_subpicture_template;
 
   GstMPEGStream *
-  		(*get_subpicture_stream)(GstMPEGDemux *mpeg_demux,
+                (*get_subpicture_stream)(GstMPEGDemux *mpeg_demux,
                                          guint8 stream_nr,
                                          gint type,
                                          const gpointer info);
 };
 
 
-GType		gst_dvd_demux_get_type		(void);
+GType           gst_dvd_demux_get_type          (void);
 
-gboolean 	gst_dvd_demux_plugin_init 	(GstPlugin *plugin);
+gboolean        gst_dvd_demux_plugin_init       (GstPlugin *plugin);
 
 G_END_DECLS
 

@@ -19,7 +19,7 @@
 /* Element-Checklist-Version: 5 */
 
 
-#define PCM_BUFFER_SIZE		(1152*4)
+#define PCM_BUFFER_SIZE         (1152*4)
 
 /*#define DEBUG_ENABLED*/
 #ifdef HAVE_CONFIG_H

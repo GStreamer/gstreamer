@@ -49,9 +49,9 @@ struct _GstAc3Parse {
 
   GstPad *sinkpad,*srcpad;
 
-  GstBuffer *partialbuf;	/* previous buffer (if carryover) */
-  guint lastframebytes;		/* bytes in previous of last frame so far */
-  guint lastframesize;		/* total length of last frame */
+  GstBuffer *partialbuf;        /* previous buffer (if carryover) */
+  guint lastframebytes;         /* bytes in previous of last frame so far */
+  guint lastframesize;          /* total length of last frame */
   guint skip; /* number of frames to skip */
 
   /* some stream parameters */

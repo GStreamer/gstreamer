@@ -50,9 +50,9 @@ static GstElementDetails mpeg_parse_details = {
   "Erik Walthinsen <omega@cse.ogi.edu>\n" "Wim Taymans <wim.taymans@chello.be>"
 };
 
-#define CLASS(o)	GST_MPEG_PARSE_CLASS (G_OBJECT_GET_CLASS (o))
+#define CLASS(o)        GST_MPEG_PARSE_CLASS (G_OBJECT_GET_CLASS (o))
 
-#define DEFAULT_MAX_SCR_GAP	120000
+#define DEFAULT_MAX_SCR_GAP     120000
 
 /* GstMPEGParse signals and args */
 enum

@@ -63,10 +63,10 @@ typedef enum {
 } GstAsfDemuxState;
 
 struct _GstASFDemux {
-  GstElement 	 element;
+  GstElement     element;
 
   /* pads */
-  GstPad 	*sinkpad;
+  GstPad        *sinkpad;
 
   GstByteStream *bs;
 

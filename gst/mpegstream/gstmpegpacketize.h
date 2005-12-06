@@ -26,24 +26,24 @@
 
 G_BEGIN_DECLS
 
-#define PICTURE_START_CODE		0x00
-#define SLICE_MIN_START_CODE		0x01
-#define SLICE_MAX_START_CODE		0xaf
-#define USER_START_CODE			0xb2
-#define SEQUENCE_START_CODE		0xb3
-#define SEQUENCE_ERROR_START_CODE	0xb4
-#define EXT_START_CODE			0xb5
-#define SEQUENCE_END_START_CODE		0xb7
-#define GOP_START_CODE			0xb8
+#define PICTURE_START_CODE              0x00
+#define SLICE_MIN_START_CODE            0x01
+#define SLICE_MAX_START_CODE            0xaf
+#define USER_START_CODE                 0xb2
+#define SEQUENCE_START_CODE             0xb3
+#define SEQUENCE_ERROR_START_CODE       0xb4
+#define EXT_START_CODE                  0xb5
+#define SEQUENCE_END_START_CODE         0xb7
+#define GOP_START_CODE                  0xb8
 
-#define ISO11172_END_START_CODE		0xb9
-#define PACK_START_CODE			0xba
-#define SYS_HEADER_START_CODE		0xbb
+#define ISO11172_END_START_CODE         0xb9
+#define PACK_START_CODE                 0xba
+#define SYS_HEADER_START_CODE           0xbb
 
 typedef struct _GstMPEGPacketize GstMPEGPacketize;
 
-#define GST_MPEG_PACKETIZE_ID(pack) 		((pack)->id)
-#define GST_MPEG_PACKETIZE_IS_MPEG2(pack) 	((pack)->MPEG2)
+#define GST_MPEG_PACKETIZE_ID(pack)             ((pack)->id)
+#define GST_MPEG_PACKETIZE_IS_MPEG2(pack)       ((pack)->MPEG2)
 
 typedef enum {
   GST_MPEG_PACKETIZE_SYSTEM,

@@ -45,9 +45,9 @@ struct _GstMPEGAudioParse {
 
   GstPad *sinkpad,*srcpad;
 
-  guint64 	last_ts;
+  guint64       last_ts;
 
-  GstBuffer *partialbuf;	/* previous buffer (if carryover) */
+  GstBuffer *partialbuf;        /* previous buffer (if carryover) */
   guint skip; /* number of frames to skip */
   guint bit_rate;
   gint channels, rate, layer;

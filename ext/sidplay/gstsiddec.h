@@ -44,24 +44,24 @@ typedef struct _GstSidDec GstSidDec;
 typedef struct _GstSidDecClass GstSidDecClass;
 
 struct _GstSidDec {
-  GstElement 	 element;
+  GstElement     element;
 
   /* pads */
-  GstPad 	*sinkpad, 
-  		*srcpad;
+  GstPad        *sinkpad, 
+                *srcpad;
 
-  guchar	*tune_buffer;
-  gint		 tune_len;
-  gint 		 tune_number;
-  guint64 	 total_bytes;
+  guchar        *tune_buffer;
+  gint           tune_len;
+  gint           tune_number;
+  guint64        total_bytes;
 
-  emuEngine 	*engine;
-  sidTune 	*tune;
-  emuConfig 	*config;
+  emuEngine     *engine;
+  sidTune       *tune;
+  emuConfig     *config;
 
-  gulong	 blocksize;
+  gulong         blocksize;
 
-  GstCaps	*metadata;
+  GstCaps       *metadata;
 };
 
 struct _GstSidDecClass {
@@ -69,7 +69,7 @@ struct _GstSidDecClass {
 };
 
 GType gst_siddec_get_type (void);
-	
+        
 G_END_DECLS
 
 #endif /* __GST_SIDDEC_H__ */

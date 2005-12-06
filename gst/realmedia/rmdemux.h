@@ -40,7 +40,7 @@ extern "C" {
 #define GST_IS_RMDEMUX_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RMDEMUX))
 
-#define GST_RMDEMUX_MAX_STREAMS		8
+#define GST_RMDEMUX_MAX_STREAMS         8
 
 typedef enum
 {

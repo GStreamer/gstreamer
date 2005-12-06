@@ -931,12 +931,12 @@ gst_mad_update_info (GstMad * mad)
   struct mad_header *header = &mad->frame.header;
   gboolean changed = FALSE;
 
-#define CHECK_HEADER(h1,str)					\
-G_STMT_START{							\
-  if (mad->header.h1 != header->h1 || mad->new_header) {	\
-    mad->header.h1 = header->h1;				\
-     changed = TRUE;						\
-  };								\
+#define CHECK_HEADER(h1,str)                                    \
+G_STMT_START{                                                   \
+  if (mad->header.h1 != header->h1 || mad->new_header) {        \
+    mad->header.h1 = header->h1;                                \
+     changed = TRUE;                                            \
+  };                                                            \
 } G_STMT_END
 
   /* update average bitrate */
@@ -1047,11 +1047,11 @@ gst_mad_check_restart (GstMad * mad)
  */
 #define BE_32(x) GST_READ_UINT32_BE(x)
 
-#define FOURCC_TAG( ch0, ch1, ch2, ch3 )		\
-	( (long)(unsigned char)(ch3) |			\
-	  ( (long)(unsigned char)(ch2) << 8 ) |		\
-	  ( (long)(unsigned char)(ch1) << 16 ) |	\
-	  ( (long)(unsigned char)(ch0) << 24 ) )
+#define FOURCC_TAG( ch0, ch1, ch2, ch3 )                \
+        ( (long)(unsigned char)(ch3) |                  \
+          ( (long)(unsigned char)(ch2) << 8 ) |         \
+          ( (long)(unsigned char)(ch1) << 16 ) |        \
+          ( (long)(unsigned char)(ch0) << 24 ) )
 
 /* Xing header stuff */
 #define XING_TAG FOURCC_TAG('X', 'i', 'n', 'g')

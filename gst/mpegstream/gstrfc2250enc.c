@@ -32,7 +32,7 @@ static GstElementDetails rfc2250_enc_details = {
   "Wim Taymans <wim.taymans@chello.be>"
 };
 
-#define CLASS(o)	GST_RFC2250_ENC_CLASS (G_OBJECT_GET_CLASS (o))
+#define CLASS(o)        GST_RFC2250_ENC_CLASS (G_OBJECT_GET_CLASS (o))
 
 /* GstRFC2250Enc signals and args */
 enum

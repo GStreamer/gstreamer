@@ -57,11 +57,11 @@ struct _AC3IEC {
   GstPad *sink;
   GstPad *src;
 
-  GstClockTime cur_ts;		/* Time stamp for the current
+  GstClockTime cur_ts;          /* Time stamp for the current
                                    frame. */
-  GstClockTime next_ts;		/* Time stamp for the next frame. */
+  GstClockTime next_ts;         /* Time stamp for the next frame. */
 
-  ac3_padder *padder;      	/* AC3 to SPDIF padder object. */
+  ac3_padder *padder;           /* AC3 to SPDIF padder object. */
 };
 
 
@@ -72,7 +72,7 @@ struct _AC3IECClass {
 };
 
 
-extern GType	ac3iec_get_type		(void);
+extern GType    ac3iec_get_type         (void);
 
 G_END_DECLS
 

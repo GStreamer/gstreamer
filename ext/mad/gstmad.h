@@ -29,11 +29,11 @@
 G_BEGIN_DECLS
 
 
-GType			gst_mad_get_type		(void);
-GType			gst_id3_tag_get_type		(guint type);
+GType                   gst_mad_get_type                (void);
+GType                   gst_id3_tag_get_type            (guint type);
 
-GstTagList*		gst_mad_id3_to_tag_list		(const struct id3_tag *	tag);
-struct id3_tag *	gst_mad_tag_list_to_id3_tag	(GstTagList *		list);
+GstTagList*             gst_mad_id3_to_tag_list         (const struct id3_tag * tag);
+struct id3_tag *        gst_mad_tag_list_to_id3_tag     (GstTagList *           list);
 
 
 G_END_DECLS
