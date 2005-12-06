@@ -4,13 +4,13 @@
  * demonstrates the adder plugin and the volume envelope plugin
  * work in progress but do try it out
  *
- * Latest change : 	28/08/2001
- * 					trying to adapt to incsched
- * 					delayed start for channels > 1
- *					now works by quickhacking the
- *					adder plugin to set
- * 					GST_ELEMENT_COTHREAD_STOPPING
- * Version :		0.5.1
+ * Latest change :      28/08/2001
+ *                                      trying to adapt to incsched
+ *                                      delayed start for channels > 1
+ *                                      now works by quickhacking the
+ *                                      adder plugin to set
+ *                                      GST_ELEMENT_COTHREAD_STOPPING
+ * Version :            0.5.1
  */
 
 #include <stdlib.h>
@@ -21,7 +21,7 @@
 /*#define WITH_BUG */
 /*#define WITH_BUG2 */
 /*#define DEBUG */
-/*#define AUTOPLUG	* define if you want autoplugging of input channels * */
+/*#define AUTOPLUG      * define if you want autoplugging of input channels * */
 /* function prototypes */
 
 input_channel_t *create_input_channel (int id, char *location);

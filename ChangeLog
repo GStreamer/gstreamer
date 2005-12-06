@@ -1,3 +1,43 @@
+2005-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/libs/tmpl/gstdataprotocol.sgml:
+	* docs/random/omega/testing/gstobject.c:
+	* gst/gst.c:
+	* gst/gstclock.c:
+	* gst/gstelement.c:
+	* gst/gstelementfactory.c:
+	* gst/gsterror.c:
+	* gst/gstevent.c:
+	* gst/gstghostpad.c:
+	* gst/gstinfo.c:
+	* gst/gstpadtemplate.c:
+	* gst/gstregistryxml.c:
+	* gst/gsttaglist.c:
+	* gst/gsttagsetter.c:
+	* gst/gsttypefind.c:
+	* gst/gstvalue.c:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/net/gstnetclientclock.c:
+	* libs/gst/net/gstnettimeprovider.c:
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstfdsrc.c:
+	* plugins/elements/gstfilesrc.c:
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gsttypefindelement.c:
+	* plugins/indexers/gstfileindex.c:
+	* plugins/indexers/gstmemindex.c:
+	* tests/check/gst/gsttag.c:
+	* tests/old/examples/cutter/cutter.c:
+	* tests/old/examples/mixer/mixer.c:
+	* tests/old/examples/xml/runxml.c: (main):
+	* tests/old/testsuite/caps/normalisation.c:
+	* tests/old/testsuite/debug/global.c:
+	* tests/old/testsuite/parse/parse1.c:
+	* tools/gst-xmlinspect.c:
+	* win32/common/dirent.c:
+	  expand tabs
+
 === release 0.10.0 ===
 
 2005-12-05   <thomas (at) apestaart (dot) org>

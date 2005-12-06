@@ -11,7 +11,7 @@
  *
  * Resource leaks fixed by <steve.lhomme@free.fr>
  *
- *	
+ *      
  * $Revision$
  * $Author$
  * $Date$
@@ -25,8 +25,8 @@
 #include <direct.h>
 #include <dirent.h>
 #include <gtchar.h>
-#define SUFFIX	_T("*")
-#define	SLASH	_T("\\")
+#define SUFFIX  _T("*")
+#define SLASH   _T("\\")
     
 #include <stdio.h>
     

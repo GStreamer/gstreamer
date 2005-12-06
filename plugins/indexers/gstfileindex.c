@@ -27,15 +27,15 @@
 #include <fcntl.h>
 #include <string.h>
 
-#define GST_TYPE_FILE_INDEX		\
+#define GST_TYPE_FILE_INDEX             \
   (gst_file_index_get_type ())
-#define GST_FILE_INDEX(obj)		\
+#define GST_FILE_INDEX(obj)             \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_FILE_INDEX, GstFileIndex))
-#define GST_FILE_INDEX_CLASS(klass)	\
+#define GST_FILE_INDEX_CLASS(klass)     \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_FILE_INDEX, GstFileIndexClass))
-#define GST_IS_FILE_INDEX(obj)		\
+#define GST_IS_FILE_INDEX(obj)          \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_FILE_INDEX))
-#define GST_IS_FILE_INDEX_CLASS(obj)	\
+#define GST_IS_FILE_INDEX_CLASS(obj)    \
   (GST_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FILE_INDEX))
 
 /*
@@ -830,12 +830,12 @@ show_entry (GstIndexEntry *entry)
   switch (entry->type) {
     case GST_INDEX_ENTRY_ID:
       g_print ("id %d describes writer %s\n", entry->id,
-		      GST_INDEX_ID_DESCRIPTION (entry));
+                      GST_INDEX_ID_DESCRIPTION (entry));
       break;
     case GST_INDEX_ENTRY_FORMAT:
       g_print ("%d: registered format %d for %s\n", entry->id,
-		      GST_INDEX_FORMAT_FORMAT (entry),
-		      GST_INDEX_FORMAT_KEY (entry));
+                      GST_INDEX_FORMAT_FORMAT (entry),
+                      GST_INDEX_FORMAT_KEY (entry));
       break;
     case GST_INDEX_ENTRY_ASSOCIATION:
     {
@@ -843,8 +843,8 @@ show_entry (GstIndexEntry *entry)
 
       g_print ("%d: %08x ", entry->id, GST_INDEX_ASSOC_FLAGS (entry));
       for (i = 0; i < GST_INDEX_NASSOCS (entry); i++) {
-	g_print ("%d %lld ", GST_INDEX_ASSOC_FORMAT (entry, i),
-			     GST_INDEX_ASSOC_VALUE (entry, i));
+        g_print ("%d %lld ", GST_INDEX_ASSOC_FORMAT (entry, i),
+                             GST_INDEX_ASSOC_VALUE (entry, i));
       }
       g_print ("\n");
       break;

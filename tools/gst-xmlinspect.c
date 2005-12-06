@@ -41,7 +41,7 @@ G_STMT_START{                                                   \
 
 #define PUT_STRING(pfx, str, a...)                              \
 G_STMT_START{                                                   \
-  g_print ("%*.*s"str"\n", pfx, pfx, "" , ##a);	   		\
+  g_print ("%*.*s"str"\n", pfx, pfx, "" , ##a);                 \
 }G_STMT_END
 
 #else

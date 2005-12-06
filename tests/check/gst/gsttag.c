@@ -57,48 +57,48 @@ check_tags (const GstTagList * list, const gchar * tag, gchar * value, ...)
   va_end (args);
 }
 
-#define NEW_LIST_FIXED(mode)					\
-G_STMT_START {							\
-  if (list) gst_tag_list_free (list);				\
-  list = gst_tag_list_new ();					\
-  gst_tag_list_add (list, mode, FTAG, FIXED1, FTAG, FIXED2,	\
-		    FTAG, FIXED3, FTAG, FIXED4, NULL);		\
+#define NEW_LIST_FIXED(mode)                                    \
+G_STMT_START {                                                  \
+  if (list) gst_tag_list_free (list);                           \
+  list = gst_tag_list_new ();                                   \
+  gst_tag_list_add (list, mode, FTAG, FIXED1, FTAG, FIXED2,     \
+                    FTAG, FIXED3, FTAG, FIXED4, NULL);          \
 } G_STMT_END;
 
-#define NEW_LIST_UNFIXED(mode)					\
-G_STMT_START {							\
-  if (list) gst_tag_list_free (list);				\
-  list = gst_tag_list_new ();					\
+#define NEW_LIST_UNFIXED(mode)                                  \
+G_STMT_START {                                                  \
+  if (list) gst_tag_list_free (list);                           \
+  list = gst_tag_list_new ();                                   \
   gst_tag_list_add (list, mode, UTAG, UNFIXED1, UTAG, UNFIXED2, \
-		    UTAG, UNFIXED3, UTAG, UNFIXED4, NULL);	\
+                    UTAG, UNFIXED3, UTAG, UNFIXED4, NULL);      \
 } G_STMT_END;
 
-#define NEW_LISTS_FIXED(mode)					\
-G_STMT_START {							\
-  if (list) gst_tag_list_free (list);				\
-  list = gst_tag_list_new ();					\
-  gst_tag_list_add (list, GST_TAG_MERGE_APPEND, FTAG, FIXED1,	\
-		    FTAG, FIXED2, NULL);			\
-  if (list2) gst_tag_list_free (list2);				\
-  list2 = gst_tag_list_new ();					\
+#define NEW_LISTS_FIXED(mode)                                   \
+G_STMT_START {                                                  \
+  if (list) gst_tag_list_free (list);                           \
+  list = gst_tag_list_new ();                                   \
+  gst_tag_list_add (list, GST_TAG_MERGE_APPEND, FTAG, FIXED1,   \
+                    FTAG, FIXED2, NULL);                        \
+  if (list2) gst_tag_list_free (list2);                         \
+  list2 = gst_tag_list_new ();                                  \
   gst_tag_list_add (list2, GST_TAG_MERGE_APPEND, FTAG, FIXED3,  \
-		    FTAG, FIXED4, NULL);			\
-  if (merge) gst_tag_list_free (merge);				\
-  merge = gst_tag_list_merge (list, list2, mode);		\
+                    FTAG, FIXED4, NULL);                        \
+  if (merge) gst_tag_list_free (merge);                         \
+  merge = gst_tag_list_merge (list, list2, mode);               \
 } G_STMT_END;
 
-#define NEW_LISTS_UNFIXED(mode)					\
-G_STMT_START {							\
-  if (list) gst_tag_list_free (list);				\
-  list = gst_tag_list_new ();					\
+#define NEW_LISTS_UNFIXED(mode)                                 \
+G_STMT_START {                                                  \
+  if (list) gst_tag_list_free (list);                           \
+  list = gst_tag_list_new ();                                   \
   gst_tag_list_add (list, GST_TAG_MERGE_APPEND, UTAG, UNFIXED1, \
-		    UTAG, UNFIXED2, NULL);			\
-  if (list2) gst_tag_list_free (list2);				\
-  list2 = gst_tag_list_new ();					\
+                    UTAG, UNFIXED2, NULL);                      \
+  if (list2) gst_tag_list_free (list2);                         \
+  list2 = gst_tag_list_new ();                                  \
   gst_tag_list_add (list2, GST_TAG_MERGE_APPEND, UTAG, UNFIXED3,\
-		    UTAG, UNFIXED4, NULL);			\
-  if (merge) gst_tag_list_free (merge);				\
-  merge = gst_tag_list_merge (list, list2, mode);		\
+                    UTAG, UNFIXED4, NULL);                      \
+  if (merge) gst_tag_list_free (merge);                         \
+  merge = gst_tag_list_merge (list, list2, mode);               \
 } G_STMT_END;
 
 
@@ -214,7 +214,8 @@ GST_START_TEST (test_date_tags)
   gst_tag_list_free (tag_list);
   g_date_free (date);
 }
-GST_END_TEST Suite * gst_tag_suite (void)
+GST_END_TEST Suite *
+gst_tag_suite (void)
 {
   Suite *s = suite_create ("GstTag");
   TCase *tc_chain = tcase_create ("general");

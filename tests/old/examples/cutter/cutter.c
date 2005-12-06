@@ -4,9 +4,9 @@
  * construct a simple pipeline osssrc ! cutter ! filesink
  * pause when necessary, change output
  *
- * Latest change : 	03/06/2001
+ * Latest change :      03/06/2001
  *
- * Version :		0.3
+ * Version :            0.3
  */
 
 #include <stdlib.h>

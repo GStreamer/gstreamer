@@ -41,7 +41,7 @@
 #include <gobject/gvaluecollector.h>
 #include <string.h>
 
-#define GST_TAG_IS_VALID(tag)		(gst_tag_get_info (tag) != NULL)
+#define GST_TAG_IS_VALID(tag)           (gst_tag_get_info (tag) != NULL)
 
 typedef struct
 {
@@ -867,7 +867,7 @@ gst_tag_list_get_value_index (const GstTagList * list, const gchar * tag,
  * You must g_value_unset() the value after use.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	    given list.
+ *          given list.
  */
 gboolean
 gst_tag_list_copy_value (GValue * dest, const GstTagList * list,
@@ -899,39 +899,39 @@ gst_tag_list_copy_value (GValue * dest, const GstTagList * list,
 
 /***** evil macros to get all the gst_tag_list_get_*() functions right *****/
 
-#define TAG_MERGE_FUNCS(name,type)					\
-gboolean								\
-gst_tag_list_get_ ## name (const GstTagList *list, const gchar *tag,	\
-			   type *value)					\
-{									\
-  GValue v = { 0, };							\
-									\
-  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);			\
-  g_return_val_if_fail (tag != NULL, FALSE);				\
-  g_return_val_if_fail (value != NULL, FALSE);				\
-									\
-  if (!gst_tag_list_copy_value (&v, list, tag))				\
-      return FALSE;							\
-  *value = COPY_FUNC (g_value_get_ ## name (&v));			\
-  g_value_unset (&v);							\
-  return TRUE;								\
-}									\
-									\
-gboolean								\
-gst_tag_list_get_ ## name ## _index (const GstTagList *list,		\
-				     const gchar *tag,			\
-				     guint index, type *value)		\
-{									\
-  const GValue *v;							\
-									\
-  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);			\
-  g_return_val_if_fail (tag != NULL, FALSE);				\
-  g_return_val_if_fail (value != NULL, FALSE);				\
-									\
-  if ((v = gst_tag_list_get_value_index (list, tag, index)) == NULL)	\
-      return FALSE;							\
-  *value = COPY_FUNC (g_value_get_ ## name (v));			\
-  return TRUE;								\
+#define TAG_MERGE_FUNCS(name,type)                                      \
+gboolean                                                                \
+gst_tag_list_get_ ## name (const GstTagList *list, const gchar *tag,    \
+                           type *value)                                 \
+{                                                                       \
+  GValue v = { 0, };                                                    \
+                                                                        \
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);                 \
+  g_return_val_if_fail (tag != NULL, FALSE);                            \
+  g_return_val_if_fail (value != NULL, FALSE);                          \
+                                                                        \
+  if (!gst_tag_list_copy_value (&v, list, tag))                         \
+      return FALSE;                                                     \
+  *value = COPY_FUNC (g_value_get_ ## name (&v));                       \
+  g_value_unset (&v);                                                   \
+  return TRUE;                                                          \
+}                                                                       \
+                                                                        \
+gboolean                                                                \
+gst_tag_list_get_ ## name ## _index (const GstTagList *list,            \
+                                     const gchar *tag,                  \
+                                     guint index, type *value)          \
+{                                                                       \
+  const GValue *v;                                                      \
+                                                                        \
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);                 \
+  g_return_val_if_fail (tag != NULL, FALSE);                            \
+  g_return_val_if_fail (value != NULL, FALSE);                          \
+                                                                        \
+  if ((v = gst_tag_list_get_value_index (list, tag, index)) == NULL)    \
+      return FALSE;                                                     \
+  *value = COPY_FUNC (g_value_get_ ## name (v));                        \
+  return TRUE;                                                          \
 }
 
 #define COPY_FUNC /**/
@@ -945,7 +945,7 @@ gst_tag_list_get_ ## name ## _index (const GstTagList *list,		\
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_char_index:
@@ -958,7 +958,7 @@ gst_tag_list_get_ ## name ## _index (const GstTagList *list,		\
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (char, gchar)
 /**
@@ -971,7 +971,7 @@ TAG_MERGE_FUNCS (char, gchar)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_uchar_index:
@@ -984,7 +984,7 @@ TAG_MERGE_FUNCS (char, gchar)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (uchar, guchar)
 /**
@@ -997,7 +997,7 @@ TAG_MERGE_FUNCS (uchar, guchar)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_boolean_index:
@@ -1010,7 +1010,7 @@ TAG_MERGE_FUNCS (uchar, guchar)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (boolean, gboolean)
 /**
@@ -1023,7 +1023,7 @@ TAG_MERGE_FUNCS (boolean, gboolean)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_int_index:
@@ -1036,7 +1036,7 @@ TAG_MERGE_FUNCS (boolean, gboolean)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (int, gint)
 /**
@@ -1049,7 +1049,7 @@ TAG_MERGE_FUNCS (int, gint)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_uint_index:
@@ -1062,7 +1062,7 @@ TAG_MERGE_FUNCS (int, gint)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (uint, guint)
 /**
@@ -1075,7 +1075,7 @@ TAG_MERGE_FUNCS (uint, guint)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_long_index:
@@ -1088,7 +1088,7 @@ TAG_MERGE_FUNCS (uint, guint)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (long, glong)
 /**
@@ -1101,7 +1101,7 @@ TAG_MERGE_FUNCS (long, glong)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_ulong_index:
@@ -1114,7 +1114,7 @@ TAG_MERGE_FUNCS (long, glong)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (ulong, gulong)
 /**
@@ -1127,7 +1127,7 @@ TAG_MERGE_FUNCS (ulong, gulong)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_int64_index:
@@ -1140,7 +1140,7 @@ TAG_MERGE_FUNCS (ulong, gulong)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (int64, gint64)
 /**
@@ -1153,7 +1153,7 @@ TAG_MERGE_FUNCS (int64, gint64)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_uint64_index:
@@ -1166,7 +1166,7 @@ TAG_MERGE_FUNCS (int64, gint64)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (uint64, guint64)
 /**
@@ -1179,7 +1179,7 @@ TAG_MERGE_FUNCS (uint64, guint64)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_float_index:
@@ -1192,7 +1192,7 @@ TAG_MERGE_FUNCS (uint64, guint64)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (float, gfloat)
 /**
@@ -1205,7 +1205,7 @@ TAG_MERGE_FUNCS (float, gfloat)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_double_index:
@@ -1218,7 +1218,7 @@ TAG_MERGE_FUNCS (float, gfloat)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (double, gdouble)
 /**
@@ -1231,7 +1231,7 @@ TAG_MERGE_FUNCS (double, gdouble)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_pointer_index:
@@ -1244,7 +1244,7 @@ TAG_MERGE_FUNCS (double, gdouble)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (pointer, gpointer)
 #undef COPY_FUNC
@@ -1259,7 +1259,7 @@ TAG_MERGE_FUNCS (pointer, gpointer)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 /**
  * gst_tag_list_get_string_index:
@@ -1272,7 +1272,7 @@ TAG_MERGE_FUNCS (pointer, gpointer)
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list.
+ *              given list.
  */
 TAG_MERGE_FUNCS (string, gchar *)
 
@@ -1286,7 +1286,7 @@ TAG_MERGE_FUNCS (string, gchar *)
  * into one if multiple values are associated with the tag.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list or if it was #NULL.
+ *              given list or if it was #NULL.
  */
 gboolean
 gst_tag_list_get_date (const GstTagList * list, const gchar * tag,
@@ -1316,7 +1316,7 @@ gst_tag_list_get_date (const GstTagList * list, const gchar * tag,
  * list.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
- *	        given list or if it was #NULL.
+ *              given list or if it was #NULL.
  */
 gboolean
 gst_tag_list_get_date_index (const GstTagList * list,

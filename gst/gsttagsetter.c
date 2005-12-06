@@ -241,7 +241,7 @@ gst_tag_setter_add_tag_valist_values (GstTagSetter * setter,
  * modified or freed.
  *
  * Returns: a current snapshot of the taglist used in the setter
- *	    or NULL if none is used.
+ *          or NULL if none is used.
  */
 G_CONST_RETURN GstTagList *
 gst_tag_setter_get_tag_list (GstTagSetter * setter)

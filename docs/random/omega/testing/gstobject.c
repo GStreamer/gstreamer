@@ -19,24 +19,24 @@ tabpad (gchar * str, gint width)
 #define TEST_CATEGORY(category) fprintf(stderr,"\n\nCategory: %s\n",category)
 
 #define TEST(test) fprintf(stderr,"Test %d: %s...\n",_testnum,test),_passed = TRUE
-#define ASSERT(expr) G_STMT_START{				\
-  fprintf(stderr,"\t%s:",#expr);tabpad(#expr,50); 		\
-  if (!(expr)) {						\
-    fprintf(stderr,"FAILED\n");					\
-    _passed = FALSE;						\
-  } else {							\
-    fprintf(stderr,"passed\n");					\
-  }								\
+#define ASSERT(expr) G_STMT_START{                              \
+  fprintf(stderr,"\t%s:",#expr);tabpad(#expr,50);               \
+  if (!(expr)) {                                                \
+    fprintf(stderr,"FAILED\n");                                 \
+    _passed = FALSE;                                            \
+  } else {                                                      \
+    fprintf(stderr,"passed\n");                                 \
+  }                                                             \
 }G_STMT_END;
-#define ENDTEST() G_STMT_START{			\
-  _testnum++;					\
-  if (_passed) {				\
-    fprintf(stderr,"\tpassed.\n");		\
-    _passed_tests++;				\
-  } else {					\
-    fprintf(stderr,"\tFAILED.\n");		\
-  }						\
-  _total_tests++;				\
+#define ENDTEST() G_STMT_START{                 \
+  _testnum++;                                   \
+  if (_passed) {                                \
+    fprintf(stderr,"\tpassed.\n");              \
+    _passed_tests++;                            \
+  } else {                                      \
+    fprintf(stderr,"\tFAILED.\n");              \
+  }                                             \
+  _total_tests++;                               \
 }G_STMT_END;
 
 void

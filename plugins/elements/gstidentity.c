@@ -59,16 +59,16 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_SLEEP_TIME		0
-#define DEFAULT_DUPLICATE		1
-#define DEFAULT_ERROR_AFTER		-1
-#define DEFAULT_DROP_PROBABILITY	0.0
-#define DEFAULT_DATARATE		0
-#define DEFAULT_SILENT			FALSE
-#define DEFAULT_SINGLE_SEGMENT		FALSE
-#define DEFAULT_DUMP			FALSE
-#define DEFAULT_SYNC			FALSE
-#define DEFAULT_CHECK_PERFECT		FALSE
+#define DEFAULT_SLEEP_TIME              0
+#define DEFAULT_DUPLICATE               1
+#define DEFAULT_ERROR_AFTER             -1
+#define DEFAULT_DROP_PROBABILITY        0.0
+#define DEFAULT_DATARATE                0
+#define DEFAULT_SILENT                  FALSE
+#define DEFAULT_SINGLE_SEGMENT          FALSE
+#define DEFAULT_DUMP                    FALSE
+#define DEFAULT_SYNC                    FALSE
+#define DEFAULT_CHECK_PERFECT           FALSE
 
 enum
 {

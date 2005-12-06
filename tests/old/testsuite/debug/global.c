@@ -24,8 +24,8 @@
 
 #include <gst/gst.h>
 
-#define THREAD_COUNT	5
-#define ITERATIONS	20
+#define THREAD_COUNT    5
+#define ITERATIONS      20
 
 /* stupid logging functions */
 static void

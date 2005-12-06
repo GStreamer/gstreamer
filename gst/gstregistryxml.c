@@ -519,13 +519,13 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
 /*
  * Save
  */
-#define PUT_ESCAPED(prefix,tag,value)           		\
-G_STMT_START{ 							\
-  const gchar *toconv = value;					\
-  if (toconv) {							\
-    gchar *v = g_markup_escape_text (toconv, strlen (toconv));	\
-    gst_registry_xml_save (registry, prefix "<%s>%s</%s>\n", tag, v, tag);			\
-    g_free (v);							\
+#define PUT_ESCAPED(prefix,tag,value)                           \
+G_STMT_START{                                                   \
+  const gchar *toconv = value;                                  \
+  if (toconv) {                                                 \
+    gchar *v = g_markup_escape_text (toconv, strlen (toconv));  \
+    gst_registry_xml_save (registry, prefix "<%s>%s</%s>\n", tag, v, tag);                      \
+    g_free (v);                                                 \
   }                                                             \
 }G_STMT_END
 

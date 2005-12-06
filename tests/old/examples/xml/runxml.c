@@ -39,7 +39,7 @@ main (int argc, char *argv[])
   xml = gst_xml_new ();
 
 /*  g_signal_connect (G_OBJECT (xml), "object_loaded", */
-/*		    G_CALLBACK (xml_loaded), xml); */
+/*                  G_CALLBACK (xml_loaded), xml); */
 
   if (argc == 2)
     ret = gst_xml_parse_file (xml, argv[1], NULL);

@@ -74,20 +74,20 @@ GST_DEBUG_CATEGORY (ncc_debug);
 #define WRITE_SOCKET(self)      self->control_sock[1]
 #define READ_SOCKET(self)       self->control_sock[0]
 
-#define SEND_COMMAND(self, command)             	\
-G_STMT_START {                                 	\
-  unsigned char c; c = command;                	\
-  write (WRITE_SOCKET(self), &c, 1);         	\
+#define SEND_COMMAND(self, command)                     \
+G_STMT_START {                                  \
+  unsigned char c; c = command;                 \
+  write (WRITE_SOCKET(self), &c, 1);            \
 } G_STMT_END
 
-#define READ_COMMAND(self, command, res)        	\
-G_STMT_START {                                	\
+#define READ_COMMAND(self, command, res)                \
+G_STMT_START {                                  \
   res = read(READ_SOCKET(self), &command, 1);    \
 } G_STMT_END
 
-#define DEFAULT_ADDRESS		"127.0.0.1"
-#define DEFAULT_PORT		5637
-#define DEFAULT_TIMEOUT		GST_SECOND
+#define DEFAULT_ADDRESS         "127.0.0.1"
+#define DEFAULT_PORT            5637
+#define DEFAULT_TIMEOUT         GST_SECOND
 
 enum
 {

@@ -47,9 +47,9 @@ GST_DEBUG_CATEGORY_EXTERN (gst_type_find_debug);
  * @extensions: Optional extensions that could belong to this type
  * @possible_caps: Optionally the caps that could be returned when typefinding succeeds
  * @data: Optional user data. This user data must be available until the plugin
- *	  is unloaded.
+ *        is unloaded.
  * @data_notify: a #GDestroyNotify that will be called on @data when the plugin
- *	  is unloaded.
+ *        is unloaded.
  *
  * Registers a new typefind function to be used for typefinding. After
  * registering this function will be available for typefinding.

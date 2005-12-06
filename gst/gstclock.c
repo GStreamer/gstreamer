@@ -109,10 +109,10 @@ static GstAllocTrace *_gst_clock_entry_trace;
 
 /* #define DEBUGGING_ENABLED */
 
-#define DEFAULT_STATS			FALSE
-#define DEFAULT_WINDOW_SIZE		32
-#define DEFAULT_WINDOW_THRESHOLD	4
-#define DEFAULT_TIMEOUT			GST_SECOND / 10
+#define DEFAULT_STATS                   FALSE
+#define DEFAULT_WINDOW_SIZE             32
+#define DEFAULT_WINDOW_THRESHOLD        4
+#define DEFAULT_TIMEOUT                 GST_SECOND / 10
 
 enum
 {

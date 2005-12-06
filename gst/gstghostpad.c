@@ -45,20 +45,20 @@
 
 #include "gstghostpad.h"
 
-#define GST_TYPE_PROXY_PAD		(gst_proxy_pad_get_type ())
-#define GST_IS_PROXY_PAD(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PROXY_PAD))
-#define GST_IS_PROXY_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PROXY_PAD))
-#define GST_PROXY_PAD(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PROXY_PAD, GstProxyPad))
-#define GST_PROXY_PAD_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PROXY_PAD, GstProxyPadClass))
-#define GST_PROXY_PAD_TARGET(pad)	(GST_PROXY_PAD (pad)->target)
+#define GST_TYPE_PROXY_PAD              (gst_proxy_pad_get_type ())
+#define GST_IS_PROXY_PAD(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PROXY_PAD))
+#define GST_IS_PROXY_PAD_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PROXY_PAD))
+#define GST_PROXY_PAD(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PROXY_PAD, GstProxyPad))
+#define GST_PROXY_PAD_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PROXY_PAD, GstProxyPadClass))
+#define GST_PROXY_PAD_TARGET(pad)       (GST_PROXY_PAD (pad)->target)
 
 
 typedef struct _GstProxyPad GstProxyPad;
 typedef struct _GstProxyPadClass GstProxyPadClass;
 
-#define GST_PROXY_GET_LOCK(pad)	(GST_PROXY_PAD (pad)->proxy_lock)
-#define GST_PROXY_LOCK(pad)	(g_mutex_lock (GST_PROXY_GET_LOCK (pad)))
-#define GST_PROXY_UNLOCK(pad)	(g_mutex_unlock (GST_PROXY_GET_LOCK (pad)))
+#define GST_PROXY_GET_LOCK(pad) (GST_PROXY_PAD (pad)->proxy_lock)
+#define GST_PROXY_LOCK(pad)     (g_mutex_lock (GST_PROXY_GET_LOCK (pad)))
+#define GST_PROXY_UNLOCK(pad)   (g_mutex_unlock (GST_PROXY_GET_LOCK (pad)))
 
 struct _GstProxyPad
 {

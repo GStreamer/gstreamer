@@ -103,8 +103,8 @@ enum
 
 
 #define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_type_find_element_debug, "typefind",	  	\
-	GST_DEBUG_BG_YELLOW | GST_DEBUG_FG_GREEN, "type finding element");
+    GST_DEBUG_CATEGORY_INIT (gst_type_find_element_debug, "typefind",           \
+        GST_DEBUG_BG_YELLOW | GST_DEBUG_FG_GREEN, "type finding element");
 
 GST_BOILERPLATE_FULL (GstTypeFindElement, gst_type_find_element, GstElement,
     GST_TYPE_ELEMENT, _do_init);

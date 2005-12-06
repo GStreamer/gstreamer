@@ -60,7 +60,7 @@ G_STMT_START {                                 \
   res = read(READ_SOCKET(src), &command, 1);   \
 } G_STMT_END
 
-#define DEFAULT_BLOCKSIZE	4096
+#define DEFAULT_BLOCKSIZE       4096
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

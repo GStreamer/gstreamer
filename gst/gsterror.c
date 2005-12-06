@@ -99,10 +99,10 @@
 #include "gst-i18n-lib.h"
 
 #define TABLE(t, d, a, b) t[GST_ ## d ## _ERROR_ ## a] = g_strdup (b)
-#define QUARK_FUNC(string)						\
-GQuark gst_ ## string ## _error_quark (void) {				\
-  static GQuark quark;							\
-  if (!quark)								\
+#define QUARK_FUNC(string)                                              \
+GQuark gst_ ## string ## _error_quark (void) {                          \
+  static GQuark quark;                                                  \
+  if (!quark)                                                           \
     quark = g_quark_from_static_string ("gst-" # string "-error-quark"); \
   return quark; }
 

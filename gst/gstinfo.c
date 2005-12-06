@@ -51,7 +51,7 @@
  * the variables and set the default category.
  * <informalexample>
  * <programlisting>
- * GST_DEBUG_CATEGORY (my_category);	        // define category
+ * GST_DEBUG_CATEGORY (my_category);            // define category
  * &hash;define GST_CAT_DEFAULT my_category     // set as default
  * </programlisting>
  * </informalexample>

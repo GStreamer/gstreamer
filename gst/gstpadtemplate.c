@@ -43,10 +43,10 @@
  *   <programlisting>
  *   GstStaticPadTemplate my_template =
  *   GST_STATIC_PAD_TEMPLATE (
- *     "sink",		// the name of the pad
- *     GST_PAD_SINK,	// the direction of the pad
- *     GST_PAD_ALWAYS,	// when this pad will be present
- *     GST_STATIC_CAPS (	// the capabilities of the padtemplate
+ *     "sink",          // the name of the pad
+ *     GST_PAD_SINK,    // the direction of the pad
+ *     GST_PAD_ALWAYS,  // when this pad will be present
+ *     GST_STATIC_CAPS (        // the capabilities of the padtemplate
  *       "audio/x-raw-int, "
  *         "channels = (int) [ 1, 6 ]"
  *     )

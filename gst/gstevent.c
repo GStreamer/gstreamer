@@ -57,9 +57,9 @@
  *   // the pipeline to decrease latency.
  *   event = gst_event_new_seek (1.0, 
  *      GST_FORMAT_TIME, 
- *   	GST_SEEK_FLAG_FLUSH,
- *   	GST_SEEK_TYPE_SET, 2 * GST_SECOND,
- *   	GST_SEEK_TYPE_SET, 5 * GST_SECOND);
+ *      GST_SEEK_FLAG_FLUSH,
+ *      GST_SEEK_TYPE_SET, 2 * GST_SECOND,
+ *      GST_SEEK_TYPE_SET, 5 * GST_SECOND);
  *   ...
  *   result = gst_element_send_event (pipeline, event);
  *   if (!result)

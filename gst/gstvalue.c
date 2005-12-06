@@ -1349,29 +1349,29 @@ gst_value_deserialize_boolean (GValue * dest, const gchar * s)
   return ret;
 }
 
-#define CREATE_SERIALIZATION_START(_type,_macro)			\
-static gint								\
-gst_value_compare_ ## _type						\
-(const GValue * value1, const GValue * value2)				\
-{									\
-  g ## _type val1 = g_value_get_ ## _type (value1);			\
-  g ## _type val2 = g_value_get_ ## _type (value2);			\
-  if (val1 > val2)							\
-    return GST_VALUE_GREATER_THAN;					\
-  if (val1 < val2)							\
-    return GST_VALUE_LESS_THAN;						\
-  return GST_VALUE_EQUAL;						\
-}									\
-									\
-static char *								\
-gst_value_serialize_ ## _type (const GValue * value)			\
-{									\
-  GValue val = { 0, };							\
-  g_value_init (&val, G_TYPE_STRING);					\
-  if (!g_value_transform (value, &val))					\
-    g_assert_not_reached ();						\
-  /* NO_COPY_MADNESS!!! */						\
-  return (char *) g_value_get_string (&val);				\
+#define CREATE_SERIALIZATION_START(_type,_macro)                        \
+static gint                                                             \
+gst_value_compare_ ## _type                                             \
+(const GValue * value1, const GValue * value2)                          \
+{                                                                       \
+  g ## _type val1 = g_value_get_ ## _type (value1);                     \
+  g ## _type val2 = g_value_get_ ## _type (value2);                     \
+  if (val1 > val2)                                                      \
+    return GST_VALUE_GREATER_THAN;                                      \
+  if (val1 < val2)                                                      \
+    return GST_VALUE_LESS_THAN;                                         \
+  return GST_VALUE_EQUAL;                                               \
+}                                                                       \
+                                                                        \
+static char *                                                           \
+gst_value_serialize_ ## _type (const GValue * value)                    \
+{                                                                       \
+  GValue val = { 0, };                                                  \
+  g_value_init (&val, G_TYPE_STRING);                                   \
+  if (!g_value_transform (value, &val))                                 \
+    g_assert_not_reached ();                                            \
+  /* NO_COPY_MADNESS!!! */                                              \
+  return (char *) g_value_get_string (&val);                            \
 }
 
 /* deserialize the given s into to as a gint64.
@@ -1436,81 +1436,81 @@ gst_value_deserialize_int_helper (gint64 * to, const gchar * s,
   return ret;
 }
 
-#define CREATE_SERIALIZATION(_type,_macro)				\
-CREATE_SERIALIZATION_START(_type,_macro)				\
-									\
-static gboolean								\
-gst_value_deserialize_ ## _type (GValue * dest, const gchar *s)		\
-{									\
-  gint64 x;								\
-									\
-  if (gst_value_deserialize_int_helper (&x, s, G_MIN ## _macro,		\
-      G_MAX ## _macro, sizeof (g ## _type))) {				\
-    g_value_set_ ## _type (dest, /*(g ## _type)*/ x);			\
-    return TRUE;							\
-  } else {								\
-    return FALSE;							\
-  }									\
+#define CREATE_SERIALIZATION(_type,_macro)                              \
+CREATE_SERIALIZATION_START(_type,_macro)                                \
+                                                                        \
+static gboolean                                                         \
+gst_value_deserialize_ ## _type (GValue * dest, const gchar *s)         \
+{                                                                       \
+  gint64 x;                                                             \
+                                                                        \
+  if (gst_value_deserialize_int_helper (&x, s, G_MIN ## _macro,         \
+      G_MAX ## _macro, sizeof (g ## _type))) {                          \
+    g_value_set_ ## _type (dest, /*(g ## _type)*/ x);                   \
+    return TRUE;                                                        \
+  } else {                                                              \
+    return FALSE;                                                       \
+  }                                                                     \
 }
 
-#define CREATE_USERIALIZATION(_type,_macro)				\
-CREATE_SERIALIZATION_START(_type,_macro)				\
-									\
-static gboolean								\
-gst_value_deserialize_ ## _type (GValue * dest, const gchar *s)		\
-{									\
-  gint64 x;								\
-  char *end;								\
-  gboolean ret = FALSE;							\
-									\
-  errno = 0;								\
-  x = g_ascii_strtoull (s, &end, 0);					\
-  /* a range error is a definitive no-no */				\
-  if (errno == ERANGE) {						\
-    return FALSE;							\
-  }									\
-  /* the cast ensures the range check later on makes sense */		\
-  x = (g ## _type) x;							\
-  if (*end == 0) {							\
-    ret = TRUE;								\
-  } else {								\
-    if (g_ascii_strcasecmp (s, "little_endian") == 0) {			\
-      x = G_LITTLE_ENDIAN;						\
-      ret = TRUE;							\
-    } else if (g_ascii_strcasecmp (s, "big_endian") == 0) {		\
-      x = G_BIG_ENDIAN;							\
-      ret = TRUE;							\
-    } else if (g_ascii_strcasecmp (s, "byte_order") == 0) {		\
-      x = G_BYTE_ORDER;							\
-      ret = TRUE;							\
-    } else if (g_ascii_strcasecmp (s, "min") == 0) {			\
-      x = 0;								\
-      ret = TRUE;							\
-    } else if (g_ascii_strcasecmp (s, "max") == 0) {			\
-      x = G_MAX ## _macro;						\
-      ret = TRUE;							\
-    }									\
-  }									\
-  if (ret) {								\
-    if (x > G_MAX ## _macro) {						\
-      ret = FALSE;							\
-    } else {								\
-      g_value_set_ ## _type (dest, x);					\
-    }									\
-  }									\
-  return ret;								\
+#define CREATE_USERIALIZATION(_type,_macro)                             \
+CREATE_SERIALIZATION_START(_type,_macro)                                \
+                                                                        \
+static gboolean                                                         \
+gst_value_deserialize_ ## _type (GValue * dest, const gchar *s)         \
+{                                                                       \
+  gint64 x;                                                             \
+  char *end;                                                            \
+  gboolean ret = FALSE;                                                 \
+                                                                        \
+  errno = 0;                                                            \
+  x = g_ascii_strtoull (s, &end, 0);                                    \
+  /* a range error is a definitive no-no */                             \
+  if (errno == ERANGE) {                                                \
+    return FALSE;                                                       \
+  }                                                                     \
+  /* the cast ensures the range check later on makes sense */           \
+  x = (g ## _type) x;                                                   \
+  if (*end == 0) {                                                      \
+    ret = TRUE;                                                         \
+  } else {                                                              \
+    if (g_ascii_strcasecmp (s, "little_endian") == 0) {                 \
+      x = G_LITTLE_ENDIAN;                                              \
+      ret = TRUE;                                                       \
+    } else if (g_ascii_strcasecmp (s, "big_endian") == 0) {             \
+      x = G_BIG_ENDIAN;                                                 \
+      ret = TRUE;                                                       \
+    } else if (g_ascii_strcasecmp (s, "byte_order") == 0) {             \
+      x = G_BYTE_ORDER;                                                 \
+      ret = TRUE;                                                       \
+    } else if (g_ascii_strcasecmp (s, "min") == 0) {                    \
+      x = 0;                                                            \
+      ret = TRUE;                                                       \
+    } else if (g_ascii_strcasecmp (s, "max") == 0) {                    \
+      x = G_MAX ## _macro;                                              \
+      ret = TRUE;                                                       \
+    }                                                                   \
+  }                                                                     \
+  if (ret) {                                                            \
+    if (x > G_MAX ## _macro) {                                          \
+      ret = FALSE;                                                      \
+    } else {                                                            \
+      g_value_set_ ## _type (dest, x);                                  \
+    }                                                                   \
+  }                                                                     \
+  return ret;                                                           \
 }
 
-#define REGISTER_SERIALIZATION(_gtype, _type)				\
-G_STMT_START {								\
-  static const GstValueTable gst_value = {				\
-    _gtype,								\
-    gst_value_compare_ ## _type,					\
-    gst_value_serialize_ ## _type,					\
-    gst_value_deserialize_ ## _type,					\
-  };									\
-									\
-  gst_value_register (&gst_value);					\
+#define REGISTER_SERIALIZATION(_gtype, _type)                           \
+G_STMT_START {                                                          \
+  static const GstValueTable gst_value = {                              \
+    _gtype,                                                             \
+    gst_value_compare_ ## _type,                                        \
+    gst_value_serialize_ ## _type,                                      \
+    gst_value_deserialize_ ## _type,                                    \
+  };                                                                    \
+                                                                        \
+  gst_value_register (&gst_value);                                      \
 } G_STMT_END
 
 CREATE_SERIALIZATION (int, INT);
@@ -3650,19 +3650,19 @@ static GTypeFundamentalInfo _finfo = {
   0
 };
 
-#define FUNC_VALUE_GET_TYPE(type, name)				\
-GType gst_ ## type ## _get_type (void)				\
-{								\
-  static GType gst_ ## type ## _type = 0;			\
-								\
-  if (!gst_ ## type ## _type) {					\
-    _info.value_table = & _gst_ ## type ## _value_table;	\
-    gst_ ## type ## _type = g_type_register_fundamental (	\
-        g_type_fundamental_next (),				\
-        name, &_info, &_finfo, 0);				\
-  }								\
-								\
-  return gst_ ## type ## _type;					\
+#define FUNC_VALUE_GET_TYPE(type, name)                         \
+GType gst_ ## type ## _get_type (void)                          \
+{                                                               \
+  static GType gst_ ## type ## _type = 0;                       \
+                                                                \
+  if (!gst_ ## type ## _type) {                                 \
+    _info.value_table = & _gst_ ## type ## _value_table;        \
+    gst_ ## type ## _type = g_type_register_fundamental (       \
+        g_type_fundamental_next (),                             \
+        name, &_info, &_finfo, 0);                              \
+  }                                                             \
+                                                                \
+  return gst_ ## type ## _type;                                 \
 }
 
 static const GTypeValueTable _gst_fourcc_value_table = {

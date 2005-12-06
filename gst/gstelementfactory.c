@@ -178,15 +178,15 @@ __gst_element_details_clear (GstElementDetails * dp)
   dp->author = NULL;
 }
 
-#define VALIDATE_SET(__dest, __src, __entry)				\
-G_STMT_START {								\
-  if (g_utf8_validate (__src->__entry, -1, NULL)) {			\
-    __dest->__entry = g_strdup (__src->__entry);			\
-  } else {								\
-    g_warning ("Invalid UTF-8 in " G_STRINGIFY (__entry) ": %s",	\
-        __src->__entry);						\
-    __dest->__entry = g_strdup ("[ERROR: invalid UTF-8]");		\
-  }									\
+#define VALIDATE_SET(__dest, __src, __entry)                            \
+G_STMT_START {                                                          \
+  if (g_utf8_validate (__src->__entry, -1, NULL)) {                     \
+    __dest->__entry = g_strdup (__src->__entry);                        \
+  } else {                                                              \
+    g_warning ("Invalid UTF-8 in " G_STRINGIFY (__entry) ": %s",        \
+        __src->__entry);                                                \
+    __dest->__entry = g_strdup ("[ERROR: invalid UTF-8]");              \
+  }                                                                     \
 } G_STMT_END
 
 void

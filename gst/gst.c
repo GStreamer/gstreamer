@@ -112,7 +112,7 @@
 
 #define GST_CAT_DEFAULT GST_CAT_GST_INIT
 
-#define MAX_PATH_SPLIT	16
+#define MAX_PATH_SPLIT  16
 #define GST_PLUGIN_SEPARATOR ","
 
 static gboolean gst_initialized = FALSE;

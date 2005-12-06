@@ -60,20 +60,20 @@ GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
 
 #define STATUS(queue, msg) \
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, \
-		      "(%s:%s) " msg ": %u of %u-%u buffers, %u of %u-%u " \
-		      "bytes, %" G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT \
-		      "-%" G_GUINT64_FORMAT " ns, %u elements", \
-		      GST_DEBUG_PAD_NAME (pad), \
-		      queue->cur_level.buffers, \
-		      queue->min_threshold.buffers, \
-		      queue->max_size.buffers, \
-		      queue->cur_level.bytes, \
-		      queue->min_threshold.bytes, \
-		      queue->max_size.bytes, \
-		      queue->cur_level.time, \
-		      queue->min_threshold.time, \
-		      queue->max_size.time, \
-		      queue->queue->length)
+                      "(%s:%s) " msg ": %u of %u-%u buffers, %u of %u-%u " \
+                      "bytes, %" G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT \
+                      "-%" G_GUINT64_FORMAT " ns, %u elements", \
+                      GST_DEBUG_PAD_NAME (pad), \
+                      queue->cur_level.buffers, \
+                      queue->min_threshold.buffers, \
+                      queue->max_size.buffers, \
+                      queue->cur_level.bytes, \
+                      queue->min_threshold.bytes, \
+                      queue->max_size.bytes, \
+                      queue->cur_level.time, \
+                      queue->min_threshold.time, \
+                      queue->max_size.time, \
+                      queue->queue->length)
 
 static GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
     "Generic",
@@ -108,27 +108,27 @@ enum
   /* FILL ME */
 };
 
-#define GST_QUEUE_MUTEX_LOCK(q) G_STMT_START {				\
-  GST_CAT_LOG_OBJECT (queue_dataflow, q,				\
-      "locking qlock from thread %p",					\
-      g_thread_self ());						\
-  g_mutex_lock (q->qlock);						\
-  GST_CAT_LOG_OBJECT (queue_dataflow, q,				\
-      "locked qlock from thread %p",					\
-      g_thread_self ());						\
+#define GST_QUEUE_MUTEX_LOCK(q) G_STMT_START {                          \
+  GST_CAT_LOG_OBJECT (queue_dataflow, q,                                \
+      "locking qlock from thread %p",                                   \
+      g_thread_self ());                                                \
+  g_mutex_lock (q->qlock);                                              \
+  GST_CAT_LOG_OBJECT (queue_dataflow, q,                                \
+      "locked qlock from thread %p",                                    \
+      g_thread_self ());                                                \
 } G_STMT_END
 
-#define GST_QUEUE_MUTEX_LOCK_CHECK(q,label) G_STMT_START {		\
-  GST_QUEUE_MUTEX_LOCK (q);						\
-  if (q->srcresult != GST_FLOW_OK)					\
-    goto label;								\
+#define GST_QUEUE_MUTEX_LOCK_CHECK(q,label) G_STMT_START {              \
+  GST_QUEUE_MUTEX_LOCK (q);                                             \
+  if (q->srcresult != GST_FLOW_OK)                                      \
+    goto label;                                                         \
 } G_STMT_END
 
-#define GST_QUEUE_MUTEX_UNLOCK(q) G_STMT_START {			\
-  GST_CAT_LOG_OBJECT (queue_dataflow, q,				\
-      "unlocking qlock from thread %p",					\
-      g_thread_self ());						\
-  g_mutex_unlock (q->qlock);						\
+#define GST_QUEUE_MUTEX_UNLOCK(q) G_STMT_START {                        \
+  GST_CAT_LOG_OBJECT (queue_dataflow, q,                                \
+      "unlocking qlock from thread %p",                                 \
+      g_thread_self ());                                                \
+  g_mutex_unlock (q->qlock);                                            \
 } G_STMT_END
 
 
@@ -497,20 +497,20 @@ gst_queue_locked_flush (GstQueue * queue)
 
 #define STATUS(queue, msg) \
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, \
-		      "(%s:%s) " msg ": %u of %u-%u buffers, %u of %u-%u " \
-		      "bytes, %" G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT \
-		      "-%" G_GUINT64_FORMAT " ns, %u elements", \
-		      GST_DEBUG_PAD_NAME (pad), \
-		      queue->cur_level.buffers, \
-		      queue->min_threshold.buffers, \
-		      queue->max_size.buffers, \
-		      queue->cur_level.bytes, \
-		      queue->min_threshold.bytes, \
-		      queue->max_size.bytes, \
-		      queue->cur_level.time, \
-		      queue->min_threshold.time, \
-		      queue->max_size.time, \
-		      queue->queue->length)
+                      "(%s:%s) " msg ": %u of %u-%u buffers, %u of %u-%u " \
+                      "bytes, %" G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT \
+                      "-%" G_GUINT64_FORMAT " ns, %u elements", \
+                      GST_DEBUG_PAD_NAME (pad), \
+                      queue->cur_level.buffers, \
+                      queue->min_threshold.buffers, \
+                      queue->max_size.buffers, \
+                      queue->cur_level.bytes, \
+                      queue->min_threshold.bytes, \
+                      queue->max_size.bytes, \
+                      queue->cur_level.time, \
+                      queue->min_threshold.time, \
+                      queue->max_size.time, \
+                      queue->queue->length)
 
 static gboolean
 gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)

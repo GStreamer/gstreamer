@@ -52,8 +52,8 @@
 #include <gst/gstmarshal.h>
 #include <gst/gst-i18n-lib.h>
 
-#define DEFAULT_BLOCKSIZE	4096
-#define DEFAULT_NUM_BUFFERS	-1
+#define DEFAULT_BLOCKSIZE       4096
+#define DEFAULT_NUM_BUFFERS     -1
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_src_debug);
 #define GST_CAT_DEFAULT gst_base_src_debug
@@ -65,7 +65,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_base_src_debug);
 #define GST_LIVE_GET_COND(elem)               (GST_BASE_SRC_CAST(elem)->live_cond)
 #define GST_LIVE_WAIT(elem)                   g_cond_wait (GST_LIVE_GET_COND (elem), GST_LIVE_GET_LOCK (elem))
 #define GST_LIVE_TIMED_WAIT(elem, timeval)    g_cond_timed_wait (GST_LIVE_GET_COND (elem), GST_LIVE_GET_LOCK (elem),\
-		                                                                timeval)
+                                                                                timeval)
 #define GST_LIVE_SIGNAL(elem)                 g_cond_signal (GST_LIVE_GET_COND (elem));
 #define GST_LIVE_BROADCAST(elem)              g_cond_broadcast (GST_LIVE_GET_COND (elem));
 
