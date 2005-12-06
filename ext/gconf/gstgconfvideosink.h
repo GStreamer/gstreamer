@@ -29,10 +29,10 @@ G_BEGIN_DECLS
   (gst_gconf_video_sink_get_type ())
 #define GST_GCONF_VIDEO_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GCONF_VIDEO_SINK, \
-			       GstGConfVideoSink))
+                               GstGConfVideoSink))
 #define GST_GCONF_VIDEO_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GCONF_VIDEO_SINK, \
-			    GstGConfVideoSink))
+                            GstGConfVideoSink))
 #define GST_IS_GCONF_VIDEO_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GCONF_VIDEO_SINK))
 #define GST_IS_GCONF_VIDEO_SINK_CLASS(obj) \
@@ -51,7 +51,7 @@ typedef struct _GstGConfVideoSinkClass {
   GstBinClass parent_class;
 } GstGConfVideoSinkClass;
 
-GType	gst_gconf_video_sink_get_type	(void);
+GType   gst_gconf_video_sink_get_type   (void);
 
 G_END_DECLS
 

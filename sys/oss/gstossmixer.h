@@ -33,7 +33,7 @@
 G_BEGIN_DECLS
 
 
-#define GST_OSS_MIXER(obj)		((GstOssMixer*)(obj))
+#define GST_OSS_MIXER(obj)              ((GstOssMixer*)(obj))
 
 
 typedef enum {
@@ -47,38 +47,38 @@ typedef struct _GstOssMixer GstOssMixer;
 
 
 struct _GstOssMixer {
-  GList *		tracklist;	/* list of available tracks */
+  GList *               tracklist;      /* list of available tracks */
 
-  gint			mixer_fd;
+  gint                  mixer_fd;
 
-  gchar *		device;
-  gchar *		cardname;
+  gchar *               device;
+  gchar *               cardname;
 
-  gint			recmask;
-  gint			recdevs;
-  gint			stereomask;
-  gint			devmask;
-  gint			mixcaps;
+  gint                  recmask;
+  gint                  recdevs;
+  gint                  stereomask;
+  gint                  devmask;
+  gint                  mixcaps;
 
   GstOssMixerDirection dir;
 };
 
 
-GstOssMixer*	gst_ossmixer_new		(const gchar *device,
+GstOssMixer*    gst_ossmixer_new                (const gchar *device,
                                                  GstOssMixerDirection dir);
-void		gst_ossmixer_free		(GstOssMixer *mixer);
+void            gst_ossmixer_free               (GstOssMixer *mixer);
 
-const GList*	gst_ossmixer_list_tracks 	(GstOssMixer * mixer);
-void		gst_ossmixer_set_volume		(GstOssMixer * mixer,
+const GList*    gst_ossmixer_list_tracks        (GstOssMixer * mixer);
+void            gst_ossmixer_set_volume         (GstOssMixer * mixer,
                                                  GstMixerTrack * track,
                                                  gint * volumes);
-void		gst_ossmixer_get_volume		(GstOssMixer * mixer,
+void            gst_ossmixer_get_volume         (GstOssMixer * mixer,
                                                  GstMixerTrack * track,
                                                  gint * volumes);
-void		gst_ossmixer_set_record		(GstOssMixer * mixer,
+void            gst_ossmixer_set_record         (GstOssMixer * mixer,
                                                  GstMixerTrack * track,
                                                  gboolean record);
-void		gst_ossmixer_set_mute		(GstOssMixer * mixer,
+void            gst_ossmixer_set_mute           (GstOssMixer * mixer,
                                                  GstMixerTrack * track,
                                                  gboolean mute);
 

@@ -46,7 +46,7 @@ struct _GstOssSrc {
   GstAudioSrc    src;
 
   gint fd;
-  gint		 bytes_per_sample;
+  gint           bytes_per_sample;
 
   gchar *device;
   gchar *device_name;

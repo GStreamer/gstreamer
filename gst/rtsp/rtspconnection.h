@@ -30,23 +30,23 @@ G_BEGIN_DECLS
 
 typedef struct _RTSPConnection
 {
-  gint          fd;			/* our socket */
+  gint          fd;                     /* our socket */
 
-  gint 		cseq;			/* sequence number */
-  gchar		session_id[512];	/* session id */
+  gint          cseq;                   /* sequence number */
+  gchar         session_id[512];        /* session id */
   
-  RTSPState     state;			/* state of the connection */
+  RTSPState     state;                  /* state of the connection */
 } RTSPConnection;
 
 /* opening/closing a connection */
-RTSPResult	rtsp_connection_open 	(RTSPUrl *url, RTSPConnection **conn);
-RTSPResult	rtsp_connection_create 	(gint fd, RTSPConnection **conn);
-RTSPResult	rtsp_connection_close 	(RTSPConnection *conn);
-RTSPResult	rtsp_connection_free 	(RTSPConnection *conn);
+RTSPResult      rtsp_connection_open    (RTSPUrl *url, RTSPConnection **conn);
+RTSPResult      rtsp_connection_create  (gint fd, RTSPConnection **conn);
+RTSPResult      rtsp_connection_close   (RTSPConnection *conn);
+RTSPResult      rtsp_connection_free    (RTSPConnection *conn);
 
 /* sending/receiving messages */
-RTSPResult	rtsp_connection_send    (RTSPConnection *conn, RTSPMessage *message);
-RTSPResult	rtsp_connection_receive (RTSPConnection *conn, RTSPMessage *message);
+RTSPResult      rtsp_connection_send    (RTSPConnection *conn, RTSPMessage *message);
+RTSPResult      rtsp_connection_receive (RTSPConnection *conn, RTSPMessage *message);
 
 G_END_DECLS
 

@@ -42,9 +42,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSXAUDIOSRC))
 
 typedef enum {
-  GST_OSXAUDIOSRC_OPEN		= (GST_ELEMENT_FLAG_LAST << 0),
+  GST_OSXAUDIOSRC_OPEN          = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_OSXAUDIOSRC_FLAG_LAST	= (GST_ELEMENT_FLAG_LAST << 2)
+  GST_OSXAUDIOSRC_FLAG_LAST     = (GST_ELEMENT_FLAG_LAST << 2)
 } GstOsxAudioSrcFlags;
 
 typedef struct _GstOsxAudioSrc GstOsxAudioSrc;
@@ -54,13 +54,13 @@ struct _GstOsxAudioSrc {
   GstOsxAudioElement  element;
 
   /* pads */
-  GstPad 	*srcpad;
+  GstPad        *srcpad;
 
-  gboolean	 need_eos; /* Do we need to emit an EOS? */
+  gboolean       need_eos; /* Do we need to emit an EOS? */
   
   /* blocking */
-  gulong 	 curoffset;
-  gulong 	 buffersize;
+  gulong         curoffset;
+  gulong         buffersize;
 
 };
 

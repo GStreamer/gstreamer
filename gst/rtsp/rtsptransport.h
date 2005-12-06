@@ -45,34 +45,34 @@ typedef struct
 } RTSPRange;
 
 typedef struct _RTSPTransport {
-  RTSPTransMode	 trans;
+  RTSPTransMode  trans;
   RTSPProfile    profile;
   RTSPLowerTrans lower_transport;
 
-  gboolean 	 multicast;
-  gchar		*destination;
-  gchar		*source;
-  gint 		 layers;
-  gboolean	 mode_play;
-  gboolean	 mode_record;
-  gboolean	 append;
-  RTSPRange	 interleaved;
+  gboolean       multicast;
+  gchar         *destination;
+  gchar         *source;
+  gint           layers;
+  gboolean       mode_play;
+  gboolean       mode_record;
+  gboolean       append;
+  RTSPRange      interleaved;
 
   /* mulitcast specific */
-  gint	ttl;
+  gint  ttl;
 
   /* RTP specific */
-  RTSPRange	 port;
-  RTSPRange	 client_port;
-  RTSPRange	 server_port;
-  gchar		*ssrc;
+  RTSPRange      port;
+  RTSPRange      client_port;
+  RTSPRange      server_port;
+  gchar         *ssrc;
   
 } RTSPTransport;
 
 RTSPResult      rtsp_transport_new      (RTSPTransport **transport);
 RTSPResult      rtsp_transport_init     (RTSPTransport *transport);
 
-RTSPResult	rtsp_transport_parse	(gchar *str, RTSPTransport *transport);
+RTSPResult      rtsp_transport_parse    (gchar *str, RTSPTransport *transport);
 
 RTSPResult      rtsp_transport_free     (RTSPTransport *transport);
 

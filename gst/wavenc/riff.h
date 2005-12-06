@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 
 typedef enum {
-  GST_RIFF_OK 	    =  0,		
+  GST_RIFF_OK       =  0,               
   GST_RIFF_ENOTRIFF = -1,
   GST_RIFF_EINVAL   = -2,
   GST_RIFF_ENOMEM   = -3
@@ -411,10 +411,10 @@ struct _gst_riff_chunk {
 struct _gst_riff_index_entry {  
   guint32 id;
   guint32 flags;
-#define GST_RIFF_IF_LIST		(0x00000001L)
-#define GST_RIFF_IF_KEYFRAME		(0x00000010L)
-#define GST_RIFF_IF_NO_TIME		(0x00000100L)
-#define GST_RIFF_IF_COMPUSE		(0x0FFF0000L)
+#define GST_RIFF_IF_LIST                (0x00000001L)
+#define GST_RIFF_IF_KEYFRAME            (0x00000010L)
+#define GST_RIFF_IF_NO_TIME             (0x00000100L)
+#define GST_RIFF_IF_COMPUSE             (0x0FFF0000L)
   guint32 offset;
   guint32 size;
 };
@@ -423,18 +423,18 @@ struct _gst_riff_dmlh {
   guint32 totalframes;
 };
 
-typedef struct _gst_riff_riff 		gst_riff_riff;
-typedef struct _gst_riff_list 		gst_riff_list;
-typedef struct _gst_riff_chunk 		gst_riff_chunk;
-typedef struct _gst_riff_index_entry 	gst_riff_index_entry;
+typedef struct _gst_riff_riff           gst_riff_riff;
+typedef struct _gst_riff_list           gst_riff_list;
+typedef struct _gst_riff_chunk          gst_riff_chunk;
+typedef struct _gst_riff_index_entry    gst_riff_index_entry;
 
-typedef struct _gst_riff_avih 		gst_riff_avih;
-typedef struct _gst_riff_strh 		gst_riff_strh;
-typedef struct _gst_riff_strf_vids 	gst_riff_strf_vids;
-typedef struct _gst_riff_strf_auds 	gst_riff_strf_auds;
-typedef struct _gst_riff_strf_iavs 	gst_riff_strf_iavs;
+typedef struct _gst_riff_avih           gst_riff_avih;
+typedef struct _gst_riff_strh           gst_riff_strh;
+typedef struct _gst_riff_strf_vids      gst_riff_strf_vids;
+typedef struct _gst_riff_strf_auds      gst_riff_strf_auds;
+typedef struct _gst_riff_strf_iavs      gst_riff_strf_iavs;
 typedef struct _gst_riff_dmlh           gst_riff_dmlh;
-typedef struct _GstRiffChunk 		GstRiffChunk;
+typedef struct _GstRiffChunk            GstRiffChunk;
 
 struct _GstRiffChunk {
   gulong offset;

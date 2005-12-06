@@ -54,7 +54,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     )
     );
 
-#define DEFAULT_SEND_CONFIG	FALSE
+#define DEFAULT_SEND_CONFIG     FALSE
 
 enum
 {
@@ -255,12 +255,12 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
   return ret;
 }
 
-#define VOS_STARTCODE  			0x000001B0
-#define VOS_ENDCODE    			0x000001B1
-#define USER_DATA_STARTCODE   	 	0x000001B2
-#define GOP_STARTCODE            	0x000001B3
-#define VISUAL_OBJECT_STARTCODE        	0x000001B5
-#define VOP_STARTCODE                  	0x000001B6
+#define VOS_STARTCODE                   0x000001B0
+#define VOS_ENDCODE                     0x000001B1
+#define USER_DATA_STARTCODE             0x000001B2
+#define GOP_STARTCODE                   0x000001B3
+#define VISUAL_OBJECT_STARTCODE         0x000001B5
+#define VOP_STARTCODE                   0x000001B6
 
 static gboolean
 gst_rtp_mp4v_pay_depay_data (GstRtpMP4VPay * enc, guint8 * data, guint size,

@@ -40,27 +40,27 @@ typedef struct _GstFlacEnc GstFlacEnc;
 typedef struct _GstFlacEncClass GstFlacEncClass;
 
 struct _GstFlacEnc {
-  GstElement 	 element;
+  GstElement     element;
 
   GstPad *sinkpad,*srcpad;
 
-  gboolean 	 first;
-  GstBuffer	*first_buf;
-  guint64	 offset;
-  guint64	 samples_written;
-  gboolean 	 eos;
-  gint 		 channels;
-  gint 		 depth;
-  gint 		 sample_rate;
-  gboolean	 negotiated;
-  gint 		 quality;
-  gboolean	 stopped;
-  FLAC__int32 	*data;
+  gboolean       first;
+  GstBuffer     *first_buf;
+  guint64        offset;
+  guint64        samples_written;
+  gboolean       eos;
+  gint           channels;
+  gint           depth;
+  gint           sample_rate;
+  gboolean       negotiated;
+  gint           quality;
+  gboolean       stopped;
+  FLAC__int32   *data;
 
   FLAC__SeekableStreamEncoder *encoder;
   FLAC__StreamMetadata **meta;
 
-  GstTagList *	   tags;
+  GstTagList *     tags;
 };
 
 struct _GstFlacEncClass {

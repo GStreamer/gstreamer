@@ -72,7 +72,7 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_DEVICE	"/dev/dsp"
+#define DEFAULT_DEVICE  "/dev/dsp"
 enum
 {
   PROP_0,
@@ -275,28 +275,28 @@ ilog2 (gint x)
   return (x & 0x0000003f) - 1;
 }
 
-#define SET_PARAM(_oss, _name, _val, _detail) 	\
-G_STMT_START {					\
-  int _tmp = _val;				\
-  if (ioctl(_oss->fd, _name, &_tmp) == -1) {	\
+#define SET_PARAM(_oss, _name, _val, _detail)   \
+G_STMT_START {                                  \
+  int _tmp = _val;                              \
+  if (ioctl(_oss->fd, _name, &_tmp) == -1) {    \
     GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, \
         ("Unable to set param " _detail ": %s",   \
                    g_strerror (errno)),            \
         (NULL));                                \
-    return FALSE;				\
-  }						\
-  GST_DEBUG(_detail " %d", _tmp);	\
+    return FALSE;                               \
+  }                                             \
+  GST_DEBUG(_detail " %d", _tmp);       \
 } G_STMT_END
 
-#define GET_PARAM(_oss, _name, _val, _detail) 	\
-G_STMT_START {					\
-  if (ioctl(oss->fd, _name, _val) == -1) {	\
+#define GET_PARAM(_oss, _name, _val, _detail)   \
+G_STMT_START {                                  \
+  if (ioctl(oss->fd, _name, _val) == -1) {      \
     GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, \
         ("Unable to get param " _detail ": %s",    \
                    g_strerror (errno)),            \
         (NULL));                                \
-    return FALSE;				\
-  }						\
+    return FALSE;                               \
+  }                                             \
 } G_STMT_END
 
 static gint

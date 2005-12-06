@@ -66,7 +66,7 @@ struct _GstAASinkClass {
 
   /* signals */
   void (*frame_displayed) (GstElement *element);
-  void (*have_size) 	  (GstElement *element, guint width, guint height);
+  void (*have_size)       (GstElement *element, guint width, guint height);
 };
 
 GType gst_aasink_get_type(void);

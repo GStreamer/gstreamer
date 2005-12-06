@@ -33,150 +33,150 @@ enum
 };
 
 static gint boxes_1b[][7] = {
-#define WIPE_B1_1	0
+#define WIPE_B1_1       0
   {BOX_VERTICAL, 0, 0, 0, 1, 1, 1},
-#define WIPE_B1_2	1
+#define WIPE_B1_2       1
   {BOX_HORIZONTAL, 0, 0, 0, 1, 1, 1}
 };
 
 static gint boxes_2b[][7 * 2] = {
-#define WIPE_B2_21	0
+#define WIPE_B2_21      0
   {BOX_VERTICAL, 0, 0, 1, 1, 2, 0,
       BOX_VERTICAL, 1, 0, 0, 2, 2, 1},
-#define WIPE_B2_22	1
+#define WIPE_B2_22      1
   {BOX_HORIZONTAL, 0, 0, 1, 2, 1, 0,
       BOX_HORIZONTAL, 0, 1, 0, 2, 2, 1},
 };
 
 static gint box_clock_1b[][1 * 10] = {
-#define WIPE_B1_241	0
+#define WIPE_B1_241     0
   {BOX_CLOCK, 0, 0, 0, 1, 0, 0, 0, 1, 1},
-#define WIPE_B1_242	1
+#define WIPE_B1_242     1
   {BOX_CLOCK, 0, 1, 0, 1, 1, 0, 0, 0, 1},
-#define WIPE_B1_243	2
+#define WIPE_B1_243     2
   {BOX_CLOCK, 1, 1, 0, 0, 1, 0, 1, 0, 1},
-#define WIPE_B1_244	3
+#define WIPE_B1_244     3
   {BOX_CLOCK, 1, 0, 0, 0, 0, 0, 1, 1, 1},
 };
 
-#define WIPE_B2_221	0
+#define WIPE_B2_221     0
 static gint box_clock_2b[][2 * 10] = {
-#define WIPE_B2_221	0
+#define WIPE_B2_221     0
   {BOX_CLOCK, 1, 0, 0, 2, 0, 0, 1, 2, 1,
       BOX_CLOCK, 1, 0, 0, 1, 2, 1, 0, 0, 2},
-#define WIPE_B2_222	1
+#define WIPE_B2_222     1
   {BOX_CLOCK, 2, 1, 0, 2, 2, 0, 0, 1, 1,
       BOX_CLOCK, 2, 1, 0, 0, 1, 1, 2, 0, 2},
-#define WIPE_B2_223	2
+#define WIPE_B2_223     2
   {BOX_CLOCK, 1, 2, 0, 0, 2, 0, 1, 0, 1,
       BOX_CLOCK, 1, 2, 0, 1, 0, 1, 2, 2, 2},
-#define WIPE_B2_224	3
+#define WIPE_B2_224     3
   {BOX_CLOCK, 0, 1, 0, 0, 0, 0, 2, 1, 1,
       BOX_CLOCK, 0, 1, 0, 2, 1, 1, 0, 2, 2},
-#define WIPE_B2_225	4
+#define WIPE_B2_225     4
   {BOX_CLOCK, 1, 0, 0, 2, 0, 0, 1, 2, 1,
       BOX_CLOCK, 1, 2, 0, 0, 2, 0, 1, 0, 1},
-#define WIPE_B2_226	5
+#define WIPE_B2_226     5
   {BOX_CLOCK, 0, 1, 0, 0, 0, 0, 2, 1, 1,
       BOX_CLOCK, 2, 1, 0, 2, 2, 0, 0, 1, 1},
-#define WIPE_B2_231	6
+#define WIPE_B2_231     6
   {BOX_CLOCK, 1, 0, 0, 1, 2, 0, 2, 0, 1,
       BOX_CLOCK, 1, 0, 0, 1, 2, 0, 0, 0, 1},
-#define WIPE_B2_232	7
+#define WIPE_B2_232     7
   {BOX_CLOCK, 2, 1, 0, 0, 1, 0, 2, 0, 1,
       BOX_CLOCK, 2, 1, 0, 0, 1, 0, 2, 2, 1},
-#define WIPE_B2_233	8
+#define WIPE_B2_233     8
   {BOX_CLOCK, 1, 2, 0, 1, 0, 0, 2, 2, 1,
       BOX_CLOCK, 1, 2, 0, 1, 0, 0, 0, 2, 1},
-#define WIPE_B2_234	9
+#define WIPE_B2_234     9
   {BOX_CLOCK, 0, 1, 0, 2, 1, 0, 0, 0, 1,
       BOX_CLOCK, 0, 1, 0, 2, 1, 0, 0, 2, 1},
-#define WIPE_B2_251	10
+#define WIPE_B2_251     10
   {BOX_CLOCK, 0, 0, 0, 1, 0, 0, 0, 2, 1,
       BOX_CLOCK, 2, 0, 0, 1, 0, 0, 2, 2, 1},
-#define WIPE_B2_252	11
+#define WIPE_B2_252     11
   {BOX_CLOCK, 0, 0, 0, 0, 1, 0, 2, 0, 1,
       BOX_CLOCK, 0, 2, 0, 0, 1, 0, 2, 2, 1},
-#define WIPE_B2_253	12
+#define WIPE_B2_253     12
   {BOX_CLOCK, 0, 2, 0, 1, 2, 0, 0, 0, 1,
       BOX_CLOCK, 2, 2, 0, 1, 2, 0, 2, 0, 1},
-#define WIPE_B2_254	13
+#define WIPE_B2_254     13
   {BOX_CLOCK, 2, 0, 0, 2, 1, 0, 0, 0, 1,
       BOX_CLOCK, 2, 2, 0, 2, 1, 0, 0, 2, 1},
 };
 
 static gint box_clock_4b[][4 * 10] = {
-#define WIPE_B4_201	0
+#define WIPE_B4_201     0
   {BOX_CLOCK, 1, 1, 0, 1, 0, 0, 2, 1, 1,
         BOX_CLOCK, 1, 1, 0, 2, 1, 1, 1, 2, 2,
         BOX_CLOCK, 1, 1, 0, 1, 2, 2, 0, 1, 3,
       BOX_CLOCK, 1, 1, 0, 0, 1, 3, 1, 0, 4},
-#define WIPE_B4_202	1
+#define WIPE_B4_202     1
   {BOX_CLOCK, 1, 1, 0, 1, 0, 3, 2, 1, 4,
         BOX_CLOCK, 1, 1, 0, 2, 1, 0, 1, 2, 1,
         BOX_CLOCK, 1, 1, 0, 1, 2, 1, 0, 1, 2,
       BOX_CLOCK, 1, 1, 0, 0, 1, 2, 1, 0, 3},
-#define WIPE_B4_203	2
+#define WIPE_B4_203     2
   {BOX_CLOCK, 1, 1, 0, 1, 0, 2, 2, 1, 3,
         BOX_CLOCK, 1, 1, 0, 2, 1, 3, 1, 2, 4,
         BOX_CLOCK, 1, 1, 0, 1, 2, 0, 0, 1, 1,
       BOX_CLOCK, 1, 1, 0, 0, 1, 1, 1, 0, 2},
-#define WIPE_B4_204	3
+#define WIPE_B4_204     3
   {BOX_CLOCK, 1, 1, 0, 1, 0, 1, 2, 1, 2,
         BOX_CLOCK, 1, 1, 0, 2, 1, 2, 1, 2, 3,
         BOX_CLOCK, 1, 1, 0, 1, 2, 3, 0, 1, 4,
       BOX_CLOCK, 1, 1, 0, 0, 1, 0, 1, 0, 1},
-#define WIPE_B4_205	4
+#define WIPE_B4_205     4
   {BOX_CLOCK, 1, 1, 0, 1, 0, 0, 2, 1, 1,
         BOX_CLOCK, 1, 1, 0, 2, 1, 1, 1, 2, 2,
         BOX_CLOCK, 1, 1, 0, 1, 2, 0, 0, 1, 1,
       BOX_CLOCK, 1, 1, 0, 0, 1, 1, 1, 0, 2},
-#define WIPE_B4_206	5
+#define WIPE_B4_206     5
   {BOX_CLOCK, 1, 1, 0, 1, 0, 1, 2, 1, 2,
         BOX_CLOCK, 1, 1, 0, 2, 1, 0, 1, 2, 1,
         BOX_CLOCK, 1, 1, 0, 1, 2, 1, 0, 1, 2,
       BOX_CLOCK, 1, 1, 0, 0, 1, 0, 1, 0, 1},
-#define WIPE_B4_207	6
+#define WIPE_B4_207     6
   {BOX_CLOCK, 1, 1, 0, 1, 0, 0, 2, 1, 1,
         BOX_CLOCK, 1, 1, 0, 2, 1, 0, 1, 2, 1,
         BOX_CLOCK, 1, 1, 0, 1, 2, 0, 0, 1, 1,
       BOX_CLOCK, 1, 1, 0, 0, 1, 0, 1, 0, 1},
-#define WIPE_B4_211	7
+#define WIPE_B4_211     7
   {BOX_CLOCK, 1, 1, 0, 1, 0, 0, 2, 1, 1,
         BOX_CLOCK, 1, 1, 0, 2, 1, 1, 1, 2, 2,
         BOX_CLOCK, 1, 1, 0, 1, 0, 0, 0, 1, 1,
       BOX_CLOCK, 1, 1, 0, 0, 1, 1, 1, 2, 2},
-#define WIPE_B4_212	8
+#define WIPE_B4_212     8
   {BOX_CLOCK, 1, 1, 0, 2, 1, 0, 1, 0, 1,
         BOX_CLOCK, 1, 1, 0, 1, 0, 1, 0, 1, 2,
         BOX_CLOCK, 1, 1, 0, 2, 1, 0, 1, 2, 1,
       BOX_CLOCK, 1, 1, 0, 1, 2, 1, 0, 1, 2},
-#define WIPE_B4_213	9
+#define WIPE_B4_213     9
   {BOX_CLOCK, 1, 1, 0, 1, 0, 0, 2, 1, 1,
         BOX_CLOCK, 1, 1, 0, 1, 0, 0, 0, 1, 1,
         BOX_CLOCK, 1, 1, 0, 1, 2, 0, 2, 1, 1,
       BOX_CLOCK, 1, 1, 0, 1, 2, 0, 0, 1, 1},
-#define WIPE_B4_214	10
+#define WIPE_B4_214     10
   {BOX_CLOCK, 1, 1, 0, 2, 1, 0, 1, 0, 1,
         BOX_CLOCK, 1, 1, 0, 2, 1, 0, 1, 2, 1,
         BOX_CLOCK, 1, 1, 0, 0, 1, 0, 1, 0, 1,
       BOX_CLOCK, 1, 1, 0, 0, 1, 0, 1, 2, 1},
-#define WIPE_B4_227	11
+#define WIPE_B4_227     11
   {BOX_CLOCK, 1, 0, 0, 2, 0, 0, 1, 1, 1,
         BOX_CLOCK, 1, 0, 0, 1, 1, 1, 0, 0, 2,
         BOX_CLOCK, 1, 2, 0, 2, 2, 0, 1, 1, 1,
       BOX_CLOCK, 1, 2, 0, 1, 1, 1, 0, 2, 2},
-#define WIPE_B4_228	12
+#define WIPE_B4_228     12
   {BOX_CLOCK, 0, 1, 0, 0, 0, 0, 1, 1, 1,
         BOX_CLOCK, 0, 1, 0, 1, 1, 1, 0, 2, 2,
         BOX_CLOCK, 2, 1, 0, 2, 0, 0, 1, 1, 1,
       BOX_CLOCK, 2, 1, 0, 1, 1, 1, 2, 2, 2},
-#define WIPE_B4_235	13
+#define WIPE_B4_235     13
   {BOX_CLOCK, 1, 0, 0, 1, 1, 0, 0, 0, 1,
         BOX_CLOCK, 1, 0, 0, 1, 1, 0, 2, 0, 1,
         BOX_CLOCK, 1, 2, 0, 1, 1, 0, 2, 2, 1,
       BOX_CLOCK, 1, 2, 0, 1, 1, 0, 0, 2, 1},
-#define WIPE_B4_236	14
+#define WIPE_B4_236     14
   {BOX_CLOCK, 0, 1, 0, 1, 1, 0, 0, 0, 1,
         BOX_CLOCK, 0, 1, 0, 1, 1, 0, 0, 2, 1,
         BOX_CLOCK, 2, 1, 0, 1, 1, 0, 2, 0, 1,
@@ -184,7 +184,7 @@ static gint box_clock_4b[][4 * 10] = {
 };
 
 static gint box_clock_8b[][8 * 10] = {
-#define WIPE_B8_261	0
+#define WIPE_B8_261     0
   {BOX_CLOCK, 2, 1, 0, 2, 2, 0, 4, 1, 1,
         BOX_CLOCK, 2, 1, 0, 4, 1, 1, 2, 0, 2,
         BOX_CLOCK, 2, 1, 0, 2, 0, 2, 0, 1, 3,
@@ -193,7 +193,7 @@ static gint box_clock_8b[][8 * 10] = {
         BOX_CLOCK, 2, 3, 0, 4, 3, 1, 2, 4, 2,
         BOX_CLOCK, 2, 3, 0, 2, 4, 2, 0, 3, 3,
       BOX_CLOCK, 2, 3, 0, 0, 3, 3, 2, 2, 4},
-#define WIPE_B8_262	1
+#define WIPE_B8_262     1
   {BOX_CLOCK, 1, 2, 0, 2, 2, 0, 1, 0, 1,
         BOX_CLOCK, 1, 2, 0, 1, 0, 1, 0, 2, 2,
         BOX_CLOCK, 1, 2, 0, 0, 2, 2, 1, 4, 3,
@@ -202,7 +202,7 @@ static gint box_clock_8b[][8 * 10] = {
         BOX_CLOCK, 3, 2, 0, 3, 0, 1, 4, 2, 2,
         BOX_CLOCK, 3, 2, 0, 4, 2, 2, 3, 4, 3,
       BOX_CLOCK, 3, 2, 0, 3, 4, 3, 2, 2, 4},
-#define WIPE_B8_263	2
+#define WIPE_B8_263     2
   {BOX_CLOCK, 2, 1, 0, 2, 0, 0, 4, 1, 1,
         BOX_CLOCK, 2, 1, 0, 4, 1, 1, 2, 2, 2,
         BOX_CLOCK, 2, 1, 0, 2, 0, 0, 0, 1, 1,
@@ -211,7 +211,7 @@ static gint box_clock_8b[][8 * 10] = {
         BOX_CLOCK, 2, 3, 0, 4, 3, 1, 2, 2, 2,
         BOX_CLOCK, 2, 3, 0, 2, 4, 0, 0, 3, 1,
       BOX_CLOCK, 2, 3, 0, 0, 3, 1, 2, 2, 2},
-#define WIPE_B8_264	3
+#define WIPE_B8_264     3
   {BOX_CLOCK, 1, 2, 0, 0, 2, 0, 1, 0, 1,
         BOX_CLOCK, 1, 2, 0, 1, 0, 1, 2, 2, 2,
         BOX_CLOCK, 1, 2, 0, 0, 2, 0, 1, 4, 1,
@@ -224,100 +224,100 @@ static gint box_clock_8b[][8 * 10] = {
 
 static gint triangles_2t[][2 * 9] = {
   /* 3 -> 6 */
-#define WIPE_T2_3	0
+#define WIPE_T2_3       0
   {0, 0, 0, 0, 1, 1, 1, 1, 1,
       1, 0, 1, 0, 0, 0, 1, 1, 1},
-#define WIPE_T2_4	WIPE_T2_3+1
+#define WIPE_T2_4       WIPE_T2_3+1
   {0, 0, 1, 1, 0, 0, 0, 1, 1,
       1, 0, 0, 0, 1, 1, 1, 1, 1},
-#define WIPE_T2_5	WIPE_T2_4+1
+#define WIPE_T2_5       WIPE_T2_4+1
   {0, 0, 1, 0, 1, 1, 1, 1, 0,
       1, 0, 1, 0, 0, 1, 1, 1, 0},
-#define WIPE_T2_6	WIPE_T2_5+1
+#define WIPE_T2_6       WIPE_T2_5+1
   {0, 0, 1, 1, 0, 1, 0, 1, 0,
       1, 0, 1, 0, 1, 0, 1, 1, 1},
-#define WIPE_T2_41	WIPE_T2_6+1
+#define WIPE_T2_41      WIPE_T2_6+1
   {0, 0, 0, 1, 0, 1, 0, 1, 1,
       1, 0, 1, 0, 1, 1, 1, 1, 2},
-#define WIPE_T2_42	WIPE_T2_41+1
+#define WIPE_T2_42      WIPE_T2_41+1
   {0, 0, 1, 1, 0, 0, 1, 1, 1,
       0, 0, 1, 0, 1, 2, 1, 1, 1},
-#define WIPE_T2_45	WIPE_T2_42+1
+#define WIPE_T2_45      WIPE_T2_42+1
   {0, 0, 1, 1, 0, 0, 0, 1, 0,
       1, 0, 0, 0, 1, 0, 1, 1, 1},
-#define WIPE_T2_46	WIPE_T2_45+1
+#define WIPE_T2_46      WIPE_T2_45+1
   {0, 0, 0, 1, 0, 1, 1, 1, 0,
       0, 0, 0, 0, 1, 1, 1, 1, 0},
-#define WIPE_T2_245	WIPE_T2_46+1
+#define WIPE_T2_245     WIPE_T2_46+1
   {0, 0, 0, 2, 0, 0, 2, 2, 1,
       2, 2, 0, 0, 2, 0, 0, 0, 1},
-#define WIPE_T2_246	WIPE_T2_245+1
+#define WIPE_T2_246     WIPE_T2_245+1
   {0, 2, 0, 0, 0, 0, 2, 0, 1,
       2, 0, 0, 2, 2, 0, 0, 2, 1},
 };
 
 static gint triangles_3t[][3 * 9] = {
   /* 23 -> 26 */
-#define WIPE_T3_23	0
+#define WIPE_T3_23      0
   {0, 0, 1, 1, 0, 0, 0, 2, 1,
         1, 0, 0, 0, 2, 1, 2, 2, 1,
       1, 0, 0, 2, 0, 1, 2, 2, 1},
-#define WIPE_T3_24	1
+#define WIPE_T3_24      1
   {0, 0, 1, 2, 0, 1, 2, 1, 0,
         0, 0, 1, 2, 1, 0, 0, 2, 1,
       2, 1, 0, 0, 2, 1, 2, 2, 1},
-#define WIPE_T3_25	2
+#define WIPE_T3_25      2
   {0, 0, 1, 0, 2, 1, 1, 2, 0,
         0, 0, 1, 2, 0, 1, 1, 2, 0,
       2, 0, 1, 1, 2, 0, 2, 2, 1},
-#define WIPE_T3_26	3
+#define WIPE_T3_26      3
   {0, 0, 1, 2, 0, 1, 0, 1, 0,
         2, 0, 1, 0, 1, 0, 2, 2, 1,
       0, 1, 0, 0, 2, 1, 2, 2, 1},
 };
 
 static gint triangles_4t[][4 * 9] = {
-#define WIPE_T4_61	0
+#define WIPE_T4_61      0
   {0, 0, 1, 1, 0, 0, 1, 2, 1,
         0, 0, 1, 0, 2, 2, 1, 2, 1,
         1, 0, 0, 2, 0, 1, 1, 2, 1,
       2, 0, 1, 1, 2, 1, 2, 2, 2},
-#define WIPE_T4_62	1
+#define WIPE_T4_62      1
   {0, 0, 2, 2, 0, 1, 0, 1, 1,
         2, 0, 1, 0, 1, 1, 2, 1, 0,
         0, 1, 1, 2, 1, 0, 2, 2, 1,
       0, 1, 1, 0, 2, 2, 2, 2, 1},
-#define WIPE_T4_63	2
+#define WIPE_T4_63      2
   {0, 0, 2, 1, 0, 1, 0, 2, 1,
         1, 0, 1, 0, 2, 1, 1, 2, 0,
         1, 0, 1, 1, 2, 0, 2, 2, 1,
       1, 0, 1, 2, 0, 2, 2, 2, 1},
-#define WIPE_T4_64	3
+#define WIPE_T4_64      3
   {0, 0, 1, 2, 0, 2, 2, 1, 1,
         0, 0, 1, 0, 1, 0, 2, 1, 1,
         0, 1, 0, 2, 1, 1, 0, 2, 1,
       2, 1, 1, 0, 2, 1, 2, 2, 2},
-#define WIPE_T4_65	4
+#define WIPE_T4_65      4
   {0, 0, 0, 1, 0, 1, 1, 2, 0,
         0, 0, 0, 0, 2, 1, 1, 2, 0,
         1, 0, 1, 2, 0, 0, 1, 2, 0,
       2, 0, 0, 1, 2, 0, 2, 2, 1},
-#define WIPE_T4_66	5
+#define WIPE_T4_66      5
   {0, 0, 1, 2, 0, 0, 0, 1, 0,
         2, 0, 0, 0, 1, 0, 2, 1, 1,
         0, 1, 0, 2, 1, 1, 2, 2, 0,
       0, 1, 0, 0, 2, 1, 2, 2, 0},
-#define WIPE_T4_67	6
+#define WIPE_T4_67      6
   {0, 0, 1, 1, 0, 0, 0, 2, 0,
         1, 0, 0, 0, 2, 0, 1, 2, 1,
         1, 0, 0, 1, 2, 1, 2, 2, 0,
       1, 0, 0, 2, 0, 1, 2, 2, 0},
-#define WIPE_T4_68	7
+#define WIPE_T4_68      7
   {0, 0, 0, 2, 0, 1, 2, 1, 0,
         0, 0, 0, 0, 1, 1, 2, 1, 0,
         0, 1, 1, 2, 1, 0, 0, 2, 0,
       2, 1, 0, 0, 2, 0, 2, 2, 1},
-#define WIPE_T4_101	8
+#define WIPE_T4_101     8
   {0, 0, 1, 2, 0, 1, 1, 1, 0,
         0, 0, 1, 1, 1, 0, 0, 2, 1,
         1, 1, 0, 0, 2, 1, 2, 2, 1,
@@ -326,7 +326,7 @@ static gint triangles_4t[][4 * 9] = {
 
 static gint triangles_8t[][8 * 9] = {
   /* 7 */
-#define WIPE_T8_7	0
+#define WIPE_T8_7       0
   {0, 0, 0, 1, 0, 1, 1, 1, 1,
         1, 0, 1, 2, 0, 0, 1, 1, 1,
         2, 0, 0, 1, 1, 1, 2, 1, 1,
@@ -335,7 +335,7 @@ static gint triangles_8t[][8 * 9] = {
         1, 1, 1, 0, 2, 0, 1, 2, 1,
         0, 1, 1, 1, 1, 1, 0, 2, 0,
       0, 0, 0, 0, 1, 1, 1, 1, 1},
-#define WIPE_T8_43	1
+#define WIPE_T8_43      1
   {0, 0, 1, 1, 0, 0, 1, 1, 1,
         1, 0, 0, 2, 0, 1, 1, 1, 1,
         2, 0, 1, 1, 1, 1, 2, 1, 2,
@@ -344,7 +344,7 @@ static gint triangles_8t[][8 * 9] = {
         1, 1, 1, 0, 2, 1, 1, 2, 0,
         0, 1, 2, 1, 1, 1, 0, 2, 1,
       0, 0, 1, 0, 1, 2, 1, 1, 1},
-#define WIPE_T8_44	2
+#define WIPE_T8_44      2
   {0, 0, 1, 1, 0, 2, 1, 1, 1,
         1, 0, 2, 2, 0, 1, 1, 1, 1,
         2, 0, 1, 1, 1, 1, 2, 1, 0,
@@ -353,7 +353,7 @@ static gint triangles_8t[][8 * 9] = {
         1, 1, 1, 0, 2, 1, 1, 2, 2,
         0, 1, 0, 1, 1, 1, 0, 2, 1,
       0, 0, 1, 0, 1, 0, 1, 1, 1},
-#define WIPE_T8_47	3
+#define WIPE_T8_47      3
   {0, 0, 0, 1, 0, 1, 1, 1, 0,
         1, 0, 1, 2, 0, 0, 1, 1, 0,
         2, 0, 0, 1, 1, 0, 2, 1, 1,
@@ -362,7 +362,7 @@ static gint triangles_8t[][8 * 9] = {
         1, 1, 0, 0, 2, 0, 1, 2, 1,
         0, 1, 1, 1, 1, 0, 0, 2, 0,
       0, 0, 0, 0, 1, 1, 1, 1, 0},
-#define WIPE_T8_48	4
+#define WIPE_T8_48      4
   {0, 0, 1, 1, 0, 0, 0, 1, 0,
         1, 0, 0, 0, 1, 0, 1, 1, 1,
         1, 0, 0, 2, 0, 1, 2, 1, 0,
@@ -375,7 +375,7 @@ static gint triangles_8t[][8 * 9] = {
 
 static gint triangles_16t[][16 * 9] = {
   /* 8 */
-#define WIPE_T16_8	0
+#define WIPE_T16_8      0
   {0, 0, 1, 2, 0, 1, 1, 1, 0,
         2, 0, 1, 1, 1, 0, 2, 2, 1,
         1, 1, 0, 0, 2, 1, 2, 2, 1,
@@ -406,148 +406,148 @@ struct _GstWipeConfig
 };
 
 static GstWipeConfig wipe_config[] = {
-#define WIPE_CONFIG_1	0
+#define WIPE_CONFIG_1   0
   {boxes_1b[WIPE_B1_1], 1, 0, 0, 0},    /* 1 */
-#define WIPE_CONFIG_2	WIPE_CONFIG_1+1
+#define WIPE_CONFIG_2   WIPE_CONFIG_1+1
   {boxes_1b[WIPE_B1_2], 1, 0, 0, 0},    /* 2 */
-#define WIPE_CONFIG_3	WIPE_CONFIG_2+1
+#define WIPE_CONFIG_3   WIPE_CONFIG_2+1
   {triangles_2t[WIPE_T2_3], 2, 0, 0, 0},        /* 3 */
-#define WIPE_CONFIG_4	WIPE_CONFIG_3+1
+#define WIPE_CONFIG_4   WIPE_CONFIG_3+1
   {triangles_2t[WIPE_T2_4], 2, 0, 0, 0},        /* 4 */
-#define WIPE_CONFIG_5	WIPE_CONFIG_4+1
+#define WIPE_CONFIG_5   WIPE_CONFIG_4+1
   {triangles_2t[WIPE_T2_5], 2, 0, 0, 0},        /* 5 */
-#define WIPE_CONFIG_6	WIPE_CONFIG_5+1
+#define WIPE_CONFIG_6   WIPE_CONFIG_5+1
   {triangles_2t[WIPE_T2_6], 2, 0, 0, 0},        /* 6 */
-#define WIPE_CONFIG_7	WIPE_CONFIG_6+1
+#define WIPE_CONFIG_7   WIPE_CONFIG_6+1
   {triangles_8t[WIPE_T8_7], 8, 1, 1, 0},        /* 7 */
-#define WIPE_CONFIG_8	WIPE_CONFIG_7+1
+#define WIPE_CONFIG_8   WIPE_CONFIG_7+1
   {triangles_16t[WIPE_T16_8], 16, 2, 2, 0},     /* 8 */
 
-#define WIPE_CONFIG_21	WIPE_CONFIG_8+1
+#define WIPE_CONFIG_21  WIPE_CONFIG_8+1
   {boxes_2b[WIPE_B2_21], 2, 1, 1, 0},   /* 21 */
-#define WIPE_CONFIG_22	WIPE_CONFIG_21+1
+#define WIPE_CONFIG_22  WIPE_CONFIG_21+1
   {boxes_2b[WIPE_B2_22], 2, 1, 1, 0},   /* 22 */
 
-#define WIPE_CONFIG_23	WIPE_CONFIG_22+1
+#define WIPE_CONFIG_23  WIPE_CONFIG_22+1
   {triangles_3t[WIPE_T3_23], 3, 1, 1, 0},       /* 23 */
-#define WIPE_CONFIG_24	WIPE_CONFIG_23+1
+#define WIPE_CONFIG_24  WIPE_CONFIG_23+1
   {triangles_3t[WIPE_T3_24], 3, 1, 1, 0},       /* 24 */
-#define WIPE_CONFIG_25	WIPE_CONFIG_24+1
+#define WIPE_CONFIG_25  WIPE_CONFIG_24+1
   {triangles_3t[WIPE_T3_23], 3, 1, 1, 0},       /* 25 */
-#define WIPE_CONFIG_26	WIPE_CONFIG_25+1
+#define WIPE_CONFIG_26  WIPE_CONFIG_25+1
   {triangles_3t[WIPE_T3_26], 3, 1, 1, 0},       /* 26 */
-#define WIPE_CONFIG_41	WIPE_CONFIG_26+1
+#define WIPE_CONFIG_41  WIPE_CONFIG_26+1
   {triangles_2t[WIPE_T2_41], 2, 0, 0, 1},       /* 41 */
-#define WIPE_CONFIG_42	WIPE_CONFIG_41+1
+#define WIPE_CONFIG_42  WIPE_CONFIG_41+1
   {triangles_2t[WIPE_T2_42], 2, 0, 0, 1},       /* 42 */
-#define WIPE_CONFIG_43	WIPE_CONFIG_42+1
+#define WIPE_CONFIG_43  WIPE_CONFIG_42+1
   {triangles_8t[WIPE_T8_43], 8, 1, 1, 1},       /* 43 */
-#define WIPE_CONFIG_44	WIPE_CONFIG_43+1
+#define WIPE_CONFIG_44  WIPE_CONFIG_43+1
   {triangles_8t[WIPE_T8_44], 8, 1, 1, 1},       /* 44 */
-#define WIPE_CONFIG_45	WIPE_CONFIG_44+1
+#define WIPE_CONFIG_45  WIPE_CONFIG_44+1
   {triangles_2t[WIPE_T2_45], 2, 0, 0, 0},       /* 45 */
-#define WIPE_CONFIG_46	WIPE_CONFIG_45+1
+#define WIPE_CONFIG_46  WIPE_CONFIG_45+1
   {triangles_2t[WIPE_T2_46], 2, 0, 0, 0},       /* 46 */
-#define WIPE_CONFIG_47	WIPE_CONFIG_46+1
+#define WIPE_CONFIG_47  WIPE_CONFIG_46+1
   {triangles_8t[WIPE_T8_47], 8, 1, 1, 0},       /* 47 */
-#define WIPE_CONFIG_48	WIPE_CONFIG_47+1
+#define WIPE_CONFIG_48  WIPE_CONFIG_47+1
   {triangles_8t[WIPE_T8_48], 8, 1, 1, 0},       /* 48 */
-#define WIPE_CONFIG_61	WIPE_CONFIG_48+1
+#define WIPE_CONFIG_61  WIPE_CONFIG_48+1
   {triangles_4t[WIPE_T4_61], 4, 1, 1, 1},       /* 61 */
-#define WIPE_CONFIG_62	WIPE_CONFIG_61+1
+#define WIPE_CONFIG_62  WIPE_CONFIG_61+1
   {triangles_4t[WIPE_T4_62], 4, 1, 1, 1},       /* 62 */
-#define WIPE_CONFIG_63	WIPE_CONFIG_62+1
+#define WIPE_CONFIG_63  WIPE_CONFIG_62+1
   {triangles_4t[WIPE_T4_63], 4, 1, 1, 1},       /* 63 */
-#define WIPE_CONFIG_64	WIPE_CONFIG_63+1
+#define WIPE_CONFIG_64  WIPE_CONFIG_63+1
   {triangles_4t[WIPE_T4_64], 4, 1, 1, 1},       /* 64 */
-#define WIPE_CONFIG_65	WIPE_CONFIG_64+1
+#define WIPE_CONFIG_65  WIPE_CONFIG_64+1
   {triangles_4t[WIPE_T4_65], 4, 1, 1, 0},       /* 65 */
-#define WIPE_CONFIG_66	WIPE_CONFIG_65+1
+#define WIPE_CONFIG_66  WIPE_CONFIG_65+1
   {triangles_4t[WIPE_T4_66], 4, 1, 1, 0},       /* 66 */
-#define WIPE_CONFIG_67	WIPE_CONFIG_66+1
+#define WIPE_CONFIG_67  WIPE_CONFIG_66+1
   {triangles_4t[WIPE_T4_67], 4, 1, 1, 0},       /* 67 */
-#define WIPE_CONFIG_68	WIPE_CONFIG_67+1
+#define WIPE_CONFIG_68  WIPE_CONFIG_67+1
   {triangles_4t[WIPE_T4_68], 4, 1, 1, 0},       /* 68 */
-#define WIPE_CONFIG_101	WIPE_CONFIG_68+1
+#define WIPE_CONFIG_101 WIPE_CONFIG_68+1
   {triangles_4t[WIPE_T4_101], 4, 1, 1, 0},      /* 101 */
-#define WIPE_CONFIG_201	WIPE_CONFIG_101+1
+#define WIPE_CONFIG_201 WIPE_CONFIG_101+1
   {box_clock_4b[WIPE_B4_201], 4, 1, 1, 2},      /* 201 */
-#define WIPE_CONFIG_202	WIPE_CONFIG_201+1
+#define WIPE_CONFIG_202 WIPE_CONFIG_201+1
   {box_clock_4b[WIPE_B4_202], 4, 1, 1, 2},      /* 202 */
-#define WIPE_CONFIG_203	WIPE_CONFIG_202+1
+#define WIPE_CONFIG_203 WIPE_CONFIG_202+1
   {box_clock_4b[WIPE_B4_203], 4, 1, 1, 2},      /* 203 */
-#define WIPE_CONFIG_204	WIPE_CONFIG_203+1
+#define WIPE_CONFIG_204 WIPE_CONFIG_203+1
   {box_clock_4b[WIPE_B4_204], 4, 1, 1, 2},      /* 204 */
-#define WIPE_CONFIG_205	WIPE_CONFIG_204+1
+#define WIPE_CONFIG_205 WIPE_CONFIG_204+1
   {box_clock_4b[WIPE_B4_205], 4, 1, 1, 1},      /* 205 */
-#define WIPE_CONFIG_206	WIPE_CONFIG_205+1
+#define WIPE_CONFIG_206 WIPE_CONFIG_205+1
   {box_clock_4b[WIPE_B4_206], 4, 1, 1, 1},      /* 206 */
-#define WIPE_CONFIG_207	WIPE_CONFIG_206+1
+#define WIPE_CONFIG_207 WIPE_CONFIG_206+1
   {box_clock_4b[WIPE_B4_207], 4, 1, 1, 0},      /* 207 */
-#define WIPE_CONFIG_211	WIPE_CONFIG_207+1
+#define WIPE_CONFIG_211 WIPE_CONFIG_207+1
   {box_clock_4b[WIPE_B4_211], 4, 1, 1, 1},      /* 211 */
-#define WIPE_CONFIG_212	WIPE_CONFIG_211+1
+#define WIPE_CONFIG_212 WIPE_CONFIG_211+1
   {box_clock_4b[WIPE_B4_212], 4, 1, 1, 1},      /* 212 */
-#define WIPE_CONFIG_213	WIPE_CONFIG_212+1
+#define WIPE_CONFIG_213 WIPE_CONFIG_212+1
   {box_clock_4b[WIPE_B4_213], 4, 1, 1, 0},      /* 213 */
-#define WIPE_CONFIG_214	WIPE_CONFIG_213+1
+#define WIPE_CONFIG_214 WIPE_CONFIG_213+1
   {box_clock_4b[WIPE_B4_214], 4, 1, 1, 0},      /* 214 */
-#define WIPE_CONFIG_221	WIPE_CONFIG_214+1
+#define WIPE_CONFIG_221 WIPE_CONFIG_214+1
   {box_clock_2b[WIPE_B2_221], 2, 1, 1, 1},      /* 221 */
-#define WIPE_CONFIG_222	WIPE_CONFIG_221+1
+#define WIPE_CONFIG_222 WIPE_CONFIG_221+1
   {box_clock_2b[WIPE_B2_222], 2, 1, 1, 1},      /* 222 */
-#define WIPE_CONFIG_223	WIPE_CONFIG_222+1
+#define WIPE_CONFIG_223 WIPE_CONFIG_222+1
   {box_clock_2b[WIPE_B2_223], 2, 1, 1, 1},      /* 223 */
-#define WIPE_CONFIG_224	WIPE_CONFIG_223+1
+#define WIPE_CONFIG_224 WIPE_CONFIG_223+1
   {box_clock_2b[WIPE_B2_224], 2, 1, 1, 1},      /* 224 */
-#define WIPE_CONFIG_225	WIPE_CONFIG_224+1
+#define WIPE_CONFIG_225 WIPE_CONFIG_224+1
   {box_clock_2b[WIPE_B2_225], 2, 1, 1, 0},      /* 225 */
-#define WIPE_CONFIG_226	WIPE_CONFIG_225+1
+#define WIPE_CONFIG_226 WIPE_CONFIG_225+1
   {box_clock_2b[WIPE_B2_226], 2, 1, 1, 0},      /* 226 */
-#define WIPE_CONFIG_227	WIPE_CONFIG_226+1
+#define WIPE_CONFIG_227 WIPE_CONFIG_226+1
   {box_clock_4b[WIPE_B4_227], 4, 1, 1, 1},      /* 227 */
-#define WIPE_CONFIG_228	WIPE_CONFIG_227+1
+#define WIPE_CONFIG_228 WIPE_CONFIG_227+1
   {box_clock_4b[WIPE_B4_228], 4, 1, 1, 1},      /* 228 */
-#define WIPE_CONFIG_231	WIPE_CONFIG_228+1
+#define WIPE_CONFIG_231 WIPE_CONFIG_228+1
   {box_clock_2b[WIPE_B2_231], 2, 1, 1, 0},      /* 231 */
-#define WIPE_CONFIG_232	WIPE_CONFIG_231+1
+#define WIPE_CONFIG_232 WIPE_CONFIG_231+1
   {box_clock_2b[WIPE_B2_232], 2, 1, 1, 0},      /* 232 */
-#define WIPE_CONFIG_233	WIPE_CONFIG_232+1
+#define WIPE_CONFIG_233 WIPE_CONFIG_232+1
   {box_clock_2b[WIPE_B2_233], 2, 1, 1, 0},      /* 233 */
-#define WIPE_CONFIG_234	WIPE_CONFIG_233+1
+#define WIPE_CONFIG_234 WIPE_CONFIG_233+1
   {box_clock_2b[WIPE_B2_234], 2, 1, 1, 0},      /* 234 */
-#define WIPE_CONFIG_235	WIPE_CONFIG_234+1
+#define WIPE_CONFIG_235 WIPE_CONFIG_234+1
   {box_clock_4b[WIPE_B4_235], 4, 1, 1, 0},      /* 235 */
-#define WIPE_CONFIG_236	WIPE_CONFIG_235+1
+#define WIPE_CONFIG_236 WIPE_CONFIG_235+1
   {box_clock_4b[WIPE_B4_236], 4, 1, 1, 0},      /* 236 */
-#define WIPE_CONFIG_241	WIPE_CONFIG_236+1
+#define WIPE_CONFIG_241 WIPE_CONFIG_236+1
   {box_clock_1b[WIPE_B1_241], 1, 0, 0, 0},      /* 241 */
-#define WIPE_CONFIG_242	WIPE_CONFIG_241+1
+#define WIPE_CONFIG_242 WIPE_CONFIG_241+1
   {box_clock_1b[WIPE_B1_242], 1, 0, 0, 0},      /* 242 */
-#define WIPE_CONFIG_243	WIPE_CONFIG_242+1
+#define WIPE_CONFIG_243 WIPE_CONFIG_242+1
   {box_clock_1b[WIPE_B1_243], 1, 0, 0, 0},      /* 243 */
-#define WIPE_CONFIG_244	WIPE_CONFIG_243+1
+#define WIPE_CONFIG_244 WIPE_CONFIG_243+1
   {box_clock_1b[WIPE_B1_244], 1, 0, 0, 0},      /* 244 */
-#define WIPE_CONFIG_245	WIPE_CONFIG_244+1
+#define WIPE_CONFIG_245 WIPE_CONFIG_244+1
   {triangles_2t[WIPE_T2_245], 2, 1, 1, 0},      /* 245 */
-#define WIPE_CONFIG_246	WIPE_CONFIG_245+1
+#define WIPE_CONFIG_246 WIPE_CONFIG_245+1
   {triangles_2t[WIPE_T2_246], 2, 1, 1, 0},      /* 246 */
-#define WIPE_CONFIG_251	WIPE_CONFIG_246+1
+#define WIPE_CONFIG_251 WIPE_CONFIG_246+1
   {box_clock_2b[WIPE_B2_251], 2, 1, 1, 0},      /* 251 */
-#define WIPE_CONFIG_252	WIPE_CONFIG_251+1
+#define WIPE_CONFIG_252 WIPE_CONFIG_251+1
   {box_clock_2b[WIPE_B2_252], 2, 1, 1, 0},      /* 252 */
-#define WIPE_CONFIG_253	WIPE_CONFIG_252+1
+#define WIPE_CONFIG_253 WIPE_CONFIG_252+1
   {box_clock_2b[WIPE_B2_253], 2, 1, 1, 0},      /* 253 */
-#define WIPE_CONFIG_254	WIPE_CONFIG_253+1
+#define WIPE_CONFIG_254 WIPE_CONFIG_253+1
   {box_clock_2b[WIPE_B2_254], 2, 1, 1, 0},      /* 254 */
 
-#define WIPE_CONFIG_261	WIPE_CONFIG_254+1
+#define WIPE_CONFIG_261 WIPE_CONFIG_254+1
   {box_clock_8b[WIPE_B8_261], 8, 2, 2, 2},      /* 261 */
-#define WIPE_CONFIG_262	WIPE_CONFIG_261+1
+#define WIPE_CONFIG_262 WIPE_CONFIG_261+1
   {box_clock_8b[WIPE_B8_262], 8, 2, 2, 2},      /* 262 */
-#define WIPE_CONFIG_263	WIPE_CONFIG_262+1
+#define WIPE_CONFIG_263 WIPE_CONFIG_262+1
   {box_clock_8b[WIPE_B8_263], 8, 2, 2, 1},      /* 263 */
-#define WIPE_CONFIG_264	WIPE_CONFIG_263+1
+#define WIPE_CONFIG_264 WIPE_CONFIG_263+1
   {box_clock_8b[WIPE_B8_264], 8, 2, 2, 1},      /* 264 */
 };
 

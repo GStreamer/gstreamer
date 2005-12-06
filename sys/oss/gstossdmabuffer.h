@@ -39,15 +39,15 @@ G_BEGIN_DECLS
 #define GST_OSSELEMENT_GET(obj)  GST_OSSELEMENT (obj->element)
 
 typedef enum {
-  GST_OSSDMABUFFER_OPEN		= (1 << 0),
+  GST_OSSDMABUFFER_OPEN         = (1 << 0),
 } GstOssDMABufferFlags;
 
 typedef struct _GstOssDMABuffer GstOssDMABuffer;
 typedef struct _GstOssDMABufferClass GstOssDMABufferClass;
 
 #define GST_OSSDMABUFFER_THREAD(buf)   (GST_OSSDMABUFFER(buf)->thread)
-#define GST_OSSDMABUFFER_LOCK	       GST_OBJECT_LOCK
-#define GST_OSSDMABUFFER_UNLOCK	       GST_OBJECT_UNLOCK
+#define GST_OSSDMABUFFER_LOCK          GST_OBJECT_LOCK
+#define GST_OSSDMABUFFER_UNLOCK        GST_OBJECT_UNLOCK
 #define GST_OSSDMABUFFER_COND(buf)     (GST_OSSDMABUFFER(buf)->cond)
 #define GST_OSSDMABUFFER_SIGNAL(buf)   (g_cond_signal (GST_OSSDMABUFFER_COND (buf)))
 #define GST_OSSDMABUFFER_WAIT(buf)     (g_cond_wait (GST_OSSDMABUFFER_COND (buf), GST_OBJECT_GET_LOCK (buf)))
@@ -55,7 +55,7 @@ typedef struct _GstOssDMABufferClass GstOssDMABufferClass;
 struct _GstOssDMABuffer {
   GstRingBuffer  buffer;
 
-  GstOssElement	*element;
+  GstOssElement *element;
 
   int            fd;
   int            caps;

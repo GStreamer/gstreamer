@@ -50,27 +50,27 @@ typedef struct _GstLevelClass GstLevelClass;
 struct _GstLevel {
   GstBaseTransform element;
 
-  gboolean message;		/* whether or not to post messages */
-  gdouble interval;		/* how many seconds between emits */
+  gboolean message;             /* whether or not to post messages */
+  gdouble interval;             /* how many seconds between emits */
 
-  gint rate;			/* caps variables */
+  gint rate;                    /* caps variables */
   gint width;
   gint channels;
 
-  gdouble decay_peak_ttl;	/* time to live for peak in seconds */
-  gdouble decay_peak_falloff;	/* falloff in dB/sec */
-  gint num_frames;		/* frame count (1 sample per channel)
+  gdouble decay_peak_ttl;       /* time to live for peak in seconds */
+  gdouble decay_peak_falloff;   /* falloff in dB/sec */
+  gint num_frames;              /* frame count (1 sample per channel)
                                  * since last emit */
 
   /* per-channel arrays for intermediate values */
-  gdouble *CS;			/* normalized Cumulative Square */
-  gdouble *peak;		/* normalized Peak value over buffer */
-  gdouble *last_peak;		/* last normalized Peak value over interval */
-  gdouble *decay_peak;		/* running decaying normalized Peak */
-  gdouble *decay_peak_base;	/* value of last peak we are decaying from */
-  gdouble *MS;			/* normalized Mean Square of buffer */
-  gdouble *RMS_dB;		/* RMS in dB to emit */
-  GstClockTime *decay_peak_age;	/* age of last peak */
+  gdouble *CS;                  /* normalized Cumulative Square */
+  gdouble *peak;                /* normalized Peak value over buffer */
+  gdouble *last_peak;           /* last normalized Peak value over interval */
+  gdouble *decay_peak;          /* running decaying normalized Peak */
+  gdouble *decay_peak_base;     /* value of last peak we are decaying from */
+  gdouble *MS;                  /* normalized Mean Square of buffer */
+  gdouble *RMS_dB;              /* RMS in dB to emit */
+  GstClockTime *decay_peak_age; /* age of last peak */
 };
 
 struct _GstLevelClass {

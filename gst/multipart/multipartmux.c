@@ -80,7 +80,7 @@ GST_ELEMENT_DETAILS ("multipart muxer",
     "mux multipart streams",
     "Wim Taymans <wim@fluendo.com>");
 
-#define DEFAULT_BOUNDARY	"ThisRandomString"
+#define DEFAULT_BOUNDARY        "ThisRandomString"
 
 enum
 {

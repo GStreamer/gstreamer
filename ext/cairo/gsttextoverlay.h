@@ -60,8 +60,8 @@ struct _GstCairoTextOverlay {
     gint                  ypad;
     gint                  deltax;
     gint                  deltay;
-    gchar		 *default_text;
-    gboolean		  want_shading;
+    gchar                *default_text;
+    gboolean              want_shading;
 
     guchar               *text_fill_image;
     guchar               *text_outline_image;
@@ -69,7 +69,7 @@ struct _GstCairoTextOverlay {
     gint                  text_x0, text_x1; /* start/end x position of text */
     gint                  text_dy;
 
-    gboolean		  need_render;
+    gboolean              need_render;
 
     gchar                *font;
     gint                  slant;

@@ -82,7 +82,7 @@ gst_aggregator_sched_get_type (void)
   return aggregator_sched_type;
 }
 
-#define AGGREGATOR_IS_LOOP_BASED(ag)	((ag)->sched != AGGREGATOR_CHAIN)
+#define AGGREGATOR_IS_LOOP_BASED(ag)    ((ag)->sched != AGGREGATOR_CHAIN)
 
 static GstPad *gst_aggregator_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused);

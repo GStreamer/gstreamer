@@ -50,22 +50,22 @@ typedef struct _GstShaper GstShaper;
 typedef struct _GstShaperClass GstShaperClass;
 
 struct _GstShaper {
-  GstElement 	 element;
+  GstElement     element;
 
-  GSList 	*connections;
-  gint		 nconnections;
+  GSList        *connections;
+  gint           nconnections;
 
-  GstShaperPolicyType	policy;
+  GstShaperPolicyType   policy;
 
-  gboolean 	 silent;
-  gchar 	*last_message;
+  gboolean       silent;
+  gchar         *last_message;
 };
 
 struct _GstShaperClass {
   GstElementClass parent_class;
 };
 
-GType 		gst_shaper_get_type	(void);
+GType           gst_shaper_get_type     (void);
 
 G_END_DECLS
 

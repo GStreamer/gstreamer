@@ -19,7 +19,7 @@
  *
  * 
  * Note: 7th December 2004: This file used to be licensed under the GPL,
- * 	 but we got permission from Ralp Loader to relicense it to LGPL.
+ *       but we got permission from Ralp Loader to relicense it to LGPL.
  * 
  *  $Id$
  *
@@ -288,7 +288,7 @@ convolve_match (const int *lastchoice,
   for (i = 0; i < 256; i++)
     right[i] -= avg;
   /* End-of-stack marker. */
-#if 	0                       /* The following line produces a CRASH, need to figure out why?!! */
+#if     0                       /* The following line produces a CRASH, need to figure out why?!! */
   top[1].b.null = scratch;
 #endif
   top[1].b.main = NULL;

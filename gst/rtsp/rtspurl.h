@@ -26,7 +26,7 @@
 
 G_BEGIN_DECLS
 
-#define RTSP_DEFAULT_PORT	554
+#define RTSP_DEFAULT_PORT       554
 
 typedef struct _RTSPUrl {
   RTSPProto   protocol;
@@ -38,8 +38,8 @@ typedef struct _RTSPUrl {
   gchar      *abspath;
 } RTSPUrl;
 
-RTSPResult    	rtsp_url_parse  	(const gchar *urlstr, RTSPUrl **url);
-void          	rtsp_url_free  		(RTSPUrl *url);
+RTSPResult      rtsp_url_parse          (const gchar *urlstr, RTSPUrl **url);
+void            rtsp_url_free           (RTSPUrl *url);
 
 G_END_DECLS
 

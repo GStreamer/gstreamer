@@ -56,7 +56,7 @@ struct _GstWavParse {
 
   /* WAVE decoding state */
   GstWavParseState state;
-  guint64	offset;
+  guint64       offset;
 
   /* format of audio, see defines below */
   gint format;

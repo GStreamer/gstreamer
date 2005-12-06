@@ -42,14 +42,14 @@ GST_DEBUG_CATEGORY (udpsrc_debug);
 #define WRITE_SOCKET(src)      src->control_sock[1]
 #define READ_SOCKET(src)       src->control_sock[0]
 
-#define SEND_COMMAND(src, command)             	\
-G_STMT_START {                                 	\
-  unsigned char c; c = command;                	\
-  write (WRITE_SOCKET(src), &c, 1);         	\
+#define SEND_COMMAND(src, command)              \
+G_STMT_START {                                  \
+  unsigned char c; c = command;                 \
+  write (WRITE_SOCKET(src), &c, 1);             \
 } G_STMT_END
 
-#define READ_COMMAND(src, command, res)        	\
-G_STMT_START {                                	\
+#define READ_COMMAND(src, command, res)         \
+G_STMT_START {                                  \
   res = read(READ_SOCKET(src), &command, 1);    \
 } G_STMT_END
 
@@ -64,10 +64,10 @@ GST_ELEMENT_DETAILS ("UDP packet receiver",
     "Receive data over the network via UDP",
     "Wim Taymans <wim@fluendo.com>");
 
-#define UDP_DEFAULT_PORT		4951
-#define UDP_DEFAULT_MULTICAST_GROUP	"0.0.0.0"
-#define UDP_DEFAULT_URI			"udp://0.0.0.0:4951"
-#define UDP_DEFAULT_CAPS		NULL
+#define UDP_DEFAULT_PORT                4951
+#define UDP_DEFAULT_MULTICAST_GROUP     "0.0.0.0"
+#define UDP_DEFAULT_URI                 "udp://0.0.0.0:4951"
+#define UDP_DEFAULT_CAPS                NULL
 
 enum
 {

@@ -34,7 +34,7 @@ typedef enum {
   GST_FLXDEC_READ_HEADER,
   GST_FLXDEC_PLAYING,
 } GstFlxDecState;
-	
+        
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstFlxDec  GstFlxDec;

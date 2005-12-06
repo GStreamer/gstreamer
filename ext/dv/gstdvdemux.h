@@ -47,47 +47,47 @@ typedef struct _GstDVDemuxClass GstDVDemuxClass;
 
 
 struct _GstDVDemux {
-  GstElement 	 element;
+  GstElement     element;
 
-  GstPad 	*sinkpad;
+  GstPad        *sinkpad;
   GstPad        *videosrcpad;
   GstPad        *audiosrcpad;
 
-  dv_decoder_t 	*decoder;
+  dv_decoder_t  *decoder;
 
   GstAdapter    *adapter;
-  gint 		 frame_len;
+  gint           frame_len;
 
   /* PAL or NTSC flag */
   gboolean       PAL;
   /* video params */
   gint           framerate_numerator;
   gint           framerate_denominator;
-  gint		 height;
-  gboolean	 wide;
+  gint           height;
+  gboolean       wide;
   /* audio params */
-  gint     	 frequency;
-  gint     	 channels;
+  gint           frequency;
+  gint           channels;
 
-  gint		 framecount;
+  gint           framecount;
   
-  guint64	 timestamp;
-  guint64	 duration;
+  guint64        timestamp;
+  guint64        duration;
   gint64         total_frames;
-  guint64	 audio_offset;
-  guint64	 video_offset;
+  guint64        audio_offset;
+  guint64        video_offset;
 
-  gint64	 start_byte;
-  gint64	 stop_byte;
-  gint64	 start_timestamp;
-  gint64	 stop_timestamp;
+  gint64         start_byte;
+  gint64         stop_byte;
+  gint64         start_timestamp;
+  gint64         stop_timestamp;
 
-  gboolean	 need_discont;
-  gboolean	 new_media;
+  gboolean       need_discont;
+  gboolean       new_media;
   
   gboolean       found_header;
 
-  gint16 	*audio_buffers[4];
+  gint16        *audio_buffers[4];
 };
 
 struct _GstDVDemuxClass {

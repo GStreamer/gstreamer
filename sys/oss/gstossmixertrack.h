@@ -33,10 +33,10 @@ G_BEGIN_DECLS
   (gst_ossmixer_track_get_type ())
 #define GST_OSSMIXER_TRACK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_OSSMIXER_TRACK, \
-			       GstOssMixerTrack))
+                               GstOssMixerTrack))
 #define GST_OSSMIXER_TRACK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_OSSMIXER_TRACK, \
-			    GstOssMixerTrackClass))
+                            GstOssMixerTrackClass))
 #define GST_IS_OSSMIXER_TRACK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OSSMIXER_TRACK))
 #define GST_IS_OSSMIXER_TRACK_CLASS(klass) \
@@ -53,8 +53,8 @@ typedef struct _GstOssMixerTrackClass {
   GstMixerTrackClass parent;
 } GstOssMixerTrackClass;
 
-GType		gst_ossmixer_track_get_type	(void);
-GstMixerTrack*	gst_ossmixer_track_new		(gint mixer_fd,
+GType           gst_ossmixer_track_get_type     (void);
+GstMixerTrack*  gst_ossmixer_track_new          (gint mixer_fd,
     gint track_num, gint max_chans, gint flags);
 
 G_END_DECLS

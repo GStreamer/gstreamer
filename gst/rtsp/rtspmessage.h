@@ -35,50 +35,50 @@ typedef enum
 
 typedef struct _RTSPMessage
 {
-  RTSPMsgType	 type;
+  RTSPMsgType    type;
 
   union {
     struct {
-      RTSPMethod	 method;
-      gchar		*uri;
+      RTSPMethod         method;
+      gchar             *uri;
     } request;
     struct {
-      RTSPStatusCode	 code;
-      gchar		*reason;
+      RTSPStatusCode     code;
+      gchar             *reason;
     } response;
     struct {
-      gint		 channel;
+      gint               channel;
     } data;
   } type_data;
 
   GHashTable    *hdr_fields;
 
-  guint8 	*body;
-  guint  	 body_size;
+  guint8        *body;
+  guint          body_size;
 
 } RTSPMessage;
 
-RTSPResult	rtsp_message_new_request	(RTSPMethod method, gchar *uri, RTSPMessage **msg);
-RTSPResult	rtsp_message_init_request	(RTSPMethod method, gchar *uri, RTSPMessage *msg);
+RTSPResult      rtsp_message_new_request        (RTSPMethod method, gchar *uri, RTSPMessage **msg);
+RTSPResult      rtsp_message_init_request       (RTSPMethod method, gchar *uri, RTSPMessage *msg);
 
-RTSPResult	rtsp_message_new_response	(RTSPStatusCode code, gchar *reason, 
-						 RTSPMessage *request, RTSPMessage **msg);
-RTSPResult	rtsp_message_init_response	(RTSPStatusCode code, gchar *reason, 
-						 RTSPMessage *request, RTSPMessage *msg);
-RTSPResult	rtsp_message_init_data		(gint channel, RTSPMessage *msg);
+RTSPResult      rtsp_message_new_response       (RTSPStatusCode code, gchar *reason, 
+                                                 RTSPMessage *request, RTSPMessage **msg);
+RTSPResult      rtsp_message_init_response      (RTSPStatusCode code, gchar *reason, 
+                                                 RTSPMessage *request, RTSPMessage *msg);
+RTSPResult      rtsp_message_init_data          (gint channel, RTSPMessage *msg);
 
-RTSPResult	rtsp_message_free		(RTSPMessage *msg);
+RTSPResult      rtsp_message_free               (RTSPMessage *msg);
 
 
-RTSPResult	rtsp_message_add_header		(RTSPMessage *msg, RTSPHeaderField field, gchar *value);
-RTSPResult	rtsp_message_remove_header	(RTSPMessage *msg, RTSPHeaderField field);
-RTSPResult	rtsp_message_get_header		(RTSPMessage *msg, RTSPHeaderField field, gchar **value);
+RTSPResult      rtsp_message_add_header         (RTSPMessage *msg, RTSPHeaderField field, gchar *value);
+RTSPResult      rtsp_message_remove_header      (RTSPMessage *msg, RTSPHeaderField field);
+RTSPResult      rtsp_message_get_header         (RTSPMessage *msg, RTSPHeaderField field, gchar **value);
 
-RTSPResult	rtsp_message_set_body		(RTSPMessage *msg, guint8 *data, guint size);
-RTSPResult	rtsp_message_take_body		(RTSPMessage *msg, guint8 *data, guint size);
-RTSPResult	rtsp_message_get_body		(RTSPMessage *msg, guint8 **data, guint *size);
+RTSPResult      rtsp_message_set_body           (RTSPMessage *msg, guint8 *data, guint size);
+RTSPResult      rtsp_message_take_body          (RTSPMessage *msg, guint8 *data, guint size);
+RTSPResult      rtsp_message_get_body           (RTSPMessage *msg, guint8 **data, guint *size);
 
-RTSPResult	rtsp_message_dump		(RTSPMessage *msg);
+RTSPResult      rtsp_message_dump               (RTSPMessage *msg);
 
 G_END_DECLS
 

@@ -251,12 +251,12 @@ gst_auparse_chain (GstPad * pad, GstBuffer * buf)
 
 /*
 Docs :
-	http://www.opengroup.org/public/pubs/external/auformat.html
-	http://astronomy.swin.edu.au/~pbourke/dataformats/au/
-	Solaris headers : /usr/include/audio/au.h
-	libsndfile : src/au.c
+        http://www.opengroup.org/public/pubs/external/auformat.html
+        http://astronomy.swin.edu.au/~pbourke/dataformats/au/
+        Solaris headers : /usr/include/audio/au.h
+        libsndfile : src/au.c
 Samples :
-	http://www.tsp.ece.mcgill.ca/MMSP/Documents/AudioFormats/AU/Samples.html
+        http://www.tsp.ece.mcgill.ca/MMSP/Documents/AudioFormats/AU/Samples.html
 */
 
     switch (auparse->encoding) {

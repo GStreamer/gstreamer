@@ -21,10 +21,10 @@
 
 #include "rtspurl.h"
 
-#define RTSP_PROTO	"rtsp://"
-#define RTSP_PROTO_LEN	7
-#define RTSPU_PROTO	"rtspu://"
-#define RTSPU_PROTO_LEN	8
+#define RTSP_PROTO      "rtsp://"
+#define RTSP_PROTO_LEN  7
+#define RTSPU_PROTO     "rtspu://"
+#define RTSPU_PROTO_LEN 8
 
 /* format is rtsp[u]://[user:passwd@]host[:port]/abspath */
 

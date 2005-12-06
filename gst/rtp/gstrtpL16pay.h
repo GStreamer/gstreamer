@@ -69,4 +69,4 @@ gboolean gst_rtpL16pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif				/* __GST_RTP_L16_PAY_H__ */
+#endif                          /* __GST_RTP_L16_PAY_H__ */

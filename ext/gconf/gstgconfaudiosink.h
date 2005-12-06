@@ -29,10 +29,10 @@ G_BEGIN_DECLS
   (gst_gconf_audio_sink_get_type ())
 #define GST_GCONF_AUDIO_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GCONF_AUDIO_SINK, \
-			       GstGConfAudioSink))
+                               GstGConfAudioSink))
 #define GST_GCONF_AUDIO_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GCONF_AUDIO_SINK, \
-			    GstGConfAudioSink))
+                            GstGConfAudioSink))
 #define GST_IS_GCONF_AUDIO_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GCONF_AUDIO_SINK))
 #define GST_IS_GCONF_AUDIO_SINK_CLASS(obj) \
@@ -51,7 +51,7 @@ typedef struct _GstGConfAudioSinkClass {
   GstBinClass parent_class;
 } GstGConfAudioSinkClass;
 
-GType	gst_gconf_audio_sink_get_type	(void);
+GType   gst_gconf_audio_sink_get_type   (void);
 
 G_END_DECLS
 

@@ -24,7 +24,7 @@
 #include "gstmngenc.h"
 #include <gst/video/video.h>
 
-#define MAX_HEIGHT		4096
+#define MAX_HEIGHT              4096
 
 
 GstElementDetails gst_mngenc_details = {
@@ -42,7 +42,7 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_SNAPSHOT	TRUE
+#define DEFAULT_SNAPSHOT        TRUE
 
 enum
 {

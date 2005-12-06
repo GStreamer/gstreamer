@@ -44,28 +44,28 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSXAUDIOSINK))
 
 typedef enum {
-  GST_OSXAUDIOSINK_OPEN		= (GST_ELEMENT_FLAG_LAST << 0),
+  GST_OSXAUDIOSINK_OPEN         = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_OSXAUDIOSINK_FLAG_LAST	= (GST_ELEMENT_FLAG_LAST << 2)
+  GST_OSXAUDIOSINK_FLAG_LAST    = (GST_ELEMENT_FLAG_LAST << 2)
 } GstOsxAudioSinkFlags;
 
 typedef struct _GstOsxAudioSink GstOsxAudioSink;
 typedef struct _GstOsxAudioSinkClass GstOsxAudioSinkClass;
 
 struct _GstOsxAudioSink {
-  GstOsxAudioElement	 element;
+  GstOsxAudioElement     element;
 
-  GstPad 	*sinkpad;
+  GstPad        *sinkpad;
 
-/*  GstClock 	*provided_clock;
-  GstClock 	*clock;
-  gboolean	 resync;
-  gboolean	 sync;
-  guint64	 handled;
+/*  GstClock    *provided_clock;
+  GstClock      *clock;
+  gboolean       resync;
+  gboolean       sync;
+  guint64        handled;
 
-  gboolean 	 mute;
-  guint 	 bufsize;
-  guint 	 chunk_size;*/
+  gboolean       mute;
+  guint          bufsize;
+  guint          chunk_size;*/
 };
 
 struct _GstOsxAudioSinkClass {

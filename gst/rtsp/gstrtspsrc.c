@@ -52,9 +52,9 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_LOCATION	NULL
-#define DEFAULT_PROTOCOLS	GST_RTSP_PROTO_UDP_UNICAST | GST_RTSP_PROTO_UDP_MULTICAST | GST_RTSP_PROTO_TCP
-#define DEFAULT_DEBUG		FALSE
+#define DEFAULT_LOCATION        NULL
+#define DEFAULT_PROTOCOLS       GST_RTSP_PROTO_UDP_UNICAST | GST_RTSP_PROTO_UDP_MULTICAST | GST_RTSP_PROTO_TCP
+#define DEFAULT_DEBUG           FALSE
 
 enum
 {
@@ -300,34 +300,34 @@ done:
   return ret;
 }
 
-#define PARSE_INT(p, del, res) 		\
-G_STMT_START {				\
-  gchar *t = p;				\
-  p = strstr (p, del);			\
-  if (p == NULL)			\
-    res = -1;				\
-  else {				\
-    *p = '\0';				\
-    p++;				\
-    res = atoi (t);			\
-  }					\
+#define PARSE_INT(p, del, res)          \
+G_STMT_START {                          \
+  gchar *t = p;                         \
+  p = strstr (p, del);                  \
+  if (p == NULL)                        \
+    res = -1;                           \
+  else {                                \
+    *p = '\0';                          \
+    p++;                                \
+    res = atoi (t);                     \
+  }                                     \
 } G_STMT_END
 
-#define PARSE_STRING(p, del, res) 	\
-G_STMT_START {				\
-  gchar *t = p;				\
-  p = strstr (p, del);			\
-  if (p == NULL)			\
-    res = NULL;				\
-  else {				\
-    *p = '\0';				\
-    p++;				\
-    res = t;				\
-  }					\
+#define PARSE_STRING(p, del, res)       \
+G_STMT_START {                          \
+  gchar *t = p;                         \
+  p = strstr (p, del);                  \
+  if (p == NULL)                        \
+    res = NULL;                         \
+  else {                                \
+    *p = '\0';                          \
+    p++;                                \
+    res = t;                            \
+  }                                     \
 } G_STMT_END
 
-#define SKIP_SPACES(p) 			\
-  while (*p && g_ascii_isspace (*p))	\
+#define SKIP_SPACES(p)                  \
+  while (*p && g_ascii_isspace (*p))    \
     p++;
 
 static gboolean

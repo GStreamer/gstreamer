@@ -67,7 +67,7 @@ struct _GstMD5SinkClass {
 
 };
 
-GType				gst_md5sink_get_type		(void);
+GType                           gst_md5sink_get_type            (void);
 
 G_END_DECLS
 

@@ -47,18 +47,18 @@ typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
 /* flags with allowed protocols */
 typedef enum
 {
-  GST_RTSP_PROTO_UDP_UNICAST	= (1 << 0),
-  GST_RTSP_PROTO_UDP_MULTICAST	= (1 << 1),
-  GST_RTSP_PROTO_TCP		= (1 << 2),
+  GST_RTSP_PROTO_UDP_UNICAST    = (1 << 0),
+  GST_RTSP_PROTO_UDP_MULTICAST  = (1 << 1),
+  GST_RTSP_PROTO_TCP            = (1 << 2),
 } GstRTSPProto;
 
 typedef struct _GstRTSPStream GstRTSPStream;
 
 struct _GstRTSPStream {
-  gint	      id;
+  gint        id;
 
-  gint 	      rtpchannel;
-  gint 	      rtcpchannel;
+  gint        rtpchannel;
+  gint        rtcpchannel;
 
   GstRTSPSrc *parent;
 
@@ -78,22 +78,22 @@ struct _GstRTSPStream {
 struct _GstRTSPSrc {
   GstElement element;
 
-  gboolean	 interleaved;
-  GstTask     	*task;
+  gboolean       interleaved;
+  GstTask       *task;
 
-  gint		 numstreams;
-  GList		*streams;
+  gint           numstreams;
+  GList         *streams;
 
-  gchar	 	*location;
-  gboolean	 debug;
+  gchar         *location;
+  gboolean       debug;
 
-  GstRTSPProto	 protocols;
+  GstRTSPProto   protocols;
   /* supported options */
-  gint        	 options;
+  gint           options;
 
   RTSPConnection *connection;
-  RTSPMessage	*request;
-  RTSPMessage	*response;
+  RTSPMessage   *request;
+  RTSPMessage   *response;
 };
 
 struct _GstRTSPSrcClass {

@@ -61,7 +61,7 @@ struct _GstShout2send {
 
   GstTagList* tags;
 
-  GstClock 	*clock;
+  GstClock      *clock;
 
 };
 

@@ -218,7 +218,7 @@ typedef enum {
 typedef struct _GstMatroskaTrackContext {
   GstPad       *pad;
   GstCaps      *caps;
-  guint 	index;
+  guint         index;
 
   /* some often-used info */
   gchar        *codec_id, *codec_name, *name, *language;
@@ -249,7 +249,7 @@ typedef struct _GstMatroskaTrackAudioContext {
   /* Special flag for Vorbis, we need to send codec_priv first before
    * sending any data, and just testing for time == 0 is not enough
    * to detect that */
-  gboolean 	first_frame;
+  gboolean      first_frame;
 } GstMatroskaTrackAudioContext;
 
 typedef struct _GstMatroskaTrackComplexContext {

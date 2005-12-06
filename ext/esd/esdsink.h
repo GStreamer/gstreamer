@@ -43,11 +43,11 @@ typedef struct _GstEsdSink GstEsdSink;
 typedef struct _GstEsdSinkClass GstEsdSinkClass;
 
 struct _GstEsdSink {
-  GstAudioSink 	 sink;
+  GstAudioSink   sink;
 
-  int 		 fd;
+  int            fd;
   int      ctrl_fd;
-  gchar		*host;
+  gchar         *host;
 };
 
 struct _GstEsdSinkClass {

@@ -31,13 +31,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_videomixer_debug);
 
 #define GST_TYPE_VIDEO_MIXER_PAD (gst_videomixer_pad_get_type())
 #define GST_VIDEO_MIXER_PAD(obj) \
-	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_MIXER_PAD, GstVideoMixerPad))
+        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_MIXER_PAD, GstVideoMixerPad))
 #define GST_VIDEO_MIXER_PAD_CLASS(klass) \
-	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MIXER_PAD, GstVideoMixerPadiClass))
+        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MIXER_PAD, GstVideoMixerPadiClass))
 #define GST_IS_VIDEO_MIXER_PAD(obj) \
-	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MIXER_PAD))
+        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MIXER_PAD))
 #define GST_IS_VIDEO_MIXER_PAD_CLASS(obj) \
-	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MIXER_PAD))
+        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MIXER_PAD))
 
 typedef struct _GstVideoMixerPad GstVideoMixerPad;
 typedef struct _GstVideoMixerPadClass GstVideoMixerPadClass;
@@ -45,13 +45,13 @@ typedef struct _GstVideoMixerCollect GstVideoMixerCollect;
 
 #define GST_TYPE_VIDEO_MIXER (gst_videomixer_get_type())
 #define GST_VIDEO_MIXER(obj) \
-	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_MIXER, GstVideoMixer))
+        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_MIXER, GstVideoMixer))
 #define GST_VIDEO_MIXER_CLASS(klass) \
-	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MIXER, GstVideoMixerClass))
+        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MIXER, GstVideoMixerClass))
 #define GST_IS_VIDEO_MIXER(obj) \
-	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MIXER))
+        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MIXER))
 #define GST_IS_VIDEO_MIXER_CLASS(obj) \
-	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MIXER))
+        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MIXER))
 
 static GType gst_videomixer_get_type (void);
 
@@ -604,139 +604,139 @@ gst_videomixer_request_new_pad (GstElement * element,
   return GST_PAD (mixpad);
 }
 
-#define BLEND_NORMAL(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)  	\
-	Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;		\
-	U = ((U1*(255-alpha))+(U2*alpha))>>8;		\
-	V = ((V1*(255-alpha))+(V2*alpha))>>8;
+#define BLEND_NORMAL(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)     \
+        Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;           \
+        U = ((U1*(255-alpha))+(U2*alpha))>>8;           \
+        V = ((V1*(255-alpha))+(V2*alpha))>>8;
 
-#define BLEND_ADD(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)  		\
-	Y = Y1+((Y2*alpha)>>8);					\
-	U = U1+(((127*(255-alpha)+(U2*alpha)))>>8)-127;		\
-	V = V1+(((127*(255-alpha)+(V2*alpha)))>>8)-127;		\
-        if (Y>255) {						\
-	  gint mult = MAX (0, 288-Y);				\
-	  U = ((U*mult) + (127*(32-mult)))>>5;			\
-	  V = ((V*mult) + (127*(32-mult)))>>5;			\
-	  Y = 255;						\
-	}							\
-	U = MIN (U,255);					\
-	V = MIN (V,255);
+#define BLEND_ADD(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)                \
+        Y = Y1+((Y2*alpha)>>8);                                 \
+        U = U1+(((127*(255-alpha)+(U2*alpha)))>>8)-127;         \
+        V = V1+(((127*(255-alpha)+(V2*alpha)))>>8)-127;         \
+        if (Y>255) {                                            \
+          gint mult = MAX (0, 288-Y);                           \
+          U = ((U*mult) + (127*(32-mult)))>>5;                  \
+          V = ((V*mult) + (127*(32-mult)))>>5;                  \
+          Y = 255;                                              \
+        }                                                       \
+        U = MIN (U,255);                                        \
+        V = MIN (V,255);
 
-#define BLEND_SUBTRACT(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)  		\
-	Y = Y1-((Y2*alpha)>>8);					\
-	U = U1+(((127*(255-alpha)+(U2*alpha)))>>8)-127;		\
-	V = V1+(((127*(255-alpha)+(V2*alpha)))>>8)-127;		\
-        if (Y<0) {						\
-	  gint mult = MIN (32, -Y);				\
-	  U = ((U*(32-mult)) + (127*mult))>>5;			\
-	  V = ((V*(32-mult)) + (127*mult))>>5;			\
-	  Y = 0;						\
-	}
+#define BLEND_SUBTRACT(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)           \
+        Y = Y1-((Y2*alpha)>>8);                                 \
+        U = U1+(((127*(255-alpha)+(U2*alpha)))>>8)-127;         \
+        V = V1+(((127*(255-alpha)+(V2*alpha)))>>8)-127;         \
+        if (Y<0) {                                              \
+          gint mult = MIN (32, -Y);                             \
+          U = ((U*(32-mult)) + (127*mult))>>5;                  \
+          V = ((V*(32-mult)) + (127*mult))>>5;                  \
+          Y = 0;                                                \
+        }
 
-#define BLEND_DARKEN(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)  	\
-	if (Y1 < Y2) {					\
-	  Y = Y1; U = U1; V = V1;			\
-	}						\
-	else {						\
-	  Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;		\
-	  U = ((U1*(255-alpha))+(U2*alpha))>>8;		\
-	  V = ((V1*(255-alpha))+(V2*alpha))>>8;		\
-	}
+#define BLEND_DARKEN(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)     \
+        if (Y1 < Y2) {                                  \
+          Y = Y1; U = U1; V = V1;                       \
+        }                                               \
+        else {                                          \
+          Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;         \
+          U = ((U1*(255-alpha))+(U2*alpha))>>8;         \
+          V = ((V1*(255-alpha))+(V2*alpha))>>8;         \
+        }
 
-#define BLEND_LIGHTEN(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)  	\
-	if (Y1 > Y2) {					\
-	  Y = Y1; U = U1; V = V1;			\
-	}						\
-	else {						\
-	  Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;		\
-	  U = ((U1*(255-alpha))+(U2*alpha))>>8;		\
-	  V = ((V1*(255-alpha))+(V2*alpha))>>8;		\
-	}
+#define BLEND_LIGHTEN(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)    \
+        if (Y1 > Y2) {                                  \
+          Y = Y1; U = U1; V = V1;                       \
+        }                                               \
+        else {                                          \
+          Y = ((Y1*(255-alpha))+(Y2*alpha))>>8;         \
+          U = ((U1*(255-alpha))+(U2*alpha))>>8;         \
+          V = ((V1*(255-alpha))+(V2*alpha))>>8;         \
+        }
 
-#define BLEND_MULTIPLY(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)  			\
-	Y = (Y1*(256*(255-alpha) +(Y2*alpha)))>>16;			\
-	U = ((U1*(255-alpha)*256)+(alpha*(U1*Y2+128*(256-Y2))))>>16;	\
-	V = ((V1*(255-alpha)*256)+(alpha*(V1*Y2+128*(256-Y2))))>>16;
+#define BLEND_MULTIPLY(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)                   \
+        Y = (Y1*(256*(255-alpha) +(Y2*alpha)))>>16;                     \
+        U = ((U1*(255-alpha)*256)+(alpha*(U1*Y2+128*(256-Y2))))>>16;    \
+        V = ((V1*(255-alpha)*256)+(alpha*(V1*Y2+128*(256-Y2))))>>16;
 
-#define BLEND_DIFFERENCE(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)  	\
-	Y = ABS((gint)Y1-(gint)Y2)+127;				\
-	U = ABS((gint)U1-(gint)U2)+127;				\
-	V = ABS((gint)V1-(gint)V2)+127;				\
-	Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;			\
-	U = ((U*alpha)+(U1*(255-alpha)))>>8;			\
-	V = ((V*alpha)+(V1*(255-alpha)))>>8;			\
-        if (Y>255) {						\
-	  gint mult = MAX (0, 288-Y);				\
-	  U = ((U*mult) + (127*(32-mult)))>>5;			\
-	  V = ((V*mult) + (127*(32-mult)))>>5;			\
-	  Y = 255;						\
-	} else if (Y<0) {					\
-	  gint mult = MIN (32, -Y);				\
-	  U = ((U*(32-mult)) + (127*mult))>>5;			\
-	  V = ((V*(32-mult)) + (127*mult))>>5;			\
-	  Y = 0;						\
-	}							\
-        U = CLAMP(U, 0, 255);					\
+#define BLEND_DIFFERENCE(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)         \
+        Y = ABS((gint)Y1-(gint)Y2)+127;                         \
+        U = ABS((gint)U1-(gint)U2)+127;                         \
+        V = ABS((gint)V1-(gint)V2)+127;                         \
+        Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;                    \
+        U = ((U*alpha)+(U1*(255-alpha)))>>8;                    \
+        V = ((V*alpha)+(V1*(255-alpha)))>>8;                    \
+        if (Y>255) {                                            \
+          gint mult = MAX (0, 288-Y);                           \
+          U = ((U*mult) + (127*(32-mult)))>>5;                  \
+          V = ((V*mult) + (127*(32-mult)))>>5;                  \
+          Y = 255;                                              \
+        } else if (Y<0) {                                       \
+          gint mult = MIN (32, -Y);                             \
+          U = ((U*(32-mult)) + (127*mult))>>5;                  \
+          V = ((V*(32-mult)) + (127*mult))>>5;                  \
+          Y = 0;                                                \
+        }                                                       \
+        U = CLAMP(U, 0, 255);                                   \
         V = CLAMP(V, 0, 255);
 
-#define BLEND_EXCLUSION(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)  	\
-	Y = ((gint)(Y1^0xff)*Y2+(gint)(Y2^0xff)*Y1)>>8;		\
-	U = ((gint)(U1^0xff)*Y2+(gint)(Y2^0xff)*U1)>>8;		\
-	V = ((gint)(V1^0xff)*Y2+(gint)(Y2^0xff)*V1)>>8;		\
-	Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;			\
-	U = ((U*alpha)+(U1*(255-alpha)))>>8;			\
-	V = ((V*alpha)+(V1*(255-alpha)))>>8;			\
-        if (Y>255) {						\
-	  gint mult = MAX (0, 288-Y);				\
-	  U = ((U*mult) + (127*(32-mult)))>>5;			\
-	  V = ((V*mult) + (127*(32-mult)))>>5;			\
-	  Y = 255;						\
-	} else if (Y<0) {					\
-	  gint mult = MIN (32, -Y);				\
-	  U = ((U*(32-mult)) + (127*mult))>>5;			\
-	  V = ((V*(32-mult)) + (127*mult))>>5;			\
-	  Y = 0;						\
-	}							\
-        U = CLAMP(U, 0, 255);					\
+#define BLEND_EXCLUSION(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)          \
+        Y = ((gint)(Y1^0xff)*Y2+(gint)(Y2^0xff)*Y1)>>8;         \
+        U = ((gint)(U1^0xff)*Y2+(gint)(Y2^0xff)*U1)>>8;         \
+        V = ((gint)(V1^0xff)*Y2+(gint)(Y2^0xff)*V1)>>8;         \
+        Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;                    \
+        U = ((U*alpha)+(U1*(255-alpha)))>>8;                    \
+        V = ((V*alpha)+(V1*(255-alpha)))>>8;                    \
+        if (Y>255) {                                            \
+          gint mult = MAX (0, 288-Y);                           \
+          U = ((U*mult) + (127*(32-mult)))>>5;                  \
+          V = ((V*mult) + (127*(32-mult)))>>5;                  \
+          Y = 255;                                              \
+        } else if (Y<0) {                                       \
+          gint mult = MIN (32, -Y);                             \
+          U = ((U*(32-mult)) + (127*mult))>>5;                  \
+          V = ((V*(32-mult)) + (127*mult))>>5;                  \
+          Y = 0;                                                \
+        }                                                       \
+        U = CLAMP(U, 0, 255);                                   \
         V = CLAMP(V, 0, 255);
 
-#define BLEND_SOFTLIGHT(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)  	\
-	Y = (gint)Y1+(gint)Y2 - 127;				\
-	U = (gint)U1+(gint)U2 - 127;				\
-	V = (gint)V1+(gint)V2 - 127;				\
-	Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;			\
-	U = ((U*alpha)+(U1*(255-alpha)))>>8;			\
-	V = ((V*alpha)+(V1*(255-alpha)))>>8;			\
-        if (Y>255) {						\
-	  gint mult = MAX (0, 288-Y);				\
-	  U = ((U*mult) + (127*(32-mult)))>>5;			\
-	  V = ((V*mult) + (127*(32-mult)))>>5;			\
-	  Y = 255;						\
-	} else if (Y<0) {					\
-	  gint mult = MIN (32, -Y);				\
-	  U = ((U*(32-mult)) + (127*mult))>>5;			\
-	  V = ((V*(32-mult)) + (127*mult))>>5;			\
-	  Y = 0;						\
-	}							\
+#define BLEND_SOFTLIGHT(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)          \
+        Y = (gint)Y1+(gint)Y2 - 127;                            \
+        U = (gint)U1+(gint)U2 - 127;                            \
+        V = (gint)V1+(gint)V2 - 127;                            \
+        Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;                    \
+        U = ((U*alpha)+(U1*(255-alpha)))>>8;                    \
+        V = ((V*alpha)+(V1*(255-alpha)))>>8;                    \
+        if (Y>255) {                                            \
+          gint mult = MAX (0, 288-Y);                           \
+          U = ((U*mult) + (127*(32-mult)))>>5;                  \
+          V = ((V*mult) + (127*(32-mult)))>>5;                  \
+          Y = 255;                                              \
+        } else if (Y<0) {                                       \
+          gint mult = MIN (32, -Y);                             \
+          U = ((U*(32-mult)) + (127*mult))>>5;                  \
+          V = ((V*(32-mult)) + (127*mult))>>5;                  \
+          Y = 0;                                                \
+        }                                                       \
 
-#define BLEND_HARDLIGHT(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)  	\
-	Y = (gint)Y1+(gint)Y2*2 - 255;				\
-	U = (gint)U1+(gint)U2 - 127;				\
-	V = (gint)V1+(gint)V2 - 127;				\
-	Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;			\
-	U = ((U*alpha)+(U1*(255-alpha)))>>8;			\
-	V = ((V*alpha)+(V1*(255-alpha)))>>8;			\
-        if (Y>255) {						\
-	  gint mult = MAX (0, 288-Y);				\
-	  U = ((U*mult) + (127*(32-mult)))>>5;			\
-	  V = ((V*mult) + (127*(32-mult)))>>5;			\
-	  Y = 255;						\
-	} else if (Y<0) {					\
-	  gint mult = MIN (32, -Y);				\
-	  U = ((U*(32-mult)) + (127*mult))>>5;			\
-	  V = ((V*(32-mult)) + (127*mult))>>5;			\
-	  Y = 0;						\
-	}							\
+#define BLEND_HARDLIGHT(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)          \
+        Y = (gint)Y1+(gint)Y2*2 - 255;                          \
+        U = (gint)U1+(gint)U2 - 127;                            \
+        V = (gint)V1+(gint)V2 - 127;                            \
+        Y = ((Y*alpha)+(Y1*(255-alpha)))>>8;                    \
+        U = ((U*alpha)+(U1*(255-alpha)))>>8;                    \
+        V = ((V*alpha)+(V1*(255-alpha)))>>8;                    \
+        if (Y>255) {                                            \
+          gint mult = MAX (0, 288-Y);                           \
+          U = ((U*mult) + (127*(32-mult)))>>5;                  \
+          V = ((V*mult) + (127*(32-mult)))>>5;                  \
+          Y = 255;                                              \
+        } else if (Y<0) {                                       \
+          gint mult = MIN (32, -Y);                             \
+          U = ((U*(32-mult)) + (127*mult))>>5;                  \
+          V = ((V*(32-mult)) + (127*mult))>>5;                  \
+          Y = 0;                                                \
+        }                                                       \
 
 #define BLEND_MODE BLEND_NORMAL
 #if 0

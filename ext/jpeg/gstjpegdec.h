@@ -83,8 +83,8 @@ struct _GstJpegDec {
   /* negotiated state */
   gint     caps_framerate_numerator;
   gint     caps_framerate_denominator;
-  gint 	   caps_width;
-  gint 	   caps_height;
+  gint     caps_width;
+  gint     caps_height;
 
   struct jpeg_decompress_struct cinfo;
   struct GstJpegDecErrorMgr     jerr;

@@ -77,56 +77,56 @@ GstFlowReturn gst_ebml_last_write_result (GstEbmlWrite *ebml);
  * each element, but fill this one until a flush.
  */
 void    gst_ebml_write_set_cache     (GstEbmlWrite *ebml,
-				      guint         size);
+                                      guint         size);
 void    gst_ebml_write_flush_cache   (GstEbmlWrite *ebml);
 
 /*
  * Seeking.
  */
 void    gst_ebml_write_seek          (GstEbmlWrite *ebml,
-				      guint64       pos);
+                                      guint64       pos);
 
 /*
  * Data writing. 
  */
 void    gst_ebml_write_uint          (GstEbmlWrite *ebml,
-				      guint32       id,
-				      guint64       num);
+                                      guint32       id,
+                                      guint64       num);
 void    gst_ebml_write_sint          (GstEbmlWrite *ebml,
-				      guint32       id,
-				      gint64        num);
+                                      guint32       id,
+                                      gint64        num);
 void    gst_ebml_write_float         (GstEbmlWrite *ebml,
-				      guint32       id,
-				      gdouble       num);
+                                      guint32       id,
+                                      gdouble       num);
 void    gst_ebml_write_ascii         (GstEbmlWrite *ebml,
-				      guint32       id,
-				      const gchar  *str);
+                                      guint32       id,
+                                      const gchar  *str);
 void    gst_ebml_write_utf8          (GstEbmlWrite *ebml,
-				      guint32       id,
-				      const gchar  *str);
+                                      guint32       id,
+                                      const gchar  *str);
 void    gst_ebml_write_date          (GstEbmlWrite *ebml,
-				      guint32       id,
-				      gint64        date);
+                                      guint32       id,
+                                      gint64        date);
 guint64 gst_ebml_write_master_start  (GstEbmlWrite *ebml,
-				      guint32       id);
+                                      guint32       id);
 void    gst_ebml_write_master_finish (GstEbmlWrite *ebml,
-				      guint64       startpos);
+                                      guint64       startpos);
 void    gst_ebml_write_binary        (GstEbmlWrite *ebml,
-				      guint32       id,
-				      guchar       *binary,
-				      guint64       length);
+                                      guint32       id,
+                                      guchar       *binary,
+                                      guint64       length);
 void    gst_ebml_write_header        (GstEbmlWrite *ebml,
-				      gchar        *doctype,
-				      guint         version);
+                                      gchar        *doctype,
+                                      guint         version);
 
 /*
  * Note: this is supposed to be used only for media data.
  */
 void    gst_ebml_write_buffer_header (GstEbmlWrite *ebml,
-				      guint32       id,
-				      guint64       length);
+                                      guint32       id,
+                                      guint64       length);
 void    gst_ebml_write_buffer        (GstEbmlWrite *ebml,
-				      GstBuffer    *data);
+                                      GstBuffer    *data);
 
 /*
  * A hack, basically... See matroska-mux.c. I should actually
@@ -134,8 +134,8 @@ void    gst_ebml_write_buffer        (GstEbmlWrite *ebml,
  * works for now.
  */
 void    gst_ebml_replace_uint        (GstEbmlWrite *ebml,
-				      guint64       pos,
-				      guint64       num);
+                                      guint64       pos,
+                                      guint64       num);
 
 G_END_DECLS
 

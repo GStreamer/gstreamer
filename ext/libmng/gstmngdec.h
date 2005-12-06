@@ -30,10 +30,10 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_MNGDEC  	(gst_mngdec_get_type())
-#define GST_MNGDEC(obj)  	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MNGDEC,GstMngDec))
+#define GST_TYPE_MNGDEC         (gst_mngdec_get_type())
+#define GST_MNGDEC(obj)         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MNGDEC,GstMngDec))
 #define GST_MNGDEC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MNGDEC,GstMngDec))
-#define GST_IS_MNGDEC(obj) 	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MNGDEC))
+#define GST_IS_MNGDEC(obj)      (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MNGDEC))
 #define GST_IS_MNGDEC_CLASS(obj)(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MNGDEC))
 
 typedef struct _GstMngDec GstMngDec;

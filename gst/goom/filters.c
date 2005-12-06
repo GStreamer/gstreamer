@@ -5,9 +5,9 @@
  *  -ajout de zoomFilter()
  *  -copie de zoomFilter() en zoomFilterRGB(), gérant les 3 couleurs
  *  -optimisation de sinFilter (utilisant une table de sin)
- *	-asm
- *	-optimisation de la procedure de génération du buffer de transformation
- *		la vitesse est maintenant comprise dans [0..128] au lieu de [0..100]
+ *      -asm
+ *      -optimisation de la procedure de génération du buffer de transformation
+ *              la vitesse est maintenant comprise dans [0..128] au lieu de [0..100]
 */
 
 /*#define _DEBUG_PIXEL; */
@@ -185,7 +185,7 @@ calculatePXandPY (int x, int y, int *px, int *py)
 static inline void
 setPixelRGB (Uint * buffer, Uint x, Uint y, Color c)
 {
-/*		buffer[ y*WIDTH + x ] = (c.r<<16)|(c.v<<8)|c.b */
+/*              buffer[ y*WIDTH + x ] = (c.r<<16)|(c.v<<8)|c.b */
 #ifdef _DEBUG_PIXEL
   if (x + y * resolx >= resolx * resoly) {
     fprintf (stderr, "setPixel ERROR : hors du tableau... %i, %i\n", x, y);
@@ -245,7 +245,7 @@ getPixelRGB (Uint * buffer, Uint x, Uint y, Color * c)
       (unsigned char *) (buffer + (x + y * resolx)));
   c->v = *(unsigned char *) (++tmp8);
   c->r = *(unsigned char *) (++tmp8);
-/*	*c = (Color) buffer[x+y*WIDTH] ; */
+/*      *c = (Color) buffer[x+y*WIDTH] ; */
 #endif
 }
 
@@ -273,7 +273,7 @@ getPixelRGB_ (Uint * buffer, Uint x, Color * c)
   c->b = *(unsigned char *) (tmp8 = (unsigned char *) (buffer + x));
   c->v = *(unsigned char *) (++tmp8);
   c->r = *(unsigned char *) (++tmp8);
-/*	*c = (Color) buffer[x+y*WIDTH] ; */
+/*      *c = (Color) buffer[x+y*WIDTH] ; */
 #endif
 }
 
@@ -452,8 +452,8 @@ zoomFilterFastRGB (Uint * pix1,
           npx10 = (px / sqrtperte);
           npy10 = (py / sqrtperte);
 
-/*			  if (npx10 >= prevX) fprintf(stderr,"error npx:%d",npx10);
-			  if (npy10 >= prevY) fprintf(stderr,"error npy:%d",npy10);
+/*                        if (npx10 >= prevX) fprintf(stderr,"error npx:%d",npx10);
+                          if (npy10 >= prevY) fprintf(stderr,"error npy:%d",npy10);
 */
           coefh = px % sqrtperte;
           coefv = py % sqrtperte;

@@ -41,8 +41,8 @@ GST_ELEMENT_DETAILS ("Audio Source (OSS)",
     "Capture from a sound card via OSS",
     "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
 
-#define DEFAULT_DEVICE		"/dev/dsp"
-#define DEFAULT_DEVICE_NAME	""
+#define DEFAULT_DEVICE          "/dev/dsp"
+#define DEFAULT_DEVICE_NAME     ""
 
 enum
 {
@@ -234,29 +234,29 @@ ilog2 (gint x)
   return (x & 0x0000003f) - 1;
 }
 
-#define SET_PARAM(_oss, _name, _val) 		\
-G_STMT_START {					\
-  int _tmp = _val;				\
-  if (ioctl(_oss->fd, _name, &_tmp) == -1) {	\
+#define SET_PARAM(_oss, _name, _val)            \
+G_STMT_START {                                  \
+  int _tmp = _val;                              \
+  if (ioctl(_oss->fd, _name, &_tmp) == -1) {    \
     GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ, \
-        ("Unable to set param "G_STRINGIFY (_name)": %s", 	 \
-		g_strerror (errno)),		\
-        (NULL));				\
-    return FALSE;				\
-  }						\
-  GST_DEBUG_OBJECT (_oss, G_STRINGIFY (_name)" %d", _tmp);	\
+        ("Unable to set param "G_STRINGIFY (_name)": %s",        \
+                g_strerror (errno)),            \
+        (NULL));                                \
+    return FALSE;                               \
+  }                                             \
+  GST_DEBUG_OBJECT (_oss, G_STRINGIFY (_name)" %d", _tmp);      \
 } G_STMT_END
 
-#define GET_PARAM(_oss, _name, _val) 	\
-G_STMT_START {					\
-  if (ioctl(oss->fd, _name, _val) == -1) {	\
+#define GET_PARAM(_oss, _name, _val)    \
+G_STMT_START {                                  \
+  if (ioctl(oss->fd, _name, _val) == -1) {      \
     GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ, \
-        ("Unable to get param "G_STRINGIFY (_name)": %s", 	 \
-		g_strerror (errno)),		\
-        (NULL));				\
-    return FALSE;				\
-  }						\
-  GST_DEBUG_OBJECT (_oss, G_STRINGIFY (_name)" %d", _val);	\
+        ("Unable to get param "G_STRINGIFY (_name)": %s",        \
+                g_strerror (errno)),            \
+        (NULL));                                \
+    return FALSE;                               \
+  }                                             \
+  GST_DEBUG_OBJECT (_oss, G_STRINGIFY (_name)" %d", _val);      \
 } G_STMT_END
 
 static gint

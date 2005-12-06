@@ -80,10 +80,10 @@ struct _GstOsxAudioElement
 struct _GstOsxAudioElementClass {
   GstElementClass klass;
 
-  GList		*device_combinations;
+  GList         *device_combinations;
 };
 
-GType		gst_osxaudioelement_get_type		(void);
+GType           gst_osxaudioelement_get_type            (void);
 int read_buffer(GstOsxAudioElement* osxaudio, unsigned char* data);
 int write_buffer(GstOsxAudioElement* osxaudio, unsigned char* data, int len);
 G_END_DECLS

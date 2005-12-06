@@ -52,14 +52,14 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_QUALITY		8.0
-#define DEFAULT_BITRATE		0
-#define DEFAULT_VBR		FALSE
-#define DEFAULT_ABR		0
-#define DEFAULT_VAD		FALSE
-#define DEFAULT_DTX		FALSE
-#define DEFAULT_COMPLEXITY	3
-#define DEFAULT_NFRAMES		1
+#define DEFAULT_QUALITY         8.0
+#define DEFAULT_BITRATE         0
+#define DEFAULT_VBR             FALSE
+#define DEFAULT_ABR             0
+#define DEFAULT_VAD             FALSE
+#define DEFAULT_DTX             FALSE
+#define DEFAULT_COMPLEXITY      3
+#define DEFAULT_NFRAMES         1
 
 enum
 {

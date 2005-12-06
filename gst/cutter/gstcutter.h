@@ -51,21 +51,21 @@ struct _GstCutter
 
   GstPad *sinkpad, *srcpad;
 
-  double threshold_level;	/* level below which to cut */
-  double threshold_length;	/* how long signal has to remain
-				 * below this level before cutting */
+  double threshold_level;       /* level below which to cut */
+  double threshold_length;      /* how long signal has to remain
+                                 * below this level before cutting */
 
-  double silent_run_length;	/* how long has it been below threshold ? */
+  double silent_run_length;     /* how long has it been below threshold ? */
   gboolean silent;
 
-  double pre_length;		/* how long can the pre-record buffer be ? */
+  double pre_length;            /* how long can the pre-record buffer be ? */
   double pre_run_length;        /* how long is it currently ? */
-  GList *pre_buffer;		/* list of GstBuffers in pre-record buffer */
-  gboolean leaky;		/* do we leak an overflowing prebuffer ? */
+  GList *pre_buffer;            /* list of GstBuffers in pre-record buffer */
+  gboolean leaky;               /* do we leak an overflowing prebuffer ? */
 
-  gboolean have_caps;		/* did we get the needed caps yet ? */
-  gint width;			/* bit width of data */
-  long max_sample;		/* maximum sample value */
+  gboolean have_caps;           /* did we get the needed caps yet ? */
+  gint width;                   /* bit width of data */
+  long max_sample;              /* maximum sample value */
 };
 
 struct _GstCutterClass

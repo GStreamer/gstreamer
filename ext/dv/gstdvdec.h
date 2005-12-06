@@ -46,29 +46,29 @@ typedef struct _GstDVDecClass GstDVDecClass;
 
 
 struct _GstDVDec {
-  GstElement 	 element;
+  GstElement     element;
 
-  GstPad 	*sinkpad;
+  GstPad        *sinkpad;
   GstPad        *srcpad;
 
-  dv_decoder_t 	*decoder;
-  gboolean	 clamp_luma;
-  gboolean	 clamp_chroma;
-  gint		 quality;
+  dv_decoder_t  *decoder;
+  gboolean       clamp_luma;
+  gboolean       clamp_chroma;
+  gint           quality;
 
-  gint 		 frame_len;
+  gint           frame_len;
   gboolean       PAL;
   gint           framerate_numerator;
   gint           framerate_denominator;
-  gint		 height;
-  gboolean	 wide;
+  gint           height;
+  gboolean       wide;
 
   /* negotiated output */
   dv_color_space_t space;
-  gint 		 bpp;
+  gint           bpp;
   
-  gint		 video_offset;
-  gint		 drop_factor;
+  gint           video_offset;
+  gint           drop_factor;
   gboolean       headers_seen;
 };
 

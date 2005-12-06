@@ -22,8 +22,8 @@
 #endif
 #include "gstudpsink.h"
 
-#define UDP_DEFAULT_HOST	"localhost"
-#define UDP_DEFAULT_PORT	4951
+#define UDP_DEFAULT_HOST        "localhost"
+#define UDP_DEFAULT_PORT        4951
 
 /* elementfactory information */
 static GstElementDetails gst_udpsink_details =

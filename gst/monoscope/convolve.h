@@ -44,8 +44,8 @@ convolve_state *convolve_init (void);
 void convolve_close (convolve_state * state);
 
 int convolve_match (const int * lastchoice,
-		    const short int * input,
-		    convolve_state * state);
+                    const short int * input,
+                    convolve_state * state);
 
 #ifdef __cplusplus
 }

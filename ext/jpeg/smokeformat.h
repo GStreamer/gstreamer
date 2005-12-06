@@ -26,16 +26,16 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define IDX_TYPE	0
-#define IDX_WIDTH	1
-#define IDX_HEIGHT	3
-#define IDX_FPS_NUM	5
-#define IDX_FPS_DENOM	9
-#define IDX_FLAGS	13
-#define IDX_NUM_BLOCKS	14
-#define IDX_SIZE	16
-#define IDX_BLOCKS	18
-#define OFFS_PICT	18
+#define IDX_TYPE        0
+#define IDX_WIDTH       1
+#define IDX_HEIGHT      3
+#define IDX_FPS_NUM     5
+#define IDX_FPS_DENOM   9
+#define IDX_FLAGS       13
+#define IDX_NUM_BLOCKS  14
+#define IDX_SIZE        16
+#define IDX_BLOCKS      18
+#define OFFS_PICT       18
 
 
 #ifdef __cplusplus

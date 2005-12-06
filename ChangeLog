@@ -1,3 +1,110 @@
+2005-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/aalib/gstaasink.h:
+	* ext/cairo/gsttextoverlay.h:
+	* ext/dv/gstdvdec.h:
+	* ext/dv/gstdvdemux.c:
+	* ext/dv/gstdvdemux.h:
+	* ext/esd/esdsink.h:
+	* ext/flac/flac_compat.h:
+	* ext/flac/gstflacdec.h:
+	* ext/flac/gstflacenc.h:
+	* ext/gconf/gconf.h:
+	* ext/gconf/gstgconfaudiosink.h:
+	* ext/gconf/gstgconfvideosink.h:
+	* ext/gdk_pixbuf/gstgdkanimation.h:
+	* ext/jpeg/gstjpegdec.h:
+	* ext/jpeg/smokecodec.h:
+	* ext/jpeg/smokeformat.h:
+	* ext/ladspa/gstsignalprocessor.h:
+	* ext/ladspa/search.c: (LADSPAPluginSearch):
+	* ext/ladspa/utils.h:
+	* ext/libmng/gstmng.c:
+	* ext/libmng/gstmngdec.h:
+	* ext/libmng/gstmngenc.c:
+	* ext/libmng/gstmngenc.h:
+	* ext/libpng/gstpng.c:
+	* ext/libpng/gstpngenc.c:
+	* ext/libpng/gstpngenc.h:
+	* ext/shout2/gstshout2.h:
+	* ext/speex/gstspeexdec.h:
+	* ext/speex/gstspeexenc.c:
+	* ext/speex/gstspeexenc.h:
+	* gst/auparse/gstauparse.c: (gst_auparse_chain):
+	* gst/autodetect/gstautoaudiosink.h:
+	* gst/autodetect/gstautovideosink.h:
+	* gst/avi/gstavidemux.h:
+	* gst/cutter/gstcutter.c: (gst_cutter_chain),
+	(gst_cutter_set_property), (gst_cutter_get_caps):
+	* gst/cutter/gstcutter.h:
+	* gst/debug/tests.c: (md5_process_block):
+	* gst/debug/tests.h:
+	* gst/effectv/gstwarp.c:
+	* gst/flx/flx_fmt.h:
+	* gst/flx/gstflxdec.h:
+	* gst/goom/filters.c: (setPixelRGB), (getPixelRGB), (getPixelRGB_),
+	(zoomFilterFastRGB):
+	* gst/goom/filters.h:
+	* gst/goom/goom_tools.h:
+	* gst/law/alaw-encode.c:
+	* gst/level/gstlevel.c:
+	* gst/level/gstlevel.h:
+	* gst/matroska/ebml-write.h:
+	* gst/matroska/matroska-demux.h:
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-mux.h:
+	* gst/monoscope/convolve.c: (convolve_match):
+	* gst/monoscope/convolve.h:
+	* gst/multipart/multipartmux.c:
+	* gst/oldcore/gstaggregator.c:
+	* gst/oldcore/gstaggregator.h:
+	* gst/oldcore/gstmd5sink.c: (md5_process_block):
+	* gst/oldcore/gstmd5sink.h:
+	* gst/oldcore/gstmultifilesrc.c:
+	* gst/oldcore/gstmultifilesrc.h:
+	* gst/oldcore/gstpipefilter.h:
+	* gst/oldcore/gstshaper.h:
+	* gst/rtp/gstrtpL16depay.h:
+	* gst/rtp/gstrtpL16pay.h:
+	* gst/rtp/gstrtpdepay.h:
+	* gst/rtp/gstrtpmp4vpay.c:
+	* gst/rtp/gstrtpmp4vpay.h:
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/rtsp/gstrtspsrc.h:
+	* gst/rtsp/rtspconnection.h:
+	* gst/rtsp/rtspdefs.h:
+	* gst/rtsp/rtspmessage.h:
+	* gst/rtsp/rtsptransport.h:
+	* gst/rtsp/rtspurl.c:
+	* gst/rtsp/rtspurl.h:
+	* gst/rtsp/sdpmessage.c:
+	* gst/rtsp/sdpmessage.h:
+	* gst/smpte/barboxwipes.c:
+	* gst/smpte/gstmask.h:
+	* gst/smpte/gstsmpte.h:
+	* gst/smpte/paint.c:
+	* gst/smpte/paint.h:
+	* gst/udp/gstdynudpsink.h:
+	* gst/udp/gstmultiudpsink.h:
+	* gst/udp/gstudpsink.c:
+	* gst/udp/gstudpsink.h:
+	* gst/udp/gstudpsrc.c:
+	* gst/videomixer/videomixer.c:
+	* gst/wavenc/riff.h:
+	* gst/wavparse/gstwavparse.h:
+	* sys/oss/gstossdmabuffer.h:
+	* sys/oss/gstossmixer.h:
+	* sys/oss/gstossmixerelement.h:
+	* sys/oss/gstossmixertrack.h:
+	* sys/oss/gstosssink.c:
+	* sys/oss/gstosssink.h:
+	* sys/oss/gstosssrc.c:
+	* sys/oss/gstosssrc.h:
+	* sys/osxaudio/gstosxaudioelement.h:
+	* sys/osxaudio/gstosxaudiosink.h:
+	* sys/osxaudio/gstosxaudiosrc.h:
+	  expand tabs
+
 === release 0.10.0 ===
 
 2005-12-05   <thomas (at) apestaart (dot) org>

@@ -45,7 +45,7 @@ struct _GstOssSink {
   GstAudioSink    sink;
 
   gchar *device;
-  gint 	 fd;
+  gint   fd;
   gint   bytes_per_sample;
 
   GstCaps *probed_caps;

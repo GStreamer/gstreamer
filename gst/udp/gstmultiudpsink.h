@@ -40,11 +40,11 @@ G_BEGIN_DECLS
 #include <arpa/inet.h>
 #include "gstudp.h"
 
-#define GST_TYPE_MULTIUDPSINK 		(gst_multiudpsink_get_type())
-#define GST_MULTIUDPSINK(obj) 		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTIUDPSINK,GstMultiUDPSink))
-#define GST_MULTIUDPSINK_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTIUDPSINK,GstMultiUDPSink))
-#define GST_IS_MULTIUDPSINK(obj) 	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTIUDPSINK))
-#define GST_IS_MULTIUDPSINK_CLASS(obj) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIUDPSINK))
+#define GST_TYPE_MULTIUDPSINK           (gst_multiudpsink_get_type())
+#define GST_MULTIUDPSINK(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTIUDPSINK,GstMultiUDPSink))
+#define GST_MULTIUDPSINK_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTIUDPSINK,GstMultiUDPSink))
+#define GST_IS_MULTIUDPSINK(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTIUDPSINK))
+#define GST_IS_MULTIUDPSINK_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIUDPSINK))
 
 typedef struct _GstMultiUDPSink GstMultiUDPSink;
 typedef struct _GstMultiUDPSinkClass GstMultiUDPSinkClass;
@@ -66,8 +66,8 @@ struct _GstMultiUDPSink {
 
   int sock;
 
-  GMutex	*client_lock;
-  GList		*clients;
+  GMutex        *client_lock;
+  GList         *clients;
 };
 
 struct _GstMultiUDPSinkClass {
@@ -80,16 +80,16 @@ struct _GstMultiUDPSinkClass {
   GValueArray*  (*get_stats)    (GstMultiUDPSink *sink, const gchar *host, gint port);
 
   /* signals */
-  void 		(*client_added) (GstElement *element, const gchar *host, gint port);
-  void 		(*client_removed) (GstElement *element, const gchar *host, gint port);
+  void          (*client_added) (GstElement *element, const gchar *host, gint port);
+  void          (*client_removed) (GstElement *element, const gchar *host, gint port);
 };
 
 GType gst_multiudpsink_get_type(void);
 
-void		gst_multiudpsink_add		(GstMultiUDPSink *sink, const gchar *host, gint port);
-void		gst_multiudpsink_remove		(GstMultiUDPSink *sink, const gchar *host, gint port);
-void		gst_multiudpsink_clear		(GstMultiUDPSink *sink);
-GValueArray*	gst_multiudpsink_get_stats	(GstMultiUDPSink *sink, const gchar *host, gint port);
+void            gst_multiudpsink_add            (GstMultiUDPSink *sink, const gchar *host, gint port);
+void            gst_multiudpsink_remove         (GstMultiUDPSink *sink, const gchar *host, gint port);
+void            gst_multiudpsink_clear          (GstMultiUDPSink *sink);
+GValueArray*    gst_multiudpsink_get_stats      (GstMultiUDPSink *sink, const gchar *host, gint port);
 
 G_END_DECLS
 

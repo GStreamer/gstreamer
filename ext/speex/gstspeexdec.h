@@ -48,30 +48,30 @@ typedef struct _GstSpeexDecClass GstSpeexDecClass;
 #define DEC_MAX_FRAME_SIZE 2000
 
 struct _GstSpeexDec {
-  GstElement		element;
+  GstElement            element;
 
   /* pads */
-  GstPad		*sinkpad,
-			*srcpad;
+  GstPad                *sinkpad,
+                        *srcpad;
 
-  void			*state;
-  SpeexStereoState	stereo;
+  void                  *state;
+  SpeexStereoState      stereo;
 #ifdef SPEEX_1_0
-  SpeexMode		*mode;
+  SpeexMode             *mode;
 #else
-  const SpeexMode	*mode;
+  const SpeexMode       *mode;
 #endif
-  SpeexHeader		*header;
-  SpeexCallback		callback;
-  SpeexBits		bits;
+  SpeexHeader           *header;
+  SpeexCallback         callback;
+  SpeexBits             bits;
 
-  gfloat		output[DEC_MAX_FRAME_SIZE];
+  gfloat                output[DEC_MAX_FRAME_SIZE];
 
-  gboolean		enh;
+  gboolean              enh;
 
-  gint			frame_size;
-  guint64		samples_out;
-  guint64		packetno;
+  gint                  frame_size;
+  guint64               samples_out;
+  guint64               packetno;
 };
 
 struct _GstSpeexDecClass {

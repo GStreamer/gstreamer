@@ -27,11 +27,11 @@
 G_BEGIN_DECLS
 
 
-#define GST_OSS_MIXER_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSS_MIXER_ELEMENT,GstOssMixerElement))
-#define GST_OSS_MIXER_ELEMENT_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSS_MIXER_ELEMENT,GstOssMixerElementClass))
-#define GST_IS_OSS_MIXER_ELEMENT(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSS_MIXER_ELEMENT))
-#define GST_IS_OSS_MIXER_ELEMENT_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSS_MIXER_ELEMENT))
-#define GST_TYPE_OSS_MIXER_ELEMENT		(gst_oss_mixer_element_get_type())
+#define GST_OSS_MIXER_ELEMENT(obj)              (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSS_MIXER_ELEMENT,GstOssMixerElement))
+#define GST_OSS_MIXER_ELEMENT_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSS_MIXER_ELEMENT,GstOssMixerElementClass))
+#define GST_IS_OSS_MIXER_ELEMENT(obj)           (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSS_MIXER_ELEMENT))
+#define GST_IS_OSS_MIXER_ELEMENT_CLASS(obj)     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSS_MIXER_ELEMENT))
+#define GST_TYPE_OSS_MIXER_ELEMENT              (gst_oss_mixer_element_get_type())
 
 
 typedef struct _GstOssMixerElement GstOssMixerElement;
@@ -39,17 +39,17 @@ typedef struct _GstOssMixerElementClass GstOssMixerElementClass;
 
 
 struct _GstOssMixerElement {
-  GstElement		parent;
+  GstElement            parent;
 
-  GstOssMixer		*mixer;
+  GstOssMixer           *mixer;
 };
 
 struct _GstOssMixerElementClass {
-  GstElementClass	parent;
+  GstElementClass       parent;
 };
 
 
-GType		gst_oss_mixer_element_get_type		(void);
+GType           gst_oss_mixer_element_get_type          (void);
 
 
 G_END_DECLS

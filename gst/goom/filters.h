@@ -7,16 +7,16 @@
 
 typedef struct
 {
-	int vitesse ;
-	unsigned char pertedec ;
-	unsigned char sqrtperte ;
-	int middleX,middleY ;
-	char reverse ;
-	char mode ;
-	/** @since June 2001 */
-	int hPlaneEffect ;
-	int vPlaneEffect ;
-	char noisify ;
+        int vitesse ;
+        unsigned char pertedec ;
+        unsigned char sqrtperte ;
+        int middleX,middleY ;
+        char reverse ;
+        char mode ;
+        /** @since June 2001 */
+        int hPlaneEffect ;
+        int vPlaneEffect ;
+        char noisify ;
 } ZoomFilterData ;
 
 
@@ -28,8 +28,8 @@ typedef struct
 #define WATER_MODE 5
 
 void pointFilter(guint32 *pix1, Color c,
-				 float t1, float t2, float t3, float t4,
-				 guint32 cycle);
+                                 float t1, float t2, float t3, float t4,
+                                 guint32 cycle);
 
 /* filtre de zoom :
  le contenu de pix1 est copie dans pix2, avec l'effet appliqué
@@ -43,9 +43,9 @@ Uint middleY);
 */
 
 void zoomFilterFastRGB (guint32 *pix1,
-						guint32 *pix2,
-						ZoomFilterData *zf,
-						guint32 resx, guint32 resy);
+                                                guint32 *pix2,
+                                                ZoomFilterData *zf,
+                                                guint32 resx, guint32 resy);
 
 
 /* filtre sin :
@@ -58,11 +58,11 @@ void zoomFilterFastRGB (guint32 *pix1,
 */
 /*
 void sinFilter(Uint *pix1,Uint *pix2,
-			   Uint cycle,
-			   Uint mode,
-			   Uint rate,
-			   char lenght,
-			   Uint speed);
+                           Uint cycle,
+                           Uint mode,
+                           Uint rate,
+                           char lenght,
+                           Uint speed);
 */
 
 #define SIN_MUL 1

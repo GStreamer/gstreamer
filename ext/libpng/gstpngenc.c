@@ -25,7 +25,7 @@
 #include <gst/video/video.h>
 #include <zlib.h>
 
-#define MAX_HEIGHT		4096
+#define MAX_HEIGHT              4096
 
 
 static GstElementDetails gst_pngenc_details = {
@@ -45,9 +45,9 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_SNAPSHOT		TRUE
-/* #define DEFAULT_NEWMEDIA		FALSE */
-#define DEFAULT_COMPRESSION_LEVEL	6
+#define DEFAULT_SNAPSHOT                TRUE
+/* #define DEFAULT_NEWMEDIA             FALSE */
+#define DEFAULT_COMPRESSION_LEVEL       6
 
 enum
 {

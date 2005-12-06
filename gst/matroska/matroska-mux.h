@@ -84,7 +84,7 @@ typedef struct _GstMatroskaMux {
   GstElement     element;
 
   /* pads */
-  GstPad 	*srcpad;
+  GstPad        *srcpad;
   GstCollectPads *collect;
   GstEbmlWrite *ebml_write;
 

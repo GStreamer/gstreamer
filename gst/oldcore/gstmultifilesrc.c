@@ -78,7 +78,7 @@ static void gst_multifilesrc_get_property (GObject * object, guint prop_id,
 
 static GstData *gst_multifilesrc_get (GstPad * pad);
 
-/*static GstBuffer *	gst_multifilesrc_get_region	(GstPad *pad,GstRegionType type,guint64 offset,guint64 len);*/
+/*static GstBuffer *    gst_multifilesrc_get_region     (GstPad *pad,GstRegionType type,guint64 offset,guint64 len);*/
 
 static GstStateChangeReturn gst_multifilesrc_change_state (GstElement *
     element);

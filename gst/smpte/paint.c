@@ -75,75 +75,75 @@ gst_smpte_paint_hbox (guint32 * dest, gint stride,
   }
 }
 
-#define STEP_3D_LINE(dxabs,dyabs,dzabs,sdx,sdy,sdz,xr,yr,zr,px,py,pz) 		\
-G_STMT_START { 						\
-  if (dxabs >= dyabs && dxabs >= dzabs) {		\
-    yr += dyabs;					\
-    zr += dzabs;					\
-    if (yr >= dxabs) {					\
-      py += sdy;					\
-      yr -= dxabs;					\
-    }							\
-    if (zr >= dzabs) {					\
-      pz += sdz;					\
-      zr -= dxabs;					\
-    }							\
-    px += sdx;						\
-  } else if (dyabs >= dxabs && dyabs >= dzabs) {	\
-    xr += dxabs;					\
-    zr += dzabs;					\
-    if (xr >= dyabs) {					\
-      px += sdx;					\
-      xr -= dyabs;					\
-    }							\
-    if (zr >= dzabs) {					\
-      pz += sdz;					\
-      zr -= dyabs;					\
-    }							\
-    py += sdy;						\
-  } else {						\
-    yr += dyabs;					\
-    xr += dxabs;					\
-    if (yr >= dyabs) {					\
-      py += sdy;					\
-      yr -= dzabs;					\
-    }							\
-    if (xr >= dyabs) {					\
-      px += sdx;					\
-      xr -= dzabs;					\
-    }							\
-    pz += sdz;						\
-  }							\
+#define STEP_3D_LINE(dxabs,dyabs,dzabs,sdx,sdy,sdz,xr,yr,zr,px,py,pz)           \
+G_STMT_START {                                          \
+  if (dxabs >= dyabs && dxabs >= dzabs) {               \
+    yr += dyabs;                                        \
+    zr += dzabs;                                        \
+    if (yr >= dxabs) {                                  \
+      py += sdy;                                        \
+      yr -= dxabs;                                      \
+    }                                                   \
+    if (zr >= dzabs) {                                  \
+      pz += sdz;                                        \
+      zr -= dxabs;                                      \
+    }                                                   \
+    px += sdx;                                          \
+  } else if (dyabs >= dxabs && dyabs >= dzabs) {        \
+    xr += dxabs;                                        \
+    zr += dzabs;                                        \
+    if (xr >= dyabs) {                                  \
+      px += sdx;                                        \
+      xr -= dyabs;                                      \
+    }                                                   \
+    if (zr >= dzabs) {                                  \
+      pz += sdz;                                        \
+      zr -= dyabs;                                      \
+    }                                                   \
+    py += sdy;                                          \
+  } else {                                              \
+    yr += dyabs;                                        \
+    xr += dxabs;                                        \
+    if (yr >= dyabs) {                                  \
+      py += sdy;                                        \
+      yr -= dzabs;                                      \
+    }                                                   \
+    if (xr >= dyabs) {                                  \
+      px += sdx;                                        \
+      xr -= dzabs;                                      \
+    }                                                   \
+    pz += sdz;                                          \
+  }                                                     \
 } G_STMT_END
 
-#define SWAP_INT(a,b) 		\
-G_STMT_START { 			\
-  gint tmp;			\
-  tmp = (a);			\
-  (a) = (b);			\
-  (b) = (tmp);			\
+#define SWAP_INT(a,b)           \
+G_STMT_START {                  \
+  gint tmp;                     \
+  tmp = (a);                    \
+  (a) = (b);                    \
+  (b) = (tmp);                  \
 } G_STMT_END
 
 #define SIGN(a) ((a) < 0 ? -1 : 1)
 
 #define PREPARE_3D_LINE(x0,y0,z0,x1,y1,z1,dxabs,dyabs,dzabs,sdx,sdy,sdz,xr,yr,zr,px,py,pz)\
-G_STMT_START { 			\
-  gint dx, dy, dz;		\
-  dx = x1 - x0;			\
-  dy = y1 - y0;			\
-  dz = z1 - z0;			\
-  dxabs = abs (dx);		\
-  dyabs = abs (dy);		\
-  dzabs = abs (dz);		\
-  sdx = SIGN (dx);		\
-  sdy = SIGN (dy);		\
-  sdz = SIGN (dz);		\
-  xr = dxabs >> 1;		\
-  yr = dyabs >> 1;		\
-  zr = dzabs >> 1;		\
-  px = x0;			\
-  py = y0;			\
-  pz = z0;			\
+G_STMT_START {                  \
+  gint dx, dy, dz;              \
+  dx = x1 - x0;                 \
+  dy = y1 - y0;                 \
+  dz = z1 - z0;                 \
+  dxabs = abs (dx);             \
+  dyabs = abs (dy);             \
+  dzabs = abs (dz);             \
+  sdx = SIGN (dx);              \
+  sdy = SIGN (dy);              \
+  sdz = SIGN (dz);              \
+  xr = dxabs >> 1;              \
+  yr = dyabs >> 1;              \
+  zr = dzabs >> 1;              \
+  px = x0;                      \
+  py = y0;                      \
+  pz = z0;                      \
 } G_STMT_END
 
 void

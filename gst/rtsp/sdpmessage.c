@@ -22,51 +22,51 @@
 
 #include "sdpmessage.h"
 
-#define FREE_STRING(field)	g_free ((field)); (field) = NULL;
-#define FREE_ARRAY(field)	\
-G_STMT_START {			\
-  if (field)			\
-    g_array_free (field, TRUE);	\
-  field = NULL;			\
+#define FREE_STRING(field)      g_free ((field)); (field) = NULL;
+#define FREE_ARRAY(field)       \
+G_STMT_START {                  \
+  if (field)                    \
+    g_array_free (field, TRUE); \
+  field = NULL;                 \
 } G_STMT_END
-#define REPLACE_STRING(field,val)	FREE_STRING(field);field=g_strdup (val);
+#define REPLACE_STRING(field,val)       FREE_STRING(field);field=g_strdup (val);
 
-#define INIT_ARRAY(field,type)	\
-G_STMT_START {			\
-  if (field)			\
-    g_array_set_size (field,0);	\
-  else				\
-    field = g_array_new (FALSE, TRUE, sizeof(type));	\
+#define INIT_ARRAY(field,type)  \
+G_STMT_START {                  \
+  if (field)                    \
+    g_array_set_size (field,0); \
+  else                          \
+    field = g_array_new (FALSE, TRUE, sizeof(type));    \
 } G_STMT_END
 
-#define DEFINE_STRING_SETTER(field)					\
-RTSPResult sdp_message_set_##field (SDPMessage *msg, gchar *val) {	\
-  g_free (msg->field);							\
-  msg->field = g_strdup (val);						\
-  return RTSP_OK;							\
+#define DEFINE_STRING_SETTER(field)                                     \
+RTSPResult sdp_message_set_##field (SDPMessage *msg, gchar *val) {      \
+  g_free (msg->field);                                                  \
+  msg->field = g_strdup (val);                                          \
+  return RTSP_OK;                                                       \
 }
-#define DEFINE_STRING_GETTER(field)					\
-char* sdp_message_get_##field (SDPMessage *msg) {			\
-  return msg->field;							\
+#define DEFINE_STRING_GETTER(field)                                     \
+char* sdp_message_get_##field (SDPMessage *msg) {                       \
+  return msg->field;                                                    \
 }
 
-#define DEFINE_ARRAY_LEN(field)						\
-gint sdp_message_##field##_len (SDPMessage *msg) {			\
-  return ((msg)->field->len);						\
+#define DEFINE_ARRAY_LEN(field)                                         \
+gint sdp_message_##field##_len (SDPMessage *msg) {                      \
+  return ((msg)->field->len);                                           \
 }
-#define DEFINE_ARRAY_GETTER(method,field,type)					\
-type sdp_message_get_##method (SDPMessage *msg, gint i) {		\
-  return g_array_index ((msg)->field, type, i);				\
+#define DEFINE_ARRAY_GETTER(method,field,type)                                  \
+type sdp_message_get_##method (SDPMessage *msg, gint i) {               \
+  return g_array_index ((msg)->field, type, i);                         \
 }
-#define DEFINE_ARRAY_P_GETTER(method,field,type)					\
-type * sdp_message_get_##method (SDPMessage *msg, gint i) {		\
-  return &g_array_index ((msg)->field, type, i);				\
+#define DEFINE_ARRAY_P_GETTER(method,field,type)                                        \
+type * sdp_message_get_##method (SDPMessage *msg, gint i) {             \
+  return &g_array_index ((msg)->field, type, i);                                \
 }
-#define DEFINE_ARRAY_ADDER(method,field,type,dup_method)			\
-RTSPResult sdp_message_add_##method (SDPMessage *msg, type val) {	\
-  type v = dup_method(val);						\
-  g_array_append_val((msg)->field, v);					\
-  return RTSP_OK;							\
+#define DEFINE_ARRAY_ADDER(method,field,type,dup_method)                        \
+RTSPResult sdp_message_add_##method (SDPMessage *msg, type val) {       \
+  type v = dup_method(val);                                             \
+  g_array_append_val((msg)->field, v);                                  \
+  return RTSP_OK;                                                       \
 }
 
 

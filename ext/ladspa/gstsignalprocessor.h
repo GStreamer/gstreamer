@@ -29,12 +29,12 @@
 G_BEGIN_DECLS
 
 
-#define GST_TYPE_SIGNAL_PROCESSOR	  (gst_signal_processor_get_type())
-#define GST_SIGNAL_PROCESSOR(obj)	  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SIGNAL_PROCESSOR,GstSignalProcessor))
+#define GST_TYPE_SIGNAL_PROCESSOR         (gst_signal_processor_get_type())
+#define GST_SIGNAL_PROCESSOR(obj)         (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SIGNAL_PROCESSOR,GstSignalProcessor))
 #define GST_SIGNAL_PROCESSOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SIGNAL_PROCESSOR,GstSignalProcessorClass))
 #define GST_SIGNAL_PROCESSOR_GET_CLASS(obj) \
-	(G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_SIGNAL_PROCESSOR,GstSignalProcessorClass))
-#define GST_IS_SIGNAL_PROCESSOR(obj)	  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SIGNAL_PROCESSOR))
+        (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_SIGNAL_PROCESSOR,GstSignalProcessorClass))
+#define GST_IS_SIGNAL_PROCESSOR(obj)      (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SIGNAL_PROCESSOR))
 #define GST_IS_SIGNAL_PROCESSOR_CLASS(obj)(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SIGNAL_PROCESSOR))
 
 
@@ -43,7 +43,7 @@ typedef struct _GstSignalProcessorClass GstSignalProcessorClass;
 
 
 struct _GstSignalProcessor {
-  GstElement	 element;
+  GstElement     element;
 
   GstCaps *caps;
 
@@ -74,11 +74,11 @@ struct _GstSignalProcessorClass {
 
   /* virtual methods for subclasses */
 
-  gboolean	(*setup)        (GstSignalProcessor *self, guint sample_rate);
+  gboolean      (*setup)        (GstSignalProcessor *self, guint sample_rate);
   gboolean      (*start)        (GstSignalProcessor *self);
-  void		(*stop)         (GstSignalProcessor *self);
-  void		(*cleanup)      (GstSignalProcessor *self);
-  void		(*process)      (GstSignalProcessor *self, guint num_frames);
+  void          (*stop)         (GstSignalProcessor *self);
+  void          (*cleanup)      (GstSignalProcessor *self);
+  void          (*process)      (GstSignalProcessor *self, guint num_frames);
   gboolean      (*event)        (GstSignalProcessor *self, GstEvent *event);
 };
 

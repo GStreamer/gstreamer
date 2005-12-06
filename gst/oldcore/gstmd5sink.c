@@ -66,8 +66,8 @@ GST_BOILERPLATE_FULL (GstMD5Sink, gst_md5sink, GstElement, GST_TYPE_ELEMENT,
     _do_init);
 
 /* GObject stuff */
-/*static void			gst_md5sink_set_property	(GObject *object, guint prop_id, 
-							 const GValue *value, GParamSpec *pspec);*/
+/*static void                   gst_md5sink_set_property        (GObject *object, guint prop_id, 
+                                                         const GValue *value, GParamSpec *pspec);*/
 static void gst_md5sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
@@ -255,14 +255,14 @@ md5_process_block (const void *buffer, size_t len, GstMD5Sink * ctx)
        before the computation.  To reduce the work for the next steps
        we store the swapped words in the array CORRECT_WORDS.  */
 
-#define OP(a, b, c, d, s, T)						\
-      do								\
-        {								\
-	  a += FF (b, c, d) + (*cwp++ = GUINT32_TO_LE (*words)) + T;		\
-	  ++words;							\
-	  CYCLIC (a, s);						\
-	  a += b;							\
-        }								\
+#define OP(a, b, c, d, s, T)                                            \
+      do                                                                \
+        {                                                               \
+          a += FF (b, c, d) + (*cwp++ = GUINT32_TO_LE (*words)) + T;            \
+          ++words;                                                      \
+          CYCLIC (a, s);                                                \
+          a += b;                                                       \
+        }                                                               \
       while (0)
 
     /* It is unfortunate that C does not provide an operator for
@@ -297,13 +297,13 @@ md5_process_block (const void *buffer, size_t len, GstMD5Sink * ctx)
        in CORRECT_WORDS.  Redefine the macro to take an additional first
        argument specifying the function to use.  */
 #undef OP
-#define OP(f, a, b, c, d, k, s, T)					\
-      do 								\
-	{								\
-	  a += f (b, c, d) + correct_words[k] + T;			\
-	  CYCLIC (a, s);						\
-	  a += b;							\
-	}								\
+#define OP(f, a, b, c, d, k, s, T)                                      \
+      do                                                                \
+        {                                                               \
+          a += f (b, c, d) + correct_words[k] + T;                      \
+          CYCLIC (a, s);                                                \
+          a += b;                                                       \
+        }                                                               \
       while (0)
 
     /* Round 2.  */

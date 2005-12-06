@@ -328,7 +328,7 @@ gst_level_calculate_##TYPE (TYPE * in, guint num, gint channels,              \
 {                                                                             \
   register int j;                                                             \
   double squaresum = 0.0;           /* square sum of the integer samples */   \
-  register double square = 0.0;	    /* Square */                              \
+  register double square = 0.0;     /* Square */                              \
   register double peaksquare = 0.0; /* Peak Square Sample */                  \
   gdouble normalizer;               /* divisor to get a [-1.0, 1.0] range */  \
                                                                               \

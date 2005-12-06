@@ -41,26 +41,26 @@ typedef struct _FlacDec FlacDec;
 typedef struct _FlacDecClass FlacDecClass;
 
 struct _FlacDec {
-  GstElement 	 element;
+  GstElement     element;
 
-  GstPad 	*sinkpad,*srcpad;
-  guint64	 offset;
+  GstPad        *sinkpad,*srcpad;
+  guint64        offset;
 
   FLAC__SeekableStreamDecoder *decoder;
-  gint		 channels;
-  gint		 depth;
+  gint           channels;
+  gint           depth;
   gint           width;
-  gint		 frequency;
+  gint           frequency;
 
-  gboolean	 need_discont;
-  gboolean 	 seek_pending;
-  gint64	 seek_value;
+  gboolean       need_discont;
+  gboolean       seek_pending;
+  gint64         seek_value;
 
-  gboolean	 init;
-  guint64	 total_samples;
-  guint64	 stream_samples;
+  gboolean       init;
+  guint64        total_samples;
+  guint64        stream_samples;
 
-  gboolean	 eos;
+  gboolean       eos;
 };
 
 struct _FlacDecClass {

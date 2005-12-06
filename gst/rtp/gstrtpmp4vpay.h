@@ -48,8 +48,8 @@ struct _GstRtpMP4VPay
   GstClockTime  first_ts;
   GstClockTime  duration;
 
-  gint		rate;
-  gint		profile;
+  gint          rate;
+  gint          profile;
   GstBuffer    *config;
   gboolean      send_config;
 };

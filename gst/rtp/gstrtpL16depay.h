@@ -27,7 +27,7 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif				/* __cplusplus */
+#endif                          /* __cplusplus */
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstRtpL16Depay GstRtpL16Depay;
@@ -67,7 +67,7 @@ gboolean gst_rtp_L16depay_plugin_init (GstPlugin * plugin);
 
 #ifdef __cplusplus
 }
-#endif				/* __cplusplus */
+#endif                          /* __cplusplus */
 
 
-#endif				/* __GST_RTP_L16_DEPAY_H__ */
+#endif                          /* __GST_RTP_L16_DEPAY_H__ */

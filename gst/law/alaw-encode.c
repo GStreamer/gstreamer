@@ -50,16 +50,16 @@ static GstFlowReturn gst_alawenc_chain (GstPad * pad, GstBuffer * buffer);
  *
  * s16_to_alaw() accepts an 16-bit integer and encodes it as A-law data.
  *
- *		Linear Input Code	Compressed Code
- *	------------------------	---------------
- *	0000000wxyza			000wxyz
- *	0000001wxyza			001wxyz
- *	000001wxyzab			010wxyz
- *	00001wxyzabc			011wxyz
- *	0001wxyzabcd			100wxyz
- *	001wxyzabcde			101wxyz
- *	01wxyzabcdef			110wxyz
- *	1wxyzabcdefg			111wxyz
+ *              Linear Input Code       Compressed Code
+ *      ------------------------        ---------------
+ *      0000000wxyza                    000wxyz
+ *      0000001wxyza                    001wxyz
+ *      000001wxyzab                    010wxyz
+ *      00001wxyzabc                    011wxyz
+ *      0001wxyzabcd                    100wxyz
+ *      001wxyzabcde                    101wxyz
+ *      01wxyzabcdef                    110wxyz
+ *      1wxyzabcdefg                    111wxyz
  *
  * For further information see John C. Bellamy's Digital Telephony, 1982,
  * John Wiley & Sons, pps 98-111 and 472-476.

@@ -39,49 +39,49 @@ G_BEGIN_DECLS
 #define GST_IS_AVI_DEMUX_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_AVI_DEMUX))
 
-#define GST_AVI_DEMUX_MAX_STREAMS	16	
+#define GST_AVI_DEMUX_MAX_STREAMS       16      
 
 #define CHUNKID_TO_STREAMNR(chunkid) \
   ((((chunkid) & 0xff) - '0') * 10 + \
    (((chunkid) >> 8) & 0xff) - '0')
 
 typedef struct {
-  gint 		 index_nr;
-  gint 		 stream_nr;
-  guint64 	 ts, dur;
-  guint32	 flags;
-  guint64	 offset;
-  gint 		 size;
-  guint64	 bytes_before;
-  guint32	 frames_before;
+  gint           index_nr;
+  gint           stream_nr;
+  guint64        ts, dur;
+  guint32        flags;
+  guint64        offset;
+  gint           size;
+  guint64        bytes_before;
+  guint32        frames_before;
 } gst_avi_index_entry;
 
 typedef struct {
   /* index of this streamcontext */
-  guint 	 num;
+  guint          num;
 
   /* pad, strh */
-  GstPad	*pad;
-  gst_riff_strh	*strh;
+  GstPad        *pad;
+  gst_riff_strh *strh;
   union {
     gst_riff_strf_vids *vids;
     gst_riff_strf_auds *auds;
     gst_riff_strf_iavs *iavs;
-    gpointer	 data;
+    gpointer     data;
   } strf;
-  GstBuffer	*extradata, *initdata;
-  gchar		*name;
+  GstBuffer     *extradata, *initdata;
+  gchar         *name;
 
   /* current position (byte, frame, time) */
-  guint 	 current_frame;
-  guint64 	 current_byte;
-  gint		 current_entry;
+  guint          current_frame;
+  guint64        current_byte;
+  gint           current_entry;
 
   /* stream length */
-  guint64	 total_bytes;
-  guint32	 total_frames;
+  guint64        total_bytes;
+  guint32        total_frames;
 
-  guint64	*indexes;
+  guint64       *indexes;
 } avi_stream_context;
 
 typedef enum {
@@ -91,44 +91,44 @@ typedef enum {
 } GstAviDemuxState;
 
 typedef struct _GstAviDemux {
-  GstElement	 parent;
+  GstElement     parent;
 
   /* pads */
-  GstPad 	*sinkpad;
+  GstPad        *sinkpad;
 
   /* AVI decoding state */
   GstAviDemuxState state;
-  guint64	 offset;
+  guint64        offset;
 
   /* index */
   gst_avi_index_entry *index_entries;
-  guint 	 index_size;
-  guint64	 index_offset;
-  guint		 current_entry;
+  guint          index_size;
+  guint64        index_offset;
+  guint          current_entry;
 
   /* streams */
-  guint 	 num_streams;
-  guint 	 num_v_streams;
-  guint 	 num_a_streams;
+  guint          num_streams;
+  guint          num_v_streams;
+  guint          num_a_streams;
   avi_stream_context stream[GST_AVI_DEMUX_MAX_STREAMS];
 
   /* some stream info for length */
-  gst_riff_avih	*avih;
+  gst_riff_avih *avih;
 
   /* seeking */
-  gdouble	segment_rate;
-  GstSeekFlags	segment_flags;
+  gdouble       segment_rate;
+  GstSeekFlags  segment_flags;
   /* in GST_FORMAT_TIME */
-  gint64	segment_start;
-  gint64	segment_stop;
-  GstEvent	*seek_event;
+  gint64        segment_start;
+  gint64        segment_stop;
+  GstEvent      *seek_event;
 } GstAviDemux;
 
 typedef struct _GstAviDemuxClass {
   GstElementClass parent_class;
 } GstAviDemuxClass;
 
-GType 		gst_avi_demux_get_type		(void);
+GType           gst_avi_demux_get_type          (void);
 
 G_END_DECLS
 
