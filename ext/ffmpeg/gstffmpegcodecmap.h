@@ -35,7 +35,7 @@
 GstCaps *
 gst_ffmpeg_codecid_to_caps   (enum CodecID    codec_id,
                               AVCodecContext *context,
-			      gboolean        encode);
+                              gboolean        encode);
 
 /*
  * _codectype_to_caps () gets the GstCaps that belongs to
@@ -63,9 +63,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps  *caps,
 
 void
 gst_ffmpeg_caps_with_codecid (enum CodecID    codec_id,
-			      enum CodecType  codec_type,
-			      const GstCaps  *caps,
-			      AVCodecContext *context);
+                              enum CodecType  codec_type,
+                              const GstCaps  *caps,
+                              AVCodecContext *context);
 
 /*
  * caps_with_codectype () transforms a GstCaps that belongs to
@@ -95,8 +95,8 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name);
 
 gboolean
 gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
-				  enum CodecID ** video_codec_list,
-				  enum CodecID ** audio_codec_list);
+                                  enum CodecID ** video_codec_list,
+                                  enum CodecID ** audio_codec_list);
 
 /*
  * Since FFMpeg has such really cool and useful descriptions
@@ -118,10 +118,10 @@ gst_ffmpeg_avpicture_get_size (int pix_fmt, int width, int height);
 
 int
 gst_ffmpeg_avpicture_fill (AVPicture * picture,
-			   uint8_t *   ptr,
-			   enum PixelFormat pix_fmt,
-			   int         width,
-			   int         height);
+                           uint8_t *   ptr,
+                           enum PixelFormat pix_fmt,
+                           int         width,
+                           int         height);
 
 /*
  * convert an image, we only use this for copying the image, ie,
@@ -129,8 +129,8 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
  */
 int
 gst_ffmpeg_img_convert (AVPicture * dst, int dst_pix_fmt,
-			const AVPicture * src, int src_pix_fmt,
-			int src_width, int src_height);
+                        const AVPicture * src, int src_pix_fmt,
+                        int src_width, int src_height);
 
 /*
  * Convert from/to a GStreamer <-> FFMpeg timestamp.

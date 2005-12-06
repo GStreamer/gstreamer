@@ -228,7 +228,7 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
             "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass),
         ARG_RTP_PAYLOAD_SIZE,
-	g_param_spec_ulong ("rtp_payload_size", "RTP Payload Size",
+        g_param_spec_ulong ("rtp_payload_size", "RTP Payload Size",
             "Target GOB length", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
   } else if (klass->in_plugin->type == CODEC_TYPE_AUDIO) {
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
@@ -566,7 +566,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
         /* this is panic! we got a buffer, but still don't have enough
          * data. Merge them and retry in the next cycle... */
         ffmpegenc->cache = gst_buffer_span (ffmpegenc->cache, 0, inbuf,
-		GST_BUFFER_SIZE (ffmpegenc->cache) + GST_BUFFER_SIZE (inbuf));
+                GST_BUFFER_SIZE (ffmpegenc->cache) + GST_BUFFER_SIZE (inbuf));
       } else if (in_size == size) {
         /* exactly the same! how wonderful */
         ffmpegenc->cache = inbuf;
@@ -593,7 +593,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
       GST_BUFFER_DURATION (subbuf) =
           GST_BUFFER_DURATION (inbuf) * GST_BUFFER_SIZE (subbuf) / size;
       subbuf = gst_buffer_span (ffmpegenc->cache, 0, subbuf,
-	      GST_BUFFER_SIZE (ffmpegenc->cache) + GST_BUFFER_SIZE (subbuf));
+              GST_BUFFER_SIZE (ffmpegenc->cache) + GST_BUFFER_SIZE (subbuf));
       ffmpegenc->cache = NULL;
     } else {
       subbuf = gst_buffer_create_sub (inbuf, size - in_size, frame_size);

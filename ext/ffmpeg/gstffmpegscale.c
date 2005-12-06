@@ -255,7 +255,7 @@ gst_ffmpegscale_pad_link (GstPad * pad, const GstCaps * caps)
     if (scale->res != NULL) img_resample_close (scale->res);
 
     scale->res = img_resample_init (scale->to_width, scale->to_height,
-				    scale->from_width, scale->from_height);
+                                    scale->from_width, scale->from_height);
 
   }
 
@@ -321,16 +321,16 @@ static void
 gst_ffmpegscale_init (GstFFMpegScale * scale)
 {
   scale->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get
-					      (&gst_ffmpegscale_sink_template), 
-					      "sink");
+                                              (&gst_ffmpegscale_sink_template), 
+                                              "sink");
   gst_pad_set_link_function (scale->sinkpad, gst_ffmpegscale_pad_link);
   gst_pad_set_getcaps_function (scale->sinkpad, gst_ffmpegscale_getcaps);
   gst_pad_set_chain_function (scale->sinkpad, gst_ffmpegscale_chain);
   gst_element_add_pad (GST_ELEMENT (scale), scale->sinkpad);
 
   scale->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
-					     (&gst_ffmpegscale_src_template), 
-					     "src");
+                                             (&gst_ffmpegscale_src_template), 
+                                             "src");
   gst_element_add_pad (GST_ELEMENT (scale), scale->srcpad);
   gst_pad_set_link_function (scale->srcpad, gst_ffmpegscale_pad_link);
   gst_pad_set_getcaps_function (scale->srcpad, gst_ffmpegscale_getcaps);
@@ -370,14 +370,14 @@ gst_ffmpegscale_chain (GstPad * pad, GstData * data)
   outbuf = gst_pad_alloc_buffer_and_set_caps (scale->srcpad, GST_BUFFER_OFFSET_NONE, scale->to_size);
 
   gst_ffmpeg_avpicture_fill (&scale->from_frame,
-			     GST_BUFFER_DATA (inbuf),
-			     scale->pixfmt, 
-			     scale->from_width, scale->from_height);
+                             GST_BUFFER_DATA (inbuf),
+                             scale->pixfmt, 
+                             scale->from_width, scale->from_height);
 
   gst_ffmpeg_avpicture_fill (&scale->to_frame,
-			     GST_BUFFER_DATA (outbuf),
-			     scale->pixfmt, 
-			     scale->to_width, scale->to_height);    
+                             GST_BUFFER_DATA (outbuf),
+                             scale->pixfmt, 
+                             scale->to_width, scale->to_height);    
   
   img_resample (scale->res, &scale->to_frame, &scale->from_frame);    
   
@@ -398,7 +398,7 @@ gst_ffmpegscale_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (scale->res != NULL)
-	img_resample_close (scale->res);
+        img_resample_close (scale->res);
       break;
   }
 

@@ -220,7 +220,7 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
     g_value_init (&list, GST_TYPE_FIXED_LIST);
 
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_IN_CAPS);
-		
+                
     g_value_init (&value, GST_TYPE_BUFFER);
     g_value_set_boxed (&value, outbuf);
     gst_value_list_append_value (&list, &value);
@@ -234,7 +234,7 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
     /* only set the first buffer */
     info->set_streamheader = FALSE;
   }
-	
+        
   gst_pad_push (info->pad, GST_DATA (outbuf));
 
   return size;

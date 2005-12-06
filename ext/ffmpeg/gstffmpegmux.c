@@ -414,10 +414,10 @@ gst_ffmpegmux_loop (GstElement * element)
       gst_tag_list_free (tags);
     }
 
-	/* set the streamheader flag for gstffmpegprotocol if codec supports it */
-	if (!strcmp (ffmpegmux->context->oformat->name, "flv") ) {
-		open_flags |= GST_FFMPEG_URL_STREAMHEADER;
-	}
+        /* set the streamheader flag for gstffmpegprotocol if codec supports it */
+        if (!strcmp (ffmpegmux->context->oformat->name, "flv") ) {
+                open_flags |= GST_FFMPEG_URL_STREAMHEADER;
+        }
 
     if (url_fopen (&ffmpegmux->context->pb,
             ffmpegmux->context->filename, open_flags) < 0) {
@@ -441,7 +441,7 @@ gst_ffmpegmux_loop (GstElement * element)
           ("Failed to write file header - check codec settings"));
       return;
     }
-	
+        
     /* flush the header so it will be used as streamheader */
     put_flush_packet (&ffmpegmux->context->pb);
   }

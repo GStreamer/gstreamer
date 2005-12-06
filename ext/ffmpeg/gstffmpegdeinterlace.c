@@ -183,7 +183,7 @@ gst_ffmpegdeinterlace_pad_link (GstPad * pad, const GstCaps * caps)
   deinterlace->width = width;
   deinterlace->height = height;
   deinterlace->to_size = avpicture_get_size (deinterlace->pixfmt, 
-					     deinterlace->width, deinterlace->height);
+                                             deinterlace->width, deinterlace->height);
   return GST_PAD_LINK_OK;
 }
 
@@ -246,16 +246,16 @@ static void
 gst_ffmpegdeinterlace_init (GstFFMpegDeinterlace * deinterlace)
 {
   deinterlace->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get
-					      (&gst_ffmpegdeinterlace_sink_template), 
-					      "sink");
+                                              (&gst_ffmpegdeinterlace_sink_template), 
+                                              "sink");
   gst_pad_set_link_function (deinterlace->sinkpad, gst_ffmpegdeinterlace_pad_link);
   gst_pad_set_getcaps_function (deinterlace->sinkpad, gst_ffmpegdeinterlace_getcaps);
   gst_pad_set_chain_function (deinterlace->sinkpad, gst_ffmpegdeinterlace_chain);
   gst_element_add_pad (GST_ELEMENT (deinterlace), deinterlace->sinkpad);
 
   deinterlace->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
-					     (&gst_ffmpegdeinterlace_src_template), 
-					     "src");
+                                             (&gst_ffmpegdeinterlace_src_template), 
+                                             "src");
   gst_element_add_pad (GST_ELEMENT (deinterlace), deinterlace->srcpad);
   gst_pad_set_link_function (deinterlace->srcpad, gst_ffmpegdeinterlace_pad_link);
   gst_pad_set_getcaps_function (deinterlace->srcpad, gst_ffmpegdeinterlace_getcaps);
@@ -285,20 +285,20 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstData * data)
   }
 
   outbuf = gst_pad_alloc_buffer_and_set_caps (deinterlace->srcpad, 
-				 GST_BUFFER_OFFSET_NONE, deinterlace->to_size);
+                                 GST_BUFFER_OFFSET_NONE, deinterlace->to_size);
 
   gst_ffmpeg_avpicture_fill (&deinterlace->from_frame,
-			     GST_BUFFER_DATA (inbuf),
-			     deinterlace->pixfmt, 
-			     deinterlace->width, deinterlace->height);
+                             GST_BUFFER_DATA (inbuf),
+                             deinterlace->pixfmt, 
+                             deinterlace->width, deinterlace->height);
 
   gst_ffmpeg_avpicture_fill (&deinterlace->to_frame,
-			     GST_BUFFER_DATA (outbuf),
-			     deinterlace->pixfmt, 
-			     deinterlace->width, deinterlace->height);    
+                             GST_BUFFER_DATA (outbuf),
+                             deinterlace->pixfmt, 
+                             deinterlace->width, deinterlace->height);    
 
   avpicture_deinterlace (&deinterlace->to_frame, &deinterlace->from_frame,
-			 deinterlace->pixfmt, deinterlace->width, deinterlace->height);
+                         deinterlace->pixfmt, deinterlace->width, deinterlace->height);
 
   gst_buffer_stamp (outbuf, (const GstBuffer *) inbuf);
   

@@ -81,34 +81,34 @@ gst_ffmpeg_set_palette (GstCaps *caps, AVCodecContext *context)
  * but I'm too lazy today. Maybe later.
  */
 
-#define GST_FF_VID_CAPS_NEW(mimetype, ...)			\
-    (context != NULL) ?						\
-    gst_caps_new_simple (mimetype,			      	\
-	"width",     G_TYPE_INT,   context->width,	      	\
-	"height",    G_TYPE_INT,   context->height,	  	\
-	"framerate", GST_TYPE_FRACTION, context->time_base.den, \
-	context->time_base.num,	__VA_ARGS__, NULL)  					\
-    :	  							\
-    gst_caps_new_simple (mimetype,			      	\
-	"width",     GST_TYPE_INT_RANGE, 16, 4096,      	\
-	"height",    GST_TYPE_INT_RANGE, 16, 4096,	      	\
-	"framerate", GST_TYPE_FRACTION_RANGE, 0, 1,             \
+#define GST_FF_VID_CAPS_NEW(mimetype, ...)                      \
+    (context != NULL) ?                                         \
+    gst_caps_new_simple (mimetype,                              \
+        "width",     G_TYPE_INT,   context->width,              \
+        "height",    G_TYPE_INT,   context->height,             \
+        "framerate", GST_TYPE_FRACTION, context->time_base.den, \
+        context->time_base.num, __VA_ARGS__, NULL)                                      \
+    :                                                           \
+    gst_caps_new_simple (mimetype,                              \
+        "width",     GST_TYPE_INT_RANGE, 16, 4096,              \
+        "height",    GST_TYPE_INT_RANGE, 16, 4096,              \
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,             \
         G_MAXINT, 1, __VA_ARGS__, NULL)
 
 /* same for audio - now with channels/sample rate
  */
 
-#define GST_FF_AUD_CAPS_NEW(mimetype, ...)			\
-    (context != NULL) ?					      	\
-    gst_caps_new_simple (mimetype,	      			\
-	"rate", G_TYPE_INT, context->sample_rate,		\
-	"channels", G_TYPE_INT, context->channels,		\
-	__VA_ARGS__, NULL)					\
-    :								\
-    gst_caps_new_simple (mimetype,	      			\
-        "rate", GST_TYPE_INT_RANGE, 8000, 96000,		\
-	"channels", GST_TYPE_INT_RANGE, 1, 2,			\
-	__VA_ARGS__, NULL)
+#define GST_FF_AUD_CAPS_NEW(mimetype, ...)                      \
+    (context != NULL) ?                                         \
+    gst_caps_new_simple (mimetype,                              \
+        "rate", G_TYPE_INT, context->sample_rate,               \
+        "channels", G_TYPE_INT, context->channels,              \
+        __VA_ARGS__, NULL)                                      \
+    :                                                           \
+    gst_caps_new_simple (mimetype,                              \
+        "rate", GST_TYPE_INT_RANGE, 8000, 96000,                \
+        "channels", GST_TYPE_INT_RANGE, 1, 2,                   \
+        __VA_ARGS__, NULL)
 
 /* Convert a FFMPEG codec ID and optional AVCodecContext
  * to a GstCaps. If the context is ommitted, no fixed values
@@ -259,7 +259,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         switch (context->codec_tag) {
           case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
             caps = GST_FF_VID_CAPS_NEW ("video/x-divx",
-	        "divxversion", G_TYPE_INT, 5, NULL);
+                "divxversion", G_TYPE_INT, 5, NULL);
             break;
           case GST_MAKE_FOURCC ('m', 'p', '4', 'v'):
           default:
@@ -450,10 +450,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_MSRLE:
       caps = GST_FF_VID_CAPS_NEW ("video/x-rle",
-	  "layout", G_TYPE_STRING, "microsoft", NULL);
+          "layout", G_TYPE_STRING, "microsoft", NULL);
       if (context) {
         gst_caps_set_simple (caps,
-	    "depth", G_TYPE_INT, (gint) context->bits_per_sample, NULL);
+            "depth", G_TYPE_INT, (gint) context->bits_per_sample, NULL);
       } else {
         gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 1, 64, NULL);
       }
@@ -472,7 +472,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_MSVIDEO1:
       caps = GST_FF_VID_CAPS_NEW ("video/x-msvideocodec",
-	  "msvideoversion", G_TYPE_INT, 1, NULL);
+          "msvideoversion", G_TYPE_INT, 1, NULL);
       break;
 
     case CODEC_ID_WMV3:
@@ -899,8 +899,8 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
     case PIX_FMT_GRAY8:
       bpp = depth = 8;
       caps = GST_FF_VID_CAPS_NEW ("video/x-raw-gray",
-				  "bpp", G_TYPE_INT, bpp,
-				  "depth", G_TYPE_INT, depth, NULL);
+                                  "bpp", G_TYPE_INT, bpp,
+                                  "depth", G_TYPE_INT, depth, NULL);
       break;
     default:
       /* give up ... */
@@ -910,28 +910,28 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
   if (caps == NULL) {
     if (bpp != 0) {
       if (r_mask != 0) {
-	caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
-				    "bpp", G_TYPE_INT, bpp,
-				    "depth", G_TYPE_INT, depth,
-				    "red_mask", G_TYPE_INT, r_mask,
-				    "green_mask", G_TYPE_INT, g_mask,
-				    "blue_mask", G_TYPE_INT, b_mask,
-				    "endianness", G_TYPE_INT, endianness, NULL);
-	if (a_mask) {
-	  gst_caps_set_simple (caps, "alpha_mask", G_TYPE_INT, a_mask, NULL);
-	}
+        caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
+                                    "bpp", G_TYPE_INT, bpp,
+                                    "depth", G_TYPE_INT, depth,
+                                    "red_mask", G_TYPE_INT, r_mask,
+                                    "green_mask", G_TYPE_INT, g_mask,
+                                    "blue_mask", G_TYPE_INT, b_mask,
+                                    "endianness", G_TYPE_INT, endianness, NULL);
+        if (a_mask) {
+          gst_caps_set_simple (caps, "alpha_mask", G_TYPE_INT, a_mask, NULL);
+        }
       } else {
-	caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
-				    "bpp", G_TYPE_INT, bpp,
-				    "depth", G_TYPE_INT, depth,
-				    "endianness", G_TYPE_INT, endianness, NULL);
-	if (context) {
-	  gst_ffmpeg_set_palette (caps, context);
-	}
+        caps = GST_FF_VID_CAPS_NEW ("video/x-raw-rgb",
+                                    "bpp", G_TYPE_INT, bpp,
+                                    "depth", G_TYPE_INT, depth,
+                                    "endianness", G_TYPE_INT, endianness, NULL);
+        if (context) {
+          gst_ffmpeg_set_palette (caps, context);
+        }
       }
     } else if (fmt) {
       caps = GST_FF_VID_CAPS_NEW ("video/x-raw-yuv",
-				  "format", GST_TYPE_FOURCC, fmt, NULL);
+                                  "format", GST_TYPE_FOURCC, fmt, NULL);
     }
   }
 
@@ -1116,8 +1116,8 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
     context->time_base.num = gst_value_get_fraction_denominator (fps);
 
     GST_DEBUG ("setting framerate %d/%d = %lf",
-	    context->time_base.den, context->time_base.num, 
-	    1. * context->time_base.den / context->time_base.num);
+            context->time_base.den, context->time_base.num, 
+            1. * context->time_base.den / context->time_base.num);
   }
 
   if (!raw)
@@ -1273,7 +1273,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
        if (!context->extradata) {
          gint halfpel_flag, thirdpel_flag, low_delay, unknown_svq3_flag;
          guint16 flags;
-  	 
+         
          if (gst_structure_get_int (str, "halfpel_flag", &halfpel_flag) ||
              gst_structure_get_int (str, "thirdpel_flag", &thirdpel_flag) ||
              gst_structure_get_int (str, "low_delay", &low_delay) ||
@@ -1872,7 +1872,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       if ((codec = avcodec_find_decoder_by_name (ext)) ||
           (codec = avcodec_find_encoder_by_name (ext))) {
         id = codec->id;
-	audio = TRUE;
+        audio = TRUE;
       }
     }
   } else if (!strncmp (mimetype, "video/x-gst_ff-", 15)) {
