@@ -23,7 +23,7 @@
 
 /**
  * SECTION:gstbasetransform
- * @short_description: Base class for simple tranform filters
+ * @short_description: Base class for simple transform filters
  * @see_also: #GstBaseSrc, #GstBaseSink
  *
  * This base class is for filter elements that process data.
@@ -488,7 +488,7 @@ gst_base_transform_getcaps (GstPad * pad)
     temp = gst_caps_intersect (caps, templ);
     GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, temp);
     gst_caps_unref (caps);
-    /* then see what we can tranform this to */
+    /* then see what we can transform this to */
     caps = gst_base_transform_transform_caps (trans,
         GST_PAD_DIRECTION (otherpad), temp);
     GST_DEBUG_OBJECT (pad, "transformed  %" GST_PTR_FORMAT, caps);

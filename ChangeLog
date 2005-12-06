@@ -1,3 +1,7 @@
+2005-12-06  David Schleef  <ds@schleef.org>
+
+	* libs/gst/base/gstbasetransform.c: speling fix.
+
 2005-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/libs/tmpl/gstdataprotocol.sgml:
