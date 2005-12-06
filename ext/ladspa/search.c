@@ -108,8 +108,8 @@ LADSPAPluginSearch (LADSPAPluginSearchCallbackFunction fCallbackFunction)
 
   if (!pcLADSPAPath) {
 /*    fprintf(stderr, */
-/*	    "Warning: You do not have a LADSPA_PATH " */
-/*	    "environment variable set.\n"); */
+/*          "Warning: You do not have a LADSPA_PATH " */
+/*          "environment variable set.\n"); */
     return;
   }
 

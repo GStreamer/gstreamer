@@ -32,8 +32,8 @@ void unloadLADSPAPluginLibrary(void * pvLADSPAPluginLibrary);
    informative error messages. */
 const LADSPA_Descriptor *
 findLADSPAPluginDescriptor(void * pvLADSPAPluginLibrary,
-			   const char * pcPluginLibraryFilename,
-			   const char * pcPluginLabel);
+                           const char * pcPluginLibraryFilename,
+                           const char * pcPluginLabel);
 
 /*****************************************************************************/
 
