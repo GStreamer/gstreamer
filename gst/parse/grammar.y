@@ -563,7 +563,7 @@ static int yyerror (const char *s);
 %type <e> element 
 %type <p> padlist pads assignments
 
-%left '{' '}' '(' ')'
+%left '(' ')'
 %left ','
 %right '.'
 %left '!' '='
@@ -587,18 +587,13 @@ element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL);
 assignments:	/* NOP */		      { $$ = NULL; }
 	|	assignments ASSIGNMENT	      { $$ = g_slist_prepend ($1, $2); }
 	;		
-bin:	        '{' assignments chain '}' { GST_BIN_MAKE ($$, "thread", $3, $2); }
-        |       '(' assignments chain ')' { GST_BIN_MAKE ($$, "bin", $3, $2); }
+bin:	        '(' assignments chain ')' { GST_BIN_MAKE ($$, "bin", $3, $2); }
         |       BINREF assignments chain ')'  { GST_BIN_MAKE ($$, $1, $3, $2); 
 						gst_parse_strfree ($1);
 					      }
-	|	'{' assignments '}'	      { GST_BIN_MAKE ($$, "thread", NULL, $2); }
-	|	'(' assignments '}'	      { GST_BIN_MAKE ($$, "thread", NULL, $2); }
         |       BINREF assignments ')'	      { GST_BIN_MAKE ($$, $1, NULL, $2); 
 						gst_parse_strfree ($1);
 					      }
-	|	'{' assignments error '}'     { GST_BIN_MAKE ($$, "thread", NULL, $2); }
-	|	'(' assignments error '}'     { GST_BIN_MAKE ($$, "thread", NULL, $2); }
         |       BINREF assignments error ')'  { GST_BIN_MAKE ($$, $1, NULL, $2); 
 						gst_parse_strfree ($1);
 					      }

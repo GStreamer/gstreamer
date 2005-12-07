@@ -1,3 +1,8 @@
+2005-12-07  Michael Smith  <msmith@fluendo.com>
+
+	* gst/parse/grammar.y:
+	  Remove handling of { } for threads.
+
 2005-12-06  David Schleef  <ds@schleef.org>
 
 	* libs/gst/base/gstbasetransform.c: speling fix.
