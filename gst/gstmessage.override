@@ -125,7 +125,7 @@ static PyObject *
 _wrap_gst_message_parse_error (PyGstMiniObject *self)
 {
 	PyObject	*ret;
-	GError	*error;
+	GError	*error = NULL;
 	gchar	*debug;
 	
 	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_ERROR) {
@@ -137,13 +137,15 @@ _wrap_gst_message_parse_error (PyGstMiniObject *self)
 
 	ret = PyList_New(2);
 	PyList_SetItem(ret, 0, pyg_boxed_new (GST_TYPE_G_ERROR, error, TRUE, TRUE));
+	if (error)
+		g_error_free (error);
 	if (debug != NULL) {
 		PyList_SetItem(ret, 1, PyString_FromString(debug));
 	} else {
 		Py_INCREF (Py_None);
 		PyList_SetItem(ret, 1, Py_None);
 	}
-
+	g_free(debug);
 	return ret;
 }
 %%
