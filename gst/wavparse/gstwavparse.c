@@ -143,6 +143,7 @@ static void
 gst_wavparse_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstPadTemplate *templ;
   static GstElementDetails gst_wavparse_details =
       GST_ELEMENT_DETAILS (".wav demuxer",
       "Codec/Demuxer/Audio",
@@ -152,10 +153,12 @@ gst_wavparse_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &gst_wavparse_details);
 
   /* register src pads */
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template_factory));
+  templ = gst_static_pad_template_get (&sink_template_factory);
+  gst_element_class_add_pad_template (element_class, templ);
+  gst_object_unref (templ);
+  templ = gst_static_pad_template_get (&src_template_factory);
+  gst_element_class_add_pad_template (element_class, templ);
+  gst_object_unref (templ);
 }
 
 static void
@@ -228,12 +231,14 @@ gst_wavparse_destroy_sourcepad (GstWavParse * wavparse)
 static void
 gst_wavparse_create_sourcepad (GstWavParse * wavparse)
 {
+  GstPadTemplate *templ;
+
   gst_wavparse_destroy_sourcepad (wavparse);
 
   /* source */
-  wavparse->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&src_template_factory), "src");
+  templ = gst_static_pad_template_get (&src_template_factory);
+  wavparse->srcpad = gst_pad_new_from_template (templ, "src");
+  gst_object_unref (templ);
   gst_pad_use_fixed_caps (wavparse->srcpad);
   gst_pad_set_query_type_function (wavparse->srcpad,
       GST_DEBUG_FUNCPTR (gst_wavparse_get_query_types));
@@ -775,6 +780,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
   if (!(gst_riff_parse_strf_auds (GST_ELEMENT (wav), buf, &header, &extra)))
     goto parse_header_error;
+
+  if (extra)
+    gst_buffer_unref (extra);
 
   /* Note: gst_riff_create_audio_caps might nedd to fix values in
    * the header header depending on the format, so call it first */

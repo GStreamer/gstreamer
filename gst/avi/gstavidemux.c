@@ -468,8 +468,9 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
           &stop_type, &stop);
 
-      GST_DEBUG_OBJECT (avi, "seek format %d, %08x, start:%lld, stop:%lld",
-          format, stream->strh->type, start, stop);
+      GST_DEBUG_OBJECT (avi,
+          "seek format %d, flags:%d, %08x, start:%lld, stop:%lld", format,
+          flags, stream->strh->type, start, stop);
 
       if (format != GST_FORMAT_TIME) {
         res &=
@@ -1045,6 +1046,8 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   }
 
   /* set proper settings and add it */
+  if (stream->pad)
+    gst_object_unref (stream->pad);
   pad = stream->pad = gst_pad_new_from_template (templ, padname);
   g_free (padname);
 
@@ -1848,7 +1851,8 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
                 GST_FOURCC_ARGS (GST_READ_UINT32_LE (GST_BUFFER_DATA (sub))));
             /* fall-through */
           case GST_RIFF_TAG_JUNK:
-            gst_buffer_unref (sub);
+            if (sub)
+              gst_buffer_unref (sub);
             break;
         }
         break;
@@ -1858,7 +1862,8 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
             offset, GST_FOURCC_ARGS (tag));
         /* fall-through */
       case GST_RIFF_TAG_JUNK:
-        gst_buffer_unref (sub);
+        if (sub)
+          gst_buffer_unref (sub);
         break;
     }
   }
@@ -1908,6 +1913,7 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
             if (t) {
               gst_element_found_tags (GST_ELEMENT (avi), t);
             }
+            gst_buffer_unref (sub);
             gst_buffer_unref (buf);
           }
           /* gst_riff_read_chunk() has already advanced avi->offset */
@@ -2068,7 +2074,14 @@ gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
 {
   buf = gst_buffer_make_writable (buf);
   gint y, h = stream->strf.vids->height, w = stream->strf.vids->width;
-  guint8 *tmp = g_malloc (w);
+  guint8 *tmp = NULL;
+
+  if (GST_BUFFER_SIZE (buf) < (w * h)) {
+    GST_WARNING ("Buffer is smaller than reported Width x Height");
+    return buf;
+  }
+
+  tmp = g_malloc (w);
 
   for (y = 0; y < h / 2; y++) {
     swap_line (GST_BUFFER_DATA (buf) + w * y,
