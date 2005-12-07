@@ -62,6 +62,7 @@ check_PROGRAMS =				\
 	generic/states				\
 	$(PARSE_CHECKS)				\
 	pipelines/stress			\
+	libs/libsabi				\
 	libs/controller				\
 	libs/gdp				\
 	libs/gstnetclientclock			\
@@ -73,7 +74,7 @@ noinst_PROGRAMS =				\
 
 TESTS = $(check_PROGRAMS)
 
-noinst_HEADERS = gst/capslist.h gst/struct_i386.h
+noinst_HEADERS = gst/capslist.h gst/struct_i386.h libs/struct_i386.h
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
