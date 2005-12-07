@@ -1,5 +1,11 @@
 2005-12-07  Wim Taymans  <wim@fluendo.com>
 
+	* plugins/elements/gstfakesrc.c: (gst_fake_src_class_init),
+	(gst_fake_src_get_times), (gst_fake_src_create):
+	Fix broken sync option, fixes #323259
+
+2005-12-07  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbuffer.c:
 	Small docs update.
 
