@@ -493,7 +493,7 @@ gst_qtdemux_loop_header (GstPad * pad)
   guint8 *data;
   guint32 length;
   guint32 fourcc;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   int offset;
   guint64 cur_offset;
   int size;
@@ -507,12 +507,14 @@ gst_qtdemux_loop_header (GstPad * pad)
     case QTDEMUX_STATE_HEADER:{
       if (gst_pad_pull_range (qtdemux->sinkpad,
               cur_offset, 16, &buf) != GST_FLOW_OK)
-        goto pause;
+        goto error;
       data = GST_BUFFER_DATA (buf);
       length = GST_READ_UINT32_BE (data);
       GST_DEBUG ("length %08x", length);
       fourcc = GST_READ_UINT32_LE (data + 4);
       GST_DEBUG ("atom type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+
+      gst_buffer_unref (buf);
 
       if (length == 0) {
         length = G_MAXUINT32;   //gst_bytestream_length (qtdemux->bs) - cur_offset;
@@ -543,7 +545,7 @@ gst_qtdemux_loop_header (GstPad * pad)
 
           if (gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length,
                   &moov) != GST_FLOW_OK)
-            goto pause;
+            goto error;
           cur_offset += length;
           qtdemux->offset += length;
 
@@ -621,7 +623,7 @@ gst_qtdemux_loop_header (GstPad * pad)
       buf = NULL;
       if (gst_pad_pull_range (qtdemux->sinkpad, offset,
               size, &buf) != GST_FLOW_OK)
-        goto pause;
+        goto error;
 
       if (buf) {
         /* hum... FIXME changing framerate breaks horribly, better set
@@ -672,7 +674,7 @@ gst_qtdemux_loop_header (GstPad * pad)
         gst_buffer_set_caps (buf, stream->caps);
         ret = gst_pad_push (stream->pad, buf);
         if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
-          goto pause;
+          goto error;
 
         GST_INFO ("pushing buffer on %" GST_PTR_FORMAT, stream->pad);
       }
@@ -686,9 +688,10 @@ gst_qtdemux_loop_header (GstPad * pad)
 
   return;
 
-pause:
-  GST_LOG_OBJECT (qtdemux, "pausing task");
+error:
+  GST_LOG_OBJECT (qtdemux, "pausing task and sending EOS");
   gst_pad_pause_task (qtdemux->sinkpad);
+  gst_pad_event_default (qtdemux->sinkpad, gst_event_new_eos ());
   return;
 }
 
@@ -722,11 +725,12 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
   gchar *caps;
 
   if (stream->subtype == GST_MAKE_FOURCC ('v', 'i', 'd', 'e')) {
+    GstPadTemplate *templ;
     gchar *name = g_strdup_printf ("video_%02d", qtdemux->n_video_streams);
 
-    stream->pad =
-        gst_pad_new_from_template (gst_static_pad_template_get
-        (&gst_qtdemux_videosrc_template), name);
+    templ = gst_static_pad_template_get (&gst_qtdemux_videosrc_template);
+    stream->pad = gst_pad_new_from_template (templ, name);
+    gst_object_unref (templ);
     g_free (name);
     stream->fps_n = stream->timescale;
     stream->fps_d = stream->samples[0].duration;
@@ -771,7 +775,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
   gst_pad_set_caps (stream->pad, stream->caps);
 
   GST_DEBUG ("adding pad %s %p to qtdemux %p",
-      gst_pad_get_name (stream->pad), stream->pad, qtdemux);
+      GST_OBJECT_NAME (stream->pad), stream->pad, qtdemux);
   gst_element_add_pad (GST_ELEMENT (qtdemux), stream->pad);
   if (list) {
     gst_element_found_tags_for_pad (GST_ELEMENT (qtdemux), stream->pad, list);
