@@ -312,18 +312,16 @@ gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
 {
   GstMiniObject *olddata_val;
 
-  if (newdata) {
+  if (newdata)
     gst_mini_object_ref (newdata);
-  }
 
   do {
-    olddata_val = *olddata;
+    olddata_val = g_atomic_pointer_get ((gpointer *) olddata);
   } while (!g_atomic_pointer_compare_and_exchange ((gpointer *) olddata,
           olddata_val, newdata));
 
-  if (olddata_val) {
+  if (olddata_val)
     gst_mini_object_unref (olddata_val);
-  }
 }
 
 static void

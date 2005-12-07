@@ -291,7 +291,7 @@ gst_buffer_new_and_alloc (guint size)
  * Gets the media type of the buffer. This can be NULL if there
  * is no media type attached to this buffer.
  *
- * Returns: a reference to the #GstCaps.
+ * Returns: a reference to the #GstCaps. unref after usage.
  * Returns NULL if there were no caps on this buffer.
  */
 /* FIXME can we make this threadsafe without a lock on the buffer?

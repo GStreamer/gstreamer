@@ -1,3 +1,18 @@
+2005-12-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbuffer.c:
+	Small docs update.
+
+	* gst/gstcaps.c: (gst_caps_is_equal):
+	Don't assert on NULL <--> X. Fixes #323260
+
+	* gst/gstminiobject.c: (gst_mini_object_replace):
+	If we're doing atomic operations, we might just as well use
+	the proper way to get an atomic pointer.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position):
+	Clean up debugging.
+
 2005-12-07  Michael Smith  <msmith@fluendo.com>
 
 	* gst/parse/grammar.y:
