@@ -583,7 +583,7 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
         continue;
 
       if (!g_utf8_validate ((char *) utf8, -1, NULL)) {
-        g_warning ("converted string is not valid utf-8");
+        GST_ERROR ("converted string is not valid utf-8");
         g_free (utf8);
         continue;
       }
@@ -610,7 +610,7 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
         continue;
 
       if (!g_utf8_validate ((char *) utf8, -1, NULL)) {
-        g_warning ("converted string is not valid utf-8");
+        GST_ERROR ("converted string is not valid utf-8");
         free (utf8);
         continue;
       }

@@ -1,3 +1,9 @@
+2005-12-07  Edward Hervey  <edward@fluendo.com>
+
+	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list):
+	g_warning() are only for really fatal warnings. If we can't decode a
+	tag, just ignore that tag and do a GST_WARNING.
+
 2005-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/a52dec/gsta52dec.h:
