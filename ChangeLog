@@ -1,3 +1,13 @@
+2005-12-07  Edward Hervey  <edward@fluendo.com>
+
+	Time to welcome ogm to 0.10 :)
+	
+	* ext/ogg/gstoggdemux.c: (internal_element_pad_added_cb),
+	(gst_ogg_pad_typefind):
+	Oggdemux can now properly typefind elements with dynamic pads.
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):
+	Properly set caps on src pad, and set caps on outgoing buffers.
+
 2005-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/alsa/gstalsamixer.h:

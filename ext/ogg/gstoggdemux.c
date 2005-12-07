@@ -121,6 +121,9 @@ struct _GstOggPad
   GstClockTime first_time;      /* the timestamp of the second page */
 
   ogg_stream_state stream;
+
+  gboolean dynamic;             /* True if the internal element had dynamic pads */
+  guint padaddedid;             /* The signal id for element::pad-added */
 };
 
 struct _GstOggPadClass
@@ -595,6 +598,20 @@ gst_ogg_pad_internal_chain (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
+static void
+internal_element_pad_added_cb (GstElement * element, GstPad * pad,
+    GstOggPad * oggpad)
+{
+  if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+    if (!(gst_pad_link (pad, oggpad->elem_out) == GST_PAD_LINK_OK)) {
+      GST_ERROR ("Really couldn't find a valid pad");
+    }
+    oggpad->dynamic = FALSE;
+    g_signal_handler_disconnect (element, oggpad->padaddedid);
+    oggpad->padaddedid = 0;
+  }
+}
+
 /* runs typefind on the packet, which is assumed to be the first
  * packet in the stream.
  * 
@@ -654,12 +671,19 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
         gst_object_unref (template);
 
         /* and this pad may not be named src.. */
+        /* And it might also not exist at this time... */
         {
           GstPad *p;
 
           p = gst_element_get_pad (element, "src");
-          gst_pad_link (p, pad->elem_out);
-          gst_object_unref (p);
+          if (p) {
+            gst_pad_link (p, pad->elem_out);
+            gst_object_unref (p);
+          } else {
+            pad->dynamic = TRUE;
+            pad->padaddedid = g_signal_connect (G_OBJECT (element),
+                "pad-added", G_CALLBACK (internal_element_pad_added_cb), pad);
+          }
         }
       }
     }

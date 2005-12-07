@@ -623,14 +623,14 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
           g_assert_not_reached ();
       }
 
-      ogm->srcpad = gst_pad_new_from_template (ogm->srcpadtempl, "src");
-      //gst_pad_use_explicit_caps (ogm->srcpad);
-      //if (!gst_pad_set_explicit_caps (ogm->srcpad, caps)) {
-      //  GST_ELEMENT_ERROR (ogm, CORE, NEGOTIATION, (NULL), (NULL));
-      //gst_object_unref (ogm->srcpad);
-      //  ogm->srcpad = NULL;
-      //  break;
-      //}
+      if (caps) {
+        ogm->srcpad = gst_pad_new ("src", GST_PAD_SRC);
+        gst_pad_set_caps (ogm->srcpad, caps);
+      } else {
+        GST_WARNING_OBJECT (ogm,
+            "No fixed caps were found, carrying on with template");
+        ogm->srcpad = gst_pad_new_from_template (ogm->srcpadtempl, "src");
+      }
       gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
       break;
     }
@@ -689,6 +689,7 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
             GST_ELEMENT_ERROR (ogm, RESOURCE, SYNC, (NULL), (NULL));
             break;
         }
+        gst_buffer_set_caps (sbuf, GST_PAD_CAPS (ogm->srcpad));
         gst_pad_push (ogm->srcpad, sbuf);
       } else {
         GST_ELEMENT_ERROR (ogm, STREAM, WRONG_TYPE,
