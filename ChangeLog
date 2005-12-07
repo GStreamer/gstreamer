@@ -1,3 +1,14 @@
+2005-12-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_property):
+	* gst/playback/gstplaybin.c: (gst_play_bin_get_property):
+	  Work around refcount problem with g_value_set_object() that occur
+	  if the core has been compiled against GLib-2.6 (g_value_set_object()
+	  will only g_object_ref() the element, but the caller will
+	  gst_object_unref() it and bad things will happen due to the way
+	  GstObjects are refcounted in the GLib-2.6 case). Fixes problems with
+	  totem for people on FC4 using Thomas's 0.10 RPMs.
+	  
 2005-12-07  Edward Hervey  <edward@fluendo.com>
 
 	Time to welcome ogm to 0.10 :)
