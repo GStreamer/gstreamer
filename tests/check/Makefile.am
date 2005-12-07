@@ -35,6 +35,7 @@ endif
 
 check_PROGRAMS =				\
 	gst/gst				     	\
+	gst/gstabi			     	\
 	gst/gstbin			     	\
         gst/gstbuffer				\
         gst/gstbus				\
