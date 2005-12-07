@@ -804,18 +804,23 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   ffmpegdec->context->frame_number++;
 
   switch (oclass->in_plugin->type) {
-    case CODEC_TYPE_VIDEO:
+  case CODEC_TYPE_VIDEO:
+    {
+      gboolean	iskeyframe = FALSE;
+      
       ffmpegdec->picture->pict_type = -1;       /* in case we skip frames */
 
       ffmpegdec->context->opaque = ffmpegdec;
 
       len = avcodec_decode_video (ffmpegdec->context,
           ffmpegdec->picture, &have_data, data, size);
+      iskeyframe = ((ffmpegdec->picture->pict_type == FF_I_TYPE) || (ffmpegdec->picture->reference));
       GST_DEBUG_OBJECT (ffmpegdec,
-          "Decoded video: len=%d, have_data=%d", len, have_data);
+			"Decoded video: len=%d, have_data=%d, is_keyframe:%d",
+			len, have_data, iskeyframe);
 
       if (ffmpegdec->waiting_for_key) {
-        if (ffmpegdec->picture->pict_type == FF_I_TYPE) {
+        if (iskeyframe) {
           ffmpegdec->waiting_for_key = FALSE;
         } else {
           GST_WARNING_OBJECT (ffmpegdec, "Dropping non-keyframe (seek/init)");
@@ -823,21 +828,20 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           break;
         }
       }
-
+      
       /* note that ffmpeg sometimes gets the FPS wrong.
        * For B-frame containing movies, we get all pictures delayed
        * except for the I frames, so we synchronize only on I frames
        * and keep an internal counter based on FPS for the others. */
       if (!(oclass->in_plugin->capabilities & CODEC_CAP_DELAY) ||
-          ((ffmpegdec->picture->pict_type == FF_I_TYPE ||
-                  !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts)) &&
-              GST_CLOCK_TIME_IS_VALID (*in_ts))) {
-        GST_DEBUG_OBJECT (ffmpegdec, "setting next_ts to %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (*in_ts));
-        ffmpegdec->next_ts = *in_ts;
-        *in_ts = GST_CLOCK_TIME_NONE;
+	  ((iskeyframe || !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts)) && 
+	   GST_CLOCK_TIME_IS_VALID (*in_ts))) {
+	GST_DEBUG_OBJECT (ffmpegdec, "setting next_ts to %" GST_TIME_FORMAT,
+			  GST_TIME_ARGS (*in_ts));
+	ffmpegdec->next_ts = *in_ts;
+	*in_ts = GST_CLOCK_TIME_NONE;
       }
-
+      
       /* precise seeking.... */
       if (GST_CLOCK_TIME_IS_VALID (ffmpegdec->synctime)) {
         if (ffmpegdec->next_ts >= ffmpegdec->synctime) {
@@ -859,8 +863,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
         }
       }
 
-      if (ffmpegdec->waiting_for_key &&
-          ffmpegdec->picture->pict_type != FF_I_TYPE) {
+      if (ffmpegdec->waiting_for_key && !iskeyframe) {
         have_data = 0;
       } else if (len >= 0 && have_data > 0) {
         /* libavcodec constantly crashes on stupid buffer allocation
@@ -904,7 +907,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
         ffmpegdec->waiting_for_key = FALSE;
 
-        if (!ffmpegdec->picture->key_frame) {
+        if (!iskeyframe) {
           GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
         }
 
@@ -935,9 +938,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       } else if (ffmpegdec->picture->pict_type != -1 &&
           oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
         /* update time for skip-frame */
-        if ((!have_data)
-            || (ffmpegdec->picture->pict_type == FF_I_TYPE ||
-                !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts))
+        if ((!have_data) || 
+	    (iskeyframe || !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts))
             && GST_CLOCK_TIME_IS_VALID (*in_ts)) {
           GST_DEBUG_OBJECT (ffmpegdec, "setting next_ts to *in_ts");
           ffmpegdec->next_ts = *in_ts;
@@ -961,7 +963,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
         }
       }
       break;
-
+  }
     case CODEC_TYPE_AUDIO:
       if (!ffmpegdec->last_buffer)
         outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);

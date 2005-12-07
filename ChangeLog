@@ -1,3 +1,13 @@
+2005-12-07  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
+	So, stupid ffmpeg.... Not all [en|de]coders set AVFrame->type.
+	This should handle the case where AVFrame->reference is set to 1 (which
+	is the equivalent of a keyframe).
+	Also fixes #323286.
+	I tried a truckload of other files with this modification and it didn't seem
+	to break playback.
+
 2005-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
