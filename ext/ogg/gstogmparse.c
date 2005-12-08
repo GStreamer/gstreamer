@@ -512,7 +512,7 @@ gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query)
       gint64 src_val, dest_val;
 
       /* peel off input */
-      gst_query_parse_convert (query, &src_fmt, &src_val, NULL, NULL);
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if ((res = gst_ogm_parse_sink_convert (pad, src_fmt, src_val,
                   &dest_fmt, &dest_val))) {
         gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);

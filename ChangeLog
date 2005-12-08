@@ -1,3 +1,9 @@
+2005-12-08  Luca Ognibene  <luogni@tin.it>
+
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_sink_query):
+	  don't pass random values to ogmparse convert function.
+	  Make seeking possible in the exile1.ogm file.
+
 2005-12-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_property):
