@@ -292,6 +292,8 @@ GObject
       GstAlsaMixerElement
       GstTee
       GstTypeFindElement
+      GstMultipartMux
+      GstMultipartDemux
     GstPadTemplate
     GstIndex
       GstMemIndex

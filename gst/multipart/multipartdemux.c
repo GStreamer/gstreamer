@@ -19,6 +19,29 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-multipartdemux
+ * @short_description: Demuxer that takes a multipart digital stream as input
+ * and demuxes one or many digital streams from it.
+ * @see_also: #GstMultipartMux
+ *
+ * <refsect2>
+ * <para>
+ * MultipartDemux uses the Content-type field of incoming buffers to demux and 
+ * push data to dynamic source pads. Most of the time multipart streams are 
+ * sequential JPEG frames.
+ * </para>
+ * <title>Sample pipelines</title>
+ * <para>
+ * Here is a simple pipeline to demux a multipart file muxed with
+ * #GstMultipartMux containing JPEG frames at a rate of 5 frames per second :
+ * <programlisting>
+ * gst-launch filesrc location=/tmp/test.multipart ! multipartdemux ! jpegdec ! video/x-raw-yuv, framerate=(fraction)5/1 ! ffmpegcolorspace ! ximagesink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -27,22 +50,16 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_multipart_demux_debug);
-#define GST_CAT_DEFAULT gst_multipart_demux_debug
-
 #define GST_TYPE_MULTIPART_DEMUX (gst_multipart_demux_get_type())
 #define GST_MULTIPART_DEMUX(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTIPART_DEMUX, GstMultipartDemux))
 #define GST_MULTIPART_DEMUX_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTIPART_DEMUX, GstMultipartDemux))
 #define GST_IS_MULTIPART_DEMUX(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTIPART_DEMUX))
 #define GST_IS_MULTIPART_DEMUX_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIPART_DEMUX))
 
-#define MAX_LINE_LEN 500
-
 typedef struct _GstMultipartDemux GstMultipartDemux;
 typedef struct _GstMultipartDemuxClass GstMultipartDemuxClass;
 
-static gchar *toFind = "--ThisRandomString\nContent-type: ";
-static gint toFindLen;
+#define MAX_LINE_LEN 500
 
 /* all information needed for one multipart stream */
 typedef struct
@@ -58,6 +75,11 @@ typedef struct
 }
 GstMultipartPad;
 
+/**
+ * GstMultipartDemux:
+ *
+ * The opaque #GstMultipartDemux structure.
+ */
 struct _GstMultipartDemux
 {
   GstElement element;
@@ -80,6 +102,12 @@ struct _GstMultipartDemuxClass
 {
   GstElementClass parent_class;
 };
+
+GST_DEBUG_CATEGORY_STATIC (gst_multipart_demux_debug);
+#define GST_CAT_DEFAULT gst_multipart_demux_debug
+
+static gchar *toFind = "--ThisRandomString\nContent-type: ";
+static gint toFindLen;
 
 /* elementfactory information */
 static GstElementDetails gst_multipart_demux_details =

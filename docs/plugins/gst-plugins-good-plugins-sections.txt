@@ -24,10 +24,10 @@ GstCairoTimeOverlayClass
 
 <SECTION>
 <FILE>element-flacdec</FILE>
-GstFlacDec
+FlacDec
 <TITLE>flacdec</TITLE>
 <SUBSECTION Standard>
-GstFlacDecClass
+FlacDecClass
 </SECTION>
 
 <SECTION>
@@ -46,4 +46,19 @@ GstLevel
 GstLevelClass
 </SECTION>
 
+<SECTION>
+<FILE>element-multipartmux</FILE>
+GstMultipartMux
+<TITLE>multipartmux</TITLE>
+<SUBSECTION Standard>
+GstMultipartMuxClass
+</SECTION>
+
+<SECTION>
+<FILE>element-multipartdemux</FILE>
+GstMultipartDemux
+<TITLE>multipartdemux</TITLE>
+<SUBSECTION Standard>
+GstMultipartDemuxClass
+</SECTION>
 

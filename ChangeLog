@@ -1,3 +1,12 @@
+2005-12-08  Julien MOUTTE  <julien@moutte.net>
+
+	* docs/plugins/Makefile.am: Add multipart elements.
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt: Fix flac.
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* gst/multipart/multipartdemux.c:
+	* gst/multipart/multipartmux.c: Add docs.
+
 2005-12-07  Edward Hervey  <edward@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_event),
