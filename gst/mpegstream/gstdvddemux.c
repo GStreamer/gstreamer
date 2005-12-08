@@ -144,12 +144,10 @@ static GstFlowReturn gst_dvd_demux_send_buffer (GstMPEGParse * mpeg_parse,
 static gboolean gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse,
     GstEvent * event, GstClockTime time);
 
-static gboolean gst_dvd_demux_handle_discont
-    (GstMPEGParse * mpeg_parse, GstEvent * event);
-#if 0
+static gboolean gst_dvd_demux_handle_newsegment (GstMPEGParse * mpeg_parse,
+    GstEvent * event, gboolean forward);
 static gboolean gst_dvd_demux_handle_dvd_event
     (GstDVDDemux * dvd_demux, GstEvent * event);
-#endif
 
 static GstMPEGStream *gst_dvd_demux_get_video_stream
     (GstMPEGDemux * mpeg_demux,
@@ -171,12 +169,10 @@ static GstFlowReturn gst_dvd_demux_send_subbuffer
     GstMPEGStream * outstream,
     GstBuffer * buffer, GstClockTime timestamp, guint offset, guint size);
 
-#if 0
 static void gst_dvd_demux_set_cur_audio
     (GstDVDDemux * dvd_demux, gint stream_nr);
 static void gst_dvd_demux_set_cur_subpicture
     (GstDVDDemux * dvd_demux, gint stream_nr);
-#endif
 
 static void gst_dvd_demux_reset (GstDVDDemux * dvd_demux);
 static void gst_dvd_demux_synchronise_pads (GstMPEGDemux * mpeg_demux,
@@ -248,7 +244,7 @@ gst_dvd_demux_class_init (GstDVDDemuxClass * klass)
 
   gstelement_class->change_state = gst_dvd_demux_change_state;
 
-  mpeg_parse_class->handle_discont = gst_dvd_demux_handle_discont;
+  mpeg_parse_class->handle_newsegment = gst_dvd_demux_handle_newsegment;
 
   mpeg_demux_class->get_audio_stream = gst_dvd_demux_get_audio_stream;
   mpeg_demux_class->get_video_stream = gst_dvd_demux_get_video_stream;
@@ -286,15 +282,11 @@ gst_dvd_demux_init (GstDVDDemux * dvd_demux, GstDVDDemuxClass * klass)
   dvd_demux->cur_audio_nr = 0;
   dvd_demux->cur_subpicture_nr = 0;
 
-  dvd_demux->last_end_ptm = INITIAL_END_PTM;
-  dvd_demux->discont_time = GST_CLOCK_TIME_NONE;
-
   for (i = 0; i < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS; i++) {
     dvd_demux->subpicture_stream[i] = NULL;
   }
 
   dvd_demux->langcodes = NULL;
-  dvd_demux->ignore_next_newmedia_discont = FALSE;
 }
 
 
@@ -314,13 +306,11 @@ gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
   gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
-#if 0
-      /* FIXME: I do not know how to port GST_EVENT_ANY to gstreamer 0.9 */
-    case GST_EVENT_ANY:
-      if (!gst_dvd_demux_handle_dvd_event (dvd_demux, event))
-        return GST_FLOW_ERROR;
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+      if (!gst_dvd_demux_handle_dvd_event (dvd_demux, event)) {
+        ret = GST_FLOW_ERROR;
+      }
       break;
-#endif
       /*  case GST_EVENT_FILLER: */
     case GST_EVENT_NEWSEGMENT:
     case GST_EVENT_FLUSH_START:
@@ -337,7 +327,23 @@ gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
   return ret;
 }
 
-#if 0
+static gboolean
+gst_dvd_demux_handle_newsegment (GstMPEGParse * mpeg_parse,
+    GstEvent * event, gboolean forward)
+{
+  gboolean ret;
+
+  /* Run the superclass implementation to update the current segment. */
+  ret = GST_MPEG_PARSE_CLASS (parent_class)->handle_newsegment (mpeg_parse,
+      event, FALSE);
+
+  /* Use the current segment to adjust timestamps. */
+  GST_MPEG_DEMUX (mpeg_parse)->adjust = mpeg_parse->current_segment.accum -
+      mpeg_parse->current_segment.start;
+
+  return ret;
+}
+
 static gboolean
 gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
 {
@@ -357,8 +363,7 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
   }
 #endif
 
-  if (!g_str_has_prefix (gst_structure_get_name (structure),
-          "application/x-gst")) {
+  if (strcmp (gst_structure_get_name (structure), "application/x-gst-dvd") != 0) {
     /* This isn't a DVD event. */
     if (GST_EVENT_TIMESTAMP (event) != GST_CLOCK_TIME_NONE) {
       GST_EVENT_TIMESTAMP (event) += mpeg_demux->adjust;
@@ -379,9 +384,7 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     }
     gst_dvd_demux_set_cur_audio (dvd_demux, stream_nr);
     gst_event_unref (event);
-  }
-
-  else if (strcmp (event_type, "dvd-spu-stream-change") == 0) {
+  } else if (strcmp (event_type, "dvd-spu-stream-change") == 0) {
     gint stream_nr;
 
     gst_structure_get_int (structure, "physical", &stream_nr);
@@ -392,59 +395,6 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     }
     gst_dvd_demux_set_cur_subpicture (dvd_demux, stream_nr);
     gst_event_unref (event);
-  }
-
-  else if (strcmp (event_type, "dvd-nav-packet") == 0) {
-    GstClockTimeDiff old_adjust = mpeg_demux->adjust;
-    GstClockTime start_ptm =
-        g_value_get_uint64 (gst_structure_get_value (structure, "start_ptm"));
-    GstClockTime end_ptm =
-        g_value_get_uint64 (gst_structure_get_value (structure, "end_ptm"));
-    GstClockTime cell_start =
-        g_value_get_uint64 (gst_structure_get_value (structure, "cell_start"));
-    GstClockTime pg_start =
-        g_value_get_uint64 (gst_structure_get_value (structure, "pg_start"));
-
-    if (start_ptm != dvd_demux->last_end_ptm) {
-
-      GST_DEBUG_OBJECT (dvd_demux,
-          "PTM sequence discontinuity: from %0.3fs to %0.3fs, cell_start %0.3fs, pg_start %0.3fs",
-          (double) dvd_demux->last_end_ptm / GST_SECOND,
-          (double) start_ptm / GST_SECOND,
-          (double) cell_start / GST_SECOND, (double) pg_start / GST_SECOND);
-
-      if (pg_start > start_ptm)
-        mpeg_demux->adjust = pg_start - start_ptm;
-      else
-        mpeg_demux->adjust = 0;
-
-      /* Keep video/audio/subtitle pads within 1/2 sec of the SCR */
-      mpeg_demux->max_gap = 0.5 * GST_SECOND;
-      mpeg_demux->max_gap_tolerance = 0.05 * GST_SECOND;
-    }
-
-    /* Send a discont after a seek, or if PTM wrapping causes too large a gap */
-    if (mpeg_demux->just_flushed ||
-        ABS (GST_CLOCK_DIFF (dvd_demux->last_end_ptm + old_adjust,
-                start_ptm + mpeg_demux->adjust)) > PTM_DISCONT_ADJUST) {
-
-      /* The pipeline was just flushed, schedule a discontinuity with
-         the next sequence time. We don't do it here to reduce the
-         time gap between the discontinuity and the subsequent data
-         blocks. */
-      if (start_ptm > PTM_DISCONT_ADJUST)
-        dvd_demux->discont_time = start_ptm - PTM_DISCONT_ADJUST;
-      else
-        dvd_demux->discont_time = 0;
-
-      GST_DEBUG_OBJECT (dvd_demux,
-          "Set mpeg discont time to %" G_GINT64_FORMAT ", adjust %"
-          G_GINT64_FORMAT, dvd_demux->discont_time, mpeg_demux->adjust);
-    }
-
-    dvd_demux->last_end_ptm = end_ptm;
-
-    gst_event_unref (event);
   } else if (!strcmp (event_type, "dvd-lang-codes")) {
     gint num_substreams = 0, num_audstreams = 0, n;
     gchar *t;
@@ -452,8 +402,6 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     /* reset */
     if (dvd_demux->langcodes)
       gst_event_unref (dvd_demux->langcodes);
-    PARSE_CLASS (dvd_demux)->handle_discont (mpeg_parse,
-        gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_UNDEFINED, 0, 0, 0));
 
     /* see what kind of streams we have */
     dvd_demux->langcodes = event;
@@ -513,7 +461,6 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
 
     /* we know this will be all */
     gst_element_no_more_pads (GST_ELEMENT (dvd_demux));
-    dvd_demux->ignore_next_newmedia_discont = TRUE;
 
     /* Keep video/audio/subtitle pads within 1/2 sec of the SCR */
     mpeg_demux->max_gap = 0.5 * GST_SECOND;
@@ -527,29 +474,6 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
   }
 
   return TRUE;
-}
-#endif
-
-static GstFlowReturn
-gst_dvd_demux_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
-{
-#if 0
-  GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_parse);
-
-  if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
-    /* HACK */
-    if (dvd_demux->ignore_next_newmedia_discont)
-      GST_EVENT_DISCONT_NEW_MEDIA (event) = FALSE;
-    else
-      gst_dvd_demux_reset (dvd_demux);
-  }
-#endif
-
-  /* let parent handle and forward discont */
-  if (GST_MPEG_PARSE_CLASS (parent_class)->handle_discont != NULL)
-    GST_MPEG_PARSE_CLASS (parent_class)->handle_discont (mpeg_parse, event);
-
-  return GST_FLOW_OK;
 }
 
 static GstMPEGStream *
@@ -1008,26 +932,10 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
     GstMPEGStream * outstream, GstBuffer * buffer,
     GstClockTime timestamp, guint offset, guint size)
 {
-  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (mpeg_demux);
   GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_demux);
   GstFlowReturn ret;
   GstPad *outpad;
   gint cur_nr;
-
-  /* If there's a pending discontinuity, send it now. The idea is to
-     minimize the time interval between the discontinuity and the data
-     buffers following it. */
-  if (dvd_demux->discont_time != GST_CLOCK_TIME_NONE) {
-    if ((gint64) (dvd_demux->discont_time) < 0) {
-      GST_ERROR ("DVD Discont < 0! % " G_GINT64_FORMAT,
-          (gint64) dvd_demux->discont_time);
-    }
-    PARSE_CLASS (mpeg_demux)->send_newsegment (mpeg_parse, 1.0,
-        dvd_demux->discont_time, GST_CLOCK_TIME_NONE);
-    dvd_demux->discont_time = GST_CLOCK_TIME_NONE;
-  }
-
-  dvd_demux->ignore_next_newmedia_discont = FALSE;
 
   /* You never know what happens to a buffer when you send it.  Just
      in case, we keep a reference to the buffer during the execution
@@ -1081,7 +989,6 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
   return ret;
 }
 
-#if 0
 static void
 gst_dvd_demux_set_cur_audio (GstDVDDemux * dvd_demux, gint stream_nr)
 {
@@ -1136,7 +1043,6 @@ gst_dvd_demux_set_cur_subpicture (GstDVDDemux * dvd_demux, gint stream_nr)
     gst_pad_set_caps (dvd_demux->cur_subpicture, caps);
   }
 }
-#endif
 
 static void
 gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
@@ -1165,9 +1071,6 @@ gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
   dvd_demux->cur_audio_nr = 0;
   dvd_demux->cur_subpicture_nr = 0;
   dvd_demux->mpeg_version = 0;
-  dvd_demux->last_end_ptm = INITIAL_END_PTM;
-
-  dvd_demux->discont_time = GST_CLOCK_TIME_NONE;
 
 #if 0
   /* Reset max_gap handling */
@@ -1259,7 +1162,6 @@ gst_dvd_demux_change_state (GstElement * element, GstStateChange transition)
         gst_event_unref (dvd_demux->langcodes);
         dvd_demux->langcodes = NULL;
       }
-      dvd_demux->ignore_next_newmedia_discont = FALSE;
       break;
     default:
       break;

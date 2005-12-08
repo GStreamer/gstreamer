@@ -98,8 +98,6 @@ static gboolean gst_mpeg_demux_process_event (GstMPEGParse * mpeg_parse,
     GstEvent * event, GstClockTime time);
 static gboolean gst_mpeg_demux_send_newsegment (GstMPEGParse * parse,
     gdouble rate, GstClockTime start_time, GstClockTime stop_time);
-static gboolean gst_mpeg_demux_handle_discont (GstMPEGParse * mpeg_parse,
-    GstEvent * event);
 static gboolean gst_mpeg_demux_send_event (GstMPEGParse * mpeg_parse,
     GstEvent * event, GstClockTime time);
 
@@ -201,7 +199,6 @@ gst_mpeg_demux_class_init (GstMPEGDemuxClass * klass)
   mpeg_parse_class->send_buffer = gst_mpeg_demux_send_buffer;
   mpeg_parse_class->process_event = gst_mpeg_demux_process_event;
   mpeg_parse_class->send_newsegment = gst_mpeg_demux_send_newsegment;
-  mpeg_parse_class->handle_discont = gst_mpeg_demux_handle_discont;
   mpeg_parse_class->send_event = gst_mpeg_demux_send_event;
 
   klass->new_output_pad = gst_mpeg_demux_new_output_pad;
@@ -323,25 +320,6 @@ gst_mpeg_demux_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
   return TRUE;
 }
 
-static gboolean
-gst_mpeg_demux_handle_discont (GstMPEGParse * mpeg_parse, GstEvent * event)
-{
-  gboolean ret = TRUE;
-
-#if 0
-  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (mpeg_parse);
-
-  if (GST_EVENT_DISCONT_NEW_MEDIA (event)) {
-    gst_mpeg_demux_reset (mpeg_demux);
-  }
-#endif
-
-  if (parent_class->handle_discont != NULL)
-    ret = parent_class->handle_discont (mpeg_parse, event);
-
-  return ret;
-}
-
 static gint
 _demux_get_writer_id (GstIndex * index, GstPad * pad)
 {
@@ -369,11 +347,11 @@ gst_mpeg_demux_new_output_pad (GstMPEGDemux * mpeg_demux,
 #if 0
   gst_pad_set_event_function (pad,
       GST_DEBUG_FUNCPTR (gst_mpeg_demux_handle_src_event));
+#endif
   gst_pad_set_query_type_function (pad,
       GST_DEBUG_FUNCPTR (gst_mpeg_parse_get_src_query_types));
   gst_pad_set_query_function (pad,
-      GST_DEBUG_FUNCPTR (gst_mpeg_demux_handle_src_query));
-#endif
+      GST_DEBUG_FUNCPTR (gst_mpeg_parse_handle_src_query));
   gst_pad_use_fixed_caps (pad);
 
   return pad;
@@ -1003,8 +981,12 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
   if (size == 0)
     return GST_FLOW_OK;
 
-  GST_DEBUG_OBJECT (mpeg_demux, "Creating subbuffer size %d, time=%"
-      GST_TIME_FORMAT, size, GST_TIME_ARGS (timestamp));
+  if (timestamp != GST_CLOCK_TIME_NONE) {
+    GST_DEBUG_OBJECT (mpeg_demux, "Creating subbuffer size %d, time=%"
+        GST_TIME_FORMAT, size, GST_TIME_ARGS (timestamp));
+  } else {
+    GST_DEBUG_OBJECT (mpeg_demux, "Creating subbuffer size %d", size);
+  }
   outbuf = gst_buffer_create_sub (buffer, offset, size);
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;

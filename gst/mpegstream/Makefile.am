@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstmpegstream.la
 
 libgstmpegstream_la_SOURCES = gstmpegstream.c \

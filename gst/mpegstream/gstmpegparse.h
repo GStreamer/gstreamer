@@ -78,16 +78,14 @@ struct _GstMPEGParse
                                    adjusted with the value of
                                    'adjust') */
 
+  /* Timestamp handling. */
+  gboolean do_adjust;           /* If true, adjust SCR values using
+                                   the 'adjust' attribute. */
   gint64 adjust;                /* Value added to SCR values to
                                    produce buffer timestamps */
   gint max_scr_gap;             /* The maximum allowed SCR gap without
                                    making a timestamp adjustment */
-
-  gboolean newsegment_pending;  /* If true, the element should send a
-                                   NEWSEGMENT event as soon as there
-                                   is SCR information available */
-
-  gboolean scr_pending;
+  GstSegment current_segment;   /* Segment currently being played. */
 
   GstIndex *index;
   gint index_id;
@@ -99,25 +97,33 @@ struct _GstMPEGParseClass
 {
   GstElementClass parent_class;
 
-  /* Process packet types */
+  /* Process packets of different types */
   gboolean      (*parse_packhead) (GstMPEGParse * parse, GstBuffer * buffer);
   gboolean      (*parse_syshead)  (GstMPEGParse * parse, GstBuffer * buffer);
   GstFlowReturn (*parse_packet)   (GstMPEGParse * parse, GstBuffer * buffer);
   GstFlowReturn (*parse_pes)      (GstMPEGParse * parse, GstBuffer * buffer);
 
-  /* Process events */
-  GstFlowReturn (*handle_discont) (GstMPEGParse * parse, GstEvent * event);
-
   /* Optional method to send out the data */
   GstFlowReturn (*send_buffer)    (GstMPEGParse * parse,
                                    GstBuffer * buffer, GstClockTime time);
+
+  /* Process an event */
   gboolean      (*process_event)  (GstMPEGParse * parse,
                                    GstEvent * event, GstClockTime time);
+
+  /* Process a newsegment event */
+  gboolean      (*handle_newsegment)
+                                  (GstMPEGParse * parse, GstEvent * event,
+                                   gboolean forward);
+
+  /* Send an event */
+  gboolean      (*send_event)     (GstMPEGParse * parse, GstEvent *event,
+                                   GstClockTime time);
+
+  /* Send a newsegment event. */
   gboolean      (*send_newsegment)(GstMPEGParse * parse, gdouble rate,
                                    GstClockTime start_time,
                                    GstClockTime stop_time);
-  gboolean      (*send_event)     (GstMPEGParse * parse, GstEvent *event,
-                                   GstClockTime time);
 
   /* Signals */
   void          (*reached_offset) (GstMPEGParse *parse,
@@ -130,13 +136,10 @@ gboolean gst_mpeg_parse_plugin_init (GstPlugin * plugin);
 
 const GstFormat *gst_mpeg_parse_get_src_formats (GstPad * pad);
 
-gboolean gst_mpeg_parse_convert_src (GstPad * pad, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 gboolean gst_mpeg_parse_handle_src_event (GstPad * pad, GstEvent * event);
 
 const GstQueryType *gst_mpeg_parse_get_src_query_types (GstPad * pad);
-gboolean gst_mpeg_parse_handle_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value);
+gboolean gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query);
 
 G_END_DECLS
 

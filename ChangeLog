@@ -1,3 +1,106 @@
+2005-12-08  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_handle_newsegment):
+	Properly handle non contiguous VOBUs by adding the segment accum
+	field to the adjust value.
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_class_init)
+	(gst_dvd_demux_init, gst_dvd_demux_handle_newsegment): Extend
+	handle_newsegment to prevent sending actual newsegment events and
+	use tiemstamp rewriting instead.
+	(gst_dvd_demux_handle_dvd_event): Don't send a newsegment after
+	dvd-lang-codes.
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_handle_newsegment) 
+	(gst_mpeg_parse_event): 
+	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParseClass): 
+	Add a new parameter to handle_newsegment to allow controlling
+	whether newsegment events are forwarded or not.
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_init) 
+	(gst_dvd_demux_handle_dvd_event, gst_dvd_demux_send_subbuffer) 
+	(gst_dvd_demux_reset): 
+	last_end_ptm and discont_time aren't necessary anymore, since
+	timestamp adjustment is now replaced by newsegment events.
+	(gst_dvd_demux_init): Prevent MPEGParse from adjusting
+	timestamps.
+	* gst/mpegstream/gstdvddemux.h: 
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_handle_dvd_event):
+	Don't handle dvd-nav-packet events anymore, since the are now
+	replaced by standard newsegment events.
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_init) 
+	(gst_dvd_demux_handle_dvd_event, gst_dvd_demux_send_subbuffer) 
+	(gst_dvd_demux_change_state): 
+	* gst/mpegstream/gstdvddemux.h: 
+	Get rid of the ignore_next_newmedia_discont hack.
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_class_init) 
+	(gst_dvd_demux_handle_newsegment): 
+	* gst/mpegstream/gstmpegdemux.c (gst_mpeg_demux_class_init) 
+	(gst_mpeg_demux_handle_newsegment): Don't override
+	handle_newsegment anymore. It was only necessary to handle
+	NEWMEDIA events.
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_process_event) 
+	(gst_dvd_demux_handle_dvd_event, gst_dvd_demux_set_cur_audio) 
+	(gst_dvd_demux_set_cur_subpicture):
+	Reactivate handling of DVD events.
+
+	* gst/mpegstream/gstmpegparse.c (normal_seek) 
+	(gst_mpeg_parse_handle_src_event) 
+	(gst_mpeg_parse_handle_src_query): 
+	First attempt at reenabling seek.
+
+	* gst/mpegstream/gstmpegparse.h: 
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_init) 
+	(gst_mpeg_parse_update_streaminfo) 
+	(gst_mpeg_parse_get_rate) 
+	(gst_mpeg_parse_convert, gst_mpeg_parse_get_src_query_types) 
+	(gst_mpeg_parse_handle_src_query): 
+	* gst/mpegstream/gstmpegdemux.c (gst_mpeg_demux_new_output_pad): 
+	Make queries work again.
+
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_reset) 
+	(gst_mpeg_parse_handle_newsegment) 
+	(gst_mpeg_parse_send_newsegment, gst_mpeg_parse_pad_added) 
+	(gst_mpeg_parse_chain, gst_mpeg_parse_handle_src_event): 
+	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParse):
+	Get rid of the newsegment_pending attribute, and rely instead on
+	proper timestamp adjustment.
+
+	* gst/mpegstream/gstmpegparse.c
+	(gst_mpeg_parse_get_src_event_masks): Erase.
+
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_init):
+	Initialize fields before creating pads to prevent the pad creation
+	callback from failing.
+	(gst_mpeg_parse_reset): Initialize new fields, and change
+	initialization order to match the order in the structure.
+	(gst_mpeg_parse_handle_newsegment): Forward new segment events
+	whenever possible, and update the current segment.
+	(gst_mpeg_parse_send_newsegment): Update the current segment and
+	pending_newsegment.
+	(gst_mpeg_parse_pad_added): Use the current segment to send
+	newsegment events to new pads.
+	(gst_mpeg_parse_chain): Properly add adjust time to sent buffers
+	and events. Properly update newsegment_pending.
+	* gst/mpegstream/gstmpegparse.h	(struct _GstMPEGParse):
+	New fields do_adjust and current_segment.
+
+	* gst/mpegstream/gstmpegdemux.c: 
+	* gst/mpegstream/gstdvddemux.c: 
+	* gst/mpegstream/gstmpegparse.h: 
+	Rename handle_discont virtual method to handle_newsegment. Erase
+	some (already commented out support) for old NEW_MEDIA events.
+
+	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParse):
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_init) 
+	(gst_mpeg_parse_reset, gst_mpeg_parse_handle_discont) 
+	(gst_mpeg_parse_pad_added, gst_mpeg_parse_parse_packhead) 
+	(gst_mpeg_parse_event, gst_mpeg_parse_chain): 
+	Erase the "pending_scr" field, and replace it by a slightly
+	different handling of the current SCR. Document code blocks in
+	parse_packhead and chain.
+
 2005-12-07  Edward Hervey  <edward@fluendo.com>
 
 	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list):
