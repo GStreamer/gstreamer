@@ -23,6 +23,7 @@
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 
 from argtypes import UInt64Arg, Int64Arg, PointerArg, ArgMatcher, ArgType, matcher
+from reversewrapper import Parameter, ReturnType, GBoxedParam, GBoxedReturn
 
 class XmlNodeArg(ArgType):
 	"""libxml2 node generator"""
@@ -128,6 +129,44 @@ class GstCapsArg(ArgType):
         else:
             raise RuntimeError, "write_return not implemented for %s" % ptype
 		info.codeafter.append('    return pyg_boxed_new (GST_TYPE_CAPS, ret, '+copyval+', TRUE);')
+
+class GstMiniObjectParam(Parameter):
+
+    def get_c_type(self):
+        return self.props.get('c_type', 'GstMiniObject *')
+
+    def convert_c2py(self):
+        self.wrapper.add_declaration("PyObject *py_%s = NULL;" % self.name)
+        self.wrapper.write_code(code=("if (%s)\n"
+                                      "    py_%s = pygstminiobject_new((GstMiniObject *) %s);\n"
+                                      "else {\n"
+                                      "    Py_INCREF(Py_None);\n"
+                                      "    py_%s = Py_None;\n"
+                                      "}"
+                                      % (self.name, self.name, self.name, self.name)),
+                                cleanup=("Py_DECREF(py_%s);" % self.name))
+        self.wrapper.add_pyargv_item("py_%s" % self.name)
+
+matcher.register_reverse('GstMiniObject*', GstMiniObjectParam)
+
+class GstMiniObjectReturn(ReturnType):
+
+    def get_c_type(self):
+        return self.props.get('c_type', 'GstMiniObject *')
+
+    def write_decl(self):
+        self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+
+    def write_error_return(self):
+        self.wrapper.write_code("return NULL;")
+
+    def write_conversion(self):
+        self.wrapper.write_code("retval = (%s) pygstminiobject_get(py_retval);"
+                                % self.get_c_type())
+        self.wrapper.write_code("gst_mini_object_ref((GstMiniObject *) retval);")
+
+matcher.register_reverse_ret('GstMiniObject*', GstMiniObjectReturn)
+
 			
 matcher.register('GstClockTime', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
@@ -139,5 +178,13 @@ matcher.register('const-GstCaps*', GstCapsArg())
 
 arg = PointerArg('gpointer', 'G_TYPE_POINTER')
 matcher.register('GstClockID', arg)
+
+for typename in ["GstPlugin", "GstStructure", "GstTagList", "GError", "GstDate", "GstSegment"]:
+	matcher.register_reverse(typename, GBoxedParam)
+	matcher.register_reverse_ret(typename, GBoxedReturn)
+
+for typename in ["GstBuffer*", "GstEvent*", "GstMessage*", "GstQuery*"]:
+	matcher.register_reverse(typename, GstMiniObjectParam)
+	matcher.register_reverse_ret(typename, GstMiniObjectReturn)
 
 del arg

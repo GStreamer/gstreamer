@@ -3621,7 +3621,7 @@
   (c-name "gst_pad_push_event")
   (return-type "gboolean")
   (parameters
-    '("GstEvent*" "event")
+    '("GstEvent*" "event" (keep-refcount))
   )
 )
 
@@ -3639,7 +3639,7 @@
   (c-name "gst_pad_chain")
   (return-type "GstFlowReturn")
   (parameters
-    '("GstBuffer*" "buffer")
+    '("GstBuffer*" "buffer" (keep-refcount))
   )
 )
 
