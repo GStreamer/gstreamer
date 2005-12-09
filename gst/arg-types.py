@@ -167,6 +167,57 @@ class GstMiniObjectReturn(ReturnType):
 
 matcher.register_reverse_ret('GstMiniObject*', GstMiniObjectReturn)
 
+class Int64Param(Parameter):
+
+    def get_c_type(self):
+        return self.props.get('c_type', 'gint64')
+
+    def convert_c2py(self):
+        self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
+        self.wrapper.write_code(code=("py_%s = PyLong_FromLongLong(%s);" %
+                                      (self.name, self.name)),
+                                cleanup=("Py_DECREF(py_%s);" % self.name))
+        self.wrapper.add_pyargv_item("py_%s" % self.name)
+
+class Int64Return(ReturnType):
+    def get_c_type(self):
+        return self.props.get('c_type', 'gint64')
+    def write_decl(self):
+        self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+    def write_error_return(self):
+        self.wrapper.write_code("return -G_MAXINT;")
+    def write_conversion(self):
+        self.wrapper.write_code(
+            code=None,
+            failure_expression="!PyLong_Check(py_retval)",
+            failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be an long");')
+        self.wrapper.write_code("retval = PyLong_AsLongLong(py_retval);")
+			
+class UInt64Param(Parameter):
+
+    def get_c_type(self):
+        return self.props.get('c_type', 'guint64')
+
+    def convert_c2py(self):
+        self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
+        self.wrapper.write_code(code=("py_%s = PyLong_FromUnsignedLongLong(%s);" %
+                                      (self.name, self.name)),
+                                cleanup=("Py_DECREF(py_%s);" % self.name))
+        self.wrapper.add_pyargv_item("py_%s" % self.name)
+
+class UInt64Return(ReturnType):
+    def get_c_type(self):
+        return self.props.get('c_type', 'guint64')
+    def write_decl(self):
+        self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+    def write_error_return(self):
+        self.wrapper.write_code("return -G_MAXINT;")
+    def write_conversion(self):
+        self.wrapper.write_code(
+            code=None,
+            failure_expression="!PyLong_Check(py_retval)",
+            failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be an long");')
+        self.wrapper.write_code("retval = PyLong_AsUnsignedLongLongMask(py_retval);")
 			
 matcher.register('GstClockTime', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
@@ -186,5 +237,13 @@ for typename in ["GstPlugin", "GstStructure", "GstTagList", "GError", "GstDate",
 for typename in ["GstBuffer*", "GstEvent*", "GstMessage*", "GstQuery*"]:
 	matcher.register_reverse(typename, GstMiniObjectParam)
 	matcher.register_reverse_ret(typename, GstMiniObjectReturn)
+
+for typename in ["gint64", "GstClockTimeDiff"]:
+	matcher.register_reverse(typename, Int64Param)
+	matcher.register_reverse_ret(typename, Int64Return)
+
+for typename in ["guint64", "GstClockTime"]:
+	matcher.register_reverse(typename, UInt64Param)
+	matcher.register_reverse_ret(typename, UInt64Return)
 
 del arg

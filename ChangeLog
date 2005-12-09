@@ -1,6 +1,12 @@
 2005-12-09  Edward Hervey  <edward@fluendo.com>
 
 	* gst/arg-types.py:
+	This covers for the codegenerator not being able to handle
+	(unsigned) int64 as parameters and return values.
+
+2005-12-09  Edward Hervey  <edward@fluendo.com>
+
+	* gst/arg-types.py:
 	Added (reverse_)wrapper for GBoxed and GstMiniObject
 	* gst/gst.defs:
 	push_event() and chain() takes the reference on the
