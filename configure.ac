@@ -320,14 +320,6 @@ dnl check for mmap()
 AC_FUNC_MMAP
 AM_CONDITIONAL(HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" = "xyes")
 
-dnl common/m4/gst-mcsc.m4
-dnl check for makecontext and define HAVE_MAKECONTEXT if we have it
-AC_CHECK_MCSC
-if test "$ac_cv_check_mcsc" = "yes"; then
-  AC_DEFINE_UNQUOTED(HAVE_MAKECONTEXT, 1,
-                     [defined if we have makecontext ()])
-fi
-
 dnl Check for a way to display the function name in debug output
 GST_CHECK_FUNCTION
 

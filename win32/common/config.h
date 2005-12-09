@@ -111,9 +111,6 @@
 /* Define if libxml2 is available */
 #define HAVE_LIBXML2 1
 
-/* defined if we have makecontext () */
-#undef HAVE_MAKECONTEXT
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
