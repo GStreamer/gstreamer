@@ -1,3 +1,15 @@
+2005-12-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_chanpos_to_gst),
+	(gst_faad_update_caps):
+	  Assume that an unknown channel mapping with 2 channels
+	  is stereo and play it that way instead of erroring.
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(gst_qtdemux_add_stream), (qtdemux_parse_trak):
+	  Handle e.g. jpeg streams with 0 duration frames as having 0 framerate.
+	  Debug fixes. Some 64 bit variable fixes
+
 2005-12-09  Edgard Lima <edgard.lima@indt.org.br>
 
 	* configure.ac:

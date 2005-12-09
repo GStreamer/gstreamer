@@ -315,6 +315,7 @@ gst_faad_chanpos_to_gst (guchar * fpos, guint num)
 {
   GstAudioChannelPosition *pos = g_new (GstAudioChannelPosition, num);
   guint n;
+  gboolean unknown_channel = FALSE;
 
   for (n = 0; n < num; n++) {
     switch (fpos[n]) {
@@ -350,10 +351,20 @@ gst_faad_chanpos_to_gst (guchar * fpos, guint num)
         pos[n] = GST_AUDIO_CHANNEL_POSITION_LFE;
         break;
       default:
-        GST_WARNING ("Unsupported FAAD channel position 0x%x encountered",
-            fpos[n]);
-        g_free (pos);
-        return NULL;
+        unknown_channel = TRUE;
+        break;
+    }
+  }
+  if (unknown_channel) {
+    if (num == 2) {
+      GST_DEBUG ("FAAD reports unknown 2 channel mapping. Forcing to stereo");
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+    } else {
+      GST_WARNING ("Unsupported FAAD channel position 0x%x encountered",
+          fpos[n]);
+      g_free (pos);
+      return NULL;
     }
   }
 
@@ -729,6 +740,11 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info,
   faad->bps = 16 / 8;
 
   pos = gst_faad_chanpos_to_gst (faad->channel_positions, faad->channels);
+  if (!pos) {
+    GST_DEBUG_OBJECT (faad, "Could not map channel positions");
+    gst_caps_unref (caps);
+    return FALSE;
+  }
   gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
   g_free (pos);
 
