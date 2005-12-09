@@ -23,20 +23,21 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 #include <swfdec.h>
 #include <swfdec_render.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SWFDEC \
+#define GST_TYPE_SWFDEC				\
   (gst_swfdec_get_type())
-#define GST_SWFDEC(obj) \
+#define GST_SWFDEC(obj)						\
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SWFDEC,GstSwfdec))
-#define GST_SWFDEC_CLASS(klass) \
+#define GST_SWFDEC_CLASS(klass)					\
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SWFDEC,GstSwfdec))
-#define GST_IS_SWFDEC(obj) \
+#define GST_IS_SWFDEC(obj)				\
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SWFDEC))
-#define GST_IS_SWFDEC_CLASS(obj) \
+#define GST_IS_SWFDEC_CLASS(obj)			\
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SWFDEC))
 
 typedef struct _GstSwfdec GstSwfdec;
@@ -51,6 +52,10 @@ struct _GstSwfdec
   GstPad *videopad;
   GstPad *audiopad;
 
+  GstAdapter *adapter;
+  GstTask *task;
+  GStaticRecMutex mutex;
+
   SwfdecDecoder *decoder;
   gboolean closed;
 
@@ -60,10 +65,10 @@ struct _GstSwfdec
   gboolean send_discont;
   int seek_frame;
 
-  double rate;
   gint64 timestamp;
   gint64 interval;
-  double frame_rate;
+  int frame_rate_n;
+  int frame_rate_d;
 
   /* video state */
   gint format;
@@ -71,11 +76,18 @@ struct _GstSwfdec
   gint height;
   gint64 total_frames;
 
+  double x, y;
+  int button;
+
+  int skip_frames;
+  int skip_index;
 };
 
 struct _GstSwfdecClass
 {
   GstElementClass parent_class;
+
+  void (*embed_url) (GstElement *element, const char *url);
 };
 
 GType gst_swfdec_get_type (void);

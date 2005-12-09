@@ -172,11 +172,11 @@ SMOOTHWAVE_DIR=
 SNDFILE_DIR=
 # endif
 
-# if USE_SWFDEC
-# SWFDEC_DIR=swfdec
-# else
+if USE_SWFDEC
+SWFDEC_DIR=swfdec
+else
 SWFDEC_DIR=
-# endif
+endif
 
 # if USE_TARKIN
 # TARKIN_DIR=tarkin
@@ -240,4 +240,5 @@ DIST_SUBDIRS= \
 	libmms \
 	musepack \
 	sdl \
+	swfdec \
 	wavpack

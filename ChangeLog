@@ -1,3 +1,12 @@
+2005-12-09  Edgard Lima <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/swfdec/Makefile.am:
+	* ext/swfdec/gstswfdec.c:
+	* ext/swfdec/gstswfdec.h:
+	swfdec Ported to 0.10.
+
 2005-12-07  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
