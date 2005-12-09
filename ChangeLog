@@ -1,3 +1,10 @@
+2005-12-09  Michael Smith  <msmith@fluendo.com>
+
+	* tools/Makefile.am:
+	* tools/gst-launch-ext-m.m:
+	  Remove gst-launch-ext. It doesn't work, and is no longer
+	  particularly useful.
+
 2005-12-08  Luca Ognibene  <luogni@tin.it>
 
 	* ext/ogg/gstogmparse.c: (gst_ogm_parse_sink_query):
