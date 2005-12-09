@@ -550,6 +550,7 @@ find_peek (gpointer data, gint64 offset, guint size)
     return NULL;
 
   if (size <= entry->self->store->size) {
+    entry->requested_size = 0;
     return GST_BUFFER_DATA (entry->self->store);
   } else {
     entry->requested_size = size;
@@ -628,15 +629,15 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
 
         all_factories = g_list_sort (all_factories, compare_type_find_factory);
         walk = all_factories;
-        while (all_factories) {
+        while (walk) {
           entry = new_entry ();
 
-          entry->factory = GST_TYPE_FIND_FACTORY (all_factories->data);
+          entry->factory = GST_TYPE_FIND_FACTORY (walk->data);
           entry->self = typefind;
           entry->probability = 0;
           typefind->possibilities =
               g_list_prepend (typefind->possibilities, entry);
-          all_factories = g_list_next (all_factories);
+          walk = g_list_next (walk);
         }
         gst_plugin_feature_list_free (all_factories);
       }

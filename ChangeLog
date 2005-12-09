@@ -1,3 +1,21 @@
+2005-12-09  Michael Smith  <msmith@fluendo.com>
+
+	* plugins/elements/gsttypefindelement.c: (find_peek),
+	(gst_type_find_element_chain):
+	  Fix leaking element factories in typefinding.
+	  Fix problem where we forgot about a probable type on non-seekable
+	  files, and thus later mis-typefound it.
+
+2005-12-09  Michael Smith  <msmith@fluendo.com>
+
+	* common/m4/gst-makecontext.m4:
+	* common/m4/gst-mcsc.m4:
+	* configure.ac:
+	* win32/common/config.h:
+	* win32/common/config.h.in:
+	  Remove makecontext stuff; not used in 0.10 and causes problems on
+	  HPUX according to bug #322441
+
 2005-12-07  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/Makefile.am:
