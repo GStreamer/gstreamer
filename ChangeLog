@@ -1,3 +1,8 @@
+2005-12-09  Michael Smith  <msmith@fluendo.com>
+
+	* ext/flac/gstflacdec.c: (raw_caps_factory), (gst_flacdec_write):
+	  Accept a wider range of flac files, more closely matching flac spec.
+
 2005-12-08  Julien MOUTTE  <julien@moutte.net>
 
 	* docs/plugins/Makefile.am: Add multipart elements.

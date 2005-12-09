@@ -149,8 +149,8 @@ raw_caps_factory (void)
       "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
       "signed = (boolean) true, "
       "width = (int) { 8, 16, 32 }, "
-      "depth = (int) { 8, 16, 24, 32 }, "
-      "rate = (int) [ 11025, 48000 ], " "channels = (int) [ 1, 6 ]");
+      "depth = (int) { 8, 12, 16, 20, 24, 32 }, "
+      "rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 8 ]");
 }
 
 static void
@@ -437,11 +437,28 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
   FlacDec *flacdec;
   GstBuffer *outbuf;
   guint depth = frame->header.bits_per_sample;
-  guint width = (depth == 24) ? 32 : depth;
+  guint width;
   guint channels = frame->header.channels;
   guint samples = frame->header.blocksize;
   guint j, i;
   GstFlowReturn ret;
+
+  switch (depth) {
+    case 8:
+      width = 8;
+      break;
+    case 12:
+    case 16:
+      width = 16;
+      break;
+    case 20:
+    case 24:
+    case 32:
+      width = 32;
+      break;
+    default:
+      return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+  }
 
   flacdec = GST_FLACDEC (client_data);
 
@@ -510,7 +527,7 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
         *outbuffer++ = (guint8) buffer[j][i];
       }
     }
-  } else if (depth == 16) {
+  } else if (depth == 12 || depth == 16) {
     guint16 *outbuffer = (guint16 *) GST_BUFFER_DATA (outbuf);
 
     for (i = 0; i < samples; i++) {
@@ -518,7 +535,7 @@ gst_flacdec_write (const FLAC__SeekableStreamDecoder * decoder,
         *outbuffer++ = (guint16) buffer[j][i];
       }
     }
-  } else if (depth == 24 || depth == 32) {
+  } else if (depth == 20 || depth == 24 || depth == 32) {
     guint32 *outbuffer = (guint32 *) GST_BUFFER_DATA (outbuf);
 
     for (i = 0; i < samples; i++) {
