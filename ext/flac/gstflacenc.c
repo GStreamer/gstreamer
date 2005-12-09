@@ -92,32 +92,33 @@ GST_DEBUG_CATEGORY_STATIC (flacenc_debug);
                                  &tag_setter_info);                             \
   }G_STMT_END
 
-GST_BOILERPLATE_FULL (GstFlacEnc, gst_flacenc, GstElement, GST_TYPE_ELEMENT,
+GST_BOILERPLATE_FULL (GstFlacEnc, gst_flac_enc, GstElement, GST_TYPE_ELEMENT,
     _do_init);
 
-static void gst_flacenc_finalize (GObject * object);
+static void gst_flac_enc_finalize (GObject * object);
 
-static gboolean gst_flacenc_sink_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_flacenc_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_flacenc_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_flac_enc_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer);
 
-static gboolean gst_flacenc_update_quality (GstFlacEnc * flacenc, gint quality);
-static void gst_flacenc_set_property (GObject * object, guint prop_id,
+static gboolean gst_flac_enc_update_quality (GstFlacEnc * flacenc,
+    gint quality);
+static void gst_flac_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_flacenc_get_property (GObject * object, guint prop_id,
+static void gst_flac_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static GstStateChangeReturn gst_flacenc_change_state (GstElement * element,
+static GstStateChangeReturn gst_flac_enc_change_state (GstElement * element,
     GstStateChange transition);
 
 static FLAC__StreamEncoderWriteStatus
-gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
+gst_flac_enc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
     const FLAC__byte buffer[], unsigned bytes,
     unsigned samples, unsigned current_frame, void *client_data);
 static FLAC__SeekableStreamEncoderSeekStatus
-gst_flacenc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
+gst_flac_enc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
     FLAC__uint64 absolute_byte_offset, void *client_data);
 static FLAC__SeekableStreamEncoderTellStatus
-gst_flacenc_tell_callback (const FLAC__SeekableStreamEncoder * encoder,
+gst_flac_enc_tell_callback (const FLAC__SeekableStreamEncoder * encoder,
     FLAC__uint64 * absolute_byte_offset, void *client_data);
 
 typedef struct
@@ -151,9 +152,9 @@ static const GstFlacEncParams flacenc_params[] = {
 
 #define DEFAULT_QUALITY 5
 
-#define GST_TYPE_FLACENC_QUALITY (gst_flacenc_quality_get_type ())
+#define GST_TYPE_FLAC_ENC_QUALITY (gst_flac_enc_quality_get_type ())
 GType
-gst_flacenc_quality_get_type (void)
+gst_flac_enc_quality_get_type (void)
 {
   static GType qtype = 0;
 
@@ -178,7 +179,7 @@ gst_flacenc_quality_get_type (void)
 }
 
 static void
-gst_flacenc_base_init (gpointer g_class)
+gst_flac_enc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -194,7 +195,7 @@ gst_flacenc_base_init (gpointer g_class)
 }
 
 static void
-gst_flacenc_class_init (GstFlacEncClass * klass)
+gst_flac_enc_class_init (GstFlacEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -202,15 +203,15 @@ gst_flacenc_class_init (GstFlacEncClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->set_property = gst_flacenc_set_property;
-  gobject_class->get_property = gst_flacenc_get_property;
-  gobject_class->finalize = gst_flacenc_finalize;
+  gobject_class->set_property = gst_flac_enc_set_property;
+  gobject_class->get_property = gst_flac_enc_get_property;
+  gobject_class->finalize = gst_flac_enc_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QUALITY,
       g_param_spec_enum ("quality",
           "Quality",
           "Speed versus compression tradeoff",
-          GST_TYPE_FLACENC_QUALITY, DEFAULT_QUALITY, G_PARAM_READWRITE));
+          GST_TYPE_FLAC_ENC_QUALITY, DEFAULT_QUALITY, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_STREAMABLE_SUBSET, g_param_spec_boolean ("streamable_subset",
           "Streamable subset",
@@ -281,11 +282,11 @@ gst_flacenc_class_init (GstFlacEncClass * klass)
           flacenc_params[DEFAULT_QUALITY].rice_parameter_search_dist,
           G_PARAM_READWRITE));
 
-  gstelement_class->change_state = gst_flacenc_change_state;
+  gstelement_class->change_state = gst_flac_enc_change_state;
 }
 
 static void
-gst_flacenc_init (GstFlacEnc * flacenc, GstFlacEncClass * klass)
+gst_flac_enc_init (GstFlacEnc * flacenc, GstFlacEncClass * klass)
 {
   GstElementClass *eclass = GST_ELEMENT_CLASS (klass);
 
@@ -293,9 +294,9 @@ gst_flacenc_init (GstFlacEnc * flacenc, GstFlacEncClass * klass)
       gst_pad_new_from_template (gst_element_class_get_pad_template (eclass,
           "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (flacenc), flacenc->sinkpad);
-  gst_pad_set_chain_function (flacenc->sinkpad, gst_flacenc_chain);
-  gst_pad_set_event_function (flacenc->sinkpad, gst_flacenc_sink_event);
-  gst_pad_set_setcaps_function (flacenc->sinkpad, gst_flacenc_sink_setcaps);
+  gst_pad_set_chain_function (flacenc->sinkpad, gst_flac_enc_chain);
+  gst_pad_set_event_function (flacenc->sinkpad, gst_flac_enc_sink_event);
+  gst_pad_set_setcaps_function (flacenc->sinkpad, gst_flac_enc_sink_setcaps);
 
   flacenc->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (eclass,
@@ -307,14 +308,14 @@ gst_flacenc_init (GstFlacEnc * flacenc, GstFlacEncClass * klass)
 
   flacenc->offset = 0;
   flacenc->samples_written = 0;
-  gst_flacenc_update_quality (flacenc, DEFAULT_QUALITY);
+  gst_flac_enc_update_quality (flacenc, DEFAULT_QUALITY);
   flacenc->tags = gst_tag_list_new ();
 }
 
 static void
-gst_flacenc_finalize (GObject * object)
+gst_flac_enc_finalize (GObject * object)
 {
-  GstFlacEnc *flacenc = GST_FLACENC (object);
+  GstFlacEnc *flacenc = GST_FLAC_ENC (object);
 
   FLAC__seekable_stream_encoder_delete (flacenc->encoder);
 
@@ -326,7 +327,7 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 {
   GList *comments;
   GList *it;
-  GstFlacEnc *flacenc = GST_FLACENC (user_data);
+  GstFlacEnc *flacenc = GST_FLAC_ENC (user_data);
 
   comments = gst_tag_to_vorbis_comments (list, tag);
   for (it = comments; it != NULL; it = it->next) {
@@ -343,7 +344,7 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 }
 
 static void
-gst_flacenc_set_metadata (GstFlacEnc * flacenc)
+gst_flac_enc_set_metadata (GstFlacEnc * flacenc)
 {
   const GstTagList *user_tags;
   GstTagList *copy;
@@ -368,14 +369,14 @@ gst_flacenc_set_metadata (GstFlacEnc * flacenc)
 }
 
 static gboolean
-gst_flacenc_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstFlacEnc *flacenc;
   GstStructure *structure;
   FLAC__SeekableStreamEncoderState state;
 
   /* takes a ref on flacenc */
-  flacenc = GST_FLACENC (gst_pad_get_parent (pad));
+  flacenc = GST_FLAC_ENC (gst_pad_get_parent (pad));
 
   if (FLAC__seekable_stream_encoder_get_state (flacenc->encoder) !=
       FLAC__SEEKABLE_STREAM_ENCODER_UNINITIALIZED)
@@ -406,15 +407,15 @@ gst_flacenc_sink_setcaps (GstPad * pad, GstCaps * caps)
       flacenc->channels);
 
   FLAC__seekable_stream_encoder_set_write_callback (flacenc->encoder,
-      gst_flacenc_write_callback);
+      gst_flac_enc_write_callback);
   FLAC__seekable_stream_encoder_set_seek_callback (flacenc->encoder,
-      gst_flacenc_seek_callback);
+      gst_flac_enc_seek_callback);
   FLAC__seekable_stream_encoder_set_tell_callback (flacenc->encoder,
-      gst_flacenc_tell_callback);
+      gst_flac_enc_tell_callback);
 
   FLAC__seekable_stream_encoder_set_client_data (flacenc->encoder, flacenc);
 
-  gst_flacenc_set_metadata (flacenc);
+  gst_flac_enc_set_metadata (flacenc);
 
   state = FLAC__seekable_stream_encoder_init (flacenc->encoder);
   if (state != FLAC__STREAM_ENCODER_OK)
@@ -448,7 +449,7 @@ failed_to_initialize:
 }
 
 static gboolean
-gst_flacenc_update_quality (GstFlacEnc * flacenc, gint quality)
+gst_flac_enc_update_quality (GstFlacEnc * flacenc, gint quality)
 {
   flacenc->quality = quality;
 
@@ -492,14 +493,14 @@ gst_flacenc_update_quality (GstFlacEnc * flacenc, gint quality)
 }
 
 static FLAC__SeekableStreamEncoderSeekStatus
-gst_flacenc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
+gst_flac_enc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
     FLAC__uint64 absolute_byte_offset, void *client_data)
 {
   GstFlacEnc *flacenc;
   GstEvent *event;
   GstPad *peerpad;
 
-  flacenc = GST_FLACENC (client_data);
+  flacenc = GST_FLAC_ENC (client_data);
 
   if (flacenc->stopped)
     return FLAC__STREAM_ENCODER_OK;
@@ -525,7 +526,7 @@ gst_flacenc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
 }
 
 static FLAC__StreamEncoderWriteStatus
-gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
+gst_flac_enc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
     const FLAC__byte buffer[], unsigned bytes,
     unsigned samples, unsigned current_frame, void *client_data)
 {
@@ -533,7 +534,7 @@ gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
   GstFlacEnc *flacenc;
   GstBuffer *outbuf;
 
-  flacenc = GST_FLACENC (client_data);
+  flacenc = GST_FLAC_ENC (client_data);
 
   if (flacenc->stopped)
     return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
@@ -574,10 +575,10 @@ gst_flacenc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
 }
 
 static FLAC__SeekableStreamEncoderTellStatus
-gst_flacenc_tell_callback (const FLAC__SeekableStreamEncoder * encoder,
+gst_flac_enc_tell_callback (const FLAC__SeekableStreamEncoder * encoder,
     FLAC__uint64 * absolute_byte_offset, void *client_data)
 {
-  GstFlacEnc *flacenc = GST_FLACENC (client_data);
+  GstFlacEnc *flacenc = GST_FLAC_ENC (client_data);
 
   *absolute_byte_offset = flacenc->offset;
 
@@ -585,13 +586,13 @@ gst_flacenc_tell_callback (const FLAC__SeekableStreamEncoder * encoder,
 }
 
 static gboolean
-gst_flacenc_sink_event (GstPad * pad, GstEvent * event)
+gst_flac_enc_sink_event (GstPad * pad, GstEvent * event)
 {
   GstFlacEnc *flacenc;
   GstTagList *taglist;
   gboolean ret = TRUE;
 
-  flacenc = GST_FLACENC (gst_pad_get_parent (pad));
+  flacenc = GST_FLAC_ENC (gst_pad_get_parent (pad));
 
   GST_DEBUG ("Received %s event on sinkpad", GST_EVENT_TYPE_NAME (event));
 
@@ -648,7 +649,7 @@ gst_flacenc_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_flacenc_chain (GstPad * pad, GstBuffer * buffer)
+gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlacEnc *flacenc;
   FLAC__int32 *data;
@@ -657,7 +658,7 @@ gst_flacenc_chain (GstPad * pad, GstBuffer * buffer)
   gulong i;
   FLAC__bool res;
 
-  flacenc = GST_FLACENC (gst_pad_get_parent (pad));
+  flacenc = GST_FLAC_ENC (gst_pad_get_parent (pad));
 
   depth = flacenc->depth;
 
@@ -696,16 +697,16 @@ gst_flacenc_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static void
-gst_flacenc_set_property (GObject * object, guint prop_id,
+gst_flac_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstFlacEnc *this = GST_FLACENC (object);
+  GstFlacEnc *this = GST_FLAC_ENC (object);
 
   GST_OBJECT_LOCK (this);
 
   switch (prop_id) {
     case PROP_QUALITY:
-      gst_flacenc_update_quality (this, g_value_get_enum (value));
+      gst_flac_enc_update_quality (this, g_value_get_enum (value));
       break;
     case PROP_STREAMABLE_SUBSET:
       FLAC__seekable_stream_encoder_set_streamable_subset (this->encoder,
@@ -764,10 +765,10 @@ gst_flacenc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_flacenc_get_property (GObject * object, guint prop_id,
+gst_flac_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstFlacEnc *this = GST_FLACENC (object);
+  GstFlacEnc *this = GST_FLAC_ENC (object);
 
   GST_OBJECT_LOCK (this);
 
@@ -839,10 +840,10 @@ gst_flacenc_get_property (GObject * object, guint prop_id,
 }
 
 static GstStateChangeReturn
-gst_flacenc_change_state (GstElement * element, GstStateChange transition)
+gst_flac_enc_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstFlacEnc *flacenc = GST_FLACENC (element);
+  GstFlacEnc *flacenc = GST_FLAC_ENC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:

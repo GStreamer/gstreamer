@@ -24,10 +24,10 @@ GstCairoTimeOverlayClass
 
 <SECTION>
 <FILE>element-flacdec</FILE>
-FlacDec
+GstFlacDec
 <TITLE>flacdec</TITLE>
 <SUBSECTION Standard>
-FlacDecClass
+GstFlacDecClass
 </SECTION>
 
 <SECTION>

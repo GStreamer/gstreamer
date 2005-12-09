@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __FLACDEC_H__
-#define __FLACDEC_H__
+#ifndef __GST_FLAC_DEC_H__
+#define __GST_FLAC_DEC_H__
 
 
 #include <gst/gst.h>
@@ -31,16 +31,16 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_FLACDEC flacdec_get_type()
-#define GST_FLACDEC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLACDEC, FlacDec)
-#define GST_FLACDEC_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_FLACDEC, FlacDec)
-#define GST_IS_FLACDEC(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_FLACDEC)
-#define GST_IS_FLACDEC_CLASS(obj) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_FLACDEC)
+#define GST_TYPE_FLAC_DEC flacdec_get_type()
+#define GST_FLAC_DEC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLAC_DEC, GstFlacDec)
+#define GST_FLAC_DEC_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_FLAC_DEC, GstFlacDec)
+#define GST_IS_FLAC_DEC(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_FLAC_DEC)
+#define GST_IS_FLAC_DEC_CLASS(obj) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_FLAC_DEC)
 
-typedef struct _FlacDec FlacDec;
-typedef struct _FlacDecClass FlacDecClass;
+typedef struct _GstFlacDec GstFlacDec;
+typedef struct _GstFlacDecClass GstFlacDecClass;
 
-struct _FlacDec {
+struct _GstFlacDec {
   GstElement     element;
 
   GstPad        *sinkpad,*srcpad;
@@ -63,15 +63,15 @@ struct _FlacDec {
   gboolean       eos;
 };
 
-struct _FlacDecClass {
+struct _GstFlacDecClass {
   GstElementClass parent_class;
 };
 
-GType flacdec_get_type(void);
+GType flacdec_get_type (void);
 
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* __FLACDEC_H__ */
+#endif /* __GST_FLAC_DEC_H__ */

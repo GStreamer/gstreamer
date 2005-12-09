@@ -31,10 +31,10 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "flacenc", GST_RANK_NONE,
-          GST_TYPE_FLACENC))
+          GST_TYPE_FLAC_ENC))
     return FALSE;
   if (!gst_element_register (plugin, "flacdec", GST_RANK_PRIMARY,
-          GST_TYPE_FLACDEC))
+          GST_TYPE_FLAC_DEC))
     return FALSE;
 #if 0
   if (!gst_element_register (plugin, "flactag", GST_RANK_PRIMARY,

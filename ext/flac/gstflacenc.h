@@ -18,23 +18,21 @@
  */
 
 
-#ifndef __FLACENC_H__
-#define __FLACENC_H__
-
+#ifndef __GST_FLAC_ENC_H__
+#define __GST_FLAC_ENC_H__
 
 #include <gst/gst.h>
 
 #include <FLAC/all.h>
 
-
 G_BEGIN_DECLS
 
 
-#define GST_TYPE_FLACENC (gst_flacenc_get_type())
-#define GST_FLACENC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLACENC, GstFlacEnc)
-#define GST_FLACENC_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_FLACENC, GstFlacEnc)
-#define GST_IS_FLACENC(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_FLACENC)
-#define GST_IS_FLACENC_CLASS(obj) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_FLACENC)
+#define GST_TYPE_FLAC_ENC (gst_flac_enc_get_type())
+#define GST_FLAC_ENC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLAC_ENC, GstFlacEnc)
+#define GST_FLAC_ENC_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_FLAC_ENC, GstFlacEnc)
+#define GST_IS_FLAC_ENC(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_FLAC_ENC)
+#define GST_IS_FLAC_ENC_CLASS(obj) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_FLAC_ENC)
 
 typedef struct _GstFlacEnc GstFlacEnc;
 typedef struct _GstFlacEncClass GstFlacEncClass;
@@ -67,10 +65,10 @@ struct _GstFlacEncClass {
   GstElementClass parent_class;
 };
 
-GType gst_flacenc_get_type(void);
+GType gst_flac_enc_get_type(void);
 
 
 G_END_DECLS
 
 
-#endif /* __FLACENC_H__ */
+#endif /* __GST_FLAC_ENC_H__ */

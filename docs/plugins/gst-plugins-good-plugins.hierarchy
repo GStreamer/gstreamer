@@ -267,7 +267,7 @@ GObject
       GstJpegEnc
       GstJpegDec
       GstSmokeEnc
-      FlacDec
+      GstFlacDec
       GstDVDemux
       GstDVDec
       GstVorbisTag

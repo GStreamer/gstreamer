@@ -1,3 +1,71 @@
+2005-12-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-efence.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-esdsink.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gconfelements.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videoflip.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* ext/flac/gstflac.c: (plugin_init):
+	* ext/flac/gstflacdec.c: (flacdec_get_type),
+	(gst_flac_dec_base_init), (gst_flac_dec_class_init),
+	(gst_flac_dec_init), (gst_flac_dec_finalize),
+	(gst_flac_dec_update_metadata), (gst_flac_dec_metadata_callback),
+	(gst_flac_dec_error_callback), (gst_flac_dec_seek),
+	(gst_flac_dec_tell), (gst_flac_dec_length), (gst_flac_dec_eof),
+	(gst_flac_dec_read), (gst_flac_dec_write), (gst_flac_dec_loop),
+	(gst_flac_dec_get_src_formats), (gst_flac_dec_convert_src),
+	(gst_flac_dec_get_src_query_types), (gst_flac_dec_src_query),
+	(gst_flac_dec_src_event), (gst_flac_dec_sink_activate),
+	(gst_flac_dec_sink_activate_pull), (gst_flac_dec_change_state):
+	* ext/flac/gstflacdec.h:
+	* ext/flac/gstflacenc.c: (gst_flac_enc_quality_get_type),
+	(gst_flac_enc_base_init), (gst_flac_enc_class_init),
+	(gst_flac_enc_init), (gst_flac_enc_finalize), (add_one_tag),
+	(gst_flac_enc_set_metadata), (gst_flac_enc_sink_setcaps),
+	(gst_flac_enc_update_quality), (gst_flac_enc_seek_callback),
+	(gst_flac_enc_write_callback), (gst_flac_enc_tell_callback),
+	(gst_flac_enc_sink_event), (gst_flac_enc_chain),
+	(gst_flac_enc_set_property), (gst_flac_enc_get_property),
+	(gst_flac_enc_change_state):
+	* ext/flac/gstflacenc.h:
+	  borgify and fix up documentation
+
 2005-12-09  Michael Smith  <msmith@fluendo.com>
 
 	* ext/flac/gstflacdec.c: (raw_caps_factory), (gst_flacdec_write):
