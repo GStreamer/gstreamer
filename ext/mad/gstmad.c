@@ -547,9 +547,12 @@ static gboolean
 gst_mad_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
+  GstPad *peer;
   GstMad *mad;
 
   mad = GST_MAD (GST_PAD_PARENT (pad));
+
+  peer = gst_pad_get_peer (mad->sinkpad);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -559,6 +562,14 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
 
       /* save requested format */
       gst_query_parse_position (query, &format, NULL);
+
+      /* try any demuxer before us first */
+      if (format == GST_FORMAT_TIME && peer && gst_pad_query (peer, query)) {
+        gst_query_parse_position (query, NULL, &cur);
+        GST_LOG_OBJECT (mad, "peer returned position %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (cur));
+        break;
+      }
 
       /* and convert to the requested format */
       if (format != GST_FORMAT_DEFAULT) {
@@ -583,22 +594,28 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       GstFormat rformat;
       gint64 total, total_bytes;
-      GstPad *peer;
 
       /* save requested format */
       gst_query_parse_duration (query, &format, NULL);
 
+      if (peer == NULL)
+        goto error;
+
+      /* try any demuxer before us first */
+      if (format == GST_FORMAT_TIME && gst_pad_query (peer, query)) {
+        gst_query_parse_duration (query, NULL, &total);
+        GST_LOG_OBJECT (mad, "peer returned duration %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (total));
+        break;
+      }
+
       /* query peer for total length in bytes */
       gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
-
-      if ((peer = gst_pad_get_peer (mad->sinkpad)) == NULL)
-        goto error;
 
       if (!gst_pad_query (peer, query)) {
         GST_LOG_OBJECT (mad, "query on peer pad failed");
         goto error;
       }
-      gst_object_unref (peer);
 
       /* get the returned format */
       gst_query_parse_duration (query, &rformat, &total_bytes);
@@ -650,11 +667,19 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
       res = FALSE;
       break;
   }
+
+  if (peer)
+    gst_object_unref (peer);
+
   return res;
 
 error:
 
   GST_DEBUG ("error handling query");
+
+  if (peer)
+    gst_object_unref (peer);
+
   return FALSE;
 }
 

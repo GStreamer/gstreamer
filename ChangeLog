@@ -1,3 +1,9 @@
+2005-12-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/gstmad.c: (gst_mad_src_query):
+	  For position and duration queries in TIME format, try the peer
+	  first (might be a demuxer).
+
 2005-12-08  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_handle_newsegment):
