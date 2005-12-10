@@ -33,7 +33,19 @@
 #include <errno.h>
 #include <string.h>
 
-#include <sys/soundcard.h>
+#ifdef HAVE_OSS_INCLUDE_IN_SYS
+# include <sys/soundcard.h>
+#else
+# ifdef HAVE_OSS_INCLUDE_IN_ROOT
+#  include <soundcard.h>
+# else
+#  ifdef HAVE_OSS_INCLUDE_IN_MACHINE
+#   include <machine/soundcard.h>
+#  else
+#   error "What to include?"
+#  endif /* HAVE_OSS_INCLUDE_IN_MACHINE */
+# endif /* HAVE_OSS_INCLUDE_IN_ROOT */
+#endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
 #include <gst/interfaces/propertyprobe.h>
 
@@ -42,30 +54,6 @@
 
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);
 #define GST_CAT_DEFAULT oss_debug
-
-#if 0
-
-#ifdef HAVE_OSS_INCLUDE_IN_SYS
-#include <sys/soundcard.h>
-#else
-
-#ifdef HAVE_OSS_INCLUDE_IN_ROOT
-#include <soundcard.h>
-#else
-
-#include <machine/soundcard.h>
-
-#endif /* HAVE_OSS_INCLUDE_IN_ROOT */
-
-#endif /* HAVE_OSS_INCLUDE_IN_SYS */
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/ioctl.h>
-#include <glib.h>
-#endif /* 0 */
 
 typedef struct _GstOssProbe GstOssProbe;
 struct _GstOssProbe

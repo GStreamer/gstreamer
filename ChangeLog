@@ -1,3 +1,20 @@
+2005-12-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Update comment in OSS includes check.
+
+	* sys/oss/gstossdmabuffer.c:
+	* sys/oss/gstosshelper.c:
+	* sys/oss/gstossmixer.c:
+	* sys/oss/gstossmixertrack.c:
+	* sys/oss/gstosssink.c:
+	* sys/oss/gstosssrc.c:
+	* sys/oss/oss_probe.c:
+	  Don't assume the OSS soundcard.h include is always in
+	  the sys/ directory. Instead, use the existing defines
+	  from config.h to include the right file. Fixes
+	  compilation on OpenBSD 3.8 (#323718).
+
 2005-12-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:

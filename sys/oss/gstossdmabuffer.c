@@ -27,7 +27,21 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/mman.h>
-#include <sys/soundcard.h>
+
+#ifdef HAVE_OSS_INCLUDE_IN_SYS
+# include <sys/soundcard.h>
+#else
+# ifdef HAVE_OSS_INCLUDE_IN_ROOT
+#  include <soundcard.h>
+# else
+#  ifdef HAVE_OSS_INCLUDE_IN_MACHINE
+#   include <machine/soundcard.h>
+#  else
+#   error "What to include?"
+#  endif /* HAVE_OSS_INCLUDE_IN_MACHINE */
+# endif /* HAVE_OSS_INCLUDE_IN_ROOT */
+#endif /* HAVE_OSS_INCLUDE_IN_SYS */
+
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <pthread.h>

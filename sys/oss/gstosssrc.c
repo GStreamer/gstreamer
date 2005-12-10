@@ -23,12 +23,26 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/soundcard.h>
+
+#ifdef HAVE_OSS_INCLUDE_IN_SYS
+# include <sys/soundcard.h>
+#else
+# ifdef HAVE_OSS_INCLUDE_IN_ROOT
+#  include <soundcard.h>
+# else
+#  ifdef HAVE_OSS_INCLUDE_IN_MACHINE
+#   include <machine/soundcard.h>
+#  else
+#   error "What to include?"
+#  endif /* HAVE_OSS_INCLUDE_IN_MACHINE */
+# endif /* HAVE_OSS_INCLUDE_IN_ROOT */
+#endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
 #include "gstosssrc.h"
 

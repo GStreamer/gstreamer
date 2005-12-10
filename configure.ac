@@ -259,7 +259,7 @@ dnl Linux and newer BSD versions :
  AC_CHECK_HEADER(sys/soundcard.h, [
    AC_DEFINE(HAVE_OSS_INCLUDE_IN_SYS,, [Define if OSS includes are in /sys/])
    ] , [
-dnl Some old BSD versions :
+dnl Some old BSD versions and also newer OpenBSD versions :
    AC_CHECK_HEADER(soundcard.h, [
      AC_DEFINE(HAVE_OSS_INCLUDE_IN_ROOT,, [Define if OSS includes are in /])
      ], [
