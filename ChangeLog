@@ -1,5 +1,26 @@
 2005-12-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/flac/gstflacdec.c: (gst_flac_dec_base_init),
+	(gst_flac_dec_class_init), (gst_flac_dec_init),
+	(gst_flac_dec_metadata_callback), (gst_flac_dec_error_callback),
+	(gst_flac_dec_eof), (gst_flac_dec_write), (gst_flac_dec_loop),
+	(gst_flac_dec_convert_src), (gst_flac_dec_get_src_query_types),
+	(gst_flac_dec_src_query), (gst_flac_dec_send_newsegment),
+	(gst_flac_dec_handle_seek_event), (gst_flac_dec_src_event),
+	(gst_flac_dec_change_state):
+	* ext/flac/gstflacdec.h:
+	  Rewrite flacdec a bit, so that even seeking might work now. Most
+	  importantly, don't act upon any flow return values we get, just tell
+	  the decoder everything's dandy and act on the flow return values
+	  later on in the loop function. We don't want to mess up the internal
+	  decoder state for non-fatal things like flushing pads etc. Other
+	  than that, use GstSegment (segment seeks don't work yet though, but
+	  should be easy to add), use boilerplate macros, drop the superfluous
+	  'flacdec:' from debug messages, use gst_util_uint64_scale_int, and
+	  lots of other things.
+
+2005-12-10  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Update comment in OSS includes check.
 

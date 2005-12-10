@@ -30,7 +30,7 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch filesrc location=media/small/dark.441-16-s.flac ! flacdec ! autoaudiosink
+ * gst-launch filesrc location=media/small/dark.441-16-s.flac ! flacdec ! audioconvert ! audioresample ! autoaudiosink
  * </programlisting>
  * </para>
  * </refsect2>
@@ -58,17 +58,14 @@ GST_DEBUG_CATEGORY_STATIC (flacdec_debug);
 
 static GstPadTemplate *src_template, *sink_template;
 
-/* elementfactory information */
-GstElementDetails flacdec_details = {
+static GstElementDetails flacdec_details = {
   "FLAC decoder",
   "Codec/Decoder/Audio",
   "Decodes FLAC lossless audio streams",
   "Wim Taymans <wim.taymans@chello.be>",
 };
 
-static void gst_flac_dec_base_init (gpointer g_class);
-static void gst_flac_dec_class_init (GstFlacDecClass * klass);
-static void gst_flac_dec_init (GstFlacDec * flacdec);
+
 static void gst_flac_dec_finalize (GObject * object);
 
 static void gst_flac_dec_loop (GstPad * pad);
@@ -82,6 +79,8 @@ static gboolean gst_flac_dec_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_flac_dec_sink_activate (GstPad * sinkpad);
 static gboolean gst_flac_dec_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
+static void gst_flac_dec_send_newsegment (GstFlacDec * flacdec,
+    gboolean update);
 
 static FLAC__SeekableStreamDecoderReadStatus
 gst_flac_dec_read (const FLAC__SeekableStreamDecoder * decoder,
@@ -106,62 +105,22 @@ static void gst_flac_dec_metadata_callback (const FLAC__SeekableStreamDecoder *
 static void gst_flac_dec_error_callback (const FLAC__SeekableStreamDecoder *
     decoder, FLAC__StreamDecoderErrorStatus status, void *client_data);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-flacdec_get_type (void)
-{
-  static GType flacdec_type = 0;
-
-  if (!flacdec_type) {
-    static const GTypeInfo flacdec_info = {
-      sizeof (GstFlacDecClass),
-      gst_flac_dec_base_init,
-      NULL,
-      (GClassInitFunc) gst_flac_dec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstFlacDec),
-      0,
-      (GInstanceInitFunc) gst_flac_dec_init,
-    };
-
-    flacdec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstFlacDec", &flacdec_info,
-        0);
-
-    GST_DEBUG_CATEGORY_INIT (flacdec_debug, "flacdec", 0, "flac decoder");
-  }
-  return flacdec_type;
-}
-
-static GstCaps *
-flac_caps_factory (void)
-{
-  return gst_caps_new_simple ("audio/x-flac", NULL);
-  /* "rate",            GST_PROPS_INT_RANGE (11025, 48000),
-   * "channels",        GST_PROPS_INT_RANGE (1, 6), */
-}
-
-static GstCaps *
-raw_caps_factory (void)
-{
-  return gst_caps_from_string ("audio/x-raw-int,"
-      "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
-      "signed = (boolean) true, "
-      "width = (int) { 8, 16, 32 }, "
-      "depth = (int) { 8, 12, 16, 20, 24, 32 }, "
-      "rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 8 ]");
-}
-
-static void
-gst_flac_dec_base_init (gpointer g_class)
+GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT)
+#define GST_FLAC_DEC_SRC_CAPS                             \
+    "audio/x-raw-int, "                                   \
+    "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", " \
+    "signed = (boolean) true, "                           \
+    "width = (int) { 8, 16, 32 }, "                       \
+    "depth = (int) { 8, 12, 16, 20, 24, 32 }, "           \
+    "rate = (int) [ 8000, 96000 ], "                      \
+    "channels = (int) [ 1, 8 ]"
+     static void gst_flac_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *raw_caps, *flac_caps;
 
-  raw_caps = raw_caps_factory ();
-  flac_caps = flac_caps_factory ();
+  raw_caps = gst_caps_from_string (GST_FLAC_DEC_SRC_CAPS);
+  flac_caps = gst_caps_new_simple ("audio/x-flac", NULL);
 
   sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
       GST_PAD_ALWAYS, flac_caps);
@@ -170,6 +129,8 @@ gst_flac_dec_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class, sink_template);
   gst_element_class_add_pad_template (element_class, src_template);
   gst_element_class_set_details (element_class, &flacdec_details);
+
+  GST_DEBUG_CATEGORY_INIT (flacdec_debug, "flacdec", 0, "flac decoder");
 }
 
 static void
@@ -181,35 +142,35 @@ gst_flac_dec_class_init (GstFlacDecClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gobject_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
   gobject_class->finalize = gst_flac_dec_finalize;
 
-  gstelement_class->change_state = gst_flac_dec_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_flac_dec_change_state);
 }
 
 static void
-gst_flac_dec_init (GstFlacDec * flacdec)
+gst_flac_dec_init (GstFlacDec * flacdec, GstFlacDecClass * klass)
 {
   flacdec->sinkpad = gst_pad_new_from_template (sink_template, "sink");
-  gst_pad_set_activate_function (flacdec->sinkpad, gst_flac_dec_sink_activate);
+  gst_pad_set_activate_function (flacdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_flac_dec_sink_activate));
   gst_pad_set_activatepull_function (flacdec->sinkpad,
-      gst_flac_dec_sink_activate_pull);
+      GST_DEBUG_FUNCPTR (gst_flac_dec_sink_activate_pull));
   gst_element_add_pad (GST_ELEMENT (flacdec), flacdec->sinkpad);
 
   flacdec->srcpad = gst_pad_new_from_template (src_template, "src");
   gst_pad_set_query_type_function (flacdec->srcpad,
-      gst_flac_dec_get_src_query_types);
-  gst_pad_set_query_function (flacdec->srcpad, gst_flac_dec_src_query);
-  gst_pad_set_event_function (flacdec->srcpad, gst_flac_dec_src_event);
+      GST_DEBUG_FUNCPTR (gst_flac_dec_get_src_query_types));
+  gst_pad_set_query_function (flacdec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_flac_dec_src_query));
+  gst_pad_set_event_function (flacdec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_flac_dec_src_event));
   gst_pad_use_fixed_caps (flacdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (flacdec), flacdec->srcpad);
 
   flacdec->decoder = FLAC__seekable_stream_decoder_new ();
-  flacdec->total_samples = 0;
+  flacdec->segment.last_stop = 0;
   flacdec->init = TRUE;
-  flacdec->eos = FALSE;
-  flacdec->seek_pending = FALSE;
 
   FLAC__seekable_stream_decoder_set_read_callback (flacdec->decoder,
       gst_flac_dec_read);
@@ -305,7 +266,10 @@ gst_flac_dec_metadata_callback (const FLAC__SeekableStreamDecoder * decoder,
 
   switch (metadata->type) {
     case FLAC__METADATA_TYPE_STREAMINFO:
-      flacdec->stream_samples = metadata->data.stream_info.total_samples;
+      gst_segment_set_duration (&flacdec->segment, GST_FORMAT_DEFAULT,
+          metadata->data.stream_info.total_samples);
+      if (flacdec->segment.stop == -1)
+        flacdec->segment.stop = metadata->data.stream_info.total_samples;
       break;
     case FLAC__METADATA_TYPE_VORBIS_COMMENT:
       gst_flac_dec_update_metadata (flacdec, metadata);
@@ -340,6 +304,7 @@ gst_flac_dec_error_callback (const FLAC__SeekableStreamDecoder * decoder,
   }
 
   GST_ELEMENT_ERROR (flacdec, STREAM, DECODE, (NULL), (error));
+  flacdec->last_flow = GST_FLOW_ERROR;
 }
 
 static FLAC__SeekableStreamDecoderSeekStatus
@@ -401,11 +366,29 @@ gst_flac_dec_eof (const FLAC__SeekableStreamDecoder * decoder,
     void *client_data)
 {
   GstFlacDec *flacdec;
+  GstFormat fmt;
+  GstPad *peer;
+  gboolean ret = FALSE;
+  gint64 len;
 
   flacdec = GST_FLAC_DEC (client_data);
-  GST_DEBUG ("eof %d", flacdec->eos);
 
-  return flacdec->eos;
+  if (!(peer = gst_pad_get_peer (flacdec->sinkpad))) {
+    GST_WARNING_OBJECT (flacdec, "no peer pad, returning EOF");
+    return TRUE;
+  }
+
+  fmt = GST_FORMAT_BYTES;
+  if (gst_pad_query_duration (peer, &fmt, &len) && fmt == GST_FORMAT_BYTES &&
+      len != -1 && flacdec->offset >= len) {
+    GST_DEBUG ("offset=%" G_GINT64_FORMAT ", len=%" G_GINT64_FORMAT
+        ", returning EOF", flacdec->offset, len);
+    ret = TRUE;
+  }
+
+  gst_object_unref (peer);
+
+  return ret;
 }
 
 static FLAC__SeekableStreamDecoderReadStatus
@@ -436,6 +419,7 @@ gst_flac_dec_write (const FLAC__SeekableStreamDecoder * decoder,
     const FLAC__Frame * frame,
     const FLAC__int32 * const buffer[], void *client_data)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   GstFlacDec *flacdec;
   GstBuffer *outbuf;
   guint depth = frame->header.bits_per_sample;
@@ -443,7 +427,8 @@ gst_flac_dec_write (const FLAC__SeekableStreamDecoder * decoder,
   guint channels = frame->header.channels;
   guint samples = frame->header.blocksize;
   guint j, i;
-  GstFlowReturn ret;
+
+  flacdec = GST_FLAC_DEC (client_data);
 
   switch (depth) {
     case 8:
@@ -459,106 +444,119 @@ gst_flac_dec_write (const FLAC__SeekableStreamDecoder * decoder,
       width = 32;
       break;
     default:
-      return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
-  }
-
-  flacdec = GST_FLAC_DEC (client_data);
-
-  if (flacdec->need_discont) {
-    gint64 time = 0;
-    GstFormat format;
-    GstEvent *newsegment;
-
-    flacdec->need_discont = FALSE;
-
-    if (flacdec->seek_pending) {
-      flacdec->total_samples = flacdec->seek_value;
-    }
-
-    GST_DEBUG ("newsegment from %" G_GUINT64_FORMAT, flacdec->seek_value);
-
-    format = GST_FORMAT_TIME;
-    gst_flac_dec_convert_src (flacdec->srcpad, GST_FORMAT_DEFAULT,
-        flacdec->total_samples, &format, &time);
-    newsegment = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, time,
-        GST_CLOCK_TIME_NONE, 0);
-
-    if (!gst_pad_push_event (flacdec->srcpad, newsegment))
-      return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+      g_assert_not_reached ();
   }
 
   if (!GST_PAD_CAPS (flacdec->srcpad)) {
+    GstCaps *caps;
+
     GST_DEBUG ("Negotiating %d Hz @ %d channels",
         frame->header.sample_rate, channels);
 
-    if (!gst_pad_set_caps (flacdec->srcpad,
-            gst_caps_new_simple ("audio/x-raw-int",
-                "endianness", G_TYPE_INT, G_BYTE_ORDER,
-                "signed", G_TYPE_BOOLEAN, TRUE,
-                "width", G_TYPE_INT, width,
-                "depth", G_TYPE_INT, depth,
-                "rate", G_TYPE_INT, frame->header.sample_rate,
-                "channels", G_TYPE_INT, channels, NULL)))
+    caps = gst_caps_new_simple ("audio/x-raw-int",
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
+        "signed", G_TYPE_BOOLEAN, TRUE,
+        "width", G_TYPE_INT, width,
+        "depth", G_TYPE_INT, depth,
+        "rate", G_TYPE_INT, frame->header.sample_rate,
+        "channels", G_TYPE_INT, channels, NULL);
+
+    if (!gst_pad_set_caps (flacdec->srcpad, caps)) {
+      GST_ELEMENT_ERROR (flacdec, CORE, NEGOTIATION, (NULL),
+          ("Failed to negotiate caps %" GST_PTR_FORMAT, caps));
+      flacdec->last_flow = GST_FLOW_ERROR;
+      gst_caps_unref (caps);
       return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+    }
+
+    gst_caps_unref (caps);
 
     flacdec->depth = depth;
     flacdec->width = width;
     flacdec->channels = channels;
-    flacdec->frequency = frame->header.sample_rate;
+    flacdec->sample_rate = frame->header.sample_rate;
   }
 
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
-      flacdec->total_samples, samples * channels * ((width + 7) >> 3),
+  if (flacdec->need_newsegment) {
+    gst_flac_dec_send_newsegment (flacdec, FALSE);
+    flacdec->need_newsegment = FALSE;
+  }
+
+  g_assert (width % 8 == 0);    /* width must be a multiple of 8 */
+
+  ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
+      flacdec->segment.last_stop, samples * channels * (width / 8),
       GST_PAD_CAPS (flacdec->srcpad), &outbuf);
-  if (ret != GST_FLOW_NOT_LINKED && ret != GST_FLOW_OK) {
-    GST_DEBUG ("stopping flac decoder engine (%d)", (gint) ret);
-    return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG ("gst_pad_alloc_buffer() returned %s", gst_flow_get_name (ret));
+    goto done;
   }
 
   GST_BUFFER_TIMESTAMP (outbuf) =
-      flacdec->total_samples * GST_SECOND / frame->header.sample_rate;
+      gst_util_uint64_scale_int (flacdec->segment.last_stop, GST_SECOND,
+      frame->header.sample_rate);
+
   GST_BUFFER_DURATION (outbuf) =
-      samples * GST_SECOND / frame->header.sample_rate;
+      gst_util_uint64_scale_int (samples, GST_SECOND,
+      frame->header.sample_rate);
 
   if (depth == 8) {
-    guint8 *outbuffer = (guint8 *) GST_BUFFER_DATA (outbuf);
+    gint8 *outbuffer = (gint8 *) GST_BUFFER_DATA (outbuf);
 
     for (i = 0; i < samples; i++) {
       for (j = 0; j < channels; j++) {
-        *outbuffer++ = (guint8) buffer[j][i];
+        *outbuffer++ = (gint8) buffer[j][i];
       }
     }
   } else if (depth == 12 || depth == 16) {
-    guint16 *outbuffer = (guint16 *) GST_BUFFER_DATA (outbuf);
+    gint16 *outbuffer = (gint16 *) GST_BUFFER_DATA (outbuf);
 
     for (i = 0; i < samples; i++) {
       for (j = 0; j < channels; j++) {
-        *outbuffer++ = (guint16) buffer[j][i];
+        *outbuffer++ = (gint16) buffer[j][i];
       }
     }
   } else if (depth == 20 || depth == 24 || depth == 32) {
-    guint32 *outbuffer = (guint32 *) GST_BUFFER_DATA (outbuf);
+    gint32 *outbuffer = (gint32 *) GST_BUFFER_DATA (outbuf);
 
     for (i = 0; i < samples; i++) {
       for (j = 0; j < channels; j++) {
-        *outbuffer++ = (guint32) buffer[j][i];
+        *outbuffer++ = (gint32) buffer[j][i];
       }
     }
   } else {
-    g_warning ("flacdec: invalid depth %d found\n", depth);
-    return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+    g_assert_not_reached ();
   }
-  GST_DEBUG ("Pushing %d samples, %" GST_TIME_FORMAT ":%" GST_TIME_FORMAT,
-      samples, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
-  ret = gst_pad_push (flacdec->srcpad, outbuf);
-  if (ret != GST_FLOW_NOT_LINKED && ret != GST_FLOW_OK) {
-    GST_DEBUG ("Invalid return code %d", (gint) ret);
-    return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+  if (!flacdec->seeking) {
+    GST_DEBUG ("pushing %d samples at offset %" G_GINT64_FORMAT
+        "(%" GST_TIME_FORMAT " + %" GST_TIME_FORMAT ")",
+        samples, GST_BUFFER_OFFSET (outbuf),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
+
+    ret = gst_pad_push (flacdec->srcpad, outbuf);
+  } else {
+    GST_DEBUG ("not pushing %d samples at offset %" G_GINT64_FORMAT
+        " (in seek)", samples, GST_BUFFER_OFFSET (outbuf));
+    gst_buffer_unref (outbuf);
+    ret = GST_FLOW_OK;
   }
-  flacdec->total_samples += samples;
+
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG ("gst_pad_push() returned %s", gst_flow_get_name (ret));
+  }
+
+done:
+
+  flacdec->segment.last_stop += samples;
+
+  /* we act on the flow return value later in the loop function, as we don't
+   * want to mess up the internal decoder state by returning ABORT when the
+   * error is in fact non-fatal (like a pad in flushing mode) and we want
+   * to continue later. So just pretend everything's dandy and act later. */
+  flacdec->last_flow = ret;
 
   return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
@@ -571,9 +569,10 @@ gst_flac_dec_loop (GstPad * sinkpad)
 
   flacdec = GST_FLAC_DEC (GST_OBJECT_PARENT (sinkpad));
 
-  GST_DEBUG ("flacdec: entering loop");
+  GST_DEBUG_OBJECT (flacdec, "entering loop");
+
   if (flacdec->init) {
-    GST_DEBUG ("flacdec: initializing decoder");
+    GST_DEBUG_OBJECT (flacdec, "initializing decoder");
     s = FLAC__seekable_stream_decoder_init (flacdec->decoder);
     if (s != FLAC__SEEKABLE_STREAM_DECODER_OK)
       goto analyze_state;
@@ -581,42 +580,49 @@ gst_flac_dec_loop (GstPad * sinkpad)
     flacdec->init = FALSE;
   }
 
-  if (flacdec->seek_pending) {
-    GST_DEBUG ("perform seek to sample %" G_GINT64_FORMAT, flacdec->seek_value);
+  flacdec->last_flow = GST_FLOW_OK;
 
-    if (FLAC__seekable_stream_decoder_seek_absolute (flacdec->decoder,
-            flacdec->seek_value)) {
-      flacdec->total_samples = flacdec->seek_value;
-      flacdec->need_discont = TRUE;
-      GST_DEBUG ("seek done");
-    } else {
-      GST_DEBUG ("seek failed");
-    }
-    flacdec->seek_pending = FALSE;
-  }
-
-  GST_DEBUG ("flacdec: processing single");
+  GST_DEBUG_OBJECT (flacdec, "processing single");
   FLAC__seekable_stream_decoder_process_single (flacdec->decoder);
 
 analyze_state:
-  GST_DEBUG ("flacdec: done processing, checking encoder state");
+
+  GST_DEBUG_OBJECT (flacdec, "done processing, checking encoder state");
   s = FLAC__seekable_stream_decoder_get_state (flacdec->decoder);
   switch (s) {
     case FLAC__SEEKABLE_STREAM_DECODER_OK:
-    case FLAC__SEEKABLE_STREAM_DECODER_SEEKING:
-      GST_DEBUG ("flacdec: everything ok");
+    case FLAC__SEEKABLE_STREAM_DECODER_SEEKING:{
+      GST_DEBUG_OBJECT (flacdec, "everything ok");
+
+      if (flacdec->last_flow != GST_FLOW_OK &&
+          flacdec->last_flow != GST_FLOW_NOT_LINKED) {
+        GST_DEBUG_OBJECT (flacdec, "last_flow return was %s, pausing",
+            gst_flow_get_name (flacdec->last_flow));
+        gst_pad_pause_task (sinkpad);
+      }
+
+/* FIXME: support segment seeks
+      if (((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) != 0) &&
+          flacdec->segment.last_stop > 0 && flacdec->segment.stop != -1 &&
+          flacdec->segment.last_stop >= flacdec->segment.stop) {
+        GST_DEBUG_OBJECT (flacdec, "reached the end of the configured"
+            " segment, posting SEGMENT_DONE message and pausing");
+        gst_pad_pause_task (sinkpad);
+        gst_element_post_message (GST_ELEMENT (flacdec),
+            gst_message_new_segment_done (GST_OBJECT (flacdec),
+                GST_FORMAT_DEFAULT, flacdec->segment.stop));
+      }
+*/
       return;
+    }
 
     case FLAC__SEEKABLE_STREAM_DECODER_END_OF_STREAM:{
-      GstEvent *event;
-
-      GST_DEBUG ("flacdec: got EOS, pushing downstream");
+      GST_DEBUG_OBJECT (flacdec, "EOS, pushing downstream");
       FLAC__seekable_stream_decoder_reset (flacdec->decoder);
 
-      event = gst_event_new_eos ();
-      gst_pad_push_event (flacdec->srcpad, event);
+      gst_pad_push_event (flacdec->srcpad, gst_event_new_eos ());
 
-      GST_DEBUG ("pausing");
+      GST_DEBUG_OBJECT (flacdec, "pausing");
       gst_pad_pause_task (sinkpad);
       return;
     }
@@ -629,79 +635,70 @@ analyze_state:
     case FLAC__SEEKABLE_STREAM_DECODER_INVALID_CALLBACK:
     case FLAC__SEEKABLE_STREAM_DECODER_UNINITIALIZED:
     default:{
-      GstEvent *event;
-
       /* fixme: this error sucks -- should try to figure out when/if an more
          specific error was already sent via the callback */
       GST_ELEMENT_ERROR (flacdec, STREAM, DECODE, (NULL),
           ("%s", FLAC__SeekableStreamDecoderStateString[s]));
 
-      event = gst_event_new_eos ();
-      gst_pad_push_event (flacdec->srcpad, event);
+      gst_pad_push_event (flacdec->srcpad, gst_event_new_eos ());
 
-      GST_DEBUG ("pausing");
+      GST_DEBUG_OBJECT (flacdec, "pausing");
       gst_pad_pause_task (sinkpad);
       return;
     }
   }
 }
 
-#if 0
-static const GstFormat *
-gst_flac_dec_get_src_formats (GstPad * pad)
-{
-  static const GstFormat formats[] = {
-    GST_FORMAT_DEFAULT,
-    GST_FORMAT_BYTES,
-    GST_FORMAT_TIME,
-    0,
-  };
-
-  return formats;
-}
-#endif
-
 static gboolean
 gst_flac_dec_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value)
 {
+  GstFlacDec *flacdec = GST_FLAC_DEC (GST_PAD_PARENT (pad));
   gboolean res = TRUE;
-  GstFlacDec *flacdec = GST_FLAC_DEC (gst_pad_get_parent (pad));
+  guint bytes_per_sample;
   guint scale = 1;
-  gint bytes_per_sample;
 
-  bytes_per_sample = flacdec->channels * ((flacdec->width + 7) >> 3);
+  g_assert (flacdec->width > 0);
+  g_assert (flacdec->width % 8 == 0);
+  g_assert (flacdec->channels > 0);
+
+  bytes_per_sample = flacdec->channels * (flacdec->width / 8);
 
   switch (src_format) {
-    case GST_FORMAT_BYTES:
+    case GST_FORMAT_BYTES:{
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
           if (bytes_per_sample == 0)
             return FALSE;
-          *dest_value = src_value / bytes_per_sample;
+          *dest_value =
+              gst_util_uint64_scale_int (src_value, 1, bytes_per_sample);
           break;
         case GST_FORMAT_TIME:
         {
-          gint byterate = bytes_per_sample * flacdec->frequency;
+          gint byterate = bytes_per_sample * flacdec->sample_rate;
 
           if (byterate == 0)
             return FALSE;
-          *dest_value = src_value * GST_SECOND / byterate;
+
+          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
+              byterate);
           break;
         }
         default:
           res = FALSE;
       }
       break;
+    }
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
           *dest_value = src_value * bytes_per_sample;
           break;
         case GST_FORMAT_TIME:
-          if (flacdec->frequency == 0)
+          if (flacdec->sample_rate == 0)
             return FALSE;
-          *dest_value = src_value * GST_SECOND / flacdec->frequency;
+          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
+              flacdec->sample_rate);
           break;
         default:
           res = FALSE;
@@ -712,7 +709,8 @@ gst_flac_dec_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_BYTES:
           scale = bytes_per_sample;
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value * scale * flacdec->frequency / GST_SECOND;
+          *dest_value = gst_util_uint64_scale_int (src_value,
+              scale * flacdec->sample_rate, GST_SECOND);
           break;
         default:
           res = FALSE;
@@ -729,6 +727,7 @@ gst_flac_dec_get_src_query_types (GstPad * pad)
 {
   static const GstQueryType types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
     0,
   };
 
@@ -738,45 +737,267 @@ gst_flac_dec_get_src_query_types (GstPad * pad)
 static gboolean
 gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
 {
+  GstFlacDec *flacdec;
   gboolean res = TRUE;
-  GstFlacDec *flacdec = GST_FLAC_DEC (gst_pad_get_parent (pad));
+  GstPad *peer;
+
+  flacdec = GST_FLAC_DEC (gst_pad_get_parent (pad));
+  peer = gst_pad_get_peer (flacdec->sinkpad);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:{
+      GstFormat fmt;
       gint64 pos;
-      GstFormat fmt = GST_FORMAT_TIME;
 
-      pos = flacdec->total_samples;
+      gst_query_parse_position (query, &fmt, NULL);
 
-      if (gst_flac_dec_convert_src (flacdec->srcpad,
-              GST_FORMAT_DEFAULT, pos, &fmt, &pos))
-        gst_query_set_position (query, GST_FORMAT_TIME, pos);
-      else
-        res = FALSE;
+      if (fmt != GST_FORMAT_DEFAULT) {
+        if (!gst_flac_dec_convert_src (flacdec->srcpad, GST_FORMAT_DEFAULT,
+                flacdec->segment.last_stop, &fmt, &pos)) {
+          GST_DEBUG ("failed to convert position into format %d", fmt);
+          res = FALSE;
+          goto done;
+        }
+      } else {
+        pos = flacdec->segment.last_stop;
+      }
+
+      gst_query_set_position (query, fmt, pos);
+
+      GST_DEBUG_OBJECT (flacdec, "returning position %" G_GUINT64_FORMAT
+          " (format: %s)", pos, gst_format_get_name (fmt));
+
+      res = TRUE;
       break;
     }
+
     case GST_QUERY_DURATION:{
+      GstFormat fmt;
       gint64 len;
-      GstFormat fmt = GST_FORMAT_TIME;
 
-      if (flacdec->stream_samples == 0)
-        len = flacdec->total_samples;
-      else
-        len = flacdec->stream_samples;
+      gst_query_parse_duration (query, &fmt, NULL);
 
-      if (gst_flac_dec_convert_src (flacdec->srcpad,
-              GST_FORMAT_DEFAULT, len, &fmt, &len))
-        gst_query_set_duration (query, GST_FORMAT_TIME, len);
-      else
+      /* try any demuxers before us first */
+      if (fmt == GST_FORMAT_TIME && peer && gst_pad_query (peer, query)) {
+        gst_query_parse_duration (query, NULL, &len);
+        GST_DEBUG_OBJECT (flacdec, "peer returned duration %" GST_TIME_FORMAT,
+            len);
+        res = TRUE;
+        goto done;
+      }
+
+      if (flacdec->segment.duration == 0 || flacdec->segment.duration == -1) {
+        GST_DEBUG_OBJECT (flacdec, "duration not known yet");
         res = FALSE;
+        goto done;
+      }
+
+      /* convert total number of samples to request format */
+      if (fmt != GST_FORMAT_DEFAULT) {
+        if (!gst_flac_dec_convert_src (flacdec->srcpad, GST_FORMAT_DEFAULT,
+                flacdec->segment.duration, &fmt, &len)) {
+          GST_DEBUG ("failed to convert duration into format %d", fmt);
+          res = FALSE;
+          goto done;
+        }
+      } else {
+        len = flacdec->segment.duration;
+      }
+
+      gst_query_set_duration (query, fmt, len);
+
+      GST_DEBUG_OBJECT (flacdec, "returning duration %" G_GUINT64_FORMAT
+          " (format: %s)", len, gst_format_get_name (fmt));
+
+      res = TRUE;
       break;
     }
-    default:
+
+    case GST_QUERY_CONVERT:{
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+
+      res = gst_flac_dec_convert_src (pad, src_fmt, src_val, &dest_fmt,
+          &dest_val);
+
+      if (res) {
+        gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      }
+
+      break;
+    }
+
+    default:{
       res = FALSE;
       break;
+    }
   }
 
+done:
+
+  if (peer)
+    gst_object_unref (peer);
+
+  gst_object_unref (flacdec);
+
   return res;
+}
+
+static void
+gst_flac_dec_send_newsegment (GstFlacDec * flacdec, gboolean update)
+{
+  GstSegment *s = &flacdec->segment;
+  GstFormat target_format = GST_FORMAT_TIME;
+  gint64 stop_time = GST_CLOCK_TIME_NONE;
+  gint64 start_time = 0;
+
+  /* segment is in DEFAULT format, but we want to send a TIME newsegment */
+  if (!gst_flac_dec_convert_src (flacdec->srcpad, GST_FORMAT_DEFAULT,
+          s->start, &target_format, &start_time)) {
+    GST_WARNING_OBJECT (flacdec, "failed to convert segment start %lld to TIME",
+        s->start);
+    return;
+  }
+
+  if (s->stop != -1 && !gst_flac_dec_convert_src (flacdec->srcpad,
+          GST_FORMAT_DEFAULT, s->stop, &target_format, &stop_time)) {
+    GST_WARNING_OBJECT (flacdec, "failed to convert segment stop to TIME");
+    return;
+  }
+
+  GST_DEBUG_OBJECT (flacdec, "sending newsegment from %" GST_TIME_FORMAT
+      " to %" GST_TIME_FORMAT, GST_TIME_ARGS (start_time),
+      GST_TIME_ARGS (stop_time));
+
+  gst_pad_push_event (flacdec->srcpad,
+      gst_event_new_new_segment (update, s->rate, GST_FORMAT_TIME,
+          start_time, stop_time, start_time));
+}
+
+static gboolean
+gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
+{
+  FLAC__bool seek_ok;
+  GstSeekFlags seek_flags;
+  GstSeekType start_type;
+  GstSeekType stop_type;
+  GstSegment segment;
+  GstFormat seek_format;
+  gboolean only_update = FALSE;
+  gboolean flush;
+  gdouble rate;
+  gint64 start;
+  gint64 stop;
+
+  gst_event_parse_seek (event, &rate, &seek_format, &seek_flags, &start_type,
+      &start, &stop_type, &stop);
+
+  if (seek_format != GST_FORMAT_DEFAULT && seek_format != GST_FORMAT_TIME) {
+    GST_DEBUG ("seeking is only supported in TIME or DEFAULT format");
+    return FALSE;
+  }
+
+  if (rate < 0.0) {
+    GST_DEBUG ("only forward playback supported, rate %f not allowed", rate);
+    return FALSE;
+  }
+
+  if (seek_format != GST_FORMAT_DEFAULT) {
+    GstFormat target_format = GST_FORMAT_DEFAULT;
+
+    if (start_type != GST_SEEK_TYPE_NONE &&
+        !gst_flac_dec_convert_src (flacdec->srcpad, seek_format, start,
+            &target_format, &start)) {
+      GST_DEBUG ("failed to convert start to DEFAULT format");
+      return FALSE;
+    }
+
+    if (stop_type != GST_SEEK_TYPE_NONE &&
+        !gst_flac_dec_convert_src (flacdec->srcpad, seek_format, stop,
+            &target_format, &stop)) {
+      GST_DEBUG ("failed to convert stop to DEFAULT format");
+      return FALSE;
+    }
+  }
+
+  flush = ((seek_flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
+
+  GST_OBJECT_LOCK (flacdec);
+
+  /* operate on segment copy until we know the seek worked */
+  segment = flacdec->segment;
+
+  gst_segment_set_seek (&segment, rate, GST_FORMAT_DEFAULT,
+      seek_flags, start_type, start, stop_type, stop, &only_update);
+
+  if (flush) {
+    gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_start ());
+  } else {
+    gst_pad_stop_task (flacdec->sinkpad);
+  }
+
+  GST_PAD_STREAM_LOCK (flacdec->sinkpad);
+
+#if 0
+  if (only_update) {
+    flacdec->segment = segment;
+    gst_flac_dec_send_newsegment (flacdec, TRUE);
+    goto done;
+  }
+#endif
+
+  GST_DEBUG ("configured segment: [%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT
+      "] = [%" GST_TIME_FORMAT "-%" GST_TIME_FORMAT "]",
+      segment.start, segment.stop,
+      GST_TIME_ARGS (segment.start * GST_SECOND / flacdec->sample_rate),
+      GST_TIME_ARGS (segment.stop * GST_SECOND / flacdec->sample_rate));
+
+  GST_DEBUG_OBJECT (flacdec, "performing seek to sample %" G_GINT64_FORMAT,
+      segment.start);
+
+  flacdec->seeking = TRUE;
+
+  seek_ok = FLAC__seekable_stream_decoder_seek_absolute (flacdec->decoder,
+      segment.start);
+
+  flacdec->seeking = FALSE;
+
+  gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_stop ());
+
+  if (seek_ok) {
+    flacdec->segment = segment;
+    gst_flac_dec_send_newsegment (flacdec, FALSE);
+    flacdec->segment.last_stop = segment.start;
+
+/* FIXME: support segment seeks
+    if ((seek_flags & GST_SEEK_FLAG_SEGMENT) != 0) {
+      GST_DEBUG_OBJECT (flacdec, "posting SEGMENT_START message");
+      GST_OBJECT_UNLOCK (flacdec);
+      gst_element_post_message (GST_ELEMENT (flacdec),
+          gst_message_new_segment_start (GST_OBJECT (flacdec),
+              GST_FORMAT_DEFAULT, flacdec->segment.start));
+      GST_OBJECT_LOCK (flacdec);
+    }
+*/
+    GST_DEBUG_OBJECT (flacdec, "seek successful");
+  } else {
+    GST_WARNING_OBJECT (flacdec, "seek failed");
+  }
+
+#if 0
+done:
+#endif
+
+  GST_PAD_STREAM_UNLOCK (flacdec->sinkpad);
+
+  gst_pad_start_task (flacdec->sinkpad,
+      (GstTaskFunction) gst_flac_dec_loop, flacdec->sinkpad);
+
+  GST_OBJECT_UNLOCK (flacdec);
+
+  return TRUE;
 }
 
 static gboolean
@@ -787,39 +1008,24 @@ gst_flac_dec_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
-      GstFormat format, seek_fmt;
-      GstSeekType type;
-      gint64 pos;
-
-      gst_event_parse_seek (event, NULL, &seek_fmt, NULL, &type, &pos,
-          NULL, NULL);
-
-      format = GST_FORMAT_DEFAULT;
-
-      if (type == GST_SEEK_TYPE_SET &&
-          gst_flac_dec_convert_src (flacdec->srcpad, seek_fmt, pos,
-              &format, &pos)) {
-        GST_DEBUG ("Initializing seek");
-        g_print ("Grab seek lock\n");
-        gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_start ());
-        GST_PAD_STREAM_LOCK (flacdec->sinkpad);
-        g_print ("Got seek lock\n");
-        gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_stop ());
-        GST_DEBUG ("Ready");
-        flacdec->seek_pending = TRUE;
-        flacdec->seek_value = pos;
-        gst_pad_start_task (flacdec->sinkpad,
-            (GstTaskFunction) gst_flac_dec_loop, flacdec->sinkpad);
-        GST_PAD_STREAM_UNLOCK (flacdec->sinkpad);
-      } else
-        res = FALSE;
+      /* first, see if we're before a demuxer that
+       * might handle the seek for us */
+      gst_event_ref (event);
+      res = gst_pad_event_default (pad, event);
+      /* if not, try to handle it ourselves */
+      if (!res) {
+        res = gst_flac_dec_handle_seek_event (flacdec, event);
+      }
+      gst_event_unref (event);
       break;
     }
     default:
-      res = FALSE;
+      res = gst_pad_event_default (pad, event);
       break;
   }
-  gst_event_unref (event);
+
+  gst_object_unref (flacdec);
+
   return res;
 }
 
@@ -848,27 +1054,34 @@ gst_flac_dec_sink_activate_pull (GstPad * sinkpad, gboolean active)
 static GstStateChangeReturn
 gst_flac_dec_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstFlacDec *flacdec = GST_FLAC_DEC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      flacdec->seek_pending = FALSE;
-      flacdec->total_samples = 0;
-      flacdec->eos = FALSE;
-      flacdec->need_discont = TRUE;
+      flacdec->segment.last_stop = 0;
+      flacdec->need_newsegment = TRUE;
+      flacdec->seeking = FALSE;
       if (flacdec->init == FALSE) {
         FLAC__seekable_stream_decoder_reset (flacdec->decoder);
       }
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      flacdec->eos = FALSE;
+      gst_segment_init (&flacdec->segment, GST_FORMAT_DEFAULT);
       break;
     default:
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
 
-  return GST_STATE_CHANGE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_segment_init (&flacdec->segment, GST_FORMAT_UNDEFINED);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }

@@ -31,7 +31,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_FLAC_DEC flacdec_get_type()
+#define GST_TYPE_FLAC_DEC gst_flac_dec_get_type()
 #define GST_FLAC_DEC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLAC_DEC, GstFlacDec)
 #define GST_FLAC_DEC_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_FLAC_DEC, GstFlacDec)
 #define GST_IS_FLAC_DEC(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_FLAC_DEC)
@@ -43,31 +43,37 @@ typedef struct _GstFlacDecClass GstFlacDecClass;
 struct _GstFlacDec {
   GstElement     element;
 
-  GstPad        *sinkpad,*srcpad;
-  guint64        offset;
-
   FLAC__SeekableStreamDecoder *decoder;
+
+  GstPad        *sinkpad;
+  GstPad        *srcpad;
+
+  gboolean       init;
+  gboolean       need_newsegment;
+
+  guint64        offset;      /* current byte offset of input */
+
+  gboolean       seeking;     /* set to TRUE while seeking to make sure we
+                               * don't push any buffers in the write callback
+                               * until we are actually at the new position */
+
+  GstSegment     segment;     /* the currently configured segment, in
+                               * samples/audio frames (DEFAULT format) */
+
+  GstFlowReturn  last_flow;   /* the last flow return received from either
+                               * gst_pad_push or gst_pad_buffer_alloc */
+
   gint           channels;
   gint           depth;
   gint           width;
-  gint           frequency;
-
-  gboolean       need_discont;
-  gboolean       seek_pending;
-  gint64         seek_value;
-
-  gboolean       init;
-  guint64        total_samples;
-  guint64        stream_samples;
-
-  gboolean       eos;
+  gint           sample_rate;
 };
 
 struct _GstFlacDecClass {
   GstElementClass parent_class;
 };
 
-GType flacdec_get_type (void);
+GType gst_flac_dec_get_type (void);
 
 
 #ifdef __cplusplus
