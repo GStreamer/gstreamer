@@ -12,4 +12,4 @@ SUBDIRS =
 DIST_SUBDIRS = ffmpeg
 
 all-local:
-	cd ffmpeg && make
+	cd ffmpeg && $(MAKE)
