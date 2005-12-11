@@ -1,5 +1,13 @@
 2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/pwg/building-chainfn.xml:
+	* docs/pwg/building-pads.xml:
+	* docs/pwg/building-state.xml:
+	* docs/pwg/other-source.xml:
+	  Update state change stuff for 0.10 (fixes #322969).
+
+2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/manual/advanced-dataaccess.xml:
 	* docs/manual/appendix-checklist.xml:
 	* docs/manual/appendix-programs.xml:

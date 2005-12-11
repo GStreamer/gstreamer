@@ -27,8 +27,8 @@
 #include "filter.h"
 #include &lt;string.h&gt;
 
-static GstElementStateReturn
-			gst_my_filter_change_state (GstElement * element);
+static GstStateChangeReturn
+gst_my_filter_change_state (GstElement * element, GstStateChange transition);
 
 GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
 
@@ -217,11 +217,11 @@ gst_my_filter_chain (GstPad * pad, GstBuffer * buf)
   return gst_pad_push (GST_MY_FILTER (GST_OBJECT_PARENT (pad))->srcpad, buf);
 }
 
-static GstElementStateReturn
-gst_my_filter_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_my_filter_change_state (GstElement * element, GstStateChange transition)
 {
   return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS,
-      change_state, (element), GST_STATE_SUCCESS);
+      change_state, (element, transition), GST_STATE_CHANGE_SUCCESS);
 }
 
 #include "register.func"

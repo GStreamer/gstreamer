@@ -33,11 +33,11 @@ gst_my_filter_chain (GstPad    *pad,
 }
 <!-- example-end chain.c b -->
 <!-- example-begin chain.c c --><!--
-static GstElementStateReturn
-gst_my_filter_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_my_filter_change_state (GstElement * element, GstStateChange transition)
 {
   return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS,
-      change_state, (element), GST_STATE_SUCCESS);
+      change_state, (element, transition), GST_STATE_CHANGE_SUCCESS);
 }
 #include "register.func"
   --><!-- example-end chain.c c --></programlisting>
@@ -113,11 +113,11 @@ gst_my_filter_chain (GstPad    *pad,
 }
 <!-- example-end chain.func b -->
 <!-- example-begin chain2.c b --><!--
-static GstElementStateReturn
-gst_my_filter_change_state (GstElement * element)
+static GstStateChangeReturn
+gst_my_filter_change_state (GstElement * element, GstStateChange transition)
 {
   return GST_CALL_PARENT_WITH_DEFAULT (GST_ELEMENT_CLASS,
-      change_state, (element), GST_STATE_SUCCESS);
+      change_state, (element, transition), GST_STATE_CHANGE_SUCCESS);
 }
 #include "register.func"
   --><!-- example-end chain2.c b --></programlisting>

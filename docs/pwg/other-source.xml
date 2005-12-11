@@ -299,24 +299,35 @@ gst_my_source_get (GstPad *pad)
   return GST_DATA (buf);
 }
 
-static GstStateReturn
-gst_my_source_change_state (GstElement *element)
+static GstStateChangeReturn
+gst_my_source_change_state (GstElement *element, GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstMySource *src = GST_MY_SOURCE (element);
 
-  switch (GST_STATE_PENDING (element)) {
-    case GT_STATE_PAUSED_TO_READY:
-      src->total_bytes = 0;
+  /* First, handle upwards state changes */
+  switch (transition) {
+    case GST_STATE_READY_TO_PAUSED:
+      /* do something */
       break;
-
     default:
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element);
+  ret = GST_ELEMENT_CLASS (parent_class)-&gt;change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
 
-  return GST_STATE_SUCCESS;
+  /* Now handle downwards state changes after chaining up */
+  switch (transition) {
+    case GST_STATE_PAUSED_TO_READY:
+      src->total_bytes = 0;
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
     </programlisting>
     <para>
