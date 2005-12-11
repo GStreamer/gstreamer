@@ -1,3 +1,8 @@
+2005-12-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/oss/gstosssink.c: (gst_oss_sink_class_init):
+          more debug-func-ptr usage
+
 2005-12-11  Zeeshan Ali <zeenix at gmail dot com>
 
 	* gst/flx/flx_color.c: (flx_colorspace_convert):

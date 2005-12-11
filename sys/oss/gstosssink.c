@@ -178,7 +178,7 @@ gst_oss_sink_class_init (GstOssSinkClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
 
-  gobject_class->dispose = gst_oss_sink_dispose;
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_oss_sink_dispose);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_oss_sink_get_property);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_oss_sink_set_property);
 
