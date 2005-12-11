@@ -1,3 +1,9 @@
+2005-12-11  Edward Hervey  <edward@fluendo.com>
+
+	* gst/debug/efence.c: (gst_efence_init), (gst_efence_getrange),
+	(gst_efence_checkgetrange), (gst_efence_activate_src_pull):
+	Added pull mode.
+
 2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/goom/gstgoom.c:

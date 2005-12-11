@@ -88,6 +88,10 @@ static void gst_efence_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_efence_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_efence_getrange (GstPad * pad, guint64 offset,
+    guint length, GstBuffer ** buffer);
+static gboolean gst_efence_checkgetrange (GstPad * pad);
+static gboolean gst_efence_activate_src_pull (GstPad * pad, gboolean active);
 
 static GstElementClass *parent_class = NULL;
 
@@ -184,6 +188,10 @@ gst_efence_init (GstEFence * filter)
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_setcaps_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
+  gst_pad_set_chain_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_efence_chain));
+  gst_pad_set_bufferalloc_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_efence_buffer_alloc));
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_object_unref (tmpl);
 
@@ -193,10 +201,13 @@ gst_efence_init (GstEFence * filter)
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_setcaps_function (filter->srcpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
-  gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_efence_chain));
-  gst_pad_set_bufferalloc_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_efence_buffer_alloc));
+  gst_pad_set_checkgetrange_function (filter->srcpad,
+      GST_DEBUG_FUNCPTR (gst_efence_checkgetrange));
+  gst_pad_set_getrange_function (filter->srcpad,
+      GST_DEBUG_FUNCPTR (gst_efence_getrange));
+  gst_pad_set_activatepull_function (filter->srcpad,
+      GST_DEBUG_FUNCPTR (gst_efence_activate_src_pull));
+
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   gst_object_unref (tmpl);
 
@@ -231,6 +242,49 @@ gst_efence_chain (GstPad * pad, GstBuffer * buffer)
   gst_buffer_unref (buffer);
 
   return gst_pad_push (efence->srcpad, copy);
+}
+
+static GstFlowReturn
+gst_efence_getrange (GstPad * pad, guint64 offset,
+    guint length, GstBuffer ** buffer)
+{
+  GstEFence *efence;
+  GstFlowReturn ret;
+  GstBuffer *ownbuf;
+  GstPad *peer;
+
+  efence = GST_EFENCE (GST_OBJECT_PARENT (pad));
+
+  peer = gst_pad_get_peer (efence->sinkpad);
+  if (!peer)
+    return GST_FLOW_NOT_LINKED;
+
+  if ((ret = gst_pad_get_range (peer, offset, length, buffer)) != GST_FLOW_OK)
+    goto beach;
+
+  ownbuf = (GstBuffer *) gst_fenced_buffer_copy (*buffer);
+  gst_buffer_unref ((GstBuffer *) * buffer);
+  *buffer = ownbuf;
+
+beach:
+  gst_object_unref (peer);
+  return ret;
+}
+
+static gboolean
+gst_efence_checkgetrange (GstPad * pad)
+{
+  GstEFence *efence = GST_EFENCE (GST_OBJECT_PARENT (pad));
+
+  return gst_pad_check_pull_range (efence->sinkpad);
+}
+
+static gboolean
+gst_efence_activate_src_pull (GstPad * pad, gboolean active)
+{
+  GstEFence *efence = GST_EFENCE (GST_OBJECT_PARENT (pad));
+
+  return gst_pad_activate_pull (efence->sinkpad, active);
 }
 
 static GstFlowReturn
