@@ -17,6 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <gst/gst.h>
+
 typedef enum {
   FLX_COLORSPACE_RGB8,
   FLX_COLORSPACE_RGB32,
@@ -30,7 +32,6 @@ struct _FlxColorSpaceConverter {
   guint      height;
   guchar      palvec[768];
 };
-
 
 void flx_colorspace_converter_destroy(FlxColorSpaceConverter *flxpal);
 void flx_colorspace_convert(FlxColorSpaceConverter *flxpal, guchar *src, guchar *dest);

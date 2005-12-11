@@ -1,3 +1,12 @@
+2005-12-11  Zeeshan Ali <zeenix at gmail dot com>
+
+	* gst/flx/flx_color.c: (flx_colorspace_convert):
+	* gst/flx/flx_color.h:
+	* gst/flx/flx_fmt.h:
+	* gst/flx/gstflxdec.c: (flx_decode_chunks), (gst_flxdec_chain):
+	* gst/flx/gstflxdec.h:
+	  Now flxdec works on big-endian machines as well.
+
 2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/debug/efence.c: (gst_efence_init), (gst_efence_chain),

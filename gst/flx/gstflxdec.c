@@ -211,6 +211,7 @@ flx_decode_chunks (GstFlxDec * flxdec, gulong count, guchar * data,
 
   while (count--) {
     hdr = (FlxFrameChunk *) data;
+    FLX_FRAME_CHUNK_FIX_ENDIANNESS (hdr);
     data += FlxFrameChunkSize;
 
     switch (hdr->id) {
@@ -466,6 +467,7 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
       const guint8 *data = gst_adapter_peek (flxdec->adapter, FlxHeaderSize);
 
       memcpy ((gchar *) & flxdec->hdr, data, FlxHeaderSize);
+      FLX_HDR_FIX_ENDIANNESS (&(flxdec->hdr));
       gst_adapter_flush (flxdec->adapter, FlxHeaderSize);
 
       flxh = &flxdec->hdr;
@@ -474,7 +476,7 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
       if (flxh->type != FLX_MAGICHDR_FLI &&
           flxh->type != FLX_MAGICHDR_FLC && flxh->type != FLX_MAGICHDR_FLX) {
         GST_ELEMENT_ERROR (flxdec, STREAM, WRONG_TYPE, (NULL),
-            ("not a flx file (type %d)\n", flxh->type));
+            ("not a flx file (type %x)\n", flxh->type));
         return GST_FLOW_ERROR;
       }
 
@@ -537,6 +539,7 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
       const guint8 *data =
           gst_adapter_peek (flxdec->adapter, FlxFrameChunkSize);
       memcpy (&flxfh, data, FlxFrameChunkSize);
+      FLX_FRAME_CHUNK_FIX_ENDIANNESS (&flxfh);
 
       switch (flxfh.id) {
         case FLX_FRAME_TYPE:
@@ -550,6 +553,7 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
           chunk = g_memdup (data, flxfh.size - FlxFrameChunkSize);
           to_flush = flxfh.size - FlxFrameChunkSize;
 
+          FLX_FRAME_TYPE_FIX_ENDIANNESS ((FlxFrameType *) chunk);
           if (((FlxFrameType *) chunk)->chunks == 0)
             break;
 

@@ -22,9 +22,8 @@
 
 #include <gst/gst.h>
 
-#include "flx_color.h"
 #include <gst/base/gstadapter.h>
-
+#include "flx_color.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +33,7 @@ typedef enum {
   GST_FLXDEC_READ_HEADER,
   GST_FLXDEC_PLAYING,
 } GstFlxDecState;
-        
+	
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstFlxDec  GstFlxDec;
