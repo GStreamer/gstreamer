@@ -451,7 +451,7 @@ link_pads_with_filter (GstPad *one,
   caps = gst_caps_new_simple ("video/x-raw-yuv",
 			      "width", G_TYPE_INT, 384,
 			      "height", G_TYPE_INT, 288,
-			      "framerate", G_TYPE_DOUBLE, 25.,
+			      "framerate", GST_TYPE_FRACTION, 25, 1,
 			      NULL);
   gst_pad_link_filtered (one, other, caps);
 }
@@ -473,12 +473,12 @@ link_pads_with_filter (GstPad *one,
       gst_structure_new ("video/x-raw-yuv",
 			 "width", G_TYPE_INT, 384,
 			 "height", G_TYPE_INT, 288,
-			 "framerate", G_TYPE_DOUBLE, 25.,
+			 "framerate", GST_TYPE_FRACTION, 25, 1,
 			 NULL),
       gst_structure_new ("video/x-raw-rgb",
 			 "width", G_TYPE_INT, 384,
 			 "height", G_TYPE_INT, 288,
-			 "framerate", G_TYPE_DOUBLE, 25.,
+			 "framerate", GST_TYPE_FRACTION, 25, 1,
 			 NULL),
       NULL);
 

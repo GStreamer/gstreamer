@@ -66,6 +66,7 @@ main (gint   argc,
 {
   GMainLoop *loop;
   GstElement *pipeline, *src, *sink, *filter, *csp;
+  GstCaps *caps;
   GstPad *pad;
 
   /* init GStreamer */
@@ -80,15 +81,17 @@ main (gint   argc,
   sink = gst_element_factory_make ("xvimagesink", "sink");
   gst_bin_add_many (GST_BIN (pipeline), src, filter, csp, sink, NULL);
   gst_element_link_many (src, filter, csp, sink, NULL);
-  g_object_set (G_OBJECT (filter), "caps",
-      gst_caps_new_simple ("video/x-raw-rgb",
+  filtercaps = gst_caps_new_simple ("video/x-raw-rgb",
 			   "width", G_TYPE_INT, 384,
 			   "height", G_TYPE_INT, 288,
-			   "framerate", G_TYPE_DOUBLE, (gdouble) 25.0,
+			   "framerate", GST_TYPE_FRACTION, 25, 1,
 			   "bpp", G_TYPE_INT, 16,
 			   "depth", G_TYPE_INT, 16,
 			   "endianness", G_TYPE_INT, G_BYTE_ORDER,
-			   NULL), NULL);
+			   NULL);
+  g_object_set (G_OBJECT (filter), "caps", filtercaps, NULL);
+  gst_caps_unref (filtercaps);
+
   pad = gst_element_get_pad (src, "src");
   gst_pad_add_buffer_probe (pad, G_CALLBACK (cb_have_data), NULL);
   gst_object_unref (pad);
@@ -105,7 +108,7 @@ main (gint   argc,
 }
     <!-- example-end probe.c --></programlisting>
     <para>
-      Compare that output with the output of <quote>gst-launch-0.9
+      Compare that output with the output of <quote>gst-launch-0.10
       videotestsrc ! xvimagesink</quote>, just so you know what you're
       looking for.
     </para>
@@ -239,7 +242,7 @@ main (gint   argc,
   		gst_caps_new_simple ("video/x-raw-rgb",
 				     "width", G_TYPE_INT, 384,
 				     "height", G_TYPE_INT, 288,
-				     "framerate", G_TYPE_DOUBLE, (gdouble) 1.0,
+				     "framerate", GST_TYPE_FRACTION, 1, 1,
 				     "bpp", G_TYPE_INT, 16,
 				     "depth", G_TYPE_INT, 16,
 				     "endianness", G_TYPE_INT, G_BYTE_ORDER,

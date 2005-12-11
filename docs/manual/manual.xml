@@ -257,7 +257,7 @@
       </para>
       <para>
         In addition, we also provide a porting guide which will explain
-        easily how to port &GStreamer;-0.8 applications to &GStreamer;-0.9.
+        easily how to port &GStreamer;-0.8 applications to &GStreamer;-0.10.
       </para>
     </partintro>
 

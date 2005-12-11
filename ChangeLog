@@ -1,5 +1,24 @@
 2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/manual/advanced-dataaccess.xml:
+	* docs/manual/appendix-checklist.xml:
+	* docs/manual/appendix-programs.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/manual/highlevel-components.xml:
+	* docs/manual/manual.xml:
+	  Update for 0.10: s/0.9/0.10/; s/audioscale/audiorsample/;
+	  add converters in front of pipelines; remove curly
+	  brackets for threads stuff, they no longer exist; use
+	  GST_TYPE_FRACTION for framerates; update some pieces of
+	  code to 0.10, but there's plenty more to do.
+
+	* docs/manual/appendix-porting.xml:
+	  Expand on asynchroneous state changes; s/0.9/0.10/;
+	  mention disappearance of gst_init_get_popt_table()
+	  (fixes #322916).
+
+2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/faq/using.xml:
 	  Spider no longer exists, and neither does gst-launch-ext.
 	  Update examples to use decodebin and playbin and put

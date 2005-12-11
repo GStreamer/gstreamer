@@ -3,15 +3,6 @@
   <para> 
   </para>
 
-  <sect1 id="section-programs-gst-register">
-    <title><command>gst-register</command></title>
-    <para> 
-      <command>gst-register</command> is used to rebuild the database of plugins.
-      It is used after a new plugin has been added to the system. The plugin database
-      can be found, by default, in <filename>/etc/gstreamer/reg.xml</filename>.
-    </para>
-  </sect1>
-
   <sect1 id="section-programs-gst-launch">
     <title><command>gst-launch</command></title>
     <para> 
@@ -22,15 +13,15 @@
       A simple commandline looks like:
 
     <screen>
-gst-launch filesrc location=hello.mp3 ! mad ! osssink
+gst-launch filesrc location=hello.mp3 ! mad ! audioresample ! osssink
     </screen>
 
       A more complex pipeline looks like:
 
     <screen>
-gst-launch filesrc location=redpill.vob ! mpegdemux name=demux \
- { demux.audio_00 ! queue ! a52dec ! audioconvert ! audioscale ! osssink } \
- { demux.video_00 ! queue !  mpeg2dec ! ffmpegcolorspace ! xvmagesink }
+gst-launch filesrc location=redpill.vob ! dvddemux name=demux \
+ demux.audio_00 ! queue ! a52dec ! audioconvert ! audioresample ! osssink \
+ demux.video_00 ! queue ! mpeg2dec ! ffmpegcolorspace ! xvimagesink
     </screen>
 
     </para>
@@ -49,6 +40,8 @@ main (int argc, char *argv[])
 {
   GstElement *pipeline;
   GstElement *filesrc;
+  GstMessage *msg;
+  GstBus *bus;
   GError *error = NULL;
 
   gst_init (&amp;argc, &amp;argv);
@@ -65,13 +58,46 @@ main (int argc, char *argv[])
   }
   
   filesrc = gst_bin_get_by_name (GST_BIN (pipeline), "my_filesrc");
-  g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
+  g_object_set (filesrc, "location", argv[1], NULL);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  while (gst_bin_iterate (GST_BIN (pipeline)));
+  bus = gst_element_get_bus (pipeline);
+
+  /* wait until we either get an EOS or an ERROR message. Note that in a real
+   * program you would probably not use gst_bus_poll(), but rather set up an
+   * async signal watch on the bus and run a main loop and connect to the
+   * bus's signals to catch certain messages or all messages */
+  msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_EOS: {
+      g_print ("EOS\n");
+      break;
+    }
+    case GST_MESSAGE_ERROR: {
+      GError *err = NULL; /* error to show to users                 */
+      gchar *dbg = NULL;  /* additional debug string for developers */
+
+      gst_message_parse_error (msg, &err, &dbg);
+      if (err) {
+        g_printerr ("ERROR: %s\n", err-&gt;message);
+        g_error_free (err);
+      }
+      if (dbg) {
+        g_printerr ("[Debug details: %s]\n", dbg);
+        g_free (dbg);
+      }
+    }
+    default:
+      g_printerr ("Unexpected message of type %d", GST_MESSAGE_TYPE (msg));
+      break;
+  }
+  gst_message_unref (msg);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+  gst_object_unref (bus);
 
   return 0;
 }

@@ -168,7 +168,7 @@ main (gint   argc,
     </itemizedlist>
     <para>
       For convenience, it is possible to test <quote>playbin</quote> on
-      the commandline, using the command <quote>gst-launch-0.9 playbin
+      the commandline, using the command <quote>gst-launch-0.10 playbin
       uri=file:///path/to/file</quote>.
     </para>
   </sect1>
