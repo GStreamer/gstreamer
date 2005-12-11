@@ -267,8 +267,6 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
         mmsh_read (NULL, mmssrc->connection_h, (char *) data,
         mmssrc->blocksize);
   }
-  printf ("%d\t", result);
-  fflush (stdout);
 
   /* EOS? */
   if (result == 0) {

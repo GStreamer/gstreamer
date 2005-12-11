@@ -1,5 +1,10 @@
 2005-12-11  Edgard Lima <edgard.lima@indt.org.br>
 
+	* ext/libmms/gstmms.c:
+	Just removed a weird printf ;-)
+
+2005-12-11  Edgard Lima <edgard.lima@indt.org.br>
+
 	* configure.ac:
 	* ext/libmms/gstmms.c:
 	* ext/libmms/gstmms.h:
