@@ -1,6 +1,12 @@
 2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/mime-world.fig:
+	  Let's try this again, this time with a file that is
+	  actually in XFig format.
+
+2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/mime-world.fig:
 	  Add audioconvert element to diagram so that it
 	  matches the text and the code (fixes #319526).
 
