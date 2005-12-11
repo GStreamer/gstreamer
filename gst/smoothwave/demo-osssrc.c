@@ -24,7 +24,7 @@ main (int argc, char *argv[])
 
   bin = gst_pipeline_new ("bin");
 
-  src = gst_element_factory_make ("sinesrc", "src");
+  src = gst_element_factory_make ("audiotestsrc", "src");
   wave = gst_element_factory_make ("smoothwave", "wave");
   ximage = gst_element_factory_make (DEFAULT_VIDEOSINK, "sink");
   g_return_val_if_fail (src != NULL, -1);

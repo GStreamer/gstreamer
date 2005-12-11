@@ -58,7 +58,7 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
 int
 main (int argc, char *argv[])
 {
-  GstElement *sinesrc, *audioconvert, *level, *fakesink;
+  GstElement *audiotestsrc, *audioconvert, *level, *fakesink;
   GstElement *pipeline;
   GstCaps *caps;
   GstBus *bus;
@@ -71,8 +71,8 @@ main (int argc, char *argv[])
 
   pipeline = gst_pipeline_new (NULL);
   g_assert (pipeline);
-  sinesrc = gst_element_factory_make ("sinesrc", NULL);
-  g_assert (sinesrc);
+  audiotestsrc = gst_element_factory_make ("audiotestsrc", NULL);
+  g_assert (audiotestsrc);
   audioconvert = gst_element_factory_make ("audioconvert", NULL);
   g_assert (audioconvert);
   level = gst_element_factory_make ("level", NULL);
@@ -80,9 +80,9 @@ main (int argc, char *argv[])
   fakesink = gst_element_factory_make ("fakesink", NULL);
   g_assert (fakesink);
 
-  gst_bin_add_many (GST_BIN (pipeline), sinesrc, audioconvert, level,
+  gst_bin_add_many (GST_BIN (pipeline), audiotestsrc, audioconvert, level,
       fakesink, NULL);
-  g_assert (gst_element_link (sinesrc, audioconvert));
+  g_assert (gst_element_link (audiotestsrc, audioconvert));
   g_assert (gst_element_link_filtered (audioconvert, level, caps));
   g_assert (gst_element_link (level, fakesink));
 

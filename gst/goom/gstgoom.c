@@ -25,7 +25,7 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch -v sinesrc ! goom ! ffmpegcolorspace ! xvimagesink
+ * gst-launch -v audiotestsrc ! goom ! ffmpegcolorspace ! xvimagesink
  * </programlisting>
  * </para>
  * </refsect2>

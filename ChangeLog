@@ -1,3 +1,10 @@
+2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/goom/gstgoom.c:
+	* gst/level/level-example.c: (main):
+	* gst/smoothwave/demo-osssrc.c: (main):
+	  Use audiotestsrc instead of sinesrc (#323798).
+
 2005-12-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/oss/gstosssink.c: (gst_oss_sink_class_init):
