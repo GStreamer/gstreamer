@@ -1703,11 +1703,14 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       xvimagesink->running = FALSE;
+      if (xvimagesink->cur_image) {
+        gst_buffer_unref (xvimagesink->cur_image);
+        xvimagesink->cur_image = NULL;
+      }
       if (xvimagesink->xvimage) {
-        gst_xvimage_buffer_free (xvimagesink->xvimage);
+        gst_buffer_unref (xvimagesink->xvimage);
         xvimagesink->xvimage = NULL;
       }
-
       if (xvimagesink->image_pool)
         gst_xvimagesink_imagepool_clear (xvimagesink);
 
