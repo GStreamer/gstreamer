@@ -7,6 +7,7 @@
 
 #include <gst/gst.h>
 #include <libmms/mms.h>
+#include <libmms/mmsh.h>
 #include <gst/base/gstpushsrc.h>
 
 G_BEGIN_DECLS
@@ -32,6 +33,7 @@ struct _GstMMS
 
   gchar *uri_name;
   gpointer connection;
+  gpointer connection_h;
   gint blocksize;
 };
 

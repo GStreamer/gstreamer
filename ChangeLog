@@ -1,3 +1,11 @@
+2005-12-11  Edgard Lima <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* ext/libmms/gstmms.c:
+	* ext/libmms/gstmms.h:
+	Added suport to mmsh. There's still a sucks msg "ERROR: Pipeline cant
+	PREROOL..." to be fixed.
+
 2005-12-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_chanpos_to_gst),

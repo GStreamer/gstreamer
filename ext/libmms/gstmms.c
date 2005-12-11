@@ -68,6 +68,7 @@ static gboolean gst_mms_src_query (GstPad * pad, GstQuery * query);
 
 
 static gboolean gst_mms_start (GstBaseSrc * bsrc);
+static gboolean gst_mms_stop (GstBaseSrc * bsrc);
 static GstFlowReturn gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf);
 
 static void
@@ -131,6 +132,7 @@ gst_mms_class_init (GstMMSClass * klass)
           G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_mms_start;
+  gstbasesrc_class->stop = gst_mms_stop;
 
   gstpushsrc_class->create = gst_mms_create;
 
@@ -152,6 +154,7 @@ gst_mms_init (GstMMS * mmssrc, GstMMSClass * g_class)
 
   mmssrc->uri_name = NULL;
   mmssrc->connection = NULL;
+  mmssrc->connection_h = NULL;
   mmssrc->blocksize = 2048;
 }
 
@@ -187,7 +190,11 @@ gst_mms_src_query (GstPad * pad, GstQuery * query)
         res = FALSE;
         break;
       }
-      value = (gint64) mms_get_current_pos (mmssrc->connection);
+      if (mmssrc->connection) {
+        value = (gint64) mms_get_current_pos (mmssrc->connection);
+      } else {
+        value = (gint64) mmsh_get_current_pos (mmssrc->connection_h);
+      }
       gst_query_set_position (query, format, value);
       break;
     case GST_QUERY_DURATION:
@@ -196,7 +203,11 @@ gst_mms_src_query (GstPad * pad, GstQuery * query)
         res = FALSE;
         break;
       }
-      value = (gint64) mms_get_length (mmssrc->connection);
+      if (mmssrc->connection) {
+        value = (gint64) mms_get_length (mmssrc->connection);
+      } else {
+        value = (gint64) mmsh_get_length (mmssrc->connection_h);
+      }
       gst_query_set_duration (query, format, value);
       break;
     default:
@@ -229,15 +240,14 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   *buf = NULL;
   mmssrc = GST_MMS (psrc);
-  *buf = gst_buffer_new ();
+  *buf = gst_buffer_new_and_alloc (mmssrc->blocksize);
 
   if (NULL == *buf) {
     ret = GST_FLOW_ERROR;
     goto done;
   }
 
-  data = g_malloc0 (mmssrc->blocksize);
-  GST_BUFFER_DATA (*buf) = data;
+  data = GST_BUFFER_DATA (*buf);
   GST_DEBUG ("mms: data: %p\n", data);
 
   if (NULL == GST_BUFFER_DATA (*buf)) {
@@ -249,11 +259,40 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   GST_BUFFER_SIZE (*buf) = 0;
   GST_DEBUG ("reading %d bytes", mmssrc->blocksize);
-  result =
-      mms_read (NULL, mmssrc->connection, (char *) data, mmssrc->blocksize);
-  GST_BUFFER_OFFSET (*buf) = mms_get_current_pos (mmssrc->connection) - result;
-  GST_BUFFER_SIZE (*buf) = result;
+  if (mmssrc->connection) {
+    result =
+        mms_read (NULL, mmssrc->connection, (char *) data, mmssrc->blocksize);
+  } else {
+    result =
+        mmsh_read (NULL, mmssrc->connection_h, (char *) data,
+        mmssrc->blocksize);
+  }
+  printf ("%d\t", result);
+  fflush (stdout);
 
+  /* EOS? */
+  if (result == 0) {
+    GstPad *peer;
+
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    GST_DEBUG ("Returning EOS");
+    peer = gst_pad_get_peer (GST_BASE_SRC_PAD (mmssrc));
+    if (!gst_pad_send_event (peer, gst_event_new_eos ())) {
+      ret = GST_FLOW_ERROR;
+    }
+    g_object_unref (peer);
+    goto done;
+  }
+
+  if (mmssrc->connection) {
+    GST_BUFFER_OFFSET (*buf) =
+        mms_get_current_pos (mmssrc->connection) - result;
+  } else {
+    GST_BUFFER_OFFSET (*buf) =
+        mmsh_get_current_pos (mmssrc->connection_h) - result;
+  }
+  GST_BUFFER_SIZE (*buf) = result;
 
   /* DEBUG */
   query = gst_query_new_position (GST_QUERY_POSITION);
@@ -261,19 +300,6 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   gst_query_parse_position (query, &fmt, &query_res);
   gst_query_unref (query);
   GST_DEBUG ("mms position: %lld\n", query_res);
-
-
-  /* EOS? */
-  if (result == 0) {
-    gst_buffer_unref (*buf);
-    *buf = NULL;
-    GST_DEBUG ("Returning EOS");
-    if (!gst_pad_send_event (GST_BASE_SRC (mmssrc)->srcpad,
-            gst_event_new_eos ())) {
-      ret = GST_FLOW_ERROR;
-      goto done;
-    }
-  }
 
 done:
 
@@ -284,7 +310,7 @@ static gboolean
 gst_mms_start (GstBaseSrc * bsrc)
 {
   GstMMS *mms;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
   mms = GST_MMS (bsrc);
 
@@ -293,15 +319,39 @@ gst_mms_start (GstBaseSrc * bsrc)
     goto done;
   }
   /* FIXME: pass some sane arguments here */
+  gst_mms_stop (bsrc);
+
   mms->connection = mms_connect (NULL, NULL, mms->uri_name, 128 * 1024);
-  if (!mms->connection) {
-    ret = FALSE;
-    goto done;
+  if (mms->connection) {
+    ret = TRUE;
+  } else {
+    mms->connection_h = mmsh_connect (NULL, NULL, mms->uri_name, 128 * 1024);
+    if (mms->connection_h) {
+      ret = TRUE;
+    }
+
   }
 
 done:
   return ret;
 
+}
+
+static gboolean
+gst_mms_stop (GstBaseSrc * bsrc)
+{
+  GstMMS *mms;
+
+  mms = GST_MMS (bsrc);
+  if (mms->connection != NULL) {
+    mms_close (mms->connection);
+    mms->connection = NULL;
+  }
+  if (mms->connection_h != NULL) {
+    mmsh_close (mms->connection_h);
+    mms->connection_h = NULL;
+  }
+  return TRUE;
 }
 
 static void
@@ -387,7 +437,7 @@ gst_mms_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   GstMMS *src = GST_MMS (handler);
 
   protocol = gst_uri_get_protocol (uri);
-  if (strcmp (protocol, "mms") != 0) {
+  if ((strcmp (protocol, "mms") != 0) && (strcmp (protocol, "mmsh") != 0)) {
     g_free (protocol);
     return FALSE;
   }
