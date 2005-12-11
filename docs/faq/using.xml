@@ -182,25 +182,37 @@ provide us with the necessary gdb output.  See
 You access the GStreamer command line interface using the command gst-launch.
 To decode an mp3 and play it through OSS, you could use
 <programlisting>
-gst-launch filesrc location=thesong.mp3 ! mad ! osssink
+gst-launch filesrc location=thesong.mp3 ! mad ! audioconvert !
+audioresample ! osssink
 </programlisting>.
 More examples can be found in the gst-launch man page.
         </para>
         <para>
 To automatically detect the right codec in a pipeline, try 
 <programlisting>
-gst-launch filesrc location=my-random-media-file.mpeg ! spider ! osssink
+gst-launch filesrc location=my-random-media-file.mpeg ! decodebin !
+ audioconvert ! audioresample ! osssink
 </programlisting>.
-Try replacing osssink with sdlvideosink and see what happens.
+or
+<programlisting>
+gst-launch filesrc location=my-random-media-file.mpeg ! decodebin !
+ ffmpegcolorspace ! xvimagesink
+</programlisting>
+Something more complicated:
+<programlisting>
+gst-launch filesrc location=my-random-media-file.mpeg ! decodebin name=decoder
+   decoder. ! ffmpegcolorspace ! xvimagesink
+   decoder. ! audioconvert ! audioresample ! osssink
+</programlisting>
         </para>
         <para>
-We also have a simple tool called gst-launch-ext used for debugging,
-which has predefined pipelines for you. This means you can just write
+We also have a basic media playing plugin that will take care of most things
+for you. This plugin is called playbin. Try this:
 <programlisting>
-gst-launch-ext (filename)
+gst-launch playbin uri=file:///home/joe/my-random-media-file.mpeg
 </programlisting>
-and it will play the file if the extension is supported.  Note that no effort
-has been made for uninterrupted synchronized playback using this tool.
+This should play the file if the format is supported, ie. you have all the
+necessary demuxing and decoding and some output plugins installed.
         </para>
       </answer>
     </qandaentry>

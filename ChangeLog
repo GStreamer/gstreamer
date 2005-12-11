@@ -1,3 +1,10 @@
+2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/faq/using.xml:
+	  Spider no longer exists, and neither does gst-launch-ext.
+	  Update examples to use decodebin and playbin and put
+	  converters in front of sinks (fixes #323726).
+
 2005-12-09  Michael Smith  <msmith@fluendo.com>
 
 	* plugins/elements/gsttypefindelement.c: (find_peek),
