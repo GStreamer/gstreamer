@@ -1,3 +1,12 @@
+2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/debug/efence.c: (gst_efence_init), (gst_efence_chain),
+	(gst_fenced_buffer_copy):
+	  Make sure GST_BUFFER_DATA is set on fenced copied buffers; fix
+	  GST_DEBUG crasher where GST_TIME_FORMAT was not used in
+	  conjunction with GST_TIME_ARGS. Also, don't leak pad templates
+	  and use GST_DEBUG_FUNCPTR for pad functions.
+
 2005-12-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_base_init),

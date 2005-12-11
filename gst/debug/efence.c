@@ -102,7 +102,7 @@ struct _GstFencedBuffer
 GType gst_fenced_buffer_get_type (void);
 static void gst_fenced_buffer_finalize (GstFencedBuffer * buf);
 static GstFencedBuffer *gst_fenced_buffer_copy (const GstBuffer * buffer);
-void *gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
+static void *gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
     gboolean fence_top);
 static GstFlowReturn gst_efence_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
@@ -176,21 +176,29 @@ gst_efence_class_init (GstEFenceClass * klass)
 static void
 gst_efence_init (GstEFence * filter)
 {
-  filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_efence_sink_factory), "sink");
-  gst_pad_set_getcaps_function (filter->sinkpad, gst_pad_proxy_getcaps);
-  gst_pad_set_setcaps_function (filter->sinkpad, gst_pad_proxy_setcaps);
-  filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_efence_src_factory), "src");
-  gst_pad_set_getcaps_function (filter->srcpad, gst_pad_proxy_getcaps);
-  gst_pad_set_setcaps_function (filter->srcpad, gst_pad_proxy_setcaps);
+  GstPadTemplate *tmpl;
 
+  tmpl = gst_static_pad_template_get (&gst_efence_sink_factory);
+  filter->sinkpad = gst_pad_new_from_template (tmpl, "sink");
+  gst_pad_set_getcaps_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_setcaps_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
+  gst_object_unref (tmpl);
+
+  tmpl = gst_static_pad_template_get (&gst_efence_src_factory);
+  filter->srcpad = gst_pad_new_from_template (tmpl, "src");
+  gst_pad_set_getcaps_function (filter->srcpad,
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_setcaps_function (filter->srcpad,
+      GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
+  gst_pad_set_chain_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_efence_chain));
+  gst_pad_set_bufferalloc_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_efence_buffer_alloc));
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  gst_pad_set_chain_function (filter->sinkpad, gst_efence_chain);
-  gst_pad_set_bufferalloc_function (filter->sinkpad, gst_efence_buffer_alloc);
+  gst_object_unref (tmpl);
 
   filter->fence_top = TRUE;
 }
@@ -205,9 +213,6 @@ gst_efence_chain (GstPad * pad, GstBuffer * buffer)
   GstEFence *efence;
   GstBuffer *copy;
 
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
-
   efence = GST_EFENCE (GST_OBJECT_PARENT (pad));
   g_return_val_if_fail (GST_IS_EFENCE (efence), GST_FLOW_ERROR);
 
@@ -219,9 +224,11 @@ gst_efence_chain (GstPad * pad, GstBuffer * buffer)
 
   copy = (GstBuffer *) gst_fenced_buffer_copy (buffer);
 
-  gst_buffer_unref (buffer);
   GST_DEBUG_OBJECT (efence, "Pushing newly fenced buffer with caps %"
-      GST_PTR_FORMAT, GST_BUFFER_CAPS (buffer));
+      GST_PTR_FORMAT ", data=%p, size=%u", GST_BUFFER_CAPS (copy),
+      GST_BUFFER_DATA (copy), GST_BUFFER_SIZE (copy));
+
+  gst_buffer_unref (buffer);
 
   return gst_pad_push (efence->srcpad, copy);
 }
@@ -360,6 +367,7 @@ gst_fenced_buffer_copy (const GstBuffer * buffer)
       GST_BUFFER_FLAG_DELTA_UNIT;
   GST_MINI_OBJECT (copy)->flags |= GST_MINI_OBJECT (buffer)->flags & mask;
 
+  GST_BUFFER_DATA (copy) = ptr;
   GST_BUFFER_SIZE (copy) = GST_BUFFER_SIZE (buffer);
   GST_BUFFER_TIMESTAMP (copy) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (copy) = GST_BUFFER_DURATION (buffer);
@@ -372,8 +380,8 @@ gst_fenced_buffer_copy (const GstBuffer * buffer)
     GST_BUFFER_CAPS (copy) = NULL;
 
   GST_DEBUG ("Copied buffer %p with ts %" GST_TIME_FORMAT
-      ", caps: % " GST_PTR_FORMAT, buffer, GST_BUFFER_TIMESTAMP (copy),
-      GST_BUFFER_CAPS (copy));
+      ", caps: % " GST_PTR_FORMAT, buffer,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (copy)), GST_BUFFER_CAPS (copy));
 
   return GST_FENCED_BUFFER (copy);
 }
