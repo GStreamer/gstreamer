@@ -215,7 +215,7 @@ gst_mms_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  g_object_unref (mmssrc);
+  gst_object_unref (mmssrc);
   return res;
 
 }
@@ -279,7 +279,7 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
     if (!gst_pad_send_event (peer, gst_event_new_eos ())) {
       ret = GST_FLOW_ERROR;
     }
-    g_object_unref (peer);
+    gst_object_unref (peer);
     goto done;
   }
 

@@ -653,7 +653,7 @@ gst_ivorbisfile_loop (GstPad * pad)
   gint link;
 
   if (ivorbisfile->eos) {
-    g_object_unref (ivorbisfile);
+    gst_object_unref (ivorbisfile);
     return;
   }
 
@@ -664,7 +664,7 @@ gst_ivorbisfile_loop (GstPad * pad)
 
     if (ivorbisfile->adapter) {
       if (gst_adapter_available (ivorbisfile->adapter) < 40960) {
-        g_object_unref (ivorbisfile);
+        gst_object_unref (ivorbisfile);
         return;
       }
     }
@@ -681,7 +681,7 @@ gst_ivorbisfile_loop (GstPad * pad)
     if ((err = ov_open_callbacks (ivorbisfile, &ivorbisfile->vf, NULL, 0,
                 ivorbisfile_ov_callbacks)) < 0) {
       GST_ELEMENT_ERROR (ivorbisfile, STREAM, DECODE, (NULL), (NULL));
-      g_object_unref (ivorbisfile);
+      gst_object_unref (ivorbisfile);
       return;
     }
 
@@ -744,7 +744,7 @@ gst_ivorbisfile_loop (GstPad * pad)
     if (!gst_ivorbisfile_new_link (ivorbisfile, ivorbisfile->vf.current_link)) {
       GST_ELEMENT_ERROR (ivorbisfile, CORE, NEGOTIATION, (NULL), (NULL));
     }
-    g_object_unref (ivorbisfile);
+    gst_object_unref (ivorbisfile);
     return;
   }
 
@@ -765,12 +765,12 @@ gst_ivorbisfile_loop (GstPad * pad)
         ivorbisfile->restart = TRUE;
         gst_pad_push_event (ivorbisfile->srcpad, gst_event_new_eos ());
       }
-      g_object_unref (ivorbisfile);
+      gst_object_unref (ivorbisfile);
       return;
     } else if (ret < 0) {
       g_warning ("ivorbisfile: decoding error");
       gst_buffer_unref (outbuf);
-      g_object_unref (ivorbisfile);
+      gst_object_unref (ivorbisfile);
       return;
     } else {
       if (ivorbisfile->need_discont) {
@@ -791,7 +791,7 @@ gst_ivorbisfile_loop (GstPad * pad)
 
       if (NULL == GST_PAD_CAPS (ivorbisfile->srcpad)) {
         gst_buffer_unref (outbuf);
-        g_object_unref (ivorbisfile);
+        gst_object_unref (ivorbisfile);
         return;
       }
 

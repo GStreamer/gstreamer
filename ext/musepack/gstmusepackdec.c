@@ -351,7 +351,7 @@ gst_musepackdec_src_query (GstPad * pad, GstQuery * query)
   }
 
 done:
-  g_object_unref (musepackdec);
+  gst_object_unref (musepackdec);
   return res;
 }
 
@@ -556,6 +556,9 @@ gst_musepackdec_loop (GstPad * sinkpad)
   gst_musepackdec_src_convert (musepackdec->srcpad,
       GST_FORMAT_DEFAULT, musepackdec->pos, &fmt, &value);
   GST_BUFFER_TIMESTAMP (out) = value;
+
+  GST_DEBUG ("Pushing buffer, timestamp %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out)));
 
   musepackdec->pos += GST_BUFFER_SIZE (out) / musepackdec->bps;
   gst_buffer_set_caps (out, GST_PAD_CAPS (musepackdec->srcpad));

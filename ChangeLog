@@ -1,3 +1,15 @@
+2005-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ivorbis/vorbisfile.c: (gst_ivorbisfile_loop):
+	* ext/libmms/gstmms.c: (gst_mms_src_query), (gst_mms_create):
+	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_src_query),
+	(gst_musepackdec_loop):
+	* ext/swfdec/gstswfdec.c: (gst_swfdec_video_link),
+	(gst_swfdec_src_query):
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_src_query):
+	  GstObjects must be unref'ed with gst_object_unref() instead of
+	  g_object_unref(), otherwise things break for GLib-2.6 users.
+
 2005-12-12  David Schleef  <ds@schleef.org>
 
 	* ext/swfdec/gstswfdec.c: (gst_swfdecbuffer_get_type),

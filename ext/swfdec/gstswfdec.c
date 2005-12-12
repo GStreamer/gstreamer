@@ -287,7 +287,7 @@ gst_swfdec_video_link (GstPad * pad, GstCaps * caps)
     res = TRUE;
   }
 
-  g_object_unref (swfdec);
+  gst_object_unref (swfdec);
   return res;
 
 }
@@ -669,7 +669,7 @@ gst_swfdec_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  g_object_unref (swfdec);
+  gst_object_unref (swfdec);
   return res;
 }
 

@@ -159,7 +159,7 @@ gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
       if (format == GST_FORMAT_TIME) {
         value = wavpackparse->timestamp;
         gst_query_set_duration (query, format, value);
-        g_object_unref (wavpackparse);
+        gst_object_unref (wavpackparse);
         ret = TRUE;
         break;
       }
@@ -171,20 +171,20 @@ gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
         if (wavpackparse->total_samples == 0) {
           value = 0;
           gst_query_set_duration (query, format, value);
-          g_object_unref (wavpackparse);
+          gst_object_unref (wavpackparse);
           ret = FALSE;
           break;
         }
         value = ((gdouble) wavpackparse->total_samples /
             (gdouble) wavpackparse->samplerate) * GST_SECOND;
         gst_query_set_duration (query, format, value);
-        g_object_unref (wavpackparse);
+        gst_object_unref (wavpackparse);
         ret = TRUE;
         break;
       }
       break;
     default:
-      g_object_unref (wavpackparse);
+      gst_object_unref (wavpackparse);
       ret = gst_pad_query_default (pad, query);
       break;
   }
