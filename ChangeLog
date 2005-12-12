@@ -1,3 +1,9 @@
+2005-12-12  Christian Schaller  <set EMAIL_ADDRESS environment variable>
+
+
+	* ext/Makefile.am: fix cdparanoia entry
+	* gst-plugins-base.spec.in: add cdparanoia
+
 2005-12-12  Michael Smith  <msmith@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_type_find):

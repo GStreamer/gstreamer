@@ -72,9 +72,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING README REQUIREMENTS
 
 # helper programs
-%{_bindir}/gst-launch-ext-%{majorminor}
 %{_bindir}/gst-visualise-%{majorminor}
-%{_mandir}/man1/gst-launch-ext-%{majorminor}.*
 %{_mandir}/man1/gst-visualise-%{majorminor}*
 
 # libraries
@@ -107,24 +105,7 @@ rm -rf $RPM_BUILD_ROOT
 # Here are packages not in the base plugins package but not dependant
 # on an external lib
 
-### VIDEO 4 LINUX 2 ###
-# @USE_GST_V4L2_TRUE@%package -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@Summary:       GStreamer Video for Linux 2 plug-in
-# @USE_GST_V4L2_TRUE@Group:         Applications/Multimedia
-# @USE_GST_V4L2_TRUE@Requires:      gstreamer-plugins09 = %{version}
-# @USE_GST_V4L2_TRUE@BuildRequires: glibc-devel
-# @USE_GST_V4L2_TRUE@Obsoletes:	  gstreamer-v4l2
-# @USE_GST_V4L2_TRUE@
-# @USE_GST_V4L2_TRUE@%description -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@Plug-in for accessing Video for Linux devices.
-# @USE_GST_V4L2_TRUE@
-# @USE_GST_V4L2_TRUE@%files -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@%defattr(-, root, root)
 # @USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
-# @USE_GST_V4L2_TRUE@
-# @USE_GST_V4L2_TRUE@%post -n gstreamer-plugins-v4l2
-# @USE_GST_V4L2_TRUE@
-# @USE_GST_V4L2_TRUE@%postun -n gstreamer-plugins-v4l2
 
 # base plugins with dependencies
 @USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsa.so
@@ -135,7 +116,8 @@ rm -rf $RPM_BUILD_ROOT
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstximage*.so
 @USE_XVIDEO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvimagesink.so
 @USE_LIBVISUAL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibvisual.so
-@USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpango.so                                                                     
+@USE_PANGO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpango.so
+@USE_CDPARANOIA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdparanoia.so                                                                     
 %package devel
 Summary: 	GStreamer Plugin Library Headers
 Group: 		Development/Libraries
