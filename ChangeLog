@@ -1,3 +1,8 @@
+2005-12-12  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_type_find):
+	  Use the correct function to free list of typefind factories.
+
 2005-12-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videotestsrc/gstvideotestsrc.c:

@@ -2688,7 +2688,7 @@ gst_ogg_type_find (ogg_packet * packet)
     walk = g_list_next (walk);
   }
 
-  g_list_free (type_list);
+  gst_plugin_feature_list_free (type_list);
 
   if (find.best_probability > 0)
     return find.caps;
