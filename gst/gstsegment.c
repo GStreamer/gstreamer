@@ -32,9 +32,52 @@
  * @see_also: #GstEvent
  *
  * This helper structure holds the relevant values for tracking the region of
- * interest in a media file, called a segment.
+ * interest in a media file, called a segment. 
  *
- * Last reviewed on 2005-20-09 (0.9.5)
+ * The structure can be used for two purposes:
+ * <itemizedlist>
+ *   <listitem><para>performing seeks (handling seek events)</para></listitem>
+ *   <listitem><para>tracking playback regions (handling newsegment events)</para></listitem>
+ * </itemizedlist>
+ *
+ * The segment is usually configured by the application with a seek event which 
+ * is propagated upstream and eventually handled by an element that performs the seek.
+ *
+ * The configured segment is then propagated back downstream with a newsegment event.
+ * This information is then used to clip media to the segment boundaries.
+ *
+ * A segment structure is initialized with gst_segment_init(), which takes a #GstFormat
+ * that will be used as the format of the segment values. The segment will be configured
+ * with a start value of 0 and a stop/duration of -1, which is undefined. The default
+ * rate is 1.0.
+ *
+ * If the segment is used for managing seeks, the segment duration should be set with
+ * gst_segment_set_duration(). The public duration field contains the duration of the
+ * segment.
+ *
+ * The current position in the segment should be set with the gst_segment_set_last_stop().
+ * The public last_stop field contains the last set stop position in the segment.
+ *
+ * For elements that perform seeks, the current segment should be updated with the
+ * gst_segment_set_seek() and the values from the seek event. This method will update
+ * all the segment fields. The last_pos field will contain the new playback position.
+ * If the cur_type was different from GST_SEEK_TYPE_NONE, playback continues from
+ * the last_pos position, possibly with updated flags or rate.
+ *
+ * For elements that want to us #GstSegment to track the playback region, use
+ * gst_segment_set_newsegment() to update the segment fields with the information from
+ * the newsegment event. The gst_segment_clip() method can be used to check and clip
+ * the media data to the segment boundaries.
+ *
+ * For elements that want to synchronize to the pipeline clock, gst_segment_to_running_time()
+ * can be used to convert a timestamp to a value that can be used to synchronize
+ * to the clock. This function takes into account all accumulated segments.
+ *
+ * For elements that need to perform operations on media data in stream_time, 
+ * gst_segment_to_stream_time() can be used to convert a timestamp and the segment
+ * info to stream time (which is always between 0 and the duration of the stream).
+ *
+ * Last reviewed on 2005-12-12 (0.10.0)
  */
 
 static GstSegment *
@@ -98,8 +141,11 @@ gst_segment_free (GstSegment * segment)
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
  *
- * Initialize @segment to its default values, which is a rate of 1.0, a
- * start time of 0.
+ * The start/last_stop positions are set to 0 and the stop/duration
+ * fields are set to -1 (unknown). The default rate of 1.0 and no
+ * flags are set.
+ *
+ * Initialize @segment to its default values.
  */
 void
 gst_segment_init (GstSegment * segment, GstFormat format)
@@ -114,7 +160,7 @@ gst_segment_init (GstSegment * segment, GstFormat format)
   segment->stop = -1;
   segment->time = 0;
   segment->accum = 0;
-  segment->last_stop = -1;
+  segment->last_stop = 0;
   segment->duration = -1;
 }
 
@@ -127,6 +173,9 @@ gst_segment_init (GstSegment * segment, GstFormat format)
  * Set the duration of the segment to @duration. This function is mainly
  * used by elements that perform seeking and know the total duration of the
  * segment.
+ * 
+ * This field should be set to allow seeking request relative to the
+ * duration.
  */
 void
 gst_segment_set_duration (GstSegment * segment, GstFormat format,
@@ -161,7 +210,7 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
   else
     g_return_if_fail (segment->format == format);
 
-  segment->last_stop = position;
+  segment->last_stop = MAX (segment->start, position);
 }
 
 /**
@@ -178,6 +227,12 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
  *    needed.
  *
  * Update the segment structure with the field values of a seek event.
+ *
+ * After calling this method, the segment field last_stop will contain
+ * the requested new position in the segment. If the cur_type is different
+ * from GST_SEEK_TYPE_NONE, the current position is not updated and 
+ * streaming should continue from the last position, possibly with
+ * updated rate, flags or stop position.
  */
 void
 gst_segment_set_seek (GstSegment * segment, gdouble rate,
@@ -269,6 +324,10 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
   segment->abs_rate = ABS (rate);
   segment->flags = flags;
   segment->start = cur;
+  if (update_start) {
+    segment->last_stop = cur;
+  }
+  segment->time = segment->last_stop;
   segment->stop = stop;
 
   if (update)
@@ -338,6 +397,7 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
   segment->rate = rate;
   segment->abs_rate = ABS (rate);
   segment->start = start;
+  segment->last_stop = start;
   segment->stop = stop;
   segment->time = time;
 }
@@ -372,7 +432,7 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
   if ((time = segment->time) == -1)
     time = 0;
 
-  if (position != -1)
+  if (position != -1 && position >= segment->start)
     result = ((position - segment->start) / segment->abs_rate) + time;
   else
     result = -1;
@@ -407,7 +467,7 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
   else if (segment->accum)
     g_return_val_if_fail (segment->format == format, -1);
 
-  if (position != -1)
+  if (position != -1 && position >= segment->start)
     result = ((position - segment->start) / segment->abs_rate) + segment->accum;
   else
     result = -1;

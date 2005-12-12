@@ -389,7 +389,7 @@ GST_START_TEST (segment_newsegment_open)
   fail_unless (segment.stop == -1);
   fail_unless (segment.time == 0);
   fail_unless (segment.accum == 0);
-  fail_unless (segment.last_stop == -1);
+  fail_unless (segment.last_stop == 0);
   fail_unless (segment.duration == -1);
 
   /* we set stop but in the wrong format, stop stays open. */
@@ -457,7 +457,7 @@ GST_START_TEST (segment_newsegment_closed)
   fail_unless (segment.stop == 200);
   fail_unless (segment.time == 0);
   fail_unless (segment.accum == 0);
-  fail_unless (segment.last_stop == -1);
+  fail_unless (segment.last_stop == 0);
   fail_unless (segment.duration == -1);
 
   /* do an update */

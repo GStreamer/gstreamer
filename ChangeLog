@@ -1,3 +1,17 @@
+2005-12-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstsegment.c: (gst_segment_init),
+	(gst_segment_set_last_stop), (gst_segment_set_seek),
+	(gst_segment_set_newsegment), (gst_segment_to_stream_time),
+	(gst_segment_to_running_time):
+	Added more documentation.
+	Make sure the last_pos value is updated properly.
+	Make sure to_stream_time and to_running_time don't
+	operate on wrong values.
+
+	* tests/check/gst/gstsegment.c: (GST_START_TEST):
+	Update check.
+
 2005-12-12  Michael Smith  <msmith@fluendo.com>
 
 	* plugins/elements/gsttypefindelement.c: (free_entry),
