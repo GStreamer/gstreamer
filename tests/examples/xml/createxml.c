@@ -21,7 +21,7 @@ object_saved (GstObject * object, xmlNodePtr parent, gpointer data)
   }
   child = xmlNewChild (parent, ns, (xmlChar *) "comment", NULL);
 
-  xmlNewChild (child, NULL, (xmlChar *) "text", (gchar *) data);
+  xmlNewChild (child, NULL, (xmlChar *) "text", (xmlChar *) data);
 }
 
 int
