@@ -1,3 +1,11 @@
+2005-12-12  David Schleef  <ds@schleef.org>
+
+	* ext/swfdec/gstswfdec.c: (gst_swfdecbuffer_get_type),
+	(gst_swfdecbuffer_class_init), (gst_swfdecbuffer_finalize),
+	(gst_swfdec_buffer_from_swf), (gst_swfdec_render): Add a subclass
+	of GstBuffer that wraps SwfdecBuffers.  Fix a massive memleak
+	because the video buffers previously never got freed.
+
 2005-12-11  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/libmms/gstmms.c:

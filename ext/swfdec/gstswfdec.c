@@ -113,6 +113,75 @@ static void gst_swfdec_render (GstSwfdec * swfdec, int ret);
 static GstElementClass *parent_class = NULL;
 static guint gst_swfdec_signals[LAST_SIGNAL];
 
+
+/* GstSwfdecBuffer */
+
+typedef struct _GstSwfdecBuffer GstSwfdecBuffer;
+struct _GstSwfdecBuffer
+{
+  GstBuffer buffer;
+
+  SwfdecBuffer *swfdec_buffer;
+};
+
+static GstBufferClass *buffer_parent_class = NULL;
+
+static void gst_swfdecbuffer_class_init (gpointer g_class, gpointer class_data);
+static void gst_swfdecbuffer_finalize (GstSwfdecBuffer * swfdecbuffer);
+
+GType
+gst_swfdecbuffer_get_type (void)
+{
+  static GType _gst_swfdecbuffer_type;
+
+  if (G_UNLIKELY (_gst_swfdecbuffer_type == 0)) {
+    static const GTypeInfo swfdecbuffer_info = {
+      sizeof (GstBufferClass),
+      NULL,
+      NULL,
+      gst_swfdecbuffer_class_init,
+      NULL,
+      NULL,
+      sizeof (GstSwfdecBuffer),
+      0,
+      NULL,
+      NULL
+    };
+
+    _gst_swfdecbuffer_type = g_type_register_static (GST_TYPE_BUFFER,
+        "GstSwfdecBuffer", &swfdecbuffer_info, 0);
+  }
+  return _gst_swfdecbuffer_type;
+}
+
+static void
+gst_swfdecbuffer_class_init (gpointer g_class, gpointer class_data)
+{
+  GstBufferClass *swfdecbuffer_class = GST_BUFFER_CLASS (g_class);
+
+  swfdecbuffer_class->mini_object_class.finalize =
+      (GstMiniObjectFinalizeFunction) gst_swfdecbuffer_finalize;
+
+  buffer_parent_class = g_type_class_ref (GST_TYPE_BUFFER);
+}
+
+static void
+gst_swfdecbuffer_finalize (GstSwfdecBuffer * swfdecbuffer)
+{
+  g_return_if_fail (swfdecbuffer != NULL);
+
+  GST_LOG ("finalize %p", swfdecbuffer);
+
+  swfdec_buffer_unref (swfdecbuffer->swfdec_buffer);
+
+  ((GstMiniObjectClass *) buffer_parent_class)->
+      finalize ((GstMiniObject *) swfdecbuffer);
+}
+
+
+
+/* GstSwfdec */
+
 GType
 gst_swfdec_get_type (void)
 {
@@ -240,6 +309,19 @@ gst_swfdec_buffer_to_swf (GstBuffer * buffer)
   sbuf->priv = buffer;
 
   return sbuf;
+}
+
+static GstBuffer *
+gst_swfdec_buffer_from_swf (SwfdecBuffer * buffer)
+{
+  GstSwfdecBuffer *buf;
+
+  buf = (GstSwfdecBuffer *) gst_mini_object_new (gst_swfdecbuffer_get_type ());
+  GST_BUFFER_DATA (buf) = buffer->data;
+  GST_BUFFER_SIZE (buf) = buffer->length;
+  buf->swfdec_buffer = buffer;
+
+  return GST_BUFFER (buf);
 }
 
 GstFlowReturn
@@ -410,23 +492,18 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
 
       swfdec->skip_index = swfdec->skip_frames - 1;
 
-      videobuf = gst_buffer_new ();
-      GST_BUFFER_DATA (videobuf) = video_buffer->data;
-      GST_BUFFER_SIZE (videobuf) = video_buffer->length;
+      videobuf = gst_swfdec_buffer_from_swf (video_buffer);
       GST_BUFFER_TIMESTAMP (videobuf) = swfdec->timestamp;
       gst_buffer_set_caps (videobuf, GST_PAD_CAPS (swfdec->videopad));
 
       gst_pad_push (swfdec->videopad, videobuf);
-
     }
 
     audio_buffer = swfdec_render_get_audio (swfdec->decoder);
 
     if (audio_buffer) {
 
-      audiobuf = gst_buffer_new ();
-      GST_BUFFER_DATA (audiobuf) = audio_buffer->data;
-      GST_BUFFER_SIZE (audiobuf) = audio_buffer->length;
+      audiobuf = gst_swfdec_buffer_from_swf (audio_buffer);
       GST_BUFFER_TIMESTAMP (audiobuf) = swfdec->timestamp;
       gst_buffer_set_caps (audiobuf, GST_PAD_CAPS (swfdec->audiopad));
 
