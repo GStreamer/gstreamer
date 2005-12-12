@@ -25,6 +25,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -32,102 +33,66 @@
 #include <gst/audio/audio.h>
 
 /* elementfactory information */
-static GstElementDetails gst_auparse_details =
+static GstElementDetails gst_au_parse_details =
 GST_ELEMENT_DETAILS (".au parser",
     "Codec/Demuxer/Audio",
     "Parse an .au file into raw audio",
     "Erik Walthinsen <omega@cse.ogi.edu>");
 
-static GstStaticPadTemplate gst_auparse_sink_template =
+static GstStaticPadTemplate gst_au_parse_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-au")
     );
 
-static GstStaticPadTemplate gst_auparse_src_template =
+#define GST_AU_PARSE_ALAW_PAD_TEMPLATE_CAPS \
+    "audio/x-alaw, "                        \
+    "rate = (int) [ 8000, 192000 ], "       \
+    "channels = (int) [ 1, 2 ]"
+
+#define GST_AU_PARSE_MULAW_PAD_TEMPLATE_CAPS \
+    "audio/x-mulaw, "                        \
+    "rate = (int) [ 8000, 192000 ], "        \
+    "channels = (int) [ 1, 2 ]"
+
+/* Nothing to decode those ADPCM streams for now */
+#define GST_AU_PARSE_ADPCM_PAD_TEMPLATE_CAPS \
+    "audio/x-adpcm, "                        \
+    "layout = (string) { g721, g722, g723_3, g723_5 }"
+
+static GstStaticPadTemplate gst_au_parse_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
-    GST_PAD_SOMETIMES,          /* FIXME: spider */
+    GST_PAD_SOMETIMES,
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS "; "
-        /* we don't use GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS
-           because of min buffer-frames which is 1, not 0 */
-        "audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) { LITTLE_ENDIAN , BIG_ENDIAN }, "
-        "width = (int) { 32, 64 }, "
-        "buffer-frames = (int) [ 0, MAX]" "; "
-        "audio/x-alaw, "
-        "rate = (int) [ 8000, 192000 ], "
-        "channels = (int) [ 1, 2 ]" "; "
-        "audio/x-mulaw, "
-        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 2 ]" "; "
-        /* Nothing to decode those ADPCM streams for now */
-        "audio/x-adpcm, " "layout = (string) { g721, g722, g723_3, g723_5 }")
-    );
+        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS ";"
+        GST_AU_PARSE_ALAW_PAD_TEMPLATE_CAPS ";"
+        GST_AU_PARSE_MULAW_PAD_TEMPLATE_CAPS ";"
+        GST_AU_PARSE_ADPCM_PAD_TEMPLATE_CAPS));
 
-enum
-{
-  ARG_0
-      /* FILL ME */
-};
 
-static void gst_auparse_base_init (gpointer g_class);
-static void gst_auparse_class_init (GstAuParseClass * klass);
-static void gst_auparse_init (GstAuParse * auparse);
-static void gst_auparse_dispose (GObject * object);
-
-static GstFlowReturn gst_auparse_chain (GstPad * pad, GstBuffer * buf);
-
-static GstStateChangeReturn gst_auparse_change_state (GstElement * element,
+static void gst_au_parse_dispose (GObject * object);
+static GstFlowReturn gst_au_parse_chain (GstPad * pad, GstBuffer * buf);
+static GstStateChangeReturn gst_au_parse_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
+GST_BOILERPLATE (GstAuParse, gst_au_parse, GstElement, GST_TYPE_ELEMENT)
 
-
-/*static guint gst_auparse_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_auparse_get_type (void)
-{
-  static GType auparse_type = 0;
-
-  if (!auparse_type) {
-    static const GTypeInfo auparse_info = {
-      sizeof (GstAuParseClass),
-      gst_auparse_base_init,
-      NULL,
-      (GClassInitFunc) gst_auparse_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAuParse),
-      0,
-      (GInstanceInitFunc) gst_auparse_init,
-    };
-
-    auparse_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstAuParse", &auparse_info,
-        0);
-  }
-  return auparse_type;
-}
-
-static void
-gst_auparse_base_init (gpointer g_class)
+     static void gst_au_parse_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_auparse_sink_template));
+      gst_static_pad_template_get (&gst_au_parse_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_auparse_src_template));
-  gst_element_class_set_details (element_class, &gst_auparse_details);
+      gst_static_pad_template_get (&gst_au_parse_src_template));
+  gst_element_class_set_details (element_class, &gst_au_parse_details);
 
 }
 
 static void
-gst_auparse_class_init (GstAuParseClass * klass)
+gst_au_parse_class_init (GstAuParseClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -135,24 +100,25 @@ gst_auparse_class_init (GstAuParseClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = gst_auparse_dispose;
+  gobject_class->dispose = gst_au_parse_dispose;
 
-  gstelement_class->change_state = gst_auparse_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_au_parse_change_state);
 }
 
 static void
-gst_auparse_init (GstAuParse * auparse)
+gst_au_parse_init (GstAuParse * auparse, GstAuParseClass * klass)
 {
   auparse->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_auparse_sink_template), "sink");
+      (&gst_au_parse_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
-  gst_pad_set_chain_function (auparse->sinkpad, gst_auparse_chain);
+  gst_pad_set_chain_function (auparse->sinkpad, gst_au_parse_chain);
 
   auparse->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_auparse_src_template), "src");
+      (&gst_au_parse_src_template), "src");
   gst_pad_use_fixed_caps (auparse->srcpad);
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
 
@@ -166,9 +132,9 @@ gst_auparse_init (GstAuParse * auparse)
 }
 
 static void
-gst_auparse_dispose (GObject * object)
+gst_au_parse_dispose (GObject * object)
 {
-  GstAuParse *au = GST_AUPARSE (object);
+  GstAuParse *au = GST_AU_PARSE (object);
 
   if (au->adapter != NULL) {
     gst_object_unref (au->adapter);
@@ -178,7 +144,7 @@ gst_auparse_dispose (GObject * object)
 }
 
 static GstFlowReturn
-gst_auparse_chain (GstPad * pad, GstBuffer * buf)
+gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn ret;
   GstAuParse *auparse;
@@ -192,13 +158,12 @@ gst_auparse_chain (GstPad * pad, GstBuffer * buf)
 
   layout[0] = 0;
 
-  auparse = GST_AUPARSE (gst_pad_get_parent (pad));
-
-  GST_DEBUG ("gst_auparse_chain: got buffer in '%s'",
-      gst_element_get_name (GST_ELEMENT (auparse)));
+  auparse = GST_AU_PARSE (gst_pad_get_parent (pad));
 
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
+
+  GST_DEBUG_OBJECT (auparse, "got buffer of size %ld", size);
 
   /* if we haven't seen any data yet... */
   if (auparse->size == 0) {
@@ -240,7 +205,7 @@ gst_auparse_chain (GstPad * pad, GstBuffer * buf)
     } else {
       GST_ELEMENT_ERROR (auparse, STREAM, WRONG_TYPE, (NULL), (NULL));
       gst_buffer_unref (buf);
-      g_object_unref (auparse);
+      gst_object_unref (auparse);
       return GST_FLOW_ERROR;
     }
 
@@ -327,7 +292,7 @@ Samples :
       default:
         GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL), (NULL));
         gst_buffer_unref (buf);
-        g_object_unref (auparse);
+        gst_object_unref (auparse);
         return GST_FLOW_ERROR;
     }
 
@@ -408,19 +373,20 @@ Samples :
     ret = gst_pad_push (auparse->srcpad, buf);
   }
 
-  g_object_unref (auparse);
+  gst_object_unref (auparse);
 
   return ret;
 }
 
 static GstStateChangeReturn
-gst_auparse_change_state (GstElement * element, GstStateChange transition)
+gst_au_parse_change_state (GstElement * element, GstStateChange transition)
 {
-  GstAuParse *auparse = GST_AUPARSE (element);
+  GstAuParse *auparse = GST_AU_PARSE (element);
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
-  if (parent_class->change_state)
-    ret = parent_class->change_state (element, transition);
+  ret = parent_class->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -442,7 +408,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "auparse", GST_RANK_SECONDARY,
-          GST_TYPE_AUPARSE)) {
+          GST_TYPE_AU_PARSE)) {
     return FALSE;
   }
 

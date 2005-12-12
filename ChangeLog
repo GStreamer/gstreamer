@@ -1,3 +1,15 @@
+2005-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/auparse/gstauparse.c: (gst_au_parse_base_init),
+	(gst_au_parse_class_init), (gst_au_parse_init),
+	(gst_au_parse_dispose), (gst_au_parse_chain),
+	(gst_au_parse_change_state), (plugin_init):
+	* gst/auparse/gstauparse.h:
+	  Use gst_object_unref() for GstObjects instead of
+	  g_object_unref() and fix a mem leak in a debug
+	  statement; while we're at it, also borgify, use
+	  boilerplate macros and clean up a little bit.
+
 2005-12-11  Edward Hervey  <edward@fluendo.com>
 
 	* gst/debug/efence.c: (gst_efence_init), (gst_efence_getrange),

@@ -28,16 +28,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AUPARSE \
-  (gst_auparse_get_type())
-#define GST_AUPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUPARSE,GstAuParse))
-#define GST_AUPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUPARSE,GstAuParse))
-#define GST_IS_AUPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUPARSE))
-#define GST_IS_AUPARSE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUPARSE))
+#define GST_TYPE_AU_PARSE \
+  (gst_au_parse_get_type())
+#define GST_AU_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AU_PARSE,GstAuParse))
+#define GST_AU_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AU_PARSE,GstAuParse))
+#define GST_IS_AU_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AU_PARSE))
+#define GST_IS_AU_PARSE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AU_PARSE))
 
 typedef struct _GstAuParse GstAuParse;
 typedef struct _GstAuParseClass GstAuParseClass;
@@ -64,7 +64,7 @@ struct _GstAuParseClass {
   GstElementClass parent_class;
 };
 
-GType gst_auparse_get_type (void);
+GType gst_au_parse_get_type (void);
 
 G_END_DECLS
 
