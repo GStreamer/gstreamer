@@ -1,5 +1,10 @@
 2005-12-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tests/check/gst/struct_i386.h:
+	  ifdef out the XML structs
+
+2005-12-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstvalue.c: (gst_value_transform_double_fraction):
 	  floor is not needed, F is always positive; this obviates the
 	  need for adding -lm when building without libxml
