@@ -48,18 +48,12 @@ static void gst_sub_parse_base_init (GstSubParseClass * klass);
 static void gst_sub_parse_class_init (GstSubParseClass * klass);
 static void gst_sub_parse_init (GstSubParse * subparse);
 
-#if 0
-static const GstFormat *gst_sub_parse_formats (GstPad * pad);
-static const GstEventMask *gst_sub_parse_src_eventmask (GstPad * pad);
-#endif
 static gboolean gst_sub_parse_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_sub_parse_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_sub_parse_change_state (GstElement * element,
     GstStateChange transition);
 
-#if 0
-static void gst_sub_parse_loop (GstPad * sinkpad);
-#endif
 static GstFlowReturn gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf);
 
 #if 0
@@ -126,11 +120,15 @@ static void
 gst_sub_parse_init (GstSubParse * subparse)
 {
   subparse->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
-  gst_pad_set_chain_function (subparse->sinkpad, gst_sub_parse_chain);
+  gst_pad_set_chain_function (subparse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_sub_parse_chain));
+  gst_pad_set_event_function (subparse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_sub_parse_sink_event));
   gst_element_add_pad (GST_ELEMENT (subparse), subparse->sinkpad);
 
   subparse->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
-  gst_pad_set_event_function (subparse->srcpad, gst_sub_parse_src_event);
+  gst_pad_set_event_function (subparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_sub_parse_src_event));
   gst_element_add_pad (GST_ELEMENT (subparse), subparse->srcpad);
 
   subparse->textbuf = g_string_new (NULL);
@@ -141,48 +139,24 @@ gst_sub_parse_init (GstSubParse * subparse)
  * Source pad functions.
  */
 
-#if 0
-static const GstFormat *
-gst_sub_parse_formats (GstPad * pad)
-{
-  static const GstFormat formats[] = {
-    GST_FORMAT_TIME,
-    0
-  };
-
-  return formats;
-}
-
-static const GstEventMask *
-gst_sub_parse_src_eventmask (GstPad * pad)
-{
-  static const GstEventMask masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET},
-    {0, 0}
-  };
-
-  return masks;
-}
-#endif
-
 static gboolean
-gst_sub_parse_src_event (GstPad * pad, GstEvent * event)
+gst_sub_parse_do_seek (GstSubParse * self, GstEvent * event)
 {
-  GstSubParse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
-  GstFormat format;
   GstSeekType type;
-
-#define grvif(x,y) g_return_val_if_fail (x, y)
-
-  grvif (GST_EVENT_TYPE (event) == GST_EVENT_SEEK, FALSE);
+  GstFormat format;
 
   gst_event_parse_seek (event, NULL, &format, NULL, &type, NULL, NULL, NULL);
 
-  /* we guaranteed these with the eventmask */
-  grvif (format == GST_FORMAT_TIME, FALSE);
-  grvif (type == GST_SEEK_TYPE_SET, FALSE);
+  if (format != GST_FORMAT_TIME) {
+    GST_DEBUG ("Cannot handle seek in non-TIME formats");
+    return FALSE;
+  }
 
-  gst_event_unref (event);
+  /* TODO: use GstSegment? */
+  if (type != GST_SEEK_TYPE_SET) {
+    GST_DEBUG ("Only support GST_SEEK_TYPE_SET");
+    return FALSE;
+  }
 
   GST_PAD_STREAM_LOCK (self->sinkpad);
 
@@ -190,11 +164,36 @@ gst_sub_parse_src_event (GstPad * pad, GstEvent * event)
      time -- and his mother cried... */
   self->next_offset = 0;
 
+  /* FIXME: shouldn't we be sending at least a newsegment event? */
+
+  /* FIXME: ... and send a seek event upstream? */
+
   GST_PAD_STREAM_UNLOCK (self->sinkpad);
+
+  return TRUE;
+}
+
+static gboolean
+gst_sub_parse_src_event (GstPad * pad, GstEvent * event)
+{
+  GstSubParse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
+  gboolean ret = FALSE;
+
+  GST_DEBUG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      ret = gst_sub_parse_do_seek (self, event);
+      gst_event_unref (event);
+      break;
+    default:
+      ret = gst_pad_event_default (pad, event);
+      break;
+  }
 
   gst_object_unref (self);
 
-  return TRUE;
+  return ret;
 }
 
 static gchar *
@@ -382,8 +381,7 @@ parse_subrip (ParserState * state, const gchar * line)
       }
       return NULL;
     default:
-      g_assert_not_reached ();
-      return NULL;
+      g_return_val_if_reached (NULL);
   }
 }
 
@@ -424,13 +422,17 @@ parse_mpsub (ParserState * state, const gchar * line)
 static void
 parser_state_init (ParserState * state)
 {
+  GST_DEBUG ("initialising parser");
+
   if (state->buf) {
     g_string_truncate (state->buf, 0);
   } else {
     state->buf = g_string_new (NULL);
   }
 
-  state->start_time = state->duration = state->state = 0;
+  state->start_time = 0;
+  state->duration = 0;
+  state->state = 0;
 }
 
 static void
@@ -546,6 +548,7 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
 static GstFlowReturn
 handle_buffer (GstSubParse * self, GstBuffer * buf)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps = NULL;
   gchar *line, *subtitle;
 
@@ -556,62 +559,47 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
     if (!(caps = gst_sub_parse_format_autodetect (self))) {
       return GST_FLOW_UNEXPECTED;
     }
+    if (!gst_pad_set_caps (self->srcpad, caps)) {
+      gst_caps_unref (caps);
+      return GST_FLOW_UNEXPECTED;
+    }
+    gst_caps_unref (caps);
   }
 
   while ((line = get_next_line (self))) {
+    GST_DEBUG ("Parsing line '%s'", line);
     subtitle = self->parse_line (&self->state, line);
     g_free (line);
 
     if (subtitle) {
-      GST_DEBUG ("subparse: loop: text %s, %lld+%lld\n",
-          subtitle, self->state.start_time, self->state.duration);
+      guint subtitle_len = strlen (subtitle);
 
-      buf = gst_buffer_new ();
-      GST_BUFFER_DATA (buf) = (guint8 *) subtitle;
-      GST_BUFFER_SIZE (buf) = strlen (subtitle);
-      GST_BUFFER_TIMESTAMP (buf) = self->state.start_time;
-      GST_BUFFER_DURATION (buf) = self->state.duration;
-      GST_DEBUG ("sending text buffer %s at %lld", subtitle,
-          self->state.start_time);
+      ret = gst_pad_alloc_buffer_and_set_caps (self->srcpad,
+          GST_BUFFER_OFFSET_NONE, subtitle_len,
+          GST_PAD_CAPS (self->srcpad), &buf);
 
-      if (G_UNLIKELY (caps)) {
-        /* set caps on the first buffer */
-        gst_buffer_set_caps (buf, caps);
-        gst_caps_unref (caps);
-        caps = NULL;
+      if (ret == GST_FLOW_OK) {
+        memcpy (GST_BUFFER_DATA (buf), subtitle, subtitle_len);
+        GST_BUFFER_TIMESTAMP (buf) = self->state.start_time;
+        GST_BUFFER_DURATION (buf) = self->state.duration;
+
+        GST_DEBUG ("Sending text '%s', %" GST_TIME_FORMAT " + %"
+            GST_TIME_FORMAT, subtitle, GST_TIME_ARGS (self->state.start_time),
+            GST_TIME_ARGS (self->state.duration));
+
+        ret = gst_pad_push (self->srcpad, buf);
       }
 
-      gst_pad_push (self->srcpad, buf);
+      g_free (subtitle);
+      subtitle = NULL;
+
+      if (GST_FLOW_IS_FATAL (ret))
+        break;
     }
   }
 
-  return GST_FLOW_OK;
+  return ret;
 }
-
-#if 0
-static void
-gst_sub_parse_loop (GstPad * sinkpad)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstSubParse *self;
-  GstBuffer *buf;
-
-  GST_DEBUG ("gst_sub_parse_loop");
-  self = GST_SUBPARSE (GST_OBJECT_PARENT (sinkpad));
-
-  GST_STREAM_LOCK (sinkpad);
-
-  ret = gst_pad_pull_range (sinkpad, self->next_offset, 1024, &buf);
-
-  if (ret == GST_FLOW_OK)
-    ret = handle_buffer (self, buf);
-
-  if (ret != GST_FLOW_OK)
-    gst_task_pause (GST_RPAD_TASK (sinkpad));
-
-  GST_STREAM_UNLOCK (sinkpad);
-}
-#endif
 
 static GstFlowReturn
 gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf)
@@ -627,16 +615,53 @@ gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf)
   return ret;
 }
 
+static gboolean
+gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstSubParse *self = GST_SUBPARSE (gst_pad_get_parent (pad));
+  gboolean ret = FALSE;
+
+  GST_DEBUG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:{
+      /* Make sure the last subrip chunk is pushed out even
+       * if the file does not have an empty line at the end */
+      if (self->parser_type == GST_SUB_PARSE_FORMAT_SUBRIP) {
+        GstBuffer *buf = gst_buffer_new_and_alloc (1 + 1);
+
+        GST_DEBUG ("EOS. Pushing remaining text (if any)");
+        GST_BUFFER_DATA (buf)[0] = '\n';
+        GST_BUFFER_DATA (buf)[1] = '\0';        /* play it safe */
+        GST_BUFFER_SIZE (buf) = 1;
+        GST_BUFFER_OFFSET (buf) = self->offset;
+        gst_sub_parse_chain (pad, buf);
+      }
+      ret = gst_pad_event_default (pad, event);
+      break;
+    }
+    case GST_EVENT_NEWSEGMENT:{
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      ret = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (self);
+
+  return ret;
+}
+
+
 static GstStateChangeReturn
 gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstSubParse *self = GST_SUBPARSE (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      parser_state_dispose (&self->state);
-      self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* format detection will init the parser state */
       self->offset = self->next_offset = 0;
@@ -646,7 +671,20 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return parent_class->change_state (element, transition);
+  ret = parent_class->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      parser_state_dispose (&self->state);
+      self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 #if 0

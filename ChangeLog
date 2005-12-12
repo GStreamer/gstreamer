@@ -1,3 +1,18 @@
+2005-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_init),
+	(gst_sub_parse_do_seek), (gst_sub_parse_src_event), (parse_subrip),
+	(parser_state_init), (handle_buffer), (gst_sub_parse_chain),
+	(gst_sub_parse_sink_event), (gst_sub_parse_change_state):
+	  Implement some sort of event handling that doesn't rely on
+	  g_return_if_fail; make sure we always push the last chunk of an 
+	  .srt out when we receive an EOS; use gst_pad_alloc_buffer; fix
+	  state change function; remove some old cruft. Seeking is still
+	  rather unlikely to work though.
+
+	* tools/.cvsignore:
+	  Ignore more.
+
 2005-12-11  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_change_state): 
