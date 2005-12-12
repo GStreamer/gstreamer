@@ -1,5 +1,10 @@
 2005-12-12  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstpushsrc.c:
+	Fix typo.
+
+2005-12-12  Wim Taymans  <wim@fluendo.com>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	Added new symbol to docs.
 

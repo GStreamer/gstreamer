@@ -30,7 +30,7 @@
  * prefers to push out a fixed size buffer.
  *
  * Classes extending this base class will usually be scheduled
- * in a push based mode. It the peer accepts to operate without
+ * in a push based mode. If the peer accepts to operate without
  * offsets and withing the limits of the allowed block size, this
  * class can operate in getrange based mode automatically.
  *
