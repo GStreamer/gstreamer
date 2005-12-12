@@ -1,3 +1,16 @@
+2005-12-12  Andy Wingo  <wingo@pobox.com>
+
+	* libs/gst/net/gstnettimeprovider.c
+	(gst_net_time_provider_class_init, gst_net_time_provider_init)
+	(gst_net_time_provider_set_property)
+	(gst_net_time_provider_get_property): Export "active" as a GObject
+	property.
+	(gst_net_time_provider_thread): Only respond to time queries if
+	the time provider is active.
+
+	* libs/gst/net/gstnettimeprovider.h: Add an "active" boolean to
+	NetTimeProvider, preserving binary compat.
+
 2005-12-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/controller/audio-example.c: (main):

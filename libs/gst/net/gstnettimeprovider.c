@@ -74,12 +74,15 @@ G_STMT_START {                                  \
 #define DEFAULT_ADDRESS         "0.0.0.0"
 #define DEFAULT_PORT            5637
 
+#define IS_ACTIVE(self) (g_atomic_int_get (&((self)->active.active)))
+
 enum
 {
   PROP_0,
   PROP_PORT,
   PROP_ADDRESS,
-  PROP_CLOCK
+  PROP_CLOCK,
+  PROP_ACTIVE
       /* FILL ME */
 };
 
@@ -129,6 +132,10 @@ gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
       g_param_spec_object ("clock", "Clock",
           "The clock to export over the network", GST_TYPE_CLOCK,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_ACTIVE,
+      g_param_spec_boolean ("active", "Active",
+          "TRUE if the clock will respond to queries over the network", TRUE,
+          G_PARAM_READWRITE));
 }
 
 static void
@@ -139,6 +146,7 @@ gst_net_time_provider_init (GstNetTimeProvider * self,
   self->sock = -1;
   self->address = g_strdup (DEFAULT_ADDRESS);
   self->thread = NULL;
+  self->active.active = TRUE;
 
   READ_SOCKET (self) = -1;
   WRITE_SOCKET (self) = -1;
@@ -234,12 +242,14 @@ gst_net_time_provider_thread (gpointer data)
       if (!packet)
         goto receive_error;
 
-      /* do what we were asked to and send the packet back */
-      packet->remote_time = gst_clock_get_time (self->clock);
+      if (IS_ACTIVE (self)) {
+        /* do what we were asked to and send the packet back */
+        packet->remote_time = gst_clock_get_time (self->clock);
 
-      /* ignore errors */
-      gst_net_time_packet_send (packet, self->sock,
-          (struct sockaddr *) &tmpaddr, len);
+        /* ignore errors */
+        gst_net_time_packet_send (packet, self->sock,
+            (struct sockaddr *) &tmpaddr, len);
+      }
 
       g_free (packet);
 
@@ -297,6 +307,9 @@ gst_net_time_provider_set_property (GObject * object, guint prop_id,
       gst_object_replace ((GstObject **) & self->clock,
           (GstObject *) g_value_get_object (value));
       break;
+    case PROP_ACTIVE:
+      gst_atomic_int_set (&self->active.active, g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -318,6 +331,9 @@ gst_net_time_provider_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CLOCK:
       g_value_set_object (value, self->clock);
+      break;
+    case PROP_ACTIVE:
+      g_value_set_boolean (value, IS_ACTIVE (self));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
