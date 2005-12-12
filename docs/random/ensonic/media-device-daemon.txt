@@ -1,21 +1,33 @@
 $Id$
 
-- 4 new elements
-  virtual-audiosink, virtual-videosink
-  virtual-audiosrc, virtual-videosrc
+components
+================================================================================
 
-- daemon that holds list of instances
-- gui app that lists instances as mixing-desk like channelstrips
-- channelstrips would contain
-  - audio
-    - volume, panorama, 3-band eq
-  - video
-    - brightness, contrast, alpha-level
-- user can
-  - add insert-fx
-  - route channel to targets, where targets can be real sinks or more
-    virtual-sinks (sub-groups)
-- virtual sinks need queues to decouple application processes
+- daemon process
+  - is a gstreamer appliation
+  - open physical sink, src elements
+  - prepends an adder to sinks
+  - appends an tee to sources
+
+- 4 new elements
+  - virtual-audiosink, virtual-videosink
+    virtual-audiosrc, virtual-videosrc
+  - virtual sinks establish a connection to the daemon
+  - they link to request_pads of the adder/tee elements
+
+- gui app
+  - lists instances as mixing-desk like channelstrips
+  - channelstrips would contain
+    - audio
+      - volume, panorama, 3-band eq
+    - video
+      - brightness, contrast, alpha-level
+  - user can
+    - add insert-fx
+    - route channel to targets, where targets can be real sinks or more
+      virtual-sinks (sub-groups)
+  - virtual sinks need queues to decouple application processes
+
 - interfaces
   - expose child-elements via child-proxy
     - then e.g. the applications volume-control could directly access the

@@ -1,6 +1,6 @@
 #include <gst/gst.h>
 
-void
+static void
 type_found (GstElement * typefind, const GstCaps * caps)
 {
   xmlDocPtr doc;
@@ -14,6 +14,42 @@ type_found (GstElement * typefind, const GstCaps * caps)
   //gst_caps_save_thyself (caps, parent);
 
   xmlDocDump (stdout, doc);
+}
+
+static void
+event_loop (GstElement * pipe)
+{
+  GstBus *bus;
+  GstMessage *message = NULL;
+
+  bus = gst_element_get_bus (GST_ELEMENT (pipe));
+
+  while (TRUE) {
+    message = gst_bus_poll (bus, GST_MESSAGE_ANY, -1);
+
+    g_assert (message != NULL);
+
+    switch (message->type) {
+      case GST_MESSAGE_EOS:
+        gst_message_unref (message);
+        return;
+      case GST_MESSAGE_WARNING:
+      case GST_MESSAGE_ERROR:{
+        GError *gerror;
+        gchar *debug;
+
+        gst_message_parse_error (message, &gerror, &debug);
+        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+        gst_message_unref (message);
+        g_error_free (gerror);
+        g_free (debug);
+        return;
+      }
+      default:
+        gst_message_unref (message);
+        break;
+    }
+  }
 }
 
 int
@@ -50,11 +86,13 @@ main (int argc, char *argv[])
   gst_element_link (filesrc, typefind);
 
   /* start playing */
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
+  gst_element_set_state (bin, GST_STATE_PLAYING);
 
-  gst_bin_iterate (GST_BIN (bin));
+  /* Run event loop listening for bus messages until EOS or ERROR */
+  event_loop (bin);
 
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_NULL);
+  /* stop the bin */
+  gst_element_set_state (bin, GST_STATE_NULL);
 
   exit (0);
 }

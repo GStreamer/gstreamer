@@ -1,3 +1,59 @@
+2005-12-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/random/ensonic/media-device-daemon.txt:
+	* tests/examples/controller/.cvsignore:
+	* tests/examples/controller/Makefile.am:
+	* tests/examples/controller/audio-example.c: (main):
+	* tests/examples/helloworld/.cvsignore:
+	* tests/examples/helloworld/Makefile.am:
+	* tests/examples/helloworld/helloworld.c: (event_loop), (main):
+	* tests/examples/launch/.cvsignore:
+	* tests/examples/launch/Makefile.am:
+	* tests/examples/launch/mp3parselaunch.c: (event_loop), (main):
+	* tests/examples/metadata/.cvsignore:
+	* tests/examples/metadata/Makefile.am:
+	* tests/examples/metadata/read-metadata.c: (message_loop),
+	(make_pipeline), (print_tag), (main):
+	* tests/examples/queue/.cvsignore:
+	* tests/examples/queue/Makefile.am:
+	* tests/examples/queue/queue.c: (event_loop), (main):
+	* tests/examples/typefind/.cvsignore:
+	* tests/examples/typefind/Makefile.am:
+	* tests/examples/typefind/typefind.c: (type_found), (event_loop),
+	(main):
+	* tests/examples/xml/.cvsignore:
+	* tests/examples/xml/Makefile.am:
+	* tests/examples/xml/createxml.c: (object_saved), (main):
+	* tests/examples/xml/runxml.c: (xml_loaded), (event_loop), (main):
+	* tests/old/examples/Makefile.am:
+	* tests/old/examples/TODO:
+	* tests/old/examples/controller/.cvsignore:
+	* tests/old/examples/controller/Makefile.am:
+	* tests/old/examples/controller/audio-example.c:
+	* tests/old/examples/helloworld/.cvsignore:
+	* tests/old/examples/helloworld/Makefile.am:
+	* tests/old/examples/helloworld/helloworld.c:
+	* tests/old/examples/launch/.cvsignore:
+	* tests/old/examples/launch/Makefile.am:
+	* tests/old/examples/launch/mp3parselaunch.c:
+	* tests/old/examples/launch/mp3play:
+	* tests/old/examples/manual/Makefile.am:
+	* tests/old/examples/metadata/Makefile.am:
+	* tests/old/examples/metadata/read-metadata.c:
+	* tests/old/examples/queue/.cvsignore:
+	* tests/old/examples/queue/Makefile.am:
+	* tests/old/examples/queue/queue.c:
+	* tests/old/examples/typefind/.cvsignore:
+	* tests/old/examples/typefind/Makefile.am:
+	* tests/old/examples/typefind/typefind.c:
+	* tests/old/examples/xml/.cvsignore:
+	* tests/old/examples/xml/Makefile.am:
+	* tests/old/examples/xml/createxml.c:
+	* tests/old/examples/xml/runxml.c:
+	  applied some simple fixing to some examples
+	  re-enabled the working examples
+
 2005-12-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstsegment.c: (gst_segment_init),

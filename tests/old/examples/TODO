@@ -1,0 +1,66 @@
+state of the examples:
+
+appreader
+controller
+  okay
+cutter
+events
+helloworld
+helloworld2
+manual
+metadata
+mixer
+pingpong
+plugins
+pwg
+queue
+queue2
+queue3
+queue4
+retag
+typefind
+xml
+
+----
+
+appreader
+  gst_bin_iterate
+
+cutter
+  gst_bin_iterate
+
+events
+  gst_bin_iterate
+  gst_event_new_seek
+  gst_event_new_flush
+
+helloworld
+  GstAutoplug
+
+manual
+  dynamic
+    gst_registry_pool_feature_filter
+
+mixer
+  gst_bin_iterate
+  gst_scheduler_show
+  gst_element_add_ghost_pad
+
+pingpong
+  gst_bin_iterate
+  gst_element_add_ghost_pad
+  gst_element_default_deep_notify
+
+plugins
+  lots of errors
+
+pwg
+  lots of errors
+
+retag
+  gst_tag_setter_
+  gst_bin_iterate
+
+thread
+  obsolete, uses gst_thread_new
+

@@ -1,29 +1,23 @@
-if GST_DISABLE_LOADSAVE
-GST_LOADSAVE_DIRS = 
-else
-GST_LOADSAVE_DIRS = xml typefind
-endif
+# these example currently don't build (see TODO)
 
-dirs = \
-	helloworld			\
-	queue				\
-	launch				\
-	thread				\
-	plugins				\
-	mixer				\
-	metadata                        \
-	controller			\
-	cutter				\
-	pingpong			\
-	manual				\
-	pwg				\
-	retag
+dirs =
 
-#queue2				\
-#queue3				\
-#queue4				
+#appreader
+#cutter
+#events
+#helloworld2
+#launch
+#manual
+#mixer
+#pingpong
+#plugins
+#pwg
+#queue2
+#queue3
+#queue4
+#retag
+#thread
 
-SUBDIRS = $(dirs)			\
-	$(GST_LOADSAVE_DIRS)
+SUBDIRS = $(dirs)
 
-DIST_SUBDIRS = $(dirs) xml typefind
+DIST_SUBDIRS = $(dirs)

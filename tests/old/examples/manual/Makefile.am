@@ -94,7 +94,7 @@ xml-mp3.c: $(top_srcdir)/docs/manual/highlevel-xml.xml
 
 # we use some of the examples as testsuite apps, to verify that
 # they actually run
-include $(top_srcdir)/testsuite/Rules
+include $(top_srcdir)/tests/old/testsuite/Rules
                                                                                 
 tests_pass = elementmake elementget init goption
 tests_fail =
