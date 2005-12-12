@@ -1,3 +1,14 @@
+2005-12-12  Wim Taymans  <wim@fluendo.com>
+
+	* tests/examples/seek/scrubby.c: (main):
+	Set higher priority for bus events so they don't get reordered with
+	gtk gui events.
+
+	* tests/examples/seek/seek.c: (do_seek), (start_seek), (stop_seek),
+	(flush_toggle_cb), (main):
+	Added checkbox do disable flushing seeks. 
+	Disable scrubbing when doing non flushing seeks.
+
 2005-12-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subparse/gstsubparse.c: (gst_sub_parse_init),

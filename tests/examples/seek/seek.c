@@ -14,6 +14,7 @@ static GList *seekable_elements = NULL;
 static gboolean accurate_seek = FALSE;
 static gboolean keyframe_seek = FALSE;
 static gboolean loop_seek = FALSE;
+static gboolean flush_seek = TRUE;
 
 static GstElement *pipeline;
 static gint64 position;
@@ -1053,7 +1054,9 @@ do_seek (GtkWidget * widget)
 
   real = gtk_range_get_value (GTK_RANGE (widget)) * duration / 100;
 
-  flags = GST_SEEK_FLAG_FLUSH;
+  flags = 0;
+  if (flush_seek)
+    flags |= GST_SEEK_FLAG_FLUSH;
   if (accurate_seek)
     flags |= GST_SEEK_FLAG_ACCURATE;
   if (keyframe_seek)
@@ -1069,9 +1072,11 @@ do_seek (GtkWidget * widget)
   res = send_event (s_event);
 
   if (res) {
-    gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
-    gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
-        50 * GST_MSECOND);
+    if (flush_seek) {
+      gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
+      gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
+          50 * GST_MSECOND);
+    }
   } else
     g_print ("seek failed\n");
 }
@@ -1117,12 +1122,12 @@ set_update_scale (gboolean active)
 static gboolean
 start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 {
-  if (state == GST_STATE_PLAYING)
+  if (state == GST_STATE_PLAYING && flush_seek)
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
   set_update_scale (FALSE);
 
-  if (changed_id == 0) {
+  if (changed_id == 0 && flush_seek) {
     changed_id = gtk_signal_connect (GTK_OBJECT (hscale),
         "value_changed", G_CALLBACK (seek_cb), pipeline);
   }
@@ -1133,8 +1138,15 @@ start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 static gboolean
 stop_seek (GtkWidget * widget, gpointer user_data)
 {
-  g_signal_handler_disconnect (GTK_OBJECT (hscale), changed_id);
-  changed_id = 0;
+  if (changed_id) {
+    g_signal_handler_disconnect (GTK_OBJECT (hscale), changed_id);
+    changed_id = 0;
+  }
+
+  if (!flush_seek) {
+    do_seek (widget);
+  }
+
   if (seek_timeout_id != 0) {
     g_source_remove (seek_timeout_id);
     seek_timeout_id = 0;
@@ -1236,6 +1248,12 @@ loop_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 }
 
 static void
+flush_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  flush_seek = gtk_toggle_button_get_active (button);
+}
+
+static void
 segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   GstEvent *event;
@@ -1324,7 +1342,7 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *window, *hbox, *vbox, *play_button, *pause_button, *stop_button;
-  GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox;
+  GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GOptionEntry options[] = {
     {"stats", 's', 0, G_OPTION_ARG_NONE, &stats,
         "Show pad stats", NULL},
@@ -1377,6 +1395,8 @@ main (int argc, char **argv)
   accurate_checkbox = gtk_check_button_new_with_label ("Accurate Seek");
   key_checkbox = gtk_check_button_new_with_label ("Key_unit Seek");
   loop_checkbox = gtk_check_button_new_with_label ("Loop");
+  flush_checkbox = gtk_check_button_new_with_label ("Flush");
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (flush_checkbox), TRUE);
 
   adjustment =
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
@@ -1401,6 +1421,7 @@ main (int argc, char **argv)
   gtk_box_pack_start (GTK_BOX (hbox), accurate_checkbox, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), key_checkbox, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), loop_checkbox, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (hbox), flush_checkbox, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
 
   /* connect things ... */
@@ -1416,6 +1437,8 @@ main (int argc, char **argv)
       G_CALLBACK (key_toggle_cb), pipeline);
   g_signal_connect (G_OBJECT (loop_checkbox), "toggled",
       G_CALLBACK (loop_toggle_cb), pipeline);
+  g_signal_connect (G_OBJECT (flush_checkbox), "toggled",
+      G_CALLBACK (flush_toggle_cb), pipeline);
 
   g_signal_connect (G_OBJECT (window), "delete_event", gtk_main_quit, NULL);
 

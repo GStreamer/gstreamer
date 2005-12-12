@@ -544,7 +544,7 @@ main (int argc, char **argv)
   g_assert (bus);
 
   bus_watch = gst_bus_add_watch_full (bus,
-      G_PRIORITY_LOW, bus_message, pipeline, NULL);
+      G_PRIORITY_HIGH, bus_message, pipeline, NULL);
 
   gtk_main ();
 
