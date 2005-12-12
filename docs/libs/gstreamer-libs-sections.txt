@@ -131,6 +131,7 @@ GstBaseSrcFlags
 
 gst_base_src_is_live
 gst_base_src_set_live
+gst_base_src_set_format
 
 GST_BASE_SRC_PAD
 <SUBSECTION Standard>
@@ -324,6 +325,12 @@ THREAD_SYNCHRONIZE
 THREAD_TEST_RUNNING
 GST_START_TEST
 GST_END_TEST
+
+sync_cond
+mutex
+GST_CAT_DEFAULT
+thread_list
+start_cond
 
 fail_unless_equals_int
 fail_unless_equals_string

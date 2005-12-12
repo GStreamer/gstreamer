@@ -93,18 +93,25 @@ struct _GstBaseSrc {
   GstSegment     segment;
   gboolean	 need_newsegment;
 
-  guint64	 offset;	/* current offset in the resource */
-  guint64        size;		/* total size of the resource */
+  guint64	 offset;	/* current offset in the resource, unused */
+  guint64        size;		/* total size of the resource, unused */
 
   gint           num_buffers;
   gint           num_buffers_left;
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  union {
+    struct {
+      gboolean  typefind;
+      gboolean  running;
+      GstEvent *pending_seek;
+    } ABI;
+    gpointer       _gst_reserved[GST_PADDING_LARGE];
+  };
 };
 
 /**
- * _GstBaseSrcClass:
+ * GstBaseSrcClass:
  * @create: ask the subclass to create a buffer with offset and size
  * @start: start processing
  */
@@ -150,14 +157,22 @@ struct _GstBaseSrcClass {
   GstFlowReturn (*create)       (GstBaseSrc *src, guint64 offset, guint size,
 		                 GstBuffer **buf);
 
+  /* additions that change padding... */
+  /* notify subclasses of a seek */
+  gboolean      (*do_seek)      (GstBaseSrc *src, GstSegment *segment);
+  /* notify subclasses of a query */
+  gboolean      (*query)        (GstBaseSrc *src, GstQuery *query);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
 };
 
 GType gst_base_src_get_type (void);
 
 void		gst_base_src_set_live	(GstBaseSrc *src, gboolean live);
 gboolean	gst_base_src_is_live	(GstBaseSrc *src);
+
+void		gst_base_src_set_format	(GstBaseSrc *src, GstFormat format);
 
 G_END_DECLS
 
