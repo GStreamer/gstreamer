@@ -1,3 +1,9 @@
+2005-12-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/examples/controller/audio-example.c: (main):
+	* tests/examples/launch/Makefile.am:
+	  convert comments again
+
 2005-12-12  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstpushsrc.c:
