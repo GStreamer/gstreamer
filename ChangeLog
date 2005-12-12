@@ -1,3 +1,30 @@
+2005-12-12  Wim Taymans  <wim@fluendo.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	Added new symbol to docs.
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_init), (gst_base_src_set_format),
+	(gst_base_src_default_query), (gst_base_src_query),
+	(gst_base_src_default_do_seek), (gst_base_src_do_seek),
+	(gst_base_src_perform_seek), (gst_base_src_send_event),
+	(gst_base_src_default_event), (gst_base_src_event_handler),
+	(gst_base_src_set_property), (gst_base_src_get_property),
+	(gst_base_src_wait), (gst_base_src_do_sync),
+	(gst_base_src_update_length), (gst_base_src_get_range),
+	(gst_base_src_check_get_range), (gst_base_src_loop),
+	(gst_base_src_default_negotiate), (gst_base_src_start),
+	(gst_base_src_activate_push), (gst_base_src_activate_pull),
+	(gst_base_src_change_state):
+	* libs/gst/base/gstbasesrc.h:
+	Implement seeking to other formats than _BYTES.
+	Implement more seeking methods correctly.
+	Doc updates.
+	Added query vmethod.
+	Added do_seek vmethod to make life easier for subclasses
+	when seeking.
+	API addition: gst_base_src_set_format()
+
 2005-12-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/Makefile.am:
