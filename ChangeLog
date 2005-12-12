@@ -1,5 +1,16 @@
 2005-12-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_video_test_src_class_init), (gst_video_test_src_init),
+	(gst_video_test_src_parse_caps), (gst_video_test_src_query),
+	(gst_video_test_src_do_seek), (gst_video_test_src_is_seekable),
+	(gst_video_test_src_create):
+	* gst/videotestsrc/gstvideotestsrc.h:
+	Implement seeking in videotestsrc.
+	Small cleanups.
+
+2005-12-12  Wim Taymans  <wim@fluendo.com>
+
 	* ext/cdparanoia/Makefile.am:
 	* ext/cdparanoia/gstcdparanoia.c: (gst_paranoia_mode_get_type),
 	(gst_paranoia_endian_get_type), (_do_init),

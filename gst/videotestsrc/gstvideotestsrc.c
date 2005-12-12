@@ -79,7 +79,10 @@ static GstCaps *gst_video_test_src_getcaps (GstBaseSrc * bsrc);
 static gboolean gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 static void gst_video_test_src_src_fixate (GstPad * pad, GstCaps * caps);
 
-static gboolean gst_video_test_src_event (GstBaseSrc * bsrc, GstEvent * event);
+static gboolean gst_video_test_src_is_seekable (GstBaseSrc * psrc);
+static gboolean gst_video_test_src_do_seek (GstBaseSrc * bsrc,
+    GstSegment * segment);
+static gboolean gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query);
 
 static void gst_video_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
@@ -147,9 +150,11 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
 
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
-  gstbasesrc_class->event = gst_video_test_src_event;
-
+  gstbasesrc_class->is_seekable = gst_video_test_src_is_seekable;
+  gstbasesrc_class->do_seek = gst_video_test_src_do_seek;
+  gstbasesrc_class->query = gst_video_test_src_query;
   gstbasesrc_class->get_times = gst_video_test_src_get_times;
+
   gstpushsrc_class->create = gst_video_test_src_create;
 }
 
@@ -162,10 +167,10 @@ gst_video_test_src_init (GstVideoTestSrc * src, GstVideoTestSrcClass * g_class)
 
   gst_video_test_src_set_pattern (src, GST_VIDEO_TEST_SRC_SMPTE);
 
-  src->segment_start_frame = -1;
-  src->segment_end_frame = -1;
   src->timestamp_offset = 0;
 
+  /* we operate in time */
+  gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
 }
 
@@ -290,24 +295,32 @@ gst_video_test_src_parse_caps (const GstCaps * caps,
 
   structure = gst_caps_get_structure (caps, 0);
 
-  *fourcc = paintinfo_find_by_structure (structure);
-  if (!*fourcc) {
-    g_critical ("videotestsrc format not found");
-    return FALSE;
-  }
+  if (!(*fourcc = paintinfo_find_by_structure (structure)))
+    goto unknown_format;
 
   ret = gst_structure_get_int (structure, "width", width);
   ret &= gst_structure_get_int (structure, "height", height);
-
   framerate = gst_structure_get_value (structure, "framerate");
 
   if (framerate) {
     *rate_numerator = gst_value_get_fraction_numerator (framerate);
     *rate_denominator = gst_value_get_fraction_denominator (framerate);
   } else
-    ret = FALSE;
+    goto no_framerate;
 
   return ret;
+
+  /* ERRORS */
+unknown_format:
+  {
+    GST_DEBUG ("videotestsrc format not found");
+    return FALSE;
+  }
+no_framerate:
+  {
+    GST_DEBUG ("videotestsrc no framerate given");
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -339,58 +352,67 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 }
 
 static gboolean
-gst_video_test_src_event (GstBaseSrc * bsrc, GstEvent * event)
+gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
 {
-  gboolean res = TRUE;
-  GstVideoTestSrc *videotestsrc;
-  gint64 new_n_frames;
+  gboolean res;
+  GstVideoTestSrc *src;
 
-  videotestsrc = GST_VIDEO_TEST_SRC (bsrc);
-  new_n_frames = videotestsrc->n_frames;
+  src = GST_VIDEO_TEST_SRC (bsrc);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONVERT:
     {
-      GstFormat format;
-      GstSeekType cur_type, stop_type;
-      GstSeekFlags flags;
-      gint64 cur, stop;
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
 
-      gst_event_parse_seek (event, NULL, &format, &flags, &cur_type, &cur,
-          &stop_type, &stop);
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if (src_fmt == dest_fmt) {
+        dest_val = src_val;
+        goto done;
+      }
 
-      switch (format) {
-        case GST_FORMAT_TIME:
-          new_n_frames = cur * videotestsrc->rate_numerator /
-              (videotestsrc->rate_denominator * GST_SECOND);
-          videotestsrc->segment_start_frame = new_n_frames;
-          videotestsrc->segment_end_frame =
-              stop * videotestsrc->rate_numerator /
-              (videotestsrc->rate_denominator * GST_SECOND);
-          videotestsrc->segment = flags & GST_SEEK_FLAG_SEGMENT;
-          break;
+      switch (src_fmt) {
         case GST_FORMAT_DEFAULT:
-          new_n_frames = cur;
-          videotestsrc->segment_start_frame = new_n_frames;
-          videotestsrc->segment_end_frame = stop;
-          videotestsrc->segment = flags & GST_SEEK_FLAG_SEGMENT;
+          switch (dest_fmt) {
+            case GST_FORMAT_TIME:
+              /* frames to time */
+              dest_val = gst_util_uint64_scale (src_val,
+                  src->rate_denominator * GST_SECOND, src->rate_numerator);
+              break;
+            default:
+              goto error;
+          }
+          break;
+        case GST_FORMAT_TIME:
+          switch (dest_fmt) {
+            case GST_FORMAT_DEFAULT:
+              /* time to frames */
+              dest_val = gst_util_uint64_scale (src_val,
+                  src->rate_numerator, src->rate_denominator * GST_SECOND);
+              break;
+            default:
+              goto error;
+          }
           break;
         default:
-          res = FALSE;
-          break;
+          goto error;
       }
+    done:
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      res = TRUE;
       break;
     }
     default:
-      res = FALSE;
-      break;
+      res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
   }
-
-  if (videotestsrc->n_frames != new_n_frames) {
-    videotestsrc->n_frames = new_n_frames;
-  }
-
   return res;
+
+  /* ERROR */
+error:
+  {
+    GST_DEBUG_OBJECT (src, "query failed");
+    return FALSE;
+  }
 }
 
 static void
@@ -416,6 +438,34 @@ gst_video_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
   }
 }
 
+static gboolean
+gst_video_test_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
+{
+  GstClockTime time;
+  GstVideoTestSrc *src;
+
+  src = GST_VIDEO_TEST_SRC (bsrc);
+
+  time = segment->time = segment->start;
+
+  /* now move to the time indicated */
+  src->n_frames = gst_util_uint64_scale (time,
+      src->rate_numerator, src->rate_denominator * GST_SECOND);
+  src->running_time = gst_util_uint64_scale (src->n_frames,
+      src->rate_denominator * GST_SECOND, src->rate_numerator);
+
+  g_assert (src->running_time <= time);
+
+  return TRUE;
+}
+
+static gboolean
+gst_video_test_src_is_seekable (GstBaseSrc * psrc)
+{
+  /* we're seekable... */
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 {
@@ -423,10 +473,11 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   gulong newsize;
   GstBuffer *outbuf;
   GstFlowReturn res;
+  GstClockTime next_time;
 
   src = GST_VIDEO_TEST_SRC (psrc);
 
-  if (src->fourcc == NULL)
+  if (src->fourcc == NULL || src->rate_numerator == 0)
     goto not_negotiated;
 
   newsize = gst_video_test_src_get_size (src, src->width, src->height);
@@ -444,11 +495,7 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   if (res != GST_FLOW_OK)
     goto no_buffer;
 #else
-  res = GST_FLOW_OK;
-
   outbuf = gst_buffer_new_and_alloc (newsize);
-  if (outbuf == NULL)
-    goto no_buffer;
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
 #endif
 
@@ -456,16 +503,14 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
       src->width, src->height);
 
   GST_BUFFER_TIMESTAMP (outbuf) = src->timestamp_offset + src->running_time;
-  if (src->rate_numerator != 0) {
-    GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (GST_SECOND,
-        src->rate_denominator, src->rate_numerator);
-  }
-
+  GST_BUFFER_OFFSET (outbuf) = src->n_frames;
   src->n_frames++;
-  if (src->rate_numerator != 0) {
-    src->running_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
-        src->rate_denominator, src->rate_numerator);
-  }
+  GST_BUFFER_OFFSET_END (outbuf) = src->n_frames;
+  next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
+      src->rate_denominator, src->rate_numerator);
+  GST_BUFFER_DURATION (outbuf) = next_time - src->running_time;
+
+  src->running_time = next_time;
 
   *buffer = outbuf;
 
@@ -479,10 +524,11 @@ not_negotiated:
   }
 no_buffer:
   {
+    GST_DEBUG_OBJECT (src, "could not allocate buffer, reason %s",
+        gst_flow_get_name (res));
     return res;
   }
 }
-
 
 static gboolean
 plugin_init (GstPlugin * plugin)
