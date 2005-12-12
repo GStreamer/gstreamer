@@ -575,6 +575,9 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
     }
 
     if (strcmp (id, "COMM") == 0) {
+      if (frame->nfields < 4)
+        continue;
+
       ucs4 = id3_field_getfullstring (&frame->fields[3]);
       g_assert (ucs4);
 
@@ -594,6 +597,9 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
       g_free (utf8);
       continue;
     }
+
+    if (frame->nfields < 2)
+      continue;
 
     field = &frame->fields[1];
     nstrings = id3_field_getnstrings (field);
@@ -1030,7 +1036,7 @@ gst_id3_tag_do_typefind (GstID3Tag * tag, GstBuffer * buffer)
       break;
     walk = g_list_next (walk);
   }
-  g_list_free (type_list);
+  gst_plugin_feature_list_free (type_list);
   if (find.best_probability > 0) {
     return find.caps;
   } else {

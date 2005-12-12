@@ -1,3 +1,9 @@
+2005-12-12  Michael Smith  <msmith@fluendo.com>
+
+	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list),
+	(gst_id3_tag_do_typefind):
+	  Use the correct function to free typefind factory list.
+
 2005-12-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstmad.c: (gst_mad_src_query):
