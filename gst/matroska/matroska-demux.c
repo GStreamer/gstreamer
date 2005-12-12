@@ -2101,6 +2101,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
   guint size = 0;
   gint *lace_size = NULL;
   gint64 time = 0;
+  gint64 lace_time = 0;
   gint flags = 0;
 
   while (!got_error) {
@@ -2295,6 +2296,15 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     }
   }
 
+  if (cluster_time != GST_CLOCK_TIME_NONE) {
+    if (time < 0 && (-time) > cluster_time)
+      lace_time = cluster_time;
+    else
+      lace_time = cluster_time + time;
+  } else {
+    lace_time = GST_CLOCK_TIME_NONE;
+  }
+
   if (!got_error && readblock) {
     guint64 duration = 0;
 
@@ -2316,14 +2326,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       sub = gst_buffer_create_sub (buf,
           GST_BUFFER_SIZE (buf) - size, lace_size[n]);
 
-      if (cluster_time != GST_CLOCK_TIME_NONE) {
-        if (time < 0 && (-time) > cluster_time)
-          GST_BUFFER_TIMESTAMP (sub) = cluster_time;
-        else
-          GST_BUFFER_TIMESTAMP (sub) = cluster_time + time;
+      GST_BUFFER_TIMESTAMP (sub) = lace_time;
+      if (lace_time != GST_CLOCK_TIME_NONE)
+        demux->pos = lace_time;
 
-        demux->pos = GST_BUFFER_TIMESTAMP (sub);
-      }
       stream->pos = demux->pos;
       gst_matroska_demux_sync_streams (demux);
 
@@ -2358,6 +2364,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         got_error = TRUE;
 
       size -= lace_size[n];
+      if (lace_time != GST_CLOCK_TIME_NONE)
+        lace_time += duration;
     }
   }
 
