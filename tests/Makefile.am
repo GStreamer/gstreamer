@@ -15,9 +15,7 @@ SUBDIRS_CHECK =
 endif
 
 if BUILD_EXAMPLES
-## FIXME: write examples from scratch
-# SUBDIRS_EXAMPLES = examples
-SUBDIRS_EXAMPLES =
+SUBDIRS_EXAMPLES = examples
 else
 SUBDIRS_EXAMPLES =
 endif
@@ -33,4 +31,6 @@ SUBDIRS = \
 DIST_SUBDIRS = \
 	benchmarks \
 	check \
+	examples \
 	misc
+	
