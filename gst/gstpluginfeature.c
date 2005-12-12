@@ -68,7 +68,8 @@ gst_plugin_feature_finalize (GObject * object)
 {
   GstPluginFeature *feature = GST_PLUGIN_FEATURE (object);
 
-  GST_DEBUG ("finalizing feature %p", feature);
+  GST_DEBUG ("finalizing feature %p: '%s'", feature,
+      GST_PLUGIN_FEATURE_NAME (feature));
   g_free (feature->name);
   g_free (feature->plugin_name);
 
@@ -103,7 +104,8 @@ gst_plugin_feature_load (GstPluginFeature * feature)
   g_return_val_if_fail (feature != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), FALSE);
 
-  GST_DEBUG ("loading plugin for feature %p", feature);
+  GST_DEBUG ("loading plugin for feature %p; '%s'", feature,
+      GST_PLUGIN_FEATURE_NAME (feature));
   if (feature->loaded)
     return feature;
 

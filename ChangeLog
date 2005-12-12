@@ -1,3 +1,13 @@
+2005-12-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstpluginfeature.c: (gst_plugin_feature_finalize),
+	(gst_plugin_feature_load):
+          more meaningful debug output
+	* configure.ac:
+	* tests/Makefile.am:
+	* tests/old/examples/Makefile.am:
+          make make distcheck happy again
+
 2005-12-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gsttypefindelement.c: (stop_typefinding):

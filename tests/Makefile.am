@@ -33,4 +33,3 @@ DIST_SUBDIRS = \
 	check \
 	examples \
 	misc
-	

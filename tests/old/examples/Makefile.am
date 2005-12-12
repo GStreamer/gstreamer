@@ -20,4 +20,5 @@ dirs =
 
 SUBDIRS = $(dirs)
 
-DIST_SUBDIRS = $(dirs)
+DIST_SUBDIRS = $(dirs) 
+
