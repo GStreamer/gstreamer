@@ -98,7 +98,8 @@ enum
 enum
 {
   MODE_NORMAL,                  /* act as identity */
-  MODE_TYPEFIND                 /* do typefinding */
+  MODE_TYPEFIND,                /* do typefinding  */
+  MODE_ERROR                    /* had fatal error */
 };
 
 
@@ -410,6 +411,7 @@ start_typefinding (GstTypeFindElement * typefind)
   typefind->stream_length_available = TRUE;
   typefind->stream_length = 0;
 }
+
 static void
 stop_typefinding (GstTypeFindElement * typefind)
 {
@@ -437,9 +439,31 @@ stop_typefinding (GstTypeFindElement * typefind)
     if (!push_cached_buffers) {
       gst_buffer_unref (typefind->store);
     } else {
+      GstPad *peer = gst_pad_get_peer (typefind->src);
+
       typefind->mode = MODE_NORMAL;
       gst_buffer_set_caps (typefind->store, typefind->caps);
-      gst_pad_push (typefind->src, typefind->store);
+
+      /* make sure the user gets a meaningful error message in this case,
+       * which is not a core bug or bug of any kind (as the default error
+       * message emitted by gstpad.c otherwise would make you think) */
+      if (peer && GST_PAD_CHAINFUNC (peer) == NULL) {
+        GST_DEBUG_OBJECT (typefind, "upstream only supports push mode, while "
+            "downstream element only works in pull mode, erroring out");
+        GST_ELEMENT_ERROR (typefind, STREAM, FAILED,
+            ("%s cannot work in push mode. The operation is not supported "
+                "with this source element or protocol.",
+                G_OBJECT_TYPE_NAME (GST_PAD_PARENT (peer))),
+            ("Downstream pad %s:%s has no chainfunction, and the upstream "
+                "element does not support pull mode",
+                GST_DEBUG_PAD_NAME (peer)));
+        typefind->mode = MODE_ERROR;    /* make the chain function error out */
+      } else {
+        gst_pad_push (typefind->src, typefind->store);
+      }
+
+      if (peer)
+        gst_object_unref (peer);
     }
     typefind->store = NULL;
   }
@@ -484,44 +508,58 @@ no_length:
   }
 }
 
+static TypeFindEntry *
+gst_type_find_element_get_best_possibility (GstTypeFindElement * typefind)
+{
+  TypeFindEntry *best = NULL;
+  GList *walk;
+
+  for (walk = typefind->possibilities; walk != NULL; walk = walk->next) {
+    TypeFindEntry *entry;
+
+    entry = (TypeFindEntry *) walk->data;
+    if ((!best || entry->probability > best->probability) &&
+        entry->probability >= typefind->min_probability) {
+      best = entry;
+    }
+  }
+
+  return best;
+}
+
 static gboolean
 gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = FALSE;
-  TypeFindEntry *entry;
   GstTypeFindElement *typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
 
-  GST_DEBUG_OBJECT (typefind, "got event %d in mode %d", GST_EVENT_TYPE (event),
-      typefind->mode);
+  GST_DEBUG_OBJECT (typefind, "got %s event in mode %d",
+      GST_EVENT_TYPE_NAME (event), typefind->mode);
 
   switch (typefind->mode) {
     case MODE_TYPEFIND:
       switch (GST_EVENT_TYPE (event)) {
-        case GST_EVENT_EOS:
-          /* this should only happen when we got all available data */
-          entry =
-              (TypeFindEntry *) typefind->possibilities ? typefind->
-              possibilities->data : NULL;
+        case GST_EVENT_EOS:{
+          TypeFindEntry *entry;
+
+          entry = gst_type_find_element_get_best_possibility (typefind);
+
           if (entry && entry->probability >= typefind->min_probability) {
             GST_INFO_OBJECT (typefind,
                 "'%s' is the best typefind left after we got all data, using it now (probability %u)",
                 GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
             g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
                 0, entry->probability, entry->caps);
-            stop_typefinding (typefind);
-            gst_buffer_set_caps (typefind->store, typefind->caps);
-            gst_pad_push (typefind->src, typefind->store);
-            typefind->store = NULL;
-            res = gst_pad_event_default (pad, event);
           } else {
-            res = gst_pad_event_default (pad, event);
             GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL),
                 (NULL));
-            stop_typefinding (typefind);
           }
+          stop_typefinding (typefind);
+          res = gst_pad_event_default (pad, event);
           break;
+        }
         default:
-          gst_mini_object_unref (GST_MINI_OBJECT (event));
+          gst_event_unref (event);
           res = TRUE;
           break;
       }
@@ -534,6 +572,8 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
       } else {
         res = gst_pad_event_default (pad, event);
       }
+      break;
+    case MODE_ERROR:
       break;
     default:
       g_assert_not_reached ();
@@ -610,6 +650,9 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
   typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
 
   switch (typefind->mode) {
+    case MODE_ERROR:
+      /* we should already have called GST_ELEMENT_ERROR */
+      return GST_FLOW_ERROR;
     case MODE_NORMAL:
       gst_buffer_set_caps (buffer, typefind->caps);
       return gst_pad_push (typefind->src, buffer);
@@ -704,24 +747,14 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
         stop_typefinding (typefind);
         return GST_FLOW_ERROR;
       } else if (done) {
-        TypeFindEntry *best = NULL;
+        TypeFindEntry *best;
 
-        walk = typefind->possibilities;
-        while (walk) {
-          entry = (TypeFindEntry *) typefind->possibilities->data;
-          if ((!best || entry->probability > best->probability) &&
-              entry->probability >= typefind->min_probability) {
-            best = entry;
-          }
-          walk = g_list_next (walk);
-        }
-
-        if (best) {
+        if ((best = gst_type_find_element_get_best_possibility (typefind))) {
           GST_INFO_OBJECT (typefind,
-              "'%s' is the only typefind left, using it now (probability %u)",
-              GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
+              "'%s' is the best typefind left, using it now (probability %u)",
+              GST_PLUGIN_FEATURE_NAME (best->factory), best->probability);
           g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
-              0, entry->probability, entry->caps);
+              0, best->probability, best->caps);
           g_list_foreach (typefind->possibilities, (GFunc) free_entry, NULL);
           g_list_free (typefind->possibilities);
           typefind->possibilities = NULL;
@@ -732,6 +765,10 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
           return GST_FLOW_ERROR;
         }
       }
+
+      if (typefind->mode == MODE_ERROR)
+        res = GST_FLOW_ERROR;
+
       break;
     }
     default:

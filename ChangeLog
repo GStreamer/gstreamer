@@ -1,5 +1,35 @@
 2005-12-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* plugins/elements/gsttypefindelement.c: (stop_typefinding):
+	  Catch the special case where we are operating chain-based,
+	  but the downstream peer pad has no chain function. Emit a
+	  custom error message in this case instead of letting the
+	  core generate one implying that this is some sort of core
+	  bug. It's not, it just means that whatever got plugged
+	  into the pipeline downstream when we announced the type
+	  can only operate pull-based, while our source can only
+	  operate push-based (e.g. http://foo/bar.mov ! qtdemux ! ...)
+	  Error string has not been marked for translation yet, as
+	  it probably needs some more work first.
+
+	(gst_type_find_element_get_best_possibility):
+	  Add helper function to find the best of all available
+	  found possibilities that qualify given the min. threshold.
+
+	(gst_type_find_element_handle_event):
+	  Fix the case where we get an EOS while still in TYPEFIND
+	  mode (we want to chose the best of all possible types,
+	  not just the first type that happens to be in our unsorted
+	  list of possible types).
+
+	(gst_type_find_element_chain):
+	  Make sure we return GST_FLOW_ERROR when we errored out
+	  in stop_typefinding(); also, don't just find the best of
+	  all found type entries and then use the last examined
+	  type entry, but actually use the best entry.
+
+2005-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/examples/typefind/typefind.c: (type_found):
 	* tests/examples/xml/runxml.c: (xml_loaded):
 	  More gcc4 fixes and a mem leak fix.
