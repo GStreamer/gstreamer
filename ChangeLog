@@ -1,5 +1,17 @@
 2005-12-12  Julien MOUTTE  <julien@moutte.net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* gst/videomixer/videomixer.c: (gst_videomixer_pad_sink_setcaps),
+	(gst_videomixer_getcaps), (gst_videomixer_fill_queues),
+	(gst_videomixer_update_queues), (gst_videomixer_collected): Adding
+	documentation for videomixer on my way with a funny sample
+	pipeline.
+
+2005-12-12  Julien MOUTTE  <julien@moutte.net>
+
 	* gst/videomixer/videomixer.c: (gst_videomixer_pad_sink_setcaps),
 	(gst_videomixer_getcaps), (gst_videomixer_fill_queues),
 	(gst_videomixer_update_queues), (gst_videomixer_collected):

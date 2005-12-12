@@ -81,7 +81,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/cairo/gsttimeoverlay.h \
 	$(top_srcdir)/ext/flac/gstflacdec.h \
 	$(top_srcdir)/gst/multipart/multipartmux.c \
-	$(top_srcdir)/gst/multipart/multipartdemux.c
+	$(top_srcdir)/gst/multipart/multipartdemux.c \
+	$(top_srcdir)/gst/videomixer/videomixer.c
 
 # example code that needs to be converted to xml and placed in xml/
 EXAMPLE_CFILES = \

@@ -62,3 +62,12 @@ GstMultipartDemux
 GstMultipartDemuxClass
 </SECTION>
 
+<SECTION>
+<FILE>element-videomixer</FILE>
+GstVideoMixer
+GstVideoMixerBackground
+<TITLE>videomixer</TITLE>
+<SUBSECTION Standard>
+GstVideoMixerClass
+</SECTION>
+

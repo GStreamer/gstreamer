@@ -294,6 +294,7 @@ GObject
       GstTypeFindElement
       GstMultipartMux
       GstMultipartDemux
+      GstVideoMixer
     GstPadTemplate
     GstIndex
       GstMemIndex
