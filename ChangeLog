@@ -1,5 +1,10 @@
 2005-12-12  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/examples/Makefile.am:
+	  added that too
+
+2005-12-12  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* docs/random/ensonic/media-device-daemon.txt:
 	* tests/examples/controller/.cvsignore:
