@@ -10,12 +10,12 @@ xml_loaded (GstXML * xml, GstObject * object, xmlNodePtr self, gpointer data)
   xmlNodePtr children = self->xmlChildrenNode;
 
   while (children) {
-    if (!strcmp (children->name, "comment")) {
+    if (!strcmp (children->name, (xmlChar *) "comment")) {
       xmlNodePtr nodes = children->xmlChildrenNode;
 
       while (nodes) {
-        if (!strcmp (nodes->name, "text")) {
-          gchar *name = g_strdup (xmlNodeGetContent (nodes));
+        if (!strcmp (nodes->name, (xmlChar *) "text")) {
+          gchar *name = g_strdup ((gchar *) xmlNodeGetContent (nodes));
 
           g_print ("object %s loaded with comment '%s'\n",
               gst_object_get_name (object), name);
@@ -82,10 +82,10 @@ main (int argc, char *argv[])
 /*  g_signal_connect (G_OBJECT (xml), "object_loaded", */
 /*                  G_CALLBACK (xml_loaded), xml); */
 
-  ret = gst_xml_parse_file (xml, argv[1], NULL);
+  ret = gst_xml_parse_file (xml, (xmlChar *) argv[1], NULL);
   g_assert (ret == TRUE);
 
-  bin = gst_xml_get_element (xml, "pipeline");
+  bin = gst_xml_get_element (xml, (xmlChar *) "pipeline");
   g_assert (bin != NULL);
 
   /* start playing */
