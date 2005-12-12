@@ -3430,7 +3430,7 @@ gst_value_transform_double_fraction (const GValue * src_value,
 
   for (i = 0; i < MAX_TERMS; i++) {
     /* get next term */
-    A = floor (F);
+    A = (gint) F;               /* no floor() needed, F is always >= 0 */
     /* get new divisor */
     F = F - A;
 
