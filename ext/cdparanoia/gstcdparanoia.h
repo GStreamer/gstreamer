@@ -24,10 +24,9 @@
 
 #include <glib.h>
 #include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define size16 gint16
 #define size32 gint32
@@ -39,8 +38,6 @@ extern "C" {
   #include <cdda_interface.h>
   #include <cdda_paranoia.h>
 #endif
-  
-
 
 /*#define CDPARANOIA_BASEOFFSET 0xf1d2 */
 #define CDPARANOIA_BASEOFFSET 0x0
@@ -56,20 +53,18 @@ extern "C" {
 #define GST_IS_CDPARANOIA_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDPARANOIA))
 
-/* NOTE: per-element flags start with 16 for now */
-typedef enum {
-  CDPARANOIA_OPEN               = (GST_ELEMENT_FLAG_LAST << 0),
-
-  CDPARANOIA_FLAG_LAST          = (GST_ELEMENT_FLAG_LAST << 2),
-} CDParanoiaFlags;
-
 typedef struct _CDParanoia CDParanoia;
 typedef struct _CDParanoiaClass CDParanoiaClass;
 
+/**
+ * CDParanoia:
+ *
+ * Opaque #CDParanoia structure 
+ */
 struct _CDParanoia {
-  GstElement element;
-  /* pads */
-  GstPad *srcpad;
+  GstPushSrc pushsrc;
+
+  /*< private >*/
 
   /* Index */
   GstIndex *index;
@@ -100,29 +95,28 @@ struct _CDParanoia {
   gint first_sector;
   gint last_sector;
 
-  /* hacks by Gordon Irving */
   gchar discid[20];
   gint64 offsets[MAXTRK];
   gint64 total_seconds;
 
-  gint prev_sec;
-  gboolean discont_sent;
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 struct _CDParanoiaClass {
-  GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 
   /* signal callbacks */
   void (*smilie_change)         (CDParanoia *cdparanoia, gchar *smilie);
   void (*transport_error)       (CDParanoia *cdparanoia, gint offset);
   void (*uncorrected_error)     (CDParanoia *cdparanoia, gint offset);
+
+  /*< private >*/
+  gpointer       _gst_reserved[GST_PADDING];
 };
 
 GType cdparanoia_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __CDPARANOIA_H__ */

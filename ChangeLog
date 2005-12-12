@@ -1,5 +1,21 @@
 2005-12-12  Wim Taymans  <wim@fluendo.com>
 
+	* ext/cdparanoia/Makefile.am:
+	* ext/cdparanoia/gstcdparanoia.c: (gst_paranoia_mode_get_type),
+	(gst_paranoia_endian_get_type), (_do_init),
+	(cdparanoia_class_init), (cdparanoia_init),
+	(cdparanoia_set_property), (cdparanoia_get_property),
+	(cdparanoia_do_seek), (cdparanoia_is_seekable),
+	(cdparanoia_create), (cdparanoia_start), (cdparanoia_stop),
+	(cdparanoia_convert), (cdparanoia_get_query_types),
+	(cdparanoia_query), (cdparanoia_set_index),
+	(cdparanoia_uri_set_uri):
+	* ext/cdparanoia/gstcdparanoia.h:
+	Partially ported cdparanoia now that basesrc can support a
+	plugin like this..
+
+2005-12-12  Wim Taymans  <wim@fluendo.com>
+
 	* tests/examples/seek/scrubby.c: (main):
 	Set higher priority for bus events so they don't get reordered with
 	gtk gui events.
