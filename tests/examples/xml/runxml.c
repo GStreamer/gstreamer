@@ -10,15 +10,18 @@ xml_loaded (GstXML * xml, GstObject * object, xmlNodePtr self, gpointer data)
   xmlNodePtr children = self->xmlChildrenNode;
 
   while (children) {
-    if (!strcmp (children->name, (xmlChar *) "comment")) {
+    if (!strcmp ((const char *) children->name, "comment")) {
       xmlNodePtr nodes = children->xmlChildrenNode;
 
       while (nodes) {
-        if (!strcmp (nodes->name, (xmlChar *) "text")) {
+        if (!strcmp ((const char *) nodes->name, "text")) {
           gchar *name = g_strdup ((gchar *) xmlNodeGetContent (nodes));
+          gchar *obj_name = gst_object_get_name (object);
 
-          g_print ("object %s loaded with comment '%s'\n",
-              gst_object_get_name (object), name);
+          g_print ("object %s loaded with comment '%s'\n", obj_name, name);
+
+          g_free (obj_name);
+          g_free (name);
         }
         nodes = nodes->next;
       }

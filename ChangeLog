@@ -1,3 +1,9 @@
+2005-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/examples/typefind/typefind.c: (type_found):
+	* tests/examples/xml/runxml.c: (xml_loaded):
+	  More gcc4 fixes and a mem leak fix.
+
 2005-12-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/xml/createxml.c: (object_saved):
