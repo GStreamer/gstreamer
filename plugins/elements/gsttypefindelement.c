@@ -393,6 +393,7 @@ free_entry (TypeFindEntry * entry)
 {
   if (entry->caps)
     gst_caps_unref (entry->caps);
+  gst_object_unref (entry->factory);
   g_free (entry);
 }
 static void
@@ -632,7 +633,7 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
         while (walk) {
           entry = new_entry ();
 
-          entry->factory = GST_TYPE_FIND_FACTORY (walk->data);
+          entry->factory = gst_object_ref (GST_TYPE_FIND_FACTORY (walk->data));
           entry->self = typefind;
           entry->probability = 0;
           typefind->possibilities =

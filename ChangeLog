@@ -1,3 +1,10 @@
+2005-12-12  Michael Smith  <msmith@fluendo.com>
+
+	* plugins/elements/gsttypefindelement.c: (free_entry),
+	(gst_type_find_element_chain):
+	  Now that we're not leaking factories, make sure we keep references
+	  to them while we need them.
+
 2005-12-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tests/check/gst/struct_i386.h:
