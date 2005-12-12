@@ -170,6 +170,7 @@ gst_type_find_helper (GstPad * src, guint64 size)
       break;
     walk = g_list_next (walk);
   }
+  gst_plugin_feature_list_free (type_list);
 
   if (find.best_probability > 0)
     result = find.caps;

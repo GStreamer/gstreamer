@@ -641,7 +641,6 @@ static GstFlowReturn
 gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstTypeFindElement *typefind;
-  GList *entries;
   TypeFindEntry *entry;
   GList *walk;
   GstFlowReturn res = GST_FLOW_OK;
@@ -687,26 +686,31 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
       }
 
       /* call every typefind function once */
-      walk = entries = typefind->possibilities;
+      walk = typefind->possibilities;
       GST_INFO_OBJECT (typefind, "iterating %u typefinding functions",
-          g_list_length (entries));
-      typefind->possibilities = NULL;
+          g_list_length (walk));
       while (walk) {
         find.data = entry = (TypeFindEntry *) walk->data;
-        walk = g_list_next (walk);
-        if (entry->probability == 0) {
-          entry->requested_size = 0;
-          gst_type_find_factory_call_function (entry->factory, &find);
-        } else {
-          typefind->possibilities =
-              g_list_prepend (typefind->possibilities, entry);
+        if (entry->probability != 0) {
+          /* Probability already known, just continue along the list */
+          walk = g_list_next (walk);
           continue;
         }
+
+        entry->requested_size = 0;
+        gst_type_find_factory_call_function (entry->factory, &find);
+
         if (entry->probability == 0 && entry->requested_size == 0) {
+          GList *next;
+
           GST_DEBUG_OBJECT (typefind,
               "'%s' was removed - no chance of being the right plugin",
               GST_PLUGIN_FEATURE_NAME (entry->factory));
+          next = g_list_next (walk);
           free_entry (entry);
+          typefind->possibilities =
+              g_list_delete_link (typefind->possibilities, walk);
+          walk = next;
         } else if (entry->probability >= typefind->max_probability) {
           /* wooha, got caps */
           GstCaps *found_caps = entry->caps;
@@ -716,28 +720,19 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
               "'%s' returned %u/%u probability, using it NOW",
               GST_PLUGIN_FEATURE_NAME (entry->factory), probability,
               typefind->max_probability);
-          while (walk) {
-            free_entry ((TypeFindEntry *) walk->data);
-            walk = g_list_next (walk);
-          }
-          walk = typefind->possibilities;
-          while (walk) {
-            free_entry (walk->data);
-            walk = g_list_next (walk);
-          }
-          g_list_free (typefind->possibilities);
-          typefind->possibilities = NULL;
           g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0,
               probability, found_caps);
-          free_entry (entry);
+
+          g_list_foreach (typefind->possibilities, (GFunc) free_entry, NULL);
+          g_list_free (typefind->possibilities);
+          typefind->possibilities = NULL;
+          break;
         } else {
-          typefind->possibilities =
-              g_list_prepend (typefind->possibilities, entry);
+          walk = g_list_next (walk);
           if (entry->requested_size != 0)
             done = FALSE;
         }
       }
-      g_list_free (entries);
 
       /* we may now already have caps or we might be left without functions to try */
       if (typefind->caps) {

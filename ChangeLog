@@ -1,3 +1,13 @@
+2005-12-12  Michael Smith  <msmith@fluendo.com>
+
+	* gst/gsttypefindfactory.c: (gst_type_find_factory_call_function):
+	  Don't unref factories after calling them.
+	* libs/gst/base/gsttypefindhelper.c: (gst_type_find_helper):
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_chain):
+	  Free lists of factories after using them. Fixing typefinding memory
+	  leaks.
+
 2005-12-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstpluginfeature.c: (gst_plugin_feature_finalize),

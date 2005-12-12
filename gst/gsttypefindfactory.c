@@ -239,6 +239,5 @@ gst_type_find_factory_call_function (GstTypeFindFactory * factory,
     g_assert (new_factory->function != NULL);
 
     new_factory->function (find, new_factory->user_data);
-    gst_object_unref (new_factory);
   }
 }
