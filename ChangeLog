@@ -1,3 +1,9 @@
+2005-12-12  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position):
+	Take current playback rate into account when reporting
+	the position.
+
 2005-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/mime-world.fig:
