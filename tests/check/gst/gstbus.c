@@ -177,7 +177,10 @@ GST_START_TEST (test_watch)
 
   gst_object_unref ((GstObject *) test_bus);
 }
-GST_END_TEST static gint messages_seen = 0;
+
+GST_END_TEST;
+
+static gint messages_seen = 0;
 
 static void
 message_func (GstBus * bus, GstMessage * message, gpointer data)
@@ -224,7 +227,8 @@ GST_START_TEST (test_watch_with_poll)
 
   gst_object_unref (test_bus);
 }
-GST_END_TEST Suite * gstbus_suite (void)
+GST_END_TEST Suite *
+gstbus_suite (void)
 {
   Suite *s = suite_create ("GstBus");
   TCase *tc_chain = tcase_create ("stresstest");

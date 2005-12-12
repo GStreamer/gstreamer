@@ -37,7 +37,7 @@ DirectFB PAL TV output:
 
 4) playing an NTSC vob on PAL TV
 
-NTSC VOB:
+NTSC VOB (4/3):
   - video size: 720x480
   - pixel aspect ratio: 8/9
 
@@ -52,3 +52,13 @@ NTSC VOB:
 
   --> 720 x ( 720 * 4 / 5) = 720 x 576
 
+
+5) other examples
+   - 720 x 480, 32/27 on a square display
+   -> intended DAR: DAR = 720/480 * 32/27 = 80/3 * 1/15 = 16/9
+   
+   keeping w constant:
+   720/h * 1/1 = 16/9 -> h = 720/16 * 9 = 45 * 9 = 405
+
+   keeping h constant:
+   w/480 * 1/1 = 16/9 -> w = 480 * 16 / 9 = 160 / 3 * 16 = 853.33
