@@ -1,3 +1,10 @@
+2005-12-12  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_pad_sink_setcaps),
+	(gst_videomixer_getcaps), (gst_videomixer_fill_queues),
+	(gst_videomixer_update_queues), (gst_videomixer_collected):
+	Fix caps negotiation. (#323896)
+
 2005-12-12  Arwed v. Merkatz  <v.merkatz@gmx.net>
 
 	* gst/matroska/matroska-demux.c:

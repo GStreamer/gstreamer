@@ -99,8 +99,8 @@ struct _GstVideoMixerPad
   guint64 queued;
 
   guint in_width, in_height;
-  gint in_framerate_numerator;
-  gint in_framerate_denominator;
+  gint fps_n;
+  gint fps_d;
 
   gint xpos, ypos;
   guint zorder;
@@ -227,6 +227,9 @@ gst_videomixer_pad_set_property (GObject * object, guint prop_id,
   gst_object_unref (mix);
 }
 
+/**
+  * GstVideoMixerBackground:
+  */
 typedef enum
 {
   VIDEO_MIXER_BACKGROUND_CHECKER,
@@ -257,8 +260,8 @@ struct _GstVideoMixer
 
   GstVideoMixerBackground background;
 
-  gint in_framerate_numerator;
-  gint in_framerate_denominator;
+  gint fps_n;
+  gint fps_d;
 };
 
 struct _GstVideoMixerClass
@@ -279,18 +282,21 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
   mixpad = GST_VIDEO_MIXER_PAD (pad);
 
-  GST_DEBUG ("videomixer: setcaps triggered on %s", gst_pad_get_name (pad));
+  if (!mixpad) {
+    goto beach;
+  }
+
+  GST_DEBUG_OBJECT (mixpad, "setcaps triggered");
 
   structure = gst_caps_get_structure (vscaps, 0);
 
   if (!gst_structure_get_int (structure, "width", &in_width)
       || !gst_structure_get_int (structure, "height", &in_height)
-      || (framerate = gst_structure_get_value (structure, "framerate")) != NULL)
+      || (framerate = gst_structure_get_value (structure, "framerate")) == NULL)
     goto beach;
 
-  mixpad->in_framerate_numerator = gst_value_get_fraction_numerator (framerate);
-  mixpad->in_framerate_denominator =
-      gst_value_get_fraction_denominator (framerate);
+  mixpad->fps_n = gst_value_get_fraction_numerator (framerate);
+  mixpad->fps_d = gst_value_get_fraction_denominator (framerate);
 
   mixpad->in_width = in_width;
   mixpad->in_height = in_height;
@@ -298,14 +304,19 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   mixpad->xpos = 0;
   mixpad->ypos = 0;
 
+  /* Biggest input geometry will be our output geometry */
   mix->in_width = MAX (mix->in_width, mixpad->in_width);
   mix->in_height = MAX (mix->in_height, mixpad->in_height);
 
   /* If mix framerate < mixpad framerate, using fractions */
-  if ((gint64) mix->in_framerate_numerator * mixpad->in_framerate_denominator <
-      (gint64) mixpad->in_framerate_numerator * mix->in_framerate_denominator) {
-    mix->in_framerate_numerator = mixpad->in_framerate_numerator;
-    mix->in_framerate_denominator = mixpad->in_framerate_denominator;
+  GST_DEBUG_OBJECT (mix, "comparing mix framerate %d/%d to mixpad's %d/%d",
+      mix->fps_n, mix->fps_d, mixpad->fps_n, mixpad->fps_d);
+  if ((!mix->fps_n && !mix->fps_d) ||
+      ((gint64) mix->fps_n * mixpad->fps_d <
+          (gint64) mixpad->fps_n * mix->fps_d)) {
+    mix->fps_n = mixpad->fps_n;
+    mix->fps_d = mixpad->fps_d;
+    GST_DEBUG_OBJECT (mixpad, "becomes the master pad");
     mix->master = mixpad;
   }
 
@@ -529,10 +540,9 @@ gst_videomixer_getcaps (GstPad * pad)
   if (mix->out_height != 0) {
     gst_structure_set (structure, "height", G_TYPE_INT, mix->out_height, NULL);
   }
-  if (mix->in_framerate_denominator != 0) {
+  if (mix->fps_d != 0) {
     gst_structure_set (structure,
-        "framerate", GST_TYPE_FRACTION, mix->in_framerate_numerator,
-        mix->in_framerate_denominator, NULL);
+        "framerate", GST_TYPE_FRACTION, mix->fps_n, mix->fps_d, NULL);
   }
 
   gst_object_unref (mix);
@@ -907,11 +917,10 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
         duration = GST_BUFFER_DURATION (mixcol->buffer);
         /* no duration on the buffer, use the framerate */
         if (!GST_CLOCK_TIME_IS_VALID (duration)) {
-          if (mixpad->in_framerate_numerator == 0) {
+          if (mixpad->fps_n == 0) {
             duration = GST_CLOCK_TIME_NONE;
           } else {
-            duration = GST_SECOND * mixpad->in_framerate_denominator /
-                mixpad->in_framerate_numerator;
+            duration = GST_SECOND * mixpad->fps_d / mixpad->fps_n;
           }
         }
         if (GST_CLOCK_TIME_IS_VALID (duration))
@@ -970,11 +979,10 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
 
   interval = mix->master->queued;
   if (interval <= 0) {
-    if (mix->in_framerate_numerator == 0) {
+    if (mix->fps_n == 0) {
       interval = G_MAXINT64;
     } else {
-      interval = GST_SECOND * mix->in_framerate_denominator /
-          mix->in_framerate_numerator;
+      interval = GST_SECOND * mix->fps_d / mix->fps_n;
     }
   }
 
