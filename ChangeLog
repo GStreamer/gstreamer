@@ -1,5 +1,10 @@
 2005-12-12  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/examples/xml/createxml.c: (object_saved):
+	  gcc 4 fixes
+
+2005-12-12  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/Makefile.am:
 	  enable the examples even more
 

@@ -11,16 +11,17 @@ object_saved (GstObject * object, xmlNodePtr parent, gpointer data)
 
   /* first see if the namespace is already known */
   ns = xmlSearchNsByHref (parent->doc, parent,
-      "http://gstreamer.net/gst-test/1.0/");
+      (xmlChar *) "http://gstreamer.net/gst-test/1.0/");
   if (ns == NULL) {
     xmlNodePtr root = xmlDocGetRootElement (parent->doc);
 
     /* add namespace to root node */
-    ns = xmlNewNs (root, "http://gstreamer.net/gst-test/1.0/", "test");
+    ns = xmlNewNs (root, (xmlChar *) "http://gstreamer.net/gst-test/1.0/",
+        (xmlChar *) "test");
   }
-  child = xmlNewChild (parent, ns, "comment", NULL);
+  child = xmlNewChild (parent, ns, (xmlChar *) "comment", NULL);
 
-  xmlNewChild (child, NULL, "text", (gchar *) data);
+  xmlNewChild (child, NULL, (xmlChar *) "text", (gchar *) data);
 }
 
 int
