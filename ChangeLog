@@ -1,3 +1,13 @@
+2005-12-12  Edward Hervey  <edward@fluendo.com>
+
+	* examples/gstfile.py:
+	Moved the Discoverer class to gst.extend
+	Now works asynchronous... bl**dy fast :)
+	* gst/extend/Makefile.am:
+	* gst/extend/discoverer.py:
+	Discoverer has landed in extend and is now asynchronous.
+	It emits a 'discovered' signal when it has finished.
+
 2005-12-09  Edward Hervey  <edward@fluendo.com>
 
 	* gst/arg-types.py:
