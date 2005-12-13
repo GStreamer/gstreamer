@@ -1,3 +1,10 @@
+2005-12-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/oss/gstossmixerelement.c: (gst_oss_mixer_element_class_init),
+	(gst_oss_mixer_element_get_property),
+	(gst_oss_mixer_element_change_state):
+	Add 'device-name' property and fix state change function.
+
 2005-12-13  Edward Hervey  <edward@fluendo.com>
 
 	* gst/flx/gstflxdec.c: (gst_flxdec_chain): 
