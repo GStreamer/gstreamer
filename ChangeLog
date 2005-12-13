@@ -1,3 +1,12 @@
+2005-12-13  Edward Hervey  <edward@fluendo.com>
+
+	* gst/flx/gstflxdec.c: (gst_flxdec_chain): 
+	If the speed of the file is null in the header, set the frame_time to the default
+	setting of GST_SECOND / 70. Which is the default frame_delay for .fli files as
+	stated in this document : http://www.compuphase.com/flic.htm
+	Would be nice to have the time conversion done properly too
+	(duration = flxh->frames * flxdec->frame_time)
+
 2005-12-12  Julien MOUTTE  <julien@moutte.net>
 
 	* docs/plugins/Makefile.am:

@@ -492,6 +492,8 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
 
       if (flxh->type == FLX_MAGICHDR_FLI) {
         flxdec->frame_time = JIFFIE * flxh->speed;
+      } else if (flxh->speed == 0) {
+        flxdec->frame_time = GST_SECOND / 70;
       } else {
         flxdec->frame_time = flxh->speed * GST_MSECOND;
       }
