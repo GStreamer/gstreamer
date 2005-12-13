@@ -1,3 +1,10 @@
+2005-12-13  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_init),
+	(gst_videomixer_fill_queues), (gst_videomixer_blend_buffers),
+	(gst_videomixer_collected): Code cleanup and re-enabling 
+	queued time validity check for correct EOS handling.
+
 2005-12-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/oss/gstossmixerelement.c: (gst_oss_mixer_element_class_init),

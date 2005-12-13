@@ -107,7 +107,7 @@ enum
   ARG_PAD_ZORDER,
   ARG_PAD_XPOS,
   ARG_PAD_YPOS,
-  ARG_PAD_ALPHA,
+  ARG_PAD_ALPHA
 };
 
 struct _GstVideoMixerCollect
@@ -267,7 +267,7 @@ typedef enum
 {
   VIDEO_MIXER_BACKGROUND_CHECKER,
   VIDEO_MIXER_BACKGROUND_BLACK,
-  VIDEO_MIXER_BACKGROUND_WHITE,
+  VIDEO_MIXER_BACKGROUND_WHITE
 }
 GstVideoMixerBackground;
 
@@ -415,7 +415,7 @@ enum
 enum
 {
   ARG_0,
-  ARG_BACKGROUND,
+  ARG_BACKGROUND
 };
 
 #define GST_TYPE_VIDEO_MIXER_BACKGROUND (gst_video_mixer_background_get_type())
@@ -555,6 +555,7 @@ gst_videomixer_init (GstVideoMixer * mix)
   mix->in_height = 0;
   mix->out_width = 0;
   mix->out_height = 0;
+  mix->fps_n = mix->fps_d = 0;
 
   gst_collect_pads_set_function (mix->collect,
       (GstCollectPadsFunction) gst_videomixer_collected, mix);
@@ -969,8 +970,7 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
         GST_LOG ("pop returned a NULL buffer");
       }
     }
-    if (mixcol->buffer !=
-        NULL /* && GST_CLOCK_TIME_IS_VALID (mixpad->queued) */ ) {
+    if (mixcol->buffer != NULL && GST_CLOCK_TIME_IS_VALID (mixpad->queued)) {
       /* got a buffer somewhere so we're not eos */
       eos = FALSE;
     }
