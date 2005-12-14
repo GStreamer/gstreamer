@@ -48,12 +48,10 @@ static GstStaticPadTemplate gst_rtp_g711_depay_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) [ 0, 255 ], "
         "clock-rate = (int) 8000, "
         "encoding-name = (string) \"PCMU\"; "
         "application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) [ 0, 255 ], "
         "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\"")
 
     );

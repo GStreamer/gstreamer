@@ -9,7 +9,7 @@ The following fields can or must (*) be specified in the structure:
  * media: (String) [ "audio", "video", "application", "data", "control" ]
      Defined in RFC 2327 in the SDP media announcement field.
 
- * payload: (int) [0, 255]
+ * payload: (int) [0, 127]
      For audio and video, these will normally be a media payload type as 
      defined in the RTP Audio/Video Profile. For dynamicaly allocated 
      payload types, this value will be >= 96 and the encoding-name must be

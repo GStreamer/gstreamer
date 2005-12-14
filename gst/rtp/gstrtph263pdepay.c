@@ -55,7 +55,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "payload = (int) [ 96, 255 ], "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"")
     );
 

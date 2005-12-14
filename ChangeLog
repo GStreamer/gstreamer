@@ -1,3 +1,24 @@
+2005-12-14  Philippe Khalaf  <burger@speedy.org>
+
+	* gst-plugins-good/gst/rtp/gstasteriskh263.c:
+	* gst-plugins-good/gst/rtp/gstrtpamrdepay.c:
+	* gst-plugins-good/gst/rtp/gstrtpamrpay.c:
+	* gst-plugins-good/gst/rtp/gstrtpg711depay.c:
+	* gst-plugins-good/gst/rtp/gstrtpg711depay.c:
+	* gst-plugins-good/gst/rtp/gstrtpgsmdepay.c:
+	* gst-plugins-good/gst/rtp/gstrtph263pay.c:
+	* gst-plugins-good/gst/rtp/gstrtph263pdepay.c:
+	* gst-plugins-good/gst/rtp/gstrtph263ppay.c:
+	* gst-plugins-good/gst/rtp/gstrtpmp4vdepay.c:
+	* gst-plugins-good/gst/rtp/gstrtpmp4vpay.c:
+	* gst-plugins-good/gst/rtp/gstrtpmpadepay.c:
+	* gst-plugins-good/gst/rtp/gstrtpmpapay.c:
+	* gst-plugins-good/gst/rtp/README:
+	Fixed payload range in payloder caps. Removed payload range completly from
+	depayloaders as they don't require payload type in their caps. In effect,
+	there isn't any specific payload type for any given codec, only suggestions.
+	Fixes bug #324011.
+
 2005-12-13  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/videomixer/videomixer.c: (gst_videomixer_init),
