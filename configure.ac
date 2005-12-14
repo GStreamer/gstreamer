@@ -92,7 +92,7 @@ fi
 AC_SUBST(GST_NET_LIBS)
 AC_SUBST(GST_NET_CFLAGS)
 
-dnl check for gstreamer-net
+dnl check for gst-plugins-base
 PKG_CHECK_MODULES(GST_PLUGINS_BASE, gstreamer-plugins-base-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST_PLUGINS_BASE="yes", HAVE_GST_PLUGINS_BASE="no")
 
@@ -140,6 +140,7 @@ AC_SUBST(PYGST_CFLAGS)
 
 dnl full installation path
 AS_AC_EXPAND(PYTHONDIR, $pythondir)
+AS_AC_EXPAND(PYEXECDIR, $pyexecdir)
 
 dnl add debugging options ...
 changequote(,)dnl

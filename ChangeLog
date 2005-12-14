@@ -1,3 +1,10 @@
+2005-12-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* configure.ac:
+	  Follow pygtk's lead in installing pygst.py and .pth in pyexecdir -
+	  this will do the right thing on multilib 64 bit
+
 2005-12-12  Edward Hervey  <edward@fluendo.com>
 
 	* examples/gstfile.py:
