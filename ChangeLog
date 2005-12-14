@@ -1,3 +1,11 @@
+2005-12-14  Julien MOUTTE  <julien@moutte.net>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_base_init),
+	(gst_collect_pads_remove_pad), (gst_collect_pads_is_collected),
+	(gst_collect_pads_event), (gst_collect_pads_chain): Refactoring
+	of collectpads. This version removes a lot of races without
+	touching API/ABI. Yay !
+
 2005-12-14  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstpad.c: (gst_pad_activate_pull), (gst_pad_link_prepare):
