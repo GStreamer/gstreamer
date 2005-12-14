@@ -46,11 +46,11 @@ endif
 DIVX_DIR=
 # endif
 
-# if USE_DTS
-# DTS_DIR=dts
-# else
+if USE_DTS
+DTS_DIR=dts
+else
 DTS_DIR=
-# endif
+endif
 
 if USE_FAAC
 FAAC_DIR=faac
@@ -238,6 +238,7 @@ DIST_SUBDIRS= \
 	gsm \
 	ivorbis \
 	libmms \
+	dts \
 	musepack \
 	sdl \
 	swfdec \

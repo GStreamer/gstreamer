@@ -392,6 +392,14 @@ else
   AC_SUBST(X_LIBS)
 fi
 
+dnl *** DTS ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DTS, true)
+GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
+  GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, -lm, dts.h, DTS_LIBS="-ldts_pic -lm")
+  AC_SUBST(DTS_LIBS)
+])
+
+
 dnl *** musepack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
 GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
@@ -541,6 +549,7 @@ ext/wavpack/Makefile
 ext/ivorbis/Makefile
 ext/gsm/Makefile
 ext/libmms/Makefile
+ext/dts/Makefile
 ext/musepack/Makefile
 ext/sdl/Makefile
 docs/Makefile
