@@ -399,7 +399,6 @@ GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
   AC_SUBST(DTS_LIBS)
 ])
 
-
 dnl *** musepack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
 GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
@@ -470,6 +469,36 @@ GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
   fi
   AC_SUBST(GSM_LIBS)
 ])
+
+dnl *** XVID ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
+GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
+  HAVE_XVID=no
+  AC_CHECK_HEADER(xvid.h, [
+    OLD_LIBS="$LIBS"
+    LIBS="-lm"
+    AC_CHECK_LIB(xvidcore, xvid_encore, [
+      AC_CHECK_LIB(xvidcore, xvid_decore, [
+        AC_CHECK_LIB(xvidcore, xvid_global, [
+          AC_MSG_CHECKING([for uptodate XviD API version])
+          AC_TRY_RUN([
+#include <xvid.h>
+#if XVID_API_MAJOR(XVID_API) != 4
+#error "Incompatible XviD API version"
+#endif
+int main () { return 0; }
+          ],[ AC_MSG_RESULT(yes)
+            XVID_LIBS="-lxvidcore -lm"
+            AC_SUBST(XVID_LIBS)
+            HAVE_XVID=yes
+          ], AC_MSG_RESULT(no) )
+        ], )
+      ], )
+    ], )
+    LIBS="$OLD_LIBS"
+  ], )
+])
+
 
 dnl also add builddir include for enumtypes and marshal
 GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $GST_ERROR"
@@ -552,6 +581,7 @@ ext/libmms/Makefile
 ext/dts/Makefile
 ext/musepack/Makefile
 ext/sdl/Makefile
+ext/xvid/Makefile
 docs/Makefile
 docs/plugins/Makefile
 docs/version.entities

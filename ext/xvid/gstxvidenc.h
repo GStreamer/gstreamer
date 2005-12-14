@@ -65,7 +65,7 @@ struct _GstXvidEnc {
   void *handle;
   gint csp;
   gint width, height, stride;
-  gdouble fps;
+  gint fps_n, fps_d;
 };
 
 struct _GstXvidEncClass {

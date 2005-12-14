@@ -166,7 +166,6 @@ gst_xvid_structure_to_csp (GstStructure * structure,
 
     stride = w * bpp / 8;
   }
-
   if (_stride)
     *_stride = stride;
   if (_bpp)
@@ -176,7 +175,7 @@ gst_xvid_structure_to_csp (GstStructure * structure,
 }
 
 GstCaps *
-gst_xvid_csp_to_caps (gint csp, gint w, gint h, gdouble fps)
+gst_xvid_csp_to_caps (gint csp, gint w, gint h, gint fps_n, gint fps_d)
 {
   GstCaps *caps = NULL;
 
@@ -263,7 +262,7 @@ gst_xvid_csp_to_caps (gint csp, gint w, gint h, gdouble fps)
           "red_mask", G_TYPE_INT, r_mask,
           "green_mask", G_TYPE_INT, g_mask,
           "blue_mask", G_TYPE_INT, b_mask,
-          "framerate", G_TYPE_DOUBLE, fps, NULL);
+          "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
       break;
     }
 
@@ -291,12 +290,11 @@ gst_xvid_csp_to_caps (gint csp, gint w, gint h, gdouble fps)
           fourcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
           break;
       }
-
       caps = gst_caps_new_simple ("video/x-raw-yuv",
           "width", G_TYPE_INT, w,
           "height", G_TYPE_INT, h,
           "format", GST_TYPE_FOURCC, fourcc,
-          "framerate", G_TYPE_DOUBLE, fps, NULL);
+          "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
       break;
     }
   }

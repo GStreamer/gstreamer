@@ -53,7 +53,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-xvid, "
         "width = (int) [ 0, MAX ], "
-        "height = (int) [ 0, MAX ], " "framerate = (double) [ 0.0, MAX ]")
+        "height = (int) [ 0, MAX ], " "framerate = (fraction) [0/1, MAX]")
     );
 
 
@@ -83,9 +83,9 @@ enum
 static void gst_xvidenc_base_init (gpointer g_class);
 static void gst_xvidenc_class_init (GstXvidEncClass * klass);
 static void gst_xvidenc_init (GstXvidEnc * xvidenc);
-static void gst_xvidenc_chain (GstPad * pad, GstData * data);
-static GstPadLinkReturn
-gst_xvidenc_link (GstPad * pad, const GstCaps * vscapslist);
+static GstFlowReturn gst_xvidenc_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_xvidenc_setcaps (GstPad * pad, GstCaps * caps);
+
 
 /* properties */
 static void gst_xvidenc_set_property (GObject * object,
@@ -173,13 +173,13 @@ gst_xvidenc_base_init (gpointer g_class)
 static void
 gst_xvidenc_class_init (GstXvidEncClass * klass)
 {
-  GstElementClass *gstelement_class;
-  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  parent_class = g_type_class_peek_parent (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  gobject_class->set_property = gst_xvidenc_set_property;
+  gobject_class->get_property = gst_xvidenc_get_property;
 
   /* encoding profile */
   g_object_class_install_property (gobject_class, ARG_PROFILE,
@@ -201,8 +201,6 @@ gst_xvidenc_class_init (GstXvidEncClass * klass)
       g_param_spec_ulong ("buffer_size", "Buffer Size",
           "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_xvidenc_set_property;
-  gobject_class->get_property = gst_xvidenc_get_property;
   gstelement_class->change_state = gst_xvidenc_change_state;
 
   gst_xvidenc_signals[FRAME_ENCODED] =
@@ -222,10 +220,9 @@ gst_xvidenc_init (GstXvidEnc * xvidenc)
   xvidenc->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
       "sink");
-  gst_element_add_pad (GST_ELEMENT (xvidenc), xvidenc->sinkpad);
-
   gst_pad_set_chain_function (xvidenc->sinkpad, gst_xvidenc_chain);
-  gst_pad_set_link_function (xvidenc->sinkpad, gst_xvidenc_link);
+  gst_pad_set_setcaps_function (xvidenc->sinkpad, gst_xvidenc_setcaps);
+  gst_element_add_pad (GST_ELEMENT (xvidenc), xvidenc->sinkpad);
 
   /* create the src pad */
   xvidenc->srcpad =
@@ -263,7 +260,7 @@ gst_xvidenc_setup (GstXvidEnc * xvidenc)
   xenc.global = XVID_GLOBAL_PACKED;
 
   xenc.fbase = 1000000;
-  xenc.fincr = (int) (xenc.fbase / xvidenc->fps);
+  xenc.fincr = (int) (xenc.fbase / xvidenc->fps_n / xvidenc->fps_d);    /* FIX? */
   xenc.max_key_interval = (xvidenc->max_key_interval == -1) ?
       (2 * xenc.fbase / xenc.fincr) : xvidenc->max_key_interval;
   xenc.handle = NULL;
@@ -293,18 +290,14 @@ gst_xvidenc_setup (GstXvidEnc * xvidenc)
 }
 
 
-static void
-gst_xvidenc_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_xvidenc_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstXvidEnc *xvidenc = GST_XVIDENC (GST_OBJECT_PARENT (pad));
+  GstXvidEnc *xvidenc = GST_XVIDENC (gst_pad_get_parent (pad));
   GstBuffer *outbuf;
   xvid_enc_frame_t xframe;
   xvid_enc_stats_t xstats;
   gint ret;
-
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
 
   outbuf = gst_buffer_new_and_alloc (xvidenc->buffer_size << 10);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
@@ -332,7 +325,7 @@ gst_xvidenc_chain (GstPad * pad, GstData * _data)
   }
   xframe.type = XVID_TYPE_AUTO;
   xframe.bitstream = (void *) GST_BUFFER_DATA (outbuf);
-  xframe.length = GST_BUFFER_MAXSIZE (outbuf);
+  xframe.length = GST_BUFFER_SIZE (outbuf);     /* GST_BUFFER_MAXSIZE */
   gst_xvid_init_struct (xstats);
 
   if ((ret = xvid_encore (xvidenc->handle, XVID_ENC_ENCODE,
@@ -341,32 +334,32 @@ gst_xvidenc_chain (GstPad * pad, GstData * _data)
         ("Error encoding xvid frame: %s (%d)", gst_xvid_error (ret), ret));
     gst_buffer_unref (buf);
     gst_buffer_unref (outbuf);
-    return;
+    return GST_FLOW_ERROR;
   }
 
   GST_BUFFER_SIZE (outbuf) = xstats.length;
-  if (xframe.out_flags & XVID_KEYFRAME)
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
 
   /* go out, multiply! */
-  gst_pad_push (xvidenc->srcpad, GST_DATA (outbuf));
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (xvidenc->srcpad));
+  gst_pad_push (xvidenc->srcpad, outbuf);
 
   /* proclaim destiny */
   g_signal_emit (G_OBJECT (xvidenc), gst_xvidenc_signals[FRAME_ENCODED], 0);
 
   /* until the final judgement */
   gst_buffer_unref (buf);
+  return GST_FLOW_OK;
 }
 
 
-static GstPadLinkReturn
-gst_xvidenc_link (GstPad * pad, const GstCaps * vscaps)
+static gboolean
+gst_xvidenc_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstXvidEnc *xvidenc;
-  GstStructure *structure;
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
   const gchar *mime;
   gint w, h;
-  double fps;
+  const GValue *fps;
   gint xvid_cs = -1, stride = -1;
 
   xvidenc = GST_XVIDENC (gst_pad_get_parent (pad));
@@ -377,43 +370,43 @@ gst_xvidenc_link (GstPad * pad, const GstCaps * vscaps)
     xvidenc->handle = NULL;
   }
 
-  g_return_val_if_fail (gst_caps_get_size (vscaps) == 1, GST_PAD_LINK_REFUSED);
-  structure = gst_caps_get_structure (vscaps, 0);
-
   gst_structure_get_int (structure, "width", &w);
   gst_structure_get_int (structure, "height", &h);
-  gst_structure_get_double (structure, "framerate", &fps);
+
+  fps = gst_structure_get_value (structure, "framerate");
+  if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
+    xvidenc->fps_n = gst_value_get_fraction_numerator (fps);
+    xvidenc->fps_d = gst_value_get_fraction_denominator (fps);
+  } else {
+    xvidenc->fps_n = -1;
+  }
+
   mime = gst_structure_get_name (structure);
-
   xvid_cs = gst_xvid_structure_to_csp (structure, w, &stride, NULL);
-  g_return_val_if_fail (xvid_cs != -1, GST_PAD_LINK_REFUSED);
-
   xvidenc->csp = xvid_cs;
   xvidenc->width = w;
   xvidenc->height = h;
   xvidenc->stride = stride;
-  xvidenc->fps = fps;
 
   if (gst_xvidenc_setup (xvidenc)) {
-    GstPadLinkReturn ret;
-    GstCaps *new_caps;
+    GstCaps *new_caps = NULL;
 
     new_caps = gst_caps_new_simple ("video/x-xvid",
         "width", G_TYPE_INT, w,
-        "height", G_TYPE_INT, h, "framerate", G_TYPE_DOUBLE, fps, NULL);
-    ret = gst_pad_try_set_caps (xvidenc->srcpad, new_caps);
-    if (GST_PAD_LINK_FAILED (ret)) {
+        "height", G_TYPE_INT, h,
+        "framerate", GST_TYPE_FRACTION, xvidenc->fps_n, xvidenc->fps_d, NULL);
+    if (!gst_pad_set_caps (xvidenc->srcpad, new_caps)) {
       if (xvidenc->handle) {
         xvid_encore (xvidenc->handle, XVID_ENC_DESTROY, NULL, NULL);
         xvidenc->handle = NULL;
       }
+      return FALSE;
     }
-
-    return ret;
+    return TRUE;
   }
 
   /* if we got here - it's not good */
-  return GST_PAD_LINK_REFUSED;
+  return FALSE;
 }
 
 
@@ -421,10 +414,9 @@ static void
 gst_xvidenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstXvidEnc *xvidenc;
+  GstXvidEnc *xvidenc = GST_XVIDENC (object);
 
-  g_return_if_fail (GST_IS_XVIDENC (object));
-  xvidenc = GST_XVIDENC (object);
+  GST_OBJECT_LOCK (xvidenc);
 
   switch (prop_id) {
     case ARG_PROFILE:
@@ -443,17 +435,18 @@ gst_xvidenc_set_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
 
+  GST_OBJECT_UNLOCK (xvidenc);
+
+}
 
 static void
 gst_xvidenc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstXvidEnc *xvidenc;
+  GstXvidEnc *xvidenc = GST_XVIDENC (object);
 
-  g_return_if_fail (GST_IS_XVIDENC (object));
-  xvidenc = GST_XVIDENC (object);
+  GST_OBJECT_LOCK (xvidenc);
 
   switch (prop_id) {
     case ARG_PROFILE:
@@ -472,26 +465,41 @@ gst_xvidenc_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_OBJECT_UNLOCK (xvidenc);
 }
 
 static GstStateChangeReturn
 gst_xvidenc_change_state (GstElement * element, GstStateChange transition)
 {
   GstXvidEnc *xvidenc = GST_XVIDENC (element);
+  GstStateChangeReturn ret;
 
-  switch (GST_STATE_PENDING (element)) {
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    default:
+      break;
+  }
+
+  ret = parent_class->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (xvidenc->handle) {
         xvid_encore (xvidenc->handle, XVID_ENC_DESTROY, NULL, NULL);
         xvidenc->handle = NULL;
       }
       break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
     default:
       break;
   }
 
-  if (parent_class->change_state)
-    return parent_class->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }

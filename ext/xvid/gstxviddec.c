@@ -40,7 +40,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-xvid, "
         "width = (int) [ 0, MAX ], "
-        "height = (int) [ 0, MAX ], " "framerate = (double) [ 0, MAX ]")
+        "height = (int) [ 0, MAX ], " "framerate = (fraction) [0/1, MAX]")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -69,23 +69,18 @@ enum
       /* FILL ME */
 };
 
-static void gst_xviddec_base_init (gpointer g_class);
+static void gst_xviddec_base_init (GstXvidDecClass * klass);
 static void gst_xviddec_class_init (GstXvidDecClass * klass);
 static void gst_xviddec_init (GstXvidDec * xviddec);
-static void gst_xviddec_chain (GstPad * pad, GstData * data);
-static GstPadLinkReturn
-gst_xviddec_sink_link (GstPad * pad, const GstCaps * vscapslist);
-static GstPadLinkReturn
-gst_xviddec_src_link (GstPad * pad, const GstCaps * vscapslist);
-static GstCaps *gst_xviddec_src_getcaps (GstPad * pad);
+static GstFlowReturn gst_xviddec_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_xviddec_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_xviddec_negotiate (GstXvidDec * xviddec);
 static GstStateChangeReturn gst_xviddec_change_state (GstElement * element,
     GstStateChange transition);
-
 
 static GstElementClass *parent_class = NULL;
 
 /* static guint gst_xviddec_signals[LAST_SIGNAL] = { 0 }; */
-
 
 GType
 gst_xviddec_get_type (void)
@@ -95,7 +90,7 @@ gst_xviddec_get_type (void)
   if (!xviddec_type) {
     static const GTypeInfo xviddec_info = {
       sizeof (GstXvidDecClass),
-      gst_xviddec_base_init,
+      (GBaseInitFunc) gst_xviddec_base_init,
       NULL,
       (GClassInitFunc) gst_xviddec_class_init,
       NULL,
@@ -112,9 +107,9 @@ gst_xviddec_get_type (void)
 }
 
 static void
-gst_xviddec_base_init (gpointer g_class)
+gst_xviddec_base_init (GstXvidDecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -127,13 +122,12 @@ gst_xviddec_base_init (gpointer g_class)
 static void
 gst_xviddec_class_init (GstXvidDecClass * klass)
 {
-  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstelement_class->change_state = gst_xviddec_change_state;
 }
-
 
 static void
 gst_xviddec_init (GstXvidDec * xviddec)
@@ -145,18 +139,15 @@ gst_xviddec_init (GstXvidDec * xviddec)
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
       "sink");
   gst_element_add_pad (GST_ELEMENT (xviddec), xviddec->sinkpad);
-
   gst_pad_set_chain_function (xviddec->sinkpad, gst_xviddec_chain);
-  gst_pad_set_link_function (xviddec->sinkpad, gst_xviddec_sink_link);
+  gst_pad_set_setcaps_function (xviddec->sinkpad, gst_xviddec_setcaps);
 
   /* create the src pad */
   xviddec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
   gst_element_add_pad (GST_ELEMENT (xviddec), xviddec->srcpad);
-
-  gst_pad_set_getcaps_function (xviddec->srcpad, gst_xviddec_src_getcaps);
-  gst_pad_set_link_function (xviddec->srcpad, gst_xviddec_src_link);
+  gst_pad_use_fixed_caps (xviddec->srcpad);
 
   /* size, etc. */
   xviddec->width = xviddec->height = xviddec->csp = -1;
@@ -196,36 +187,30 @@ gst_xviddec_setup (GstXvidDec * xviddec)
   }
 
   xviddec->handle = xdec.handle;
-
   return TRUE;
 }
 
-
-static void
-gst_xviddec_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstXvidDec *xviddec = GST_XVIDDEC (GST_OBJECT_PARENT (pad));
-  GstBuffer *outbuf;
+  GstXvidDec *xviddec = GST_XVIDDEC (gst_pad_get_parent (pad));
+  GstBuffer *outbuf = NULL;
   xvid_dec_frame_t xframe;
-  int ret;
+  GstFlowReturn ret = GST_FLOW_OK;
+  int error = 0;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  if (!xviddec->handle) {
-    GST_ELEMENT_ERROR (xviddec, CORE, NEGOTIATION, (NULL),
-        ("format wasn't negotiated before chain function"));
-    gst_buffer_unref (buf);
-    return;
+  if (xviddec->handle == NULL) {
+    if (!gst_xviddec_negotiate (xviddec))
+      goto not_negotiated;
   }
 
-  outbuf = gst_buffer_new_and_alloc (xviddec->width *
-      xviddec->height * xviddec->bpp / 8);
+  guint bufsize = (xviddec->width * xviddec->height * xviddec->bpp / 8);
+
+  outbuf = gst_buffer_new_and_alloc (bufsize);
+
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
-  GST_BUFFER_SIZE (outbuf) = xviddec->width *
-      xviddec->height * xviddec->bpp / 8;
+  GST_BUFFER_SIZE (outbuf) = bufsize;
 
   /* decode and so ... */
   gst_xvid_init_struct (xframe);
@@ -247,23 +232,39 @@ gst_xviddec_chain (GstPad * pad, GstData * _data)
     xframe.output.stride[0] = xviddec->stride;
   }
 
-  if ((ret = xvid_decore (xviddec->handle, XVID_DEC_DECODE, &xframe, NULL)) < 0) {
-    GST_ELEMENT_ERROR (xviddec, STREAM, DECODE, (NULL),
-        ("Error decoding xvid frame: %s (%d)\n", gst_xvid_error (ret), ret));
-    gst_buffer_unref (buf);
-    gst_buffer_unref (outbuf);
-    return;
+  if ((error =
+          xvid_decore (xviddec->handle, XVID_DEC_DECODE, &xframe, NULL)) < 0) {
+    goto not_decoding;
   }
 
-  gst_pad_push (xviddec->srcpad, GST_DATA (outbuf));
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (xviddec->srcpad));
+  gst_pad_push (xviddec->srcpad, outbuf);
   gst_buffer_unref (buf);
+  return ret;
+
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (xviddec, CORE, NEGOTIATION, (NULL),
+        ("format wasn't negotiated before chain function"));
+    gst_buffer_unref (buf);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
+not_decoding:
+  {
+    GST_ELEMENT_ERROR (xviddec, STREAM, DECODE, (NULL),
+        ("Error decoding xvid frame: %s (%d)\n", gst_xvid_error (error),
+            error));
+    gst_buffer_unref (buf);
+    gst_buffer_unref (outbuf);
+    return GST_FLOW_ERROR;
+  }
 }
 
-static GstCaps *
-gst_xviddec_src_getcaps (GstPad * pad)
+static gboolean
+gst_xviddec_negotiate (GstXvidDec * xviddec)
 {
-  GstXvidDec *xviddec = GST_XVIDDEC (gst_pad_get_parent (pad));
-  GstCaps *caps;
+  GstCaps *caps = NULL;
   gint csp[] = {
     XVID_CSP_I420,
     XVID_CSP_YV12,
@@ -282,92 +283,93 @@ gst_xviddec_src_getcaps (GstPad * pad)
     0
   }, i;
 
-  if (!GST_PAD_CAPS (xviddec->sinkpad)) {
-    GstPadTemplate *templ = gst_static_pad_template_get (&src_template);
-
-    return gst_caps_copy (gst_pad_template_get_caps (templ));
-  }
-
   caps = gst_caps_new_empty ();
   for (i = 0; csp[i] != 0; i++) {
     GstCaps *one = gst_xvid_csp_to_caps (csp[i], xviddec->width,
-        xviddec->height, xviddec->fps);
+        xviddec->height, xviddec->fps_n, xviddec->fps_d);
 
-    gst_caps_append (caps, one);
+    if (gst_pad_set_caps (xviddec->srcpad, one)) {
+      GstStructure *structure = gst_caps_get_structure (one, 0);
+
+      xviddec->csp = gst_xvid_structure_to_csp (structure, xviddec->width,
+          &xviddec->stride, &xviddec->bpp);
+
+      if (xviddec->csp < 0) {
+        return FALSE;
+      }
+
+      break;
+    }
   }
 
-  return caps;
+  gst_xviddec_setup (xviddec);
+  return TRUE;
 }
 
-static GstPadLinkReturn
-gst_xviddec_src_link (GstPad * pad, const GstCaps * vscaps)
-{
-  GstXvidDec *xviddec = GST_XVIDDEC (gst_pad_get_parent (pad));
-  GstStructure *structure = gst_caps_get_structure (vscaps, 0);
-
-  if (!GST_PAD_CAPS (xviddec->sinkpad))
-    return GST_PAD_LINK_DELAYED;
-
-  /* if there's something old around, remove it */
-  if (xviddec->handle) {
-    gst_xviddec_unset (xviddec);
-  }
-  xviddec->csp = gst_xvid_structure_to_csp (structure, xviddec->width,
-      &xviddec->stride, &xviddec->bpp);
-
-  if (xviddec->csp < 0)
-    return GST_PAD_LINK_REFUSED;
-
-  if (!gst_xviddec_setup (xviddec))
-    return GST_PAD_LINK_REFUSED;
-
-  return GST_PAD_LINK_OK;
-}
-
-static GstPadLinkReturn
-gst_xviddec_sink_link (GstPad * pad, const GstCaps * vscaps)
+static gboolean
+gst_xviddec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstXvidDec *xviddec = GST_XVIDDEC (gst_pad_get_parent (pad));
   GstStructure *structure;
-  GstPadLinkReturn ret;
+  const GValue *fps;
 
   /* if there's something old around, remove it */
   if (xviddec->handle) {
     gst_xviddec_unset (xviddec);
+  }
+
+  if (!gst_pad_set_caps (xviddec->srcpad, caps)) {
+    return FALSE;
   }
 
   /* if we get here, we know the input is xvid. we
    * only need to bother with the output colorspace,
    * which the src_link function takes care of. */
-  structure = gst_caps_get_structure (vscaps, 0);
+  structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &xviddec->width);
   gst_structure_get_int (structure, "height", &xviddec->height);
-  gst_structure_get_double (structure, "framerate", &xviddec->fps);
 
-  ret = gst_pad_renegotiate (xviddec->srcpad);
-  if (ret == GST_PAD_LINK_DELAYED)
-    ret = GST_PAD_LINK_OK;
+  fps = gst_structure_get_value (structure, "framerate");
+  if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
+    xviddec->fps_n = gst_value_get_fraction_numerator (fps);
+    xviddec->fps_d = gst_value_get_fraction_denominator (fps);
+  } else {
+    xviddec->fps_n = -1;
+  }
 
-  return ret;
+  return gst_xviddec_negotiate (xviddec);
 }
 
 static GstStateChangeReturn
 gst_xviddec_change_state (GstElement * element, GstStateChange transition)
 {
   GstXvidDec *xviddec = GST_XVIDDEC (element);
+  GstStateChangeReturn ret;
 
-  switch (GST_STATE_PENDING (element)) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (xviddec->handle) {
-        gst_xviddec_unset (xviddec);
-      }
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     default:
       break;
   }
 
-  if (parent_class->change_state)
-    return parent_class->change_state (element, transition);
+  ret = parent_class->change_state (element, transition);
 
-  return GST_STATE_CHANGE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (xviddec->handle) {
+        gst_xviddec_unset (xviddec);
+      }
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }

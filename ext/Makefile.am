@@ -40,11 +40,11 @@ else
 DIRECTFB_DIR=
 endif
 
-# if USE_DIVX
-# DIVX_DIR=divx
-# else
+#if USE_DIVX
+#DIVX_DIR=divx
+#else
 DIVX_DIR=
-# endif
+#endif
 
 if USE_DTS
 DTS_DIR=dts
@@ -190,11 +190,11 @@ TARKIN_DIR=
 XINE_DIR=
 # endif
 
-# if USE_XVID
-# XVID_DIR=xvid
-# else
+if USE_XVID
+XVID_DIR=xvid
+else
 XVID_DIR=
-# endif
+endif
 
 SUBDIRS=\
 	$(ARTS_DIR) \
@@ -242,4 +242,5 @@ DIST_SUBDIRS= \
 	musepack \
 	sdl \
 	swfdec \
-	wavpack
+	wavpack \
+	xvid

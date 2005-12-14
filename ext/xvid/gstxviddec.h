@@ -54,7 +54,7 @@ struct _GstXvidDec {
   /* video (output) settings */
   gint csp, bpp, stride;
   gint width, height;
-  double fps;
+  gint fps_n, fps_d;
 };
 
 struct _GstXvidDecClass {

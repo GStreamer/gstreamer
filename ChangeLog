@@ -2,6 +2,19 @@
 
 	* configure.ac:
 	* ext/Makefile.am:
+	* ext/xvid/gstxvid.c:
+	* ext/xvid/gstxvid.h:
+	* ext/xvid/gstxviddec.c:
+	* ext/xvid/gstxviddec.h:
+	* ext/xvid/gstxvidenc.c:
+	* ext/xvid/gstxvidenc.h:
+	xviddec and xvideenc ported to 0.10
+		
+
+2005-12-14  Edgard Lima <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* ext/Makefile.am:
 	* ext/dts/Makefile.am:
 	* ext/dts/gstdtsdec.c:
 	* ext/dts/gstdtsdec.h:
