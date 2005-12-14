@@ -41,9 +41,10 @@ static GstStaticPadTemplate gst_rtp_speex_pay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp, " "media = (string) \"audio\", " "payload = (int) 110, "       /* guaranties compatibility with Linphone
-                                                                                                           Could be [96,127] See page 34 at http://www.ietf.org/rfc/rfc3551.txt */
-        "clock-rate =  (int) [6000, 48000], "
+    GST_STATIC_CAPS ("application/x-rtp, "
+        "media = (string) \"audio\", "
+        "payload = (int) [ 96, 127 ], "
+        "clock-rate =  (int) 8000, "
         "encoding-name = (string) \"speex\", "
         "encoding-params = (string) \"1\"")
     );

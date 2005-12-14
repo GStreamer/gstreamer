@@ -46,7 +46,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) [ 96, 127 ], "
         "clock-rate =  (int) [6000, 48000], "
         "encoding-name = (string) \"speex\", "
         "encoding-params = (string) \"1\"")

@@ -1,3 +1,9 @@
+2005-12-14  Edgard Lima <edgard.lima@indt.org.br>
+
+	* gst/rtp/gstrtpspeexdepay.c:
+	* gst/rtp/gstrtpspeexpay.c:
+	Set clock rate to be fixed in 8000. It fixes bug #324012.
+
 2005-12-14  Philippe Khalaf  <burger@speedy.org>
 
 	* gst-plugins-good/gst/rtp/gstasteriskh263.c:
