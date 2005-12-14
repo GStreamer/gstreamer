@@ -23,6 +23,7 @@
 
 #include "gstalsa.h"
 #include "gstalsamixer.h"
+#include "gstalsadeviceprobe.h"
 
 
 G_BEGIN_DECLS
@@ -43,10 +44,13 @@ struct _GstAlsaMixerElement {
   GstElement            parent;
 
   GstAlsaMixer          *mixer;
+  gchar                 *device;
 };
 
 struct _GstAlsaMixerElementClass {
   GstElementClass       parent;
+
+  GstAlsaDeviceProbeData   device_probe_data;
 };
 
 

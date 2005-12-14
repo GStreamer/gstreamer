@@ -81,8 +81,11 @@ gst_alsa_mixer_open (GstAlsaMixer * mixer)
   if (sscanf (mixer->device, "hw:%d", &devicenum) == 1) {
     gchar *name;
 
-    if (!snd_card_get_name (devicenum, &name))
-      mixer->cardname = name;
+    if (!snd_card_get_name (devicenum, &name)) {
+      mixer->cardname = g_strdup (name);
+      free (name);
+      GST_DEBUG ("Card name = %s", GST_STR_NULL (mixer->cardname));
+    }
   }
 
   GST_INFO ("Successfully opened mixer for device `%s'.", mixer->device);

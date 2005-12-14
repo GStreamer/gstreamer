@@ -23,6 +23,13 @@
 #endif
 
 #include "gstalsamixerelement.h"
+#include "gstalsadeviceprobe.h"
+
+enum
+{
+  PROP_DEVICE = 1,
+  PROP_DEVICE_NAME
+};
 
 
 static GstElementDetails gst_alsa_mixer_element_details =
@@ -31,15 +38,62 @@ GST_ELEMENT_DETAILS ("Alsa Mixer",
     "Control sound input and output levels with ALSA",
     "Leif Johnson <leif@ambient.2y.net>");
 
+static void gst_alsa_mixer_element_init_interfaces (GType type);
 
-GST_BOILERPLATE_WITH_INTERFACE (GstAlsaMixerElement, gst_alsa_mixer_element,
-    GstElement, GST_TYPE_ELEMENT, GstMixer, GST_TYPE_MIXER,
-    gst_alsa_mixer_element);
+GST_BOILERPLATE_FULL (GstAlsaMixerElement, gst_alsa_mixer_element,
+    GstElement, GST_TYPE_ELEMENT, gst_alsa_mixer_element_init_interfaces)
 
-GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaMixerElement, gst_alsa_mixer_element);
+/* massive macro that takes care of all the GstMixer stuff */
+    GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaMixerElement, gst_alsa_mixer_element);
 
-static GstStateChangeReturn gst_alsa_mixer_element_change_state (GstElement *
-    element, GstStateChange transition);
+     static void gst_alsa_mixer_element_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+     static void gst_alsa_mixer_element_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+     static void gst_alsa_mixer_element_finalize (GObject * object);
+
+     static GstStateChangeReturn gst_alsa_mixer_element_change_state (GstElement
+    * element, GstStateChange transition);
+
+     static gboolean
+         gst_alsa_mixer_element_interface_supported (GstAlsaMixerElement * this,
+    GType interface_type)
+{
+  if (interface_type == GST_TYPE_MIXER) {
+    return gst_alsa_mixer_element_supported (this, interface_type);
+  }
+
+  g_return_val_if_reached (FALSE);
+}
+
+static void
+gst_implements_interface_init (GstImplementsInterfaceClass * klass)
+{
+  klass->supported = (gpointer) gst_alsa_mixer_element_interface_supported;
+}
+
+static void
+gst_alsa_mixer_element_init_interfaces (GType type)
+{
+  static const GInterfaceInfo implements_iface_info = {
+    (GInterfaceInitFunc) gst_implements_interface_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo mixer_iface_info = {
+    (GInterfaceInitFunc) gst_alsa_mixer_element_interface_init,
+    NULL,
+    NULL,
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
+      &implements_iface_info);
+  g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
+
+  gst_alsa_type_add_device_property_probe_interface (type,
+      G_STRUCT_OFFSET (GstAlsaMixerElementClass, device_probe_data),
+      PROP_DEVICE);
+}
 
 static void
 gst_alsa_mixer_element_base_init (gpointer klass)
@@ -52,10 +106,36 @@ static void
 gst_alsa_mixer_element_class_init (GstAlsaMixerElementClass * klass)
 {
   GstElementClass *element_class;
+  GObjectClass *gobject_class;
 
   element_class = (GstElementClass *) klass;
+  gobject_class = (GObjectClass *) klass;
 
-  element_class->change_state = gst_alsa_mixer_element_change_state;
+  gobject_class->finalize = gst_alsa_mixer_element_finalize;
+  gobject_class->get_property = gst_alsa_mixer_element_get_property;
+  gobject_class->set_property = gst_alsa_mixer_element_set_property;
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "ALSA device, as defined in an asound configuration file",
+          "default", G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Device name",
+          "Human-readable name of the sound device", "", G_PARAM_READABLE));
+
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_alsa_mixer_element_change_state);
+}
+
+static void
+gst_alsa_mixer_element_finalize (GObject * obj)
+{
+  GstAlsaMixerElement *this = GST_ALSA_MIXER_ELEMENT (obj);
+
+  g_free (this->device);
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
@@ -63,20 +143,84 @@ gst_alsa_mixer_element_init (GstAlsaMixerElement * this,
     GstAlsaMixerElementClass * klass)
 {
   this->mixer = NULL;
+  this->device = g_strdup ("default");
+}
+
+static void
+gst_alsa_mixer_element_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAlsaMixerElement *this = GST_ALSA_MIXER_ELEMENT (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE:{
+      GST_OBJECT_LOCK (this);
+      g_free (this->device);
+      this->device = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (this);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_alsa_mixer_element_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAlsaMixerElement *this = GST_ALSA_MIXER_ELEMENT (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE:{
+      GST_OBJECT_LOCK (this);
+      g_value_set_string (value, this->device);
+      GST_OBJECT_UNLOCK (this);
+      break;
+    }
+    case PROP_DEVICE_NAME:{
+      GST_OBJECT_LOCK (this);
+      if (this->mixer) {
+        g_value_set_string (value, this->mixer->cardname);
+      } else {
+        g_value_set_string (value, NULL);
+      }
+      GST_OBJECT_UNLOCK (this);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstStateChangeReturn
 gst_alsa_mixer_element_change_state (GstElement * element,
     GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstAlsaMixerElement *this = GST_ALSA_MIXER_ELEMENT (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!this->mixer) {
-        this->mixer = gst_alsa_mixer_new ("hw:0", GST_ALSA_MIXER_ALL);
+        if (!this->device) {
+          this->mixer = gst_alsa_mixer_new ("default", GST_ALSA_MIXER_ALL);
+        } else {
+          this->mixer = gst_alsa_mixer_new (this->device, GST_ALSA_MIXER_ALL);
+        }
       }
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (this->mixer) {
         gst_alsa_mixer_free (this->mixer);
@@ -87,8 +231,5 @@ gst_alsa_mixer_element_change_state (GstElement * element,
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }

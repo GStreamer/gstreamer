@@ -30,8 +30,8 @@
 
 G_BEGIN_DECLS
 
-
-#define GST_ALSA_MIXER(obj)             ((GstAlsaMixer*)(obj))
+/* This does not get you what you think it does, use obj->mixer   */
+/* #define GST_ALSA_MIXER(obj)             ((GstAlsaMixer*)(obj)) */
 
 
 typedef enum {
