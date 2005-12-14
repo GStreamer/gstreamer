@@ -51,7 +51,7 @@ message_loop (GstElement * element, GstTagList ** tags)
   while (!done) {
     GstMessage *message;
 
-    message = gst_bus_poll (bus, GST_MESSAGE_ANY, 0);
+    message = gst_bus_pop (bus);
     if (message == NULL)
       /* All messages read, we're done */
       break;

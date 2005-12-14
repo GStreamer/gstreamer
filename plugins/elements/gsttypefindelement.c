@@ -308,13 +308,18 @@ static gboolean
 gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
 {
   GstTypeFindElement *typefind;
-  gboolean res;
+  gboolean res = FALSE;
+  GstPad *peer;
 
   typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
 
-  res = gst_pad_query (GST_PAD_PEER (typefind->sink), query);
-  if (!res)
+  peer = gst_pad_get_peer (typefind->sink);
+  if (peer == NULL)
     return FALSE;
+
+  res = gst_pad_query (peer, query);
+  if (!res)
+    goto out;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -323,7 +328,7 @@ gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
 
       if (typefind->store == NULL)
-        return TRUE;
+        goto out;
 
       gst_query_parse_position (query, &format, &peer_pos);
 
@@ -343,7 +348,9 @@ gst_type_find_handle_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
-  return TRUE;
+out:
+  gst_object_unref (peer);
+  return res;
 }
 
 #if 0

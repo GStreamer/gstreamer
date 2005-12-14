@@ -1,3 +1,18 @@
+2005-12-14  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstpad.c: (gst_pad_activate_pull), (gst_pad_link_prepare):
+	  Don't allow activation of a srcpad in pull_range if it has no
+	  getrange function.
+	  Change some debug statements to be a little clearer
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_handle_src_query):
+	  Check that we have a peer before executing queries thereupon.
+
+	* tests/examples/metadata/read-metadata.c: (message_loop):
+	  Use gst_bus_pop instead of gst_bus_poll when we just want it to
+	  immediately return us any available message with 0 timeout.
+
 2005-12-12  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gsttypefindfactory.c: (gst_type_find_factory_call_function):

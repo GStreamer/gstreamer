@@ -706,6 +706,10 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
         goto peer_failed;
       gst_object_unref (peer);
     }
+  } else {
+    if (GST_PAD_GETRANGEFUNC (pad) == NULL)
+      goto failure;             /* Can't activate pull on a src without a 
+                                   getrange function */
   }
 
   new = active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE;
@@ -1624,7 +1628,7 @@ not_srcpad:
   }
 src_was_linked:
   {
-    GST_CAT_INFO (GST_CAT_PADS, "src %s:%s was linked",
+    GST_CAT_INFO (GST_CAT_PADS, "src %s:%s was already linked",
         GST_DEBUG_PAD_NAME (srcpad));
     /* we do not emit a warning in this case because unlinking cannot
      * be made MT safe.*/
@@ -1640,7 +1644,7 @@ not_sinkpad:
   }
 sink_was_linked:
   {
-    GST_CAT_INFO (GST_CAT_PADS, "sink %s:%s was linked",
+    GST_CAT_INFO (GST_CAT_PADS, "sink %s:%s was already linked",
         GST_DEBUG_PAD_NAME (sinkpad));
     /* we do not emit a warning in this case because unlinking cannot
      * be made MT safe.*/
