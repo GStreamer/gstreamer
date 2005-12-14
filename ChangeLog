@@ -1,3 +1,14 @@
+2005-12-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audio_test_src_class_init), (gst_audio_test_src_init),
+	(gst_audio_test_src_setcaps), (gst_audio_test_src_src_query),
+	(gst_audio_test_src_do_seek), (gst_audio_test_src_is_seekable),
+	(gst_audio_test_src_create):
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+          Adjust to some recent api changes and add wtays new cool seeking
+          capabillities
+
 2005-12-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/alsa/Makefile.am:

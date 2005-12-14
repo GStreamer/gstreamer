@@ -121,8 +121,11 @@ static gboolean gst_audio_test_src_setcaps (GstBaseSrc * basesrc,
     GstCaps * caps);
 static void gst_audio_test_src_src_fixate (GstPad * pad, GstCaps * caps);
 
-static const GstQueryType *gst_audio_test_src_get_query_types (GstPad * pad);
-static gboolean gst_audio_test_src_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_audio_test_src_is_seekable (GstBaseSrc * basesrc);
+static gboolean gst_audio_test_src_do_seek (GstBaseSrc * basesrc,
+    GstSegment * segment);
+static gboolean gst_audio_test_src_src_query (GstBaseSrc * basesrc,
+    GstQuery * query);
 
 static void gst_audio_test_src_change_wave (GstAudioTestSrc * src);
 
@@ -130,7 +133,6 @@ static void gst_audio_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static GstFlowReturn gst_audio_test_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
-static gboolean gst_audio_test_src_start (GstBaseSrc * basesrc);
 
 
 static void
@@ -178,7 +180,10 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
           G_MAXINT64, 0, G_PARAM_READWRITE));
 
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_test_src_setcaps);
-  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_audio_test_src_start);
+  gstbasesrc_class->is_seekable =
+      GST_DEBUG_FUNCPTR (gst_audio_test_src_is_seekable);
+  gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_audio_test_src_do_seek);
+  gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_audio_test_src_src_query);
   gstbasesrc_class->get_times =
       GST_DEBUG_FUNCPTR (gst_audio_test_src_get_times);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_audio_test_src_create);
@@ -190,17 +195,15 @@ gst_audio_test_src_init (GstAudioTestSrc * src, GstAudioTestSrcClass * g_class)
   GstPad *pad = GST_BASE_SRC_PAD (src);
 
   gst_pad_set_fixatecaps_function (pad, gst_audio_test_src_src_fixate);
-  gst_pad_set_query_function (pad, gst_audio_test_src_src_query);
-  gst_pad_set_query_type_function (pad, gst_audio_test_src_get_query_types);
 
   src->samplerate = 44100;
   src->volume = 1.0;
   src->freq = 440.0;
+  /* we operate in time */
+  gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
 
   src->samples_per_buffer = 1024;
-  src->timestamp = G_GINT64_CONSTANT (0);
-  src->offset = G_GINT64_CONSTANT (0);
   src->timestamp_offset = G_GINT64_CONSTANT (0);
 
   src->wave = GST_AUDIO_TEST_SRC_WAVE_SINE;
@@ -220,73 +223,61 @@ gst_audio_test_src_src_fixate (GstPad * pad, GstCaps * caps)
 static gboolean
 gst_audio_test_src_setcaps (GstBaseSrc * basesrc, GstCaps * caps)
 {
-  GstAudioTestSrc *audiotestsrc;
+  GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (basesrc);
   const GstStructure *structure;
   gboolean ret;
 
-  audiotestsrc = GST_AUDIO_TEST_SRC (basesrc);
-
   structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "rate", &audiotestsrc->samplerate);
+  ret = gst_structure_get_int (structure, "rate", &src->samplerate);
 
   return ret;
 }
 
-static const GstQueryType *
-gst_audio_test_src_get_query_types (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_POSITION,
-    0,
-  };
-
-  return query_types;
-}
-
 static gboolean
-gst_audio_test_src_src_query (GstPad * pad, GstQuery * query)
+gst_audio_test_src_src_query (GstBaseSrc * basesrc, GstQuery * query)
 {
+  GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (basesrc);
   gboolean res = FALSE;
-  GstAudioTestSrc *src;
-
-  src = GST_AUDIO_TEST_SRC (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_POSITION:
+    case GST_QUERY_CONVERT:
     {
-      GstFormat format;
-      gint64 current;
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
 
-      gst_query_parse_position (query, &format, NULL);
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if (src_fmt == dest_fmt) {
+        dest_val = src_val;
+        goto done;
+      }
 
-      switch (format) {
+      switch (src_fmt) {
+        case GST_FORMAT_DEFAULT:
+          switch (dest_fmt) {
+            case GST_FORMAT_TIME:
+              /* samples to time */
+              dest_val = src_val / src->samplerate;
+              break;
+            default:
+              goto error;
+          }
+          break;
         case GST_FORMAT_TIME:
-          current = src->timestamp;
-          res = TRUE;
-          break;
-        case GST_FORMAT_DEFAULT:       /* samples */
-          current = src->offset / 2;    /* 16bpp audio */
-          res = TRUE;
-          break;
-        case GST_FORMAT_BYTES:
-          current = src->offset;
-          res = TRUE;
+          switch (dest_fmt) {
+            case GST_FORMAT_DEFAULT:
+              /* time to samples */
+              dest_val = src_val * src->samplerate;
+              break;
+            default:
+              goto error;
+          }
           break;
         default:
-          break;
+          goto error;
       }
-      if (res) {
-        gst_query_set_position (query, format, current);
-      }
-      break;
-    }
-    case GST_QUERY_DURATION:
-    {
-      GstFormat format;
-
-      /* unlimited length */
-      gst_query_parse_duration (query, &format, NULL);
-      gst_query_set_duration (query, format, -1);
+    done:
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      res = TRUE;
       break;
     }
     default:
@@ -294,6 +285,12 @@ gst_audio_test_src_src_query (GstPad * pad, GstQuery * query)
   }
 
   return res;
+  /* ERROR */
+error:
+  {
+    GST_DEBUG_OBJECT (src, "query failed");
+    return FALSE;
+  }
 }
 
 static void
@@ -532,13 +529,37 @@ gst_audio_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
   }
 }
 
+static gboolean
+gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
+{
+  GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (basesrc);
+  GstClockTime time;
+
+  time = segment->time = segment->start;
+
+  /* now move to the time indicated */
+  src->n_samples = time * src->samplerate / GST_SECOND;
+  src->running_time = src->n_samples * GST_SECOND / src->samplerate;
+
+  g_assert (src->running_time <= time);
+
+  return TRUE;
+}
+
+static gboolean
+gst_audio_test_src_is_seekable (GstBaseSrc * basesrc)
+{
+  /* we're seekable... */
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer)
 {
   GstAudioTestSrc *src;
   GstBuffer *buf;
-  guint tdiff;
+  GstClockTime next_time;
 
   src = GST_AUDIO_TEST_SRC (basesrc);
 
@@ -556,21 +577,20 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     src->tags_pushed = TRUE;
   }
 
-  tdiff = src->samples_per_buffer * GST_SECOND / src->samplerate;
-
   buf = gst_buffer_new_and_alloc (src->samples_per_buffer * sizeof (gint16));
   gst_buffer_set_caps (buf, GST_PAD_CAPS (basesrc->srcpad));
 
-  GST_BUFFER_TIMESTAMP (buf) = src->timestamp + src->timestamp_offset;
+  GST_BUFFER_TIMESTAMP (buf) = src->timestamp_offset + src->running_time;
   /* offset is the number of samples */
-  GST_BUFFER_OFFSET (buf) = src->offset;
-  GST_BUFFER_OFFSET_END (buf) = src->offset + src->samples_per_buffer;
-  GST_BUFFER_DURATION (buf) = tdiff;
+  GST_BUFFER_OFFSET (buf) = src->n_samples;
+  src->n_samples += src->samples_per_buffer;
+  GST_BUFFER_OFFSET_END (buf) = src->n_samples;
+  next_time = src->n_samples * GST_SECOND / src->samplerate;
+  GST_BUFFER_DURATION (buf) = next_time - src->running_time;
 
-  gst_object_sync_values (G_OBJECT (src), src->timestamp);
+  gst_object_sync_values (G_OBJECT (src), src->running_time);
 
-  src->timestamp += tdiff;
-  src->offset += src->samples_per_buffer;
+  src->running_time = next_time;
 
   src->process (src, (gint16 *) GST_BUFFER_DATA (buf));
 
@@ -640,17 +660,6 @@ gst_audio_test_src_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static gboolean
-gst_audio_test_src_start (GstBaseSrc * basesrc)
-{
-  GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (basesrc);
-
-  src->timestamp = G_GINT64_CONSTANT (0);
-  src->offset = G_GINT64_CONSTANT (0);
-
-  return TRUE;
 }
 
 static gboolean

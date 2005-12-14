@@ -79,20 +79,17 @@ struct _GstAudioTestSrc {
     
   /* audio parameters */
   gint samplerate;
-
   gint samples_per_buffer;
   
-  guint64 timestamp;
-  guint64 offset;
-
   gdouble accumulator;
 
   gboolean tags_pushed;
 
-  GstClockID clock_id;
-  GstClockTimeDiff timestamp_offset;
-
   /* < private > */
+  GstClockID clock_id;
+  GstClockTimeDiff timestamp_offset;    /* base offset */
+  GstClockTime running_time;            /* total running time */
+  gint64 n_samples;                     /* total samples sent */
   
   /* waveform specific context data */
   GstPinkNoise pink;
