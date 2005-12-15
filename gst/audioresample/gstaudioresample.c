@@ -480,7 +480,7 @@ static GstFlowReturn
 {
   GstAudioresample *audioresample;
   ResampleState *r;
-  guchar *data;
+  guchar *data, *datacopy;
   gulong size;
   GstClockTime timestamp;
 
@@ -514,7 +514,8 @@ static GstFlowReturn
   }
 
   /* need to memdup, resample takes ownership. */
-  resample_add_input_data (r, g_memdup (data, size), size, NULL, NULL);
+  datacopy = g_memdup (data, size);
+  resample_add_input_data (r, datacopy, size, g_free, datacopy);
 
   return audioresample_do_output (audioresample, outbuf);
 }

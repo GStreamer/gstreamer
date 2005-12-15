@@ -1,3 +1,8 @@
+2005-12-15  Michael Smith  <msmith@fluendo.com>
+
+	* gst/audioresample/gstaudioresample.c:
+	  Don't leak all input buffers to audioresample.
+
 2005-12-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_collected):
