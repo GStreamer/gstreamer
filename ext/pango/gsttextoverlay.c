@@ -49,7 +49,7 @@
  * <programlisting>
  * gst-launch -v filesrc location=subtitles.srt ! subparse ! txt.   videotestsrc ! timeoverlay ! textoverlay name=txt shaded-background=yes ! xvimagesink
  * </programlisting>
- * If you do not have such a subtitle file, create on looking like this
+ * If you do not have such a subtitle file, create one looking like this
  * in a text editor:
  * <programlisting>
  * 1
@@ -870,7 +870,6 @@ gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
   GstBuffer *video_frame = NULL;
   GstBuffer *text_buf = NULL;
   gchar *text;
-  gint text_len;
 
   overlay = GST_TEXT_OVERLAY (data);
   klass = GST_TEXT_OVERLAY_GET_CLASS (data);
@@ -983,10 +982,14 @@ gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
   /* text duration overlaps video frame duration */
   text = g_strndup ((gchar *) GST_BUFFER_DATA (text_buf),
       GST_BUFFER_SIZE (text_buf));
-  g_strdelimit (text, "\n\r\t", ' ');
-  text_len = strlen (text);
 
-  if (text_len > 0) {
+  if (text != NULL && *text != '\0') {
+    gint text_len = strlen (text);
+
+    while (text_len > 0 && (text[text_len - 1] == '\n' ||
+            text[text_len - 1] == '\r')) {
+      --text_len;
+    }
     GST_DEBUG ("Rendering text '%*s'", text_len, text);;
     gst_text_overlay_render_text (overlay, text, text_len);
   } else {

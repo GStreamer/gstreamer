@@ -1,5 +1,12 @@
 2005-12-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_collected):
+	  Don't operate on empty text buffers. Strip newlines and
+	  tabs only from the end of the text, but leave them intact
+	  in the middle. Fix typo in gtk-doc description.
+
+2005-12-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstplaybasebin.c:
 	* gst/playback/gstplaybin.c: (handoff):
 	  Make sure the video frame buffer we return to apps via the
