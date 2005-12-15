@@ -1,3 +1,12 @@
+2005-12-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c:
+	* gst/playback/gstplaybin.c: (handoff):
+	  Make sure the video frame buffer we return to apps via the
+	  "frame" property always has caps set on it. Modify
+	  _gst_gvalue_set_object() macro to handle NULL objects
+	  gracefully too.
+
 2005-12-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:

@@ -40,9 +40,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
 
 #ifndef GST_HAVE_GLIB_2_8
 #define _gst_gvalue_set_gstobject(gvalue,obj)  \
-      gst_object_ref (obj);                     \
-      g_value_set_object (gvalue, obj);         \
-      g_object_unref (obj);
+      if (obj != NULL) {                       \
+        gst_object_ref (obj);                  \
+        g_value_set_object (gvalue, obj);      \
+        g_object_unref (obj);                  \
+      } else {                                 \
+        g_value_set_object (gvalue, NULL);     \
+      }
 #else
 #define _gst_gvalue_set_gstobject(gvalue,obj)  \
       g_value_set_object (gvalue, obj);

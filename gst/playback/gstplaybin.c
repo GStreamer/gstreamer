@@ -41,9 +41,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 
 #ifndef GST_HAVE_GLIB_2_8
 #define _gst_gvalue_set_gstobject(gvalue,obj)  \
-      gst_object_ref (obj);                     \
-      g_value_set_object (gvalue, obj);         \
-      g_object_unref (obj);
+      if (obj != NULL) {                       \
+        gst_object_ref (obj);                  \
+        g_value_set_object (gvalue, obj);      \
+        g_object_unref (obj);                  \
+      } else {                                 \
+        g_value_set_object (gvalue, NULL);     \
+      }
 #else
 #define _gst_gvalue_set_gstobject(gvalue,obj)  \
       g_value_set_object (gvalue, obj);
@@ -368,10 +372,19 @@ handoff (GstElement * identity, GstBuffer * frame, gpointer data)
 {
   GstPlayBin *play_bin = GST_PLAY_BIN (data);
 
-  if (play_bin->frame) {
-    gst_buffer_unref (play_bin->frame);
+  gst_mini_object_replace ((GstMiniObject **) & play_bin->frame,
+      GST_MINI_OBJECT_CAST (frame));
+
+  /* applications need to know the buffer caps,
+   * make sure they are always set on the frame */
+  if (GST_BUFFER_CAPS (play_bin->frame) == NULL) {
+    GstPad *pad;
+
+    if ((pad = gst_element_get_pad (identity, "sink"))) {
+      gst_buffer_set_caps (play_bin->frame, GST_PAD_CAPS (pad));
+      gst_object_unref (pad);
+    }
   }
-  play_bin->frame = gst_buffer_ref (frame);
 }
 
 /* make the element (bin) that contains the elements needed to perform
