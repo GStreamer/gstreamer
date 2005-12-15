@@ -238,16 +238,16 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
   }
 
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (xviddec->srcpad));
-  gst_pad_push (xviddec->srcpad, outbuf);
-  gst_buffer_unref (buf);
-  return ret;
+  ret = gst_pad_push (xviddec->srcpad, outbuf);
+
+  goto cleanup;
 
 not_negotiated:
   {
     GST_ELEMENT_ERROR (xviddec, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before chain function"));
-    gst_buffer_unref (buf);
-    return GST_FLOW_NOT_NEGOTIATED;
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto cleanup;
   }
 
 not_decoding:
@@ -255,16 +255,22 @@ not_decoding:
     GST_ELEMENT_ERROR (xviddec, STREAM, DECODE, (NULL),
         ("Error decoding xvid frame: %s (%d)\n", gst_xvid_error (error),
             error));
-    gst_buffer_unref (buf);
     gst_buffer_unref (outbuf);
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto cleanup;
   }
+
+cleanup:
+
+  gst_buffer_unref (buf);
+  gst_object_unref (xviddec);
+  return ret;
+
 }
 
 static gboolean
 gst_xviddec_negotiate (GstXvidDec * xviddec)
 {
-  GstCaps *caps = NULL;
   gint csp[] = {
     XVID_CSP_I420,
     XVID_CSP_YV12,
@@ -283,23 +289,29 @@ gst_xviddec_negotiate (GstXvidDec * xviddec)
     0
   }, i;
 
-  caps = gst_caps_new_empty ();
   for (i = 0; csp[i] != 0; i++) {
     GstCaps *one = gst_xvid_csp_to_caps (csp[i], xviddec->width,
         xviddec->height, xviddec->fps_n, xviddec->fps_d);
 
-    if (gst_pad_set_caps (xviddec->srcpad, one)) {
-      GstStructure *structure = gst_caps_get_structure (one, 0);
+    if (one) {
 
-      xviddec->csp = gst_xvid_structure_to_csp (structure, xviddec->width,
-          &xviddec->stride, &xviddec->bpp);
+      if (gst_pad_set_caps (xviddec->srcpad, one)) {
+        GstStructure *structure = gst_caps_get_structure (one, 0);
 
-      if (xviddec->csp < 0) {
-        return FALSE;
+        xviddec->csp = gst_xvid_structure_to_csp (structure, xviddec->width,
+            &xviddec->stride, &xviddec->bpp);
+
+        if (xviddec->csp < 0) {
+          return FALSE;
+        }
+
+        break;
       }
 
-      break;
+      gst_caps_unref (one);
+
     }
+
   }
 
   gst_xviddec_setup (xviddec);
@@ -312,6 +324,7 @@ gst_xviddec_setcaps (GstPad * pad, GstCaps * caps)
   GstXvidDec *xviddec = GST_XVIDDEC (gst_pad_get_parent (pad));
   GstStructure *structure;
   const GValue *fps;
+  gboolean ret = FALSE;
 
   /* if there's something old around, remove it */
   if (xviddec->handle) {
@@ -319,7 +332,8 @@ gst_xviddec_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   if (!gst_pad_set_caps (xviddec->srcpad, caps)) {
-    return FALSE;
+    ret = FALSE;
+    goto done;
   }
 
   /* if we get here, we know the input is xvid. we
@@ -330,14 +344,20 @@ gst_xviddec_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "height", &xviddec->height);
 
   fps = gst_structure_get_value (structure, "framerate");
-  if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
+  if (fps != NULL) {
     xviddec->fps_n = gst_value_get_fraction_numerator (fps);
     xviddec->fps_d = gst_value_get_fraction_denominator (fps);
   } else {
     xviddec->fps_n = -1;
   }
 
-  return gst_xviddec_negotiate (xviddec);
+  ret = gst_xviddec_negotiate (xviddec);
+
+done:
+  gst_object_unref (xviddec);
+
+  return ret;
+
 }
 
 static GstStateChangeReturn

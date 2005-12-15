@@ -1,3 +1,10 @@
+2005-12-15  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/xvid/Makefile.am:
+	* ext/xvid/gstxviddec.c:
+	* ext/xvid/gstxvidenc.c:
+	Fixed some mem-leaks in xvid.
+
 2005-12-14  Edgard Lima <edgard.lima@indt.org.br>
 
 	* configure.ac:

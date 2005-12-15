@@ -297,7 +297,8 @@ gst_xvidenc_chain (GstPad * pad, GstBuffer * buf)
   GstBuffer *outbuf;
   xvid_enc_frame_t xframe;
   xvid_enc_stats_t xstats;
-  gint ret;
+  gint res;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   outbuf = gst_buffer_new_and_alloc (xvidenc->buffer_size << 10);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
@@ -328,39 +329,45 @@ gst_xvidenc_chain (GstPad * pad, GstBuffer * buf)
   xframe.length = GST_BUFFER_SIZE (outbuf);     /* GST_BUFFER_MAXSIZE */
   gst_xvid_init_struct (xstats);
 
-  if ((ret = xvid_encore (xvidenc->handle, XVID_ENC_ENCODE,
+  if ((res = xvid_encore (xvidenc->handle, XVID_ENC_ENCODE,
               &xframe, &xstats)) < 0) {
     GST_ELEMENT_ERROR (xvidenc, LIBRARY, ENCODE, (NULL),
-        ("Error encoding xvid frame: %s (%d)", gst_xvid_error (ret), ret));
-    gst_buffer_unref (buf);
+        ("Error encoding xvid frame: %s (%d)", gst_xvid_error (res), res));
     gst_buffer_unref (outbuf);
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto cleanup;
   }
 
   GST_BUFFER_SIZE (outbuf) = xstats.length;
 
   /* go out, multiply! */
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (xvidenc->srcpad));
-  gst_pad_push (xvidenc->srcpad, outbuf);
+  ret = gst_pad_push (xvidenc->srcpad, outbuf);
 
   /* proclaim destiny */
   g_signal_emit (G_OBJECT (xvidenc), gst_xvidenc_signals[FRAME_ENCODED], 0);
 
   /* until the final judgement */
+
+cleanup:
+
   gst_buffer_unref (buf);
-  return GST_FLOW_OK;
+  gst_object_unref (xvidenc);
+  return ret;
 }
 
 
 static gboolean
 gst_xvidenc_setcaps (GstPad * pad, GstCaps * caps)
 {
+  GstCaps *new_caps = NULL;
   GstXvidEnc *xvidenc;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   const gchar *mime;
   gint w, h;
   const GValue *fps;
   gint xvid_cs = -1, stride = -1;
+  gboolean ret = FALSE;
 
   xvidenc = GST_XVIDENC (gst_pad_get_parent (pad));
 
@@ -374,7 +381,7 @@ gst_xvidenc_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "height", &h);
 
   fps = gst_structure_get_value (structure, "framerate");
-  if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
+  if (fps != NULL) {
     xvidenc->fps_n = gst_value_get_fraction_numerator (fps);
     xvidenc->fps_d = gst_value_get_fraction_denominator (fps);
   } else {
@@ -389,24 +396,41 @@ gst_xvidenc_setcaps (GstPad * pad, GstCaps * caps)
   xvidenc->stride = stride;
 
   if (gst_xvidenc_setup (xvidenc)) {
-    GstCaps *new_caps = NULL;
 
     new_caps = gst_caps_new_simple ("video/x-xvid",
         "width", G_TYPE_INT, w,
         "height", G_TYPE_INT, h,
         "framerate", GST_TYPE_FRACTION, xvidenc->fps_n, xvidenc->fps_d, NULL);
-    if (!gst_pad_set_caps (xvidenc->srcpad, new_caps)) {
-      if (xvidenc->handle) {
-        xvid_encore (xvidenc->handle, XVID_ENC_DESTROY, NULL, NULL);
-        xvidenc->handle = NULL;
+
+    if (new_caps) {
+
+      if (!gst_pad_set_caps (xvidenc->srcpad, new_caps)) {
+        if (xvidenc->handle) {
+          xvid_encore (xvidenc->handle, XVID_ENC_DESTROY, NULL, NULL);
+          xvidenc->handle = NULL;
+        }
+        ret = FALSE;
+        goto cleanup;
       }
-      return FALSE;
+      ret = TRUE;
+      goto cleanup;
+
     }
-    return TRUE;
+
   }
 
   /* if we got here - it's not good */
-  return FALSE;
+  ret = FALSE;
+
+cleanup:
+
+  if (new_caps) {
+    gst_caps_unref (new_caps);
+  }
+
+  gst_object_unref (xvidenc);
+  return ret;
+
 }
 
 
