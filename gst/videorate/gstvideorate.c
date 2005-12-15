@@ -50,7 +50,6 @@ struct _GstVideoRate
   gint from_rate_numerator, from_rate_denominator;
   gint to_rate_numerator, to_rate_denominator;
   guint64 next_ts;              /* Timestamp of next buffer to output */
-  guint64 first_ts;             /* Timestamp of first buffer */
   GstBuffer *prevbuf;
   guint64 prev_ts;              /* Previous buffer timestamp */
   guint64 in, out, dup, drop;
@@ -358,7 +357,6 @@ gst_video_rate_blank_data (GstVideoRate * videorate)
   videorate->drop = 0;
   videorate->dup = 0;
   videorate->next_ts = 0LL;
-  videorate->first_ts = 0LL;
   videorate->prev_ts = 0LL;
 
   videorate->segment_start = 0;
@@ -454,9 +452,10 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
   if (videorate->prevbuf == NULL) {
     /* We're sure it's a GstBuffer here */
     videorate->prevbuf = buffer;
-    videorate->next_ts = videorate->first_ts = videorate->prev_ts =
+    videorate->prev_ts =
         GST_BUFFER_TIMESTAMP (buffer) - videorate->segment_start +
         videorate->segment_accum;
+    videorate->next_ts = 0;
   } else {
     GstClockTime prevtime, intime;
     gint count = 0;
@@ -494,16 +493,17 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
       /* output first one when its the best */
       if (diff1 < diff2) {
         GstBuffer *outbuf;
+        GstClockTime push_ts;
 
         count++;
         outbuf =
             gst_buffer_create_sub (videorate->prevbuf, 0,
             GST_BUFFER_SIZE (videorate->prevbuf));
         GST_BUFFER_TIMESTAMP (outbuf) = videorate->next_ts;
+        push_ts = GST_BUFFER_TIMESTAMP (outbuf);
         videorate->out++;
         if (videorate->to_rate_numerator) {
           videorate->next_ts =
-              videorate->first_ts +
               gst_util_uint64_scale_int (videorate->out * GST_SECOND,
               videorate->to_rate_denominator, videorate->to_rate_numerator);
           GST_BUFFER_DURATION (outbuf) =
@@ -515,7 +515,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 
         GST_LOG_OBJECT (videorate,
             "old is best, dup, pushing buffer outgoing ts %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (videorate->next_ts));
+            GST_TIME_ARGS (push_ts));
 
         if ((res = gst_pad_push (videorate->srcpad, outbuf)) != GST_FLOW_OK) {
           GST_WARNING_OBJECT (videorate, "couldn't push buffer on srcpad:%d",
@@ -525,7 +525,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 
         GST_LOG_OBJECT (videorate,
             "old is best, dup, pushed buffer outgoing ts %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (videorate->next_ts));
+            GST_TIME_ARGS (push_ts));
       }
       /* continue while the first one was the best */
     }

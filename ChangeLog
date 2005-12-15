@@ -1,5 +1,12 @@
 2005-12-15  Michael Smith  <msmith@fluendo.com>
 
+	* gst/videorate/gstvideorate.c: (gst_video_rate_blank_data),
+	(gst_video_rate_chain):
+	  Fix timestamping for videorate when the first buffer it sees has a
+	  non-zero timestamp. Fix some misleading debug output.
+
+2005-12-15  Michael Smith  <msmith@fluendo.com>
+
 	* gst/audioresample/gstaudioresample.c:
 	  Don't leak all input buffers to audioresample.
 
