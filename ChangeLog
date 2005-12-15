@@ -1,3 +1,14 @@
+2005-12-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstminiobject.c: (gst_value_mini_object_lcopy):
+	  Fix lcopy for mini objects, the mini object needs to be ref'ed.
+	  
+	* tests/check/gst/gstminiobject.c: (my_foo_init),
+	(my_foo_get_property), (my_foo_set_property), (my_foo_class_init),
+	(test_value_collection), (gst_mini_object_suite):
+	  Add test to ensure refcounts end up as expected when passing
+	  GstMiniObjects through g_object_get() and g_object_set().
+
 2005-12-14  Julien MOUTTE  <julien@moutte.net>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_base_init),

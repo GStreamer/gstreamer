@@ -375,7 +375,12 @@ gst_value_mini_object_lcopy (const GValue * value, guint n_collect_values,
         G_VALUE_TYPE_NAME (value));
   }
 
-  *mini_object_p = value->data[0].v_pointer;
+  if (!value->data[0].v_pointer)
+    *mini_object_p = NULL;
+  else if (collect_flags & G_VALUE_NOCOPY_CONTENTS)
+    *mini_object_p = value->data[0].v_pointer;
+  else
+    *mini_object_p = gst_mini_object_ref (value->data[0].v_pointer);
 
   return NULL;
 }

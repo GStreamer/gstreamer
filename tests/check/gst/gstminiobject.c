@@ -3,6 +3,7 @@
  * unit test for GstMiniObject
  *
  * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) <2005> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -174,6 +175,101 @@ GST_START_TEST (test_unref_threaded)
 
 GST_END_TEST;
 
+/* ======== value collection test ======== */
+typedef struct _MyFoo
+{
+  GObject object;
+} MyFoo;
+
+typedef struct _MyFooClass
+{
+  GObjectClass gobject_class;
+} MyFooClass;
+
+enum
+{
+  PROP_BUFFER = 1
+};
+
+G_DEFINE_TYPE (MyFoo, my_foo, G_TYPE_OBJECT)
+
+     static void my_foo_init (MyFoo * foo)
+{
+}
+
+static void
+my_foo_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstBuffer *new_buf;
+
+  g_assert (prop_id == PROP_BUFFER);
+
+  new_buf = gst_buffer_new_and_alloc (1024);
+  gst_value_set_mini_object (value, GST_MINI_OBJECT (new_buf));
+  gst_buffer_unref (new_buf);
+}
+
+static void
+my_foo_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
+{
+  GstMiniObject *mini_obj;
+
+  g_assert (prop_id == PROP_BUFFER);
+
+  mini_obj = gst_value_get_mini_object (value);
+  g_assert (GST_IS_MINI_OBJECT (mini_obj));
+  g_assert (GST_IS_BUFFER (mini_obj));
+
+#if 0
+  /* gst_value_dup_mini_object() does not exist yet */
+  mini_obj = gst_value_dup_mini_object (value);
+  g_assert (GST_IS_MINI_OBJECT (mini_obj));
+  g_assert (GST_IS_BUFFER (mini_obj));
+  gst_mini_object_unref (mini_obj);
+#endif
+}
+
+
+static void
+my_foo_class_init (MyFooClass * klass)
+{
+  GObjectClass *gobject_klass = G_OBJECT_CLASS (klass);
+
+  gobject_klass->get_property = my_foo_get_property;
+  gobject_klass->set_property = my_foo_set_property;
+
+  g_object_class_install_property (gobject_klass, PROP_BUFFER,
+      gst_param_spec_mini_object ("buffer", "Buffer",
+          "a newly created GstBuffer", GST_TYPE_BUFFER, G_PARAM_READWRITE));
+}
+
+GST_START_TEST (test_value_collection)
+{
+  GstBuffer *buf = NULL;
+  MyFoo *foo;
+
+  foo = (MyFoo *) g_object_new (my_foo_get_type (), NULL);
+
+  /* test g_object_get() refcounting */
+  g_object_get (foo, "buffer", &buf, NULL);
+  g_assert (GST_IS_BUFFER (buf));
+  g_assert (GST_MINI_OBJECT_REFCOUNT_VALUE (GST_MINI_OBJECT_CAST (buf)) == 1);
+  gst_buffer_unref (buf);
+
+  /* test g_object_set() refcounting */
+  buf = gst_buffer_new_and_alloc (1024);
+  g_object_set (foo, "buffer", buf, NULL);
+  g_assert (GST_MINI_OBJECT_REFCOUNT_VALUE (GST_MINI_OBJECT_CAST (buf)) == 1);
+  gst_buffer_unref (buf);
+
+  g_object_unref (foo);
+}
+
+GST_END_TEST;
+
+
 Suite *
 gst_mini_object_suite (void)
 {
@@ -189,6 +285,7 @@ gst_mini_object_suite (void)
   tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_ref_threaded);
   tcase_add_test (tc_chain, test_unref_threaded);
+  tcase_add_test (tc_chain, test_value_collection);
   return s;
 }
 
