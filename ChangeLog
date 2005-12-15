@@ -1,3 +1,8 @@
+2005-12-15  Edward Hervey  <edward@fluendo.com>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream):
+	Remove memleak from unused GstRMDemuxStream
+
 2005-12-12  Michael Smith  <msmith@fluendo.com>
 
 	* ext/mad/gstid3tag.c: (gst_mad_id3_to_tag_list),

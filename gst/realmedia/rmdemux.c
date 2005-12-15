@@ -1330,8 +1330,9 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     }
     rmdemux->n_audio_streams++;
   } else {
-    GST_WARNING_OBJECT (rmdemux, "not adding stream of type %d",
+    GST_WARNING_OBJECT (rmdemux, "not adding stream of type %d, freeing it",
         stream->subtype);
+    g_free (stream);
     goto beach;
   }
 
