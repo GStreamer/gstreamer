@@ -88,7 +88,6 @@
 #include "dfbvideosink.h"
 
 #include <string.h>
-#include <liboil/liboil.h>
 
 /* Debugging category */
 GST_DEBUG_CATEGORY (dfbvideosink_debug);
