@@ -1,3 +1,10 @@
+2005-12-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/esd/esdmon.c: (gst_esdmon_open_audio):
+	* ext/esd/esdsink.c: (gst_esdsink_prepare):
+	* gst/multipart/multipartdemux.c:
+          change some char* into char[]
+
 2005-12-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_reset),

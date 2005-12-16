@@ -372,7 +372,7 @@ static gboolean
 gst_esdmon_open_audio (GstEsdmon * src)
 {
   /* Name used by esound for this connection. */
-  const char *connname = "GStreamer";
+  const char connname[] = "GStreamer";
 
   /* Bitmap describing audio format. */
   esd_format_t esdformat = ESD_STREAM | ESD_PLAY;

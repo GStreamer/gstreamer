@@ -253,7 +253,7 @@ gst_esdsink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   GstEsdSink *esdsink = GST_ESDSINK (asink);
 
   /* Name used by esound for this connection. */
-  const char *connname = "GStreamer";
+  const char connname[] = "GStreamer";
 
   /* Bitmap describing audio format. */
   esd_format_t esdformat = ESD_STREAM | ESD_PLAY;

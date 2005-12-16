@@ -106,7 +106,7 @@ struct _GstMultipartDemuxClass
 GST_DEBUG_CATEGORY_STATIC (gst_multipart_demux_debug);
 #define GST_CAT_DEFAULT gst_multipart_demux_debug
 
-static gchar *toFind = "--ThisRandomString\nContent-type: ";
+static gchar toFind[] = "--ThisRandomString\nContent-type: ";
 static gint toFindLen;
 
 /* elementfactory information */
