@@ -68,7 +68,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "audio/x-raw-float, "
         "width = (int) 32, "
         "channels = (int) { 1, 2 }, "
-        "rate = (int) [ 6000, 192000 ], " "endianness = (int) LITTLE_ENDIAN, ")
+        "rate = (int) [ 6000, 192000 ], " "endianness = (int) LITTLE_ENDIAN")
     );
 
 static void gst_wavpack_dec_class_init (GstWavpackDecClass * klass);
