@@ -64,7 +64,7 @@ shell=$SHELL
 if test "x$SHELL" == "x/bin/bash"
 then
   # debian/ubuntu resets our PS1.  bastards.
-  shell="$SHELL --norc --noprofile"
+  shell="$SHELL --noprofile"
 fi
 PS1="[gst-$VERSION] $PS1" $shell
 

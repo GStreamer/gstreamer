@@ -589,7 +589,7 @@ init_post (void)
     registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
     if (registry_file == NULL) {
       registry_file = g_build_filename (g_get_home_dir (),
-          ".gstreamer-" GST_MAJORMINOR, "registry.xml", NULL);
+          ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".xml", NULL);
     }
     GST_DEBUG ("Reading registry cache");
     gst_registry_xml_read_cache (default_registry, registry_file);

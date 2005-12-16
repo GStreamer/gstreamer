@@ -1,3 +1,8 @@
+2005-12-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.c: (init_post):
+	  make the registry cache file HOST_CPU-dependent
+
 2005-12-16  Andy Wingo  <wingo@pobox.com>
 
 	* plugins/elements/gstbufferstore.c
