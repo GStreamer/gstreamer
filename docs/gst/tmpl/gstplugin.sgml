@@ -35,6 +35,9 @@ to bring the plugin into memory.
 #GstPluginFeature, #GstType, #GstAutoplug, #GstElementFactory
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gst_plugin_error_quark ##### -->
 <para>
 Get the error quark
@@ -344,13 +347,12 @@ to get a list of plugins that match certain criteria.
 @Returns: 
 
 
-<!-- ##### FUNCTION gst_plugin_new ##### -->
+<!-- ##### FUNCTION gst_plugin_free ##### -->
 <para>
 
 </para>
 
-@name: 
-@Returns: 
+@plugin: 
 
 
 <!-- ##### FUNCTION gst_library_load ##### -->
@@ -360,4 +362,5 @@ to get a list of plugins that match certain criteria.
 
 @name: 
 @Returns: 
+
 

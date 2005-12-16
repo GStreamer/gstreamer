@@ -14,6 +14,9 @@ various utility functions
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gst_util_set_value_from_string ##### -->
 <para>
 

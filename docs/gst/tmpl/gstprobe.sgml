@@ -19,6 +19,9 @@ enumerate all registered probes to signal them.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstProbe ##### -->
 <para>
 The probe structure

@@ -21,6 +21,9 @@ clock so that the clock is always a good measure of the time in the pipeline.
 #GstSystemClock
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstClock ##### -->
 <para>
 

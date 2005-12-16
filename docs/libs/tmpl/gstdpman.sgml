@@ -20,6 +20,9 @@ are for applications that use elements with dparams.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstDParamManager ##### -->
 <para>
 

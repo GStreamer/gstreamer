@@ -19,6 +19,9 @@ You'll get a bitmask of flags with gst_cpu_get_flags().
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### ENUM GstCPUFlags ##### -->
 <para>
 Flags that represent cpu capabilities

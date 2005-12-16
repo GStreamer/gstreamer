@@ -33,6 +33,9 @@ The next step is to get hold of the GstDParamManager instance of a GstElement.
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gst_control_init ##### -->
 <para>
 

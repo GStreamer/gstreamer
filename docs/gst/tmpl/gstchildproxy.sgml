@@ -14,6 +14,9 @@ GstChildProxy
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gst_child_proxy_get_children_count ##### -->
 <para>
 

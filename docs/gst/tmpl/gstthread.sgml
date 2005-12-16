@@ -18,6 +18,9 @@ A Thread can act as a toplevel bin as it has its own scheduler.
 #GstBin, #GstPipeline
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstThread ##### -->
 <para>
 

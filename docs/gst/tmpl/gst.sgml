@@ -87,6 +87,9 @@ Check out both <ulink url="http://www.cse.ogi.edu/sysl/">OGI's
 pipeline</ulink> and Microsoft's DirectShow for some background.
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### FUNCTION gst_init ##### -->
 <para>
 

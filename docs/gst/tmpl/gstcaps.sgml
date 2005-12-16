@@ -14,6 +14,9 @@ Structure describing sets of media formats
 
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### MACRO GST_CAPS_FLAGS_ANY ##### -->
 <para>
 Flags that this caps has no specific content, but can contain anything.

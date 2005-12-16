@@ -27,6 +27,9 @@ gst_event_new_flush() creates a new flush event.
 #GstPad, #GstElement
 </para>
 
+<!-- ##### SECTION Stability_Level ##### -->
+
+
 <!-- ##### STRUCT GstEvent ##### -->
 <para>
 
