@@ -29,6 +29,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <string.h>             /* memset, in FD_ZERO macro */
 #include <unistd.h>
 #include <sys/ioctl.h>
 

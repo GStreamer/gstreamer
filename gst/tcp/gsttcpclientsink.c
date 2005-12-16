@@ -25,6 +25,7 @@
 #include <gst/dataprotocol/dataprotocol.h>
 #include "gsttcp.h"
 #include "gsttcpclientsink.h"
+#include <string.h>             /* memset */
 
 /* elementfactory information */
 static GstElementDetails gst_tcp_client_sink_details =

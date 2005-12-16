@@ -29,6 +29,7 @@
 #include "config.h"
 #endif
 #include <gst/gst-i18n-plugin.h>
+#include <string.h>             /* memset */
 
 #include <sys/ioctl.h>
 

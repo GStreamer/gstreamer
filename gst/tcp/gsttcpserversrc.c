@@ -26,6 +26,7 @@
 #include <gst/gst-i18n-plugin.h>
 #include "gsttcp.h"
 #include "gsttcpserversrc.h"
+#include <string.h>             /* memset */
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
