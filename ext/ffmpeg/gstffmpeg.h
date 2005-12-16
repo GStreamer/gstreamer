@@ -51,6 +51,9 @@ extern gboolean gst_ffmpegcsp_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegscale_register (GstPlugin * plugin);
 extern gboolean gst_ffmpegdeinterlace_register (GstPlugin * plugin);
 
+int gst_ffmpeg_avcodec_open (AVCodecContext *avctx, AVCodec *codec);
+int gst_ffmpeg_avcodec_close (AVCodecContext *avctx);
+
 G_END_DECLS
 
 extern URLProtocol gstreamer_protocol;

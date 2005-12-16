@@ -283,7 +283,7 @@ gst_ffmpegenc_dispose (GObject * object)
 
   /* close old session */
   if (ffmpegenc->opened) {
-    avcodec_close (ffmpegenc->context);
+    gst_ffmpeg_avcodec_close (ffmpegenc->context);
     ffmpegenc->opened = FALSE;
   }
 
@@ -338,17 +338,17 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   _shut_up_I_am_probing = TRUE;
   for (pixfmt = 0; pixfmt < PIX_FMT_NB; pixfmt++) {
     ctx->pix_fmt = pixfmt;
-    if (avcodec_open (ctx, oclass->in_plugin) >= 0 &&
+    if (gst_ffmpeg_avcodec_open (ctx, oclass->in_plugin) >= 0 &&
         ctx->pix_fmt == pixfmt) {
       ctx->width = -1;
       if (!caps)
         caps = gst_caps_new_empty ();
       gst_caps_append (caps,
           gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type, ctx));
-      avcodec_close (ctx);
+      gst_ffmpeg_avcodec_close (ctx);
     }
     if (ctx->priv_data)
-      avcodec_close (ctx);
+      gst_ffmpeg_avcodec_close (ctx);
   }
   av_free (ctx);
   _shut_up_I_am_probing = FALSE;
@@ -376,7 +376,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
 
   /* close old session */
   if (ffmpegenc->opened) {
-    avcodec_close (ffmpegenc->context);
+    gst_ffmpeg_avcodec_close (ffmpegenc->context);
     ffmpegenc->opened = FALSE;
   }
 
@@ -417,9 +417,9 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   pix_fmt = ffmpegenc->context->pix_fmt;
 
   /* open codec */
-  if (avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
+  if (gst_ffmpeg_avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
     if (ffmpegenc->context->priv_data)
-      avcodec_close (ffmpegenc->context);
+      gst_ffmpeg_avcodec_close (ffmpegenc->context);
     GST_DEBUG ("ffenc_%s: Failed to open FFMPEG codec",
         oclass->in_plugin->name);
     return FALSE;
@@ -427,7 +427,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
 
   /* is the colourspace correct? */
   if (pix_fmt != ffmpegenc->context->pix_fmt) {
-    avcodec_close (ffmpegenc->context);
+    gst_ffmpeg_avcodec_close (ffmpegenc->context);
     GST_DEBUG ("ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
         oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
     return FALSE;
@@ -452,7 +452,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
       ffmpegenc->context, TRUE);
 
   if (!other_caps) {
-    avcodec_close (ffmpegenc->context);
+    gst_ffmpeg_avcodec_close (ffmpegenc->context);
     GST_DEBUG ("Unsupported codec - no caps found");
     return FALSE;
   }
@@ -476,7 +476,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   if (!gst_pad_set_caps (ffmpegenc->srcpad, icaps)) {
-    avcodec_close (ffmpegenc->context);
+    gst_ffmpeg_avcodec_close (ffmpegenc->context);
     gst_caps_unref (icaps);
     return FALSE;
   }
@@ -711,7 +711,7 @@ gst_ffmpegenc_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (ffmpegenc->opened) {
-        avcodec_close (ffmpegenc->context);
+        gst_ffmpeg_avcodec_close (ffmpegenc->context);
         ffmpegenc->opened = FALSE;
       }
       if (ffmpegenc->cache) {

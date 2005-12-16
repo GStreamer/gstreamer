@@ -384,7 +384,7 @@ gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
   }
 
   if (ffmpegdec->context->priv_data)
-    avcodec_close (ffmpegdec->context);
+    gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
 
   if (ffmpegdec->context->palctrl) {
@@ -419,7 +419,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
   GstFFMpegDecClass *oclass =
       (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
-  if (avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0)
+  if (gst_ffmpeg_avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0)
     goto could_not_open;
 
   ffmpegdec->opened = TRUE;

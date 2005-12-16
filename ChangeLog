@@ -1,3 +1,16 @@
+2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpeg.c: (gst_ffmpeg_avcodec_open),
+	(gst_ffmpeg_avcodec_close):
+	* ext/ffmpeg/gstffmpeg.h:
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_close),
+	(gst_ffmpegdec_open):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_dispose),
+	(gst_ffmpegenc_getcaps), (gst_ffmpegenc_setcaps),
+	(gst_ffmpegenc_change_state):
+	  Do proper locking around avcodec_open() and avcodec_close()
+	  (fixes #322254, patch by: Sebastien Cote and Luca Ognibene).
+
 2005-12-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/ext/Makefile.am:
