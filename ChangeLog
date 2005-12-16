@@ -1,3 +1,9 @@
+2005-12-16  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.override (handle_event_function_exception) 
+	(handle_chain_function_exception): GCC told me I needed braces
+	here.
+
 2005-12-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

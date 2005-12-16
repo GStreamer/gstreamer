@@ -255,8 +255,9 @@ handle_chain_function_exception (GValue *ret, guint n, const GValue *params)
 {
   GstElement *element = GST_ELEMENT (gst_object_get_parent (g_value_get_object (&params[0])));
   
-  if (!_pygst_element_check_error (element))
+  if (!_pygst_element_check_error (element)) {
     g_assert_not_reached (); /* only returns FALSE when there's no error */
+  }
 }
 
 static GstFlowReturn
@@ -305,8 +306,9 @@ handle_event_function_exception (GValue *ret, guint n, const GValue *params)
 {
   GstElement *element = GST_ELEMENT (gst_pad_get_parent (g_value_get_object (&params[0])));
   
-  if (!_pygst_element_check_error (element))
+  if (!_pygst_element_check_error (element)) {
     g_assert_not_reached (); /* only returns FALSE when there's no error */
+  }
 }
 
 static gboolean
