@@ -56,7 +56,6 @@ struct _GstWavParse {
 
   /* WAVE decoding state */
   GstWavParseState state;
-  guint64       offset;
 
   /* format of audio, see defines below */
   gint format;
@@ -71,17 +70,20 @@ struct _GstWavParse {
 
   guint bytes_per_sample;
 
-  guint64 dataleft, datasize, datastart;
+  /* position in data part */
+  guint64	offset;
+  guint64	end_offset;
+  guint64 	dataleft;
+  /* offset/length of data part */
+  guint64 	datastart;
+  guint64 	datasize;
   
-  gboolean seek_pending;
   GstEvent *seek_event;
 
   /* configured segment, start/stop expressed in
    * bytes */
-  gdouble segment_rate;
-  GstSeekFlags segment_flags;
-  gint64 segment_start;
-  gint64 segment_stop;
+  GstSegment segment;
+  gboolean segment_running;
 };
 
 struct _GstWavParseClass {
