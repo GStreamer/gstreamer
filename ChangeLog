@@ -1,5 +1,12 @@
 2005-12-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstregistryxml.c: (load_feature):
+	Cleanups.
+	Don't use g_object_unref on GstObjects so that we avoid
+	leaks on unsafe glibs.
+
+2005-12-16  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_recalc_state):
 	Small doc updates.
 

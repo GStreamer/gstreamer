@@ -218,16 +218,20 @@ static GstPluginFeature *
 load_feature (xmlTextReaderPtr reader)
 {
   int ret;
-  int depth = xmlTextReaderDepth (reader);
-  gchar *feature_name =
-      (gchar *) xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
+  int depth;
+  gchar *feature_name;
   GstPluginFeature *feature;
   GType type;
+
+  depth = xmlTextReaderDepth (reader);
+  feature_name =
+      (gchar *) xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
 
   GST_DEBUG ("loading feature");
 
   if (!feature_name)
     return NULL;
+
   type = g_type_from_name (feature_name);
   g_free (feature_name);
   feature_name = NULL;
@@ -240,7 +244,11 @@ load_feature (xmlTextReaderPtr reader)
     return NULL;
   }
   if (!GST_IS_PLUGIN_FEATURE (feature)) {
-    g_object_unref (feature);
+    /* don't really know what it is */
+    if (GST_IS_OBJECT (feature))
+      gst_object_unref (feature);
+    else
+      g_object_unref (feature);
     return NULL;
   }
   while ((ret = xmlTextReaderRead (reader)) == 1) {
