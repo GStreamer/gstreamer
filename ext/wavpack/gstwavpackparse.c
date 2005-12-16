@@ -56,7 +56,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "width = (int) { 8, 16, 24 }, "
         "channels = (int) { 1, 2 }, "
-        "rate = (int) [ 8000, 96000 ], " "framed = (boolean) true")
+        "rate = (int) [ 6000, 192000 ], " "framed = (boolean) true")
     );
 
 static GstStaticPadTemplate wvc_src_factory = GST_STATIC_PAD_TEMPLATE ("wvcsrc",
