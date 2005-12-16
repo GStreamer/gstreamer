@@ -543,6 +543,18 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
 
   g_assert (src->running_time <= time);
 
+  /*
+     if (GST_CLOCK_TIME_IS_VALID (segment->stop)) {
+     time = segment->stop;
+     src->n_samples_stop = time * src->samplerate / GST_SECOND;
+     src->check_seek_stop = true;
+     src->seek_flags = segment.flags;
+     }
+     else {
+     src->check_seek_stop = false;
+     }
+   */
+
   return TRUE;
 }
 
@@ -583,6 +595,16 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   GST_BUFFER_TIMESTAMP (buf) = src->timestamp_offset + src->running_time;
   /* offset is the number of samples */
   GST_BUFFER_OFFSET (buf) = src->n_samples;
+  /*
+     if (src->check_seek_stop &&
+     (src->n_samples_stop > src->n_samples) &&
+     (src->n_samples_stop < src->n_samples + src->samples_per_buffer)) {
+     src->n_samples = src->n_samples_stop;
+     @todo: calculate only partial buffer!
+     @todo: send EOS or SEGMENT_DONE depending on segment.flags&GST_SEEK_FLAG_SEGMENT
+     }
+     else
+   */
   src->n_samples += src->samples_per_buffer;
   GST_BUFFER_OFFSET_END (buf) = src->n_samples;
   next_time = src->n_samples * GST_SECOND / src->samplerate;

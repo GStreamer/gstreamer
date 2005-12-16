@@ -507,7 +507,7 @@ make_valid_name (char *name)
   /*
    * Replace invalid chars with _ in the type name
    */
-  static const gchar *extra_chars = "-_+";
+  static const gchar extra_chars[] = "-_+";
   gchar *p = name;
 
   for (; *p; p++) {

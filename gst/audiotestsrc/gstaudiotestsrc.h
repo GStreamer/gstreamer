@@ -90,6 +90,11 @@ struct _GstAudioTestSrc {
   GstClockTimeDiff timestamp_offset;    /* base offset */
   GstClockTime running_time;            /* total running time */
   gint64 n_samples;                     /* total samples sent */
+  /*
+  gint64 n_samples_stop;
+  gboolean check_seek_stop;
+  GstSeekFlags seek_flags;
+  */
   
   /* waveform specific context data */
   GstPinkNoise pink;
