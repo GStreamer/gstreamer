@@ -998,7 +998,7 @@ gst_asfmux_file_start (GstAsfMux * asfmux, guint64 file_size, guint64 data_size)
   gst_asfmux_put_le32 (header, asfmux->num_outputs);
   for (n = 0; n < asfmux->num_outputs; n++) {
     GstAsfMuxStream *stream = &asfmux->output[n];
-    const char *codec = "Unknown codec";
+    const char codec[] = "Unknown codec";
 
     gst_asfmux_put_le16 (header, stream->index + 1);
     /* Isn't this wrong? This is UTF16! */
