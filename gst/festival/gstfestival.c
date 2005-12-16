@@ -340,7 +340,7 @@ socket_receive_file_to_buff (int fd, int *size)
   /* Festival key stuff technique, but long winded I know, sorry */
   /* but will receive any file without closeing the stream or    */
   /* using OOB data                                              */
-  static const char *file_stuff_key = "ft_StUfF_key";   /* must == Festival's key */
+  static const char file_stuff_key[] = "ft_StUfF_key";  /* must == Festival's key */
   char *buff;
   int bufflen;
   int n, k, i;

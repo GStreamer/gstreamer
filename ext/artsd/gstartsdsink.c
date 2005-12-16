@@ -282,7 +282,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 
      static gboolean gst_artsdsink_open_audio (GstArtsdsink * sink)
 {
-  const char *connname = "gstreamer";
+  const char connname[] = "gstreamer";
   int errcode;
 
   /* Name used by aRtsd for this connection. */

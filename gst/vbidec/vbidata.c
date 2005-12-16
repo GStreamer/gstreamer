@@ -95,22 +95,22 @@ struct vbidata_s
 
 
 /* this is NOT exactly right */
-//static char *ccode = " !\"#$%&'()\0341+,-./0123456789:;<=>?@"
-static char *ccode = " !\"#$%&'()a+,-./0123456789:;<=>?@"
+//static char ccode[] = " !\"#$%&'()\0341+,-./0123456789:;<=>?@"
+static char ccode[] = " !\"#$%&'()a+,-./0123456789:;<=>?@"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 //                     "abcdefghijklmnopqrstuvwxyz"
 //                     "[\0351]\0355\0363\0372abcdefghijklmnopqr"
     "[e]iouabcdefghijklmnopqr"
 //                     "stuvwxyz\0347\0367\0245\0244\0240";
     "stuvwxyzcoNn ";
-static char *wccode = "\0256\0260\0275\0277T\0242\0243#\0340 "
+static char wccode[] = "\0256\0260\0275\0277T\0242\0243#\0340 "
     "\0350\0354\0362\0371";
 
-static char *extcode1 = "\0301\0311\0323\0332\0334\0374"
+static char extcode1[] = "\0301\0311\0323\0332\0334\0374"
     "`\0241*'-\0251S*\"\"\0300\0302"
     "\0307\0310\0312\0313\0353\0316\0317\0357" "\0324\0331\0371\0333\0253\0273";
 
-static char *extcode2 = "\0303\0343\0315\0314\0354\0322\0362\0325"
+static char extcode2[] = "\0303\0343\0315\0314\0354\0322\0362\0325"
     "{}\\^_|~\0304\0344\0326\0366\0337\0245\0244|" "\0305\0345\0330\0370++++";
 
 int

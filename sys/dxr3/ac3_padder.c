@@ -112,10 +112,10 @@ ac3p_init (ac3_padder * padder)
 
 /**
  * ac3_push_data:
- * @padder The padder structure.
- * @data A pointer to a buffer with new data to parse.  This should 
+ * @padder: The padder structure.
+ * @data: A pointer to a buffer with new data to parse.  This should 
  * correspond to a new piece of a stream containing raw AC3 data.
- * @size The number of available bytes in the buffer.
+ * @size: The number of available bytes in the buffer.
  *
  * Pushes a new buffer of data to be parsed by the ac3 padder.  The
  * ac3_parse() function will actually parse the data and report when
@@ -133,7 +133,7 @@ ac3p_push_data (ac3_padder * padder, guchar * data, guint size)
 
 /**
  * ac3p_parse:
- * @padder The padder structure.
+ * @padder: The padder structure.
  * 
  * Parses the bytes already pushed into the padder structure (see
  * ac3p_push_data()) and returns an event value depending on the
