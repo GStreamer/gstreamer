@@ -1,5 +1,10 @@
 2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/wavpack/gstwavpackdec.c:
+	  Oops, remove trailing comma from caps string.
+
+2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_link):
 	* ext/wavpack/gstwavpackparse.c:
 	  Wavpack supports samplerates from 6-192kHz, fix pad template
