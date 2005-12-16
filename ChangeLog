@@ -1,3 +1,13 @@
+2005-12-16  Andy Wingo  <wingo@pobox.com>
+
+	* plugins/elements/gstbufferstore.c
+	(gst_buffer_store_cleared_func): Pay attention to g_list_append
+	return value.
+
+	* tests/check/gst/gstobject.c
+	(test_fake_object_name_threaded_unique): Pay attention to
+	g_list_sort return value.
+
 2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-feedback-m.m:

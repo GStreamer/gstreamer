@@ -311,7 +311,8 @@ GST_START_TEST (test_fake_object_name_threaded_unique)
 
   /* sort GList based on object name */
   /* FIXME: sort and test */
-  g_list_sort (object_list, (GCompareFunc) gst_object_name_compare);
+  object_list =
+      g_list_sort (object_list, (GCompareFunc) gst_object_name_compare);
 
   name1 = gst_object_get_name (GST_OBJECT (object_list->data));
   for (l = object_list->next; l->next; l = l->next) {
