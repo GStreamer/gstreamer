@@ -45,7 +45,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "width = (int) { 8, 16, 24, 32 }, "
         "channels = (int) { 1, 2 }, "
-        "rate = (int) [ 8000, 96000 ], " "framed = (boolean) true")
+        "rate = (int) [ 6000, 192000 ], " "framed = (boolean) true")
     );
 
 static GstStaticPadTemplate wvc_sink_factory =
@@ -62,14 +62,13 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) { 8, 16, 24 }, "
         "depth = (int) { 8, 16, 24 }, "
         "channels = (int) { 1, 2 }, "
-        "rate = (int) [ 8000, 96000 ], "
+        "rate = (int) [ 6000, 192000 ], "
         "endianness = (int) LITTLE_ENDIAN, "
         "signed = (boolean) true;"
         "audio/x-raw-float, "
         "width = (int) 32, "
         "channels = (int) { 1, 2 }, "
-        "rate = (int) [ 8000, 96000 ], "
-        "endianness = (int) LITTLE_ENDIAN, " "buffer-frames = (int) 0")
+        "rate = (int) [ 6000, 192000 ], " "endianness = (int) LITTLE_ENDIAN, ")
     );
 
 static void gst_wavpack_dec_class_init (GstWavpackDecClass * klass);
@@ -110,9 +109,7 @@ gst_wavpack_dec_link (GstPad * pad, GstPad * peer)
     srccaps = gst_caps_new_simple ("audio/x-raw-float",
         "rate", G_TYPE_INT, wavpackdec->samplerate,
         "channels", G_TYPE_INT, wavpackdec->channels,
-        "width", G_TYPE_INT, 32,
-        "endianness", G_TYPE_INT, LITTLE_ENDIAN,
-        "buffer-frames", G_TYPE_INT, 0, NULL);
+        "width", G_TYPE_INT, 32, "endianness", G_TYPE_INT, LITTLE_ENDIAN, NULL);
   }
   gst_pad_set_caps (wavpackdec->srcpad, srccaps);
   gst_pad_use_fixed_caps (wavpackdec->srcpad);

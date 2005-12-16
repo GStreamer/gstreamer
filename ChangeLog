@@ -1,3 +1,11 @@
+2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_link):
+	* ext/wavpack/gstwavpackparse.c:
+	  Wavpack supports samplerates from 6-192kHz, fix pad template
+	  caps (fixes #322973; patch by: gcocatre@gmail.com). Also
+	  remove buffer-frames from caps, they are gone in 0.10.
+
 2005-12-15  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/xvid/Makefile.am:
