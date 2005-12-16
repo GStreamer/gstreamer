@@ -1,3 +1,10 @@
+2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/rtsp/rtspconnection.c:
+	  Add <netinet/in.h> include and move <arpa/inet.h> include
+	  to make things work on OpenBSD as well (fixes #323717;
+	  patch by: Benjamin Pineau)
+
 2005-12-14  Edgard Lima <edgard.lima@indt.org.br>
 
 	* gst/rtp/gstrtpspeexdepay.c:
