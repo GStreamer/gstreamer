@@ -1,3 +1,8 @@
+2005-12-16  Wim Taymans  <wim@fluendo.com>
+
+	* common/check.mak:
+	Added make forever target for check.
+
 2005-12-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.c: (init_post):
