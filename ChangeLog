@@ -1,5 +1,10 @@
 2005-12-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (gst_bin_recalc_state):
+	Small doc updates.
+
+2005-12-16  Wim Taymans  <wim@fluendo.com>
+
 	* common/check.mak:
 	Added make forever target for check.
 

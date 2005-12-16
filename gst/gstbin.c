@@ -102,10 +102,15 @@
  *     sink is in the bin, the query fails.</para></listitem>
  *   </varlistentry>
  * </variablelist>
+ *
+ * A #GstBin will by default forward any event sent to it to all sink elements.
+ * If all the sinks return TRUE, the bin will also return TRUE. If no sinks are
+ * in the bin, the event handler will return TRUE.
+ *
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2005-11-23 (0.9.5)
+ * Last reviewed on 2005-12-16 (0.10.0)
  */
 
 #include "gst_private.h"
@@ -1189,7 +1194,7 @@ gst_bin_recalc_state (GstBin * bin, gboolean force)
 
 restart:
   /* when we leave this function, the state must not be dirty, whenever
-   * we are scanning and the state bemoces dirty again, we restart. */
+   * we are scanning and the state becomes dirty again, we restart. */
   bin->state_dirty = FALSE;
 
   have_no_preroll = FALSE;
