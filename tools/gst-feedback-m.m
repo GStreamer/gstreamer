@@ -40,17 +40,31 @@ for mm in 0.6 0.7 0.8
 do
   echo "+   $mm"
   command_output "pkg-config --version"
-  command_output "pkg-config gstreamer-$mm --modversion"
-  command_output "pkg-config gstreamer-$mm --cflags"
-  command_output "pkg-config gstreamer-$mm --libs"
-  command_output "pkg-config gstreamer-libs-$mm --modversion"
-  command_output "pkg-config gstreamer-libs-$mm --cflags"
-  command_output "pkg-config gstreamer-libs-$mm --libs"
+  command_output "pkg-config gstreamer-$mm --modversion" 2>/dev/null
+  command_output "pkg-config gstreamer-$mm --cflags" 2>/dev/null
+  command_output "pkg-config gstreamer-$mm --libs" 2>/dev/null
+  command_output "pkg-config gstreamer-libs-$mm --modversion" 2>/dev/null
+  command_output "pkg-config gstreamer-libs-$mm --cflags" 2>/dev/null
+  command_output "pkg-config gstreamer-libs-$mm --libs" 2>/dev/null
   echo
 done
 
+for mm in 0.9 0.10
+do
+  for module in gstreamer gstreamer-base gstreamer-check gstreamer-controller\
+                gstreamer-dataprotocol gstreamer-plugins-base gstreamer-net\
+                gst-python
+  do
+    echo "+   $mm"
+    command_output "pkg-config $module-$mm --modversion" 2>/dev/null
+    command_output "pkg-config $module-$mm --cflags" 2>/dev/null
+    command_output "pkg-config $module-$mm --libs" 2>/dev/null
+    echo
+  done
+done
+
 echo "+   GSTREAMER INFORMATION"
-command_output "which gst-register"
+command_output "which gst-inspect"
 command_output "gst-inspect"
 command_output "gst-inspect fakesrc"
 command_output "gst-inspect fakesink"
