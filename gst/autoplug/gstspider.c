@@ -99,7 +99,8 @@ static void gst_spider_get_property (GObject * object, guint prop_id,
 
 /* link functions */
 static GstSpiderConnection *gst_spider_link_new (GstSpiderIdentity * src);
-static void gst_spider_link_destroy (GstSpiderConnection * conn);
+
+/* static void gst_spider_link_destroy (GstSpiderConnection * conn); */
 static void gst_spider_link_reset (GstSpiderConnection * conn, GstElement * to);
 static void gst_spider_link_add (GstSpiderConnection * conn,
     GstElement * element);
@@ -351,6 +352,8 @@ gst_spider_link_new (GstSpiderIdentity * src)
 
   return conn;
 }
+
+#if 0
 static void
 gst_spider_link_destroy (GstSpiderConnection * conn)
 {
@@ -360,6 +363,8 @@ gst_spider_link_destroy (GstSpiderConnection * conn)
   gst_spider_link_reset (conn, (GstElement *) spider->sink_ident);
   g_free (conn);
 }
+#endif
+
 static void
 gst_spider_link_reset (GstSpiderConnection * conn, GstElement * to)
 {
@@ -519,6 +524,7 @@ gst_spider_identity_plug (GstSpiderIdentity * ident)
   ident->plugged = TRUE;
 }
 
+#if 0
 void
 gst_spider_identity_unplug (GstSpiderIdentity * ident)
 {
@@ -529,12 +535,15 @@ gst_spider_identity_unplug (GstSpiderIdentity * ident)
     GstSpiderConnection *conn = list->data;
 
     if (conn->src == ident) {
-      g_list_delete_link (spider->links, list);
+      spider->links = g_list_delete_link (spider->links, list);
       gst_spider_link_destroy (conn);
+      /* assuming we have found the one and only list item */
+      break;
     }
   }
   ident->plugged = FALSE;
 }
+#endif
 
 /* links src to sink using the elementfactories in plugpath
  * plugpath will be removed afterwards */
@@ -561,7 +570,7 @@ gst_spider_create_and_plug (GstSpiderConnection * conn, GList * plugpath)
 
       endelements = g_list_prepend (endelements, element);
       templist = g_list_previous (templist);
-      g_list_delete_link (cur, cur);
+      cur = g_list_delete_link (cur, cur);
     }
   }
 

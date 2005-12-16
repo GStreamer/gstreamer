@@ -1,3 +1,15 @@
+2005-12-16  Christian Kirbach  <Christian.Kirbach@student.uni-siegen.de>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/autoplug/gstspider.c: (gst_spider_identity_unplug),
+	  (gst_spider_create_and_plug):
+	* gst/elements/gstbufferstore.c: (gst_buffer_store_add_buffer_func):
+	   Do not silently discard return values of g_list_delete_link()
+	   and g_list_append(). This would trigger gcc4 warnings that
+	   are treated as errors in CVS builds (fixes: #324260). Also
+	   ifdef out unused function while we are at it.
+	
 2005-10-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* examples/retag/retag.c: (main):

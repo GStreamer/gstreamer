@@ -233,7 +233,7 @@ gst_buffer_store_add_buffer_func (GstBufferStore * store, GstBuffer * buffer)
           "adding buffer %p with offset %" G_GINT64_FORMAT " and size %u",
           buffer, GST_BUFFER_OFFSET (buffer), GST_BUFFER_SIZE (buffer));
       if (current_list) {
-        g_list_append (current_list, buffer);
+        current_list = g_list_append (current_list, buffer);
       } else {
         g_assert (store->buffers == NULL);
         store->buffers = g_list_prepend (NULL, buffer);
