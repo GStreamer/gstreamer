@@ -1,5 +1,10 @@
 2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/generic/states.c: (GST_START_TEST):
+	  Blacklist cdparanoia element in state test.
+
+2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/tcp/gsttcp.c:
 	* gst/tcp/gsttcpclientsink.c:
 	* gst/tcp/gsttcpserversink.c:
