@@ -367,50 +367,61 @@ gst_dfbvideosink_enum_layers (DFBDisplayLayerID id,
 
   dfbvideosink = GST_DFBVIDEOSINK (data);
 
-  GST_DEBUG ("inspecting display layer %d with name: %s", id, desc.name);
+  GST_DEBUG_OBJECT (dfbvideosink, "inspecting display layer %d with name: %s",
+      id, desc.name);
 
   if ((desc.type & DLTF_VIDEO) && (desc.caps & DLCAPS_SURFACE)) {
-    GST_DEBUG ("this layer can handle live video and has a surface");
-    goto beach;                 /* It seems that kind of overlay is not very well supported */
+    GST_DEBUG_OBJECT (dfbvideosink,
+        "this layer can handle live video and has a surface");
   } else {
     if (desc.caps & DLCAPS_SURFACE) {
-      GST_DEBUG ("this layer can not handle live video but has a surface");
+      GST_DEBUG_OBJECT (dfbvideosink,
+          "this layer can not handle live video but has a surface");
     } else {
-      GST_DEBUG ("no we can't use that layer, really...");
+      GST_DEBUG_OBJECT (dfbvideosink, "no we can't use that layer, really...");
       goto beach;
     }
   }
 
   ret = dfbvideosink->dfb->GetDisplayLayer (dfbvideosink->dfb, id, &layer);
   if (ret != DFB_OK) {
-    GST_WARNING ("failed getting display layer %s", desc.name);
+    GST_WARNING_OBJECT (dfbvideosink, "failed getting display layer %s",
+        desc.name);
     goto beach;
   }
 
   ret = layer->GetConfiguration (layer, &dlc);
   if (ret != DFB_OK) {
-    GST_WARNING ("failed getting display layer configuration");
+    GST_WARNING_OBJECT (dfbvideosink,
+        "failed getting display layer configuration");
     goto beach;
   }
 
   if ((dlc.flags & DLCONF_BUFFERMODE) && (dlc.buffermode & DLBM_FRONTONLY)) {
-    GST_DEBUG ("no backbuffer");
+    GST_DEBUG_OBJECT (dfbvideosink, "no backbuffer");
   }
   if ((dlc.flags & DLCONF_BUFFERMODE) && (dlc.buffermode & DLBM_BACKVIDEO)) {
-    GST_DEBUG ("backbuffer is in video memory");
+    GST_DEBUG_OBJECT (dfbvideosink, "backbuffer is in video memory");
     backbuffer = TRUE;
   }
   if ((dlc.flags & DLCONF_BUFFERMODE) && (dlc.buffermode & DLBM_BACKSYSTEM)) {
-    GST_DEBUG ("backbuffer is in system memory");
+    GST_DEBUG_OBJECT (dfbvideosink, "backbuffer is in system memory");
     backbuffer = TRUE;
   }
   if ((dlc.flags & DLCONF_BUFFERMODE) && (dlc.buffermode & DLBM_TRIPLE)) {
-    GST_DEBUG ("triple buffering");
+    GST_DEBUG_OBJECT (dfbvideosink, "triple buffering");
     backbuffer = TRUE;
   }
 
-  dfbvideosink->backbuffer = backbuffer;
-  dfbvideosink->layer_id = id;
+  /* If the primary is suitable we prefer using it */
+  if (dfbvideosink->layer_id != DLID_PRIMARY) {
+    GST_DEBUG_OBJECT (dfbvideosink, "selecting layer named %s", desc.name);
+    dfbvideosink->layer_id = id;
+    dfbvideosink->backbuffer = backbuffer;
+  } else {
+    GST_DEBUG_OBJECT (dfbvideosink, "layer %s is suitable but the primary "
+        "is currently selected and we prefer that one", desc.name);
+  }
 
 beach:
   if (layer) {
@@ -1760,7 +1771,7 @@ gst_dfbvideosink_init (GstDfbVideoSink * dfbvideosink)
 
   dfbvideosink->dfb = NULL;
   dfbvideosink->vmodes = NULL;
-  dfbvideosink->layer_id = 0;
+  dfbvideosink->layer_id = -1;
   dfbvideosink->layer = NULL;
   dfbvideosink->primary = NULL;
   dfbvideosink->event_buffer = NULL;
