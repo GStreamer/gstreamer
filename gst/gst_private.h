@@ -30,7 +30,7 @@
 
 /* This needs to be before glib.h, since it might be used in inline
  * functions */
-extern const char             *g_log_domain_gstreamer;
+extern const char             g_log_domain_gstreamer[];
 
 #include <glib.h>
 

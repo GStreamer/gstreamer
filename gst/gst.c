@@ -131,7 +131,7 @@ static gboolean parse_goption_arg (const gchar * s_opt,
 
 static GSList *preload_plugins = NULL;
 
-const gchar *g_log_domain_gstreamer = "GStreamer";
+const gchar g_log_domain_gstreamer[] = "GStreamer";
 
 static void
 debug_log_handler (const gchar * log_domain,
