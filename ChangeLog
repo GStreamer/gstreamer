@@ -1,3 +1,36 @@
+2005-12-17  Julien MOUTTE  <julien@moutte.net>
+
+	* docs/plugins/gst-plugins-bad-plugins-decl.txt:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-undocumented.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/inspect/plugin-dfbvideosink.xml:
+	* docs/plugins/inspect/plugin-qtdemux.xml:
+	* docs/plugins/inspect/plugin-sdlvideosink.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-tta.xml: Updates.
+	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_surface_create),
+	(gst_dfbvideosink_event_thread), (gst_dfbvideosink_enum_vmodes),
+	(gst_dfbvideosink_enum_devices), (gst_dfbvideosink_setup),
+	(gst_dfbvideosink_cleanup),
+	(gst_dfbvideosink_can_blit_from_format),
+	(gst_dfbvideosink_get_best_vmode), (gst_dfbvideosink_getcaps),
+	(gst_dfbvideosink_setcaps), (gst_dfbvideosink_show_frame),
+	(gst_dfbvideosink_buffer_alloc), (gst_dfbsurface_finalize),
+	(gst_dfbvideosink_interface_supported),
+	(gst_dfbvideosink_navigation_send_event),
+	(gst_dfbvideosink_update_colorbalance),
+	(gst_dfbvideosink_colorbalance_list_channels),
+	(gst_dfbvideosink_colorbalance_set_value),
+	(gst_dfbvideosink_colorbalance_get_value),
+	(gst_dfbvideosink_colorbalance_init),
+	(gst_dfbvideosink_set_property), (gst_dfbvideosink_get_property),
+	(gst_dfbvideosink_init), (gst_dfbvideosink_class_init):
+	* ext/directfb/dfbvideosink.h: Implement vertical sync and 
+	color balance interface.
+
 2005-12-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/artsd/gstartsdsink.c: (gst_artsdsink_open_audio):

@@ -74,6 +74,13 @@
  * <para>
  * <include xmlns="http://www.w3.org/2003/XInclude" href="element-dfb-example.xml" />
  * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * Here is a test pipeline to test the colorbalance interface :
+ * <programlisting>
+ * gst-launch -v videotestsrc ! dfbvideosink hue=20000 saturation=40000 brightness=25000
+ * </programlisting>
+ * </para>
  * </refsect2>
  */
 
@@ -83,6 +90,7 @@
 
 /* Our interfaces */
 #include <gst/interfaces/navigation.h>
+#include <gst/interfaces/colorbalance.h>
 
 /* Object header */
 #include "dfbvideosink.h"
@@ -118,12 +126,19 @@ static GstStaticPadTemplate gst_dfbvideosink_sink_template_factory =
 enum
 {
   ARG_0,
-  ARG_SURFACE
+  ARG_SURFACE,
+  ARG_CONTRAST,
+  ARG_BRIGHTNESS,
+  ARG_HUE,
+  ARG_SATURATION,
+  ARG_VSYNC
 };
 
 static void gst_dfbvideosink_bufferpool_clear (GstDfbVideoSink * dfbvideosink);
 static DFBSurfacePixelFormat gst_dfbvideosink_get_format_from_caps (GstCaps *
     caps);
+static void gst_dfbvideosink_update_colorbalance (GstDfbVideoSink *
+    dfbvideosink);
 
 static GstVideoSinkClass *parent_class = NULL;
 
@@ -198,7 +213,8 @@ gst_dfbvideosink_surface_create (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
 
   if (!gst_structure_get_int (structure, "width", &surface->width) ||
       !gst_structure_get_int (structure, "height", &surface->height)) {
-    GST_WARNING ("failed getting geometry from caps %" GST_PTR_FORMAT, caps);
+    GST_WARNING_OBJECT (dfbvideosink, "failed getting geometry from caps %"
+        GST_PTR_FORMAT, caps);
   }
 
   surface->pixel_format = gst_dfbvideosink_get_format_from_caps (caps);
@@ -218,7 +234,7 @@ gst_dfbvideosink_surface_create (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
     ret = dfbvideosink->dfb->CreateSurface (dfbvideosink->dfb, &s_dsc,
         &surface->surface);
     if (ret != DFB_OK) {
-      GST_WARNING ("failed creating a DirectFB surface");
+      GST_WARNING_OBJECT (dfbvideosink, "failed creating a DirectFB surface");
       gst_object_unref (surface);
       surface = NULL;
       goto beach;
@@ -233,15 +249,15 @@ gst_dfbvideosink_surface_create (GstDfbVideoSink * dfbvideosink, GstCaps * caps,
     GST_BUFFER_DATA (surface) = data;
     GST_BUFFER_SIZE (surface) = pitch * surface->height;
 
-    GST_DEBUG ("creating a %dx%d surface with %s pixel format, line pitch %d",
-        surface->width, surface->height,
+    GST_DEBUG_OBJECT (dfbvideosink, "creating a %dx%d surface with %s pixel "
+        "format, line pitch %d", surface->width, surface->height,
         gst_dfbvideosink_get_format_name (surface->pixel_format), pitch);
   } else {
     GST_BUFFER (surface)->malloc_data = g_malloc (size);
     GST_BUFFER_DATA (surface) = GST_BUFFER (surface)->malloc_data;
     GST_BUFFER_SIZE (surface) = size;
     surface->surface = NULL;
-    GST_DEBUG ("allocating a buffer of %d bytes", size);
+    GST_DEBUG_OBJECT (dfbvideosink, "allocating a buffer of %d bytes", size);
   }
 
   /* Keep a ref to our sink */
@@ -299,12 +315,13 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
     if (ret == DFB_OK) {
       DFBEvent event;
 
-      GST_DEBUG ("we have an event");
+      GST_DEBUG_OBJECT (dfbvideosink, "we have an event");
 
       ret = dfbvideosink->event_buffer->GetEvent (dfbvideosink->event_buffer,
           &event);
       if (ret != DFB_OK) {      /* Error */
-        GST_WARNING ("failed when getting event from event buffer");
+        GST_WARNING_OBJECT (dfbvideosink, "failed when getting event from "
+            "event buffer");
       } else {                  /* Handle event */
         if (event.input.type == DIET_KEYPRESS) {
           switch (event.input.key_symbol) {
@@ -316,7 +333,8 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
                       "pressed the ESC key, stopping playback."));
             }
             default:
-              GST_DEBUG ("key press event %c !", event.input.key_symbol);
+              GST_DEBUG_OBJECT (dfbvideosink, "key press event %c !",
+                  event.input.key_symbol);
               gst_navigation_send_key_event (GST_NAVIGATION (dfbvideosink),
                   "key-press", "prout");
           }
@@ -325,7 +343,8 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
 
           dfbvideosink->layer->GetCursorPosition (dfbvideosink->layer, &x, &y);
 
-          GST_DEBUG ("button %d pressed at %dx%d", event.input.button, x, y);
+          GST_DEBUG_OBJECT (dfbvideosink, "button %d pressed at %dx%d",
+              event.input.button, x, y);
 
           gst_navigation_send_mouse_event (GST_NAVIGATION (dfbvideosink),
               "mouse-button-press", event.input.button, x, y);
@@ -334,7 +353,8 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
 
           dfbvideosink->layer->GetCursorPosition (dfbvideosink->layer, &x, &y);
 
-          GST_DEBUG ("button %d released at %dx%d", event.input.button, x, y);
+          GST_DEBUG_OBJECT (dfbvideosink, "button %d released at %dx%d",
+              event.input.button, x, y);
 
           gst_navigation_send_mouse_event (GST_NAVIGATION (dfbvideosink),
               "mouse-button-release", event.input.button, x, y);
@@ -345,7 +365,8 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
           gst_navigation_send_mouse_event (GST_NAVIGATION (dfbvideosink),
               "mouse-move", 0, x, y);
         } else {
-          GST_WARNING ("unhandled event type %d", event.input.type);
+          GST_WARNING_OBJECT (dfbvideosink, "unhandled event type %d",
+              event.input.type);
         }
       }
     }
@@ -440,7 +461,8 @@ gst_dfbvideosink_enum_vmodes (gint width, gint height, gint bpp, void *data)
 
   dfbvideosink = GST_DFBVIDEOSINK (data);
 
-  GST_DEBUG ("adding video mode %dx%d at %d bpp", width, height, bpp);
+  GST_DEBUG_OBJECT (dfbvideosink, "adding video mode %dx%d at %d bpp", width,
+      height, bpp);
   vmode = g_new0 (GstDfbVMode, 1);
   vmode->width = width;
   vmode->height = height;
@@ -471,19 +493,21 @@ gst_dfbvideosink_enum_devices (DFBInputDeviceID id,
 
   dfbvideosink = GST_DFBVIDEOSINK (data);
 
-  GST_DEBUG ("detected input device %s from vendor %s", desc.name, desc.vendor);
+  GST_DEBUG_OBJECT (dfbvideosink, "detected input device %s from vendor %s",
+      desc.name, desc.vendor);
 
   /* Get that input device */
   ret = dfbvideosink->dfb->GetInputDevice (dfbvideosink->dfb, id, &device);
   if (ret != DFB_OK) {
-    GST_WARNING ("failed when getting input device id %d", id);
+    GST_WARNING_OBJECT (dfbvideosink, "failed when getting input device id %d",
+        id);
     goto beach;
   }
 
   ret = device->AttachEventBuffer (device, dfbvideosink->event_buffer);
   if (ret != DFB_OK) {
-    GST_WARNING ("failed when attaching input device %d to our event buffer",
-        id);
+    GST_WARNING_OBJECT (dfbvideosink, "failed when attaching input device "
+        "%d to our event buffer", id);
   }
 
 beach:
@@ -513,23 +537,25 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
   /* If we do it all by ourself we create the DirectFB context, get the 
      primary layer and use a fullscreen configuration */
   if (!dfbvideosink->ext_surface) {
-    GST_DEBUG ("no external surface, taking over DirectFB fullscreen");
+    GST_DEBUG_OBJECT (dfbvideosink, "no external surface, taking over "
+        "DirectFB fullscreen");
     if (!dfbvideosink->dfb) {
       DFBGraphicsDeviceDescription hw_caps;
 
-      GST_DEBUG ("initializing DirectFB");
+      GST_DEBUG_OBJECT (dfbvideosink, "initializing DirectFB");
 
       ret = DirectFBInit (0, NULL);
 
       if (ret != DFB_OK) {
-        GST_WARNING ("DirectFB initialization failed");
+        GST_WARNING_OBJECT (dfbvideosink, "DirectFB initialization failed");
         goto beach;
       }
 
       ret = DirectFBCreate (&(dfbvideosink->dfb));
 
       if (ret != DFB_OK) {
-        GST_WARNING ("failed creating the DirectFB main object");
+        GST_WARNING_OBJECT (dfbvideosink, "failed creating the DirectFB "
+            "main object");
         goto beach;
       }
 
@@ -538,21 +564,23 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
           &hw_caps);
 
       if (ret != DFB_OK) {
-        GST_WARNING ("failed grabbing the hardware capabilities");
+        GST_WARNING_OBJECT (dfbvideosink, "failed grabbing the hardware "
+            "capabilities");
         goto beach;
       }
 
-      GST_DEBUG ("video card %s from vendor %s detected with %d bytes of "
-          "video memory", hw_caps.name, hw_caps.vendor, hw_caps.video_memory);
+      GST_DEBUG_OBJECT (dfbvideosink, "video card %s from vendor %s detected "
+          "with %d bytes of video memory", hw_caps.name, hw_caps.vendor,
+          hw_caps.video_memory);
 
       if (hw_caps.acceleration_mask & DFXL_BLIT) {
-        GST_DEBUG ("Blit is accelerated");
+        GST_DEBUG_OBJECT (dfbvideosink, "Blit is accelerated");
       }
       if (hw_caps.acceleration_mask & DFXL_STRETCHBLIT) {
-        GST_DEBUG ("StretchBlit is accelerated");
+        GST_DEBUG_OBJECT (dfbvideosink, "StretchBlit is accelerated");
         dfbvideosink->hw_scaling = TRUE;
       } else {
-        GST_DEBUG ("StretchBlit is not accelerated");
+        GST_DEBUG_OBJECT (dfbvideosink, "StretchBlit is not accelerated");
         dfbvideosink->hw_scaling = FALSE;
       }
 
@@ -578,11 +606,14 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
           dfbvideosink, TRUE, NULL);
     }
     if (!dfbvideosink->layer) {
+      GList *channels_list = NULL;
+      DFBDisplayLayerDescription dl_desc;
+
       /* Get the best Display Layer */
       ret = dfbvideosink->dfb->GetDisplayLayer (dfbvideosink->dfb,
           dfbvideosink->layer_id, &dfbvideosink->layer);
       if (ret != DFB_OK) {
-        GST_WARNING ("failed getting display layer");
+        GST_WARNING_OBJECT (dfbvideosink, "failed getting display layer");
         goto beach;
       }
 
@@ -590,8 +621,90 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
           DLSCL_EXCLUSIVE);
 
       if (ret != DFB_OK) {
-        GST_WARNING ("failed setting display layer to fullscreen mode");
+        GST_WARNING_OBJECT (dfbvideosink, "failed setting display layer to "
+            "fullscreen mode");
         goto beach;
+      }
+
+      dfbvideosink->layer->GetDescription (dfbvideosink->layer, &dl_desc);
+
+      /* Check that this layer is able to do colorbalance settings */
+      if (dl_desc.caps & DLCAPS_BRIGHTNESS) {
+        channels_list = g_list_append (channels_list, "BRIGHTNESS");
+      }
+      if (dl_desc.caps & DLCAPS_CONTRAST) {
+        channels_list = g_list_append (channels_list, "CONTRAST");
+      }
+      if (dl_desc.caps & DLCAPS_HUE) {
+        channels_list = g_list_append (channels_list, "HUE");
+      }
+      if (dl_desc.caps & DLCAPS_SATURATION) {
+        channels_list = g_list_append (channels_list, "SATURATION");
+      }
+
+      if (channels_list) {
+        GList *walk = channels_list;
+
+        /* Generate Color balance channel list */
+        while (walk) {
+          GstColorBalanceChannel *channel = NULL;
+
+          GST_DEBUG_OBJECT (dfbvideosink, "adding %s as a colorbalance channel",
+              walk->data);
+
+          channel = g_object_new (GST_TYPE_COLOR_BALANCE_CHANNEL, NULL);
+          channel->label = g_strdup (walk->data);
+          channel->min_value = 0x0000;
+          channel->max_value = 0xFFFF;
+
+          dfbvideosink->cb_channels = g_list_append (dfbvideosink->cb_channels,
+              channel);
+
+          walk = g_list_next (walk);
+        }
+
+        /* If the colorbalance settings have not been touched we get current
+           values as defaults and update our internal variables */
+        if (!dfbvideosink->cb_changed) {
+          DFBColorAdjustment cb_adjust;
+
+          ret = dfbvideosink->layer->GetColorAdjustment (dfbvideosink->layer,
+              &cb_adjust);
+
+          if (ret != DFB_OK) {
+            GST_WARNING_OBJECT (dfbvideosink, "failed when getting color "
+                "adjustment from layer");
+          }
+
+          if (cb_adjust.flags & DCAF_BRIGHTNESS) {
+            dfbvideosink->brightness = cb_adjust.brightness;
+          } else {
+            dfbvideosink->brightness = 0x8000;
+          }
+          if (cb_adjust.flags & DCAF_CONTRAST) {
+            dfbvideosink->contrast = cb_adjust.contrast;
+          } else {
+            dfbvideosink->contrast = 0x8000;
+          }
+          if (cb_adjust.flags & DCAF_HUE) {
+            dfbvideosink->hue = cb_adjust.hue;
+          } else {
+            dfbvideosink->hue = 0x8000;
+          }
+          if (cb_adjust.flags & DCAF_SATURATION) {
+            dfbvideosink->saturation = cb_adjust.saturation;
+          } else {
+            dfbvideosink->saturation = 0x8000;
+          }
+          GST_DEBUG_OBJECT (dfbvideosink, "brightness %d, contrast %d, "
+              "hue %d, saturation %d", dfbvideosink->brightness,
+              dfbvideosink->contrast, dfbvideosink->hue,
+              dfbvideosink->saturation);
+        }
+
+        g_list_free (channels_list);
+
+        gst_dfbvideosink_update_colorbalance (dfbvideosink);
       }
 
       dfbvideosink->layer->SetBackgroundColor (dfbvideosink->layer,
@@ -599,7 +712,7 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
 
       dfbvideosink->layer->EnableCursor (dfbvideosink->layer, TRUE);
 
-      GST_DEBUG ("getting primary surface");
+      GST_DEBUG_OBJECT (dfbvideosink, "getting primary surface");
       dfbvideosink->layer->GetSurface (dfbvideosink->layer,
           &dfbvideosink->primary);
 
@@ -612,8 +725,8 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
   } else {
     DFBSurfaceCapabilities s_caps;
 
-    GST_DEBUG ("getting pixel format from foreign surface %p",
-        dfbvideosink->ext_surface);
+    GST_DEBUG_OBJECT (dfbvideosink, "getting pixel format from foreign "
+        "surface %p", dfbvideosink->ext_surface);
     dfbvideosink->ext_surface->GetPixelFormat (dfbvideosink->ext_surface,
         &dfbvideosink->pixel_format);
     dfbvideosink->ext_surface->GetSize (dfbvideosink->ext_surface,
@@ -625,8 +738,8 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
     } else {
       dfbvideosink->backbuffer = FALSE;
     }
-    GST_DEBUG ("external surface is %dx%d and uses %s pixel format",
-        dfbvideosink->out_width, dfbvideosink->out_height,
+    GST_DEBUG_OBJECT (dfbvideosink, "external surface is %dx%d and uses %s "
+        "pixel format", dfbvideosink->out_width, dfbvideosink->out_height,
         gst_dfbvideosink_get_format_name (dfbvideosink->pixel_format));
   }
 
@@ -641,7 +754,7 @@ gst_dfbvideosink_cleanup (GstDfbVideoSink * dfbvideosink)
 {
   g_return_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink));
 
-  GST_DEBUG ("cleaning up DirectFB environment");
+  GST_DEBUG_OBJECT (dfbvideosink, "cleaning up DirectFB environment");
 
   /* Wait for our event thread */
   if (dfbvideosink->event_thread) {
@@ -663,6 +776,19 @@ gst_dfbvideosink_cleanup (GstDfbVideoSink * dfbvideosink)
     }
     g_slist_free (dfbvideosink->vmodes);
     dfbvideosink->vmodes = NULL;
+  }
+
+  if (dfbvideosink->cb_channels) {
+    GList *walk = dfbvideosink->cb_channels;
+
+    while (walk) {
+      GstColorBalanceChannel *channel = walk->data;
+
+      g_object_unref (channel);
+      walk = g_list_next (walk);
+    }
+    g_list_free (dfbvideosink->cb_channels);
+    dfbvideosink->cb_channels = NULL;
   }
 
   if (dfbvideosink->buffer_pool) {
@@ -854,7 +980,7 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
 
   ret = dfbvideosink->dfb->CreateSurface (dfbvideosink->dfb, &s_dsc, &surface);
   if (ret != DFB_OK) {
-    GST_WARNING ("failed creating surface with format %s",
+    GST_WARNING_OBJECT (dfbvideosink, "failed creating surface with format %s",
         gst_dfbvideosink_get_format_name (format));
     goto beach;
   }
@@ -862,7 +988,8 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
   /* Backup layer configuration */
   ret = dfbvideosink->layer->GetConfiguration (dfbvideosink->layer, &prev_dlc);
   if (ret != DFB_OK) {
-    GST_WARNING ("failed when getting current layer configuration");
+    GST_WARNING_OBJECT (dfbvideosink, "failed when getting current layer "
+        "configuration");
     goto beach;
   }
 
@@ -873,15 +1000,15 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
   ret = dfbvideosink->layer->TestConfiguration (dfbvideosink->layer, &dlc,
       NULL);
   if (ret != DFB_OK) {
-    GST_DEBUG ("our layer refuses to operate in pixel format %s",
-        gst_dfbvideosink_get_format_name (format));
+    GST_DEBUG_OBJECT (dfbvideosink, "our layer refuses to operate in pixel "
+        "format %s", gst_dfbvideosink_get_format_name (format));
     goto beach;
   }
 
   ret = dfbvideosink->layer->SetConfiguration (dfbvideosink->layer, &dlc);
   if (ret != DFB_OK) {
-    GST_WARNING ("our layer refuses to operate in pixel format, though this "
-        "format was successfully tested earlied %s",
+    GST_WARNING_OBJECT (dfbvideosink, "our layer refuses to operate in pixel "
+        "format, though this format was successfully tested earlied %s",
         gst_dfbvideosink_get_format_name (format));
     goto beach;
   }
@@ -889,25 +1016,26 @@ gst_dfbvideosink_can_blit_from_format (GstDfbVideoSink * dfbvideosink,
   ret = dfbvideosink->primary->GetAccelerationMask (dfbvideosink->primary,
       surface, &mask);
   if (ret != DFB_OK) {
-    GST_WARNING ("failed getting acceleration mask");
+    GST_WARNING_OBJECT (dfbvideosink, "failed getting acceleration mask");
     goto beach;
   }
 
   /* Blitting from this format to our primary is accelerated */
   if (mask & DFXL_BLIT) {
-    GST_DEBUG ("blitting from format %s to our primary is accelerated",
-        gst_dfbvideosink_get_format_name (format));
+    GST_DEBUG_OBJECT (dfbvideosink, "blitting from format %s to our primary "
+        "is accelerated", gst_dfbvideosink_get_format_name (format));
     res = TRUE;
   } else {
-    GST_DEBUG ("blitting from format %s to our primary is not accelerated",
-        gst_dfbvideosink_get_format_name (format));
+    GST_DEBUG_OBJECT (dfbvideosink, "blitting from format %s to our primary "
+        "is not accelerated", gst_dfbvideosink_get_format_name (format));
     res = FALSE;
   }
 
   /* Restore original layer configuration */
   ret = dfbvideosink->layer->SetConfiguration (dfbvideosink->layer, &prev_dlc);
   if (ret != DFB_OK) {
-    GST_WARNING ("failed when restoring layer configuration");
+    GST_WARNING_OBJECT (dfbvideosink, "failed when restoring layer "
+        "configuration");
     goto beach;
   }
 
@@ -963,8 +1091,8 @@ gst_dfbvideosink_get_best_vmode (GstDfbVideoSink * dfbvideosink, gint v_width,
     walk = g_slist_next (walk);
   }
 
-  GST_DEBUG ("found video mode %dx%d for input at %dx%d", width, height,
-      v_width, v_height);
+  GST_DEBUG_OBJECT (dfbvideosink, "found video mode %dx%d for input at %dx%d",
+      width, height, v_width, v_height);
 
   best_vmode->width = width;
   best_vmode->height = height;
@@ -988,11 +1116,12 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink)
   if (!dfbvideosink->setup) {
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
             (dfbvideosink)));
-    GST_DEBUG ("getcaps called and we are not setup yet, "
+    GST_DEBUG_OBJECT (dfbvideosink, "getcaps called and we are not setup yet, "
         "returning template %" GST_PTR_FORMAT, caps);
     goto beach;
   } else {
-    GST_DEBUG ("getcaps called, checking our internal format");
+    GST_DEBUG_OBJECT (dfbvideosink, "getcaps called, checking our internal "
+        "format");
     if (dfbvideosink->ext_surface) {
       /* We are not rendering to our own surface, returning this surface's
        *  pixel format */
@@ -1046,7 +1175,7 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink)
         "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
   }
 
-  GST_DEBUG ("returning our caps %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (dfbvideosink, "returning our caps %" GST_PTR_FORMAT, caps);
 
 beach:
   return caps;
@@ -1078,16 +1207,18 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   pixel_format = gst_dfbvideosink_get_format_from_caps (caps);
 
-  GST_DEBUG ("setcaps called, %dx%d %s video at %d/%d fps", video_width,
-      video_height, gst_dfbvideosink_get_format_name (pixel_format),
-      dfbvideosink->fps_n, dfbvideosink->fps_d);
+  GST_DEBUG_OBJECT (dfbvideosink, "setcaps called, %dx%d %s video at %d/%d fps",
+      video_width, video_height,
+      gst_dfbvideosink_get_format_name (pixel_format), dfbvideosink->fps_n,
+      dfbvideosink->fps_d);
 
   /* Try to adapt the video mode to the video geometry */
   if (dfbvideosink->dfb) {
     DFBResult ret;
     GstDfbVMode vmode;
 
-    GST_DEBUG ("trying to adapt the video mode to video geometry");
+    GST_DEBUG_OBJECT (dfbvideosink, "trying to adapt the video mode to video "
+        "geometry");
 
     /* Set video mode and layer configuration appropriately */
     if (gst_dfbvideosink_get_best_vmode (dfbvideosink, video_width,
@@ -1099,13 +1230,14 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       height = vmode.height;
       bpp = vmode.bpp;
 
-      GST_DEBUG ("setting video mode to %dx%d at %d bpp", width, height, bpp);
+      GST_DEBUG_OBJECT (dfbvideosink, "setting video mode to %dx%d at %d bpp",
+          width, height, bpp);
 
       ret = dfbvideosink->dfb->SetVideoMode (dfbvideosink->dfb, width,
           height, bpp);
       if (ret != DFB_OK) {
-        GST_WARNING ("failed setting video mode %dx%d at %d bpp", width,
-            height, bpp);
+        GST_WARNING_OBJECT (dfbvideosink, "failed setting video mode %dx%d "
+            "at %d bpp", width, height, bpp);
       }
 
       lc.flags = DLCONF_WIDTH | DLCONF_HEIGHT | DLCONF_PIXELFORMAT;
@@ -1115,19 +1247,22 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
       ret = dfbvideosink->layer->SetConfiguration (dfbvideosink->layer, &lc);
       if (ret != DFB_OK) {
-        GST_WARNING ("failed setting layer configuration to  %dx%d", width,
-            height);
+        GST_WARNING_OBJECT (dfbvideosink, "failed setting layer "
+            "configuration to  %dx%d", width, height);
       } else {
         dfbvideosink->out_width = width;
         dfbvideosink->out_height = height;
         dfbvideosink->pixel_format = pixel_format;
+        GST_DEBUG_OBJECT (dfbvideosink, "layer %d now configured to %dx%d %s",
+            dfbvideosink->layer_id, width, height,
+            gst_dfbvideosink_get_format_name (pixel_format));
       }
     }
   }
 
   if (pixel_format != dfbvideosink->pixel_format) {
-    GST_WARNING ("setcaps sent us a different pixel format %s",
-        gst_dfbvideosink_get_format_name (pixel_format));
+    GST_WARNING_OBJECT (dfbvideosink, "setcaps sent us a different pixel "
+        "format %s", gst_dfbvideosink_get_format_name (pixel_format));
     goto beach;
   }
 
@@ -1223,51 +1358,12 @@ gst_dfbvideosink_get_times (GstBaseSink * bsink, GstBuffer * buf,
   }
 }
 
-static void
-gst_dfbvideosink_center_rect (DFBRectangle src, DFBRectangle dst,
-    DFBRectangle * result, gboolean scale)
-{
-  g_return_if_fail (result != NULL);
-
-  if (!scale) {
-    result->w = MIN (src.w, dst.w);
-    result->h = MIN (src.h, dst.h);
-    result->x = (dst.w - result->w) / 2;
-    result->y = (dst.h - result->h) / 2;
-  } else {
-    gdouble src_ratio, dst_ratio;
-
-    src_ratio = (gdouble) src.w / src.h;
-    dst_ratio = (gdouble) dst.w / dst.h;
-
-    if (src_ratio > dst_ratio) {
-      result->w = dst.w;
-      result->h = dst.w / src_ratio;
-      result->x = 0;
-      result->y = (dst.h - result->h) / 2;
-    } else if (src_ratio < dst_ratio) {
-      result->w = dst.h * src_ratio;
-      result->h = dst.h;
-      result->x = (dst.w - result->w) / 2;
-      result->y = 0;
-    } else {
-      result->x = 0;
-      result->y = 0;
-      result->w = dst.w;
-      result->h = dst.h;
-    }
-  }
-
-  GST_DEBUG ("source is %dx%d dest is %dx%d, result is %dx%d with x,y %dx%d",
-      src.w, src.h, dst.w, dst.h, result->w, result->h, result->x, result->y);
-}
-
 static GstFlowReturn
 gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstDfbVideoSink *dfbvideosink = NULL;
   DFBResult res;
-  DFBRectangle dst, src, result;
+  GstVideoRectangle dst, src, result;
   GstFlowReturn ret = GST_FLOW_OK;
 
   dfbvideosink = GST_DFBVIDEOSINK (bsink);
@@ -1301,27 +1397,35 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
     if (dfbvideosink->ext_surface) {
       surface = dfbvideosink->ext_surface;
-      GST_DEBUG ("memcpy to an external surface subsurface");
+      GST_DEBUG_OBJECT (dfbvideosink, "memcpy to an external surface "
+          "subsurface (vsync %d)", dfbvideosink->vsync);
     } else {
       surface = dfbvideosink->primary;
-      GST_DEBUG ("memcpy to a primary subsurface");
+      GST_DEBUG_OBJECT (dfbvideosink, "memcpy to a primary subsurface "
+          "(vsync %d)", dfbvideosink->vsync);
     }
 
     res = surface->GetSize (surface, &dst.w, &dst.h);
 
     /* Center / Clip */
-    gst_dfbvideosink_center_rect (src, dst, &result, FALSE);
+    gst_video_sink_center_rect (src, dst, &result, FALSE);
 
-    res = surface->GetSubSurface (surface, &result, &dest);
+    res = surface->GetSubSurface (surface, (DFBRectangle *) & result, &dest);
     if (res != DFB_OK) {
-      GST_WARNING ("failed when getting a sub surface");
+      GST_WARNING_OBJECT (dfbvideosink, "failed when getting a sub surface");
       ret = GST_FLOW_UNEXPECTED;
       goto beach;
     }
 
+    /* If we are not using Flip we wait for VSYNC before blit */
+    if (!dfbvideosink->backbuffer && dfbvideosink->vsync) {
+      dfbvideosink->layer->WaitForSync (dfbvideosink->layer);
+    }
+
     res = dest->Lock (dest, DSLF_WRITE, &data, &dest_pitch);
     if (res != DFB_OK) {
-      GST_WARNING ("failed locking the external subsurface for writing");
+      GST_WARNING_OBJECT (dfbvideosink, "failed locking the external "
+          "subsurface for writing");
       ret = GST_FLOW_ERROR;
       goto beach;
     }
@@ -1342,13 +1446,18 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     res = dest->Release (dest);
 
     if (dfbvideosink->backbuffer) {
-      res = surface->Flip (surface, NULL, 0);
+      if (dfbvideosink->vsync) {
+        res = surface->Flip (surface, NULL, DSFLIP_ONSYNC);
+      } else {
+        res = surface->Flip (surface, NULL, DSFLIP_NONE);
+      }
     }
   } else if (dfbvideosink->primary) {
     /* Else we will [Stretch]Blit to our primary */
     GstDfbSurface *surface = GST_DFBSURFACE (buf);
 
-    GST_DEBUG ("blitting to a primary surface");
+    GST_DEBUG_OBJECT (dfbvideosink, "blitting to a primary surface (vsync %d)",
+        dfbvideosink->vsync);
 
     dfbvideosink->primary->GetSize (dfbvideosink->primary, &dst.w, &dst.h);
 
@@ -1356,11 +1465,16 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     surface->surface->Unlock (surface->surface);
     surface->locked = FALSE;
 
-    gst_dfbvideosink_center_rect (src, dst, &result, dfbvideosink->hw_scaling);
+    gst_video_sink_center_rect (src, dst, &result, dfbvideosink->hw_scaling);
+
+    /* If we are not using Flip we wait for VSYNC before blit */
+    if (!dfbvideosink->backbuffer && dfbvideosink->vsync) {
+      dfbvideosink->layer->WaitForSync (dfbvideosink->layer);
+    }
 
     if (dfbvideosink->hw_scaling) {
       dfbvideosink->primary->StretchBlit (dfbvideosink->primary,
-          surface->surface, NULL, &result);
+          surface->surface, NULL, (DFBRectangle *) & result);
     } else {
       DFBRectangle clip;
 
@@ -1372,10 +1486,16 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     }
 
     if (dfbvideosink->backbuffer) {
-      dfbvideosink->primary->Flip (dfbvideosink->primary, NULL, 0);
+      if (dfbvideosink->vsync) {
+        dfbvideosink->primary->Flip (dfbvideosink->primary, NULL,
+            DSFLIP_ONSYNC);
+      } else {
+        dfbvideosink->primary->Flip (dfbvideosink->primary, NULL, DSFLIP_NONE);
+      }
     }
   } else {
-    GST_WARNING ("no primary, no external surface what's going on ?");
+    GST_WARNING_OBJECT (dfbvideosink, "no primary, no external surface "
+        "what's going on ?");
     ret = GST_FLOW_UNEXPECTED;
     goto beach;
   }
@@ -1417,8 +1537,8 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   dfbvideosink = GST_DFBVIDEOSINK (bsink);
 
-  GST_DEBUG ("a buffer of %d bytes was requested with caps %" GST_PTR_FORMAT
-      " and offset %llu", size, caps, offset);
+  GST_DEBUG_OBJECT (dfbvideosink, "a buffer of %d bytes was requested "
+      "with caps %" GST_PTR_FORMAT " and offset %llu", size, caps, offset);
 
   desired_caps = gst_caps_copy (caps);
 
@@ -1426,7 +1546,7 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   if (gst_structure_get_int (structure, "width", &width) &&
       gst_structure_get_int (structure, "height", &height)) {
-    DFBRectangle dst, src, result;
+    GstVideoRectangle dst, src, result;
     GstDfbVMode vmode;
 
     /* If we can do hardware scaling we don't do reverse negotiation */
@@ -1452,7 +1572,7 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       dfbvideosink->out_height = dst.h;
     }
 
-    gst_dfbvideosink_center_rect (src, dst, &result, TRUE);
+    gst_video_sink_center_rect (src, dst, &result, TRUE);
 
     if (width != result.w || height != result.h) {
       GstPad *peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (dfbvideosink));
@@ -1462,7 +1582,8 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
         goto alloc;
       }
 
-      GST_DEBUG ("we would love to receive a %dx%d video", result.w, result.h);
+      GST_DEBUG_OBJECT (dfbvideosink, "we would love to receive a %dx%d video",
+          result.w, result.h);
       gst_structure_set (structure, "width", G_TYPE_INT, result.w, NULL);
       gst_structure_set (structure, "height", G_TYPE_INT, result.h, NULL);
 
@@ -1474,11 +1595,11 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
         width = result.w;
         height = result.h;
         size = bpp * width * height;
-        GST_DEBUG ("peed pad accepts our desired caps %" GST_PTR_FORMAT
-            " buffer size is now %d bytes", desired_caps, size);
+        GST_DEBUG_OBJECT (dfbvideosink, "peed pad accepts our desired caps %"
+            GST_PTR_FORMAT " buffer size is now %d bytes", desired_caps, size);
       } else {
-        GST_DEBUG ("peer pad does not accept our desired caps %" GST_PTR_FORMAT,
-            desired_caps);
+        GST_DEBUG_OBJECT (dfbvideosink, "peer pad does not accept our "
+            "desired caps %" GST_PTR_FORMAT, desired_caps);
         rev_nego = FALSE;
         width = dfbvideosink->video_width;
         height = dfbvideosink->video_height;
@@ -1549,7 +1670,7 @@ gst_dfbsurface_finalize (GstDfbSurface * surface)
 
   dfbvideosink = surface->dfbvideosink;
   if (!dfbvideosink) {
-    GST_WARNING ("no sink found");
+    GST_WARNING_OBJECT (surface, "no sink found");
     goto beach;
   }
 
@@ -1557,13 +1678,13 @@ gst_dfbsurface_finalize (GstDfbSurface * surface)
   if ((surface->width != dfbvideosink->video_width) ||
       (surface->height != dfbvideosink->video_height) ||
       (surface->pixel_format != dfbvideosink->pixel_format)) {
-    GST_DEBUG ("destroy image as its size changed %dx%d vs current %dx%d",
-        surface->width, surface->height,
+    GST_DEBUG_OBJECT (dfbvideosink, "destroy image as its size changed %dx%d "
+        "vs current %dx%d", surface->width, surface->height,
         dfbvideosink->video_width, dfbvideosink->video_height);
     gst_dfbvideosink_surface_destroy (dfbvideosink, surface);
   } else {
     /* In that case we can reuse the image and add it to our image pool. */
-    GST_DEBUG ("recycling image in pool");
+    GST_DEBUG_OBJECT (dfbvideosink, "recycling image in pool");
     /* need to increment the refcount again to recycle */
     gst_buffer_ref (GST_BUFFER (surface));
     g_mutex_lock (dfbvideosink->pool_lock);
@@ -1625,7 +1746,7 @@ static gboolean
 gst_dfbvideosink_interface_supported (GstImplementsInterface * iface,
     GType type)
 {
-  g_assert (type == GST_TYPE_NAVIGATION);
+  g_assert (type == GST_TYPE_NAVIGATION || type == GST_TYPE_COLOR_BALANCE);
   return TRUE;
 }
 
@@ -1641,7 +1762,7 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
 {
   GstDfbVideoSink *dfbvideosink = GST_DFBVIDEOSINK (navigation);
   GstEvent *event;
-  DFBRectangle src, dst, result;
+  GstVideoRectangle src, dst, result;
   gint width, height;
   double x, y;
   GstPad *pad = NULL;
@@ -1650,7 +1771,7 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
   src.h = dfbvideosink->video_height;
   dst.w = dfbvideosink->out_width;
   dst.h = dfbvideosink->out_height;
-  gst_dfbvideosink_center_rect (src, dst, &result, dfbvideosink->hw_scaling);
+  gst_video_sink_center_rect (src, dst, &result, dfbvideosink->hw_scaling);
 
   event = gst_event_new_navigation (structure);
 
@@ -1667,8 +1788,8 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
     } else {
       x = 0;
     }
-    GST_DEBUG ("translated navigation event x coordinate from %f to %f",
-        old_x, x);
+    GST_DEBUG_OBJECT (dfbvideosink, "translated navigation event x "
+        "coordinate from %f to %f", old_x, x);
     gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
   }
   if (gst_structure_get_double (structure, "pointer_y", &y)) {
@@ -1681,8 +1802,8 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
     } else {
       y = 0;
     }
-    GST_DEBUG ("translated navigation event y coordinate from %fd to %fd",
-        old_y, y);
+    GST_DEBUG_OBJECT (dfbvideosink, "translated navigation event y "
+        "coordinate from %fd to %fd", old_y, y);
     gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
   }
 
@@ -1701,6 +1822,115 @@ gst_dfbvideosink_navigation_init (GstNavigationInterface * iface)
   iface->send_event = gst_dfbvideosink_navigation_send_event;
 }
 
+static void
+gst_dfbvideosink_update_colorbalance (GstDfbVideoSink * dfbvideosink)
+{
+  g_return_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink));
+
+  if (dfbvideosink->layer) {
+    DFBColorAdjustment cb_adjust;
+
+    cb_adjust.flags = DCAF_NONE;
+
+    if (dfbvideosink->brightness >= 0) {
+      cb_adjust.flags |= DCAF_BRIGHTNESS;
+    }
+    if (dfbvideosink->contrast >= 0) {
+      cb_adjust.flags |= DCAF_CONTRAST;
+    }
+    if (dfbvideosink->hue >= 0) {
+      cb_adjust.flags |= DCAF_HUE;
+    }
+    if (dfbvideosink->saturation >= 0) {
+      cb_adjust.flags |= DCAF_SATURATION;
+    }
+
+    cb_adjust.brightness = dfbvideosink->brightness;
+    cb_adjust.contrast = dfbvideosink->contrast;
+    cb_adjust.hue = dfbvideosink->hue;
+    cb_adjust.saturation = dfbvideosink->saturation;
+
+    GST_DEBUG_OBJECT (dfbvideosink, "updating colorbalance: flags %d "
+        "brightness %d contrast %d hue %d saturation %d", cb_adjust.flags,
+        cb_adjust.brightness, cb_adjust.contrast, cb_adjust.hue,
+        cb_adjust.saturation);
+    dfbvideosink->layer->SetColorAdjustment (dfbvideosink->layer, &cb_adjust);
+  }
+}
+
+static const GList *
+gst_dfbvideosink_colorbalance_list_channels (GstColorBalance * balance)
+{
+  GstDfbVideoSink *dfbvideosink = GST_DFBVIDEOSINK (balance);
+
+  g_return_val_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink), NULL);
+
+  return dfbvideosink->cb_channels;
+}
+
+static void
+gst_dfbvideosink_colorbalance_set_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel, gint value)
+{
+  GstDfbVideoSink *dfbvideosink = GST_DFBVIDEOSINK (balance);
+
+  g_return_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink));
+  g_return_if_fail (channel->label != NULL);
+
+  dfbvideosink->cb_changed = TRUE;
+
+  if (g_ascii_strcasecmp (channel->label, "HUE") == 0) {
+    dfbvideosink->hue = value;
+  } else if (g_ascii_strcasecmp (channel->label, "SATURATION") == 0) {
+    dfbvideosink->saturation = value;
+  } else if (g_ascii_strcasecmp (channel->label, "CONTRAST") == 0) {
+    dfbvideosink->contrast = value;
+  } else if (g_ascii_strcasecmp (channel->label, "BRIGHTNESS") == 0) {
+    dfbvideosink->brightness = value;
+  } else {
+    GST_WARNING_OBJECT (dfbvideosink, "got an unknown channel %s",
+        channel->label);
+    return;
+  }
+
+  gst_dfbvideosink_update_colorbalance (dfbvideosink);
+}
+
+static gint
+gst_dfbvideosink_colorbalance_get_value (GstColorBalance * balance,
+    GstColorBalanceChannel * channel)
+{
+  GstDfbVideoSink *dfbvideosink = GST_DFBVIDEOSINK (balance);
+  gint value = 0;
+
+  g_return_val_if_fail (GST_IS_DFBVIDEOSINK (dfbvideosink), 0);
+  g_return_val_if_fail (channel->label != NULL, 0);
+
+  if (g_ascii_strcasecmp (channel->label, "HUE") == 0) {
+    value = dfbvideosink->hue;
+  } else if (g_ascii_strcasecmp (channel->label, "SATURATION") == 0) {
+    value = dfbvideosink->saturation;
+  } else if (g_ascii_strcasecmp (channel->label, "CONTRAST") == 0) {
+    value = dfbvideosink->contrast;
+  } else if (g_ascii_strcasecmp (channel->label, "BRIGHTNESS") == 0) {
+    value = dfbvideosink->brightness;
+  } else {
+    GST_WARNING_OBJECT (dfbvideosink, "got an unknown channel %s",
+        channel->label);
+  }
+
+  return value;
+}
+
+static void
+gst_dfbvideosink_colorbalance_init (GstColorBalanceClass * iface)
+{
+  GST_COLOR_BALANCE_TYPE (iface) = GST_COLOR_BALANCE_HARDWARE;
+  iface->list_channels = gst_dfbvideosink_colorbalance_list_channels;
+  iface->set_value = gst_dfbvideosink_colorbalance_set_value;
+  iface->get_value = gst_dfbvideosink_colorbalance_get_value;
+}
+
 /* Properties */
 
 static void
@@ -1715,6 +1945,29 @@ gst_dfbvideosink_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_SURFACE:
       dfbvideosink->ext_surface = g_value_get_pointer (value);
+      break;
+    case ARG_HUE:
+      dfbvideosink->hue = g_value_get_int (value);
+      dfbvideosink->cb_changed = TRUE;
+      gst_dfbvideosink_update_colorbalance (dfbvideosink);
+      break;
+    case ARG_CONTRAST:
+      dfbvideosink->contrast = g_value_get_int (value);
+      dfbvideosink->cb_changed = TRUE;
+      gst_dfbvideosink_update_colorbalance (dfbvideosink);
+      break;
+    case ARG_BRIGHTNESS:
+      dfbvideosink->brightness = g_value_get_int (value);
+      dfbvideosink->cb_changed = TRUE;
+      gst_dfbvideosink_update_colorbalance (dfbvideosink);
+      break;
+    case ARG_SATURATION:
+      dfbvideosink->saturation = g_value_get_int (value);
+      dfbvideosink->cb_changed = TRUE;
+      gst_dfbvideosink_update_colorbalance (dfbvideosink);
+      break;
+    case ARG_VSYNC:
+      dfbvideosink->vsync = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1732,6 +1985,21 @@ gst_dfbvideosink_get_property (GObject * object, guint prop_id,
   dfbvideosink = GST_DFBVIDEOSINK (object);
 
   switch (prop_id) {
+    case ARG_HUE:
+      g_value_set_int (value, dfbvideosink->hue);
+      break;
+    case ARG_CONTRAST:
+      g_value_set_int (value, dfbvideosink->contrast);
+      break;
+    case ARG_BRIGHTNESS:
+      g_value_set_int (value, dfbvideosink->brightness);
+      break;
+    case ARG_SATURATION:
+      g_value_set_int (value, dfbvideosink->saturation);
+      break;
+    case ARG_VSYNC:
+      g_value_set_boolean (value, dfbvideosink->vsync);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1783,8 +2051,15 @@ gst_dfbvideosink_init (GstDfbVideoSink * dfbvideosink)
 
   dfbvideosink->hw_scaling = FALSE;
   dfbvideosink->backbuffer = FALSE;
+  dfbvideosink->vsync = TRUE;
   dfbvideosink->setup = FALSE;
   dfbvideosink->running = FALSE;
+
+  dfbvideosink->cb_channels = NULL;
+  dfbvideosink->brightness = -1;
+  dfbvideosink->contrast = -1;
+  dfbvideosink->hue = -1;
+  dfbvideosink->saturation = -1;
 }
 
 static void
@@ -1815,9 +2090,27 @@ gst_dfbvideosink_class_init (GstDfbVideoSinkClass * klass)
   gobject_class->set_property = gst_dfbvideosink_set_property;
   gobject_class->get_property = gst_dfbvideosink_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURFACE,
+  g_object_class_install_property (gobject_class, ARG_SURFACE,
       g_param_spec_pointer ("surface", "Surface",
           "The target surface for video", G_PARAM_WRITABLE));
+  g_object_class_install_property (gobject_class, ARG_CONTRAST,
+      g_param_spec_int ("contrast", "Contrast", "The contrast of the video",
+          0x0000, 0xFFFF, 0x8000, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_BRIGHTNESS,
+      g_param_spec_int ("brightness", "Brightness",
+          "The brightness of the video", 0x0000, 0xFFFF, 0x8000,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_HUE,
+      g_param_spec_int ("hue", "Hue", "The hue of the video", 0x0000, 0xFFFF,
+          0x8000, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_SATURATION,
+      g_param_spec_int ("saturation", "Saturation",
+          "The saturation of the video", 0x0000, 0xFFFF, 0x8000,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_VSYNC,
+      g_param_spec_boolean ("vsync", "Vertical synchronisation",
+          "Wait for next vertical sync to draw frames", TRUE,
+          G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_dfbvideosink_change_state;
 

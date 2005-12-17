@@ -20,7 +20,6 @@
     <title>gst-plugins-bad Plugins</title>
 
     <xi:include href="xml/plugin-dfbvideosink.xml" />
-    <xi:include href="xml/plugin-dfbvideosink.xml" />
     <xi:include href="xml/plugin-faad.xml" />
     <xi:include href="xml/plugin-gsm.xml" />
     <xi:include href="xml/plugin-qtdemux.xml" />

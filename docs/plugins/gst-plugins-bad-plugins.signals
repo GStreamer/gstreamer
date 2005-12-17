@@ -1,1 +1,6 @@
+<SIGNAL>
+<NAME>GstXvidEnc::frame-encoded</NAME>
+<RETURNS>void</RETURNS>
+GstXvidEnc *gstxvidenc
+</SIGNAL>
 

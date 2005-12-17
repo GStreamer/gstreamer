@@ -65,6 +65,11 @@ struct _GstDfbVMode {
   gint bpp;
 };
 
+/**
+ * GstDfbVideoSink:
+ *
+ * The opaque #GstDfbVideoSink structure.
+ */
 struct _GstDfbVideoSink {
   /* Our element stuff */
   GstVideoSink videosink;
@@ -97,8 +102,17 @@ struct _GstDfbVideoSink {
   
   gboolean hw_scaling;
   gboolean backbuffer;
+  gboolean vsync;
   gboolean setup;
   gboolean running;
+  
+  /* Color balance */
+  GList *cb_channels;
+  gint brightness;
+  gint contrast;
+  gint hue;
+  gint saturation;
+  gboolean cb_changed;
 };
 
 struct _GstDfbVideoSinkClass {
