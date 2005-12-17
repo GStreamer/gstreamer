@@ -1,3 +1,9 @@
+2005-12-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-launch.1.in:
+	  Update gst-launch man page; add a section with useful
+	  environment variables. Fixes #323882.
+
 2005-12-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gst.c:

@@ -1,4 +1,4 @@
-.TH "GStreamer" "1" "April 2003"
+.TH "GStreamer" "1" "December 2005"
 .SH "NAME"
 gst\-launch \- build and run a GStreamer pipeline
 .SH "SYNOPSIS"
@@ -12,9 +12,13 @@ In simple form, a PIPELINE\-DESCRIPTION is a list of
 elements separated by exclamation marks (!).  Properties may be appended to
 elements, in the form \fIproperty=value\fR.
 
-For a complete description of possible PIPELINE-DESCRIPTIONS see above under
-\fIpipeline description\fR or the GStreamer documentation.
+For a complete description of possible PIPELINE-DESCRIPTIONS see the section
+\fIpipeline description\fR below or consult the GStreamer documentation.
 
+Please note that \fIgst\-launch\fP is primarily a debugging tool for
+developers and users. You should not build applications on top of it. For
+applications, use the gst_parse_launch() function of the GStreamer API as an
+easy way to construct pipelines from pipeline descriptions.
 .
 .SH "OPTIONS"
 .l
@@ -26,21 +30,22 @@ Print help synopsis and available FLAGS
 .B  \-v, \-\-verbose
 Output status information
 .TP 8
-.B  \-XTYPE, \-\-exclude=TYPE, 
-Do not output status information of TYPE
+.B  \-m, \-\-messages
+Output messages posted on the pipeline's bus
 .TP 8
-.B  \-oFILE, \-\-output=FILE
+.B  \-t, \-\-tags
+Output tags (also known as metadata)
+.TP 8
+.B  \-o FILE, \-\-output=FILE
 Save XML representation of pipeline to FILE and exit
 .TP 8
 .B  \-f, \-\-no_fault
 Do not install a fault handler
 .TP 8
-.B  \-t, \-\-trace
+.B  \-T, \-\-trace
 Print memory allocation traces. The feature must be enabled at compile time to
 work.
 .TP 8
-.B  \-i, \-\-iterations=N
-Stop processing after N iterations.
 
 .
 .SH "GSTREAMER OPTIONS"
@@ -52,17 +57,20 @@ to all GStreamer applications:
 Prints the version string of the \fIGStreamer\fP core library.
 .TP 8
 .B  \-\-gst\-fatal\-warnings
-Causes \fIGStreamer\fP to abort if a warning message occurs.
+Causes \fIGStreamer\fP to abort if a warning message occurs. This is equivalent
+to setting the environment variable G_DEBUG to 'fatal_warnings' (see the
+section \fIenvironment variables\fR below for further information).
 .TP 8
 .B  \-\-gst\-debug=STRING
-A comma seperated list of category_name:level pairs to specify debugging levels
+A comma separated list of category_name:level pairs to specify debugging levels
 for each category. Level is in the range 0-5 where 0 will show no messages, and
 5 will show all messages. The wildcard * can be used to match category names.
 
 Use \-\-gst\-debug\-help to show category names
 
 Example:
-GST_CAT:5,GST_ELEMENT_*:3
+GST_CAT:5,GST_ELEMENT_*:3,oggdemux:5
+
 .TP 8
 .B  \-\-gst\-debug\-level=LEVEL
 Sets the threshold for printing debugging messages.  A higher level
@@ -73,18 +81,14 @@ being 0.
 \fIGStreamer\fP normally prints debugging messages so that the
 messages are color-coded when printed to a terminal that handles
 ANSI escape sequences.  Using this option causes \fIGStreamer\fP
-to print messages without color.
+to print messages without color. Setting the \fBGST_DEBUG_NO_COLOR\fR
+environment variable will achieve the same thing.
 .TP 8
 .B  \-\-gst\-disable\-debug
 Disables debugging.
 .TP 8
 .B  \-\-gst\-debug\-help
 Prints a list of available debug categories and their default debugging level.
-.TP 8
-.B  \-\-gst\-disable\-cpu\-opt
-\fIGStreamer\fP normally automatically detects the capabilities of the
-current CPU and selects the optimal implementation for some functions.
-Using this flag disables detection, which is useful for debugging.
 .TP 8
 .B  \-\-gst\-plugin\-spew
 \fIGStreamer\fP info flags to set
@@ -96,12 +100,6 @@ Add directories separated with ':' to the plugin search path
 .B  \-\-gst\-plugin\-load=PLUGINS
 Preload plugins specified in a comma-separated list. Another way to specify
 plugins to preload is to use the environment variable GST_PLUGIN_PATH
-.TP 8
-.B  \-\-gst\-scheduler=SCHEDULER
-Use SCHEDULER as the default scheduler
-.TP 8
-.B  \-\-gst\-registry=REGISTRY
-Use the file REGISTRY as registry instead of the default
 
 .SH "PIPELINE DESCRIPTION"
 
@@ -128,14 +126,13 @@ Enumeration properties can be set by name, nick or value.
 
 \fI[BINTYPE.]\fR ( \fI[PROPERTY1 ...]\fR PIPELINE-DESCRIPTION )
 .br
-{ \fI[PROPERTY1 ...]\fR PIPELINE-DESCRIPTION }
 
 Specifies that a bin of type BINTYPE is created and the given properties are 
-set. Every element between the braces is put into the bin. Using curly braces
-(second line) is a short cut for using the first line and "thread" as the 
-BINTYPE.
-.br
-Please note the dot that has to be used after the BINTYPE.
+set. Every element between the braces is put into the bin. Please note the dot
+that has to be used after the BINTYPE. You will almost never need this
+functionality, it is only really useful for applications using the
+gst_launch_parse() API with 'bin' as bintype. That way it is possible to build
+partial pipelines instead of a full-fledged top-level pipeline.
 
 .B Links
 
@@ -154,10 +151,6 @@ specified and multiple links are done in the given order.
 So the simplest link is a simple exclamation mark, that links the element to
 the left of it to the element right of it.
 .br
-Note that when specifying either pads or element names you have to include the
-dot or your syntax will be misinterpreted. This is a change to the old syntax
-used up to version 0.6 that allowed omitting the dot when only specifying a
-padname.
 
 .B Caps
 
@@ -186,6 +179,8 @@ and the type can have the following case-insensitive values:
 .br
 - \fBs\fR, \fBstr\fR or \fBstring\fR for strings
 .br
+- \ffraction\fR for fractions (framerate, pixel-aspect-ratio)
+.br
 - \fBl\fR or \fBlist\fR for lists
 .br
 If no type was given, the following order is tried: integer, float, boolean, 
@@ -212,19 +207,24 @@ There are currently no signals defined to go into the ready or pause
 
 The examples below assume that you have the correct plug-ins available.
 In general, "osssink" can be substituted with another audio output
-plug-in such as "esdsink", "alsasink", or "artsdsink".  Likewise,
-"xvideosink" can be substituted with "sdlvideosink" or "aasink".
+plug-in such as "esdsink", "alsasink", "osxaudiosink", or "artsdsink".
+Likewise, "xvimagesink" can be substituted with "ximagesink", "sdlvideosink",
+"osxvideosink", or "aasink". Keep in mind though that different sinks might
+accept different formats and even the same sink might accept different formats
+on different machines, so you might need to add converter elements like
+audioconvert and audioresample (for audio) or ffmpegcolorspace (for video)
+in front of the sink to make things work.
 
 .B Audio playback
 
 .B
-        gst\-launch filesrc location=music.mp3 ! mad ! osssink
+        gst\-launch filesrc location=music.mp3 ! mad ! audioconvert ! audioresample ! osssink
 .br
 Play the mp3 music file "music.mp3" using a libmad-based plug-in and
 output to an OSS device
 
 .B
-        gst\-launch filesrc location=music.ogg ! oggdemux ! vorbisdec ! audioconvert ! osssink
+        gst\-launch filesrc location=music.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! osssink
 .br
 Play an Ogg Vorbis format file
 
@@ -232,161 +232,188 @@ Play an Ogg Vorbis format file
         gst\-launch gnomevfssrc location=music.mp3 ! mad ! osssink
 .br
 .B
-        gst\-launch gnomevfssrc location=http://domain.com/music.mp3 ! mad ! osssink
+        gst\-launch gnomevfssrc location=http://domain.com/music.mp3 ! mad ! audioconvert ! audioresample ! osssink
 .br
 Play an mp3 file or an http stream using GNOME\-VFS
 
 .B
-        gst\-launch gnomevfssrc location=smb://computer/music.mp3 ! mad ! osssink
+        gst\-launch gnomevfssrc location=smb://computer/music.mp3 ! mad ! audioconvert ! audioresample ! osssink
 .br
 Use GNOME\-VFS to play an mp3 file located on an SMB server
 
 .B Format conversion
 
 .B
-        gst\-launch filesrc location=music.mp3 ! mad ! vorbisenc ! filesink location=music.ogg
+        gst\-launch filesrc location=music.mp3 ! mad ! audioconvert ! vorbisenc ! oggmux ! filesink location=music.ogg
 .br
 Convert an mp3 music file to an Ogg Vorbis file
 
 .B
-        gst\-launch filesrc location=music.mp3 ! mad ! flacenc ! filesink location=test.flac
+        gst\-launch filesrc location=music.mp3 ! mad ! audioconvert ! flacenc ! filesink location=test.flac
 .br
 Convert to the FLAC format
 
 .B Other
 
 .B
-        gst\-launch filesrc location=music.wav ! wavparse ! osssink
+        gst\-launch filesrc location=music.wav ! wavparse ! audioconvert ! audioresample ! osssink
 .br
-Plays a .WAV file
+Plays a .WAV file that contains raw audio data (PCM).
 
 .B
-        gst\-launch filesrc location=music.wav ! wavparse ! vorbisenc ! filesink location=music.ogg
+        gst\-launch filesrc location=music.wav ! wavparse ! audioconvert ! vorbisenc ! oggmux ! filesink location=music.ogg
 .br
 .B
-        gst\-launch filesrc location=music.wav ! wavparse ! mpegaudio ! filesink location=music.mp3
+        gst\-launch filesrc location=music.wav ! wavparse ! audioconvert ! lame ! filesink location=music.mp3
 .br
-Convert a .WAV file into Ogg Vorbis (or mp3) file
-
-Alternatively, if you have lame installed (and have the lame plug-in),
-you can substitute lame for mpegaudio in the previous example.  It gives
-better results than mpegaudio.
+Convert a .WAV file containing raw audio data into an Ogg Vorbis or mp3 file
 
 .B
-        gst\-launch cdparanoia ! mpegaudio ! filesink location=cd.mp3
+        gst\-launch cdparanoia ! lame ! filesink location=cd.mp3
 .br
-Rip all tracks from compact disc and convert them into a single mp3 file
+rips all tracks from compact disc and convert them into a single mp3 file
 
 Using \fBgst\-inspect\fR(1), it is possible to discover settings for cdparanoia
-that will tell it to rip individual tracks.
+that will tell it to rip individual tracks. Alternatively, you can use an URI
+and gst-launch will find an element (such as cdparanoia) that supports that
+protocol for you, e.g.:
+.B
+       gst\-launch cdda://5 ! lame vbr=new vbr-quality=6 ! filesink location=track5.mp3
 
 .B
-        gst\-launch osssrc ! vorbisenc ! filesink location=input.ogg
+        gst\-launch osssrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=input.ogg
 .br
-Record sound from your audio input and encode it into an ogg file
+records sound from your audio input and encodes it into an ogg file
 
 .B Video
 
 .B
-        gst\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! mpegdemux ! mpeg2dec ! xvideosink
+        gst\-launch filesrc location=JB_FF9_TheGravityOfLove.mpg ! dvddemux ! mpeg2dec ! xvimagesink
 .br
 Display only the video portion of an MPEG-1 video file, outputting to
 an X display window
 
 .B
-        gst\-launch filesrc location=/flflfj.vob ! mpegdemux ! mpeg2dec ! sdlvideosink
+        gst\-launch filesrc location=/flflfj.vob ! dvddemux ! mpeg2dec ! sdlvideosink
 .br
 Display the video portion of a .vob file (used on DVDs), outputting to
 an SDL window
 
 .B
-        gst\-launch filesrc location=movie.mpg ! mpegdemux name=demuxer ! mpeg2dec ! sdlvideosink demuxer. ! mad ! osssink
+        gst\-launch filesrc location=movie.mpg ! dvddemux name=demuxer  demuxer. ! queue ! mpeg2dec ! sdlvideosink  demuxer. ! queue ! mad ! audioconvert ! audioresample ! osssink
 .br
 Play both video and audio portions of an MPEG movie
 
 .B
-        gst\-launch filesrc location=movie.mpg ! mpegdemux name=demuxer ! { queue ! mpeg2dec ! sdlvideosink } { demuxer. ! queue ! mad ! osssink }
-.br
-Use threaded output to improve synchronization and smoothness. Threads require
-queues for buffering on thread boundaries
-
-.B
-        gst\-launch filesrc location=movie.avi ! avidemux name=demuxer ! { queue ! ffdecall ! sdlvideosink } { demuxer. ! queue ! mad ! osssink }
+        gst\-launch filesrc location=movie.mpg ! mpegdemux name=demuxer  demuxer. ! queue ! mpeg2dec ! ffmpegcolorspace ! sdlvideosink   demuxer. ! queue ! mad ! audioconvert ! audioresample ! osssink
 .br
 Play an AVI movie
 
 .B Network streaming
 
-An MPEG\-1 system stream can be streamed via RTP from one machine to
-another. 
+FIXME: give example pipelines using RTP and network elements.
 
 .B
-        gst\-launch rtprecv media_type=mpeg1_sys ! mpegdemux name=demuxer ! { queue ! mpeg2dec ! xvideosink } { demuxer. ! queue ! mad ! osssink }
+        FIXME: pipeline to send file
 .br
 Use this command on the receiver
 
 .B
-        gst\-launch filesrc location=mpeg1system.mpeg ! mpegparse ! rtpsend ip=IPorHostname
+        FIXME: pipeline to receive file
 .br
 This command would be run on the transmitter
 
 .B Diagnostic
 
 .B
-        gst\-launch fakesrc ! fakesink
+        gst\-launch -v fakesrc num-buffers=16 ! fakesink
 .br
-Generate a null stream and ignore it
+Generate a null stream and ignore it (and print out details).
 
 .B
-        gst\-launch audiotestsrc ! osssink
+        gst\-launch audiotestsrc ! audioconvert ! audioresample ! osssink
 .br
-Generate a pure tone to test the audio output
+Generate a pure sine tone to test the audio output
 
 .B
-        gst\-launch videotestsrc ! xvideosink
+        gst\-launch videotestsrc ! xvimagesink
+.br
+.B
+        gst\-launch videotestsrc ! ximagesink
 .br
 Generate a familiar test pattern to test the video output
 
 .B Automatic linking
 
-You can use the spider element to automatically select the right elements to get
-a working pipeline.
+You can use the decodebin element to automatically select the right elements
+to get a working pipeline.
 
 .B
-        gst\-launch filesrc location=musicfile ! spider ! osssink
+        gst\-launch filesrc location=musicfile ! decodebin ! audioconvert ! audioresample ! osssink
 .br
 Play any supported audio format
 
 .B
-        gst\-launch filesrc location=videofile ! spider name=spider ! osssink spider. ! xvideosink
+        gst\-launch filesrc location=videofile ! decodebin name=decoder  decoder. ! queue ! audioconvert ! audioresample ! osssink   decoder. ! ffmpegcolorspace ! xvimagesink
 .br
+Play any supported video format with video and audio output. Threads are used
+automatically. To make this even easier, you can use the playbin element:
+
 .B
-        gst\-launch filesrc location=videofile ! spider name=spider ! { queue ! osssink } { spider. ! queue ! xvideosink }
+        gst\-launch playbin uri=file:///home/joe/foo.avi
 .br
-Play any supported video format with video and audio output. The second pipeline
-uses threaded output.
+  
 
 .B Filtered connections
 
 These examples show you how to use filtered caps.
 
 .B
-        gst\-launch videotestsrc ! video/raw, format:fourcc=YUY2; video/raw, format:fourcc=YV12 ! xvideosink
+        gst\-launch videotestsrc ! video/x-raw-yuv,format=\(fourcc\)YUY2;video/x-raw-yuv,format=\(fourcc\)YV12 ! xvimagesink
 .br
 Show a test image and use the YUY2 or YV12 video format for this.
 
 .B
-        gst\-launch osssrc ! "audio/raw", format=int, width=[16, 32], depth=(16, 24, 32), signed=TRUE ! osssink
+        gst\-launch osssrc ! 'audio/x-raw-int,rate=[32000,64000],width=[16,32],depth={16,24,32},signed=(boolean)true' ! wavenc ! filesink location=recording.wav
 .br
-Playback currently recorded audio. Force usage of signed 16 to 32 bit samples.
+record audio and write it to a .wav file. Force usage of signed 16 to 32 bit
+samples and a sample rate between 32kHz and 64KHz.
 
 
-
-
+.SH "ENVIRONMENT VARIABLES"
+.TP
+\fBGST_DEBUG\fR
+Comma-separated list of debug categories and levels, e.g.
+GST_DEBUG=totem:4,typefind:5
+.TP
+\fBGST_DEBUG_NO_COLOR\fR
+When this environment variable is set, coloured debug output is disabled.
+.TP
+\fBGST_REGISTRY\fR
+Describe me
+.TP
+\fBGST_PLUGIN_PATH\fR
+Describe me
+.TP
+\fBGST_PLUGIN_SYSTEM_PATH\fR
+Describe me
+.TP
+\fBOIL_CPU_FLAGS\fR
+Useful liboil environment variable. Set OIL_CPU_FLAGS=0 when valgrind or
+other debugging tools trip over liboil's CPU detection (quite a few important
+GStreamer plugins like videotestsrc, audioconvert or audioresample use liboil).
+.TP
+\fBG_DEBUG\fR
+Useful GLib environment variable. Set G_DEBUG=fatal_warnings to make
+GStreamer programs abort when a critical warning such as an assertion failure
+occurs. This is useful if you want to find out which part of the code caused
+that warning to be triggered and under what circumstances. Simply set G_DEBUG
+as mentioned above and run the program in gdb (or let it core dump). Then get
+a stack trace in the usual way.
 .
 .SH "SEE ALSO"
-.BR gst\-complete (1),
-.BR gst\-register (1),
 .BR gst\-inspect (1)
+.BR gst\-typefind (1)
+.BR gst\-feedback (1)
 .SH "AUTHOR"
-The GStreamer team at http://gstreamer.net/
+The GStreamer team at http://gstreamer.freedesktop.org/
