@@ -1,3 +1,8 @@
+2005-12-18  Julien MOUTTE  <julien@moutte.net>
+
+	* gst-libs/gst/video/gstvideosink.c: (gst_video_sink_base_init),
+	(gst_video_sink_get_type): Add a debug category.
+
 2005-12-17  Philippe Khalaf  <burger@speedy.org> 
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:

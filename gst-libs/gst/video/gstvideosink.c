@@ -37,6 +37,9 @@
 
 #include "gstvideosink.h"
 
+GST_DEBUG_CATEGORY_STATIC (video_sink_debug);
+#define GST_CAT_DEFAULT video_sink_debug
+
 static GstElementClass *parent_class = NULL;
 
 /**
@@ -110,6 +113,12 @@ gst_video_sink_class_init (GstVideoSinkClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 }
 
+static void
+gst_video_sink_base_init (gpointer g_class)
+{
+  GST_DEBUG_CATEGORY_INIT (video_sink_debug, "videosink", 0, "GstVideoSink");
+}
+
 /* Public methods */
 
 GType
@@ -120,7 +129,7 @@ gst_video_sink_get_type (void)
   if (!videosink_type) {
     static const GTypeInfo videosink_info = {
       sizeof (GstVideoSinkClass),
-      NULL,
+      gst_video_sink_base_init,
       NULL,
       (GClassInitFunc) gst_video_sink_class_init,
       NULL,
