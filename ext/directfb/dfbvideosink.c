@@ -131,6 +131,7 @@ enum
   ARG_BRIGHTNESS,
   ARG_HUE,
   ARG_SATURATION,
+  ARG_PIXEL_ASPECT_RATIO,
   ARG_VSYNC
 };
 
@@ -1173,6 +1174,15 @@ gst_dfbvideosink_getcaps (GstBaseSink * bsink)
         "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+    if (!dfbvideosink->hw_scaling && dfbvideosink->par) {
+      int nom, den;
+
+      nom = gst_value_get_fraction_numerator (dfbvideosink->par);
+      den = gst_value_get_fraction_denominator (dfbvideosink->par);
+      gst_structure_set (structure, "pixel-aspect-ratio",
+          GST_TYPE_FRACTION, nom, den, NULL);
+    }
   }
 
   GST_DEBUG_OBJECT (dfbvideosink, "returning our caps %" GST_PTR_FORMAT, caps);
@@ -1207,10 +1217,89 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   pixel_format = gst_dfbvideosink_get_format_from_caps (caps);
 
-  GST_DEBUG_OBJECT (dfbvideosink, "setcaps called, %dx%d %s video at %d/%d fps",
+  GST_DEBUG_OBJECT (dfbvideosink, "setcaps called with %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (dfbvideosink, "our format is: %dx%d %s video at %d/%d fps",
       video_width, video_height,
       gst_dfbvideosink_get_format_name (pixel_format), dfbvideosink->fps_n,
       dfbvideosink->fps_d);
+
+  if (dfbvideosink->hw_scaling && dfbvideosink->par) {
+    gint video_par_n, video_par_d;      /* video's PAR */
+    gint display_par_n, display_par_d;  /* display's PAR */
+    gint num, den;
+    GValue display_ratio = { 0, };      /* display w/h ratio */
+    const GValue *caps_par;
+
+    /* get aspect ratio from caps if it's present, and
+     * convert video width and height to a display width and height
+     * using wd / hd = wv / hv * PARv / PARd
+     * the ratio wd / hd will be stored in display_ratio */
+    g_value_init (&display_ratio, GST_TYPE_FRACTION);
+
+    /* get video's PAR */
+    caps_par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+    if (caps_par) {
+      video_par_n = gst_value_get_fraction_numerator (caps_par);
+      video_par_d = gst_value_get_fraction_denominator (caps_par);
+    } else {
+      video_par_n = 1;
+      video_par_d = 1;
+    }
+    /* get display's PAR */
+    if (dfbvideosink->par) {
+      display_par_n = gst_value_get_fraction_numerator (dfbvideosink->par);
+      display_par_d = gst_value_get_fraction_denominator (dfbvideosink->par);
+    } else {
+      display_par_n = 1;
+      display_par_d = 1;
+    }
+
+    gst_value_set_fraction (&display_ratio,
+        video_width * video_par_n * display_par_d,
+        video_height * video_par_d * display_par_n);
+
+    num = gst_value_get_fraction_numerator (&display_ratio);
+    den = gst_value_get_fraction_denominator (&display_ratio);
+    GST_DEBUG_OBJECT (dfbvideosink,
+        "video width/height: %dx%d, calculated display ratio: %d/%d",
+        video_width, video_height, num, den);
+
+    /* now find a width x height that respects this display ratio.
+     * prefer those that have one of w/h the same as the incoming video
+     * using wd / hd = num / den */
+
+    /* start with same height, because of interlaced video */
+    /* check hd / den is an integer scale factor, and scale wd with the PAR */
+    if (video_height % den == 0) {
+      GST_DEBUG_OBJECT (dfbvideosink, "keeping video height");
+      GST_VIDEO_SINK_WIDTH (dfbvideosink) = video_height * num / den;
+      GST_VIDEO_SINK_HEIGHT (dfbvideosink) = video_height;
+    } else if (video_width % num == 0) {
+      GST_DEBUG_OBJECT (dfbvideosink, "keeping video width");
+      GST_VIDEO_SINK_WIDTH (dfbvideosink) = video_width;
+      GST_VIDEO_SINK_HEIGHT (dfbvideosink) = video_width * den / num;
+    } else {
+      GST_DEBUG_OBJECT (dfbvideosink, "approximating while keeping height");
+      GST_VIDEO_SINK_WIDTH (dfbvideosink) = video_height * num / den;
+      GST_VIDEO_SINK_HEIGHT (dfbvideosink) = video_height;
+    }
+    GST_DEBUG_OBJECT (dfbvideosink, "scaling to %dx%d",
+        GST_VIDEO_SINK_WIDTH (dfbvideosink),
+        GST_VIDEO_SINK_HEIGHT (dfbvideosink));
+  } else {
+    if (dfbvideosink->par) {
+      const GValue *par;
+
+      par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+      if (par) {
+        if (gst_value_compare (par, dfbvideosink->par) != GST_VALUE_EQUAL) {
+          goto wrong_aspect;
+        }
+      }
+    }
+    GST_VIDEO_SINK_WIDTH (dfbvideosink) = video_width;
+    GST_VIDEO_SINK_HEIGHT (dfbvideosink) = video_height;
+  }
 
   /* Try to adapt the video mode to the video geometry */
   if (dfbvideosink->dfb) {
@@ -1221,8 +1310,9 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
         "geometry");
 
     /* Set video mode and layer configuration appropriately */
-    if (gst_dfbvideosink_get_best_vmode (dfbvideosink, video_width,
-            video_height, &vmode)) {
+    if (gst_dfbvideosink_get_best_vmode (dfbvideosink,
+            GST_VIDEO_SINK_WIDTH (dfbvideosink),
+            GST_VIDEO_SINK_HEIGHT (dfbvideosink), &vmode)) {
       DFBDisplayLayerConfig lc;
       gint width, height, bpp;
 
@@ -1240,22 +1330,21 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
             "at %d bpp", width, height, bpp);
       }
 
-      lc.flags = DLCONF_WIDTH | DLCONF_HEIGHT | DLCONF_PIXELFORMAT;
-      lc.width = width;
-      lc.height = height;
+      lc.flags = DLCONF_PIXELFORMAT;
       lc.pixelformat = pixel_format;
 
       ret = dfbvideosink->layer->SetConfiguration (dfbvideosink->layer, &lc);
       if (ret != DFB_OK) {
-        GST_WARNING_OBJECT (dfbvideosink, "failed setting layer "
-            "configuration to  %dx%d", width, height);
+        GST_WARNING_OBJECT (dfbvideosink, "failed setting layer pixelformat "
+            "to %s", gst_dfbvideosink_get_format_name (pixel_format));
       } else {
-        dfbvideosink->out_width = width;
-        dfbvideosink->out_height = height;
-        dfbvideosink->pixel_format = pixel_format;
+        dfbvideosink->layer->GetConfiguration (dfbvideosink->layer, &lc);
+        dfbvideosink->out_width = lc.width;
+        dfbvideosink->out_height = lc.height;
+        dfbvideosink->pixel_format = lc.pixelformat;
         GST_DEBUG_OBJECT (dfbvideosink, "layer %d now configured to %dx%d %s",
-            dfbvideosink->layer_id, width, height,
-            gst_dfbvideosink_get_format_name (pixel_format));
+            dfbvideosink->layer_id, lc.width, lc.height,
+            gst_dfbvideosink_get_format_name (lc.pixelformat));
       }
     }
   }
@@ -1273,6 +1362,13 @@ gst_dfbvideosink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
 beach:
   return result;
+
+/* ERRORS */
+wrong_aspect:
+  {
+    GST_INFO_OBJECT (dfbvideosink, "pixel aspect ratio does not match");
+    return FALSE;
+  }
 }
 
 static GstStateChangeReturn
@@ -1373,22 +1469,13 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     goto beach;
   }
 
-  if (GST_IS_DFBSURFACE (buf)) {
-    GstDfbSurface *surface = GST_DFBSURFACE (buf);
-
-    src.w = surface->width;
-    src.h = surface->height;
-  } else {
-    src.w = dfbvideosink->video_width;
-    src.h = dfbvideosink->video_height;
-  }
-
   /* If we are rendering from a buffer we did not allocate or to an external
    * surface, we will memcpy data */
   if (!GST_IS_DFBSURFACE (buf) || dfbvideosink->ext_surface) {
     IDirectFBSurface *dest = NULL, *surface = NULL;
     gpointer data;
     gint dest_pitch, src_pitch, line;
+    GstStructure *structure;
 
     /* As we are not blitting no acceleration is possible. If the surface is
      * too small we do clipping, if it's too big we center. Theoretically as 
@@ -1405,6 +1492,14 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
           "(vsync %d)", dfbvideosink->vsync);
     }
 
+    structure = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+    if (structure) {
+      gst_structure_get_int (structure, "width", &src.w);
+      gst_structure_get_int (structure, "height", &src.h);
+    } else {
+      src.w = dfbvideosink->video_width;
+      src.h = dfbvideosink->video_height;
+    }
     res = surface->GetSize (surface, &dst.w, &dst.h);
 
     /* Center / Clip */
@@ -1458,6 +1553,9 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
     GST_DEBUG_OBJECT (dfbvideosink, "blitting to a primary surface (vsync %d)",
         dfbvideosink->vsync);
+
+    src.w = GST_VIDEO_SINK_WIDTH (dfbvideosink);
+    src.h = GST_VIDEO_SINK_HEIGHT (dfbvideosink);
 
     dfbvideosink->primary->GetSize (dfbvideosink->primary, &dst.w, &dst.h);
 
@@ -1586,6 +1684,16 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
           result.w, result.h);
       gst_structure_set (structure, "width", G_TYPE_INT, result.w, NULL);
       gst_structure_set (structure, "height", G_TYPE_INT, result.h, NULL);
+
+      /* PAR property overrides the X calculated one */
+      if (dfbvideosink->par) {
+        gint nom, den;
+
+        nom = gst_value_get_fraction_numerator (dfbvideosink->par);
+        den = gst_value_get_fraction_denominator (dfbvideosink->par);
+        gst_structure_set (structure, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION, nom, den, NULL);
+      }
 
       if (gst_pad_accept_caps (peer, desired_caps)) {
         gint bpp;
@@ -1767,8 +1875,8 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
   double x, y;
   GstPad *pad = NULL;
 
-  src.w = dfbvideosink->video_width;
-  src.h = dfbvideosink->video_height;
+  src.w = GST_VIDEO_SINK_WIDTH (dfbvideosink);
+  src.h = GST_VIDEO_SINK_HEIGHT (dfbvideosink);
   dst.w = dfbvideosink->out_width;
   dst.h = dfbvideosink->out_height;
   gst_video_sink_center_rect (src, dst, &result, dfbvideosink->hw_scaling);
@@ -1966,6 +2074,19 @@ gst_dfbvideosink_set_property (GObject * object, guint prop_id,
       dfbvideosink->cb_changed = TRUE;
       gst_dfbvideosink_update_colorbalance (dfbvideosink);
       break;
+    case ARG_PIXEL_ASPECT_RATIO:
+      g_free (dfbvideosink->par);
+      dfbvideosink->par = g_new0 (GValue, 1);
+      g_value_init (dfbvideosink->par, GST_TYPE_FRACTION);
+      if (!g_value_transform (value, dfbvideosink->par)) {
+        GST_WARNING_OBJECT (dfbvideosink, "Could not transform string to "
+            "aspect ratio");
+        gst_value_set_fraction (dfbvideosink->par, 1, 1);
+      }
+      GST_DEBUG_OBJECT (dfbvideosink, "set PAR to %d/%d",
+          gst_value_get_fraction_numerator (dfbvideosink->par),
+          gst_value_get_fraction_denominator (dfbvideosink->par));
+      break;
     case ARG_VSYNC:
       dfbvideosink->vsync = g_value_get_boolean (value);
       break;
@@ -1997,6 +2118,10 @@ gst_dfbvideosink_get_property (GObject * object, guint prop_id,
     case ARG_SATURATION:
       g_value_set_int (value, dfbvideosink->saturation);
       break;
+    case ARG_PIXEL_ASPECT_RATIO:
+      if (dfbvideosink->par)
+        g_value_transform (dfbvideosink->par, value);
+      break;
     case ARG_VSYNC:
       g_value_set_boolean (value, dfbvideosink->vsync);
       break;
@@ -2018,6 +2143,10 @@ gst_dfbvideosink_finalize (GObject * object)
 
   dfbvideosink = GST_DFBVIDEOSINK (object);
 
+  if (dfbvideosink->par) {
+    g_free (dfbvideosink->par);
+    dfbvideosink->par = NULL;
+  }
   if (dfbvideosink->pool_lock) {
     g_mutex_free (dfbvideosink->pool_lock);
     dfbvideosink->pool_lock = NULL;
@@ -2060,6 +2189,8 @@ gst_dfbvideosink_init (GstDfbVideoSink * dfbvideosink)
   dfbvideosink->contrast = -1;
   dfbvideosink->hue = -1;
   dfbvideosink->saturation = -1;
+
+  dfbvideosink->par = NULL;
 }
 
 static void
@@ -2107,6 +2238,9 @@ gst_dfbvideosink_class_init (GstDfbVideoSinkClass * klass)
       g_param_spec_int ("saturation", "Saturation",
           "The saturation of the video", 0x0000, 0xFFFF, 0x8000,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_PIXEL_ASPECT_RATIO,
+      g_param_spec_string ("pixel-aspect-ratio", "Pixel Aspect Ratio",
+          "The pixel aspect ratio of the device", "1/1", G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_VSYNC,
       g_param_spec_boolean ("vsync", "Vertical synchronisation",
           "Wait for next vertical sync to draw frames", TRUE,

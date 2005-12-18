@@ -113,6 +113,9 @@ struct _GstDfbVideoSink {
   gint hue;
   gint saturation;
   gboolean cb_changed;
+  
+  /* object-set pixel aspect ratio */
+  GValue *par;
 };
 
 struct _GstDfbVideoSinkClass {
