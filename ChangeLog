@@ -1,3 +1,19 @@
+2005-12-18  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	gst_object_sink is a method of GstObject
+	const of enums is a stupidity (_element_make_from_uri)
+	* gst/gst.override:
+	Ignore more functions that have no place in bindings or have better
+	python equivalents (list filtering for example)
+	Wrapped gst_version() and gst_type_find_factory_get_list()
+	* gst/gststructure.override:
+	More ignores
+	* gst/gsttaglist.override:
+	ignore gst_is_tag_list.
+	* gst/interfaces.override:
+	wrap gst_mixer_options_get_values()
+
 2005-12-16  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.override (handle_event_function_exception) 

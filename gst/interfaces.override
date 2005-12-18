@@ -138,3 +138,25 @@ _wrap_gst_color_balance_list_channels(PyGObject *self)
 
     return py_list;
 }
+%%
+override gst_mixer_options_get_values noargs
+static PyObject *
+_wrap_gst_mixer_options_get_values (PyGObject *self)
+{
+    GList	*l, *list;
+    PyObject	*py_list;
+
+    g_return_val_if_fail (GST_IS_MIXER_OPTIONS (self->obj), PyList_New(0));
+
+    list = gst_mixer_options_get_values (GST_MIXER_OPTIONS (self->obj));
+
+    py_list = PyList_New(0);
+    for (l = list; l; l = l->next) {
+	gchar *value = (gchar *) l->data;
+	PyObject *py_string = PyString_FromString(g_strdup(value));
+	PyList_Append(py_list, py_string);
+	Py_DECREF (py_string);
+    }
+
+    return py_list;
+}

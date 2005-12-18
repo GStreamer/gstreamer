@@ -3087,6 +3087,12 @@
   )
 )
 
+(define-method sink
+  (of-object "GstObject")
+  (c-name "gst_object_sink")
+  (return-type "none")
+)
+
 (define-function object_default_deep_notify
   (c-name "gst_object_default_deep_notify")
   (return-type "none")
@@ -3108,14 +3114,6 @@
 
 (define-function object_unref
   (c-name "gst_object_unref")
-  (return-type "none")
-  (parameters
-    '("gpointer" "object")
-  )
-)
-
-(define-function object_sink
-  (c-name "gst_object_sink")
   (return-type "none")
   (parameters
     '("gpointer" "object")
@@ -6003,7 +6001,7 @@
   (c-name "gst_element_make_from_uri")
   (return-type "GstElement*")
   (parameters
-    '("const-GstURIType" "type")
+    '("GstURIType" "type")
     '("const-gchar*" "uri")
     '("const-gchar*" "elementname")
   )

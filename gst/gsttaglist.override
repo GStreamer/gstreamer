@@ -32,6 +32,7 @@ ignore
   gst_tag_list_get
   gst_tag_list_remove_tag
   gst_tag_list_foreach
+  gst_is_tag_list
 %%
 define GstTagList.keys noargs
 static void

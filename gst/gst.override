@@ -317,6 +317,12 @@ ignore
   gst_util_set_value_from_string
   gst_print_element_args
   gst_atomic_int_set
+  gst_caps_replace
+  gst_mini_object_replace
+  gst_filter_run
+  gst_flow_to_quark
+  gst_implements_interface_cast
+  gst_implements_interface_check
 %%
 override-slot GstPluginFeature.tp_repr
 static PyObject *
@@ -866,4 +872,43 @@ _wrap_GST_TIME_ARGS(PyObject *self, PyObject *args, PyObject *kwargs)
     }
     g_free(ret);
     return string;
+}
+%%
+override gst_type_find_factory_get_list noargs
+static PyObject *
+_wrap_gst_type_find_factory_get_list (PyObject *self)
+{
+    GList	*l, *list;
+    PyObject	*py_list;
+    int		i = 0;
+
+    list = gst_type_find_factory_get_list ();
+
+    py_list = PyList_New(g_list_length(list));
+    for (l = list; l ; l = g_list_next(l), i++) {
+	GstTypeFindFactory *fact = (GstTypeFindFactory*) l->data;
+
+	PyList_SetItem(py_list, i,
+		       pygstobject_new (G_OBJECT (fact)));
+    }
+    g_list_free (list);
+
+    return py_list;
+}
+%%
+override gst_version noargs
+static PyObject *
+_wrap_gst_version (PyObject *self)
+{
+    guint	major, minor, micro, nano;
+    PyObject	*py_tuple;
+
+    gst_version (&major, &minor, &micro, &nano);
+    py_tuple = PyTuple_New(4);
+    PyTuple_SetItem(py_tuple, 0, PyInt_FromLong(major));
+    PyTuple_SetItem(py_tuple, 1, PyInt_FromLong(minor));
+    PyTuple_SetItem(py_tuple, 2, PyInt_FromLong(micro));
+    PyTuple_SetItem(py_tuple, 3, PyInt_FromLong(nano));
+
+    return py_tuple;
 }

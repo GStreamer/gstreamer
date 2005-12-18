@@ -30,11 +30,15 @@ ignore
   gst_structure_get_string
   gst_structure_get_value
   gst_structure_get_enum
+  gst_structure_get_fraction
   gst_structure_set
   gst_structure_get_name_id
   gst_structure_id_get_value
   gst_structure_id_set_value
   gst_structure_set_parent_refcount
+  gst_structure_remove_fields
+  gst_structure_map_in_place
+  gst_structure_fixate_field_nearest_fraction
 %%
 override gst_structure_new kwargs
 static int
