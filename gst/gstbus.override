@@ -22,6 +22,11 @@
  * Author: Edward Hervey <edward@fluendo.com>
  */
 %%
+ignore
+  gst_bus_create_watch
+  gst_bus_sync_signal_handler
+  gst_bus_async_signal_func
+%%
 headers
 static GstBusSyncReply
 bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)

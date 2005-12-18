@@ -156,3 +156,31 @@ _wrap_gst_event_parse_seek (PyGstMiniObject *self)
 	
 	return ret;
 }
+%%
+override gst_event_parse_buffer_size noargs
+static PyObject *
+_wrap_gst_event_parse_buffer_size (PyGstMiniObject *self)
+{
+     PyObject		*ret;
+     GstFormat		format;
+     gint64		minsize;
+     gint64		maxsize;
+     gboolean		async;
+
+     if (GST_EVENT_TYPE (self->obj) != GST_EVENT_BUFFERSIZE) {
+	  PyErr_SetString(PyExc_TypeError, "Event is not an 'BufferSize' event");
+	  return NULL;
+     }
+     
+     gst_event_parse_buffer_size (GST_EVENT (self->obj),
+				  &format, &minsize,
+				  &maxsize, &async);
+
+     ret = PyList_New (4);
+     PyList_SetItem (ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
+     PyList_SetItem (ret, 1, PyLong_FromLongLong (minsize));
+     PyList_SetItem (ret, 2, PyLong_FromLongLong (maxsize));
+     PyList_SetItem (ret, 3, PyBool_FromLong (async));
+
+     return ret;
+}

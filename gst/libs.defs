@@ -259,7 +259,7 @@
   )
 )
 
-(define-function gst_controller_init
+(define-function controller_init
   (c-name "gst_controller_init")
   (return-type "gboolean")
   (parameters
@@ -272,111 +272,111 @@
 
 ;; From ../gstreamer/libs/gst/dataprotocol/dataprotocol.h
 
-(define-function gst_dp_header_payload_length
+(define-function dp_header_payload_length
   (c-name "gst_dp_header_payload_length")
   (return-type "guint32")
   (parameters
-    '("const-guint8*" "header")
+    '("const-gchar*" "header")
   )
 )
 
-(define-function gst_dp_header_payload_type
+(define-function dp_header_payload_type
   (c-name "gst_dp_header_payload_type")
   (return-type "GstDPPayloadType")
   (parameters
-    '("const-guint8*" "header")
+    '("const-gchar*" "header")
   )
 )
 
-(define-function gst_dp_header_from_buffer
+(define-function dp_header_from_buffer
   (c-name "gst_dp_header_from_buffer")
   (return-type "gboolean")
   (parameters
     '("const-GstBuffer*" "buffer")
     '("GstDPHeaderFlag" "flags")
     '("guint*" "length")
-    '("guint8**" "header")
+    '("gchar**" "header")
   )
 )
 
-(define-function gst_dp_packet_from_caps
+(define-function dp_packet_from_caps
   (c-name "gst_dp_packet_from_caps")
   (return-type "gboolean")
   (parameters
     '("const-GstCaps*" "caps")
     '("GstDPHeaderFlag" "flags")
     '("guint*" "length")
-    '("guint8**" "header")
-    '("guint8**" "payload")
+    '("gchar**" "header")
+    '("gchar**" "payload")
   )
 )
 
-(define-function gst_dp_packet_from_event
+(define-function dp_packet_from_event
   (c-name "gst_dp_packet_from_event")
   (return-type "gboolean")
   (parameters
     '("const-GstEvent*" "event")
     '("GstDPHeaderFlag" "flags")
     '("guint*" "length")
-    '("guint8**" "header")
-    '("guint8**" "payload")
+    '("gchar**" "header")
+    '("gchar**" "payload")
   )
 )
 
-(define-function gst_dp_buffer_from_header
+(define-function dp_buffer_from_header
   (c-name "gst_dp_buffer_from_header")
   (return-type "GstBuffer*")
   (parameters
     '("guint" "header_length")
-    '("const-guint8*" "header")
+    '("const-gchar*" "header")
   )
 )
 
-(define-function gst_dp_caps_from_packet
+(define-function dp_caps_from_packet
   (c-name "gst_dp_caps_from_packet")
   (return-type "GstCaps*")
   (parameters
     '("guint" "header_length")
-    '("const-guint8*" "header")
-    '("const-guint8*" "payload")
+    '("const-gchar*" "header")
+    '("const-gchar*" "payload")
   )
 )
 
-(define-function gst_dp_event_from_packet
+(define-function dp_event_from_packet
   (c-name "gst_dp_event_from_packet")
   (return-type "GstEvent*")
   (parameters
     '("guint" "header_length")
-    '("const-guint8*" "header")
-    '("const-guint8*" "payload")
+    '("const-gchar*" "header")
+    '("const-gchar*" "payload")
   )
 )
 
-(define-function gst_dp_validate_header
+(define-function dp_validate_header
   (c-name "gst_dp_validate_header")
   (return-type "gboolean")
   (parameters
     '("guint" "header_length")
-    '("const-guint8*" "header")
+    '("const-gchar*" "header")
   )
 )
 
-(define-function gst_dp_validate_payload
+(define-function dp_validate_payload
   (c-name "gst_dp_validate_payload")
   (return-type "gboolean")
   (parameters
     '("guint" "header_length")
-    '("const-guint8*" "header")
-    '("const-guint8*" "payload")
+    '("const-gchar*" "header")
+    '("const-gchar*" "payload")
   )
 )
 
-(define-function gst_dp_validate_packet
+(define-function dp_validate_packet
   (c-name "gst_dp_validate_packet")
   (return-type "gboolean")
   (parameters
     '("guint" "header_length")
-    '("const-guint8*" "header")
-    '("const-guint8*" "payload")
+    '("const-gchar*" "header")
+    '("const-gchar*" "payload")
   )
 )

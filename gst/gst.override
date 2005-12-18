@@ -323,6 +323,7 @@ ignore
   gst_flow_to_quark
   gst_implements_interface_cast
   gst_implements_interface_check
+  gst_plugin_get_module
 %%
 override-slot GstPluginFeature.tp_repr
 static PyObject *
@@ -911,4 +912,29 @@ _wrap_gst_version (PyObject *self)
     PyTuple_SetItem(py_tuple, 3, PyInt_FromLong(nano));
 
     return py_tuple;
+}
+%%
+override gst_clock_get_calibration noargs
+static PyObject *
+_wrap_gst_clock_get_calibration (PyGObject * self)
+{
+    PyObject		*ret;
+    GstClockTime	internal;
+    GstClockTime	external;
+    GstClockTime	rate_num;
+    GstClockTime	rate_denom;
+
+    gst_clock_get_calibration (GST_CLOCK (self->obj),
+			       &internal,
+			       &external,
+			       &rate_num,
+			       &rate_denom);
+
+    ret = PyTuple_New(4);
+    PyTuple_SetItem(ret, 0, PyLong_FromUnsignedLongLong(internal));
+    PyTuple_SetItem(ret, 1, PyLong_FromUnsignedLongLong(external));
+    PyTuple_SetItem(ret, 2, PyLong_FromUnsignedLongLong(rate_num));
+    PyTuple_SetItem(ret, 3, PyLong_FromUnsignedLongLong(rate_denom));
+    
+    return ret;
 }

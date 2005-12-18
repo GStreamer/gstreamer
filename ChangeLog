@@ -1,5 +1,23 @@
 2005-12-18  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.override:
+	ignore gst_plugin_get_module, GModule aren't wrapped in
+	pygtk anyway.
+	wrap gst_clock_get_calibration
+	* gst/gstbus.override:
+	Ignore the following:
+	gst_bus_create_watch, since GSource aren't wrapped in pygtk
+	gst_bus_sync_signal_handler and gst_bus_async_signal_func since
+	these functions are used by the default bus handler anyway.
+	* gst/gstevent.override:
+	wrapped gst_event_parse_buffer_size
+	* gst/libs.defs:
+	Replace all guint8* for gst_dp_ functions by gchar * since they
+	are the same, but at least get generated properly by the code
+	generator.
+
+2005-12-18  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst.defs:
 	gst_object_sink is a method of GstObject
 	const of enums is a stupidity (_element_make_from_uri)
