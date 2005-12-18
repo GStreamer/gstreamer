@@ -79,6 +79,8 @@ static gboolean gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstFlowReturn gst_base_rtp_depayload_chain (GstPad * pad,
     GstBuffer * in);
+static gboolean
+gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_base_rtp_depayload_change_state (GstElement *
     element, GstStateChange transition);
@@ -139,6 +141,8 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter, gpointer g_class)
   gst_pad_set_setcaps_function (filter->sinkpad,
       gst_base_rtp_depayload_setcaps);
   gst_pad_set_chain_function (filter->sinkpad, gst_base_rtp_depayload_chain);
+  gst_pad_set_event_function (filter->sinkpad,
+      gst_base_rtp_depayload_handle_sink_event);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   pad_template =
@@ -203,6 +207,33 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
       ret = bclass->add_to_queue (filter, in);
   }
   return ret;
+}
+
+static gboolean
+gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstBaseRTPDepayload *filter =
+      GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
+  gboolean res = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GST_DEBUG_OBJECT (filter,
+          "Upstream sent a NEWSEGMENT, handle in worker thread.");
+      /* the worker thread will assign a new RTP-TS<->GST-TS mapping
+       * based on the next processed RTP packet */
+      filter->need_newsegment = TRUE;
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      /* pass other events forward */
+      res = gst_pad_push_event (filter->srcpad, event);
+      break;
+  }
+
+  return res;
 }
 
 static GstFlowReturn
@@ -359,8 +390,10 @@ gst_base_rtp_depayload_thread (GstBaseRTPDepayload * filter)
 {
   while (filter->thread_running) {
     gst_base_rtp_depayload_queue_release (filter);
-    /* i want to run this thread clock_rate times per second */
-    /* sleep for 5msec */
+    /* sleep for 5msec (XXX: 5msec is a value that works for audio and video,
+     * should be adjusted based on frequency of incoming packet, 
+     * or by data comsumption rate of the sink (depends on how
+     * clock-drift compensation is implemented) */
     gst_base_rtp_depayload_wait (filter, GST_MSECOND * 5);
   }
   return NULL;
