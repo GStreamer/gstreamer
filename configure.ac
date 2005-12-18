@@ -73,6 +73,7 @@ GST_PLUGINS_ALL="\
 		cutter \
 		debug \
 		effectv \
+		id3demux \
 		flx \
 		goom \
 		law \
@@ -472,6 +473,17 @@ GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
   ])
 ])
 
+dnl *** id3demux prefers to have zlib ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ZLIB, true)
+GST_CHECK_FEATURE(ZLIB, [zlib support for id3demux],, [
+  GST_CHECK_LIBHEADER(ZLIB,
+    z, uncompress,, zlib.h, [
+    HAVE_ZLIB="yes"
+    ZLIB_LIBS="-lz"
+    AC_SUBST(ZLIB_LIBS)
+  ])
+])
+
 fi dnl of EXT plugins
 
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
@@ -531,6 +543,7 @@ gst/avi/Makefile
 gst/cutter/Makefile
 gst/debug/Makefile
 gst/effectv/Makefile
+gst/id3demux/Makefile
 gst/goom/Makefile
 gst/law/Makefile
 gst/level/Makefile

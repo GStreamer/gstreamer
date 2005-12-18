@@ -33,7 +33,7 @@
 #define G_MAXUINT32 0xffffffff
 #endif
 
-GST_DEBUG_CATEGORY (wavparse_debug);
+GST_DEBUG_CATEGORY_STATIC (wavparse_debug);
 #define GST_CAT_DEFAULT (wavparse_debug)
 
 static void gst_wavparse_base_init (gpointer g_class);
@@ -1140,7 +1140,8 @@ pause:
     GST_ELEMENT_ERROR (wav, STREAM, FAILED,
         (_("Internal data stream error.")),
         ("streaming stopped, reason %s", gst_flow_get_name (ret)));
-    gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
+    if (wav->srcpad != NULL)
+      gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
   }
 }
 

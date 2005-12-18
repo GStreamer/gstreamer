@@ -1,3 +1,42 @@
+2005-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  Check for optional dependency on zlib for id3demux
+
+	* gst/id3demux/Makefile.am:
+	* gst/id3demux/gstid3demux.c: (gst_gst_id3demux_get_type),
+	(gst_id3demux_base_init), (gst_id3demux_class_init),
+	(gst_id3demux_reset), (gst_id3demux_init), (gst_id3demux_dispose),
+	(gst_id3demux_add_srcpad), (gst_id3demux_remove_srcpad),
+	(gst_id3demux_trim_buffer), (gst_id3demux_chain),
+	(gst_id3demux_set_property), (gst_id3demux_get_property),
+	(id3demux_get_upstream_size), (gst_id3demux_srcpad_event),
+	(gst_id3demux_read_id3v1), (gst_id3demux_read_id3v2),
+	(gst_id3demux_sink_activate), (gst_id3demux_src_activate_pull),
+	(gst_id3demux_src_checkgetrange), (gst_id3demux_read_range),
+	(gst_id3demux_src_getrange), (gst_id3demux_change_state),
+	(gst_id3demux_pad_query), (gst_id3demux_get_query_types),
+	(simple_find_peek), (simple_find_suggest),
+	(gst_id3demux_do_typefind), (gst_id3demux_send_tag_event),
+	(plugin_init):
+	* gst/id3demux/gstid3demux.h:
+	* gst/id3demux/id3tags.c: (read_synch_uint),
+	(id3demux_read_id3v1_tag), (id3demux_read_id3v2_tag),
+	(id3demux_id3v2_frame_hdr_size), (convert_fid_to_v240),
+	(id3demux_id3v2_frames_to_tag_list):
+	* gst/id3demux/id3tags.h:
+	* gst/id3demux/id3v2.4.0-frames.txt:
+	* gst/id3demux/id3v2.4.0-structure.txt:
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame),
+	(parse_comment_frame), (parse_text_identification_frame),
+	(id3v2_tag_to_taglist), (parse_split_strings):
+	  All new LGPL id3 demuxer. Can use zlib for compressed frames, 
+	  otherwise it discards them. Works on my test files. 
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_loop):
+	  Don't send EOS to a non-existing srcpad
+	  The debug category can be static
+
 2005-12-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/esd/esdmon.c: (gst_esdmon_open_audio):
