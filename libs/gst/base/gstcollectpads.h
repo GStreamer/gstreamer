@@ -77,6 +77,7 @@ typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer 
 
 /**
  * GstCollectPads:
+ * @object: the #GstObject parent structure.
  * @data: #GList of #GstCollectData managed by this #GstCollectPads.
  *
  * Collectpads object. 

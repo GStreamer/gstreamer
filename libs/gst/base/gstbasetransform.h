@@ -51,6 +51,7 @@ typedef struct _GstBaseTransformClass GstBaseTransformClass;
 
 /**
  * GstBaseTransform:
+ * @element: the parent element.
  *
  * The opaque #GstBaseTransform data structure.
  */

@@ -1,3 +1,27 @@
+2005-12-18  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstadapter.c:
+	* libs/gst/base/gstadapter.h:
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init),
+	(gst_base_sink_get_position):
+	* libs/gst/base/gstbasesink.h:
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_default_query), (gst_base_src_default_do_seek),
+	(gst_base_src_do_seek), (gst_base_src_perform_seek),
+	(gst_base_src_send_event), (gst_base_src_update_length),
+	(gst_base_src_get_range), (gst_base_src_loop),
+	(gst_base_src_start):
+	* libs/gst/base/gstbasesrc.h:
+	* libs/gst/base/gstbasetransform.h:
+	* libs/gst/base/gstcollectpads.h:
+	* libs/gst/base/gstpushsrc.c:
+	* libs/gst/base/gstpushsrc.h:
+	* libs/gst/dataprotocol/dataprotocol.c:
+	* libs/gst/dataprotocol/dataprotocol.h:
+	* libs/gst/net/gstnetclientclock.h:
+	* libs/gst/net/gstnettimeprovider.h:
+	Documentation updates.
+
 2005-12-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/basics-helloworld.xml:

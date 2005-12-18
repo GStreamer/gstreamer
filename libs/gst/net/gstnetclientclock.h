@@ -57,6 +57,7 @@ typedef struct _GstNetClientClockClass GstNetClientClockClass;
 
 /**
  * GstNetClientClock:
+ * @clock: the parent clock structure.
  *
  * Opaque #GstNetClientClock structure.
  */

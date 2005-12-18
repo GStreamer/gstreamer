@@ -78,7 +78,9 @@
  * of GstAdapter is inside one pad's chain function, in which case access is
  * serialized via the pad's stream lock.
  *
- * Last reviewed on 2005-11-08 (0.9.5).
+ * Note that gst_adapter_push() takes ownership of the buffer passed.
+ *
+ * Last reviewed on 2005-12-18 (0.10.0).
  */
 
 #include <string.h>
@@ -303,7 +305,7 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
  * Returns a freshly allocated buffer containing the first @nbytes bytes of the
  * @adapter.
  *
- * Caller owns returned value.
+ * Caller owns returned value. g_free after usage.
  *
  * Returns: oven-fresh hot data, or #NULL if @nbytes bytes are not available
  */

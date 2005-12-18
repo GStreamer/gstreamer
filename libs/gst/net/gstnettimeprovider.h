@@ -51,6 +51,7 @@ typedef struct _GstNetTimeProviderClass GstNetTimeProviderClass;
 
 /**
  * GstNetTimeProvider:
+ * @parent: the parent object structure.
  *
  * Opaque #GstNetTimeProvider structure.
  */
@@ -74,6 +75,7 @@ struct _GstNetTimeProvider {
     gint active;
   } active;
   
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING - 1];
 };
 

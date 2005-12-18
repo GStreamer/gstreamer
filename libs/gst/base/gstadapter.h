@@ -44,6 +44,7 @@ typedef struct _GstAdapterClass GstAdapterClass;
 
 /**
  * GstAdapter:
+ * @object: the parent object.
  *
  * The opaque #GstAdapter data structure.
  */

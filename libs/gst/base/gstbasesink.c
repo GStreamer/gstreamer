@@ -24,13 +24,13 @@
  * @short_description: Base class for sink elements
  * @see_also: #GstBaseTransform, #GstBaseSource
  *
- * GstBaseSink is the base class for sink elements in GStreamer, such as
+ * #GstBaseSink is the base class for sink elements in GStreamer, such as
  * xvimagesink or filesink. It is a layer on top of #GstElement that provides a
- * simplified interface to plugin writers. GstBaseSink handles many details for
+ * simplified interface to plugin writers. #GstBaseSink handles many details for
  * you, for example preroll, clock synchronization, state changes, activation in
  * push or pull mode, and queries. In most cases, when writing sink elements,
  * there is no need to implement class methods from #GstElement or to set
- * functions on pads, because the GstBaseSink infrastructure is sufficient.
+ * functions on pads, because the #GstBaseSink infrastructure is sufficient.
  *
  * There is only support in GstBaseSink for one sink pad, which should be named
  * "sink". A sink implementation (subclass of GstBaseSink) should install a pad
@@ -50,26 +50,55 @@
  * }
  * </programlisting>
  *
- * The one method which all subclasses of GstBaseSink must implement is
- * GstBaseSink::render. This method will be called...
+ * #GstBaseSink will handle the prerolling correctly. This means that it will
+ * return GST_STATE_CHANGE_ASYNC from a state change to PAUSED until the first buffer
+ * arrives in this element. The base class will call the GstBaseSink::preroll
+ * vmethod with this preroll buffer and will then commit the state change to
+ * PAUSED. 
+ *
+ * When the element is set to PLAYING, #GstBaseSink will synchronize on the clock
+ * using the times returned from ::get_times. If this function returns
+ * #GST_CLOCK_TIME_NONE for the start time, no synchronisation will be done.
+ * Synchronisation can be disabled entirely by setting the sync property to FALSE.
+ *
+ * After synchronisation the virtual method #GstBaseSink::render will be called.
+ * Subclasses should minimally implement this method.
+ *
+ * Upon receiving the EOS event in th PLAYING state, #GstBaseSink will wait for 
+ * the clock to reach the time indicated by the stop time of the last ::get_times 
+ * call before posting an EOS message. When the element receives EOS in PAUSED,
+ * the event is queued and an EOS message is posted when going to PLAYING.
  * 
- * preroll()
+ * #GstBaseSink will internally use the GST_EVENT_NEW_SEGMENT events to schedule
+ * synchronisation and clipping of buffers. Buffers that fall completely outside
+ * of the segment are dropped. Buffers that fall partially in the segment are 
+ * rendered (and prerolled), subclasses should do any subbuffer clipping themselves
+ * when needed.
+ * 
+ * #GstBaseSink will by default report the current playback position in 
+ * GST_FORMAT_TIME based on the current clock time and segment information. 
+ * If the element is EOS however, the query will be forwarded upstream.
  *
- * event(): mostly useful for file-like sinks (seeking or flushing)
+ * The ::set_caps function will be called when the subclass should configure itself
+ * to precess a specific media type.
+ * 
+ * The ::start and ::stop virtual methods will be called when resources should be
+ * allocated. Any ::preroll, ::render  and ::set_caps function will be called
+ * between the ::start and ::stop calls. 
  *
- * get_caps/set_caps/buffer_alloc
+ * The ::event virtual method will be called when an event is received by 
+ * #GstBaseSink. Normally this method should only be overriden by very specific
+ * elements such as file sinks that need to handle the newsegment event specially.
+ * 
+ * #GstBaseSink provides an overridable ::buffer_alloc function that can be used
+ * by specific sinks that want to do reverse negotiation or want to provided 
+ * hardware accelerated buffers for downstream elements.
  *
- * start/stop for resource allocation
+ * The ::unlock method is called when the elements should unblock any blocking
+ * operations they perform in the ::render method. This is mostly usefull when
+ * the ::render method performs a blocking write on a file descripter.
  *
- * unlock if you block on an fd, for example
- *
- * get_times i'm sure is for something :P
- *
- * provide example of textsink
- *
- * admonishment not to try to implement your own sink with prerolling...
- *
- * extending via subclassing, setting pad functions, gstelement vmethods.
+ * Last reviewed on 2005-12-18 (0.10.0)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -188,12 +217,13 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_base_sink_get_property);
 
   /* FIXME, this next value should be configured using an event from the
-   * upstream element */
+   * upstream element, ie, the BUFFER_SIZE event. */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_PREROLL_QUEUE_LEN,
       g_param_spec_uint ("preroll-queue-len", "preroll-queue-len",
           "Number of buffers to queue during preroll", 0, G_MAXUINT, 0,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
           G_PARAM_READWRITE));

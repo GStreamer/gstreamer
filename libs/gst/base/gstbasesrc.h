@@ -63,6 +63,7 @@ typedef struct _GstBaseSrcClass GstBaseSrcClass;
 
 /**
  * GstBaseSrc:
+ * @element: the parent element.
  *
  * The opaque #GstBaseSrc data structure.
  */

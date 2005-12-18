@@ -49,6 +49,7 @@ typedef struct _GstBaseSinkClass GstBaseSinkClass;
 
 /**
  * GstBaseSink:
+ * @element: the parent element.
  *
  * The opaque #GstBaseSink data structure.
  */

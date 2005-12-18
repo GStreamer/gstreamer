@@ -29,6 +29,9 @@
  * random access, or at least very slowly. The source usually
  * prefers to push out a fixed size buffer.
  *
+ * Subclasses usually operate in a format that is different from the
+ * default GST_FORMAT_BYTES format of #GstBaseSrc.
+ *
  * Classes extending this base class will usually be scheduled
  * in a push based mode. If the peer accepts to operate without
  * offsets and withing the limits of the allowed block size, this

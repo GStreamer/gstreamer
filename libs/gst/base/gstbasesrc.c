@@ -82,9 +82,28 @@
  *
  * The #GstBaseSrc::get_times method can be used to implement pseudo-live sources.
  * The base source will wait for the specified stream time returned in 
- * #GstBaseSrc::get_times before pushing out the buffer.
+ * #GstBaseSrc::get_times before pushing out the buffer. It only makes sense to implement
+ * the ::get_times function if the source is a live source.
  *
- * Last reviewed on 2005-12-10 (0.10.0)
+ * There is only support in GstBaseSrc for one source pad, which should be named
+ * "src". A source implementation (subclass of GstBaseSrc) should install a pad
+ * template in its base_init function, like so:
+ *
+ * <programlisting>
+ * static void
+ * my_element_base_init (gpointer g_class)
+ * {
+ *   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+ *   // srctemplate should be a #GstStaticPadTemplate with direction
+ *   // #GST_PAD_SRC and name "src"
+ *   gst_element_class_add_pad_template (gstelement_class,
+ *       gst_static_pad_template_get (&amp;srctemplate));
+ *   // see #GstElementDetails
+ *   gst_element_class_set_details (gstelement_class, &amp;details);
+ * }
+ * </programlisting>
+ *
+ * Last reviewed on 2005-12-18 (0.10.0)
  */
 
 #include <stdlib.h>
