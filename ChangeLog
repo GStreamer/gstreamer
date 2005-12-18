@@ -1,3 +1,10 @@
+2005-12-17  Philippe Khalaf  <burger@speedy.org> 
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_set_gst_timestamp):
+		add queue delay to new segment as well (as opposed to just the first
+		buffer). (bug #322347)
+
 2005-12-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/libvisual/visual.c: (make_valid_name):

@@ -295,7 +295,9 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
   GST_DEBUG_OBJECT (filter, "calculating ts : timestamp : %u, clockrate : %u",
       timestamp, filter->clock_rate);
 
-  GST_BUFFER_TIMESTAMP (buf) = ts;
+  /* add delay to timestamp */
+  GST_BUFFER_TIMESTAMP (buf) = ts + (filter->queue_delay * GST_MSECOND);
+
   GST_DEBUG_OBJECT (filter, "calculated ts %"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
@@ -309,9 +311,6 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     filter->need_newsegment = FALSE;
     GST_DEBUG_OBJECT (filter, "Pushed newsegment event on this first buffer");
   }
-  /* add delay to timestamp */
-  GST_BUFFER_TIMESTAMP (buf) =
-      GST_BUFFER_TIMESTAMP (buf) + (filter->queue_delay * GST_MSECOND);
 }
 
 static void
