@@ -383,6 +383,7 @@ gst_mad_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 
   g_free (mad->tempbuffer);
+  mad->tempbuffer = NULL;
 }
 
 static void

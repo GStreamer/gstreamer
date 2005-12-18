@@ -27,7 +27,9 @@
 #include <string.h>
 #include <gst/gsttagsetter.h>
 
-#define ID3_TYPE_FIND_SIZE 40960
+#define ID3_TYPE_FIND_MIN_SIZE 3072
+#define ID3_TYPE_FIND_MAX_SIZE 40960
+
 GST_DEBUG_CATEGORY_STATIC (gst_id3_tag_debug);
 #define GST_CAT_DEFAULT gst_id3_tag_debug
 
@@ -1039,11 +1041,11 @@ gst_id3_tag_do_typefind (GstID3Tag * tag, GstBuffer * buffer)
   gst_plugin_feature_list_free (type_list);
   if (find.best_probability > 0) {
     return find.caps;
-  } else {
-    GST_ELEMENT_ERROR (tag, CORE, CAPS, (NULL), ("no caps found"));
-    return NULL;
   }
+
+  return NULL;
 }
+
 static gboolean
 gst_id3_tag_do_caps_nego (GstID3Tag * tag, GstBuffer * buffer)
 {
@@ -1052,6 +1054,8 @@ gst_id3_tag_do_caps_nego (GstID3Tag * tag, GstBuffer * buffer)
     if (!tag->found_caps) {
       return FALSE;
     }
+    GST_DEBUG_OBJECT (tag, "Found contained data caps %" GST_PTR_FORMAT,
+        tag->found_caps);
   }
   if (tag->srcpad == NULL) {
     gst_id3_tag_add_src_pad (tag);
@@ -1126,9 +1130,15 @@ static GstFlowReturn
 gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstID3Tag *tag;
+  GstBuffer *temp;
 
   tag = GST_ID3_TAG (gst_pad_get_parent (pad));
-  GST_DEBUG_OBJECT (tag, "Chain, state = %d", tag->state);
+  GST_LOG_OBJECT (tag, "Chain, state = %d", tag->state);
+
+  if (tag->buffer) {
+    buffer = gst_buffer_join (tag->buffer, buffer);
+    tag->buffer = NULL;
+  }
 
   switch (tag->state) {
     case GST_ID3_TAG_STATE_SEEKING_TO_V1_TAG:
@@ -1137,27 +1147,24 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
       gst_buffer_unref (buffer);
       return GST_FLOW_OK;
     case GST_ID3_TAG_STATE_READING_V1_TAG:
-      if (tag->buffer) {
-        GstBuffer *temp;
-
-        temp = gst_buffer_merge (tag->buffer, buffer);
-        gst_buffer_unref (tag->buffer);
-        tag->buffer = temp;
-        gst_buffer_unref (buffer);
-      } else {
+      if (GST_BUFFER_SIZE (buffer) < 128) {
         tag->buffer = buffer;
-        tag->v1tag_offset = buffer->offset;
-      }
-      if (GST_BUFFER_SIZE (tag->buffer) < 128)
         return GST_FLOW_OK;
+      }
+
       g_assert (tag->v1tag_size == 0);
-      tag->v1tag_size = id3_tag_query (GST_BUFFER_DATA (tag->buffer),
-          GST_BUFFER_SIZE (tag->buffer));
+      tag->v1tag_size = id3_tag_query (GST_BUFFER_DATA (buffer),
+          GST_BUFFER_SIZE (buffer));
       if (tag->v1tag_size == 128) {
         GstTagList *newtag;
 
-        newtag = gst_tag_list_new_from_id3v1 (GST_BUFFER_DATA (tag->buffer));
+        newtag = gst_tag_list_new_from_id3v1 (GST_BUFFER_DATA (buffer));
         GST_LOG_OBJECT (tag, "have read ID3v1 tag");
+        if (GST_BUFFER_OFFSET_IS_VALID (buffer))
+          tag->v1tag_offset = GST_BUFFER_OFFSET (buffer);
+        else
+          tag->v1tag_offset = G_MAXUINT64;
+
         if (newtag) {
           if (tag->parsed_tags) {
             /* FIXME: use append/prepend here ? */
@@ -1175,15 +1182,15 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
           GST_WARNING_OBJECT (tag, "bad non-ID3v1 tag at end of file");
         } else {
           GST_LOG_OBJECT (tag, "no ID3v1 tag (%" G_GUINT64_FORMAT ")",
-              GST_BUFFER_OFFSET (tag->buffer));
+              GST_BUFFER_OFFSET (buffer));
           tag->v1tag_offset = G_MAXUINT64;
         }
       }
-      gst_buffer_unref (tag->buffer);
-      tag->buffer = NULL;
+      gst_buffer_unref (buffer);
       if (tag->parse_mode != GST_ID3_TAG_PARSE_ANY) {
         /* seek to beginning */
-        GST_LOG_OBJECT (tag, "seeking back to beginning");
+        GST_LOG_OBJECT (tag, "seeking back to beginning (offset %d)",
+            tag->v2tag_size);
         gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_SEEKING_TO_NORMAL);
         if (!gst_pad_push_event (tag->sinkpad,
                 gst_event_new_seek (1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_FLUSH,
@@ -1197,37 +1204,35 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
         /* set eos, we're done parsing tags */
         GST_LOG_OBJECT (tag, "Finished reading ID3v1 tag");
         gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL_START);
-        //gst_element_set_eos (GST_ELEMENT (tag));
         gst_pad_push_event (tag->srcpad, gst_event_new_eos ());
       }
       return GST_FLOW_OK;
     case GST_ID3_TAG_STATE_READING_V2_TAG:
-      if (tag->buffer) {
-        GstBuffer *temp;
-
-        temp = gst_buffer_merge (tag->buffer, buffer);
-        gst_buffer_unref (tag->buffer);
-        tag->buffer = temp;
-        gst_buffer_unref (buffer);
-      } else {
+      if (GST_BUFFER_SIZE (buffer) < 10) {
         tag->buffer = buffer;
-      }
-      if (GST_BUFFER_SIZE (tag->buffer) < 10)
         return GST_FLOW_OK;
+      }
       if (tag->v2tag_size == 0) {
-        tag->v2tag_size = id3_tag_query (GST_BUFFER_DATA (tag->buffer),
-            GST_BUFFER_SIZE (tag->buffer));
+        tag->v2tag_size = id3_tag_query (GST_BUFFER_DATA (buffer),
+            GST_BUFFER_SIZE (buffer));
         /* no footers supported */
         if (tag->v2tag_size < 0)
           tag->v2tag_size = 0;
       }
-      if (GST_BUFFER_SIZE (tag->buffer) < tag->v2tag_size + ID3_TYPE_FIND_SIZE)
+      /* Collect a large enough chunk to read the tag */
+      if (GST_BUFFER_SIZE (buffer) < tag->v2tag_size) {
+        GST_DEBUG_OBJECT (tag,
+            "Not enough data to read ID3v2. Need %d have %d, waiting for more",
+            tag->v2tag_size, GST_BUFFER_SIZE (buffer));
+        tag->buffer = buffer;
         return GST_FLOW_OK;
+      }
+
       if (tag->v2tag_size != 0) {
         struct id3_tag *v2tag;
 
-        v2tag = id3_tag_parse (GST_BUFFER_DATA (tag->buffer),
-            GST_BUFFER_SIZE (tag->buffer));
+        v2tag = id3_tag_parse (GST_BUFFER_DATA (buffer),
+            GST_BUFFER_SIZE (buffer));
         if (v2tag) {
           GstTagList *list;
 
@@ -1248,8 +1253,7 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
       if (gst_pad_push_event (tag->sinkpad,
               gst_event_new_seek (1.0, GST_FORMAT_BYTES, GST_SEEK_FLAG_FLUSH,
                   GST_SEEK_TYPE_END, -128, GST_SEEK_TYPE_NONE, 0))) {
-        gst_buffer_unref (tag->buffer);
-        tag->buffer = NULL;
+        gst_buffer_unref (buffer);
         return GST_FLOW_OK;
       } else {
         GST_DEBUG_OBJECT (tag, "Can't seek to read ID3v1 tag");
@@ -1259,29 +1263,47 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
       GST_LOG_OBJECT (tag,
           "removing first %ld bytes, because they're the ID3v2 tag",
           tag->v2tag_size);
-      buffer =
-          gst_buffer_create_sub (tag->buffer, tag->v2tag_size,
-          GST_BUFFER_SIZE (tag->buffer) - tag->v2tag_size);
+      temp =
+          gst_buffer_create_sub (buffer, tag->v2tag_size,
+          GST_BUFFER_SIZE (buffer) - tag->v2tag_size);
       /* the offsets will be corrected further down, we just copy them */
-      if (GST_BUFFER_OFFSET_IS_VALID (tag->buffer))
-        GST_BUFFER_OFFSET (buffer) =
-            GST_BUFFER_OFFSET (tag->buffer) + tag->v2tag_size;
-      if (GST_BUFFER_OFFSET_END_IS_VALID (tag->buffer))
-        GST_BUFFER_OFFSET_END (buffer) =
-            GST_BUFFER_OFFSET_END (tag->buffer) + tag->v2tag_size;
-      gst_buffer_unref (tag->buffer);
-      tag->buffer = NULL;
+      if (GST_BUFFER_OFFSET_IS_VALID (buffer))
+        GST_BUFFER_OFFSET (temp) = GST_BUFFER_OFFSET (buffer) + tag->v2tag_size;
+      if (GST_BUFFER_OFFSET_END_IS_VALID (buffer))
+        GST_BUFFER_OFFSET_END (temp) =
+            GST_BUFFER_OFFSET_END (buffer) + tag->v2tag_size;
+
+      gst_buffer_unref (buffer);
+      buffer = temp;
 
       gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL_START);
       /* fall through */
     case GST_ID3_TAG_STATE_NORMAL_START:
-      g_assert (tag->buffer == NULL);
-
-      if (!IS_MUXER (tag) && (tag->found_caps == NULL))
-        if (!gst_id3_tag_do_caps_nego (tag, buffer)) {
-          gst_buffer_unref (buffer);
+      if (!IS_MUXER (tag) && (tag->found_caps == NULL)) {
+        /* Don't do caps nego until we have at least ID3_TYPE_FIND_SIZE bytes */
+        if (GST_BUFFER_SIZE (buffer) < ID3_TYPE_FIND_MIN_SIZE) {
+          GST_DEBUG_OBJECT (tag,
+              "Not enough data (%d) for typefind, waiting for more",
+              GST_BUFFER_SIZE (buffer));
+          tag->buffer = buffer;
           return GST_FLOW_OK;
         }
+
+        if (!gst_id3_tag_do_caps_nego (tag, buffer)) {
+          if (GST_BUFFER_SIZE (buffer) < ID3_TYPE_FIND_MAX_SIZE) {
+            /* Just break for more */
+            tag->buffer = buffer;
+            return GST_FLOW_OK;
+          }
+
+          /* We failed typefind */
+          GST_ELEMENT_ERROR (tag, CORE, CAPS, (NULL), ("no caps found"));
+          gst_buffer_unref (buffer);
+          return GST_FLOW_ERROR;
+        }
+      }
+
+      g_print ("Found type with size %u\n", GST_BUFFER_SIZE (buffer));
 
       /* If we didn't get a segment event to pass on, someone
        * downstream is going to complain */
@@ -1328,16 +1350,16 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
     case GST_ID3_TAG_STATE_NORMAL:
       if (tag->parse_mode == GST_ID3_TAG_PARSE_ANY) {
         gst_buffer_unref (buffer);
-        //gst_element_set_eos (GST_ELEMENT (tag));
         gst_pad_push_event (tag->srcpad, gst_event_new_eos ());
       } else {
         if (GST_BUFFER_OFFSET_IS_VALID (buffer)) {
-          if (buffer->offset >= tag->v1tag_offset) {
+          if (GST_BUFFER_OFFSET (buffer) >= tag->v1tag_offset) {
             gst_buffer_unref (buffer);
             return GST_FLOW_OK;
-          } else if (buffer->offset + buffer->size > tag->v1tag_offset) {
+          } else if (GST_BUFFER_OFFSET (buffer) + GST_BUFFER_SIZE (buffer) >
+              tag->v1tag_offset) {
             GstBuffer *sub = gst_buffer_create_sub (buffer, 0,
-                buffer->size - 128);
+                GST_BUFFER_SIZE (buffer) - 128);
 
             gst_buffer_unref (buffer);
             buffer = sub;
@@ -1431,8 +1453,6 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "mad", GST_RANK_SECONDARY,
           gst_mad_get_type ())
-      || !gst_element_register (plugin, "id3demux", GST_RANK_PRIMARY,
-          gst_id3_tag_get_type (GST_ID3_TAG_PARSE_DEMUX))
       || !gst_element_register (plugin, "id3mux", GST_RANK_NONE,        /* removed for spider */
           gst_id3_tag_get_type (GST_ID3_TAG_PARSE_MUX))) {
     return FALSE;
