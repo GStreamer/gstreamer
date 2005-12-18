@@ -29,14 +29,35 @@
 
 G_BEGIN_DECLS
 
-/* GStreamer Data Protocol Version */
+/**
+ * GST_DP_VERSION_MAJOR:
+ *
+ * The major version number of the GStreamer Data Protocol.
+ */
 #define GST_DP_VERSION_MAJOR 0
+/**
+ * GST_DP_VERSION_MINOR:
+ *
+ * The minor version number of the GStreamer Data Protocol.
+ */
 #define GST_DP_VERSION_MINOR 2
 
-#define GST_DP_HEADER_LENGTH 62 /* header size in bytes */
+/**
+ * GST_DP_HEADER_LENGTH:
+ *
+ * The header size in bytes.
+ */
+#define GST_DP_HEADER_LENGTH 62
 
-
-/* header flags */
+/**
+ * GstDPHeaderFlag:
+ * @GST_DP_HEADER_FLAG_NONE: No flag present.
+ * @GST_DP_HEADER_FLAG_CRC_HEADER: a header CRC field is present.
+ * @GST_DP_HEADER_FLAG_CRC_PAYLOAD: a payload CRC field is present.
+ * @GST_DP_HEADER_FLAG_CRC: a CRC for header and payload is present.
+ *
+ * header flags for the dataprotocol.
+ */
 typedef enum {
   GST_DP_HEADER_FLAG_NONE        = 0,
   GST_DP_HEADER_FLAG_CRC_HEADER  = (1 << 0),
@@ -44,7 +65,16 @@ typedef enum {
   GST_DP_HEADER_FLAG_CRC         = (1 << 1) | (1 <<0),
 } GstDPHeaderFlag;
 
-/* payload types */
+/**
+ * GstDPPayloadType:
+ * @GST_DP_PAYLOAD_NONE: Invalid payload type.
+ * @GST_DP_PAYLOAD_BUFFER: #GstBuffer payload packet.
+ * @GST_DP_PAYLOAD_CAPS: #GstCaps payload packet.
+ * @GST_DP_PAYLOAD_EVENT_NONE: First value of #GstEvent payload packets.
+ *
+ * The GDP payload types. a #GstEvent payload type is encoded with the
+ * event type number starting from @GST_DP_PAYLOAD_EVENT_NONE.
+ */
 typedef enum {
   GST_DP_PAYLOAD_NONE            = 0,
   GST_DP_PAYLOAD_BUFFER,
