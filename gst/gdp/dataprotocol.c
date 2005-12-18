@@ -124,6 +124,8 @@ gst_dp_init (void)
  * gst_dp_header_payload_length:
  * @header: the byte header of the packet array
  *
+ * Get the length of the payload described by @header.
+ *
  * Returns: the length of the payload this header describes.
  */
 guint32
@@ -135,6 +137,8 @@ gst_dp_header_payload_length (const guint8 * header)
 /**
  * gst_dp_header_payload_type:
  * @header: the byte header of the packet array
+ *
+ * Get the type of the payload described by @header.
  *
  * Returns: the #GstDPPayloadType the payload this header describes.
  */
