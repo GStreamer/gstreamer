@@ -1378,11 +1378,15 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   if (chain == NULL)
     return TRUE;
 
+  GST_DEBUG ("deactivating chain %p", chain);
+
   /* send EOS on all the pads */
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
     gst_pad_push_event (GST_PAD (pad), gst_event_new_eos ());
+
+    GST_DEBUG_OBJECT (ogg, "removing pad %" GST_PTR_FORMAT, pad);
     gst_element_remove_pad (GST_ELEMENT (ogg), GST_PAD (pad));
   }
   /* if we cannot seek back to the chain, we can destroy the chain 
@@ -1409,13 +1413,15 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
   gst_ogg_demux_deactivate_current_chain (ogg);
 
-  GST_DEBUG ("activating chain");
+  GST_DEBUG ("activating chain %p", chain);
 
   /* first add the pads */
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad;
 
     pad = g_array_index (chain->streams, GstOggPad *, i);
+    GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
+
     gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD (pad));
   }
 

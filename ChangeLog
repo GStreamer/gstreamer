@@ -1,3 +1,16 @@
+2005-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_deactivate_current_chain),
+	(gst_ogg_demux_activate_chain):
+	  Extra debug output when activating/deactivating chains.
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_factory_filter),
+	(is_demuxer_element), (try_to_link_1), (remove_element_chain),
+	(unlinked):
+	  Remove a queue from our list when it becomes unlinked.
+	  Don't add queues to elements in class 'Demux' if they
+	  can only produce one pad 
+
 2005-12-18  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/video/gstvideosink.c: (gst_video_sink_base_init),

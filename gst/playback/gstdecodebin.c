@@ -69,6 +69,8 @@ struct _GstDecodeBin
   guint have_type_id;           /* signal id for the typefind element */
 
   gboolean shutting_down;       /* stop pluggin if we're shutting down */
+
+  GType queue_type;             /* store the GType of queues, to aid in recognising them */
 };
 
 struct _GstDecodeBinClass
@@ -233,7 +235,7 @@ gst_decode_bin_factory_filter (GstPluginFeature * feature,
     return FALSE;
 
   klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
-  /* only demuxers and decoders can play */
+  /* only demuxers, decoders and parsers can play */
   if (strstr (klass, "Demux") == NULL &&
       strstr (klass, "Decoder") == NULL && strstr (klass, "Parse") == NULL) {
     return FALSE;
@@ -603,6 +605,56 @@ many_types:
   }
 }
 
+/* Decide whether an element is a demuxer based on the 
+ * klass and number/type of src pad templates it has */
+static gboolean
+is_demuxer_element (GstElement * srcelement)
+{
+  GstElementFactory *srcfactory;
+  GstElementClass *elemclass;
+  GList *templates, *walk;
+  const gchar *klass;
+  gint potential_src_pads = 0;
+
+  srcfactory = gst_element_get_factory (srcelement);
+  klass = gst_element_factory_get_klass (srcfactory);
+
+  /* Can't be a demuxer unless it has Demux in the klass name */
+  if (!strstr (klass, "Demux"))
+    return FALSE;
+
+  /* Walk the src pad templates and count how many the element
+   * might produce */
+  elemclass = GST_ELEMENT_GET_CLASS (srcelement);
+
+  walk = templates = gst_element_class_get_pad_template_list (elemclass);
+  while (walk != NULL) {
+    GstPadTemplate *templ;
+
+    templ = (GstPadTemplate *) walk->data;
+    if (GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) {
+      switch (GST_PAD_TEMPLATE_PRESENCE (templ)) {
+        case GST_PAD_ALWAYS:
+        case GST_PAD_SOMETIMES:
+          if (strstr (GST_PAD_TEMPLATE_NAME_TEMPLATE (templ), "%"))
+            potential_src_pads += 2;    /* Might make multiple pads */
+          else
+            potential_src_pads += 1;
+          break;
+        case GST_PAD_REQUEST:
+          potential_src_pads += 2;
+          break;
+      }
+    }
+    walk = g_list_next (walk);
+  }
+
+  if (potential_src_pads < 2)
+    return FALSE;
+
+  return TRUE;
+}
+
 /*
  * given a list of element factories, try to link one of the factories
  * to the given pad.
@@ -615,25 +667,41 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
     GList * factories)
 {
   GList *walk;
-  GstElementFactory *srcfactory = NULL;
   GstElement *result = NULL;
   gboolean isdemux = FALSE;
-  const gchar *klass;
+  GstPad *queuesinkpad = NULL, *queuesrcpad = NULL;
+  GstElement *queue = NULL;
+  GstPad *usedsrcpad = pad;
 
   /* Check if the parent of the src pad is a demuxer */
-  srcfactory = gst_element_get_factory (srcelement);
-  klass = gst_element_factory_get_klass (srcfactory);
-  isdemux = !!(strstr (klass, "Demux"));
+  isdemux = is_demuxer_element (srcelement);
+
+  if (isdemux && factories != NULL) {
+    /* Insert a queue between demuxer and decoder */
+    GST_DEBUG_OBJECT (decode_bin,
+        "Element %s is a demuxer, inserting a queue",
+        GST_OBJECT_NAME (srcelement));
+    queue = gst_element_factory_make ("queue", NULL);
+    decode_bin->queue_type = G_OBJECT_TYPE (queue);
+
+    g_object_set (G_OBJECT (queue), "max-size-buffers", 0, NULL);
+    g_object_set (G_OBJECT (queue), "max-size-time", 0LL, NULL);
+    g_object_set (G_OBJECT (queue), "max-size-bytes", 8192, NULL);
+    gst_bin_add (GST_BIN (decode_bin), queue);
+    gst_element_set_state (queue, GST_STATE_READY);
+    queuesinkpad = gst_element_get_pad (queue, "sink");
+    usedsrcpad = queuesrcpad = gst_element_get_pad (queue, "src");
+
+    g_return_val_if_fail (gst_pad_link (pad, queuesinkpad) == GST_PAD_LINK_OK,
+        NULL);
+  }
 
   /* loop over the factories */
   for (walk = factories; walk; walk = g_list_next (walk)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (walk->data);
     GstElement *element;
-    GstElement *queue = NULL;
     GstPadLinkReturn ret;
     GstPad *sinkpad;
-    GstPad *usedsrcpad = pad;
-    GstPad *queuesinkpad = NULL, *queuesrcpad = NULL;
 
     GST_DEBUG_OBJECT (decode_bin, "trying to link %s",
         gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
@@ -662,24 +730,6 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
     /* set to ready first so it is ready */
     gst_element_set_state (element, GST_STATE_READY);
 
-    if (isdemux) {
-      /* Insert a queue between demuxer and decoder */
-      GST_DEBUG_OBJECT (decode_bin,
-          "Element %s is a demuxer, inserting a queue",
-          GST_OBJECT_NAME (srcelement));
-
-      queue = gst_element_factory_make ("queue", NULL);
-      g_object_set (G_OBJECT (queue), "max-size-buffers", 0, NULL);
-      g_object_set (G_OBJECT (queue), "max-size-time", 0LL, NULL);
-      g_object_set (G_OBJECT (queue), "max-size-bytes", 8192, NULL);
-      gst_bin_add (GST_BIN (decode_bin), queue);
-      gst_element_set_state (queue, GST_STATE_READY);
-      queuesinkpad = gst_element_get_pad (queue, "sink");
-      usedsrcpad = queuesrcpad = gst_element_get_pad (queue, "src");
-
-      gst_pad_link (pad, queuesinkpad);
-    }
-
     if ((ret = gst_pad_link (usedsrcpad, sinkpad)) != GST_PAD_LINK_OK) {
       GST_DEBUG_OBJECT (decode_bin, "link failed on pad %s:%s, reason %d",
           GST_DEBUG_PAD_NAME (pad), ret);
@@ -687,15 +737,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
       gst_object_unref (sinkpad);
       /* this element did not work, remove it again and continue trying
        * other elements, the element will be disposed. */
-      if (isdemux)
-        gst_element_set_state (queue, GST_STATE_NULL);
       gst_element_set_state (element, GST_STATE_NULL);
-      if (isdemux) {
-        gst_pad_unlink (pad, queuesrcpad);
-        gst_object_unref (queuesrcpad);
-        gst_object_unref (queuesinkpad);
-        gst_bin_remove (GST_BIN (decode_bin), queue);
-      }
       gst_bin_remove (GST_BIN (decode_bin), element);
 
     } else {
@@ -704,7 +746,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
       GST_DEBUG_OBJECT (decode_bin, "linked on pad %s:%s",
           GST_DEBUG_PAD_NAME (usedsrcpad));
 
-      if (isdemux) {
+      if (queue != NULL) {
         decode_bin->queues = g_list_append (decode_bin->queues, queue);
         g_signal_connect (G_OBJECT (queue),
             "overrun", G_CALLBACK (queue_filled_cb), decode_bin);
@@ -713,11 +755,8 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
       /* The link worked, now figure out what it was that we connected */
 
       /* make sure we catch unlink signals */
-      sig = g_signal_connect (G_OBJECT (usedsrcpad), "unlinked",
+      sig = g_signal_connect (G_OBJECT (pad), "unlinked",
           G_CALLBACK (unlinked), decode_bin);
-
-      /* keep a ref to the signal id so that we can disconnect the signal callback */
-      g_object_set_data (G_OBJECT (pad), "unlinked_id", GINT_TO_POINTER (sig));
 
       /* now that we added the element we can try to continue autoplugging
        * on it until we have a raw type */
@@ -729,8 +768,12 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
 
       /* get rid of the sinkpad now */
       gst_object_unref (sinkpad);
-      if (isdemux) {
+
+      /* Set the queue to paused and set the pointer to NULL so we don't 
+       * remove it below */
+      if (queue != NULL) {
         gst_element_set_state (queue, GST_STATE_PAUSED);
+        queue = NULL;
         gst_object_unref (queuesrcpad);
         gst_object_unref (queuesinkpad);
       }
@@ -740,6 +783,14 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
     }
   }
 done:
+  if (queue != NULL) {
+    /* We didn't successfully connect to the queue */
+    gst_pad_unlink (pad, queuesrcpad);
+    gst_element_set_state (queue, GST_STATE_NULL);
+    gst_object_unref (queuesrcpad);
+    gst_object_unref (queuesinkpad);
+    gst_bin_remove (GST_BIN (decode_bin), queue);
+  }
   return result;
 }
 
@@ -800,6 +851,12 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
   while (GST_OBJECT_PARENT (elem) &&
       GST_OBJECT_PARENT (elem) != GST_OBJECT (decode_bin))
     elem = GST_ELEMENT (GST_OBJECT_PARENT (elem));
+
+  if (G_OBJECT_TYPE (elem) == decode_bin->queue_type) {
+    GST_DEBUG_OBJECT (decode_bin,
+        "Encountered demuxer output queue while removing element chain");
+    decode_bin->queues = g_list_remove (decode_bin->queues, elem);
+  }
 
   GST_DEBUG_OBJECT (decode_bin, "%s:%s", GST_DEBUG_PAD_NAME (pad));
   int_links = gst_pad_get_internal_links (pad);
@@ -1010,14 +1067,17 @@ unlinked (GstPad * pad, GstPad * peerpad, GstDecodeBin * decode_bin)
   if (!is_our_kid (peer, decode_bin))
     goto exit;
 
+  GST_DEBUG_OBJECT (decode_bin, "pad %s:%s removal while alive - chained?",
+      GST_DEBUG_PAD_NAME (pad));
+
   /* remove all elements linked to the peerpad */
   remove_element_chain (decode_bin, peerpad);
 
   /* if an element removes two pads, then we don't want this twice */
+  /* FIXME: decode_bin->dynamics doesn't contain a list of GstElements, it
+   * has GstDynamic structures */
   if (g_list_find (decode_bin->dynamics, element) != NULL)
     goto exit;
-
-  GST_DEBUG_OBJECT (decode_bin, "pad removal while alive - chained?");
 
   dyn = dynamic_create (element, decode_bin);
   /* and add this element to the dynamic elements */
