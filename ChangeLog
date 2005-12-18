@@ -1,3 +1,8 @@
+2005-12-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/basics-helloworld.xml:
+	  Remove superfluous closing bracket in helloworld example.
+
 2005-12-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-launch.1.in:
