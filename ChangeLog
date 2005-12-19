@@ -1,3 +1,15 @@
+2005-12-19  Edward Hervey  <edward@fluendo.com>
+
+	* ext/swfdec/gstswfdec.c: (gst_swfdec_class_init),
+	(gst_swfdec_chain), (gst_swfdec_render):
+	Add debugging category and return GstFlowReturn in the right places
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_link):
+	Get something from the peer pad once we've checked if there is a peer pad.
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
+	(qtdemux_tree_get_child_by_type), (qtdemux_parse_trak),
+	(qtdemux_video_caps):
+	Couple of fixes
+
 2005-12-19  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/divx/Makefile.am:

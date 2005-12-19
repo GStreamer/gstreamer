@@ -26,6 +26,9 @@
 #include <gst/video/video.h>
 #include <swfdec_buffer.h>
 
+GST_DEBUG_CATEGORY_STATIC (swfdec_debug);
+#define GST_CAT_DEFAULT swfdec_debug
+
 /* elementfactory information */
 static GstElementDetails gst_swfdec_details =
 GST_ELEMENT_DETAILS ("SWF video decoder",
@@ -243,6 +246,9 @@ gst_swfdec_class_init (GstSwfdecClass * klass)
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstSwfdecClass, embed_url), NULL, NULL,
       g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
+
+  GST_DEBUG_CATEGORY_INIT (swfdec_debug, "swfdec", 0, "Flash decoder plugin");
+
 }
 
 static GstCaps *
@@ -332,11 +338,13 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
   GstSwfdec *swfdec = GST_SWFDEC (GST_PAD_PARENT (pad));
 
   g_static_rec_mutex_lock (&swfdec->mutex);
+  GST_DEBUG_OBJECT (swfdec, "about to call swfdec_decoder_parse");
   ret = swfdec_decoder_parse (swfdec->decoder);
   if (ret == SWF_NEEDBITS) {
     guint buf_size;
     GstBuffer *prev_buffer;
 
+    GST_DEBUG_OBJECT (swfdec, "SWF_NEEDBITS, feeding data to swfdec-decoder");
     buf_size = gst_adapter_available (swfdec->adapter);
     if (buf_size) {
       prev_buffer = gst_buffer_new_and_alloc (buf_size);
@@ -351,8 +359,6 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
     swfdec_decoder_add_buffer (swfdec->decoder,
         gst_swfdec_buffer_to_swf (buffer));
 
-
-
   } else if (ret == SWF_CHANGE) {
 
     GstCaps *caps;
@@ -363,6 +369,7 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
     GstTagList *taglist;
 #endif
 
+    GST_DEBUG_OBJECT (swfdec, "SWF_CHANGE");
     gst_adapter_push (swfdec->adapter, buffer);
 
     swfdec_decoder_get_image_size (swfdec->decoder,
@@ -411,6 +418,7 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
 #endif
 
   } else if (ret == SWF_EOF) {
+    GST_DEBUG_OBJECT (swfdec, "SWF_EOF");
     gst_swfdec_render (swfdec, ret);
     gst_task_start (swfdec->task);
   }
@@ -439,8 +447,10 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
     GstBuffer *videobuf;
     GstBuffer *audiobuf;
     gboolean ret;
+    GstFlowReturn res;
     const char *url;
 
+    GST_DEBUG_OBJECT (swfdec, "render:SWF_EOF");
     swfdec_decoder_set_mouse (swfdec->decoder, swfdec->x, swfdec->y,
         swfdec->button);
 
@@ -448,8 +458,8 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
 
     if (!ret) {
       gst_task_stop (swfdec->task);
-      gst_pad_push_event (swfdec->videopad, gst_event_new_eos ());
-      gst_pad_push_event (swfdec->audiopad, gst_event_new_eos ());
+      res = gst_pad_push_event (swfdec->videopad, gst_event_new_eos ());
+      res = gst_pad_push_event (swfdec->audiopad, gst_event_new_eos ());
 
       return;
     }
