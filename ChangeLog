@@ -1,5 +1,10 @@
 2005-12-19  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.override:
+	ignore gst_object_sink
+
+2005-12-19  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gstlibs.override:
 	* gst/libs.defs:
 	Properly wrap the gst_dp_* functions (cast gchar* to guint8*).

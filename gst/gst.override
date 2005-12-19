@@ -324,6 +324,7 @@ ignore
   gst_implements_interface_cast
   gst_implements_interface_check
   gst_plugin_get_module
+  gst_object_sink
 %%
 override-slot GstPluginFeature.tp_repr
 static PyObject *
