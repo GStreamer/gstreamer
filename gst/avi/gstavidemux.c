@@ -1571,6 +1571,7 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
   GstFormat format = GST_FORMAT_BYTES;
   guint64 pos = avi->offset;
   guint64 length;
+  gint64 tmplength;
   guint32 tag;
   GstPad *peer;
   GList *list = NULL;
@@ -1585,8 +1586,9 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
 
   if (!(peer = gst_pad_get_peer (avi->sinkpad)))
     return FALSE;
-  if (!(gst_pad_query_duration (peer, &format, &length)))
+  if (!(gst_pad_query_duration (peer, &format, &tmplength)))
     return FALSE;
+  length = tmplength;
   gst_object_unref (peer);
 
   if (*index) {
@@ -1608,6 +1610,7 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
   while (1) {
     gint stream_nr;
     guint size;
+    gint64 tmpts, tmpdur;
 
     if ((res =
             gst_avi_demux_next_data_buffer (avi, &pos, &tag,
@@ -1636,16 +1639,20 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
       format = GST_FORMAT_TIME;
       /* constant rate stream */
       gst_avi_demux_src_convert (stream->pad, GST_FORMAT_BYTES,
-          stream->total_bytes, &format, &entry->ts);
+          stream->total_bytes, &format, &tmpts);
+      entry->ts = tmpts;
       gst_avi_demux_src_convert (stream->pad, GST_FORMAT_BYTES,
-          stream->total_bytes + entry->size, &format, &entry->dur);
+          stream->total_bytes + entry->size, &format, &tmpdur);
+      entry->dur = tmpdur;
     } else {
       format = GST_FORMAT_TIME;
       /* VBR stream */
       gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-          stream->total_frames, &format, &entry->ts);
+          stream->total_frames, &format, &tmpts);
+      entry->ts = tmpts;
       gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-          stream->total_frames + 1, &format, &entry->dur);
+          stream->total_frames + 1, &format, &tmpdur);
+      entry->dur = tmpdur;
     }
     entry->dur -= entry->ts;
 
