@@ -142,10 +142,8 @@ static void gst_dvd_demux_init (GstDVDDemux * dvd_demux,
 static GstFlowReturn gst_dvd_demux_send_buffer (GstMPEGParse * mpeg_parse,
     GstBuffer * buffer, GstClockTime time);
 static gboolean gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse,
-    GstEvent * event, GstClockTime time);
+    GstEvent * event);
 
-static gboolean gst_dvd_demux_handle_newsegment (GstMPEGParse * mpeg_parse,
-    GstEvent * event, gboolean forward);
 static gboolean gst_dvd_demux_handle_dvd_event
     (GstDVDDemux * dvd_demux, GstEvent * event);
 
@@ -244,8 +242,6 @@ gst_dvd_demux_class_init (GstDVDDemuxClass * klass)
 
   gstelement_class->change_state = gst_dvd_demux_change_state;
 
-  mpeg_parse_class->handle_newsegment = gst_dvd_demux_handle_newsegment;
-
   mpeg_demux_class->get_audio_stream = gst_dvd_demux_get_audio_stream;
   mpeg_demux_class->get_video_stream = gst_dvd_demux_get_video_stream;
   mpeg_demux_class->send_subbuffer = gst_dvd_demux_send_subbuffer;
@@ -299,47 +295,27 @@ gst_dvd_demux_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
 }
 
 static gboolean
-gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
-    GstClockTime time)
+gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
 {
   GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_parse);
   gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM:
-      if (!gst_dvd_demux_handle_dvd_event (dvd_demux, event)) {
-        ret = GST_FLOW_ERROR;
+    case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
+      if (gst_structure_has_name (gst_event_get_structure (event),
+              "application/x-gst-dvd")) {
+        ret = gst_dvd_demux_handle_dvd_event (dvd_demux, event);
+      } else {
+        ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
+            event);
       }
       break;
-      /*  case GST_EVENT_FILLER: */
-    case GST_EVENT_NEWSEGMENT:
-    case GST_EVENT_FLUSH_START:
-    case GST_EVENT_FLUSH_STOP:
-      ret = PARSE_CLASS (dvd_demux)->send_event (mpeg_parse, event,
-          GST_CLOCK_TIME_NONE);
-      break;
     default:
-      /* Propagate the event normally. */
-      ret = gst_pad_event_default (mpeg_parse->sinkpad, event);
+      ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
+          event);
       break;
   }
-
-  return ret;
-}
-
-static gboolean
-gst_dvd_demux_handle_newsegment (GstMPEGParse * mpeg_parse,
-    GstEvent * event, gboolean forward)
-{
-  gboolean ret;
-
-  /* Run the superclass implementation to update the current segment. */
-  ret = GST_MPEG_PARSE_CLASS (parent_class)->handle_newsegment (mpeg_parse,
-      event, FALSE);
-
-  /* Use the current segment to adjust timestamps. */
-  GST_MPEG_DEMUX (mpeg_parse)->adjust = mpeg_parse->current_segment.accum -
-      mpeg_parse->current_segment.start;
 
   return ret;
 }
@@ -363,16 +339,6 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
   }
 #endif
 
-  if (strcmp (gst_structure_get_name (structure), "application/x-gst-dvd") != 0) {
-    /* This isn't a DVD event. */
-    if (GST_EVENT_TIMESTAMP (event) != GST_CLOCK_TIME_NONE) {
-      GST_EVENT_TIMESTAMP (event) += mpeg_demux->adjust;
-    }
-    gst_pad_event_default (mpeg_parse->sinkpad, event);
-
-    return TRUE;
-  }
-
   if (strcmp (event_type, "dvd-audio-stream-change") == 0) {
     gint stream_nr;
 
@@ -395,6 +361,11 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     }
     gst_dvd_demux_set_cur_subpicture (dvd_demux, stream_nr);
     gst_event_unref (event);
+  } else if (strcmp (event_type, "dvd-spu-still-frame") == 0) {
+    /* Send an EOS down the audio path, to allow for preroll in the
+       absence of audio material. */
+    gst_event_unref (event);
+    return gst_pad_push_event (dvd_demux->cur_audio, gst_event_new_eos ());
   } else if (!strcmp (event_type, "dvd-lang-codes")) {
     gint num_substreams = 0, num_audstreams = 0, n;
     gchar *t;
@@ -469,8 +440,7 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     GST_DEBUG_OBJECT (dvd_demux, "dvddemux Forwarding DVD event %s to all pads",
         event_type);
 
-    PARSE_CLASS (dvd_demux)->send_event (mpeg_parse, event,
-        GST_CLOCK_TIME_NONE);
+    PARSE_CLASS (dvd_demux)->send_event (mpeg_parse, event);
   }
 
   return TRUE;

@@ -109,21 +109,13 @@ struct _GstMPEGParseClass
 
   /* Process an event */
   gboolean      (*process_event)  (GstMPEGParse * parse,
-                                   GstEvent * event, GstClockTime time);
-
-  /* Process a newsegment event */
-  gboolean      (*handle_newsegment)
-                                  (GstMPEGParse * parse, GstEvent * event,
-                                   gboolean forward);
+                                   GstEvent * event);
 
   /* Send an event */
-  gboolean      (*send_event)     (GstMPEGParse * parse, GstEvent *event,
-                                   GstClockTime time);
+  gboolean      (*send_event)     (GstMPEGParse * parse, GstEvent *event);
 
-  /* Send a newsegment event. */
-  gboolean      (*send_newsegment)(GstMPEGParse * parse, gdouble rate,
-                                   GstClockTime start_time,
-                                   GstClockTime stop_time);
+  /* Adjust a timestamp */
+  GstClockTime	(*adjust_ts)      (GstMPEGParse * parse, GstClockTime ts);
 
   /* Signals */
   void          (*reached_offset) (GstMPEGParse *parse,

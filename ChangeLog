@@ -1,3 +1,89 @@
+2005-12-19  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	Big mpegparse clean up, second round:
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_handle_dvd_event):
+	Send and EOS event down the audio pipeline when an still frame
+	event arrives. This prevents the pipeline from locking when a
+	still menu comes directly after a flush.
+
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_reset): 
+	Don't send a newsegment in reset.
+	(gst_mpeg_parse_adjust_ts): Check for invalid timestamps.
+	(gst_mpeg_parse_handle_newsegment, gst_mpeg_parse_process_event):
+	Move the code of handle_newsegment to process_event. Send a
+	NEWSEGMENT after FLUSH_STOP.
+	(gst_mpeg_parse_change_state): Send a NEWSEGMENT right after
+	moving to PAUSED.
+
+	* gst/mpegstream/gstmpegdemux.c (gst_mpeg_demux_send_event) 
+	(gst_mpeg_demux_class_init): Don't override send_event.
+	* gst/mpegstream/gstmpegdemux.c (gst_mpeg_demux_init) 
+	(gst_mpeg_demux_send_event, gst_mpeg_demux_send_subbuffer) 
+	(gst_mpeg_demux_reset):
+	* gst/mpegstream/gstmpegdemux.h:  Get rid of just_flushed
+	attribute.
+
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_process_event):
+	Reset the mpegparse element after a flush.
+
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_handle_newsegment): 
+	Don't forward events.
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_process_event): 
+	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParseClass): 
+	handle_newsegment is not a virtual method anymore.
+
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_send_newsegment) 
+	(gst_mpeg_parse_reset, gst_mpeg_parse_class_init): 
+	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParseClass): Get
+	rid of send_newsegment virtual method.
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_process_event): Only
+	handle DVD events and call the superclass method for other event
+	types.
+	* gst/mpegstream/gstmpegdemux.c (gst_mpeg_demux_send_event): Don't
+	override process_event anymore.
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_event)
+	(gst_mpeg_parse_process_event): Move actual event processing to
+	process event so that subclasses can properly override or extend
+	it.
+	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParseClass):
+	Eliminate time parameter in process event.
+
+	* gst/mpegstream/gstmpegdemux.c (gst_mpeg_demux_init) 
+	(gst_mpeg_demux_parse_packet, gst_mpeg_demux_parse_pes) 
+	(gst_mpeg_demux_send_subbuffer): 
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_class_init) 
+	(gst_mpeg_parse_parse_packhead, gst_mpeg_parse_event) 
+	(gst_mpeg_parse_chain): Use the new adjust_ts method instead of
+	adding the value of the adjust attribute.
+	* gst/mpegstream/gstmpegdemux.h (struct _GstMPEGVideoStream): Get
+	rid of the adjust attribute. Now all timestamp adjustments are
+	performed by mpegparse using the current segment.
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_adjust_ts)
+	(gst_mpeg_parse_class_init): Implement the adjust_ts method based
+	on the adjust attribute for SCR values and the current segment.
+	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParseClass): New
+	adjust_ts virtual method to adjust timestamps for outgoing
+	buffers.
+	* gst/mpegstream/gstmpegdemux.c (gst_mpeg_demux_send_newsegment) 
+	(gst_mpeg_demux_parse_packet): Don't override send_newsegment.
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_class_init) 
+	(gst_dvd_demux_handle_newsegment): Don't override
+	handle_newsegment.
+	(gst_dvd_demux_process_event, gst_dvd_demux_handle_dvd_event):
+	Check for DVD events in process_event instead of
+	handle_dvd_event.
+
+	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParseClass): 
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_handle_newsegment) 
+	(gst_mpeg_parse_send_newsegment, gst_mpeg_parse_send_event): 
+	* gst/mpegstream/gstmpegdemux.c (gst_mpeg_demux_process_event) 
+	(gst_mpeg_demux_send_event): 
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_process_event) 
+	(gst_dvd_demux_handle_dvd_event): 
+	Eliminate the time parameter in send_event.
+
 2005-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_do_typefind),

@@ -94,12 +94,6 @@ static void gst_mpeg_demux_class_init (GstMPEGDemuxClass * klass);
 
 static GstFlowReturn gst_mpeg_demux_send_buffer (GstMPEGParse * mpeg_parse,
     GstBuffer * buffer, GstClockTime time);
-static gboolean gst_mpeg_demux_process_event (GstMPEGParse * mpeg_parse,
-    GstEvent * event, GstClockTime time);
-static gboolean gst_mpeg_demux_send_newsegment (GstMPEGParse * parse,
-    gdouble rate, GstClockTime start_time, GstClockTime stop_time);
-static gboolean gst_mpeg_demux_send_event (GstMPEGParse * mpeg_parse,
-    GstEvent * event, GstClockTime time);
 
 static GstPad *gst_mpeg_demux_new_output_pad (GstMPEGDemux * mpeg_demux,
     const gchar * name, GstPadTemplate * temp);
@@ -197,9 +191,6 @@ gst_mpeg_demux_class_init (GstMPEGDemuxClass * klass)
   mpeg_parse_class->parse_packet = gst_mpeg_demux_parse_packet;
   mpeg_parse_class->parse_pes = gst_mpeg_demux_parse_pes;
   mpeg_parse_class->send_buffer = gst_mpeg_demux_send_buffer;
-  mpeg_parse_class->process_event = gst_mpeg_demux_process_event;
-  mpeg_parse_class->send_newsegment = gst_mpeg_demux_send_newsegment;
-  mpeg_parse_class->send_event = gst_mpeg_demux_send_event;
 
   klass->new_output_pad = gst_mpeg_demux_new_output_pad;
   klass->init_stream = gst_mpeg_demux_init_stream;
@@ -232,10 +223,8 @@ gst_mpeg_demux_init (GstMPEGDemux * mpeg_demux, GstMPEGDemuxClass * klass)
     mpeg_demux->private_stream[i] = NULL;
   }
 
-  mpeg_demux->adjust = 0;
   mpeg_demux->max_gap = GST_CLOCK_TIME_NONE;
   mpeg_demux->max_gap_tolerance = GST_CLOCK_TIME_NONE;
-  mpeg_demux->just_flushed = FALSE;
 }
 
 static GstFlowReturn
@@ -244,80 +233,6 @@ gst_mpeg_demux_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
 {
   gst_buffer_unref (buffer);
   return GST_FLOW_OK;
-}
-
-static gboolean
-gst_mpeg_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
-    GstClockTime time)
-{
-  gboolean ret = TRUE;
-
-  switch (GST_EVENT_TYPE (event)) {
-      /* case GST_EVENT_FILLER: */
-    case GST_EVENT_NEWSEGMENT:
-    case GST_EVENT_FLUSH_START:
-    case GST_EVENT_FLUSH_STOP:
-      ret = PARSE_CLASS (mpeg_parse)->send_event (mpeg_parse, event,
-          GST_CLOCK_TIME_NONE);
-      break;
-    default:
-      /* Propagate the event normally. */
-      ret = gst_pad_event_default (mpeg_parse->sinkpad, event);
-      break;
-  }
-
-  return ret;
-}
-
-static gboolean
-gst_mpeg_demux_send_newsegment (GstMPEGParse * mpeg_parse, gdouble rate,
-    GstClockTime start_time, GstClockTime stop_time)
-{
-  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (mpeg_parse);
-
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (start_time), FALSE);
-
-  start_time += mpeg_demux->adjust;
-  stop_time += mpeg_demux->adjust;
-
-  if (!mpeg_demux->just_flushed) {
-    GST_DEBUG_OBJECT (mpeg_parse, "NEWSEGMENT without flush, st = %llu",
-        start_time);
-    /* Add padding to the end to make sure all streams end at the same timestamp */
-    CLASS (mpeg_demux)->synchronise_pads (mpeg_demux,
-        mpeg_parse->current_ts + mpeg_demux->adjust + (GST_SECOND / 20),
-        mpeg_parse->current_ts + mpeg_demux->adjust + (GST_SECOND / 20));
-  } else {
-    GST_DEBUG_OBJECT (mpeg_parse, "NEWSEGMENT after flush, st = %llu",
-        start_time);
-  }
-  mpeg_demux->just_flushed = FALSE;
-
-  return parent_class->send_newsegment (mpeg_parse, rate, start_time,
-      stop_time);
-}
-
-static gboolean
-gst_mpeg_demux_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
-    GstClockTime time)
-{
-  /*
-   * Distribute the event to all active pads
-   */
-  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (mpeg_parse);
-
-  GST_DEBUG_OBJECT (mpeg_demux, "Sending %s event",
-      GST_EVENT_TYPE_NAME (event));
-
-  if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START)
-    mpeg_demux->just_flushed = TRUE;
-
-  if (parent_class->send_event)
-    return parent_class->send_event (mpeg_parse, event, time);
-  else
-    gst_event_unref (event);
-
-  return TRUE;
 }
 
 static gint
@@ -769,8 +684,8 @@ done:
       headerlen, datalen);
 
   if (pts != -1) {
-    pts += mpeg_parse->adjust;
-    timestamp = MPEGTIME_TO_GSTTIME (pts) + mpeg_demux->adjust;
+    timestamp = PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
+        MPEGTIME_TO_GSTTIME (pts));
 
     /* this apparently happens for some input were headers are
      * rewritten to make time start at zero... */
@@ -867,8 +782,8 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
       pts |= ((guint64) * buf++) << 7;
       pts |= ((guint64) (*buf++ & 0xFE)) >> 1;
 
-      timestamp =
-          MPEGTIME_TO_GSTTIME (pts + mpeg_parse->adjust) + mpeg_demux->adjust;
+      timestamp = PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
+          MPEGTIME_TO_GSTTIME (pts));
 
       GST_DEBUG_OBJECT (mpeg_demux,
           "0x%02x (% " G_GINT64_FORMAT ") PTS = %" G_GUINT64_FORMAT, id, pts,
@@ -957,12 +872,11 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
   GstFlowReturn ret;
   GstBuffer *outbuf;
 
-  mpeg_demux->just_flushed = FALSE;
-
   if (timestamp != GST_CLOCK_TIME_NONE) {
     outstream->cur_ts = timestamp;
-    outstream->scr_offs =
-        GST_CLOCK_DIFF (timestamp, mpeg_parse->current_ts + mpeg_demux->adjust);
+    outstream->scr_offs = GST_CLOCK_DIFF (timestamp,
+        PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
+            mpeg_parse->current_ts));
     if (outstream->scr_offs < 0)
       outstream->scr_offs = 0;
 
@@ -974,8 +888,8 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
           GST_BUFFER_OFFSET (buffer), GST_FORMAT_TIME, timestamp, 0);
     }
   } else {
-    outstream->cur_ts =
-        mpeg_parse->current_ts + mpeg_demux->adjust + outstream->scr_offs;
+    outstream->cur_ts = PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
+        mpeg_parse->current_ts + outstream->scr_offs);
   }
 
   if (size == 0)
@@ -995,14 +909,16 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
 
   if (GST_CLOCK_TIME_IS_VALID (mpeg_demux->max_gap) &&
       GST_CLOCK_TIME_IS_VALID (mpeg_parse->current_ts) &&
-      (mpeg_parse->current_ts + mpeg_demux->adjust > mpeg_demux->max_gap)) {
+      (PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
+              mpeg_parse->current_ts) > mpeg_demux->max_gap)) {
     GstClockTime threshold =
-        GST_CLOCK_DIFF (mpeg_parse->current_ts + mpeg_demux->adjust,
+        GST_CLOCK_DIFF (PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
+            mpeg_parse->current_ts),
         mpeg_demux->max_gap);
 
     CLASS (mpeg_demux)->synchronise_pads (mpeg_demux, threshold,
-        mpeg_parse->current_ts + mpeg_demux->adjust -
-        mpeg_demux->max_gap_tolerance);
+        PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
+            mpeg_parse->current_ts) - mpeg_demux->max_gap_tolerance);
   }
 
   return ret;
@@ -1290,7 +1206,6 @@ gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux)
    * mpeg_demux->adjust = 0;
    * mpeg_demux->max_gap = GST_CLOCK_TIME_NONE;
    * mpeg_demux->max_gap_tolerance = GST_CLOCK_TIME_NONE;
-   * mpeg_demux->just_flushed = FALSE;
    */
 }
 

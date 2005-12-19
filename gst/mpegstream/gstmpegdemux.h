@@ -129,21 +129,15 @@ struct _GstMPEGDemux {
   GstMPEGStream *audio_stream[GST_MPEG_DEMUX_NUM_AUDIO_STREAMS];
   GstMPEGStream *private_stream[GST_MPEG_DEMUX_NUM_PRIVATE_STREAMS];
 
-  GstClockTimeDiff adjust;      /* Added to all PTS timestamps. This element
-                                   keeps always this value in 0, but it is
-                                   there for the benefit of subclasses. */
+  GstClockTime max_gap;         /* Maximum timestamp difference to
+                                   allow between pads before using a
+                                   filler to catch up. */
+  GstClockTime max_gap_tolerance;
+                                /* When catching a pad up, how far
+                                   behind to make it. */
 
-  GstClockTime max_gap; /* Maximum timestamp difference to allow 
-                         * between pads before using a filler to catch up
-                         */
-  GstClockTime max_gap_tolerance; /* When catching a pad up, how far behind
-                                     to make it
-                                   */
-
-  GstClockTime max_ts; /* Highest timestamp of all pads */
-  GstPad      *max_pad; /* Pad with highest timestamp */
-
-  gboolean     just_flushed; 
+  GstClockTime max_ts;          /* Highest timestamp of all pads. */
+  GstPad      *max_pad;         /* Pad with highest timestamp. */
 };
 
 struct _GstMPEGDemuxClass {

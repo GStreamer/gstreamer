@@ -99,18 +99,15 @@ static gboolean gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse,
 
 static void gst_mpeg_parse_reset (GstMPEGParse * mpeg_parse);
 
-static gboolean
-gst_mpeg_parse_handle_newsegment (GstMPEGParse * mpeg_parse,
-    GstEvent * event, gboolean forward);
+static GstClockTime gst_mpeg_parse_adjust_ts (GstMPEGParse * mpeg_parse,
+    GstClockTime ts);
 
 static GstFlowReturn gst_mpeg_parse_send_buffer (GstMPEGParse * mpeg_parse,
     GstBuffer * buffer, GstClockTime time);
 static GstFlowReturn gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse,
-    GstEvent * event, GstClockTime time);
-static GstFlowReturn gst_mpeg_parse_send_newsegment (GstMPEGParse * parse,
-    gdouble rate, GstClockTime start_time, GstClockTime stop_time);
+    GstEvent * event);
 static gboolean gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse,
-    GstEvent * event, GstClockTime time);
+    GstEvent * event);
 
 static void gst_mpeg_parse_pad_added (GstElement * element, GstPad * pad);
 
@@ -162,10 +159,9 @@ gst_mpeg_parse_class_init (GstMPEGParseClass * klass)
   klass->parse_syshead = NULL;
   klass->parse_packet = NULL;
   klass->parse_pes = NULL;
-  klass->handle_newsegment = gst_mpeg_parse_handle_newsegment;
+  klass->adjust_ts = gst_mpeg_parse_adjust_ts;
   klass->send_buffer = gst_mpeg_parse_send_buffer;
   klass->process_event = gst_mpeg_parse_process_event;
-  klass->send_newsegment = gst_mpeg_parse_send_newsegment;
   klass->send_event = gst_mpeg_parse_send_event;
 
   /* FIXME: this is a hack.  We add the pad templates here instead
@@ -258,7 +254,7 @@ gst_mpeg_parse_update_streaminfo (GstMPEGParse * mpeg_parse)
 static void
 gst_mpeg_parse_reset (GstMPEGParse * mpeg_parse)
 {
-  GST_DEBUG ("Resetting mpeg_parse");
+  GST_DEBUG_OBJECT (mpeg_parse, "Resetting mpeg_parse");
 
   mpeg_parse->first_scr = MP_INVALID_SCR;
   mpeg_parse->first_scr_pos = 0;
@@ -279,52 +275,27 @@ gst_mpeg_parse_reset (GstMPEGParse * mpeg_parse)
   mpeg_parse->do_adjust = TRUE;
   mpeg_parse->adjust = 0;
 
-  /* Reset the current segment. */
+  /* Initialize the current segment. */
   GST_DEBUG_OBJECT (mpeg_parse, "Resetting current segment");
   gst_segment_init (&mpeg_parse->current_segment, GST_FORMAT_TIME);
-
-  /* Send a corresponding newsegment. */
-  if (CLASS (mpeg_parse)->send_newsegment) {
-    CLASS (mpeg_parse)->send_newsegment (mpeg_parse, 1.0, 0,
-        GST_CLOCK_TIME_NONE);
-  }
 }
 
-static gboolean
-gst_mpeg_parse_handle_newsegment (GstMPEGParse * mpeg_parse,
-    GstEvent * event, gboolean forward)
+static GstClockTime
+gst_mpeg_parse_adjust_ts (GstMPEGParse * mpeg_parse, GstClockTime ts)
 {
-  gboolean ret = TRUE;
-  gboolean update;
-  gdouble rate;
-  GstFormat format;
-  gint64 start, stop, time;
-
-  gst_event_parse_new_segment (event, &update, &rate, &format,
-      &start, &stop, &time);
-
-  if (format == GST_FORMAT_TIME && (GST_CLOCK_TIME_IS_VALID (time))) {
-    /* Update the current segment. */
-    GST_DEBUG_OBJECT (mpeg_parse, "Updating current segment with newsegment");
-    gst_segment_set_newsegment (&mpeg_parse->current_segment,
-        update, rate, format, start, stop, time);
-
-    if (forward) {
-      GST_DEBUG_OBJECT (mpeg_parse, "forwarding time based segment");
-      if (CLASS (mpeg_parse)->send_event) {
-        ret = CLASS (mpeg_parse)->send_event (mpeg_parse, event, time);
-      }
-    }
-
-    /* We are receiving segments from upstream. Don't try to adjust
-       SCR values. */
-    mpeg_parse->do_adjust = FALSE;
-    mpeg_parse->adjust = 0;
+  if (!GST_CLOCK_TIME_IS_VALID (ts)) {
+    return GST_CLOCK_TIME_NONE;
   }
-  mpeg_parse->packetize->resync = TRUE;
 
-  gst_event_unref (event);
-  return ret;
+  if (mpeg_parse->do_adjust) {
+    /* Close the SCR gaps. */
+    return ts + MPEGTIME_TO_GSTTIME (mpeg_parse->adjust);
+  } else {
+    /* Adjust the timestamp in such a way that all segments appear to
+       be in a single continuous sequence starting at time 0. */
+    return ts + mpeg_parse->current_segment.accum -
+        mpeg_parse->current_segment.start;
+  }
 }
 
 static GstFlowReturn
@@ -352,7 +323,8 @@ gst_mpeg_parse_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
   }
 
   GST_BUFFER_TIMESTAMP (buffer) = time;
-  GST_DEBUG ("current buffer time: %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
+  GST_DEBUG_OBJECT (mpeg_parse, "current buffer time: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time));
 
   result = gst_pad_push (mpeg_parse->srcpad, buffer);
 
@@ -360,37 +332,72 @@ gst_mpeg_parse_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
 }
 
 static gboolean
-gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event,
-    GstClockTime time)
+gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
 {
-  return gst_pad_event_default (mpeg_parse->sinkpad, event);
-}
+  gboolean ret = FALSE;
 
-static gboolean
-gst_mpeg_parse_send_newsegment (GstMPEGParse * mpeg_parse, gdouble rate,
-    GstClockTime start_time, GstClockTime stop_time)
-{
-  GstEvent *event;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gboolean update;
+      gdouble rate;
+      GstFormat format;
+      gint64 start, stop, time;
 
-  event = gst_event_new_new_segment (FALSE, rate, GST_FORMAT_TIME,
-      start_time, stop_time, 0);
+      gst_event_parse_new_segment (event, &update, &rate, &format,
+          &start, &stop, &time);
 
-  /* Update the current segment. */
-  GST_DEBUG_OBJECT (mpeg_parse, "Setting current segment");
-  gst_segment_set_newsegment (&mpeg_parse->current_segment, FALSE, rate,
-      GST_FORMAT_TIME, start_time, stop_time, 0);
+      if (format == GST_FORMAT_TIME && (GST_CLOCK_TIME_IS_VALID (time))) {
+        /* Update the current segment. */
+        GST_DEBUG_OBJECT (mpeg_parse,
+            "Updating current segment with newsegment");
+        gst_segment_set_newsegment (&mpeg_parse->current_segment,
+            update, rate, format, start, stop, time);
 
-  if (CLASS (mpeg_parse)->send_event) {
-    return CLASS (mpeg_parse)->send_event (mpeg_parse, event, start_time);
+        /* We are receiving segments from upstream. Don't try to adjust
+           SCR values. */
+        mpeg_parse->do_adjust = FALSE;
+        mpeg_parse->adjust = 0;
+      }
+      mpeg_parse->packetize->resync = TRUE;
+
+      gst_event_unref (event);
+
+      ret = TRUE;
+      break;
+    }
+    case GST_EVENT_FLUSH_STOP:
+      /* Forward the event. */
+      if (CLASS (mpeg_parse)->send_event) {
+        ret = CLASS (mpeg_parse)->send_event (mpeg_parse, event);
+      } else {
+        gst_event_unref (event);
+      }
+
+      /* Send a newsegment event to restart counting from 0. */
+      if (CLASS (mpeg_parse)->send_event) {
+        CLASS (mpeg_parse)->send_event (mpeg_parse,
+            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
+      }
+
+      /* Reset the internal fields. */
+      gst_mpeg_parse_reset (mpeg_parse);
+
+      break;
+    default:
+      if (CLASS (mpeg_parse)->send_event) {
+        ret = CLASS (mpeg_parse)->send_event (mpeg_parse, event);
+      } else {
+        gst_event_unref (event);
+      }
+      break;
   }
 
-  gst_event_unref (event);
-  return FALSE;
+  return ret;
 }
 
 static gboolean
-gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse, GstEvent * event,
-    GstClockTime time)
+gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse, GstEvent * event)
 {
   GstIterator *it;
   gpointer pad;
@@ -541,19 +548,19 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 
   if (mpeg_parse->do_adjust && diff > mpeg_parse->max_scr_gap) {
     /* SCR gap found, fix the adjust value. */
-    GST_DEBUG ("SCR gap detected; expected: %" G_GUINT64_FORMAT " got: %"
-        G_GUINT64_FORMAT " adjusted:%" G_GINT64_FORMAT " adjust:%"
-        G_GINT64_FORMAT, mpeg_parse->next_scr, mpeg_parse->current_scr,
-        mpeg_parse->current_scr + mpeg_parse->adjust, mpeg_parse->adjust);
+    GST_DEBUG_OBJECT (mpeg_parse, "SCR gap detected; expected: %"
+        G_GUINT64_FORMAT " got: %" G_GUINT64_FORMAT,
+        mpeg_parse->next_scr, mpeg_parse->current_scr);
 
     mpeg_parse->adjust +=
         (gint64) mpeg_parse->next_scr - (gint64) mpeg_parse->current_scr;
-    GST_DEBUG ("new adjust: %" G_GINT64_FORMAT, mpeg_parse->adjust);
+    GST_DEBUG_OBJECT (mpeg_parse, "new adjust: %" G_GINT64_FORMAT,
+        mpeg_parse->adjust);
   }
 
   /* Update the current timestamp. */
-  mpeg_parse->current_ts = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr +
-      mpeg_parse->adjust);
+  mpeg_parse->current_ts = CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
+      MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
 
   /* Check for the reached offset signal. */
   offset = gst_mpeg_packetize_tell (mpeg_parse->packetize);
@@ -588,13 +595,15 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
           mpeg_parse->avg_bitrate_time;
     }
     //gst_mpeg_parse_update_streaminfo (mpeg_parse);
-    GST_LOG ("stream current is %1.3fMbs, calculated over %1.3fkB",
+    GST_LOG_OBJECT (mpeg_parse,
+        "stream current is %1.3fMbs, calculated over %1.3fkB",
         (mpeg_parse->mux_rate * 8) / 1048576.0,
         mpeg_parse->bytes_since_scr / 1024.0);
   }
 
   if (mpeg_parse->avg_bitrate_bytes) {
-    GST_LOG ("stream avg is %1.3fMbs, calculated over %1.3fkB",
+    GST_LOG_OBJECT (mpeg_parse,
+        "stream avg is %1.3fMbs, calculated over %1.3fkB",
         (float) (mpeg_parse->avg_bitrate_bytes) * 8 * GST_SECOND
         / mpeg_parse->avg_bitrate_time / 1048576.0,
         mpeg_parse->avg_bitrate_bytes / 1024.0);
@@ -613,30 +622,10 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 static gboolean
 gst_mpeg_parse_event (GstPad * pad, GstEvent * event)
 {
+  gboolean ret;
   GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
-  GstClockTime time;
-  gboolean ret = FALSE;
 
-  if (mpeg_parse->current_scr != MP_INVALID_SCR) {
-    time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr);
-  } else {
-    time = GST_CLOCK_TIME_NONE;
-  }
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-      if (CLASS (mpeg_parse)->handle_newsegment)
-        ret = CLASS (mpeg_parse)->handle_newsegment (mpeg_parse, event, TRUE);
-      else
-        gst_event_unref (event);
-      break;
-    default:
-      if (CLASS (mpeg_parse)->process_event)
-        ret = CLASS (mpeg_parse)->process_event (mpeg_parse, event, time);
-      else
-        gst_event_unref (event);
-      break;
-  }
+  ret = CLASS (mpeg_parse)->process_event (mpeg_parse, event);
 
   gst_object_unref (mpeg_parse);
   return ret;
@@ -704,7 +693,7 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
 
     /* Don't send data as long as no new SCR is found. */
     if (mpeg_parse->current_scr == MP_INVALID_SCR) {
-      GST_DEBUG ("waiting for SCR");
+      GST_DEBUG_OBJECT (mpeg_parse, "waiting for SCR");
       gst_buffer_unref (buffer);
       result = GST_FLOW_OK;
       goto done;
@@ -733,7 +722,8 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
     /* Send the buffer. */
     g_return_val_if_fail (mpeg_parse->current_scr != MP_INVALID_SCR,
         GST_FLOW_OK);
-    time = MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr + mpeg_parse->adjust);
+    time = CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
+        MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
     if (CLASS (mpeg_parse)->send_buffer)
       result = CLASS (mpeg_parse)->send_buffer (mpeg_parse, buffer, time);
 
@@ -1089,7 +1079,7 @@ normal_seek (GstMPEGParse * mpeg_parse, GstPad * pad, GstEvent * event)
 
   offset = cur;
   if (offset != -1) {
-    GST_LOG ("starting conversion of cur");
+    GST_LOG_OBJECT (mpeg_parse, "starting conversion of cur");
     /* Bring the format to time on srcpad. */
     conv = GST_FORMAT_TIME;
     if (!gst_pad_query_convert (pad, format, offset, &conv, &start_position)) {
@@ -1101,14 +1091,15 @@ normal_seek (GstMPEGParse * mpeg_parse, GstPad * pad, GstEvent * event)
             start_position, &conv, &start_position)) {
       goto done;
     }
-    GST_INFO ("Finished conversion of cur, BYTES cur : %lld", start_position);
+    GST_INFO_OBJECT (mpeg_parse,
+        "Finished conversion of cur, BYTES cur : %lld", start_position);
   } else {
     start_position = -1;
   }
 
   offset = stop;
   if (offset != -1) {
-    GST_INFO ("starting conversion of stop");
+    GST_INFO_OBJECT (mpeg_parse, "starting conversion of stop");
     /* Bring the format to time on srcpad. */
     conv = GST_FORMAT_TIME;
     if (!gst_pad_query_convert (pad, format, offset, &conv, &end_position)) {
@@ -1120,7 +1111,8 @@ normal_seek (GstMPEGParse * mpeg_parse, GstPad * pad, GstEvent * event)
             end_position, &conv, &end_position)) {
       goto done;
     }
-    GST_INFO ("Finished conversion of stop, BYTES stop : %lld", end_position);
+    GST_INFO_OBJECT (mpeg_parse,
+        "Finished conversion of stop, BYTES stop : %lld", end_position);
   } else {
     end_position = -1;
   }
@@ -1196,8 +1188,15 @@ gst_mpeg_parse_change_state (GstElement * element, GstStateChange transition)
             gst_mpeg_packetize_new (mpeg_parse->srcpad,
             GST_MPEG_PACKETIZE_SYSTEM);
       }
-      /* initialize parser state */
+
+      /* Initialize parser state */
       gst_mpeg_parse_reset (mpeg_parse);
+
+      /* Send a newsegment event to start counting from 0. */
+      if (CLASS (mpeg_parse)->send_event) {
+        CLASS (mpeg_parse)->send_event (mpeg_parse,
+            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
+      }
       break;
     default:
       break;
