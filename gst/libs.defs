@@ -295,7 +295,7 @@
     '("const-GstBuffer*" "buffer")
     '("GstDPHeaderFlag" "flags")
     '("guint*" "length")
-    '("gchar**" "header")
+    '("guint8**" "header")
   )
 )
 
@@ -306,8 +306,8 @@
     '("const-GstCaps*" "caps")
     '("GstDPHeaderFlag" "flags")
     '("guint*" "length")
-    '("gchar**" "header")
-    '("gchar**" "payload")
+    '("guint8**" "header")
+    '("guint8**" "payload")
   )
 )
 
@@ -318,8 +318,8 @@
     '("const-GstEvent*" "event")
     '("GstDPHeaderFlag" "flags")
     '("guint*" "length")
-    '("gchar**" "header")
-    '("gchar**" "payload")
+    '("guint8**" "header")
+    '("guint8**" "payload")
   )
 )
 
@@ -328,7 +328,7 @@
   (return-type "GstBuffer*")
   (parameters
     '("guint" "header_length")
-    '("const-gchar*" "header")
+    '("const-guint8*" "header")
   )
 )
 
@@ -337,8 +337,8 @@
   (return-type "GstCaps*")
   (parameters
     '("guint" "header_length")
-    '("const-gchar*" "header")
-    '("const-gchar*" "payload")
+    '("const-guint8*" "header")
+    '("const-guint8*" "payload")
   )
 )
 
@@ -347,8 +347,8 @@
   (return-type "GstEvent*")
   (parameters
     '("guint" "header_length")
-    '("const-gchar*" "header")
-    '("const-gchar*" "payload")
+    '("const-guint8*" "header")
+    '("const-guint8*" "payload")
   )
 )
 
@@ -357,7 +357,7 @@
   (return-type "gboolean")
   (parameters
     '("guint" "header_length")
-    '("const-gchar*" "header")
+    '("const-guint8*" "header")
   )
 )
 
@@ -366,8 +366,8 @@
   (return-type "gboolean")
   (parameters
     '("guint" "header_length")
-    '("const-gchar*" "header")
-    '("const-gchar*" "payload")
+    '("const-guint8*" "header")
+    '("const-guint8*" "payload")
   )
 )
 
@@ -376,7 +376,7 @@
   (return-type "gboolean")
   (parameters
     '("guint" "header_length")
-    '("const-gchar*" "header")
-    '("const-gchar*" "payload")
+    '("const-guint8*" "header")
+    '("const-guint8*" "payload")
   )
 )

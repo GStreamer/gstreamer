@@ -249,3 +249,149 @@ _wrap_gst_controller_set_from_list (PyGObject *self, PyObject *args)
     g_slist_free (list);
     return NULL;
 }
+%%
+override gst_dp_header_payload_length kwargs
+static PyObject *
+_wrap_gst_dp_header_payload_length(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "header", NULL };
+    char *header;
+    gulong ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:dp_header_payload_length", kwlist, &header))
+        return NULL;
+    ret = gst_dp_header_payload_length((guint8*)header);
+    return PyLong_FromUnsignedLong(ret);
+}
+%%
+overrid gst_dp_header_payload_type kwargs
+static PyObject *
+_wrap_gst_dp_header_payload_type(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "header", NULL };
+    char *header;
+    gint ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:dp_header_payload_type", kwlist, &header))
+        return NULL;
+    ret = gst_dp_header_payload_type((guint8*)header);
+    return pyg_enum_from_gtype(G_TYPE_NONE, ret);
+}
+%%
+override gst_dp_buffer_from_header kwargs
+static PyObject *
+_wrap_gst_dp_buffer_from_header(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "header_length", "header", NULL };
+    char *header;
+    GstBuffer *ret;
+    guint header_length;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Is:dp_buffer_from_header", kwlist, &header_length, &header))
+        return NULL;
+    ret = gst_dp_buffer_from_header(header_length, (guint8*)header);
+    /* pygobject_new handles NULL checking */
+    return pygstminiobject_new((GstMiniObject *)ret);
+}
+%%
+override gst_dp_caps_from_packet kwargs
+static PyObject *
+_wrap_gst_dp_caps_from_packet(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "header_length", "header", "payload", NULL };
+    char *header, *payload;
+    GstCaps *ret;
+    guint header_length;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Iss:dp_caps_from_packet", kwlist, &header_length, &header, &payload))
+        return NULL;
+    ret = gst_dp_caps_from_packet(header_length, 
+				  (guint8*) header,
+				  (guint8*) payload);
+    return pyg_boxed_new (GST_TYPE_CAPS, ret, FALSE, TRUE);
+}
+%%
+override gst_dp_event_from_packet kwargs
+static PyObject *
+_wrap_gst_dp_event_from_packet(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "header_length", "header", "payload", NULL };
+    char *header, *payload;
+    GstEvent *ret;
+    guint header_length;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Iss:dp_event_from_packet", kwlist, &header_length, &header, &payload))
+        return NULL;
+    ret = gst_dp_event_from_packet(header_length, 
+				   (guint8*) header,
+				   (guint8*) payload);
+    /* pygobject_new handles NULL checking */
+    return pygstminiobject_new((GstMiniObject *)ret);
+}
+%%
+override gst_dp_validate_header kwargs
+static PyObject *
+_wrap_gst_dp_validate_header(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "header_length", "header", NULL };
+    char *header;
+    int ret;
+    guint header_length;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Is:dp_validate_header", kwlist, &header_length, &header))
+        return NULL;
+    ret = gst_dp_validate_header(header_length, (guint8*) header);
+    return PyBool_FromLong(ret);
+
+}
+%%
+override gst_dp_validate_payload kwargs
+static PyObject *
+_wrap_gst_dp_validate_payload(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "header_length", "header", "payload", NULL };
+    char *header, *payload;
+    int ret;
+    guint header_length;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Iss:dp_validate_payload", kwlist, &header_length, &header, &payload))
+        return NULL;
+    ret = gst_dp_validate_payload(header_length,
+				  (guint8*) header,
+				  (guint8*) payload);
+    return PyBool_FromLong(ret);
+
+}
+%%
+override gst_dp_validate_packet kwargs
+static PyObject *
+_wrap_gst_dp_validate_packet(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "header_length", "header", "payload", NULL };
+    char *header, *payload;
+    int ret;
+    guint header_length;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Iss:dp_validate_packet", kwlist, &header_length, &header, &payload))
+        return NULL;
+    ret = gst_dp_validate_packet(header_length, 
+				 (guint8*) header,
+				 (guint8*) payload);
+    return PyBool_FromLong(ret);
+
+}
+%%
+override gst_dp_header_payload_type kwargs
+static PyObject *
+_wrap_gst_dp_header_payload_type(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "header", NULL };
+    char *header;
+    gint ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s:dp_header_payload_type", kwlist, &header))
+        return NULL;
+    ret = gst_dp_header_payload_type((guint8*) header);
+    return pyg_enum_from_gtype(G_TYPE_NONE, ret);
+}
+
