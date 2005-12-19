@@ -179,8 +179,8 @@ _wrap_gst_bus_set_sync_handler (PyGObject *self, PyObject *args)
                       (GstBusSyncHandler) bus_sync_handler, 
                       data);
 
-    return (PyObject*) self;
-
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 %%
 override gst_bus_add_watch args

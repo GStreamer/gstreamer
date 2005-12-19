@@ -1,3 +1,10 @@
+2005-12-19  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/gstbus.override (_wrap_gst_bus_add_watch): This function
+	incorrectly returned self, which was causing the message bus to
+	get prematurely destroyed by the Python interpreter. Now returns
+	Py_None.
+
 2005-12-19  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override:
