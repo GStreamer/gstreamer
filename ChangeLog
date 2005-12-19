@@ -1,3 +1,10 @@
+2005-12-19  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	Update ffmpeg_codec_id <=> mimetype conversions
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
+	Finer grained keyframe detection
+
 2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpeg.c: (gst_ffmpeg_avcodec_open),

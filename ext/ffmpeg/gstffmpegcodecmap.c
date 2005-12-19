@@ -244,8 +244,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
        * MJPEG-B and sp5x decoding...)? */
     case CODEC_ID_MJPEG:
     case CODEC_ID_LJPEG:
-    case CODEC_ID_SP5X:
       caps = GST_FF_VID_CAPS_NEW ("image/jpeg", NULL);
+      break;
+
+    case CODEC_ID_SP5X:
+      caps = GST_FF_VID_CAPS_NEW ("video/sp5x", NULL);
       break;
 
     case CODEC_ID_MJPEGB:
@@ -378,7 +381,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_CYUV:
-      buildcaps = TRUE;
+      caps = GST_FF_VID_CAPS_NEW ("video/x-compressed-yuv", NULL);
       break;
 
     case CODEC_ID_H264:
@@ -410,8 +413,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_ASV1:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-asus",
+				  "asusversion", G_TYPE_INT, 1, NULL);
+      break;
     case CODEC_ID_ASV2:
-      buildcaps = TRUE;
+      caps = GST_FF_VID_CAPS_NEW ("video/x-asus",
+				  "asusversion", G_TYPE_INT, 2, NULL);
       break;
 
     case CODEC_ID_FFV1:
@@ -429,13 +436,20 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "wcversion", G_TYPE_INT, 3 - CODEC_ID_XAN_WC3 + codec_id, NULL);
       break;
 
-    case CODEC_ID_FRAPS:
-    case CODEC_ID_VCR1:
     case CODEC_ID_CLJR:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-cirrus-logic-accupak", NULL);
+      break;
+
+    case CODEC_ID_FRAPS:
     case CODEC_ID_MDEC:
     case CODEC_ID_ROQ:
     case CODEC_ID_INTERPLAY_VIDEO:
       buildcaps = TRUE;
+      break;
+
+    case CODEC_ID_VCR1:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-ati-vcr", 
+				  "vcrversion", G_TYPE_INT, 1, NULL);
       break;
 
     case CODEC_ID_RPZA:
@@ -484,27 +498,50 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = GST_FF_AUD_CAPS_NEW ("audio/x-qdm2", NULL);
       break;  
 
+    case CODEC_ID_MSZH:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-mszh", NULL);
+      break;
+
+    case CODEC_ID_ZLIB:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-zlib", NULL);
+      break;
+
+    case CODEC_ID_TRUEMOTION1:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-truemotion",
+				  "trueversion", G_TYPE_INT, 1, NULL);
+      break;
+    case CODEC_ID_TRUEMOTION2:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-truemotion",
+				  "trueversion", G_TYPE_INT, 2, NULL);
+      break;
+
+    case CODEC_ID_ULTI:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-ultimotion",
+				  NULL);
+      break;
+
+    case CODEC_ID_TSCC:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-camtasia", NULL);
+      break;
+
+    case CODEC_ID_PNG:
+      caps = GST_FF_VID_CAPS_NEW ("image/png", NULL);
+      break;
+
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
     case CODEC_ID_8BPS:
     case CODEC_ID_SMC:
     case CODEC_ID_FLIC:
-    case CODEC_ID_TRUEMOTION1:
-    case CODEC_ID_TRUEMOTION2:
     case CODEC_ID_VMDVIDEO:
     case CODEC_ID_VMDAUDIO:
-    case CODEC_ID_MSZH:
-    case CODEC_ID_ZLIB:
     case CODEC_ID_SONIC:
     case CODEC_ID_SONIC_LS:
     case CODEC_ID_SNOW:
-    case CODEC_ID_TSCC:
-    case CODEC_ID_ULTI:
     case CODEC_ID_QDRAW:
     case CODEC_ID_VIXL:
     case CODEC_ID_QPEG:
     case CODEC_ID_XVID:
-    case CODEC_ID_PNG:
     case CODEC_ID_PPM:
     case CODEC_ID_PBM:
     case CODEC_ID_PGM:

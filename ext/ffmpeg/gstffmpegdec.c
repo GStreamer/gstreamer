@@ -807,6 +807,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   case CODEC_TYPE_VIDEO:
     {
       gboolean	iskeyframe = FALSE;
+      gboolean	is_itype = FALSE;
+      gboolean	is_reference = FALSE;
       
       ffmpegdec->picture->pict_type = -1;       /* in case we skip frames */
 
@@ -814,10 +816,14 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
       len = avcodec_decode_video (ffmpegdec->context,
           ffmpegdec->picture, &have_data, data, size);
-      iskeyframe = ((ffmpegdec->picture->pict_type == FF_I_TYPE) || (ffmpegdec->picture->reference));
+      is_itype = (ffmpegdec->picture->pict_type == FF_I_TYPE);
+      is_reference = (ffmpegdec->picture->reference == 1);
+      iskeyframe = ( is_itype || is_reference ) 
+	|| (oclass->in_plugin->id == CODEC_ID_MSZH)
+	|| (oclass->in_plugin->id == CODEC_ID_ZLIB);
       GST_DEBUG_OBJECT (ffmpegdec,
-			"Decoded video: len=%d, have_data=%d, is_keyframe:%d",
-			len, have_data, iskeyframe);
+			"Decoded video: len=%d, have_data=%d, is_keyframe:%d, is_itype:%d, is_reference:%d",
+			len, have_data, iskeyframe, is_itype, is_reference);
 
       if (ffmpegdec->waiting_for_key) {
         if (iskeyframe) {
