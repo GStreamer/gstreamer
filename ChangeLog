@@ -1,3 +1,14 @@
+2005-12-19  Edgard Lima <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/divx/Makefile.am:
+	* ext/divx/gstdivxdec.c:
+	* ext/divx/gstdivxdec.h:
+	* ext/divx/gstdivxenc.c:
+	* ext/divx/gstdivxenc.h:
+	divxdec and divxenc ported to 0.10
+	
 2005-12-18  Julien MOUTTE  <julien@moutte.net>
 
 	* docs/plugins/gst-plugins-bad-plugins-decl.txt:

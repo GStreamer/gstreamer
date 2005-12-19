@@ -39,7 +39,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-divx, "
         "divxversion = (int) [ 3, 5 ], "
         "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 0, MAX ]")
+        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [0/1, MAX]")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -69,11 +69,11 @@ static void gst_divxdec_base_init (GstDivxDecClass * klass);
 static void gst_divxdec_class_init (GstDivxDecClass * klass);
 static void gst_divxdec_init (GstDivxDec * divxdec);
 static void gst_divxdec_dispose (GObject * object);
-static void gst_divxdec_chain (GstPad * pad, GstData * data);
-static GstPadLinkReturn gst_divxdec_connect (GstPad * pad,
-    const GstCaps * vscapslist);
-static GstPadLinkReturn gst_divxdec_negotiate (GstDivxDec * divxdec);
-
+static GstFlowReturn gst_divxdec_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_divxdec_connect (GstPad * pad, GstCaps * vscapslist);
+static gboolean gst_divxdec_negotiate (GstDivxDec * divxdec);
+static GstStateChangeReturn
+gst_divxdec_change_state (GstElement * element, GstStateChange transition);
 static GstElementClass *parent_class = NULL;
 
 /* static guint gst_divxdec_signals[LAST_SIGNAL] = { 0 }; */
@@ -150,10 +150,12 @@ gst_divxdec_base_init (GstDivxDecClass * klass)
 static void
 gst_divxdec_class_init (GstDivxDecClass * klass)
 {
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
+  gstelement_class->change_state = gst_divxdec_change_state;
   gobject_class->dispose = gst_divxdec_dispose;
 }
 
@@ -167,14 +169,14 @@ gst_divxdec_init (GstDivxDec * divxdec)
       "sink");
   gst_element_add_pad (GST_ELEMENT (divxdec), divxdec->sinkpad);
   gst_pad_set_chain_function (divxdec->sinkpad, gst_divxdec_chain);
-  gst_pad_set_link_function (divxdec->sinkpad, gst_divxdec_connect);
+  gst_pad_set_setcaps_function (divxdec->sinkpad, gst_divxdec_connect);
 
   /* create the src pad */
   divxdec->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
   gst_element_add_pad (GST_ELEMENT (divxdec), divxdec->srcpad);
-  gst_pad_use_explicit_caps (divxdec->srcpad);
+  gst_pad_use_fixed_caps (divxdec->srcpad);
 
   /* bitrate, etc. */
   divxdec->width = divxdec->height = divxdec->csp = divxdec->bitcnt = -1;
@@ -244,10 +246,8 @@ gst_divxdec_setup (GstDivxDec * divxdec)
     gst_divxdec_unset (divxdec);
     return FALSE;
   }
-
   return TRUE;
 }
-
 
 static void
 gst_divxdec_dispose (GObject * object)
@@ -258,28 +258,19 @@ gst_divxdec_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-
-static void
-gst_divxdec_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_divxdec_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstDivxDec *divxdec;
   GstBuffer *outbuf;
   DEC_FRAME xframe;
-  int ret;
+  int res;
+  GstFlowReturn ret;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-
-  divxdec = GST_DIVXDEC (GST_OBJECT_PARENT (pad));
-
+  divxdec = GST_DIVXDEC (gst_pad_get_parent (pad));
   if (!divxdec->handle) {
     if (gst_divxdec_negotiate (divxdec) <= 0) {
-      GST_ELEMENT_ERROR (divxdec, CORE, TOO_LAZY, (NULL),
-          ("No format set - aborting"));
-      gst_buffer_unref (buf);
-      return;
+      goto not_negotiated;
     }
   }
 
@@ -296,15 +287,37 @@ gst_divxdec_chain (GstPad * pad, GstData * _data)
   xframe.stride = 0;
   xframe.render_flag = 1;
 
-  if ((ret = decore (divxdec->handle, DEC_OPT_FRAME, &xframe, NULL))) {
-    GST_ELEMENT_ERROR (divxdec, STREAM, DECODE, (NULL),
-        ("Error decoding divx frame: %s (%d)", gst_divxdec_error (ret), ret));
-    gst_buffer_unref (buf);
-    return;
+  if ((res = decore (divxdec->handle, DEC_OPT_FRAME, &xframe, NULL))) {
+    goto not_decoding;
   }
 
-  gst_pad_push (divxdec->srcpad, GST_DATA (outbuf));
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (divxdec->srcpad));
+  ret = gst_pad_push (divxdec->srcpad, outbuf);
+  goto cleanup;
+
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (divxdec, CORE, TOO_LAZY, (NULL),
+        ("No format set - aborting"));
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto cleanup;
+  }
+
+not_decoding:
+  {
+    GST_ELEMENT_ERROR (divxdec, STREAM, DECODE, (NULL),
+        ("Error decoding divx frame: %s (%d)", gst_divxdec_error (res), res));
+    gst_buffer_unref (outbuf);
+    ret = GST_FLOW_ERROR;
+    goto cleanup;
+  }
+
+cleanup:
+
   gst_buffer_unref (buf);
+  gst_object_unref (divxdec);
+  return ret;
+
 }
 
 
@@ -312,85 +325,89 @@ gst_divxdec_chain (GstPad * pad, GstData * _data)
  * stays clear */
 
 /*
-{
+  {
   GST_MAKE_FOURCC ('R', 'G', 'B', ' '), 32, 32,
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-GST_MAKE_FOURCC ('A', 'B', 'G', 'R'), 32}
+  #if (G_BYTE_ORDER == G_BIG_ENDIAN)
+  GST_MAKE_FOURCC ('A', 'B', 'G', 'R'), 32}
 
-,
-#else
-0, 32}
+  ,
+  #else
+  0, 32}
 
-,
-#endif
-{
+  ,
+  #endif
+  {
   GST_MAKE_FOURCC ('R', 'G', 'B', ' '), 24, 24,
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-GST_MAKE_FOURCC ('A', 'B', 'G', 'R'), 24}
+  #if (G_BYTE_ORDER == G_BIG_ENDIAN)
+  GST_MAKE_FOURCC ('A', 'B', 'G', 'R'), 24}
 
-,
-#else
-0, 24}
+  ,
+  #else
+  0, 24}
 
-,
-#endif
-{
-GST_MAKE_FOURCC ('R', 'G', 'B', ' '), 16, 16, 3, 16}
+  ,
+  #endif
+  {
+  GST_MAKE_FOURCC ('R', 'G', 'B', ' '), 16, 16, 3, 16}
 
-, {
-GST_MAKE_FOURCC ('R', 'G', 'B', ' '), 15, 16, 0, 16}
+  , {
+  GST_MAKE_FOURCC ('R', 'G', 'B', ' '), 15, 16, 0, 16}
 
-,
-#endif
-    if (fmt_list[i].fourcc == GST_MAKE_FOURCC ('R', 'G', 'B', ' ')) {
+  ,
+  #endif
+  if (fmt_list[i].fourcc == GST_MAKE_FOURCC ('R', 'G', 'B', ' ')) {
   guint32 r_mask = 0, b_mask = 0, g_mask = 0;
   gint endianness = 0;
 
   switch (fmt_list[i].depth) {
-    case 15:
-      endianness = G_BYTE_ORDER;
-      r_mask = 0xf800;
-      g_mask = 0x07c0;
-      b_mask = 0x003e;
-      break;
-    case 16:
-      endianness = G_BYTE_ORDER;
-      r_mask = 0xf800;
-      g_mask = 0x07e0;
-      b_mask = 0x001f;
-      break;
-    case 24:
-      endianness = G_BIG_ENDIAN;
-      r_mask = GST_VIDEO_BYTE1_MASK_24_INT;
-      g_mask = GST_VIDEO_BYTE2_MASK_24_INT;
-      b_mask = GST_VIDEO_BYTE3_MASK_24_INT break;
-    case 32:
-      endianness = G_BIG_ENDIAN;
-      r_mask = GST_VIDEO_BYTE1_MASK_32_INT;
-      g_mask = GST_VIDEO_BYTE2_MASK_32_INT;
-      b_mask = GST_VIDEO_BYTE3_MASK_32_INT break;
+  case 15:
+  endianness = G_BYTE_ORDER;
+  r_mask = 0xf800;
+  g_mask = 0x07c0;
+  b_mask = 0x003e;
+  break;
+  case 16:
+  endianness = G_BYTE_ORDER;
+  r_mask = 0xf800;
+  g_mask = 0x07e0;
+  b_mask = 0x001f;
+  break;
+  case 24:
+  endianness = G_BIG_ENDIAN;
+  r_mask = GST_VIDEO_BYTE1_MASK_24_INT;
+  g_mask = GST_VIDEO_BYTE2_MASK_24_INT;
+  b_mask = GST_VIDEO_BYTE3_MASK_24_INT break;
+  case 32:
+  endianness = G_BIG_ENDIAN;
+  r_mask = GST_VIDEO_BYTE1_MASK_32_INT;
+  g_mask = GST_VIDEO_BYTE2_MASK_32_INT;
+  b_mask = GST_VIDEO_BYTE3_MASK_32_INT break;
   }
   caps = GST_CAPS_NEW ("divxdec_src_pad_rgb",
-      "video/x-raw-rgb",
-      "width", GST_PROPS_INT (divxdec->width),
-      "height", GST_PROPS_INT (divxdec->height),
-      "framerate", GST_PROPS_FLOAT (divxdec->fps),
-      "depth", GST_PROPS_INT (fmt_list[i].depth),
-      "bpp", GST_PROPS_INT (fmt_list[i].bpp),
-      "endianness", GST_PROPS_INT (endianness),
-      "red_mask", GST_PROPS_INT (r_mask),
-      "green_mask", GST_PROPS_INT (g_mask),
-      "blue_mask", GST_PROPS_INT (b_mask));
-} else {
-#endif
+  "video/x-raw-rgb",
+  "width", GST_PROPS_INT (divxdec->width),
+  "height", GST_PROPS_INT (divxdec->height),
+  "framerate", GST_PROPS_FLOAT (divxdec->fps),
+  "depth", GST_PROPS_INT (fmt_list[i].depth),
+  "bpp", GST_PROPS_INT (fmt_list[i].bpp),
+  "endianness", GST_PROPS_INT (endianness),
+  "red_mask", GST_PROPS_INT (r_mask),
+  "green_mask", GST_PROPS_INT (g_mask),
+  "blue_mask", GST_PROPS_INT (b_mask));
+  } else {
+  #endif
 
-#endif
+  #endif
 */
 
-static GstPadLinkReturn
+static gboolean
 gst_divxdec_negotiate (GstDivxDec * divxdec)
 {
-  GstCaps *caps;
+  GstCaps *caps = NULL;
+  gint i;
+  gint par_num, par_den;
+  gboolean ret = FALSE;
+
   struct
   {
     guint32 fourcc;
@@ -398,6 +415,7 @@ gst_divxdec_negotiate (GstDivxDec * divxdec)
     guint32 csp;
     gint bitcnt;
   }
+
   fmt_list[] = {
     {
     GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'), 16, 16,
@@ -414,7 +432,18 @@ gst_divxdec_negotiate (GstDivxDec * divxdec)
     , {
     0, 0, 0, 0, 0}
   };
-  gint i;
+
+  GST_DEBUG_OBJECT (divxdec, "fps %d/%d, PAR %d/%d",
+      divxdec->fps_n, divxdec->fps_d, divxdec->par_n, divxdec->par_d);
+
+  /* calculate par
+   * the info.aspect_* values reflect PAR;
+   * 0:0 is allowed and can be interpreted as 1:1, so correct for it */
+  par_num = divxdec->par_n;
+  par_den = divxdec->par_d;
+  if (par_num == 0 && par_den == 0) {
+    par_num = par_den = 1;
+  }
 
   for (i = 0; fmt_list[i].fourcc != 0; i++) {
     divxdec->csp = fmt_list[i].csp;
@@ -422,27 +451,48 @@ gst_divxdec_negotiate (GstDivxDec * divxdec)
     caps = gst_caps_new_simple ("video/x-raw-yuv",
         "width", G_TYPE_INT, divxdec->width,
         "height", G_TYPE_INT, divxdec->height,
-        "framerate", G_TYPE_DOUBLE, divxdec->fps,
+        "framerate", GST_TYPE_FRACTION, divxdec->fps_n, divxdec->fps_d,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_num, par_den,
         "format", GST_TYPE_FOURCC, fmt_list[i].fourcc, NULL);
 
-    if (gst_divxdec_setup (divxdec) &&
-        gst_pad_set_explicit_caps (divxdec->srcpad, caps)) {
-      divxdec->csp = fmt_list[i].csp;
-      divxdec->bpp = fmt_list[i].bpp;
-      divxdec->bitcnt = fmt_list[i].bitcnt;
-      return GST_PAD_LINK_OK;
+    if (caps) {
+
+      if (gst_divxdec_setup (divxdec) &&
+          gst_pad_set_caps (divxdec->srcpad, caps)) {
+        divxdec->csp = fmt_list[i].csp;
+        divxdec->bpp = fmt_list[i].bpp;
+        divxdec->bitcnt = fmt_list[i].bitcnt;
+        ret = TRUE;
+        goto done;
+      }
+
+      gst_caps_unref (caps);
+      caps = NULL;
+
     }
+
   }
 
   /* if we got here - it's not good */
-  return GST_PAD_LINK_REFUSED;
+
+done:
+
+  if (caps) {
+    gst_caps_unref (caps);
+  }
+
+  return ret;
 }
 
 
-static GstPadLinkReturn
-gst_divxdec_connect (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_divxdec_connect (GstPad * pad, GstCaps * caps)
 {
   GstDivxDec *divxdec;
+  const GValue *par;
+  const GValue *fps;
+  gboolean ret = FALSE;
+
   GstStructure *structure = gst_caps_get_structure (caps, 0);
 
   divxdec = GST_DIVXDEC (gst_pad_get_parent (pad));
@@ -452,18 +502,61 @@ gst_divxdec_connect (GstPad * pad, const GstCaps * caps)
     gst_divxdec_unset (divxdec);
   }
 
-  /* we are not going to act on variable caps */
-  if (!gst_caps_is_fixed (caps))
-    return GST_PAD_LINK_DELAYED;
-
   /* if we get here, we know the input is divx. we
    * only need to bother with the output colorspace */
   gst_structure_get_int (structure, "width", &divxdec->width);
   gst_structure_get_int (structure, "height", &divxdec->height);
-  gst_structure_get_double (structure, "framerate", &divxdec->fps);
   gst_structure_get_int (structure, "divxversion", &divxdec->version);
 
-  return gst_divxdec_negotiate (divxdec);
+  /* get pixel aspect ratio if it's set */
+  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  if (par) {
+    divxdec->par_n = gst_value_get_fraction_numerator (par),
+        divxdec->par_d = gst_value_get_fraction_denominator (par);
+  }
+
+  fps = gst_structure_get_value (structure, "framerate");
+  if (fps != NULL) {
+    divxdec->fps_n = gst_value_get_fraction_numerator (fps);
+    divxdec->fps_d = gst_value_get_fraction_denominator (fps);
+  } else {
+    divxdec->fps_n = -1;
+  }
+
+  ret = gst_divxdec_negotiate (divxdec);
+  gst_object_unref (divxdec);
+
+  return ret;
+}
+
+static GstStateChangeReturn
+gst_divxdec_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    default:
+      break;
+  }
+
+  ret = parent_class->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 

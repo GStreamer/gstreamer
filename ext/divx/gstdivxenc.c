@@ -48,7 +48,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-divx, "
         "divxversion = (int) 5, "
         "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (double) [ 0, MAX ]")
+        "height = (int) [ 16, 4096 ], " "framerate = (fraction) [0/1, MAX]")
     );
 
 
@@ -73,9 +73,8 @@ static void gst_divxenc_class_init (GstDivxEncClass * klass);
 static void gst_divxenc_base_init (GstDivxEncClass * klass);
 static void gst_divxenc_init (GstDivxEnc * divxenc);
 static void gst_divxenc_dispose (GObject * object);
-static void gst_divxenc_chain (GstPad * pad, GstData * data);
-static GstPadLinkReturn gst_divxenc_connect (GstPad * pad,
-    const GstCaps * vscapslist);
+static GstFlowReturn gst_divxenc_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_divxenc_setcaps (GstPad * pad, GstCaps * caps);
 
 /* properties */
 static void gst_divxenc_set_property (GObject * object,
@@ -162,13 +161,12 @@ gst_divxenc_base_init (GstDivxEncClass * klass)
 static void
 gst_divxenc_class_init (GstDivxEncClass * klass)
 {
-  GstElementClass *gstelement_class;
-  GObjectClass *gobject_class;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  parent_class = g_type_class_peek_parent (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  gobject_class->set_property = gst_divxenc_set_property;
+  gobject_class->get_property = gst_divxenc_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_ulong ("bitrate", "Bitrate",
@@ -186,9 +184,6 @@ gst_divxenc_class_init (GstDivxEncClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_int ("quality", "Quality",
           "Amount of Motion Estimation", 1, 5, 3, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_divxenc_set_property;
-  gobject_class->get_property = gst_divxenc_get_property;
 
   gobject_class->dispose = gst_divxenc_dispose;
 
@@ -210,13 +205,13 @@ gst_divxenc_init (GstDivxEnc * divxenc)
   gst_element_add_pad (GST_ELEMENT (divxenc), divxenc->sinkpad);
 
   gst_pad_set_chain_function (divxenc->sinkpad, gst_divxenc_chain);
-  gst_pad_set_link_function (divxenc->sinkpad, gst_divxenc_connect);
+  gst_pad_set_setcaps_function (divxenc->sinkpad, gst_divxenc_setcaps);
 
   /* create the src pad */
   divxenc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
-  gst_pad_use_explicit_caps (divxenc->srcpad);
+  gst_pad_use_fixed_caps (divxenc->srcpad);
   gst_element_add_pad (GST_ELEMENT (divxenc), divxenc->srcpad);
 
   /* bitrate, etc. */
@@ -254,7 +249,7 @@ gst_divxenc_setup (GstDivxEnc * divxenc)
   output.use_bidirect = 1;
   output.input_clock = 0;
   output.input_frame_period = 1000000;
-  output.internal_timescale = divxenc->fps * 1000000;
+  output.internal_timescale = (divxenc->fps_n / divxenc->fps_d) * 1000000;      /* FIX? */
   output.max_key_interval = (divxenc->max_key_interval == -1) ?
       150 : divxenc->max_key_interval;
   output.key_frame_threshold = 50;
@@ -314,21 +309,17 @@ gst_divxenc_dispose (GObject * object)
 }
 
 
-static void
-gst_divxenc_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_divxenc_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
   GstDivxEnc *divxenc;
   GstBuffer *outbuf;
   ENC_FRAME xframe;
   ENC_RESULT xres;
-  int ret;
+  int res;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-
-  divxenc = GST_DIVXENC (GST_OBJECT_PARENT (pad));
+  divxenc = GST_DIVXENC (gst_pad_get_parent (pad));
 
   outbuf = gst_buffer_new_and_alloc (divxenc->buffer_size);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
@@ -336,28 +327,38 @@ gst_divxenc_chain (GstPad * pad, GstData * _data)
   /* encode and so ... */
   xframe.image = GST_BUFFER_DATA (buf);
   xframe.bitstream = (void *) GST_BUFFER_DATA (outbuf);
-  xframe.length = GST_BUFFER_MAXSIZE (outbuf);
+  xframe.length = GST_BUFFER_SIZE (outbuf);     /* GST_BUFFER_MAXSIZE */
   xframe.produce_empty_frame = 0;
 
-  if ((ret = encore (divxenc->handle, ENC_OPT_ENCODE, &xframe, &xres))) {
-    GST_ELEMENT_ERROR (divxenc, LIBRARY, ENCODE, (NULL),
-        ("Error encoding divx frame: %s (%d)", gst_divxenc_error (ret), ret));
-    gst_buffer_unref (buf);
-    return;
+  if ((res = encore (divxenc->handle, ENC_OPT_ENCODE, &xframe, &xres))) {
+    goto not_encoding;
   }
 
   GST_BUFFER_SIZE (outbuf) = xframe.length;
-  if (xres.cType == 'I')
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_KEY_UNIT);
 
   /* go out, multiply! */
-  gst_pad_push (divxenc->srcpad, GST_DATA (outbuf));
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (divxenc->srcpad));
+  gst_pad_push (divxenc->srcpad, outbuf);
 
   /* proclaim destiny */
   g_signal_emit (G_OBJECT (divxenc), gst_divxenc_signals[FRAME_ENCODED], 0);
 
   /* until the final judgement */
+  goto done;
+
+not_encoding:
+
+  GST_ELEMENT_ERROR (divxenc, LIBRARY, ENCODE, (NULL),
+      ("Error encoding divx frame: %s (%d)", gst_divxenc_error (res), res));
+  ret = GST_FLOW_ERROR;
+  gst_buffer_unref (outbuf);
+  goto done;
+
+done:
   gst_buffer_unref (buf);
+  gst_object_unref (divxenc);
+  return ret;
+
 }
 
 /* FIXME: moving broken bits here for others to fix */
@@ -366,26 +367,27 @@ gst_divxenc_chain (GstPad * pad, GstData * _data)
     case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
       gst_caps_get_int (caps, "depth", &d);
       switch (d) {
-        case 24:
-          divx_cs = 0;
-          bitcnt = 24;
-          break;
-        case 32:
-          divx_cs = 0;
-          bitcnt = 32;
-          break;
+	case 24:
+	  divx_cs = 0;
+	  bitcnt = 24;
+	  break;
+	case 32:
+	  divx_cs = 0;
+	  bitcnt = 32;
+	  break;
 */
 
-static GstPadLinkReturn
-gst_divxenc_connect (GstPad * pad, const GstCaps * caps)
+static gboolean
+gst_divxenc_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstDivxEnc *divxenc;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint w, h;
-  gdouble fps;
+  const GValue *fps;
   guint32 fourcc;
   guint32 divx_cs;
   gint bitcnt = 0;
+  gboolean ret = FALSE;
 
   divxenc = GST_DIVXENC (gst_pad_get_parent (pad));
 
@@ -394,8 +396,15 @@ gst_divxenc_connect (GstPad * pad, const GstCaps * caps)
 
   gst_structure_get_int (structure, "width", &w);
   gst_structure_get_int (structure, "height", &h);
-  gst_structure_get_double (structure, "framerate", &fps);
   gst_structure_get_fourcc (structure, "format", &fourcc);
+
+  fps = gst_structure_get_value (structure, "framerate");
+  if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
+    divxenc->fps_n = gst_value_get_fraction_numerator (fps);
+    divxenc->fps_d = gst_value_get_fraction_denominator (fps);
+  } else {
+    divxenc->fps_n = -1;
+  }
 
   switch (fourcc) {
     case GST_MAKE_FOURCC ('I', '4', '2', '0'):
@@ -414,35 +423,47 @@ gst_divxenc_connect (GstPad * pad, const GstCaps * caps)
       divx_cs = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
       break;
     default:
-      return GST_PAD_LINK_REFUSED;
+      ret = FALSE;
+      goto done;
   }
 
   divxenc->csp = divx_cs;
   divxenc->bitcnt = bitcnt;
   divxenc->width = w;
   divxenc->height = h;
-  divxenc->fps = fps;
 
   /* try it */
   if (gst_divxenc_setup (divxenc)) {
-    GstPadLinkReturn ret;
-    GstCaps *new_caps;
+    GstCaps *new_caps = NULL;
 
     new_caps = gst_caps_new_simple ("video/x-divx",
         "divxversion", G_TYPE_INT, 5,
         "width", G_TYPE_INT, w,
-        "height", G_TYPE_INT, h, "framerate", G_TYPE_DOUBLE, fps, NULL);
+        "height", G_TYPE_INT, h,
+        "framerate", GST_TYPE_FRACTION, divxenc->fps_n, divxenc->fps_d, NULL);
 
-    ret = gst_pad_set_explicit_caps (divxenc->srcpad, new_caps);
-    if (ret <= 0) {
-      gst_divxenc_unset (divxenc);
+    if (new_caps) {
+
+      if (!gst_pad_set_caps (divxenc->srcpad, new_caps)) {
+        gst_divxenc_unset (divxenc);
+        ret = FALSE;
+        goto done;
+      }
+      gst_caps_unref (new_caps);
+      ret = TRUE;
+      goto done;
+
     }
 
-    return ret;
   }
 
   /* if we got here - it's not good */
-  return GST_PAD_LINK_REFUSED;
+
+  ret = FALSE;
+
+done:
+  gst_object_unref (divxenc);
+  return ret;
 }
 
 
@@ -450,10 +471,9 @@ static void
 gst_divxenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstDivxEnc *divxenc;
+  GstDivxEnc *divxenc = GST_DIVXENC (object);
 
-  g_return_if_fail (GST_IS_DIVXENC (object));
-  divxenc = GST_DIVXENC (object);
+  GST_OBJECT_LOCK (divxenc);
 
   switch (prop_id) {
     case ARG_BITRATE:
@@ -469,6 +489,8 @@ gst_divxenc_set_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_OBJECT_UNLOCK (divxenc);
 }
 
 
@@ -476,10 +498,9 @@ static void
 gst_divxenc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstDivxEnc *divxenc;
+  GstDivxEnc *divxenc = GST_DIVXENC (object);
 
-  g_return_if_fail (GST_IS_DIVXENC (object));
-  divxenc = GST_DIVXENC (object);
+  GST_OBJECT_LOCK (divxenc);
 
   switch (prop_id) {
     case ARG_BITRATE:
@@ -498,8 +519,9 @@ gst_divxenc_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
 
+  GST_OBJECT_UNLOCK (divxenc);
+}
 
 static gboolean
 plugin_init (GstPlugin * plugin)

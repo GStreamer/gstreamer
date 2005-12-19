@@ -64,7 +64,7 @@ struct _GstDivxEnc {
   guint32 csp;
   gint bitcnt; 
   gint width, height;
-  gfloat fps;
+  gint fps_n, fps_d;
 };
 
 struct _GstDivxEncClass {

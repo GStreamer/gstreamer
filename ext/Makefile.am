@@ -40,11 +40,11 @@ else
 DIRECTFB_DIR=
 endif
 
-#if USE_DIVX
-#DIVX_DIR=divx
-#else
+if USE_DIVX
+DIVX_DIR=divx
+else
 DIVX_DIR=
-#endif
+endif
 
 if USE_DTS
 DTS_DIR=dts
@@ -239,6 +239,7 @@ DIST_SUBDIRS= \
 	ivorbis \
 	libmms \
 	dts \
+	divx \
 	musepack \
 	sdl \
 	swfdec \
