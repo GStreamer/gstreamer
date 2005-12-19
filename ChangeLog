@@ -1,5 +1,10 @@
 2005-12-19  Edgard Lima <edgard.lima@indt.org.br>
 
+	* ext/divx/Makefile.am:
+	just a small fix. I have to pay more attention when commiting ;-)
+
+2005-12-19  Edgard Lima <edgard.lima@indt.org.br>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/divx/Makefile.am:

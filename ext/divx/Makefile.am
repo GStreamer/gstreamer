@@ -1,7 +1,6 @@
 
-plugin_LTLIBRARIES = libgstdivxdec.la 
+plugin_LTLIBRARIES = libgstdivxdec.la libgstdivxenc.la
 
-plugin_LTLIBRARIES = libgstdivxenc.la
 libgstdivxenc_la_SOURCES = gstdivxenc.c
 libgstdivxenc_la_CFLAGS = $(GST_CFLAGS) $(DIVX_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstdivxenc_la_LIBADD = $(DIVXENC_LIBS) $(GST_PLUGINS_BASE_LIBS)
