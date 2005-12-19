@@ -188,6 +188,7 @@ G_BEGIN_DECLS
 #define GST_RIFF_m263 GST_MAKE_FOURCC ('m', '2', '6', '3')
 #define GST_RIFF_M263 GST_MAKE_FOURCC ('M', '2', '6', '3')
 #define GST_RIFF_H263 GST_MAKE_FOURCC ('H', '2', '6', '3')
+#define GST_RIFF_h263 GST_MAKE_FOURCC ('h', '2', '6', '3')
 #define GST_RIFF_i263 GST_MAKE_FOURCC ('i', '2', '6', '3')
 #define GST_RIFF_L263 GST_MAKE_FOURCC ('L', '2', '6', '3')
 #define GST_RIFF_x263 GST_MAKE_FOURCC ('x', '2', '6', '3')

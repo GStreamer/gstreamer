@@ -1,3 +1,16 @@
+2005-12-19  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ogg/gstogmparse.c: (gst_ogm_text_parse_base_init),
+	(gst_ogm_parse_init), (gst_ogm_audio_parse_init),
+	(gst_ogm_video_parse_init), (gst_ogm_text_parse_init),
+	(gst_ogm_parse_chain):
+	Make sure pads are initialized correctly.
+	* gst-libs/gst/riff/riff-ids.h:
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_video_template_caps):
+	Add a whole bunch of FOURCC <=> MimeType.
+	Extend the riff video pad template to support the newly added fourcc.
+
 2005-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_deactivate_current_chain),

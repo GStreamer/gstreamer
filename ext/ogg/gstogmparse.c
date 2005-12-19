@@ -309,7 +309,7 @@ gst_ogm_text_parse_base_init (GstOgmParseClass * klass)
       "Codec/Decoder/Subtitle",
       "parse an OGM text header and stream",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-  GstCaps *caps = gst_caps_new_simple ("text/plain", NULL);
+  GstCaps *caps = gst_caps_new_simple ("text/plain", NULL, NULL);
 
   gst_element_class_set_details (element_class, &gst_ogm_text_parse_details);
 
@@ -336,6 +336,7 @@ gst_ogm_parse_init (GstOgmParse * ogm)
   /* initalize */
   memset (&ogm->hdr, 0, sizeof (ogm->hdr));
   ogm->next_granulepos = 0;
+  ogm->srcpad = NULL;
 }
 
 static void
@@ -354,6 +355,7 @@ gst_ogm_audio_parse_init (GstOgmParse * ogm)
   gst_pad_use_explicit_caps (ogm->srcpad);
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
 #endif
+  ogm->srcpad = NULL;
   ogm->srcpadtempl = audio_src_templ;
 }
 
@@ -373,6 +375,7 @@ gst_ogm_video_parse_init (GstOgmParse * ogm)
   gst_pad_use_explicit_caps (ogm->srcpad);
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
 #endif
+  ogm->srcpad = NULL;
   ogm->srcpadtempl = video_src_templ;
 }
 
@@ -394,6 +397,7 @@ gst_ogm_text_parse_init (GstOgmParse * ogm)
   gst_pad_use_explicit_caps (ogm->srcpad);
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
 #endif
+  ogm->srcpad = NULL;
   ogm->srcpadtempl = text_src_templ;
 }
 
@@ -623,6 +627,13 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
           g_assert_not_reached ();
       }
 
+      if (ogm->srcpad) {
+        GST_WARNING_OBJECT (ogm, "Already an existing pad %s:%s",
+            GST_DEBUG_PAD_NAME (ogm->srcpad));
+        gst_element_remove_pad (GST_ELEMENT (ogm), ogm->srcpad);
+        gst_object_unref (ogm->srcpad);
+
+      }
       if (caps) {
         ogm->srcpad = gst_pad_new ("src", GST_PAD_SRC);
         gst_pad_set_caps (ogm->srcpad, caps);
