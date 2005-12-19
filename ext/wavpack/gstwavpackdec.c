@@ -83,13 +83,14 @@ static GstPadLinkReturn
 gst_wavpack_dec_link (GstPad * pad, GstPad * peer)
 {
   GstWavpackDec *wavpackdec = GST_WAVPACK_DEC (gst_pad_get_parent (pad));
-  GstStructure *structure = gst_caps_get_structure (GST_PAD_CAPS (peer), 0);
+  GstStructure *structure;
   GstCaps *srccaps;
   gint bits;
 
   if (!gst_caps_is_fixed (GST_PAD_CAPS (peer)))
     return GST_PAD_LINK_REFUSED;
 
+  structure = gst_caps_get_structure (GST_PAD_CAPS (peer), 0);
   gst_structure_get_int (structure, "rate",
       (gint32 *) & wavpackdec->samplerate);
   gst_structure_get_int (structure, "channels",

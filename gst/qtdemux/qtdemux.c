@@ -473,7 +473,8 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       for (n = 0; n < qtdemux->n_streams; n++) {
         gst_element_remove_pad (element, qtdemux->streams[n]->pad);
         g_free (qtdemux->streams[n]->samples);
-        gst_caps_unref (qtdemux->streams[n]->caps);
+        if (qtdemux->streams[n]->caps)
+          gst_caps_unref (qtdemux->streams[n]->caps);
         g_free (qtdemux->streams[n]);
       }
       qtdemux->n_streams = 0;
@@ -1765,7 +1766,13 @@ qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc)
       child = g_node_next_sibling (child)) {
     buffer = child->data;
 
+    child_fourcc = GST_READ_UINT32_LE (buffer);
+    GST_LOG ("First chunk of buffer %p is [%" GST_FOURCC_FORMAT "]",
+        buffer, GST_FOURCC_ARGS (child_fourcc));
+
     child_fourcc = GST_READ_UINT32_LE (buffer + 4);
+    GST_LOG ("buffer %p has fourcc [%" GST_FOURCC_FORMAT "]",
+        buffer, GST_FOURCC_ARGS (child_fourcc));
 
     if (child_fourcc == fourcc) {
       return child;
@@ -1899,7 +1906,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   stream = g_new0 (QtDemuxStream, 1);
 
   tkhd = qtdemux_tree_get_child_by_type (trak, FOURCC_tkhd);
-  g_assert (tkhd);
+  g_return_if_fail (tkhd);
 
   GST_LOG ("track[tkhd] version/flags: 0x%08x",
       QTDEMUX_GUINT32_GET (tkhd->data + 8));
@@ -2621,7 +2628,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       return gst_caps_from_string ("image/jpeg");
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'b'):
       _codec ("Motion-JPEG format B");
-      return gst_caps_from_string ("image/jpeg-b");
+      return gst_caps_from_string ("video/x-mjpeg-b");
     case GST_MAKE_FOURCC ('S', 'V', 'Q', '3'):
       _codec ("Sorensen video v.3");
       return gst_caps_from_string ("video/x-svq, " "svqversion = (int) 3");
