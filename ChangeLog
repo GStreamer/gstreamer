@@ -1,3 +1,16 @@
+2005-12-19  Edward Hervey  <edward@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
+	(gst_avi_demux_handle_src_event), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_parse_odml), (gst_avi_demux_peek_tag),
+	(gst_avi_demux_next_data_buffer), (gst_avi_demux_stream_scan),
+	(gst_avi_demux_stream_header), (gst_avi_demux_loop):
+	Construct index for indexless files.
+	Make sure pad/buffers are correctly reset to NULL once we don't need
+	them anymore, else we get lovely segfaults/assertions.
+	* gst/wavparse/gstwavparse.c:
+	Yes, you can have 96KHz audio and wma in wav :(
+
 2005-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

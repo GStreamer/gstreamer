@@ -73,7 +73,7 @@ static GstStaticPadTemplate src_template_factory =
         "signed = (boolean) { true, false }, "
         "width = (int) { 8, 16, 24, 32 }, "
         "depth = (int) { 8, 16, 24, 32 }, "
-        "rate = (int) [ 8000, 48000 ], "
+        "rate = (int) [ 8000, 96000 ], "
         "channels = (int) [ 1, 2 ]; "
         "audio/mpeg, "
         "mpegversion = (int) 1, "
@@ -94,7 +94,8 @@ static GstStaticPadTemplate src_template_factory =
         "layout = (string) dvi, "
         "block_align = (int) [ 1, 8192 ], "
         "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ];"
-        "audio/x-vnd.sony.atrac3")
+        "audio/x-vnd.sony.atrac3;"
+        "audio/x-wma, " "wmaversion = (int) [ 1, 2 ]")
     );
 
 /* WavParse signals and args */
