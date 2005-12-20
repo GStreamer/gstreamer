@@ -1,3 +1,11 @@
+2005-12-20  Michael Smith  <msmith@fluendo.com>
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_render),
+	(gst_multiudpsink_add), (gst_multiudpsink_remove),
+	(gst_multiudpsink_get_stats):
+	* gst/udp/gstmultiudpsink.h:
+	  Collect statistics; return them from get_stats.
+
 2005-12-19  Edward Hervey  <edward@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_scan):

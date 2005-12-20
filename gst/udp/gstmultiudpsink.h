@@ -57,6 +57,11 @@ typedef struct {
 
   gchar *host;
   gint port;
+
+  /* Per-client stats */
+  guint64 bytes_sent;
+  guint64 connect_time;
+  guint64 disconnect_time;
 } GstUDPClient;
 
 /* sends udp packets to multiple host/port pairs.

@@ -226,8 +226,10 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
         if (errno != EINTR && errno != EAGAIN) {
           goto send_error;
         }
-      } else
+      } else {
+        client->bytes_sent += ret;
         break;
+      }
     }
   }
   g_mutex_unlock (sink->client_lock);
@@ -320,6 +322,7 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
   struct in_addr addr;
   struct ip_mreq multi_addr;
   GstUDPClient *client;
+  GTimeVal now;
 
   GST_DEBUG_OBJECT (sink, "adding client on host %s, port %d", host, port);
   client = g_new0 (GstUDPClient, 1);
@@ -330,6 +333,9 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
   memset (&client->theiraddr, 0, sizeof (client->theiraddr));
   client->theiraddr.sin_family = AF_INET;       /* host byte order */
   client->theiraddr.sin_port = htons (port);    /* short, network byte order */
+
+  g_get_current_time (&now);
+  client->connect_time = GST_TIMEVAL_TO_TIME (now);
 
   /* if its an IP address */
   if (inet_aton (host, &addr)) {
@@ -407,8 +413,18 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
       (GCompareFunc) client_compare);
   if (find) {
     GstUDPClient *client;
+    GTimeVal now;
 
     client = (GstUDPClient *) find->data;
+
+    g_get_current_time (&now);
+    client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
+
+    /* Unlock to emit signal before we delete the actual client */
+    g_mutex_unlock (sink->client_lock);
+    g_signal_emit (G_OBJECT (sink),
+        gst_multiudpsink_signals[SIGNAL_CLIENT_REMOVED], 0, host, port);
+    g_mutex_lock (sink->client_lock);
 
     sink->clients = g_list_delete_link (sink->clients, find);
 
@@ -432,7 +448,50 @@ GValueArray *
 gst_multiudpsink_get_stats (GstMultiUDPSink * sink, const gchar * host,
     gint port)
 {
-  return NULL;
+  GstUDPClient *client;
+  GValueArray *result = NULL;
+  GstUDPClient udpclient;
+  GList *find;
+
+  udpclient.host = (gchar *) host;
+  udpclient.port = port;
+
+  g_mutex_lock (sink->client_lock);
+
+  find = g_list_find_custom (sink->clients, &udpclient,
+      (GCompareFunc) client_compare);
+  if (find) {
+    client = (GstUDPClient *) find->data;
+
+    GValue value = { 0 };
+
+    /* Result is a value array of (bytes_sent, connect_time, disconnect_time) */
+    result = g_value_array_new (3);
+
+    g_value_init (&value, G_TYPE_UINT64);
+    g_value_set_uint64 (&value, client->bytes_sent);
+    result = g_value_array_append (result, &value);
+    g_value_unset (&value);
+
+    g_value_init (&value, G_TYPE_UINT64);
+    g_value_set_uint64 (&value, client->connect_time);
+    result = g_value_array_append (result, &value);
+    g_value_unset (&value);
+
+    g_value_init (&value, G_TYPE_UINT64);
+    g_value_set_uint64 (&value, client->disconnect_time);
+    result = g_value_array_append (result, &value);
+    g_value_unset (&value);
+  }
+
+  g_mutex_unlock (sink->client_lock);
+
+  /* Apparently (see comment in gstmultifdsink.c) returning NULL from here may
+   * confuse/break python bindings */
+  if (result == NULL)
+    result = g_value_array_new (0);
+
+  return result;
 }
 
 static GstStateChangeReturn
