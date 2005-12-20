@@ -100,14 +100,14 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
   longdesc =
       g_strdup_printf
       ("Size of audio buffer in microseconds (use -1 for default of %"
-      G_GUINT64_FORMAT " µs)", DEFAULT_BUFFER_TIME / GST_USECOND);
+      G_GUINT64_FORMAT " us)", DEFAULT_BUFFER_TIME / GST_USECOND);
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
       g_param_spec_int64 ("buffer-time", "Buffer Time", longdesc, -1,
           G_MAXINT64, DEFAULT_BUFFER_TIME, G_PARAM_READWRITE));
   g_free (longdesc);
   longdesc =
       g_strdup_printf ("Audio latency in microseconds (use -1 for default of %"
-      G_GUINT64_FORMAT " µs)", DEFAULT_LATENCY_TIME / GST_USECOND);
+      G_GUINT64_FORMAT " us)", DEFAULT_LATENCY_TIME / GST_USECOND);
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LATENCY_TIME,
       g_param_spec_int64 ("latency-time", "Latency Time", longdesc, -1,
           G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
