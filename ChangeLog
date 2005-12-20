@@ -1,3 +1,8 @@
+2005-12-20  Edward Hervey  <edward@fluendo.com>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_template_caps):
+	Made a quack, forgot to add DUCK to the riff video template.
+
 2005-12-19  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ogg/gstogmparse.c: (gst_ogm_text_parse_base_init),

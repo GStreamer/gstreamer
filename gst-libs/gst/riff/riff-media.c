@@ -799,6 +799,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('C', 'L', 'J', 'R'),
     GST_MAKE_FOURCC ('I', 'V', '4', '1'),
     GST_MAKE_FOURCC ('R', 'T', '2', '1'),
+    GST_MAKE_FOURCC ('D', 'U', 'C', 'K'),
     GST_MAKE_FOURCC ('T', 'M', '2', '0'),
     GST_MAKE_FOURCC ('U', 'L', 'T', 'I'),
     GST_MAKE_FOURCC ('V', 'P', '3', ' '),
