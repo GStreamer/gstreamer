@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-05 16:45+0100\n"
+"POT-Creation-Date: 2005-12-20 13:13+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -597,50 +597,50 @@ msgstr "could not link %s to %s"
 msgid "no element \"%s\""
 msgstr "no element \"%s\""
 
-#: gst/parse/grammar.y:629
+#: gst/parse/grammar.y:624
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "could not parse caps \"%s\""
 
-#: gst/parse/grammar.y:651 gst/parse/grammar.y:699 gst/parse/grammar.y:715
-#: gst/parse/grammar.y:773
+#: gst/parse/grammar.y:646 gst/parse/grammar.y:694 gst/parse/grammar.y:710
+#: gst/parse/grammar.y:768
 msgid "link without source element"
 msgstr "link without source element"
 
-#: gst/parse/grammar.y:657 gst/parse/grammar.y:696 gst/parse/grammar.y:782
+#: gst/parse/grammar.y:652 gst/parse/grammar.y:691 gst/parse/grammar.y:777
 msgid "link without sink element"
 msgstr "link without sink element"
 
-#: gst/parse/grammar.y:733
+#: gst/parse/grammar.y:728
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "no source element for URI \"%s\""
 
-#: gst/parse/grammar.y:743
+#: gst/parse/grammar.y:738
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "no element to link URI \"%s\" to"
 
-#: gst/parse/grammar.y:751
+#: gst/parse/grammar.y:746
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "no sink element for URI \"%s\""
 
-#: gst/parse/grammar.y:755
+#: gst/parse/grammar.y:750
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "could not link sink element for URI \"%s\""
 
-#: gst/parse/grammar.y:767
+#: gst/parse/grammar.y:762
 msgid "empty pipeline not allowed"
 msgstr "empty pipeline not allowed"
 
-#: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
+#: libs/gst/base/gstbasesrc.c:1312 libs/gst/base/gstbasesrc.c:1321
 #: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:603
+#: libs/gst/base/gstbasesink.c:633
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -691,19 +691,19 @@ msgstr "File \"%s\" isn't a regular file."
 msgid "Failed after iterations as requested."
 msgstr "Failed after iterations as requested."
 
-#: plugins/elements/gsttypefindelement.c:182
+#: plugins/elements/gsttypefindelement.c:183
 msgid "caps"
 msgstr "caps"
 
-#: plugins/elements/gsttypefindelement.c:183
+#: plugins/elements/gsttypefindelement.c:184
 msgid "detected capabilities in stream"
 msgstr "detected capabilities in stream"
 
-#: plugins/elements/gsttypefindelement.c:186
+#: plugins/elements/gsttypefindelement.c:187
 msgid "minimum"
 msgstr "minimum"
 
-#: plugins/elements/gsttypefindelement.c:190
+#: plugins/elements/gsttypefindelement.c:191
 msgid "maximum"
 msgstr "maximum"
 

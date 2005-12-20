@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-05 16:45+0100\n"
+"POT-Creation-Date: 2005-12-20 13:13+0100\n"
 "PO-Revision-Date: 2005-11-26 15:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -587,50 +587,50 @@ msgstr "не вдається прив'язати %s до %s"
 msgid "no element \"%s\""
 msgstr "немає елементу \"%s\""
 
-#: gst/parse/grammar.y:629
+#: gst/parse/grammar.y:624
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "не вдається розібрати можливості \"%s\""
 
-#: gst/parse/grammar.y:651 gst/parse/grammar.y:699 gst/parse/grammar.y:715
-#: gst/parse/grammar.y:773
+#: gst/parse/grammar.y:646 gst/parse/grammar.y:694 gst/parse/grammar.y:710
+#: gst/parse/grammar.y:768
 msgid "link without source element"
 msgstr "зв'язок без елемента-джерела"
 
-#: gst/parse/grammar.y:657 gst/parse/grammar.y:696 gst/parse/grammar.y:782
+#: gst/parse/grammar.y:652 gst/parse/grammar.y:691 gst/parse/grammar.y:777
 msgid "link without sink element"
 msgstr "зв'язок без елемента-споживача"
 
-#: gst/parse/grammar.y:733
+#: gst/parse/grammar.y:728
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "відсутній елемент-джерело для URI \"%s\""
 
-#: gst/parse/grammar.y:743
+#: gst/parse/grammar.y:738
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "відсутній елемент для зв'язку URI \"%s\" до"
 
-#: gst/parse/grammar.y:751
+#: gst/parse/grammar.y:746
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "відсутній елемент-споживач для URI \"%s\""
 
-#: gst/parse/grammar.y:755
+#: gst/parse/grammar.y:750
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "не вдається прив'язати елемент-споживач для URI \"%s\""
 
-#: gst/parse/grammar.y:767
+#: gst/parse/grammar.y:762
 msgid "empty pipeline not allowed"
 msgstr "порожній канал не допускається"
 
-#: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
+#: libs/gst/base/gstbasesrc.c:1312 libs/gst/base/gstbasesrc.c:1321
 #: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr "Помилка внутрішнього потоку даних."
 
-#: libs/gst/base/gstbasesink.c:603
+#: libs/gst/base/gstbasesink.c:633
 msgid "Internal data flow problem."
 msgstr "Помилка внутрішнього потоку даних."
 
@@ -681,19 +681,19 @@ msgstr "Файл \"%s\" є сокетом."
 msgid "Failed after iterations as requested."
 msgstr "Помилка після ітерацій у запитаному порядку."
 
-#: plugins/elements/gsttypefindelement.c:182
+#: plugins/elements/gsttypefindelement.c:183
 msgid "caps"
 msgstr "можливості"
 
-#: plugins/elements/gsttypefindelement.c:183
+#: plugins/elements/gsttypefindelement.c:184
 msgid "detected capabilities in stream"
 msgstr "у потоці знайдено можливості"
 
-#: plugins/elements/gsttypefindelement.c:186
+#: plugins/elements/gsttypefindelement.c:187
 msgid "minimum"
 msgstr "мінімум"
 
-#: plugins/elements/gsttypefindelement.c:190
+#: plugins/elements/gsttypefindelement.c:191
 msgid "maximum"
 msgstr "максимум"
 

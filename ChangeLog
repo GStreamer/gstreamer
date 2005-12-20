@@ -7,9 +7,11 @@
 
 	* gst/gstcaps.c: (gst_static_caps_get_type):
 	* gst/gstcaps.h:
+	  API addition: GST_TYPE_STATIC_CAPS
 	Added gpointer GType for GstStaticCaps so we can wrap them in bindings.
 	* gst/gstpadtemplate.c: (gst_static_pad_template_get_type):
 	* gst/gstpadtemplate.h:
+	  API addition: GST_TYPE_STATIC_PAD_TEMPLATE
 	Added gpointer GType for GstStaticPadTemplate so we can wrap them in
 	bindings.
 
@@ -52,7 +54,7 @@
 
 	* gst/gst.c:
 	* gst/gst_private.h:
-          change some char* into char[]
+	  change some char* into char[]
 
 2005-12-16  Wim Taymans  <wim@fluendo.com>
 

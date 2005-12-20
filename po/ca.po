@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-05 16:45+0100\n"
+"POT-Creation-Date: 2005-12-20 13:13+0100\n"
 "PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -592,50 +592,50 @@ msgstr "no s'ha pogut enllaçar %s a %s"
 msgid "no element \"%s\""
 msgstr "no hi ha cap element «%s»"
 
-#: gst/parse/grammar.y:629
+#: gst/parse/grammar.y:624
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "no s'han pogut analitzar les capacitats «%s»"
 
-#: gst/parse/grammar.y:651 gst/parse/grammar.y:699 gst/parse/grammar.y:715
-#: gst/parse/grammar.y:773
+#: gst/parse/grammar.y:646 gst/parse/grammar.y:694 gst/parse/grammar.y:710
+#: gst/parse/grammar.y:768
 msgid "link without source element"
 msgstr "l'enllaç no té un element font"
 
-#: gst/parse/grammar.y:657 gst/parse/grammar.y:696 gst/parse/grammar.y:782
+#: gst/parse/grammar.y:652 gst/parse/grammar.y:691 gst/parse/grammar.y:777
 msgid "link without sink element"
 msgstr "l'enllaç no té un element sortida"
 
-#: gst/parse/grammar.y:733
+#: gst/parse/grammar.y:728
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "no hi ha cap element font per a l'URI «%s»"
 
-#: gst/parse/grammar.y:743
+#: gst/parse/grammar.y:738
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "no hi ha cap element el qual enllaçar a l'URI «%s»"
 
-#: gst/parse/grammar.y:751
+#: gst/parse/grammar.y:746
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "no hi ha cap element de sortida per a l'URI «%s»"
 
-#: gst/parse/grammar.y:755
+#: gst/parse/grammar.y:750
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "No s'ha pogut enllaçar l'element de sortida per a l'URI «%s»"
 
-#: gst/parse/grammar.y:767
+#: gst/parse/grammar.y:762
 msgid "empty pipeline not allowed"
 msgstr "no es permet un conducte buit"
 
-#: libs/gst/base/gstbasesrc.c:1031 libs/gst/base/gstbasesrc.c:1041
+#: libs/gst/base/gstbasesrc.c:1312 libs/gst/base/gstbasesrc.c:1321
 #: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr "S'ha produït un error intern de flux de dades."
 
-#: libs/gst/base/gstbasesink.c:603
+#: libs/gst/base/gstbasesink.c:633
 msgid "Internal data flow problem."
 msgstr "Hi ha un problema intern de flux de dades."
 
@@ -686,19 +686,19 @@ msgstr "El fitxer «%s» és un sòcol."
 msgid "Failed after iterations as requested."
 msgstr "Ha fallat després de les iteracions com s'ha demanat."
 
-#: plugins/elements/gsttypefindelement.c:182
+#: plugins/elements/gsttypefindelement.c:183
 msgid "caps"
 msgstr "capacitats"
 
-#: plugins/elements/gsttypefindelement.c:183
+#: plugins/elements/gsttypefindelement.c:184
 msgid "detected capabilities in stream"
 msgstr "capacitats detectades al flux"
 
-#: plugins/elements/gsttypefindelement.c:186
+#: plugins/elements/gsttypefindelement.c:187
 msgid "minimum"
 msgstr "mínim"
 
-#: plugins/elements/gsttypefindelement.c:190
+#: plugins/elements/gsttypefindelement.c:191
 msgid "maximum"
 msgstr "màxim"
 
