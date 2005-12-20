@@ -389,6 +389,18 @@ gst_caps_unref (GstCaps * caps)
   }
 }
 
+GType
+gst_static_caps_get_type (void)
+{
+  static GType staticcaps_type = 0;
+
+  if (!staticcaps_type) {
+    staticcaps_type = g_pointer_type_register_static ("GstStaticCaps");
+  }
+  return staticcaps_type;
+}
+
+
 /**
  * gst_static_caps_get:
  * @static_caps: the #GstStaticCaps to convert

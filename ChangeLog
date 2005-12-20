@@ -1,3 +1,13 @@
+2005-12-20  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstcaps.c: (gst_static_caps_get_type):
+	* gst/gstcaps.h:
+	Added gpointer GType for GstStaticCaps so we can wrap them in bindings.
+	* gst/gstpadtemplate.c: (gst_static_pad_template_get_type):
+	* gst/gstpadtemplate.h:
+	Added gpointer GType for GstStaticPadTemplate so we can wrap them in
+	bindings.
+
 2005-12-18  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstadapter.c:

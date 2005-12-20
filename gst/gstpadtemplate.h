@@ -40,6 +40,8 @@ G_BEGIN_DECLS
 typedef struct _GstPadTemplateClass GstPadTemplateClass;
 typedef struct _GstStaticPadTemplate GstStaticPadTemplate;
 
+#define GST_TYPE_STATIC_PAD_TEMPLATE	(gst_static_pad_template_get_type ())
+
 #define GST_TYPE_PAD_TEMPLATE		(gst_pad_template_get_type ())
 #define GST_PAD_TEMPLATE(obj)		(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PAD_TEMPLATE,GstPadTemplate))
 #define GST_PAD_TEMPLATE_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PAD_TEMPLATE,GstPadTemplateClass))
@@ -165,6 +167,7 @@ struct _GstStaticPadTemplate {
 
 /* templates and factories */
 GType			gst_pad_template_get_type		(void);
+GType			gst_static_pad_template_get_type	(void);
 
 GstPadTemplate*		gst_pad_template_new			(const gchar *name_template,
 								 GstPadDirection direction, GstPadPresence presence,

@@ -30,6 +30,8 @@ G_BEGIN_DECLS
 #define GST_CAPS(object)          ((GstCaps*)object)
 #define GST_IS_CAPS(object)       ((object) && (GST_CAPS(object)->type == GST_TYPE_CAPS))
 
+#define GST_TYPE_STATIC_CAPS      (gst_static_caps_get_type())
+
 /**
  * GstCapsFlags:
  * @GST_CAPS_FLAGS_ANY: Caps has no specific content, but can contain
@@ -186,6 +188,7 @@ GstCaps *                gst_caps_copy					(const GstCaps * caps);
 GstCaps *                gst_caps_make_writable				(GstCaps *caps);
 void                     gst_caps_unref					(GstCaps* caps);
 
+GType			 gst_static_caps_get_type			(void);
 GstCaps *		 gst_static_caps_get                            (GstStaticCaps *static_caps);
 
 /* manipulation */

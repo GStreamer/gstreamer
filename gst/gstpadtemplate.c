@@ -213,6 +213,18 @@ name_is_valid (const gchar * name, GstPadPresence presence)
   return TRUE;
 }
 
+GType
+gst_static_pad_template_get_type (void)
+{
+  static GType staticpadtemplate_type = 0;
+
+  if (!staticpadtemplate_type) {
+    staticpadtemplate_type =
+        g_pointer_type_register_static ("GstStaticPadTemplate");
+  }
+  return staticpadtemplate_type;
+}
+
 /**
  * gst_static_pad_template_get:
  * @pad_template: the static pad template
