@@ -39,7 +39,7 @@ enum
  * and sample offset position. */
 #define DIFF_TOLERANCE  10
 
-#define DEFAULT_BUFFER_TIME     500 * GST_USECOND
+#define DEFAULT_BUFFER_TIME     200 * GST_USECOND
 #define DEFAULT_LATENCY_TIME    10 * GST_USECOND
 #define DEFAULT_PROVIDE_CLOCK   TRUE
 
@@ -94,6 +94,8 @@ gst_base_audio_sink_base_init (gpointer g_class)
 static void
 gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
 {
+  gchar *longdesc;
+
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
@@ -108,14 +110,21 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_property);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_base_audio_sink_dispose);
 
+  longdesc =
+      g_strdup_printf
+      ("Size of audio buffer in microseconds (use -1 for default of %"
+      G_GUINT64_FORMAT " µs)", DEFAULT_BUFFER_TIME / GST_USECOND);
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
-      g_param_spec_int64 ("buffer-time", "Buffer Time",
-          "Size of audio buffer in milliseconds (-1 = default)",
-          -1, G_MAXINT64, DEFAULT_BUFFER_TIME, G_PARAM_READWRITE));
+      g_param_spec_int64 ("buffer-time", "Buffer Time", longdesc, -1,
+          G_MAXINT64, DEFAULT_BUFFER_TIME, G_PARAM_READWRITE));
+  g_free (longdesc);
+  longdesc =
+      g_strdup_printf ("Audio latency in microseconds (use -1 for default of %"
+      G_GUINT64_FORMAT " µs)", DEFAULT_LATENCY_TIME / GST_USECOND);
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LATENCY_TIME,
-      g_param_spec_int64 ("latency-time", "Latency Time",
-          "Audio latency in milliseconds (-1 = default)",
-          -1, G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
+      g_param_spec_int64 ("latency-time", "Latency Time", longdesc, -1,
+          G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
+  g_free (longdesc);
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PROVIDE_CLOCK,
       g_param_spec_boolean ("provide-clock", "Provide Clock",
           "Provide a clock to be used as the global pipeline clock",

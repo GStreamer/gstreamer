@@ -1,3 +1,14 @@
+2005-12-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init):
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_class_init):
+	  update strings, values are in microseconds
+	  change the default sink buffer time to something that is smaller
+	  (to help software volume mixing have a slightly lower delay) but
+	  still be acceptable on Wim's laptop
+
 2005-12-20  Edward Hervey  <edward@fluendo.com>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_template_caps):

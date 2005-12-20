@@ -81,6 +81,7 @@ gst_base_audio_src_base_init (gpointer g_class)
 static void
 gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
 {
+  gchar *longdesc;
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
@@ -96,14 +97,21 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_get_property);
 
+  longdesc =
+      g_strdup_printf
+      ("Size of audio buffer in microseconds (use -1 for default of %"
+      G_GUINT64_FORMAT " µs)", DEFAULT_BUFFER_TIME / GST_USECOND);
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
-      g_param_spec_int64 ("buffer-time", "Buffer Time",
-          "Size of audio buffer in milliseconds (-1 = default)",
-          -1, G_MAXINT64, DEFAULT_BUFFER_TIME, G_PARAM_READWRITE));
+      g_param_spec_int64 ("buffer-time", "Buffer Time", longdesc, -1,
+          G_MAXINT64, DEFAULT_BUFFER_TIME, G_PARAM_READWRITE));
+  g_free (longdesc);
+  longdesc =
+      g_strdup_printf ("Audio latency in microseconds (use -1 for default of %"
+      G_GUINT64_FORMAT " µs)", DEFAULT_LATENCY_TIME / GST_USECOND);
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LATENCY_TIME,
-      g_param_spec_int64 ("latency-time", "Latency Time",
-          "Audio latency in milliseconds (-1 = default)",
-          -1, G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
+      g_param_spec_int64 ("latency-time", "Latency Time", longdesc, -1,
+          G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
+  g_free (longdesc);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_change_state);
