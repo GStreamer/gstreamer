@@ -6,7 +6,7 @@ AC_INIT
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-base, GST_PLUGINS_BASE_VERSION, 0, 10, 0, 1,
+AS_VERSION(gst-plugins-base, GST_PLUGINS_BASE_VERSION, 0, 10, 0, 2,
     GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
@@ -41,6 +41,9 @@ dnl sets GST_LT_LDFLAGS
 AS_LIBTOOL(GST, 0, 0, 0)
 AS_LIBTOOL_TAGS
 AM_PROG_LIBTOOL
+
+dnl *** required versions of GStreamer stuff ***
+GST_REQ=0.10.0.2
 
 dnl *** autotools stuff ****
 
@@ -207,7 +210,6 @@ fi
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_REQ=0.9.7
 GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
@@ -428,10 +430,25 @@ GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
                        defined if cdda headers are in a cdda/ directory)
   fi
   AC_SUBST(CDPARANOIA_LIBS)
+
+  dnl FIXME: temporarily disable for release
+  HAVE_CDPARANOIA=no
+], disabled, , [
+  AC_MSG_NOTICE(cdparanoiasrc not stable yet, not building)
 ])
 dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
+GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
+  [HAVE_EXTERNAL=yes], enabled,
+  [
+    AC_MSG_NOTICE(building external plug-ins)
+    BUILD_EXTERNAL="yes"
+  ],[
+    AC_MSG_NOTICE(all plug-ins with external dependencies will not be built)
+    BUILD_EXTERNAL="no"
+  ])
+
 
 dnl *** Gnome VFS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)

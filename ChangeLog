@@ -49,25 +49,25 @@
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
 	(gst_base_rtp_depayload_init), (gst_base_rtp_depayload_handle_sink_event):
-		Handle downstream newsegment by sending our own newsegment before the
-		next buffer to be released. (#323900)
+	  Handle downstream newsegment by sending our own newsegment before the
+	  next buffer to be released. (#323900)
 
 2005-12-17  Philippe Khalaf  <burger@speedy.org> 
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
 	(gst_base_rtp_depayload_set_gst_timestamp):
-		add queue delay to new segment as well (as opposed to just the first
-		buffer). (bug #322347)
+	  add queue delay to new segment as well (as opposed to just the first
+	  buffer). (bug #322347)
 
 2005-12-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/libvisual/visual.c: (make_valid_name):
-          change some char* into char[]
+	  change some char* into char[]
 	* gst/audiotestsrc/gstaudiotestsrc.c:
 	(gst_audio_test_src_class_init), (gst_audio_test_src_do_seek),
 	(gst_audio_test_src_create):
 	* gst/audiotestsrc/gstaudiotestsrc.h:
-          prepare to handle EOS and SEGMENT_DONE
+	  prepare to handle EOS and SEGMENT_DONE
 
 2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -119,8 +119,8 @@
 	(gst_audio_test_src_do_seek), (gst_audio_test_src_is_seekable),
 	(gst_audio_test_src_create):
 	* gst/audiotestsrc/gstaudiotestsrc.h:
-          Adjust to some recent api changes and add wtays new cool seeking
-          capabillities
+	Adjust to some recent api changes and add wtays new cool seeking
+	capabillities
 
 2005-12-14  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -195,7 +195,7 @@
 
 	* tests/examples/seek/seek.c: (do_seek), (start_seek), (stop_seek),
 	(flush_toggle_cb), (main):
-	Added checkbox do disable flushing seeks. 
+	Added checkbox to disable flushing seeks. 
 	Disable scrubbing when doing non flushing seeks.
 
 2005-12-12  Tim-Philipp Müller  <tim at centricular dot net>

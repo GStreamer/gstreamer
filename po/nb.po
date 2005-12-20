@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-05 17:15+0100\n"
+"POT-Creation-Date: 2005-12-20 13:14+0100\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -59,15 +59,15 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:279
+#: ext/cdparanoia/gstcdparanoia.c:305
 msgid "discid"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:279
+#: ext/cdparanoia/gstcdparanoia.c:305
 msgid "CDDA discid for metadata retrieval"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
+#: ext/cdparanoia/gstcdparanoia.c:808 ext/cdparanoia/gstcdparanoia.c:814
 msgid "Could not open CD device for reading."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
@@ -85,45 +85,45 @@ msgstr "Ingen filnavn oppgitt"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
 
-#: ext/ogg/gstoggdemux.c:2473
+#: ext/ogg/gstoggdemux.c:2503
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1333
+#: gst/playback/gstplaybasebin.c:1347
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1339
+#: gst/playback/gstplaybasebin.c:1353
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1343
+#: gst/playback/gstplaybasebin.c:1357
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1350
+#: gst/playback/gstplaybasebin.c:1364
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1416
+#: gst/playback/gstplaybasebin.c:1430
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1419
+#: gst/playback/gstplaybasebin.c:1433
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "Enhet «%s» kan ikke fange data."
 
-#: gst/playback/gstplaybin.c:411
+#: gst/playback/gstplaybin.c:434
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:541
+#: gst/playback/gstplaybin.c:564
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
