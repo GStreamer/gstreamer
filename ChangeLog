@@ -1,3 +1,8 @@
+2005-12-20  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-trickmodes.txt:
+	More documentation on trickmodes.
+
 2005-12-20  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstcaps.c: (gst_static_caps_get_type):
