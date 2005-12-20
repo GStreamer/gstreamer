@@ -1,3 +1,4 @@
+/* -*- Mode: C; c-basic-offset: 4 -*- */
 /*
  * gstelementfactory.override - gstreamer element factory override
  * Copyright (C) 2005 Alessandro Decina
@@ -41,4 +42,23 @@ _wrap_gst_element_factory_make(PyObject *self, PyObject *args, PyObject *kwargs)
     pygst_object_unref((GObject *)ret);
     return py_ret;
 }
+%%
+override gst_element_factory_get_static_pad_templates noargs
+static PyObject *
+_wrap_gst_element_factory_get_static_pad_templates(PyGObject *self)
+{
+  const GList *list;
+  GList	*l;
+  PyObject *py_list;
+  int i = 0;
 
+  list = gst_element_factory_get_static_pad_templates (GST_ELEMENT_FACTORY (self->obj));
+
+  py_list = PyList_New(g_list_length ((GList*) list));
+
+  for (l = (GList*) list; l ; l = g_list_next(l), i++) {
+    GstStaticPadTemplate *templ = (GstStaticPadTemplate*) l->data;
+    PyList_SetItem(py_list, i, pyg_pointer_new(GST_TYPE_STATIC_PAD_TEMPLATE, (gpointer) templ));
+  }
+  return py_list;
+}

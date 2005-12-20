@@ -277,6 +277,28 @@
   )
 )
 
+(define-pointer StaticPadTemplate
+  (in-module "Gst")
+  (c-name "GstStaticPadTemplate")
+  (gtype-id "GST_TYPE_STATIC_PAD_TEMPLATE")
+  (fields
+   '("gchar*" "name_template")
+   '("GstPadDirection" "direction")
+   '("GstPadPresence" "presence")
+   '("GstStaticCaps" "static_caps")
+  )
+)
+
+(define-pointer StaticCaps
+  (in-module "Gst")
+  (c-name "GstStaticCaps")
+  (gtype-id "GST_TYPE_STATIC_CAPS")
+  (fields
+   '("GstCaps" "caps")
+   '("const-gchar*" "string")
+  )
+)
+
 ;; Enumerations and flags ...
 
 (define-flags BinFlags

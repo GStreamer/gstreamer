@@ -1,3 +1,12 @@
+2005-12-20  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst-types.defs:
+	Added GstStaticCaps and GstStaticPadTemplate, using the new GType.
+	* gst/gst.defs:
+	Doesn't return a const anymore.
+	* gst/gstelementfactory.override:
+	Wrapped gst_element_factory_get_static_pad_templates()
+
 2005-12-19  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/gstbus.override (_wrap_gst_bus_add_watch): This function

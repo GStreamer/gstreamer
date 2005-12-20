@@ -488,7 +488,7 @@
 (define-method get
   (of-object "GstStaticCaps")
   (c-name "gst_static_caps_get")
-  (return-type "const-GstCaps*")
+  (return-type "GstCaps*")
 )
 
 (define-method append
