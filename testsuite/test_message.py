@@ -31,7 +31,7 @@ class NewTest(TestCase):
         gst.info("got message : %s" % m)
 
     def message_application_cb(self, bus, message):
-        print "got message"
+        gst.info("got application message")
         self.got_message = True
         self.loop.quit()
 

@@ -1,17 +1,16 @@
 %define         majorminor      @GST_MAJORMINOR@
-%define         gstreamer       gstreamer
+%define         gstreamer       gstreamer010
 %define		_pygtk		@PYGTK_REQ@
 %define		_gst		@GST_REQ@
 
-Name:           %{gstreamer}09-python
+Name:           %{gstreamer}-python
 Version:        @VERSION@
 Release:        1
 Summary:        Python bindings for GStreamer.
 
 Group:          Development/Languages
 License:        LGPL
-URL:            http://gstreamer.net/
-Vendor:         GStreamer Backpackers Team <package@gstreamer.net>
+URL:            http://gstreamer.freedesktop.org/
 Source: 	http://gstreamer.freedesktop.org/src/gst-python/gst-python-%{version}.tar.gz
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -19,8 +18,8 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires:	python >= 2
 Requires:	gnome-python2
 Requires:	pygtk2 >= %_pygtk
-Requires:	%{gstreamer}09
-Requires:	%{gstreamer}09-plugins-base
+Requires:	%{gstreamer}
+Requires:	%{gstreamer}-plugins-base
 
 BuildRequires:	python >= 2
 BuildRequires:  python-devel >= 2
@@ -28,8 +27,8 @@ BuildRequires:  pygtk2-devel >= %_pygtk
 BuildRequires:	xmlto
 BuildRequires:	links
 
-BuildRequires:	%{gstreamer}09-devel >= %_gst
-BuildRequires:	%{gstreamer}09-plugins-base-devel >= %_gst
+BuildRequires:	%{gstreamer}-devel >= %_gst
+BuildRequires:	%{gstreamer}-plugins-base-devel >= %_gst
 
 # sigh, libtool
 BuildRequires:  gcc-c++
@@ -64,12 +63,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/extend
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/_gst.so
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/interfaces.so
-%dir %{_datadir}/gst-python
-%{_datadir}/gst-python/?.?/defs/*
-%{_datadir}/gst-python/?.?/examples/*
+%{_datadir}/gst-python
 %{_libdir}/pkgconfig/gst-python-%{majorminor}.pc
 
 %changelog
+* Tue Dec 20 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- updated spec file
+
 * Thu Oct 06 2005 Edward Hervey < edward at fluendo dot com >
 - Updated spec file for 0.9
 
