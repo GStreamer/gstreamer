@@ -1,3 +1,10 @@
+2005-12-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_src_event):
+	  When getting a seek event, first check if the upstream element
+	  can handle it and only do our own seek stuff when it can't
+	  (should fix #322856).
+
 2005-12-21  Josef Zlomek  <josef dot zlomek at xeris dot cz>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

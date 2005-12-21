@@ -1325,14 +1325,17 @@ gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
       /* the all-formats seek logic */
-    case GST_EVENT_SEEK:
-      if (mpeg2dec->index)
-        res = index_seek (pad, event);
-      else
-        res = normal_seek (pad, event);
-
+    case GST_EVENT_SEEK:{
+      gst_event_ref (event);
+      if (!(res = gst_pad_event_default (pad, event))) {
+        if (mpeg2dec->index)
+          res = index_seek (pad, event);
+        else
+          res = normal_seek (pad, event);
+      }
       gst_event_unref (event);
       break;
+    }
     case GST_EVENT_NAVIGATION:
       /* Forward a navigation event unchanged */
     default:
