@@ -1284,10 +1284,10 @@ normal_seek (GstPad * pad, GstEvent * event)
   /* else we try to seek on bytes */
   conv = GST_FORMAT_BYTES;
   if (!gst_mpeg2dec_sink_convert (pad, GST_FORMAT_TIME, time_cur,
-          &format, &bytes_cur))
+          &conv, &bytes_cur))
     goto convert_failed;
   if (!gst_mpeg2dec_sink_convert (pad, GST_FORMAT_TIME, time_stop,
-          &format, &bytes_stop))
+          &conv, &bytes_stop))
     goto convert_failed;
 
   /* conversion succeeded, create the seek */

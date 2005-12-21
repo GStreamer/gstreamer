@@ -1,3 +1,11 @@
+2005-12-21  Josef Zlomek  <josef dot zlomek at xeris dot cz>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (normal_seek):
+	  Really convert to BYTES format when we want to convert
+	  to bytes (use right variable; fixes #322856).
+
 2005-12-19  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	Big mpegparse clean up, second round:
