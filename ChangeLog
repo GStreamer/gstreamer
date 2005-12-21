@@ -1,5 +1,11 @@
 2005-12-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	Regenerate the plugin hiearchy.
+
+2005-12-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:

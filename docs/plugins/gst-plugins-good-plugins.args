@@ -1654,7 +1654,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Prefer version 1 tag</NICK>
-<BLURB>Prefer tags from ID3v1 tag at end of file.</BLURB>
+<BLURB>Prefer tags from ID3v1 tag at end of file when both ID3v1 and ID3v2 tags are present.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
