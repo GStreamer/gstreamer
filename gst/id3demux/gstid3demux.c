@@ -18,6 +18,27 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-id3demux
+ * @short_description: reads tag information from ID3v1 and ID3v2 (<= 2.4.0) data blocks and outputs them as GStreamer tag messages and events.
+ *
+ * <refsect2>
+ * <para>
+ * id3demux accepts data streams with either (or both) ID3v2 regions at the start, or ID3v1 at the end. The mime type of the data between the tag blocks is detected using typefind functions, and the appropriate output mime type set on outgoing buffers. 
+ * </para><para>
+ * The element is only able to read ID3v1 tags from a seekable stream, because they are at the end of the stream. That is, when get_range mode is supported by the upstream elements. If get_range operation is available, id3demux makes it available downstream. This means that elements which require get_range mode, such as wavparse, can operate on files containing ID3 tag information.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=file.mp3 ! id3demux ! fakesink -t
+ * </programlisting>
+ * This pipeline should read any available ID3 tag information and output it. The contents of the file inside the ID3 tag regions should be detected, and the appropriate mime type set on buffers produced from id3demux.
+ * </para><para>
+ * This id3demux element replaced an older element with the same name which relied on libid3tag from the MAD project.
+ * </para>
+ * </refsect2>
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -26,6 +47,12 @@
 
 #include "gstid3demux.h"
 #include "id3tags.h"
+
+static GstElementDetails gst_id3demux_details =
+GST_ELEMENT_DETAILS ("ID3 tag demuxer",
+    "Codec/Demuxer/Metadata",
+    "Read and output ID3v1 and ID3v2 tags while demuxing the contents",
+    "Jan Schmidt <thaytan@mad.scientist.com>");
 
 enum
 {
@@ -93,7 +120,7 @@ static void gst_id3demux_send_tag_event (GstID3Demux * id3demux);
 static GstElementClass *parent_class = NULL;
 
 GType
-gst_gst_id3demux_get_type (void)
+gst_id3demux_get_type (void)
 {
   static GType plugin_type = 0;
 
@@ -118,19 +145,13 @@ gst_gst_id3demux_get_type (void)
 static void
 gst_id3demux_base_init (GstID3DemuxClass * klass)
 {
-  static GstElementDetails plugin_details = {
-    "GStreamer ID3 Demuxer",
-    "Codec/Demuxer/Metadata",
-    "ID3 tag reader and demuxer",
-    "Jan Schmidt <thaytan@mad.scientist.com>"
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &plugin_details);
+  gst_element_class_set_details (element_class, &gst_id3demux_details);
 }
 
 static void
@@ -153,7 +174,8 @@ gst_id3demux_class_init (GstID3DemuxClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_PREFER_V1,
       g_param_spec_boolean ("prefer-v1", "Prefer version 1 tag",
-          "Prefer tags from ID3v1 tag at end of file", FALSE,
+          "Prefer tags from ID3v1 tag at end of file when both ID3v1 "
+          "and ID3v2 tags are present", FALSE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
@@ -382,8 +404,6 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
       if (GST_BUFFER_OFFSET (id3demux->collect) != 0) {
         GST_DEBUG_OBJECT (id3demux,
             "Received buffer from non-zero offset. Can't read tags");
-        id3demux->state = GST_ID3DEMUX_TYPEFINDING;
-        break;
       } else {
         ID3TagsResult tag_result;
 
@@ -398,9 +418,9 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
           GST_DEBUG_OBJECT (id3demux, "Found an ID3v2 tag of size %d\n",
               id3demux->strip_start);
 
-        id3demux->state = GST_ID3DEMUX_TYPEFINDING;
         id3demux->send_tag_event = TRUE;
       }
+      id3demux->state = GST_ID3DEMUX_TYPEFINDING;
 
       /* Fall-through */
     case GST_ID3DEMUX_TYPEFINDING:{

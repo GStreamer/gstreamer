@@ -1,3 +1,18 @@
+2005-12-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_get_type),
+	(gst_id3demux_base_init), (gst_id3demux_class_init),
+	(gst_id3demux_chain):
+	* gst/id3demux/gstid3demux.h:
+	  Add documentation for id3demux.
+	  Don't fail if the first buffer is not at offset 0, just
+	  attempt to typefind and do pass through
+	  Rename the gst_type function from gst_gst_id3demux..
+
 2005-12-20  Michael Smith  <msmith@fluendo.com>
 
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_render),

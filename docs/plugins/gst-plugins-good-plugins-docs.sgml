@@ -17,6 +17,7 @@
     <xi:include href="xml/element-cairotimeoverlay.xml" />
     <xi:include href="xml/element-flacdec.xml" />
     <xi:include href="xml/element-goom.xml" />
+    <xi:include href="xml/element-id3demux.xml" />
     <xi:include href="xml/element-level.xml" />
     <xi:include href="xml/element-multipartmux.xml" />
     <xi:include href="xml/element-multipartdemux.xml" />
@@ -45,6 +46,7 @@
     <xi:include href="xml/plugin-flxdec.xml" />
     <xi:include href="xml/plugin-gconfelements.xml" />
     <xi:include href="xml/plugin-goom.xml" />
+    <xi:include href="xml/plugin-id3demux.xml" />
     <xi:include href="xml/plugin-jpeg.xml" />
     <xi:include href="xml/plugin-level.xml" />
     <xi:include href="xml/plugin-matroska.xml" />

@@ -25,7 +25,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_ID3DEMUX \
-  (gst_gst_id3demux_get_type())
+  (gst_id3demux_get_type())
 #define GST_ID3DEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ID3DEMUX,GstID3Demux))
 #define GST_ID3DEMUX_CLASS(klass) \
@@ -72,7 +72,7 @@ struct _GstID3DemuxClass
   GstElementClass parent_class;
 };
 
-GType gst_gst_id3demux_get_type (void);
+GType gst_id3demux_get_type (void);
 
 G_END_DECLS
 

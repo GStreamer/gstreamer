@@ -39,6 +39,14 @@ GstGoomClass
 </SECTION>
 
 <SECTION>
+<FILE>element-id3demux</FILE>
+GstID3Demux
+<TITLE>id3demux</TITLE>
+<SUBSECTION Standard>
+GstID3DemuxClass
+</SECTION>
+
+<SECTION>
 <FILE>element-level</FILE>
 GstLevel
 <TITLE>level</TITLE>
