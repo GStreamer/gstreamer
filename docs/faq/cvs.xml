@@ -124,7 +124,7 @@ CVS and prereleases so that people actually notice and fix problems found by
         <para>
 If for any reason you want to bypass these flags and you are certain it's the
 right thing to do, you can run
-<programlisting>make ERROR_CFLAGS="</programlisting>
+<programlisting>make ERROR_CFLAGS=""</programlisting>
 to clear the CFLAGS for error checking.
         </para>
       </answer>

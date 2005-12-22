@@ -1,3 +1,8 @@
+2005-12-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/faq/cvs.xml:
+	  Add missing quote, should be make ERROR_CFLAGS="".
+
 2005-12-20  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-trickmodes.txt:
