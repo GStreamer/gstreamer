@@ -1,5 +1,11 @@
 2005-12-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/extend/Makefile.am:
+	  install in pyexecdir, so the package does not need splitting
+	  for multilib
+
+2005-12-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gst.override:
 	  allow for logging both on objects and in general
 	* testsuite/test_element.py:
