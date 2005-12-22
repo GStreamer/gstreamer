@@ -1,3 +1,10 @@
+2005-12-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.override:
+	  allow for logging both on objects and in general
+	* testsuite/test_element.py:
+	  add a subclass test
+
 2005-10-11  Richard Hult  <richard@imendio.com>
 
 	Reviewed by Edward Hervey  <edward@fluendo.com>
