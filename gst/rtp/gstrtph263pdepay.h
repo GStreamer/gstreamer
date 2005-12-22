@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/rtp/gstbasertpdepayload.h>
 
 G_BEGIN_DECLS
 
@@ -41,10 +42,7 @@ typedef struct _GstRtpH263PDepayClass GstRtpH263PDepayClass;
 
 struct _GstRtpH263PDepay
 {
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstBaseRTPDepayload depayload;
 
   GstAdapter *adapter;
 
@@ -53,7 +51,7 @@ struct _GstRtpH263PDepay
 
 struct _GstRtpH263PDepayClass
 {
-  GstElementClass parent_class;
+  GstBaseRTPDepayloadClass parent_class;
 };
 
 gboolean gst_rtp_h263p_depay_plugin_init (GstPlugin * plugin);

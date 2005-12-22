@@ -1,3 +1,12 @@
+2005-12-22  Philippe Khalaf  <burger@speedy.org>
+
+	* gst-plugins-good/gst/rtp/gstrtph263pdepay.h:
+	* gst-plugins-good/gst/rtp/gstrtph263pdepay.c:
+	* gst-plugins-good/gst/rtp/gstrtpmp4vdepay.h:
+	* gst-plugins-good/gst/rtp/gstrtpmp4vdepay.c:
+		Making these depayloaders (H263+ and mpeg4 video) inherit from
+		RtpBaseDepayloaderClass. Fixes bugs #323922 and #323908.
+
 2005-12-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/plugins/gst-plugins-good-plugins.args:

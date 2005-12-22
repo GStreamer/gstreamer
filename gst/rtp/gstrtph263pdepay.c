@@ -58,15 +58,10 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"")
     );
 
+GST_BOILERPLATE (GstRtpH263PDepay, gst_rtp_h263p_depay, GstBaseRTPDepayload,
+    GST_TYPE_BASE_RTP_DEPAYLOAD);
 
-static void gst_rtp_h263p_depay_class_init (GstRtpH263PDepayClass * klass);
-static void gst_rtp_h263p_depay_base_init (GstRtpH263PDepayClass * klass);
-static void gst_rtp_h263p_depay_init (GstRtpH263PDepay * rtph263pdepay);
 static void gst_rtp_h263p_depay_finalize (GObject * object);
-
-static GstFlowReturn gst_rtp_h263p_depay_chain (GstPad * pad,
-    GstBuffer * buffer);
-
 static void gst_rtp_h263p_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtp_h263p_depay_get_property (GObject * object, guint prop_id,
@@ -75,35 +70,13 @@ static void gst_rtp_h263p_depay_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_rtp_h263p_depay_change_state (GstElement *
     element, GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
-
-static GType
-gst_rtp_h263p_depay_get_type (void)
-{
-  static GType rtph263pdepay_type = 0;
-
-  if (!rtph263pdepay_type) {
-    static const GTypeInfo rtph263pdepay_info = {
-      sizeof (GstRtpH263PDepayClass),
-      (GBaseInitFunc) gst_rtp_h263p_depay_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtp_h263p_depay_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRtpH263PDepay),
-      0,
-      (GInstanceInitFunc) gst_rtp_h263p_depay_init,
-    };
-
-    rtph263pdepay_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRtpH263PDepay",
-        &rtph263pdepay_info, 0);
-  }
-  return rtph263pdepay_type;
-}
+static GstBuffer *gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload,
+    GstBuffer * buf);
+gboolean gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter,
+    GstCaps * caps);
 
 static void
-gst_rtp_h263p_depay_base_init (GstRtpH263PDepayClass * klass)
+gst_rtp_h263p_depay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -111,6 +84,7 @@ gst_rtp_h263p_depay_base_init (GstRtpH263PDepayClass * klass)
       gst_static_pad_template_get (&gst_rtp_h263p_depay_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_h263p_depay_sink_template));
+
 
   gst_element_class_set_details (element_class, &gst_rtp_h263pdepay_details);
 }
@@ -120,11 +94,16 @@ gst_rtp_h263p_depay_class_init (GstRtpH263PDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_DEPAYLOAD);
+
+  gstbasertpdepayload_class->process = gst_rtp_h263p_depay_process;
+  gstbasertpdepayload_class->set_caps = gst_rtp_h263p_depay_setcaps;
 
   gobject_class->finalize = gst_rtp_h263p_depay_finalize;
 
@@ -135,20 +114,9 @@ gst_rtp_h263p_depay_class_init (GstRtpH263PDepayClass * klass)
 }
 
 static void
-gst_rtp_h263p_depay_init (GstRtpH263PDepay * rtph263pdepay)
+gst_rtp_h263p_depay_init (GstRtpH263PDepay * rtph263pdepay,
+    GstRtpH263PDepayClass * klass)
 {
-  rtph263pdepay->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtp_h263p_depay_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (rtph263pdepay), rtph263pdepay->srcpad);
-
-  rtph263pdepay->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtp_h263p_depay_sink_template), "sink");
-  gst_pad_set_chain_function (rtph263pdepay->sinkpad,
-      gst_rtp_h263p_depay_chain);
-  gst_element_add_pad (GST_ELEMENT (rtph263pdepay), rtph263pdepay->sinkpad);
-
   rtph263pdepay->adapter = gst_adapter_new ();
 }
 
@@ -165,16 +133,34 @@ gst_rtp_h263p_depay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static GstFlowReturn
-gst_rtp_h263p_depay_chain (GstPad * pad, GstBuffer * buf)
+// only on the sink
+gboolean
+gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 {
+
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  gint clock_rate = 90000;      // default
+
+  if (gst_structure_has_field (structure, "clock-rate")) {
+    gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  }
+
+  filter->clock_rate = clock_rate;
+
+  return TRUE;
+}
+
+
+static GstBuffer *
+gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+{
+
   GstRtpH263PDepay *rtph263pdepay;
   GstBuffer *outbuf;
-  GstFlowReturn ret;
 
   /* GstRTPPayload pt; */
 
-  rtph263pdepay = GST_RTP_H263P_DEPAY (GST_OBJECT_PARENT (pad));
+  rtph263pdepay = GST_RTP_H263P_DEPAY (depayload);
 
   if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
@@ -223,12 +209,16 @@ gst_rtp_h263p_depay_chain (GstPad * pad, GstBuffer * buf)
 
     if (M) {
       /* frame is completed: append to previous, push it out */
+      guint len;
       guint avail;
       guint8 *data;
 
       avail = gst_adapter_available (rtph263pdepay->adapter);
 
-      outbuf = gst_buffer_new_and_alloc (avail + payload_len);
+      len = avail + payload_len;
+      outbuf = gst_buffer_new_and_alloc (len + (len % 4) + 4);
+      memset (GST_BUFFER_DATA (outbuf) + len, 0, (len % 4) + 4);
+      GST_BUFFER_SIZE (outbuf) = len;
 
       /* prepend previous data */
       if (avail > 0) {
@@ -238,11 +228,14 @@ gst_rtp_h263p_depay_chain (GstPad * pad, GstBuffer * buf)
       }
       memcpy (GST_BUFFER_DATA (outbuf) + avail, payload, payload_len);
 
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / 90000;
-      gst_buffer_set_caps (outbuf,
-          (GstCaps *) gst_pad_get_pad_template_caps (rtph263pdepay->srcpad));
+      GST_BUFFER_TIMESTAMP (outbuf) =
+          timestamp * GST_SECOND / depayload->clock_rate;
 
-      ret = gst_pad_push (rtph263pdepay->srcpad, outbuf);
+      gst_buffer_set_caps (outbuf,
+          (GstCaps *) gst_pad_get_pad_template_caps (depayload->srcpad));
+
+      return outbuf;
+
     } else {
       /* frame not completed: store in adapter */
       outbuf = gst_buffer_new_and_alloc (payload_len);
@@ -251,19 +244,18 @@ gst_rtp_h263p_depay_chain (GstPad * pad, GstBuffer * buf)
 
       gst_adapter_push (rtph263pdepay->adapter, outbuf);
 
-      ret = GST_FLOW_OK;
     }
 
-    gst_buffer_unref (buf);
   }
 
-  return ret;
+  return NULL;
 
 bad_packet:
   {
-    GST_DEBUG ("Packet does not validate");
-    gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
+    GST_ELEMENT_WARNING (rtph263pdepay, STREAM, DECODE,
+        ("Packet did not validate"), (NULL));
+
+    return NULL;
   }
   /*
      bad_payload:
