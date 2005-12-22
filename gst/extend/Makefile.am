@@ -1,4 +1,4 @@
-pkgpythondir = $(pythondir)/gst-$(GST_MAJORMINOR)/gst/extend
+pkgpyexecdir = $(pyexecdir)/gst-$(GST_MAJORMINOR)/gst/extend
 
-pygstdir = $(pkgpythondir)
+pygstdir = $(pkgpyexecdir)
 pygst_PYTHON = __init__.py pygobject.py utils.py discoverer.py

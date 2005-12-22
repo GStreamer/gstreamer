@@ -1,5 +1,12 @@
 2005-12-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/extend/Makefile.am:
+	  install in pyexecdir as well
+
+2005-12-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* pygst.py.in: give the correct error when not finding the version
 
 2005-12-20  Edward Hervey  <edward@fluendo.com>
