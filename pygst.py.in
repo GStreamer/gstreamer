@@ -49,7 +49,7 @@ def require(version):
            "pygst.require() must be called before importing gst"
 
     assert version == _pygst_version, \
-           "Only version '%s' is available" % pygst_version
+           "Only version '%s' is available" % _pygst_version
 
     # move the pygst path to the front
     while _pygst_dir in sys.path:
