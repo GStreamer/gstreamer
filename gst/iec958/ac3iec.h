@@ -62,6 +62,8 @@ struct _AC3IEC {
   GstClockTime next_ts;         /* Time stamp for the next frame. */
 
   ac3_padder *padder;           /* AC3 to SPDIF padder object. */
+
+  gboolean dvdmode;
 };
 
 

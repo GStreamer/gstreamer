@@ -1,3 +1,10 @@
+2005-12-23  Michael Smith  <msmith@fluendo.com>
+
+	* gst/iec958/ac3iec.c: (ac3iec_init), (ac3iec_setcaps),
+	(ac3iec_chain_dvd):
+	* gst/iec958/ac3iec.h:
+	  Accept audio/x-ac3 and audio/ac3 to ac3iec958 element.
+
 2005-12-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_src_event):

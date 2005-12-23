@@ -61,10 +61,10 @@ enum
 
 
 static GstStaticPadTemplate ac3iec_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-private1-ac3")
+    GST_STATIC_CAPS ("audio/x-private1-ac3; audio/x-ac3; audio/ac3")
     );
 
 static GstStaticPadTemplate ac3iec_src_template =
@@ -84,6 +84,7 @@ static void ac3iec_set_property (GObject * object,
 static void ac3iec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
+static gboolean ac3iec_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn ac3iec_chain_dvd (GstPad * pad, GstBuffer * buf);
 static GstFlowReturn ac3iec_chain_raw (GstPad * pad, GstBuffer * buf);
 
@@ -160,6 +161,7 @@ ac3iec_init (AC3IEC * ac3iec)
   ac3iec->sink =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_sink_template), "sink");
+  gst_pad_set_setcaps_function (ac3iec->sink, ac3iec_setcaps);
   gst_pad_set_chain_function (ac3iec->sink, ac3iec_chain_dvd);
   gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->sink);
 
@@ -199,6 +201,21 @@ ac3iec_set_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+ac3iec_setcaps (GstPad * pad, GstCaps * caps)
+{
+  AC3IEC *ac3iec = AC3IEC (gst_pad_get_parent (pad));
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+
+  if (structure && gst_structure_has_name (structure, "audio/x-private1-ac3"))
+    ac3iec->dvdmode = TRUE;
+  else
+    ac3iec->dvdmode = FALSE;
+
+  gst_object_unref (ac3iec);
+
+  return TRUE;
+}
 
 static void
 ac3iec_get_property (GObject * object, guint prop_id,
@@ -228,54 +245,62 @@ ac3iec_chain_dvd (GstPad * pad, GstBuffer * buf)
   gint len;
   GstBuffer *subbuf;
   GstFlowReturn ret;
+  AC3IEC *ac3iec = AC3IEC (gst_pad_get_parent (pad));
 
-  size = GST_BUFFER_SIZE (buf);
-  data = GST_BUFFER_DATA (buf);
+  if (ac3iec->dvdmode) {
+    size = GST_BUFFER_SIZE (buf);
+    data = GST_BUFFER_DATA (buf);
 
-  first_access = (data[0] << 8) | data[1];
+    first_access = (data[0] << 8) | data[1];
 
-  /* Skip the first_access header */
-  offset = 2;
+    /* Skip the first_access header */
+    offset = 2;
 
-  if (first_access > 1) {
-    /* Length of data before first_access */
-    len = first_access - 1;
+    if (first_access > 1) {
+      /* Length of data before first_access */
+      len = first_access - 1;
 
-    /* Ensure we don't crash if fed totally invalid data */
-    if (offset + len > size) {
-      ret = GST_FLOW_ERROR;
-      goto done;
-    }
+      /* Ensure we don't crash if fed totally invalid data */
+      if (offset + len > size) {
+        ret = GST_FLOW_ERROR;
+        goto done;
+      }
 
-    if (len > 0) {
+      if (len > 0) {
+        subbuf = gst_buffer_create_sub (buf, offset, len);
+        GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+        ret = ac3iec_chain_raw (pad, subbuf);
+        if (ret != GST_FLOW_OK)
+          goto done;
+      }
+
+      offset += len;
+      len = size - offset;
+
       subbuf = gst_buffer_create_sub (buf, offset, len);
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
+
+      ret = ac3iec_chain_raw (pad, subbuf);
+    } else {
+      /* Ensure we don't crash if fed totally invalid data */
+      if (size < 2) {
+        ret = GST_FLOW_ERROR;
+        goto done;
+      }
+
+      /* No first_access, so no timestamp */
+      subbuf = gst_buffer_create_sub (buf, offset, size - offset);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
       ret = ac3iec_chain_raw (pad, subbuf);
-      if (ret != GST_FLOW_OK)
-        goto done;
     }
-
-    offset += len;
-    len = size - offset;
-
-    subbuf = gst_buffer_create_sub (buf, offset, len);
-    GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
-
-    ret = ac3iec_chain_raw (pad, subbuf);
   } else {
-    /* Ensure we don't crash if fed totally invalid data */
-    if (size < 2) {
-      ret = GST_FLOW_ERROR;
-      goto done;
-    }
-
-    /* No first_access, so no timestamp */
-    subbuf = gst_buffer_create_sub (buf, offset, size - offset);
-    GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
-    ret = ac3iec_chain_raw (pad, subbuf);
+    ret = ac3iec_chain_raw (pad, buf);
+    gst_object_unref (ac3iec);
+    return ret;
   }
 
 done:
+  gst_object_unref (ac3iec);
   gst_buffer_unref (buf);
 
   return ret;
