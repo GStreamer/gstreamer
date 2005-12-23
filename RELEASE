@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Python bindings 0.10.0 "Reblochon"
+GStreamer: Release notes for GStreamer Python bindings 0.10.1 "Krisimas Yakanaka"
         
 
 
@@ -18,9 +18,23 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
+      * added discoverer
+      * updated for core API additions
 
 Bugs fixed in this release
     
+
+API changed in this release
+     
+
+- API additions:
+    
+* gst.extend.discoverer
+* wrapped gst_version()
+* wrapped gst_type_find_factory_get_list()
+* wrapped gst_mixer_options_get_values()
+* wrapped gst_dp_*()
+* wrapped gst_element_factory_get_static_pad_templates()
 
 Download
 
@@ -52,4 +66,6 @@ Contributors to this release
     
       * Andy Wingo
       * Edward Hervey
+      * Martin Soto
+      * Thomas Vander Stichele
  

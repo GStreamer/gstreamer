@@ -1,4 +1,18 @@
-This is GStreamer Python Bindings 0.10.0, "Reblochon".
+This is GStreamer Python Bindings 0.10.1, "Krisimas Yakanaka"
+
+Changes since 0.10.0:
+
+      * added discoverer
+      * updated for core API additions
+
+API changed since 0.10.0:
+     
+      * gst.extend.discoverer
+      * wrapped gst_version()
+      * wrapped gst_type_find_factory_get_list()
+      * wrapped gst_mixer_options_get_values()
+      * wrapped gst_dp_*()
+      * wrapped gst_element_factory_get_static_pad_templates()
 
 Changes since 0.9.6:
     
