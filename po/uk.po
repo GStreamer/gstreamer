@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-20 13:13+0100\n"
+"POT-Creation-Date: 2005-12-23 15:43+0100\n"
 "PO-Revision-Date: 2005-11-26 15:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -625,7 +625,7 @@ msgstr "не вдається прив'язати елемент-спожива�
 msgid "empty pipeline not allowed"
 msgstr "порожній канал не допускається"
 
-#: libs/gst/base/gstbasesrc.c:1312 libs/gst/base/gstbasesrc.c:1321
+#: libs/gst/base/gstbasesrc.c:1314 libs/gst/base/gstbasesrc.c:1323
 #: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr "Помилка внутрішнього потоку даних."

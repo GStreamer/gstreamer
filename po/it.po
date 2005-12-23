@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-20 13:13+0100\n"
+"POT-Creation-Date: 2005-12-23 15:43+0100\n"
 "PO-Revision-Date: 2005-12-02 19:48+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -732,7 +732,7 @@ msgstr "impossibile collegare l'elemento sink per l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "pipeline vuota non consentito"
 
-#: libs/gst/base/gstbasesrc.c:1312 libs/gst/base/gstbasesrc.c:1321
+#: libs/gst/base/gstbasesrc.c:1314 libs/gst/base/gstbasesrc.c:1323
 #: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr "Errore interno nel flusso di dati."

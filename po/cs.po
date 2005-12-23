@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-20 13:13+0100\n"
+"POT-Creation-Date: 2005-12-23 15:43+0100\n"
 "PO-Revision-Date: 2005-04-15 14:36+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -641,7 +641,7 @@ msgstr "nemohu připojit element spotřebiče pro URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
 
-#: libs/gst/base/gstbasesrc.c:1312 libs/gst/base/gstbasesrc.c:1321
+#: libs/gst/base/gstbasesrc.c:1314 libs/gst/base/gstbasesrc.c:1323
 #: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""

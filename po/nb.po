@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-20 13:13+0100\n"
+"POT-Creation-Date: 2005-12-23 15:43+0100\n"
 "PO-Revision-Date: 2005-02-17 12:00+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -615,7 +615,7 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr ""
 
-#: libs/gst/base/gstbasesrc.c:1312 libs/gst/base/gstbasesrc.c:1321
+#: libs/gst/base/gstbasesrc.c:1314 libs/gst/base/gstbasesrc.c:1323
 #: plugins/elements/gstqueue.c:820
 msgid "Internal data flow error."
 msgstr ""
