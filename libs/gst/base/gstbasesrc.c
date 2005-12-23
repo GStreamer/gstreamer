@@ -35,7 +35,7 @@
  *
  * The source can be configured to operate in a any #GstFormat with the
  * gst_base_src_set_format(). This format determines the format of the
- * internal #GstSegment and the #GST_EVENT_NEW_SEGMENT. The default format for 
+ * internal #GstSegment and the #GST_EVENT_NEW_SEGMENT. The default format for
  * #GstBaseSrc is GST_FORMAT_BYTES.
  *
  * #GstBaseSrc always supports the push mode scheduling. If the following
@@ -45,16 +45,16 @@
  *   <listitem><para>#GstBaseSrc::is_seekable returns TRUE.</para></listitem>
  * </itemizedlist>
  *
- * If all the conditions are met for operating in pull mode, #GstBaseSrc is 
+ * If all the conditions are met for operating in pull mode, #GstBaseSrc is
  * automatically seekable in push mode as well. The following conditions must be
- * met to make the element seekable in push mode when the format is not 
+ * met to make the element seekable in push mode when the format is not
  * GST_FORMAT_BYTES:
  * <itemizedlist>
  *   <listitem><para>
  *     #GstBaseSrc::is_seekable returns TRUE.
  *   </para></listitem>
  *   <listitem><para>
- *     #GstBaseSrc::query can convert all supported seek formats to the 
+ *     #GstBaseSrc::query can convert all supported seek formats to the
  *     internal format as set with gst_base_src_set_format().
  *   </para></listitem>
  *   <listitem><para>
@@ -372,6 +372,8 @@ gst_base_src_is_live (GstBaseSrc * src)
  *
  * If a format of GST_FORMAT_BYTES is set, the element will be able to
  * operate in pull mode if the #GstBaseSrc::is_seekable returns TRUE.
+ *
+ * @Since: 0.10.1
  */
 void
 gst_base_src_set_format (GstBaseSrc * src, GstFormat format)

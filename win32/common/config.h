@@ -21,7 +21,7 @@
 #undef GST_GCOV_ENABLED
 
 /* Default errorlevel to use */
-#define GST_LEVEL_DEFAULT GST_LEVEL_ERROR
+#define GST_LEVEL_DEFAULT GST_LEVEL_NONE
 
 /* GStreamer license */
 #define GST_LICENSE "LGPL"
@@ -30,10 +30,10 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer CVS/prerelease"
+#define GST_PACKAGE_NAME "GStreamer source release"
 
 /* Define the version */
-#define GST_VERSION "0.10.0.2"
+#define GST_VERSION "0.10.1"
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
@@ -210,7 +210,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.0.2"
+#define VERSION "0.10.1"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

@@ -1,3 +1,10 @@
+=== release 0.10.1 ===
+
+2005-12-23  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.1, "Nollaig chridheil"
+
 2005-12-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/faq/cvs.xml:
@@ -146,11 +153,11 @@
 
 	* gst/gstpluginfeature.c: (gst_plugin_feature_finalize),
 	(gst_plugin_feature_load):
-          more meaningful debug output
+	  more meaningful debug output
 	* configure.ac:
 	* tests/Makefile.am:
 	* tests/old/examples/Makefile.am:
-          make make distcheck happy again
+	  make make distcheck happy again
 
 2005-12-12  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -203,8 +210,8 @@
 	* libs/gst/net/gstnettimeprovider.c
 	(gst_net_time_provider_class_init, gst_net_time_provider_init)
 	(gst_net_time_provider_set_property)
-	(gst_net_time_provider_get_property): Export "active" as a GObject
-	property.
+	(gst_net_time_provider_get_property):
+	API addition: Export "active" as a GObject property.
 	(gst_net_time_provider_thread): Only respond to time queries if
 	the time provider is active.
 

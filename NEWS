@@ -1,4 +1,26 @@
-This is GStreamer 0.10.0, "Maroilles".
+This is GStreamer 0.10.1, "Nollaig chridheil"
+
+Changes since 0.10.0:
+    
+      * element factory leak fixes
+      * tests cleanup
+      * BaseSrc seeking in other format than BYTES
+      * collectpad fixes
+
+Bugs fixed since 0.10.0:
+    
+      * 322441 : getcontext() in common/m4/gst-mcsc.m4 uses incorrect stac...
+      * 323041 : [BASESRC] basesrc does not handle a seek to non-bytes for...
+      * 323870 : [tools] gst-feedback needs updating for 0.9/0.10
+      * 323882 : gst-launch manpage needs updates
+      * 323905 : use return val of g_list_append
+
+API added since 0.10.0:
+     
+      * GST_TYPE_STATIC_CAPS
+      * GST_TYPE_STATIC_PAD_TEMPLATE
+      * GstNetTimeProvider::active
+      * gst_base_src_set_format
 
 Changes from the 0.8 series to 0.10 series:
 
