@@ -1238,3 +1238,143 @@
 <DEFAULT>25</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>CDParanoia::abort-on-skip</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Abort on skip</NICK>
+<BLURB>Abort on imperfect reads/skips.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::default-sectors</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Default sectors</NICK>
+<BLURB>Force default number of sectors in read to n sectors.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>CD device location.</BLURB>
+<DEFAULT>"/dev/cdrom"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::discid</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>discid</NICK>
+<BLURB>The dics id.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::endian</NAME>
+<TYPE>GstParanoiaEndian</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Endian</NICK>
+<BLURB>Force endian on drive.</BLURB>
+<DEFAULT>treat drive as little endian</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::generic-device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Generic device</NICK>
+<BLURB>Use specified generic scsi device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::never-skip</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Never skip</NICK>
+<BLURB>never accept any less than perfect data reconstruction (don't allow 'V's) but if [n] is given, skip after [n] retries without progress.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::paranoia-mode</NAME>
+<TYPE>GstParanoiaMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Paranoia mode</NICK>
+<BLURB>Type of checking to perform.</BLURB>
+<DEFAULT>Disable paranoid checking</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::read-speed</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Read speed</NICK>
+<BLURB>Read from device at specified speed.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::search-overlap</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,75]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Search overlap</NICK>
+<BLURB>Force minimum overlap search during verification to n sectors.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::toc-bias</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TOC bias</NICK>
+<BLURB>Assume that the beginning offset of track 1 as reported in the TOC will be addressed as LBA 0.  Necessary for some Toshiba drives to get track boundaries.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>CDParanoia::toc-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TOC offset</NICK>
+<BLURB>Add <n> sectors to the values reported.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAlsaMixerElement::device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>ALSA device, as defined in an asound configuration file.</BLURB>
+<DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAlsaMixerElement::device-name</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Human-readable name of the sound device.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+

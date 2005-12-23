@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Base Plug-ins 0.10.0 "Mont-d'or"
+GStreamer: Release notes for GStreamer Base Plug-ins 0.10.1 "Dobro Dedek"
         
 
 
@@ -55,11 +55,23 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
+      * removed gst-launch-ext
+      * Ported: ogmparse
+      * Fixes for: subparse, xvimagesink, audioresample, videorate, decodebin
 
 Bugs fixed in this release
     
-      * 319172 : gstreamer-plugins-base-0.9.pc doesn't export linking flags
-      * 323017 : While(1) loop with sleep(0) in basertpdepayload.c
+      * 322347 : GstBaseRtpDepayload timestamps are wring
+      * 323900 : Basertpdepayloader lets NEWSEGMENT events through unfiltered
+      * 323878 : missing < string.h > inclusion (for memset & FD_ZERO)
+
+API changed in this release
+     
+
+- API additions:
+    
+* GstAlsaMixer::device
+* GstAlsaMixer::device-name
 
 Download
 
@@ -89,11 +101,15 @@ Applications
   
 Contributors to this release
     
-      * 
-      * Andy Wingo
+      * Christian Schaller
+      * Edgard Lima
+      * Edward Hervey
       * Jan Schmidt
-      * Kai Vehmanen
-      * Sebastien Cote
+      * Julien MOUTTE
+      * Luca Ognibene
+      * Michael Smith
+      * Stefan Kost
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans
  

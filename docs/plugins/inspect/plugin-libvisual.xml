@@ -3,12 +3,74 @@
   <description>libvisual visualization plugins</description>
   <filename>../../ext/libvisual/.libs/libgstlibvisual.so</filename>
   <basename>libgstlibvisual.so</basename>
-  <version>0.10.0</version>
+  <version>0.10.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
-
+    <element>
+      <name>libvisual_G-Force</name>
+      <longname>libvisual libvisual G-Force plugin plugin v.0.1.0</longname>
+      <class>Visualization</class>
+      <description>The Libvisual G-Force plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_bumpscope</name>
+      <longname>libvisual Bumpscope plugin plugin v.0.0.1</longname>
+      <class>Visualization</class>
+      <description>The bumpscope visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_corona</name>
+      <longname>libvisual libvisual corona plugin plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>The Libvisual corona plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_jakdaw</name>
+      <longname>libvisual Jakdaw plugin plugin v.0.0.1</longname>
+      <class>Visualization</class>
+      <description>The jakdaw visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_jess</name>
+      <longname>libvisual jess plugin plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>The jess visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_lv_analyzer</name>
+      <longname>libvisual libvisual analyzer plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>The Libvisual analyzer plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_lv_scope</name>
+      <longname>libvisual libvisual scope plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>The Libvisual scope plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_oinksie</name>
+      <longname>libvisual oinksie plugin plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>The oinksie visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_plazma</name>
+      <longname>libvisual Plazma plugin plugin v.0.0.1</longname>
+      <class>Visualization</class>
+      <description>The plazma visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
   </elements>
 </plugin>

@@ -1,4 +1,23 @@
-This is GStreamer Base Plug-ins 0.10.0, "Mont-d'or"
+This is GStreamer Base Plug-ins 0.10.1, "Dobro Dedek"
+        
+Changes since 0.10.0:
+    
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+      * removed gst-launch-ext
+      * Ported: ogmparse
+      * Fixes for: subparse, xvimagesink, audioresample, videorate, decodebin
+
+Bugs fixed since 0.10.0:
+    
+      * 322347 : GstBaseRtpDepayload timestamps are wring
+      * 323900 : Basertpdepayloader lets NEWSEGMENT events through unfiltered
+      * 323878 : missing < string.h > inclusion (for memset & FD_ZERO)
+
+API added since 0.10.0:
+    
+      * GstAlsaMixer::device
+      * GstAlsaMixer::device-name
 
 Bugs fixed since 0.9.7:
     

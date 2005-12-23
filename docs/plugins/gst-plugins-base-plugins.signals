@@ -63,3 +63,24 @@ GstPad *arg1
 GstCaps *arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>CDParanoia::smilie-change</NAME>
+<RETURNS>void</RETURNS>
+CDParanoia *cdparanoia
+gchar *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>CDParanoia::transport-error</NAME>
+<RETURNS>void</RETURNS>
+CDParanoia *cdparanoia
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>CDParanoia::uncorrected-error</NAME>
+<RETURNS>void</RETURNS>
+CDParanoia *cdparanoia
+gint  arg1
+</SIGNAL>
+
