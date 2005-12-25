@@ -1,3 +1,11 @@
+2005-12-24  David Schleef  <ds@schleef.org>
+
+	* tools/gstreamer-completion:
+	  Replacement for gst-complete written in sh and sed.  Only
+	  completes names of features, but that's 90% of what I want
+	  it for.  Properties are not available in registry.xml.  (Maybe
+	  they should be...)
+
 === release 0.10.1 ===
 
 2005-12-23  Thomas Vander Stichele <thomas at apestaart dot org>
