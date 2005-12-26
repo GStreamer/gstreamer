@@ -1,3 +1,15 @@
+2005-12-26  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/iec958/ac3iec.h:
+	* gst/iec958/ac3iec.c:
+	(NORMAL_CAPS_DEF, RAW_AUDIO_CAPS_DEF, ac3iec_class_init)
+	(ac3iec_init, ac3iec_set_property, ac3iec_get_property): Add a
+	raw-audio property to ac3iec958 that allows setting the source pad
+	caps to raw audio instead of audio/x-iec958. This makes it
+	possible to use ac3iec958 together with the normal alsasink
+	element to drive an external receiver that autodetects AC3
+	content.
+
 2005-12-23  Michael Smith  <msmith@fluendo.com>
 
 	* gst/iec958/ac3iec.c: (ac3iec_init), (ac3iec_setcaps),

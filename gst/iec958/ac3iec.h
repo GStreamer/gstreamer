@@ -63,7 +63,12 @@ struct _AC3IEC {
 
   ac3_padder *padder;           /* AC3 to SPDIF padder object. */
 
-  gboolean dvdmode;
+  gboolean dvdmode;		/* TRUE if DVD mode (input is
+				   demultiplexed from a DVD) is
+				   active. */
+
+  gboolean raw_audio;		/* TRUE if output pad should use raw
+				   audio capabilities. */
 };
 
 

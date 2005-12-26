@@ -56,7 +56,8 @@ enum
 
 enum
 {
-  ARG_0,
+  PROP_0,
+  PROP_RAW_AUDIO,
 };
 
 
@@ -67,12 +68,24 @@ static GstStaticPadTemplate ac3iec_sink_template =
     GST_STATIC_CAPS ("audio/x-private1-ac3; audio/x-ac3; audio/ac3")
     );
 
+/* Two different output caps are possible. */
+#define NORMAL_CAPS_DEF "audio/x-iec958"
+#define RAW_AUDIO_CAPS_DEF "audio/x-raw-int, " \
+    "endianness = (int) " G_STRINGIFY (G_BIG_ENDIAN) ", " \
+    "signed = (boolean) true, " \
+    "width = (int) 16, " \
+    "depth = (int) 16, " \
+    "rate = (int) 48000, " \
+    "channels = (int) 2"
+
+static GstStaticCaps normal_caps = GST_STATIC_CAPS (NORMAL_CAPS_DEF);
+static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS (RAW_AUDIO_CAPS_DEF);
+
 static GstStaticPadTemplate ac3iec_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-iec958")
-    );
+    GST_STATIC_CAPS (NORMAL_CAPS_DEF ";" RAW_AUDIO_CAPS_DEF));
 
 static void ac3iec_base_init (gpointer g_class);
 static void ac3iec_class_init (AC3IECClass * klass);
@@ -151,6 +164,11 @@ ac3iec_class_init (AC3IECClass * klass)
   gobject_class->get_property = ac3iec_get_property;
   gobject_class->finalize = ac3iec_finalize;
 
+  g_object_class_install_property (gobject_class, PROP_RAW_AUDIO,
+      g_param_spec_boolean ("raw-audio", "raw-audio",
+          "If true, source pad caps are set to raw audio.",
+          FALSE, G_PARAM_READWRITE));
+
   gstelement_class->change_state = ac3iec_change_state;
 }
 
@@ -158,6 +176,8 @@ ac3iec_class_init (AC3IECClass * klass)
 static void
 ac3iec_init (AC3IEC * ac3iec)
 {
+  GstCaps *src_caps;
+
   ac3iec->sink =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_sink_template), "sink");
@@ -169,8 +189,10 @@ ac3iec_init (AC3IEC * ac3iec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_src_template), "src");
   gst_pad_use_fixed_caps (ac3iec->src);
+  src_caps = gst_static_caps_get (&normal_caps);
+  gst_pad_set_caps (ac3iec->src, src_caps);
+  gst_caps_unref (src_caps);
   gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->src);
-
 
   ac3iec->cur_ts = GST_CLOCK_TIME_NONE;
 
@@ -190,12 +212,23 @@ static void
 ac3iec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  AC3IEC *ac3iec;
-
-  /* it's not null if we got it, but it might not be ours */
-  ac3iec = AC3IEC (object);
+  AC3IEC *ac3iec = AC3IEC (object);
 
   switch (prop_id) {
+    case PROP_RAW_AUDIO:
+    {
+      GstCaps *src_caps;
+
+      ac3iec->raw_audio = g_value_get_boolean (value);
+      if (ac3iec->raw_audio) {
+        src_caps = gst_static_caps_get (&raw_audio_caps);
+      } else {
+        src_caps = gst_static_caps_get (&normal_caps);
+      }
+      gst_pad_set_caps (ac3iec->src, src_caps);
+      gst_caps_unref (src_caps);
+      break;
+    }
     default:
       break;
   }
@@ -221,14 +254,12 @@ static void
 ac3iec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  AC3IEC *ac3iec;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_AC3IEC (object));
-
-  ac3iec = AC3IEC (object);
+  AC3IEC *ac3iec = AC3IEC (object);
 
   switch (prop_id) {
+    case PROP_RAW_AUDIO:
+      g_value_set_boolean (value, ac3iec->raw_audio);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
