@@ -88,7 +88,7 @@ static void gst_video_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static GstFlowReturn gst_video_test_src_create (GstPushSrc * psrc,
     GstBuffer ** buffer);
-
+static gboolean gst_video_test_src_start (GstBaseSrc * basesrc);
 
 #define GST_TYPE_VIDEO_TEST_SRC_PATTERN (gst_video_test_src_pattern_get_type ())
 static GType
@@ -154,6 +154,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   gstbasesrc_class->do_seek = gst_video_test_src_do_seek;
   gstbasesrc_class->query = gst_video_test_src_query;
   gstbasesrc_class->get_times = gst_video_test_src_get_times;
+  gstbasesrc_class->start = gst_video_test_src_start;
 
   gstpushsrc_class->create = gst_video_test_src_create;
 }
@@ -528,6 +529,17 @@ no_buffer:
         gst_flow_get_name (res));
     return res;
   }
+}
+
+static gboolean
+gst_video_test_src_start (GstBaseSrc * basesrc)
+{
+  GstVideoTestSrc *src = GST_VIDEO_TEST_SRC (basesrc);
+
+  src->running_time = 0;
+  src->n_frames = 0;
+
+  return TRUE;
 }
 
 static gboolean

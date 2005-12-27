@@ -1,5 +1,12 @@
 2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_video_test_src_class_init), (gst_video_test_src_start):
+	  Add start method to reset running time and number of frames sent
+	  when starting up (fixes #324696; patch by: Michal Benes).
+
+2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:
