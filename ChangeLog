@@ -1,5 +1,10 @@
 2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tools/gst-inspect.c: (print_element_properties_info):
+	  Handle properties of POINTER and BOXED type.
+
+2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gst.c: (init_post):
 	  Init tags stuff and some other things before loading
 	  any static plugins (there may be other static plugins

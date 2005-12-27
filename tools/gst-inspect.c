@@ -496,6 +496,16 @@ print_element_properties_info (GstElement * element)
         } else if (G_IS_PARAM_SPEC_OBJECT (param)) {
           n_print ("%-23.23s Object of type \"%s\"", "",
               g_type_name (param->value_type));
+        } else if (G_IS_PARAM_SPEC_BOXED (param)) {
+          n_print ("%-23.23s Boxed pointer of type \"%s\"", "",
+              g_type_name (param->value_type));
+        } else if (G_IS_PARAM_SPEC_POINTER (param)) {
+          if (param->value_type != G_TYPE_POINTER) {
+            n_print ("%-23.23s Pointer of type \"%s\".", "",
+                g_type_name (param->value_type));
+          } else {
+            n_print ("%-23.23s Pointer.", "");
+          }
         } else {
           n_print ("%-23.23s Unknown type %ld \"%s\"", "", param->value_type,
               g_type_name (param->value_type));
