@@ -1,3 +1,17 @@
+2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c: (init_post):
+	  Init tags stuff and some other things before loading
+	  any static plugins (there may be other static plugins
+	  than just the GStreamer ones, and they may want to
+	  register their own tags or formats or whatever, and
+	  preferably without segfaulting).
+
+	* plugins/elements/gstqueue.c: (gst_queue_handle_src_query):
+	  Print at least a warning in the debug logs if we drop a
+	  query just because we don't know how to adjust the value
+	  in the particular format.
+
 2005-12-24  David Schleef  <ds@schleef.org>
 
 	* tools/gstreamer-completion:
