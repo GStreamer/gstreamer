@@ -73,10 +73,9 @@ IGNORE_CFILES = utils.c mem.c imgconvert.c
 # but I'm not sure about that - it might be this Just Works given that
 # the registry won't have the element
 
-# FIXME: not ported yet
-#	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.c 
-
 EXTRA_HFILES = \
+	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.h \
+	$(top_srcdir)/ext/gnomevfs/gstgnomevfssrc.h \
 	$(top_srcdir)/ext/pango/gstclockoverlay.h \
 	$(top_srcdir)/ext/pango/gsttextoverlay.h \
 	$(top_srcdir)/ext/pango/gsttextrender.h \

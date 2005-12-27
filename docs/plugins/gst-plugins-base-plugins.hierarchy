@@ -14,6 +14,7 @@ GObject
         GstVideoSink
           GstXvImageSink
           GstXImageSink
+        GstGnomeVFSSink
         GstMultiFdSink
           GstTCPServerSink
         GstBaseAudioSink

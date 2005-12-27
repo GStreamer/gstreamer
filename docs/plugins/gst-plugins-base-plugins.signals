@@ -84,3 +84,10 @@ CDParanoia *cdparanoia
 gint  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstGnomeVFSSink::allow-overwrite</NAME>
+<RETURNS>gboolean</RETURNS>
+GstGnomeVFSSink *gstgnomevfssink
+GnomeVFSURI *arg1
+</SIGNAL>
+

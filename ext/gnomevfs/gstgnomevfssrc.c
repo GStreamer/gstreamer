@@ -54,7 +54,7 @@
  * <para>
  * Yet another example pipeline:
  * <programlisting>
- * gst-launch -v gnomevfssrc location=http://music.foobar.com/demo.mp3 ! mad ! audioconvert ! audioscale ! alsasink
+ * gst-launch -v gnomevfssrc location=http://music.foobar.com/demo.mp3 ! mad ! audioconvert ! audioresample ! alsasink
  * </programlisting>
  * The above pipeline will read and decode and play an mp3 file from a
  * web server using the http protocol.

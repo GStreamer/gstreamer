@@ -1,5 +1,18 @@
 2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.signals:
+	  Add docs stuff for gnomevfssrc and gnomevfssink.
+
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	  Fix example pipeline in gtk-doc blurb.
+
+2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gnomevfs/Makefile.am:
 	* ext/gnomevfs/gstgnomevfs.c: (gst_gnome_vfs_uri_get_type),
 	(gst_gnome_vfs_handle_copy), (gst_gnome_vfs_handle_free),

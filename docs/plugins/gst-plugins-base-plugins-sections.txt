@@ -54,6 +54,14 @@ GstGnomeVFSSinkClass
 </SECTION>
 
 <SECTION>
+<FILE>element-gnomevfssrc</FILE>
+<TITLE>gnomevfssrc</TITLE>
+GstGnomeVFSSrc
+<SUBSECTION Standard>
+GstGnomeVFSSrcClass
+</SECTION>
+
+<SECTION>
 <FILE>element-tcpserversink</FILE>
 <TITLE>tcpserversink</TITLE>
 GstTCPServerSink
@@ -143,17 +151,17 @@ CLIENTS_LOCK_INIT
 GST_MULTI_FD_SINK_GET_CLASS
 CLIENTS_LOCK_FREE
 GST_IS_MULTI_FD_SINK_CLASS
-gst_multi_fd_sinkget_type
-gst_multi_fd_sinkremove
+gst_multi_fd_sink_get_type
+gst_multi_fd_sink_remove
 GST_IS_MULTI_FD_SINK
 CLIENTS_LOCK
 GST_TYPE_MULTI_FD_SINK
-gst_multi_fd_sinkclear
+gst_multi_fd_sink_clear
 GstTCPClient
 GST_MULTI_FD_SINK_CLASS
-gst_multi_fd_sinkget_stats
+gst_multi_fd_sink_get_stats
 GST_MULTI_FD_SINK
-gst_multi_fd_sinkadd
+gst_multi_fd_sink_add
 
 GST_TCP_SERVER_SINK
 GstTCPServerSinkFlags
@@ -162,14 +170,13 @@ gst_tcp_server_sink_get_type
 GST_IS_TCP_SERVER_SINK_CLASS
 GST_IS_TCP_SERVER_SINK
 
-GST_GNOMEVFSSINK_CLASS
-GST_TYPE_GNOMEVFSSINK
-GST_IS_GNOMEVFSSINK
-gst_gnomevfssink_get_type
-GST_IS_GNOMEVFSSINK_CLASS
+GST_GNOME_VFS_SINK_CLASS
+GST_TYPE_GNOME_VFS_SINK
+GST_IS_GNOME_VFS_SINK
+gst_gnome_vfs_sink_get_type
+GST_IS_GNOME_VFS_SINK_CLASS
 GST_ELEMENT_CLASS
-GstGnomeVFSSinkFlags
-GST_GNOMEVFSSINK
+GST_GNOME_VFS_SINK
 
 GST_IS_VORBISENC
 GST_VORBISENC_CLASS
