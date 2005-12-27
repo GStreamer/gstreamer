@@ -24,11 +24,12 @@
 #include <glib-object.h>
 
 G_BEGIN_DECLS
-  
 
-GType gst_gnomevfssink_get_type (void);
-GType gst_gnomevfssrc_get_type (void);
+#define GST_TYPE_GNOME_VFS_URI     (gst_gnome_vfs_uri_get_type ())
+#define GST_TYPE_GNOME_VFS_HANDLE  (gst_gnome_vfs_handle_get_type ())
 
+GType gst_gnome_vfs_uri_get_type (void);
+GType gst_gnome_vfs_handle_get_type (void);
 
 G_END_DECLS
 

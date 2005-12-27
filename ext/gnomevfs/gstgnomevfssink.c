@@ -3,6 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2001 Bastien Nocera <hadess@hadess.net>
  *                    2003 Colin Walters <walters@verbum.org>
+ *                    2005 Tim-Philipp Müller <tim centricular net>
  *
  * gstgnomevfssink.c: 
  *
@@ -22,71 +23,52 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-gnomevfssink
+ * @short_description: Write a stream to a GnomeVFS URI
+ * @see_also: #GstFileSink, #GstGnomeVFSSrc
+ *
+ * <refsect2>
+ * <para>
+ * This plugin writes incoming data to a local or remote location specified
+ * by an URI. This location can be specified using any protocol supported by
+ * the GnomeVFS library. Common protocols are 'file', 'ftp', or 'smb'.
+ * </para>
+ * <para>
+ * Example pipeline:
+ * <programlisting>
+ * gst-launch -v filesrc location=input.xyz ! gnomevfssink location=file:///home/joe/out.xyz
+ * </programlisting>
+ * The above pipeline will simply copy a local file. Instead of gnomevfssink,
+ * we could just as well have used the filesink element here.
+ * </para>
+ * <para>
+ * Another example pipeline:
+ * <programlisting>
+ * gst-launch -v filesrc location=foo.mp3 ! mad ! flacenc ! gnomevfssink location=smb://othercomputer/foo.flac
+ * </programlisting>
+ * The above pipeline will re-encode an mp3 file into FLAC format and store
+ * it on a remote host using the Samba protocol.
+ * </para>
+ * </refsect2>
+ *
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "gst/gst-i18n-plugin.h"
+#include "gstgnomevfssink.h"
 
-#include "gstgnomevfs.h"
-#include "gstgnomevfsuri.h"
+#include "gst/gst-i18n-plugin.h"
 
 #include <gst/gst.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <string.h>
 #include <errno.h>
 
-
-#define GST_TYPE_GNOMEVFSSINK \
-  (gst_gnomevfssink_get_type())
-#define GST_GNOMEVFSSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GNOMEVFSSINK,GstGnomeVFSSink))
-#define GST_GNOMEVFSSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GNOMEVFSSINK,GstGnomeVFSSinkClass))
-#define GST_IS_GNOMEVFSSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GNOMEVFSSINK))
-#define GST_IS_GNOMEVFSSINK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GNOMEVFSSINK))
-
-typedef struct _GstGnomeVFSSink GstGnomeVFSSink;
-typedef struct _GstGnomeVFSSinkClass GstGnomeVFSSinkClass;
-
-typedef enum
-{
-  GST_GNOMEVFSSINK_OPEN = GST_ELEMENT_FLAG_LAST,
-
-  GST_GNOMEVFSSINK_FLAG_LAST = GST_ELEMENT_FLAG_LAST + 2
-}
-GstGnomeVFSSinkFlags;
-
-struct _GstGnomeVFSSink
-{
-  GstElement element;
-
-  /* uri */
-  GnomeVFSURI *uri;
-  gchar *uri_name;
-
-  /* handle */
-  GnomeVFSHandle *handle;
-
-  /* whether we opened the handle ourselves */
-  gboolean own_handle;
-};
-
-struct _GstGnomeVFSSinkClass
-{
-  GstElementClass parent_class;
-
-  /* signals */
-    gboolean (*erase_ask) (GstElement * element, GnomeVFSURI * uri);
-};
-
-/* GnomeVFSSink signals and args */
 enum
 {
-  /* FILL ME */
   SIGNAL_ERASE_ASK,
   LAST_SIGNAL
 };
@@ -99,73 +81,68 @@ enum
   ARG_HANDLE
 };
 
-static void gst_gnomevfssink_base_init (gpointer g_class);
-static void gst_gnomevfssink_class_init (GstGnomeVFSSinkClass * klass);
-static void gst_gnomevfssink_init (GstGnomeVFSSink * gnomevfssink);
-static void gst_gnomevfssink_finalize (GObject * obj);
+static void gst_gnome_vfs_sink_finalize (GObject * obj);
 
-static void gst_gnomevfssink_uri_handler_init (gpointer g_iface,
+static void gst_gnome_vfs_sink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static void gst_gnomevfssink_set_property (GObject * object, guint prop_id,
+static void gst_gnome_vfs_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_gnomevfssink_get_property (GObject * object, guint prop_id,
+static void gst_gnome_vfs_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gnomevfssink_open_file (GstGnomeVFSSink * sink);
-static void gst_gnomevfssink_close_file (GstGnomeVFSSink * sink);
+static gboolean gst_gnome_vfs_sink_open_file (GstGnomeVFSSink * sink);
+static void gst_gnome_vfs_sink_close_file (GstGnomeVFSSink * sink);
+static gboolean gst_gnome_vfs_sink_start (GstBaseSink * basesink);
+static gboolean gst_gnome_vfs_sink_stop (GstBaseSink * basesink);
+static GstFlowReturn gst_gnome_vfs_sink_render (GstBaseSink * basesink,
+    GstBuffer * buffer);
+static gboolean gst_gnome_vfs_sink_handle_event (GstBaseSink * basesink,
+    GstEvent * event);
+static gboolean gst_gnome_vfs_sink_query (GstPad * pad, GstQuery * query);
 
-static void gst_gnomevfssink_chain (GstPad * pad, GstData * _data);
+static guint gst_gnome_vfs_sink_signals[LAST_SIGNAL];   /* all 0 */
 
-static GstStateChangeReturn gst_gnomevfssink_change_state (GstElement *
-    element);
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
 
-static GstElementClass *parent_class = NULL;
-static guint gst_gnomevfssink_signals[LAST_SIGNAL] = { 0 };
-
-GType
-gst_gnomevfssink_get_type (void)
-{
-  static GType gnomevfssink_type = 0;
-
-  if (!gnomevfssink_type) {
-    static const GTypeInfo gnomevfssink_info = {
-      sizeof (GstGnomeVFSSinkClass),
-      gst_gnomevfssink_base_init,
-      NULL,
-      (GClassInitFunc) gst_gnomevfssink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstGnomeVFSSink),
-      0,
-      (GInstanceInitFunc) gst_gnomevfssink_init,
-    };
-    static const GInterfaceInfo urihandler_info = {
-      gst_gnomevfssink_uri_handler_init,
-      NULL,
-      NULL
-    };
-
-    gnomevfssink_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstGnomeVFSSink",
-        &gnomevfssink_info, 0);
-    g_type_add_interface_static (gnomevfssink_type, GST_TYPE_URI_HANDLER,
-        &urihandler_info);
-  }
-  return gnomevfssink_type;
-}
+GST_DEBUG_CATEGORY_STATIC (gst_gnome_vfs_sink_debug);
+#define GST_CAT_DEFAULT gst_gnome_vfs_sink_debug
 
 static void
-gst_gnomevfssink_base_init (gpointer g_class)
+gst_gnome_vfs_sink_do_init (GType type)
+{
+  static const GInterfaceInfo urihandler_info = {
+    gst_gnome_vfs_sink_uri_handler_init,
+    NULL,
+    NULL
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
+
+  GST_DEBUG_CATEGORY_INIT (gst_gnome_vfs_sink_debug, "gnomevfssink", 0,
+      "Gnome VFS sink element");
+}
+
+GST_BOILERPLATE_FULL (GstGnomeVFSSink, gst_gnome_vfs_sink, GstBaseSink,
+    GST_TYPE_BASE_SINK, gst_gnome_vfs_sink_do_init);
+
+static void
+gst_gnome_vfs_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  static GstElementDetails gst_gnomevfssink_details =
+  static GstElementDetails gst_gnome_vfs_sink_details =
       GST_ELEMENT_DETAILS ("GnomeVFS Sink",
       "Sink/File",
-      "Write stream to a GnomeVFS URI",
+      "Write a stream to a GnomeVFS URI",
       "Bastien Nocera <hadess@hadess.net>");
 
-  gst_element_class_set_details (element_class, &gst_gnomevfssink_details);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sinktemplate));
+
+  gst_element_class_set_details (element_class, &gst_gnome_vfs_sink_details);
 }
 
 static gboolean
@@ -183,48 +160,45 @@ _gst_boolean_allow_overwrite_accumulator (GSignalInvocationHint * ihint,
 }
 
 static void
-gst_gnomevfssink_class_init (GstGnomeVFSSinkClass * klass)
+gst_gnome_vfs_sink_class_init (GstGnomeVFSSinkClass * klass)
 {
+  GstBaseSinkClass *basesink_class;
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  basesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
+  gobject_class->set_property = gst_gnome_vfs_sink_set_property;
+  gobject_class->get_property = gst_gnome_vfs_sink_get_property;
+  gobject_class->finalize = gst_gnome_vfs_sink_finalize;
 
   gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
       "location", ARG_LOCATION, G_PARAM_READWRITE, NULL);
   g_object_class_install_property (gobject_class, ARG_URI,
-      g_param_spec_pointer ("uri", "GnomeVFSURI", "URI for GnomeVFS",
-          G_PARAM_READWRITE));
+      g_param_spec_boxed ("uri", "GnomeVFSURI", "URI for GnomeVFS",
+          GST_TYPE_GNOME_VFS_URI, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_HANDLE,
-      g_param_spec_pointer ("handle",
-          "GnomeVFSHandle", "Handle for GnomeVFS", G_PARAM_READWRITE));
+      g_param_spec_boxed ("handle",
+          "GnomeVFSHandle", "Handle for GnomeVFS",
+          GST_TYPE_GNOME_VFS_HANDLE, G_PARAM_READWRITE));
 
-  gst_gnomevfssink_signals[SIGNAL_ERASE_ASK] =
+  gst_gnome_vfs_sink_signals[SIGNAL_ERASE_ASK] =
       g_signal_new ("allow-overwrite", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_CLEANUP, G_STRUCT_OFFSET (GstGnomeVFSSinkClass, erase_ask),
       _gst_boolean_allow_overwrite_accumulator, NULL,
-      gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
+      gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1, GST_TYPE_GNOME_VFS_URI);
 
-
-  gobject_class->set_property = gst_gnomevfssink_set_property;
-  gobject_class->get_property = gst_gnomevfssink_get_property;
-  gobject_class->finalize = gst_gnomevfssink_finalize;
-
-  gstelement_class->change_state = gst_gnomevfssink_change_state;
-
-  /* gnome vfs engine init */
-  if (gnome_vfs_initialized () == FALSE)
-    gnome_vfs_init ();
+  basesink_class->stop = GST_DEBUG_FUNCPTR (gst_gnome_vfs_sink_stop);
+  basesink_class->start = GST_DEBUG_FUNCPTR (gst_gnome_vfs_sink_start);
+  basesink_class->event = GST_DEBUG_FUNCPTR (gst_gnome_vfs_sink_handle_event);
+  basesink_class->render = GST_DEBUG_FUNCPTR (gst_gnome_vfs_sink_render);
+  basesink_class->get_times = NULL;
 }
 
 static void
-gst_gnomevfssink_finalize (GObject * obj)
+gst_gnome_vfs_sink_finalize (GObject * obj)
 {
-  GstGnomeVFSSink *sink = GST_GNOMEVFSSINK (obj);
+  GstGnomeVFSSink *sink = GST_GNOME_VFS_SINK (obj);
 
   if (sink->uri) {
     gnome_vfs_uri_unref (sink->uri);
@@ -240,167 +214,121 @@ gst_gnomevfssink_finalize (GObject * obj)
 }
 
 static void
-gst_gnomevfssink_init (GstGnomeVFSSink * gnomevfssink)
+gst_gnome_vfs_sink_init (GstGnomeVFSSink * sink, GstGnomeVFSSinkClass * klass)
 {
-  GstPad *pad;
+  gst_pad_set_query_function (GST_BASE_SINK_PAD (sink),
+      GST_DEBUG_FUNCPTR (gst_gnome_vfs_sink_query));
 
-  GST_OBJECT_FLAG_SET (gnomevfssink, GST_ELEMENT_EVENT_AWARE);
+  sink->uri = NULL;
+  sink->uri_name = NULL;
+  sink->handle = NULL;
+  sink->own_handle = FALSE;
+  sink->data_written = 0;
 
-  pad = gst_pad_new ("sink", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (gnomevfssink), pad);
-  gst_pad_set_chain_function (pad, gst_gnomevfssink_chain);
-
-  gnomevfssink->uri = NULL;
-  gnomevfssink->uri_name = NULL;
-  gnomevfssink->handle = NULL;
-  gnomevfssink->own_handle = FALSE;
-}
-
-static guint
-gst_gnomevfssink_uri_get_type (void)
-{
-  return GST_URI_SINK;
-}
-
-static gchar **
-gst_gnomevfssink_uri_get_protocols (void)
-{
-  static gchar **protocols = NULL;
-
-  if (!protocols)
-    protocols = gst_gnomevfs_get_supported_uris ();
-
-  return protocols;
-}
-
-static const gchar *
-gst_gnomevfssink_uri_get_uri (GstURIHandler * handler)
-{
-  GstGnomeVFSSink *sink = GST_GNOMEVFSSINK (handler);
-
-  return sink->uri_name;
-}
-
-static gboolean
-gst_gnomevfssink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
-{
-  GstGnomeVFSSink *sink = GST_GNOMEVFSSINK (handler);
-
-  if (GST_STATE (sink) == GST_STATE_PLAYING ||
-      GST_STATE (sink) == GST_STATE_PAUSED)
-    return FALSE;
-
-  g_object_set (G_OBJECT (sink), "location", uri, NULL);
-
-  return TRUE;
+  GST_BASE_SINK (sink)->sync = FALSE;
 }
 
 static void
-gst_gnomevfssink_uri_handler_init (gpointer g_iface, gpointer iface_data)
-{
-  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
-
-  iface->get_type = gst_gnomevfssink_uri_get_type;
-  iface->get_protocols = gst_gnomevfssink_uri_get_protocols;
-  iface->get_uri = gst_gnomevfssink_uri_get_uri;
-  iface->set_uri = gst_gnomevfssink_uri_set_uri;
-}
-
-static void
-gst_gnomevfssink_set_property (GObject * object, guint prop_id,
+gst_gnome_vfs_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstGnomeVFSSink *sink;
+  GstState cur_state;
 
-  sink = GST_GNOMEVFSSINK (object);
+  sink = GST_GNOME_VFS_SINK (object);
+
+  gst_element_get_state (GST_ELEMENT (sink), &cur_state, NULL, 0);
+
+  if (cur_state == GST_STATE_PLAYING || cur_state == GST_STATE_PAUSED) {
+    GST_WARNING_OBJECT (sink, "cannot set property when PAUSED or PLAYING");
+    return;
+  }
+
+  GST_OBJECT_LOCK (sink);
 
   switch (prop_id) {
-    case ARG_LOCATION:
-      if (GST_STATE (sink) == GST_STATE_NULL ||
-          GST_STATE (sink) == GST_STATE_READY) {
-        if (sink->uri) {
-          gnome_vfs_uri_unref (sink->uri);
-          sink->uri = NULL;
-        }
-        if (sink->uri_name) {
-          g_free (sink->uri_name);
-          sink->uri_name = NULL;
-        }
-        if (g_value_get_string (value)) {
-          sink->uri_name = g_strdup (g_value_get_string (value));
-          sink->uri = gnome_vfs_uri_new (sink->uri_name);
-        }
+    case ARG_LOCATION:{
+      if (sink->uri) {
+        gnome_vfs_uri_unref (sink->uri);
+        sink->uri = NULL;
+      }
+      if (sink->uri_name) {
+        g_free (sink->uri_name);
+        sink->uri_name = NULL;
+      }
+      if (g_value_get_string (value)) {
+        sink->uri_name = g_value_dup_string (value);
+        sink->uri = gnome_vfs_uri_new (sink->uri_name);
       }
       break;
-    case ARG_URI:
-      if (GST_STATE (sink) == GST_STATE_NULL ||
-          GST_STATE (sink) == GST_STATE_READY) {
-        if (sink->uri) {
-          gnome_vfs_uri_unref (sink->uri);
-          sink->uri = NULL;
-        }
-        if (sink->uri_name) {
-          g_free (sink->uri_name);
-          sink->uri_name = NULL;
-        }
-        if (g_value_get_pointer (value)) {
-          sink->uri = gnome_vfs_uri_ref (g_value_get_pointer (value));
-          sink->uri_name = gnome_vfs_uri_to_string (sink->uri, 0);
-        }
+    }
+    case ARG_URI:{
+      if (sink->uri) {
+        gnome_vfs_uri_unref (sink->uri);
+        sink->uri = NULL;
+      }
+      if (sink->uri_name) {
+        g_free (sink->uri_name);
+        sink->uri_name = NULL;
+      }
+      if (g_value_get_boxed (value)) {
+        sink->uri = (GnomeVFSURI *) g_value_dup_boxed (value);
+        sink->uri_name = gnome_vfs_uri_to_string (sink->uri, 0);
       }
       break;
-    case ARG_HANDLE:
-      if (GST_STATE (sink) == GST_STATE_NULL ||
-          GST_STATE (sink) == GST_STATE_READY) {
-        if (sink->uri) {
-          gnome_vfs_uri_unref (sink->uri);
-          sink->uri = NULL;
-        }
-        if (sink->uri_name) {
-          g_free (sink->uri_name);
-          sink->uri_name = NULL;
-        }
-        sink->handle = g_value_get_pointer (value);
+    }
+    case ARG_HANDLE:{
+      if (sink->uri) {
+        gnome_vfs_uri_unref (sink->uri);
+        sink->uri = NULL;
       }
+      if (sink->uri_name) {
+        g_free (sink->uri_name);
+        sink->uri_name = NULL;
+      }
+      sink->handle = g_value_get_boxed (value);
       break;
+    }
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_OBJECT_UNLOCK (sink);
 }
 
 static void
-gst_gnomevfssink_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+gst_gnome_vfs_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstGnomeVFSSink *sink;
 
-  g_return_if_fail (GST_IS_GNOMEVFSSINK (object));
+  sink = GST_GNOME_VFS_SINK (object);
 
-  sink = GST_GNOMEVFSSINK (object);
+  GST_OBJECT_LOCK (sink);
 
   switch (prop_id) {
     case ARG_LOCATION:
       g_value_set_string (value, sink->uri_name);
       break;
     case ARG_URI:
-      g_value_set_pointer (value, sink->uri);
+      g_value_set_boxed (value, sink->uri);
       break;
     case ARG_HANDLE:
-      g_value_set_pointer (value, sink->handle);
+      g_value_set_boxed (value, sink->handle);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  GST_OBJECT_UNLOCK (sink);
 }
 
 static gboolean
-gst_gnomevfssink_open_file (GstGnomeVFSSink * sink)
+gst_gnome_vfs_sink_open_file (GstGnomeVFSSink * sink)
 {
   GnomeVFSResult result;
-
-  g_return_val_if_fail (!GST_OBJECT_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN),
-      FALSE);
 
   if (sink->uri) {
     /* open the file */
@@ -413,7 +341,7 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink * sink)
       gboolean erase_anyway = FALSE;
 
       g_signal_emit (G_OBJECT (sink),
-          gst_gnomevfssink_signals[SIGNAL_ERASE_ASK], 0, sink->uri,
+          gst_gnome_vfs_sink_signals[SIGNAL_ERASE_ASK], 0, sink->uri,
           &erase_anyway);
       if (erase_anyway) {
         result = gnome_vfs_create_uri (&(sink->handle), sink->uri,
@@ -422,7 +350,9 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink * sink)
             | GNOME_VFS_PERM_GROUP_READ);
       }
     }
-    GST_DEBUG ("open: %s", gnome_vfs_result_to_string (result));
+
+    GST_DEBUG_OBJECT (sink, "open: %s", gnome_vfs_result_to_string (result));
+
     if (result != GNOME_VFS_OK) {
       gchar *filename = gnome_vfs_uri_to_string (sink->uri,
           GNOME_VFS_URI_HIDE_PASSWORD);
@@ -442,17 +372,15 @@ gst_gnomevfssink_open_file (GstGnomeVFSSink * sink)
     sink->own_handle = FALSE;
   }
 
-  GST_OBJECT_FLAG_SET (sink, GST_GNOMEVFSSINK_OPEN);
+  sink->data_written = 0;
 
   return TRUE;
 }
 
 static void
-gst_gnomevfssink_close_file (GstGnomeVFSSink * sink)
+gst_gnome_vfs_sink_close_file (GstGnomeVFSSink * sink)
 {
   GnomeVFSResult result;
-
-  g_return_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN));
 
   if (sink->own_handle) {
     /* close the file */
@@ -470,176 +398,212 @@ gst_gnomevfssink_close_file (GstGnomeVFSSink * sink)
     sink->own_handle = FALSE;
     sink->handle = NULL;
   }
-
-  GST_OBJECT_FLAG_UNSET (sink, GST_GNOMEVFSSINK_OPEN);
 }
 
-/**
- * gst_gnomevfssink_handle_event:
- * @sink: reference to GstGnomeVFSSink
- * @event: the event to dispatch
- *
- * Handles the event appropriately (seek, end-of-file, ...)
- *
- * Return value: whether to continue processing or not.
- */
+static gboolean
+gst_gnome_vfs_sink_start (GstBaseSink * basesink)
+{
+  gboolean ret;
+
+  ret = gst_gnome_vfs_sink_open_file (GST_GNOME_VFS_SINK (basesink));
+
+  return ret;
+}
 
 static gboolean
-gst_gnomevfssink_handle_event (GstGnomeVFSSink * sink, GstEvent * event)
+gst_gnome_vfs_sink_stop (GstBaseSink * basesink)
 {
-  GstEventType type;
-  gboolean res = FALSE;
+  GST_DEBUG_OBJECT (basesink, "closing ...");
+  gst_gnome_vfs_sink_close_file (GST_GNOME_VFS_SINK (basesink));
+  return TRUE;
+}
 
-  type = GST_EVENT_TYPE (event);
+static gboolean
+gst_gnome_vfs_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
+{
+  GstGnomeVFSSink *sink;
 
-  switch (type) {
-    case GST_EVENT_EOS:
-      gst_gnomevfssink_close_file (sink);
-      gst_element_set_eos (GST_ELEMENT (sink));
-      break;
+  sink = GST_GNOME_VFS_SINK (basesink);
 
-    case GST_EVENT_DISCONTINUOUS:{
+  GST_DEBUG_OBJECT (sink, "processing %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:{
       GnomeVFSResult res;
+      GstFormat format;
       gint64 offset;
 
-      if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &offset)) {
-        if ((res = gnome_vfs_seek (sink->handle, GNOME_VFS_SEEK_START,
-                    offset)) != GNOME_VFS_OK) {
-          GST_ERROR_OBJECT (sink, "Failed to seek to offset %"
-              G_GINT64_FORMAT ": %s", offset, gnome_vfs_result_to_string (res));
-        }
-      }
+      gst_event_parse_new_segment (event, NULL, NULL, &format, &offset,
+          NULL, NULL);
 
-      res = TRUE;
-      break;
-    }
-
-    case GST_EVENT_SEEK:{
-      GnomeVFSResult res;
-      GnomeVFSSeekPosition method;
-      gint64 offset;
-
-      if (GST_EVENT_SEEK_FORMAT (event) != GST_FORMAT_BYTES) {
-        GST_ERROR_OBJECT (sink, "Can only seek in bytes");
+      if (format != GST_FORMAT_BYTES) {
+        GST_WARNING_OBJECT (sink, "ignored NEWSEGMENT event in %s format",
+            gst_format_get_name (format));
         break;
       }
 
-      switch (GST_EVENT_SEEK_METHOD (event)) {
-        case GST_SEEK_METHOD_SET:
-          method = GNOME_VFS_SEEK_START;
-          break;
-        case GST_SEEK_METHOD_CUR:
-          method = GNOME_VFS_SEEK_CURRENT;
-          break;
-        case GST_SEEK_METHOD_END:
-          method = GNOME_VFS_SEEK_END;
-          break;
-        default:
-          GST_ERROR_OBJECT (sink, "Unknown seek method %d",
-              GST_EVENT_SEEK_METHOD (event));
-          goto end;
-          break;
-      }
-      offset = GST_EVENT_SEEK_OFFSET (event);
+      GST_LOG_OBJECT (sink, "seeking to offset %" G_GINT64_FORMAT, offset);
+      res = gnome_vfs_seek (sink->handle, GNOME_VFS_SEEK_START, offset);
 
-      if (GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH) {
-        /* how does Gnome-VFS flush? */
-      }
-
-      if ((res = gnome_vfs_seek (sink->handle, method, offset)) != GNOME_VFS_OK) {
+      if (res != GNOME_VFS_OK) {
         GST_ERROR_OBJECT (sink, "Failed to seek to offset %"
-            G_GINT64_FORMAT " with method %d: %s", offset, method,
-            gnome_vfs_result_to_string (res));
+            G_GINT64_FORMAT ": %s", offset, gnome_vfs_result_to_string (res));
       }
 
-      res = TRUE;
       break;
     }
 
-    case GST_EVENT_FLUSH:
-      /* how does Gnome-VFS flush? */
+    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_EOS:{
+      /* how does Gnome-VFS flush? Do we need to flush? */
       break;
-
+    }
     default:
-      GST_WARNING ("Unhandled event type %d", type);
-      gst_pad_event_default (gst_element_get_pad (GST_ELEMENT (sink), "sink"),
-          event);
-      event = NULL;
       break;
   }
 
-end:
-  if (event)
-    gst_event_unref (event);
-
-  return res;
+  return TRUE;
 }
 
-/**
- * gst_gnomevfssink_chain:
- * @pad: the pad this gnomevfssink is connected to
- * @buf: the buffer that has to be absorbed
- *
- * take the buffer from the pad and write to file if it's open
- */
-static void
-gst_gnomevfssink_chain (GstPad * pad, GstData * _data)
+static gboolean
+gst_gnome_vfs_sink_query (GstPad * pad, GstQuery * query)
 {
-  GstBuffer *buf;
+  GstGnomeVFSSink *sink;
+  GstFormat format;
+
+  sink = GST_GNOME_VFS_SINK (GST_PAD_PARENT (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+      gst_query_parse_position (query, &format, NULL);
+      switch (format) {
+        case GST_FORMAT_DEFAULT:
+        case GST_FORMAT_BYTES:
+          gst_query_set_position (query, GST_FORMAT_BYTES, sink->data_written);
+          return TRUE;
+        default:
+          return FALSE;
+      }
+
+    case GST_QUERY_FORMATS:
+      gst_query_set_formats (query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
+      return TRUE;
+
+    default:
+      return gst_pad_query_default (pad, query);
+  }
+}
+
+static GstFlowReturn
+gst_gnome_vfs_sink_render (GstBaseSink * basesink, GstBuffer * buf)
+{
+  GnomeVFSFileSize written, cur_pos;
   GstGnomeVFSSink *sink;
   GnomeVFSResult result;
-  GnomeVFSFileSize bytes_written;
+  GstFlowReturn ret;
+  guint64 back_pending = 0;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
+  sink = GST_GNOME_VFS_SINK (basesink);
 
-  sink = GST_GNOMEVFSSINK (gst_pad_get_parent (pad));
+  if (gnome_vfs_tell (sink->handle, &cur_pos) == GNOME_VFS_OK) {
+    if (cur_pos < sink->data_written)
+      back_pending = sink->data_written - cur_pos;
+  }
 
-  if (GST_OBJECT_FLAG_IS_SET (sink, GST_GNOMEVFSSINK_OPEN)) {
-    if (GST_IS_EVENT (_data)) {
-      gst_gnomevfssink_handle_event (sink, GST_EVENT (_data));
-      return;
+  result = gnome_vfs_write (sink->handle, GST_BUFFER_DATA (buf),
+      GST_BUFFER_SIZE (buf), &written);
+
+  switch (result) {
+    case GNOME_VFS_OK:{
+      GST_DEBUG_OBJECT (sink, "wrote %" G_GINT64_FORMAT " bytes at %"
+          G_GINT64_FORMAT, (gint64) written, (gint64) cur_pos);
+
+      if (written < GST_BUFFER_SIZE (buf)) {
+        /* FIXME: what to do here? (tpm) */
+        g_warning ("%s: %d bytes should be written, only %"
+            G_GUINT64_FORMAT " bytes written", G_STRLOC,
+            GST_BUFFER_SIZE (buf), written);
+      }
+
+      sink->data_written += GST_BUFFER_SIZE (buf) - back_pending;
+      ret = GST_FLOW_OK;
+      break;
     }
+    case GNOME_VFS_ERROR_NO_SPACE:{
+      /* TODO: emit signal/send msg on out-of-diskspace and
+       * handle this gracefully (see open bug) (tpm) */
+    }
+      /* fall-through */
+    default:{
+      gchar *filename = gnome_vfs_uri_to_string (sink->uri,
+          GNOME_VFS_URI_HIDE_PASSWORD);
 
-    buf = GST_BUFFER (_data);
-    g_return_if_fail (buf != NULL);
-    result =
-        gnome_vfs_write (sink->handle, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf), &bytes_written);
-    GST_DEBUG ("write: %s, written_bytes: %" G_GUINT64_FORMAT,
-        gnome_vfs_result_to_string (result), bytes_written);
-    if (bytes_written < GST_BUFFER_SIZE (buf)) {
-      printf ("gnomevfssink : Warning : %d bytes should be written, only %"
-          G_GUINT64_FORMAT " bytes written\n", GST_BUFFER_SIZE (buf),
-          bytes_written);
+      GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
+          (_("Error while writing to file \"%s\"."), filename),
+          ("%s, bufsize=%u, written=%u", gnome_vfs_result_to_string (result),
+              GST_BUFFER_SIZE (buf), (guint) written));
+
+      g_free (filename);
+      ret = GST_FLOW_ERROR;
+      break;
     }
   }
-  gst_data_unref (_data);
+
+  return GST_FLOW_OK;
 }
 
-static GstStateChangeReturn
-gst_gnomevfssink_change_state (GstElement * element, GstStateChange transition)
-{
-  g_return_val_if_fail (GST_IS_GNOMEVFSSINK (element),
-      GST_STATE_CHANGE_FAILURE);
+/*** GSTURIHANDLER INTERFACE *************************************************/
 
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!GST_OBJECT_FLAG_IS_SET (element, GST_GNOMEVFSSINK_OPEN)) {
-        if (!gst_gnomevfssink_open_file (GST_GNOMEVFSSINK (element)))
-          return GST_STATE_CHANGE_FAILURE;
-      }
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (GST_OBJECT_FLAG_IS_SET (element, GST_GNOMEVFSSINK_OPEN))
-        gst_gnomevfssink_close_file (GST_GNOMEVFSSINK (element));
-      break;
-    default:
-      break;
+static guint
+gst_gnome_vfs_sink_uri_get_type (void)
+{
+  return GST_URI_SINK;
+}
+
+static gchar **
+gst_gnome_vfs_sink_uri_get_protocols (void)
+{
+  static gchar **protocols = NULL;
+
+  if (!protocols)
+    protocols = gst_gnomevfs_get_supported_uris ();
+
+  return protocols;
+}
+
+static const gchar *
+gst_gnome_vfs_sink_uri_get_uri (GstURIHandler * handler)
+{
+  GstGnomeVFSSink *sink = GST_GNOME_VFS_SINK (handler);
+
+  return sink->uri_name;
+}
+
+static gboolean
+gst_gnome_vfs_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+{
+  GstGnomeVFSSink *sink = GST_GNOME_VFS_SINK (handler);
+  GstState cur_state;
+
+  gst_element_get_state (GST_ELEMENT (sink), &cur_state, NULL, 0);
+
+  if (cur_state == GST_STATE_PLAYING || cur_state == GST_STATE_PAUSED) {
+    GST_WARNING_OBJECT (sink, "cannot set uri when PAUSED or PLAYING");
+    return FALSE;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  g_object_set (sink, "location", uri, NULL);
 
-  return GST_STATE_CHANGE_SUCCESS;
+  return TRUE;
+}
+
+static void
+gst_gnome_vfs_sink_uri_handler_init (gpointer g_iface, gpointer iface_data)
+{
+  GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
+
+  iface->get_type = gst_gnome_vfs_sink_uri_get_type;
+  iface->get_protocols = gst_gnome_vfs_sink_uri_get_protocols;
+  iface->get_uri = gst_gnome_vfs_sink_uri_get_uri;
+  iface->set_uri = gst_gnome_vfs_sink_uri_set_uri;
 }

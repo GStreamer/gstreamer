@@ -23,6 +23,47 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-gnomevfssrc
+ * @short_description: Read from any GnomeVFS-supported location
+ * @see_also: #GstFileSrc, #GstGnomeVFSSink
+ *
+ * <refsect2>
+ * <para>
+ * This plugin reads data from a local or remote location specified
+ * by an URI. This location can be specified using any protocol supported by
+ * the GnomeVFS library. Common protocols are 'file', 'http', 'ftp', or 'smb'.
+ * </para>
+ * <para>
+ * Example pipeline:
+ * <programlisting>
+ * gst-launch -v gnomevfssrc location=file:///home/joe/foo.xyz ! fakesink
+ * </programlisting>
+ * The above pipeline will simply read a local file and do nothing with the
+ * data read. Instead of gnomevfssrc, we could just as well have used the
+ * filesrc element here.
+ * </para>
+ * <para>
+ * Another example pipeline:
+ * <programlisting>
+ * gst-launch -v gnomevfssrc location=smb://othercomputer/foo.xyz ! filesink location=/home/joe/foo.xyz
+ * </programlisting>
+ * The above pipeline will copy a file from a remote host to the local file
+ * system using the Samba protocol.
+ * </para>
+ * <para>
+ * Yet another example pipeline:
+ * <programlisting>
+ * gst-launch -v gnomevfssrc location=http://music.foobar.com/demo.mp3 ! mad ! audioconvert ! audioscale ! alsasink
+ * </programlisting>
+ * The above pipeline will read and decode and play an mp3 file from a
+ * web server using the http protocol.
+ * </para>
+ * </refsect2>
+ *
+ */
+
+
 #define BROKEN_SIG 1
 /*#undef BROKEN_SIG */
 
@@ -32,8 +73,7 @@
 
 #include "gst/gst-i18n-plugin.h"
 
-#include "gstgnomevfs.h"
-#include "gstgnomevfsuri.h"
+#include "gstgnomevfssrc.h"
 
 #include <stdlib.h>
 #include <sys/types.h>
@@ -50,68 +90,17 @@
 #include <string.h>
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesrc.h>
-#include <libgnomevfs/gnome-vfs.h>
 /* gnome-vfs.h doesn't include the following header, which we need: */
 #include <libgnomevfs/gnome-vfs-standard-callbacks.h>
 
-GST_DEBUG_CATEGORY (gnomevfssrc_debug);
+GST_DEBUG_CATEGORY_STATIC (gnomevfssrc_debug);
 #define GST_CAT_DEFAULT gnomevfssrc_debug
 
-#define GST_TYPE_GNOMEVFSSRC \
-  (gst_gnomevfssrc_get_type())
-#define GST_GNOMEVFSSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GNOMEVFSSRC,GstGnomeVFSSrc))
-#define GST_GNOMEVFSSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GNOMEVFSSRC,GstGnomeVFSSrcClass))
-#define GST_IS_GNOMEVFSSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GNOMEVFSSRC))
-#define GST_IS_GNOMEVFSSRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GNOMEVFSSRC))
 
 static GStaticMutex count_lock = G_STATIC_MUTEX_INIT;
 static gint ref_count = 0;
 static gboolean vfs_owner = FALSE;
 
-typedef struct _GstGnomeVFSSrc
-{
-  GstBaseSrc element;
-
-  /* uri, file, ... */
-  GnomeVFSURI *uri;
-  gchar *uri_name;
-  GnomeVFSHandle *handle;
-  gboolean own_handle;
-  GnomeVFSFileSize size;        /* -1 = unknown */
-  GnomeVFSFileOffset curoffset; /* current offset in file */
-  gboolean seekable;
-
-  /* icecast/audiocast metadata extraction handling */
-  gboolean iradio_mode;
-  gboolean http_callbacks_pushed;
-
-  gint icy_metaint;
-  GnomeVFSFileSize icy_count;
-
-  gchar *iradio_name;
-  gchar *iradio_genre;
-  gchar *iradio_url;
-  gchar *iradio_title;
-
-  GThread *audiocast_thread;
-  GList *audiocast_notify_queue;
-  GMutex *audiocast_queue_mutex;
-  GMutex *audiocast_udpdata_mutex;
-  gint audiocast_thread_die_infd;
-  gint audiocast_thread_die_outfd;
-  gint audiocast_port;
-  gint audiocast_fd;
-} GstGnomeVFSSrc;
-
-typedef struct _GstGnomeVFSSrcClass
-{
-  GstBaseSrcClass parent_class;
-} GstGnomeVFSSrcClass;
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -130,23 +119,23 @@ enum
   ARG_IRADIO_TITLE
 };
 
-static void gst_gnomevfssrc_base_init (gpointer g_class);
-static void gst_gnomevfssrc_class_init (GstGnomeVFSSrcClass * klass);
-static void gst_gnomevfssrc_init (GstGnomeVFSSrc * gnomevfssrc);
-static void gst_gnomevfssrc_finalize (GObject * object);
-static void gst_gnomevfssrc_uri_handler_init (gpointer g_iface,
+static void gst_gnome_vfs_src_base_init (gpointer g_class);
+static void gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass);
+static void gst_gnome_vfs_src_init (GstGnomeVFSSrc * gnomevfssrc);
+static void gst_gnome_vfs_src_finalize (GObject * object);
+static void gst_gnome_vfs_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
-static void gst_gnomevfssrc_set_property (GObject * object, guint prop_id,
+static void gst_gnome_vfs_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_gnomevfssrc_get_property (GObject * object, guint prop_id,
+static void gst_gnome_vfs_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gnomevfssrc_stop (GstBaseSrc * src);
-static gboolean gst_gnomevfssrc_start (GstBaseSrc * src);
-static gboolean gst_gnomevfssrc_is_seekable (GstBaseSrc * src);
-static gboolean gst_gnomevfssrc_get_size (GstBaseSrc * src, guint64 * size);
-static GstFlowReturn gst_gnomevfssrc_create (GstBaseSrc * basesrc,
+static gboolean gst_gnome_vfs_src_stop (GstBaseSrc * src);
+static gboolean gst_gnome_vfs_src_start (GstBaseSrc * src);
+static gboolean gst_gnome_vfs_src_is_seekable (GstBaseSrc * src);
+static gboolean gst_gnome_vfs_src_get_size (GstBaseSrc * src, guint64 * size);
+static GstFlowReturn gst_gnome_vfs_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint size, GstBuffer ** buffer);
 
 static int audiocast_init (GstGnomeVFSSrc * src);
@@ -158,24 +147,24 @@ static void audiocast_thread_kill (GstGnomeVFSSrc * src);
 static GstElementClass *parent_class = NULL;
 
 GType
-gst_gnomevfssrc_get_type (void)
+gst_gnome_vfs_src_get_type (void)
 {
   static GType gnomevfssrc_type = 0;
 
   if (!gnomevfssrc_type) {
     static const GTypeInfo gnomevfssrc_info = {
       sizeof (GstGnomeVFSSrcClass),
-      gst_gnomevfssrc_base_init,
+      gst_gnome_vfs_src_base_init,
       NULL,
-      (GClassInitFunc) gst_gnomevfssrc_class_init,
+      (GClassInitFunc) gst_gnome_vfs_src_class_init,
       NULL,
       NULL,
       sizeof (GstGnomeVFSSrc),
       0,
-      (GInstanceInitFunc) gst_gnomevfssrc_init,
+      (GInstanceInitFunc) gst_gnome_vfs_src_init,
     };
     static const GInterfaceInfo urihandler_info = {
-      gst_gnomevfssrc_uri_handler_init,
+      gst_gnome_vfs_src_uri_handler_init,
       NULL,
       NULL
     };
@@ -190,10 +179,10 @@ gst_gnomevfssrc_get_type (void)
 }
 
 static void
-gst_gnomevfssrc_base_init (gpointer g_class)
+gst_gnome_vfs_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  static GstElementDetails gst_gnomevfssrc_details =
+  static GstElementDetails gst_gnome_vfs_src_details =
       GST_ELEMENT_DETAILS ("GnomeVFS Source",
       "Source/File",
       "Read from any GnomeVFS-supported file",
@@ -202,11 +191,14 @@ gst_gnomevfssrc_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
-  gst_element_class_set_details (element_class, &gst_gnomevfssrc_details);
+  gst_element_class_set_details (element_class, &gst_gnome_vfs_src_details);
+
+  GST_DEBUG_CATEGORY_INIT (gnomevfssrc_debug, "gnomevfssrc", 0,
+      "Gnome-VFS Source");
 }
 
 static void
-gst_gnomevfssrc_class_init (GstGnomeVFSSrcClass * klass)
+gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -216,19 +208,20 @@ gst_gnomevfssrc_class_init (GstGnomeVFSSrcClass * klass)
   gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->finalize = gst_gnomevfssrc_finalize;
-  gobject_class->set_property = gst_gnomevfssrc_set_property;
-  gobject_class->get_property = gst_gnomevfssrc_get_property;
+  gobject_class->finalize = gst_gnome_vfs_src_finalize;
+  gobject_class->set_property = gst_gnome_vfs_src_set_property;
+  gobject_class->get_property = gst_gnome_vfs_src_get_property;
 
   /* properties */
   gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
       "location", ARG_LOCATION, G_PARAM_READWRITE, NULL);
   g_object_class_install_property (gobject_class,
       ARG_HANDLE,
-      g_param_spec_pointer ("handle",
-          "GnomeVFSHandle", "Handle for GnomeVFS", G_PARAM_READWRITE));
+      g_param_spec_boxed ("handle",
+          "GnomeVFSHandle", "Handle for GnomeVFS",
+          GST_TYPE_GNOME_VFS_HANDLE, G_PARAM_READWRITE));
 
   /* icecast stuff */
   g_object_class_install_property (gobject_class,
@@ -256,16 +249,16 @@ gst_gnomevfssrc_class_init (GstGnomeVFSSrcClass * klass)
           "iradio-title",
           "Name of currently playing song", NULL, G_PARAM_READABLE));
 
-  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_gnomevfssrc_start);
-  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_gnomevfssrc_stop);
-  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_gnomevfssrc_get_size);
+  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_start);
+  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_stop);
+  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_get_size);
   gstbasesrc_class->is_seekable =
-      GST_DEBUG_FUNCPTR (gst_gnomevfssrc_is_seekable);
-  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_gnomevfssrc_create);
+      GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_is_seekable);
+  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_create);
 }
 
 static void
-gst_gnomevfssrc_init (GstGnomeVFSSrc * gnomevfssrc)
+gst_gnome_vfs_src_init (GstGnomeVFSSrc * gnomevfssrc)
 {
   gnomevfssrc->uri = NULL;
   gnomevfssrc->uri_name = NULL;
@@ -300,9 +293,9 @@ gst_gnomevfssrc_init (GstGnomeVFSSrc * gnomevfssrc)
 }
 
 static void
-gst_gnomevfssrc_finalize (GObject * object)
+gst_gnome_vfs_src_finalize (GObject * object)
 {
-  GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (object);
+  GstGnomeVFSSrc *src = GST_GNOME_VFS_SRC (object);
 
   g_static_mutex_lock (&count_lock);
   ref_count--;
@@ -334,13 +327,13 @@ gst_gnomevfssrc_finalize (GObject * object)
  */
 
 static guint
-gst_gnomevfssrc_uri_get_type (void)
+gst_gnome_vfs_src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
 
 static gchar **
-gst_gnomevfssrc_uri_get_protocols (void)
+gst_gnome_vfs_src_uri_get_protocols (void)
 {
   static gchar **protocols = NULL;
 
@@ -351,17 +344,17 @@ gst_gnomevfssrc_uri_get_protocols (void)
 }
 
 static const gchar *
-gst_gnomevfssrc_uri_get_uri (GstURIHandler * handler)
+gst_gnome_vfs_src_uri_get_uri (GstURIHandler * handler)
 {
-  GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (handler);
+  GstGnomeVFSSrc *src = GST_GNOME_VFS_SRC (handler);
 
   return src->uri_name;
 }
 
 static gboolean
-gst_gnomevfssrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_gnome_vfs_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
-  GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (handler);
+  GstGnomeVFSSrc *src = GST_GNOME_VFS_SRC (handler);
 
   if (GST_STATE (src) == GST_STATE_PLAYING ||
       GST_STATE (src) == GST_STATE_PAUSED)
@@ -373,24 +366,24 @@ gst_gnomevfssrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 }
 
 static void
-gst_gnomevfssrc_uri_handler_init (gpointer g_iface, gpointer iface_data)
+gst_gnome_vfs_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 {
   GstURIHandlerInterface *iface = (GstURIHandlerInterface *) g_iface;
 
-  iface->get_type = gst_gnomevfssrc_uri_get_type;
-  iface->get_protocols = gst_gnomevfssrc_uri_get_protocols;
-  iface->get_uri = gst_gnomevfssrc_uri_get_uri;
-  iface->set_uri = gst_gnomevfssrc_uri_set_uri;
+  iface->get_type = gst_gnome_vfs_src_uri_get_type;
+  iface->get_protocols = gst_gnome_vfs_src_uri_get_protocols;
+  iface->get_uri = gst_gnome_vfs_src_uri_get_uri;
+  iface->set_uri = gst_gnome_vfs_src_uri_set_uri;
 }
 
 static void
-gst_gnomevfssrc_set_property (GObject * object, guint prop_id,
+gst_gnome_vfs_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstGnomeVFSSrc *src;
   gchar cwd[PATH_MAX];
 
-  src = GST_GNOMEVFSSRC (object);
+  src = GST_GNOME_VFS_SRC (object);
 
   switch (prop_id) {
     case ARG_LOCATION:
@@ -438,7 +431,7 @@ gst_gnomevfssrc_set_property (GObject * object, guint prop_id,
           g_free (src->uri_name);
           src->uri_name = NULL;
         }
-        src->handle = g_value_get_pointer (value);
+        src->handle = g_value_get_boxed (value);
       }
       break;
     case ARG_IRADIO_MODE:
@@ -451,19 +444,19 @@ gst_gnomevfssrc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_gnomevfssrc_get_property (GObject * object, guint prop_id, GValue * value,
+gst_gnome_vfs_src_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstGnomeVFSSrc *src;
 
-  src = GST_GNOMEVFSSRC (object);
+  src = GST_GNOME_VFS_SRC (object);
 
   switch (prop_id) {
     case ARG_LOCATION:
       g_value_set_string (value, src->uri_name);
       break;
     case ARG_HANDLE:
-      g_value_set_pointer (value, src->handle);
+      g_value_set_boxed (value, src->handle);
       break;
     case ARG_IRADIO_MODE:
       g_value_set_boolean (value, src->iradio_mode);
@@ -515,7 +508,7 @@ unicodify (const char *str, int len, ...)
 }
 
 static char *
-gst_gnomevfssrc_unicodify (const char *str)
+gst_gnome_vfs_src_unicodify (const char *str)
 {
   return unicodify (str, -1, "locale", "ISO-8859-1", NULL);
 }
@@ -674,7 +667,7 @@ audiocast_thread_run (GstGnomeVFSSrc * src)
         if (!strlen (valptr))
           continue;
 
-        value = gst_gnomevfssrc_unicodify (valptr);
+        value = gst_gnome_vfs_src_unicodify (valptr);
         if (!value) {
           g_print ("Unable to convert \"%s\" to UTF-8!\n", valptr);
           continue;
@@ -745,10 +738,10 @@ audiocast_thread_kill (GstGnomeVFSSrc * src)
 }
 
 static void
-gst_gnomevfssrc_send_additional_headers_callback (gconstpointer in,
+gst_gnome_vfs_src_send_additional_headers_callback (gconstpointer in,
     gsize in_size, gpointer out, gsize out_size, gpointer callback_data)
 {
-  GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (callback_data);
+  GstGnomeVFSSrc *src = GST_GNOME_VFS_SRC (callback_data);
   GnomeVFSModuleCallbackAdditionalHeadersOut *out_args =
       (GnomeVFSModuleCallbackAdditionalHeadersOut *) out;
 
@@ -763,12 +756,12 @@ gst_gnomevfssrc_send_additional_headers_callback (gconstpointer in,
 }
 
 static void
-gst_gnomevfssrc_received_headers_callback (gconstpointer in,
+gst_gnome_vfs_src_received_headers_callback (gconstpointer in,
     gsize in_size, gpointer out, gsize out_size, gpointer callback_data)
 {
   GList *i;
   gint icy_metaint;
-  GstGnomeVFSSrc *src = GST_GNOMEVFSSRC (callback_data);
+  GstGnomeVFSSrc *src = GST_GNOME_VFS_SRC (callback_data);
   GnomeVFSModuleCallbackReceivedHeadersIn *in_args =
       (GnomeVFSModuleCallbackReceivedHeadersIn *) in;
 
@@ -810,17 +803,17 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
     GST_DEBUG_OBJECT (src, "key: %s", key);
     if (!strncmp (key, "name", 4)) {
       g_free (src->iradio_name);
-      src->iradio_name = gst_gnomevfssrc_unicodify (value);
+      src->iradio_name = gst_gnome_vfs_src_unicodify (value);
       if (src->iradio_name)
         g_object_notify (G_OBJECT (src), "iradio-name");
     } else if (!strncmp (key, "genre", 5)) {
       g_free (src->iradio_genre);
-      src->iradio_genre = gst_gnomevfssrc_unicodify (value);
+      src->iradio_genre = gst_gnome_vfs_src_unicodify (value);
       if (src->iradio_genre)
         g_object_notify (G_OBJECT (src), "iradio-genre");
     } else if (!strncmp (key, "url", 3)) {
       g_free (src->iradio_url);
-      src->iradio_url = gst_gnomevfssrc_unicodify (value);
+      src->iradio_url = gst_gnome_vfs_src_unicodify (value);
       if (src->iradio_url)
         g_object_notify (G_OBJECT (src), "iradio-url");
     }
@@ -828,7 +821,7 @@ gst_gnomevfssrc_received_headers_callback (gconstpointer in,
 }
 
 static void
-gst_gnomevfssrc_push_callbacks (GstGnomeVFSSrc * src)
+gst_gnome_vfs_src_push_callbacks (GstGnomeVFSSrc * src)
 {
   if (src->http_callbacks_pushed)
     return;
@@ -836,16 +829,16 @@ gst_gnomevfssrc_push_callbacks (GstGnomeVFSSrc * src)
   GST_DEBUG_OBJECT (src, "pushing callbacks");
   gnome_vfs_module_callback_push
       (GNOME_VFS_MODULE_CALLBACK_HTTP_SEND_ADDITIONAL_HEADERS,
-      gst_gnomevfssrc_send_additional_headers_callback, src, NULL);
+      gst_gnome_vfs_src_send_additional_headers_callback, src, NULL);
   gnome_vfs_module_callback_push
       (GNOME_VFS_MODULE_CALLBACK_HTTP_RECEIVED_HEADERS,
-      gst_gnomevfssrc_received_headers_callback, src, NULL);
+      gst_gnome_vfs_src_received_headers_callback, src, NULL);
 
   src->http_callbacks_pushed = TRUE;
 }
 
 static void
-gst_gnomevfssrc_pop_callbacks (GstGnomeVFSSrc * src)
+gst_gnome_vfs_src_pop_callbacks (GstGnomeVFSSrc * src)
 {
   if (!src->http_callbacks_pushed)
     return;
@@ -858,7 +851,7 @@ gst_gnomevfssrc_pop_callbacks (GstGnomeVFSSrc * src)
 }
 
 static void
-gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
+gst_gnome_vfs_src_get_icy_metadata (GstGnomeVFSSrc * src)
 {
   GnomeVFSFileSize length = 0;
   GnomeVFSResult res;
@@ -903,7 +896,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
   for (i = 0; tags[i]; i++) {
     if (!g_ascii_strncasecmp (tags[i], "StreamTitle=", 12)) {
       g_free (src->iradio_title);
-      src->iradio_title = gst_gnomevfssrc_unicodify (tags[i] + 13);
+      src->iradio_title = gst_gnome_vfs_src_unicodify (tags[i] + 13);
       if (src->iradio_title) {
         GST_DEBUG_OBJECT (src, "sending notification on icecast title");
         g_object_notify (G_OBJECT (src), "iradio-title");
@@ -914,7 +907,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
     }
     if (!g_ascii_strncasecmp (tags[i], "StreamUrl=", 10)) {
       g_free (src->iradio_url);
-      src->iradio_url = gst_gnomevfssrc_unicodify (tags[i] + 11);
+      src->iradio_url = gst_gnome_vfs_src_unicodify (tags[i] + 11);
       if (src->iradio_url) {
         GST_DEBUG_OBJECT (src, "sending notification on icecast url");
         g_object_notify (G_OBJECT (src), "iradio-url");
@@ -934,7 +927,7 @@ gst_gnomevfssrc_get_icy_metadata (GstGnomeVFSSrc * src)
  * and seeking and such.
  */
 static GstFlowReturn
-gst_gnomevfssrc_create (GstBaseSrc * basesrc, guint64 offset, guint size,
+gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
     GstBuffer ** buffer)
 {
   GnomeVFSResult res;
@@ -943,7 +936,7 @@ gst_gnomevfssrc_create (GstBaseSrc * basesrc, guint64 offset, guint size,
   guint8 *data;
   GstGnomeVFSSrc *src;
 
-  src = GST_GNOMEVFSSRC (basesrc);
+  src = GST_GNOME_VFS_SRC (basesrc);
 
   GST_DEBUG ("now at %llu, reading %lld, size %u", src->curoffset, offset,
       size);
@@ -988,7 +981,7 @@ gst_gnomevfssrc_create (GstBaseSrc * basesrc, guint64 offset, guint size,
     src->curoffset += readbytes;
 
     if (src->icy_count == src->icy_metaint) {
-      gst_gnomevfssrc_get_icy_metadata (src);
+      gst_gnome_vfs_src_get_icy_metadata (src);
       src->icy_count = 0;
     }
   } else {
@@ -1045,21 +1038,21 @@ eos:
 }
 
 static gboolean
-gst_gnomevfssrc_is_seekable (GstBaseSrc * basesrc)
+gst_gnome_vfs_src_is_seekable (GstBaseSrc * basesrc)
 {
   GstGnomeVFSSrc *src;
 
-  src = GST_GNOMEVFSSRC (basesrc);
+  src = GST_GNOME_VFS_SRC (basesrc);
 
   return src->seekable;
 }
 
 static gboolean
-gst_gnomevfssrc_get_size (GstBaseSrc * basesrc, guint64 * size)
+gst_gnome_vfs_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 {
   GstGnomeVFSSrc *src;
 
-  src = GST_GNOMEVFSSRC (basesrc);
+  src = GST_GNOME_VFS_SRC (basesrc);
 
   GST_DEBUG_OBJECT (src, "size %" G_GUINT64_FORMAT, src->size);
 
@@ -1073,18 +1066,18 @@ gst_gnomevfssrc_get_size (GstBaseSrc * basesrc, guint64 * size)
 
 /* open the file, do stuff necessary to go to READY state */
 static gboolean
-gst_gnomevfssrc_start (GstBaseSrc * basesrc)
+gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
 {
   GnomeVFSResult res;
   GnomeVFSFileInfo *info;
   GstGnomeVFSSrc *src;
 
-  src = GST_GNOMEVFSSRC (basesrc);
+  src = GST_GNOME_VFS_SRC (basesrc);
 
   if (!audiocast_init (src))
     return FALSE;
 
-  gst_gnomevfssrc_push_callbacks (src);
+  gst_gnome_vfs_src_push_callbacks (src);
 
   if (src->uri != NULL) {
     if ((res = gnome_vfs_open_uri (&src->handle, src->uri,
@@ -1092,7 +1085,7 @@ gst_gnomevfssrc_start (GstBaseSrc * basesrc)
       gchar *filename = gnome_vfs_uri_to_string (src->uri,
           GNOME_VFS_URI_HIDE_PASSWORD);
 
-      gst_gnomevfssrc_pop_callbacks (src);
+      gst_gnome_vfs_src_pop_callbacks (src);
       audiocast_thread_kill (src);
 
       if (res == GNOME_VFS_ERROR_NOT_FOUND) {
@@ -1143,13 +1136,13 @@ gst_gnomevfssrc_start (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_gnomevfssrc_stop (GstBaseSrc * basesrc)
+gst_gnome_vfs_src_stop (GstBaseSrc * basesrc)
 {
   GstGnomeVFSSrc *src;
 
-  src = GST_GNOMEVFSSRC (basesrc);
+  src = GST_GNOME_VFS_SRC (basesrc);
 
-  gst_gnomevfssrc_pop_callbacks (src);
+  gst_gnome_vfs_src_pop_callbacks (src);
   audiocast_thread_kill (src);
 
   if (src->own_handle) {

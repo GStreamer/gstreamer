@@ -1,3 +1,45 @@
+2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/Makefile.am:
+	* ext/gnomevfs/gstgnomevfs.c: (gst_gnome_vfs_uri_get_type),
+	(gst_gnome_vfs_handle_copy), (gst_gnome_vfs_handle_free),
+	(gst_gnome_vfs_handle_get_type), (plugin_init):
+	* ext/gnomevfs/gstgnomevfs.h:
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnome_vfs_sink_do_init),
+	(gst_gnome_vfs_sink_base_init), (gst_gnome_vfs_sink_class_init),
+	(gst_gnome_vfs_sink_finalize), (gst_gnome_vfs_sink_init),
+	(gst_gnome_vfs_sink_set_property),
+	(gst_gnome_vfs_sink_get_property), (gst_gnome_vfs_sink_open_file),
+	(gst_gnome_vfs_sink_close_file), (gst_gnome_vfs_sink_start),
+	(gst_gnome_vfs_sink_stop), (gst_gnome_vfs_sink_handle_event),
+	(gst_gnome_vfs_sink_query), (gst_gnome_vfs_sink_render),
+	(gst_gnome_vfs_sink_uri_get_type),
+	(gst_gnome_vfs_sink_uri_get_protocols),
+	(gst_gnome_vfs_sink_uri_get_uri), (gst_gnome_vfs_sink_uri_set_uri),
+	(gst_gnome_vfs_sink_uri_handler_init):
+	* ext/gnomevfs/gstgnomevfssink.h:
+	  Port gnomevfssink; add gtk-doc blurb.
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_get_type),
+	(gst_gnome_vfs_src_base_init), (gst_gnome_vfs_src_class_init),
+	(gst_gnome_vfs_src_init), (gst_gnome_vfs_src_finalize),
+	(gst_gnome_vfs_src_uri_get_type),
+	(gst_gnome_vfs_src_uri_get_protocols),
+	(gst_gnome_vfs_src_uri_get_uri), (gst_gnome_vfs_src_uri_set_uri),
+	(gst_gnome_vfs_src_uri_handler_init),
+	(gst_gnome_vfs_src_set_property), (gst_gnome_vfs_src_get_property),
+	(gst_gnome_vfs_src_unicodify), (audiocast_thread_run),
+	(gst_gnome_vfs_src_send_additional_headers_callback),
+	(gst_gnome_vfs_src_received_headers_callback),
+	(gst_gnome_vfs_src_push_callbacks),
+	(gst_gnome_vfs_src_pop_callbacks),
+	(gst_gnome_vfs_src_get_icy_metadata), (gst_gnome_vfs_src_create),
+	(gst_gnome_vfs_src_is_seekable), (gst_gnome_vfs_src_get_size),
+	(gst_gnome_vfs_src_start), (gst_gnome_vfs_src_stop):
+	* ext/gnomevfs/gstgnomevfssrc.h:
+	  s/gst_gnomevfssrc/gst_gnome_vfs_src/; move header stuff to header
+	  file; add gtk-doc blurb with example pipelines.
+
 === release 0.10.1 ===
 
 2005-12-23  Thomas Vander Stichele <thomas at apestaart dot org>

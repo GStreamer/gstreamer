@@ -26,27 +26,67 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include "gstgnomevfs.h"
+#include "gstgnomevfssrc.h"
+#include "gstgnomevfssink.h"
+
 #include <libgnomevfs/gnome-vfs.h>
 #include <gst/gst.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gnomevfssrc_debug);
+GType
+gst_gnome_vfs_uri_get_type (void)
+{
+  static GType type;            /* 0 */
+
+  if (type == 0) {
+    type = g_boxed_type_register_static ("GnomeVFSURI",
+        (GBoxedCopyFunc) gnome_vfs_uri_ref,
+        (GBoxedFreeFunc) gnome_vfs_uri_unref);
+  }
+
+  return type;
+}
+
+static gpointer
+gst_gnome_vfs_handle_copy (gpointer handle)
+{
+  return handle;
+}
+
+static void
+gst_gnome_vfs_handle_free (gpointer handle)
+{
+  return;
+}
+
+GType
+gst_gnome_vfs_handle_get_type (void)
+{
+  static GType type;            /* 0 */
+
+  if (type == 0) {
+    /* hackish, but makes it show up nicely in gst-inspect */
+    type = g_boxed_type_register_static ("GnomeVFSHandle",
+        (GBoxedCopyFunc) gst_gnome_vfs_handle_copy,
+        (GBoxedFreeFunc) gst_gnome_vfs_handle_free);
+  }
+
+  return type;
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gnome_vfs_init ();
-
-  GST_DEBUG_CATEGORY_INIT (gnomevfssrc_debug, "gnomevfssrc", 0,
-      "Gnome-VFS Source");
-
+  /* gnome vfs engine init */
+  if (!gnome_vfs_initialized ())
+    gnome_vfs_init ();
 
   if (!gst_element_register (plugin, "gnomevfssrc", GST_RANK_SECONDARY,
-          gst_gnomevfssrc_get_type ()))
+          gst_gnome_vfs_src_get_type ()))
     return FALSE;
-/*
+
   if (!gst_element_register (plugin, "gnomevfssink", GST_RANK_SECONDARY,
-      gst_gnomevfssink_get_type ()))
+          gst_gnome_vfs_sink_get_type ()))
     return FALSE;
-*/
 
 #ifdef ENABLE_NLS
   setlocale (LC_ALL, "");
