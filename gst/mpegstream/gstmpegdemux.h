@@ -91,6 +91,7 @@ struct _GstMPEGStream {
   gint          type;
   gint          number;
   GstPad        *pad;
+  GstCaps	*caps;
   gint          index_id;
   gint          size_bound;
   GstClockTime  cur_ts;

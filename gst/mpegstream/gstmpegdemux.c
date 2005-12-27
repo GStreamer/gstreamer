@@ -299,7 +299,6 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
   GstMPEGStream *str;
   GstMPEGVideoStream *video_str;
   gchar *name;
-  GstCaps *caps;
   gboolean set_caps = FALSE;
 
   g_return_val_if_fail (stream_nr < GST_MPEG_DEMUX_NUM_VIDEO_STREAMS, NULL);
@@ -332,17 +331,17 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
     GstTagList *list;
 
     /* We need to set new caps for this pad. */
-    caps = gst_caps_new_simple ("video/mpeg",
+    str->caps = gst_caps_new_simple ("video/mpeg",
         "mpegversion", G_TYPE_INT, mpeg_version,
         "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-    if (!gst_pad_set_caps (str->pad, caps)) {
+    if (!gst_pad_set_caps (str->pad, str->caps)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
           CORE, NEGOTIATION, (NULL), ("failed to set caps"));
-      gst_caps_unref (caps);
+      gst_caps_unref (str->caps);
+      str->caps = NULL;
       gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
       return str;
     }
-    gst_caps_unref (caps);
     gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
 
     /* Store the current values. */
@@ -366,7 +365,6 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
 {
   GstMPEGStream *str;
   gchar *name;
-  GstCaps *caps;
   gboolean set_caps = FALSE;
 
   g_return_val_if_fail (stream_nr < GST_MPEG_DEMUX_NUM_AUDIO_STREAMS, NULL);
@@ -402,16 +400,16 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
     GstTagList *list;
 
     /* We need to set new caps for this pad. */
-    caps = gst_caps_new_simple ("audio/mpeg",
+    str->caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, 1, NULL);
-    if (!gst_pad_set_caps (str->pad, caps)) {
+    if (!gst_pad_set_caps (str->pad, str->caps)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
           CORE, NEGOTIATION, (NULL), ("failed to set caps"));
-      gst_caps_unref (caps);
+      gst_caps_unref (str->caps);
+      str->caps = NULL;
       gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
       return str;
     }
-    gst_caps_unref (caps);
     gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
 
     /* stream metadata */

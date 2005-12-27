@@ -1,3 +1,18 @@
+2005-12-27  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/mpegstream/gstdvddemux.c (AUDIO_CAPS) 
+	(gst_dvd_demux_get_audio_stream): Use audio/x-lpcm as mimetype for
+	LPCM.
+
+	* gstmpegdemux.h: 
+	* gstmpegdemux.c (gst_mpeg_demux_get_video_stream) 
+	(gst_mpeg_demux_get_audio_stream): 
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_get_video_stream) 
+	(gst_dvd_demux_get_audio_stream) 
+	(gst_dvd_demux_get_subpicture_stream) 
+	(gst_dvd_demux_send_subbuffer):
+	Send current* pad buffers with appropriate caps.
+
 2005-12-26  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/iec958/ac3iec.h:
