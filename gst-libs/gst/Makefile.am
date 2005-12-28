@@ -1,5 +1,6 @@
 SUBDIRS = \
 	audio \
+	cdda \
 	floatcast \
 	interfaces \
 	netbuffer \

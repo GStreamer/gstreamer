@@ -1,5 +1,40 @@
 2005-12-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/cdda/Makefile.am:
+	* gst-libs/gst/cdda/base64.c:
+	* gst-libs/gst/cdda/base64.h:
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cdda_base_src_mode_get_type), (gst_cdda_base_src_base_init),
+	(gst_cdda_base_src_class_init), (gst_cdda_base_src_init),
+	(gst_cdda_base_src_finalize), (gst_cdda_base_src_set_property),
+	(gst_cdda_base_src_get_property),
+	(gst_cdda_base_src_get_track_from_sector),
+	(gst_cdda_base_src_get_query_types), (gst_cdda_base_src_convert),
+	(gst_cdda_base_src_query), (gst_cdda_base_src_is_seekable),
+	(gst_cdda_base_src_do_seek), (gst_cdda_base_src_handle_track_seek),
+	(gst_cdda_base_src_handle_event), (gst_cdda_base_src_uri_get_type),
+	(gst_cdda_base_src_uri_get_protocols),
+	(gst_cdda_base_src_uri_get_uri), (gst_cdda_base_src_uri_set_uri),
+	(gst_cdda_base_src_uri_handler_init),
+	(gst_cdda_base_src_setup_interfaces),
+	(gst_cdda_base_src_add_track), (gst_cdda_base_src_update_duration),
+	(cddb_sum), (gst_cddabasesrc_calculate_musicbrainz_discid),
+	(lba_to_msf), (gst_cdda_base_src_calculate_cddb_id),
+	(gst_cdda_base_src_add_tags),
+	(gst_cdda_base_src_add_index_associations),
+	(gst_cdda_base_src_set_index), (gst_cdda_base_src_get_index),
+	(gst_cdda_base_src_track_sort_func), (gst_cdda_base_src_start),
+	(gst_cdda_base_src_clear_tracks), (gst_cdda_base_src_stop),
+	(gst_cdda_base_src_create):
+	* gst-libs/gst/cdda/gstcddabasesrc.h:
+	* gst-libs/gst/cdda/sha1.c:
+	* gst-libs/gst/cdda/sha1.h:
+	  Add new libgstcdda with GstCddaBaseSrc class.
+
+2005-12-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gnomevfs/gstgnomevfssink.h:
 	  Use GstBaseSinkClass as parent_class member for class struct, not
 	  GstBaseSink.

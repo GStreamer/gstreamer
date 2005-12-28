@@ -629,6 +629,7 @@ ext/vorbis/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
+gst-libs/gst/cdda/Makefile
 gst-libs/gst/floatcast/Makefile
 gst-libs/gst/interfaces/Makefile
 gst-libs/gst/netbuffer/Makefile
