@@ -142,6 +142,12 @@ MUSICBRAINZ_DIR=
 NAS_DIR=
 # endif
 
+if USE_NEON
+NEON_DIR=neon
+else
+NEON_DIR=
+endif
+
 # if USE_POLYP
 # POLYP_DIR=polyp
 # else
@@ -220,6 +226,7 @@ SUBDIRS=\
 	$(MUSEPACK_DIR) \
 	$(MUSICBRAINZ_DIR) \
 	$(NAS_DIR) \
+	$(NEON_DIR) \
 	$(POLYP_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
@@ -241,6 +248,7 @@ DIST_SUBDIRS= \
 	dts \
 	divx \
 	musepack \
+	neon \
 	sdl \
 	swfdec \
 	wavpack \

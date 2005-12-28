@@ -1,3 +1,13 @@
+2005-12-28  Edgard Lima <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* ext/Makefile.am
+	* ext/neon:
+	* ext/neon/Makefile.am:
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/neon/gstneonhttpsrc.h:
+	Created new element neonhttpsrc.
+
 2005-12-19  Edward Hervey  <edward@fluendo.com>
 
 	* ext/swfdec/gstswfdec.c: (gst_swfdec_class_init),

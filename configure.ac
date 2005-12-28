@@ -469,6 +469,14 @@ GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
   AC_LANG_C
 ])
 
+dnl *** neon ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
+GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
+  PKG_CHECK_MODULES(NEON, neon = 0.24.7, HAVE_NEON="yes", HAVE_NEON="no")
+  AC_SUBST(NEON_CFLAGS)
+  AC_SUBST(NEON_LIBS)
+])
+
 dnl *** libmms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
 GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
@@ -635,6 +643,7 @@ ext/swfdec/Makefile
 ext/wavpack/Makefile
 ext/ivorbis/Makefile
 ext/gsm/Makefile
+ext/neon/Makefile
 ext/libmms/Makefile
 ext/dts/Makefile
 ext/divx/Makefile
