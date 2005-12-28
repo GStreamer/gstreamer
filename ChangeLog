@@ -1,3 +1,9 @@
+2005-12-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/gstgnomevfssink.h:
+	  Use GstBaseSinkClass as parent_class member for class struct, not
+	  GstBaseSink.
+
 2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videotestsrc/gstvideotestsrc.c:

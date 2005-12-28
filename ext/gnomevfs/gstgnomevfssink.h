@@ -65,7 +65,7 @@ struct _GstGnomeVFSSink
 
 struct _GstGnomeVFSSinkClass
 {
-  GstBaseSink basesink_class;
+  GstBaseSinkClass basesink_class;
 
   /* signals */
   gboolean (*erase_ask) (GstElement * element, GnomeVFSURI * uri);
