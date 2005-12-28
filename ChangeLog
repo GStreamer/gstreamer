@@ -1,3 +1,9 @@
+2005-12-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3tags.c: (id3demux_read_id3v2_tag):
+	If a broken tag has 0 bytes payload, at least still skip
+	the 10 byte header
+
 2005-12-22  Philippe Khalaf  <burger@speedy.org>
 
 	* gst-plugins-good/gst/rtp/gstrtph263pdepay.h:

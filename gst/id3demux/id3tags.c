@@ -143,9 +143,12 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
   /* Read the size from the header */
   read_size = read_synch_uint (data + 6, 4);
   if (read_size == 0) {
+    /* Tag has no frames attached. Ignore it, but skip the header */
+    if (id3v2_size)
+      *id3v2_size = ID3V2_HDR_SIZE;
     return ID3TAGS_BROKEN_TAG;
   }
-  read_size += 10;
+  read_size += ID3V2_HDR_SIZE;
 
   /* Expand the read size to include a footer if there is one */
   if (flags & ID3V2_HDR_FLAG_FOOTER) {
