@@ -10,6 +10,19 @@ gst_audio_structure_set_int
 </SECTION>
 
 <SECTION>
+<FILE>gstcddabasesrc</FILE>
+<INCLUDE>gst/cdda/gstcddabasesrc.h</INCLUDE>
+GstCddaBaseSrc
+GstCddaBaseSrcTrack
+GstCddaBaseSrcMode
+gst_cdda_base_src_add_track
+GST_TAG_CDDA_CDDB_DISCID
+GST_TAG_CDDA_CDDB_DISCID_FULL
+GST_TAG_CDDA_MUSICBRAINZ_DISCID
+GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL
+</SECTION>
+
+<SECTION>
 <FILE>gstcolorbalance</FILE>
 <INCLUDE>gst/interfaces/colorbalance.h</INCLUDE>
 GstColorBalance
@@ -130,3 +143,9 @@ GstVideoFilterClass
 </SECTION>
 
 
+<SECTION>
+<FILE>private</FILE>
+sha_init
+sha_final
+sha_update
+</SECTION>

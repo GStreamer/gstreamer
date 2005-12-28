@@ -76,9 +76,9 @@ struct _GstMixerTrack {
   gchar             *label;
   /* FIXME: flags should be guint32. Change in 0.9 */
   GstMixerTrackFlags flags;
-  gint               num_channels,
-                     min_volume,
-                     max_volume;
+  gint               num_channels;
+  gint               min_volume;
+  gint               max_volume;
 };
 
 struct _GstMixerTrackClass {

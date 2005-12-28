@@ -7,3 +7,6 @@ gst_ring_buffer_get_type
 
 gst_color_balance_get_type
 gst_color_balance_channel_get_type
+
+#include <gst/cdda/gstcddabasesrc.h>
+gst_cdda_base_src_get_type

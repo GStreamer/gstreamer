@@ -1,5 +1,17 @@
 2005-12-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* docs/libs/gst-plugins-base-libs.types:
+	  Add docs for libgstcdda/GstCddaBaseSrc.
+
+	* gst-libs/gst/interfaces/mixertrack.h:
+	  Do one struct member per line with a semicolon at the end, that way
+	  even gtk-doc might parse it without complaining.
+
+2005-12-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	* gst-libs/gst/Makefile.am:
 	* gst-libs/gst/cdda/Makefile.am:
