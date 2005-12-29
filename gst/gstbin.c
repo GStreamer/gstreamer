@@ -2125,6 +2125,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
     {
+#if 0
       GList *cached;
       GstFormat qformat;
 
@@ -2155,7 +2156,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
         }
       }
       GST_OBJECT_UNLOCK (bin);
-
+#endif
       fold_func = (GstIteratorFoldFunction) bin_query_duration_fold;
       fold_init = bin_query_duration_init;
       fold_done = bin_query_duration_done;
@@ -2204,7 +2205,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
 done:
   gst_iterator_free (iter);
 
-exit:
+/* exit: */
   GST_DEBUG_OBJECT (bin, "query %p result %d", query, res);
 
   return res;

@@ -1,3 +1,9 @@
+2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstbin.c: (gst_bin_query):
+	  Disable duration query caching in bins until it gets
+	  fixed (see #324807).
+
 2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-inspect.c: (print_element_properties_info):
