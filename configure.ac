@@ -430,11 +430,6 @@ GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
                        defined if cdda headers are in a cdda/ directory)
   fi
   AC_SUBST(CDPARANOIA_LIBS)
-
-  dnl FIXME: temporarily disable for release
-  HAVE_CDPARANOIA=no
-], disabled, , [
-  AC_MSG_NOTICE(cdparanoiasrc not stable yet, not building)
 ])
 dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )

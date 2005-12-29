@@ -1,5 +1,24 @@
 2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	* ext/cdparanoia/Makefile.am:
+	* ext/cdparanoia/gstcdparanoia.c:
+	* ext/cdparanoia/gstcdparanoia.h:
+	* ext/cdparanoia/gstcdparanoiasrc.c:
+	(gst_cd_paranoia_mode_get_type), (gst_cd_paranoia_src_base_init),
+	(gst_cd_paranoia_src_init), (gst_cd_paranoia_src_class_init),
+	(gst_cd_paranoia_src_open), (gst_cd_paranoia_src_close),
+	(gst_cd_paranoia_paranoia_callback),
+	(gst_cd_paranoia_src_read_sector), (gst_cd_paranoia_src_finalize),
+	(gst_cd_paranoia_src_set_property),
+	(gst_cd_paranoia_src_get_property), (plugin_init):
+	* ext/cdparanoia/gstcdparanoiasrc.h:
+	  New cdparanoiasrc element based on cddabasesrc; enable cdparanoia
+	  plugin again (there are still fixes required to playbin to make
+	  cdda:// uris work there).
+
+2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	  Fix test case compilation.
 
