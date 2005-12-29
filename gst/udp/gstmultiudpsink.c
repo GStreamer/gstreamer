@@ -228,6 +228,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
         }
       } else {
         client->bytes_sent += ret;
+        client->packets_sent++;
         break;
       }
     }
@@ -465,11 +466,17 @@ gst_multiudpsink_get_stats (GstMultiUDPSink * sink, const gchar * host,
 
     GValue value = { 0 };
 
-    /* Result is a value array of (bytes_sent, connect_time, disconnect_time) */
-    result = g_value_array_new (3);
+    /* Result is a value array of (bytes_sent, packets_sent, 
+     * connect_time, disconnect_time), all as uint64 */
+    result = g_value_array_new (4);
 
     g_value_init (&value, G_TYPE_UINT64);
     g_value_set_uint64 (&value, client->bytes_sent);
+    result = g_value_array_append (result, &value);
+    g_value_unset (&value);
+
+    g_value_init (&value, G_TYPE_UINT64);
+    g_value_set_uint64 (&value, client->packets_sent);
     result = g_value_array_append (result, &value);
     g_value_unset (&value);
 

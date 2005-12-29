@@ -60,6 +60,7 @@ typedef struct {
 
   /* Per-client stats */
   guint64 bytes_sent;
+  guint64 packets_sent;
   guint64 connect_time;
   guint64 disconnect_time;
 } GstUDPClient;
