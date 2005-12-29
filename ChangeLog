@@ -1,3 +1,8 @@
+2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/auparse/gstauparse.c: (gst_au_parse_dispose):
+	  Can't use gst_object_unref() on a GstAdapter (#325191).
+
 2005-12-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3tags.c: (id3demux_read_id3v2_tag):
