@@ -1,3 +1,9 @@
+2005-12-29  Michael Smith  <msmith@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (new_pad):
+	  Fix non-C89 variable declaration not at the start of a block. Should
+	  help some compilers.
+
 2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:

@@ -973,6 +973,7 @@ new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
 {
   GstDecodeBin *decode_bin = dynamic->decode_bin;
   GstCaps *caps;
+  gboolean more;
 
   GST_OBJECT_LOCK (decode_bin);
   if (decode_bin->shutting_down)
@@ -984,7 +985,7 @@ new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
     goto shutting_down2;
 
   /* see if any more pending dynamic connections exist */
-  gboolean more = gst_decode_bin_is_dynamic (decode_bin);
+  more = gst_decode_bin_is_dynamic (decode_bin);
 
   caps = gst_pad_get_caps (pad);
   close_pad_link (element, pad, caps, decode_bin, more);
