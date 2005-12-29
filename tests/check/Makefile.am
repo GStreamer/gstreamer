@@ -58,3 +58,7 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 libs_cddabasesrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
 	$(LDADD)
+
+libs_cddabasesrc_CFLAGS = \
+	-I$(top_builddir)/gst-libs \
+	$(CFLAGS) $(AM_CFLAGS)

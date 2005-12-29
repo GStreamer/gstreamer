@@ -1,5 +1,10 @@
 2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	  Fix test case compilation.
+
+2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/cdda/gstcddabasesrc.c:
 	(gst_cdda_base_src_update_duration),
 	(gst_cdda_base_src_calculate_cddb_id):
