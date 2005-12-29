@@ -1,3 +1,8 @@
+2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* po/POTFILES.in:
+	  ... and this time the other modified file that I missed last time.
+
 2005-12-29  Michael Smith  <msmith@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (new_pad):

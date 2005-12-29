@@ -1,5 +1,5 @@
 ext/alsa/gstalsamixertrack.c
-ext/cdparanoia/gstcdparanoia.c
+ext/cdparanoia/gstcdparanoiasrc.c
 ext/gnomevfs/gstgnomevfssrc.c
 ext/gnomevfs/gstgnomevfssink.c
 ext/ogg/gstoggdemux.c
