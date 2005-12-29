@@ -50,6 +50,7 @@ typedef enum {
   GST_AUDIO_TEST_SRC_WAVE_SILENCE,
   GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE,
   GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE,
+  GST_AUDIO_TEST_SRC_WAVE_SINE_TAB
 } GstAudioTestSrcWaves; 
 
 #define PINK_MAX_RANDOM_ROWS   (30)
@@ -81,23 +82,20 @@ struct _GstAudioTestSrc {
   gint samplerate;
   gint samples_per_buffer;
   
-  gdouble accumulator;
-
-  gboolean tags_pushed;
-
   /* < private > */
-  GstClockID clock_id;
+  gboolean tags_pushed;			/* send tags just once ? */
   GstClockTimeDiff timestamp_offset;    /* base offset */
   GstClockTime running_time;            /* total running time */
   gint64 n_samples;                     /* total samples sent */
-  /*
   gint64 n_samples_stop;
   gboolean check_seek_stop;
-  GstSeekFlags seek_flags;
-  */
+  gboolean eos_reached;
+  gint generate_samples_per_buffer;	/* used to generate a partial buffer */
   
   /* waveform specific context data */
+  gdouble accumulator;			/* phase angle */
   GstPinkNoise pink;
+  gint16 wave_table[1024];
 };
 
 struct _GstAudioTestSrcClass {

@@ -1,3 +1,24 @@
+2005-12-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audiostestsrc_wave_get_type), (gst_audio_test_src_class_init),
+	(gst_audio_test_src_init), (gst_audio_test_src_src_fixate),
+	(gst_audio_test_src_query), (gst_audio_test_src_create_sine),
+	(gst_audio_test_src_create_square),
+	(gst_audio_test_src_create_saw),
+	(gst_audio_test_src_create_triangle),
+	(gst_audio_test_src_create_silence),
+	(gst_audio_test_src_create_white_noise),
+	(gst_audio_test_src_create_pink_noise),
+	(gst_audio_test_src_init_sine_table),
+	(gst_audio_test_src_create_sine_table),
+	(gst_audio_test_src_change_wave),
+	(gst_audio_test_src_change_volume), (gst_audio_test_src_do_seek),
+	(gst_audio_test_src_create), (gst_audio_test_src_set_property):
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+          update to basesrc changes, implement segmented seeking and eos handling,
+          add a 'sine-tab' waveform for performance critical playback
+
 2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* po/POTFILES.in:
