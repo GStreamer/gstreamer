@@ -60,5 +60,5 @@ libs_cddabasesrc_LDADD = \
 	$(LDADD)
 
 libs_cddabasesrc_CFLAGS = \
-	-I$(top_builddir)/gst-libs \
+	-I$(top_srcdir)/gst-libs \
 	$(CFLAGS) $(AM_CFLAGS)

@@ -1,5 +1,10 @@
 2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	  And now fix 'make distcheck' (builddir != srcdir)
+
+2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	* ext/cdparanoia/Makefile.am:
 	* ext/cdparanoia/gstcdparanoia.c:
