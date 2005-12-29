@@ -27,7 +27,7 @@ else
 check_vorbis =
 endif
 
-check_PROGRAMS = \
+check_PROGRAMS = $(check_vorbis) \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/audiotestsrc \
@@ -35,12 +35,13 @@ check_PROGRAMS = \
 	elements/volume \
 	generic/clock-selection \
 	generic/states \
+	libs/cddabasesrc \
         pipelines/simple-launch-lines
-	$(check_vorbis)
 
 VALGRIND_TO_FIX = \
 	elements/audioresample \
 	generic/states \
+	libs/cddabasesrc \
         pipelines/simple-launch-lines
 
 # these tests don't even pass
@@ -53,3 +54,7 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
+
+libs_cddabasesrc_LDADD = \
+	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
+	$(LDADD)

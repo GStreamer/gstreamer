@@ -1,3 +1,19 @@
+2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cdda_base_src_update_duration),
+	(gst_cdda_base_src_calculate_cddb_id):
+	  An integer is not a string. Fix access to uninitialised variable.
+
+	* tests/check/Makefile.am:
+	  Add cddabasesrc unit test; also actually enable the vorbis test.
+
+	* tests/check/generic/states.c:
+	  Blacklist new cd audio elements as well.
+
+	* tests/check/libs/cddabasesrc.c:
+	  Unit test for GstCddaBaseSrc (discid calculation mostly).
+
 2005-12-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/Makefile.am:

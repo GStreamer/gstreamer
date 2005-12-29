@@ -55,8 +55,10 @@ GST_START_TEST (test_state_changes)
       if (!GST_IS_ELEMENT_FACTORY (feature))
         continue;
 
-      if (strcmp (name, "cdparanoia") == 0)
+      if (g_str_has_prefix (name, "cdparanoia") ||
+          g_str_has_prefix (name, "cdio")) {
         continue;
+      }
 
       GST_DEBUG ("testing element %s", name);
       element = gst_element_factory_make (name, name);

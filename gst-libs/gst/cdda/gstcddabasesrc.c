@@ -1029,6 +1029,7 @@ gst_cdda_base_src_update_duration (GstCddaBaseSrc * src)
     gst_segment_set_duration (&basesrc->segment, GST_FORMAT_TIME, duration);
   } else {
     gst_segment_set_duration (&basesrc->segment, GST_FORMAT_TIME, -1);
+    duration = GST_CLOCK_TIME_NONE;
   }
 
   gst_element_post_message (GST_ELEMENT (src),
@@ -1197,7 +1198,7 @@ gst_cdda_base_src_calculate_cddb_id (GstCddaBaseSrc * src)
   g_string_append_printf (s, "%08x", src->discid);
 
   gst_tag_list_add (src->tags, GST_TAG_MERGE_REPLACE,
-      GST_TAG_CDDA_CDDB_DISCID, src->discid, NULL);
+      GST_TAG_CDDA_CDDB_DISCID, s->str, NULL);
 
   g_string_append_printf (s, " %u", src->num_tracks);
   for (i = 0; i < src->num_tracks; ++i) {
