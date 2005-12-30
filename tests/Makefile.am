@@ -4,8 +4,7 @@ else
 SUBDIRS_CHECK =
 endif
 
-SUBDIRS = 			\
-	$(SUBDIRS_CHECK)
+SUBDIRS = $(SUBDIRS_CHECK) examples
 
-DIST_SUBDIRS = 			\
-	check
+DIST_SUBDIRS = check examples
+

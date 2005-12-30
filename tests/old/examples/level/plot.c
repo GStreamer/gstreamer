@@ -98,7 +98,7 @@ main (int argc, char *argv[])
   if (error) {
     g_print ("pipeline could not be constructed: %s\n", error->message);
     g_print ("Please give a complete pipeline  with a 'level' element.\n");
-    g_print ("Example: sinesrc ! level ! %s\n", DEFAULT_AUDIOSINK);
+    g_print ("Example: audiotestsrc ! level ! %s\n", DEFAULT_AUDIOSINK);
     g_error_free (error);
     return 1;
   }

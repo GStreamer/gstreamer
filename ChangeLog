@@ -1,3 +1,16 @@
+2005-12-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst/level/Makefile.am:
+	* gst/level/level-example.c:
+	* tests/Makefile.am:
+	* tests/examples/level/Makefile.am:
+	* tests/examples/level/level-example.c: (message_handler), (main):
+          moved level-example to tests/examples/level-example
+	* tests/old/examples/level/demo.c: (main):
+	* tests/old/examples/level/plot.c: (main):
+          some initial fixes
+
 2005-12-29  Michael Smith  <msmith@fluendo.com>
 
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_render),
