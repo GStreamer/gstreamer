@@ -1,5 +1,12 @@
 2005-12-30  Stefan Kost  <ensonic@users.sf.net>
 
+	* configure.ac:
+          also remove smoothwave's Makefile.am
+	* docs/plugins/Makefile.am:
+          fix plugin docs
+
+2005-12-30  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/examples/Makefile.am:
           added missing Makefile.am
 

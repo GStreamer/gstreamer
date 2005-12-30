@@ -573,7 +573,6 @@ gst/matroska/Makefile
 gst/multipart/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
-gst/smoothwave/Makefile
 gst/smpte/Makefile
 gst/udp/Makefile
 gst/videobox/Makefile
