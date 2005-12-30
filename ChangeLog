@@ -1,3 +1,24 @@
+2005-12-31  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_handle_dvd_event):
+	Use the new "audio-shutdown" and "audio-restart" DVD events
+	instead of the "spu-still-frame" event to shutdown and restart
+	the audio pipeline.
+
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_adjust_ts):
+	Check for cases where the segment-based adjustment calculation
+	would produce negative values (which result in an overflow) and
+	return GST_CLOCK_TIME_NONE instead.
+
+	* gst/mpegstream/gstdvddemux.h: 
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_init) 
+	(gst_dvd_demux_process_event, gst_dvd_demux_send_subbuffer): 
+	Add a mechanism to discard audio buffers with timestamps outside
+	the currently set segment. This was causing (sometimes serious)
+	synchronization problems after seeking in DVDs with LPCM audio,
+	since VOBUs usually contain audio material that lies outside the
+	timestamp range specified by the header.
+
 2005-12-30  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mad/gstid3tag.c: (gst_id3_tag_get_type):

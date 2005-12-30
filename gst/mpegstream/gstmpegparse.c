@@ -293,8 +293,15 @@ gst_mpeg_parse_adjust_ts (GstMPEGParse * mpeg_parse, GstClockTime ts)
   } else {
     /* Adjust the timestamp in such a way that all segments appear to
        be in a single continuous sequence starting at time 0. */
-    return ts + mpeg_parse->current_segment.accum -
-        mpeg_parse->current_segment.start;
+    if (ts + mpeg_parse->current_segment.accum >=
+        mpeg_parse->current_segment.start) {
+      return ts + mpeg_parse->current_segment.accum -
+          mpeg_parse->current_segment.start;
+    } else {
+      /* The adjustment would lead to a timestamp outside the current
+         segment. Return an invalid timestamp instead. */
+      return GST_CLOCK_TIME_NONE;
+    }
   }
 }
 

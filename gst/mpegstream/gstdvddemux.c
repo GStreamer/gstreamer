@@ -282,6 +282,9 @@ gst_dvd_demux_init (GstDVDDemux * dvd_demux, GstDVDDemuxClass * klass)
     dvd_demux->subpicture_stream[i] = NULL;
   }
 
+  /* Directly after starting we operate as if we had just flushed. */
+  dvd_demux->flush_filter = TRUE;
+
   dvd_demux->langcodes = NULL;
 }
 
@@ -301,6 +304,11 @@ gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
   gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      dvd_demux->flush_filter = TRUE;
+      ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
+          event);
+      break;
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
       if (gst_structure_has_name (gst_event_get_structure (event),
@@ -350,6 +358,23 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     }
     gst_dvd_demux_set_cur_audio (dvd_demux, stream_nr);
     gst_event_unref (event);
+  } else if (strcmp (event_type, "dvd-audio-shutdown") == 0) {
+    /* Send an EOS down the audio path to effectively shut it down and
+       allow for preroll in the absence of audio material. */
+    gst_event_unref (event);
+    return gst_pad_push_event (dvd_demux->cur_audio, gst_event_new_eos ());
+  } else if (strcmp (event_type, "dvd-audio-restart") == 0) {
+    /* Restart the audio pipeline after an EOS by flushing it. */
+    gst_event_unref (event);
+    if (!gst_pad_push_event (dvd_demux->cur_audio,
+            gst_event_new_flush_start ())) {
+      return FALSE;
+    }
+    if (!gst_pad_push_event (dvd_demux->cur_audio, gst_event_new_flush_stop ())) {
+      return FALSE;
+    }
+    dvd_demux->flush_filter = TRUE;
+    return TRUE;
   } else if (strcmp (event_type, "dvd-spu-stream-change") == 0) {
     gint stream_nr;
 
@@ -361,11 +386,6 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     }
     gst_dvd_demux_set_cur_subpicture (dvd_demux, stream_nr);
     gst_event_unref (event);
-  } else if (strcmp (event_type, "dvd-spu-still-frame") == 0) {
-    /* Send an EOS down the audio path, to allow for preroll in the
-       absence of audio material. */
-    gst_event_unref (event);
-    return gst_pad_push_event (dvd_demux->cur_audio, gst_event_new_eos ());
   } else if (!strcmp (event_type, "dvd-lang-codes")) {
     gint num_substreams = 0, num_audstreams = 0, n;
     gchar *t;
@@ -909,6 +929,19 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
   GstFlowReturn ret;
   GstPad *outpad;
   gint cur_nr;
+
+  if (dvd_demux->flush_filter &&
+      GST_MPEG_DEMUX_STREAM_KIND (outstream->type) ==
+      GST_MPEG_DEMUX_STREAM_AUDIO) {
+    /* We are in flush_filter mode and have an audio buffer. */
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      /* This is the first valid audio buffer after the flush. */
+      dvd_demux->flush_filter = FALSE;
+    } else {
+      /* Discard the buffer, */
+      return GST_FLOW_OK;
+    }
+  }
 
   /* You never know what happens to a buffer when you send it.  Just
      in case, we keep a reference to the buffer during the execution
