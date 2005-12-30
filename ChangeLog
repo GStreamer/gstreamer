@@ -1,5 +1,10 @@
 2005-12-30  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/examples/Makefile.am:
+          added missing Makefile.am
+
+2005-12-30  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* gst/level/Makefile.am:
 	* gst/level/level-example.c:
