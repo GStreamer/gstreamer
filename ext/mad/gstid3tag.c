@@ -181,12 +181,10 @@ static GstElementClass *parent_class = NULL;
 GType
 gst_id3_tag_get_type (guint type)
 {
-  static GType id3_tag_type[4] = { 0, 0, 0, 0 };
-  static gchar *name[4] = { "GstID3TagBase", "GstID3Demux", "GstID3Mux",
-    "GstID3Tag"
-  };
+  static GType id3_tag_type[3] = { 0, 0, 0 };
+  static gchar *name[3] = { "GstID3TagBase", "GstID3Mux", "GstID3Tag" };
 
-  g_assert (type < 4);
+  g_assert (type < 3);
 
   if (!id3_tag_type[type]) {
     GTypeInfo id3_tag_info = {

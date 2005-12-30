@@ -854,7 +854,7 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
         id - 0xE0, GST_MPEG_DEMUX_VIDEO_MPEG, &mpeg_version);
     ret = CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
         timestamp, headerlen + 4, datalen);
-  } else {
+  } else if (id != 0xBE /* Ignore padding stream */ ) {
     GST_WARNING_OBJECT (mpeg_demux, "unknown stream id 0x%02x", id);
   }
 

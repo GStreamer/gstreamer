@@ -1,3 +1,12 @@
+2005-12-30  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_get_type):
+	  Remove lingering reference to GstID3Demux
+
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_parse_pes):
+	  Don't output debug saying padding streams are unknown type,
+	  because they're not
+
 2005-12-27  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/mpegstream/gstdvddemux.c (AUDIO_CAPS) 
