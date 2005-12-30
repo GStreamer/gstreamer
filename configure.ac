@@ -640,6 +640,7 @@ tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
 tests/examples/seek/Makefile
+tests/examples/volume/Makefile
 tests/icles/Makefile
 docs/Makefile
 docs/libs/Makefile

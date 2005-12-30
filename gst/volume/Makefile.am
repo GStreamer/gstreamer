@@ -11,9 +11,3 @@ libgstvolume_la_LIBADD = \
 
 noinst_HEADERS = gstvolume.h
 
-if HAVE_GTK
-noinst_PROGRAMS = demo
-demo_SOURCES = demo.c
-demo_CFLAGS = $(GTK_CFLAGS) $(GST_CFLAGS) -D_GNU_SOURCE
-demo_LDFLAGS = $(GTK_LIBS) $(GST_LIBS) -lm
-endif

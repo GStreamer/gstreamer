@@ -1440,7 +1440,7 @@ main (int argc, char **argv)
   g_signal_connect (G_OBJECT (flush_checkbox), "toggled",
       G_CALLBACK (flush_toggle_cb), pipeline);
 
-  g_signal_connect (G_OBJECT (window), "delete_event", gtk_main_quit, NULL);
+  g_signal_connect (G_OBJECT (window), "destroy", gtk_main_quit, NULL);
 
   /* show the gui. */
   gtk_widget_show_all (window);

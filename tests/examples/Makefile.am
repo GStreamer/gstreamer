@@ -4,6 +4,6 @@ else
 FT2_SUBDIRS =
 endif
 
-SUBDIRS = $(FT2_SUBDIRS)
+SUBDIRS = $(FT2_SUBDIRS) volume
 
-DIST_SUBDIRS = seek
+DIST_SUBDIRS = seek volume

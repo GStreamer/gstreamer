@@ -1,3 +1,18 @@
+2005-12-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst/volume/Makefile.am:
+	* gst/volume/demo.c:
+          move old example to tests/examples/volume/volune.c
+	* tests/examples/Makefile.am:
+	* tests/examples/seek/seek.c: (main):
+          change window-close event from "delete-event" to "destroy"
+	* tests/examples/volume/Makefile.am:
+	* tests/examples/volume/volume.c: (value_changed_callback),
+	(setup_gui), (message_received), (eos_message_received), (main):
+          fix event handling and bus usage
+
+
 2005-12-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:
