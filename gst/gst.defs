@@ -3,6 +3,7 @@
 (include "gst-extrafuncs.defs")
 (include "gst-types.defs")
 (include "libs.defs")
+(include "base.defs")
 
 ;; From ../gstreamer/gst/gst.h
 
@@ -1018,6 +1019,13 @@
   (of-object "GstElement")
   (c-name "gst_element_get_bus")
   (return-type "GstBus*")
+  (caller-owns-return #t)
+)
+
+(define-method get_clock
+  (of-object "GstElement")
+  (c-name "gst_element_get_clock")
+  (return-type "GstClock*")
   (caller-owns-return #t)
 )
 

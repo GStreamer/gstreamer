@@ -16,7 +16,8 @@ interface_lib = interfaces.la
 
 defs_DATA = gst-types.defs \
 	gst-extrafuncs.defs \
-	libs.defs
+	libs.defs \
+	base.defs
 defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 
 noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstobject.h pygstexception.h
@@ -24,11 +25,11 @@ noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstobject.h pygstexce
 INCLUDES = $(PYTHON_INCLUDES)
 EXTRA_DIST = $(defs_DATA) common.h arg-types.py
 PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
-GEN_FILES = arg-types.py gst-types.defs libs.defs
+GEN_FILES = arg-types.py gst-types.defs libs.defs base.defs
 
 # GStreamer bindings
 _gst_la_CFLAGS = $(common_cflags)
-_gst_la_LIBADD = $(common_libadd)
+_gst_la_LIBADD = $(common_libadd) $(GST_BASE_LIBS)
 _gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex init_gst \
 	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) $(GST_NET_LIBS)
 _gst_la_SOURCES = 		\
@@ -58,7 +59,7 @@ GST_OVERRIDES = 		\
 	gsttaglist.override	\
 	gstlibs.override
 
-GST_DEFS = gst.defs gst-types.defs gst-extrafuncs.defs libs.defs
+GST_DEFS = gst.defs gst-types.defs gst-extrafuncs.defs libs.defs base.defs
 CLEANFILES = gst.c
 EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
 gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)

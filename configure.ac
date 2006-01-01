@@ -144,19 +144,19 @@ AS_AC_EXPAND(PYTHONDIR, $pythondir)
 AS_AC_EXPAND(PYEXECDIR, $pyexecdir)
 
 dnl add debugging options ...
-changequote(,)dnl
-if test "x$GCC" = xyes; then
-  case " $CFLAGS " in
-  *[\	\ ]-Wall[\	\ ]*) ;;
-  *) CFLAGS="$CFLAGS -Wall" ;;
-  esac
+# changequote(,)dnl
+# if test "x$GCC" = xyes; then
+#   case " $CFLAGS " in
+#   *[\	\ ]-Wall[\	\ ]*) ;;
+#   *) CFLAGS="$CFLAGS -Wall" ;;
+#   esac
 
-  case " $CFLAGS " in
-  *[\	\ ]-std=c9x[\	\ ]*) ;;
-  *) CFLAGS="$CFLAGS -std=c9x" ;;
-  esac
-fi
-changequote([,])dnl
+#   case " $CFLAGS " in
+#   *[\	\ ]-std=c9x[\	\ ]*) ;;
+#   *) CFLAGS="$CFLAGS -std=c9x" ;;
+#   esac
+# fi
+# changequote([,])dnl
 
 GST_VALGRIND_CHECK()
 

@@ -1,0 +1,354 @@
+;; -*- scheme -*-
+; object definitions ...
+(define-object Adapter
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstAdapter")
+  (gtype-id "GST_TYPE_ADAPTER")
+)
+
+(define-object BaseSink
+  (in-module "Gst")
+  (parent "GstElement")
+  (c-name "GstBaseSink")
+  (gtype-id "GST_TYPE_BASE_SINK")
+)
+
+(define-object BaseSrc
+  (in-module "Gst")
+  (parent "GstElement")
+  (c-name "GstBaseSrc")
+  (gtype-id "GST_TYPE_BASE_SRC")
+)
+
+(define-object BaseTransform
+  (in-module "Gst")
+  (parent "GstElement")
+  (c-name "GstBaseTransform")
+  (gtype-id "GST_TYPE_BASE_TRANSFORM")
+)
+
+(define-object CollectPads
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstCollectPads")
+  (gtype-id "GST_TYPE_COLLECT_PADS")
+)
+
+(define-object PushSrc
+  (in-module "Gst")
+  (parent "GstBaseSrc")
+  (c-name "GstPushSrc")
+  (gtype-id "GST_TYPE_PUSH_SRC")
+)
+
+;; Enumerations and flags ...
+
+; (define-flags BaseSrcFlags
+;   (in-module "Gst")
+;   (c-name "GstBaseSrcFlags")
+;   (gtype-id "GST_TYPE_BASE_SRC_FLAGS")
+;   (values
+;     '("started" "GST_BASE_SRC_STARTED")
+;     '("flag-last" "GST_BASE_SRC_FLAG_LAST")
+;   )
+; )
+
+
+;; From ../gstreamer/libs/gst/base/gstadapter.h
+
+(define-function gst_adapter_new
+  (c-name "gst_adapter_new")
+  (is-constructor-of "GstAdapter")
+  (return-type "GstAdapter*")
+)
+
+(define-method clear
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_clear")
+  (return-type "none")
+)
+
+(define-method push
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_push")
+  (return-type "none")
+  (parameters
+    '("GstBuffer*" "buf")
+  )
+)
+
+(define-method peek
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_peek")
+  (return-type "const-guint8*")
+  (parameters
+    '("guint" "size")
+  )
+)
+
+(define-method flush
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_flush")
+  (return-type "none")
+  (parameters
+    '("guint" "flush")
+  )
+)
+
+(define-method take
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_take")
+  (return-type "guint8*")
+  (parameters
+    '("guint" "nbytes")
+  )
+)
+
+(define-method available
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_available")
+  (return-type "guint")
+)
+
+(define-method available_fast
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_available_fast")
+  (return-type "guint")
+)
+
+(define-function gst_adapter_get_type
+  (c-name "gst_adapter_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ../gstreamer/libs/gst/base/gstbasesink.h
+
+(define-function gst_base_sink_get_type
+  (c-name "gst_base_sink_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ../gstreamer/libs/gst/base/gstbasesrc.h
+
+(define-function gst_base_src_get_type
+  (c-name "gst_base_src_get_type")
+  (return-type "GType")
+)
+
+(define-method set_live
+  (of-object "GstBaseSrc")
+  (c-name "gst_base_src_set_live")
+  (return-type "none")
+  (parameters
+    '("gboolean" "live")
+  )
+)
+
+(define-method is_live
+  (of-object "GstBaseSrc")
+  (c-name "gst_base_src_is_live")
+  (return-type "gboolean")
+)
+
+(define-method set_format
+  (of-object "GstBaseSrc")
+  (c-name "gst_base_src_set_format")
+  (return-type "none")
+  (parameters
+    '("GstFormat" "format")
+  )
+)
+
+
+
+;; From ../gstreamer/libs/gst/base/gstbasetransform.h
+
+(define-function gst_base_transform_get_type
+  (c-name "gst_base_transform_get_type")
+  (return-type "GType")
+)
+
+(define-method set_passthrough
+  (of-object "GstBaseTransform")
+  (c-name "gst_base_transform_set_passthrough")
+  (return-type "none")
+  (parameters
+    '("gboolean" "passthrough")
+  )
+)
+
+(define-method is_passthrough
+  (of-object "GstBaseTransform")
+  (c-name "gst_base_transform_is_passthrough")
+  (return-type "gboolean")
+)
+
+(define-method set_in_place
+  (of-object "GstBaseTransform")
+  (c-name "gst_base_transform_set_in_place")
+  (return-type "none")
+  (parameters
+    '("gboolean" "in_place")
+  )
+)
+
+(define-method is_in_place
+  (of-object "GstBaseTransform")
+  (c-name "gst_base_transform_is_in_place")
+  (return-type "gboolean")
+)
+
+
+
+;; From ../gstreamer/libs/gst/base/gstcollectpads.h
+
+(define-function gst_collect_pads_get_type
+  (c-name "gst_collect_pads_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_collect_pads_new
+  (c-name "gst_collect_pads_new")
+  (is-constructor-of "GstCollectPads")
+  (return-type "GstCollectPads*")
+)
+
+(define-method set_function
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_set_function")
+  (return-type "none")
+  (parameters
+    '("GstCollectPadsFunction" "func")
+    '("gpointer" "user_data")
+  )
+)
+
+(define-method add_pad
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_add_pad")
+  (return-type "GstCollectData*")
+  (parameters
+    '("GstPad*" "pad")
+    '("guint" "size")
+  )
+)
+
+(define-method remove_pad
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_remove_pad")
+  (return-type "gboolean")
+  (parameters
+    '("GstPad*" "pad")
+  )
+)
+
+(define-method is_active
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_is_active")
+  (return-type "gboolean")
+  (parameters
+    '("GstPad*" "pad")
+  )
+)
+
+(define-method collect
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_collect")
+  (return-type "GstFlowReturn")
+)
+
+(define-method collect_range
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_collect_range")
+  (return-type "GstFlowReturn")
+  (parameters
+    '("guint64" "offset")
+    '("guint" "length")
+  )
+)
+
+(define-method start
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_start")
+  (return-type "none")
+)
+
+(define-method stop
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_stop")
+  (return-type "none")
+)
+
+(define-method peek
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_peek")
+  (return-type "GstBuffer*")
+  (parameters
+    '("GstCollectData*" "data")
+  )
+)
+
+(define-method pop
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_pop")
+  (return-type "GstBuffer*")
+  (parameters
+    '("GstCollectData*" "data")
+  )
+)
+
+(define-method available
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_available")
+  (return-type "guint")
+)
+
+(define-method read
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_read")
+  (return-type "guint")
+  (parameters
+    '("GstCollectData*" "data")
+    '("guint8**" "bytes")
+    '("guint" "size")
+  )
+)
+
+(define-method flush
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_flush")
+  (return-type "guint")
+  (parameters
+    '("GstCollectData*" "data")
+    '("guint" "size")
+  )
+)
+
+
+
+;; From ../gstreamer/libs/gst/base/gstpushsrc.h
+
+(define-function gst_push_src_get_type
+  (c-name "gst_push_src_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From ../gstreamer/libs/gst/base/gsttypefindhelper.h
+
+(define-function gst_type_find_helper
+  (c-name "gst_type_find_helper")
+  (return-type "GstCaps*")
+  (parameters
+    '("GstPad*" "src")
+    '("guint64" "size")
+  )
+)
+
+

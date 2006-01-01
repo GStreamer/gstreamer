@@ -1,3 +1,18 @@
+2006-01-01  Edward Hervey  <edward@fluendo.com>
+
+	First step at wrapping base elements in gst-python
+	
+	* configure.ac:
+	Commenting out weird debugging statement dating from gst-python's
+	and which causes problems with gstbasesrc.h anonymous union.
+	* gst/Makefile.am:
+	Added base.defs
+	* gst/base.defs:
+	New base elements definition files
+	* gst/gst.defs:
+	* gst/gst.override:
+	Add base elements
+
 === release 0.10.1 ===
 
 2005-12-23  Thomas Vander Stichele <thomas at apestaart dot org>

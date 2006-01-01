@@ -40,6 +40,12 @@ headers
 #include <gst/controller/gstcontroller.h>
 #include <gst/dataprotocol/dataprotocol.h>
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstbasesrc.h>
+#include <gst/base/gstpushsrc.h>
+#include <gst/base/gstbasesink.h>
+#include <gst/base/gstbasetransform.h>
+#include <gst/base/gstcollectpads.h>
+#include <gst/base/gsttypefindhelper.h>
 
 #include <gst/net/gstnet.h>
 
