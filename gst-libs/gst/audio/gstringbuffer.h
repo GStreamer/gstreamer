@@ -226,7 +226,7 @@ struct _GstRingBuffer {
   union {
     struct {
       gboolean           flushing;
-    };
+    } ABI;
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING + 0];
   };
