@@ -1,3 +1,12 @@
+2006-01-02  James Livingston  <jrl at ids dot org dot au>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstutils.h:
+	  Add prototype for _get_type() function to GST_BOILERPLATE_FULL
+	  macro, so that gcc doesn't complain if the -Wmissing-prototypes
+	  compiler switch is being used (#325429).
+
 2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbin.c: (gst_bin_query):
