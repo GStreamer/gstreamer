@@ -482,8 +482,6 @@ gst_flac_dec_write (const FLAC__SeekableStreamDecoder * decoder,
     flacdec->need_newsegment = FALSE;
   }
 
-  g_assert (width % 8 == 0);    /* width must be a multiple of 8 */
-
   ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
       flacdec->segment.last_stop, samples * channels * (width / 8),
       GST_PAD_CAPS (flacdec->srcpad), &outbuf);
@@ -658,9 +656,12 @@ gst_flac_dec_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
   guint bytes_per_sample;
   guint scale = 1;
 
-  g_assert (flacdec->width > 0);
-  g_assert (flacdec->width % 8 == 0);
-  g_assert (flacdec->channels > 0);
+  if (flacdec->width == 0 || flacdec->channels == 0 ||
+      flacdec->sample_rate == 0) {
+    /* no frame decoded yet */
+    GST_DEBUG_OBJECT (flacdec, "cannot convert: not set up yet");
+    return FALSE;
+  }
 
   bytes_per_sample = flacdec->channels * (flacdec->width / 8);
 
@@ -668,17 +669,12 @@ gst_flac_dec_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
     case GST_FORMAT_BYTES:{
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          if (bytes_per_sample == 0)
-            return FALSE;
           *dest_value =
               gst_util_uint64_scale_int (src_value, 1, bytes_per_sample);
           break;
         case GST_FORMAT_TIME:
         {
           gint byterate = bytes_per_sample * flacdec->sample_rate;
-
-          if (byterate == 0)
-            return FALSE;
 
           *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
               byterate);
@@ -695,8 +691,6 @@ gst_flac_dec_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
           *dest_value = src_value * bytes_per_sample;
           break;
         case GST_FORMAT_TIME:
-          if (flacdec->sample_rate == 0)
-            return FALSE;
           *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
               flacdec->sample_rate);
           break;
@@ -754,7 +748,8 @@ gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
       if (fmt != GST_FORMAT_DEFAULT) {
         if (!gst_flac_dec_convert_src (flacdec->srcpad, GST_FORMAT_DEFAULT,
                 flacdec->segment.last_stop, &fmt, &pos)) {
-          GST_DEBUG ("failed to convert position into format %d", fmt);
+          GST_DEBUG_OBJECT (flacdec, "failed to convert position into %s "
+              "format", gst_format_get_name (fmt));
           res = FALSE;
           goto done;
         }
@@ -796,7 +791,8 @@ gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
       if (fmt != GST_FORMAT_DEFAULT) {
         if (!gst_flac_dec_convert_src (flacdec->srcpad, GST_FORMAT_DEFAULT,
                 flacdec->segment.duration, &fmt, &len)) {
-          GST_DEBUG ("failed to convert duration into format %d", fmt);
+          GST_DEBUG_OBJECT (flacdec, "failed to convert duration into %s "
+              "format", gst_format_get_name (fmt));
           res = FALSE;
           goto done;
         }
@@ -1062,6 +1058,10 @@ gst_flac_dec_change_state (GstElement * element, GstStateChange transition)
       flacdec->segment.last_stop = 0;
       flacdec->need_newsegment = TRUE;
       flacdec->seeking = FALSE;
+      flacdec->channels = 0;
+      flacdec->depth = 0;
+      flacdec->width = 0;
+      flacdec->sample_rate = 0;
       if (flacdec->init == FALSE) {
         FLAC__seekable_stream_decoder_reset (flacdec->decoder);
       }
