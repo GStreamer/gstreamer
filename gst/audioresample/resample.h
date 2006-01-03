@@ -56,7 +56,7 @@ struct _ResampleState {
 
         /* filter state */
 
-        void *o_buf;
+        unsigned char *o_buf;
         int o_size;
 
         AudioresampleBufferQueue *queue;

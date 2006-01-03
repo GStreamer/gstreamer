@@ -1,6 +1,11 @@
 2006-01-03  Michael Smith  <msmith@fluendo.com>
 
 	* gst/audioresample/resample.h:
+	  As before, but for o_buf
+
+2006-01-03  Michael Smith  <msmith@fluendo.com>
+
+	* gst/audioresample/resample.h:
 	  Declare struct _ResampleState.buffer as unsigned char *, not void *,
 	  since we do arithmetic on it.
 
