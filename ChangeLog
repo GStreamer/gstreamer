@@ -1,3 +1,8 @@
+2006-01-03  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
+
+	* common/gst.supp:
+	  add a suppression for liboil's uninitialized variable
+
 2006-01-02  James Livingston  <jrl at ids dot org dot au>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
