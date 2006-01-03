@@ -65,7 +65,7 @@ struct _ResampleState {
 
         int sample_size;
 
-        void *buffer;
+        unsigned char *buffer;
         int buffer_len;
         int buffer_filled;
 
