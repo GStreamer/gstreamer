@@ -1,3 +1,9 @@
+2006-01-04  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/neon/gstneonhttpsrc.h:
+	Removed not need thread and changed to push out blocksize bytes.
+	
 2005-12-28  Edgard Lima <edgard.lima@indt.org.br>
 
 	* configure.ac:

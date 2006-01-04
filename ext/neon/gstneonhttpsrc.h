@@ -62,12 +62,8 @@ struct _GstNeonhttpSrc {
   gint current_size;
 
   GstAdapter *adapter;
-  GMutex *lock;
-  GstTask *task;
-  GStaticRecMutex tasklock;
-  gboolean eos;
 
-  char respbuf[BUFSIZ];
+  gboolean eos;
 
 };
 
