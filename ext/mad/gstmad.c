@@ -60,6 +60,7 @@ struct _GstMad
   gboolean in_error;            /* set when mad's in an error state */
   gboolean restart;
   guint64 segment_start;
+  gboolean need_newsegment;
 
   /* info */
   struct mad_header header;
@@ -1286,13 +1287,12 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
   gboolean new_pts = FALSE;
   GstClockTime timestamp;
   GstFlowReturn result = GST_FLOW_OK;
-  gboolean do_send_discont = FALSE;
 
   mad = GST_MAD (GST_PAD_PARENT (pad));
 
   /* restarts happen on discontinuities, ie. seek, flush, PAUSED to PLAYING */
   if (gst_mad_check_restart (mad)) {
-    do_send_discont = TRUE;
+    mad->need_newsegment = TRUE;
     GST_DEBUG ("mad restarted");
   }
 
@@ -1563,7 +1563,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           }
         }
 
-        if (do_send_discont) {
+        if (mad->need_newsegment) {
           gint64 start = GST_BUFFER_TIMESTAMP (outbuffer);
 
           GST_DEBUG ("Sending NEWSEGMENT event, start=%" GST_TIME_FORMAT,
@@ -1572,7 +1572,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           gst_pad_push_event (mad->srcpad,
               gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
                   start, GST_CLOCK_TIME_NONE, start));
-          do_send_discont = FALSE;
+          mad->need_newsegment = FALSE;
         }
 
         result = gst_pad_push (mad->srcpad, outbuffer);

@@ -1,3 +1,10 @@
+2006-01-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	  Don't forget that we need to send out a newsegment event after a
+	  restart even if we don't have enough data to decode a frame right
+	  now.
+
 2005-12-31  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_handle_dvd_event):
