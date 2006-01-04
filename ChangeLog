@@ -1,5 +1,11 @@
 2006-01-04  Edgard Lima <edgard.lima@indt.org.br>
 
+        * ext/neon/gstneonhttpsrc.c:
+        * ext/neon/gstneonhttpsrc.h:
+        Some improvements in cancellation and debug messages.
+			
+2006-01-04  Edgard Lima <edgard.lima@indt.org.br>
+
 	* ext/neon/gstneonhttpsrc.c:
 	* ext/neon/gstneonhttpsrc.h:
 	Removed not need thread and changed to push out blocksize bytes.

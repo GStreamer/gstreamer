@@ -58,8 +58,7 @@ struct _GstNeonhttpSrc {
 
   gboolean ishttps;
 
-  gint content_size;
-  gint current_size;
+  guint64 content_size;
 
   GstAdapter *adapter;
 

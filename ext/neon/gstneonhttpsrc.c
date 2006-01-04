@@ -62,8 +62,10 @@ static void gst_neonhttp_src_finalize (GObject * gobject);
 
 static GstFlowReturn gst_neonhttp_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
-static gboolean gst_neonhttp_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_neonhttp_src_start (GstBaseSrc * bsrc);
+static gboolean gst_neonhttp_src_stop (GstBaseSrc * bsrc);
+static gboolean gst_neonhttp_src_unlock (GstBaseSrc * bsrc);
+static gboolean gst_neonhttp_src_get_size (GstBaseSrc * bsrc, guint64 * size);
 
 static void gst_neonhttp_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -139,6 +141,8 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
 
   gstbasesrc_class->start = gst_neonhttp_src_start;
   gstbasesrc_class->stop = gst_neonhttp_src_stop;
+  gstbasesrc_class->unlock = gst_neonhttp_src_unlock;
+  gstbasesrc_class->get_size = gst_neonhttp_src_get_size;
 
   gstpush_src_class->create = gst_neonhttp_src_create;
 
@@ -156,8 +160,7 @@ gst_neonhttp_src_init (GstNeonhttpSrc * this, GstNeonhttpSrcClass * g_class)
   this->uristr = NULL;
   memset (&this->proxy, 0, sizeof (this->proxy));
   this->ishttps = FALSE;
-  this->content_size = 0;
-  this->current_size = 0;
+  this->content_size = -1;
 
   set_uri (NULL, &this->uri, &this->ishttps, &this->uristr, TRUE);
   set_proxy (NULL, &this->proxy, TRUE);
@@ -200,10 +203,8 @@ gst_neonhttp_src_finalize (GObject * gobject)
 }
 
 int
-request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf)
+request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf, gboolean * eos)
 {
-
-  GstPad *peer;
   int ret;
   int read = 0;
   int sizetoread = GST_BUFFER_SIZE (outbuf);
@@ -217,6 +218,11 @@ request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf)
 
     if (!GST_OBJECT_FLAG_IS_SET (src, GST_NEONHTTP_SRC_OPEN)) {
       GST_BUFFER_SIZE (outbuf) = read;
+      ret = ne_end_request (src->request);
+      if (ret != NE_OK) {
+        GST_ERROR ("Request failed. code:%d, desc: %s\n", ret,
+            ne_get_error (src->session));
+      }
       return read;
     }
     len = ne_read_response_block (src->request,
@@ -239,12 +245,7 @@ request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf)
     ret = ne_end_request (src->request);
     if (ret != NE_RETRY) {
       if (ret == NE_OK) {
-        GST_DEBUG ("Returning EOS");
-        peer = gst_pad_get_peer (GST_BASE_SRC_PAD (src));
-        if (!gst_pad_send_event (peer, gst_event_new_eos ())) {
-          ret = GST_FLOW_ERROR;
-        }
-        gst_object_unref (peer);
+        *eos = TRUE;
       } else {
         read = -3;
         GST_ERROR ("Request failed. code:%d, desc: %s\n", ret,
@@ -267,17 +268,18 @@ gst_neonhttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GstNeonhttpSrc *src;
   GstFlowReturn ret = GST_FLOW_OK;
   int read;
+  gboolean eos = FALSE;
 
   src = GST_NEONHTTP_SRC (psrc);
 
   if (!GST_OBJECT_FLAG_IS_SET (src, GST_NEONHTTP_SRC_OPEN))
     goto wrong_state;
 
-  GST_LOG_OBJECT (src, "asked for a buffer");
-
   *outbuf = gst_buffer_new_and_alloc (GST_BASE_SRC (psrc)->blocksize);
 
-  read = request_dispatch (src, *outbuf);
+  read = request_dispatch (src, *outbuf, &eos);
+  GST_LOG ("outbuffer size = %d", read);
+
   if (read > 0) {
 
     if (*outbuf) {
@@ -285,17 +287,127 @@ gst_neonhttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     }
 
   } else if (read < 0) {
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+  }
+
+  if (eos) {
+    GstPad *peer;
+
+    GST_DEBUG ("Returning EOS");
+    peer = gst_pad_get_peer (GST_BASE_SRC_PAD (src));
+    if (!gst_pad_send_event (peer, gst_event_new_eos ())) {
+      ret = GST_FLOW_ERROR;
+    }
+    gst_object_unref (peer);
   }
 
   return ret;
 
 wrong_state:
   {
-    GST_DEBUG_OBJECT (src, "connection to closed, cannot read data");
+    GST_DEBUG ("connection to closed, cannot read data");
     return GST_FLOW_WRONG_STATE;
   }
 
+}
+
+/* create a socket for connecting to remote server */
+static gboolean
+gst_neonhttp_src_start (GstBaseSrc * bsrc)
+{
+  gboolean ret = TRUE;
+  GstNeonhttpSrc *src = GST_NEONHTTP_SRC (bsrc);
+
+  ne_oom_callback (oom_callback);
+
+  if (0 != ne_sock_init ()) {
+    ret = FALSE;
+    goto done;
+  }
+
+  src->session =
+      ne_session_create (src->uri.scheme, src->uri.host, src->uri.port);
+
+  if (src->proxy.host && src->proxy.port) {
+    ne_session_proxy (src->session, src->proxy.host, src->proxy.port);
+  } else if (src->proxy.host || src->proxy.port) {
+    /* both proxy host and port must be specified or none */
+    ret = FALSE;
+    goto done;
+  }
+
+  src->request = ne_request_create (src->session, "GET", src->uri.path);
+
+  ne_add_response_header_handler (src->request, "Content-Length",
+      size_header_handler, src);
+
+  if (NE_OK != ne_begin_request (src->request)) {
+    ret = FALSE;
+    goto done;
+  }
+
+  GST_OBJECT_FLAG_SET (src, GST_NEONHTTP_SRC_OPEN);
+
+done:
+
+  return ret;
+
+}
+
+static gboolean
+gst_neonhttp_src_get_size (GstBaseSrc * bsrc, guint64 * size)
+{
+  GstNeonhttpSrc *src;
+
+  src = GST_NEONHTTP_SRC (bsrc);
+
+  if (src->content_size != -1) {
+    *size = src->content_size;
+    return TRUE;
+  }
+
+  return FALSE;
+
+}
+
+static gboolean
+gst_neonhttp_src_unlock (GstBaseSrc * bsrc)
+{
+  GstNeonhttpSrc *src;
+
+  src = GST_NEONHTTP_SRC (bsrc);
+
+  GST_OBJECT_FLAG_UNSET (src, GST_NEONHTTP_SRC_OPEN);
+
+  ne_end_request (src->request);
+
+  return TRUE;
+
+}
+
+
+/* close the socket and associated resources
+ * unset OPEN flag
+ * used both to recover from errors and go to NULL state */
+static gboolean
+gst_neonhttp_src_stop (GstBaseSrc * bsrc)
+{
+  GstNeonhttpSrc *src;
+
+  src = GST_NEONHTTP_SRC (bsrc);
+
+  if (src->request) {
+    ne_request_destroy (src->request);
+    src->request = NULL;
+  }
+
+  if (src->session) {
+    ne_close_connection (src->session);
+    ne_session_destroy (src->session);
+    src->session = NULL;
+  }
+
+  return TRUE;
 }
 
 gboolean
@@ -308,7 +420,7 @@ set_proxy (const char *uri, ne_uri * parsed, gboolean set_default)
 
     if (str) {
       if (0 != ne_uri_parse (str, parsed)) {
-        g_warning ("The proxy set on http_proxy env var isn't well formated");
+        GST_WARNING ("The proxy set on http_proxy env var isn't well formated");
         ne_uri_free (parsed);
       }
     }
@@ -321,7 +433,7 @@ set_proxy (const char *uri, ne_uri * parsed, gboolean set_default)
 
 
   if (parsed->scheme) {
-    g_warning ("The proxy schema shouldn't be defined");
+    GST_WARNING ("The proxy schema shouldn't be defined");
   }
 
 
@@ -428,12 +540,12 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
     {
 
       if (!g_value_get_string (value)) {
-        g_warning ("proxy property cannot be NULL");
+        GST_WARNING ("proxy property cannot be NULL");
         goto done;
       }
 
       if (!set_proxy (g_value_get_string (value), &this->proxy, FALSE)) {
-        g_warning ("bad formated proxy");
+        GST_WARNING ("bad formated proxy");
         goto done;
       }
     }
@@ -442,13 +554,13 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
     case PROP_URI:
     {
       if (!g_value_get_string (value)) {
-        g_warning ("uri property cannot be NULL");
+        GST_WARNING ("uri property cannot be NULL");
         goto done;
       }
 
       if (!set_uri (g_value_get_string (value), &this->uri, &this->ishttps,
               &this->uristr, FALSE)) {
-        g_warning ("bad formated uri");
+        GST_WARNING ("bad formated uri");
         goto done;
       }
     }
@@ -508,75 +620,6 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       break;
   }
 
-}
-
-/* create a socket for connecting to remote server */
-static gboolean
-gst_neonhttp_src_start (GstBaseSrc * bsrc)
-{
-  gboolean ret = TRUE;
-  GstNeonhttpSrc *src = GST_NEONHTTP_SRC (bsrc);
-
-  ne_oom_callback (oom_callback);
-
-  if (0 != ne_sock_init ()) {
-    ret = FALSE;
-    goto done;
-  }
-
-  src->session =
-      ne_session_create (src->uri.scheme, src->uri.host, src->uri.port);
-
-  if (src->proxy.host && src->proxy.port) {
-    ne_session_proxy (src->session, src->proxy.host, src->proxy.port);
-  } else if (src->proxy.host || src->proxy.port) {
-    /* both proxy host and port must be specified or none */
-    ret = FALSE;
-    goto done;
-  }
-
-  src->request = ne_request_create (src->session, "GET", src->uri.path);
-
-  ne_add_response_header_handler (src->request, "Content-Length",
-      size_header_handler, src);
-
-  if (NE_OK != ne_begin_request (src->request)) {
-    ret = FALSE;
-    goto done;
-  }
-
-  GST_OBJECT_FLAG_SET (src, GST_NEONHTTP_SRC_OPEN);
-
-done:
-
-  return ret;
-
-}
-
-/* close the socket and associated resources
- * unset OPEN flag
- * used both to recover from errors and go to NULL state */
-static gboolean
-gst_neonhttp_src_stop (GstBaseSrc * bsrc)
-{
-  GstNeonhttpSrc *src;
-
-  src = GST_NEONHTTP_SRC (bsrc);
-
-  GST_OBJECT_FLAG_UNSET (src, GST_NEONHTTP_SRC_OPEN);
-
-  if (src->request) {
-    ne_request_destroy (src->request);
-    src->request = NULL;
-  }
-
-  if (src->session) {
-    ne_close_connection (src->session);
-    ne_session_destroy (src->session);
-    src->session = NULL;
-  }
-
-  return TRUE;
 }
 
 /* entry point to initialize the plug-in
@@ -655,6 +698,7 @@ size_header_handler (void *userdata, const char *value)
 {
   GstNeonhttpSrc *src = GST_NEONHTTP_SRC (userdata);
 
-  src->content_size = atoi (value);
+  src->content_size = atoll (value);
+  GST_DEBUG ("content size = %lld bytes", src->content_size);
 
 }
