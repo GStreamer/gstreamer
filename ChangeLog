@@ -1,3 +1,9 @@
+2006-01-04  Wim Taymans  <wim@fluendo.com>
+
+	* ext/jpeg/gstsmokedec.c: (gst_smokedec_chain):
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_chain):
+	Fix leaks.
+
 2006-01-02  Alessandro Decina  <alessandro at nnva dot org>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

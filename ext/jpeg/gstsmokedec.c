@@ -220,7 +220,9 @@ gst_smokedec_chain (GstPad * pad, GstData * _data)
 
   outbuf = gst_buffer_new ();
   outsize = GST_BUFFER_SIZE (outbuf) = width * height + width * height / 2;
-  outdata = GST_BUFFER_DATA (outbuf) = g_malloc (outsize);
+  outdata = g_malloc (outsize);
+  GST_BUFFER_DATA (outbuf) = outdata;
+  GST_BUFFER_MALLOCDATA (outbuf) = outdata;
 
   GST_BUFFER_DURATION (outbuf) = GST_SECOND * fps_denom / fps_num;
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buf);

@@ -308,7 +308,9 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
   if (smokeenc->need_header) {
     outbuf = gst_buffer_new ();
     outsize = 256;
-    outdata = GST_BUFFER_DATA (outbuf) = g_malloc (outsize);
+    outdata = g_malloc (outsize);
+    GST_BUFFER_DATA (outbuf) = outdata;
+    GST_BUFFER_MALLOCDATA (outbuf) = outdata;
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
 
@@ -323,7 +325,9 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
 
   outbuf = gst_buffer_new ();
   outsize = smokeenc->width * smokeenc->height * 3;
-  outdata = GST_BUFFER_DATA (outbuf) = g_malloc (outsize);
+  outdata = g_malloc (outsize);
+  GST_BUFFER_DATA (outbuf) = outdata;
+  GST_BUFFER_MALLOCDATA (outbuf) = outdata;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
   GST_BUFFER_DURATION (outbuf) =
       smokeenc->fps_denom * GST_SECOND / smokeenc->fps_num;
