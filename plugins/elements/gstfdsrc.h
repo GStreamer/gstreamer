@@ -46,9 +46,15 @@ G_BEGIN_DECLS
 typedef struct _GstFdSrc GstFdSrc;
 typedef struct _GstFdSrcClass GstFdSrcClass;
 
+/**
+ * GstFdSrc:
+ *
+ * Opaque #GstFdSrc data structure
+ */
 struct _GstFdSrc {
   GstPushSrc element;
 
+  /*< private >*/
   /* new_fd is copied to fd on READY->PAUSED */
   gint new_fd;
 

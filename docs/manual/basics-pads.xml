@@ -195,7 +195,7 @@ link_to_multiplexer (GstPad     *tolink_pad,
       Since the pads play a very important role in how the element is
       viewed by the outside world, a mechanism is implemented to describe
       the data that can flow or currently flows through the pad by using
-      capabilities. Here,w e will briefly describe what capabilities are
+      capabilities. Here, we will briefly describe what capabilities are
       and how to use them, enough to get an understanding of the concept.
       For an in-depth look into capabilities and a list of all capabilities
       defined in &GStreamer;, see the <ulink type="http"
@@ -381,7 +381,7 @@ Pad Templates:
           Metadata: by reading the capabilities from a pad, applications
           can provide information about the type of media that is being
           streamed over the pad, which is information about the stream
-          thatis currently being played back.
+          that is currently being played back.
         </para>
       </listitem>
       <listitem>

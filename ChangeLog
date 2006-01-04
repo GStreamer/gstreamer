@@ -1,3 +1,26 @@
+2006-01-04  Wim Taymans  <wim@fluendo.com>
+
+	* docs/manual/basics-pads.xml:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gstreamer-plugins-docs.sgml:
+	* docs/plugins/gstreamer-plugins-sections.txt:
+	* docs/pwg/advanced-clock.xml:
+	* docs/pwg/advanced-scheduling.xml:
+	* docs/pwg/advanced-types.xml:
+	* plugins/elements/gstfdsink.c:
+	* plugins/elements/gstfdsrc.c:
+	* plugins/elements/gstfdsrc.h:
+	* plugins/elements/gstidentity.c: (gst_identity_class_init):
+	* plugins/elements/gstidentity.h:
+	* plugins/elements/gstqueue.h:
+	* plugins/elements/gsttee.c:
+	* plugins/elements/gsttee.h:
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_class_init):
+	* plugins/elements/gsttypefindelement.h:
+	Small updates to various docs.
+	Added core plugins to docs.
+
 2006-01-03  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* common/gst.supp:

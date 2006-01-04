@@ -20,6 +20,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-fdsink
+ * @short_description: write to a unix file descriptor
+ * @see_also: #GstFdSrc
+ *
+ * Write data to a unix file descriptor.
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

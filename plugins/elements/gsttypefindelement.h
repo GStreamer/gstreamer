@@ -42,6 +42,11 @@ G_BEGIN_DECLS
 typedef struct _GstTypeFindElement 		GstTypeFindElement;
 typedef struct _GstTypeFindElementClass 	GstTypeFindElementClass;
 
+/**
+ * GstTypeFindElement:
+ *
+ * Opaque #GstTypeFindElement data structure
+ */
 struct _GstTypeFindElement {
   GstElement		element;
 

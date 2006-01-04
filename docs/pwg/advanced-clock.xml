@@ -4,7 +4,7 @@
   <para>
     When playing complex media, each sound and video sample must be played in a
     specific order at a specific time. For this purpose, GStreamer provides a
-    syncrhonization mechanism.
+    synchronization mechanism.
   </para>
 
   <sect1 id="section-clock-time-types" xreflabel="Types of time"> 

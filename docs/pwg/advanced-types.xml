@@ -331,25 +331,6 @@ plugin_init (GstPlugin *plugin)
               The amount of bits used and allocated per sample.
             </entry>
           </row>
-          <row>
-            <entry morerows="1">buffer-frames</entry>
-            <entry morerows="1">integer</entry>
-            <entry morerows="1">Any</entry>
-            <entry>
-              The number of frames per buffer. The reason for this property
-              is that the element does not need to reuse buffers or use data
-              spanned over multiple buffers, so this property - when used
-              rightly - will decrease latency.
-	    </entry>
-	  </row>
-          <row>
-	    <entry>
-              Note that some people think that this property is very ugly, 
-	      whereas others think it is vital for the use of &GStreamer; in 
-	      professional audio applications. The special value zero is 
-	      reserved and implies that size is variable between buffers.
-	    </entry>
-          </row>
 
           <!-- ############ subtitle ############# -->
 
@@ -750,14 +731,14 @@ plugin_init (GstPlugin *plugin)
           </row>
           <row>
             <entry>framerate</entry>
-            <entry>double</entry>
-            <entry>greater than 0</entry>
+            <entry>fraction</entry>
+            <entry>greater or equal 0</entry>
             <entry>
               The (average) framerate in frames per second. Note that this
               property does not guarantee in <emphasis>any</emphasis> way that
               it will actually come close to this value. If you need a fixed
               framerate, please use an element that provides that (such as
-              <quote>videodrop</quote>).
+              <quote>videodrop</quote>). 0 means a variable framerate.
             </entry>
           </row>
 

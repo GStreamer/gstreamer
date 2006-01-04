@@ -191,7 +191,15 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
       g_param_spec_uint ("maximum", _("maximum"),
           "probability to stop typefinding", GST_TYPE_FIND_MINIMUM,
           GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MAXIMUM, G_PARAM_READWRITE));
-
+  /**
+   * GstTypeFindElement::have-type:
+   * @typefind: the typefind instance
+   * @probability: the probability of the type found
+   * @caps: the caps of the type found
+   *
+   * This signal gets emitted when the type and its probability has 
+   * been found.
+   */
   gst_type_find_element_signals[HAVE_TYPE] = g_signal_new ("have_type",
       G_TYPE_FROM_CLASS (typefind_class), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstTypeFindElementClass, have_type), NULL, NULL,

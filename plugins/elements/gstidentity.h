@@ -45,9 +45,15 @@ G_BEGIN_DECLS
 typedef struct _GstIdentity GstIdentity;
 typedef struct _GstIdentityClass GstIdentityClass;
 
+/**
+ * GstIdentity:
+ *
+ * Opaque #GstIdentity data structure
+ */
 struct _GstIdentity {
   GstBaseTransform 	 element;
 
+  /*< private >*/
   GstClockID     clock_id;
   gint 	 	 error_after;
   gfloat 	 drop_probability;

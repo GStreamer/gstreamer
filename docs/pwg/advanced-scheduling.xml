@@ -47,7 +47,7 @@
           If all pads of an element are assigned to do
           <quote>push</quote>-based scheduling, then this means that data
           will be pushed by upstream elements to this element using the
-          sinkpads <function>_chain ()</function>-function. Pprerequisites
+          sinkpads <function>_chain ()</function>-function. Prerequisites
           for this scheduling mode are that a chain-function was set for
           each sinkpad using<function>gst_pad_set_chain_function ()</function>
           and that all downstream elements operate in the same mode. Pads are

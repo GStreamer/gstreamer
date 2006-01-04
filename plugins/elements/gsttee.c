@@ -21,6 +21,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-tee
+ * @short_description: 1-to-N pipe fitting
+ * @see_also: #GstIdentity
+ *
+ * Split data to multiple pads.
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif

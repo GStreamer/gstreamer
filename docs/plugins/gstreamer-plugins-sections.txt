@@ -34,6 +34,20 @@ GST_IS_FAKE_SINK_CLASS
 gst_fake_sink_get_type
 </SECTION>
 
+<SECTION>
+<FILE>element-fdsrc</FILE>
+<TITLE>fdsrc</TITLE>
+GstFdSrc
+<SUBSECTION Standard>
+GstFdSrcClass
+GST_FD_SRC
+GST_IS_FD_SRC
+GST_TYPE_FD_SRC
+GST_FD_SRC_CLASS
+GST_IS_FD_SRC_CLASS
+<SUBSECTION Private>
+gst_fd_src_get_type
+</SECTION>
 
 <SECTION>
 <FILE>element-filesrc</FILE>
@@ -67,6 +81,21 @@ gst_file_sink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-identity</FILE>
+<TITLE>identity</TITLE>
+GstIdentity
+<SUBSECTION Standard>
+GstIdentityClass
+GST_IDENTITY
+GST_IS_IDENTITY
+GST_TYPE_IDENTITY
+GST_IDENTITY_CLASS
+GST_IS_IDENTITY_CLASS
+<SUBSECTION Private>
+gst_identity_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-queue</FILE>
 <TITLE>queue</TITLE>
 GstQueue
@@ -81,4 +110,35 @@ GST_TYPE_QUEUE
 <SUBSECTION Private>
 gst_queue_get_type
 </SECTION>
+
+<SECTION>
+<FILE>element-typefind</FILE>
+<TITLE>typefind</TITLE>
+GstTypeFindElement
 <SUBSECTION Standard>
+GstTypeFindElementClass
+GST_TYPE_FIND_ELEMENT
+GST_IS_TYPE_FIND_ELEMENT
+GST_TYPE_TYPE_FIND_ELEMENT
+GST_TYPE_FIND_ELEMENT_CLASS
+GST_IS_TYPE_FIND_ELEMENT_CLASS
+GST_TYPE_FIND_ELEMENT_GET_CLASS
+<SUBSECTION Private>
+gst_type_find_element_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-tee</FILE>
+<TITLE>tee</TITLE>
+GstTee
+<SUBSECTION Standard>
+GstTeeClass
+GST_TEE
+GST_IS_TEE
+GST_TYPE_TEE
+GST_TEE_CLASS
+GST_IS_TEE_CLASS
+<SUBSECTION Private>
+gst_tee_get_type
+</SECTION>
+

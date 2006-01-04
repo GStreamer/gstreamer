@@ -14,9 +14,13 @@
     <title>gstreamer Elements</title>
     <xi:include href="xml/element-fakesrc.xml" />
     <xi:include href="xml/element-fakesink.xml" />
+    <xi:include href="xml/element-fdsrc.xml" />
     <xi:include href="xml/element-filesrc.xml" />
     <xi:include href="xml/element-filesink.xml" />
+    <xi:include href="xml/element-identity.xml" />
     <xi:include href="xml/element-queue.xml" />
+    <xi:include href="xml/element-tee.xml" />
+    <xi:include href="xml/element-typefind.xml" />
   </chapter>
 
   <chapter>

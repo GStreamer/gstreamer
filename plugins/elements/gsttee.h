@@ -43,9 +43,15 @@ G_BEGIN_DECLS
 typedef struct _GstTee 		GstTee;
 typedef struct _GstTeeClass 	GstTeeClass;
 
+/**
+ * GstTee:
+ *
+ * Opaque #GstTee data structure.
+ */
 struct _GstTee {
   GstElement element;
 
+  /*< private >*/
   GstPad *sinkpad;
 
   gboolean silent;

@@ -76,9 +76,13 @@ IGNORE_CFILES =
 EXTRA_HFILES = \
 	$(top_srcdir)/plugins/elements/gstfakesrc.h \
 	$(top_srcdir)/plugins/elements/gstfakesink.h \
+	$(top_srcdir)/plugins/elements/gstfdsrc.h \
 	$(top_srcdir)/plugins/elements/gstfilesrc.h \
 	$(top_srcdir)/plugins/elements/gstfilesink.h \
-	$(top_srcdir)/plugins/elements/gstqueue.h
+	$(top_srcdir)/plugins/elements/gstidentity.h \
+	$(top_srcdir)/plugins/elements/gstqueue.h \
+	$(top_srcdir)/plugins/elements/gsttypefindelement.h \
+	$(top_srcdir)/plugins/elements/gsttee.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

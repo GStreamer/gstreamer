@@ -208,6 +208,14 @@ gst_identity_class_init (GstIdentityClass * klass)
           "Verify that the stream is time- and data-contiguous",
           DEFAULT_CHECK_PERFECT, G_PARAM_READWRITE));
 
+   /**
+   * GstIdentity::handoff:
+   * @identity: the identity instance
+   * @buffer: the buffer that just has been received
+   * @pad: the pad that received it
+   *
+   * This signal gets emitted before passing the buffer downstream.
+   */
   gst_identity_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstIdentityClass, handoff), NULL, NULL,

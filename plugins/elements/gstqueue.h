@@ -24,8 +24,7 @@
 #ifndef __GST_QUEUE_H__
 #define __GST_QUEUE_H__
 
-
-#include <gst/gstelement.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
