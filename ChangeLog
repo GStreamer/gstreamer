@@ -1,3 +1,11 @@
+2006-01-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	submitted by: Abel Cheung
+
+	* po/LINGUAS:
+	* po/zh_TW.po:
+	  Added Chinese (traditional) translation
+
 2006-01-04  Wim Taymans  <wim@fluendo.com>
 
 	* docs/manual/basics-pads.xml:
@@ -35,6 +43,7 @@
 	  macro, so that gcc doesn't complain if the -Wmissing-prototypes
 	  compiler switch is being used (#325429).
 
+>>>>>>> 1.2159
 2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbin.c: (gst_bin_query):
