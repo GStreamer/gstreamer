@@ -1,3 +1,14 @@
+2006-01-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstcaps.h:
+	* gst/gstdata.h:
+	* gst/gstprobe.h:
+	* gst/gststructure.h:
+	* gst/gsttaginterface.h:
+	  Don't use G_GNUC_CONST for _get_type() functions (see #324530
+	  and http://wingolog.org/archives/2005/03/24/98 for why); yes, we
+	  aim to please even unreleased and mind-boggingly cranky compilers.
+
 2005-12-16  Christian Kirbach  <Christian.Kirbach@student.uni-siegen.de>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

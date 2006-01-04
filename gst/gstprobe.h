@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstProbe GstProbe;
 
-GType                    gst_probe_get_type		(void) G_GNUC_CONST;
+GType                    gst_probe_get_type		(void);
 
 /* the callback should return FALSE if the data should be discarded */
 typedef gboolean	(*GstProbeCallback)		(GstProbe *probe,

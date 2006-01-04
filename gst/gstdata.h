@@ -99,7 +99,7 @@ GstData*		gst_data_ref_by_count		(GstData* data, gint count);
 void			gst_data_unref			(GstData* data);
 
 /* GType for GstData */
-GType                   gst_data_get_type               (void) G_GNUC_CONST;
+GType                   gst_data_get_type               (void);
 
 G_END_DECLS
 
