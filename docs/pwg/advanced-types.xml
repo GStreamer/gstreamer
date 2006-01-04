@@ -308,8 +308,8 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
-            <entry morerows="3">audio/x-raw-float</entry>
-            <entry morerows="3">
+            <entry morerows="1">audio/x-raw-float</entry>
+            <entry>
               Unstructured and uncompressed raw floating-point audio data.
             </entry>
             <entry>endianness</entry>
