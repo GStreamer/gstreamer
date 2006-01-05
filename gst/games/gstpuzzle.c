@@ -557,6 +557,10 @@ draw_puzzle (GstVideofilter * videofilter, void *destp, void *srcp)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#ifdef HAVE_LIBOIL
+  oil_init ();
+#endif
+
   if (!gst_library_load ("gstvideofilter"))
     return FALSE;
 
