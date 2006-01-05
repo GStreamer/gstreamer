@@ -219,6 +219,10 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (videobox_debug, "videobox", 0,
       "Resizes a video by adding borders or cropping");
+
+#ifdef HAVE_LIBOIL
+  oil_init ();
+#endif
 }
 
 static void
@@ -685,6 +689,7 @@ gst_video_box_transform (GstBaseTransform * trans, GstBuffer * in,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+
   return gst_element_register (plugin, "videobox", GST_RANK_NONE,
       GST_TYPE_VIDEO_BOX);
 }
