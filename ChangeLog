@@ -1,3 +1,8 @@
+2006-01-05  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstplugin.c: (gst_plugin_load_file):
+	Replace strdup by g_strdup.
+
 2006-01-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/pwg/advanced-types.xml:

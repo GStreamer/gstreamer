@@ -417,7 +417,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
 
   plugin->module = module;
-  plugin->filename = strdup (filename);
+  plugin->filename = g_strdup (filename);
   plugin->basename = g_path_get_basename (filename);
   plugin->file_mtime = file_status.st_mtime;
   plugin->file_size = file_status.st_size;
