@@ -81,7 +81,7 @@
 (define-method peek
   (of-object "GstAdapter")
   (c-name "gst_adapter_peek")
-  (return-type "const-guint8*")
+  (return-type "const-gchar*")
   (parameters
     '("guint" "size")
   )
@@ -99,7 +99,7 @@
 (define-method take
   (of-object "GstAdapter")
   (c-name "gst_adapter_take")
-  (return-type "guint8*")
+  (return-type "gchar*")
   (parameters
     '("guint" "nbytes")
   )
@@ -131,7 +131,78 @@
   (return-type "GType")
 )
 
+(define-virtual get_caps
+  (of-object "GstBaseSink")
+  (return-type "GstCaps*")
+)
 
+(define-virtual set_caps
+  (of-object "GstBaseSink")
+  (return-type "gboolean")
+  (parameters
+   '("GstCaps*" "caps")
+  )
+)
+
+(define-virtual buffer_alloc
+  (of-object "GstBaseSink")
+  (return-type "GstFlowReturn")
+  (parameters
+   '("guint64" "offset")
+   '("guint" "size")
+   '("GstCaps*" "caps")
+   '("GstBuffer**" "buffer")
+  )
+)
+
+(define-virtual get_times
+  (of-object "GstBaseSink")
+  (return-type "none")
+  (parameters
+   '("GstBuffer*" "buffer")
+   '("GstClockTime*" "start")
+   '("GstClockTime*" "end")
+  )
+)
+
+(define-virtual start
+  (of-object "GstBaseSink")
+  (return-type "gboolean")
+)
+
+(define-virtual stop
+  (of-object "GstBaseSink")
+  (return-type "gboolean")
+)
+
+(define-virtual unlock
+  (of-object "GstBaseSink")
+  (return-type "gboolean")
+)
+
+(define-virtual event
+  (of-object "GstBaseSink")
+  (return-type "gboolean")
+  (parameters
+   '("GstEvent*" "event")
+  )
+)
+
+(define-virtual preroll
+  (of-object "GstBaseSink")
+  (return-type "GstFlowReturn")
+  (parameters
+   '("GstBuffer*" "buffer")
+  )
+)
+
+(define-virtual render
+  (of-object "GstBaseSink")
+  (return-type "GstFlowReturn")
+  (parameters
+   '("GstBuffer*" "buffer")
+  )
+)
 
 ;; From ../gstreamer/libs/gst/base/gstbasesrc.h
 
@@ -164,6 +235,100 @@
   )
 )
 
+(define-virtual get_caps
+  (of-object "GstBaseSrc")
+  (return-type "GstCaps*")
+)
+
+(define-virtual set_caps
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+  (parameters
+   '("GstCaps*" "caps")
+  )
+)
+
+(define-virtual negotiate
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+)
+
+(define-virtual newsegment
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+)
+
+(define-virtual start
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+)
+
+(define-virtual stop
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+)
+
+(define-virtual get_times
+  (of-object "GstBaseSrc")
+  (return-type "none")
+  (parameters
+   '("GstBuffer*" "buffer")
+   '("GstClockTime*" "start")
+   '("GstClockTime*" "end")
+  )
+)
+
+(define-virtual get_size
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+  (parameters
+   '("guint64*" "size")
+  )
+)
+
+(define-virtual is_seekable
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+)
+
+(define-virtual unlock
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+)
+
+(define-virtual event
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+  (parameters
+   '("GstEvent*" "event")
+  )
+)
+
+(define-virtual create
+  (of-object "GstBaseSrc")
+  (return-type "GstFlowReturn")
+  (parameters
+   '("guint64" "offset")
+   '("guint" "size")
+   '("GstBuffer**" "buf")
+  )
+)
+
+(define-virtual do_seek
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+  (parameters
+   '("GstSegment*" "segment")
+  )
+)
+
+(define-virtual query
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+  (parameters
+   '("GstQuery*" "query")
+  )
+)
 
 
 ;; From ../gstreamer/libs/gst/base/gstbasetransform.h
@@ -203,6 +368,100 @@
   (return-type "gboolean")
 )
 
+(define-virtual transform_caps
+  (of-object "GstBaseTransform")
+  (return-type "GstCaps*")
+  (parameters
+   '("GstPadDirection" "direction")
+   '("GstCaps*" "caps")
+  )
+)
+
+(define-virtual fixate_caps
+  (of-object "GstBaseTransform")
+  (return-type "none")
+  (parameters
+   '("GstPadDirection" "direction")
+   '("GstCaps*" "caps")
+   '("GstCaps*" "othercaps")
+  )
+)
+
+(define-virtual transform_size
+  (of-object "GstBaseTransform")
+  (return-type "gboolean")
+  (parameters
+   '("GstPadDirection" "direction")
+   '("GstCaps*" "caps")
+   '("guint" "size")
+   '("GstCaps*" "othercaps")
+   '("guint*" "othersize")
+  )
+)
+
+(define-virtual get_unit_size
+  (of-object "GstBaseTransform")
+  (return-type "gboolean")
+  (parameters
+   '("GstCaps*" "caps")
+   '("guint*" "size")
+  )
+)
+
+(define-virtual set_caps
+  (of-object "GstBaseTransform")
+  (return-type "gboolean")
+  (parameters
+   '("GstCaps*" "incaps")
+   '("GstCaps*" "outcaps")
+  )
+)
+
+(define-virtual start
+  (of-object "GstBaseTransform")
+  (return-type "gboolean")
+)
+
+(define-virtual stop
+  (of-object "GstBaseTransform")
+  (return-type "gboolean")
+)
+
+(define-virtual event
+  (of-object "GstBaseTransform")
+  (return-type "gboolean")
+  (parameters
+   '("GstEvent*" "event")
+  )
+)
+
+(define-virtual transform
+  (of-object "GstBaseTransform")
+  (return-type "GstFlowReturn")
+  (parameters
+   '("GstBuffer*" "inbuf")
+   '("GstBuffer*" "outbuf")
+  )
+)
+
+(define-virtual transform_ip
+  (of-object "GstBaseTransform")
+  (return-type "GstFlowReturn")
+  (parameters
+   '("GstBuffer*" "buf")
+  )
+)
+
+(define-virtual prepare_output_buffer
+  (of-object "GstBaseTransform")
+  (return-type "GstFlowReturn")
+  (parameters
+   '("GstBuffer*" "input")
+   '("gint" "size")
+   '("GstCaps*" "caps")
+   '("GstBuffer**" "buf")
+  )
+)
 
 
 ;; From ../gstreamer/libs/gst/base/gstcollectpads.h
@@ -336,6 +595,14 @@
 (define-function gst_push_src_get_type
   (c-name "gst_push_src_get_type")
   (return-type "GType")
+)
+
+(define-virtual create
+  (of-object "GstPushSrc")
+  (return-type "GstFlowReturn")
+  (parameters
+   '("GstBuffer**" "buf")
+  )
 )
 
 

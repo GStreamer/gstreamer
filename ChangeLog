@@ -1,3 +1,11 @@
+2006-01-05  Edward Hervey  <edward@fluendo.com>
+
+	* gst/base.defs:
+	Use gchar* instead of guint8* for GstAdapter
+	Added virtual methods definitions for base classes.
+	Still have to override some functions, and figure
+	out how to properly add reverse wrappers to the codegenerator.
+
 2006-01-01  Edward Hervey  <edward@fluendo.com>
 
 	First step at wrapping base elements in gst-python
