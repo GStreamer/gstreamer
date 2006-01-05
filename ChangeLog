@@ -1,3 +1,11 @@
+﻿2006-01-05  Sebastien Moutte  <sebastien@moutte.net>
+	* added sys/directdraw
+	* added sys/directsound
+	* added win32/vs6/gst_plugins_bad.dsw
+	* added win32/vs6/libgstdirectsound.dsp
+	* added win32/vs6/libgstdirectdraw.dsp
+	* added win32/common/config.h
+	
 2006-01-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/games/gstpuzzle.c: (plugin_init):
