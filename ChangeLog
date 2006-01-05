@@ -1,3 +1,21 @@
+2006-01-05  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_adjust_ts) 
+	(gst_mpeg_parse_process_event, gst_mpeg_parse_pad_added): Don't
+	rewrite timestamps in the case segments are being set from
+	upstream, but use timestamps unmodified. Also send proper position
+	values. This allows for correct time display and makes queries
+	work in sink elements.
+
+	* gst/mpegstream/gstdvddemux.h: 
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_init) 
+	(gst_dvd_demux_handle_dvd_event, gst_dvd_demux_send_subbuffer):
+	Rename flush_filter to segment_filter, which is better represents
+	what the arreibute does.
+
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_process_event):
+	Activate segment filtering when a timestamp discontinuity is seen.
+
 2006-01-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstmad.c: (gst_mad_chain):

@@ -104,14 +104,10 @@ struct _GstDVDDemux {
   GstMPEGStream *subpicture_stream[GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS];
                                 /* Subpicture output streams. */
 
-  gboolean flush_filter;	/* If TRUE, the demuxer refrains from
+  gboolean segment_filter;	/* If TRUE, the demuxer refrains from
 				   sending any audio packets until it
-				   sees one with a valid
-				   timestamp. This is used to avoid
-				   sending audio packets that lie
-				   outside (actually before) the
-				   current segment, which may happen
-				   after a seek operation. */
+				   sees one with a timestamp lying
+				   inside the current segment. */
 
   GstEvent *langcodes;
 };

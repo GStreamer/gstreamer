@@ -291,15 +291,11 @@ gst_mpeg_parse_adjust_ts (GstMPEGParse * mpeg_parse, GstClockTime ts)
     /* Close the SCR gaps. */
     return ts + MPEGTIME_TO_GSTTIME (mpeg_parse->adjust);
   } else {
-    /* Adjust the timestamp in such a way that all segments appear to
-       be in a single continuous sequence starting at time 0. */
-    if (ts + mpeg_parse->current_segment.accum >=
-        mpeg_parse->current_segment.start) {
-      return ts + mpeg_parse->current_segment.accum -
-          mpeg_parse->current_segment.start;
+    if (ts >= mpeg_parse->current_segment.start) {
+      return ts;
     } else {
-      /* The adjustment would lead to a timestamp outside the current
-         segment. Return an invalid timestamp instead. */
+      /* The timestamp lies outside the current segment. Return an
+         invalid timestamp instead. */
       return GST_CLOCK_TIME_NONE;
     }
   }
@@ -355,16 +351,38 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
           &start, &stop, &time);
 
       if (format == GST_FORMAT_TIME && (GST_CLOCK_TIME_IS_VALID (time))) {
+        /* We are receiving segments from upstream. Don't try to adjust
+           SCR values. */
+        mpeg_parse->do_adjust = FALSE;
+        mpeg_parse->adjust = 0;
+
+        if (!update && mpeg_parse->current_segment.stop != -1) {
+          /* Close the current segment. */
+          if (CLASS (mpeg_parse)->send_event) {
+            CLASS (mpeg_parse)->send_event (mpeg_parse,
+                gst_event_new_new_segment (TRUE,
+                    mpeg_parse->current_segment.rate,
+                    GST_FORMAT_TIME,
+                    mpeg_parse->current_segment.start,
+                    mpeg_parse->current_segment.stop,
+                    mpeg_parse->current_segment.time));
+          }
+        }
+
         /* Update the current segment. */
         GST_DEBUG_OBJECT (mpeg_parse,
             "Updating current segment with newsegment");
         gst_segment_set_newsegment (&mpeg_parse->current_segment,
             update, rate, format, start, stop, time);
 
-        /* We are receiving segments from upstream. Don't try to adjust
-           SCR values. */
-        mpeg_parse->do_adjust = FALSE;
-        mpeg_parse->adjust = 0;
+        if (!update) {
+          /* Send a newsegment event for the new current segment. */
+          if (CLASS (mpeg_parse)->send_event) {
+            CLASS (mpeg_parse)->send_event (mpeg_parse,
+                gst_event_new_new_segment (FALSE, rate, GST_FORMAT_TIME,
+                    start, -1, time));
+          }
+        }
       }
       mpeg_parse->packetize->resync = TRUE;
 
@@ -455,7 +473,7 @@ gst_mpeg_parse_pad_added (GstElement * element, GstPad * pad)
   GstEvent *event = gst_event_new_new_segment (FALSE,
       mpeg_parse->current_segment.rate,
       GST_FORMAT_TIME, mpeg_parse->current_segment.start,
-      mpeg_parse->current_segment.stop, 0);
+      -1, mpeg_parse->current_segment.start);
 
   gst_pad_push_event (pad, event);
 }

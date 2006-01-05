@@ -283,7 +283,7 @@ gst_dvd_demux_init (GstDVDDemux * dvd_demux, GstDVDDemuxClass * klass)
   }
 
   /* Directly after starting we operate as if we had just flushed. */
-  dvd_demux->flush_filter = TRUE;
+  dvd_demux->segment_filter = TRUE;
 
   dvd_demux->langcodes = NULL;
 }
@@ -304,8 +304,24 @@ gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
   gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gboolean update;
+
+      gst_event_parse_new_segment (event, &update, NULL, NULL,
+          NULL, NULL, NULL);
+
+      if (!update) {
+        /* This is a discontinuity in the timestamp sequence. which
+           may mean that we find some audio blocks lying outside the
+           segment. Filter them. */
+        dvd_demux->segment_filter = TRUE;
+      }
+
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
-      dvd_demux->flush_filter = TRUE;
+      dvd_demux->segment_filter = TRUE;
       ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
           event);
       break;
@@ -373,7 +389,7 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     if (!gst_pad_push_event (dvd_demux->cur_audio, gst_event_new_flush_stop ())) {
       return FALSE;
     }
-    dvd_demux->flush_filter = TRUE;
+    dvd_demux->segment_filter = TRUE;
     return TRUE;
   } else if (strcmp (event_type, "dvd-spu-stream-change") == 0) {
     gint stream_nr;
@@ -930,15 +946,15 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
   GstPad *outpad;
   gint cur_nr;
 
-  if (dvd_demux->flush_filter &&
+  if (dvd_demux->segment_filter &&
       GST_MPEG_DEMUX_STREAM_KIND (outstream->type) ==
       GST_MPEG_DEMUX_STREAM_AUDIO) {
-    /* We are in flush_filter mode and have an audio buffer. */
+    /* We are in segment_filter mode and have an audio buffer. */
     if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
       /* This is the first valid audio buffer after the flush. */
-      dvd_demux->flush_filter = FALSE;
+      dvd_demux->segment_filter = FALSE;
     } else {
-      /* Discard the buffer, */
+      /* Discard the buffer. */
       return GST_FLOW_OK;
     }
   }
