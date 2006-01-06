@@ -1,3 +1,11 @@
+2006-01-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstmessage.c: (gst_message_parse_tag),
+	(gst_message_parse_error), (gst_message_parse_warning):
+	  Don't crash when return location for error/warning debug
+	  string is NULL; add fact that return locations can be
+	  NULL to docs where appropriate.
+
 2006-01-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstplugin.c: (gst_plugin_load_file):

@@ -694,6 +694,7 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
 {
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_TAG);
+  g_return_if_fail (tag_list != NULL);
 
   *tag_list = (GstTagList *) gst_structure_copy (message->structure);
 }
@@ -701,9 +702,9 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
 /**
  * gst_message_parse_state_changed:
  * @message: a valid #GstMessage of type GST_MESSAGE_STATE_CHANGED
- * @oldstate: the previous state
- * @newstate: the new (current) state
- * @pending: the pending (target) state
+ * @oldstate: the previous state, or NULL
+ * @newstate: the new (current) state, or NULL
+ * @pending: the pending (target) state, or NULL
  *
  * Extracts the old and new states from the GstMessage.
  *
@@ -813,7 +814,7 @@ gst_message_parse_new_clock (GstMessage * message, GstClock ** clock)
  * gst_message_parse_error:
  * @message: A valid #GstMessage of type GST_MESSAGE_ERROR.
  * @gerror: Location for the GError
- * @debug: Location for the debug message
+ * @debug: Location for the debug message, or NULL
  *
  * Extracts the GError and debug string from the GstMessage. The values returned
  * in the output arguments are copies; the caller must free them when done.
@@ -838,14 +839,16 @@ gst_message_parse_error (GstMessage * message, GError ** gerror, gchar ** debug)
     *gerror = g_error_copy (error_val);
   else
     *gerror = NULL;
-  *debug = g_strdup (gst_structure_get_string (message->structure, "debug"));
+
+  if (debug)
+    *debug = g_strdup (gst_structure_get_string (message->structure, "debug"));
 }
 
 /**
  * gst_message_parse_warning:
  * @message: A valid #GstMessage of type GST_MESSAGE_WARNING.
  * @gerror: Location for the GError
- * @debug: Location for the debug message
+ * @debug: Location for the debug message, or NULL
  *
  * Extracts the GError and debug string from the GstMessage. The values returned
  * in the output arguments are copies; the caller must free them when done.
@@ -872,14 +875,15 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
   else
     *gerror = NULL;
 
-  *debug = g_strdup (gst_structure_get_string (message->structure, "debug"));
+  if (debug)
+    *debug = g_strdup (gst_structure_get_string (message->structure, "debug"));
 }
 
 /**
  * gst_message_parse_segment_start:
  * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_START.
- * @format: Result location for the format
- * @position: Result location for the position
+ * @format: Result location for the format, or NULL
+ * @position: Result location for the position, or NULL
  *
  * Extracts the position and format from the segment start message.
  *
@@ -905,8 +909,8 @@ gst_message_parse_segment_start (GstMessage * message, GstFormat * format,
 /**
  * gst_message_parse_segment_done:
  * @message: A valid #GstMessage of type GST_MESSAGE_SEGMENT_DONE.
- * @format: Result location for the format
- * @position: Result location for the position
+ * @format: Result location for the format, or NULL
+ * @position: Result location for the position, or NULL
  *
  * Extracts the position and format from the segment start message.
  *
@@ -932,8 +936,8 @@ gst_message_parse_segment_done (GstMessage * message, GstFormat * format,
 /**
  * gst_message_parse_duration:
  * @message: A valid #GstMessage of type GST_MESSAGE_DURATION.
- * @format: Result location for the format
- * @duration: Result location for the duration
+ * @format: Result location for the format, or NULL
+ * @duration: Result location for the duration, or NULL
  *
  * Extracts the duration and format from the duration message. The duration
  * might be GST_CLOCK_TIME_NONE, which indicates that the duration has
