@@ -26,7 +26,9 @@
 #include "gstgconfelements.h"
 
 #include "gstgconfaudiosink.h"
+#include "gstgconfaudiosrc.h"
 #include "gstgconfvideosink.h"
+#include "gstgconfvideosrc.h"
 
 GST_DEBUG_CATEGORY (gconf_debug);
 
@@ -36,10 +38,18 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gconf_debug, "gconf", 0,
       "GConf/GStreamer audio/video output wrapper elements");
 
-  return gst_element_register (plugin, "gconfvideosink",
-      GST_RANK_NONE, GST_TYPE_GCONF_VIDEO_SINK) &&
-      gst_element_register (plugin, "gconfaudiosink",
-      GST_RANK_NONE, GST_TYPE_GCONF_AUDIO_SINK);
+  if (!gst_element_register (plugin, "gconfvideosink",
+          GST_RANK_NONE, GST_TYPE_GCONF_VIDEO_SINK) ||
+      !gst_element_register (plugin, "gconfvideosrc",
+          GST_RANK_NONE, GST_TYPE_GCONF_VIDEO_SRC) ||
+      !gst_element_register (plugin, "gconfaudiosink",
+          GST_RANK_NONE, GST_TYPE_GCONF_AUDIO_SINK) ||
+      !gst_element_register (plugin, "gconfaudiosrc",
+          GST_RANK_NONE, GST_TYPE_GCONF_AUDIO_SRC)) {
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

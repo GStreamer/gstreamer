@@ -1,3 +1,22 @@
+2006-01-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gconf/Makefile.am:
+	* ext/gconf/gstgconfaudiosrc.c: (gst_gconf_audio_src_base_init),
+	(gst_gconf_audio_src_class_init), (gst_gconf_audio_src_reset),
+	(gst_gconf_audio_src_init), (gst_gconf_audio_src_dispose),
+	(do_toggle_element), (cb_toggle_element),
+	(gst_gconf_audio_src_change_state):
+	* ext/gconf/gstgconfaudiosrc.h:
+	* ext/gconf/gstgconfelements.c: (plugin_init):
+	* ext/gconf/gstgconfvideosrc.c: (gst_gconf_video_src_base_init),
+	(gst_gconf_video_src_class_init), (gst_gconf_video_src_reset),
+	(gst_gconf_video_src_init), (gst_gconf_video_src_dispose),
+	(do_toggle_element), (cb_toggle_element),
+	(gst_gconf_video_src_change_state):
+	* ext/gconf/gstgconfvideosrc.h:
+	  Add new gconfaudiosrc and gconfvideosrc elements
+	  (needed for gnome-sound-recorder).
+
 2006-01-06  Edward Hervey  <edward@fluendo.com>
 
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_add_srcpad):
