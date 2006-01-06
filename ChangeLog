@@ -1,3 +1,14 @@
+2006-01-06  Edward Hervey  <edward@fluendo.com>
+
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_add_srcpad):
+	Add gst_element_no_more_pads() for proper decodebin behaviour.
+	* gst/id3demux/id3v2frames.c: (parse_comment_frame),
+	(parse_text_identification_frame), (parse_split_strings):
+	Failure to decode some tags is not a GST_ERROR() but a
+	GST_WARNING()
+	When iterating over a chunk of text, check that we haven't gone too
+	far.
+
 2006-01-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),

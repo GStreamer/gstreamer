@@ -280,7 +280,9 @@ gst_id3demux_add_srcpad (GstID3Demux * id3demux, GstCaps * new_caps)
         id3demux->src_caps);
 
     gst_object_ref (id3demux->srcpad);
-    return gst_element_add_pad (GST_ELEMENT (id3demux), id3demux->srcpad);
+    if (!(gst_element_add_pad (GST_ELEMENT (id3demux), id3demux->srcpad)))
+      return FALSE;
+    gst_element_no_more_pads (GST_ELEMENT (id3demux));
   }
 
   return TRUE;
