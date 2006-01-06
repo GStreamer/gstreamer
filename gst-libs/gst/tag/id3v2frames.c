@@ -161,12 +161,12 @@ parse_comment_frame (ID3TagsWorking * work)
   parse_split_strings (work, encoding, &description, &text);
 
   if (text == NULL || description == NULL) {
-    GST_ERROR ("Failed to decode comment frame");
+    GST_WARNING ("Failed to decode comment frame");
     goto fail;
   }
 
   if (!g_utf8_validate (text, -1, NULL)) {
-    GST_ERROR ("Converted string is not valid utf-8");
+    GST_WARNING ("Converted string is not valid utf-8");
     goto fail;
   } else {
     if (strlen (description) > 0 && g_utf8_validate (description, -1, NULL)) {
@@ -214,7 +214,7 @@ parse_text_identification_frame (ID3TagsWorking * work)
   }
 
   if (text != NULL && !g_utf8_validate (text, -1, NULL)) {
-    GST_ERROR ("Converted string is not valid utf-8");
+    GST_WARNING ("Converted string is not valid utf-8");
     g_free (text);
     text = NULL;
   }
@@ -332,7 +332,7 @@ parse_split_strings (ID3TagsWorking * work, guint8 encoding,
 
   switch (encoding) {
     case ID3V2_ENCODING_ISO8859:
-      for (text_pos = 4; text_pos < work->parse_size - 1; text_pos++) {
+      for (text_pos = 4; text_pos < work->parse_size - 5; text_pos++) {
         if (work->parse_data[text_pos] == 0) {
           *field1 = g_convert ((gchar *) (work->parse_data + 4),
               text_pos - 4, "UTF-8", "ISO-8859-1", NULL, NULL, NULL);
@@ -356,7 +356,7 @@ parse_split_strings (ID3TagsWorking * work, guint8 encoding,
     case ID3V2_ENCODING_UTF16BE:
     {
       /* Find '\0\0' terminator */
-      for (text_pos = 4; text_pos < work->parse_size - 2; text_pos++) {
+      for (text_pos = 4; text_pos < work->parse_size - 6; text_pos++) {
         if (work->parse_data[text_pos] == 0 &&
             work->parse_data[text_pos + 1] == 0) {
           /* found our delimiter */
