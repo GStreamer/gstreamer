@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-23 15:43+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2005-02-15 22:33+0300\n"
 "Last-Translator: Peter Astakhov <astakhovp@mail.ru>\n"
 "Language-Team: Russian <ru@li.org>\n"
@@ -99,7 +99,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "Печатает версию GStreamer"
 
-#: gst/gst.c:789
+#: gst/gst.c:790
 msgid "Unknown option"
 msgstr ""
 
@@ -707,7 +707,7 @@ msgstr "\"%s\" - это каталог."
 msgid "File \"%s\" is a socket."
 msgstr "Файл \"%s\" является сокетом."
 
-#: plugins/elements/gstidentity.c:351
+#: plugins/elements/gstidentity.c:359
 msgid "Failed after iterations as requested."
 msgstr ""
 
@@ -727,7 +727,7 @@ msgstr "минимум"
 msgid "maximum"
 msgstr "максимум"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1110
 msgid "Print all elements"
 msgstr "Печатать все элементы"
 

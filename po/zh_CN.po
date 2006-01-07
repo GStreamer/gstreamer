@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-23 15:43+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2005-12-03 00:05+0800\n"
 "Last-Translator: Funda Wang <fundawang@linux.net.cn>\n"
 "Language-Team: Chinese (simplified) <i18n-translation@lists.linux.net.cn>\n"
@@ -87,7 +87,7 @@ msgstr "GStreamer 选项"
 msgid "Show GStreamer Options"
 msgstr "显示 GStreamer 选项"
 
-#: gst/gst.c:789
+#: gst/gst.c:790
 msgid "Unknown option"
 msgstr "未知选项"
 
@@ -664,7 +664,7 @@ msgstr "“%s”不是目录。"
 msgid "File \"%s\" is a socket."
 msgstr "文件“%s”是套接字。"
 
-#: plugins/elements/gstidentity.c:351
+#: plugins/elements/gstidentity.c:359
 msgid "Failed after iterations as requested."
 msgstr ""
 
@@ -684,7 +684,7 @@ msgstr "最小"
 msgid "maximum"
 msgstr "最大"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1110
 msgid "Print all elements"
 msgstr "打印全部元素"
 

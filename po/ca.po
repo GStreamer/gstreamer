@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-23 15:43+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -98,7 +98,7 @@ msgstr "Opcions del GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Mostra les opcions del GStreamer"
 
-#: gst/gst.c:789
+#: gst/gst.c:790
 msgid "Unknown option"
 msgstr "Opció desconeguda"
 
@@ -682,7 +682,7 @@ msgstr "«%s» és un directori."
 msgid "File \"%s\" is a socket."
 msgstr "El fitxer «%s» és un sòcol."
 
-#: plugins/elements/gstidentity.c:351
+#: plugins/elements/gstidentity.c:359
 msgid "Failed after iterations as requested."
 msgstr "Ha fallat després de les iteracions com s'ha demanat."
 
@@ -702,7 +702,7 @@ msgstr "mínim"
 msgid "maximum"
 msgstr "màxim"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1110
 msgid "Print all elements"
 msgstr "Imprimeix tots els elements"
 

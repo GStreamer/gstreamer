@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-23 15:43+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2004-12-21 14:49+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -99,7 +99,7 @@ msgstr "_GStreamer-rörledning:"
 msgid "Show GStreamer Options"
 msgstr "Visa mixerikoner"
 
-#: gst/gst.c:789
+#: gst/gst.c:790
 #, fuzzy
 msgid "Unknown option"
 msgstr "Okänd artist"
@@ -703,7 +703,7 @@ msgstr "\"%s\" är en katalog."
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" är ett uttag."
 
-#: plugins/elements/gstidentity.c:351
+#: plugins/elements/gstidentity.c:359
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
@@ -724,7 +724,7 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1110
 msgid "Print all elements"
 msgstr "Skriv ut alla element"
 

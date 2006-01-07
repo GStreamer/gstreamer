@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-23 15:43+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2005-04-15 14:36+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -99,7 +99,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "Vypsat verzi GStreamer"
 
-#: gst/gst.c:789
+#: gst/gst.c:790
 msgid "Unknown option"
 msgstr ""
 
@@ -693,7 +693,7 @@ msgstr "\"%s\" je adresář."
 msgid "File \"%s\" is a socket."
 msgstr "Soubor \"%s\" je socket."
 
-#: plugins/elements/gstidentity.c:351
+#: plugins/elements/gstidentity.c:359
 msgid "Failed after iterations as requested."
 msgstr "Selhání po iteracích podle požadavku."
 
@@ -713,7 +713,7 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1110
 msgid "Print all elements"
 msgstr "Vypsat všechny elementy"
 

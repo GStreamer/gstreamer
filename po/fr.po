@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-23 15:43+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -101,7 +101,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "Afficher la version de GStreamer"
 
-#: gst/gst.c:789
+#: gst/gst.c:790
 msgid "Unknown option"
 msgstr ""
 
@@ -710,7 +710,7 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr ""
 
-#: plugins/elements/gstidentity.c:351
+#: plugins/elements/gstidentity.c:359
 msgid "Failed after iterations as requested."
 msgstr ""
 
@@ -730,7 +730,7 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1110
 #, fuzzy
 msgid "Print all elements"
 msgstr "pas d'element \"%s\""

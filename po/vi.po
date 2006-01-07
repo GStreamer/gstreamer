@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-23 15:43+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2005-12-05 21:38+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
@@ -95,7 +95,7 @@ msgstr "Tùy chọn GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Hiển thị Tùy chọnStreamer"
 
-#: gst/gst.c:789
+#: gst/gst.c:790
 msgid "Unknown option"
 msgstr "Tùy chọn lạ"
 
@@ -685,7 +685,7 @@ msgstr "« %s » là thư mục."
 msgid "File \"%s\" is a socket."
 msgstr "Tập tin « %s » là ổ cắm."
 
-#: plugins/elements/gstidentity.c:351
+#: plugins/elements/gstidentity.c:359
 msgid "Failed after iterations as requested."
 msgstr "Lỗi sau số lần lặp lại được chọn."
 
@@ -705,7 +705,7 @@ msgstr "tối thiểu"
 msgid "maximum"
 msgstr "tối đa"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1110
 msgid "Print all elements"
 msgstr "Hiển thị mọi yếu tố"
 

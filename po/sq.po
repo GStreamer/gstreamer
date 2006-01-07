@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-23 15:43+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -98,7 +98,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "Printo versionin e GStreamer"
 
-#: gst/gst.c:789
+#: gst/gst.c:790
 msgid "Unknown option"
 msgstr ""
 
@@ -694,7 +694,7 @@ msgstr "\"%s\" është një directory."
 msgid "File \"%s\" is a socket."
 msgstr "File \"%s\" është një socket."
 
-#: plugins/elements/gstidentity.c:351
+#: plugins/elements/gstidentity.c:359
 msgid "Failed after iterations as requested."
 msgstr "Dështoi mbas përsëritjeve sikurse të kërkuara."
 
@@ -714,7 +714,7 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maksimum"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1110
 msgid "Print all elements"
 msgstr "Printo të gjithë elementët"
 

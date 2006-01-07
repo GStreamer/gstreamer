@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-23 15:43+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -94,7 +94,7 @@ msgstr "GStreamer Opsies"
 msgid "Show GStreamer Options"
 msgstr "Wys GStreamer opsies"
 
-#: gst/gst.c:789
+#: gst/gst.c:790
 msgid "Unknown option"
 msgstr "Onbekende opsie"
 
@@ -679,7 +679,7 @@ msgstr "\"%s\" is 'n gids."
 msgid "File \"%s\" is a socket."
 msgstr "Lêer \"%s\" is 'n sok."
 
-#: plugins/elements/gstidentity.c:351
+#: plugins/elements/gstidentity.c:359
 msgid "Failed after iterations as requested."
 msgstr "Mislukking na die vasgestelde aantal probeerslae."
 
@@ -699,7 +699,7 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maksimum"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1110
 msgid "Print all elements"
 msgstr "Druk alle elemente"
 

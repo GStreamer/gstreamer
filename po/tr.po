@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-23 15:43+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -95,7 +95,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "GStreamer sürünümü yazdır"
 
-#: gst/gst.c:789
+#: gst/gst.c:790
 msgid "Unknown option"
 msgstr ""
 
@@ -694,7 +694,7 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr "\"%s\" dosyası düzenli bir dosya değil."
 
-#: plugins/elements/gstidentity.c:351
+#: plugins/elements/gstidentity.c:359
 msgid "Failed after iterations as requested."
 msgstr "İstenildiği gibi tekrarlama başarısız oldu."
 
@@ -714,7 +714,7 @@ msgstr "asgari"
 msgid "maximum"
 msgstr "azami"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1110
 #, fuzzy
 msgid "Print all elements"
 msgstr "\"%s\" öğesi yok"

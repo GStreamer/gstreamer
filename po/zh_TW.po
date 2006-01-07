@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-12-17 16:11+0100\n"
+"POT-Creation-Date: 2006-01-05 11:07+0100\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -15,95 +15,96 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: gst/gst.c:160
+#: gst/gst.c:270
 msgid "Print the GStreamer version"
 msgstr "顯示 GStreamer 版本"
 
-#: gst/gst.c:162
+#: gst/gst.c:272
 msgid "Make all warnings fatal"
 msgstr "令任何警告都造成程式終止"
 
-#: gst/gst.c:166
+#: gst/gst.c:275
 msgid "Print available debug categories and exit"
 msgstr "顯示可以偵錯的類別，然後結束"
 
-#: gst/gst.c:169
-msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "將預設偵錯級別設定為 1 (只顯示錯誤) 至 5 (任何訊息)，或者用 0 表示不顯示訊息"
+#: gst/gst.c:278
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"將預設偵錯級別設定為 1 (只顯示錯誤) 至 5 (任何訊息)，或者用 0 表示不顯示訊息"
 
-#: gst/gst.c:171
+#: gst/gst.c:280
 msgid "LEVEL"
 msgstr "LEVEL"
 
-#: gst/gst.c:173
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "各種類別和它們的詳細程度，格式是「分類:等級」，每個都以逗號隔開。例如：GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+#: gst/gst.c:282
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"各種類別和它們的詳細程度，格式是「分類:等級」，每個都以逗號隔開。例如："
+"GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:176
+#: gst/gst.c:285
 msgid "LIST"
 msgstr "LIST"
 
-#: gst/gst.c:178
+#: gst/gst.c:287
 msgid "Disable colored debugging output"
 msgstr "偵錯結果不加上色彩"
 
-#: gst/gst.c:180
+#: gst/gst.c:289
 msgid "Disable debugging"
 msgstr "關閉偵錯功能"
 
-#: gst/gst.c:184
-msgid "Disable accelerated CPU instructions"
-msgstr "關閉 CPU 優化功能"
-
-#: gst/gst.c:186
+#: gst/gst.c:292
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "載入增效模組時顯示詳細訊息"
 
-#: gst/gst.c:188
+#: gst/gst.c:295
+msgid "Colon-separated paths containing plugins"
+msgstr ""
+
+#: gst/gst.c:295
 msgid "PATHS"
 msgstr "PATHS"
 
-#: gst/gst.c:191
+#: gst/gst.c:297
 #, fuzzy
-msgid "Comma-separated list of plugins to preload in addition to the list stored in envronment variable GST_PLUGIN_PATH"
-msgstr "除了環境變數 GST_PLUGIN_PATH 中的增效模組之外，另外再指定載入的增效模組 (以逗號分隔)"
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"除了環境變數 GST_PLUGIN_PATH 中的增效模組之外，另外再指定載入的增效模組 (以逗"
+"號分隔)"
 
-#: gst/gst.c:193
+#: gst/gst.c:299
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:196
+#: gst/gst.c:302
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "載入增效模組時不攔截程式區段碼錯誤"
 
-#: gst/gst.c:199
-msgid "SCHEDULER"
-msgstr "SCHEDULER"
-
-#: gst/gst.c:201
-msgid "Registry to use"
+#: gst/gst.c:307
+msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:201
-msgid "REGISTRY"
-msgstr "REGISTRY"
+#: gst/gst.c:308
+#, fuzzy
+msgid "Show GStreamer Options"
+msgstr "顯示 GStreamer 版本"
 
-#: gst/gst.c:214
-#, c-format
-msgid "path list for loading plugins (separated by '%s')"
-msgstr "搜尋增效模組時的路徑清單，以‘%s’分隔"
+#: gst/gst.c:790
+msgid "Unknown option"
+msgstr ""
 
-#: gst/gst.c:218
-#, c-format
-msgid "Scheduler to use (default is '%s')"
-msgstr "準備使用的排程器 (預設為 ‘%s’)"
-
-#: gst/gstelement.c:261
+#: gst/gstelement.c:278
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "錯誤：來自 %s 元件：%s\n"
 
-#: gst/gstelement.c:263
+#: gst/gstelement.c:280
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -112,708 +113,822 @@ msgstr ""
 "額外偵錯資訊：\n"
 "%s\n"
 
-#: gst/gsterror.c:56
+#: gst/gsterror.c:132
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer 主要函式庫發生一般性的錯誤。"
 
-#: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:115 gst/gsterror.c:145
-msgid "GStreamer developers were too lazy to assign an error code to this error.  Please file a bug."
+#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
+#, fuzzy
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
 msgstr "GStreamer 開發人員未用任何錯誤碼判定這類錯誤。請匯報之。"
 
-#: gst/gsterror.c:61
-msgid "Internal GStreamer error: code not implemented.  File a bug."
+#: gst/gsterror.c:137
+#, fuzzy
+msgid "Internal GStreamer error: code not implemented."
 msgstr "GStreamer 內部錯誤：未完成編程。請匯報錯誤。"
 
-#: gst/gsterror.c:63
-msgid "Internal GStreamer error: state change failed.  File a bug."
+#: gst/gsterror.c:139
+#, fuzzy
+msgid "Internal GStreamer error: state change failed."
 msgstr "GStreamer 內部錯誤：無法更改狀態。請匯報錯誤。"
 
-#: gst/gsterror.c:65
-msgid "Internal GStreamer error: pad problem.  File a bug."
-msgstr ""
-
-#: gst/gsterror.c:67
-msgid "Internal GStreamer error: thread problem.  File a bug."
+#: gst/gsterror.c:140
+#, fuzzy
+msgid "Internal GStreamer error: pad problem."
 msgstr "GStreamer 內部錯誤：線程發生問題。請匯報錯誤。"
 
-#: gst/gsterror.c:69
-msgid "Internal GStreamer error: scheduler problem.  File a bug."
-msgstr "GStreamer 內部錯誤：排程器發生問題。請匯報錯誤。"
+#: gst/gsterror.c:142
+#, fuzzy
+msgid "Internal GStreamer error: thread problem."
+msgstr "GStreamer 內部錯誤：線程發生問題。請匯報錯誤。"
 
-#: gst/gsterror.c:71
-msgid "Internal GStreamer error: negotiation problem.  File a bug."
-msgstr ""
+#: gst/gsterror.c:144
+#, fuzzy
+msgid "Internal GStreamer error: negotiation problem."
+msgstr "GStreamer 內部錯誤：線程發生問題。請匯報錯誤。"
 
-#: gst/gsterror.c:73
-msgid "Internal GStreamer error: event problem.  File a bug."
-msgstr ""
-
-#: gst/gsterror.c:75
-msgid "Internal GStreamer error: seek problem.  File a bug."
+#: gst/gsterror.c:146
+#, fuzzy
+msgid "Internal GStreamer error: event problem."
 msgstr "GStreamer 內部錯誤：搜尋發生問題。請匯報錯誤。"
 
-#: gst/gsterror.c:77
-msgid "Internal GStreamer error: caps problem.  File a bug."
+#: gst/gsterror.c:148
+#, fuzzy
+msgid "Internal GStreamer error: seek problem."
+msgstr "GStreamer 內部錯誤：搜尋發生問題。請匯報錯誤。"
+
+#: gst/gsterror.c:150
+#, fuzzy
+msgid "Internal GStreamer error: caps problem."
+msgstr "GStreamer 內部錯誤：搜尋發生問題。請匯報錯誤。"
+
+#: gst/gsterror.c:151
+#, fuzzy
+msgid "Internal GStreamer error: tag problem."
+msgstr "GStreamer 內部錯誤：線程發生問題。請匯報錯誤。"
+
+#: gst/gsterror.c:153
+msgid "Your GStreamer installation is missing a plug-in."
 msgstr ""
 
-#: gst/gsterror.c:79
-msgid "Internal GStreamer error: tag problem.  File a bug."
-msgstr ""
+#: gst/gsterror.c:155
+#, fuzzy
+msgid "Internal GStreamer error: clock problem."
+msgstr "GStreamer 內部錯誤：搜尋發生問題。請匯報錯誤。"
 
-#: gst/gsterror.c:93 gst/gsterror.c:113 gst/gsterror.c:143
+#: gst/gsterror.c:169
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer 輔助函式庫發生一般性的錯誤。"
 
-#: gst/gsterror.c:97
+#: gst/gsterror.c:173
 msgid "Could not initialize supporting library."
 msgstr "無法初始化輔助函式庫。"
 
 # (abel) close library? 該解釋清楚才是。
-#: gst/gsterror.c:98 gst/gsterror.c:99
+#: gst/gsterror.c:174 gst/gsterror.c:175
 msgid "Could not close supporting library."
 msgstr "無法關閉輔助函式庫。"
 
-#: gst/gsterror.c:117
+#: gst/gsterror.c:189
+#, fuzzy
+msgid "GStreamer encountered a general resource error."
+msgstr "GStreamer 主要函式庫發生一般性的錯誤。"
+
+#: gst/gsterror.c:193
 msgid "Resource not found."
 msgstr "找不到資源。"
 
-#: gst/gsterror.c:118
+#: gst/gsterror.c:194
 msgid "Resource busy or not available."
 msgstr "資源使用中，或者無法存取。"
 
-#: gst/gsterror.c:119
+#: gst/gsterror.c:195
 msgid "Could not open resource for reading."
 msgstr ""
 
-#: gst/gsterror.c:120
+#: gst/gsterror.c:196
 msgid "Could not open resource for writing."
 msgstr ""
 
-#: gst/gsterror.c:122
+#: gst/gsterror.c:198
 msgid "Could not open resource for reading and writing."
 msgstr ""
 
-#: gst/gsterror.c:123
+#: gst/gsterror.c:199
 msgid "Could not close resource."
 msgstr ""
 
-#: gst/gsterror.c:124
+#: gst/gsterror.c:200
 msgid "Could not read from resource."
 msgstr ""
 
-#: gst/gsterror.c:125
+#: gst/gsterror.c:201
 msgid "Could not write to resource."
 msgstr ""
 
-#: gst/gsterror.c:126
+#: gst/gsterror.c:202
 msgid "Could not perform seek on resource."
 msgstr ""
 
-#: gst/gsterror.c:127
+#: gst/gsterror.c:203
 msgid "Could not synchronize on resource."
 msgstr ""
 
-#: gst/gsterror.c:129
+#: gst/gsterror.c:205
 msgid "Could not get/set settings from/on resource."
 msgstr ""
 
-#: gst/gsterror.c:148
+#: gst/gsterror.c:219
+#, fuzzy
+msgid "GStreamer encountered a general stream error."
+msgstr "GStreamer 主要函式庫發生一般性的錯誤。"
+
+#: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 
-#: gst/gsterror.c:150
+#: gst/gsterror.c:226
 msgid "Could not determine type of stream."
 msgstr "無法決定資料串流的類型。"
 
-#: gst/gsterror.c:152
+#: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
 msgstr ""
 
-#: gst/gsterror.c:154
+#: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
 msgstr ""
 
-#: gst/gsterror.c:155
+#: gst/gsterror.c:231
 msgid "Could not decode stream."
 msgstr "無法將資料串流進行解碼。"
 
-#: gst/gsterror.c:156
+#: gst/gsterror.c:232
 msgid "Could not encode stream."
 msgstr "無法將資料串流進行編碼。"
 
-#: gst/gsterror.c:157
+#: gst/gsterror.c:233
 msgid "Could not demultiplex stream."
 msgstr ""
 
-#: gst/gsterror.c:158
+#: gst/gsterror.c:234
 msgid "Could not multiplex stream."
 msgstr ""
 
-#: gst/gsterror.c:159
-msgid "Stream is of the wrong format."
-msgstr "資料串流格式錯誤。"
-
-#: gst/gsterror.c:207
+#: gst/gsterror.c:285
 #, c-format
 msgid "No error message for domain %s."
 msgstr ""
 
-#: gst/gsterror.c:215
+#: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr ""
 
-#: gst/gsttag.c:83
+#: gst/gsttaglist.c:92
 msgid "title"
 msgstr "標題"
 
-#: gst/gsttag.c:83
+#: gst/gsttaglist.c:92
 msgid "commonly used title"
 msgstr ""
 
-#: gst/gsttag.c:86
+#: gst/gsttaglist.c:95
 msgid "artist"
 msgstr ""
 
-#: gst/gsttag.c:87
+#: gst/gsttaglist.c:96
 msgid "person(s) responsible for the recording"
 msgstr ""
 
-#: gst/gsttag.c:91
+#: gst/gsttaglist.c:100
 msgid "album"
 msgstr "專輯"
 
-#: gst/gsttag.c:92
+#: gst/gsttaglist.c:101
 msgid "album containing this data"
 msgstr "這些樂曲所屬的專輯"
 
-#: gst/gsttag.c:94
+#: gst/gsttaglist.c:103
 msgid "date"
 msgstr "日期"
 
-#: gst/gsttag.c:95
-msgid "date the data was created (in Julian calendar days)"
+#: gst/gsttaglist.c:103
+#, fuzzy
+msgid "date the data was created (as a GDate structure)"
 msgstr "媒體資料製作日期"
 
-#: gst/gsttag.c:98
+#: gst/gsttaglist.c:106
 msgid "genre"
 msgstr "樂曲分類"
 
-#: gst/gsttag.c:99
+#: gst/gsttaglist.c:107
 msgid "genre this data belongs to"
 msgstr "這首樂曲的分類"
 
-#: gst/gsttag.c:102
+#: gst/gsttaglist.c:110
 msgid "comment"
 msgstr "註解"
 
-#: gst/gsttag.c:103
+#: gst/gsttaglist.c:111
 msgid "free text commenting the data"
 msgstr "任意用來為媒體加上註解的文字"
 
-#: gst/gsttag.c:106
+#: gst/gsttaglist.c:114
 msgid "track number"
 msgstr "音軌編號"
 
-#: gst/gsttag.c:107
+#: gst/gsttaglist.c:115
 msgid "track number inside a collection"
 msgstr "樂曲屬於專輯中的第幾首樂曲"
 
-#: gst/gsttag.c:110
+#: gst/gsttaglist.c:118
 msgid "track count"
 msgstr "音軌總數"
 
-#: gst/gsttag.c:111
+#: gst/gsttaglist.c:119
 msgid "count of tracks inside collection this track belongs to"
 msgstr "整套專輯的樂曲總數"
 
-#: gst/gsttag.c:115
+#: gst/gsttaglist.c:123
 msgid "disc number"
 msgstr "碟片編號"
 
-#: gst/gsttag.c:116
+#: gst/gsttaglist.c:124
 msgid "disc number inside a collection"
 msgstr "整套專輯中該樂曲存取在第幾片碟片"
 
-#: gst/gsttag.c:119
+#: gst/gsttaglist.c:127
 msgid "disc count"
 msgstr "碟片總數"
 
-#: gst/gsttag.c:120
+#: gst/gsttaglist.c:128
 msgid "count of discs inside collection this disc belongs to"
 msgstr "整套專輯的碟片總數"
 
-#: gst/gsttag.c:124
+#: gst/gsttaglist.c:132
 msgid "location"
 msgstr "位置"
 
-#: gst/gsttag.c:125
+#: gst/gsttaglist.c:133
 msgid "original location of file as a URI"
 msgstr "URI 形式的檔案位置"
 
-#: gst/gsttag.c:129
+#: gst/gsttaglist.c:137
 msgid "description"
 msgstr "說明"
 
-#: gst/gsttag.c:130
+#: gst/gsttaglist.c:138
 msgid "short text describing the content of the data"
 msgstr "一段有關媒體內容的簡短說明文字"
 
-#: gst/gsttag.c:133
+#: gst/gsttaglist.c:141
 msgid "version"
 msgstr "版本"
 
-#: gst/gsttag.c:133
+#: gst/gsttaglist.c:141
 msgid "version of this data"
 msgstr "媒體檔案版本"
 
-#: gst/gsttag.c:136
+#: gst/gsttaglist.c:144
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttag.c:138
+#: gst/gsttaglist.c:146
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
 
-#: gst/gsttag.c:140
+#: gst/gsttaglist.c:148
 msgid "organization"
 msgstr "組織"
 
-#: gst/gsttag.c:143
+#: gst/gsttaglist.c:151
 msgid "copyright"
 msgstr "授權"
 
-#: gst/gsttag.c:143
+#: gst/gsttaglist.c:151
 msgid "copyright notice of the data"
 msgstr ""
 
-#: gst/gsttag.c:146
+#: gst/gsttaglist.c:154
 msgid "contact"
 msgstr "連絡"
 
-#: gst/gsttag.c:146
+#: gst/gsttaglist.c:154
 msgid "contact information"
 msgstr "連絡資訊"
 
-#: gst/gsttag.c:148
+#: gst/gsttaglist.c:156
 msgid "license"
 msgstr "條款"
 
-#: gst/gsttag.c:148
+#: gst/gsttaglist.c:156
 msgid "license of data"
 msgstr ""
 
-#: gst/gsttag.c:151
+#: gst/gsttaglist.c:159
 msgid "performer"
 msgstr "演出者"
 
-#: gst/gsttag.c:152
+#: gst/gsttaglist.c:160
 msgid "person(s) performing"
 msgstr ""
 
-#: gst/gsttag.c:155
+#: gst/gsttaglist.c:163
 msgid "duration"
 msgstr "時間長度"
 
-#: gst/gsttag.c:155
+#: gst/gsttaglist.c:163
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr ""
 
-#: gst/gsttag.c:158
+#: gst/gsttaglist.c:166
 msgid "codec"
 msgstr "編碼"
 
-#: gst/gsttag.c:159
+#: gst/gsttaglist.c:167
 msgid "codec the data is stored in"
 msgstr ""
 
-#: gst/gsttag.c:162
+#: gst/gsttaglist.c:170
 msgid "video codec"
 msgstr "視像編碼"
 
-#: gst/gsttag.c:162
+#: gst/gsttaglist.c:170
 msgid "codec the video data is stored in"
 msgstr ""
 
-#: gst/gsttag.c:165
+#: gst/gsttaglist.c:173
 msgid "audio codec"
 msgstr "音效編碼"
 
-#: gst/gsttag.c:165
+#: gst/gsttaglist.c:173
 msgid "codec the audio data is stored in"
 msgstr "音效"
 
-#: gst/gsttag.c:167
+#: gst/gsttaglist.c:175
 msgid "bitrate"
 msgstr "位元率"
 
-#: gst/gsttag.c:167
+#: gst/gsttaglist.c:175
 msgid "exact or average bitrate in bits/s"
 msgstr "準確的或平均的位元率 (bit/s)"
 
-#: gst/gsttag.c:169
+#: gst/gsttaglist.c:177
 msgid "nominal bitrate"
 msgstr ""
 
-#: gst/gsttag.c:169
+#: gst/gsttaglist.c:177
 msgid "nominal bitrate in bits/s"
 msgstr ""
 
-#: gst/gsttag.c:171
+#: gst/gsttaglist.c:179
 msgid "minimum bitrate"
 msgstr "最低位元率"
 
-#: gst/gsttag.c:171
+#: gst/gsttaglist.c:179
 msgid "minimum bitrate in bits/s"
 msgstr "最低位元率 (bit/s)"
 
-#: gst/gsttag.c:173
+#: gst/gsttaglist.c:181
 msgid "maximum bitrate"
 msgstr "最高位元率"
 
-#: gst/gsttag.c:173
+#: gst/gsttaglist.c:181
 msgid "maximum bitrate in bits/s"
 msgstr "最高位元率 (bit/s)"
 
-#: gst/gsttag.c:176
+#: gst/gsttaglist.c:184
 msgid "encoder"
 msgstr "編碼程序"
 
-#: gst/gsttag.c:176
+#: gst/gsttaglist.c:184
 msgid "encoder used to encode this stream"
 msgstr ""
 
-#: gst/gsttag.c:179
+#: gst/gsttaglist.c:187
 msgid "encoder version"
 msgstr ""
 
-#: gst/gsttag.c:180
+#: gst/gsttaglist.c:188
 msgid "version of the encoder used to encode this stream"
 msgstr ""
 
-#: gst/gsttag.c:182
+#: gst/gsttaglist.c:190
 msgid "serial"
 msgstr ""
 
-#: gst/gsttag.c:182
+#: gst/gsttaglist.c:190
 msgid "serial number of track"
 msgstr ""
 
-#: gst/gsttag.c:184
+#: gst/gsttaglist.c:192
 msgid "replaygain track gain"
 msgstr ""
 
-#: gst/gsttag.c:184
+#: gst/gsttaglist.c:192
 msgid "track gain in db"
 msgstr ""
 
-#: gst/gsttag.c:186
+#: gst/gsttaglist.c:194
 msgid "replaygain track peak"
 msgstr ""
 
-#: gst/gsttag.c:186
+#: gst/gsttaglist.c:194
 msgid "peak of the track"
 msgstr ""
 
-#: gst/gsttag.c:188
+#: gst/gsttaglist.c:196
 msgid "replaygain album gain"
 msgstr ""
 
-#: gst/gsttag.c:188
+#: gst/gsttaglist.c:196
 msgid "album gain in db"
 msgstr ""
 
-#: gst/gsttag.c:190
+#: gst/gsttaglist.c:198
 msgid "replaygain album peak"
 msgstr ""
 
-#: gst/gsttag.c:190
+#: gst/gsttaglist.c:198
 msgid "peak of the album"
 msgstr ""
 
-#: gst/gsttag.c:229
+#: gst/gsttaglist.c:200
+msgid "language code"
+msgstr ""
+
+#: gst/gsttaglist.c:201
+msgid "language code for this stream, conforming to ISO-639-1"
+msgstr ""
+
+#: gst/gsttaglist.c:240
 msgid ", "
 msgstr ""
 
-#: gst/autoplug/gstspider.c:466
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr ""
-
-#: gst/elements/gstfilesink.c:268
-msgid "No file name specified for writing."
-msgstr "未指定準備寫入的檔案名稱。"
-
-#: gst/elements/gstfilesink.c:275
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "無法開啟 “%s” 檔案來寫入內容。"
-
-#: gst/elements/gstfilesink.c:294
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "關閉檔案 “%s” 時發生錯誤。"
-
-#: gst/elements/gstfilesink.c:364 gst/elements/gstfilesink.c:399
-#: gst/elements/gstfilesink.c:452
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
-
-#: gst/elements/gstfilesrc.c:766 gst/elements/gstmultifilesrc.c:298
-msgid "No file name specified for reading."
-msgstr "未指定要讀取的檔案名稱。"
-
-#: gst/elements/gstfilesrc.c:781 gst/elements/gstmultifilesrc.c:306
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "無法開啟檔案 “%s” 來讀取內容。"
-
-#: gst/elements/gstfilesrc.c:792
-#, c-format
-msgid "\"%s\" is a directory."
-msgstr "“%s” 是一個目錄。"
-
-#: gst/elements/gstfilesrc.c:798
-#, c-format
-msgid "File \"%s\" is a socket."
-msgstr "“%s” 是一個 socket。"
-
-#: gst/elements/gstidentity.c:304
-msgid "Failed after iterations as requested."
-msgstr ""
-
-#: gst/elements/gsttypefindelement.c:157
-msgid "caps"
-msgstr ""
-
-#: gst/elements/gsttypefindelement.c:158
-msgid "detected capabilities in stream"
-msgstr ""
-
-#: gst/elements/gsttypefindelement.c:161
-msgid "minimum"
-msgstr "最低"
-
-#: gst/elements/gsttypefindelement.c:165
-msgid "maximum"
-msgstr "最高"
-
-#: gst/parse/grammar.y:186
+#: gst/parse/grammar.y:206
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr ""
 
-#: gst/parse/grammar.y:191
+#: gst/parse/grammar.y:212
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr ""
 
-#: gst/parse/grammar.y:262
+#: gst/parse/grammar.y:294
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "“%2$s” 元件沒有 “%1$s” 屬性"
 
-#: gst/parse/grammar.y:275
+#: gst/parse/grammar.y:309
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "無法將 “%2$s” 元件的 “%1$s” 屬性設定為 “%3$s”"
 
-#: gst/parse/grammar.y:460
+#: gst/parse/grammar.y:532
 #, c-format
 msgid "could not link %s to %s"
 msgstr "無法連接 %s 和 %s"
 
-#: gst/parse/grammar.y:505
+#: gst/parse/grammar.y:578
 #, c-format
 msgid "no element \"%s\""
 msgstr "“%s” 元件不存在"
 
-#: gst/parse/grammar.y:556
+#: gst/parse/grammar.y:624
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:578 gst/parse/grammar.y:626 gst/parse/grammar.y:642
-#: gst/parse/grammar.y:700
+#: gst/parse/grammar.y:646 gst/parse/grammar.y:694 gst/parse/grammar.y:710
+#: gst/parse/grammar.y:768
 msgid "link without source element"
 msgstr "管線中沒有來源元件"
 
-#: gst/parse/grammar.y:584 gst/parse/grammar.y:623 gst/parse/grammar.y:709
+#: gst/parse/grammar.y:652 gst/parse/grammar.y:691 gst/parse/grammar.y:777
 msgid "link without sink element"
 msgstr "管線中沒有輸出元件"
 
-#: gst/parse/grammar.y:660
+#: gst/parse/grammar.y:728
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "URI “%s” 沒有來源元件"
 
-#: gst/parse/grammar.y:670
+#: gst/parse/grammar.y:738
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr ""
 
-#: gst/parse/grammar.y:678
+#: gst/parse/grammar.y:746
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "URI “%s” 沒有輸出元件"
 
-#: gst/parse/grammar.y:682
+#: gst/parse/grammar.y:750
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr ""
 
-#: gst/parse/grammar.y:694
+#: gst/parse/grammar.y:762
 msgid "empty pipeline not allowed"
 msgstr "不允許使用沒有內容的管線"
 
-#: tools/gst-inspect.c:1130
+#: libs/gst/base/gstbasesrc.c:1314 libs/gst/base/gstbasesrc.c:1323
+#: plugins/elements/gstqueue.c:820
+msgid "Internal data flow error."
+msgstr ""
+
+#: libs/gst/base/gstbasesink.c:633
+msgid "Internal data flow problem."
+msgstr ""
+
+#: plugins/elements/gstfilesink.c:230
+msgid "No file name specified for writing."
+msgstr "未指定準備寫入的檔案名稱。"
+
+#: plugins/elements/gstfilesink.c:237
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "無法開啟 “%s” 檔案來寫入內容。"
+
+#: plugins/elements/gstfilesink.c:253
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "關閉檔案 “%s” 時發生錯誤。"
+
+#: plugins/elements/gstfilesink.c:361 plugins/elements/gstfilesink.c:425
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
+
+#: plugins/elements/gstfilesrc.c:910
+msgid "No file name specified for reading."
+msgstr "未指定要讀取的檔案名稱。"
+
+#: plugins/elements/gstfilesrc.c:922
+#, fuzzy, c-format
+msgid "Could not open file \"%s\" for reading: %s."
+msgstr "無法開啟檔案 “%s” 來讀取內容。"
+
+#: plugins/elements/gstfilesrc.c:931
+#, fuzzy, c-format
+msgid "could not get info on \"%s\"."
+msgstr "無法連接 %s 和 %s"
+
+#: plugins/elements/gstfilesrc.c:938
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr "“%s” 是一個目錄。"
+
+#: plugins/elements/gstfilesrc.c:945
+#, c-format
+msgid "File \"%s\" is a socket."
+msgstr "“%s” 是一個 socket。"
+
+#: plugins/elements/gstidentity.c:359
+msgid "Failed after iterations as requested."
+msgstr ""
+
+#: plugins/elements/gsttypefindelement.c:183
+msgid "caps"
+msgstr ""
+
+#: plugins/elements/gsttypefindelement.c:184
+msgid "detected capabilities in stream"
+msgstr ""
+
+#: plugins/elements/gsttypefindelement.c:187
+msgid "minimum"
+msgstr "最低"
+
+#: plugins/elements/gsttypefindelement.c:191
+msgid "maximum"
+msgstr "最高"
+
+#: tools/gst-inspect.c:1110
 msgid "Print all elements"
 msgstr "顯示所有元件"
 
-#: tools/gst-launch.c:107
-#, c-format
-msgid "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, max %s ns).\n"
-msgstr "%s 個迴圈後執行完畢 (總共 %s ns，平均 %s ns，最少 %s ns，最多 %s ns)\n"
-
-#: tools/gst-launch.c:134
+#: tools/gst-launch.c:82
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "用法：gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 
-#: tools/gst-launch.c:142
+#: tools/gst-launch.c:91
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "錯誤：無法解析 XML 檔案 ‘%s’ 的內容。\n"
 
-#: tools/gst-launch.c:148
+#: tools/gst-launch.c:97
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr ""
 
-#: tools/gst-launch.c:155
+#: tools/gst-launch.c:104
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr ""
 
-#: tools/gst-launch.c:166
+#: tools/gst-launch.c:115
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "錯誤：無法解析指令的第 %d 個參數：%s。\n"
 
-#: tools/gst-launch.c:177
+#: tools/gst-launch.c:126
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr ""
 
-#: tools/gst-launch.c:316
+#: tools/gst-launch.c:380
+#, fuzzy, c-format
+msgid "Got Message from element \"%s\" (%s): "
+msgstr "錯誤：來自 %s 元件：%s\n"
+
+#: tools/gst-launch.c:407
+#, fuzzy, c-format
+msgid "Got EOS from element \"%s\".\n"
+msgstr "錯誤：來自 %s 元件：%s\n"
+
+#: tools/gst-launch.c:417
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr ""
 
-#: tools/gst-launch.c:403
+#: tools/gst-launch.c:463
+#, c-format
+msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
+msgstr ""
+
+#: tools/gst-launch.c:494
 msgid "Output tags (also known as metadata)"
 msgstr ""
 
-#: tools/gst-launch.c:405
+#: tools/gst-launch.c:496
 msgid "Output status information and property notifications"
 msgstr ""
 
-#: tools/gst-launch.c:407
+#: tools/gst-launch.c:498
+msgid "Output messages"
+msgstr ""
+
+#: tools/gst-launch.c:500
 msgid "Do not output status information of TYPE"
 msgstr "不顯示和 TYPE 有關的狀態資訊"
 
-#: tools/gst-launch.c:407
+#: tools/gst-launch.c:500
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-#: tools/gst-launch.c:410
+#: tools/gst-launch.c:503
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "將代表管線的架構儲存至<檔案>，然後結束"
 
-#: tools/gst-launch.c:410
+#: tools/gst-launch.c:503
 msgid "FILE"
 msgstr "檔案"
 
-#: tools/gst-launch.c:413
+#: tools/gst-launch.c:506
 msgid "Do not install a fault handler"
 msgstr ""
 
-#: tools/gst-launch.c:415
+#: tools/gst-launch.c:508
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "印出 alloc 追蹤訊息 (如果編譯程式時有啟用這項功能)"
 
-#: tools/gst-launch.c:417
-msgid "Number of times to iterate pipeline"
-msgstr "管線執行次數"
-
-#: tools/gst-launch.c:487
+#: tools/gst-launch.c:586
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "錯誤：無法製作管線：%s。\n"
 
-#: tools/gst-launch.c:491
+#: tools/gst-launch.c:590
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "錯誤：無法製作管線。\n"
 
-#: tools/gst-launch.c:495
+#: tools/gst-launch.c:594
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "警告：管線錯誤：%s\n"
 
-#: tools/gst-launch.c:496
-#, c-format
-msgid "         Trying to run anyway.\n"
-msgstr "      嘗試強制執行。\n"
-
-#: tools/gst-launch.c:523
+#: tools/gst-launch.c:620
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "錯誤：找不到 ‘pipeline’ 元件。\n"
 
-#: tools/gst-launch.c:530
+#: tools/gst-launch.c:626 tools/gst-launch.c:673
 #, c-format
-msgid "RUNNING pipeline ...\n"
-msgstr "執行管線 ...\n"
+msgid "Setting pipeline to PAUSED ...\n"
+msgstr ""
 
-#: tools/gst-launch.c:533
+#: tools/gst-launch.c:631
+#, fuzzy, c-format
+msgid "ERROR: Pipeline doesn't want to pause.\n"
+msgstr "錯誤：管線無法執行。\n"
+
+#: tools/gst-launch.c:636
+#, fuzzy, c-format
+msgid "ERROR: Pipeline can't PREROLL ...\n"
+msgstr "錯誤：管線無法執行。\n"
+
+#: tools/gst-launch.c:639
+#, c-format
+msgid "Pipeline is PREROLLING ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:643
+#, c-format
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:650
+#, fuzzy, c-format
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "錯誤：管線無法執行。\n"
+
+#: tools/gst-launch.c:655
+#, c-format
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:658
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "錯誤：管線無法執行。\n"
 
-# (abel) e.g. "Added plugin alaw with 2 features."
-#: tools/gst-register.c:49
-#, c-format
-msgid "Added plugin %s with %d %s.\n"
-msgstr "加入增效模組 %s，當中有 %d 項%s。\n"
-
-#: tools/gst-register.c:51 tools/gst-register.c:169
-msgid "feature"
-msgid_plural "features"
-msgstr[0] "功能"
-
-#: tools/gst-register.c:112
-#, c-format
-msgid "Added path   %s to %s \n"
+#: tools/gst-launch.c:669
+msgid "Execution ended after %"
 msgstr ""
 
-#: tools/gst-register.c:127
-#, c-format
-msgid "Rebuilding %s (%s) ...\n"
-msgstr "正在重新整理 %s (%s) ...\n"
+#: tools/gst-launch.c:669
+msgid " ns.\n"
+msgstr ""
 
-#: tools/gst-register.c:132
+#: tools/gst-launch.c:676
 #, c-format
-msgid "Trying to load %s ...\n"
-msgstr "嘗試載入 %s ...\n"
+msgid "Setting pipeline to READY ...\n"
+msgstr ""
 
-#: tools/gst-register.c:134
+#: tools/gst-launch.c:681
 #, c-format
-msgid "Error loading %s\n"
-msgstr "載入 %s 失敗\n"
+msgid "Setting pipeline to NULL ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:686
+#, fuzzy, c-format
+msgid "FREEING pipeline ...\n"
+msgstr "執行管線 ...\n"
+
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "關閉 CPU 優化功能"
+
+#~ msgid "SCHEDULER"
+#~ msgstr "SCHEDULER"
+
+#~ msgid "REGISTRY"
+#~ msgstr "REGISTRY"
+
+#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgstr "搜尋增效模組時的路徑清單，以‘%s’分隔"
+
+#~ msgid "Scheduler to use (default is '%s')"
+#~ msgstr "準備使用的排程器 (預設為 ‘%s’)"
+
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr "GStreamer 內部錯誤：排程器發生問題。請匯報錯誤。"
+
+#~ msgid "Stream is of the wrong format."
+#~ msgstr "資料串流格式錯誤。"
+
+#~ msgid ""
+#~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+#~ "max %s ns).\n"
+#~ msgstr ""
+#~ "%s 個迴圈後執行完畢 (總共 %s ns，平均 %s ns，最少 %s ns，最多 %s ns)\n"
+
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "管線執行次數"
+
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "      嘗試強制執行。\n"
+
+# (abel) e.g. "Added plugin alaw with 2 features."
+#~ msgid "Added plugin %s with %d %s.\n"
+#~ msgstr "加入增效模組 %s，當中有 %d 項%s。\n"
+
+#~ msgid "feature"
+#~ msgid_plural "features"
+#~ msgstr[0] "功能"
+
+#~ msgid "Rebuilding %s (%s) ...\n"
+#~ msgstr "正在重新整理 %s (%s) ...\n"
+
+#~ msgid "Trying to load %s ...\n"
+#~ msgstr "嘗試載入 %s ...\n"
+
+#~ msgid "Error loading %s\n"
+#~ msgstr "載入 %s 失敗\n"
 
 # (abel) e.g. "Loaded 146 plugins with 293 features."
-#: tools/gst-register.c:168
-#, c-format
-msgid "Loaded %d plugins with %d %s.\n"
-msgstr "載入 %d 個增效模組，當中有 %d 項%s。\n"
+#~ msgid "Loaded %d plugins with %d %s.\n"
+#~ msgstr "載入 %d 個增效模組，當中有 %d 項%s。\n"
