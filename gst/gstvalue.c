@@ -4002,7 +4002,7 @@ _gst_value_initialize (void)
   {
     volatile GType date_type = G_TYPE_DATE;
 
-    GST_LOG ("Faking out the compiler: %d", date_type);
+    g_type_name (date_type);
   }
 #endif
 

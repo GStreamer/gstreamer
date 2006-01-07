@@ -1,3 +1,8 @@
+2006-01-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstvalue.c: (_gst_value_initialize):
+	  make the G_TYPE_DATE instantiation work if debug is disabled
+
 2006-01-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstmessage.c: (gst_message_parse_tag),
