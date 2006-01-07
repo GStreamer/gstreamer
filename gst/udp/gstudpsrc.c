@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Nokia Corporation <kai.vehmanen@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -76,7 +77,8 @@ enum
   PROP_MULTICAST_GROUP,
   PROP_URI,
   PROP_CAPS,
-  /* FILL ME */
+  PROP_SOCKFD
+      /* FILL ME */
 };
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
@@ -149,6 +151,10 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",
           "The caps of the source pad", GST_TYPE_CAPS, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_SOCKFD,
+      g_param_spec_int ("sockfd", "socket handle",
+          "Socket to use for UDP reception.",
+          0, G_MAXINT16, 0, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
@@ -403,6 +409,10 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       gst_pad_set_caps (GST_BASE_SRC (udpsrc)->srcpad, new_caps);
       break;
     }
+    case PROP_SOCKFD:
+      udpsrc->sock = g_value_get_int (value);
+      GST_DEBUG ("setting SOCKFD to %d", udpsrc->sock);
+      break;
     default:
       break;
   }
@@ -426,6 +436,9 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CAPS:
       gst_value_set_caps (value, udpsrc->caps);
+      break;
+    case PROP_SOCKFD:
+      g_value_set_int (value, udpsrc->sock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -454,27 +467,30 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   fcntl (READ_SOCKET (src), F_SETFL, O_NONBLOCK);
   fcntl (WRITE_SOCKET (src), F_SETFL, O_NONBLOCK);
 
-  if ((ret = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
-    goto no_socket;
+  if (src->sock == -1) {
+    if ((ret = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
+      goto no_socket;
 
-  src->sock = ret;
+    src->sock = ret;
 
-  reuse = 1;
-  if ((ret =
-          setsockopt (src->sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
-              sizeof (reuse))) < 0)
-    goto setsockopt_error;
+    reuse = 1;
+    if ((ret =
+            setsockopt (src->sock, SOL_SOCKET, SO_REUSEADDR, &reuse,
+                sizeof (reuse))) < 0)
+      goto setsockopt_error;
 
-  memset (&src->myaddr, 0, sizeof (src->myaddr));
-  src->myaddr.sin_family = AF_INET;     /* host byte order */
-  src->myaddr.sin_port = htons (src->port);     /* short, network byte order */
-  src->myaddr.sin_addr.s_addr = INADDR_ANY;
+    /* XXX-kvehmanen: add ability to select a random, free port */
+    memset (&src->myaddr, 0, sizeof (src->myaddr));
+    src->myaddr.sin_family = AF_INET;   /* host byte order */
+    src->myaddr.sin_port = htons (src->port);   /* short, network byte order */
+    src->myaddr.sin_addr.s_addr = INADDR_ANY;
 
-  GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
-  if ((ret =
-          bind (src->sock, (struct sockaddr *) &src->myaddr,
-              sizeof (src->myaddr))) < 0)
-    goto bind_error;
+    GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
+    if ((ret =
+            bind (src->sock, (struct sockaddr *) &src->myaddr,
+                sizeof (src->myaddr))) < 0)
+      goto bind_error;
+  }
 
   if (inet_aton (src->multi_group, &(src->multi_addr.imr_multiaddr))) {
     if (src->multi_addr.imr_multiaddr.s_addr) {

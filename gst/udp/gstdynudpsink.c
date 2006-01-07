@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org>
+ * Copyright (C) <2005> Nokia Corporation <kai.vehmanen@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -54,7 +55,8 @@ enum
 enum
 {
   PROP_0,
-  /* FILL ME */
+  PROP_SOCKFD
+      /* FILL ME */
 };
 
 static void gst_dynudpsink_base_init (gpointer g_class);
@@ -139,6 +141,11 @@ gst_dynudpsink_class_init (GstDynUDPSink * klass)
       NULL, NULL, gst_udp_marshal_BOXED__STRING_INT, G_TYPE_VALUE_ARRAY, 2,
       G_TYPE_STRING, G_TYPE_INT);
 
+  g_object_class_install_property (gobject_class, PROP_SOCKFD,
+      g_param_spec_int ("sockfd", "socket handle",
+          "Socket to use for UDP reception.",
+          0, G_MAXINT16, 0, G_PARAM_READWRITE));
+
   gstelement_class->change_state = gst_dynudpsink_change_state;
 
   gstbasesink_class->get_times = gst_dynudpsink_get_times;
@@ -151,6 +158,11 @@ gst_dynudpsink_class_init (GstDynUDPSink * klass)
 static void
 gst_dynudpsink_init (GstDynUDPSink * sink)
 {
+  GstDynUDPSink *udpsink;
+
+  udpsink = GST_DYNUDPSINK (sink);
+
+  sink->sock = -1;
 }
 
 static void
@@ -231,6 +243,11 @@ gst_dynudpsink_set_property (GObject * object, guint prop_id,
   udpsink = GST_DYNUDPSINK (object);
 
   switch (prop_id) {
+    case PROP_SOCKFD:
+      udpsink->sock = g_value_get_int (value);
+      GST_DEBUG ("setting SOCKFD to %d", udpsink->sock);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -246,6 +263,10 @@ gst_dynudpsink_get_property (GObject * object, guint prop_id, GValue * value,
   udpsink = GST_DYNUDPSINK (object);
 
   switch (prop_id) {
+    case PROP_SOCKFD:
+      g_value_set_int (value, udpsink->sock);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -260,15 +281,18 @@ gst_dynudpsink_init_send (GstDynUDPSink * sink)
   guint bc_val;
   gint ret;
 
-  /* create sender socket */
-  if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
-    goto no_socket;
+  if (sink->sock == -1) {
+    /* create sender socket if none available */
 
-  bc_val = 1;
-  if ((ret =
-          setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
-              sizeof (bc_val))) < 0)
-    goto no_broadcast;
+    if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
+      goto no_socket;
+
+    bc_val = 1;
+    if ((ret =
+            setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
+                sizeof (bc_val))) < 0)
+      goto no_broadcast;
+  }
 
   return TRUE;
 
