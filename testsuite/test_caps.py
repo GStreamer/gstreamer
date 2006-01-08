@@ -61,7 +61,7 @@ class CapsTest(TestCase):
         assert caps[0]['width'] == 10
 
     def testCapsConstructFromStructure(self):
-        struct = gst.structure_from_string('video/x-raw-yuv,width=10')
+        struct = gst.structure_from_string('video/x-raw-yuv,width=10,framerate=[0/1, 25/3]')
         caps = gst.Caps(struct)
         assert isinstance(caps, gst.Caps)
         assert len(caps) == 1
@@ -69,6 +69,7 @@ class CapsTest(TestCase):
         assert caps[0].get_name() == 'video/x-raw-yuv'
         assert isinstance(caps[0]['width'], int)
         assert caps[0]['width'] == 10
+        assert isinstance(caps[0]['framerate'], gst.FractionRange)
 
     def testCapsConstructFromStructures(self):
         struct1 = gst.structure_from_string('video/x-raw-yuv,width=10')

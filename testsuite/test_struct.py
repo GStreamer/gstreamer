@@ -73,6 +73,12 @@ class StructureTest(TestCase):
         s['frac'] = gst.Fraction(3,4)
         assert s['frac'].num == 3
         assert s['frac'].denom == 4
+        s['fracrange'] = gst.FractionRange(gst.Fraction(0,1),
+                                           gst.Fraction(25,3))
+        assert s['fracrange'].low.num == 0
+        assert s['fracrange'].low.denom == 1
+        assert s['fracrange'].high.num == 25
+        assert s['fracrange'].high.denom == 3
         s['intrange'] = gst.IntRange(5,21)
         assert s['intrange'].low == 5
         assert s['intrange'].high == 21

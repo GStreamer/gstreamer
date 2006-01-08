@@ -113,14 +113,16 @@ _wrap_gst_structure_set_value(PyObject *self, PyObject *args, PyObject *kwargs)
         } else {
             /* Let PyGTK guess a GType for the object. */
             type = pyg_type_from_object((PyObject *) py_value->ob_type);
-            if (type == 0) {
-		return NULL;
-            }
         }
 
-	g_value_init(&value, type);
+	if (type != G_TYPE_INVALID) {
+	    g_value_init(&value, type);
+	} else if (!pygst_value_init_for_pyobject(&value, py_value)) {
+	    return NULL;
+	}
+
 	if (pygst_value_from_pyobject(&value, py_value) != 0) {
-		return NULL;
+	    return NULL;
 	}
 	gst_structure_set_value(pyg_boxed_get(self, GstStructure), field,
             &value);
