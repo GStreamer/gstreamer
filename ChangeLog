@@ -1,3 +1,7 @@
+2006-01-09  Edward Hervey  <edward@fluendo.com>
+
+	* gst-libs/gst/Makefile.am:
+
 2006-01-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/Makefile.am:

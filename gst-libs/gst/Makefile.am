@@ -1,8 +1,11 @@
+# The interfaces directory has to be built before the others,
+# otherwise some generated header files will be missing for the
+# plugins in the other directories.
 SUBDIRS = \
+	interfaces \
 	audio \
 	cdda \
 	floatcast \
-	interfaces \
 	netbuffer \
 	riff \
 	rtp \
