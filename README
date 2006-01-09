@@ -176,23 +176,19 @@ COMPILING FROM SOURCE TARBALLS
   make
 
   to build GStreamer.
-- if you want to install it (not required), run
+- if you want to install it (not required, but what you usually want to do), run
   make install
-- You should create a registry for things to work.
-  If you ran make install in the previous step, run
-  gst-register
-  as root.
-
-  If you didn't install, run
-  tools/gst-register
-  as a normal user.
 
 - try out a simple test:
-  gst-launch fakesrc num_buffers=5 ! fakesink
-  (If you didn't install GStreamer, again prefix gst-launch with tools/)
+  gst-launch -v fakesrc num_buffers=5 ! fakesink
+  (If you didn't install GStreamer, prefix gst-launch with tools/)
 
   If it outputs a bunch of messages from fakesrc and fakesink, everything is
   ok.
+
+  If it did not work, keep in mind that you might need to adjust the
+  PATH and/or LD_LIBRARY_PATH environment variables to make the system
+  find GStreamer in the prefix where you installed (by default that is /usr/local).
 
 - After this, you're ready to install gst-plugins, which will provide the
   functionality you're probably looking for by now, so go on and read
