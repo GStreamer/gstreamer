@@ -1,3 +1,9 @@
+2006-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/Makefile.am:
+	  Link against libgstinterfaces, needed for mixer
+	  and property probe stuff.
+
 2006-01-09  Edward Hervey  <edward@fluendo.com>
 
 	* gst-libs/gst/Makefile.am:

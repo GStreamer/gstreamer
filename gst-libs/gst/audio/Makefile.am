@@ -45,7 +45,8 @@ nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	multichannel-enumtypes.h
 
 libgstaudio_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
-libgstaudio_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
+libgstaudio_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) \
+  $(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la
 libgstaudio_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 libgstaudiofilterexample_la_SOURCES = gstaudiofilterexample.c
