@@ -15,7 +15,10 @@ EXTRA_DIST = gstaudiofiltertemplate.c make_filter
 CLEANFILES = gstaudiofilterexample.c \
 	$(BUILT_SOURCES)
 
-libgstaudio_@GST_MAJORMINOR@_la_SOURCES = audio.c gstaudioclock.c \
+libgstaudio_@GST_MAJORMINOR@_la_SOURCES = \
+	audio.c \
+	gstaudioclock.c \
+	mixerutils.c \
 	multichannel.c \
 	gstaudiofilter.c \
 	gstaudiosink.c \
@@ -35,6 +38,7 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	gstbaseaudiosink.h \
 	gstbaseaudiosrc.h \
 	gstringbuffer.h \
+	mixerutils.h \
 	multichannel.h
 
 nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS = \

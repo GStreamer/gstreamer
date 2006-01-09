@@ -1,3 +1,16 @@
+2006-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/audio/mixerutils.c:
+	(gst_audio_mixer_filter_do_filter),
+	(gst_audio_mixer_filter_check_element),
+	(gst_audio_mixer_filter_probe_feature),
+	(element_factory_rank_compare_func),
+	(gst_audio_default_registry_mixer_filter):
+	* gst-libs/gst/audio/mixerutils.h:
+	  Add gst_audio_default_registry_mixer_filter() utility
+	  function.
+
 2006-01-03  Michael Smith  <msmith@fluendo.com>
 
 	* gst/audioresample/resample.h:
