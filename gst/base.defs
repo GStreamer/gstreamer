@@ -81,7 +81,7 @@
 (define-method peek
   (of-object "GstAdapter")
   (c-name "gst_adapter_peek")
-  (return-type "const-gchar*")
+  (return-type "const-guint8*")
   (parameters
     '("guint" "size")
   )
@@ -99,7 +99,7 @@
 (define-method take
   (of-object "GstAdapter")
   (c-name "gst_adapter_take")
-  (return-type "gchar*")
+  (return-type "guint8*")
   (parameters
     '("guint" "nbytes")
   )

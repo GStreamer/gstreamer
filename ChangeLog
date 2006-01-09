@@ -1,3 +1,10 @@
+2006-01-09  Edward Hervey  <edward@fluendo.com>
+
+	* gst/base.defs:
+	Revert guint8* to gchar* modifications for the adapter
+	* gst/gst.defs:
+	Cleanups and API additions
+
 2006-01-08  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/gststructure.override: (_wrap_gst_structure_set_value):

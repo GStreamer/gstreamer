@@ -5927,6 +5927,7 @@
     '("gchar**" "extensions")
     '("const-GstCaps*" "possible_caps")
     '("gpointer" "data")
+    '("GDestroyNotify" "data_notify")
   )
 )
 
@@ -6086,16 +6087,16 @@
   )
 )
 
-(define-function gdouble_to_guint64
-  (c-name "gst_gdouble_to_guint64")
+(define-function util_gdouble_to_guint64
+  (c-name "gst_util_gdouble_to_guint64")
   (return-type "guint64")
   (parameters
     '("gdouble" "value")
   )
 )
 
-(define-function guint64_to_gdouble
-  (c-name "gst_guint64_to_gdouble")
+(define-function util_guint64_to_gdouble
+  (c-name "gst_util_guint64_to_gdouble")
   (return-type "gdouble")
   (parameters
     '("guint64" "value")
@@ -6112,7 +6113,7 @@
   )
 )
 
-(define-function gst_util_uint64_scale_int
+(define-function util_uint64_scale_int
   (c-name "gst_util_uint64_scale_int")
   (return-type "guint64")
   (parameters
