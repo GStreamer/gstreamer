@@ -1,3 +1,42 @@
+2006-01-09 Brian Cameron <brian.cameron@sun.com>
+
+	reviewed by: Christian Schaller <uraeus@gnome.org>
+	
+	Add SunAudio plugin - tested to make sure it doesn't break
+	the build under GNU/Linux.	
+
+	* configure.ac:
+	* gst-plugins-good.spec.in:
+	* sys/Makefile.am:
+	* sys/sunaudio/Makefile.am:
+	* sys/sunaudio/gstsunaudio.c: (plugin_init):
+	* sys/sunaudio/gstsunaudiomixer.c: (gst_sunaudiomixer_base_init),
+        (gst_sunaudiomixer_class_init), (gst_sunaudiomixer_init),
+        (gst_sunaudiomixer_change_state):
+        * sys/sunaudio/gstsunaudiomixer.h:
+        * sys/sunaudio/gstsunaudiomixerctrl.c:
+        (gst_sunaudiomixer_ctrl_open), (gst_sunaudiomixer_ctrl_build_list),
+        (gst_sunaudiomixer_ctrl_new), (gst_sunaudiomixer_ctrl_free),
+        (gst_sunaudiomixer_ctrl_list_tracks),
+        (gst_sunaudiomixer_ctrl_get_volume),
+        (gst_sunaudiomixer_ctrl_set_volume),
+        (gst_sunaudiomixer_ctrl_set_mute),
+        (gst_sunaudiomixer_ctrl_set_record):
+        * sys/sunaudio/gstsunaudiomixerctrl.h:
+        * sys/sunaudio/gstsunaudiomixertrack.c:
+        (gst_sunaudiomixer_track_class_init),
+        (gst_sunaudiomixer_track_init), (fill_labels),
+        (gst_sunaudiomixer_track_new):
+        * sys/sunaudio/gstsunaudiomixertrack.h:
+        * sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_get_type),
+        (gst_sunaudiosink_dispose), (gst_sunaudiosink_base_init),
+        (gst_sunaudiosink_set_property), (gst_sunaudiosink_get_property),
+        (gst_sunaudiosink_getcaps), (gst_sunaudiosink_open),
+        (gst_sunaudiosink_close), (gst_sunaudiosink_prepare),
+        (gst_sunaudiosink_unprepare), (gst_sunaudiosink_write),
+        (gst_sunaudiosink_delay), (gst_sunaudiosink_reset):
+        * sys/sunaudio/gstsunaudiosink.h:
+
 2005-01-07  Philippe Khalaf  <philippe.kalaf@collabora.co.uk>
 
 	* gst-plugins-good/gst/udp/gstdynudpsink.c:

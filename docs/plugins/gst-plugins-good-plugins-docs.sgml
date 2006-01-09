@@ -19,6 +19,8 @@
     <xi:include href="xml/element-goom.xml" />
     <xi:include href="xml/element-id3demux.xml" />
     <xi:include href="xml/element-level.xml" />
+    <xi:include href="xml/element-sunaudiomixer.xml" />
+    <xi:include href="xml/element-sunaudiosink.xml" />
     <xi:include href="xml/element-multipartmux.xml" />
     <xi:include href="xml/element-multipartdemux.xml" />
     <xi:include href="xml/element-videomixer.xml" />
@@ -60,6 +62,7 @@
     <xi:include href="xml/plugin-shout2send.xml" />
     <xi:include href="xml/plugin-smpte.xml" />
     <xi:include href="xml/plugin-speex.xml" />
+    <xi:include href="xml/plugin-sunaudio.xml" />
     <xi:include href="xml/plugin-udp.xml" />
     <xi:include href="xml/plugin-videobox.xml" />
     <xi:include href="xml/plugin-videoflip.xml" />

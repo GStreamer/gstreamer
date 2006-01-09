@@ -10,6 +10,12 @@ else
 OSS_DIR=
 endif
 
+if USE_SUNAUDIO
+SUNAUDIO_DIR=sunaudio
+else
+SUNAUDIO_DIR=
+endif
+
 # if USE_OSX_AUDIO
 # OSX_AUDIO_DIR=osxaudio
 # else
@@ -26,12 +32,6 @@ endif
 # QCAM_DIR=qcam
 # else
 # QCAM_DIR=
-# endif
-
-# if USE_SUNAUDIO
-# SUNAUDIO_DIR=sunaudio
-# else
-# SUNAUDIO_DIR=
 # endif
 
 # if USE_GST_V4L2
@@ -58,6 +58,6 @@ endif
 # GL_DIR=
 # endif
 
-SUBDIRS=$(OSS_DIR) 
+SUBDIRS=$(OSS_DIR) $(SUNAUDIO_DIR)
 
-DIST_SUBDIRS=oss
+DIST_SUBDIRS=oss sunaudio

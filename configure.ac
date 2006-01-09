@@ -168,6 +168,10 @@ AC_CHECK_HEADERS([netinet/in.h])
 AC_CHECK_HEADERS([winsock2.h])
 AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
 
+dnl Check for FIONREAD ioctl declaration.  This check is needed
+dnl for the UDP plugin to build on Solaris 
+GST_CHECK_FIONREAD()
+
 dnl *** checks for compiler characteristics ***
 
 dnl FIXME: check if this is used; was used for floatcast.h in base
@@ -295,6 +299,12 @@ dnl Some old BSD versions and also newer OpenBSD versions :
      ])
    ])
  ])
+])
+
+dnl *** Sun Audio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SUNAUDIO, true)
+GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudiosink, [
+  AC_CHECK_HEADER(sys/audioio.h, HAVE_SUNAUDIO="yes", HAVE_SUNAUDIO="no")
 ])
 
 dnl *** ext plug-ins ***
@@ -597,6 +607,7 @@ ext/shout2/Makefile
 ext/speex/Makefile
 sys/Makefile
 sys/oss/Makefile
+sys/sunaudio/Makefile
 po/Makefile.in
 gconf/Makefile
 gconf/gstreamer.schemas
