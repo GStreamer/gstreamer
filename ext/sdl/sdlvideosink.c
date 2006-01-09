@@ -32,8 +32,8 @@
 
 #include "sdlvideosink.h"
 
-GST_DEBUG_CATEGORY_STATIC (sdlvideosink_debug);
-#define GST_CAT_DEFAULT sdlvideosink_debug
+GST_DEBUG_CATEGORY_EXTERN (sdl_debug);
+#define GST_CAT_DEFAULT sdl_debug
 
 /* These macros are adapted from videotestsrc.c 
  *  and/or gst-plugins/gst/games/gstvideoimage.c */
@@ -173,8 +173,6 @@ gst_sdlvideosink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class, sink_template);
   gst_element_class_set_details (element_class, &gst_sdlvideosink_details);
 
-  GST_DEBUG_CATEGORY_INIT (sdlvideosink_debug, "sdlvideosink", 0,
-      "SDL video sink element");
 }
 
 static void
@@ -844,19 +842,3 @@ init_failed:
     return GST_STATE_CHANGE_FAILURE;
   }
 }
-
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "sdlvideosink", GST_RANK_NONE,
-          GST_TYPE_SDLVIDEOSINK))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "sdlvideosink",
-    "SDL Video Sink", plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)

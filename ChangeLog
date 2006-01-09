@@ -1,4 +1,15 @@
-﻿2006-01-05  Sebastien Moutte  <sebastien@moutte.net>
+﻿2006-01-09  Edgard Lima <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* ext/sdl/Makefile.am:
+	* ext/sdl/gstsdl.c:
+	* ext/sdl/sdlaudiosink.c:
+	* ext/sdl/sdlaudiosink.h:
+	* ext/sdl/sdlvideosink.c:
+	Created new element, sdlaudiosink.
+	
+2006-01-05  Sebastien Moutte  <sebastien@moutte.net>
+
 	* added sys/directdraw
 	* added sys/directsound
 	* added win32/vs6/gst_plugins_bad.dsw

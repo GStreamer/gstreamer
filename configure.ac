@@ -488,7 +488,7 @@ AC_SUBST(LIBMMS_LIBS)
 
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
-GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink, [
+GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
     AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
 ])
 
