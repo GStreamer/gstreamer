@@ -87,17 +87,19 @@ enum
 };
 
 static GstStaticPadTemplate gst_audio_rate_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS ";"
+        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
     );
 
 static GstStaticPadTemplate gst_audio_rate_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
+    GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS ";"
+        GST_AUDIO_FLOAT_PAD_TEMPLATE_CAPS)
     );
 
 static void gst_audio_rate_base_init (gpointer g_class);
@@ -191,7 +193,7 @@ gst_audio_rate_setcaps (GstPad * pad, GstCaps * caps)
   GstAudioRate *audiorate;
   GstStructure *structure;
   GstPad *otherpad;
-  gint ret, channels, depth;
+  gint ret, channels, width;
 
   audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
 
@@ -204,12 +206,12 @@ gst_audio_rate_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   ret = gst_structure_get_int (structure, "channels", &channels);
-  ret &= gst_structure_get_int (structure, "depth", &depth);
+  ret &= gst_structure_get_int (structure, "width", &width);
 
   if (!ret)
     return FALSE;
 
-  audiorate->bytes_per_sample = channels * (depth / 8);
+  audiorate->bytes_per_sample = channels * (width / 8);
   if (audiorate->bytes_per_sample == 0)
     audiorate->bytes_per_sample = 1;
 

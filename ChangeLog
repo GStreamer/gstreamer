@@ -1,3 +1,9 @@
+2006-01-10  Michael Smith  <msmith@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_setcaps):
+	  Support float audio in audiorate.
+	  Use width rather than depth for selecting sample width.
+
 2006-01-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videotestsrc/videotestsrc.h:
