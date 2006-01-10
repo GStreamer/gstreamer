@@ -1,3 +1,8 @@
+2006-01-10  Michael Smith  <msmith@fluendo.com>
+
+	* gst-libs/gst/audio/gstaudiosrc.c: (gst_audioringbuffer_dispose):
+	  Don't leak GCond in audio sources.
+
 2006-01-10  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstplaybin.c: (gen_audio_element):

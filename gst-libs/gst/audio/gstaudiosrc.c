@@ -231,6 +231,13 @@ gst_audioringbuffer_init (GstAudioRingBuffer * ringbuffer,
 static void
 gst_audioringbuffer_dispose (GObject * object)
 {
+  GstAudioRingBuffer *ringbuffer = GST_AUDIORING_BUFFER (object);
+
+  if (ringbuffer->cond) {
+    g_cond_free (ringbuffer->cond);
+    ringbuffer->cond = NULL;
+  }
+
   G_OBJECT_CLASS (ring_parent_class)->dispose (object);
 }
 
