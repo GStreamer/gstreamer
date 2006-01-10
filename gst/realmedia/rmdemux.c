@@ -630,18 +630,18 @@ gst_rmdemux_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
       GST_DEBUG_OBJECT (rmdemux, "src_query position");
-      gst_query_set_position (query, GST_FORMAT_TIME, -1);      //rmdemux->cur_timestamp, 
+      gst_query_set_position (query, GST_FORMAT_TIME, -1);      /* rmdemux->cur_timestamp */
       GST_DEBUG_OBJECT (rmdemux, "Position query: no idea from demuxer!");
+      res = FALSE;
       break;
     case GST_QUERY_DURATION:
       GST_DEBUG_OBJECT (rmdemux, "src_query duration");
-      gst_query_set_duration (query, GST_FORMAT_TIME,   //rmdemux->cur_timestamp, 
-          rmdemux->duration);
-      GST_DEBUG_OBJECT (rmdemux, "Duration query: set to %lld in demuxer",
+      gst_query_set_duration (query, GST_FORMAT_TIME, rmdemux->duration);
+      GST_DEBUG_OBJECT (rmdemux, "duration set to %" G_GINT64_FORMAT,
           rmdemux->duration);
       break;
     default:
-      res = FALSE;
+      res = gst_pad_query_default (pad, query);
       break;
   }
 

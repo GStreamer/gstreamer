@@ -1,3 +1,17 @@
+2006-01-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_query):
+	* ext/mad/gstid3tag.c: (gst_id3_tag_src_query):
+	* ext/mad/gstmad.c: (gst_mad_src_query):
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_src_query):
+	* ext/sidplay/gstsiddec.cc:
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_handle_src_query):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_src_query):
+	  Pass unhandled queries upstream (useful e.g. for SEEKING query)
+	  (fixes #325652; based on patch by: Philippe); make rmdemux return
+	  FALSE for position queries, instead of setting -1 as value and
+	  returning TRUE.
+
 2006-01-05  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_adjust_ts) 

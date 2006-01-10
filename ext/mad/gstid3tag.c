@@ -487,6 +487,7 @@ gst_id3_tag_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
+      res = gst_pad_query_default (pad, query);
       break;
   }
   return res;
