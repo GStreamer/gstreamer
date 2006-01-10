@@ -564,10 +564,6 @@ gen_audio_element (GstPlayBin * play_bin)
           (_("Both autoaudiosink and alsasink elements are missing.")), (NULL));
       return NULL;
     }
-    sink = gst_element_factory_make ("alsasink", "audiosink");
-    if (sink == NULL) {
-      g_warning ("could not create autoaudiosink element");
-    }
     play_bin->audio_sink = GST_ELEMENT (gst_object_ref (sink));
   }
 

@@ -1,3 +1,9 @@
+2006-01-10  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstplaybin.c: (gen_audio_element):
+	  Don't leak an autoaudiosink/alsasink when we generate
+	  a new audio element. (old code, I guess)
+
 2006-01-10  Michael Smith  <msmith@fluendo.com>
 
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_setcaps):
