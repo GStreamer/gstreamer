@@ -20,12 +20,12 @@
 #ifndef __VIDEO_TEST_SRC_H__
 #define __VIDEO_TEST_SRC_H__
 
-#include "_stdint.h"
+#include <glib.h>
 
 
 struct vts_color_struct {
-        uint8_t Y, U, V;
-        uint8_t R, G, B;
+        guint8 Y, U, V;
+        guint8 R, G, B;
 };
 
 typedef struct paintinfo_struct paintinfo;

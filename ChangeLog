@@ -1,5 +1,13 @@
 2006-01-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/videotestsrc/videotestsrc.h:
+	  Use GLib types here (that way we don't have to include the
+	  generated _stdint.h header, which makes life easier for win32
+	  folks that don't use autotools for the build) (#325990, patch
+	  by: Sergey Scobich).
+
+2006-01-10  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_init),
 	(gst_ring_buffer_set_flushing), (gst_ring_buffer_start),
 	(gst_ring_buffer_pause), (wait_segment):
