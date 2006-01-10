@@ -449,8 +449,11 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     g_usleep (identity->sleep_time);
 
   if (identity->single_segment && (trans->segment.format == GST_FORMAT_TIME)
-      && (ret == GST_FLOW_OK))
+      && (ret == GST_FLOW_OK)) {
     GST_BUFFER_TIMESTAMP (buf) = runtimestamp;
+    GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_OFFSET_END (buf) = GST_CLOCK_TIME_NONE;
+  }
 
   return ret;
 }

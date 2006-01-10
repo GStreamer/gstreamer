@@ -1,3 +1,9 @@
+2006-01-10  Edward Hervey  <edward@fluendo.com>
+
+	* plugins/elements/gstidentity.c: (gst_identity_transform_ip):
+	Set the buffer offset/offset_end to GST_CLOCK_TIME_NONE when using
+	the single-segment mode.
+
 2006-01-10  Brian Cameron  <brian dot cameron at sun dot com>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
