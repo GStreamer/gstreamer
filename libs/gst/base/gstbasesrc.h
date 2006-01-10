@@ -108,7 +108,7 @@ struct _GstBaseSrc {
       GstEvent *pending_seek;
     } ABI;
     gpointer       _gst_reserved[GST_PADDING_LARGE];
-  };
+  } data;
 };
 
 /**

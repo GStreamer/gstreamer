@@ -306,7 +306,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   basesrc->clock_id = NULL;
   /* we operate in BYTES by default */
   gst_base_src_set_format (basesrc, GST_FORMAT_BYTES);
-  basesrc->ABI.typefind = DEFAULT_TYPEFIND;
+  basesrc->data.ABI.typefind = DEFAULT_TYPEFIND;
 
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
 
@@ -749,7 +749,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     /* send flush stop, peer will accept data and events again. We
      * are not yet providing data as we still have the STREAM_LOCK. */
     gst_pad_push_event (src->srcpad, gst_event_new_flush_stop ());
-  } else if (res && src->ABI.running) {
+  } else if (res && src->data.ABI.running) {
     /* we are running the current segment and doing a non-flushing seek, 
      * close the segment first based on the last_stop. */
     GST_DEBUG_OBJECT (src, "closing running segment %" G_GINT64_FORMAT
@@ -785,7 +785,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
             src->segment.last_stop, stop, src->segment.time));
   }
 
-  src->ABI.running = TRUE;
+  src->data.ABI.running = TRUE;
   /* and restart the task in case it got paused explicitely or by
    * the FLUSH_START event we pushed out. */
   gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
@@ -819,10 +819,10 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
     {
       GST_OBJECT_LOCK (src);
       /* gst_event_replace? */
-      if (src->ABI.pending_seek)
-        gst_event_unref (src->ABI.pending_seek);
+      if (src->data.ABI.pending_seek)
+        gst_event_unref (src->data.ABI.pending_seek);
       gst_event_ref (event);
-      src->ABI.pending_seek = event;
+      src->data.ABI.pending_seek = event;
       GST_OBJECT_UNLOCK (src);
       result = TRUE;
       break;
@@ -914,7 +914,7 @@ gst_base_src_set_property (GObject * object, guint prop_id,
       src->num_buffers = g_value_get_int (value);
       break;
     case PROP_TYPEFIND:
-      src->ABI.typefind = g_value_get_boolean (value);
+      src->data.ABI.typefind = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -938,7 +938,7 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, src->num_buffers);
       break;
     case PROP_TYPEFIND:
-      g_value_set_boolean (value, src->ABI.typefind);
+      g_value_set_boolean (value, src->data.ABI.typefind);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1291,7 +1291,7 @@ eos:
   {
     GST_DEBUG_OBJECT (src, "going to EOS, getrange returned UNEXPECTED");
     /* we finished the segment */
-    src->ABI.running = FALSE;
+    src->data.ABI.running = FALSE;
     gst_pad_pause_task (pad);
     if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
       gst_element_post_message (GST_ELEMENT (src),
@@ -1322,7 +1322,7 @@ error:
     GST_ELEMENT_ERROR (src, STREAM, FAILED,
         (_("Internal data flow error.")), ("element returned NULL buffer"));
     /* we finished the segment on error */
-    src->ABI.running = FALSE;
+    src->data.ABI.running = FALSE;
     gst_pad_pause_task (pad);
     gst_pad_push_event (pad, gst_event_new_eos ());
     goto done;
@@ -1458,7 +1458,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   basesrc->num_buffers_left = basesrc->num_buffers;
 
   gst_segment_init (&basesrc->segment, basesrc->segment.format);
-  basesrc->ABI.running = FALSE;
+  basesrc->data.ABI.running = FALSE;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
   if (bclass->start)
@@ -1505,7 +1505,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   GST_DEBUG_OBJECT (basesrc, "is random_access: %d", basesrc->random_access);
 
   /* run typefind if we are random_access and the typefinding is enabled. */
-  if (basesrc->random_access && basesrc->ABI.typefind && size != -1) {
+  if (basesrc->random_access && basesrc->data.ABI.typefind && size != -1) {
     GstCaps *caps;
 
     caps = gst_type_find_helper (basesrc->srcpad, size);
@@ -1597,8 +1597,8 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
 
     /* do initial seek, which will start the task */
     GST_OBJECT_LOCK (basesrc);
-    event = basesrc->ABI.pending_seek;
-    basesrc->ABI.pending_seek = NULL;
+    event = basesrc->data.ABI.pending_seek;
+    basesrc->data.ABI.pending_seek = NULL;
     GST_OBJECT_UNLOCK (basesrc);
 
     /* no need to unlock anything, the task is certainly
