@@ -1,3 +1,11 @@
+2006-01-10  Edward Hervey  <edward@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain),
+	(gst_audio_rate_change_state), (plugin_init):
+	Add debugging category.
+	Fix type issues.
+	Add case for incoming buffers without valid offset/offset_end.
+
 2006-01-10  Michael Smith  <msmith@fluendo.com>
 
 	* gst-libs/gst/audio/gstaudiosrc.c: (gst_audioringbuffer_dispose):

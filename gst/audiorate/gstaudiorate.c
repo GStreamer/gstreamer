@@ -25,6 +25,9 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
+GST_DEBUG_CATEGORY (audio_rate_debug);
+#define GST_CAT_DEFAULT audio_rate_debug
+
 #define GST_TYPE_AUDIO_RATE \
   (gst_audio_rate_get_type())
 #define GST_AUDIO_RATE(obj) \
@@ -48,6 +51,7 @@ struct _GstAudioRate
   gint bytes_per_sample;
 
   /* audio state */
+  guint64 offset;
   guint64 next_offset;
 
   guint64 in, out, add, drop;
@@ -248,7 +252,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   GstAudioRate *audiorate;
   GstClockTime in_time, in_duration;
   guint64 in_offset, in_offset_end;
-  gint in_size;
+  guint in_size;
   GstFlowReturn ret = GST_FLOW_OK;
 
   audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
@@ -261,8 +265,18 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   in_offset = GST_BUFFER_OFFSET (buf);
   in_offset_end = GST_BUFFER_OFFSET_END (buf);
 
+  GST_LOG_OBJECT (audiorate,
+      "in_time:%" GST_TIME_FORMAT ", in_duration:%" GST_TIME_FORMAT
+      ", in_size:%u, in_offset:%lld, in_offset_end:%lld" ", ->next_offset:%lld",
+      GST_TIME_ARGS (in_time), GST_TIME_ARGS (in_duration), in_size, in_offset,
+      in_offset_end, audiorate->next_offset);
+
   if (in_offset == GST_CLOCK_TIME_NONE || in_offset_end == GST_CLOCK_TIME_NONE) {
     GST_WARNING_OBJECT (audiorate, "audiorate got buffer without offsets");
+    in_offset = audiorate->offset;
+    in_offset_end = audiorate->offset + in_size / audiorate->bytes_per_sample;
+    GST_WARNING_OBJECT (audiorate, "in_offset:%lld, in_offset_end:%lld",
+        in_offset, in_offset_end);
   }
 
   /* do we need to insert samples */
@@ -308,7 +322,8 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
       goto beach;
     } else {
-      guint64 truncsamples, truncsize, leftsize;
+      guint64 truncsamples;
+      guint truncsize, leftsize;
       GstBuffer *trunc;
 
       /* truncate buffer */
@@ -316,7 +331,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       truncsize = truncsamples * audiorate->bytes_per_sample;
       leftsize = in_size - truncsize;
 
-      trunc = gst_buffer_create_sub (buf, truncsize, in_size);
+      trunc = gst_buffer_create_sub (buf, truncsize, leftsize);
       GST_BUFFER_DURATION (trunc) = in_duration * leftsize / in_size;
       GST_BUFFER_TIMESTAMP (trunc) =
           in_time + in_duration - GST_BUFFER_DURATION (trunc);
@@ -336,6 +351,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
   audiorate->next_offset = in_offset_end;
 beach:
+  audiorate->offset += in_size / audiorate->bytes_per_sample;
   return ret;
 }
 
@@ -392,6 +408,7 @@ gst_audio_rate_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      audiorate->offset = 0;
       audiorate->next_offset = 0;
       break;
     default:
@@ -407,6 +424,9 @@ gst_audio_rate_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (audio_rate_debug, "audiorate", 0,
+      "AudioRate stream fixer");
+
   return gst_element_register (plugin, "audiorate", GST_RANK_NONE,
       GST_TYPE_AUDIO_RATE);
 }
