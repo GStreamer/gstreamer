@@ -1,3 +1,12 @@
+2006-01-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_init),
+	(gst_ring_buffer_set_flushing), (gst_ring_buffer_start),
+	(gst_ring_buffer_pause), (wait_segment):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	  Name (private) union, makes Forte compiler happy (this time
+	  for real) (#324900).
+
 2006-01-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/Makefile.am:

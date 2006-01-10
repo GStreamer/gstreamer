@@ -229,7 +229,7 @@ struct _GstRingBuffer {
     } ABI;
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING + 0];
-  };
+  } abidata;
 };
 
 struct _GstRingBufferClass {

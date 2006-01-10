@@ -97,7 +97,7 @@ gst_ring_buffer_init (GstRingBuffer * ringbuffer)
   ringbuffer->cond = g_cond_new ();
   ringbuffer->waiting = 0;
   ringbuffer->empty_seg = NULL;
-  ringbuffer->ABI.flushing = TRUE;
+  ringbuffer->abidata.ABI.flushing = TRUE;
 }
 
 static void
@@ -710,7 +710,7 @@ void
 gst_ring_buffer_set_flushing (GstRingBuffer * buf, gboolean flushing)
 {
   GST_OBJECT_LOCK (buf);
-  buf->ABI.flushing = flushing;
+  buf->abidata.ABI.flushing = flushing;
 
   gst_ring_buffer_clear_all (buf);
   if (flushing) {
@@ -743,7 +743,7 @@ gst_ring_buffer_start (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "starting ringbuffer");
 
   GST_OBJECT_LOCK (buf);
-  if (buf->ABI.flushing)
+  if (buf->abidata.ABI.flushing)
     goto flushing;
 
   /* if stopped, set to started */
@@ -847,7 +847,7 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
   g_return_val_if_fail (buf != NULL, FALSE);
 
   GST_OBJECT_LOCK (buf);
-  if (buf->ABI.flushing)
+  if (buf->abidata.ABI.flushing)
     goto flushing;
 
   res = gst_ring_buffer_pause_unlocked (buf);
@@ -1058,7 +1058,7 @@ wait_segment (GstRingBuffer * buf)
 
   /* take lock first, then update our waiting flag */
   GST_OBJECT_LOCK (buf);
-  if (buf->ABI.flushing)
+  if (buf->abidata.ABI.flushing)
     goto flushing;
 
   if (g_atomic_int_compare_and_exchange (&buf->waiting, 0, 1)) {
@@ -1067,7 +1067,7 @@ wait_segment (GstRingBuffer * buf)
       goto not_started;
 
     GST_RING_BUFFER_WAIT (buf);
-    if (buf->ABI.flushing)
+    if (buf->abidata.ABI.flushing)
       goto flushing;
 
     if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
