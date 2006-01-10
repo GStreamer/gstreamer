@@ -133,6 +133,7 @@ static void gst_level_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_level_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_level_dispose (GObject * obj);
 
 static gboolean gst_level_set_caps (GstBaseTransform * trans, GstCaps * in,
     GstCaps * out);
@@ -163,6 +164,7 @@ gst_level_class_init (GstLevelClass * klass)
 
   gobject_class->set_property = gst_level_set_property;
   gobject_class->get_property = gst_level_get_property;
+  gobject_class->dispose = gst_level_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_LEVEL,
       g_param_spec_boolean ("message", "mesage",
@@ -203,6 +205,28 @@ gst_level_init (GstLevel * filter, GstLevelClass * g_class)
   filter->decay_peak_falloff = 10.0;    /* dB falloff (/sec) */
 
   filter->message = TRUE;
+}
+
+static void
+gst_level_dispose (GObject * obj)
+{
+  GstLevel *filter = GST_LEVEL (obj);
+
+  g_free (filter->CS);
+  g_free (filter->peak);
+  g_free (filter->last_peak);
+  g_free (filter->decay_peak);
+  g_free (filter->decay_peak_base);
+  g_free (filter->decay_peak_age);
+
+  filter->CS = NULL;
+  filter->peak = NULL;
+  filter->last_peak = NULL;
+  filter->decay_peak = NULL;
+  filter->decay_peak_base = NULL;
+  filter->decay_peak_age = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
 static void

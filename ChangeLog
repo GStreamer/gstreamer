@@ -1,3 +1,9 @@
+2006-01-10  Michael Smith  <msmith@fluendo.com>
+
+	* gst/level/gstlevel.c: (gst_level_class_init),
+	(gst_level_dispose):
+	  Don't leak filter arrays.
+
 2006-01-09 Brian Cameron <brian.cameron@sun.com>
 
 	reviewed by: Christian Schaller <uraeus@gnome.org>
