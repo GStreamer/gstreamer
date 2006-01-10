@@ -1,3 +1,8 @@
+2006-01-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/icles/Makefile.am:
+	  don't build the tests if we don't have the libs
+
 2006-01-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/cdparanoia/gstcdparanoiasrc.c: (gst_cd_paranoia_src_close),
