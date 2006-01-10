@@ -1,3 +1,9 @@
+2006-01-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/cdparanoia/gstcdparanoiasrc.c: (gst_cd_paranoia_src_close),
+	(gst_cd_paranoia_paranoia_callback):
+	  Don't try to free NULL pointers.
+
 2006-01-10  Edward Hervey  <edward@fluendo.com>
 
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain),

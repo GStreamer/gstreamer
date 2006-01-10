@@ -236,11 +236,15 @@ gst_cd_paranoia_src_close (GstCddaBaseSrc * cddabasesrc)
 {
   GstCdParanoiaSrc *src = GST_CD_PARANOIA_SRC (cddabasesrc);
 
-  paranoia_free (src->p);
-  src->p = NULL;
+  if (src->p) {
+    paranoia_free (src->p);
+    src->p = NULL;
+  }
 
-  cdda_close (src->d);
-  src->d = NULL;
+  if (src->d) {
+    cdda_close (src->d);
+    src->d = NULL;
+  }
 
   src->next_sector = -1;
 }
@@ -248,7 +252,9 @@ gst_cd_paranoia_src_close (GstCddaBaseSrc * cddabasesrc)
 static void
 gst_cd_paranoia_paranoia_callback (long inpos, int function)
 {
-  /* do nothing for now, maybe emit signals later */
+  /* There is not much we can do here (not without a lot of trickery
+   * at least), since we don't have a pointer to our own element or at
+   * least the cdparanoia object */
 }
 
 static GstBuffer *
