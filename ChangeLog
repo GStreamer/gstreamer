@@ -1,3 +1,8 @@
+2006-01-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  prerelease
+
 2006-01-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_query):
@@ -214,7 +219,7 @@
 2005-12-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/asfdemux/gstasfmux.c: (gst_asfmux_file_start):
-          change some char* into char[]
+	  change some char* into char[]
 
 2005-12-15  Edward Hervey  <edward@fluendo.com>
 
