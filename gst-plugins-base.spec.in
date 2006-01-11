@@ -83,6 +83,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstvideo-%{majorminor}.so.*
 %{_libdir}/libgstrtp-%{majorminor}.so*
 %{_libdir}/libgstnetbuffer-%{majorminor}.so*
+%{_libdir}/libgstcdda-%{majorminor}.so*
 
 # base plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
@@ -163,6 +164,8 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideofilter.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideosink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/netbuffer/gstnetbuffer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/cdda/gstcddabasesrc.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/mixerutils.h
 
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
@@ -171,6 +174,7 @@ GStreamer Plugins Base library development and header files.
 %{_libdir}/libgstrtp-%{majorminor}.so
 %{_libdir}/libgstinterfaces-%{majorminor}.so
 %{_libdir}/libgstnetbuffer-%{majorminor}.so
+%{_libdir}/libgstcdda-%{majorminor}.so
 
 # pkg-config files
 %{_libdir}/pkgconfig/gstreamer-plugins-base-%{majorminor}.pc
