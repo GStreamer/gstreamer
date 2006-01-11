@@ -819,6 +819,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       is_itype = (ffmpegdec->picture->pict_type == FF_I_TYPE);
       is_reference = (ffmpegdec->picture->reference == 1);
       iskeyframe = ( is_itype || is_reference ) 
+	|| (oclass->in_plugin->id == CODEC_ID_INDEO3)
 	|| (oclass->in_plugin->id == CODEC_ID_MSZH)
 	|| (oclass->in_plugin->id == CODEC_ID_ZLIB);
       GST_DEBUG_OBJECT (ffmpegdec,
