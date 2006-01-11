@@ -29,6 +29,7 @@
 #include <stdlib.h>
 
 #include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/navigation.h>
 
 #include "sdlvideosink.h"
 
@@ -62,10 +63,6 @@ enum
   PROP_FULLSCREEN
 };
 
-static void gst_sdlvideosink_base_init (gpointer g_class);
-static void gst_sdlvideosink_class_init (GstSDLVideoSinkClass * klass);
-static void gst_sdlvideosink_init (GstSDLVideoSink * sdl);
-
 static void gst_sdlvideosink_interface_init (GstImplementsInterfaceClass *
     klass);
 static gboolean gst_sdlvideosink_supported (GstImplementsInterface * iface,
@@ -96,52 +93,40 @@ static void gst_sdlvideosink_get_property (GObject * object,
 static GstStateChangeReturn
 gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition);
 
+static void gst_sdlvideosink_navigation_init (GstNavigationInterface * iface);
 
 static GstPadTemplate *sink_template;
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_sdlvideosink_get_type (void)
+static void
+_do_init (GType type)
 {
-  static GType sdlvideosink_type = 0;
+  static const GInterfaceInfo iface_info = {
+    (GInterfaceInitFunc) gst_sdlvideosink_interface_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo xoverlay_info = {
+    (GInterfaceInitFunc) gst_sdlvideosink_xoverlay_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo navigation_info = {
+    (GInterfaceInitFunc) gst_sdlvideosink_navigation_init,
+    NULL,
+    NULL,
+  };
 
-  if (!sdlvideosink_type) {
-    static const GTypeInfo sdlvideosink_info = {
-      sizeof (GstSDLVideoSinkClass),
-      gst_sdlvideosink_base_init,
-      NULL,
-      (GClassInitFunc) gst_sdlvideosink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSDLVideoSink),
-      0,
-      (GInstanceInitFunc) gst_sdlvideosink_init,
-    };
-    static const GInterfaceInfo iface_info = {
-      (GInterfaceInitFunc) gst_sdlvideosink_interface_init,
-      NULL,
-      NULL,
-    };
-    static const GInterfaceInfo xoverlay_info = {
-      (GInterfaceInitFunc) gst_sdlvideosink_xoverlay_init,
-      NULL,
-      NULL,
-    };
+  g_type_add_interface_static (type,
+      GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
+  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xoverlay_info);
+  g_type_add_interface_static (type, GST_TYPE_NAVIGATION, &navigation_info);
 
-    sdlvideosink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
-        "GstSDLVideoSink", &sdlvideosink_info, 0);
-    g_type_add_interface_static (sdlvideosink_type,
-        GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
-    g_type_add_interface_static (sdlvideosink_type, GST_TYPE_X_OVERLAY,
-        &xoverlay_info);
-  }
-
-  return sdlvideosink_type;
 }
 
-static void
-gst_sdlvideosink_base_init (gpointer g_class)
+GST_BOILERPLATE_FULL (GstSDLVideoSink, gst_sdlvideosink, GstVideoSink,
+    GST_TYPE_VIDEO_SINK, _do_init)
+
+     static void gst_sdlvideosink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *capslist;
@@ -150,10 +135,10 @@ gst_sdlvideosink_base_init (gpointer g_class)
     GST_MAKE_FOURCC ('I', '4', '2', '0'),
     GST_MAKE_FOURCC ('Y', 'V', '1', '2'),
     GST_MAKE_FOURCC ('Y', 'U', 'Y', '2')
-/*
-    GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'),
-    GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')
-*/
+        /*
+           GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'),
+           GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')
+         */
   };
 
   /* make a list of all available caps */
@@ -301,7 +286,8 @@ gst_sdlvideosink_get_bufferpool (GstPad * pad)
 #endif
 
 static void
-gst_sdlvideosink_init (GstSDLVideoSink * sdlvideosink)
+gst_sdlvideosink_init (GstSDLVideoSink * sdlvideosink,
+    GstSDLVideoSinkClass * g_class)
 {
 
   sdlvideosink->width = -1;
@@ -470,7 +456,7 @@ SDL_WaitEventTimeout (SDL_Event * event, Uint32 timeout)
     numevents =
         SDL_PeepEvents (event, 1, SDL_GETEVENT,
         SDL_KEYDOWNMASK | SDL_KEYUPMASK |
-        /* SDL_MOUSEMOTIONMASK | SDL_MOUSEBUTTONDOWNMASK | SDL_MOUSEBUTTONUPMASK | */
+        SDL_MOUSEMOTIONMASK | SDL_MOUSEBUTTONDOWNMASK | SDL_MOUSEBUTTONUPMASK |
         SDL_QUITMASK);
     switch (numevents) {
       case -1:
@@ -498,8 +484,32 @@ gst_sdlvideosink_event_thread (GstSDLVideoSink * sdlvideosink)
     if (SDL_WaitEventTimeout (&event, 50)) {
 
       switch (event.type) {
+        case SDL_MOUSEMOTION:
+          gst_navigation_send_mouse_event (GST_NAVIGATION (sdlvideosink),
+              "mouse-move", 0, event.motion.x, event.motion.y);
+          break;
+        case SDL_MOUSEBUTTONDOWN:
+          gst_navigation_send_mouse_event (GST_NAVIGATION (sdlvideosink),
+              "mouse-button-press",
+              event.button.button, event.button.x, event.button.y);
+          break;
+        case SDL_MOUSEBUTTONUP:
+          gst_navigation_send_mouse_event (GST_NAVIGATION (sdlvideosink),
+              "mouse-button-release",
+              event.button.button, event.button.x, event.button.y);
+          break;
+        case SDL_KEYUP:
+          GST_DEBUG ("key press event %s !",
+              SDL_GetKeyName (event.key.keysym.sym));
+          gst_navigation_send_key_event (GST_NAVIGATION (sdlvideosink),
+              "key-release", SDL_GetKeyName (event.key.keysym.sym));
+          break;
         case SDL_KEYDOWN:
           if (SDLK_ESCAPE != event.key.keysym.sym) {
+            GST_DEBUG ("key press event %s !",
+                SDL_GetKeyName (event.key.keysym.sym));
+            gst_navigation_send_key_event (GST_NAVIGATION (sdlvideosink),
+                "key-press", SDL_GetKeyName (event.key.keysym.sym));
             break;
           } else {
             /* fall through */
@@ -841,4 +851,71 @@ init_failed:
     GST_DEBUG_OBJECT (sdlvideosink, "init failed");
     return GST_STATE_CHANGE_FAILURE;
   }
+}
+
+
+static void
+gst_sdlvideosink_navigation_send_event (GstNavigation * navigation,
+    GstStructure * structure)
+{
+  GstSDLVideoSink *sdlvideosink = GST_SDLVIDEOSINK (navigation);
+  GstEvent *event;
+  GstVideoRectangle src, dst, result;
+  gint width, height;
+  double x, y;
+  GstPad *pad = NULL;
+
+  src.w = GST_VIDEO_SINK_WIDTH (sdlvideosink);
+  src.h = GST_VIDEO_SINK_HEIGHT (sdlvideosink);
+  dst.w = sdlvideosink->width;
+  dst.h = sdlvideosink->height;
+  gst_video_sink_center_rect (src, dst, &result, FALSE);
+
+  event = gst_event_new_navigation (structure);
+
+  /* Our coordinates can be wrong here if we centered the video */
+
+  /* Converting pointer coordinates to the non scaled geometry */
+  if (gst_structure_get_double (structure, "pointer_x", &x)) {
+    double old_x = x;
+
+    if (x >= result.x && x <= (result.x + result.w)) {
+      x -= result.x;
+      x *= sdlvideosink->width;
+      x /= result.w;
+    } else {
+      x = 0;
+    }
+    GST_DEBUG_OBJECT (sdlvideosink, "translated navigation event x "
+        "coordinate from %f to %f", old_x, x);
+    gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
+  }
+  if (gst_structure_get_double (structure, "pointer_y", &y)) {
+    double old_y = y;
+
+    if (y >= result.y && y <= (result.y + result.h)) {
+      y -= result.y;
+      y *= sdlvideosink->height;
+      y /= result.h;
+    } else {
+      y = 0;
+    }
+    GST_DEBUG_OBJECT (sdlvideosink, "translated navigation event y "
+        "coordinate from %fd to %fd", old_y, y);
+    gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
+  }
+
+  pad = gst_pad_get_peer (GST_VIDEO_SINK_PAD (sdlvideosink));
+
+  if (GST_IS_PAD (pad) && GST_IS_EVENT (event)) {
+    gst_pad_send_event (pad, event);
+
+    gst_object_unref (pad);
+  }
+}
+
+static void
+gst_sdlvideosink_navigation_init (GstNavigationInterface * iface)
+{
+  iface->send_event = gst_sdlvideosink_navigation_send_event;
 }

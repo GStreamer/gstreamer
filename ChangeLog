@@ -1,3 +1,9 @@
+2006-01-11  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/sdl/sdlvideosink.c:
+	Now implementing navigation interface and using
+	GST_BOILER_PLATE_FULL.
+	
 2006-01-11  Christian Schaller  <christian@fluendo.com>
 
 	Remove SunAudio plugin as Brian's new one is in -good
