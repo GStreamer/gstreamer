@@ -431,7 +431,7 @@ gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
     pads->queuedpads--;
   }
 
-  GST_COLLECT_PADS_SIGNAL (pads);
+  GST_COLLECT_PADS_BROADCAST (pads);
 
   GST_DEBUG ("Pop buffer on pad %s:%s: buffer=%p",
       GST_DEBUG_PAD_NAME (data->pad), result);

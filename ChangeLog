@@ -1,3 +1,9 @@
+2006-01-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_pop):
+	  Need to awaken ALL the pads when we pop a buffer, otherwise
+	  collectpads only works when there is 2 input streams.
+
 2006-01-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/media-device-daemon.txt:
