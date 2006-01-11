@@ -1,3 +1,23 @@
+2006-01-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  prereleasing
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	  update translations
+
 2006-01-10  Michael Smith  <msmith@fluendo.com>
 
 	* gst/level/gstlevel.c: (gst_level_class_init),
@@ -8,47 +28,47 @@
 
 	reviewed by: Christian Schaller <uraeus@gnome.org>
 	
-	Add SunAudio plugin - tested to make sure it doesn't break
-	the build under GNU/Linux.	
-
 	* configure.ac:
 	* gst-plugins-good.spec.in:
 	* sys/Makefile.am:
 	* sys/sunaudio/Makefile.am:
 	* sys/sunaudio/gstsunaudio.c: (plugin_init):
 	* sys/sunaudio/gstsunaudiomixer.c: (gst_sunaudiomixer_base_init),
-        (gst_sunaudiomixer_class_init), (gst_sunaudiomixer_init),
-        (gst_sunaudiomixer_change_state):
-        * sys/sunaudio/gstsunaudiomixer.h:
-        * sys/sunaudio/gstsunaudiomixerctrl.c:
-        (gst_sunaudiomixer_ctrl_open), (gst_sunaudiomixer_ctrl_build_list),
-        (gst_sunaudiomixer_ctrl_new), (gst_sunaudiomixer_ctrl_free),
-        (gst_sunaudiomixer_ctrl_list_tracks),
-        (gst_sunaudiomixer_ctrl_get_volume),
-        (gst_sunaudiomixer_ctrl_set_volume),
-        (gst_sunaudiomixer_ctrl_set_mute),
-        (gst_sunaudiomixer_ctrl_set_record):
-        * sys/sunaudio/gstsunaudiomixerctrl.h:
-        * sys/sunaudio/gstsunaudiomixertrack.c:
-        (gst_sunaudiomixer_track_class_init),
-        (gst_sunaudiomixer_track_init), (fill_labels),
-        (gst_sunaudiomixer_track_new):
-        * sys/sunaudio/gstsunaudiomixertrack.h:
-        * sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_get_type),
-        (gst_sunaudiosink_dispose), (gst_sunaudiosink_base_init),
-        (gst_sunaudiosink_set_property), (gst_sunaudiosink_get_property),
-        (gst_sunaudiosink_getcaps), (gst_sunaudiosink_open),
-        (gst_sunaudiosink_close), (gst_sunaudiosink_prepare),
-        (gst_sunaudiosink_unprepare), (gst_sunaudiosink_write),
-        (gst_sunaudiosink_delay), (gst_sunaudiosink_reset):
-        * sys/sunaudio/gstsunaudiosink.h:
+	(gst_sunaudiomixer_class_init), (gst_sunaudiomixer_init),
+	(gst_sunaudiomixer_change_state):
+	* sys/sunaudio/gstsunaudiomixer.h:
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	(gst_sunaudiomixer_ctrl_open), (gst_sunaudiomixer_ctrl_build_list),
+	(gst_sunaudiomixer_ctrl_new), (gst_sunaudiomixer_ctrl_free),
+	(gst_sunaudiomixer_ctrl_list_tracks),
+	(gst_sunaudiomixer_ctrl_get_volume),
+	(gst_sunaudiomixer_ctrl_set_volume),
+	(gst_sunaudiomixer_ctrl_set_mute),
+	(gst_sunaudiomixer_ctrl_set_record):
+	* sys/sunaudio/gstsunaudiomixerctrl.h:
+	* sys/sunaudio/gstsunaudiomixertrack.c:
+	(gst_sunaudiomixer_track_class_init),
+	(gst_sunaudiomixer_track_init), (fill_labels),
+	(gst_sunaudiomixer_track_new):
+	* sys/sunaudio/gstsunaudiomixertrack.h:
+	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_get_type),
+	(gst_sunaudiosink_dispose), (gst_sunaudiosink_base_init),
+	(gst_sunaudiosink_set_property), (gst_sunaudiosink_get_property),
+	(gst_sunaudiosink_getcaps), (gst_sunaudiosink_open),
+	(gst_sunaudiosink_close), (gst_sunaudiosink_prepare),
+	(gst_sunaudiosink_unprepare), (gst_sunaudiosink_write),
+	(gst_sunaudiosink_delay), (gst_sunaudiosink_reset):
+	* sys/sunaudio/gstsunaudiosink.h:
+
+	Add SunAudio plugin - tested to make sure it doesn't break
+	the build under GNU/Linux.	
 
 2005-01-07  Philippe Khalaf  <philippe.kalaf@collabora.co.uk>
 
 	* gst-plugins-good/gst/udp/gstdynudpsink.c:
 	* gst-plugins-good/gst/udp/gstudpsrc.c:
-		Allow udpsrc and dynudpsink to take a sockfd as a parameter. For udpsrc,
-		overrides the port or multicast parameters. Fixes bugs #323021.
+	Allow udpsrc and dynudpsink to take a sockfd as a parameter. For udpsrc,
+	overrides the port or multicast parameters. Fixes bugs #323021.
 
 2006-01-06  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -107,14 +127,14 @@
 2005-12-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
-          also remove smoothwave's Makefile.am
+	  also remove smoothwave's Makefile.am
 	* docs/plugins/Makefile.am:
-          fix plugin docs
+	  fix plugin docs
 
 2005-12-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/Makefile.am:
-          added missing Makefile.am
+	  added missing Makefile.am
 
 2005-12-30  Stefan Kost  <ensonic@users.sf.net>
 
@@ -124,10 +144,10 @@
 	* tests/Makefile.am:
 	* tests/examples/level/Makefile.am:
 	* tests/examples/level/level-example.c: (message_handler), (main):
-          moved level-example to tests/examples/level-example
+	  moved level-example to tests/examples/level-example
 	* tests/old/examples/level/demo.c: (main):
 	* tests/old/examples/level/plot.c: (main):
-          some initial fixes
+	  some initial fixes
 
 2005-12-29  Michael Smith  <msmith@fluendo.com>
 
@@ -154,8 +174,8 @@
 	* gst-plugins-good/gst/rtp/gstrtph263pdepay.c:
 	* gst-plugins-good/gst/rtp/gstrtpmp4vdepay.h:
 	* gst-plugins-good/gst/rtp/gstrtpmp4vdepay.c:
-		Making these depayloaders (H263+ and mpeg4 video) inherit from
-		RtpBaseDepayloaderClass. Fixes bugs #323922 and #323908.
+	  Making these depayloaders (H263+ and mpeg4 video) inherit from
+	  RtpBaseDepayloaderClass. Fixes bugs #323922 and #323908.
 
 2005-12-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
@@ -248,7 +268,7 @@
 	* ext/esd/esdmon.c: (gst_esdmon_open_audio):
 	* ext/esd/esdsink.c: (gst_esdsink_prepare):
 	* gst/multipart/multipartdemux.c:
-          change some char* into char[]
+	  change some char* into char[]
 
 2005-12-16  Wim Taymans  <wim@fluendo.com>
 
@@ -289,9 +309,10 @@
 	* gst-plugins-good/gst/rtp/gstrtpmpadepay.c:
 	* gst-plugins-good/gst/rtp/gstrtpmpapay.c:
 	* gst-plugins-good/gst/rtp/README:
-	Fixed payload range in payloder caps. Removed payload range completly from
-	depayloaders as they don't require payload type in their caps. In effect,
-	there isn't any specific payload type for any given codec, only suggestions.
+	Fixed payload range in payloder caps. Removed payload range completely
+	from depayloaders as they don't require payload type in their caps.
+	In effect, there isn't any specific payload type for any given codec,
+	only suggestions.
 	Fixes bug #324011.
 
 2005-12-13  Julien MOUTTE  <julien@moutte.net>
@@ -311,11 +332,12 @@
 2005-12-13  Edward Hervey  <edward@fluendo.com>
 
 	* gst/flx/gstflxdec.c: (gst_flxdec_chain): 
-	If the speed of the file is null in the header, set the frame_time to the default
-	setting of GST_SECOND / 70. Which is the default frame_delay for .fli files as
-	stated in this document : http://www.compuphase.com/flic.htm
-	Would be nice to have the time conversion done properly too
-	(duration = flxh->frames * flxdec->frame_time)
+	If the speed of the file is null in the header, set the frame_time to
+	the default setting of GST_SECOND / 70. Which is the default
+	frame_delay for .fli files as stated in this document :
+	http://www.compuphase.com/flic.htm
+	Would be nice to have the time conversion done properly too (duration =
+	flxh->frames * flxdec->frame_time)
 
 2005-12-12  Julien MOUTTE  <julien@moutte.net>
 
@@ -371,7 +393,7 @@
 2005-12-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/oss/gstosssink.c: (gst_oss_sink_class_init):
-          more debug-func-ptr usage
+	  more debug-func-ptr usage
 
 2005-12-11  Zeeshan Ali <zeenix at gmail dot com>
 
