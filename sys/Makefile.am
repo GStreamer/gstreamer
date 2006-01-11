@@ -10,12 +10,6 @@
 # QCAM_DIR=
 # endif
 
-# if USE_SUNAUDIO
-# SUNAUDIO_DIR=sunaudio
-# else
-# SUNAUDIO_DIR=
-# endif
-
 # if USE_GST_V4L2
 # V4L2_DIR=v4l2
 # else

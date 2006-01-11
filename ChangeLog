@@ -1,3 +1,17 @@
+2006-01-11  Christian Schaller  <christian@fluendo.com>
+
+	Remove SunAudio plugin as Brian's new one is in -good
+
+	* sys/Makefile.am:
+	* sys/sunaudio/Makefile.am:
+	* sys/sunaudio/gstsunaudio.c:
+	* sys/sunaudio/gstsunaudiosrc.c:
+	* sys/sunaudio/gstsunaudiosrc.h:
+	* sys/sunaudio/gstsunelement.c:
+	* sys/sunaudio/gstsunelement.h:
+	* sys/sunaudio/gstsunmixer.c:
+	* sys/sunaudio/gstsunmixer.h:
+
 2006-01-11  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/sdl/sdlaudiosink.c:
