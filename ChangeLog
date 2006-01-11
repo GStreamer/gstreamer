@@ -1,3 +1,10 @@
+2006-01-11  Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_parse_caps):
+	  Set depth and width for alaw/mulaw (fixes #326601).
+
 2006-01-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tests/icles/Makefile.am:

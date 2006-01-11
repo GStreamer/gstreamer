@@ -302,9 +302,13 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
   } else if (!strncmp (mimetype, "audio/x-alaw", 12)) {
     spec->type = GST_BUFTYPE_A_LAW;
     spec->format = GST_A_LAW;
+    spec->width = 8;
+    spec->depth = 8;
   } else if (!strncmp (mimetype, "audio/x-mulaw", 13)) {
     spec->type = GST_BUFTYPE_MU_LAW;
     spec->format = GST_MU_LAW;
+    spec->width = 8;
+    spec->depth = 8;
   } else {
     goto parse_error;
   }
