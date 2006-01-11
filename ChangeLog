@@ -1,3 +1,11 @@
+2006-01-11  Fabrizio Gennari <fabrizio.ge@tiscali.it>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
+	Add support for Indeo3 video in Quicktime files.
+	Closes #326524
+
 ﻿2006-01-09  Edgard Lima <edgard.lima@indt.org.br>
 
 	* configure.ac:
