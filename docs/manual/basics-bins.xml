@@ -134,7 +134,7 @@ main (int   argc
   player = gst_element_factory_make ("oggvorbisplayer", "player");
 
   /* set the source audio file */
-  g_object_set (G_OBJECT (player), "location", "helloworld.ogg", NULL);
+  g_object_set (player, "location", "helloworld.ogg", NULL);
 
   /* start playback */
   gst_element_set_state (GST_ELEMENT (player), GST_STATE_PLAYING);
@@ -147,6 +147,12 @@ main (int   argc
       type="http"
       url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html">Plugin
       Writers Guide</ulink>.
+    </para>
+    <para>
+      Examples of such custom bins are the playbin and decodebin elements from<ulink
+      type="http"
+      url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/index.html">
+      gst-plugins-base</ulink>.
     </para>
   </sect1>
 </chapter>

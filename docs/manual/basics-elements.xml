@@ -530,7 +530,9 @@ main (int   argc,
       any form. Internally, &GStreamer; will start threads that take this
       task on to them. &GStreamer; will also take care of switching
       messages from the pipeline's thread into the application's own
-      thread, by using <xref linkend="chapter-bus"/>.
+      thread, by using a <ulink type="http"
+      url="&URLAPI;GstBus.html"><classname>GstBus</classname></ulink>. See
+      <xref linkend="chapter-bus"/> for details.
     </para>
   </sect1>
 </chapter>
