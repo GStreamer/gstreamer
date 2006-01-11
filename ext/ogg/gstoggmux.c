@@ -653,7 +653,8 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
     walk = g_slist_next (walk);
 
-    GST_DEBUG_OBJECT (ogg_mux, "looking at pad %p", pad);
+    GST_DEBUG_OBJECT (ogg_mux, "looking at pad %" GST_PTR_FORMAT " (oggpad %p)",
+        data->pad, pad);
 
     /* try to get a new buffer for this pad if needed and possible */
     if (pad->buffer == NULL) {
@@ -661,7 +662,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
       gboolean incaps;
 
       buf = gst_collect_pads_pop (ogg_mux->collect, data);
-      GST_DEBUG_OBJECT (ogg_mux, "popping buffer %p", buf);
+      GST_DEBUG_OBJECT (ogg_mux, "popping buffer %" GST_PTR_FORMAT, buf);
 
       /* On EOS we get a NULL buffer */
       if (buf != NULL) {
@@ -694,11 +695,14 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
      * pull on */
     if (pad->buffer) {
       if (gst_ogg_mux_compare_pads (ogg_mux, bestpad, pad) > 0) {
-        GST_DEBUG_OBJECT (ogg_mux, "best pad now %p", pad);
+        GST_DEBUG_OBJECT (ogg_mux, "best pad now %" GST_PTR_FORMAT
+            " (oggpad %p)", data->pad, pad);
+
         bestpad = pad;
       }
     } else if (!pad->eos) {
-      GST_DEBUG_OBJECT (ogg_mux, "hungry pad %p", pad);
+      GST_DEBUG_OBJECT (ogg_mux, "hungry pad %" GST_PTR_FORMAT
+          " (oggpad %p)", data->pad, pad);
       still_hungry = pad;
     }
   }
@@ -1022,10 +1026,13 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 
   /* queue buffers on all pads; find a buffer with the lowest timestamp */
   best = gst_ogg_mux_queue_pads (ogg_mux);
-  if (best && !best->buffer)
+  if (best && !best->buffer) {
+    GST_DEBUG_OBJECT (ogg_mux, "No buffer available on best pad");
     return GST_FLOW_OK;
+  }
 
-  GST_DEBUG_OBJECT (ogg_mux, "best pad %p, pulling %p", best, ogg_mux->pulling);
+  GST_DEBUG_OBJECT (ogg_mux, "best pad %" GST_PTR_FORMAT " (oggpad %p)"
+      " pulling %" GST_PTR_FORMAT, best->collect.pad, best, ogg_mux->pulling);
 
   if (!best) {                  /* EOS : FIXME !! We need to handle EOS correctly, and set EOS
                                    flags on the ogg pages. */
@@ -1071,7 +1078,9 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
   /* if we don't know which pad to pull on, use the best one */
   if (ogg_mux->pulling == NULL) {
     ogg_mux->pulling = best;
-    GST_DEBUG_OBJECT (ogg_mux, "pulling now %p", ogg_mux->pulling);
+    GST_DEBUG_OBJECT (ogg_mux, "pulling now %" GST_PTR_FORMAT " (oggpad %p)",
+        ogg_mux->pulling->collect.pad, ogg_mux->pulling);
+
     /* remember timestamp of first buffer for this new pad */
     if (ogg_mux->pulling != NULL) {
       ogg_mux->next_ts = GST_BUFFER_TIMESTAMP (ogg_mux->pulling->buffer);
@@ -1092,7 +1101,8 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     gint64 duration;
     gboolean force_flush;
 
-    GST_DEBUG_OBJECT (ogg_mux, "pulling now %p", ogg_mux->pulling);
+    GST_DEBUG_OBJECT (ogg_mux, "pulling now %" GST_PTR_FORMAT " (oggpad %p)",
+        ogg_mux->pulling->collect.pad, ogg_mux->pulling);
 
     /* now see if we have a buffer */
     buf = pad->buffer;
@@ -1237,7 +1247,8 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
      */
     if (pad->timestamp < timestamp) {
       pad->timestamp = timestamp;
-      GST_DEBUG_OBJECT (pad, "Updated timestamp of pad to %" GST_TIME_FORMAT,
+      GST_DEBUG_OBJECT (ogg_mux, "Updated timestamp of pad %" GST_PTR_FORMAT
+          " (oggpad %p) to %" GST_TIME_FORMAT, pad->collect.pad, pad,
           GST_TIME_ARGS (timestamp));
     }
   }

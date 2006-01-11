@@ -1,3 +1,15 @@
+2006-01-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  Change the pad template to src_%d to match the pads that 
+	  are created from it. decodebin needs this information in order
+	  to decide that oggdemux is capable of producing multiple pads
+	  (and hence needs queues inserted).
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_queue_pads),
+	(gst_ogg_mux_collected):
+	  Make debug output more useful by using GST_PTR_FORMAT.
+
 2006-01-11  Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
