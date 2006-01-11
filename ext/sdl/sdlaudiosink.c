@@ -33,9 +33,6 @@ GST_ELEMENT_DETAILS ("Audio Sink (SDLAUDIO)",
     "Output to a sound card via SDLAUDIO",
     "Edgard Lima <edgard.lima@indt.org.br>");
 
-static void gst_sdlaudio_sink_base_init (gpointer g_class);
-static void gst_sdlaudio_sink_class_init (GstSDLAudioSinkClass * klass);
-static void gst_sdlaudio_sink_init (GstSDLAudioSink * sdlaudiosink);
 static void gst_sdlaudio_sink_dispose (GObject * object);
 
 static void gst_sdlaudio_sink_get_property (GObject * object, guint prop_id,
@@ -134,36 +131,10 @@ static GstStaticPadTemplate sdlaudiosink_sink_factory =
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 
-static GstElementClass *parent_class = NULL;
+GST_BOILERPLATE (GstSDLAudioSink, gst_sdlaudio_sink, GstAudioSink,
+    GST_TYPE_AUDIO_SINK)
 
-GType
-gst_sdlaudio_sink_get_type (void)
-{
-  static GType sdlaudiosink_type = 0;
-
-  if (!sdlaudiosink_type) {
-    static const GTypeInfo sdlaudiosink_info = {
-      sizeof (GstSDLAudioSinkClass),
-      gst_sdlaudio_sink_base_init,
-      NULL,
-      (GClassInitFunc) gst_sdlaudio_sink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSDLAudioSink),
-      0,
-      (GInstanceInitFunc) gst_sdlaudio_sink_init,
-    };
-
-    sdlaudiosink_type =
-        g_type_register_static (GST_TYPE_AUDIO_SINK, "GstSDLAudioSink",
-        &sdlaudiosink_info, 0);
-  }
-
-  return sdlaudiosink_type;
-}
-
-static void
-gst_sdlaudio_sink_dispose (GObject * object)
+     static void gst_sdlaudio_sink_dispose (GObject * object)
 {
   GstSDLAudioSink *sdlaudiosink = GST_SDLAUDIOSINK (object);
 
@@ -175,7 +146,6 @@ gst_sdlaudio_sink_dispose (GObject * object)
     g_free (sdlaudiosink->buffer);
   }
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -203,8 +173,6 @@ gst_sdlaudio_sink_class_init (GstSDLAudioSinkClass * klass)
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
-
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_sdlaudio_sink_dispose);
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_sdlaudio_sink_getcaps);
@@ -224,7 +192,8 @@ gst_sdlaudio_sink_class_init (GstSDLAudioSinkClass * klass)
 }
 
 static void
-gst_sdlaudio_sink_init (GstSDLAudioSink * sdlaudiosink)
+gst_sdlaudio_sink_init (GstSDLAudioSink * sdlaudiosink,
+    GstSDLAudioSinkClass * g_class)
 {
   GST_DEBUG ("initializing sdlaudiosink");
 
@@ -235,7 +204,7 @@ gst_sdlaudio_sink_init (GstSDLAudioSink * sdlaudiosink)
 
   SEMAPHORE_INIT (sdlaudiosink->semA, TRUE);
 
-  SEMAPHORE_INIT (sdlaudiosink->semB, TRUE);
+  SEMAPHORE_INIT (sdlaudiosink->semB, FALSE);
 
 }
 
