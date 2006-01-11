@@ -1,3 +1,12 @@
+2006-01-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/random/ensonic/media-device-daemon.txt:
+          more ideas (dbus)
+	* gst/gstbuffer.c:
+          fix doc example, add clarification
+	* tools/gst-launch.1.in:
+          add initial info about GST_PLUGIN_PATH, needs more work
+
 2006-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/basics-bins.xml:

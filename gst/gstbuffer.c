@@ -44,7 +44,7 @@
  *   size = width * height * bpp;
  *   buffer = gst_buffer_new ();
  *   GST_BUFFER_SIZE (buffer) = size;
- *   GST_BUFFER_MALLOCDATA (buffer) = g_alloc (size);
+ *   GST_BUFFER_MALLOCDATA (buffer) = g_malloc (size);
  *   GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
  *   ...
  *   </programlisting>
@@ -264,6 +264,7 @@ gst_buffer_new (void)
  * @size: the size of the new buffer's data.
  *
  * Creates a newly allocated buffer with data of the given size.
+ * The buffer memory is not cleared.
  *
  * MT safe.
  * Returns: the new #GstBuffer.

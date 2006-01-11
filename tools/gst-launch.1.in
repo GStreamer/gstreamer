@@ -393,7 +393,9 @@ When this environment variable is set, coloured debug output is disabled.
 Describe me
 .TP
 \fBGST_PLUGIN_PATH\fR
-Describe me
+Set to directories in the form of $prefix/lib/gstreamer-0.10 to include plugins
+in non-standart locations. The path does not need to repeat the default
+GStreamer plugin path.
 .TP
 \fBGST_PLUGIN_SYSTEM_PATH\fR
 Describe me

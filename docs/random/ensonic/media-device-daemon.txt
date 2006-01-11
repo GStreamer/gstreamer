@@ -8,12 +8,16 @@ components
   - open physical sink, src elements
   - prepends an adder to sinks
   - appends an tee to sources
+  - listens to dbus, to get notified by virtual-endpoints of init/finalize
+    (the dbus notify, would also be useful for gst-editor to hook on running
+     apps)
 
 - 4 new elements
   - virtual-audiosink, virtual-videosink
     virtual-audiosrc, virtual-videosrc
   - virtual sinks establish a connection to the daemon
   - they link to request_pads of the adder/tee elements
+  - on init and finalize they send a dbus-message
 
 - gui app
   - lists instances as mixing-desk like channelstrips
