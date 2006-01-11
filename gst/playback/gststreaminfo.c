@@ -296,9 +296,7 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
     GstElement *element;
 
     stream_info->mute = mute;
-    //gst_pad_set_active_recursive ((GstPad *)
-    //GST_PAD_CAST (stream_info->object), !mute);
-    g_warning ("FIXME");
+    // gst_pad_set_active ((GstPad *) GST_PAD_CAST (stream_info->object), !mute);
 
     element = gst_pad_get_parent_element ((GstPad *)
         GST_PAD_CAST (stream_info->object));

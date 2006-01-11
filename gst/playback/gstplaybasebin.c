@@ -299,14 +299,16 @@ group_destroy (GstPlayBaseGroup * group)
   for (n = 0; n < NUM_TYPES; n++) {
     GstElement *element = group->type[n].preroll;
     GstElement *fakesrc;
+    GstElement *sel;
     const GList *item;
 
     if (!element)
       continue;
 
+    sel = group->type[n].selector;
+
     /* remove any fakesrc elements for this preroll element */
-    for (item = GST_ELEMENT (group->type[n].selector)->pads;
-        item != NULL; item = item->next) {
+    for (item = sel->pads; item != NULL; item = item->next) {
       GstPad *pad = GST_PAD (item->data);
       guint sig_id;
 
@@ -813,7 +815,7 @@ probe_triggered (GstPad * pad, GstEvent * event, gpointer user_data)
     GROUP_LOCK (play_base_bin);
 
     /* mute this stream */
-    //g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
+    g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
     if (info->type > 0 && info->type <= NUM_TYPES)
       group->type[info->type - 1].done = TRUE;
 
@@ -999,6 +1001,9 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
       G_CALLBACK (preroll_unlinked), play_base_bin);
   /* keep a ref to the signal id so that we can disconnect the signal callback */
   g_object_set_data (G_OBJECT (sinkpad), "unlinked_id", GINT_TO_POINTER (sig));
+  /* Store a pointer to the stream selector pad for this stream */
+  g_object_set_data (G_OBJECT (pad), "pb_sel_pad", sinkpad);
+
   gst_pad_link (pad, sinkpad);
   gst_object_unref (sinkpad);
 
@@ -1471,8 +1476,10 @@ get_active_source (GstPlayBaseBin * play_base_bin, GstStreamType type)
 
 /* Kill pad reactivation on state change. */
 
+#if 0
 static void muted_group_change_state (GstElement * element,
     gint old_state, gint new_state, gpointer data);
+#endif
 
 static void
 mute_group_type (GstPlayBaseGroup * group, GstStreamType type, gboolean mute)
@@ -1490,6 +1497,7 @@ mute_group_type (GstPlayBaseGroup * group, GstStreamType type, gboolean mute)
   gst_pad_set_active (pad, active);
   gst_object_unref (pad);
 
+#if 0
   if (mute) {
     g_signal_connect (group->type[type - 1].preroll, "state-changed",
         G_CALLBACK (muted_group_change_state), group);
@@ -1497,8 +1505,10 @@ mute_group_type (GstPlayBaseGroup * group, GstStreamType type, gboolean mute)
     g_signal_handlers_disconnect_by_func (group->type[type - 1].preroll,
         G_CALLBACK (muted_group_change_state), group);
   }
+#endif
 }
 
+#if 0
 static void
 muted_group_change_state (GstElement * element,
     gint old_state, gint new_state, gpointer data)
@@ -1519,6 +1529,7 @@ muted_group_change_state (GstElement * element,
 
   GROUP_UNLOCK (group->bin);
 }
+#endif
 
 /*
  * Caller has group-lock held.
@@ -1532,6 +1543,7 @@ set_active_source (GstPlayBaseBin * play_base_bin,
   GList *s;
   gint num = 0;
   gboolean have_active = FALSE;
+  GstElement *sel;
 
   GST_LOG ("Changing active source of type %d to %d", type, source_num);
   play_base_bin->current[type - 1] = source_num;
@@ -1542,14 +1554,28 @@ set_active_source (GstPlayBaseBin * play_base_bin,
     return;
   }
 
+  sel = group->type[type - 1].selector;
+
   for (s = group->streaminfo; s; s = s->next) {
     GstStreamInfo *info = s->data;
 
     if (info->type == type) {
       if (num == source_num) {
+        GstPad *sel_pad;
+
         GST_LOG ("Unmuting (if already muted) source %d of type %d", source_num,
             type);
-        g_object_set (s->data, "mute", FALSE, NULL);
+        g_object_set (info, "mute", FALSE, NULL);
+
+        /* Tell the stream selector which pad to accept */
+        sel_pad = GST_PAD_CAST (g_object_get_data (G_OBJECT (info->object),
+                "pb_sel_pad"));
+
+        if (sel && sel_pad != NULL) {
+          g_object_set (G_OBJECT (sel), "active-pad", GST_PAD_NAME (sel_pad),
+              NULL);
+        }
+
         have_active = TRUE;
       } else {
         guint id;
@@ -1564,7 +1590,12 @@ set_active_source (GstPlayBaseBin * play_base_bin,
     }
   }
 
-  GST_LOG ("Muting group type: %d -> %d", type, !have_active);
+  if (!have_active) {
+    GST_LOG ("Muting group type: %d", type);
+    g_object_set (sel, "active-pad", "", NULL);
+  } else {
+    GST_LOG ("Unuting group type: %d", type);
+  }
   mute_group_type (group, type, !have_active);
 }
 

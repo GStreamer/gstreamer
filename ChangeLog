@@ -1,5 +1,18 @@
 2006-01-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/playback/gstplaybasebin.c: (group_destroy),
+	(probe_triggered), (new_decoded_pad), (mute_group_type),
+	(set_active_source):
+	* gst/playback/gststreaminfo.c: (gst_stream_info_set_mute):
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_base_init),
+	(gst_stream_selector_set_property),
+	(gst_stream_selector_request_new_pad):
+	  Reenable stream selection. These mechanisms need a complete overhaul
+	  in the face of 0.8->0.10 changes though.
+
+2006-01-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/ogg/gstoggdemux.c:
 	  Change the pad template to src_%d to match the pads that 
 	  are created from it. decodebin needs this information in order

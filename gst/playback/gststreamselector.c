@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2003 Julien Moutte <julien@moutte.net>
  * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2005 Jan Schmidt <thaytan@mad.scientist.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,12 +22,6 @@
 /*
  * !!!!!!!!!!!!!!!!! Big phat warning. !!!!!!!!!!!!!!!!!!!!!!
  *
- * The pads on the sinkside can be filled and the application is
- * supposed to enable/disable them. The plugin will receive input
- * data over the currently active pad and take care of data
- * forwarding and negotiation. This plugin does nothing fancy. It
- * exists to be light-weight and simple.
- *
  * This is not a generic switch element. This is not to be used for
  * any such purpose. Patches to make it do that will be rejected.
  */
@@ -34,6 +29,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <string.h>
 
 #include "gststreamselector.h"
 
@@ -112,7 +109,8 @@ gst_stream_selector_base_init (GstStreamSelectorClass * klass)
       "Generic",
       "N-to-1 input stream_selectoring",
       "Julien Moutte <julien@moutte.net>\n"
-      "Ronald S. Bultje <rbultje@ronald.bitfreak.net>");
+      "Ronald S. Bultje <rbultje@ronald.bitfreak.net>\n"
+      "Jan Schmidt <thaytan@mad.scientist.com>");
 
   gst_element_class_set_details (element_class, &gst_stream_selector_details);
 
@@ -180,27 +178,41 @@ gst_stream_selector_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_ACTIVE_PAD:{
       const gchar *pad_name = g_value_get_string (value);
-      GstPad *pad;
+      GstPad *pad = NULL;
+
+      if (strcmp (pad_name, "") != 0) {
+        pad = gst_element_get_pad (GST_ELEMENT (object), pad_name);
+      }
 
       GST_OBJECT_LOCK (object);
-      pad = gst_element_get_pad (GST_ELEMENT (object), pad_name);
       if (pad == sel->active_sinkpad) {
         GST_OBJECT_UNLOCK (object);
-        gst_object_unref (pad);
+        if (pad)
+          gst_object_unref (pad);
         break;
       }
-
+#if 0
       if (sel->active_sinkpad && (GST_STATE (sel) >= GST_STATE_PAUSED)) {
         gst_pad_set_active (sel->active_sinkpad, FALSE);
+        GST_DEBUG_OBJECT (sel, "Deactivating pad %" GST_PTR_FORMAT,
+            sel->active_sinkpad);
       }
+#endif
 
       gst_object_replace ((GstObject **) (&sel->active_sinkpad),
-          GST_OBJECT (pad));
-      gst_object_unref (pad);
+          GST_OBJECT_CAST (pad));
+      if (pad)
+        gst_object_unref (pad);
 
+#if 0
       if (sel->active_sinkpad && (GST_STATE (sel) >= GST_STATE_PAUSED)) {
         gst_pad_set_active (sel->active_sinkpad, TRUE);
+        GST_DEBUG_OBJECT (sel, "Activating pad %" GST_PTR_FORMAT,
+            sel->active_sinkpad);
       }
+#endif
+      GST_DEBUG_OBJECT (sel, "New active pad is %" GST_PTR_FORMAT,
+          sel->active_sinkpad);
       GST_OBJECT_UNLOCK (object);
       break;
     }
@@ -311,12 +323,6 @@ gst_stream_selector_request_new_pad (GstElement * element,
   gst_pad_set_internal_link_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_selector_get_linked_pads));
   gst_element_add_pad (GST_ELEMENT (sel), sinkpad);
-
-  GST_OBJECT_LOCK (sel);
-  if (GST_STATE (sel) >= GST_STATE_PAUSED) {
-    gst_pad_set_active (sinkpad, TRUE);
-  }
-  GST_OBJECT_UNLOCK (sel);
 
   return sinkpad;
 }
