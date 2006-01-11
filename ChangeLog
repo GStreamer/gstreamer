@@ -1,3 +1,9 @@
+2006-01-11  Wim Taymans  <wim@fluendo.com>
+
+	* docs/manual/basics-bins.xml:
+	* docs/manual/basics-elements.xml:
+	Some small fixes as pointed out by Ser-ver on IRC.
+
 2006-01-10  Edward Hervey  <edward@fluendo.com>
 
 	* plugins/elements/gstidentity.c: (gst_identity_transform_ip):

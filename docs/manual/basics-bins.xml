@@ -137,7 +137,7 @@ main (int   argc
   g_object_set (G_OBJECT (player), "location", "helloworld.ogg", NULL);
 
   /* start playback */
-  gst_element_set_state (GST_ELEMENT (mp3player), GST_STATE_PLAYING);
+  gst_element_set_state (GST_ELEMENT (player), GST_STATE_PLAYING);
 [..]
 }
     </programlisting>
