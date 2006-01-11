@@ -2691,6 +2691,9 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     case GST_MAKE_FOURCC ('r', 'l', 'e', ' '):
       _codec ("Run-length encoding");
       return gst_caps_from_string ("video/x-rle, layout=(string)quicktime");
+    case GST_MAKE_FOURCC ('i', 'v', '3', '2'):
+      _codec ("Indeo Video 3");
+      return gst_caps_from_string ("video/x-indeo, indeoversion=(int)3");
     case GST_MAKE_FOURCC ('s', 'm', 'c', ' '):
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
