@@ -1,5 +1,9 @@
 2006-01-12  Andy Wingo  <wingo@pobox.com>
 
+	* libavcodec/utils.c: Fix for CVE-2005-4048 (bugzilla bug
+	#324209), buffer overflow with small PNG images with palettes.
+	Patch by: Loïc Minier <lool+gnome at via.ecp.fr>
+
 	* libavutil/Makefile.am (INCLUDES): Add ALTIVEC_CFLAGS here, fixes
 	compilation on ppc (#320238).
 
