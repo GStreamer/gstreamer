@@ -39,6 +39,8 @@ EXPORTS
     gst_buffer_new_and_alloc
 
     gst_buffer_stamp
+    
+    gst_bus_new
 
     gst_bus_poll
 
@@ -84,9 +86,19 @@ EXPORTS
 
     gst_caps_to_string
 
+    gst_clock_get_calibration
+
+    gst_clock_get_internal_time
+
     gst_clock_get_type
 
+    gst_clock_set_calibration
+
+    gst_clock_set_master
+
     gst_core_error_quark
+    
+    gst_date_get_type    
 
     gst_deinit
 
@@ -97,6 +109,8 @@ EXPORTS
     gst_element_class_add_pad_template
 
     gst_element_class_get_pad_template
+    
+    gst_element_class_get_pad_template_list
 
     gst_element_class_set_details
 
@@ -122,7 +136,11 @@ EXPORTS
 
     gst_element_get_clock
 
+    gst_element_get_factory
+
     gst_element_get_pad
+    
+    gst_element_get_request_pad
 
     gst_element_get_state
 
@@ -135,6 +153,8 @@ EXPORTS
     gst_element_link_many
 
     gst_element_link_pads
+    
+    gst_element_make_from_uri
 
     gst_element_no_more_pads
 
@@ -145,9 +165,13 @@ EXPORTS
     gst_element_remove_pad
 
     gst_element_requires_clock
-
+    
+    gst_element_send_event
+    
+    gst_element_set_bus
+    
     gst_element_set_state
-
+    
     gst_element_sync_state_with_parent
 
     gst_element_unlink
@@ -164,6 +188,8 @@ EXPORTS
 
     gst_format_get_details
 
+    gst_format_get_name
+
     gst_format_register
 
     gst_fourcc_get_type
@@ -171,6 +197,16 @@ EXPORTS
     gst_fraction_get_type
 
     gst_fraction_range_get_type
+    
+    gst_ghost_pad_get_type
+    
+    gst_ghost_pad_new
+    
+    gst_ghost_pad_new_no_target
+    
+    gst_ghost_pad_set_target
+    
+    gst_implements_interface_cast
 
     gst_implements_interface_check
 
@@ -193,6 +229,8 @@ EXPORTS
     gst_init_get_option_group
 
     gst_int_range_get_type
+    
+    gst_library_error_quark
 
     gst_marshal_BOOLEAN__POINTER
 
@@ -203,6 +241,8 @@ EXPORTS
     gst_marshal_VOID__POINTER_OBJECT
 
     gst_marshal_VOID__UINT_BOXED
+    
+    gst_message_new_element
 
     gst_message_get_structure
 
@@ -223,6 +263,8 @@ EXPORTS
     gst_message_parse_warning
 
     gst_mini_object_get_type
+    
+    gst_mini_object_make_writable
 
     gst_mini_object_new
 
@@ -247,6 +289,12 @@ EXPORTS
     gst_object_set_name
 
     gst_object_unref
+    
+    gst_pad_add_buffer_probe
+    
+    gst_pad_add_data_probe
+    
+    gst_pad_add_event_probe
 
     gst_pad_alloc_buffer
 
@@ -259,12 +307,16 @@ EXPORTS
     gst_pad_get_direction
 
     gst_pad_get_element_private
+    
+    gst_pad_get_internal_links
 
     gst_pad_get_internal_links_default
 
     gst_pad_get_negotiated_caps
 
     gst_pad_get_pad_template_caps
+    
+    gst_pad_get_parent_element
 
     gst_pad_get_peer
 
@@ -291,10 +343,16 @@ EXPORTS
     gst_pad_query
 
     gst_pad_query_default
+    
+    gst_pad_remove_buffer_probe
+    
+    gst_pad_remove_data_probe
 
     gst_pad_send_event
 
     gst_pad_set_active
+
+    gst_pad_set_blocked_async
 
     gst_pad_set_chain_function
 
@@ -321,6 +379,8 @@ EXPORTS
     gst_pad_template_new
 
     gst_pad_unlink
+    
+    gst_param_spec_mini_object
 
     gst_parse_launch
 
@@ -329,6 +389,8 @@ EXPORTS
     gst_pipeline_get_type
 
     gst_pipeline_new
+
+    gst_pipeline_set_new_stream_time
 
     gst_plugin_feature_get_name
 
@@ -347,10 +409,14 @@ EXPORTS
     gst_stream_error_quark
 
     gst_structure_copy
+    
+    gst_structure_fixate_field_boolean
 
     gst_structure_fixate_field_nearest_double
 
     gst_structure_fixate_field_nearest_int
+    
+    gst_structure_fixate_field_nearest_fraction
 
     gst_structure_foreach
 
@@ -359,6 +425,8 @@ EXPORTS
     gst_structure_get_double
 
     gst_structure_get_fourcc
+    
+    gst_structure_get_fraction
 
     gst_structure_get_int
 
@@ -369,6 +437,8 @@ EXPORTS
     gst_structure_get_value
 
     gst_structure_has_field
+
+    gst_structure_has_name
 
     gst_structure_new
 
@@ -408,7 +478,13 @@ EXPORTS
 
     gst_util_set_object_arg
 
+    gst_value_array_append_value
+
+    gst_value_array_get_size
+
     gst_value_array_get_type
+
+    gst_value_array_get_value
 
     gst_value_get_caps
 
@@ -519,6 +595,8 @@ EXPORTS
 	gst_iterator_fold
 
 	gst_iterator_free
+	
+	gst_message_new_custom
 
 	gst_message_new_eos
 
@@ -549,6 +627,8 @@ EXPORTS
 	gst_pad_activate_pull
 
 	gst_pad_activate_push
+
+	gst_pad_alloc_buffer_and_set_caps
 
 	gst_pad_chain
 
@@ -642,6 +722,8 @@ EXPORTS
 
 	gst_segment_clip
 
+	gst_segment_set_duration
+	
 	gst_segment_set_newsegment
 
 	gst_segment_to_running_time
@@ -659,8 +741,12 @@ EXPORTS
 	gst_tag_list_foreach
 
 	gst_tag_list_free
+	
+	gst_tag_list_get_date_index
 
 	gst_tag_list_get_double_index
+	
+	gst_tag_list_get_string
 
 	gst_tag_list_get_string_index
 
@@ -693,6 +779,8 @@ EXPORTS
 	gst_util_guint64_to_gdouble
 
 	gst_util_uint64_scale
+	
+	gst_util_uint64_scale_int
 
 	gst_value_get_int_range_max
 

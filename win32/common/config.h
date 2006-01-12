@@ -35,6 +35,12 @@
 /* Define the version */
 #define GST_VERSION "0.10.1.1"
 
+/* Define the MAJOR.MINOR version */
+#define GST_MAJORMINOR "0.10"
+
+/* Define host CPU */
+#define HOST_CPU "i386"
+
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
 

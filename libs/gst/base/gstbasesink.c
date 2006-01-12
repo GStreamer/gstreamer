@@ -1398,7 +1398,9 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
         base = GST_ELEMENT_CAST (basesink)->base_time;
         base += basesink->segment.accum;
         base = MIN (now, base);
-        *cur = (now - base) * basesink->segment.abs_rate + time;
+        *cur =
+            gst_guint64_to_gdouble (now - base) * basesink->segment.abs_rate +
+            time;
 
         GST_DEBUG_OBJECT (basesink,
             "now %" GST_TIME_FORMAT " - base %" GST_TIME_FORMAT " - accum %"

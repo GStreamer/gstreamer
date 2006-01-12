@@ -393,6 +393,7 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
   /* use previous rate to calculate duration */
   segment->accum += gst_gdouble_to_guint64 (
       (gst_guint64_to_gdouble (duration) / segment->abs_rate));
+
   /* then update the current segment */
   segment->rate = rate;
   segment->abs_rate = ABS (rate);

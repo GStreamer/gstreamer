@@ -1,3 +1,14 @@
+2006-01-12  Sebastien Moutte  <sebastien@moutte.net>
+
+	* libs/gst/base/gstbasesink.c:
+	  *cur = (now - base) * basesink->segment.abs_rate + time; replaced by 
+	  *cur = gst_guint64_to_gdouble(now - base) * basesink->segment.abs_rate + time; for vs6
+	* win32/common/config.h:
+	  added some defines GST_MAJORMINOR and HOST_CPU
+	* win32/common/libgstbase.def:
+	* win32/common/libgstreamer.def:
+	  added some exported functions.
+
 2006-01-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/controller/gstcontroller.c:
