@@ -1,3 +1,10 @@
+2006-01-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstbuffer.c: (gst_buffer_span):
+	  gst_buffer_span should copy the timestamp of the first buffer
+	  if they were both originally overlapping subbuffers of the 
+	  same parent, using the same logic as the 'slow copy' case.
+
 2006-01-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_pop):

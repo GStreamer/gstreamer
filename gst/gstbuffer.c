@@ -553,25 +553,26 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
     /* copy the second buffer's data across */
     memcpy (newbuf->data + (buf1->size - offset), buf2->data,
         len - (buf1->size - offset));
-    /* if the offset is 0, the new buffer has the same timestamp as buf1 */
-    if (offset == 0) {
-      GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET (buf1);
-      GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buf1);
-    }
   }
-  /* if we completely merged the two buffers (appended), we can
-   * calculate the duration too. Also make sure we's not messing with
-   * invalid DURATIONS */
-  if (offset == 0 && buf1->size + buf2->size == len) {
-    if (GST_BUFFER_DURATION_IS_VALID (buf1) &&
-        GST_BUFFER_DURATION_IS_VALID (buf2)) {
-      /* add duration */
-      GST_BUFFER_DURATION (newbuf) = GST_BUFFER_DURATION (buf1) +
-          GST_BUFFER_DURATION (buf2);
-    }
-    if (GST_BUFFER_OFFSET_END_IS_VALID (buf2)) {
-      /* add offset_end */
-      GST_BUFFER_OFFSET_END (newbuf) = GST_BUFFER_OFFSET_END (buf2);
+  /* if the offset is 0, the new buffer has the same timestamp as buf1 */
+  if (offset == 0) {
+    GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET (buf1);
+    GST_BUFFER_TIMESTAMP (newbuf) = GST_BUFFER_TIMESTAMP (buf1);
+
+    /* if we completely merged the two buffers (appended), we can
+     * calculate the duration too. Also make sure we's not messing with
+     * invalid DURATIONS */
+    if (buf1->size + buf2->size == len) {
+      if (GST_BUFFER_DURATION_IS_VALID (buf1) &&
+          GST_BUFFER_DURATION_IS_VALID (buf2)) {
+        /* add duration */
+        GST_BUFFER_DURATION (newbuf) = GST_BUFFER_DURATION (buf1) +
+            GST_BUFFER_DURATION (buf2);
+      }
+      if (GST_BUFFER_OFFSET_END_IS_VALID (buf2)) {
+        /* add offset_end */
+        GST_BUFFER_OFFSET_END (newbuf) = GST_BUFFER_OFFSET_END (buf2);
+      }
     }
   }
 
