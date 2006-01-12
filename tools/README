@@ -91,7 +91,7 @@ For an avi file (DivX, mjpeg,...)
  gst-launch filesrc location=video.avi ! avidecoder video_00! { queue ! sdlvideosink } avidecoder0.audio_00! { queue ! osssink }
 
 
- 
+
 gst-complete
 ==================
 
@@ -107,15 +107,6 @@ You can then enjoy context sensitive tab-completion of gst-launch
 commands.
 
 
-gst-register
-==================
-
-This tool will perform an introspection on all available plugins and will
-create a registry file in /etc/gstreamer/reg.xml. Startup time will be
-much faster since the gstreamer core doesn't have to bring all the plugins 
-files into memory at startup. As with gst-compprep you need to run this
-as root for it too work correctly.
-
 
 gst-inspect
 =================
@@ -129,6 +120,8 @@ will show all the plugins available and the elements they contain.
  ./gst-inspect <pluginname/elementname>
 
 shows more info about the plugin/element.
+
+
 
 gst-xmlinspect
 =================

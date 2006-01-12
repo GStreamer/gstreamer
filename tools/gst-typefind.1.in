@@ -1,15 +1,15 @@
 .TH GStreamer 1 "May 2003"
-.SH NAME
+.SH "NAME"
 gst\-typefind - print MIME type of file
-.SH SYNOPSIS
+.SH "SYNOPSIS"
 .B  gst\-typefind <file>
-.SH DESCRIPTION
+.SH "DESCRIPTION"
 .PP
 \fIgst\-typefind\fP uses the GStreamer type finding system to
 determine the relevant GStreamer plugin to parse or decode \fBfile\fP,
 and the corresponding MIME type.
 .
-.SH OPTIONS
+.SH "OPTIONS"
 .l
 \fIgst\-typefind\fP accepts the following options:
 .TP 8
@@ -31,8 +31,10 @@ Enable printout of errors while loading \fIGStreamer\fP plugins
 .TP 8
 .B  \-\-gst\-plugin\-path=PATH
 Add directories separated with ':' to the plugin search path
-.SH SEE ALSO
-.BR gst\-register (1),
+.
+.SH "SEE ALSO"
+.BR gst\-feedback (1),
+.BR gst\-inspect (1),
 .BR gst\-launch (1)
-.SH AUTHOR
-The GStreamer team at http://gstreamer.net/
+.SH "AUTHOR"
+The GStreamer team at http://gstreamer.freedesktop.org/

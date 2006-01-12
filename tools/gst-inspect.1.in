@@ -1,19 +1,20 @@
-.TH GStreamer 1 "March 2001"
-.SH NAME
+.TH GStreamer 1 "December 2005"
+.SH "NAME"
 gst\-inspect - print info about a GStreamer plugin or element
-.SH SYNOPSIS
+.SH "SYNOPSIS"
 .B  gst\-inspect [OPTION...] [PLUGIN|ELEMENT]
-.SH DESCRIPTION
+.SH "DESCRIPTION"
 .PP
 \fIgst\-inspect\fP is a tool that prints out information on
 available \fIGStreamer\fP plugins, information about a particular
 plugin, or information about a particular element.  When executed
 with no PLUGIN or ELEMENT argument, \fIgst\-inspect\fP will print
-a list of all plugins and elements.  When executed with a PLUGIN
-or ELEMENT argument, \fIgst\-inspect\fP will print information
-about that plug-in or element.
+a list of all plugins and elements together with a sumary.
+When executed with a PLUGIN or ELEMENT argument,
+\fIgst\-inspect\fP will print information about that plug-in or
+element.
 .
-.SH OPTIONS
+.SH "OPTIONS"
 .l
 \fIgst\-inspect\fP accepts the following arguments and options:
 .TP 8
@@ -41,8 +42,10 @@ Enable printout of errors while loading \fIGStreamer\fP plugins
 .TP 8
 .B  \-\-gst\-plugin\-path=PATH
 Add directories separated with ':' to the plugin search path
-.SH SEE ALSO
-.BR gst\-register (1),
-.BR gst\-launch (1)
-.SH AUTHOR
-The GStreamer team at http://gstreamer.net/
+.
+.SH "SEE ALSO"
+.BR gst\-feedback (1),
+.BR gst\-launch (1),
+.BR gst\-typefind (1)
+.SH "AUTHOR"
+The GStreamer team at http://gstreamer.freedesktop.org/

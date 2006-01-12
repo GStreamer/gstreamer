@@ -1,3 +1,15 @@
+2006-01-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* tools/README:
+	* tools/gst-feedback.1.in:
+	* tools/gst-inspect.1.in:
+	* tools/gst-launch.1.in:
+	* tools/gst-md5sum.1.in:
+	* tools/gst-typefind.1.in:
+	* tools/gst-xmlinspect.1.in:
+	* tools/gst-xmllaunch.1.in:
+	  cleanup man-pages, remove reference to gst-register, document env-vars
+
 2006-01-12  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstbuffer.c: (gst_buffer_span):

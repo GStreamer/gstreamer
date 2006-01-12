@@ -9,7 +9,7 @@ gst\-launch \- build and run a GStreamer pipeline
 \fIGStreamer\fP pipelines.
 
 In simple form, a PIPELINE\-DESCRIPTION is a list of
-elements separated by exclamation marks (!).  Properties may be appended to
+elements separated by exclamation marks (!). Properties may be appended to
 elements, in the form \fIproperty=value\fR.
 
 For a complete description of possible PIPELINE-DESCRIPTIONS see the section
@@ -390,15 +390,16 @@ GST_DEBUG=totem:4,typefind:5
 When this environment variable is set, coloured debug output is disabled.
 .TP
 \fBGST_REGISTRY\fR
-Describe me
+Path of the registry file. Default is ~/.gstreamer-0.9/registry.xml.
 .TP
 \fBGST_PLUGIN_PATH\fR
-Set to directories in the form of $prefix/lib/gstreamer-0.10 to include plugins
-in non-standart locations. The path does not need to repeat the default
-GStreamer plugin path.
+Specifies a list of directories to scan for additional plugins.
+These take precedence over the system plugins.
 .TP
 \fBGST_PLUGIN_SYSTEM_PATH\fR
-Describe me
+Specifies a list of plugins that are always loaded by default.  If not set, 
+this defaults to the system-installed path, and the plugins installed in the
+user's home directory
 .TP
 \fBOIL_CPU_FLAGS\fR
 Useful liboil environment variable. Set OIL_CPU_FLAGS=0 when valgrind or
@@ -414,8 +415,8 @@ as mentioned above and run the program in gdb (or let it core dump). Then get
 a stack trace in the usual way.
 .
 .SH "SEE ALSO"
-.BR gst\-inspect (1)
+.BR gst\-feedback (1),
+.BR gst\-inspect (1),
 .BR gst\-typefind (1)
-.BR gst\-feedback (1)
 .SH "AUTHOR"
 The GStreamer team at http://gstreamer.freedesktop.org/
