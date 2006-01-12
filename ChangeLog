@@ -1,5 +1,15 @@
 2006-01-12  Stefan Kost  <ensonic@users.sf.net>
 
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_set_interpolation_mode),
+	(gst_controlled_property_new):
+	* libs/gst/controller/gstcontroller.h:
+	* libs/gst/controller/gstinterpolation.c:
+	(interpolate_none_get_string_value_array):
+	  make G_TYPE_STRING controlable
+
+2006-01-12  Stefan Kost  <ensonic@users.sf.net>
+
 	* tools/README:
 	* tools/gst-feedback.1.in:
 	* tools/gst-inspect.1.in:

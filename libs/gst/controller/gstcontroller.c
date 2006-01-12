@@ -213,6 +213,11 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
         self->get_value_array =
             interpolation_methods[mode]->get_enum_value_array;
         break;
+      case G_TYPE_STRING:
+        self->get = interpolation_methods[mode]->get_string;
+        self->get_value_array =
+            interpolation_methods[mode]->get_string_value_array;
+        break;
       default:
         self->get = NULL;
         self->get_value_array = NULL;
@@ -338,6 +343,12 @@ gst_controlled_property_new (GObject * object, const gchar * name)
           GParamSpecEnum *tpspec = G_PARAM_SPEC_ENUM (pspec);
 
           g_value_set_enum (&prop->default_value, tpspec->default_value);
+        }
+          break;
+        case G_TYPE_STRING:{
+          GParamSpecString *tpspec = G_PARAM_SPEC_STRING (pspec);
+
+          g_value_set_string (&prop->default_value, tpspec->default_value);
         }
           break;
         default:

@@ -135,6 +135,21 @@ interpolate_none_get_enum_value_array (GstControlledProperty * prop,
   return (TRUE);
 }
 
+static gboolean
+interpolate_none_get_string_value_array (GstControlledProperty * prop,
+    GstClockTime timestamp, GstValueArray * value_array)
+{
+  gint i;
+  GstClockTime ts = timestamp;
+  gchar **values = (gchar **) value_array->values;
+
+  for (i = 0; i < value_array->nbsamples; i++) {
+    *values = (gchar *) g_value_get_string (interpolate_none_get (prop, ts));
+    ts += value_array->sample_interval;
+    values++;
+  }
+  return (TRUE);
+}
 
 static GstInterpolateMethod interpolate_none = {
   interpolate_none_get,
@@ -152,7 +167,9 @@ static GstInterpolateMethod interpolate_none = {
   interpolate_none_get,
   interpolate_none_get_boolean_value_array,
   interpolate_none_get,
-  interpolate_none_get_enum_value_array
+  interpolate_none_get_enum_value_array,
+  interpolate_none_get,
+  interpolate_none_get_string_value_array
 };
 
 /*  returns the default value of the property, except for times with specific values */
@@ -185,6 +202,8 @@ interpolate_trigger_get_value_array (GstControlledProperty * prop,
 static GstInterpolateMethod interpolate_trigger = {
   interpolate_trigger_get,
   interpolate_trigger_get_value_array,
+  interpolate_trigger_get,
+  NULL,
   interpolate_trigger_get,
   NULL,
   interpolate_trigger_get,
@@ -279,6 +298,8 @@ static GstInterpolateMethod interpolate_linear = {
   interpolate_linear_get_float_value_array,
   interpolate_linear_get_double,
   interpolate_linear_get_double_value_array,
+  NULL,
+  NULL,
   NULL,
   NULL,
   NULL,
