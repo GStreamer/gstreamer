@@ -1,3 +1,11 @@
+2006-01-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cdda_base_src_handle_track_seek):
+	  No need to post a tag message on the bus when seeking
+	  within the same track, only post it when the current
+	  track changes.
+
 2006-01-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstplaybasebin.c: (group_destroy),

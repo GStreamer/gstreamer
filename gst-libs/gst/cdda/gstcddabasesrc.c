@@ -790,16 +790,20 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
     return FALSE;
   }
 
-  src->cur_track = (gint) start;
-  src->uri_track = -1;
-  src->prev_track = -1;
+  GST_DEBUG_OBJECT (src, "seeking to track %d", start + 1);
 
-  GST_DEBUG_OBJECT (src, "seeking to track %d", src->cur_track + 1);
-
-  src->cur_sector = src->tracks[src->cur_track].start;
+  src->cur_sector = src->tracks[start].start;
   GST_DEBUG_OBJECT (src, "starting at sector %d", src->cur_sector);
 
-  gst_cdda_base_src_update_duration (src);
+  if (src->cur_track != start) {
+    src->cur_track = (gint) start;
+    src->uri_track = -1;
+    src->prev_track = -1;
+
+    gst_cdda_base_src_update_duration (src);
+  } else {
+    GST_DEBUG_OBJECT (src, "is current track, just seeking back to start");
+  }
 
   /* send fake segment seek event in TIME format to
    * base class (so we get a newsegment etc.) */
