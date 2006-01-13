@@ -190,7 +190,7 @@ Windows.  It is released under the GNU Library General Public License
   </index>
   <!-- disable, as
      - index generation is extremly slow in gtk-doc
-     - we have not tagged lots of symbols thsi way anyway
+     - we have not tagged lots of symbols this way anyway
   <index role="0.8">
     <title>Index of new symbols in 0.8</title>
   </index>

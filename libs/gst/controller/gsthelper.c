@@ -35,6 +35,7 @@
 
 #include <stdarg.h>
 
+#include "gstcontrollerprivate.h"
 #include "gstcontroller.h"
 
 #define GST_CAT_DEFAULT gst_controller_debug

@@ -1,3 +1,22 @@
+2006-01-13  Stefan Kost  <ensonic@users.sf.net>
+
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/libs/gstreamer-libs-sections.txt:
+          add new API entries to the docs
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/controller/gstcontroller.c:
+	* libs/gst/controller/gstcontroller.h:
+	* libs/gst/controller/gstcontrollerprivate.h:
+	* libs/gst/controller/gsthelper.c:
+	* libs/gst/controller/gstinterpolation.c:
+          move private structs to private header
+	* po/README:
+          gstreamer-0.7 -> gstreamer-0.10
+	* tests/check/libs/struct_i386.h:
+          remove private structs
+
 2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* plugins/indexers/Makefile.am:

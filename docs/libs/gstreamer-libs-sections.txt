@@ -94,6 +94,8 @@ gst_object_get_value_array
 <SUBSECTION Standard>
 <SUBSECTION Private>
 </SECTION>
+
+
 # base classes
 
 <SECTION>
@@ -271,6 +273,7 @@ GST_IS_NET_CLIENT_CLOCK_CLASS
 gst_net_client_clock_get_type
 </SECTION>
 
+
 <SECTION>
 <FILE>gstnettimepacket</FILE>
 <TITLE>GstNetTimePacket</TITLE>
@@ -284,6 +287,7 @@ gst_net_time_packet_serialize
 <SUBSECTION Standard>
 <SUBSECTION Private>
 </SECTION>
+
 
 <SECTION>
 <FILE>gstnettimeprovider</FILE>
@@ -347,3 +351,7 @@ gst_check_teardown_element
 gst_check_teardown_sink_pad
 gst_check_teardown_src_pad
 </SECTION>
+
+# misc
+
+# TODO : add gsttypefindhelper

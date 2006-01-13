@@ -15,8 +15,6 @@ Struct list[] = {
 
  {"GstTimedValue", sizeof(GstTimedValue), 28},
  {"GstValueArray", sizeof(GstValueArray), 20},
- {"GstInterpolateMethod", sizeof(GstInterpolateMethod), 64},
- {"GstControlledProperty", sizeof(GstControlledProperty), 144},
  {"GstController", sizeof(GstController), 40},
  {"GstControllerClass", sizeof(GstControllerClass), 84},
 
