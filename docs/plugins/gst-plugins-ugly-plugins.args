@@ -588,3 +588,13 @@
 <DEFAULT>120000</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>AC3IEC::raw-audio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>raw-audio</NICK>
+<BLURB>If true, source pad caps are set to raw audio.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+

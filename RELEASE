@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Ugly Plug-ins 0.10.0 "Brie"
+GStreamer: Release notes for GStreamer Ugly Plug-ins 0.10.1 "Peng"
         
 
 The GStreamer team is proud to announce a new release
@@ -56,10 +56,22 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
+      * fixes in dvddemux, mpegdemux, mad, iec958
+      * removed id3demux (new version in gst-plugins-good)
 
 Bugs fixed in this release
     
-      * 323199 : Remove id3tag element (replaced by id3demux and id3mux)
+      * 322049 : [id3demux] should support pull range
+      * 322856 : [mpeg2dec] Use of wrong variables
+      * 322857 : [mpeg2dec] Seeking in byte format
+      * 325652 : many plugins don't pass unhandled queries upstream
+
+API changed in this release
+     
+
+- API additions:
+    
+* AC3IEC::raw-audio
 
 Download
 
@@ -89,6 +101,12 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
+      * Edward Hervey
+      * Jan Schmidt
+      * Josef Zlomek
+      * Martin Soto
+      * Michael Smith
+      * Stefan Kost
       * Thomas Vander Stichele
+      * Tim-Philipp Müller
  

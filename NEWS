@@ -1,4 +1,20 @@
-This is GStreamer Ugly Plug-ins 0.10.0, "Brie".
+This is GStreamer Ugly Plug-ins 0.10.1, "Peng".
+
+Features since 0.10.0:
+    
+      * fixes in dvddemux, mpegdemux, mad, iec958
+      * removed id3demux (new version in gst-plugins-good)
+
+Bugs fixed since 0.10.0:
+    
+      * 322049 : [id3demux] should support pull range
+      * 322856 : [mpeg2dec] Use of wrong variables
+      * 322857 : [mpeg2dec] Seeking in byte format
+      * 325652 : many plugins don't pass unhandled queries upstream
+
+API added since 0.10.0:
+    
+      * AC3IEC::raw-audio
 
 Bugs fixed since 0.9.7:
     

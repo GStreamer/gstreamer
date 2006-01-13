@@ -1,3 +1,10 @@
+=== release 0.10.1 ===
+
+2006-01-13  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.1, "Peng"
+
 2006-01-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
@@ -98,6 +105,7 @@
 	possible to use ac3iec958 together with the normal alsasink
 	element to drive an external receiver that autodetects AC3
 	content.
+	API addition: AC3IEC::raw-audio property
 
 2005-12-23  Michael Smith  <msmith@fluendo.com>
 
