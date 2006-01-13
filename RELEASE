@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Good Plug-ins 0.10.0 "Abondance"
+GStreamer: Release notes for GStreamer Good Plug-ins 0.10.1 "Li"
         
 
 
@@ -55,9 +55,37 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
+      * new id3 demuxer (replaces the mad one in gst-plugins-ugly)
+      * memleak fixes in avidemux, wavparse, level, smoke
+      * ports of multipart, 
+      * fixes in flacdec, flxdec, rtp
+      * documentation updates on videomixer 
+      * added new sunaudiosink, gconfaudiosrc and gconfvideosrc elements
 
 Bugs fixed in this release
     
+      * 321269 : add sunaudio to 0.9
+      * 322769 : The ID3 tag of this file is a segfaulter
+      * 323021 : sockfd property to udpsrc/dynudpsink elements
+      * 322975 : erroneous audio specs in flac plugin
+      * 323226 : block/crash on id3 v2 tags when using big blocksize
+      * 323717 :  < netinet/in.h > inclusion necessary on some systems
+      * 323718 : [oss] does not build on OpenBSD 3.8 because of hardcoded ...
+      * 323896 : pngdec/videomixer negotation problem in 0.10
+      * 324011 : Invalid payload type definition for some rtp payloaders
+      * 324012 : Invalid caps on rtpspeexpay element
+      * 325504 : [flacdec] gst_flac_dec_convert_src [mis]uses g_assert
+      * 325974 : [gst0.10] doesn't correctly gets the tags on a mp3
+      * 326612 : Serious memory leak in level plugin
+      * 326618 : memleak fix in smokeenc
+
+API changed in this release
+     
+
+- API additions:
+    
+* device-name property on ossmixer subclasses
+* GstUDPSrc::sockfd property
 
 Download
 
@@ -87,6 +115,19 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
+      * Alessandro Decina
+      * Arwed v. Merkatz
+      * Brian Cameron
+      * Christian Schaller
+      * Edgard Lima
+      * Edward Hervey
+      * Jan Schmidt
+      * Julien MOUTTE
       * Michael Smith
+      * Philippe Khalaf
+      * Stefan Kost
+      * Thomas Vander Stichele
+      * Tim-Philipp Müller
+      * Wim Taymans
+      * Zeeshan Ali
  

@@ -159,6 +159,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstUDPSrc::sockfd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,32767]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>socket handle</NICK>
+<BLURB>Socket to use for UDP reception.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSMPTE::border</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -1656,5 +1666,15 @@
 <NICK>Prefer version 1 tag</NICK>
 <BLURB>Prefer tags from ID3v1 tag at end of file when both ID3v1 and ID3v2 tags are present.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDynUDPSink::sockfd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,32767]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>socket handle</NICK>
+<BLURB>Socket to use for UDP reception.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

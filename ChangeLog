@@ -1,3 +1,10 @@
+=== release 0.10.1 ===
+
+2006-01-13  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.1, "Li"
+
 2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	  patch by: Wim Taymans
@@ -84,6 +91,7 @@
 	* gst-plugins-good/gst/udp/gstudpsrc.c:
 	Allow udpsrc and dynudpsink to take a sockfd as a parameter. For udpsrc,
 	overrides the port or multicast parameters. Fixes bugs #323021.
+	API addition: adds GstUDPSrc::sockfd property	
 
 2006-01-06  Tim-Philipp Müller  <tim at centricular dot net>
 
