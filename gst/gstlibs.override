@@ -32,31 +32,24 @@ _wrap_gst_controller_set (PyGObject *self, PyObject *args)
 {
   GstController	*controller = (GstController *) self->obj;
   gchar		*param_name;
+  GParamSpec	*pspec = NULL;
   GstClockTime	timestamp;
   GValue	value = { 0, };
   PyObject	*pvalue;
-  GType		type = 0;
-  GList		*tmp;
   gboolean	res;
 
   if (!PyArg_ParseTuple(args, "sLO:GstController.set",
 			&param_name, &timestamp, &pvalue))
     return NULL;
 
-  /* We need to find the GType to convert to */
-  for (tmp = controller->properties; tmp; tmp = g_list_next (tmp)) {
-    GstControlledProperty	*prop = (GstControlledProperty *) tmp->data;
-    if (!strcmp (prop->name, param_name))
-      type = prop->type;
+  if (!(pspec = g_object_class_find_property(G_OBJECT_GET_CLASS (controller->object),
+					     (const gchar*) param_name))) {
+      PyErr_SetString (PyExc_TypeError,
+		       "The controlled object doesn't have the given property");
+      return NULL;
   }
 
-  if (!type) {
-    PyErr_SetString (PyExc_TypeError,
-		     "The controller doesn't handle the given property");
-    return NULL;
-  }
-
-  g_value_init (&value, type);
+  g_value_init (&value, pspec->value_type);
 
   if (pyg_value_from_pyobject (&value, pvalue)) {
     PyErr_SetString (PyExc_TypeError,
@@ -179,9 +172,8 @@ _wrap_gst_controller_set_from_list (PyGObject *self, PyObject *args)
     gint	len;
     gchar	*pname;
     GSList	*list = NULL;
-    GList	*props;
+    GParamSpec	*pspec = NULL;
     gboolean	res = FALSE;
-    GType	vtype = 0;
     PyObject	*pret;
 
     if ((len = PyTuple_Size(args)) < 2) {
@@ -196,18 +188,8 @@ _wrap_gst_controller_set_from_list (PyGObject *self, PyObject *args)
     }
     pname = PyString_AsString(temp);
 
-    /* Get the GType of the given property */
-    g_mutex_lock (controller->lock);
-    for (props = controller->properties; props; props = g_list_next(props)) {
-	GstControlledProperty	*prop = (GstControlledProperty *) props->data;
-
-	if (!strcmp(prop->name, pname)) {
-	    vtype = prop->type;
-	    break;
-	}
-    }
-    g_mutex_unlock (controller->lock);
-    if (!vtype)
+    if (!(pspec = g_object_class_find_property(G_OBJECT_GET_CLASS (controller->object),
+					       (const gchar*) pname)))
 	goto error;
 
     while (len-- > 1) {
@@ -221,7 +203,7 @@ _wrap_gst_controller_set_from_list (PyGObject *self, PyObject *args)
 	}
 	tval = g_new0(GstTimedValue, 1);
 	tval->timestamp = PyLong_AsUnsignedLongLong(PyTuple_GetItem(temp2, 0));
-	g_value_init (&tval->value, vtype);
+	g_value_init (&tval->value, pspec->value_type);
 	if ((pyg_value_from_pyobject (&tval->value, PyTuple_GetItem (temp2, 1))) < 0) {
 	    PyErr_SetString (PyExc_TypeError, "Couldn't convert value to correct type");
 	    goto error;
