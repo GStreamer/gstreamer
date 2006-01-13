@@ -340,7 +340,7 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
       smokeenc->max_quality);
   smokecodec_set_threshold (smokeenc->info, smokeenc->threshold);
   smokecodec_encode (smokeenc->info, data, flags, outdata, &encsize);
-  /*gst_buffer_unref (buf); */
+  gst_buffer_unref (buf);
 
   GST_BUFFER_SIZE (outbuf) = encsize;
   GST_BUFFER_OFFSET (outbuf) = smokeenc->frame;

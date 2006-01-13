@@ -1,5 +1,12 @@
 2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	  patch by: Wim Taymans
+
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_chain):
+	  fix memleak.  Fixes #326618
+
+2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	  patch by: Mike Smith
 
 	* gst/level/gstlevel.c: (gst_level_message_new),
