@@ -1,12 +1,11 @@
 plugin_LTLIBRARIES = libgstcoreindexers.la
 # file index uses xml
+if HAVE_MMAP
 if GST_DISABLE_LOADSAVE
 GST_LOADSAVE_SRC =
 else
 GST_LOADSAVE_SRC = gstfileindex.c
 endif
-if HAVE_MMAP
-
 else
 GST_LOADSAVE_SRC =
 endif
