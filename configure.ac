@@ -536,4 +536,5 @@ pkgconfig/gstreamer-net.pc
 pkgconfig/gstreamer-net-uninstalled.pc
 gstreamer.spec
 )
+
 AC_OUTPUT
