@@ -1266,48 +1266,70 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
    * do everything itself.
    */
   {
-#if 0
-    const GList *pads;
-    gboolean is_raw = FALSE, no_out = TRUE;
+    GstIterator *pads_iter;
+    gboolean done = FALSE;
+    gboolean no_out = TRUE, is_raw = FALSE;
 
-    for (pads = gst_element_get_pad_list (play_base_bin->source);
-        pads; pads = g_list_next (pads)) {
-      GstPad *pad = GST_PAD (pads->data);
-      GstStructure *structure;
-      const gchar *mimetype;
-      GstCaps *caps;
+    pads_iter = gst_element_iterate_pads (play_base_bin->source);
+    while (!done) {
+      gpointer data;
 
-      if (GST_PAD_IS_SINK (pad))
-        continue;
+      switch (gst_iterator_next (pads_iter, &data)) {
+        case GST_ITERATOR_DONE:
+          done = TRUE;
+        case GST_ITERATOR_ERROR:
+        case GST_ITERATOR_RESYNC:
+          break;
+        case GST_ITERATOR_OK:
+        {
+          GstCaps *caps;
+          GstPad *pad = GST_PAD (data);
+          guint i, num_raw = 0;
 
-      no_out = FALSE;
+          if (GST_PAD_IS_SINK (pad))
+            break;
 
-      srcpad = pad;
-      caps = gst_pad_get_caps (pad);
+          no_out = FALSE;
 
-      if (caps == NULL || gst_caps_is_empty (caps) ||
-          gst_caps_get_size (caps) == 0) {
-        if (caps != NULL)
-          gst_caps_free (caps);
-        continue;
+          caps = gst_pad_get_caps (pad);
+          if (caps == NULL || gst_caps_is_empty (caps) ||
+              gst_caps_get_size (caps) == 0) {
+            if (caps)
+              gst_caps_unref (caps);
+            break;
+          }
+
+          for (i = 0; i < gst_caps_get_size (caps); ++i) {
+            GstStructure *s;
+            const gchar *mime_type;
+
+            s = gst_caps_get_structure (caps, i);
+            mime_type = gst_structure_get_name (s);
+
+            if (g_str_has_prefix (mime_type, "audio/x-raw") ||
+                g_str_has_prefix (mime_type, "video/x-raw")) {
+              ++num_raw;
+            }
+          }
+
+          /* if possible caps on source pad are all raw, just add the pad */
+          if (num_raw == gst_caps_get_size (caps)) {
+            new_decoded_pad (play_base_bin->source, pad, FALSE, play_base_bin);
+            is_raw = TRUE;
+          } else if (num_raw > 0 && num_raw < gst_caps_get_size (caps)) {
+            g_warning ("FIXME: handling of mixed raw/coded caps on source");
+          }
+
+          break;
+        }
       }
-
-      structure = gst_caps_get_structure (caps, 0);
-      mimetype = gst_structure_get_name (structure);
-
-      if (g_str_has_prefix (mimetype, "audio/x-raw") ||
-          g_str_has_prefix (mimetype, "video/x-raw")) {
-        new_decoded_pad (play_base_bin->source, pad, g_list_next (pads) == NULL,
-            play_base_bin);
-        is_raw = TRUE;
-      }
-
-      gst_caps_free (caps);
     }
+
     if (is_raw) {
       no_more_pads (play_base_bin->source, play_base_bin);
       return TRUE;
     }
+#if 0
     if (no_out) {
       /* create a stream to indicate that this uri is handled by a self
        * contained element */

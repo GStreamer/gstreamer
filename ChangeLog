@@ -1,3 +1,9 @@
+2006-01-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c: (setup_source):
+	  Fix playback for sources that emit raw audio or
+	  raw video streams (e.g.: cd audio sources) (#325984).
+
 2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/audio/mixerutils.c:
