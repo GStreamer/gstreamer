@@ -1,5 +1,5 @@
 %define         majorminor      @GST_MAJORMINOR@
-%define		gstreamer	gstreamer010
+%define		gstreamer	gstreamer
 
 Name: 		%{gstreamer}
 Version: 	@VERSION@
