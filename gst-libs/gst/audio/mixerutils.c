@@ -47,9 +47,9 @@ gst_audio_mixer_filter_do_filter (GstAudioMixerFilterFunc filter_func,
     *p_element = NULL;
   }
 
-  /* create new element for further probing if the old one */
+  /* create new element for further probing if the old one was cleared */
   if (*p_element == NULL) {
-    gst_element_factory_create (factory, NULL);
+    *p_element = gst_element_factory_create (factory, NULL);
   }
 }
 
