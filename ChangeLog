@@ -1,6 +1,11 @@
 2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* plugins/indexers/Makefile.am:
+	  Fixes as part of #317048
+
+2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* plugins/indexers/Makefile.am:
 	  fix #316086 - compilation when mmap is missing
 
 2006-01-12  Sebastien Moutte  <sebastien@moutte.net>
