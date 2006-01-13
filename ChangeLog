@@ -1,3 +1,11 @@
+2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	  patch by: Mike Smith
+
+	* gst/level/gstlevel.c: (gst_level_message_new),
+	(gst_level_message_append_channel):
+	  Fix memleak.  Fixes #326612
+
 2006-01-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

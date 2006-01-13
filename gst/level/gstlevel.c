@@ -390,6 +390,8 @@ gst_level_message_new (GstLevel * l, GstClockTime endtime)
   gst_structure_set_value (s, "peak", &v);
   gst_structure_set_value (s, "decay", &v);
 
+  g_value_unset (&v);
+
   return gst_message_new_element (GST_OBJECT (l), s);
 }
 
@@ -416,6 +418,8 @@ gst_level_message_append_channel (GstMessage * m, gdouble rms, gdouble peak,
   l = (GValue *) gst_structure_get_value (s, "decay");
   g_value_set_double (&v, decay);
   gst_value_list_append_value (l, &v);  /* copies by value */
+
+  g_value_unset (&v);
 }
 
 static GstFlowReturn
