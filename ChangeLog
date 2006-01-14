@@ -1,3 +1,14 @@
+2006-01-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/manual/Makefile.am:
+	  don't do parallel make
+	* configure.ac:
+	  AC_SUBST HOST_CPU
+	* win32/common/config.h.in:
+	  add generations for HOST_CPU and GST_MAJORMINOR
+	* win32/common/config.h:
+	  commit generated result
+
 2006-01-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/appendix-integration.xml:
@@ -12,18 +23,18 @@
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
 	* docs/libs/gstreamer-libs-sections.txt:
-          add new API entries to the docs
+	  add new API entries to the docs
 	* libs/gst/controller/Makefile.am:
 	* libs/gst/controller/gstcontroller.c:
 	* libs/gst/controller/gstcontroller.h:
 	* libs/gst/controller/gstcontrollerprivate.h:
 	* libs/gst/controller/gsthelper.c:
 	* libs/gst/controller/gstinterpolation.c:
-          move private structs to private header
+	  move private structs to private header
 	* po/README:
-          gstreamer-0.7 -> gstreamer-0.10
+	  gstreamer-0.7 -> gstreamer-0.10
 	* tests/check/libs/struct_i386.h:
-          remove private structs
+	  remove private structs
 
 2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 

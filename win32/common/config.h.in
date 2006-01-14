@@ -35,6 +35,12 @@
 /* Define the version */
 #define GST_VERSION "@GST_VERSION@"
 
+/* Define the MAJOR.MINOR version */
+#define GST_MAJORMINOR "@GST_MAJORMINOR@"
+
+/* Define host CPU */
+#define HOST_CPU "@HOST_CPU@"
+
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
 

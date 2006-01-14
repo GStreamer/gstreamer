@@ -39,7 +39,7 @@
 #define GST_MAJORMINOR "0.10"
 
 /* Define host CPU */
-#define HOST_CPU "i386"
+#define HOST_CPU "i686"
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA

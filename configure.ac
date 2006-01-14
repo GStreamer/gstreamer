@@ -185,6 +185,9 @@ dnl * hardware/architecture *
 dnl common/m4/gst-arch.m4
 dnl check CPU type
 GST_ARCH
+dnl substitution for win32/common/config.h
+HOST_CPU=$host_cpu
+AC_SUBST(HOST_CPU)
 
 dnl common/m4/gst-arch.m4
 dnl check for unaligned access
