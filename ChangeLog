@@ -1,3 +1,11 @@
+2006-01-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/audio/mixerutils.c:
+	* gst-libs/gst/audio/mixerutils.h:
+	  Add docs for mixerutils stuff.
+
 2006-01-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (setup_source):

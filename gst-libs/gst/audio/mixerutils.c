@@ -18,6 +18,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstaudiomixerutils
+ * @short_description:  utility functions to find available audio mixers
+ *                      from the plugin registry
+ *
+ * <refsect2>
+ * <para>
+ * Provides some utility functions to detect available audio mixers
+ * on the system.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -166,6 +179,25 @@ element_factory_rank_compare_func (gconstpointer a, gconstpointer b)
   return rank_b - rank_a;
 }
 
+/**
+ * gst_audio_default_registry_mixer_filter:
+ * @filter_func: filter function, or #NULL
+ * @first: set to #TRUE if you only want the first suitable mixer element
+ * @user_data: user data to pass to the filter function
+ *
+ * Utility function to find audio mixer elements.
+ *
+ * Will traverse the default plugin registry in order of plugin rank and
+ * find usable audio mixer elements. The caller may optionally fine-tune
+ * the selection by specifying a filter function.
+ *
+ * Returns: a #GList of audio mixer #GstElement<!-- -->s. You must free each
+ *          element in the list by setting it to NULL state and calling
+ *          gst_object_unref(). After that the list itself should be freed
+ *          using g_list_free().
+ *
+ * Since: 0.10.2
+ */
 GList *
 gst_audio_default_registry_mixer_filter (GstAudioMixerFilterFunc filter_func,
     gboolean first, gpointer data)

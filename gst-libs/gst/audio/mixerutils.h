@@ -23,7 +23,21 @@
 #include <gst/gst.h>
 #include <gst/interfaces/mixer.h>
 
+/**
+ * GstAudioMixerFilterFunc:
+ * @mixer: a #GstElement implementing the #GstMixer interface
+ * @user_data: user data
+ *
+ * Function that will be called by gst_audio_default_registry_mixer_filter()
+ * so the caller can decide which mixer elements should be kept and returned.
+ * When the mixer element is passed to the callback function, it is opened
+ * and in READY state. If you decide to keep the element, you need to set it
+ * back to NULL state yourself (unless you want to keep it opened of course).
+ *
+ * Returns: TRUE if the element should be kept, FALSE otherwise.
+ */
 typedef gboolean (*GstAudioMixerFilterFunc) (GstMixer * mixer, gpointer user_data);
+
 
 GList * gst_audio_default_registry_mixer_filter (GstAudioMixerFilterFunc  filter_func,
                                                  gboolean                 first,

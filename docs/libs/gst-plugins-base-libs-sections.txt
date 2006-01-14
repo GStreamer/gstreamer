@@ -10,6 +10,13 @@ gst_audio_structure_set_int
 </SECTION>
 
 <SECTION>
+<FILE>gstaudiomixerutils</FILE>
+<INCLUDE>gst/audio/mixerutils.h</INCLUDE>
+GstAudioMixerFilterFunc
+gst_audio_default_registry_mixer_filter
+</SECTION>
+
+<SECTION>
 <FILE>gstcddabasesrc</FILE>
 <INCLUDE>gst/cdda/gstcddabasesrc.h</INCLUDE>
 GstCddaBaseSrc
