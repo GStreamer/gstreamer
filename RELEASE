@@ -1,25 +1,28 @@
 
-GStreamer: Release notes for GStreamer Python 0.8.2 "Another one bites the dust"
+GStreamer: Release notes for GStreamer Python 0.8.3 "Nadolig LLawen"
         
 
-This is the 0.8.2 release of the GStreamer Python bindings.
-It should be used with the 0.8.x series of GStreamer and GStreamer Plugins.
+This is the 0.8.3 release of the GStreamer Python bindings.
+It should be used with the 0.8.x series of GStreamer and GStreamer Plug-ins.
 
 
-This is the third stable 0.8.0 gst-python release, it's now considered
+This is the fourth stable 0.8.0 gst-python release, it's now considered
 stable and ready to be used in production. It's already being used by
 serveral applications.
 
   
 Features of this release
     
-      * Fixes for gcc 4
-      * Dict-like access to Structure and Caps
-      * Access to Buffer and Event fields
-      * Access to Element flags
-      * Access to Probes
-      * Overriding of Object, Element and Bin virtual methods posssible
-      * Many memleak fixes
+      * add GStreamer logging support from python
+      * added a gst.extend package
+      * added modules to do jukebox mixed and levelled playback
+      * memleak fixes
+
+Bugs fixed in this release
+    
+      * 147641 : [docs] pydoc segfaults when viewing gst package doc
+      * 171287 : gst-python leaks
+      * 313415 : current cvs of gst-python ( branch BRANCH-GSTREAMER-0_8  ...
 
 Download
 
@@ -47,13 +50,17 @@ will create more lists as necessary.
         
 Contributors to this release
     
-      * Edward Hervey
-      * Richard Hult
-      * Zaheer Abbas Merali
-      * Benjamin Otte
-      * Thomas Vander Stichele
       * Andy Wingo
+      * Benjamin Otte
+      * Edward Hervey
+      * Jan Schmidt
+      * Johan Dahlin
+      * Martin Soto
+      * Michael Scherer
+      * Richard Hult
+      * Thomas Vander Stichele
+      * Zaheer Abbas Merali
 Maintainers
     
-      * Johan Dahlin
+      * Edward Hervey
  

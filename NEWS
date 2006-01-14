@@ -1,4 +1,17 @@
-This is GStreamer Python 0.8.2, "Another one bites the dust".
+This is GStreamer Python 0.8.3, "Nadolig LLawen"
+
+Changes since 0.8.2:
+
+      * add GStreamer logging support from python
+      * added a gst.extend package
+      * added modules to do jukebox mixed and levelled playback
+      * memleak fixes
+
+Bugs fixed since 0.8.2:
+
+      * 147641 : [docs] pydoc segfaults when viewing gst package doc
+      * 171287 : gst-python leaks
+      * 313415 : current cvs of gst-python ( branch BRANCH-GSTREAMER-0_8  ...
 
 Changes since 0.8.1:
 
