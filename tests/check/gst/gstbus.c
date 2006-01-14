@@ -98,7 +98,10 @@ GST_START_TEST (test_hammer_bus)
 
   gst_object_unref ((GstObject *) test_bus);
 }
-GST_END_TEST static gboolean
+
+GST_END_TEST;
+
+static gboolean
 message_func_eos (GstBus * bus, GstMessage * message, gpointer data)
 {
   const GstStructure *s;

@@ -126,6 +126,12 @@ GST_START_TEST (test_link)
 
   gst_element_set_state (sink, GST_STATE_NULL);
   gst_element_set_state (src, GST_STATE_NULL);
+
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  gst_element_unlink_pads (src, "src", sink, "sink");
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
 }
 
 GST_END_TEST;
