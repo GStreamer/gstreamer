@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-20 13:14+0100\n"
+"POT-Creation-Date: 2006-01-14 23:36+0100\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -59,62 +59,68 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "discid"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "CDDA discid for metadata retrieval"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:808 ext/cdparanoia/gstcdparanoia.c:814
+#: ext/cdparanoia/gstcdparanoiasrc.c:215 ext/cdparanoia/gstcdparanoiasrc.c:221
 msgid "Could not open CD device for reading."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#: ext/gnomevfs/gstgnomevfssink.c:431
+#: ext/cdparanoia/gstcdparanoiasrc.c:283
+#, fuzzy
+msgid "Could not seek CD."
+msgstr "Kunne ikke lukke VFS-fil «%s»."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:296
+msgid "Could not read CD."
+msgstr ""
+
+#: ext/gnomevfs/gstgnomevfssink.c:361
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Kunne ikke åpne VFS-fil «%s» for skriving: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:438
+#: ext/gnomevfs/gstgnomevfssink.c:368
 msgid "No filename given"
 msgstr "Ingen filnavn oppgitt"
 
-#: ext/gnomevfs/gstgnomevfssink.c:466
+#: ext/gnomevfs/gstgnomevfssink.c:394
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
+
+#: ext/gnomevfs/gstgnomevfssink.c:542
+#, fuzzy, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Feil under lukking av fil «%s»."
 
 #: ext/ogg/gstoggdemux.c:2503
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1347
+#: gst/playback/gstplaybasebin.c:1374
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1353
+#: gst/playback/gstplaybasebin.c:1380
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1357
+#: gst/playback/gstplaybasebin.c:1384
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1364
+#: gst/playback/gstplaybasebin.c:1391
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1430
+#: gst/playback/gstplaybasebin.c:1457
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1433
+#: gst/playback/gstplaybasebin.c:1460
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "Enhet «%s» kan ikke fange data."
@@ -150,9 +156,6 @@ msgstr ""
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Kunne ikke åpne filen «%s» for skriving."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Feil under lukking av fil «%s»."
 
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "Kunne ikke åpne filen «%s» for lesing."

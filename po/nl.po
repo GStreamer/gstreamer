@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-20 13:14+0100\n"
+"POT-Creation-Date: 2006-01-14 23:36+0100\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -60,62 +60,69 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "discid"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "CDDA discid for metadata retrieval"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:808 ext/cdparanoia/gstcdparanoia.c:814
+#: ext/cdparanoia/gstcdparanoiasrc.c:215 ext/cdparanoia/gstcdparanoiasrc.c:221
 msgid "Could not open CD device for reading."
 msgstr "Kon het CD-apparaat niet openen om te lezen."
 
-#: ext/gnomevfs/gstgnomevfssink.c:431
+#: ext/cdparanoia/gstcdparanoiasrc.c:283
+#, fuzzy
+msgid "Could not seek CD."
+msgstr "Kon het VFS-bestand \"%s\" niet sluiten."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:296
+#, fuzzy
+msgid "Could not read CD."
+msgstr "Kon niet schrijven naar apparaat \"%s\"."
+
+#: ext/gnomevfs/gstgnomevfssink.c:361
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Kon het VFS-bestand \"%s\" niet openen om te schrijven: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:438
+#: ext/gnomevfs/gstgnomevfssink.c:368
 msgid "No filename given"
 msgstr "Geen bestandsnaam opgegeven"
 
-#: ext/gnomevfs/gstgnomevfssink.c:466
+#: ext/gnomevfs/gstgnomevfssink.c:394
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kon het VFS-bestand \"%s\" niet sluiten."
+
+#: ext/gnomevfs/gstgnomevfssink.c:542
+#, fuzzy, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Fout bij sluiten bestand \"%s\"."
 
 #: ext/ogg/gstoggdemux.c:2503
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1347
+#: gst/playback/gstplaybasebin.c:1374
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1353
+#: gst/playback/gstplaybasebin.c:1380
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1357
+#: gst/playback/gstplaybasebin.c:1384
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1364
+#: gst/playback/gstplaybasebin.c:1391
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1430
+#: gst/playback/gstplaybasebin.c:1457
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1433
+#: gst/playback/gstplaybasebin.c:1460
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "Apparaat \"%s\" is niet een opvangapparaat."
@@ -152,9 +159,6 @@ msgstr ""
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Kon \"%s\" niet openen om te schrijven."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Fout bij sluiten bestand \"%s\"."
 
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "Kon \"%s\" niet openen om te lezen."
@@ -207,9 +211,6 @@ msgstr ""
 
 #~ msgid "Could not close video device \"%s\"."
 #~ msgstr "Kon videoapparaat \"%s\" niet sluiten."
-
-#~ msgid "Could not write to device \"%s\"."
-#~ msgstr "Kon niet schrijven naar apparaat \"%s\"."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "OSS-apparaat \"%s\" is al in gebruik door een ander programma."

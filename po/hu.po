@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-20 13:14+0100\n"
+"POT-Creation-Date: 2006-01-14 23:36+0100\n"
 "PO-Revision-Date: 2004-07-18 11:03+0200\n"
 "Last-Translator: Laszlo Dvornik <dvornik@invitel.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -59,62 +59,69 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "discid"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "CDDA discid for metadata retrieval"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:808 ext/cdparanoia/gstcdparanoia.c:814
+#: ext/cdparanoia/gstcdparanoiasrc.c:215 ext/cdparanoia/gstcdparanoiasrc.c:221
 msgid "Could not open CD device for reading."
 msgstr "Nem lehet olvasásra megnyitni a CD-eszközt."
 
-#: ext/gnomevfs/gstgnomevfssink.c:431
+#: ext/cdparanoia/gstcdparanoiasrc.c:283
+#, fuzzy
+msgid "Could not seek CD."
+msgstr "Nem lehet bezárni a(z) \"%s\" vfs-fájlt."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:296
+#, fuzzy
+msgid "Could not read CD."
+msgstr "Nem lehet írni a(z) \"%s\" eszközre."
+
+#: ext/gnomevfs/gstgnomevfssink.c:361
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Nem lehet írásra megnyitni a(z) \"%s\" vfs-fájlt: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:438
+#: ext/gnomevfs/gstgnomevfssink.c:368
 msgid "No filename given"
 msgstr "Nincs fájlnév megadva"
 
-#: ext/gnomevfs/gstgnomevfssink.c:466
+#: ext/gnomevfs/gstgnomevfssink.c:394
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Nem lehet bezárni a(z) \"%s\" vfs-fájlt."
+
+#: ext/gnomevfs/gstgnomevfssink.c:542
+#, fuzzy, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Hiba a(z) \"%s\" fájl bezárása közben."
 
 #: ext/ogg/gstoggdemux.c:2503
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1347
+#: gst/playback/gstplaybasebin.c:1374
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1353
+#: gst/playback/gstplaybasebin.c:1380
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1357
+#: gst/playback/gstplaybasebin.c:1384
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1364
+#: gst/playback/gstplaybasebin.c:1391
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1430
+#: gst/playback/gstplaybasebin.c:1457
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1433
+#: gst/playback/gstplaybasebin.c:1460
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "A(z) \"%s\" eszköz nem rögzítőeszköz."
@@ -152,9 +159,6 @@ msgstr ""
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Nem lehet írásra megnyitni a(z) \"%s\" fájlt."
 
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Hiba a(z) \"%s\" fájl bezárása közben."
-
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "Nem lehet olvasásra megnyitni a(z) \"%s\" fájlt."
 
@@ -190,9 +194,6 @@ msgstr ""
 
 #~ msgid "Could not close video device \"%s\"."
 #~ msgstr "Nem lehet lezárni a(z) \"%s\" videoeszközt."
-
-#~ msgid "Could not write to device \"%s\"."
-#~ msgstr "Nem lehet írni a(z) \"%s\" eszközre."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "A(z) \"%s\" OSS-eszközt már használja egy másik program."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-20 13:14+0100\n"
+"POT-Creation-Date: 2006-01-14 23:36+0100\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -61,62 +61,69 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "discid"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "CDDA discid for metadata retrieval"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:808 ext/cdparanoia/gstcdparanoia.c:814
+#: ext/cdparanoia/gstcdparanoiasrc.c:215 ext/cdparanoia/gstcdparanoiasrc.c:221
 msgid "Could not open CD device for reading."
 msgstr "Đã không mở được thiết bị CD để đọc"
 
-#: ext/gnomevfs/gstgnomevfssink.c:431
+#: ext/cdparanoia/gstcdparanoiasrc.c:283
+#, fuzzy
+msgid "Could not seek CD."
+msgstr "Đã không đóng được tập tin vfs \"%s\"."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:296
+#, fuzzy
+msgid "Could not read CD."
+msgstr "Đã không ghi được vào thiết bị \"%s\"."
+
+#: ext/gnomevfs/gstgnomevfssink.c:361
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Đã không mở được tập tin vfs \"%s\" để ghi: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:438
+#: ext/gnomevfs/gstgnomevfssink.c:368
 msgid "No filename given"
 msgstr "Chưa nhập tên tập tin "
 
-#: ext/gnomevfs/gstgnomevfssink.c:466
+#: ext/gnomevfs/gstgnomevfssink.c:394
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Đã không đóng được tập tin vfs \"%s\"."
+
+#: ext/gnomevfs/gstgnomevfssink.c:542
+#, fuzzy, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Lỗi khi đóng tập tin \"%s\"."
 
 #: ext/ogg/gstoggdemux.c:2503
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1347
+#: gst/playback/gstplaybasebin.c:1374
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1353
+#: gst/playback/gstplaybasebin.c:1380
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1357
+#: gst/playback/gstplaybasebin.c:1384
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1364
+#: gst/playback/gstplaybasebin.c:1391
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1430
+#: gst/playback/gstplaybasebin.c:1457
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1433
+#: gst/playback/gstplaybasebin.c:1460
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "Thiết bị \"%s\" không bắt gì được."
@@ -153,9 +160,6 @@ msgstr ""
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Đã không mở được tập tin \"%s\" để ghi."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Lỗi khi đóng tập tin \"%s\"."
 
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "Đã không mở được tập tin \"%s\" để đọc."
@@ -210,9 +214,6 @@ msgstr ""
 
 #~ msgid "Could not close video device \"%s\"."
 #~ msgstr "Đã không đóng được thiết bị ảnh động \"%s\"."
-
-#~ msgid "Could not write to device \"%s\"."
-#~ msgstr "Đã không ghi được vào thiết bị \"%s\"."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "Một chương trình khác đang sử dụng thiết bị OSS \"%s\"."

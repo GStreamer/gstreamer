@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.37 2005/12/20 15:57:06 thomasvs Exp $
+# $Id: sv.po,v 1.38 2006/01/14 22:59:49 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-20 13:14+0100\n"
+"POT-Creation-Date: 2006-01-14 23:36+0100\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -63,63 +63,69 @@ msgstr "Spela"
 msgid "Capture"
 msgstr "Satir"
 
-#: ext/cdparanoia/gstcdparanoia.c:305
-#, fuzzy
-msgid "discid"
-msgstr "Ingen skiva"
-
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "CDDA discid for metadata retrieval"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:808 ext/cdparanoia/gstcdparanoia.c:814
+#: ext/cdparanoia/gstcdparanoiasrc.c:215 ext/cdparanoia/gstcdparanoiasrc.c:221
 msgid "Could not open CD device for reading."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/gnomevfs/gstgnomevfssink.c:431
+#: ext/cdparanoia/gstcdparanoiasrc.c:283
+#, fuzzy
+msgid "Could not seek CD."
+msgstr "Kunde inte stänga vfs-filen \"%s\"."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:296
+#, fuzzy
+msgid "Could not read CD."
+msgstr "Kunde inte spela in!"
+
+#: ext/gnomevfs/gstgnomevfssink.c:361
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Kunde inte öppna vfs-filen \"%s\" för skrivning: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:438
+#: ext/gnomevfs/gstgnomevfssink.c:368
 msgid "No filename given"
 msgstr "Inget filnamn angivet"
 
-#: ext/gnomevfs/gstgnomevfssink.c:466
+#: ext/gnomevfs/gstgnomevfssink.c:394
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunde inte stänga vfs-filen \"%s\"."
+
+#: ext/gnomevfs/gstgnomevfssink.c:542
+#, fuzzy, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Fel vid stängning av filen \"%s\"."
 
 #: ext/ogg/gstoggdemux.c:2503
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1347
+#: gst/playback/gstplaybasebin.c:1374
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1353
+#: gst/playback/gstplaybasebin.c:1380
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1357
+#: gst/playback/gstplaybasebin.c:1384
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1364
+#: gst/playback/gstplaybasebin.c:1391
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1430
+#: gst/playback/gstplaybasebin.c:1457
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1433
+#: gst/playback/gstplaybasebin.c:1460
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "%s är ingen cdrom-enhet"
@@ -131,6 +137,10 @@ msgstr ""
 #: gst/playback/gstplaybin.c:564
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
+
+#, fuzzy
+#~ msgid "discid"
+#~ msgstr "Ingen skiva"
 
 #~ msgid "No device specified."
 #~ msgstr "Ingen enheten angiven."
@@ -156,9 +166,6 @@ msgstr ""
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Kunde inte öppna filen \"%s\" för skrivning."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Fel vid stängning av filen \"%s\"."
 
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "Kunde inte öppna filen \"%s\" för läsning."
@@ -2718,9 +2725,6 @@ msgstr ""
 
 #~ msgid "_Program"
 #~ msgstr "_Program"
-
-#~ msgid "Couldn't record!"
-#~ msgstr "Kunde inte spela in!"
 
 #~ msgid "Select a .wav file"
 #~ msgstr "Välj en .wav-fil"

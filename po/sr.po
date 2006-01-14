@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-12-20 13:14+0100\n"
+"POT-Creation-Date: 2006-01-14 23:36+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -61,63 +61,70 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "discid"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:305
-msgid "CDDA discid for metadata retrieval"
-msgstr ""
-
-#: ext/cdparanoia/gstcdparanoia.c:808 ext/cdparanoia/gstcdparanoia.c:814
+#: ext/cdparanoia/gstcdparanoiasrc.c:215 ext/cdparanoia/gstcdparanoiasrc.c:221
 msgid "Could not open CD device for reading."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
-#: ext/gnomevfs/gstgnomevfssink.c:431
+#: ext/cdparanoia/gstcdparanoiasrc.c:283
+#, fuzzy
+msgid "Could not seek CD."
+msgstr "Не могу да затворим ВСД датотеку „%s“."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:296
+#, fuzzy
+msgid "Could not read CD."
+msgstr "Не могу да пишем на видео уређај „%s“."
+
+#: ext/gnomevfs/gstgnomevfssink.c:361
 #, fuzzy, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Не могу да отворим ВСД датотеку „%s“ ради уписа."
 
-#: ext/gnomevfs/gstgnomevfssink.c:438
+#: ext/gnomevfs/gstgnomevfssink.c:368
 #, fuzzy
 msgid "No filename given"
 msgstr "Име датотеке није задато."
 
-#: ext/gnomevfs/gstgnomevfssink.c:466
+#: ext/gnomevfs/gstgnomevfssink.c:394
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не могу да затворим ВСД датотеку „%s“."
+
+#: ext/gnomevfs/gstgnomevfssink.c:542
+#, fuzzy, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Грешка при затварању датотеке „%s“."
 
 #: ext/ogg/gstoggdemux.c:2503
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1347
+#: gst/playback/gstplaybasebin.c:1374
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1353
+#: gst/playback/gstplaybasebin.c:1380
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1357
+#: gst/playback/gstplaybasebin.c:1384
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1364
+#: gst/playback/gstplaybasebin.c:1391
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1430
+#: gst/playback/gstplaybasebin.c:1457
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1433
+#: gst/playback/gstplaybasebin.c:1460
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "Уређај „%s“ не представља уређај за снимање."
@@ -156,9 +163,6 @@ msgstr ""
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Не могу да отворим датотеку „%s“ ради уписа."
 
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Грешка при затварању датотеке „%s“."
-
 #~ msgid "Could not open file \"%s\" for reading."
 #~ msgstr "Не могу да отворим датотеку „%s“ ради читања."
 
@@ -194,9 +198,6 @@ msgstr ""
 
 #~ msgid "Could not close video device \"%s\"."
 #~ msgstr "Не могу да затворим видео уређај „%s“."
-
-#~ msgid "Could not write to device \"%s\"."
-#~ msgstr "Не могу да пишем на видео уређај „%s“."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "OSS уређај „%s“ већ користи неки програм."
