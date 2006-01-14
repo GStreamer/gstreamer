@@ -13,12 +13,12 @@
 2006-01-08  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/gststructure.override: (_wrap_gst_structure_set_value):
- 	Properly check for gstvalue data types. This makes it possible to
- 	set fields with fractions.
+	Properly check for gstvalue data types. This makes it possible to
+	set fields with fractions.
 	* testsuite/test_caps.py:
 	* testsuite/test_struct.py:
 	Test for above modifications
- 
+
 2006-01-05  Edward Hervey  <edward@fluendo.com>
 
 	* gst/base.defs:
