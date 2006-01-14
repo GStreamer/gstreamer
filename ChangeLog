@@ -1,3 +1,8 @@
+2006-01-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/manual/Makefile.am:
+	  do not parallel-build manual
+
 2006-01-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstcaps.h:

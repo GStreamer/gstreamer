@@ -1,5 +1,8 @@
 ### this is the part you can customize if you need to
 
+# parallel builds don't work, probably due to temporary files
+MAKEFLAGS = -j1
+
 # base name of doc
 DOC = manual
 # formats defined for upload.mak
