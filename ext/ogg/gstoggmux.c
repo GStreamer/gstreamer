@@ -1031,8 +1031,9 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     return GST_FLOW_OK;
   }
 
-  GST_DEBUG_OBJECT (ogg_mux, "best pad %" GST_PTR_FORMAT " (oggpad %p)"
-      " pulling %" GST_PTR_FORMAT, best->collect.pad, best, ogg_mux->pulling);
+  if (best)
+    GST_DEBUG_OBJECT (ogg_mux, "best pad %" GST_PTR_FORMAT " (oggpad %p)"
+        " pulling %" GST_PTR_FORMAT, best->collect.pad, best, ogg_mux->pulling);
 
   if (!best) {                  /* EOS : FIXME !! We need to handle EOS correctly, and set EOS
                                    flags on the ogg pages. */
