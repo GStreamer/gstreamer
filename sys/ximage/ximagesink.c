@@ -215,7 +215,7 @@ gst_ximage_buffer_finalize (GstXImageBuffer * ximage)
     gst_ximagesink_ximage_destroy (ximagesink, ximage);
   } else {
     /* In that case we can reuse the image and add it to our image pool. */
-    GST_DEBUG_OBJECT (ximagesink, "recycling image %p in pool", ximage);
+    GST_LOG_OBJECT (ximagesink, "recycling image %p in pool", ximage);
     /* need to increment the refcount again to recycle */
     gst_buffer_ref (GST_BUFFER (ximage));
     g_mutex_lock (ximagesink->pool_lock);
@@ -405,7 +405,7 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
 
     /* we have to use the returned bytes_per_line for our shm size */
     ximage->size = ximage->ximage->bytes_per_line * ximage->ximage->height;
-    GST_DEBUG_OBJECT (ximagesink, "XShm image size is %d, width %d, stride %d",
+    GST_LOG_OBJECT (ximagesink, "XShm image size is %d, width %d, stride %d",
         ximage->size, ximage->width, ximage->ximage->bytes_per_line);
 
     ximage->SHMInfo.shmid = shmget (IPC_PRIVATE, ximage->size,
@@ -564,17 +564,17 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
 
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
 
-  /* We take the flow_lock. If expose is in there we don't want to run 
+  /* We take the flow_lock. If expose is in there we don't want to run
      concurrently from the data flow thread */
   g_mutex_lock (ximagesink->flow_lock);
 
-  /* Store a reference to the last image we put, loose the previous one */
+  /* Store a reference to the last image we put, lose the previous one */
   if (ximage && ximagesink->cur_image != ximage) {
     if (ximagesink->cur_image) {
-      GST_DEBUG_OBJECT (ximagesink, "unreffing %p", ximagesink->cur_image);
+      GST_LOG_OBJECT (ximagesink, "unreffing %p", ximagesink->cur_image);
       gst_buffer_unref (ximagesink->cur_image);
     }
-    GST_DEBUG_OBJECT (ximagesink, "reffing %p as our current image", ximage);
+    GST_LOG_OBJECT (ximagesink, "reffing %p as our current image", ximage);
     ximagesink->cur_image = GST_XIMAGE_BUFFER (gst_buffer_ref (ximage));
   }
 
@@ -1424,8 +1424,9 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   ximagesink = GST_XIMAGESINK (bsink);
 
-  GST_DEBUG ("a buffer of %d bytes was requested with caps %" GST_PTR_FORMAT
-      " and offset %llu", size, caps, offset);
+  GST_LOG_OBJECT (ximagesink,
+      "a buffer of %d bytes was requested with caps %" GST_PTR_FORMAT
+      " and offset %" G_GUINT64_FORMAT, size, caps, offset);
 
   desired_caps = gst_caps_copy (caps);
 
@@ -1454,11 +1455,11 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     g_mutex_unlock (ximagesink->flow_lock);
 
     if (ximagesink->keep_aspect) {
-      GST_DEBUG_OBJECT (ximagesink, "enforcing aspect ratio in reverse caps "
+      GST_LOG_OBJECT (ximagesink, "enforcing aspect ratio in reverse caps "
           "negotiation");
       gst_video_sink_center_rect (src, dst, &result, TRUE);
     } else {
-      GST_DEBUG_OBJECT (ximagesink, "trying to resize to window geometry "
+      GST_LOG_OBJECT (ximagesink, "trying to resize to window geometry "
           "ignoring aspect ratio");
       result.x = result.y = 0;
       result.w = dst.w;

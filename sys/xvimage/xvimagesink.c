@@ -275,13 +275,14 @@ gst_xvimage_buffer_finalize (GstXvImageBuffer * xvimage)
   /* If our geometry changed we can't reuse that image. */
   if ((xvimage->width != xvimagesink->video_width) ||
       (xvimage->height != xvimagesink->video_height)) {
-    GST_DEBUG ("destroy image as its size changed %dx%d vs current %dx%d",
+    GST_LOG_OBJECT (xvimage,
+        "destroy image as its size changed %dx%d vs current %dx%d",
         xvimage->width, xvimage->height,
         xvimagesink->video_width, xvimagesink->video_height);
     gst_xvimage_buffer_destroy (xvimage);
   } else {
     /* In that case we can reuse the image and add it to our image pool. */
-    GST_DEBUG ("recycling image in pool");
+    GST_LOG_OBJECT (xvimage, "recycling image in pool");
     /* need to increment the refcount again to recycle */
     gst_buffer_ref (GST_BUFFER (xvimage));
     g_mutex_lock (xvimagesink->pool_lock);
@@ -588,17 +589,17 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
   g_return_if_fail (xvimagesink->xwindow != NULL);
 
-  /* We take the flow_lock. If expose is in there we don't want to run 
+  /* We take the flow_lock. If expose is in there we don't want to run
      concurrently from the data flow thread */
   g_mutex_lock (xvimagesink->flow_lock);
 
-  /* Store a reference to the last image we put, loose the previous one */
+  /* Store a reference to the last image we put, lose the previous one */
   if (xvimage && xvimagesink->cur_image != xvimage) {
     if (xvimagesink->cur_image) {
-      GST_DEBUG_OBJECT (xvimagesink, "unreffing %p", xvimagesink->cur_image);
+      GST_LOG_OBJECT (xvimagesink, "unreffing %p", xvimagesink->cur_image);
       gst_buffer_unref (xvimagesink->cur_image);
     }
-    GST_DEBUG_OBJECT (xvimagesink, "reffing %p as our current image", xvimage);
+    GST_LOG_OBJECT (xvimagesink, "reffing %p as our current image", xvimage);
     xvimagesink->cur_image = GST_XVIMAGE_BUFFER (gst_buffer_ref (xvimage));
   }
 
@@ -1761,10 +1762,10 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   /* If this buffer has been allocated using our buffer management we simply
      put the ximage which is in the PRIVATE pointer */
   if (GST_IS_XVIMAGE_BUFFER (buf)) {
-    GST_DEBUG ("fast put of bufferpool buffer");
+    GST_LOG_OBJECT (xvimagesink, "fast put of bufferpool buffer");
     gst_xvimagesink_xvimage_put (xvimagesink, GST_XVIMAGE_BUFFER (buf));
   } else {
-    GST_DEBUG ("slow copy into bufferpool buffer");
+    GST_LOG_OBJECT (xvimagesink, "slow copy into bufferpool buffer");
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
     if (!xvimagesink->xvimage) {
@@ -1790,7 +1791,7 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 no_image:
   {
     /* No image available. That's very bad ! */
-    GST_DEBUG ("could not create image");
+    GST_WARNING_OBJECT (xvimagesink, "could not create image");
     GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
         ("Failed creating an XvImage in xvimagesink chain function."));
     return GST_FLOW_ERROR;
@@ -1829,7 +1830,7 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
         xvimage = NULL;
       } else {
         /* We found a suitable image */
-        GST_DEBUG_OBJECT (xvimagesink, "found usable image in pool");
+        GST_LOG_OBJECT (xvimagesink, "found usable image in pool");
         break;
       }
     }

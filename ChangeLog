@@ -1,3 +1,14 @@
+2006-01-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/ximage/ximagesink.c: (gst_ximage_buffer_finalize),
+	(gst_ximagesink_ximage_new), (gst_ximagesink_ximage_put),
+	(gst_ximagesink_buffer_alloc):
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_finalize),
+	(gst_xvimagesink_xvimage_put), (gst_xvimagesink_show_frame),
+	(gst_xvimagesink_buffer_alloc):
+	  move all regularly occurring messages to GST_LOG level
+	  add some more object logs
+
 2006-01-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_collected):
