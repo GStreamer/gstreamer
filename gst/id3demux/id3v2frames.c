@@ -92,6 +92,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     work->parse_size = frame_data_size;
 
   if (work->frame_flags & ID3V2_FRAME_FORMAT_COMPRESSION) {
+#ifdef HAVE_ZLIB
     uLongf destSize = work->parse_size;
     Bytef *dest, *src;
 
@@ -105,6 +106,11 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
       g_free (work->parse_data);
       return FALSE;
     }
+#else
+    GST_WARNING ("Compressed ID3v2 tag frame could not be decompressed"
+        " because gstid3demux was compiled without zlib support");
+    return FALSE;
+#endif
   } else {
     work->parse_data = work->hdr.frame_data;
   }

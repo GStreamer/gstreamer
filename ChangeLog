@@ -1,3 +1,9 @@
+2006-01-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame):
+	  Fix compilation of id3demux when zlib is not present.
+	  (Fixes #326602; patch by: Sergey Scobich)
+
 2006-01-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/esd/Makefile.am:
