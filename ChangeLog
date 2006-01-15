@@ -1,3 +1,9 @@
+2006-01-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/esd/Makefile.am:
+	  Add $(ESD_CFLAGS), otherwise build will fail for folks
+	  with libesd in a non-standard prefix (#327009).
+
 2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
