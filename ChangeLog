@@ -1,3 +1,13 @@
+2006-01-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/theora/theoradec.c: (theora_handle_comment_packet):
+	  Post taglist actually on bus instead of just freeing it
+	  (fixes #327114 and totem bug #327080).
+
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_comment_packet):
+	  Use gst_element_found_tags_for_pad(), so that the tags
+	  are sent downstream as an event as well.
+
 2006-01-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/ximage/ximagesink.c: (gst_ximage_buffer_finalize),

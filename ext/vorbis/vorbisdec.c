@@ -568,7 +568,6 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   guint bitrate = 0;
   gchar *encoder = NULL;
-  GstMessage *message;
   GstTagList *list;
   GstBuffer *buf;
 
@@ -617,8 +616,7 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
         GST_TAG_BITRATE, (guint) bitrate, NULL);
   }
 
-  message = gst_message_new_tag ((GstObject *) vd, list);
-  gst_element_post_message (GST_ELEMENT (vd), message);
+  gst_element_found_tags_for_pad (GST_ELEMENT (vd), vd->srcpad, list);
 
   return GST_FLOW_OK;
 }

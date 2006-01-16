@@ -684,11 +684,15 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
   }
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
       GST_TAG_ENCODER_VERSION, dec->info.version_major,
-      GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate,
       GST_TAG_VIDEO_CODEC, "Theora", NULL);
 
-  //gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, 0, list);
-  gst_tag_list_free (list);
+  if (dec->info.target_bitrate > 0) {
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_BITRATE, dec->info.target_bitrate,
+        GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate, NULL);
+  }
+
+  gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, list);
 
   return GST_FLOW_OK;
 }
