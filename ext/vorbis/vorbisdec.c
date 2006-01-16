@@ -274,7 +274,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
 {
   gint64 granulepos;
   GstVorbisDec *dec;
-  gboolean res;
+  gboolean res = FALSE;
 
   dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
 
@@ -307,6 +307,11 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_DURATION:
     {
       /* query peer for total length */
+      if (!gst_pad_is_linked (dec->sinkpad)) {
+        GST_WARNING_OBJECT (dec, "sink pad %" GST_PTR_FORMAT " is not linked",
+            dec->sinkpad);
+        goto error;
+      }
       if (!(res = gst_pad_query (GST_PAD_PEER (dec->sinkpad), query)))
         goto error;
       break;

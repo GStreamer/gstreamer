@@ -1,3 +1,8 @@
+2006-01-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query):
+	  Fix #327216 (null dereference in vorbisdec)
+
 2006-01-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/theora/theoradec.c: (theora_handle_comment_packet):
