@@ -1,5 +1,11 @@
 2006-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/gstminiobject.c:
+	  Spelling fix in docs.
+	* ChangeLog - remove conflict indicator
+
+2006-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	Reviewed By: Andy Wingo
 
 	* gst/gstbuffer.c: (gst_buffer_is_metadata_writable),
@@ -225,7 +231,6 @@
 	  macro, so that gcc doesn't complain if the -Wmissing-prototypes
 	  compiler switch is being used (#325429).
 
->>>>>>> 1.2159
 2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbin.c: (gst_bin_query):

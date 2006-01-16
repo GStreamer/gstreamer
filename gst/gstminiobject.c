@@ -209,7 +209,7 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
  *
  * MT safe
  *
- * Returns: a mini-object (possibly a duplicate) that it writable.
+ * Returns: a mini-object (possibly a duplicate) that is writable.
  */
 GstMiniObject *
 gst_mini_object_make_writable (GstMiniObject * mini_object)
