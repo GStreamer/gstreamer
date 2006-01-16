@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.10.1 "Nollaig chridheil"
+GStreamer: Release notes for GStreamer 0.10.2 "If man is five"
         
 
 
@@ -38,28 +38,13 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * element factory leak fixes
-      * tests cleanup
-      * BaseSrc seeking in other format than BYTES
-      * collectpad fixes
+      * documentation updates
+      * bug fixes
 
 Bugs fixed in this release
     
-      * 322441 : getcontext() in common/m4/gst-mcsc.m4 uses incorrect stac...
-      * 323041 : [BASESRC] basesrc does not handle a seek to non-bytes for...
-      * 323870 : [tools] gst-feedback needs updating for 0.9/0.10
-      * 323882 : gst-launch manpage needs updates
-      * 323905 : use return val of g_list_append
-
-API changed in this release
-     
-
-- API additions:
-    
-* GST_TYPE_STATIC_CAPS
-* GST_TYPE_STATIC_PAD_TEMPLATE
-* GstNetTimeProvider::active
-* gst_base_src_set_format
+      * 325429 : GST_BOILERPLATE_FULL can't be used when compiling with -W...
+      * 316086 : MinGW compilation: fileindexer depends on mmap
 
 Download
 
@@ -98,12 +83,12 @@ Flumotion has been ported to 0.10 as well.
   
 Contributors to this release
     
-      * Andy Wingo
+      * Brian Cameron
       * David Schleef
       * Edward Hervey
+      * James Livingston
       * Jan Schmidt
-      * Julien MOUTTE
-      * Michael Smith
+      * Sebastien Moutte
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller

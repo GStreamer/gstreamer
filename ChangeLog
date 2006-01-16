@@ -1,3 +1,10 @@
+=== release 0.10.2 ===
+
+2006-01-16  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.2, "If man is five"
+
 2006-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstbuffer.c:
@@ -131,11 +138,11 @@
 2006-01-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/media-device-daemon.txt:
-          more ideas (dbus)
+	  more ideas (dbus)
 	* gst/gstbuffer.c:
-          fix doc example, add clarification
+	  fix doc example, add clarification
 	* tools/gst-launch.1.in:
-          add initial info about GST_PLUGIN_PATH, needs more work
+	  add initial info about GST_PLUGIN_PATH, needs more work
 
 2006-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 

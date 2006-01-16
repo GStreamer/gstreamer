@@ -1,4 +1,14 @@
-This is GStreamer 0.10.1, "Nollaig chridheil"
+This is GStreamer 0.10.2, "If man is 5"
+
+Changes since 0.10.1:
+    
+      * documentation updates
+      * bug fixes
+
+Bugs fixed since 0.10.1:
+    
+      * 325429 : GST_BOILERPLATE_FULL can't be used when compiling with -W...
+      * 316086 : MinGW compilation: fileindexer depends on mmap
 
 Changes since 0.10.0:
     
