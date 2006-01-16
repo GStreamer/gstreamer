@@ -1,3 +1,13 @@
+2006-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gststreaminfo.c: (gst_stream_info_set_mute):
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_set_property):
+	  Comment out broken code that connects to the state-changed signal.
+	  At this point, changing current stream selection is broken, but 
+	  stuff like gst-launch playbin current-audio=1 works and filters
+	  to the chosen stream.
+
 2006-01-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query):

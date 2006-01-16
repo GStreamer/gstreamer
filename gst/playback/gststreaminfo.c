@@ -301,6 +301,7 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
     element = gst_pad_get_parent_element ((GstPad *)
         GST_PAD_CAST (stream_info->object));
     if (element) {
+#if 0
       if (mute) {
         g_signal_connect (element, "state-changed",
             G_CALLBACK (stream_info_change_state), stream_info);
@@ -308,6 +309,7 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
         g_signal_handlers_disconnect_by_func (element,
             G_CALLBACK (stream_info_change_state), stream_info);
       }
+#endif
       gst_object_unref (element);
     }
   }
