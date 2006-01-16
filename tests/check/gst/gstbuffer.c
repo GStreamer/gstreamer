@@ -268,41 +268,6 @@ GST_START_TEST (test_subbuffer_make_writable)
 
 GST_END_TEST;
 
-GST_START_TEST (test_metadata_writable)
-{
-  GstBuffer *buffer, *sub1;
-
-  buffer = gst_buffer_new_and_alloc (4);
-  /* Buffer with refcount 1 should have writable metadata */
-  fail_unless (gst_buffer_is_metadata_writable (buffer) == TRUE);
-
-  /* Check that a buffer with refcount 2 does not have writable metadata */
-  gst_buffer_ref (buffer);
-  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 2);
-  fail_unless (gst_buffer_is_metadata_writable (buffer) == FALSE);
-
-  /* Check that make_metadata_writable produces a new sub-buffer with 
-   * writable metadata. */
-  sub1 = gst_buffer_make_metadata_writable (buffer);
-  fail_if (sub1 == buffer);
-  fail_unless (gst_buffer_is_metadata_writable (sub1) == TRUE);
-
-  /* Check that the original metadata is still not writable 
-   * (subbuffer should be holding a reference, and so should we) */
-  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 2);
-  fail_unless (gst_buffer_is_metadata_writable (buffer) == FALSE);
-
-  /* Drop the subbuffer and check that the metadata is now writable again */
-  ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
-  gst_buffer_unref (sub1);
-  fail_unless (gst_buffer_is_metadata_writable (buffer) == TRUE);
-
-  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
-  gst_buffer_unref (buffer);
-}
-
-GST_END_TEST;
-
 Suite *
 gst_test_suite (void)
 {
@@ -316,7 +281,6 @@ gst_test_suite (void)
   tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_is_span_fast);
   tcase_add_test (tc_chain, test_span);
-  tcase_add_test (tc_chain, test_metadata_writable);
   return s;
 }
 

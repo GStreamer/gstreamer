@@ -1,5 +1,15 @@
 2006-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buf):
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_prepare_buf):
+	* tests/check/gst/gstbuffer.c: (gst_test_suite):
+	  Back out patch until after the release.
+
+2006-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/gstminiobject.c:
 	  Spelling fix in docs.
 	* ChangeLog - remove conflict indicator

@@ -83,14 +83,9 @@
  * To efficiently create a smaller buffer out of an existing one, you can
  * use gst_buffer_create_sub().
  *
- * If a plug-in wants to modify the buffer data in-place, it should first obtain
+ * If the plug-in wants to modify the buffer in-place, it should first obtain
  * a buffer that is safe to modify by using gst_buffer_make_writable().  This
  * function is optimized so that a copy will only be made when it is necessary.
- *
- * A plugin that only wishes to modify the metadata of a buffer, such as the offset,
- * timestamp or caps, should use gst_buffer_make_metadata_writable(), which will
- * create a subbuffer of the original buffer to ensure the caller has sole ownership,
- * and not copy the buffer data.
  *
  * Several flags of the buffer can be set and unset with the
  * GST_BUFFER_FLAG_SET() and GST_BUFFER_FLAG_UNSET() macros. Use
@@ -336,44 +331,6 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
   g_return_if_fail (buffer != NULL);
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), caps);
-}
-
-/**
- * gst_buffer_is_metadata_writable:
- * @buf: a #GstBuffer
- *
- * Similar to gst_buffer_is_writable, but this only ensures that the
- * refcount of the buffer is 1, indicating that the caller is the sole
- * owner and can change the buffer metadata, such as caps and timestamps.
- */
-gboolean
-gst_buffer_is_metadata_writable (GstBuffer * buf)
-{
-  return (GST_MINI_OBJECT_REFCOUNT_VALUE (GST_MINI_OBJECT (buf)) == 1);
-}
-
-/**
- * gst_buffer_make_metadata_writable:
- * @buf: a #GstBuffer
- *
- * Similar to gst_buffer_make_writable, but does not ensure that the buffer
- * data array is writable. Instead, this just ensures that the returned buffer
- * is solely owned by the caller, by creating a subbuffer of the original
- * buffer if necessary.
- */
-GstBuffer *
-gst_buffer_make_metadata_writable (GstBuffer * buf)
-{
-  GstBuffer *ret;
-
-  if (gst_buffer_is_metadata_writable (buf)) {
-    ret = buf;
-  } else {
-    ret = gst_buffer_create_sub (buf, 0, GST_BUFFER_SIZE (buf));
-    gst_buffer_unref (buf);
-  }
-
-  return ret;
 }
 
 typedef struct _GstSubBuffer GstSubBuffer;

@@ -866,7 +866,7 @@ gst_base_transform_prepare_output_buf (GstBaseTransform * trans,
 
   /* If the output buffer metadata is modifiable, copy timestamps and
    * buffer flags */
-  if (*out_buf != in_buf && gst_buffer_is_metadata_writable (*out_buf) == 1) {
+  if (*out_buf != in_buf && GST_MINI_OBJECT_REFCOUNT_VALUE (*out_buf) == 1) {
 
     if (copy_inbuf && gst_buffer_is_writable (*out_buf))
       memcpy (GST_BUFFER_DATA (*out_buf), GST_BUFFER_DATA (in_buf), out_size);
