@@ -146,8 +146,6 @@ gst_mms_class_init (GstMMSClass * klass)
 static void
 gst_mms_init (GstMMS * mmssrc, GstMMSClass * g_class)
 {
-  gst_base_src_set_live (GST_BASE_SRC (mmssrc), TRUE);
-
   gst_pad_set_query_function (GST_BASE_SRC (mmssrc)->srcpad, gst_mms_src_query);
   gst_pad_set_query_type_function (GST_BASE_SRC (mmssrc)->srcpad,
       gst_mms_get_query_types);

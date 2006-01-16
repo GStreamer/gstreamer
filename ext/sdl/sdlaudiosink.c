@@ -146,6 +146,8 @@ GST_BOILERPLATE (GstSDLAudioSink, gst_sdlaudio_sink, GstAudioSink,
     g_free (sdlaudiosink->buffer);
   }
 
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+
 }
 
 static void

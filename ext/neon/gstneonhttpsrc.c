@@ -167,8 +167,6 @@ gst_neonhttp_src_init (GstNeonhttpSrc * this, GstNeonhttpSrcClass * g_class)
 
   this->adapter = gst_adapter_new ();
 
-  gst_base_src_set_live (GST_BASE_SRC (this), TRUE);
-
   GST_OBJECT_FLAG_UNSET (this, GST_NEONHTTP_SRC_OPEN);
 }
 
