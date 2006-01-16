@@ -1,3 +1,10 @@
+=== release 0.10.2 ===
+
+2006-01-16  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.2, "Then the devil is six"
+
 2006-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gststreaminfo.c: (gst_stream_info_set_mute):
@@ -200,15 +207,14 @@
 	* configure.ac:
 	* gst/volume/Makefile.am:
 	* gst/volume/demo.c:
-          move old example to tests/examples/volume/volune.c
+	  move old example to tests/examples/volume/volune.c
 	* tests/examples/Makefile.am:
 	* tests/examples/seek/seek.c: (main):
-          change window-close event from "delete-event" to "destroy"
+	  change window-close event from "delete-event" to "destroy"
 	* tests/examples/volume/Makefile.am:
 	* tests/examples/volume/volume.c: (value_changed_callback),
 	(setup_gui), (message_received), (eos_message_received), (main):
-          fix event handling and bus usage
-
+	  fix event handling and bus usage
 
 2005-12-29  Stefan Kost  <ensonic@users.sf.net>
 
@@ -228,8 +234,8 @@
 	(gst_audio_test_src_change_volume), (gst_audio_test_src_do_seek),
 	(gst_audio_test_src_create), (gst_audio_test_src_set_property):
 	* gst/audiotestsrc/gstaudiotestsrc.h:
-          update to basesrc changes, implement segmented seeking and eos handling,
-          add a 'sine-tab' waveform for performance critical playback
+	  update to basesrc changes, implement segmented seeking and eos
+	  handling, add a 'sine-tab' waveform for performance critical playback
 
 2005-12-29  Tim-Philipp Müller  <tim at centricular dot net>
 

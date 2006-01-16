@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Base Plug-ins 0.10.1 "Dobro Dedek"
+GStreamer: Release notes for GStreamer Base Plug-ins 0.10.2 "Then the devil is six"
         
 
 
@@ -55,23 +55,30 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * removed gst-launch-ext
-      * Ported: ogmparse
-      * Fixes for: subparse, xvimagesink, audioresample, videorate, decodebin
+      * ported gnomevfssink, cdparanoia
+      * New library and base class: GstCddaBaseSrc
+      * ported mixerutils.h
+      * added 'sine-tab' waveform to audiotestsrc
+      * added float audio to audiorate
 
 Bugs fixed in this release
     
-      * 322347 : GstBaseRtpDepayload timestamps are wring
-      * 323900 : Basertpdepayloader lets NEWSEGMENT events through unfiltered
-      * 323878 : missing < string.h > inclusion (for memset & FD_ZERO)
+      * 324216 : [cdparanoia] missing patches from 0.8
+      * 324696 : [videotestsrc] does not start counting the time from zero...
+      * 324900 : Problem compiling gst-plugins-base with Forte
+      * 325984 : [playbin] cannot handle sources that produce raw audio/video
+      * 325990 : patch videotestsrc for using glib types
+      * 326601 : GstRingBuffer crashes with alaw/mulaw caps
+      * 327114 : [theoradec] should post tags on the bus
+      * 327216 : vorbisdec segfaults on certain queries
 
 API changed in this release
      
 
 - API additions:
     
-* GstAlsaMixer::device
-* GstAlsaMixer::device-name
+* added libgstcddabase
+* added mixerutils.h
 
 Download
 
@@ -101,15 +108,11 @@ Applications
   
 Contributors to this release
     
-      * Christian Schaller
-      * Edgard Lima
       * Edward Hervey
       * Jan Schmidt
-      * Julien MOUTTE
-      * Luca Ognibene
       * Michael Smith
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Wim Taymans
+      * Tommi Myöhänen
  

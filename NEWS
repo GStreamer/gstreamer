@@ -1,4 +1,28 @@
-This is GStreamer Base Plug-ins 0.10.1, "Dobro Dedek"
+This is GStreamer Base Plug-ins 0.10.2, "Then the devil is six"
+
+Changes since 0.10.1:
+    
+      * ported gnomevfssink, cdparanoia
+      * New library and base class: GstCddaBaseSrc
+      * ported mixerutils.h
+      * added 'sine-tab' waveform to audiotestsrc
+      * added float audio to audiorate
+
+Bugs fixed since 0.10.1:
+    
+      * 324216 : [cdparanoia] missing patches from 0.8
+      * 324696 : [videotestsrc] does not start counting the time from zero...
+      * 324900 : Problem compiling gst-plugins-base with Forte
+      * 325984 : [playbin] cannot handle sources that produce raw audio/video
+      * 325990 : patch videotestsrc for using glib types
+      * 326601 : GstRingBuffer crashes with alaw/mulaw caps
+      * 327114 : [theoradec] should post tags on the bus
+      * 327216 : vorbisdec segfaults on certain queries
+
+API added since 0.10.1:
+     
+      * added libgstcddabase
+      * added mixerutils.h
         
 Changes since 0.10.0:
     

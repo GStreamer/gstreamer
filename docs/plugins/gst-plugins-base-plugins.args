@@ -1408,3 +1408,43 @@
 <DEFAULT></DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstCdParanoiaSrc::generic-device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Generic device</NICK>
+<BLURB>Use specified generic scsi device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCdParanoiaSrc::paranoia-mode</NAME>
+<TYPE>GstCdParanoiaMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Paranoia mode</NICK>
+<BLURB>Type of checking to perform.</BLURB>
+<DEFAULT>PARANOIA_MODE_FRAGMENT</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCdParanoiaSrc::read-speed</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Read speed</NICK>
+<BLURB>Read from device at specified speed.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCdParanoiaSrc::search-overlap</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,75]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Search overlap</NICK>
+<BLURB>Force minimum overlap search during verification to n sectors.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+

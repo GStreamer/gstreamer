@@ -1,0 +1,20 @@
+<plugin>
+  <name>cdparanoia</name>
+  <description>Read audio from CD in paranoid mode</description>
+  <filename>../../ext/cdparanoia/.libs/libgstcdparanoia.so</filename>
+  <basename>libgstcdparanoia.so</basename>
+  <version>0.10.2</version>
+  <license>GPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>cdparanoiasrc</name>
+      <longname>CD Audio (cdda) Source, Paranoia IV</longname>
+      <class>Source/File</class>
+      <description>Read audio from CD in paranoid mode</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>
