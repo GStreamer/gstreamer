@@ -1,3 +1,23 @@
+2006-01-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	Reviewed By: Andy Wingo
+
+	* gst/gstbuffer.c: (gst_buffer_is_metadata_writable),
+	(gst_buffer_make_metadata_writable):
+	* gst/gstbuffer.h:
+	  Add gst_buffer_(is|make)_metadata_writable as analogues of
+	  gst_buffer_(is|make)_writable.
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buf):
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_prepare_buf):
+	  Use name gst_buffer_(is|make)_metadata_writable functions.
+
+	* tests/check/gst/gstbuffer.c: (GST_START_TEST), (gst_test_suite):
+	  Test gst_buffer_(is|make)_metadata_writable
+	
+	  (Closes: #324162)
+
 2006-01-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/manual/Makefile.am:
