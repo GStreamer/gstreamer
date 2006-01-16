@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Python bindings 0.10.1 "Krisimas Yakanaka"
+GStreamer: Release notes for GStreamer Python bindings 0.10.2 "And if the devil is six"
         
 
 
@@ -18,23 +18,12 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * added discoverer
-      * updated for core API additions
+      * allow fractions in structures
+      * added vmethods for base classes
 
 Bugs fixed in this release
     
-
-API changed in this release
-     
-
-- API additions:
-    
-* gst.extend.discoverer
-* wrapped gst_version()
-* wrapped gst_type_find_factory_get_list()
-* wrapped gst_mixer_options_get_values()
-* wrapped gst_dp_*()
-* wrapped gst_element_factory_get_static_pad_templates()
+      * 325459 : Fractions cannot be used as values for gst.Structure fileds
 
 Download
 
@@ -64,8 +53,6 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
       * Edward Hervey
       * Martin Soto
-      * Thomas Vander Stichele
  

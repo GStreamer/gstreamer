@@ -1,3 +1,10 @@
+=== release 0.10.2 ===
+
+2006-01-16  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.2, "And if the devil is six"
+
 2006-01-13  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstlibs.override:

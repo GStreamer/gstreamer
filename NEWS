@@ -1,4 +1,15 @@
-This is GStreamer Python Bindings 0.10.1, "Krisimas Yakanaka"
+This is GStreamer Python Bindings 0.10.2, "And if the devil is six"
+  
+Changes since 0.10.1:
+    
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+      * allow fractions in structures
+      * added vmethods for base classes
+
+Bugs fixed since 0.10.1:
+    
+      * 325459 : Fractions cannot be used as values for gst.Structure fileds
 
 Changes since 0.10.0:
 
