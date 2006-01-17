@@ -233,8 +233,6 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
 
   qtdemux->state = QTDEMUX_STATE_HEADER;
   qtdemux->last_ts = GST_CLOCK_TIME_NONE;
-  qtdemux->need_discont = TRUE;
-  qtdemux->need_flush = FALSE;
 }
 
 #if 0
@@ -331,6 +329,22 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
+/* sends event to all source pads; takes ownership of the event */
+static void
+gst_qtdemux_send_event (GstQTDemux * qtdemux, GstEvent * event)
+{
+  guint n;
+
+  GST_DEBUG_OBJECT (qtdemux, "pushing %s event on all source pads",
+      GST_EVENT_TYPE_NAME (event));
+
+  for (n = 0; n < qtdemux->n_streams; n++) {
+    gst_event_ref (event);
+    gst_pad_push_event (qtdemux->streams[n]->pad, event);
+  }
+  gst_event_unref (event);
+}
+
 static gboolean
 gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
 {
@@ -359,22 +373,32 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
             break;
           }
 
-          gst_pad_event_default (pad, gst_event_new_flush_start ());
+          gst_pad_push_event (qtdemux->sinkpad, gst_event_new_flush_start ());
           GST_PAD_STREAM_LOCK (pad);
+
+          gst_qtdemux_send_event (qtdemux, gst_event_new_flush_start ());
 
           /* resync to new time */
           for (n = 0; n < qtdemux->n_streams; n++) {
             QtDemuxStream *str = qtdemux->streams[n];
 
             for (i = 0; i < str->n_samples; i++) {
-              if (str->samples[i].timestamp > desired_offset)
+              /* Seek to the sample just before the desired offset and
+               * let downstream throw away bits outside of the segment */
+              if (str->samples[i].timestamp > desired_offset) {
+                if (i > 0)
+                  --i;
                 break;
+              }
             }
             str->sample_index = i;
           }
-          gst_pad_event_default (pad, gst_event_new_flush_stop ());
-          qtdemux->need_discont = TRUE;
-          qtdemux->need_flush = TRUE;
+          gst_pad_push_event (qtdemux->sinkpad, gst_event_new_flush_stop ());
+          gst_qtdemux_send_event (qtdemux, gst_event_new_flush_stop ());
+
+          gst_qtdemux_send_event (qtdemux,
+              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+                  desired_offset, GST_CLOCK_TIME_NONE, desired_offset));
 
           /* and restart */
           gst_pad_start_task (qtdemux->sinkpad,
@@ -468,8 +492,6 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
 
       qtdemux->state = QTDEMUX_STATE_HEADER;
       qtdemux->last_ts = GST_CLOCK_TIME_NONE;
-      qtdemux->need_discont = TRUE;
-      qtdemux->need_flush = FALSE;
       for (n = 0; n < qtdemux->n_streams; n++) {
         gst_element_remove_pad (element, qtdemux->streams[n]->pad);
         g_free (qtdemux->streams[n]->samples);
@@ -621,7 +643,9 @@ gst_qtdemux_loop_header (GstPad * pad)
 
       buf = NULL;
       if (size > 0) {
-        GST_DEBUG_OBJECT (qtdemux, "reading %d bytes @ ", size);
+        GST_LOG_OBJECT (qtdemux, "reading %d bytes @ " G_GINT64_FORMAT,
+            size, offset);
+
         if (gst_pad_pull_range (qtdemux->sinkpad, offset,
                 size, &buf) != GST_FLOW_OK)
           goto error;
@@ -643,6 +667,13 @@ gst_qtdemux_loop_header (GstPad * pad)
            */
         }
 
+        /* first buffer? */
+        if (qtdemux->last_ts == GST_CLOCK_TIME_NONE) {
+          gst_qtdemux_send_event (qtdemux,
+              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+                  0, GST_CLOCK_TIME_NONE, 0));
+        }
+
         /* timestamps of AMR aren't known... */
         if (stream->fourcc != GST_MAKE_FOURCC ('s', 'a', 'm', 'r')) {
           GST_BUFFER_TIMESTAMP (buf) =
@@ -652,33 +683,13 @@ gst_qtdemux_loop_header (GstPad * pad)
               GST_SECOND * stream->samples[stream->sample_index].duration
               / stream->timescale;
         }
-        if (qtdemux->need_discont) {
-          GstEvent *event = gst_event_new_new_segment (FALSE, 1.0,
-              GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf),
-              GST_CLOCK_TIME_NONE, 0);
-          gint n;
 
-          GST_DEBUG ("Discont to %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
-          qtdemux->need_discont = FALSE;
-          for (n = 0; n < qtdemux->n_streams; n++) {
-            gst_event_ref (event);
-            gst_pad_push_event (qtdemux->streams[n]->pad, event);
-          }
-          gst_event_unref (event);
-        }
-        if (qtdemux->need_flush) {
-          /* ? */
-          qtdemux->need_flush = FALSE;
-        }
-        GST_DEBUG ("Pushing buf with time=%" GST_TIME_FORMAT,
-            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+        GST_DEBUG ("Pushing buffer with time %" GST_TIME_FORMAT " on pad %p",
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), stream->pad);
         gst_buffer_set_caps (buf, stream->caps);
         ret = gst_pad_push (stream->pad, buf);
         if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
           goto error;
-
-        GST_INFO ("pushing buffer on %" GST_PTR_FORMAT, stream->pad);
       }
       stream->sample_index++;
       break;
