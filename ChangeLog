@@ -1,3 +1,17 @@
+2006-01-17  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstregistry.c: Reflow design comment. Update so as to speak
+	in the present tense without reference to versions.
+
+	* gst/gstregistry.c (gst_registry_add_plugin)
+	(gst_registry_remove_plugin, gst_registry_remove_feature)
+	(gst_registry_find_feature, gst_registry_get_feature_list)
+	(gst_registry_get_plugin_list, gst_registry_lookup_feature)
+	(gst_registry_lookup, gst_registry_scan_path)
+	(_gst_registry_remove_cache_plugins)
+	(gst_registry_get_feature_list_by_plugin): Add argument
+	validation.
+
 === release 0.10.2 ===
 
 2006-01-16  Thomas Vander Stichele <thomas at apestaart dot org>

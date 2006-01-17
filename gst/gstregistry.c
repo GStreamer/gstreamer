@@ -58,56 +58,52 @@ static GstRegistry *_gst_registry_default = NULL;
 /*
  * Design:
  *
- * The GstRegistry object is a list of plugins and some functions
- * for dealing with them.  Plugins are matched 1-1 with a file on
- * disk, and may or may not be loaded at a given time.  There may
- * be multiple GstRegistry objects, but the "default registry" is
- * the only object that has any meaning to the core.
+ * The GstRegistry object is a list of plugins and some functions for dealing
+ * with them. Plugins are matched 1-1 with a file on disk, and may or may not be
+ * loaded at a given time. There may be multiple GstRegistry objects, but the
+ * "default registry" is the only object that has any meaning to the core.
  *
- * The registry.xml file in 0.9 is actually a cache of plugin
- * information.  This is unlike previous versions, where the registry
- * file was the primary source of plugin information, and was created
- * by the gst-register command.
+ * The registry.xml file is actually a cache of plugin information. This is
+ * unlike versions prior to 0.10, where the registry file was the primary source
+ * of plugin information, and was created by the gst-register command.
  *
- * In 0.9, the primary source, at all times, of plugin information
- * is each plugin file itself.  Thus, if an application wants
- * information about a particular plugin, or wants to search for
- * a feature that satisfies given criteria, the primary means of
- * doing so is to load every plugin and look at the resulting
- * information that is gathered in the default registry.  Clearly,
- * this is a time consuming process, so we cache information in
- * the registry.xml file.
+ * The primary source, at all times, of plugin information is each plugin file
+ * itself. Thus, if an application wants information about a particular plugin,
+ * or wants to search for a feature that satisfies given criteria, the primary
+ * means of doing so is to load every plugin and look at the resulting
+ * information that is gathered in the default registry. Clearly, this is a time
+ * consuming process, so we cache information in the registry.xml file.
  *
- * On startup, plugins are searched for in the plugin search path.
- * This path can be set directly using the GST_PLUGIN_PATH
- * environment variable.  The registry file is loaded from
- * ~/.gstreamer-0.9/registry.xml or the file listed in the
- * GST_REGISTRY env var.  The only reason to change the registry
- * location is for testing.
+ * On startup, plugins are searched for in the plugin search path. This path can
+ * be set directly using the GST_PLUGIN_PATH environment variable. The registry
+ * file is loaded from ~/.gstreamer-$GST_MAJORMINOR/registry-$ARCH.xml or the
+ * file listed in the GST_REGISTRY env var. The only reason to change the
+ * registry location is for testing.
  *
- * For each plugin that is found in the plugin search path, there
- * could be 3 possibilities for cached information:
+ * For each plugin that is found in the plugin search path, there could be 3
+ * possibilities for cached information:
+ *
  *  - the cache may not contain information about a given file.
  *  - the cache may have stale information.
  *  - the cache may have current information.
- * In the first two cases, the plugin is loaded and the cache
- * updated.  In addition to these cases, the cache may have entries
- * for plugins that are not relevant to the current process.  These
- * are marked as not available to the current process.  If the
- * cache is updated for whatever reason, it is marked dirty.
  *
- * A dirty cache is written out at the end of initialization.  Each
- * entry is checked to make sure the information is minimally valid.
- * If not, the entry is simply dropped.
+ * In the first two cases, the plugin is loaded and the cache updated. In
+ * addition to these cases, the cache may have entries for plugins that are not
+ * relevant to the current process. These are marked as not available to the
+ * current process. If the cache is updated for whatever reason, it is marked
+ * dirty.
+ *
+ * A dirty cache is written out at the end of initialization. Each entry is
+ * checked to make sure the information is minimally valid. If not, the entry is
+ * simply dropped.
  *
  * Implementation notes:
  *
- * The "cache" and "default registry" are different concepts and
- * can represent different sets of plugins.  For various reasons,
- * at init time, the cache is stored in the default registry, and
- * plugins not relevant to the current process are marked with the
- * GST_PLUGIN_FLAG_CACHED bit.  These plugins are removed at the
- * end of intitialization.
+ * The "cache" and "default registry" are different concepts and can represent
+ * different sets of plugins. For various reasons, at init time, the cache is
+ * stored in the default registry, and plugins not relevant to the current
+ * process are marked with the GST_PLUGIN_FLAG_CACHED bit. These plugins are
+ * removed at the end of intitialization.
  *
  */
 
@@ -304,6 +300,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   GstPlugin *existing_plugin;
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
+  g_return_val_if_fail (GST_IS_PLUGIN (plugin), FALSE);
 
   GST_OBJECT_LOCK (registry);
   existing_plugin = gst_registry_lookup_locked (registry, plugin->filename);
@@ -345,6 +342,7 @@ void
 gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
+  g_return_if_fail (GST_IS_PLUGIN (plugin));
 
   GST_OBJECT_LOCK (registry);
   registry->plugins = g_list_remove (registry->plugins, plugin);
@@ -412,6 +410,8 @@ void
 gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
 {
   g_return_if_fail (GST_IS_REGISTRY (registry));
+  g_return_if_fail (GST_IS_PLUGIN_FEATURE (feature));
+
   GST_DEBUG_OBJECT (registry, "removing feature %p (%s)",
       feature, gst_plugin_feature_get_name (feature));
 
@@ -551,6 +551,7 @@ gst_registry_find_feature (GstRegistry * registry, const gchar * name,
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
   g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (g_type_is_a (type, GST_TYPE_PLUGIN_FEATURE), NULL);
 
   data.name = name;
   data.type = type;
@@ -586,6 +587,9 @@ gst_registry_get_feature_list (GstRegistry * registry, GType type)
 {
   GstTypeNameData data;
 
+  g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
+  g_return_val_if_fail (g_type_is_a (type, GST_TYPE_PLUGIN_FEATURE), NULL);
+
   data.type = type;
   data.name = NULL;
 
@@ -610,6 +614,8 @@ gst_registry_get_plugin_list (GstRegistry * registry)
 {
   GList *list;
   GList *g;
+
+  g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
 
   GST_OBJECT_LOCK (registry);
   list = g_list_copy (registry->plugins);
@@ -656,6 +662,9 @@ GstPluginFeature *
 gst_registry_lookup_feature (GstRegistry * registry, const char *name)
 {
   GstPluginFeature *feature;
+
+  g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
 
   GST_OBJECT_LOCK (registry);
   feature = gst_registry_lookup_feature_locked (registry, name);
@@ -704,6 +713,9 @@ GstPlugin *
 gst_registry_lookup (GstRegistry * registry, const char *filename)
 {
   GstPlugin *plugin;
+
+  g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
+  g_return_val_if_fail (filename != NULL, NULL);
 
   GST_OBJECT_LOCK (registry);
   plugin = gst_registry_lookup_locked (registry, filename);
@@ -827,6 +839,9 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
 void
 gst_registry_scan_path (GstRegistry * registry, const gchar * path)
 {
+  g_return_if_fail (GST_IS_REGISTRY (registry));
+  g_return_if_fail (path != NULL);
+
   GST_DEBUG_OBJECT (registry, "scanning path %s", path);
   gst_registry_scan_path_level (registry, path, 10);
 }
@@ -837,6 +852,8 @@ _gst_registry_remove_cache_plugins (GstRegistry * registry)
   GList *g;
   GList *g_next;
   GstPlugin *plugin;
+
+  g_return_if_fail (GST_IS_REGISTRY (registry));
 
   GST_DEBUG_OBJECT (registry, "removing cached plugins");
   g = registry->plugins;
@@ -874,6 +891,9 @@ GList *
 gst_registry_get_feature_list_by_plugin (GstRegistry * registry,
     const gchar * name)
 {
+  g_return_val_if_fail (GST_IS_REGISTRY (registry), NULL);
+  g_return_val_if_fail (name != NULL, NULL);
+
   return gst_registry_feature_filter (registry,
       _gst_plugin_feature_filter_plugin_name, FALSE, (gpointer) name);
 }
