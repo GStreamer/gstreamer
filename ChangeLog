@@ -1,3 +1,12 @@
+2006-01-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
+	(gst_qtdemux_send_event), (gst_qtdemux_handle_src_event),
+	(gst_qtdemux_change_state), (gst_qtdemux_loop_header):
+	* gst/qtdemux/qtdemux.h:
+	  Fix seeking for quicktime files. Could still use some more
+	  love and sophistication.
+
 2006-01-16  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/libmms/gstmms.c: gst_mms_init:
