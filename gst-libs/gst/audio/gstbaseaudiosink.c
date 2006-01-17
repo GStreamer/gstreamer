@@ -405,7 +405,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   guint size;
   guint samples;
   gint bps;
-  gdouble crate;
+  gdouble crate = 1.0;
   GstClockTime crate_num;
   GstClockTime crate_denom;
   GstClockTime cinternal, cexternal;
@@ -438,6 +438,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * sample ASAP */
   if (!GST_CLOCK_TIME_IS_VALID (time) || !bsink->sync) {
     render_offset = gst_base_audio_sink_get_offset (sink);
+    GST_DEBUG ("Buffer of size %u has no time. Using render_offset=%"
+        G_GUINT64_FORMAT, GST_BUFFER_SIZE (buf), render_offset);
     goto no_sync;
   }
 
@@ -488,12 +490,11 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     GST_DEBUG ("resync");
   }
 
-no_sync:
   crate = ((gdouble) crate_num) / crate_denom;
   GST_DEBUG_OBJECT (sink,
       "internal %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", rate %g",
       cinternal, cexternal, crate);
-
+no_sync:
   /* clip length based on rate */
   samples = MIN (samples, samples / (crate * ABS (bsink->segment.rate)));
 
