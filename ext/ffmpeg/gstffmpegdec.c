@@ -1144,8 +1144,9 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 
   /* parse cache joining */
   if (ffmpegdec->pcache) {
-    inbuf = gst_buffer_span (ffmpegdec->pcache, 0, inbuf,
-        GST_BUFFER_SIZE (ffmpegdec->pcache) + GST_BUFFER_SIZE (inbuf));
+    inbuf = gst_buffer_join (ffmpegdec->pcache, inbuf);
+/*     inbuf = gst_buffer_span (ffmpegdec->pcache, 0, inbuf, */
+/*         GST_BUFFER_SIZE (ffmpegdec->pcache) + GST_BUFFER_SIZE (inbuf)); */
     ffmpegdec->pcache = NULL;
     bdata = GST_BUFFER_DATA (inbuf);
     bsize = GST_BUFFER_SIZE (inbuf);

@@ -1,5 +1,11 @@
 2006-01-17  Edward Hervey  <edward@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	Memleak fix.
+	Closes #326704
+
+2006-01-17  Edward Hervey  <edward@fluendo.com>
+
 	* configure.ac:
 	Add --with-pkg-config-path argument.
 	Closes #319248
