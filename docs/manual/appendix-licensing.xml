@@ -59,12 +59,12 @@ the GPL. Or you can add a exceptions clause to your GPL license stating
 that you except GStreamer plugins from the obligations of the GPL.
 </para>
 <para>
-A good example of such a GPL exception clause would be, using the Muine 
-music player project as an example:
-The Muine project hereby grants permission for non-GPL-compatible 
-GStreamer plugins to be used and distributed together with GStreamer and 
-Muine. This permission goes above and beyond the permissions granted by 
-the GPL license Muine is covered by.
+A good example of such a GPL exception clause would be, using the
+Totem video player project as an example:
+The authors of the Totem video player project hereby grants permission 
+for non-GPL-compatible GStreamer plugins to be used and distributed 
+together with GStreamer and Totem. This permission goes above and beyond 
+the permissions granted by the GPL license Totem is covered by.
 </para>
 <para>
 Our suggestion among these choices is to use the LGPL license, as it is 
