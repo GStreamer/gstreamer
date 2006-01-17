@@ -1,3 +1,15 @@
+2006-01-17  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstbuffer.c: (gst_buffer_is_metadata_writable),
+	(gst_buffer_make_metadata_writable):
+	* gst/gstbuffer.h:
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buf):
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_prepare_buf):
+	* tests/check/gst/gstbuffer.c: (GST_START_TEST), (gst_test_suite):
+	  Replace gst_buffer_(make|is)_metadata_writable patch now
+	  that the release is out.
+
 2006-01-17  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstregistry.c: Reflow design comment. Update so as to speak
