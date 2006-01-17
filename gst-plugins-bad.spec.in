@@ -1,7 +1,7 @@
 %define majorminor  @GST_MAJORMINOR@
-%define gstreamer   gstreamer010
+%define gstreamer   gstreamer
 
-%define gst_minver   0.9.7
+%define gst_minver   0.10.0
 
 Name: 		%{gstreamer}-plugins-bad
 Version: 	@VERSION@
@@ -30,7 +30,6 @@ BuildRequires:  gcc-c++
 # @USE_HERMES_TRUE@BuildRequires: Hermes-devel >= 1.3.0
 # @USE_LIBFAME_TRUE@BuildRequires:  libfame-devel >= 0.9.0
 @USE_SDL_TRUE@Requires:      SDL >= 1.2.0
-@USE_SDL_TRUE@BuildRequires: 	XFree86-devel
 @USE_SWFDEC_TRUE@BuildRequires:  swfdec-devel
 @USE_FAAD_TRUE@Provides:      gstreamer-faad = %{version}-%{release}
 @USE_FAAC_TRUE@Requires:      faac >= 1.23
