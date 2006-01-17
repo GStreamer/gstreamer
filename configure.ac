@@ -82,6 +82,8 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 dnl Determine CPU
 GST_ARCH()
 
+GST_ARG_WITH_PKG_CONFIG_PATH
+
 dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
