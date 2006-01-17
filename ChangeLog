@@ -1,3 +1,16 @@
+2006-01-17  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstregistry.c (_gst_registry_remove_cache_plugins): Lock the
+	registry while we remove plugins.
+
+	* tools/gst-inspect.c (print_element_info): Don't unref the
+	factory arg, that should be the responsibility of whatever code
+	received the ref. Fixes a double-free when called from
+	print_element_list via gst-inspect-0.10 -a. Fixes #327324.
+	(main): Unref the factory if we have one.
+	(print_element_list): No change -- relies on the
+	plugin_feature_list_free to free the list of features.
+
 2006-01-17  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstbuffer.c: (gst_buffer_is_metadata_writable),

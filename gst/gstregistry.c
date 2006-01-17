@@ -855,6 +855,8 @@ _gst_registry_remove_cache_plugins (GstRegistry * registry)
 
   g_return_if_fail (GST_IS_REGISTRY (registry));
 
+  GST_OBJECT_LOCK (registry);
+
   GST_DEBUG_OBJECT (registry, "removing cached plugins");
   g = registry->plugins;
   while (g) {
@@ -863,11 +865,16 @@ _gst_registry_remove_cache_plugins (GstRegistry * registry)
     if (plugin->flags & GST_PLUGIN_FLAG_CACHED) {
       GST_DEBUG_OBJECT (registry, "removing cached plugin \"%s\"",
           GST_STR_NULL (plugin->filename));
+      /* seems it would be sufficient just to do a delete_link for o(1) deletion
+       * -- we have to traverse the whole list anyway, and dup entries (if
+       * possible) should have dup refcounts */
       registry->plugins = g_list_remove (registry->plugins, plugin);
       gst_object_unref (plugin);
     }
     g = g_next;
   }
+
+  GST_OBJECT_UNLOCK (registry);
 }
 
 
