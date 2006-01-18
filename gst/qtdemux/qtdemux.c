@@ -2000,20 +2000,33 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     } else {
       if (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4) ==
           GST_MAKE_FOURCC ('a', 'v', 'c', '1')) {
-        gint len = QTDEMUX_GUINT32_GET (stsd->data);
+        gint len = QTDEMUX_GUINT32_GET (stsd->data) - 0x66;
+        guint8 *stsddata = stsd->data + 0x66;
 
-        if (len > 0x6E &&
-            QTDEMUX_FOURCC_GET (stsd->data + 0x6A) ==
+
+        /* find avcC */
+        while (len >= 0x8 &&
+            QTDEMUX_FOURCC_GET (stsddata + 0x4) !=
+            GST_MAKE_FOURCC ('a', 'v', 'c', 'C') &&
+            QTDEMUX_GUINT32_GET (stsddata) < len) {
+          len -= QTDEMUX_GUINT32_GET (stsddata);
+          stsddata += QTDEMUX_GUINT32_GET (stsddata);
+        }
+
+        /* parse, if found */
+        if (len > 0x8 &&
+            QTDEMUX_FOURCC_GET (stsddata + 0x4) ==
             GST_MAKE_FOURCC ('a', 'v', 'c', 'C')) {
           GstBuffer *buf;
           gint size;
 
-          if (QTDEMUX_GUINT32_GET (stsd->data + 0x66) < len - 0x66)
-            size = QTDEMUX_GUINT32_GET (stsd->data + 0x66) - 8;
+          if (QTDEMUX_GUINT32_GET (stsddata) < len)
+            size = QTDEMUX_GUINT32_GET (stsddata) - 0x8;
           else
-            size = len - 0x6E;
+            size = len - 0x8;
+
           buf = gst_buffer_new_and_alloc (size);
-          memcpy (GST_BUFFER_DATA (buf), (guint8 *) stsd->data + 0x6E, size);
+          memcpy (GST_BUFFER_DATA (buf), (guint8 *) stsd->data + 0x8, size);
           gst_caps_set_simple (stream->caps,
               "codec_data", GST_TYPE_BUFFER, buf, NULL);
           gst_buffer_unref (buf);
