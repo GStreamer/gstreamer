@@ -356,7 +356,8 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
     GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "waiting on clock entry %p",
         id);
     res = cclass->wait (clock, entry);
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "done waiting entry %p", id);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "done waiting entry %p, res: %d", id, res);
 
     if (jitter) {
       GstClockTime now = gst_clock_get_time (clock);

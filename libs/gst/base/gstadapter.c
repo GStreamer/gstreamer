@@ -303,7 +303,7 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
  * @nbytes: the number of bytes to take
  *
  * Returns a freshly allocated buffer containing the first @nbytes bytes of the
- * @adapter.
+ * @adapter. The returned bytes will be flushed from the adapter.
  *
  * Caller owns returned value. g_free after usage.
  *

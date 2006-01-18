@@ -1,5 +1,18 @@
 2006-01-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (gst_bin_element_set_state):
+	* gst/gstclock.c: (gst_clock_id_wait):
+	Added some more debug info.
+
+	* libs/gst/base/gstadapter.c:
+	Added more docs.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_do_sync), (gst_base_sink_chain):
+	Added some comments.
+
+2006-01-18  Wim Taymans  <wim@fluendo.com>
+
 	* tests/check/Makefile.am:
 	* tests/check/elements/fakesink.c: (chain_async_buffer),
 	(chain_async), (chain_async_return), (GST_START_TEST),

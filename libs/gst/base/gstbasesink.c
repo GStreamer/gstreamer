@@ -1177,6 +1177,8 @@ wrong_mode:
     g_warning ("Push on pad %s:%s, but it was not activated in push mode",
         GST_DEBUG_PAD_NAME (pad));
     GST_OBJECT_UNLOCK (pad);
+    /* we don't post an error message this will signal to the peer
+     * pushing that EOS is reached. */
     result = GST_FLOW_UNEXPECTED;
     goto done;
   }

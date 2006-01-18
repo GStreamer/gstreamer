@@ -1621,6 +1621,8 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element, GstState pending)
 
   /* skip locked elements */
   if (G_UNLIKELY (locked)) {
+    GST_DEBUG_OBJECT (element,
+        "element is locked, pretending state change succeeded");
     ret = GST_STATE_CHANGE_SUCCESS;
     goto done;
   }
