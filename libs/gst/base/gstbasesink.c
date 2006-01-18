@@ -728,36 +728,36 @@ gst_base_sink_handle_object (GstBaseSink * basesink, GstPad * pad,
   /* see if we need to block now. We cannot block on events, only
    * on buffers, the reason is that events can be sent from the
    * application thread and we don't want to block there. */
-  if (length > basesink->preroll_queue_max_len && !have_event) {
-    /* block until the state changes, or we get a flush, or something */
-    GST_DEBUG_OBJECT (basesink, "waiting to finish preroll");
-    GST_PAD_PREROLL_WAIT (pad);
-    GST_DEBUG_OBJECT (basesink, "done preroll");
-    GST_OBJECT_LOCK (pad);
-    if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-      goto flushing;
-    GST_OBJECT_UNLOCK (pad);
-  }
+  if (length <= basesink->preroll_queue_max_len || have_event)
+    goto more_preroll;
+
+  /* block until the state changes, or we get a flush, or something */
+  GST_DEBUG_OBJECT (basesink, "waiting to finish preroll");
+  GST_PAD_PREROLL_WAIT (pad);
+  GST_DEBUG_OBJECT (basesink, "done preroll");
+  GST_OBJECT_LOCK (pad);
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
+  GST_OBJECT_UNLOCK (pad);
+
+  /* we can start rendering the data now */
+no_preroll:
+  GST_DEBUG_OBJECT (basesink, "no preroll needed");
+  /* maybe it was another sink that blocked in preroll, need to check for
+     buffers to drain */
+  basesink->have_preroll = FALSE;
+  ret = gst_base_sink_preroll_queue_empty (basesink, pad);
   GST_PAD_PREROLL_UNLOCK (pad);
 
-  return GST_FLOW_OK;
+  return ret;
 
-no_preroll:
-  {
-    GST_DEBUG_OBJECT (basesink, "no preroll needed");
-    /* maybe it was another sink that blocked in preroll, need to check for
-       buffers to drain */
-    basesink->have_preroll = FALSE;
-    ret = gst_base_sink_preroll_queue_empty (basesink, pad);
-    GST_PAD_PREROLL_UNLOCK (pad);
-
-    return ret;
-  }
+  /* special cases */
 dropping:
   {
     GstBuffer *buf;
 
     GST_DEBUG_OBJECT (basesink, "dropping buffer");
+    /* take the buffer off the queue again */
     buf = GST_BUFFER (g_queue_pop_tail (basesink->preroll_queue));
 
     gst_buffer_unref (buf);
@@ -791,6 +791,12 @@ preroll_failed:
     gst_element_abort_state (GST_ELEMENT (basesink));
 
     return ret;
+  }
+more_preroll:
+  {
+    GST_DEBUG_OBJECT (basesink, "need more preroll data");
+    GST_PAD_PREROLL_UNLOCK (pad);
+    return GST_FLOW_OK;
   }
 }
 
