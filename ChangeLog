@@ -1,3 +1,8 @@
+2006-01-18  Edward Hervey  <edward@fluendo.com>
+
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_subbuffer): 
+	tss tss... always set caps on outgoing buffer.
+
 2006-01-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

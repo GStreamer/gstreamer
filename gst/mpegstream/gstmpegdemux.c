@@ -900,6 +900,7 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
     GST_DEBUG_OBJECT (mpeg_demux, "Creating subbuffer size %d", size);
   }
   outbuf = gst_buffer_create_sub (buffer, offset, size);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (outstream->pad));
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + offset;
