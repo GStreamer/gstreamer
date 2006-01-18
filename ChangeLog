@@ -1,3 +1,9 @@
+2006-01-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_pad_convert):
+	  Fix conversion from TIME to BYTES format (fixes #326864;
+	  patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>)
+
 2006-01-15  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame):

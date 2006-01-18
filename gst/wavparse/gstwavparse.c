@@ -1215,8 +1215,8 @@ gst_wavparse_pad_convert (GstPad * pad,
         case GST_FORMAT_BYTES:
           /* make sure we end up on a sample boundary */
           *dest_value =
-              gst_util_uint64_scale_int (src_value, wavparse->rate,
-              GST_SECOND) * wavparse->blockalign;
+              gst_util_uint64_scale_int (src_value, wavparse->bps, GST_SECOND);
+          *dest_value -= *dest_value % wavparse->blockalign;
           break;
         case GST_FORMAT_DEFAULT:
           *dest_value =
