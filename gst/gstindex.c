@@ -675,7 +675,7 @@ gst_index_add_entry (GstIndex * index, GstIndexEntry * entry)
  */
 GstIndexEntry *
 gst_index_add_associationv (GstIndex * index, gint id, GstAssocFlags flags,
-    int n, const GstIndexAssociation * list)
+    gint n, const GstIndexAssociation * list)
 {
   GstIndexEntry *entry;
 

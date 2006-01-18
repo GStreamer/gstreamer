@@ -390,6 +390,8 @@ void			gst_index_set_resolver		(GstIndex *index,
 gboolean 		gst_index_get_writer_id 	(GstIndex *index, GstObject *writer, gint *id);
 
 GstIndexEntry*		gst_index_add_format		(GstIndex *index, gint id, GstFormat format);
+GstIndexEntry*		gst_index_add_associationv	(GstIndex * index, gint id, GstAssocFlags flags,
+                                                         gint n, const GstIndexAssociation * list);
 GstIndexEntry*		gst_index_add_association	(GstIndex *index, gint id, GstAssocFlags flags,
 							 GstFormat format, gint64 value, ...);
 GstIndexEntry*		gst_index_add_object		(GstIndex *index, gint id, gchar *key,

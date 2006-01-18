@@ -1,3 +1,13 @@
+2006-01-18  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstindex.h (gst_index_add_associationv): Add to header. The
+	symbol was exported before, it appears this was just an oversight.
+	Fixes #168703.
+	Patch by: Torsten Schoenfeld <kaffeetisch at gmx.de>
+
+	* gst/gstindex.c (gst_index_add_associationv): Changed int in
+	prototype to gint. OK since this prototype was not in the header.
+
 2006-01-17  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstregistry.c (_gst_registry_remove_cache_plugins): Lock the
