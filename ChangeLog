@@ -1,3 +1,12 @@
+2006-01-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_class_init):
+	  'have-type' signal needs to be G_SIGNAL_RUN_FIRST, as it is the
+	  object method handler that sets the caps on the pad and we want
+	  that to happen before we emit the signal (fixes e.g. feeding a
+	  plain text file to decodebin).
+
 2006-01-18  Christian Schaller  <Christian@fluendo.com>
 
 	* gst/gstplugin.c: Add MPL and Proprietary as license options

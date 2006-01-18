@@ -201,7 +201,7 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
    * been found.
    */
   gst_type_find_element_signals[HAVE_TYPE] = g_signal_new ("have_type",
-      G_TYPE_FROM_CLASS (typefind_class), G_SIGNAL_RUN_LAST,
+      G_TYPE_FROM_CLASS (typefind_class), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstTypeFindElementClass, have_type), NULL, NULL,
       gst_marshal_VOID__UINT_BOXED, G_TYPE_NONE, 2,
       G_TYPE_UINT, GST_TYPE_CAPS | G_SIGNAL_TYPE_STATIC_SCOPE);
