@@ -1,5 +1,26 @@
 2006-01-18  Wim Taymans  <wim@fluendo.com>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/fakesink.c: (chain_async_buffer),
+	(chain_async), (chain_async_return), (GST_START_TEST),
+	(fakesink_suite), (main):
+	Added fakesink test that checks prerolling and clipping
+	behaviour.
+
+	* tests/check/gst/gstutils.c: (GST_START_TEST):
+	Make check run faster so that buildbots don't timeout.
+
+2006-01-18  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_do_sync):
+	Some cleanups.
+	When the sink finishes blocking on the preroll buffer, it can
+	immediatly render it instead of rendering when the next buffer
+	arrives.
+
+2006-01-18  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_set_property),
 	(gst_base_sink_get_property), (gst_base_sink_do_sync),
 	(gst_base_sink_chain):

@@ -242,7 +242,7 @@ GST_START_TEST (test_math_scale_random)
 
   rand = g_rand_new ();
 
-  i = 1000000;
+  i = 100000;
   while (i--) {
     guint64 check, diff;
 

@@ -55,9 +55,10 @@ check_PROGRAMS =				\
 	gst/gsttag				\
 	gst/gstutils				\
 	gst/gstvalue				\
+	elements/fakesink			\
 	elements/fakesrc			\
-	elements/identity			\
 	elements/fdsrc		          	\
+	elements/identity			\
 	generic/sinks				\
 	generic/states				\
 	$(PARSE_CHECKS)				\
