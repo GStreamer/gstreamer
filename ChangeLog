@@ -1,3 +1,8 @@
+2006-01-18  Edgard Lima <edgard.lima@indt.org.br>
+
+	* gst/qtdemux/qtdemux.c: qtdemux_parse_trak:
+	Ronald's patch applied. see bug #326318.
+
 2006-01-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
