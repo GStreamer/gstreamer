@@ -59,7 +59,8 @@
  * When the element is set to PLAYING, #GstBaseSink will synchronize on the clock
  * using the times returned from ::get_times. If this function returns
  * #GST_CLOCK_TIME_NONE for the start time, no synchronisation will be done.
- * Synchronisation can be disabled entirely by setting the sync property to FALSE.
+ * Synchronisation can be disabled entirely by setting the object "sync" property 
+ * to FALSE.
  *
  * After synchronisation the virtual method #GstBaseSink::render will be called.
  * Subclasses should minimally implement this method.
@@ -98,7 +99,7 @@
  * operations they perform in the ::render method. This is mostly usefull when
  * the ::render method performs a blocking write on a file descripter.
  *
- * Last reviewed on 2005-12-18 (0.10.0)
+ * Last reviewed on 2006-01-18 (0.10.0)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -371,7 +372,9 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
       GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
       break;
     case PROP_SYNC:
+      GST_OBJECT_LOCK (sink);
       sink->sync = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (sink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -385,19 +388,21 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstBaseSink *sink = GST_BASE_SINK (object);
 
-  GST_OBJECT_LOCK (sink);
   switch (prop_id) {
     case PROP_PREROLL_QUEUE_LEN:
+      GST_PAD_PREROLL_LOCK (sink->sinkpad);
       g_value_set_uint (value, sink->preroll_queue_max_len);
+      GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
       break;
     case PROP_SYNC:
+      GST_OBJECT_LOCK (sink);
       g_value_set_boolean (value, sink->sync);
+      GST_OBJECT_UNLOCK (sink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (sink);
 }
 
 static GstCaps *
@@ -894,7 +899,7 @@ gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
   }
 }
 
-/* with STREAM_LOCK and LOCK*/
+/* with STREAM_LOCK and LOCK */
 static GstClockReturn
 gst_base_sink_wait (GstBaseSink * basesink, GstClockTime time)
 {
@@ -937,10 +942,12 @@ gst_base_sink_wait (GstBaseSink * basesink, GstClockTime time)
 static GstClockReturn
 gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
 {
-  GstClockReturn result = GST_CLOCK_OK;
+  GstClockReturn result;
   GstClockTime start, end;
   gint64 cstart, cend;
   GstBaseSinkClass *bclass;
+  GstClockTime base_time;
+  GstClockTimeDiff stream_start, stream_end;
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
@@ -952,80 +959,95 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
       ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
 
   /* if we don't have a timestamp, we don't sync */
-  if (!GST_CLOCK_TIME_IS_VALID (start)) {
-    GST_DEBUG_OBJECT (basesink, "start not valid");
-    goto done;
-  }
+  if (!GST_CLOCK_TIME_IS_VALID (start))
+    goto invalid_start;
 
   if (basesink->segment.format == GST_FORMAT_TIME) {
-    /* save last times seen. */
+    /* clip */
+    if (!gst_segment_clip (&basesink->segment, GST_FORMAT_TIME,
+            (gint64) start, (gint64) end, &cstart, &cend))
+      goto out_of_segment;
+
+    /* save last valid times seen. */
     if (GST_CLOCK_TIME_IS_VALID (end))
       gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_TIME,
           (gint64) end);
     else
       gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_TIME,
           (gint64) start);
-
-    /* clip */
-    if (!gst_segment_clip (&basesink->segment, GST_FORMAT_TIME,
-            (gint64) start, (gint64) end, &cstart, &cend))
-      goto out_of_segment;
   } else {
     /* no clipping for formats different from GST_FORMAT_TIME */
     cstart = start;
     cend = end;
   }
 
-  if (!basesink->sync) {
-    GST_DEBUG_OBJECT (basesink, "no need to sync");
-    goto done;
-  }
+  GST_OBJECT_LOCK (basesink);
+  if (!basesink->sync)
+    goto no_sync;
 
-  /* now do clocking */
-  if (GST_ELEMENT_CLOCK (basesink)
-      && ((basesink->segment.format == GST_FORMAT_TIME)
-          || (basesink->segment.accum == 0))) {
-    GstClockTime base_time;
-    GstClockTimeDiff stream_start, stream_end;
+  if (GST_ELEMENT_CLOCK (basesink) == NULL)
+    goto no_clock;
 
-    stream_start =
-        gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME,
-        cstart);
-    stream_end =
-        gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME, cend);
+  if (!((basesink->segment.format == GST_FORMAT_TIME)
+          || (basesink->segment.accum == 0)))
+    goto no_segment;
 
-    GST_OBJECT_LOCK (basesink);
+  /* now do clocking, LOCK is helt */
+  stream_start =
+      gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME, cstart);
+  stream_end =
+      gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME, cend);
 
-    base_time = GST_ELEMENT_CAST (basesink)->base_time;
+  base_time = GST_ELEMENT_CAST (basesink)->base_time;
 
-    GST_LOG_OBJECT (basesink,
-        "waiting for clock, base time %" GST_TIME_FORMAT
-        " stream_start %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (base_time), GST_TIME_ARGS (stream_start));
+  GST_LOG_OBJECT (basesink,
+      "waiting for clock, base time %" GST_TIME_FORMAT
+      " stream_start %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (base_time), GST_TIME_ARGS (stream_start));
 
-    /* also save end_time of this buffer so that we can wait
-     * to signal EOS */
-    if (GST_CLOCK_TIME_IS_VALID (stream_end))
-      basesink->end_time = stream_end + base_time;
-    else
-      basesink->end_time = GST_CLOCK_TIME_NONE;
+  /* also save end_time of this buffer so that we can wait
+   * to signal EOS */
+  if (GST_CLOCK_TIME_IS_VALID (stream_end))
+    basesink->end_time = stream_end + base_time;
+  else
+    basesink->end_time = GST_CLOCK_TIME_NONE;
 
-    result = gst_base_sink_wait (basesink, stream_start + base_time);
+  result = gst_base_sink_wait (basesink, stream_start + base_time);
 
-    GST_OBJECT_UNLOCK (basesink);
+  GST_OBJECT_UNLOCK (basesink);
 
-    GST_LOG_OBJECT (basesink, "clock entry done: %d", result);
-  } else {
-    GST_DEBUG_OBJECT (basesink, "no clock, not syncing");
-  }
+  GST_LOG_OBJECT (basesink, "clock entry done: %d", result);
 
-done:
   return result;
 
+  /* special cases */
+invalid_start:
+  {
+    GST_DEBUG_OBJECT (basesink, "start not valid, cannot sync");
+    return GST_CLOCK_OK;
+  }
 out_of_segment:
   {
     GST_LOG_OBJECT (basesink, "buffer skipped, not in segment");
     return GST_CLOCK_UNSCHEDULED;
+  }
+no_sync:
+  {
+    GST_DEBUG_OBJECT (basesink, "no need to sync");
+    GST_OBJECT_UNLOCK (basesink);
+    return GST_CLOCK_OK;
+  }
+no_clock:
+  {
+    GST_DEBUG_OBJECT (basesink, "no clock, can't sync");
+    GST_OBJECT_UNLOCK (basesink);
+    return GST_CLOCK_OK;
+  }
+no_segment:
+  {
+    GST_DEBUG_OBJECT (basesink, "no segment info, can't sync");
+    GST_OBJECT_UNLOCK (basesink);
+    return GST_CLOCK_OK;
   }
 }
 
@@ -1131,14 +1153,8 @@ gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
 
   basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
 
-  if (!(basesink->pad_mode == GST_ACTIVATE_PUSH)) {
-    GST_OBJECT_LOCK (pad);
-    g_warning ("Push on pad %s:%s, but it was not activated in push mode",
-        GST_DEBUG_PAD_NAME (pad));
-    GST_OBJECT_UNLOCK (pad);
-    result = GST_FLOW_UNEXPECTED;
-    goto done;
-  }
+  if (!(basesink->pad_mode == GST_ACTIVATE_PUSH))
+    goto wrong_mode;
 
   result =
       gst_base_sink_handle_object (basesink, pad, GST_MINI_OBJECT_CAST (buf));
@@ -1147,6 +1163,17 @@ done:
   gst_object_unref (basesink);
 
   return result;
+
+  /* ERRORS */
+wrong_mode:
+  {
+    GST_OBJECT_LOCK (pad);
+    g_warning ("Push on pad %s:%s, but it was not activated in push mode",
+        GST_DEBUG_PAD_NAME (pad));
+    GST_OBJECT_UNLOCK (pad);
+    result = GST_FLOW_UNEXPECTED;
+    goto done;
+  }
 }
 
 static void
