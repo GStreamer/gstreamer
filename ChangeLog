@@ -1,3 +1,9 @@
+2006-01-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstbin.c: (gst_bin_dispose):
+	  Guard gst_object_unref call against a NULL object (dispose
+	  can theoretically be called multiple times).
+	  
 2006-01-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_element_set_state):

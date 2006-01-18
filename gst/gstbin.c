@@ -381,8 +381,8 @@ gst_bin_dispose (GObject * object)
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
   bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
-  gst_object_unref (bin->child_bus);
-  bin->child_bus = NULL;
+
+  gst_object_replace ((GstObject **) & bin->child_bus, NULL);
   gst_object_replace ((GstObject **) & bin->provided_clock, NULL);
 
   while (bin->children) {
