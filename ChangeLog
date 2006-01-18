@@ -1,3 +1,7 @@
+2006-01-18  Christian Schaller  <Christian@fluendo.com>
+
+	* gst/gstplugin.c: Add MPL and Proprietary as license options
+
 2006-01-18  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstindex.h (gst_index_add_associationv): Add to header. The
