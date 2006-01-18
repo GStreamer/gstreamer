@@ -1,5 +1,18 @@
 2006-01-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/cdio/Makefile.am:
+	* ext/cdio/gstcdio.c:
+	* ext/cdio/gstcdio.h:
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/cdio/gstcdiocddasrc.h:
+	  Port libcdio cdda source, formerly known as cddasrc, now known as
+	  cdiocddasrc (fixes #323327). Should also read CD-TEXT if available,
+	  but that's not tested (fixes #317658).
+
+2006-01-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_pad_convert):
 	  Fix conversion from TIME to BYTES format (fixes #326864;
 	  patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>)

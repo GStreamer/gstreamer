@@ -36,8 +36,8 @@ AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.1
-GSTPB_REQ=0.10.1
+GST_REQ=0.10.2
+GSTPB_REQ=0.10.2
 
 dnl *** autotools stuff ****
 
@@ -337,6 +337,18 @@ GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
   ])
 ])
 
+dnl *** cdio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CDIO, true)
+GST_CHECK_FEATURE(CDIO, [cdio library], cdio, [
+  PKG_CHECK_MODULES(CDIO, libcdio >= 0.71, [
+    HAVE_CDIO=yes
+    AC_SUBST(CDIO_CFLAGS)
+    AC_SUBST(CDIO_LIBS)
+  ], [
+    HAVE_CDIO=no
+  ])
+])
+
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
 GST_CHECK_FEATURE(ESD, [esound plug-ins], esdsink, [
@@ -597,6 +609,7 @@ ext/jpeg/Makefile
 ext/Makefile
 ext/aalib/Makefile
 ext/cairo/Makefile
+ext/cdio/Makefile
 ext/dv/Makefile
 ext/esd/Makefile
 ext/flac/Makefile
