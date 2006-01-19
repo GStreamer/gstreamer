@@ -1,3 +1,13 @@
+2006-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstevent.c:
+	  Fix docs typo
+
+	* plugins/elements/gstqueue.c: (gst_queue_handle_sink_event),
+	(gst_queue_chain), (gst_queue_push_one), (gst_queue_loop):
+	  Do some refactoring. Doesn't actually change functionality,
+	  but makes landing the DRAIN event easier later.
+
 2006-01-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/advanced-scheduling.xml:

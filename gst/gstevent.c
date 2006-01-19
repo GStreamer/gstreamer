@@ -388,8 +388,9 @@ gst_event_new_flush_stop (void)
  * event on a pad can return UNEXPECTED as a GstFlowReturn when data
  * after the EOS event arrives.
  *
- * The EOS event will travel up to the sink elements in the pipeline
- * which will then post the GST_MESSAGE_EOS on the bus.
+ * The EOS event will travel down to the sink elements in the pipeline
+ * which will then post the GST_MESSAGE_EOS on the bus after they have
+ * finished playing any buffered data.
  *
  * When all sinks have posted an EOS message, the EOS message is
  * forwarded to the application.
