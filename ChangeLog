@@ -1,3 +1,9 @@
+2006-01-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/pwg/advanced-scheduling.xml:
+	  Update from 0.9.x to 0.10 API and make example a bit
+	  clearer.
+
 2006-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/gst/gstreamer-sections.txt:
