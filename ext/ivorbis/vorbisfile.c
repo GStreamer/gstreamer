@@ -1,6 +1,4 @@
 /* GStreamer
-
-
 * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
 *
 * This library is free software; you can redistribute it and/or
@@ -288,18 +286,6 @@ gst_ivorbisfile_init (Ivorbisfile * ivorbisfile)
 
   gst_pad_set_event_function (ivorbisfile->srcpad, gst_ivorbisfile_src_event);
 
-  ivorbisfile->total_bytes = 0;
-  ivorbisfile->offset = 0;
-  ivorbisfile->seek_pending = 0;
-  ivorbisfile->need_discont = FALSE;
-  ivorbisfile->metadata = NULL;
-  ivorbisfile->streaminfo = NULL;
-  ivorbisfile->current_link = -1;
-
-  ivorbisfile->rate = -1;
-  ivorbisfile->channels = -1;
-  ivorbisfile->width = -1;
-
   ivorbisfile->adapter = NULL;
 
 }
@@ -333,7 +319,7 @@ gst_ivorbisfile_read (void *ptr, size_t size, size_t nmemb, void *datasource)
   Ivorbisfile *ivorbisfile = GST_IVORBISFILE (datasource);
   size_t ret;
 
-  GST_DEBUG ("read %d", read_size);
+  GST_LOG ("read %d", read_size);
 
   /* make sure we don't go to EOS */
 
@@ -629,7 +615,7 @@ gst_ivorbisfile_chain (GstPad * pad, GstBuffer * buffer)
   Ivorbisfile *ivorbisfile = GST_IVORBISFILE (GST_PAD_PARENT (pad));
 
   if (NULL == ivorbisfile->adapter) {
-    GST_DEBUG ("pull expected! Chain func should not be called");
+    GST_ERROR ("pull expected! Chain func should not be called");
     return GST_FLOW_UNEXPECTED;
   }
 
@@ -653,8 +639,7 @@ gst_ivorbisfile_loop (GstPad * pad)
   gint link;
 
   if (ivorbisfile->eos) {
-    gst_object_unref (ivorbisfile);
-    return;
+    goto done;
   }
 
   /* this function needs to go first since you don't want to be messing
@@ -664,8 +649,7 @@ gst_ivorbisfile_loop (GstPad * pad)
 
     if (ivorbisfile->adapter) {
       if (gst_adapter_available (ivorbisfile->adapter) < 40960) {
-        gst_object_unref (ivorbisfile);
-        return;
+        goto done;
       }
     }
 
@@ -681,8 +665,7 @@ gst_ivorbisfile_loop (GstPad * pad)
     if ((err = ov_open_callbacks (ivorbisfile, &ivorbisfile->vf, NULL, 0,
                 ivorbisfile_ov_callbacks)) < 0) {
       GST_ELEMENT_ERROR (ivorbisfile, STREAM, DECODE, (NULL), (NULL));
-      gst_object_unref (ivorbisfile);
-      return;
+      goto done;
     }
 
     ivorbisfile->need_discont = TRUE;
@@ -730,10 +713,10 @@ gst_ivorbisfile_loop (GstPad * pad)
             ivorbisfile->need_discont = TRUE;
             ivorbisfile->current_link = -1;
           } else {
-            g_warning ("raw seek failed");
+            GST_WARNING ("raw seek failed");
           }
         } else
-          g_warning ("unknown seek method, implement me !");
+          GST_WARNING ("unknown seek method, implement me !");
         break;
     }
     ivorbisfile->seek_pending = FALSE;
@@ -744,8 +727,7 @@ gst_ivorbisfile_loop (GstPad * pad)
     if (!gst_ivorbisfile_new_link (ivorbisfile, ivorbisfile->vf.current_link)) {
       GST_ELEMENT_ERROR (ivorbisfile, CORE, NEGOTIATION, (NULL), (NULL));
     }
-    gst_object_unref (ivorbisfile);
-    return;
+    goto done;
   }
 
   do {
@@ -765,13 +747,25 @@ gst_ivorbisfile_loop (GstPad * pad)
         ivorbisfile->restart = TRUE;
         gst_pad_push_event (ivorbisfile->srcpad, gst_event_new_eos ());
       }
-      gst_object_unref (ivorbisfile);
-      return;
+      goto done;
     } else if (ret < 0) {
-      g_warning ("ivorbisfile: decoding error");
+      switch (ret) {
+        case OV_HOLE:
+          GST_WARNING
+              ("Vorbisfile encoutered missing or corrupt data in the bitstream."
+              " Recovery is normally automatic and"
+              " this return code is for informational purposes only.");
+          break;
+        case OV_EBADLINK:
+          GST_WARNING ("The given link exists in the Vorbis data stream,"
+              " but is not decipherable due to garbacge or corruption.");
+          break;
+        default:
+          GST_ERROR ("ivorbisfile: decoding error, unexpected ret = %ld", ret);
+          break;
+      }
       gst_buffer_unref (outbuf);
-      gst_object_unref (ivorbisfile);
-      return;
+      goto done;
     } else {
       if (ivorbisfile->need_discont) {
         GstEvent *event;
@@ -791,8 +785,7 @@ gst_ivorbisfile_loop (GstPad * pad)
 
       if (NULL == GST_PAD_CAPS (ivorbisfile->srcpad)) {
         gst_buffer_unref (outbuf);
-        gst_object_unref (ivorbisfile);
-        return;
+        goto done;
       }
 
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ivorbisfile->srcpad));
@@ -804,7 +797,6 @@ gst_ivorbisfile_loop (GstPad * pad)
          GST_BUFFER_DURATION (outbuf) =  GST_SECOND * bufsize / (ivorbisfile->rate * ivorbisfile->channels);
        */
 
-
       ivorbisfile->may_eos = TRUE;
 
       if (!ivorbisfile->vf.seekable) {
@@ -812,14 +804,16 @@ gst_ivorbisfile_loop (GstPad * pad)
       }
 
       if (GST_FLOW_OK != gst_pad_push (ivorbisfile->srcpad, outbuf)) {
-        gst_buffer_unref (outbuf);
-        return;
+        goto done;
       }
 
     }
 
   } while (TRUE);
 
+done:
+
+  gst_object_unref (ivorbisfile);
 
 }
 
@@ -1198,7 +1192,7 @@ gst_ivorbisfile_sink_event (GstPad * pad, GstEvent * event)
 {
 
   Ivorbisfile *ivorbisfile;
-  gboolean ret;
+  gboolean ret = TRUE;
 
   ivorbisfile = GST_IVORBISFILE (gst_pad_get_parent (pad));
 
@@ -1211,11 +1205,15 @@ gst_ivorbisfile_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
       GST_DEBUG ("discont");
       ivorbisfile->need_discont = TRUE;
+      gst_event_unref (event);
+      goto done;
     default:
       break;
   }
 
   ret = gst_pad_event_default (pad, event);
+
+done:
   gst_object_unref (ivorbisfile);
 
   return ret;
@@ -1307,7 +1305,18 @@ gst_ivorbisfile_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      /* fall through */
+      ivorbisfile->total_bytes = 0;
+      ivorbisfile->offset = 0;
+      ivorbisfile->seek_pending = 0;
+      ivorbisfile->need_discont = FALSE;
+      ivorbisfile->metadata = NULL;
+      ivorbisfile->streaminfo = NULL;
+      ivorbisfile->current_link = -1;
+
+      ivorbisfile->rate = -1;
+      ivorbisfile->channels = -1;
+      ivorbisfile->width = -1;
+      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (ivorbisfile->adapter) {
         gst_adapter_clear (ivorbisfile->adapter);
@@ -1352,7 +1361,7 @@ gst_ivorbisfile_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     default:
-      g_warning ("Unknown property id\n");
+      GST_WARNING ("Unknown property id\n");
   }
 }
 
@@ -1374,6 +1383,6 @@ gst_ivorbisfile_get_property (GObject * object, guint prop_id,
       g_value_set_boxed (value, ivorbisfile->streaminfo);
       break;
     default:
-      g_warning ("Unknown property id\n");
+      GST_WARNING ("Unknown property id\n");
   }
 }

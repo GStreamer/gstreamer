@@ -1,3 +1,8 @@
+2006-01-19  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/tremor/vorbisfile.c:
+	Some minor improvements on log messages.
+
 2006-01-18  Edgard Lima <edgard.lima@indt.org.br>
 
 	* gst/qtdemux/qtdemux.c: qtdemux_parse_trak:
