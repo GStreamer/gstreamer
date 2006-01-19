@@ -2,8 +2,8 @@
 
 	* configure.ac:
 	  Use plain AS_LIBTOOL_TAGS instead of AS_LIBTOOL_TAGS([CXX]), just
-	  like in the core and gst-plugins-base. Fixes build on Solaris (fixes
-	  #326683; patch by: Brian Cameron <brian dot cameron at sun dot com>)
+	  like in the core and gst-plugins-base. Fixes #324367 and #326683;
+	  patch by: Brian Cameron <brian dot cameron at sun dot com>
 
 2006-01-19  Tim-Philipp Müller  <tim at centricular dot net>
 
