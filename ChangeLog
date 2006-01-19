@@ -1,3 +1,8 @@
+2006-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/design/part-sparsestreams.txt:
+	Update sparse streams doc, hopefully for greater clarity
+
 2006-01-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/design/part-events.txt:

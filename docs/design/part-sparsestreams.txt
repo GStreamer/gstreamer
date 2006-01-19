@@ -43,10 +43,14 @@ Details
   packets, and is effectively updating the minimum-timestamp for that stream.
   
   A demuxer can do this by sending an 'update' NEWSEGMENT with a new start time
-  to the subtitle pad. For example, every time the SCR in the MPEG data 
+  to the subtitle pad. For example, every time the SCR in MPEG data 
   advances more than 0.5 seconds, the MPEG demuxer can issue a NEWSEGMENT with
    (update=TRUE, start=SCR ). Downstream elements can then be aware not to 
    expect any data older than the new start time.
+
+  The same holds true for any element that knows the current position in the 
+  stream - once the element knows that there is no more data to be presented
+  until time 'n' it can advance the start time of the current segment to 'n'.
    
   This technique can also be used, for example, to represent a stream of 
   MIDI events spaced to a clock period. When there is no event present for 
@@ -70,12 +74,12 @@ Details
     * Send a NEWSEGMENT to restart playback with the next timestamp in the 
       stream.
   
-  The upstream element performing the wait MUST be marked as LIVE element, to
-  prevent GStreamer from attempting to preroll the element during a still frame
-  wait.
+  The upstream element performing the wait must only do so when in the PLAYING 
+  state. During PAUSED, the clock will not be running, and may not even have 
+  been distributed to the element yet.
   
-  DRAIN is a new event that will block on the pad until all data downstream has
-  been played out. 
+  DRAIN is a new event that will block on a src pad until all data downstream 
+  has been played out. 
   
   Flushing after completing the still wait is to ensure that data after the wait
   is played correctly. Without it, sinks will consider the first buffers 
