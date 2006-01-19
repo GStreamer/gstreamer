@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "gstcdio.h"
 #include "gstcdiocddasrc.h"
 
 #include <gst/gst.h>
@@ -161,8 +162,7 @@ static GstTagList *
 gst_cdio_cdda_src_get_cdtext (GstCdioCddaSrc * src, track_t i_track)
 {
   GstTagList *tags = NULL;
-  const gchar *artist;
-  const gchar *title;
+  GstObject *obj;
   cdtext_t *t;
 
   t = cdio_get_cdtext (src->cdio, i_track);
@@ -171,11 +171,9 @@ gst_cdio_cdda_src_get_cdtext (GstCdioCddaSrc * src, track_t i_track)
     return NULL;
   }
 
-  gst_cdio_cdda_src_add_cdtext_field (src, t, CDTEXT_PERFOMER,
-      GST_TAG_ARTIST, &tags);
-
-  gst_cdio_cdda_src_add_cdtext_field (src, t, CDTEXT_TITLE,
-      GST_TAG_TITLE, &tags);
+  obj = GST_OBJECT (src);
+  gst_cdio_add_cdtext_field (obj, t, CDTEXT_PERFORMER, GST_TAG_ARTIST, &tags);
+  gst_cdio_add_cdtext_field (obj, t, CDTEXT_TITLE, GST_TAG_TITLE, &tags);
 
   return tags;
 }
