@@ -1,3 +1,13 @@
+2006-01-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/design/part-events.txt:
+	Remove mention of FILLER events.
+	Add DRAIN event.
+
+	* docs/design/part-sparsestreams.txt:
+	Write some things about using NEWSEGMENT to keep sparse streams
+	flowing.
+
 2006-01-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbin.c: (gst_bin_dispose):
