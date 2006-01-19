@@ -1,5 +1,12 @@
 2006-01-19  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	  Use plain AS_LIBTOOL_TAGS instead of AS_LIBTOOL_TAGS([CXX]), just
+	  like in the core and gst-plugins-base. Fixes build on Solaris (fixes
+	  #326683; patch by: Brian Cameron <brian dot cameron at sun dot com>)
+
+2006-01-19  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/cdio/gstcdio.c: (gst_cdio_add_cdtext_field), (plugin_init):
 	* ext/cdio/gstcdio.h:
 	* ext/cdio/gstcdiocddasrc.c: (gst_cdio_cdda_src_get_cdtext):
