@@ -1,5 +1,10 @@
 2006-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	Add gst_buffer_(is|make)_metadata_writable methods.
+
+2006-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* docs/design/part-sparsestreams.txt:
 	Update sparse streams doc, hopefully for greater clarity
 

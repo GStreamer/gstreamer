@@ -151,6 +151,8 @@ gst_buffer_set_data
 gst_buffer_copy
 gst_buffer_is_writable
 gst_buffer_make_writable
+gst_buffer_is_metadata_writable
+gst_buffer_make_metadata_writable
 gst_buffer_replace
 
 gst_buffer_get_caps
