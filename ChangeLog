@@ -1,5 +1,10 @@
 2006-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	Add gst_index_add_associationv to the docs
+
+2006-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/gstevent.c:
 	  Fix docs typo
 
