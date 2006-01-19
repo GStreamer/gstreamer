@@ -1325,6 +1325,8 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
       }
     }
 
+    gst_iterator_free (pads_iter);
+
     if (is_raw) {
       no_more_pads (play_base_bin->source, play_base_bin);
       return TRUE;
