@@ -21,7 +21,8 @@
 #ifndef __GST_CDIO_H__
 #define __GST_CDIO_H__
 
-#include <gst/gstinfo.h>
+#include <gst/gst.h>
+#include <cdio/version.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_cdio_debug);
 #define GST_CAT_DEFAULT gst_cdio_debug

@@ -37,7 +37,7 @@ gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext,
 {
   const gchar *txt;
 
-  txt = cdtext_get_const (cdtext, field);
+  txt = cdtext_get_const (field, cdtext);
   if (txt == NULL || *txt == '\0') {
     GST_DEBUG_OBJECT (src, "empty CD-TEXT field %u (%s)", field, gst_tag);
     return;
@@ -73,7 +73,7 @@ gst_cdio_log_handler (cdio_log_level_t level, const char *msg)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "cdiocddasrc", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "cdiocddasrc", GST_RANK_SECONDARY - 1,
           GST_TYPE_CDIO_CDDA_SRC))
     return FALSE;
 
