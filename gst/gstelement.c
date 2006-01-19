@@ -2279,7 +2279,10 @@ gst_element_pads_activate (GstElement * element, gboolean active)
   g_value_init (&ret, G_TYPE_BOOLEAN);
   g_value_set_boolean (&ret, TRUE);
 
-  iter = gst_element_iterate_src_pads (element);
+  if (active)
+    iter = gst_element_iterate_src_pads (element);
+  else
+    iter = gst_element_iterate_sink_pads (element);
   fold_ok = iterator_fold_with_resync
       (iter, (GstIteratorFoldFunction) activate_pads, &ret, &active);
   gst_iterator_free (iter);
@@ -2288,7 +2291,10 @@ gst_element_pads_activate (GstElement * element, gboolean active)
     return FALSE;
   }
 
-  iter = gst_element_iterate_sink_pads (element);
+  if (active)
+    iter = gst_element_iterate_sink_pads (element);
+  else
+    iter = gst_element_iterate_src_pads (element);
   fold_ok = iterator_fold_with_resync
       (iter, (GstIteratorFoldFunction) activate_pads, &ret, &active);
   gst_iterator_free (iter);

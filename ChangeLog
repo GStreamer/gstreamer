@@ -1,3 +1,9 @@
+2006-01-19  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstelement.c: (gst_element_pads_activate): 
+	When activating, do src pads first, then sink pads.
+	When de-activating, do sink pads first, then src pads.
+
 2006-01-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/gst/gstreamer-sections.txt:
