@@ -1,3 +1,14 @@
+2006-01-19  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParse): 
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_reset) 
+	(gst_mpeg_parse_process_event, gst_mpeg_parse_parse_packhead) 
+	(gst_mpeg_parse_change_state): 
+	Make timestamp adjustment somewhat milder. Actual timestamps are
+	now sent unmodified unless an actual gap is found in the
+	stream. This should fix time display when playing most MPEG
+	files.
+
 2006-01-18  Edward Hervey  <edward@fluendo.com>
 
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_subbuffer): 

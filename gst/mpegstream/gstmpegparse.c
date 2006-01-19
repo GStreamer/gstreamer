@@ -273,6 +273,7 @@ gst_mpeg_parse_reset (GstMPEGParse * mpeg_parse)
   mpeg_parse->current_ts = 0;
 
   mpeg_parse->do_adjust = TRUE;
+  mpeg_parse->pending_newsegment = TRUE;
   mpeg_parse->adjust = 0;
 
   /* Initialize the current segment. */
@@ -374,6 +375,8 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
             "Updating current segment with newsegment");
         gst_segment_set_newsegment (&mpeg_parse->current_segment,
             update, rate, format, start, stop, time);
+        gst_segment_set_newsegment (&mpeg_parse->current_segment,
+            update, rate, format, start, stop, time);
 
         if (!update) {
           /* Send a newsegment event for the new current segment. */
@@ -397,12 +400,6 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
         ret = CLASS (mpeg_parse)->send_event (mpeg_parse, event);
       } else {
         gst_event_unref (event);
-      }
-
-      /* Send a newsegment event to restart counting from 0. */
-      if (CLASS (mpeg_parse)->send_event) {
-        CLASS (mpeg_parse)->send_event (mpeg_parse,
-            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
       }
 
       /* Reset the internal fields. */
@@ -531,6 +528,22 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 
   prev_scr = mpeg_parse->current_scr;
   mpeg_parse->current_scr = scr;
+
+  if (mpeg_parse->do_adjust && mpeg_parse->pending_newsegment) {
+    /* Open a new segment. */
+    gst_segment_set_newsegment (&mpeg_parse->current_segment,
+        FALSE, 1.0, GST_FORMAT_TIME, MPEGTIME_TO_GSTTIME (scr), -1,
+        MPEGTIME_TO_GSTTIME (scr));
+    CLASS (mpeg_parse)->send_event (mpeg_parse,
+        gst_event_new_new_segment (FALSE, mpeg_parse->current_segment.rate,
+            GST_FORMAT_TIME, mpeg_parse->current_segment.start, -1,
+            mpeg_parse->current_segment.time));
+
+    mpeg_parse->pending_newsegment = FALSE;
+
+    /* The first SCR seen should not lead to timestamp adjustment. */
+    mpeg_parse->next_scr = scr;
+  }
 
   if (mpeg_parse->next_scr == MP_INVALID_SCR) {
     mpeg_parse->next_scr = mpeg_parse->current_scr;
@@ -1216,12 +1229,6 @@ gst_mpeg_parse_change_state (GstElement * element, GstStateChange transition)
 
       /* Initialize parser state */
       gst_mpeg_parse_reset (mpeg_parse);
-
-      /* Send a newsegment event to start counting from 0. */
-      if (CLASS (mpeg_parse)->send_event) {
-        CLASS (mpeg_parse)->send_event (mpeg_parse,
-            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
-      }
       break;
     default:
       break;

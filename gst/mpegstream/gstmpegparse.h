@@ -83,6 +83,10 @@ struct _GstMPEGParse
                                    the 'adjust' attribute. */
   gint64 adjust;                /* Value added to SCR values to
                                    produce buffer timestamps */
+  gboolean pending_newsegment;	/* The element should send a
+				   newsegment event as soon as it sees
+				   the next SCR. This option is only
+				   meaningful in do_adjust mode. */
   gint max_scr_gap;             /* The maximum allowed SCR gap without
                                    making a timestamp adjustment */
   GstSegment current_segment;   /* Segment currently being played. */
