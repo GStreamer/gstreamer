@@ -875,7 +875,9 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
  * <note>This function does not work reliably if optional properties for caps
  * are included on one caps and omitted on the other.</note>
  *
- * Returns: TRUE if both caps are equal
+ * This function deals correctly with passing NULL for any of the caps. 
+ *
+ * Returns: TRUE if both caps are equal. 
  */
 gboolean
 gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)

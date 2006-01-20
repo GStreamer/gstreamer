@@ -1510,10 +1510,12 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 
   srccaps = gst_pad_get_caps_unlocked (src);
   sinkcaps = gst_pad_get_caps_unlocked (sink);
+
   GST_CAT_DEBUG (GST_CAT_CAPS, "src caps %" GST_PTR_FORMAT, srccaps);
   GST_CAT_DEBUG (GST_CAT_CAPS, "sink caps %" GST_PTR_FORMAT, sinkcaps);
 
-  /* if we have caps on both pads we can check the intersection */
+  /* if we have caps on both pads we can check the intersection. If one
+   * of the caps is NULL, we return TRUE. */
   if (srccaps && sinkcaps) {
     GstCaps *icaps;
 
@@ -1521,18 +1523,31 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
     gst_caps_unref (srccaps);
     gst_caps_unref (sinkcaps);
 
+    if (icaps == NULL)
+      goto was_null;
+
     GST_CAT_DEBUG (GST_CAT_CAPS,
         "intersection caps %p %" GST_PTR_FORMAT, icaps, icaps);
 
-    if (!icaps || gst_caps_is_empty (icaps)) {
-      GST_CAT_DEBUG (GST_CAT_CAPS, "intersection is empty");
-      gst_caps_unref (icaps);
-      return FALSE;
-    }
+    if (gst_caps_is_empty (icaps))
+      goto was_empty;
+
     gst_caps_unref (icaps);
   }
-
   return TRUE;
+
+  /* incompatible cases */
+was_null:
+  {
+    GST_CAT_DEBUG (GST_CAT_CAPS, "intersection gave NULL");
+    return FALSE;
+  }
+was_empty:
+  {
+    GST_CAT_DEBUG (GST_CAT_CAPS, "intersection is EMPTY");
+    gst_caps_unref (icaps);
+    return FALSE;
+  }
 }
 
 /* check if the grandparents of both pads are the same.
@@ -2136,12 +2151,11 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
   setcaps = GST_PAD_SETCAPSFUNC (pad);
 
   existing = GST_PAD_CAPS (pad);
-  if (caps == existing)
-    goto setting_same_caps;
-  else if (caps && existing && gst_caps_is_equal (caps, existing))
+  if (gst_caps_is_equal (caps, existing))
     goto setting_same_caps;
 
-  /* call setcaps function to configure the pad */
+  /* call setcaps function to configure the pad only if the
+   * caps is not NULL */
   if (setcaps != NULL && caps) {
     if (!GST_PAD_IS_IN_SETCAPS (pad)) {
       GST_OBJECT_FLAG_SET (pad, GST_PAD_IN_SETCAPS);
@@ -2167,10 +2181,11 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 
 setting_same_caps:
   {
-    GST_OBJECT_UNLOCK (pad);
     gst_caps_replace (&GST_PAD_CAPS (pad), caps);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "caps %" GST_PTR_FORMAT " same as existing, updating ptr only", caps);
+    GST_OBJECT_UNLOCK (pad);
+
     return TRUE;
   }
 /* errors */

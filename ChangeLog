@@ -1,3 +1,15 @@
+2006-01-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstcaps.c:
+	Clarify behaviour of _is_equal() when passing NULL parameters.
+
+	* gst/gstpad.c: (gst_pad_link_check_compatible_unlocked),
+	(gst_pad_set_caps):
+	Cleanups. Don't unref NULL caps.
+	When setting the same caps, protect caps of the pad with
+	proper lock.
+	Use full functionality of _is_equal() when comparing caps.
+
 2006-01-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_is_collected):
