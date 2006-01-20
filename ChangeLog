@@ -1,3 +1,10 @@
+2006-01-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videobox/gstvideobox.c: (gst_video_box_class_init):
+	  Don't forget to initialize liboil, otherwise our oil functions
+	  will crash (fixes #327871; patch by: Christoph Burghardt
+	  <hawkes at web dot de>).
+
 2006-01-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
