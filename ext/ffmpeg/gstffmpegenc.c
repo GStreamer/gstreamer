@@ -621,6 +621,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
     GST_BUFFER_SIZE (outbuf) = ret_size;
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (subbuf);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (subbuf);
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
     gst_buffer_unref (subbuf);
 
     ret = gst_pad_push (ffmpegenc->srcpad, outbuf);
