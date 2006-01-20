@@ -377,8 +377,6 @@ gst_neonhttp_src_unlock (GstBaseSrc * bsrc)
 
   GST_OBJECT_FLAG_UNSET (src, GST_NEONHTTP_SRC_OPEN);
 
-  ne_end_request (src->request);
-
   return TRUE;
 
 }

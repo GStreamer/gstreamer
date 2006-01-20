@@ -145,6 +145,7 @@ static gboolean
 gst_ivorbisfile_sink_activate_pull (GstPad * sinkpad, gboolean active);
 
 static void gst_ivorbisfile_loop (GstPad * pad);
+static GstFlowReturn gst_ivorbisfile_play (GstPad * pad);
 
 static GstElementClass *parent_class = NULL;
 
@@ -287,6 +288,13 @@ gst_ivorbisfile_init (Ivorbisfile * ivorbisfile)
   gst_pad_set_event_function (ivorbisfile->srcpad, gst_ivorbisfile_src_event);
 
   ivorbisfile->adapter = NULL;
+
+  if (ivorbisfile->metadata) {
+    ivorbisfile->metadata = NULL;
+  }
+  if (ivorbisfile->streaminfo) {
+    ivorbisfile->streaminfo = NULL;
+  }
 
 }
 
@@ -621,9 +629,7 @@ gst_ivorbisfile_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_adapter_push (ivorbisfile->adapter, buffer);
 
-  gst_ivorbisfile_loop (pad);
-
-  return GST_FLOW_OK;
+  return gst_ivorbisfile_play (pad);
 
 }
 
@@ -631,12 +637,19 @@ gst_ivorbisfile_chain (GstPad * pad, GstBuffer * buffer)
 static void
 gst_ivorbisfile_loop (GstPad * pad)
 {
+  gst_ivorbisfile_play (pad);
+}
+
+static GstFlowReturn
+gst_ivorbisfile_play (GstPad * pad)
+{
   Ivorbisfile *ivorbisfile = GST_IVORBISFILE (gst_pad_get_parent (pad));
   GstBuffer *outbuf;
   long ret;
   GstClockTime time;
   gint64 samples;
   gint link;
+  GstFlowReturn res = GST_FLOW_OK;
 
   if (ivorbisfile->eos) {
     goto done;
@@ -803,7 +816,7 @@ gst_ivorbisfile_loop (GstPad * pad)
         ivorbisfile->total_bytes += GST_BUFFER_SIZE (outbuf);
       }
 
-      if (GST_FLOW_OK != gst_pad_push (ivorbisfile->srcpad, outbuf)) {
+      if (GST_FLOW_OK != (res = gst_pad_push (ivorbisfile->srcpad, outbuf))) {
         goto done;
       }
 
@@ -814,6 +827,7 @@ gst_ivorbisfile_loop (GstPad * pad)
 done:
 
   gst_object_unref (ivorbisfile);
+  return res;
 
 }
 
@@ -1309,8 +1323,14 @@ gst_ivorbisfile_change_state (GstElement * element, GstStateChange transition)
       ivorbisfile->offset = 0;
       ivorbisfile->seek_pending = 0;
       ivorbisfile->need_discont = FALSE;
-      ivorbisfile->metadata = NULL;
-      ivorbisfile->streaminfo = NULL;
+      if (ivorbisfile->metadata) {
+        gst_caps_unref (ivorbisfile->metadata);
+        ivorbisfile->metadata = NULL;
+      }
+      if (ivorbisfile->streaminfo) {
+        gst_caps_unref (ivorbisfile->streaminfo);
+        ivorbisfile->streaminfo = NULL;
+      }
       ivorbisfile->current_link = -1;
 
       ivorbisfile->rate = -1;

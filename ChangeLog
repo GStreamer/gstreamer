@@ -1,3 +1,9 @@
+2006-01-20  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/ivorbis/vorbisfile.c:
+	* ext/neon/gstneonhttpsrc.c:
+	Fixed state transictions PLAYING->NULL->PLAYING.
+	
 2006-01-19  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/tremor/vorbisfile.c:
