@@ -802,3 +802,5 @@ EXPORTS
 
 	gst_version_string
 
+	gst_buffer_is_metadata_writable
+
