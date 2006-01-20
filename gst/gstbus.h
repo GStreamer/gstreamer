@@ -90,8 +90,8 @@ typedef GstBusSyncReply (*GstBusSyncHandler) 	(GstBus * bus, GstMessage * messag
  * @message: the #GstMessage
  * @data: user data that has been given, when registering the handler
  *
- * Specifies the type of function passed to #gst_bus_add_watch() or
- * #gst_bus_add_watch_full(), which is called from the mainloop when a message
+ * Specifies the type of function passed to gst_bus_add_watch() or
+ * gst_bus_add_watch_full(), which is called from the mainloop when a message
  * is available on the bus.
  *
  * The message passed to the function will be unreffed after execution of this

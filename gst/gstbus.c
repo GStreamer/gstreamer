@@ -39,8 +39,8 @@
  * convert all bus messages into signal emissions.
  *
  * A message is posted on the bus with the gst_bus_post() method. With the
- * gst_bus_peek() and gst_bus_pop() methods one can look at or retrieve a previously
- * posted message.
+ * gst_bus_peek() and gst_bus_pop() methods one can look at or retrieve a
+ * previously posted message.
  *
  * The bus can be polled with the gst_bus_poll() method. This methods blocks
  * up to the specified timeout value until one of the specified messages types
@@ -279,6 +279,7 @@ gst_bus_new (void)
   GstBus *result;
 
   result = g_object_new (gst_bus_get_type (), NULL);
+  GST_DEBUG_OBJECT (result, "created new bus");
 
   return result;
 }
@@ -905,7 +906,7 @@ gst_bus_sync_signal_handler (GstBus * bus, GstMessage * message, gpointer data)
 
 /**
  * gst_bus_add_signal_watch_full:
- * @bus: a #GstBus on which you want to recieve the "message" signal
+ * @bus: a #GstBus on which you want to receive the "message" signal
  * @priority: The priority of the watch.
  *
  * Adds a bus signal watch to the default main context with the given priority.
@@ -944,9 +945,10 @@ done:
 
 /**
  * gst_bus_add_signal_watch:
- * @bus: a #GstBus on which you want to recieve the "message" signal
+ * @bus: a #GstBus on which you want to receive the "message" signal
  *
- * Adds a bus signal watch to the default main context with the default priority.
+ * Adds a bus signal watch to the default main context with the default
+ * priority.
  * After calling this statement, the bus will emit the message signal for each
  * message posted on the bus.
  *

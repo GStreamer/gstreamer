@@ -163,8 +163,10 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
 
   pipeline->delay = DEFAULT_DELAY;
 
-  bus = g_object_new (gst_bus_get_type (), NULL);
+  bus = gst_bus_new ();
   gst_element_set_bus (GST_ELEMENT_CAST (pipeline), bus);
+  GST_DEBUG_OBJECT (pipeline, "set bus %" GST_PTR_FORMAT " on pipeline", bus);
+
   gst_object_unref (bus);
 }
 

@@ -226,9 +226,13 @@ NEW NOTES
   - tag tree
     for example for 0.6.3 :
            cvs tag RELEASE-0_6_3
+  - bump nano number, commit
   - if working in the "stable" release branch, update to this tag to freeze it:
     cvs up -r RELEASE-0_6_3
   - sync source and packages to website
   - add entry on website; commit additions to website
+  - change versions in www/src/htdocs/entities.gst
+  - add versions and milestones in bugzilla
+
 
 

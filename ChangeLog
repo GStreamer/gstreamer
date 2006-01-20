@@ -1,5 +1,17 @@
 2006-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/random/release:
+	  update notes
+	* gst/gstbin.c: (gst_bin_init):
+	* gst/gstbus.c: (gst_bus_new):
+	* gst/gstbus.h:
+	* gst/gstpipeline.c: (gst_pipeline_init):
+	  use gst_bus_new(), improve logging, fix docs
+	* win32/common/config.h:
+	  update for cvs build
+
+2006-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* autogen.sh:
 	  up required version of automake to 1.7
 
