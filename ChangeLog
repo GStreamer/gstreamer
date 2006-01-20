@@ -1,3 +1,9 @@
+2006-01-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstevent.h:
+	  Add gst_event_replace() (#327001)
+
 2006-01-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_link_check_compatible_unlocked):

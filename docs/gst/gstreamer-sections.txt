@@ -613,10 +613,11 @@ gst_event_parse_qos
 gst_event_parse_seek
 gst_event_parse_tag
 gst_event_ref
+gst_event_unref
+gst_event_replace
 gst_event_type_get_flags
 gst_event_type_get_name
 gst_event_type_to_quark
-gst_event_unref
 <SUBSECTION Standard>
 GstEventClass
 GST_EVENT

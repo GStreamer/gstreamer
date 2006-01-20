@@ -206,6 +206,24 @@ typedef struct _GstEventClass GstEventClass;
 #define GST_EVENT_IS_SERIALIZED(ev)	!!(GST_EVENT_TYPE (ev) & GST_EVENT_TYPE_SERIALIZED)
 
 /**
+ * gst_event_replace:
+ * @old_event: pointer to a pointer to a #GstEvent to be replaced.
+ * @new_event: pointer to a #GstEvent that will replace the event pointed to 
+ *        by @old_event.
+ *
+ * Modifies a pointer to a #GstEvent to point to a different #GstEvent. The
+ * modification is done atomically (so this is useful for ensuring thread safety
+ * in some cases), and the reference counts are updated appropriately (the old 
+ * event is unreffed, the new one is reffed).
+ *
+ * Either @new_event or the #GstEvent pointed to by @old_event may be NULL.
+ *
+ * Since: 0.10.3
+ */
+#define		gst_event_replace(old_event,new_event) \
+    gst_mini_object_replace ((GstMiniObject **)(old_event), GST_MINI_OBJECT (new_event))
+
+/**
  * GstSeekType:
  * @GST_SEEK_TYPE_NONE: no change in position is required
  * @GST_SEEK_TYPE_CUR: change relative to current position
