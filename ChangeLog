@@ -1,3 +1,17 @@
+2006-01-20  Martin Zlomek from Itonis (michael.benes@xeris.cz)
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	(gst_ffmpegdeinterlace_base_init),
+	(gst_ffmpegdeinterlace_class_init),
+	(gst_ffmpegdeinterlace_sink_setcaps), (gst_ffmpegdeinterlace_init),
+	(gst_ffmpegdeinterlace_chain), (gst_ffmpegdeinterlace_register):
+	ffdeinterlace port to 0.10.
+	Could be made a subclass of GstBaseTransform later on...
+
 2006-01-20  Michal Benes  <michael.benes@xeris.cz>
 
 	Reviewed by : Edward Hervey  <edward@fluendo.com>
