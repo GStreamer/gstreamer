@@ -1,3 +1,10 @@
+2006-01-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tools/gst-inspect.c: (print_element_features):
+	* tools/gst-xmlinspect.c: (main):
+	URL_HANDLER is not a plugin feature we can search for in
+	the registry.
+
 2006-01-19  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstelement.c: (gst_element_pads_activate): 

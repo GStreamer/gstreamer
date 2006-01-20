@@ -1031,14 +1031,6 @@ print_element_features (const gchar * element_name)
     n_print ("%s: a typefind function\n", element_name);
     return 0;
   }
-#ifndef GST_DISABLE_URI
-  feature = gst_default_registry_find_feature (element_name,
-      GST_TYPE_URI_HANDLER);
-  if (feature) {
-    n_print ("%s: an uri handler\n", element_name);
-    return 0;
-  }
-#endif
 
   return -1;
 }

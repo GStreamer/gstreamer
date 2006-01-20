@@ -825,14 +825,6 @@ main (int argc, char *argv[])
           g_print ("%s: a type find function\n", argv[1]);
           return 0;
         }
-#ifndef GST_DISABLE_URI
-        feature = gst_default_registry_find_feature (argv[1],
-            GST_TYPE_URI_HANDLER);
-        if (feature) {
-          g_print ("%s: an uri handler\n", argv[1]);
-          return 0;
-        }
-#endif
       }
     } else {
       /* strip the .so */
