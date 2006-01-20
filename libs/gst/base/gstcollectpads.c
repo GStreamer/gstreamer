@@ -589,6 +589,10 @@ gst_collect_pads_is_collected (GstCollectPads * pads, GstFlowReturn * ret)
         GST_DEBUG_FUNCPTR_NAME (pads->func));
     flow_ret = pads->func (pads, pads->user_data);
     res = TRUE;
+
+    /* Don't keep looping after telling the element EOS or flushing */
+    if (pads->queuedpads == 0)
+      break;
   }
 
 beach:

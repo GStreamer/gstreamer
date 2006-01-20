@@ -1,5 +1,12 @@
 2006-01-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_is_collected):
+	Don't loop infinitely if there are no buffers to present. Partially
+	fixes #327197, but collectpads is just broken for reusing elements
+	to do multiple encodes atm.
+
+2006-01-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* tools/gst-inspect.c: (print_element_features):
 	* tools/gst-xmlinspect.c: (main):
 	URL_HANDLER is not a plugin feature we can search for in
