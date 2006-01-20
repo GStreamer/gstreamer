@@ -53,11 +53,10 @@ GST_DEBUG_CATEGORY_STATIC (dvdnavsrc_debug);
 #define DVDNAV_RAWCALL(func, params, elem, action) \
   if (func params != DVDNAV_STATUS_OK) { \
     GST_ELEMENT_ERROR (elem, LIBRARY, FAILED, \
-                       (_("Error invoking \"%s\": %s."), \
-                        #func, dvdnav_err_to_string ((elem)->dvdnav)), \
-                       GST_ERROR_SYSTEM); \
-    action \
-  }
+                       (_("Library call failed.")), \
+                       ("Error invoking \"%s\": %s.", \
+                        #func, dvdnav_err_to_string ((elem)->dvdnav)));
+action}
 
 /* Call a dvdnav function and, it it fails, report an error and return
    from the current procedure. */
@@ -1527,7 +1526,7 @@ dvdnavsrc_open (DVDNavSrc * src)
   g_return_val_if_fail (src->location != NULL, FALSE);
 
   if (dvdnav_open (&src->dvdnav, (char *) src->location) != DVDNAV_STATUS_OK) {
-    GST_ELEMENT_ERROR (src, LIBRARY, FAILED,
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("Failed to open DVD device '%s'."), src->location),
         GST_ERROR_SYSTEM);
     return FALSE;

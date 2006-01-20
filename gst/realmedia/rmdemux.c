@@ -876,11 +876,9 @@ need_pause:
     gst_pad_pause_task (pad);
     if (GST_FLOW_IS_FATAL (ret)) {
       gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
-      /* FIXME: add translations */
       if (ret != GST_FLOW_UNEXPECTED) {
-        GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED,
-            (("Internal data stream error.")),
-            ("stream stopped, reason %d", ret));
+        GST_ELEMENT_ERROR (rmdemux, CORE, EVENT, (NULL),
+            ("gst_rmdemux_send_event() failed with return value %d", ret));
       }
     }
     return;

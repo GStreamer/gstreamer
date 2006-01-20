@@ -1,3 +1,14 @@
+2006-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/dvdnav/dvdnavsrc.c: (if):
+	* ext/dvdread/stream_labels.c:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_segment):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_loop):
+	  fix up error domains, error strings, and use of translation
+	* po/POTFILES.in:
+	  fix up this file, even though none of them are actually marked
+	  for build yet.
+
 2006-01-19  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/mpegstream/gstmpegparse.h (struct _GstMPEGParse): 

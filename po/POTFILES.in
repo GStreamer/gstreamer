@@ -1,1 +1,6 @@
-gst/realmedia/rmdemux.c
+# not activated yet:
+# ext/dvdread/stream_labels.c
+# ext/dvdnav/dvdnavsrc.c
+
+# not activated yet:
+# gst/asfdemux/gstasfdemux.c

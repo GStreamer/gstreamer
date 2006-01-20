@@ -23,7 +23,7 @@
 
 #include "dvdreadsrc.h"
 #include "stream_labels.h"
-#include "gst/gst-i18n-plugin.h"
+#include <gst/gst-i18n-plugin.h>
 
 GHashTable *
 dvdreadsrc_init_languagelist (void)

@@ -26,6 +26,8 @@
 #include <gst/riff/riff-media.h>
 #include <string.h>
 
+#include <gst/gst-i18n-plugin.h>
+
 #include "gstasfdemux.h"
 #include "asfheaders.h"
 
@@ -928,8 +930,8 @@ gst_asf_demux_process_segment (GstASFDemux * asf_demux,
       if (segment_info.chunk_size < frag_size)
         frag_size -= segment_info.chunk_size + 1;
       else {
-        GST_ELEMENT_ERROR (asf_demux, STREAM, TOO_LAZY,
-            ("Invalid data in stream"),
+        GST_ELEMENT_ERROR (asf_demux, STREAM, DEMUX,
+            (_("Invalid data in stream")),
             ("Invalid fragment size indicator in segment"));
         return FALSE;
       }
