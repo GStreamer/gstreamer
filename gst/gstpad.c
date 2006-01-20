@@ -1507,6 +1507,7 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 {
   GstCaps *srccaps;
   GstCaps *sinkcaps;
+  GstCaps *icaps;
 
   srccaps = gst_pad_get_caps_unlocked (src);
   sinkcaps = gst_pad_get_caps_unlocked (sink);
@@ -1516,24 +1517,25 @@ gst_pad_link_check_compatible_unlocked (GstPad * src, GstPad * sink)
 
   /* if we have caps on both pads we can check the intersection. If one
    * of the caps is NULL, we return TRUE. */
-  if (srccaps && sinkcaps) {
-    GstCaps *icaps;
+  if (srccaps == NULL || sinkcaps == NULL)
+    goto done;
 
-    icaps = gst_caps_intersect (srccaps, sinkcaps);
-    gst_caps_unref (srccaps);
-    gst_caps_unref (sinkcaps);
+  icaps = gst_caps_intersect (srccaps, sinkcaps);
+  gst_caps_unref (srccaps);
+  gst_caps_unref (sinkcaps);
 
-    if (icaps == NULL)
-      goto was_null;
+  if (icaps == NULL)
+    goto was_null;
 
-    GST_CAT_DEBUG (GST_CAT_CAPS,
-        "intersection caps %p %" GST_PTR_FORMAT, icaps, icaps);
+  GST_CAT_DEBUG (GST_CAT_CAPS,
+      "intersection caps %p %" GST_PTR_FORMAT, icaps, icaps);
 
-    if (gst_caps_is_empty (icaps))
-      goto was_empty;
+  if (gst_caps_is_empty (icaps))
+    goto was_empty;
 
-    gst_caps_unref (icaps);
-  }
+  gst_caps_unref (icaps);
+
+done:
   return TRUE;
 
   /* incompatible cases */

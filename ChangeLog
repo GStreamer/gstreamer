@@ -1,5 +1,10 @@
 2006-01-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_link_check_compatible_unlocked):
+	Make it actually compile too..
+
+2006-01-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstcaps.c:
 	Clarify behaviour of _is_equal() when passing NULL parameters.
 
