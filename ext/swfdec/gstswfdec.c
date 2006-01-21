@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) <2002,2003> David A. Schleef <ds@schleef.org>
+ * Copyright (C) 2002,2003,2006 David A. Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,6 +25,7 @@
 #include <string.h>
 #include <gst/video/video.h>
 #include <swfdec_buffer.h>
+#include <swfdec_decoder.h>
 
 GST_DEBUG_CATEGORY_STATIC (swfdec_debug);
 #define GST_CAT_DEFAULT swfdec_debug
@@ -39,7 +40,6 @@ GST_ELEMENT_DETAILS ("SWF video decoder",
 /* Swfdec signals and args */
 enum
 {
-  SIGNAL_EMBED_URL,
   /* FILL ME */
   LAST_SIGNAL
 };
@@ -114,7 +114,8 @@ static GstFlowReturn gst_swfdec_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_swfdec_render (GstSwfdec * swfdec, int ret);
 
 static GstElementClass *parent_class = NULL;
-static guint gst_swfdec_signals[LAST_SIGNAL];
+
+//static guint gst_swfdec_signals[LAST_SIGNAL];
 
 
 /* GstSwfdecBuffer */
@@ -241,12 +242,6 @@ gst_swfdec_class_init (GstSwfdecClass * klass)
 
   gstelement_class->change_state = gst_swfdec_change_state;
 
-  gst_swfdec_signals[SIGNAL_EMBED_URL] =
-      g_signal_new ("embed-url", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstSwfdecClass, embed_url), NULL, NULL,
-      g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
-
   GST_DEBUG_CATEGORY_INIT (swfdec_debug, "swfdec", 0, "Flash decoder plugin");
 
 }
@@ -364,10 +359,7 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
     GstCaps *caps;
     double rate;
 
-    /* Let's not depend on features that are only in CVS */
-#ifdef HAVE_SWFDEC_0_3_5
     GstTagList *taglist;
-#endif
 
     GST_DEBUG_OBJECT (swfdec, "SWF_CHANGE");
     gst_adapter_push (swfdec->adapter, buffer);
@@ -408,15 +400,11 @@ gst_swfdec_chain (GstPad * pad, GstBuffer * buffer)
     gst_caps_unref (caps);
 
 
-#ifdef HAVE_SWFDEC_0_3_5
     taglist = gst_tag_list_new ();
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_ENCODER_VERSION, swfdec_decoder_get_version (swfdec->decoder),
         NULL);
     gst_element_found_tags (GST_ELEMENT (swfdec), taglist);
-    gst_tag_list_free (taglist);
-#endif
-
   } else if (ret == SWF_EOF) {
     GST_DEBUG_OBJECT (swfdec, "SWF_EOF");
     gst_swfdec_render (swfdec, ret);
@@ -455,6 +443,13 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
         swfdec->button);
 
     ret = swfdec_render_iterate (swfdec->decoder);
+
+    if (swfdec->decoder->using_experimental) {
+      GST_ELEMENT_ERROR (swfdec, LIBRARY, FAILED,
+          ("SWF file contains features known to trigger bugs."),
+          ("SWF file contains features known to trigger bugs."));
+      gst_task_stop (swfdec->task);
+    }
 
     if (!ret) {
       gst_task_stop (swfdec->task);
@@ -525,8 +520,13 @@ gst_swfdec_render (GstSwfdec * swfdec, int ret)
 
     url = swfdec_decoder_get_url (swfdec->decoder);
     if (url) {
-      g_signal_emit (G_OBJECT (swfdec), gst_swfdec_signals[SIGNAL_EMBED_URL],
-          0, url);
+      GstStructure *s;
+      GstMessage *msg;
+
+      s = gst_structure_new ("embedded-url", "url", G_TYPE_STRING, url,
+          "target", G_TYPE_STRING, "_self", NULL);
+      msg = gst_message_new_element (GST_OBJECT (swfdec), s);
+      gst_element_post_message (GST_ELEMENT (swfdec), msg);
     }
   }
 }
@@ -730,6 +730,7 @@ gst_swfdec_src_event (GstPad * pad, GstEvent * event)
   swfdec = GST_SWFDEC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+#if 0
       /* the all-formats seek logic */
     case GST_EVENT_SEEK:
     {
@@ -769,6 +770,7 @@ gst_swfdec_src_event (GstPad * pad, GstEvent * event)
       res = TRUE;
       break;
     }
+#endif
     case GST_EVENT_NAVIGATION:
     {
       const GstStructure *structure = gst_event_get_structure (event);
@@ -899,12 +901,6 @@ gst_swfdec_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-void
-art_warn (const char *fmt, ...)
-{
-  GST_LOG ("caught art_warn");
-}
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -912,7 +908,7 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_SWFDEC);
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "swfdec",
     "Uses libswfdec to decode Flash video streams",

@@ -1,3 +1,8 @@
+2006-01-21  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* ext/swfdec/gstswfdec.c: Update from swfdec.
+
 2006-01-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak),
