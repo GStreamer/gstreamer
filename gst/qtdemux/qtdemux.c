@@ -167,8 +167,9 @@ static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GNode * esds);
 static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     const guint8 * stsd_data, const gchar ** codec_name);
-static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc,
-    const guint8 * data, int len, const gchar ** codec_name);
+static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
+    QtDemuxStream * stream, guint32 fourcc, const guint8 * data, int len,
+    const gchar ** codec_name);
 
 static GType
 gst_qtdemux_get_type (void)
@@ -2124,7 +2125,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GST_ERROR ("unknown version %08x", version);
     }
 
-    stream->caps = qtdemux_audio_caps (qtdemux, fourcc, NULL, 0, &codec);
+    stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc, NULL, 0,
+        &codec);
+
     if (codec) {
       list = gst_tag_list_new ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
@@ -2737,8 +2740,8 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
 }
 
 static GstCaps *
-qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data,
-    int len, const gchar ** codec_name)
+qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    guint32 fourcc, const guint8 * data, int len, const gchar ** codec_name)
 {
   switch (fourcc) {
 #if 0
@@ -2751,41 +2754,53 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, guint32 fourcc, const guint8 * data,
       return gst_caps_from_string ("audio/x-raw-int, "
           "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) false");
     case GST_MAKE_FOURCC ('t', 'w', 'o', 's'):
-      _codec ("Raw 16-bit PCM audio");
-      /* FIXME */
-      return gst_caps_from_string ("audio/x-raw-int, "
-          "width = (int) 16, "
-          "depth = (int) 16, "
-          "endianness = (int) BIG_ENDIAN, " "signed = (boolean) true");
+      if (stream->bytes_per_frame == 1) {
+        _codec ("Raw 8-bit PCM audio");
+        return gst_caps_from_string ("audio/x-raw-int, "
+            "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) true");
+      } else {
+        _codec ("Raw 16-bit PCM audio");
+        /* FIXME */
+        return gst_caps_from_string ("audio/x-raw-int, "
+            "width = (int) 16, "
+            "depth = (int) 16, "
+            "endianness = (int) BIG_ENDIAN, " "signed = (boolean) true");
+      }
     case GST_MAKE_FOURCC ('s', 'o', 'w', 't'):
-      _codec ("Raw 16-bit PCM audio");
-      /* FIXME */
-      return gst_caps_from_string ("audio/x-raw-int, "
-          "width = (int) 16, "
-          "depth = (int) 16, "
-          "endianness = (int) G_LITTLE_ENDIAN, " "signed = (boolean) true");
+      if (stream->bytes_per_frame == 1) {
+        _codec ("Raw 8-bit PCM audio");
+        return gst_caps_from_string ("audio/x-raw-int, "
+            "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) true");
+      } else {
+        _codec ("Raw 16-bit PCM audio");
+        /* FIXME */
+        return gst_caps_from_string ("audio/x-raw-int, "
+            "width = (int) 16, "
+            "depth = (int) 16, "
+            "endianness = (int) LITTLE_ENDIAN, " "signed = (boolean) true");
+      }
     case GST_MAKE_FOURCC ('f', 'l', '6', '4'):
       _codec ("Raw 64-bit floating-point audio");
       return gst_caps_from_string ("audio/x-raw-float, "
-          "width = (int) 64, " "endianness = (int) G_BIG_ENDIAN");
+          "width = (int) 64, " "endianness = (int) BIG_ENDIAN");
     case GST_MAKE_FOURCC ('f', 'l', '3', '2'):
       _codec ("Raw 32-bit floating-point audio");
       return gst_caps_from_string ("audio/x-raw-float, "
-          "width = (int) 32, " "endianness = (int) G_BIG_ENDIAN");
+          "width = (int) 32, " "endianness = (int) BIG_ENDIAN");
     case GST_MAKE_FOURCC ('i', 'n', '2', '4'):
       _codec ("Raw 24-bit PCM audio");
       /* FIXME */
       return gst_caps_from_string ("audio/x-raw-int, "
           "width = (int) 24, "
           "depth = (int) 32, "
-          "endianness = (int) G_BIG_ENDIAN, " "signed = (boolean) true");
+          "endianness = (int) BIG_ENDIAN, " "signed = (boolean) true");
     case GST_MAKE_FOURCC ('i', 'n', '3', '2'):
       _codec ("Raw 32-bit PCM audio");
       /* FIXME */
       return gst_caps_from_string ("audio/x-raw-int, "
           "width = (int) 32, "
           "depth = (int) 32, "
-          "endianness = (int) G_BIG_ENDIAN, " "signed = (boolean) true");
+          "endianness = (int) BIG_ENDIAN, " "signed = (boolean) true");
     case GST_MAKE_FOURCC ('u', 'l', 'a', 'w'):
       _codec ("Mu-law audio");
       /* FIXME */

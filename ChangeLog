@@ -1,3 +1,14 @@
+2006-01-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak),
+	(qtdemux_audio_caps):
+	  'twos' and 'sowt' fourcc can be 16bit or 8bit audio.
+	  Fix 8bit case (#327133, based on patch by: Fabrizio
+	  Gennari <fabrizio dot ge at tiscali dot it>).
+	  Also, "G_LITTLE_ENDIAN" and "G_BIG_ENDIAN" are not
+	  valid literals for endianness in caps strings,
+	  only "LITTLE_ENDIAN" and "BIG_ENDIAN" are valid. 
+
 2006-01-20  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/ivorbis/vorbisfile.c:
