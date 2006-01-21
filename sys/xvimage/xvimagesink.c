@@ -1804,10 +1804,85 @@ static GstFlowReturn
 gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   GstXvImageSink *xvimagesink;
   GstXvImageBuffer *xvimage = NULL;
+  GstCaps *intersection = NULL;
+  GstStructure *structure = NULL;
+  gint width, height, image_format;
 
   xvimagesink = GST_XVIMAGESINK (bsink);
+
+  GST_DEBUG_OBJECT (xvimagesink, "buffer alloc requested with caps %"
+      GST_PTR_FORMAT "intersecting with our caps %" GST_PTR_FORMAT, caps,
+      xvimagesink->xcontext->caps);
+
+  /* Check the caps against our xcontext */
+  intersection = gst_caps_intersect (xvimagesink->xcontext->caps, caps);
+  GST_DEBUG_OBJECT (xvimagesink, "intersection in buffer alloc returned %"
+      GST_PTR_FORMAT, intersection);
+
+  if (gst_caps_is_empty (intersection)) {
+    /* So we don't support this kind of buffer, let's define one we'd like */
+    GstCaps *new_caps = gst_caps_copy (caps);
+
+    structure = gst_caps_get_structure (new_caps, 0);
+
+    /* Try with YUV first */
+    gst_structure_set_name (structure, "video/x-raw-yuv");
+    gst_structure_remove_field (structure, "format");
+    gst_structure_remove_field (structure, "endianness");
+    gst_structure_remove_field (structure, "depth");
+    gst_structure_remove_field (structure, "bpp");
+    gst_structure_remove_field (structure, "red_mask");
+    gst_structure_remove_field (structure, "green_mask");
+    gst_structure_remove_field (structure, "blue_mask");
+    gst_structure_remove_field (structure, "alpha_mask");
+
+    /* Reuse intersection with Xcontext */
+    gst_caps_unref (intersection);
+    intersection = gst_caps_intersect (xvimagesink->xcontext->caps, new_caps);
+
+    if (gst_caps_is_empty (intersection)) {
+      /* Now try with RGB */
+      gst_structure_set_name (structure, "video/x-raw-rgb");
+      /* And interset again */
+      gst_caps_unref (intersection);
+      intersection = gst_caps_intersect (xvimagesink->xcontext->caps, new_caps);
+
+      if (gst_caps_is_empty (intersection)) {
+        GST_WARNING_OBJECT (xvimagesink, "we were requested a buffer with "
+            "caps %" GST_PTR_FORMAT "but our xcontext caps %" GST_PTR_FORMAT
+            "are completely incompatible with those caps", new_caps,
+            xvimagesink->xcontext->caps);
+        gst_caps_unref (new_caps);
+        ret = GST_FLOW_UNEXPECTED;
+        goto beach;
+      }
+    }
+
+    /* Clean this copy */
+    gst_caps_unref (new_caps);
+    /* We want fixed caps */
+    gst_caps_truncate (intersection);
+
+    GST_DEBUG_OBJECT (xvimagesink, "allocating a buffer with caps %"
+        GST_PTR_FORMAT, intersection);
+  }
+
+  /* Get image format from caps */
+  image_format = gst_xvimagesink_get_format_from_caps (xvimagesink,
+      intersection);
+
+  /* Get geometry from caps */
+  structure = gst_caps_get_structure (intersection, 0);
+  if (!gst_structure_get_int (structure, "width", &width) ||
+      !gst_structure_get_int (structure, "height", &height) || !image_format) {
+    GST_WARNING_OBJECT (xvimagesink, "invalid caps for buffer allocation %"
+        GST_PTR_FORMAT, intersection);
+    ret = GST_FLOW_UNEXPECTED;
+    goto beach;
+  }
 
   g_mutex_lock (xvimagesink->pool_lock);
 
@@ -1822,9 +1897,8 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
           xvimagesink->image_pool);
 
       /* We check for geometry or image format changes */
-      if ((xvimage->width != xvimagesink->video_width) ||
-          (xvimage->height != xvimagesink->video_height) ||
-          (xvimage->im_format != xvimagesink->xcontext->im_format)) {
+      if ((xvimage->width != width) ||
+          (xvimage->height != height) || (xvimage->im_format != image_format)) {
         /* This image is unusable. Destroying... */
         gst_xvimage_buffer_free (xvimage);
         xvimage = NULL;
@@ -1841,14 +1915,21 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   if (!xvimage) {
     /* We found no suitable image in the pool. Creating... */
     GST_DEBUG_OBJECT (xvimagesink, "no usable image in pool, creating xvimage");
-    xvimage = gst_xvimagesink_xvimage_new (xvimagesink, caps);
+    xvimage = gst_xvimagesink_xvimage_new (xvimagesink, intersection);
   }
+
   if (xvimage) {
-    gst_buffer_set_caps (GST_BUFFER (xvimage), caps);
+    gst_buffer_set_caps (GST_BUFFER (xvimage), intersection);
   }
+
   *buf = GST_BUFFER (xvimage);
 
-  return GST_FLOW_OK;
+beach:
+  if (intersection) {
+    gst_caps_unref (intersection);
+  }
+
+  return ret;
 }
 
 /* Interfaces stuff */
