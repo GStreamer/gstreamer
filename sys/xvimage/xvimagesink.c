@@ -223,6 +223,11 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
   if (xvimagesink->cur_image == xvimage)
     xvimagesink->cur_image = NULL;
 
+  /* We might have some buffers destroyed after changing state to NULL */
+  if (xvimagesink->xcontext) {
+    goto beach;
+  }
+
   g_mutex_lock (xvimagesink->x_lock);
 
 #ifdef HAVE_XSHM
@@ -251,6 +256,7 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
 
   g_mutex_unlock (xvimagesink->x_lock);
 
+beach:
   xvimage->xvimagesink = NULL;
   gst_object_unref (xvimagesink);
 

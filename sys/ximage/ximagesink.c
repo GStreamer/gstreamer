@@ -485,6 +485,11 @@ gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
     ximagesink->cur_image = NULL;
   }
 
+  /* We might have some buffers destroyed after changing state to NULL */
+  if (!ximagesink->xcontext) {
+    goto beach;
+  }
+
   g_mutex_lock (ximagesink->x_lock);
 
 #ifdef HAVE_XSHM
@@ -511,6 +516,7 @@ gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
 
   g_mutex_unlock (ximagesink->x_lock);
 
+beach:
   if (ximage->ximagesink) {
     /* Release the ref to our sink */
     ximage->ximagesink = NULL;
