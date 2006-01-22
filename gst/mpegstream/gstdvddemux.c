@@ -318,6 +318,8 @@ gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
         dvd_demux->segment_filter = TRUE;
       }
 
+      ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
+          event);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
@@ -374,23 +376,6 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     }
     gst_dvd_demux_set_cur_audio (dvd_demux, stream_nr);
     gst_event_unref (event);
-  } else if (strcmp (event_type, "dvd-audio-shutdown") == 0) {
-    /* Send an EOS down the audio path to effectively shut it down and
-       allow for preroll in the absence of audio material. */
-    gst_event_unref (event);
-    return gst_pad_push_event (dvd_demux->cur_audio, gst_event_new_eos ());
-  } else if (strcmp (event_type, "dvd-audio-restart") == 0) {
-    /* Restart the audio pipeline after an EOS by flushing it. */
-    gst_event_unref (event);
-    if (!gst_pad_push_event (dvd_demux->cur_audio,
-            gst_event_new_flush_start ())) {
-      return FALSE;
-    }
-    if (!gst_pad_push_event (dvd_demux->cur_audio, gst_event_new_flush_stop ())) {
-      return FALSE;
-    }
-    dvd_demux->segment_filter = TRUE;
-    return TRUE;
   } else if (strcmp (event_type, "dvd-spu-stream-change") == 0) {
     gint stream_nr;
 

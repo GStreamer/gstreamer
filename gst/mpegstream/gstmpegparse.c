@@ -375,8 +375,6 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
             "Updating current segment with newsegment");
         gst_segment_set_newsegment (&mpeg_parse->current_segment,
             update, rate, format, start, stop, time);
-        gst_segment_set_newsegment (&mpeg_parse->current_segment,
-            update, rate, format, start, stop, time);
 
         if (!update) {
           /* Send a newsegment event for the new current segment. */

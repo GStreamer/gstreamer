@@ -1,3 +1,13 @@
+2006-01-22  Martin Soto  <martinsoto@users.sourceforge.net>
+
+	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_process_event): 
+	Erase spurious call to gst_segment_set_newsegment.
+	* gst/mpegstream/gstdvddemux.c (gst_dvd_demux_process_event): Call
+	the superclass method when handling NEWSEGMENT events.
+	(gst_dvd_demux_handle_dvd_event): Get rid of dvd-audio-shutdown
+	and dvd-audio-restart event handling. There are currently less
+	hackish ways of handling the sparse audio stream problem.
+
 2006-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/dvdnav/dvdnavsrc.c: (if):
