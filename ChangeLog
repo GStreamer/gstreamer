@@ -1,3 +1,9 @@
+2006-01-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/interfaces/xoverlay.c:
+	  Fix prepare-xwindow-id code example in the docs - we need to
+	  ignore all messages that aren't element messages as well.
+	  
 2006-01-21  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_buffer_alloc):

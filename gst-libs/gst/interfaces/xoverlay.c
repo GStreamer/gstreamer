@@ -65,12 +65,13 @@
  * create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
  * {
  *  XGCValues values;
- *  const GstStructure *s;
  *  
- *  s = gst_message_get_structure (message);
- *  if (!gst_structure_has_name (s, "prepare-xwindow-id")) {
+ *  // ignore anything but 'prepare-xwindow-id' element messages
+ *  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
  *    return GST_BUS_PASS;
- *  }
+ *  
+ *  if (!gst_structure_has_name (message-&gt;structure, "prepare-xwindow-id"))
+ *    return GST_BUS_PASS;
  *  
  *  win = XCreateSimpleWindow (disp, root, 0, 0, 320, 240, 0, 0, 0);
  *  
