@@ -1,5 +1,12 @@
 2006-01-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/lame/gstlame.c: (add_one_tag):
+	  Fix handling of GST_TAG_DATE (#311679), don't pass an
+	  uninitialised string pointer to lame if we don't know
+	  how to handle the tag type, and fix minor memory leak.
+
+2006-01-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/mad/gstmad.c: (gst_mad_chain):
 	  Fix debug message.
 

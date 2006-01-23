@@ -580,7 +580,7 @@ static void
 add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 {
   GstLame *lame;
-  gchar *value;
+  gchar *value = NULL;
   int i = 0;
 
   lame = GST_LAME (user_data);
@@ -616,16 +616,29 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
         return;
       };
       break;
-    default:
-      GST_WARNING_OBJECT (lame, "Couldn't write tag %s", tag);
+    default:{
+      if (strcmp (tag, GST_TAG_DATE) == 0) {
+        GDate *date = NULL;
+
+        if (!gst_tag_list_get_date (list, tag, &date) || date == NULL) {
+          GST_WARNING_OBJECT (lame, "Error reading \"%s\" tag value", tag);
+        } else {
+          value = g_strdup_printf ("%u", g_date_get_year (date));
+          g_date_free (date);
+        }
+      } else {
+        GST_WARNING_OBJECT (lame, "Couldn't write tag %s", tag);
+      }
       break;
+    }
   }
 
-  tag_matches[i].tag_func (lame->lgf, value);
-
-  if (gst_tag_get_type (tag) == G_TYPE_UINT) {
-    g_free (value);
+  if (value != NULL && *value != '\0') {
+    GST_LOG_OBJECT (lame, "Adding tag %s:%s", tag, value);
+    tag_matches[i].tag_func (lame->lgf, value);
   }
+
+  g_free (value);
 }
 
 static void
