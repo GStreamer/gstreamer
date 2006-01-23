@@ -1,3 +1,9 @@
+2006-01-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3v2frames.c: (id3v2_tag_to_taglist):
+	  Remove errant break statement, and fix compilation with
+	  older GCC.
+
 2006-01-23  Brian Cameron  <brian dot cameron at sun dot com>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
