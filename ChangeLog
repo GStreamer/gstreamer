@@ -1,3 +1,13 @@
+2006-01-23  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak),
+	(qtdemux_video_caps), (qtdemux_audio_caps):
+	Added codec recognition for:
+	_ VP31 : video/x-vp3
+	_ AVDJ : image/jpeg
+	_ dvcp, dvc  : video/x-dv, systemstream=(boolean)false
+	_ 0x6d730017 : audio/x-adpcm, layout=(string)quicktime
+
 2006-01-21  David Schleef  <ds@schleef.org>
 
 	* configure.ac:

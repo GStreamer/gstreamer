@@ -2043,6 +2043,16 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             "codec_data", GST_TYPE_BUFFER, buf, NULL);
         gst_buffer_unref (buf);
       } else if (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4) ==
+          GST_MAKE_FOURCC ('V', 'P', '3', '1')) {
+        GstBuffer *buf;
+        gint len = QTDEMUX_GUINT32_GET (stsd->data);
+
+        buf = gst_buffer_new_and_alloc (len);
+        memcpy (GST_BUFFER_DATA (buf), stsd->data, len);
+        gst_caps_set_simple (stream->caps,
+            "codec_data", GST_TYPE_BUFFER, buf, NULL);
+        gst_buffer_unref (buf);
+      } else if (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4) ==
           GST_MAKE_FOURCC ('r', 'l', 'e', ' ')) {
         gst_caps_set_simple (stream->caps,
             "depth", G_TYPE_INT, QTDEMUX_GUINT16_GET (stsd->data + offset + 82),
@@ -2651,6 +2661,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       _codec ("JPEG still images");
       return gst_caps_from_string ("image/jpeg");
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'a'):
+    case GST_MAKE_FOURCC ('A', 'V', 'D', 'J'):
       _codec ("Motion-JPEG");
       return gst_caps_from_string ("image/jpeg");
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'b'):
@@ -2721,7 +2732,16 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     case GST_MAKE_FOURCC ('i', 'v', '3', '2'):
       _codec ("Indeo Video 3");
       return gst_caps_from_string ("video/x-indeo, indeoversion=(int)3");
+    case GST_MAKE_FOURCC ('d', 'v', 'c', 'p'):
+    case GST_MAKE_FOURCC ('d', 'v', 'c', ' '):
+      _codec ("DV Video");
+      return gst_caps_from_string ("video/x-dv, systemstream=(boolean)false");
     case GST_MAKE_FOURCC ('s', 'm', 'c', ' '):
+      _codec ("Apple Graphics (SMC)");
+      return gst_caps_from_string ("video/x-smc");
+    case GST_MAKE_FOURCC ('V', 'P', '3', '1'):
+      _codec ("VP3");
+      return gst_caps_from_string ("video/x-vp3");
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
 #if 0
@@ -2815,6 +2835,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       return gst_caps_from_string ("audio/x-adpcm, "
           "layout = (string) microsoft");
     case 0x6d730011:
+    case 0x6d730017:
       _codec ("DVI/Intel IMA ADPCM");
       /* FIXME DVI/Intel IMA ADPCM/ACM code 17 */
       return gst_caps_from_string ("audio/x-adpcm, "
