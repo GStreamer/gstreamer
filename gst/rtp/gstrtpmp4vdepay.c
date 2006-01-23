@@ -132,12 +132,11 @@ gst_rtp_mp4v_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstRtpMP4VDepay *rtpmp4vdepay;
   GstCaps *srccaps;
   const gchar *str;
+  gint clock_rate = 90000;      /* default */
 
   rtpmp4vdepay = GST_RTP_MP4V_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
-
-  gint clock_rate = 90000;      // default
 
   if (gst_structure_has_field (structure, "clock-rate")) {
     gst_structure_get_int (structure, "clock-rate", &clock_rate);

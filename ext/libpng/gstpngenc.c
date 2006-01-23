@@ -323,9 +323,11 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
     goto done;
 
   if (pngenc->snapshot) {
+    GstEvent *event;
+
     GST_DEBUG_OBJECT (pngenc, "snapshot mode, sending EOS");
     /* send EOS event, since a frame has been pushed out */
-    GstEvent *event = gst_event_new_eos ();
+    event = gst_event_new_eos ();
 
     ret = gst_pad_push_event (pngenc->srcpad, event);
 

@@ -2219,10 +2219,10 @@ swap_line (guint8 * d1, guint8 * d2, guint8 * tmp, gint bytes)
 static GstBuffer *
 gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
 {
-  buf = gst_buffer_make_writable (buf);
   gint y, h = stream->strf.vids->height, w = stream->strf.vids->width;
   guint8 *tmp = NULL;
 
+  buf = gst_buffer_make_writable (buf);
   if (GST_BUFFER_SIZE (buf) < (w * h)) {
     GST_WARNING ("Buffer is smaller than reported Width x Height");
     return buf;

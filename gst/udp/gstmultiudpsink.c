@@ -462,9 +462,9 @@ gst_multiudpsink_get_stats (GstMultiUDPSink * sink, const gchar * host,
   find = g_list_find_custom (sink->clients, &udpclient,
       (GCompareFunc) client_compare);
   if (find) {
-    client = (GstUDPClient *) find->data;
-
     GValue value = { 0 };
+
+    client = (GstUDPClient *) find->data;
 
     /* Result is a value array of (bytes_sent, packets_sent, 
      * connect_time, disconnect_time), all as uint64 */

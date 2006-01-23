@@ -187,6 +187,8 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   guint8 *data;
   GstNetBuffer *netbuf;
   struct sockaddr_in theiraddr;
+  guint16 destport;
+  guint32 destaddr;
 
   memset (&theiraddr, 0, sizeof (theiraddr));
 
@@ -203,8 +205,6 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   data = GST_BUFFER_DATA (netbuf);
 
   GST_DEBUG ("about to send %d bytes", size);
-  guint16 destport;
-  guint32 destaddr;
 
   // let's get the address from the netbuffer
   gst_netaddress_get_ip4_address (&netbuf->to, &destaddr, &destport);

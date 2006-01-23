@@ -52,7 +52,7 @@ typedef struct {
   gchar *start;
   gchar *stop;
   gint   n_repeat;
-  gchar *repeat[];
+  gchar **repeat;
 } SDPTime;
 
 typedef struct {

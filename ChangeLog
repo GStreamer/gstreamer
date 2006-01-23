@@ -1,3 +1,15 @@
+2006-01-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/libpng/gstpngenc.c: (gst_pngenc_chain):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_invert):
+	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_setcaps):
+	* gst/rtsp/sdpmessage.h:
+	* gst/udp/gstdynudpsink.c: (gst_dynudpsink_render):
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_get_stats):
+	  C89 fixes: declare variables at the beginning of a block and
+	  make gcc-2.9x happy (#328264; patch by: Jens Granseuer
+	  <jensgr at gmx dot net>).
+
 2006-01-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3tags.c: (id3demux_read_id3v2_tag):
