@@ -132,7 +132,7 @@ gst_sunaudiomixer_ctrl_list_tracks (GstSunAudioMixerCtrl * mixer)
   return (const GList *) mixer->tracklist;
 }
 
-static void
+void
 gst_sunaudiomixer_ctrl_get_volume (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gint * volumes)
 {
@@ -199,7 +199,7 @@ gst_sunaudiomixer_ctrl_set_volume (GstSunAudioMixerCtrl * mixer,
   sunaudiotrack->vol = volume;
 }
 
-static void
+void
 gst_sunaudiomixer_ctrl_set_mute (GstSunAudioMixerCtrl * sunaudio,
     GstMixerTrack * track, gboolean mute)
 {
@@ -239,7 +239,7 @@ gst_sunaudiomixer_ctrl_set_mute (GstSunAudioMixerCtrl * sunaudio,
   }
 }
 
-static void
+void
 gst_sunaudiomixer_ctrl_set_record (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gboolean record)
 {

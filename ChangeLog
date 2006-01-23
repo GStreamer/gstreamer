@@ -1,3 +1,14 @@
+2006-01-23  Brian Cameron  <brian dot cameron at sun dot com>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_init):
+	  Export functions that are needed in other parts of the code,
+	  makes the mixer actually work; adjust magic minimum buffer-time
+	  value from 3ms to 5ms to work around stuttering during mp3
+	  playback (#327765).
+
 2006-01-23  Michal Benes  <michal dot benes at xeris dot cz>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>

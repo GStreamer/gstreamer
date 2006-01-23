@@ -192,8 +192,8 @@ gst_sunaudiosink_init (GstSunAudioSink * sunaudiosink)
   sunaudiosink->buffer_size = 8180;
 
   /*
-   * Reset the buffer-time to 3ms instead of the normal default of 500us
-   * (6 times larger, in other words).  
+   * Reset the buffer-time to 5ms instead of the normal default of 500us
+   * (10 times larger, in other words).  
    *
    * Setting a larger buffer causes the sinesrc to not stutter with this
    * sink.  The fact that SunAudio requires a larger buffer should be
@@ -204,8 +204,8 @@ gst_sunaudiosink_init (GstSunAudioSink * sunaudiosink)
   g_value_init (&gvalue, G_TYPE_INT64);
   g_object_get_property (G_OBJECT (sunaudiosink), "buffer-time", &gvalue);
   buffer_time = g_value_get_int64 (&gvalue);
-  if (buffer_time < 3000000) {
-    g_value_set_int64 (&gvalue, 3000000);
+  if (buffer_time < 5000000) {
+    g_value_set_int64 (&gvalue, 5000000);
     g_object_set_property (G_OBJECT (sunaudiosink), "buffer-time", &gvalue);
   }
 
