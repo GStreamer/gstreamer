@@ -528,10 +528,13 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = GST_FF_VID_CAPS_NEW ("image/png", NULL);
       break;
 
+    case CODEC_ID_SMC:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-smc", NULL);
+      break;
+
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
     case CODEC_ID_8BPS:
-    case CODEC_ID_SMC:
     case CODEC_ID_FLIC:
     case CODEC_ID_VMDVIDEO:
     case CODEC_ID_VMDAUDIO:

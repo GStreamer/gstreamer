@@ -1,3 +1,11 @@
+2006-01-23  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	Added CODEC_ID_SMC <==> video/x-smc   caps
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
+	I hate ffmpeg... no keyframe information at all for VP3, so we have
+	to assume they're all keyframes :(
+
 2006-01-20  Martin Zlomek from Itonis (michael.benes@xeris.cz)
 
 	reviewed by: Edward Hervey  <edward@fluendo.com>

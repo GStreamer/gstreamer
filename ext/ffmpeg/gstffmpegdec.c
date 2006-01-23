@@ -821,7 +821,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       iskeyframe = ( is_itype || is_reference ) 
 	|| (oclass->in_plugin->id == CODEC_ID_INDEO3)
 	|| (oclass->in_plugin->id == CODEC_ID_MSZH)
-	|| (oclass->in_plugin->id == CODEC_ID_ZLIB);
+	|| (oclass->in_plugin->id == CODEC_ID_ZLIB)
+	|| (oclass->in_plugin->id == CODEC_ID_VP3);
       GST_DEBUG_OBJECT (ffmpegdec,
 			"Decoded video: len=%d, have_data=%d, is_keyframe:%d, is_itype:%d, is_reference:%d",
 			len, have_data, iskeyframe, is_itype, is_reference);
