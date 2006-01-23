@@ -1,6 +1,11 @@
 2006-01-23  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/vs7:
+	  Add new vs7 project files and solution.
+
+2006-01-23  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/vs7:
 	  all files removed as they were out-dated.
 
 2006-01-20  Thomas Vander Stichele  <thomas at apestaart dot org>
