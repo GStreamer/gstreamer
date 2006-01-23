@@ -72,6 +72,9 @@ typedef struct {
   
   guint8 *parse_data;
   guint parse_size;
+  
+  /* Previous genre string, for simple duplicate removal */
+  gchar *prev_genre;
 } ID3TagsWorking;
 
 enum {
