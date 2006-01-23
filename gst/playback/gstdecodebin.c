@@ -62,6 +62,8 @@ struct _GstDecodeBin
 
   GList *queues;                /* list of demuxer-decoder queues */
 
+  GList *probes;                /* list of PadProbeData */
+
   GList *factories;             /* factories we can use for selecting elements */
   gint numpads;
   gint numwaiting;
@@ -94,6 +96,14 @@ enum
   SIGNAL_REDIRECT,
   LAST_SIGNAL
 };
+
+
+typedef struct
+{
+  GstPad *pad;
+  gulong sigid;
+  gboolean done;
+} PadProbeData;
 
 /* this structure is created for all dynamic pads that could get created
  * at runtime */
@@ -336,6 +346,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
 
   decode_bin->dynamics = NULL;
   decode_bin->queues = NULL;
+  decode_bin->probes = NULL;
 }
 
 static void dynamic_free (GstDynamic * dyn);
@@ -464,6 +475,22 @@ mimetype_is_raw (const gchar * mimetype)
 }
 
 static void
+free_pad_probes (GstDecodeBin * decode_bin)
+{
+  GList *tmp;
+
+  /* Remove pad probes */
+  for (tmp = decode_bin->probes; tmp; tmp = g_list_next (tmp)) {
+    PadProbeData *data = (PadProbeData *) tmp->data;
+
+    gst_pad_remove_data_probe (data->pad, data->sigid);
+    g_free (data);
+  }
+  g_list_free (decode_bin->probes);
+  decode_bin->probes = NULL;
+}
+
+static void
 remove_fakesink (GstDecodeBin * decode_bin)
 {
   if (decode_bin->fakesink) {
@@ -477,22 +504,33 @@ remove_fakesink (GstDecodeBin * decode_bin)
     gst_object_unref (decode_bin->fakesink);
     decode_bin->fakesink = NULL;
 
+    free_pad_probes (decode_bin);
+
     gst_element_post_message (GST_ELEMENT_CAST (decode_bin),
         gst_message_new_state_dirty (GST_OBJECT_CAST (decode_bin)));
   }
 }
 
-static void
-pad_blocked (GstPad * pad, gboolean blocked, GstDecodeBin * decode_bin)
+static gboolean
+pad_probe (GstPad * pad, GstMiniObject * data, GstDecodeBin * decode_bin)
 {
-  if (blocked) {
-    decode_bin->numwaiting--;
-    if (decode_bin->numwaiting == 0) {
-      remove_fakesink (decode_bin);
-    }
-    gst_pad_set_blocked_async (pad, FALSE, (GstPadBlockCallback) pad_blocked,
-        NULL);
+  GList *tmp;
+  gboolean alldone = TRUE;
+
+  for (tmp = decode_bin->probes; tmp; tmp = g_list_next (tmp)) {
+    PadProbeData *pdata = (PadProbeData *) tmp->data;
+
+    if (pdata->pad == pad) {
+      if (GST_IS_BUFFER (data))
+        pdata->done = TRUE;
+      else if (GST_IS_EVENT (data) && (GST_EVENT_TYPE (data) == GST_EVENT_EOS))
+        pdata->done = TRUE;
+    } else if (!(pdata->done))
+      alldone = FALSE;
   }
+  if (alldone)
+    remove_fakesink (decode_bin);
+  return TRUE;
 }
 
 /* given a pad and a caps from an element, find the list of elements
@@ -544,6 +582,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
   if (mimetype_is_raw (mimetype)) {
     gchar *padname;
     GstPad *ghost;
+    PadProbeData *data;
 
     /* make a unique name for this new pad */
     padname = g_strdup_printf ("src%d", decode_bin->numpads);
@@ -553,10 +592,15 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     ghost = gst_ghost_pad_new (padname, pad);
     gst_element_add_pad (GST_ELEMENT (decode_bin), ghost);
 
-    if (gst_pad_set_blocked_async (pad, TRUE, (GstPadBlockCallback) pad_blocked,
-            decode_bin)) {
-      decode_bin->numwaiting++;
-    }
+    data = g_new0 (PadProbeData, 1);
+    data->pad = pad;
+    data->done = FALSE;
+
+    data->sigid = gst_pad_add_data_probe (pad, G_CALLBACK (pad_probe),
+        decode_bin);
+    decode_bin->numwaiting++;
+
+    decode_bin->probes = g_list_append (decode_bin->probes, data);
 
     GST_LOG_OBJECT (element, "closed pad %s", padname);
 
@@ -1279,6 +1323,7 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       free_dynamics (decode_bin);
+      free_pad_probes (decode_bin);
       break;
     default:
       break;

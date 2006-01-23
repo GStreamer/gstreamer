@@ -1,3 +1,13 @@
+2006-01-23  Edward Hervey  <edward@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
+	(free_pad_probes), (remove_fakesink), (pad_probe),
+	(close_pad_link), (gst_decode_bin_change_state):
+	Replace GstPadBlockCallback with pad probes that detect
+	first buffer AND eos before removing fakesink.
+	Fixes hang with demuxers doing EOS while pre-rolling.
+	Solves #328279
+
 2006-01-23  Andy Wingo  <wingo@pobox.com>
 
 	* ext/alsa/gstalsasink.c:
