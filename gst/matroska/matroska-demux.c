@@ -3034,6 +3034,25 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     }
     if (codec_name)
       *codec_name = g_strdup ("H264");
+  } else if ((!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO1)) ||
+      (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO2)) ||
+      (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO3)) ||
+      (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO4))) {
+    gint rmversion = -1;
+
+    if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO1))
+      rmversion = 1;
+    else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO2))
+      rmversion = 2;
+    else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO3))
+      rmversion = 3;
+    else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO4))
+      rmversion = 4;
+
+    caps = gst_caps_new_simple ("video/x-pn-realvideo",
+        "rmversion", G_TYPE_INT, rmversion, NULL);
+    if (codec_name)
+      *codec_name = g_strdup_printf ("RealVideo %d.0", rmversion);
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps", codec_id);
     return NULL;
@@ -3327,6 +3346,33 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     }
     if (codec_name)
       *codec_name = g_strdup ("Wavpack audio");
+  } else if ((!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4)) ||
+      (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4)) ||
+      (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK))) {
+    gint raversion = -1;
+
+    if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4))
+      raversion = 1;
+    else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK))
+      raversion = 8;
+    else
+      raversion = 2;
+    caps = gst_caps_new_simple ("audio/x-pn-realaudio",
+        "raversion", G_TYPE_INT, raversion, NULL);
+    if (codec_name)
+      *codec_name = g_strdup_printf ("RealAudio %d.0", raversion);
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_SIPR)) {
+    caps = gst_caps_new_simple ("audio/x-sipro", NULL);
+    if (codec_name)
+      *codec_name = g_strdup ("Sipro/ACELP.NET Voice Codec");
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_RALF)) {
+    caps = gst_caps_new_simple ("audio/x-ralf-mpeg4-generic", NULL);
+    if (codec_name)
+      *codec_name = g_strdup ("Real Audio Lossless");
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_REAL_ATRC)) {
+    caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
+    if (codec_name)
+      *codec_name = g_strdup ("Sony ATRAC3");
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps", codec_id);
     return NULL;
@@ -3431,7 +3477,11 @@ gst_matroska_demux_plugin_init (GstPlugin * plugin)
     GST_MATROSKA_CODEC_ID_VIDEO_MPEG1,
     GST_MATROSKA_CODEC_ID_VIDEO_MPEG2,
     GST_MATROSKA_CODEC_ID_VIDEO_MJPEG,
-    /* TODO: Real/Quicktime */
+    GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO1,
+    GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO2,
+    GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO3,
+    GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO4,
+    /* TODO: Quicktime */
     /* FILLME */
     NULL
   };
@@ -3448,7 +3498,13 @@ gst_matroska_demux_plugin_init (GstPlugin * plugin)
     GST_MATROSKA_CODEC_ID_AUDIO_TTA,
     GST_MATROSKA_CODEC_ID_AUDIO_MPEG2, GST_MATROSKA_CODEC_ID_AUDIO_MPEG4,
     GST_MATROSKA_CODEC_ID_AUDIO_WAVPACK4,
-    /* TODO: AC3-9/10, Real, Musepack, Quicktime */
+    GST_MATROSKA_CODEC_ID_AUDIO_REAL_14_4,
+    GST_MATROSKA_CODEC_ID_AUDIO_REAL_28_8,
+    GST_MATROSKA_CODEC_ID_AUDIO_REAL_COOK,
+    GST_MATROSKA_CODEC_ID_AUDIO_REAL_SIPR,
+    GST_MATROSKA_CODEC_ID_AUDIO_REAL_RALF,
+    GST_MATROSKA_CODEC_ID_AUDIO_REAL_ATRC,
+    /* TODO: AC3-9/10, Musepack, Quicktime */
     /* FILLME */
     NULL
   };
