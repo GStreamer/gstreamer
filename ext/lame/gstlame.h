@@ -98,6 +98,8 @@ struct _GstLame {
 
   GstTagList *tags;
 
+  GSList *tag_strings;
+
   /* time tracker */
   guint64 last_ts, last_offs, last_duration;
 };
