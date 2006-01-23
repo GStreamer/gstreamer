@@ -1,3 +1,13 @@
+2006-01-23  Andy Wingo  <wingo@pobox.com>
+
+	* ext/alsa/gstalsasink.c:
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_setcaps),
+	(gst_base_rtp_depayload_add_to_queue),
+	(gst_base_rtp_depayload_queue_release): GCC 2.95 fixes (#328263).
+	
+	Patch by: Jens Granseuer <jensgr at gmx dot net>
+
 2006-01-22  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_destroy):

@@ -173,12 +173,13 @@ static gboolean
 gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseRTPDepayload *filter;
+  GstBaseRTPDepayloadClass *bclass;
 
   filter = GST_BASE_RTP_DEPAYLOAD (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, FALSE);
   g_return_val_if_fail (GST_IS_BASE_RTP_DEPAYLOAD (filter), FALSE);
 
-  GstBaseRTPDepayloadClass *bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+  bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
   if (bclass->set_caps)
     return bclass->set_caps (filter, caps);
@@ -241,6 +242,7 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
     GstBuffer * in)
 {
   GQueue *queue = filter->queue;
+  int i;
 
   /* our first packet, just push it */
   QUEUE_LOCK (filter);
@@ -255,7 +257,7 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
     queueseq = gst_rtp_buffer_get_seq (GST_BUFFER (g_queue_peek_head (queue)));
 
     /* look for right place to insert it */
-    int i = 0;
+    i = 0;
 
     while (seqnum > queueseq) {
       gpointer data;
@@ -350,6 +352,8 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
   GQueue *queue = filter->queue;
   guint32 headts, tailts;
   GstBaseRTPDepayloadClass *bclass;
+  gfloat q_size_secs;
+  guint maxtsunits;
 
   if (g_queue_is_empty (queue))
     return;
@@ -359,8 +363,8 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
    */
   GST_DEBUG_OBJECT (filter, "clockrate %d, queue_delay %d", filter->clock_rate,
       filter->queue_delay);
-  gfloat q_size_secs = (gfloat) filter->queue_delay / 1000;
-  guint maxtsunits = (gfloat) filter->clock_rate * q_size_secs;
+  q_size_secs = (gfloat) filter->queue_delay / 1000;
+  maxtsunits = (gfloat) filter->clock_rate * q_size_secs;
 
   QUEUE_LOCK (filter);
   headts =

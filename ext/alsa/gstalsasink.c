@@ -74,16 +74,18 @@ enum
   LAST_SIGNAL
 };
 
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+# define ALSA_SINK_FACTORY_ENDIANNESS	"LITTLE_ENDIAN, BIG_ENDIAN"
+#else
+# define ALSA_SINK_FACTORY_ENDIANNESS	"BIG_ENDIAN, LITTLE_ENDIAN"
+#endif
+
 static GstStaticPadTemplate alsasink_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-        "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
-#else
-        "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
-#endif
+        "endianness = (int) { " ALSA_SINK_FACTORY_ENDIANNESS " }, "
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 16, "
         "depth = (int) 16, "
