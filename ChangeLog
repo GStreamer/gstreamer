@@ -1,3 +1,11 @@
+2006-01-23  Michal Benes  <michal dot benes at xeris dot cz>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_best_pad),
+	(gst_matroska_mux_write_data), (gst_matroska_mux_collected):
+	  Fix possible deadlock in matroska muxer (#327825).
+
 2006-01-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/libpng/gstpngenc.c: (gst_pngenc_chain):
