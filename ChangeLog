@@ -1,5 +1,16 @@
 2006-01-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/lame/gstlame.c: (gst_lame_finalize), (gst_lame_class_init),
+	(gst_lame_init), (add_one_tag), (gst_lame_set_metadata):
+	* ext/lame/gstlame.h:
+	  Contrary to what the const char in the lame API might suggest,
+	  lame expects us to keep the strings we pass to id3tag_set_foo()
+	  around; it doesn't free them either though, so we have to store
+	  them somewhere and free them later when we can be sure lame
+	  doesn't need them any longer.
+
+2006-01-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/lame/gstlame.c: (add_one_tag):
 	  Fix handling of GST_TAG_DATE (#311679), don't pass an
 	  uninitialised string pointer to lame if we don't know

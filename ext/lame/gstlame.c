@@ -276,6 +276,18 @@ gst_lame_get_type (void)
 }
 
 static void
+gst_lame_finalize (GObject * obj)
+{
+  GstLame *lame = GST_LAME (obj);
+
+  g_slist_foreach (lame->tag_strings, (GFunc) g_free, NULL);
+  g_slist_free (lame->tag_strings);
+  lame->tag_strings = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+static void
 gst_lame_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -300,6 +312,7 @@ gst_lame_class_init (GstLameClass * klass)
 
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
+  gobject_class->finalize = gst_lame_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate (kb/s)", "Bitrate in kbit/sec",
@@ -552,6 +565,7 @@ gst_lame_init (GstLame * lame)
   lame->preset = 0;
   lame_close (lame->lgf);
   lame->lgf = NULL;
+  lame->tag_strings = NULL;
 
   GST_DEBUG_OBJECT (lame, "done initializing");
 }
@@ -638,7 +652,10 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
     tag_matches[i].tag_func (lame->lgf, value);
   }
 
-  g_free (value);
+  /* lame does not copy strings passed to it and expects them
+   * to be around later, but it does not free them for us either,
+   * so we just add them to a list and free it later when it's safe */
+  lame->tag_strings = g_slist_prepend (lame->tag_strings, value);
 }
 
 static void
@@ -650,11 +667,19 @@ gst_lame_set_metadata (GstLame * lame)
   g_return_if_fail (lame != NULL);
 
   user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (lame));
+
+  GST_DEBUG_OBJECT (lame, "lame->tags  = %" GST_PTR_FORMAT, lame->tags);
+  GST_DEBUG_OBJECT (lame, "user tags   = %" GST_PTR_FORMAT, user_tags);
+
   if ((lame->tags == NULL) && (user_tags == NULL)) {
     return;
   }
+
   copy = gst_tag_list_merge (user_tags, lame->tags,
       gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (lame)));
+
+  GST_DEBUG_OBJECT (lame, "merged tags = %" GST_PTR_FORMAT, copy);
+
   gst_tag_list_foreach ((GstTagList *) copy, add_one_tag, lame);
 
   gst_tag_list_free (copy);
