@@ -299,7 +299,10 @@ id3v2_tag_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
 
     default:{
       gchar *tmp = NULL;
+      GValue src = { 0, };
+      GValue dest = { 0, };
 
+      /* Ensure that any date string is complete */
       if (tag_type == GST_TYPE_DATE) {
         guint year = 1901, month = 1, day = 1;
 
@@ -310,13 +313,9 @@ id3v2_tag_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
 
         tmp = g_strdup_printf ("%04u-%02u-%02u", year, month, day);
         tag_str = tmp;
-        break;
       }
 
       /* handles anything else */
-      GValue src = { 0, };
-      GValue dest = { 0, };
-
       g_value_init (&src, G_TYPE_STRING);
       g_value_set_string (&src, (const gchar *) tag_str);
       g_value_init (&dest, tag_type);
