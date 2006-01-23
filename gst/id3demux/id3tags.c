@@ -198,6 +198,9 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
       *tags = work.tags;
   }
 
+  if (work.prev_genre)
+    g_free (work.prev_genre);
+
   return result;
 }
 
