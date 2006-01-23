@@ -1369,7 +1369,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
        * some weird decoding errors... */
       GST_LOG ("decoding the header now");
       if (mad_header_decode (&mad->frame.header, &mad->stream) == -1) {
-        GST_WARNING ("mad_frame_decode had an error: %s",
+        GST_WARNING ("mad_header_decode had an error: %s",
             mad_stream_errorstr (&mad->stream));
       }
 

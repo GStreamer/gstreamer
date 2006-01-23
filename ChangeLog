@@ -1,3 +1,8 @@
+2006-01-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	  Fix debug message.
+
 2006-01-22  Martin Soto  <martinsoto@users.sourceforge.net>
 
 	* gst/mpegstream/gstmpegparse.c (gst_mpeg_parse_process_event): 
