@@ -1,3 +1,8 @@
+2006-01-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/examples/seek/seek.c: (main):
+	  Output tag messages as well.
+
 2006-01-23  Edward Hervey  <edward@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
