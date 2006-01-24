@@ -21,7 +21,6 @@
 #define __GST_MUSEPACK_READER_H__
 
 #include <mpcdec/mpcdec.h>
-//#include <gst/bytestream/bytestream.h>
 #include "gstmusepackdec.h"
 
 void gst_musepack_init_reader (mpc_reader * r, GstMusepackDec * musepackdec);

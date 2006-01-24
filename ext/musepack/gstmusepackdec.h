@@ -21,9 +21,7 @@
 #define __GST_MUSEPACK_DEC_H__
 
 #include <gst/gst.h>
-//#include <gst/bytestream/bytestream.h>
 #include <mpcdec/mpcdec.h>
-//#include "gstmusepackreader.h"
 
 G_BEGIN_DECLS
 
@@ -37,7 +35,7 @@ G_BEGIN_DECLS
                             GstMusepackDecClass))
 #define GST_IS_MUSEPACK_DEC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MUSEPACK_DEC))
-#define GST_IS_MUSEPACK_DEC_CLASS(obj) \
+#define GST_IS_MUSEPACK_DEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MUSEPACK_DEC))
 
 typedef struct _GstMusepackDec {
@@ -45,7 +43,6 @@ typedef struct _GstMusepackDec {
 
   /* pads */
   GstPad *srcpad, *sinkpad;
-  //  GstByteStream *bs;
   guint64 offset;
 
   /* MUSEPACK_DEC object */
@@ -53,15 +50,12 @@ typedef struct _GstMusepackDec {
   mpc_reader *r;
   gboolean init;
 
-  /* bytes-per-sample */
-  int bps, rate;
+  /* bytes per sample and sample rate */
+  guint       bps;
+  guint       rate;
 
-  /* position and length, in samples */
-  guint64 pos, len;
-
-  /* seeks */
-  gdouble flush_pending, seek_pending, eos;
-  guint64 seek_time;
+  /* currently configured segment, in samples (DEFAULT format) */
+  GstSegment  segment;
 } GstMusepackDec;
 
 typedef struct _GstMusepackDecClass {
@@ -69,10 +63,6 @@ typedef struct _GstMusepackDecClass {
 } GstMusepackDecClass;
 
 GType gst_musepackdec_get_type (void);
-
-extern gboolean gst_musepackdec_src_convert (GstPad * pad,
-                                             GstFormat src_format,
-                                             gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
 
 G_END_DECLS
 

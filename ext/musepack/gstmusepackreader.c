@@ -26,72 +26,48 @@
 
 #include "gstmusepackreader.h"
 
+GST_DEBUG_CATEGORY_EXTERN (musepackdec_debug);
+#define GST_CAT_DEFAULT musepackdec_debug
+
+static mpc_int32_t gst_musepack_reader_peek (void *this, void *ptr,
+    mpc_int32_t size);
+static mpc_int32_t gst_musepack_reader_read (void *this, void *ptr,
+    mpc_int32_t size);
+static mpc_bool_t gst_musepack_reader_seek (void *this, mpc_int32_t offset);
+static mpc_int32_t gst_musepack_reader_tell (void *this);
+static mpc_int32_t gst_musepack_reader_get_size (void *this);
+static mpc_bool_t gst_musepack_reader_canseek (void *this);
+
 static mpc_int32_t
 gst_musepack_reader_peek (void *this, void *ptr, mpc_int32_t size)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this);
+  GstFlowReturn flow_ret;
   GstBuffer *buf = NULL;
-  gint read;
+  guint read;
 
-  if (musepackdec->eos) {
+  g_return_val_if_fail (size > 0, 0);
+
+  /* GST_LOG_OBJECT (musepackdec, "size=%d", size); */
+
+  flow_ret = gst_pad_pull_range (musepackdec->sinkpad, musepackdec->offset,
+      size, &buf);
+
+  if (flow_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (musepackdec, "Flow: %s", gst_flow_get_name (flow_ret));
     return 0;
   }
 
-  do {
-    if (GST_FLOW_OK != gst_pad_pull_range (musepackdec->sinkpad,
-            musepackdec->offset, size, &buf)) {
-      return 0;
-    }
+  read = MIN (GST_BUFFER_SIZE (buf), size);
 
-    read = GST_BUFFER_SIZE (buf);
-
-    if (musepackdec->eos ||
-        musepackdec->flush_pending || musepackdec->seek_pending) {
-      break;
-    }
-
-
-    /* FIX ME: do i have to handle those event in sink_event? */
-    /* we pipeline doesnt stop after receive EOS */
-    /*
-
-       if (read != size) {
-       GstEvent *event;
-       guint32 remaining;
-
-       gst_bytestream_get_status (bs, &remaining, &event);
-       if (!event) {
-       GST_ELEMENT_ERROR (gst_pad_get_parent (bs->pad),
-       RESOURCE, READ, (NULL), (NULL));
-       goto done;
-       }
-
-       switch (GST_EVENT_TYPE (event)) {
-       case GST_EVENT_INTERRUPT:
-       gst_event_unref (event);
-       goto done;
-       case GST_EVENT_EOS:
-       gst_event_unref (event);
-       goto done;
-       case GST_EVENT_FLUSH:
-       gst_event_unref (event);
-       break;
-       case GST_EVENT_DISCONTINUOUS:
-       gst_event_unref (event);
-       break;
-       default:
-       gst_pad_event_default (bs->pad, event);
-       break;
-       }
-       }
-     */
-  } while (read != size);
-
-  if (read != 0) {
-    memcpy (ptr, GST_BUFFER_DATA (buf), read);
+  if (read < size) {
+    GST_WARNING_OBJECT (musepackdec, "Short read: got only %u bytes of %u "
+        "bytes requested", read, size);
+    /* GST_ELEMENT_ERROR (musepackdec, RESOURCE, READ, (NULL), (NULL)); */
   }
-  gst_buffer_unref (buf);
 
+  memcpy (ptr, GST_BUFFER_DATA (buf), read);
+  gst_buffer_unref (buf);
   return read;
 }
 
@@ -113,83 +89,44 @@ static mpc_bool_t
 gst_musepack_reader_seek (void *this, mpc_int32_t offset)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this);
-  guint8 dummy;
+  mpc_int32_t length;
 
-  /* hacky hack - if we're after typefind, we'll fail because
-   * typefind is still typefinding (heh :) ). So read first. */
-  gst_musepack_reader_peek (this, &dummy, 1);
-
-  /* seek */
-  musepackdec->offset = offset;
-
-  /* get discont */
-  if (gst_musepack_reader_peek (this, &dummy, 1) != 1)
+  length = gst_musepack_reader_get_size (this);
+  if (length > 0 && offset >= 0 && offset < length) {
+    musepackdec->offset = offset;
+    GST_LOG_OBJECT (musepackdec, "Seek'ed to byte offset %d", (gint) offset);
+    return TRUE;
+  } else {
+    GST_DEBUG_OBJECT (musepackdec, "Cannot seek to offset %d", (gint) offset);
     return FALSE;
-
-  return TRUE;
+  }
 }
 
 static mpc_int32_t
 gst_musepack_reader_tell (void *this)
 {
   GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this);
-  GstQuery *query;
-  gint64 position;
-  GstFormat format = GST_FORMAT_BYTES;
 
-  query = gst_query_new_position (GST_FORMAT_BYTES);
-  if (gst_pad_query (musepackdec->sinkpad, query)) {
-
-    gst_query_parse_position (query, &format, &position);
-
-    if (format != GST_FORMAT_BYTES) {
-      GstFormat dest_format = GST_FORMAT_BYTES;
-
-      if (!gst_musepackdec_src_convert (musepackdec->srcpad,
-              format, position, &dest_format, &position)) {
-        position = -1;
-      }
-
-    }
-
-  } else {
-    position = -1;
-  }
-  gst_query_unref (query);
-
-  return position;
+  return musepackdec->offset;
 }
 
 static mpc_int32_t
 gst_musepack_reader_get_size (void *this)
 {
-  GstMusepackDec *musepackdec = GST_MUSEPACK_DEC (this);
-  GstQuery *query;
-  gint64 duration;
+  GstMusepackDec *dec = GST_MUSEPACK_DEC (this);
   GstFormat format = GST_FORMAT_BYTES;
+  gint64 length = -1;
+  GstPad *peer;
 
-  query = gst_query_new_duration (GST_FORMAT_BYTES);
-  if (gst_pad_query (musepackdec->sinkpad, query)) {
-
-    gst_query_parse_duration (query, &format, &duration);
-
-    if (format != GST_FORMAT_BYTES) {
-      GstFormat dest_format = GST_FORMAT_BYTES;
-
-      if (!gst_musepackdec_src_convert (musepackdec->srcpad,
-              format, duration, &dest_format, &duration)) {
-        duration = -1;
-      }
-
+  peer = gst_pad_get_peer (dec->sinkpad);
+  if (peer) {
+    if (!gst_pad_query_duration (peer, &format, &length) || length <= 0) {
+      length = -1;
     }
-
-  } else {
-    duration = -1;
+    gst_object_unref (peer);
   }
-  gst_query_unref (query);
 
-
-  return duration;
+  return (mpc_int32_t) length;
 }
 
 static mpc_bool_t

@@ -1,3 +1,23 @@
+2006-01-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_base_init),
+	(gst_musepackdec_class_init), (gst_musepackdec_init),
+	(gst_musepackdec_send_newsegment),
+	(gst_musepackdec_handle_seek_event), (gst_musepackdec_src_event),
+	(gst_musepackdec_src_query), (gst_musepackdec_src_convert),
+	(gst_musepack_stream_init), (gst_musepackdec_sink_activate_pull),
+	(gst_musepackdec_loop), (gst_musepackdec_change_state):
+	* ext/musepack/gstmusepackdec.h:
+	* ext/musepack/gstmusepackreader.c: (gst_musepack_reader_peek),
+	(gst_musepack_reader_seek), (gst_musepack_reader_tell),
+	(gst_musepack_reader_get_size):
+	* ext/musepack/gstmusepackreader.h:
+	  Fix seeking in musepack files (it's still incredibly slow, but I
+	  don't think that is our plugin's fault). Clean up code and get
+	  rid of old cruft. Post tags with all kind of neat information like
+	  replay gain and such on the bus, if it is available. Add a
+	  'musepackdec' debug category.
+
 2006-01-24  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
