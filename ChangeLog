@@ -1,3 +1,13 @@
+2006-01-24  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(gst_qtdemux_add_stream), (qtdemux_parse_trak):
+	More coherent framerate setting on caps.
+	If sample_size is available, use that for the samples' duration in
+	the index. This enables single frame streams to work (and I imagine
+	fixes some other cases).
+	Tested on testsuite, no regression.
+
 2006-01-23  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak),

@@ -644,8 +644,7 @@ gst_qtdemux_loop_header (GstPad * pad)
 
       buf = NULL;
       if (size > 0) {
-        GST_LOG_OBJECT (qtdemux, "reading %d bytes @ " G_GINT64_FORMAT,
-            size, offset);
+        GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %lld", size, offset);
 
         if (gst_pad_pull_range (qtdemux->sinkpad, offset,
                 size, &buf) != GST_FLOW_OK)
@@ -744,12 +743,15 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     stream->pad = gst_pad_new_from_template (templ, name);
     gst_object_unref (templ);
     g_free (name);
-    if (stream->samples[0].duration == 0) {
+    if ((stream->n_samples == 1) && (stream->samples[0].duration == 0)) {
       stream->fps_n = 0;
       stream->fps_d = 1;
     } else {
       stream->fps_n = stream->timescale;
-      stream->fps_d = stream->samples[0].duration;
+      if (stream->samples[0].duration == 0)
+        stream->fps_d = 1;
+      else
+        stream->fps_d = stream->samples[0].duration;
     }
 
     if (stream->caps) {
@@ -2336,8 +2338,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           samples[j].size =
               samples_per_chunk * stream->bytes_per_frame /
               stream->samples_per_packet / stream->compression;
-        else
+        else if (stream->bytes_per_frame)
           samples[j].size = stream->bytes_per_frame;
+        else
+          samples[j].size = sample_size;
         samples[j].duration =
             samples_per_chunk * stream->timescale / (stream->rate / 2);
         samples[j].timestamp = timestamp;
