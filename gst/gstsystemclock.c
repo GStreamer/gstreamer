@@ -402,6 +402,8 @@ gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
           break;
       }
     }
+  } else if (diff == 0) {
+    entry->status = GST_CLOCK_OK;
   } else {
     entry->status = GST_CLOCK_EARLY;
   }

@@ -974,6 +974,12 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstBuffer * buffer)
             (gint64) start, (gint64) end, &cstart, &cend))
       goto out_of_segment;
 
+    if (start != cstart || end != cend) {
+      GST_DEBUG_OBJECT (basesink, "clipped to: start %" GST_TIME_FORMAT
+          ", end: %" GST_TIME_FORMAT, GST_TIME_ARGS (cstart),
+          GST_TIME_ARGS (cend));
+    }
+
     /* save last valid times seen. */
     if (GST_CLOCK_TIME_IS_VALID (end))
       gst_segment_set_last_stop (&basesink->segment, GST_FORMAT_TIME,

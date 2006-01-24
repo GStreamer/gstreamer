@@ -1,3 +1,13 @@
+2006-01-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstsystemclock.c: (gst_system_clock_id_wait_unlocked):
+	A clock entry that is scheduled for the exact time of the
+	clock is still in time.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_handle_object),
+	(gst_base_sink_do_sync):
+	Add some more debug info.
+
 2006-01-23  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/vs7:
