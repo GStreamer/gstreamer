@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) <2005> Nokia Corporation <kai.vehmanen@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -62,6 +63,11 @@ static void gst_rtp_g711_pay_finalize (GObject * object);
 
 GST_BOILERPLATE (GstRtpG711Pay, gst_rtp_g711_pay, GstBaseRTPPayload,
     GST_TYPE_BASE_RTP_PAYLOAD);
+
+/* The lower limit for number of octet to put in one packet
+ * (clock-rate=8000, octet-per-sample=1). The default 80 is equal
+ * to to 10msec (see RFC3551) */
+#define GST_RTP_G711_MIN_PTIME_OCTETS   80
 
 static void
 gst_rtp_g711_pay_base_init (gpointer klass)
@@ -145,6 +151,16 @@ gst_rtp_g711_pay_flush (GstRtpG711Pay * rtpg711pay)
   guint avail;
   GstBuffer *outbuf;
   GstFlowReturn ret;
+  guint maxptime_octets = G_MAXUINT;
+  guint minptime_octets = GST_RTP_G711_MIN_PTIME_OCTETS;
+
+  if (GST_BASE_RTP_PAYLOAD (rtpg711pay)->max_ptime > 0) {
+    /* calculate octet count with:
+       maxptime-nsec * samples-per-sec / nsecs-per-sec * octets-per-sample */
+    maxptime_octets =
+        GST_BASE_RTP_PAYLOAD (rtpg711pay)->max_ptime *
+        GST_BASE_RTP_PAYLOAD (rtpg711pay)->clock_rate / GST_SECOND;
+  }
 
   /* the data available in the adapter is either smaller
    * than the MTU or bigger. In the case it is smaller, the complete
@@ -153,19 +169,20 @@ gst_rtp_g711_pay_flush (GstRtpG711Pay * rtpg711pay)
 
   ret = GST_FLOW_OK;
 
-  while (avail > 0) {
-    guint towrite;
+  while (avail >= minptime_octets) {
     guint8 *payload;
     guint8 *data;
     guint payload_len;
     guint packet_len;
 
-    /* this will be the total lenght of the packet */
-    packet_len = gst_rtp_buffer_calc_packet_len (avail, 0, 0);
     /* fill one MTU or all available bytes */
-    towrite = MIN (packet_len, GST_BASE_RTP_PAYLOAD_MTU (rtpg711pay));
-    /* this is the payload length */
-    payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
+    payload_len =
+        MIN (MIN (GST_BASE_RTP_PAYLOAD_MTU (rtpg711pay), maxptime_octets),
+        avail);
+
+    /* this will be the total lenght of the packet */
+    packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
+
     /* create buffer to hold the payload */
     outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
 

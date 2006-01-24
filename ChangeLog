@@ -1,3 +1,9 @@
+2006-01-24  Edgard Lima <edgard.lima@indt.org.br>
+
+	* gst/rtp/gstrtpg711pay.c:
+	Patch written by Kai Vehmanen <kai.vehmanen@nokia.com> applied. See
+	bug #325148.
+
 2006-01-23  Edward Hervey  <edward@fluendo.com>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_video_caps),
