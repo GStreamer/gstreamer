@@ -1,6 +1,13 @@
 2006-01-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render), (gst_base_audio_sink_change_state):
+	Undo previous commit that returned WRONG_STATE sooner, it breaks 
+	resume after pause.
+
+2006-01-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
 	(gst_base_audio_sink_setcaps), (gst_base_audio_sink_event),
 	(gst_base_audio_sink_preroll), (gst_base_audio_sink_render):
 	Improve debugging.

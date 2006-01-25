@@ -536,8 +536,6 @@ no_sync:
   sink->next_sample = render_offset + samples;
 
   samples = gst_ring_buffer_commit (ringbuf, render_offset, data, samples);
-  if (samples == -1)
-    goto stopping;
 
   if (GST_CLOCK_TIME_IS_VALID (stop) && stop >= bsink->segment.stop) {
     GST_DEBUG_OBJECT (sink,
@@ -569,11 +567,6 @@ wrong_size:
         ("sink received buffer of wrong size."),
         ("sink received buffer of wrong size."));
     return GST_FLOW_ERROR;
-  }
-stopping:
-  {
-    GST_DEBUG_OBJECT (sink, "ringbuffer is stopping");
-    return GST_FLOW_WRONG_STATE;
   }
 }
 
@@ -625,6 +618,7 @@ gst_base_audio_sink_change_state (GstElement * element,
     {
       GstClock *clock;
 
+      /* FIXME, only start slaving when we really start the ringbuffer */
       GST_OBJECT_LOCK (sink);
       clock = GST_ELEMENT_CLOCK (sink);
       /* if we are slaved to a clock, we need to set the initial
