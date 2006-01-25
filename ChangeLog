@@ -67,7 +67,7 @@
 	  strings. Parse numeric genre strings and ID3v2 type
 	  "(3)(6)Alternative" style genre strings.
 	  Parse dates that are only YYYY or YYYY-mm format.
-	  (Fixes #328241)
+	  (Fixes #328241 and #322154)
 
 2006-01-20  Tim-Philipp Müller  <tim at centricular dot net>
 
