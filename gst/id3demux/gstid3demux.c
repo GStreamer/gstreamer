@@ -291,15 +291,17 @@ gst_id3demux_add_srcpad (GstID3Demux * id3demux, GstCaps * new_caps)
 static gboolean
 gst_id3demux_remove_srcpad (GstID3Demux * id3demux)
 {
+  gboolean res = TRUE;
+
   if (id3demux->srcpad != NULL) {
     GST_DEBUG_OBJECT (id3demux, "Removing src pad");
-    g_return_val_if_fail (gst_element_remove_pad (GST_ELEMENT (id3demux),
-            id3demux->srcpad), FALSE);
+    res = gst_element_remove_pad (GST_ELEMENT (id3demux), id3demux->srcpad);
+    g_return_val_if_fail (res != FALSE, FALSE);
     gst_object_unref (id3demux->srcpad);
     id3demux->srcpad = NULL;
   }
 
-  return TRUE;
+  return res;
 };
 
 static gboolean

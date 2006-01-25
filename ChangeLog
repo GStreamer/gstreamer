@@ -1,3 +1,10 @@
+2006-01-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_remove_srcpad):
+	  Don't put function calls in g_return_if_fail() statements,
+	  or they'll be replaced with NOOPs if someone compiles with
+	  G_DISABLE_CHECKS defined.
+	  
 2006-01-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame):
