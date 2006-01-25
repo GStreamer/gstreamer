@@ -1,3 +1,9 @@
+2006-01-25  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame):
+	Never trust ANY information encoded in a media file, especially
+	when it's giving you sizes. (Fixes #328452)
+
 2006-01-24  Edgard Lima <edgard.lima@indt.org.br>
 
 	* gst/rtp/gstrtpg711pay.c:
