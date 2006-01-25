@@ -95,6 +95,11 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     work->parse_size = read_synch_uint (frame_data, 4);
     frame_data += 4;
     frame_data_size -= 4;
+    if (work->parse_size < frame_data_size) {
+      GST_WARNING ("ID3v2 frame %s has invalid size %d.", tag_name,
+          frame_data_size);
+      return FALSE;
+    }
   } else
     work->parse_size = frame_data_size;
 
@@ -111,6 +116,12 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
 
     if (uncompress (dest, &destSize, src, frame_data_size) != Z_OK) {
       g_free (work->parse_data);
+      return FALSE;
+    }
+    if (destSize != work->parse_size) {
+      GST_WARNING
+          ("Decompressing ID3v2 frame %s did not produce expected size %d bytes (got %d)",
+          tag_name, work->parse_data, destSize);
       return FALSE;
     }
 #else
