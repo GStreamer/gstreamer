@@ -198,6 +198,9 @@ gst_neonhttp_src_finalize (GObject * gobject)
     ne_free (this->uristr);
   }
 
+  if (G_OBJECT_CLASS (parent_class)->finalize)
+    G_OBJECT_CLASS (parent_class)->finalize (gobject);
+
 }
 
 int

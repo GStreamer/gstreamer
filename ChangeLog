@@ -1,5 +1,11 @@
 2006-01-25  Edgard Lima <edgard.lima@indt.org.br>
 
+	* ext/libmms/gstmms.c: (gst_mms_finalize):
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_finalize):
+	Just chain up finalize calls (calling parent_class->finalize).
+
+2006-01-25  Edgard Lima <edgard.lima@indt.org.br>
+
 	* ext/libmms/gstmms.c: (gst_mms_finalize), (gst_mms_set_property),
 	(gst_mms_get_property), (gst_mms_src_query), (gst_mms_class_init):
 	Finalize method has been created and others small changes.

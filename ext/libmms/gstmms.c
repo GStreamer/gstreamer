@@ -163,12 +163,15 @@ gst_mms_finalize (GObject * gobject)
 {
   GstMMS *mmssrc = GST_MMS (gobject);
 
-  gst_mms_stop (mmssrc);
+  gst_mms_stop (GST_BASE_SRC (mmssrc));
 
   if (mmssrc->uri_name) {
     g_free (mmssrc->uri_name);
     mmssrc->uri_name = NULL;
   }
+
+  if (G_OBJECT_CLASS (parent_class)->finalize)
+    G_OBJECT_CLASS (parent_class)->finalize (gobject);
 
 }
 
