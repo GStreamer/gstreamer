@@ -1,3 +1,10 @@
+2006-01-25  Julien MOUTTE  <julien@moutte.net>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position):
+	We only query position using the clock in the playing state.
+	Query peer in the other cases.
+	* win32/common/config.h: Updates.
+
 2006-01-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstsystemclock.c: (gst_system_clock_id_wait_unlocked):

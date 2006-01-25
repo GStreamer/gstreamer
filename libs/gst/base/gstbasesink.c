@@ -1421,6 +1421,13 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
     {
       /* we can answer time format */
       GST_OBJECT_LOCK (basesink);
+
+      /* We get position from clock only in PLAYING */
+      if (GST_STATE (basesink) != GST_STATE_PLAYING) {
+        GST_OBJECT_UNLOCK (basesink);
+        goto beach;
+      }
+
       if ((clock = GST_ELEMENT_CLOCK (basesink))) {
         GstClockTime now, base;
         gint64 time;
@@ -1459,6 +1466,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
     default:
       break;
   }
+beach:
   return res;
 }
 
