@@ -138,6 +138,8 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
 
   gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (baseaudiosrc),
       gst_base_audio_src_fixate);
+
+  gst_base_src_set_format (GST_BASE_SRC (baseaudiosrc), GST_FORMAT_TIME);
 }
 
 static GstClock *
@@ -161,7 +163,8 @@ gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
 
   samples = gst_ring_buffer_samples_done (src->ringbuffer);
 
-  result = samples * GST_SECOND / src->ringbuffer->spec.rate;
+  result = gst_util_uint64_scale_int (samples, GST_SECOND,
+      src->ringbuffer->spec.rate);
 
   return result;
 }
@@ -319,11 +322,14 @@ gst_base_audio_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   guint len, samples;
   guint res;
   guint64 sample;
+  GstRingBuffer *ringbuffer;
 
-  if (!gst_ring_buffer_is_acquired (src->ringbuffer))
+  ringbuffer = src->ringbuffer;
+
+  if (!gst_ring_buffer_is_acquired (ringbuffer))
     goto wrong_state;
 
-  buf = gst_buffer_new_and_alloc (src->ringbuffer->spec.segsize);
+  buf = gst_buffer_new_and_alloc (ringbuffer->spec.segsize);
 
   data = GST_BUFFER_DATA (buf);
   len = GST_BUFFER_SIZE (buf);
@@ -334,13 +340,17 @@ gst_base_audio_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     sample = 0;
   }
 
-  samples = len / src->ringbuffer->spec.bytes_per_sample;
+  samples = len / ringbuffer->spec.bytes_per_sample;
 
-  res = gst_ring_buffer_read (src->ringbuffer, sample, data, samples);
+  res = gst_ring_buffer_read (ringbuffer, sample, data, samples);
   if (res == -1)
     goto stopped;
 
+  GST_BUFFER_TIMESTAMP (buf) = gst_util_uint64_scale_int (sample,
+      GST_SECOND, ringbuffer->spec.rate);
   src->next_sample = sample + samples;
+  GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (src->next_sample,
+      GST_SECOND, ringbuffer->spec.rate) - GST_BUFFER_TIMESTAMP (buf);
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
 

@@ -262,12 +262,12 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   spec = &sink->ringbuffer->spec;
 
-  GST_DEBUG ("release old ringbuffer");
+  GST_DEBUG_OBJECT (sink, "release old ringbuffer");
 
   /* release old ringbuffer */
   gst_ring_buffer_release (sink->ringbuffer);
 
-  GST_DEBUG ("parse caps");
+  GST_DEBUG_OBJECT (sink, "parse caps");
 
   spec->buffer_time = sink->buffer_time;
   spec->latency_time = sink->latency_time;
@@ -278,7 +278,7 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   gst_ring_buffer_debug_spec_buff (spec);
 
-  GST_DEBUG ("acquire new ringbuffer");
+  GST_DEBUG_OBJECT (sink, "acquire new ringbuffer");
 
   if (!gst_ring_buffer_acquire (sink->ringbuffer, spec))
     goto acquire_error;
@@ -297,12 +297,14 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   /* ERRORS */
 parse_error:
   {
-    GST_DEBUG ("could not parse caps");
+    GST_DEBUG_OBJECT (sink, "could not parse caps");
+    GST_ELEMENT_ERROR (sink, STREAM, FORMAT,
+        ("cannot parse audio format."), ("cannot parse audio format."));
     return FALSE;
   }
 acquire_error:
   {
-    GST_DEBUG ("could not acquire ringbuffer");
+    GST_DEBUG_OBJECT (sink, "could not acquire ringbuffer");
     return FALSE;
   }
 }
@@ -332,7 +334,9 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
     case GST_EVENT_EOS:
+      /* need to start playback when we reach EOS */
       gst_ring_buffer_start (sink->ringbuffer);
+      /* now wait till we played everything */
       break;
     default:
       break;
@@ -355,7 +359,7 @@ gst_base_audio_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 
 wrong_state:
   {
-    GST_DEBUG ("ringbuffer in wrong state");
+    GST_DEBUG_OBJECT (sink, "ringbuffer in wrong state");
     GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
         ("sink not negotiated."), ("sink not negotiated."));
     return GST_FLOW_NOT_NEGOTIATED;
@@ -396,11 +400,10 @@ static GstFlowReturn
 gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   guint64 render_offset, in_offset;
-  GstClockTime time, render_time, duration;
-  GstClockTimeDiff render_diff;
+  GstClockTime time, stop, render_time, duration;
   GstBaseAudioSink *sink;
   GstRingBuffer *ringbuf;
-  gint64 diff;
+  gint64 diff, ctime, cstop;
   guint8 *data;
   guint size;
   guint samples;
@@ -411,6 +414,11 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstClockTime cinternal, cexternal;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
+
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+    /* always resync after a discont */
+    sink->next_sample = -1;
+  }
 
   ringbuf = sink->ringbuffer;
 
@@ -431,80 +439,109 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   duration = GST_BUFFER_DURATION (buf);
   data = GST_BUFFER_DATA (buf);
 
-  GST_DEBUG ("time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (sink,
+      "time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->segment.start));
 
   /* if not valid timestamp or we don't need to sync, try to play
    * sample ASAP */
   if (!GST_CLOCK_TIME_IS_VALID (time) || !bsink->sync) {
     render_offset = gst_base_audio_sink_get_offset (sink);
-    GST_DEBUG ("Buffer of size %u has no time. Using render_offset=%"
-        G_GUINT64_FORMAT, GST_BUFFER_SIZE (buf), render_offset);
+    stop = -1;
+    GST_DEBUG_OBJECT (sink,
+        "Buffer of size %u has no time. Using render_offset=%" G_GUINT64_FORMAT,
+        GST_BUFFER_SIZE (buf), render_offset);
     goto no_sync;
   }
 
-  render_diff = time - bsink->segment.start;
-
   /* samples should be rendered based on their timestamp. All samples
-   * arriving before the segment.start are to be thrown away */
-  /* FIXME, for now we drop the sample completely, we should
-   * in fact clip the sample. Same for the segment.stop, actually. */
-  if (render_diff < 0)
+   * arriving before the segment.start or after segment.stop are to be 
+   * thrown away. All samples should also be clipped to the segment 
+   * boundaries */
+  stop =
+      time + gst_util_uint64_scale_int (samples, GST_SECOND,
+      ringbuf->spec.rate);
+  if (!gst_segment_clip (&bsink->segment, GST_FORMAT_TIME, time, stop, &ctime,
+          &cstop))
     goto out_of_segment;
+
+  /* see if some clipping happened */
+  diff = ctime - time;
+  if (diff > 0) {
+    diff = gst_util_uint64_scale_int (diff, ringbuf->spec.rate, GST_SECOND);
+    GST_DEBUG_OBJECT (sink, "clipping start to %" GST_TIME_FORMAT " %"
+        G_GUINT64_FORMAT " samples", GST_TIME_ARGS (ctime), diff);
+    samples -= diff;
+    data += samples * bps;
+    time = ctime;
+  }
+  diff = stop - cstop;
+  if (diff > 0) {
+    diff = gst_util_uint64_scale_int (diff, ringbuf->spec.rate, GST_SECOND);
+    GST_DEBUG_OBJECT (sink, "clipping stop to %" GST_TIME_FORMAT " %"
+        G_GUINT64_FORMAT " samples", GST_TIME_ARGS (cstop), diff);
+    samples -= diff;
+    stop = cstop;
+  }
 
   gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
       &crate_num, &crate_denom);
 
-  /* bring buffer timestamp to stream time */
-  render_time = render_diff;
-  /* adjust for rate */
-  render_time /= ABS (bsink->segment.rate);
-  /* adjust for accumulated segments */
-  render_time += bsink->segment.accum;
+  /* bring buffer timestamp to running time */
+  render_time =
+      gst_segment_to_running_time (&bsink->segment, GST_FORMAT_TIME, time);
   /* add base time to get absolute clock time */
   render_time +=
       (gst_element_get_base_time (GST_ELEMENT_CAST (bsink)) - cexternal) +
       cinternal;
   /* and bring the time to the offset in the buffer */
-  render_offset = render_time * ringbuf->spec.rate / GST_SECOND;
+  render_offset =
+      gst_util_uint64_scale_int (render_time, ringbuf->spec.rate, GST_SECOND);
+
+  GST_DEBUG_OBJECT (sink, "render time %" GST_TIME_FORMAT
+      ", render offset %llu, samples %lu",
+      GST_TIME_ARGS (render_time), render_offset, samples);
 
   /* roundoff errors in timestamp conversion */
-  if (sink->next_sample != -1)
+  if (sink->next_sample != -1) {
     diff = ABS ((gint64) render_offset - (gint64) sink->next_sample);
-  else
-    diff = ringbuf->spec.rate;
 
-  GST_DEBUG ("render time %" GST_TIME_FORMAT
-      ", render offset %llu, diff %lld, samples %lu",
-      GST_TIME_ARGS (render_time), render_offset, diff, samples);
-
-  /* we tollerate a 10th of a second diff before we start resyncing. This
-   * should be enough to compensate for various rounding errors in the timestamp
-   * and sample offset position. */
-  if (diff < ringbuf->spec.rate / DIFF_TOLERANCE) {
-    GST_DEBUG ("align with prev sample, %" G_GINT64_FORMAT " < %lu", diff,
-        ringbuf->spec.rate / DIFF_TOLERANCE);
-    /* just align with previous sample then */
-    render_offset = sink->next_sample;
+    /* we tollerate a 10th of a second diff before we start resyncing. This
+     * should be enough to compensate for various rounding errors in the timestamp
+     * and sample offset position. */
+    if (diff < ringbuf->spec.rate / DIFF_TOLERANCE) {
+      GST_DEBUG_OBJECT (sink,
+          "align with prev sample, %" G_GINT64_FORMAT " < %lu", diff,
+          ringbuf->spec.rate / DIFF_TOLERANCE);
+      /* just align with previous sample then */
+      render_offset = sink->next_sample;
+    } else {
+      GST_DEBUG_OBJECT (sink,
+          "resync after discont with previous sample of diff: %lu", diff);
+    }
   } else {
-    GST_DEBUG ("resync");
+    GST_DEBUG_OBJECT (sink, "resync after discont");
   }
 
   crate = ((gdouble) crate_num) / crate_denom;
   GST_DEBUG_OBJECT (sink,
       "internal %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", rate %g",
       cinternal, cexternal, crate);
+
 no_sync:
   /* clip length based on rate */
-  samples = MIN (samples, samples / (crate * ABS (bsink->segment.rate)));
+  samples = MIN (samples, samples / (crate * bsink->segment.abs_rate));
 
   /* the next sample should be current sample and its length */
   sink->next_sample = render_offset + samples;
 
-  gst_ring_buffer_commit (ringbuf, render_offset, data, samples);
+  samples = gst_ring_buffer_commit (ringbuf, render_offset, data, samples);
+  if (samples == -1)
+    goto stopping;
 
-  if (GST_CLOCK_TIME_IS_VALID (time) && time + duration >= bsink->segment.stop) {
-    GST_DEBUG ("start playback because we are at the end of segment");
+  if (GST_CLOCK_TIME_IS_VALID (stop) && stop >= bsink->segment.stop) {
+    GST_DEBUG_OBJECT (sink,
+        "start playback because we are at the end of segment");
     gst_ring_buffer_start (ringbuf);
   }
 
@@ -512,25 +549,31 @@ no_sync:
 
 out_of_segment:
   {
-    GST_DEBUG ("dropping sample out of segment time %" GST_TIME_FORMAT
-        ", start %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (time), GST_TIME_ARGS (bsink->segment.start));
+    GST_DEBUG_OBJECT (sink,
+        "dropping sample out of segment time %" GST_TIME_FORMAT ", start %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (time),
+        GST_TIME_ARGS (bsink->segment.start));
     return GST_FLOW_OK;
   }
 wrong_state:
   {
-    GST_DEBUG ("ringbuffer not negotiated");
+    GST_DEBUG_OBJECT (sink, "ringbuffer not negotiated");
     GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
         ("sink not negotiated."), ("sink not negotiated."));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 wrong_size:
   {
-    GST_DEBUG ("wrong size");
+    GST_DEBUG_OBJECT (sink, "wrong size");
     GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
         ("sink received buffer of wrong size."),
         ("sink received buffer of wrong size."));
     return GST_FLOW_ERROR;
+  }
+stopping:
+  {
+    GST_DEBUG_OBJECT (sink, "ringbuffer is stopping");
+    return GST_FLOW_WRONG_STATE;
   }
 }
 

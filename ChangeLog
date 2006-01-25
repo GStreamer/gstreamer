@@ -1,3 +1,19 @@
+2006-01-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_setcaps), (gst_base_audio_sink_event),
+	(gst_base_audio_sink_preroll), (gst_base_audio_sink_render):
+	Improve debugging.
+	Post error when caps cannot be parsed.
+	Resync on discontinuity in the stream.
+	Clip samples to segment boundaries.
+	return WRONG_STATE sooner when we are flushing.
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c: (gst_base_audio_src_init),
+	(gst_base_audio_src_get_time), (gst_base_audio_src_create):
+	Make audiosrc operate in TIME.
+	Set TIMESTAMP and DURATION on buffers.
+
 2006-01-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/examples/seek/seek.c: (main):
