@@ -54,6 +54,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_mms_class_init (GstMMSClass * klass);
 static void gst_mms_base_init (gpointer g_class);
 static void gst_mms_init (GstMMS * mmssrc, GstMMSClass * g_class);
+static void gst_mms_finalize (GObject * gobject);
 
 static void gst_mms_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
@@ -119,6 +120,7 @@ gst_mms_class_init (GstMMSClass * klass)
 
   gobject_class->set_property = gst_mms_set_property;
   gobject_class->get_property = gst_mms_get_property;
+  gobject_class->finalize = gst_mms_finalize;
 
   g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "location",
@@ -154,6 +156,20 @@ gst_mms_init (GstMMS * mmssrc, GstMMSClass * g_class)
   mmssrc->connection = NULL;
   mmssrc->connection_h = NULL;
   mmssrc->blocksize = 2048;
+}
+
+static void
+gst_mms_finalize (GObject * gobject)
+{
+  GstMMS *mmssrc = GST_MMS (gobject);
+
+  gst_mms_stop (mmssrc);
+
+  if (mmssrc->uri_name) {
+    g_free (mmssrc->uri_name);
+    mmssrc->uri_name = NULL;
+  }
+
 }
 
 /*
@@ -236,7 +252,6 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   gint64 query_res;
   GstQuery *query;
 
-  *buf = NULL;
   mmssrc = GST_MMS (psrc);
   *buf = gst_buffer_new_and_alloc (mmssrc->blocksize);
 
@@ -360,6 +375,10 @@ gst_mms_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_LOCATION:
+      if (mmssrc->uri_name) {
+        g_free (mmssrc->uri_name);
+        mmssrc->uri_name = NULL;
+      }
       mmssrc->uri_name = g_value_dup_string (value);
       break;
     case ARG_BLOCKSIZE:
@@ -381,7 +400,8 @@ gst_mms_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_LOCATION:
-      g_value_set_string (value, mmssrc->uri_name);
+      if (mmssrc->uri_name)
+        g_value_set_string (value, mmssrc->uri_name);
       break;
     case ARG_BLOCKSIZE:
       g_value_set_int (value, mmssrc->blocksize);

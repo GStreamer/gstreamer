@@ -1,3 +1,9 @@
+2006-01-25  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/libmms/gstmms.c: (gst_mms_finalize), (gst_mms_set_property),
+	(gst_mms_get_property), (gst_mms_src_query), (gst_mms_class_init):
+	Finalize method has been created and others small changes.
+
 2006-01-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_base_init),
