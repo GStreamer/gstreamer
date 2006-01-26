@@ -1,3 +1,10 @@
+2006-01-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
+	  Pad codec data buffer to a size that is a multiple of 16, which
+	  ffmpeg apparently needs for optimized/unchecked access to the
+	  data. Fixes crashes with HD h264 video.
+
 2006-01-23  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):

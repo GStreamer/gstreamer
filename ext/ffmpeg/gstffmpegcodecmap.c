@@ -1284,7 +1284,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
   /* extradata parsing (esds [mpeg4], wma/wmv, msmpeg4v1/2/3, etc.) */
   if ((value = gst_structure_get_value (str, "codec_data"))) {
     buf = GST_BUFFER (gst_value_get_mini_object (value));
-    context->extradata = av_mallocz (GST_BUFFER_SIZE (buf));
+    context->extradata = av_mallocz (GST_ROUND_UP_16 (GST_BUFFER_SIZE (buf)));
     memcpy (context->extradata, GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf));
     context->extradata_size = GST_BUFFER_SIZE (buf);
