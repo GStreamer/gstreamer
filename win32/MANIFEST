@@ -19,7 +19,6 @@ win32/vs6/gst_launch.dsp
 win32/vs6/libgstbase.dsp
 win32/vs6/libgstcoreelements.dsp
 win32/vs6/libgstreamer.dsp
-win32/vs7/GStreamer.vcproj
 win32/vs7/Makefile
 win32/vs7/Makefile.inspect
 win32/vs7/Makefile.launch
