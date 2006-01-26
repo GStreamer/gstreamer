@@ -521,10 +521,18 @@ pad_probe (GstPad * pad, GstMiniObject * data, GstDecodeBin * decode_bin)
     PadProbeData *pdata = (PadProbeData *) tmp->data;
 
     if (pdata->pad == pad) {
-      if (GST_IS_BUFFER (data))
+      if (GST_IS_BUFFER (data)) {
+        if (!pdata->done)
+          decode_bin->numwaiting--;
         pdata->done = TRUE;
-      else if (GST_IS_EVENT (data) && (GST_EVENT_TYPE (data) == GST_EVENT_EOS))
+      } else if (GST_IS_EVENT (data) &&
+          ((GST_EVENT_TYPE (data) == GST_EVENT_EOS) ||
+              (GST_EVENT_TYPE (data) == GST_EVENT_TAG) ||
+              (GST_EVENT_TYPE (data) == GST_EVENT_FLUSH_START))) {
+        if (!pdata->done)
+          decode_bin->numwaiting--;
         pdata->done = TRUE;
+      }
     } else if (!(pdata->done))
       alldone = FALSE;
   }
