@@ -1127,6 +1127,9 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
   if (ret != GST_FLOW_OK)
     goto done;
 
+  GST_DEBUG_OBJECT (src, "offset %" G_GUINT64_FORMAT " %" G_GINT64_FORMAT,
+      offset, src->segment.time);
+
   /* no timestamp set and we are at offset 0 */
   if (offset == 0 && src->segment.time == 0
       && GST_BUFFER_TIMESTAMP (*buf) == -1)

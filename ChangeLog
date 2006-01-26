@@ -1,3 +1,8 @@
+2006-01-26  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_get_range):
+	Add some debugging.
+
 2006-01-26  Julien MOUTTE  <julien@moutte.net>
 
 	* plugins/elements/gsttee.c: (gst_tee_do_push),
