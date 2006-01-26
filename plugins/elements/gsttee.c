@@ -278,12 +278,18 @@ gst_tee_do_push (GstPad * pad, GValue * ret, PushData * data)
     g_object_notify (G_OBJECT (tee), "last_message");
   }
 
+  /* Push */
   res = gst_pad_push (pad, gst_buffer_ref (data->buffer));
-  g_value_set_enum (ret, res);
+
+  /* If it's fatal or OK we overwrite the previous value */
+  if (GST_FLOW_IS_FATAL (res) || (res == GST_FLOW_OK)) {
+    g_value_set_enum (ret, res);
+  }
 
   gst_object_unref (pad);
 
-  return (res == GST_FLOW_OK);
+  /* Stop iterating if flow return is fatal */
+  return (!GST_FLOW_IS_FATAL (res));
 }
 
 static GstFlowReturn
@@ -297,6 +303,7 @@ gst_tee_handle_buffer (GstTee * tee, GstBuffer * buffer)
   tee->offset += GST_BUFFER_SIZE (buffer);
 
   g_value_init (&ret, GST_TYPE_FLOW_RETURN);
+  g_value_set_enum (&ret, GST_FLOW_NOT_LINKED);
   iter = gst_element_iterate_src_pads (GST_ELEMENT (tee));
   data.tee = tee;
   data.buffer = buffer;

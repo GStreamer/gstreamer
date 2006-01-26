@@ -1,3 +1,9 @@
+2006-01-26  Julien MOUTTE  <julien@moutte.net>
+
+	* plugins/elements/gsttee.c: (gst_tee_do_push),
+	(gst_tee_handle_buffer): Apply patch from #328715. Tee now
+	handles pad being NOT_LINKED or in WRONG_STATE.
+
 2006-01-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* win32/MANIFEST:
