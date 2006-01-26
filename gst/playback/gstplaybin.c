@@ -65,6 +65,7 @@ struct _GstPlayBin
   GstElement *audio_sink;
   GstElement *video_sink;
   GstElement *visualisation;
+  GstElement *pending_visualisation;
   GstElement *volume_element;
   GstElement *textoverlay_element;
   gfloat volume;
@@ -220,6 +221,7 @@ gst_play_bin_init (GstPlayBin * play_bin)
   play_bin->video_sink = NULL;
   play_bin->audio_sink = NULL;
   play_bin->visualisation = NULL;
+  play_bin->pending_visualisation = NULL;
   play_bin->volume_element = NULL;
   play_bin->textoverlay_element = NULL;
   play_bin->volume = 1.0;
@@ -258,12 +260,126 @@ gst_play_bin_dispose (GObject * object)
     gst_object_unref (play_bin->visualisation);
     play_bin->visualisation = NULL;
   }
+  if (play_bin->pending_visualisation != NULL) {
+    gst_element_set_state (play_bin->pending_visualisation, GST_STATE_NULL);
+    gst_object_unref (play_bin->pending_visualisation);
+    play_bin->pending_visualisation = NULL;
+  }
   g_free (play_bin->font_desc);
   play_bin->font_desc = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+static void
+gst_play_bin_vis_unblocked (GstPad * tee_pad, gboolean blocked,
+    gpointer user_data)
+{
+  /* Unblocked */
+}
+
+static void
+gst_play_bin_vis_blocked (GstPad * tee_pad, gboolean blocked,
+    gpointer user_data)
+{
+  GstPlayBin *play_bin = GST_PLAY_BIN (user_data);
+  GstBin *vis_bin = NULL;
+  GstPad *vis_sink_pad = NULL, *vis_src_pad = NULL, *vqueue_pad = NULL;
+  GstState bin_state;
+
+  /* We want to disable visualisation */
+  if (!GST_IS_ELEMENT (play_bin->pending_visualisation)) {
+    /* Set visualisation element to READY */
+    gst_element_set_state (play_bin->visualisation, GST_STATE_READY);
+    goto beach;
+  }
+
+  vis_bin =
+      GST_BIN (gst_object_get_parent (GST_OBJECT (play_bin->visualisation)));
+
+  if (!GST_IS_BIN (vis_bin) || !GST_IS_PAD (tee_pad)) {
+    goto beach;
+  }
+
+  vis_src_pad = gst_element_get_pad (play_bin->visualisation, "src");
+  vis_sink_pad = gst_pad_get_peer (tee_pad);
+
+  /* Can be fakesink */
+  if (GST_IS_PAD (vis_src_pad)) {
+    vqueue_pad = gst_pad_get_peer (vis_src_pad);
+  }
+
+  if (!GST_IS_PAD (vis_sink_pad)) {
+    goto beach;
+  }
+
+  /* Check the bin's state */
+  GST_OBJECT_LOCK (vis_bin);
+  bin_state = GST_STATE (vis_bin);
+  GST_OBJECT_UNLOCK (vis_bin);
+
+  /* Unlink */
+  gst_pad_unlink (tee_pad, vis_sink_pad);
+  gst_object_unref (vis_sink_pad);
+  vis_sink_pad = NULL;
+
+  if (GST_IS_PAD (vqueue_pad)) {
+    gst_pad_unlink (vis_src_pad, vqueue_pad);
+    gst_object_unref (vis_src_pad);
+    vis_src_pad = NULL;
+  }
+
+  /* Remove from vis_bin */
+  gst_bin_remove (vis_bin, play_bin->visualisation);
+  /* Set state to NULL */
+  gst_element_set_state (play_bin->visualisation, GST_STATE_NULL);
+  /* And loose our ref */
+  gst_object_unref (play_bin->visualisation);
+
+  if (play_bin->pending_visualisation) {
+    /* Ref this new visualisation element before adding to the bin */
+    gst_object_ref (play_bin->pending_visualisation);
+    /* Add the new one */
+    gst_bin_add (vis_bin, play_bin->pending_visualisation);
+    /* Synchronizing state */
+    gst_element_set_state (play_bin->pending_visualisation, bin_state);
+
+    vis_sink_pad = gst_element_get_pad (play_bin->pending_visualisation,
+        "sink");
+    vis_src_pad = gst_element_get_pad (play_bin->pending_visualisation, "src");
+
+    if (!GST_IS_PAD (vis_sink_pad) || !GST_IS_PAD (vis_src_pad)) {
+      goto beach;
+    }
+
+    /* Link */
+    gst_pad_link (tee_pad, vis_sink_pad);
+    gst_pad_link (vis_src_pad, vqueue_pad);
+  }
+
+  /* We are done */
+  gst_object_unref (play_bin->visualisation);
+  play_bin->visualisation = play_bin->pending_visualisation;
+  play_bin->pending_visualisation = NULL;
+
+beach:
+  if (vis_sink_pad) {
+    gst_object_unref (vis_sink_pad);
+  }
+  if (vis_src_pad) {
+    gst_object_unref (vis_src_pad);
+  }
+  if (vqueue_pad) {
+    gst_object_unref (vqueue_pad);
+  }
+  if (vis_bin) {
+    gst_object_unref (vis_bin);
+  }
+
+  /* Unblock the pad */
+  gst_pad_set_blocked_async (tee_pad, FALSE, gst_play_bin_vis_unblocked,
+      play_bin);
+}
 
 static void
 gst_play_bin_set_property (GObject * object, guint prop_id,
@@ -302,15 +418,70 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       g_hash_table_remove (play_bin->cache, "abin");
       break;
     case ARG_VIS_PLUGIN:
-      if (play_bin->visualisation != NULL) {
-        gst_object_unref (play_bin->visualisation);
-      }
-      play_bin->visualisation = g_value_get_object (value);
-      if (play_bin->visualisation != NULL) {
-        gst_object_ref (play_bin->visualisation);
-        gst_object_sink (GST_OBJECT (play_bin->visualisation));
+    {
+      /* Do we already have a visualisation change pending ? */
+      if (play_bin->pending_visualisation) {
+        gst_object_unref (play_bin->pending_visualisation);
+        play_bin->pending_visualisation = g_value_get_object (value);
+        /* Take ownership */
+        if (play_bin->pending_visualisation) {
+          gst_object_ref (play_bin->pending_visualisation);
+          gst_object_sink (GST_OBJECT (play_bin->pending_visualisation));
+        }
+      } else {
+        play_bin->pending_visualisation = g_value_get_object (value);
+
+        /* Take ownership */
+        if (play_bin->pending_visualisation) {
+          gst_object_ref (play_bin->pending_visualisation);
+          gst_object_sink (GST_OBJECT (play_bin->pending_visualisation));
+        }
+
+        /* Was there a visualisation already set ? */
+        if (play_bin->visualisation != NULL) {
+          GstBin *vis_bin = NULL;
+
+          vis_bin =
+              GST_BIN (gst_object_get_parent (GST_OBJECT (play_bin->
+                      visualisation)));
+
+          /* Check if the visualisation is already in a bin */
+          if (GST_IS_BIN (vis_bin)) {
+            GstPad *vis_sink_pad = NULL, *tee_pad = NULL;
+
+            /* Now get tee pad and block it async */
+            vis_sink_pad = gst_element_get_pad (play_bin->visualisation,
+                "sink");
+            if (!GST_IS_PAD (vis_sink_pad)) {
+              goto beach;
+            }
+            tee_pad = gst_pad_get_peer (vis_sink_pad);
+            if (!GST_IS_PAD (tee_pad)) {
+              goto beach;
+            }
+
+            /* Block with callback */
+            gst_pad_set_blocked_async (tee_pad, TRUE, gst_play_bin_vis_blocked,
+                play_bin);
+          beach:
+            if (vis_sink_pad) {
+              gst_object_unref (vis_sink_pad);
+            }
+            if (tee_pad) {
+              gst_object_unref (tee_pad);
+            }
+            gst_object_unref (vis_bin);
+          } else {
+            play_bin->visualisation = play_bin->pending_visualisation;
+            play_bin->pending_visualisation = NULL;
+          }
+        } else {
+          play_bin->visualisation = play_bin->pending_visualisation;
+          play_bin->pending_visualisation = NULL;
+        }
       }
       break;
+    }
     case ARG_VOLUME:
       play_bin->volume = g_value_get_double (value);
       if (play_bin->volume_element) {

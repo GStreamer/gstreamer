@@ -1,3 +1,12 @@
+2006-01-26  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_init),
+	(gst_play_bin_dispose), (gst_play_bin_vis_unblocked),
+	(gst_play_bin_vis_blocked), (gst_play_bin_set_property): 
+	On the fly visualisation switch, works disabling, enabling as
+	well but it won't be able to enable vis in a playbin that was
+	created with no visualisation.
+
 2006-01-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
