@@ -687,40 +687,52 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-#if 0
-/* typefinding stuff */
-static GstTypeDefinition sub_parse_definition = {
-  "subparse/x-text",
-  "text/plain",
-  ".sub",
-  gst_sub_parse_type_find,
-};
-static GstCaps *
-gst_sub_parse_type_find (GstBuffer * buf, gpointer private)
+/*
+ * Typefind support.
+ */
+
+static GstStaticCaps sub_caps = GST_STATIC_CAPS ("application/x-subtitle");
+
+#define SUB_CAPS (gst_static_caps_get (&sub_caps))
+
+static void
+gst_subparse_type_find (GstTypeFind * tf, gpointer private)
 {
+  const guint8 *data;
   GstSubParseFormat format;
 
-  format = gst_sub_parse_data_format_autodetect (buf);
+  if (!(data = gst_type_find_peek (tf, 0, 36)))
+    return;
+  format = gst_sub_parse_data_format_autodetect ((gchar *) data);
   switch (format) {
     case GST_SUB_PARSE_FORMAT_MDVDSUB:
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "MicroDVD format detected");
-      return gst_caps_new ("sub_parse_type_find", "text/plain", NULL);
-    case GST_SUB_PARSE_FORMAT_SUBRIP:
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "SubRip format detected");
-      return gst_caps_new ("sub_parse_type_find", "text/plain", NULL);
-    case GST_SUB_PARSE_FORMAT_UNKNOWN:
-      GST_DEBUG (GST_CAT_PLUGIN_INFO, "no subtitle format detected");
+      GST_DEBUG ("MicroDVD format detected");
       break;
+    case GST_SUB_PARSE_FORMAT_SUBRIP:
+      GST_DEBUG ("SubRip format detected");
+      break;
+    case GST_SUB_PARSE_FORMAT_MPSUB:
+      GST_DEBUG ("SubRip format detected");
+      break;
+    case GST_SUB_PARSE_FORMAT_UNKNOWN:
+      GST_DEBUG ("no subtitle format detected");
+      return;
   }
-  /* don't know which this is */
-  return NULL;
+
+  /* if we're here, it's ok */
+  gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SUB_CAPS);
 }
-#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  static gchar *sub_exts[] = { "srt", "sub", "mpsub", "mdvd", NULL };
+
   GST_DEBUG_CATEGORY_INIT (sub_parse_debug, "subparse", 0, ".sub parser");
+
+  if (!gst_type_find_register (plugin, "subparse_typefind", GST_RANK_MARGINAL,
+          gst_subparse_type_find, sub_exts, SUB_CAPS, NULL, NULL))
+    return FALSE;
 
   return gst_element_register (plugin, "subparse",
       GST_RANK_PRIMARY, GST_TYPE_SUBPARSE);
