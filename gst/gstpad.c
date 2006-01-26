@@ -3526,6 +3526,9 @@ dropping:
  * mainly used by elements to send events to their peer
  * elements.
  *
+ * This function takes owership of the provided event so you should
+ * gst_event_ref() it if you want to reuse the event after this call.
+ *
  * Returns: TRUE if the event was handled.
  *
  * MT safe.
@@ -3619,6 +3622,9 @@ not_linked:
  * doesn't need to bother itself with this information; the core handles all
  * necessary locks and checks.
  *
+ * This function takes owership of the provided event so you should
+ * gst_event_ref() it if you want to reuse the event after this call.
+ *
  * Returns: TRUE if the event was handled.
  */
 gboolean
@@ -3696,8 +3702,8 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   /* ERROR handling */
 wrong_direction:
   {
-    g_warning ("pad %s:%s sending event in wrong direction",
-        GST_DEBUG_PAD_NAME (pad));
+    g_warning ("pad %s:%s sending %s event in wrong direction",
+        GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE_NAME (event));
     GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
     return FALSE;

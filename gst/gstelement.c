@@ -446,7 +446,7 @@ gst_element_get_clock (GstElement * element)
  * @element: a #GstElement.
  * @time: the base time to set.
  *
- * Set the base time of an element. See @gst_element_get_base_time().
+ * Set the base time of an element. See gst_element_get_base_time().
  *
  * MT safe.
  */
@@ -1197,21 +1197,26 @@ gst_element_send_event (GstElement * element, GstEvent * event)
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   if (oclass->send_event) {
-    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "send event on element %s",
-        GST_ELEMENT_NAME (element));
+    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "send %s event on element %s",
+        GST_EVENT_TYPE_NAME (event), GST_ELEMENT_NAME (element));
     result = oclass->send_event (element, event);
   } else {
-    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
+    GstPad *pad = GST_EVENT_IS_DOWNSTREAM (event) ?
+        gst_element_get_random_pad (element, GST_PAD_SRC) :
+        gst_element_get_random_pad (element, GST_PAD_SINK);
 
     if (pad) {
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-          "pushing event to random pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+          "pushing %s event to random %s pad %s:%s",
+          GST_EVENT_TYPE_NAME (event),
+          (GST_PAD_DIRECTION (pad) == GST_PAD_SRC ? "src" : "sink"),
+          GST_DEBUG_PAD_NAME (pad));
 
       result = gst_pad_push_event (pad, event);
       gst_object_unref (pad);
     } else {
-      GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "can't send event on element %s",
-          GST_ELEMENT_NAME (element));
+      GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "can't send %s event on element %s",
+          GST_EVENT_TYPE_NAME (event), GST_ELEMENT_NAME (element));
     }
   }
   return result;

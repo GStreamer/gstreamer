@@ -167,6 +167,7 @@ static void bin_remove_messages (GstBin * bin, GstObject * src,
     GstMessageType types);
 static void gst_bin_recalc_func (GstBin * child, gpointer data);
 static gint bin_element_is_sink (GstElement * child, GstBin * bin);
+static gint bin_element_is_src (GstElement * child, GstBin * bin);
 
 static GstIterator *gst_bin_sort_iterator_new (GstBin * bin);
 
@@ -1143,6 +1144,71 @@ gst_bin_iterate_sinks (GstBin * bin)
   return result;
 }
 
+/* returns 0 when TRUE because this is a GCompareFunc */
+/* MT safe */
+static gint
+bin_element_is_src (GstElement * child, GstBin * bin)
+{
+  gboolean is_src = FALSE;
+
+  /* we lock the child here for the remainder of the function to
+   * get its name and flag safely. */
+  GST_OBJECT_LOCK (child);
+  if (!GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SINK) &&
+      !child->numsinkpads) {
+    is_src = TRUE;
+  }
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin,
+      "child %s %s src", GST_OBJECT_NAME (child), is_src ? "is" : "is not");
+
+  GST_OBJECT_UNLOCK (child);
+  return is_src ? 0 : 1;
+}
+
+static gint
+src_iterator_filter (GstElement * child, GstBin * bin)
+{
+  if (bin_element_is_src (child, bin) == 0) {
+    /* returns 0 because this is a GCompareFunc */
+    return 0;
+  } else {
+    /* child carries a ref from gst_bin_iterate_elements -- drop if not passing
+       through */
+    gst_object_unref (child);
+    return 1;
+  }
+}
+
+/**
+ * gst_bin_iterate_sources:
+ * @bin: a #GstBin
+ *
+ * Gets an iterator for all elements in the bin that have the
+ * #GST_ELEMENT_IS_SRC flag set.
+ *
+ * Each element yielded by the iterator will have its refcount increased, so
+ * unref after use.
+ *
+ * MT safe.  Caller owns returned value.
+ *
+ * Returns: a #GstIterator of #GstElement, or NULL
+ */
+GstIterator *
+gst_bin_iterate_sources (GstBin * bin)
+{
+  GstIterator *children;
+  GstIterator *result;
+
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+
+  children = gst_bin_iterate_elements (bin);
+  result = gst_iterator_filter (children,
+      (GCompareFunc) src_iterator_filter, bin);
+
+  return result;
+}
+
 /*
  * MT safe
  */
@@ -1788,8 +1854,15 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
   gboolean res = TRUE;
   gboolean done = FALSE;
 
-  iter = gst_bin_iterate_sinks (bin);
-  GST_DEBUG_OBJECT (bin, "Sending event to sink children");
+  if (GST_EVENT_IS_DOWNSTREAM (event)) {
+    iter = gst_bin_iterate_sources (bin);
+    GST_DEBUG_OBJECT (bin, "Sending %s event to src children",
+        GST_EVENT_TYPE_NAME (event));
+  } else {
+    iter = gst_bin_iterate_sinks (bin);
+    GST_DEBUG_OBJECT (bin, "Sending %s event to sink children",
+        GST_EVENT_TYPE_NAME (event));
+  }
 
   while (!done) {
     gpointer data;
@@ -1797,21 +1870,23 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
     switch (gst_iterator_next (iter, &data)) {
       case GST_ITERATOR_OK:
       {
-        GstElement *sink;
+        GstElement *child;
 
         gst_event_ref (event);
-        sink = GST_ELEMENT_CAST (data);
-        res &= gst_element_send_event (sink, event);
-        gst_object_unref (sink);
+        child = GST_ELEMENT_CAST (data);
+        res &= gst_element_send_event (child, event);
+        gst_object_unref (child);
         break;
       }
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
         res = TRUE;
         break;
-      default:
       case GST_ITERATOR_DONE:
         done = TRUE;
+        break;
+      case GST_ITERATOR_ERROR:
+        g_assert_not_reached ();
         break;
     }
   }

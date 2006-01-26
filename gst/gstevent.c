@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wim.taymans@chello.be>
+ *                    2005 Wim Taymans <wim@fluendo.com>
  *
  * gstevent.c: GstEvent subsystem
  *
@@ -26,27 +27,30 @@
  *                     a pipeline
  * @see_also: #GstPad, #GstElement
  *
- * The event classes are used to construct and query events.
+ * The event class provides factory methods to construct and functions query
+ * (parse) events.
  *
- * Events are usually created with gst_event_new_*() which takes the extra
- * event parameters as arguments.
- * Events can be parsed with their respective gst_event_parse_*() functions.
- * The event should be unreffed with gst_event_unref().
+ * Events are usually created with gst_event_new_*() which takes event-type
+ * specific parameters as arguments.
+ * To send an event use gst_element_send_event(),gst_pad_send_event() or
+ * gst_pad_push_event().
+ * The event should be unreffed with gst_event_unref() if it has not been sent.
+ *
+ * Events that have been received can be parsed with their respective 
+ * gst_event_parse_*() functions.
  *
  * Events are passed between elements in parallel to the data stream. Some events
  * are serialized with buffers, others are not. Some events only travel downstream,
  * others only upstream. Some events can travel both upstream and downstream. 
  * 
- * The events are used to signal special conditions in the datastream such as EOS
- * or the start of a new segment. Events are also used to flush the pipeline of
- * any pending data.
+ * The events are used to signal special conditions in the datastream such as
+ * EOS (end of stream) or the start of a new stream-segment.
+ * Events are also used to flush the pipeline of any pending data.
  *
- * Most of the event API is used inside plugins. The application usually only 
- * constructs and uses the seek event API when it wants to perform a seek in the
- * pipeline. 
-
- * gst_event_new_seek() is usually used to create a seek event and it takes
- * the needed parameters for a seek event.
+ * Most of the event API is used inside plugins. Applications usually only 
+ * construct and use seek events. 
+ * To do that gst_event_new_seek() is used to create a seek event. It takes
+ * the needed parameters to specity seeking time and mode.
  * <example>
  * <title>performing a seek on a pipeline</title>
  *   <programlisting>
@@ -68,7 +72,7 @@
  *   </programlisting>
  * </example>
  *
- * Last reviewed on 2005-11-23 (0.9.5)
+ * Last reviewed on 2006-01-24 (0.10.2)
  */
 
 #include <string.h>             /* memcpy */

@@ -46,6 +46,7 @@ gst_bin_iterate_elements
 gst_bin_iterate_recurse
 gst_bin_iterate_sinks
 gst_bin_iterate_sorted
+gst_bin_iterate_sources
 gst_bin_iterate_all_by_interface
 
 <SUBSECTION>

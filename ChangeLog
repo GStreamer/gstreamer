@@ -1,3 +1,14 @@
+2006-01-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbin.c: (bin_element_is_src), (src_iterator_filter),
+	(gst_bin_iterate_sources), (gst_bin_send_event):
+	* gst/gstbin.h:
+	* gst/gstelement.c: (gst_element_send_event):
+	* gst/gstevent.c:
+	* gst/gstpad.c: (gst_pad_send_event):
+          added code for downstream events, reviewed docs in gstevent.c
+
 2006-01-25  Julien MOUTTE  <julien@moutte.net>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position):

@@ -169,6 +169,7 @@ GstIterator*    gst_bin_iterate_sorted		 (GstBin *bin);
 GstIterator*    gst_bin_iterate_recurse		 (GstBin *bin);
 
 GstIterator*	gst_bin_iterate_sinks		 (GstBin *bin);
+GstIterator*	gst_bin_iterate_sources		 (GstBin *bin);
 GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType interface);
 
 G_END_DECLS
