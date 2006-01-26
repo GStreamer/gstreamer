@@ -324,25 +324,71 @@ tta_type_find (GstTypeFind * tf, gpointer unused)
 static GstStaticCaps aac_caps = GST_STATIC_CAPS ("audio/mpeg, "
     "mpegversion = (int) { 2, 4 }, framed = (bool) false");
 #define AAC_CAPS (gst_static_caps_get(&aac_caps))
+#define AAC_AMOUNT (4096)
 static void
 aac_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data = gst_type_find_peek (tf, 0, 2);
+  guint8 *data = gst_type_find_peek (tf, 0, AAC_AMOUNT);
+  gint snc;
 
-  /* detect adts header
-   * note that this is a pretty lame typefind method (14 bits, 0.006%), so
-   * we'll only use LIKELY
+  /* detect adts header or adif header.
+   * The ADIF header is 4 bytes, that should be OK. The ADTS header, on
+   * the other hand, is 14 bits only, so we require one valid frame with
+   * again a valid syncpoint on the next one (28 bits) for certainty. We
+   * require 4 kB, which is quite a lot, since frames are generally 200-400
+   * bytes.
    */
   if (data) {
-    if (data[0] == 0xFF && (data[1] & 0xF6) == 0xF0) {
-      gboolean mpegversion = (data[1] & 0x08) ? 2 : 4;
-      GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
-          "framed", G_TYPE_BOOLEAN, FALSE,
-          "mpegversion", G_TYPE_INT, mpegversion,
-          NULL);
+    gint n;
 
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
-      gst_caps_unref (caps);
+    for (n = 0; n < AAC_AMOUNT - 3; n++) {
+      snc = GST_READ_UINT16_BE (&data[n]);
+      if ((snc & 0xfff6) == 0xfff0) {
+        /* ADTS header - find frame length */
+        gint len;
+
+        GST_DEBUG ("Found one ADTS syncpoint at offset 0x%x, tracing next...",
+            n);
+        if (AAC_AMOUNT - n < 5) {
+          GST_DEBUG ("Not enough data to parse ADTS header");
+          break;
+        }
+        len = ((data[n + 3] & 0x03) << 11) |
+            (data[n + 4] << 3) | ((data[n + 5] & 0xe0) >> 5);
+        if (n + len + 2 >= AAC_AMOUNT) {
+          GST_DEBUG ("Next frame is not within reach");
+          break;
+        } else if (len == 0) {
+          continue;
+        }
+
+        snc = GST_READ_UINT16_BE (&data[n + len]);
+        if ((snc & 0xfff6) == 0xfff0) {
+          gint mpegversion = (data[n + 1] & 0x08) ? 2 : 4;
+          GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
+              "framed", G_TYPE_BOOLEAN, FALSE,
+              "mpegversion", G_TYPE_INT, mpegversion,
+              NULL);
+
+          gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
+          gst_caps_unref (caps);
+
+          GST_DEBUG ("Found ADTS-%d syncpoint at offset 0x%x (framelen %u)",
+              mpegversion, n, len);
+          break;
+        }
+
+        GST_DEBUG ("No next frame found... (should be at 0x%x)", n + len);
+      } else if (!memcmp (&data[n], "ADIF", 4)) {
+        /* ADIF header */
+        GstCaps *caps = gst_caps_new_simple ("audio/mpeg",
+            "framed", G_TYPE_BOOLEAN, FALSE,
+            "mpegversion", G_TYPE_INT, 4,
+            NULL);
+
+        gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
+        gst_caps_unref (caps);
+      }
     }
   }
 }
@@ -387,7 +433,8 @@ static guint mp3types_freqs[3][3] = { {11025, 12000, 8000},
 
 static inline guint
 mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
-    guint * put_channels, guint * put_bitrate, guint * put_samplerate)
+    guint * put_channels, guint * put_bitrate, guint * put_samplerate,
+    gboolean * may_be_free_format, gint possible_free_framelen)
 {
   guint bitrate, layer, length, mode, samplerate, version, channels;
 
@@ -414,7 +461,11 @@ mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
 
   /* bitrate index */
   bitrate = header & 0xF;
-  if (bitrate == 15 || bitrate == 0)
+  if (bitrate == 0 && possible_free_framelen == -1) {
+    GST_LOG ("Possibly a free format mp3 - signalling");
+    *may_be_free_format = TRUE;
+  }
+  if (bitrate == 15 || (bitrate == 0 && possible_free_framelen == -1))
     return 0;
 
   /* ignore error correction, too */
@@ -433,15 +484,26 @@ mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
 
   /* lookup */
   channels = (mode == 3) ? 1 : 2;
-  bitrate = mp3types_bitrates[version == 3 ? 0 : 1][layer - 1][bitrate];
   samplerate = mp3types_freqs[version > 0 ? version - 1 : 0][samplerate];
-
-  /* calculating */
-  if (layer == 1) {
-    length = ((12000 * bitrate / samplerate) + length) * 4;
+  if (bitrate == 0) {
+    if (layer == 1) {
+      length *= 4;
+      length += possible_free_framelen;
+      bitrate = length * samplerate / 48000;
+    } else {
+      length += possible_free_framelen;
+      bitrate = length * samplerate /
+          ((layer == 3 && version != 3) ? 72000 : 144000);
+    }
   } else {
-    length += ((layer == 3
-            && version != 3) ? 72000 : 144000) * bitrate / samplerate;
+    /* calculating */
+    bitrate = mp3types_bitrates[version == 3 ? 0 : 1][layer - 1][bitrate];
+    if (layer == 1) {
+      length = ((12000 * bitrate / samplerate) + length) * 4;
+    } else {
+      length += ((layer == 3
+              && version != 3) ? 72000 : 144000) * bitrate / samplerate;
+    }
   }
 
   GST_LOG ("mp3typefind: calculated mp3 frame length of %u bytes", length);
@@ -487,6 +549,7 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
   guint64 skipped;
 
   for (try = 0; try < 2; try++) {
+    gint last_free_offset = -1, last_free_framelen = -1;
     guint64 start_off = (try == 0) ? 0 : length / 2;
 
     if (try != 0 && start_off == 0)
@@ -515,6 +578,7 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
           guint length;
           guint prev_layer = 0, prev_bitrate = 0,
               prev_channels = 0, prev_samplerate = 0;
+          gboolean free = FALSE;
 
           if (offset + 4 <= skipped + size) {
             head_data = data + offset - skipped;
@@ -525,11 +589,23 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
             break;
           head = GST_READ_UINT32_BE (head_data);
           if (!(length = mp3_type_frame_length_from_header (head, &layer,
-                      &channels, &bitrate, &samplerate))) {
+                      &channels, &bitrate, &samplerate, &free,
+                      last_free_framelen))) {
+            if (free) {
+              if (last_free_offset == -1)
+                last_free_offset = offset;
+              else {
+                last_free_framelen = offset - last_free_offset;
+                offset = last_free_offset;
+                continue;
+              }
+            } else {
+              last_free_framelen = -1;
+            }
 
             GST_LOG ("%d. header at offset %" G_GUINT64_FORMAT
-                " (0x%X) was not an mp3 header", found + 1, offset,
-                (guint) offset);
+                " (0x%X) was not an mp3 header (possibly-free: %s)",
+                found + 1, offset, (guint) offset, free ? "yes" : "no");
             break;
           }
           if ((prev_layer && prev_layer != layer) ||
@@ -638,9 +714,24 @@ wavpack_type_find (GstTypeFind * tf, gpointer unused)
     guint32 blocksize, sublen;
     gint32 left;
 
+    GST_LOG ("got wavpack header");
+
+    /* wavpack blocks can be fairly large, possibly larger than the max.
+     * limits imposed by certain typefinding elements like id3demux or
+     * apedemux. So if the first wavpack block is larger than any particular
+     * limit, we try to get a smaller chunk and hope we get lucky parsing
+     * only bits of it (case at hand: first wavpack block: 42kB, with a
+     * max. limit imposed by apedemux/id3demux: 40kB) */
     blocksize = GST_READ_UINT32_LE (data + 4);
-    /* peek from offset 0, otherwise it won't work with apedemux */
-    data = gst_type_find_peek (tf, 0, 32 + blocksize);
+    do {
+      /* peek from offset 0, otherwise it won't work with apedemux */
+      data = gst_type_find_peek (tf, 0, 32 + blocksize);
+      if (data != NULL)
+        break;
+      if (32 + blocksize < 512) /* random threshold */
+        break;
+      blocksize = (blocksize * 3) / 4;
+    } while (data == NULL);
     if (!data)
       return;
     data += 32;
@@ -1112,7 +1203,9 @@ m4a_type_find (GstTypeFind * tf, gpointer unused)
 {
   guint8 *data = gst_type_find_peek (tf, 4, 8);
 
-  if (data && memcmp (data, "ftypM4A ", 8) == 0) {
+  if (data &&
+      (memcmp (data, "ftypM4A ", 8) == 0 ||
+          memcmp (data, "ftypmp42", 8) == 0)) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, M4A_CAPS);
   }
 }
@@ -1384,7 +1477,7 @@ ircam_type_find (GstTypeFind * tf, gpointer ununsed)
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, IRCAM_CAPS);
     return;
   }
-  // now try the reverse version
+  /* now try the reverse version */
   matched = TRUE;
   for (x = 0; x < 4; x++) {
     if ((data[x] & mask[3 - x]) != match[3 - x]) {
@@ -1860,7 +1953,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *flx_exts[] = { "flc", "fli", NULL };
   static gchar *id3_exts[] =
       { "mp3", "mp2", "mp1", "mpga", "ogg", "flac", "tta", NULL };
-  static gchar *apetag_exts[] = { "ape", "mpc", NULL };
+  static gchar *apetag_exts[] = { "ape", "mpc", "wv", NULL };   /* and mp3 and wav? */
   static gchar *tta_exts[] = { "tta", NULL };
   static gchar *mod_exts[] = { "669", "amf", "dsm", "gdm", "far", "imf",
     "it", "med", "mod", "mtm", "okt", "sam",
