@@ -1,3 +1,8 @@
+2006-01-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
+	  Fix wrong memcpy source pointer.
+
 2006-01-25  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/libmms/gstmms.c: (gst_mms_finalize):

@@ -2001,11 +2001,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     if (esds) {
       gst_qtdemux_handle_esds (qtdemux, stream, esds);
     } else {
-      if (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4) ==
+      if (QTDEMUX_FOURCC_GET ((char *) stsd->data + 16 + 4) ==
           GST_MAKE_FOURCC ('a', 'v', 'c', '1')) {
         gint len = QTDEMUX_GUINT32_GET (stsd->data) - 0x66;
         guint8 *stsddata = stsd->data + 0x66;
-
 
         /* find avcC */
         while (len >= 0x8 &&
@@ -2029,7 +2028,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             size = len - 0x8;
 
           buf = gst_buffer_new_and_alloc (size);
-          memcpy (GST_BUFFER_DATA (buf), (guint8 *) stsd->data + 0x8, size);
+          memcpy (GST_BUFFER_DATA (buf), stsddata + 0x8, size);
           gst_caps_set_simple (stream->caps,
               "codec_data", GST_TYPE_BUFFER, buf, NULL);
           gst_buffer_unref (buf);
