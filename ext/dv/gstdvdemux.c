@@ -1053,6 +1053,7 @@ gst_dvdemux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       dvdemux->decoder = dv_decoder_new (0, FALSE, FALSE);
+      dv_set_error_log (dvdemux->decoder, NULL);
       dvdemux->audio_offset = 0;
       dvdemux->video_offset = 0;
       dvdemux->framecount = 0;

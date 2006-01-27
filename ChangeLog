@@ -1,3 +1,13 @@
+2006-01-27  Jan Gerber  <j@bootlab.org>
+
+	Reviewed by: Andy Wingo <wingo@pobox.com>
+
+	* ext/dv/gstdvdec.c (gst_dvdec_change_state):
+	* ext/dv/gstdvdemux.c (gst_dvdemux_change_state):
+	Call dv_set_error_log (dv_decoder_t *, NULL); after dv_decoder_new
+	to not have warings flooding stderr. this is the suggested way
+	also used in dvgrab and kino. (#328336)
+
 2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/oss/gstosssink.c: (gst_oss_sink_class_init),

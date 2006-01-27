@@ -332,6 +332,7 @@ gst_dvdec_change_state (GstElement * element, GstStateChange transition)
       dvdec->decoder =
           dv_decoder_new (0, dvdec->clamp_luma, dvdec->clamp_chroma);
       dvdec->decoder->quality = qualities[dvdec->quality];
+      dv_set_error_log (dvdec->decoder, NULL);
       /* 
        * Enable this function call when libdv2 0.100 or higher is more
        * common
