@@ -1,3 +1,9 @@
+2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/oss/gstosssink.c: (gst_oss_sink_class_init),
+	(gst_oss_sink_init), (gst_oss_sink_finalise):
+	  Free the device name string when finalised.
+
 2006-01-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_remove_srcpad):

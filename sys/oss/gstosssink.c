@@ -59,7 +59,9 @@ GST_ELEMENT_DETAILS ("Audio Sink (OSS)",
 static void gst_oss_sink_base_init (gpointer g_class);
 static void gst_oss_sink_class_init (GstOssSinkClass * klass);
 static void gst_oss_sink_init (GstOssSink * osssink);
+
 static void gst_oss_sink_dispose (GObject * object);
+static void gst_oss_sink_finalise (GObject * object);
 
 static void gst_oss_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -179,6 +181,7 @@ gst_oss_sink_class_init (GstOssSinkClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_oss_sink_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_oss_sink_finalise);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_oss_sink_get_property);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_oss_sink_set_property);
 
@@ -202,8 +205,16 @@ gst_oss_sink_init (GstOssSink * osssink)
 {
   GST_DEBUG ("initializing osssink");
 
-  osssink->device = g_strdup (DEFAULT_DEVICE);;
+  osssink->device = g_strdup (DEFAULT_DEVICE);
   osssink->fd = -1;
+}
+
+static void
+gst_oss_sink_finalise (GObject * object)
+{
+  GstOssSink *osssink = GST_OSSSINK (object);
+
+  g_free (osssink->device);
 }
 
 static void
