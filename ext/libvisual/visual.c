@@ -363,6 +363,9 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
         visual->video->bpp, GST_PAD_CAPS (visual->srcpad), outbuf);
   }
 
+  if (ret != GST_FLOW_OK)
+    return ret;
+
   if (*outbuf == NULL)
     return GST_FLOW_ERROR;
 
