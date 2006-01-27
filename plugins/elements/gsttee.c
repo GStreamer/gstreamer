@@ -265,24 +265,32 @@ static gboolean
 gst_tee_do_push (GstPad * pad, GValue * ret, PushData * data)
 {
   GstFlowReturn res;
+  GstTee *tee = data->tee;
 
   if (G_UNLIKELY (!data->tee->silent)) {
-    GstTee *tee = data->tee;
     GstBuffer *buf = data->buffer;
 
+    GST_OBJECT_LOCK (tee);
     g_free (tee->last_message);
     tee->last_message =
         g_strdup_printf ("chain        ******* (%s:%s)t (%d bytes, %"
         G_GUINT64_FORMAT ") %p", GST_DEBUG_PAD_NAME (pad),
         GST_BUFFER_SIZE (buf), GST_BUFFER_TIMESTAMP (buf), buf);
+    GST_OBJECT_UNLOCK (tee);
     g_object_notify (G_OBJECT (tee), "last_message");
   }
 
   /* Push */
   res = gst_pad_push (pad, gst_buffer_ref (data->buffer));
+  GST_LOG_OBJECT (tee, "Pushing buffer %p to %" GST_PTR_FORMAT
+      " yielded result=%d", data->buffer, pad, res);
 
-  /* If it's fatal or OK we overwrite the previous value */
-  if (GST_FLOW_IS_FATAL (res) || (res == GST_FLOW_OK)) {
+  /* If it's fatal or OK, or if ret is currently
+   * not-linked, we overwrite the previous value */
+  if (GST_FLOW_IS_FATAL (res) || (res == GST_FLOW_OK) ||
+      (g_value_get_enum (ret) == GST_FLOW_NOT_LINKED)) {
+    GST_LOG_OBJECT (tee, "Replacing ret val %d with %d",
+        g_value_get_enum (ret), res);
     g_value_set_enum (ret, res);
   }
 
@@ -308,9 +316,15 @@ gst_tee_handle_buffer (GstTee * tee, GstBuffer * buffer)
   data.tee = tee;
   data.buffer = buffer;
 
+  GST_LOG_OBJECT (tee, "Starting to push buffer %p", buffer);
+  /* FIXME: Not sure how tee would handle RESEND buffer from some of the
+   * pads but not from others. */
   res = gst_iterator_fold (iter, (GstIteratorFoldFunction) gst_tee_do_push,
       &ret, &data);
   gst_iterator_free (iter);
+
+  GST_LOG_OBJECT (tee, "Pushing buffer %p yielded result=%d", buffer,
+      g_value_get_enum (&ret));
 
   gst_buffer_unref (buffer);
 

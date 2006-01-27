@@ -1,5 +1,19 @@
 2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* plugins/elements/gsttee.c: (gst_tee_do_push),
+	(gst_tee_handle_buffer):
+	Always prefer an actual return value from a src
+	pad in place of NOT_LINKED. This means we return
+	WRONG_STATE when all src pads are WRONG_STATE
+	instead of NOT_LINKED.
+
+	Lock when replacing the last message to prevent
+	racing with the get_property method.
+
+	Add debug output
+
+2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* tests/check/Makefile.am:
 	* tests/check/gst/gstquery.c: (GST_START_TEST), (gstquery_suite),
 	(main):
