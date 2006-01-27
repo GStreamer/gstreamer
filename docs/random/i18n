@@ -1,0 +1,40 @@
+Internationalization notes
+--------------------------
+- apps:
+  - use setlocale to parse locale env vars and set to language code
+  - use textdomain to set the text domain of their app
+  - use bindtextdomain to tie the domain to a locale dir
+  - use gettext (possibly disguised as _) to translate in the current domain
+
+- libraries:
+  - should only use bindtextdomain to tie a domain to a locale dir
+  - use dgettext (possibly disguised as _) to translate from a set domain
+
+- How to make your plug-in code translateable:
+  - include <gst/gst-i18n-plugin.h> in all files that mark strings for
+    translation, or do the bindtextdomain call
+  - in plugin_init, add a block like this:
+
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
+
+  - mark all strings you want translated for translation by wrapping them in
+    _()
+  - typically, these are all strings that serve as the message string for a
+    GST_ELEMENT_ERROR or _WARNING
+  - but it could also consist of any strings that may end up being presented
+    to the user (for example mixer track)
+
+Things to watch out for
+-----------------------
+- forgetting to bindtextdomain is an error that is not always noticeable,
+  because:
+  - any plugin from the same module being init'd binds the text domain,
+    so you may forget it in B, and still have it work because A bound the
+    domain
+  - without a bindtextdomain call, any domain is bound to the system locale
+    dir - so you could still have translations if it happens to be where the
+    translations are
