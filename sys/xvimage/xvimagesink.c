@@ -1072,18 +1072,39 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     return NULL;
   }
 
-  /* Set XV_AUTOPAINT_COLORKEY */
+  /* Set XV_AUTOPAINT_COLORKEY and XV_DOUBLE_BUFFER and XV_COLORKEY */
   {
     int count;
     XvAttribute *const attr = XvQueryPortAttributes (xcontext->disp,
         xcontext->xv_port_id, &count);
     static const char autopaint[] = "XV_AUTOPAINT_COLORKEY";
+    static const char dbl_buffer[] = "XV_DOUBLE_BUFFER";
+    static const char colorkey[] = "XV_COLORKEY";
 
     for (i = 0; i < count; i++)
       if (!strcmp (attr[i].name, autopaint)) {
         const Atom atom = XInternAtom (xcontext->disp, autopaint, False);
 
         XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom, 1);
+        break;
+      }
+
+    for (i = 0; i < count; i++)
+      if (!strcmp (attr[i].name, dbl_buffer)) {
+        const Atom atom = XInternAtom (xcontext->disp, dbl_buffer, False);
+
+        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom, 1);
+        break;
+      }
+
+    /* Set the colorkey to something that is dark but hopefully won't randomly
+     * appear on the screen elsewhere (ie not black or greys) */
+    for (i = 0; i < count; i++)
+      if (!strcmp (attr[i].name, colorkey)) {
+        const Atom atom = XInternAtom (xcontext->disp, colorkey, False);
+
+        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
+            0x010203);
         break;
       }
 

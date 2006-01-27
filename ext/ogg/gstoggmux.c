@@ -170,6 +170,8 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux);
 static gboolean gst_ogg_mux_handle_src_event (GstPad * pad, GstEvent * event);
 static GstPad *gst_ogg_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
+static void gst_ogg_mux_release_pad (GstElement * element, GstPad * pad);
+
 static void gst_ogg_mux_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_ogg_mux_get_property (GObject * object,
@@ -235,6 +237,7 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
   gobject_class->set_property = gst_ogg_mux_set_property;
 
   gstelement_class->request_new_pad = gst_ogg_mux_request_new_pad;
+  gstelement_class->release_pad = gst_ogg_mux_release_pad;
 
   g_object_class_install_property (gobject_class, ARG_MAX_DELAY,
       g_param_spec_uint64 ("max-delay", "Max delay",
@@ -384,10 +387,6 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       oggpad->new_page = TRUE;
       oggpad->first_delta = FALSE;
       oggpad->prev_delta = FALSE;
-      /* TODO: delete this queue (and the things contained within) later,
-       * possibly when doing gst_collect_pads_remove_pad() (which we don't seem
-       * to do at all?)
-       */
       oggpad->pagebuffers = g_queue_new ();
     }
   }
@@ -412,14 +411,49 @@ wrong_template:
   }
 }
 
+static void
+gst_ogg_mux_release_pad (GstElement * element, GstPad * pad)
+{
+  GstOggMux *ogg_mux;
+  GSList *walk;
+
+  ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
+
+  /* FIXME: When a request pad is released while paused or playing, 
+   * we probably need to do something to finalise its stream in the
+   * ogg data we're producing, but I'm not sure what */
+
+  /* Find out GstOggPad in the collect pads info and clean it up */
+
+  GST_OBJECT_LOCK (ogg_mux->collect);
+  walk = ogg_mux->collect->data;
+  while (walk) {
+    GstOggPad *oggpad = (GstOggPad *) walk->data;
+    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstBuffer *buf;
+
+    if (cdata->pad == pad) {
+      /* FIXME: clear the ogg stream stuff? - 
+       *    ogg_stream_clear (&oggpad->stream); */
+
+      while ((buf = g_queue_pop_head (oggpad->pagebuffers)) != NULL) {
+        gst_buffer_unref (buf);
+      }
+
+      g_queue_free (oggpad->pagebuffers);
+    }
+    walk = g_slist_next (walk);
+  }
+  GST_OBJECT_UNLOCK (ogg_mux->collect);
+
+  gst_collect_pads_remove_pad (ogg_mux->collect, pad);
+}
+
 /* handle events */
 static gboolean
 gst_ogg_mux_handle_src_event (GstPad * pad, GstEvent * event)
 {
-  GstOggMux *ogg_mux;
   GstEventType type;
-
-  ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
 
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
@@ -1299,6 +1333,7 @@ gst_ogg_mux_set_property (GObject * object,
   }
 }
 
+/* Clear all buffers from the collectpads object */
 static void
 gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
 {
@@ -1306,18 +1341,27 @@ gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
 
   walk = collect->data;
   while (walk) {
-    GstOggPad *pad = (GstOggPad *) walk->data;
+    GstOggPad *oggpad = (GstOggPad *) walk->data;
     GstBuffer *buf;
 
-    ogg_stream_clear (&pad->stream);
+    ogg_stream_clear (&oggpad->stream);
 
-    while ((buf = g_queue_pop_head (pad->pagebuffers)) != NULL) {
+    while ((buf = g_queue_pop_head (oggpad->pagebuffers)) != NULL) {
       gst_buffer_unref (buf);
     }
-    g_queue_free (pad->pagebuffers);
 
-    gst_collect_pads_remove_pad (collect, ((GstCollectData *) pad)->pad);
-    walk = collect->data;
+    ogg_stream_init (&oggpad->stream, oggpad->serial);
+    oggpad->packetno = 0;
+    oggpad->pageno = 0;
+    oggpad->eos = FALSE;
+    /* we assume there will be some control data first for this pad */
+    oggpad->state = GST_OGG_PAD_STATE_CONTROL;
+    oggpad->new_page = TRUE;
+    oggpad->first_delta = FALSE;
+    oggpad->prev_delta = FALSE;
+    oggpad->pagebuffers = g_queue_new ();
+
+    walk = g_slist_next (walk);
   }
 }
 

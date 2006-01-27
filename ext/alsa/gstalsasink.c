@@ -51,6 +51,7 @@ static void gst_alsasink_base_init (gpointer g_class);
 static void gst_alsasink_class_init (GstAlsaSinkClass * klass);
 static void gst_alsasink_init (GstAlsaSink * alsasink);
 static void gst_alsasink_dispose (GObject * object);
+static void gst_alsasink_finalise (GObject * object);
 static void gst_alsasink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_alsasink_get_property (GObject * object,
@@ -134,6 +135,14 @@ gst_alsasink_dispose (GObject * object)
 }
 
 static void
+gst_alsasink_finalise (GObject * object)
+{
+  GstAlsaSink *sink = GST_ALSA_SINK (object);
+
+  g_free (sink->device);
+}
+
+static void
 gst_alsasink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -161,6 +170,7 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
   parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_alsasink_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_alsasink_finalise);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_alsasink_get_property);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_alsasink_set_property);
 

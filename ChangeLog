@@ -1,3 +1,21 @@
+2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_finalise),
+	(gst_alsasink_class_init):
+	  Free the device name string.
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_class_init),
+	(gst_ogg_mux_request_new_pad), (gst_ogg_mux_release_pad),
+	(gst_ogg_mux_handle_src_event), (gst_ogg_mux_clear_collectpads):
+	  Don't remove a pad from the collectpads structure until it
+	  is released - it's a request pad, and may receive data again
+	  if the element gets moved back to PLAYING state.
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support):
+	  Ensure we turn on double buffering on the Xv port, and
+	  set the colour key to something dark and mysterious that
+	  isn't black.
+
 2006-01-27  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/alsa/gstalsaplugin.c: (plugin_init):
