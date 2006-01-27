@@ -1587,7 +1587,7 @@ gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
  * @caps: a #GstCaps
  *
  * Converts @caps to a string representation.  This string representation
- * can be converted back to a #GstCaps by #gst_caps_from_string.
+ * can be converted back to a #GstCaps by gst_caps_from_string().
  *
  * Returns: a newly allocated string representing @caps.
  */

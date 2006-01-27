@@ -447,7 +447,7 @@ gst_structure_set (GstStructure * structure, const gchar * field, ...)
  * @fieldname: the name of the field to set
  * @varargs: variable arguments
  *
- * va_list form of #gst_structure_set.
+ * va_list form of gst_structure_set().
  */
 void
 gst_structure_set_valist (GstStructure * structure,
@@ -656,7 +656,7 @@ gst_structure_remove_fields (GstStructure * structure,
  * @fieldname: the name of the field to remove
  * @varargs: NULL-terminated list of more fieldnames to remove
  *
- * va_list form of #gst_structure_remove_fields.
+ * va_list form of gst_structure_remove_fields().
  */
 void
 gst_structure_remove_fields_valist (GstStructure * structure,

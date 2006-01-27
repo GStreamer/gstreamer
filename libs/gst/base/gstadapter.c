@@ -47,12 +47,12 @@
  *   adapter = this->adapter;
  *   
  *   // put buffer into adapter
- *   #gst_adapter_push (adapter, buffer);
+ *   gst_adapter_push (adapter, buffer);
  *   // while we can read out 512 bytes, process them
- *   while (#gst_adapter_available (adapter) >= 512 && ret == GST_FLOW_OK) {
+ *   while (gst_adapter_available (adapter) >= 512 && ret == GST_FLOW_OK) {
  *     // use flowreturn as an error value
- *     ret = my_library_foo (#gst_adapter_peek (adapter, 512));
- *     #gst_adapter_flush (adapter, 512);
+ *     ret = my_library_foo (gst_adapter_peek (adapter, 512));
+ *     gst_adapter_flush (adapter, 512);
  *   }
  *   
  *   gst_object_unref (this);

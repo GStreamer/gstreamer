@@ -2736,7 +2736,7 @@ gst_value_register_union_func (GType type1, GType type2, GstValueUnionFunc func)
  * Determines if intersecting two values will produce a valid result.
  * Two values will produce a valid intersection if they have the same
  * type, or if there is a method (registered by
- * #gst_value_register_intersection_func) to calculate the intersection.
+ * gst_value_register_intersection_func()) to calculate the intersection.
  *
  * Returns: TRUE if the values can intersect
  */

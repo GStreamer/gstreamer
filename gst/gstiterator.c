@@ -298,7 +298,7 @@ done:
  * @it: The #GstIterator to resync
  *
  * Resync the iterator. this function is mostly called
- * after #gst_iterator_next() returned #GST_ITERATOR_RESYNC.
+ * after gst_iterator_next() returned %GST_ITERATOR_RESYNC.
  *
  * MT safe.
  */

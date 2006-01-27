@@ -1,3 +1,19 @@
+2006-01-27  Stefan Kost  <ensonic@users.sf.net>
+	* gst/gstcaps.c:
+	* gst/gstelement.c: (gst_element_send_event):
+	* gst/gstevent.c:
+	* gst/gstinfo.c:
+	* gst/gstiterator.c:
+	* gst/gstiterator.h:
+	* gst/gstpad.c: (gst_pad_send_event):
+	* gst/gststructure.c:
+	* gst/gsturi.c:
+	* gst/gstutils.c:
+	* gst/gstvalue.c:
+	* libs/gst/base/gstadapter.c:
+          doc fixes, to link to function, just write gst_cool_function(), don't
+          prefix with '#'
+
 2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* plugins/elements/gsttee.c: (gst_tee_do_push),

@@ -1873,7 +1873,7 @@ done:
  *
  * Gets the capabilities this pad can produce or consume.
  * Note that this method doesn't necessarily returns the caps set by
- * #gst_pad_set_caps - use #GST_PAD_CAPS for that instead.
+ * gst_pad_set_caps() - use #GST_PAD_CAPS for that instead.
  * gst_pad_get_caps returns all possible caps a pad can operate with, using
  * the pad's get_caps function;
  * this returns the pad template caps if not explicitly set.
@@ -3302,7 +3302,7 @@ not_linked:
  * gst_pad_check_pull_range:
  * @pad: a sink #GstPad.
  *
- * Checks if a #gst_pad_pull_range() can be performed on the peer
+ * Checks if a gst_pad_pull_range() can be performed on the peer
  * source pad. This function is used by plugins that want to check
  * if they can use random access on the peer source pad.
  *
@@ -3841,7 +3841,7 @@ no_task:
  * from the GstTaskFunction.
  *
  * This function will deadlock if called from the GstTaskFunction of
- * the task. Use #gst_task_pause() instead.
+ * the task. Use gst_task_pause() instead.
  *
  * Regardless of whether the pad has a task, the stream lock is acquired and
  * released so as to ensure that streaming through this pad has finished.

@@ -129,9 +129,9 @@ typedef void		  (*GstIteratorFreeFunction)	(GstIterator *it);
  * GstIteratorFoldFunction:
  * @item: the item to fold
  * @ret: a GValue collecting the result
- * @user_data: data passed to #gst_iterator_fold
+ * @user_data: data passed to gst_iterator_fold()
  *
- * A function to be passed to #gst_iterator_fold.
+ * A function to be passed to gst_iterator_fold().
  *
  * Returns: TRUE if the fold should continue, FALSE if it should stop.
  */

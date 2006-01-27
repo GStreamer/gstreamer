@@ -539,9 +539,9 @@ gst_debug_construct_term_color (guint colorinfo)
  * The default logging handler used by GStreamer. Logging functions get called
  * whenever a macro like GST_DEBUG or similar is used. This function outputs the
  * message and additional info using the glib error handler.
- * You can add other handlers by using #gst_debug_add_log_function.
+ * You can add other handlers by using gst_debug_add_log_function().
  * And you can remove this handler by calling
- * gst_debug_remove_log_function (gst_debug_log_default);
+ * gst_debug_remove_log_function(gst_debug_log_default);
  */
 void
 gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,

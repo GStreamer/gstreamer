@@ -62,10 +62,10 @@
  * You can get and set a #GstClock on an element using gst_element_get_clock()
  * and gst_element_set_clock().
  * Some elements can provide a clock for the pipeline if
- * gst_element_provides_clock() returns TRUE. With the gst_element_provide_clock()
+ * gst_element_provides_clock() returns %TRUE. With the gst_element_provide_clock()
  * method one can retrieve the clock provided by such an element.
  * Not all elements require a clock to operate correctly. If
- * gst_element_requires_clock() returns TRUE, a clock should be set on the
+ * gst_element_requires_clock() returns %TRUE, a clock should be set on the
  * element with gst_element_set_clock().
  *
  * Note that clock slection and distribution is normally handled by the
@@ -1401,7 +1401,7 @@ no_bus:
  * _gst_element_error_printf:
  * @format: the printf-like format to use, or NULL
  *
- * This function is only used internally by the #gst_element_error macro.
+ * This function is only used internally by the gst_element_error() macro.
  *
  * Returns: a newly allocated string, or NULL if the format was NULL or ""
  *
@@ -1735,36 +1735,36 @@ interrupted:
  * @element: a #GstElement to get the state of.
  * @state: a pointer to #GstState to hold the state. Can be NULL.
  * @pending: a pointer to #GstState to hold the pending state.
- *           Can be NULL.
+ *           Can be %NULL.
  * @timeout: a #GstClockTime to specify the timeout for an async
- *           state change or GST_CLOCK_TIME_NONE for infinite timeout.
+ *           state change or %GST_CLOCK_TIME_NONE for infinite timeout.
  *
  * Gets the state of the element.
  *
  * For elements that performed an ASYNC state change, as reported by
- * #gst_element_set_state(), this function will block up to the
+ * gst_element_set_state(), this function will block up to the
  * specified timeout value for the state change to complete.
  * If the element completes the state change or goes into
  * an error, this function returns immediately with a return value of
- * #GST_STATE_CHANGE_SUCCESS or #GST_STATE_CHANGE_FAILURE respectively.
+ * %GST_STATE_CHANGE_SUCCESS or %GST_STATE_CHANGE_FAILURE respectively.
  *
- * For elements that did not return #GST_STATE_CHANGE_ASYNC, this function
+ * For elements that did not return %GST_STATE_CHANGE_ASYNC, this function
  * returns the current and pending state immediately.
  *
- * This function returns #GST_STATE_CHANGE_NO_PREROLL if the element
+ * This function returns %GST_STATE_CHANGE_NO_PREROLL if the element
  * successfully changed its state but is not able to provide data yet.
  * This mostly
  * happens for live sources that only produce data in the PLAYING state.
- * While the state change return is equivalent to #GST_STATE_CHANGE_SUCCESS, it
+ * While the state change return is equivalent to %GST_STATE_CHANGE_SUCCESS, it
  * is returned to the application to signal that some sink elements might not
  * be able to complete their state change because an element is not producing
  * data to complete the preroll. When setting the element to playing,
  * the preroll will complete and playback will start.
  *
- * Returns: #GST_STATE_CHANGE_SUCCESS if the element has no more pending state
- *          and the last state change succeeded, #GST_STATE_CHANGE_ASYNC if the
+ * Returns: %GST_STATE_CHANGE_SUCCESS if the element has no more pending state
+ *          and the last state change succeeded, %GST_STATE_CHANGE_ASYNC if the
  *          element is still performing a state change or
- *          #GST_STATE_CHANGE_FAILURE if the last state change failed.
+ *          %GST_STATE_CHANGE_FAILURE if the last state change failed.
  *
  * MT safe.
  */
@@ -1950,7 +1950,7 @@ complete:
  *
  * Brings the element to the lost state. The current state of the
  * element is copied to the pending state so that any call to
- * #gst_element_get_state() will return ASYNC.
+ * gst_element_get_state() will return ASYNC.
  *
  * This is mostly used for elements that lost their preroll buffer
  * in the PAUSED state after a flush, they become PAUSED again

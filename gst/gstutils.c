@@ -2794,7 +2794,10 @@ gst_pad_remove_buffer_probe (GstPad * pad, guint handler_id)
  * @list: the taglist to post on the bus and create event from.
  *
  * Posts a message to the bus that new tags were found and pushes the
- * tags as event. Takes ownership of the taglist.
+ * tags as event. Takes ownership of the @list.
+ *
+ * This is a utility method for elements. Applications should use the
+ * #GstTagSetter interface.
  */
 void
 gst_element_found_tags_for_pad (GstElement * element,
@@ -2821,7 +2824,10 @@ push_and_ref (GstPad * pad, GstEvent * event)
  * @list: list of tags.
  *
  * Posts a message to the bus that new tags were found, and pushes an event
- * to all sourcepads. Takes ownership of the taglist.
+ * to all sourcepads. Takes ownership of the @list.
+ *
+ * This is a utility method for elements. Applications should use the
+ * #GstTagSetter interface.
  */
 void
 gst_element_found_tags (GstElement * element, GstTagList * list)

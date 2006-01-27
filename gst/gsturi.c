@@ -28,9 +28,10 @@
  * #GstElement to simplify then handling of URI.
  *
  * An application can use the following functions to quickly get an element
- * that handles the given URI for reading or writing (#gst_element_make_from_uri).
+ * that handles the given URI for reading or writing
+ * (gst_element_make_from_uri()).
  *
- * Source and Sink plugins should implement when possible this interface.
+ * Source and Sink plugins should implement this interface when possible.
  *
  * Last reviewed on 2005-11-09 (0.9.4)
  */

@@ -32,8 +32,8 @@
  *
  * Events are usually created with gst_event_new_*() which takes event-type
  * specific parameters as arguments.
- * To send an event use gst_element_send_event(),gst_pad_send_event() or
- * gst_pad_push_event().
+ * To send an event application will usually use gst_element_send_event() and
+ * elements will use gst_pad_send_event() or gst_pad_push_event().
  * The event should be unreffed with gst_event_unref() if it has not been sent.
  *
  * Events that have been received can be parsed with their respective 
