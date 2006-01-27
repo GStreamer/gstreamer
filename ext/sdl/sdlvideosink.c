@@ -53,7 +53,9 @@ static GstElementDetails gst_sdlvideosink_details = {
   "Video sink",
   "Sink/Video",
   "An SDL-based videosink",
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>",
+  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
+      "Edgard Lima <edgard.lima@indt.org.br>"
+      "Jan Schmidt <thaytan@mad.scientist.com>"
 };
 
 
@@ -94,6 +96,8 @@ static GstStateChangeReturn
 gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition);
 
 static void gst_sdlvideosink_navigation_init (GstNavigationInterface * iface);
+
+static void gst_sdlv_process_events (GstSDLVideoSink * sdlvideosink);
 
 static GstPadTemplate *sink_template;
 
@@ -321,12 +325,45 @@ static gboolean
 gst_sdlvideosink_supported (GstImplementsInterface * interface,
     GType iface_type)
 {
-  g_assert (iface_type == GST_TYPE_X_OVERLAY);
+  GstSDLVideoSink *sdlvideosink = GST_SDLVIDEOSINK (interface);
+  gboolean result = FALSE;
 
-  /* FIXME: check SDL for whether it was compiled against X, FB, etc. */
-  return (GST_STATE (interface) != GST_STATE_NULL);
+  /* check SDL for whether it was compiled against X, FB, etc. */
+  if (iface_type == GST_TYPE_X_OVERLAY) {
+    gchar tmp[4];
+
+    if (!sdlvideosink->init) {
+      g_mutex_lock (sdlvideosink->lock);
+      SDL_Init (SDL_INIT_VIDEO);
+
+      /* True if the video driver is X11 */
+      result = (strcmp ("x11", SDL_VideoDriverName (tmp, 4)) == 0);
+      SDL_Quit ();
+      g_mutex_unlock (sdlvideosink->lock);
+    } else
+      result = sdlvideosink->is_xwindows;
+  } else if (iface_type == GST_TYPE_NAVIGATION)
+    result = TRUE;
+
+  return result;
 }
 
+/* SDL Video sink and X overlay: 
+ *
+ * SDL supports creating an Xv window/overlay within an existing X window
+ * through the horrible mechanism of setting the WINDOWID environment
+ * variable.
+ * It will then display the x overlay within that window, but not at the
+ * full window size. Instead, we need to explicitly tell SDL the size.
+ *
+ * Unfortunately, the XOverlay interface in GStreamer doesn't supply
+ * that information. The only way to get it would be to do what X[v]imagesink
+ * does and retrieve it using X11 calls, and linking to Xlib. That would
+ * defeat the whole purpose of using the SDL abstraction and plugin entirely
+ * however. 
+ *
+ * I have no nice solution to this problem for you, dear readers.
+ */
 static void
 gst_sdlvideosink_xoverlay_init (GstXOverlayClass * klass)
 {
@@ -339,19 +376,29 @@ gst_sdlvideosink_xoverlay_set_xwindow_id (GstXOverlay * overlay,
 {
   GstSDLVideoSink *sdlvideosink = GST_SDLVIDEOSINK (overlay);
 
+  if (sdlvideosink->xwindow_id == parent)
+    return;
+
   sdlvideosink->xwindow_id = parent;
 
   /* are we running yet? */
   if (sdlvideosink->init) {
-    gboolean negotiated = (sdlvideosink->overlay != NULL);
+    gboolean negotiated;
+
+    g_mutex_lock (sdlvideosink->lock);
+
+    negotiated = (sdlvideosink->overlay != NULL);
 
     if (negotiated)
       gst_sdlvideosink_destroy (sdlvideosink);
 
+    /* Call initsdl to set the WINDOWID env var urk */
     gst_sdlvideosink_initsdl (sdlvideosink);
 
     if (negotiated)
       gst_sdlvideosink_create (sdlvideosink);
+
+    g_mutex_unlock (sdlvideosink->lock);
   }
 }
 
@@ -424,15 +471,16 @@ gst_sdlvideosink_unlock (GstSDLVideoSink * sdlvideosink)
     SDL_UnlockSurface (sdlvideosink->screen);
 }
 
+/* Must be called with ->lock held */
 static void
 gst_sdlvideosink_deinitsdl (GstSDLVideoSink * sdlvideosink)
 {
-  g_mutex_lock (sdlvideosink->lock);
-
   if (sdlvideosink->init) {
     sdlvideosink->running = FALSE;
     if (sdlvideosink->event_thread) {
+      g_mutex_unlock (sdlvideosink->lock);
       g_thread_join (sdlvideosink->event_thread);
+      g_mutex_lock (sdlvideosink->lock);
       sdlvideosink->event_thread = NULL;
     }
 
@@ -440,49 +488,29 @@ gst_sdlvideosink_deinitsdl (GstSDLVideoSink * sdlvideosink)
     sdlvideosink->init = FALSE;
 
   }
-
-  g_mutex_unlock (sdlvideosink->lock);
 }
 
-int
-SDL_WaitEventTimeout (SDL_Event * event, Uint32 timeout)
+/* Process pending events. Call with ->lock held */
+static void
+gst_sdlv_process_events (GstSDLVideoSink * sdlvideosink)
 {
-  Uint32 i;
-  int numevents = 0;
-
-  for (i = 0; i < timeout; i += 10) {
-    SDL_PumpEvents ();
-    /*  numevents = SDL_PeepEvents(event, 1, SDL_GETEVENT, SDL_ALLEVENTS); */
-    numevents =
-        SDL_PeepEvents (event, 1, SDL_GETEVENT,
-        SDL_KEYDOWNMASK | SDL_KEYUPMASK |
-        SDL_MOUSEMOTIONMASK | SDL_MOUSEBUTTONDOWNMASK | SDL_MOUSEBUTTONUPMASK |
-        SDL_QUITMASK);
-    switch (numevents) {
-      case -1:
-        return 0;
-        break;
-      case 0:
-        SDL_Delay (10);
-        break;
-      default:
-        return numevents;
-        break;
-    }
-  }
-
-  return 0;
-}
-
-static gpointer
-gst_sdlvideosink_event_thread (GstSDLVideoSink * sdlvideosink)
-{
-
   SDL_Event event;
+  int numevents;
+  char *keysym;
 
-  while (sdlvideosink->running) {
-    if (SDL_WaitEventTimeout (&event, 50)) {
+  do {
+    SDL_PumpEvents ();
+    numevents = SDL_PeepEvents (&event, 1, SDL_GETEVENT,
+        SDL_KEYDOWNMASK | SDL_KEYUPMASK |
+        SDL_MOUSEMOTIONMASK | SDL_MOUSEBUTTONDOWNMASK |
+        SDL_MOUSEBUTTONUPMASK | SDL_QUITMASK | SDL_VIDEORESIZEMASK);
 
+    if (numevents > 0 && (event.type == SDL_KEYUP || event.type == SDL_KEYDOWN)) {
+      keysym = SDL_GetKeyName (event.key.keysym.sym);
+    }
+
+    if (numevents > 0) {
+      g_mutex_unlock (sdlvideosink->lock);
       switch (event.type) {
         case SDL_MOUSEMOTION:
           gst_navigation_send_mouse_event (GST_NAVIGATION (sdlvideosink),
@@ -502,14 +530,14 @@ gst_sdlvideosink_event_thread (GstSDLVideoSink * sdlvideosink)
           GST_DEBUG ("key press event %s !",
               SDL_GetKeyName (event.key.keysym.sym));
           gst_navigation_send_key_event (GST_NAVIGATION (sdlvideosink),
-              "key-release", SDL_GetKeyName (event.key.keysym.sym));
+              "key-release", keysym);
           break;
         case SDL_KEYDOWN:
           if (SDLK_ESCAPE != event.key.keysym.sym) {
             GST_DEBUG ("key press event %s !",
                 SDL_GetKeyName (event.key.keysym.sym));
             gst_navigation_send_key_event (GST_NAVIGATION (sdlvideosink),
-                "key-press", SDL_GetKeyName (event.key.keysym.sym));
+                "key-press", keysym);
             break;
           } else {
             /* fall through */
@@ -521,22 +549,48 @@ gst_sdlvideosink_event_thread (GstSDLVideoSink * sdlvideosink)
               ("We were running fullscreen and user "
                   "pressed the ESC key, stopping playback."));
           break;
+        case SDL_VIDEORESIZE:
+          /* create a SDL window of the size requested by the user */
+          g_mutex_lock (sdlvideosink->lock);
+          GST_VIDEO_SINK_WIDTH (sdlvideosink) = event.resize.w;
+          GST_VIDEO_SINK_HEIGHT (sdlvideosink) = event.resize.h;
+          gst_sdlvideosink_create (sdlvideosink);
+          g_mutex_unlock (sdlvideosink->lock);
+          break;
       }
-
+      g_mutex_lock (sdlvideosink->lock);
     }
-
-  }
-
-  return NULL;
-
+  } while (numevents > 0);
 }
 
+static gpointer
+gst_sdlvideosink_event_thread (GstSDLVideoSink * sdlvideosink)
+{
+  g_mutex_lock (sdlvideosink->lock);
+  while (sdlvideosink->running) {
+    gst_sdlv_process_events (sdlvideosink);
+
+    /* Done events, sleep for 50 ms */
+    g_mutex_unlock (sdlvideosink->lock);
+    g_usleep (50000);
+    g_mutex_lock (sdlvideosink->lock);
+  }
+  g_mutex_unlock (sdlvideosink->lock);
+
+  return NULL;
+}
+
+/* Must be called with the SDL lock held */
 static gboolean
 gst_sdlvideosink_initsdl (GstSDLVideoSink * sdlvideosink)
 {
   gst_sdlvideosink_deinitsdl (sdlvideosink);
 
-  g_mutex_lock (sdlvideosink->lock);
+  if (sdlvideosink->is_xwindows && !sdlvideosink->xwindow_id) {
+    g_mutex_unlock (sdlvideosink->lock);
+    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (sdlvideosink));
+    g_mutex_lock (sdlvideosink->lock);
+  }
 
   if (!sdlvideosink->xwindow_id) {
     unsetenv ("SDL_WINDOWID");
@@ -558,8 +612,6 @@ gst_sdlvideosink_initsdl (GstSDLVideoSink * sdlvideosink)
       g_thread_create ((GThreadFunc) gst_sdlvideosink_event_thread,
       sdlvideosink, TRUE, NULL);
 
-  g_mutex_unlock (sdlvideosink->lock);
-
   return TRUE;
 
   /* ERRORS */
@@ -567,16 +619,14 @@ init_failed:
   {
     GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, INIT, (NULL),
         ("Couldn't initialize SDL: %s", SDL_GetError ()));
-    g_mutex_unlock (sdlvideosink->lock);
     return FALSE;
   }
 }
 
+/* Must be called with the sdl lock held */
 static void
 gst_sdlvideosink_destroy (GstSDLVideoSink * sdlvideosink)
 {
-  g_mutex_lock (sdlvideosink->lock);
-
   if (sdlvideosink->overlay) {
     SDL_FreeYUVOverlay (sdlvideosink->overlay);
     sdlvideosink->overlay = NULL;
@@ -586,10 +636,10 @@ gst_sdlvideosink_destroy (GstSDLVideoSink * sdlvideosink)
     SDL_FreeSurface (sdlvideosink->screen);
     sdlvideosink->screen = NULL;
   }
-
-  g_mutex_unlock (sdlvideosink->lock);
+  sdlvideosink->xwindow_id = 0;
 }
 
+/* Must be called with the sdl lock held */
 static gboolean
 gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
 {
@@ -600,7 +650,11 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
 
   gst_sdlvideosink_destroy (sdlvideosink);
 
-  g_mutex_lock (sdlvideosink->lock);
+  if (sdlvideosink->is_xwindows && !sdlvideosink->xwindow_id) {
+    g_mutex_unlock (sdlvideosink->lock);
+    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (sdlvideosink));
+    g_mutex_lock (sdlvideosink->lock);
+  }
 
   /* create a SDL window of the size requested by the user */
   if (sdlvideosink->full_screen) {
@@ -639,8 +693,6 @@ gst_sdlvideosink_create (GstSDLVideoSink * sdlvideosink)
   GST_DEBUG ("sdlvideosink: setting %08x (%" GST_FOURCC_FORMAT ")",
       sdlvideosink->format, GST_FOURCC_ARGS (sdlvideosink->format));
 
-  g_mutex_unlock (sdlvideosink->lock);
-
   return TRUE;
 
   /* ERRORS */
@@ -649,7 +701,6 @@ no_screen:
     GST_ELEMENT_ERROR (sdlvideosink, LIBRARY, TOO_LAZY, (NULL),
         ("SDL: Couldn't set %dx%d: %s", GST_VIDEO_SINK_WIDTH (sdlvideosink),
             GST_VIDEO_SINK_HEIGHT (sdlvideosink), SDL_GetError ()));
-    g_mutex_unlock (sdlvideosink->lock);
     return FALSE;
   }
 no_overlay:
@@ -658,7 +709,6 @@ no_overlay:
         ("SDL: Couldn't create SDL YUV overlay (%dx%d \'%" GST_FOURCC_FORMAT
             "\'): %s", sdlvideosink->width, sdlvideosink->height,
             GST_FOURCC_ARGS (sdlvideosink->format), SDL_GetError ()));
-    g_mutex_unlock (sdlvideosink->lock);
     return FALSE;
   }
 }
@@ -669,6 +719,7 @@ gst_sdlvideosink_setcaps (GstBaseSink * bsink, GstCaps * vscapslist)
   GstSDLVideoSink *sdlvideosink;
   guint32 format;
   GstStructure *structure;
+  gboolean res = TRUE;
 
   sdlvideosink = GST_SDLVIDEOSINK (bsink);
 
@@ -681,10 +732,12 @@ gst_sdlvideosink_setcaps (GstBaseSink * bsink, GstCaps * vscapslist)
   gst_structure_get_fraction (structure, "framerate",
       &sdlvideosink->framerate_n, &sdlvideosink->framerate_d);
 
+  g_mutex_lock (sdlvideosink->lock);
   if (!sdlvideosink->format || !gst_sdlvideosink_create (sdlvideosink))
-    return FALSE;
+    res = FALSE;
+  g_mutex_unlock (sdlvideosink->lock);
 
-  return TRUE;
+  return res;
 }
 
 
@@ -697,12 +750,16 @@ gst_sdlvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   sdlvideosink = GST_SDLVIDEOSINK (bsink);
 
+  g_mutex_lock (sdlvideosink->lock);
   if (!sdlvideosink->init ||
       !sdlvideosink->overlay || !sdlvideosink->overlay->pixels)
     goto not_init;
 
   /* if (GST_BUFFER_DATA (buf) != sdlvideosink->overlay->pixels[0]) */
   if (TRUE) {
+    guint8 *out;
+    gint l;
+
     if (!gst_sdlvideosink_lock (sdlvideosink))
       goto cannot_lock;
 
@@ -719,22 +776,47 @@ gst_sdlvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
           break;
         case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
           y = GST_BUFFER_DATA (buf);
-          u = y + sdlvideosink->width * sdlvideosink->height;
-          v = y + sdlvideosink->width * sdlvideosink->height * 5 / 4;
+          u = y + I420_U_OFFSET (sdlvideosink->width, sdlvideosink->height);
+          v = y + I420_V_OFFSET (sdlvideosink->width, sdlvideosink->height);
           break;
         default:
           g_assert_not_reached ();
       }
 
-      memcpy (sdlvideosink->overlay->pixels[0], y,
-          sdlvideosink->width * sdlvideosink->height);
-      memcpy (sdlvideosink->overlay->pixels[1], u,
-          sdlvideosink->width * sdlvideosink->height / 4);
-      memcpy (sdlvideosink->overlay->pixels[2], v,
-          sdlvideosink->width * sdlvideosink->height / 4);
+      /* Y Plane */
+      out = sdlvideosink->overlay->pixels[0];
+      for (l = 0; l < sdlvideosink->height; l++) {
+        memcpy (out, y, I420_Y_ROWSTRIDE (sdlvideosink->width));
+        out += sdlvideosink->overlay->pitches[0];
+        y += I420_Y_ROWSTRIDE (sdlvideosink->width);
+      }
+
+      /* U plane */
+      out = sdlvideosink->overlay->pixels[1];
+      for (l = 0; l < (sdlvideosink->height / 2); l++) {
+        memcpy (out, u, I420_U_ROWSTRIDE (sdlvideosink->width));
+        out += sdlvideosink->overlay->pitches[1];
+        u += I420_U_ROWSTRIDE (sdlvideosink->width);
+      }
+
+      /* V plane */
+      out = sdlvideosink->overlay->pixels[2];
+      for (l = 0; l < (sdlvideosink->height / 2); l++) {
+        memcpy (out, v, I420_V_ROWSTRIDE (sdlvideosink->width));
+        out += sdlvideosink->overlay->pitches[2];
+        v += I420_V_ROWSTRIDE (sdlvideosink->width);
+      }
     } else {
-      memcpy (sdlvideosink->overlay->pixels[0], GST_BUFFER_DATA (buf),
-          sdlvideosink->width * sdlvideosink->height * 2);
+      guint8 *in = GST_BUFFER_DATA (buf);
+      gint in_stride = sdlvideosink->width * 2;
+
+      out = sdlvideosink->overlay->pixels[0];
+
+      for (l = 0; l < sdlvideosink->height; l++) {
+        memcpy (out, in, in_stride);
+        out += sdlvideosink->overlay->pitches[0];
+        in += in_stride;
+      }
     }
     gst_sdlvideosink_unlock (sdlvideosink);
   }
@@ -742,16 +824,10 @@ gst_sdlvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   /* Show, baby, show! */
   SDL_DisplayYUVOverlay (sdlvideosink->overlay, &(sdlvideosink->rect));
 
-  while (SDL_PollEvent (&sdl_event)) {
-    switch (sdl_event.type) {
-      case SDL_VIDEORESIZE:
-        /* create a SDL window of the size requested by the user */
-        GST_VIDEO_SINK_WIDTH (sdlvideosink) = sdl_event.resize.w;
-        GST_VIDEO_SINK_HEIGHT (sdlvideosink) = sdl_event.resize.h;
-        gst_sdlvideosink_create (sdlvideosink);
-        break;
-    }
-  }
+  /* Handle any resize */
+  gst_sdlv_process_events (sdlvideosink);
+
+  g_mutex_unlock (sdlvideosink->lock);
 
   return GST_FLOW_OK;
 
@@ -760,11 +836,13 @@ not_init:
   {
     GST_ELEMENT_ERROR (sdlvideosink, CORE, NEGOTIATION, (NULL),
         ("not negotiated."));
+    g_mutex_unlock (sdlvideosink->lock);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 cannot_lock:
   {
     /* lock function posted detailed message */
+    g_mutex_unlock (sdlvideosink->lock);
     return GST_FLOW_ERROR;
   }
 }
@@ -820,9 +898,14 @@ gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_sdlvideosink_initsdl (sdlvideosink))
+      sdlvideosink->is_xwindows = GST_IS_X_OVERLAY (sdlvideosink);
+      g_mutex_lock (sdlvideosink->lock);
+      if (!gst_sdlvideosink_initsdl (sdlvideosink)) {
+        g_mutex_unlock (sdlvideosink->lock);
         goto init_failed;
+      }
       GST_OBJECT_FLAG_SET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
+      g_mutex_unlock (sdlvideosink->lock);
       break;
     default:                   /* do nothing */
       break;
@@ -834,11 +917,15 @@ gst_sdlvideosink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       sdlvideosink->framerate_n = 0;
       sdlvideosink->framerate_d = 1;
+      g_mutex_lock (sdlvideosink->lock);
       gst_sdlvideosink_destroy (sdlvideosink);
+      g_mutex_unlock (sdlvideosink->lock);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      g_mutex_lock (sdlvideosink->lock);
       gst_sdlvideosink_deinitsdl (sdlvideosink);
       GST_OBJECT_FLAG_UNSET (sdlvideosink, GST_SDLVIDEOSINK_OPEN);
+      g_mutex_unlock (sdlvideosink->lock);
       break;
     default:                   /* do nothing */
       break;
@@ -901,7 +988,7 @@ gst_sdlvideosink_navigation_send_event (GstNavigation * navigation,
       y = 0;
     }
     GST_DEBUG_OBJECT (sdlvideosink, "translated navigation event y "
-        "coordinate from %fd to %fd", old_y, y);
+        "coordinate from %f to %f", old_y, y);
     gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
   }
 

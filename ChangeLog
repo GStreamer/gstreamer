@@ -1,3 +1,24 @@
+2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_supported),
+	(gst_sdlvideosink_xoverlay_set_xwindow_id),
+	(gst_sdlvideosink_deinitsdl), (gst_sdlv_process_events),
+	(gst_sdlvideosink_event_thread), (gst_sdlvideosink_initsdl),
+	(gst_sdlvideosink_destroy), (gst_sdlvideosink_create),
+	(gst_sdlvideosink_setcaps), (gst_sdlvideosink_show_frame),
+	(gst_sdlvideosink_change_state),
+	(gst_sdlvideosink_navigation_send_event):
+	* ext/sdl/sdlvideosink.h:
+	  Fix output stride copying, so that it displays correctly on 
+	  framebuffer devices that don't match our implict GStreamer stride
+	  arrangement.
+
+	  Fix locking things. Offer XOverlay only when SDL is running against
+	  X. Make non-scaled (and ugly) embedding work via X Overlay. It can't
+	  actually match the embedded window size because there's no way to
+	  figure out what size that should be from the XOverlay interface.
+	  See comment in sdlvideosink.c
+
 2006-01-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
