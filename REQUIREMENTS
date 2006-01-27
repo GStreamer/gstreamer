@@ -88,7 +88,7 @@ swfdec		(for the swfdec (flash) plugin)
 			http://www.schleef.org/swfdec/
 liboil		(for the liboil optimization library)
 			http://www.schleef.org/liboil/
-		>=	0.2.0
+		>=	0.3.6
 flac		(for the FLAC lossless audio format)
 			http://flac.sourceforge.net
                 >= 1.0.3 preferred, 1.0.2 should work

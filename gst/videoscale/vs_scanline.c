@@ -27,6 +27,7 @@
 
 #include "vs_scanline.h"
 
+#include <liboil/liboil.h>
 #include <glib.h>
 
 /* greyscale, i.e., single componenet */
@@ -65,31 +66,23 @@ void
 vs_scanline_resample_linear_Y (guint8 * dest, guint8 * src, int n,
     int *accumulator, int increment)
 {
-  int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  uint32_t vals[2];
 
-  for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-    dest[i] = (src[j] * (65536 - x) + src[j + 1] * x) >> 16;
+  vals[0] = *accumulator;
+  vals[1] = increment;
 
-    acc += increment;
-  }
+  oil_resample_linear_u8 (dest, src, n, vals);
 
-  *accumulator = acc;
+  *accumulator = vals[0];
 }
 
 void
 vs_scanline_merge_linear_Y (guint8 * dest, guint8 * src1, guint8 * src2,
     int n, int x)
 {
-  int i;
+  uint32_t value = x >> 8;
 
-  for (i = 0; i < n; i++) {
-    dest[i] = (src1[i] * (65536 - x) + src2[i] * x) >> 16;
-  }
+  oil_merge_linear_u8 (dest, src1, src2, &value, n);
 }
 
 
@@ -135,41 +128,23 @@ void
 vs_scanline_resample_linear_RGBA (guint8 * dest, guint8 * src, int n,
     int *accumulator, int increment)
 {
-  int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  uint32_t vals[2];
 
-  for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-    dest[i * 4 + 0] = (src[j * 4 + 0] * (65536 - x) + src[j * 4 + 4] * x) >> 16;
-    dest[i * 4 + 1] = (src[j * 4 + 1] * (65536 - x) + src[j * 4 + 5] * x) >> 16;
-    dest[i * 4 + 2] = (src[j * 4 + 2] * (65536 - x) + src[j * 4 + 6] * x) >> 16;
-    dest[i * 4 + 3] = (src[j * 4 + 3] * (65536 - x) + src[j * 4 + 7] * x) >> 16;
+  vals[0] = *accumulator;
+  vals[1] = increment;
 
-    acc += increment;
-  }
+  oil_resample_linear_argb ((guint32 *) dest, (guint32 *) src, n, vals);
 
-  *accumulator = acc;
+  *accumulator = vals[0];
 }
 
 void
 vs_scanline_merge_linear_RGBA (guint8 * dest, guint8 * src1, guint8 * src2,
     int n, int x)
 {
-  int i;
+  uint32_t value = x >> 8;
 
-  for (i = 0; i < n; i++) {
-    dest[i * 4 + 0] =
-        (src1[i * 4 + 0] * (65536 - x) + src2[i * 4 + 0] * x) >> 16;
-    dest[i * 4 + 1] =
-        (src1[i * 4 + 1] * (65536 - x) + src2[i * 4 + 1] * x) >> 16;
-    dest[i * 4 + 2] =
-        (src1[i * 4 + 2] * (65536 - x) + src2[i * 4 + 2] * x) >> 16;
-    dest[i * 4 + 3] =
-        (src1[i * 4 + 3] * (65536 - x) + src2[i * 4 + 3] * x) >> 16;
-  }
+  oil_merge_linear_u8 (dest, src1, src2, &value, n * 4);
 }
 
 
@@ -235,16 +210,9 @@ void
 vs_scanline_merge_linear_RGB (guint8 * dest, guint8 * src1, guint8 * src2,
     int n, int x)
 {
-  int i;
+  uint32_t value = x >> 8;
 
-  for (i = 0; i < n; i++) {
-    dest[i * 3 + 0] =
-        (src1[i * 3 + 0] * (65536 - x) + src2[i * 3 + 3] * x) >> 16;
-    dest[i * 3 + 1] =
-        (src1[i * 3 + 1] * (65536 - x) + src2[i * 3 + 4] * x) >> 16;
-    dest[i * 3 + 2] =
-        (src1[i * 3 + 2] * (65536 - x) + src2[i * 3 + 5] * x) >> 16;
-  }
+  oil_merge_linear_u8 (dest, src1, src2, &value, n * 3);
 }
 
 
@@ -431,18 +399,9 @@ void
 vs_scanline_merge_linear_UYVY (guint8 * dest, guint8 * src1, guint8 * src2,
     int n, int x)
 {
-  int i;
+  uint32_t value = x >> 8;
 
-  for (i = 0; i < n; i++) {
-    dest[i * 4 + 0] =
-        (src1[i * 4 + 0] * (65536 - x) + src2[i * 4 + 0] * x) >> 16;
-    dest[i * 4 + 1] =
-        (src1[i * 4 + 1] * (65536 - x) + src2[i * 4 + 1] * x) >> 16;
-    dest[i * 4 + 2] =
-        (src1[i * 4 + 2] * (65536 - x) + src2[i * 4 + 2] * x) >> 16;
-    dest[i * 4 + 3] =
-        (src1[i * 4 + 3] * (65536 - x) + src2[i * 4 + 3] * x) >> 16;
-  }
+  oil_merge_linear_u8 (dest, src1, src2, &value, n * 4);
 }
 
 

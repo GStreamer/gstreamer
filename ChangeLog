@@ -1,3 +1,10 @@
+2006-01-27  David Schleef  <ds@schleef.org>
+
+	* REQUIREMENTS:
+	* configure.ac: update liboil requirement to 0.3.6
+	* gst/videoscale/Makefile.am:
+	* gst/videoscale/vs_scanline.c: liboilify
+
 2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/libvisual/visual.c: (get_buffer):
