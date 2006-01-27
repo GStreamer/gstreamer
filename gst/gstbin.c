@@ -387,6 +387,7 @@ gst_bin_dispose (GObject * object)
 
   gst_object_replace ((GstObject **) & bin->child_bus, NULL);
   gst_object_replace ((GstObject **) & bin->provided_clock, NULL);
+  gst_object_replace ((GstObject **) & bin->clock_provider, NULL);
 
   while (bin->children) {
     gst_bin_remove (bin, GST_ELEMENT_CAST (bin->children->data));
@@ -513,7 +514,12 @@ gst_bin_provide_clock_func (GstElement * element)
   gst_object_replace ((GstObject **) & bin->clock_provider,
       (GstObject *) provider);
   bin->clock_dirty = FALSE;
-  GST_DEBUG_OBJECT (bin, "provided new clock %p", result);
+  GST_DEBUG_OBJECT (bin,
+      "provided new clock %" GST_PTR_FORMAT " by provider %" GST_PTR_FORMAT,
+      result, provider);
+  /* Provider is not being returned to caller, just the result */
+  if (provider)
+    gst_object_unref (provider);
   GST_OBJECT_UNLOCK (bin);
 
   gst_iterator_free (it);
@@ -884,6 +890,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
     }
   }
+
   /* if the clock provider for this element is removed, we lost
    * the clock as well, we need to inform the parent of this
    * so that it can select a new clock */
@@ -893,6 +900,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
     clock_message =
         gst_message_new_clock_lost (GST_OBJECT_CAST (bin), bin->provided_clock);
   }
+
   bin->state_dirty = TRUE;
   GST_OBJECT_UNLOCK (bin);
 
@@ -905,6 +913,9 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   g_free (elem_name);
 
   gst_element_set_bus (element, NULL);
+
+  /* Clear the clock we provided to the element */
+  gst_element_set_clock (element, NULL);
 
   /* we ref here because after the _unparent() the element can be disposed
    * and we still need it to reset the UNPARENTING flag and fire a signal. */
@@ -2076,6 +2087,13 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       provided = (clock == bin->provided_clock);
       playing = (GST_STATE (bin) == GST_STATE_PLAYING);
       forward = playing & provided;
+      if (provided) {
+        GST_DEBUG_OBJECT (bin,
+            "Lost clock %" GST_PTR_FORMAT " provided by %" GST_PTR_FORMAT,
+            bin->provided_clock, bin->clock_provider);
+        gst_object_replace ((GstObject **) & bin->provided_clock, NULL);
+        gst_object_replace ((GstObject **) & bin->clock_provider, NULL);
+      }
       GST_DEBUG_OBJECT (bin, "provided %d, playing %d, forward %d",
           provided, playing, forward);
       GST_OBJECT_UNLOCK (bin);
@@ -2154,6 +2172,8 @@ bin_query_duration_fold (GstElement * item, GValue * ret, QueryFold * fold)
     if (duration > fold->max)
       fold->max = duration;
   }
+
+  gst_object_unref (item);
   return TRUE;
 }
 static void
@@ -2184,6 +2204,8 @@ bin_query_generic_fold (GstElement * item, GValue * ret, QueryFold * fold)
     g_value_set_boolean (ret, TRUE);
     GST_DEBUG_OBJECT (item, "answered query %p", fold->query);
   }
+
+  gst_object_unref (item);
 
   /* and stop as soon as we have a valid result */
   return !res;

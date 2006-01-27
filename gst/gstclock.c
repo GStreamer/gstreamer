@@ -125,6 +125,7 @@ enum
 
 static void gst_clock_class_init (GstClockClass * klass);
 static void gst_clock_init (GstClock * clock);
+static void gst_clock_dispose (GObject * object);
 static void gst_clock_finalize (GObject * object);
 
 static void gst_clock_set_property (GObject * object, guint prop_id,
@@ -535,6 +536,7 @@ gst_clock_class_init (GstClockClass * klass)
       gst_alloc_trace_register (GST_CLOCK_ENTRY_TRACE_NAME);
 #endif
 
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_clock_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_clock_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_clock_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_clock_get_property);
@@ -577,6 +579,18 @@ gst_clock_init (GstClock * clock)
   clock->time_index = 0;
   clock->timeout = DEFAULT_TIMEOUT;
   clock->times = g_new0 (GstClockTime, 4 * clock->window_size);
+}
+
+static void
+gst_clock_dispose (GObject * object)
+{
+  GstClock *clock = GST_CLOCK (object);
+
+  GST_OBJECT_LOCK (clock);
+  gst_object_replace ((GstObject **) & clock->master, NULL);
+  GST_OBJECT_UNLOCK (clock);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -874,6 +888,7 @@ gboolean
 gst_clock_set_master (GstClock * clock, GstClock * master)
 {
   g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
+  g_return_val_if_fail (master != clock, FALSE);
 
   GST_OBJECT_LOCK (clock);
   /* we always allow setting the master to NULL */

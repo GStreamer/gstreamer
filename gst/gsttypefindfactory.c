@@ -161,6 +161,8 @@ gst_type_find_factory_dispose (GObject * object)
     factory->user_data_notify (factory->user_data);
     factory->user_data = NULL;
   }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /**

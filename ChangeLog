@@ -1,3 +1,21 @@
+2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstbin.c: (gst_bin_dispose), (gst_bin_provide_clock_func),
+	(gst_bin_remove_func), (gst_bin_handle_message_func),
+	(bin_query_duration_fold), (bin_query_generic_fold):
+	Clean up references to the clock provider when disposed or when
+	handling a clock-lost message from it.
+
+	Unref sinks when performing a query via gst_iterator_fold, as the
+	gst_bin_iterate_sinks iterator refs each item. (Fixes #323874)
+
+	* gst/gstclock.c: (gst_clock_class_init), (gst_clock_dispose),
+	(gst_clock_set_master):
+	Drop our reference to the master clock, if any, when we are disposed.
+
+	* gst/gsttypefindfactory.c: (gst_type_find_factory_dispose):
+	Chain up in dispose. 
+
 2006-01-26  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_get_range):
