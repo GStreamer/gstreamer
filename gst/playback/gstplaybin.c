@@ -689,7 +689,7 @@ gen_text_element (GstPlayBin * play_bin)
 }
 
 /* make the element (bin) that contains the elements needed to perform
- * audio playback. 
+ * audio playback.
  *
  *  +-------------------------------------------------------------+
  *  | abin                                                        |
@@ -699,7 +699,7 @@ gen_text_element (GstPlayBin * play_bin)
  *  |   |  +---------+   +----------+   +---------+   +---------+ |
  * sink-+                                                         |
  *  +-------------------------------------------------------------+
- *                  
+ *
  */
 static GstElement *
 gen_audio_element (GstPlayBin * play_bin)
@@ -799,14 +799,20 @@ gen_vis_element (GstPlayBin * play_bin)
   GstElement *vqueue, *aqueue;
   GstPad *pad, *rpad;
 
+  asink = gen_audio_element (play_bin);
+  if (!asink)
+    return NULL;
+  vsink = gen_video_element (play_bin);
+  if (!vsink) {
+    gst_object_unref (asink);
+    return NULL;
+  }
+
   element = gst_bin_new ("visbin");
   tee = gst_element_factory_make ("tee", "tee");
 
   vqueue = gst_element_factory_make ("queue", "vqueue");
   aqueue = gst_element_factory_make ("queue", "aqueue");
-
-  asink = gen_audio_element (play_bin);
-  vsink = gen_video_element (play_bin);
 
   gst_bin_add (GST_BIN (element), asink);
   gst_bin_add (GST_BIN (element), vqueue);
@@ -956,6 +962,7 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
   GstElement *parent;
   GstStateChangeReturn stateret;
 
+  g_return_val_if_fail (sink != NULL, FALSE);
   /* this is only for debugging */
   parent = gst_pad_get_parent_element (srcpad);
   if (parent) {
@@ -1028,7 +1035,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   if (play_bin->sinks) {
     remove_sinks (play_bin);
   }
-  GST_DEBUG ("setupsinks");
+  GST_DEBUG_OBJECT (play_base_bin, "setupsinks");
 
   /* find out what to do */
   if (group->type[GST_STREAM_TYPE_VIDEO - 1].npads > 0 &&
@@ -1058,6 +1065,8 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     } else {
       sink = gen_audio_element (play_bin);
     }
+    if (!sink)
+      return FALSE;
     pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_AUDIO - 1].preroll,
         "src");
     res = add_sink (play_bin, sink, pad);
@@ -1079,6 +1088,8 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     } else {
       sink = gen_video_element (play_bin);
     }
+    if (!sink)
+      return FALSE;
     pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_VIDEO - 1].preroll,
         "src");
     res = add_sink (play_bin, sink, pad);
@@ -1242,6 +1253,12 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_play_bin_debug, "playbin", 0, "play bin");
+
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
 
   return gst_element_register (plugin, "playbin", GST_RANK_NONE,
       GST_TYPE_PLAY_BIN);

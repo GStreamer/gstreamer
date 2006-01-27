@@ -27,6 +27,8 @@
 #include "gstalsasrc.h"
 #include "gstalsamixerelement.h"
 
+#include <gst/gst-i18n-plugin.h>
+
 GST_DEBUG_CATEGORY (alsa_debug);
 
 /* ALSA debugging wrapper */
@@ -67,6 +69,13 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (alsa_debug, "alsa", 0, "alsa plugins");
+
+#if ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif
+
   err = snd_lib_error_set_handler (gst_alsa_error_wrapper);
   if (err != 0)
     GST_WARNING ("failed to set alsa error handler");

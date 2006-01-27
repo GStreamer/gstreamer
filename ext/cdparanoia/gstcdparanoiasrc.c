@@ -97,9 +97,6 @@ gst_cd_paranoia_src_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_set_details (element_class, &cdparanoia_details);
-
-  GST_DEBUG_CATEGORY_INIT (gst_cd_paranoia_src_debug, "cdparanoiasrc", 0,
-      "CD Paranoia Source");
 }
 
 static void
@@ -389,9 +386,19 @@ gst_cd_paranoia_src_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_cd_paranoia_src_debug, "cdparanoiasrc", 0,
+      "CD Paranoia Source");
+
   if (!gst_element_register (plugin, "cdparanoiasrc", GST_RANK_SECONDARY,
           GST_TYPE_CD_PARANOIA_SRC))
     return FALSE;
+
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif
+
 
   return TRUE;
 }
