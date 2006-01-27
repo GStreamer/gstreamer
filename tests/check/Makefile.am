@@ -49,6 +49,7 @@ check_PROGRAMS =				\
 	gst/gstobject				\
 	gst/gstpad				\
 	gst/gstplugin				\
+	gst/gstquery				\
 	gst/gstsegment				\
 	gst/gstsystemclock			\
 	gst/gststructure			\

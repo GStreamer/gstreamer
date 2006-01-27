@@ -1,5 +1,13 @@
 2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/Makefile.am:
+	* tests/check/gst/gstquery.c: (GST_START_TEST), (gstquery_suite),
+	(main):
+	Add a very simple check that should have caught the memleak I fixed
+	last night (if not for the slice allocator hiding it)
+
+2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/gstbin.c: (gst_bin_dispose), (gst_bin_provide_clock_func),
 	(gst_bin_remove_func), (gst_bin_handle_message_func),
 	(bin_query_duration_fold), (bin_query_generic_fold):
