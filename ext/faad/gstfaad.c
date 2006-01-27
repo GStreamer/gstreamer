@@ -248,6 +248,9 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
       gst_buffer_unref (faad->tempbuf);
       faad->tempbuf = NULL;
     }
+  } else if ((value = gst_structure_get_value (str, "framed")) &&
+      g_value_get_boolean (value) == TRUE) {
+    faad->packetised = TRUE;
   } else {
     faad->init = FALSE;
   }
@@ -356,15 +359,25 @@ gst_faad_chanpos_to_gst (guchar * fpos, guint num)
     }
   }
   if (unknown_channel) {
-    if (num == 2) {
-      GST_DEBUG ("FAAD reports unknown 2 channel mapping. Forcing to stereo");
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-    } else {
-      GST_WARNING ("Unsupported FAAD channel position 0x%x encountered",
-          fpos[n]);
-      g_free (pos);
-      return NULL;
+    switch (num) {
+      case 1:{
+        GST_DEBUG ("FAAD reports unknown 1 channel mapping. Forcing to mono");
+        pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+        break;
+      }
+      case 2:{
+        GST_DEBUG ("FAAD reports unknown 2 channel mapping. Forcing to stereo");
+        pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+        break;
+      }
+      default:{
+        GST_WARNING ("Unsupported FAAD channel position 0x%x encountered",
+            fpos[n]);
+        g_free (pos);
+        pos = NULL;
+        break;
+      }
     }
   }
 
@@ -760,6 +773,68 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info,
   return TRUE;
 }
 
+/*
+ * Find syncpoint in ADTS/ADIF stream. Doesn't work for raw,
+ * packetized streams. Be careful when calling.
+ * Returns FALSE on no-sync, fills offset/length if one/two
+ * syncpoints are found, only returns TRUE when it finds two
+ * subsequent syncpoints (similar to mp3 typefinding in
+ * gst/typefind/) for ADTS because 12 bits isn't very reliable.
+ */
+
+static gboolean
+gst_faad_sync (GstBuffer * buf, guint * off)
+{
+  guint8 *data = GST_BUFFER_DATA (buf);
+  guint size = GST_BUFFER_SIZE (buf), n;
+  gint snc;
+
+  GST_DEBUG ("Finding syncpoint");
+
+  /* FIXME: for no-sync, we go over the same data for every new buffer.
+   * We should save the information somewhere. */
+  for (n = 0; n < size - 3; n++) {
+    snc = GST_READ_UINT16_BE (&data[n]);
+    if ((snc & 0xfff6) == 0xfff0) {
+      /* we have an ADTS syncpoint. Parse length and find
+       * next syncpoint. */
+      guint len;
+
+      GST_DEBUG ("Found one ADTS syncpoint at offset 0x%x, tracing next...", n);
+
+      if (size - n < 5) {
+        GST_DEBUG ("Not enough data to parse ADTS header");
+        return FALSE;
+      }
+
+      *off = n;
+      len = ((data[n + 3] & 0x03) << 11) |
+          (data[n + 4] << 3) | ((data[n + 5] & 0xe0) >> 5);
+      if (n + len + 2 >= size) {
+        GST_DEBUG ("Next frame is not within reach");
+        return FALSE;
+      }
+
+      snc = GST_READ_UINT16_BE (&data[n + len]);
+      if ((snc & 0xfff6) == 0xfff0) {
+        GST_DEBUG ("Found ADTS syncpoint at offset 0x%x (framelen %u)", n, len);
+        return TRUE;
+      }
+
+      GST_DEBUG ("No next frame found... (should be at 0x%x)", n + len);
+    } else if (!memcmp (&data[n], "ADIF", 4)) {
+      /* we have an ADIF syncpoint. 4 bytes is enough. */
+      *off = n;
+      GST_DEBUG ("Found ADIF syncpoint at offset 0x%x", n);
+      return TRUE;
+    }
+  }
+
+  GST_DEBUG ("Found no syncpoint");
+
+  return FALSE;
+}
+
 static GstFlowReturn
 gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -773,6 +848,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   faacDecFrameInfo info;
   void *out;
   gboolean run_loop = TRUE;
+  guint sync_off;
 
   faad = GST_FAAD (gst_pad_get_parent (pad));
 
@@ -794,22 +870,32 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     faad->tempbuf = NULL;
   }
 
+  input_data = GST_BUFFER_DATA (buffer);
+  input_size = GST_BUFFER_SIZE (buffer);
+  if (!faad->packetised) {
+    if (!gst_faad_sync (buffer, &sync_off)) {
+      goto next;
+    } else {
+      input_data += sync_off;
+      input_size -= sync_off;
+    }
+  }
+
   /* init if not already done during capsnego */
   if (!faad->init) {
     guint32 samplerate;
     guchar channels;
     glong init_res;
 
-    init_res = faacDecInit (faad->handle,
-        GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), &samplerate,
-        &channels);
+    init_res = faacDecInit (faad->handle, input_data, input_size,
+        &samplerate, &channels);
     if (init_res < 0) {
       GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
           ("Failed to init decoder from stream"));
       gst_object_unref (faad);
       return GST_FLOW_UNEXPECTED;
     }
-    skip_bytes = init_res;
+    skip_bytes = 0;             /* init_res; */
     faad->init = TRUE;
 
     /* make sure we create new caps below */
@@ -818,9 +904,8 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   /* decode cycle */
-  input_data = GST_BUFFER_DATA (buffer);
-  input_size = GST_BUFFER_SIZE (buffer);
   info.bytesconsumed = input_size - skip_bytes;
+  info.error = 0;
 
   if (!faad->packetised) {
     /* We must check that ourselves for raw stream */
@@ -908,6 +993,8 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
   }
+
+next:
 
   /* Keep the leftovers in raw stream */
   if (input_size > 0 && !faad->packetised) {

@@ -1,3 +1,10 @@
+2006-01-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/faad/gstfaad.c: (gst_faad_setcaps),
+	(gst_faad_chanpos_to_gst), (gst_faad_sync), (gst_faad_chain):
+	  Handle 'framed' field in caps; Port syncing for raw streams
+	  from 0.8 branch (for AAC+ radio streams) (#328722).
+
 2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_supported),
