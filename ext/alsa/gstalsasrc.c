@@ -30,8 +30,9 @@
 #include <getopt.h>
 #include <alsa/asoundlib.h>
 
-
 #include "gstalsasrc.h"
+
+#include <gst/gst-i18n-plugin.h>
 
 /* elementfactory information */
 static GstElementDetails gst_alsasrc_details =
@@ -201,7 +202,7 @@ gst_alsasrc_get_property (GObject * object, guint prop_id,
 static void
 gst_alsasrc_init (GstAlsaSrc * alsasrc, GstAlsaSrcClass * g_class)
 {
-  GST_DEBUG ("initializing alsasrc");
+  GST_DEBUG_OBJECT (alsasrc, "initializing");
 
   alsasrc->device = g_strdup ("default");
 }
@@ -270,79 +271,83 @@ set_hwparams (GstAlsaSrc * alsa)
   /* ERRORS */
 no_config:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Broken configuration for recording: no configurations available: %s",
-            snd_strerror (err)), (NULL));
+            snd_strerror (err)));
     return err;
   }
 wrong_access:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Access type not available for recording: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Access type not available for recording: %s", snd_strerror (err)));
     return err;
   }
 no_sample_format:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Sample format not available for recording: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Sample format not available for recording: %s", snd_strerror (err)));
     return err;
   }
 no_channels:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Channels count (%i) not available for recording: %s",
-            alsa->channels, snd_strerror (err)), (NULL));
+    gchar *msg = NULL;
+
+    if ((alsa->channels) == 1)
+      msg = g_strdup (_("Could not open device for recording in mono mode."));
+    if ((alsa->channels) == 2)
+      msg = g_strdup (_("Could not open device for recording in stereo mode."));
+    if ((alsa->channels) > 2)
+      msg =
+          g_strdup_printf (_
+          ("Could not open device for recording in %d-channel mode"),
+          alsa->channels);
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (msg), (snd_strerror (err)));
+    g_free (msg);
     return err;
   }
 no_rate:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Rate %iHz not available for recording: %s",
-            alsa->rate, snd_strerror (err)), (NULL));
+            alsa->rate, snd_strerror (err)));
     return err;
   }
 rate_match:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Rate doesn't match (requested %iHz, get %iHz)",
-            alsa->rate, err), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Rate doesn't match (requested %iHz, get %iHz)", alsa->rate, err));
     return -EINVAL;
   }
 buffer_time:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set buffer time %i for recording: %s",
-            alsa->buffer_time, snd_strerror (err)), (NULL));
+            alsa->buffer_time, snd_strerror (err)));
     return err;
   }
 buffer_size:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to get buffer size for recording: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to get buffer size for recording: %s", snd_strerror (err)));
     return err;
   }
 period_time:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set period time %i for recording: %s", alsa->period_time,
-            snd_strerror (err)), (NULL));
+            snd_strerror (err)));
     return err;
   }
 period_size:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to get period size for recording: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to get period size for recording: %s", snd_strerror (err)));
     return err;
   }
 set_hw_params:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to set hw params for recording: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set hw params for recording: %s", snd_strerror (err)));
     return err;
   }
 }
@@ -379,39 +384,36 @@ set_swparams (GstAlsaSrc * alsa)
   /* ERRORS */
 no_config:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to determine current swparams for recording: %s",
-            snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to determine current swparams for playback: %s",
+            snd_strerror (err)));
     return err;
   }
 #if 0
 start_threshold:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to set start threshold mode for recording: %s",
-            snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set start threshold mode for playback: %s",
+            snd_strerror (err)));
     return err;
   }
 set_avail:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to set avail min for recording: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set avail min for playback: %s", snd_strerror (err)));
     return err;
   }
 #endif
 set_align:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to set transfer align for recording: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set transfer align for playback: %s", snd_strerror (err)));
     return err;
   }
 set_sw_params:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to set sw params for recording: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set sw params for playback: %s", snd_strerror (err)));
     return err;
   }
 }
@@ -486,8 +488,12 @@ gst_alsasrc_open (GstAudioSrc * asrc)
   /* ERRORS */
 open_error:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Capture open error: %s", snd_strerror (err)), (NULL));
+    if (err == -EBUSY) {
+      GST_ELEMENT_ERROR (alsa, RESOURCE, BUSY, (NULL), (NULL));
+    } else {
+      GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+          (NULL), ("Recording open error: %s", snd_strerror (err)));
+    }
     return FALSE;
   }
 }
@@ -522,32 +528,32 @@ gst_alsasrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   /* ERRORS */
 spec_parse:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Error parsing spec"), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Error parsing spec"));
     return FALSE;
   }
 non_block:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Could not set device to blocking: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Could not set device to blocking: %s", snd_strerror (err)));
     return FALSE;
   }
 hw_params_failed:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Setting of hwparams failed: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Setting of hwparams failed: %s", snd_strerror (err)));
     return FALSE;
   }
 sw_params_failed:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Setting of swparams failed: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Setting of swparams failed: %s", snd_strerror (err)));
     return FALSE;
   }
 prepare_failed:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Prepare failed: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Prepare failed: %s", snd_strerror (err)));
     return FALSE;
   }
 }
@@ -571,21 +577,20 @@ gst_alsasrc_unprepare (GstAudioSrc * asrc)
   /* ERRORS */
 drop:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Could not drop samples: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Could not drop samples: %s", snd_strerror (err)));
     return FALSE;
   }
 hw_free:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Could not free hw params: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Could not free hw params: %s", snd_strerror (err)));
     return FALSE;
   }
 non_block:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Could not set device to nonblocking: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Could not set device to nonblocking: %s", snd_strerror (err)));
     return FALSE;
   }
 }
@@ -650,7 +655,7 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length)
   while (cptr > 0) {
     if ((err = snd_pcm_readi (alsa->handle, ptr, cptr)) < 0) {
       if (err == -EAGAIN) {
-        GST_DEBUG ("Read error: %s", snd_strerror (err));
+        GST_DEBUG_OBJECT (asrc, "Read error: %s", snd_strerror (err));
         continue;
       } else if (xrun_recovery (alsa->handle, err) < 0) {
         goto read_error;

@@ -33,6 +33,8 @@
 #include "gstalsa.h"
 #include "gstalsasink.h"
 
+#include <gst/gst-i18n-plugin.h>
+
 /* elementfactory information */
 static GstElementDetails gst_alsasink_details =
 GST_ELEMENT_DETAILS ("Audio Sink (ALSA)",
@@ -247,7 +249,7 @@ gst_alsasink_get_property (GObject * object, guint prop_id,
 static void
 gst_alsasink_init (GstAlsaSink * alsasink)
 {
-  GST_DEBUG ("initializing alsasink");
+  GST_DEBUG_OBJECT (alsasink, "initializing alsasink");
 
   alsasink->device = g_strdup ("default");
   alsasink->handle = NULL;
@@ -274,7 +276,8 @@ set_hwparams (GstAlsaSink * alsa)
 
   snd_pcm_hw_params_alloca (&params);
 
-  GST_DEBUG ("Negotiating to %d channels @ %d Hz", alsa->channels, alsa->rate);
+  GST_DEBUG_OBJECT (alsa, "Negotiating to %d channels @ %d Hz", alsa->channels,
+      alsa->rate);
 
   /* choose all parameters */
   CHECK (snd_pcm_hw_params_any (alsa->handle, params), no_config);
@@ -319,79 +322,83 @@ set_hwparams (GstAlsaSink * alsa)
   /* ERRORS */
 no_config:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Broken configuration for playback: no configurations available: %s",
-            snd_strerror (err)), (NULL));
+            snd_strerror (err)));
     return err;
   }
 wrong_access:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Access type not available for playback: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Access type not available for playback: %s", snd_strerror (err)));
     return err;
   }
 no_sample_format:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Sample format not available for playback: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Sample format not available for playback: %s", snd_strerror (err)));
     return err;
   }
 no_channels:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Channels count (%i) not available for playbacks: %s",
-            alsa->channels, snd_strerror (err)), (NULL));
+    gchar *msg = NULL;
+
+    if ((alsa->channels) == 1)
+      msg = g_strdup (_("Could not open device for playback in mono mode."));
+    if ((alsa->channels) == 2)
+      msg = g_strdup (_("Could not open device for playback in stereo mode."));
+    if ((alsa->channels) > 2)
+      msg =
+          g_strdup_printf (_
+          ("Could not open device for playback in %d-channel mode."),
+          alsa->channels);
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (msg), (snd_strerror (err)));
+    g_free (msg);
     return err;
   }
 no_rate:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Rate %iHz not available for playback: %s",
-            alsa->rate, snd_strerror (err)), (NULL));
+            alsa->rate, snd_strerror (err)));
     return err;
   }
 rate_match:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Rate doesn't match (requested %iHz, get %iHz)",
-            alsa->rate, err), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Rate doesn't match (requested %iHz, get %iHz)", alsa->rate, err));
     return -EINVAL;
   }
 buffer_time:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set buffer time %i for playback: %s",
-            alsa->buffer_time, snd_strerror (err)), (NULL));
+            alsa->buffer_time, snd_strerror (err)));
     return err;
   }
 buffer_size:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to get buffer size for playback: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to get buffer size for playback: %s", snd_strerror (err)));
     return err;
   }
 period_time:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set period time %i for playback: %s", alsa->period_time,
-            snd_strerror (err)), (NULL));
+            snd_strerror (err)));
     return err;
   }
 period_size:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to get period size for playback: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to get period size for playback: %s", snd_strerror (err)));
     return err;
   }
 set_hw_params:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to set hw params for playback: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set hw params for playback: %s", snd_strerror (err)));
     return err;
   }
 }
@@ -426,37 +433,34 @@ set_swparams (GstAlsaSink * alsa)
   /* ERRORS */
 no_config:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to determine current swparams for playback: %s",
-            snd_strerror (err)), (NULL));
+            snd_strerror (err)));
     return err;
   }
 start_threshold:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set start threshold mode for playback: %s",
-            snd_strerror (err)), (NULL));
+            snd_strerror (err)));
     return err;
   }
 set_avail:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to set avail min for playback: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set avail min for playback: %s", snd_strerror (err)));
     return err;
   }
 set_align:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to set transfer align for playback: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set transfer align for playback: %s", snd_strerror (err)));
     return err;
   }
 set_sw_params:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Unable to set sw params for playback: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set sw params for playback: %s", snd_strerror (err)));
     return err;
   }
 }
@@ -567,26 +571,26 @@ gst_alsasink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   /* ERRORS */
 spec_parse:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Error parsing spec"), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Error parsing spec"));
     return FALSE;
   }
 non_block:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Could not set device to blocking: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Could not set device to blocking: %s", snd_strerror (err)));
     return FALSE;
   }
 hw_params_failed:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Setting of hwparams failed: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Setting of hwparams failed: %s", snd_strerror (err)));
     return FALSE;
   }
 sw_params_failed:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Setting of swparams failed: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Setting of swparams failed: %s", snd_strerror (err)));
     return FALSE;
   }
 }
@@ -610,21 +614,20 @@ gst_alsasink_unprepare (GstAudioSink * asink)
   /* ERRORS */
 drop:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Could not drop samples: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Could not drop samples: %s", snd_strerror (err)));
     return FALSE;
   }
 hw_free:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Could not free hw params: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Could not free hw params: %s", snd_strerror (err)));
     return FALSE;
   }
 non_block:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("Could not set device to nonblocking: %s", snd_strerror (err)),
-        (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Could not set device to nonblocking: %s", snd_strerror (err)));
     return FALSE;
   }
 }
@@ -643,8 +646,8 @@ gst_alsasink_close (GstAudioSink * asink)
   /* ERRORS */
 close_error:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, CLOSE,
-        ("Playback close error: %s", snd_strerror (err)), (NULL));
+    GST_ELEMENT_ERROR (alsa, RESOURCE, CLOSE, (NULL),
+        ("Playback close error: %s", snd_strerror (err)));
     return FALSE;
   }
 }
@@ -697,7 +700,7 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
 
     if (err < 0) {
       if (err == -EAGAIN) {
-        GST_DEBUG ("Write error: %s", snd_strerror (err));
+        GST_DEBUG_OBJECT (asink, "Write error: %s", snd_strerror (err));
         continue;
       } else if (xrun_recovery (alsa->handle, err) < 0) {
         goto write_error;
@@ -747,13 +750,13 @@ gst_alsasink_reset (GstAudioSink * asink)
   /* ERRORS */
 drop_error:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS,
         ("alsa-reset: pcm drop error: %s", snd_strerror (err)), (NULL));
     return;
   }
 prepare_error:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS,
         ("alsa-reset: pcm prepare error: %s", snd_strerror (err)), (NULL));
     return;
   }

@@ -5,6 +5,19 @@
 
 2006-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/alsa/gstalsasink.c: (gst_alsasink_init), (set_hwparams),
+	(set_swparams), (gst_alsasink_prepare), (gst_alsasink_unprepare),
+	(gst_alsasink_close), (gst_alsasink_write), (gst_alsasink_reset):
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_init), (set_hwparams),
+	(set_swparams), (gst_alsasrc_open), (gst_alsasrc_prepare),
+	(gst_alsasrc_unprepare), (gst_alsasrc_read):
+	  Update all error messages.  All of them should either use
+	  the default translated message, or actually provide a
+	  translatable string.
+	  Make the string for channel count problems meaningful.
+
+2006-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* sys/v4l/v4l_calls.c: (gst_v4l_open):
 	  check for and throw RESOURCE_BUSY
 
