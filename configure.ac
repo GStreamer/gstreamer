@@ -319,6 +319,14 @@ dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
 
+#dnl *** cairo ***
+#translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO, true)
+#GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
+#  PKG_CHECK_MODULES(CAIRO, cairo >= 1.0 glitz-glx, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+#  AC_SUBST(CAIRO_CFLAGS)
+#  AC_SUBST(CAIRO_LIBS)
+#])
+
 dnl **** DirectFB ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
 GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
@@ -536,6 +544,13 @@ GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
   AC_SUBST(GSM_LIBS)
 ])
 
+dnl *** OpenGL ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
+GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
+  GST_CHECK_LIBHEADER(GL, GLU, glTexImage2D,,
+                      GL/gl.h, HAVE_OPENGL="yes", HAVE_OPENGL="no")
+])
+
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
 GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
@@ -633,13 +648,13 @@ gst/speed/Makefile
 gst/qtdemux/Makefile
 gst/tta/Makefile
 sys/Makefile
+sys/glsink/Makefile
 examples/Makefile
 examples/directfb/Makefile
 ext/Makefile
 ext/directfb/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
-ext/swfdec/Makefile
 ext/wavpack/Makefile
 ext/ivorbis/Makefile
 ext/gsm/Makefile
@@ -649,6 +664,7 @@ ext/dts/Makefile
 ext/divx/Makefile
 ext/musepack/Makefile
 ext/sdl/Makefile
+ext/swfdec/Makefile
 ext/xvid/Makefile
 docs/Makefile
 docs/plugins/Makefile

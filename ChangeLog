@@ -1,3 +1,12 @@
+2006-01-27  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/glsink/Makefile.am:
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/glimagesink.h:
+	  revival of glimagesink.  Kind of works.
+
 2006-01-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/faad/gstfaad.c: (gst_faad_setcaps),

@@ -28,12 +28,12 @@
 # CDROM_DIR=
 # endif
 
-# if USE_OPENGL
-# GL_DIR=glsink
-# else
-# GL_DIR=
-# endif
+if USE_OPENGL
+GL_DIR=glsink
+else
+GL_DIR=
+endif
 
-SUBDIRS =
+SUBDIRS = $(GL_DIR)
 
-DIST_SUBDIRS =
+DIST_SUBDIRS = glsink
