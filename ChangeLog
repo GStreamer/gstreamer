@@ -1,3 +1,8 @@
+2006-01-28  Edward Hervey  <edward@fluendo.com>
+
+	* sys/glsink/Makefile.am:
+	glimagesink.h is dead, long live glimagesink.h
+
 2006-01-27  David Schleef  <ds@schleef.org>
 
 	* configure.ac:
