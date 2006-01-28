@@ -119,7 +119,7 @@ gst_ring_buffer_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (ringbuffer));
 }
 
-static int linear_formats[4 * 2 * 2] = {
+static const int linear_formats[4 * 2 * 2] = {
   GST_S8,
   GST_S8,
   GST_U8,
@@ -138,7 +138,7 @@ static int linear_formats[4 * 2 * 2] = {
   GST_U32_BE
 };
 
-static int linear24_formats[3 * 2 * 2] = {
+static const int linear24_formats[3 * 2 * 2] = {
   GST_S24_3LE,
   GST_S24_3BE,
   GST_U24_3LE,
@@ -156,40 +156,45 @@ static int linear24_formats[3 * 2 * 2] = {
 static GstBufferFormat
 build_linear_format (int depth, int width, int unsignd, int big_endian)
 {
+  const gint *formats;
+
   if (width == 24) {
     switch (depth) {
       case 24:
-        depth = 0;
+        formats = &linear24_formats[0];
         break;
       case 20:
-        depth = 1;
+        formats = &linear24_formats[4];
         break;
       case 18:
-        depth = 2;
+        formats = &linear24_formats[8];
         break;
       default:
         return GST_UNKNOWN;
     }
-    return ((int (*)[2][2]) linear24_formats)[depth][!!unsignd][!!big_endian];
   } else {
     switch (depth) {
       case 8:
-        depth = 0;
+        formats = &linear_formats[0];
         break;
       case 16:
-        depth = 1;
+        formats = &linear_formats[4];
         break;
       case 24:
-        depth = 2;
+        formats = &linear_formats[8];
         break;
       case 32:
-        depth = 3;
+        formats = &linear_formats[12];
         break;
       default:
         return GST_UNKNOWN;
     }
   }
-  return ((int (*)[2][2]) linear_formats)[depth][!!unsignd][!!big_endian];
+  if (unsignd)
+    formats += 2;
+  if (big_endian)
+    formats += 1;
+  return (GstBufferFormat) * formats;
 }
 
 /**
