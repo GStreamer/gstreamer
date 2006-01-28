@@ -80,9 +80,18 @@ void
 vs_scanline_merge_linear_Y (guint8 * dest, guint8 * src1, guint8 * src2,
     int n, int x)
 {
+  /* FIXME after liboil-0.3.7 is released */
+#ifdef oil_merge_linear_u8
   uint32_t value = x >> 8;
 
   oil_merge_linear_u8 (dest, src1, src2, &value, n);
+#else
+  int i;
+
+  for (i = 0; i < n; i++) {
+    dest[i] = (src1[i] * (65536 - x) + src2[i] * x) >> 16;
+  }
+#endif
 }
 
 
@@ -144,7 +153,8 @@ vs_scanline_merge_linear_RGBA (guint8 * dest, guint8 * src1, guint8 * src2,
 {
   uint32_t value = x >> 8;
 
-  oil_merge_linear_u8 (dest, src1, src2, &value, n * 4);
+  oil_merge_linear_argb ((guint32 *) dest, (guint32 *) src1, (guint32 *) src2,
+      &value, n);
 }
 
 
@@ -210,9 +220,22 @@ void
 vs_scanline_merge_linear_RGB (guint8 * dest, guint8 * src1, guint8 * src2,
     int n, int x)
 {
+#ifdef oil_merge_linear_u8
   uint32_t value = x >> 8;
 
   oil_merge_linear_u8 (dest, src1, src2, &value, n * 3);
+#else
+  int i;
+
+  for (i = 0; i < n; i++) {
+    dest[3 * i + 0] =
+        (src1[3 * i + 0] * (65536 - x) + src2[3 * i + 0] * x) >> 16;
+    dest[3 * i + 1] =
+        (src1[3 * i + 1] * (65536 - x) + src2[3 * i + 1] * x) >> 16;
+    dest[3 * i + 2] =
+        (src1[3 * i + 2] * (65536 - x) + src2[3 * i + 2] * x) >> 16;
+  }
+#endif
 }
 
 
@@ -401,7 +424,8 @@ vs_scanline_merge_linear_UYVY (guint8 * dest, guint8 * src1, guint8 * src2,
 {
   uint32_t value = x >> 8;
 
-  oil_merge_linear_u8 (dest, src1, src2, &value, n * 4);
+  oil_merge_linear_argb ((guint32 *) dest, (guint32 *) src1, (guint32 *) src2,
+      &value, n);
 }
 
 
