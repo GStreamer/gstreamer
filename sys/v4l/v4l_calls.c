@@ -168,6 +168,12 @@ gst_v4l_open (GstV4lElement * v4lelement)
           (_("Device \"%s\" does not exist."), v4lelement->videodev), (NULL));
       return FALSE;
     }
+    if (errno == EBUSY) {
+      GST_ELEMENT_ERROR (v4lelement, RESOURCE, BUSY,
+          (_("Device \"%s\" is already being used."), v4lelement->videodev),
+          (NULL));
+      return FALSE;
+    }
     GST_ELEMENT_ERROR (v4lelement, RESOURCE, OPEN_READ_WRITE,
         (_("Could not open device \"%s\" for reading and writing."),
             v4lelement->videodev), GST_ERROR_SYSTEM);

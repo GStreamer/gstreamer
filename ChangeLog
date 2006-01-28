@@ -1,3 +1,8 @@
+2006-01-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/v4l/v4l_calls.c: (gst_v4l_open):
+	  check for and throw RESOURCE_BUSY
+
 2006-01-27  David Schleef  <ds@schleef.org>
 
 	* gst/videoscale/vs_scanline.c: Oops, *that's* why I never
