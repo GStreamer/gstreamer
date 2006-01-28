@@ -57,10 +57,13 @@ GST_START_TEST (test_interface)
   gst_bin_add (bin, filesrc);
 
   fail_unless (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
+  gst_object_unref (filesrc);
+
   it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   fail_unless (it != NULL);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
   fail_unless (item == (gpointer) filesrc);
+  gst_object_unref (GST_OBJECT (item));
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
   gst_iterator_free (it);
 
@@ -68,11 +71,11 @@ GST_START_TEST (test_interface)
       gst_element_factory_make ("identity", NULL),
       gst_element_factory_make ("identity", NULL),
       gst_element_factory_make ("identity", NULL), NULL);
-  fail_unless (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
   it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   fail_unless (it != NULL);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
   fail_unless (item == (gpointer) filesrc);
+  gst_object_unref (GST_OBJECT (item));
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
   gst_iterator_free (it);
 
@@ -83,10 +86,10 @@ GST_START_TEST (test_interface)
       gst_element_factory_make ("identity", NULL),
       gst_element_factory_make ("identity", NULL),
       GST_ELEMENT (bin2), gst_element_factory_make ("identity", NULL), NULL);
-  fail_unless (gst_bin_get_by_interface (bin, GST_TYPE_URI_HANDLER) == filesrc);
   it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
   fail_unless (item == (gpointer) filesrc);
+  gst_object_unref (GST_OBJECT (item));
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
   gst_iterator_free (it);
 
@@ -94,8 +97,11 @@ GST_START_TEST (test_interface)
   gst_bin_add (bin2, gst_element_factory_make ("filesrc", NULL));
   it = gst_bin_iterate_all_by_interface (bin, GST_TYPE_URI_HANDLER);
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  gst_object_unref (GST_OBJECT (item));
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  gst_object_unref (GST_OBJECT (item));
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_OK);
+  gst_object_unref (GST_OBJECT (item));
   fail_unless (gst_iterator_next (it, &item) == GST_ITERATOR_DONE);
   gst_iterator_free (it);
 

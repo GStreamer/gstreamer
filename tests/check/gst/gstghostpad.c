@@ -58,6 +58,8 @@ GST_START_TEST (test_remove1)
   srcpad = gst_element_get_pad (src, "src");
   /* pad cannot be linked now */
   fail_if (gst_pad_is_linked (srcpad));
+
+  gst_object_unref (b1);
 }
 
 GST_END_TEST;

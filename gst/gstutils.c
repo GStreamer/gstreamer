@@ -1710,14 +1710,17 @@ gst_element_unlink_pads (GstElement * src, const gchar * srcpadname,
     return;
   }
   destpad = gst_element_get_pad (dest, destpadname);
-  if (srcpad == NULL) {
+  if (destpad == NULL) {
     GST_WARNING_OBJECT (dest, "destination element has no pad \"%s\"",
         destpadname);
+    gst_object_unref (srcpad);
     return;
   }
 
   /* we're satisified they can be unlinked, let's do it */
   gst_pad_unlink (srcpad, destpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (destpad);
 }
 
 /**

@@ -43,8 +43,8 @@ GST_START_TEST (test_from_string)
 
     fail_unless (gst_caps_is_equal (caps, caps2));
 
-    g_free (caps);
-    g_free (caps2);
+    gst_caps_unref (caps);
+    gst_caps_unref (caps2);
     g_free (to_str);
   }
 }
@@ -61,9 +61,13 @@ GST_START_TEST (test_buffer)
       "buffer", GST_TYPE_BUFFER, buffer, NULL);
 
   GST_DEBUG ("caps: %" GST_PTR_FORMAT, c1);
-
-  gst_buffer_set_caps (buffer, c1);     /* gives away our c1 ref */
   gst_buffer_unref (buffer);
+
+  buffer = gst_buffer_new_and_alloc (1000);
+  gst_buffer_set_caps (buffer, c1);     /* doesn't give away our c1 ref */
+
+  gst_caps_unref (c1);
+  gst_buffer_unref (buffer);    /* Should now drop both references */
 }
 
 GST_END_TEST;
@@ -115,7 +119,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_static_caps)
 {
-  GstStaticCaps scaps = GST_STATIC_CAPS ("audio/x-raw-int,rate=44100");
+  static GstStaticCaps scaps = GST_STATIC_CAPS ("audio/x-raw-int,rate=44100");
   GstCaps *caps1;
   GstCaps *caps2;
 

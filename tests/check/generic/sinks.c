@@ -86,6 +86,7 @@ GST_START_TEST (test_sink_completion)
   GstState current, pending;
 
   sink = gst_element_factory_make ("fakesink", "sink");
+  g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
 
   ret = gst_element_set_state (sink, GST_STATE_PLAYING);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no async state return");
@@ -96,6 +97,7 @@ GST_START_TEST (test_sink_completion)
   fail_unless (pending == GST_STATE_PLAYING, "bad pending state");
 
   src = gst_element_factory_make ("fakesrc", "src");
+  g_object_set (G_OBJECT (src), "datarate", 200, "sizetype", 2, NULL);
   gst_element_link (src, sink);
 
   ret = gst_element_set_state (src, GST_STATE_PLAYING);
@@ -200,6 +202,8 @@ GST_START_TEST (test_livesrc_remove)
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "not async");
   fail_unless (current == GST_STATE_PAUSED, "not paused");
   fail_unless (pending == GST_STATE_PAUSED, "not paused");
+
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST

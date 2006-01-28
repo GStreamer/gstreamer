@@ -472,6 +472,9 @@ GST_START_TEST (test_value_intersect)
   fail_unless (GST_VALUE_HOLDS_FOURCC (&dest));
   fail_unless (gst_value_get_fourcc (&dest) ==
       GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'));
+
+  g_value_unset (&src1);
+  g_value_unset (&src2);
 }
 
 GST_END_TEST;

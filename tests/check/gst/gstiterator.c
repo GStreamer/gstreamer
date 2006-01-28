@@ -70,6 +70,7 @@ GST_START_TEST (test_manual_iteration)
   /* clean up */
   gst_iterator_free (iter);
   g_mutex_free (m);
+  g_list_free (l);
 }
 
 GST_END_TEST;
@@ -119,6 +120,7 @@ GST_START_TEST (test_resync)
   /* clean up */
   gst_iterator_free (iter);
   g_mutex_free (m);
+  g_list_free (l);
 }
 
 GST_END_TEST;
@@ -160,6 +162,7 @@ GST_START_TEST (test_fold)
   /* clean up */
   gst_iterator_free (iter);
   g_mutex_free (m);
+  g_list_free (l);
 }
 
 GST_END_TEST;

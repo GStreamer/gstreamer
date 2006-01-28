@@ -54,6 +54,7 @@ GST_START_TEST (test_state_changes)
 
     gst_object_unref (GST_OBJECT (element));
   }
+  gst_plugin_feature_list_free (features);
   gst_task_cleanup_all ();
 }
 

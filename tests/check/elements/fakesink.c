@@ -208,6 +208,11 @@ GST_START_TEST (test_clipping)
     fret = gst_pad_chain (sinkpad, buffer);
     fail_if (fret != GST_FLOW_OK);
   }
+
+  gst_element_set_state (sink, GST_STATE_NULL);
+  gst_element_get_state (sink, NULL, NULL, GST_CLOCK_TIME_NONE);
+  gst_object_unref (sinkpad);
+  gst_object_unref (sink);
 }
 
 GST_END_TEST;

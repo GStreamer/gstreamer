@@ -45,6 +45,7 @@ GST_START_TEST (test_add_remove_pad)
 
   /* clean up our own reference */
   gst_object_unref (p);
+  gst_object_unref (e);
 }
 
 GST_END_TEST;
@@ -127,11 +128,17 @@ GST_START_TEST (test_link)
   gst_element_set_state (sink, GST_STATE_NULL);
   gst_element_set_state (src, GST_STATE_NULL);
 
+  gst_element_get_state (sink, NULL, NULL, GST_CLOCK_TIME_NONE);
+  g_usleep (G_USEC_PER_SEC / 2);
+
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   gst_element_unlink_pads (src, "src", sink, "sink");
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
 }
 
 GST_END_TEST;
