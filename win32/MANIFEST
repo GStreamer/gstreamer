@@ -1,3 +1,4 @@
+win32/common/config.h
 win32/common/libgstaudio.def
 win32/common/libgstriff.def
 win32/common/libgsttag.def

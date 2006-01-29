@@ -1,3 +1,10 @@
+2006-01-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* win32/MANIFEST:
+	* win32/common/config.h:
+	* win32/common/config.h.in:
+	  add config files just like in core
+
 2006-01-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/gstringbuffer.c: (build_linear_format):
