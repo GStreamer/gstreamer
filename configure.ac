@@ -633,6 +633,7 @@ gst-libs/gst/rtp/Makefile
 gst-libs/gst/tag/Makefile
 gst-libs/gst/video/Makefile
 tools/Makefile
+win32/common/config.h
 pkgconfig/Makefile
 pkgconfig/gstreamer-plugins-base.pc
 pkgconfig/gstreamer-plugins-base-uninstalled.pc
