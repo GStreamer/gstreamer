@@ -1,3 +1,7 @@
+2006-01-29  Sebastien Moutte  <sebastien@moutte.net>
+	* win32/vs8:
+		add vs8 project files created by Sergey Scobich
+	
 2006-01-27  Stefan Kost  <ensonic@users.sf.net>
 	* gst/gstcaps.c:
 	* gst/gstelement.c: (gst_element_send_event):
