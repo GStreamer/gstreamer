@@ -1,3 +1,16 @@
+2006-01-29  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst-libs/gst/audio/audio.h: (GST_CLOCK_TIME_TO_FRAMES)
+	* gst-libs/gst/audio/gstbaseaudiosink.c: (gst_base_audio_sink_render)
+		use gst_guint64_to_gdouble to be compliant with vs6
+	* gst/playback/gstdecodebin.c: (try_to_link_1)
+	* gst/videorate/videorate.c: (gst_video_rate_blank_data)
+		use G_GINT64_CONSTANT for int64 constants
+	* win32/common/libgstinterfaces.def:
+		export some symbols (gst_mixer_get_type,gst_mixer_track_get_type)
+	* win32/vs6:
+		update and add new project files
+		
 2006-01-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

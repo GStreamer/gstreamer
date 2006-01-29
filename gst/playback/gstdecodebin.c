@@ -737,7 +737,8 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
     decode_bin->queue_type = G_OBJECT_TYPE (queue);
 
     g_object_set (G_OBJECT (queue), "max-size-buffers", 0, NULL);
-    g_object_set (G_OBJECT (queue), "max-size-time", 0LL, NULL);
+    g_object_set (G_OBJECT (queue), "max-size-time", G_GINT64_CONSTANT (0),
+        NULL);
     g_object_set (G_OBJECT (queue), "max-size-bytes", 8192, NULL);
     gst_bin_add (GST_BIN (decode_bin), queue);
     gst_element_set_state (queue, GST_STATE_READY);

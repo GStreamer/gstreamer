@@ -54,7 +54,7 @@ G_BEGIN_DECLS
   ((GstClockTime) (((gdouble) frames / rate) * GST_SECOND))
 
 #define GST_CLOCK_TIME_TO_FRAMES(clocktime, rate) \
-  ((gint64) (((gdouble) clocktime / GST_SECOND) * rate))
+  ((gint64) ((gst_guint64_to_gdouble(clocktime) / GST_SECOND) * rate))
 
 #define GST_AUDIO_DEF_RATE 44100
 

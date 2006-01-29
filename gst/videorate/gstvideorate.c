@@ -356,8 +356,8 @@ gst_video_rate_blank_data (GstVideoRate * videorate)
   videorate->out = 0;
   videorate->drop = 0;
   videorate->dup = 0;
-  videorate->next_ts = 0LL;
-  videorate->prev_ts = 0LL;
+  videorate->next_ts = G_GINT64_CONSTANT (0);
+  videorate->prev_ts = G_GINT64_CONSTANT (0);
 
   videorate->segment_start = 0;
   videorate->segment_stop = 0;

@@ -1,0 +1,4 @@
+EXPORTS
+	gst_mixer_get_type
+	gst_mixer_track_get_type
+	

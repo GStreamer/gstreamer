@@ -523,7 +523,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     GST_DEBUG_OBJECT (sink, "resync after discont");
   }
 
-  crate = ((gdouble) crate_num) / crate_denom;
+  crate =
+      gst_guint64_to_gdouble (crate_num) / gst_guint64_to_gdouble (crate_denom);
   GST_DEBUG_OBJECT (sink,
       "internal %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", rate %g",
       cinternal, cexternal, crate);

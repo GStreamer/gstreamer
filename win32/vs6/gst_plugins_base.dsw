@@ -3,6 +3,18 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "grammar"=".\grammar.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "libgstadder"=".\libgstadder.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -23,6 +35,9 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name grammar
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -75,6 +90,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libgstdecodebin"=".\libgstdecodebin.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name grammar
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "libgstffmpegcolorspace"=".\libgstffmpegcolorspace.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -95,6 +125,9 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name grammar
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -121,6 +154,21 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name libgstriff
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libgstplaybin"=".\libgstplaybin.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name grammar
     End Project Dependency
 }}}
 
@@ -202,6 +250,42 @@ Package=<4>
 ###############################################################################
 
 Project: "libgstvideo"=".\libgstvideo.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstvideorate"=".\libgstvideorate.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstvideoscale"=".\libgstvideoscale.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstvideotestsrc"=".\libgstvideotestsrc.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
