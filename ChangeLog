@@ -1,5 +1,19 @@
 2006-01-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* Makefile.am:
+	* win32/MANIFEST:
+	* win32/common/interfaces-enumtypes.c:
+	(gst_color_balance_type_get_type), (gst_mixer_type_get_type),
+	(gst_mixer_track_flags_get_type),
+	(gst_tuner_channel_flags_get_type):
+	* win32/common/interfaces-enumtypes.h:
+	* win32/common/multichannel-enumtypes.c:
+	(gst_audio_channel_position_get_type):
+	* win32/common/multichannel-enumtypes.h:
+	  add a win32-update rule like in core, and copy over enumtypes files
+
+2006-01-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* win32/MANIFEST:
 	* win32/common/config.h:
 	* win32/common/config.h.in:

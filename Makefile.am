@@ -47,3 +47,7 @@ check-valgrind:
 
 check-torture:
 	cd tests/check && make torture
+
+WIN32_COPY = $(top_builddir)/gst-libs/gst/*/*-enumtypes.[ch]
+win32-update:
+	for f in $(WIN32_COPY); do cp $$f win32/common;done

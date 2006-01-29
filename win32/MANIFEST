@@ -3,6 +3,10 @@ win32/common/libgstaudio.def
 win32/common/libgstriff.def
 win32/common/libgsttag.def
 win32/common/libgstvideo.def
+win32/common/interfaces-enumtypes.c
+win32/common/interfaces-enumtypes.h
+win32/common/multichannel-enumtypes.c
+win32/common/multichannel-enumtypes.h
 win32/vs6/gst_plugins_base.dsw
 win32/vs6/libgstadder.dsp
 win32/vs6/libgstaudio.dsp
