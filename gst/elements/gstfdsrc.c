@@ -103,6 +103,11 @@ static void gst_fdsrc_set_property (GObject * object, guint prop_id,
 static void gst_fdsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static const GstQueryType *gst_fdsrc_get_query_types (GstPad * pad);
+static const GstFormat *gst_fdsrc_get_formats (GstPad * pad);
+static gboolean gst_fdsrc_srcpad_query (GstPad * pad, GstQueryType type,
+    GstFormat * fmt, gint64 * value);
+
 static GstElementStateReturn gst_fdsrc_change_state (GstElement * element);
 static gboolean gst_fdsrc_release_locks (GstElement * element);
 static GstData *gst_fdsrc_get (GstPad * pad);
@@ -168,6 +173,9 @@ gst_fdsrc_init (GstFdSrc * fdsrc)
       "src");
 
   gst_pad_set_get_function (fdsrc->srcpad, gst_fdsrc_get);
+  gst_pad_set_query_function (fdsrc->srcpad, gst_fdsrc_srcpad_query);
+  gst_pad_set_query_type_function (fdsrc->srcpad, gst_fdsrc_get_query_types);
+  gst_pad_set_formats_function (fdsrc->srcpad, gst_fdsrc_get_formats);
   gst_element_add_pad (GST_ELEMENT (fdsrc), fdsrc->srcpad);
 
   fdsrc->fd = 0;
@@ -176,6 +184,42 @@ gst_fdsrc_init (GstFdSrc * fdsrc)
   fdsrc->blocksize = DEFAULT_BLOCKSIZE;
   fdsrc->timeout = 0;
   fdsrc->seq = 0;
+}
+
+static const GstQueryType *
+gst_fdsrc_get_query_types (GstPad * pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_POSITION,
+    0
+  };
+
+  return types;
+}
+
+static const GstFormat *
+gst_fdsrc_get_formats (GstPad * pad)
+{
+  static const GstFormat formats[] = {
+    GST_FORMAT_BYTES,
+    0,
+  };
+
+  return formats;
+}
+
+static gboolean
+gst_fdsrc_srcpad_query (GstPad * pad, GstQueryType type,
+    GstFormat * format, gint64 * value)
+{
+  GstFdSrc *fdsrc = GST_FDSRC (gst_pad_get_parent (pad));
+
+  if (*format != GST_FORMAT_BYTES || type != GST_QUERY_POSITION)
+    return FALSE;
+
+  *value = fdsrc->curoffset;
+
+  return TRUE;
 }
 
 static GstElementStateReturn

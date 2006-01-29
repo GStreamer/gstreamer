@@ -436,6 +436,13 @@ GstTagList *	gst_event_tag_get_list		(GstEvent *		tag_event);
  * Language code (ISO-639-1)
  */
 #define GST_TAG_LANGUAGE_CODE		"language-code"
+/**
+ * GST_TAG_IMAGE:
+ *
+ * Image, such as cover art or screenshot in movie (if explicitely
+ * supplied in media)
+ */
+#define GST_TAG_IMAGE			"image"
 
 G_END_DECLS
 

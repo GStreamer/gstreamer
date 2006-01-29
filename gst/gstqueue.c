@@ -59,6 +59,21 @@ GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
 		      queue->min_threshold.time, \
 		      queue->max_size.time, \
 		      queue->queue->length)
+#define IS_FULL(queue) \
+  ((queue->max_size.buffers > 0 && \
+          queue->cur_level.buffers >= queue->max_size.buffers) || \
+      (queue->max_size.bytes > 0 && \
+          queue->cur_level.bytes >= queue->max_size.bytes) || \
+      (queue->max_size.time > 0 && \
+          queue->cur_level.time >= queue->max_size.time))
+#define IS_EMPTY(queue) \
+  (queue->queue->length == 0 || \
+      (queue->min_threshold.buffers > 0 && \
+          queue->cur_level.buffers < queue->min_threshold.buffers) || \
+      (queue->min_threshold.bytes > 0 && \
+          queue->cur_level.bytes < queue->min_threshold.bytes) || \
+      (queue->min_threshold.time > 0 && \
+          queue->cur_level.time < queue->min_threshold.time))
 
 static GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
     "Generic",
@@ -592,14 +607,10 @@ restart:
    * and filler events with a duration
    * We always handle events and they don't count in our statistics. */
   if ((GST_IS_BUFFER (data) ||
-          (GST_IS_EVENT (data) && GST_EVENT_TYPE (data) == GST_EVENT_FILLER &&
+          (GST_IS_EVENT (data) &&
+              GST_EVENT_TYPE (data) == GST_EVENT_FILLER &&
               gst_event_filler_get_duration (GST_EVENT (data)) !=
-              GST_CLOCK_TIME_NONE)) && ((queue->max_size.buffers > 0
-              && queue->cur_level.buffers >= queue->max_size.buffers)
-          || (queue->max_size.bytes > 0
-              && queue->cur_level.bytes >= queue->max_size.bytes)
-          || (queue->max_size.time > 0
-              && queue->cur_level.time >= queue->max_size.time))) {
+              GST_CLOCK_TIME_NONE)) && IS_FULL (queue)) {
     GST_QUEUE_MUTEX_UNLOCK;
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_OVERRUN], 0);
     GST_QUEUE_MUTEX_LOCK;
@@ -663,12 +674,7 @@ restart:
       case GST_QUEUE_NO_LEAK:
         STATUS (queue, "pre-full wait");
 
-        while ((queue->max_size.buffers > 0 &&
-                queue->cur_level.buffers >= queue->max_size.buffers) ||
-            (queue->max_size.bytes > 0 &&
-                queue->cur_level.bytes >= queue->max_size.bytes) ||
-            (queue->max_size.time > 0 &&
-                queue->cur_level.time >= queue->max_size.time)) {
+        while (IS_FULL (queue)) {
           /* if there's a pending state change for this queue
            * or its manager, switch back to iterator so bottom
            * half of state change executes */
@@ -793,25 +799,27 @@ restart:
   /* have to lock for thread-safety */
   GST_QUEUE_MUTEX_LOCK;
 
-  if (queue->queue->length == 0 ||
-      (queue->min_threshold.buffers > 0 &&
-          queue->cur_level.buffers < queue->min_threshold.buffers) ||
-      (queue->min_threshold.bytes > 0 &&
-          queue->cur_level.bytes < queue->min_threshold.bytes) ||
-      (queue->min_threshold.time > 0 &&
-          queue->cur_level.time < queue->min_threshold.time)) {
+  if (IS_EMPTY (queue)) {
     GST_QUEUE_MUTEX_UNLOCK;
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_UNDERRUN], 0);
     GST_QUEUE_MUTEX_LOCK;
 
     STATUS (queue, "pre-empty wait");
-    while (queue->queue->length == 0 ||
-        (queue->min_threshold.buffers > 0 &&
-            queue->cur_level.buffers < queue->min_threshold.buffers) ||
-        (queue->min_threshold.bytes > 0 &&
-            queue->cur_level.bytes < queue->min_threshold.bytes) ||
-        (queue->min_threshold.time > 0 &&
-            queue->cur_level.time < queue->min_threshold.time)) {
+    while (IS_EMPTY (queue)) {
+      /* if there's an EOS in the queue, just run */
+      GList *item;
+      gboolean got_eos = FALSE;
+
+      for (item = queue->queue->head; item != NULL; item = item->next) {
+        if (GST_IS_EVENT (item->data) &&
+            GST_EVENT_TYPE (item->data) == GST_EVENT_EOS) {
+          GST_CAT_DEBUG (queue_dataflow, "got eos, exit loop");
+          got_eos = TRUE;
+          break;
+        }
+      }
+      if (got_eos)
+        break;
       /* if there's a pending state change for this queue or its
        * manager, switch back to iterator so bottom half of state
        * change executes. */

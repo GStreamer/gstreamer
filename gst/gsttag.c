@@ -25,6 +25,7 @@
 
 #include "gst_private.h"
 #include "gst-i18n-lib.h"
+#include "gstbuffer.h"
 #include "gsttag.h"
 #include "gstinfo.h"
 #include "gstvalue.h"
@@ -191,6 +192,8 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_LANGUAGE_CODE, GST_TAG_FLAG_META, G_TYPE_STRING,
       _("language code"),
       _("language code for this stream, conforming to ISO-639-1"), NULL);
+  gst_tag_register (GST_TAG_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
+      _("image"), _("cover art or image for screenshot display"), NULL);
 }
 
 /**

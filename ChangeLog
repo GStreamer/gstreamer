@@ -1,3 +1,18 @@
+2006-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* gst/elements/gstfdsrc.c: (gst_fdsrc_init),
+	(gst_fdsrc_get_query_types), (gst_fdsrc_get_formats),
+	(gst_fdsrc_srcpad_query):
+	  Implement querying.
+	* gst/gstqueue.c: (gst_queue_chain), (gst_queue_get):
+	  If we're waiting to be "full enough to start" and EOS comes in,
+	  just flow through all data since waiting longer is not going to
+	  help us. Fixes hangs on short media files played from network
+	  sources.
+	* gst/gsttag.c: (_gst_tag_initialize):
+	* gst/gsttag.h:
+	  Add GST_TAG_IMAGE tag.
+
 2006-01-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/manual/Makefile.am:
