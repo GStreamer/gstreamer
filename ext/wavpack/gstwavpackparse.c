@@ -1,5 +1,6 @@
 /* GStreamer wavpack plugin
  * (c) 2005 Arwed v. Merkatz <v.merkatz@gmx.net>
+ * (c) 2006 Tim-Philipp Müller <tim centricular net>
  *
  * gstwavpackparse.c: wavpack file parser
  *
@@ -31,17 +32,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_wavpack_parse_debug);
 #define GST_CAT_DEFAULT gst_wavpack_parse_debug
 
-/* Filter signals and args */
-enum
-{
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-};
-
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -54,7 +44,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/x-wavpack, "
-        "width = (int) { 8, 16, 24 }, "
+        "width = (int) { 8, 16, 24, 32 }, "
         "channels = (int) { 1, 2 }, "
         "rate = (int) [ 6000, 192000 ], " "framed = (boolean) true")
     );
@@ -65,47 +55,22 @@ static GstStaticPadTemplate wvc_src_factory = GST_STATIC_PAD_TEMPLATE ("wvcsrc",
     GST_STATIC_CAPS ("audio/x-wavpack-correction, " "framed = (boolean) true")
     );
 
-static void gst_wavpack_parse_class_init (GstWavpackParseClass * klass);
-static void gst_wavpack_parse_base_init (GstWavpackParseClass * klass);
-static void gst_wavpack_parse_init (GstWavpackParse * wavpackparse);
-
 static gboolean gst_wavepack_parse_sink_activate (GstPad * sinkpad);
 static gboolean
 gst_wavepack_parse_sink_activate_pull (GstPad * sinkpad, gboolean active);
 
-static gboolean gst_wavpack_parse_sink_event (GstPad * pad, GstEvent * event);
-
 static void gst_wavpack_parse_loop (GstElement * element);
 static GstStateChangeReturn gst_wavpack_parse_change_state (GstElement *
     element, GstStateChange transition);
+static void gst_wavpack_parse_reset (GstWavpackParse * wavpackparse);
+static gint64 gst_wavpack_parse_get_upstream_length (GstWavpackParse * wvparse);
+static GstBuffer *gst_wavpack_parse_pull_buffer (GstWavpackParse * wvparse,
+    gint64 offset, guint size, GstFlowReturn * flow);
 
-static GstElementClass *parent = NULL;
+GST_BOILERPLATE (GstWavpackParse, gst_wavpack_parse, GstElement,
+    GST_TYPE_ELEMENT)
 
-GType
-gst_wavpack_parse_get_type (void)
-{
-  static GType plugin_type = 0;
-
-  if (!plugin_type) {
-    static const GTypeInfo plugin_info = {
-      sizeof (GstWavpackParseClass),
-      (GBaseInitFunc) gst_wavpack_parse_base_init,
-      NULL,
-      (GClassInitFunc) gst_wavpack_parse_class_init,
-      NULL,
-      NULL,
-      sizeof (GstWavpackParse),
-      0,
-      (GInstanceInitFunc) gst_wavpack_parse_init,
-    };
-    plugin_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstWavpackParse", &plugin_info, 0);
-  }
-  return plugin_type;
-}
-
-static void
-gst_wavpack_parse_base_init (GstWavpackParseClass * klass)
+     static void gst_wavpack_parse_base_init (gpointer klass)
 {
   static GstElementDetails plugin_details = {
     "Wavpack file parser",
@@ -127,7 +92,8 @@ gst_wavpack_parse_base_init (GstWavpackParseClass * klass)
 static void
 gst_wavpack_parse_dispose (GObject * object)
 {
-  G_OBJECT_CLASS (parent)->dispose (object);
+  gst_wavpack_parse_reset (GST_WAVPACK_PARSE (object));
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -139,513 +105,703 @@ gst_wavpack_parse_class_init (GstWavpackParseClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent = g_type_class_ref (GST_TYPE_ELEMENT);
-
   gobject_class->dispose = gst_wavpack_parse_dispose;
-  gstelement_class->change_state = gst_wavpack_parse_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_wavpack_parse_change_state);
+}
+
+static GstWavpackParseIndexEntry *
+gst_wavpack_parse_index_get_last_entry (GstWavpackParse * wvparse)
+{
+  gint last;
+
+  g_assert (wvparse->entries != NULL);
+  g_assert (wvparse->entries->len > 0);
+
+  last = wvparse->entries->len - 1;
+  return &g_array_index (wvparse->entries, GstWavpackParseIndexEntry, last);
+}
+
+static GstWavpackParseIndexEntry *
+gst_wavpack_parse_index_get_entry_from_sample (GstWavpackParse * wvparse,
+    gint64 sample_offset)
+{
+  gint i;
+
+  if (wvparse->entries == NULL || wvparse->entries->len == 0)
+    return NULL;
+
+  for (i = wvparse->entries->len - 1; i >= 0; --i) {
+    GstWavpackParseIndexEntry *entry;
+
+    entry = &g_array_index (wvparse->entries, GstWavpackParseIndexEntry, i);
+
+    GST_LOG_OBJECT (wvparse, "Index entry %03u: sample %" G_GINT64_FORMAT " @"
+        " byte %" G_GINT64_FORMAT, entry->sample_offset, entry->byte_offset);
+
+    if (entry->sample_offset <= sample_offset &&
+        sample_offset < entry->sample_offset_end) {
+      GST_LOG_OBJECT (wvparse, "found match");
+      return entry;
+    }
+  }
+  GST_LOG_OBJECT (wvparse, "no match in index");
+  return NULL;
+}
+
+static void
+gst_wavpack_parse_index_append_entry (GstWavpackParse * wvparse,
+    gint64 byte_offset, gint64 sample_offset, gint64 num_samples)
+{
+  GstWavpackParseIndexEntry entry;
+
+  if (wvparse->entries == NULL) {
+    wvparse->entries = g_array_new (FALSE, TRUE,
+        sizeof (GstWavpackParseIndexEntry));
+  } else {
+    /* do we have this one already? */
+    entry = *gst_wavpack_parse_index_get_last_entry (wvparse);
+    if (entry.byte_offset >= byte_offset)
+      return;
+  }
+
+  GST_LOG_OBJECT (wvparse, "Adding index entry %8" G_GINT64_FORMAT " - %"
+      GST_TIME_FORMAT " @ offset 0x%08" G_GINT64_MODIFIER "x", sample_offset,
+      GST_TIME_ARGS (gst_util_uint64_scale_int (sample_offset,
+              GST_SECOND, wvparse->samplerate)), byte_offset);
+
+  entry.byte_offset = byte_offset;
+  entry.sample_offset = sample_offset;
+  entry.sample_offset_end = sample_offset + num_samples;
+  g_array_append_val (wvparse->entries, entry);
+}
+
+static void
+gst_wavpack_parse_reset (GstWavpackParse * wavpackparse)
+{
+  wavpackparse->total_samples = 0;
+  wavpackparse->samplerate = 0;
+  wavpackparse->channels = 0;
+
+  gst_segment_init (&wavpackparse->segment, GST_FORMAT_UNDEFINED);
+
+  wavpackparse->current_offset = 0;
+  wavpackparse->need_newsegment = TRUE;
+  wavpackparse->upstream_length = -1;
+
+  if (wavpackparse->entries) {
+    g_array_free (wavpackparse->entries, TRUE);
+    wavpackparse->entries = NULL;
+  }
+
+  if (wavpackparse->srcpad != NULL) {
+    gboolean res;
+
+    GST_DEBUG_OBJECT (wavpackparse, "Removing src pad");
+    res = gst_element_remove_pad (GST_ELEMENT (wavpackparse),
+        wavpackparse->srcpad);
+    g_return_if_fail (res != FALSE);
+    gst_object_unref (wavpackparse->srcpad);
+    wavpackparse->srcpad = NULL;
+  }
 }
 
 static gboolean
 gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
 {
   GstWavpackParse *wavpackparse = GST_WAVPACK_PARSE (gst_pad_get_parent (pad));
-  GstFormat format = GST_FORMAT_DEFAULT;
-  gint64 value;
+  GstFormat format;
   gboolean ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_POSITION:
-      gst_query_parse_position (query, &format, &value);
-      if (format == GST_FORMAT_TIME) {
-        value = wavpackparse->timestamp;
-        gst_query_set_duration (query, format, value);
-        gst_object_unref (wavpackparse);
-        ret = TRUE;
-        break;
-      }
-      break;
-    case GST_QUERY_DURATION:
-      gst_query_parse_duration (query, &format, &value);
+    case GST_QUERY_POSITION:{
+      gint64 cur, len;
+      guint rate;
 
-      if (format == GST_FORMAT_TIME) {
-        if (wavpackparse->total_samples == 0) {
-          value = 0;
-          gst_query_set_duration (query, format, value);
-          gst_object_unref (wavpackparse);
-          ret = FALSE;
-          break;
-        }
-        value = ((gdouble) wavpackparse->total_samples /
-            (gdouble) wavpackparse->samplerate) * GST_SECOND;
-        gst_query_set_duration (query, format, value);
-        gst_object_unref (wavpackparse);
-        ret = TRUE;
+      GST_OBJECT_LOCK (wavpackparse);
+      cur = wavpackparse->segment.last_stop;
+      len = wavpackparse->total_samples;
+      rate = wavpackparse->samplerate;
+      GST_OBJECT_UNLOCK (wavpackparse);
+
+      if (len <= 0 || rate == 0) {
+        GST_DEBUG_OBJECT (wavpackparse, "haven't read header yet");
         break;
       }
+
+      gst_query_parse_position (query, &format, NULL);
+
+      switch (format) {
+        case GST_FORMAT_TIME:
+          cur = gst_util_uint64_scale_int (cur, GST_SECOND, rate);
+          gst_query_set_position (query, GST_FORMAT_TIME, cur);
+          ret = TRUE;
+          break;
+        case GST_FORMAT_DEFAULT:
+          gst_query_set_position (query, GST_FORMAT_DEFAULT, cur);
+          ret = TRUE;
+          break;
+        default:
+          GST_DEBUG_OBJECT (wavpackparse, "cannot handle position query in "
+              "%s format", gst_format_get_name (format));
+          break;
+      }
       break;
-    default:
-      gst_object_unref (wavpackparse);
+    }
+    case GST_QUERY_DURATION:{
+      gint64 len;
+      guint rate;
+
+      GST_OBJECT_LOCK (wavpackparse);
+      rate = wavpackparse->samplerate;
+      len = wavpackparse->total_samples;
+      GST_OBJECT_UNLOCK (wavpackparse);
+
+      if (len <= 0 || rate == 0) {
+        GST_DEBUG_OBJECT (wavpackparse, "haven't read header yet");
+        break;
+      }
+
+      gst_query_parse_duration (query, &format, NULL);
+
+      switch (format) {
+        case GST_FORMAT_TIME:
+          len = gst_util_uint64_scale_int (len, GST_SECOND, rate);
+          gst_query_set_duration (query, GST_FORMAT_TIME, len);
+          ret = TRUE;
+          break;
+        case GST_FORMAT_DEFAULT:
+          gst_query_set_duration (query, GST_FORMAT_DEFAULT, len);
+          ret = TRUE;
+          break;
+        default:
+          GST_DEBUG_OBJECT (wavpackparse, "cannot handle duration query in "
+              "%s format", gst_format_get_name (format));
+          break;
+      }
+      break;
+    }
+    default:{
       ret = gst_pad_query_default (pad, query);
       break;
+    }
   }
 
+  gst_object_unref (wavpackparse);
   return ret;
 
+}
+
+/* returns TRUE on success, with byte_offset set to the offset of the
+ * wavpack chunk containing the sample requested. start_sample will be
+ * set to the first sample in the chunk starting at byte_offset.
+ * Scanning from the last known header offset to the wanted position
+ * when seeking forward isn't very clever, but seems fast enough in
+ * practice and has the nice side effect of populating our index
+ * table */
+static gboolean
+gst_wavpack_parse_scan_to_find_sample (GstWavpackParse * parse,
+    gint64 sample, gint64 * byte_offset, gint64 * start_sample)
+{
+  GstWavpackParseIndexEntry *entry;
+  GstFlowReturn ret;
+  gint64 off = 0;
+
+  /* first, check if we have to scan at all */
+  entry = gst_wavpack_parse_index_get_entry_from_sample (parse, sample);
+  if (entry) {
+    *byte_offset = entry->byte_offset;
+    *start_sample = entry->sample_offset;
+    GST_LOG_OBJECT (parse, "Found index entry: sample %" G_GINT64_FORMAT
+        " @ offset %" G_GINT64_FORMAT, entry->sample_offset,
+        entry->byte_offset);
+    return TRUE;
+  }
+
+  GST_LOG_OBJECT (parse, "No matching entry in index, scanning file ...");
+
+  /* if we have an index, we can start scanning from the last known offset
+   * in there, after all we know our wanted sample is not in the index */
+  if (parse->entries && parse->entries->len > 0) {
+    GstWavpackParseIndexEntry *entry;
+
+    entry = gst_wavpack_parse_index_get_last_entry (parse);
+    off = entry->byte_offset;
+  }
+
+  /* now scan forward until we find the chunk we're looking for or hit EOS */
+  do {
+    WavpackHeader header = { {0,}
+    , 0, };
+    GstBuffer *buf;
+
+    buf = gst_wavpack_parse_pull_buffer (parse, off, sizeof (WavpackHeader),
+        &ret);
+
+    if (buf == NULL)
+      break;
+
+    gst_wavpack_read_header (&header, GST_BUFFER_DATA (buf));
+    gst_buffer_unref (buf);
+
+    gst_wavpack_parse_index_append_entry (parse, off, header.block_index,
+        header.block_samples);
+
+    if (header.block_index <= sample &&
+        sample < (header.block_index + header.block_samples)) {
+      *byte_offset = off;
+      *start_sample = header.block_index;
+      return TRUE;
+    }
+
+    off += header.ckSize + 8;
+  } while (1);
+
+  GST_DEBUG_OBJECT (parse, "scan failed: %s (off=0x%08" G_GINT64_MODIFIER "x)",
+      gst_flow_get_name (ret), off);
+
+  return FALSE;
+}
+
+static gboolean
+gst_wavpack_parse_send_newsegment (GstWavpackParse * wvparse, gboolean update)
+{
+  GstSegment *s = &wvparse->segment;
+  gboolean ret;
+  gint64 stop_time = -1;
+  gint64 start_time = 0;
+  gint64 cur_pos_time;
+  gint64 diff;
+
+  /* segment is in DEFAULT format, but we want to send a TIME newsegment */
+  start_time = gst_util_uint64_scale_int (s->start, GST_SECOND,
+      wvparse->samplerate);
+
+  if (s->stop != -1) {
+    stop_time = gst_util_uint64_scale_int (s->stop, GST_SECOND,
+        wvparse->samplerate);
+  }
+
+  GST_DEBUG_OBJECT (wvparse, "sending newsegment from %" GST_TIME_FORMAT
+      " to %" GST_TIME_FORMAT, GST_TIME_ARGS (start_time),
+      GST_TIME_ARGS (stop_time));
+
+  /* after a seek, s->last_stop will point to a chunk boundary, ie. from
+   * which sample we will start sending data again, while s->start will
+   * point to the sample we actually want to seek to and want to start
+   * playing right after the seek. Adjust clock-time for the difference
+   * so we start playing from start_time */
+  cur_pos_time = gst_util_uint64_scale_int (s->last_stop, GST_SECOND,
+      wvparse->samplerate);
+  diff = start_time - cur_pos_time;
+
+  ret = gst_pad_push_event (wvparse->srcpad,
+      gst_event_new_new_segment (update, s->rate, GST_FORMAT_TIME,
+          start_time, stop_time, start_time - diff));
+
+  return ret;
+}
+
+static gboolean
+gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
+    GstEvent * event)
+{
+  GstSeekFlags seek_flags;
+  GstSeekType start_type;
+  GstSeekType stop_type;
+  GstSegment segment;
+  GstFormat format;
+  gboolean only_update;
+  gboolean flush, ret;
+  gdouble speed;
+  gint64 stop;
+  gint64 start;                 /* sample we want to seek to                  */
+  gint64 byte_offset;           /* byte offset the chunk we seek to starts at */
+  gint64 chunk_start;           /* first sample in chunk we seek to           */
+  guint rate;
+
+  gst_event_parse_seek (event, &speed, &format, &seek_flags, &start_type,
+      &start, &stop_type, &stop);
+
+  if (format != GST_FORMAT_DEFAULT && format != GST_FORMAT_TIME) {
+    GST_DEBUG ("seeking is only supported in TIME or DEFAULT format");
+    return FALSE;
+  }
+
+  if (speed < 0.0) {
+    GST_DEBUG ("only forward playback supported, rate %f not allowed", speed);
+    return FALSE;
+  }
+
+  GST_OBJECT_LOCK (wvparse);
+
+  rate = wvparse->samplerate;
+  if (rate == 0) {
+    GST_OBJECT_UNLOCK (wvparse);
+    GST_DEBUG ("haven't read header yet");
+    return FALSE;
+  }
+
+  /* convert from time to samples if necessary */
+  if (format == GST_FORMAT_TIME) {
+    if (start_type != GST_SEEK_TYPE_NONE)
+      start = gst_util_uint64_scale_int (start, rate, GST_SECOND);
+    if (stop_type != GST_SEEK_TYPE_NONE)
+      stop = gst_util_uint64_scale_int (stop, rate, GST_SECOND);
+  }
+
+  flush = ((seek_flags & GST_SEEK_FLAG_FLUSH) != 0);
+
+  if (start < 0) {
+    GST_OBJECT_UNLOCK (wvparse);
+    GST_DEBUG_OBJECT (wvparse, "Invalid start sample %" G_GINT64_FORMAT, start);
+    return FALSE;
+  }
+
+  /* operate on segment copy until we know the seek worked */
+  segment = wvparse->segment;
+
+  gst_segment_set_seek (&segment, speed, GST_FORMAT_DEFAULT,
+      seek_flags, start_type, start, stop_type, stop, &only_update);
+
+#if 0
+  if (only_update) {
+    wvparse->segment = segment;
+    gst_wavpack_parse_send_newsegment (wvparse, TRUE);
+    goto done;
+  }
+#endif
+
+  gst_pad_push_event (wvparse->sinkpad, gst_event_new_flush_start ());
+
+  if (flush) {
+    gst_pad_push_event (wvparse->srcpad, gst_event_new_flush_start ());
+  } else {
+    gst_pad_stop_task (wvparse->sinkpad);
+  }
+
+  GST_PAD_STREAM_LOCK (wvparse->sinkpad);
+
+  gst_pad_push_event (wvparse->sinkpad, gst_event_new_flush_stop ());
+
+  if (flush) {
+    gst_pad_push_event (wvparse->srcpad, gst_event_new_flush_stop ());
+  }
+
+  GST_DEBUG_OBJECT (wvparse, "Performing seek to %" GST_TIME_FORMAT " sample %"
+      G_GINT64_FORMAT, GST_TIME_ARGS (segment.start * GST_SECOND / rate),
+      start);
+
+  ret = gst_wavpack_parse_scan_to_find_sample (wvparse, segment.start,
+      &byte_offset, &chunk_start);
+
+  if (ret) {
+    GST_DEBUG_OBJECT (wvparse, "new offset: %" G_GINT64_FORMAT, byte_offset);
+    wvparse->current_offset = byte_offset;
+    /* we want to send a newsegment event with the actual seek position
+     * as start, even though our first buffer might start before the
+     * configured segment. We leave it up to the decoder or sink to crop
+     * the output buffers accordingly */
+    wvparse->segment = segment;
+    wvparse->segment.last_stop = chunk_start;
+    gst_wavpack_parse_send_newsegment (wvparse, FALSE);
+  } else {
+    GST_DEBUG_OBJECT (wvparse, "seek failed: don't know where to seek to");
+  }
+
+  GST_PAD_STREAM_UNLOCK (wvparse->sinkpad);
+  GST_OBJECT_UNLOCK (wvparse);
+
+  gst_pad_start_task (wvparse->sinkpad,
+      (GstTaskFunction) gst_wavpack_parse_loop, wvparse);
+
+  return ret;
 }
 
 static gboolean
 gst_wavpack_parse_src_event (GstPad * pad, GstEvent * event)
 {
   GstWavpackParse *wavpackparse;
-  GstSeekType type;
-  GstFormat format;
-  gboolean need_flush;
-  gint64 offset, dest;
-  GstSeekFlags flags;
-  gboolean ret = TRUE;
+  gboolean ret;
 
   wavpackparse = GST_WAVPACK_PARSE (gst_pad_get_parent (pad));
 
-  if (GST_EVENT_TYPE (event) != GST_EVENT_SEEK) {
-    GstPad *peer;
-
-    if (!(peer = gst_pad_get_peer (wavpackparse->sinkpad))) {
-      ret = FALSE;
-      goto done;
-    }
-    ret = gst_pad_send_event (peer, event);
-    gst_object_unref (peer);
-    goto done;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      ret = gst_wavpack_parse_handle_seek_event (wavpackparse, event);
+      break;
+    default:
+      ret = gst_pad_event_default (pad, event);
+      break;
   }
 
-  gst_event_parse_seek (event, NULL, &format, &flags, &type, &offset, NULL,
-      NULL);
-
-  need_flush = flags & GST_SEEK_FLAG_FLUSH;
-
-
-
-  if (offset < 0 || type != GST_SEEK_TYPE_SET) {
-    ret = FALSE;
-    goto done;
-  }
-
-  if (format == GST_FORMAT_TIME) {
-    dest = offset * wavpackparse->samplerate / GST_SECOND;
-  } else if (format == GST_FORMAT_DEFAULT) {
-    dest = offset;
-  } else {
-    ret = FALSE;
-    goto done;
-  }
-
-  wavpackparse->need_discont = TRUE;
-  wavpackparse->need_flush = need_flush;
-
-  wavpackparse->seek_pending = TRUE;
-  wavpackparse->seek_offset = dest;
-
-done:
-  gst_event_unref (event);
   gst_object_unref (wavpackparse);
   return ret;
 }
 
-#define BUFSIZE 4096
-
-static guint64
-find_header (GstWavpackParse * wavpackparse, guint64 filepos,
-    WavpackHeader * wphdr)
-{
-  guint64 pos = filepos;
-  gint read = 0;
-  GstBuffer *buf = NULL;
-
-  while (TRUE) {
-    guint8 *cur;
-
-    if (GST_FLOW_OK != gst_pad_pull_range (wavpackparse->sinkpad,
-            wavpackparse->flushed_bytes + filepos, BUFSIZE, &buf)) {
-      wavpackparse->eos = TRUE;
-      gst_pad_push_event (wavpackparse->srcpad, gst_event_new_eos ());
-      return 0;
-    }
-    read = GST_BUFFER_SIZE (buf);
-
-    if (read == 0) {
-      wavpackparse->eos = TRUE;
-      gst_pad_push_event (wavpackparse->srcpad, gst_event_new_eos ());
-      gst_buffer_unref (buf);
-      return 0;
-    }
-
-    cur = GST_BUFFER_DATA (buf);
-    do {
-      if (cur[0] == 'w' && cur[1] == 'v' && cur[2] == 'p' && cur[3] == 'k') {
-        gst_wavpack_read_header (wphdr, cur);
-        pos += (cur - GST_BUFFER_DATA (buf));
-        gst_buffer_unref (buf);
-        buf = NULL;
-        return pos;
-      }
-      cur++;
-    } while ((cur - GST_BUFFER_DATA (buf)) <
-        (BUFSIZE - sizeof (WavpackHeader)));
-
-    wavpackparse->flushed_bytes += BUFSIZE - sizeof (WavpackHeader);
-
-    pos += BUFSIZE - sizeof (WavpackHeader);
-  }
-
-  /* never reached */
-
-  if (buf) {
-    gst_buffer_unref (buf);
-    buf = NULL;
-  }
-  return wavpackparse->duration - wavpackparse->flushed_bytes;
-}
-
-/* find the position of sample in the input bytestream, adapted from the
- * original wavpack find_sample function */
-static guint64
-find_sample (GstWavpackParse * wavpackparse, guint32 sample)
-{
-  WavpackHeader wphdr;
-  guint64 file_pos1 = 0;
-  guint64 file_pos2 = wavpackparse->duration - wavpackparse->flushed_bytes;
-  guint64 sample_pos1 = 0, sample_pos2 = wavpackparse->total_samples;
-  double ratio = 0.96;
-  int file_skip = 0;
-
-  if (sample >= wavpackparse->total_samples) {
-    return wavpackparse->duration - wavpackparse->flushed_bytes;
-  }
-
-  while (1) {
-    double bytes_per_sample;
-    guint64 seek_pos;
-
-    bytes_per_sample = file_pos2 - file_pos1;
-    bytes_per_sample /= sample_pos2 - sample_pos1;
-    seek_pos = file_pos1 + (file_skip ? 32 : 0);
-    seek_pos += (guint64) (bytes_per_sample * (sample - sample_pos1) * ratio);
-    seek_pos = find_header (wavpackparse, seek_pos, &wphdr);
-
-    if (seek_pos == wavpackparse->duration - wavpackparse->flushed_bytes
-        || seek_pos >= file_pos2) {
-      if (ratio > 0.0) {
-        if ((ratio -= 0.24) < 0.0)
-          ratio = 0.0;
-      } else {
-        return wavpackparse->duration - wavpackparse->flushed_bytes;
-      }
-    } else if (wphdr.block_index > sample) {
-      sample_pos2 = wphdr.block_index;
-      file_pos2 = seek_pos;
-    } else if (wphdr.block_index + wphdr.block_samples <= sample) {
-      if (seek_pos == file_pos1)
-        file_skip = 1;
-      else {
-        sample_pos1 = wphdr.block_index;
-        file_pos1 = seek_pos;
-      }
-    } else {
-      return seek_pos;
-    }
-  }
-}
-
-
 static void
-gst_wavpack_parse_seek (GstWavpackParse * wavpackparse)
-{
-  GstBuffer *buf;
-  gint num;
-  WavpackHeader *header = g_malloc (sizeof (WavpackHeader));
-
-  guint64 offset = find_sample (wavpackparse, wavpackparse->seek_offset);
-
-  if (offset >= wavpackparse->duration - wavpackparse->flushed_bytes) {
-    /* seek failed or went beyond the end, go EOS */
-    wavpackparse->timestamp =
-        ((gdouble) wavpackparse->total_samples /
-        (gdouble) wavpackparse->samplerate) * GST_SECOND;
-    return;
-  }
-
-  if (GST_FLOW_OK != gst_pad_pull_range (wavpackparse->sinkpad,
-          wavpackparse->flushed_bytes + offset, sizeof (WavpackHeader), &buf)) {
-    wavpackparse->eos = TRUE;
-    gst_pad_push_event (wavpackparse->srcpad, gst_event_new_eos ());
-    return;
-  }
-  num = GST_BUFFER_SIZE (buf);
-
-  if (num != sizeof (WavpackHeader)) {
-    wavpackparse->eos = TRUE;
-    gst_pad_push_event (wavpackparse->srcpad, gst_event_new_eos ());
-    return;
-  }
-
-  gst_wavpack_read_header (header, GST_BUFFER_DATA (buf));
-  gst_buffer_unref (buf);
-
-  if (wavpackparse->need_flush) {
-    wavpackparse->need_flush = FALSE;
-    gst_pad_push_event (wavpackparse->srcpad, gst_event_new_flush_start ());
-  }
-
-  wavpackparse->need_discont = TRUE;
-  wavpackparse->timestamp =
-      ((gdouble) header->block_index / (gdouble) wavpackparse->samplerate) *
-      GST_SECOND;
-}
-
-static void
-gst_wavpack_parse_init (GstWavpackParse * wavpackparse)
+gst_wavpack_parse_init (GstWavpackParse * wavpackparse,
+    GstWavpackParseClass * gclass)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (wavpackparse);
+  GstPadTemplate *tmpl;
 
-  wavpackparse->duration = -1;
-  wavpackparse->flushed_bytes = -1;
-  wavpackparse->eos = FALSE;
+  tmpl = gst_element_class_get_pad_template (klass, "sink");
+  wavpackparse->sinkpad = gst_pad_new_from_template (tmpl, "sink");
 
-  wavpackparse->sinkpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-          "sink"), "sink");
+  gst_pad_set_activate_function (wavpackparse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_wavepack_parse_sink_activate));
 
-  gst_pad_set_event_function (wavpackparse->sinkpad,
-      gst_wavpack_parse_sink_event);
+  gst_pad_set_activatepull_function (wavpackparse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_wavepack_parse_sink_activate_pull));
 
   gst_element_add_pad (GST_ELEMENT (wavpackparse), wavpackparse->sinkpad);
 
-  gst_pad_set_activate_function (wavpackparse->sinkpad,
-      gst_wavepack_parse_sink_activate);
-
-  gst_pad_set_activatepull_function (wavpackparse->sinkpad,
-      gst_wavepack_parse_sink_activate_pull);
-
   wavpackparse->srcpad = NULL;
+  gst_wavpack_parse_reset (wavpackparse);
+}
 
+static gint64
+gst_wavpack_parse_get_upstream_length (GstWavpackParse * wavpackparse)
+{
+  GstPad *peer;
+  gint64 length = -1;
+
+  peer = gst_pad_get_peer (wavpackparse->sinkpad);
+  if (peer) {
+    GstFormat format = GST_FORMAT_BYTES;
+
+    if (!gst_pad_query_duration (peer, &format, &length)) {
+      length = -1;
+    } else {
+      GST_DEBUG ("upstream length: %" G_GINT64_FORMAT, length);
+    }
+    gst_object_unref (peer);
+  } else {
+    GST_DEBUG ("no peer!");
+  }
+
+  return length;
+}
+
+static GstBuffer *
+gst_wavpack_parse_pull_buffer (GstWavpackParse * wvparse, gint64 offset,
+    guint size, GstFlowReturn * flow)
+{
+  GstFlowReturn flow_ret;
+  GstBuffer *buf = NULL;
+
+  if (offset + size >= wvparse->upstream_length) {
+    wvparse->upstream_length = gst_wavpack_parse_get_upstream_length (wvparse);
+    if (offset + size >= wvparse->upstream_length) {
+      GST_DEBUG_OBJECT (wvparse, "EOS: %" G_GINT64_FORMAT " + %u > %"
+          G_GINT64_FORMAT, offset, size, wvparse->upstream_length);
+      flow_ret = GST_FLOW_UNEXPECTED;
+      goto done;
+    }
+  }
+
+  flow_ret = gst_pad_pull_range (wvparse->sinkpad, offset, size, &buf);
+
+  if (flow_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (wvparse, "pull_range (%" G_GINT64_FORMAT ", %u) "
+        "failed, flow: %s", offset, size, gst_flow_get_name (flow_ret));
+    return NULL;
+  }
+
+  if (GST_BUFFER_SIZE (buf) < size) {
+    GST_DEBUG_OBJECT (wvparse, "Short read at offset %" G_GINT64_FORMAT
+        ", got only %u of %u bytes", offset, GST_BUFFER_SIZE (buf), size);
+    gst_buffer_unref (buf);
+    buf = NULL;
+    flow_ret = GST_FLOW_UNEXPECTED;
+  }
+
+done:
+  if (flow)
+    *flow = flow_ret;
+  return buf;
 }
 
 static gboolean
-gst_wavpack_parse_sink_event (GstPad * pad, GstEvent * event)
+gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
+    WavpackHeader * header)
 {
-  GstWavpackParse *wavpackparse = GST_WAVPACK_PARSE (gst_pad_get_parent (pad));
-  gboolean res = TRUE;
+  WavpackMetadata meta;
+  GstCaps *caps = NULL;
+  guchar *bufptr;
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      wavpackparse->eos = TRUE;
-      /* fall through */
-    default:
-      res = gst_pad_event_default (pad, event);
-      gst_object_unref (wavpackparse);
-      return res;
+  g_assert (wvparse->srcpad == NULL);
+
+  bufptr = GST_BUFFER_DATA (buf) + sizeof (WavpackHeader);
+
+  while (read_metadata_buff (&meta, GST_BUFFER_DATA (buf), &bufptr)) {
+    switch (meta.id) {
+      case ID_WVC_BITSTREAM:{
+        caps = gst_caps_new_simple ("audio/x-wavpack-correction",
+            "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+        wvparse->srcpad =
+            gst_pad_new_from_template (gst_element_class_get_pad_template
+            (GST_ELEMENT_GET_CLASS (wvparse), "wvcsrc"), "wvcsrc");
+        break;
+      }
+      case ID_RIFF_HEADER:{
+        WaveHeader wheader;
+
+        /* skip RiffChunkHeader and ChunkHeader */
+        g_memmove (&wheader, meta.data + 20, sizeof (WaveHeader));
+        little_endian_to_native (&wheader, WaveHeaderFormat);
+        wvparse->samplerate = wheader.SampleRate;
+        wvparse->channels = wheader.NumChannels;
+        wvparse->total_samples = header->total_samples;
+        caps = gst_caps_new_simple ("audio/x-wavpack",
+            "width", G_TYPE_INT, wheader.BitsPerSample,
+            "channels", G_TYPE_INT, wvparse->channels,
+            "rate", G_TYPE_INT, wvparse->samplerate,
+            "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+        wvparse->srcpad =
+            gst_pad_new_from_template (gst_element_class_get_pad_template
+            (GST_ELEMENT_GET_CLASS (wvparse), "src"), "src");
+        break;
+      }
+      default:{
+        GST_WARNING_OBJECT (wvparse, "unhandled ID: 0x%02x", meta.id);
+        break;
+      }
+    }
+    if (caps != NULL)
       break;
   }
 
+  if (caps == NULL || wvparse->srcpad == NULL)
+    return FALSE;
+
+  GST_DEBUG_OBJECT (wvparse, "Added src pad with caps %" GST_PTR_FORMAT, caps);
+
+  gst_pad_set_query_function (wvparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_wavpack_parse_src_query));
+  gst_pad_set_event_function (wvparse->srcpad,
+      GST_DEBUG_FUNCPTR (gst_wavpack_parse_src_event));
+
+  gst_pad_set_caps (wvparse->srcpad, caps);
+  gst_pad_use_fixed_caps (wvparse->srcpad);
+
+  gst_object_ref (wvparse->srcpad);
+  gst_element_add_pad (GST_ELEMENT (wvparse), wvparse->srcpad);
+  gst_element_no_more_pads (GST_ELEMENT (wvparse));
+
+  return TRUE;
 }
 
 static void
 gst_wavpack_parse_loop (GstElement * element)
 {
   GstWavpackParse *wavpackparse = GST_WAVPACK_PARSE (element);
-  gint num;
-  GstBuffer *buf;
-  WavpackHeader *header = g_malloc (sizeof (WavpackHeader));
+  GstFlowReturn flow_ret;
+  WavpackHeader header = { {0,}, 0, };
+  GstBuffer *buf = NULL;
 
-  GST_PAD_STREAM_LOCK (wavpackparse->sinkpad);
+  GST_LOG_OBJECT (wavpackparse, "Current offset: %" G_GINT64_FORMAT,
+      wavpackparse->current_offset);
 
-  if (wavpackparse->eos) {
-    goto done;
+  buf = gst_wavpack_parse_pull_buffer (wavpackparse,
+      wavpackparse->current_offset, sizeof (WavpackHeader), &flow_ret);
+
+  if (buf == NULL && flow_ret == GST_FLOW_UNEXPECTED) {
+    goto eos;
+  } else if (buf == NULL) {
+    goto pause;
   }
 
-  if (wavpackparse->seek_pending) {
-    gst_wavpack_parse_seek (wavpackparse);
-    wavpackparse->need_discont = TRUE;
-    wavpackparse->seek_pending = FALSE;
-  }
-
-  if (wavpackparse->need_discont) {
-    if (GST_IS_PAD (wavpackparse->srcpad)) {
-      gst_pad_push_event (wavpackparse->srcpad,
-          gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-              wavpackparse->timestamp, GST_CLOCK_TIME_NONE, 0));
-
-      wavpackparse->need_discont = FALSE;
-    }
-  }
-
-  if (GST_FLOW_OK != gst_pad_pull_range (wavpackparse->sinkpad,
-          wavpackparse->flushed_bytes, sizeof (WavpackHeader), &buf)) {
-    wavpackparse->eos = TRUE;
-    gst_pad_push_event (wavpackparse->srcpad, gst_event_new_eos ());
-    goto done;
-  }
-  num = GST_BUFFER_SIZE (buf);
-
-  if (num != sizeof (WavpackHeader)) {
-    gst_buffer_unref (buf);
-    wavpackparse->eos = TRUE;
-    gst_pad_push_event (wavpackparse->srcpad, gst_event_new_eos ());
-    goto done;
-  }
-
-  gst_wavpack_read_header (header, GST_BUFFER_DATA (buf));
+  gst_wavpack_read_header (&header, GST_BUFFER_DATA (buf));
   gst_buffer_unref (buf);
 
-  if (GST_FLOW_OK != gst_pad_pull_range (wavpackparse->sinkpad,
-          wavpackparse->flushed_bytes, header->ckSize + 8, &buf)) {
-    wavpackparse->eos = TRUE;
-    gst_pad_push_event (wavpackparse->srcpad, gst_event_new_eos ());
-    goto done;
-  }
-  num = GST_BUFFER_SIZE (buf);
+  GST_LOG_OBJECT (wavpackparse, "Read header at offset %" G_GINT64_FORMAT
+      ": chunk size = %u+8", wavpackparse->current_offset, header.ckSize);
 
-  if (num != header->ckSize + 8) {
-    gst_buffer_unref (buf);
-    wavpackparse->eos = TRUE;
-    gst_pad_push_event (wavpackparse->srcpad, gst_event_new_eos ());
-    goto done;
+  buf = gst_wavpack_parse_pull_buffer (wavpackparse,
+      wavpackparse->current_offset, header.ckSize + 8, &flow_ret);
+
+  if (buf == NULL && flow_ret == GST_FLOW_UNEXPECTED) {
+    goto eos;
+  } else if (buf == NULL) {
+    goto pause;
   }
 
-  if (!GST_IS_PAD (wavpackparse->srcpad)) {
-
-    guchar *bufptr = GST_BUFFER_DATA (buf) + sizeof (WavpackHeader);
-    GstCaps *caps = NULL;
-    WavpackMetadata meta;
-
-    while (read_metadata_buff (&meta, GST_BUFFER_DATA (buf), &bufptr)) {
-      if (meta.id == ID_WVC_BITSTREAM) {
-        caps = gst_caps_new_simple ("audio/x-wavpack-correction",
-            "framed", G_TYPE_BOOLEAN, TRUE, NULL);
-        if (GST_IS_PAD (wavpackparse->srcpad)) {
-          gst_object_unref (wavpackparse->srcpad);
-        }
-        wavpackparse->srcpad =
-            gst_pad_new_from_template (gst_element_class_get_pad_template
-            (GST_ELEMENT_GET_CLASS (wavpackparse), "wvcsrc"), "wvcsrc");
-      } else if (meta.id == ID_RIFF_HEADER) {
-        WaveHeader *wheader = g_malloc (sizeof (WaveHeader));
-
-        /* skip RiffChunkHeader and ChunkHeader */
-        g_memmove (wheader, meta.data + 20, sizeof (WaveHeader));
-        little_endian_to_native (wheader, WaveHeaderFormat);
-        wavpackparse->samplerate = wheader->SampleRate;
-        wavpackparse->channels = wheader->NumChannels;
-        wavpackparse->total_samples = header->total_samples;
-        caps = gst_caps_new_simple ("audio/x-wavpack",
-            "width", G_TYPE_INT, wheader->BitsPerSample,
-            "channels", G_TYPE_INT, wavpackparse->channels,
-            "rate", G_TYPE_INT, wavpackparse->samplerate,
-            "framed", G_TYPE_BOOLEAN, TRUE, NULL);
-        if (GST_IS_PAD (wavpackparse->srcpad)) {
-          gst_object_unref (wavpackparse->srcpad);
-        }
-        wavpackparse->srcpad =
-            gst_pad_new_from_template (gst_element_class_get_pad_template
-            (GST_ELEMENT_GET_CLASS (wavpackparse), "src"), "src");
-      }
-    }
-
-    if (!(caps && GST_IS_PAD (wavpackparse->srcpad))) {
-      gst_buffer_unref (buf);
-      goto done;
-    }
-
-    gst_pad_set_query_function (wavpackparse->srcpad,
-        gst_wavpack_parse_src_query);
-    gst_pad_set_event_function (wavpackparse->srcpad,
-        gst_wavpack_parse_src_event);
-
-    gst_pad_set_caps (wavpackparse->srcpad, caps);
-    gst_pad_use_fixed_caps (wavpackparse->srcpad);
-
-    gst_element_add_pad (GST_ELEMENT (wavpackparse), wavpackparse->srcpad);
-
-  }
-
-  if (wavpackparse->need_discont) {
-    if (GST_IS_PAD (wavpackparse->srcpad)) {
-      gst_pad_push_event (wavpackparse->srcpad,
-          gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-              wavpackparse->timestamp, GST_CLOCK_TIME_NONE, 0));
-
-      wavpackparse->need_discont = FALSE;
+  if (wavpackparse->srcpad == NULL) {
+    if (!gst_wavpack_parse_create_src_pad (wavpackparse, buf, &header)) {
+      GST_ELEMENT_ERROR (wavpackparse, STREAM, DECODE, (NULL), (NULL));
+      goto pause;
     }
   }
 
-  wavpackparse->flushed_bytes += header->ckSize + 8;
+  gst_wavpack_parse_index_append_entry (wavpackparse,
+      wavpackparse->current_offset, header.block_index, header.block_samples);
 
-  wavpackparse->timestamp =
-      ((gdouble) header->block_index / (gdouble) wavpackparse->samplerate) *
-      GST_SECOND;
-  GST_BUFFER_TIMESTAMP (buf) = wavpackparse->timestamp;
-  GST_BUFFER_DURATION (buf) =
-      ((gdouble) header->block_samples / (gdouble) wavpackparse->samplerate) *
-      GST_SECOND;
+  wavpackparse->current_offset += header.ckSize + 8;
+
+  wavpackparse->segment.last_stop = header.block_index;
+
+  if (wavpackparse->need_newsegment) {
+    if (gst_wavpack_parse_send_newsegment (wavpackparse, FALSE))
+      wavpackparse->need_newsegment = FALSE;
+  }
+
+  GST_BUFFER_TIMESTAMP (buf) = gst_util_uint64_scale_int (header.block_index,
+      GST_SECOND, wavpackparse->samplerate);
+  GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (header.block_samples,
+      GST_SECOND, wavpackparse->samplerate);
+  GST_BUFFER_OFFSET (buf) = header.block_index;
   gst_buffer_set_caps (buf, GST_PAD_CAPS (wavpackparse->srcpad));
 
-  if (GST_FLOW_OK != gst_pad_push (wavpackparse->srcpad, buf)) {
-    gst_buffer_unref (buf);
+  GST_LOG_OBJECT (wavpackparse, "Pushing buffer with time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+  flow_ret = gst_pad_push (wavpackparse->srcpad, buf);
+  if (flow_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (wavpackparse, "Push failed, flow: %s",
+        gst_flow_get_name (flow_ret));
+    goto pause;
   }
 
-done:
-  GST_PAD_STREAM_UNLOCK (wavpackparse->sinkpad);
   return;
 
+eos:
+  {
+    GST_DEBUG_OBJECT (wavpackparse, "sending EOS");
+    if (wavpackparse->srcpad) {
+      gst_pad_push_event (wavpackparse->srcpad, gst_event_new_eos ());
+    }
+    /* fall through and pause task */
+  }
+pause:
+  {
+    GST_DEBUG_OBJECT (wavpackparse, "Pausing task");
+    gst_pad_pause_task (wavpackparse->sinkpad);
+    return;
+  }
 }
 
 static GstStateChangeReturn
 gst_wavpack_parse_change_state (GstElement * element, GstStateChange transition)
 {
-  GstWavpackParse *wavpackparse = GST_WAVPACK_PARSE (element);
+  GstWavpackParse *wvparse = GST_WAVPACK_PARSE (element);
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      wavpackparse->flushed_bytes = 0;
-      wavpackparse->need_discont = TRUE;
-      wavpackparse->eos = FALSE;
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-    {
-      GstQuery *query;
-      GstFormat format = GST_FORMAT_BYTES;
-
-      query = gst_query_new_duration (GST_FORMAT_BYTES);
-      if (gst_pad_query (GST_PAD_PEER (wavpackparse->sinkpad), query)) {
-
-        gst_query_parse_duration (query, &format,
-            (gint64 *) & wavpackparse->duration);
-
-        if (format != GST_FORMAT_BYTES) {
-          wavpackparse->duration = -1;
-          ret = GST_STATE_CHANGE_FAILURE;
-        }
-
-      } else {
-        wavpackparse->duration = -1;
-        ret = GST_STATE_CHANGE_FAILURE;
-      }
-      gst_query_unref (query);
-    }
-      break;
+      gst_segment_init (&wvparse->segment, GST_FORMAT_DEFAULT);
+      wvparse->segment.last_stop = 0;
     default:
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent)->change_state)
-    ret = GST_ELEMENT_CLASS (parent)->change_state (element, transition);
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      wavpackparse->seek_pending = FALSE;
+      gst_wavpack_parse_reset (wvparse);
       break;
     default:
       break;
@@ -658,7 +814,6 @@ gst_wavpack_parse_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 gst_wavepack_parse_sink_activate (GstPad * sinkpad)
 {
-
   if (gst_pad_check_pull_range (sinkpad)) {
     return gst_pad_activate_pull (sinkpad, TRUE);
   } else {
@@ -669,11 +824,9 @@ gst_wavepack_parse_sink_activate (GstPad * sinkpad)
 static gboolean
 gst_wavepack_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
 {
-
   gboolean result;
 
   if (active) {
-
     result = gst_pad_start_task (sinkpad,
         (GstTaskFunction) gst_wavpack_parse_loop, GST_PAD_PARENT (sinkpad));
   } else {
@@ -681,14 +834,11 @@ gst_wavepack_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
   }
 
   return result;
-
-  return TRUE;
 }
 
 gboolean
 gst_wavpack_parse_plugin_init (GstPlugin * plugin)
 {
-
   if (!gst_element_register (plugin, "wavpackparse",
           GST_RANK_PRIMARY, GST_TYPE_WAVPACK_PARSE)) {
     return FALSE;

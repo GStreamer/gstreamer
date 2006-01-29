@@ -28,16 +28,8 @@
 #include "gstwavpackdec.h"
 #include "gstwavpackcommon.h"
 
-/* Filter signals and args */
-enum
-{
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-};
+GST_DEBUG_CATEGORY_STATIC (gst_wavpack_dec_debug);
+#define GST_CAT_DEFAULT gst_wavpack_dec_debug
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -59,63 +51,66 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) { 8, 16, 24 }, "
-        "depth = (int) { 8, 16, 24 }, "
+        "width = (int) { 8, 16, 24, 32 }, "
+        "depth = (int) { 8, 16, 24, 32 }, "
         "channels = (int) { 1, 2 }, "
         "rate = (int) [ 6000, 192000 ], "
-        "endianness = (int) LITTLE_ENDIAN, "
-        "signed = (boolean) true;"
+        "endianness = (int) LITTLE_ENDIAN, " "signed = (boolean) true")
+/*
         "audio/x-raw-float, "
         "width = (int) 32, "
         "channels = (int) { 1, 2 }, "
-        "rate = (int) [ 6000, 192000 ], " "endianness = (int) LITTLE_ENDIAN")
+        "rate = (int) [ 6000, 192000 ], " "endianness = (int) LITTLE_ENDIAN"
+*/
     );
 
-static void gst_wavpack_dec_class_init (GstWavpackDecClass * klass);
-static void gst_wavpack_dec_base_init (GstWavpackDecClass * klass);
-static void gst_wavpack_dec_init (GstWavpackDec * wavpackdec);
-
 static GstFlowReturn gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_wavpack_dec_sink_event (GstPad * pad, GstEvent * event);
 
-static GstElementClass *parent = NULL;
+GST_BOILERPLATE (GstWavpackDec, gst_wavpack_dec, GstElement, GST_TYPE_ELEMENT)
 
-static GstPadLinkReturn
-gst_wavpack_dec_link (GstPad * pad, GstPad * peer)
+     static gboolean gst_wavpack_dec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstWavpackDec *wavpackdec = GST_WAVPACK_DEC (gst_pad_get_parent (pad));
   GstStructure *structure;
   GstCaps *srccaps;
-  gint bits;
+  gint bits, rate, channels;
 
-  if (!gst_caps_is_fixed (GST_PAD_CAPS (peer)))
-    return GST_PAD_LINK_REFUSED;
+  structure = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (structure, "rate", &rate) ||
+      !gst_structure_get_int (structure, "channels", &channels) ||
+      !gst_structure_get_int (structure, "width", &bits)) {
+    return FALSE;
+  }
 
-  structure = gst_caps_get_structure (GST_PAD_CAPS (peer), 0);
-  gst_structure_get_int (structure, "rate",
-      (gint32 *) & wavpackdec->samplerate);
-  gst_structure_get_int (structure, "channels",
-      (gint *) & wavpackdec->channels);
-  gst_structure_get_int (structure, "width", &bits);
+  wavpackdec->samplerate = rate;
+  wavpackdec->channels = channels;
   wavpackdec->width = bits;
 
-  if (bits != 32) {
-    srccaps = gst_caps_new_simple ("audio/x-raw-int",
-        "rate", G_TYPE_INT, wavpackdec->samplerate,
-        "channels", G_TYPE_INT, wavpackdec->channels,
-        "depth", G_TYPE_INT, bits,
-        "width", G_TYPE_INT, bits,
-        "endianness", G_TYPE_INT, LITTLE_ENDIAN,
-        "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+/* 32-bit output seems to be in fact 32 bit int (e.g. Prod_Girls.wv) */
+/*  if (bits != 32) { */
+  srccaps = gst_caps_new_simple ("audio/x-raw-int",
+      "rate", G_TYPE_INT, wavpackdec->samplerate,
+      "channels", G_TYPE_INT, wavpackdec->channels,
+      "depth", G_TYPE_INT, bits,
+      "width", G_TYPE_INT, bits,
+      "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+      "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+/*
   } else {
     srccaps = gst_caps_new_simple ("audio/x-raw-float",
         "rate", G_TYPE_INT, wavpackdec->samplerate,
         "channels", G_TYPE_INT, wavpackdec->channels,
-        "width", G_TYPE_INT, 32, "endianness", G_TYPE_INT, LITTLE_ENDIAN, NULL);
+        "width", G_TYPE_INT, 32,
+        "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, NULL);
   }
+*/
+/*  gst_pad_set_caps (wavpackdec->sinkpad, caps); */
+
   gst_pad_set_caps (wavpackdec->srcpad, srccaps);
   gst_pad_use_fixed_caps (wavpackdec->srcpad);
 
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
 #if 0
@@ -129,31 +124,8 @@ gst_wavpack_dec_wvclink (GstPad * pad, GstPad * peer)
 }
 #endif
 
-GType
-gst_wavpack_dec_get_type (void)
-{
-  static GType plugin_type = 0;
-
-  if (!plugin_type) {
-    static const GTypeInfo plugin_info = {
-      sizeof (GstWavpackDecClass),
-      (GBaseInitFunc) gst_wavpack_dec_base_init,
-      NULL,
-      (GClassInitFunc) gst_wavpack_dec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstWavpackDec),
-      0,
-      (GInstanceInitFunc) gst_wavpack_dec_init,
-    };
-    plugin_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstWavpackDec", &plugin_info, 0);
-  }
-  return plugin_type;
-}
-
 static void
-gst_wavpack_dec_base_init (GstWavpackDecClass * klass)
+gst_wavpack_dec_base_init (gpointer klass)
 {
   static GstElementDetails plugin_details = {
     "WAVPACK decoder",
@@ -178,8 +150,11 @@ gst_wavpack_dec_dispose (GObject * object)
   GstWavpackDec *wavpackdec = GST_WAVPACK_DEC (object);
 
   g_free (wavpackdec->decodebuf);
+  wavpackdec->decodebuf = NULL;
 
-  G_OBJECT_CLASS (parent)->dispose (object);
+  /* FIXME: what about wavpackdec->stream and wavpackdec->context? (tpm) */
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -191,8 +166,6 @@ gst_wavpack_dec_class_init (GstWavpackDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent = g_type_class_ref (GST_TYPE_ELEMENT);
-
   gobject_class->dispose = gst_wavpack_dec_dispose;
 }
 
@@ -202,8 +175,31 @@ gst_wavpack_dec_src_query (GstPad * pad, GstQuery * query)
   return gst_pad_query_default (pad, query);
 }
 
+static gboolean
+gst_wavpack_dec_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstWavpackDec *dec;
+
+  dec = GST_WAVPACK_DEC (gst_pad_get_parent (pad));
+
+  GST_LOG_OBJECT (dec, "Received %s event", GST_EVENT_TYPE_NAME (event));
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:{
+      /* TODO: save current segment so we can do clipping, for now
+       * we'll just leave the clipping to the audio sink */
+      break;
+    }
+    default:
+      break;
+  }
+
+  gst_object_unref (dec);
+
+  return gst_pad_event_default (pad, event);
+}
+
 static void
-gst_wavpack_dec_init (GstWavpackDec * wavpackdec)
+gst_wavpack_dec_init (GstWavpackDec * wavpackdec, GstWavpackDecClass * gklass)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (wavpackdec);
 
@@ -212,8 +208,12 @@ gst_wavpack_dec_init (GstWavpackDec * wavpackdec)
           "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (wavpackdec), wavpackdec->sinkpad);
 
-  gst_pad_set_chain_function (wavpackdec->sinkpad, gst_wavpack_dec_chain);
-  gst_pad_set_link_function (wavpackdec->sinkpad, gst_wavpack_dec_link);
+  gst_pad_set_chain_function (wavpackdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_wavpack_dec_chain));
+  gst_pad_set_setcaps_function (wavpackdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_wavpack_dec_setcaps));
+  gst_pad_set_event_function (wavpackdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_wavpack_dec_sink_event));
 
 #if 0
   wavpackdec->wvcsinkpad =
@@ -229,7 +229,8 @@ gst_wavpack_dec_init (GstWavpackDec * wavpackdec)
           "src"), "src");
   gst_pad_use_fixed_caps (wavpackdec->srcpad);
 
-  gst_pad_set_query_function (wavpackdec->srcpad, gst_wavpack_dec_src_query);
+  gst_pad_set_query_function (wavpackdec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_wavpack_dec_src_query));
 
   gst_element_add_pad (GST_ELEMENT (wavpackdec), wavpackdec->srcpad);
 
@@ -290,6 +291,7 @@ gst_wavpack_dec_format_samples (GstWavpackDec * wavpackdec, int32_t * samples,
   buf =
       gst_buffer_new_and_alloc (num_samples * wavpackdec->width / 8 *
       wavpackdec->channels);
+
   dst = (guint8 *) GST_BUFFER_DATA (buf);
 
   switch (wavpackdec->width) {
@@ -353,8 +355,7 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
       gst_wavpack_dec_format_samples (wavpackdec, wavpackdec->decodebuf,
       wavpackdec->context->streams[0]->wphdr.block_samples);
 
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
+  gst_buffer_stamp (outbuf, buf);
 
   gst_buffer_unref (buf);
   if (cbuf) {
@@ -362,17 +363,27 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
   }
 
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (wavpackdec->srcpad));
-  if (GST_FLOW_OK != (ret = gst_pad_push (wavpackdec->srcpad, outbuf))) {
-    gst_buffer_unref (outbuf);
+
+  GST_LOG_OBJECT (wavpackdec, "pushing buffer with time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
+
+  ret = gst_pad_push (wavpackdec->srcpad, outbuf);
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (wavpackdec, "pad_push: %s", gst_flow_get_name (ret));
   }
 
   return ret;
-
 }
 
 gboolean
 gst_wavpack_dec_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "wavpackdec",
-      GST_RANK_PRIMARY, GST_TYPE_WAVPACK_DEC);
+  if (!gst_element_register (plugin, "wavpackdec",
+          GST_RANK_PRIMARY, GST_TYPE_WAVPACK_DEC))
+    return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_wavpack_dec_debug, "wavpackdec", 0,
+      "wavpack decoder");
+
+  return TRUE;
 }

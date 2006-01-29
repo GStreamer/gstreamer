@@ -1,3 +1,35 @@
+2006-01-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_setcaps),
+	(gst_wavpack_dec_base_init), (gst_wavpack_dec_dispose),
+	(gst_wavpack_dec_class_init), (gst_wavpack_dec_sink_event),
+	(gst_wavpack_dec_init), (gst_wavpack_dec_format_samples),
+	(gst_wavpack_dec_chain), (gst_wavpack_dec_plugin_init):
+	  Add debug category, use boilerplate macros, fix handling
+	  of widths of 32 bits.
+
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_base_init),
+	(gst_wavpack_parse_dispose), (gst_wavpack_parse_class_init),
+	(gst_wavpack_parse_index_get_last_entry),
+	(gst_wavpack_parse_index_get_entry_from_sample),
+	(gst_wavpack_parse_index_append_entry), (gst_wavpack_parse_reset),
+	(gst_wavpack_parse_src_query),
+	(gst_wavpack_parse_scan_to_find_sample),
+	(gst_wavpack_parse_send_newsegment),
+	(gst_wavpack_parse_handle_seek_event),
+	(gst_wavpack_parse_src_event), (gst_wavpack_parse_init),
+	(gst_wavpack_parse_get_upstream_length),
+	(gst_wavpack_parse_pull_buffer),
+	(gst_wavpack_parse_create_src_pad), (gst_wavpack_parse_loop),
+	(gst_wavpack_parse_change_state),
+	(gst_wavepack_parse_sink_activate),
+	(gst_wavepack_parse_sink_activate_pull),
+	(gst_wavpack_parse_plugin_init):
+	* ext/wavpack/gstwavpackparse.h:
+	  Rewrite a bit, mostly to fix flow logic and to make seeking work.
+	  Fix buffer/event refcounting. Add some debug statements. Add
+	  width of 32 to source pad template caps. Use boilerplate macros.
+
 2006-01-28  Edward Hervey  <edward@fluendo.com>
 
 	* sys/glsink/Makefile.am:
@@ -17,7 +49,7 @@
 	* ext/faad/gstfaad.c: (gst_faad_setcaps),
 	(gst_faad_chanpos_to_gst), (gst_faad_sync), (gst_faad_chain):
 	  Handle 'framed' field in caps; Port syncing for raw streams
-	  from 0.8 branch (for AAC+ radio streams) (#328722).
+	  from 0.8 branch (for AAC+ radio streams) (#328854, #328721).
 
 2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
