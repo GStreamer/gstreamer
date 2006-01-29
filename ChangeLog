@@ -1,3 +1,8 @@
+2006-01-29  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/gstghostpad.c: (gst_proxy_pad_set_target_unlocked):
+	Set pad functions unconditionally. Fixes #329105.
+
 2006-01-29  Sebastien Moutte  <sebastien@moutte.net>
 	* win32/vs8:
 		add vs8 project files created by Sergey Scobich

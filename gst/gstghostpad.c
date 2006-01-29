@@ -297,10 +297,6 @@ gst_proxy_pad_do_setcaps (GstPad * pad, GstCaps * caps)
   return res;
 }
 
-#define SETFUNC(member, kind) \
-  if (target->member) \
-    gst_pad_set_##kind##_function (pad, gst_proxy_pad_do_##kind)
-
 static gboolean
 gst_proxy_pad_set_target_unlocked (GstPad * pad, GstPad * target)
 {
@@ -319,23 +315,33 @@ gst_proxy_pad_set_target_unlocked (GstPad * pad, GstPad * target)
     /* set and ref new target if any */
     GST_PROXY_PAD_TARGET (pad) = gst_object_ref (target);
 
-    /* really, all these should have default implementations so I can set them
-     * in the _init() instead of here */
-    SETFUNC (querytypefunc, query_type);
-    SETFUNC (eventfunc, event);
-    SETFUNC (queryfunc, query);
-    SETFUNC (intlinkfunc, internal_link);
-    SETFUNC (getcapsfunc, getcaps);
-    SETFUNC (acceptcapsfunc, acceptcaps);
-    SETFUNC (fixatecapsfunc, fixatecaps);
-    SETFUNC (setcapsfunc, setcaps);
+    gst_pad_set_query_type_function (pad,
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_query_type));
+    gst_pad_set_event_function (pad,
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_event));
+    gst_pad_set_query_function (pad,
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_query));
+    gst_pad_set_internal_link_function (pad,
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_internal_link));
+    gst_pad_set_getcaps_function (pad,
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_getcaps));
+    gst_pad_set_acceptcaps_function (pad,
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_acceptcaps));
+    gst_pad_set_fixatecaps_function (pad,
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_fixatecaps));
+    gst_pad_set_setcaps_function (pad,
+        GST_DEBUG_FUNCPTR (gst_proxy_pad_do_setcaps));
 
     if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-      SETFUNC (bufferallocfunc, bufferalloc);
-      SETFUNC (chainfunc, chain);
+      gst_pad_set_bufferalloc_function (pad,
+          GST_DEBUG_FUNCPTR (gst_proxy_pad_do_bufferalloc));
+      gst_pad_set_chain_function (pad,
+          GST_DEBUG_FUNCPTR (gst_proxy_pad_do_chain));
     } else {
-      SETFUNC (getrangefunc, getrange);
-      SETFUNC (checkgetrangefunc, checkgetrange);
+      gst_pad_set_getrange_function (pad,
+          GST_DEBUG_FUNCPTR (gst_proxy_pad_do_getrange));
+      gst_pad_set_checkgetrange_function (pad,
+          GST_DEBUG_FUNCPTR (gst_proxy_pad_do_checkgetrange));
     }
   }
   return TRUE;
