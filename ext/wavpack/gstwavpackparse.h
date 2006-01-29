@@ -38,28 +38,40 @@ G_BEGIN_DECLS
 #define GST_IS_WAVPACK_PARSE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WAVPACK_PARSE))
 
-typedef struct _GstWavpackParse      GstWavpackParse;
-typedef struct _GstWavpackParseClass GstWavpackParseClass;
+typedef struct _GstWavpackParse           GstWavpackParse;
+typedef struct _GstWavpackParseClass      GstWavpackParseClass;
+typedef struct _GstWavpackParseIndexEntry GstWavpackParseIndexEntry;
+
+struct _GstWavpackParseIndexEntry {
+  gint64 byte_offset;          /* byte offset of this chunk  */
+  gint64 sample_offset;        /* first sample in this chunk */
+  gint64 sample_offset_end;    /* first sample in next chunk  */
+};
 
 struct _GstWavpackParse
 {
-  GstElement element;
+  GstElement     element;
 
-  GstPad *sinkpad, *srcpad;
+  GstPad        *sinkpad;
+  GstPad        *srcpad;
   
-  guint32 samplerate;
-  guint32 channels;
-  guint32 total_samples;
-  guint64 timestamp;
+  guint          samplerate;
+  guint          channels;
+  guint          total_samples;
 
-  guint64 flushed_bytes;
-  guint64 duration;
+  gboolean       need_newsegment;
 
-  guint64 seek_offset;
-  gboolean seek_pending;
-  gboolean need_discont;
-  gboolean need_flush;
-  gboolean eos;
+  gint64         current_offset;   /* byte offset on sink pad */
+  gint64         upstream_length;  /* length of file in bytes */
+
+  GstSegment     segment;     /* the currently configured segment, in
+                               * samples/audio frames (DEFAULT format) */
+
+  /* Array of GstWavpackParseIndexEntry structs, mapping known
+   * sample offsets to byte offsets. Is kept increasing without
+   * gaps (ie. append only and consecutive entries must always
+   * map to consecutive chunks in the file). */
+  GArray        *entries;
 };
 
 struct _GstWavpackParseClass 
