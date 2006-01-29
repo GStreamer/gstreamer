@@ -803,4 +803,8 @@ EXPORTS
 	gst_version_string
 
 	gst_buffer_is_metadata_writable
+	
+	gst_iterator_next
+
+	gst_structure_set_valist
 

@@ -10,6 +10,8 @@ EXPORTS
 
 	gst_base_src_get_type
 
+	gst_base_src_set_format
+
 	gst_base_src_is_live
 
 	gst_push_src_get_type
