@@ -116,7 +116,13 @@ SOURCE=..\..\gst\gst.h
 SOURCE=..\common\gstconfig.h
 
 !IF  "$(CFG)" == "grammar - Win32 Release"
+# Begin Custom Build
+InputPath=..\common\gstconfig.h
 
+"..\..\gstconfig.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	copy /y ..\common\gstconfig.h ..\..\gst
+
+# End Custom Build
 !ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
 
 # Begin Custom Build
@@ -141,7 +147,7 @@ InputPath=..\common\gstenumtypes.c
 
 BuildCmds= \
 	copy /y ..\common\gstenumtypes.c ..\..\gst\gstenumtypes.c \
-	copy /y ..\common\gstenumtypes.c ..\..\gst\gstenumtypes.h \
+	copy /y ..\common\gstenumtypes.h ..\..\gst\gstenumtypes.h \
 	
 
 "..\..\gst\gstenumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -212,7 +218,7 @@ SOURCE=..\common\gstversion.h
 InputPath=..\common\gstversion.h
 
 "..\..\gst\gstversion.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	copy /? ..\common\gstversion.h ..\..\gst
+	copy /y ..\common\gstversion.h ..\..\gst
 
 # End Custom Build
 
