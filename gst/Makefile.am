@@ -31,7 +31,7 @@ GEN_FILES = arg-types.py gst-types.defs libs.defs base.defs
 _gst_la_CFLAGS = $(common_cflags)
 _gst_la_LIBADD = $(common_libadd) $(GST_BASE_LIBS)
 _gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex init_gst \
-	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) $(GST_NET_LIBS)
+	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) $(GST_NET_LIBS) $(GST_DP_LIBS)
 _gst_la_SOURCES = 		\
 	gst-argtypes.c 		\
 	gstmodule.c 		\

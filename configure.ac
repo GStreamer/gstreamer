@@ -93,6 +93,18 @@ fi
 AC_SUBST(GST_NET_LIBS)
 AC_SUBST(GST_NET_CFLAGS)
 
+dnl check for gstreamer-dataprotocol
+PKG_CHECK_MODULES(GST_DP, gstreamer-dataprotocol-$GST_MAJORMINOR >= $GST_REQ,
+  HAVE_GST_DP="yes", HAVE_GST_DP="no")
+
+if test "x$HAVE_GST_DP" = "xno"; then
+  AC_MSG_ERROR(no GStreamer Data Protocol Libs found)
+fi
+
+AC_SUBST(GST_DP_LIBS)
+AC_SUBST(GST_DP_CFLAGS)
+
+
 dnl check for gst-plugins-base
 PKG_CHECK_MODULES(GST_PLUGINS_BASE, gstreamer-plugins-base-$GST_MAJORMINOR >= $GSTPB_REQ,
   HAVE_GST_PLUGINS_BASE="yes", HAVE_GST_PLUGINS_BASE="no")

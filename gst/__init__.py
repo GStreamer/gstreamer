@@ -36,13 +36,6 @@ if 'gobject' not in sys.modules:
     import pygtk
     pygtk.require('2.0')
 
-try:
-   import DLFCN
-   sys.setdlopenflags(DLFCN.RTLD_LAZY | DLFCN.RTLD_GLOBAL)
-   del sys, DLFCN
-except ImportError:
-   pass
-
 class Value:
    def __init__(self, type):
       assert type in ('fourcc', 'intrange', 'doublerange', 'fractionrange', 'fraction')
@@ -90,8 +83,15 @@ class Fraction(Value):
    def __repr__(self):
       return '<gst.Fraction %d/%d>' % (self.num, self.denom)
 
+import DLFCN, sys
+dlsave = sys.getdlopenflags()
+sys.setdlopenflags(DLFCN.RTLD_LAZY | DLFCN.RTLD_GLOBAL)
+
 from _gst import *
 import interfaces
+
+sys.setdlopenflags(dlsave)
+del DLFCN, sys
 
 # this restores previously installed importhooks, so we don't interfere
 # with other people's module importers
