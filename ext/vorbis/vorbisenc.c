@@ -98,17 +98,14 @@ enum
 
 static GstFlowReturn gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc);
 
-/* FIXME:
- * vorbis_granule_time was added between 1.0 and 1.0.1; it's too silly
- * to require a new version for such a simple function, but once we move
- * beyond 1.0 for other reasons we can remove this copy */
-
-static double
-vorbis_granule_time_copy (vorbis_dsp_state * v, ogg_int64_t granulepos)
+static GstClockTime
+granulepos_to_clocktime (GstVorbisEnc * vorbisenc, ogg_int64_t granulepos)
 {
   if (granulepos >= 0)
-    return ((double) granulepos / v->vi->rate);
-  return (-1);
+    return gst_util_uint64_scale ((guint64) granulepos
+        + vorbisenc->granulepos_offset, GST_SECOND, vorbisenc->frequency)
+        + vorbisenc->subgranule_offset;
+  return GST_CLOCK_TIME_NONE;
 }
 
 #if 0
@@ -549,7 +546,6 @@ gst_vorbisenc_init (GstVorbisEnc * vorbisenc)
   vorbisenc->quality = QUALITY_DEFAULT;
   vorbisenc->quality_set = FALSE;
   vorbisenc->last_message = NULL;
-
 }
 
 
@@ -770,7 +766,7 @@ gst_vorbisenc_setup (GstVorbisEnc * vorbisenc)
   vorbis_analysis_init (&vorbisenc->vd, &vorbisenc->vi);
   vorbis_block_init (&vorbisenc->vd, &vorbisenc->vb);
 
-  vorbisenc->prev_ts = 0;
+  vorbisenc->next_ts = 0;
 
   vorbisenc->setup = TRUE;
 
@@ -808,15 +804,37 @@ gst_vorbisenc_buffer_from_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
   outbuf = gst_buffer_new_and_alloc (packet->bytes);
   memcpy (GST_BUFFER_DATA (outbuf), packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (outbuf) = vorbisenc->bytes_out;
-  GST_BUFFER_OFFSET_END (outbuf) = packet->granulepos;
-  GST_BUFFER_TIMESTAMP (outbuf) =
-      vorbis_granule_time_copy (&vorbisenc->vd,
-      packet->granulepos) * GST_SECOND;
+  GST_BUFFER_OFFSET_END (outbuf) = packet->granulepos +
+      vorbisenc->granulepos_offset;
+  GST_BUFFER_TIMESTAMP (outbuf) = vorbisenc->next_ts;
+
+  /* need to pass in an unadjusted granulepos here */
+  vorbisenc->next_ts = granulepos_to_clocktime (vorbisenc, packet->granulepos);
+
   GST_BUFFER_DURATION (outbuf) =
-      GST_BUFFER_TIMESTAMP (outbuf) - vorbisenc->prev_ts;
-  vorbisenc->prev_ts = GST_BUFFER_TIMESTAMP (outbuf);
+      vorbisenc->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
 
   GST_DEBUG ("encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+  return outbuf;
+}
+
+/* the same as above, but different logic for setting timestamp and granulepos
+ * */
+static GstBuffer *
+gst_vorbisenc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
+    ogg_packet * packet)
+{
+  GstBuffer *outbuf;
+
+  outbuf = gst_buffer_new_and_alloc (packet->bytes);
+  memcpy (GST_BUFFER_DATA (outbuf), packet->packet, packet->bytes);
+  GST_BUFFER_OFFSET (outbuf) = vorbisenc->bytes_out;
+  GST_BUFFER_OFFSET_END (outbuf) = 0;
+  GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+
+  GST_DEBUG ("created header packet buffer, %d bytes",
+      GST_BUFFER_SIZE (outbuf));
   return outbuf;
 }
 
@@ -913,97 +931,117 @@ gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstBuffer *buf = GST_BUFFER (buffer);
   GstVorbisEnc *vorbisenc;
   GstFlowReturn ret = GST_FLOW_OK;
+  gfloat *data;
+  gulong size;
+  gulong i, j;
+  float **vorbis_buffer;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
-  {
-    gfloat *data;
-    gulong size;
-    gulong i, j;
-    float **buffer;
+  if (!vorbisenc->setup)
+    goto not_setup;
 
-    if (!vorbisenc->setup) {
-      gst_buffer_unref (buf);
-      GST_ELEMENT_ERROR (vorbisenc, CORE, NEGOTIATION, (NULL),
-          ("encoder not initialized (input is not audio?)"));
-      return GST_FLOW_UNEXPECTED;
-    }
+  if (!vorbisenc->header_sent) {
+    /* Vorbis streams begin with three headers; the initial header (with
+       most of the codec setup parameters) which is mandated by the Ogg
+       bitstream spec.  The second header holds any comment fields.  The
+       third header holds the bitstream codebook.  We merely need to
+       make the headers, then pass them to libvorbis one at a time;
+       libvorbis handles the additional Ogg bitstream constraints */
+    ogg_packet header;
+    ogg_packet header_comm;
+    ogg_packet header_code;
+    GstBuffer *buf1, *buf2, *buf3;
+    GstCaps *caps;
 
-    if (!vorbisenc->header_sent) {
-      /* Vorbis streams begin with three headers; the initial header (with
-         most of the codec setup parameters) which is mandated by the Ogg
-         bitstream spec.  The second header holds any comment fields.  The
-         third header holds the bitstream codebook.  We merely need to
-         make the headers, then pass them to libvorbis one at a time;
-         libvorbis handles the additional Ogg bitstream constraints */
-      ogg_packet header;
-      ogg_packet header_comm;
-      ogg_packet header_code;
-      GstBuffer *buf1, *buf2, *buf3;
-      GstCaps *caps;
+    /* first, make sure header buffers get timestamp == 0 */
+    vorbisenc->next_ts = 0;
+    vorbisenc->granulepos_offset = 0;
+    vorbisenc->subgranule_offset = 0;
 
-      GST_DEBUG_OBJECT (vorbisenc, "creating and sending header packets");
-      gst_vorbisenc_set_metadata (vorbisenc);
-      vorbis_analysis_headerout (&vorbisenc->vd, &vorbisenc->vc, &header,
-          &header_comm, &header_code);
+    GST_DEBUG_OBJECT (vorbisenc, "creating and sending header packets");
+    gst_vorbisenc_set_metadata (vorbisenc);
+    vorbis_analysis_headerout (&vorbisenc->vd, &vorbisenc->vc, &header,
+        &header_comm, &header_code);
 
-      /* create header buffers */
-      buf1 = gst_vorbisenc_buffer_from_packet (vorbisenc, &header);
-      buf2 = gst_vorbisenc_buffer_from_packet (vorbisenc, &header_comm);
-      buf3 = gst_vorbisenc_buffer_from_packet (vorbisenc, &header_code);
+    /* create header buffers */
+    buf1 = gst_vorbisenc_buffer_from_header_packet (vorbisenc, &header);
+    buf2 = gst_vorbisenc_buffer_from_header_packet (vorbisenc, &header_comm);
+    buf3 = gst_vorbisenc_buffer_from_header_packet (vorbisenc, &header_code);
 
-      /* mark and put on caps */
-      caps = gst_pad_get_caps (vorbisenc->srcpad);
-      caps = gst_vorbisenc_set_header_on_caps (caps, buf1, buf2, buf3);
+    /* mark and put on caps */
+    caps = gst_pad_get_caps (vorbisenc->srcpad);
+    caps = gst_vorbisenc_set_header_on_caps (caps, buf1, buf2, buf3);
 
-      /* negotiate with these caps */
-      GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
-      gst_pad_set_caps (vorbisenc->srcpad, caps);
+    /* negotiate with these caps */
+    GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
+    gst_pad_set_caps (vorbisenc->srcpad, caps);
 
-      gst_buffer_set_caps (buf1, caps);
-      gst_buffer_set_caps (buf2, caps);
-      gst_buffer_set_caps (buf3, caps);
+    gst_buffer_set_caps (buf1, caps);
+    gst_buffer_set_caps (buf2, caps);
+    gst_buffer_set_caps (buf3, caps);
 
-      /* push out buffers */
-      if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf1)) != GST_FLOW_OK)
-        goto done;
-      if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf2)) != GST_FLOW_OK)
-        goto done;
-      if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf3)) != GST_FLOW_OK)
-        goto done;
+    /* push out buffers */
+    if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf1)) != GST_FLOW_OK)
+      goto failed_header_push;
+    if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf2)) != GST_FLOW_OK)
+      goto failed_header_push;
+    if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf3)) != GST_FLOW_OK)
+      goto failed_header_push;
 
-      vorbisenc->header_sent = TRUE;
-    }
 
-    /* data to encode */
-    data = (gfloat *) GST_BUFFER_DATA (buf);
-    size = GST_BUFFER_SIZE (buf) / (vorbisenc->channels * sizeof (float));
+    /* now adjust starting granulepos accordingly if the buffer's timestamp is
+       nonzero */
+    vorbisenc->next_ts = GST_BUFFER_TIMESTAMP (buffer);
+    vorbisenc->granulepos_offset = gst_util_uint64_scale
+        (GST_BUFFER_TIMESTAMP (buffer), vorbisenc->frequency, GST_SECOND);
+    vorbisenc->subgranule_offset = 0;
+    vorbisenc->subgranule_offset =
+        vorbisenc->next_ts - granulepos_to_clocktime (vorbisenc, 0);
 
-    /* expose the buffer to submit data */
-    buffer = vorbis_analysis_buffer (&vorbisenc->vd, size);
-
-    /* uninterleave samples */
-    for (i = 0; i < size; i++) {
-      for (j = 0; j < vorbisenc->channels; j++) {
-        buffer[j][i] = *data++;
-      }
-    }
-
-    /* tell the library how much we actually submitted */
-    vorbis_analysis_wrote (&vorbisenc->vd, size);
-
-    vorbisenc->samples_in += size;
-
-    gst_buffer_unref (buf);
+    vorbisenc->header_sent = TRUE;
   }
+
+  /* data to encode */
+  data = (gfloat *) GST_BUFFER_DATA (buffer);
+  size = GST_BUFFER_SIZE (buffer) / (vorbisenc->channels * sizeof (float));
+
+  /* expose the buffer to submit data */
+  vorbis_buffer = vorbis_analysis_buffer (&vorbisenc->vd, size);
+
+  /* deinterleave samples, write the buffer data */
+  for (i = 0; i < size; i++) {
+    for (j = 0; j < vorbisenc->channels; j++) {
+      vorbis_buffer[j][i] = *data++;
+    }
+  }
+
+  /* tell the library how much we actually submitted */
+  vorbis_analysis_wrote (&vorbisenc->vd, size);
+
+  vorbisenc->samples_in += size;
+
+  gst_buffer_unref (buffer);
 
   ret = gst_vorbisenc_output_buffers (vorbisenc);
 
-done:
   return ret;
+
+  /* error cases */
+not_setup:
+  {
+    gst_buffer_unref (buffer);
+    GST_ELEMENT_ERROR (vorbisenc, CORE, NEGOTIATION, (NULL),
+        ("encoder not initialized (input is not audio?)"));
+    return GST_FLOW_UNEXPECTED;
+  }
+failed_header_push:
+  {
+    gst_buffer_unref (buffer);
+    return ret;
+  }
 }
 
 static GstFlowReturn

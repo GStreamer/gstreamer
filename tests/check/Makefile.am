@@ -22,7 +22,7 @@ $(CHECK_REGISTRY):
 TESTS = $(check_PROGRAMS)
 
 if USE_VORBIS
-check_vorbis = elements/vorbisdec
+check_vorbis = elements/vorbisdec pipelines/vorbisenc
 else
 check_vorbis =
 endif

@@ -1,3 +1,29 @@
+2006-01-30  Andy Wingo  <wingo@pobox.com>
+
+	* tests/check/Makefile.am (check_vorbis): Add pipelines/vorbisenc.
+
+	* ext/vorbis/vorbisenc.c (gst_vorbisenc_buffer_from_packet): Logic
+	updated to timestamp from the first sample, not the last.
+	(gst_vorbisenc_buffer_from_header_packet): New function, takes
+	special care of granulepos and timestamp for header packets.
+	(gst_vorbisenc_chain): Reflow, fix some leaks, and handle the case
+	when the first buffer has a nonzero timestamp.
+
+	* ext/vorbis/vorbisenc.h (GstVorbisEnc.granulepos_offset)
+	(GstVorbisEnc.subgranule_offset): New members. Take care of the
+	case when the first audio buffer we get has a nonzero timestamp.
+	(GstVorbisEnc.next_ts): Renamed from prev_ts, because now we
+	properly timestamp vorbis buffers with the time of the first
+	sample, not the last.
+	
+	* ext/vorbis/vorbisenc.c (granulepos_to_clocktime): Renamed from
+	vorbis_granule_time_copy -- now it takes the granule/subgranule
+	offset into account.
+
+	* tests/check/pipelines/vorbisenc.c: New test for correctness of
+	timestamps, durations, and granulepos on buffers produced by
+	vorbisenc.
+
 2006-01-30  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
