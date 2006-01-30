@@ -20,13 +20,177 @@ includes a state change from READY->PAUSED and PLAYING->PAUSED. The
 reason for this is that this way we can detect when the first buffer
 or event arrives in the sink when the state change completes.
 
-A sink should block on the first event or buffer received in the
-PAUSED state before commiting the state to PAUSED.
+A sink should block on the first EOS event or buffer received in the
+READY->PAUSED state before commiting the state to PAUSED.
 
 FLUSHING events have to be handled out of sync with the buffer flow
 and take no part in the preroll procedure.
 
 Events other than EOS do not complete the preroll stage.
 
+sink overview
+-------------
 
+  /* commit the state. We return TRUE if we can continue
+   * streaming, FALSE in the case we go to a READY or NULL state.
+   * if we go to PLAYING, we don't need to block on preroll.
+   */
+  commit
+    LOCK
+    switch (pending) {
+      case PLAYING:
+        need_preroll = FALSE;
+	break;
+      case PAUSED:
+	break;
+      case READY:
+      case NULL:
+        return FALSE;
+      case VOID:
+        return TRUE;
+    }
+    /* update state */
+    state = pending;
+    next = VOID;
+    pending = VOID;
+    UNLOCK
+    return TRUE;
+
+  /* handle a prerollable item (EOS or buffer). It is
+   * always called with the PREROLL_LOCK helt.
+   * need_preroll indicates that we must perform, commit and
+   * potentially block on preroll.
+   */
+  handle (time)
+ again:
+    while (need_preroll) {
+      preroll
+      if (!commit)
+        return WRONG_STATE
+      /* commit could have made us not need preroll anymore. */
+      if (need_preroll) {
+        /* release PREROLL_LOCK and wait. prerolled can be observed
+	 * and will be TRUE */
+        prerolled = TRUE;
+        PREROLL_WAIT (releasing PREROLL_LOCK)
+        prerolled = FALSE;
+        if (flushing)
+          return WRONG_STATE
+      }
+    }
+    if (clock && sync) {
+      /* the only way we can regain the prerolled state is when
+       * the clock entry gets unscheduled, we then preroll (again) on the
+       * current item, else we render and preroll on the next buffer. */
+      PREROLL_UNLOCK
+      ret = wait_clock;
+      PREROLL_LOCK
+      if (flushing)                | /* sinks that sync on buffer contents do like this */
+        return WRONG_STATE         | while (more_to_render) {
+      if (ret == UNSCHEDULED)      |   ret = render 
+        goto again;                |   if (ret == interrupted)
+    }                              |     prerolled = TRUE;
+    render                   ----->|     PREROLL_WAIT (releasing PREROLL_LOCK)
+                                   |     prerolled = FALSE;
+                                   |     if (flushing)
+                                   |       return WRONG_STATE
+                                   | }
+  /* various event functions */
+  event
+    EOS:
+      STREAM_LOCK
+      PREROLL_LOCK
+      if (flushing)
+        return FALSE
+      ret = handle (end_time);
+      if (ret == WRONG_STATE)
+        return FALSE
+      post_eos
+      eos = TRUE;
+      PREROLL_UNLOCK
+      STREAM_UNLOCK
+      break;
+    NEWSEGMENT:
+      STREAM_LOCK
+      PREROLL_LOCK
+      if (flushing)
+        return FALSE
+      set_clip
+      event 
+      PREROLL_UNLOCK
+      STREAM_UNLOCK
+      break;
+    FLUSH_START:
+      event                   ----> subclasses can interrupt render
+      PREROLL_LOCK
+      flushing = TRUE
+      unlock_clock
+      PREROLL_SIGNAL
+      PREROLL_UNLOCK
+      STREAM_LOCK
+      lost_state
+      STREAM_UNLOCK
+      break;
+    FLUSH_END:
+      STREAM_LOCK
+      event 
+      PREROLL_LOCK
+      flushing = FALSE
+      eos = FALSE;
+      PREROLL_UNLOCK
+      STREAM_UNLOCK
+      break;
+
+  chain
+    STREAM_LOCK
+    PREROLL_LOCK
+    if (flushing)
+      return WRONG_STATE
+    if (clip)
+      handle (time);
+    PREROLL_UNLOCK
+    STREAM_UNLOCK
+
+  state
+    switch (transition)
+      READY_PAUSED:
+        ret = ASYNC;
+        eos = FALSE
+        flushing = FALSE
+	need_preroll = TRUE;
+	prerolled = FALSE;
+        break;
+      PAUSED_PLAYING:
+        PREROLL_LOCK
+	if (prerolled || eos)
+          PREROLL_SIGNAL
+          ret = OK;
+	  need_preroll = FALSE;
+	  if (eos)
+	    post_eos
+	else
+	  need_preroll = TRUE;
+          ret = ASYNC;
+        PREROLL_UNLOCK
+        break;
+      PLAYING_PAUSED:
+                           ---> subclass can interrupt render
+        PREROLL_LOCK
+	need_preroll = TRUE;
+        unlock_clock
+	if (prerolled || eos)
+          ret = OK;
+	else
+          ret = ASYNC;
+        PREROLL_UNLOCK
+        break;
+      PAUSED_READY:
+                           ---> subclass can interrupt render
+        PREROLL_LOCK
+        flushing = TRUE
+        unlock_clock
+        PREROLL_SIGNAL
+        ret = OK;
+        PREROLL_UNLOCK
+        break;
 
