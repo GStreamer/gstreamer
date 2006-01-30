@@ -1,3 +1,8 @@
+2006-01-31  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/vs7:
+		add vs7 project files created by Sergey Scobich
+
 2006-01-30  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/vs8:
