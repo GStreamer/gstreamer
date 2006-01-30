@@ -1,3 +1,9 @@
+2006-01-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_send_buffer):
+	  If we haven't set caps on a source pad yet, the caps on the
+	  pad are NULL, not un-fixed. Set caps on outgoing buffers.
+
 2006-01-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/lame/gstlame.c: (gst_lame_finalize), (gst_lame_class_init),

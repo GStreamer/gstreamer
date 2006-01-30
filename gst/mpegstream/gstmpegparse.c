@@ -308,7 +308,7 @@ gst_mpeg_parse_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
 {
   GstFlowReturn result = GST_FLOW_OK;
 
-  if (!gst_caps_is_fixed (GST_PAD_CAPS (mpeg_parse->srcpad))) {
+  if (!GST_PAD_CAPS (mpeg_parse->srcpad)) {
     gboolean mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
     GstCaps *caps;
 
@@ -330,6 +330,7 @@ gst_mpeg_parse_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
   GST_DEBUG_OBJECT (mpeg_parse, "current buffer time: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time));
 
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (mpeg_parse->srcpad));
   result = gst_pad_push (mpeg_parse->srcpad, buffer);
 
   return result;
