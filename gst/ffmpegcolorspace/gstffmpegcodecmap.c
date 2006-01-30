@@ -132,6 +132,9 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
     case PIX_FMT_YUV422:
       fmt = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
       break;
+    case PIX_FMT_UYVY422:
+      fmt = GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
+      break;
     case PIX_FMT_RGB24:
       bpp = depth = 24;
       endianness = G_BIG_ENDIAN;
@@ -474,6 +477,9 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
       switch (fourcc) {
         case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
           context->pix_fmt = PIX_FMT_YUV422;
+          break;
+        case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
+          context->pix_fmt = PIX_FMT_UYVY422;
           break;
         case GST_MAKE_FOURCC ('I', '4', '2', '0'):
           context->pix_fmt = PIX_FMT_YUV420P;

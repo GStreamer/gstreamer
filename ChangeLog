@@ -1,3 +1,10 @@
+2006-01-30  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt):
+	  Patch from Eric Jonas to support conversions to/from UYVY 
+	  (Fixes: #324626)
+
 2006-01-30  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/playback/gstplaybasebin.c: (group_commit), (queue_overrun),
