@@ -25,8 +25,8 @@
  * @short_description: dynamic parameter control subsystem
  *
  * The controller subsystem offers a lightweight way to adjust gobject
- * properties over stream-time. It works by using time-stampled value pairs that
- * are queued for element-properties. At run-time the elements continously pulls
+ * properties over stream-time. It works by using time-stamped value pairs that
+ * are queued for element-properties. At run-time the elements continously pull
  * values changes for the current stream-time.
  *
  * What needs to be changed in a #GstElement?

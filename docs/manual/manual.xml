@@ -18,102 +18,50 @@
 </footnote>
 ">
 
+<!ENTITY TITLEPAGE            SYSTEM "titlepage.xml">
+
 <!-- Part 1: Overview -->
-<!ENTITY INTRO SYSTEM "intro-preface.xml">
-<!ENTITY MOTIVATION SYSTEM "intro-motivation.xml">
-<!ENTITY CONCEPTS SYSTEM "intro-basics.xml">
+<!ENTITY INTRO                SYSTEM "intro-preface.xml">
+<!ENTITY MOTIVATION           SYSTEM "intro-motivation.xml">
+<!ENTITY CONCEPTS             SYSTEM "intro-basics.xml">
 
 <!-- Part 2: Basic Concepts -->
-<!ENTITY INIT SYSTEM "basics-init.xml">
-<!ENTITY ELEMENTS SYSTEM "basics-elements.xml">
-<!ENTITY BINS SYSTEM "basics-bins.xml">
-<!ENTITY BUS SYSTEM "basics-bus.xml">
-<!ENTITY PADS SYSTEM "basics-pads.xml">
-<!ENTITY DATA SYSTEM "basics-data.xml">
-<!ENTITY HELLOWORLD SYSTEM "basics-helloworld.xml">
+<!ENTITY INIT                 SYSTEM "basics-init.xml">
+<!ENTITY ELEMENTS             SYSTEM "basics-elements.xml">
+<!ENTITY BINS                 SYSTEM "basics-bins.xml">
+<!ENTITY BUS                  SYSTEM "basics-bus.xml">
+<!ENTITY PADS                 SYSTEM "basics-pads.xml">
+<!ENTITY DATA                 SYSTEM "basics-data.xml">
+<!ENTITY HELLOWORLD           SYSTEM "basics-helloworld.xml">
 
 <!-- Part 3: Advanced Concepts -->
-<!ENTITY QUERYEVENTS SYSTEM "advanced-position.xml">
-<!ENTITY METADATA SYSTEM "advanced-metadata.xml">
-<!ENTITY INTERFACES SYSTEM "advanced-interfaces.xml">
-<!ENTITY CLOCKS SYSTEM "advanced-clocks.xml">
-<!ENTITY DPARAMS SYSTEM "advanced-dparams.xml">
-<!ENTITY THREADS SYSTEM "advanced-threads.xml">
-<!ENTITY AUTOPLUGGING SYSTEM "advanced-autoplugging.xml">
-<!ENTITY DATAACCESS SYSTEM "advanced-dataaccess.xml">
+<!ENTITY QUERYEVENTS          SYSTEM "advanced-position.xml">
+<!ENTITY METADATA             SYSTEM "advanced-metadata.xml">
+<!ENTITY INTERFACES           SYSTEM "advanced-interfaces.xml">
+<!ENTITY CLOCKS               SYSTEM "advanced-clocks.xml">
+<!ENTITY DPARAMS              SYSTEM "advanced-dparams.xml">
+<!ENTITY THREADS              SYSTEM "advanced-threads.xml">
+<!ENTITY AUTOPLUGGING         SYSTEM "advanced-autoplugging.xml">
+<!ENTITY DATAACCESS           SYSTEM "advanced-dataaccess.xml">
 
 <!-- Part 4: Higher-level interfaces -->
-<!ENTITY XML SYSTEM "highlevel-xml.xml">
-<!ENTITY COMPONENTS SYSTEM "highlevel-components.xml">
+<!ENTITY XML                  SYSTEM "highlevel-xml.xml">
+<!ENTITY COMPONENTS           SYSTEM "highlevel-components.xml">
 
 <!-- Appendices -->
-<!ENTITY CHECKLIST SYSTEM "appendix-checklist.xml">
-<!ENTITY PORTING SYSTEM "appendix-porting.xml">
-<!ENTITY INTEGRATION SYSTEM "appendix-integration.xml">
-<!ENTITY LICENSING SYSTEM "appendix-licensing.xml">
-<!ENTITY WIN32 SYSTEM "appendix-win32.xml">
-<!ENTITY QUOTES SYSTEM "appendix-quotes.xml">
+<!ENTITY CHECKLIST            SYSTEM "appendix-checklist.xml">
+<!ENTITY PORTING              SYSTEM "appendix-porting.xml">
+<!ENTITY INTEGRATION          SYSTEM "appendix-integration.xml">
+<!ENTITY LICENSING            SYSTEM "appendix-licensing.xml">
+<!ENTITY WIN32                SYSTEM "appendix-win32.xml">
+<!ENTITY QUOTES               SYSTEM "appendix-quotes.xml">
 
 <!ENTITY GStreamer    "<application>GStreamer</application>">
 ]>
 
 <book id="index">
-  <bookinfo>
-    
-    <authorgroup>
-      <author>
-	<firstname>Wim</firstname>
-	<surname>Taymans</surname>
-	<authorblurb>
-	  <para>
-	    <email>wim.taymans@chello.be</email>
-	  </para>
-	</authorblurb>
-      </author>
-      <author>
-	<firstname>Steve</firstname>
-	<surname>Baker</surname>
-	<authorblurb>
-	  <para>
-	    <email>stevebaker_org@yahoo.co.uk</email>
-	  </para>
-	</authorblurb>
-      </author>
-      <author>
-	<firstname>Andy</firstname>
-	<surname>Wingo</surname>
-	<authorblurb>
-	  <para>
-	    <email>wingo@pobox.com</email>
-	  </para>
-	</authorblurb>
-      </author>
-      <author>
-        <firstname>Ronald</firstname>
-        <othername>S.</othername>
-        <surname>Bultje</surname>
-        <authorblurb>
-          <para>
-            <email>rbultje@ronald.bitfreak.net</email>
-          </para>
-        </authorblurb>
-      </author>
-    </authorgroup>
-
-    <legalnotice id="misc-legalnotice">
-      <para>
-	This material may be distributed only subject to the terms and
-        conditions set forth in the Open Publication License, v1.0 or later (the
-        latest version is presently available at <ulink url="
-        http://www.opencontent.org/opl.shtml"
-        type="http">http://www.opencontent.org/opl.shtml</ulink>).
-      </para>
-    </legalnotice>
-
-    <title>&GStreamer; Application Development Manual (&GST_VERSION;)</title>
-
-  </bookinfo>
-      
+  &TITLEPAGE;
+  
 <!-- ############# Introduction & Overview - part ############### -->
 
   <part id="part-overview">
@@ -261,35 +209,35 @@
       </para>
     </partintro>
 
-<!--
-Idea:
-* Debugging and error handling
-   - 'error' signal in pipelines
-   - checking return values and how to handle them
-   - using signals for pipeline states
-   - gst-debug
-   - programs
-* Desktop integration
-   - Linux/UNIX
-      . {x,xv}imagesink
-      . {oss,alsa}sink
-      . {v4l,v4l2,oss,alsa}src
-   - GNOME
-      . GConf ({video,audio}{src,sink})
-      . gnomevfssrc, gnomevfssink
-      . popt
-      . app examples (RB, Totem, gnome-media, ...)
-   - KDE
-      . kiosrc
-      . app examples (JuK, AmaroK)
-      . ask Scott/Mark
-   - Mac OS X
-      . native video/audio sink
-   - Windows
-      . build etc.
-* Quotes from devs
-   - table please...
--->
+    <!--
+    Idea:
+    * Debugging and error handling
+     - 'error' signal in pipelines
+     - checking return values and how to handle them
+     - using signals for pipeline states
+     - gst-debug
+     - programs
+    * Desktop integration
+     - Linux/UNIX
+	. {x,xv}imagesink
+	. {oss,alsa}sink
+	. {v4l,v4l2,oss,alsa}src
+     - GNOME
+	. GConf ({video,audio}{src,sink})
+	. gnomevfssrc, gnomevfssink
+	. popt
+	. app examples (RB, Totem, gnome-media, ...)
+     - KDE
+	. kiosrc
+	. app examples (JuK, AmaroK)
+	. ask Scott/Mark
+     - Mac OS X
+	. native video/audio sink
+     - Windows
+	. build etc.
+    * Quotes from devs
+     - table please...
+    -->
 
     &CHECKLIST;
     &PORTING;

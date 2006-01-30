@@ -1,3 +1,17 @@
+2006-01-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/manual/advanced-dparams.xml:
+          describe controller
+	* docs/manual/advanced-position.xml:
+	* docs/manual/basics-init.xml:
+	* docs/manual/manual.xml:
+	* docs/manual/titlepage.xml:
+	* docs/pwg/pwg.xml:
+	* docs/pwg/titlepage.xml:
+          cleanup xml (more to come)
+	* libs/gst/controller/gstcontroller.c:
+          fix typo
+
 2006-01-30  Sebastien Moutte  <sebastien@moutte.net>
 	
 	* win32/vs6/grammar.dsp:

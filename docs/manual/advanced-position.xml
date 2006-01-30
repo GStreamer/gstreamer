@@ -39,7 +39,8 @@
       source itself.
     </para>
 
-    <programlisting><!-- example-begin query.c a -->
+    <programlisting>
+<!-- example-begin query.c a -->
 #include &lt;gst/gst.h&gt;
 <!-- example-end query.c a -->
 <!-- example-begin query.c b --><!--
@@ -71,7 +72,8 @@ my_bus_message_cb (GstBus     *bus,
       break;
   }
 }
---><!-- example-end query.c b -->
+-->
+<!-- example-end query.c b -->
 <!-- example-begin query.c c -->
 static gboolean
 cb_print_position (GstElement *pipeline)

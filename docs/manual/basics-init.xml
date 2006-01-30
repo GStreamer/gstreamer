@@ -20,7 +20,9 @@
       A typical program &EXAFOOT; would have code to initialize
       &GStreamer; that looks like this:
     </para>
-    <programlisting>
+    <example id="ex-init-c">
+      <title>Initializing GStreamer</title>
+      <programlisting>
 <!-- example-begin init.c -->
 #include &lt;gst/gst.h&gt;
 
@@ -39,7 +41,8 @@ main (int   argc,
   return 0;
 }
 <!-- example-end init.c -->
-    </programlisting>
+      </programlisting>
+    </example>
     <para>
       Use the <symbol>GST_VERSION_MAJOR</symbol>,
       <symbol>GST_VERSION_MINOR</symbol> and <symbol>GST_VERSION_MICRO</symbol>
@@ -62,7 +65,9 @@ main (int   argc,
       You can also use a GOption table to initialize your own parameters as
       shown in the next example:
     </para>
-    <programlisting>
+    <example id="ex-goption-c">
+      <title>Initialisation using the GOption interface</title>
+      <programlisting>
 <!-- example-begin goption.c -->
 #include &lt;gst/gst.h&gt;
 
@@ -96,7 +101,8 @@ main (int   argc,
   return 0;
 }
 <!-- example-end goption.c -->
-    </programlisting>
+      </programlisting>
+    </example>
     <para>
       As shown in this fragment, you can use a <ulink
       url="http://developer.gnome.org/doc/API/2.0/glib/glib-Commandline-option-parser.html"

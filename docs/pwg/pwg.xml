@@ -8,9 +8,11 @@
 
 <!ENTITY TITLEPAGE            SYSTEM "titlepage.xml">
 
+<!-- Part 1: Introduction -->
 <!ENTITY INTRO_PREFACE        SYSTEM "intro-preface.xml">
 <!ENTITY INTRO_BASICS         SYSTEM "intro-basics.xml">
 
+<!-- Part 2: Building a Plugin -->
 <!ENTITY BUILDING_BOILER      SYSTEM "building-boiler.xml">
 <!ENTITY BUILDING_DEBUG       SYSTEM "building-debug.xml">
 <!ENTITY BUILDING_PADS        SYSTEM "building-pads.xml">
@@ -20,6 +22,7 @@
 <!ENTITY BUILDING_SIGNALS     SYSTEM "building-signals.xml">
 <!ENTITY BUILDING_TESTAPP     SYSTEM "building-testapp.xml">
 
+<!-- Part 3: Advanced Filter Concepts -->
 <!ENTITY ADVANCED_NEGOTIATION SYSTEM "advanced-negotiation.xml">
 <!ENTITY ADVANCED_SCHEDULING  SYSTEM "advanced-scheduling.xml">
 <!ENTITY ADVANCED_TYPES       SYSTEM "advanced-types.xml">
@@ -31,11 +34,13 @@
 <!ENTITY ADVANCED_TAGGING     SYSTEM "advanced-tagging.xml">
 <!ENTITY ADVANCED_EVENTS      SYSTEM "advanced-events.xml">
 
+<!-- Part 4: Creating special element types -->
 <!ENTITY OTHER_BASE           SYSTEM "other-base.xml">
 <!ENTITY OTHER_ONETON         SYSTEM "other-oneton.xml">
 <!ENTITY OTHER_NTOONE         SYSTEM "other-ntoone.xml">
 <!ENTITY OTHER_MANAGER        SYSTEM "other-manager.xml">
 
+<!-- Appendices -->
 <!ENTITY APPENDIX_CHECKLIST   SYSTEM "appendix-checklist.xml">
 <!ENTITY APPENDIX_PORTING     SYSTEM "appendix-porting.xml">
 <!ENTITY APPENDIX_LICENSING   SYSTEM "appendix-licensing.xml">
@@ -49,7 +54,7 @@
 <book id="index">
   &TITLEPAGE;
 
-  <!-- ############# part ############### -->
+  <!-- ############# Introduction - part ############### -->
 
   <part id="part-introduction" xreflabel="Introduction">
     <title>Introduction</title>
@@ -78,7 +83,7 @@
     &INTRO_BASICS;
   </part>
 
-  <!-- ############ part ############# -->
+  <!-- ############ Building a Plugin - part ############# -->
 
   <part id="part-building" xreflabel="Building a Plugin">
     <title>Building a Plugin</title>
@@ -118,7 +123,7 @@
     &BUILDING_TESTAPP;
   </part>
 
-  <!-- ############ part ############# -->
+  <!-- ############ Advanced Filter Concepts - part ############# -->
 
   <part id="part-advanced" xreflabel="Advanced Filter Concepts">
     <title>Advanced Filter Concepts</title>
@@ -148,7 +153,7 @@
 
   </part>
 
-  <!-- ############ part ############# -->
+  <!-- ############ Creating special element types - part ############# -->
 
   <part id="part-other" xreflabel="Creating special element types">
     <title>Creating special element types</title>
@@ -173,7 +178,7 @@
     &OTHER_MANAGER;
   </part>
 
-  <!-- ############ part ############# -->
+  <!-- ############ Appendices - part ############# -->
 
   <part id="part-appendix" xreflabel="Appendices">
     <title>Appendices</title>
