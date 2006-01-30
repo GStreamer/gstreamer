@@ -1,3 +1,18 @@
+2006-01-30  Andy Wingo  <wingo@pobox.com>
+
+	* ext/theora/theoraenc.c (theora_enc_sink_setcaps) 
+	(gst_theora_enc_init): Pull the granule shift out of the encoder.
+	(granulepos_add): New function, handles the messiness of adjusting
+	granulepos values.
+	(theora_buffer_from_packet):
+	(theora_enc_chain):
+	(theora_enc_sink_event): Use granulepos_add, not +.
+
+	* tests/check/pipelines/theoraenc.c
+	(check_buffer_granulepos_from_starttime): Just check the frame
+	count, not the actual granulepos -- we can't dictate to the
+	encoder when it should be placing keyframes.
+
 2006-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_start):

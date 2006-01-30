@@ -84,6 +84,7 @@ struct _GstTheoraEnc
   guint64 bytes_out;
   guint64 granulepos_offset;
   guint64 timestamp_offset;
+  gint granule_shift;  
 };
 
 struct _GstTheoraEncClass

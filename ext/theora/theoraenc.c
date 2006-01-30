@@ -82,6 +82,19 @@ gst_border_mode_get_type (void)
 #define THEORA_DEF_NOISE_SENSITIVITY    1
 #define THEORA_DEF_SHARPNESS            0
 
+/* taken from theora/lib/toplevel.c */
+static int
+_ilog (unsigned int v)
+{
+  int ret = 0;
+
+  while (v) {
+    ret++;
+    v >>= 1;
+  }
+  return (ret);
+}
+
 enum
 {
   ARG_0,
@@ -236,6 +249,11 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
   enc->keyframe_mindistance = THEORA_DEF_KEYFRAME_MINDISTANCE;
   enc->noise_sensitivity = THEORA_DEF_NOISE_SENSITIVITY;
   enc->sharpness = THEORA_DEF_SHARPNESS;
+
+  enc->granule_shift = _ilog (enc->info.keyframe_frequency_force - 1);
+  GST_DEBUG_OBJECT (enc,
+      "keyframe_frequency_force is %d, granule shift is %d",
+      enc->info.keyframe_frequency_force, enc->granule_shift);
 }
 
 static gboolean
@@ -298,9 +316,27 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info.noise_sensitivity = enc->noise_sensitivity;
   enc->info.sharpness = enc->sharpness;
 
+  /* as done in theora */
+  enc->granule_shift = _ilog (enc->info.keyframe_frequency_force - 1);
+  GST_DEBUG_OBJECT (enc,
+      "keyframe_frequency_force is %d, granule shift is %d",
+      enc->info.keyframe_frequency_force, enc->granule_shift);
+
   theora_encode_init (&enc->state, &enc->info);
 
   return TRUE;
+}
+
+static guint64
+granulepos_add (guint64 granulepos, guint64 addend, gint shift)
+{
+  GstClockTime iframe, pframe;
+
+  iframe = granulepos >> shift;
+  pframe = granulepos - (iframe << shift);
+  iframe += addend;
+
+  return (iframe << shift) + pframe;
 }
 
 /* prepare a buffer for transmission by passing data through libtheora */
@@ -318,7 +354,9 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
 
   memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (buf) = enc->bytes_out;
-  GST_BUFFER_OFFSET_END (buf) = packet->granulepos + enc->granulepos_offset;
+  GST_BUFFER_OFFSET_END (buf) =
+      granulepos_add (packet->granulepos, enc->granulepos_offset,
+      enc->granule_shift);
   GST_BUFFER_TIMESTAMP (buf) = timestamp + enc->timestamp_offset;
   GST_BUFFER_DURATION (buf) = duration;
 
@@ -418,8 +456,8 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
       /* push last packet with eos flag */
       while (theora_encode_packetout (&enc->state, 1, &op)) {
         /* See comment in the chain function */
-        GstClockTime next_time =
-            theora_granule_time (&enc->state, op.granulepos + 1) * GST_SECOND;
+        GstClockTime next_time = theora_granule_time (&enc->state,
+            granulepos_add (op.granulepos, 1, enc->granule_shift)) * GST_SECOND;
 
         theora_push_packet (enc, &op, enc->next_ts, next_time - enc->next_ts);
         enc->next_ts = next_time;
@@ -675,8 +713,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
          theora starts with 0 instead of 1... */
       GstClockTime next_time;
 
-      next_time =
-          theora_granule_time (&enc->state, op.granulepos + 1) * GST_SECOND;
+      next_time = theora_granule_time (&enc->state,
+          granulepos_add (op.granulepos, 1, enc->granule_shift)) * GST_SECOND;
       ret =
           theora_push_packet (enc, &op, enc->next_ts, next_time - enc->next_ts);
       enc->next_ts = next_time;

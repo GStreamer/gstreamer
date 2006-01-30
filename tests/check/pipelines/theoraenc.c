@@ -25,6 +25,9 @@
 #define TIMESTAMP_OFFSET 3249870963
 #define FRAMERATE 10
 
+/* I know all of these have a shift of 6 bits */
+#define GRANULEPOS_SHIFT 6
+
 static GCond *cond = NULL;
 static GMutex *lock = NULL;
 static GstBuffer *buf = NULL;
@@ -143,15 +146,17 @@ static void
 check_buffer_granulepos_from_starttime (GstBuffer * buffer,
     GstClockTime starttime)
 {
-  GstClockTime granulepos, expected;
+  GstClockTime granulepos, expected, framecount;
 
   granulepos = GST_BUFFER_OFFSET_END (buffer);
+  framecount = granulepos >> GRANULEPOS_SHIFT;
+  framecount += granulepos & ((1 << GRANULEPOS_SHIFT) - 1);
   expected = gst_util_uint64_scale (starttime, FRAMERATE, GST_SECOND);
 
-  fail_unless (granulepos == expected || granulepos == expected + 1,
-      "expected granulepos %" G_GUINT64_FORMAT
+  fail_unless (framecount == expected || framecount == expected + 1,
+      "expected frame count %" G_GUINT64_FORMAT
       " or %" G_GUINT64_FORMAT
-      ", but got granulepos %" G_GUINT64_FORMAT,
+      ", but got frame count %" G_GUINT64_FORMAT,
       expected, expected + 1, granulepos);
 }
 
