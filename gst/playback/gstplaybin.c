@@ -265,6 +265,10 @@ gst_play_bin_dispose (GObject * object)
     gst_object_unref (play_bin->pending_visualisation);
     play_bin->pending_visualisation = NULL;
   }
+  if (play_bin->textoverlay_element != NULL) {
+    gst_object_unref (play_bin->textoverlay_element);
+    play_bin->textoverlay_element = NULL;
+  }
   g_free (play_bin->font_desc);
   play_bin->font_desc = NULL;
 
@@ -657,33 +661,52 @@ gen_text_element (GstPlayBin * play_bin)
   GstElement *element, *csp, *overlay, *vbin;
   GstPad *pad;
 
+  /* Create our bin */
+  element = gst_bin_new ("textbin");
+
+  /* Text overlay */
   overlay = gst_element_factory_make ("textoverlay", "overlay");
+
+  /* Create the video rendering bin */
+  vbin = gen_video_element (play_bin);
+
+  /* If no overlay return the video bin */
+  if (!overlay) {
+    GST_WARNING ("No overlay (pango) element, subtitles disabled");
+    return vbin;
+  }
+
+  /* Set some parameters */
   g_object_set (G_OBJECT (overlay),
       "halign", "center", "valign", "bottom", NULL);
-  play_bin->textoverlay_element = overlay;
   if (play_bin->font_desc) {
     g_object_set (G_OBJECT (play_bin->textoverlay_element),
         "font-desc", play_bin->font_desc, NULL);
   }
-  vbin = gen_video_element (play_bin);
-  if (!overlay) {
-    g_warning ("No overlay (pango) element, subtitles disabled");
-    return vbin;
-  }
+
+  /* Take a ref */
+  play_bin->textoverlay_element = GST_ELEMENT (gst_object_ref (overlay));
+
   csp = gst_element_factory_make ("ffmpegcolorspace", "subtitlecsp");
-  element = gst_bin_new ("textbin");
-  gst_element_link_many (csp, overlay, vbin, NULL);
+
+  /* Add our elements */
   gst_bin_add_many (GST_BIN (element), csp, overlay, vbin, NULL);
 
+  /* Link */
+  gst_element_link_pads (csp, "src", overlay, "video_sink");
+  gst_element_link_pads (overlay, "src", vbin, "sink");
+
+  /* Add ghost pads on the subtitle bin */
   pad = gst_element_get_pad (overlay, "text_sink");
-#define gst_element_add_ghost_pad(element, pad, name) \
-    gst_element_add_pad (element, gst_ghost_pad_new (name, pad))
-  gst_element_add_ghost_pad (element, pad, "text_sink");
+  gst_element_add_pad (element, gst_ghost_pad_new ("text_sink", pad));
   gst_object_unref (pad);
 
   pad = gst_element_get_pad (csp, "sink");
-  gst_element_add_ghost_pad (element, pad, "sink");
+  gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (pad);
+
+  /* Set state to READY */
+  gst_element_set_state (element, GST_STATE_READY);
 
   return element;
 }
@@ -751,7 +774,7 @@ gen_audio_element (GstPlayBin * play_bin)
   gst_element_link_pads (volume, "src", sink, "sink");
 
   pad = gst_element_get_pad (conv, "sink");
-  gst_element_add_ghost_pad (element, pad, "sink");
+  gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (pad);
 
   gst_element_set_state (element, GST_STATE_READY);
@@ -850,7 +873,7 @@ gen_vis_element (GstPlayBin * play_bin)
   gst_object_unref (pad);
 
   pad = gst_element_get_pad (tee, "sink");
-  gst_element_add_ghost_pad (element, pad, "sink");
+  gst_element_add_pad (element, gst_ghost_pad_new ("sink", pad));
   gst_object_unref (pad);
 
   return element;
@@ -942,7 +965,10 @@ remove_sinks (GstPlayBin * play_bin)
     play_bin->frame = NULL;
   }
 
-  play_bin->textoverlay_element = NULL;
+  if (play_bin->textoverlay_element) {
+    gst_object_unref (play_bin->textoverlay_element);
+    play_bin->textoverlay_element = NULL;
+  }
 }
 
 /* loop over the streams and set up the pipeline to play this
@@ -955,7 +981,8 @@ remove_sinks (GstPlayBin * play_bin)
  * one can switch the streams.
  */
 static gboolean
-add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
+add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad,
+    GstPad * subtitle_pad)
 {
   GstPad *sinkpad;
   GstPadLinkReturn linkres;
@@ -988,8 +1015,19 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad)
   if (GST_PAD_LINK_FAILED (linkres))
     goto link_failed;
 
+  if (GST_IS_PAD (subtitle_pad)) {
+    sinkpad = gst_element_get_pad (sink, "text_sink");
+    linkres = gst_pad_link (subtitle_pad, sinkpad);
+    gst_object_unref (sinkpad);
+  }
+
+  /* try to link the subtitle pad of the sink to the stream */
+  if (GST_PAD_LINK_FAILED (linkres)) {
+    goto subtitle_failed;
+  }
+
   /* we got the sink succesfully linked, now keep the sink
-   * in out internal list */
+   * in our internal list */
   play_bin->sinks = g_list_prepend (play_bin->sinks, sink);
 
   return TRUE;
@@ -1018,6 +1056,22 @@ link_failed:
     gst_bin_remove (GST_BIN (play_bin), sink);
     return FALSE;
   }
+subtitle_failed:
+  {
+    gchar *capsstr;
+    GstCaps *caps;
+
+    /* could not link this stream */
+    caps = gst_pad_get_caps (subtitle_pad);
+    capsstr = gst_caps_to_string (caps);
+    GST_DEBUG_OBJECT (play_bin,
+        "subtitle link failed when adding sink, caps %s, reason %d", capsstr,
+        linkres);
+    g_free (capsstr);
+    g_free (caps);
+
+    return TRUE;
+  }
 }
 
 static gboolean
@@ -1027,7 +1081,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   GList *streaminfo = NULL, *s;
   gboolean need_vis = FALSE;
   gboolean need_text = FALSE;
-  GstPad *textsrcpad = NULL, *textsinkpad = NULL, *pad;
+  GstPad *textsrcpad = NULL, *pad = NULL;
   GstElement *sink;
   gboolean res = TRUE;
 
@@ -1069,30 +1123,71 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
       return FALSE;
     pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_AUDIO - 1].preroll,
         "src");
-    res = add_sink (play_bin, sink, pad);
+    res = add_sink (play_bin, sink, pad, NULL);
     gst_object_unref (pad);
   }
 
   /* link video */
   if (group->type[GST_STREAM_TYPE_VIDEO - 1].npads > 0) {
     if (need_text) {
-      sink = gen_text_element (play_bin);
+      GstObject *parent = NULL, *grandparent = NULL;
+      GstPad *ghost = NULL;
 
-      textsinkpad = gst_element_get_pad (sink, "text_sink");
+      sink = gen_text_element (play_bin);
       textsrcpad =
           gst_element_get_pad (group->type[GST_STREAM_TYPE_TEXT - 1].preroll,
           "src");
-      gst_pad_link (textsrcpad, textsinkpad);
-      gst_object_unref (textsinkpad);
-      gst_object_unref (textsrcpad);
+      /* This pad is from subtitle-bin, we need to create a ghost pad to have
+         common grandparents */
+      parent = gst_object_get_parent (GST_OBJECT (textsrcpad));
+      if (!parent) {
+        GST_WARNING_OBJECT (textsrcpad, "subtitle pad has no parent !");
+        gst_object_unref (textsrcpad);
+        textsrcpad = NULL;
+        goto beach;
+      }
+
+      grandparent = gst_object_get_parent (parent);
+      if (!grandparent) {
+        GST_WARNING_OBJECT (textsrcpad, "subtitle pad has no grandparent !");
+        gst_object_unref (parent);
+        gst_object_unref (textsrcpad);
+        textsrcpad = NULL;
+        goto beach;
+      }
+
+      ghost = gst_ghost_pad_new ("text_src", textsrcpad);
+      if (!GST_IS_PAD (ghost)) {
+        GST_WARNING_OBJECT (textsrcpad, "failed creating ghost pad for "
+            "subtitle-bin");
+        gst_object_unref (parent);
+        gst_object_unref (grandparent);
+        gst_object_unref (textsrcpad);
+        textsrcpad = NULL;
+        goto beach;
+      }
+
+      if (gst_element_add_pad (GST_ELEMENT (grandparent), ghost)) {
+        gst_object_unref (textsrcpad);
+        textsrcpad = ghost;
+      } else {
+        GST_WARNING_OBJECT (ghost, "failed adding ghost pad on subtitle-bin");
+        gst_object_unref (ghost);
+        gst_object_unref (textsrcpad);
+        textsrcpad = NULL;
+      }
+
+      gst_object_unref (parent);
+      gst_object_unref (grandparent);
     } else {
       sink = gen_video_element (play_bin);
     }
+  beach:
     if (!sink)
       return FALSE;
     pad = gst_element_get_pad (group->type[GST_STREAM_TYPE_VIDEO - 1].preroll,
         "src");
-    res = add_sink (play_bin, sink, pad);
+    res = add_sink (play_bin, sink, pad, textsrcpad);
     gst_object_unref (pad);
   }
 

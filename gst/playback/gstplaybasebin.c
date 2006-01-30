@@ -408,8 +408,10 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
       sig_id =
           GPOINTER_TO_INT (g_object_get_data (G_OBJECT (element), "signal_id"));
 
-      GST_LOG ("removing preroll signal %s", GST_ELEMENT_NAME (element));
-      g_signal_handler_disconnect (G_OBJECT (element), sig_id);
+      if (sig_id) {
+        GST_LOG ("removing preroll signal %s", GST_ELEMENT_NAME (element));
+        g_signal_handler_disconnect (G_OBJECT (element), sig_id);
+      }
     }
   }
 
@@ -501,10 +503,15 @@ queue_overrun (GstElement * element, GstPlayBaseBin * play_base_bin)
 {
   GST_DEBUG ("queue %s overrun", GST_ELEMENT_NAME (element));
 
-  group_commit (play_base_bin, FALSE, FALSE);
+  group_commit (play_base_bin, FALSE,
+      GST_OBJECT_PARENT (GST_OBJECT_CAST (element)) ==
+      GST_OBJECT (play_base_bin->subtitle));
 
   g_signal_handlers_disconnect_by_func (element,
       G_CALLBACK (queue_overrun), play_base_bin);
+  /* We have disconnected this signal, remove the signal_id from the object
+     data */
+  g_object_set_data (G_OBJECT (element), "signal_id", NULL);
 }
 
 /* Used for time-based buffering. */
@@ -1057,7 +1064,7 @@ setup_subtitle (GstPlayBaseBin * play_base_bin, gchar * sub_uri)
     return NULL;
   subparse = gst_element_factory_make ("decodebin", "subtitle-decoder");
 
-  subbin = gst_bin_new ("subbin");
+  subbin = gst_bin_new ("subtitle-bin");
   gst_bin_add_many (GST_BIN (subbin), source, subparse, NULL);
   gst_element_link (source, subparse);
 
@@ -1193,71 +1200,45 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
 
   /* do subs */
   if (subbin) {
-#if 0
-    gint sig4, sig5, sig6;
     GstElement *db;
 
     play_base_bin->subtitle = subbin;
     db = gst_bin_get_by_name (GST_BIN (subbin), "subtitle-decoder");
 
-    /* don't add yet, because we will preroll, and subs shouldn't
-     * preroll (we shouldn't preroll more than once source). */
-    gst_element_set_state (subbin, GST_STATE_PAUSED);
-
     /* do type detection, without adding (so no preroll) */
-    g_signal_connect (G_OBJECT (db),
-        "new-decoded-pad", G_CALLBACK (new_decoded_pad), play_base_bin);
+    g_signal_connect (G_OBJECT (db), "new-decoded-pad",
+        G_CALLBACK (new_decoded_pad), play_base_bin);
     g_signal_connect (G_OBJECT (db), "no-more-pads",
         G_CALLBACK (no_more_pads), play_base_bin);
+    g_signal_connect (G_OBJECT (db), "unknown-type",
+        G_CALLBACK (unknown_type), play_base_bin);
 
     if (!play_base_bin->is_stream) {
-      sig4 = g_signal_connect (G_OBJECT (db),
-          "unknown-type", G_CALLBACK (unknown_type), play_base_bin);
-      sig5 = g_signal_connect (G_OBJECT (subbin), "error",
-          G_CALLBACK (thread_error), error);
-
       /* either when the queues are filled or when the decoder element
        * has no more dynamic streams, the cond is unlocked. We can remove
        * the signal handlers then
        */
-      g_mutex_lock (play_base_bin->group_lock);
-      if (gst_element_set_state (subbin, GST_STATE_PLAYING) ==
-          GST_STATE_CHANGE_SUCCESS) {
-        GST_DEBUG ("waiting for first group...");
-        sig6 = g_signal_connect (G_OBJECT (subbin),
-            "state-changed", G_CALLBACK (state_change), play_base_bin);
-        g_cond_wait (play_base_bin->group_cond, play_base_bin->group_lock);
-        GST_DEBUG ("group done !");
-      } else {
-        GST_DEBUG ("state change failed, subtitle cannot be loaded");
-        sig6 = 0;
-      }
-      g_mutex_unlock (play_base_bin->group_lock);
-
-      if (sig6 != 0)
-        g_signal_handler_disconnect (G_OBJECT (subbin), sig6);
-
-      g_signal_handler_disconnect (G_OBJECT (subbin), sig5);
-      g_signal_handler_disconnect (G_OBJECT (db), sig4);
 
       gst_element_set_state (subbin, GST_STATE_PAUSED);
+
+      GROUP_LOCK (play_base_bin);
+      GST_DEBUG ("waiting for first group...");
+      GROUP_WAIT (play_base_bin);
+      GST_DEBUG ("group done !");
+      GROUP_UNLOCK (play_base_bin);
 
       if (!play_base_bin->building_group ||
           play_base_bin->building_group->type[GST_STREAM_TYPE_TEXT - 1].npads ==
           0) {
-        if (*error) {
-          g_error_free (*error);
-          *error = NULL;
-        }
 
         GST_DEBUG ("No subtitle found - ignoring");
-        gst_object_unref (play_base_bin->subtitle);
+        gst_element_set_state (subbin, GST_STATE_NULL);
+        gst_object_unref (GST_OBJECT (play_base_bin->subtitle));
         play_base_bin->subtitle = NULL;
       } else {
         GST_DEBUG ("Subtitle set-up successful");
       }
     }
-#endif
   }
 
   /* now see if the source element emits raw audio/video all by itself,
@@ -1360,6 +1341,10 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
       G_CALLBACK (no_more_pads), play_base_bin);
   g_signal_connect (G_OBJECT (play_base_bin->decoder),
       "unknown-type", G_CALLBACK (unknown_type), play_base_bin);
+
+  if (play_base_bin->subtitle) {
+    gst_bin_add (GST_BIN (play_base_bin), play_base_bin->subtitle);
+  }
 
   play_base_bin->need_rebuild = FALSE;
 
@@ -1618,7 +1603,7 @@ set_active_source (GstPlayBaseBin * play_base_bin,
     GST_LOG ("Muting group type: %d", type);
     g_object_set (sel, "active-pad", "", NULL);
   } else {
-    GST_LOG ("Unuting group type: %d", type);
+    GST_LOG ("Unmuting group type: %d", type);
   }
   mute_group_type (group, type, !have_active);
 }
