@@ -16,6 +16,24 @@
 2006-01-29  Sebastien Moutte  <sebastien@moutte.net>
 	* win32/vs8:
 		add vs8 project files created by Sergey Scobich
+
+2006-01-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstutils.c: (gst_element_unlink_pads):
+	Don't leak pad references.
+
+	* tests/check/elements/fakesink.c: (GST_START_TEST):
+	* tests/check/generic/sinks.c: (GST_START_TEST):
+	* tests/check/generic/states.c: (GST_START_TEST):
+	* tests/check/gst/gstbin.c: (GST_START_TEST):
+	* tests/check/gst/gstcaps.c: (GST_START_TEST):
+	* tests/check/gst/gstelement.c: (GST_START_TEST):
+	* tests/check/gst/gstghostpad.c: (GST_START_TEST):
+	* tests/check/gst/gstiterator.c: (GST_START_TEST):
+	* tests/check/gst/gstvalue.c: (GST_START_TEST):
+	Fix a bunch of leaks. Make generic/sinks.c
+	use a bit less cpu by slowing the buffer rate
+	between fakesrc and fakesink.
 	
 2006-01-27  Stefan Kost  <ensonic@users.sf.net>
 	* gst/gstcaps.c:
