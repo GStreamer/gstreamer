@@ -1,3 +1,21 @@
+2006-01-30  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstaudiosink.c:
+	(gst_audioringbuffer_class_init), (gst_audioringbuffer_release),
+	(gst_audioringbuffer_pause):
+	Implement pause that does not wait for completion.
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render), (gst_base_audio_sink_change_state):
+	Don't drop buffers when going to PAUSED but perform preroll on
+	remaining samples now that core base class supports this.
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_release),
+	(gst_ring_buffer_pause_unlocked), (gst_ring_buffer_stop),
+	(gst_ring_buffer_commit):
+	Pause should not signal waiters.
+	Implement return value of _commit correctly.
+
 2006-01-30  Andy Wingo  <wingo@pobox.com>
 
 	* tests/check/Makefile.am (check_vorbis): Add pipelines/vorbisenc.

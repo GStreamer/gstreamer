@@ -77,6 +77,7 @@ static gboolean gst_audioringbuffer_acquire (GstRingBuffer * buf,
     GstRingBufferSpec * spec);
 static gboolean gst_audioringbuffer_release (GstRingBuffer * buf);
 static gboolean gst_audioringbuffer_start (GstRingBuffer * buf);
+static gboolean gst_audioringbuffer_pause (GstRingBuffer * buf);
 static gboolean gst_audioringbuffer_stop (GstRingBuffer * buf);
 static guint gst_audioringbuffer_delay (GstRingBuffer * buf);
 
@@ -132,7 +133,7 @@ gst_audioringbuffer_class_init (GstAudioRingBufferClass * klass)
   gstringbuffer_class->release =
       GST_DEBUG_FUNCPTR (gst_audioringbuffer_release);
   gstringbuffer_class->start = GST_DEBUG_FUNCPTR (gst_audioringbuffer_start);
-  gstringbuffer_class->pause = GST_DEBUG_FUNCPTR (gst_audioringbuffer_stop);
+  gstringbuffer_class->pause = GST_DEBUG_FUNCPTR (gst_audioringbuffer_pause);
   gstringbuffer_class->resume = GST_DEBUG_FUNCPTR (gst_audioringbuffer_start);
   gstringbuffer_class->stop = GST_DEBUG_FUNCPTR (gst_audioringbuffer_stop);
 
@@ -348,6 +349,7 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
   abuf = GST_AUDIORING_BUFFER (buf);
 
   abuf->running = FALSE;
+  GST_DEBUG ("signal wait");
   GST_AUDIORING_BUFFER_SIGNAL (buf);
   GST_OBJECT_UNLOCK (buf);
 
@@ -384,6 +386,25 @@ gst_audioringbuffer_start (GstRingBuffer * buf)
 
   GST_DEBUG ("start, sending signal");
   GST_AUDIORING_BUFFER_SIGNAL (buf);
+
+  return TRUE;
+}
+
+static gboolean
+gst_audioringbuffer_pause (GstRingBuffer * buf)
+{
+  GstAudioSink *sink;
+  GstAudioSinkClass *csink;
+
+  sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
+  csink = GST_AUDIO_SINK_GET_CLASS (sink);
+
+  /* unblock any pending writes to the audio device */
+  if (csink->reset) {
+    GST_DEBUG ("reset...");
+    csink->reset (sink);
+    GST_DEBUG ("reset done");
+  }
 
   return TRUE;
 }

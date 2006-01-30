@@ -406,7 +406,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   gint64 diff, ctime, cstop;
   guint8 *data;
   guint size;
-  guint samples;
+  guint samples, written;
   gint bps;
   gdouble crate = 1.0;
   GstClockTime crate_num;
@@ -458,6 +458,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * arriving before the segment.start or after segment.stop are to be 
    * thrown away. All samples should also be clipped to the segment 
    * boundaries */
+  /* let's calc stop based on the number of samples in the buffer instead
+   * of trusting the DURATION */
   stop =
       time + gst_util_uint64_scale_int (samples, GST_SECOND,
       ringbuf->spec.rate);
@@ -536,7 +538,27 @@ no_sync:
   /* the next sample should be current sample and its length */
   sink->next_sample = render_offset + samples;
 
-  samples = gst_ring_buffer_commit (ringbuf, render_offset, data, samples);
+  do {
+    written = gst_ring_buffer_commit (ringbuf, render_offset, data, samples);
+    GST_DEBUG_OBJECT (sink, "wrote %u of %u", written, samples);
+    /* if we wrote all, we're done */
+    if (written == samples)
+      break;
+
+    /* else something interrupted us */
+    GST_DEBUG_OBJECT (sink, "wait for preroll...");
+    bsink->have_preroll = TRUE;
+    GST_PAD_PREROLL_WAIT (bsink->sinkpad);
+    bsink->have_preroll = FALSE;
+    GST_DEBUG_OBJECT (sink, "preroll done");
+    if (G_UNLIKELY (bsink->flushing))
+      goto stopping;
+    GST_DEBUG_OBJECT (sink, "continue after preroll");
+
+    render_offset += written;
+    samples -= written;
+    data += written * bps;
+  } while (TRUE);
 
   if (GST_CLOCK_TIME_IS_VALID (stop) && stop >= bsink->segment.stop) {
     GST_DEBUG_OBJECT (sink,
@@ -568,6 +590,11 @@ wrong_size:
         ("sink received buffer of wrong size."),
         ("sink received buffer of wrong size."));
     return GST_FLOW_ERROR;
+  }
+stopping:
+  {
+    GST_DEBUG_OBJECT (sink, "ringbuffer is stopping");
+    return GST_FLOW_WRONG_STATE;
   }
 }
 
@@ -644,6 +671,9 @@ gst_base_audio_sink_change_state (GstElement * element,
       GST_OBJECT_UNLOCK (sink);
       break;
     }
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      gst_ring_buffer_pause (sink->ringbuffer);
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
       break;
@@ -655,7 +685,6 @@ gst_base_audio_sink_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      gst_ring_buffer_pause (sink->ringbuffer);
       /* slop slaving ourselves to the master, if any */
       gst_clock_set_master (sink->provided_clock, NULL);
       break;

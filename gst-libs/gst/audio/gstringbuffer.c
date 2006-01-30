@@ -654,6 +654,7 @@ gst_ring_buffer_release (GstRingBuffer * buf)
     res = rclass->release (buf);
 
   /* signal any waiters */
+  GST_DEBUG_OBJECT (buf, "signal waiter");
   GST_RING_BUFFER_SIGNAL (buf);
 
   if (!res)
@@ -820,9 +821,6 @@ gst_ring_buffer_pause_unlocked (GstRingBuffer * buf)
     goto done;
   }
 
-  /* signal any waiters */
-  GST_RING_BUFFER_SIGNAL (buf);
-
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (rclass->pause)
     res = rclass->pause (buf);
@@ -906,6 +904,7 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
   }
 
   /* signal any waiters */
+  GST_DEBUG_OBJECT (buf, "signal waiter");
   GST_RING_BUFFER_SIGNAL (buf);
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
@@ -1127,6 +1126,7 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
   gint segdone;
   gint segsize, segtotal, bps, sps;
   guint8 *dest;
+  guint to_write;
 
   g_return_val_if_fail (buf != NULL, -1);
   g_return_val_if_fail (buf->data != NULL, -1);
@@ -1138,8 +1138,9 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
   bps = buf->spec.bytes_per_sample;
   sps = buf->samples_per_seg;
 
+  to_write = len;
   /* write out all samples */
-  while (len > 0) {
+  while (to_write > 0) {
     gint sampleslen;
     gint writeseg, sampleoff;
 
@@ -1158,14 +1159,14 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
       diff = writeseg - segdone;
 
       GST_DEBUG
-          ("pointer at %d, sample %llu, write to %d-%d, len %d, diff %d, segtotal %d, segsize %d",
-          segdone, sample, writeseg, sampleoff, len, diff, segtotal, sps);
+          ("pointer at %d, sample %llu, write to %d-%d, to_write %d, diff %d, segtotal %d, segsize %d",
+          segdone, sample, writeseg, sampleoff, to_write, diff, segtotal, sps);
 
       /* segment too far ahead, we need to drop */
       if (diff < 0) {
         /* we need to drop one segment at a time, pretend we wrote a
          * segment. */
-        sampleslen = MIN (sps, len);
+        sampleslen = MIN (sps, to_write);
         goto next;
       }
 
@@ -1181,27 +1182,27 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
 
     /* we can write now */
     writeseg = writeseg % segtotal;
-    sampleslen = MIN (sps - sampleoff, len);
+    sampleslen = MIN (sps - sampleoff, to_write);
 
-    GST_DEBUG_OBJECT (buf, "write @%p seg %d, off %d, len %d",
+    GST_DEBUG_OBJECT (buf, "write @%p seg %d, off %d, sampleslen %d",
         dest + writeseg * segsize, writeseg, sampleoff, sampleslen);
 
     memcpy (dest + (writeseg * segsize) + (sampleoff * bps), data,
         (sampleslen * bps));
 
   next:
-    len -= sampleslen;
+    to_write -= sampleslen;
     sample += sampleslen;
     data += sampleslen * bps;
   }
 
-  return len;
+  return len - to_write;
 
   /* ERRORS */
 not_started:
   {
     GST_DEBUG_OBJECT (buf, "stopped processing");
-    return -1;
+    return len - to_write;
   }
 }
 
