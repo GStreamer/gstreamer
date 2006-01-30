@@ -1,5 +1,28 @@
 2006-01-30  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),
+	(gst_base_sink_preroll_queue_empty), (gst_base_sink_commit_state),
+	(gst_base_sink_handle_object), (gst_base_sink_event),
+	(gst_base_sink_is_prerolled), (gst_base_sink_wait),
+	(gst_base_sink_do_sync), (gst_base_sink_handle_event),
+	(gst_base_sink_handle_buffer), (gst_base_sink_set_flushing),
+	(gst_base_sink_deactivate), (gst_base_sink_activate),
+	(gst_base_sink_activate_pull), (gst_base_sink_get_position),
+	(gst_base_sink_query), (gst_base_sink_change_state):
+	Basesink cleanups, remove some old code.
+	Handle the case where a subclass can preroll in the render
+	method (mostly audiosinks).
+	Handle more events.
+	Remove some locks around variables that are now protected
+	with the PREROLL_LOCK (clock_id, flushing, ..).
+	Optimize position query some more, do correct locking.
+	Remove old code to push queue in state change, this is not
+	needed anymore since preroll blocks on all prerollable items 
+	now.
+	Almost implemented as described in design doc.
+
+2006-01-30  Wim Taymans  <wim@fluendo.com>
+
 	* tests/check/gst/gstbin.c: (GST_START_TEST):
 	Wait for refcount to settle down before checking.
 
