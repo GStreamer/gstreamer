@@ -1,5 +1,10 @@
 2006-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* docs/gst/gstreamer-sections.txt:
+	  Fix build by adding missing symbols.
+
+2006-01-29  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* gst/elements/gstfdsrc.c: (gst_fdsrc_init),
 	(gst_fdsrc_get_query_types), (gst_fdsrc_get_formats),
 	(gst_fdsrc_srcpad_query):

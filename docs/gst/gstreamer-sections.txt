@@ -23,7 +23,7 @@ gst_has_threads
 gst_main
 gst_main_quit
 <SUBSECTION Private>
-#GstPoptOption
+GstPoptOption
 </SECTION>
 
 <SECTION>
@@ -1633,6 +1633,7 @@ GST_TAG_TRACK_PEAK
 GST_TAG_ALBUM_GAIN
 GST_TAG_ALBUM_PEAK
 GST_TAG_LANGUAGE_CODE
+GST_TAG_IMAGE
 <SUBSECTION Standard>
 GST_TAG_LIST
 GST_IS_TAG_LIST
