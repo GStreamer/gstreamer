@@ -1,5 +1,10 @@
 2006-01-30  Andy Wingo  <wingo@pobox.com>
 
+	* tests/check/pipelines/vorbisenc.c (TIMESTAMP_OFFSET): 
+	* tests/check/pipelines/theoraenc.c (TIMESTAMP_OFFSET): Totally
+	remove the UINT64_CONSTANT macro, doesn't appear to be needed or
+	available.
+
 	* ext/theora/gsttheoraenc.h:
 	* ext/theora/theoraenc.c: Same changes as were done to vorbisenc,
 	although theoraenc was timestamping correctly. Added handling of
