@@ -1,3 +1,8 @@
+2006-01-30  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/vs8:
+		add vs8 project files created by Sergey Scobich
+	
 2006-01-30  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ogg/gstoggmux.c (gst_ogg_mux_dequeue_page): Compare

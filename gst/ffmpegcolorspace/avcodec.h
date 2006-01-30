@@ -11,7 +11,11 @@
 extern "C" {
 #endif
 
+#ifndef WIN32
 #include "_stdint.h"
+#else
+#include "stdint.h"
+#endif
 
 #include <sys/types.h> /* size_t */
 
