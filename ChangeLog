@@ -1,5 +1,10 @@
 2006-01-30  Wim Taymans  <wim@fluendo.com>
 
+	* tests/check/gst/gstbin.c: (GST_START_TEST):
+	Wait for refcount to settle down before checking.
+
+2006-01-30  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-element-sink.txt:
 	Pseudo code overview of desired sink behaviour regarding
 	preroll.

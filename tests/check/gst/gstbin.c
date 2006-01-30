@@ -568,6 +568,9 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   pop_messages (bus, 4);        /* pop playing => paused messages off the bus */
   pop_messages (bus, 4);        /* pop paused => ready messages off the bus */
 
+  while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 1)
+    THREAD_SWITCH ();
+
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
