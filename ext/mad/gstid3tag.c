@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2003-2004 Benjamin Otte <otte@gnome.org>
+ *               2006 Stefan Kost <ensonic at users dot sf dot net>
  *
  * gstid3tag.c: plugin for reading / modifying id3 tags
  *
@@ -54,6 +55,17 @@ typedef enum
 }
 GstID3TagState;
 
+static const char *state_names[] = {
+  "READING_V2_TAG",
+  "SEEKING_TO_V1_TAG",
+  "READING_V1_TAG",
+  "SEEKING_TO_NORMAL",
+  "NORMAL_START2",
+  "NORMAL"
+};
+
+#define GST_ID3_TAG_GET_STATE_NAME(state) state_names[state]
+
 typedef enum
 {
   GST_ID3_TAG_PARSE_BASE = 0,
@@ -62,6 +74,16 @@ typedef enum
   GST_ID3_TAG_PARSE_ANY = 3
 }
 GstID3ParseMode;
+
+static const char *mode_names[] = {
+  "BASE",
+  "DEMUX",
+  "MUX",
+  "ANY"
+};
+
+#define GST_ID3_TAG_GET_MODE_NAME(mode) mode_names[mode]
+
 
 #define IS_DEMUXER(tag) ((tag)->parse_mode & GST_ID3_TAG_PARSE_DEMUX)
 #define IS_MUXER(tag) ((tag)->parse_mode & GST_ID3_TAG_PARSE_MUX)
@@ -222,7 +244,7 @@ GstElementDetails gst_id3_tag_details[3] = {
       "Codec/Demuxer/Audio",
       "Extract ID3 tagging information",
       "Benjamin Otte <otte@gnome.org>"),
-  GST_ELEMENT_DETAILS ("id3 muxer",
+  GST_ELEMENT_DETAILS ("id3 tag muxer",
       "Codec/Muxer/Audio",
       "Add ID3 tagging information",
       "Benjamin Otte <otte@gnome.org>"),
@@ -737,6 +759,8 @@ tag_list_to_id3_tag_foreach (const GstTagList * list, const gchar * tag_name,
   if (values == 0)
     return;
 
+  GST_DEBUG ("mapping tags to id3 for %s", tag_name);
+
   frame = id3_frame_new (id);
   if (id3_tag_attachframe (tag, frame) != 0) {
     GST_WARNING ("could not attach frame (%s) to id3 tag", id);
@@ -752,12 +776,10 @@ tag_list_to_id3_tag_foreach (const GstTagList * list, const gchar * tag_name,
 
     if (strcmp (tag_name, GST_TAG_DATE) == 0) {
       gchar *str;
-      guint u;
       GDate *d;
 
-      if (!gst_tag_list_get_uint_index (list, tag_name, values, &u))
+      if (!gst_tag_list_get_date_index (list, tag_name, values, &d))
         g_assert_not_reached ();
-      d = g_date_new_julian (u);
       str = g_strdup_printf ("%u", (guint) (g_date_get_year (d)));
       put = g_utf8_to_ucs4_fast (str, -1, NULL);
       g_date_free (d);
@@ -821,6 +843,12 @@ static GstTagList *
 gst_id3_tag_get_tag_to_render (GstID3Tag * tag)
 {
   GstTagList *ret = NULL;
+  const GstTagList *taglist =
+      gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag));
+
+  GST_DEBUG
+      ("preparing taglist to render: event_tags=%p, parsed_tags=%p, taglist=%p",
+      tag->event_tags, tag->parsed_tags, taglist);
 
   if (tag->event_tags)
     ret = gst_tag_list_copy (tag->event_tags);
@@ -830,13 +858,13 @@ gst_id3_tag_get_tag_to_render (GstID3Tag * tag)
   } else if (tag->parsed_tags) {
     ret = gst_tag_list_copy (tag->parsed_tags);
   }
-  if (ret && gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag))) {
-    gst_tag_list_insert (ret,
-        gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag)),
-        gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (tag)));
-  } else if (gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag))) {
-    ret =
-        gst_tag_list_copy (gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag)));
+  if (taglist) {
+    if (ret) {
+      gst_tag_list_insert (ret, taglist,
+          gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (tag)));
+    } else {
+      ret = gst_tag_list_copy (taglist);
+    }
   }
   return ret;
 }
@@ -848,7 +876,8 @@ gst_id3_tag_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-      GST_DEBUG_OBJECT (tag, "Have new segment event in mode %d", tag->state);
+      GST_DEBUG_OBJECT (tag, "Have new segment event in mode %s",
+          GST_ID3_TAG_GET_STATE_NAME (tag->state));
       switch (tag->state) {
         case GST_ID3_TAG_STATE_READING_V2_TAG:{
           GstFormat format = GST_FORMAT_UNDEFINED;
@@ -929,7 +958,8 @@ gst_id3_tag_sink_event (GstPad * pad, GstEvent * event)
     {
       GstTagList *list;
 
-      GST_DEBUG_OBJECT (tag, "Have tags event in mode %d", tag->state);
+      GST_DEBUG_OBJECT (tag, "Have tags event in mode %s",
+          GST_ID3_TAG_GET_STATE_NAME (tag->state));
       gst_event_parse_tag (event, &list);
 
       if (tag->event_tags) {
@@ -941,7 +971,8 @@ gst_id3_tag_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:
-      GST_DEBUG_OBJECT (tag, "Have EOS in mode %d", tag->state);
+      GST_DEBUG_OBJECT (tag, "Have EOS in mode %s",
+          GST_ID3_TAG_GET_STATE_NAME (tag->state));
       if (tag->v1tag_render && IS_MUXER (tag)) {
         GstTagList *merged;
         struct id3_tag *id3;
@@ -1076,31 +1107,33 @@ gst_id3_tag_src_link (GstPad * pad, GstPad * peer)
 {
   GstID3Tag *tag;
 
-  //const gchar *mimetype;
+  const gchar *mimetype;
 
   tag = GST_ID3_TAG (gst_pad_get_parent (pad));
 
-#if 0
+/*#if 0*/
   if (!tag->found_caps && CAN_BE_DEMUXER (tag))
-    return GST_PAD_LINK_DELAYED;
+    return GST_PAD_LINK_REFUSED;
+  /*return GST_PAD_LINK_DELAYED; */
   if (!CAN_BE_MUXER (tag) || !CAN_BE_DEMUXER (tag)) {
     tag->parse_mode = GST_ID3_TAG_GET_CLASS (tag)->type;
     return GST_PAD_LINK_OK;
   }
 
-  mimetype = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  mimetype =
+      gst_structure_get_name (gst_caps_get_structure (tag->found_caps, 0));
 
   if (strcmp (mimetype, "application/x-id3") == 0) {
     tag->parse_mode = GST_ID3_TAG_PARSE_MUX;
-    GST_LOG_OBJECT (tag, "normal operation, using application/x-id3 output");
+    GST_LOG_OBJECT (tag, "mux operation, using application/x-id3 output");
   } else if (strcmp (mimetype, "application/x-gst-tags") == 0) {
     tag->parse_mode = GST_ID3_TAG_PARSE_ANY;
     GST_LOG_OBJECT (tag, "fast operation, just outputting tags");
   } else {
     tag->parse_mode = GST_ID3_TAG_PARSE_DEMUX;
-    GST_LOG_OBJECT (tag, "parsing operation, extracting tags");
+    GST_LOG_OBJECT (tag, "demux operation, extracting tags");
   }
-#endif
+/*#endif*/
   if (GST_PAD_LINKFUNC (peer))
     return GST_PAD_LINKFUNC (peer) (peer, pad);
   else
@@ -1112,6 +1145,8 @@ gst_id3_tag_send_tag_event (GstID3Tag * tag)
   /* FIXME: what's the correct merge mode? Docs need to tell... */
   GstTagList *merged = gst_tag_list_merge (tag->event_tags, tag->parsed_tags,
       GST_TAG_MERGE_KEEP);
+
+  GST_DEBUG ("Sending tag event");
 
   if (tag->parsed_tags)
     gst_element_post_message (GST_ELEMENT (tag),
@@ -1132,7 +1167,9 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *temp;
 
   tag = GST_ID3_TAG (gst_pad_get_parent (pad));
-  GST_LOG_OBJECT (tag, "Chain, state = %d", tag->state);
+  GST_LOG_OBJECT (tag, "Chain, mode = %s, state = %s",
+      GST_ID3_TAG_GET_MODE_NAME (tag->parse_mode),
+      GST_ID3_TAG_GET_STATE_NAME (tag->state));
 
   if (tag->buffer) {
     buffer = gst_buffer_join (tag->buffer, buffer);
@@ -1302,7 +1339,7 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
         }
       }
 
-      g_print ("Found type with size %u\n", GST_BUFFER_SIZE (buffer));
+      GST_DEBUG ("Found type with size %u", GST_BUFFER_SIZE (buffer));
 
       /* If we didn't get a segment event to pass on, someone
        * downstream is going to complain */
@@ -1319,6 +1356,7 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
         GstBuffer *tag_buffer;
 
         /* render tag */
+        GST_LOG_OBJECT (tag, "rendering v2 tag");
         tag->v2tag_size_new = 0;
         merged = gst_id3_tag_get_tag_to_render (tag);
         if (merged) {
@@ -1336,7 +1374,12 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
             id3_tag_delete (id3);
           }
           gst_tag_list_free (merged);
+        } else {
+          GST_INFO ("no tags to render");
         }
+      } else {
+        GST_INFO ("tag-mode=%s, v2tag_render=%d",
+            GST_ID3_TAG_GET_MODE_NAME (tag->parse_mode), tag->v2tag_render);
       }
 
       gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_NORMAL);

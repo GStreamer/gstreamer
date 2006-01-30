@@ -1,3 +1,13 @@
+2006-01-31  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/mad/gstid3tag.c: (tag_list_to_id3_tag_foreach),
+	(gst_id3_tag_get_tag_to_render), (gst_id3_tag_sink_event),
+	(gst_id3_tag_src_link), (gst_id3_tag_send_tag_event),
+	(gst_id3_tag_chain):
+	  fixing Gdate handling
+	  enabling mux/demux mode switching
+	  adding better debug output
+
 2006-01-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_send_buffer):
