@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * unit test for vorbisenc
+ * unit test for theoraenc
  *
  * Copyright (C) 2006 Andy Wingo <wingo at pobox.com>
  *
@@ -23,6 +23,7 @@
 #include <gst/check/gstcheck.h>
 
 #define TIMESTAMP_OFFSET G_GUINT64_CONSTANT(3249870963)
+#define FRAMERATE 10
 
 static GCond *cond = NULL;
 static GMutex *lock = NULL;
@@ -137,13 +138,15 @@ check_buffer_granulepos (GstBuffer * buffer, GstClockTime granulepos)
    timestamp to granulepos due to the downward-rounding characteristics of
    gst_util_uint64_scale, so you check if granulepos is equal to the number, or
    the number plus one. */
+/* should be from_endtime, but theora's granulepos mapping is "special" */
 static void
-check_buffer_granulepos_from_endtime (GstBuffer * buffer, GstClockTime endtime)
+check_buffer_granulepos_from_starttime (GstBuffer * buffer,
+    GstClockTime starttime)
 {
   GstClockTime granulepos, expected;
 
   granulepos = GST_BUFFER_OFFSET_END (buffer);
-  expected = gst_util_uint64_scale (endtime, 44100, GST_SECOND);
+  expected = gst_util_uint64_scale (starttime, FRAMERATE, GST_SECOND);
 
   fail_unless (granulepos == expected || granulepos == expected + 1,
       "expected granulepos %" G_GUINT64_FORMAT
@@ -161,9 +164,9 @@ GST_START_TEST (test_granulepos_offset)
   GError *error = NULL;
   GstClockTime timestamp;
 
-  pipe_str = g_strdup_printf ("audiotestsrc timestamp-offset=%" G_GUINT64_FORMAT
-      " ! audio/x-raw-int,rate=44100"
-      " ! audioconvert ! vorbisenc ! fakesink", TIMESTAMP_OFFSET);
+  pipe_str = g_strdup_printf ("videotestsrc timestamp-offset=%" G_GUINT64_FORMAT
+      " ! video/x-raw-yuv,format=(fourcc)I420,framerate=10/1"
+      " ! theoraenc ! fakesink", TIMESTAMP_OFFSET);
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -207,15 +210,14 @@ GST_START_TEST (test_granulepos_offset)
     /* first buffer should have timestamp of TIMESTAMP_OFFSET, granulepos to
      * match the timestamp of the end of the last sample in the output buffer.
      * Note that one cannot go timestamp->granulepos->timestamp and get the same
-     * value due to loss of precision with granulepos. vorbisenc does take care
+     * value due to loss of precision with granulepos. theoraenc does take care
      * to timestamp correctly based on the offset of the input data however, so
      * it does do sub-granulepos timestamping. */
     buffer = get_buffer (bin, pad);
     last_granulepos = GST_BUFFER_OFFSET_END (buffer);
     check_buffer_timestamp (buffer, TIMESTAMP_OFFSET);
     /* don't really have a good way of checking duration... */
-    check_buffer_granulepos_from_endtime (buffer,
-        TIMESTAMP_OFFSET + GST_BUFFER_DURATION (buffer));
+    check_buffer_granulepos_from_starttime (buffer, TIMESTAMP_OFFSET);
 
     next_timestamp = TIMESTAMP_OFFSET + GST_BUFFER_DURATION (buffer);
 
@@ -226,10 +228,9 @@ GST_START_TEST (test_granulepos_offset)
     check_buffer_timestamp (buffer, next_timestamp);
     check_buffer_duration (buffer,
         gst_util_uint64_scale (GST_BUFFER_OFFSET_END (buffer), GST_SECOND,
-            44100)
-        - gst_util_uint64_scale (last_granulepos, GST_SECOND, 44100));
-    check_buffer_granulepos_from_endtime (buffer,
-        next_timestamp + GST_BUFFER_DURATION (buffer));
+            FRAMERATE)
+        - gst_util_uint64_scale (last_granulepos, GST_SECOND, FRAMERATE));
+    check_buffer_granulepos_from_starttime (buffer, next_timestamp);
 
     gst_buffer_unref (buffer);
   }
@@ -242,7 +243,7 @@ GST_START_TEST (test_granulepos_offset)
 
 GST_END_TEST;
 
-GST_START_TEST (test_timestamps)
+GST_START_TEST (test_continuity)
 {
   GstElement *bin;
   GstPad *pad;
@@ -251,8 +252,9 @@ GST_START_TEST (test_timestamps)
   GError *error = NULL;
   GstClockTime timestamp;
 
-  pipe_str = g_strdup_printf ("audiotestsrc"
-      " ! audio/x-raw-int,rate=44100" " ! audioconvert ! vorbisenc ! fakesink");
+  pipe_str = g_strdup_printf ("videotestsrc"
+      " ! video/x-raw-yuv,format=(fourcc)I420,framerate=10/1"
+      " ! theoraenc ! fakesink");
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -271,7 +273,7 @@ GST_START_TEST (test_timestamps)
 
   start_pipeline (bin, pad);
 
-  /* check header packets */
+  /* header packets should have timestamp == NONE, granulepos 0 */
   buffer = get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
@@ -293,12 +295,18 @@ GST_START_TEST (test_timestamps)
   {
     GstClockTime next_timestamp, last_granulepos;
 
-    /* first buffer has timestamp 0 */
+    /* first buffer should have timestamp of TIMESTAMP_OFFSET, granulepos to
+     * match the timestamp of the end of the last sample in the output buffer.
+     * Note that one cannot go timestamp->granulepos->timestamp and get the same
+     * value due to loss of precision with granulepos. theoraenc does take care
+     * to timestamp correctly based on the offset of the input data however, so
+     * it does do sub-granulepos timestamping. */
     buffer = get_buffer (bin, pad);
     last_granulepos = GST_BUFFER_OFFSET_END (buffer);
     check_buffer_timestamp (buffer, 0);
-    /* don't really have a good way of checking duration... */
-    check_buffer_granulepos_from_endtime (buffer, GST_BUFFER_DURATION (buffer));
+    check_buffer_duration (buffer, GST_SECOND / 10);    /* plain division because I
+                                                           know the answer is exact */
+    check_buffer_granulepos (buffer, 0);
 
     next_timestamp = GST_BUFFER_DURATION (buffer);
 
@@ -307,12 +315,8 @@ GST_START_TEST (test_timestamps)
     /* check continuity with the next buffer */
     buffer = get_buffer (bin, pad);
     check_buffer_timestamp (buffer, next_timestamp);
-    check_buffer_duration (buffer,
-        gst_util_uint64_scale (GST_BUFFER_OFFSET_END (buffer), GST_SECOND,
-            44100)
-        - gst_util_uint64_scale (last_granulepos, GST_SECOND, 44100));
-    check_buffer_granulepos_from_endtime (buffer,
-        next_timestamp + GST_BUFFER_DURATION (buffer));
+    check_buffer_duration (buffer, GST_SECOND / 10);
+    check_buffer_granulepos (buffer, 1);
 
     gst_buffer_unref (buffer);
   }
@@ -326,14 +330,14 @@ GST_START_TEST (test_timestamps)
 GST_END_TEST;
 
 Suite *
-vorbisenc_suite (void)
+theoraenc_suite (void)
 {
-  Suite *s = suite_create ("vorbisenc");
+  Suite *s = suite_create ("theoraenc");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_granulepos_offset);
-  tcase_add_test (tc_chain, test_timestamps);
+  tcase_add_test (tc_chain, test_continuity);
 
   return s;
 }
@@ -343,7 +347,7 @@ main (int argc, char **argv)
 {
   int nf;
 
-  Suite *s = vorbisenc_suite ();
+  Suite *s = theoraenc_suite ();
   SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);

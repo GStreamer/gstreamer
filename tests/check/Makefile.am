@@ -27,7 +27,14 @@ else
 check_vorbis =
 endif
 
+if USE_THEORA
+check_theora = pipelines/theoraenc
+else
+check_theora =
+endif
+
 check_PROGRAMS = $(check_vorbis) \
+	$(check_theora) \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/audiotestsrc \

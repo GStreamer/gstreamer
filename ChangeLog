@@ -1,3 +1,16 @@
+2006-01-30  Andy Wingo  <wingo@pobox.com>
+
+	* ext/theora/gsttheoraenc.h:
+	* ext/theora/theoraenc.c: Same changes as were done to vorbisenc,
+	although theoraenc was timestamping correctly. Added handling of
+	streams that start with nonzero timestamps.
+
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/theoraenc.c: New file, basically does same
+	tests as vorbisenc.
+
+	* tests/check/pipelines/vorbisenc.c: I claim these bugs.
+
 2006-01-30  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstaudiosink.c:

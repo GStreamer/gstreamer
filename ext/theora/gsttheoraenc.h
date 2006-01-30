@@ -77,11 +77,13 @@ struct _GstTheoraEnc
   gint info_width, info_height;
   gint width, height;
   gint offset_x, offset_y;
-  gdouble fps;
+  gint fps_n, fps_d;
+  GstClockTime next_ts;
 
   guint packetno;
   guint64 bytes_out;
-  guint64 initial_delay;
+  guint64 granulepos_offset;
+  guint64 timestamp_offset;
 };
 
 struct _GstTheoraEncClass

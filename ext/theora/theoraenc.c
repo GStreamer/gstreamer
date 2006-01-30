@@ -271,8 +271,8 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   enc->info.offset_x = enc->offset_x;
   enc->info.offset_y = enc->offset_y;
 
-  enc->info.fps_numerator = fps_n;
-  enc->info.fps_denominator = fps_d;
+  enc->info.fps_numerator = enc->fps_n = fps_n;
+  enc->info.fps_denominator = enc->fps_d = fps_d;
   if (par) {
     enc->info.aspect_numerator = gst_value_get_fraction_numerator (par);
     enc->info.aspect_denominator = gst_value_get_fraction_denominator (par);
@@ -318,8 +318,8 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
 
   memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (buf) = enc->bytes_out;
-  GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_OFFSET_END (buf) = packet->granulepos + enc->granulepos_offset;
+  GST_BUFFER_TIMESTAMP (buf) = timestamp + enc->timestamp_offset;
   GST_BUFFER_DURATION (buf) = duration;
 
   /* the second most significant bit of the first data byte is cleared
@@ -417,10 +417,12 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       /* push last packet with eos flag */
       while (theora_encode_packetout (&enc->state, 1, &op)) {
-        GstClockTime out_time =
-            theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
+        /* See comment in the chain function */
+        GstClockTime next_time =
+            theora_granule_time (&enc->state, op.granulepos + 1) * GST_SECOND;
 
-        theora_push_packet (enc, &op, out_time, GST_SECOND / enc->fps);
+        theora_push_packet (enc, &op, enc->next_ts, next_time - enc->next_ts);
+        enc->next_ts = next_time;
       }
       res = gst_pad_push_event (enc->srcpad, event);
       break;
@@ -447,6 +449,9 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     GstCaps *caps;
     GstBuffer *buf1, *buf2, *buf3;
 
+    enc->granulepos_offset = 0;
+    enc->timestamp_offset = 0;
+
     /* Theora streams begin with three headers; the initial header (with
        most of the codec setup parameters) which is mandated by the Ogg
        bitstream spec.  The second header holds any comment fields.  The
@@ -456,7 +461,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
     /* first packet will get its own page automatically */
     theora_encode_header (&enc->state, &op);
-    ret = theora_buffer_from_packet (enc, &op, 0, 0, &buf1);
+    ret = theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
+        GST_CLOCK_TIME_NONE, &buf1);
     if (ret != GST_FLOW_OK) {
       goto header_buffer_alloc;
     }
@@ -467,14 +473,16 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
      * portably work around it. Leaks ~50 bytes per encoder instance, so not a
      * huge problem. */
     theora_encode_comment (&enc->comment, &op);
-    ret = theora_buffer_from_packet (enc, &op, 0, 0, &buf2);
+    ret = theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
+        GST_CLOCK_TIME_NONE, &buf2);
     if (ret != GST_FLOW_OK) {
       gst_buffer_unref (buf1);
       goto header_buffer_alloc;
     }
 
     theora_encode_tables (&enc->state, &op);
-    ret = theora_buffer_from_packet (enc, &op, 0, 0, &buf3);
+    ret = theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
+        GST_CLOCK_TIME_NONE, &buf3);
     if (ret != GST_FLOW_OK) {
       gst_buffer_unref (buf1);
       gst_buffer_unref (buf2);
@@ -504,6 +512,12 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     if ((ret = theora_push_buffer (enc, buf3)) != GST_FLOW_OK) {
       goto header_push;
     }
+
+    enc->granulepos_offset =
+        gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buffer), enc->fps_n,
+        GST_SECOND * enc->fps_d);
+    enc->timestamp_offset = GST_BUFFER_TIMESTAMP (buffer);
+    enc->next_ts = 0;
   }
 
   {
@@ -655,11 +669,18 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
     ret = GST_FLOW_OK;
     while (theora_encode_packetout (&enc->state, 0, &op)) {
-      GstClockTime out_time;
+      /* This is where we hack around theora's broken idea of what granulepos
+         is -- normally we wouldn't need to add the 1, because granulepos
+         should be the presentation time of the last sample in the packet, but
+         theora starts with 0 instead of 1... */
+      GstClockTime next_time;
 
-      out_time = theora_granule_time (&enc->state, op.granulepos) * GST_SECOND;
-      if ((ret = theora_push_packet (enc, &op, out_time, GST_SECOND / enc->fps))
-          != GST_FLOW_OK)
+      next_time =
+          theora_granule_time (&enc->state, op.granulepos + 1) * GST_SECOND;
+      ret =
+          theora_push_packet (enc, &op, enc->next_ts, next_time - enc->next_ts);
+      enc->next_ts = next_time;
+      if (ret != GST_FLOW_OK)
         goto data_push;
     }
     gst_buffer_unref (buffer);
@@ -705,7 +726,6 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
       theora_info_init (&enc->info);
       theora_comment_init (&enc->comment);
       enc->packetno = 0;
-      enc->initial_delay = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
