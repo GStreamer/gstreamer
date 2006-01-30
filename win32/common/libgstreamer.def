@@ -807,4 +807,6 @@ EXPORTS
 	gst_iterator_next
 
 	gst_structure_set_valist
+	
+	gst_value_compare
 
