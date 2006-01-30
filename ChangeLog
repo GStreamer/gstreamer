@@ -1,5 +1,10 @@
 2006-01-30  Andy Wingo  <wingo@pobox.com>
 
+	* ext/ogg/gstoggmux.c (gst_ogg_mux_dequeue_page): Compare
+	timestamp + duration, not just timestamp -- ogg pages should be
+	ordered by stop time. Necessary fix given the change in vorbis
+	timestamps.
+
 	* ext/theora/theoraenc.c (theora_enc_sink_setcaps) 
 	(gst_theora_enc_init): Pull the granule shift out of the encoder.
 	(granulepos_add): New function, handles the messiness of adjusting

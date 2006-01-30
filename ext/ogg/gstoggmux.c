@@ -571,12 +571,12 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
     if (buf) {
       /* if no oldest buffer yet, take this one */
       if (oldest == GST_CLOCK_TIME_NONE) {
-        oldest = GST_BUFFER_TIMESTAMP (buf);
+        oldest = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
         opad = pad;
       } else {
         /* if we have an oldest, compare with this one */
-        if (GST_BUFFER_TIMESTAMP (buf) < oldest) {
-          oldest = GST_BUFFER_TIMESTAMP (buf);
+        if (GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf) < oldest) {
+          oldest = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
           opad = pad;
         }
       }
@@ -588,9 +588,9 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
     g_assert (opad);
     buf = g_queue_pop_head (opad->pagebuffers);
     GST_LOG_OBJECT (opad,
-        GST_GP_FORMAT " pushing oldest page (time %" GST_TIME_FORMAT ")",
+        GST_GP_FORMAT " pushing oldest page (end time %" GST_TIME_FORMAT ")",
         GST_BUFFER_OFFSET_END (buf),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf)));
     *flowret = gst_ogg_mux_push_buffer (mux, buf);
     ret = TRUE;
   }
