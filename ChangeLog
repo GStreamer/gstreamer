@@ -1,3 +1,9 @@
+2006-01-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_start):
+	  SERVICE_NOT_AVAILABLE happens for example when you're trying to
+	  play an http:// stream from a server that's not serving
+
 2006-01-30  Andy Wingo  <wingo@pobox.com>
 
 	* tests/check/pipelines/vorbisenc.c (TIMESTAMP_OFFSET): 

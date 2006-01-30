@@ -1088,7 +1088,8 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
       gst_gnome_vfs_src_pop_callbacks (src);
       audiocast_thread_kill (src);
 
-      if (res == GNOME_VFS_ERROR_NOT_FOUND) {
+      if (res == GNOME_VFS_ERROR_NOT_FOUND ||
+          res == GNOME_VFS_ERROR_SERVICE_NOT_AVAILABLE) {
         GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
             ("Could not open vfs file \"%s\" for reading: %s",
                 filename, gnome_vfs_result_to_string (res)));
