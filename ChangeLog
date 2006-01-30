@@ -1,3 +1,16 @@
+2006-01-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain),
+	(gst_id3demux_read_id3v1), (gst_id3demux_sink_activate),
+	(gst_id3demux_send_tag_event):
+	* gst/id3demux/id3tags.c: (id3demux_read_id3v1_tag):
+	Someone should kick my butt. Remove ID3v1 tags from the end of the
+	file.
+
+	Improve error messages. Send the TAG message as soon as we complete
+	typefinding, instead of waiting until we send the first buffer.
+	Downstream tag event is still sent before the first buffer.
+
 2006-01-27  Jan Gerber  <j@bootlab.org>
 
 	Reviewed by: Andy Wingo <wingo@pobox.com>

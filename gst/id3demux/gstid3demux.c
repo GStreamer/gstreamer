@@ -453,7 +453,9 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
         }
 
         /* We failed typefind */
-        GST_ELEMENT_ERROR (id3demux, CORE, CAPS, (NULL), ("no caps found"));
+        GST_ELEMENT_ERROR (id3demux, CORE, CAPS,
+            ("Could not determine the mime type of the file"),
+            ("No caps found for contents within an ID3 tag"));
         gst_buffer_unref (typefind_buf);
         gst_buffer_unref (id3demux->collect);
         id3demux->collect = NULL;
@@ -471,6 +473,14 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
       /* Move onto streaming and fall-through to push out existing
        * data */
       id3demux->state = GST_ID3DEMUX_STREAMING;
+
+      /* Now that typefinding is complete, post the
+       * tags message */
+      if (id3demux->parsed_tags != NULL) {
+        gst_element_post_message (GST_ELEMENT (id3demux),
+            gst_message_new_tag (GST_OBJECT (id3demux),
+                gst_tag_list_copy (id3demux->parsed_tags)));
+      }
       /* fall-through */
     }
     case GST_ID3DEMUX_STREAMING:{
@@ -675,7 +685,9 @@ gst_id3demux_read_id3v1 (GstID3Demux * id3demux, GstTagList ** tags)
 
   tag_res = id3demux_read_id3v1_tag (buffer, &id3demux->strip_end, tags);
   if (tag_res == ID3TAGS_READ_TAG) {
-    GST_DEBUG_OBJECT (id3demux, "Read ID3v1 tag");
+    GST_DEBUG_OBJECT (id3demux,
+        "Read ID3v1 tag - trimming %d bytes from end of file",
+        id3demux->strip_end);
     res = TRUE;
   } else if (tag_res == ID3TAGS_BROKEN_TAG) {
     GST_WARNING_OBJECT (id3demux, "Ignoring broken ID3v1 tag");
@@ -828,8 +840,17 @@ gst_id3demux_sink_activate (GstPad * sinkpad)
 
   /* 5 - If we didn't find the caps, fail */
   if (caps == NULL) {
-    GST_DEBUG_OBJECT (id3demux, "Could not detect type of contents");
+    GST_ELEMENT_ERROR (id3demux, CORE, CAPS,
+        ("Could not determine the mime type of the file"),
+        ("No caps found for contents within an ID3 tag"));
     goto done_activate;
+  }
+
+  /* Now that we've finished typefinding, post tag message on bus */
+  if (id3demux->parsed_tags != NULL) {
+    gst_element_post_message (GST_ELEMENT (id3demux),
+        gst_message_new_tag (GST_OBJECT (id3demux),
+            gst_tag_list_copy (id3demux->parsed_tags)));
   }
 
   /* tag reading and typefinding were already done, don't do them again in
@@ -1078,11 +1099,6 @@ gst_id3demux_send_tag_event (GstID3Demux * id3demux)
   /* FIXME: what's the correct merge mode? Docs need to tell... */
   GstTagList *merged = gst_tag_list_merge (id3demux->event_tags,
       id3demux->parsed_tags, GST_TAG_MERGE_KEEP);
-
-  if (id3demux->parsed_tags)
-    gst_element_post_message (GST_ELEMENT (id3demux),
-        gst_message_new_tag (GST_OBJECT (id3demux),
-            gst_tag_list_copy (id3demux->parsed_tags)));
 
   if (merged) {
     GstEvent *event = gst_event_new_tag (merged);

@@ -101,6 +101,8 @@ id3demux_read_id3v1_tag (GstBuffer * buffer, guint * id3v1_size,
   } else
     *tags = new_tags;
 
+  if (id3v1_size)
+    *id3v1_size = ID3V1_TAG_SIZE;
   return ID3TAGS_READ_TAG;
 }
 
