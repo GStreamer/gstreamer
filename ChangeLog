@@ -1,3 +1,8 @@
+2006-01-30  Andy Wingo  <wingo@pobox.com>
+
+	* sys/glsink/Makefile.am (libgstglimagesink_la_LIBADD) 
+	(libgstglimagesink_la_CFLAGS): Add PLUGINS_BASE cflags and libs.
+
 2006-01-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_setcaps),
