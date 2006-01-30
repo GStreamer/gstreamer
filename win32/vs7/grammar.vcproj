@@ -96,8 +96,7 @@ copy /y ..\common\gstenumtypes.h ..\..\gst"
 					Outputs="..\..\gst\gstenumtypes.c;..\..\gst\gstenumtypes.h"/>
 			</FileConfiguration>
 			<FileConfiguration
-				Name="Release|Win32"
-				ExcludedFromBuild="TRUE">
+				Name="Release|Win32">
 				<Tool
 					Name="VCCustomBuildTool"
 					CommandLine="copy /y ..\common\gstenumtypes.c ..\..\gst
