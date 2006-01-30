@@ -1,3 +1,18 @@
+2006-01-30  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* plugins/elements/Makefile.am:
+	* plugins/elements/gstelements.c:
+	* plugins/elements/gstfdsink.c: (_do_init),
+	(gst_fd_sink_base_init), (gst_fd_sink_class_init),
+	(gst_fd_sink_init), (gst_fd_sink_dispose), (gst_fd_sink_query),
+	(gst_fd_sink_render), (gst_fd_sink_check_fd), (gst_fd_sink_start),
+	(gst_fd_sink_stop), (gst_fd_sink_unlock), (gst_fd_sink_update_fd),
+	(gst_fd_sink_set_property), (gst_fd_sink_uri_get_type),
+	(gst_fd_sink_uri_get_protocols), (gst_fd_sink_uri_get_uri),
+	(gst_fd_sink_uri_set_uri), (gst_fd_sink_uri_handler_init):
+	* plugins/elements/gstfdsink.h:
+	Port fdsink to 0.10 (patch by Philippe Rouquier) (Fixes #325490)
+
 2006-01-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/manual/advanced-dparams.xml:

@@ -25,6 +25,7 @@
 #define __GST_FD_SINK_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
 
@@ -44,15 +45,18 @@ typedef struct _GstFdSink GstFdSink;
 typedef struct _GstFdSinkClass GstFdSinkClass;
 
 struct _GstFdSink {
-  GstElement element;
+  GstBaseSink parent;
 
-  GstPad *sinkpad;
+  gchar *uri;
+
+  gint control_sock[2];
 
   int fd;
+  guint64 bytes_written;
 };
 
 struct _GstFdSinkClass {
-  GstElementClass parent_class;
+  GstBaseSinkClass parent_class;
 };
 
 GType gst_fd_sink_get_type(void);

@@ -8,8 +8,10 @@ plugin_LTLIBRARIES = libgstcoreelements.la
 
 if HAVE_SYS_SOCKET_H
 GSTFDSRC = gstfdsrc.c
+GSTFDSINK = gstfdsink.c
 else
 GSTFDSRC =
+GSTFDSINK = 
 endif
 
 libgstcoreelements_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
@@ -20,6 +22,7 @@ libgstcoreelements_la_SOURCES =	\
 	gstfakesrc.c		\
 	gstfakesink.c		\
 	$(GSTFDSRC)		\
+	$(GSTFDSINK)		\
 	gstfilesink.c		\
 	gstfilesrc.c		\
 	gstidentity.c		\
@@ -38,6 +41,7 @@ noinst_HEADERS =		\
 	gstfakesink.h		\
 	gstfakesrc.h		\
 	gstfdsrc.h		\
+	gstfdsink.h		\
 	gstfilesink.h		\
 	gstfilesrc.h		\
 	gstidentity.h		\
@@ -45,4 +49,5 @@ noinst_HEADERS =		\
 	gsttee.h		\
 	gsttypefindelement.h
 
-EXTRA_DIST = gstfdsrc.c
+EXTRA_DIST = gstfdsrc.c \
+	     gstfdsink.c

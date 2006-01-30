@@ -30,6 +30,7 @@
 #include "gstfakesink.h"
 #include "gstfakesrc.h"
 #include "gstfdsrc.h"
+#include "gstfdsink.h"
 #include "gstfilesink.h"
 #include "gstfilesrc.h"
 #include "gstidentity.h"
@@ -54,6 +55,7 @@ static struct _elements_entry _elements[] = {
   {"fakesink", GST_RANK_NONE, gst_fake_sink_get_type},
 #if HAVE_SYS_SOCKET_H
   {"fdsrc", GST_RANK_NONE, gst_fd_src_get_type},
+  {"fdsink", GST_RANK_NONE, gst_fd_sink_get_type},
 #endif
   {"filesrc", GST_RANK_NONE, gst_file_src_get_type},
   {"identity", GST_RANK_NONE, gst_identity_get_type},
