@@ -1,3 +1,8 @@
+2006-01-30  Sebastien Moutte  <sebastien@moutte.net>
+	
+	* win32/vs6/grammar.dsp:
+		add autogen of gstmarshal.c,h for Release mode
+		
 2006-01-30  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),

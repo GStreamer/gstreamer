@@ -182,6 +182,25 @@ BuildCmds= \
 SOURCE=..\..\gst\gstmarshal.list
 
 !IF  "$(CFG)" == "grammar - Win32 Release"
+# Begin Custom Build
+InputPath=..\..\gst\gstmarshal.list
+
+BuildCmds= \
+	echo #include "glib-object.h" > gstmarshal.c.tmp \
+	echo #include "gstmarshal.h" >> gstmarshal.c.tmp \
+	glib-genmarshal --body --prefix=gst_marshal ..\..\gst\gstmarshal.list >> gstmarshal.c.tmp \
+	move gstmarshal.c.tmp ..\..\gst\gstmarshal.c \
+	echo #include "gst/gstconfig.h" > gstmarshal.h.tmp \
+	glib-genmarshal --header --prefix=gst_marshal ..\..\gst\gstmarshal.list >> gstmarshal.h.tmp \
+	move gstmarshal.h.tmp ..\..\gst\gstmarshal.h \
+	
+
+"..\..\gst\gstmarshal.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst\gstmarshal.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
 
 !ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
 
