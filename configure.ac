@@ -66,6 +66,7 @@ dnl check for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
 GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GST_REQ])
 
 if test "x$HAVE_GST" = "xno"; then
   AC_MSG_ERROR(no GStreamer found)
