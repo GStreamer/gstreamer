@@ -56,6 +56,7 @@ struct _GstTheoraDec
 
   gboolean have_header;
   guint64 granulepos;
+  guint64 granule_shift;
 
   GstClockTime last_timestamp;
   guint64 frame_nr;
@@ -208,25 +209,52 @@ _theora_ilog (unsigned int v)
   return (ret);
 }
 
-static void
-_inc_granulepos (GstTheoraDec * dec)
+static gint64
+_theora_granule_frame (GstTheoraDec * dec, gint64 granulepos)
 {
   guint ilog;
   gint framecount;
 
-  if (dec->granulepos == -1)
-    return;
+  if (granulepos == -1)
+    return -1;
 
-  ilog = _theora_ilog (dec->info.keyframe_frequency_force - 1);
+  ilog = dec->granule_shift;
 
-  framecount = dec->granulepos >> ilog;
-  framecount += dec->granulepos - (framecount << ilog);
+  /* granulepos is last ilog bits for counting pframes since last iframe and 
+   * bits in front of that for the framenumber of the last iframe. */
+  framecount = granulepos >> ilog;
+  framecount += granulepos - (framecount << ilog);
 
   GST_DEBUG_OBJECT (dec, "framecount=%d, ilog=%u", framecount, ilog);
 
-  framecount++;
+  return framecount;
+}
 
-  dec->granulepos = (framecount << ilog);
+static GstClockTime
+_theora_granule_time (GstTheoraDec * dec, gint64 granulepos)
+{
+  gint framecount;
+
+  if (granulepos == -1)
+    return -1;
+
+  framecount = _theora_granule_frame (dec, dec->granulepos);
+
+  return gst_util_uint64_scale_int (framecount * GST_SECOND,
+      dec->info.fps_denominator, dec->info.fps_numerator);
+}
+
+static gint64
+_inc_granulepos (GstTheoraDec * dec, gint64 granulepos)
+{
+  gint framecount;
+
+  if (granulepos == -1)
+    return -1;
+
+  framecount = _theora_granule_frame (dec, granulepos);
+
+  return (framecount + 1) << dec->granule_shift;
 }
 
 #if 0
@@ -298,8 +326,8 @@ theora_dec_src_convert (GstPad * pad,
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_value =
-              src_value * 2 / (dec->info.height * dec->info.width * 3);
+          *dest_value = gst_util_uint64_scale_int (src_value, 2,
+              dec->info.height * dec->info.width * 3);
           break;
         case GST_FORMAT_TIME:
           /* seems like a rather silly conversion, implement me if you like */
@@ -312,9 +340,8 @@ theora_dec_src_convert (GstPad * pad,
         case GST_FORMAT_BYTES:
           scale = 3 * (dec->info.width * dec->info.height) / 2;
         case GST_FORMAT_DEFAULT:
-          *dest_value =
-              scale * (((guint64) src_value * dec->info.fps_numerator) /
-              (dec->info.fps_denominator * GST_SECOND));
+          *dest_value = scale * gst_util_uint64_scale_int (src_value,
+              dec->info.fps_numerator, dec->info.fps_denominator * GST_SECOND);
           break;
         default:
           res = FALSE;
@@ -323,8 +350,8 @@ theora_dec_src_convert (GstPad * pad,
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_TIME:
-          *dest_value = src_value * (GST_SECOND * dec->info.fps_denominator /
-              dec->info.fps_numerator);
+          *dest_value = gst_util_uint64_scale_int (src_value,
+              GST_SECOND * dec->info.fps_denominator, dec->info.fps_numerator);
           break;
         case GST_FORMAT_BYTES:
           *dest_value =
@@ -363,20 +390,9 @@ theora_dec_sink_convert (GstPad * pad,
   switch (src_format) {
     case GST_FORMAT_DEFAULT:
     {
-      guint64 framecount;
-      guint ilog;
-
-      ilog = _theora_ilog (dec->info.keyframe_frequency_force - 1);
-
-      /* granulepos is last ilog bits for counting pframes since last iframe and 
-       * bits in front of that for the framenumber of the last iframe. */
-      framecount = src_value >> ilog;
-      framecount += src_value - (framecount << ilog);
-
       switch (*dest_format) {
         case GST_FORMAT_TIME:
-          *dest_value = framecount * (GST_SECOND * dec->info.fps_denominator /
-              dec->info.fps_numerator);
+          *dest_value = _theora_granule_time (dec, src_value);
           break;
         default:
           res = FALSE;
@@ -388,17 +404,16 @@ theora_dec_sink_convert (GstPad * pad,
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
         {
-          guint ilog = _theora_ilog (dec->info.keyframe_frequency_force - 1);
           guint rest;
 
           /* framecount */
-          *dest_value = src_value * dec->info.fps_numerator /
-              (GST_SECOND * dec->info.fps_denominator);
+          *dest_value = gst_util_uint64_scale_int (src_value,
+              dec->info.fps_numerator, GST_SECOND * dec->info.fps_denominator);
 
           /* funny way of calculating granulepos in theora */
           rest = *dest_value / dec->info.keyframe_frequency_force;
           *dest_value -= rest;
-          *dest_value <<= ilog;
+          *dest_value <<= dec->granule_shift;
           *dest_value += rest;
           break;
         }
@@ -743,6 +758,8 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
     dec->offset_y = 0;
   }
 
+  dec->granule_shift = _theora_ilog (dec->info.keyframe_frequency_force - 1);
+
   GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
       dec->width, dec->height, dec->offset_x, dec->offset_y);
 
@@ -941,8 +958,8 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   dec->frame_nr++;
   GST_BUFFER_OFFSET_END (out) = dec->frame_nr;
   GST_BUFFER_DURATION (out) =
-      GST_SECOND * ((gdouble) dec->info.fps_denominator) /
-      dec->info.fps_numerator;
+      gst_util_uint64_scale_int (GST_SECOND, dec->info.fps_denominator,
+      dec->info.fps_numerator);
   GST_BUFFER_TIMESTAMP (out) = outtime;
 
   result = theora_dec_push (dec, out);
@@ -1005,11 +1022,9 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
   if (dec->have_header) {
     if (packet.granulepos != -1) {
       dec->granulepos = packet.granulepos;
-      dec->last_timestamp =
-          GST_SECOND * theora_granule_time (&dec->state, packet.granulepos);
+      dec->last_timestamp = _theora_granule_time (dec, packet.granulepos);
     } else if (dec->last_timestamp != -1) {
-      dec->last_timestamp +=
-          (GST_SECOND * dec->info.fps_denominator) / dec->info.fps_numerator;
+      dec->last_timestamp = _theora_granule_time (dec, dec->granulepos);
     }
   } else {
     dec->last_timestamp = -1;
@@ -1030,7 +1045,7 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
   }
 
 done:
-  _inc_granulepos (dec);
+  dec->granulepos = _inc_granulepos (dec, dec->granulepos);
 
   gst_object_unref (dec);
 
