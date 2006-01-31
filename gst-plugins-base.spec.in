@@ -20,7 +20,6 @@ BuildRequires: 	  %{gstreamer}-devel >= %{gst_minver}
 
 BuildRequires:  gcc-c++
 BuildRequires:  gtk-doc >= 1.3
-BuildRequires:  XFree86-devel
 
 @USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
 @USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
@@ -28,8 +27,6 @@ BuildRequires:  XFree86-devel
 @USE_VORBIS_TRUE@Requires:      libvorbis >= 1.0
 @USE_VORBIS_TRUE@BuildRequires: libogg-devel >= 1.0
 @USE_VORBIS_TRUE@BuildRequires: libvorbis-devel >= 1.0
-@USE_XVIDEO_TRUE@Requires: 	XFree86-libs
-@USE_XVIDEO_TRUE@BuildRequires: XFree86-devel
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
