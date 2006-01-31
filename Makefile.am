@@ -1,4 +1,4 @@
-SUBDIRS = gst-libs ext
+SUBDIRS = gst-libs ext docs
 EXTRA_DIST=gst-ffmpeg.spec depcomp \
 	AUTHORS COPYING NEWS README ChangeLog
 
