@@ -1451,10 +1451,11 @@ void gst_element_message_full
   gchar *name;
   gchar *sent_text;
   gchar *sent_debug;
+  gboolean has_debug = TRUE;
   GstMessage *message = NULL;
 
   /* checks */
-  GST_DEBUG ("start");
+  GST_DEBUG_OBJECT (element, "start");
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail ((type == GST_MESSAGE_ERROR) ||
       (type == GST_MESSAGE_WARNING));
@@ -1470,13 +1471,17 @@ void gst_element_message_full
   /* construct a sent_debug with extra information from source */
   if ((debug == NULL) || (debug[0] == 0)) {
     /* debug could have come from g_strdup_printf (""); */
-    sent_debug = NULL;
-  } else {
-    name = gst_object_get_path_string (GST_OBJECT (element));
-    sent_debug = g_strdup_printf ("%s(%d): %s: %s:\n%s",
-        file, line, function, name, debug ? debug : "");
-    g_free (name);
+    has_debug = FALSE;
   }
+
+  name = gst_object_get_path_string (GST_OBJECT (element));
+  if (has_debug)
+    sent_debug = g_strdup_printf ("%s(%d): %s (): %s:\n%s",
+        file, line, function, name, debug);
+  else
+    sent_debug = g_strdup_printf ("%s(%d): %s (): %s",
+        file, line, function, name);
+  g_free (name);
   g_free (debug);
 
   /* create gerror and post message */

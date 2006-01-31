@@ -1,3 +1,8 @@
+2006-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstelement.c: (gst_element_message_full):
+	  also show file/line/func if no additional debug was given
+
 2006-01-31  Sebastien Moutte  <sebastien@moutte.net>
 	
 	* win32/vs7/grammar.vcproj:
@@ -26,16 +31,16 @@
 2006-01-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/manual/advanced-dparams.xml:
-          describe controller
+	  describe controller
 	* docs/manual/advanced-position.xml:
 	* docs/manual/basics-init.xml:
 	* docs/manual/manual.xml:
 	* docs/manual/titlepage.xml:
 	* docs/pwg/pwg.xml:
 	* docs/pwg/titlepage.xml:
-          cleanup xml (more to come)
+	  cleanup xml (more to come)
 	* libs/gst/controller/gstcontroller.c:
-          fix typo
+	  fix typo
 
 2006-01-30  Sebastien Moutte  <sebastien@moutte.net>
 	
@@ -126,8 +131,8 @@
 	* gst/gstutils.c:
 	* gst/gstvalue.c:
 	* libs/gst/base/gstadapter.c:
-          doc fixes, to link to function, just write gst_cool_function(), don't
-          prefix with '#'
+	  doc fixes, to link to function, just write gst_cool_function(), don't
+	  prefix with '#'
 
 2006-01-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
