@@ -236,7 +236,7 @@ gst_v4lsrc_fixate (GstPad * pad, GstCaps * caps)
 
     gst_structure_fixate_field_nearest_int (structure, "width", targetwidth);
     gst_structure_fixate_field_nearest_int (structure, "height", targetheight);
-    gst_structure_fixate_field_nearest_double (structure, "framerate", 7.5);
+    gst_structure_fixate_field_nearest_fraction (structure, "framerate", 15, 2);
 
     v = gst_structure_get_value (structure, "format");
     if (v && G_VALUE_TYPE (v) != GST_TYPE_FOURCC) {
@@ -496,26 +496,28 @@ gst_v4lsrc_set_caps (GstBaseSrc * src, GstCaps * caps)
   gst_structure_get_int (structure, "height", &h);
   new_fps = gst_structure_get_value (structure, "framerate");
 
-  GST_DEBUG_OBJECT (v4lsrc, "linking with %dx%d at %d/%d fps", w, h,
-      gst_value_get_fraction_numerator (new_fps),
-      gst_value_get_fraction_denominator (new_fps));
-
   /* set framerate if it's not already correct */
   if (!gst_v4lsrc_get_fps (v4lsrc, &cur_fps_n, &cur_fps_d))
     return FALSE;
 
-  if (gst_value_get_fraction_numerator (new_fps) != cur_fps_n ||
-      gst_value_get_fraction_denominator (new_fps) != cur_fps_d) {
-    int fps_index = (gst_value_get_fraction_numerator (new_fps) * 16) /
-        (gst_value_get_fraction_denominator (new_fps) * 15);
+  if (new_fps) {
+    GST_DEBUG_OBJECT (v4lsrc, "linking with %dx%d at %d/%d fps", w, h,
+        gst_value_get_fraction_numerator (new_fps),
+        gst_value_get_fraction_denominator (new_fps));
 
-    GST_DEBUG_OBJECT (v4lsrc, "Trying to set fps index %d", fps_index);
-    /* set bits 16 to 21 to 0 */
-    vwin->flags &= (0x3F00 - 1);
-    /* set bits 16 to 21 to the index */
-    vwin->flags |= fps_index << 16;
-    if (!gst_v4l_set_window_properties (GST_V4LELEMENT (v4lsrc))) {
-      return FALSE;
+    if (gst_value_get_fraction_numerator (new_fps) != cur_fps_n ||
+        gst_value_get_fraction_denominator (new_fps) != cur_fps_d) {
+      int fps_index = (gst_value_get_fraction_numerator (new_fps) * 16) /
+          (gst_value_get_fraction_denominator (new_fps) * 15);
+
+      GST_DEBUG_OBJECT (v4lsrc, "Trying to set fps index %d", fps_index);
+      /* set bits 16 to 21 to 0 */
+      vwin->flags &= (0x3F00 - 1);
+      /* set bits 16 to 21 to the index */
+      vwin->flags |= fps_index << 16;
+      if (!gst_v4l_set_window_properties (GST_V4LELEMENT (v4lsrc))) {
+        return FALSE;
+      }
     }
   }
 

@@ -1,12 +1,26 @@
+2006-01-31  Andy Wingo  <wingo@pobox.com>
+
+	* sys/v4l/gstv4lsrc.c (gst_v4lsrc_set_caps): Don't segfault if the
+	caps being set doesn't have a framerate value. Basically a stopgap
+	measure.
+
+	* ext/ogg/gstoggmux.c (GST_BUFFER_END_TIME): New macro. Not
+	technically correct enough to put into core though.
+	(gst_ogg_mux_dequeue_page): Use END_TIME instead of TIMESTAMP +
+	DURATION. Fixes theoraenc ! oggmux.
+
+	* sys/v4l/gstv4lsrc.c (gst_v4lsrc_fixate): Fixate to the nearest
+	fraction, not double.
+
 2006-01-31  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/vs7:
-		add vs7 project files created by Sergey Scobich
+	add vs7 project files created by Sergey Scobich
 
 2006-01-30  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/vs8:
-		add vs8 project files created by Sergey Scobich
+	add vs8 project files created by Sergey Scobich
 	
 2006-01-30  Andy Wingo  <wingo@pobox.com>
 

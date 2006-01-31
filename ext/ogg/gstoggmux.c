@@ -39,6 +39,14 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogg_mux_debug);
 #define GST_IS_OGG_MUX(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OGG_MUX))
 #define GST_IS_OGG_MUX_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OGG_MUX))
 
+/* This isn't generally what you'd want with an end-time macro, because
+   technically the end time of a buffer with invalid duration is invalid. But
+   for sorting ogg pages this is what we want. */
+#define GST_BUFFER_END_TIME(buf) \
+    (GST_BUFFER_DURATION_IS_VALID (buf) \
+    ? GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf) \
+    : GST_BUFFER_TIMESTAMP (buf))
+
 #define GST_GP_FORMAT "[gp %8" G_GINT64_FORMAT "]"
 
 typedef struct _GstOggMux GstOggMux;
@@ -571,12 +579,12 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
     if (buf) {
       /* if no oldest buffer yet, take this one */
       if (oldest == GST_CLOCK_TIME_NONE) {
-        oldest = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
+        oldest = GST_BUFFER_END_TIME (buf);
         opad = pad;
       } else {
         /* if we have an oldest, compare with this one */
-        if (GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf) < oldest) {
-          oldest = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
+        if (GST_BUFFER_END_TIME (buf) < oldest) {
+          oldest = GST_BUFFER_END_TIME (buf);
           opad = pad;
         }
       }
@@ -589,8 +597,7 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
     buf = g_queue_pop_head (opad->pagebuffers);
     GST_LOG_OBJECT (opad,
         GST_GP_FORMAT " pushing oldest page (end time %" GST_TIME_FORMAT ")",
-        GST_BUFFER_OFFSET_END (buf),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf)));
+        GST_BUFFER_OFFSET_END (buf), GST_TIME_ARGS (GST_BUFFER_END_TIME (buf)));
     *flowret = gst_ogg_mux_push_buffer (mux, buf);
     ret = TRUE;
   }
