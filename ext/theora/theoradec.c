@@ -238,7 +238,7 @@ _theora_granule_time (GstTheoraDec * dec, gint64 granulepos)
   if (granulepos == -1)
     return -1;
 
-  framecount = _theora_granule_frame (dec, dec->granulepos);
+  framecount = _theora_granule_frame (dec, granulepos);
 
   return gst_util_uint64_scale_int (framecount * GST_SECOND,
       dec->info.fps_denominator, dec->info.fps_numerator);
@@ -340,7 +340,7 @@ theora_dec_src_convert (GstPad * pad,
         case GST_FORMAT_BYTES:
           scale = 3 * (dec->info.width * dec->info.height) / 2;
         case GST_FORMAT_DEFAULT:
-          *dest_value = scale * gst_util_uint64_scale_int (src_value,
+          *dest_value = scale * gst_util_uint64_scale (src_value,
               dec->info.fps_numerator, dec->info.fps_denominator * GST_SECOND);
           break;
         default:
@@ -350,7 +350,7 @@ theora_dec_src_convert (GstPad * pad,
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_TIME:
-          *dest_value = gst_util_uint64_scale_int (src_value,
+          *dest_value = gst_util_uint64_scale (src_value,
               GST_SECOND * dec->info.fps_denominator, dec->info.fps_numerator);
           break;
         case GST_FORMAT_BYTES:
@@ -407,7 +407,7 @@ theora_dec_sink_convert (GstPad * pad,
           guint rest;
 
           /* framecount */
-          *dest_value = gst_util_uint64_scale_int (src_value,
+          *dest_value = gst_util_uint64_scale (src_value,
               dec->info.fps_numerator, GST_SECOND * dec->info.fps_denominator);
 
           /* funny way of calculating granulepos in theora */
