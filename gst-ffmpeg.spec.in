@@ -1,6 +1,6 @@
 %define majorminor  @GST_MAJORMINOR@
-%define gstreamer   gstreamer010
-%define gst_minver  0.9.7
+%define gstreamer   gstreamer
+%define gst_minver  0.10.0
 %define gst_majorminor  0.10
 
 
