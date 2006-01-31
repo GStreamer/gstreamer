@@ -629,7 +629,7 @@ bin_remove_messages (GstBin * bin, GstObject * src, GstMessageType types)
       gst_message_unref (message);
     } else {
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
-          "not deleting message of types %d", types);
+          "not deleting message of type %d", GST_MESSAGE_TYPE (message));
     }
   }
 }
@@ -2187,11 +2187,13 @@ bin_query_duration_done (GstBin * bin, QueryFold * fold)
 
   GST_DEBUG_OBJECT (bin, "max duration %" G_GINT64_FORMAT, fold->max);
 
+#if 0
   /* and cache now */
   GST_OBJECT_LOCK (bin);
   bin->messages = g_list_prepend (bin->messages,
       gst_message_new_duration (GST_OBJECT_CAST (bin), format, fold->max));
   GST_OBJECT_UNLOCK (bin);
+#endif
 }
 
 /* generic fold, return first valid result */
