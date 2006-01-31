@@ -1,0 +1,1084 @@
+<plugin>
+  <name>ffmpeg</name>
+  <description>All FFMPEG codecs</description>
+  <filename>../../ext/ffmpeg/.libs/libgstffmpeg.so</filename>
+  <basename>libgstffmpeg.so</basename>
+  <version>CVS</version>
+  <license>LGPL</license>
+  <source>gst-ffmpeg</source>
+  <package>FFMpeg</package>
+  <origin>http://ffmpeg.sourceforge.net/</origin>
+  <elements>
+    <element>
+      <name>ffdec_4xm</name>
+      <longname>FFMPEG 4-XM video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG 4xm decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_8bps</name>
+      <longname>FFMPEG Quicktime planar 8bps video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG 8bps decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_aasc</name>
+      <longname>FFMPEG Autodesk RLE video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG aasc decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_4xm</name>
+      <longname>FFMPEG 4-XM ADPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_4xm decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_adx</name>
+      <longname>FFMPEG ADX ADPCM decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_adx decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_ct</name>
+      <longname>FFMPEG CT ADPCM decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_ct decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_ea</name>
+      <longname>FFMPEG Electronic Arts ADPCM decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_ea decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_ima_dk3</name>
+      <longname>FFMPEG IMA/DK3 ADPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_ima_dk3 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_ima_dk4</name>
+      <longname>FFMPEG IMA/DK4 ADPCM decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_ima_dk4 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_ima_qt</name>
+      <longname>FFMPEG IMA/Quicktime ADPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_ima_qt decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_ima_smjpeg</name>
+      <longname>FFMPEG IMA/SMJPEG ADPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_ima_smjpeg decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_ima_wav</name>
+      <longname>FFMPEG IMA/DVI ADPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_ima_wav decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_ima_ws</name>
+      <longname>FFMPEG IMA/Westwood ADPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_ima_ws decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_ms</name>
+      <longname>FFMPEG Microsoft ADPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_ms decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_swf</name>
+      <longname>FFMPEG Shockwave ADPCM decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_swf decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_xa</name>
+      <longname>FFMPEG CD-ROM XA ADPCM decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_xa decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_adpcm_yamaha</name>
+      <longname>FFMPEG Yamaha ADPCM decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG adpcm_yamaha decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_alac</name>
+      <longname>FFMPEG Apple lossless audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG alac decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_asv1</name>
+      <longname>FFMPEG Asus video v1 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG asv1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_asv2</name>
+      <longname>FFMPEG Asus video v2 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG asv2 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_camtasia</name>
+      <longname>FFMPEG Techsmith Camtasia video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG camtasia decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_cinepak</name>
+      <longname>FFMPEG Cinepak video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG cinepak decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_cljr</name>
+      <longname>FFMPEG Cirrus Logipak AccuPak video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG cljr decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_cyuv</name>
+      <longname>FFMPEG CYUV lossless video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG cyuv decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_dvvideo</name>
+      <longname>FFMPEG Digital video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG dvvideo decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_ffv1</name>
+      <longname>FFMPEG FFMpeg video v1 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG ffv1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_ffvhuff</name>
+      <longname>FFMPEG FFMPEG non-compliant Huffyuv video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG ffvhuff decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_flac</name>
+      <longname>FFMPEG FLAC lossless audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG flac decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_flic</name>
+      <longname>FFMPEG FLIC animation video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG flic decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_flv</name>
+      <longname>FFMPEG FLV video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG flv decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_fraps</name>
+      <longname>FFMPEG FRAPS video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG fraps decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_g726</name>
+      <longname>FFMPEG G.726 ADPCM decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG g726 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_h261</name>
+      <longname>FFMPEG H.261 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG h261 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_h263</name>
+      <longname>FFMPEG H.263 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG h263 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_h263i</name>
+      <longname>FFMPEG Intel H.263 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG h263i decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_h264</name>
+      <longname>FFMPEG H.264 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG h264 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_huffyuv</name>
+      <longname>FFMPEG Huffyuv lossless video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG huffyuv decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_idcinvideo</name>
+      <longname>FFMPEG ID Quake II CIN video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG idcinvideo decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_indeo2</name>
+      <longname>FFMPEG Indeo=2 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG indeo2 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_indeo3</name>
+      <longname>FFMPEG Indeo-3 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG indeo3 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_interplay_dpcm</name>
+      <longname>FFMPEG Interplay DPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG interplay_dpcm decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_interplayvideo</name>
+      <longname>FFMPEG Interplay video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG interplayvideo decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_loco</name>
+      <longname>FFMPEG LOCO video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG loco decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mace3</name>
+      <longname>FFMPEG MACE-3 audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG mace3 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mace6</name>
+      <longname>FFMPEG MACE-6 audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG mace6 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mdec</name>
+      <longname>FFMPEG Playstation MDEC video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG mdec decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mjpeg</name>
+      <longname>FFMPEG Motion-JPEG decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG mjpeg decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mp3</name>
+      <longname>FFMPEG MPEG-1 layer 3 audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG mp3 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mp3adu</name>
+      <longname>FFMPEG ADU-formatted MPEG-1 layer 3 audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG mp3adu decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mp3on4</name>
+      <longname>FFMPEG MP3ON4 decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG mp3on4 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mpeg2video</name>
+      <longname>FFMPEG MPEG-2 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG mpeg2video decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mpeg4</name>
+      <longname>FFMPEG MPEG-4 compatible video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG mpeg4 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mpegvideo</name>
+      <longname>FFMPEG MPEG-2 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG mpegvideo decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_msmpeg4</name>
+      <longname>FFMPEG Microsoft MPEG-4 v3 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG msmpeg4 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_msmpeg4v1</name>
+      <longname>FFMPEG Microsoft MPEG-4 v1 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG msmpeg4v1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_msmpeg4v2</name>
+      <longname>FFMPEG Microsoft MPEG-4 v2 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG msmpeg4v2 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_msrle</name>
+      <longname>FFMPEG Microsoft RLE video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG msrle decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_msvideo1</name>
+      <longname>FFMPEG Microsoft video v1 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG msvideo1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_mszh</name>
+      <longname>FFMPEG Lossless MSZH video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG mszh decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_pam</name>
+      <longname>FFMPEG PAM image decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG pam decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_pbm</name>
+      <longname>FFMPEG PBM image decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG pbm decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_pgm</name>
+      <longname>FFMPEG PGM image decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG pgm decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_pgmyuv</name>
+      <longname>FFMPEG PGM-YUV image decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG pgmyuv decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_png</name>
+      <longname>FFMPEG PNG image decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG png decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_ppm</name>
+      <longname>FFMPEG PPM image decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG ppm decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_qdm2</name>
+      <longname>FFMPEG QDesign Music 2 decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG qdm2 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_qdraw</name>
+      <longname>FFMPEG Applet Quickdraw video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG qdraw decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_qtrle</name>
+      <longname>FFMPEG Quicktime RLE animation video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG qtrle decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_real_144</name>
+      <longname>FFMPEG Realaudio 14k4bps decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG real_144 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_real_288</name>
+      <longname>FFMPEG Realaudio 28k8bps decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG real_288 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_roq_dpcm</name>
+      <longname>FFMPEG RoQ DPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG roq_dpcm decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_roqvideo</name>
+      <longname>FFMPEG ID/RoQ video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG roqvideo decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_rpza</name>
+      <longname>FFMPEG Apple RPZA video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG rpza decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_rv10</name>
+      <longname>FFMPEG Realvideo 1.0 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG rv10 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_rv20</name>
+      <longname>FFMPEG Realvideo 2.0 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG rv20 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_shorten</name>
+      <longname>FFMPEG Shorten lossless audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG shorten decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_smc</name>
+      <longname>FFMPEG Quicktime SMC graphics video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG smc decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_snow</name>
+      <longname>FFMPEG Snow wave video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG snow decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_sol_dpcm</name>
+      <longname>FFMPEG SOL DPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG sol_dpcm decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_sonic</name>
+      <longname>FFMPEG Sonic audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG sonic decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_sp5x</name>
+      <longname>FFMPEG Sp5x-like JPEG decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG sp5x decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_svq1</name>
+      <longname>FFMPEG Sorensen-1 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG svq1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_svq3</name>
+      <longname>FFMPEG Sorensen-3 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG svq3 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_theora</name>
+      <longname>FFMPEG Theora video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG theora decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_truemotion1</name>
+      <longname>FFMPEG Duck Truemotion video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG truemotion1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_truemotion2</name>
+      <longname>FFMPEG Duck Truemotion 2 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG truemotion2 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_ultimotion</name>
+      <longname>FFMPEG Ultimotion video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG ultimotion decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_vc9</name>
+      <longname>FFMPEG Microsoft Video Codec v1 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG vc9 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_vcr1</name>
+      <longname>FFMPEG ATI VCR-1 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG vcr1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_vmdaudio</name>
+      <longname>FFMPEG Sierra VMD audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG vmdaudio decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_vmdvideo</name>
+      <longname>FFMPEG Sierra VMD video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG vmdvideo decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_vp3</name>
+      <longname>FFMPEG VP3 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG vp3 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_vqavideo</name>
+      <longname>FFMPEG Westwood VQA video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG vqavideo decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_wmav1</name>
+      <longname>FFMPEG Windows Media Audio v7 decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG wmav1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_wmav2</name>
+      <longname>FFMPEG Windows Media Audio v8/9 decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG wmav2 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_wmv1</name>
+      <longname>FFMPEG Windows Media Video v7 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG wmv1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_wmv2</name>
+      <longname>FFMPEG Windows Media Video v8 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG wmv2 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_wmv3</name>
+      <longname>FFMPEG Windows Media Video v9 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG wmv3 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_wnv1</name>
+      <longname>FFMPEG Winnov video 1 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG wnv1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_ws_snd1</name>
+      <longname>FFMPEG Westwood Sound-1 decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG ws_snd1 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_xan_dpcm</name>
+      <longname>FFMPEG XAN DPCM audio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>FFMPEG xan_dpcm decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_xan_wc3</name>
+      <longname>FFMPEG XAN Wing Commander 3 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG xan_wc3 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_xl</name>
+      <longname>FFMPEG Miro VideoXL decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG xl decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_zlib</name>
+      <longname>FFMPEG Lossless zlib video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG zlib decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_ac3</name>
+      <longname>FFMPEG AC-3 audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG ac3 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_4xm</name>
+      <longname>FFMPEG 4-XM ADPCM audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_4xm encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_adx</name>
+      <longname>FFMPEG ADX ADPCM encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_adx encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_ct</name>
+      <longname>FFMPEG CT ADPCM encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_ct encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_ea</name>
+      <longname>FFMPEG Electronic Arts ADPCM encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_ea encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_ima_dk3</name>
+      <longname>FFMPEG IMA/DK3 ADPCM audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_ima_dk3 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_ima_dk4</name>
+      <longname>FFMPEG IMA/DK4 ADPCM encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_ima_dk4 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_ima_qt</name>
+      <longname>FFMPEG IMA/Quicktime ADPCM audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_ima_qt encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_ima_smjpeg</name>
+      <longname>FFMPEG IMA/SMJPEG ADPCM audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_ima_smjpeg encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_ima_wav</name>
+      <longname>FFMPEG IMA/DVI ADPCM audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_ima_wav encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_ima_ws</name>
+      <longname>FFMPEG IMA/Westwood ADPCM audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_ima_ws encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_ms</name>
+      <longname>FFMPEG Microsoft ADPCM audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_ms encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_swf</name>
+      <longname>FFMPEG Shockwave ADPCM encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_swf encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_xa</name>
+      <longname>FFMPEG CD-ROM XA ADPCM encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_xa encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_adpcm_yamaha</name>
+      <longname>FFMPEG Yamaha ADPCM encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG adpcm_yamaha encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_asv1</name>
+      <longname>FFMPEG Asus video v1 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG asv1 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_asv2</name>
+      <longname>FFMPEG Asus video v2 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG asv2 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_dvvideo</name>
+      <longname>FFMPEG Digital video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG dvvideo encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_ffv1</name>
+      <longname>FFMPEG FFMpeg video v1 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG ffv1 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_ffvhuff</name>
+      <longname>FFMPEG FFMPEG non-compliant Huffyuv video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG ffvhuff encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_flv</name>
+      <longname>FFMPEG FLV video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG flv encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_g726</name>
+      <longname>FFMPEG G.726 ADPCM encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG g726 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_h261</name>
+      <longname>FFMPEG H.261 video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG h261 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_h263</name>
+      <longname>FFMPEG H.263 video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG h263 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_h263p</name>
+      <longname>FFMPEG H.263 (P) video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG h263p encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_huffyuv</name>
+      <longname>FFMPEG Huffyuv lossless video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG huffyuv encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_ljpeg</name>
+      <longname>FFMPEG Lossless JPEG encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG ljpeg encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_mjpeg</name>
+      <longname>FFMPEG Motion-JPEG encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG mjpeg encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_mp2</name>
+      <longname>FFMPEG MPEG-1 layer 2 audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG mp2 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_mpeg1video</name>
+      <longname>FFMPEG MPEG-1 video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG mpeg1video encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_mpeg2video</name>
+      <longname>FFMPEG MPEG-2 video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG mpeg2video encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_mpeg4</name>
+      <longname>FFMPEG MPEG-4 compatible video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG mpeg4 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_msmpeg4</name>
+      <longname>FFMPEG Microsoft MPEG-4 v3 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG msmpeg4 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_msmpeg4v1</name>
+      <longname>FFMPEG Microsoft MPEG-4 v1 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG msmpeg4v1 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_msmpeg4v2</name>
+      <longname>FFMPEG Microsoft MPEG-4 v2 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG msmpeg4v2 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_pam</name>
+      <longname>FFMPEG PAM image encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG pam encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_pbm</name>
+      <longname>FFMPEG PBM image encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG pbm encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_pgm</name>
+      <longname>FFMPEG PGM image encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG pgm encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_pgmyuv</name>
+      <longname>FFMPEG PGM-YUV image encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG pgmyuv encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_png</name>
+      <longname>FFMPEG PNG image encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG png encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_ppm</name>
+      <longname>FFMPEG PPM image encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG ppm encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_rv10</name>
+      <longname>FFMPEG Realvideo 1.0 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG rv10 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_rv20</name>
+      <longname>FFMPEG Realvideo 2.0 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG rv20 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_snow</name>
+      <longname>FFMPEG Snow wave video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG snow encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_sonic</name>
+      <longname>FFMPEG Sonic audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG sonic encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_sonicls</name>
+      <longname>FFMPEG Sonic lossless audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>FFMPEG sonicls encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_svq1</name>
+      <longname>FFMPEG Sorensen-1 video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG svq1 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_wmv1</name>
+      <longname>FFMPEG Windows Media Video v7 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG wmv1 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffenc_wmv2</name>
+      <longname>FFMPEG Windows Media Video v8 encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>FFMPEG wmv2 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

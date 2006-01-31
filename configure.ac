@@ -19,7 +19,7 @@ dnl we cheat here so we don't have to change the actual configure code bit
 GST_PLUGINS_VERSION_NANO=$GST_FFMPEG_VERSION_NANO
 
 dnl required GStreamer version
-GST_REQ=0.9.7
+GST_REQ=0.10.0
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
 
@@ -62,10 +62,10 @@ fi
 AC_HEADER_STDC([])
 
 
-dnl check for gstreamer; uninstalled is selected preferentially -- see pkg-config(1)
-PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ \
-		       gstreamer-plugins-base-$GST_MAJORMINOR,
-  HAVE_GST="yes", HAVE_GST="no")
+dnl check for gstreamer
+dnl uninstalled is selected preferentially -- see pkg-config(1)
+GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
 
 if test "x$HAVE_GST" = "xno"; then
   AC_MSG_ERROR(no GStreamer found)
@@ -84,6 +84,10 @@ GST_ARCH()
 
 GST_ARG_WITH_PKG_CONFIG_PATH
 
+dnl check for documentation tools
+GTK_DOC_CHECK([1.3])
+AS_PATH_PYTHON([2.1])
+
 dnl ###########################
 dnl # Configure external libs #
 dnl ###########################
@@ -101,5 +105,7 @@ ext/ffmpeg/Makefile
 ext/libpostproc/Makefile
 gst-libs/Makefile
 gst-libs/ext/Makefile
+docs/Makefile
+docs/plugins/Makefile
 )
 AC_OUTPUT

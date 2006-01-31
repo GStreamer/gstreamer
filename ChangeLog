@@ -1,3 +1,19 @@
+2006-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/plugins/.cvsignore:
+	* docs/plugins/gst-ffmpeg-plugins-docs.sgml:
+	* docs/plugins/gst-ffmpeg-plugins.args:
+	* docs/plugins/gst-ffmpeg-plugins.hierarchy:
+	* docs/plugins/gst-ffmpeg-plugins.interfaces:
+	* docs/plugins/gst-ffmpeg-plugins.prerequisites:
+	* docs/plugins/gst-ffmpeg-plugins.types:
+	* docs/plugins/inspect.stamp:
+	* docs/plugins/inspect/plugin-ffmpeg.xml:
+	* docs/version.entities.in:
+	  First step at adding docs
+
 2006-01-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):

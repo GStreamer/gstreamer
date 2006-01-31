@@ -1,0 +1,17 @@
+*-plugins-decl-list.txt
+*-plugins-decl.txt
+*-plugins-overrides.txt
+*-plugins-undocumented.txt
+*-plugins.args.new
+*-plugins.signals.new
+*-plugins-unused.txt
+html
+html-build.stamp
+html.stamp
+scan-build.stamp
+sgml-build.stamp
+sgml.stamp
+tmpl
+tmpl-build.stamp
+tmpl.stamp
+xml
