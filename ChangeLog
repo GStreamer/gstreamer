@@ -1,3 +1,12 @@
+2006-01-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/pipelines/theoraenc.c:
+	* tests/check/pipelines/vorbisenc.c:
+	Define constant using G_GINT64_CONSTANT to avoid errors when
+	passing it around - otherwise it gets truncated to 32 bits.
+
+	Fixes failing tests.
+
 2006-01-31  Andy Wingo  <wingo@pobox.com>
 
 	* sys/v4l/gstv4lsrc.c (gst_v4lsrc_set_caps): Don't segfault if the

@@ -22,7 +22,7 @@
 
 #include <gst/check/gstcheck.h>
 
-#define TIMESTAMP_OFFSET 3249870963
+#define TIMESTAMP_OFFSET G_GINT64_CONSTANT(3249870963)
 #define FRAMERATE 10
 
 /* I know all of these have a shift of 6 bits */
