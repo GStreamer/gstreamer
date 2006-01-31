@@ -43,6 +43,13 @@ GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 gboolean
 gst_controller_init (int *argc, char ***argv)
 {
+  static gboolean _gst_controller_initialized = FALSE;
+
+  if (_gst_controller_initialized)
+    return TRUE;
+
+  _gst_controller_initialized = TRUE;
+
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gstcontroller", 0,
       "dynamic parameter control for gstreamer elements");
 

@@ -1,3 +1,13 @@
+2006-01-31  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/manual/advanced-dparams.xml:
+	* docs/pwg/advanced-dparams.xml:
+	  more dparam docs
+	* gst/gstindex.c:
+	  fix docs
+	* libs/gst/controller/lib.c: (gst_controller_init):
+	  init just once
+
 2006-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gstelement.c: (gst_element_message_full):

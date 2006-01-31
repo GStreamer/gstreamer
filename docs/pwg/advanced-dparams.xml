@@ -5,343 +5,60 @@
   <title>Supporting Dynamic Parameters</title>
   <para>
     Sometimes object properties are not powerful enough to control the
-    parameters that affect the behaviour of your element. When this is the case
-    you can expose these parameters as Dynamic Parameters which can be
-    manipulated by any Dynamic Parameters aware application.
+    parameters that affect the behaviour of your element.
+    When this is the case you can mark these parameters as beeing Controllable.
+    Aware appliations can use the controller subsystem to dynamically adjust
+    the property values over time.
   </para>
-  <para>
-    Throughout this section, the term <emphasis>dparams</emphasis> will be used
-    as an abbreviation for "Dynamic Parameters".
-  </para>
-
-  <sect1 id="section-dparams-compare">
-    <title>Comparing Dynamic Parameters with GObject Properties</title>
-    <para>
-      Your first exposure to dparams may be to convert an existing element from
-      using object properties to using dparams. The following table gives an
-      overview of the difference between these approaches. The significance of
-      these differences should become apparent later on.
-    </para>
-    <informaltable frame="all">
-      <tgroup cols="3">
-      <thead>
-        <row>
-          <entry></entry>
-          <entry>Object Properties</entry>
-          <entry>Dynamic Parameters</entry>
-        </row>
-      </thead>
-      <tbody>
-      <row>
-        <entry><emphasis>Parameter definition</emphasis></entry>
-        <entry>Class level at compile time</entry>
-        <entry>Any level at run time</entry>
-      </row>
-      <row>
-        <entry><emphasis>Getting and setting</emphasis></entry>
-        <entry>Implemented by element subclass as functions</entry>
-        <entry>Handled entirely by dparams subsystem</entry>
-      </row>
-      <row>
-        <entry><emphasis>Extra objects required</emphasis></entry>
-        <entry>None - all functionality is derived from base GObject</entry>
-        <entry>Element needs to create and store a <filename>GstDParamManager</filename> at object creation</entry>
-      </row>
-      <row>
-        <entry><emphasis>Frequency and resolution of updates</emphasis></entry>
-        <entry>Object properties will only be updated between calls to _get, _chain or _loop</entry>
-        <entry>dparams can be updated at any rate independent of calls to _get, _chain or _loop up to sample-level accuracy</entry>
-      </row>
-      </tbody>
-      </tgroup>
-    </informaltable>
-  </sect1>
 
 <sect1 id="section-dparam-start">
   <title>Getting Started</title>
 
   <para>
-    The dparams subsystem is contained within the
-    <filename>gstcontrol</filename> library. You need to include the header in
+    The controller subsystem is contained within the
+    <filename>gstcontroller</filename> library. You need to include the header in
     your element's source file:
   </para>
   <programlisting>
-  #include &lt;gst/control/control.h&gt;
+...
+#include &lt;gst/gst.h&gt;
+#include &lt;gst/controller/gstcontroller.h&gt;
+...
   </programlisting>
 
   <para>
-    Even though the <filename>gstcontrol</filename> library may be linked into
-    the host application, you should make sure it is loaded in your
+    Even though the <filename>gstcontroller</filename> library may be linked into
+    the host application, you should make sure it is initialized in your
     <filename>plugin_init</filename> function:
   </para>
   <programlisting>
   static gboolean
-  plugin_init (GModule *module, GstPlugin *plugin)
+  plugin_init (GstPlugin *plugin)
   {
     ...
-
-    /* load dparam support library */
-    if (!gst_library_load ("gstcontrol"))
-    {
-      gst_info ("example: could not load support library: 'gstcontrol'\n");
-      return FALSE;
-    }
-
+    /* initialize library */
+    gst_controller_init (NULL, NULL);
     ...
   }
   </programlisting>
-
   <para>
-    You need to store an instance of <filename>GstDParamManager</filename> in
-    your element's struct:
+    It makes not sense for all GObject parameter to be real-time controlled.
+    Therefore the next step is to mark controllable parameters.
+    This is done by using the special flag <constant>GST_PARAM_CONTROLLABLE</constant>.
+    when setting up GObject params in the <function>_class_init</function> method.    
   </para>
   <programlisting>
-  struct _GstExample {
-    GstElement element;
-    ...
-
-    GstDParamManager *dpman;
-
-    ...
-  };
+  g_object_class_install_property (gobject_class, PROP_FREQ,
+      g_param_spec_double ("freq", "Frequency", "Frequency of test signal",
+          0.0, 20000.0, 440.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   </programlisting>
 
-  <para>
-    The <filename>GstDParamManager</filename> can be initialised in your
-    element's init function:
-  </para>
-  <programlisting>
-  static void
-  gst_example_init (GstExample *example)
-  {
-    ...
-
-    example-&gt;dpman = gst_dpman_new ("example_dpman", GST_ELEMENT(example));
-
-    ...
-  }
-  </programlisting>
-</sect1>
-
-<sect1 id="section-dparam-define">
-  <title>Defining Parameter Specifications</title>
-  <para>
-    You can define the dparams you need anywhere within your element but will
-    usually need to do so in only a couple of places:
-    <itemizedlist>
-      <listitem>
-        <para>
-        In the element <filename>init</filename> function, just after the call
-        to <filename>gst_dpman_new</filename>
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-        Whenever a new pad is created so that parameters can affect data going
-        into or out of a specific pad. An example of this would be a mixer
-        element where a separate volume parameter is needed on every pad.
-        </para>
-      </listitem>
-    </itemizedlist>
-  </para>
-  <para>
-    There are three different ways the dparams subsystem can pass parameters
-    into your element. Which one you use will depend on how that parameter is
-    used within your element. Each of these methods has its own function to
-    define a required dparam:
-    <itemizedlist>
-<!-- FIXME: are we sure we need to use filename for function calls ??? -->
-      <listitem><para><filename>gst_dpman_add_required_dparam_direct</filename></para></listitem>
-      <listitem><para><filename>gst_dpman_add_required_dparam_callback</filename></para></listitem>
-      <listitem><para><filename>gst_dpman_add_required_dparam_array</filename></para></listitem>
-    </itemizedlist>
-    These functions will return TRUE if the required dparam was added
-    successfully.
-    </para>
-    <para>
-    The following function will be used as an example.
-    <programlisting>
-  gboolean
-  gst_dpman_add_required_dparam_direct (GstDParamManager *dpman,
-                                        GParamSpec *param_spec,
-                                        gboolean is_log,
-                                        gboolean is_rate,
-                                        gpointer update_data)
-    </programlisting>
-    The common parameters to these functions are:
-    <itemizedlist>
-      <listitem>
-        <para>
-        <filename>GstDParamManager *dpman</filename> the element's dparam
-        manager
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-        <filename>GParamSpec *param_spec</filename> the param spec which defines
-        the required dparam
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-        <filename>gboolean is_log</filename> whether this dparam value should be
-        interpreted on a log scale (such as a frequency or a decibel value)
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-        <filename>gboolean is_rate</filename> whether this dparam value is a
-        proportion of the sample rate. For example with a sample rate of 44100,
-        0.5 would be 22050 Hz and 0.25 would be 11025 Hz.
-        </para>
-      </listitem>
-    </itemizedlist>
-  </para>
-  <sect2 id="section-dparam-direct">
-    <title>Direct Method</title>
-    <para>
-      This method is the simplest and has the lowest overhead for parameters
-      which change less frequently than the sample rate. First you need
-      somewhere to store the parameter - this will usually be in your element's
-      struct.
-    </para>
-    <programlisting>
-  struct _GstExample {
-    GstElement element;
-    ...
-
-    GstDParamManager *dpman;
-    gfloat volume;
-    ...
-  };
-    </programlisting>
-    <para>
-      Then to define the required dparam just call
-      <filename>gst_dpman_add_required_dparam_direct</filename> and pass in the
-      location of the parameter to change. In this case the location is
-      <filename>&amp;(example-&gt;volume)</filename>.
-    </para>
-    <programlisting>
-  gst_dpman_add_required_dparam_direct (
-    example-&gt;dpman,
-    g_param_spec_float("volume","Volume","Volume of the audio",
-                       0.0, 1.0, 0.8, G_PARAM_READWRITE),
-    FALSE,
-    FALSE,
-    &amp;(example-&gt;volume)
-  );
-    </programlisting>
-    <para>
-      You can now use <filename>example-&gt;volume</filename> anywhere in your
-      element knowing that it will always contain the correct value to use.
-    </para>
-  </sect2>
-  <sect2 id="section-dparam-callback">
-    <title>Callback Method</title>
-    <para>
-      This should be used if the you have other values to calculate whenever a
-      parameter changes. If you used the direct method you wouldn't know if a
-      parameter had changed so you would have to recalculate the other values
-      every time you needed them. By using the callback method, other values
-      only have to be recalculated when the dparam value actually changes.
-    </para>
-    <para>
-      The following code illustrates an instance where you might want to use the
-      callback method. If you had a volume dparam which was represented by a
-      gfloat number, your element may only deal with integer arithmetic. The
-      callback could be used to calculate the integer scaler when the volume
-      changes. First you will need somewhere to store these values.
-    </para>
-    <programlisting>
-  struct _GstExample {
-    GstElement element;
-    ...
-
-    GstDParamManager *dpman;
-    gfloat volume_f;
-    gint   volume_i;
-    ...
-  };
-    </programlisting>
-    <para>
-      When the required dparam is defined, the callback function
-      <filename>gst_example_update_volume</filename> and some user data (which
-      in this case is our element instance) is passed in to the call to
-      <filename>gst_dpman_add_required_dparam_callback</filename>.
-    </para>
-    <programlisting>
-  gst_dpman_add_required_dparam_callback (
-    example-&gt;dpman,
-    g_param_spec_float("volume","Volume","Volume of the audio",
-                       0.0, 1.0, 0.8, G_PARAM_READWRITE),
-    FALSE,
-    FALSE,
-    gst_example_update_volume,
-    example
-  );
-    </programlisting>
-    <para>
-      The callback function needs to conform to this signature
-    </para>
-    <programlisting>
-typedef void (*GstDPMUpdateFunction) (GValue *value, gpointer data);
-    </programlisting>
-    <para>
-      In our example the callback function looks like this
-    </para>
-    <programlisting>
-static void
-gst_example_update_volume(GValue *value, gpointer data)
-{
-  GstExample *example = (GstExample*)data;
-  g_return_if_fail(GST_IS_EXAMPLE(example));
-
-  example-&gt;volume_f = g_value_get_float(value);
-  example-&gt;volume_i = example-&gt;volume_f * 8192;
-}
-    </programlisting>
-    <para>
-      Now <filename>example-&gt;volume_i</filename> can be used elsewhere and it
-      will always contain the correct value.
-    </para>
-  </sect2>
-  <sect2 id="section-dparam-array">
-    <title>Array Method</title>
-    <para>
-      This method is quite different from the other two. It could be thought of
-      as a specialised method which should only be used if you need the
-      advantages that it provides. Instead of giving the element a single value
-      it provides an array of values where each item in the array corresponds to
-      a sample of audio in your buffer. There are a couple of reasons why this
-      might be useful.
-    </para>
-
-    <itemizedlist>
-      <listitem>
-        <para>
-        Certain optimisations may be possible since you can iterate over your
-        dparams array and your buffer data together.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-        Some dparams may be able to interpolate changing values at the sample
-        rate. This would allow the array to contain very smoothly changing
-        values which may be required for the stability and quality of some DSP
-        algorithms.
-        </para>
-      </listitem>
-    </itemizedlist>
-    <para>
-      The array method is currently the least mature of the three methods and is
-      not yet ready to be used in elements, but plugin writers should be aware
-      of its existence for the future.
-    </para>
-  </sect2>
 </sect1>
 
 <sect1 id="chapter-dparam-loop">
   <title>The Data Processing Loop</title>
+  <!-- FIXME -->
   <para>
     This is the most critical aspect of the dparams subsystem as it relates to
     elements. In a traditional audio processing loop, a <filename>for</filename>

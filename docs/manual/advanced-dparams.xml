@@ -13,7 +13,7 @@
     </para>
     <para>
       This subsystem is contained within the
-      <filename>gstcontrol</filename> library.
+      <filename>gstcontroller</filename> library.
       You need to include the header in your application's source file:
     </para>
     <programlisting>
@@ -32,17 +32,18 @@
     </para>
     <programlisting>
   ...
-  gst_init(&amp;argc,&amp;argv);
-  gst_controller_init(&amp;argc,&amp;argv);
+  gst_init (&amp;argc, &amp;argv);
+  gst_controller_init (&amp;argc, &amp;argv);
   ...
     </programlisting>
   </sect1>
   
   <sect1 id="section-dparams-parameters">
-    <title>Setting up parameters</title>
+    <title>Setting up parameter control</title>
     <para>
-      It makes not sense for all GObject parameter to be real-time controlled.
-      Therefore the first step is to mark controllable parameters.
+      The first step is to select the parameters that should be controlled.
+      This returns a controller object that is needed to further adjust the
+      behaviour.      
     </para>
     <programlisting>
   controller = g_object_control_properties(object, "prop1", "prop2",...);
