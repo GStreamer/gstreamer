@@ -506,7 +506,7 @@ gst_audio_test_src_create_sine_table (GstAudioTestSrc * src, gint16 * samples)
     if (src->accumulator >= M_PI_M2)
       src->accumulator -= M_PI_M2;
 
-    samples[i] = (gint16) src->wave_table[(gint) (src->accumulator * scl)];
+    samples[i] = src->wave_table[(gint) (src->accumulator * scl)];
   }
 }
 
@@ -754,6 +754,9 @@ gst_audio_test_src_get_property (GObject * object, guint prop_id,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  /* initialize gst controller library */
+  gst_controller_init (NULL, NULL);
+
   return gst_element_register (plugin, "audiotestsrc",
       GST_RANK_NONE, GST_TYPE_AUDIO_TEST_SRC);
 }

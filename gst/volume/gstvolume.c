@@ -498,6 +498,9 @@ volume_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  /* initialize gst controller library */
+  gst_controller_init (NULL, NULL);
+
   return gst_element_register (plugin, "volume", GST_RANK_NONE,
       GST_TYPE_VOLUME);
 }
