@@ -1,5 +1,11 @@
 2006-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-ffmpeg-plugins-docs.sgml:
+	  first stab at documenting ffmpeg elements.  Needs work.
+
+2006-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	* docs/Makefile.am:
 	* docs/plugins/.cvsignore:

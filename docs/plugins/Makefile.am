@@ -39,7 +39,7 @@ DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 # The directory containing the source code. Relative to $(top_srcdir).
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting functions and macros.
-DOC_SOURCE_DIR = $(top_srcdir)
+DOC_SOURCE_DIR = $(top_srcdir)/ext/ffmpeg
 
 # Extra options to supply to gtkdoc-scan.
 SCAN_OPTIONS=
@@ -52,8 +52,8 @@ MKDB_OPTIONS=--sgml-mode
 #FIXXREF_OPTIONS=--extra-dir=../gst/html
 
 # Used for dependencies.
-HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.h
-CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c
+HFILE_GLOB=$(DOC_SOURCE_DIR)/*.h
+CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 
 # this is a wingo addition
 # thomasvs: another nice wingo addition would be an explanation on why
@@ -62,8 +62,8 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c
 SCANOBJ_DEPS =
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = avcodec.h gstffmpegcodecmap.h dsputil.h
-IGNORE_CFILES = utils.c mem.c imgconvert.c
+IGNORE_HFILES = 
+IGNORE_CFILES = 
 
 # we add all .h files of elements that have signals/args we want
 # sadly this also pulls in the private methods - maybe we should
@@ -73,7 +73,7 @@ IGNORE_CFILES = utils.c mem.c imgconvert.c
 # but I'm not sure about that - it might be this Just Works given that
 # the registry won't have the element
 
-EXTRA_HFILES =
+EXTRA_HFILES = $(DOC_SOURCE_DIR)/gstffmpegenc.c
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

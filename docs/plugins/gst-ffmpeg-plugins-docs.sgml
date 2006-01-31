@@ -11,7 +11,14 @@
   </bookinfo>
 
   <chapter>
+    <title>gst-ffmpeg Element Types</title>
+    <xi:include href="xml/type-ffenc.xml" />
+  </chapter>
+
+  <chapter>
     <title>gst-ffmpeg Elements</title>
+    <xi:include href="xml/element-ffenc_h263p.xml" />
+    <xi:include href="xml/element-ffenc_mpeg4.xml" />
   </chapter>
 
   <chapter>
