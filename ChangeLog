@@ -1,3 +1,8 @@
+2006-02-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/test_element.py:
+	  add another link test
+
 2006-01-30  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

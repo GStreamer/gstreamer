@@ -222,11 +222,47 @@ class DebugTest(TestCase):
         e.set_property("name", "testelement")
         e.break_it_down()
         
-class LinkNoPadsTest(TestCase):
+class LinkTest(TestCase):
     def testLinkNoPads(self):
         src = gst.Bin()
         sink = gst.Bin()
         self.assertRaises(gst.LinkError, src.link, sink)
+
+    def testLink(self):
+        src = gst.element_factory_make('fakesrc')
+        sink = gst.element_factory_make('fakesink')
+        self.failUnless(src.link(sink))
+        # FIXME: this unlink leaks, no idea why
+        # src.unlink(sink)
+        # print src.__gstrefcount__
+
+    def testLinkPads(self):
+        src = gst.element_factory_make('fakesrc')
+        sink = gst.element_factory_make('fakesink')
+        # print src.__gstrefcount__
+        self.failUnless(src.link_pads("src", sink, "sink"))
+        src.unlink_pads("src", sink, "sink")
+
+    def testLinkFiltered(self):
+        # a filtered link uses capsfilter and thus needs a bin
+        bin = gst.Bin()
+        src = gst.element_factory_make('fakesrc')
+        sink = gst.element_factory_make('fakesink')
+        bin.add(src, sink)
+        caps = gst.caps_from_string("audio/x-raw-int")
+
+        self.failUnless(src.link(sink, caps))
+
+        # DANGER WILL.  src is not actually connected to sink, since
+        # there's a capsfilter in the way.  What a leaky abstraction.
+        # FIXME
+        # src.unlink(sink)
+
+        # instead, mess with pads directly
+        pad = src.get_pad('src')
+        pad.unlink(pad.get_peer())
+        pad = sink.get_pad('sink')
+        pad.get_peer().unlink(pad)
 
 if __name__ == "__main__":
     unittest.main()
