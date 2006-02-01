@@ -1,5 +1,13 @@
 2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/test6.c: (new_decoded_pad_cb), (show_error), (main):
+	  Make test work again by connecting fakesinks to each decoded pad,
+	  which makes the pipeline wait until each fakesink has a buffer
+	  queued before going to PAUSED state. At that point we know the
+	  decodebin pads are negotiated.
+
+2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/cdda/gstcddabasesrc.c: (gst_cdda_base_src_query),
 	(gst_cdda_base_src_handle_event):
 	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_query):
