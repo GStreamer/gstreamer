@@ -1,5 +1,14 @@
 2006-02-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* testsuite/test_event.py:
+	  add a test case for autoplugging behaviour:
+	  create a source, connect probes, store new-segment event,
+	  add element in buffer probe callback, and forward event
+	  Currently fails due to refcounting on the stored new-segment
+	  event
+
+2006-02-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* testsuite/test_element.py:
 	  add another link test
 
