@@ -229,6 +229,19 @@ in the various plugin packages.
 
 - in a submodule, docs go in docs/plugins
 - template can be copied from gst-plugins-base
+- to add plugins documentation:
+  - create docs/plugins
+  - create Makefile.am and friends, add to configure.ac
+  - create docs/version.entities.in, add to configure.ac
+  - in docs/plugins:
+    - create $(module)-plugins.types with #include <gst/gst.h>
+    - run make
+    - edit the -docs.sgml
+    - add to cvs:
+      cvs add *-plugins-docs.sgml *-plugins.args *-plugins.hierarchy *-plugins.interfaces *-plugins.prerequisites *-plugins.signals *-plugins.types inspect-build.stamp inspect.stamp scanobj-build.stamp
+      cvs add inspect
+      cvs add inspect/*.xml
+
 - to add an element to be documented:
   - add an include href in the Elements chapter for the element
     in the main .sgml
