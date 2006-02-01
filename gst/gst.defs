@@ -1115,7 +1115,7 @@
   (c-name "gst_element_send_event")
   (return-type "gboolean")
   (parameters
-    '("GstEvent*" "event")
+    '("GstEvent*" "event" (keep-refcount))
   )
 )
 
@@ -3665,7 +3665,7 @@
   (c-name "gst_pad_send_event")
   (return-type "gboolean")
   (parameters
-    '("GstEvent*" "event")
+    '("GstEvent*" "event" (keep-refcount))
   )
 )
 

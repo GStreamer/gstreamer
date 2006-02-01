@@ -165,7 +165,7 @@ class TestDelayedEventProbe(TestCase):
             time.sleep(0.1)
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
 
-    def FIXMEtestProbe(self):
+    def testProbe(self):
         self.srcpad.add_event_probe(self._event_probe_cb)
         self._buffer_probe_id = self.srcpad.add_buffer_probe(
             self._buffer_probe_cb)

@@ -1,3 +1,11 @@
+2006-02-01  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	When using gst.Element.send_event() and gst.Pad.send_event() we keep
+	a refcount on the sent event.
+	* testsuite/test_event.py:
+	Uncomment test to prove above fix
+
 2006-02-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/test_event.py:
