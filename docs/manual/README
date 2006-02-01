@@ -25,6 +25,11 @@ Thomas's new comments on the doc building :
 * eps files in images/ should be generated from the makefile.  You need to 
   have fig2dev installed for that.
 
+Ensonic's comments on the doc build system :
+--------------------------------------------
+In case you like to share files between the manual and the pwg - its not trivial.
+Before anything is done, the build-system copies all xml files into the build
+subdir and this breaks including shared docs via entities.
 
 Wtay's original comments :
 --------------------------

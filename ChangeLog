@@ -1,3 +1,8 @@
+2006-02-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/manual/README:
+          uncover a nasty detail of the docs build
+
 2006-01-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (bin_remove_messages), (bin_query_duration_done):
