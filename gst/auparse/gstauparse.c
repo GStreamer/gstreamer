@@ -153,7 +153,7 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
   GstCaps *tempcaps;
   gint law = 0, depth = 0, ieee = 0;
   gchar layout[7];
-  GstBuffer *subbuf;
+  GstBuffer *databuf;
   GstEvent *event;
 
   layout[0] = 0;
@@ -325,28 +325,32 @@ Samples :
       auparse->sample_size = auparse->channels * depth / 8;
     }
 
-    gst_pad_set_active (auparse->srcpad, TRUE);
+    gst_pad_use_fixed_caps (auparse->srcpad);
     gst_pad_set_caps (auparse->srcpad, tempcaps);
+    gst_pad_set_active (auparse->srcpad, TRUE);
 
     event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_DEFAULT,
         0, GST_CLOCK_TIME_NONE, 0);
 
     gst_pad_push_event (auparse->srcpad, event);
 
-    subbuf = gst_buffer_create_sub (buf, auparse->offset,
+    databuf = gst_buffer_create_sub (buf, auparse->offset,
         size - auparse->offset);
 
     gst_buffer_unref (buf);
-
-    gst_adapter_push (auparse->adapter, subbuf);
+    buf = NULL;
   } else {
-    gst_adapter_push (auparse->adapter, buf);
+    databuf = buf;
+    buf = NULL;
   }
 
   if (auparse->sample_size) {
-    /* Ensure we push a buffer that's a multiple of the frame size downstream */
-    int avail = gst_adapter_available (auparse->adapter);
+    int avail;
 
+    gst_adapter_push (auparse->adapter, databuf);
+
+    /* Ensure we push a buffer that's a multiple of the frame size downstream */
+    avail = gst_adapter_available (auparse->adapter);
     avail -= avail % auparse->sample_size;
 
     if (avail > 0) {
@@ -365,12 +369,14 @@ Samples :
 
         ret = gst_pad_push (auparse->srcpad, newbuf);
       }
-    } else
+    } else {
       ret = GST_FLOW_OK;
+    }
   } else {
     /* It's something non-trivial (such as ADPCM), we don't understand it, so
      * just push downstream and assume this will know what to do with it */
-    ret = gst_pad_push (auparse->srcpad, buf);
+    gst_buffer_set_caps (databuf, GST_PAD_CAPS (auparse->srcpad));
+    ret = gst_pad_push (auparse->srcpad, databuf);
   }
 
   gst_object_unref (auparse);

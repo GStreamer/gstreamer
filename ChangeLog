@@ -1,3 +1,12 @@
+2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/auparse/gstauparse.c: (gst_au_parse_chain):
+	  Don't push buffers into the adapter that we are going to
+	  push downstream again without framing anyway. Also, the
+	  adaptor takes ownership of buffers put into it (fixes
+	  auparse pushing invalid buffers for .au files with
+	  ADPCM contents). Finally, set caps on all outgoing buffers.
+
 2006-01-31  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain),
