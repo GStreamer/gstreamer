@@ -1,5 +1,12 @@
 2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/cdda/gstcddabasesrc.c: (gst_cdda_base_src_query),
+	(gst_cdda_base_src_handle_event):
+	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_query):
+	  Pass unhandled queries to the parent class's query function.
+
+2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_query_types),
 	(gst_ogg_pad_src_query):
 	* ext/ogg/gstogmparse.c: (gst_ogm_parse_sink_query):

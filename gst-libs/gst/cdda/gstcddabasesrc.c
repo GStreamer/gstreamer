@@ -644,8 +644,8 @@ gst_cdda_base_src_query (GstBaseSrc * basesrc, GstQuery * query)
       break;
     }
     default:{
-      GST_DEBUG_OBJECT (src, "unsupported query type");
-      return FALSE;
+      GST_DEBUG_OBJECT (src, "unhandled query, chaining up to parent class");
+      return GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
     }
   }
 
@@ -848,14 +848,14 @@ gst_cdda_base_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
       } else {
         GST_LOG_OBJECT (src, "let base class handle seek in %s format",
             gst_format_get_name (format));
-        gst_event_ref (event);
+        event = gst_event_ref (event);
         ret = GST_BASE_SRC_CLASS (parent_class)->event (basesrc, event);
       }
       break;
     }
     default:{
       GST_LOG_OBJECT (src, "let base class handle event");
-      gst_event_ref (event);
+      event = gst_event_ref (event);
       ret = GST_BASE_SRC_CLASS (parent_class)->event (basesrc, event);
       break;
     }
