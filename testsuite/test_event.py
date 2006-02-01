@@ -23,6 +23,7 @@
 import os
 import sys
 import time
+import tempfile
 
 from common import gst, unittest, testhelper, TestCase
 
@@ -71,13 +72,11 @@ class EventTest(TestCase):
 
 
 class EventFileSrcTest(TestCase):
-   # FIXME: properly create temp files
-   filename = '/tmp/gst-python-test-file'
+
    def setUp(self):
        TestCase.setUp(self)
        gst.info("start")
-       if os.path.exists(self.filename):
-           os.remove(self.filename)
+       self.filename = tempfile.mktemp()
        open(self.filename, 'w').write(''.join(map(str, range(10))))
        
        self.pipeline = gst.parse_launch('filesrc name=source location=%s blocksize=1 ! fakesink signal-handoffs=1 name=sink' % self.filename)

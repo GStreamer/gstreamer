@@ -1,5 +1,10 @@
 2006-02-01  Edward Hervey  <edward@fluendo.com>
 
+	* testsuite/test_event.py:
+	Properly use tempfile
+
+2006-02-01  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst.defs:
 	When using gst.Element.send_event() and gst.Pad.send_event() we keep
 	a refcount on the sent event.
