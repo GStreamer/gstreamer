@@ -1842,6 +1842,61 @@ ar_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** audio/x-au ***/
+
+/* NOTE: we cannot replace this function with TYPE_FIND_REGISTER_START_WITH,
+ * as it is only possible to register one typefind factory per 'name'
+ * (which is in this case the caps), and the first one would be replaced by
+ * the second one. */
+static GstStaticCaps au_caps = GST_STATIC_CAPS ("audio/x-au");
+
+#define AU_CAPS (gst_static_caps_get(&au_caps))
+static void
+au_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 4);
+
+  if (data) {
+    if (memcmp (data, ".snd", 4) == 0 || memcmp (data, "dns.", 4) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, AU_CAPS);
+    }
+  }
+}
+
+/*** audio/x-paris ***/
+/* NOTE: do not replace this function with two TYPE_FIND_REGISTER_START_WITH */
+static GstStaticCaps paris_caps = GST_STATIC_CAPS ("audio/x-paris");
+
+#define PARIS_CAPS (gst_static_caps_get(&paris_caps))
+static void
+paris_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 4);
+
+  if (data) {
+    if (memcmp (data, " paf", 4) == 0 || memcmp (data, "fap ", 4) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, PARIS_CAPS);
+    }
+  }
+}
+
+/*** audio/iLBC-sh ***/
+/* NOTE: do not replace this function with two TYPE_FIND_REGISTER_START_WITH */
+static GstStaticCaps ilbc_caps = GST_STATIC_CAPS ("audio/iLBC-sh");
+
+#define ILBC_CAPS (gst_static_caps_get(&ilbc_caps))
+static void
+ilbc_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 8);
+
+  if (data) {
+    if (memcmp (data, "#!iLBC30", 8) == 0 || memcmp (data, "#!iLBC20", 8) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, ILBC_CAPS);
+    }
+  }
+}
+
 /*** application/x-ms-dos-executable ***/
 
 static GstStaticCaps msdos_caps =
@@ -2026,10 +2081,8 @@ plugin_init (GstPlugin * plugin)
   /* -1 so id3v1 or apev1/2 are detected with higher preference */
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-musepack", GST_RANK_PRIMARY,
       musepack_exts, "MP+", 3, GST_TYPE_FIND_MAXIMUM - 1);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-au", GST_RANK_MARGINAL,
-      au_exts, ".snd", 4, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-au", GST_RANK_MARGINAL,
-      au_exts, "dns.", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER (plugin, "audio/x-au", GST_RANK_MARGINAL,
+      au_type_find, au_exts, AU_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-msvideo", GST_RANK_PRIMARY,
       avi_exts, "AVI ");
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-cdxa", GST_RANK_PRIMARY,
@@ -2084,10 +2137,8 @@ plugin_init (GstPlugin * plugin)
       aiff_type_find, aiff_exts, AIFF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-svx", GST_RANK_SECONDARY, svx_type_find,
       svx_exts, SVX_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-paris", GST_RANK_SECONDARY,
-      paris_exts, " paf", 4, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-paris", GST_RANK_SECONDARY,
-      paris_exts, "fap ", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER (plugin, "audio/x-paris", GST_RANK_SECONDARY,
+      paris_type_find, paris_exts, PARIS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-nist", GST_RANK_SECONDARY,
       nist_exts, "NIST", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-voc", GST_RANK_SECONDARY,
@@ -2120,10 +2171,8 @@ plugin_init (GstPlugin * plugin)
       amr_exts, "#!AMR", 5, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-amr-wb-sh", GST_RANK_PRIMARY,
       amr_exts, "#!AMR-WB", 7, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/iLBC-sh", GST_RANK_PRIMARY,
-      ilbc_exts, "#!iLBC30", 8, GST_TYPE_FIND_LIKELY);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/iLBC-sh", GST_RANK_PRIMARY,
-      ilbc_exts, "#!iLBC20", 8, GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER (plugin, "audio/iLBC-sh", GST_RANK_PRIMARY,
+      ilbc_type_find, ilbc_exts, ILBC_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-sid", GST_RANK_MARGINAL,
       sid_exts, "PSID", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "image/x-xcf", GST_RANK_SECONDARY,

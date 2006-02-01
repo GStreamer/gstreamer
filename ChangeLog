@@ -1,3 +1,15 @@
+2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (au_type_find),
+	(paris_type_find), (ilbc_type_find), (plugin_init):
+	  Fix typefinding for audio/x-au, audio/x-paris and
+	  audio/iLBC-sh. We cannot use the START_WITH macros
+	  here, because there can only be one typefind factory
+	  with the same name (caps), so the second one would
+	  replace the first one and the first one would never
+	  be called when doing typefinding (see #161712).
+	  
+
 2006-01-31  Wim Taymans  <wim@fluendo.com>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_convert),
