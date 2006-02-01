@@ -107,6 +107,9 @@ ext/libpostproc/Makefile
 gst-libs/Makefile
 gst-libs/ext/Makefile
 docs/Makefile
+docs/version.entities
 docs/plugins/Makefile
+common/Makefile
+common/m4/Makefile
 )
 AC_OUTPUT
