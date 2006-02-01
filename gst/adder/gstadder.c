@@ -234,8 +234,10 @@ gst_adder_query (GstPad * pad, GstQuery * query)
       /* FIXME: what to do about the length? query all pads upstream and
        * pick the longest length? or the shortest length? or what? */
     case GST_QUERY_DURATION:
+      res = FALSE;
       break;
     default:
+      res = gst_pad_query_default (pad, query);
       break;
   }
 

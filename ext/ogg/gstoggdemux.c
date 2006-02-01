@@ -339,7 +339,7 @@ static const GstQueryType *
 gst_ogg_pad_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
-    GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
     0
   };
 
@@ -378,12 +378,8 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_duration (query, GST_FORMAT_TIME, ogg->total_time);
       break;
     }
-    case GST_QUERY_CONVERT:
-      /* hmm .. */
-      res = FALSE;
-      break;
     default:
-      res = FALSE;
+      res = gst_pad_query_default (pad, query);
       break;
   }
 done:

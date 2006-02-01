@@ -1,5 +1,21 @@
 2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_query_types),
+	(gst_ogg_pad_src_query):
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_sink_query):
+	* ext/theora/theoradec.c: (theora_dec_src_query),
+	(theora_dec_sink_query):
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query),
+	(vorbis_dec_sink_query):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_src_query),
+	(gst_vorbisenc_sink_query):
+	* gst/adder/gstadder.c: (gst_adder_query):
+	  Pass unhandled queries upstream instead of just
+	  dropping them (#326447). Also, fix supported
+	  query types list for some elements.
+
+2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c: (au_type_find),
 	(paris_type_find), (ilbc_type_find), (plugin_init):
 	  Fix typefinding for audio/x-au, audio/x-paris and
