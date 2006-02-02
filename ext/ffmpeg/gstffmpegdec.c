@@ -214,7 +214,7 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
       (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
   details.description = g_strdup_printf ("FFMPEG %s decoder",
       params->in_plugin->name);
-  details.author = "Wim Taymans <wim.taymans@chello.be>, "
+  details.author = "Wim Taymans <wim@fluendo.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>";
   gst_element_class_set_details (element_class, &details);
   g_free (details.longname);
@@ -1387,6 +1387,13 @@ gst_ffmpegdec_register (GstPlugin * plugin)
         /* what's that? */
       case CODEC_ID_SP5X:
         rank = GST_RANK_NONE;
+        /* MP3 and MPEG2 have better alternatives and
+           the ffmpeg versions don't work properly feel
+           free to assign rank if you fix them */
+      case CODEC_ID_MP3:
+	rank = GST_RANK_NONE;
+      case CODEC_ID_MPEG2VIDEO:
+	rank = GST_RANK_NONE;
         break;
     }
     if (!gst_element_register (plugin, type_name, rank, type)) {

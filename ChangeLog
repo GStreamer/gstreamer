@@ -1,3 +1,10 @@
+2006-02-02  Christian Schaller <christian at fluendo dot com>
+
+	* Set rank NONE for mp3 and mpeg2video:
+	  They don't work properly and having them autoplugged
+	  gives people a bad impression and leads them to not grab 
+	  mad or fluendo mp3. Fixes #162833
+
 2006-01-31  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
