@@ -1,5 +1,11 @@
 2006-02-02  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.override:
+	(gst.TIME_ARGS) return "CLOCK_TIME_NONE" for invalid times instead of
+	outputing gibberish value.
+
+2006-02-02  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst.defs:
 	Update for current GStreamer core API
 

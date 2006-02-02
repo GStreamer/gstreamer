@@ -867,7 +867,10 @@ _wrap_GST_TIME_ARGS(PyObject *self, PyObject *args, PyObject *kwargs)
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:time_to_string", kwlist, &py_time))
         return NULL;
     time = PyInt_AsUnsignedLongLongMask(py_time);
-    ret = g_strdup_printf("%"GST_TIME_FORMAT, GST_TIME_ARGS(time));
+    if (GST_CLOCK_TIME_IS_VALID (time))
+	ret = g_strdup_printf("%"GST_TIME_FORMAT, GST_TIME_ARGS(time));
+    else
+	ret = g_strdup ("CLOCK_TIME_NONE");
 
     if (!ret) {
 	Py_INCREF(Py_None);
