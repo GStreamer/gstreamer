@@ -1,5 +1,10 @@
 2006-02-02  Wim Taymans  <wim@fluendo.com>
 
+	* common/gst.supp:
+	Added more suppressions
+
+2006-02-02  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-element-sink.txt:
 	Updated document.
 
