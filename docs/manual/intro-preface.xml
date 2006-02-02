@@ -1,11 +1,13 @@
 <chapter id="chapter-intro">
-  <title>Introduction</title>
+  <title>Preface</title>
   <para> 
     This chapter gives you an overview of the technologies described in this
     book.  
   </para>
 
-  <sect1 id="section-intro-what">
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="section-intro-what"><!-- synchronize with PWG -->
     <title>What is &GStreamer;?</title>
     <para> 
       &GStreamer; is a framework for creating streaming media applications.
@@ -51,8 +53,10 @@
     </para> 
   </sect1>
 
-  <sect1 id="section-intro-structure">
-    <title>Structure of this Manual</title>
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="section-intro-who" xreflabel="Who Should Read This Manual?">
+    <title>Who Should Read This Manual?</title>
     <para>
       This book is about &GStreamer; from a developer's point of view; it
       describes how to write a &GStreamer; application using the &GStreamer;
@@ -60,15 +64,49 @@
       suggest the <ulink type="http"
       url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html">Plugin
       Writers Guide</ulink>.
-    </para> 
+    </para>     
+  </sect1>
+  
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="section-intro-reading" xreflabel="Preliminary Reading">
+    <title>Preliminary Reading</title>
+    <para><!-- synchronize with PWG -->
+      In order to understand this manual, you will need to have a basic
+      understanding of the C language.
+      Since &GStreamer; adheres to the GObject programming model, this guide
+      also assumes that you understand the basics of <ulink type="http"
+      url="http://developer.gnome.org/doc/API/2.0/gobject/index.html">GObject</ulink>
+      programming.
+      You may also want to have a look
+      at Eric Harlow's book <emphasis>Developing Linux Applications with
+      GTK+ and GDK</emphasis>.
+    </para>
+    <para>
+      In addition you might want to read the &GstPWG; after this manual.
+      Also check out the other documentation available on the <ulink type="http"
+      url="http://gstreamer.freedesktop.org/documentation/">&GStreamer; web site</ulink>.
+    </para>
+  </sect1>
+  
+  <!-- ############ sect1 ############# -->
+
+  <sect1 id="section-intro-structure">
+    <title>Structure of this Manual</title>
+    <para>
+      To help you navigate through this guide, it is divided into several large
+      parts. Each part addresses a particular broad topic concerning &GStreamer;
+      appliction development. The parts of this guide are laid out in the following
+      order:
+    </para>
 
     <para>
-      <xref linkend="part-overview"/> gives you an overview of &GStreamer;'s
+      <xref linkend="part-introduction"/> gives you an overview of &GStreamer;'s
       motivation design goals.
     </para>
 
     <para>
-      <xref linkend="part-basics"/> rapidly covers the basics of &GStreamer;
+      <xref linkend="part-building"/> rapidly covers the basics of &GStreamer;
       application programming. At the end of that chapter, you should be
       able to build your own audio player using &GStreamer;
     </para>
@@ -98,20 +136,5 @@
       debugging help and general tips to improve and simplify &GStreamer;
       programming.
     </para>
-
-    <para>
-      In order to understand this manual, you will need to have a basic
-      understanding of the C language. Since &GStreamer; uses <ulink
-      url="http://developer.gnome.org/arch/gtk/glib.html" type="http">GLib
-      2.0</ulink>, the reader is assumed to understand the basics of the
-      <ulink url="http://developer.gnome.org/doc/API/2.0/gobject/index.html"
-      type="http">GObject object model</ulink>. It is recommended to have
-      skimmed through the introduction of the <ulink type="http"
-      url="http://www.le-hacker.org/papers/gobject/index.html">GObject
-      tutorial</ulink> before reading this. You may also want to have a look
-      at Eric Harlow's book <emphasis>Developing Linux Applications with
-      GTK+ and GDK</emphasis>.
-      </para>
-
   </sect1>
 </chapter>

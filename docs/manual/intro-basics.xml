@@ -1,6 +1,6 @@
 <chapter id="chapter-intro-basics">
   <title>Foundations</title>
-  <para>
+  <para><!-- synchronize with PWG -->
     This chapter of the guide introduces the basic concepts of &GStreamer;.
     Understanding these concepts will be important in reading any of the
     rest of this guide, all of them assume understanding of these basic
@@ -20,8 +20,7 @@
       for example media playback or capture. &GStreamer; ships with a large
       collection of elements by default, making the development of a large
       variety of media applications possible. If needed, you can also write
-      new elements. That topic is explained in great deal in the Plugin
-      Writer's Guide.
+      new elements. That topic is explained in great deal in the &GstPWG;.
     </para>
   </sect1>
 

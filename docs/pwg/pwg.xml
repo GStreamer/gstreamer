@@ -59,7 +59,7 @@
   <part id="part-introduction" xreflabel="Introduction">
     <title>Introduction</title>
     <partintro>
-      <para>
+      <para><!-- synchronize with AppDevMan -->
         &GStreamer; is an exremely powerful and versatile framework for creating
         streaming media applications. Many of the virtues of the &GStreamer;
         framework come from its modularity: &GStreamer; can seamlessly

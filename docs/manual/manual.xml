@@ -57,6 +57,7 @@
 <!ENTITY QUOTES               SYSTEM "appendix-quotes.xml">
 
 <!ENTITY GStreamer    "<application>GStreamer</application>">
+<!ENTITY GstPWG       "<emphasis>GStreamer Plugin Writer's Guide</emphasis>">
 ]>
 
 <book id="index">
@@ -64,10 +65,10 @@
   
 <!-- ############# Introduction & Overview - part ############### -->
 
-  <part id="part-overview">
-    <title>Overview</title>
+  <part id="part-introduction">
+    <title>Introduction</title>
     <partintro>
-      <para>
+      <para><!-- synchronize with PWG -->
         &GStreamer; is an exremely powerful and versatile framework for
         creating streaming media applications. Many of the virtues of the
         &GStreamer; framework come from its modularity: &GStreamer; can
@@ -96,8 +97,8 @@
 
 <!-- ############ Basic concepts - part ############# -->
 
-  <part id="part-basics">
-    <title>Basic Concepts</title>
+  <part id="part-building">
+    <title>Building an Application</title>
     <partintro>
       <para>
         In these chapters, we will discuss the basic concepts of &GStreamer;

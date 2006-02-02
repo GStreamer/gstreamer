@@ -1,3 +1,16 @@
+2006-02-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/README:
+	* docs/manual/intro-basics.xml:
+	* docs/manual/intro-preface.xml:
+	* docs/manual/manual.xml:
+	* docs/pwg/advanced-dparams.xml:
+	* docs/pwg/intro-basics.xml:
+	* docs/pwg/intro-preface.xml:
+	* docs/pwg/pwg.xml:
+	  describe dparams (controller) for plugins
+	  unify docs a little more
+
 2006-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:

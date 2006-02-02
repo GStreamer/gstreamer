@@ -40,6 +40,9 @@ We stick to some simple conventions for writing docbook documentation.
   - sections should also include the chapter name;
     for example in a chapter called chapter-example, a section would be
     called section-example-hello-world
+* there are currently comments of the form <!-- synchronize with PWG -->
+  in the docbook file. Please check the relevant section of the other manual
+  when updating.
 
 HOW IMAGES ARE HANDLED
 ----------------------
@@ -86,11 +89,9 @@ HOW THE BUILD SYSTEM IS SET UP
 * html is built in a subdir, with the png/ps images copied there
 * ps and pdf are built in the current dir, in one file
 
-
-DOCBOOK NOTES
-=============
-
-* spell checking with aspell
+SPELL CHECKING
+--------------
+* with aspell
   * aspell -b -c --mode=sgml --lang=en <file>.xml
     unfortunately the curses-ui of aspell (0.50.5) has problems with the xml tags
 

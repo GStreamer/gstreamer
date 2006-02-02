@@ -1,8 +1,8 @@
 <!-- ############ chapter ############# -->
 
-<chapter id="chapter-intro-basics" xreflabel="Basic Concepts">
-  <title>Basic Concepts</title>
-  <para>
+<chapter id="chapter-intro-basics" xreflabel="Foundations">
+  <title>Foundations</title>
+  <para><!-- synchronize with AppDevMan -->
     This chapter of the guide introduces the basic concepts of &GStreamer;.
     Understanding these concepts will help you grok the issues involved in
     extending &GStreamer;. Many of these concepts are explained in greater

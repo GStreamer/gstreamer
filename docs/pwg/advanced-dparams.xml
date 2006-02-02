@@ -58,166 +58,47 @@
 
 <sect1 id="chapter-dparam-loop">
   <title>The Data Processing Loop</title>
-  <!-- FIXME -->
+
   <para>
-    This is the most critical aspect of the dparams subsystem as it relates to
-    elements. In a traditional audio processing loop, a <filename>for</filename>
-    loop will usually iterate over each sample in the buffer, processing one
-    sample at a time until the buffer is finished. A simplified loop with no
-    error checking might look something like this.
+    In the last section we learned how to mark GObject params as controllable.
+    Application developers can then queue parameter changes for these parameters.
+    The approach the controller subsystem takes is to make plugins responsible 
+    for pulling the changes in. This requires just one action:
   </para>
   <programlisting>
-static void
-example_chain (GstPad *pad, GstBuffer *buf)
-{
-  ...
-  gfloat *float_data;
-  int j;
-  GstExample *example = GST_EXAMPLE(GST_OBJECT_PARENT (pad));
-  int num_samples = GST_BUFFER_SIZE(buf)/sizeof(gfloat);
-  float_data = (gfloat *)GST_BUFFER_DATA(buf);
-  ...
-  for (j = 0; j &lt; num_samples; j++) {
-    float_data[j] *= example-&gt;volume;
-  }
-  ...
-}
+    gst_object_sync_values(element,timestamp);
   </programlisting>
   <para>
-    To make this dparams aware, a couple of changes are needed.
+    This call makes all parameter-changes for the given timestamp active by
+    adjusting the GObject properties of the element. Its up to the element to
+    determine the synchronisation rate.
   </para>
-  <programlisting>
-static void
-example_chain (GstPad *pad, GstBuffer *buf)
-{
-  ...
-  int j = 0;
-  GstExample *example = GST_EXAMPLE(GST_OBJECT_PARENT (pad));
-  int num_samples = GST_BUFFER_SIZE(buf)/sizeof(gfloat);
-  gfloat *float_data = (gfloat *)GST_BUFFER_DATA(buf);
-  int frame_countdown = GST_DPMAN_PREPROCESS(example-&gt;dpman, num_samples, GST_BUFFER_TIMESTAMP(buf));
-  ...
-  while (GST_DPMAN_PROCESS_COUNTDOWN(example-&gt;dpman, frame_countdown, j)) {
-    float_data[j++] *= example-&gt;volume;
-  }
-  ...
-}
-  </programlisting>
-  <para>
-    The biggest changes here are 2 new macros,
-    <filename>GST_DPMAN_PREPROCESS</filename> and
-    <filename>GST_DPMAN_PROCESS_COUNTDOWN</filename>. You will also notice that
-    the for loop has become a while loop.
-    <filename>GST_DPMAN_PROCESS_COUNTDOWN</filename> is called as the condition
-    for the while loop so that any required dparams can be updated in the middle
-    of a buffer if required. This is because one of the required behaviours of
-    dparams is that they can be <emphasis>sample accurate</emphasis>. This means
-    that parameters change at the exact timestamp that they are supposed to -
-    not after the buffer has finished being processed.
-  </para>
-  <para>
-    It may be alarming to see a macro as the condition for a while loop, but it
-    is actually very efficient. The macro expands to the following.
-  </para>
-  <programlisting>
-#define GST_DPMAN_PROCESS_COUNTDOWN(dpman, frame_countdown, frame_count) \
-				(frame_countdown-- || \
-				(frame_countdown = GST_DPMAN_PROCESS(dpman, frame_count)))
-  </programlisting>
-  <para>
-    So as long as <filename>frame_countdown</filename> is greater than 0,
-    <filename>GST_DPMAN_PROCESS</filename> will not be called at all. Also in
-    many cases, <filename>GST_DPMAN_PROCESS</filename> will do nothing and
-    simply return 0, meaning that there is no more data in the buffer to
-    process.
-  </para>
-  <para>
-    The macro <filename>GST_DPMAN_PREPROCESS</filename> will do the following:
-    <itemizedlist>
-      <listitem>
-        <para>
-        Update any dparams which are due to be updated.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-        Calculate how many samples should be processed before the next required
-        update
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-        Return the number of samples until next update, or the number of samples
-        in the buffer - whichever is less.
-        </para>
-      </listitem>
-    </itemizedlist>
-    In fact <filename>GST_DPMAN_PROCESS</filename> may do the same things as
-    <filename>GST_DPMAN_PREPROCESS</filename> depending on the mode that the
-    dparam manager is running in (see below).
-  </para>
-  <sect2 id="section-dparam-modes">
-    <title>DParam Manager Modes</title>
+  
+  <sect2 id="chapter-dparam-loop-video">
+    <title>The Data Processing Loop for Video Elements</title>
     <para>
-      A brief explanation of dparam manager modes might be useful here even
-      though it doesn't generally affect the way your element is written. There
-      are different ways media applications will be used which require that an
-      element's parameters be updated in differently. These include:
-      <itemizedlist>
-        <listitem>
-          <para>
-          <emphasis>Timelined</emphasis> - all parameter changes are known in
-          advance before the pipeline is run.
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-          <emphasis>Realtime low-latency</emphasis> - Nothing is known ahead of
-          time about when a parameter might change. Changes need to be
-          propagated to the element as soon as possible.
-          </para>
-        </listitem>
-      </itemizedlist>
-      When a dparam-aware application gets the dparam manager for an element,
-      the first thing it will do is set the dparam manager mode. Current modes
-      are <filename>"synchronous"</filename> and
-      <filename>"asynchronous"</filename>.
-    </para>
-    <para>
-      If you are in a realtime low-latency situation then the
-      <filename>"synchronous"</filename> mode is appropriate. During
-      <filename>GST_DPMAN_PREPROCESS</filename> this mode will poll all dparams
-      for required updates and propagate them.
-      <filename>GST_DPMAN_PROCESS</filename> will do nothing in this mode. To
-      then achieve the desired latency, the size of the buffers needs to be
-      reduced so that the dparams will be polled for updates at the desired
-      frequency.
-    </para>
-    <para>
-      In a timelined situation, the <filename>"asynchronous"</filename> mode
-      will be required. This mode hasn't actually been implemented yet but will
-      be described anyway. The <filename>GST_DPMAN_PREPROCESS</filename> call
-      will precalculate when and how often each dparam needs to update for the
-      duration of the current buffer. From then on
-      <filename>GST_DPMAN_PROCESS</filename> will propagate the calculated
-      updates each time it is called until end of the buffer. If the application
-      is rendering to disk in non-realtime, the render could be sped up by
-      increasing the buffer size. In the <filename>"asynchronous"</filename>
-      mode this could be done without affecting the sample accuracy of the
-      parameter updates
+      For video processing elements it is the best to synchonise for every frame.
+      That means one would add the <function>gst_object_sync_values()</function>
+      call described in the previous section to the data processing function of
+      the element.
     </para>
   </sect2>
-  <sect2 id="section-dparam-audio-video">
-    <title>Dynamic Parameters for Video</title>
+
+  <sect2 id="chapter-dparam-loop-audio">
+    <title>The Data Processing Loop for Audio Elements</title>
     <para>
-      All of the explanation so far has presumed that the buffer contains audio
-      data with many samples. Video should be regarded differently since a video
-      buffer often contains only 1 frame. In this case some of the complexity of
-      dparams isn't required but the other benefits still make it useful for
-      video parameters. If a buffer only contains one frame of video, only a
-      single call to <filename>GST_DPMAN_PREPROCESS</filename> should be
-      required. For more than one frame per buffer, treat it the same as the
-      audio case.
+      For audio processing elements the case is not as easy as for video
+      processing elements. The problem here is that audio has a much higher rate.
+      For PAL video one will e.g. process 25 full frames per second, but for
+      standard audio it will be 44100 samples.
+      It is rarely useful to synchronise controllable parameters that often. 
+      The easiest solution is also to have just one synchronisation call per
+      buffer processing. This makes the control-rate dependend on the buffer 
+      size.
+    </para>
+    <para>
+      Elements that need a specific control-rate need to break their data
+      processing loop to synchronise every n-samples.
     </para>
   </sect2>
 </sect1>
