@@ -838,7 +838,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
 done:
   if (queue != NULL) {
     /* We didn't successfully connect to the queue */
-    gst_pad_unlink (pad, queuesrcpad);
+    gst_pad_unlink (pad, queuesinkpad);
     gst_element_set_state (queue, GST_STATE_NULL);
     gst_object_unref (queuesrcpad);
     gst_object_unref (queuesinkpad);

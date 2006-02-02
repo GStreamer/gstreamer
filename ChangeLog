@@ -1,3 +1,8 @@
+2006-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstdecodebin.c: (try_to_link_1):
+	  Unlinking two source pads is ... hard.
+
 2006-02-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/TODO:
