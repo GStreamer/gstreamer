@@ -136,11 +136,11 @@ check_buffer_granulepos (GstBuffer * buffer, GstClockTime granulepos)
       granulepos, GST_BUFFER_OFFSET_END (buffer));
 }
 
-/* this check is here to check that the granulepos we derive from the timestamp
-   is about correct. This is "about correct" because you can't precisely go from
-   timestamp to granulepos due to the downward-rounding characteristics of
-   gst_util_uint64_scale, so you check if granulepos is equal to the number, or
-   the number plus one. */
+/* this check is here to check that the granulepos we derive from the
+   timestamp is about correct. This is "about correct" because you can't
+   precisely go from timestamp to granulepos due to the downward-rounding
+   characteristics of gst_util_uint64_scale, so you check if granulepos is
+   equal to the number, or the number plus one. */
 /* should be from_endtime, but theora's granulepos mapping is "special" */
 static void
 check_buffer_granulepos_from_starttime (GstBuffer * buffer,
@@ -214,10 +214,10 @@ GST_START_TEST (test_granulepos_offset)
 
     /* first buffer should have timestamp of TIMESTAMP_OFFSET, granulepos to
      * match the timestamp of the end of the last sample in the output buffer.
-     * Note that one cannot go timestamp->granulepos->timestamp and get the same
-     * value due to loss of precision with granulepos. theoraenc does take care
-     * to timestamp correctly based on the offset of the input data however, so
-     * it does do sub-granulepos timestamping. */
+     * Note that one cannot go timestamp->granulepos->timestamp and get the
+     * same value due to loss of precision with granulepos. theoraenc does
+     * take care to timestamp correctly based on the offset of the input data
+     * however, so it does do sub-granulepos timestamping. */
     buffer = get_buffer (bin, pad);
     last_granulepos = GST_BUFFER_OFFSET_END (buffer);
     check_buffer_timestamp (buffer, TIMESTAMP_OFFSET);
@@ -302,15 +302,15 @@ GST_START_TEST (test_continuity)
 
     /* first buffer should have timestamp of TIMESTAMP_OFFSET, granulepos to
      * match the timestamp of the end of the last sample in the output buffer.
-     * Note that one cannot go timestamp->granulepos->timestamp and get the same
-     * value due to loss of precision with granulepos. theoraenc does take care
-     * to timestamp correctly based on the offset of the input data however, so
-     * it does do sub-granulepos timestamping. */
+     * Note that one cannot go timestamp->granulepos->timestamp and get the
+     * same value due to loss of precision with granulepos. theoraenc does
+     * take care to timestamp correctly based on the offset of the input data
+     * however, so it does do sub-granulepos timestamping. */
     buffer = get_buffer (bin, pad);
     last_granulepos = GST_BUFFER_OFFSET_END (buffer);
     check_buffer_timestamp (buffer, 0);
-    check_buffer_duration (buffer, GST_SECOND / 10);    /* plain division because I
-                                                           know the answer is exact */
+    /* plain division because I know the answer is exact */
+    check_buffer_duration (buffer, GST_SECOND / 10);
     check_buffer_granulepos (buffer, 0);
 
     next_timestamp = GST_BUFFER_DURATION (buffer);
