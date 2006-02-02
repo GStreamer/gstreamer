@@ -52,6 +52,7 @@ gst_bin_iterate_all_by_interface
 <SUBSECTION>
 gst_bin_add_many
 gst_bin_remove_many
+gst_bin_find_unconnected_pad
 
 <SUBSECTION>
 GstBinFlags
@@ -1383,6 +1384,7 @@ GST_PARSE_ERROR
 GstParseError
 gst_parse_launch
 gst_parse_launchv
+gst_parse_bin_from_description
 <SUBSECTION Standard>
 GST_TYPE_PARSE_ERROR
 <SUBSECTION Private>

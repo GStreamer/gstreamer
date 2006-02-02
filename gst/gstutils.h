@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2002 Thomas Vander Stichele <thomas@apestaart.org>
  *
  * gstutils.h: Header for various utility functions
  *
@@ -565,8 +566,9 @@ gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat 
 		                                         GstFormat *dest_format, gint64 *dest_val);
 
 /* bin functions */
-void			gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
-void			gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
+void                    gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
+void                    gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
+GstPad *                gst_bin_find_unconnected_pad    (GstBin *bin, GstPadDirection direction);
 
 /* buffer functions */
 GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);
@@ -596,6 +598,11 @@ void			gst_element_found_tags_for_pad	(GstElement * element,
 							 GstTagList * list);
 void			gst_element_found_tags		(GstElement * element,
 							 GstTagList * list);
+
+/* parse utility functions */
+GstElement *            gst_parse_bin_from_description  (const gchar * bin_description,
+                                                         gboolean ghost_unconnected_pads,
+                                                         GError ** err);
 
 G_END_DECLS
 

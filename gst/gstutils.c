@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2002 Thomas Vander Stichele <thomas@apestaart.org>
  *
  * gstutils.c: Utility functions: gtk_get_property stuff, etc.
  *
@@ -34,6 +35,7 @@
 #include "gstghostpad.h"
 #include "gstutils.h"
 #include "gstinfo.h"
+#include "gstparse.h"
 #include "gst-i18n-lib.h"
 
 
@@ -2849,4 +2851,178 @@ gst_element_found_tags (GstElement * element, GstTagList * list)
 
   gst_element_post_message (element,
       gst_message_new_tag (GST_OBJECT (element), list));
+}
+
+static GstPad *
+element_find_unconnected_pad (GstElement * element, GstPadDirection direction)
+{
+  GstIterator *iter;
+  GstPad *unconnected_pad = NULL;
+  gboolean done;
+
+  switch (direction) {
+    case GST_PAD_SRC:
+      iter = gst_element_iterate_src_pads (element);
+      break;
+    case GST_PAD_SINK:
+      iter = gst_element_iterate_sink_pads (element);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+
+  done = FALSE;
+  while (!done) {
+    gpointer pad;
+
+    switch (gst_iterator_next (iter, &pad)) {
+      case GST_ITERATOR_OK:{
+        GstPad *peer;
+
+        GST_CAT_LOG (GST_CAT_ELEMENT_PADS, "examining pad %s:%s",
+            GST_DEBUG_PAD_NAME (pad));
+
+        peer = gst_pad_get_peer (GST_PAD (pad));
+        if (peer == NULL) {
+          unconnected_pad = pad;
+          done = TRUE;
+          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+              "found existing unlinked pad %s:%s",
+              GST_DEBUG_PAD_NAME (unconnected_pad));
+        } else {
+          gst_object_unref (pad);
+          gst_object_unref (peer);
+        }
+        break;
+      }
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+        g_return_val_if_reached (NULL);
+        break;
+    }
+  }
+
+  gst_iterator_free (iter);
+
+  return unconnected_pad;
+}
+
+/**
+ * gst_bin_find_unconnected_pad:
+ * @bin: bin in which to look for elements with unconnected pads
+ * @direction: whether to look for an unconnected source or sink pad
+ *
+ * Recursively looks for elements with an unconnected pad of the given
+ * direction within the specified bin and returns an unconnected pad
+ * if one is found, or NULL otherwise. If a pad is found, the caller
+ * owns a reference to it and should use gst_object_unref() on the
+ * pad when it is not needed any longer.
+ *
+ * Returns: unconnected pad of the given direction, or NULL.
+ *
+ * Since: 0.10.3
+ */
+GstPad *
+gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
+{
+  GstIterator *iter;
+  gboolean done;
+  GstPad *pad = NULL;
+
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+  g_return_val_if_fail (direction != GST_PAD_UNKNOWN, NULL);
+
+  done = FALSE;
+  iter = gst_bin_iterate_recurse (bin);
+  while (!done) {
+    gpointer element;
+
+    switch (gst_iterator_next (iter, &element)) {
+      case GST_ITERATOR_OK:
+        pad = element_find_unconnected_pad (GST_ELEMENT (element), direction);
+        gst_object_unref (element);
+        if (pad != NULL)
+          done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+        g_return_val_if_reached (NULL);
+        break;
+    }
+  }
+
+  gst_iterator_free (iter);
+
+  return pad;
+}
+
+/**
+ * gst_parse_bin_from_description:
+ * @bin_description: command line describing the bin
+ * @ghost_unconnected_pads: whether to automatically create ghost pads
+ *                          for unconnected source or sink pads within
+ *                          the bin
+ * @err: where to store the error message in case of an error, or NULL
+ *
+ * This is a convenience wrapper around gst_parse_launch() to create a
+ * #GstBin from a gst-launch-style pipeline description. See
+ * gst_parse_launch() and the gst-launch man page for details about the
+ * syntax. Ghost pads on the bin for unconnected source or sink pads
+ * within the bin can automatically be created (but only a maximum of
+ * one ghost pad for each direction will be created; if you expect
+ * multiple unconnected source pads or multiple unconnected sink pads
+ * and want them all ghosted, you will have to create the ghost pads
+ * yourself).
+ *
+ * Returns: a newly-created bin, or NULL if an error occurred.
+ *
+ * Since: 0.10.3
+ */
+GstElement *
+gst_parse_bin_from_description (const gchar * bin_description,
+    gboolean ghost_unconnected_pads, GError ** err)
+{
+  GstPad *pad = NULL;
+  GstBin *bin;
+  gchar *desc;
+
+  g_return_val_if_fail (bin_description != NULL, NULL);
+  g_return_val_if_fail (err == NULL || *err == NULL, NULL);
+
+  GST_DEBUG ("Making bin from description '%s'", bin_description);
+
+  /* parse the pipeline to a bin */
+  desc = g_strdup_printf ("bin.( %s )", bin_description);
+  bin = (GstBin *) gst_parse_launch (desc, err);
+  g_free (desc);
+
+  if (bin == NULL || (err && *err != NULL)) {
+    if (bin)
+      gst_object_unref (bin);
+    return NULL;
+  }
+
+  /* find pads and ghost them if necessary */
+  if (ghost_unconnected_pads) {
+    if ((pad = gst_bin_find_unconnected_pad (bin, GST_PAD_SRC))) {
+      gst_element_add_pad (GST_ELEMENT (bin), gst_ghost_pad_new ("src", pad));
+      gst_object_unref (pad);
+    }
+    if ((pad = gst_bin_find_unconnected_pad (bin, GST_PAD_SINK))) {
+      gst_element_add_pad (GST_ELEMENT (bin), gst_ghost_pad_new ("sink", pad));
+      gst_object_unref (pad);
+    }
+  }
+
+  return GST_ELEMENT (bin);
 }

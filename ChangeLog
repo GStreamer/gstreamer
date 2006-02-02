@@ -1,3 +1,12 @@
+2006-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstutils.c: (element_find_unconnected_pad),
+	(gst_bin_find_unconnected_pad), (gst_parse_bin_from_description):
+	* gst/gstutils.h:
+	  Add new API: gst_parse_bin_from_description() and
+	  gst_bin_find_unconnected_pad() (#329069).
+
 2006-02-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/manual/README:
