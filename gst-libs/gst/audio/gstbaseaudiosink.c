@@ -185,7 +185,7 @@ gst_base_audio_sink_provide_clock (GstElement * elem)
     goto wrong_state;
 
   GST_OBJECT_LOCK (sink);
-  if (sink->provide_clock)
+  if (!sink->provide_clock)
     goto clock_disabled;
 
   clock = GST_CLOCK_CAST (gst_object_ref (sink->provided_clock));

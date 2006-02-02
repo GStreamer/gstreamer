@@ -1,6 +1,12 @@
 2006-02-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_provide_clock):
+	Ugh.. getting late I guess...
+
+2006-02-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
 	(gst_base_audio_sink_provide_clock),
 	(gst_base_audio_sink_set_property),
 	(gst_base_audio_sink_get_property), (gst_base_audio_sink_render):
