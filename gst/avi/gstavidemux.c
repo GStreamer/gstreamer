@@ -2251,7 +2251,7 @@ gst_avi_demux_all_source_pads_unlinked (GstAviDemux * avi)
     peer = gst_pad_get_peer (avi->stream[i].pad);
     if (peer) {
       gst_object_unref (peer);
-    } else {
+    } else if (avi->stream[i].current_frame > 0) {
       ++num_unlinked;
     }
   }

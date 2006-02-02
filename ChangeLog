@@ -1,5 +1,11 @@
 2006-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_all_source_pads_unlinked):
+	  Only pause if all pads are unlinked AND we've tried to send data
+	  on all of them at least once.
+
+2006-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_all_source_pads_unlinked),
 	(gst_avi_demux_process_next_entry), (gst_avi_demux_loop):
 	  Make loop function/task pause itself when all source pads are
