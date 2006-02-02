@@ -1,5 +1,10 @@
 2006-02-02  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-element-sink.txt:
+	Updated doc.
+
+2006-02-02  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_do_sync),
 	(gst_base_sink_render_object),
 	(gst_base_sink_queue_object_unlocked):

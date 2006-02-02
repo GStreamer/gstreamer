@@ -155,10 +155,10 @@ sink overview
           queue.add (obj)
           return OK
 
-        # now clear the queue and render each item before
-	# rendering the current item.
-        while (queue.hasItem)
-          render_object (queue.remove())
+    # now clear the queue and render each item before
+    # rendering the current item.
+    while (queue.hasItem)
+      render_object (queue.remove())
 
     render_object (obj)
     queuelen = 0
