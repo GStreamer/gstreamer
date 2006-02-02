@@ -2240,6 +2240,25 @@ gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
   return buf;
 }
 
+static gboolean
+gst_avi_demux_all_source_pads_unlinked (GstAviDemux * avi)
+{
+  gint i, num_unlinked = 0;
+
+  for (i = 0; i < avi->num_streams; ++i) {
+    GstPad *peer;
+
+    peer = gst_pad_get_peer (avi->stream[i].pad);
+    if (peer) {
+      gst_object_unref (peer);
+    } else {
+      ++num_unlinked;
+    }
+  }
+
+  return (num_unlinked == avi->num_streams);
+}
+
 static GstFlowReturn
 gst_avi_demux_process_next_entry (GstAviDemux * avi)
 {
@@ -2294,9 +2313,12 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
             GST_TIME_FORMAT " on pad %s",
             GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
             GST_PAD_NAME (stream->pad));
-        if ((res = gst_pad_push (stream->pad, buf)) != GST_FLOW_OK &&
-            res != GST_FLOW_NOT_LINKED)
+        res = gst_pad_push (stream->pad, buf);
+        if (res != GST_FLOW_OK && res != GST_FLOW_NOT_LINKED) {
+          GST_DEBUG_OBJECT (avi, "Flow on pad %s: %s",
+              GST_PAD_NAME (stream->pad), gst_flow_get_name (res));
           return res;
+        }
         processed = TRUE;
       }
     next:
@@ -2405,11 +2427,18 @@ gst_avi_demux_loop (GstPad * pad)
         gst_avi_demux_send_event (avi, avi->seek_event);
         avi->seek_event = NULL;
       }
-      if ((res = gst_avi_demux_stream_data (avi)) != GST_FLOW_OK)
+      if ((res = gst_avi_demux_stream_data (avi)) != GST_FLOW_OK) {
+        GST_DEBUG_OBJECT (avi, "stream_data flow: %s", gst_flow_get_name (res));
         goto pause;
+      }
       break;
     default:
       g_assert_not_reached ();
+  }
+
+  if (gst_avi_demux_all_source_pads_unlinked (avi)) {
+    GST_DEBUG_OBJECT (avi, "all source pads unlinked, pausing");
+    goto pause;
   }
 
   return;

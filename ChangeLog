@@ -1,5 +1,12 @@
 2006-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_all_source_pads_unlinked),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_loop):
+	  Make loop function/task pause itself when all source pads are
+	  unlinked.
+
+2006-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	* ext/gconf/gconf.c: (gst_gconf_render_bin_from_key):
 	  Use new functions from core to render a bin from a
