@@ -1,3 +1,8 @@
+2006-02-02  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	Update for current GStreamer core API
+
 2006-02-01  Edward Hervey  <edward@fluendo.com>
 
 	* testsuite/test_event.py:

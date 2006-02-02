@@ -163,6 +163,12 @@
   (return-type "GstIterator*")
 )
 
+(define-method iterate_sources
+  (of-object "GstBin")
+  (c-name "gst_bin_iterate_sources")
+  (return-type "GstIterator*")
+)
+
 (define-method iterate_all_by_interface
   (of-object "GstBin")
   (c-name "gst_bin_iterate_all_by_interface")
@@ -216,6 +222,18 @@
   (parameters
     '("guint" "size")
   )
+)
+
+(define-method is_metadata_writable
+  (of-object "GstBuffer")
+  (c-name "gst_buffer_is_metadata_writable")
+  (return-type "gboolean")
+)
+
+(define-method make_metadata_writable
+  (of-object "GstBuffer")
+  (c-name "gst_buffer_make_metadata_writable")
+  (return-type "GstBuffer*")
 )
 
 (define-method get_caps
@@ -2137,6 +2155,18 @@
   )
 )
 
+(define-method add_associationv
+  (of-object "GstIndex")
+  (c-name "gst_index_add_associationv")
+  (return-type "GstIndexEntry*")
+  (parameters
+    '("gint" "id")
+    '("GstAssocFlags" "flags")
+    '("gint" "n")
+    '("const-GstIndexAssociation*" "list")
+  )
+)
+
 (define-method add_association
   (of-object "GstIndex")
   (c-name "gst_index_add_association")
@@ -3824,6 +3854,35 @@
   (return-type "none")
   (parameters
     '("guint" "handler_id")
+  )
+)
+
+(define-method found_tags_for_pad
+  (of-object "GstElement")
+  (c-name "gst_element_found_tags_for_pad")
+  (return-type "none")
+  (parameters
+    '("GstPad*" "pad")
+    '("GstTagList*" "list")
+  )
+)
+
+(define-method found_tags
+  (of-object "GstElement")
+  (c-name "gst_element_found_tags")
+  (return-type "none")
+  (parameters
+    '("GstTagList*" "list")
+  )
+)
+
+(define-function gst_parse_bin_from_description
+  (c-name "gst_parse_bin_from_description")
+  (return-type "GstElement*")
+  (parameters
+    '("const-gchar*" "bin_description")
+    '("gboolean" "ghost_unconnected_pads")
+    '("GError**" "err")
   )
 )
 
@@ -6420,6 +6479,15 @@
     '("GstElement*" "element_1")
   )
   (varargs #t)
+)
+
+(define-method find_unconnected_pad
+  (of-object "GstBin")
+  (c-name "gst_bin_find_unconnected_pad")
+  (return-type "GstPad*")
+  (parameters
+    '("GstPadDirection" "direction")
+  )
 )
 
 (define-method merge
