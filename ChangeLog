@@ -1,5 +1,33 @@
 2006-02-02  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-element-sink.txt:
+	Updated document.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),
+	(gst_base_sink_finalize), (gst_base_sink_preroll_queue_flush),
+	(gst_base_sink_configure_segment), (gst_base_sink_commit_state),
+	(gst_base_sink_get_sync_times), (gst_base_sink_wait_clock),
+	(gst_base_sink_do_sync), (gst_base_sink_render_object),
+	(gst_base_sink_preroll_object),
+	(gst_base_sink_queue_object_unlocked),
+	(gst_base_sink_queue_object), (gst_base_sink_event),
+	(gst_base_sink_chain_unlocked), (gst_base_sink_chain),
+	(gst_base_sink_loop), (gst_base_sink_activate_pull),
+	(gst_base_sink_get_position), (gst_base_sink_change_state):
+	* libs/gst/base/gstbasesink.h:
+	Totally refactored matching the design doc.
+	Use two segments, one to clip incomming buffers and another to
+	perform sync.
+	Handle queueing correctly, bypass the queue when playing.
+	Make EOS cancelable.
+	Handle errors correctly when operating in pull based mode.
+
+	* tests/check/elements/fakesink.c: (GST_START_TEST),
+	(fakesink_suite):
+	Added new check for sinks.
+
+2006-02-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstsegment.c: (gst_segment_clip):
 	No reason to refuse to clip when start == -1
 

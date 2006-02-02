@@ -166,7 +166,7 @@ GST_START_TEST (test_clipping)
     fail_unless (current == GST_STATE_PAUSED);
     fail_unless (pending == GST_STATE_VOID_PENDING);
 
-    /* pause should render the buffer */
+    /* playing should render the buffer */
     ret = gst_element_set_state (sink, GST_STATE_PLAYING);
     fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
@@ -217,6 +217,81 @@ GST_START_TEST (test_clipping)
 
 GST_END_TEST;
 
+GST_START_TEST (test_preroll_sync)
+{
+  GstElement *pipeline, *sink;
+  GstPad *sinkpad;
+  GstStateChangeReturn ret;
+
+  /* create sink */
+  pipeline = gst_pipeline_new ("pipeline");
+  fail_if (pipeline == NULL);
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  fail_if (sink == NULL);
+  g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  sinkpad = gst_element_get_pad (sink, "sink");
+  fail_if (sinkpad == NULL);
+
+  /* make pipeline and element ready to accept data */
+  ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+
+  /* send segment */
+  {
+    GstEvent *segment;
+    gboolean eret;
+
+    GST_DEBUG ("sending segment");
+    segment = gst_event_new_new_segment (FALSE,
+        1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND, 0 * GST_SECOND);
+
+    eret = gst_pad_send_event (sinkpad, segment);
+    fail_if (eret == FALSE);
+  }
+
+  /* send buffer that should block and finish preroll */
+  {
+    GstBuffer *buffer;
+    GstFlowReturn fret;
+    ChainData *data;
+    GstState current, pending;
+
+    buffer = gst_buffer_new ();
+    GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
+    GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+
+    GST_DEBUG ("sending buffer to finish preroll");
+    data = chain_async (sinkpad, buffer);
+    fail_if (data == NULL);
+
+    /* state should now eventually change to PAUSED */
+    ret =
+        gst_element_get_state (pipeline, &current, &pending,
+        GST_CLOCK_TIME_NONE);
+    fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+    fail_unless (current == GST_STATE_PAUSED);
+    fail_unless (pending == GST_STATE_VOID_PENDING);
+
+    /* playing should render the buffer */
+    ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+    /* and we should get a success return value */
+    fret = chain_async_return (data);
+    fail_if (fret != GST_FLOW_OK);
+  }
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  gst_object_unref (sinkpad);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 Suite *
 fakesink_suite (void)
 {
@@ -225,6 +300,7 @@ fakesink_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_clipping);
+  tcase_add_test (tc_chain, test_preroll_sync);
 
   return s;
 }
