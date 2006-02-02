@@ -45,47 +45,6 @@ gst_gconf_get_client (void)
   return _gst_gconf_client;
 }
 
-/* go through a bin, finding the one pad that is unconnected in the given
- *  * direction, and return that pad */
-static GstPad *
-gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
-{
-  GstPad *pad = NULL;
-  GList *elements = NULL;
-  const GList *pads = NULL;
-  GstElement *element = NULL;
-
-  GST_OBJECT_LOCK (bin);
-  elements = bin->children;
-  /* traverse all elements looking for unconnected pads */
-  while (elements && pad == NULL) {
-    element = GST_ELEMENT (elements->data);
-    GST_OBJECT_LOCK (element);
-    pads = element->pads;
-    while (pads) {
-      GstPad *testpad = GST_PAD (pads->data);
-
-      /* check if the direction matches */
-      if (GST_PAD_DIRECTION (testpad) == direction) {
-        GST_OBJECT_LOCK (testpad);
-        if (GST_PAD_PEER (testpad) == NULL) {
-          GST_OBJECT_UNLOCK (testpad);
-          /* found it ! */
-          pad = testpad;
-          break;
-        }
-        GST_OBJECT_UNLOCK (testpad);
-      }
-      pads = g_list_next (pads);
-    }
-    GST_OBJECT_UNLOCK (element);
-    elements = g_list_next (elements);
-  }
-  GST_OBJECT_UNLOCK (bin);
-
-  return pad;
-}
-
 /* external functions */
 
 /**
@@ -139,43 +98,6 @@ gst_gconf_set_string (const gchar * key, const gchar * value)
 }
 
 /**
- * gst_gconf_render_bin_from_description:
- * @description: a #gchar string describing the bin.
- *
- * Render bin from description @description.
- *
- * Returns: a #GstElement containing the rendered bin.
- */
-GstElement *
-gst_gconf_render_bin_from_description (const gchar * description)
-{
-  GstElement *bin = NULL;
-  GstPad *pad = NULL;
-  GError *error = NULL;
-  gchar *desc = NULL;
-
-  /* parse the pipeline to a bin */
-  desc = g_strdup_printf ("bin.( %s )", description);
-  bin = GST_ELEMENT (gst_parse_launch (desc, &error));
-  g_free (desc);
-  if (error) {
-    GST_ERROR ("gstgconf: error parsing pipeline %s\n%s\n",
-        description, error->message);
-    g_error_free (error);
-    return NULL;
-  }
-
-  /* find pads and ghost them if necessary */
-  if ((pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SRC))) {
-    gst_element_add_pad (bin, gst_ghost_pad_new ("src", pad));
-  }
-  if ((pad = gst_bin_find_unconnected_pad (GST_BIN (bin), GST_PAD_SINK))) {
-    gst_element_add_pad (bin, gst_ghost_pad_new ("sink", pad));
-  }
-  return bin;
-}
-
-/**
  * gst_gconf_render_bin_from_key:
  * @key: a #gchar string corresponding to a GConf key.
  *
@@ -190,9 +112,17 @@ gst_gconf_render_bin_from_key (const gchar * key)
   gchar *value;
 
   value = gst_gconf_get_string (key);
-  if (value)
-    bin = gst_gconf_render_bin_from_description (value);
-  g_free (value);
+  if (value) {
+    GError *err = NULL;
+
+    bin = gst_parse_bin_from_description (value, TRUE, &err);
+    if (err) {
+      GST_ERROR ("gconf: error creating bin '%s': %s", value, err->message);
+      g_error_free (err);
+    }
+
+    g_free (value);
+  }
   return bin;
 }
 

@@ -1,3 +1,10 @@
+2006-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* ext/gconf/gconf.c: (gst_gconf_render_bin_from_key):
+	  Use new functions from core to render a bin from a
+	  string. Fixes build. Up requirements to core CVS.
+
 2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/auparse/gstauparse.c: (gst_au_parse_chain):
