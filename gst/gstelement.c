@@ -1896,6 +1896,8 @@ gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
   transition = GST_STATE_TRANSITION (current, next);
 
   GST_STATE_NEXT (element) = next;
+  /* mark busy */
+  GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
   GST_OBJECT_UNLOCK (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
@@ -2108,6 +2110,13 @@ gst_element_set_state_func (GstElement * element, GstState state)
   next = GST_STATE_GET_NEXT (current, state);
   /* now we store the next state */
   GST_STATE_NEXT (element) = next;
+  /* mark busy, we need to check that there is actually a state change
+   * to be done else we could accidentally override SUCCESS/NO_PREROLL and
+   * the default element change_state function has no way to know what the
+   * old value was... could consider this a FIXME...*/
+  if (current != next)
+    GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
+
   transition = GST_STATE_TRANSITION (current, next);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
@@ -2209,11 +2218,8 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
   return ret;
 
 async:
-  GST_OBJECT_LOCK (element);
-  GST_STATE_RETURN (element) = ret;
   GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "exit async state change %d",
       ret);
-  GST_OBJECT_UNLOCK (element);
 
   return ret;
 

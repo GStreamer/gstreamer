@@ -1,5 +1,12 @@
 2006-02-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstelement.c: (gst_element_continue_state),
+	(gst_element_set_state_func), (gst_element_change_state):
+	Fixed #326576, been running this for quite some time with
+	no regressions at all.
+
+2006-02-02  Wim Taymans  <wim@fluendo.com>
+
 	* common/gst.supp:
 	Added more suppressions
 
