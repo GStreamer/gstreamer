@@ -1,3 +1,12 @@
+2006-02-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_provide_clock),
+	(gst_base_audio_sink_set_property),
+	(gst_base_audio_sink_get_property), (gst_base_audio_sink_render):
+	Don't try to provide a clock when we are not negotiated since
+	we might not be able to make it run.
+
 2006-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstdecodebin.c: (try_to_link_1):

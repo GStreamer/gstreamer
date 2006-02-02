@@ -181,12 +181,29 @@ gst_base_audio_sink_provide_clock (GstElement * elem)
 
   sink = GST_BASE_AUDIO_SINK (elem);
 
+  if (!gst_ring_buffer_is_acquired (sink->ringbuffer))
+    goto wrong_state;
+
+  GST_OBJECT_LOCK (sink);
   if (sink->provide_clock)
-    clock = GST_CLOCK_CAST (gst_object_ref (sink->provided_clock));
-  else
-    clock = NULL;
+    goto clock_disabled;
+
+  clock = GST_CLOCK_CAST (gst_object_ref (sink->provided_clock));
+  GST_OBJECT_UNLOCK (sink);
 
   return clock;
+
+wrong_state:
+  {
+    GST_DEBUG_OBJECT (sink, "ringbuffer not acquired");
+    return NULL;
+  }
+clock_disabled:
+  {
+    GST_DEBUG_OBJECT (sink, "clock provide disabled");
+    GST_OBJECT_UNLOCK (sink);
+    return NULL;
+  }
 }
 
 static GstClockTime
@@ -222,7 +239,9 @@ gst_base_audio_sink_set_property (GObject * object, guint prop_id,
       sink->latency_time = g_value_get_int64 (value);
       break;
     case PROP_PROVIDE_CLOCK:
+      GST_OBJECT_LOCK (sink);
       sink->provide_clock = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (sink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -246,7 +265,9 @@ gst_base_audio_sink_get_property (GObject * object, guint prop_id,
       g_value_set_int64 (value, sink->latency_time);
       break;
     case PROP_PROVIDE_CLOCK:
+      GST_OBJECT_LOCK (sink);
       g_value_set_boolean (value, sink->provide_clock);
+      GST_OBJECT_UNLOCK (sink);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -543,7 +564,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
     /* we tollerate a 10th of a second diff before we start resyncing. This
      * should be enough to compensate for various rounding errors in the timestamp
-     * and sample offset position. */
+     * and sample offset position. We always resync if we got a discont anyway. */
     if (diff < ringbuf->spec.rate / DIFF_TOLERANCE) {
       GST_DEBUG_OBJECT (sink,
           "align with prev sample, %" G_GINT64_FORMAT " < %lu", diff,
