@@ -33,6 +33,8 @@ static GMutex *lock = NULL;
 static GstBuffer *buf = NULL;
 static gulong id;
 
+/* called for every buffer.  Waits until the global "buf" variable is unset,
+ * then sets it to the buffer received, and signals. */
 static gboolean
 buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
 {
@@ -41,6 +43,7 @@ buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
   while (buf != NULL)
     g_cond_wait (cond, lock);
 
+  /* increase the refcount because we store it globally for others to use */
   buf = gst_buffer_ref (buffer);
 
   g_cond_signal (cond);
@@ -62,6 +65,7 @@ start_pipeline (GstElement * bin, GstPad * pad)
 
 }
 
+/* waits until the probe receives a buffer.  will catch every buffer */
 static GstBuffer *
 get_buffer (GstElement * bin, GstPad * pad)
 {
