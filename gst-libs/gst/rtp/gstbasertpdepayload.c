@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org> 
+ * Copyright (C) <2005> Nokia Corporation <kai.vehmanen@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -220,14 +221,22 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
     {
-      GST_DEBUG_OBJECT (filter,
-          "Upstream sent a NEWSEGMENT, handle in worker thread.");
-      /* the worker thread will assign a new RTP-TS<->GST-TS mapping
-       * based on the next processed RTP packet */
-      filter->need_newsegment = TRUE;
-      gst_event_unref (event);
-      break;
+      /* intercept NEWSEGMENT events only if the packet scheduler thread
+         is active */
+      if (filter->thread) {
+        GST_DEBUG_OBJECT (filter,
+            "Upstream sent a NEWSEGMENT, handle in worker thread.");
+        /* the worker thread will assign a new RTP-TS<->GST-TS mapping
+         * based on the next processed RTP packet */
+        filter->need_newsegment = TRUE;
+        gst_event_unref (event);
+        break;
+      } else {
+        GST_DEBUG_OBJECT (filter,
+            "Upstream sent a NEWSEGMENT, passing through.");
+      }
     }
+      /* note: pass through to default if no thread running */
     default:
       /* pass other events forward */
       res = gst_pad_push_event (filter->srcpad, event);
@@ -361,8 +370,8 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
   /* if our queue is getting to big (more than RTP_QUEUEDELAY ms of data)
    * release heading buffers
    */
-  GST_DEBUG_OBJECT (filter, "clockrate %d, queue_delay %d", filter->clock_rate,
-      filter->queue_delay);
+  /*GST_DEBUG_OBJECT (filter, "clockrate %d, queue_delay %d", filter->clock_rate,
+     filter->queue_delay); */
   q_size_secs = (gfloat) filter->queue_delay / 1000;
   maxtsunits = (gfloat) filter->clock_rate * q_size_secs;
 
@@ -406,11 +415,15 @@ gst_base_rtp_depayload_thread (GstBaseRTPDepayload * filter)
 static gboolean
 gst_base_rtp_depayload_start_thread (GstBaseRTPDepayload * filter)
 {
-  GST_DEBUG_OBJECT (filter, "Starting queue release thread");
-  filter->thread_running = TRUE;
-  filter->thread = g_thread_create ((GThreadFunc) gst_base_rtp_depayload_thread,
-      filter, TRUE, NULL);
-  GST_DEBUG_OBJECT (filter, "Started queue release thread");
+  /* only launch the thread if processing is needed */
+  if (filter->queue_delay) {
+    GST_DEBUG_OBJECT (filter, "Starting queue release thread");
+    filter->thread_running = TRUE;
+    filter->thread =
+        g_thread_create ((GThreadFunc) gst_base_rtp_depayload_thread, filter,
+        TRUE, NULL);
+    GST_DEBUG_OBJECT (filter, "Started queue release thread");
+  }
   return TRUE;
 }
 

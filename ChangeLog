@@ -1,3 +1,10 @@
+2006-02-01  Philippe Kalaf <burger at speedy dot org>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	  Patch by Kai Vehmanen : Adds ability to enable newsegment bypass by
+	  setting queue_delay to zero. Also avoid thread being started if
+	  queue_delay is zero.
+
 2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/test6.c: (new_decoded_pad_cb), (show_error), (main):
