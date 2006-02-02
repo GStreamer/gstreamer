@@ -7,8 +7,6 @@ TODO
         is parsed correctly.
       - implement seek/query/convert
       - implement getrange scheduling
-   - on EOS, only post EOS when the complete ringbuffer has been played.      
-   - more accurate clipping of samples outside of the segment
    - simple resampling
    - more accurate master/slave calibration handling
    - faster audio cutoff when going to PAUSED

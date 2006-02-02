@@ -320,6 +320,38 @@ gst_base_audio_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
 }
 
 static gboolean
+gst_base_audio_sink_drain (GstBaseAudioSink * sink)
+{
+  if (!sink->ringbuffer)
+    return TRUE;
+  if (!sink->ringbuffer->spec.rate)
+    return TRUE;
+
+  if (sink->next_sample != -1) {
+    GstClockTime time;
+    GstClock *clock;
+
+    time =
+        gst_util_uint64_scale_int (sink->next_sample, GST_SECOND,
+        sink->ringbuffer->spec.rate);
+
+    GST_OBJECT_LOCK (sink);
+    if ((clock = GST_ELEMENT_CLOCK (sink)) != NULL) {
+      GstClockID id = gst_clock_new_single_shot_id (clock, time);
+
+      GST_OBJECT_UNLOCK (sink);
+
+      GST_DEBUG_OBJECT (sink, "waiting for last sample to play");
+      gst_clock_id_wait (id, NULL);
+      sink->next_sample = -1;
+    } else {
+      GST_OBJECT_UNLOCK (sink);
+    }
+  }
+  return TRUE;
+}
+
+static gboolean
 gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
 {
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (bsink);
@@ -337,6 +369,7 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       /* need to start playback when we reach EOS */
       gst_ring_buffer_start (sink->ringbuffer);
       /* now wait till we played everything */
+      gst_base_audio_sink_drain (sink);
       break;
     default:
       break;
