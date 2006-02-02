@@ -414,6 +414,8 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
  *
  * This function is typically used by elements that need to operate on
  * the stream time of the buffers it receives, such as effect plugins.
+ * The stream time is always between 0 and the total duration of the 
+ * media stream.
  *
  * Returns: the position in stream_time.
  */
@@ -451,7 +453,8 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
  * segment.
  *
  * This function is typically used by elements that need to synchronize to the
- * global clock in a pipeline.
+ * global clock in a pipeline. The runnning time is a constantly increasing value
+ * starting from 0.
  *
  * Returns: the position as the total running time.
  */
@@ -502,13 +505,9 @@ gst_segment_clip (GstSegment * segment, GstFormat format, gint64 start,
   else
     g_return_val_if_fail (segment->format == format, FALSE);
 
-  /* we need a valid start position */
-  if (start == -1)
-    return FALSE;
-
-  /* if we have a stop position and start is bigger, we're
-   * outside of the segment */
-  if (segment->stop != -1 && start >= segment->stop)
+  /* if we have a stop position and a valid start and start is bigger, 
+   * we're outside of the segment */
+  if (segment->stop != -1 && start != -1 && start >= segment->stop)
     return FALSE;
 
   /* if a stop position is given and is before the segment start,
@@ -516,8 +515,12 @@ gst_segment_clip (GstSegment * segment, GstFormat format, gint64 start,
   if (stop != -1 && stop <= segment->start)
     return FALSE;
 
-  if (clip_start)
-    *clip_start = MAX (start, segment->start);
+  if (clip_start) {
+    if (start == -1)
+      *clip_start = -1;
+    else
+      *clip_start = MAX (start, segment->start);
+  }
 
   if (clip_stop) {
     if (stop == -1)
