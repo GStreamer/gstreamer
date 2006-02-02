@@ -1,3 +1,8 @@
+2006-02-02  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_register): Reorder case
+	statements to make control flow more clear.
+
 2006-02-02  Christian Schaller <christian at fluendo dot com>
 
 	* Set rank NONE for mp3 and mpeg2video:

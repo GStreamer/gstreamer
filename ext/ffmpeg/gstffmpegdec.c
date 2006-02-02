@@ -1386,14 +1386,12 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_VC9:
         /* what's that? */
       case CODEC_ID_SP5X:
-        rank = GST_RANK_NONE;
         /* MP3 and MPEG2 have better alternatives and
            the ffmpeg versions don't work properly feel
            free to assign rank if you fix them */
       case CODEC_ID_MP3:
-	rank = GST_RANK_NONE;
       case CODEC_ID_MPEG2VIDEO:
-	rank = GST_RANK_NONE;
+        rank = GST_RANK_NONE;
         break;
     }
     if (!gst_element_register (plugin, type_name, rank, type)) {
