@@ -765,6 +765,8 @@ again:
    * any clock sync in PAUSED because there is no clock. 
    */
   while (G_UNLIKELY (basesink->need_preroll)) {
+    GST_DEBUG_OBJECT (basesink, "prerolling object %p", obj);
+
     if (G_LIKELY (basesink->playing_async)) {
       basesink->playing_async = FALSE;
       /* commit state */
@@ -853,15 +855,20 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
   } else {
     GstEvent *event = GST_EVENT_CAST (obj);
     gboolean ok = TRUE;
+    GstEventType type;
 
     bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
-    GST_DEBUG_OBJECT (basesink, "rendering event %p", obj);
+    type = GST_EVENT_TYPE (event);
+
+    GST_DEBUG_OBJECT (basesink, "rendering event %p, type %s", obj,
+        gst_event_type_get_name (type));
+
     if (bclass->event)
       ok = bclass->event (basesink, event);
 
     if (G_LIKELY (ok)) {
-      switch (GST_EVENT_TYPE (event)) {
+      switch (type) {
         case GST_EVENT_EOS:
           /* the EOS event is completely handled so we mark
            * ourselves as being in the EOS state. eos is also 
@@ -968,38 +975,42 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   gint length;
-
-  if (G_LIKELY (prerollable))
-    basesink->preroll_queued++;
-
-  GST_DEBUG_OBJECT (basesink, "now %d prerolled items",
-      basesink->preroll_queued);
+  GQueue *q;
 
   if (G_UNLIKELY (basesink->need_preroll)) {
+    if (G_LIKELY (prerollable))
+      basesink->preroll_queued++;
+
     length = basesink->preroll_queued;
 
+    GST_DEBUG_OBJECT (basesink, "now %d prerolled items", length);
+
+    /* first prerollable item needs to finish the preroll */
     if (length == 1) {
       ret = gst_base_sink_preroll_object (basesink, pad, obj);
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         goto preroll_failed;
     }
-    /* need to recheck, commmit state during preroll could have made us 
-     * not need more preroll. */
+    /* need to recheck if we need preroll, commmit state during preroll 
+     * could have made us not need more preroll. */
     if (G_UNLIKELY (basesink->need_preroll)) {
-      GQueue *q;
-
       /* see if we can render now. */
       if (G_UNLIKELY (length <= basesink->preroll_queue_max_len))
         goto more_preroll;
-
-      /* we can start rendering (or blocking) */
-      GST_DEBUG_OBJECT (basesink, "emptying queue");
-      q = basesink->preroll_queue;
-      while (G_UNLIKELY (!g_queue_is_empty (q))) {
-        /* FIXME, do something with the return value? */
-        ret = gst_base_sink_render_object (basesink, pad, g_queue_pop_head (q));
-      }
     }
+  }
+
+  /* we can start rendering (or blocking) the queued object
+   * if any. */
+  q = basesink->preroll_queue;
+  while (G_UNLIKELY (!g_queue_is_empty (q))) {
+    GstMiniObject *o;
+
+    o = g_queue_pop_head (q);
+    GST_DEBUG_OBJECT (basesink, "rendering queued object %p", o);
+
+    /* FIXME, do something with the return value? */
+    ret = gst_base_sink_render_object (basesink, pad, o);
   }
 
   /* now render the object */
