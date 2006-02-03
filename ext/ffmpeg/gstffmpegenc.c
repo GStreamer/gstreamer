@@ -335,7 +335,9 @@ gst_ffmpegenc_getcaps (GstPad * pad)
     * instances/threads/..., one could investigate if there is a way to
     * set this as a struct member on the av context, and check it from the
     * log handler */
+#ifndef GST_DISABLE_GST_DEBUG
   _shut_up_I_am_probing = TRUE;
+#endif
   for (pixfmt = 0; pixfmt < PIX_FMT_NB; pixfmt++) {
     ctx->pix_fmt = pixfmt;
     if (gst_ffmpeg_avcodec_open (ctx, oclass->in_plugin) >= 0 &&
@@ -351,7 +353,9 @@ gst_ffmpegenc_getcaps (GstPad * pad)
       gst_ffmpeg_avcodec_close (ctx);
   }
   av_free (ctx);
+#ifndef GST_DISABLE_GST_DEBUG
   _shut_up_I_am_probing = FALSE;
+#endif
 
   /* make sure we have something */
   if (!caps) {

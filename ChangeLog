@@ -1,3 +1,8 @@
+2006-02-03  Edgard Lima <edgard.lima@indt.org.br>
+
+        * ext/ffmpeg/gstffmpegenc.c:
+        Just make it compile with --disable-gst-debug.
+			
 2006-02-02  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_register): Reorder case
