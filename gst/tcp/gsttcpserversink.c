@@ -170,7 +170,9 @@ gst_tcp_server_sink_handle_server_read (GstTCPServerSink * sink)
 static void
 gst_tcp_server_sink_removed (GstMultiFdSink * sink, int fd)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstTCPServerSink *this = GST_TCP_SERVER_SINK (sink);
+#endif
 
   GST_LOG_OBJECT (this, "closing fd %d", fd);
   if (close (fd) < 0) {

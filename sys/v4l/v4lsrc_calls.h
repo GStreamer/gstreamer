@@ -47,7 +47,9 @@ GstBuffer *gst_v4lsrc_buffer_new   (GstV4lSrc * v4lsrc, gint num);
 gboolean gst_v4lsrc_try_capture    (GstV4lSrc *v4lsrc, gint width, gint height, gint palette);
 
 /* For debug purposes, share the palette names */
+#ifndef GST_DISABLE_GST_DEBUG
 const char *gst_v4lsrc_palette_name (int i);
+#endif
 
 
 G_END_DECLS

@@ -390,8 +390,10 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
       /* discontinuity; track how many bytes we skipped (-ret) */
       ogg->offset -= ret;
     } else {
+#ifndef GST_DISABLE_GST_DEBUG
       gint64 granule = ogg_page_granulepos (&page);
       int bos = ogg_page_bos (&page);
+#endif
       guint64 startoffset = ogg->offset;
 
       GST_LOG_OBJECT (ogg, "Timestamping outgoing buffer as %" GST_TIME_FORMAT,

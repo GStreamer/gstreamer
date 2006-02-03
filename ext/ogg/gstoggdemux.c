@@ -620,7 +620,10 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
 {
   GstCaps *caps;
   GstElement *element = NULL;
+
+#ifndef GST_DISABLE_GST_DEBUG
   GstOggDemux *ogg = pad->ogg;
+#endif
 
   if (GST_PAD_CAPS (pad) != NULL)
     return TRUE;
@@ -699,7 +702,10 @@ gst_ogg_demux_chain_elem_pad (GstOggPad * pad, ogg_packet * packet)
 {
   GstBuffer *buf;
   GstFlowReturn ret;
+
+#ifndef GST_DISABLE_GST_DEBUG
   GstOggDemux *ogg = pad->ogg;
+#endif
 
   /* initialize our internal decoder with packets */
   if (!pad->elem_pad)
@@ -737,7 +743,10 @@ static GstFlowReturn
 gst_ogg_demux_queue_data (GstOggPad * pad, ogg_packet * packet)
 {
   GstBuffer *buf;
+
+#ifndef GST_DISABLE_GST_DEBUG
   GstOggDemux *ogg = pad->ogg;
+#endif
 
   GST_DEBUG_OBJECT (ogg, "%p queueing data serial %08lx", pad, pad->serialno);
 

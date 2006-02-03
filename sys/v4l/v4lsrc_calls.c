@@ -494,11 +494,13 @@ gst_v4lsrc_try_capture (GstV4lSrc * v4lsrc, gint width, gint height,
   return TRUE;
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
 const char *
 gst_v4lsrc_palette_name (int i)
 {
   return v4l_palette_name[i];
 }
+#endif
 
 gboolean
 gst_v4lsrc_get_fps (GstV4lSrc * v4lsrc, gint * fps_n, gint * fps_d)
