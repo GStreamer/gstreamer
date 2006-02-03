@@ -232,6 +232,16 @@ parse_text_identification_frame (ID3TagsWorking * work)
   encoding = work->parse_data[0];
   parse_split_strings (encoding, (gchar *) work->parse_data + 1,
       work->parse_size - 1, &fields);
+  if (fields) {
+    if (fields->len > 0) {
+      GST_LOG ("Read %d fields from Text ID frame of size %d. First is '%s'",
+          fields->len, work->parse_size - 1,
+          g_array_index (fields, gchar *, 0));
+    } else {
+      GST_LOG ("Read %d fields from Text ID frame of size %d", fields->len,
+          work->parse_size - 1);
+    }
+  }
 
   return fields;
 }
@@ -242,6 +252,9 @@ id3v2_tag_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
 {
   GType tag_type = gst_tag_get_type (tag_name);
   GstTagList *tag_list = work->tags;
+
+  if (tag_str == NULL)
+    return FALSE;
 
   switch (tag_type) {
     case G_TYPE_UINT:
@@ -371,8 +384,7 @@ id3v2_genre_string_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
   /* If it's a number, it might be a defined genre */
   if (id3v2_are_digits (tag_str, len)) {
     tag_str = gst_tag_id3_genre_get (strtol (tag_str, NULL, 10));
-    if (tag_str != NULL)
-      return id3v2_tag_to_taglist (work, tag_name, tag_str);
+    return id3v2_tag_to_taglist (work, tag_name, tag_str);
   }
   /* Otherwise it might be "RX" or "CR" */
   if (len == 2) {
@@ -434,7 +446,7 @@ id3v2_genre_fields_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
       }
     }
 
-    if (len > 0)
+    if (len > 0 && tag_str != NULL)
       result |= id3v2_genre_string_to_taglist (work, tag_name, tag_str, len);
   }
   return result;
