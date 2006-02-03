@@ -1,3 +1,11 @@
+2006-02-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstdecodebin.c: (try_to_link_1):
+	  Don't put essential function call into
+	  g_return_*() macro, otherwise it'll all be
+	  replaced by NOOPs when compiling with
+	  G_DISABLE_CHECKS defined.
+
 2006-02-03  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/ogg/gstoggdemux.c:

@@ -729,6 +729,8 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
   isdemux = is_demuxer_element (srcelement);
 
   if (isdemux && factories != NULL) {
+    GstPadLinkReturn dqlink;
+
     /* Insert a queue between demuxer and decoder */
     GST_DEBUG_OBJECT (decode_bin,
         "Element %s is a demuxer, inserting a queue",
@@ -745,8 +747,8 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
     queuesinkpad = gst_element_get_pad (queue, "sink");
     usedsrcpad = queuesrcpad = gst_element_get_pad (queue, "src");
 
-    g_return_val_if_fail (gst_pad_link (pad, queuesinkpad) == GST_PAD_LINK_OK,
-        NULL);
+    dqlink = gst_pad_link (pad, queuesinkpad);
+    g_return_val_if_fail (dqlink == GST_PAD_LINK_OK, NULL);
   }
 
   /* loop over the factories */
