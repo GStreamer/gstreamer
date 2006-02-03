@@ -872,8 +872,10 @@ gst_type_find_element_activate (GstPad * pad)
   gst_pad_activate_push (typefind->src, FALSE);
 
   /* 5 */
-  if (!found_caps)
+  if (!found_caps) {
+    GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
     return FALSE;
+  }
 
   /* 6 */
   g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],

@@ -1,3 +1,10 @@
+2006-02-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_activate):
+	  Post TYPE_NOT_FOUND error message when typefinding
+	  is unsuccessful in the activate function as well.
+
 2006-02-02  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-element-sink.txt:
