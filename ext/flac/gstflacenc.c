@@ -509,14 +509,17 @@ gst_flac_enc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
       absolute_byte_offset, GST_BUFFER_OFFSET_NONE, 0);
 
   if ((peerpad = gst_pad_get_peer (flacenc->srcpad))) {
-#ifndef GST_DISABLE_GST_DEBUG
     gboolean ret = gst_pad_send_event (peerpad, event);
-#endif
 
     gst_object_unref (peerpad);
 
-    GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " %s", absolute_byte_offset,
-        (ret) ? "succeeded" : "failed");
+    if (ret) {
+      GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " %s", absolute_byte_offset,
+          "succeeded");
+    } else {
+      GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " %s", absolute_byte_offset,
+          "failed");
+    }
   } else {
     GST_DEBUG ("Seek to %" G_GUINT64_FORMAT " failed (no peer pad)",
         absolute_byte_offset);

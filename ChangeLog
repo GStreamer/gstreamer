@@ -1,6 +1,12 @@
 2006-02-03  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/flac/gstflacenc.c:
+	Fixed a bug add in last commit, where no event is send. Thanks Tim to
+	show me.
+	
+2006-02-03  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/flac/gstflacenc.c:
 	* gst/matroska/ebml-read.c:
 	Just make it compile with --disable-gst-debug.
 
