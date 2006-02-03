@@ -263,7 +263,9 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 {
   gboolean ret = TRUE;
 
+#ifndef GST_DISABLE_GST_DEBUG
   GstRMDemux *rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+#endif
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:

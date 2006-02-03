@@ -1,3 +1,9 @@
+2006-02-03  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/mad/gstid3tag.c:
+	* gst/realmedia/rmdemux.c:
+	Just make it compile with --disable-gst-debug.
+
 2006-01-31  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mad/gstmad.c: (gst_mad_convert_src), (scale),

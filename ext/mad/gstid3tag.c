@@ -55,6 +55,7 @@ typedef enum
 }
 GstID3TagState;
 
+#ifndef GST_DISABLE_GST_DEBUG
 static const char *state_names[] = {
   "READING_V2_TAG",
   "SEEKING_TO_V1_TAG",
@@ -63,6 +64,7 @@ static const char *state_names[] = {
   "NORMAL_START2",
   "NORMAL"
 };
+#endif
 
 #define GST_ID3_TAG_GET_STATE_NAME(state) state_names[state]
 
@@ -75,12 +77,14 @@ typedef enum
 }
 GstID3ParseMode;
 
+#ifndef GST_DISABLE_GST_DEBUG
 static const char *mode_names[] = {
   "BASE",
   "DEMUX",
   "MUX",
   "ANY"
 };
+#endif
 
 #define GST_ID3_TAG_GET_MODE_NAME(mode) mode_names[mode]
 
