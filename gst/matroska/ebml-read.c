@@ -609,7 +609,10 @@ gboolean
 gst_ebml_read_utf8 (GstEbmlRead * ebml, guint32 * id, gchar ** str)
 {
   gboolean ret;
+
+#ifndef GST_DISABLE_GST_DEBUG
   guint64 oldoff = ebml->offset;
+#endif
 
   ret = gst_ebml_read_ascii (ebml, id, str);
 

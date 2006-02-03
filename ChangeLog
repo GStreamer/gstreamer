@@ -1,3 +1,9 @@
+2006-02-03  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/flac/gstflacenc.c:
+	* gst/matroska/ebml-read.c:
+	Just make it compile with --disable-gst-debug.
+
 2006-02-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3v2frames.c: (parse_text_identification_frame),
