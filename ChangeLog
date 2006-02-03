@@ -1,3 +1,13 @@
+2006-02-03  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_finalise),
+	(gst_alsasink_class_init), (gst_alsasink_init),
+	(gst_alsasink_write), (gst_alsasink_reset):
+	* ext/alsa/gstalsasink.h:
+	Add lock to protect alsa calls.
+	Implement reset to flush samples ASAP, does not work
+	with dmix though.
+
 2006-02-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

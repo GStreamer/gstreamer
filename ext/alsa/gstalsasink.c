@@ -42,6 +42,9 @@ GST_ELEMENT_DETAILS ("Audio Sink (ALSA)",
     "Output to a sound card via ALSA",
     "Wim Taymans <wim@fluendo.com>");
 
+#define DEFAULT_DEVICE		"default"
+#define DEFAULT_DEVICE_NAME	""
+
 enum
 {
   PROP_0,
@@ -142,6 +145,7 @@ gst_alsasink_finalise (GObject * object)
   GstAlsaSink *sink = GST_ALSA_SINK (object);
 
   g_free (sink->device);
+  g_mutex_free (sink->alsa_lock);
 }
 
 static void
@@ -189,11 +193,12 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "ALSA device, as defined in an asound configuration file",
-          "default", G_PARAM_READWRITE));
+          DEFAULT_DEVICE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", "", G_PARAM_READABLE));
+          "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
+          G_PARAM_READABLE));
 }
 
 static void
@@ -246,13 +251,18 @@ gst_alsasink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static snd_output_t *output = NULL;
+
 static void
 gst_alsasink_init (GstAlsaSink * alsasink)
 {
   GST_DEBUG_OBJECT (alsasink, "initializing alsasink");
 
-  alsasink->device = g_strdup ("default");
+  alsasink->device = g_strdup (DEFAULT_DEVICE);
   alsasink->handle = NULL;
+  alsasink->alsa_lock = g_mutex_new ();
+
+  snd_output_stdio_attach (&output, stdout, 0);
 }
 
 static GstCaps *
@@ -695,12 +705,14 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
   cptr = length / alsa->bytes_per_sample;
   ptr = data;
 
+  GST_ALSA_LOCK (asink);
   while (cptr > 0) {
     err = snd_pcm_writei (alsa->handle, ptr, cptr);
 
+    GST_DEBUG_OBJECT (asink, "written %d result %d", cptr, err);
     if (err < 0) {
+      GST_DEBUG_OBJECT (asink, "Write error: %s", snd_strerror (err));
       if (err == -EAGAIN) {
-        GST_DEBUG_OBJECT (asink, "Write error: %s", snd_strerror (err));
         continue;
       } else if (xrun_recovery (alsa->handle, err) < 0) {
         goto write_error;
@@ -711,11 +723,13 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
     ptr += err * alsa->channels;
     cptr -= err;
   }
+  GST_ALSA_UNLOCK (asink);
 
   return length - cptr;
 
 write_error:
   {
+    GST_ALSA_UNLOCK (asink);
     return length;              /* skip one period */
   }
 }
@@ -736,14 +750,18 @@ gst_alsasink_delay (GstAudioSink * asink)
 static void
 gst_alsasink_reset (GstAudioSink * asink)
 {
-#if 0
   GstAlsaSink *alsa;
   gint err;
 
   alsa = GST_ALSA_SINK (asink);
 
+  GST_ALSA_LOCK (asink);
+  GST_DEBUG_OBJECT (alsa, "drop");
   CHECK (snd_pcm_drop (alsa->handle), drop_error);
+  GST_DEBUG_OBJECT (alsa, "prepare");
   CHECK (snd_pcm_prepare (alsa->handle), prepare_error);
+  GST_DEBUG_OBJECT (alsa, "reset done");
+  GST_ALSA_UNLOCK (asink);
 
   return;
 
@@ -760,5 +778,4 @@ prepare_error:
         ("alsa-reset: pcm prepare error: %s", snd_strerror (err)), (NULL));
     return;
   }
-#endif
 }

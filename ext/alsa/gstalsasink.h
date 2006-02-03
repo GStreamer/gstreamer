@@ -36,9 +36,14 @@ G_BEGIN_DECLS
 #define GST_ALSA_SINK_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_SINK,GstAlsaSinkClass))
 #define GST_IS_ALSA_SINK(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_SINK))
 #define GST_IS_ALSA_SINK_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_SINK))
+#define GST_ALSA_SINK_CAST(obj)     ((GstAlsaSink *) (obj))
 
 typedef struct _GstAlsaSink GstAlsaSink;
 typedef struct _GstAlsaSinkClass GstAlsaSinkClass;
+
+#define GST_ALSA_GET_LOCK(obj)	(GST_ALSA_SINK_CAST (obj)->alsa_lock)
+#define GST_ALSA_LOCK(obj)	(g_mutex_lock (GST_ALSA_GET_LOCK (obj)))
+#define GST_ALSA_UNLOCK(obj)	(g_mutex_unlock (GST_ALSA_GET_LOCK (obj)))
 
 struct _GstAlsaSink {
   GstAudioSink    sink;
@@ -59,6 +64,8 @@ struct _GstAlsaSink {
   guint period_time;
   snd_pcm_uframes_t buffer_size;
   snd_pcm_uframes_t period_size;
+
+  GMutex *alsa_lock;
 };
 
 struct _GstAlsaSinkClass {
