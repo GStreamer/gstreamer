@@ -47,7 +47,7 @@ gst_ffmpeg_get_palette (const GstCaps *caps, AVCodecContext *context)
   /* do we have a palette? */
   if ((palette_v = gst_structure_get_value (str,
           "palette_data")) && context) {
-    palette = g_value_get_boxed (palette_v);
+    palette = gst_value_get_buffer (palette_v);
     if (GST_BUFFER_SIZE (palette) >= 256 * 4) {
       if (context->palctrl)
         av_free (context->palctrl);
