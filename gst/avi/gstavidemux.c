@@ -1052,6 +1052,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   if (stream->pad)
     gst_object_unref (stream->pad);
   pad = stream->pad = gst_pad_new_from_template (templ, padname);
+  stream->last_flow = GST_FLOW_OK;
   g_free (padname);
 
   gst_pad_use_fixed_caps (pad);
@@ -2243,20 +2244,17 @@ gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
 static gboolean
 gst_avi_demux_all_source_pads_unlinked (GstAviDemux * avi)
 {
-  gint i, num_unlinked = 0;
+  gint i;
 
   for (i = 0; i < avi->num_streams; ++i) {
-    GstPad *peer;
-
-    peer = gst_pad_get_peer (avi->stream[i].pad);
-    if (peer) {
-      gst_object_unref (peer);
-    } else if (avi->stream[i].current_frame > 0) {
-      ++num_unlinked;
-    }
+    if (gst_pad_is_linked (avi->stream[i].pad))
+      return FALSE;
+    /* ignore unlinked state if we haven't tried to push on this pad yet */
+    if (avi->stream[i].last_flow == GST_FLOW_OK)
+      return FALSE;
   }
 
-  return (num_unlinked == avi->num_streams);
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -2314,6 +2312,7 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
             GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
             GST_PAD_NAME (stream->pad));
         res = gst_pad_push (stream->pad, buf);
+        stream->last_flow = res;
         if (res != GST_FLOW_OK && res != GST_FLOW_NOT_LINKED) {
           GST_DEBUG_OBJECT (avi, "Flow on pad %s: %s",
               GST_PAD_NAME (stream->pad), gst_flow_get_name (res));

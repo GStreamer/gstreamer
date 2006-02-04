@@ -62,6 +62,7 @@ typedef struct {
 
   /* pad, strh */
   GstPad        *pad;
+  GstFlowReturn  last_flow;
   gst_riff_strh *strh;
   union {
     gst_riff_strf_vids *vids;

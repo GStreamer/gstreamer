@@ -1,3 +1,11 @@
+2006-02-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),
+	(gst_avi_demux_all_source_pads_unlinked),
+	(gst_avi_demux_process_next_entry):
+	* gst/avi/gstavidemux.h:
+	  Third attempt, use gst_pad_is_linked() this time.
+
 2006-02-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame),
