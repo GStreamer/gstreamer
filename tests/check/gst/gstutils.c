@@ -324,6 +324,84 @@ GST_START_TEST (test_gdouble_to_guint64)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_bin_from_description)
+{
+  struct
+  {
+    const gchar *bin_desc;
+    const gchar *pad_names;
+  } bin_tests[] = {
+    {
+    "identity", "identity0/sink,identity0/src"}, {
+    "identity ! identity ! identity", "identity1/sink,identity3/src"}, {
+    "identity ! fakesink", "identity4/sink"}, {
+    "fakesrc ! identity", "identity5/src"}, {
+    "fakesrc ! fakesink", ""}
+  };
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (bin_tests); ++i) {
+    GstElement *bin, *parent;
+    GString *s;
+    GstPad *ghost_pad, *target_pad;
+    GError *err = NULL;
+
+    bin = gst_parse_bin_from_description (bin_tests[i].bin_desc, TRUE, &err);
+    if (err) {
+      g_error ("ERROR in gst_parse_bin_from_description (%s): %s",
+          bin_tests[i].bin_desc, err->message);
+    }
+    g_assert (bin != NULL);
+
+    s = g_string_new ("");
+    if ((ghost_pad = gst_element_get_pad (bin, "sink"))) {
+      g_assert (GST_IS_GHOST_PAD (ghost_pad));
+
+      target_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (ghost_pad));
+      g_assert (target_pad != NULL);
+      g_assert (GST_IS_PAD (target_pad));
+
+      parent = gst_pad_get_parent_element (target_pad);
+      g_assert (parent != NULL);
+
+      g_string_append_printf (s, "%s/sink", GST_ELEMENT_NAME (parent));
+
+      gst_object_unref (parent);
+      gst_object_unref (target_pad);
+      gst_object_unref (ghost_pad);
+    }
+
+    if ((ghost_pad = gst_element_get_pad (bin, "src"))) {
+      g_assert (GST_IS_GHOST_PAD (ghost_pad));
+
+      target_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (ghost_pad));
+      g_assert (target_pad != NULL);
+      g_assert (GST_IS_PAD (target_pad));
+
+      parent = gst_pad_get_parent_element (target_pad);
+      g_assert (parent != NULL);
+
+      if (s->len > 0) {
+        g_string_append (s, ",");
+      }
+
+      g_string_append_printf (s, "%s/src", GST_ELEMENT_NAME (parent));
+
+      gst_object_unref (parent);
+      gst_object_unref (target_pad);
+      gst_object_unref (ghost_pad);
+    }
+
+    if (strcmp (s->str, bin_tests[i].pad_names) != 0) {
+      g_error ("FAILED: expted '%s', got '%s' for bin '%s'",
+          bin_tests[i].pad_names, s->str, bin_tests[i].bin_desc);
+    }
+    g_string_free (s, TRUE);
+  }
+}
+
+GST_END_TEST;
+
 Suite *
 gst_utils_suite (void)
 {
@@ -338,6 +416,7 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_math_scale_random);
   tcase_add_test (tc_chain, test_guint64_to_gdouble);
   tcase_add_test (tc_chain, test_gdouble_to_guint64);
+  tcase_add_test (tc_chain, test_parse_bin_from_description);
   return s;
 }
 

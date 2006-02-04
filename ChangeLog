@@ -1,5 +1,12 @@
 2006-02-04  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/gst/gstutils.c: (test_parse_bin_from_description),
+	(gst_utils_suite):
+	  Add some simple tests for gst_parse_bin_from_description() and
+	  gst_bin_find_unconnected_pad() (#329069).
+
+2006-02-04  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tools/gst-launch.c: (event_loop), (main):
 	  Catch errors during preroll (#320084).
 
