@@ -100,8 +100,9 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
           frame_data_size);
       return FALSE;
     }
-  } else
-    work->parse_size = frame_data_size;
+  }
+
+  work->parse_size = frame_data_size;
 
   if (work->frame_flags & ID3V2_FRAME_FORMAT_COMPRESSION) {
 #ifdef HAVE_ZLIB
@@ -130,7 +131,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     return FALSE;
 #endif
   } else {
-    work->parse_data = work->hdr.frame_data;
+    work->parse_data = frame_data;
   }
 
   if (work->frame_id[0] == 'T') {
@@ -151,9 +152,8 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     /* Unique file identifier */
   }
 
-  if (work->frame_flags & ID3V2_FRAME_FORMAT_COMPRESSION) {
+  if (work->frame_flags & ID3V2_FRAME_FORMAT_COMPRESSION)
     g_free (work->parse_data);
-  }
 
   if (tag_str != NULL) {
     /* g_print ("Tag %s value %s\n", tag_name, tag_str); */
@@ -165,8 +165,13 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
       /* Genre strings need special treatment */
       result |= id3v2_genre_fields_to_taglist (work, tag_name, tag_fields);
     } else {
-      tag_str = g_array_index (tag_fields, gchar *, 0);
-      result |= id3v2_tag_to_taglist (work, tag_name, tag_str);
+      gint t;
+
+      for (t = 0; t < tag_fields->len; t++) {
+        tag_str = g_array_index (tag_fields, gchar *, t);
+        if (tag_str != NULL && tag_str[0] != '\0')
+          result |= id3v2_tag_to_taglist (work, tag_name, tag_str);
+      }
     }
     free_tag_strings (tag_fields);
   }
@@ -484,7 +489,7 @@ parse_split_strings (guint8 encoding, gchar * data, gint data_size,
       break;
     case ID3V2_ENCODING_UTF8:
       for (prev = 0, text_pos = 0; text_pos < data_size; text_pos++) {
-        if (data[text_pos]) {
+        if (data[text_pos] == '\0') {
           field = g_strndup (data + prev, text_pos - prev + 1);
           if (field)
             g_array_append_val (fields, field);
@@ -502,7 +507,7 @@ parse_split_strings (guint8 encoding, gchar * data, gint data_size,
     {
       /* Find '\0\0' terminator */
       for (text_pos = 0; text_pos < data_size - 1; text_pos += 2) {
-        if (data[text_pos] == 0 && data[text_pos + 1] == 0) {
+        if (data[text_pos] == '\0' && data[text_pos + 1] == '\0') {
           /* found a delimiter */
           if (encoding == ID3V2_ENCODING_UTF16) {
             field = g_convert (data + prev, text_pos - prev + 2,

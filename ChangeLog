@@ -1,3 +1,12 @@
+2006-02-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame),
+	(parse_split_strings):
+	Adjust for data length indicators when parsing (Fixes #329810)
+	Fix stupid bug parsing UTF-8 tag text.
+	Output tag strings with multiple fields as multiple tags, so the
+	app gets all the data.
+
 2006-02-03  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/flac/gstflacenc.c:
