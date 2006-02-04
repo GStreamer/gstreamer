@@ -352,7 +352,7 @@ play_signal_setup (void)
 #endif /* DISABLE_FAULT_HANDLER */
 
 static gboolean
-event_loop (GstElement * pipeline, gboolean blocking)
+event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 {
   GstBus *bus;
   GstMessage *message = NULL;
@@ -454,6 +454,12 @@ event_loop (GstElement * pipeline, gboolean blocking)
         GstState old, new, pending;
 
         gst_message_parse_state_changed (message, &old, &new, &pending);
+        if (GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline) &&
+            target_state != GST_STATE_VOID_PENDING && new == target_state) {
+          gst_message_unref (message);
+          gst_object_unref (bus);
+          return FALSE;
+        }
         if (!(old == GST_STATE_PLAYING && new == GST_STATE_PAUSED &&
                 GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline))) {
           gst_message_unref (message);
@@ -630,21 +636,26 @@ main (int argc, char *argv[])
       case GST_STATE_CHANGE_FAILURE:
         fprintf (stderr, _("ERROR: Pipeline doesn't want to pause.\n"));
         res = -1;
-        event_loop (pipeline, FALSE);
+        event_loop (pipeline, FALSE, GST_STATE_VOID_PENDING);
         goto end;
       case GST_STATE_CHANGE_NO_PREROLL:
         fprintf (stderr, _("ERROR: Pipeline can't PREROLL ...\n"));
         break;
       case GST_STATE_CHANGE_ASYNC:
         fprintf (stderr, _("Pipeline is PREROLLING ...\n"));
-        gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
+        caught_error = event_loop (pipeline, TRUE, GST_STATE_PAUSED);
+        if (caught_error) {
+          fprintf (stderr, _("ERROR: pipeline doesn't want to preroll.\n"));
+          goto end;
+        }
+        state = GST_STATE_PAUSED;
         /* fallthrough */
       case GST_STATE_CHANGE_SUCCESS:
         fprintf (stderr, _("Pipeline is PREROLLED ...\n"));
         break;
     }
 
-    caught_error = event_loop (pipeline, FALSE);
+    caught_error = event_loop (pipeline, FALSE, GST_STATE_VOID_PENDING);
 
     if (caught_error) {
       fprintf (stderr, _("ERROR: pipeline doesn't want to preroll.\n"));
@@ -661,7 +672,7 @@ main (int argc, char *argv[])
       }
 
       g_get_current_time (&tfthen);
-      caught_error = event_loop (pipeline, TRUE);
+      caught_error = event_loop (pipeline, TRUE, GST_STATE_VOID_PENDING);
       g_get_current_time (&tfnow);
 
       diff = GST_TIMEVAL_TO_TIME (tfnow) - GST_TIMEVAL_TO_TIME (tfthen);
