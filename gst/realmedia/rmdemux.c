@@ -1368,21 +1368,20 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     if (stream->extra_data_size > 0) {
       GstBuffer *buffer;
 
-      if ((ret = gst_pad_alloc_buffer_and_set_caps
-              (stream->pad, GST_BUFFER_OFFSET_NONE, stream->extra_data_size,
-                  stream->caps, &buffer))
-          != GST_FLOW_OK) {
+      if ((ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
+                  GST_BUFFER_OFFSET_NONE, stream->extra_data_size,
+                  stream->caps, &buffer)) == GST_FLOW_OK) {
+        memcpy (GST_BUFFER_DATA (buffer), stream->extra_data,
+            stream->extra_data_size);
+
+        GST_DEBUG_OBJECT (rmdemux, "Pushing extra_data of size %d to pad %s",
+            stream->extra_data_size, GST_PAD_NAME (stream->pad));
+        ret = gst_pad_push (stream->pad, buffer);
+      } else {
         GST_WARNING_OBJECT (rmdemux, "failed to alloc extra_data src "
-            "buffer for stream %d", stream->id);
-        goto beach;
+            "buffer for stream %d (%s)", stream->id, gst_flow_get_name (ret));
+        ret = GST_FLOW_OK;      /* one unlinked pad doesn't mean an error */
       }
-
-      memcpy (GST_BUFFER_DATA (buffer), stream->extra_data,
-          stream->extra_data_size);
-
-      GST_DEBUG_OBJECT (rmdemux, "Pushing extra_data of size %d to pad",
-          stream->extra_data_size);
-      ret = gst_pad_push (stream->pad, buffer);
     }
   }
 

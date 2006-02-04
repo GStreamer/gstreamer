@@ -1,3 +1,13 @@
+2006-02-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream):
+	  One source pad not being linked is not an error condition when we're
+	  still parsing the header. In this case (e.g. where we don't have a
+	  suitable decoder installed) just pretend everything is fine, so that
+	  the demuxer will actually go on to signal no-more-pads when done
+	  parsing the header, otherwise  decodebin/playbin will never post the
+	  appropriate error message if decoders are not available.
+
 2006-02-03  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/mad/gstid3tag.c:
