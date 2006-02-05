@@ -24,6 +24,7 @@ G_BEGIN_DECLS
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include "goom_core.h"
 
 #define GOOM_SAMPLES 512
 
@@ -60,6 +61,8 @@ struct _GstGoom
   gint channels;
 
   gboolean disposed;
+
+  GoomData goomdata;
 };
 
 struct _GstGoomClass

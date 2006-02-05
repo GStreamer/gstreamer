@@ -1,3 +1,24 @@
+2006-02-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/goom/filters.c: (zoomFilterNew), (calculatePXandPY),
+	(setPixelRGB), (setPixelRGB_), (getPixelRGB), (getPixelRGB_),
+	(zoomFilterSetResolution), (zoomFilterDestroy),
+	(zoomFilterFastRGB), (pointFilter):
+	* gst/goom/filters.h:
+	* gst/goom/goom_core.c: (goom_init), (goom_set_resolution),
+	(goom_update), (goom_close):
+	* gst/goom/goom_core.h:
+	* gst/goom/goom_tools.h:
+	* gst/goom/graphic.c:
+	* gst/goom/gstgoom.c: (gst_goom_class_init), (gst_goom_init),
+	(gst_goom_dispose), (gst_goom_src_setcaps), (gst_goom_chain):
+	* gst/goom/gstgoom.h:
+	* gst/goom/lines.c: (goom_lines):
+	* gst/goom/lines.h:
+	  Make goom reentrant by moving all important static variables
+	  into instance structures.
+	  (Fixes #329181)
+
 2006-02-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),

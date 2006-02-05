@@ -19,6 +19,7 @@
 #include "filters.h"
 #include "graphic.h"
 #include "goom_tools.h"
+#include "goom_core.h"
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
@@ -37,9 +38,6 @@
 #endif
 
 
-extern volatile guint32 resolx;
-extern volatile guint32 resoly;
-
 #ifdef USE_ASM
 
 #ifdef MMX
@@ -54,25 +52,44 @@ extern void ppc_zoom_altivec (void);
 unsigned int ppcsize4;
 #endif /* PowerPC */
 
+
 unsigned int *coeffs = 0, *freecoeffs = 0;
 guint32 *expix1 = 0;            /* pointeur exporte vers p1 */
 guint32 *expix2 = 0;            /* pointeur exporte vers p2 */
 guint32 zoom_width;
-
 #endif /* ASM */
 
 
+static int firstTime = 1;
 static int sintable[0xffff];
-static int vitesse = 127;
-static char theMode = AMULETTE_MODE;
-static int vPlaneEffect = 0;
-static int hPlaneEffect = 0;
-static char noisify = 2;
-static int middleX, middleY;
-static unsigned char sqrtperte = 16;
 
-static int *firedec = 0;
+ZoomFilterData *
+zoomFilterNew ()
+{
+  ZoomFilterData *zf = malloc (sizeof (ZoomFilterData));
 
+  zf->vitesse = 128;
+  zf->pertedec = 8;
+  zf->sqrtperte = 16;
+  zf->middleX = 1;
+  zf->middleY = 1;
+  zf->reverse = 0;
+  zf->mode = WAVE_MODE;
+  zf->hPlaneEffect = 0;
+  zf->vPlaneEffect = 0;
+  zf->noisify = 0;
+  zf->buffsize = 0;
+  zf->res_x = 0;
+  zf->res_y = 0;
+
+  zf->buffer = NULL;
+  zf->firedec = NULL;
+
+  zf->wave = 0;
+  zf->wavesp = 0;
+
+  return zf;
+}
 
 /* retourne x>>s , en testant le signe de x */
 static inline int
@@ -90,43 +107,56 @@ ShiftRight (int x, const unsigned char s)
   (valeur * 16)
 */
 void
-calculatePXandPY (int x, int y, int *px, int *py)
+calculatePXandPY (GoomData * gd, int x, int y, int *px, int *py)
 {
-  if (theMode == WATER_MODE) {
-    static int wave = 0;
-    static int wavesp = 0;
-    int yy;
+  ZoomFilterData *zf = gd->zfd;
+  int middleX, middleY;
+  guint32 resoly = zf->res_y;
+  int vPlaneEffect = zf->vPlaneEffect;
+  int hPlaneEffect = zf->hPlaneEffect;
+  int vitesse = zf->vitesse;
+  char theMode = zf->mode;
 
-    yy = y + RAND () % 4 + wave / 10;
-    yy -= RAND () % 4;
+  if (theMode == WATER_MODE) {
+    int wavesp = zf->wavesp;
+    int wave = zf->wave;
+    int yy = y + RAND (gd) % 4 + wave / 10;
+
+    yy -= RAND (gd) % 4;
     if (yy < 0)
       yy = 0;
     if (yy >= resoly)
       yy = resoly - 1;
 
-    *px = (x << 4) + firedec[yy] + (wave / 10);
+    *px = (x << 4) + zf->firedec[yy] + (wave / 10);
     *py = (y << 4) + 132 - ((vitesse < 132) ? vitesse : 131);
 
-    wavesp += RAND () % 3;
-    wavesp -= RAND () % 3;
+    wavesp += RAND (gd) % 3;
+    wavesp -= RAND (gd) % 3;
     if (wave < -10)
       wavesp += 2;
     if (wave > 10)
       wavesp -= 2;
-    wave += (wavesp / 10) + RAND () % 3;
-    wave -= RAND () % 3;
+    wave += (wavesp / 10) + RAND (gd) % 3;
+    wave -= RAND (gd) % 3;
     if (wavesp > 100)
       wavesp = (wavesp * 9) / 10;
+
+    zf->wavesp = wavesp;
+    zf->wave = wave;
   } else {
     int dist;
     register int vx, vy;
     int fvitesse = vitesse << 4;
 
-    if (noisify) {
-      x += RAND () % noisify;
-      x -= RAND () % noisify;
-      y += RAND () % noisify;
-      y -= RAND () % noisify;
+    middleX = zf->middleX;
+    middleY = zf->middleY;
+
+    if (zf->noisify) {
+      x += RAND (gd) % zf->noisify;
+      x -= RAND (gd) % zf->noisify;
+      y += RAND (gd) % zf->noisify;
+      y -= RAND (gd) % zf->noisify;
     }
 
     if (hPlaneEffect)
@@ -183,7 +213,8 @@ calculatePXandPY (int x, int y, int *px, int *py)
 /*#define _DEBUG */
 
 static inline void
-setPixelRGB (Uint * buffer, Uint x, Uint y, Color c)
+setPixelRGB (Uint * buffer, Uint x, Uint y, Color c,
+    guint32 resolx, guint32 resoly)
 {
 /*              buffer[ y*WIDTH + x ] = (c.r<<16)|(c.v<<8)|c.b */
 #ifdef _DEBUG_PIXEL
@@ -202,7 +233,7 @@ setPixelRGB (Uint * buffer, Uint x, Uint y, Color c)
 
 
 static inline void
-setPixelRGB_ (Uint * buffer, Uint x, Color c)
+setPixelRGB_ (Uint * buffer, Uint x, Color c, guint32 resolx, guint32 resoly)
 {
 #ifdef _DEBUG
   if (x >= resolx * resoly) {
@@ -221,7 +252,8 @@ setPixelRGB_ (Uint * buffer, Uint x, Color c)
 
 
 static inline void
-getPixelRGB (Uint * buffer, Uint x, Uint y, Color * c)
+getPixelRGB (Uint * buffer, Uint x, Uint y, Color * c,
+    guint32 resolx, guint32 resoly)
 {
   register unsigned char *tmp8;
 
@@ -251,7 +283,7 @@ getPixelRGB (Uint * buffer, Uint x, Uint y, Color * c)
 
 
 static inline void
-getPixelRGB_ (Uint * buffer, Uint x, Color * c)
+getPixelRGB_ (Uint * buffer, Uint x, Color * c, guint32 resolx, guint32 resoly)
 {
   register unsigned char *tmp8;
 
@@ -270,26 +302,132 @@ getPixelRGB_ (Uint * buffer, Uint x, Color * c)
 
 #else
   /* ATTENTION AU PETIT INDIEN  */
-  c->b = *(unsigned char *) (tmp8 = (unsigned char *) (buffer + x));
-  c->v = *(unsigned char *) (++tmp8);
-  c->r = *(unsigned char *) (++tmp8);
+  tmp8 = (unsigned char *) (buffer + x);
+  c->b = *(unsigned char *) (tmp8++);
+  c->v = *(unsigned char *) (tmp8++);
+  c->r = *(unsigned char *) (tmp8);
 /*      *c = (Color) buffer[x+y*WIDTH] ; */
 #endif
 }
 
+static void
+zoomFilterSetResolution (GoomData * gd, ZoomFilterData * zf)
+{
+  unsigned short us;
+
+  if (zf->buffsize >= gd->buffsize) {
+    zf->res_x = gd->resolx;
+    zf->res_y = gd->resoly;
+    zf->middleX = gd->resolx / 2;
+    zf->middleY = gd->resoly - 1;
+
+    return;
+  }
+#ifndef USE_ASM
+  if (zf->buffer)
+    free (zf->buffer);
+  zf->buffer = 0;
+#else
+  if (coeffs)
+    free (freecoeffs);
+  coeffs = 0;
+#endif
+  zf->middleX = gd->resolx / 2;
+  zf->middleY = gd->resoly - 1;
+  zf->res_x = gd->resolx;
+  zf->res_y = gd->resoly;
+
+  if (zf->firedec)
+    free (zf->firedec);
+  zf->firedec = 0;
+
+  zf->buffsize = gd->resolx * gd->resoly * sizeof (unsigned int);
+
+#ifdef USE_ASM
+  freecoeffs = (unsigned int *)
+      malloc (resx * resy * 2 * sizeof (unsigned int) + 128);
+  coeffs = (guint32 *) ((1 + ((unsigned int) (freecoeffs)) / 128) * 128);
+
+#else
+  zf->buffer = malloc (sizeof (guint32) * zf->buffsize * 5);
+  zf->pos10 = zf->buffer;
+  zf->c[0] = zf->pos10 + zf->buffsize;
+  zf->c[1] = zf->c[0] + zf->buffsize;
+  zf->c[2] = zf->c[1] + zf->buffsize;
+  zf->c[3] = zf->c[2] + zf->buffsize;
+#endif
+  zf->firedec = (int *) malloc (zf->res_y * sizeof (int));
+
+  if (firstTime) {
+    firstTime = 0;
+
+    /* generation d'une table de sinus */
+    for (us = 0; us < 0xffff; us++) {
+      sintable[us] = (int) (1024.0f * sin (us * 2 * 3.31415f / 0xffff));
+    }
+  }
+
+  {
+    int loopv;
+
+    for (loopv = zf->res_y; loopv != 0;) {
+      int decc = 0;
+      int spdc = 0;
+      int accel = 0;
+
+      loopv--;
+      zf->firedec[loopv] = decc;
+      decc += spdc / 10;
+      spdc += RAND (gd) % 3;
+      spdc -= RAND (gd) % 3;
+
+      if (decc > 4)
+        spdc -= 1;
+      if (decc < -4)
+        spdc += 1;
+
+      if (spdc > 30)
+        spdc = spdc - RAND (gd) % 3 + accel / 10;
+      if (spdc < -30)
+        spdc = spdc + RAND (gd) % 3 + accel / 10;
+
+      if (decc > 8 && spdc > 1)
+        spdc -= RAND (gd) % 3 - 2;
+
+      if (decc < -8 && spdc < -1)
+        spdc += RAND (gd) % 3 + 2;
+
+      if (decc > 8 || decc < -8)
+        decc = decc * 8 / 9;
+
+      accel += RAND (gd) % 2;
+      accel -= RAND (gd) % 2;
+      if (accel > 20)
+        accel -= 2;
+      if (accel < -20)
+        accel += 2;
+    }
+  }
+}
+
+void
+zoomFilterDestroy (ZoomFilterData * zf)
+{
+  if (zf)
+    free (zf);
+}
 
 /*===============================================================*/
 void
-zoomFilterFastRGB (Uint * pix1,
-    Uint * pix2, ZoomFilterData * zf, Uint resx, Uint resy)
+zoomFilterFastRGB (GoomData * goomdata, ZoomFilterData * zf, int zfd_update)
 {
-  static guint32 prevX = 0, prevY = 0;
+  guint32 prevX = goomdata->resolx;
+  guint32 prevY = goomdata->resoly;
 
-  static char reverse = 0;      /*vitesse inversé..(zoom out) */
-
-  /*    static int perte = 100; // 100 = normal */
-  static unsigned char pertedec = 8;
-  static char firstTime = 1;
+  guint32 *pix1 = goomdata->p1;
+  guint32 *pix2 = goomdata->p2;
+  unsigned int *pos10;
+  unsigned int **c;
 
   Uint x, y;
 
@@ -302,147 +440,49 @@ zoomFilterFastRGB (Uint * pix1,
   Color couleur;
   Color col1, col2, col3, col4;
   Uint position;
-
-  static unsigned int *pos10 = 0;
-  static unsigned int *c1 = 0, *c2 = 0, *c3 = 0, *c4 = 0;
 #endif
 
-  if ((prevX != resx) || (prevY != resy)) {
-    prevX = resx;
-    prevY = resy;
-#ifndef USE_ASM
-    if (c1)
-      free (c1);
-    if (c2)
-      free (c2);
-    if (c3)
-      free (c3);
-    if (c4)
-      free (c4);
-    if (pos10)
-      free (pos10);
-    c1 = c2 = c3 = c4 = pos10 = 0;
-#else
-    if (coeffs)
-      free (freecoeffs);
-    coeffs = 0;
-#endif
-    middleX = resx / 2;
-    middleY = resy - 1;
-    firstTime = 1;
-    if (firedec)
-      free (firedec);
-    firedec = 0;
+  if ((goomdata->resolx != zf->res_x) || (goomdata->resoly != zf->res_y)) {
+    zoomFilterSetResolution (goomdata, zf);
   }
 
-  if (zf) {
-    reverse = zf->reverse;
-    vitesse = zf->vitesse;
-    if (reverse)
-      vitesse = 256 - vitesse;
-#ifndef USE_ASM
-    sqrtperte = zf->sqrtperte;
-#endif
-    pertedec = zf->pertedec;
-    middleX = zf->middleX;
-    middleY = zf->middleY;
-    theMode = zf->mode;
-    hPlaneEffect = zf->hPlaneEffect;
-    vPlaneEffect = zf->vPlaneEffect;
-    noisify = zf->noisify;
-  }
+  pos10 = zf->pos10;
+  c = zf->c;
 
-  if (firstTime || zf) {
+  if (zfd_update) {
+    guchar sqrtperte = zf->sqrtperte;
+    gint start_y = 0;
 
-    /* generation d'une table de sinus */
-    if (firstTime) {
-      unsigned short us;
-
-      firstTime = 0;
-#ifdef USE_ASM
-      freecoeffs = (unsigned int *)
-          malloc (resx * resy * 2 * sizeof (unsigned int) + 128);
-      coeffs = (guint32 *) ((1 + ((unsigned int) (freecoeffs)) / 128) * 128);
-
-#else
-      pos10 = (unsigned int *) malloc (resx * resy * sizeof (unsigned int));
-      c1 = (unsigned int *) malloc (resx * resy * sizeof (unsigned int));
-      c2 = (unsigned int *) malloc (resx * resy * sizeof (unsigned int));
-      c3 = (unsigned int *) malloc (resx * resy * sizeof (unsigned int));
-      c4 = (unsigned int *) malloc (resx * resy * sizeof (unsigned int));
-#endif
-      for (us = 0; us < 0xffff; us++) {
-        sintable[us] = (int) (1024.0f * sin (us * 2 * 3.31415f / 0xffff));
-      }
-
-      {
-        int loopv;
-        firedec = (int *) malloc (prevY * sizeof (int));
-        for (loopv = prevY; loopv != 0;) {
-          static int decc = 0;
-          static int spdc = 0;
-          static int accel = 0;
-
-          loopv--;
-          firedec[loopv] = decc;
-          decc += spdc / 10;
-          spdc += RAND () % 3;
-          spdc -= RAND () % 3;
-
-          if (decc > 4)
-            spdc -= 1;
-          if (decc < -4)
-            spdc += 1;
-
-          if (spdc > 30)
-            spdc = spdc - RAND () % 3 + accel / 10;
-          if (spdc < -30)
-            spdc = spdc + RAND () % 3 + accel / 10;
-
-          if (decc > 8 && spdc > 1)
-            spdc -= RAND () % 3 - 2;
-
-          if (decc < -8 && spdc < -1)
-            spdc += RAND () % 3 + 2;
-
-          if (decc > 8 || decc < -8)
-            decc = decc * 8 / 9;
-
-          accel += RAND () % 2;
-          accel -= RAND () % 2;
-          if (accel > 20)
-            accel -= 2;
-          if (accel < -20)
-            accel += 2;
-        }
-      }
-    }
-
+    if (zf->reverse)
+      zf->vitesse = 256 - zf->vitesse;
 
     /* generation du buffer */
-    for (y = 0; y < prevY; y++)
-      for (x = 0; x < prevX; x++) {
-        int px, py;
-        unsigned char coefv, coefh;
+    for (y = 0; y < zf->res_y; y++) {
+      gint y_16 = y << 4;
+      gint max_px = (prevX - 1) * sqrtperte;
+      gint max_py = (prevY - 1) * sqrtperte;
+
+      for (x = 0; x < zf->res_x; x++) {
+        gint px, py;
+        guchar coefv, coefh;
 
         /* calculer px et py en fonction de */
         /*   x,y,middleX,middleY et theMode */
-        calculatePXandPY (x, y, &px, &py);
-        if ((px == x << 4) && (py == y << 4))
+        calculatePXandPY (goomdata, x, y, &px, &py);
+
+        if ((px == x << 4) && (py == y_16))
           py += 8;
 
-        if ((py < 0) || (px < 0) ||
-            (py >= (prevY - 1) * sqrtperte) ||
-            (px >= (prevX - 1) * sqrtperte)) {
+        if ((py < 0) || (px < 0) || (py >= max_py) || (px >= max_px)) {
 #ifdef USE_ASM
           coeffs[(y * prevX + x) * 2] = 0;
           coeffs[(y * prevX + x) * 2 + 1] = 0;
 #else
-          pos10[y * prevX + x] = 0;
-          c1[y * prevX + x] = 0;
-          c2[y * prevX + x] = 0;
-          c3[y * prevX + x] = 0;
-          c4[y * prevX + x] = 0;
+          pos10[start_y + x] = 0;
+          c[0][start_y + x] = 0;
+          c[1][start_y + x] = 0;
+          c[2][start_y + x] = 0;
+          c[3][start_y + x] = 0;
 #endif
         } else {
           int npx10;
@@ -470,23 +510,25 @@ zoomFilterFastRGB (Uint * pix1,
           coeffs[pos + 1] |= ((sqrtperte - coefh) * coefv) << 16;
           coeffs[pos + 1] |= (coefh * coefv) << 24;
 #else
-          pos = y * prevX + x;
+          pos = start_y + x;
           pos10[pos] = npx10 + prevX * npy10;
 
           if (!(coefh || coefv))
-            c1[pos] = sqrtperte * sqrtperte - 1;
+            c[0][pos] = sqrtperte * sqrtperte - 1;
           else
-            c1[pos] = (sqrtperte - coefh) * (sqrtperte - coefv);
+            c[0][pos] = (sqrtperte - coefh) * (sqrtperte - coefv);
 
-          c2[pos] = coefh * (sqrtperte - coefv);
-          c3[pos] = (sqrtperte - coefh) * coefv;
-          c4[pos] = coefh * coefv;
+          c[1][pos] = coefh * (sqrtperte - coefv);
+          c[2][pos] = (sqrtperte - coefh) * coefv;
+          c[3][pos] = coefh * coefv;
 #endif
         }
       }
+      /* Advance start of line index */
+      start_y += prevX;
+    }
   }
 #ifdef USE_ASM
-
 #ifdef MMX
   zoom_width = prevX;
   mmx_zoom_size = prevX * prevY;
@@ -505,47 +547,54 @@ zoomFilterFastRGB (Uint * pix1,
 #endif
 #else
   for (position = 0; position < prevX * prevY; position++) {
-    getPixelRGB_ (pix1, pos10[position], &col1);
-    getPixelRGB_ (pix1, pos10[position] + 1, &col2);
-    getPixelRGB_ (pix1, pos10[position] + prevX, &col3);
-    getPixelRGB_ (pix1, pos10[position] + prevX + 1, &col4);
+    getPixelRGB_ (pix1, pos10[position], &col1, goomdata->resolx,
+        goomdata->resoly);
+    getPixelRGB_ (pix1, pos10[position] + 1, &col2, goomdata->resolx,
+        goomdata->resoly);
+    getPixelRGB_ (pix1, pos10[position] + prevX, &col3, goomdata->resolx,
+        goomdata->resoly);
+    getPixelRGB_ (pix1, pos10[position] + prevX + 1, &col4, goomdata->resolx,
+        goomdata->resoly);
 
-    couleur.r = col1.r * c1[position]
-        + col2.r * c2[position]
-        + col3.r * c3[position]
-        + col4.r * c4[position];
-    couleur.r >>= pertedec;
+    couleur.r = col1.r * c[0][position]
+        + col2.r * c[1][position]
+        + col3.r * c[2][position]
+        + col4.r * c[3][position];
+    couleur.r >>= zf->pertedec;
 
-    couleur.v = col1.v * c1[position]
-        + col2.v * c2[position]
-        + col3.v * c3[position]
-        + col4.v * c4[position];
-    couleur.v >>= pertedec;
+    couleur.v = col1.v * c[0][position]
+        + col2.v * c[1][position]
+        + col3.v * c[2][position]
+        + col4.v * c[3][position];
+    couleur.v >>= zf->pertedec;
 
-    couleur.b = col1.b * c1[position]
-        + col2.b * c2[position]
-        + col3.b * c3[position]
-        + col4.b * c4[position];
-    couleur.b >>= pertedec;
+    couleur.b = col1.b * c[0][position]
+        + col2.b * c[1][position]
+        + col3.b * c[2][position]
+        + col4.b * c[3][position];
+    couleur.b >>= zf->pertedec;
 
-    setPixelRGB_ (pix2, position, couleur);
+    setPixelRGB_ (pix2, position, couleur, goomdata->resolx, goomdata->resoly);
   }
 #endif
 }
 
 
 void
-pointFilter (Uint * pix1, Color c,
+pointFilter (GoomData * goomdata, Color c,
     float t1, float t2, float t3, float t4, Uint cycle)
 {
-  Uint x = (Uint) ((int) middleX + (int) (t1 * cos ((float) cycle / t3)));
-  Uint y = (Uint) ((int) middleY + (int) (t2 * sin ((float) cycle / t4)));
+  Uint *pix1 = goomdata->p1;
+  ZoomFilterData *zf = goomdata->zfd;
+  Uint x = (Uint) (zf->middleX + (int) (t1 * cos ((float) cycle / t3)));
+  Uint y = (Uint) (zf->middleY + (int) (t2 * sin ((float) cycle / t4)));
 
-  if ((x > 1) && (y > 1) && (x < resolx - 2) && (y < resoly - 2)) {
-    setPixelRGB (pix1, x + 1, y, c);
-    setPixelRGB (pix1, x, y + 1, c);
-    setPixelRGB (pix1, x + 1, y + 1, WHITE);
-    setPixelRGB (pix1, x + 2, y + 1, c);
-    setPixelRGB (pix1, x + 1, y + 2, c);
+  if ((x > 1) && (y > 1) && (x < goomdata->resolx - 2)
+      && (y < goomdata->resoly - 2)) {
+    setPixelRGB (pix1, x + 1, y, c, goomdata->resolx, goomdata->resoly);
+    setPixelRGB (pix1, x, y + 1, c, goomdata->resolx, goomdata->resoly);
+    setPixelRGB (pix1, x + 1, y + 1, WHITE, goomdata->resolx, goomdata->resoly);
+    setPixelRGB (pix1, x + 2, y + 1, c, goomdata->resolx, goomdata->resoly);
+    setPixelRGB (pix1, x + 1, y + 2, c, goomdata->resolx, goomdata->resoly);
   }
 }

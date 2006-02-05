@@ -9,7 +9,8 @@
 #include <glib.h>
 
 #include "graphic.h"
+#include "goom_core.h"
 
-void goom_lines(gint16 data [2][512], unsigned int ID,unsigned int* p, guint32 power);
-void goom_lines_conf(gint16 config [25]);
+void goom_lines(GoomData *goomdata, gint16 data [2][512], unsigned int ID,unsigned int* p, guint32 power);
+
 

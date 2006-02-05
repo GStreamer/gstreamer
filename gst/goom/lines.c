@@ -14,8 +14,6 @@
 #include "lines.h"
 #include <math.h>
 
-extern unsigned int resolx, resoly;
-
 static inline unsigned char
 lighten (unsigned char value, unsigned char power)
 {
@@ -27,11 +25,13 @@ lighten (unsigned char value, unsigned char power)
 }
 
 void
-goom_lines (gint16 data[2][512], unsigned int ID, unsigned int *p,
-    guint32 power)
+goom_lines (GoomData * goomdata, gint16 data[2][512], unsigned int ID,
+    unsigned int *p, guint32 power)
 {
   guint32 color1;
   guint32 color2;
+  guint32 resolx = goomdata->resolx;
+  guint32 resoly = goomdata->resoly;
   unsigned char *color = 1 + (unsigned char *) &color1;
 
   switch (ID) {

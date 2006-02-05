@@ -4,21 +4,7 @@
 #include <glib.h>
 
 #include "graphic.h"
-
-typedef struct
-{
-        int vitesse ;
-        unsigned char pertedec ;
-        unsigned char sqrtperte ;
-        int middleX,middleY ;
-        char reverse ;
-        char mode ;
-        /** @since June 2001 */
-        int hPlaneEffect ;
-        int vPlaneEffect ;
-        char noisify ;
-} ZoomFilterData ;
-
+#include "goom_core.h"
 
 #define NORMAL_MODE 0
 #define WAVE_MODE 1
@@ -27,7 +13,34 @@ typedef struct
 #define AMULETTE_MODE 4
 #define WATER_MODE 5
 
-void pointFilter(guint32 *pix1, Color c,
+struct ZoomFilterData
+{
+  int vitesse;
+  unsigned char pertedec;
+  unsigned char sqrtperte;
+  int middleX;
+  int middleY;
+  char reverse;
+  char mode;
+        /** @since June 2001 */
+  int hPlaneEffect;
+  int vPlaneEffect;
+  char noisify;
+
+  guint32 res_x;
+  guint32 res_y;
+  guint32 buffsize;
+
+  guint32 *buffer;
+  guint32 *pos10;
+  guint32 *c[4];
+  int     *firedec;
+
+  int     wave;
+  int     wavesp;
+};
+
+void pointFilter(GoomData *goomdata, Color c,
                                  float t1, float t2, float t3, float t4,
                                  guint32 cycle);
 
@@ -42,11 +55,10 @@ Uint middleX,
 Uint middleY);
 */
 
-void zoomFilterFastRGB (guint32 *pix1,
-                                                guint32 *pix2,
-                                                ZoomFilterData *zf,
-                                                guint32 resx, guint32 resy);
-
+ZoomFilterData *zoomFilterNew ();
+void zoomFilterDestroy (ZoomFilterData *zf);
+void zoomFilterFastRGB (GoomData *goomdata, ZoomFilterData *zf,
+                           int zfd_update);
 
 /* filtre sin :
  le contenu de pix1 est copie dans pix2, avec l'effet appliqué

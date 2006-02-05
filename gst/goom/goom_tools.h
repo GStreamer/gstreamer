@@ -3,27 +3,22 @@
 
 #define NB_RAND 0x10000
 
-/* in graphic.c */
-extern int * rand_tab ;
-extern unsigned short rand_pos ;
+#define RAND_INIT(gd,i) \
+        srand (i); \
+        if (gd->rand_tab == NULL) \
+                gd->rand_tab = g_malloc (NB_RAND * sizeof(gint)) ;\
+        gd->rand_pos = 0; \
+        while (gd->rand_pos < NB_RAND) \
+                gd->rand_tab [gd->rand_pos++] = rand ();
 
-#define RAND_INIT(i) \
-        srand (i) ;\
-        if (!rand_tab)\
-                rand_tab = (int *) malloc (NB_RAND * sizeof(int)) ;\
-        rand_pos = 1 ;\
-        while (rand_pos != 0)\
-                rand_tab [rand_pos++] = rand () ;
+#define RAND(gd) \
+        (gd->rand_tab[gd->rand_pos = ((gd->rand_pos + 1) % NB_RAND)])
 
-#define RAND()\
-        (rand_tab[rand_pos = rand_pos + 1])
-
-#define RAND_CLOSE()\
-        free (rand_tab);\
-        rand_tab = 0;
-
+#define RAND_CLOSE(gd) \
+        g_free (gd->rand_tab); \
+        gd->rand_tab = NULL;
 
 /*#define iRAND(i) ((guint32)((float)i * RAND()/RAND_MAX)) */
-#define iRAND(i) (RAND()%i)
+#define iRAND(gd,i) (RAND(gd) % i)
         
 #endif

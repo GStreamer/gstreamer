@@ -1,3 +1,8 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#include <glib.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include "goom_core.h"
@@ -13,67 +18,69 @@
 
 #define STOP_SPEED 128
 
-
-/**-----------------------------------------------------**
- **  SHARED DATA                                        **
- **-----------------------------------------------------**/
-static guint32 *pixel;
-static guint32 *back;
-static guint32 *p1, *p2, *tmp;
-static guint32 cycle;
-
-guint32 resolx, resoly, buffsize;
-
 void
-goom_init (guint32 resx, guint32 resy)
+goom_init (GoomData * goomdata, guint32 resx, guint32 resy)
 {
 #ifdef VERBOSE
   printf ("GOOM: init (%d, %d);\n", resx, resy);
 #endif
-  resolx = resx;
-  resoly = resy;
-  buffsize = resx * resy;
+  goomdata->resolx = 0;
+  goomdata->resoly = 0;
+  goomdata->buffsize = 0;
 
-  pixel = (guint32 *) malloc (buffsize * sizeof (guint32) + 128);
-  back = (guint32 *) malloc (buffsize * sizeof (guint32) + 128);
-  RAND_INIT (GPOINTER_TO_INT (pixel));
-  cycle = 0;
+  goomdata->pixel = NULL;
+  goomdata->back = NULL;
+  goomdata->p1 = NULL;
+  goomdata->p2 = NULL;
 
-  p1 = (void *) (((unsigned long) pixel + 0x7f) & (~0x7f));
-  p2 = (void *) (((unsigned long) back + 0x7f) & (~0x7f));
+  goom_set_resolution (goomdata, resx, resy);
+  RAND_INIT (goomdata, GPOINTER_TO_INT (goomdata->pixel));
+  goomdata->cycle = 0;
+
+
+  goomdata->goomlimit = 2;      /* sensibilité du goom */
+  goomdata->zfd = zoomFilterNew ();
+  goomdata->lockvar = 0;        /* pour empecher de nouveaux changements */
+  goomdata->goomvar = 0;        /* boucle des gooms */
+  goomdata->totalgoom = 0;      /* nombre de gooms par seconds */
+  goomdata->agoom = 0;          /* un goom a eu lieu..       */
+  goomdata->loopvar = 0;        /* mouvement des points */
+  goomdata->speedvar = 0;       /* vitesse des particules */
+  goomdata->lineMode = 0;       /* l'effet lineaire a dessiner */
 }
-
 
 void
-goom_set_resolution (guint32 resx, guint32 resy)
+goom_set_resolution (GoomData * goomdata, guint32 resx, guint32 resy)
 {
-  free (pixel);
-  free (back);
+  guint32 buffsize = resx * resy;
 
-  resolx = resx;
-  resoly = resy;
-  buffsize = resx * resy;
+  if ((goomdata->resolx == resx) && (goomdata->resoly == resy))
+    return;
 
-  pixel = (guint32 *) malloc (buffsize * sizeof (guint32) + 128);
-  memset (pixel, 0, buffsize * sizeof (guint32) + 128);
-  back = (guint32 *) malloc (buffsize * sizeof (guint32) + 128);
-  memset (back, 0, buffsize * sizeof (guint32) + 128);
+  if (goomdata->buffsize < buffsize) {
+    if (goomdata->pixel)
+      free (goomdata->pixel);
+    if (goomdata->back)
+      free (goomdata->back);
+    goomdata->pixel = (guint32 *) malloc (buffsize * sizeof (guint32) + 128);
+    goomdata->back = (guint32 *) malloc (buffsize * sizeof (guint32) + 128);
+    goomdata->buffsize = buffsize;
 
-  p1 = (void *) (((unsigned long) pixel + 0x7f) & (~0x7f));
-  p2 = (void *) (((unsigned long) back + 0x7f) & (~0x7f));
+    goomdata->p1 =
+        (void *) (((unsigned long) goomdata->pixel + 0x7f) & (~0x7f));
+    goomdata->p2 = (void *) (((unsigned long) goomdata->back + 0x7f) & (~0x7f));
+  }
+
+  goomdata->resolx = resx;
+  goomdata->resoly = resy;
+
+  memset (goomdata->pixel, 0, buffsize * sizeof (guint32) + 128);
+  memset (goomdata->back, 0, buffsize * sizeof (guint32) + 128);
 }
 
-
 guint32 *
-goom_update (gint16 data[2][512])
+goom_update (GoomData * goomdata, gint16 data[2][512])
 {
-  static int lockvar = 0;       /* pour empecher de nouveaux changements */
-  static int goomvar = 0;       /* boucle des gooms */
-  static int totalgoom = 0;     /* nombre de gooms par seconds */
-  static int agoom = 0;         /* un goom a eu lieu..       */
-  static int loopvar = 0;       /* mouvement des points */
-  static int speedvar = 0;      /* vitesse des particules */
-  static int lineMode = 0;      /* l'effet lineaire a dessiner */
   guint32 *return_val;
   guint32 pointWidth;
   guint32 pointHeight;
@@ -81,16 +88,14 @@ goom_update (gint16 data[2][512])
   int accelvar;                 /* acceleration des particules */
   int i;
   float largfactor;             /* elargissement de l'intervalle d'évolution des points */
-  static char goomlimit = 2;    /* sensibilité du goom */
-  static ZoomFilterData zfd = {
-    128, 8, 16,
-    1, 1, 0, WAVE_MODE,
-    0, 0, 0
-  };
-
-  ZoomFilterData *pzfd;
+  int zfd_update = 0;
+  int resolx = goomdata->resolx;
+  int resoly = goomdata->resoly;
+  ZoomFilterData *pzfd = goomdata->zfd;
+  guint32 *tmp;
 
   /* test if the config has changed, update it if so */
+
   pointWidth = (resolx * 2) / 5;
   pointHeight = (resoly * 2) / 5;
 
@@ -102,308 +107,303 @@ goom_update (gint16 data[2][512])
   }
 
   accelvar = incvar / 5000;
-  if (speedvar > 5) {
+  if (goomdata->speedvar > 5) {
     accelvar--;
-    if (speedvar > 20)
+    if (goomdata->speedvar > 20)
       accelvar--;
-    if (speedvar > 40)
-      speedvar = 40;
+    if (goomdata->speedvar > 40)
+      goomdata->speedvar = 40;
   }
   accelvar--;
-  speedvar += accelvar;
+  goomdata->speedvar += accelvar;
 
-  if (speedvar < 0)
-    speedvar = 0;
-  if (speedvar > 40)
-    speedvar = 40;
+  if (goomdata->speedvar < 0)
+    goomdata->speedvar = 0;
+  if (goomdata->speedvar > 40)
+    goomdata->speedvar = 40;
 
 
   /* ! calcul du deplacement des petits points ... */
 
-  largfactor = ((float) speedvar / 40.0f + (float) incvar / 50000.0f) / 1.5f;
+  largfactor =
+      ((float) goomdata->speedvar / 40.0f + (float) incvar / 50000.0f) / 1.5f;
   if (largfactor > 1.5f)
     largfactor = 1.5f;
 
-  for (i = 1; i * 15 <= speedvar + 15; i++) {
-    loopvar += speedvar + 1;
+  for (i = 1; i * 15 <= goomdata->speedvar + 15; i++) {
+    goomdata->loopvar += goomdata->speedvar + 1;
 
-    pointFilter (p1,
+    pointFilter (goomdata,
         YELLOW,
         ((pointWidth - 6.0f) * largfactor + 5.0f),
         ((pointHeight - 6.0f) * largfactor + 5.0f),
-        i * 152.0f, 128.0f, loopvar + i * 2032);
-    pointFilter (p1, ORANGE,
+        i * 152.0f, 128.0f, goomdata->loopvar + i * 2032);
+    pointFilter (goomdata, ORANGE,
         ((pointWidth / 2) * largfactor) / i + 10.0f * i,
         ((pointHeight / 2) * largfactor) / i + 10.0f * i,
-        96.0f, i * 80.0f, loopvar / i);
-    pointFilter (p1, VIOLET,
+        96.0f, i * 80.0f, goomdata->loopvar / i);
+    pointFilter (goomdata, VIOLET,
         ((pointHeight / 3 + 5.0f) * largfactor) / i + 10.0f * i,
         ((pointHeight / 3 + 5.0f) * largfactor) / i + 10.0f * i,
-        i + 122.0f, 134.0f, loopvar / i);
-    pointFilter (p1, BLACK,
+        i + 122.0f, 134.0f, goomdata->loopvar / i);
+    pointFilter (goomdata, BLACK,
         ((pointHeight / 3) * largfactor + 20.0f),
         ((pointHeight / 3) * largfactor + 20.0f),
-        58.0f, i * 66.0f, loopvar / i);
-    pointFilter (p1, WHITE,
+        58.0f, i * 66.0f, goomdata->loopvar / i);
+    pointFilter (goomdata, WHITE,
         (pointHeight * largfactor + 10.0f * i) / i,
         (pointHeight * largfactor + 10.0f * i) / i,
-        66.0f, 74.0f, loopvar + i * 500);
+        66.0f, 74.0f, goomdata->loopvar + i * 500);
   }
-
-  /* par défaut pas de changement de zoom */
-  pzfd = NULL;
 
   /* diminuer de 1 le temps de lockage */
   /* note pour ceux qui n'ont pas suivis : le lockvar permet d'empecher un */
   /* changement d'etat du plugins juste apres un autre changement d'etat. oki ? */
-  if (--lockvar < 0)
-    lockvar = 0;
+  if (--goomdata->lockvar < 0)
+    goomdata->lockvar = 0;
 
   /* temps du goom */
-  if (--agoom < 0)
-    agoom = 0;
+  if (--goomdata->agoom < 0)
+    goomdata->agoom = 0;
 
   /* on verifie qu'il ne se pas un truc interressant avec le son. */
-  if ((accelvar > goomlimit) || (accelvar < -goomlimit)) {
+  if ((accelvar > goomdata->goomlimit) || (accelvar < -goomdata->goomlimit)) {
     /* UN GOOM !!! YAHOO ! */
-    totalgoom++;
-    agoom = 20;                 /* mais pdt 20 cycles, il n'y en aura plus. */
-    lineMode = (lineMode + 1) % 20;     /* Tous les 10 gooms on change de mode lineaire */
+    goomdata->totalgoom++;
+    goomdata->agoom = 20;       /* mais pdt 20 cycles, il n'y en aura plus. */
+    goomdata->lineMode = (goomdata->lineMode + 1) % 20; /* Tous les 10 gooms on change de mode lineaire */
 
     /* changement eventuel de mode */
-    switch (iRAND (10)) {
+    switch (iRAND (goomdata, 10)) {
       case 0:
       case 1:
       case 2:
-        zfd.mode = WAVE_MODE;
-        zfd.vitesse = STOP_SPEED - 1;
-        zfd.reverse = 0;
+        pzfd->mode = WAVE_MODE;
+        pzfd->vitesse = STOP_SPEED - 1;
+        pzfd->reverse = 0;
         break;
       case 3:
       case 4:
-        zfd.mode = CRYSTAL_BALL_MODE;
+        pzfd->mode = CRYSTAL_BALL_MODE;
         break;
       case 5:
-        zfd.mode = AMULETTE_MODE;
+        pzfd->mode = AMULETTE_MODE;
         break;
       case 6:
-        zfd.mode = WATER_MODE;
+        pzfd->mode = WATER_MODE;
         break;
       case 7:
-        zfd.mode = SCRUNCH_MODE;
+        pzfd->mode = SCRUNCH_MODE;
         break;
       default:
-        zfd.mode = NORMAL_MODE;
+        pzfd->mode = NORMAL_MODE;
     }
   }
 
   /* tout ceci ne sera fait qu'en cas de non-blocage */
-  if (lockvar == 0) {
+  if (goomdata->lockvar == 0) {
     /* reperage de goom (acceleration forte de l'acceleration du volume) */
     /* -> coup de boost de la vitesse si besoin.. */
-    if ((accelvar > goomlimit) || (accelvar < -goomlimit)) {
-      goomvar++;
+    if ((accelvar > goomdata->goomlimit) || (accelvar < -goomdata->goomlimit)) {
+      goomdata->goomvar++;
       /*if (goomvar % 1 == 0) */
       {
         guint32 vtmp;
         guint32 newvit;
 
-        newvit = STOP_SPEED - speedvar / 2;
+        newvit = STOP_SPEED - goomdata->speedvar / 2;
         /* retablir le zoom avant.. */
-        if ((zfd.reverse) && (!(cycle % 12)) && (rand () % 3 == 0)) {
-          zfd.reverse = 0;
-          zfd.vitesse = STOP_SPEED - 2;
-          lockvar = 50;
+        if ((pzfd->reverse) && (!(goomdata->cycle % 12)) && (rand () % 3 == 0)) {
+          pzfd->reverse = 0;
+          pzfd->vitesse = STOP_SPEED - 2;
+          goomdata->lockvar = 50;
         }
-        if (iRAND (10) == 0) {
-          zfd.reverse = 1;
-          lockvar = 100;
+        if (iRAND (goomdata, 10) == 0) {
+          pzfd->reverse = 1;
+          goomdata->lockvar = 100;
         }
 
         /* changement de milieu.. */
-        switch (iRAND (20)) {
+        switch (iRAND (goomdata, 20)) {
           case 0:
-            zfd.middleY = resoly - 1;
-            zfd.middleX = resolx / 2;
+            pzfd->middleY = resoly - 1;
+            pzfd->middleX = resolx / 2;
             break;
           case 1:
-            zfd.middleX = resolx - 1;
+            pzfd->middleX = resolx - 1;
             break;
           case 2:
-            zfd.middleX = 1;
+            pzfd->middleX = 1;
             break;
           default:
-            zfd.middleY = resoly / 2;
-            zfd.middleX = resolx / 2;
+            pzfd->middleY = resoly / 2;
+            pzfd->middleX = resolx / 2;
         }
 
-        if (zfd.mode == WATER_MODE) {
-          zfd.middleX = resolx / 2;
-          zfd.middleY = resoly / 2;
+        if (pzfd->mode == WATER_MODE) {
+          pzfd->middleX = resolx / 2;
+          pzfd->middleY = resoly / 2;
         }
 
-        switch (vtmp = (iRAND (27))) {
+        switch (vtmp = (iRAND (goomdata, 27))) {
           case 0:
-            zfd.vPlaneEffect = iRAND (3);
-            zfd.vPlaneEffect -= iRAND (3);
-            zfd.hPlaneEffect = iRAND (3);
-            zfd.hPlaneEffect -= iRAND (3);
+            pzfd->vPlaneEffect = iRAND (goomdata, 3);
+            pzfd->vPlaneEffect -= iRAND (goomdata, 3);
+            pzfd->hPlaneEffect = iRAND (goomdata, 3);
+            pzfd->hPlaneEffect -= iRAND (goomdata, 3);
             break;
           case 3:
-            zfd.vPlaneEffect = 0;
-            zfd.hPlaneEffect = iRAND (8);
-            zfd.hPlaneEffect -= iRAND (8);
+            pzfd->vPlaneEffect = 0;
+            pzfd->hPlaneEffect = iRAND (goomdata, 8);
+            pzfd->hPlaneEffect -= iRAND (goomdata, 8);
             break;
           case 4:
           case 5:
           case 6:
           case 7:
-            zfd.vPlaneEffect = iRAND (5);
-            zfd.vPlaneEffect -= iRAND (5);
-            zfd.hPlaneEffect = -zfd.vPlaneEffect;
+            pzfd->vPlaneEffect = iRAND (goomdata, 5);
+            pzfd->vPlaneEffect -= iRAND (goomdata, 5);
+            pzfd->hPlaneEffect = -pzfd->vPlaneEffect;
             break;
           case 8:
-            zfd.hPlaneEffect = 5 + iRAND (8);
-            zfd.vPlaneEffect = -zfd.hPlaneEffect;
+            pzfd->hPlaneEffect = 5 + iRAND (goomdata, 8);
+            pzfd->vPlaneEffect = -pzfd->hPlaneEffect;
             break;
           case 9:
-            zfd.vPlaneEffect = 5 + iRAND (8);
-            zfd.hPlaneEffect = -zfd.hPlaneEffect;
+            pzfd->vPlaneEffect = 5 + iRAND (goomdata, 8);
+            pzfd->hPlaneEffect = -pzfd->hPlaneEffect;
             break;
           case 13:
-            zfd.hPlaneEffect = 0;
-            zfd.vPlaneEffect = iRAND (10);
-            zfd.vPlaneEffect -= iRAND (10);
+            pzfd->hPlaneEffect = 0;
+            pzfd->vPlaneEffect = iRAND (goomdata, 10);
+            pzfd->vPlaneEffect -= iRAND (goomdata, 10);
             break;
           default:
             if (vtmp < 10) {
-              zfd.vPlaneEffect = 0;
-              zfd.hPlaneEffect = 0;
+              pzfd->vPlaneEffect = 0;
+              pzfd->hPlaneEffect = 0;
             }
         }
 
-        if (iRAND (3) != 0)
-          zfd.noisify = 0;
+        if (iRAND (goomdata, 3) != 0)
+          pzfd->noisify = 0;
         else {
-          zfd.noisify = iRAND (3) + 2;
-          lockvar *= 3;
+          pzfd->noisify = iRAND (goomdata, 3) + 2;
+          goomdata->lockvar *= 3;
         }
 
-        if (zfd.mode == AMULETTE_MODE) {
-          zfd.vPlaneEffect = 0;
-          zfd.hPlaneEffect = 0;
-          zfd.noisify = 0;
+        if (pzfd->mode == AMULETTE_MODE) {
+          pzfd->vPlaneEffect = 0;
+          pzfd->hPlaneEffect = 0;
+          pzfd->noisify = 0;
         }
 
-        if ((zfd.middleX == 1) || (zfd.middleX == resolx - 1)) {
-          zfd.vPlaneEffect = 0;
-          zfd.hPlaneEffect = iRAND (2) ? 0 : zfd.hPlaneEffect;
+        if ((pzfd->middleX == 1) || (pzfd->middleX == resolx - 1)) {
+          pzfd->vPlaneEffect = 0;
+          pzfd->hPlaneEffect = iRAND (goomdata, 2) ? 0 : pzfd->hPlaneEffect;
         }
 
-        if (newvit < zfd.vitesse) {     /* on accelere */
-          pzfd = &zfd;
+        if (newvit < pzfd->vitesse) {   /* on accelere */
+          zfd_update = 1;
           if (((newvit < STOP_SPEED - 7) &&
-                  (zfd.vitesse < STOP_SPEED - 6) &&
-                  (cycle % 3 == 0)) || (iRAND (40) == 0)) {
-            zfd.vitesse = STOP_SPEED - 1;
-            zfd.reverse = !zfd.reverse;
+                  (pzfd->vitesse < STOP_SPEED - 6) &&
+                  (goomdata->cycle % 3 == 0)) || (iRAND (goomdata, 40) == 0)) {
+            pzfd->vitesse = STOP_SPEED - 1;
+            pzfd->reverse = !pzfd->reverse;
           } else {
-            zfd.vitesse = (newvit + zfd.vitesse * 4) / 5;
+            pzfd->vitesse = (newvit + pzfd->vitesse * 4) / 5;
           }
-          lockvar += 50;
+          goomdata->lockvar += 50;
         }
       }
     }
     /* mode mega-lent */
-    if (iRAND (1000) == 0) {
+    if (iRAND (goomdata, 1000) == 0) {
       /* 
          printf ("coup du sort...\n") ;
        */
-      pzfd = &zfd;
-      zfd.vitesse = STOP_SPEED - 1;
-      zfd.pertedec = 8;
-      zfd.sqrtperte = 16;
-      goomvar = 1;
-      lockvar += 70;
+      zfd_update = 1;
+      pzfd->vitesse = STOP_SPEED - 1;
+      pzfd->pertedec = 8;
+      pzfd->sqrtperte = 16;
+      goomdata->goomvar = 1;
+      goomdata->lockvar += 70;
     }
   }
 
   /* gros frein si la musique est calme */
-  if ((speedvar < 1) && (zfd.vitesse < STOP_SPEED - 4) && (cycle % 16 == 0)) {
+  if ((goomdata->speedvar < 1) && (pzfd->vitesse < STOP_SPEED - 4)
+      && (goomdata->cycle % 16 == 0)) {
     /*
        printf ("++slow part... %i\n", zfd.vitesse) ;
      */
-    pzfd = &zfd;
-    zfd.vitesse += 3;
-    zfd.pertedec = 8;
-    zfd.sqrtperte = 16;
-    goomvar = 0;
+    zfd_update = 1;
+    pzfd->vitesse += 3;
+    pzfd->pertedec = 8;
+    pzfd->sqrtperte = 16;
+    goomdata->goomvar = 0;
     /*
        printf ("--slow part... %i\n", zfd.vitesse) ;
      */
   }
 
   /* baisser regulierement la vitesse... */
-  if ((cycle % 73 == 0) && (zfd.vitesse < STOP_SPEED - 5)) {
+  if ((goomdata->cycle % 73 == 0) && (pzfd->vitesse < STOP_SPEED - 5)) {
     /*
        printf ("slow down...\n") ;
      */
-    pzfd = &zfd;
-    zfd.vitesse++;
+    zfd_update = 1;
+    pzfd->vitesse++;
   }
 
   /* arreter de decrémenter au bout d'un certain temps */
-  if ((cycle % 101 == 0) && (zfd.pertedec == 7)) {
-    pzfd = &zfd;
-    zfd.pertedec = 8;
-    zfd.sqrtperte = 16;
+  if ((goomdata->cycle % 101 == 0) && (pzfd->pertedec == 7)) {
+    zfd_update = 1;
+    pzfd->pertedec = 8;
+    pzfd->sqrtperte = 16;
   }
-#ifdef VERBOSE
-  if (pzfd) {
-    printf ("GOOM: pzfd->mode = %d\n", pzfd->mode);
-  }
-#endif
 
   /* Zoom here ! */
-  zoomFilterFastRGB (p1, p2, pzfd, resolx, resoly);
+  zoomFilterFastRGB (goomdata, pzfd, zfd_update);
 
   /* si on est dans un goom : afficher les lignes... */
-  if (agoom > 15)
+  if (goomdata->agoom > 15)
     goom_lines
-        (data, ((zfd.middleX == resolx / 2) && (zfd.middleY == resoly / 2)
-            && (zfd.mode != WATER_MODE))
-        ? (lineMode / 10) : 0, p2, agoom - 15);
+        (goomdata, data, ((pzfd->middleX == resolx / 2)
+            && (pzfd->middleY == resoly / 2)
+            && (pzfd->mode != WATER_MODE))
+        ? (goomdata->lineMode / 10) : 0, goomdata->p2, goomdata->agoom - 15);
 
-  return_val = p2;
-  tmp = p1;
-  p1 = p2;
-  p2 = tmp;
+  return_val = goomdata->p2;
+  tmp = goomdata->p1;
+  goomdata->p1 = goomdata->p2;
+  goomdata->p2 = tmp;
 
   /* affichage et swappage des buffers.. */
-  cycle++;
+  goomdata->cycle++;
 
   /* tous les 100 cycles : vérifier si le taux de goom est correct */
   /* et le modifier sinon.. */
-  if (!(cycle % 100)) {
-    if (totalgoom > 15) {
+  if (!(goomdata->cycle % 100)) {
+    if (goomdata->totalgoom > 15) {
       /*  printf ("less gooms\n") ; */
-      goomlimit++;
+      goomdata->goomlimit++;
     } else {
-      if ((totalgoom == 0) && (goomlimit > 1))
-        goomlimit--;
+      if ((goomdata->totalgoom == 0) && (goomdata->goomlimit > 1))
+        goomdata->goomlimit--;
     }
-    totalgoom = 0;
+    goomdata->totalgoom = 0;
   }
   return return_val;
 }
 
 void
-goom_close ()
+goom_close (GoomData * goomdata)
 {
-  if (pixel != NULL)
-    free (pixel);
-  if (back != NULL)
-    free (back);
-  pixel = back = NULL;
-  RAND_CLOSE ();
+  if (goomdata->pixel != NULL)
+    free (goomdata->pixel);
+  if (goomdata->back != NULL)
+    free (goomdata->back);
+  goomdata->pixel = goomdata->back = NULL;
+  RAND_CLOSE (goomdata);
 }

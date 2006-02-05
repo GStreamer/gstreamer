@@ -182,7 +182,7 @@ gst_goom_init (GstGoom * goom)
   goom->samples_consumed = 0;
   goom->disposed = FALSE;
 
-  goom_init (goom->width, goom->height);
+  goom_init (&(goom->goomdata), goom->width, goom->height);
 }
 
 static void
@@ -191,7 +191,7 @@ gst_goom_dispose (GObject * object)
   GstGoom *goom = GST_GOOM (object);
 
   if (!goom->disposed) {
-    goom_close ();
+    goom_close (&(goom->goomdata));
     goom->disposed = TRUE;
 
     g_object_unref (goom->adapter);
@@ -233,7 +233,7 @@ gst_goom_src_setcaps (GstPad * pad, GstCaps * caps)
           &goom->fps_d))
     return FALSE;
 
-  goom_set_resolution (goom->width, goom->height);
+  goom_set_resolution (&(goom->goomdata), goom->width, goom->height);
 
   return TRUE;
 }
@@ -382,7 +382,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
     GST_BUFFER_DURATION (bufout) = frame_duration;
     GST_BUFFER_SIZE (bufout) = goom->width * goom->height * 4;
 
-    out_frame = (guchar *) goom_update (goom->datain);
+    out_frame = (guchar *) goom_update (&(goom->goomdata), goom->datain);
     memcpy (GST_BUFFER_DATA (bufout), out_frame, GST_BUFFER_SIZE (bufout));
 
     GST_DEBUG ("Pushing frame with time=%" G_GUINT64_FORMAT ", duration=%"
