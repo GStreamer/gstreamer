@@ -1,3 +1,14 @@
+2006-02-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/tag/gstid3tag.c: (gst_tag_from_id3_tag):
+	* gst-libs/gst/tag/gstvorbistag.c:
+	* gst-libs/gst/tag/tag.h:
+	* gst-libs/gst/tag/tags.c:
+	  Add libgsttag to the docs.
+
 2006-02-05  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_finalize),

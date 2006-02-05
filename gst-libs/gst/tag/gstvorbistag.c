@@ -222,8 +222,8 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
  * @buffer: buffer to convert
  * @id_data: identification data at start of stream
  * @id_data_length: length of identification data
- * @ vendor_string: pointer to a string that should take the vendor string of this
- *                  vorbis comment or NULL if you don't need it.
+ * @vendor_string: pointer to a string that should take the vendor string
+ *                 of this vorbis comment or NULL if you don't need it.
  *
  * Creates a new tag list that contains the information parsed out of a 
  * vorbiscomment packet.
@@ -390,10 +390,10 @@ write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 
 /**
  * gst_tag_list_to_vorbiscomment_buffer:
- * @buffer: tag list to convert
+ * @list: tag list to convert
  * @id_data: identification data at start of stream
  * @id_data_length: length of identification data
- * @ vendor_string: string that describes the vendor string or NULL
+ * @vendor_string: string that describes the vendor string or NULL
  *
  * Creates a new vorbiscomment buffer from a tag list.
  *

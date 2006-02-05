@@ -13,6 +13,7 @@
 <!ENTITY GstColorBalance SYSTEM "xml/gstcolorbalance.xml">
 <!ENTITY GstMixer SYSTEM "xml/gstmixer.xml">
 <!ENTITY GstRingBuffer SYSTEM "xml/gstringbuffer.xml">
+<!ENTITY GstTag SYSTEM "xml/gsttag.xml">
 <!ENTITY GstTuner SYSTEM "xml/gsttuner.xml">
 <!ENTITY GstXOverlay SYSTEM "xml/gstxoverlay.xml">
 
@@ -65,6 +66,16 @@ This library should be linked to by getting cflags and libs from
     &GstMixer;
     &GstTuner;
     &GstXOverlay;
+  </chapter>
+
+  <chapter id="gstreamer-tag">
+    <title>Tag Support Library</title>
+    <para>
+This library should be linked to by getting cflags and libs from
+<filename>gstreamer-plugins-base.pc</filename> and adding
+<filename>-lgsttag-&GST_MAJORMINOR;</filename> to the library flags.
+    </para>
+    &GstTag;
   </chapter>
 
   <chapter id="gstreamer-cdda">

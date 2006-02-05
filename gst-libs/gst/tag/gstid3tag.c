@@ -209,11 +209,15 @@ gst_tag_from_id3_tag (const gchar * id3_tag)
 
   while (tag_matches[i].gstreamer_tag != NULL) {
     if (strncmp (id3_tag, tag_matches[i].original_tag, 5) == 0) {
-      break;
+      return tag_matches[i].gstreamer_tag;
     }
     i++;
   }
-  return tag_matches[i].gstreamer_tag;
+
+  GST_INFO ("Cannot map ID3v2 tag '%c%c%c%c' to GStreamer tag",
+      id3_tag[0], id3_tag[1], id3_tag[2], id3_tag[3]);
+
+  return NULL;
 }
 
 /**

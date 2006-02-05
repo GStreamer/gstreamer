@@ -27,6 +27,22 @@
 #include <gst/gst.h>
 #include "tag.h"
 
+/**
+ * SECTION:gsttag
+ * @short_description: Tag Support Library
+ * @see_also: #GstTagList
+ * 
+ * <refsect2>
+ * <para>
+ * Contains additional standardized GStreamer tag definitions and
+ * various utility functions for plugins to parse or create different
+ * types of tags. Also provides mappings from and to other tag identifiers
+ * to the GStreamer tag identifier.
+ * </para>
+ * </refsect2>
+ */
+
+
 static gpointer
 gst_tag_register_musicbrainz_tags_internal (gpointer unused)
 {
@@ -54,6 +70,13 @@ gst_tag_register_musicbrainz_tags_internal (gpointer unused)
   return NULL;
 }
 
+/**
+ * gst_tag_register_musicbrainz_tags
+ *
+ * Registers additional musicbrainz-specific tags with the GStreamer tag
+ * system. Plugins and applications that use these tags should call this
+ * function before using them. Can be called multiple times.
+ */
 void
 gst_tag_register_musicbrainz_tags (void)
 {
