@@ -112,10 +112,23 @@ gst_collect_pads_init (GstCollectPads * pads, GstCollectPadsClass * g_class)
 static void
 gst_collect_pads_finalize (GObject * object)
 {
+  GSList *collected;
   GstCollectPads *pads = GST_COLLECT_PADS (object);
 
   gst_collect_pads_stop (pads);
   g_cond_free (pads->cond);
+
+  /* Remove pads */
+  for (collected = pads->data; collected; collected = g_slist_next (collected)) {
+    GstCollectData *pdata = (GstCollectData *) collected->data;
+
+    if (pdata->pad) {
+      gst_object_unref (pdata->pad);
+    }
+  }
+  /* Free pads list */
+  g_slist_free (pads->data);
+
   /* FIXME, free data */
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -194,7 +207,7 @@ gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
 
   data = g_malloc0 (size);
   data->collect = pads;
-  data->pad = pad;
+  data->pad = gst_object_ref (pad);
   data->buffer = NULL;
   gst_segment_init (&data->segment, GST_FORMAT_UNDEFINED);
   data->abidata.ABI.flushing = FALSE;
@@ -246,6 +259,7 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   if (list) {
     g_free (list->data);
     pads->data = g_slist_delete_link (pads->data, list);
+    gst_object_unref (pad);
   }
   pads->numpads--;
   /* FIXME : if the pad has data queued we should decrease the number of

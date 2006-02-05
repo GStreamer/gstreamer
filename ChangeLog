@@ -1,5 +1,14 @@
 2006-02-05  Julien MOUTTE  <julien@moutte.net>
 
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_finalize),
+	(gst_collect_pads_add_pad), (gst_collect_pads_remove_pad),
+	(gst_collect_pads_start), (gst_collect_pads_stop),
+	(gst_collect_pads_event): Collectpads now holds a reference
+	to the GstPad that was added. Indeed we don't want to look
+	at pads that might just go away with no warning...
+
+2006-02-05  Julien MOUTTE  <julien@moutte.net>
+
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_add_pad),
 	(gst_collect_pads_start), (gst_collect_pads_stop),
 	(gst_collect_pads_event), (gst_collect_pads_chain):
