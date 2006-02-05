@@ -50,6 +50,13 @@ static GstTagEntryMatch tag_matches[] = {
   {GST_TAG_TRACK_PEAK, "REPLAYGAIN_TRACK_PEAK"},
   {GST_TAG_ALBUM_GAIN, "REPLAYGAIN_ALBUM_GAIN"},
   {GST_TAG_ALBUM_PEAK, "REPLAYGAIN_ALBUM_PEAK"},
+  {GST_TAG_MUSICBRAINZ_TRACKID, "MUSICBRAINZ_TRACKID"},
+  {GST_TAG_MUSICBRAINZ_ARTISTID, "MUSICBRAINZ_ARTISTID"},
+  {GST_TAG_MUSICBRAINZ_ALBUMID, "MUSICBRAINZ_ALBUMID"},
+  {GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "MUSICBRAINZ_ALBUMARTISTID"},
+  {GST_TAG_MUSICBRAINZ_TRMID, "MUSICBRAINZ_TRMID"},
+  {GST_TAG_MUSICBRAINZ_SORTNAME, "MUSICBRAINZ_SORTNAME"},
+  {GST_TAG_LANGUAGE_CODE, "LANGUAGE"},
   {NULL, NULL}
 };
 
@@ -146,13 +153,24 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
       break;
     }
     case G_TYPE_STRING:{
-      gchar *valid;
+      gchar *valid = NULL;
 
-      if (!g_utf8_validate (value, -1, (const gchar **) &valid)) {
-        valid = g_strndup (value, valid - value);
-        GST_DEBUG ("Invalid vorbis comment tag, truncated it to %s\n", valid);
-      } else {
-        valid = g_strdup (value);
+      /* specialcase for language code */
+      if (strcmp (tag, "LANGUAGE") == 0) {
+        const gchar *s = strchr (value, '[');
+
+        if (s && strchr (s, ']') == s + 4) {
+          valid = g_strndup (s + 1, 3);
+        }
+      }
+
+      if (!valid) {
+        if (!g_utf8_validate (value, -1, (const gchar **) &valid)) {
+          valid = g_strndup (value, valid - value);
+          GST_DEBUG ("Invalid vorbis comment tag, truncated it to %s", valid);
+        } else {
+          valid = g_strdup (value);
+        }
       }
       gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, valid, NULL);
       g_free (valid);

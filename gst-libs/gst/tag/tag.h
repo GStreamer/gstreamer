@@ -25,6 +25,45 @@
 
 G_BEGIN_DECLS
 
+/* Tag names */
+
+/**
+ * GST_TAG_MUSICBRAINZ_TRACKID
+ *
+ * MusicBrainz track ID
+ */
+#define GST_TAG_MUSICBRAINZ_TRACKID	"musicbrainz-trackid"
+/**
+ * GST_TAG_MUSICBRAINZ_ARTISTID
+ *
+ * MusicBrainz artist ID
+ */
+#define GST_TAG_MUSICBRAINZ_ARTISTID	"musicbrainz-artistid"
+/**
+ * GST_TAG_MUSICBRAINZ_ALBUMID
+ *
+ * MusicBrainz album ID
+ */
+#define GST_TAG_MUSICBRAINZ_ALBUMID	"musicbrainz-albumid"
+/**
+ * GST_TAG_MUSICBRAINZ_ALBUMARTISTID
+ *
+ * MusicBrainz album artist ID
+ */
+#define GST_TAG_MUSICBRAINZ_ALBUMARTISTID	"musicbrainz-albumartistid"
+/**
+ * GST_TAG_MUSICBRAINZ_TRMID
+ *
+ * MusicBrainz track TRM ID
+ */
+#define GST_TAG_MUSICBRAINZ_TRMID	"musicbrainz-trmid"
+/**
+ * GST_TAG_MUSICBRAINZ_SORTNAME
+ *
+ * MusicBrainz artist sort name
+ */
+#define GST_TAG_MUSICBRAINZ_SORTNAME	"musicbrainz-sortname"
+
 
 /* functions for vorbis comment manipulation */
 
@@ -56,6 +95,7 @@ GstTagList *            gst_tag_list_new_from_id3v1             (const guint8 * 
 G_CONST_RETURN gchar *  gst_tag_from_id3_tag                    (const gchar *          vorbis_tag);
 G_CONST_RETURN gchar *  gst_tag_to_id3_tag                      (const gchar *          gst_tag);
 
+void gst_tag_register_musicbrainz_tags (void);
 
 G_END_DECLS
 
