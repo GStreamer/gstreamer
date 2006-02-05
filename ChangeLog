@@ -1,3 +1,14 @@
+2006-02-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/compiling.sgml:
+	  Fix typo: it's pkg-config, not pkg-gconfig
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* docs/libs/tmpl/gstgconf.sgml:
+	  There is no libgstgconf in 0.10, remove it
+	  from the docs.
+
 2006-02-05  Julien MOUTTE  <julien@moutte.net>
 
 	* docs/libs/tmpl/gstcolorbalance.sgml: Updated.

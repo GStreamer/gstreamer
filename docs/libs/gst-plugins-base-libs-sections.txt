@@ -41,12 +41,6 @@ gst_color_balance_value_changed
 </SECTION>
 
 <SECTION>
-<FILE>gstgconf</FILE>
-<INCLUDE>gst/gconf/gconf.h</INCLUDE>
-gst_gconf_get_string
-</SECTION>
-
-<SECTION>
 <FILE>gstmixer</FILE>
 <INCLUDE>gst/interfaces/mixer.h</INCLUDE>
 GstMixer
