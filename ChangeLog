@@ -1,3 +1,9 @@
+2006-02-04  David Schleef  <ds@schleef.org>
+
+	* ext/ogg/gstoggmux.c:
+	* gst/typefind/gsttypefindfunctions.c:
+	  Add Dirac typefinding and add dirac format to oggmux.
+
 2006-02-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstdecodebin.c: (try_to_link_1):
