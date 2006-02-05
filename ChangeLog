@@ -1,3 +1,11 @@
+2006-02-05  Julien MOUTTE  <julien@moutte.net>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_add_pad),
+	(gst_collect_pads_start), (gst_collect_pads_stop),
+	(gst_collect_pads_event), (gst_collect_pads_chain):
+	* libs/gst/base/gstcollectpads.h: Handle flush. Adapted from
+	Mark Nauwelaerts's patch on bug #328491.
+
 2006-02-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/gst/gstutils.c: (test_parse_bin_from_description),

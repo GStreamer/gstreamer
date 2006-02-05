@@ -56,7 +56,14 @@ struct _GstCollectData
   GstSegment             segment;
 
   /*< private >*/
-  gpointer               _gst_reserved[GST_PADDING];
+  union {
+    struct {
+      gboolean           flushing;
+      gboolean           new_segment;
+    } ABI;
+    /* adding + 0 to mark ABI change to be undone later */
+    gpointer _gst_reserved[GST_PADDING + 0];
+  } abidata;
 };
 
 /**
