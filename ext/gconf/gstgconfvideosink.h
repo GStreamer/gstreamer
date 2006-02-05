@@ -45,6 +45,9 @@ typedef struct _GstGConfVideoSink {
   GConfClient *client;
   GstElement *kid;
   GstPad *pad;
+
+  /* Current gconf string */
+  gchar *gconf_str;
 } GstGConfVideoSink;
 
 typedef struct _GstGConfVideoSinkClass {

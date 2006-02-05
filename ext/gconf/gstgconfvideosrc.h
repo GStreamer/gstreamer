@@ -39,6 +39,9 @@ typedef struct _GstGConfVideoSrc {
   GConfClient *client;
   GstElement *kid;
   GstPad *pad;
+
+  /* Current gconf string */
+  gchar *gconf_str;
 } GstGConfVideoSrc;
 
 typedef struct _GstGConfVideoSrcClass {

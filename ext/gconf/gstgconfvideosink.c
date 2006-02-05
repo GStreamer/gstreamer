@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "gstgconfelements.h"
 #include "gstgconfvideosink.h"
 
@@ -83,6 +85,9 @@ gst_gconf_video_sink_reset (GstGConfVideoSink * sink)
   targetpad = gst_element_get_pad (sink->kid, "sink");
   gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
   gst_object_unref (targetpad);
+
+  g_free (sink->gconf_str);
+  sink->gconf_str = NULL;
 }
 
 static void
@@ -97,7 +102,8 @@ gst_gconf_video_sink_init (GstGConfVideoSink * sink,
   sink->client = gconf_client_get_default ();
   gconf_client_add_dir (sink->client, GST_GCONF_DIR,
       GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
-  gconf_client_notify_add (sink->client, GST_GCONF_DIR "/default/videosink",
+  gconf_client_notify_add (sink->client,
+      GST_GCONF_DIR "/" GST_GCONF_VIDEOSINK_KEY,
       cb_toggle_element, sink, NULL, NULL);
 }
 
@@ -110,6 +116,8 @@ gst_gconf_video_sink_dispose (GObject * object)
     g_object_unref (G_OBJECT (sink->client));
     sink->client = NULL;
   }
+  g_free (sink->gconf_str);
+  sink->gconf_str = NULL;
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
@@ -118,6 +126,37 @@ static gboolean
 do_toggle_element (GstGConfVideoSink * sink)
 {
   GstPad *targetpad;
+  gchar *new_gconf_str;
+  GstState cur, next;
+
+  new_gconf_str = gst_gconf_get_string (GST_GCONF_VIDEOSINK_KEY);
+  if (new_gconf_str != NULL && sink->gconf_str != NULL &&
+      (strlen (new_gconf_str) == 0 ||
+          strcmp (sink->gconf_str, new_gconf_str) == 0)) {
+    g_free (new_gconf_str);
+    GST_DEBUG_OBJECT (sink, "GConf key was updated, but it didn't change");
+    return TRUE;
+  }
+
+  /* Sometime, it would be lovely to allow sink changes even when
+   * already running, but this involves sending an appropriate new-segment
+   * and possibly prerolling etc */
+  GST_OBJECT_LOCK (sink);
+  cur = GST_STATE (sink);
+  next = GST_STATE_PENDING (sink);
+  GST_OBJECT_UNLOCK (sink);
+
+  if (cur > GST_STATE_READY || next == GST_STATE_PAUSED) {
+    GST_DEBUG_OBJECT (sink,
+        "Auto-sink is already running. Ignoring GConf change");
+    return TRUE;
+  }
+
+  GST_DEBUG_OBJECT (sink, "GConf key changed: '%s' to '%s'",
+      GST_STR_NULL (sink->gconf_str), GST_STR_NULL (new_gconf_str));
+
+  g_free (sink->gconf_str);
+  sink->gconf_str = new_gconf_str;
 
   /* kill old element */
   if (sink->kid) {

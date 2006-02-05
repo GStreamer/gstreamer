@@ -139,7 +139,7 @@ gst_gconf_render_bin_from_key (const gchar * key)
 GstElement *
 gst_gconf_get_default_audio_sink (void)
 {
-  GstElement *ret = gst_gconf_render_bin_from_key ("default/audiosink");
+  GstElement *ret = gst_gconf_render_bin_from_key (GST_GCONF_AUDIOSINK_KEY);
 
   if (!ret) {
     ret = gst_element_factory_make (DEFAULT_AUDIOSINK, NULL);
@@ -165,7 +165,7 @@ gst_gconf_get_default_audio_sink (void)
 GstElement *
 gst_gconf_get_default_video_sink (void)
 {
-  GstElement *ret = gst_gconf_render_bin_from_key ("default/videosink");
+  GstElement *ret = gst_gconf_render_bin_from_key (GST_GCONF_VIDEOSINK_KEY);
 
   if (!ret) {
     ret = gst_element_factory_make (DEFAULT_VIDEOSINK, NULL);
@@ -191,7 +191,7 @@ gst_gconf_get_default_video_sink (void)
 GstElement *
 gst_gconf_get_default_audio_src (void)
 {
-  GstElement *ret = gst_gconf_render_bin_from_key ("default/audiosrc");
+  GstElement *ret = gst_gconf_render_bin_from_key (GST_GCONF_AUDIOSRC_KEY);
 
   if (!ret) {
     ret = gst_element_factory_make (DEFAULT_AUDIOSRC, NULL);
@@ -217,7 +217,7 @@ gst_gconf_get_default_audio_src (void)
 GstElement *
 gst_gconf_get_default_video_src (void)
 {
-  GstElement *ret = gst_gconf_render_bin_from_key ("default/videosrc");
+  GstElement *ret = gst_gconf_render_bin_from_key (GST_GCONF_VIDEOSRC_KEY);
 
   if (!ret) {
     ret = gst_element_factory_make (DEFAULT_VIDEOSRC, NULL);

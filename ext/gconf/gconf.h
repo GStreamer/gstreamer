@@ -29,6 +29,11 @@
 
 G_BEGIN_DECLS
 
+#define GST_GCONF_AUDIOSRC_KEY  "default/audiosrc"
+#define GST_GCONF_AUDIOSINK_KEY "default/audiosink"
+#define GST_GCONF_VIDEOSRC_KEY  "default/videosrc"
+#define GST_GCONF_VIDEOSINK_KEY "default/videosink"
+
 gchar *         gst_gconf_get_string            (const gchar *key);
 void            gst_gconf_set_string            (const gchar *key, 
                                                  const gchar *value);

@@ -45,6 +45,9 @@ typedef struct _GstGConfAudioSink {
   GConfClient *client;
   GstElement *kid;
   GstPad *pad;
+
+  /* Current gconf string */
+  gchar *gconf_str;
 } GstGConfAudioSink;
 
 typedef struct _GstGConfAudioSinkClass {

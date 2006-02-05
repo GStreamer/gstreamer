@@ -1,5 +1,36 @@
 2006-02-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/gconf/gconf.c: (gst_gconf_get_default_audio_sink),
+	(gst_gconf_get_default_video_sink),
+	(gst_gconf_get_default_audio_src),
+	(gst_gconf_get_default_video_src):
+	* ext/gconf/gconf.h:
+	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_reset),
+	(gst_gconf_audio_sink_init), (gst_gconf_audio_sink_dispose),
+	(do_toggle_element):
+	* ext/gconf/gstgconfaudiosink.h:
+	* ext/gconf/gstgconfaudiosrc.c: (gst_gconf_audio_src_reset),
+	(gst_gconf_audio_src_init), (gst_gconf_audio_src_dispose),
+	(do_toggle_element):
+	* ext/gconf/gstgconfaudiosrc.h:
+	* ext/gconf/gstgconfvideosink.c: (gst_gconf_video_sink_reset),
+	(gst_gconf_video_sink_init), (gst_gconf_video_sink_dispose),
+	(do_toggle_element):
+	* ext/gconf/gstgconfvideosink.h:
+	* ext/gconf/gstgconfvideosrc.c: (gst_gconf_video_src_reset),
+	(gst_gconf_video_src_init), (gst_gconf_video_src_dispose),
+	(do_toggle_element):
+	* ext/gconf/gstgconfvideosrc.h:
+	  Ignore changing the GConf key to "". Ignore GConf key updates
+	  that don't actually change the string.
+	  For now, ignore the GConf key when the state is > READY, as
+	  it breaks streaming. Sometime it will be nice to bring the
+	  new sink online even mid-stream, by sending NEWSEGMENT info
+	  and possibly prerolling.
+	  (Fixes #326736)
+
+2006-02-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/goom/filters.c: (zoomFilterNew), (calculatePXandPY),
 	(setPixelRGB), (setPixelRGB_), (getPixelRGB), (getPixelRGB_),
 	(zoomFilterSetResolution), (zoomFilterDestroy),

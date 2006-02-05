@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include "gstgconfelements.h"
 #include "gstgconfaudiosrc.h"
 
@@ -84,6 +86,9 @@ gst_gconf_audio_src_reset (GstGConfAudioSrc * src)
   targetpad = gst_element_get_pad (src->kid, "src");
   gst_ghost_pad_set_target (GST_GHOST_PAD (src->pad), targetpad);
   gst_object_unref (targetpad);
+
+  g_free (src->gconf_str);
+  src->gconf_str = NULL;
 }
 
 static void
@@ -98,7 +103,8 @@ gst_gconf_audio_src_init (GstGConfAudioSrc * src,
   src->client = gconf_client_get_default ();
   gconf_client_add_dir (src->client, GST_GCONF_DIR,
       GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
-  gconf_client_notify_add (src->client, GST_GCONF_DIR "/default/audiosrc",
+  gconf_client_notify_add (src->client,
+      GST_GCONF_DIR "/" GST_GCONF_AUDIOSRC_KEY,
       cb_toggle_element, src, NULL, NULL);
 }
 
@@ -112,6 +118,9 @@ gst_gconf_audio_src_dispose (GObject * object)
     src->client = NULL;
   }
 
+  g_free (src->gconf_str);
+  src->gconf_str = NULL;
+
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
@@ -119,6 +128,19 @@ static gboolean
 do_toggle_element (GstGConfAudioSrc * src)
 {
   GstPad *targetpad;
+  gchar *new_gconf_str;
+
+  new_gconf_str = gst_gconf_get_string (GST_GCONF_AUDIOSRC_KEY);
+  if (new_gconf_str != NULL && src->gconf_str != NULL &&
+      (strlen (new_gconf_str) == 0 ||
+          strcmp (src->gconf_str, new_gconf_str) == 0)) {
+    g_free (new_gconf_str);
+    GST_DEBUG_OBJECT (src, "GConf key was updated, but it didn't change");
+    return TRUE;
+  }
+
+  g_free (src->gconf_str);
+  src->gconf_str = new_gconf_str;
 
   /* kill old element */
   if (src->kid) {
@@ -132,6 +154,8 @@ do_toggle_element (GstGConfAudioSrc * src)
   if (!(src->kid = gst_gconf_get_default_audio_src ())) {
     GST_ELEMENT_ERROR (src, LIBRARY, SETTINGS, (NULL),
         ("Failed to render audio source from GConf"));
+    g_free (src->gconf_str);
+    src->gconf_str = NULL;
     return FALSE;
   }
   gst_element_set_state (src->kid, GST_STATE (src));
