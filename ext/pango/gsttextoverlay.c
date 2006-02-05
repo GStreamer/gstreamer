@@ -263,7 +263,6 @@ gst_text_overlay_finalize (GObject * object)
 {
   GstTextOverlay *overlay = GST_TEXT_OVERLAY (object);
 
-  gst_collect_pads_stop (overlay->collect);
   gst_object_unref (overlay->collect);
 
   g_free (overlay->default_text);
@@ -335,8 +334,10 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
 
   overlay->video_collect_data = gst_collect_pads_add_pad (overlay->collect,
       overlay->video_sinkpad, sizeof (GstCollectData));
-  overlay->text_collect_data = gst_collect_pads_add_pad (overlay->collect,
-      overlay->text_sinkpad, sizeof (GstCollectData));
+  if (overlay->text_sinkpad) {
+    overlay->text_collect_data = gst_collect_pads_add_pad (overlay->collect,
+        overlay->text_sinkpad, sizeof (GstCollectData));
+  }
 }
 
 static void
@@ -513,6 +514,11 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
+      /* We don't handle seek if we have not text pad */
+      if (!overlay->text_sinkpad) {
+        ret = gst_pad_push_event (overlay->video_sinkpad, event);
+        goto beach;
+      }
 
       GST_DEBUG_OBJECT (overlay, "seek received, driving from here");
 
@@ -554,9 +560,12 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
     default:
       gst_event_ref (event);
       ret = gst_pad_push_event (overlay->video_sinkpad, event);
-      ret = gst_pad_push_event (overlay->text_sinkpad, event);
+      if (overlay->text_sinkpad) {
+        ret = gst_pad_push_event (overlay->text_sinkpad, event);
+      }
   }
 
+beach:
   gst_object_unref (overlay);
 
   return ret;
