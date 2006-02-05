@@ -152,9 +152,7 @@ static GstStateChangeReturn gst_text_overlay_change_state (GstElement * element,
     GstStateChange transition);
 static GstCaps *gst_text_overlay_getcaps (GstPad * pad);
 static gboolean gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps);
-static GstPadLinkReturn gst_text_overlay_text_pad_linked (GstPad * pad,
-    GstPad * peer);
-static void gst_text_overlay_text_pad_unlinked (GstPad * pad);
+static gboolean gst_text_overlay_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_text_overlay_collected (GstCollectPads * pads,
     gpointer data);
 static void gst_text_overlay_finalize (GObject * object);
@@ -295,10 +293,6 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
     overlay->text_sinkpad =
         gst_pad_new_from_template (gst_static_pad_template_get
         (&text_sink_template_factory), "text_sink");
-    gst_pad_set_link_function (overlay->text_sinkpad,
-        GST_DEBUG_FUNCPTR (gst_text_overlay_text_pad_linked));
-    gst_pad_set_unlink_function (overlay->text_sinkpad,
-        GST_DEBUG_FUNCPTR (gst_text_overlay_text_pad_unlinked));
     gst_element_add_pad (GST_ELEMENT (overlay), overlay->text_sinkpad);
   }
 
@@ -308,6 +302,8 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
       (&src_template_factory), "src");
   gst_pad_set_getcaps_function (overlay->srcpad,
       GST_DEBUG_FUNCPTR (gst_text_overlay_getcaps));
+  gst_pad_set_event_function (overlay->srcpad,
+      GST_DEBUG_FUNCPTR (gst_text_overlay_src_event));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
   overlay->layout =
@@ -339,9 +335,8 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
 
   overlay->video_collect_data = gst_collect_pads_add_pad (overlay->collect,
       overlay->video_sinkpad, sizeof (GstCollectData));
-
-  /* text pad will be added when it is linked */
-  overlay->text_collect_data = NULL;
+  overlay->text_collect_data = gst_collect_pads_add_pad (overlay->collect,
+      overlay->text_sinkpad, sizeof (GstCollectData));
 }
 
 static void
@@ -397,43 +392,6 @@ gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   return ret;
-}
-
-static GstPadLinkReturn
-gst_text_overlay_text_pad_linked (GstPad * pad, GstPad * peer)
-{
-  GstTextOverlay *overlay;
-
-  overlay = GST_TEXT_OVERLAY (GST_PAD_PARENT (pad));
-
-  GST_DEBUG_OBJECT (overlay, "Text pad linked");
-
-  if (overlay->text_collect_data == NULL) {
-    overlay->text_collect_data = gst_collect_pads_add_pad (overlay->collect,
-        overlay->text_sinkpad, sizeof (GstCollectData));
-  }
-
-  overlay->need_render = TRUE;
-
-  return GST_PAD_LINK_OK;
-}
-
-static void
-gst_text_overlay_text_pad_unlinked (GstPad * pad)
-{
-  GstTextOverlay *overlay;
-
-  /* don't use gst_pad_get_parent() here, will deadlock */
-  overlay = GST_TEXT_OVERLAY (GST_PAD_PARENT (pad));
-
-  GST_DEBUG_OBJECT (overlay, "Text pad unlinked");
-
-  if (overlay->text_collect_data) {
-    gst_collect_pads_remove_pad (overlay->collect, overlay->text_sinkpad);
-    overlay->text_collect_data = NULL;
-  }
-
-  overlay->need_render = TRUE;
 }
 
 static void
@@ -545,6 +503,64 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
   GST_OBJECT_UNLOCK (overlay);
 }
 
+static gboolean
+gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
+{
+  gboolean ret = FALSE;
+  GstTextOverlay *overlay = NULL;
+
+  overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+
+      GST_DEBUG_OBJECT (overlay, "seek received, driving from here");
+
+      /* Flush downstream */
+      gst_pad_push_event (overlay->srcpad, gst_event_new_flush_start ());
+
+      /* Stopping collect pads */
+      gst_collect_pads_stop (overlay->collect);
+
+      /* Flush upstream, this is required so that we can take the stream lock
+         safely */
+      gst_pad_push_event (overlay->video_sinkpad, gst_event_new_flush_start ());
+      gst_pad_push_event (overlay->text_sinkpad, gst_event_new_flush_start ());
+
+      /* Acquire stream lock */
+      GST_PAD_STREAM_LOCK (overlay->video_sinkpad);
+      GST_PAD_STREAM_LOCK (overlay->text_sinkpad);
+
+      /* Seek on each sink pad */
+      gst_event_ref (event);
+      ret = gst_pad_push_event (overlay->video_sinkpad, event);
+      if (ret) {
+        ret = gst_pad_push_event (overlay->text_sinkpad, event);
+      } else {
+        gst_event_unref (event);
+      }
+
+      /* Stop flushing upstream */
+      gst_pad_push_event (overlay->video_sinkpad, gst_event_new_flush_stop ());
+      gst_pad_push_event (overlay->text_sinkpad, gst_event_new_flush_stop ());
+
+      /* Start collect pads again */
+      gst_collect_pads_start (overlay->collect);
+
+      /* Release stream lock */
+      GST_PAD_STREAM_UNLOCK (overlay->video_sinkpad);
+      GST_PAD_STREAM_UNLOCK (overlay->text_sinkpad);
+      break;
+    default:
+      gst_event_ref (event);
+      ret = gst_pad_push_event (overlay->video_sinkpad, event);
+      ret = gst_pad_push_event (overlay->text_sinkpad, event);
+  }
+
+  gst_object_unref (overlay);
+
+  return ret;
+}
 
 static GstCaps *
 gst_text_overlay_getcaps (GstPad * pad)
@@ -875,6 +891,22 @@ gst_text_overlay_collected (GstCollectPads * pads, gpointer data)
   klass = GST_TEXT_OVERLAY_GET_CLASS (data);
 
   GST_DEBUG ("Collecting");
+
+  if (overlay->video_collect_data->abidata.ABI.new_segment) {
+
+    GST_DEBUG ("generating newsegment, start %" GST_TIME_FORMAT
+        ", stop %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (overlay->video_collect_data->segment.start),
+        GST_TIME_ARGS (overlay->video_collect_data->segment.stop));
+
+    gst_pad_push_event (overlay->srcpad, gst_event_new_new_segment (FALSE,
+            overlay->video_collect_data->segment.rate, GST_FORMAT_TIME,
+            overlay->video_collect_data->segment.start,
+            overlay->video_collect_data->segment.stop,
+            overlay->video_collect_data->segment.last_stop));
+
+    overlay->video_collect_data->abidata.ABI.new_segment = FALSE;
+  }
 
   video_frame = gst_collect_pads_peek (overlay->collect,
       overlay->video_collect_data);

@@ -53,6 +53,7 @@ typedef struct {
   GString *buf;
   guint64  start_time;
   guint64  duration;
+  GstSegment *segment;
 } ParserState;
 
 typedef gchar* (*Parser) (ParserState *state, const gchar *line);
@@ -73,6 +74,13 @@ struct _GstSubParse {
   /* seek */
   guint64 offset;
   guint64 next_offset;
+  
+  /* Segment */
+  GstSegment *segment;
+  GstSeekFlags  segment_flags;
+  gboolean need_segment;
+  
+  gboolean flushing;
 };
 
 struct _GstSubParseClass {

@@ -1,3 +1,15 @@
+2006-02-05  Julien MOUTTE  <julien@moutte.net>
+
+	* docs/libs/tmpl/gstcolorbalance.sgml: Updated.
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_init),
+	(gst_text_overlay_src_event), (gst_text_overlay_collected):
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_dispose),
+	(gst_sub_parse_class_init), (gst_sub_parse_init),
+	(gst_sub_parse_src_event), (parse_mdvdsub), (parse_subrip),
+	(parse_mpsub), (parser_state_init), (handle_buffer),
+	(gst_sub_parse_chain), (gst_sub_parse_sink_event), (plugin_init):
+	* gst/subparse/gstsubparse.h: Introduce seeking code.
+
 2006-02-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add):

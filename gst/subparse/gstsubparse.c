@@ -56,10 +56,6 @@ static GstStateChangeReturn gst_sub_parse_change_state (GstElement * element,
 
 static GstFlowReturn gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf);
 
-#if 0
-static GstCaps *gst_sub_parse_type_find (GstBuffer * buf, gpointer private);
-#endif
-
 static GstElementClass *parent_class = NULL;
 
 GType
@@ -107,11 +103,29 @@ gst_sub_parse_base_init (GstSubParseClass * klass)
 }
 
 static void
+gst_sub_parse_dispose (GObject * object)
+{
+  GstSubParse *subparse = GST_SUBPARSE (object);
+
+  GST_DEBUG_OBJECT (subparse, "cleaning up subtitle parser");
+
+  if (subparse->segment) {
+    gst_segment_free (subparse->segment);
+    subparse->segment = NULL;
+  }
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+}
+
+static void
 gst_sub_parse_class_init (GstSubParseClass * klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+
+  object_class->dispose = gst_sub_parse_dispose;
 
   element_class->change_state = gst_sub_parse_change_state;
 }
@@ -133,45 +147,20 @@ gst_sub_parse_init (GstSubParse * subparse)
 
   subparse->textbuf = g_string_new (NULL);
   subparse->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
+  subparse->flushing = FALSE;
+  subparse->segment = gst_segment_new ();
+  if (subparse->segment) {
+    gst_segment_init (subparse->segment, GST_FORMAT_TIME);
+    subparse->need_segment = TRUE;
+  } else {
+    GST_WARNING_OBJECT (subparse, "segment creation failed");
+    g_assert_not_reached ();
+  }
 }
 
 /*
  * Source pad functions.
  */
-
-static gboolean
-gst_sub_parse_do_seek (GstSubParse * self, GstEvent * event)
-{
-  GstSeekType type;
-  GstFormat format;
-
-  gst_event_parse_seek (event, NULL, &format, NULL, &type, NULL, NULL, NULL);
-
-  if (format != GST_FORMAT_TIME) {
-    GST_DEBUG ("Cannot handle seek in non-TIME formats");
-    return FALSE;
-  }
-
-  /* TODO: use GstSegment? */
-  if (type != GST_SEEK_TYPE_SET) {
-    GST_DEBUG ("Only support GST_SEEK_TYPE_SET");
-    return FALSE;
-  }
-
-  GST_PAD_STREAM_LOCK (self->sinkpad);
-
-  /* just seek to 0, rely on the overlayer to throw away buffers until the right
-     time -- and his mother cried... */
-  self->next_offset = 0;
-
-  /* FIXME: shouldn't we be sending at least a newsegment event? */
-
-  /* FIXME: ... and send a seek event upstream? */
-
-  GST_PAD_STREAM_UNLOCK (self->sinkpad);
-
-  return TRUE;
-}
 
 static gboolean
 gst_sub_parse_src_event (GstPad * pad, GstEvent * event)
@@ -183,14 +172,55 @@ gst_sub_parse_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      ret = gst_sub_parse_do_seek (self, event);
+    {
+      GstFormat format;
+      GstSeekType start_type, stop_type;
+      gint64 start, stop;
+      gdouble rate;
+      gboolean update;
+
+      gst_event_parse_seek (event, &rate, &format, &self->segment_flags,
+          &start_type, &start, &stop_type, &stop);
+
+      if (format != GST_FORMAT_TIME) {
+        GST_WARNING_OBJECT (self, "we only support seeking in TIME format");
+        gst_event_unref (event);
+        goto beach;
+      }
+
+      /* Convert that seek to a seeking in bytes at position 0,
+         FIXME: could use an index */
+      ret = gst_pad_push_event (self->sinkpad,
+          gst_event_new_seek (rate, GST_FORMAT_BYTES, self->segment_flags,
+              GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_NONE, 0));
+
+      if (ret) {
+        /* Apply the seek to our segment */
+        gst_segment_set_seek (self->segment, rate, format, self->segment_flags,
+            start_type, start, stop_type, stop, &update);
+
+        GST_DEBUG_OBJECT (self, "segment configured from %" GST_TIME_FORMAT
+            " to %" GST_TIME_FORMAT ", position %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (self->segment->start),
+            GST_TIME_ARGS (self->segment->stop),
+            GST_TIME_ARGS (self->segment->last_stop));
+
+        self->next_offset = 0;
+
+        self->need_segment = TRUE;
+      } else {
+        GST_WARNING_OBJECT (self, "seek to 0 bytes failed");
+      }
+
       gst_event_unref (event);
       break;
+    }
     default:
       ret = gst_pad_event_default (pad, event);
       break;
   }
 
+beach:
   gst_object_unref (self);
 
   return ret;
@@ -267,6 +297,8 @@ parse_mdvdsub (ParserState * state, const gchar * line)
   const gchar *line_split;
   gchar *line_chunk;
   guint start_frame, end_frame;
+  gint64 clip_start = 0, clip_stop = 0;
+  gboolean in_seg = FALSE;
 
   /* FIXME: hardcoded for now, but detecting the correct value is
    * not going to be easy, I suspect... */
@@ -287,6 +319,19 @@ parse_mdvdsub (ParserState * state, const gchar * line)
 
   state->start_time = (start_frame - 1000) / frames_per_sec * GST_SECOND;
   state->duration = (end_frame - start_frame) / frames_per_sec * GST_SECOND;
+
+  /* Check our segment start/stop */
+  in_seg = gst_segment_clip (state->segment, GST_FORMAT_TIME,
+      state->start_time, state->start_time + state->duration, &clip_start,
+      &clip_stop);
+
+  /* No need to parse that text if it's out of segment */
+  if (in_seg) {
+    state->start_time = clip_start;
+    state->duration = clip_stop - clip_start;
+  } else {
+    return NULL;
+  }
 
   /* skip the {%u}{%u} part */
   line = strchr (line, '}') + 1;
@@ -368,6 +413,23 @@ parse_subrip (ParserState * state, const gchar * line)
       }
       return NULL;
     case 2:
+    {                           /* No need to parse that text if it's out of segment */
+      gint64 clip_start = 0, clip_stop = 0;
+      gboolean in_seg = FALSE;
+
+      /* Check our segment start/stop */
+      in_seg = gst_segment_clip (state->segment, GST_FORMAT_TIME,
+          state->start_time, state->start_time + state->duration,
+          &clip_start, &clip_stop);
+
+      if (in_seg) {
+        state->start_time = clip_start;
+        state->duration = clip_stop - clip_start;
+      } else {
+        state->state = 0;
+        return NULL;
+      }
+    }
       /* looking for subtitle text; empty line ends this
        * subtitle entry */
       if (state->buf->len)
@@ -401,6 +463,23 @@ parse_mpsub (ParserState * state, const gchar * line)
       }
       return NULL;
     case 1:
+    {                           /* No need to parse that text if it's out of segment */
+      gint64 clip_start = 0, clip_stop = 0;
+      gboolean in_seg = FALSE;
+
+      /* Check our segment start/stop */
+      in_seg = gst_segment_clip (state->segment, GST_FORMAT_TIME,
+          state->start_time, state->start_time + state->duration,
+          &clip_start, &clip_stop);
+
+      if (in_seg) {
+        state->start_time = clip_start;
+        state->duration = clip_stop - clip_start;
+      } else {
+        state->state = 0;
+        return NULL;
+      }
+    }
       /* looking for subtitle text; empty line ends this
        * subtitle entry */
       if (state->buf->len)
@@ -433,6 +512,7 @@ parser_state_init (ParserState * state)
   state->start_time = 0;
   state->duration = 0;
   state->state = 0;
+  state->segment = NULL;
 }
 
 static void
@@ -566,7 +646,10 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
     gst_caps_unref (caps);
   }
 
-  while ((line = get_next_line (self))) {
+  while ((line = get_next_line (self)) && !self->flushing) {
+    /* Set segment on our parser state machine */
+    self->state.segment = self->segment;
+    /* Now parse the line, out of segment lines will just return NULL */
     GST_DEBUG ("Parsing line '%s'", line);
     subtitle = self->parse_line (&self->state, line);
     g_free (line);
@@ -582,6 +665,9 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
         memcpy (GST_BUFFER_DATA (buf), subtitle, subtitle_len);
         GST_BUFFER_TIMESTAMP (buf) = self->state.start_time;
         GST_BUFFER_DURATION (buf) = self->state.duration;
+
+        gst_segment_set_last_stop (self->segment, GST_FORMAT_TIME,
+            self->state.start_time);
 
         GST_DEBUG ("Sending text '%s', %" GST_TIME_FORMAT " + %"
             GST_TIME_FORMAT, subtitle, GST_TIME_ARGS (self->state.start_time),
@@ -608,9 +694,20 @@ gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf)
   GstSubParse *self;
 
   GST_DEBUG ("gst_sub_parse_chain");
-  self = GST_SUBPARSE (GST_OBJECT_PARENT (sinkpad));
+  self = GST_SUBPARSE (gst_pad_get_parent (sinkpad));
+
+  /* Push newsegment if needed */
+  if (self->need_segment) {
+    gst_pad_push_event (self->srcpad, gst_event_new_new_segment (FALSE,
+            self->segment->rate, self->segment->format,
+            self->segment->last_stop, self->segment->stop,
+            self->segment->time));
+    self->need_segment = FALSE;
+  }
 
   ret = handle_buffer (self, buf);
+
+  gst_object_unref (self);
 
   return ret;
 }
@@ -640,8 +737,38 @@ gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_event_default (pad, event);
       break;
     }
-    case GST_EVENT_NEWSEGMENT:{
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat format;
+      gdouble rate;
+      gint64 start, stop, time;
+      gboolean update;
+
+      GST_DEBUG_OBJECT (self, "received new segment");
+
+      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
+          &stop, &time);
+
+      /* now copy over the values */
+      gst_segment_set_newsegment (self->segment, update, rate, format,
+          start, stop, time);
+
+      ret = TRUE;
       gst_event_unref (event);
+      break;
+    }
+    case GST_EVENT_FLUSH_START:
+    {
+      self->flushing = TRUE;
+
+      ret = gst_pad_event_default (pad, event);
+      break;
+    }
+    case GST_EVENT_FLUSH_STOP:
+    {
+      self->flushing = FALSE;
+
+      ret = gst_pad_event_default (pad, event);
       break;
     }
     default:
