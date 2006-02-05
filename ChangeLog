@@ -1,5 +1,11 @@
 2006-02-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst-libs/gst/tag/gstid3tag.c:
+	  Add mapping for ID3 International Standard Recording Code
+	  tag "TSRC"
+
+2006-02-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_metadata_set1):
 	  Don't leak tag names.
 
