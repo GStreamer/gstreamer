@@ -19,6 +19,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gsttagid3
+ * @short_description: tag mappings and support functions for plugins
+ *                     dealing with ID3v1 and ID3v2 tags
+ * @see_also: #GstTagList
+ * 
+ * <refsect2>
+ * <para>
+ * Contains various utility functions for plugins to parse or create
+ * ID3 tags and map ID3v2 identifiers to and from GStreamer identifiers.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

@@ -29,15 +29,14 @@
 
 /**
  * SECTION:gsttag
- * @short_description: Tag Support Library
+ * @short_description: additional tag definitions for plugins and applications
  * @see_also: #GstTagList
  * 
  * <refsect2>
  * <para>
- * Contains additional standardized GStreamer tag definitions and
- * various utility functions for plugins to parse or create different
- * types of tags. Also provides mappings from and to other tag identifiers
- * to the GStreamer tag identifier.
+ * Contains additional standardized GStreamer tag definitions for plugins
+ * and applications, and functions to register them with the GStreamer
+ * tag system.
  * </para>
  * </refsect2>
  */

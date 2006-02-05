@@ -14,6 +14,8 @@
 <!ENTITY GstMixer SYSTEM "xml/gstmixer.xml">
 <!ENTITY GstRingBuffer SYSTEM "xml/gstringbuffer.xml">
 <!ENTITY GstTag SYSTEM "xml/gsttag.xml">
+<!ENTITY GstTagVorbis SYSTEM "xml/gsttagvorbis.xml">
+<!ENTITY GstTagID3 SYSTEM "xml/gsttagid3.xml">
 <!ENTITY GstTuner SYSTEM "xml/gsttuner.xml">
 <!ENTITY GstXOverlay SYSTEM "xml/gstxoverlay.xml">
 
@@ -76,6 +78,8 @@ This library should be linked to by getting cflags and libs from
 <filename>-lgsttag-&GST_MAJORMINOR;</filename> to the library flags.
     </para>
     &GstTag;
+    &GstTagVorbis;
+    &GstTagID3;
   </chapter>
 
   <chapter id="gstreamer-cdda">

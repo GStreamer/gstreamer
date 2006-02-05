@@ -1,5 +1,14 @@
 2006-02-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/tag/gstid3tag.c:
+	* gst-libs/gst/tag/gstvorbistag.c:
+	* gst-libs/gst/tag/tags.c:
+	  Split libgsttag docs into multiple sections.
+
+2006-02-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/libs/Makefile.am:
 	* docs/libs/gst-plugins-base-libs-docs.sgml:
 	* docs/libs/gst-plugins-base-libs-sections.txt:
