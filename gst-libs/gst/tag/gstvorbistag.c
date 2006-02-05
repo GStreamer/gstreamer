@@ -159,6 +159,10 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
       if (strcmp (tag, "LANGUAGE") == 0) {
         const gchar *s = strchr (value, '[');
 
+        /* FIXME: gsttaglist.h says our language tag contains ISO-639-1
+         * codes, which are 2 letter codes. The code below extracts 3-letter
+         * identifiers, which would be ISO-639-2. Mixup? Oversight? Wrong core
+         * docs? What do files in the wild contain? (tpm) */
         if (s && strchr (s, ']') == s + 4) {
           valid = g_strndup (s + 1, 3);
         }

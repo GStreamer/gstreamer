@@ -1,5 +1,14 @@
 2006-02-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add):
+	  Add comment about LANGUAGE tag inconsistency (we want
+	  ISO-639-1, but extract three-letter identifiers?)
+
+	* po/POTFILES.in:
+	  Add two translatable files.
+
+2006-02-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/tag/Makefile.am:
 	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add):
 	* gst-libs/gst/tag/tag.h:

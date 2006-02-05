@@ -5,3 +5,5 @@ ext/gnomevfs/gstgnomevfssink.c
 ext/ogg/gstoggdemux.c
 gst/playback/gstplaybasebin.c
 gst/playback/gstplaybin.c
+gst-libs/gst/tag/tags.c
+gst-libs/gst/cdda/gstcddabasesrc.c
