@@ -613,6 +613,7 @@ gst_vorbisenc_metadata_set1 (const GstTagList * list, const gchar * tag,
 
       vorbis_comment_add_tag (&enc->vc, tmptag, vorbisvalue);
       g_free (tmptag);
+      g_free (vorbisvalue);
     }
   }
 }
@@ -968,6 +969,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
     gst_vorbisenc_set_metadata (vorbisenc);
     vorbis_analysis_headerout (&vorbisenc->vd, &vorbisenc->vc, &header,
         &header_comm, &header_code);
+    vorbis_comment_clear (&vorbisenc->vc);
 
     /* create header buffers */
     buf1 = gst_vorbisenc_buffer_from_header_packet (vorbisenc, &header);

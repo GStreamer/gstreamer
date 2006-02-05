@@ -148,6 +148,7 @@ static void theora_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void theora_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+static void theora_enc_finalize (GObject * object);
 
 static void
 gst_theora_enc_base_init (gpointer g_class)
@@ -169,6 +170,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
 
   gobject_class->set_property = theora_enc_set_property;
   gobject_class->get_property = theora_enc_get_property;
+  gobject_class->finalize = theora_enc_finalize;
 
   g_object_class_install_property (gobject_class, ARG_CENTER,
       g_param_spec_boolean ("center", "Center",
@@ -256,6 +258,16 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
       enc->info.keyframe_frequency_force, enc->granule_shift);
 }
 
+static void
+theora_enc_finalize (GObject * object)
+{
+  GstTheoraEnc *enc = GST_THEORA_ENC (object);
+
+  theora_clear (&enc->state);
+  theora_comment_clear (&enc->comment);
+  theora_info_clear (&enc->info);
+}
+
 static gboolean
 theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -323,6 +335,8 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
       enc->info.keyframe_frequency_force, enc->granule_shift);
 
   theora_encode_init (&enc->state, &enc->info);
+
+  gst_object_unref (enc);
 
   return TRUE;
 }

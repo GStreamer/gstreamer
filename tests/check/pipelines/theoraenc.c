@@ -56,13 +56,19 @@ buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
 static void
 start_pipeline (GstElement * bin, GstPad * pad)
 {
+  GstStateChangeReturn ret;
+
   id = gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe), NULL);
 
   cond = g_cond_new ();
   lock = g_mutex_new ();
 
-  gst_element_set_state (bin, GST_STATE_PLAYING);
-
+  ret = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_if (ret == GST_STATE_CHANGE_FAILURE, "Could not start test pipeline");
+  if (ret == GST_STATE_CHANGE_ASYNC) {
+    ret = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+    fail_if (ret != GST_STATE_CHANGE_SUCCESS, "Could not start test pipeline");
+  }
 }
 
 /* waits until the probe receives a buffer.  will catch every buffer */
@@ -89,6 +95,8 @@ get_buffer (GstElement * bin, GstPad * pad)
 static void
 stop_pipeline (GstElement * bin, GstPad * pad)
 {
+  GstStateChangeReturn ret;
+
   g_mutex_lock (lock);
   if (buf)
     gst_buffer_unref (buf);
@@ -98,7 +106,12 @@ stop_pipeline (GstElement * bin, GstPad * pad)
   g_cond_signal (cond);
   g_mutex_unlock (lock);
 
-  gst_element_set_state (bin, GST_STATE_NULL);
+  ret = gst_element_set_state (bin, GST_STATE_NULL);
+  fail_if (ret == GST_STATE_CHANGE_FAILURE, "Could not stop test pipeline");
+  if (ret == GST_STATE_CHANGE_ASYNC) {
+    ret = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+    fail_if (ret != GST_STATE_CHANGE_SUCCESS, "Could not stop test pipeline");
+  }
 
   g_mutex_lock (lock);
   if (buf)
