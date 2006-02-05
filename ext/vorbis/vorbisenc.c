@@ -609,7 +609,10 @@ gst_vorbisenc_metadata_set1 (const GstTagList * list, const gchar * tag,
     vorbisvalue = gst_vorbisenc_get_tag_value (list, tag, i);
 
     if (vorbisvalue != NULL) {
-      vorbis_comment_add_tag (&enc->vc, g_strdup (vorbistag), vorbisvalue);
+      gchar *tmptag = g_strdup (vorbistag);
+
+      vorbis_comment_add_tag (&enc->vc, tmptag, vorbisvalue);
+      g_free (tmptag);
     }
   }
 }
