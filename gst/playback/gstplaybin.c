@@ -680,8 +680,7 @@ gen_text_element (GstPlayBin * play_bin)
   g_object_set (G_OBJECT (overlay),
       "halign", "center", "valign", "bottom", NULL);
   if (play_bin->font_desc) {
-    g_object_set (G_OBJECT (play_bin->textoverlay_element),
-        "font-desc", play_bin->font_desc, NULL);
+    g_object_set (G_OBJECT (overlay), "font-desc", play_bin->font_desc, NULL);
   }
 
   /* Take a ref */
