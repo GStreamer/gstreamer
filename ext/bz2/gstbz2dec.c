@@ -225,8 +225,6 @@ gst_bz2dec_class_init (GstBz2decClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
   gobject_class->finalize = gst_bz2dec_finalize;
   gobject_class->get_property = gst_bz2dec_get_property;
   gobject_class->set_property = gst_bz2dec_set_property;

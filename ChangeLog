@@ -1,3 +1,9 @@
+2006-02-06  Andy Wingo  <wingo@pobox.com>
+
+	* ext/bz2/gstbz2enc.c (gst_bz2enc_class_init): 
+	* ext/bz2/gstbz2dec.c (gst_bz2dec_class_init): No need to init
+	parent_class, the boilerplate does it for you.
+
 2006-02-05  Lutz Mueller <lutz@topfrose.de>
 
 	reviewed by: Andy Wingo <wingo@pobox.com>
