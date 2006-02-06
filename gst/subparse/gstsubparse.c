@@ -408,7 +408,7 @@ parse_subrip (ParserState * state, const gchar * line)
             (((guint64) h2) * 3600 + m2 * 60 + s2) * GST_SECOND +
             ms2 * GST_MSECOND - state->start_time;
       } else {
-        GST_DEBUG (0, "error parsing subrip time line");
+        GST_DEBUG ("error parsing subrip time line");
         state->state = 0;
       }
       return NULL;

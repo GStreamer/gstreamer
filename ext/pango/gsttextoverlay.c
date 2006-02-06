@@ -528,11 +528,6 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
       /* Stopping collect pads */
       gst_collect_pads_stop (overlay->collect);
 
-      /* Flush upstream, this is required so that we can take the stream lock
-         safely */
-      gst_pad_push_event (overlay->video_sinkpad, gst_event_new_flush_start ());
-      gst_pad_push_event (overlay->text_sinkpad, gst_event_new_flush_start ());
-
       /* Acquire stream lock */
       GST_PAD_STREAM_LOCK (overlay->video_sinkpad);
       GST_PAD_STREAM_LOCK (overlay->text_sinkpad);
@@ -545,10 +540,6 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
       } else {
         gst_event_unref (event);
       }
-
-      /* Stop flushing upstream */
-      gst_pad_push_event (overlay->video_sinkpad, gst_event_new_flush_stop ());
-      gst_pad_push_event (overlay->text_sinkpad, gst_event_new_flush_stop ());
 
       /* Start collect pads again */
       gst_collect_pads_start (overlay->collect);
