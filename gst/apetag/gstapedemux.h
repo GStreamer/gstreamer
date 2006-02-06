@@ -21,7 +21,7 @@
 #ifndef __GST_APE_DEMUX_H__
 #define __GST_APE_DEMUX_H__
 
-#include <gst/tag/gsttagdemux.h>
+#include "gsttagdemux.h"
 
 G_BEGIN_DECLS
 
