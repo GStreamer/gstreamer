@@ -77,8 +77,12 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   /* gnome vfs engine init */
-  if (!gnome_vfs_initialized ())
-    gnome_vfs_init ();
+  if (!gnome_vfs_initialized ()) {
+    if (!gnome_vfs_init ()) {
+      GST_WARNING ("Failed to initialize GnomeVFS - not registering plugin!");
+      return FALSE;
+    }
+  }
 
   if (!gst_element_register (plugin, "gnomevfssrc", GST_RANK_SECONDARY,
           gst_gnome_vfs_src_get_type ()))
