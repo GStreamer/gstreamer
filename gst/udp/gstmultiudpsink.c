@@ -71,6 +71,9 @@ enum
 enum
 {
   PROP_0,
+  PROP_BYTES_TO_SERVE,
+  PROP_BYTES_SERVED,
+
   /* FILL ME */
 };
 
@@ -152,6 +155,9 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    * @gstmultiudpsink: the sink on which the signal is emitted
    * @host: the hostname/IP address of the client to add
    * @port: the port of the client to add
+   *
+   * Add a client with destination @host and @port to the list of
+   * clients.
    */
   gst_multiudpsink_signals[SIGNAL_ADD] =
       g_signal_new ("add", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -163,12 +169,21 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    * @gstmultiudpsink: the sink on which the signal is emitted
    * @host: the hostname/IP address of the client to remove
    * @port: the port of the client to remove
+   *
+   * Remove the client with destination @host and @port from the list of
+   * clients.
    */
   gst_multiudpsink_signals[SIGNAL_REMOVE] =
       g_signal_new ("remove", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiUDPSinkClass, remove),
       NULL, NULL, gst_udp_marshal_VOID__STRING_INT, G_TYPE_NONE, 2,
       G_TYPE_STRING, G_TYPE_INT);
+  /**
+   * GstMultiUDPSink::clear:
+   * @gstmultiudpsink: the sink on which the signal is emitted
+   *
+   * Clear the list of clients.
+   */
   gst_multiudpsink_signals[SIGNAL_CLEAR] =
       g_signal_new ("clear", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiUDPSinkClass, clear),
@@ -179,7 +194,9 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    * @host: the hostname/IP address of the client to get stats on
    * @port: the port of the client to get stats on
    *
-   * @returns: a GValueArray of uint64: bytes_sent, packets_sent,
+   * Get the statistics of the client with destination @host and @port.
+   *
+   * Returns: a GValueArray of uint64: bytes_sent, packets_sent,
    *           connect_time (in epoch seconds), disconnect_time (in epoch seconds)
    */
   gst_multiudpsink_signals[SIGNAL_GET_STATS] =
@@ -192,6 +209,9 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    * @gstmultiudpsink: the sink emitting the signal
    * @host: the hostname/IP address of the added client
    * @port: the port of the added client
+   *
+   * Signal emited when a new client is added to the list of
+   * clients.
    */
   gst_multiudpsink_signals[SIGNAL_CLIENT_ADDED] =
       g_signal_new ("client-added", G_TYPE_FROM_CLASS (klass),
@@ -203,12 +223,24 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    * @gstmultiudpsink: the sink emitting the signal
    * @host: the hostname/IP address of the removed client
    * @port: the port of the removed client
+   *
+   * Signal emited when a client is removed from the list of
+   * clients.
    */
   gst_multiudpsink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiUDPSinkClass,
           client_removed), NULL, NULL, gst_udp_marshal_VOID__STRING_INT,
       G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_INT);
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTES_TO_SERVE,
+      g_param_spec_uint64 ("bytes-to-serve", "Bytes to serve",
+          "Number of bytes received to serve to clients", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTES_SERVED,
+      g_param_spec_uint64 ("bytes-served", "Bytes served",
+          "Total number of bytes send to all clients", 0, G_MAXUINT64, 0,
+          G_PARAM_READABLE));
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
@@ -253,6 +285,10 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
+  sink->bytes_to_serve += size;
+
+  /* grab lock while iterating and sending to clients, this shuld be
+   * fast as UDP never blocks */
   g_mutex_lock (sink->client_lock);
   GST_LOG_OBJECT (bsink, "about to send %d bytes", size);
 
@@ -260,7 +296,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
     GstUDPClient *client;
 
     client = (GstUDPClient *) clients->data;
-    ++num;
+    num++;
     GST_LOG_OBJECT (sink, "sending %d bytes to client %p", size, client);
 
     while (TRUE) {
@@ -274,6 +310,7 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
       } else {
         client->bytes_sent += ret;
         client->packets_sent++;
+        sink->bytes_served += ret;
         break;
       }
     }
@@ -284,10 +321,14 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   return GST_FLOW_OK;
 
+  /* ERRORS */
 send_error:
   {
+    /* if sendto returns an error, something is seriously wrong */
     g_mutex_unlock (sink->client_lock);
-    GST_DEBUG ("got send error %s (%d)", g_strerror (errno), errno);
+    GST_DEBUG_OBJECT (sink, "got send error %d: %s", errno, g_strerror (errno));
+    GST_ELEMENT_ERROR (sink, STREAM, FAILED, (NULL),
+        ("Got send error %d: %s", errno, g_strerror (errno)));
     return GST_FLOW_ERROR;
   }
 }
@@ -316,6 +357,13 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
   udpsink = GST_MULTIUDPSINK (object);
 
   switch (prop_id) {
+    case PROP_BYTES_TO_SERVE:
+      g_value_set_uint64 (value, udpsink->bytes_to_serve);
+      break;
+    case PROP_BYTES_SERVED:
+      g_value_set_uint64 (value, udpsink->bytes_served);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -340,17 +388,23 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
               sizeof (bc_val))) < 0)
     goto no_broadcast;
 
+  sink->bytes_to_serve = 0;
+  sink->bytes_served = 0;
+
   return TRUE;
 
   /* ERRORS */
 no_socket:
   {
-    perror ("socket");
+    GST_ELEMENT_ERROR (sink, RESOURCE, FAILED, (NULL),
+        ("Could not create socket (%d): %s", errno, g_strerror (errno)));
     return FALSE;
   }
 no_broadcast:
   {
-    perror ("setsockopt");
+    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
+        ("Could not set broadcast socket option (%d): %s", errno,
+            g_strerror (errno)));
     return FALSE;
   }
 }
@@ -417,12 +471,15 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
   sink->clients = g_list_prepend (sink->clients, client);
   g_mutex_unlock (sink->client_lock);
 
+  g_signal_emit (G_OBJECT (sink),
+      gst_multiudpsink_signals[SIGNAL_CLIENT_ADDED], 0, host, port);
+
   return;
 
   /* ERRORS */
 host_error:
   {
-    GST_DEBUG ("hostname lookup error?");
+    GST_WARNING_OBJECT (sink, "hostname lookup error?");
     g_free (client->host);
     g_free (client);
     return;
@@ -450,6 +507,8 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
 {
   GList *find;
   GstUDPClient udpclient;
+  GstUDPClient *client;
+  GTimeVal now;
 
   udpclient.host = (gchar *) host;
   udpclient.port = port;
@@ -457,34 +516,45 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
   g_mutex_lock (sink->client_lock);
   find = g_list_find_custom (sink->clients, &udpclient,
       (GCompareFunc) client_compare);
-  if (find) {
-    GstUDPClient *client;
-    GTimeVal now;
+  if (!find)
+    goto not_found;
 
-    client = (GstUDPClient *) find->data;
+  GST_DEBUG_OBJECT (sink, "remove client with host %s, port %d", host, port);
 
-    g_get_current_time (&now);
-    client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
+  client = (GstUDPClient *) find->data;
 
-    /* Unlock to emit signal before we delete the actual client */
-    g_mutex_unlock (sink->client_lock);
-    g_signal_emit (G_OBJECT (sink),
-        gst_multiudpsink_signals[SIGNAL_CLIENT_REMOVED], 0, host, port);
-    g_mutex_lock (sink->client_lock);
+  g_get_current_time (&now);
+  client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
 
-    sink->clients = g_list_delete_link (sink->clients, find);
-
-    free_client (client);
-  }
+  /* Unlock to emit signal before we delete the actual client */
   g_mutex_unlock (sink->client_lock);
+  g_signal_emit (G_OBJECT (sink),
+      gst_multiudpsink_signals[SIGNAL_CLIENT_REMOVED], 0, host, port);
+  g_mutex_lock (sink->client_lock);
+
+  sink->clients = g_list_delete_link (sink->clients, find);
+
+  free_client (client);
+  g_mutex_unlock (sink->client_lock);
+
+  return;
+
+  /* ERRORS */
+not_found:
+  {
+    g_mutex_unlock (sink->client_lock);
+    GST_WARNING_OBJECT (sink, "client at host %s, port %d not found",
+        host, port);
+    return;
+  }
 }
 
-/* FIXME: what's the point of this signal/method ? It frees client structure
- * data without removing them from the sink */
 void
 gst_multiudpsink_clear (GstMultiUDPSink * sink)
 {
   GST_DEBUG_OBJECT (sink, "clearing");
+  /* we only need to remove the client structure, there is no additional
+   * socket or anything to free for UDP */
   g_mutex_lock (sink->client_lock);
   g_list_foreach (sink->clients, (GFunc) free_client, sink);
   g_list_free (sink->clients);
@@ -500,6 +570,7 @@ gst_multiudpsink_get_stats (GstMultiUDPSink * sink, const gchar * host,
   GValueArray *result = NULL;
   GstUDPClient udpclient;
   GList *find;
+  GValue value = { 0 };
 
   udpclient.host = (gchar *) host;
   udpclient.port = port;
@@ -508,44 +579,51 @@ gst_multiudpsink_get_stats (GstMultiUDPSink * sink, const gchar * host,
 
   find = g_list_find_custom (sink->clients, &udpclient,
       (GCompareFunc) client_compare);
-  if (find) {
-    GValue value = { 0 };
+  if (!find)
+    goto not_found;
 
-    client = (GstUDPClient *) find->data;
+  GST_DEBUG_OBJECT (sink, "stats for client with host %s, port %d", host, port);
 
-    /* Result is a value array of (bytes_sent, packets_sent,
-     * connect_time, disconnect_time), all as uint64 */
-    result = g_value_array_new (4);
+  client = (GstUDPClient *) find->data;
 
-    g_value_init (&value, G_TYPE_UINT64);
-    g_value_set_uint64 (&value, client->bytes_sent);
-    result = g_value_array_append (result, &value);
-    g_value_unset (&value);
+  /* Result is a value array of (bytes_sent, packets_sent,
+   * connect_time, disconnect_time), all as uint64 */
+  result = g_value_array_new (4);
 
-    g_value_init (&value, G_TYPE_UINT64);
-    g_value_set_uint64 (&value, client->packets_sent);
-    result = g_value_array_append (result, &value);
-    g_value_unset (&value);
+  g_value_init (&value, G_TYPE_UINT64);
+  g_value_set_uint64 (&value, client->bytes_sent);
+  result = g_value_array_append (result, &value);
+  g_value_unset (&value);
 
-    g_value_init (&value, G_TYPE_UINT64);
-    g_value_set_uint64 (&value, client->connect_time);
-    result = g_value_array_append (result, &value);
-    g_value_unset (&value);
+  g_value_init (&value, G_TYPE_UINT64);
+  g_value_set_uint64 (&value, client->packets_sent);
+  result = g_value_array_append (result, &value);
+  g_value_unset (&value);
 
-    g_value_init (&value, G_TYPE_UINT64);
-    g_value_set_uint64 (&value, client->disconnect_time);
-    result = g_value_array_append (result, &value);
-    g_value_unset (&value);
-  }
+  g_value_init (&value, G_TYPE_UINT64);
+  g_value_set_uint64 (&value, client->connect_time);
+  result = g_value_array_append (result, &value);
+  g_value_unset (&value);
+
+  g_value_init (&value, G_TYPE_UINT64);
+  g_value_set_uint64 (&value, client->disconnect_time);
+  result = g_value_array_append (result, &value);
+  g_value_unset (&value);
 
   g_mutex_unlock (sink->client_lock);
 
-  /* Apparently (see comment in gstmultifdsink.c) returning NULL from here may
-   * confuse/break python bindings */
-  if (result == NULL)
-    result = g_value_array_new (0);
-
   return result;
+
+  /* ERRORS */
+not_found:
+  {
+    g_mutex_unlock (sink->client_lock);
+    GST_WARNING_OBJECT (sink, "client with host %s, port %d not found",
+        host, port);
+    /* Apparently (see comment in gstmultifdsink.c) returning NULL from here may
+     * confuse/break python bindings */
+    return g_value_array_new (0);
+  }
 }
 
 static GstStateChangeReturn
@@ -579,6 +657,7 @@ gst_multiudpsink_change_state (GstElement * element, GstStateChange transition)
   /* ERRORS */
 no_init:
   {
+    /* _init_send() posted specific error already */
     return GST_STATE_CHANGE_FAILURE;
   }
 }

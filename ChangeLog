@@ -1,3 +1,16 @@
+2006-02-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init),
+	(gst_multiudpsink_render), (gst_multiudpsink_get_property),
+	(gst_multiudpsink_init_send), (gst_multiudpsink_add),
+	(gst_multiudpsink_remove), (gst_multiudpsink_clear),
+	(gst_multiudpsink_get_stats), (gst_multiudpsink_change_state):
+	* gst/udp/gstmultiudpsink.h:
+	Updated docs.
+	Added properties bytes-served, bytes_to_serve.
+	Post proper error messages,
+	Emit client added signal too.
+
 2006-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/Makefile.am:
