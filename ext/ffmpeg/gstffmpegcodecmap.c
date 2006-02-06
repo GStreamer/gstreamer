@@ -840,7 +840,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       gst_ffmpeg_set_palette (caps, context);
     }
 
-    GST_DEBUG ("caps for codec_id=%d: %" GST_PTR_FORMAT, codec_id, caps);
+    GST_LOG ("caps for codec_id=%d: %" GST_PTR_FORMAT, codec_id, caps);
 
   } else {
     GST_WARNING ("No caps found for codec_id=%d", codec_id);
@@ -1024,7 +1024,7 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
   if (caps != NULL) {
     char *str = gst_caps_to_string (caps);
 
-    GST_DEBUG ("caps for sample_fmt=%d: %s", sample_fmt, str);
+    GST_LOG ("caps for sample_fmt=%d: %s", sample_fmt, str);
     g_free (str);
   } else {
     GST_WARNING ("No caps found for sample_fmt=%d", sample_fmt);

@@ -1,3 +1,17 @@
+2006-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_smpfmt_to_caps):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps),
+	(gst_ffmpegdec_negotiate), (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_chain):
+	  debug recurring events at LOG level
+	  do some timestamp setting heuristics on the pcache, with the
+	  net result of having more buffers have approximately correct
+	  timestamps.
+	  This allows playback of h263/3gp files taking fps from the demuxer,
+	  which before always set GST_CLOCK_TIME_NONE as timestamp.
+
 2006-02-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_get_palette):
@@ -5,8 +19,8 @@
 
 2006-02-03  Edgard Lima <edgard.lima@indt.org.br>
 
-        * ext/ffmpeg/gstffmpegenc.c:
-        Just make it compile with --disable-gst-debug.
+	* ext/ffmpeg/gstffmpegenc.c:
+	  Just make it compile with --disable-gst-debug.
 			
 2006-02-02  Andy Wingo  <wingo@pobox.com>
 
