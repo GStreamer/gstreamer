@@ -400,6 +400,13 @@ else
   AC_SUBST(X_LIBS)
 fi
 
+dnl *** BZ2 ***
+translit(bz2, m, l) AM_CONDITIONAL(USE_BZ2, true)
+GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
+  GST_CHECK_LIBHEADER(BZ2, bz2, BZ2_bzCompress, ,bzlib.h, BZ2_LIBS="-lbz2")
+  AC_SUBST(BZ2_LIBS)
+])
+
 dnl *** DTS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DTS, true)
 GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
@@ -652,6 +659,7 @@ sys/glsink/Makefile
 examples/Makefile
 examples/directfb/Makefile
 ext/Makefile
+ext/bz2/Makefile
 ext/directfb/Makefile
 ext/faac/Makefile
 ext/faad/Makefile

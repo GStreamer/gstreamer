@@ -22,6 +22,12 @@ AUDIOFILE_DIR=
 AUDIORESAMPLE_DIR=
 # endif
 
+if USE_BZ2
+BZ2_DIR=bz2
+else
+BZ2_DIR=
+endif
+
 # if USE_CDAUDIO
 # CDAUDIO_DIR=cdaudio
 # else
@@ -207,6 +213,7 @@ SUBDIRS=\
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
 	$(AUDIORESAMPLE_DIR) \
+	$(BZ2_DIR) \
 	$(CDAUDIO_DIR) \
 	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \
@@ -239,6 +246,7 @@ SUBDIRS=\
 	$(XVID_DIR)
 
 DIST_SUBDIRS= \
+	bz2 \
 	directfb \
 	faac \
 	faad \

@@ -1,3 +1,16 @@
+2006-02-05  Lutz Mueller <lutz@topfrose.de>
+
+	reviewed by: Andy Wingo <wingo@pobox.com>
+
+	* configure.ac:
+	* ext/Makefile.am: Hook it up.
+	* ext/bz2/gstbz2.c:
+	* ext/bz2/gstbz2dec.h:
+	* ext/bz2/gstbz2dec.c:
+	* ext/bz2/gstbz2enc.h:
+	* ext/bz2/gstbz2enc.c: New plugin, implements bz2 encoding and
+	decoding (#303167).
+	
 2006-01-30  Andy Wingo  <wingo@pobox.com>
 
 	* sys/glsink/Makefile.am (libgstglimagesink_la_LIBADD) 
