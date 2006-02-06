@@ -1,3 +1,17 @@
+2006-02-06  Lutz Mueller <lutz@topfrose.de>
+
+	Reviewed by: Edward Hervey <edward@fluendo.com>
+	
+	* ext/bz2/gstbz2enc.c: Accepd "ANY" caps. Use "x-bzip" instead of
+	"x-bz2".
+	* ext/bz2/gstbz2dec.c: Use "x-bzip" instead of "x-bz2". Initial
+	caps are "ANY".
+	(gst_bz2dec_chain): Configure the source pad if we can figure out
+	the mime type of the decompressed data.
+	(gst_bz2dec_[get,set]_property):
+	(gst_bz2dec_class_init: New property "first_buffer_size".
+	
+
 2006-02-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_src_query),

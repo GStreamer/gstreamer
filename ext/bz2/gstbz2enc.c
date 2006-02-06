@@ -32,10 +32,10 @@ static GstElementDetails bz2enc_details = GST_ELEMENT_DETAILS ("BZ2 encoder",
 
 static GstStaticPadTemplate sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/octet-stream"));
+    GST_STATIC_CAPS ("ANY"));
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-bz2"));
+    GST_STATIC_CAPS ("application/x-bzip"));
 
 #define DEFAULT_BLOCK_SIZE 6
 #define DEFAULT_BUFFER_SIZE 1024

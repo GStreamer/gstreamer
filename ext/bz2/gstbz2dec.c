@@ -32,16 +32,17 @@ static GstElementDetails bz2dec_details = GST_ELEMENT_DETAILS ("BZ2 decoder",
 
 static GstStaticPadTemplate sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-bz2"));
+    GST_STATIC_CAPS ("application/x-bzip"));
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/octet-stream"));
+    GST_STATIC_CAPS ("ANY"));
 
 struct _GstBz2dec
 {
   GstElement parent;
 
   /* Properties */
+  guint first_buffer_size;
   guint buffer_size;
 
   gboolean ready;
@@ -56,11 +57,13 @@ struct _GstBz2decClass
 
 GST_BOILERPLATE (GstBz2dec, gst_bz2dec, GstElement, GST_TYPE_ELEMENT);
 
+#define DEFAULT_FIRST_BUFFER_SIZE 1024
 #define DEFAULT_BUFFER_SIZE 1024
 
 enum
 {
   PROP_0,
+  PROP_FIRST_BUFFER_SIZE,
   PROP_BUFFER_SIZE
 };
 
@@ -95,14 +98,81 @@ gst_bz2dec_decompress_init (GstBz2dec * b)
   }
 }
 
+typedef struct
+{
+  guint best_probability;
+  GstCaps *caps;
+  GstBuffer *buffer;
+} SimpleTypeFind;
+
+guint8 *
+simple_find_peek (gpointer data, gint64 offset, guint size)
+{
+  SimpleTypeFind *find = (SimpleTypeFind *) data;
+
+  if (offset < 0)
+    return NULL;
+
+  if (GST_BUFFER_SIZE (find->buffer) >= offset + size) {
+    return GST_BUFFER_DATA (find->buffer) + offset;
+  }
+  return NULL;
+}
+
+static void
+simple_find_suggest (gpointer data, guint probability, const GstCaps * caps)
+{
+  SimpleTypeFind *find = (SimpleTypeFind *) data;
+
+  if (probability > find->best_probability) {
+    GstCaps *copy = gst_caps_copy (caps);
+
+    gst_caps_replace (&find->caps, copy);
+    gst_caps_unref (copy);
+    find->best_probability = probability;
+  }
+}
+
+static GstCaps *
+gst_bz2dec_do_typefind (GstBz2dec * b, GstBuffer * buffer)
+{
+  GList *walk, *type_list;
+  SimpleTypeFind find;
+  GstTypeFind gst_find;
+
+  walk = type_list = gst_type_find_factory_get_list ();
+
+  find.buffer = buffer;
+  find.best_probability = 0;
+  find.caps = NULL;
+  gst_find.data = &find;
+  gst_find.peek = simple_find_peek;
+  gst_find.get_length = NULL;
+  gst_find.suggest = simple_find_suggest;
+  while (walk) {
+    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
+
+    gst_type_find_factory_call_function (factory, &gst_find);
+    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
+      break;
+    walk = g_list_next (walk);
+  }
+  gst_plugin_feature_list_free (type_list);
+  if (find.best_probability > 0) {
+    GST_DEBUG ("Found caps %s" GST_PTR_FORMAT " with buf size %u", find.caps,
+        GST_BUFFER_SIZE (buffer));
+    return find.caps;
+  }
+
+  return NULL;
+}
+
 static GstFlowReturn
 gst_bz2dec_chain (GstPad * pad, GstBuffer * in)
 {
   GstBz2dec *b = GST_BZ2DEC (gst_pad_get_parent (pad));
   GstPad *src = gst_element_get_pad (GST_ELEMENT (b), "src");
   int r = BZ_OK;
-  GstFlowReturn fr;
-  guint n;
 
   gst_object_unref (b);
   gst_object_unref (src);
@@ -116,12 +186,19 @@ gst_bz2dec_chain (GstPad * pad, GstBuffer * in)
 
   while (r != BZ_STREAM_END) {
     GstBuffer *out;
+    GstCaps *caps;
+    guint n;
+    GstFlowReturn fr;
 
-    if ((fr = gst_pad_alloc_buffer (src, b->offset, b->buffer_size,
+    /* Create the output buffer */
+    if ((fr = gst_pad_alloc_buffer (src, b->offset,
+                b->offset ? b->buffer_size : b->first_buffer_size,
                 GST_PAD_CAPS (pad), &out)) != GST_FLOW_OK) {
       gst_bz2dec_decompress_init (b);
       return fr;
     }
+
+    /* Decode */
     b->stream.next_out = (char *) GST_BUFFER_DATA (out);
     b->stream.avail_out = GST_BUFFER_SIZE (out);
     r = BZ2_bzDecompress (&b->stream);
@@ -138,6 +215,15 @@ gst_bz2dec_chain (GstPad * pad, GstBuffer * in)
     }
     GST_BUFFER_SIZE (out) -= b->stream.avail_out;
     GST_BUFFER_OFFSET (out) = b->stream.total_out_lo32 - GST_BUFFER_SIZE (out);
+
+    /* Configure source pad (if necessary) */
+    if (!b->offset && (caps = gst_bz2dec_do_typefind (b, out))) {
+      gst_buffer_set_caps (out, caps);
+      gst_pad_set_caps (src, caps);
+      gst_caps_unref (caps);
+    }
+
+    /* Push data */
     n = GST_BUFFER_SIZE (out);
     if ((fr = gst_pad_push (src, out)) != GST_FLOW_OK) {
       gst_buffer_unref (out);
@@ -154,6 +240,7 @@ gst_bz2dec_init (GstBz2dec * b, GstBz2decClass * klass)
 {
   GstPad *pad;
 
+  b->first_buffer_size = DEFAULT_FIRST_BUFFER_SIZE;
   b->buffer_size = DEFAULT_BUFFER_SIZE;
   pad =
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
@@ -200,6 +287,9 @@ gst_bz2dec_get_property (GObject * object, guint prop_id,
     case PROP_BUFFER_SIZE:
       g_value_set_uint (value, b->buffer_size);
       break;
+    case PROP_FIRST_BUFFER_SIZE:
+      g_value_set_uint (value, b->first_buffer_size);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -215,6 +305,9 @@ gst_bz2dec_set_property (GObject * object, guint prop_id,
     case PROP_BUFFER_SIZE:
       b->buffer_size = g_value_get_uint (value);
       break;
+    case PROP_FIRST_BUFFER_SIZE:
+      b->first_buffer_size = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -229,6 +322,11 @@ gst_bz2dec_class_init (GstBz2decClass * klass)
   gobject_class->get_property = gst_bz2dec_get_property;
   gobject_class->set_property = gst_bz2dec_set_property;
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_FIRST_BUFFER_SIZE, g_param_spec_uint ("first_buffer_size",
+          "Size of first buffer", "Size of first buffer (used to determine the "
+          "mime type of the uncompressed data)", 1, G_MAXUINT,
+          DEFAULT_FIRST_BUFFER_SIZE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_SIZE,
       g_param_spec_uint ("buffer_size", "Buffer size", "Buffer size",
           1, G_MAXUINT, DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE));
