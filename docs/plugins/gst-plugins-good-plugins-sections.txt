@@ -31,6 +31,14 @@ GstCairoTimeOverlayClass
 </SECTION>
 
 <SECTION>
+<FILE>element-cdiocddasrc</FILE>
+GstCdioCddaSrc
+<TITLE>cdiocddasrc</TITLE>
+<SUBSECTION Standard>
+GstCdioCddaSrcClass
+</SECTION>
+
+<SECTION>
 <FILE>element-flacdec</FILE>
 GstFlacDec
 <TITLE>flacdec</TITLE>

@@ -1,5 +1,19 @@
 2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	  Add cdio plugin to docs.
+
+	* ext/cdio/gstcdiocddasrc.c:
+	  Add gtk-doc blurb.
+
+	* ext/cdio/gstcdio.c:
+	  The plugin is called 'cdio' not 'cddio'.
+
+2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
