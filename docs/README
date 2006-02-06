@@ -279,7 +279,8 @@ in the various plugin packages.
     this to only get stuff from the source.
 
 - to add a plugin to be documented:
-  - make sure inspect/ has generated a .xml file for it
+  - make sure inspect/ has generated a .xml file for it. If it has not, make
+    sure you have pygst installed and run 'make update-inspect'.
   - add it to CVS
   - add an include in -docs.sgml in the Plugins list for that plugin
 

@@ -1,3 +1,9 @@
+2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/README:
+	  Tell folks what to do if the plugin-foobar.xml file
+	  hasn't been generated for a newly-added plugin.
+
 2006-02-05  Julien MOUTTE  <julien@moutte.net>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_finalize),
