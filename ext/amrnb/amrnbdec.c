@@ -48,6 +48,7 @@ static void gst_amrnbdec_base_init (GstAmrnbDecClass * klass);
 static void gst_amrnbdec_class_init (GstAmrnbDecClass * klass);
 static void gst_amrnbdec_init (GstAmrnbDec * amrnbdec);
 
+static gboolean gst_amrnbdec_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_amrnbdec_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_amrnbdec_state_change (GstElement * element,
@@ -117,6 +118,7 @@ gst_amrnbdec_init (GstAmrnbDec * amrnbdec)
       gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
       "sink");
   gst_pad_set_setcaps_function (amrnbdec->sinkpad, gst_amrnbdec_setcaps);
+  gst_pad_set_event_function (amrnbdec->sinkpad, gst_amrnbdec_event);
   gst_pad_set_chain_function (amrnbdec->sinkpad, gst_amrnbdec_chain);
   gst_element_add_pad (GST_ELEMENT (amrnbdec), amrnbdec->sinkpad);
 
@@ -133,7 +135,8 @@ gst_amrnbdec_init (GstAmrnbDec * amrnbdec)
   amrnbdec->handle = NULL;
   amrnbdec->channels = 0;
   amrnbdec->rate = 0;
-  amrnbdec->ts = 0;
+  amrnbdec->duration = 0;
+  amrnbdec->ts = -1;
 }
 
 static gboolean
@@ -143,7 +146,7 @@ gst_amrnbdec_setcaps (GstPad * pad, GstCaps * caps)
   GstAmrnbDec *amrnbdec;
   GstCaps *copy;
 
-  amrnbdec = GST_AMRNBDEC (GST_PAD_PARENT (pad));
+  amrnbdec = GST_AMRNBDEC (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -159,10 +162,45 @@ gst_amrnbdec_setcaps (GstPad * pad, GstCaps * caps)
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "rate", G_TYPE_INT, amrnbdec->rate, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
 
+  amrnbdec->duration = gst_util_uint64_scale_int (GST_SECOND, 160,
+      amrnbdec->rate * amrnbdec->channels);
+
   gst_pad_set_caps (amrnbdec->srcpad, copy);
   gst_caps_unref (copy);
 
+  gst_object_unref (amrnbdec);
+
   return TRUE;
+}
+
+static gboolean
+gst_amrnbdec_event (GstPad * pad, GstEvent * event)
+{
+  GstAmrnbDec *amrnbdec;
+  gboolean ret = TRUE;
+
+  amrnbdec = GST_AMRNBDEC (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      ret = gst_pad_push_event (amrnbdec->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      ret = gst_pad_push_event (amrnbdec->srcpad, event);
+      gst_adapter_clear (amrnbdec->adapter);
+      amrnbdec->ts = -1;
+      break;
+    case GST_EVENT_EOS:
+      gst_adapter_clear (amrnbdec->adapter);
+      ret = gst_pad_push_event (amrnbdec->srcpad, event);
+      break;
+    default:
+      ret = gst_pad_push_event (amrnbdec->srcpad, event);
+      break;
+  }
+  gst_object_unref (amrnbdec);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -171,7 +209,7 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
   GstAmrnbDec *amrnbdec;
   GstFlowReturn ret;
 
-  amrnbdec = GST_AMRNBDEC (GST_PAD_PARENT (pad));
+  amrnbdec = GST_AMRNBDEC (gst_pad_get_parent (pad));
 
   if (amrnbdec->rate == 0 || amrnbdec->channels == 0)
     goto not_negotiated;
@@ -198,30 +236,35 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
 
     if (gst_adapter_available (amrnbdec->adapter) < block)
       break;
-    data = (guint8 *) gst_adapter_peek (amrnbdec->adapter, block);
+    data = (guint8 *) gst_adapter_take (amrnbdec->adapter, block);
 
     /* get output */
     out = gst_buffer_new_and_alloc (160 * 2);
-    GST_BUFFER_DURATION (out) = GST_SECOND * 160 /
-        (amrnbdec->rate * amrnbdec->channels);
+    GST_BUFFER_DURATION (out) = amrnbdec->duration;
     GST_BUFFER_TIMESTAMP (out) = amrnbdec->ts;
-    amrnbdec->ts += GST_BUFFER_DURATION (out);
-    gst_buffer_set_caps (out, gst_pad_get_caps (amrnbdec->srcpad));
+    if (amrnbdec->ts != -1)
+      amrnbdec->ts += GST_BUFFER_DURATION (out);
+    gst_buffer_set_caps (out, GST_PAD_CAPS (amrnbdec->srcpad));
 
-    /* decode */
+    /* decode, the library seems to write into the source data, hence
+     * the copy. */
     Decoder_Interface_Decode (amrnbdec->handle, data,
         (short *) GST_BUFFER_DATA (out), 0);
-
-    gst_adapter_flush (amrnbdec->adapter, block);
+    g_free (data);
 
     /* play */
     ret = gst_pad_push (amrnbdec->srcpad, out);
   }
+  gst_object_unref (amrnbdec);
 
   return ret;
 
+  /* ERRORS */
 not_negotiated:
   {
+    GST_ELEMENT_ERROR (amrnbdec, STREAM, TYPE_NOT_FOUND, (NULL),
+        ("Decoder is not initialized"));
+    gst_object_unref (amrnbdec);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
@@ -237,11 +280,13 @@ gst_amrnbdec_state_change (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!(amrnbdec->handle = Decoder_Interface_init ()))
-        return GST_STATE_CHANGE_FAILURE;
+        goto init_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (amrnbdec->adapter);
-      amrnbdec->ts = 0;
+      amrnbdec->rate = 0;
+      amrnbdec->channels = 0;
+      amrnbdec->ts = -1;
       break;
     default:
       break;
@@ -258,4 +303,12 @@ gst_amrnbdec_state_change (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+
+  /* ERRORS */
+init_failed:
+  {
+    GST_ELEMENT_ERROR (amrnbdec, LIBRARY, INIT, (NULL),
+        ("Failed to open AMR Decoder"));
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }

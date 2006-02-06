@@ -1,3 +1,14 @@
+2006-02-06  Wim Taymans  <wim@fluendo.com>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_init),
+	(gst_amrnbdec_setcaps), (gst_amrnbdec_event), (gst_amrnbdec_chain),
+	(gst_amrnbdec_state_change):
+	* ext/amrnb/amrnbdec.h:
+	Fix amrnbdec, handle events, take copy from adapter since the decoder
+	apparently writes in the source data.
+	Use some _scale_int, and precalc duration.
+	Fix some leaks, post ERROR messages.
+
 2006-02-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream):
