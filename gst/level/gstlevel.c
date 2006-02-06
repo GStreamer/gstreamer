@@ -547,9 +547,12 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
         decaydB = 10 * log10 (filter->decay_peak[i]);
 
         if (filter->decay_peak[i] < filter->last_peak[i]) {
-          GST_ERROR_OBJECT (filter,
-              "message: decay peak dB %f smaller than last peak dB %f",
+          /* this can happen in certain cases, for example when
+           * the last peak is between decay_peak and decay_peak_base */
+          GST_DEBUG_OBJECT (filter,
+              "message: decay peak dB %f smaller than last peak dB %f, copying",
               decaydB, lastdB);
+          filter->decay_peak[i] = filter->last_peak[i];
         }
         GST_LOG_OBJECT (filter,
             "message: RMS %f dB, peak %f dB, decay %f dB",
