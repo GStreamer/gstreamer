@@ -1,5 +1,12 @@
 2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/elements/matroskamux.c: (setup_src_pad):
+	  Collectpads in core got changed and now also holds a
+	  reference to any pad that is part of it. Fix refcount
+	  checks in test case accordingly.
+
+2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/apetag/gstapedemux.h:
 	  Fix include, for now GstTagDemux is in the apetag dir.
 

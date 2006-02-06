@@ -69,13 +69,16 @@ setup_src_pad (GstElement * element,
   sinkpad = gst_element_get_pad (element, "audio_%d");
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  /* references are owned by: 1) us, 2) matroskamux, 3) collect pads */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
   if (caps)
     fail_unless (gst_pad_set_caps (srcpad, caps));
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (sinkpad);   /* because we got it higher up */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 1);
+
+  /* references are owned by: 1) matroskamux, 2) collect pads */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
 
   return srcpad;
 }
