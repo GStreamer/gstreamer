@@ -317,8 +317,12 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
       break;
     case GST_QUERY_DURATION:
       if (qtdemux->duration != 0 && qtdemux->timescale != 0) {
-        gst_query_set_duration (query, GST_FORMAT_TIME,
-            (guint64) qtdemux->duration * GST_SECOND / qtdemux->timescale);
+        gint64 duration;
+
+        duration = gst_util_uint64_scale_int (qtdemux->duration,
+            GST_SECOND, qtdemux->timescale);
+
+        gst_query_set_duration (query, GST_FORMAT_TIME, duration);
         res = TRUE;
       }
       break;
@@ -326,6 +330,8 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
       res = FALSE;
       break;
   }
+
+  gst_object_unref (qtdemux);
 
   return res;
 }
@@ -358,6 +364,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
       GstSeekFlags flags;
       gint64 desired_offset;
 
+      /* FIXME do seeking correctly */
       gst_event_parse_seek (event, NULL, &format, &flags, NULL,
           &desired_offset, NULL, NULL);
       GST_DEBUG ("seek format %d", format);
@@ -374,10 +381,13 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
             break;
           }
 
+          /* unlock upstream pull_range */
           gst_pad_push_event (qtdemux->sinkpad, gst_event_new_flush_start ());
-          GST_PAD_STREAM_LOCK (pad);
-
+          /* make sure out loop function exits */
           gst_qtdemux_send_event (qtdemux, gst_event_new_flush_start ());
+
+          /* wait for streaming to finish */
+          GST_PAD_STREAM_LOCK (qtdemux->sinkpad);
 
           /* resync to new time */
           for (n = 0; n < qtdemux->n_streams; n++) {
@@ -394,6 +404,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
             }
             str->sample_index = i;
           }
+          /* prepare for streaming again */
           gst_pad_push_event (qtdemux->sinkpad, gst_event_new_flush_stop ());
           gst_qtdemux_send_event (qtdemux, gst_event_new_flush_stop ());
 
@@ -405,7 +416,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
           gst_pad_start_task (qtdemux->sinkpad,
               (GstTaskFunction) gst_qtdemux_loop_header, qtdemux->sinkpad);
 
-          GST_PAD_STREAM_UNLOCK (pad);
+          GST_PAD_STREAM_UNLOCK (qtdemux->sinkpad);
           break;
         }
         default:
@@ -418,6 +429,8 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
       res = FALSE;
       break;
   }
+
+  gst_object_unref (qtdemux);
 
   gst_event_unref (event);
 
@@ -442,6 +455,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);
 
 #if 0
+/* not needed, we don't work in streaming mode yet */
 static gboolean
 gst_qtdemux_handle_sink_event (GstQTDemux * qtdemux)
 {
@@ -529,8 +543,8 @@ gst_qtdemux_loop_header (GstPad * pad)
 
   switch (qtdemux->state) {
     case QTDEMUX_STATE_HEADER:{
-      if (gst_pad_pull_range (qtdemux->sinkpad,
-              cur_offset, 16, &buf) != GST_FLOW_OK)
+      ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, 16, &buf);
+      if (ret != GST_FLOW_OK)
         goto error;
       data = GST_BUFFER_DATA (buf);
       length = GST_READ_UINT32_BE (data);
@@ -567,8 +581,9 @@ gst_qtdemux_loop_header (GstPad * pad)
         case GST_MAKE_FOURCC ('m', 'o', 'o', 'v'):{
           GstBuffer *moov;
 
-          if (gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length,
-                  &moov) != GST_FLOW_OK)
+          ret =
+              gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length, &moov);
+          if (ret != GST_FLOW_OK)
             goto error;
           cur_offset += length;
           qtdemux->offset += length;
@@ -638,7 +653,7 @@ gst_qtdemux_loop_header (GstPad * pad)
       size = stream->samples[stream->sample_index].size;
 
       GST_INFO
-          ("pushing from stream %d, sample_index=%d offset=%d size=%d timestamp=%lld",
+          ("pushing from stream %d, sample_index=%d offset=%lld size=%d timestamp=%lld",
           index, stream->sample_index, offset, size,
           stream->samples[stream->sample_index].timestamp);
 
@@ -646,8 +661,8 @@ gst_qtdemux_loop_header (GstPad * pad)
       if (size > 0) {
         GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %lld", size, offset);
 
-        if (gst_pad_pull_range (qtdemux->sinkpad, offset,
-                size, &buf) != GST_FLOW_OK)
+        ret = gst_pad_pull_range (qtdemux->sinkpad, offset, size, &buf);
+        if (ret != GST_FLOW_OK)
           goto error;
       }
 
@@ -679,9 +694,13 @@ gst_qtdemux_loop_header (GstPad * pad)
           GST_BUFFER_TIMESTAMP (buf) =
               stream->samples[stream->sample_index].timestamp;
           qtdemux->last_ts = GST_BUFFER_TIMESTAMP (buf);
-          GST_BUFFER_DURATION (buf) =
-              GST_SECOND * stream->samples[stream->sample_index].duration
-              / stream->timescale;
+          GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int
+              (stream->samples[stream->sample_index].duration, GST_SECOND,
+              stream->timescale);
+        } else {
+          if (stream->sample_index == 0) {
+            GST_BUFFER_TIMESTAMP (buf) = 0;
+          }
         }
 
         GST_DEBUG ("Pushing buffer with time %" GST_TIME_FORMAT " on pad %p",
@@ -702,10 +721,17 @@ gst_qtdemux_loop_header (GstPad * pad)
   return;
 
 error:
-  GST_LOG_OBJECT (qtdemux, "pausing task and sending EOS");
-  gst_pad_pause_task (qtdemux->sinkpad);
-  gst_pad_event_default (qtdemux->sinkpad, gst_event_new_eos ());
-  return;
+  {
+    GST_LOG_OBJECT (qtdemux, "pausing task, reason %s",
+        gst_flow_get_name (ret));
+    gst_pad_pause_task (qtdemux->sinkpad);
+    if (GST_FLOW_IS_FATAL (ret)) {
+      gst_pad_event_default (qtdemux->sinkpad, gst_event_new_eos ());
+      GST_ELEMENT_ERROR (qtdemux, STREAM, FAILED,
+          (NULL), ("stream stopped, reason %s", gst_flow_get_name (ret)));
+    }
+    return;
+  }
 }
 
 static gboolean
@@ -1022,7 +1048,7 @@ qtdemux_inflate (void *z_buffer, int z_length, int length)
       break;
   }
   if (ret != Z_STREAM_END) {
-    g_warning ("inflate() returned %d\n", ret);
+    g_warning ("inflate() returned %d", ret);
   }
 
   g_free (z);
@@ -1192,9 +1218,9 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       guint32 version;
       int tlen;
 
-      GST_DEBUG ("parsing in mp4v\n");
+      GST_DEBUG ("parsing in mp4v");
       version = QTDEMUX_GUINT32_GET (buffer + 16);
-      GST_DEBUG ("version %08x\n", version);
+      GST_DEBUG ("version %08x", version);
       if (1 || version == 0x00000000) {
 
         buf = buffer + 0x32;
@@ -1204,9 +1230,9 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
          * the iso format uses C strings. Check the file
          * type before attempting to parse the string here. */
         tlen = QTDEMUX_GUINT8_GET (buf);
-        GST_DEBUG ("tlen = %d\n", tlen);
+        GST_DEBUG ("tlen = %d", tlen);
         buf++;
-        GST_DEBUG ("string = %.*s\n", tlen, (char *) buf);
+        GST_DEBUG ("string = %.*s", tlen, (char *) buf);
         /* the string has a reserved space of 32 bytes so skip
          * the remaining 31 */
         buf += 31;
@@ -1274,20 +1300,20 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       guint32 version;
       int tlen;
 
-      GST_LOG ("parsing in SVQ3\n");
+      GST_LOG ("parsing in SVQ3");
       buf = buffer + 12;
       end = buffer + length;
       version = QTDEMUX_GUINT32_GET (buffer + 16);
-      GST_DEBUG ("version %08x\n", version);
+      GST_DEBUG ("version %08x", version);
       if (1 || version == 0x00000000) {
 
         buf = buffer + 0x32;
         end = buffer + length;
 
         tlen = QTDEMUX_GUINT8_GET (buf);
-        GST_DEBUG ("tlen = %d\n", tlen);
+        GST_DEBUG ("tlen = %d", tlen);
         buf++;
-        GST_DEBUG ("string = %.*s\n", tlen, (char *) buf);
+        GST_DEBUG ("string = %.*s", tlen, (char *) buf);
         buf += tlen;
         buf += 23;
 
@@ -2279,7 +2305,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
       n = QTDEMUX_GUINT32_GET (stts->data + 16 + 8 * i);
       duration = QTDEMUX_GUINT32_GET (stts->data + 16 + 8 * i + 4);
-      time = (GST_SECOND * duration) / stream->timescale;
+      time =
+          gst_util_uint64_scale_int (duration, GST_SECOND, stream->timescale);
       for (j = 0; j < n; j++) {
         //GST_INFO("moo %lld", timestamp);
         samples[index].timestamp = timestamp;
@@ -2344,7 +2371,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         samples[j].duration =
             samples_per_chunk * stream->timescale / (stream->rate / 2);
         samples[j].timestamp = timestamp;
-        timestamp += (samples_per_chunk * GST_SECOND) / stream->rate;
+        timestamp += gst_util_uint64_scale_int (samples_per_chunk, GST_SECOND,
+            stream->rate);
 #if 0
         GST_INFO ("moo samples_per_chunk=%d rate=%d dur=%lld %lld",
             (int) samples_per_chunk,
@@ -2414,7 +2442,7 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
     return;
   }
 
-  GST_DEBUG ("new tag list\n");
+  GST_DEBUG ("new tag list");
   qtdemux->tag_list = gst_tag_list_new ();
 
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC__nam);
@@ -2479,7 +2507,7 @@ qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, GNode * node)
     type = QTDEMUX_GUINT32_GET (data->data + 8);
     if (type == 0x00000001) {
       s = g_strndup ((char *) data->data + 16, len - 16);
-      GST_DEBUG ("adding tag %s\n", s);
+      GST_DEBUG ("adding tag %s", s);
       gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag, s, NULL);
       g_free (s);
     }
@@ -2502,7 +2530,7 @@ qtdemux_tag_add_num (GstQTDemux * qtdemux, const char *tag1,
     if (type == 0x00000000 && len >= 22) {
       n1 = GST_READ_UINT16_BE (data->data + 18);
       n2 = GST_READ_UINT16_BE (data->data + 20);
-      GST_DEBUG ("adding tag %d/%d\n", n1, n2);
+      GST_DEBUG ("adding tag %d/%d", n1, n2);
       gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
           tag1, n1, tag2, n2, NULL);
     }
@@ -2555,7 +2583,7 @@ qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, GNode * node)
     if (type == 0x00000000 && len >= 18) {
       n = GST_READ_UINT16_BE (data->data + 16);
       if (n > 0 && n < sizeof (genres) / sizeof (char *)) {
-        GST_DEBUG ("adding %d [%s]\n", n, genres[n]);
+        GST_DEBUG ("adding %d [%s]", n, genres[n]);
         gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
             tag, genres[n], NULL);
       }
@@ -2596,42 +2624,42 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   gst_util_dump_mem (ptr, len);
   ptr += 8;
-  GST_DEBUG ("version/flags = %08x\n", QTDEMUX_GUINT32_GET (ptr));
+  GST_DEBUG ("version/flags = %08x", QTDEMUX_GUINT32_GET (ptr));
   ptr += 4;
   while (ptr < end) {
     tag = QTDEMUX_GUINT8_GET (ptr);
-    GST_DEBUG ("tag = %02x\n", tag);
+    GST_DEBUG ("tag = %02x", tag);
     ptr++;
     len = get_size (ptr, &ptr);
-    GST_DEBUG ("len = %d\n", len);
+    GST_DEBUG ("len = %d", len);
 
     switch (tag) {
       case 0x03:
-        GST_DEBUG ("ID %04x\n", QTDEMUX_GUINT16_GET (ptr));
-        GST_DEBUG ("priority %04x\n", QTDEMUX_GUINT8_GET (ptr + 2));
+        GST_DEBUG ("ID %04x", QTDEMUX_GUINT16_GET (ptr));
+        GST_DEBUG ("priority %04x", QTDEMUX_GUINT8_GET (ptr + 2));
         ptr += 3;
         break;
       case 0x04:
-        GST_DEBUG ("object_type_id %02x\n", QTDEMUX_GUINT8_GET (ptr));
-        GST_DEBUG ("stream_type %02x\n", QTDEMUX_GUINT8_GET (ptr + 1));
-        GST_DEBUG ("buffer_size_db %02x\n", QTDEMUX_GUINT24_GET (ptr + 2));
-        GST_DEBUG ("max bitrate %d\n", QTDEMUX_GUINT32_GET (ptr + 5));
-        GST_DEBUG ("avg bitrate %d\n", QTDEMUX_GUINT32_GET (ptr + 9));
+        GST_DEBUG ("object_type_id %02x", QTDEMUX_GUINT8_GET (ptr));
+        GST_DEBUG ("stream_type %02x", QTDEMUX_GUINT8_GET (ptr + 1));
+        GST_DEBUG ("buffer_size_db %02x", QTDEMUX_GUINT24_GET (ptr + 2));
+        GST_DEBUG ("max bitrate %d", QTDEMUX_GUINT32_GET (ptr + 5));
+        GST_DEBUG ("avg bitrate %d", QTDEMUX_GUINT32_GET (ptr + 9));
         ptr += 13;
         break;
       case 0x05:
-        GST_DEBUG ("data:\n");
+        GST_DEBUG ("data:");
         gst_util_dump_mem (ptr, len);
         data_ptr = ptr;
         data_len = len;
         ptr += len;
         break;
       case 0x06:
-        GST_DEBUG ("data %02x\n", QTDEMUX_GUINT8_GET (ptr));
+        GST_DEBUG ("data %02x", QTDEMUX_GUINT8_GET (ptr));
         ptr += 1;
         break;
       default:
-        GST_ERROR ("parse error\n");
+        GST_ERROR ("parse error");
     }
   }
 
@@ -2749,7 +2777,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     default:
 #if 0
       g_critical ("Don't know how to convert fourcc '%" GST_FOURCC_FORMAT
-          "' to caps\n", GST_FOURCC_ARGS (fourcc));
+          "' to caps", GST_FOURCC_ARGS (fourcc));
       return NULL;
 #endif
       {
@@ -2883,7 +2911,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       return gst_caps_new_simple ("audio/x-gsm", NULL);
     case GST_MAKE_FOURCC ('s', 'a', 'm', 'r'):
       _codec ("AMR audio");
-      return gst_caps_new_simple ("audio/x-amr-nb", NULL);
+      return gst_caps_new_simple ("audio/AMR", NULL);
     case GST_MAKE_FOURCC ('i', 'm', 'a', '4'):
       _codec ("Quicktime IMA ADPCM");
       return gst_caps_new_simple ("audio/x-adpcm",
@@ -2900,7 +2928,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     default:
 #if 0
       g_critical ("Don't know how to convert fourcc '%" GST_FOURCC_FORMAT
-          "' to caps\n", GST_FOURCC_ARGS (fourcc));
+          "' to caps", GST_FOURCC_ARGS (fourcc));
       return NULL;
 #endif
       {
