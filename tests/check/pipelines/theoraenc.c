@@ -188,7 +188,7 @@ GST_START_TEST (test_granulepos_offset)
 
   pipe_str = g_strdup_printf ("videotestsrc timestamp-offset=%" G_GUINT64_FORMAT
       " ! video/x-raw-yuv,format=(fourcc)I420,framerate=10/1"
-      " ! theoraenc ! fakesink", TIMESTAMP_OFFSET);
+      " ! theoraenc ! fakesink name=fs0", TIMESTAMP_OFFSET);
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -197,7 +197,7 @@ GST_START_TEST (test_granulepos_offset)
 
   /* get the pad */
   {
-    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink0");
+    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fs0");
 
     fail_unless (sink != NULL, "Could not get fakesink out of bin");
     pad = gst_element_get_pad (sink, "sink");
@@ -276,7 +276,7 @@ GST_START_TEST (test_continuity)
 
   pipe_str = g_strdup_printf ("videotestsrc"
       " ! video/x-raw-yuv,format=(fourcc)I420,framerate=10/1"
-      " ! theoraenc ! fakesink");
+      " ! theoraenc ! fakesink name=fs0");
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",
@@ -285,7 +285,7 @@ GST_START_TEST (test_continuity)
 
   /* get the pad */
   {
-    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink0");
+    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fs0");
 
     fail_unless (sink != NULL, "Could not get fakesink out of bin");
     pad = gst_element_get_pad (sink, "sink");

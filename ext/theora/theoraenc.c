@@ -263,9 +263,12 @@ theora_enc_finalize (GObject * object)
 {
   GstTheoraEnc *enc = GST_THEORA_ENC (object);
 
+  GST_DEBUG_OBJECT (enc, "Finalizing");
   theora_clear (&enc->state);
   theora_comment_clear (&enc->comment);
   theora_info_clear (&enc->info);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -281,6 +284,7 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d);
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
+  theora_info_clear (&enc->info);
   theora_info_init (&enc->info);
   /* Theora has a divisible-by-sixteen restriction for the encoded video size but
    * we can define a visible area using the frame_width/frame_height */
@@ -431,27 +435,42 @@ theora_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   caps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (caps, 0);
 
+  /* Copy buffers, because we can't use the originals -
+   * it creates a circular refcount with the caps<->buffers */
+  buf1 = gst_buffer_copy (buf1);
+  buf2 = gst_buffer_copy (buf2);
+  buf3 = gst_buffer_copy (buf3);
+
   /* mark buffers */
   GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_FLAG_IN_CAPS);
   GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_FLAG_IN_CAPS);
   GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_IN_CAPS);
 
-  /* put buffers in a fixed list */
+  /* put copies of the buffers in a fixed list */
   g_value_init (&array, GST_TYPE_ARRAY);
+
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf1);
   gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
+
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf2);
   gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
+
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf3);
   gst_value_array_append_value (&array, &value);
-  gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&value);
+
+  gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&array);
+
+  /* Unref our copies */
+  gst_buffer_unref (buf1);
+  gst_buffer_unref (buf2);
+  gst_buffer_unref (buf3);
 
   return caps;
 }
@@ -520,13 +539,19 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     /* create the remaining theora headers */
+    theora_comment_clear (&enc->comment);
     theora_comment_init (&enc->comment);
-    /* Currently leaks due to libtheora API brokenness, I don't think we can
-     * portably work around it. Leaks ~50 bytes per encoder instance, so not a
-     * huge problem. */
+
     theora_encode_comment (&enc->comment, &op);
     ret = theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
         GST_CLOCK_TIME_NONE, &buf2);
+    /* Theora expects us to put this packet buffer into an ogg page,
+     * in which case it becomes the ogg library's responsibility to
+     * free it. Since we're copying and outputting a gst_buffer,
+     * we need to free it ourselves. */
+    if (op.packet)
+      free (op.packet);
+
     if (ret != GST_FLOW_OK) {
       gst_buffer_unref (buf1);
       goto header_buffer_alloc;
@@ -550,6 +575,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_set_caps (buf1, caps);
     gst_buffer_set_caps (buf2, caps);
     gst_buffer_set_caps (buf3, caps);
+
+    gst_caps_unref (caps);
 
     /* push out the header buffers */
     if ((ret = theora_push_buffer (enc, buf1)) != GST_FLOW_OK) {
@@ -775,6 +802,7 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_DEBUG_OBJECT (enc, "READY->PAUSED Initing theora state");
       theora_info_init (&enc->info);
       theora_comment_init (&enc->comment);
       enc->packetno = 0;
@@ -791,6 +819,7 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_DEBUG_OBJECT (enc, "PAUSED->READY Clearing theora state");
       theora_clear (&enc->state);
       theora_comment_clear (&enc->comment);
       theora_info_clear (&enc->info);

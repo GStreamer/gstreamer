@@ -1,6 +1,15 @@
 2006-02-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
+	(theora_enc_finalize), (theora_enc_sink_setcaps),
+	(theora_set_header_on_caps), (theora_enc_chain),
+	(theora_enc_change_state):
+	* tests/check/pipelines/theoraenc.c: (GST_START_TEST):
+	  Make theoraenc and the tests leak free. Like, really.
+
+2006-02-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/theora/theoraenc.c: (gst_theora_enc_class_init),
 	(theora_enc_finalize), (theora_enc_sink_setcaps):
 	  Add a finalize method to ensure we clean up state even if
 	  someone omitted the state change back to NULL.
