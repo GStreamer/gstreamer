@@ -118,6 +118,7 @@ speex_get_query_types (GstPad * pad)
 {
   static const GstQueryType speex_dec_src_query_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
     0
   };
 
@@ -212,6 +213,7 @@ static gboolean
 speex_dec_src_query (GstPad * pad, GstQuery * query)
 {
   GstSpeexDec *dec = GST_SPEEXDEC (GST_OBJECT_PARENT (pad));
+  gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -221,10 +223,10 @@ speex_dec_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_position (query, &format, NULL);
 
-      speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT, dec->samples_out,
-          &format, &cur);
-
-      gst_query_set_position (query, format, cur);
+      if ((res = speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT,
+                  dec->samples_out, &format, &cur))) {
+        gst_query_set_position (query, format, cur);
+      }
       break;
     }
     case GST_QUERY_DURATION:
@@ -234,19 +236,19 @@ speex_dec_src_query (GstPad * pad, GstQuery * query)
       gint64 total_samples;
 
       if (!(peer = gst_pad_get_peer (dec->sinkpad)))
-        return FALSE;
+        break;
 
       gst_pad_query_duration (peer, &my_format, &total_samples);
       gst_object_unref (peer);
 
-      speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT, total_samples,
-          &my_format, &total_samples);
-
-      gst_query_set_duration (query, GST_FORMAT_TIME, total_samples);
+      if ((res = speex_dec_convert (dec->srcpad, GST_FORMAT_DEFAULT,
+                  total_samples, &my_format, &total_samples))) {
+        gst_query_set_duration (query, GST_FORMAT_TIME, total_samples);
+      }
       break;
     }
     default:
-      return FALSE;
+      res = gst_pad_query_default (pad, query);
       break;
   }
 

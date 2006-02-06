@@ -928,6 +928,7 @@ gst_matroska_demux_get_src_query_types (GstPad * pad)
 {
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
     0
   };
 
@@ -981,6 +982,7 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
     }
 
     default:
+      res = gst_pad_query_default (pad, query);
       break;
   }
 

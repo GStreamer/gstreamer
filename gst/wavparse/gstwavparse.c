@@ -1260,6 +1260,8 @@ gst_wavparse_get_query_types (GstPad * pad)
 {
   static const GstQueryType types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_CONVERT,
     0
   };
 
@@ -1343,7 +1345,7 @@ gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = FALSE;
+      res = gst_pad_query_default (pad, query);
       break;
   }
   return res;

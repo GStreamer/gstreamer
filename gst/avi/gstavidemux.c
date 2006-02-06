@@ -416,7 +416,7 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = FALSE;
+      res = gst_pad_query_default (pad, query);
       break;
   }
 

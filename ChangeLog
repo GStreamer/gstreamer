@@ -1,5 +1,23 @@
 2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_src_query),
+	(gst_dvdemux_sink_query):
+	* ext/flac/gstflacdec.c: (gst_flac_dec_src_query):
+	* ext/speex/gstspeexdec.c: (speex_get_query_types),
+	(speex_dec_src_query):
+	* ext/speex/gstspeexenc.c: (gst_speexenc_src_query),
+	(gst_speexenc_sink_query):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query):
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_get_src_query_types),
+	(gst_matroska_demux_handle_src_query):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_get_query_types),
+	(gst_wavparse_pad_query):
+	  Pass unhandled queries upstream instead of just dropping
+	  them (#326446). Update query type arrays here and there.
+
+2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/elements/matroskamux.c: (setup_src_pad):
 	  Collectpads in core got changed and now also holds a
 	  reference to any pad that is part of it. Fix refcount
