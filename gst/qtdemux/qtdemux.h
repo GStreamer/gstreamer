@@ -23,10 +23,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_QTDEMUX \
   (gst_qtdemux_get_type())
@@ -71,14 +68,14 @@ struct _GstQTDemux {
   /* track stuff */
 
   guint64 last_ts;
+
+  GstSegment segment;
 };
 
 struct _GstQTDemuxClass {
   GstElementClass parent_class;
 };
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_QTDEMUX_H__ */

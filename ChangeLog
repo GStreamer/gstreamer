@@ -1,3 +1,19 @@
+2006-02-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_src_query),
+	(gst_qtdemux_handle_src_event), (gst_qtdemux_loop_header),
+	(qtdemux_inflate), (qtdemux_parse), (qtdemux_parse_trak),
+	(qtdemux_parse_udta), (qtdemux_tag_add_str), (qtdemux_tag_add_num),
+	(qtdemux_tag_add_gnre), (gst_qtdemux_handle_esds),
+	(qtdemux_video_caps), (qtdemux_audio_caps):
+	* gst/qtdemux/qtdemux.h:
+	Some QT demux loving.
+	Handle seeking in a less broken way.
+	Fix AMR caps to match the AMR decoder.
+	Set first timestamp on AMR samples to 0 for now.
+	Remove some \n in DEBUG strings.
+	Use _scale_int for maximum precision.
+
 2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/apetag/Makefile.am:
