@@ -22,12 +22,11 @@
 				AdditionalIncludeDirectories="../..,../../libs,../common"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGSTCONTROLLER_EXPORTS;HAVE_CONFIG_H"
 				MinimalRebuild="TRUE"
-				BasicRuntimeChecks="0"
+				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				BufferSecurityCheck="FALSE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="FALSE"
+				Detect64BitPortabilityProblems="TRUE"
 				DebugInformationFormat="4"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -77,10 +76,9 @@ copy /y &quot;$(TargetPath)&quot; c:\gstreamer\debug\bin
 				AdditionalIncludeDirectories="../..,../../libs,../common"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGSTCONTROLLER_EXPORTS;HAVE_CONFIG_H"
 				RuntimeLibrary="2"
-				BufferSecurityCheck="FALSE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="FALSE"
+				Detect64BitPortabilityProblems="TRUE"
 				DebugInformationFormat="3"/>
 			<Tool
 				Name="VCCustomBuildTool"/>

@@ -1,3 +1,17 @@
+2006-02-06  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/vs7:
+	  project files updated to the default vs7 configuration
+	* win32/common/libgstbase.def:
+	* win32/common/libgstreamer.def:
+	  added new symbols,
+	  removed empty lines,
+	  sorted all exported symbols alphabetically
+	* win32/common/dirent.c:
+	* win32/common/dirent.h:
+	* win32/common/gchar.h:
+	  use windows line end.
+	  
 2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_change_state):
