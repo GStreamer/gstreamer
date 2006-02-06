@@ -62,8 +62,9 @@
  * You can get and set a #GstClock on an element using gst_element_get_clock()
  * and gst_element_set_clock().
  * Some elements can provide a clock for the pipeline if
- * gst_element_provides_clock() returns %TRUE. With the gst_element_provide_clock()
- * method one can retrieve the clock provided by such an element.
+ * gst_element_provides_clock() returns %TRUE. With the
+ * gst_element_provide_clock() method one can retrieve the clock provided by
+ * such an element.
  * Not all elements require a clock to operate correctly. If
  * gst_element_requires_clock() returns %TRUE, a clock should be set on the
  * element with gst_element_set_clock().
