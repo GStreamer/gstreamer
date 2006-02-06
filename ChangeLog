@@ -1,5 +1,14 @@
 2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/matroska/ebml-write.c: (gst_ebml_write_reset),
+	(gst_ebml_write_flush_cache), (gst_ebml_write_element_push),
+	(gst_ebml_write_seek):
+	* gst/matroska/ebml-write.h:
+	  Make sure we send a newsegment event in BYTES format
+	  before sending buffers (#328531).
+
+2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_src_query),
 	(gst_dvdemux_sink_query):
 	* ext/flac/gstflacdec.c: (gst_flac_dec_src_query):

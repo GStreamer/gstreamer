@@ -54,6 +54,8 @@ typedef struct _GstEbmlWrite {
 
   GstFlowReturn last_write_result;
 
+  gboolean need_newsegment;
+
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 } GstEbmlWrite;

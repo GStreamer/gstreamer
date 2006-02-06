@@ -115,6 +115,7 @@ gst_ebml_write_reset (GstEbmlWrite * ebml)
   ebml->cache_size = 0;
   ebml->last_write_result = GST_FLOW_OK;
   ebml->timestamp = GST_CLOCK_TIME_NONE;
+  ebml->need_newsegment = TRUE;
 }
 
 
@@ -181,8 +182,17 @@ gst_ebml_write_flush_cache (GstEbmlWrite * ebml)
   g_assert (GST_BUFFER_SIZE (ebml->cache) +
       GST_BUFFER_OFFSET (ebml->cache) == ebml->pos);
 
-  if (ebml->last_write_result == GST_FLOW_OK)
+  if (ebml->last_write_result == GST_FLOW_OK) {
+    if (ebml->need_newsegment) {
+      GstEvent *ev;
+
+      g_assert (ebml->handled == 0);
+      ev = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
+      if (gst_pad_push_event (ebml->srcpad, ev))
+        ebml->need_newsegment = FALSE;
+    }
     ebml->last_write_result = gst_pad_push (ebml->srcpad, ebml->cache);
+  }
 
   ebml->cache = NULL;
   ebml->cache_size = 0;
@@ -348,8 +358,17 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
     return;
   }
 
-  if (ebml->last_write_result == GST_FLOW_OK)
+  if (ebml->last_write_result == GST_FLOW_OK) {
+    if (ebml->need_newsegment) {
+      GstEvent *ev;
+
+      g_assert (ebml->handled == 0);
+      ev = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
+      if (gst_pad_push_event (ebml->srcpad, ev))
+        ebml->need_newsegment = FALSE;
+    }
     ebml->last_write_result = gst_pad_push (ebml->srcpad, buf);
+  }
 }
 
 
@@ -363,8 +382,7 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
 void
 gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
 {
-  GstEvent *seek;
-  GstPad *peer_pad;
+  GstEvent *event;
 
   /* Cache seeking. A bit dangerous, we assume the client writer
    * knows what he's doing... */
@@ -384,14 +402,12 @@ gst_ebml_write_seek (GstEbmlWrite * ebml, guint64 pos)
     }
   }
 
-  seek = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, pos, -1, 0);
-  peer_pad = GST_PAD_PEER (ebml->srcpad);
-  if (peer_pad) {
-    gst_pad_send_event (peer_pad, seek);
+  event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, pos, -1, 0);
+  if (gst_pad_push_event (ebml->srcpad, event)) {
+    GST_DEBUG ("Seek'd to offset %" G_GUINT64_FORMAT, pos);
   } else {
-    GST_WARNING_OBJECT (ebml, "Can not seek: no peer pad");
+    GST_WARNING ("Seek to offset %" G_GUINT64_FORMAT " failed", pos);
   }
-
   ebml->pos = pos;
 }
 
