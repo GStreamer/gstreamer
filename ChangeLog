@@ -1,3 +1,11 @@
+2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/apetag/Makefile.am:
+	* gst/apetag/apedemux.c:
+	* gst/apetag/apedemux.h:
+	* gst/apetag/apetag.c:
+	  Remove old files, apetag is in gst-plugins-good now.
+
 2006-02-06  Andy Wingo  <wingo@pobox.com>
 
 	* ext/bz2/gstbz2enc.c (gst_bz2enc_class_init): 
