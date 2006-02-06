@@ -1,5 +1,10 @@
 2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_change_state):
+	  Send EOS event when stopping.
+
+2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/README:
 	  Tell folks what to do if the plugin-foobar.xml file
 	  hasn't been generated for a newly-added plugin.

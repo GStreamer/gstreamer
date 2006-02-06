@@ -1720,6 +1720,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (!gst_base_src_stop (basesrc))
         goto error_stop;
+      gst_pad_push_event (basesrc->srcpad, gst_event_new_eos ());
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
