@@ -1,3 +1,9 @@
+2006-02-06  Edgard Lima <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* ext/neon/gstneonhttpsrc.c:
+	Now it uses libneon 0.25.5 that supports shoutcast.
+
 2006-02-06  Lutz Mueller <lutz@topfrose.de>
 
 	Reviewed by: Edward Hervey <edward@fluendo.com>

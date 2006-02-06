@@ -51,8 +51,6 @@ enum
 
 static void oom_callback ();
 
-static void size_header_handler (void *userdata, const char *value);
-
 static gboolean set_proxy (const char *uri, ne_uri * parsed,
     gboolean set_default);
 static gboolean set_uri (const char *uri, ne_uri * parsed, gboolean * ishttps,
@@ -318,6 +316,7 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
 {
   gboolean ret = TRUE;
   GstNeonhttpSrc *src = GST_NEONHTTP_SRC (bsrc);
+  const char *content_length;
 
   ne_oom_callback (oom_callback);
 
@@ -339,12 +338,17 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
 
   src->request = ne_request_create (src->session, "GET", src->uri.path);
 
-  ne_add_response_header_handler (src->request, "Content-Length",
-      size_header_handler, src);
-
   if (NE_OK != ne_begin_request (src->request)) {
     ret = FALSE;
     goto done;
+  }
+
+  content_length = ne_get_response_header (src->request, "Content-Length");
+
+  if (content_length) {
+    src->content_size = atoll (content_length);
+  } else {
+    src->content_size = -1;
   }
 
   GST_OBJECT_FLAG_SET (src, GST_NEONHTTP_SRC_OPEN);

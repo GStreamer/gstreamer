@@ -487,7 +487,7 @@ GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
 dnl *** neon ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
 GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
-  PKG_CHECK_MODULES(NEON, neon = 0.24.7, HAVE_NEON="yes", HAVE_NEON="no")
+  PKG_CHECK_MODULES(NEON, neon = 0.25.5, HAVE_NEON="yes", HAVE_NEON="no")
   AC_SUBST(NEON_CFLAGS)
   AC_SUBST(NEON_LIBS)
 ])
