@@ -87,6 +87,14 @@ GstMultipartDemuxClass
 </SECTION>
 
 <SECTION>
+<FILE>element-multiudpsink</FILE>
+GstMultiUDPSink
+<TITLE>multiudpsink</TITLE>
+<SUBSECTION Standard>
+GstMultiUDPSinkClass
+</SECTION>
+
+<SECTION>
 <FILE>element-videomixer</FILE>
 GstVideoMixer
 GstVideoMixerBackground

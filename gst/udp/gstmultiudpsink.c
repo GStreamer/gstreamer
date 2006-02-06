@@ -17,6 +17,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-multiupdsink
+ * @see_also: udpsink, multifdsink
+ *
+ * <refsect2>
+ * <para>
+ * multiudpsink is a network sink that sends UDP packets to multiple
+ * clients.
+ * It can be combined with rtp payload encoders to implement RTP streaming.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -134,11 +147,23 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
   gobject_class->get_property = gst_multiudpsink_get_property;
   gobject_class->finalize = gst_multiudpsink_finalize;
 
+  /**
+   * GstMultiUDPSink::add:
+   * @gstmultiudpsink: the sink on which the signal is emitted
+   * @host: the hostname/IP address of the client to add
+   * @port: the port of the client to add
+   */
   gst_multiudpsink_signals[SIGNAL_ADD] =
       g_signal_new ("add", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiUDPSinkClass, add),
       NULL, NULL, gst_udp_marshal_VOID__STRING_INT, G_TYPE_NONE, 2,
       G_TYPE_STRING, G_TYPE_INT);
+  /**
+   * GstMultiUDPSink::remove:
+   * @gstmultiudpsink: the sink on which the signal is emitted
+   * @host: the hostname/IP address of the client to remove
+   * @port: the port of the client to remove
+   */
   gst_multiudpsink_signals[SIGNAL_REMOVE] =
       g_signal_new ("remove", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiUDPSinkClass, remove),
@@ -148,17 +173,37 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
       g_signal_new ("clear", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiUDPSinkClass, clear),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+  /**
+   * GstMultiUDPSink::get-stats:
+   * @gstmultiudpsink: the sink on which the signal is emitted
+   * @host: the hostname/IP address of the client to get stats on
+   * @port: the port of the client to get stats on
+   *
+   * @returns: a GValueArray of uint64: bytes_sent, packets_sent,
+   *           connect_time (in epoch seconds), disconnect_time (in epoch seconds)
+   */
   gst_multiudpsink_signals[SIGNAL_GET_STATS] =
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiUDPSinkClass, get_stats),
       NULL, NULL, gst_udp_marshal_BOXED__STRING_INT, G_TYPE_VALUE_ARRAY, 2,
       G_TYPE_STRING, G_TYPE_INT);
-
+  /**
+   * GstMultiUDPSink::client-added:
+   * @gstmultiudpsink: the sink emitting the signal
+   * @host: the hostname/IP address of the added client
+   * @port: the port of the added client
+   */
   gst_multiudpsink_signals[SIGNAL_CLIENT_ADDED] =
       g_signal_new ("client-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiUDPSinkClass, client_added),
       NULL, NULL, gst_udp_marshal_VOID__STRING_INT, G_TYPE_NONE, 2,
       G_TYPE_STRING, G_TYPE_INT);
+  /**
+   * GstMultiUDPSink::client-removed:
+   * @gstmultiudpsink: the sink emitting the signal
+   * @host: the hostname/IP address of the removed client
+   * @port: the port of the removed client
+   */
   gst_multiudpsink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiUDPSinkClass,
@@ -434,6 +479,8 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
   g_mutex_unlock (sink->client_lock);
 }
 
+/* FIXME: what's the point of this signal/method ? It frees client structure
+ * data without removing them from the sink */
 void
 gst_multiudpsink_clear (GstMultiUDPSink * sink)
 {
@@ -466,7 +513,7 @@ gst_multiudpsink_get_stats (GstMultiUDPSink * sink, const gchar * host,
 
     client = (GstUDPClient *) find->data;
 
-    /* Result is a value array of (bytes_sent, packets_sent, 
+    /* Result is a value array of (bytes_sent, packets_sent,
      * connect_time, disconnect_time), all as uint64 */
     result = g_value_array_new (4);
 
