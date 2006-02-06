@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-14 22:11+0100\n"
+"POT-Creation-Date: 2006-02-06 21:47+0100\n"
 "PO-Revision-Date: 2005-12-03 16:02+0200\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -103,12 +103,12 @@ msgstr "Показване на опциите на GStreamer"
 msgid "Unknown option"
 msgstr "Непозната опция"
 
-#: gst/gstelement.c:278
+#: gst/gstelement.c:279
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ГРЕШКА: от елемент %s: %s\n"
 
-#: gst/gstelement.c:280
+#: gst/gstelement.c:281
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -628,14 +628,19 @@ msgstr "не може да се свърже елемент-приемник к�
 msgid "empty pipeline not allowed"
 msgstr "не е позволен празен конвейер"
 
-#: libs/gst/base/gstbasesrc.c:1314 libs/gst/base/gstbasesrc.c:1323
-#: plugins/elements/gstqueue.c:820
+#: libs/gst/base/gstbasesrc.c:1317 libs/gst/base/gstbasesrc.c:1326
+#: plugins/elements/gstqueue.c:772
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка на потока от данни."
 
-#: libs/gst/base/gstbasesink.c:633
+#: libs/gst/base/gstbasesink.c:1226
 msgid "Internal data flow problem."
 msgstr "Вътрешен проблем на потока от данни."
+
+#: libs/gst/base/gstbasesink.c:1354
+#, fuzzy
+msgid "Internal data stream error."
+msgstr "Вътрешна грешка на потока от данни."
 
 #: plugins/elements/gstfilesink.c:230
 msgid "No file name specified for writing."
@@ -700,7 +705,7 @@ msgstr "минимум"
 msgid "maximum"
 msgstr "максимум"
 
-#: tools/gst-inspect.c:1110
+#: tools/gst-inspect.c:1100
 msgid "Print all elements"
 msgstr "Отпечатване на всички елементи"
 
@@ -750,128 +755,128 @@ msgstr "Получен е EOS (край на потока) от елемент �
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ОТКРИТ ЕТИКЕТ      : открит към елемент „%s“.\n"
 
-#: tools/gst-launch.c:463
+#: tools/gst-launch.c:469
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr "Елементът „%s“ премина от състояние ИЗПЪЛНЕНИЕ към ПАУЗА, изход.\n"
 
-#: tools/gst-launch.c:494
+#: tools/gst-launch.c:500
 msgid "Output tags (also known as metadata)"
 msgstr "Изходни съобщения за етикетите (метаданните)"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:502
 msgid "Output status information and property notifications"
 msgstr "Да се дават изходни съобщения за състоянието и промяната на свойства"
 
-#: tools/gst-launch.c:498
+#: tools/gst-launch.c:504
 msgid "Output messages"
 msgstr "Изходни съобщения"
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:506
 msgid "Do not output status information of TYPE"
 msgstr "Да не се дават изходни съобщения от следните ВИДове за състоянието "
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:506
 msgid "TYPE1,TYPE2,..."
 msgstr "ВИД1,ВИД2,..."
 
-#: tools/gst-launch.c:503
+#: tools/gst-launch.c:509
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Запазване на конвейера във вид на XML във ФАЙЛа и изход"
 
-#: tools/gst-launch.c:503
+#: tools/gst-launch.c:509
 msgid "FILE"
 msgstr "ФАЙЛ"
 
-#: tools/gst-launch.c:506
+#: tools/gst-launch.c:512
 msgid "Do not install a fault handler"
 msgstr "Да не се инсталира обработчик на грешки"
 
-#: tools/gst-launch.c:508
+#: tools/gst-launch.c:514
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
 "Отпечатване на заделянето на памет (ако е било включено при компилиране на "
 "програмата)"
 
-#: tools/gst-launch.c:586
+#: tools/gst-launch.c:592
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ГРЕШКА: конвейерът не може да бъде сглобен: %s.\n"
 
-#: tools/gst-launch.c:590
+#: tools/gst-launch.c:596
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ГРЕШКА: конвейерът не може да бъде сглобен.\n"
 
-#: tools/gst-launch.c:594
+#: tools/gst-launch.c:600
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: конвейер с грешки: %s\n"
 
-#: tools/gst-launch.c:620
+#: tools/gst-launch.c:626
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ГРЕШКА: не е открит елемент за конвейер - „pipeline“.\n"
 
-#: tools/gst-launch.c:626 tools/gst-launch.c:673
+#: tools/gst-launch.c:632 tools/gst-launch.c:684
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Конвейерът се дава НА ПАУЗА...\n"
 
-#: tools/gst-launch.c:631
+#: tools/gst-launch.c:637
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ГРЕШКА: конвейерът не изпълнява даването на пауза.\n"
 
-#: tools/gst-launch.c:636
+#: tools/gst-launch.c:642
 #, c-format
 msgid "ERROR: Pipeline can't PREROLL ...\n"
 msgstr "ГРЕШКА: конвейерът не може да се БУФЕРИРА...\n"
 
-#: tools/gst-launch.c:639
+#: tools/gst-launch.c:645
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Конвейерът се БУФЕРИРА...\n"
 
-#: tools/gst-launch.c:643
-#, c-format
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Конвейерът е БУФЕРИРАН...\n"
-
-#: tools/gst-launch.c:650
+#: tools/gst-launch.c:648 tools/gst-launch.c:661
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ГРЕШКА: конвейерът не иска да превърти напред.\n"
 
-#: tools/gst-launch.c:655
+#: tools/gst-launch.c:654
+#, c-format
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Конвейерът е БУФЕРИРАН...\n"
+
+#: tools/gst-launch.c:666
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Конвейерът се дава на ИЗПЪЛНЕНИЕ...\n"
 
-#: tools/gst-launch.c:658
+#: tools/gst-launch.c:669
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ГРЕШКА: конвейерът не иска да проработи.\n"
 
-#: tools/gst-launch.c:669
+#: tools/gst-launch.c:680
 msgid "Execution ended after %"
 msgstr "Изпълнението завърши след %"
 
-#: tools/gst-launch.c:669
+#: tools/gst-launch.c:680
 msgid " ns.\n"
 msgstr " ns.\n"
 
-#: tools/gst-launch.c:676
+#: tools/gst-launch.c:687
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Конвейерът е в ГОТОВНОСТ...\n"
 
-#: tools/gst-launch.c:681
+#: tools/gst-launch.c:692
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Конвейерът се ЗАНУЛЯВА...\n"
 
-#: tools/gst-launch.c:686
+#: tools/gst-launch.c:697
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "ОСВОБОЖДАВАНЕ на конвейера...\n"

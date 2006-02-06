@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-14 22:11+0100\n"
+"POT-Creation-Date: 2006-02-06 21:47+0100\n"
 "PO-Revision-Date: 2004-06-05 09:32+0100\n"
 "Last-Translator: Roland Illig <roland.illig@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
@@ -101,12 +101,12 @@ msgstr "Die Version von GStreamer ausgeben"
 msgid "Unknown option"
 msgstr ""
 
-#: gst/gstelement.c:278
+#: gst/gstelement.c:279
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FEHLER: Von Element %s: %s\n"
 
-#: gst/gstelement.c:280
+#: gst/gstelement.c:281
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -673,14 +673,21 @@ msgstr "Konnte Zielelement für URI »%s« nicht verbinden"
 msgid "empty pipeline not allowed"
 msgstr "Leere Leitung ist nicht erlaubt"
 
-#: libs/gst/base/gstbasesrc.c:1314 libs/gst/base/gstbasesrc.c:1323
-#: plugins/elements/gstqueue.c:820
+#: libs/gst/base/gstbasesrc.c:1317 libs/gst/base/gstbasesrc.c:1326
+#: plugins/elements/gstqueue.c:772
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:633
+#: libs/gst/base/gstbasesink.c:1226
 msgid "Internal data flow problem."
 msgstr ""
+
+#: libs/gst/base/gstbasesink.c:1354
+#, fuzzy
+msgid "Internal data stream error."
+msgstr ""
+"Interner GStreamer-Fehler: Paddingproblem. Bitte schicken Sie einen "
+"Fehlerbericht."
 
 #: plugins/elements/gstfilesink.c:230
 msgid "No file name specified for writing."
@@ -745,7 +752,7 @@ msgstr "Minimum"
 msgid "maximum"
 msgstr "Maximum"
 
-#: tools/gst-inspect.c:1110
+#: tools/gst-inspect.c:1100
 #, fuzzy
 msgid "Print all elements"
 msgstr "Kein Element »%s«"
@@ -794,128 +801,128 @@ msgstr "FEHLER: Von Element %s: %s\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "KENNZEICHEN GEFUNDEN: Von Element »%s« gefunden.\n"
 
-#: tools/gst-launch.c:463
+#: tools/gst-launch.c:469
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr ""
 
-#: tools/gst-launch.c:494
+#: tools/gst-launch.c:500
 msgid "Output tags (also known as metadata)"
 msgstr "Kennzeichen (auch bekannt als Metadaten) ausgeben"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:502
 msgid "Output status information and property notifications"
 msgstr "Zustandsinformation und Eigenschaftsmitteilungen ausgeben"
 
-#: tools/gst-launch.c:498
+#: tools/gst-launch.c:504
 msgid "Output messages"
 msgstr ""
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:506
 msgid "Do not output status information of TYPE"
 msgstr "Zustandsinformation der Art ART nicht ausgeben"
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:506
 msgid "TYPE1,TYPE2,..."
 msgstr "ART1,ART2,..."
 
-#: tools/gst-launch.c:503
+#: tools/gst-launch.c:509
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "XML-Repräsentation der Pipeline in DATEI speichern und beenden"
 
-#: tools/gst-launch.c:503
+#: tools/gst-launch.c:509
 msgid "FILE"
 msgstr "DATEI"
 
-#: tools/gst-launch.c:506
+#: tools/gst-launch.c:512
 msgid "Do not install a fault handler"
 msgstr "Keine Routine zum Abfangen von Fehlern installieren"
 
-#: tools/gst-launch.c:508
+#: tools/gst-launch.c:514
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
 "Speicherzuordnungsverfolgung ausgeben (falls zur Compilierzeit aktiviert)"
 
-#: tools/gst-launch.c:586
+#: tools/gst-launch.c:592
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEHLER: Leitung konnte nicht konstruiert werden: %s.\n"
 
-#: tools/gst-launch.c:590
+#: tools/gst-launch.c:596
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEHLER: Leitung konnte nicht konstruiert werden.\n"
 
-#: tools/gst-launch.c:594
+#: tools/gst-launch.c:600
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WARNUNG: Fehlerhafte Leitung: %s\n"
 
-#: tools/gst-launch.c:620
+#: tools/gst-launch.c:626
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEHLER: Das »pipeline«-Element wurde nicht gefunden.\n"
 
-#: tools/gst-launch.c:626 tools/gst-launch.c:673
+#: tools/gst-launch.c:632 tools/gst-launch.c:684
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:631
+#: tools/gst-launch.c:637
 #, fuzzy, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FEHLER: Leitung möchte nicht abgespielt werden.\n"
 
-#: tools/gst-launch.c:636
+#: tools/gst-launch.c:642
 #, fuzzy, c-format
 msgid "ERROR: Pipeline can't PREROLL ...\n"
 msgstr "FEHLER: Leitung möchte nicht abgespielt werden.\n"
 
-#: tools/gst-launch.c:639
+#: tools/gst-launch.c:645
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:643
-#, c-format
-msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
-
-#: tools/gst-launch.c:650
+#: tools/gst-launch.c:648 tools/gst-launch.c:661
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FEHLER: Leitung möchte nicht abgespielt werden.\n"
 
-#: tools/gst-launch.c:655
+#: tools/gst-launch.c:654
+#, c-format
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:666
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:658
+#: tools/gst-launch.c:669
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEHLER: Leitung möchte nicht abgespielt werden.\n"
 
-#: tools/gst-launch.c:669
+#: tools/gst-launch.c:680
 msgid "Execution ended after %"
 msgstr "Ausführung nach %"
 
-#: tools/gst-launch.c:669
+#: tools/gst-launch.c:680
 #, fuzzy
 msgid " ns.\n"
 msgstr " Nanosekunden.\n"
 
-#: tools/gst-launch.c:676
+#: tools/gst-launch.c:687
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:681
+#: tools/gst-launch.c:692
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:686
+#: tools/gst-launch.c:697
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "FÜHRE Leitung AUS ...\n"

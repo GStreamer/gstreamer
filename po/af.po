@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-14 22:11+0100\n"
+"POT-Creation-Date: 2006-02-06 21:47+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -98,12 +98,12 @@ msgstr "Wys GStreamer opsies"
 msgid "Unknown option"
 msgstr "Onbekende opsie"
 
-#: gst/gstelement.c:278
+#: gst/gstelement.c:279
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FOUT: vanaf element %s: %s\n"
 
-#: gst/gstelement.c:280
+#: gst/gstelement.c:281
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -627,14 +627,19 @@ msgstr "kon nie aan bestemming-element vir  URI \"%s\" verbind nie"
 msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
 
-#: libs/gst/base/gstbasesrc.c:1314 libs/gst/base/gstbasesrc.c:1323
-#: plugins/elements/gstqueue.c:820
+#: libs/gst/base/gstbasesrc.c:1317 libs/gst/base/gstbasesrc.c:1326
+#: plugins/elements/gstqueue.c:772
 msgid "Internal data flow error."
 msgstr "Interne datavloeifout."
 
-#: libs/gst/base/gstbasesink.c:633
+#: libs/gst/base/gstbasesink.c:1226
 msgid "Internal data flow problem."
 msgstr "Interne datavloeiprobleem."
+
+#: libs/gst/base/gstbasesink.c:1354
+#, fuzzy
+msgid "Internal data stream error."
+msgstr "Interne datavloeifout."
 
 #: plugins/elements/gstfilesink.c:230
 msgid "No file name specified for writing."
@@ -699,7 +704,7 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maksimum"
 
-#: tools/gst-inspect.c:1110
+#: tools/gst-inspect.c:1100
 msgid "Print all elements"
 msgstr "Druk alle elemente"
 
@@ -747,126 +752,126 @@ msgstr "EOS gekry vanaf element \"%s\".\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ETIKET GEVIND  : gevind by element \"%s\".\n"
 
-#: tools/gst-launch.c:463
+#: tools/gst-launch.c:469
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr "Element \"%s\" het verander van SPEEL na POUSE, verlaat dus.\n"
 
-#: tools/gst-launch.c:494
+#: tools/gst-launch.c:500
 msgid "Output tags (also known as metadata)"
 msgstr "Wys etikette (ook bekend as metadata)"
 
-#: tools/gst-launch.c:496
+#: tools/gst-launch.c:502
 msgid "Output status information and property notifications"
 msgstr "Wys statusinligting en kennisgewings van eienskappe"
 
-#: tools/gst-launch.c:498
+#: tools/gst-launch.c:504
 msgid "Output messages"
 msgstr "Afvoerboodskappe"
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:506
 msgid "Do not output status information of TYPE"
 msgstr "Moenie statusinligting van TIPE wys nie"
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:506
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPE1, TIPE2,..."
 
-#: tools/gst-launch.c:503
+#: tools/gst-launch.c:509
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Stoor xml-voorstelling van pyplyn na LÊER en stop"
 
-#: tools/gst-launch.c:503
+#: tools/gst-launch.c:509
 msgid "FILE"
 msgstr "LÊER"
 
-#: tools/gst-launch.c:506
+#: tools/gst-launch.c:512
 msgid "Do not install a fault handler"
 msgstr "Moenie 'n fouthanteerder installeer nie"
 
-#: tools/gst-launch.c:508
+#: tools/gst-launch.c:514
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Druk \"alloc trace\" (indien aangeskakel tydens kompilering)"
 
-#: tools/gst-launch.c:586
+#: tools/gst-launch.c:592
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FOUT: pyplyn kon nie opgestel word nie: %s.\n"
 
-#: tools/gst-launch.c:590
+#: tools/gst-launch.c:596
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FOUT: pyplyn kon nie opgestel word nie.\n"
 
-#: tools/gst-launch.c:594
+#: tools/gst-launch.c:600
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WAARSKUWING: foutiewe pyplyn: %s\n"
 
-#: tools/gst-launch.c:620
+#: tools/gst-launch.c:626
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FOUT: die pyplynelement kon nie gevind word nie.\n"
 
-#: tools/gst-launch.c:626 tools/gst-launch.c:673
+#: tools/gst-launch.c:632 tools/gst-launch.c:684
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Stel pyplyn na POUSEER ...\n"
 
-#: tools/gst-launch.c:631
+#: tools/gst-launch.c:637
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FOUT: pyplyn wil nie pouseer nie.\n"
 
-#: tools/gst-launch.c:636
+#: tools/gst-launch.c:642
 #, c-format
 msgid "ERROR: Pipeline can't PREROLL ...\n"
 msgstr "FOUT: pyplyn kan nie VOORROL nie ...\n"
 
-#: tools/gst-launch.c:639
+#: tools/gst-launch.c:645
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Pyplyn doen VOORROLLING ...\n"
 
-#: tools/gst-launch.c:643
-#, c-format
-msgid "Pipeline is PREROLLED ...\n"
-msgstr "Pyplyn is VOORGEROL ...\n"
-
-#: tools/gst-launch.c:650
+#: tools/gst-launch.c:648 tools/gst-launch.c:661
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FOUT: pyplyn wil nie voorrol nie.\n"
 
-#: tools/gst-launch.c:655
+#: tools/gst-launch.c:654
+#, c-format
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Pyplyn is VOORGEROL ...\n"
+
+#: tools/gst-launch.c:666
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Pyplyn word gestel na SPEEL ...\n"
 
-#: tools/gst-launch.c:658
+#: tools/gst-launch.c:669
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pyplyn wil nie speel nie.\n"
 
-#: tools/gst-launch.c:669
+#: tools/gst-launch.c:680
 msgid "Execution ended after %"
 msgstr "Uitvoering het geëindig na %"
 
-#: tools/gst-launch.c:669
+#: tools/gst-launch.c:680
 msgid " ns.\n"
 msgstr " ns.\n"
 
-#: tools/gst-launch.c:676
+#: tools/gst-launch.c:687
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Pyplyn word gestel na GEREED ...\n"
 
-#: tools/gst-launch.c:681
+#: tools/gst-launch.c:692
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
 
-#: tools/gst-launch.c:686
+#: tools/gst-launch.c:697
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "pyplyn word VRYGEMAAK ...\n"
