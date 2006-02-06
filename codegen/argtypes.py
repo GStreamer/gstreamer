@@ -294,19 +294,13 @@ class Int64Arg(ArgType):
         info.codeafter.append('    return PyLong_FromLongLong(ret);')
 
 class UInt64Arg(ArgType):
-    dflt = '    if (py_%(name)s)\n' \
-           '        %(name)s = PyLong_AsUnsignedLongLong(py_%(name)s);\n'
-    before = '    %(name)s = PyLong_AsUnsignedLongLong(py_%(name)s);\n'
     def write_param(self, ptype, pname, pdflt, pnull, keeprefcount, info):
-        if pdflt:
-            info.varlist.add('guint64', pname + ' = ' + pdflt)
-            info.codebefore.append(self.dflt % {'name':pname})            
-        else:
-            info.varlist.add('guint64', pname)
-            info.codebefore.append(self.before % {'name':pname})            
-        info.varlist.add('PyObject', "*py_" + pname + ' = NULL')
-        info.arglist.append(pname)
-        info.add_parselist('O!', ['&PyLong_Type', '&py_' + pname], [pname])
+	if pdflt:
+	    info.varlist.add('guint64', pname + ' = ' + pdflt)
+	else:
+	    info.varlist.add('guint64', pname)
+	info.arglist.append(pname)
+        info.add_parselist('K', ['&' + pname], [pname])
     def write_return(self, ptype, ownsreturn, info):
         info.varlist.add('guint64', 'ret')
         info.codeafter.append('    return PyLong_FromUnsignedLongLong(ret);')

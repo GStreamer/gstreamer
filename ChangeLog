@@ -1,3 +1,9 @@
+2006-02-06  Andy Wingo  <wingo@pobox.com>
+
+	* codegen/argtypes.py (UInt64Arg.write_param): Parse long
+	arguments using ParseTuple and friends; allows ints to passed for
+	longs as a side benefit.
+
 2006-02-02  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override:
