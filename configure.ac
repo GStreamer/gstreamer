@@ -71,6 +71,7 @@ dnl videofilter is at the top because others depend on it
 GST_PLUGINS_ALL="\
 		videofilter \
 		alpha \
+		apetag \
 		auparse \
 		autodetect \
 		avi \
@@ -583,6 +584,7 @@ AC_CONFIG_FILES(
 Makefile
 gst/Makefile
 gst/alpha/Makefile
+gst/apetag/Makefile
 gst/auparse/Makefile
 gst/autodetect/Makefile
 gst/avi/Makefile

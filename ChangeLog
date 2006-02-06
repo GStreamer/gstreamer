@@ -1,3 +1,18 @@
+2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* gst/apetag/Makefile.am:
+	* gst/apetag/gstapedemux.c:
+	* gst/apetag/gstapedemux.h:
+	* gst/apetag/gsttagdemux.c:
+	* gst/apetag/gsttagdemux.h:
+	  Add APE tag demuxer (#325649).
+
 2006-02-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/gconf/gconf.c: (gst_gconf_get_default_audio_sink),

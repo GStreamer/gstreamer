@@ -12,6 +12,7 @@
 
   <chapter>
     <title>gst-plugins-good Elements</title>
+    <xi:include href="xml/element-apedemux.xml" />
     <xi:include href="xml/element-autoaudiosink.xml" />
     <xi:include href="xml/element-autovideosink.xml" />
     <xi:include href="xml/element-cairotimeoverlay.xml" />
@@ -34,6 +35,7 @@
     <xi:include href="xml/plugin-alaw.xml" />
     <xi:include href="xml/plugin-alpha.xml" />
     <xi:include href="xml/plugin-alphacolor.xml" />
+    <xi:include href="xml/plugin-apetag.xml" />
     <xi:include href="xml/plugin-autodetect.xml" />
     <xi:include href="xml/plugin-avi.xml" />
     <xi:include href="xml/plugin-cacasink.xml" />

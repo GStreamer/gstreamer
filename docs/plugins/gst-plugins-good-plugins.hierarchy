@@ -104,6 +104,8 @@ GObject
       GstAviDemux
       GstAuParse
       GstAlpha
+      GstTagDemux
+        GstApeDemux
     GstPlugin
     GstRegistry
     GstPadTemplate

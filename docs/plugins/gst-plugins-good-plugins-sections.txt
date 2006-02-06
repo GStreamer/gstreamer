@@ -1,4 +1,12 @@
 <SECTION>
+<FILE>element-apedemux</FILE>
+GstApeDemux
+<TITLE>apedemux</TITLE>
+<SUBSECTION Standard>
+GstApeDemuxClass
+</SECTION>
+
+<SECTION>
 <FILE>element-autoaudiosink</FILE>
 GstAutoAudioSink
 <TITLE>autoaudiosink</TITLE>
