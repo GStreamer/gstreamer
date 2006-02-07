@@ -97,9 +97,9 @@ with different major/minor versions of GStreamer.
 %build
 %configure \
   --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} \
-  --enable-gtk-doc --enable-docbook \
-  --disable-tests --disable-examples
-                                                                                
+  --disable-tests --disable-examples \
+  --enable-gtk-doc 
+#--enable-docbook \                                                                               
 make
 
 %install  
@@ -134,7 +134,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstcontroller-%{majorminor}.so.*
 %{_libdir}/libgstdataprotocol-%{majorminor}.so.*
 %{_libdir}/libgstnet-%{majorminor}.so.*
-
+%{_libdir}/libgstcheck-%{majorminor}.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstcoreelements.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcoreindexers.so
@@ -168,7 +168,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-, root, root, -)
-%doc installed-doc/faq installed-doc/pwg installed-doc/manual
+# %doc installed-doc/faq installed-doc/pwg installed-doc/manual
 %dir %{_includedir}/gstreamer-%{majorminor}
 %dir %{_includedir}/gstreamer-%{majorminor}/gst
 %{_includedir}/gstreamer-%{majorminor}/gst/*.h
@@ -179,13 +179,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/net/gstnettimeprovider.h
 %{_includedir}/gstreamer-%{majorminor}/gst/base
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
-
+%{_includedir}/gstreamer-%{majorminor}/gst/check/gstcheck.h
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstdataprotocol-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
 %{_libdir}/libgstcontroller-%{majorminor}.so
 %{_libdir}/libgstnet-%{majorminor}.so
-
+%{_libdir}/libgstcheck-%{majorminor}.so
 
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
@@ -193,6 +193,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/gstreamer-dataprotocol-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-controller-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-net-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-check-%{majorminor}.pc
 
 %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
 %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
