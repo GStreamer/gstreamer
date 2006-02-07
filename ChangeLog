@@ -1,5 +1,13 @@
 2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/tag/gstvorbistag.c: (gst_tag_from_vorbis_tag),
+	(gst_tag_to_vorbis_tag):
+	  Make sure we called gst_tag_register_musicbrainz_tags()
+	  before possibly mapping a vorbiscomment string from/to a
+	  musicbrainz tag.
+
+2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find):
 	  In case we can't find the required number of consecutive
 	  mpeg audio frames to positively identify an MPEG audio
