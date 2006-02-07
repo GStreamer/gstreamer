@@ -1,6 +1,14 @@
 2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (prepare_output):
+	  Don't print the URI as part of the error message, it
+	  makes error dialogs look rather ugly, especially if
+	  the URI is very long or has characters in it that
+	  need escaping.
+
+2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c: (prepare_output):
 	  Error out if we have only text or subtitles, but nothing
 	  else. Also error out if we have subtitles but no video
 	  stream.

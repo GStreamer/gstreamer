@@ -1452,10 +1452,11 @@ prepare_output (GstPlayBaseBin * play_base_bin)
                   "text file, or the media file was not recognized.")), (NULL));
     } else if (!no_media) {
       GST_ELEMENT_ERROR (play_base_bin, STREAM, CODEC_NOT_FOUND,
-          (_("You do not have a decoder installed to handle \"%s\".  You might need to install the necessary plugins."), play_base_bin->uri), (NULL));
+          (_("You do not have a decoder installed to handle this file. "
+                  "You might need to install the necessary plugins.")), (NULL));
     } else {
       GST_ELEMENT_ERROR (play_base_bin, STREAM, WRONG_TYPE,
-          (_("\"%s\" is not a media file"), play_base_bin->uri), (NULL));
+          (_("This is not a media file")), (NULL));
     }
     return FALSE;
   } else if (got_subtitle && !got_video) {
