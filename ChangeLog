@@ -1,3 +1,10 @@
+2006-02-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(qtdemux_parse_trak):
+	  clean up some debugging, using _OBJECT, moving recurring
+	  messages to LOG level
+
 2006-02-06  Edgard Lima <edgard.lima@indt.org.br>
 
 	* configure.ac:
