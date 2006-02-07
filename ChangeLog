@@ -1,5 +1,12 @@
 2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybasebin.c: (prepare_output):
+	  Error out if we have only text or subtitles, but nothing
+	  else. Also error out if we have subtitles but no video
+	  stream.
+
+2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_create):
 	  Treat GNOME_VFS_RESULT_EOF as EOS, not as error (#329194).
 	  Post an error message on the bus when we encounter an
