@@ -1,5 +1,10 @@
 2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/vorbis/vorbis.c: (plugin_init):
+	  Register musicbrainz tags, so apps don't have to.
+
+2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/tag/gstvorbistag.c: (gst_tag_from_vorbis_tag),
 	(gst_tag_to_vorbis_tag):
 	  Make sure we called gst_tag_register_musicbrainz_tags()

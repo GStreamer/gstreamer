@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include "gst/tag/tag.h"
+
 #include "vorbisenc.h"
 #include "vorbisdec.h"
 #include "vorbisparse.h"
@@ -50,6 +52,9 @@ plugin_init (GstPlugin * plugin)
       "vorbis decoding element");
   GST_DEBUG_CATEGORY_INIT (vorbisparse_debug, "vorbisparse", 0,
       "vorbis parsing element");
+
+  gst_tag_register_musicbrainz_tags ();
+
   return TRUE;
 }
 
