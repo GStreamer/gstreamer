@@ -1,3 +1,12 @@
+2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_create):
+	  Treat GNOME_VFS_RESULT_EOF as EOS, not as error (#329194).
+	  Post an error message on the bus when we encounter an
+	  error, which will hopefully be more meaningful than the
+	  'Internal Flow Error' message users get to see if we
+	  just return GST_FLOW_ERROR.
+
 2006-02-07  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac (GST_MAJORMINOR): Update core version req to

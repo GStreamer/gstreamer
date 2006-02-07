@@ -969,11 +969,11 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
     res = gnome_vfs_read (src->handle, data,
         src->icy_metaint - src->icy_count, &readbytes);
 
+    if (res == GNOME_VFS_ERROR_EOF || (res == GNOME_VFS_OK && readbytes == 0))
+      goto eos;
+
     if (res != GNOME_VFS_OK)
       goto read_failed;
-
-    if (readbytes == 0)
-      goto eos;
 
     src->icy_count += readbytes;
     GST_BUFFER_OFFSET (buf) = src->curoffset;
@@ -992,13 +992,13 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
     res = gnome_vfs_read (src->handle, data, size, &readbytes);
 
+    if (res == GNOME_VFS_ERROR_EOF || (res == GNOME_VFS_OK && readbytes == 0))
+      goto eos;
+
     GST_BUFFER_SIZE (buf) = readbytes;
 
     if (res != GNOME_VFS_OK)
       goto read_failed;
-
-    if (readbytes == 0)
-      goto eos;
 
     src->curoffset += readbytes;
   }
@@ -1010,30 +1010,31 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
 seek_failed:
   {
-    GST_ERROR_OBJECT (src,
-        "Failed to seek to requested position %lld: %s",
-        offset, gnome_vfs_result_to_string (res));
+    GST_ELEMENT_ERROR (src, RESOURCE, SEEK, (NULL),
+        ("Failed to seek to requested position %" G_GINT64_FORMAT ": %s",
+            offset, gnome_vfs_result_to_string (res)));
     return GST_FLOW_ERROR;
   }
 cannot_seek:
   {
-    GST_ERROR_OBJECT (src,
-        "Requested seek from %lld to %lld on non-seekable stream",
-        src->curoffset, offset);
+    GST_ELEMENT_ERROR (src, RESOURCE, SEEK, (NULL),
+        ("Requested seek from %" G_GINT64_FORMAT " to %" G_GINT64_FORMAT
+            "on non-seekable stream", src->curoffset, offset));
     return GST_FLOW_ERROR;
   }
 read_failed:
   {
     gst_buffer_unref (buf);
-    GST_ERROR_OBJECT (src, "Failed to read data: %s",
-        gnome_vfs_result_to_string (res));
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Failed to read data: %s", gnome_vfs_result_to_string (res)));
     return GST_FLOW_ERROR;
   }
 eos:
   {
     gst_buffer_unref (buf);
-    GST_LOG_OBJECT (src, "Reading data gave EOS");
-    return GST_FLOW_WRONG_STATE;
+    GST_DEBUG_OBJECT (src, "Reading data gave EOS");
+    gst_pad_push_event (basesrc->srcpad, gst_event_new_eos ());
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
