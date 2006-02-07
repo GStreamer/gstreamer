@@ -1,3 +1,12 @@
+2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find):
+	  In case we can't find the required number of consecutive
+	  mpeg audio frames to positively identify an MPEG audio
+	  stream, check if there's at least a valid mpeg audio
+	  frame right at offset 0 and if so suggest mpeg/audio
+	  caps with a very low probability (#153004).
+
 2006-02-07  Andy Wingo  <wingo@pobox.com>
 
 	* gst/tcp/gsttcpclientsrc.c (gst_tcp_client_src_create): Switch to

@@ -553,7 +553,7 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
     guint64 start_off = (try == 0) ? 0 : length / 2;
 
     if (try != 0 && start_off == 0)
-      return;
+      break;
 
     size = 0;
     skipped = 0;
@@ -660,13 +660,33 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
                 G_TYPE_INT, layer, NULL);
             gst_type_find_suggest (tf, probability, caps);
             gst_caps_unref (caps);
+            return;
           }
-          return;
+          goto no_luck;
         }
       }
       data++;
       skipped++;
       size--;
+    }
+  }
+
+no_luck:
+
+  /* no luck so far, let's see if there's a valid header right at the start */
+  data = gst_type_find_peek (tf, 0, 4); /* use min. frame size? */
+  if (data) {
+    GstCaps *caps;
+    guint layer;
+
+    if (mp3_type_frame_length_from_header (GST_READ_UINT32_BE (data),
+            &layer, NULL, NULL, NULL, NULL, 0) != 0) {
+      caps = gst_caps_copy (MP3_CAPS);
+      gst_structure_set (gst_caps_get_structure (caps, 0), "layer",
+          G_TYPE_INT, layer, NULL);
+      GST_LOG ("possible mpeg audio layer %u frame at offset 0", layer);
+      gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE - 10, caps);
+      gst_caps_unref (caps);
     }
   }
 }
