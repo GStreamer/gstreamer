@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-06 21:47+0100\n"
+"POT-Creation-Date: 2006-02-07 14:15+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -647,11 +647,11 @@ msgstr "nuk lejohet konduktori bosh"
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1226
+#: libs/gst/base/gstbasesink.c:1233
 msgid "Internal data flow problem."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1354
+#: libs/gst/base/gstbasesink.c:1363
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Gabim i brendshëm i GStreamer: problem me shtegun.  Raporto bug."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-06 21:47+0100\n"
+"POT-Creation-Date: 2006-02-07 14:15+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -640,11 +640,11 @@ msgstr "empty pipeline not allowed"
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1226
+#: libs/gst/base/gstbasesink.c:1233
 msgid "Internal data flow problem."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1354
+#: libs/gst/base/gstbasesink.c:1363
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Internal GStreamer error: pad problem.  File a bug."

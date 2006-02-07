@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-06 21:47+0100\n"
+"POT-Creation-Date: 2006-02-07 14:15+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -632,11 +632,11 @@ msgstr "leë pyplyn word nie toegelaat nie"
 msgid "Internal data flow error."
 msgstr "Interne datavloeifout."
 
-#: libs/gst/base/gstbasesink.c:1226
+#: libs/gst/base/gstbasesink.c:1233
 msgid "Internal data flow problem."
 msgstr "Interne datavloeiprobleem."
 
-#: libs/gst/base/gstbasesink.c:1354
+#: libs/gst/base/gstbasesink.c:1363
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Interne datavloeifout."

@@ -1,5 +1,18 @@
 2006-02-07  Andy Wingo  <wingo@pobox.com>
 
+	* libs/gst/base/gstcollectpads.c (gst_collect_pads_chain): Only
+	update last_stop if we're in TIME format and the timestamp is
+	valid.
+
+	* libs/gst/base/gstcollectpads.c (gst_collect_pads_event) 
+	* libs/gst/base/gstbasetransform.c (gst_base_transform_eventfunc): 
+	* libs/gst/base/gstbasesink.c (gst_base_sink_configure_segment):
+	If we get a new newsegment with a different format, adapt
+	accordingly.
+
+	* gst/gstclock.c (gst_clock_set_calibration): Accept a numerator
+	of 0. Not a problem, really.
+
 	* libs/gst/base/gstbasesink.c (gst_base_sink_chain_unlocked): Only
 	warn if sync=true.
 

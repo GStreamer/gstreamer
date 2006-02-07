@@ -471,6 +471,10 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
       &start, &stop, &time);
 
   GST_OBJECT_LOCK (basesink);
+
+  if (segment->format != format)
+    gst_segment_init (segment, format);
+
   gst_segment_set_newsegment (segment, update, rate, format, start, stop, time);
 
   GST_DEBUG_OBJECT (basesink,

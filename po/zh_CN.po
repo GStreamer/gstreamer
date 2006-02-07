@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-06 21:47+0100\n"
+"POT-Creation-Date: 2006-02-07 14:15+0100\n"
 "PO-Revision-Date: 2005-12-03 00:05+0800\n"
 "Last-Translator: Funda Wang <fundawang@linux.net.cn>\n"
 "Language-Team: Chinese (simplified) <i18n-translation@lists.linux.net.cn>\n"
@@ -617,11 +617,11 @@ msgstr ""
 msgid "Internal data flow error."
 msgstr "内部数据流错误。"
 
-#: libs/gst/base/gstbasesink.c:1226
+#: libs/gst/base/gstbasesink.c:1233
 msgid "Internal data flow problem."
 msgstr "内部数据流问题。"
 
-#: libs/gst/base/gstbasesink.c:1354
+#: libs/gst/base/gstbasesink.c:1363
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"

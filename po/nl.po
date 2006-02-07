@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-06 21:47+0100\n"
+"POT-Creation-Date: 2006-02-07 14:15+0100\n"
 "PO-Revision-Date: 2004-08-05 16:56+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -650,11 +650,11 @@ msgstr "lege pijplijn niet toegelaten"
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1226
+#: libs/gst/base/gstbasesink.c:1233
 msgid "Internal data flow problem."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1354
+#: libs/gst/base/gstbasesink.c:1363
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Interne GStreamer-fout: padprobleem.  Stuur een foutrapport."

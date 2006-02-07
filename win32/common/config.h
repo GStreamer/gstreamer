@@ -33,7 +33,7 @@
 #define GST_PACKAGE_NAME "GStreamer CVS/prerelease"
 
 /* Define the version */
-#define GST_VERSION "0.10.2.1"
+#define GST_VERSION "0.10.2.2"
 
 /* Define the MAJOR.MINOR version */
 #define GST_MAJORMINOR "0.10"
@@ -216,7 +216,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.2.1"
+#define VERSION "0.10.2.2"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

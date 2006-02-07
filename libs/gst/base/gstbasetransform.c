@@ -1099,6 +1099,9 @@ gst_base_transform_eventfunc (GstBaseTransform * trans, GstEvent * event)
       gst_event_parse_new_segment (event, &update, &rate, &format, &start,
           &stop, &time);
 
+      if (trans->segment.format != format)
+        gst_segment_init (&trans->segment, format);
+
       gst_segment_set_newsegment (&trans->segment, update, rate, format, start,
           stop, time);
 

@@ -729,6 +729,9 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
           ", stop %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
+      if (data->segment.format != format)
+        gst_segment_init (&data->segment, format);
+
       gst_segment_set_newsegment (&data->segment, update, rate, format,
           start, stop, time);
 
@@ -791,8 +794,11 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   /* One more pad has data queued */
   pads->queuedpads++;
   gst_buffer_replace (&data->buffer, buffer);
-  gst_segment_set_last_stop (&data->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer));
+
+  if (data->segment.format == GST_FORMAT_TIME
+      && GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+    gst_segment_set_last_stop (&data->segment, GST_FORMAT_TIME,
+        GST_BUFFER_TIMESTAMP (buffer));
 
   /* Check if our collected condition is matched and call the collected function
      if it is */
