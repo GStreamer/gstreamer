@@ -1,3 +1,8 @@
+2006-02-07  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac (GST_MAJORMINOR): Update core version req to
+	0.10.2.2, for the collectpads API addition (#330244).
+
 2006-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/gnomevfs/gstgnomevfs.c: (plugin_init):
