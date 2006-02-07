@@ -2357,7 +2357,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       int samples_per_chunk;
 
       first_chunk = QTDEMUX_GUINT32_GET (stsc->data + 16 + i * 12 + 0) - 1;
-      if (i == n_samples - 1) {
+      /* the last chunk of each entry is calculated by taking the first chunk
+       * of the next entry; except if there is no next, where we fake it with
+       * INT_MAX */
+      if (i == n_samples_per_chunk - 1) {
         last_chunk = INT_MAX;
       } else {
         last_chunk = QTDEMUX_GUINT32_GET (stsc->data + 16 + i * 12 + 12) - 1;
@@ -2365,8 +2368,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       samples_per_chunk = QTDEMUX_GUINT32_GET (stsc->data + 16 + i * 12 + 4);
 
       GST_LOG_OBJECT (qtdemux,
-          "sample %d has first_chunk %d, last_chunk %d, samples_per_chunk %d",
-          i, first_chunk, last_chunk, samples_per_chunk);
+          "entry %d has first_chunk %d, last_chunk %d, samples_per_chunk %d", i,
+          first_chunk, last_chunk, samples_per_chunk);
 
       for (j = first_chunk; j < last_chunk; j++) {
         guint64 chunk_offset;

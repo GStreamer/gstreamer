@@ -2,6 +2,14 @@
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
 	(qtdemux_parse_trak):
+	  use the correct variable to check if we can calculate
+	  the last chunk.  Looks like an obvious bug, and makes
+	  the dump of offsets comparable to other tools
+
+2006-02-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),
+	(qtdemux_parse_trak):
 	  clean up some debugging, using _OBJECT, moving recurring
 	  messages to LOG level
 
