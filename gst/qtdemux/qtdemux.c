@@ -2328,7 +2328,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       }
     }
   } else {
-    int sample_width;
     guint64 timestamp = 0;
 
     GST_DEBUG_OBJECT (qtdemux,
@@ -2344,9 +2343,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %d", n_samples);
     samples = g_malloc (sizeof (QtDemuxSample) * n_samples);
     stream->samples = samples;
-
-    sample_width = QTDEMUX_GUINT16_GET (stsd->data + offset + 10) / 8;
-    GST_DEBUG_OBJECT (qtdemux, "sample_width %d", sample_width);
 
     n_samples_per_chunk = QTDEMUX_GUINT32_GET (stsc->data + 12);
     GST_DEBUG_OBJECT (qtdemux, "n_samples_per_chunk %d", n_samples_per_chunk);
