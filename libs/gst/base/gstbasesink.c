@@ -1222,9 +1222,18 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     goto flushing;
 
   if (G_UNLIKELY (!basesink->have_newsegment)) {
-    GST_ELEMENT_WARNING (basesink, STREAM, FAILED,
-        (_("Internal data flow problem.")),
-        ("Received buffer without a new-segment. Cannot sync to clock."));
+    gboolean sync;
+
+    GST_OBJECT_LOCK (basesink);
+    sync = basesink->sync;
+    GST_OBJECT_UNLOCK (basesink);
+
+    if (sync) {
+      GST_ELEMENT_WARNING (basesink, STREAM, FAILED,
+          (_("Internal data flow problem.")),
+          ("Received buffer without a new-segment. Cannot sync to clock."));
+    }
+
     basesink->have_newsegment = TRUE;
     /* this means this sink will not be able to sync to the clock */
     basesink->abidata.ABI.clip_segment->start = -1;

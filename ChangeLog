@@ -1,3 +1,8 @@
+2006-02-07  Andy Wingo  <wingo@pobox.com>
+
+	* libs/gst/base/gstbasesink.c (gst_base_sink_chain_unlocked): Only
+	warn if sync=true.
+
 2006-02-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
