@@ -39,8 +39,6 @@ void pygst_add_constants(PyObject *module, const gchar *strip_prefix);
 void _pygst_register_boxed_types(PyObject *moddict);
 		
 extern PyMethodDef pygst_functions[];
-extern GSList *mainloops;
-extern void _pygst_main_quit(void);
 
 GST_DEBUG_CATEGORY (pygst_debug);  /* for bindings code */
 GST_DEBUG_CATEGORY (python_debug); /* for python code */
@@ -68,18 +66,13 @@ GST_DEBUG_CATEGORY (python_debug); /* for python code */
 static gboolean
 python_do_pending_calls(gpointer data)
 {
-    gboolean quit = FALSE;
     PyGILState_STATE state;
 
     if (PyOS_InterruptOccurred()) {
 	 state = pyg_gil_state_ensure();
 	 PyErr_SetNone(PyExc_KeyboardInterrupt);
 	 pyg_gil_state_release(state);
-	 quit = TRUE;
     }
-
-    if (quit && mainloops != NULL)
-	 _pygst_main_quit();
 
     return TRUE;
 }

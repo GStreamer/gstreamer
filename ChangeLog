@@ -1,3 +1,9 @@
+2006-02-07  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.override:
+	* gst/gstmodule.c: (python_do_pending_calls):
+	Remove deprecated code dating back from 0.8 era.
+
 2006-02-06  Andy Wingo  <wingo@pobox.com>
 
 	* codegen/argtypes.py (UInt64Arg.write_param): Parse long

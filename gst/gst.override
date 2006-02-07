@@ -62,32 +62,6 @@ GST_DEBUG_CATEGORY_EXTERN (python_debug);
 GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
 #define GST_CAT_DEFAULT pygst_debug
 
-GSList *mainloops = NULL;
-void
-_pygst_main_quit(void)
-{
-    if (!mainloops)
-           g_error ("Quit more loops than there are");
-    else {
-       GMainLoop *loop = mainloops->data;
-
-       mainloops = g_slist_delete_link (mainloops, mainloops);
-       g_main_loop_quit (loop);
-       g_main_loop_unref (loop);
-    }
- }
-
-void
-_pygst_main(void)
-{
-    GMainLoop *loop;
-
-    loop = g_main_loop_new (NULL, FALSE);
-    mainloops = g_slist_prepend (mainloops, loop);
-
-    g_main_loop_run (loop);
-}
-
 /* This function checks if a former Python code threw an exception and if
  * so, transforms this exception into an error on the given GstElement.
  * This allows code run on the element to just raise an exception instead of
