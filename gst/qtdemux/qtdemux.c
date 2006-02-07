@@ -538,7 +538,7 @@ gst_qtdemux_loop_header (GstPad * pad)
   GstFlowReturn ret;
 
   cur_offset = qtdemux->offset;
-  GST_DEBUG_OBJECT (qtdemux, "loop at position %" G_GUINT64_FORMAT ", state %d",
+  GST_LOG_OBJECT (qtdemux, "loop at position %" G_GUINT64_FORMAT ", state %d",
       cur_offset, qtdemux->state);
 
   switch (qtdemux->state) {
@@ -597,6 +597,8 @@ gst_qtdemux_loop_header (GstPad * pad)
           gst_buffer_unref (moov);
           qtdemux->moov_node = NULL;
           qtdemux->state = QTDEMUX_STATE_MOVIE;
+          GST_DEBUG_OBJECT (qtdemux, "switching state to STATE_MOVIE (%d)",
+              qtdemux->state);
           break;
         }
         ed_edd_and_eddy:
@@ -635,8 +637,12 @@ gst_qtdemux_loop_header (GstPad * pad)
       min_time = G_MAXUINT64;
       for (i = 0; i < qtdemux->n_streams; i++) {
         stream = qtdemux->streams[i];
-        if (stream->sample_index < stream->n_samples &&
-            stream->samples[stream->sample_index].timestamp < min_time) {
+        GST_LOG_OBJECT (qtdemux,
+            "stream %d: sample_index %d, timestamp %" GST_TIME_FORMAT, i,
+            stream->sample_index,
+            GST_TIME_ARGS (stream->samples[stream->sample_index].timestamp));
+        if (stream->sample_index < stream->n_samples
+            && stream->samples[stream->sample_index].timestamp < min_time) {
           min_time = stream->samples[stream->sample_index].timestamp;
           index = i;
         }
@@ -652,14 +658,16 @@ gst_qtdemux_loop_header (GstPad * pad)
       offset = stream->samples[stream->sample_index].offset;
       size = stream->samples[stream->sample_index].size;
 
-      GST_INFO
-          ("pushing from stream %d, sample_index=%d offset=%lld size=%d timestamp=%lld",
+      GST_LOG_OBJECT (qtdemux,
+          "pushing from stream %d, sample_index=%d offset=%" G_GUINT64_FORMAT
+          ",size=%d timestamp=%" GST_TIME_FORMAT,
           index, stream->sample_index, offset, size,
-          stream->samples[stream->sample_index].timestamp);
+          GST_TIME_ARGS (stream->samples[stream->sample_index].timestamp));
 
       buf = NULL;
       if (size > 0) {
-        GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %lld", size, offset);
+        GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %" G_GUINT64_FORMAT, size,
+            offset);
 
         ret = gst_pad_pull_range (qtdemux->sinkpad, offset, size, &buf);
         if (ret != GST_FLOW_OK)
@@ -703,7 +711,8 @@ gst_qtdemux_loop_header (GstPad * pad)
           }
         }
 
-        GST_DEBUG ("Pushing buffer with time %" GST_TIME_FORMAT " on pad %p",
+        GST_LOG_OBJECT (qtdemux,
+            "Pushing buffer with time %" GST_TIME_FORMAT " on pad %p",
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), stream->pad);
         gst_buffer_set_caps (buf, stream->caps);
         ret = gst_pad_push (stream->pad, buf);
@@ -2253,12 +2262,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   sample_size = QTDEMUX_GUINT32_GET (stsz->data + 12);
   if (sample_size == 0) {
     n_samples = QTDEMUX_GUINT32_GET (stsz->data + 16);
+    GST_DEBUG_OBJECT (qtdemux, "stsz sample_size 0, allocating n_samples %d",
+        n_samples);
     stream->n_samples = n_samples;
     samples = g_malloc (sizeof (QtDemuxSample) * n_samples);
     stream->samples = samples;
 
     for (i = 0; i < n_samples; i++) {
       samples[i].size = QTDEMUX_GUINT32_GET (stsz->data + i * 4 + 20);
+      GST_LOG_OBJECT (qtdemux, "sample %d has size %d", i, samples[i].size);
     }
     n_samples_per_chunk = QTDEMUX_GUINT32_GET (stsc->data + 12);
     index = 0;
@@ -2319,7 +2331,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     int sample_width;
     guint64 timestamp = 0;
 
-    GST_LOG ("treating chunks as samples");
+    GST_DEBUG_OBJECT (qtdemux,
+        "stsz sample_size %d != 0, treating chunks as samples", sample_size);
 
     /* treat chunks as samples */
     if (stco) {
@@ -2328,12 +2341,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       n_samples = QTDEMUX_GUINT32_GET (co64->data + 12);
     }
     stream->n_samples = n_samples;
+    GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %d", n_samples);
     samples = g_malloc (sizeof (QtDemuxSample) * n_samples);
     stream->samples = samples;
 
     sample_width = QTDEMUX_GUINT16_GET (stsd->data + offset + 10) / 8;
+    GST_DEBUG_OBJECT (qtdemux, "sample_width %d", sample_width);
 
     n_samples_per_chunk = QTDEMUX_GUINT32_GET (stsc->data + 12);
+    GST_DEBUG_OBJECT (qtdemux, "n_samples_per_chunk %d", n_samples_per_chunk);
     offset = 16;
     sample_index = 0;
     for (i = 0; i < n_samples_per_chunk; i++) {
@@ -2348,6 +2364,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       }
       samples_per_chunk = QTDEMUX_GUINT32_GET (stsc->data + 16 + i * 12 + 4);
 
+      GST_LOG_OBJECT (qtdemux,
+          "sample %d has first_chunk %d, last_chunk %d, samples_per_chunk %d",
+          i, first_chunk, last_chunk, samples_per_chunk);
+
       for (j = first_chunk; j < last_chunk; j++) {
         guint64 chunk_offset;
 
@@ -2355,8 +2375,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           goto done2;
         if (stco) {
           chunk_offset = QTDEMUX_GUINT32_GET (stco->data + 16 + j * 4);
+          GST_LOG_OBJECT (qtdemux, "stco chunk %d offset %x", j, chunk_offset);
         } else {
           chunk_offset = QTDEMUX_GUINT64_GET (co64->data + 16 + j * 8);
+          GST_LOG_OBJECT (qtdemux, "co64 chunk %d offset %" G_GUINT64_FORMAT, j,
+              chunk_offset);
         }
         samples[j].chunk = j;
         samples[j].offset = chunk_offset;
