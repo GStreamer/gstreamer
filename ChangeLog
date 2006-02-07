@@ -1,3 +1,9 @@
+2006-02-07  Andy Wingo  <wingo@pobox.com>
+
+	* gst/tcp/gsttcpclientsrc.c (gst_tcp_client_src_create): Switch to
+	a TIME segment if we get timestamped buffers. Requires recent
+	fixes in core to work properly.
+
 2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (prepare_output):

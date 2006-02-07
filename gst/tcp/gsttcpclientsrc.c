@@ -194,6 +194,7 @@ gst_tcp_client_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstTCPClientSrc *src;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstBaseSrc *bsrc = GST_BASE_SRC (psrc);
 
   src = GST_TCP_CLIENT_SRC (psrc);
 
@@ -227,6 +228,21 @@ gst_tcp_client_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
       ret = gst_tcp_gdp_read_buffer (GST_ELEMENT (src), src->sock_fd,
           READ_SOCKET (src), outbuf);
+
+      if (G_UNLIKELY (bsrc->segment.format != GST_FORMAT_TIME)
+          && G_LIKELY (ret == GST_FLOW_OK)
+          && G_LIKELY (GST_BUFFER_TIMESTAMP_IS_VALID (*outbuf))) {
+        /* switch our format to time */
+        gst_base_src_set_format (bsrc, GST_FORMAT_TIME);
+        gst_segment_set_newsegment (&bsrc->segment, FALSE, 1.0,
+            GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (*outbuf), -1, 0);
+
+        gst_pad_push_event (bsrc->srcpad,
+            gst_event_new_new_segment (FALSE,
+                bsrc->segment.rate, bsrc->segment.format,
+                bsrc->segment.start, bsrc->segment.stop, bsrc->segment.time));
+      }
+
       break;
     default:
       /* need to assert as buf == NULL */

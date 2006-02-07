@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.38 2006/01/14 22:59:49 thomasvs Exp $
+# $Id: sv.po,v 1.39 2006/02/07 15:52:26 wingo Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-14 23:36+0100\n"
+"POT-Creation-Date: 2006-02-06 13:46+0100\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -63,16 +63,16 @@ msgstr "Spela"
 msgid "Capture"
 msgstr "Satir"
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:215 ext/cdparanoia/gstcdparanoiasrc.c:221
+#: ext/cdparanoia/gstcdparanoiasrc.c:212 ext/cdparanoia/gstcdparanoiasrc.c:218
 msgid "Could not open CD device for reading."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:283
+#: ext/cdparanoia/gstcdparanoiasrc.c:280
 #, fuzzy
 msgid "Could not seek CD."
 msgstr "Kunde inte stänga vfs-filen \"%s\"."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:296
+#: ext/cdparanoia/gstcdparanoiasrc.c:293
 #, fuzzy
 msgid "Could not read CD."
 msgstr "Kunde inte spela in!"
@@ -96,46 +96,102 @@ msgstr "Kunde inte stänga vfs-filen \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2503
+#: ext/ogg/gstoggdemux.c:2508
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1374
+#: gst/playback/gstplaybasebin.c:1361
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1380
+#: gst/playback/gstplaybasebin.c:1367
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1384
+#: gst/playback/gstplaybasebin.c:1371
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1391
+#: gst/playback/gstplaybasebin.c:1378
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1457
+#: gst/playback/gstplaybasebin.c:1444
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1460
+#: gst/playback/gstplaybasebin.c:1447
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "%s är ingen cdrom-enhet"
 
-#: gst/playback/gstplaybin.c:434
+#: gst/playback/gstplaybin.c:609
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:564
+#: gst/playback/gstplaybin.c:757
 msgid "Both autoaudiosink and alsasink elements are missing."
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:55
+#, fuzzy
+msgid "track ID"
+msgstr "Spår %d"
+
+#: gst-libs/gst/tag/tags.c:55
+msgid "MusicBrainz track ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:57
+#, fuzzy
+msgid "artist ID"
+msgstr "Skiv-ID"
+
+#: gst-libs/gst/tag/tags.c:57
+msgid "MusicBrainz artist ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:59
+msgid "album ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:59
+msgid "MusicBrainz album ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:62
+msgid "album artist ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:62
+msgid "MusicBrainz album artist ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:64
+msgid "track TRM ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:64
+msgid "MusicBrainz TRM ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:67
+#, fuzzy
+msgid "artist sortname"
+msgstr "Artistrad"
+
+#: gst-libs/gst/tag/tags.c:67
+msgid "MusicBrainz artist sortname"
+msgstr ""
+
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1362
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1395
+msgid "This CD has no audio tracks"
 msgstr ""
 
 #, fuzzy
@@ -395,9 +451,6 @@ msgstr ""
 
 #~ msgid "Category"
 #~ msgstr "Kategori"
-
-#~ msgid "Disc ID"
-#~ msgstr "Skiv-ID"
 
 #~ msgid "Artist and Title"
 #~ msgstr "Artist och titel"
@@ -908,9 +961,6 @@ msgstr ""
 
 #~ msgid "Line for displaying information"
 #~ msgstr "Rad för visning av information"
-
-#~ msgid "Artist Line"
-#~ msgstr "Artistrad"
 
 #~ msgid "Line for displaying the name of the artist"
 #~ msgstr "Rad för visning av namnet på artisten"
@@ -2632,9 +2682,6 @@ msgstr ""
 #~ "enheten.\n"
 #~ "\n"
 #~ "Anledning: %s\n"
-
-#~ msgid "Track %d"
-#~ msgstr "Spår %d"
 
 #~ msgid "Preferences..."
 #~ msgstr "Inställningar..."

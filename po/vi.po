@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-14 23:36+0100\n"
+"POT-Creation-Date: 2006-02-06 13:46+0100\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -61,16 +61,16 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:215 ext/cdparanoia/gstcdparanoiasrc.c:221
+#: ext/cdparanoia/gstcdparanoiasrc.c:212 ext/cdparanoia/gstcdparanoiasrc.c:218
 msgid "Could not open CD device for reading."
 msgstr "Đã không mở được thiết bị CD để đọc"
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:283
+#: ext/cdparanoia/gstcdparanoiasrc.c:280
 #, fuzzy
 msgid "Could not seek CD."
 msgstr "Đã không đóng được tập tin vfs \"%s\"."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:296
+#: ext/cdparanoia/gstcdparanoiasrc.c:293
 #, fuzzy
 msgid "Could not read CD."
 msgstr "Đã không ghi được vào thiết bị \"%s\"."
@@ -94,46 +94,99 @@ msgstr "Đã không đóng được tập tin vfs \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Lỗi khi đóng tập tin \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2503
+#: ext/ogg/gstoggdemux.c:2508
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1374
+#: gst/playback/gstplaybasebin.c:1361
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1380
+#: gst/playback/gstplaybasebin.c:1367
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1384
+#: gst/playback/gstplaybasebin.c:1371
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1391
+#: gst/playback/gstplaybasebin.c:1378
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1457
+#: gst/playback/gstplaybasebin.c:1444
 #, c-format
 msgid ""
 "You do not have a decoder installed to handle \"%s\".  You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1460
+#: gst/playback/gstplaybasebin.c:1447
 #, fuzzy, c-format
 msgid "\"%s\" is not a media file"
 msgstr "Thiết bị \"%s\" không bắt gì được."
 
-#: gst/playback/gstplaybin.c:434
+#: gst/playback/gstplaybin.c:609
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:564
+#: gst/playback/gstplaybin.c:757
 msgid "Both autoaudiosink and alsasink elements are missing."
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:55
+msgid "track ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:55
+msgid "MusicBrainz track ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:57
+msgid "artist ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:57
+msgid "MusicBrainz artist ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:59
+msgid "album ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:59
+msgid "MusicBrainz album ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:62
+msgid "album artist ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:62
+msgid "MusicBrainz album artist ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:64
+msgid "track TRM ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:64
+msgid "MusicBrainz TRM ID"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:67
+msgid "artist sortname"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:67
+msgid "MusicBrainz artist sortname"
+msgstr ""
+
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1362
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1395
+msgid "This CD has no audio tracks"
 msgstr ""
 
 #~ msgid "No device specified."
