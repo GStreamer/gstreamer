@@ -1,3 +1,8 @@
+2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gconf/gconf.h:
+	  Remove declaration of function that no longer exists.
+
 2006-02-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/shout2/gstshout2.c: (gst_shout2send_render),
