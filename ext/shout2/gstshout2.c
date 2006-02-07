@@ -366,6 +366,32 @@ gst_shout2send_render (GstBaseSink * sink, GstBuffer * buf)
 
   shout2send = GST_SHOUT2SEND (sink);
 
+  if (!shout2send->started) {
+/* connect */
+    GST_DEBUG ("Connection format is: %s",
+        shout2send->audio_format == SHOUT_FORMAT_VORBIS ? "vorbis" :
+        (shout2send->audio_format == SHOUT_FORMAT_MP3 ? "mp3" : "unknown"));
+    if (shout_set_format (shout2send->conn,
+            shout2send->audio_format) != SHOUTERR_SUCCESS) {
+      GST_ERROR ("Error setting connection format: %s\n",
+          shout_get_error (shout2send->conn));
+    }
+
+    if (shout_open (shout2send->conn) == SHOUTERR_SUCCESS) {
+      g_print ("connected to server...\n");
+      /* lets set metadata */
+      gst_shout2send_set_metadata (shout2send);
+      shout2send->started = TRUE;
+
+    } else {
+      GST_ERROR ("Couldn't connect to server: %s",
+          shout_get_error (shout2send->conn));
+      shout2send->conn = FALSE;
+
+    }
+  }
+
+
   if (shout2send->clock && shout2send->sync) {
     //GST_DEBUG("using GStreamer clock to sync");
     //gst_element_wait (GST_ELEMENT (shout2send), GST_BUFFER_TIMESTAMP (buf));
@@ -520,7 +546,7 @@ gst_shout2send_setcaps (GstPad * pad, GstCaps * caps)
     shout2send->audio_format = SHOUT_FORMAT_MP3;
   }
 
-  if (!strcmp (mimetype, "application/ogg")) {
+  else if (!strcmp (mimetype, "application/ogg")) {
     shout2send->audio_format = SHOUT_FORMAT_VORBIS;
   } else {
     ret = FALSE;
@@ -638,28 +664,6 @@ gst_shout2send_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-
-      /* connect */
-      GST_DEBUG ("Connection format is: %s",
-          shout2send->audio_format == SHOUT_FORMAT_VORBIS ? "vorbis" :
-          (shout2send->audio_format == SHOUT_FORMAT_MP3 ? "mp3" : "unknown"));
-      if (shout_set_format (shout2send->conn,
-              shout2send->audio_format) != SHOUTERR_SUCCESS) {
-        GST_ERROR ("Error setting connection format: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-
-      if (shout_open (shout2send->conn) == SHOUTERR_SUCCESS) {
-        g_print ("connected to server...\n");
-        /* lets set metadata */
-        gst_shout2send_set_metadata (shout2send);
-
-      } else {
-        GST_ERROR ("Couldn't connect to server: %s",
-            shout_get_error (shout2send->conn));
-        shout2send->conn = FALSE;
-        return GST_STATE_CHANGE_FAILURE;
-      }
       break;
 
 
@@ -673,9 +677,11 @@ gst_shout2send_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      shout_close (shout2send->conn);
-      shout_free (shout2send->conn);
-      shout2send->started = FALSE;
+      if (shout2send->started) {
+        shout_close (shout2send->conn);
+        shout_free (shout2send->conn);
+        shout2send->started = FALSE;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

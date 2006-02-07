@@ -1,3 +1,9 @@
+2006-02-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/shout2/gstshout2.c: (gst_shout2send_render),
+	(gst_shout2send_setcaps), (gst_shout2send_change_state):
+	Make shout2 work for non ogg streams
+
 2006-02-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init),
