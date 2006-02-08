@@ -1,6 +1,12 @@
 2006-02-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
+	Drat. Bump libtool version number for new API.
+	Prelease 0.10.2.3 (of 0.10.3)
+
+2006-02-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
 	* win32/common/config.h:
 	0.10.2.2 prerelease (of 0.10.3).
 
