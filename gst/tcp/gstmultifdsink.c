@@ -338,7 +338,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   /**
    * GstMultiFdSink::add:
    * @gstmultifdsink: the multifdsink element to emit this signal on
-   * @arg1:           the file descriptor to add to multifdsink
+   * @fd:             the file descriptor to add to multifdsink
    *
    * Hand the given open file descriptor to multifdsink to write to.
    */
@@ -349,7 +349,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   /**
    * GstMultiFdSink::remove:
    * @gstmultifdsink: the multifdsink element to emit this signal on
-   * @arg1:           the file descriptor to remove from multifdsink
+   * @fd:             the file descriptor to remove from multifdsink
    *
    * Remove the given open file descriptor from multifdsink.
    */
@@ -361,7 +361,9 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * GstMultiFdSink::clear:
    * @gstmultifdsink: the multifdsink element to emit this signal on
    *
-   * Clear all file descriptors from multifdsink.
+   * Remove all file descriptors from multifdsink.  Since multifdsink did not
+   * open fd's itself, it does not explicitly close the fd.  The application
+   * should do so by connecting to the client-removed callback.
    */
   gst_multi_fd_sink_signals[SIGNAL_CLEAR] =
       g_signal_new ("clear", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
