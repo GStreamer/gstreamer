@@ -23,6 +23,8 @@
 #include "gstspeexdec.h"
 #include "gstspeexenc.h"
 
+#include <gst/tag/tag.h>
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -34,6 +36,8 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "speexdec", GST_RANK_PRIMARY,
           GST_TYPE_SPEEXDEC))
     return FALSE;
+
+  gst_tag_register_musicbrainz_tags ();
 
   return TRUE;
 }

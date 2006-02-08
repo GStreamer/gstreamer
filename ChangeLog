@@ -1,5 +1,11 @@
 2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/flac/gstflac.c: (plugin_init):
+	* ext/speex/gstspeex.c: (plugin_init):
+	  Register musicbrainz tags.
+
+2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gconf/gconf.h:
 	  Remove declaration of function that no longer exists.
 

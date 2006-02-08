@@ -27,6 +27,8 @@
 
 #include "flac_compat.h"
 
+#include <gst/tag/tag.h>
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -41,6 +43,9 @@ plugin_init (GstPlugin * plugin)
           gst_flac_tag_get_type ()))
     return FALSE;
 #endif
+
+  gst_tag_register_musicbrainz_tags ();
+
   return TRUE;
 }
 
