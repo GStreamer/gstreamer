@@ -1,3 +1,16 @@
+=== release 0.10.2 ===
+
+2006-02-08  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.2, "Papa was a rolling stone"
+
+2006-02-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  Bump core and plugins-base requirement to 0.10.2.2
+	  for API additions (and 1 migration of gst_bin_find_unconnected_pad)
+
 2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflac.c: (plugin_init):
