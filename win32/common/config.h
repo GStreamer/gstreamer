@@ -250,7 +250,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.2.1"
+#define VERSION "0.10.2.2"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
