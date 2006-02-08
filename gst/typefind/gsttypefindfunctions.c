@@ -1092,59 +1092,6 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
-/*** video/quicktime***/
-
-static GstStaticCaps qt_caps = GST_STATIC_CAPS ("video/quicktime");
-
-#define QT_CAPS gst_static_caps_get(&qt_caps)
-#define STRNCMP(x,y,z) (strncmp ((char*)(x), (char*)(y), z))
-
-static void
-qt_type_find (GstTypeFind * tf, gpointer unused)
-{
-  guint8 *data;
-  guint tip = 0;
-  guint64 offset = 0;
-  guint64 size;
-
-  while ((data = gst_type_find_peek (tf, offset, 8)) != NULL) {
-    if (STRNCMP (&data[4], "wide", 4) != 0 &&
-        STRNCMP (&data[4], "moov", 4) != 0 &&
-        STRNCMP (&data[4], "mdat", 4) != 0 &&
-        STRNCMP (&data[4], "pnot", 4) != 0 &&
-        STRNCMP (&data[4], "PICT", 4) != 0 &&
-        STRNCMP (&data[4], "ftyp", 4) != 0 &&
-        STRNCMP (&data[4], "free", 4) != 0 &&
-        STRNCMP (&data[4], "skip", 4) != 0) {
-      tip = 0;
-      break;
-    }
-    if (tip == 0) {
-      tip = GST_TYPE_FIND_LIKELY;
-    } else {
-      tip = GST_TYPE_FIND_MAXIMUM;
-      break;
-    }
-    size = GST_READ_UINT32_BE (data);
-    if (size == 1) {
-      guint8 *sizedata;
-
-      sizedata = gst_type_find_peek (tf, offset + 8, 8);
-      if (sizedata == NULL)
-        break;
-
-      size = GST_READ_UINT64_BE (sizedata);
-    } else {
-      if (size < 8)
-        break;
-    }
-    offset += size;
-  }
-  if (tip > 0) {
-    gst_type_find_suggest (tf, tip, QT_CAPS);
-  }
-};
-
 /*** audio/x-aiff ***/
 
 static GstStaticCaps aiff_caps = GST_STATIC_CAPS ("audio/x-aiff");
@@ -1213,6 +1160,8 @@ ape_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** ISO FORMATS ***/
+
 /*** audio/x-m4a ***/
 
 static GstStaticCaps m4a_caps = GST_STATIC_CAPS ("audio/x-m4a");
@@ -1232,9 +1181,8 @@ m4a_type_find (GstTypeFind * tf, gpointer unused)
 
 /*** application/x-3gp ***/
 
-/*
- * The Q is there because variables can't start with a number.
- */
+/* The Q is there because variables can't start with a number. */
+
 
 static GstStaticCaps q3gp_caps = GST_STATIC_CAPS ("application/x-3gp");
 
@@ -1244,10 +1192,67 @@ q3gp_type_find (GstTypeFind * tf, gpointer unused)
 {
   guint8 *data = gst_type_find_peek (tf, 4, 8);
 
-  if (data && memcmp (data, "ftyp3gp4", 8) == 0) {
+  if (data &&
+      (memcmp (data, "ftyp3gp4", 8) == 0 ||
+          memcmp (data, "ftyp3gp5", 8) == 0 ||
+          memcmp (data, "ftyp3gp6", 8) == 0)) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, Q3GP_CAPS);
   }
 }
+
+/*** video/quicktime ***/
+
+static GstStaticCaps qt_caps = GST_STATIC_CAPS ("video/quicktime");
+
+#define QT_CAPS gst_static_caps_get(&qt_caps)
+#define STRNCMP(x,y,z) (strncmp ((char*)(x), (char*)(y), z))
+
+static void
+qt_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data;
+  guint tip = 0;
+  guint64 offset = 0;
+  guint64 size;
+
+  while ((data = gst_type_find_peek (tf, offset, 8)) != NULL) {
+    if (STRNCMP (&data[4], "wide", 4) != 0 &&
+        STRNCMP (&data[4], "moov", 4) != 0 &&
+        STRNCMP (&data[4], "mdat", 4) != 0 &&
+        STRNCMP (&data[4], "pnot", 4) != 0 &&
+        STRNCMP (&data[4], "PICT", 4) != 0 &&
+        STRNCMP (&data[4], "ftyp", 4) != 0 &&
+        STRNCMP (&data[4], "free", 4) != 0 &&
+        STRNCMP (&data[4], "skip", 4) != 0) {
+      tip = 0;
+      break;
+    }
+    if (tip == 0) {
+      tip = GST_TYPE_FIND_LIKELY;
+    } else {
+      tip = GST_TYPE_FIND_MAXIMUM;
+      break;
+    }
+    size = GST_READ_UINT32_BE (data);
+    if (size == 1) {
+      guint8 *sizedata;
+
+      sizedata = gst_type_find_peek (tf, offset + 8, 8);
+      if (sizedata == NULL)
+        break;
+
+      size = GST_READ_UINT64_BE (sizedata);
+    } else {
+      if (size < 8)
+        break;
+    }
+    offset += size;
+  }
+  if (tip > 0) {
+    gst_type_find_suggest (tf, tip, QT_CAPS);
+  }
+};
+
 
 /*** audio/x-mod ***/
 
@@ -2137,8 +2142,15 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "video/mpeg-stream", GST_RANK_MARGINAL,
       mpeg_video_stream_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL,
       NULL);
+
+  /* ISO formats */
+  TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,
+      m4a_exts, M4A_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-3gp", GST_RANK_PRIMARY,
+      q3gp_type_find, q3gp_exts, Q3GP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/quicktime", GST_RANK_SECONDARY,
       qt_type_find, qt_exts, QT_CAPS, NULL, NULL);
+
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/vnd.rn-realmedia",
       GST_RANK_SECONDARY, rm_exts, ".RMF", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "application/x-shockwave-flash",
@@ -2230,10 +2242,6 @@ plugin_init (GstPlugin * plugin)
       oggskel_type_find, NULL, OGG_SKELETON_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "text/x-cmml", GST_RANK_PRIMARY, cmml_type_find,
       NULL, CMML_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,
-      m4a_exts, M4A_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "application/x-3gp", GST_RANK_PRIMARY,
-      q3gp_type_find, q3gp_exts, Q3GP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-executable",
       GST_RANK_MARGINAL, NULL, "\177ELF", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "adts_mpeg_stream", GST_RANK_SECONDARY,

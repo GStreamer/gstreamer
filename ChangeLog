@@ -1,3 +1,10 @@
+2006-02-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/typefind/gsttypefindfunctions.c: (q3gp_type_find),
+	(qt_type_find), (plugin_init):
+	  detect more files as 3gp
+	  group and reorder the iso file formats
+
 2006-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/vorbis/vorbis.c: (plugin_init):
