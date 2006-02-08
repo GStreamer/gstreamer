@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-06 13:46+0100\n"
+"POT-Creation-Date: 2006-02-08 13:46+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -117,17 +117,26 @@ msgstr ""
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1444
-#, c-format
+#: gst/playback/gstplaybasebin.c:1450
 msgid ""
-"You do not have a decoder installed to handle \"%s\".  You might need to "
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1455
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1447
-#, fuzzy, c-format
-msgid "\"%s\" is not a media file"
+#: gst/playback/gstplaybasebin.c:1459
+#, fuzzy
+msgid "This is not a media file"
 msgstr "Уређај „%s“ не представља уређај за снимање."
+
+#: gst/playback/gstplaybasebin.c:1464
+msgid "A subtitle stream was detected, but no video stream."
+msgstr ""
 
 #: gst/playback/gstplaybin.c:609
 msgid "Both autovideosink and xvimagesink elements are missing."
