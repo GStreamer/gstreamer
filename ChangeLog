@@ -1,3 +1,9 @@
+2006-02-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  2nd prerelease of 0.10.3
+	  Bump libtool versioning.
+
 2006-02-07  Andy Wingo  <wingo@pobox.com>
 
 	* libs/gst/base/gstcollectpads.c (gst_collect_pads_chain): Only
