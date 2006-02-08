@@ -1,3 +1,11 @@
+2006-02-08  Arwed v. Merkatz  <v.merkatz@gmx.net>
+
+	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* configure.ac:
+	  Don't link to valgrind. Only needed for VG-tools, not for VG'ed
+	  apps. Fixes compile error (330308).
+
 2006-02-01  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* testsuite/caps/caps.h:
