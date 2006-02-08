@@ -1,4 +1,11 @@
-This is GStreamer 0.10.2, "If man is 5"
+This is GStreamer 0.10.3, "Like a virgin"
+Changes since 0.10.2:
+      * Documentation updates
+      * Bug fixes
+      * Base class improvements
+      * Extra utility API
+      * More elements ported from 0.8
+      * Fixes for win32 build.
 
 Changes since 0.10.1:
     

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-07 14:15+0100\n"
+"POT-Creation-Date: 2006-02-08 12:08+0100\n"
 "PO-Revision-Date: 2004-06-05 09:32+0100\n"
 "Last-Translator: Roland Illig <roland.illig@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
@@ -678,11 +678,11 @@ msgstr "Leere Leitung ist nicht erlaubt"
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1233
+#: libs/gst/base/gstbasesink.c:1237
 msgid "Internal data flow problem."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1363
+#: libs/gst/base/gstbasesink.c:1367
 #, fuzzy
 msgid "Internal data stream error."
 msgstr ""

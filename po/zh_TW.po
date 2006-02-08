@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-07 14:15+0100\n"
+"POT-Creation-Date: 2006-02-08 12:08+0100\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -640,11 +640,11 @@ msgstr "不允許使用沒有內容的管線"
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1233
+#: libs/gst/base/gstbasesink.c:1237
 msgid "Internal data flow problem."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1363
+#: libs/gst/base/gstbasesink.c:1367
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "GStreamer 內部錯誤：線程發生問題。請匯報錯誤。"

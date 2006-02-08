@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.10.2 "If man is five"
+GStreamer: Release notes for GStreamer 0.10.3 "Like a virgin"
         
 
 
@@ -38,13 +38,26 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * documentation updates
-      * bug fixes
+      * state lock redefined
+      * Extensive documentation updates
+      * BaseTransform reworked
+      * Bus reworked; signal API added
 
 Bugs fixed in this release
     
-      * 325429 : GST_BOILERPLATE_FULL can't be used when compiling with -W...
-      * 316086 : MinGW compilation: fileindexer depends on mmap
+      * 320084 : gst-launch doesn't show errors before going to PLAYING
+      * 168703 : [API] Add gst_index_add_associationv() to gstindex.h
+      * 324162 : [API] Add gst_buffer_make_meta_writable or similar
+      * 324199 : Collectpads hangs when muxing more than two streams
+      * 325490 : fdsink ported to 0.10.x
+      * 327001 : API: add gst_event_replace
+      * 327197 : Sound Juicer with Gst-0.10 segfaults
+      * 327324 : gst-inspect-0.10 -a crashes after id3demux
+      * 328491 : Sending FLUSH_START blocks in GstCollectPads
+      * 328715 : tee does no handle a pad being in wrong state or not linked
+      * 329069 : API: add gst_parse_bin_from_description
+      * 329105 : ghostpad no setting pad chain function if target has not ...
+      * 329713 : Endlessly increasing VM size with playbin using apps
 
 Download
 
@@ -72,25 +85,24 @@ will create more lists as necessary.
         
 Applications
 
-At this point, ports of existing applications to 0.10 are still experimental.
-Totem HEAD has a configure option to build the 0.10 backend.
-A patch for Rhythmbox is maintained at
-
-http://bugzilla.gnome.org/show_bug.cgi?id=309609.
+At this point, ports of various applications are available:
+Totem HEAD has a configure option to build the 0.10 backend,
+as does Rhythmbox.
 Jamboree builds against GStreamer 0.10.
 Flumotion has been ported to 0.10 as well.
 
   
 Contributors to this release
     
-      * Brian Cameron
-      * David Schleef
+      * Andy Wingo
+      * Christian Schaller
       * Edward Hervey
-      * James Livingston
       * Jan Schmidt
+      * Julien MOUTTE
       * Sebastien Moutte
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Torsten Schoenfeld
       * Wim Taymans
  

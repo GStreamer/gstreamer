@@ -588,3 +588,13 @@
 <DEFAULT>1</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstFdSink::fd</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>fd</NICK>
+<BLURB>An open file descriptor to write to.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+

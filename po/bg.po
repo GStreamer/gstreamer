@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-07 14:15+0100\n"
+"POT-Creation-Date: 2006-02-08 12:08+0100\n"
 "PO-Revision-Date: 2005-12-03 16:02+0200\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -633,11 +633,11 @@ msgstr "не е позволен празен конвейер"
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка на потока от данни."
 
-#: libs/gst/base/gstbasesink.c:1233
+#: libs/gst/base/gstbasesink.c:1237
 msgid "Internal data flow problem."
 msgstr "Вътрешен проблем на потока от данни."
 
-#: libs/gst/base/gstbasesink.c:1363
+#: libs/gst/base/gstbasesink.c:1367
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка на потока от данни."

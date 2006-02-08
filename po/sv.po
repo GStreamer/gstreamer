@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.7pre2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-07 14:15+0100\n"
+"POT-Creation-Date: 2006-02-08 12:08+0100\n"
 "PO-Revision-Date: 2004-12-21 14:49+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -656,13 +656,13 @@ msgstr "tom rörledning är inte tillåtet"
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1233
+#: libs/gst/base/gstbasesink.c:1237
 msgid "Internal data flow problem."
 msgstr ""
 
 # Richard Hult säger: "Pad" i gstreamer betyder ungefär "kontakt", man
 # kopplar ihop två element via deras "pads".
-#: libs/gst/base/gstbasesink.c:1363
+#: libs/gst/base/gstbasesink.c:1367
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Internt GStreamer-fel: kontaktproblem. Skicka en felrapport."
