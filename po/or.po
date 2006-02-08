@@ -2,13 +2,13 @@
 # Copyright (C) 2004, Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-0.8.3 package.
 # Gora Mohanty <gora_mohanty@yahoo.co.in>, 2004.
-# $Id: or.po,v 1.18 2005/12/22 15:00:41 burger Exp $
+# $Id: or.po,v 1.19 2006/01/11 11:39:10 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-01-11 11:15+0100\n"
+"POT-Creation-Date: 2006-02-08 18:36+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
