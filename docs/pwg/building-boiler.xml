@@ -80,18 +80,16 @@ U gst-template/gst-app/src/Makefile.am
       The standard way of defining the boilerplate is simply to write some code,
       and fill in some structures. As mentioned in the previous section, the
       easiest way to do this is to copy a template and add functionality
-      according to your needs. To help you do so, there are some tools in the
+      according to your needs. To help you do so, there is a tool in the
       <filename class="directory">./gst-plugins/tools/</filename> directory.
-      One tool, <filename>gst-quick-stamp</filename>, is a quick command line
-      tool. The other, <filename>gst-project-stamp</filename>, is a full GNOME
-      druid application that takes you through the steps of creating a new
-      project (either a plugin or an application).
+      This tool, <filename>make_element</filename>, is a quick command line
+      tool.
     </para>
     <para>
-      To use <command>pluginstamp.sh</command>, first open up a terminal window.
-      Change to the <filename class="directory">gst-template</filename>
-      directory, and then run the <command>pluginstamp.sh</command> command. The
-      arguments to the <command>pluginstamp.sh</command> are:
+      To use <command>make_element</command>, first open up a terminal window.
+      Change to the <filename class="directory">gst-template/gst-plugin/src</filename>
+      directory, and then run the <command>make_element</command> command. The
+      arguments to the <command>make_element</command> are:
     </para>
     <orderedlist>
       <listitem>
@@ -99,8 +97,8 @@ U gst-template/gst-app/src/Makefile.am
       </listitem>
       <listitem>
         <para>
-          the directory that should hold a new subdirectory for the source tree
-          of the plugin.
+          the source file that the tool will use. By default,
+          gstplugin.{c,h} is used.
         </para>
       </listitem>
     </orderedlist>
@@ -109,13 +107,18 @@ U gst-template/gst-app/src/Makefile.am
       some operating systems, capitalization is also important when specifying
       directory names. For example, the following commands create the
       ExampleFilter plugin based on the plugin template and put the output files
-      in a new directory called <filename
-      class="directory">~/src/examplefilter/</filename>:
+      in the <filename class="directory">gst-template/gst-plugin/src</filename>
+      directory:
     </para>
     <screen>
-<prompt>shell $ </prompt><userinput>cd gst-template</userinput>
-<prompt>shell $ </prompt><userinput>tools/pluginstamp.sh ExampleFilter ~/src</userinput>
+<prompt>shell $ </prompt><userinput>cd gst-template/gst-plugin/src</userinput>
+<prompt>shell $ </prompt><userinput>../tools/make_element ExampleFilter</userinput>
     </screen>
+    <para>
+      The last command creates two files:
+      <filename>gstexamplefilter.c</filename> and
+      <filename>gstexamplefilter.h</filename>.
+    </para>
   </sect1>
 
   <!-- ############ sect1 ############# -->

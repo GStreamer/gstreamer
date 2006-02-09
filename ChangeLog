@@ -1,3 +1,8 @@
+2006-02-10  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/pwg/building-boiler.xml:
+	PWG patch from #326800 (Patch by Vincent Torri)
+
 2006-02-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
