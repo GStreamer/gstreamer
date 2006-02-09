@@ -73,8 +73,10 @@ typedef struct
   guint64 duration;             /* duration of current page */
   gboolean eos;
   gint64 offset;
-  GstClockTime timestamp;       /* timestamp for granulepos of last complete
-                                   packet on this page */
+  GstClockTime timestamp;       /* start timestamp of last complete packet on
+                                   this page */
+  GstClockTime timestamp_end;   /* end timestamp of last complete packet on this
+                                   page == granulepos time. */
 
   GstOggPadState state;         /* state of the pad */
 
@@ -618,8 +620,15 @@ gst_ogg_mux_pad_queue_page (GstOggMux * mux, GstOggPad * pad, ogg_page * page,
 
   /* take the timestamp of the last completed packet on this page */
   GST_BUFFER_TIMESTAMP (buffer) = pad->timestamp;
+  GST_BUFFER_DURATION (buffer) = pad->timestamp_end - pad->timestamp;
+
+  pad->timestamp = pad->timestamp_end;
+
   g_queue_push_tail (pad->pagebuffers, buffer);
-  GST_LOG_OBJECT (pad, GST_GP_FORMAT " queued buffer page (time %" GST_TIME_FORMAT "), %d page buffers queued", ogg_page_granulepos (page), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)), pad->pagebuffers->length);   /* no g_queue_get_length in 2.2 */
+  GST_LOG_OBJECT (pad, GST_GP_FORMAT " queued buffer page (time %"
+      GST_TIME_FORMAT "), %d page buffers queued", ogg_page_granulepos (page),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      g_queue_get_length (pad->pagebuffers));
 
   while (gst_ogg_mux_dequeue_page (mux, &ret)) {
     if (ret != GST_FLOW_OK)
@@ -1061,7 +1070,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
   gboolean delta_unit;
   GstFlowReturn ret;
   gint64 granulepos = 0;
-  GstClockTime timestamp;
+  GstClockTime timestamp, timestamp_end;
 
   GST_DEBUG_OBJECT (ogg_mux, "collected");
 
@@ -1090,8 +1099,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
       ogg_mux->pulling != best && ogg_mux->pulling->buffer) {
     GstOggPad *pad = ogg_mux->pulling;
 
-    GstClockTime last_ts =
-        GST_BUFFER_TIMESTAMP (pad->buffer) + GST_BUFFER_DURATION (pad->buffer);
+    GstClockTime last_ts = GST_BUFFER_END_TIME (pad->buffer);
 
     /* if the next packet in the current page is going to make the page 
      * too long, we need to flush */
@@ -1234,6 +1242,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 
     granulepos = GST_BUFFER_OFFSET_END (pad->buffer);
     timestamp = GST_BUFFER_TIMESTAMP (pad->buffer);
+    timestamp_end = GST_BUFFER_END_TIME (pad->buffer);
 
     /* don't need the old buffer anymore */
     gst_buffer_unref (pad->buffer);
@@ -1249,6 +1258,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
          * packet completed on that page,
          * so update the timestamp that we will give to the page */
         pad->timestamp = timestamp;
+        pad->timestamp_end = timestamp_end;
         GST_DEBUG_OBJECT (pad, "Timestamp of pad is %" GST_TIME_FORMAT
             ", granulepos is %lld", GST_TIME_ARGS (timestamp), granulepos);
       }
@@ -1267,6 +1277,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
            * the packet ends the page and we can update the timestamp
            * before pushing out */
           pad->timestamp = timestamp;
+          pad->timestamp_end = timestamp_end;
         }
 
         /* we have a complete page now, we can push the page 
@@ -1287,11 +1298,11 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     /* Update the timestamp, if neccesary, since and future page will have at
      * least this timestamp.
      */
-    if (pad->timestamp < timestamp) {
-      pad->timestamp = timestamp;
+    if (pad->timestamp < timestamp_end) {
+      pad->timestamp = timestamp_end;
       GST_DEBUG_OBJECT (ogg_mux, "Updated timestamp of pad %" GST_PTR_FORMAT
           " (oggpad %p) to %" GST_TIME_FORMAT, pad->collect.pad, pad,
-          GST_TIME_ARGS (timestamp));
+          GST_TIME_ARGS (timestamp_end));
     }
   }
 

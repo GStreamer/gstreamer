@@ -1,3 +1,13 @@
+2006-02-09  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ogg/gstoggmux.c (GstOggPad): Keep track of both the start
+	time and the end time of the last packet in the page.
+	(gst_ogg_mux_pad_queue_page): In addition to setting the timestamp
+	on the pages in our queue, set the duration as well. Reflow a
+	debug statement.
+	(gst_ogg_mux_collected): Keep track of GstOggPad->timestamp_end.
+	Fixes bad muxing order.
+
 2006-02-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst-libs/gst/rtp/gstbasertppayload.c:
