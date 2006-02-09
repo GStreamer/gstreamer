@@ -567,18 +567,18 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
      * the rtp session plugin. */
     pad = gst_element_get_pad (stream->rtpsrc, "src");
     gst_pad_link (pad, stream->rtpdecrtp);
-    gst_object_unref (GST_OBJECT (pad));
+    gst_object_unref (pad);
 
     pad = gst_element_get_pad (stream->rtcpsrc, "src");
     gst_pad_link (pad, stream->rtpdecrtcp);
-    gst_object_unref (GST_OBJECT (pad));
+    gst_object_unref (pad);
   }
 
   pad = gst_element_get_pad (stream->rtpdec, "srcrtp");
   name = g_strdup_printf ("rtp_stream%d", stream->id);
-  gst_element_add_pad (GST_ELEMENT (src), gst_ghost_pad_new (name, pad));
+  gst_element_add_pad (GST_ELEMENT_CAST (src), gst_ghost_pad_new (name, pad));
   g_free (name);
-  gst_object_unref (GST_OBJECT (pad));
+  gst_object_unref (pad);
 
   return TRUE;
 

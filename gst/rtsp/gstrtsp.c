@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "gstrtpdec.h"
 #include "gstrtspsrc.h"
 
 static gboolean
@@ -28,6 +29,8 @@ plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "rtspsrc", GST_RANK_NONE,
           GST_TYPE_RTSPSRC))
+    return FALSE;
+  if (!gst_element_register (plugin, "rtpdec", GST_RANK_NONE, GST_TYPE_RTPDEC))
     return FALSE;
 
   return TRUE;

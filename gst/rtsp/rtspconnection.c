@@ -376,9 +376,10 @@ read_body (gint fd, glong content_length, RTSPMessage * msg)
       bodyptr += r;
     }
   }
+  content_length += 1;
 
 done:
-  rtsp_message_set_body (msg, (guint8 *) body, content_length + 1);
+  rtsp_message_set_body (msg, (guint8 *) body, content_length);
 
   return RTSP_OK;
 
@@ -499,7 +500,16 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
 
       if (rtsp_message_get_header (msg, RTSP_HDR_SESSION,
               &session_id) == RTSP_OK) {
-        gint maxlen = sizeof (conn->session_id) - 1;
+        gint sesslen, maxlen, i;
+
+        sesslen = strlen (session_id);
+        maxlen = sizeof (conn->session_id) - 1;
+        /* the sessionid can have attributes marked with ;
+         * Make sure we strip them */
+        for (i = 0; i < sesslen; i++) {
+          if (session_id[i] == ';')
+            maxlen = i;
+        }
 
         /* make sure to not overflow */
         strncpy (conn->session_id, session_id, maxlen);

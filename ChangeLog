@@ -1,5 +1,24 @@
 2006-02-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/Makefile.am:
+	* gst/rtsp/gstrtpdec.c: (gst_rtpdec_get_type),
+	(gst_rtpdec_class_init), (gst_rtpdec_init), (gst_rtpdec_getcaps),
+	(gst_rtpdec_chain_rtp), (gst_rtpdec_chain_rtcp),
+	(gst_rtpdec_set_property), (gst_rtpdec_get_property),
+	(gst_rtpdec_change_state):
+	* gst/rtsp/gstrtpdec.h:
+	* gst/rtsp/gstrtsp.c: (plugin_init):
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_transport):
+	* gst/rtsp/rtspconnection.c: (read_body),
+	(rtsp_connection_receive):
+	* gst/rtsp/rtspmessage.c: (rtsp_message_dump):
+	Resurected rtpdec to make rtspsrc happy again.
+	Skip attributes from the session id.
+	Don't crash when dumping a message with an empty body.
+
+
+2006-02-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_chain):
 	Added more meaningfull warnings when something goes wrong.
 	Clear F bit on outgoing AMR packets.

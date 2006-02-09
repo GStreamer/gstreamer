@@ -1,6 +1,7 @@
 plugin_LTLIBRARIES = libgstrtsp.la
 
 libgstrtsp_la_SOURCES = gstrtsp.c gstrtspsrc.c \
+			gstrtpdec.c		\
      			rtspconnection.c	\
      			rtspdefs.c		\
      			rtspmessage.c		\
@@ -18,4 +19,4 @@ test_SOURCES = test.c rtspdefs.c rtspurl.c rtspconnection.c rtspmessage.c rtsptr
 test_CFLAGS = $(GST_CFLAGS)
 test_LDFLAGS = $(GST_LIBS)
 
-noinst_HEADERS = gstrtspsrc.h gstrtsp.h rtsptransport.h rtsp.h rtspurl.h rtspconnection.h rtspdefs.h rtspmessage.h sdp.h sdpmessage.h
+noinst_HEADERS = gstrtspsrc.h gstrtsp.h gstrtpdec.h rtsptransport.h rtsp.h rtspurl.h rtspconnection.h rtspdefs.h rtspmessage.h sdp.h sdpmessage.h

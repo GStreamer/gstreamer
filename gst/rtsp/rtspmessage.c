@@ -263,8 +263,8 @@ rtsp_message_dump (RTSPMessage * msg)
     g_print ("   reason: '%s'\n", msg->type_data.response.reason);
     g_print (" headers:\n");
     g_hash_table_foreach (msg->hdr_fields, dump_key_value, NULL);
-    g_print (" body:\n");
     rtsp_message_get_body (msg, &data, &size);
+    g_print (" body: length %d\n", size);
     dump_mem (data, size);
   } else if (msg->type == RTSP_MESSAGE_DATA) {
     g_print ("data message %p\n", msg);
