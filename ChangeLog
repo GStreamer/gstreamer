@@ -67,7 +67,6 @@
 	  frame right at offset 0 and if so suggest mpeg/audio
 	  caps with a very low probability (#153004).
 
->>>>>>> 1.2367
 2006-02-07  Andy Wingo  <wingo@pobox.com>
 
 	* gst/tcp/gsttcpclientsrc.c (gst_tcp_client_src_create): Switch to
