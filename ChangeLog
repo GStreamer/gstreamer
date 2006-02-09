@@ -1,3 +1,10 @@
+=== release 0.10.3 ===
+
+2006-02-09  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.3, "Under Pressure"
+
 2006-02-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

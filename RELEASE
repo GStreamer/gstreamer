@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Base Plug-ins 0.10.2 "Then the devil is six"
+GStreamer: Release notes for GStreamer Base Plug-ins 0.10.3 "Under Pressure"
         
 
 
@@ -55,30 +55,25 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * ported gnomevfssink, cdparanoia
-      * New library and base class: GstCddaBaseSrc
-      * ported mixerutils.h
-      * added 'sine-tab' waveform to audiotestsrc
-      * added float audio to audiorate
+      * typefind improvements
+      * Ogg decoding and encoding fixes
+      * Improved audio and video sink classes
+      * Bug and leak fixes
+      * Improved video scaling
+      * On-the-fly visualisation switching
+      * Subtitle support
 
 Bugs fixed in this release
     
-      * 324216 : [cdparanoia] missing patches from 0.8
-      * 324696 : [videotestsrc] does not start counting the time from zero...
-      * 324900 : Problem compiling gst-plugins-base with Forte
-      * 325984 : [playbin] cannot handle sources that produce raw audio/video
-      * 325990 : patch videotestsrc for using glib types
-      * 326601 : GstRingBuffer crashes with alaw/mulaw caps
-      * 327114 : [theoradec] should post tags on the bus
-      * 327216 : vorbisdec segfaults on certain queries
-
-API changed in this release
-     
-
-- API additions:
-    
-* added libgstcddabase
-* added mixerutils.h
+      * 324000 : [playbin] post error or message on unknown input
+      * 153004 : [typefind] can't identify mp3 file with one single mpeg f...
+      * 323874 : [playbin] leaks sinks and threads when using gconfaudiosink
+      * 324626 : ffmpegcolorspace support for fourcc " UYVY " 
+      * 326447 : check that all elements in -base pass queries they can't ...
+      * 328263 : Fix build with gcc 2.95
+      * 328279 : [decodebin] timeout issue when pre-rolling
+      * 329326 : Fix oggmux removing pads from collect pads
+      * 330244 : gsttextoverlay.c:895: 'struct _GstCollectData' has no mem...
 
 Download
 
@@ -108,11 +103,17 @@ Applications
   
 Contributors to this release
     
+      * Andy Wingo
+      * David Schleef
+      * Edgard Lima
       * Edward Hervey
       * Jan Schmidt
-      * Michael Smith
+      * Jens Granseuer
+      * Julien MOUTTE
+      * Philippe Kalaf
+      * Sebastien Moutte
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Tommi Myöhänen
+      * Wim Taymans
  

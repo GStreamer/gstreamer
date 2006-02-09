@@ -1,4 +1,24 @@
-This is GStreamer Base Plug-ins 0.10.2, "Then the devil is six"
+This is GStreamer Base Plug-ins 0.10.3, "Under Pressure"
+
+Changes since 0.10.2:
+      * typefind improvements
+      * Ogg decoding and encoding fixes
+      * Improved audio and video sink classes
+      * Bug and leak fixes
+      * Improved video scaling
+      * On-the-fly visualisation switching
+      * Subtitle support
+
+Bugs fixed since 0.10.2:
+      * 330244 : gsttextoverlay.c:895: 'struct _GstCollectData' has no mem...
+      * 324000 : [playbin] post error or message on unknown input
+      * 153004 : [typefind] can't identify mp3 file with one single mpeg f...
+      * 323874 : [playbin] leaks sinks and threads when using gconfaudiosink
+      * 324626 : ffmpegcolorspace support for fourcc " UYVY "
+      * 326447 : check that all elements in -base pass queries they can't ...
+      * 328263 : Fix build with gcc 2.95
+      * 328279 : [decodebin] timeout issue when pre-rolling
+      * 329326 : Fix oggmux removing pads from collect pads
 
 Changes since 0.10.1:
     

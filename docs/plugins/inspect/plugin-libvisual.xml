@@ -3,7 +3,7 @@
   <description>libvisual visualization plugins</description>
   <filename>../../ext/libvisual/.libs/libgstlibvisual.so</filename>
   <basename>libgstlibvisual.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.3</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -31,6 +31,27 @@
       <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
     </element>
     <element>
+      <name>libvisual_dancingparticles</name>
+      <longname>libvisual libvisual Dancing Particles plugin plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>The Libvisual Dancing Particles plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_gdkpixbuf</name>
+      <longname>libvisual GdkPixbuf image loader plugin v.0.0.1</longname>
+      <class>Visualization</class>
+      <description>The GdkPixbuf image loader for libvisual</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_infinite</name>
+      <longname>libvisual infinite plugin plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>The infinite visual plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
       <name>libvisual_jakdaw</name>
       <longname>libvisual Jakdaw plugin plugin v.0.0.1</longname>
       <class>Visualization</class>
@@ -52,10 +73,38 @@
       <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
     </element>
     <element>
+      <name>libvisual_lv_flower</name>
+      <longname>libvisual libvisual Pseudotoad flower, yellow rose of texas plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>The Libvisual yellow rose of texas port</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_lv_gltest</name>
+      <longname>libvisual libvisual GL analyser plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>The Libvisual GL analyzer plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
       <name>libvisual_lv_scope</name>
       <longname>libvisual libvisual scope plugin v.0.1</longname>
       <class>Visualization</class>
       <description>The Libvisual scope plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_madspin</name>
+      <longname>libvisual libvisual madspin port plugin v.0.1</longname>
+      <class>Visualization</class>
+      <description>The Libvisual madspin plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+    </element>
+    <element>
+      <name>libvisual_nebulus</name>
+      <longname>libvisual Libvisual plugins plugin v.0.2.0</longname>
+      <class>Visualization</class>
+      <description>The Libvisual nebulus plugin</description>
       <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
     </element>
     <element>
