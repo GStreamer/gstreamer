@@ -1,5 +1,12 @@
 2006-02-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
+	* configure.ac:
+	  Back to development.
+
+=== release 0.8.12 ===
+
+2006-02-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
 	* NEWS:
 	* RELEASE:
 	* configure.ac:
