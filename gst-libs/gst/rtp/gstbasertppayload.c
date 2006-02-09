@@ -223,6 +223,7 @@ gst_basertppayload_setcaps (GstPad * pad, GstCaps * caps)
   GstBaseRTPPayloadClass *basertppayload_class;
   gboolean ret = TRUE;
 
+  GST_DEBUG_OBJECT (pad, "setting caps %" GST_PTR_FORMAT, caps);
   basertppayload = GST_BASE_RTP_PAYLOAD (gst_pad_get_parent (pad));
   basertppayload_class = GST_BASE_RTP_PAYLOAD_GET_CLASS (basertppayload);
 
@@ -377,7 +378,10 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
   gst_rtp_buffer_set_payload_type (buffer, payload->pt);
 
   /* can wrap around, which is perfectly fine */
-  gst_rtp_buffer_set_seq (buffer, payload->seqnum++);
+  /* update first, so that the property is set to the last
+   * seqnum pushed */
+  payload->seqnum++;
+  gst_rtp_buffer_set_seq (buffer, payload->seqnum);
 
   /* add our random offset to the timestamp */
   ts = payload->ts_base;

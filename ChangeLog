@@ -1,3 +1,11 @@
+2006-02-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_setcaps), (gst_basertppayload_push):
+	  update seqnum before setting it on the packet; this makes sure
+	  that the timestamp and seqnum properties match after pushing
+	  a buffer
+
 2006-02-09  Andy Wingo  <wingo@pobox.com>
 
 	* gst-libs/gst/audio/gstringbuffer.c
