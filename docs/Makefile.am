@@ -12,8 +12,8 @@ endif
 
 BUILT_SOURCES = version.entities
 
-SUBDIRS = $(SUBDIRS_DOCBOOK) $(SUBDIRS_GTK_DOC)
-DIST_SUBDIRS = gst libs plugins faq manual pwg xsl
+SUBDIRS = design $(SUBDIRS_DOCBOOK) $(SUBDIRS_GTK_DOC)
+DIST_SUBDIRS = design gst libs plugins faq manual pwg xsl
 
 EXTRA_DIST = \
 	slides manuals.mak htmlinstall.mak upload.mak \
