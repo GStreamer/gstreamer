@@ -1,3 +1,10 @@
+2006-02-09  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	  Release 0.8.12 "Cookies".
+
 2006-02-08  Arwed v. Merkatz  <v.merkatz@gmx.net>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>

@@ -1,3 +1,23 @@
+This is GStreamer 0.8.12, "Cookies"
+
+Changes since 0.8.11:
+
+      * Leak, build and portability fixes
+      * Add querying to fdsrc (useful for Totem's Firefox plugin)
+
+Bugs fixed in this release:
+
+      * 316809 : bug in gstinfo.c -> _gst_debug_register_funcptr
+      * 319316 : retag example doesn't work
+      * 324260 : ignoring return value of 'g_list_delete_link' / 'g_list_...
+      * 326299 : totem mozilla plugin doesn't play asf
+      * 328382 : support single-image files
+      * 330308 : undefined reference to `vgPlain_tool_info'
+
+API additions:
+
+      * GST_TAG_IMAGE
+
 This is GStreamer 0.8.11, "So Long ...".
 
 Bugs fixed since 0.8.10:

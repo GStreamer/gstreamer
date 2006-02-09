@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.8.10 "So Long ..."
+GStreamer: Release notes for GStreamer 0.8.12 "Thanks for the cookies"
         
 
 The GStreamer team is happy to announce a new release
@@ -7,39 +7,40 @@ in the 0.8.x stable series of the GStreamer streaming media framework.
 
 
 The 0.8.x series is a stable series aimed at end users.
-It is not API or ABI compatible with the stable 0.6.x series.
-It is, however, parallel installable with the 0.6.x series.
+It is not API or ABI compatible with the stable 0.6.x or 0.10.x series.
+It is, however, parallel installable with the 0.6.x and 0.10.x series.
 
 
 This module only contains core functionality.  For actual media playback,
-you will need other modules.  GStreamer Plugins contains a huge set of
+you will need other modules.  GStreamer Plug-ins contains a huge set of
 additional plugins.  GStreamer FFmpeg contains a plugin based on the popular
 FFmpeg decoding library.  These modules need not have the same source version
 as the core, as long as they are in the 0.8.x series.
 
-
-A special "thank you" to Ronald Bultje, who has done most of the work on 0.8
-in the past year.  We wish him luck on his new adventure in NYC.  Thanks for
-all the fix !
-
   
 Features of this release
     
-      * Parallel installability with 0.6.x series
+      * Parallel installability with 0.6.x and 0.10.x series
       * Internationalization
+      * Translations: af, az, ca, cs, da, de, en_GB, fi, fr, it, nb, nl, ru, sq, sr, sv, tr, uk, vi
+      * Leak, build and portability fixes
+      * Add querying to fdsrc (useful for Totem's Firefox plugin)
 
 Bugs fixed in this release
     
-      * 170809 : Error compiling on Solaris 9 x86
-      * 304123 : update to POTFILES.in
-      * 305653 : build fixes for gstreamer and gst-plugins
-      * 307352 : PATCH: pass the --libdir argument to autogen
-      * 308067 : GST_TYPE_BUFFER crashes in gstvalue handling
-      * 308438 : Registering the same tag twice leads to assertion warnings
-      * 308559 : gst_value_deserialize to a gint64 does not work
-      * 308647 : [filesink] not handling errors properly?
-      * 308766 : gst_element_factory_create() may invalidate pad templates...
-      * 309125 : [patch] memleak in gst/gstvalues.c
+      * 316809 : bug in gstinfo.c -> _gst_debug_register_funcptr
+      * 319316 : retag example doesn't work
+      * 324260 : ignoring return value of 'g_list_delete_link' / 'g_list_...
+      * 326299 : totem mozilla plugin doesn't play asf
+      * 328382 : support single-image files
+      * 330308 : undefined reference to `vgPlain_tool_info'
+
+API changed in this release
+     
+
+- API additions:
+    
+* GST_TAG_IMAGE
 
 Download
 
@@ -74,16 +75,13 @@ GNOME applications including sound-juicer, totem and RhythmBox.
   
 Contributors to this release
     
-      * Akos Maroy
-      * Andreas Schwab
-      * Antoine Tremblay
-      * Benjamin Otte
-      * David Schleef
+      * Arwed v. Merkatz
+      * Christian Kirbach
+      * Francis Labonte
       * Jan Schmidt
-      * Luca Ognibene
+      * Julien Moutte
       * Ronald Bultje
-      * Stefan Kost
+      * Steve Lhomme
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Torsten Schoenfeld
  
