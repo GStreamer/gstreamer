@@ -1,3 +1,17 @@
+2006-02-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_chain):
+	Added more meaningfull warnings when something goes wrong.
+	Clear F bit on outgoing AMR packets.
+
+	* gst/rtp/gstrtpamrpay.c: (gst_rtp_amr_pay_class_init),
+	(gst_rtp_amr_pay_handle_buffer):
+	Added debugging category
+	Support payloading of multiple AMR frames.
+
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_depay_data):
+	Added some debugging.
+
 2006-02-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

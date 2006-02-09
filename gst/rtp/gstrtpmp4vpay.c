@@ -275,6 +275,7 @@ gst_rtp_mp4v_pay_depay_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
     return FALSE;
 
   code = GST_READ_UINT32_BE (data);
+  GST_DEBUG_OBJECT (enc, "start code 0x%08x", code);
 
   switch (code) {
     case VOS_STARTCODE:
@@ -286,6 +287,8 @@ gst_rtp_mp4v_pay_depay_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
 
       /* profile_and_level_indication */
       profile = data[4];
+
+      GST_DEBUG_OBJECT (enc, "VOS profile 0x%08x", profile);
 
       if (profile != enc->profile) {
         newprofile = TRUE;
@@ -322,10 +325,12 @@ gst_rtp_mp4v_pay_depay_data (GstRtpMP4VPay * enc, guint8 * data, guint size,
       break;
     }
     case VOP_STARTCODE:
+      GST_DEBUG_OBJECT (enc, "VOP");
       /* VOP startcode, we don't have to flush the packet */
       result = FALSE;
       break;
     default:
+      GST_DEBUG_OBJECT (enc, "other startcode");
       /* all other startcodes need a flush */
       result = TRUE;
       break;

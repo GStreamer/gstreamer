@@ -22,6 +22,9 @@
 
 #include "gstrtpamrpay.h"
 
+GST_DEBUG_CATEGORY (rtpamrpay_debug);
+#define GST_CAT_DEFAULT (rtpamrpay_debug)
+
 /* references:
  *
  * RFC 3267 - Real-Time Transport Protocol (RTP) Payload Format and File 
@@ -128,6 +131,10 @@ gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
 
   gstbasertppayload_class->set_caps = gst_rtp_amr_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_amr_pay_handle_buffer;
+
+  GST_DEBUG_CATEGORY_INIT (rtpamrpay_debug, "rtpamrpay", 0,
+      "AMR RTP Depayloader");
+
 }
 
 static void
@@ -156,6 +163,12 @@ gst_rtp_amr_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   return TRUE;
 }
 
+/* -1 is invalid */
+static gint frame_size[16] = {
+  12, 13, 15, 17, 19, 20, 26, 31,
+  5, -1, -1, -1, -1, -1, -1, 0
+};
+
 static GstFlowReturn
 gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
@@ -164,30 +177,63 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstFlowReturn ret;
   guint size, payload_len;
   GstBuffer *outbuf;
-  guint8 *payload, *data;
+  guint8 *payload, *data, *payload_amr;
   GstClockTime timestamp;
+  guint packet_len, mtu;
+  gint i, num_packets, num_nonempty_packets;
+  gint amr_len;
 
   rtpamrpay = GST_RTP_AMR_PAY (basepayload);
+  mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpamrpay);
 
   size = GST_BUFFER_SIZE (buffer);
+  data = GST_BUFFER_DATA (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  /* FIXME, only one AMR frame per RTP packet for now, 
+  /* FIXME, only 
    * octet aligned, no interleaving, single channel, no CRC,
    * no robust-sorting. */
+
+  GST_DEBUG_OBJECT (basepayload, "got %d bytes", size);
+
+  /* first count number of packets and total amr frame size */
+  amr_len = num_packets = num_nonempty_packets = 0;
+  for (i = 0; i < size; i++) {
+    guint8 FT;
+    gint fr_size;
+
+    FT = (data[i] & 0x78) >> 3;
+
+    fr_size = frame_size[FT];
+    GST_DEBUG_OBJECT (basepayload, "frame size %d", fr_size);
+    /* FIXME, we don't handle this yet.. */
+    if (fr_size <= 0)
+      goto wrong_size;
+
+    amr_len += fr_size;
+    num_nonempty_packets++;
+    num_packets++;
+    i += fr_size;
+  }
+  if (amr_len > size)
+    goto incomplete_frame;
 
   /* we need one extra byte for the CMR, the ToC is in the input
    * data */
   payload_len = size + 1;
 
+  /* get packet len to check against MTU */
+  packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
+  if (packet_len > mtu)
+    goto too_big;
+
+  /* now alloc output buffer */
   outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
-  /* FIXME, assert for now */
-  g_assert (GST_BUFFER_SIZE (outbuf) < GST_BASE_RTP_PAYLOAD_MTU (rtpamrpay));
 
   /* copy timestamp */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-  /* get payload */
+  /* get payload, this is now writable */
   payload = gst_rtp_buffer_get_payload (outbuf);
 
   /*   0 1 2 3 4 5 6 7 
@@ -197,24 +243,70 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
    */
   payload[0] = 0xF0;            /* CMR, no specific mode requested */
 
-  data = GST_BUFFER_DATA (buffer);
+  /* this is where we copy the AMR data, after num_packets FTs and the
+   * CMR. */
+  payload_amr = payload + num_packets + 1;
 
-  /* copy data in payload */
-  memcpy (&payload[1], data, size);
+  /* copy data in payload, first we copy all the FTs then all
+   * the AMR data. The last FT has to have the F flag cleared. */
+  for (i = 1; i <= num_packets; i++) {
+    guint8 FT;
+    gint fr_size;
 
-  /*   0 1 2 3 4 5 6 7
-   *  +-+-+-+-+-+-+-+-+
-   *  |F|  FT   |Q|P|P|
-   *  +-+-+-+-+-+-+-+-+
-   */
-  /* clear F flag */
-  payload[1] = payload[1] & 0x7f;
+    /*   0 1 2 3 4 5 6 7
+     *  +-+-+-+-+-+-+-+-+
+     *  |F|  FT   |Q|P|P| more FT...
+     *  +-+-+-+-+-+-+-+-+
+     */
+    FT = (*data & 0x78) >> 3;
+
+    fr_size = frame_size[FT];
+
+    if (i == num_packets)
+      /* last packet, clear F flag */
+      payload[i] = *data & 0x7f;
+    else
+      /* set F flag */
+      payload[i] = *data | 0x80;
+
+    memcpy (payload_amr, &data[1], fr_size);
+
+    /* all sizes are > 0 since we checked for that above */
+    data += fr_size + 1;
+    payload_amr += fr_size;
+  }
 
   gst_buffer_unref (buffer);
 
   ret = gst_basertppayload_push (basepayload, outbuf);
 
   return ret;
+
+  /* ERRORS */
+wrong_size:
+  {
+    GST_ELEMENT_ERROR (basepayload, STREAM, FORMAT,
+        (NULL), ("received AMR frame with size <= 0"));
+    gst_buffer_unref (buffer);
+
+    return GST_FLOW_ERROR;
+  }
+incomplete_frame:
+  {
+    GST_ELEMENT_ERROR (basepayload, STREAM, FORMAT,
+        (NULL), ("received incomplete AMR frames"));
+    gst_buffer_unref (buffer);
+
+    return GST_FLOW_ERROR;
+  }
+too_big:
+  {
+    GST_ELEMENT_ERROR (basepayload, STREAM, FORMAT,
+        (NULL), ("received too many AMR frames for MTU"));
+    gst_buffer_unref (buffer);
+
+    return GST_FLOW_ERROR;
+  }
 }
 
 gboolean
