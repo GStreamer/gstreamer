@@ -2,7 +2,7 @@
 
 	* configure.ac:
 	* docs/Makefile.am:
-	* docs/design/Makefile.am
+	* docs/design/Makefile.am:
 	  Dist design docs.
 
 2006-02-08  Jan Schmidt  <thaytan@mad.scientist.com>
