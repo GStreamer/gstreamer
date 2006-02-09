@@ -1,3 +1,20 @@
+2006-02-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/dvdread/Makefile.am:
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/dvdread/dvdreadsrc.h:
+	  Half-baked port to 0.10. Needs some love
+	  in the seeking department, but at least
+	  it does something.
+
+	* ext/dvdread/stream_labels.c:
+	* ext/dvdread/stream_labels.h:
+	  Remove these (we use ISO-639 language codes internally; applications
+	  that want to translate those into language names for display to the
+	  user should rely on the iso-codes package for that).
+
 2006-02-06  Wim Taymans  <wim@fluendo.com>
 
 	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_init),

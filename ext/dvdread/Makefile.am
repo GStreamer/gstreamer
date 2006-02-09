@@ -1,16 +1,17 @@
 
-plugin_LTLIBRARIES = libgstdvdreadsrc.la
+plugin_LTLIBRARIES = libgstdvdread.la
 
-## FIXME: the extra option, what do we do with it ?
-## AM_CFLAGS = -D_LARGEFILE64_SOURCE $(LIBDVDREADCFLAGS)
+libgstdvdread_la_SOURCES = dvdreadsrc.c
+libgstdvdread_la_CFLAGS = \
+	$(GST_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(DVDREAD_CFLAGS)
+libgstdvdread_la_LIBADD = \
+	$(GST_BASE_LIBS) \
+	$(DVDREAD_LIBS)
+libgstdvdread_la_LDFLAGS = \
+	$(GST_PLUGIN_LDFLAGS)
 
-libgstdvdreadsrc_la_SOURCES = dvdreadsrc.c stream_labels.c
-libgstdvdreadsrc_la_CFLAGS = $(GST_CFLAGS)
-libgstdvdreadsrc_la_LIBADD = $(DVDREAD_LIBS)
-libgstdvdreadsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+noinst_HEADERS = dvdreadsrc.h
 
-noinst_HEADERS = dvdreadsrc.h stream_labels.h
-
-EXTRA_DIST = \
-	README \
-	demo-play
+EXTRA_DIST = README demo-play

@@ -260,6 +260,12 @@ GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnbdec amrnbenc, [
 		      AC_SUBST(AMRNB_LIBS))
 ])
 
+dnl *** dvdread ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
+GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
+  GST_CHECK_LIBHEADER(DVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, DVDREAD_LIBS="-ldvdread")
+  AC_SUBST(DVDREAD_LIBS)
+])
 
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
@@ -392,6 +398,7 @@ gst/realmedia/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/amrnb/Makefile
+ext/dvdread/Makefile
 ext/lame/Makefile
 ext/mad/Makefile
 ext/mpeg2dec/Makefile

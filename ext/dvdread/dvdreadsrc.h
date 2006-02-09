@@ -17,48 +17,75 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __DVDREADSRC_H__
-#define __DVDREADSRC_H__
+#ifndef __GST_DVD_READ_SRC_H__
+#define __GST_DVD_READ_SRC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
+
+#include <dvdread/dvd_reader.h>
+#include <dvdread/ifo_types.h>
+#include <dvdread/ifo_read.h>
+#include <dvdread/nav_read.h>
+#include <dvdread/nav_print.h>
 
 G_BEGIN_DECLS
 
-GstElementDetails dvdreadsrc_details;
+#define GST_TYPE_DVD_READ_SRC            (gst_dvd_read_src_get_type())
+#define GST_DVD_READ_SRC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVD_READ_SRC,GstDvdReadSrc))
+#define GST_DVD_READ_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVD_READ_SRC,GstDvdReadSrcClass))
+#define GST_IS_DVD_READ_SRC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DVD_READ_SRC))
+#define GST_IS_DVD_READ_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVD_READ_SRC))
 
-#define GST_TYPE_DVDREADSRC \
-  (dvdreadsrc_get_type())
-#define DVDREADSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVDREADSRC,DVDReadSrc))
-#define DVDREADSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVDREADSRC,DVDReadSrcClass))
-#define GST_IS_DVDREADSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DVDREADSRC))
-#define GST_IS_DVDREADSRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVDREADSRC))
+typedef struct _GstDvdReadSrc GstDvdReadSrc;
+typedef struct _GstDvdReadSrcClass GstDvdReadSrcClass;
 
-/* NOTE: per-element flags start with 16 for now */
-typedef enum {
-  DVDREADSRC_OPEN               = (GST_ELEMENT_FLAG_LAST << 0),
+struct _GstDvdReadSrc {
+  GstPushSrc       pushsrc;
 
-  DVDREADSRC_FLAG_LAST          = (GST_ELEMENT_FLAG_LAST << 2)
-} DVDReadSrcFlags;
+  /* location */
+  gchar           *location;
+  gchar           *last_uri;
 
-typedef struct _DVDReadSrc DVDReadSrc;
-typedef struct _DVDReadSrcPrivate DVDReadSrcPrivate;
-typedef struct _DVDReadSrcClass DVDReadSrcClass;
+  gboolean         new_seek;
+  gboolean         change_cell;
 
-struct _DVDReadSrc {
-  GstElement element;
-  DVDReadSrcPrivate *priv;
+  gboolean         new_cell;
+
+  gint             title, chapter, angle;
+  gint             start_cell, last_cell, cur_cell;
+  gint             cur_pack;
+  gint             next_cell;
+  dvd_reader_t    *dvd;
+  ifo_handle_t    *vmg_file;
+
+  /* title stuff */
+  gint             ttn;
+  tt_srpt_t       *tt_srpt;
+  ifo_handle_t    *vts_file;
+  vts_ptt_srpt_t  *vts_ptt_srpt;
+  dvd_file_t      *dvd_title;
+  gint             num_chapters;
+
+  /* which program chain to watch (based on title and chapter number) */
+  pgc_t           *cur_pgc;
+  gint             pgc_id;
+  gint             pgn;
+
+  gboolean         seek_pend;
+  gboolean         flush_pend;
+  GstFormat        seek_pend_fmt;
+  GstEvent        *title_lang_event_pending;
+  GstEvent        *pending_clut_event;
 };
 
-struct _DVDReadSrcClass {
-  GstElementClass parent_class;
+struct _GstDvdReadSrcClass {
+  GstPushSrcClass parent_class;
 };
 
-GType dvdreadsrc_get_type (void);
+GType gst_dvd_read_src_get_type (void);
 
 G_END_DECLS
 
-#endif /* __DVDREADSRC_H__ */
+#endif /* __GST_DVD_READ_SRC_H__ */
+

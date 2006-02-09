@@ -10,11 +10,11 @@ else
  AMRNB_DIR =
 endif
 
-# if USE_DVDREAD
-# DVDREAD_DIR = dvdread
-# else
-DVDREAD_DIR =
-# endif
+if USE_DVDREAD
+ DVDREAD_DIR = dvdread
+else
+ DVDREAD_DIR =
+endif
 
 # if USE_DVDNAV
 # DVDNAV_DIR = dvdnav
@@ -49,6 +49,7 @@ endif
 SUBDIRS = \
 	$(A52DEC_DIR) \
 	$(AMRNB_DIR) \
+	$(DVDREAD_DIR) \
 	$(DVDNAV_DIR) \
 	$(LAME_DIR) \
 	$(MAD_DIR) \
@@ -58,6 +59,7 @@ SUBDIRS = \
 DIST_SUBDIRS = \
 	a52dec \
 	amrnb \
+	dvdread \
 	lame \
 	mad \
 	mpeg2dec \
