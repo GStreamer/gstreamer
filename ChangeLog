@@ -1,3 +1,10 @@
+=== release 0.10.2 ===
+
+2006-02-09  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.2, "Papa was a rolling stone"
+
 2006-02-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

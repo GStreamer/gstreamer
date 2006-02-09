@@ -1,4 +1,35 @@
-This is GStreamer Good Plug-ins 0.10.1, "Li".
+This is GStreamer Good Plug-ins 0.10.2, "Papa was a rolling stone".
+
+Changes since 0.10.1:
+      * New libcdio based CDDA reading element
+      * APE tag reader ported
+      * ID3 tag reading fixes
+      * Sun Audio Sink fixes
+      * GOOM and gconf element fixes
+      * lots of bug and leak fixes
+
+Bugs fixed since 0.10.1:
+      * 328336 : silence warings which make dvdec / dvdemux unusable
+      * 315557 : Internal event problem with MP3s from vgmix.com
+      * 323327 : [cdio] port cddasrc to 0.10
+      * 325148 : Bugs in G711 RTP packetization logic
+      * 325649 : apetag plugin needs porting to 0.10
+      * 326446 : check that all elements in -good pass queries they can't ...
+      * 326602 : id3demux is not compiling without ZLIB
+      * 326683 : build problem caused by AS_LIBTOOL_TAGS([CXX])
+      * 326736 : gconf(audio|video)sink response to key changes
+      * 326864 : [wavparse] time to bytes format conversion broken
+      * 327009 : [esdsink] won't compile with includes in non-standard prefix
+      * 327765 : [sunaudio] fixes for mixer and stuttering mp3 playback
+      * 327825 : [matroskamux]  Matroska muxer deadlock
+      * 327871 : [videobox] crash when cropping
+      * 328241 : id3demux emits NULL date for year tags
+      * 328264 : Fix build with gcc 2.95
+      * 328531 : [matroskamux] doesn't send newsegment event, critical war...
+      * 329181 : totem crash when using goom effect
+      * 329810 : Fails to read ID3 tag
+      * 330005 : Please use the autodetect sinks by default
+      * 317658 : [cdio] support for cd-text and cd-g
 
 Changes since 0.10.0:
     

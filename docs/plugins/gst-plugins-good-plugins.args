@@ -1678,3 +1678,33 @@
 <DEFAULT>0</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstCdioCddaSrc::read-speed</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Read speed</NICK>
+<BLURB>Read from device at the specified speed (-1 = default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::bytes-served</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Bytes served</NICK>
+<BLURB>Total number of bytes send to all clients.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::bytes-to-serve</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Bytes to serve</NICK>
+<BLURB>Number of bytes received to serve to clients.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+

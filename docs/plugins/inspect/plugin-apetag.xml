@@ -1,12 +1,12 @@
 <plugin>
   <name>apetag</name>
   <description>APEv1/2 tag reader</description>
-  <filename>../../gst/apedemux/.libs/libgstapetag.so</filename>
+  <filename>../../gst/apetag/.libs/libgstapetag.so</filename>
   <basename>libgstapetag.so</basename>
-  <version>0.10.1.1</version>
+  <version>0.10.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
