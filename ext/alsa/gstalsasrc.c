@@ -684,7 +684,7 @@ gst_alsasrc_delay (GstAudioSrc * asrc)
 
   snd_pcm_delay (alsa->handle, &delay);
 
-  return delay;
+  return CLAMP (delay, 0, alsa->buffer_size);
 }
 
 static void

@@ -1,3 +1,13 @@
+2006-02-09  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/audio/gstringbuffer.c
+	(gst_ring_buffer_samples_done): Cast to guint64, fixes an integer
+	overflow after 13.5 hours of recording. Kapow!
+
+	* ext/alsa/gstalsasrc.c (gst_alsasrc_delay): Clamp the delay to
+	the buffer size -- we don't care about underrun/overrun reporting
+	right now, just need to return a useful value.
+
 2006-02-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
@@ -57,6 +67,7 @@
 	  frame right at offset 0 and if so suggest mpeg/audio
 	  caps with a very low probability (#153004).
 
+>>>>>>> 1.2367
 2006-02-07  Andy Wingo  <wingo@pobox.com>
 
 	* gst/tcp/gsttcpclientsrc.c (gst_tcp_client_src_create): Switch to

@@ -980,7 +980,7 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
   /* and the number of samples not yet processed */
   delay = gst_ring_buffer_delay (buf);
 
-  samples = (segdone * buf->samples_per_seg);
+  samples = ((guint64) segdone) * buf->samples_per_seg);
   raw = samples;
 
   if (samples >= delay)
@@ -1006,8 +1006,7 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
  *
  * MT safe.
  */
-void
-gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
+void gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
 {
   g_return_if_fail (buf != NULL);
 
@@ -1036,8 +1035,7 @@ gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
  *
  * MT safe.
  */
-void
-gst_ring_buffer_clear_all (GstRingBuffer * buf)
+void gst_ring_buffer_clear_all (GstRingBuffer * buf)
 {
   gint i;
 
@@ -1055,8 +1053,7 @@ gst_ring_buffer_clear_all (GstRingBuffer * buf)
 }
 
 
-static gboolean
-wait_segment (GstRingBuffer * buf)
+static gboolean wait_segment (GstRingBuffer * buf)
 {
   /* buffer must be started now or we deadlock since nobody is reading */
   if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED) {
@@ -1120,9 +1117,8 @@ flushing:
  * MT safe.
  */
 guint
-gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
-    guint len)
-{
+    gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
+    guint len) {
   gint segdone;
   gint segsize, segtotal, bps, sps;
   guint8 *dest;
@@ -1227,9 +1223,8 @@ not_started:
  * MT safe.
  */
 guint
-gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
-    guint len)
-{
+    gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
+    guint len) {
   gint segdone;
   gint segsize, segtotal, bps, sps;
   guint8 *dest;
@@ -1333,9 +1328,8 @@ not_started:
  * MT safe.
  */
 gboolean
-gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
-    guint8 ** readptr, gint * len)
-{
+    gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
+    guint8 ** readptr, gint * len) {
   guint8 *data;
   gint segdone;
 
@@ -1378,8 +1372,7 @@ gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
  *
  * MT safe.
  */
-void
-gst_ring_buffer_advance (GstRingBuffer * buf, guint advance)
+void gst_ring_buffer_advance (GstRingBuffer * buf, guint advance)
 {
   g_return_if_fail (buf != NULL);
 
@@ -1407,8 +1400,7 @@ gst_ring_buffer_advance (GstRingBuffer * buf, guint advance)
  *
  * MT safe.
  */
-void
-gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
+void gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
 {
   guint8 *data;
 
