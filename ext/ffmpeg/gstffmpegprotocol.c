@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ *               <2006> Edward Hervey <bilboed@bilboed.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,7 +30,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
 
 #include "gstffmpeg.h"
 
@@ -39,9 +39,9 @@ struct _GstProtocolInfo
 {
   GstPad *pad;
 
-  GstByteStream *bs;
+  guint64 offset;
   gboolean eos;
-  gboolean set_streamheader;
+  gint set_streamheader;
 };
 
 static int
@@ -60,12 +60,12 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
   
   /* we don't support R/W together */
   if (flags != URL_RDONLY && flags != URL_WRONLY) {
-    g_warning ("Only read-only or write-only are supported");
+    GST_WARNING ("Only read-only or write-only are supported");
     return -EINVAL;
   }
 
   if (sscanf (&filename[12], "%p", &pad) != 1) {
-    g_warning ("could not decode pad from %s", filename);
+    GST_WARNING ("could not decode pad from %s", filename);
     return -EIO;
   }
 
@@ -75,16 +75,15 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
   switch (flags) {
     case URL_RDONLY:
       g_return_val_if_fail (GST_PAD_IS_SINK (pad), -EINVAL);
-      info->bs = gst_bytestream_new (pad);
       break;
     case URL_WRONLY:
       g_return_val_if_fail (GST_PAD_IS_SRC (pad), -EINVAL);
-      info->bs = NULL;
       break;
   }
 
   info->eos = FALSE;
   info->pad = pad;
+  info->offset = 0;
 
   h->priv_data = (void *) info;
   h->is_streamed = FALSE;
@@ -96,79 +95,20 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
 static int
 gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
 {
-  GstByteStream *bs;
-  guint32 total, request;
-  guint8 *data;
   GstProtocolInfo *info;
-  gboolean have_event, will_get_eos;
-
+  GstBuffer *inbuf = NULL;
+  int	total;
+  
+  g_return_val_if_fail (h->flags == URL_RDONLY, AVERROR_IO);
   info = (GstProtocolInfo *) h->priv_data;
 
-  g_return_val_if_fail (h->flags == URL_RDONLY, AVERROR_IO);
-
-  bs = info->bs;
-
-  if (info->eos)
-    return 0;
-
-  do {
-    have_event = FALSE, will_get_eos = FALSE;
-
-    /* prevent EOS */
-    if (gst_bytestream_tell (bs) + size >= gst_bytestream_length (bs)) {
-      request = (int) (gst_bytestream_length (bs) - gst_bytestream_tell (bs));
-      will_get_eos = TRUE;
-    } else {
-      request = size;
-    }
-
-    if (request > 0) {
-      total = gst_bytestream_peek_bytes (bs, &data, request);
-    } else {
-      total = 0;
-    }
-
-    if (total < request) {
-      GstEvent *event;
-      guint32 remaining;
-
-      gst_bytestream_get_status (bs, &remaining, &event);
-
-      if (!event) {
-        g_warning ("gstffmpegprotocol: no bytestream event");
-        return total;
-      }
-      GST_LOG ("Reading (req %d, got %d) gave event of type %d",
-          request, total, GST_EVENT_TYPE (event));
-      switch (GST_EVENT_TYPE (event)) {
-        case GST_EVENT_DISCONTINUOUS:
-          gst_event_unref (event);
-          break;
-        case GST_EVENT_EOS:
-          g_warning ("Unexpected/unwanted eos in data function");
-          info->eos = TRUE;
-          have_event = TRUE;
-          gst_event_unref (event);
-          break;
-        case GST_EVENT_FLUSH:
-          gst_event_unref (event);
-          break;
-        case GST_EVENT_INTERRUPT:
-          have_event = TRUE;
-          gst_event_unref (event);
-          break;
-        default:
-          gst_pad_event_default (info->pad, event);
-          break;
-      }
-    } else {
-      GST_DEBUG ("got data (%d bytes)", request);
-      if (will_get_eos)
-        info->eos = TRUE;
-    }
-  } while ((!info->eos && total != request) && !have_event);
-
-  memcpy (buf, data, total);
+  if (gst_pad_pull_range(info->pad, info->offset, (guint) size, &inbuf) != GST_FLOW_OK) {
+    total = 0;
+  } else {
+    total = (gint) GST_BUFFER_SIZE (inbuf);
+    memcpy (buf, GST_BUFFER_DATA (inbuf), total);
+    gst_buffer_unref (inbuf);
+  }
 
   return total;
 }
@@ -177,17 +117,14 @@ static int
 gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
 {
   gint res;
-  GstByteStream *bs;
   GstProtocolInfo *info;
 
-  GST_DEBUG ("Reading %d bytes of data", size);
-
   info = (GstProtocolInfo *) h->priv_data;
-  bs = info->bs;
-  res = gst_ffmpegdata_peek (h, buf, size);
-  if (res > 0) {
-    gst_bytestream_flush_fast (bs, res);
-  }
+
+  GST_DEBUG ("Reading %d bytes of data at position %lld", size, info->offset);
+
+  res = gst_ffmpegdata_peek(h, buf, size);
+  info->offset += res;
 
   GST_DEBUG ("Returning %d bytes", res);
 
@@ -206,37 +143,18 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
   g_return_val_if_fail (h->flags != URL_RDONLY, -EIO);
 
   /* create buffer and push data further */
-  outbuf = gst_buffer_new_and_alloc (size);
-  GST_BUFFER_SIZE (outbuf) = size;
+  if (gst_pad_alloc_buffer_and_set_caps(info->pad,
+					info->offset,
+					size, GST_PAD_CAPS (info->pad),
+					&outbuf) != GST_FLOW_OK)
+    return 0;
+  
   memcpy (GST_BUFFER_DATA (outbuf), buf, size);
 
-  if (info->set_streamheader) {
-    GstCaps *caps = gst_pad_get_caps (info->pad);
-    GstStructure *structure = gst_caps_get_structure (caps, 0);
-    GValue list = { 0 }, value = { 0 };
+  if (gst_pad_push(info->pad, outbuf) != GST_FLOW_OK)
+    return 0;
 
-    GST_DEBUG ("Using buffer (size %i) as streamheader", size);
-
-    g_value_init (&list, GST_TYPE_FIXED_LIST);
-
-    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_IN_CAPS);
-                
-    g_value_init (&value, GST_TYPE_BUFFER);
-    g_value_set_boxed (&value, outbuf);
-    gst_value_list_append_value (&list, &value);
-    g_value_unset (&value);
-
-    gst_structure_set_value (structure, "streamheader", &list);
-    g_value_unset (&list);
-
-    gst_pad_try_set_caps (info->pad, caps);
-
-    /* only set the first buffer */
-    info->set_streamheader = FALSE;
-  }
-        
-  gst_pad_push (info->pad, GST_DATA (outbuf));
-
+  info->offset += size;
   return size;
 }
 
@@ -251,103 +169,39 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
 
   info = (GstProtocolInfo *) h->priv_data;
 
-  if (h->flags == URL_RDONLY) {
-    /* get data (typefind hack) */
-    if (gst_bytestream_tell (info->bs) != gst_bytestream_length (info->bs)) {
-      gchar buf;
-      gst_ffmpegdata_peek (h, &buf, 1);
-    }
-
-    /* hack in ffmpeg to get filesize... */
-    if (whence == SEEK_END && pos == -1)
-      return gst_bytestream_length (info->bs) - 1;
-    else if (whence == SEEK_END && pos == 0)
-      return gst_bytestream_length (info->bs);
-    /* another hack to get the current position... */
-    else if (whence == SEEK_CUR && pos == 0)
-      return gst_bytestream_tell (info->bs);
-  }
-
-  switch (whence) {
-    case SEEK_SET:
-      seek_type = GST_SEEK_METHOD_SET;
-      break;
-    case SEEK_CUR:
-      seek_type = GST_SEEK_METHOD_CUR;
-      break;
-    case SEEK_END:
-      seek_type = GST_SEEK_METHOD_END;
-      break;
-    default:
-      g_assert (0);
-      break;
-  }
-
   switch (h->flags) {
-    case URL_RDONLY: {
-      GstEvent *event;
-      guint8 *data;
-      guint32 remaining;
-
-      /* handle discont */
-      gst_bytestream_seek (info->bs, pos, seek_type);
-
-      /* prevent eos */
-      if (gst_bytestream_tell (info->bs) ==
-              gst_bytestream_length (info->bs)) {
-        info->eos = TRUE;
-        break;
+  case URL_RDONLY:
+    {
+      /* sinkpad */
+      switch (whence) {
+      case SEEK_SET:
+	info->offset = (guint64) pos;
+	break;
+      case SEEK_CUR:
+	info->offset += pos;
+	break;
+      case SEEK_END:
+	GST_WARNING ("Can't handle SEEK_END yet");
+      default:
+	break;
       }
-      info->eos = FALSE;
-      while (gst_bytestream_peek_bytes (info->bs, &data, 1) == 0) {
-        gst_bytestream_get_status (info->bs, &remaining, &event);
-
-        if (!event) {
-          g_warning ("no data, no event - panic!");
-          return -1;
-        }
-
-        switch (GST_EVENT_TYPE (event)) {
-          case GST_EVENT_EOS:
-            g_warning ("unexpected/unwanted EOS event after seek");
-            info->eos = TRUE;
-            gst_event_unref (event);
-            return -1;
-          case GST_EVENT_DISCONTINUOUS:
-            gst_event_unref (event); /* we expect this */
-            break;
-          case GST_EVENT_FLUSH:
-            break;
-          case GST_EVENT_INTERRUPT:
-            gst_event_unref (event);
-            return -1;
-          default:
-            gst_pad_event_default (info->pad, event);
-            break;
-        }
-      }
-      newpos = gst_bytestream_tell (info->bs);
-      break;
+      /* FIXME : implement case for push-based behaviour */
+      newpos = info->offset;
     }
-
-    case URL_WRONLY:
-      gst_pad_push (info->pad,
-          GST_DATA (gst_event_new_seek (seek_type | GST_FORMAT_BYTES, pos)));
-      /* this is screwy because there might be queues or scheduler-queued
-       * buffers... Argh! */
-      if (whence == SEEK_SET) {
-        newpos = pos;
-      } else {
-        g_warning ("Writer reposition: implement me\n");
-        newpos = 0;
-      }
-      break;
-
-    default:
-      g_assert (0);
-      break;
+    break;
+  case URL_WRONLY:
+    {
+      /* srcpad */
+      /* FIXME : implement */
+      newpos = info->offset;
+    }
+    break;
+  default:
+    g_assert(0);
+    break;
   }
 
+  GST_DEBUG ("Now at offset %lld", info->offset);
   return newpos;
 }
 
@@ -361,20 +215,15 @@ gst_ffmpegdata_close (URLContext * h)
   GST_LOG ("Closing file");
 
   switch (h->flags) {
-    case URL_WRONLY:{
-      /* send EOS - that closes down the stream */
-      GstEvent *event = gst_event_new (GST_EVENT_EOS);
-
-      gst_pad_push (info->pad, GST_DATA (event));
-    }
-      break;
-
-    case URL_RDONLY:
-      /* unref bytestream */
-      gst_bytestream_destroy (info->bs);
-      break;
+  case URL_WRONLY:{
+    /* send EOS - that closes down the stream */
+    gst_pad_push_event (info->pad, gst_event_new_eos());
   }
-
+    break;
+  default:
+    break;
+  }
+  
   /* clean up data */
   g_free (info);
 

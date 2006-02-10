@@ -1,5 +1,25 @@
 2006-02-10  Edward Hervey  <edward@fluendo.com>
 
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_base_init),
+	(gst_ffmpegdemux_init), (gst_ffmpegdemux_stream_from_pad),
+	(gst_ffmpegdemux_handle_seek), (gst_ffmpegdemux_src_event),
+	(gst_ffmpegdemux_src_query_list), (gst_ffmpegdemux_src_query),
+	(gst_ffmpegdemux_add), (gst_ffmpegdemux_open),
+	(gst_ffmpegdemux_loop), (gst_ffmpegdemux_sink_activate),
+	(gst_ffmpegdemux_sink_activate_pull),
+	(gst_ffmpegdemux_change_state), (gst_ffmpegdemux_register):
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_open),
+	(gst_ffmpegdata_peek), (gst_ffmpegdata_read),
+	(gst_ffmpegdata_write), (gst_ffmpegdata_seek),
+	(gst_ffmpegdata_close):
+	Welcome the demuxers to 0.10 :)
+	For the time being the demuxers work only pull-based.
+	Seeking, querying works.
+
+2006-02-10  Edward Hervey  <edward@fluendo.com>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
 	added CODEC_ID_FLV1 <==> 'video/x-flash-video,flvversion=1' conversion.
 

@@ -4,10 +4,10 @@ libgstffmpeg_la_SOURCES = gstffmpeg.c 		\
 			  gstffmpegcodecmap.c	\
 			  gstffmpegdec.c 	\
 			  gstffmpegenc.c	\
-			  gstffmpegdeinterlace.c
-#			  gstffmpegdemux.c	\
+			  gstffmpegdeinterlace.c \
+			  gstffmpegdemux.c	\
+			  gstffmpegprotocol.c
 #			  gstffmpegmux.c 	\
-#			  gstffmpegprotocol.c	\
 #			  gstffmpegscale.c
 
 libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
