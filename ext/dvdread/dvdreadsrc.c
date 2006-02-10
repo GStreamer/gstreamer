@@ -86,6 +86,8 @@ static void gst_dvd_read_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstEvent *gst_dvd_read_src_make_clut_change_event (GstDvdReadSrc * src,
     const guint * clut);
+static gboolean gst_dvd_read_src_get_size (GstBaseSrc * bsrc, guint64 * size);
+static gboolean gst_dvd_read_src_seekable (GstBaseSrc * bsrc);
 
 GST_BOILERPLATE_FULL (GstDvdReadSrc, gst_dvd_read_src, GstPushSrc,
     GST_TYPE_PUSH_SRC, gst_dvd_read_src_do_init)
@@ -163,6 +165,8 @@ gst_dvd_read_src_class_init (GstDvdReadSrcClass * klass)
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dvd_read_src_stop);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_dvd_read_src_src_query);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_dvd_read_src_src_event);
+  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_dvd_read_src_get_size);
+  gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_dvd_read_src_seekable);
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_dvd_read_src_create);
 }
@@ -761,6 +765,34 @@ gst_dvd_read_src_get_property (GObject * object, guint prop_id, GValue * value,
   GST_OBJECT_UNLOCK (src);
 }
 
+static gboolean
+gst_dvd_read_src_seekable (GstBaseSrc * basesrc)
+{
+  return TRUE;
+}
+
+static gboolean
+gst_dvd_read_src_get_size (GstBaseSrc * basesrc, guint64 * size)
+{
+  GstDvdReadSrc *src = GST_DVD_READ_SRC (basesrc);
+  gboolean ret = FALSE;
+
+  if (src->dvd_title) {
+    gsize blocks;
+
+    blocks = DVDFileSize (src->dvd_title);
+    if (blocks >= 0) {
+      *size = (guint64) blocks *DVD_VIDEO_LB_LEN;
+
+      ret = TRUE;
+    } else {
+      GST_WARNING_OBJECT (src, "DVDFileSize(%p) failed!", src->dvd_title);
+    }
+  }
+
+  return ret;
+}
+
 /*** Querying and seeking ***/
 
 static gboolean
@@ -857,6 +889,7 @@ gst_dvd_read_src_do_seek (GstDvdReadSrc * src, GstEvent * event)
     src->chapter = 0;
     src->seek_pend_fmt = format;
   } else {
+    GST_OBJECT_UNLOCK (src);
     g_return_val_if_reached (FALSE);
   }
 
@@ -950,7 +983,12 @@ gst_dvd_read_src_do_duration_query (GstDvdReadSrc * src, GstQuery * query)
       break;
     }
     case GST_FORMAT_BYTES:{
-      val = DVDFileSize (src->dvd_title) * DVD_VIDEO_LB_LEN;
+      guint64 size;
+
+      if (!gst_dvd_read_src_get_size (GST_BASE_SRC (src), &size))
+        return FALSE;
+
+      val = (gint64) size;
       break;
     }
     default:{
@@ -970,6 +1008,9 @@ gst_dvd_read_src_do_duration_query (GstDvdReadSrc * src, GstQuery * query)
       break;
     }
   }
+
+  GST_LOG_OBJECT (src, "duration = %" G_GINT64_FORMAT " %s", val,
+      gst_format_get_name (format));
 
   gst_query_set_duration (query, format, val);
   return TRUE;
@@ -1005,6 +1046,9 @@ gst_dvd_read_src_do_position_query (GstDvdReadSrc * src, GstQuery * query)
       break;
     }
   }
+
+  GST_LOG_OBJECT (src, "position = %" G_GINT64_FORMAT " %s", val,
+      gst_format_get_name (format));
 
   gst_query_set_position (query, format, val);
   return TRUE;

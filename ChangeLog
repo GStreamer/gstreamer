@@ -1,3 +1,11 @@
+2006-02-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_class_init),
+	(gst_dvd_read_src_seekable), (gst_dvd_read_src_get_size),
+	(gst_dvd_read_src_do_seek), (gst_dvd_read_src_do_duration_query),
+	(gst_dvd_read_src_do_position_query):
+	  Add some more debugging and fix duration query in BYTES.
+
 2006-02-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
