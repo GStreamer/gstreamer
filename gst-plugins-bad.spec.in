@@ -104,7 +104,8 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_SNDFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
 @USE_SWFDEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstswfdec.so
 @USE_LIBMMS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmms.so
-@USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so                                                                    
+@USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
+@USE_BZ2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstbz2.so
 # @USE_DXR3_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdxr3.so
 # @USE_JACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjack.so
 # @USE_NAS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstnassink.so
