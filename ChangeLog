@@ -1,5 +1,12 @@
 2006-02-10  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_class_init),
+	(gst_rtp_mp4v_pay_setcaps):
+	Don't waste time looking for a config string if we have codec_info
+	on the incomming caps.
+
+2006-02-10  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/README:
 	Say something about case-sensitivity of caps vs mime-attributes.
 

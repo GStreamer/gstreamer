@@ -22,6 +22,9 @@
 
 #include "gstrtpmp4vpay.h"
 
+GST_DEBUG_CATEGORY (rtpmp4vpay_debug);
+#define GST_CAT_DEFAULT (rtpmp4vpay_debug)
+
 /* elementfactory information */
 static GstElementDetails gst_rtp_mp4vpay_details = {
   "RTP packet parser",
@@ -143,6 +146,10 @@ gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
 
   gstbasertppayload_class->set_caps = gst_rtp_mp4v_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_mp4v_pay_handle_buffer;
+
+  GST_DEBUG_CATEGORY_INIT (rtpmp4vpay_debug, "rtpmp4vpay", 0,
+      "MP4 video RTP Payloader");
+
 }
 
 static void
@@ -192,9 +199,40 @@ static gboolean
 gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   GstRtpMP4VPay *rtpmp4vpay;
+  GstStructure *structure;
+  const GValue *codec_info;
 
   rtpmp4vpay = GST_RTP_MP4V_PAY (payload);
 
+  structure = gst_caps_get_structure (caps, 0);
+  codec_info = gst_structure_get_value (structure, "codec_info");
+  if (codec_info) {
+    GST_LOG_OBJECT (rtpmp4vpay, "got codec_info");
+    if (G_VALUE_TYPE (codec_info) == GST_TYPE_BUFFER) {
+      GstBuffer *buffer;
+      guint8 *data;
+      guint size;
+
+      buffer = gst_value_get_buffer (codec_info);
+
+      data = GST_BUFFER_DATA (buffer);
+      size = GST_BUFFER_SIZE (buffer);
+
+      if (size < 5)
+        goto done;
+
+      rtpmp4vpay->profile = data[4];
+      GST_LOG_OBJECT (rtpmp4vpay, "configuring codec_info, profile %d",
+          data[4]);
+
+      if (rtpmp4vpay->config)
+        gst_buffer_unref (rtpmp4vpay->config);
+      rtpmp4vpay->config = gst_buffer_copy (buffer);
+      gst_rtp_mp4v_pay_new_caps (rtpmp4vpay);
+    }
+  }
+
+done:
   gst_basertppayload_set_options (payload, "video", TRUE, "MP4V-ES",
       rtpmp4vpay->rate);
 
