@@ -66,6 +66,10 @@ The following fields can or must (*) be specified in the structure:
 
  in RTSP, the SSRC is also sent.
 
+ The optional parameters in the SDP fields are case insensitive. In the caps we
+ always use the lowercase names so that the SDP -> caps mapping remains
+ possible.
+
 
 TODO
 ----

@@ -1,3 +1,22 @@
+2006-02-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/README:
+	Say something about case-sensitivity of caps vs mime-attributes.
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpamrpay.c: (gst_rtp_amr_pay_class_init),
+	(gst_rtp_amr_pay_handle_buffer):
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_get_type),
+	(gst_rtp_mp4g_pay_base_init), (gst_rtp_mp4g_pay_class_init),
+	(gst_rtp_mp4g_pay_init), (gst_rtp_mp4g_pay_finalize),
+	(gst_rtp_mp4g_pay_new_caps), (gst_rtp_mp4g_pay_setcaps),
+	(gst_rtp_mp4g_pay_flush), (gst_rtp_mp4g_pay_handle_buffer),
+	(gst_rtp_mp4g_pay_set_property), (gst_rtp_mp4g_pay_get_property),
+	(gst_rtp_mp4g_pay_plugin_init):
+	* gst/rtp/gstrtpmp4gpay.h:
+	Added beginnings of mpeg4-generic payloader (RFC 3640)
+
 2006-02-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/Makefile.am:

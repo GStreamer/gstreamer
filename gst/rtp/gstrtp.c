@@ -35,6 +35,7 @@
 #include "gstrtph263pay.h"
 #include "gstasteriskh263.h"
 #include "gstrtpmp4vpay.h"
+#include "gstrtpmp4gpay.h"
 #include "gstrtpmp4vdepay.h"
 #include "gstrtpspeexpay.h"
 #include "gstrtpspeexdepay.h"
@@ -85,6 +86,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_mp4v_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_mp4g_pay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_speex_pay_plugin_init (plugin))

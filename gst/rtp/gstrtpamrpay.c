@@ -133,7 +133,7 @@ gst_rtp_amr_pay_class_init (GstRtpAMRPayClass * klass)
   gstbasertppayload_class->handle_buffer = gst_rtp_amr_pay_handle_buffer;
 
   GST_DEBUG_CATEGORY_INIT (rtpamrpay_debug, "rtpamrpay", 0,
-      "AMR RTP Depayloader");
+      "AMR RTP Payloader");
 
 }
 
