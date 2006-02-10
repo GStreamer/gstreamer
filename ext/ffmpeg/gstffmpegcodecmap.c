@@ -320,7 +320,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_FLV1:
-      buildcaps = TRUE;
+      caps = GST_FF_VID_CAPS_NEW ("video/x-flash-video",
+				  "flvversion", G_TYPE_INT, 1, NULL);
       break;
 
     case CODEC_ID_SVQ1:

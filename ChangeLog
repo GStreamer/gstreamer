@@ -1,3 +1,8 @@
+2006-02-10  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	added CODEC_ID_FLV1 <==> 'video/x-flash-video,flvversion=1' conversion.
+
 2006-02-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
