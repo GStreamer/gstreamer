@@ -1,5 +1,10 @@
 2006-02-10  Edward Hervey  <edward@fluendo.com>
 
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	Added flv file typefind (video/x-flv).
+
+2006-02-10  Edward Hervey  <edward@fluendo.com>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
 	(gst_riff_create_video_template_caps):
 	Added FLV1 <==> 'video/x-flash-video,flvversion=1' conversion.

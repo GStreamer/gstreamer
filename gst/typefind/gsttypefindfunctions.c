@@ -2094,6 +2094,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *msdos_exts[] = { "dll", "exe", "ocx", "sys", "scr",
     "msstyles", "cpl", NULL
   };
+  static gchar *flv_exts[] = { "flv", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -2155,6 +2156,8 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_SECONDARY, rm_exts, ".RMF", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "application/x-shockwave-flash",
       GST_RANK_SECONDARY, swf_type_find, swf_exts, SWF_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-flv", GST_RANK_SECONDARY,
+      flv_exts, "FLV", 3, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "text/plain", GST_RANK_MARGINAL, utf8_type_find,
       utf8_exts, UTF8_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "text/uri-list", GST_RANK_MARGINAL, uri_type_find,
