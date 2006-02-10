@@ -67,6 +67,12 @@ data = (('Video capture via V4L',
         ('Video test, RGB format',
          'videotestsrc \n'
          '    ! video/x-raw-rgb,red_mask=0xff00 \n'
+         '    ! ffmpegcolorspace \n'
+         '    ! ximagesink'),
+        ('Software scaling',
+         'videotestsrc \n'
+         '    ! video/x-raw-rgb,height=200,width=320 \n'
+         '    ! videoscale method=2 \n'
          '    ! ximagesink'),
         ('Reencode Vorbis to mulaw, play via ALSA',
          'filesrc location=cooldance.ogg \n'

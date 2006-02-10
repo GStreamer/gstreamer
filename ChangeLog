@@ -1,3 +1,13 @@
+2006-02-10  Andy Wingo  <wingo@pobox.com>
+
+	* examples/play.py (GstPlayer.query_position) 
+	(PlayerWindow.update_scale_cb): Only return position, duration
+	from query_position -- fixes a bugaboo.
+	(main): Add some input validation.
+
+	* examples/pipeline-tester (data): Add a pipeline to test software
+	scaling.
+
 2006-02-07  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override:

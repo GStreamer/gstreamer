@@ -29,20 +29,16 @@ class GstPlayer:
     def query_position(self):
         "Returns a (position, duration) tuple"
         try:
-            ret = self.player.query_position(gst.FORMAT_TIME)
+            position, format = self.player.query_position(gst.FORMAT_TIME)
         except:
             position = gst.CLOCK_TIME_NONE
-        else:
-            position = ret[0]
 
         try:
-            ret = self.player.query_duration(gst.FORMAT_TIME)
+            duration, format = self.player.query_duration(gst.FORMAT_TIME)
         except:
             duration = gst.CLOCK_TIME_NONE
-        else:
-            duration = ret[0]
 
-        return (position, duration, ret[1])
+        return (position, duration)
 
     def seek(self, location):
         """
@@ -222,7 +218,7 @@ class PlayerWindow(gtk.Window):
                 self.update_scale_cb)
 
     def update_scale_cb(self):
-        self.p_position, self.p_duration, format = self.player.query_position()
+        self.p_position, self.p_duration = self.player.query_position()
         if self.p_position != gst.CLOCK_TIME_NONE:
             value = self.p_position * 100.0 / self.p_duration
             self.adjustment.set_value(value)
@@ -260,7 +256,19 @@ class PlayerWindow(gtk.Window):
         self.adjustment.set_value(0.0)
 
 def main(args):
+    def usage():
+        sys.stderr.write("usage: %s URI-OF-MEDIA-FILE\n" % args[0])
+        sys.exit(1)
+
     w = PlayerWindow()
+
+    if len(args) != 2:
+        usage()
+
+    if not gst.uri_is_valid(args[1]):
+        sys.stderr.write("Error: Invalid URI: %s\n" % args[1])
+        sys.exit(1)
+
     w.load_file(args[1])
     w.show_all()
 
