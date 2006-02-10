@@ -23,6 +23,7 @@
 #define __GST_BUS_H__
 
 typedef struct _GstBus GstBus;
+typedef struct _GstBusPrivate GstBusPrivate;
 typedef struct _GstBusClass GstBusClass;
 
 #include <gst/gstmessage.h>
@@ -121,7 +122,8 @@ struct _GstBus
   guint             num_signal_watchers;
 
   /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
+  GstBusPrivate    *priv;
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstBusClass
@@ -175,6 +177,9 @@ GstBusSyncReply		gst_bus_sync_signal_handler	(GstBus *bus, GstMessage *message,
 void 			gst_bus_add_signal_watch 	(GstBus * bus);
 void 			gst_bus_add_signal_watch_full 	(GstBus * bus, gint priority);
 void 			gst_bus_remove_signal_watch 	(GstBus * bus);
+
+void			gst_bus_enable_sync_message_emission (GstBus * bus);
+void			gst_bus_disable_sync_message_emission (GstBus * bus);
 
 G_END_DECLS
 

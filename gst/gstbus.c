@@ -100,6 +100,11 @@ static guint gst_bus_signals[LAST_SIGNAL] = { 0 };
 /* the context we wakeup when we posted a message on the bus */
 static GMainContext *main_context;
 
+struct _GstBusPrivate
+{
+  guint num_sync_message_emitters;
+};
+
 GType
 gst_bus_get_type (void)
 {
@@ -199,6 +204,8 @@ gst_bus_class_init (GstBusClass * klass)
       marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
 
   main_context = g_main_context_default ();
+
+  g_type_class_add_private (klass, sizeof (GstBusPrivate));
 }
 
 static void
@@ -206,6 +213,8 @@ gst_bus_init (GstBus * bus)
 {
   bus->queue = g_queue_new ();
   bus->queue_lock = g_mutex_new ();
+
+  bus->priv = G_TYPE_INSTANCE_GET_PRIVATE (bus, GST_TYPE_BUS, GstBusPrivate);
 
   GST_DEBUG_OBJECT (bus, "created");
 }
@@ -301,6 +310,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
 {
   GstBusSyncReply reply = GST_BUS_PASS;
   GstBusSyncHandler handler;
+  gboolean emit_sync_message;
   gpointer handler_data;
 
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
@@ -316,11 +326,18 @@ gst_bus_post (GstBus * bus, GstMessage * message)
 
   handler = bus->sync_handler;
   handler_data = bus->sync_handler_data;
+  emit_sync_message = bus->priv->num_sync_message_emitters > 0;
   GST_OBJECT_UNLOCK (bus);
 
   /* first call the sync handler if it is installed */
   if (handler)
     reply = handler (bus, message, handler_data);
+
+  /* emit sync-message if requested to do so via
+     gst_bus_enable_sync_message_emission. terrible but effective */
+  if (emit_sync_message && reply != GST_BUS_DROP
+      && handler != gst_bus_sync_signal_handler)
+    gst_bus_sync_signal_handler (bus, message, NULL);
 
   /* now see what we should do with the message */
   switch (reply) {
@@ -902,6 +919,71 @@ gst_bus_sync_signal_handler (GstBus * bus, GstMessage * message, gpointer data)
   g_signal_emit (bus, gst_bus_signals[SYNC_MESSAGE], detail, message);
 
   return GST_BUS_PASS;
+}
+
+/**
+ * gst_bus_enable_sync_message_emission:
+ * @bus: a #GstBus on which you want to receive the "sync-message" signal
+ *
+ * Instructs GStreamer to emit the sync-message signal after running the bus's
+ * sync handler. This function is here so that code can ensure that they can
+ * synchronously receive messages without having to affect what the bin's sync
+ * handler is. 
+ *
+ * This function may be called multiple times. To clean up, the caller is
+ * responsible for calling gst_bus_disable_sync_message_emission() as many times
+ * as this function is called.
+ *
+ * While this function looks similar to gst_bus_add_signal_watch(), it is not
+ * exactly the same -- this function enables <i>synchronous</i> emission of
+ * signals when messages arrive; gst_bus_add_signal_watch adds an idle callback
+ * to pop messages off the bus <i>asynchronously</a>. The sync-message signal
+ * comes from the thread of whatever object posted the message; the message
+ * signal is marshalled to the main thread via the main loop.
+ *
+ * MT safe.
+ */
+void
+gst_bus_enable_sync_message_emission (GstBus * bus)
+{
+  g_return_if_fail (GST_IS_BUS (bus));
+
+  GST_OBJECT_LOCK (bus);
+
+  bus->priv->num_sync_message_emitters++;
+
+  GST_OBJECT_UNLOCK (bus);
+}
+
+/**
+ * gst_bus_disable_sync_message_emission:
+ * @bus: a #GstBus on which you previously called
+ * gst_bus_enable_sync_message_emission()
+ *
+ * Instructs GStreamer to stop emitting the sync-message signal for this bus.
+ * See gst_bus_enable_sync_message_emission() for more information.
+ *
+ * In the event that multiple pieces of code have called
+ * gst_bus_enable_sync_message_emission(), the sync-message emissions will only
+ * be stopped after all calls to gst_bus_enable_sync_message_emission() were
+ * "cancelled" by calling this function. In this way the semantics are exactly
+ * the same as gst_object_ref(); that which calls enable should also call
+ * disable.
+ *
+ * MT safe.
+ */
+void
+gst_bus_disable_sync_message_emission (GstBus * bus)
+{
+  g_return_if_fail (GST_IS_BUS (bus));
+
+  g_return_if_fail (bus->num_signal_watchers == 0);
+
+  GST_OBJECT_LOCK (bus);
+
+  bus->priv->num_sync_message_emitters--;
+
+  GST_OBJECT_UNLOCK (bus);
 }
 
 /**

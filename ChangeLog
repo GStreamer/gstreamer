@@ -1,3 +1,20 @@
+2006-02-10  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstbus.c (gst_bus_class_init): Declare our private data
+	structure.
+	(gst_bus_init): Cache the location of the private data in the
+	instance structure.
+	(gst_bus_enable_sync_message_emission) 
+	(gst_bus_disable_sync_message_emission): Implement new public
+	functions.
+	(gst_bus_post): Emit the sync-message signal if the user asked for
+	it. Fixes #330684.
+
+	* gst/gstbus.h (GstBus): Use a padding pointer to cache the
+	location of the bus-private structuure.
+	(gst_bus_enable_sync_message_emission)
+	(gst_bus_disable_sync_message_emission): New public functions.
+
 2006-02-10  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/pwg/building-boiler.xml:
