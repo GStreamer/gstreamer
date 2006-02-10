@@ -280,6 +280,7 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
+		cdxaparse  \
 		speed   \
 		qtdemux \
 		tta     \
@@ -651,6 +652,7 @@ AC_CONFIG_FILES(
 Makefile
 gst-plugins-bad.spec
 gst/Makefile
+gst/cdxaparse/Makefile
 gst/speed/Makefile
 gst/qtdemux/Makefile
 gst/tta/Makefile

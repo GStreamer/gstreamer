@@ -1,3 +1,11 @@
+2006-02-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/cdxaparse/Makefile.am:
+	* gst/cdxaparse/gstcdxaparse.c:
+	* gst/cdxaparse/gstcdxaparse.h:
+	  Port cdxaparse, makes VCD playback work.
+
 2006-02-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_header),

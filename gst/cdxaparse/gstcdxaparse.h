@@ -18,57 +18,58 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_CDXAPARSE_H__
-#define __GST_CDXAPARSE_H__
+#ifndef __GST_CDXA_PARSE_H__
+#define __GST_CDXA_PARSE_H__
 
 #include <gst/gst.h>
-#include "gst/riff/riff-ids.h"
-#include "gst/riff/riff-read.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_CDXAPARSE \
-  (gst_cdxaparse_get_type())
-#define GST_CDXAPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CDXAPARSE,GstCDXAParse))
-#define GST_CDXAPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CDXAPARSE,GstCDXAParse))
-#define GST_IS_CDXAPARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CDXAPARSE))
-#define GST_IS_CDXAPARSE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDXAPARSE))
+#define GST_TYPE_CDXA_PARSE \
+  (gst_cdxa_parse_get_type())
+#define GST_CDXA_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CDXA_PARSE,GstCDXAParse))
+#define GST_CDXA_PARSE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CDXA_PARSE,GstCDXAParse))
+#define GST_IS_CDXA_PARSE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CDXA_PARSE))
+#define GST_IS_CDXA_PARSE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CDXA_PARSE))
 
 typedef enum {
-  GST_CDXAPARSE_START,
-  GST_CDXAPARSE_FMT,
-  GST_CDXAPARSE_OTHER,
-  GST_CDXAPARSE_DATA,
+  GST_CDXA_PARSE_START,
+  GST_CDXA_PARSE_FMT,
+  GST_CDXA_PARSE_OTHER,
+  GST_CDXA_PARSE_DATA,
 } GstCDXAParseState;
 
 typedef struct _GstCDXAParse GstCDXAParse;
 typedef struct _GstCDXAParseClass GstCDXAParseClass;
 
 struct _GstCDXAParse {
-  GstRiffRead parent;
+  GstElement  element;
 
   /* pads */
-  GstPad *sinkpad,*srcpad;
+  GstPad    *sinkpad;
+  GstPad    *srcpad;
 
   /* CDXA decoding state */
   GstCDXAParseState state;
 
-  guint64 dataleft, datasize, datastart;
-  
-  gboolean seek_pending;
-  guint64 seek_offset;
+  gint64     offset;    /* current byte offset in file     */
+  gint64     datasize;  /* upstream size in bytes          */
+  gint64     datastart; /* byte offset of first frame sync */
+  gint64     bytes_skipped;
+  gint64     bytes_sent;
 };
 
 struct _GstCDXAParseClass {
   GstElementClass parent_class;
 };
 
-GType           gst_cdxaparse_get_type          (void);
+GType 		gst_cdxa_parse_get_type		(void);
 
 G_END_DECLS
 
-#endif /* __GST_CDXAPARSE_H__ */
+#endif /* __GST_CDXA_PARSE_H__ */
+
