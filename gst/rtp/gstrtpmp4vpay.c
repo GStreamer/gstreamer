@@ -204,6 +204,9 @@ gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   rtpmp4vpay = GST_RTP_MP4V_PAY (payload);
 
+  gst_basertppayload_set_options (payload, "video", TRUE, "MP4V-ES",
+      rtpmp4vpay->rate);
+
   structure = gst_caps_get_structure (caps, 0);
   codec_info = gst_structure_get_value (structure, "codec_info");
   if (codec_info) {
@@ -233,9 +236,6 @@ gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   }
 
 done:
-  gst_basertppayload_set_options (payload, "video", TRUE, "MP4V-ES",
-      rtpmp4vpay->rate);
-
   return TRUE;
 }
 

@@ -1,5 +1,11 @@
 2006-02-10  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_setcaps):
+	First set options, then set caps or else the baseclass
+	will not know about the options, duh.
+
+2006-02-10  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_class_init),
 	(gst_rtp_mp4v_pay_setcaps):
 	Don't waste time looking for a config string if we have codec_info
