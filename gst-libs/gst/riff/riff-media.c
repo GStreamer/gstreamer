@@ -494,6 +494,13 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("PNG image");
       break;
 
+    case GST_MAKE_FOURCC ('F', 'L', 'V', '1'):
+      caps = gst_caps_new_simple ("video/x-flash-video",
+          "flvversion", G_TYPE_INT, 1, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Flash Video 1");
+      break;
+
     default:
       GST_WARNING ("Unknown video fourcc %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
@@ -807,6 +814,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('S', 'P', '5', '3'),
     GST_MAKE_FOURCC ('P', 'N', 'G', ' '),
     GST_MAKE_FOURCC ('C', 'Y', 'U', 'V'),
+    GST_MAKE_FOURCC ('F', 'L', 'V', '1'),
     /* FILL ME */
     0
   };
