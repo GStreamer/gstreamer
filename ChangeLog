@@ -1,5 +1,17 @@
 2006-02-10  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gst.defs (disable_sync_message_emission) 
+	(enable_sync_message_emission): Wrap new functions from GStreamer
+	CVS.
+
+	* configure.ac (GST_REQ): Require GStreamer 0.10.3.1.
+
+	* examples/play.py: A bit of refactoring. Make use of the
+	sync-message signals. Reacts to events on the bus. Keeps aspect
+	ratio. Better scrubbing, play/pause button instead of
+	play+pause+stop. Not a bad player now, although the code still
+	lacks cleanliness.
+
 	* examples/play.py (GstPlayer.query_position) 
 	(PlayerWindow.update_scale_cb): Only return position, duration
 	from query_position -- fixes a bugaboo.

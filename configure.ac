@@ -27,7 +27,7 @@ dnl required versions of other packages
 AC_SUBST(PYGTK_REQ, 2.6.3)
 AC_SUBST(GLIB_REQ,  2.6.0)
 AC_SUBST(GTK_REQ,   2.6.0)
-AC_SUBST(GST_REQ,   0.10.0.2)
+AC_SUBST(GST_REQ,   0.10.3.1)
 AC_SUBST(GSTPB_REQ, 0.10.0.2)
 
 

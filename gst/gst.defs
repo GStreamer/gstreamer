@@ -428,6 +428,19 @@
 )
 
 
+(define-method enable_sync_message_emission
+  (of-object "GstBus")
+  (c-name "gst_bus_enable_sync_message_emission")
+  (return-type "none")
+)
+
+(define-method disable_sync_message_emission
+  (of-object "GstBus")
+  (c-name "gst_bus_disable_sync_message_emission")
+  (return-type "none")
+)
+
+
 ;; From ../gstreamer/gst/gstcaps.h
 
 (define-function caps_get_type
