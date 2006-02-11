@@ -578,6 +578,7 @@ id3demux_get_upstream_size (GstID3Demux * id3demux)
     goto out;
 
   gst_query_parse_duration (query, &format, &result);
+  gst_query_unref (query);
 
   if (format != GST_FORMAT_BYTES || result == -1)
     goto out;
@@ -1089,6 +1090,9 @@ gst_id3demux_do_typefind (GstID3Demux * id3demux, GstBuffer * buffer)
         GST_BUFFER_SIZE (buffer));
     return find.caps;
   }
+
+  if (find.caps)
+    gst_caps_unref (find.caps);
 
   return NULL;
 }

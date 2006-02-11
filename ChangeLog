@@ -1,3 +1,10 @@
+2006-02-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/gstid3demux.c: (id3demux_get_upstream_size),
+	(gst_id3demux_do_typefind):
+	Fix a couple of mem leaks. (Patch by Jonathan Matthew
+	<jonathan at kaolin dot wh9 dot net>)
+
 2006-02-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_setcaps):
