@@ -1,5 +1,12 @@
 2006-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* ext/ffmpeg/gstffmpeg.c:
+	  set correct version on the plug-in - the GStreamer
+	  FFMpeg version.  I could swear I had already done this
+	  before.
+
+2006-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_class_init),
 	(gst_ffmpegenc_init), (gst_ffmpegenc_setcaps):
 	  debug and magic number fixes

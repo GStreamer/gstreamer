@@ -128,6 +128,6 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "ffmpeg",
     "All FFMPEG codecs",
     plugin_init,
-    FFMPEG_VERSION, "LGPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
+    GST_FFMPEG_VERSION, "LGPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
 
 
