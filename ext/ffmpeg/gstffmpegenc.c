@@ -35,6 +35,10 @@
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
+#define DEFAULT_VIDEO_BITRATE 300000 /* in bps */
+#define DEFAULT_VIDEO_GOP_SIZE 15
+#define DEFAULT_AUDIO_BITRATE 128000
+
 typedef struct _GstFFMpegEnc GstFFMpegEnc;
 
 struct _GstFFMpegEnc
@@ -214,11 +218,11 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
   if (klass->in_plugin->type == CODEC_TYPE_VIDEO) {
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
         g_param_spec_ulong ("bitrate", "Bit Rate",
-            "Target Video Bitrate", 0, G_MAXULONG, 300000, G_PARAM_READWRITE));
+            "Target Video Bitrate", 0, G_MAXULONG, DEFAULT_VIDEO_BITRATE, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GOP_SIZE,
         g_param_spec_int ("gop_size", "GOP Size",
             "Number of frames within one GOP",
-            0, G_MAXINT, 15, G_PARAM_READWRITE));
+            0, G_MAXINT, DEFAULT_VIDEO_GOP_SIZE, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ME_METHOD,
         g_param_spec_enum ("me_method", "ME Method",
             "Motion Estimation Method",
@@ -233,7 +237,7 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
   } else if (klass->in_plugin->type == CODEC_TYPE_AUDIO) {
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
         g_param_spec_ulong ("bitrate", "Bit Rate",
-            "Target Audio Bitrate", 0, G_MAXULONG, 128000, G_PARAM_READWRITE));
+            "Target Audio Bitrate", 0, G_MAXULONG, DEFAULT_AUDIO_BITRATE, G_PARAM_READWRITE));
   }
 
   gstelement_class->change_state = gst_ffmpegenc_change_state;
@@ -262,14 +266,14 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_video);
 
-    ffmpegenc->bitrate = 300000;
+    ffmpegenc->bitrate = DEFAULT_VIDEO_BITRATE;
     ffmpegenc->buffer_size = 512 * 1024;
-    ffmpegenc->gop_size = 15;
+    ffmpegenc->gop_size = DEFAULT_VIDEO_GOP_SIZE;
     ffmpegenc->rtp_payload_size = 0;
   } else if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_audio);
 
-    ffmpegenc->bitrate = 128000;
+    ffmpegenc->bitrate = DEFAULT_AUDIO_BITRATE;
   }
 
   gst_element_add_pad (GST_ELEMENT (ffmpegenc), ffmpegenc->sinkpad);
@@ -395,6 +399,8 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   ffmpegenc->context->bit_rate_tolerance = ffmpegenc->bitrate;
   ffmpegenc->context->gop_size = ffmpegenc->gop_size;
   ffmpegenc->context->me_method = ffmpegenc->me_method;
+  GST_DEBUG_OBJECT (ffmpegenc, "Setting avcontext with bitrate %d, gop_size %d",
+      ffmpegenc->bitrate, ffmpegenc->gop_size);
 
   /* RTP payload used for GOB production (for Asterisk) */
   if (ffmpegenc->rtp_payload_size) {
@@ -424,7 +430,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   if (gst_ffmpeg_avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
     if (ffmpegenc->context->priv_data)
       gst_ffmpeg_avcodec_close (ffmpegenc->context);
-    GST_DEBUG ("ffenc_%s: Failed to open FFMPEG codec",
+    GST_DEBUG_OBJECT (ffmpegenc, "ffenc_%s: Failed to open FFMPEG codec",
         oclass->in_plugin->name);
     return FALSE;
   }
@@ -432,7 +438,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   /* is the colourspace correct? */
   if (pix_fmt != ffmpegenc->context->pix_fmt) {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
-    GST_DEBUG ("ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
+    GST_DEBUG_OBJECT (ffmpegenc, "ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
         oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
     return FALSE;
   }
