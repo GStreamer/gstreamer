@@ -621,7 +621,6 @@ error:
 static gboolean
 gst_tag_demux_get_upstream_size (GstTagDemux * tagdemux)
 {
-  GstQuery *query;
   GstPad *peer = NULL;
   GstFormat format;
   gint64 result;
@@ -634,21 +633,13 @@ gst_tag_demux_get_upstream_size (GstTagDemux * tagdemux)
   if ((peer = gst_pad_get_peer (tagdemux->priv->sinkpad)) == NULL)
     return FALSE;
 
-  query = gst_query_new_duration (GST_FORMAT_BYTES);
-  gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
+  format = GST_FORMAT_BYTES;
+  if (gst_pad_query_duration (peer, &format, &result) &&
+      format == GST_FORMAT_BYTES && result > 0) {
+    tagdemux->priv->upstream_size = result;
+    res = TRUE;
+  }
 
-  if (!gst_pad_query (peer, query))
-    goto out;
-
-  gst_query_parse_duration (query, &format, &result);
-
-  if (format != GST_FORMAT_BYTES || result == -1)
-    goto out;
-
-  tagdemux->priv->upstream_size = result;
-  res = TRUE;
-
-out:
   gst_object_unref (peer);
   return res;
 }
@@ -1319,6 +1310,7 @@ gst_tag_demux_do_typefind (GstTagDemux * tagdemux, GstBuffer * buffer)
     return find.caps;
   }
 
+  gst_caps_replace (&find.caps, NULL);
   return NULL;
 }
 

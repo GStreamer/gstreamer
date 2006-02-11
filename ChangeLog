@@ -1,3 +1,9 @@
+2006-02-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_get_upstream_size),
+	(gst_tag_demux_do_typefind):
+	  ... and fix the very same leaks in GstTagDemux.
+
 2006-02-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/gstid3demux.c: (id3demux_get_upstream_size),
