@@ -1,3 +1,11 @@
+2006-02-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_check_xshm_calls):
+	Fix up the XShm call testing so that we catch errors, and don't
+	cause new ones by attempting to detach from a segment we failed
+	to attach to. Fixes #312439.
+
 2006-02-10  Edward Hervey  <edward@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (plugin_init):

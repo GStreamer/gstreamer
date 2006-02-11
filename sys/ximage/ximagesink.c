@@ -304,8 +304,16 @@ gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
   size_t size;
   int (*handler) (Display *, XErrorEvent *);
   gboolean result = FALSE;
+  gboolean did_attach = FALSE;
 
   g_return_val_if_fail (xcontext != NULL, FALSE);
+
+  /* Sync to ensure any older errors are already processed */
+  XSync (xcontext->disp, FALSE);
+
+  /* Set defaults so we don't free these later unnecessarily */
+  SHMInfo.shmaddr = ((void *) -1);
+  SHMInfo.shmid = -1;
 
   /* Setting an error handler to catch failure */
   error_caught = FALSE;
@@ -316,7 +324,10 @@ gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
 
   ximage = XShmCreateImage (xcontext->disp, xcontext->visual,
       xcontext->depth, ZPixmap, NULL, &SHMInfo, 1, 1);
-  if (!ximage) {
+
+  /* Might cause an error, sync to ensure it is noticed */
+  XSync (xcontext->disp, FALSE);
+  if (!ximage || error_caught) {
     GST_WARNING ("could not XShmCreateImage a 1x1 image");
     goto beach;
   }
@@ -342,27 +353,31 @@ gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
     goto beach;
   }
 
-  XSync (xcontext->disp, 0);
+  /* Sync to ensure we see any errors we caused */
+  XSync (xcontext->disp, FALSE);
 
-  /* Destroy the image */
-  if (SHMInfo.shmaddr != ((void *) -1)) {
-    XShmDetach (xcontext->disp, &SHMInfo);
-    XSync (xcontext->disp, 0);
-    shmdt (SHMInfo.shmaddr);
+  if (!error_caught) {
+    did_attach = TRUE;
+    /* store whether we succeeded in result */
+    result = TRUE;
   }
+
+beach:
+  /* Sync to ensure we swallow any errors we caused and reset error_caught */
+  XSync (xcontext->disp, FALSE);
+  error_caught = FALSE;
+  XSetErrorHandler (handler);
+
+  if (did_attach) {
+    XShmDetach (xcontext->disp, &SHMInfo);
+    XSync (xcontext->disp, FALSE);
+  }
+  if (SHMInfo.shmaddr != ((void *) -1))
+    shmdt (SHMInfo.shmaddr);
   if (SHMInfo.shmid > 0)
     shmctl (SHMInfo.shmid, IPC_RMID, 0);
   if (ximage)
     XDestroyImage (ximage);
-
-  /* store whether we succeeded in result and reset error_caught */
-  result = !error_caught;
-  error_caught = FALSE;
-
-beach:
-  XSetErrorHandler (handler);
-
-  XSync (xcontext->disp, FALSE);
   return result;
 }
 #endif /* HAVE_XSHM */

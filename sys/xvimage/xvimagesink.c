@@ -382,8 +382,16 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   gint size;
   int (*handler) (Display *, XErrorEvent *);
   gboolean result = FALSE;
+  gboolean did_attach = FALSE;
 
   g_return_val_if_fail (xcontext != NULL, FALSE);
+
+  /* Sync to ensure any older errors are already processed */
+  XSync (xcontext->disp, FALSE);
+
+  /* Set defaults so we don't free these later unnecessarily */
+  SHMInfo.shmaddr = ((void *) -1);
+  SHMInfo.shmid = -1;
 
   /* Setting an error handler to catch failure */
   error_caught = FALSE;
@@ -393,7 +401,10 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   GST_DEBUG ("XvShmCreateImage of 1x1");
   xvimage = XvShmCreateImage (xcontext->disp, xcontext->xv_port_id,
       xcontext->im_format, NULL, 1, 1, &SHMInfo);
-  if (!xvimage) {
+
+  /* Might cause an error, sync to ensure it is noticed */
+  XSync (xcontext->disp, FALSE);
+  if (!xvimage || error_caught) {
     GST_WARNING ("could not XvShmCreateImage a 1x1 image");
     goto beach;
   }
@@ -419,19 +430,28 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
     goto beach;
   }
 
-  /* store whether we succeeded in result and reset error_caught */
-  result = !error_caught;
-  error_caught = FALSE;
+  /* Sync to ensure we see any errors we caused */
+  XSync (xcontext->disp, FALSE);
+
+  if (!error_caught) {
+    did_attach = TRUE;
+    /* store whether we succeeded in result */
+    result = TRUE;
+  }
 
 beach:
+  /* Sync to ensure we swallow any errors we caused and reset error_caught */
+  XSync (xcontext->disp, FALSE);
+
+  error_caught = FALSE;
   XSetErrorHandler (handler);
 
-  XSync (xcontext->disp, FALSE);
-  if (SHMInfo.shmaddr != ((void *) -1)) {
+  if (did_attach) {
     XShmDetach (xcontext->disp, &SHMInfo);
     XSync (xcontext->disp, FALSE);
-    shmdt (SHMInfo.shmaddr);
   }
+  if (SHMInfo.shmaddr != ((void *) -1))
+    shmdt (SHMInfo.shmaddr);
   if (SHMInfo.shmid > 0)
     shmctl (SHMInfo.shmid, IPC_RMID, 0);
   if (xvimage)
