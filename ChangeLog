@@ -1,3 +1,13 @@
+2006-02-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_class_init),
+	(gst_rtp_mp4g_pay_init), (gst_rtp_mp4g_pay_parse_audio_config),
+	(gst_rtp_mp4g_pay_parse_video_config), (gst_rtp_mp4g_pay_new_caps),
+	(gst_rtp_mp4g_pay_setcaps), (gst_rtp_mp4g_pay_flush):
+	* gst/rtp/gstrtpmp4gpay.h:
+	Make more things work.
+	Handle ACC config strings.
+
 2006-02-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/rtp/gstrtpamrpay.c: (gst_rtp_amr_pay_handle_buffer):

@@ -50,7 +50,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "media = (string) \"video\", "
         "payload = (int) [ 96, 127 ], "
         "clock-rate = (int) [1, MAX ], "
-        "encoding-name = (string) \"MP4G-ES\", "
+        "encoding-name = (string) \"mpeg4-generic\", "
         /* required string params */
         "streamtype = (string) { \"4\", \"5\" }, "      /* 4 = video, 5 = audio */
         "profile-level-id = (int) [1,MAX], "
@@ -165,6 +165,7 @@ gst_rtp_mp4g_pay_init (GstRtpMP4GPay * rtpmp4gpay)
   rtpmp4gpay->adapter = gst_adapter_new ();
   rtpmp4gpay->rate = 90000;
   rtpmp4gpay->profile = 1;
+  rtpmp4gpay->mode = "";
 }
 
 static void
@@ -180,40 +181,234 @@ gst_rtp_mp4g_pay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-#if 0
+static unsigned sampling_table[16] = {
+  96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050,
+  16000, 12000, 11025, 8000, 7350, 0, 0, 0
+};
+
+static gboolean
+gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
+    GstBuffer * buffer)
+{
+  guint8 *data;
+  guint size;
+  guint8 objectType;
+  guint8 samplingIdx;
+  guint8 channelCfg;
+
+  data = GST_BUFFER_DATA (buffer);
+  size = GST_BUFFER_SIZE (buffer);
+
+  if (size < 2)
+    goto too_short;
+
+  /* only AAC LC for now */
+  objectType = (data[0] & 0xf8) >> 3;
+  if (objectType != 2)
+    goto unsupported_type;
+
+  samplingIdx = ((data[0] & 0x07) << 1) | ((data[1] & 0x80) >> 7);
+  /* only fixed values for now */
+  if (samplingIdx > 12 && samplingIdx != 15)
+    goto wrong_freq;
+
+  channelCfg = ((data[1] & 0x78) >> 3);
+  if (channelCfg > 7)
+    goto wrong_channels;
+
+  /* rtp rate depends on sampling rate of the audio */
+  if (samplingIdx == 15) {
+    if (size < 5)
+      goto too_short;
+
+    /* index of 15 means we get the rate in the next 24 bits */
+    rtpmp4gpay->rate = ((data[1] & 0x7f) << 17) |
+        ((data[2]) << 9) | ((data[3]) << 1) | ((data[4] & 0x80) >> 7);
+  } else {
+    /* else use the rate from the table */
+    rtpmp4gpay->rate = sampling_table[samplingIdx];
+  }
+  /* extra rtp params contain the number of channels */
+  rtpmp4gpay->params = channelCfg;
+  /* audio stream type */
+  rtpmp4gpay->streamtype = 5;
+  /* mode */
+  rtpmp4gpay->mode = "ACC-hbr";
+  /* profile (should be 1) */
+  rtpmp4gpay->profile = objectType - 1;
+
+  GST_DEBUG_OBJECT (rtpmp4gpay,
+      "objectType: %d, samplingIdx: %d (%d), channelCfg: %d", objectType,
+      samplingIdx, rtpmp4gpay->rate, channelCfg);
+
+  return TRUE;
+
+  /* ERROR */
+too_short:
+  {
+    GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, FORMAT,
+        (NULL), ("config string too short"));
+    return FALSE;
+  }
+unsupported_type:
+  {
+    GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, NOT_IMPLEMENTED,
+        (NULL), ("unsupported object type %d", objectType));
+    return FALSE;
+  }
+wrong_freq:
+  {
+    GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, NOT_IMPLEMENTED,
+        (NULL), ("unsupported frequency index %d", samplingIdx));
+    return FALSE;
+  }
+wrong_channels:
+  {
+    GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, NOT_IMPLEMENTED,
+        (NULL), ("unsupported number of channels %d", channelCfg));
+    return FALSE;
+  }
+}
+
+#define VOS_STARTCODE                   0x000001B0
+
+static gboolean
+gst_rtp_mp4g_pay_parse_video_config (GstRtpMP4GPay * rtpmp4gpay,
+    GstBuffer * buffer)
+{
+  guint8 *data;
+  guint size;
+  guint32 code;
+
+  data = GST_BUFFER_DATA (buffer);
+  size = GST_BUFFER_SIZE (buffer);
+
+  if (size < 5)
+    goto too_short;
+
+  code = GST_READ_UINT32_BE (data);
+  if (code == VOS_STARTCODE) {
+    /* get profile */
+    rtpmp4gpay->profile = data[4];
+  } else {
+    GST_ELEMENT_WARNING (rtpmp4gpay, STREAM, FORMAT,
+        (NULL), ("profile not found in config string"));
+    rtpmp4gpay->profile = 1;
+  }
+
+  /* fixed rate */
+  rtpmp4gpay->rate = 90000;
+  /* video stream type */
+  rtpmp4gpay->streamtype = 4;
+  /* no params for video */
+  rtpmp4gpay->params = 0;
+  /* mode */
+  rtpmp4gpay->mode = "generic";
+
+  GST_LOG_OBJECT (rtpmp4gpay, "profile %d", rtpmp4gpay->profile);
+
+  return TRUE;
+
+  /* ERROR */
+too_short:
+  {
+    GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, FORMAT,
+        (NULL), ("config string too short"));
+    return FALSE;
+  }
+}
+
 static void
 gst_rtp_mp4g_pay_new_caps (GstRtpMP4GPay * rtpmp4gpay)
 {
-  gchar *profile, *config;
+  gchar *config;
   GValue v = { 0 };
 
-  profile = g_strdup_printf ("%d", rtpmp4gpay->profile);
+#define MP4GCAPS					\
+  "streamtype", G_TYPE_INT, rtpmp4gpay->streamtype, 	\
+  "profile-level-id", G_TYPE_INT, rtpmp4gpay->profile,	\
+  "mode", G_TYPE_STRING, rtpmp4gpay->mode,		\
+  "config", G_TYPE_STRING, config,			\
+  "sizelength", G_TYPE_INT, 13,				\
+  "indexlength", G_TYPE_INT, 3,				\
+  "indexdeltalength", G_TYPE_INT, 3,			\
+  NULL
+
   g_value_init (&v, GST_TYPE_BUFFER);
   gst_value_set_buffer (&v, rtpmp4gpay->config);
   config = gst_value_serialize (&v);
 
-  gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
-      "profile-level-id", G_TYPE_STRING, profile,
-      "config", G_TYPE_STRING, config, NULL);
+  /* hmm, silly */
+  if (rtpmp4gpay->params) {
+    gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
+        "encoding-params", G_TYPE_INT, rtpmp4gpay->params, MP4GCAPS);
+  } else {
+    gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
+        MP4GCAPS);
+  }
 
   g_value_unset (&v);
-
-  g_free (profile);
   g_free (config);
+
+#undef MP4GCAPS
 }
-#endif
 
 static gboolean
 gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   GstRtpMP4GPay *rtpmp4gpay;
+  GstStructure *structure;
+  const GValue *codec_info;
+  gboolean res = TRUE;
 
   rtpmp4gpay = GST_RTP_MP4G_PAY (payload);
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  codec_info = gst_structure_get_value (structure, "codec_info");
+  if (codec_info) {
+    GST_LOG_OBJECT (rtpmp4gpay, "got codec_info");
+    if (G_VALUE_TYPE (codec_info) == GST_TYPE_BUFFER) {
+      GstBuffer *buffer;
+      const gchar *name;
+
+      buffer = gst_value_get_buffer (codec_info);
+      GST_LOG_OBJECT (rtpmp4gpay, "configuring codec_info");
+
+      name = gst_structure_get_name (structure);
+
+      /* parse buffer */
+      if (!strcmp (name, "audio/mpeg")) {
+        res = gst_rtp_mp4g_pay_parse_audio_config (rtpmp4gpay, buffer);
+      } else if (!strcmp (name, "video/mpeg")) {
+        res = gst_rtp_mp4g_pay_parse_video_config (rtpmp4gpay, buffer);
+      } else {
+        res = FALSE;
+      }
+      if (!res)
+        goto config_failed;
+
+      /* now we can configure the buffer */
+      if (rtpmp4gpay->config)
+        gst_buffer_unref (rtpmp4gpay->config);
+
+      rtpmp4gpay->config = gst_buffer_copy (buffer);
+    }
+  }
 
   gst_basertppayload_set_options (payload, "video", TRUE, "mpeg4-generic",
       rtpmp4gpay->rate);
 
-  return TRUE;
+  gst_rtp_mp4g_pay_new_caps (rtpmp4gpay);
+
+  return res;
+
+  /* ERRORS */
+config_failed:
+  {
+    GST_DEBUG_OBJECT (rtpmp4gpay, "failed to parse config");
+    return FALSE;
+  }
 }
 
 static GstFlowReturn
@@ -303,6 +498,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
 
     gst_adapter_flush (rtpmp4gpay->adapter, payload_len);
 
+    /* marker only if the packet is complete */
     gst_rtp_buffer_set_marker (outbuf, avail > payload_len);
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4gpay->first_ts;
