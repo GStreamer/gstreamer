@@ -39,6 +39,9 @@
 #define DEFAULT_VIDEO_GOP_SIZE 15
 #define DEFAULT_AUDIO_BITRATE 128000
 
+#define DEFAULT_WIDTH 352
+#define DEFAULT_HEIGHT 288
+
 typedef struct _GstFFMpegEnc GstFFMpegEnc;
 
 struct _GstFFMpegEnc
@@ -325,11 +328,11 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   }
 
   /* set some default properties */
-  ctx->width = 352;
-  ctx->height = 288;
+  ctx->width = DEFAULT_WIDTH;
+  ctx->height = DEFAULT_HEIGHT;
   ctx->time_base.num = DEFAULT_FRAME_RATE_BASE;
   ctx->time_base.den = 25 * DEFAULT_FRAME_RATE_BASE;
-  ctx->bit_rate = 350 * 1000;
+  ctx->bit_rate = DEFAULT_VIDEO_BITRATE;
   /* makes it silent */
   ctx->strict_std_compliance = -1;
 
