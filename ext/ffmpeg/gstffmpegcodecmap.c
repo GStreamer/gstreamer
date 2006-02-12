@@ -1141,7 +1141,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
 {
   GstStructure *structure;
   const GValue *fps;
-  const GValue *par;
+  const GValue *par = NULL;
 
   GST_DEBUG ("converting caps %" GST_PTR_FORMAT, caps);
   g_return_if_fail (gst_caps_get_size (caps) == 1);
@@ -1164,7 +1164,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
   }
 
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
-  if (par != NULL && GST_VALUE_HOLDS_FRACTION (par)) {
+  if (par && GST_VALUE_HOLDS_FRACTION (par)) {
 
     context->sample_aspect_ratio.num = gst_value_get_fraction_numerator (par);
     context->sample_aspect_ratio.den = gst_value_get_fraction_denominator (par);
@@ -1178,7 +1178,6 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
     return;
 
   g_return_if_fail (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps));
-  g_return_if_fail (par != NULL && GST_VALUE_HOLDS_FRACTION (par));
 
   if (strcmp (gst_structure_get_name (structure), "video/x-raw-yuv") == 0) {
     guint32 fourcc;
