@@ -36,7 +36,7 @@ GST_DEBUG_CATEGORY (rtpamrpay_debug);
 static GstElementDetails gst_rtp_amrpay_details = {
   "RTP packet parser",
   "Codec/Payloader/Network",
-  "Payode AMR audio into RTP packets (RFC 3267)",
+  "Payload-encode AMR audio into RTP packets (RFC 3267)",
   "Wim Taymans <wim@fluendo.com>"
 };
 
@@ -230,8 +230,16 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* now alloc output buffer */
   outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
 
-  /* copy timestamp */
-  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  /* copy timestamp, or fabricate one */
+  if (timestamp != GST_CLOCK_TIME_NONE)
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  else {
+    /* AMR (nb) and AMR-WB both have 20 ms per frame */
+    /* FIXME: when we do more than one AMR frame per packet, fix this */
+    gint count = basepayload->seqnum - basepayload->seqnum_base;
+
+    GST_BUFFER_TIMESTAMP (outbuf) = count * 20 * GST_MSECOND;
+  }
 
   /* get payload, this is now writable */
   payload = gst_rtp_buffer_get_payload (outbuf);
