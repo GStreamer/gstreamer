@@ -1,3 +1,15 @@
+2006-02-12  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_init),
+	(gst_ffmpegdemux_close), (gst_ffmpegdemux_handle_seek),
+	(gst_ffmpegdemux_add), (my_safe_copy), (gst_ffmpegdemux_read_tags),
+	(gst_ffmpegdemux_open), (gst_ffmpegdemux_loop):
+	Add Tag support and keyframe seeking (for those formats where ffmpeg
+	actually fills in the index).
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_peek),
+	(gst_ffmpegdata_read), (gst_ffmpegdata_seek):
+	Add support for size querying.
+
 2006-02-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpeg.c:

@@ -97,17 +97,22 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
 {
   GstProtocolInfo *info;
   GstBuffer *inbuf = NULL;
-  int	total;
+  GstFlowReturn ret;
+  int	total = 0;
   
   g_return_val_if_fail (h->flags == URL_RDONLY, AVERROR_IO);
   info = (GstProtocolInfo *) h->priv_data;
 
-  if (gst_pad_pull_range(info->pad, info->offset, (guint) size, &inbuf) != GST_FLOW_OK) {
-    total = 0;
+  ret = gst_pad_pull_range(info->pad, info->offset, (guint) size, &inbuf);
+
+  if ((ret == GST_FLOW_OK) || (ret == GST_FLOW_UNEXPECTED)) {
+    if (inbuf) {
+      total = (gint) GST_BUFFER_SIZE (inbuf);
+      memcpy (buf, GST_BUFFER_DATA (inbuf), total);
+      gst_buffer_unref (inbuf);
+    }
   } else {
-    total = (gint) GST_BUFFER_SIZE (inbuf);
-    memcpy (buf, GST_BUFFER_DATA (inbuf), total);
-    gst_buffer_unref (inbuf);
+    return -1;
   }
 
   return total;
@@ -124,7 +129,8 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
   GST_DEBUG ("Reading %d bytes of data at position %lld", size, info->offset);
 
   res = gst_ffmpegdata_peek(h, buf, size);
-  info->offset += res;
+  if (res >= 0)
+    info->offset += res;
 
   GST_DEBUG ("Returning %d bytes", res);
 
@@ -169,6 +175,8 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
 
   info = (GstProtocolInfo *) h->priv_data;
 
+  /* TODO : if we are push-based, we need to return sensible info */
+
   switch (h->flags) {
   case URL_RDONLY:
     {
@@ -181,7 +189,16 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
 	info->offset += pos;
 	break;
       case SEEK_END:
-	GST_WARNING ("Can't handle SEEK_END yet");
+	/* ffmpeg wants to know the current end position in bytes ! */
+	{
+	  GstFormat format = GST_FORMAT_BYTES;
+	  gint64 duration;
+	  
+	  if (gst_pad_is_linked (info->pad))
+	    if (gst_pad_query_duration (GST_PAD_PEER (info->pad), &format, &duration))
+	      info->offset = ((guint64) duration) + pos;
+	}
+	break;
       default:
 	break;
       }

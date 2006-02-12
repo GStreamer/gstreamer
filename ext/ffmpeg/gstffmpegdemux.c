@@ -53,6 +53,12 @@ struct _GstFFMpegDemux
   guint64 last_ts[MAX_STREAMS];
   gint videopads, audiopads;
 
+  /* Id of the first video stream */
+  gint	videostreamid;
+
+  /* time of the first media frame */
+  gint64	timeoffset;
+
   /* segment stuff */
   /* TODO : replace with GstSegment */
   gdouble	segment_rate;
@@ -60,7 +66,9 @@ struct _GstFFMpegDemux
   /* GST_FORMAT_TIME */
   gint64	segment_start;
   gint64	segment_stop;
+
   GstEvent	*seek_event;
+  gint64	seek_start;
 };
 
 typedef struct _GstFFMpegDemuxClassParams
@@ -220,11 +228,15 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
   demux->videopads = 0;
   demux->audiopads = 0;
 
+  demux->videostreamid = -1;
+  demux->timeoffset = 0;
+
   demux->segment_rate = 1.0;
   demux->segment_flags = 0;
   demux->segment_start = -1;
   demux->segment_stop = -1;
   demux->seek_event = NULL;
+  demux->seek_start = 0;
 }
 
 static void
@@ -246,6 +258,16 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
   }
   demux->videopads = 0;
   demux->audiopads = 0;
+
+  demux->videostreamid = -1;
+  demux->timeoffset = 0;
+
+  demux->segment_rate = 1.0;
+  demux->segment_flags = 0;
+  demux->segment_start = -1;
+  demux->segment_stop = -1;
+  demux->seek_event = NULL;
+  demux->seek_start = 0;
 
   /* close demuxer context from ffmpeg */
   av_close_input_file (demux->context);
@@ -284,15 +306,46 @@ gst_ffmpegdemux_handle_seek (GstFFMpegDemux * demux, gboolean update)
   keyframe = demux->segment_flags & GST_SEEK_FLAG_KEY_UNIT;
 
   if (flush) {
+    GST_LOG_OBJECT (demux, "sending flush_start");
     for (stream = 0; stream < demux->context->nb_streams; stream++) {
       gst_pad_push_event (demux->srcpads[stream],
 			  gst_event_new_flush_start());
     }
     gst_pad_push_event (demux->sinkpad, gst_event_new_flush_start ());
-  } else
+  } else {
+    GST_LOG_OBJECT (demux, "pausing task");
     gst_pad_pause_task (demux->sinkpad);
+  }
 
   GST_PAD_STREAM_LOCK (demux->sinkpad);
+
+  GST_DEBUG_OBJECT (demux, "after PAD_STREAM_LOCK");
+
+  /* by default, the seek position is the segment_start */
+  demux->seek_start = demux->segment_start;
+
+  /* if index is available, find previous keyframe */
+  if ((demux->videostreamid != -1) && (demux->context->index_built)) {
+    gint keyframeidx;
+
+    GST_LOG_OBJECT (demux, "looking for keyframe in ffmpeg for time %lld",
+		    demux->segment_start / (GST_SECOND / AV_TIME_BASE));
+    keyframeidx = av_index_search_timestamp 
+      (demux->context->streams[demux->videostreamid],
+       demux->segment_start / (GST_SECOND / AV_TIME_BASE),
+       AVSEEK_FLAG_BACKWARD);
+    GST_LOG_OBJECT (demux, "keyframeidx:%d", keyframeidx);
+    if (keyframeidx >= 0) {
+      gint64 idxtimestamp = demux->context->streams[demux->videostreamid]->index_entries[keyframeidx].timestamp;
+      GST_LOG_OBJECT (demux, "Found a keyframe at ffmpeg idx:%d timestamp :%lld",
+		      keyframeidx, idxtimestamp);
+      demux->seek_start = idxtimestamp * (GST_SECOND / AV_TIME_BASE);
+    }
+  } else {
+    GST_LOG_OBJECT (demux, "no videostream or index not built");
+  }
+  if (keyframe)
+    demux->segment_start = demux->seek_start;
 
   GST_DEBUG_OBJECT (demux, "Creating new segment (%"GST_TIME_FORMAT" / %"GST_TIME_FORMAT,
 		    GST_TIME_ARGS (demux->segment_start),
@@ -568,6 +621,7 @@ gst_ffmpegdemux_add (GstFFMpegDemux * demux, AVStream * stream)
     case CODEC_TYPE_VIDEO:
       templ = oclass->videosrctempl;
       num = demux->videopads++;
+      demux->videostreamid = stream->index;
       break;
     case CODEC_TYPE_AUDIO:
       templ = oclass->audiosrctempl;
@@ -614,6 +668,92 @@ gst_ffmpegdemux_add (GstFFMpegDemux * demux, AVStream * stream)
   return TRUE;
 }
 
+static gchar *
+my_safe_copy (gchar * input)
+{
+  gchar	* output;
+
+  if (!(g_utf8_validate (input, -1, NULL))) {
+    output = g_convert (input, strlen(input),
+			"UTF-8", "ISO-8859-1",
+			NULL, NULL, NULL);
+  } else {
+    output = g_strdup (input);
+  }
+}
+
+static GstTagList *
+gst_ffmpegdemux_read_tags (GstFFMpegDemux * demux)
+{
+  GstTagList	*tlist;
+  gboolean	hastag = FALSE;
+
+  tlist = gst_tag_list_new ();
+
+  if (*demux->context->title) {
+    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
+		      GST_TAG_TITLE,
+		      my_safe_copy (demux->context->title),
+		      NULL);
+    hastag = TRUE;
+  }
+  if (*demux->context->author) {
+    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
+		      GST_TAG_ARTIST,
+		      my_safe_copy (demux->context->author),
+		      NULL);
+    hastag = TRUE;
+  }
+  if (*demux->context->copyright) {
+    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
+		      GST_TAG_COPYRIGHT,
+		      my_safe_copy (demux->context->copyright),
+		      NULL);
+    hastag = TRUE;
+  }
+  if (*demux->context->comment) {
+    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
+		      GST_TAG_COMMENT,
+		      my_safe_copy (demux->context->comment),
+		      NULL);
+    hastag = TRUE;
+  }
+  if (*demux->context->album) {
+    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
+		      GST_TAG_ALBUM,
+		      my_safe_copy (demux->context->album),
+		      NULL);
+    hastag = TRUE;
+  }
+  if (demux->context->track) {
+    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
+		      GST_TAG_TRACK_NUMBER,
+		      demux->context->track,
+		      NULL);
+    hastag = TRUE;
+  }
+  if (*demux->context->genre) {
+    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
+		      GST_TAG_GENRE,
+		      my_safe_copy (demux->context->genre),
+		      NULL);
+    hastag = TRUE;    
+  }
+  if (demux->context->year) {
+    gst_tag_list_add (tlist, GST_TAG_MERGE_REPLACE,
+		      GST_TAG_DATE,
+		      g_date_new_dmy(1, 1, demux->context->year),
+		      NULL);
+    hastag = TRUE;
+  }
+
+  if (!hastag) {
+    gst_tag_list_free (tlist);
+    tlist = NULL;
+  }
+  return tlist;
+}
+
 static gboolean
 gst_ffmpegdemux_open (GstFFMpegDemux * demux)
 {
@@ -621,6 +761,7 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
       (GstFFMpegDemuxClass *) G_OBJECT_GET_CLASS (demux);
   gchar *location;
   gint res;
+  GstTagList *tags;
 
   /* to be sure... */
   gst_ffmpegdemux_close (demux);
@@ -646,6 +787,36 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   for (res = 0; res < demux->context->nb_streams; res++) {
     gst_ffmpegdemux_add (demux, demux->context->streams[res]);
     demux->handled[res] = TRUE;
+  }
+
+  gst_element_no_more_pads (GST_ELEMENT (demux));
+  
+
+  /* grab the tags */
+  tags = gst_ffmpegdemux_read_tags(demux);
+  if (tags) {
+    gst_element_post_message (GST_ELEMENT (demux),
+			      gst_message_new_tag (GST_OBJECT (demux),
+						   tags));
+  }
+
+  /* remember initial start position and shift start/stop */
+  demux->timeoffset = demux->context->start_time * (GST_SECOND / AV_TIME_BASE );
+  demux->segment_start = 0;
+  demux->segment_stop = demux->context->duration * (GST_SECOND / AV_TIME_BASE );
+  
+  /* Send newsegment on all src pads */
+  for (res = 0; res < demux->context->nb_streams; res++) {
+    AVStream *stream;
+    
+    GST_DEBUG_OBJECT (demux, "sending newsegment start:%"GST_TIME_FORMAT" duration:%"GST_TIME_FORMAT,
+		      GST_TIME_ARGS (demux->segment_start),
+		      GST_TIME_ARGS (demux->segment_stop));
+    
+    gst_pad_push_event(demux->srcpads[res],
+		       gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+						  demux->segment_start, demux->segment_stop,
+						  demux->segment_start));
   }
 
   demux->opened = TRUE;
@@ -694,52 +865,20 @@ gst_ffmpegdemux_loop (GstPad * pad)
       ret = GST_FLOW_ERROR;
       goto pause;
     }
-    gst_element_no_more_pads (GST_ELEMENT (demux));
-
-    /* Calculate min start and maximum end */
-    for (res = 0; res < demux->context->nb_streams; res++) {
-      gint64 start_time, duration, end;
-      AVStream *stream;
-      
-      stream = demux->context->streams[res];
-
-      start_time = gst_ffmpeg_time_ff_to_gst (stream->start_time, stream->time_base);
-      duration = gst_ffmpeg_time_ff_to_gst (stream->duration, stream->time_base);
-      if (start_time == GST_CLOCK_TIME_NONE)
-	start_time = 0;
-      if (duration == GST_CLOCK_TIME_NONE)
-	end = GST_CLOCK_TIME_NONE;
-      else
-	end = start_time + duration;
-
-      if ((start_time < demux->segment_start) || (demux->segment_start == -1))
-	demux->segment_start = start_time;
-
-      if ((end > demux->segment_stop) || (demux->segment_stop == -1))
-	demux->segment_stop = end;
-    }    
-    /* Send newsegment on all src pads */
-    for (res = 0; res < demux->context->nb_streams; res++) {
-      AVStream *stream;
-      
-      GST_DEBUG_OBJECT (demux, "sending newsegment start:%"GST_TIME_FORMAT" duration:%"GST_TIME_FORMAT,
-			GST_TIME_ARGS (demux->segment_start),
-			GST_TIME_ARGS (demux->segment_stop));
-
-      gst_pad_push_event(demux->srcpads[res],
-			 gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-						    demux->segment_start, demux->segment_stop,
-						    demux->segment_start));
-    }
   }
 
+  /* pending seek */
   if (demux->seek_event) {
-    /* pending seek */
-    GST_DEBUG_OBJECT (demux, "About to call av_seek_frame (context, -1, %lld, 0)",
-		      gst_ffmpeg_time_gst_to_ff (demux->segment_start, demux->context->streams[0]->time_base));
-    if ((av_seek_frame (demux->context, -1, 
-			gst_ffmpeg_time_gst_to_ff (demux->segment_start, demux->context->streams[0]->time_base), 0)) < 0) {
-      GST_WARNING_OBJECT (demux, "Call to av_seek_frame failed");
+    gint seekret;
+
+    GST_DEBUG_OBJECT (demux, "About to call av_seek_frame (context, %d, %lld, 0) for time %"GST_TIME_FORMAT,
+		      -1,
+		      gst_ffmpeg_time_gst_to_ff (demux->seek_start + demux->timeoffset, demux->context->streams[0]->time_base),
+		      GST_TIME_ARGS (demux->seek_start + demux->timeoffset));
+    if (((seekret = av_seek_frame 
+	  (demux->context, -1,
+	   gst_ffmpeg_time_gst_to_ff (demux->seek_start + demux->timeoffset, demux->context->streams[0]->time_base), 0))) < 0) {
+      GST_WARNING_OBJECT (demux, "Call to av_seek_frame failed : %d", seekret);
       ret = GST_FLOW_ERROR;
       goto pause;
     }
@@ -795,7 +934,7 @@ gst_ffmpegdemux_loop (GstPad * pad)
     memcpy (GST_BUFFER_DATA (outbuf), pkt.data, pkt.size);
     GST_BUFFER_TIMESTAMP (outbuf) =
       gst_ffmpeg_time_ff_to_gst (pkt.pts,
-          demux->context->streams[pkt.stream_index]->time_base);
+          demux->context->streams[pkt.stream_index]->time_base) - demux->timeoffset;
     if (GST_BUFFER_TIMESTAMP_IS_VALID (outbuf))
       demux->last_ts[stream->index] = GST_BUFFER_TIMESTAMP (outbuf);
     if (!(pkt.flags & PKT_FLAG_KEY))
@@ -814,7 +953,7 @@ gst_ffmpegdemux_loop (GstPad * pad)
     GST_WARNING_OBJECT (demux, "No pad from stream %d",
 			pkt.stream_index);
   }
-
+  
   pkt.destruct (&pkt);
 
   return;
