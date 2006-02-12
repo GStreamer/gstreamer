@@ -218,7 +218,8 @@ gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
   /* our processed samples are always increasing */
   samples = gst_ring_buffer_samples_done (sink->ringbuffer);
 
-  result = samples * GST_SECOND / sink->ringbuffer->spec.rate;
+  result = gst_util_uint64_scale_int (samples, GST_SECOND,
+      sink->ringbuffer->spec.rate);
 
   return result;
 }
@@ -320,7 +321,7 @@ parse_error:
   {
     GST_DEBUG_OBJECT (sink, "could not parse caps");
     GST_ELEMENT_ERROR (sink, STREAM, FORMAT,
-        ("cannot parse audio format."), ("cannot parse audio format."));
+        (NULL), ("cannot parse audio format."));
     return FALSE;
   }
 acquire_error:
@@ -340,6 +341,9 @@ gst_base_audio_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
   *end = GST_CLOCK_TIME_NONE;
 }
 
+/* FIXME, this waits for the drain to happen but it cannot be
+ * canceled.
+ */
 static gboolean
 gst_base_audio_sink_drain (GstBaseAudioSink * sink)
 {
@@ -364,6 +368,8 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
 
       GST_DEBUG_OBJECT (sink, "waiting for last sample to play");
       gst_clock_id_wait (id, NULL);
+
+      gst_clock_id_unref (id);
       sink->next_sample = -1;
     } else {
       GST_OBJECT_UNLOCK (sink);
@@ -414,8 +420,7 @@ gst_base_audio_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 wrong_state:
   {
     GST_DEBUG_OBJECT (sink, "ringbuffer in wrong state");
-    GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
-        ("sink not negotiated."), ("sink not negotiated."));
+    GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL), ("sink not negotiated."));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
@@ -469,7 +474,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
     /* always resync after a discont */
     sink->next_sample = -1;
   }
@@ -477,13 +482,13 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   ringbuf = sink->ringbuffer;
 
   /* can't do anything when we don't have the device */
-  if (!gst_ring_buffer_is_acquired (ringbuf))
+  if (G_UNLIKELY (!gst_ring_buffer_is_acquired (ringbuf)))
     goto wrong_state;
 
   bps = ringbuf->spec.bytes_per_sample;
 
   size = GST_BUFFER_SIZE (buf);
-  if (size % bps != 0)
+  if (G_UNLIKELY (size % bps) != 0)
     goto wrong_size;
 
   samples = size / bps;
@@ -524,15 +529,17 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* see if some clipping happened */
   diff = ctime - time;
   if (diff > 0) {
+    /* bring clipped time to samples */
     diff = gst_util_uint64_scale_int (diff, ringbuf->spec.rate, GST_SECOND);
     GST_DEBUG_OBJECT (sink, "clipping start to %" GST_TIME_FORMAT " %"
         G_GUINT64_FORMAT " samples", GST_TIME_ARGS (ctime), diff);
     samples -= diff;
-    data += samples * bps;
+    data += diff * bps;
     time = ctime;
   }
   diff = stop - cstop;
   if (diff > 0) {
+    /* bring clipped time to samples */
     diff = gst_util_uint64_scale_int (diff, ringbuf->spec.rate, GST_SECOND);
     GST_DEBUG_OBJECT (sink, "clipping stop to %" GST_TIME_FORMAT " %"
         G_GUINT64_FORMAT " samples", GST_TIME_ARGS (cstop), diff);
@@ -559,7 +566,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_TIME_ARGS (render_time), render_offset, samples);
 
   /* roundoff errors in timestamp conversion */
-  if (sink->next_sample != -1) {
+  if (G_LIKELY (sink->next_sample != -1)) {
     diff = ABS ((gint64) render_offset - (gint64) sink->next_sample);
 
     /* we tollerate a 10th of a second diff before we start resyncing. This
@@ -622,6 +629,7 @@ no_sync:
 
   return GST_FLOW_OK;
 
+  /* SPECIAL cases */
 out_of_segment:
   {
     GST_DEBUG_OBJECT (sink,
@@ -630,19 +638,18 @@ out_of_segment:
         GST_TIME_ARGS (bsink->segment.start));
     return GST_FLOW_OK;
   }
+  /* ERRORS */
 wrong_state:
   {
     GST_DEBUG_OBJECT (sink, "ringbuffer not negotiated");
-    GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
-        ("sink not negotiated."), ("sink not negotiated."));
+    GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL), ("sink not negotiated."));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 wrong_size:
   {
     GST_DEBUG_OBJECT (sink, "wrong size");
-    GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
-        ("sink received buffer of wrong size."),
-        ("sink received buffer of wrong size."));
+    GST_ELEMENT_ERROR (sink, STREAM, WRONG_TYPE,
+        (NULL), ("sink received buffer of wrong size."));
     return GST_FLOW_ERROR;
   }
 stopping:
@@ -690,7 +697,7 @@ gst_base_audio_sink_change_state (GstElement * element,
             gst_base_audio_sink_callback, sink);
       }
       if (!gst_ring_buffer_open_device (sink->ringbuffer))
-        return GST_STATE_CHANGE_FAILURE;
+        goto open_failed;
       sink->next_sample = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -699,20 +706,25 @@ gst_base_audio_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
       GstClock *clock;
+      GstClockTime time, base;
 
-      /* FIXME, only start slaving when we really start the ringbuffer */
       GST_OBJECT_LOCK (sink);
       clock = GST_ELEMENT_CLOCK (sink);
+      if (clock == NULL)
+        goto no_clock;
+
+      /* FIXME, only start slaving when we really start the ringbuffer */
       /* if we are slaved to a clock, we need to set the initial
        * calibration */
       if (clock != sink->provided_clock) {
-        GstClockTime time;
         GstClockTime rate_num, rate_denom;
 
+        base = element->base_time;
         time = gst_clock_get_internal_time (sink->provided_clock);
 
-        GST_DEBUG_OBJECT (sink, "time: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (time));
+        GST_DEBUG_OBJECT (sink,
+            "time: %" GST_TIME_FORMAT " base: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (time), GST_TIME_ARGS (base));
 
         gst_clock_set_master (sink->provided_clock, clock);
         /* FIXME, this is not yet accurate enough for smooth playback */
@@ -722,6 +734,7 @@ gst_base_audio_sink_change_state (GstElement * element,
         gst_clock_set_calibration (sink->provided_clock,
             time, element->base_time, rate_num, rate_denom);
       }
+    no_clock:
       GST_OBJECT_UNLOCK (sink);
       break;
     }
@@ -754,4 +767,10 @@ gst_base_audio_sink_change_state (GstElement * element,
   }
 
   return ret;
+
+open_failed:
+  {
+    GST_DEBUG_OBJECT (sink, "open failed");
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
