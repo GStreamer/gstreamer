@@ -1406,7 +1406,7 @@ prepare_output (GstPlayBaseBin * play_base_bin)
 {
   const GList *item;
   gboolean stream_found = FALSE, no_media = FALSE;
-  gboolean got_video = FALSE, got_subtitle = FALSE;;
+  gboolean got_video = FALSE, got_subtitle = FALSE;
   GstPlayBaseGroup *group;
 
   group = get_active_group (play_base_bin);
