@@ -2706,16 +2706,14 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
       /* for each pad we send to, we should ref the event; it's up
        * to downstream to unref again when handled. */
       GST_LOG_OBJECT (pad, "Reffing and sending event %p (%s) to %s:%s",
-          event, gst_event_type_get_name (GST_EVENT_TYPE (event)),
-          GST_DEBUG_PAD_NAME (eventpad));
+          event, GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (eventpad));
       gst_event_ref (event);
       gst_pad_push_event (eventpad, event);
     } else {
       /* we only send the event on one pad, multi-sinkpad elements
        * should implement a handler */
       GST_LOG_OBJECT (pad, "sending event %p (%s) to one sink pad %s:%s",
-          event, gst_event_type_get_name (GST_EVENT_TYPE (event)),
-          GST_DEBUG_PAD_NAME (eventpad));
+          event, GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (eventpad));
       result = gst_pad_push_event (eventpad, event);
       goto done;
     }
@@ -3665,7 +3663,6 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
     GST_OBJECT_LOCK (pad);
   }
 
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       GST_CAT_DEBUG (GST_CAT_EVENT,
@@ -3689,8 +3686,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       break;
     default:
       GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %s on pad %s:%s",
-          gst_event_type_get_name (GST_EVENT_TYPE (event)),
-          GST_DEBUG_PAD_NAME (pad));
+          GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (pad));
 
       /* make this a little faster, no point in grabbing the lock
        * if the pad is allready flushing. */

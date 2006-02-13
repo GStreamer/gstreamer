@@ -1577,6 +1577,8 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
   return TRUE;
 
 was_ok:
+  GST_CAT_DEBUG (GST_CAT_STATES, "elements %s was in locked state %d",
+      GST_ELEMENT_NAME (element), old);
   GST_OBJECT_UNLOCK (element);
 
   return FALSE;

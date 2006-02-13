@@ -135,10 +135,10 @@ sink overview
   # right away if no preroll is needed.
   queue (obj, prerollable) 
   {
-    if (prerollable)
-      queuelen++
-
     if (need_preroll)
+      if (prerollable)
+        queuelen++
+
       # first item in the queue while we need preroll
       # will complete state change and call preroll
       if (queuelen == 1)

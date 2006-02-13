@@ -317,7 +317,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
 
   GST_DEBUG_OBJECT (bus, "[msg %p] posting on bus, type %s",
-      message, gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+      message, GST_MESSAGE_TYPE_NAME (message));
 
   GST_OBJECT_LOCK (bus);
   /* check if the bus is flushing */
@@ -490,7 +490,7 @@ gst_bus_pop (GstBus * bus)
   if (message)
     GST_DEBUG_OBJECT (bus, "pop from bus, have %d messages, got message %p, %s",
         g_queue_get_length (bus->queue) + 1, message,
-        gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+        GST_MESSAGE_TYPE_NAME (message));
   else
     GST_DEBUG_OBJECT (bus, "pop from bus, no messages");
   g_mutex_unlock (bus->queue_lock);

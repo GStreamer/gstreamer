@@ -7,8 +7,6 @@ API/ABI
   after the seek you want to get the new stream time that will actually be used to
   update the slider bar.
 
-- make it possible to seek on other formats than bytes in basesrc.
-
 - GstEvent, GstMessage register like GstFormat or GstQuery.
 
 - query POSITION/DURATION return accuracy. Just a flag or accuracy percentage.

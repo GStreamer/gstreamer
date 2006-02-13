@@ -574,7 +574,7 @@ bin_replace_message (GstBin * bin, GstMessage * message, GstMessageType types)
   gboolean res = TRUE;
   const gchar *name;
 
-  name = gst_message_type_get_name (GST_MESSAGE_TYPE (message));
+  name = GST_MESSAGE_TYPE_NAME (message);
 
   if ((src = GST_MESSAGE_SRC (message))) {
     MessageFind find;
@@ -1962,7 +1962,7 @@ static void
 gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 {
   GST_DEBUG_OBJECT (bin, "[msg %p] handling child message of type %s",
-      message, gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+      message, GST_MESSAGE_TYPE_NAME (message));
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:

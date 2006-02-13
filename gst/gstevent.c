@@ -239,7 +239,7 @@ gst_event_finalize (GstEvent * event)
   g_return_if_fail (GST_IS_EVENT (event));
 
   GST_CAT_LOG (GST_CAT_EVENT, "freeing event %p type %s", event,
-      gst_event_type_get_name (GST_EVENT_TYPE (event)));
+      GST_EVENT_TYPE_NAME (event));
 
   if (GST_EVENT_SRC (event)) {
     gst_object_unref (GST_EVENT_SRC (event));

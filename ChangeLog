@@ -1,3 +1,26 @@
+2006-02-13  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	Updated TODO list, basesrc supports seeking to non-bytes
+	formats.
+
+	* docs/design/part-element-sink.txt:
+	Update docs.
+
+	* gst/gstbin.c: (bin_replace_message),
+	(gst_bin_handle_message_func):
+	* gst/gstbus.c: (gst_bus_post), (gst_bus_pop):
+	* gst/gstevent.c: (gst_event_finalize):
+	* gst/gstpad.c: (gst_pad_event_default_dispatch),
+	(gst_pad_send_event):
+	Use shiny new _TYPE_NAME macros.
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_get_range):
+	Move debug statement up.
+
+	* gst/gstelement.c: (gst_element_set_locked_state):
+	Add some debugging.
+
 2006-02-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:

@@ -1123,12 +1123,13 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
       src->num_buffers_left--;
   }
 
+  GST_DEBUG_OBJECT (src,
+      "calling create offset %" G_GUINT64_FORMAT " %" G_GINT64_FORMAT, offset,
+      src->segment.time);
+
   ret = bclass->create (src, offset, length, buf);
   if (ret != GST_FLOW_OK)
     goto done;
-
-  GST_DEBUG_OBJECT (src, "offset %" G_GUINT64_FORMAT " %" G_GINT64_FORMAT,
-      offset, src->segment.time);
 
   /* no timestamp set and we are at offset 0 */
   if (offset == 0 && src->segment.time == 0
