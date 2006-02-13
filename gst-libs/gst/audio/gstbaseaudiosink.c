@@ -698,10 +698,10 @@ gst_base_audio_sink_change_state (GstElement * element,
       }
       if (!gst_ring_buffer_open_device (sink->ringbuffer))
         goto open_failed;
-      sink->next_sample = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
+      sink->next_sample = -1;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {

@@ -1,5 +1,12 @@
 2006-02-13  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_get_time), (gst_base_audio_sink_preroll),
+	(gst_base_audio_sink_render), (gst_base_audio_sink_change_state):
+	Always sync on first sample we receive when starting.
+
+2006-02-13  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstplaybin.c: (gen_vis_element):
 	Update vis bin docs.
 	Move queue after tee so we don't queue video buffers but
