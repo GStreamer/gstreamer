@@ -793,21 +793,21 @@ gen_audio_element (GstPlayBin * play_bin)
  * normal video bin. The video bin is run in a thread to make sure it does
  * not block the audio playback pipeline.
  *
- *  +--------------------------------------------------------------------------+
- *  | visbin                                                                   |
- *  |      +------+   +----------------+                                       |
- *  |      | tee  |   |   abin ...     |                                       |
- *  |   +-sink   src-sink              |                                       |
- *  |   |  |      |   +----------------+                 +-------------------+ |
- *  |   |  |      |                                      | vthread           | |
- *  |   |  |      |   +---------+   +------+   +------+  | +--------------+  | |
- *  |   |  |      |   |audioconv|   | vis  |   |vqueue|  | | vbin ...     |  | |
- *  |   |  |     src-sink      src-sink   src-sink   src-sink             |  | |
- *  |   |  |      |   +---------+   +------+   +------+  | +--------------+  | |
- *  |   |  |      |                                      +-------------------+ |
- *  |   |  +------+                                                            |
- * sink-+                                                                      |
-   +--------------------------------------------------------------------------+
+ *  +--------------------------------------------------------------------+
+ *  | visbin                                                             |
+ *  |      +------+   +--------+   +----------------+                    |
+ *  |      | tee  |   | aqueue |   |   abin ...     |                    |
+ *  |   +-sink   src-sink     src-sink              |                    |
+ *  |   |  |      |   +--------+   +----------------+                    |
+ *  |   |  |      |                                                      |
+ *  |   |  |      |   +------+   +---------+   +------+   +-----------+  |
+ *  |   |  |      |   |vqueue|   |audioconv|   | vis  |   | vbin ...  |  |
+ *  |   |  |     src-sink   src-sink      src-sink   src-sink         |  |
+ *  |   |  |      |   +------+   +---------+   +------+   +-----------+  |
+ *  |   |  |      |                                                      |
+ *  |   |  +------+                                                      |
+ * sink-+                                                                |
+   +---------------------------------------------------------------------+
  */
 static GstElement *
 gen_vis_element (GstPlayBin * play_bin)
@@ -853,10 +853,9 @@ gen_vis_element (GstPlayBin * play_bin)
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), vis);
 
+  gst_element_link_pads (vqueue, "src", conv, "sink");
   gst_element_link_pads (conv, "src", vis, "sink");
-  gst_element_link_pads (vis, "src", vqueue, "sink");
-
-  gst_element_link_pads (vqueue, "src", vsink, "sink");
+  gst_element_link_pads (vis, "src", vsink, "sink");
 
   pad = gst_element_get_pad (aqueue, "sink");
   rpad = gst_element_get_request_pad (tee, "src%d");
@@ -865,7 +864,7 @@ gen_vis_element (GstPlayBin * play_bin)
   gst_object_unref (pad);
   gst_element_link_pads (aqueue, "src", asink, "sink");
 
-  pad = gst_element_get_pad (conv, "sink");
+  pad = gst_element_get_pad (vqueue, "sink");
   rpad = gst_element_get_request_pad (tee, "src%d");
   gst_pad_link (rpad, pad);
   gst_object_unref (rpad);
