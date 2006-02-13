@@ -31,6 +31,7 @@ static gboolean
 data_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
 {
   n_data_probes++;
+  GST_DEBUG ("data probe %d", n_data_probes);
   g_assert (GST_IS_MINI_OBJECT (obj));
   g_assert (data == SPECIAL_POINTER (0));
   return TRUE;
@@ -40,6 +41,7 @@ static gboolean
 buffer_probe (GstPad * pad, GstBuffer * obj, gpointer data)
 {
   n_buffer_probes++;
+  GST_DEBUG ("buffer probe %d", n_buffer_probes);
   g_assert (GST_IS_BUFFER (obj));
   g_assert (data == SPECIAL_POINTER (1));
   return TRUE;
@@ -49,6 +51,7 @@ static gboolean
 event_probe (GstPad * pad, GstEvent * obj, gpointer data)
 {
   n_event_probes++;
+  GST_DEBUG ("event probe %d", n_event_probes);
   g_assert (GST_IS_EVENT (obj));
   g_assert (data == SPECIAL_POINTER (2));
   return TRUE;
@@ -84,12 +87,13 @@ GST_START_TEST (test_buffer_probe_n_times)
   gst_message_unref (message);
   gst_object_unref (bus);
 
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (pipeline);
-
   g_assert (n_buffer_probes == 10);     /* one for every buffer */
   g_assert (n_event_probes == 2);       /* new segment and eos */
   g_assert (n_data_probes == 12);       /* duh */
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+
 } GST_END_TEST;
 
 static int n_data_probes_once = 0;

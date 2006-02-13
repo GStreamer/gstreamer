@@ -1,5 +1,13 @@
 2006-02-13  Wim Taymans  <wim@fluendo.com>
 
+	* tests/check/gst/gstutils.c: (data_probe), (buffer_probe),
+	(event_probe), (GST_START_TEST):
+	Only events up to the pipeline EOS are counted, there are
+	some more when going to NULL currently which we don't care
+	about for now.
+
+2006-02-13  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_send_event):
 	Correctly check flushing and emit probes. fixes #330125
 
