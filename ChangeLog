@@ -1,3 +1,18 @@
+2006-02-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* configure.ac:
+	* win32/MANIFEST:
+	* win32/common/_stdint.h:
+	  Windows does not have long long; copy the generated _stdint.h
+	* win32/common/interfaces-enumtypes.c:
+	(gst_color_balance_type_get_type), (gst_mixer_type_get_type),
+	(gst_mixer_track_flags_get_type),
+	(gst_tuner_channel_flags_get_type):
+	* win32/common/multichannel-enumtypes.c:
+	(gst_audio_channel_position_get_type):
+	  update
+
 2006-02-13  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

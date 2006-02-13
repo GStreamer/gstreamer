@@ -172,6 +172,7 @@ AC_CHECK_HEADERS([sys/socket.h],
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 
 dnl ffmpegcolorspace includes _stdint.h
+dnl also, Windows does not have long long
 AX_CREATE_STDINT_H
 
 dnl *** checks for types/defines ***
