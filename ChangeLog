@@ -1,5 +1,16 @@
 2006-02-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_class_init),
+	(gst_dvd_read_src_get_size), (gst_dvd_read_src_do_seek),
+	(gst_dvd_read_src_do_duration_query):
+	  Don't implement GstBaseSrc::get_size or GstBaseSrc::is_seekable,
+	  otherwise GstBaseSrc will think we can operate pull_range based,
+	  which we don't really, and typefinding will fail miserably.
+	  Also, make seeking work somewhat (only works with flumpegdemux
+	  at the moment, mpegstream needs fixing for that first).
+
+2006-02-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_read),
 	(gst_dvd_read_src_create), (gst_dvd_read_src_src_event):
 	  Only allocate buffer once we know exactly how much we need,
