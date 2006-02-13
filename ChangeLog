@@ -1,5 +1,11 @@
 2006-02-13  Wim Taymans  <wim@fluendo.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbus.c:
+	Add new functions to docs.
+
+2006-02-13  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-TODO.txt:
 	Updated TODO list, basesrc supports seeking to non-bytes
 	formats.
