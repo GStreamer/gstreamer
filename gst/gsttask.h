@@ -133,7 +133,15 @@ struct _GstTask {
   gboolean	   running;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    struct {
+      /* thread this task is currently running in */
+      GThread  *thread;
+    } ABI;
+    /* adding + 0 to mark ABI change to be undone later */
+    gpointer _gst_reserved[GST_PADDING + 0];
+  } abidata;
+
 };
 
 struct _GstTaskClass {

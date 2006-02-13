@@ -55,7 +55,7 @@
  * After creating a #GstTask, use gst_object_unref() to free its resources. This can
  * only be done it the task is not running anymore.
  *
- * Last reviewed on 2005-11-09 (0.9.4)
+ * Last reviewed on 2006-02-13 (0.10.4)
  */
 
 #include "gst_private.h"
@@ -122,6 +122,7 @@ static void
 gst_task_init (GstTask * task)
 {
   task->running = FALSE;
+  task->abidata.ABI.thread = NULL;
   task->lock = NULL;
   task->cond = g_cond_new ();
   task->state = GST_TASK_STOPPED;
@@ -146,8 +147,11 @@ static void
 gst_task_func (GstTask * task, GstTaskClass * tclass)
 {
   GStaticRecMutex *lock;
+  GThread *tself;
 
-  GST_DEBUG ("Entering task %p, thread %p", task, g_thread_self ());
+  tself = g_thread_self ();
+
+  GST_DEBUG ("Entering task %p, thread %p", task, tself);
 
   /* we have to grab the lock to get the mutex. We also
    * mark our state running so that nobody can mess with
@@ -156,7 +160,10 @@ gst_task_func (GstTask * task, GstTaskClass * tclass)
   if (task->state == GST_TASK_STOPPED)
     goto exit;
   lock = GST_TASK_GET_LOCK (task);
+  if (G_UNLIKELY (lock == NULL))
+    goto no_lock;
   task->running = TRUE;
+  task->abidata.ABI.thread = tself;
   GST_OBJECT_UNLOCK (task);
 
   /* locking order is TASK_LOCK, LOCK */
@@ -194,6 +201,7 @@ done:
   /* now we allow messing with the lock again */
   GST_OBJECT_LOCK (task);
   task->running = FALSE;
+  task->abidata.ABI.thread = NULL;
 exit:
   GST_TASK_SIGNAL (task);
   GST_OBJECT_UNLOCK (task);
@@ -201,6 +209,13 @@ exit:
   GST_DEBUG ("Exit task %p, thread %p", task, g_thread_self ());
 
   gst_object_unref (task);
+  return;
+
+no_lock:
+  {
+    g_warning ("starting task without a lock");
+    goto exit;
+  }
 }
 
 /**
@@ -267,6 +282,9 @@ gst_task_create (GstTaskFunction func, gpointer data)
  * Set the mutex used by the task. The mutex will be acquired before
  * calling the #GstTaskFunction.
  *
+ * This function has to be called before calling gst_task_pause() or
+ * gst_task_start().
+ *
  * MT safe.
  */
 void
@@ -283,8 +301,8 @@ gst_task_set_lock (GstTask * task, GStaticRecMutex * mutex)
   /* ERRORS */
 is_running:
   {
-    g_warning ("cannot call set_lock on a running task");
     GST_OBJECT_UNLOCK (task);
+    g_warning ("cannot call set_lock on a running task");
   }
 }
 
@@ -369,6 +387,8 @@ gst_task_start (GstTask * task)
   /* ERRORS */
 no_lock:
   {
+    GST_WARNING_OBJECT (task, "starting task without a lock");
+    GST_OBJECT_UNLOCK (task);
     g_warning ("starting task without a lock");
     return FALSE;
   }
@@ -438,6 +458,9 @@ gst_task_pause (GstTask * task)
   GST_DEBUG_OBJECT (task, "Pausing task %p", task);
 
   GST_OBJECT_LOCK (task);
+  if (G_UNLIKELY (GST_TASK_GET_LOCK (task) == NULL))
+    goto no_lock;
+
   old = task->state;
   task->state = GST_TASK_PAUSED;
   switch (old) {
@@ -461,6 +484,15 @@ gst_task_pause (GstTask * task)
   GST_OBJECT_UNLOCK (task);
 
   return TRUE;
+
+  /* ERRORS */
+no_lock:
+  {
+    GST_WARNING_OBJECT (task, "pausing task without a lock");
+    GST_OBJECT_UNLOCK (task);
+    g_warning ("pausing task without a lock");
+    return FALSE;
+  }
 }
 
 /**
@@ -482,11 +514,17 @@ gst_task_pause (GstTask * task)
 gboolean
 gst_task_join (GstTask * task)
 {
+  GThread *tself;
+
   g_return_val_if_fail (GST_IS_TASK (task), FALSE);
 
-  GST_DEBUG_OBJECT (task, "Joining task %p", task);
+  tself = g_thread_self ();
+
+  GST_DEBUG_OBJECT (task, "Joining task %p, thread %p", task, tself);
 
   GST_OBJECT_LOCK (task);
+  if (tself == task->abidata.ABI.thread)
+    goto joining_self;
   task->state = GST_TASK_STOPPED;
   GST_TASK_SIGNAL (task);
   while (task->running)
@@ -496,4 +534,13 @@ gst_task_join (GstTask * task)
   GST_DEBUG_OBJECT (task, "Joined task %p", task);
 
   return TRUE;
+
+  /* ERRORS */
+joining_self:
+  {
+    GST_WARNING_OBJECT (task, "trying to join task from its thread");
+    GST_OBJECT_UNLOCK (task);
+    g_warning ("trying to join task %p from its thread would deadlock", task);
+    return FALSE;
+  }
 }

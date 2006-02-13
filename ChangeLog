@@ -1,5 +1,19 @@
 2006-02-13  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gsttask.c: (gst_task_init), (gst_task_func),
+	(gst_task_set_lock), (gst_task_start), (gst_task_pause),
+	(gst_task_join):
+	* gst/gsttask.h:
+	Detect and warn for obvious deadlocks. fixes #320340
+	Fix error case where lock was not released.
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/gsttask.c: (task_func2), (GST_START_TEST),
+	(task_func), (gst_element_suite), (main):
+	Add task check.
+
+2006-02-13  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstbus.c:
 	Add new functions to docs.
