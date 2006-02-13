@@ -623,10 +623,11 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
   GstBuffer *buf;
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) context->opaque;
 
-  g_return_if_fail (buf != NULL);
   g_return_if_fail (picture->type == FF_BUFFER_TYPE_USER);
 
   buf = GST_BUFFER (picture->opaque);
+
+  g_return_if_fail (buf != NULL);
 
   if (buf == ffmpegdec->last_buffer)
     ffmpegdec->last_buffer = NULL;
@@ -821,11 +822,12 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           ffmpegdec->picture, &have_data, data, size);
       is_itype = (ffmpegdec->picture->pict_type == FF_I_TYPE);
       is_reference = (ffmpegdec->picture->reference == 1);
-      iskeyframe = (is_itype || is_reference)
+      iskeyframe = (is_itype || is_reference || ffmpegdec->picture->key_frame)
 	|| (oclass->in_plugin->id == CODEC_ID_INDEO3)
 	|| (oclass->in_plugin->id == CODEC_ID_MSZH)
 	|| (oclass->in_plugin->id == CODEC_ID_ZLIB)
-	|| (oclass->in_plugin->id == CODEC_ID_VP3);
+	|| (oclass->in_plugin->id == CODEC_ID_VP3)
+	|| (oclass->in_plugin->id == CODEC_ID_HUFFYUV);
       GST_LOG_OBJECT (ffmpegdec,
           "Decoded video: len=%d, have_data=%d, "
           "is_keyframe:%d, is_itype:%d, is_reference:%d",
