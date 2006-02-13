@@ -1,3 +1,12 @@
+2006-02-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_read),
+	(gst_dvd_read_src_create), (gst_dvd_read_src_src_event):
+	  Only allocate buffer once we know exactly how much we need,
+	  rather than gratuitously allocating 2MB-buffers all the time
+	  even if we usually need much less than that. Also, demote
+	  a debug message from DEBUG to LOG level.
+
 2006-02-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_class_init),

@@ -485,9 +485,10 @@ typedef enum
 
 static GstDvdReadReturn
 gst_dvd_read_src_read (GstDvdReadSrc * src, gint angle, gint new_seek,
-    GstBuffer * buf)
+    GstBuffer ** p_buf)
 {
-  guint8 *data;
+  GstBuffer *buf;
+  guint8 oneblock[DVD_VIDEO_LB_LEN];
   dsi_t dsi_pack;
   guint next_vobu, next_ilvu_start, cur_output_size;
   gint len;
@@ -542,23 +543,21 @@ again:
   }
 
   /* read NAV packet */
-  data = GST_BUFFER_DATA (buf);
-
 nav_retry:
 
-  len = DVDReadBlocks (src->dvd_title, src->cur_pack, 1, data);
+  len = DVDReadBlocks (src->dvd_title, src->cur_pack, 1, oneblock);
   if (len == 0) {
     GST_ERROR_OBJECT (src, "Read failed for block %d", src->cur_pack);
     return GST_DVD_READ_ERROR;
   }
 
-  if (!gst_dvd_read_src_is_nav_pack (data)) {
+  if (!gst_dvd_read_src_is_nav_pack (oneblock)) {
     src->cur_pack++;
     goto nav_retry;
   }
 
   /* parse the contained dsi packet */
-  navRead_DSI (&dsi_pack, &data[DSI_START_BYTE]);
+  navRead_DSI (&dsi_pack, &oneblock[DSI_START_BYTE]);
   g_assert (src->cur_pack == dsi_pack.dsi_gi.nv_pck_lbn);
 
   /* determine where we go next. These values are the ones we
@@ -583,16 +582,24 @@ nav_retry:
   g_assert (cur_output_size < 1024);
   ++src->cur_pack;
 
+  /* create the buffer (TODO: use buffer pool?) */
+  buf = gst_buffer_new_and_alloc (cur_output_size * DVD_VIDEO_LB_LEN);
+
   /* read in and output cursize packs */
-  len = DVDReadBlocks (src->dvd_title, src->cur_pack, cur_output_size, data);
+  len = DVDReadBlocks (src->dvd_title, src->cur_pack, cur_output_size,
+      GST_BUFFER_DATA (buf));
+
   if (len != cur_output_size) {
     GST_ERROR_OBJECT (src, "Read failed for %d blocks at %d",
         cur_output_size, src->cur_pack);
+    gst_buffer_unref (buf);
     return GST_DVD_READ_ERROR;
   }
 
   GST_BUFFER_SIZE (buf) = cur_output_size * DVD_VIDEO_LB_LEN;
   /* GST_BUFFER_OFFSET (buf) = priv->cur_pack * DVD_VIDEO_LB_LEN; */
+
+  *p_buf = buf;
 
   src->cur_pack = next_vobu;
 
@@ -604,7 +611,6 @@ static GstFlowReturn
 gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
 {
   GstDvdReadSrc *src = GST_DVD_READ_SRC (pushsrc);
-  GstBuffer *buf;
   GstPad *srcpad;
   gint res;
 
@@ -660,29 +666,23 @@ gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
     src->pending_clut_event = NULL;
   }
 
-  /* create the buffer (TODO: use buffer pool?) */
-  buf = gst_buffer_new_and_alloc (1024 * DVD_VIDEO_LB_LEN);
-
   /* read it in */
   do {
-    res = gst_dvd_read_src_read (src, src->angle, src->change_cell, buf);
+    res = gst_dvd_read_src_read (src, src->angle, src->change_cell, p_buf);
   } while (res == GST_DVD_READ_AGAIN);
 
   switch (res) {
     case GST_DVD_READ_ERROR:{
       GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), (NULL));
-      gst_buffer_unref (buf);
       return GST_FLOW_ERROR;
     }
     case GST_DVD_READ_EOS:{
       GST_INFO_OBJECT (src, "Reached EOS");
       gst_pad_push_event (GST_BASE_SRC (src)->srcpad, gst_event_new_eos ());
-      gst_buffer_unref (buf);
       return GST_FLOW_UNEXPECTED;
     }
     case GST_DVD_READ_OK:{
       src->change_cell = FALSE;
-      *p_buf = buf;
       return GST_FLOW_OK;
     }
     default:
@@ -909,7 +909,7 @@ gst_dvd_read_src_src_event (GstBaseSrc * basesrc, GstEvent * event)
   GstDvdReadSrc *src = GST_DVD_READ_SRC (basesrc);
   gboolean res;
 
-  GST_DEBUG_OBJECT (src, "handling %s event", GST_EVENT_TYPE_NAME (event));
+  GST_LOG_OBJECT (src, "handling %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
