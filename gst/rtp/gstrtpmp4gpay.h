@@ -49,7 +49,10 @@ struct _GstRtpMP4GPay
   GstClockTime  duration;
 
   gint          rate;
+  gint		params;
   gint          profile;
+  gint          streamtype;
+  const gchar  *mode;
   GstBuffer    *config;
 };
 
