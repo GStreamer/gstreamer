@@ -1,3 +1,17 @@
+2006-02-13  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/Makefile.am:
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
+	(gst_qtdemux_handle_sink_event), (gst_qtdemux_change_state),
+	(extract_initial_length_and_fourcc),
+	(gst_qtdemux_loop_state_header), (gst_qtdemux_loop_state_movie),
+	(gst_qtdemux_loop_header), (next_entry_size), (gst_qtdemux_chain),
+	(qtdemux_sink_activate), (qtdemux_sink_activate_pull),
+	(qtdemux_sink_activate_push), (qtdemux_parse_trak):
+	* gst/qtdemux/qtdemux.h:
+	QtDemux can now work push-based.
+	It still needs some love for seeking.
+
 2006-02-13  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* configure.ac:
