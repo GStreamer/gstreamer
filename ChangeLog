@@ -1,3 +1,12 @@
+2006-02-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstmessage.h:
+	* gst/gstquery.h:
+	  New API: add GST_MESSAGE_TYPE_NAME and GST_QUERY_TYPE_NAME
+	  macros (#330906). Also, document the already existing
+	  GST_QUERY_TYPE macro.
+
 2006-02-13  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/gst/gstutils.c: (data_probe), (buffer_probe),

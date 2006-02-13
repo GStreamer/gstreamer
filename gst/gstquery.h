@@ -99,7 +99,24 @@ struct _GstQueryTypeDefinition
 #define GST_QUERY(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_QUERY, GstQuery))
 #define GST_QUERY_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_QUERY, GstQueryClass))
 
+/**
+ * GST_QUERY_TYPE:
+ * @query: the query to query
+ *
+ * Get the #GstQueryType of the query.
+ */
 #define GST_QUERY_TYPE(query)  (((GstQuery*)(query))->type)
+
+/**
+ * GST_QUERY_TYPE_NAME:
+ * @query: the query to query
+ *
+ * Get a constant string representation of the #GstQueryType of the query.
+ *
+ * Since: 0.10.4
+ */
+#define GST_QUERY_TYPE_NAME(query) (gst_query_type_get_name(GST_QUERY_TYPE(query)))
+
 
 /**
  * GstQuery:

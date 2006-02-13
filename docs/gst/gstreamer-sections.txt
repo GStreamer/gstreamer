@@ -940,6 +940,7 @@ GstMessageType
 GST_MESSAGE_SRC
 GST_MESSAGE_TIMESTAMP
 GST_MESSAGE_TYPE
+GST_MESSAGE_TYPE_NAME
 GST_MESSAGE_TRACE_NAME
 gst_message_type_to_quark
 gst_message_type_get_name
@@ -1507,6 +1508,8 @@ gst_rank_get_type
 <TITLE>GstQuery</TITLE>
 GstQuery
 GstQueryType
+GST_QUERY_TYPE
+GST_QUERY_TYPE_NAME
 GST_QUERY_TYPE_RATE_DEN
 GstQueryTypeDefinition
 

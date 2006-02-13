@@ -124,6 +124,15 @@ typedef enum
  */
 #define GST_MESSAGE_TYPE(message)	(GST_MESSAGE(message)->type)
 /**
+ * GST_MESSAGE_TYPE_NAME:
+ * @message: a #GstMessage
+ *
+ * Get a constant string representation of the #GstMessageType of @message.
+ *
+ * Since: 0.10.4
+ */
+#define GST_MESSAGE_TYPE_NAME(message)	gst_message_type_get_name(GST_MESSAGE_TYPE(message))
+/**
  * GST_MESSAGE_TIMESTAMP:
  * @message: a #GstMessage
  *
