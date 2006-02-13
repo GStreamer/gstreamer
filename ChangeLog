@@ -1,3 +1,13 @@
+2006-02-13  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* gst/freeze/Makefile.am:
+	* gst/freeze/gstfreeze.c:
+	* gst/freeze/gstfreeze.h:
+	* gst/freeze/FAQ:
+	freeze plugin ported to 0.10 by
+	Renato Filho <renato.filho@indt.org.br>
+
 2006-02-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
