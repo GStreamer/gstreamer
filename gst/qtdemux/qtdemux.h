@@ -22,6 +22,7 @@
 #define __GST_QTDEMUX_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -61,6 +62,14 @@ struct _GstQTDemux {
 
   int state;
 
+  gboolean pullbased;
+
+  /* push based variables */
+  guint neededbytes;
+  guint todrop;
+  GstAdapter *adapter;
+
+  /* offset of the media data (i.e.: Size of header) */
   guint64 offset;
 
   GstTagList *tag_list;
