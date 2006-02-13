@@ -1491,7 +1491,7 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     src->prev_track = -1;
     GST_DEBUG_OBJECT (src, "EOS at sector %d, cur_track=%d, mode=%d",
         src->cur_sector, src->cur_track, src->mode);
-    gst_pad_push_event (GST_BASE_SRC_PAD (src), gst_event_new_eos ());
+    /* base class will send EOS for us */
     return GST_FLOW_UNEXPECTED;
   }
 
