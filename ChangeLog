@@ -1,3 +1,10 @@
+2006-02-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3v2frames.c: (parse_insert_string_field),
+	(parse_split_strings):
+	Add more validation to ensure that a char encoding conversion
+	produced a valid UTF-8 string.
+
 2006-02-13  Mark Nauwelaerts <manauw@skynet.be>
 
 	Reviewed by: Edward Hervey  <edward@fluendo.com>
