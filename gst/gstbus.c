@@ -935,9 +935,9 @@ gst_bus_sync_signal_handler (GstBus * bus, GstMessage * message, gpointer data)
  * as this function is called.
  *
  * While this function looks similar to gst_bus_add_signal_watch(), it is not
- * exactly the same -- this function enables <i>synchronous</i> emission of
+ * exactly the same -- this function enables <emphasis>synchronous</emphasis> emission of
  * signals when messages arrive; gst_bus_add_signal_watch adds an idle callback
- * to pop messages off the bus <i>asynchronously</a>. The sync-message signal
+ * to pop messages off the bus <emphasis>asynchronously</emphasis>. The sync-message signal
  * comes from the thread of whatever object posted the message; the message
  * signal is marshalled to the main thread via the main loop.
  *

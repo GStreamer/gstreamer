@@ -95,6 +95,8 @@ gst_bus_sync_signal_handler
 gst_bus_create_watch
 gst_bus_add_watch_full
 gst_bus_add_watch
+gst_bus_disable_sync_message_emission
+gst_bus_enable_sync_message_emission
 gst_bus_async_signal_func
 gst_bus_add_signal_watch
 gst_bus_add_signal_watch_full
@@ -115,6 +117,7 @@ GST_BUS_CAST
 gst_bus_get_type
 gst_bus_flags_get_type
 gst_bus_sync_reply_get_type
+GstBusPrivate
 </SECTION>
 
 
