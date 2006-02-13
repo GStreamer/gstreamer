@@ -2268,14 +2268,7 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
     if (avi->current_entry >= avi->index_size) {
       GST_LOG_OBJECT (avi, "Handled last index entry, setting EOS (%d > %d)",
           avi->current_entry, avi->index_size);
-      if (avi->segment_flags & GST_SEEK_FLAG_SEGMENT)
-        gst_element_post_message
-            (GST_ELEMENT (avi),
-            gst_message_new_segment_done (GST_OBJECT (avi), GST_FORMAT_TIME,
-                avi->segment_stop));
-      else
-        gst_avi_demux_send_event (avi, gst_event_new_eos ());
-      return GST_FLOW_WRONG_STATE;
+      goto eos;
     } else {
       GstBuffer *buf;
       gst_avi_index_entry *entry = &avi->index_entries[avi->current_entry++];
@@ -2285,6 +2278,16 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
         GST_DEBUG_OBJECT (avi,
             "Entry has non-existing stream nr %d", entry->stream_nr);
         continue;
+      }
+
+      if ((entry->flags & GST_RIFF_IF_KEYFRAME)
+          && GST_CLOCK_TIME_IS_VALID (entry->ts)
+          && GST_CLOCK_TIME_IS_VALID (avi->segment_stop)
+          && (entry->ts > avi->segment_stop)) {
+        GST_LOG_OBJECT (avi, "Found keyframe after segment,"
+            " setting EOS (%" GST_TIME_FORMAT " > %" GST_TIME_FORMAT ")",
+            GST_TIME_ARGS (entry->ts), GST_TIME_ARGS (avi->segment_stop));
+        goto eos;
       }
 
       stream = &avi->stream[entry->stream_nr];
@@ -2327,6 +2330,17 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
   } while (!processed);
 
   return GST_FLOW_OK;
+
+eos:
+  /* handle end-of-stream/segment */
+  if (avi->segment_flags & GST_SEEK_FLAG_SEGMENT)
+    gst_element_post_message
+        (GST_ELEMENT (avi),
+        gst_message_new_segment_done (GST_OBJECT (avi), GST_FORMAT_TIME,
+            avi->segment_stop));
+  else
+    gst_avi_demux_send_event (avi, gst_event_new_eos ());
+  return GST_FLOW_WRONG_STATE;
 }
 
 /*

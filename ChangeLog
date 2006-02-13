@@ -1,3 +1,10 @@
+2006-02-13  Mark Nauwelaerts <manauw@skynet.be>
+
+	Reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_process_next_entry):
+	Properly handle end of segment. Closes #330885.
+
 2006-02-13  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpmp4gpay.h:
