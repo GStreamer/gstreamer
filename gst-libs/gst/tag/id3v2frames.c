@@ -458,11 +458,26 @@ id3v2_genre_fields_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
 }
 
 static void
+parse_insert_string_field (const gchar * encoding, gchar * data, gint data_size,
+    GArray * fields)
+{
+  gchar *field;
+
+  field = g_convert (data, data_size, "UTF-8", encoding, NULL, NULL, NULL);
+  if (field && !g_utf8_validate (field, -1, NULL)) {
+    GST_DEBUG ("%s was bad UTF-8. Ignoring", field);
+    g_free (field);
+    field = NULL;
+  }
+  if (field)
+    g_array_append_val (fields, field);
+}
+
+static void
 parse_split_strings (guint8 encoding, gchar * data, gint data_size,
     GArray ** out_fields)
 {
   GArray *fields = g_array_new (FALSE, TRUE, sizeof (gchar *));
-  gchar *field;
   gint text_pos;
   gint prev = 0;
 
@@ -472,52 +487,46 @@ parse_split_strings (guint8 encoding, gchar * data, gint data_size,
     case ID3V2_ENCODING_ISO8859:
       for (text_pos = 0; text_pos < data_size; text_pos++) {
         if (data[text_pos] == 0) {
-          field = g_convert (data + prev, text_pos - prev + 1,
-              "UTF-8", "ISO-8859-1", NULL, NULL, NULL);
-          if (field)
-            g_array_append_val (fields, field);
+          parse_insert_string_field ("ISO-8859-1", data + prev,
+              text_pos - prev + 1, fields);
           prev = text_pos + 1;
         }
       }
       if (data_size - prev > 0 && data[prev] != 0x00) {
-        field = g_convert (data + prev, data_size - prev,
-            "UTF-8", "ISO-8859-1", NULL, NULL, NULL);
-        if (field)
-          g_array_append_val (fields, field);
+        parse_insert_string_field ("ISO-8859-1", data + prev,
+            data_size - prev, fields);
       }
 
       break;
     case ID3V2_ENCODING_UTF8:
       for (prev = 0, text_pos = 0; text_pos < data_size; text_pos++) {
         if (data[text_pos] == '\0') {
-          field = g_strndup (data + prev, text_pos - prev + 1);
-          if (field)
-            g_array_append_val (fields, field);
+          parse_insert_string_field ("UTF-8", data + prev,
+              text_pos - prev + 1, fields);
           prev = text_pos + 1;
         }
       }
       if (data_size - prev > 0 && data[prev] != 0x00) {
-        field = g_strndup (data + prev, data_size - prev);
-        if (field)
-          g_array_append_val (fields, field);
+        parse_insert_string_field ("UTF-8", data + prev,
+            data_size - prev, fields);
       }
       break;
     case ID3V2_ENCODING_UTF16:
     case ID3V2_ENCODING_UTF16BE:
     {
+      const gchar *in_encode;
+
+      if (encoding == ID3V2_ENCODING_UTF16)
+        in_encode = "UTF-16";
+      else
+        in_encode = "UTF-16BE";
+
       /* Find '\0\0' terminator */
       for (text_pos = 0; text_pos < data_size - 1; text_pos += 2) {
         if (data[text_pos] == '\0' && data[text_pos + 1] == '\0') {
           /* found a delimiter */
-          if (encoding == ID3V2_ENCODING_UTF16) {
-            field = g_convert (data + prev, text_pos - prev + 2,
-                "UTF-8", "UTF-16", NULL, NULL, NULL);
-          } else {
-            field = g_convert (data + prev, text_pos - prev + 2,
-                "UTF-8", "UTF-16BE", NULL, NULL, NULL);
-          }
-          if (field)
-            g_array_append_val (fields, field);
+          parse_insert_string_field (in_encode, data + prev,
+              text_pos - prev + 2, fields);
           text_pos++;           /* Advance to the 2nd NULL terminator */
           prev = text_pos + 1;
           break;
@@ -526,15 +535,8 @@ parse_split_strings (guint8 encoding, gchar * data, gint data_size,
       if (data_size - prev > 1 &&
           (data[prev] != 0x00 || data[prev + 1] != 0x00)) {
         /* There were 2 or more non-null chars left, convert those too */
-        if (encoding == ID3V2_ENCODING_UTF16) {
-          field = g_convert (data + prev, data_size - prev,
-              "UTF-8", "UTF-16", NULL, NULL, NULL);
-        } else {
-          field = g_convert (data + prev, data_size - prev,
-              "UTF-8", "UTF-16BE", NULL, NULL, NULL);
-        }
-        if (field)
-          g_array_append_val (fields, field);
+        parse_insert_string_field (in_encode, data + prev,
+            data_size - prev, fields);
       }
       break;
     }
