@@ -3632,21 +3632,39 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 {
   gboolean result = FALSE;
   GstPadEventFunction eventfunc;
-  gboolean emit_signal, serialized;
+  gboolean serialized, need_unlock = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (event != NULL, FALSE);
 
   GST_OBJECT_LOCK (pad);
-  if (GST_PAD_IS_SINK (pad) && !GST_EVENT_IS_DOWNSTREAM (event))
-    goto wrong_direction;
-  if (GST_PAD_IS_SRC (pad) && !GST_EVENT_IS_UPSTREAM (event))
-    goto wrong_direction;
+  if (GST_PAD_IS_SINK (pad)) {
+    if (G_UNLIKELY (!GST_EVENT_IS_DOWNSTREAM (event)))
+      goto wrong_direction;
+    serialized = GST_EVENT_IS_SERIALIZED (event);
+  } else if (GST_PAD_IS_SRC (pad)) {
+    if (G_UNLIKELY (!GST_EVENT_IS_UPSTREAM (event)))
+      goto wrong_direction;
+    /* events on srcpad never are serialized */
+    serialized = FALSE;
+  } else
+    goto unknown_direction;
 
-  if (GST_EVENT_SRC (event) == NULL) {
+  if (G_UNLIKELY (GST_EVENT_SRC (event) == NULL)) {
     GST_LOG_OBJECT (pad, "event had no source, setting pad as event source");
     GST_EVENT_SRC (event) = gst_object_ref (pad);
   }
+
+  /* pad signals */
+  if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {
+    GST_OBJECT_UNLOCK (pad);
+
+    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (event)))
+      goto dropping;
+
+    GST_OBJECT_LOCK (pad);
+  }
+
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -3663,38 +3681,41 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       GST_PAD_UNSET_FLUSHING (pad);
       GST_CAT_DEBUG (GST_CAT_EVENT, "cleared flush flag");
+      GST_OBJECT_UNLOCK (pad);
+      /* grab stream lock */
+      GST_PAD_STREAM_LOCK (pad);
+      need_unlock = TRUE;
+      GST_OBJECT_LOCK (pad);
       break;
     default:
       GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %s on pad %s:%s",
           gst_event_type_get_name (GST_EVENT_TYPE (event)),
           GST_DEBUG_PAD_NAME (pad));
 
-      if (GST_PAD_IS_FLUSHING (pad))
+      /* make this a little faster, no point in grabbing the lock
+       * if the pad is allready flushing. */
+      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
+
+      if (serialized) {
+        /* lock order: STREAM_LOCK, LOCK */
+        GST_OBJECT_UNLOCK (pad);
+        GST_PAD_STREAM_LOCK (pad);
+        need_unlock = TRUE;
+        GST_OBJECT_LOCK (pad);
+        if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+          goto flushing;
+      }
       break;
   }
-
-  if ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL)
+  if (G_UNLIKELY ((eventfunc = GST_PAD_EVENTFUNC (pad)) == NULL))
     goto no_function;
 
-  emit_signal = GST_PAD_DO_EVENT_SIGNALS (pad) > 0;
   GST_OBJECT_UNLOCK (pad);
 
-  /* have to check if it's a sink pad, because e.g. CUSTOM_BOTH is serialized
-     when going down but not when going up */
-  serialized = GST_EVENT_IS_SERIALIZED (event) && GST_PAD_IS_SINK (pad);
+  result = eventfunc (pad, event);
 
-  if (G_UNLIKELY (emit_signal)) {
-    if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event)))
-      goto dropping;
-  }
-
-  if (serialized)
-    GST_PAD_STREAM_LOCK (pad);
-
-  result = eventfunc (GST_PAD_CAST (pad), event);
-
-  if (serialized)
+  if (need_unlock)
     GST_PAD_STREAM_UNLOCK (pad);
 
   return result;
@@ -3704,6 +3725,13 @@ wrong_direction:
   {
     g_warning ("pad %s:%s sending %s event in wrong direction",
         GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE_NAME (event));
+    GST_OBJECT_UNLOCK (pad);
+    gst_event_unref (event);
+    return FALSE;
+  }
+unknown_direction:
+  {
+    g_warning ("pad %s:%s has invalid direction", GST_DEBUG_PAD_NAME (pad));
     GST_OBJECT_UNLOCK (pad);
     gst_event_unref (event);
     return FALSE;
@@ -3719,6 +3747,8 @@ no_function:
 flushing:
   {
     GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
     GST_CAT_INFO (GST_CAT_EVENT, "Received event on flushing pad. Discarding");
     gst_event_unref (event);
     return FALSE;

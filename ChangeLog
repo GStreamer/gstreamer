@@ -1,3 +1,8 @@
+2006-02-13  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_send_event):
+	Correctly check flushing and emit probes. fixes #330125
+
 2006-02-10  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbus.c (gst_bus_class_init): Declare our private data
