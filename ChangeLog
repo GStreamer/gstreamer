@@ -1,5 +1,11 @@
 2006-02-14  Wim Taymans  <wim@fluendo.com>
 
+	* tools/gst-launch.c: (main):
+	NO_PREROLL is not an ERROR so don't send confusing messages
+	to the user.
+
+2006-02-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstregistry.c: (gst_registry_get_default),
 	(_gst_registry_cleanup):
 	Protect default registry with lock and ref/sink it.

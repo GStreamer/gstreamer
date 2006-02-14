@@ -639,7 +639,7 @@ main (int argc, char *argv[])
         event_loop (pipeline, FALSE, GST_STATE_VOID_PENDING);
         goto end;
       case GST_STATE_CHANGE_NO_PREROLL:
-        fprintf (stderr, _("ERROR: Pipeline can't PREROLL ...\n"));
+        fprintf (stderr, _("Pipeline is live and does not need PREROLL ...\n"));
         break;
       case GST_STATE_CHANGE_ASYNC:
         fprintf (stderr, _("Pipeline is PREROLLING ...\n"));
