@@ -345,6 +345,8 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
  * Similar to gst_buffer_is_writable, but this only ensures that the
  * refcount of the buffer is 1, indicating that the caller is the sole
  * owner and can change the buffer metadata, such as caps and timestamps.
+ *
+ * Returns: TRUE if the metadata is writable.
  */
 gboolean
 gst_buffer_is_metadata_writable (GstBuffer * buf)
@@ -360,6 +362,10 @@ gst_buffer_is_metadata_writable (GstBuffer * buf)
  * data array is writable. Instead, this just ensures that the returned buffer
  * is solely owned by the caller, by creating a subbuffer of the original
  * buffer if necessary.
+ * 
+ * After calling this function, @buf should not be referenced anymore.
+ *
+ * Returns: A new #GstBuffer with writable metadata.
  */
 GstBuffer *
 gst_buffer_make_metadata_writable (GstBuffer * buf)

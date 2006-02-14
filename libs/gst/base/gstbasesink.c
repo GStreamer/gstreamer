@@ -598,7 +598,9 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
         return TRUE;
         /* other events do not need syncing */
         /* FIXME, maybe NEWSEGMENT might need synchronisation
-         * since the POSITION query depends on accumulated times 
+         * since the POSITION query depends on accumulated times and
+         * we cannot accumulate the current segment before the previous
+         * one completed.
          */
       default:
         return FALSE;

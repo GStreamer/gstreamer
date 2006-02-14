@@ -1,5 +1,14 @@
 2006-02-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbuffer.c:
+	* gst/gstquery.c: (gst_query_list_add_format),
+	(gst_query_set_formatsv), (gst_query_parse_formats_length),
+	(gst_query_parse_formats_nth):
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times):
+	Docs fixes.
+
+2006-02-14  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	Reworked query docs.
 
