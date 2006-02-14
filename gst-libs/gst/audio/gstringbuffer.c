@@ -814,12 +814,12 @@ gst_ring_buffer_pause_unlocked (GstRingBuffer * buf)
   res = g_atomic_int_compare_and_exchange (&buf->state,
       GST_RING_BUFFER_STATE_STARTED, GST_RING_BUFFER_STATE_PAUSED);
 
-  if (!res) {
-    /* was not started */
-    res = TRUE;
-    GST_DEBUG_OBJECT (buf, "was not started");
-    goto done;
-  }
+  if (!res)
+    goto not_started;
+
+  /* signal any waiters */
+  GST_DEBUG_OBJECT (buf, "signal waiter");
+  GST_RING_BUFFER_SIGNAL (buf);
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (rclass->pause)
@@ -832,8 +832,14 @@ gst_ring_buffer_pause_unlocked (GstRingBuffer * buf)
     GST_DEBUG_OBJECT (buf, "paused");
   }
 
-done:
   return res;
+
+not_started:
+  {
+    /* was not started */
+    GST_DEBUG_OBJECT (buf, "was not started");
+    return TRUE;
+  }
 }
 
 /**
@@ -944,11 +950,11 @@ gst_ring_buffer_delay (GstRingBuffer * buf)
 
   g_return_val_if_fail (buf != NULL, 0);
 
-  if (!gst_ring_buffer_is_acquired (buf))
+  if (G_UNLIKELY (!gst_ring_buffer_is_acquired (buf)))
     return 0;
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
-  if (rclass->delay)
+  if (G_LIKELY (rclass->delay))
     res = rclass->delay (buf);
 
   return res;
@@ -983,7 +989,7 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
   samples = ((guint64) segdone) * buf->samples_per_seg;
   raw = samples;
 
-  if (samples >= delay)
+  if (G_UNLIKELY (samples >= delay))
     samples -= delay;
 
   GST_DEBUG_OBJECT (buf, "processed samples: raw %llu, delay %u, real %llu",
@@ -1059,26 +1065,30 @@ static gboolean
 wait_segment (GstRingBuffer * buf)
 {
   /* buffer must be started now or we deadlock since nobody is reading */
-  if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED) {
+  if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
+          GST_RING_BUFFER_STATE_STARTED)) {
     GST_DEBUG_OBJECT (buf, "start!");
     gst_ring_buffer_start (buf);
   }
 
   /* take lock first, then update our waiting flag */
   GST_OBJECT_LOCK (buf);
-  if (buf->abidata.ABI.flushing)
+  if (G_UNLIKELY (buf->abidata.ABI.flushing))
     goto flushing;
+
+  if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
+          GST_RING_BUFFER_STATE_STARTED))
+    goto not_started;
 
   if (g_atomic_int_compare_and_exchange (&buf->waiting, 0, 1)) {
     GST_DEBUG_OBJECT (buf, "waiting..");
-    if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
-      goto not_started;
-
     GST_RING_BUFFER_WAIT (buf);
-    if (buf->abidata.ABI.flushing)
+
+    if (G_UNLIKELY (buf->abidata.ABI.flushing))
       goto flushing;
 
-    if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
+    if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
+            GST_RING_BUFFER_STATE_STARTED))
       goto not_started;
   }
   GST_OBJECT_UNLOCK (buf);
@@ -1088,14 +1098,16 @@ wait_segment (GstRingBuffer * buf)
   /* ERROR */
 not_started:
   {
-    GST_OBJECT_UNLOCK (buf);
+    g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0);
     GST_DEBUG_OBJECT (buf, "stopped processing");
+    GST_OBJECT_UNLOCK (buf);
     return FALSE;
   }
 flushing:
   {
-    GST_OBJECT_UNLOCK (buf);
+    g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0);
     GST_DEBUG_OBJECT (buf, "flushing");
+    GST_OBJECT_UNLOCK (buf);
     return FALSE;
   }
 }
@@ -1163,7 +1175,7 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
           segdone, sample, writeseg, sampleoff, to_write, diff, segtotal, sps);
 
       /* segment too far ahead, we need to drop */
-      if (diff < 0) {
+      if (G_UNLIKELY (diff < 0)) {
         /* we need to drop one segment at a time, pretend we wrote a
          * segment. */
         sampleslen = MIN (sps, to_write);
@@ -1176,7 +1188,7 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
         break;
 
       /* else we need to wait for the segment to become writable. */
-      if (!wait_segment (buf))
+      if (G_UNLIKELY (!wait_segment (buf)))
         goto not_started;
     }
 
@@ -1419,8 +1431,10 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
 
   g_return_if_fail (buf->empty_seg != NULL);
 
+  segment %= buf->spec.segtotal;
+
   data = GST_BUFFER_DATA (buf->data);
-  data += (segment % buf->spec.segtotal) * buf->spec.segsize;
+  data += segment * buf->spec.segsize;
 
   GST_LOG ("clear segment %d @%p", segment, data);
 

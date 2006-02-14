@@ -1,3 +1,13 @@
+2006-02-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ring_buffer_pause_unlocked), (gst_ring_buffer_delay),
+	(gst_ring_buffer_samples_done), (wait_segment),
+	(gst_ring_buffer_commit), (gst_ring_buffer_clear):
+	Add some compiler G_(UN_)LIKELY help.
+	SIGNAL the ringbuffer waiters when going to PAUSED as well to
+	make sure they can exit their functions. Should fix #330748
+
 2006-02-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
