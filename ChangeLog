@@ -1,3 +1,11 @@
+2006-02-14  Edward Hervey  <edward@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_header):
+	There can be bogus data before the hdrl LIST tag in the RIFF header.
+	It's hard to say if it's not respecting the AVI specifications or not,
+	but since Google Video is producing AVIs like that and the other player
+	don't seem to complain, I guess we should do the same.
+
 2006-02-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3v2frames.c: (parse_insert_string_field),
