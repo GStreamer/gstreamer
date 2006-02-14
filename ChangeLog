@@ -1,3 +1,10 @@
+2006-02-14  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_open):
+	If the duration returned by ffmpeg is 0, it doesn't mean the file has
+	no duration, but that it doesn't know the end.
+	Fixed accordingly for segment_stop.
+
 2006-02-13  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_release_buffer),

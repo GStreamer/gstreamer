@@ -803,7 +803,10 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   /* remember initial start position and shift start/stop */
   demux->timeoffset = demux->context->start_time * (GST_SECOND / AV_TIME_BASE );
   demux->segment_start = 0;
-  demux->segment_stop = demux->context->duration * (GST_SECOND / AV_TIME_BASE );
+  if (demux->context->duration > 0)
+    demux->segment_stop = demux->context->duration * (GST_SECOND / AV_TIME_BASE );
+  else
+    demux->segment_stop = GST_CLOCK_TIME_NONE;
   
   /* Send newsegment on all src pads */
   for (res = 0; res < demux->context->nb_streams; res++) {
