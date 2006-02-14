@@ -1,3 +1,9 @@
+2006-02-14  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (next_entry_size), (gst_qtdemux_chain):
+	Handle the case where data atoms are before moov atoms in push-based mode.
+	Errors out gracefully.
+
 2006-02-13  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/Makefile.am:
