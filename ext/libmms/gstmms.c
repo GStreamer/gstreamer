@@ -133,10 +133,10 @@ gst_mms_class_init (GstMMSClass * klass)
           "How many bytes should be read at once", 0, 65536, 2048,
           G_PARAM_READWRITE));
 
-  gstbasesrc_class->start = gst_mms_start;
-  gstbasesrc_class->stop = gst_mms_stop;
+  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_mms_start);
+  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_mms_stop);
 
-  gstpushsrc_class->create = gst_mms_create;
+  gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_mms_create);
 
 }
 
@@ -253,7 +253,6 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   /* DEBUG */
   GstFormat fmt = GST_FORMAT_BYTES;
   gint64 query_res;
-  GstQuery *query;
 
   mmssrc = GST_MMS (psrc);
   *buf = gst_buffer_new_and_alloc (mmssrc->blocksize);
@@ -286,16 +285,10 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   /* EOS? */
   if (result == 0) {
-    GstPad *peer;
-
     gst_buffer_unref (*buf);
     *buf = NULL;
     GST_DEBUG ("Returning EOS");
-    peer = gst_pad_get_peer (GST_BASE_SRC_PAD (mmssrc));
-    if (!gst_pad_send_event (peer, gst_event_new_eos ())) {
-      ret = GST_FLOW_ERROR;
-    }
-    gst_object_unref (peer);
+    ret = GST_FLOW_UNEXPECTED;
     goto done;
   }
 
@@ -309,11 +302,9 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   GST_BUFFER_SIZE (*buf) = result;
 
   /* DEBUG */
-  query = gst_query_new_position (GST_QUERY_POSITION);
-  gst_pad_query (GST_BASE_SRC (mmssrc)->srcpad, query);
-  gst_query_parse_position (query, &fmt, &query_res);
-  gst_query_unref (query);
-  GST_DEBUG ("mms position: %lld\n", query_res);
+  fmt = GST_FORMAT_BYTES;
+  gst_pad_query_position (GST_BASE_SRC (mmssrc)->srcpad, &fmt, &query_res);
+  GST_DEBUG ("mms position: %" G_GINT64_FORMAT, query_res);
 
 done:
 
@@ -328,10 +319,12 @@ gst_mms_start (GstBaseSrc * bsrc)
 
   mms = GST_MMS (bsrc);
 
-  if (!mms->uri_name) {
-    ret = FALSE;
-    goto done;
+  if (!mms->uri_name || *mms->uri_name == '\0') {
+    GST_ELEMENT_ERROR (mms, RESOURCE, OPEN_READ,
+        ("No URI to open specified"), (NULL));
+    return FALSE;
   }
+
   /* FIXME: pass some sane arguments here */
   gst_mms_stop (bsrc);
 
@@ -342,11 +335,12 @@ gst_mms_start (GstBaseSrc * bsrc)
     mms->connection_h = mmsh_connect (NULL, NULL, mms->uri_name, 128 * 1024);
     if (mms->connection_h) {
       ret = TRUE;
+    } else {
+      GST_ELEMENT_ERROR (mms, RESOURCE, OPEN_READ,
+          ("Could not connect to this stream"), (NULL));
     }
-
   }
 
-done:
   return ret;
 
 }

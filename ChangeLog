@@ -1,3 +1,13 @@
+2006-02-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/libmms/gstmms.c: (gst_mms_class_init), (gst_mms_create),
+	(gst_mms_start):
+	  Return FLOW_UNEXPECTED on EOS, not FLOW_ERROR. Also, no need to
+	  push our own EOS event on EOS, the base class will do that for us;
+	  fix bogus query code; post semi-decent errors on the bus when an
+	  error occurs in ::start(), otherwise the user will get to see
+	  whatever cryptic default message GstBaseSrc comes up with.
+
 2006-02-14  Andy Wingo  <wingo@pobox.com>
 
 	* sys/glsink/glimagesink.c (gst_glimage_sink_init): Come on
