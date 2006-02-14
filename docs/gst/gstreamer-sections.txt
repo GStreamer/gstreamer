@@ -1344,18 +1344,19 @@ GST_PAD_PREROLL_WAIT
 <SECTION>
 <FILE>gstpadtemplate</FILE>
 <TITLE>GstPadTemplate</TITLE>
-GstPadTemplate
 GstStaticPadTemplate
+GST_STATIC_PAD_TEMPLATE
+gst_static_pad_template_get
+gst_static_pad_template_get_caps
+GstPadTemplate
+GstPadTemplateFlags
+GstPadPresence
 GST_PAD_TEMPLATE_NAME_TEMPLATE
 GST_PAD_TEMPLATE_DIRECTION
 GST_PAD_TEMPLATE_PRESENCE
 GST_PAD_TEMPLATE_CAPS
 GST_PAD_TEMPLATE_IS_FIXED
-GstPadTemplateFlags
-GstPadPresence
 gst_pad_template_new
-gst_static_pad_template_get
-gst_static_pad_template_get_caps
 gst_pad_template_get_caps
 
 <SUBSECTION Standard>
@@ -1364,7 +1365,6 @@ GST_PAD_TEMPLATE
 GST_IS_PAD_TEMPLATE
 GST_PAD_TEMPLATE_CLASS
 GST_IS_PAD_TEMPLATE_CLASS
-GST_STATIC_PAD_TEMPLATE
 GST_TYPE_PAD_TEMPLATE
 GST_TYPE_PAD_TEMPLATE_FLAGS
 GST_TYPE_STATIC_CAPS

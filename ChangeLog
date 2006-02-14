@@ -1,5 +1,12 @@
 2006-02-14  Wim Taymans  <wim@fluendo.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpadtemplate.c:
+	* gst/gstpadtemplate.h:
+	Fix padtemplate docs, fixes #328805.
+
+2006-02-14  Wim Taymans  <wim@fluendo.com>
+
 	* tools/gst-launch.c: (main):
 	NO_PREROLL is not an ERROR so don't send confusing messages
 	to the user.

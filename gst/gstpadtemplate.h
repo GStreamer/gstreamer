@@ -157,6 +157,16 @@ struct _GstStaticPadTemplate {
   GstStaticCaps   static_caps;
 };
 
+/**
+ * GST_STATIC_PAD_TEMPLATE:
+ * @padname: the name template of pad
+ * @dir: the GstPadDirection of the pad
+ * @pres: the GstPadPresence of the pad
+ * @caps: the GstStaticCaps of the pad
+ *
+ * Convenience macro to fill the values of a GstStaticPadTemplate
+ * structure.
+ */
 #define GST_STATIC_PAD_TEMPLATE(padname, dir, pres, caps) \
 { \
   /* name_template */    padname, \
