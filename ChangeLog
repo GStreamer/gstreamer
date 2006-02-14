@@ -1,3 +1,16 @@
+2006-02-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_chain):
+	  When typefinding is unsuccessful in the chain function, don't
+	  error out immediately. Only error out with NO_CAPS_FOUND if
+	  the amount of data is at least MAX_TYPEFIND_SIZE bytes,
+	  otherwise simply wait for more data so we can try typefinding
+	  again with more data later. Also, don't attempt to typefind
+	  if we have less than MIN_TYPEFIND_SIZE data available. Overall,
+	  this should improve typefinding from network sources where the
+	  size of the first buffer can be somewhat random.
+
 2006-02-14  Wim Taymans  <wim@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:

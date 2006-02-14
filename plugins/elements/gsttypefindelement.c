@@ -82,6 +82,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+/* Require at least 2kB of data before we attempt typefinding in chain-mode.
+ * 128kB is massive overkill for the maximum, but doesn't do any harm */
+#define TYPE_FIND_MIN_SIZE   (2*1024)
+#define TYPE_FIND_MAX_SIZE (128*1024)
+
 /* TypeFind signals and args */
 enum
 {
@@ -678,6 +683,11 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
       else
         typefind->store = buffer;
 
+      if (GST_BUFFER_SIZE (typefind->store) < TYPE_FIND_MIN_SIZE) {
+        GST_DEBUG_OBJECT (typefind, "not enough data for typefinding yet");
+        return GST_FLOW_OK;
+      }
+
       if (typefind->possibilities == NULL) {
         /* not yet started, get all typefinding functions into our "queue" */
         GList *all_factories = gst_type_find_factory_get_list ();
@@ -753,9 +763,15 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
       if (typefind->caps) {
         stop_typefinding (typefind);
       } else if (typefind->possibilities == NULL) {
-        GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
-        stop_typefinding (typefind);
-        return GST_FLOW_ERROR;
+        if (GST_BUFFER_SIZE (typefind->store) > TYPE_FIND_MAX_SIZE) {
+          GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+          stop_typefinding (typefind);
+          return GST_FLOW_ERROR;
+        } else {
+          GST_DEBUG_OBJECT (typefind, "no type found with %u bytes - waiting "
+              "for more data", GST_BUFFER_SIZE (typefind->store));
+          return GST_FLOW_OK;
+        }
       } else if (done) {
         TypeFindEntry *best;
 
