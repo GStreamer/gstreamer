@@ -180,12 +180,12 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink,
 {
   int screen;
 
-  //glimage_sink->display = XOpenDisplay (NULL);
+  glimage_sink->display = XOpenDisplay (NULL);
 
   screen = DefaultScreen (glimage_sink->display);
 
-  //XSynchronize(glimage_sink->display, True);
-  //XSetErrorHandler (error_handler);
+  XSynchronize (glimage_sink->display, True);
+  /* XSetErrorHandler (error_handler); */
   glimage_sink->width = 400;
   glimage_sink->height = 400;
 
