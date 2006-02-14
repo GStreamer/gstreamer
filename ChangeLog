@@ -1,5 +1,12 @@
 2006-02-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstregistry.c: (gst_registry_get_default),
+	(_gst_registry_cleanup):
+	Protect default registry with lock and ref/sink it.
+	Fixes #324818, patch by Torsten Schoenfeld.
+
+2006-02-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbuffer.c:
 	* gst/gstquery.c: (gst_query_list_add_format),
 	(gst_query_set_formatsv), (gst_query_parse_formats_length),

@@ -52,7 +52,9 @@
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
-/* the one instance of the default registry */
+/* the one instance of the default registry and the mutex protecting the 
+ * variable. */
+static GStaticMutex _gst_registry_mutex = G_STATIC_MUTEX_INIT;
 static GstRegistry *_gst_registry_default = NULL;
 
 /*
@@ -208,10 +210,18 @@ gst_registry_finalize (GObject * object)
 GstRegistry *
 gst_registry_get_default (void)
 {
-  if (!_gst_registry_default) {
+  GstRegistry *registry;
+
+  g_static_mutex_lock (&_gst_registry_mutex);
+  if (G_UNLIKELY (!_gst_registry_default)) {
     _gst_registry_default = g_object_new (GST_TYPE_REGISTRY, NULL);
+    gst_object_ref (GST_OBJECT_CAST (_gst_registry_default));
+    gst_object_sink (GST_OBJECT_CAST (_gst_registry_default));
   }
-  return _gst_registry_default;
+  registry = _gst_registry_default;
+  g_static_mutex_unlock (&_gst_registry_mutex);
+
+  return registry;
 }
 
 /**
@@ -908,11 +918,17 @@ gst_registry_get_feature_list_by_plugin (GstRegistry * registry,
 void
 _gst_registry_cleanup ()
 {
-  if (!_gst_registry_default)
-    return;
+  GstRegistry *registry;
 
-  gst_object_unref (_gst_registry_default);
-  _gst_registry_default = NULL;
+  g_static_mutex_lock (&_gst_registry_mutex);
+  if ((registry = _gst_registry_default) != NULL) {
+    _gst_registry_default = NULL;
+  }
+  g_static_mutex_unlock (&_gst_registry_mutex);
+
+  /* unref outside of the lock because we can. */
+  if (registry)
+    gst_object_unref (registry);
 }
 
 /**
