@@ -1,3 +1,16 @@
+2006-02-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_init),
+	(gst_dvd_read_src_class_init), (gst_dvd_read_src_start),
+	(gst_dvd_read_src_stop), (gst_dvd_read_src_goto_title),
+	(gst_dvd_read_src_set_property), (gst_dvd_read_src_get_property),
+	(gst_dvd_read_src_uri_get_uri), (gst_dvd_read_src_uri_set_uri):
+	* ext/dvdread/dvdreadsrc.h:
+	  Let's try to play the title the user set via the URI handler or
+	  via properties instead of always playing the first title. Also,
+	  Also, count title/chapter/angle number in URI and properties
+	  from 1 rather than 0.
+
 2006-02-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_class_init),

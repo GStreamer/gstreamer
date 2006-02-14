@@ -125,9 +125,9 @@ gst_dvd_read_src_init (GstDvdReadSrc * src, GstDvdReadSrcClass * klass)
   src->new_seek = TRUE;
   src->new_cell = TRUE;
   src->change_cell = FALSE;
-  src->title = 0;
-  src->chapter = 0;
-  src->angle = 0;
+  src->uri_title = 1;
+  src->uri_chapter = 1;
+  src->uri_angle = 1;
 
   src->seek_pend = FALSE;
   src->flush_pend = FALSE;
@@ -152,13 +152,13 @@ gst_dvd_read_src_class_init (GstDvdReadSrcClass * klass)
           "DVD device location", NULL, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TITLE,
       g_param_spec_int ("title", "title", "title",
-          0, 999, 0, G_PARAM_READWRITE));
+          1, 999, 1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CHAPTER,
       g_param_spec_int ("chapter", "chapter", "chapter",
-          0, 999, 0, G_PARAM_READWRITE));
+          1, 999, 1, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ANGLE,
       g_param_spec_int ("angle", "angle", "angle",
-          0, 999, 0, G_PARAM_READWRITE));
+          1, 999, 1, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dvd_read_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dvd_read_src_stop);
@@ -198,8 +198,23 @@ gst_dvd_read_src_start (GstBaseSrc * basesrc)
 
   src->tt_srpt = src->vmg_file->tt_srpt;
 
-  src->seek_pend_fmt = title_format;
-  src->seek_pend = TRUE;
+  src->title = src->uri_title - 1;
+  src->chapter = src->uri_chapter - 1;
+  src->angle = src->uri_angle - 1;
+
+  if (!gst_dvd_read_src_goto_title (src, src->title, src->angle)) {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("Could not open DVD title %d"), src->uri_title), (NULL));
+    return FALSE;
+  }
+
+  if (!gst_dvd_read_src_goto_chapter (src, src->chapter)) {
+    GST_ERROR_OBJECT (src, "Failed to go to chapter %d of DVD title %d",
+        src->uri_chapter, src->uri_title);
+  }
+
+  src->new_seek = FALSE;
+  src->change_cell = TRUE;
 
   return TRUE;
 }
@@ -241,6 +256,8 @@ gst_dvd_read_src_stop (GstBaseSrc * basesrc)
     gst_event_unref (src->pending_clut_event);
     src->pending_clut_event = NULL;
   }
+
+  GST_LOG_OBJECT (src, "closed DVD");
 
   return TRUE;
 }
@@ -352,7 +369,7 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
   if (title < 0 || title >= num_titles) {
     GST_WARNING_OBJECT (src, "Invalid title %d (only %d available)",
         title, num_titles);
-    title = CLAMP (title, 0, num_titles - 1);
+    return FALSE;
   }
 
   src->num_chapters = src->tt_srpt->title[title].nr_of_ptts;
@@ -446,7 +463,7 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
   src->title_lang_event_pending =
       gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
 
-  return 0;
+  return TRUE;
 }
 
 /* FIXME: double-check this function, compare against original */
@@ -694,12 +711,14 @@ gst_dvd_read_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstDvdReadSrc *src = GST_DVD_READ_SRC (object);
+  gboolean started;
 
   GST_OBJECT_LOCK (src);
+  started = GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED);
 
   switch (prop_id) {
     case ARG_DEVICE:{
-      if (!GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)) {
+      if (!started) {
         g_warning ("%s: property '%s' needs to be set before the device is "
             "opened", GST_ELEMENT_NAME (src), pspec->name);
         break;;
@@ -715,15 +734,24 @@ gst_dvd_read_src_set_property (GObject * object, guint prop_id,
       break;
     }
     case ARG_TITLE:
-      src->title = g_value_get_int (value);
-      src->new_seek = TRUE;
+      src->uri_title = g_value_get_int (value);
+      if (started) {
+        src->title = src->uri_title - 1;
+        src->new_seek = TRUE;
+      }
       break;
     case ARG_CHAPTER:
-      src->chapter = g_value_get_int (value);
-      src->new_seek = TRUE;
+      src->uri_chapter = g_value_get_int (value);
+      if (started) {
+        src->chapter = src->uri_chapter - 1;
+        src->new_seek = TRUE;
+      }
       break;
     case ARG_ANGLE:
-      src->angle = g_value_get_int (value);
+      src->uri_angle = g_value_get_int (value);
+      if (started) {
+        src->angle = src->uri_angle - 1;
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -746,13 +774,13 @@ gst_dvd_read_src_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_string (value, src->location);
       break;
     case ARG_TITLE:
-      g_value_set_int (value, src->title);
+      g_value_set_int (value, src->uri_title);
       break;
     case ARG_CHAPTER:
-      g_value_set_int (value, src->chapter);
+      g_value_set_int (value, src->uri_chapter);
       break;
     case ARG_ANGLE:
-      g_value_set_int (value, src->angle);
+      g_value_set_int (value, src->uri_angle);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1167,9 +1195,13 @@ gst_dvd_read_src_uri_get_uri (GstURIHandler * handler)
 {
   GstDvdReadSrc *src = GST_DVD_READ_SRC (handler);
 
+  GST_OBJECT_LOCK (src);
+
   g_free (src->last_uri);
-  src->last_uri =
-      g_strdup_printf ("dvd://%d,%d,%d", src->title, src->chapter, src->angle);
+  src->last_uri = g_strdup_printf ("dvd://%d,%d,%d", src->uri_title,
+      src->uri_chapter, src->uri_angle);
+
+  GST_OBJECT_UNLOCK (src);
 
   return src->last_uri;
 }
@@ -1201,6 +1233,12 @@ gst_dvd_read_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     if (!location)
       return ret;
 
+    GST_OBJECT_LOCK (src);
+
+    src->uri_title = 1;
+    src->uri_chapter = 1;
+    src->uri_angle = 1;
+
     strcur = strs = g_strsplit (location, ",", 0);
     while (strcur && *strcur) {
       gint val;
@@ -1208,27 +1246,36 @@ gst_dvd_read_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
       if (!sscanf (*strcur, "%d", &val))
         break;
 
+      if (val <= 0) {
+        g_warning ("Invalid value %d in URI '%s'. Must be 1 or greater",
+            val, location);
+        break;
+      }
+
       switch (pos) {
         case 0:
-          if (val != src->title) {
-            src->title = val;
-            src->new_seek = TRUE;
-          }
+          src->uri_title = val;
           break;
         case 1:
-          if (val != src->chapter) {
-            src->chapter = val;
-            src->new_seek = TRUE;
-          }
+          src->uri_chapter = val;
           break;
         case 2:
-          src->angle = val;
+          src->uri_angle = val;
           break;
       }
 
       strcur++;
       pos++;
     }
+
+    if (pos > 0 && GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)) {
+      src->title = src->uri_title - 1;
+      src->chapter = src->uri_chapter - 1;
+      src->angle = src->uri_angle - 1;
+      src->new_seek = TRUE;
+    }
+
+    GST_OBJECT_UNLOCK (src);
 
     g_strfreev (strs);
     g_free (location);
