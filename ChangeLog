@@ -1,3 +1,13 @@
+2006-02-14  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
+	(gst_qtdemux_handle_src_query), (gst_qtdemux_change_state),
+	(next_entry_size), (gst_qtdemux_chain):
+	* gst/qtdemux/qtdemux.h:
+	Make push-based work if mdat atom is before moov atom.
+	Don't answer duration query. This should be transformed into replying
+	FALSE to seek events.
+
 2006-02-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/libmms/gstmms.c: (gst_mms_class_init), (gst_mms_create),

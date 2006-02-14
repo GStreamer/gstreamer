@@ -104,6 +104,7 @@ enum QtDemuxState
   QTDEMUX_STATE_INITIAL,        /* Initial state (haven't got the header yet) */
   QTDEMUX_STATE_HEADER,         /* Parsing the header */
   QTDEMUX_STATE_MOVIE,          /* Parsing/Playing the media data */
+  QTDEMUX_STATE_BUFFER_MDAT,    /* Buffering the mdat atom */
 };
 
 static GNode *qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc);
@@ -242,6 +243,9 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->neededbytes = 16;
   qtdemux->todrop = 0;
   qtdemux->adapter = gst_adapter_new ();
+  qtdemux->offset = 0;
+  qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
+  qtdemux->mdatbuffer = NULL;
 }
 
 #if 0
@@ -324,7 +328,8 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     case GST_QUERY_DURATION:
-      if (qtdemux->duration != 0 && qtdemux->timescale != 0) {
+      if (qtdemux->pullbased && qtdemux->duration != 0
+          && qtdemux->timescale != 0) {
         gint64 duration;
 
         duration = gst_util_uint64_scale_int (qtdemux->duration,
@@ -498,6 +503,10 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       qtdemux->todrop = 0;
       qtdemux->pullbased = FALSE;
       qtdemux->offset = 0;
+      qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
+      if (qtdemux->mdatbuffer)
+        gst_buffer_unref (qtdemux->mdatbuffer);
+      qtdemux->mdatbuffer = NULL;
       gst_adapter_clear (qtdemux->adapter);
       for (n = 0; n < qtdemux->n_streams; n++) {
         gst_element_remove_pad (element, qtdemux->streams[n]->pad);
@@ -775,8 +784,9 @@ next_entry_size (GstQTDemux * demux)
         stream->samples[stream->sample_index].size,
         stream->samples[stream->sample_index].chunk);
 
-    if ((smalloffs == -1)
-        || (stream->samples[stream->sample_index].offset < smalloffs)) {
+    if (((smalloffs == -1)
+            || (stream->samples[stream->sample_index].offset < smalloffs))
+        && (stream->samples[stream->sample_index].size)) {
       smallidx = i;
       smalloffs = stream->samples[stream->sample_index].offset;
     }
@@ -812,7 +822,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
       inbuf, demux->neededbytes, gst_adapter_available (demux->adapter));
 
   while (((gst_adapter_available (demux->adapter)) >= demux->neededbytes) &&
-      ret == GST_FLOW_OK) {
+      (ret == GST_FLOW_OK)) {
 
     GST_DEBUG_OBJECT (demux,
         "state:%d , demux->neededbytes:%d, demux->offset:%lld", demux->state,
@@ -832,16 +842,14 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             "Peeking found [%" GST_FOURCC_FORMAT "] size:%ld",
             GST_FOURCC_ARGS (fourcc), size);
         if ((fourcc == GST_MAKE_FOURCC ('m', 'd', 'a', 't'))) {
-          if (demux->n_streams <= 0) {
-            GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-                (NULL),
-                ("Can't handled files with header after data in push-mode!"));
-            ret = GST_FLOW_ERROR;
+          if (demux->n_streams > 0) {
+            demux->state = QTDEMUX_STATE_MOVIE;
+            demux->neededbytes = next_entry_size (demux);
+          } else {
+            demux->state = QTDEMUX_STATE_BUFFER_MDAT;
+            demux->neededbytes = size;
+            demux->mdatoffset = demux->offset;
           }
-          demux->state = QTDEMUX_STATE_MOVIE;
-          demux->offset += 24;
-          gst_adapter_flush (demux->adapter, 24);
-          demux->neededbytes = next_entry_size (demux);
         } else {
           demux->neededbytes = size;
           demux->state = QTDEMUX_STATE_HEADER;
@@ -862,7 +870,6 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         if (fourcc == GST_MAKE_FOURCC ('m', 'o', 'o', 'v')) {
           GST_DEBUG_OBJECT (demux, "Parsing [moov]");
 
-          demux->offset += demux->neededbytes;
           qtdemux_parse_moov (demux, data, demux->neededbytes);
           qtdemux_node_dump (demux, demux->moov_node);
           qtdemux_parse_tree (demux);
@@ -870,18 +877,49 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           g_node_destroy (demux->moov_node);
           g_free (data);
           demux->moov_node = NULL;
-
-          demux->neededbytes = 16;
-          demux->state = QTDEMUX_STATE_INITIAL;
         } else {
           GST_WARNING_OBJECT (demux,
               "Unknown fourcc while parsing header : %" GST_FOURCC_FORMAT,
               GST_FOURCC_ARGS (fourcc));
           /* Let's jump that one and go back to initial state */
+        }
+
+        GST_DEBUG_OBJECT (demux, "Finished parsing the header");
+        if (demux->mdatbuffer && demux->n_streams) {
+          /* the mdat was before the header */
+          GST_DEBUG_OBJECT (demux, "We have n_streams:%d and mdatbuffer:%p",
+              demux->n_streams, demux->mdatbuffer);
+          gst_adapter_clear (demux->adapter);
+          GST_DEBUG_OBJECT (demux, "mdatbuffer starts with %" GST_FOURCC_FORMAT,
+              GST_FOURCC_ARGS (GST_READ_UINT32_BE (demux->mdatbuffer)));
+          gst_adapter_push (demux->adapter, demux->mdatbuffer);
+          demux->mdatbuffer = NULL;
+          demux->offset = demux->mdatoffset;
+          demux->neededbytes = next_entry_size (demux);
+          demux->state = QTDEMUX_STATE_MOVIE;
+        } else {
+          GST_DEBUG_OBJECT (demux, "Carrying on normally");
           demux->offset += demux->neededbytes;
           demux->neededbytes = 16;
           demux->state = QTDEMUX_STATE_INITIAL;
         }
+      }
+        break;
+
+      case QTDEMUX_STATE_BUFFER_MDAT:{
+        GST_DEBUG_OBJECT (demux, "Got our buffer at offset %lld",
+            demux->mdatoffset);
+        if (demux->mdatbuffer)
+          gst_buffer_unref (demux->mdatbuffer);
+        demux->mdatbuffer = gst_buffer_new ();
+        gst_buffer_set_data (demux->mdatbuffer,
+            gst_adapter_take (demux->adapter, demux->neededbytes),
+            demux->neededbytes);
+        GST_DEBUG_OBJECT (demux, "mdatbuffer starts with %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (GST_READ_UINT32_BE (demux->mdatbuffer)));
+        demux->offset += demux->neededbytes;
+        demux->neededbytes = 16;
+        demux->state = QTDEMUX_STATE_INITIAL;
       }
         break;
 
