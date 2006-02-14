@@ -1952,6 +1952,8 @@ fixate_value (GValue * dest, const GValue * src)
   } else if (G_VALUE_TYPE (src) == GST_TYPE_DOUBLE_RANGE) {
     g_value_init (dest, G_TYPE_DOUBLE);
     g_value_set_double (dest, gst_value_get_double_range_min (src));
+  } else if (G_VALUE_TYPE (src) == GST_TYPE_FRACTION_RANGE) {
+    gst_value_init_and_copy (dest, gst_value_get_fraction_range_min (src));
   } else if (G_VALUE_TYPE (src) == GST_TYPE_LIST) {
     GValue temp = { 0 };
 
