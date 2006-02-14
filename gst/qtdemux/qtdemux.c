@@ -761,7 +761,7 @@ next_entry_size (GstQTDemux * demux)
 {
   QtDemuxStream *stream;
   int i;
-  int smallidx = 0;
+  int smallidx = -1;
   guint64 smalloffs = -1;
 
   GST_LOG_OBJECT (demux, "Finding entry at offset %lld", demux->offset);
@@ -785,6 +785,8 @@ next_entry_size (GstQTDemux * demux)
   GST_LOG_OBJECT (demux, "stream %d offset %lld demux->offset :%lld",
       smallidx, smalloffs, demux->offset);
 
+  if (smallidx == -1)
+    return -1;
   stream = demux->streams[smallidx];
 
   if (stream->samples[stream->sample_index].offset >= demux->offset) {
@@ -826,7 +828,16 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 
         /* get fourcc/length, set neededbytes */
         extract_initial_length_and_fourcc ((guint8 *) data, &size, &fourcc);
-        if (fourcc == GST_MAKE_FOURCC ('m', 'd', 'a', 't')) {
+        GST_DEBUG_OBJECT (demux,
+            "Peeking found [%" GST_FOURCC_FORMAT "] size:%ld",
+            GST_FOURCC_ARGS (fourcc), size);
+        if ((fourcc == GST_MAKE_FOURCC ('m', 'd', 'a', 't'))) {
+          if (demux->n_streams <= 0) {
+            GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+                (NULL),
+                ("Can't handled files with header after data in push-mode!"));
+            ret = GST_FLOW_ERROR;
+          }
           demux->state = QTDEMUX_STATE_MOVIE;
           demux->offset += 24;
           gst_adapter_flush (demux->adapter, 24);
