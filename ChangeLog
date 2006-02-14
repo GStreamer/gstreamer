@@ -1,3 +1,9 @@
+2006-02-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_sync_streams):
+	  Advance stream time for lagging subtitle streams by sending
+	  newsegment events with the update flag set.
+
 2006-02-14  Edward Hervey  <edward@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_header):

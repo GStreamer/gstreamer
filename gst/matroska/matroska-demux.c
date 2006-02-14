@@ -1933,49 +1933,34 @@ gst_matroska_ebmlnum_sint (guint8 * data, guint size, gint64 * num)
 static void
 gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
 {
-  /* FIXME: add filler events or buffers back */
-#if 0
   gint stream_nr;
-  GstMatroskaTrackContext *context;
 
-  GST_DEBUG ("Sync to %" GST_TIME_FORMAT, GST_TIME_ARGS (demux->pos));
+  GST_LOG ("Sync to %" GST_TIME_FORMAT, GST_TIME_ARGS (demux->pos));
 
   for (stream_nr = 0; stream_nr < demux->num_streams; stream_nr++) {
+    GstMatroskaTrackContext *context;
+
     context = demux->src[stream_nr];
     if (context->type != GST_MATROSKA_TRACK_TYPE_SUBTITLE)
       continue;
-    GST_DEBUG ("Checking for resync on stream %d (%" GST_TIME_FORMAT ")",
+
+    GST_LOG ("Checking for resync on stream %d (%" GST_TIME_FORMAT ")",
         stream_nr, GST_TIME_ARGS (context->pos));
 
-    /* does it lag? 1 second is a random treshold... */
+    /* does it lag? 0.5 seconds is a random treshold... */
     if (context->pos + (GST_SECOND / 2) < demux->pos) {
-      GstEvent *event;
-      static gboolean showed_msg = FALSE;       /* FIXME */
-
-      event = gst_event_new_filler ();
-
-      /* FIXME: fillers in 0.9 aren't specified properly yet 
-         event = gst_event_new_filler_stamped (context->pos,
-         demux->pos - context->pos); */
-      if (!showed_msg) {
-        g_message ("%s: fix filler stuff when spec'ed out in core", G_STRLOC);
-        showed_msg = TRUE;
-      }
+      GST_DEBUG ("Synchronizing stream %d with others by advancing time "
+          "from %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT, stream_nr,
+          GST_TIME_ARGS (context->pos), GST_TIME_ARGS (demux->pos));
 
       context->pos = demux->pos;
 
-      /* sync */
-      GST_DEBUG ("Synchronizing stream %d with others by sending filler "
-          "at time %" GST_TIME_FORMAT " and duration %" GST_TIME_FORMAT
-          " to time %" GST_TIME_FORMAT, stream_nr,
-          GST_TIME_ARGS (context->pos),
-          GST_TIME_ARGS (demux->pos - context->pos),
-          GST_TIME_ARGS (demux->pos));
-
-      gst_pad_push_event (context->pad, event);
+      /* advance stream time */
+      gst_pad_push_event (context->pad,
+          gst_event_new_new_segment (TRUE, demux->segment_rate,
+              GST_FORMAT_TIME, demux->pos, -1, demux->pos));
     }
   }
-#endif
 }
 
 static gboolean
