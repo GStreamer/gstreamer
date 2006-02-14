@@ -1,3 +1,13 @@
+2006-02-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/audioconvert/plugin.c: (plugin_init):
+	  Register the GstAudioChannelPosition enum type with the type
+	  system in the plugin_init function, so that it is known before
+	  any element actually makes use of multi-channel stuff. This is
+	  required for example if one wants to be able to deserialise/use
+	  a caps string with channel positions before any pipeline has
+	  been setup and started, like with gst-launch.
+
 2006-02-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstringbuffer.c:

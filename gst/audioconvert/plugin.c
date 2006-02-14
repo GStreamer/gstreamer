@@ -25,9 +25,15 @@
 
 #include "plugin.h"
 
+#include <gst/audio/multichannel.h>
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  /* ensure GstAudioChannelPosition type is registered */
+  if (!gst_audio_channel_position_get_type ())
+    return FALSE;
+
   if (!gst_element_register (plugin, "audioconvert",
           GST_RANK_PRIMARY, gst_audio_convert_get_type ()))
     return FALSE;
