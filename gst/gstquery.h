@@ -244,7 +244,11 @@ void            gst_query_parse_seeking         (GstQuery *query, GstFormat *for
                                                  gint64 *segment_start,
                                                  gint64 *segment_end);
 
+GstQuery*       gst_query_new_formats           (void);
 void            gst_query_set_formats           (GstQuery *query, gint n_formats, ...);
+void            gst_query_set_formatsv          (GstQuery *query, gint n_formats, GstFormat *formats);
+void            gst_query_parse_formats_length  (GstQuery *query, guint *n_formats);
+void            gst_query_parse_formats_nth     (GstQuery *query, guint nth, GstFormat *format);
 
 G_END_DECLS
 

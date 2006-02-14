@@ -1,3 +1,19 @@
+2006-02-14  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	Reworked query docs.
+
+	* gst/gstquery.c: (gst_query_new_formats),
+	(gst_query_list_add_format), (gst_query_set_formats),
+	(gst_query_set_formatsv), (gst_query_parse_formats_length),
+	(gst_query_parse_formats_nth):
+	* gst/gstquery.h:
+	Flesh out formats query, added some new methods.
+	Fix part of #324398.
+
+	* tests/check/gst/gstquery.c: (GST_START_TEST), (gstquery_suite):
+	Added query creation tests.
+
 2006-02-14  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstpad.c: (fixate_value):

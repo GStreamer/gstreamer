@@ -21,6 +21,109 @@
 
 
 #include <gst/check/gstcheck.h>
+GST_START_TEST (create_queries)
+{
+  GstQuery *query;
+
+  /* POSITION */
+  {
+    GstFormat format;
+    gint64 position;
+
+    query = gst_query_new_position (GST_FORMAT_TIME);
+    fail_if (query == NULL);
+    fail_unless (GST_QUERY_TYPE (query) == GST_QUERY_POSITION);
+
+    gst_query_parse_position (query, &format, NULL);
+    fail_if (format != GST_FORMAT_TIME);
+
+    gst_query_set_position (query, GST_FORMAT_TIME, 0xdeadbeaf);
+
+    gst_query_parse_position (query, &format, &position);
+    fail_if (format != GST_FORMAT_TIME);
+    fail_if (position != 0xdeadbeaf);
+
+    gst_query_unref (query);
+  }
+  /* DURATION */
+  {
+    GstFormat format;
+    gint64 duration;
+
+    query = gst_query_new_duration (GST_FORMAT_TIME);
+    fail_if (query == NULL);
+    fail_unless (GST_QUERY_TYPE (query) == GST_QUERY_DURATION);
+
+    gst_query_parse_duration (query, &format, NULL);
+    fail_if (format != GST_FORMAT_TIME);
+
+    gst_query_set_duration (query, GST_FORMAT_TIME, 0xdeadbeaf);
+
+    gst_query_parse_duration (query, &format, &duration);
+    fail_if (format != GST_FORMAT_TIME);
+    fail_if (duration != 0xdeadbeaf);
+
+    gst_query_unref (query);
+  }
+  {
+    /* FIXME make tests for:
+     *
+     * LATENCY
+     * JITTER
+     * RATE
+     * SEEKING
+     * SEGMENT
+     * CONVERT
+     */
+  }
+
+  /* FORMATS */
+  {
+    guint size;
+    GstFormat format;
+
+    query = gst_query_new_formats ();
+    fail_if (query == NULL);
+    fail_unless (GST_QUERY_TYPE (query) == GST_QUERY_FORMATS);
+
+    gst_query_parse_formats_length (query, &size);
+    fail_if (size != 0);
+
+    gst_query_parse_formats_nth (query, 0, &format);
+    fail_if (format != GST_FORMAT_UNDEFINED);
+    gst_query_parse_formats_nth (query, 1, &format);
+    fail_if (format != GST_FORMAT_UNDEFINED);
+
+    gst_query_set_formats (query, 2, GST_FORMAT_TIME, GST_FORMAT_BYTES);
+
+    gst_query_parse_formats_length (query, &size);
+    fail_if (size != 2);
+
+    format = GST_FORMAT_UNDEFINED;
+
+    gst_query_parse_formats_nth (query, 0, &format);
+    fail_if (format != GST_FORMAT_TIME);
+    gst_query_parse_formats_nth (query, 1, &format);
+    fail_if (format != GST_FORMAT_BYTES);
+
+    /* out of bounds, should return UNDEFINED */
+    gst_query_parse_formats_nth (query, 2, &format);
+    fail_if (format != GST_FORMAT_UNDEFINED);
+
+    gst_query_set_formats (query, 3, GST_FORMAT_TIME, GST_FORMAT_BYTES,
+        GST_FORMAT_PERCENT);
+
+    gst_query_parse_formats_length (query, &size);
+    fail_if (size != 3);
+
+    gst_query_parse_formats_nth (query, 2, &format);
+    fail_if (format != GST_FORMAT_PERCENT);
+
+    gst_query_unref (query);
+  }
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_queries)
 {
@@ -103,6 +206,7 @@ gstquery_suite (void)
   tcase_set_timeout (tc_chain, 20);
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, create_queries);
   tcase_add_test (tc_chain, test_queries);
   return s;
 }

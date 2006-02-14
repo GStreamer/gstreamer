@@ -800,6 +800,39 @@ gst_query_parse_seeking (GstQuery * query, GstFormat * format,
 }
 
 /**
+ * gst_query_new_formats:
+ *
+ * Constructs a new query object for querying formats of
+ * the stream. 
+ *
+ * Returns: A #GstQuery
+ *
+ * Since: 0.10.4
+ */
+GstQuery *
+gst_query_new_formats (void)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new ("GstQueryFormats", NULL);
+  query = gst_query_new (GST_QUERY_FORMATS, structure);
+
+  return query;
+}
+
+static void
+gst_query_list_add_format (GValue * list, GstFormat format)
+{
+  GValue item = { 0, };
+
+  g_value_init (&item, GST_TYPE_FORMAT);
+  g_value_set_enum (&item, format);
+  gst_value_list_append_value (list, &item);
+  g_value_unset (&item);
+}
+
+/**
  * gst_query_set_formats:
  * @query: a #GstQuery
  * @n_formats: the number of formats to set.
@@ -813,23 +846,110 @@ gst_query_set_formats (GstQuery * query, gint n_formats, ...)
 {
   va_list ap;
   GValue list = { 0, };
-  GValue item = { 0, };
   GstStructure *structure;
   gint i;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_FORMATS);
 
   g_value_init (&list, GST_TYPE_LIST);
 
   va_start (ap, n_formats);
-
   for (i = 0; i < n_formats; i++) {
-    g_value_init (&item, GST_TYPE_FORMAT);
-    g_value_set_enum (&item, va_arg (ap, GstFormat));
-    gst_value_list_append_value (&list, &item);
-    g_value_unset (&item);
+    gst_query_list_add_format (&list, va_arg (ap, GstFormat));
   }
-
   va_end (ap);
 
   structure = gst_query_get_structure (query);
   gst_structure_set_value (structure, "formats", &list);
+}
+
+/**
+ * gst_query_set_formatsv:
+ * @query: a #GstQuery
+ * @n_formats: the number of formats to set.
+ * @formats: An array containing @n_formats @GstFormat values.
+ *
+ * Set the formats query result fields in @query. The number of formats passed
+ * in the @formats array must be equal to @n_formats.
+ *
+ * Since: 0.10.4
+ */
+void
+gst_query_set_formatsv (GstQuery * query, gint n_formats, GstFormat * formats)
+{
+  GValue list = { 0, };
+  GstStructure *structure;
+  gint i;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_FORMATS);
+
+  g_value_init (&list, GST_TYPE_LIST);
+  for (i = 0; i < n_formats; i++) {
+    gst_query_list_add_format (&list, formats[i]);
+  }
+  structure = gst_query_get_structure (query);
+  gst_structure_set_value (structure, "formats", &list);
+}
+
+/**
+ * gst_query_parse_formats_length:
+ * @query: a #GstQuery
+ * @n_formats: the number of formats in this query.
+ *
+ * Parse the number of formats in the formats @query. 
+ *
+ * Since: 0.10.4
+ */
+void
+gst_query_parse_formats_length (GstQuery * query, guint * n_formats)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_FORMATS);
+
+  if (n_formats) {
+    const GValue *list;
+
+    structure = gst_query_get_structure (query);
+    list = gst_structure_get_value (structure, "formats");
+    if (list == NULL)
+      *n_formats = 0;
+    else
+      *n_formats = gst_value_list_get_size (list);
+  }
+}
+
+/**
+ * gst_query_parse_formats_nth:
+ * @query: a #GstQuery
+ * @nth: the nth format to retrieve.
+ * @format: a pointer to store the nth format
+ *
+ * Parse the format query and retrieve the @nth format from it into 
+ * @format. If the list contains less elements than @nth, @format will be
+ * set to GST_FORMAT_UNDEFINED.
+ *
+ * Since: 0.10.4
+ */
+void
+gst_query_parse_formats_nth (GstQuery * query, guint nth, GstFormat * format)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_FORMATS);
+
+  if (format) {
+    const GValue *list;
+
+    structure = gst_query_get_structure (query);
+    list = gst_structure_get_value (structure, "formats");
+    if (list == NULL) {
+      *format = GST_FORMAT_UNDEFINED;
+    } else {
+      if (nth < gst_value_list_get_size (list)) {
+        *format = g_value_get_enum (gst_value_list_get_value (list, nth));
+      } else
+        *format = GST_FORMAT_UNDEFINED;
+    }
+  }
 }
