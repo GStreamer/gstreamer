@@ -1,3 +1,12 @@
+2006-02-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_event):
+	Add comment in a fultile attempt to stop the copy-and-paste 
+	paradigm leading to duplication of bad code.
+
+	* gst/rtsp/rtsptransport.c: (rtsp_transport_parse):
+	Mime parameters have to be checked case insensitive
+
 2006-02-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_sync_streams):

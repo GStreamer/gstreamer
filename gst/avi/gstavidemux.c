@@ -455,6 +455,8 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
+      /* FIXME, this seeking code is not correct, look at wavparse for 
+       * a better example */
       GstFormat format;
       GstSeekFlags flags;
       gdouble rate;

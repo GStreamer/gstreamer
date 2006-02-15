@@ -80,7 +80,7 @@ parse_range (RTSPTransport * transport, gchar * str, RTSPRange * range)
 RTSPResult
 rtsp_transport_parse (gchar * str, RTSPTransport * transport)
 {
-  gchar **split;
+  gchar **split, *down;
   gint i;
 
   if (str == NULL || transport == NULL)
@@ -88,14 +88,17 @@ rtsp_transport_parse (gchar * str, RTSPTransport * transport)
 
   rtsp_transport_init (transport);
 
-  split = g_strsplit (str, ";", 0);
+  /* case insensitive */
+  down = g_ascii_strdown (str, -1);
+
+  split = g_strsplit (down, ";", 0);
   i = 0;
   while (split[i]) {
-    if (g_str_has_prefix (split[i], "RTP/AVP/UDP")) {
+    if (g_str_has_prefix (split[i], "rtp/avp/udp")) {
       transport->lower_transport = RTSP_LOWER_TRANS_UDP;
-    } else if (g_str_has_prefix (split[i], "RTP/AVP/TCP")) {
+    } else if (g_str_has_prefix (split[i], "rtp/avp/tcp")) {
       transport->lower_transport = RTSP_LOWER_TRANS_TCP;
-    } else if (g_str_has_prefix (split[i], "RTP/AVP")) {
+    } else if (g_str_has_prefix (split[i], "rtp/avp")) {
       transport->lower_transport = RTSP_LOWER_TRANS_UDP;
     } else if (g_str_has_prefix (split[i], "multicast")) {
       transport->multicast = TRUE;
@@ -130,6 +133,7 @@ rtsp_transport_parse (gchar * str, RTSPTransport * transport)
     i++;
   }
   g_strfreev (split);
+  g_free (down);
 
   return RTSP_OK;
 }
