@@ -932,7 +932,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         demux->offset += demux->neededbytes;
         demux->neededbytes = 16;
         demux->state = QTDEMUX_STATE_INITIAL;
-        gst_qtdemux_post_buffering (demux, 100, 1);
+        gst_qtdemux_post_buffering (demux, 1, 1);
       }
         break;
 

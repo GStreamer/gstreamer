@@ -1,5 +1,10 @@
 2006-02-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_chain):
+	  It appears 100% equals 1/1 and not 100/1 ...
+
+2006-02-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_post_buffering),
 	(gst_qtdemux_chain):
 	  When buffering MDAT data, show the user something is
