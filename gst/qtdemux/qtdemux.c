@@ -104,7 +104,7 @@ enum QtDemuxState
   QTDEMUX_STATE_INITIAL,        /* Initial state (haven't got the header yet) */
   QTDEMUX_STATE_HEADER,         /* Parsing the header */
   QTDEMUX_STATE_MOVIE,          /* Parsing/Playing the media data */
-  QTDEMUX_STATE_BUFFER_MDAT,    /* Buffering the mdat atom */
+  QTDEMUX_STATE_BUFFER_MDAT     /* Buffering the mdat atom */
 };
 
 static GNode *qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc);
@@ -810,6 +810,18 @@ next_entry_size (GstQTDemux * demux)
   return -1;
 }
 
+static void
+gst_qtdemux_post_buffering (GstQTDemux * demux, gint num, gint denom)
+{
+  gint perc = (gint) ((gdouble) num * 100.0 / (gdouble) denom);
+
+  gst_element_post_message (GST_ELEMENT (demux),
+      gst_message_new_custom (GST_MESSAGE_BUFFERING,
+          GST_OBJECT (demux),
+          gst_structure_new ("GstMessageBuffering",
+              "buffer-percent", G_TYPE_INT, perc, NULL)));
+}
+
 static GstFlowReturn
 gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 {
@@ -920,6 +932,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         demux->offset += demux->neededbytes;
         demux->neededbytes = 16;
         demux->state = QTDEMUX_STATE_INITIAL;
+        gst_qtdemux_post_buffering (demux, 100, 1);
       }
         break;
 
@@ -1012,6 +1025,12 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
     }
   }
 
+  /* when buffering movie data, at least show user something is happening */
+  if (ret == GST_FLOW_OK && demux->state == QTDEMUX_STATE_BUFFER_MDAT &&
+      gst_adapter_available (demux->adapter) <= demux->neededbytes) {
+    gst_qtdemux_post_buffering (demux, gst_adapter_available (demux->adapter),
+        demux->neededbytes);
+  }
 
   return ret;
 }

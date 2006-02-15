@@ -1,3 +1,10 @@
+2006-02-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_post_buffering),
+	(gst_qtdemux_chain):
+	  When buffering MDAT data, show the user something is
+	  happening by posting 'buffering' messages on the bus.
+
 2006-02-14  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
