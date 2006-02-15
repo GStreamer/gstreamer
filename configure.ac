@@ -208,6 +208,7 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
+		asfdemux \
 		dvdlpcmdec \
         iec958 \
 		mpegaudioparse \
@@ -390,6 +391,7 @@ dnl po/Makefile.in
 AC_CONFIG_FILES(
 Makefile
 gst/Makefile
+gst/asfdemux/Makefile
 gst/dvdlpcmdec/Makefile
 gst/iec958/Makefile
 gst/mpegaudioparse/Makefile

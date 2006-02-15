@@ -22,7 +22,7 @@
 #define __ASF_DEMUX_H__
 
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
   
@@ -34,26 +34,31 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ASF_DEMUX,GstASFDemux))
 #define GST_IS_ASF_DEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ASF_DEMUX))
-#define GST_IS_ASF_DEMUX_CLASS(obj) \
+#define GST_IS_ASF_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ASF_DEMUX))
 
 typedef struct _GstASFDemux GstASFDemux;
 typedef struct _GstASFDemuxClass GstASFDemuxClass;
 
-struct _GstASFStreamContext {
-  GstPad *pad;
-  guint64 pts;
-};
-
-
 typedef struct
 {
-  GstPad  *pad;
-  guint16 id;
-  guint32 frag_offset;
-  guint32 sequence;
-  guint64 delay;
-  GstBuffer *payload;
+  GstPad     *pad;
+  guint16     id;
+  guint32     frag_offset;
+  guint32     sequence;
+  guint64     delay;
+  guint64     last_pts;
+  GstBuffer  *payload;
+
+  gboolean    need_newsegment;  /* do we need to send a new-segment event? */
+
+  /* video-only */
+  guint64     last_buffer_timestamp;  /* timestamp of last buffer sent out */
+  gboolean    is_video;
+  gboolean    fps_known;
+  GstBuffer  *cache;
+
+  GstCaps    *caps;
 } asf_stream_context;
 
 typedef enum {
@@ -62,55 +67,60 @@ typedef enum {
   GST_ASF_DEMUX_STATE_EOS
 } GstAsfDemuxState;
 
+#define GST_ASF_DEMUX_NUM_VIDEO_PADS   16
+#define GST_ASF_DEMUX_NUM_AUDIO_PADS   32
+#define GST_ASF_DEMUX_NUM_STREAMS      32
+#define GST_ASF_DEMUX_NUM_STREAM_IDS  127
+
 struct _GstASFDemux {
-  GstElement     element;
+  GstElement 	     element;
 
-  /* pads */
-  GstPad        *sinkpad;
+  GstPad 	    *sinkpad;
 
-  GstByteStream *bs;
+  GstAdapter        *adapter;
+  GstTagList        *taglist;
+  GstAsfDemuxState   state;
+  
+  /* The number of bytes needed for the next parsing unit. Set by
+   * parsing functions when they return ASF_FLOW_NEED_MORE_DATA.
+   * if not set after an ASF_FLOW_NEED_MORE_DATA, this indicates 
+   * that we are parsing broken data and want to parse beyond an
+   * object or packet boundary. */ 
+  guint              bytes_needed;
 
-  GstTagList *taglist;
-  GstAsfDemuxState state;
-  guint64 data_offset, num_packets, packet, data_size;
-  guint64 seek_pending;
-  gboolean seek_flush, seek_discont;
+  guint64            data_offset;  /* byte offset where packets start    */
+  guint64            data_size;    /* total size of packet data in bytes */
+  guint64            num_packets;  /* total number of data packets       */
+  guint64            packet;       /* current packet                     */
 
-#define GST_ASF_DEMUX_NUM_VIDEO_PADS 16
-#define GST_ASF_DEMUX_NUM_AUDIO_PADS 32
-#define GST_ASF_DEMUX_NUM_STREAMS 23
-#define GST_ASF_DEMUX_NUM_STREAM_IDS 127
+  /* bitrates are unused at the moment */
+  guint32              bitrate[GST_ASF_DEMUX_NUM_STREAM_IDS];
 
-  /* stream output pads */
-  GstPad *video_pad[GST_ASF_DEMUX_NUM_VIDEO_PADS];
-  gint64 video_PTS[GST_ASF_DEMUX_NUM_VIDEO_PADS];
+  guint32              num_audio_streams;
+  guint32              num_video_streams;
+  guint32              num_streams;
+  asf_stream_context   stream[GST_ASF_DEMUX_NUM_STREAMS];
 
-  GstPad *audio_pad[GST_ASF_DEMUX_NUM_AUDIO_PADS];
-  gint64 audio_PTS[GST_ASF_DEMUX_NUM_AUDIO_PADS];
+  guint32              packet_size; /* -1 if not fixed or not known */
+  guint32              timestamp;   /* in milliseconds              */
+  guint64              play_time;
 
-  guint64  last_seek;
-  gboolean restart;
+  guint64              preroll;
+  guint64              pts;
 
-  guint32 bitrate[GST_ASF_DEMUX_NUM_STREAM_IDS];
+  /* expected byte offset of next buffer to be received by chain
+   * function. Used to calculate the current byte offset into the
+   * file from the adapter state and the data parser state */
+  gint64               next_byte_offset;
 
-  /* Demuxing state */
-  guint32 num_audio_streams;
-  guint32 num_video_streams;
-  guint32 num_streams;
-  asf_stream_context stream[GST_ASF_DEMUX_NUM_STREAMS];
-
-  guint32 packet_size;
-  guint32 timestamp;
-  guint64 play_time;
-
-  guint64 preroll;
-  guint64 pts;
+  
+  GstSegment           segment; /* configured play segment */
 
   /* Descrambler settings */
-  guint8  span;
-  guint16 ds_packet_size;
-  guint16 ds_chunk_size;
-  guint16 ds_data_size;
+  guint8               span;
+  guint16              ds_packet_size;
+  guint16              ds_chunk_size;
+  guint16              ds_data_size;
 
 };
 

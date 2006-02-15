@@ -1,3 +1,54 @@
+2006-02-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/asfdemux/asfheaders.c: (gst_asf_identify_guid),
+	(gst_asf_get_guid_nick):
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasf.c: (plugin_init):
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_base_init),
+	(gst_asf_demux_class_init), (gst_asf_demux_init),
+	(gst_asf_demux_sink_event), (gst_asf_demux_handle_seek_event),
+	(gst_asf_demux_handle_src_event),
+	(gst_asf_demux_get_current_offset), (gst_asf_demux_chain),
+	(gst_asf_demux_skip_bytes), (gst_asf_demux_identify_guid),
+	(gst_asf_demux_get_uint8), (gst_asf_demux_get_uint16),
+	(gst_asf_demux_get_uint32), (gst_asf_demux_get_uint64),
+	(gst_asf_demux_get_var_length), (gst_asf_demux_get_buffer),
+	(gst_asf_demux_get_bytes), (gst_asf_demux_get_string),
+	(gst_asf_demux_get_guid), (gst_asf_demux_get_obj_file),
+	(gst_asf_demux_get_bitrate_record),
+	(gst_asf_demux_get_obj_comment), (gst_asf_demux_get_obj_header),
+	(gst_asf_demux_get_obj_header_ext), (gst_asf_demux_get_obj_stream),
+	(gst_asf_demux_get_replicated_data), (gst_asf_demux_get_obj_data),
+	(gst_asf_demux_get_obj_data_correction),
+	(gst_asf_demux_get_stream_audio),
+	(gst_asf_demux_get_stream_correction),
+	(gst_asf_demux_get_stream_video),
+	(gst_asf_demux_get_stream_video_format),
+	(gst_asf_demux_get_stream), (gst_asf_demux_setup_pad),
+	(gst_asf_demux_add_audio_stream), (gst_asf_demux_add_video_stream),
+	(gst_asf_demux_process_stream),
+	(gst_asf_demux_get_gst_tag_from_tag_name),
+	(gst_asf_demux_commit_taglist),
+	(gst_asf_demux_process_ext_content_desc),
+	(gst_asf_demux_get_object_header), (gst_asf_demux_process_data),
+	(gst_asf_demux_process_header), (gst_asf_demux_process_file),
+	(gst_asf_demux_process_comment),
+	(gst_asf_demux_process_bitrate_props_object),
+	(gst_asf_demux_process_header_ext), (gst_asf_demux_process_object),
+	(gst_asf_demux_descramble_segment),
+	(gst_asf_demux_element_send_event),
+	(gst_asf_demux_send_event_unlocked), (gst_asf_demux_push_buffer),
+	(gst_asf_demux_process_chunk), (gst_asf_demux_process_segment),
+	(gst_asf_demux_handle_data), (gst_asf_demux_parse_data),
+	(gst_asf_demux_get_src_query_types),
+	(gst_asf_demux_handle_src_query), (gst_asf_demux_change_state):
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux ported to 0.10. Does still need a bit of work (seems like
+	  there's something funky going on when timestamping video frames).
+	  The seeking code is likely to make Wim cry, but hey, at least it
+	  compiles.
+
 2006-02-15  Wim Taymans  <wim@fluendo.com>
 
 	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_setcaps),

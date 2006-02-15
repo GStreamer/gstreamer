@@ -30,8 +30,9 @@ typedef struct {
 
 
 typedef struct {
-  guint8     obj_id;
-  ASFGuid guid;
+  guint8       obj_id;
+  const gchar *obj_id_str;
+  ASFGuid      guid;
 } ASFGuidHash;
 
 enum {
@@ -53,24 +54,34 @@ enum {
   ASF_OBJ_BITRATE_MUTEX,
   ASF_OBJ_LANGUAGE_LIST,
   ASF_OBJ_METADATA_OBJECT,
-  ASF_OBJ_EXTENDED_STREAM_PROPS,
+  ASF_OBJ_EXTENDED_STREAM_PROPS
 };
 
 enum {
   ASF_STREAM_UNDEFINED = 0,
   ASF_STREAM_VIDEO,
-  ASF_STREAM_AUDIO,
+  ASF_STREAM_AUDIO
 };
 
 enum {
   ASF_CORRECTION_UNDEFINED = 0,
   ASF_CORRECTION_ON,
-  ASF_CORRECTION_OFF,
+  ASF_CORRECTION_OFF
 };
 
-extern ASFGuidHash asf_correction_guids[];
+extern const ASFGuidHash asf_correction_guids[];
 
-extern ASFGuidHash asf_stream_guids[];
+extern const ASFGuidHash asf_stream_guids[];
+
+extern const ASFGuidHash asf_object_guids[];
+
+/* GUID utilities */
+guint32        gst_asf_identify_guid (const ASFGuidHash * guids,
+                                      ASFGuid           * guid);
+
+const gchar   *gst_asf_get_guid_nick (const ASFGuidHash * guids,
+                                      guint32             obj_id);
+
 
 struct _asf_obj_header {
   guint32 num_objects;
@@ -234,7 +245,5 @@ struct _asf_bitrate_record {
 };
 
 typedef struct _asf_bitrate_record asf_bitrate_record;
-
-extern ASFGuidHash asf_object_guids[];
 
 #endif /* __ASFHEADERS_H__ */

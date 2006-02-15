@@ -24,18 +24,15 @@
 #include <gst/gst.h>
 
 #include "gstasfdemux.h"
-#include "gstasfmux.h"
+/* #include "gstasfmux.h" */
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstbytestream") || !gst_library_load ("riff"))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "asfdemux", GST_RANK_PRIMARY,
-          GST_TYPE_ASF_DEMUX)
-      || !gst_element_register (plugin, "asfmux", GST_RANK_NONE,
-          GST_TYPE_ASFMUX))
+  if (!gst_element_register (plugin, "asfdemux", GST_RANK_PRIMARY, GST_TYPE_ASF_DEMUX)) /*
+                                                                                           || !gst_element_register (plugin, "asfmux", GST_RANK_NONE,
+                                                                                           GST_TYPE_ASFMUX))
+                                                                                         */
     return FALSE;
 
   return TRUE;
@@ -45,4 +42,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "asf",
     "Demuxes and muxes audio and video in Microsofts ASF format",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
