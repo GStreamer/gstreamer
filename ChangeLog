@@ -1,3 +1,8 @@
+2006-02-15  Edward Hervey  <edward@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (qt_type_find):
+	quicktime movie files can also contain 'uuid' atoms.
+
 2006-02-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/audioconvert/plugin.c: (plugin_init):

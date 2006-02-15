@@ -1223,7 +1223,8 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
         STRNCMP (&data[4], "PICT", 4) != 0 &&
         STRNCMP (&data[4], "ftyp", 4) != 0 &&
         STRNCMP (&data[4], "free", 4) != 0 &&
-        STRNCMP (&data[4], "skip", 4) != 0) {
+        STRNCMP (&data[4], "skip", 4) != 0 &&
+        STRNCMP (&data[4], "uuid", 4) != 0) {
       tip = 0;
       break;
     }
