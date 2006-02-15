@@ -1,3 +1,9 @@
+2006-02-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gsttypefindelement.c: (find_peek):
+	  We can do peeks at non-zero offsets, as long as they
+	  fall within the buffer we have.
+
 2006-02-15  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/Makefile.am:

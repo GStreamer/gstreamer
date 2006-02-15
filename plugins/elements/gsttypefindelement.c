@@ -607,8 +607,22 @@ find_peek (gpointer data, gint64 offset, guint size)
 
   GST_LOG_OBJECT (entry->self, "'%s' called peek (%" G_GINT64_FORMAT ", %u)",
       GST_PLUGIN_FEATURE_NAME (entry->factory), offset, size);
-  if (offset != 0)
+
+  if (offset < 0) {
+    GST_LOG_OBJECT (entry->self, "peek at end not supported in push mode");
     return NULL;
+  }
+
+  if (offset > 0) {
+    if ((offset + size) <= entry->self->store->size) {
+      entry->requested_size = 0;
+      return GST_BUFFER_DATA (entry->self->store) + offset;
+    }
+    /* no can do */
+    return NULL;
+  }
+
+  /* offset == 0 ... */
 
   if (size <= entry->self->store->size) {
     entry->requested_size = 0;
