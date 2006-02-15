@@ -1300,6 +1300,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
      */
     if (pad->timestamp < timestamp_end) {
       pad->timestamp = timestamp_end;
+      pad->timestamp_end = timestamp_end;
       GST_DEBUG_OBJECT (ogg_mux, "Updated timestamp of pad %" GST_PTR_FORMAT
           " (oggpad %p) to %" GST_TIME_FORMAT, pad->collect.pad, pad,
           GST_TIME_ARGS (timestamp_end));

@@ -1,3 +1,10 @@
+2006-02-15  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ogg/gstoggmux.c (gst_ogg_mux_collected): When updating
+	timestamp, update timestamp_end as well. Fixes a bugaboo. I hope
+	to the Lord Jesus that I do not have to touch the ogg muxer ever
+	again.
+
 2006-02-15  Edward Hervey  <edward@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (qt_type_find):
