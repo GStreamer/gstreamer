@@ -236,6 +236,8 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
 
     if (gst_adapter_available (amrnbdec->adapter) < block)
       break;
+    /* the library seems to write into the source data, hence
+     * the copy. */
     data = (guint8 *) gst_adapter_take (amrnbdec->adapter, block);
 
     /* get output */
@@ -246,8 +248,7 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
       amrnbdec->ts += GST_BUFFER_DURATION (out);
     gst_buffer_set_caps (out, GST_PAD_CAPS (amrnbdec->srcpad));
 
-    /* decode, the library seems to write into the source data, hence
-     * the copy. */
+    /* decode */
     Decoder_Interface_Decode (amrnbdec->handle, data,
         (short *) GST_BUFFER_DATA (out), 0);
     g_free (data);

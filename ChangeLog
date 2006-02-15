@@ -1,3 +1,12 @@
+2006-02-15  Wim Taymans  <wim@fluendo.com>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_setcaps),
+	(gst_amrnbdec_chain), (gst_amrnbdec_state_change):
+	Some more comments.
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (crop_buffer), (handle_slice):
+	Applied patch from Fabrizio Gennari, fixes #330844.
+
 2006-02-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_init),

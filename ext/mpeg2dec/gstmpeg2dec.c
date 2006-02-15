@@ -189,7 +189,7 @@ static const GstEventMask *gst_mpeg2dec_get_event_masks (GstPad * pad);
 
 static GstElementClass *parent_class = NULL;
 
-static GstBuffer *crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input);
+static gboolean crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf);
 
 /*static guint gst_mpeg2dec_signals[LAST_SIGNAL] = { 0 };*/
 
@@ -342,14 +342,16 @@ gst_mpeg2dec_get_index (GstElement * element)
   return mpeg2dec->index;
 }
 
-static GstBuffer *
-crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input)
+static gboolean
+crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf)
 {
   unsigned char *in_data;
   unsigned char *out_data;
   unsigned int h_subsample;
   unsigned int v_subsample;
   unsigned int line;
+  gboolean result = FALSE;
+  GstBuffer *input = *buf;
   GstBuffer *outbuf = input;
 
   /*We crop only if the target region is smaller than the input one */
@@ -376,6 +378,7 @@ crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input)
         h_subsample = 2;
         v_subsample = 2;
       }
+      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mpeg2dec->srcpad));
 
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (input);
       GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (input);
@@ -405,11 +408,12 @@ crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input)
         in_data += mpeg2dec->decoded_width / h_subsample;
       }
 
-      gst_buffer_unref (input);
+      *buf = outbuf;
+      result = TRUE;
     }
   }
 
-  return outbuf;
+  return result;
 }
 
 static GstFlowReturn
@@ -713,6 +717,8 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
           GST_TIME_ARGS (mpeg2dec->next_time),
           GST_TIME_ARGS (mpeg2dec->segment_start));
     } else {
+      gboolean cropped_outbuf_different_from_outbuf = FALSE;
+
       GST_LOG_OBJECT (mpeg2dec, "pushing buffer, timestamp %"
           GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
@@ -720,13 +726,13 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 
       if ((mpeg2dec->decoded_height > mpeg2dec->height) ||
           (mpeg2dec->decoded_width > mpeg2dec->width)) {
-        /* CHECKME: this might unref outbuf and return a new buffer.
-         * Does this affect the info->discard_fbuf stuff below? */
-        outbuf = crop_buffer (mpeg2dec, outbuf);
+        cropped_outbuf_different_from_outbuf = crop_buffer (mpeg2dec, &outbuf);
       }
 
       gst_buffer_ref (outbuf);
       ret = gst_pad_push (mpeg2dec->srcpad, outbuf);
+      if (cropped_outbuf_different_from_outbuf)
+        gst_buffer_unref (outbuf);
     }
   }
 
