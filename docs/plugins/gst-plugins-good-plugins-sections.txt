@@ -55,6 +55,22 @@ GstGoomClass
 </SECTION>
 
 <SECTION>
+<FILE>element-halaudiosink</FILE>
+GstHalAudioSink
+<TITLE>halaudiosink</TITLE>
+<SUBSECTION Standard>
+GstHalAudioSinkClass
+</SECTION>
+
+<SECTION>
+<FILE>element-halaudiosrc</FILE>
+GstHalAudioSrc
+<TITLE>halaudiosrc</TITLE>
+<SUBSECTION Standard>
+GstHalAudioSrcClass
+</SECTION>
+
+<SECTION>
 <FILE>element-id3demux</FILE>
 GstID3Demux
 <TITLE>id3demux</TITLE>

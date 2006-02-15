@@ -385,6 +385,14 @@ GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
   AC_SUBST(GCONF_LIBS)
 ])
 
+dnl *** HAL ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_HAL, true)
+GST_CHECK_FEATURE(HAL, [HAL libraries], , [
+  PKG_CHECK_MODULES(HAL, [hal >= 0.5.6, dbus-1 >= 0.32], HAVE_HAL="yes", HAVE_HAL="no")
+  AC_SUBST(HAL_CFLAGS)
+  AC_SUBST(HAL_LIBS)
+])
+
 dnl *** jpeg ***
 dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG, true)
@@ -616,6 +624,7 @@ ext/dv/Makefile
 ext/esd/Makefile
 ext/flac/Makefile
 ext/gconf/Makefile
+ext/hal/Makefile
 ext/ladspa/Makefile
 ext/libcaca/Makefile
 ext/libpng/Makefile

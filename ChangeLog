@@ -1,5 +1,35 @@
 2006-02-15  Wim Taymans  <wim@fluendo.com>
 
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* ext/Makefile.am:
+	* ext/hal/Makefile.am:
+	* ext/hal/gsthalaudiosink.c: (gst_hal_audio_sink_base_init),
+	(gst_hal_audio_sink_class_init), (gst_hal_audio_sink_reset),
+	(gst_hal_audio_sink_init), (gst_hal_audio_sink_dispose),
+	(do_toggle_element), (gst_hal_audio_sink_set_property),
+	(gst_hal_audio_sink_get_property),
+	(gst_hal_audio_sink_change_state):
+	* ext/hal/gsthalaudiosink.h:
+	* ext/hal/gsthalaudiosrc.c: (gst_hal_audio_src_base_init),
+	(gst_hal_audio_src_class_init), (gst_hal_audio_src_reset),
+	(gst_hal_audio_src_init), (gst_hal_audio_src_dispose),
+	(do_toggle_element), (gst_hal_audio_src_set_property),
+	(gst_hal_audio_src_get_property), (gst_hal_audio_src_change_state):
+	* ext/hal/gsthalaudiosrc.h:
+	* ext/hal/gsthalelements.c: (plugin_init):
+	* ext/hal/gsthalelements.h:
+	* ext/hal/hal.c: (gst_hal_get_string),
+	(gst_hal_render_bin_from_udi), (gst_hal_get_audio_sink),
+	(gst_hal_get_audio_src):
+	* ext/hal/hal.h:
+	Add HAL sound device wrapper plugins. Closes #329106
+
+2006-02-15  Wim Taymans  <wim@fluendo.com>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_event):
 	Add comment in a fultile attempt to stop the copy-and-paste 
 	paradigm leading to duplication of bad code.

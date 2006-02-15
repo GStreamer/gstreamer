@@ -83,6 +83,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/cairo/gsttimeoverlay.h \
 	$(top_srcdir)/ext/cdio/gstcdiocddasrc.h \
 	$(top_srcdir)/ext/flac/gstflacdec.h \
+	$(top_srcdir)/ext/hal/gsthalaudiosink.h \
+	$(top_srcdir)/ext/hal/gsthalaudiosrc.h \
 	$(top_srcdir)/gst/multipart/multipartmux.c \
 	$(top_srcdir)/gst/multipart/multipartdemux.c \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \

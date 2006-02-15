@@ -12,6 +12,8 @@ GObject
         GstGConfAudioSink
         GstAutoVideoSink
         GstAutoAudioSink
+        GstHalAudioSink
+        GstHalAudioSrc
       GstSpeexEnc
       GstSpeexDec
       GstBaseSink

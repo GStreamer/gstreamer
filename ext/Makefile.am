@@ -40,6 +40,12 @@ endif
 GDK_PIXBUF_DIR =
 # endif
 
+if USE_HAL
+HAL_DIR = hal
+else
+HAL_DIR =
+endif
+
 if USE_JPEG
 JPEG_DIR = jpeg
 else
@@ -109,6 +115,7 @@ SUBDIRS = \
 	$(FLAC_DIR) \
 	$(GCONF_DIR) \
 	$(GDK_PIXBUF_DIR) \
+	$(HAL_DIR) \
 	$(JPEG_DIR) \
 	$(LADSPA_DIR) \
 	$(LIBCACA_DIR) \
@@ -127,6 +134,7 @@ DIST_SUBDIRS = \
 	esd \
 	flac \
 	gconf \
+	hal \
 	jpeg \
 	ladspa \
 	libcaca \
