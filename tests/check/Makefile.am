@@ -30,7 +30,7 @@ clean-local: clean-local-check
 if GST_DISABLE_PARSE
 PARSE_CHECKS =
 else
-PARSE_CHECKS = pipelines/simple-launch-lines pipelines/cleanup
+PARSE_CHECKS = pipelines/simple-launch-lines pipelines/cleanup pipelines/parse-launch
 endif
 
 check_PROGRAMS =				\

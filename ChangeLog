@@ -1,3 +1,11 @@
+2006-02-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/parse-launch.c: (setup_pipeline),
+	(expected_fail_pipe), (check_pipeline_runs), (GST_START_TEST),
+	(parse_suite), (main):
+	  Add testsuite for parse launch syntax
+
 2006-02-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gsttypefindelement.c:
