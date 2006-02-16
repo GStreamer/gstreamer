@@ -298,6 +298,7 @@ typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_VORBIS3PLUS    (0x6771)
 #define GST_RIFF_WAVE_FORMAT_GSM_AMR_CBR    (0x7A21)
 #define GST_RIFF_WAVE_FORMAT_GSM_AMR_VBR    (0x7A22)
+#define GST_RIFF_WAVE_FORMAT_EXTENSIBLE     (0xFFFE)
   guint16 channels;
   guint32 rate;
   guint32 av_bps;

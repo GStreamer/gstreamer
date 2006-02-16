@@ -26,6 +26,13 @@
 #include "riff-ids.h"
 #include "riff-media.h"
 
+#include <gst/audio/multichannel.h>
+
+#include <string.h>
+
+GST_DEBUG_CATEGORY_EXTERN (riff_debug);
+#define GST_CAT_DEFAULT riff_debug
+
 /**
  * gst_riff_create_video_caps_with_data:
  * @codec_fcc: fourCC codec for this codec.
@@ -550,6 +557,85 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   return caps;
 }
 
+static const struct
+{
+  const guint32 ms_mask;
+  const GstAudioChannelPosition gst_pos;
+} layout_mapping[] = {
+  {
+  0x00001, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
+  0x00002, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
+  0x00004, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
+  0x00008, GST_AUDIO_CHANNEL_POSITION_LFE}, {
+  0x00010, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT}, {
+  0x00020, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+  0x00040, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER}, {
+  0x00080, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
+  0x00100, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
+  0x00200, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT}, {
+  0x00400, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}, {
+  0x00800, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_CENTER       */
+  {
+  0x01000, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_FRONT_LEFT   */
+  {
+  0x02000, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_FRONT_CENTER */
+  {
+  0x04000, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_FRONT_RIGHT  */
+  {
+  0x08000, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_BACK_LEFT    */
+  {
+  0x10000, GST_AUDIO_CHANNEL_POSITION_INVALID}, /* TOP_BACK_CENTER  */
+  {
+  0x20000, GST_AUDIO_CHANNEL_POSITION_INVALID}  /* TOP_BACK_RIGHT   */
+};
+
+#define MAX_CHANNEL_POSITIONS G_N_ELEMENTS (layout_mapping)
+
+static gboolean
+gst_riff_wavext_add_channel_layout (GstCaps * caps, guint32 layout)
+{
+  GstAudioChannelPosition pos[MAX_CHANNEL_POSITIONS];
+  GstStructure *s;
+  gint num_channels, i, p;
+
+  s = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (s, "channels", &num_channels))
+    g_return_val_if_reached (FALSE);
+
+  if (num_channels < 2 || num_channels > MAX_CHANNEL_POSITIONS) {
+    GST_DEBUG ("invalid number of channels: %d", num_channels);
+    return FALSE;
+  }
+
+  p = 0;
+  for (i = 0; i < MAX_CHANNEL_POSITIONS; ++i) {
+    if ((layout & layout_mapping[i].ms_mask) != 0) {
+      if (p >= num_channels) {
+        GST_WARNING ("More bits set in the channel layout map than there "
+            "are channels! Broken file");
+        return FALSE;
+      }
+      if (layout_mapping[i].gst_pos == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+        GST_WARNING ("Unsupported channel position (mask 0x%08x) in channel "
+            "layout map - ignoring those channels", layout_mapping[i].ms_mask);
+        /* what to do? just ignore it and let downstream deal with a channel
+         * layout that has INVALID positions in it for now ... */
+      }
+      pos[p] = layout_mapping[i].gst_pos;
+      ++p;
+    }
+  }
+
+  if (p != num_channels) {
+    GST_WARNING ("Only %d bits set in the channel layout map, but there are "
+        "supposed to be %d channels! Broken file", p, num_channels);
+    return FALSE;
+  }
+
+  gst_audio_set_channel_positions (s, pos);
+  return TRUE;
+}
+
 GstCaps *
 gst_riff_create_audio_caps (guint16 codec_id,
     gst_riff_strh * strh, gst_riff_strf_auds * strf,
@@ -586,6 +672,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
             "width", G_TYPE_INT, (int) (ba * 8 / ch),
             "depth", G_TYPE_INT, ws, "signed", G_TYPE_BOOLEAN, ws != 8, NULL);
       } else {
+        /* FIXME: this is pretty useless - we need fixed caps */
         caps = gst_caps_from_string ("audio/x-raw-int, "
             "endianness = (int) LITTLE_ENDIAN, "
             "signed = (boolean) { true, false }, "
@@ -699,6 +786,69 @@ gst_riff_create_audio_caps (guint16 codec_id,
         *codec_name = g_strdup ("Sony ATRAC3");
       break;
 
+    case GST_RIFF_WAVE_FORMAT_EXTENSIBLE:{
+      guint16 valid_bits_per_sample;
+      guint32 channel_mask;
+      guint32 subformat_guid[4];
+      const guint8 *data;
+
+      if (GST_BUFFER_SIZE (strf_data) != 22) {
+        GST_WARNING ("WAVE_FORMAT_EXTENSIBLE data size is %d (expected: 22)",
+            GST_BUFFER_SIZE (strf_data));
+        return NULL;
+      }
+
+      data = GST_BUFFER_DATA (strf_data);
+      valid_bits_per_sample = GST_READ_UINT16_LE (data);
+      channel_mask = GST_READ_UINT32_LE (data + 2);
+      subformat_guid[0] = GST_READ_UINT32_LE (data + 6);
+      subformat_guid[1] = GST_READ_UINT32_LE (data + 10);
+      subformat_guid[2] = GST_READ_UINT32_LE (data + 14);
+      subformat_guid[3] = GST_READ_UINT32_LE (data + 18);
+
+      GST_DEBUG ("valid bps    = %u", valid_bits_per_sample);
+      GST_DEBUG ("channel mask = 0x%08x", channel_mask);
+      GST_DEBUG ("GUID         = %08x-%08x-%08x-%08x", subformat_guid[0],
+          subformat_guid[1], subformat_guid[2], subformat_guid[3]);
+
+      if (subformat_guid[1] == 0x00100000 &&
+          subformat_guid[2] == 0xaa000080 && subformat_guid[3] == 0x719b3800) {
+        if (subformat_guid[0] == 0x00000001) {
+          GST_DEBUG ("PCM");
+          if (strf != NULL) {
+            gint ba = strf->blockalign;
+            gint ws = strf->size;
+            gint depth = ws;
+
+            if (valid_bits_per_sample != 0)
+              depth = valid_bits_per_sample;
+
+            caps = gst_caps_new_simple ("audio/x-raw-int",
+                "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+                "channels", G_TYPE_INT, strf->channels,
+                "width", G_TYPE_INT, (int) (ba * 8 / strf->channels),
+                "depth", G_TYPE_INT, depth,
+                "rate", G_TYPE_INT, strf->rate,
+                "signed", G_TYPE_BOOLEAN, (depth > 8) ? TRUE : FALSE, NULL);
+
+            if (!gst_riff_wavext_add_channel_layout (caps, channel_mask)) {
+              GST_WARNING ("failed to add channel layout");
+              gst_caps_unref (caps);
+              caps = NULL;
+            }
+            rate_chan = FALSE;
+          }
+        } else if (subformat_guid[0] == 0x00000003) {
+          GST_DEBUG ("FIXME: handle IEEE float format");
+        }
+
+        if (caps == NULL) {
+          GST_WARNING ("Unknown WAVE_FORMAT_EXTENSIBLE audio format");
+          return NULL;
+        }
+      }
+      break;
+    }
     default:
       GST_WARNING ("Unknown audio tag 0x%04x", codec_id);
       return NULL;

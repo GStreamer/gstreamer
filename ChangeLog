@@ -1,3 +1,15 @@
+2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/multichannel.c:
+	  Minor docs fix.
+
+	* gst-libs/gst/riff/Makefile.am:
+	* gst-libs/gst/riff/riff-ids.h:
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_wavext_add_channel_layout), (gst_riff_create_audio_caps):
+	  Add support for WAVEFORMATEX, eg. PCM audio with more than two
+	  channels and a channel layout map.
+	  
 2006-02-16  Mathieu Garcia <b0nk at free dot fr>
 
 	Reviewed by Edward Hervey  <edward@fluendo.com>

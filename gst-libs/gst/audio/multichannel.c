@@ -265,7 +265,7 @@ gst_audio_get_channel_positions (GstStructure * str)
 
 /**
  * gst_audio_set_channel_positions:
- * @str: A #GstStructure to retrieve channel positions from.
+ * @str: A #GstStructure to set channel positions on.
  * @pos: an array of channel positions. The number of members
  *       in this array should be equal to the (fixed!) number
  *       of the "channels" property in the given #GstStructure.
