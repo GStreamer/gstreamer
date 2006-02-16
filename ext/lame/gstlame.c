@@ -541,7 +541,7 @@ gst_lame_init (GstLame * lame)
   lame->vbr_quality = 5;
   lame->vbr_mean_bitrate = lame_get_VBR_mean_bitrate_kbps (lame->lgf);
   lame->vbr_min_bitrate = lame_get_VBR_min_bitrate_kbps (lame->lgf);
-  lame->vbr_max_bitrate = 320;  /* lame_get_VBR_max_bitrate_kbps (lame->lgf);
+  lame->vbr_max_bitrate = 0;    /* lame_get_VBR_max_bitrate_kbps (lame->lgf);
                                  * => 0/no vbr possible */
   lame->vbr_hard_min = lame_get_VBR_hard_min (lame->lgf);
   /* lame->lowpass_freq = 50000;    lame_get_lowpassfreq (lame->lgf);
@@ -987,6 +987,8 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
   gint64 duration;
   GstFlowReturn result;
   gint num_samples;
+  guint8 *data;
+  guint size;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
 
@@ -995,7 +997,10 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
   if (!lame->setup)
     goto not_setup;
 
-  num_samples = GST_BUFFER_SIZE (buf) / 2;
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  num_samples = size / 2;
 
   /* allocate space for output */
   mp3_buffer_size = 1.25 * num_samples + 7200;
@@ -1004,20 +1009,19 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
   /* lame seems to be too stupid to get mono interleaved going */
   if (lame->num_channels == 1) {
     mp3_size = lame_encode_buffer (lame->lgf,
-        (short int *) (GST_BUFFER_DATA (buf)),
-        (short int *) (GST_BUFFER_DATA (buf)),
-        num_samples, mp3_data, mp3_buffer_size);
+        (short int *) data,
+        (short int *) data, num_samples, mp3_data, mp3_buffer_size);
   } else {
     mp3_size = lame_encode_buffer_interleaved (lame->lgf,
-        (short int *) (GST_BUFFER_DATA (buf)),
+        (short int *) data,
         num_samples / lame->num_channels, mp3_data, mp3_buffer_size);
   }
 
   GST_LOG_OBJECT (lame, "encoded %d bytes of audio to %d bytes of mp3",
       GST_BUFFER_SIZE (buf), mp3_size);
 
-  duration = (GST_SECOND * GST_BUFFER_SIZE (buf) /
-      (2 * lame->samplerate * lame->num_channels));
+  duration = gst_util_uint64_scale_int (size, GST_SECOND,
+      2 * lame->samplerate * lame->num_channels);
 
   if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
       GST_BUFFER_DURATION (buf) != duration)
@@ -1176,7 +1180,6 @@ gst_lame_change_state (GstElement * element, GstStateChange transition)
 
   lame = GST_LAME (element);
 
-
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       lame->tags = gst_tag_list_new ();
@@ -1187,7 +1190,6 @@ gst_lame_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  /* if we haven't failed already, give the parent class a chance to ;-) */
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
