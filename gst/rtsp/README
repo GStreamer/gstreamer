@@ -40,9 +40,15 @@ An RTSP session is created as follows:
   to allocate two local UDP ports for receiving the RTP and RTCP data because we
   need to send the port numbers to the server in the next request.
 
-  In RTSPSrc we create two elements that can handle the udp://0.0.0.0:0 uri. This
-  will create an udp source element. We get the port number by getting the "port"
-  property of the element after setting the element to PAUSED.
+  In RTSPSrc we first create an element that can handle the udp://0.0.0.0:0 uri. This
+  will create an udp source element with a random port number. We get the port
+  number by getting the "port" property of the element after setting the element to 
+  PAUSED. This element is used for the RTP packets and has to be an even number. If
+  the random port number is not an even number we retry to allocate a new udp source.
+
+  We then create another UDP source element with the next (uneven) port number to 
+  receive the RTCP packet on. After this step we have two udp ports we can use to
+  accept RTP packets.
 
     +-----------------+
     | +------------+  |
@@ -129,7 +135,7 @@ An RTSP session is created as follows:
     << Session: 5d5cb94413288ccd
     <<
 
-  This means that RTP/RTCP messages will be send on channel 0/1 respectively and that
+  This means that RTP/RTCP messages will be sent on channel 0/1 respectively and that
   the data will be received on the same connection as the RTSP connection.
 
   At this point, we remove the UDP source elements as we don't need them anymore. We
@@ -303,7 +309,7 @@ Minimal server requirements:
                                       +------------+    +-------------+
 
       The server would set the above pipeline to PAUSE to make sure no data
-      is send to the client yet.
+      is sent to the client yet.
 
       optionally udpsrc elements can be configured to receive client RTP and
       RTSP messages.

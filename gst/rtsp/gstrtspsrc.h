@@ -86,6 +86,7 @@ struct _GstRTSPSrc {
 
   gchar         *location;
   gboolean       debug;
+  guint 	 retry;
 
   GstRTSPProto   protocols;
   /* supported options */

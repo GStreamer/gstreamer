@@ -27,11 +27,14 @@
 #include "gstrtspsrc.h"
 #include "sdp.h"
 
+GST_DEBUG_CATEGORY (rtspsrc_debug);
+#define GST_CAT_DEFAULT (rtspsrc_debug)
+
 /* elementfactory information */
 static GstElementDetails gst_rtspsrc_details =
 GST_ELEMENT_DETAILS ("RTSP packet receiver",
     "Source/Network",
-    "Receive data over the network via RTSP",
+    "Receive data over the network via RTSP (RFC 2326)",
     "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate rtptemplate =
@@ -55,6 +58,7 @@ enum
 #define DEFAULT_LOCATION        NULL
 #define DEFAULT_PROTOCOLS       GST_RTSP_PROTO_UDP_UNICAST | GST_RTSP_PROTO_UDP_MULTICAST | GST_RTSP_PROTO_TCP
 #define DEFAULT_DEBUG           FALSE
+#define DEFAULT_RETRY           20
 
 enum
 {
@@ -62,6 +66,7 @@ enum
   PROP_LOCATION,
   PROP_PROTOCOLS,
   PROP_DEBUG,
+  PROP_RETRY,
   /* FILL ME */
 };
 
@@ -129,6 +134,8 @@ gst_rtspsrc_get_type (void)
       NULL
     };
 
+    GST_DEBUG_CATEGORY_INIT (rtspsrc_debug, "rtspsrc", 0, "RTSP src");
+
     rtspsrc_type =
         g_type_register_static (GST_TYPE_ELEMENT, "GstRTSPSrc", &rtspsrc_info,
         0);
@@ -166,20 +173,26 @@ gst_rtspsrc_class_init (GstRTSPSrc * klass)
   gobject_class->set_property = gst_rtspsrc_set_property;
   gobject_class->get_property = gst_rtspsrc_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LOCATION,
+  g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "RTSP Location",
           "Location of the RTSP url to read",
           DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PROTOCOLS,
+  g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
       g_param_spec_flags ("protocols", "Protocols", "Allowed protocols",
           GST_TYPE_RTSP_PROTO, DEFAULT_PROTOCOLS,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEBUG,
+  g_object_class_install_property (gobject_class, PROP_DEBUG,
       g_param_spec_boolean ("debug", "Debug",
           "Dump request and response messages to stdout",
           DEFAULT_DEBUG, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  g_object_class_install_property (gobject_class, PROP_RETRY,
+      g_param_spec_uint ("retry", "Retry",
+          "Max number of retries when allocating RTP ports.",
+          0, G_MAXUINT16, DEFAULT_RETRY,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->change_state = gst_rtspsrc_change_state;
 }
@@ -208,6 +221,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_DEBUG:
       rtspsrc->debug = g_value_get_boolean (value);
       break;
+    case PROP_RETRY:
+      rtspsrc->retry = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -231,6 +247,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_DEBUG:
       g_value_set_boolean (value, rtspsrc->debug);
+      break;
+    case PROP_RETRY:
+      g_value_set_uint (value, rtspsrc->retry);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -476,59 +495,139 @@ gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, SDPMedia * media,
   GstStateChangeReturn ret;
   GstRTSPSrc *src;
   GstCaps *caps;
+  GstElement *tmp, *rtp, *rtcp;
+  gint tmp_rtp, tmp_rtcp;
+  guint count;
 
   src = stream->parent;
 
-  if (!(stream->rtpsrc =
-          gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0:0", NULL)))
+  tmp = NULL;
+  rtp = NULL;
+  rtcp = NULL;
+  count = 0;
+
+  /* try to allocate 2 udp ports, the RTP port should be an even
+   * number and the RTCP port should be the next (uneven) port */
+again:
+  rtp = gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0:0", NULL);
+  if (rtp == NULL)
     goto no_udp_rtp_protocol;
 
-  /* we manage this element */
-  gst_rtspsrc_add_element (src, stream->rtpsrc);
-
-  ret = gst_element_set_state (stream->rtpsrc, GST_STATE_PAUSED);
+  ret = gst_element_set_state (rtp, GST_STATE_PAUSED);
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto start_rtp_failure;
 
-  if (!(stream->rtcpsrc =
-          gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0:0", NULL)))
+  g_object_get (G_OBJECT (rtp), "port", &tmp_rtp, NULL);
+  GST_DEBUG_OBJECT (src, "got RTP port %d", tmp_rtp);
+
+  /* check if port is even */
+  if ((tmp_rtp & 0x01) != 0) {
+    /* port not even, close and allocate another */
+    count++;
+    if (count > src->retry)
+      goto no_ports;
+
+    GST_DEBUG_OBJECT (src, "RTP port not even, retry %d", count);
+    /* have to keep port allocated so we can get a new one */
+    if (tmp != NULL) {
+      GST_DEBUG_OBJECT (src, "free temp");
+      gst_element_set_state (tmp, GST_STATE_NULL);
+      gst_object_unref (tmp);
+    }
+    tmp = rtp;
+    GST_DEBUG_OBJECT (src, "retry %d", count);
+    goto again;
+  }
+  /* free leftover temp element/port */
+  if (tmp) {
+    gst_element_set_state (tmp, GST_STATE_NULL);
+    gst_object_unref (tmp);
+    tmp = NULL;
+  }
+
+  /* allocate port+1 for RTCP now */
+  rtcp = gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0", NULL);
+  if (rtcp == NULL)
     goto no_udp_rtcp_protocol;
 
-  /* we manage this element */
-  gst_rtspsrc_add_element (src, stream->rtcpsrc);
+  /* set port */
+  tmp_rtcp = tmp_rtp + 1;
+  g_object_set (G_OBJECT (rtcp), "port", tmp_rtcp, NULL);
 
-  ret = gst_element_set_state (stream->rtcpsrc, GST_STATE_PAUSED);
+  GST_DEBUG_OBJECT (src, "starting RTCP on port %d", tmp_rtcp);
+  ret = gst_element_set_state (rtcp, GST_STATE_PAUSED);
+  /* FIXME, this could fail if the next port is not free, we
+   * should retry with another port then */
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto start_rtcp_failure;
 
+  /* all fine, do port check */
+  g_object_get (G_OBJECT (rtp), "port", rtpport, NULL);
+  g_object_get (G_OBJECT (rtcp), "port", rtcpport, NULL);
+
+  /* this should not happen */
+  if (*rtpport != tmp_rtp || *rtcpport != tmp_rtcp)
+    goto port_error;
+
+  /* we manage these elements */
+  stream->rtpsrc = rtp;
+  gst_rtspsrc_add_element (src, stream->rtpsrc);
+  stream->rtcpsrc = rtcp;
+  gst_rtspsrc_add_element (src, stream->rtcpsrc);
+
   caps = gst_rtspsrc_media_to_caps (media);
 
+  /* set caps */
   g_object_set (G_OBJECT (stream->rtpsrc), "caps", caps, NULL);
-
-  g_object_get (G_OBJECT (stream->rtpsrc), "port", rtpport, NULL);
-  g_object_get (G_OBJECT (stream->rtcpsrc), "port", rtcpport, NULL);
 
   return TRUE;
 
-  /* ERRORS, FIXME, cleanup */
+  /* ERRORS */
 no_udp_rtp_protocol:
   {
-    GST_DEBUG ("could not get UDP source for rtp");
-    return FALSE;
-  }
-no_udp_rtcp_protocol:
-  {
-    GST_DEBUG ("could not get UDP source for rtcp");
-    return FALSE;
+    GST_DEBUG ("could not get UDP source for RTP");
+    goto cleanup;
   }
 start_rtp_failure:
   {
-    GST_DEBUG ("could not start UDP source for rtp");
-    return FALSE;
+    GST_DEBUG ("could not start UDP source for RTP");
+    goto cleanup;
+  }
+no_ports:
+  {
+    GST_DEBUG ("could not allocate UDP port pair after %d retries", count);
+    goto cleanup;
+  }
+no_udp_rtcp_protocol:
+  {
+    GST_DEBUG ("could not get UDP source for RTCP");
+    goto cleanup;
   }
 start_rtcp_failure:
   {
-    GST_DEBUG ("could not start UDP source for rtcp");
+    GST_DEBUG ("could not start UDP source for RTCP");
+    goto cleanup;
+  }
+port_error:
+  {
+    GST_DEBUG ("ports don't match rtp: %d<->%d, rtcp: %d<->%d",
+        tmp_rtp, *rtpport, tmp_rtcp, *rtcpport);
+    goto cleanup;
+  }
+cleanup:
+  {
+    if (tmp) {
+      gst_element_set_state (tmp, GST_STATE_NULL);
+      gst_object_unref (tmp);
+    }
+    if (rtp) {
+      gst_element_set_state (rtp, GST_STATE_NULL);
+      gst_object_unref (rtp);
+    }
+    if (rtcp) {
+      gst_element_set_state (rtcp, GST_STATE_NULL);
+      gst_object_unref (rtcp);
+    }
     return FALSE;
   }
 }

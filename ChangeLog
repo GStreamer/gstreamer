@@ -1,3 +1,19 @@
+2006-02-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/README:
+	Updated README.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_get_type),
+	(gst_rtspsrc_class_init), (gst_rtspsrc_set_property),
+	(gst_rtspsrc_get_property), (gst_rtspsrc_stream_setup_rtp):
+	* gst/rtsp/gstrtspsrc.h:
+	Make sure the RTP port is an even port an try to allocate 
+	another if not.
+	Added retry property to control max retries for port allocation.
+	Make sure RTCP port is RTP port+1.
+	Cleanup when port allocation fails.
+	Fixes #319183.
+	
 2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/alpha/gstalpha.c: (gst_alpha_change_state):
