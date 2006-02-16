@@ -362,6 +362,7 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
     gchar frame_id[5] = "";
     guint16 frame_flags = 0x0;
     gboolean obsolete_id = FALSE;
+    gboolean read_synch_size = TRUE;
 
     /* Read the header */
     switch (ID3V2_VER_MAJOR (work->hdr.version)) {
@@ -375,10 +376,13 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
         frame_id[4] = 0;
         obsolete_id = convert_fid_to_v240 (frame_id);
 
-        frame_size = read_synch_uint (work->hdr.frame_data + 3, 3);
+        /* 3 byte non-synchsafe size */
+        frame_size = work->hdr.frame_data[3] << 16 |
+            work->hdr.frame_data[4] << 8 | work->hdr.frame_data[5];
         frame_flags = 0;
         break;
       case 3:
+        read_synch_size = FALSE;        /* 2.3 frame size is not synch-safe */
       case 4:
       default:
         frame_id[0] = work->hdr.frame_data[0];
@@ -386,7 +390,11 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
         frame_id[2] = work->hdr.frame_data[2];
         frame_id[3] = work->hdr.frame_data[3];
         frame_id[4] = 0;
-        frame_size = read_synch_uint (work->hdr.frame_data + 4, 4);
+        if (read_synch_size)
+          frame_size = read_synch_uint (work->hdr.frame_data + 4, 4);
+        else
+          frame_size = GST_READ_UINT32_BE (work->hdr.frame_data + 4);
+
         frame_flags = GST_READ_UINT16_BE (work->hdr.frame_data + 8);
 
         if (ID3V2_VER_MAJOR (work->hdr.version) == 3) {
@@ -403,8 +411,8 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
         frame_size == 0 || strcmp (frame_id, "") == 0)
       break;                    /* No more frames to read */
 
-#if 0
-    g_print
+#if 1
+    GST_LOG
         ("Frame @ %d (0x%02x) id %s size %d, next=%d (0x%02x) obsolete=%d\n",
         work->hdr.frame_data - start, work->hdr.frame_data - start, frame_id,
         frame_size, work->hdr.frame_data + frame_hdr_size + frame_size - start,
