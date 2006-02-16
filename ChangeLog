@@ -1,3 +1,9 @@
+2006-02-16  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_src_event),
+	(gst_qtdemux_loop), (qtdemux_sink_activate_pull):
+	Don't stop the task if the pad isn't linked.
+
 2006-02-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_chain):
