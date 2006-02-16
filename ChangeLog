@@ -1,3 +1,9 @@
+2006-02-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3tags.c: (id3demux_id3v2_frames_to_tag_list):
+	ID3 2.3.0 used synch-safe integers for the tag size, but not for the
+	frame size. (Fixes #331368)
+
 2006-02-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/README:
