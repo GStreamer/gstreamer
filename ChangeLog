@@ -1,5 +1,10 @@
 2006-02-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst/asfdemux/Makefile.am:
+	More asf makefile fixing.
+
+2006-02-16  Wim Taymans  <wim@fluendo.com>
+
 	* ext/lame/gstlame.c: (gst_lame_init), (gst_lame_chain),
 	(gst_lame_change_state):
 	Fix up lame a bit.
