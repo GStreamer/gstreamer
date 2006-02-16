@@ -1,5 +1,14 @@
 2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/alsa/gstalsasink.c: (gst_alsasink_class_init),
+	(gst_alsasink_init), (get_channel_free_structure),
+	(caps_add_channel_configuration), (gst_alsasink_getcaps),
+	(gst_alsasink_close):
+	* ext/alsa/gstalsasink.h:
+	  Add support for more than 2 channels (#326720).
+
+2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
 	  Set codec_name for WAVEFORMATEX as well. When we have 'normal PCM'
 	  with 4 or 6 channels, assume a default channel layout to make things

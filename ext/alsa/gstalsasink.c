@@ -34,6 +34,7 @@
 #include "gstalsasink.h"
 
 #include <gst/gst-i18n-plugin.h>
+#include <gst/audio/multichannel.h>
 
 /* elementfactory information */
 static GstElementDetails gst_alsasink_details =
@@ -95,17 +96,15 @@ static GstStaticPadTemplate alsasink_sink_factory =
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 16, "
         "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 8 ]; "
         "audio/x-raw-int, "
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 8, "
         "depth = (int) 8, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 8 ]")
     );
 
 static GstElementClass *parent_class = NULL;
-
-/* static guint gst_alsasink_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_alsasink_get_type (void)
@@ -173,7 +172,7 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_alsasink_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_alsasink_finalise);
@@ -260,15 +259,10 @@ gst_alsasink_init (GstAlsaSink * alsasink)
 
   alsasink->device = g_strdup (DEFAULT_DEVICE);
   alsasink->handle = NULL;
+  alsasink->cached_caps = NULL;
   alsasink->alsa_lock = g_mutex_new ();
 
   snd_output_stdio_attach (&output, stdout, 0);
-}
-
-static GstCaps *
-gst_alsasink_getcaps (GstBaseSink * bsink)
-{
-  return NULL;
 }
 
 #define CHECK(call, error) \
@@ -276,6 +270,182 @@ G_STMT_START {                  \
 if ((err = call) < 0)           \
   goto error;                   \
 } G_STMT_END;
+
+/* we don't have channel mappings for more than this many channels */
+#define GST_ALSA_MAX_CHANNELS 8
+
+static GstStructure *
+get_channel_free_structure (const GstStructure * in_structure)
+{
+  GstStructure *s = gst_structure_copy (in_structure);
+
+  gst_structure_remove_field (s, "channels");
+  return s;
+}
+
+static void
+caps_add_channel_configuration (GstCaps * caps,
+    const GstStructure * in_structure, gint min_channels, gint max_channels)
+{
+  GstAudioChannelPosition pos[8] = {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_LFE,
+    GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT
+  };
+  GstStructure *s = NULL;
+  gint c;
+
+  if (min_channels == max_channels) {
+    s = get_channel_free_structure (in_structure);
+    gst_structure_set (s, "channels", G_TYPE_INT, max_channels, NULL);
+    gst_caps_append_structure (caps, s);
+    return;
+  }
+
+  g_assert (min_channels >= 1);
+
+  /* mono and stereo don't need channel configurations */
+  if (min_channels == 2) {
+    s = get_channel_free_structure (in_structure);
+    gst_structure_set (s, "channels", G_TYPE_INT, 2, NULL);
+    gst_caps_append_structure (caps, s);
+  } else if (min_channels == 1 && max_channels >= 2) {
+    s = get_channel_free_structure (in_structure);
+    gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
+    gst_caps_append_structure (caps, s);
+  }
+
+  /* don't know whether to use 2.1 or 3.0 here - but I suspect
+   * alsa might work around that/fix it somehow. Can we tell alsa
+   * what our channel layout is like? */
+  if (max_channels >= 3) {
+    GstAudioChannelPosition pos_21[3] = {
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_LFE
+    };
+
+    s = get_channel_free_structure (in_structure);
+    gst_structure_set (s, "channels", G_TYPE_INT, 3, NULL);
+    gst_audio_set_channel_positions (s, pos_21);
+    gst_caps_append_structure (caps, s);
+  }
+
+  /* everything else (4, 6, 8 channels) needs a channel layout */
+  for (c = 4; c < 8; c += 2) {
+    if (max_channels >= c) {
+      s = get_channel_free_structure (in_structure);
+      gst_structure_set (s, "channels", G_TYPE_INT, c, NULL);
+      gst_audio_set_channel_positions (s, pos);
+      gst_caps_append_structure (caps, s);
+    }
+  }
+}
+
+static GstCaps *
+gst_alsasink_getcaps (GstBaseSink * bsink)
+{
+  snd_pcm_format_mask_t *mask;
+  snd_pcm_hw_params_t *hw_params;
+  GstElementClass *element_class;
+  GstPadTemplate *pad_template;
+  GstAlsaSink *sink = GST_ALSA_SINK (bsink);
+  GstCaps *tmpl_caps;
+  GstCaps *caps = NULL;
+  guint min, max;
+  gint i, err, min_channels, max_channels;
+
+  if (sink->handle == NULL) {
+    GST_DEBUG_OBJECT (sink, "device not open, using template caps");
+    return NULL;                /* base class will get template caps for us */
+  }
+
+  if (sink->cached_caps) {
+    GST_DEBUG_OBJECT (sink, "Returning cached caps %" GST_PTR_FORMAT,
+        sink->cached_caps);
+    return gst_caps_ref (sink->cached_caps);
+  }
+
+  snd_pcm_hw_params_alloca (&hw_params);
+  CHECK (snd_pcm_hw_params_any (sink->handle, hw_params), error);
+
+  GST_LOG_OBJECT (sink, "probing channels ...");
+  CHECK (snd_pcm_hw_params_get_channels_min (hw_params, &min), min_chan_error);
+  CHECK (snd_pcm_hw_params_get_channels_max (hw_params, &max), max_chan_error);
+
+  min_channels = min;
+  max_channels = max;
+
+  if (min_channels < 0) {       /* hmm? min and max are unsigned */
+    min_channels = 1;
+    max_channels = GST_ALSA_MAX_CHANNELS;
+  } else if (max_channels < 0) {        /* hmm? min and max are unsigned */
+    max_channels = GST_ALSA_MAX_CHANNELS;
+  }
+
+  if (min_channels > max_channels) {
+    gint temp;
+
+    GST_WARNING_OBJECT (sink, "minimum channels > maximum channels (%d > %d), "
+        "please fix your soundcard drivers", min, max);
+    temp = min_channels;
+    min_channels = max_channels;
+    max_channels = temp;
+  }
+
+  min_channels = MAX (min_channels, 1);
+  max_channels = MIN (GST_ALSA_MAX_CHANNELS, max_channels);
+
+  GST_LOG_OBJECT (sink, "Min. channels = %d (%d)", min_channels, min);
+  GST_LOG_OBJECT (sink, "Max. channels = %d (%d)", max_channels, max);
+
+  snd_pcm_format_mask_alloca (&mask);
+  snd_pcm_hw_params_get_format_mask (hw_params, mask);
+
+  element_class = GST_ELEMENT_GET_CLASS (sink);
+  pad_template = gst_element_class_get_pad_template (element_class, "sink");
+
+  g_return_val_if_fail (pad_template != NULL, NULL);
+
+  tmpl_caps = gst_pad_template_get_caps (pad_template);
+
+  caps = gst_caps_new_empty ();
+
+  for (i = 0; i < gst_caps_get_size (tmpl_caps); ++i) {
+    caps_add_channel_configuration (caps,
+        gst_caps_get_structure (tmpl_caps, i), min_channels, max_channels);
+  }
+
+  sink->cached_caps = gst_caps_ref (caps);
+
+  GST_DEBUG_OBJECT (sink, "returning caps %" GST_PTR_FORMAT, caps);
+
+  return caps;
+
+error:
+  {
+    GST_ERROR_OBJECT (sink, "failed to query alsasink formats: %s",
+        snd_strerror (err));
+    return NULL;
+  }
+min_chan_error:
+  {
+    GST_ERROR_OBJECT (sink, "failed to query minimum channel count: %s",
+        snd_strerror (err));
+    return NULL;
+  }
+max_chan_error:
+  {
+    GST_ERROR_OBJECT (sink, "failed to query maximum channel count: %s",
+        snd_strerror (err));
+    return NULL;
+  }
+}
 
 static int
 set_hwparams (GstAlsaSink * alsa)
@@ -650,6 +820,7 @@ gst_alsasink_close (GstAudioSink * asink)
 
   CHECK (snd_pcm_close (alsa->handle), close_error);
   alsa->handle = NULL;
+  gst_caps_replace (&alsa->cached_caps, NULL);
 
   return TRUE;
 

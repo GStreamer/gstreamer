@@ -65,6 +65,8 @@ struct _GstAlsaSink {
   snd_pcm_uframes_t buffer_size;
   snd_pcm_uframes_t period_size;
 
+  GstCaps *cached_caps;
+
   GMutex *alsa_lock;
 };
 
