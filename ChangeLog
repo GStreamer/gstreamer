@@ -1,3 +1,10 @@
+2006-02-16  Wim Taymans  <wim@fluendo.com>
+
+	* ext/lame/gstlame.c: (gst_lame_init), (gst_lame_chain),
+	(gst_lame_change_state):
+	Fix up lame a bit.
+	Apply patch #319782 by Gautier Portet.
+
 2006-02-16  Edward Hervey  <edward@fluendo.com>
 
 	* gst/asfdemux/Makefile.am:
