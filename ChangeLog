@@ -1,3 +1,11 @@
+2006-02-16  Mathieu Garcia <b0nk at free dot fr>
+
+	Reviewed by Edward Hervey  <edward@fluendo.com>
+
+	* gst/videoscale/vs_scanline.c: (vs_scanline_resample_nearest_RGBA): 
+	C-level optimization of the RGBA nearest neighbour function.
+	Eventually this might end up in liboil with vectorized versions.
+
 2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/multichannel.c:

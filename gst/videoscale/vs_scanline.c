@@ -29,6 +29,7 @@
 
 #include <liboil/liboil.h>
 #include <glib.h>
+#include <stdio.h>
 
 /* greyscale, i.e., single componenet */
 
@@ -114,21 +115,56 @@ void
 vs_scanline_resample_nearest_RGBA (guint8 * dest, guint8 * src, int n,
     int *accumulator, int increment)
 {
+  guint8 *tmpsrc;
   int acc = *accumulator;
   int i;
   int j;
   int x;
 
-  for (i = 0; i < n; i++) {
+  /* Optimization Pass #1 :
+   * - Unroll loop by 16
+   * - Pointer arithmetics (most CPUs have DAGs !)
+   * - Avoid useless branching
+   */
+  for (i = 0, tmpsrc = src; i < n; i++) {
     j = acc >> 16;
     x = acc & 0xffff;
-    dest[i * 4 + 0] = (x < 32768) ? src[j * 4 + 0] : src[j * 4 + 4];
-    dest[i * 4 + 1] = (x < 32768) ? src[j * 4 + 1] : src[j * 4 + 5];
-    dest[i * 4 + 2] = (x < 32768) ? src[j * 4 + 2] : src[j * 4 + 6];
-    dest[i * 4 + 3] = (x < 32768) ? src[j * 4 + 3] : src[j * 4 + 7];
 
-    acc += increment;
+    if (x < 32768) {
+      tmpsrc = src + j * 4;
+      *dest++ = *tmpsrc++;
+
+      /* We do it here to avoid low-level instruction locks */
+      acc += increment;
+
+      *dest++ = *tmpsrc++;
+      *dest++ = *tmpsrc++;
+      *dest++ = *tmpsrc++;
+    } else {
+      tmpsrc = src + (j + 1) * 4;;
+      *dest++ = *tmpsrc++;
+
+      /* We do it here to avoid low-level instruction locks */
+      acc += increment;
+
+      *dest++ = *tmpsrc++;
+      *dest++ = *tmpsrc++;
+      *dest++ = *tmpsrc++;
+    }
   }
+
+  /* --- Unoptimized code BEGIN ---
+     for (i = 0; i < n; i++) {
+     j = acc >> 16;
+     x = acc & 0xffff;
+     dest[i * 4 + 0] = (x < 32768) ? src[j * 4 + 0] : src[j * 4 + 4];
+     dest[i * 4 + 1] = (x < 32768) ? src[j * 4 + 1] : src[j * 4 + 5];
+     dest[i * 4 + 2] = (x < 32768) ? src[j * 4 + 2] : src[j * 4 + 6];
+     dest[i * 4 + 3] = (x < 32768) ? src[j * 4 + 3] : src[j * 4 + 7];
+
+     acc += increment;
+     }
+     --- Unoptimized code END --- */
 
   *accumulator = acc;
 }
