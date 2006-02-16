@@ -119,6 +119,74 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
   return TRUE;
 }
 
+/* FIXME: these default positions may or may not be correct. In any
+ * case, they are mostly just a fallback for buggy plugins, so it
+ * should not really matter too much */
+#define NUM_DEF_CHANS  8
+static const GstAudioChannelPosition
+    default_positions[NUM_DEF_CHANS][NUM_DEF_CHANS] = {
+  /* 1 channel */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_MONO,
+      },
+  /* 2 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      },
+  /* 3 channels (2.1) */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_LFE, /* or FRONT_CENTER for 3.0? */
+      },
+  /* 4 channels (4.0 or 3.1?) */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  /* 5 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      },
+  /* 6 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+      },
+  /* 7 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+      },
+  /* 8 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+      }
+};
+
 /**
  * gst_audio_get_channel_positions:
  * @str: A #GstStructure to retrieve channel positions from.
@@ -153,19 +221,26 @@ gst_audio_get_channel_positions (GstStructure * str)
 
   /* The following checks are here to retain compatibility for plugins not
    * implementing this property. They expect that channels=1 implies mono
-   * and channels=2 implies stereo, so we follow that.
-   * This might be removed during 0.9.x. */
-  if (!pos_val_arr && (channels == 1 || channels == 2)) {
-    pos = g_new (GstAudioChannelPosition, channels);
-    if (channels == 1) {
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
-    } else {
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+   * and channels=2 implies stereo, so we follow that. */
+  if (pos_val_arr == NULL) {
+    /* channel layouts for 1 and 2 channels are implicit, don't warn */
+    if (channels > 2) {
+      g_warning ("Failed to retrieve channel layout from caps. This usually "
+          "means there is a GStreamer element that does not implement "
+          "multichannel audio correctly. Please file a bug.");
     }
-    return pos;
+
+    /* just return some default channel layout if we have one */
+    if (channels >= 1 && channels <= NUM_DEF_CHANS) {
+      const GstAudioChannelPosition *p;
+
+      p = default_positions[channels - 1];
+      return g_memdup (p, channels * sizeof (GstAudioChannelPosition));
+    }
+
+    return NULL;
   }
-  g_return_val_if_fail (pos_val_arr != NULL, NULL);
+
   g_return_val_if_fail (gst_value_array_get_size (pos_val_arr) == channels,
       NULL);
   for (n = 0; n < channels; n++) {

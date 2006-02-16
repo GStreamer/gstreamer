@@ -1,5 +1,14 @@
 2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/audio/multichannel.c:
+	(gst_audio_get_channel_positions):
+	  When we have more than 2 channels, but no channel layout is
+	  specified in the caps, return some default channel layout
+	  to the caller and warn about about a possibly buggy element
+	  (could be buggy filtercaps as well of course) (#317038).
+
+2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* pkgconfig/gstreamer-plugins-base-uninstalled.pc.in:
 	  Add gst-libs/gst/cdda to list of lib search paths.
 
