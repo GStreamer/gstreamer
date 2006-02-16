@@ -23,6 +23,7 @@
     <xi:include href="xml/element-halaudiosrc.xml" />
     <xi:include href="xml/element-id3demux.xml" />
     <xi:include href="xml/element-level.xml" />
+    <xi:include href="xml/element-udpsrc.xml" />
     <xi:include href="xml/element-multiudpsink.xml" />
     <xi:include href="xml/element-multipartmux.xml" />
     <xi:include href="xml/element-multipartdemux.xml" />

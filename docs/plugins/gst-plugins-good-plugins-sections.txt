@@ -104,10 +104,35 @@ GstMultipartDemuxClass
 
 <SECTION>
 <FILE>element-multiudpsink</FILE>
+GstUDPClient
 GstMultiUDPSink
 <TITLE>multiudpsink</TITLE>
 <SUBSECTION Standard>
 GstMultiUDPSinkClass
+gst_multiudpsink_add
+gst_multiudpsink_remove
+gst_multiudpsink_clear
+gst_multiudpsink_get_stats
+GST_MULTIUDPSINK
+GST_IS_MULTIUDPSINK
+GST_TYPE_MULTIUDPSINK
+gst_multiudpsink_get_type
+GST_MULTIUDPSINK_CLASS
+GST_IS_MULTIUDPSINK_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-udpsrc</FILE>
+GstUDPSrc
+<TITLE>udpsrc</TITLE>
+<SUBSECTION Standard>
+GstUDPSrcClass
+GST_UDPSRC
+GST_IS_UDPSRC
+GST_TYPE_UDPSRC
+gst_udpsrc_get_type
+GST_UDPSRC_CLASS
+GST_IS_UDPSRC_CLASS
 </SECTION>
 
 <SECTION>

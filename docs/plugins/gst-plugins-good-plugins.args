@@ -141,7 +141,7 @@
 <ARG>
 <NAME>GstUDPSrc::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,32768]</RANGE>
+<RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>port</NICK>
 <BLURB>The port to receive the packets from, 0=allocate.</BLURB>
@@ -161,11 +161,11 @@
 <ARG>
 <NAME>GstUDPSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,32767]</RANGE>
+<RANGE>[-1,2147483647]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>socket handle</NICK>
 <BLURB>Socket to use for UDP reception.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>

@@ -87,6 +87,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/hal/gsthalaudiosrc.h \
 	$(top_srcdir)/gst/multipart/multipartmux.c \
 	$(top_srcdir)/gst/multipart/multipartdemux.c \
+	$(top_srcdir)/gst/udp/gstudpsrc.h \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
 	$(top_srcdir)/gst/videomixer/videomixer.c
 

@@ -18,6 +18,60 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-udpsrc
+ * @see_also: udpsink, multifdsink
+ *
+ * <refsect2>
+ * <para>
+ * udpsrc is a network source that reads UDP packets from the network.
+ * It can be combined with RTP depayloaders to implement RTP streaming.
+ * </para>
+ * <title>Examples</title>
+ * <para>
+ * Here is a simple pipeline to read from the default port and dump the udp packets.
+ * <programlisting>
+ * gst-launch -v udpsrc ! fakesink dump=1
+ * </programlisting>
+ * To actually generate udp packets on the default port one can use the
+ * udpsink element. When running the following pipeline in another terminal, the
+ * above mentioned pipeline should dump data packets to the console.
+ * <programlisting>
+ * gst-launch -v audiotestsrc ! udpsink
+ * </programlisting>
+ * </para>
+ * <para>
+ * The udpsrc element supports automatic port allocation by setting the
+ * "port" property to 0. the following pipeline reads UDP from a free port.
+ * <programlisting>
+ * gst-launch -v udpsrc port=0 ! fakesink
+ * </programlisting>
+ * </para>
+ * <para>
+ * udpsrc can read from multicast groups by setting the multicast_group property
+ * to the IP address of the multicast group.
+ * </para>
+ * <para>
+ * Alternatively one can provide a custom socket to udpsrc with the "sockfd" property,
+ * udpsrc will then not allocate a socket itself but use the provided one.
+ * </para>
+ * <para>
+ * The "caps" property is mainly used to give a type to the UDP packet so that they
+ * can be autoplugged in GStreamer pipelines. This is very usefull for RTP 
+ * implementations where the contents of the UDP packets is transfered out-of-bounds
+ * using SDP or other means. 
+ * </para>
+ * <para>
+ * The udpsrc is always a live source. It does however not provide a GstClock, this
+ * is left for upstream elements such as an RTP session manager or demuxer (such
+ * as an MPEG demuxer).
+ * </para>
+ * <para>
+ * udpsrc implements a GstURIHandler interface that handles udp://host:port type
+ * URIs.
+ * </para>
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -67,8 +121,9 @@ GST_ELEMENT_DETAILS ("UDP packet receiver",
 
 #define UDP_DEFAULT_PORT                4951
 #define UDP_DEFAULT_MULTICAST_GROUP     "0.0.0.0"
-#define UDP_DEFAULT_URI                 "udp://0.0.0.0:4951"
+#define UDP_DEFAULT_URI                 "udp://"UDP_DEFAULT_MULTICAST_GROUP":"G_STRINGIFY(UDP_DEFAULT_PORT)
 #define UDP_DEFAULT_CAPS                NULL
+#define UDP_DEFAULT_SOCKFD              -1
 
 enum
 {
@@ -138,7 +193,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "port",
-          "The port to receive the packets from, 0=allocate", 0, 32768,
+          "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
           UDP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_MULTICAST_GROUP,
       g_param_spec_string ("multicast_group", "multicast_group",
@@ -153,8 +208,8 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           "The caps of the source pad", GST_TYPE_CAPS, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_SOCKFD,
       g_param_spec_int ("sockfd", "socket handle",
-          "Socket to use for UDP reception.",
-          0, G_MAXINT16, 0, G_PARAM_READWRITE));
+          "Socket to use for UDP reception. (-1 == allocate)",
+          -1, G_MAXINT, UDP_DEFAULT_SOCKFD, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
@@ -169,7 +224,7 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
 {
   gst_base_src_set_live (GST_BASE_SRC (udpsrc), TRUE);
   udpsrc->port = UDP_DEFAULT_PORT;
-  udpsrc->sock = -1;
+  udpsrc->sock = UDP_DEFAULT_SOCKFD;
   udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
   udpsrc->uri = g_strdup (UDP_DEFAULT_URI);
 }
@@ -479,7 +534,6 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
                 sizeof (reuse))) < 0)
       goto setsockopt_error;
 
-    /* XXX-kvehmanen: add ability to select a random, free port */
     memset (&src->myaddr, 0, sizeof (src->myaddr));
     src->myaddr.sin_family = AF_INET;   /* host byte order */
     src->myaddr.sin_port = htons (src->port);   /* short, network byte order */
