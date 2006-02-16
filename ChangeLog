@@ -1,6 +1,11 @@
 2006-02-16  Edward Hervey  <edward@fluendo.com>
 
 	* gst/asfdemux/Makefile.am:
+	But we do need to link against the riff libraryr.
+
+2006-02-16  Edward Hervey  <edward@fluendo.com>
+
+	* gst/asfdemux/Makefile.am:
 	We don't want asfmux.c yet.
 
 2006-02-16  Jan Schmidt  <thaytan@mad.scientist.com>
