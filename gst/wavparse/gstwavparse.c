@@ -67,14 +67,14 @@ GST_STATIC_PAD_TEMPLATE ("wavparse_sink",
 static GstStaticPadTemplate src_template_factory =
     GST_STATIC_PAD_TEMPLATE ("wavparse_src",
     GST_PAD_SRC,
-    GST_PAD_SOMETIMES,          /* FIXME: spider */
+    GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "endianness = (int) little_endian, "
         "signed = (boolean) { true, false }, "
         "width = (int) { 8, 16, 24, 32 }, "
         "depth = (int) { 8, 16, 24, 32 }, "
         "rate = (int) [ 8000, 96000 ], "
-        "channels = (int) [ 1, 2 ]; "
+        "channels = (int) [ 1, 8 ]; "
         "audio/mpeg, "
         "mpegversion = (int) 1, "
         "layer = (int) [ 1, 3 ], "
@@ -98,21 +98,8 @@ static GstStaticPadTemplate src_template_factory =
         "audio/x-wma, " "wmaversion = (int) [ 1, 2 ]")
     );
 
-/* WavParse signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  PROP_0
-};
 
 static GstElementClass *parent_class = NULL;
-
-/*static guint gst_wavparse_signals[LAST_SIGNAL] = { 0 }; */
 
 GType
 gst_wavparse_get_type (void)
@@ -852,6 +839,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   gboolean gotdata = FALSE;
   GstCaps *caps;
   gint64 duration;
+  gchar *codec_name = NULL;
 
   /* The header start with a 'fmt ' tag */
   if ((res = gst_riff_read_chunk (GST_ELEMENT (wav), wav->sinkpad,
@@ -864,14 +852,14 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   if (!(gst_riff_parse_strf_auds (GST_ELEMENT (wav), buf, &header, &extra)))
     goto parse_header_error;
 
-  if (extra)
-    gst_buffer_unref (extra);
-
   /* Note: gst_riff_create_audio_caps might nedd to fix values in
    * the header header depending on the format, so call it first */
   caps =
-      gst_riff_create_audio_caps (header->format, NULL, header, NULL,
-      NULL, NULL);
+      gst_riff_create_audio_caps (header->format, NULL, header, extra,
+      NULL, &codec_name);
+
+  if (extra)
+    gst_buffer_unref (extra);
 
   wav->format = header->format;
   wav->rate = header->rate;
@@ -905,6 +893,18 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
   gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
   gst_element_no_more_pads (GST_ELEMENT (wav));
+
+  if (codec_name) {
+    GstTagList *tags = gst_tag_list_new ();
+
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_AUDIO_CODEC, codec_name, NULL);
+
+    gst_element_found_tags_for_pad (GST_ELEMENT (wav), wav->srcpad, tags);
+
+    g_free (codec_name);
+    codec_name = NULL;
+  }
 
   GST_DEBUG ("frequency %d, channels %d", wav->rate, wav->channels);
 
@@ -961,6 +961,7 @@ invalid_wav:
     GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL),
         ("Invalid WAV header (no fmt at start): %"
             GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
+    g_free (codec_name);
     return GST_FLOW_ERROR;
   }
 parse_header_error:
@@ -968,6 +969,7 @@ parse_header_error:
     GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL),
         ("Couldn't parse audio header"));
     gst_buffer_unref (buf);
+    g_free (codec_name);
     return GST_FLOW_ERROR;
   }
 no_channels:
@@ -975,6 +977,7 @@ no_channels:
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("Stream claims to contain no channels - invalid data"));
     g_free (header);
+    g_free (codec_name);
     return GST_FLOW_ERROR;
   }
 no_bitrate:
@@ -982,6 +985,7 @@ no_bitrate:
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("Stream claims to have a bitrate of <= zero - invalid data"));
     g_free (header);
+    g_free (codec_name);
     return GST_FLOW_ERROR;
   }
 no_bytes_per_sample:
@@ -989,6 +993,7 @@ no_bytes_per_sample:
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("could not caluclate bytes per sample - invalid data"));
     g_free (header);
+    g_free (codec_name);
     return GST_FLOW_ERROR;
   }
 unknown_format:
@@ -996,11 +1001,13 @@ unknown_format:
     GST_ELEMENT_ERROR (wav, STREAM, TYPE_NOT_FOUND, (NULL),
         ("No caps found for format 0x%x, %d channels, %d Hz",
             wav->format, wav->channels, wav->rate));
+    g_free (codec_name);
     return GST_FLOW_ERROR;
   }
 header_read_error:
   {
     GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL), ("Couldn't read in header"));
+    g_free (codec_name);
     return GST_FLOW_ERROR;
   }
 }

@@ -1,3 +1,11 @@
+2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):
+	  Pass extra_data to gst_riff_create_audio_caps(), so that
+	  WAVEFORMATEX stuff works. Post audio codec name and post
+	  it as taglist on the bus. Allow up to 8 channesl for raw
+	  PCM in the source pad template caps.
+
 2006-02-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/multipart/multipartdemux.c: (gst_multipart_demux_base_init),
