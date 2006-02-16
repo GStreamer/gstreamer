@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstasf.la
 
-libgstasf_la_SOURCES = gstasfmux.c gstasfdemux.c gstasf.c asfheaders.c
+libgstasf_la_SOURCES = gstasfdemux.c gstasf.c asfheaders.c
 libgstasf_la_CFLAGS = $(GST_CFLAGS)
 libgstasf_la_LIBADD =
 libgstasf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
