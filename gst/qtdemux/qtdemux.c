@@ -143,7 +143,7 @@ static void gst_qtdemux_base_init (GstQTDemuxClass * klass);
 static void gst_qtdemux_init (GstQTDemux * quicktime_demux);
 static GstStateChangeReturn gst_qtdemux_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_qtdemux_loop_header (GstPad * pad);
+static void gst_qtdemux_loop (GstPad * pad);
 static GstFlowReturn gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf);
 static gboolean qtdemux_sink_activate (GstPad * sinkpad);
 static gboolean qtdemux_sink_activate_pull (GstPad * sinkpad, gboolean active);
@@ -427,7 +427,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
 
           /* and restart */
           gst_pad_start_task (qtdemux->sinkpad,
-              (GstTaskFunction) gst_qtdemux_loop_header, qtdemux->sinkpad);
+              (GstTaskFunction) gst_qtdemux_loop, qtdemux->sinkpad);
 
           GST_PAD_STREAM_UNLOCK (qtdemux->sinkpad);
           break;
@@ -723,7 +723,7 @@ beach:
 }
 
 static void
-gst_qtdemux_loop_header (GstPad * pad)
+gst_qtdemux_loop (GstPad * pad)
 {
   GstQTDemux *qtdemux = GST_QTDEMUX (GST_OBJECT_PARENT (pad));
   guint64 cur_offset;
@@ -746,7 +746,7 @@ gst_qtdemux_loop_header (GstPad * pad)
       g_error ("State=%d", qtdemux->state);
   }
 
-  if (ret != GST_FLOW_OK) {
+  if ((ret != GST_FLOW_OK) && (ret != GST_FLOW_NOT_LINKED)) {
     GST_LOG_OBJECT (qtdemux, "pausing task, reason %s",
         gst_flow_get_name (ret));
     gst_pad_pause_task (qtdemux->sinkpad);
@@ -1052,8 +1052,7 @@ qtdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
   if (active) {
     /* if we have a scheduler we can start the task */
     demux->pullbased = TRUE;
-    gst_pad_start_task (sinkpad,
-        (GstTaskFunction) gst_qtdemux_loop_header, sinkpad);
+    gst_pad_start_task (sinkpad, (GstTaskFunction) gst_qtdemux_loop, sinkpad);
   } else {
     gst_pad_stop_task (sinkpad);
   }
