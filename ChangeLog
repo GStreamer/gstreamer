@@ -1,3 +1,9 @@
+2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/alpha/gstalpha.c: (gst_alpha_change_state):
+	  Don't ignore return value of the parent class's state
+	  change function (#331385, patch by: Wouter Paesen).
+
 2006-02-15  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:

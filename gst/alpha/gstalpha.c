@@ -857,6 +857,7 @@ gst_alpha_chain (GstPad * pad, GstBuffer * buffer)
 static GstStateChangeReturn
 gst_alpha_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn res;
   GstAlpha *alpha;
 
   alpha = GST_ALPHA (element);
@@ -868,18 +869,21 @@ gst_alpha_change_state (GstElement * element, GstStateChange transition)
       gst_alpha_init_params (alpha);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
+    default:
       break;
   }
 
-  parent_class->change_state (element, transition);
+  res = parent_class->change_state (element, transition);
 
-  return GST_STATE_CHANGE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
+    default:
+      break;
+  }
+
+  return res;
 }
 
 static gboolean
