@@ -29,7 +29,8 @@
  * <para>
  * MultipartDemux uses the Content-type field of incoming buffers to demux and 
  * push data to dynamic source pads. Most of the time multipart streams are 
- * sequential JPEG frames.
+ * sequential JPEG frames generated from a live source such as a network source
+ * or a camera.
  * </para>
  * <title>Sample pipelines</title>
  * <para>
@@ -38,6 +39,15 @@
  * <programlisting>
  * gst-launch filesrc location=/tmp/test.multipart ! multipartdemux ! jpegdec ! video/x-raw-yuv, framerate=(fraction)5/1 ! ffmpegcolorspace ! ximagesink
  * </programlisting>
+ * </para>
+ * <para>
+ * The output buffers of the multipartdemux typically have no timestamps and are usually 
+ * played as fast as possible (at the rate that the source provides the data).
+ * </para>
+ * <para>
+ * the content in multipart files is separated with a boundary string that can be 
+ * configured specifically with the "boundary" property or can be autodetected by
+ * setting the "autoscan" property to TRUE.
  * </para>
  * </refsect2>
  */
@@ -96,6 +106,11 @@ struct _GstMultipartDemux
   gint bufsize;
   gint scanpos;
   gint lastpos;
+
+  gchar *prefix;
+  gint prefixLen;
+  gboolean first_frame;
+  gboolean autoscan;
 };
 
 struct _GstMultipartDemuxClass
@@ -105,9 +120,6 @@ struct _GstMultipartDemuxClass
 
 GST_DEBUG_CATEGORY_STATIC (gst_multipart_demux_debug);
 #define GST_CAT_DEFAULT gst_multipart_demux_debug
-
-static gchar toFind[] = "--ThisRandomString\nContent-type: ";
-static gint toFindLen;
 
 /* elementfactory information */
 static GstElementDetails gst_multipart_demux_details =
@@ -124,10 +136,14 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_BOUNDARY	"ThisRandomString"
+#define DEFAULT_AUTOSCAN 	FALSE
 enum
 {
-  ARG_0,
-  /* FILL ME */
+  PROP_0,
+  PROP_BOUNDARY,
+  PROP_AUTOSCAN
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate multipart_demux_src_template_factory =
@@ -148,6 +164,14 @@ static GstFlowReturn gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_multipart_demux_change_state (GstElement *
     element, GstStateChange transition);
 
+static void gst_multipart_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+
+static void gst_multipart_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
+static void gst_multipart_demux_finalize (GObject * object);
+
 
 GST_BOILERPLATE (GstMultipartDemux, gst_multipart_demux, GstElement,
     GST_TYPE_ELEMENT)
@@ -155,23 +179,37 @@ GST_BOILERPLATE (GstMultipartDemux, gst_multipart_demux, GstElement,
      static void gst_multipart_demux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
 
   gst_element_class_set_details (element_class, &gst_multipart_demux_details);
+  gobject_class->set_property = gst_multipart_set_property;
+  gobject_class->get_property = gst_multipart_get_property;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&multipart_demux_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&multipart_demux_src_template_factory));
 
-  toFindLen = strlen (toFind);
+  g_object_class_install_property (gobject_class, PROP_BOUNDARY,
+      g_param_spec_string ("boundary", "Boundary",
+          "The boundary string separating data", DEFAULT_BOUNDARY,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  g_object_class_install_property (gobject_class, PROP_AUTOSCAN,
+      g_param_spec_boolean ("autoscan", "autoscan",
+          "Try to autofind the prefix", DEFAULT_AUTOSCAN,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
 }
 
 static void
 gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gstelement_class->change_state = gst_multipart_demux_change_state;
+  gobject_class->finalize = gst_multipart_demux_finalize;
 }
 
 static void
@@ -187,10 +225,16 @@ gst_multipart_demux_init (GstMultipartDemux * multipart,
       GST_DEBUG_FUNCPTR (gst_multipart_demux_chain));
 
   multipart->maxlen = 4096;
-  multipart->parsing_mime = NULL;
-  multipart->numpads = 0;
-  multipart->scanpos = 0;
-  multipart->lastpos = 0;
+}
+
+static void
+gst_multipart_demux_finalize (GObject * object)
+{
+  GstMultipartDemux *demux = GST_MULTIPART_DEMUX (object);
+
+  g_free (demux->prefix);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstMultipartPad *
@@ -220,6 +264,8 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     GstCaps *caps;
 
     mppad = g_new0 (GstMultipartPad, 1);
+
+    GST_DEBUG_OBJECT (demux, "creating pad with mime: %s", mime);
 
     name = g_strdup_printf ("src_%d", demux->numpads);
     pad = gst_pad_new_from_template (gst_static_pad_template_get
@@ -269,6 +315,47 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
   memcpy (multipart->buffer + multipart->bufsize, data, size);
   multipart->bufsize += size;
 
+  if (multipart->first_frame && multipart->autoscan) {
+    /* find the prefix if this is the first buffer */
+    /* the prefix is like --prefix\r\n */
+    size_t i, start;
+
+    i = 0;
+    start = -1;
+
+    while ((i + 1) < multipart->bufsize) {
+
+      if (-1 == start) {
+        if ((multipart->buffer[i] == '-') && (multipart->buffer[i + 1] == '-')) {
+          start = i + 2;        /* discart -- */
+        }
+      } else {
+        /* look for \r\n or \n\n */
+        if ((multipart->buffer[i] == '\n') ||
+            ((multipart->buffer[i] == '\r') &&
+                (multipart->buffer[i + 1] == '\n'))) {
+
+          /* found first \r\n, the prefix is from 0 to i */
+
+          g_free (multipart->prefix);
+          multipart->prefix =
+              g_strndup (multipart->buffer + start, (i - start));
+          multipart->prefixLen = strlen (multipart->prefix);
+          GST_DEBUG_OBJECT (multipart,
+              "set prefix to [%s]\n", multipart->prefix);
+
+          multipart->first_frame = FALSE;
+          break;
+        }
+      }
+
+      i++;
+    }
+
+  }
+
+
+
   /* find \n */
   while (multipart->scanpos < multipart->bufsize) {
     if (multipart->buffer[multipart->scanpos] == '\n') {
@@ -279,11 +366,12 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
 
   /* then scan for the boundary */
   for (matchpos = 0;
-      multipart->scanpos + toFindLen + MAX_LINE_LEN - matchpos <
+      multipart->scanpos + multipart->prefixLen + MAX_LINE_LEN - matchpos <
       multipart->bufsize; multipart->scanpos++) {
-    if (multipart->buffer[multipart->scanpos] == toFind[matchpos]) {
+    if (multipart->buffer[multipart->scanpos] == multipart->prefix[matchpos]) {
+
       matchpos++;
-      if (matchpos == toFindLen) {
+      if (matchpos == multipart->prefixLen) {
         int datalen;
         int i, start;
         gchar *mime_type;
@@ -335,7 +423,7 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
               } else {
                 GST_BUFFER_TIMESTAMP (outbuf) = -1;
               }
-              gst_pad_push (srcpad->pad, outbuf);
+              ret = gst_pad_push (srcpad->pad, outbuf);
             }
           }
         }
@@ -351,6 +439,8 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
     } else {
       matchpos = 0;
     }
+    if (ret != GST_FLOW_OK)
+      break;
   }
 
   gst_buffer_unref (buf);
@@ -373,6 +463,11 @@ gst_multipart_demux_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       multipart->buffer = g_malloc (multipart->maxlen);
+      multipart->first_frame = TRUE;
+      multipart->parsing_mime = NULL;
+      multipart->numpads = 0;
+      multipart->scanpos = 0;
+      multipart->lastpos = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -401,6 +496,54 @@ gst_multipart_demux_change_state (GstElement * element,
 
   return ret;
 }
+
+static void
+gst_multipart_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMultipartDemux *filter;
+
+  g_return_if_fail (GST_IS_MULTIPART_DEMUX (object));
+  filter = GST_MULTIPART_DEMUX (object);
+
+  switch (prop_id) {
+    case PROP_BOUNDARY:
+      g_free (filter->prefix);
+      filter->prefix = g_value_dup_string (value);
+      filter->prefixLen = strlen (filter->prefix);
+      break;
+    case PROP_AUTOSCAN:
+      filter->autoscan = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_multipart_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMultipartDemux *filter;
+
+  g_return_if_fail (GST_IS_MULTIPART_DEMUX (object));
+  filter = GST_MULTIPART_DEMUX (object);
+
+  switch (prop_id) {
+    case PROP_BOUNDARY:
+      g_value_set_string (value, filter->prefix);
+      break;
+    case PROP_AUTOSCAN:
+      g_value_set_boolean (value, filter->autoscan);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+
 
 gboolean
 gst_multipart_demux_plugin_init (GstPlugin * plugin)

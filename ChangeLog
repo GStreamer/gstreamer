@@ -1,5 +1,15 @@
 2006-02-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_base_init),
+	(gst_multipart_demux_class_init), (gst_multipart_demux_init),
+	(gst_multipart_demux_finalize), (gst_multipart_find_pad_by_mime),
+	(gst_multipart_demux_chain), (gst_multipart_demux_change_state),
+	(gst_multipart_set_property), (gst_multipart_get_property):
+	Applied #318663. Gives quite a few false positives in
+	autoscan mode, but it's better than nothing. Not closing yet.
+
+2006-02-16  Wim Taymans  <wim@fluendo.com>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
