@@ -84,6 +84,7 @@ struct _GstMad
   gint index_id;
 
   gboolean check_for_xing;
+  gboolean xing_found;
 };
 
 struct _GstMadClass
@@ -372,6 +373,7 @@ gst_mad_init (GstMad * mad)
   mad->half = FALSE;
   mad->ignore_crc = TRUE;
   mad->check_for_xing = TRUE;
+  mad->xing_found = FALSE;
 }
 
 static void
@@ -987,10 +989,7 @@ G_STMT_START{                                                   \
   CHECK_HEADER (layer, "layer");
   CHECK_HEADER (mode, "mode");
   CHECK_HEADER (emphasis, "emphasis");
-
-  if (header->bitrate != mad->header.bitrate || mad->new_header) {
-    mad->header.bitrate = header->bitrate;
-  }
+  mad->header.bitrate = header->bitrate;
   mad->new_header = FALSE;
 
   if (changed) {
@@ -1009,6 +1008,10 @@ G_STMT_START{                                                   \
         GST_TAG_LAYER, mad->header.layer,
         GST_TAG_MODE, mode->value_nick,
         GST_TAG_EMPHASIS, emphasis->value_nick, NULL);
+    if (!mad->xing_found) {
+      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+          GST_TAG_BITRATE, mad->header.bitrate, NULL);
+    }
     gst_element_post_message (GST_ELEMENT (mad),
         gst_message_new_tag (GST_OBJECT (mad), list));
   }
@@ -1052,6 +1055,15 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       mad->caps_set = FALSE;    /* could be a new stream */
       result = gst_pad_push_event (mad->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      /* Clear any stored data, as it won't make sense once
+       * the new data arrives */
+      mad->tempsize = 0;
+      mad_frame_mute (&mad->frame);
+      mad_synth_mute (&mad->synth);
+      result = gst_pad_event_default (pad, event);
+
       break;
     default:
       result = gst_pad_event_default (pad, event);
@@ -1226,7 +1238,7 @@ static void
 gst_mad_check_caps_reset (GstMad * mad)
 {
   guint nchannels;
-  guint rate;
+  guint rate, old_rate = mad->rate;
 
   nchannels = MAD_NCHANNELS (&mad->frame.header);
 
@@ -1282,6 +1294,11 @@ gst_mad_check_caps_reset (GstMad * mad)
     mad->caps_set = TRUE;       /* set back to FALSE on discont */
     mad->channels = nchannels;
     mad->rate = rate;
+
+    /* update sample count so we don't come up with crazy timestamps */
+    if (mad->total_samples && old_rate) {
+      mad->total_samples = mad->total_samples * rate / old_rate;
+    }
   }
 }
 
@@ -1473,6 +1490,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         /* Assume Xing headers can only be the first frame in a mp3 file */
         if (mpg123_parse_xing_header (&mad->frame.header,
                 mad->stream.this_frame, frame_len, &bitrate, &time)) {
+          mad->xing_found = TRUE;
           list = gst_tag_list_new ();
           gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
               GST_TAG_DURATION, (gint64) time * 1000 * 1000 * 1000,
@@ -1508,8 +1526,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           mad->total_samples = total;
           mad->last_ts = GST_CLOCK_TIME_NONE;
         }
-        time_offset = mad->total_samples * GST_SECOND / mad->rate;
-        time_duration = (nsamples * GST_SECOND / mad->rate);
+        time_offset = mad->total_samples * (GST_SECOND / mad->rate);
+        time_duration = (nsamples * (GST_SECOND / mad->rate));
       }
 
       if (mad->index) {
@@ -1686,6 +1704,7 @@ gst_mad_change_state (GstElement * element, GstStateChange transition)
       mad_frame_finish (&mad->frame);
       mad_stream_finish (&mad->stream);
       mad->restart = TRUE;
+      mad->check_for_xing = TRUE;
       if (mad->tags) {
         gst_tag_list_free (mad->tags);
         mad->tags = NULL;

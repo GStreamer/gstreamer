@@ -1,3 +1,13 @@
+2006-02-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/mad/gstmad.c: (gst_mad_init), (scale), (gst_mad_update_info),
+	(gst_mad_sink_event), (gst_mad_check_caps_reset), (gst_mad_chain),
+	(gst_mad_change_state):
+	  Port fixes for bugs 314771, 308772, 140237, and 302625
+	  from 0.8 (Patch by Jonathan Matthew, Fixes #329575)
+	  Use GST_EVENT_FLUSH_STOP to clear data from the current input
+	  buffer, to avoid using it for any future decoding.
+
 2006-02-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
