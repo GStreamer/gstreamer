@@ -1075,9 +1075,9 @@ gst_asf_demux_process_stream (GstASFDemux * demux, guint8 ** p_data,
     }
 
     default:
-      GST_ELEMENT_ERROR (demux, STREAM, WRONG_TYPE, (NULL),
-          ("Unknown asf stream (id %08x)", (guint) stream_id));
-      return GST_FLOW_ERROR;
+      GST_WARNING_OBJECT (demux, "Unknown asf stream (id %08x)",
+          (guint) stream_id);
+      break;
   }
 
   return GST_FLOW_OK;
