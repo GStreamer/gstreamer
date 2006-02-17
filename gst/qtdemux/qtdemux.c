@@ -642,14 +642,16 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   min_time = G_MAXUINT64;
   for (i = 0; i < qtdemux->n_streams; i++) {
     stream = qtdemux->streams[i];
-    GST_LOG_OBJECT (qtdemux,
-        "stream %d: sample_index %d, timestamp %" GST_TIME_FORMAT, i,
-        stream->sample_index,
-        GST_TIME_ARGS (stream->samples[stream->sample_index].timestamp));
-    if (stream->sample_index < stream->n_samples
-        && stream->samples[stream->sample_index].timestamp < min_time) {
-      min_time = stream->samples[stream->sample_index].timestamp;
-      index = i;
+    if (stream->sample_index < stream->n_samples) {
+      GST_LOG_OBJECT (qtdemux,
+          "stream %d: sample_index %d, timestamp %" GST_TIME_FORMAT, i,
+          stream->sample_index,
+          GST_TIME_ARGS (stream->samples[stream->sample_index].timestamp));
+
+      if (stream->samples[stream->sample_index].timestamp < min_time) {
+        min_time = stream->samples[stream->sample_index].timestamp;
+        index = i;
+      }
     }
   }
   if (index == -1) {

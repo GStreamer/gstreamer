@@ -1,3 +1,9 @@
+2006-02-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_state_movie):
+	  Don't GST_LOG timestamps from nonexistent index
+	  entries (#331582).
+
 2006-02-17  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_state_header):
