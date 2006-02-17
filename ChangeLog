@@ -1,13 +1,13 @@
+2006-02-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_sink_event):
+	  In sink event handler, release object lock again
+	  _before_ sending EOS event downstream (#313838).
+
 2006-02-17  Christian Schaller  <christian@fluendo.com>
 	
-	Fixes bug 331579
 	* gst/asfdemux/gstasf.c: (plugin_init):
-
-2006-02-17  Christian Schaller  <set EMAIL_ADDRESS environment variable>
-
-	reviewed by: <delete if not using a buddy>
-
-	* configure.ac:
+	  Set asfdemux rank to secondary (fixes #331579).
 
 2006-02-17  Jan Schmidt <thaytan@mad.scientist.com>
 

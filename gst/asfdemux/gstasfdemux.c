@@ -185,8 +185,8 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (demux);
       gst_adapter_clear (demux->adapter);
       demux->bytes_needed = 0;
-      gst_asf_demux_send_event_unlocked (demux, event);
       GST_OBJECT_UNLOCK (demux);
+      gst_asf_demux_send_event_unlocked (demux, event);
       break;
     }
 
