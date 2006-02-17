@@ -85,6 +85,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttta.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspeed.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcdxaparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfreeze.so
 @USE_IVORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstivorbis.so
 @USE_NEON_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstneonhttpsrc.so
 # gstreamer-plugins with external dependencies but in the main package
