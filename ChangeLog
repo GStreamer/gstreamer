@@ -1,3 +1,8 @@
+2006-02-17  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_sink_activate):
+	Post nice error message when we cannot activate in pull mode.
+
 2006-02-14  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_open):

@@ -978,9 +978,13 @@ gst_ffmpegdemux_loop (GstPad * pad)
 static gboolean
 gst_ffmpegdemux_sink_activate (GstPad * sinkpad)
 {
+  GstFFMpegDemux *demux = (GstFFMpegDemux*) (GST_PAD_PARENT (sinkpad));
+  
   if (gst_pad_check_pull_range (sinkpad))
     return gst_pad_activate_pull (sinkpad, TRUE);
 
+  GST_ELEMENT_ERROR (demux, STREAM, NOT_IMPLEMENTED,
+        (NULL), ("failed to activate sinkpad in pull mode, push mode not implemented yet"));
   return FALSE;
 }
 
