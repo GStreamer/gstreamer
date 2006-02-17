@@ -22,7 +22,7 @@ BuildRequires:  gcc-c++
 @USE_SIDPLAY_TRUE@BuildRequires:  libsidplay-devel >= 1.36.0
 @USE_A52DEC_TRUE@BuildRequires:  a52dec-devel >= 0.7.3
 # @USE_DVDNAV_TRUE@BuildRequires:  libdvdnav-devel >= 0.1.3
-# @USE_DVDREAD_TRUE@BuildRequires:  libdvdread-devel >= 0.9.0
+@USE_DVDREAD_TRUE@BuildRequires:  libdvdread-devel >= 0.9.0
 @USE_LAME_TRUE@BuildRequires:  lame-devel >= 3.89
 @USE_MAD_TRUE@BuildRequires:  libid3tag-devel >= 0.15.0
 @USE_MAD_TRUE@BuildRequires:  libmad-devel >= 0.15.0
@@ -33,7 +33,7 @@ BuildRequires:  gcc-c++
 @USE_MAD_TRUE@Provides:       gstreamer-mad = %{version}-%{release}
 @USE_A52DEC_TRUE@Provides:       gstreamer-a52dec = %{version}-%{release}
 # @USE_DVDNAV_TRUE@Provides:       gstreamer-dvdnavsrc = %{version}-%{release}
-# @USE_DVDREAD_TRUE@Provides:       gstreamer-dvdreadsrc = %{version}-%{release}
+@USE_DVDREAD_TRUE@Provides:       gstreamer-dvdread = %{version}-%{release}
 @USE_MPEG2DEC_TRUE@Provides:       gstreamer-mpeg2dec = %{version}-%{release}
 
 %description
@@ -101,7 +101,7 @@ rm -rf $RPM_BUILD_ROOT
 
 # plugins without external dependencies
 #%{_libdir}/gstreamer-%{majorminor}/libgstac3parse.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstasfdemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstasf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdlpcmdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstiec958.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegaudioparse.so
@@ -114,7 +114,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_MAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmad.so
 @USE_A52DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsta52dec.so
 # @USE_DVDNAV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdnavsrc.so
-# @USE_DVDREAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdreadsrc.so
+@USE_DVDREAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdvdread.so
 @USE_MPEG2DEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2dec.so
 %doc %{_datadir}/gtk-doc/html/gst-plugins-ugly-plugins-%{majorminor}/*
 
