@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-ugly, GST_PLUGINS_UGLY_VERSION, 0, 10, 1, 1,
+AS_VERSION(gst-plugins-ugly, GST_PLUGINS_UGLY_VERSION, 0, 10, 1, 2,
   GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
@@ -27,8 +27,8 @@ AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.1
-GSTPB_REQ=0.10.1
+GST_REQ=0.10.3
+GSTPB_REQ=0.10.3
 
 AC_CONFIG_SRCDIR([ext/mad/gstmad.c])
 AM_CONFIG_HEADER(config.h)

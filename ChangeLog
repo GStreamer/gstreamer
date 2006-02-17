@@ -1,3 +1,8 @@
+2006-02-17  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.1.2 prelease for 0.10.2
+
 2006-02-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (crop_copy_i420_buffer),
