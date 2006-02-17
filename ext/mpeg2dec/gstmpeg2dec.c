@@ -342,14 +342,101 @@ gst_mpeg2dec_get_index (GstElement * element)
   return mpeg2dec->index;
 }
 
+/* see gst-plugins/gst/games/gstvideoimage.c, paint_setup_I420() */
+#define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
+#define I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
+#define I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
+
+#define I420_Y_OFFSET(w,h) (0)
+#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
+#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+
+#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+
+static GstBuffer *
+crop_copy_i420_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input)
+{
+  GstBuffer *outbuf;
+  guint8 *dest, *src;
+  guint outsize, line;
+
+  outsize = I420_SIZE (mpeg2dec->width, mpeg2dec->height);
+  GST_LOG_OBJECT (mpeg2dec, "Copying input buffer %ux%u (%u) to output buffer "
+      "%ux%u (%u)", mpeg2dec->decoded_width, mpeg2dec->decoded_height,
+      GST_BUFFER_SIZE (input), mpeg2dec->width, mpeg2dec->height, outsize);
+  outbuf = gst_buffer_new_and_alloc (outsize);
+
+  /* Copy Y first */
+  src = GST_BUFFER_DATA (input);
+  dest = GST_BUFFER_DATA (outbuf);
+  for (line = 0; line < mpeg2dec->height; line++) {
+    memcpy (dest, src, mpeg2dec->width);
+    dest += I420_Y_ROWSTRIDE (mpeg2dec->width);
+    src += I420_Y_ROWSTRIDE (mpeg2dec->decoded_width);
+  }
+
+  /* U */
+  src = GST_BUFFER_DATA (input)
+      + I420_U_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
+  dest = GST_BUFFER_DATA (outbuf)
+      + I420_U_OFFSET (mpeg2dec->width, mpeg2dec->height);
+  for (line = 0; line < mpeg2dec->height / 2; line++) {
+    memcpy (dest, src, mpeg2dec->width / 2);
+    dest += I420_U_ROWSTRIDE (mpeg2dec->width);
+    src += I420_U_ROWSTRIDE (mpeg2dec->decoded_width);
+  }
+
+  /* V */
+  src = GST_BUFFER_DATA (input)
+      + I420_V_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
+  dest = GST_BUFFER_DATA (outbuf)
+      + I420_V_OFFSET (mpeg2dec->width, mpeg2dec->height);
+  for (line = 0; line < mpeg2dec->height / 2; line++) {
+    memcpy (dest, src, mpeg2dec->width / 2);
+    dest += I420_V_ROWSTRIDE (mpeg2dec->width);
+    src += I420_V_ROWSTRIDE (mpeg2dec->decoded_width);
+  }
+
+  return outbuf;
+}
+
+  /* FIXME: this is unlikely to be right stride-wise and offset-wise */
+static GstBuffer *
+crop_copy_i422_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input)
+{
+  GstBuffer *outbuf;
+  guint8 *in_data, *out_data;
+  guint line;
+
+  outbuf = gst_buffer_new_and_alloc (mpeg2dec->width * mpeg2dec->height * 2);
+
+  /* Copy Y first */
+  in_data = GST_BUFFER_DATA (input);
+  out_data = GST_BUFFER_DATA (outbuf);
+  for (line = 0; line < mpeg2dec->height; line++) {
+    memcpy (out_data, in_data, mpeg2dec->width);
+    out_data += mpeg2dec->width;
+    in_data += mpeg2dec->decoded_width;
+  }
+
+  /* Now copy U & V */
+  in_data = GST_BUFFER_DATA (input)
+      + mpeg2dec->decoded_width * mpeg2dec->decoded_height;
+  for (line = 0; line < mpeg2dec->height; line++) {
+    memcpy (out_data, in_data, mpeg2dec->width / 2);
+    memcpy (out_data + mpeg2dec->width * mpeg2dec->height / 2,
+        in_data + mpeg2dec->decoded_width * mpeg2dec->decoded_height / 2,
+        mpeg2dec->width / 2);
+    out_data += mpeg2dec->width / 2;
+    in_data += mpeg2dec->decoded_width / 2;
+  }
+
+  return outbuf;
+}
+
 static gboolean
 crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf)
 {
-  unsigned char *in_data;
-  unsigned char *out_data;
-  unsigned int h_subsample;
-  unsigned int v_subsample;
-  unsigned int line;
   gboolean result = FALSE;
   GstBuffer *input = *buf;
   GstBuffer *outbuf = input;
@@ -368,45 +455,13 @@ crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf)
        *        for each frame decoded...
        */
       if (mpeg2dec->format == MPEG2DEC_FORMAT_I422) {
-        outbuf =
-            gst_buffer_new_and_alloc (mpeg2dec->width * mpeg2dec->height * 2);
-        h_subsample = 2;
-        v_subsample = 1;
+        outbuf = crop_copy_i422_buffer (mpeg2dec, input);
       } else {
-        outbuf =
-            gst_buffer_new_and_alloc (mpeg2dec->width * mpeg2dec->height * 1.5);
-        h_subsample = 2;
-        v_subsample = 2;
+        outbuf = crop_copy_i420_buffer (mpeg2dec, input);
       }
+
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mpeg2dec->srcpad));
-
-      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (input);
-      GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (input);
-      GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (input);
-
-      /* Copy Y first */
-      in_data = GST_BUFFER_DATA (input);
-      out_data = GST_BUFFER_DATA (outbuf);
-      for (line = 0; line < mpeg2dec->height; line++) {
-        memcpy (out_data, in_data, mpeg2dec->width);
-        out_data += mpeg2dec->width;
-        in_data += mpeg2dec->decoded_width;
-      }
-
-      /* Now copy U & V */
-      in_data =
-          GST_BUFFER_DATA (input) +
-          mpeg2dec->decoded_width * mpeg2dec->decoded_height;
-      for (line = 0; line < mpeg2dec->height / v_subsample; line++) {
-        memcpy (out_data, in_data, mpeg2dec->width / h_subsample);
-        memcpy (out_data +
-            mpeg2dec->width * mpeg2dec->height / (v_subsample * h_subsample),
-            in_data +
-            mpeg2dec->decoded_width * mpeg2dec->decoded_height / (v_subsample *
-                h_subsample), mpeg2dec->width / h_subsample);
-        out_data += mpeg2dec->width / h_subsample;
-        in_data += mpeg2dec->decoded_width / h_subsample;
-      }
+      gst_buffer_stamp (outbuf, input);
 
       *buf = outbuf;
       result = TRUE;

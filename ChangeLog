@@ -1,3 +1,11 @@
+2006-02-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (crop_copy_i420_buffer),
+	(crop_copy_i422_buffer), (crop_buffer):
+	  When we need to crop the output buffer, make sure we
+	  create a buffer of the right size and respect the implicit
+	  striding used for I420 elsewhere in GStreamer (#331301).
+
 2006-02-17  Edward Hervey  <edward@fluendo.com>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_stream):
