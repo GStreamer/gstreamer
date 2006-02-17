@@ -1,3 +1,8 @@
+2006-02-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/cdio/gstcdio.c: (plugin_init):
+	  Init debug category (#331253).
+
 2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):

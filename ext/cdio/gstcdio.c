@@ -79,6 +79,8 @@ plugin_init (GstPlugin * plugin)
 
   cdio_log_set_handler (gst_cdio_log_handler);
 
+  GST_DEBUG_CATEGORY_INIT (gst_cdio_debug, "cdio", 0, "libcdio elements");
+
   return TRUE;
 }
 
