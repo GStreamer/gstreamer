@@ -1,3 +1,8 @@
+2006-02-17  Wim Taymans  <wim@fluendo.com>
+
+	* tests/check/gst/gstquery.c: (GST_START_TEST):
+	Added another check.
+
 2006-02-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gsttypefindelement.c: (find_peek):

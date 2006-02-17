@@ -86,14 +86,17 @@ GST_START_TEST (create_queries)
     fail_if (query == NULL);
     fail_unless (GST_QUERY_TYPE (query) == GST_QUERY_FORMATS);
 
+    /* empty */
     gst_query_parse_formats_length (query, &size);
     fail_if (size != 0);
 
+    /* see if empty gives undefined formats */
     gst_query_parse_formats_nth (query, 0, &format);
     fail_if (format != GST_FORMAT_UNDEFINED);
     gst_query_parse_formats_nth (query, 1, &format);
     fail_if (format != GST_FORMAT_UNDEFINED);
 
+    /* set 2 formats */
     gst_query_set_formats (query, 2, GST_FORMAT_TIME, GST_FORMAT_BYTES);
 
     gst_query_parse_formats_length (query, &size);
@@ -110,6 +113,7 @@ GST_START_TEST (create_queries)
     gst_query_parse_formats_nth (query, 2, &format);
     fail_if (format != GST_FORMAT_UNDEFINED);
 
+    /* overwrite with 3 formats */
     gst_query_set_formats (query, 3, GST_FORMAT_TIME, GST_FORMAT_BYTES,
         GST_FORMAT_PERCENT);
 
@@ -119,6 +123,23 @@ GST_START_TEST (create_queries)
     gst_query_parse_formats_nth (query, 2, &format);
     fail_if (format != GST_FORMAT_PERCENT);
 
+    /* create one from an array */
+    {
+      static GstFormat formats[] = {
+        GST_FORMAT_TIME,
+        GST_FORMAT_BYTES,
+        GST_FORMAT_PERCENT
+      };
+      gst_query_set_formatsv (query, 3, formats);
+
+      gst_query_parse_formats_length (query, &size);
+      fail_if (size != 3);
+
+      gst_query_parse_formats_nth (query, 0, &format);
+      fail_if (format != GST_FORMAT_TIME);
+      gst_query_parse_formats_nth (query, 2, &format);
+      fail_if (format != GST_FORMAT_PERCENT);
+    }
     gst_query_unref (query);
   }
 }
