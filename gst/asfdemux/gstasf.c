@@ -29,10 +29,10 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "asfdemux", GST_RANK_PRIMARY, GST_TYPE_ASF_DEMUX)) /*
-                                                                                           || !gst_element_register (plugin, "asfmux", GST_RANK_NONE,
-                                                                                           GST_TYPE_ASFMUX))
-                                                                                         */
+  if (!gst_element_register (plugin, "asfdemux", GST_RANK_SECONDARY, GST_TYPE_ASF_DEMUX))       /*
+                                                                                                   || !gst_element_register (plugin, "asfmux", GST_RANK_NONE,
+                                                                                                   GST_TYPE_ASFMUX))
+                                                                                                 */
     return FALSE;
 
   return TRUE;
