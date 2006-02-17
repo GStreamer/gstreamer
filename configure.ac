@@ -12,7 +12,7 @@ AM_MAINTAINER_MODE
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-bad, GST_PLUGINS_BAD_VERSION, 0, 10, 0, 1,
+AS_VERSION(gst-plugins-bad, GST_PLUGINS_BAD_VERSION, 0, 10, 0, 2,
     GST_CVS="no", GST_CVS="yes")
 
 AM_INIT_AUTOMAKE($PACKAGE,$VERSION)
@@ -205,7 +205,8 @@ GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
 
 dnl check for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_REQ=0.9.7
+GST_REQ=0.10.3
+GST_PBREQ=0.10.3
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ,
   HAVE_GST="yes", HAVE_GST="no")
 
@@ -220,7 +221,7 @@ fi
 AC_SUBST(GST_TOOLS_DIR)
 
 dnl check for gstreamer-base; uninstalled is selected preferentially
-PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,
+PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_PBREQ,
   HAVE_GST_BASE="yes", HAVE_GST_BASE="no")
 
 if test "x$HAVE_GST_BASE" = "xno"; then

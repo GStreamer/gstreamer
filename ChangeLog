@@ -1,3 +1,8 @@
+2006-02-17  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  Release 0.10.0.2 - pre-release for 0.10.1
+
 2006-02-16  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_src_event),
