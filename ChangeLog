@@ -1,5 +1,16 @@
 2006-02-17  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/TODO:
+	Update TODO
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_get_offset):
+	When trying to play samples ASAP and we don't have a
+	previous sample, try to play at position 0 instead of
+	an invalid position.
+
+2006-02-17  Wim Taymans  <wim@fluendo.com>
+
 	* ext/alsa/gstalsasink.c: (gst_alsasink_open),
 	(gst_alsasink_reset):
 	Also release lock when we get an error in _reset();

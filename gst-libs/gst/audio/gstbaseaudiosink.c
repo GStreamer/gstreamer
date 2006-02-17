@@ -434,6 +434,9 @@ gst_base_audio_sink_get_offset (GstBaseAudioSink * sink)
 
   /* assume we can append to the previous sample */
   sample = sink->next_sample;
+  /* no previous sample, try to insert at position 0 */
+  if (sample == -1)
+    sample = 0;
 
   sps = sink->ringbuffer->samples_per_seg;
 

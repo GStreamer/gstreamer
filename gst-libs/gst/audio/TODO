@@ -11,3 +11,5 @@ TODO
    - more accurate master/slave calibration handling
    - faster audio cutoff when going to PAUSED
    - resubmit samples from ringbuffer when doing PAUSED->PLAYING again
+   - the ringbuffer should have a state where it is filling up the
+     buffer before going to playing.
