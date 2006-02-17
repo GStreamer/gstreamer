@@ -589,6 +589,13 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length, &moov);
       if (ret != GST_FLOW_OK)
         goto beach;
+      if (length != GST_BUFFER_SIZE (moov)) {
+        GST_WARNING_OBJECT (qtdemux,
+            "We got less than expected (received %d, wanted %d)",
+            GST_BUFFER_SIZE (moov), length);
+        ret = GST_FLOW_ERROR;
+        goto beach;
+      }
       cur_offset += length;
       qtdemux->offset += length;
 
