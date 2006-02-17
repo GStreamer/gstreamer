@@ -1,3 +1,8 @@
+2006-02-17  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain_dvd):
+	Add a small sanity check for LPCM reading.
+
 2006-02-17  Edward Hervey  <edward@fluendo.com>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_file):

@@ -323,6 +323,15 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
   size = GST_BUFFER_SIZE (buf);
   data = GST_BUFFER_DATA (buf);
 
+  if (size < 5) {
+    /* Buffer is too small */
+    GST_ELEMENT_WARNING (dvdlpcmdec, STREAM, DECODE,
+        ("Invalid data found parsing LPCM packet"),
+        ("LPCM packet was too small. Dropping"));
+    ret = GST_FLOW_OK;
+    goto done;
+  }
+
   /* We have a 5 byte header, now.
    * The first two bytes are a (big endian) 16 bit offset into our buffer.
    * The buffer timestamp refers to this offset.
@@ -331,6 +340,14 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
    * encoded.
    */
   first_access = (data[0] << 8) | data[1];
+  if (first_access > size) {
+    GST_ELEMENT_WARNING (dvdlpcmdec, STREAM, DECODE,
+        ("Invalid data found parsing LPCM packet"),
+        ("LPCM packet contained invalid first access. Dropping"));
+    ret = GST_FLOW_OK;
+    goto done;
+  }
+
   header = (data[2] << 16) | (data[3] << 8) | data[4];
 
   /* see if we have a new header */
