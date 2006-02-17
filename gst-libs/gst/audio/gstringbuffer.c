@@ -50,7 +50,7 @@ gst_ring_buffer_get_type (void)
 {
   static GType ringbuffer_type = 0;
 
-  if (!ringbuffer_type) {
+  if (G_UNLIKELY (!ringbuffer_type)) {
     static const GTypeInfo ringbuffer_info = {
       sizeof (GstRingBufferClass),
       NULL,
@@ -394,7 +394,7 @@ gst_ring_buffer_open_device (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "opening device");
 
   GST_OBJECT_LOCK (buf);
-  if (buf->open)
+  if (G_UNLIKELY (buf->open))
     goto was_opened;
 
   buf->open = TRUE;
@@ -403,10 +403,10 @@ gst_ring_buffer_open_device (GstRingBuffer * buf)
   g_assert (!buf->acquired);
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
-  if (rclass->open_device)
+  if (G_LIKELY (rclass->open_device))
     res = rclass->open_device (buf);
 
-  if (!res)
+  if (G_UNLIKELY (!res))
     goto open_failed;
 
   GST_DEBUG_OBJECT (buf, "opened device");
@@ -454,19 +454,19 @@ gst_ring_buffer_close_device (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "closing device");
 
   GST_OBJECT_LOCK (buf);
-  if (!buf->open)
+  if (G_UNLIKELY (!buf->open))
     goto was_closed;
 
-  if (buf->acquired)
+  if (G_UNLIKELY (buf->acquired))
     goto was_acquired;
 
   buf->open = FALSE;
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
-  if (rclass->close_device)
+  if (G_LIKELY (rclass->close_device))
     res = rclass->close_device (buf);
 
-  if (!res)
+  if (G_UNLIKELY (!res))
     goto close_error;
 
   GST_DEBUG_OBJECT (buf, "closed device");
@@ -517,9 +517,7 @@ gst_ring_buffer_device_is_open (GstRingBuffer * buf)
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
   GST_OBJECT_LOCK (buf);
-
   res = buf->open;
-
   GST_OBJECT_UNLOCK (buf);
 
   return res;
@@ -552,22 +550,22 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   GST_DEBUG_OBJECT (buf, "acquiring device");
 
   GST_OBJECT_LOCK (buf);
-  if (!buf->open)
+  if (G_UNLIKELY (!buf->open))
     goto not_opened;
 
-  if (buf->acquired)
+  if (G_UNLIKELY (buf->acquired))
     goto was_acquired;
 
   buf->acquired = TRUE;
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
-  if (rclass->acquire)
+  if (G_LIKELY (rclass->acquire))
     res = rclass->acquire (buf, spec);
 
-  if (!res)
+  if (G_UNLIKELY (!res))
     goto acquire_failed;
 
-  if ((bps = buf->spec.bytes_per_sample) == 0)
+  if (G_UNLIKELY ((bps = buf->spec.bytes_per_sample) == 0))
     goto invalid_bps;
 
   segsize = buf->spec.segsize;
@@ -641,7 +639,7 @@ gst_ring_buffer_release (GstRingBuffer * buf)
   gst_ring_buffer_stop (buf);
 
   GST_OBJECT_LOCK (buf);
-  if (!buf->acquired)
+  if (G_UNLIKELY (!buf->acquired))
     goto was_released;
 
   buf->acquired = FALSE;
@@ -650,14 +648,14 @@ gst_ring_buffer_release (GstRingBuffer * buf)
   g_assert (buf->open == TRUE);
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
-  if (rclass->release)
+  if (G_LIKELY (rclass->release))
     res = rclass->release (buf);
 
   /* signal any waiters */
   GST_DEBUG_OBJECT (buf, "signal waiter");
   GST_RING_BUFFER_SIGNAL (buf);
 
-  if (!res)
+  if (G_UNLIKELY (!res))
     goto release_failed;
 
   g_free (buf->empty_seg);
@@ -726,10 +724,8 @@ gst_ring_buffer_set_flushing (GstRingBuffer * buf, gboolean flushing)
   if (flushing) {
     gst_ring_buffer_pause_unlocked (buf);
   }
-
   GST_OBJECT_UNLOCK (buf);
 }
-
 
 /**
  * gst_ring_buffer_start:
@@ -753,7 +749,7 @@ gst_ring_buffer_start (GstRingBuffer * buf)
   GST_DEBUG_OBJECT (buf, "starting ringbuffer");
 
   GST_OBJECT_LOCK (buf);
-  if (buf->abidata.ABI.flushing)
+  if (G_UNLIKELY (buf->abidata.ABI.flushing))
     goto flushing;
 
   /* if stopped, set to started */
@@ -776,14 +772,14 @@ gst_ring_buffer_start (GstRingBuffer * buf)
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (resume) {
-    if (rclass->resume)
+    if (G_LIKELY (rclass->resume))
       res = rclass->resume (buf);
   } else {
-    if (rclass->start)
+    if (G_LIKELY (rclass->start))
       res = rclass->start (buf);
   }
 
-  if (!res) {
+  if (G_UNLIKELY (!res)) {
     buf->state = GST_RING_BUFFER_STATE_PAUSED;
     GST_DEBUG_OBJECT (buf, "failed to start");
   } else {
@@ -822,10 +818,10 @@ gst_ring_buffer_pause_unlocked (GstRingBuffer * buf)
   GST_RING_BUFFER_SIGNAL (buf);
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
-  if (rclass->pause)
+  if (G_LIKELY (rclass->pause))
     res = rclass->pause (buf);
 
-  if (!res) {
+  if (G_UNLIKELY (!res)) {
     buf->state = GST_RING_BUFFER_STATE_STARTED;
     GST_DEBUG_OBJECT (buf, "failed to pause");
   } else {
@@ -860,11 +856,10 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
   g_return_val_if_fail (buf != NULL, FALSE);
 
   GST_OBJECT_LOCK (buf);
-  if (buf->abidata.ABI.flushing)
+  if (G_UNLIKELY (buf->abidata.ABI.flushing))
     goto flushing;
 
   res = gst_ring_buffer_pause_unlocked (buf);
-
   GST_OBJECT_UNLOCK (buf);
 
   return res;
@@ -914,10 +909,10 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
   GST_RING_BUFFER_SIGNAL (buf);
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
-  if (rclass->stop)
+  if (G_LIKELY (rclass->stop))
     res = rclass->stop (buf);
 
-  if (!res) {
+  if (G_UNLIKELY (!res)) {
     buf->state = GST_RING_BUFFER_STATE_STARTED;
     GST_DEBUG_OBJECT (buf, "failed to stop");
   } else {
@@ -946,17 +941,21 @@ guint
 gst_ring_buffer_delay (GstRingBuffer * buf)
 {
   GstRingBufferClass *rclass;
-  guint res = 0;
+  guint res;
 
   g_return_val_if_fail (buf != NULL, 0);
 
+  res = 0;
+
+  /* buffer must be acquired */
   if (G_UNLIKELY (!gst_ring_buffer_is_acquired (buf)))
-    return 0;
+    goto done;
 
   rclass = GST_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->delay))
     res = rclass->delay (buf);
 
+done:
   return res;
 }
 
@@ -986,10 +985,9 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
   /* and the number of samples not yet processed */
   delay = gst_ring_buffer_delay (buf);
 
-  samples = ((guint64) segdone) * buf->samples_per_seg;
-  raw = samples;
+  raw = samples = ((guint64) segdone) * buf->samples_per_seg;
 
-  if (G_UNLIKELY (samples >= delay))
+  if (G_LIKELY (samples >= delay))
     samples -= delay;
 
   GST_DEBUG_OBJECT (buf, "processed samples: raw %llu, delay %u, real %llu",
@@ -1020,7 +1018,7 @@ gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
   if (sample == -1)
     sample = 0;
 
-  if (buf->samples_per_seg == 0)
+  if (G_UNLIKELY (buf->samples_per_seg == 0))
     return;
 
   /* FIXME, we assume the ringbuffer can restart at a random 
@@ -1050,7 +1048,7 @@ gst_ring_buffer_clear_all (GstRingBuffer * buf)
   g_return_if_fail (buf != NULL);
 
   /* not fatal, we just are not negotiated yet */
-  if (buf->spec.segtotal <= 0)
+  if (G_UNLIKELY (buf->spec.segtotal <= 0))
     return;
 
   GST_DEBUG_OBJECT (buf, "clear all segments");
@@ -1174,7 +1172,7 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
           ("pointer at %d, sample %llu, write to %d-%d, to_write %d, diff %d, segtotal %d, segsize %d",
           segdone, sample, writeseg, sampleoff, to_write, diff, segtotal, sps);
 
-      /* segment too far ahead, we need to drop */
+      /* segment too far ahead, we need to drop, hopefully UNLIKELY */
       if (G_UNLIKELY (diff < 0)) {
         /* we need to drop one segment at a time, pretend we wrote a
          * segment. */
@@ -1188,7 +1186,7 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
         break;
 
       /* else we need to wait for the segment to become writable. */
-      if (G_UNLIKELY (!wait_segment (buf)))
+      if (!wait_segment (buf))
         goto not_started;
     }
 
@@ -1370,7 +1368,8 @@ gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
   *len = buf->spec.segsize;
   *readptr = data + *segment * *len;
 
-  /* callback to fill the memory with data */
+  /* callback to fill the memory with data, for pull based
+   * scheduling. */
   if (buf->callback)
     buf->callback (buf, *readptr, *len, buf->cb_data);
 
@@ -1425,8 +1424,9 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
   guint8 *data;
 
   g_return_if_fail (buf != NULL);
-  /* no data means it's allready cleared */
-  if (buf->data == NULL)
+
+  /* no data means it's already cleared */
+  if (G_UNLIKELY (buf->data == NULL))
     return;
 
   g_return_if_fail (buf->empty_seg != NULL);

@@ -1,5 +1,20 @@
 2006-02-17  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_get_type),
+	(gst_ring_buffer_open_device), (gst_ring_buffer_close_device),
+	(gst_ring_buffer_device_is_open), (gst_ring_buffer_acquire),
+	(gst_ring_buffer_release), (gst_ring_buffer_set_flushing),
+	(gst_ring_buffer_start), (gst_ring_buffer_pause_unlocked),
+	(gst_ring_buffer_pause), (gst_ring_buffer_stop),
+	(gst_ring_buffer_delay), (gst_ring_buffer_samples_done),
+	(gst_ring_buffer_set_sample), (gst_ring_buffer_clear_all),
+	(gst_ring_buffer_commit), (gst_ring_buffer_prepare_read),
+	(gst_ring_buffer_clear):
+	Small cleanups.
+	Added some G_LIKELY.
+
+2006-02-17  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/TODO:
 	Update TODO
 
