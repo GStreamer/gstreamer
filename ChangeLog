@@ -1,3 +1,10 @@
+2006-02-17  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_state_header):
+	Check that the size of the returned buffer is of the correct size
+	because the parser assumes that.
+	Fixes #331543.
+
 2006-02-17  Jan Schmidt <thaytan@mad.scientist.com>
 
 	* configure.ac:
