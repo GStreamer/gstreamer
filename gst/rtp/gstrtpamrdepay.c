@@ -366,13 +366,6 @@ gst_rtp_amr_depay_chain (GstPad * pad, GstBuffer * buf)
         break;
     }
 
-    /* this is impossible */
-    if (num_packets == payload_len) {
-      GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
-          (NULL), ("AMR RTP num_packets == payload_len"));
-      goto bad_packet;
-    }
-
     if (rtpamrdepay->crc) {
       /* data len + CRC len + header bytes should be smaller than payload_len */
       if (num_packets + num_nonempty_packets + amr_len > payload_len) {
@@ -407,10 +400,11 @@ gst_rtp_amr_depay_chain (GstPad * pad, GstBuffer * buf)
     for (i = 0; i < num_packets; i++) {
       gint fr_size;
 
+      /* copy FT, clear F bit */
+      *p++ = payload[i] & 0x7f;
+
       fr_size = frame_size[(payload[i] & 0x78) >> 3];
       if (fr_size > 0) {
-        /* copy FT, clear F bit */
-        *p++ = payload[i] & 0x7f;
         /* copy data packet, FIXME, calc CRC here. */
         memcpy (p, dp, fr_size);
 
