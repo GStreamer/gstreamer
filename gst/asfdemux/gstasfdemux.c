@@ -1408,7 +1408,10 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 ** p_data,
   /* FIXME: do we need object.send_time as well? what is it? */
 
   demux->play_time = (guint64) object.play_time * (GST_SECOND / 10000000);
-  demux->preroll = 0;           /* object.preroll; */
+  demux->preroll = object.preroll;
+  GST_DEBUG_OBJECT (demux,
+      "play_time %" GST_TIME_FORMAT " preroll %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (demux->play_time), GST_TIME_ARGS (demux->preroll));
 
   gst_segment_set_duration (&demux->segment, GST_FORMAT_TIME, demux->play_time);
 

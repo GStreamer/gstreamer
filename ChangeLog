@@ -1,3 +1,9 @@
+2006-02-17  Edward Hervey  <edward@fluendo.com>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_file):
+	Take into account the file properties preroll value for
+	timestamping/newsegment. It's weird this value was commented out.
+
 2006-02-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/asfdemux/Makefile.am:
