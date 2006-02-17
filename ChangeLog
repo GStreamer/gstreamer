@@ -1,3 +1,9 @@
+2006-02-17  Wim Taymans  <wim@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_convert_src),
+	(gst_vorbisenc_convert_sink):
+	Use some more scaling functions.
+
 2006-02-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/cdparanoia/gstcdparanoiasrc.c:

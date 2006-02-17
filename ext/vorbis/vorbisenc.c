@@ -310,7 +310,7 @@ gst_vorbisenc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
         case GST_FORMAT_TIME:
-          *dest_value = src_value * GST_SECOND / avg;
+          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND, avg);
           break;
         default:
           res = FALSE;
@@ -319,7 +319,7 @@ gst_vorbisenc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          *dest_value = src_value * avg / GST_SECOND;
+          *dest_value = gst_util_uint64_scale_int (src_value, avg, GST_SECOND);
           break;
         default:
           res = FALSE;
@@ -358,7 +358,8 @@ gst_vorbisenc_convert_sink (GstPad * pad, GstFormat src_format,
 
           if (byterate == 0)
             return FALSE;
-          *dest_value = src_value * GST_SECOND / byterate;
+          *dest_value =
+              gst_util_uint64_scale_int (src_value, GST_SECOND, byterate);
           break;
         }
         default:
@@ -373,7 +374,9 @@ gst_vorbisenc_convert_sink (GstPad * pad, GstFormat src_format,
         case GST_FORMAT_TIME:
           if (vorbisenc->frequency == 0)
             return FALSE;
-          *dest_value = src_value * GST_SECOND / vorbisenc->frequency;
+          *dest_value =
+              gst_util_uint64_scale_int (src_value, GST_SECOND,
+              vorbisenc->frequency);
           break;
         default:
           res = FALSE;
@@ -385,7 +388,9 @@ gst_vorbisenc_convert_sink (GstPad * pad, GstFormat src_format,
           scale = bytes_per_sample;
           /* fallthrough */
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value * scale * vorbisenc->frequency / GST_SECOND;
+          *dest_value =
+              gst_util_uint64_scale_int (src_value,
+              scale * vorbisenc->frequency, GST_SECOND);
           break;
         default:
           res = FALSE;
