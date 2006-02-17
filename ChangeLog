@@ -1,3 +1,9 @@
+2006-02-17  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	* gst/gstquery.override:
+	Updated and properly wrapped new GstQuery formats API.
+
 2006-02-10  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gst.defs (disable_sync_message_emission) 

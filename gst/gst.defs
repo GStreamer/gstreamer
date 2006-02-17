@@ -4473,6 +4473,12 @@
   )
 )
 
+(define-function query_new_formats
+  (c-name "gst_query_new_formats")
+  (caller-owns-return #t)
+  (return-type "GstQuery*")
+)
+
 (define-method set_formats
   (of-object "GstQuery")
   (c-name "gst_query_set_formats")
@@ -4481,6 +4487,35 @@
     '("gint" "n_formats")
   )
   (varargs #t)
+)
+
+(define-method set_formatsv
+  (of-object "GstQuery")
+  (c-name "gst_query_set_formatsv")
+  (return-type "none")
+  (parameters
+    '("gint" "n_formats")
+    '("GstFormat*" "formats")
+  )
+)
+
+(define-method parse_formats_length
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_formats_length")
+  (return-type "none")
+  (parameters
+    '("guint*" "n_formats")
+  )
+)
+
+(define-method parse_formats_nth
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_formats_nth")
+  (return-type "none")
+  (parameters
+    '("guint" "nth")
+    '("GstFormat*" "format")
+  )
 )
 
 

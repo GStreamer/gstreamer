@@ -19,7 +19,9 @@
  * 
  * Author: Johan Dahlin <johan@gnome.org>
  */
-
+%%
+ignore
+  gst_query_set_formatsv
 %%
 override gst_query_parse_position noargs
 static PyObject *
@@ -143,5 +145,84 @@ _wrap_gst_query_parse_seeking (PyGstMiniObject *self)
 	PyList_SetItem (ret, 2, PyLong_FromLongLong(segment_start));
 	PyList_SetItem (ret, 3, PyLong_FromLongLong(segment_end));
 
+	return ret;
+}
+%%
+override gst_query_parse_formats_length noargs
+static PyObject *
+_wrap_gst_query_parse_formats_length (PyGstMiniObject *self)
+{
+	PyObject	*ret;
+	guint		n_formats;
+	
+	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_FORMATS) {
+		PyErr_SetString(PyExc_TypeError, "Query is not a 'Formats' query");
+		return NULL;
+	}
+
+	gst_query_parse_formats_length (GST_QUERY (self->obj),
+					&n_formats);
+
+	ret = PyInt_FromLong(n_formats);
+	
+	return ret;
+}
+%%
+override gst_query_parse_formats_nth kwargs
+static PyObject *
+_wrap_gst_query_parse_formats_nth (PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
+{
+	static char *kwlist[] = {"nth", NULL};
+	guint		nth;
+	GstFormat	format;
+
+	if (GST_QUERY_TYPE (self->obj) != GST_QUERY_FORMATS) {
+		PyErr_SetString(PyExc_TypeError, "Query is not a 'Formats' query");
+		return NULL;
+	}
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "I:GstQuery.parse_formats_nth", kwlist, &nth))
+		return NULL;
+
+	gst_query_parse_formats_nth (GST_QUERY (self->obj),
+				     nth, &format);
+
+	return pyg_enum_from_gtype (GST_TYPE_FORMAT, format);
+}
+%%
+override gst_query_set_formats args
+static PyObject *
+_wrap_gst_query_set_formats (PyGstMiniObject *self, PyObject *args)
+{
+	PyObject	*ret = NULL;
+	gint	len, i;
+	GstFormat *formats;
+
+	if (GST_QUERY_TYPE (self->obj) != GST_QUERY_FORMATS) {
+		PyErr_SetString(PyExc_TypeError, "Query is not a 'Formats' query");
+		return NULL;
+	}
+
+	if ((len = PyTuple_Size(args)) < 1) {
+		PyErr_SetString(PyExc_TypeError, "You need to supply at least one gst.Format");
+		return NULL;
+	}
+
+	formats = g_new0(GstFormat, len);
+
+	for (i = 0; i < len; i++) {
+		if (pyg_enum_get_value(GST_TYPE_FORMAT, 
+				       PyTuple_GetItem(args, i), 
+				       (gint *) &formats[i]))
+			goto beach;
+	}
+
+	gst_query_set_formatsv (GST_QUERY(self->obj), len, formats);
+
+	Py_INCREF(Py_None);
+	ret = Py_None;
+
+  beach:
+	g_free(formats);
 	return ret;
 }
