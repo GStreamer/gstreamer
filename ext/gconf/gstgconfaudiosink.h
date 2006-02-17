@@ -43,6 +43,8 @@ typedef struct _GstGConfAudioSink {
 
   /* explicit pointers to stuff used */
   GConfClient *client;
+  int profile;
+  guint connection;
   GstElement *kid;
   GstPad *pad;
 

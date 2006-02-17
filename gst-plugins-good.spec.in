@@ -36,7 +36,7 @@ BuildRequires:  gcc-c++
 # @USE_RAW1394_TRUE@BuildRequires: libraw1394-devel
 # @USE_RAW1394_TRUE@BuildRequires: libavc1394-devel
 @USE_SPEEX_TRUE@BuildRequires:	speex-devel
-
+@USE_HAL_TRUE@BuildRequires: hal-devel
 @USE_SHOUT2_TRUE@BuildRequires: libshout-devel >= 2.0
 @USE_LADSPA_TRUE@BuildRequires: ladspa-devel
 @USE_AALIB_TRUE@BuildRequires:  aalib-devel >= 1.3
@@ -112,6 +112,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmultipart.so
 %{_libdir}/gstreamer-%{majorminor}/libgstid3demux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcdio.so
+%{_libdir}/gstreamer-%{majorminor}/libgstapetag.so
+
 # gstreamer-plugins with external dependencies but in the main package
 @USE_LIBCACA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcacasink.so
 @USE_ESD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstesd.so
@@ -123,7 +125,7 @@ rm -rf $RPM_BUILD_ROOT
 ## @USE_RAW1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
 @USE_SPEEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstspeex.so
 @USE_GCONF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgconfelements.so
-
+@USE_HAL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthalelements.so
 # @USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 @USE_SHOUT2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout2.so
 @USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so

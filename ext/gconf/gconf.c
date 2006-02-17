@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2002> Thomas Vander Stichele <thomas@apestaart.org>
+ * Copyright (C) <2006> Jürg Billeter <j@bitron.ch>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -128,6 +129,7 @@ gst_gconf_render_bin_from_key (const gchar * key)
 
 /**
  * gst_gconf_get_default_audio_sink:
+ * @profile: the appropriate application profile.
  *
  * Render audio output bin from GStreamer GConf key : "default/audiosink".
  * If key is invalid, the default audio sink for the platform is used
@@ -137,9 +139,30 @@ gst_gconf_render_bin_from_key (const gchar * key)
  * everything failed.
  */
 GstElement *
-gst_gconf_get_default_audio_sink (void)
+gst_gconf_get_default_audio_sink (int profile)
 {
-  GstElement *ret = gst_gconf_render_bin_from_key (GST_GCONF_AUDIOSINK_KEY);
+  GstElement *ret;
+  gchar *key;
+  const gchar *profile_string;
+
+  switch (profile) {
+    case GCONF_PROFILE_SOUNDS:
+      profile_string = "";
+      break;
+    case GCONF_PROFILE_MUSIC:
+      profile_string = "music";
+      break;
+    case GCONF_PROFILE_CHAT:
+      profile_string = "chat";
+      break;
+    default:
+      g_return_val_if_reached (NULL);
+  }
+
+  key = g_strdup_printf ("default/%saudiosink", profile_string);
+
+  ret = gst_gconf_render_bin_from_key (key);
+  g_free (key);
 
   if (!ret) {
     ret = gst_element_factory_make (DEFAULT_AUDIOSINK, NULL);

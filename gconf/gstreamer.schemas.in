@@ -12,6 +12,116 @@
       </locale>
     </schema>
     <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/audiosink_description</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/audiosink_description</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>Default</default>
+      <locale name="C">
+        <short>description for default GStreamer audiosink</short>
+        <long>Describes the selected output element.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/musicaudiosink</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/musicaudiosink</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>@DEFAULT_AUDIOSINK@</default>
+      <locale name="C">
+        <short>GStreamer audiosink for Music and Movies</short>
+        <long>GStreamer can play audio using any number of output elements.  Some possible choices are osssink, esdsink and alsasink.  The audiosink can be a partial pipeline instead of just one element.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/musicaudiosink_description</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/musicaudiosink_description</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>Default</default>
+      <locale name="C">
+        <short>description for GStreamer audiosink for Music and Movies</short>
+        <long>Describes the selected output element for Music and Movies.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/chataudiosink</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/chataudiosink</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>@DEFAULT_AUDIOSINK@</default>
+      <locale name="C">
+        <short>GStreamer audiosink for Audio/Video Conferencing</short>
+        <long>GStreamer can play audio using any number of output elements.  Some possible choices are osssink, esdsink and alsasink.  The audiosink can be a partial pipeline instead of just one element.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/chataudiosink_description</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/chataudiosink_description</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>Default</default>
+      <locale name="C">
+        <short>description for GStreamer audiosink for Audio/Video Conferencing</short>
+        <long>Describes the selected output element for Audio/Video Conferencing.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/audiosink_description</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/audiosink_description</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>Default</default>
+      <locale name="C">
+        <short>description for default GStreamer audiosink</short>
+        <long>Describes the selected output element.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/musicaudiosink</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/musicaudiosink</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>@DEFAULT_AUDIOSINK@</default>
+      <locale name="C">
+        <short>GStreamer audiosink for Music and Movies</short>
+        <long>GStreamer can play audio using any number of output elements.  Some possible choices are osssink, esdsink and alsasink.  The audiosink can be a partial pipeline instead of just one element.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/musicaudiosink_description</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/musicaudiosink_description</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>Default</default>
+      <locale name="C">
+        <short>description for GStreamer audiosink for Music and Movies</short>
+        <long>Describes the selected output element for Music and Movies.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/chataudiosink</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/chataudiosink</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>@DEFAULT_AUDIOSINK@</default>
+      <locale name="C">
+        <short>GStreamer audiosink for Audio/Video Conferencing</short>
+        <long>GStreamer can play audio using any number of output elements.  Some possible choices are osssink, esdsink and alsasink.  The audiosink can be a partial pipeline instead of just one element.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/chataudiosink_description</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/chataudiosink_description</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>Default</default>
+      <locale name="C">
+        <short>description for GStreamer audiosink for Audio/Video Conferencing</short>
+        <long>Describes the selected output element for Audio/Video Conferencing.</long>
+      </locale>
+    </schema>
+    <schema>
       <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/videosink</key>
       <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/videosink</applyto>
       <owner>gstreamer</owner>
@@ -31,6 +141,28 @@
       <locale name="C">
         <short>default GStreamer audio source</short>
         <long>GStreamer can record audio using any number of input elements.  Some possible choices are osssrc, esdsrc and alsasrc.  The audio source can be a partial pipeline instead of just one element.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/audiosrc_description</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/audiosrc_description</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>Default</default>
+      <locale name="C">
+        <short>description for default GStreamer audiosrc</short>
+        <long>Describes the selected input element.</long>
+      </locale>
+    </schema>
+    <schema>
+      <key>/schemas/system/gstreamer/@GST_MAJORMINOR@/default/audiosrc_description</key>
+      <applyto>/system/gstreamer/@GST_MAJORMINOR@/default/audiosrc_description</applyto>
+      <owner>gstreamer</owner>
+      <type>string</type>
+      <default>Default</default>
+      <locale name="C">
+        <short>description for default GStreamer audiosrc</short>
+        <long>Describes the selected input element.</long>
       </locale>
     </schema>
     <schema>
