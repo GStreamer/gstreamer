@@ -1,3 +1,14 @@
+2006-02-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/cdparanoia/gstcdparanoiasrc.c:
+	(gst_cd_paranoia_src_class_init), (gst_cd_paranoia_dummy_callback),
+	(gst_cd_paranoia_paranoia_callback),
+	(gst_cd_paranoia_src_signal_is_being_watched),
+	(gst_cd_paranoia_src_read_sector):
+	* ext/cdparanoia/gstcdparanoiasrc.h:
+	  Add back 'transport-error' and 'uncorrected-error' signals and
+	  make them actually be fired when bad stuff happens (#319340).
+
 2006-02-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_get_type),

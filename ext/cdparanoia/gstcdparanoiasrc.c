@@ -32,6 +32,13 @@
 
 enum
 {
+  TRANSPORT_ERROR,
+  UNCORRECTED_ERROR,
+  NUM_SIGNALS
+};
+
+enum
+{
   PROP_0,
   PROP_READ_SPEED,
   PROP_PARANOIA_MODE,
@@ -67,6 +74,15 @@ static GstElementDetails cdparanoia_details = {
   "Read audio from CD in paranoid mode",
   "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>"
 };
+
+/* We use these to serialize calls to paranoia_read() among several
+ * cdparanoiasrc instances. We do this because it's the only reasonably
+ * easy way to find out the calling object from within the paranoia
+ * callback, and we need the object instance in there to emit our signals */
+static GstCdParanoiaSrc *cur_cb_source;
+static GStaticMutex cur_cb_mutex = G_STATIC_MUTEX_INIT;
+
+static gint cdpsrc_signals[NUM_SIGNALS];        /* all 0 */
 
 #define GST_TYPE_CD_PARANOIA_MODE (gst_cd_paranoia_mode_get_type())
 static GType
@@ -142,6 +158,19 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
       g_param_spec_int ("search-overlap", "Search overlap",
           "Force minimum overlap search during verification to n sectors", -1,
           75, DEFAULT_SEARCH_OVERLAP, G_PARAM_READWRITE));
+
+  /* FIXME: we don't really want signals for this, but messages on the bus,
+   * but then we can't check any longer whether anyone is interested in them */
+  cdpsrc_signals[TRANSPORT_ERROR] =
+      g_signal_new ("transport-error", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstCdParanoiaSrcClass, transport_error),
+      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+  cdpsrc_signals[UNCORRECTED_ERROR] =
+      g_signal_new ("uncorrected-error", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstCdParanoiaSrcClass, uncorrected_error),
+      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 }
 
 static gboolean
@@ -247,11 +276,35 @@ gst_cd_paranoia_src_close (GstCddaBaseSrc * cddabasesrc)
 }
 
 static void
+gst_cd_paranoia_dummy_callback (long inpos, int function)
+{
+  /* Used by instanced where no one is interested what's happening here */
+}
+
+static void
 gst_cd_paranoia_paranoia_callback (long inpos, int function)
 {
-  /* There is not much we can do here (not without a lot of trickery
-   * at least), since we don't have a pointer to our own element or at
-   * least the cdparanoia object */
+  GstCdParanoiaSrc *src = cur_cb_source;
+  gint sector = (gint) (inpos / CD_FRAMEWORDS);
+
+  switch (function) {
+    case PARANOIA_CB_SKIP:
+      GST_INFO_OBJECT (src, "Skip at sector %d", sector);
+      g_signal_emit (src, cdpsrc_signals[UNCORRECTED_ERROR], 0, sector);
+      break;
+    case PARANOIA_CB_READERR:
+      GST_INFO_OBJECT (src, "Transport error at sector %d", sector);
+      g_signal_emit (src, cdpsrc_signals[TRANSPORT_ERROR], 0, sector);
+      break;
+    default:
+      break;
+  }
+}
+
+static gboolean
+gst_cd_paranoia_src_signal_is_being_watched (GstCdParanoiaSrc * src, gint sig)
+{
+  return g_signal_has_handler_pending (src, cdpsrc_signals[sig], 0, FALSE);
 }
 
 static GstBuffer *
@@ -259,6 +312,7 @@ gst_cd_paranoia_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
 {
   GstCdParanoiaSrc *src = GST_CD_PARANOIA_SRC (cddabasesrc);
   GstBuffer *buf;
+  gboolean do_serialize;
   gint16 *cdda_buf;
 
 #if 0
@@ -285,7 +339,24 @@ gst_cd_paranoia_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
     src->next_sector = sector;
   }
 
-  cdda_buf = paranoia_read (src->p, gst_cd_paranoia_paranoia_callback);
+  do_serialize =
+      gst_cd_paranoia_src_signal_is_being_watched (src, TRANSPORT_ERROR) ||
+      gst_cd_paranoia_src_signal_is_being_watched (src, UNCORRECTED_ERROR);
+
+  if (do_serialize) {
+    GST_LOG_OBJECT (src, "Signal handlers connected, serialising access");
+    g_static_mutex_lock (&cur_cb_mutex);
+    GST_LOG_OBJECT (src, "Got lock");
+    cur_cb_source = src;
+
+    cdda_buf = paranoia_read (src->p, gst_cd_paranoia_paranoia_callback);
+
+    cur_cb_source = NULL;
+    GST_LOG_OBJECT (src, "Releasing lock");
+    g_static_mutex_unlock (&cur_cb_mutex);
+  } else {
+    cdda_buf = paranoia_read (src->p, gst_cd_paranoia_dummy_callback);
+  }
 
   if (cdda_buf == NULL) {
     GST_WARNING_OBJECT (src, "read at sector %d failed!", sector);

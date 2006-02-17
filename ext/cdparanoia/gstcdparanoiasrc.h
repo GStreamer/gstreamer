@@ -64,6 +64,26 @@ struct _GstCdParanoiaSrc {
 
 struct _GstCdParanoiaSrcClass {
   GstCddaBaseSrcClass parent_class;
+
+  /* signal callbacks */
+  /**
+   * GstCdParanoiaSrcClass::transport-error:
+   * @src: the GstCddaBaseSrc source element object
+   * @sector: the sector at which the error happened
+   *
+   * This signal is emitted when a sector could not be read
+   * because of a transport error.
+   */
+  void (*transport_error)	(GstCdParanoiaSrc * src, gint sector);
+  /**
+   * GstCdParanoiaSrcClass::uncorrected-error:
+   * @src: the GstCddaBaseSrc source element object
+   * @sector: the sector at which the error happened
+   *
+   * This signal is emitted when a sector could not be read
+   * because of a transport error.
+   */
+  void (*uncorrected_error)	(GstCdParanoiaSrc * src, gint sector);
 };
 
 GType    gst_cd_paranoia_src_get_type (void);
