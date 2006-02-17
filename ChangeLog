@@ -1,3 +1,11 @@
+2006-02-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_decode_direct),
+	(gst_jpeg_dec_chain):
+	  Fix invalid memory access for some odd-sized images
+	  (see image contained in quicktime stream in #327083);
+	  use g_malloc() instead of g_alloca().
+
 2006-02-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_chain):

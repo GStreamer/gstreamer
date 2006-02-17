@@ -655,12 +655,9 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
   guchar **line[3];             /* the jpeg line buffer */
   gint i, j, k;
 
-  line[0] = g_alloca ((r_v * DCTSIZE) * sizeof (guchar *));
-  line[1] = g_alloca ((r_v * DCTSIZE) * sizeof (guchar *));
-  line[2] = g_alloca ((r_v * DCTSIZE) * sizeof (guchar *));
-  memset (line[0], 0, (r_v * DCTSIZE) * sizeof (guchar *));
-  memset (line[1], 0, (r_v * DCTSIZE) * sizeof (guchar *));
-  memset (line[2], 0, (r_v * DCTSIZE) * sizeof (guchar *));
+  line[0] = g_new0 (guchar *, (r_v * DCTSIZE));
+  line[1] = g_new0 (guchar *, (r_v * DCTSIZE));
+  line[2] = g_new0 (guchar *, (r_v * DCTSIZE));
 
   /* let jpeglib decode directly into our final buffer */
   GST_DEBUG_OBJECT (dec, "decoding directly into output buffer");
@@ -685,6 +682,10 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
     }
     jpeg_read_raw_data (&dec->cinfo, line, r_v * DCTSIZE);
   }
+
+  g_free (line[0]);
+  g_free (line[1]);
+  g_free (line[2]);
 }
 
 
@@ -864,7 +865,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
    * copy over the data into our final picture buffer, otherwise jpeglib might
    * write over the end of a line into the beginning of the next line,
    * resulting in blocky artifacts on the left side of the picture. */
-  if ((I420_Y_ROWSTRIDE (width) % (dec->cinfo.max_h_samp_factor * DCTSIZE)) > 0) {
+  if (width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0) {
     gst_jpeg_dec_decode_indirect (dec, base, last, width, height, r_v);
   } else {
     gst_jpeg_dec_decode_direct (dec, base, last, width, height, r_v);
