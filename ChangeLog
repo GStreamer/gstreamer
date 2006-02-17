@@ -1,3 +1,10 @@
+2006-02-17  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_open),
+	(gst_alsasink_reset):
+	Also release lock when we get an error in _reset();
+	fix an error message.
+
 2006-02-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/alsa/gstalsasink.c: (gst_alsasink_class_init),

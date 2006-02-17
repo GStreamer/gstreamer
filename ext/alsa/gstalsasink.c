@@ -713,7 +713,7 @@ gst_alsasink_open (GstAudioSink * asink)
 open_error:
   {
     if (err == -EBUSY) {
-      GST_ELEMENT_ERROR (alsa, RESOURCE, BUSY, (NULL), (NULL));
+      GST_ELEMENT_ERROR (alsa, RESOURCE, BUSY, (NULL), ("Device is busy"));
     } else {
       GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_WRITE,
           (NULL), ("Playback open error: %s", snd_strerror (err)));
@@ -941,12 +941,14 @@ drop_error:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS,
         ("alsa-reset: pcm drop error: %s", snd_strerror (err)), (NULL));
+    GST_ALSA_UNLOCK (asink);
     return;
   }
 prepare_error:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS,
         ("alsa-reset: pcm prepare error: %s", snd_strerror (err)), (NULL));
+    GST_ALSA_UNLOCK (asink);
     return;
   }
 }
