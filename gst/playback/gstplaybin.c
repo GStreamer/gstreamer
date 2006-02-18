@@ -1154,25 +1154,34 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
         goto beach;
       }
 
-      ghost = gst_ghost_pad_new ("text_src", textsrcpad);
-      if (!GST_IS_PAD (ghost)) {
-        GST_WARNING_OBJECT (textsrcpad, "failed creating ghost pad for "
-            "subtitle-bin");
-        gst_object_unref (parent);
-        gst_object_unref (grandparent);
-        gst_object_unref (textsrcpad);
-        textsrcpad = NULL;
-        goto beach;
-      }
+      /* We ghost the pad on subtitle_bin only, if the text pad is from the
+         media demuxer we keep it as it is */
+      if (!GST_IS_PLAY_BIN (grandparent)) {
+        GST_DEBUG_OBJECT (textsrcpad, "this subtitle pad is from a subtitle "
+            "file, ghosting to a suitable hierarchy");
+        ghost = gst_ghost_pad_new ("text_src", textsrcpad);
+        if (!GST_IS_PAD (ghost)) {
+          GST_WARNING_OBJECT (textsrcpad, "failed creating ghost pad for "
+              "subtitle-bin");
+          gst_object_unref (parent);
+          gst_object_unref (grandparent);
+          gst_object_unref (textsrcpad);
+          textsrcpad = NULL;
+          goto beach;
+        }
 
-      if (gst_element_add_pad (GST_ELEMENT (grandparent), ghost)) {
-        gst_object_unref (textsrcpad);
-        textsrcpad = ghost;
+        if (gst_element_add_pad (GST_ELEMENT (grandparent), ghost)) {
+          gst_object_unref (textsrcpad);
+          textsrcpad = gst_object_ref (ghost);
+        } else {
+          GST_WARNING_OBJECT (ghost, "failed adding ghost pad on subtitle-bin");
+          gst_object_unref (ghost);
+          gst_object_unref (textsrcpad);
+          textsrcpad = NULL;
+        }
       } else {
-        GST_WARNING_OBJECT (ghost, "failed adding ghost pad on subtitle-bin");
-        gst_object_unref (ghost);
-        gst_object_unref (textsrcpad);
-        textsrcpad = NULL;
+        GST_DEBUG_OBJECT (textsrcpad, "this subtitle pad is from the demuxer "
+            "no changes to hierarchy needed");
       }
 
       gst_object_unref (parent);
@@ -1187,6 +1196,9 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
         "src");
     res = add_sink (play_bin, sink, pad, textsrcpad);
     gst_object_unref (pad);
+    if (textsrcpad) {
+      gst_object_unref (textsrcpad);
+    }
   }
 
   /* remove the sinks now, pipeline get_state will now wait for the

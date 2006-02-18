@@ -2,7 +2,6 @@
 #define __GST_TEXT_OVERLAY_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
 #include <pango/pangoft2.h>
 
 G_BEGIN_DECLS
@@ -53,9 +52,11 @@ struct _GstTextOverlay {
     GstPad                  *text_sinkpad;
     GstPad                  *srcpad;
 
-    GstCollectPads          *collect;
-    GstCollectData          *video_collect_data;
-    GstCollectData          *text_collect_data;
+    GstSegment              *segment;
+    GstBuffer               *text_buffer;
+    gboolean                text_linked;
+  
+    GCond                   *cond;  /* to signal removal of data */
 
     gint                     width;
     gint                     height;
