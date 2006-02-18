@@ -1,3 +1,10 @@
+2006-02-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3tags.c: (id3demux_id3v2_frames_to_tag_list):
+	* gst/id3demux/id3v2frames.c: (id3v2_genre_fields_to_taglist):
+	 Handle 0 data size in otherwise valid frames.
+	 Handle numeric strings in 2.4.0 even when not in parentheses 
+
 2006-02-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-demux.c:

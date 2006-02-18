@@ -333,6 +333,7 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
     work->hdr.ext_hdr_size = read_synch_uint (work->hdr.frame_data, 4);
     if (work->hdr.ext_hdr_size < 6 ||
         (work->hdr.ext_hdr_size) > work->hdr.frame_data_size) {
+      GST_DEBUG ("Invalid extended header. Broken tag");
       return ID3TAGS_BROKEN_TAG;
     }
     work->hdr.ext_flag_bytes = work->hdr.frame_data[4];
@@ -400,6 +401,8 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
         if (ID3V2_VER_MAJOR (work->hdr.version) == 3) {
           frame_flags &= ID3V2_3_FRAME_FLAGS_MASK;
           obsolete_id = convert_fid_to_v240 (frame_id);
+          if (obsolete_id)
+            GST_DEBUG ("Ignoring v2.3 frame %s", frame_id);
         }
         break;
     }
@@ -407,8 +410,7 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
     work->hdr.frame_data += frame_hdr_size;
     work->hdr.frame_data_size -= frame_hdr_size;
 
-    if (frame_size > work->hdr.frame_data_size ||
-        frame_size == 0 || strcmp (frame_id, "") == 0)
+    if (frame_size > work->hdr.frame_data_size || strcmp (frame_id, "") == 0)
       break;                    /* No more frames to read */
 
 #if 1

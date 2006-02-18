@@ -420,7 +420,9 @@ id3v2_genre_fields_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
       continue;
 
     len = strlen (tag_str);
-    if (work->hdr.version <= 0x300) {   /* <= 2.3.0 */
+    /* Only supposed to see '(n)' type numeric genre strings in ID3 <= 2.3.0
+     * but apparently we see them in 2.4.0 sometimes too */
+    if (TRUE || work->hdr.version <= 0x300) {   /* <= 2.3.0 */
       /* Check for genre numbers wrapped in parentheses, possibly
        * followed by a string */
       while (len >= 2) {
