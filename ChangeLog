@@ -1,3 +1,12 @@
+2006-02-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls),
+	(gst_ximagesink_ximage_new), (gst_ximagesink_ximage_destroy):
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_destroy),
+	(gst_xvimagesink_check_xshm_calls), (gst_xvimagesink_xvimage_new):
+	Set shared memory segments to be deleted as soon as we have attached,
+	that way they get cleaned up automatically if we crash.
+
 2006-02-18  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/pango/gstclockoverlay.c: (gst_clock_overlay_get_text): 

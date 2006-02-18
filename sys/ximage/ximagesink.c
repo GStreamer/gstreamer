@@ -342,8 +342,15 @@ gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
   SHMInfo.shmaddr = shmat (SHMInfo.shmid, 0, 0);
   if (SHMInfo.shmaddr == ((void *) -1)) {
     GST_WARNING ("Failed to shmat: %s", g_strerror (errno));
+    /* Clean up shm seg */
+    shmctl (SHMInfo.shmid, IPC_RMID, 0);
     goto beach;
   }
+
+  /* Delete the shared memory segment as soon as we manage to attach. 
+   * This way, it will be deleted as soon as we detach later, and not
+   * leaked if we crash. */
+  shmctl (SHMInfo.shmid, IPC_RMID, 0);
 
   ximage->data = SHMInfo.shmaddr;
   SHMInfo.readOnly = FALSE;
@@ -374,8 +381,6 @@ beach:
   }
   if (SHMInfo.shmaddr != ((void *) -1))
     shmdt (SHMInfo.shmaddr);
-  if (SHMInfo.shmid > 0)
-    shmctl (SHMInfo.shmid, IPC_RMID, 0);
   if (ximage)
     XDestroyImage (ximage);
   return result;
@@ -435,8 +440,15 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
     if (ximage->SHMInfo.shmaddr == ((void *) -1)) {
       GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE, (NULL),
           ("Failed to shmat: %s", g_strerror (errno)));
+      /* Clean up the shared memory segment */
+      shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
       goto beach;
     }
+
+    /* Now that we've attached, we can delete the shared memory segment.
+     * This way, it will be deleted as soon as we detach later, and not
+     * leaked if we crash. */
+    shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
 
     ximage->ximage->data = ximage->SHMInfo.shmaddr;
     ximage->SHMInfo.readOnly = FALSE;
@@ -514,8 +526,6 @@ gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
       XSync (ximagesink->xcontext->disp, 0);
       shmdt (ximage->SHMInfo.shmaddr);
     }
-    if (ximage->SHMInfo.shmid > 0)
-      shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
     if (ximage->ximage)
       XDestroyImage (ximage->ximage);
 

@@ -237,8 +237,6 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
       XSync (xvimagesink->xcontext->disp, FALSE);
       shmdt (xvimage->SHMInfo.shmaddr);
     }
-    if (xvimage->SHMInfo.shmid > 0)
-      shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
     if (xvimage->xvimage)
       XFree (xvimage->xvimage);
   } else
@@ -419,8 +417,15 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   SHMInfo.shmaddr = shmat (SHMInfo.shmid, 0, 0);
   if (SHMInfo.shmaddr == ((void *) -1)) {
     GST_WARNING ("Failed to shmat: %s", g_strerror (errno));
+    /* Clean up the shared memory segment */
+    shmctl (SHMInfo.shmid, IPC_RMID, 0);
     goto beach;
   }
+
+  /* Delete the shared memory segment as soon as we manage to attach.
+   * This way, it will be deleted as soon as we detach later, and not
+   * leaked if we crash. */
+  shmctl (SHMInfo.shmid, IPC_RMID, 0);
 
   xvimage->data = SHMInfo.shmaddr;
   SHMInfo.readOnly = FALSE;
@@ -452,8 +457,6 @@ beach:
   }
   if (SHMInfo.shmaddr != ((void *) -1))
     shmdt (SHMInfo.shmaddr);
-  if (SHMInfo.shmid > 0)
-    shmctl (SHMInfo.shmid, IPC_RMID, 0);
   if (xvimage)
     XFree (xvimage);
   return result;
@@ -521,8 +524,15 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     if (xvimage->SHMInfo.shmaddr == ((void *) -1)) {
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
           ("Failed to shmat: %s", g_strerror (errno)));
+      /* Clean up the shared memory segment */
+      shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
       goto beach;
     }
+
+    /* Delete the shared memory segment as soon as we manage to attach.
+     * This way, it will be deleted as soon as we detach later, and not
+     * leaked if we crash. */
+    shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
 
     xvimage->xvimage->data = xvimage->SHMInfo.shmaddr;
     xvimage->SHMInfo.readOnly = FALSE;
