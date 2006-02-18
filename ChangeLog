@@ -1,5 +1,11 @@
 2006-02-18  Julien MOUTTE  <julien@moutte.net>
 
+	* ext/pango/gstclockoverlay.c: (gst_clock_overlay_get_text): 
+	* ext/pango/gsttimeoverlay.c: (gst_time_overlay_get_text): Those
+	functions are called with lock held.
+
+2006-02-18  Julien MOUTTE  <julien@moutte.net>
+
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_base_init),
 	(gst_text_overlay_finalize), (gst_text_overlay_init),
 	(gst_text_overlay_setcaps), (gst_text_overlay_src_event),

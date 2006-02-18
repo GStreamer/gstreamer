@@ -86,6 +86,7 @@ gst_clock_overlay_render_time (GstClockOverlay * overlay)
   return g_strdup_printf ("%02u:%02u:%02u", t.tm_hour, t.tm_min, t.tm_sec);
 }
 
+/* Called with lock held */
 static gchar *
 gst_clock_overlay_get_text (GstTextOverlay * overlay, GstBuffer * video_frame)
 {
@@ -93,9 +94,7 @@ gst_clock_overlay_get_text (GstTextOverlay * overlay, GstBuffer * video_frame)
 
   overlay->need_render = TRUE;
 
-  GST_OBJECT_LOCK (overlay);
   txt = g_strdup (overlay->default_text);
-  GST_OBJECT_UNLOCK (overlay);
 
   time_str = gst_clock_overlay_render_time (GST_CLOCK_OVERLAY (overlay));
   if (txt != NULL && *txt != '\0') {
