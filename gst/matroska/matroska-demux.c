@@ -3408,11 +3408,36 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
      (GstMatroskaTrackContext *) subtitlecontext; */
   GstCaps *caps = NULL;
 
+  /* for backwards compatibility */
+  if (!g_ascii_strcasecmp (codec_id, "S_TEXT/ASCII"))
+    codec_id = GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8;
+  else if (!g_ascii_strcasecmp (codec_id, "S_SSA"))
+    codec_id = GST_MATROSKA_CODEC_ID_SUBTITLE_SSA;
+  else if (!g_ascii_strcasecmp (codec_id, "S_ASS"))
+    codec_id = GST_MATROSKA_CODEC_ID_SUBTITLE_ASS;
+  else if (!g_ascii_strcasecmp (codec_id, "S_USF"))
+    codec_id = GST_MATROSKA_CODEC_ID_SUBTITLE_USF;
+
   if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8)) {
     caps = gst_caps_new_simple ("text/plain", NULL);
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_SSA)) {
+    caps = gst_caps_new_simple ("application/x-ssa", NULL);
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_ASS)) {
+    caps = gst_caps_new_simple ("application/x-ass", NULL);
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_USF)) {
+    caps = gst_caps_new_simple ("application/x-usf", NULL);
   } else {
     GST_DEBUG ("Unknown subtitle stream: codec_id='%s'", codec_id);
     caps = gst_caps_new_simple ("application/x-subtitle-unknown", NULL);
+  }
+
+  if (data != NULL && size > 0) {
+    GstBuffer *buf;
+
+    buf = gst_buffer_new_and_alloc (size);
+    memcpy (GST_BUFFER_DATA (buf), data, size);
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buf, NULL);
+    gst_buffer_unref (buf);
   }
 
   return caps;
@@ -3501,6 +3526,9 @@ gst_matroska_demux_plugin_init (GstPlugin * plugin)
   };
   const gchar *subtitle_id[] = {
     GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8,
+    GST_MATROSKA_CODEC_ID_SUBTITLE_SSA,
+    GST_MATROSKA_CODEC_ID_SUBTITLE_ASS,
+    GST_MATROSKA_CODEC_ID_SUBTITLE_USF,
     /* FILLME */
     NULL
   };

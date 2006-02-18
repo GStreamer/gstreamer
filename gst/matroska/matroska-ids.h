@@ -168,6 +168,9 @@
 /* TODO: AC3-9/10 (?), Musepack, Quicktime */
 
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8      "S_TEXT/UTF8"
+#define GST_MATROSKA_CODEC_ID_SUBTITLE_SSA       "S_TEXT/SSA"
+#define GST_MATROSKA_CODEC_ID_SUBTITLE_ASS       "S_TEXT/ASS" 
+#define GST_MATROSKA_CODEC_ID_SUBTITLE_USF       "S_TEXT/USF"
 
 /*
  * Matrodka tags. Strings.
