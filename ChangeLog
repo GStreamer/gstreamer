@@ -1,3 +1,12 @@
+2006-02-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* HACKING:
+	Mention ffmpeg snapshot update
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid), (gst_ffmpeg_get_codecid_longname):
+	Add new codec types from FFMpeg snapshot update to 2006-02-17 4:00 GMT
+
 2006-02-17  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_sink_activate):

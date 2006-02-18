@@ -645,6 +645,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_CT:
     case CODEC_ID_ADPCM_SWF:
     case CODEC_ID_ADPCM_YAMAHA:
+    case CODEC_ID_ADPCM_SBPRO_2:
+    case CODEC_ID_ADPCM_SBPRO_3:
+    case CODEC_ID_ADPCM_SBPRO_4:
       {
         gchar *layout = NULL;
 
@@ -693,6 +696,15 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
             break;
           case CODEC_ID_ADPCM_YAMAHA:
             layout = "yamaha";
+            break;
+          case CODEC_ID_ADPCM_SBPRO_2:
+            layout = "sbpro2";
+            break;
+          case CODEC_ID_ADPCM_SBPRO_3:
+            layout = "sbpro3";
+            break;
+          case CODEC_ID_ADPCM_SBPRO_4:
+            layout = "sbpro4";
             break;
           default:
             g_assert (0);       /* don't worry, we never get here */
@@ -1818,6 +1830,12 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       id = CODEC_ID_ADPCM_SWF;
     } else if (!strcmp (layout, "yamaha")) {
       id = CODEC_ID_ADPCM_YAMAHA;
+    } else if (!strcmp (layout, "sbpro2")) {
+      id = CODEC_ID_ADPCM_SBPRO_2;
+    } else if (!strcmp (layout, "sbpro3")) {
+      id = CODEC_ID_ADPCM_SBPRO_3;
+    } else if (!strcmp (layout, "sbpro4")) {
+      id = CODEC_ID_ADPCM_SBPRO_4;
     }
     if (id != CODEC_ID_NONE)
       audio = TRUE;
@@ -2291,6 +2309,15 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_ADPCM_SWF:
       name = "Shockwave ADPCM";
+      break;
+    case CODEC_ID_ADPCM_SBPRO_2:
+      name = "SB-Pro ADPCM 2";
+      break;
+    case CODEC_ID_ADPCM_SBPRO_3:
+      name = "SB-Pro ADPCM 3";
+      break;
+    case CODEC_ID_ADPCM_SBPRO_4:
+      name = "SB-Pro ADPCM 4";
       break;
     case CODEC_ID_ADPCM_YAMAHA:
       name = "Yamaha ADPCM";
