@@ -471,7 +471,8 @@ mimetype_is_raw (const gchar * mimetype)
 {
   return g_str_has_prefix (mimetype, "video/x-raw") ||
       g_str_has_prefix (mimetype, "audio/x-raw") ||
-      g_str_has_prefix (mimetype, "text/plain");
+      g_str_has_prefix (mimetype, "text/plain") ||
+      g_str_has_prefix (mimetype, "text/x-pango-layout");
 }
 
 static void
