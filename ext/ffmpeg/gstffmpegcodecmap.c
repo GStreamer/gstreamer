@@ -558,6 +558,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_MP3ADU:
     case CODEC_ID_MP3ON4:
     case CODEC_ID_WESTWOOD_SND1:
+    case CODEC_ID_CSCD:
+    case CODEC_ID_MMVIDEO:
+    case CODEC_ID_ZMBV:
+    case CODEC_ID_AVS:
+    case CODEC_ID_TRUESPEECH:
       buildcaps = TRUE;
       break;
 
@@ -813,7 +818,16 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_DVB_SUBTITLE:
       caps = NULL;
       break;
-
+    case CODEC_ID_BMP:
+      caps = gst_caps_new_simple ("image/bmp", NULL);
+      break;
+    case CODEC_ID_TTA:
+      caps = GST_FF_AUD_CAPS_NEW ("audio/x-tta", NULL);
+      if (context) {
+        gst_caps_set_simple (caps,
+            "samplesize", G_TYPE_INT, context->bits_per_sample, NULL);
+      }
+      break;
     default:
       g_warning ("Unknown codec ID %d, please add here", codec_id);
       break;
@@ -1471,6 +1485,13 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_new_simple ("video/x-fli", NULL);
   } else if (!strcmp (format_name, "flv")) {
     caps = gst_caps_new_simple ("video/x-flv", NULL);
+  } else if (!strcmp (format_name, "tta")) {
+    caps = gst_caps_new_simple ("audio/x-ttafile", NULL);
+  } else if (!strcmp (format_name, "aiff")) {
+    caps = gst_caps_new_simple ("audio/x-aiff", NULL);
+  } else if (!strcmp (format_name, "mov_mp4_m4a_3gp_3g2")) {
+    caps = gst_caps_from_string (
+               "application/x-3gp; video/quicktime; audio/x-m4a");
   } else {
     gchar *name;
 
@@ -2375,6 +2396,27 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_FRAPS:
       name = "FRAPS video";
+      break;
+    case CODEC_ID_BMP:
+      name = "BMP bitmap";
+      break;
+    case CODEC_ID_CSCD:
+      name = "CamStudio video";
+      break;
+    case CODEC_ID_MMVIDEO:
+      name = "American Laser Games MM Video";
+      break;
+    case CODEC_ID_ZMBV:
+      name = "Zip Motion Blocks Video";
+      break;
+    case CODEC_ID_AVS:
+      name = "AVS Video";
+      break;
+    case CODEC_ID_TTA:
+      name = "Lossless True Audio";
+      break;
+    case CODEC_ID_TRUESPEECH:
+      name = "DSP Group TrueSpeech Audio";
       break;
     default:
       GST_WARNING ("Unknown codecID 0x%x", codec_id);
