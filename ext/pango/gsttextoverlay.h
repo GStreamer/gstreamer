@@ -55,6 +55,8 @@ struct _GstTextOverlay {
     GstSegment              *segment;
     GstBuffer               *text_buffer;
     gboolean                text_linked;
+    gboolean                video_flushing;
+    gboolean                text_flushing;
   
     GCond                   *cond;  /* to signal removal of data */
 

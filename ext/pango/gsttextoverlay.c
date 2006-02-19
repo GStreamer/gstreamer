@@ -290,6 +290,11 @@ gst_text_overlay_finalize (GObject * object)
     overlay->segment = NULL;
   }
 
+  if (overlay->text_buffer) {
+    gst_buffer_unref (overlay->text_buffer);
+    overlay->text_buffer = NULL;
+  }
+
   if (overlay->cond) {
     g_cond_free (overlay->cond);
     overlay->cond = NULL;
@@ -365,6 +370,8 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
 
   overlay->text_buffer = NULL;
   overlay->text_linked = FALSE;
+  overlay->video_flushing = FALSE;
+  overlay->text_flushing = FALSE;
   overlay->cond = g_cond_new ();
   overlay->segment = gst_segment_new ();
   if (overlay->segment) {
@@ -562,20 +569,12 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
       /* Flush downstream */
       gst_pad_push_event (overlay->srcpad, gst_event_new_flush_start ());
 
-      /* Mark our sink pads as flushing to acquire stream lock */
-      GST_OBJECT_LOCK (overlay->video_sinkpad);
-      GST_PAD_SET_FLUSHING (overlay->video_sinkpad);
-      GST_OBJECT_UNLOCK (overlay->video_sinkpad);
-      GST_OBJECT_LOCK (overlay->text_sinkpad);
-      GST_PAD_SET_FLUSHING (overlay->text_sinkpad);
-      GST_OBJECT_UNLOCK (overlay->text_sinkpad);
-
-      /* Unblock the text chain if it's waiting */
+      /* Mark ourself as flushing, unblock chains */
+      GST_OBJECT_LOCK (overlay);
+      overlay->video_flushing = TRUE;
+      overlay->text_flushing = TRUE;
       gst_text_overlay_pop_text (overlay);
-
-      /* Take the stream locks */
-      GST_PAD_STREAM_LOCK (overlay->video_sinkpad);
-      GST_PAD_STREAM_LOCK (overlay->text_sinkpad);
+      GST_OBJECT_UNLOCK (overlay);
 
       /* Seek on each sink pad */
       gst_event_ref (event);
@@ -585,10 +584,6 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
       } else {
         gst_event_unref (event);
       }
-
-      /* Release the locks */
-      GST_PAD_STREAM_UNLOCK (overlay->video_sinkpad);
-      GST_PAD_STREAM_UNLOCK (overlay->text_sinkpad);
       break;
     default:
       gst_event_ref (event);
@@ -937,15 +932,36 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
     case GST_EVENT_NEWSEGMENT:
-    case GST_EVENT_FLUSH_START:
-    case GST_EVENT_FLUSH_STOP:
       /* We just ignore those events from the text pad */
       gst_event_unref (event);
       ret = TRUE;
       break;
-
+    case GST_EVENT_FLUSH_STOP:
+      GST_OBJECT_LOCK (overlay);
+      overlay->text_flushing = FALSE;
+      gst_text_overlay_pop_text (overlay);
+      GST_OBJECT_UNLOCK (overlay);
+      gst_event_unref (event);
+      ret = TRUE;
+      break;
+    case GST_EVENT_FLUSH_START:
+      GST_OBJECT_LOCK (overlay);
+      overlay->text_flushing = TRUE;
+      GST_TEXT_OVERLAY_BROADCAST (overlay);
+      GST_OBJECT_UNLOCK (overlay);
+      gst_event_unref (event);
+      ret = TRUE;
+      break;
+    case GST_EVENT_EOS:
+      GST_OBJECT_LOCK (overlay);
+      /* We use flushing to make sure we return WRONG_STATE */
+      overlay->text_flushing = TRUE;
+      gst_text_overlay_pop_text (overlay);
+      GST_OBJECT_UNLOCK (overlay);
+      gst_event_unref (event);
+      ret = TRUE;
+      break;
     default:
       ret = gst_pad_event_default (pad, event);
       goto beach;
@@ -985,9 +1001,26 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_event_default (pad, event);
       break;
     }
-    case GST_EVENT_FLUSH_START:
-    case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_EOS:
+      GST_OBJECT_LOCK (overlay);
+      overlay->video_flushing = TRUE;
+      overlay->text_flushing = TRUE;
+      gst_text_overlay_pop_text (overlay);
+      GST_OBJECT_UNLOCK (overlay);
+      ret = gst_pad_event_default (pad, event);
+      break;
+    case GST_EVENT_FLUSH_START:
+      GST_OBJECT_LOCK (overlay);
+      overlay->video_flushing = TRUE;
+      GST_OBJECT_UNLOCK (overlay);
+      ret = gst_pad_event_default (pad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_OBJECT_LOCK (overlay);
+      overlay->video_flushing = FALSE;
+      GST_OBJECT_UNLOCK (overlay);
+      ret = gst_pad_event_default (pad, event);
+      break;
     default:
       ret = gst_pad_event_default (pad, event);
   }
@@ -1029,6 +1062,12 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_OBJECT_LOCK (overlay);
 
+  if (overlay->text_flushing) {
+    GST_OBJECT_UNLOCK (overlay);
+    ret = GST_FLOW_WRONG_STATE;
+    goto beach;
+  }
+
   in_seg = gst_segment_clip (overlay->segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (buffer),
       GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer),
@@ -1044,6 +1083,11 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
           GST_DEBUG_PAD_NAME (pad));
       GST_TEXT_OVERLAY_WAIT (overlay);
       GST_DEBUG ("Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
+      if (overlay->text_flushing) {
+        GST_OBJECT_UNLOCK (overlay);
+        ret = GST_FLOW_WRONG_STATE;
+        goto beach;
+      }
     }
 
     overlay->text_buffer = buffer;
@@ -1053,6 +1097,7 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
 
   GST_OBJECT_UNLOCK (overlay);
 
+beach:
   gst_object_unref (overlay);
 
   return ret;
@@ -1071,6 +1116,12 @@ gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
   klass = GST_TEXT_OVERLAY_GET_CLASS (overlay);
 
   GST_OBJECT_LOCK (overlay);
+
+  if (overlay->video_flushing) {
+    GST_OBJECT_UNLOCK (overlay);
+    ret = GST_FLOW_WRONG_STATE;
+    goto beach;
+  }
 
   in_seg = gst_segment_clip (overlay->segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (buffer),
@@ -1174,6 +1225,7 @@ gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_unref (buffer);
   }
 
+beach:
   gst_object_unref (overlay);
 
   return ret;

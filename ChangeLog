@@ -1,5 +1,17 @@
 2006-02-19  Julien MOUTTE  <julien@moutte.net>
 
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_base_init),
+	(gst_text_overlay_finalize), (gst_text_overlay_init),
+	(gst_text_overlay_setcaps), (gst_text_overlay_src_event),
+	(gst_text_overlay_render_text), (gst_text_overlay_text_pad_link),
+	(gst_text_overlay_text_event), (gst_text_overlay_video_event),
+	(gst_text_overlay_pop_text), (gst_text_overlay_text_chain),
+	(gst_text_overlay_video_chain), (gst_text_overlay_change_state):
+	* ext/pango/gsttextoverlay.h: Fix seeking both for muxed formats
+	and subtitles files.
+
+2006-02-19  Julien MOUTTE  <julien@moutte.net>
+
 	* gst/playback/gstdecodebin.c: (mimetype_is_raw): pango layout
 	should be considered as row.
 
