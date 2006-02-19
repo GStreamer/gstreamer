@@ -28,6 +28,7 @@
 #include <regex.h>
 
 #include "gstsubparse.h"
+#include "gstssaparse.h"
 
 GST_DEBUG_CATEGORY_STATIC (sub_parse_debug);
 #define GST_CAT_DEFAULT sub_parse_debug
@@ -861,12 +862,18 @@ plugin_init (GstPlugin * plugin)
           gst_subparse_type_find, sub_exts, SUB_CAPS, NULL, NULL))
     return FALSE;
 
-  return gst_element_register (plugin, "subparse",
-      GST_RANK_PRIMARY, GST_TYPE_SUBPARSE);
+  if (!gst_element_register (plugin, "subparse",
+          GST_RANK_PRIMARY, GST_TYPE_SUBPARSE) ||
+      !gst_element_register (plugin, "ssaparse",
+          GST_RANK_PRIMARY, GST_TYPE_SSA_PARSE)) {
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "subparse",
-    "Subtitle (.sub) file parsing",
+    "Subtitle parsing",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

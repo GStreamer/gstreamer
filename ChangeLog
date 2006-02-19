@@ -1,5 +1,19 @@
 2006-02-19  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/subparse/Makefile.am:
+	* gst/subparse/gstssaparse.c: (gst_ssa_parse_base_init),
+	(gst_ssa_parse_dispose), (gst_ssa_parse_init),
+	(gst_ssa_parse_class_init), (gst_ssa_parse_src_event),
+	(gst_ssa_parse_sink_event), (gst_ssa_parse_setcaps),
+	(gst_ssa_parse_remove_override_codes), (gst_ssa_parse_parse_line),
+	(gst_ssa_parse_chain), (gst_ssa_parse_change_state):
+	* gst/subparse/gstssaparse.h:
+	* gst/subparse/gstsubparse.c: (plugin_init):
+	  Add very basic parser for SSA subtitle streams (as often
+	  found in matroska files).
+
+2006-02-19  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstdecodebin.c: (mimetype_is_raw):
 	  That should be text/x-pango-markup, not text/x-pango-layout.
 
