@@ -60,6 +60,7 @@ gst_stream_type_get_type (void)
     {GST_STREAM_TYPE_AUDIO, "Audio stream", "audio"},
     {GST_STREAM_TYPE_VIDEO, "Video stream", "video"},
     {GST_STREAM_TYPE_TEXT, "Text stream", "text"},
+    {GST_STREAM_TYPE_SUBPICTURE, "Subpicture stream", "subpicture"},
     {GST_STREAM_TYPE_ELEMENT,
         "Stream handled by element", "element"},
     {0, NULL, NULL},
@@ -178,7 +179,7 @@ cb_probe (GstPad * pad, GstEvent * e, gpointer user_data)
   GstStreamInfo *info = user_data;
 
   if (GST_EVENT_TYPE (e) == GST_EVENT_TAG) {
-    gchar *codec;               //, *lang;
+    gchar *codec, *lang;
     GstTagList *list;
 
     gst_event_parse_tag (e, &list);
@@ -192,13 +193,11 @@ cb_probe (GstPad * pad, GstEvent * e, gpointer user_data)
       info->codec = codec;
       g_object_notify (G_OBJECT (info), "codec");
     }
-#if 0
     if (gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &lang)) {
       g_free (info->langcode);
       info->langcode = lang;
       g_object_notify (G_OBJECT (info), "language-code");
     }
-#endif
   }
 
   return TRUE;

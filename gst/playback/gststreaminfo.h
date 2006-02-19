@@ -36,10 +36,11 @@ typedef struct _GstStreamInfoClass GstStreamInfoClass;
 
 typedef enum {
   GST_STREAM_TYPE_UNKNOWN = 0,
-  GST_STREAM_TYPE_AUDIO   = 1,  /* an audio stream */
-  GST_STREAM_TYPE_VIDEO   = 2,  /* a video stream */
-  GST_STREAM_TYPE_TEXT    = 3,  /* a subtitle/text stream */
-  GST_STREAM_TYPE_ELEMENT = 4,  /* stream handled by an element */
+  GST_STREAM_TYPE_AUDIO   = 1,    /* an audio stream */
+  GST_STREAM_TYPE_VIDEO   = 2,    /* a video stream */
+  GST_STREAM_TYPE_TEXT    = 3,    /* a subtitle/text stream */
+  GST_STREAM_TYPE_SUBPICTURE = 4, /* a subtitle in picture-form */
+  GST_STREAM_TYPE_ELEMENT = 5    /* stream handled by an element */
 } GstStreamType;
 
 struct _GstStreamInfo {
@@ -82,4 +83,3 @@ gboolean        gst_stream_info_is_mute         (GstStreamInfo *stream_info);
 G_END_DECLS
 
 #endif /* __GST_STREAMINFO_H__ */
-
