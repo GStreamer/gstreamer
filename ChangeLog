@@ -1,3 +1,13 @@
+2006-02-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/bz2/gstbz2.c:
+	* ext/bz2/gstbz2dec.c:
+	* ext/bz2/gstbz2dec.h:
+	* ext/bz2/gstbz2enc.c:
+	* ext/bz2/gstbz2enc.h:
+	  Add proper copyright headers identifying Lutz Müller
+	  as the author and copyright holder (#331600).
+
 2006-02-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_state_movie):
