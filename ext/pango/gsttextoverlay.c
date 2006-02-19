@@ -1235,13 +1235,16 @@ static GstStateChangeReturn
 gst_text_overlay_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-
-  /*GstTextOverlay *overlay = GST_TEXT_OVERLAY (element); */
+  GstTextOverlay *overlay = GST_TEXT_OVERLAY (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_OBJECT_LOCK (overlay);
+      overlay->text_flushing = TRUE;
+      gst_text_overlay_pop_text (overlay);
+      GST_OBJECT_UNLOCK (overlay);
       break;
     default:
       break;
