@@ -1,5 +1,16 @@
 2006-02-19  Wim Taymans  <wim@fluendo.com>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_src_convert),
+	(gst_avi_demux_handle_src_query), (gst_avi_demux_handle_src_event),
+	(gst_avi_demux_parse_file_header), (gst_avi_demux_stream_init),
+	(gst_avi_demux_parse_avih), (gst_avi_demux_parse_superindex),
+	(gst_avi_demux_parse_subindex), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_stream_header), (gst_avi_demux_change_state):
+	Use scaling code for added precission and more correct stop
+	position in case scale==0.
+
+2006-02-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst/flx/gstflxdec.c: (gst_flxdec_src_query_handler),
 	(gst_flxdec_chain):
 	* gst/flx/gstflxdec.h:
