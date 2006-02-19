@@ -1113,8 +1113,7 @@ gst_pad_set_event_function (GstPad * pad, GstPadEventFunction event)
   GST_PAD_EVENTFUNC (pad) = event;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "eventfunc for %s:%s  set to %s",
-      GST_STR_NULL (GST_DEBUG_PAD_NAME (pad)),
-      GST_STR_NULL (GST_DEBUG_FUNCPTR_NAME (event)));
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (event));
 }
 
 /**
@@ -1132,8 +1131,7 @@ gst_pad_set_query_function (GstPad * pad, GstPadQueryFunction query)
   GST_PAD_QUERYFUNC (pad) = query;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "queryfunc for %s:%s  set to %s",
-      GST_STR_NULL (GST_DEBUG_PAD_NAME (pad)),
-      GST_STR_NULL (GST_DEBUG_FUNCPTR_NAME (query)));
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
 }
 
 /**
@@ -1152,8 +1150,7 @@ gst_pad_set_query_type_function (GstPad * pad,
   GST_PAD_QUERYTYPEFUNC (pad) = type_func;
 
   GST_CAT_DEBUG (GST_CAT_PADS, "querytypefunc for %s:%s  set to %s",
-      GST_STR_NULL (GST_DEBUG_PAD_NAME (pad)),
-      GST_STR_NULL (GST_DEBUG_FUNCPTR_NAME (type_func)));
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (type_func));
 }
 
 /**
@@ -1309,8 +1306,7 @@ gst_pad_set_getcaps_function (GstPad * pad, GstPadGetCapsFunction getcaps)
 
   GST_PAD_GETCAPSFUNC (pad) = getcaps;
   GST_CAT_DEBUG (GST_CAT_PADS, "getcapsfunc for %s:%s set to %s",
-      GST_STR_NULL (GST_DEBUG_PAD_NAME (pad)),
-      GST_STR_NULL (GST_DEBUG_FUNCPTR_NAME (getcaps)));
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (getcaps));
 }
 
 /**

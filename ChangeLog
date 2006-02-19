@@ -1,3 +1,11 @@
+2006-02-19  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/gstinfo.h: Add GST_STR_NULL to the second string.
+	* gst/gstpad.c: (gst_pad_set_event_function),
+	(gst_pad_set_query_function), (gst_pad_set_query_type_function),
+	(gst_pad_set_getcaps_function): GST_DEBUG_PAD_NAME evaluates to
+	2 strings. You can't use the STR_NULL macro on that.
+
 2006-02-19  Sebastien Moutte <sebastien@moutte.net>
 
 	* gst/gstpad.c: (gst_pad_set_event_function),
