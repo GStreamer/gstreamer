@@ -25,9 +25,7 @@
 #include <gst/base/gstadapter.h>
 #include "flx_color.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 typedef enum {
   GST_FLXDEC_READ_HEADER,
@@ -51,6 +49,7 @@ struct _GstFlxDec {
   GstFlxDecState state;
   glong frame_time;
   gint64 next_time;
+  gint64 duration;
 
   FlxColorSpaceConverter *converter;
 
@@ -78,10 +77,6 @@ struct _GstFlxDecClass {
 /* Standard function returning type information. */
 GType gst_flxdec_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_FLX_DECODER_H__ */

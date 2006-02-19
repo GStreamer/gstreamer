@@ -17,7 +17,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifndef __FLX_COLOR_H__
+#define __FLX_COLOR_H__
+
 #include <gst/gst.h>
+
+G_BEGIN_DECLS
 
 typedef enum {
   FLX_COLORSPACE_RGB8,
@@ -42,3 +47,6 @@ void flx_set_palette_vector(FlxColorSpaceConverter *flxpal, guint start, guint n
 void flx_set_color(FlxColorSpaceConverter *flxpal, guint colr, guint red, guint green,
           guint blue, gint scale);
 
+G_END_DECLS
+
+#endif /* __FLX_COLOR_H__ */

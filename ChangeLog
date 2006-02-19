@@ -1,3 +1,16 @@
+2006-02-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/flx/flx_color.h:
+	* gst/flx/flx_fmt.h:
+	* gst/flx/gstflxdec.c: (gst_flxdec_init),
+	(gst_flxdec_src_query_handler), (flx_decode_color),
+	(gst_flxdec_chain):
+	* gst/flx/gstflxdec.h:
+	Set MALLOCDATA for the temp buffers so we don't leak.
+	Some debug cleanups.
+	Consume all data in the adapter before leaving the chain
+	function. Fixes #330678.
+
 2006-02-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3tags.c: (id3demux_id3v2_frames_to_tag_list):

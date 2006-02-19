@@ -23,9 +23,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 enum Flx_TypeChunk
 {
@@ -197,9 +195,6 @@ typedef struct _FlxFrameType
 
 #endif /* G_BYTE_ORDER == G_BIG_ENDIAN */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_FLX_FMT_H__ */
