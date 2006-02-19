@@ -1,5 +1,12 @@
 2006-02-19  Wim Taymans  <wim@fluendo.com>
 
+	* gst/flx/gstflxdec.c: (gst_flxdec_src_query_handler),
+	(gst_flxdec_chain):
+	* gst/flx/gstflxdec.h:
+	Implement DURATION query.
+
+2006-02-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst/flx/flx_color.h:
 	* gst/flx/flx_fmt.h:
 	* gst/flx/gstflxdec.c: (gst_flxdec_init),

@@ -47,7 +47,7 @@ struct _GstFlxDec {
   GstAdapter *adapter;
   gulong size;
   GstFlxDecState state;
-  glong frame_time;
+  gint64 frame_time;
   gint64 next_time;
   gint64 duration;
 

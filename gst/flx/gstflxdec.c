@@ -526,6 +526,8 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
       }
 
       flxdec->duration = flxh->frames * flxdec->frame_time;
+      GST_LOG ("duration   :  %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (flxdec->duration));
 
       caps = gst_caps_from_string (GST_VIDEO_CAPS_xRGB_HOST_ENDIAN);
       gst_caps_set_simple (caps,
