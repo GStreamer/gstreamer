@@ -1,6 +1,15 @@
 2006-02-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid):
+	Add extra detail to the Real format caps. With this info, 
+	filesrc ! ffdemux_rm ! ffdec_cook ! ... works, but using rmdemux
+	doesn't. The order of the data the demuxers output appears to be
+	different.
+
+2006-02-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
 	(gst_ffmpeg_formatid_to_caps), (gst_ffmpeg_get_codecid_longname):
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
 	Add new codec ids and fix up some of the codec->mime type mappings

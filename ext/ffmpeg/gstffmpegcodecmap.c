@@ -755,6 +755,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         /* FIXME: properties? */
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-pn-realaudio",
             "raversion", G_TYPE_INT, version, NULL);
+        if (context) {
+          gst_caps_set_simple (caps,
+              "leaf_size", G_TYPE_INT, context->block_align,
+              "bitrate", G_TYPE_INT, context->bit_rate, NULL);
+        }
       }
       break;
 
@@ -1410,7 +1415,17 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
           context->sub_id = fourcc;
       }
       break;
-
+    case CODEC_ID_COOK:
+    case CODEC_ID_RA_288:
+    case CODEC_ID_RA_144:
+      {
+        gint leaf_size;
+        gint bitrate;
+        if (gst_structure_get_int (str, "leaf_size", &leaf_size))
+          context->block_align = leaf_size;
+        if (gst_structure_get_int (str, "bitrate", &bitrate))
+          context->bit_rate = bitrate;
+      }
     case CODEC_ID_ALAC:
       gst_structure_get_int (str, "samplesize", &context->bits_per_sample);
       break;
