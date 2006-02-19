@@ -404,16 +404,16 @@ gst_parse_found_pad (GstElement *src, GstPad *pad, gpointer data)
   DelayedLink *link = (DelayedLink *) data;
   
   GST_CAT_INFO (GST_CAT_PIPELINE, "trying delayed linking %s:%s to %s:%s", 
-                GST_ELEMENT_NAME (src), link->src_pad,
-                GST_ELEMENT_NAME (link->sink), link->sink_pad);
+                GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
+                GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
 
   if (gst_element_link_pads_filtered (src, link->src_pad, link->sink,
       link->sink_pad, link->caps)) {
     /* do this here, we don't want to get any problems later on when
      * unlocking states */
     GST_CAT_DEBUG (GST_CAT_PIPELINE, "delayed linking %s:%s to %s:%s worked", 
-               	   GST_ELEMENT_NAME (src), link->src_pad,
-               	   GST_ELEMENT_NAME (link->sink), link->sink_pad);
+               	   GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (link->src_pad),
+               	   GST_STR_NULL (GST_ELEMENT_NAME (link->sink)), GST_STR_NULL (link->sink_pad));
     g_signal_handler_disconnect (src, link->signal_id);
     g_free (link->src_pad);
     g_free (link->sink_pad);
@@ -442,8 +442,8 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
       /* TODO: maybe we should check if src_pad matches this template's names */
 
       GST_CAT_DEBUG (GST_CAT_PIPELINE, "trying delayed link %s:%s to %s:%s", 
-                     GST_ELEMENT_NAME (src), src_pad,
-                     GST_ELEMENT_NAME (sink), sink_pad);
+                     GST_STR_NULL (GST_ELEMENT_NAME (src)), GST_STR_NULL (src_pad),
+                     GST_STR_NULL (GST_ELEMENT_NAME (sink)), GST_STR_NULL (sink_pad));
 
       data->src_pad = g_strdup (src_pad);
       data->sink = sink;

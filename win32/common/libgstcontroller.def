@@ -1,2 +1,3 @@
 EXPORTS
+	gst_controller_init
 	gst_object_sync_values

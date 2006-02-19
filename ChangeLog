@@ -1,3 +1,16 @@
+2006-02-19  Sebastien Moutte <sebastien@moutte.net>
+
+	* gst/gstpad.c: (gst_pad_set_event_function),
+	(gst_pad_set_query_function), (gst_pad_set_query_type_function),
+	(gst_pad_set_getcaps_function)
+	* gst/parse/grammar.y: (gst_parse_found_pad), (gst_parse_perform_delayed_link)
+		Fixed NULL pointer used in GST_CAT_DEBUG using GST_STR_NULL macro
+		So now, we can use --gst-debug-level=5 on Windows
+	* win32/common/libgstcontroller.def:
+	  Added export of gst_controller_init
+	* win32/vs6/libgstcontroller.dsp:
+	  Fixed Release post build configuration
+
 2006-02-17  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/gst/gstquery.c: (GST_START_TEST):
