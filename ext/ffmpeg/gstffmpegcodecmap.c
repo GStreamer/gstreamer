@@ -732,8 +732,20 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_RA_144:
     case CODEC_ID_RA_288:
+    case CODEC_ID_COOK:
       {
-        gint version = (codec_id == CODEC_ID_RA_144) ? 1 : 2;
+        gint version;
+        switch (codec_id) {
+          case CODEC_ID_RA_144:
+            version = 1;
+            break;
+          case CODEC_ID_RA_288:
+            version = 2;
+            break;
+          case CODEC_ID_COOK:
+            version = 8;
+            break;
+        }
 
         /* FIXME: properties? */
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-pn-realaudio",
@@ -1897,6 +1909,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
         case 2:
           id = CODEC_ID_RA_288;
           break;
+        case 8:
+          id = CODEC_ID_COOK;
+          break;
       }
     }
     if (id != CODEC_ID_NONE)
@@ -2327,6 +2342,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_RA_288:
       name = "Realaudio 28k8bps";
+      break;
+    case CODEC_ID_COOK:
+      name = "Realaudio G2 (Cook) audio";
       break;
     case CODEC_ID_ROQ_DPCM:
       name = "RoQ DPCM audio";
