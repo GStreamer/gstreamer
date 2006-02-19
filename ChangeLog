@@ -1,3 +1,9 @@
+2006-02-19  Wim Taymans  <wim@fluendo.com>
+
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnome_vfs_sink_open_file):
+	use 0666 mask when creating files so umask gets applied
+	correctly. Fixes #331295.
+
 2006-02-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subparse/Makefile.am:

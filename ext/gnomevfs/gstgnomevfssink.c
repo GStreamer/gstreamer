@@ -331,11 +331,13 @@ gst_gnome_vfs_sink_open_file (GstGnomeVFSSink * sink)
   GnomeVFSResult result;
 
   if (sink->uri) {
-    /* open the file */
+    /* open the file, all permissions, umask will apply */
     result = gnome_vfs_create_uri (&(sink->handle), sink->uri,
         GNOME_VFS_OPEN_WRITE, TRUE,
-        GNOME_VFS_PERM_USER_READ | GNOME_VFS_PERM_USER_WRITE
-        | GNOME_VFS_PERM_GROUP_READ);
+        GNOME_VFS_PERM_USER_READ | GNOME_VFS_PERM_USER_WRITE |
+        GNOME_VFS_PERM_GROUP_READ | GNOME_VFS_PERM_GROUP_WRITE |
+        GNOME_VFS_PERM_OTHER_READ | GNOME_VFS_PERM_OTHER_WRITE);
+
     /* if the file existed and the property says to ask, then ask! */
     if (result == GNOME_VFS_ERROR_FILE_EXISTS) {
       gboolean erase_anyway = FALSE;
@@ -346,8 +348,9 @@ gst_gnome_vfs_sink_open_file (GstGnomeVFSSink * sink)
       if (erase_anyway) {
         result = gnome_vfs_create_uri (&(sink->handle), sink->uri,
             GNOME_VFS_OPEN_WRITE, FALSE,
-            GNOME_VFS_PERM_USER_READ | GNOME_VFS_PERM_USER_WRITE
-            | GNOME_VFS_PERM_GROUP_READ);
+            GNOME_VFS_PERM_USER_READ | GNOME_VFS_PERM_USER_WRITE |
+            GNOME_VFS_PERM_GROUP_READ | GNOME_VFS_PERM_GROUP_WRITE |
+            GNOME_VFS_PERM_OTHER_READ | GNOME_VFS_PERM_OTHER_WRITE);
       }
     }
 
