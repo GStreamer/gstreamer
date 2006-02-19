@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
+ * Copyright (C) <2006> Julien Moutte <julien@moutte.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -282,8 +283,10 @@ gst_text_overlay_finalize (GObject * object)
   g_free (overlay->default_text);
   g_free (overlay->bitmap.buffer);
 
-  if (overlay->layout)
+  if (overlay->layout) {
     g_object_unref (overlay->layout);
+    overlay->layout = NULL;
+  }
 
   if (overlay->segment) {
     gst_segment_free (overlay->segment);
@@ -395,7 +398,6 @@ gst_text_overlay_update_wrap_mode (GstTextOverlay * overlay)
     pango_layout_set_wrap (overlay->layout, (PangoWrapMode) overlay->wrap_mode);
   }
 }
-
 
 /* FIXME: upstream nego (e.g. when the video window is resized) */
 
