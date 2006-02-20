@@ -1,3 +1,32 @@
+2006-02-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/ximagesrc/Makefile.am:
+	* sys/ximagesrc/ximagesrc.c: (gst_ximagesrc_return_buf),
+	(gst_ximagesrc_open_display), (gst_ximagesrc_start),
+	(gst_ximagesrc_stop), (gst_ximagesrc_unlock),
+	(gst_ximagesrc_recalc), (composite_pixel),
+	(gst_ximagesrc_ximage_get), (gst_ximagesrc_create),
+	(gst_ximagesrc_set_property), (gst_ximagesrc_get_property),
+	(gst_ximagesrc_clear_bufpool), (gst_ximagesrc_base_init),
+	(gst_ximagesrc_dispose), (gst_ximagesrc_finalize),
+	(gst_ximagesrc_get_caps), (gst_ximagesrc_set_caps),
+	(gst_ximagesrc_fixate), (gst_ximagesrc_class_init),
+	(gst_ximagesrc_init), (plugin_init):
+	* sys/ximagesrc/ximagesrc.h:
+	* sys/ximagesrc/ximageutil.c: (ximageutil_handle_xerror),
+	(ximageutil_check_xshm_calls), (ximageutil_xcontext_get),
+	(ximageutil_xcontext_clear),
+	(ximageutil_calculate_pixel_aspect_ratio),
+	(gst_ximagesrc_buffer_finalize), (gst_ximage_buffer_free),
+	(gst_ximagesrc_buffer_init), (gst_ximagesrc_buffer_class_init),
+	(gst_ximagesrc_buffer_get_type), (gst_ximageutil_ximage_new),
+	(gst_ximageutil_ximage_destroy):
+	* sys/ximagesrc/ximageutil.h:
+
+	Port ximagesrc to 0.10 (Closes #304795)
+
 2006-02-20  Edgard Lima <edgard.lima@indt.org.br>
 
         * gst/freeze/gstfreeze.c:

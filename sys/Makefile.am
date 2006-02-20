@@ -34,6 +34,12 @@ else
 GL_DIR=
 endif
 
-SUBDIRS = $(GL_DIR)
+if USE_X
+XIMAGESRC_DIR=ximagesrc
+else
+XIMAGESRC_DIR=
+endif
 
-DIST_SUBDIRS = glsink
+SUBDIRS = $(GL_DIR) $(XIMAGESRC_DIR)
+
+DIST_SUBDIRS = glsink ximagesrc
