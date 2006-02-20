@@ -14,12 +14,10 @@ endif
 
 if GST_DISABLE_PARSE
 GST_PARSE_SRC = 
-GST_PARSE_H =
 SUBDIRS_PARSE = 
 GST_PARSE_LA = 
 else
 GST_PARSE_SRC = gstparse.c
-GST_PARSE_H = gstparse.h
 SUBDIRS_PARSE = parse
 GST_PARSE_LA = parse/libgstparse.la 
 endif
@@ -190,7 +188,7 @@ gst_headers =			\
 	gstutils.h		\
 	gstvalue.h		\
 	gstregistry.h		\
-	$(GST_PARSE_H)		\
+	gstparse.h              \
 	gstxml.h
 
 libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers)

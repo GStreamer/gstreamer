@@ -3047,6 +3047,7 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
   return pad;
 }
 
+#ifndef GST_DISABLE_PARSE
 /**
  * gst_parse_bin_from_description:
  * @bin_description: command line describing the bin
@@ -3107,3 +3108,4 @@ gst_parse_bin_from_description (const gchar * bin_description,
 
   return GST_ELEMENT (bin);
 }
+#endif

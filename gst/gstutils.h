@@ -25,6 +25,8 @@
 #ifndef __GST_UTILS_H__
 #define __GST_UTILS_H__
 
+#include <gst/gstconfig.h>
+
 #include <glib.h>
 #include <gst/gstbin.h>
 
@@ -599,10 +601,18 @@ void			gst_element_found_tags_for_pad	(GstElement * element,
 void			gst_element_found_tags		(GstElement * element,
 							 GstTagList * list);
 
+#ifndef GST_DISABLE_PARSE
 /* parse utility functions */
 GstElement *            gst_parse_bin_from_description  (const gchar * bin_description,
                                                          gboolean ghost_unconnected_pads,
                                                          GError ** err);
+#else /* GST_DISABLE_PARSE */
+
+#if defined _GNUC_ && _GNUC_ >= 3
+#pragma GCC poison gst_parse_bin_from_description 
+#endif
+
+#endif
 
 G_END_DECLS
 

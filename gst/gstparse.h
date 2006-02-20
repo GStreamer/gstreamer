@@ -23,6 +23,8 @@
 #ifndef __GST_PARSE_H__
 #define __GST_PARSE_H__
 
+#include <gst/gstconfig.h>
+
 #include <gst/gstelement.h>
 
 G_BEGIN_DECLS

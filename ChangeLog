@@ -1,3 +1,14 @@
+2006-02-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/Makefile.am:
+	* gst/gstparse.h:
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	Make things work with --disable-parse as they do with 
+	--disable-load-save - the symbols involved disappear, but the
+	header is still installed and GST_DISABLE_PARSE is included via
+	gstconfig.h
+
 2006-02-20  Julien MOUTTE  <julien@moutte.net>
 
 	* libs/gst/base/gstbasetransform.c:
