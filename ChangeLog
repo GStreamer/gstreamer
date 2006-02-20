@@ -1,5 +1,11 @@
 2006-02-20  Julien MOUTTE  <julien@moutte.net>
 
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_change_state): Fix a stupid bug. I was 
+	sure i compiled that.
+
+2006-02-20  Julien MOUTTE  <julien@moutte.net>
+
 	* gst/gstpad.c: (gst_pad_set_blocked_async):
 	* gst/gstutils.c: (gst_pad_add_data_probe),
 	(gst_pad_add_event_probe), (gst_pad_add_buffer_probe),
