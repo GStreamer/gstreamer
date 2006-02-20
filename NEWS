@@ -1,4 +1,29 @@
-This is GStreamer Bad Plug-ins 0.10.0, "Camembert"
+This is GStreamer Bad Plug-ins 0.10.1, "Slimy - yet satisfying"
+
+Changes since 0.10.0:
+
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+      * Lots of fixes for the QT/MOV demuxer, including restoring 
+        the ability to play web streams, and more codecs supported
+      * AAC decoder fixes
+      * MMS source fixes
+      * DirectFB plugin updated
+      * New plugins ported to 0.10: swfdec, XVid, dtsdec, glimagesink
+      * New libneon based http source filter
+      * APE tag reader moved to gst-plugins-good module
+
+Bugs fixed since 0.10.0:
+
+      * 303167 : Add bzip2 support
+      * 322973 : [wavpack] erroneous sampling rates range
+      * 326524 : Support for Indeo 3-encoded QuickTime files
+      * 327133 : [qtdemux] QuickTime with 8-bit audio
+      * 328854 : AAC+ stream not working with FAAD plugin
+      * 330089 : [bz2] Wrong mimetype and no typefinding
+      * 331302 : bz2 plugin source files lack copyright notices
+      * 331543 : crash on iTunes MPEG v4 AAC-LC files
+      * 331582 : [qtdemux] protect log statement against invalid memory access
 
 Bugs fixed since 0.9.7:
     

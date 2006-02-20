@@ -138,3 +138,133 @@
 <DEFAULT>S_L0</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstFaac::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[8192,327680]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate (bps)</NICK>
+<BLURB>Bitrate in bits/sec.</BLURB>
+<DEFAULT>131072</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaac::midside</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Midside</NICK>
+<BLURB>Allow mid/side encoding.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaac::outputformat</NAME>
+<TYPE>GstFaacOutputFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output format</NICK>
+<BLURB>Format of output frames.</BLURB>
+<DEFAULT>OUTPUTFORMAT_RAW</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaac::profile</NAME>
+<TYPE>GstFaacProfile</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Profile</NICK>
+<BLURB>MPEG/AAC encoding profile.</BLURB>
+<DEFAULT>MAIN</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaac::shortctl</NAME>
+<TYPE>GstFaacShortCtl</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block type</NICK>
+<BLURB>Block type encorcing.</BLURB>
+<DEFAULT>SHORTCTL_NORMAL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaac::tns</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TNS</NICK>
+<BLURB>Use temporal noise shaping.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDtsDec::drc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dynamic Range Compression</NICK>
+<BLURB>Use Dynamic Range Compression.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBz2dec::buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer size</NICK>
+<BLURB>Buffer size.</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBz2dec::first-buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size of first buffer</NICK>
+<BLURB>Size of first buffer (used to determine the mime type of the uncompressed data).</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBz2enc::block-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,9]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block size</NICK>
+<BLURB>Block size.</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBz2enc::buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer size</NICK>
+<BLURB>Buffer size.</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLImageSink::display</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display</NICK>
+<BLURB>X Display name.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFreeze::max-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>max-buffers</NICK>
+<BLURB>Maximum number of buffers.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+

@@ -1,3 +1,10 @@
+=== release 0.10.1 ===
+
+2006-02-20  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.1, "Slimy - yet satisfying"
+
 2006-02-19  Jan Schmidt <thaytan@mad.scientist.com>
 
 	* configure.ac:
