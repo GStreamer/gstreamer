@@ -63,6 +63,7 @@
 #include "gst_private.h"
 
 #include "gstpad.h"
+#include "gstghostpad.h"
 #include "gstpadtemplate.h"
 #include "gstenumtypes.h"
 #include "gstmarshal.h"
@@ -876,9 +877,17 @@ gboolean
 gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
     GstPadBlockCallback callback, gpointer user_data)
 {
-  gboolean was_blocked;
+  gboolean was_blocked, was_ghost = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  if (GST_IS_GHOST_PAD (pad)) {
+    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
+    if (!pad) {
+      return FALSE;
+    }
+    was_ghost = TRUE;
+  }
 
   GST_OBJECT_LOCK (pad);
 
@@ -919,6 +928,10 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
   }
   GST_OBJECT_UNLOCK (pad);
 
+  if (was_ghost) {
+    gst_object_unref (pad);
+  }
+
   return TRUE;
 
 had_right_state:
@@ -926,6 +939,10 @@ had_right_state:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "pad %s:%s was in right state", GST_DEBUG_PAD_NAME (pad));
     GST_OBJECT_UNLOCK (pad);
+
+    if (was_ghost) {
+      gst_object_unref (pad);
+    }
     return FALSE;
   }
 }
