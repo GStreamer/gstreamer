@@ -39,13 +39,15 @@ struct _GstFreeze
 
   GstPad *sinkpad, *srcpad;
 
-  GList *buffers;
-  GList *current;
+  GQueue *buffers;
+  GstBuffer *current;
+  
   guint max_buffers;
 
   gint64 timestamp_offset;
   gint64 offset;
   GstClockTime running_time;
+  gboolean on_flush;
 };
 
 struct _GstFreezeClass

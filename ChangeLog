@@ -1,3 +1,9 @@
+2006-02-20  Edgard Lima <edgard.lima@indt.org.br>
+
+        * gst/freeze/gstfreeze.c:
+        * gst/freeze/gstfreeze.h:
+        Some event handling added by Renato Filho <renato.filho@indt.org.br>
+
 2006-02-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

@@ -33,37 +33,42 @@ enum
 };
 
 
-static GstElementDetails freeze_details = GST_ELEMENT_DETAILS ("Stream freezer",
-    "Generic",
-    "Makes a stream from buffers of data",
-    "Gergely Nagy <gergely.nagy@neteyes.hu>,"
-    " Renato Filho <renato.filho@indt.org.br>");
+static GstElementDetails freeze_details = { "Stream freezer",
+  "Generic",
+  "Makes a stream from buffers of data",
+  "Gergely Nagy <gergely.nagy@neteyes.hu>,"
+      " Renato Filho <renato.filho@indt.org.br>"
+};
 
 static GstStaticPadTemplate gst_freeze_src_template =
-GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate gst_freeze_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+static void gst_freeze_class_init (GstFreezeClass * klass);
 static void gst_freeze_dispose (GObject * object);
 static void gst_freeze_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_freeze_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
 static GstFlowReturn gst_freeze_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn gst_freeze_change_state (GstElement * element,
     GstStateChange transition);
-
 static GstFlowReturn gst_freeze_play (GstPad * pad, GstBuffer * buff);
 static void gst_freeze_loop (GstPad * pad);
 static gboolean gst_freeze_sink_activate (GstPad * sinkpad);
 static gboolean gst_freeze_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
 static gboolean gst_freeze_sink_event (GstPad * pad, GstEvent * event);
-
+static void gst_freeze_clear_buffer (GstFreeze * freeze);
+static void gst_freeze_buffer_free (gpointer data, gpointer user_data);
 
 
 GST_BOILERPLATE (GstFreeze, gst_freeze, GstElement, GST_TYPE_ELEMENT)
@@ -91,9 +96,10 @@ gst_freeze_class_init (GstFreezeClass * klass)
   object_class->set_property = gst_freeze_set_property;
   object_class->get_property = gst_freeze_get_property;
 
-  g_object_class_install_property
-      (object_class, ARG_MAX_BUFFERS,
-      g_param_spec_uint ("max-buffers", "max-buffers",
+  g_object_class_install_property (object_class,
+      ARG_MAX_BUFFERS,
+      g_param_spec_uint ("max-buffers",
+          "max-buffers",
           "Maximum number of buffers", 0, G_MAXUINT, 1, G_PARAM_READWRITE));
 
   object_class->dispose = gst_freeze_dispose;
@@ -103,7 +109,8 @@ gst_freeze_class_init (GstFreezeClass * klass)
 static void
 gst_freeze_init (GstFreeze * freeze, GstFreezeClass * klass)
 {
-  freeze->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get
+  freeze->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_freeze_sink_template), "sink");
   gst_element_add_pad (GST_ELEMENT (freeze), freeze->sinkpad);
   gst_pad_set_activate_function (freeze->sinkpad, gst_freeze_sink_activate);
@@ -111,36 +118,29 @@ gst_freeze_init (GstFreeze * freeze, GstFreezeClass * klass)
       gst_freeze_sink_activate_pull);
   gst_pad_set_chain_function (freeze->sinkpad, gst_freeze_chain);
   gst_pad_set_getcaps_function (freeze->sinkpad, gst_pad_proxy_getcaps);
+  gst_pad_set_event_function (freeze->sinkpad, gst_freeze_sink_event);
 
   freeze->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_freeze_src_template), "src");
   gst_element_add_pad (GST_ELEMENT (freeze), freeze->srcpad);
-
   gst_pad_set_getcaps_function (freeze->srcpad, gst_pad_proxy_getcaps);
-
-  gst_pad_set_event_function (freeze->sinkpad, gst_freeze_sink_event);
 
   freeze->timestamp_offset = 0;
   freeze->running_time = 0;
-  freeze->buffers = NULL;
   freeze->current = NULL;
   freeze->max_buffers = 1;
+  freeze->on_flush = FALSE;
+  freeze->buffers = g_queue_new ();
 }
 
 static void
 gst_freeze_dispose (GObject * object)
 {
-  guint i;
   GstFreeze *freeze = GST_FREEZE (object);
 
-  if (freeze->buffers != NULL) {
-    for (i = 0; i < g_list_length (freeze->buffers); i++)
-      gst_buffer_unref (GST_BUFFER (g_list_nth_data (freeze->buffers, i)));
+  gst_freeze_clear_buffer (freeze);
 
-    g_list_free (freeze->buffers);
-    freeze->buffers = NULL;
-    freeze->current = NULL;
-  }
+  g_queue_free (freeze->buffers);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -224,14 +224,19 @@ gst_freeze_play (GstPad * pad, GstBuffer * buff)
 {
   GstFreeze *freeze;
   guint64 cur_offset;
-  GstFlowReturn ret;
-
-
+  GstFlowReturn ret = GST_FLOW_OK;
 
   freeze = GST_FREEZE (gst_pad_get_parent (pad));
 
-  cur_offset = freeze->offset;
+  if (freeze->on_flush) {
+    g_object_unref (freeze);
+    return GST_FLOW_WRONG_STATE;
+  }
 
+  cur_offset = freeze->offset;
+  /* If it is working in push mode this function will be called by "_chain"
+     and buff will never be NULL. In pull mode this function will be called
+     by _loop and buff will be NULL */
   if (!buff) {
     ret =
         gst_pad_pull_range (GST_PAD (freeze->sinkpad), freeze->offset, 4096,
@@ -245,11 +250,11 @@ gst_freeze_play (GstPad * pad, GstBuffer * buff)
 
   }
 
-  if (g_list_length (freeze->buffers) < freeze->max_buffers ||
+  if (g_queue_get_length (freeze->buffers) < freeze->max_buffers ||
       freeze->max_buffers == 0) {
-    freeze->buffers = g_list_append (freeze->buffers, buff);
+    g_queue_push_tail (freeze->buffers, buff);
     GST_DEBUG_OBJECT (freeze, "accepted buffer %u",
-        g_list_length (freeze->buffers) - 1);
+        g_queue_get_length (freeze->buffers) - 1);
   } else {
     gst_buffer_unref (buff);
   }
@@ -257,25 +262,26 @@ gst_freeze_play (GstPad * pad, GstBuffer * buff)
 
   if (freeze->current != NULL) {
     GST_DEBUG_OBJECT (freeze, "switching to next buffer");
-    freeze->current = freeze->current->next;
+    freeze->current = g_queue_peek_nth (freeze->buffers,
+        g_queue_index (freeze->buffers, (gpointer) freeze->current) + 1);
   }
 
   if (freeze->current == NULL) {
     if (freeze->max_buffers > 1)
       GST_DEBUG_OBJECT (freeze, "restarting the loop");
-    freeze->current = freeze->buffers;
+    freeze->current = g_queue_peek_head (freeze->buffers);
   }
 
-  GST_BUFFER_TIMESTAMP (freeze->current->data) = freeze->timestamp_offset +
+  GST_BUFFER_TIMESTAMP (freeze->current) = freeze->timestamp_offset +
       freeze->running_time;
-  freeze->running_time += GST_BUFFER_DURATION (freeze->current->data);
+  freeze->running_time += GST_BUFFER_DURATION (freeze->current);
 
-  gst_buffer_ref (freeze->current->data);
-  gst_pad_push (freeze->srcpad, freeze->current->data);
+  gst_buffer_ref (freeze->current);
+  ret = gst_pad_push (freeze->srcpad, freeze->current);
 
   gst_object_unref (freeze);
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static void
@@ -314,6 +320,22 @@ gst_freeze_sink_activate_pull (GstPad * sinkpad, gboolean active)
   return result;
 }
 
+static void
+gst_freeze_buffer_free (gpointer data, gpointer user_data)
+{
+  gst_buffer_unref (GST_BUFFER (data));
+}
+
+static void
+gst_freeze_clear_buffer (GstFreeze * freeze)
+{
+  if (freeze->buffers != NULL) {
+    g_queue_foreach (freeze->buffers, gst_freeze_buffer_free, NULL);
+  }
+  freeze->current = NULL;
+  freeze->running_time = 0;
+}
+
 static gboolean
 gst_freeze_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -327,6 +349,11 @@ gst_freeze_sink_event (GstPad * pad, GstEvent * event)
           gst_pad_get_name (GST_PAD (freeze->sinkpad)));
       gst_event_unref (event);
       break;
+    case GST_EVENT_NEWSEGMENT:
+      /* FALL TROUGH */
+    case GST_EVENT_FLUSH_STOP:
+      gst_freeze_clear_buffer (freeze);
+      /* FALL TROUGH */
     default:
       ret = gst_pad_event_default (GST_PAD (freeze->sinkpad), event);
       break;
