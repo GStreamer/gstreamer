@@ -287,7 +287,7 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
 {
   GstSignalProcessor *self;
   GstSignalProcessorClass *bclass;
-  gboolean unlock;
+  gboolean ret;
 
   self = GST_SIGNAL_PROCESSOR (GST_PAD_PARENT (pad));
   bclass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
@@ -309,6 +309,8 @@ gst_signal_processor_process (GstSignalProcessor * self)
 
   g_return_if_fail (self->pending_in == 0);
   g_return_if_fail (self->pending_out == 0);
+
+  elem = GST_ELEMENT (self);
 
   /* arrange the output buffers */
   for (l1 = elem->sinkpads, l2 = elem->srcpads; l1 || l2;

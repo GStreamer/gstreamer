@@ -1,3 +1,11 @@
+2006-02-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/ladspa/gstsignalprocessor.c: (gst_signal_processor_event),
+	(gst_signal_processor_process):
+	Fix compilation of LADPSA. It doesn't seem to work, and isn't
+	enabled for the build, but it helps me win the feature-count
+	competitions ooh yeah.
+
 2006-02-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_src_convert),
