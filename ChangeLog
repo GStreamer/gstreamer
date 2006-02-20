@@ -1,5 +1,13 @@
 2006-02-20  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/subparse/gstsubparse.c: (subrip_unescape_formatting),
+	(parse_subrip), (gst_sub_parse_format_autodetect):
+	  Set right caps given that we send escaped text. Also,
+	  honour <i></i>, <b></b> and <u></u> markers that can be found
+	  in .srt files (fixes #310202).
+
+2006-02-20  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/audio/mixerutils.c:
 	(element_factory_rank_compare_func):
 	  Make order in which elements are tried more determinable.
