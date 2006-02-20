@@ -92,12 +92,9 @@ class Window(gtk.Dialog):
             pipeline = gst.parse_launch(s)
             self.set_sensitive(True)
             pipeline.get_bus().add_signal_watch()
-            i = pipeline.get_bus().connect('message::application', self.on_message)
-            if pipeline.set_state(gst.STATE_PLAYING) == gst.STATE_CHANGE_SUCCESS:
-                print "going into main"
-                gtk.Dialog.run(self)
-            else:
-                self.error('Could not set state')
+            i = pipeline.get_bus().connect('message', self.on_message)
+            pipeline.set_state(gst.STATE_PLAYING)
+            gtk.Dialog.run(self)
             pipeline.get_bus().disconnect(i)
             pipeline.get_bus().remove_signal_watch()
             pipeline.set_state(gst.STATE_NULL)
