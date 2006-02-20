@@ -1,3 +1,9 @@
+2006-02-20  Julien MOUTTE  <julien@moutte.net>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_change_state): Make basetransform reusable.
+	(Closes #331898)
+
 2006-02-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/random/release:

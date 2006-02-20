@@ -1413,6 +1413,12 @@ gst_base_transform_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      trans->have_same_caps = FALSE;
+      /* We can only reset the passthrough mode if the instance told us to 
+         handle it in configure_caps */
+      if (trans->passthrough_on_same_caps) {
+        gst_base_transform_set_passthrough (trans, FALSE);
+      }
       gst_caps_replace (&trans->cache_caps1, NULL);
       gst_caps_replace (&trans->cache_caps2, NULL);
     default:
