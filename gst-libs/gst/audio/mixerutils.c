@@ -176,6 +176,14 @@ element_factory_rank_compare_func (gconstpointer a, gconstpointer b)
   gint rank_a = gst_plugin_feature_get_rank (GST_PLUGIN_FEATURE (a));
   gint rank_b = gst_plugin_feature_get_rank (GST_PLUGIN_FEATURE (b));
 
+  /* make order chosen in the end more determinable */
+  if (rank_a == rank_b) {
+    const gchar *name_a = GST_PLUGIN_FEATURE_NAME (GST_PLUGIN_FEATURE (a));
+    const gchar *name_b = GST_PLUGIN_FEATURE_NAME (GST_PLUGIN_FEATURE (b));
+
+    return g_ascii_strcasecmp (name_a, name_b);
+  }
+
   return rank_b - rank_a;
 }
 
