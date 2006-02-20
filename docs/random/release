@@ -30,6 +30,50 @@ interested developers.  To minimize the impact on the rest of the core hacking,
 we create a new CVS branch which will go through the pre-releases and finally
 contain the definitive tarball for that version.
 
+RELEASE PROCEDURE:
+-----------------
+
+- www/bin/new-release is a release helper script.  It automates a lot of the
+  tedious work.  Now releasing looks like this:
+
+- before release:
+  - make sure all blocker bugs for that release are fixed or deferred
+  - make sure you have a local copy of all online files
+  - bin/new-release (module) (version) (checkoutdir) (release name)
+    - updates cvs
+    - allows you to update versioning in configure.ac
+    - rebuilds
+    - updates ChangeLog
+    - adds a new releases/module/version.xml file and lets you edit
+      --> here you add/fix up the features (from ChangeLog) and check
+	  contributors
+    - allows you to update NEWS file with snippets from RELEASE
+      --> copy stuff
+    - rebuilds docs for plugins
+    - rolls release tarballs and puts them in the local www/data tree
+    - uploads docs to website
+    - commits changes to po files
+    - shows you a diff for evaluation
+
+  - build packages to test
+
+- release:
+  - cvs commit in the tree
+  - tag tree
+    for example for 0.6.3 :
+           cvs tag RELEASE-0_6_3
+  - bump nano number, commit
+  - if working in the "stable" release branch, update to this tag to freeze it:
+    cvs up -r RELEASE-0_6_3
+  - sync source and packages to website
+  - add entry on website; commit additions to website
+  - change versions in www/src/htdocs/entities.gst
+  - add versions and milestones in bugzilla
+
+
+Old release notes - superceded by the www/bin/new-release script.
+----------------------------------------------------------------
+
 TODO :
   - Decide on the next version number (major, minor or micro upgrade ?)
   - Get a fresh copy to do the necessary tests on
@@ -194,45 +238,6 @@ NOTES ON STARTING A NEW STABLE SERIES
     perl -i -p -e 's@0\.9([^.])@0.10$1@g' (file) changes 0.9 -> 0.10
 
 
-
-NEW NOTES
----------
-- www/bin/new-release is a release helper script.  It automates a lot of the
-  tedious work.  Now releasing looks like this:
-
-- before release:
-  - make sure all blocker bugs for that release are fixed or deferred
-  - make sure you have a local copy of all online files
-  - bin/new-release (module) (version) (checkoutdir) (release name)
-    - updates cvs
-    - allows you to update versioning in configure.ac
-    - rebuilds
-    - updates ChangeLog
-    - adds a new releases/module/version.xml file and lets you edit
-      --> here you add/fix up the features (from ChangeLog) and check
-	  contributors
-    - allows you to update NEWS file with snippets from RELEASE
-      --> copy stuff
-    - rebuilds docs for plugins
-    - rolls release tarballs and puts them in the local www/data tree
-    - uploads docs to website
-    - commits changes to po files
-    - shows you a diff for evaluation
-
-  - build packages to test
-
-- release:
-  - cvs commit in the tree
-  - tag tree
-    for example for 0.6.3 :
-           cvs tag RELEASE-0_6_3
-  - bump nano number, commit
-  - if working in the "stable" release branch, update to this tag to freeze it:
-    cvs up -r RELEASE-0_6_3
-  - sync source and packages to website
-  - add entry on website; commit additions to website
-  - change versions in www/src/htdocs/entities.gst
-  - add versions and milestones in bugzilla
 
 
 

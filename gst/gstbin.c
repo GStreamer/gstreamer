@@ -348,7 +348,7 @@ gst_bin_class_init (GstBinClass * klass)
   GST_DEBUG ("creating bin thread pool");
   err = NULL;
   klass->pool =
-      g_thread_pool_new ((GFunc) gst_bin_recalc_func, NULL, 1, FALSE, &err);
+      g_thread_pool_new ((GFunc) gst_bin_recalc_func, NULL, -1, FALSE, &err);
   if (err != NULL) {
     g_critical ("could alloc threadpool %s", err->message);
   }
@@ -2005,8 +2005,13 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 
       klass = GST_BIN_GET_CLASS (bin);
       gst_object_ref (bin);
-      GST_DEBUG_OBJECT (bin, "pushing recalc on thread pool");
-      g_thread_pool_push (klass->pool, bin, NULL);
+      if (!bin->polling) {
+        GST_DEBUG_OBJECT (bin, "pushing recalc on thread pool");
+        g_thread_pool_push (klass->pool, bin, NULL);
+      } else {
+        GST_DEBUG_OBJECT (bin,
+            "state recalc already in progress, not pushing new recalc");
+      }
       GST_OBJECT_UNLOCK (bin);
       break;
 

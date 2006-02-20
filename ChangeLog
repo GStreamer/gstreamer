@@ -1,3 +1,13 @@
+2006-02-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/random/release:
+	Move the current documentation of how to do a release to the top
+	of the file.
+
+	* gst/gstbin.c: (gst_bin_class_init),
+	(gst_bin_handle_message_func):
+	Allow multiple state-recalculation threads. (Closes #328873)
+
 2006-02-19  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/gstinfo.h: Add GST_STR_NULL to the second string.
