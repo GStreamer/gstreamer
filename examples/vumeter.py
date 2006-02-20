@@ -92,7 +92,7 @@ class Window(gtk.Dialog):
             pipeline = gst.parse_launch(s)
             self.set_sensitive(True)
             pipeline.get_bus().add_signal_watch()
-            i = pipeline.get_bus().connect('message', self.on_message)
+            i = pipeline.get_bus().connect('message::element', self.on_message)
             pipeline.set_state(gst.STATE_PLAYING)
             gtk.Dialog.run(self)
             pipeline.get_bus().disconnect(i)
