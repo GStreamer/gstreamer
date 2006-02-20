@@ -1,3 +1,11 @@
+2006-02-20  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/playback/gstdecodebin.c: (get_our_ghost_pad),
+	(remove_element_chain), (cleanup_decodebin),
+	(gst_decode_bin_change_state): Make decodebin reusable by
+	fixing remove_element_chain first and then introduce a
+	cleaner in state change to ->NULL. (Closes #331678)
+
 2006-02-19  Wim Taymans  <wim@fluendo.com>
 
 	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnome_vfs_sink_open_file):
