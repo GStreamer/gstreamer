@@ -425,7 +425,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>clock</NICK>
 <BLURB>clock.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>PAL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -465,7 +465,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>memory</NICK>
 <BLURB>memory.</BLURB>
-<DEFAULT>34</DEFAULT>
+<DEFAULT>Playsid Environment</DEFAULT>
 </ARG>
 
 <ARG>
@@ -596,5 +596,45 @@
 <NICK>raw-audio</NICK>
 <BLURB>If true, source pad caps are set to raw audio.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvdReadSrc::angle</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>angle</NICK>
+<BLURB>angle.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvdReadSrc::chapter</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>chapter</NICK>
+<BLURB>chapter.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvdReadSrc::device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>DVD device location.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvdReadSrc::title</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,999]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>title</NICK>
+<BLURB>title.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 

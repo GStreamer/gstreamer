@@ -1,4 +1,31 @@
-This is GStreamer Ugly Plug-ins 0.10.1, "Peng".
+This is GStreamer Ugly Plug-ins 0.10.2, "Season to Taste".
+
+Features since 0.10.1:
+
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+      * DVD Title source (dvdreadsrc) ported (DVD Menus in a future release)
+      * ASF demuxer ported
+      * Fixes for MPEG demuxing
+      * Fixes for the MAD MP3 decoder
+      * Fixes for the LAME MP3 encoder
+      * ID3 tag reading has moved to id3demux in gst-plugins-good
+      * Fixes for the Real Media demuxer
+      * Various other fixes
+
+Bugs fixed since 0.10.1:
+
+      * 171528 : SIGFPE in gstasf with http://joule.via.ecp.fr/~lool/debia...
+      * 317872 : Cannot demux ASF/WMV files with auxillary (non-audio/vide...
+      * 319782 : Lame encoding is broken with vbr=vbr-new and vbr-quality=9
+      * 326711 : [mpegdemux] does not negotiate source pads
+      * 326734 : [mad] Add 24-bit output support
+      * 329575 : misc bugfixes for mad from 0.8
+      * 331035 : [asfdemux] port to 0.10
+      * 331301 : [mpeg2dec] strides issues when cropping
+      * 330844 : mpeg2dec crashes with " cropped " MPEG videos
+      * 331579 : Set asfdemux rank to secondary
+      * 313838 : totem hangs after playing an amazon sample
 
 Features since 0.10.0:
     

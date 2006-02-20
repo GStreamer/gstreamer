@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Ugly Plug-ins 0.10.1 "Peng"
+GStreamer: Release notes for GStreamer Ugly Plug-ins 0.10.2 "Season to Taste"
         
 
 The GStreamer team is proud to announce a new release
@@ -56,22 +56,29 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * fixes in dvddemux, mpegdemux, mad, iec958
-      * removed id3demux (new version in gst-plugins-good)
+      * DVD Title source (dvdreadsrc) ported (DVD Menus in a future release)
+      * ASF demuxer ported
+      * Fixes for MPEG demuxing
+      * Fixes for the MAD MP3 decoder
+      * Fixes for the LAME MP3 encoder
+      * ID3 tag reading has moved to id3demux in gst-plugins-good
+      * Fixes for the Real Media demuxer
+      * Various other fixes
 
 Bugs fixed in this release
     
-      * 322049 : [id3demux] should support pull range
-      * 322856 : [mpeg2dec] Use of wrong variables
-      * 322857 : [mpeg2dec] Seeking in byte format
-      * 325652 : many plugins don't pass unhandled queries upstream
-
-API changed in this release
-     
-
-- API additions:
-    
-* AC3IEC::raw-audio
+      * 311679 : [lame] doesn't write GST_TAG_DATE correctly
+      * 326734 : [mad] Add 24-bit output support
+      * 171528 : SIGFPE in gstasf with http://joule.via.ecp.fr/~lool/debia...
+      * 313838 : totem hangs after playing an amazon sample
+      * 317872 : Cannot demux ASF/WMV files with auxillary (non-audio/vide...
+      * 319782 : Lame encoding is broken with vbr=vbr-new and vbr-quality=9
+      * 326711 : [mpegdemux] does not negotiate source pads
+      * 329575 : misc bugfixes for mad from 0.8
+      * 331035 : [asfdemux] port to 0.10
+      * 331301 : [mpeg2dec] strides issues when cropping
+      * 331579 : Set asfdemux rank to secondary
+      * 330844 : mpeg2dec crashes with " cropped " MPEG videos
 
 Download
 
@@ -101,12 +108,13 @@ Applications
   
 Contributors to this release
     
+      * Christian Schaller
+      * Edgard Lima
       * Edward Hervey
       * Jan Schmidt
-      * Josef Zlomek
       * Martin Soto
-      * Michael Smith
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Wim Taymans
  

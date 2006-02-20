@@ -1,3 +1,10 @@
+=== release 0.10.2 ===
+
+2006-02-20  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.2, "Season to Taste"
+
 2006-02-19  Jan Schmidt <thaytan@mad.scientist.com>
 
 	* configure.ac:
