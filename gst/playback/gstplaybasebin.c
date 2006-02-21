@@ -1423,7 +1423,8 @@ prepare_output (GstPlayBaseBin * play_base_bin)
       break;
     } else if (info->type == GST_STREAM_TYPE_AUDIO) {
       stream_found = TRUE;
-    } else if (info->type == GST_STREAM_TYPE_TEXT) {
+    } else if (info->type == GST_STREAM_TYPE_TEXT ||
+        info->type == GST_STREAM_TYPE_SUBPICTURE) {
       got_subtitle = TRUE;
     } else if (!item->prev && !item->next) {
       /* We're no audio/video and the only stream... We could

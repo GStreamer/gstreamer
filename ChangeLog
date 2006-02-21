@@ -1,5 +1,16 @@
 2006-02-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_create):
+	  Don't send EOS event here, the base class will send one for us.
+  
+	* gst/playback/gstplaybasebin.c: (prepare_output):
+	  Subpictures without video stream aren't allowed either.
+	
+	* gst/subparse/gstsubparse.c: (gst_subparse_type_find):
+	  Fix debug statement copy'n'paste-o.
+
+2006-02-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_get_volume):
 	  Fix issues with mixer keeping state when muting/unmuting
 	  and when changing the volume whilst muted (see #331763

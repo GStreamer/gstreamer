@@ -879,7 +879,7 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
       GST_DEBUG ("SubRip format detected");
       break;
     case GST_SUB_PARSE_FORMAT_MPSUB:
-      GST_DEBUG ("SubRip format detected");
+      GST_DEBUG ("MPSub format detected");
       break;
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
       GST_DEBUG ("no subtitle format detected");

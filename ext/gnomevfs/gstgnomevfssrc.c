@@ -1033,7 +1033,6 @@ eos:
   {
     gst_buffer_unref (buf);
     GST_DEBUG_OBJECT (src, "Reading data gave EOS");
-    gst_pad_push_event (basesrc->srcpad, gst_event_new_eos ());
     return GST_FLOW_UNEXPECTED;
   }
 }
