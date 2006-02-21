@@ -1,3 +1,10 @@
+2006-02-21  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_formatid_to_caps):
+	Added proper formatid to caps conversion for ogg, gif, yuv4mpeg and
+	quicktime formats.
+
 2006-02-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

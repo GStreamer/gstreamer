@@ -845,6 +845,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         (codec = avcodec_find_encoder (codec_id))) {
       gchar *mime = NULL;
 
+      GST_WARNING ("Could not create stream format caps for %s",
+		   codec->name);
+      
       switch (codec->type) {
         case CODEC_TYPE_VIDEO:
           mime = g_strdup_printf ("video/x-gst_ff-%s", codec->name);
@@ -1485,8 +1488,6 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_new_simple ("application/x-shockwave-flash", NULL);
   } else if (!strcmp (format_name, "au")) {
     caps = gst_caps_new_simple ("audio/x-au", NULL);
-  } else if (!strcmp (format_name, "mov_mp4_m4a_3gp")) {
-    caps = gst_caps_new_simple ("video/quicktime", NULL);
   } else if (!strcmp (format_name, "dv")) {
     caps = gst_caps_new_simple ("video/x-dv",
         "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
@@ -1507,6 +1508,18 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
   } else if (!strcmp (format_name, "mov_mp4_m4a_3gp_3g2")) {
     caps = gst_caps_from_string (
                "application/x-3gp; video/quicktime; audio/x-m4a");
+  } else if (!strcmp (format_name, "aac")) {
+    caps = gst_caps_new_simple ("audio/mpeg",
+				"mpegversion", G_TYPE_INT, 4,
+				NULL);
+  } else if (!strcmp (format_name, "gif")) {
+    caps = gst_caps_from_string ("image/gif");
+  } else if (!strcmp (format_name, "ogg")) {
+    caps = gst_caps_from_string ("application/ogg");
+  } else if (!strcmp (format_name, "yuv4mpegpipe")) {
+    caps = gst_caps_new_simple ("application/x-yuv4mpeg",
+				"y4mversion", G_TYPE_INT, 1,
+				NULL);
   } else {
     gchar *name;
 
