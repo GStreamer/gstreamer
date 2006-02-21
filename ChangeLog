@@ -1,3 +1,9 @@
+2006-02-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	Apply patch from Sebastien Cote to handle --with-pkg-config-path
+	before looking for GStreamer patches. (Re-closes #319248)
+
 2006-02-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),

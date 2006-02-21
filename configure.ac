@@ -61,6 +61,7 @@ fi
 
 AC_HEADER_STDC([])
 
+GST_ARG_WITH_PKG_CONFIG_PATH
 
 dnl check for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
@@ -82,8 +83,6 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl Determine CPU
 GST_ARCH()
-
-GST_ARG_WITH_PKG_CONFIG_PATH
 
 dnl check for documentation tools
 GTK_DOC_CHECK([1.3])
