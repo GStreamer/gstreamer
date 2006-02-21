@@ -1,3 +1,9 @@
+2006-02-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_plugin_init):
+	 Push the rank up to SECONDARY+1 so that dvddemux is preferred over
+	 mpegdemux for MPEG-2 video streams.
+
 2006-02-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
