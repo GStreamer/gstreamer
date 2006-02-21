@@ -1,3 +1,10 @@
+2006-02-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_get_volume):
+	  Fix issues with mixer keeping state when muting/unmuting
+	  and when changing the volume whilst muted (see #331763
+	  and #331765).
+
 2006-02-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subparse/gstsubparse.c: (subrip_unescape_formatting),

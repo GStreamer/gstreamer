@@ -309,9 +309,8 @@ gst_alsa_mixer_get_volume (GstAlsaMixer * mixer, GstMixerTrack * track,
       } else if (alsa_track->alsa_flags & GST_ALSA_MIXER_TRACK_CAPTURE) {
         snd_mixer_selem_get_capture_volume (alsa_track->element, i, &tmp);
       }
-      if (!(track->flags & GST_MIXER_TRACK_MUTE)) {
-        volumes[i] = (gint) tmp;
-      }
+
+      alsa_track->volumes[i] = volumes[i] = (gint) tmp;
     }
   }
 }
