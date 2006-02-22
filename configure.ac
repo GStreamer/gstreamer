@@ -210,6 +210,7 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 		asfdemux \
 		dvdlpcmdec \
+		dvdsub \
         iec958 \
 		mpegaudioparse \
         mpegstream \
@@ -393,6 +394,7 @@ Makefile
 gst/Makefile
 gst/asfdemux/Makefile
 gst/dvdlpcmdec/Makefile
+gst/dvdsub/Makefile
 gst/iec958/Makefile
 gst/mpegaudioparse/Makefile
 gst/mpegstream/Makefile

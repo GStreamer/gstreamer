@@ -1,3 +1,20 @@
+2006-02-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/dvdsub/Makefile.am:
+	* gst/dvdsub/gstdvdsubdec.c: (gst_dvd_sub_dec_base_init),
+	(gst_dvd_sub_dec_class_init), (gst_dvd_sub_dec_init),
+	(gst_dvd_sub_dec_finalize), (gst_dvd_sub_dec_src_event),
+	(gst_dvd_sub_dec_get_event_delay), (gst_dvd_sub_dec_parse_subpic),
+	(gst_get_nibble), (gst_setup_palette), (gst_get_rle_code),
+	(gst_draw_rle_line), (gst_dvd_sub_dec_merge_title),
+	(gst_send_empty_fill), (gst_send_subtitle_frame),
+	(gst_dvd_sub_dec_advance_time), (gst_dvd_sub_dec_chain),
+	(gst_dvd_sub_dec_sink_event), (gst_dvd_sub_dec_handle_dvd_event),
+	(plugin_init):
+	* gst/dvdsub/gstdvdsubdec.h:
+	  Port dvdsubdec to 0.10
+
 2006-02-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_plugin_init):
