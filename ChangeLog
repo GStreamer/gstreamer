@@ -1,3 +1,12 @@
+2006-02-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* sys/glsink/Makefile.am:
+	Merge patch from #317048 for building on Cygwin. Patch by 
+	Cygwin Ports maintainer.
+	* sys/glsink/glimagesink.c: (gst_glimage_sink_init_display):
+	Move normal debug output to LOG level not ERROR.
+
 2006-02-19  Jan Gerber  <j@bootlab.org>
 
 	Reviewed by : Edward Hervey <edward@fluendo.com>

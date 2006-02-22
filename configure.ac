@@ -389,12 +389,12 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesrc], [
   AC_PATH_XTRA
+
+  dnl now try to find the HEADER
   ac_cflags_save="$CFLAGS"
   ac_cppflags_save="$CPPFLAGS"
   CFLAGS="$CFLAGS $X_CFLAGS"
   CPPFLAGS="$CPPFLAGS $X_CFLAGS"
-
-  dnl now try to find the HEADER
   AC_CHECK_HEADER(X11/Xlib.h, HAVE_X="yes", HAVE_X="no")
 
   if test "x$HAVE_X" = "xno"
@@ -457,7 +457,7 @@ GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], [ximagesrc w/ xshm], [
 ] )
 
 dnl *** BZ2 ***
-translit(bz2, m, l) AM_CONDITIONAL(USE_BZ2, true)
+translit(dnm, m, l) AM_CONDITIONAL(USE_BZ2, true)
 GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
   GST_CHECK_LIBHEADER(BZ2, bz2, BZ2_bzCompress, ,bzlib.h, BZ2_LIBS="-lbz2")
   AC_SUBST(BZ2_LIBS)
@@ -609,10 +609,16 @@ GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
 
 dnl *** OpenGL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
+save_CPPFLAGS="$CPPFLAGS"
+save_LIBS="$LIBS"
+CPPFLAGS="$CPPFLAGS $X_CFLAGS"
+LIBS="$LIBS $X_LIBS"
 GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
-  GST_CHECK_LIBHEADER(GL, GLU, glTexImage2D,,
+  GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,,
                       GL/gl.h, HAVE_OPENGL="yes", HAVE_OPENGL="no")
 ])
+CPPFLAGS="$save_CPPFLAGS"
+LIBS="$save_LIBS"
 
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
