@@ -37,6 +37,9 @@ GST_ELEMENT_DETAILS ("DV (smpte314) decoder plugin",
 #define DV_DEFAULT_QUALITY DV_QUALITY_BEST
 #define DV_DEFAULT_DECODE_NTH 1
 
+GST_DEBUG_CATEGORY (dvdec_debug);
+#define GST_CAT_DEFAULT dvdec_debug
+
 enum
 {
   PROP_0,
@@ -133,6 +136,8 @@ gst_dvdec_base_init (gpointer g_class)
       gst_static_pad_template_get (&src_temp));
 
   gst_element_class_set_details (element_class, &dvdec_details);
+
+  GST_DEBUG_CATEGORY_INIT (dvdec_debug, "dvdec", 0, "DV decoding element");
 }
 
 static void
@@ -190,7 +195,6 @@ gst_dvdec_init (GstDVDec * dvdec, GstDVDecClass * g_class)
   dvdec->height = 0;
   dvdec->wide = FALSE;
   dvdec->drop_factor = 1;
-  dvdec->headers_seen = FALSE;
 
   dvdec->clamp_luma = FALSE;
   dvdec->clamp_chroma = FALSE;
@@ -353,7 +357,6 @@ gst_dvdec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       dv_decoder_free (dvdec->decoder);
       dvdec->decoder = NULL;
-      dvdec->headers_seen = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

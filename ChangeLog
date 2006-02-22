@@ -1,3 +1,20 @@
+2006-02-22  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_base_init), (gst_dvdec_init),
+	(gst_dvdec_change_state):
+	* ext/dv/gstdvdec.h:
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_base_init), (gst_dvdemux_init),
+	(gst_dvdemux_src_convert), (gst_dvdemux_sink_convert),
+	(gst_dvdemux_src_query), (gst_dvdemux_sink_query),
+	(gst_dvdemux_handle_sink_event), (gst_dvdemux_demux_frame),
+	(gst_dvdemux_flush), (gst_dvdemux_chain),
+	(gst_dvdemux_change_state):
+	* ext/dv/gstdvdemux.h:
+	Ueber spiffify some more, added debug category.
+	Use _scale.
+	Use segments, respect playback rate from newsegment.
+	Fix refcount issue.
+
 2006-02-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ladspa/gstsignalprocessor.c: (gst_signal_processor_event),

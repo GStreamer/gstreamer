@@ -21,14 +21,11 @@
 #ifndef __GST_DVDEMUX_H__
 #define __GST_DVDEMUX_H__
 
-
 #include <gst/gst.h>
 #include <libdv/dv.h>
 #include <gst/base/gstadapter.h>
 
-
 G_BEGIN_DECLS
-
 
 #define GST_TYPE_DVDEMUX \
   (gst_dvdemux_get_type())
@@ -44,7 +41,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstDVDemux GstDVDemux;
 typedef struct _GstDVDemuxClass GstDVDemuxClass;
-
 
 struct _GstDVDemux {
   GstElement     element;
@@ -77,12 +73,9 @@ struct _GstDVDemux {
   guint64        audio_offset;
   guint64        video_offset;
 
-  gint64         start_byte;
-  gint64         stop_byte;
-  gint64         start_timestamp;
-  gint64         stop_timestamp;
-
-  gboolean       need_discont;
+  GstSegment     byte_segment;
+  GstSegment     time_segment;
+  gboolean       need_segment;
   gboolean       new_media;
   
   gboolean       found_header;
@@ -94,11 +87,8 @@ struct _GstDVDemuxClass {
   GstElementClass parent_class;
 };
 
-
 GType gst_dvdemux_get_type (void);
 
-
 G_END_DECLS
-
 
 #endif /* __GST_DVDEMUX_H__ */
