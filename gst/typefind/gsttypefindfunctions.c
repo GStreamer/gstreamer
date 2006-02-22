@@ -1190,14 +1190,47 @@ static GstStaticCaps q3gp_caps = GST_STATIC_CAPS ("application/x-3gp");
 static void
 q3gp_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data = gst_type_find_peek (tf, 4, 8);
 
-  if (data &&
-      (memcmp (data, "ftyp3gp4", 8) == 0 ||
-          memcmp (data, "ftyp3gp5", 8) == 0 ||
-          memcmp (data, "ftyp3gp6", 8) == 0)) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, Q3GP_CAPS);
+  guint32 ftyp_size = 0;
+  gint offset = 0;
+  guint8 *data = NULL;
+
+  if ((data = gst_type_find_peek (tf, 0, 12)) == NULL) {
+    return;
   }
+
+  data += 4;
+  if (memcmp (data, "ftyp", 4) != 0) {
+    return;
+  }
+
+  /* check major brand */
+  data += 4;
+  if (memcmp (data, "3gp", 3) == 0 ||
+      memcmp (data, "3gr", 3) == 0 ||
+      memcmp (data, "3gs", 3) == 0 || memcmp (data, "3gg", 3) == 0) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, Q3GP_CAPS);
+    return;
+  }
+
+  /* check compatible brands */
+  if ((data = gst_type_find_peek (tf, 0, 4)) != NULL) {
+    ftyp_size = GST_READ_UINT32_BE (data);
+  }
+  for (offset = 16; offset < ftyp_size; offset += 4) {
+    if ((data = gst_type_find_peek (tf, offset, 3)) == NULL) {
+      break;
+    }
+    if (memcmp (data, "3gp", 3) == 0 ||
+        memcmp (data, "3gr", 3) == 0 ||
+        memcmp (data, "3gs", 3) == 0 || memcmp (data, "3gg", 3) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, Q3GP_CAPS);
+      break;
+    }
+  }
+
+  return;
+
 }
 
 /*** video/quicktime ***/
@@ -1216,22 +1249,26 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
   guint64 size;
 
   while ((data = gst_type_find_peek (tf, offset, 8)) != NULL) {
-    if (STRNCMP (&data[4], "wide", 4) != 0 &&
-        STRNCMP (&data[4], "moov", 4) != 0 &&
-        STRNCMP (&data[4], "mdat", 4) != 0 &&
-        STRNCMP (&data[4], "pnot", 4) != 0 &&
-        STRNCMP (&data[4], "PICT", 4) != 0 &&
-        STRNCMP (&data[4], "ftyp", 4) != 0 &&
-        STRNCMP (&data[4], "free", 4) != 0 &&
-        STRNCMP (&data[4], "skip", 4) != 0 &&
-        STRNCMP (&data[4], "uuid", 4) != 0) {
-      tip = 0;
-      break;
+    /* box/atom types that are in common with ISO base media file format */
+    if (STRNCMP (&data[4], "moov", 4) == 0 ||
+        STRNCMP (&data[4], "mdat", 4) == 0 ||
+        STRNCMP (&data[4], "ftyp", 4) == 0 ||
+        STRNCMP (&data[4], "free", 4) == 0 ||
+        STRNCMP (&data[4], "skip", 4) == 0) {
+      if (tip == 0) {
+        tip = GST_TYPE_FIND_LIKELY;
+      } else {
+        tip = GST_TYPE_FIND_NEARLY_CERTAIN;
+      }
     }
-    if (tip == 0) {
-      tip = GST_TYPE_FIND_LIKELY;
-    } else {
+    /* other box/atom types, apparently quicktime specific */
+    else if (STRNCMP (&data[4], "pnot", 4) == 0 ||
+        STRNCMP (&data[4], "PICT", 4) == 0 ||
+        STRNCMP (&data[4], "wide", 4) == 0) {
       tip = GST_TYPE_FIND_MAXIMUM;
+      break;
+    } else {
+      tip = 0;
       break;
     }
     size = GST_READ_UINT32_BE (data);

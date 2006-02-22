@@ -1,3 +1,11 @@
+2006-02-22  Tommi Myöhänen  <ext-tommi do myohanen at nokia dot com>
+
+	Reviewed by : Edward Hervey  <edward@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (q3gp_type_find),
+	(qt_type_find):
+	Better 3gp typefinding.
+
 2006-02-21  Tim-Philipp MÃ¼ller  <tim at centricular dot net>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_create):
