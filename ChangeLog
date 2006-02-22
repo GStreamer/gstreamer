@@ -1,3 +1,8 @@
+2006-02-22  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsasrc.c:
+	Fix description as pointed out by caugier.
+
 2006-02-22  Tommi Myöhänen  <ext-tommi do myohanen at nokia dot com>
 
 	Reviewed by : Edward Hervey  <edward@fluendo.com>
