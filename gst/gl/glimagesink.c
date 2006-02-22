@@ -568,11 +568,11 @@ gst_glimage_sink_init_display (GstGLImageSink * glimage_sink)
   const char *extstring;
   Window window;
 
-  GST_ERROR ("initializing display");
+  GST_LOG_OBJECT (glimage_sink, "initializing display");
 
   glimage_sink->display = XOpenDisplay (NULL);
   if (glimage_sink->display == NULL) {
-    GST_ERROR ("Could not open display");
+    GST_ERROR_OBJECT (glimage_sink, "Could not open display");
     return FALSE;
   }
 
@@ -582,13 +582,13 @@ gst_glimage_sink_init_display (GstGLImageSink * glimage_sink)
 
   ret = glXQueryExtension (glimage_sink->display, &error_base, &event_base);
   if (!ret) {
-    GST_ERROR ("No GLX extension");
+    GST_LOG_OBJECT (glimage_sink, "No GLX extension");
     return FALSE;
   }
 
   visinfo = glXChooseVisual (glimage_sink->display, scrnum, attrib);
   if (visinfo == NULL) {
-    GST_ERROR ("No usable visual");
+    GST_LOG_OBJECT (glimage_sink, "No usable visual");
     return FALSE;
   }
 
