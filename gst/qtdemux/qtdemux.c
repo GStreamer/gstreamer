@@ -3027,6 +3027,9 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     const guint8 * stsd_data, const gchar ** codec_name)
 {
   switch (fourcc) {
+    case GST_MAKE_FOURCC ('p', 'n', 'g', ' '):
+      _codec ("PNG still images");
+      return gst_caps_from_string ("image/png");
     case GST_MAKE_FOURCC ('j', 'p', 'e', 'g'):
       _codec ("JPEG still images");
       return gst_caps_from_string ("image/jpeg");
@@ -3104,6 +3107,8 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       return gst_caps_from_string ("video/x-indeo, indeoversion=(int)3");
     case GST_MAKE_FOURCC ('d', 'v', 'c', 'p'):
     case GST_MAKE_FOURCC ('d', 'v', 'c', ' '):
+    case GST_MAKE_FOURCC ('d', 'v', 's', 'd'):
+    case GST_MAKE_FOURCC ('d', 'v', '2', '5'):
       _codec ("DV Video");
       return gst_caps_from_string ("video/x-dv, systemstream=(boolean)false");
     case GST_MAKE_FOURCC ('s', 'm', 'c', ' '):

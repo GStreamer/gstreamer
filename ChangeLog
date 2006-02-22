@@ -1,3 +1,11 @@
+2006-02-19  Jan Gerber  <j@bootlab.org>
+
+	Reviewed by : Edward Hervey <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
+	  Add 'dvsd' and 'dv25' to list of possible fourcc values for DV Video.
+ 	  Add image/png for fourcc 'png '
+ 
 2006-02-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
