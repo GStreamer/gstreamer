@@ -103,6 +103,7 @@ init_gst (void)
      PyObject *m, *d;
      PyObject *av, *tuple;
      int argc, i;
+     guint major, minor, micro, nano;
      char **argv;
      GError	*error = NULL;
 
@@ -157,9 +158,9 @@ init_gst (void)
      m = Py_InitModule ("_gst", pygst_functions);
      d = PyModule_GetDict (m);
 
-     /* gst+ version */
-     tuple = Py_BuildValue ("(iii)", GST_VERSION_MAJOR, GST_VERSION_MINOR,
-			    GST_VERSION_MICRO);
+     /* gst version */
+     gst_version(&major, &minor, &micro, &nano);
+     tuple = Py_BuildValue("(iii)", major, minor, micro);
      PyDict_SetItemString(d, "gst_version", tuple);    
      Py_DECREF(tuple);
      

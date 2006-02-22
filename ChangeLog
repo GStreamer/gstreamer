@@ -1,3 +1,12 @@
+2006-02-22  Joe Wreschnig  <piman@sacredchao.net>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstmodule.c: (init_gst):
+	gst.gst_version uses the result of gst_version() rather than use
+	the GST_VERSION_* hardcoded values.
+	Closes #331616
+	
 2006-02-20  Edward Hervey  <edward@fluendo.com>
 
 	* examples/vumeter.py:
