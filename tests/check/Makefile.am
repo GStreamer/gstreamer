@@ -66,6 +66,7 @@ check_PROGRAMS =				\
 	$(PARSE_CHECKS)				\
 	pipelines/stress			\
 	libs/libsabi				\
+	libs/basesrc				\
 	libs/controller				\
 	libs/gdp				\
 	libs/gstnetclientclock			\
@@ -91,10 +92,12 @@ libs_gdp_CFLAGS = $(AM_CFLAGS)
 
 elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) $(CHECK_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
 
+libs_basesrc_LDADD = \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(LDADD)
 libs_controller_LDADD = \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
 	$(LDADD)
-
 libs_gstnetclientclock_LDADD = \
 	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
 	$(LDADD)
