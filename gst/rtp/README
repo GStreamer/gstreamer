@@ -1,3 +1,8 @@
+This directory contains some RTP payloaders/depayloaders for different payload
+types. Use one payloader/depayloder pair per payload. If several payloads can be
+payloaded/depayloaded by the same element, make different copies of it, one for
+each payload.
+
 The application/x-rtp mime type
 -------------------------------
 

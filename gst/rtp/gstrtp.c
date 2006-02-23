@@ -22,8 +22,10 @@
 #endif
 
 #include "gstrtpdepay.h"
-#include "gstrtpg711pay.h"
-#include "gstrtpg711depay.h"
+#include "gstrtppcmupay.h"
+#include "gstrtppcmapay.h"
+#include "gstrtppcmadepay.h"
+#include "gstrtppcmudepay.h"
 #include "gstrtpgsmpay.h"
 #include "gstrtpgsmdepay.h"
 #include "gstrtpamrpay.h"
@@ -58,10 +60,16 @@ plugin_init (GstPlugin * plugin)
   if (!gst_rtp_amr_pay_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_rtp_g711_depay_plugin_init (plugin))
+  if (!gst_rtp_pcma_depay_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_rtp_g711_pay_plugin_init (plugin))
+  if (!gst_rtp_pcmu_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_pcmu_pay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_pcma_pay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_mpa_depay_plugin_init (plugin))

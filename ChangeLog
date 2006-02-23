@@ -1,3 +1,19 @@
+2006-02-23  Philippe Kalaf  <philippe.kalaf at collabora.co.uk>
+
+	* rtp/gst/gstrtppcmadepay.c:
+	* rtp/gst/gstrtppcmadepay.h:
+	* rtp/gst/gstgstrtppcmapay.c:
+	* rtp/gst/gstgstrtppcmapay.h:
+	* rtp/gst/gstrtppcmudepay.c:
+	* rtp/gst/gstrtppcmudepay.h:
+	* rtp/gst/gstrtppcmupay.c:
+	* rtp/gst/gstrtppcmupay.h:
+	* rtp/gst/Makefile.am:
+	* rtp/gst/gstrtp.c:
+	* rtp/gst/README:
+	Separated the G711 payloaders/depayloaders into separate elements for
+	mulaw/alaw. Also removed the old g711 payloaders/depayloaders.
+
 2006-02-22  Wim Taymans  <wim@fluendo.com>
 
 	* ext/dv/gstdvdec.c: (gst_dvdec_base_init), (gst_dvdec_init),

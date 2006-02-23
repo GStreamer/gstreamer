@@ -20,17 +20,17 @@
 
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
-#include "gstrtpg711depay.h"
+#include "gstrtppcmudepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_g711depay_details = {
+static GstElementDetails gst_rtp_pcmudepay_details = {
   "RTP packet parser",
   "Codec/Depayr/Network",
-  "Extracts PCMU/PCMA audio from RTP packets",
+  "Extracts PCMU audio from RTP packets",
   "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>"
 };
 
-/* RtpG711Depay signals and args */
+/* RtpPcmuDepay signals and args */
 enum
 {
   /* FILL ME */
@@ -42,50 +42,45 @@ enum
   ARG_0
 };
 
-static GstStaticPadTemplate gst_rtp_g711_depay_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate gst_rtp_pcmu_depay_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
-        "clock-rate = (int) 8000, "
-        "encoding-name = (string) \"PCMU\"; "
-        "application/x-rtp, "
-        "media = (string) \"audio\", "
-        "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\"")
+        "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMU\"")
 
     );
 
-static GstStaticPadTemplate gst_rtp_g711_depay_src_template =
-    GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate gst_rtp_pcmu_depay_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-mulaw, "
-        "channels = (int) 1; " "audio/x-alaw, " "channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-mulaw, " "channels = (int) 1")
     );
 
-static GstBuffer *gst_rtp_g711_depay_process (GstBaseRTPDepayload * depayload,
+static GstBuffer *gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
-static gboolean gst_rtp_g711_depay_setcaps (GstBaseRTPDepayload * depayload,
+static gboolean gst_rtp_pcmu_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 
-GST_BOILERPLATE (GstRtpG711Depay, gst_rtp_g711_depay, GstBaseRTPDepayload,
+GST_BOILERPLATE (GstRtpPcmuDepay, gst_rtp_pcmu_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
 static void
-gst_rtp_g711_depay_base_init (gpointer klass)
+gst_rtp_pcmu_depay_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_g711_depay_src_template));
+      gst_static_pad_template_get (&gst_rtp_pcmu_depay_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_rtp_g711_depay_sink_template));
-  gst_element_class_set_details (element_class, &gst_rtp_g711depay_details);
+      gst_static_pad_template_get (&gst_rtp_pcmu_depay_sink_template));
+  gst_element_class_set_details (element_class, &gst_rtp_pcmudepay_details);
 }
 
 static void
-gst_rtp_g711_depay_class_init (GstRtpG711DepayClass * klass)
+gst_rtp_pcmu_depay_class_init (GstRtpPcmuDepayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -97,46 +92,30 @@ gst_rtp_g711_depay_class_init (GstRtpG711DepayClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_DEPAYLOAD);
 
-  gstbasertpdepayload_class->process = gst_rtp_g711_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_g711_depay_setcaps;
+  gstbasertpdepayload_class->process = gst_rtp_pcmu_depay_process;
+  gstbasertpdepayload_class->set_caps = gst_rtp_pcmu_depay_setcaps;
 }
 
 static void
-gst_rtp_g711_depay_init (GstRtpG711Depay * rtpg711depay,
-    GstRtpG711DepayClass * klass)
+gst_rtp_pcmu_depay_init (GstRtpPcmuDepay * rtppcmudepay,
+    GstRtpPcmuDepayClass * klass)
 {
   GstBaseRTPDepayload *depayload;
 
-  depayload = GST_BASE_RTP_DEPAYLOAD (rtpg711depay);
+  depayload = GST_BASE_RTP_DEPAYLOAD (rtppcmudepay);
 
   depayload->clock_rate = 8000;
   gst_pad_use_fixed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
 }
 
 static gboolean
-gst_rtp_g711_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
+gst_rtp_pcmu_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
-  const gchar *pay_name;
-  GstStructure *structure;
   gboolean ret;
 
-  structure = gst_caps_get_structure (caps, 0);
-  pay_name = gst_structure_get_string (structure, "encoding-name");
-
-  if (NULL == pay_name) {
-    return FALSE;
-  }
-
-  if (0 == strcmp ("PCMU", pay_name)) {
-    srccaps = gst_caps_new_simple ("audio/x-mulaw",
-        "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
-  } else if (0 == strcmp ("PCMA", pay_name)) {
-    srccaps = gst_caps_new_simple ("audio/x-alaw",
-        "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
-  } else {
-    return FALSE;
-  }
+  srccaps = gst_caps_new_simple ("audio/x-mulaw",
+      "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
 
   ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
@@ -145,7 +124,7 @@ gst_rtp_g711_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 }
 
 static GstBuffer *
-gst_rtp_g711_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
+gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstCaps *srccaps;
   GstBuffer *outbuf = NULL;
@@ -175,8 +154,8 @@ gst_rtp_g711_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 }
 
 gboolean
-gst_rtp_g711_depay_plugin_init (GstPlugin * plugin)
+gst_rtp_pcmu_depay_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "rtpg711depay",
-      GST_RANK_NONE, GST_TYPE_RTP_G711_DEPAY);
+  return gst_element_register (plugin, "rtppcmudepay",
+      GST_RANK_NONE, GST_TYPE_RTP_PCMU_DEPAY);
 }
