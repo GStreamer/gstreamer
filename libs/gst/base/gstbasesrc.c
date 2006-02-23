@@ -151,6 +151,15 @@ enum
   PROP_TYPEFIND,
 };
 
+#define GST_BASE_SRC_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_SRC, GstBaseSrcPrivate))
+
+struct _GstBaseSrcPrivate
+{
+  gboolean last_sent_eos;       /* last thing we did was send an EOS (we set this
+                                 * to avoid the sending of two EOS in some cases) */
+};
+
 static GstElementClass *parent_class = NULL;
 
 static void gst_base_src_base_init (gpointer g_class);
@@ -231,6 +240,8 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  g_type_class_add_private (klass, sizeof (GstBaseSrcPrivate));
+
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_src_finalize);
@@ -265,6 +276,8 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
 {
   GstPad *pad;
   GstPadTemplate *pad_template;
+
+  basesrc->priv = GST_BASE_SRC_GET_PRIVATE (basesrc);
 
   basesrc->is_live = FALSE;
   basesrc->live_lock = g_mutex_new ();
@@ -1235,6 +1248,8 @@ gst_base_src_loop (GstPad * pad)
 
   src = GST_BASE_SRC (gst_pad_get_parent (pad));
 
+  src->priv->last_sent_eos = FALSE;
+
   /* if we operate in bytes, we can calculate an offset */
   if (src->segment.format == GST_FORMAT_BYTES)
     position = src->segment.last_stop;
@@ -1303,6 +1318,7 @@ eos:
               src->segment.format, src->segment.last_stop));
     } else {
       gst_pad_push_event (pad, gst_event_new_eos ());
+      src->priv->last_sent_eos = TRUE;
     }
     goto done;
   }
@@ -1318,6 +1334,7 @@ pause:
           (_("Internal data flow error.")),
           ("streaming task paused, reason %s", reason));
       gst_pad_push_event (pad, gst_event_new_eos ());
+      src->priv->last_sent_eos = TRUE;
     }
     goto done;
   }
@@ -1329,6 +1346,7 @@ error:
     src->data.ABI.running = FALSE;
     gst_pad_pause_task (pad);
     gst_pad_push_event (pad, gst_event_new_eos ());
+    src->priv->last_sent_eos = TRUE;
     goto done;
   }
 }
@@ -1599,6 +1617,8 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
     if (!gst_base_src_start (basesrc))
       goto error_start;
 
+    basesrc->priv->last_sent_eos = FALSE;
+
     /* do initial seek, which will start the task */
     GST_OBJECT_LOCK (basesrc);
     event = basesrc->data.ABI.pending_seek;
@@ -1653,6 +1673,9 @@ gst_base_src_activate_pull (GstPad * pad, gboolean active)
   } else {
     GST_DEBUG_OBJECT (basesrc, "Deactivating in pull mode");
 
+    /* don't send EOS when going from PAUSED => READY when in pull mode */
+    basesrc->priv->last_sent_eos = TRUE;
+
     if (!gst_base_src_stop (basesrc))
       goto error_stop;
 
@@ -1690,6 +1713,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
         no_preroll = TRUE;
         basesrc->live_running = FALSE;
       }
+      basesrc->priv->last_sent_eos = FALSE;
       GST_LIVE_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -1721,7 +1745,12 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (!gst_base_src_stop (basesrc))
         goto error_stop;
-      gst_pad_push_event (basesrc->srcpad, gst_event_new_eos ());
+
+      if (!basesrc->priv->last_sent_eos) {
+        GST_DEBUG_OBJECT (basesrc, "Sending EOS event");
+        gst_pad_push_event (basesrc->srcpad, gst_event_new_eos ());
+        basesrc->priv->last_sent_eos = TRUE;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

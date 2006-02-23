@@ -1,5 +1,20 @@
 2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_init), (gst_base_src_loop),
+	(gst_base_src_activate_push), (gst_base_src_activate_pull),
+	(gst_base_src_change_state):
+	* libs/gst/base/gstbasesrc.h:
+	  Don't unconditionally send EOS when going from PAUSED to
+	  READY state, esp. make sure we don't send two EOS events
+	  in some cases (e.g. one when reaching EOS and one when
+	  going from PAUSED to READY). Also, we don't want to send
+	  EOS events when operating in pull mode. However, we do
+	  want to send an EOS event when shutting down a live
+	  source explicitly, for example (fixes #330996).
+	  
+2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* plugins/elements/gstfilesrc.c: (gst_file_src_create_read):
 	  Update src->read_position after a seek when not using mmap.
 	  Fixes #332277, patch by: Renchi Raju <renchi gmail com>

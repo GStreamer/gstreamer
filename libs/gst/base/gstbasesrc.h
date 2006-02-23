@@ -51,6 +51,7 @@ typedef enum {
 
 typedef struct _GstBaseSrc GstBaseSrc;
 typedef struct _GstBaseSrcClass GstBaseSrcClass;
+typedef struct _GstBaseSrcPrivate GstBaseSrcPrivate;
 
 /**
  * GST_BASE_SRC_PAD:
@@ -103,12 +104,15 @@ struct _GstBaseSrc {
   /*< private >*/
   union {
     struct {
+      /* FIXME: those fields should be moved into the private struct */
       gboolean  typefind;
       gboolean  running;
       GstEvent *pending_seek;
     } ABI;
-    gpointer       _gst_reserved[GST_PADDING_LARGE];
+    gpointer       _gst_reserved[GST_PADDING_LARGE-1];
   } data;
+
+  GstBaseSrcPrivate *priv;
 };
 
 /**
