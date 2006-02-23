@@ -1,5 +1,14 @@
 2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/gst/tmpl/.cvsignore:
+	* docs/plugins/tmpl/.cvsignore:
+	* tests/check/gst/.cvsignore:
+	* tests/check/libs/.cvsignore:
+	* tests/check/pipelines/.cvsignore:
+	  Ignore more stuff.
+
+2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	* tests/check/libs/basesrc.c: (eos_event_counter),
 	(basesrc_eos_events_pull), (basesrc_eos_events_push),

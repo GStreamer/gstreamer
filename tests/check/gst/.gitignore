@@ -22,3 +22,5 @@ gstsystemclock
 gsttag
 gstutils
 gstvalue
+gstquery
+gsttask
