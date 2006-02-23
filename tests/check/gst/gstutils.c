@@ -94,6 +94,10 @@ GST_START_TEST (test_buffer_probe_n_times)
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 
+  /* make sure nothing was sent in addition to the above when shutting down */
+  g_assert (n_buffer_probes == 10);     /* one for every buffer */
+  g_assert (n_event_probes == 2);       /* new segment and eos */
+  g_assert (n_data_probes == 12);       /* duh */
 } GST_END_TEST;
 
 static int n_data_probes_once = 0;

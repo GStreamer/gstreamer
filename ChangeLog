@@ -1,5 +1,12 @@
 2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/gst/gstutils.c: (test_buffer_probe_n_times):
+	  Test case originally showed the problem fixed below,
+	  but was then amended. Add checks back at the place
+	  where they used to be.
+
+2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
 	(gst_base_src_init), (gst_base_src_loop),
 	(gst_base_src_activate_push), (gst_base_src_activate_pull),
