@@ -1,3 +1,9 @@
+2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_create_read):
+	  Update src->read_position after a seek when not using mmap.
+	  Fixes #332277, patch by: Renchi Raju <renchi gmail com>
+
 2006-02-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/Makefile.am:
