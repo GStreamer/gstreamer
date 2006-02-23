@@ -21,12 +21,14 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstasteriskh263.h"
 
+/* Cygwin has both netinet/in.h and winsock2.h, but
+ * only one can be included, so prefer the unix one */
 #ifdef HAVE_NETINET_IN_H
 #  include <netinet/in.h>
-#endif
-
+#else
 #ifdef HAVE_WINSOCK2_H
 #  include <winsock2.h>
+#endif
 #endif
 
 #define GST_ASTERISKH263_HEADER_LEN 6

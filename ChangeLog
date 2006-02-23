@@ -1,3 +1,15 @@
+2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/cdio/Makefile.am:
+	  Add GST_BASE_CFLAGS and GST_BASE_LIBS (seems to be
+	  required for Cygwin, see #317048)
+
+	* gst/rtp/gstasteriskh263.c:
+	  Cygwin has includes for both the unix network socket API
+	  and the windows API, but only one can be included, so fix
+	  includes to only use one or the other, prefering the unxi
+	  one (#317048).
+
 2006-02-23  Philippe Kalaf  <philippe.kalaf at collabora.co.uk>
 
 	* rtp/gst/gstrtppcmadepay.c:

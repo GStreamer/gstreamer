@@ -8,10 +8,12 @@ libgstcdio_la_SOURCES = \
 libgstcdio_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(CDIO_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS)
 
 libgstcdio_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstcdda-@GST_MAJORMINOR@ \
+	$(GST_BASE_LIBS) \
 	$(CDIO_LIBS)
 
 libgstcdio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
