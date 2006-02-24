@@ -1,3 +1,14 @@
+2006-02-04  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_parse_skeleton_fishead),
+	(gst_ogg_pad_parse_skeleton_fisbone), (gst_ogg_pad_query_convert),
+	(gst_ogg_demux_chain_peer), (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_read_chain),
+	(gst_ogg_demux_read_end_chain), (gst_ogg_demux_collect_chain_info),
+	(gst_ogg_demux_change_state), (gst_annodex_granule_to_time):
+	  Annodex support in ogg demuxer. Doesn't do very much without the
+	  other annodex patches (to come).
+
 2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
