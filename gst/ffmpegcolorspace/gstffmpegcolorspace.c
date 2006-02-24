@@ -108,6 +108,7 @@ gst_ffmpegcsp_caps_remove_format_info (GstCaps * caps)
     gst_structure_remove_field (structure, "green_mask");
     gst_structure_remove_field (structure, "blue_mask");
     gst_structure_remove_field (structure, "alpha_mask");
+    gst_structure_remove_field (structure, "palette_data");
   }
 
   gst_caps_do_simplify (caps);
@@ -398,8 +399,13 @@ gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
 
   *size = avpicture_get_size (ctx->pix_fmt, width, height);
 
-  if (space->palette)
-    *size -= 4 * 256;
+  /* ffmpeg frames have the palette after the frame data, whereas
+   * GStreamer currently puts it into the caps as 'palette_data' field,
+   * so for paletted data the frame size avpicture_get_size() returns is
+   * 1024 bytes larger than what GStreamer expects. */
+  if (gst_structure_has_field (structure, "palette_data")) {
+    *size -= 4 * 256;           /* = AVPALETTE_SIZE */
+  }
 
   if (ctx->palctrl)
     av_free (ctx->palctrl);
