@@ -1,3 +1,12 @@
+2006-02-24  Michael Smith  <msmith@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (mpeg4_video_type_find),
+	(cmml_type_find), (plugin_init):
+	  Fix CMML type find function to not require a specific minor version
+	  of the CMML header.
+
+	  Add an MPEG4 video elementary stream typefind function.
+
 2006-02-04  Michael Smith  <msmith@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_parse_skeleton_fishead),

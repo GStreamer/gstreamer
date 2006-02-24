@@ -982,6 +982,30 @@ mpeg1_sys_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** video/mpeg MPEG-4 elementary video stream ***/
+
+static GstStaticCaps mpeg4_video_caps = GST_STATIC_CAPS ("video/mpeg, "
+    "systemstream = (boolean) false, mpegversion = 4");
+#define MPEG4_VIDEO_CAPS gst_static_caps_get(&mpeg4_video_caps)
+static void
+mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
+{
+  /* Header is a video object start code followed by a video object layer
+   * start code. The last byte of this 8-byte header can be from 0x20 - 0x2F */
+  static const guint8 header[] = { 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01 };
+  guint8 *data = NULL;
+
+  data = gst_type_find_peek (tf, 0, 8);
+
+  if (data && memcmp (data, header, 7) == 0 &&
+      data[7] >= 0x20 && data[7] <= 0x2F) {
+    GstCaps *caps = gst_caps_copy (MPEG4_VIDEO_CAPS);
+
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
+    gst_caps_unref (caps);
+  }
+}
+
 /*** video/mpeg video stream ***/
 
 static GstStaticCaps mpeg_video_caps = GST_STATIC_CAPS ("video/mpeg, "
@@ -1808,7 +1832,7 @@ speex_type_find (GstTypeFind * tf, gpointer private)
 
 /*** application/x-ogg-skeleton ***/
 static GstStaticCaps ogg_skeleton_caps =
-GST_STATIC_CAPS ("application/x-ogg-skeleton");
+GST_STATIC_CAPS ("application/x-ogg-skeleton, parsed=(boolean)FALSE");
 #define OGG_SKELETON_CAPS (gst_static_caps_get(&ogg_skeleton_caps))
 static void
 oggskel_type_find (GstTypeFind * tf, gpointer private)
@@ -1838,9 +1862,11 @@ static GstStaticCaps cmml_caps = GST_STATIC_CAPS ("text/x-cmml");
 static void
 cmml_type_find (GstTypeFind * tf, gpointer private)
 {
+  /* Header is 12 bytes minimum (though we don't check the minor version */
   guint8 *data = gst_type_find_peek (tf, 0, 12);
 
   if (data) {
+
     /* 8 byte string "CMML\0\0\0\0" for the magic number */
     if (memcmp (data, "CMML\0\0\0\0", 8) != 0)
       return;
@@ -1848,10 +1874,6 @@ cmml_type_find (GstTypeFind * tf, gpointer private)
 
     /* Require that the header contains at least version 2.0 */
     if (GST_READ_UINT16_LE (data) < 2)
-      return;
-    data += 2;
-
-    if (GST_READ_UINT16_LE (data) != 0)
       return;
 
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, CMML_CAPS);
@@ -2133,6 +2155,7 @@ plugin_init (GstPlugin * plugin)
     "msstyles", "cpl", NULL
   };
   static gchar *flv_exts[] = { "flv", NULL };
+  static gchar *m4v_exts[] = { "m4v" };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -2181,6 +2204,8 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "video/mpeg-stream", GST_RANK_MARGINAL,
       mpeg_video_stream_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL,
       NULL);
+  TYPE_FIND_REGISTER (plugin, "video/mpeg", GST_RANK_PRIMARY,
+      mpeg4_video_type_find, m4v_exts, MPEG_VIDEO_CAPS, NULL, NULL);
 
   /* ISO formats */
   TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,
