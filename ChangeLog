@@ -1,3 +1,13 @@
+2006-02-24  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/Makefile.am: Disable annodex for now until we figure out
+	how to make it build.
+	* ext/gdk_pixbuf/Makefile.am: Note for Thomas :
+	Add a rule to your checklist : "please try to at least build 
+	what you are going to commit into -good, or if you are too lazy
+	to do that, please check that the buildbots are not crying because
+	of your commit."
+
 2006-02-24  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* configure.ac:

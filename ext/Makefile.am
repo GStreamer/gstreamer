@@ -4,11 +4,11 @@ else
 AALIB_DIR =
 endif
 
-if USE_ANNODEX
-ANNODEX_DIR = annodex
-else
-ANNODEX_DIR =
-endif
+# if USE_ANNODEX
+# ANNODEX_DIR = annodex
+# else
+# ANNODEX_DIR =
+# endif
 
 if USE_CAIRO
 CAIRO_DIR = cairo

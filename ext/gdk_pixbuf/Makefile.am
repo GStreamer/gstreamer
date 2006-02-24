@@ -1,8 +1,9 @@
 plugin_LTLIBRARIES = libgstgdkpixbuf.la
 
 libgstgdkpixbuf_la_SOURCES = gstgdkpixbuf.c pixbufscale.c
-libgstgdkpixbuf_la_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS) $(GST_BASE_CFLAGS)
-libgstgdkpixbuf_la_LIBADD = $(GTK_LIBS)  $(GST_BASE_LIBS)
+libgstgdkpixbuf_la_CFLAGS = $(GST_CFLAGS) $(GTK_CFLAGS) $(GST_BASE_CFLAGS) \
+			    $(GST_PLUGINS_BASE_CFLAGS)
+libgstgdkpixbuf_la_LIBADD = $(GTK_LIBS)  $(GST_LIBS) $(GST_BASE_LIBS)
 libgstgdkpixbuf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 
