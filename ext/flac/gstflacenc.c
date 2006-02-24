@@ -44,7 +44,7 @@ GstElementDetails flacenc_details = {
   "signed = (boolean) TRUE, "       \
   "width = (int) 16, "              \
   "depth = (int) 16, "              \
-  "rate = (int) [ 11025, 48000 ], " \
+  "rate = (int) [ 8000, 48000 ], " \
   "channels = (int) [ 1, 2 ]"
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",

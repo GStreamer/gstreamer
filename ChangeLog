@@ -1,3 +1,8 @@
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/flac/gstflacenc.c:
+	  Change min. sample rate to 8kHz to match flacdec's.
+	  
 2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/cdio/Makefile.am:
