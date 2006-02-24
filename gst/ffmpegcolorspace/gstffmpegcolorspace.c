@@ -147,6 +147,7 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
 
   template = gst_ffmpegcsp_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
   result = gst_caps_intersect (caps, template);
+  gst_caps_unref (template);
 
   gst_caps_append (result, gst_ffmpegcsp_caps_remove_format_info (caps));
 
@@ -231,6 +232,7 @@ gst_ffmpegcsp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   if (space->palette)
     av_free (space->palette);
   space->palette = ctx->palctrl;
+  ctx->palctrl = NULL;
 
   /* get to format */
   ctx->pix_fmt = PIX_FMT_NB;
@@ -321,6 +323,17 @@ gst_ffmpegcsp_base_init (GstFFMpegCspClass * klass)
 }
 
 static void
+gst_ffmpegcsp_finalize (GObject * obj)
+{
+  GstFFMpegCsp *space = GST_FFMPEGCSP (obj);
+
+  if (space->palette)
+    av_free (space->palette);
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
+}
+
+static void
 gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
 {
   GObjectClass *gobject_class;
@@ -331,7 +344,9 @@ gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasetransform_class = (GstBaseTransformClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_TRANSFORM);
+  parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ffmpegcsp_finalize);
 
   gstbasetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_ffmpegcsp_transform_caps);
@@ -386,6 +401,8 @@ gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
   if (space->palette)
     *size -= 4 * 256;
 
+  if (ctx->palctrl)
+    av_free (ctx->palctrl);
   av_free (ctx);
 
   return TRUE;

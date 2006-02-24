@@ -1,5 +1,13 @@
 2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_transform_caps), (gst_ffmpegcsp_set_caps),
+	(gst_ffmpegcsp_finalize), (gst_ffmpegcsp_class_init),
+	(gst_ffmpegcsp_get_unit_size):
+	  Plug some memory leaks.
+
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* sys/ximage/Makefile.am:
 	* sys/xvimage/Makefile.am:
 	  Add some _CFLAGS and _LIBS that seem to be missing
