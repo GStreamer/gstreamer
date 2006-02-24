@@ -1,5 +1,35 @@
 2006-02-24  Michael Smith  <msmith@fluendo.com>
 
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* ext/Makefile.am:
+	* ext/annodex/Makefile.am:
+	* ext/annodex/gstannodex.c:
+	* ext/annodex/gstannodex.h:
+	* ext/annodex/gstcmmldec.c:
+	* ext/annodex/gstcmmldec.h:
+	* ext/annodex/gstcmmlenc.c:
+	* ext/annodex/gstcmmlenc.h:
+	* ext/annodex/gstcmmlparser.c:
+	* ext/annodex/gstcmmlparser.h:
+	* ext/annodex/gstcmmltag.c:
+	* ext/annodex/gstcmmltag.h:
+	* ext/annodex/gstcmmlutils.c:
+	* ext/annodex/gstcmmlutils.h:
+	* ext/annodex/gstskeldec.c:
+	* ext/annodex/gstskeldec.h:
+	* ext/annodex/gstskeltag.c:
+	* ext/annodex/gstskeltag.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/cmmldec.c:
+	* tests/check/elements/cmmlenc.c:
+	* tests/check/elements/skeldec.c:
+	  Add Annodex elements from Alessendro Decina: skeleton and CMML. 
+	  Includes tests & docs, oh my! Passes Thomas's -good checklist
+	  entirely. Wow.
+
+2006-02-24  Michael Smith  <msmith@fluendo.com>
+
 	* autogen.sh:
 	  Check for automake 1.9 as well.
 

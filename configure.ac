@@ -133,6 +133,8 @@ dnl common/m4/gst-arch.m4
 dnl check CPU type
 GST_ARCH
 
+AC_SUBST(GST_CTRL_LIBS)
+
 dnl Determine endianness
 AC_C_BIGENDIAN
 
@@ -324,6 +326,18 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
 GST_CHECK_FEATURE(AALIB, [aasink plug-in], aasink, [
   AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)
   AS_SCRUB_INCLUDE(AALIB_CFLAGS)
+])
+
+dnl *** annodex ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ANNODEX, true)
+GST_CHECK_FEATURE(ANNODEX, [annodex plug-in], skeldec cmmlenc cmmldec, [
+  PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.4.9, [
+    HAVE_ANNODEX=yes
+    AC_SUBST(XML_CFLAGS)
+    AC_SUBST(XML_LIBS)
+  ], [
+    HAVE_ANNODEX=no
+  ])
 ])
 
 dnl *** cairo ***
@@ -618,6 +632,7 @@ gst/flx/Makefile
 ext/jpeg/Makefile
 ext/Makefile
 ext/aalib/Makefile
+ext/annodex/Makefile
 ext/cairo/Makefile
 ext/cdio/Makefile
 ext/dv/Makefile

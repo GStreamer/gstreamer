@@ -19,7 +19,10 @@ TESTS = $(check_PROGRAMS)
 
 check_PROGRAMS = \
 	elements/level \
-    elements/matroskamux
+    elements/matroskamux \
+	elements/cmmldec \
+	elements/cmmlenc \
+	elements/skeldec
     
 
 # these tests don't even pass
