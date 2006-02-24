@@ -45,7 +45,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 enum
 {
   PROP_0,
-  PROP_URI,
+  PROP_LOCATION,
   PROP_PROXY
 };
 
@@ -118,9 +118,9 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
   gobject_class->finalize = gst_neonhttp_src_finalize;
 
   g_object_class_install_property
-      (G_OBJECT_CLASS (klass), PROP_URI,
-      g_param_spec_string ("uri", "Uri",
-          "The uri. In the form:"
+      (G_OBJECT_CLASS (klass), PROP_LOCATION,
+      g_param_spec_string ("location", "Location",
+          "The location. In the form:"
           "\n\t\t\thttp://a.com/file.txt - default port '80' "
           "\n\t\t\thttp://a.com:80/file.txt "
           "\n\t\t\ta.com/file.txt - defualt scheme 'HTTP' "
@@ -554,16 +554,16 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
     }
 
       break;
-    case PROP_URI:
+    case PROP_LOCATION:
     {
       if (!g_value_get_string (value)) {
-        GST_WARNING ("uri property cannot be NULL");
+        GST_WARNING ("location property cannot be NULL");
         goto done;
       }
 
       if (!set_uri (g_value_get_string (value), &this->uri, &this->ishttps,
               &this->uristr, FALSE)) {
-        GST_WARNING ("bad formated uri");
+        GST_WARNING ("bad formated location");
         goto done;
       }
     }
@@ -602,7 +602,7 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       }
     }
       break;
-    case PROP_URI:
+    case PROP_LOCATION:
     {
       char *str;
 
