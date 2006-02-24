@@ -48,7 +48,7 @@ gst_ffmpeg_get_palette (const GstCaps *caps, AVCodecContext *context)
   if ((palette_v = gst_structure_get_value (str,
           "palette_data")) && context) {
     palette = gst_value_get_buffer (palette_v);
-    if (GST_BUFFER_SIZE (palette) >= 256 * 4) {
+    if (GST_BUFFER_SIZE (palette) >= AVPALETTE_SIZE) {
       if (context->palctrl)
         av_free (context->palctrl);
       context->palctrl = av_malloc (sizeof (AVPaletteControl));
@@ -63,7 +63,7 @@ static void
 gst_ffmpeg_set_palette (GstCaps *caps, AVCodecContext *context)
 {
   if (context->palctrl) {
-    GstBuffer *palette = gst_buffer_new_and_alloc (256 * 4);
+    GstBuffer *palette = gst_buffer_new_and_alloc (AVPALETTE_SIZE);
 
     memcpy (GST_BUFFER_DATA (palette), context->palctrl->palette,
         AVPALETTE_SIZE);

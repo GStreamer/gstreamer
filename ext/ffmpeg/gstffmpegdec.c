@@ -984,8 +984,12 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
         }
       }
+      /* palette is not part of raw video frame in gst and the size
+       * of the outgoing buffer needs to be adjusted accordingly */
+      if (ffmpegdec->context->palctrl != NULL)
+        GST_BUFFER_SIZE (outbuf) -= AVPALETTE_SIZE;
       break;
-  }
+    }
     case CODEC_TYPE_AUDIO:
       if (!ffmpegdec->last_buffer)
         outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);

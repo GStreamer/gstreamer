@@ -1,3 +1,15 @@
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_get_palette),
+	(gst_ffmpeg_set_palette):
+	  Use AVPALETTE_SIZE macro instead of magic value for clarity.
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
+	  In GStreamer, the size of the palette is not part of
+	  GST_BUFFER_SIZE, so adjust buffer size of outgoing buffers
+	  accordingly if there's a palette (fixes #327028, based on 
+	  patch by: Fabrizio Gennari).
+
 2006-02-21  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
