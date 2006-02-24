@@ -1,3 +1,10 @@
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream),
+	(qtdemux_parse_trak), (qtdemux_video_caps):
+	  Add support for palettised Apple SMC videos (#327075, based on
+	  patch by: Fabrizio Gennari <fabrizio dot ge at tiscali dot it>).
+
 2006-02-24  Michael Smith  <msmith@fluendo.com>
 
 	* autogen.sh:
