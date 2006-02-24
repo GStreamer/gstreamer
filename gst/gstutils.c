@@ -2627,9 +2627,10 @@ gst_atomic_int_set (gint * atomic_int, gint value)
  *
  * Adds a "data probe" to a pad. This function will be called whenever data
  * passes through a pad. In this case data means both events and buffers. The
- * probe will be called with the data as an argument. Note that the data will
- * have a reference count greater than 1, so it will be immutable -- you must
- * not change it.
+ * probe will be called with the data as an argument, meaning @handler should
+ * have the same callback signature as the 'have-data' signal of #GstPad.
+ * Note that the data will have a reference count greater than 1, so it will
+ * be immutable -- you must not change it.
  *
  * For source pads, the probe will be called after the blocking function, if any
  * (see gst_pad_set_blocked_async()), but before looking up the peer to chain

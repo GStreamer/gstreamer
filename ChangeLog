@@ -1,5 +1,11 @@
 2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstutils.c:
+	  Docs enhancement: make it crystal clear what the
+	  gst_pad_add_*_probe() callbacks should look like.
+
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* libs/gst/base/gstbasesrc.c:
 	  Document how applications can stop recording from
 	  live sources (see #330996).
