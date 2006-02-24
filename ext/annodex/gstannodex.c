@@ -25,9 +25,9 @@
 #include "config.h"
 #endif
 
+#include <gst/tag/tag.h>
 #include "gstcmmlenc.h"
 #include "gstcmmldec.h"
-#include "gstskeldec.h"
 
 GstClockTime
 gst_annodex_granule_to_time (gint64 granulepos, gint64 granulerate_n,
@@ -149,9 +149,6 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_cmml_dec_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_skel_dec_plugin_init (plugin))
     return FALSE;
 
   return TRUE;

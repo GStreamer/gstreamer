@@ -1,5 +1,15 @@
 2006-02-25  Julien MOUTTE  <julien@moutte.net>
 
+	* ext/annodex/Makefile.am:
+	* ext/annodex/gstannodex.c: (plugin_init):
+	* ext/annodex/gstcmmldec.c:
+	* ext/annodex/gstskeldec.c:
+	* ext/annodex/gstskeldec.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/skeldec.c: Try to fix Annodex plugin.
+
+2006-02-25  Julien MOUTTE  <julien@moutte.net>
+
 	* tests/check/Makefile.am: Disable those checks as well.
 
 2006-02-24  Julien MOUTTE  <julien@moutte.net>

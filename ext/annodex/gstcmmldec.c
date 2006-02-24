@@ -47,6 +47,7 @@
 #include <string.h>
 #include <glib.h>
 
+#include <gst/tag/tag.h>
 #include "gstannodex.h"
 #include "gstcmmltag.h"
 #include "gstcmmldec.h"
