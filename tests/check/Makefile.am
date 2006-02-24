@@ -21,8 +21,7 @@ check_PROGRAMS = \
 	elements/level \
 	elements/matroskamux \
 	elements/cmmldec \
-	elements/cmmlenc \
-	elements/skeldec
+	elements/cmmlenc
     
 
 # these tests don't even pass

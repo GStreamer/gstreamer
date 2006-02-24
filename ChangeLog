@@ -1,5 +1,9 @@
 2006-02-25  Julien MOUTTE  <julien@moutte.net>
 
+	* tests/check/Makefile.am: Forgot to remove that test.
+
+2006-02-25  Julien MOUTTE  <julien@moutte.net>
+
 	* ext/annodex/Makefile.am:
 	* ext/annodex/gstannodex.c: (plugin_init):
 	* ext/annodex/gstcmmldec.c:
