@@ -1,5 +1,11 @@
 2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	  Pick up palette for MS video v1 (#327028, patch by:
+	  Fabrizio Gennari <fabrizio dot get at tiscali dot it>)
+
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
 	(gst_ffmpegcsp_caps_remove_format_info),
 	(gst_ffmpegcsp_get_unit_size):

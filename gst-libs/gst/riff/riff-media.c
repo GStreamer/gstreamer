@@ -345,6 +345,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
           "msvideoversion", G_TYPE_INT, 1, NULL);
       if (codec_name)
         *codec_name = g_strdup ("MS video v1");
+      palette = strf_data;
+      strf_data = NULL;
       break;
 
     case GST_MAKE_FOURCC ('R', 'L', 'E', ' '):
