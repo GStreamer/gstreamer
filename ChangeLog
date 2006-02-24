@@ -1,3 +1,16 @@
+2006-02-24  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/gdk_pixbuf/Makefile.am:
+	* ext/gdk_pixbuf/gstgdkpixbuf.c:
+	* ext/gdk_pixbuf/gstgdkpixbuf.h:
+	* ext/gdk_pixbuf/pixbufscale.c:
+	* ext/gdk_pixbuf/pixbufscale.h:
+	  Gdkpixbuf ported from 0.8 to 0.10 by
+	  Renato Filho <renato.filho@indt.org.br>.
+	  gst_loader and gdkpixbufanimation still need port.
+
 2006-02-24  Michael Smith  <msmith@fluendo.com>
 
 	* configure.ac:

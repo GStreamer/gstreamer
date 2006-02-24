@@ -232,6 +232,9 @@ if test "x$HAVE_GTK_22" = "xyes"; then
   AC_SUBST(GTK_VERSION)
   GTK_PREFIX=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
   AC_SUBST(GTK_BASE_DIR)
+  GDK_PIXBUF_LIBDIR=`$PKG_CONFIG --variable=libdir gdk-pixbuf-2.0`
+  GDK_PIXBUF_PREFIXDIR=`$PKG_CONFIG --variable=prefix gdk-pixbuf-2.0`
+  AC_SUBST(GTK_BASE_DIR)
 else
   PKG_CHECK_MODULES(GTK2, gtk+-2.0, HAVE_GTK_20=yes, HAVE_GTK_20=no)
 fi
@@ -397,6 +400,12 @@ GST_CHECK_FEATURE(GCONF, [GConf libraries], , [
   PKG_CHECK_MODULES(GCONF, gconf-2.0, HAVE_GCONF="yes", HAVE_GCONF="no")
   AC_SUBST(GCONF_CFLAGS)
   AC_SUBST(GCONF_LIBS)
+])
+
+dnl *** GDK pixbuf ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
+GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbufsrc, [
+  if test $HAVE_GTK_22 = "yes"; then HAVE_GDK_PIXBUF=yes; fi;
 ])
 
 dnl *** HAL ***
@@ -639,6 +648,7 @@ ext/dv/Makefile
 ext/esd/Makefile
 ext/flac/Makefile
 ext/gconf/Makefile
+ext/gdk_pixbuf/Makefile
 ext/hal/Makefile
 ext/ladspa/Makefile
 ext/libcaca/Makefile

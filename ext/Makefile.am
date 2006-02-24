@@ -40,11 +40,11 @@ else
 GCONF_DIR =
 endif
 
-# if USE_GDK_PIXBUF
-# GDK_PIXBUF_DIR = gdk_pixbuf
-# else
+if USE_GDK_PIXBUF
+GDK_PIXBUF_DIR = gdk_pixbuf
+else
 GDK_PIXBUF_DIR =
-# endif
+endif
 
 if USE_HAL
 HAL_DIR = hal
@@ -141,6 +141,7 @@ DIST_SUBDIRS = \
 	esd \
 	flac \
 	gconf \
+	gdk_pixbuf \
 	hal \
 	jpeg \
 	ladspa \

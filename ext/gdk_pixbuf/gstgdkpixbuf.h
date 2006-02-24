@@ -28,15 +28,15 @@
 G_BEGIN_DECLS
 
 /* #define's don't like whitespacey bits */
-#define GST_TYPE_GDK_PIXBUF \
+#define GST_TYPE_GDK_PIXBUF			\
   (gst_gdk_pixbuf_get_type())
-#define GST_GDK_PIXBUF(obj) \
+#define GST_GDK_PIXBUF(obj)						\
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GDK_PIXBUF,GstGdkPixbuf))
-#define GST_GDK_PIXBUF_CLASS(klass) \
+#define GST_GDK_PIXBUF_CLASS(klass)					\
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GDK_PIXBUF,GstGdkPixbuf))
-#define GST_IS_GDK_PIXBUF(obj) \
+#define GST_IS_GDK_PIXBUF(obj)					\
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GDK_PIXBUF))
-#define GST_IS_GDK_PIXBUF_CLASS(obj) \
+#define GST_IS_GDK_PIXBUF_CLASS(obj)				\
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GDK_PIXBUF))
 
 typedef struct _GstGdkPixbuf      GstGdkPixbuf;
@@ -56,8 +56,8 @@ struct _GstGdkPixbuf
   int rowstride;
   unsigned int image_size;
 
-  gint fps_n;
-  gint fps_d;
+  gint framerate_numerator;
+  gint framerate_denominator;
 };
 
 struct _GstGdkPixbufClass 

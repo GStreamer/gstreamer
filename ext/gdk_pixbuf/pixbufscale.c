@@ -36,7 +36,6 @@
 #define GST_RGB24_SIZE(width,height)  ((height)*GST_RGB24_ROWSTRIDE(width))
 
 
-/* debug variable definition */
 GST_DEBUG_CATEGORY (pixbufscale_debug);
 #define GST_CAT_DEFAULT pixbufscale_debug
 
@@ -45,7 +44,9 @@ static GstElementDetails pixbufscale_details =
 GST_ELEMENT_DETAILS ("Gdk Pixbuf scaler",
     "Filter/Effect/Video",
     "Resizes video",
-    "Jan Schmidt <thaytan@mad.scientist.com>\nWim Taymans <wim.taymans@chello.be>");
+    "Jan Schmidt <thaytan@mad.scientist.com>\n"
+    "Wim Taymans <wim.taymans@chello.be>\n"
+    "Renato Filho <renato.filho@indt.org.br>");
 
 /* GstPixbufScale signals and args */
 enum
@@ -81,10 +82,10 @@ gst_pixbufscale_method_get_type (void)
 {
   static GType pixbufscale_method_type = 0;
   static GEnumValue pixbufscale_methods[] = {
-    {GST_PIXBUFSCALE_NEAREST, "Nearest Neighbour", "nearest"},
-    {GST_PIXBUFSCALE_TILES, "Tiles", "tiles"},
-    {GST_PIXBUFSCALE_BILINEAR, "Bilinear", "bilinear"},
-    {GST_PIXBUFSCALE_HYPER, "Hyper", "hyper"},
+    {GST_PIXBUFSCALE_NEAREST, "0", "Nearest Neighbour"},
+    {GST_PIXBUFSCALE_TILES, "1", "Tiles"},
+    {GST_PIXBUFSCALE_BILINEAR, "2", "Bilinear"},
+    {GST_PIXBUFSCALE_HYPER, "3", "Hyper"},
     {0, NULL, NULL},
   };
 
@@ -97,46 +98,33 @@ gst_pixbufscale_method_get_type (void)
 
 static void gst_pixbufscale_base_init (gpointer g_class);
 static void gst_pixbufscale_class_init (GstPixbufScaleClass * klass);
-static void gst_pixbufscale_init (GstPixbufScale * pixbufscale);
-static gboolean gst_pixbufscale_handle_src_event (GstPad * pad,
-    GstEvent * event);
-
+static void gst_pixbufscale_init (GstPixbufScale * pixbufscale,
+    GstPixbufScaleClass * kclass);
 static void gst_pixbufscale_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_pixbufscale_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_pixbufscale_chain (GstPad * pad, GstData * _data);
+static GstCaps *gst_pixbufscale_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps);
+static gboolean gst_pixbufscale_set_caps (GstBaseTransform * trans,
+    GstCaps * in, GstCaps * out);
+static gboolean gst_pixbufscale_get_unit_size (GstBaseTransform * trans,
+    GstCaps * caps, guint * size);
+static void gst_pixbufscale_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+static GstFlowReturn gst_pixbufscale_transform (GstBaseTransform * trans,
+    GstBuffer * in, GstBuffer * out);
+static gboolean gst_pixbufscale_handle_src_event (GstPad * pad,
+    GstEvent * event);
 
-static GstElementClass *parent_class = NULL;
 
-GType
-gst_pixbufscale_get_type (void)
-{
-  static GType pixbufscale_type = 0;
+static gboolean parse_caps (GstCaps * caps, gint * width, gint * height);
 
-  if (!pixbufscale_type) {
-    static const GTypeInfo pixbufscale_info = {
-      sizeof (GstPixbufScaleClass),
-      gst_pixbufscale_base_init,
-      NULL,
-      (GClassInitFunc) gst_pixbufscale_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPixbufScale),
-      0,
-      (GInstanceInitFunc) gst_pixbufscale_init,
-    };
+GST_BOILERPLATE (GstPixbufScale, gst_pixbufscale, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM)
 
-    pixbufscale_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstPixbufScale",
-        &pixbufscale_info, 0);
-  }
-  return pixbufscale_type;
-}
-
-static void
-gst_pixbufscale_base_init (gpointer g_class)
+     static void gst_pixbufscale_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -151,277 +139,43 @@ static void
 gst_pixbufscale_class_init (GstPixbufScaleClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  trans_class = (GstBaseTransformClass *) klass;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_METHOD,
+  gobject_class->set_property = gst_pixbufscale_set_property;
+  gobject_class->get_property = gst_pixbufscale_get_property;
+
+  g_object_class_install_property (gobject_class,
+      ARG_METHOD,
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_PIXBUFSCALE_METHOD, GST_PIXBUFSCALE_BILINEAR,
           G_PARAM_READWRITE));
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_pixbufscale_transform_caps);
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_pixbufscale_set_caps);
+  trans_class->get_unit_size =
+      GST_DEBUG_FUNCPTR (gst_pixbufscale_get_unit_size);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_pixbufscale_transform);
+  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_pixbufscale_fixate_caps);
+  trans_class->passthrough_on_same_caps = TRUE;
 
-  gobject_class->set_property = gst_pixbufscale_set_property;
-  gobject_class->get_property = gst_pixbufscale_get_property;
-}
-
-static GstCaps *
-gst_pixbufscale_getcaps (GstPad * pad)
-{
-  GstPixbufScale *pixbufscale;
-  GstCaps *othercaps;
-  GstCaps *caps;
-  GstPad *otherpad;
-  int i;
-
-  pixbufscale = GST_PIXBUFSCALE (gst_pad_get_parent (pad));
-
-  otherpad = (pad == pixbufscale->srcpad) ? pixbufscale->sinkpad :
-      pixbufscale->srcpad;
-  othercaps = gst_pad_get_allowed_caps (otherpad);
-
-  caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
-  gst_caps_free (othercaps);
-
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (caps, i);
-
-    gst_structure_set (structure,
-        "width", GST_TYPE_INT_RANGE, 16, 4096,
-        "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
-    gst_structure_remove_field (structure, "pixel-aspect-ratio");
-  }
-
-  GST_DEBUG ("getcaps are: %" GST_PTR_FORMAT, caps);
-  return caps;
-}
-
-static GstPadLinkReturn
-gst_pixbufscale_link (GstPad * pad, const GstCaps * caps)
-{
-  GstPixbufScale *pixbufscale;
-  GstPadLinkReturn ret;
-  GstPad *otherpad;
-  GstStructure *structure;
-  int height, width;
-  gchar *caps_string;
-
-  caps_string = gst_caps_to_string (caps);
-  GST_DEBUG ("gst_pixbufscale_link %s\n", caps_string);
-  g_free (caps_string);
-
-  pixbufscale = GST_PIXBUFSCALE (gst_pad_get_parent (pad));
-
-  otherpad = (pad == pixbufscale->srcpad) ? pixbufscale->sinkpad :
-      pixbufscale->srcpad;
-
-  structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", &width);
-  ret &= gst_structure_get_int (structure, "height", &height);
-
-  ret = gst_pad_try_set_caps (otherpad, caps);
-  if (ret == GST_PAD_LINK_OK) {
-    /* cool, we can use passthru */
-
-    pixbufscale->to_width = width;
-    pixbufscale->to_height = height;
-    pixbufscale->from_width = width;
-    pixbufscale->from_height = height;
-
-    pixbufscale->from_buf_size = GST_RGB24_SIZE (width, height);
-    pixbufscale->to_buf_size = GST_RGB24_SIZE (width, height);
-    pixbufscale->from_stride = GST_RGB24_ROWSTRIDE (width);
-    pixbufscale->to_stride = GST_RGB24_ROWSTRIDE (width);
-
-    pixbufscale->inited = TRUE;
-
-    return GST_PAD_LINK_OK;
-  }
-
-  if (gst_pad_is_negotiated (otherpad)) {
-    GstCaps *newcaps = gst_caps_copy (caps);
-
-    if (pad == pixbufscale->srcpad) {
-      gst_caps_set_simple (newcaps,
-          "width", G_TYPE_INT, pixbufscale->from_width,
-          "height", G_TYPE_INT, pixbufscale->from_height, NULL);
-    } else {
-      gst_caps_set_simple (newcaps,
-          "width", G_TYPE_INT, pixbufscale->to_width,
-          "height", G_TYPE_INT, pixbufscale->to_height, NULL);
-    }
-    ret = gst_pad_try_set_caps (otherpad, newcaps);
-    if (GST_PAD_LINK_FAILED (ret)) {
-      return GST_PAD_LINK_REFUSED;
-    }
-  }
-
-  pixbufscale->passthru = FALSE;
-
-  if (pad == pixbufscale->srcpad) {
-    pixbufscale->to_width = width;
-    pixbufscale->to_height = height;
-  } else {
-    pixbufscale->from_width = width;
-    pixbufscale->from_height = height;
-  }
-
-  if (gst_pad_is_negotiated (otherpad)) {
-    pixbufscale->from_buf_size =
-        GST_RGB24_SIZE (pixbufscale->from_width, pixbufscale->from_height);
-    pixbufscale->to_buf_size =
-        GST_RGB24_SIZE (pixbufscale->to_width, pixbufscale->to_height);
-    pixbufscale->from_stride = GST_RGB24_ROWSTRIDE (pixbufscale->from_width);
-    pixbufscale->to_stride = GST_RGB24_ROWSTRIDE (pixbufscale->to_width);
-    pixbufscale->inited = TRUE;
-  }
-
-  return GST_PAD_LINK_OK;
+  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
-gst_pixbufscale_init (GstPixbufScale * pixbufscale)
+gst_pixbufscale_init (GstPixbufScale * pixbufscale,
+    GstPixbufScaleClass * kclass)
 {
   GST_DEBUG_OBJECT (pixbufscale, "_init");
-  pixbufscale->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_pixbufscale_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (pixbufscale), pixbufscale->sinkpad);
-  gst_pad_set_chain_function (pixbufscale->sinkpad, gst_pixbufscale_chain);
-  gst_pad_set_link_function (pixbufscale->sinkpad, gst_pixbufscale_link);
-  gst_pad_set_getcaps_function (pixbufscale->sinkpad, gst_pixbufscale_getcaps);
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (pixbufscale);
 
-  pixbufscale->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_pixbufscale_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (pixbufscale), pixbufscale->srcpad);
-  gst_pad_set_event_function (pixbufscale->srcpad,
-      gst_pixbufscale_handle_src_event);
-  gst_pad_set_link_function (pixbufscale->srcpad, gst_pixbufscale_link);
-  gst_pad_set_getcaps_function (pixbufscale->srcpad, gst_pixbufscale_getcaps);
-
-  pixbufscale->inited = FALSE;
+  gst_pad_set_event_function (trans->srcpad, gst_pixbufscale_handle_src_event);
 
   pixbufscale->method = GST_PIXBUFSCALE_TILES;
   pixbufscale->gdk_method = GDK_INTERP_TILES;
-}
-
-static gboolean
-gst_pixbufscale_handle_src_event (GstPad * pad, GstEvent * event)
-{
-  GstPixbufScale *pixbufscale;
-  double a;
-  GstStructure *structure;
-  GstEvent *new_event;
-
-  pixbufscale = GST_PIXBUFSCALE (gst_pad_get_parent (pad));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NAVIGATION:
-      structure = gst_structure_copy (event->event_data.structure.structure);
-      if (gst_structure_get_double (event->event_data.structure.structure,
-              "pointer_x", &a)) {
-        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
-            a * pixbufscale->from_width / pixbufscale->to_width, NULL);
-      }
-      if (gst_structure_get_double (event->event_data.structure.structure,
-              "pointer_y", &a)) {
-        gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
-            a * pixbufscale->from_height / pixbufscale->to_height, NULL);
-      }
-      gst_event_unref (event);
-      new_event = gst_event_new (GST_EVENT_NAVIGATION);
-      new_event->event_data.structure.structure = structure;
-      return gst_pad_event_default (pad, new_event);
-      break;
-    default:
-      return gst_pad_event_default (pad, event);
-      break;
-  }
-}
-
-static void
-pixbufscale_scale (GstPixbufScale * scale, unsigned char *dest,
-    unsigned char *src)
-{
-  GdkPixbuf *src_pixbuf, *dest_pixbuf;
-
-  src_pixbuf = gdk_pixbuf_new_from_data
-      (src, GDK_COLORSPACE_RGB, FALSE,
-      8, scale->from_width, scale->from_height,
-      GST_RGB24_ROWSTRIDE (scale->from_width), NULL, NULL);
-  dest_pixbuf = gdk_pixbuf_new_from_data
-      (dest, GDK_COLORSPACE_RGB, FALSE,
-      8, scale->to_width, scale->to_height,
-      GST_RGB24_ROWSTRIDE (scale->to_width), NULL, NULL);
-  gdk_pixbuf_scale (src_pixbuf, dest_pixbuf, 0, 0, scale->to_width,
-      scale->to_height, 0, 0,
-      (double) scale->to_width / scale->from_width,
-      (double) scale->to_height / scale->from_height, scale->gdk_method);
-
-  dest_pixbuf = gdk_pixbuf_scale_simple
-      (src_pixbuf, scale->to_width, scale->to_height, scale->gdk_method);
-
-  g_object_unref (src_pixbuf);
-  g_object_unref (dest_pixbuf);
-}
-
-static void
-gst_pixbufscale_chain (GstPad * pad, GstData * _data)
-{
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstPixbufScale *pixbufscale;
-  guchar *data;
-  gulong size;
-  GstBuffer *outbuf;
-
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-
-  pixbufscale = GST_PIXBUFSCALE (gst_pad_get_parent (pad));
-  g_return_if_fail (pixbufscale->inited);
-
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
-
-  if (pixbufscale->passthru) {
-    GST_LOG_OBJECT (pixbufscale, "passing through buffer of %ld bytes in '%s'",
-        size, GST_OBJECT_NAME (pixbufscale));
-    gst_pad_push (pixbufscale->srcpad, GST_DATA (buf));
-    return;
-  }
-
-  GST_LOG_OBJECT (pixbufscale, "got buffer of %ld bytes in '%s'", size,
-      GST_OBJECT_NAME (pixbufscale));
-  GST_LOG_OBJECT (pixbufscale,
-      "size=%ld from=%dx%d to=%dx%d fromsize=%ld (should be %d) tosize=%d",
-      size, pixbufscale->from_width, pixbufscale->from_height,
-      pixbufscale->to_width, pixbufscale->to_height, size,
-      pixbufscale->from_buf_size, pixbufscale->to_buf_size);
-
-  if (size != pixbufscale->from_buf_size) {
-    GST_ERROR ("Incoming RGB data is %d bytes (expected: %d bytes) (%dx%d)\n",
-        size, pixbufscale->from_buf_size, pixbufscale->from_width,
-        pixbufscale->from_height);
-    return;
-  }
-
-  outbuf = gst_pad_alloc_buffer_and_set_caps (pixbufscale->srcpad,
-      GST_BUFFER_OFFSET_NONE, pixbufscale->to_buf_size);
-
-  gst_buffer_stamp (outbuf, buf);
-
-  pixbufscale_scale (pixbufscale, GST_BUFFER_DATA (outbuf), data);
-
-  GST_DEBUG_OBJECT (pixbufscale, "pushing buffer of %d bytes in '%s'",
-      GST_BUFFER_SIZE (outbuf), GST_OBJECT_NAME (pixbufscale));
-
-  gst_pad_push (pixbufscale->srcpad, GST_DATA (outbuf));
-
-  gst_buffer_unref (buf);
 }
 
 static void
@@ -475,6 +229,255 @@ gst_pixbufscale_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+
+static GstCaps *
+gst_pixbufscale_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps)
+{
+  GstPixbufScale *pixbufscale;
+  GstCaps *ret;
+  int i;
+
+  pixbufscale = GST_PIXBUFSCALE (trans);
+  ret = gst_caps_copy (caps);
+
+  for (i = 0; i < gst_caps_get_size (ret); i++) {
+    GstStructure *structure = gst_caps_get_structure (ret, i);
+
+    gst_structure_set (structure,
+        "width", GST_TYPE_INT_RANGE, 16, 4096,
+        "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
+    gst_structure_remove_field (structure, "pixel-aspect-ratio");
+  }
+
+  GST_DEBUG_OBJECT (trans, "returning caps: %", ret);
+  return ret;
+}
+
+static gboolean
+parse_caps (GstCaps * caps, gint * width, gint * height)
+{
+  gboolean ret;
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "width", width);
+  ret &= gst_structure_get_int (structure, "height", height);
+
+  return ret;
+}
+
+static gboolean
+gst_pixbufscale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
+{
+  GstPixbufScale *pixbufscale;
+  gboolean ret;
+
+  pixbufscale = GST_PIXBUFSCALE (trans);
+  ret = parse_caps (in, &pixbufscale->from_width, &pixbufscale->from_height);
+  ret &= parse_caps (out, &pixbufscale->to_width, &pixbufscale->to_height);
+  if (!ret)
+    goto done;
+
+  pixbufscale->from_stride = GST_ROUND_UP_4 (pixbufscale->from_width * 3);
+  pixbufscale->from_buf_size =
+      pixbufscale->from_stride * pixbufscale->from_height;
+
+  pixbufscale->to_stride = GST_ROUND_UP_4 (pixbufscale->to_width * 3);
+  pixbufscale->to_buf_size = pixbufscale->to_stride * pixbufscale->to_height;
+
+  GST_DEBUG_OBJECT (pixbufscale, "from=%dx%d, size %d -> to=%dx%d, size %d",
+      pixbufscale->from_width, pixbufscale->from_height,
+      pixbufscale->from_buf_size, pixbufscale->to_width, pixbufscale->to_height,
+      pixbufscale->to_buf_size);
+
+done:
+  return ret;
+}
+
+
+static gboolean
+gst_pixbufscale_get_unit_size (GstBaseTransform * trans,
+    GstCaps * caps, guint * size)
+{
+  GstPixbufScale *pixbufscale;
+  gint width, height;
+
+  g_return_val_if_fail (size, FALSE);
+
+  pixbufscale = GST_PIXBUFSCALE (trans);
+
+  if (!parse_caps (caps, &width, &height))
+    return FALSE;
+
+  *size = GST_ROUND_UP_4 (width * 3) * height;
+
+  return TRUE;
+}
+
+static void
+gst_pixbufscale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
+    GstCaps * caps, GstCaps * othercaps)
+{
+  GstStructure *ins, *outs;
+  const GValue *from_par, *to_par;
+
+  g_return_if_fail (gst_caps_is_fixed (caps));
+
+  GST_DEBUG_OBJECT (base, "trying to fixate othercaps %" GST_PTR_FORMAT
+      " based on caps %" GST_PTR_FORMAT, othercaps, caps);
+
+  ins = gst_caps_get_structure (caps, 0);
+  outs = gst_caps_get_structure (othercaps, 0);
+
+  from_par = gst_structure_get_value (ins, "pixel-aspect-ratio");
+  to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
+
+  if (from_par && to_par) {
+    GValue to_ratio = { 0, };   /* w/h of output video */
+    int from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
+    int count = 0, w = 0, h = 0, num, den;
+
+    /* if both width and height are already fixed, we can't do anything
+     *      * about it anymore */
+    if (gst_structure_get_int (outs, "width", &w))
+      ++count;
+    if (gst_structure_get_int (outs, "height", &h))
+      ++count;
+    if (count == 2) {
+      GST_DEBUG_OBJECT (base, "dimensions already set to %dx%d, not fixating",
+          w, h);
+      return;
+    }
+
+    gst_structure_get_int (ins, "width", &from_w);
+    gst_structure_get_int (ins, "height", &from_h);
+    from_par_n = gst_value_get_fraction_numerator (from_par);
+    from_par_d = gst_value_get_fraction_denominator (from_par);
+    to_par_n = gst_value_get_fraction_numerator (to_par);
+    to_par_d = gst_value_get_fraction_denominator (to_par);
+
+    g_value_init (&to_ratio, GST_TYPE_FRACTION);
+    gst_value_set_fraction (&to_ratio, from_w * from_par_n * to_par_d,
+        from_h * from_par_d * to_par_n);
+    num = gst_value_get_fraction_numerator (&to_ratio);
+    den = gst_value_get_fraction_denominator (&to_ratio);
+    GST_DEBUG_OBJECT (base,
+        "scaling input with %dx%d and PAR %d/%d to output PAR %d/%d",
+        from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d);
+    GST_DEBUG_OBJECT (base,
+        "resulting output should respect ratio of %d/%d", num, den);
+
+    /* now find a width x height that respects this display ratio.
+     *      * prefer those that have one of w/h the same as the incoming video
+     *           * using wd / hd = num / den */
+
+    /* start with same height, because of interlaced video */
+    /* check hd / den is an integer scale factor, and scale wd with the PAR */
+    if (from_h % den == 0) {
+      GST_DEBUG_OBJECT (base, "keeping video height");
+      h = from_h;
+      w = h * num / den;
+    } else if (from_w % num == 0) {
+      GST_DEBUG_OBJECT (base, "keeping video width");
+      w = from_w;
+      h = w * den / num;
+    } else {
+      GST_DEBUG_OBJECT (base, "approximating but keeping video height");
+      h = from_h;
+      w = h * num / den;
+    }
+    GST_DEBUG_OBJECT (base, "scaling to %dx%d", w, h);
+    /* now fixate */
+    gst_structure_fixate_field_nearest_int (outs, "width", w);
+    gst_structure_fixate_field_nearest_int (outs, "height", h);
+  } else {
+    gint width, height;
+
+    if (gst_structure_get_int (ins, "width", &width)) {
+      if (gst_structure_has_field (outs, "width")) {
+        gst_structure_fixate_field_nearest_int (outs, "width", width);
+      }
+    }
+    if (gst_structure_get_int (ins, "height", &height)) {
+      if (gst_structure_has_field (outs, "height")) {
+        gst_structure_fixate_field_nearest_int (outs, "height", height);
+      }
+    }
+  }
+
+  GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
+}
+
+static GstFlowReturn
+gst_pixbufscale_transform (GstBaseTransform * trans,
+    GstBuffer * in, GstBuffer * out)
+{
+  GstPixbufScale *scale;
+  GdkPixbuf *src_pixbuf, *dest_pixbuf;
+
+  scale = GST_PIXBUFSCALE (trans);
+
+  src_pixbuf =
+      gdk_pixbuf_new_from_data (GST_BUFFER_DATA (in), GDK_COLORSPACE_RGB, FALSE,
+      8, scale->from_width, scale->from_height,
+      GST_RGB24_ROWSTRIDE (scale->from_width), NULL, NULL);
+
+  dest_pixbuf =
+      gdk_pixbuf_new_from_data (GST_BUFFER_DATA (out), GDK_COLORSPACE_RGB,
+      FALSE, 8, scale->to_width, scale->to_height,
+      GST_RGB24_ROWSTRIDE (scale->to_width), NULL, NULL);
+
+  gdk_pixbuf_scale (src_pixbuf, dest_pixbuf, 0, 0,
+      scale->to_width,
+      scale->to_height, 0, 0,
+      (double) scale->to_width / scale->from_width,
+      (double) scale->to_height / scale->from_height, scale->gdk_method);
+
+  g_object_unref (src_pixbuf);
+  g_object_unref (dest_pixbuf);
+
+  return GST_FLOW_OK;
+}
+
+static gboolean
+gst_pixbufscale_handle_src_event (GstPad * pad, GstEvent * event)
+{
+  GstPixbufScale *pixbufscale;
+  gboolean ret;
+  double a;
+  GstStructure *structure;
+
+  pixbufscale = GST_PIXBUFSCALE (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (pixbufscale, "handling %s event",
+      GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NAVIGATION:
+      event =
+          GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+
+      structure = (GstStructure *) gst_event_get_structure (event);
+      if (gst_structure_get_double (structure, "pointer_x", &a)) {
+        gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE,
+            a * pixbufscale->from_width / pixbufscale->to_width, NULL);
+      }
+      if (gst_structure_get_double (structure, "pointer_y", &a)) {
+        gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE,
+            a * pixbufscale->from_height / pixbufscale->to_height, NULL);
+      }
+      break;
+    default:
+      break;
+  }
+
+  ret = gst_pad_event_default (pad, event);
+
+  gst_object_unref (pixbufscale);
+
+  return ret;
+}
 
 gboolean
 pixbufscale_init (GstPlugin * plugin)
