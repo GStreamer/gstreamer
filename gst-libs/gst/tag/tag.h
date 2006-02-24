@@ -63,6 +63,25 @@ G_BEGIN_DECLS
  * MusicBrainz artist sort name
  */
 #define GST_TAG_MUSICBRAINZ_SORTNAME	"musicbrainz-sortname"
+/**
+ * GST_TAG_CMML_STREAM
+ *
+ * Annodex CMML stream element tag
+ */
+#define GST_TAG_CMML_STREAM "cmml-stream"
+/**
+ * GST_TAG_CMML_HEAD
+ *
+ * Annodex CMML head element tag
+ */
+
+#define GST_TAG_CMML_HEAD "cmml-head"
+/**
+ * GST_TAG_CMML_CLIP
+ *
+ * Annodex CMML clip element tag
+ */
+#define GST_TAG_CMML_CLIP "cmml-clip"
 
 
 /* functions for vorbis comment manipulation */
