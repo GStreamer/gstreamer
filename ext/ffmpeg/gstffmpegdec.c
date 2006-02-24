@@ -986,7 +986,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       }
       /* palette is not part of raw video frame in gst and the size
        * of the outgoing buffer needs to be adjusted accordingly */
-      if (ffmpegdec->context->palctrl != NULL)
+      if (ffmpegdec->context->palctrl != NULL && outbuf != NULL)
         GST_BUFFER_SIZE (outbuf) -= AVPALETTE_SIZE;
       break;
     }

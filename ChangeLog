@@ -1,3 +1,9 @@
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
+	  ... can't adjust buffer size of NULL buffers though
+	  (as happens when seeking in video from #327075).
+
 2006-02-24  Michael Smith  <msmith@fluendo.com>
 
 	* autogen.sh:
