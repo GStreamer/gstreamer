@@ -1,3 +1,9 @@
+2006-02-24  Michael Smith  <msmith@fluendo.com>
+
+	* autogen.sh:
+	* gst-libs/ext/ffmpeg/autogen.sh:
+	  Allow automake 1.9
+
 2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_get_palette),
