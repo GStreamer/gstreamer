@@ -34,3 +34,6 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 VALGRIND_TESTS_DISABLE =
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
+
+elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
+elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)

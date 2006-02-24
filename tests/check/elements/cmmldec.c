@@ -23,6 +23,8 @@
 
 #include <gst/check/gstcheck.h>
 
+#include <gst/tag/tag.h>
+
 #define SINK_CAPS "text/xml"
 #define SRC_CAPS "text/x-cmml"
 

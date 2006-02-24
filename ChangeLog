@@ -1,5 +1,12 @@
 2006-02-25  Julien MOUTTE  <julien@moutte.net>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/cmmldec.c:
+	* tests/check/elements/cmmlenc.c: Fix tests so that they use
+	the plugins-base tags.
+
+2006-02-25  Julien MOUTTE  <julien@moutte.net>
+
 	* ext/Makefile.am: Re-enable module.
 
 2006-02-25  Julien MOUTTE  <julien@moutte.net>
