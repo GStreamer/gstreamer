@@ -33,18 +33,22 @@
  *   <listitem><para>live sources</para></listitem>
  * </itemizedlist>
  *
+ * <refsect2>
+ * <para>
  * The source can be configured to operate in a any #GstFormat with the
  * gst_base_src_set_format(). This format determines the format of the
  * internal #GstSegment and the #GST_EVENT_NEW_SEGMENT. The default format for
  * #GstBaseSrc is GST_FORMAT_BYTES.
- *
+ * </para>
+ * <para>
  * #GstBaseSrc always supports the push mode scheduling. If the following
  * conditions are met, it also supports pull mode scheduling:
  * <itemizedlist>
  *   <listitem><para>the format is set to GST_FORMAT_BYTES (default).</para></listitem>
  *   <listitem><para>#GstBaseSrc::is_seekable returns TRUE.</para></listitem>
  * </itemizedlist>
- *
+ * </para>
+ * <para>
  * If all the conditions are met for operating in pull mode, #GstBaseSrc is
  * automatically seekable in push mode as well. The following conditions must be
  * met to make the element seekable in push mode when the format is not
@@ -61,34 +65,41 @@
  *     #GstBaseSrc::do_seek is implemented, performs the seek and returns TRUE.
  *   </para></listitem>
  * </itemizedlist>
- *
+ * </para>
+ * <para>
  * When the default format is not GST_FORMAT_BYTES, the element should ignore the
  * offset and length in the #GstBaseSrc::create method. It is recommended to subclass
  * #GstPushSrc instead in this situation.
- *
+ * </para>
+ * <para>
  * #GstBaseSrc has support for live sources. Live sources are sources that produce
  * data at a fixed rate, such as audio or video capture. A typical live source also
  * provides a clock to export the rate at which they produce data.
  * Use gst_base_src_set_live() to activate the live source mode.
- *
+ * </para>
+ * <para>
  * A live source does not produce data in the PAUSED state, this means that the 
  * #GstBaseSrc::create method will not be called in PAUSED but only in PLAYING.
  * To signal the pipeline that the element will not produce data, its return
  * value from the READY to PAUSED state will be GST_STATE_CHANGE_NO_PREROLL.
- * 
+ * </para>
+ * <para>
  * A typical live source will timestamp the buffers they create with the current
  * stream time of the pipeline. This is why they can only produce data in PLAYING,
  * when the clock is actually distributed and running.
- *
+ * </para>
+ * <para>
  * The #GstBaseSrc::get_times method can be used to implement pseudo-live sources.
  * The base source will wait for the specified stream time returned in 
  * #GstBaseSrc::get_times before pushing out the buffer. It only makes sense to implement
  * the ::get_times function if the source is a live source.
- *
+ * </para>
+ * <para>
  * There is only support in GstBaseSrc for one source pad, which should be named
  * "src". A source implementation (subclass of GstBaseSrc) should install a pad
  * template in its base_init function, like so:
- *
+ * </para>
+ * <para>
  * <programlisting>
  * static void
  * my_element_base_init (gpointer g_class)
@@ -102,8 +113,48 @@
  *   gst_element_class_set_details (gstelement_class, &amp;details);
  * }
  * </programlisting>
- *
+ * </para>
+ * <title>Controlled shutdown of live sources in applications</title>
+ * <para>
+ * Applications that record from a live source may want to stop recording
+ * in a controlled way, so that the recording is stopped, but the data
+ * already in the pipeline processed to the end (remember that many live
+ * sources would go on recording forever otherwise). For that to happen the
+ * application needs to make the source stop recording and send an EOS
+ * event down the pipeline. The application would then wait for an
+ * EOS message posted on the pipeline's bus to know when all data has
+ * been processed and the pipeline can safely be stopped.
+ * </para>
+ * <para>
+ * Since GStreamer 0.10.3 an application may simply set the source
+ * element to NULL or READY state to make it send an EOS event downstream.
+ * The application should lock the state of the source afterwards, so that
+ * shutting down the pipeline from PLAYING doesn't temporarily start up the
+ * source element for a second time:
+ * <programlisting>
+ * ...
+ * // stop recording
+ * gst_element_set_state (audio_source, GST_STATE_NULL);
+ * gst_element_get_state (audio_source, NULL, NULL, -1);
+ * gst_element_set_locked_state (audio_source, TRUE);
+ * ...
+ * </programlisting>
+ * Now the application should wait for an EOS message
+ * to be posted on the pipeline's bus. Once it has received
+ * an EOS message, it may safely shut down the entire pipeline:
+ * <programlisting>
+ * ...
+ * // everything done - shut down pipeline
+ * gst_element_set_state (pipeline, GST_STATE_NULL);
+ * gst_element_get_state (pipeline, NULL, NULL, -1);
+ * gst_element_set_locked_state (audio_source, FALSE);
+ * ...
+ * </programlisting>
+ * </para>
+ * <para>
  * Last reviewed on 2005-12-18 (0.10.0)
+ * </para>
+ * </refsect2>
  */
 
 #include <stdlib.h>

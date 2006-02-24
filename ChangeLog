@@ -1,3 +1,9 @@
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gstbasesrc.c:
+	  Document how applications can stop recording from
+	  live sources (see #330996).
+
 2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/tmpl/.cvsignore:
