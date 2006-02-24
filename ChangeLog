@@ -1,3 +1,10 @@
+2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/ximage/Makefile.am:
+	* sys/xvimage/Makefile.am:
+	  Add some _CFLAGS and _LIBS that seem to be missing
+	  and/or required for Cygwin (see #317048).
+
 2006-02-22  Wim Taymans  <wim@fluendo.com>
 
 	* ext/alsa/gstalsasrc.c:
