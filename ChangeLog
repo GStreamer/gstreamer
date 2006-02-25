@@ -1,3 +1,7 @@
+2006-02-25  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/glsink/glimagesink.c: It doesn't seem we need GLU.h
+
 2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream),
