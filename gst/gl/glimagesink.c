@@ -32,7 +32,6 @@
 
 #include <GL/glx.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
 
 GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define GST_CAT_DEFAULT gst_debug_glimage_sink
