@@ -539,8 +539,10 @@ gst_cmml_enc_push_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip,
   /* set the granulepos */
   granulepos = gst_cmml_clock_time_to_granule (prev_clip_time, clip->start_time,
       enc->granulerate_n, enc->granulerate_d, enc->granuleshift);
-  if (granulepos == -1)
+  if (granulepos == -1) {
+    gst_buffer_unref (buffer);
     goto granule_overflow;
+  }
 
   GST_BUFFER_OFFSET_END (buffer) = granulepos;
   GST_BUFFER_TIMESTAMP (buffer) = clip->start_time;
