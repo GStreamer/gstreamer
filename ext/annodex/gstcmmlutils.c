@@ -186,13 +186,28 @@ gst_cmml_clock_time_to_granule (GstClockTime prev_time,
   if (prev_time > current_time)
     return -1;
 
+  /* GST_SECOND / (granulerate_n / granulerate_d) */
   granulerate = gst_util_uint64_scale (GST_SECOND,
-      granulerate_n, granulerate_d);
-  keyindex = prev_time / granulerate << granuleshift;
-  keyoffset = (current_time - prev_time) / granulerate;
+      granulerate_d, granulerate_n);
+
+  prev_time = prev_time / granulerate;
+  if (prev_time > (((guint64) 1 << (64 - granuleshift)) - 1))
+    /* we need more than 64 - granuleshift bits to encode prev_time */
+    goto overflow;
+
+  keyindex = prev_time << granuleshift;
+
+  keyoffset = (current_time / granulerate) - prev_time;
+  if (keyoffset > ((guint64) 1 << granuleshift) - 1)
+    /* we need more than granuleshift bits to encode prev_time - current_time */
+    goto overflow;
+
   granulepos = keyindex + keyoffset;
 
   return granulepos;
+
+overflow:
+  return -1;
 }
 
 /* track list */
@@ -221,8 +236,6 @@ gst_cmml_track_list_destroy_track (gchar * key,
 void
 gst_cmml_track_list_destroy (GHashTable * tracks)
 {
-  g_return_if_fail (tracks != NULL);
-
   g_hash_table_foreach_remove (tracks,
       (GHRFunc) gst_cmml_track_list_destroy_track, NULL);
   g_hash_table_destroy (tracks);
@@ -240,28 +253,24 @@ gst_cmml_track_list_compare_clips (GstCmmlTagClip * a, GstCmmlTagClip * b)
 void
 gst_cmml_track_list_add_clip (GHashTable * tracks, GstCmmlTagClip * clip)
 {
-  GstCmmlTrack *track = NULL;
-  gchar *track_name = NULL;
-  void *key = NULL, *value = NULL;
+  gpointer key, value;
+  GstCmmlTrack *track;
+  gchar *track_name;
 
-  /* find clip's track */
-  g_hash_table_lookup_extended (tracks, clip->track, &key, &value);
-  track_name = (gchar *) key;
-  track = (GstCmmlTrack *) track;
+  g_return_if_fail (clip->track != NULL);
 
-  if (track_name == NULL)
-    /* it doesn't exist yet: create its key */
+  if (g_hash_table_lookup_extended (tracks, clip->track, &key, &value)) {
+    track_name = (gchar *) key;
+    track = (GstCmmlTrack *) value;
+  } else {
     track_name = g_strdup ((gchar *) clip->track);
-
-  if (track == NULL)
     track = g_new0 (GstCmmlTrack, 1);
+    g_hash_table_insert (tracks, track_name, track);
+  }
 
   /* add clip to the tracklist */
   track->clips = g_list_insert_sorted (track->clips, g_object_ref (clip),
       (GCompareFunc) gst_cmml_track_list_compare_clips);
-
-  /* reset the head every time as it could change */
-  g_hash_table_insert (tracks, track_name, track);
 }
 
 gboolean
@@ -270,6 +279,8 @@ gst_cmml_track_list_del_clip (GHashTable * tracks, GstCmmlTagClip * clip)
   GstCmmlTrack *track;
   GList *link;
   gboolean res = FALSE;
+
+  g_return_val_if_fail (clip->track != NULL, FALSE);
 
   track = g_hash_table_lookup (tracks, clip->track);
   if (track) {
@@ -292,6 +303,8 @@ gst_cmml_track_list_has_clip (GHashTable * tracks, GstCmmlTagClip * clip)
   GstCmmlTagClip *tmp;
   gchar *clip_id = (gchar *) clip->id;
   gboolean res = FALSE;
+
+  g_return_val_if_fail (clip_id != NULL, FALSE);
 
   track = g_hash_table_lookup (tracks, clip_id);
   if (track) {
@@ -329,6 +342,8 @@ gst_cmml_track_list_get_track_clips (GHashTable * tracks,
 {
   GstCmmlTrack *track;
 
+  g_return_val_if_fail (track_name != NULL, NULL);
+
   track = g_hash_table_lookup (tracks, track_name);
   return track ? track->clips : NULL;
 }
@@ -350,6 +365,8 @@ gst_cmml_track_list_get_track_last_clip (GHashTable * tracks,
   GstCmmlTrack *track;
   GList *res = NULL;
 
+  g_return_val_if_fail (track_name != NULL, NULL);
+
   track = g_hash_table_lookup (tracks, track_name);
   if (track && track->clips)
     res = g_list_last (track->clips);
@@ -363,6 +380,8 @@ gst_cmml_track_list_set_data (GHashTable * tracks,
 {
   GstCmmlTrack *track;
 
+  g_return_if_fail (track_name != NULL);
+
   track = g_hash_table_lookup (tracks, track_name);
   if (track)
     track->user_data = data;
@@ -372,6 +391,8 @@ gpointer
 gst_cmml_track_get_data (GHashTable * tracks, const gchar * track_name)
 {
   GstCmmlTrack *track;
+
+  g_return_val_if_fail (track_name != NULL, NULL);
 
   track = g_hash_table_lookup (tracks, track_name);
   return track ? track->user_data : NULL;

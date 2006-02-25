@@ -69,6 +69,8 @@ struct _GstCmmlParser
   GstCmmlParserClipCallback clip_callback;
 };
 
+void gst_cmml_parser_init (void);
+
 GstCmmlParser *gst_cmml_parser_new (GstCmmlParserMode mode);
 void gst_cmml_parser_free (GstCmmlParser * parser);
 

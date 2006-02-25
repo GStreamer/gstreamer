@@ -75,14 +75,14 @@ static GstStaticPadTemplate gst_cmml_enc_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/x-cmml")
+    GST_STATIC_CAPS ("text/x-cmml, encoded = (boolean) true")
     );
 
 static GstStaticPadTemplate gst_cmml_enc_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/xml")
+    GST_STATIC_CAPS ("text/x-cmml, encoded = (boolean) false")
     );
 
 GST_BOILERPLATE (GstCmmlEnc, gst_cmml_enc, GstElement, GST_TYPE_ELEMENT);
@@ -103,9 +103,6 @@ static void gst_cmml_enc_parse_tag_clip (GstCmmlEnc * enc,
     GstCmmlTagClip * tag);
 static GstFlowReturn gst_cmml_enc_new_buffer (GstCmmlEnc * enc,
     guchar * data, gint size, GstBuffer ** buffer);
-#if 0
-static void gst_cmml_enc_flush_clips (GstCmmlEnc * enc);
-#endif
 static GstFlowReturn gst_cmml_enc_push_clip (GstCmmlEnc * enc,
     GstCmmlTagClip * clip, GstClockTime prev_clip_time);
 static GstFlowReturn gst_cmml_enc_push (GstCmmlEnc * enc, GstBuffer * buffer);
@@ -137,13 +134,13 @@ gst_cmml_enc_class_init (GstCmmlEncClass * enc_class)
       g_param_spec_int64 ("granule-rate-numerator",
           "Granulerate numerator",
           "Granulerate numerator",
-          0, G_MAXINT64, 1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXINT64, 1000, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (klass, GST_CMML_ENC_GRANULERATE_D,
       g_param_spec_int64 ("granule-rate-denominator",
           "Granulerate denominator",
           "Granulerate denominator",
-          0, G_MAXINT64, 1000, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXINT64, 1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (klass, GST_CMML_ENC_GRANULESHIFT,
       g_param_spec_uchar ("granule-shift",
@@ -304,15 +301,15 @@ gst_cmml_enc_new_buffer (GstCmmlEnc * enc,
     if (data)
       memcpy (GST_BUFFER_DATA (*buffer), data, size);
   } else {
-    GST_ELEMENT_ERROR (enc, STREAM, ENCODE,
-        (NULL), ("alloc function returned error %s", gst_flow_get_name (res)));
+    GST_WARNING_OBJECT (enc, "alloc function returned error %s",
+        gst_flow_get_name (res));
   }
 
   return res;
 }
 
 static GstCaps *
-gst_cmml_enc_set_header_on_caps (GstCaps * caps,
+gst_cmml_enc_set_header_on_caps (GstCmmlEnc * enc, GstCaps * caps,
     GstBuffer * ident, GstBuffer * preamble, GstBuffer * head)
 {
   GValue array = { 0 };
@@ -387,13 +384,6 @@ gst_cmml_enc_parse_end_tag (GstCmmlEnc * enc)
   GstBuffer *buffer;
 
   GST_INFO_OBJECT (enc, "parsing end tag");
-#if 0
-  if (!enc->streaming)
-    gst_cmml_enc_flush_clips (enc);
-
-  if (GST_FLOW_IS_FATAL (enc->flow_return))
-    goto done;
-#endif
 
   /* push an empty buffer to signal EOS */
   enc->flow_return = gst_cmml_enc_new_buffer (enc, NULL, 0, &buffer);
@@ -444,24 +434,23 @@ gst_cmml_enc_parse_tag_head (GstCmmlEnc * enc, GstCmmlTagHead * head)
   headers = g_list_append (headers, head_buf);
 
   caps = gst_pad_get_caps (enc->srcpad);
-  /* this call unrefs caps and creates new caps */
-  caps = gst_cmml_enc_set_header_on_caps (caps,
+  caps = gst_cmml_enc_set_header_on_caps (enc, caps,
       ident_buf, preamble_buf, head_buf);
 
-  for (walk = headers; walk; walk = walk->next) {
-    buffer = GST_BUFFER (walk->data);
+  while (headers) {
+    buffer = GST_BUFFER (headers->data);
     /* set granulepos 0 on headers */
     GST_BUFFER_OFFSET_END (buffer) = 0;
     gst_buffer_set_caps (buffer, caps);
 
     enc->flow_return = gst_cmml_enc_push (enc, buffer);
+    headers = g_list_delete_link (headers, headers);
+
     if (GST_FLOW_IS_FATAL (enc->flow_return))
       goto push_error;
-
   }
 
   gst_caps_unref (caps);
-  g_list_free (headers);
 
   enc->sent_headers = TRUE;
   return;
@@ -481,22 +470,6 @@ alloc_error:
   return;
 }
 
-#if 0
-static void
-gst_cmml_enc_flush_clips (GstCmmlEnc * enc)
-{
-  GList *clips, *walk;
-
-  clips = gst_cmml_track_list_get_clips (enc->tracks);
-  for (walk = clips; walk; walk = g_list_next (walk)) {
-    enc->flow_return = gst_cmml_enc_push_clip (enc,
-        GST_CMML_TAG_CLIP (walk->data));
-    if (!GST_FLOW_IS_FATAL (enc->flow_return))
-      break;
-  }
-}
-#endif
-
 /* encode a CMML clip tag
  * remove the start and end attributes (GstCmmlParser does this itself) and
  * push the tag with the timestamp of its start attribute. If the tag has the
@@ -510,7 +483,7 @@ gst_cmml_enc_parse_tag_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip)
 
   /* this can happen if there's a programming error (eg user forgets to set
    * the start-time property) or if one of the gst_cmml_clock_time_from_*
-   * overflows in the GstCmmlParser code */
+   * overflows in GstCmmlParser */
   if (clip->start_time == GST_CLOCK_TIME_NONE) {
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE,
         (NULL), ("invalid start time for clip (%s)", clip->id));
@@ -519,10 +492,12 @@ gst_cmml_enc_parse_tag_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip)
     return;
   }
 
+  /* get the previous clip's start time to encode the current granulepos */
   prev_clip = gst_cmml_track_list_get_track_last_clip (enc->tracks,
       (gchar *) clip->track);
   if (prev_clip) {
     prev_clip_time = prev_clip->start_time;
+    /* we don't need the prev clip anymore */
     gst_cmml_track_list_del_clip (enc->tracks, prev_clip);
   }
 
@@ -543,10 +518,8 @@ gst_cmml_enc_push_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip,
 
   if (prev_clip_time != GST_CLOCK_TIME_NONE &&
       prev_clip_time > clip->start_time) {
-    GST_ELEMENT_ERROR (enc, STREAM, ENCODE,
-        (NULL), ("previous clip start time > current clip (%s) start time",
-            clip->id));
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (enc,
+        "previous clip start time > current clip (%s) start time", clip->id);
   }
 
   /* encode the clip */
@@ -566,6 +539,9 @@ gst_cmml_enc_push_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip,
   /* set the granulepos */
   granulepos = gst_cmml_clock_time_to_granule (prev_clip_time, clip->start_time,
       enc->granulerate_n, enc->granulerate_d, enc->granuleshift);
+  if (granulepos == -1)
+    goto granule_overflow;
+
   GST_BUFFER_OFFSET_END (buffer) = granulepos;
   GST_BUFFER_TIMESTAMP (buffer) = clip->start_time;
 
@@ -574,8 +550,7 @@ gst_cmml_enc_push_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip,
     goto done;
 
   if (clip->end_time != GST_CLOCK_TIME_NONE) {
-    /* create a new empty clip for the same cmml "track" starting at
-     * "end_time"
+    /* create a new empty clip for the same cmml track starting at end_time
      */
     GObject *end_clip = g_object_new (GST_TYPE_CMML_TAG_CLIP,
         "start-time", clip->end_time, "track", clip->track, NULL);
@@ -587,6 +562,10 @@ gst_cmml_enc_push_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip,
   }
 done:
   return res;
+
+granule_overflow:
+  GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL), ("granulepos overflow"));
+  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
@@ -600,7 +579,7 @@ gst_cmml_enc_push (GstCmmlEnc * enc, GstBuffer * buffer)
   res = gst_pad_push (enc->srcpad, buffer);
   if (GST_FLOW_IS_FATAL (res))
     GST_ELEMENT_ERROR (enc, STREAM, ENCODE,
-        (NULL), ("could not push the buffer: %s", gst_flow_get_name (res)));
+        (NULL), ("could not push buffer: %s", gst_flow_get_name (res)));
 
   return res;
 }

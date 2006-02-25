@@ -1,3 +1,21 @@
+2006-02-25  Alessandro Decina <alessandro@nnva.org>
+
+	* ext/annodex/Makefile.am:
+	* ext/annodex/gstannodex.c:
+	* ext/annodex/gstcmmldec.c:
+	* ext/annodex/gstcmmlenc.c:
+	* ext/annodex/gstcmmlparser.c:
+	* ext/annodex/gstcmmlparser.h:
+	* ext/annodex/gstcmmlutils.c:
+	* tests/check/elements/cmmldec.c:
+	* tests/check/elements/cmmlenc.c:
+	  Fix a memleak in gst_cmml_track_list_add_clip.
+	  Handle overflows in clip's start and end times.
+	  Add the "encoded" parameter to cmmldec and cmmlenc caps.
+	  Do not parse junk at the end of a CMML preamble buffer.
+	  Register a libxml error handler to not print stuff on stderr.
+	  Check for bad clip start and end times in the testsuites.
+
 2006-02-25  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/annodex/gstcmmldec.c: (gst_cmml_dec_class_init),

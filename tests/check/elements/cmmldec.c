@@ -25,14 +25,14 @@
 
 #include <gst/tag/tag.h>
 
-#define SINK_CAPS "text/xml"
+#define SINK_CAPS "text/x-cmml"
 #define SRC_CAPS "text/x-cmml"
 
 #define IDENT_HEADER \
   "CMML\x00\x00\x00\x00"\
   "\x03\x00\x00\x00"\
-  "\x01\x00\x00\x00\x00\x00\x00\x00"\
   "\xe8\x03\x00\x00\x00\x00\x00\x00"\
+  "\x01\x00\x00\x00\x00\x00\x00\x00"\
   "\x20"
 
 #define XML_PREAMBLE \
@@ -269,11 +269,8 @@ GST_START_TEST (test_dec)
   /* send EOS to flush clip-2 and clip-3 */
   gst_pad_send_event (GST_PAD_PEER (srcpad), gst_event_new_eos ());
 
-  printf ("Check1\n");
   check_clip ("clip-1", "default", "0:00:01.234", NULL);
-  printf ("Check2\n");
   check_clip ("clip-2", "othertrack", "0:00:04.321", NULL);
-  printf ("Check3\n");
   check_clip ("clip-3", "default", "100:59:59.678", NULL);
   check_end ();
 

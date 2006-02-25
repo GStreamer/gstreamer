@@ -12,8 +12,7 @@ libgstannodex_la_SOURCES = \
 	gstcmmldec.c \
 	gstcmmlenc.c \
 	gstcmmltag.c \
-	gstcmmlparser.c \
-	gstskeltag.c
+	gstcmmlparser.c
 
 # flags used to compile this plugin
 # we use the GST_LIBS flags because we might be using plug-in libs

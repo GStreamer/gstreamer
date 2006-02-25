@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-08 18:36+0100\n"
+"POT-Creation-Date: 2006-02-25 19:58+0100\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ext/libpng/gstpngdec.c:275 ext/libpng/gstpngdec.c:438
-#: gst/wavparse/gstwavparse.c:1142
+#: gst/wavparse/gstwavparse.c:1149
 msgid "Internal data stream error."
 msgstr ""
 

@@ -25,7 +25,9 @@
 #include "config.h"
 #endif
 
+#include <math.h>
 #include <gst/tag/tag.h>
+#include "gstcmmlparser.h"
 #include "gstcmmlenc.h"
 #include "gstcmmldec.h"
 
@@ -49,9 +51,9 @@ gst_annodex_granule_to_time (gint64 granulepos, gint64 granulerate_n,
     granulepos = keyindex + keyoffset;
   }
 
-  /* GST_SECOND / granulerate_n / granulerate_d */
+  /* GST_SECOND / (granulerate_n / granulerate_d) */
   granulerate = gst_util_uint64_scale (GST_SECOND,
-      granulerate_n, granulerate_d);
+      granulerate_d, granulerate_n);
 
   /* granulepos * granulerate */
   res = gst_util_uint64_scale (granulepos, granulerate, 1);
@@ -135,7 +137,6 @@ fail:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-
   gst_tag_register (GST_TAG_CMML_STREAM, GST_TAG_FLAG_META,
       GST_TYPE_CMML_TAG_STREAM, "cmml-stream", "annodex CMML stream tag", NULL);
 
@@ -144,6 +145,8 @@ plugin_init (GstPlugin * plugin)
 
   gst_tag_register (GST_TAG_CMML_CLIP, GST_TAG_FLAG_META,
       GST_TYPE_CMML_TAG_CLIP, "cmml-clip", "annodex CMML clip tag", NULL);
+
+  gst_cmml_parser_init ();
 
   if (!gst_cmml_enc_plugin_init (plugin))
     return FALSE;

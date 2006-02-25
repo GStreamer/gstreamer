@@ -26,13 +26,13 @@
 #include <gst/tag/tag.h>
 
 #define SINK_CAPS "text/x-cmml"
-#define SRC_CAPS "text/xml"
+#define SRC_CAPS "text/x-cmml"
 
 #define IDENT_HEADER \
   "CMML\x00\x00\x00\x00"\
   "\x03\x00\x00\x00"\
-  "\x01\x00\x00\x00\x00\x00\x00\x00"\
   "\xe8\x03\x00\x00\x00\x00\x00\x00"\
+  "\x01\x00\x00\x00\x00\x00\x00\x00"\
   "\x20"
 
 #define XML_PREAMBLE \
@@ -154,7 +154,7 @@ setup_cmmlenc ()
       "granule-rate-denominator", &granulerate_d,
       "granule-shift", &granuleshift, NULL);
 
-  granulerate = GST_SECOND * granulerate_n / granulerate_d;
+  granulerate = GST_SECOND * granulerate_d / granulerate_n;
   buffers = NULL;
   return cmmlenc;
 }
@@ -240,7 +240,7 @@ push_clip (const gchar * name, const gchar * track,
   if (track == NULL)
     track = "default";
 
-  clip = g_strdup_printf (CLIP_TEMPLATE, name, track, start, end);
+  clip = g_strdup_printf (CLIP_TEMPLATE, name, track, start);
   push_data (name, clip, strlen (clip), expected_return);
   g_free (clip);
 }
@@ -317,16 +317,29 @@ GST_START_TEST (test_bad_start_time)
 
   check_headers ();
 
-  push_clip ("clip-1", "default", "1.234", NULL, GST_FLOW_OK);
-  check_clip ("clip-1", "default", 1234 * granulerate, 0);
+  push_clip ("clip-1", "default", "1000:00:00.000", NULL, GST_FLOW_OK);
+  check_clip ("clip-1", "default", (guint64) 3600000 * 1000 * granulerate, 0);
 
-  push_clip ("clip-bad", "default", "1.1000", NULL, GST_FLOW_ERROR);
+  /* keyindex overflow: npt:1000:00:00.000 doesn't fit in 32 bits */
+  push_clip ("clip-2", NULL, "5.678", NULL, GST_FLOW_ERROR);
 
-  push_clip ("clip-2", NULL, "5.678", NULL, GST_FLOW_OK);
-  check_clip ("clip-2", "default", 5678 * granulerate, 1234 * granulerate);
-
+  /* other tracks should work */
   push_clip ("clip-3", "othertrack", "9.123", NULL, GST_FLOW_OK);
   check_clip ("clip-3", "othertrack", 9123 * granulerate, 0);
+
+  /* bad msecs */
+  push_clip ("clip-bad-msecs", "default", "0.1000", NULL, GST_FLOW_ERROR);
+
+  /* bad secs */
+  push_clip ("clip-bad-secs", "default", "00:00:60.123", NULL, GST_FLOW_ERROR);
+
+  /* bad minutes */
+  push_clip ("clip-bad-minutes", "default", "00:60:12.345",
+      NULL, GST_FLOW_ERROR);
+
+  /* bad hours */
+  push_clip ("clip-bad-hours", "default", "10000:12:34.567",
+      NULL, GST_FLOW_ERROR);
 
   push_end ();
   check_end ();

@@ -79,14 +79,14 @@ static GstStaticPadTemplate gst_cmml_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/xml")
+    GST_STATIC_CAPS ("text/x-cmml, encoded = (boolean) false")
     );
 
 static GstStaticPadTemplate gst_cmml_dec_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/x-cmml")
+    GST_STATIC_CAPS ("text/x-cmml, encoded = (boolean) true")
     );
 
 /* GstCmmlDec */
@@ -449,6 +449,9 @@ gst_cmml_dec_new_buffer (GstCmmlDec * dec,
     if (data)
       memcpy (GST_BUFFER_DATA (*buffer), data, size);
     GST_BUFFER_TIMESTAMP (*buffer) = dec->timestamp;
+  } else {
+    GST_WARNING_OBJECT (dec, "alloc function returned error %s",
+        gst_flow_get_name (res));
   }
 
   return res;
@@ -505,8 +508,11 @@ gst_cmml_dec_parse_first_header (GstCmmlDec * dec, GstBuffer * buffer)
    * will be triggered. Otherwise we need to call it manually.
    */
   if (!GST_FLOW_IS_FATAL (dec->flow_return) && !dec->sent_root) {
-    gst_cmml_dec_parse_preamble (dec, GST_BUFFER_DATA (buffer),
-        (guchar *) "<cmml>");
+    guchar *preamble = (guchar *) g_strndup ((gchar *) GST_BUFFER_DATA (buffer),
+        GST_BUFFER_SIZE (buffer));
+
+    gst_cmml_dec_parse_preamble (dec, preamble, (guchar *) "<cmml>");
+    g_free (preamble);
   }
 }
 
@@ -536,6 +542,7 @@ gst_cmml_dec_parse_preamble (GstCmmlDec * dec, guchar * preamble,
 
   /* send the root element to the internal parser */
   gst_cmml_dec_parse_xml (dec, root_element, strlen ((gchar *) root_element));
+  dec->sent_root = TRUE;
 
   /* push the root element */
   dec->flow_return = gst_cmml_dec_new_buffer (dec,
@@ -546,7 +553,6 @@ gst_cmml_dec_parse_preamble (GstCmmlDec * dec, guchar * preamble,
   dec->flow_return = gst_pad_push (dec->srcpad, buffer);
   if (!GST_FLOW_IS_FATAL (dec->flow_return)) {
     GST_INFO_OBJECT (dec, "preamble parsed");
-    dec->sent_root = TRUE;
   }
 
 done:

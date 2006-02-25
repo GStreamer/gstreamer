@@ -22,12 +22,17 @@
  */
 
 #include <string.h>
+#include <stdarg.h>
 #include <gst/gst.h>
 
 #include "gstcmmlparser.h"
 #include "gstannodex.h"
 #include "gstcmmlutils.h"
 
+GST_DEBUG_CATEGORY (cmmlparser);
+#define GST_CAT_DEFAULT cmmlparser
+
+static void gst_cmml_parser_generic_error (void *ctx, const char *msg, ...);
 static xmlNodePtr gst_cmml_parser_new_node (GstCmmlParser * parser,
     const gchar * name, ...);
 static void
@@ -41,6 +46,15 @@ static void gst_cmml_parser_parse_processing_instruction (xmlParserCtxtPtr ctxt,
     const xmlChar * target, const xmlChar * data);
 static void gst_cmml_parser_meta_to_string (GstCmmlParser * parser,
     xmlNodePtr parent, GValueArray * meta);
+
+/* initialize the parser */
+void
+gst_cmml_parser_init (void)
+{
+  GST_DEBUG_CATEGORY_INIT (cmmlparser, "cmmlparser", 0, "annodex CMML parser");
+
+  xmlGenericError = gst_cmml_parser_generic_error;
+}
 
 /* create a new CMML parser
  */
@@ -58,7 +72,8 @@ gst_cmml_parser_new (GstCmmlParserMode mode)
       (startElementNsSAX2Func) gst_cmml_parser_parse_start_element_ns;
   parser->context->sax->endElementNs =
       (endElementNsSAX2Func) gst_cmml_parser_parse_end_element_ns;
-  parser->context->sax->processingInstruction = (processingInstructionSAXFunc)
+  parser->context->sax->processingInstruction =
+      (processingInstructionSAXFunc)
       gst_cmml_parser_parse_processing_instruction;
   parser->preamble_callback = NULL;
   parser->cmml_end_callback = NULL;
@@ -463,12 +478,17 @@ gst_cmml_parser_parse_clip (GstCmmlParser * parser, xmlNodePtr clip)
   GstClockTime start_time = GST_CLOCK_TIME_NONE;
   GstClockTime end_time = GST_CLOCK_TIME_NONE;
 
-  g_value_init (&str_val, G_TYPE_STRING);
+  start = xmlGetProp (clip, (xmlChar *) "start");
+  if (parser->mode == GST_CMML_PARSER_ENCODE && start == NULL)
+    /* XXX: validate the document */
+    return;
 
   id = xmlGetProp (clip, (xmlChar *) "id");
   track = xmlGetProp (clip, (xmlChar *) "track");
-  start = xmlGetProp (clip, (xmlChar *) "start");
   end = xmlGetProp (clip, (xmlChar *) "end");
+
+  if (track == NULL)
+    track = (guchar *) g_strdup ("default");
 
   if (start) {
     if (!strncmp ((gchar *) start, "smpte", 5))
@@ -484,17 +504,15 @@ gst_cmml_parser_parse_clip (GstCmmlParser * parser, xmlNodePtr clip)
       end_time = gst_cmml_clock_time_from_npt ((gchar *) end);
   }
 
-  if (track == NULL)
-    track = (guchar *) g_strdup ("default");
-
-  clip_tag = g_object_new (GST_TYPE_CMML_TAG_CLIP,
-      "id", id,
+  clip_tag = g_object_new (GST_TYPE_CMML_TAG_CLIP, "id", id,
       "track", track, "start-time", start_time, "end-time", end_time, NULL);
 
   g_free (id);
   g_free (track);
   g_free (start);
   g_free (end);
+
+  g_value_init (&str_val, G_TYPE_STRING);
 
   /* parse the children */
   for (walk = clip->children; walk; walk = walk->next) {
@@ -543,6 +561,17 @@ gst_cmml_parser_meta_to_string (GstCmmlParser * parser,
         "content", g_value_get_string (content), NULL);
     xmlAddChild (parent, node);
   }
+}
+
+static void
+gst_cmml_parser_generic_error (void *ctx, const char *msg, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, msg);
+  gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_WARNING,
+      "", "", 0, NULL, msg, varargs);
+  va_end (varargs);
 }
 
 /* sax handler called when an element start tag is found
