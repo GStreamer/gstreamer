@@ -135,6 +135,7 @@ SUBDIRS = \
 
 DIST_SUBDIRS = \
 	aalib \
+	annodex \
 	cairo \
 	cdio \
 	dv \

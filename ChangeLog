@@ -1,5 +1,9 @@
 2006-02-25  Julien MOUTTE  <julien@moutte.net>
 
+	* ext/Makefile.am: Fix dist-check.
+
+2006-02-25  Julien MOUTTE  <julien@moutte.net>
+
 	* ext/annodex/gstcmmlenc.c: (gst_cmml_enc_push_clip): Fix another
 	memleak.
 
