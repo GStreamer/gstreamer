@@ -1,5 +1,14 @@
 2006-02-25  Julien MOUTTE  <julien@moutte.net>
 
+	* ext/annodex/gstcmmldec.c: (gst_cmml_dec_class_init),
+	(gst_cmml_dec_finalize), (gst_cmml_dec_change_state):
+	* ext/annodex/gstcmmlenc.c: (gst_cmml_enc_class_init),
+	(gst_cmml_enc_finalize), (gst_cmml_enc_change_state):
+	* ext/annodex/gstcmmlutils.c: (gst_cmml_track_list_destroy): Fix
+	possible memleaks.
+
+2006-02-25  Julien MOUTTE  <julien@moutte.net>
+
 	* tests/check/Makefile.am:
 	* tests/check/elements/cmmldec.c:
 	* tests/check/elements/cmmlenc.c: Fix tests so that they use

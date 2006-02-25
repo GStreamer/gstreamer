@@ -110,6 +110,8 @@ static GstFlowReturn gst_cmml_enc_push_clip (GstCmmlEnc * enc,
     GstCmmlTagClip * clip, GstClockTime prev_clip_time);
 static GstFlowReturn gst_cmml_enc_push (GstCmmlEnc * enc, GstBuffer * buffer);
 
+static void gst_cmml_enc_finalize (GObject * object);
+
 static void
 gst_cmml_enc_base_init (gpointer g_class)
 {
@@ -129,6 +131,7 @@ gst_cmml_enc_class_init (GstCmmlEncClass * enc_class)
 
   klass->get_property = gst_cmml_enc_get_property;
   klass->set_property = gst_cmml_enc_set_property;
+  klass->finalize = gst_cmml_enc_finalize;
 
   g_object_class_install_property (klass, GST_CMML_ENC_GRANULERATE_N,
       g_param_spec_int64 ("granule-rate-numerator",
@@ -211,6 +214,19 @@ gst_cmml_enc_get_property (GObject * object, guint property_id,
   }
 }
 
+static void
+gst_cmml_enc_finalize (GObject * object)
+{
+  GstCmmlEnc *enc = GST_CMML_ENC (object);
+
+  if (enc->tracks) {
+    gst_cmml_track_list_destroy (enc->tracks);
+    enc->tracks = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static GstStateChangeReturn
 gst_cmml_enc_change_state (GstElement * element, GstStateChange transition)
 {
@@ -244,6 +260,7 @@ gst_cmml_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
       gst_cmml_track_list_destroy (enc->tracks);
+      enc->tracks = NULL;
       g_free (enc->preamble);
       gst_cmml_parser_free (enc->parser);
       break;

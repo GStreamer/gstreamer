@@ -121,6 +121,8 @@ static void gst_cmml_dec_push_clip (GstCmmlDec * dec, GstCmmlTagClip * clip);
 static void gst_cmml_dec_send_clip_tag (GstCmmlDec * dec,
     GstCmmlTagClip * clip);
 
+static void gst_cmml_dec_finalize (GObject * object);
+
 static void
 gst_cmml_dec_base_init (gpointer g_class)
 {
@@ -142,6 +144,7 @@ gst_cmml_dec_class_init (GstCmmlDecClass * dec_class)
 
   klass->set_property = gst_cmml_dec_set_property;
   klass->get_property = gst_cmml_dec_get_property;
+  klass->finalize = gst_cmml_dec_finalize;
 
   g_object_class_install_property (klass, GST_CMML_DEC_WAIT_CLIP_END,
       g_param_spec_boolean ("wait-clip-end-time",
@@ -199,6 +202,19 @@ gst_cmml_dec_set_property (GObject * object, guint property_id,
   }
 }
 
+static void
+gst_cmml_dec_finalize (GObject * object)
+{
+  GstCmmlDec *dec = GST_CMML_DEC (object);
+
+  if (dec->tracks) {
+    gst_cmml_track_list_destroy (dec->tracks);
+    dec->tracks = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 static GstStateChangeReturn
 gst_cmml_dec_change_state (GstElement * element, GstStateChange transition)
 {
@@ -235,6 +251,7 @@ gst_cmml_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_cmml_parser_free (dec->parser);
       gst_cmml_track_list_destroy (dec->tracks);
+      dec->tracks = NULL;
       break;
     default:
       break;

@@ -221,6 +221,8 @@ gst_cmml_track_list_destroy_track (gchar * key,
 void
 gst_cmml_track_list_destroy (GHashTable * tracks)
 {
+  g_return_if_fail (tracks != NULL);
+
   g_hash_table_foreach_remove (tracks,
       (GHRFunc) gst_cmml_track_list_destroy_track, NULL);
   g_hash_table_destroy (tracks);
