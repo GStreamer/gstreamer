@@ -16,11 +16,11 @@ else
  DVDREAD_DIR =
 endif
 
-# if USE_DVDNAV
-# DVDNAV_DIR = dvdnav
-# else
-DVDNAV_DIR =
-# endif
+if USE_DVDNAV
+ DVDNAV_DIR = dvdnav
+else
+ DVDNAV_DIR =
+endif
 
 if USE_LAME
 LAME_DIR = lame

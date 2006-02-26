@@ -1,3 +1,34 @@
+2006-02-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/dvdnav/Makefile.am:
+	* ext/dvdnav/dvdnavsrc.c: (gst_dvd_nav_src_base_init),
+	(gst_dvd_nav_src_class_init), (gst_dvd_nav_src_check_get_range),
+	(gst_dvd_nav_src_init), (gst_dvd_nav_src_finalize),
+	(gst_dvd_nav_src_is_open), (gst_dvd_nav_src_set_property),
+	(gst_dvd_nav_src_get_property), (gst_dvd_nav_src_set_clock),
+	(gst_dvd_nav_src_tca_seek), (gst_dvd_nav_src_update_streaminfo),
+	(gst_dvd_nav_src_set_domain), (gst_dvd_nav_src_update_highlight),
+	(gst_dvd_nav_src_user_op), (dvdnav_get_event_name),
+	(dvdnav_get_read_domain_name), (gst_dvd_nav_src_print_event),
+	(gst_dvd_nav_src_make_dvd_event),
+	(gst_dvd_nav_src_structure_set_uint64),
+	(gst_dvd_nav_src_push_dvd_nav_packet_event),
+	(gst_dvd_nav_src_push_clut_change_event), (read_vts_info),
+	(gst_dvd_nav_src_push_titlelang_event),
+	(gst_dvd_nav_src_process_next_block), (gst_dvd_nav_src_create),
+	(gst_dvd_nav_src_start), (gst_dvd_nav_src_stop),
+	(gst_dvd_nav_src_handle_navigation_event),
+	(gst_dvd_nav_src_handle_seek_event), (gst_dvd_nav_src_src_event),
+	(gst_dvd_nav_src_query_position), (gst_dvd_nav_src_query_duration),
+	(gst_dvd_nav_src_query), (gst_dvd_nav_src_uri_get_type),
+	(gst_dvd_nav_src_uri_get_protocols), (gst_dvd_nav_src_uri_get_uri),
+	(gst_dvd_nav_src_uri_set_uri), (gst_dvd_nav_src_uri_handler_init),
+	(gst_dvd_nav_src_do_init), (plugin_init):
+	  dvdnavsrc ported to 0.10, for the most part at least. Not quite
+	  ready for prime time yet though.
+
 2006-02-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
