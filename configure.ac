@@ -298,6 +298,11 @@ GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnavsrc, [
       HAVE_DVDNAV="no"
   ])
   AS_SCRUB_INCLUDE(DVDNAV_CFLAGS)
+
+  dnl disabled until plugin is fully functional
+  HAVE_DVDNAV=no
+], disabled, , [
+  AC_MSG_NOTICE([dvdnavsrc not stable yet, not building])
 ])
 
 dnl *** lame ***

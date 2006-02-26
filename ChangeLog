@@ -1,6 +1,11 @@
 2006-02-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
+	  Disable dvdnavsrc for now.
+
+2006-02-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
 	* ext/Makefile.am:
 	* ext/dvdnav/Makefile.am:
 	* ext/dvdnav/dvdnavsrc.c: (gst_dvd_nav_src_base_init),
