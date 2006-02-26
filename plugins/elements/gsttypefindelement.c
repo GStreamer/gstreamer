@@ -875,7 +875,7 @@ gst_type_find_element_activate (GstPad * pad)
    */
 
   /* 1 */
-  if (!gst_pad_activate_pull (pad, TRUE)) {
+  if (!gst_pad_check_pull_range (pad) || !gst_pad_activate_pull (pad, TRUE)) {
     start_typefinding (typefind);
     return gst_pad_activate_push (pad, TRUE);
   }

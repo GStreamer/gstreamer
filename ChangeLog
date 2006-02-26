@@ -1,3 +1,10 @@
+2006-02-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_activate):
+	  Use gst_pad_check_pull_range() before _activate_pull()
+	  to avoid unnecessary open/close (see #331690).
+
 2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstutils.c:
