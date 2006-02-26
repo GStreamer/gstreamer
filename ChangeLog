@@ -1,3 +1,10 @@
+2006-02-26  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/libvisual/visual.c: (gst_visual_init),
+	(gst_visual_src_setcaps), (get_buffer), (gst_visual_chain),
+	(plugin_init): Load only non GL plugins. Fix some memleaks and 
+	possible negotiation issues.
+
 2006-02-25  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/tag/tag.h: Adding Annodex tags here.

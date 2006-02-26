@@ -196,6 +196,7 @@ gst_visual_init (GstVisual * visual)
   visual->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_setcaps_function (visual->srcpad, gst_visual_src_setcaps);
   gst_pad_set_getcaps_function (visual->srcpad, gst_visual_getcaps);
+  gst_pad_use_fixed_caps (visual->srcpad);
   gst_element_add_pad (GST_ELEMENT (visual), visual->srcpad);
 
   visual->next_ts = 0;
@@ -274,6 +275,8 @@ gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
+  GST_DEBUG_OBJECT (visual, "src pad got caps %" GST_PTR_FORMAT, caps);
+
   if (!gst_structure_get_int (structure, "width", &visual->width))
     return FALSE;
   if (!gst_structure_get_int (structure, "height", &visual->height))
@@ -315,10 +318,13 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
     GstStructure *s;
     GstCaps *caps;
 
+    GST_DEBUG_OBJECT (visual, "no src caps defined yet, try to set some");
+
     /* No output caps current set up. Try and pick some */
     caps = gst_pad_get_allowed_caps (visual->srcpad);
 
     if (gst_caps_is_empty (caps)) {
+      GST_DEBUG_OBJECT (visual, "allowed caps are empty");
       gst_caps_unref (caps);
       return GST_FLOW_NOT_NEGOTIATED;
     }
@@ -333,6 +339,8 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
       gst_structure_fixate_field_nearest_int (s, "width", 320);
       gst_structure_fixate_field_nearest_int (s, "height", 240);
       gst_structure_fixate_field_nearest_fraction (s, "framerate", 25, 1);
+
+      GST_DEBUG_OBJECT (visual, "fixating caps to %" GST_PTR_FORMAT, caps);
 
       gst_pad_fixate_caps (visual->srcpad, caps);
     } else
@@ -356,6 +364,9 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
       gst_pad_set_caps (visual->srcpad, caps);
     gst_caps_unref (caps);
   } else {
+    GST_DEBUG_OBJECT (visual, "allocating output buffer with caps %"
+        GST_PTR_FORMAT, GST_PAD_CAPS (visual->srcpad));
+
     ret =
         gst_pad_alloc_buffer_and_set_caps (visual->srcpad,
         GST_BUFFER_OFFSET_NONE,
@@ -381,13 +392,15 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
   guint spf;
 
+  GST_DEBUG_OBJECT (visual, "chain function called");
+
   /* If we don't have an output format yet, preallocate a buffer to try and
    * set one */
   if (GST_PAD_CAPS (visual->srcpad) == NULL) {
     ret = get_buffer (visual, &outbuf);
     if (ret != GST_FLOW_OK) {
       gst_buffer_unref (buffer);
-      return ret;
+      goto beach;
     }
   }
 
@@ -413,7 +426,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     if (outbuf == NULL) {
       ret = get_buffer (visual, &outbuf);
       if (ret != GST_FLOW_OK) {
-        return ret;
+        goto beach;
       }
     }
 
@@ -445,6 +458,9 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
   if (outbuf != NULL)
     gst_buffer_unref (outbuf);
+
+beach:
+  gst_object_unref (visual);
 
   return ret;
 }
@@ -531,10 +547,6 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (libvisual_debug, "libvisual", 0,
       "libvisual audio visualisations");
 
-  if (!visual_is_initialized ())
-    if (visual_init (NULL, NULL) != 0)
-      return FALSE;
-
   visual_log_set_verboseness (VISUAL_LOG_VERBOSENESS_LOW);
   visual_log_set_info_handler (libvisual_log_handler, (void *) GST_LEVEL_INFO);
   visual_log_set_warning_handler (libvisual_log_handler,
@@ -544,9 +556,16 @@ plugin_init (GstPlugin * plugin)
   visual_log_set_error_handler (libvisual_log_handler,
       (void *) GST_LEVEL_ERROR);
 
+  if (!visual_is_initialized ())
+    if (visual_init (NULL, NULL) != 0)
+      return FALSE;
+
   list = visual_actor_get_list ();
   for (i = 0; i < visual_list_count (list); i++) {
     VisPluginRef *ref = visual_list_get (list, i);
+    VisActorPlugin *actplugin = NULL;
+    VisPluginData *visplugin = NULL;
+    gboolean is_gl = FALSE;
     GType type;
     gchar *name;
     GTypeInfo info = {
@@ -561,21 +580,38 @@ plugin_init (GstPlugin * plugin)
       NULL
     };
 
+    visplugin = visual_plugin_load (ref);
+
     if (ref->info->plugname == NULL)
       continue;
 
-    name = g_strdup_printf ("GstVisual%s", ref->info->plugname);
-    make_valid_name (name);
-    type = g_type_register_static (GST_TYPE_VISUAL, name, &info, 0);
-    g_free (name);
+    actplugin = VISUAL_PLUGIN_ACTOR (visplugin->info->plugin);
 
-    name = g_strdup_printf ("libvisual_%s", ref->info->plugname);
-    make_valid_name (name);
-    if (!gst_element_register (plugin, name, GST_RANK_NONE, type)) {
-      g_free (name);
-      return FALSE;
+    if ((actplugin->depth & VISUAL_VIDEO_DEPTH_GL) > 0) {
+      GST_DEBUG ("plugin %s is a GL plugin (%d), ignoring",
+          ref->info->plugname, actplugin->depth);
+      is_gl = TRUE;
+    } else {
+      GST_DEBUG ("plugin %s is not a GL plugin (%d), registering",
+          ref->info->plugname, actplugin->depth);
     }
-    g_free (name);
+
+    visual_plugin_unload (visplugin);
+
+    if (!is_gl) {
+      name = g_strdup_printf ("GstVisual%s", ref->info->plugname);
+      make_valid_name (name);
+      type = g_type_register_static (GST_TYPE_VISUAL, name, &info, 0);
+      g_free (name);
+
+      name = g_strdup_printf ("libvisual_%s", ref->info->plugname);
+      make_valid_name (name);
+      if (!gst_element_register (plugin, name, GST_RANK_NONE, type)) {
+        g_free (name);
+        return FALSE;
+      }
+      g_free (name);
+    }
   }
 
   return TRUE;
