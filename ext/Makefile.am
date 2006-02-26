@@ -59,6 +59,7 @@ SUBDIRS = \
 DIST_SUBDIRS = \
 	a52dec \
 	amrnb \
+	dvdnav \
 	dvdread \
 	lame \
 	mad \
