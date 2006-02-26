@@ -438,8 +438,7 @@ stop_typefinding (GstTypeFindElement * typefind)
   GstState state;
   gboolean push_cached_buffers;
 
-  gst_element_get_state (GST_ELEMENT (typefind), &state, NULL,
-      GST_CLOCK_TIME_NONE);
+  gst_element_get_state (GST_ELEMENT (typefind), &state, NULL, 0);
 
   push_cached_buffers = (state >= GST_STATE_PAUSED);
 
