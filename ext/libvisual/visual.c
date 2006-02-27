@@ -196,7 +196,6 @@ gst_visual_init (GstVisual * visual)
   visual->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_setcaps_function (visual->srcpad, gst_visual_src_setcaps);
   gst_pad_set_getcaps_function (visual->srcpad, gst_visual_getcaps);
-  gst_pad_use_fixed_caps (visual->srcpad);
   gst_element_add_pad (GST_ELEMENT (visual), visual->srcpad);
 
   visual->next_ts = 0;
@@ -308,71 +307,66 @@ gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps)
   return TRUE;
 }
 
+static gboolean
+gst_vis_src_negotiate (GstVisual * visual)
+{
+  GstCaps *othercaps, *target, *intersect;
+  GstStructure *structure;
+  const GstCaps *templ;
+
+  templ = gst_pad_get_pad_template_caps (visual->srcpad);
+
+  /* see what the peer can do */
+  othercaps = gst_pad_peer_get_caps (visual->srcpad);
+  if (othercaps) {
+    intersect = gst_caps_intersect (othercaps, templ);
+    gst_caps_unref (othercaps);
+
+    if (gst_caps_is_empty (intersect))
+      goto no_format;
+
+    target = gst_caps_copy_nth (intersect, 0);
+    gst_caps_unref (intersect);
+  } else {
+    target = gst_caps_ref ((GstCaps *) templ);
+  }
+
+  structure = gst_caps_get_structure (target, 0);
+  gst_structure_fixate_field_nearest_int (structure, "width", 320);
+  gst_structure_fixate_field_nearest_int (structure, "height", 240);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
+
+  gst_pad_set_caps (visual->srcpad, target);
+  gst_caps_unref (target);
+
+  return TRUE;
+
+no_format:
+  {
+    gst_caps_unref (intersect);
+    gst_caps_unref (othercaps);
+    return FALSE;
+  }
+}
+
 static GstFlowReturn
 get_buffer (GstVisual * visual, GstBuffer ** outbuf)
 {
   GstFlowReturn ret;
 
   if (GST_PAD_CAPS (visual->srcpad) == NULL) {
-    gint width, height, bpp;
-    GstStructure *s;
-    GstCaps *caps;
-
-    GST_DEBUG_OBJECT (visual, "no src caps defined yet, try to set some");
-
-    /* No output caps current set up. Try and pick some */
-    caps = gst_pad_get_allowed_caps (visual->srcpad);
-
-    if (gst_caps_is_empty (caps)) {
-      GST_DEBUG_OBJECT (visual, "allowed caps are empty");
-      gst_caps_unref (caps);
+    if (!gst_vis_src_negotiate (visual))
       return GST_FLOW_NOT_NEGOTIATED;
-    }
-
-    if (!gst_caps_is_fixed (caps)) {
-      /* OK, not fixed, fixate the width and height */
-      caps = gst_caps_make_writable (caps);
-      gst_caps_truncate (caps);
-
-      s = gst_caps_get_structure (caps, 0);
-
-      gst_structure_fixate_field_nearest_int (s, "width", 320);
-      gst_structure_fixate_field_nearest_int (s, "height", 240);
-      gst_structure_fixate_field_nearest_fraction (s, "framerate", 25, 1);
-
-      GST_DEBUG_OBJECT (visual, "fixating caps to %" GST_PTR_FORMAT, caps);
-
-      gst_pad_fixate_caps (visual->srcpad, caps);
-    } else
-      s = gst_caps_get_structure (caps, 0);
-
-    GST_DEBUG_OBJECT (visual,
-        "Trying to alloc buffer with caps: %" GST_PTR_FORMAT, caps);
-
-    if (!gst_structure_get_int (s, "width", &width) ||
-        !gst_structure_get_int (s, "height", &height) ||
-        !gst_structure_get_int (s, "bpp", &bpp)) {
-      ret = FALSE;
-    } else {
-      ret =
-          gst_pad_alloc_buffer_and_set_caps (visual->srcpad,
-          GST_BUFFER_OFFSET_NONE, height * GST_ROUND_UP_4 (width) * bpp, caps,
-          outbuf);
-    }
-
-    if (GST_PAD_CAPS (visual->srcpad) == NULL)
-      gst_pad_set_caps (visual->srcpad, caps);
-    gst_caps_unref (caps);
-  } else {
-    GST_DEBUG_OBJECT (visual, "allocating output buffer with caps %"
-        GST_PTR_FORMAT, GST_PAD_CAPS (visual->srcpad));
-
-    ret =
-        gst_pad_alloc_buffer_and_set_caps (visual->srcpad,
-        GST_BUFFER_OFFSET_NONE,
-        visual->video->height * GST_ROUND_UP_4 (visual->video->width) *
-        visual->video->bpp, GST_PAD_CAPS (visual->srcpad), outbuf);
   }
+
+  GST_DEBUG_OBJECT (visual, "allocating output buffer with caps %"
+      GST_PTR_FORMAT, GST_PAD_CAPS (visual->srcpad));
+
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (visual->srcpad,
+      GST_BUFFER_OFFSET_NONE,
+      visual->video->height * GST_ROUND_UP_4 (visual->video->width) *
+      visual->video->bpp, GST_PAD_CAPS (visual->srcpad), outbuf);
 
   if (ret != GST_FLOW_OK)
     return ret;
@@ -587,7 +581,8 @@ plugin_init (GstPlugin * plugin)
 
     actplugin = VISUAL_PLUGIN_ACTOR (visplugin->info->plugin);
 
-    if ((actplugin->depth & VISUAL_VIDEO_DEPTH_GL) > 0) {
+    /* Ignore plugins that only support GL output for now */
+    if (actplugin->depth == VISUAL_VIDEO_DEPTH_GL) {
       GST_DEBUG ("plugin %s is a GL plugin (%d), ignoring",
           ref->info->plugname, actplugin->depth);
       is_gl = TRUE;

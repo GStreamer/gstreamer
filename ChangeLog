@@ -1,3 +1,14 @@
+2006-02-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/libvisual/visual.c: (gst_visual_init),
+	(gst_vis_src_negotiate), (get_buffer), (plugin_init):
+	Don't use gst_pad_use_fixed_caps, because it prevents downstream from
+	being able to renegotiate the size. Instead, use the negotiation
+	algorithm from the goom plugin to pick an initial output caps. 
+
+	Also, allow theoretical libvisual plugins that might support non-GL 
+	output even if they also do GL.
+
 2006-02-26  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/libvisual/visual.c: (gst_visual_init),
