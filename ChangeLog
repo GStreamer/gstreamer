@@ -1,5 +1,11 @@
 2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* libs/gst/base/gsttypefindhelper.c: (type_find_factory_rank_cmp),
+	(gst_type_find_helper):
+	  Try typefinding factories with the highest rank first.
+
+2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/libs/gstreamer-libs-docs.sgml:
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/gsttypefindhelper.c:

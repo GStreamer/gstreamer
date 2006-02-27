@@ -40,9 +40,20 @@
 
 #include "gsttypefindhelper.h"
 
-/**
- * typefind code here
- */
+static gint
+type_find_factory_rank_cmp (gconstpointer fac1, gconstpointer fac2)
+{
+  if (GST_PLUGIN_FEATURE (fac1)->rank != GST_PLUGIN_FEATURE (fac2)->rank)
+    return GST_PLUGIN_FEATURE (fac2)->rank - GST_PLUGIN_FEATURE (fac1)->rank;
+
+  /* to make the order in which things happen more deterministic,
+   * sort by name when the ranks are the same. */
+  return strcmp (GST_PLUGIN_FEATURE_NAME (fac1),
+      GST_PLUGIN_FEATURE_NAME (fac2));
+}
+
+/* ********************** typefinding in pull mode ************************ */
+
 typedef struct
 {
   GstPad *src;
@@ -159,7 +170,9 @@ gst_type_find_helper (GstPad * src, guint64 size)
   g_return_val_if_fail (src != NULL, NULL);
   g_return_val_if_fail (GST_PAD_GETRANGEFUNC (src) != NULL, NULL);
 
-  walk = type_list = gst_type_find_factory_get_list ();
+  type_list = gst_type_find_factory_get_list ();
+
+  type_list = g_list_sort (type_list, type_find_factory_rank_cmp);
 
   find.src = src;
   find.best_probability = 0;
@@ -170,6 +183,8 @@ gst_type_find_helper (GstPad * src, guint64 size)
   gst_find.peek = helper_find_peek;
   gst_find.suggest = helper_find_suggest;
   gst_find.get_length = NULL;
+
+  walk = type_list;
 
   while (walk) {
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
@@ -246,18 +261,6 @@ buf_helper_find_suggest (gpointer data, guint prob, const GstCaps * caps)
     gst_caps_unref (copy);
     helper->best_probability = prob;
   }
-}
-
-static gint
-type_find_factory_rank_cmp (gconstpointer fac1, gconstpointer fac2)
-{
-  if (GST_PLUGIN_FEATURE (fac1)->rank != GST_PLUGIN_FEATURE (fac2)->rank)
-    return GST_PLUGIN_FEATURE (fac2)->rank - GST_PLUGIN_FEATURE (fac1)->rank;
-
-  /* to make the order in which things happen more deterministic,
-   * sort by name when the ranks are the same. */
-  return strcmp (GST_PLUGIN_FEATURE_NAME (fac1),
-      GST_PLUGIN_FEATURE_NAME (fac2));
 }
 
 /**
