@@ -254,6 +254,15 @@ GST_PUSH_SRC_GET_CLASS
 gst_push_src_get_type
 </SECTION>
 
+<SECTION>
+<FILE>gsttypefindhelper</FILE>
+<TITLE>GstTypeFindHelper</TITLE>
+<INCLUDE>gst/base/gsttypefindhelper.h</INCLUDE>
+gst_type_find_helper
+gst_type_find_helper_for_buffer
+<SUBSECTION Private>
+</SECTION>
+
 # net
 
 <SECTION>
@@ -351,7 +360,3 @@ gst_check_teardown_element
 gst_check_teardown_sink_pad
 gst_check_teardown_src_pad
 </SECTION>
-
-# misc
-
-# TODO : add gsttypefindhelper

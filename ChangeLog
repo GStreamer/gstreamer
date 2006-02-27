@@ -1,5 +1,13 @@
 2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gsttypefindhelper.c:
+	  Add section for typefind helper and add documentation
+	  for the old and the new function.
+
+2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* libs/gst/base/gsttypefindhelper.c: (buf_helper_find_peek),
 	(buf_helper_find_suggest), (type_find_factory_rank_cmp),
 	(gst_type_find_helper_for_buffer):

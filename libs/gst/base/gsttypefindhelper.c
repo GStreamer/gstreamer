@@ -21,6 +21,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gsttypefindhelper
+ * @short_description: Utility functions for typefinding 
+ *
+ * Utility functions for elements doing typefinding:
+ * gst_type_find_helper() does typefinding in pull mode, while
+ * gst_type_find_helper_for_buffer() is useful for elements needing to do
+ * typefinding in push mode from a chain function.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 

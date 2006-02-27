@@ -10,8 +10,7 @@
 <!ENTITY GstBaseTransform SYSTEM "xml/gstbasetransform.xml">
 <!ENTITY GstCollectPads SYSTEM "xml/gstcollectpads.xml">
 <!ENTITY GstPushSrc SYSTEM "xml/gstpushsrc.xml">
-
-<!ENTITY GstBytestream SYSTEM "xml/gstbytestream.xml">
+<!ENTITY GstTypeFindHelper SYSTEM "xml/gsttypefindhelper.xml">
 
 <!ENTITY GstCheck SYSTEM "xml/gstcheck.xml">
 
@@ -59,6 +58,7 @@
 
     &GstAdapter;
     &GstCollectPads;
+    &GstTypeFindHelper;
 
   </chapter>
 
