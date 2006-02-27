@@ -1,3 +1,10 @@
+2006-02-27  Michael Smith  <msmith@fluendo.com>
+
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/slides/Makefile.am:
+	  Patch from Loïc Minier to prevent CVS directories getting disted.
+
 2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstcaps.c: (gst_caps_ref), (gst_caps_unref):

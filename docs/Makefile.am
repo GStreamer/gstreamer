@@ -13,10 +13,10 @@ endif
 BUILT_SOURCES = version.entities
 
 SUBDIRS = design $(SUBDIRS_DOCBOOK) $(SUBDIRS_GTK_DOC)
-DIST_SUBDIRS = design gst libs plugins faq manual pwg xsl
+DIST_SUBDIRS = design gst libs plugins faq manual pwg slides xsl
 
 EXTRA_DIST = \
-	slides manuals.mak htmlinstall.mak upload.mak \
+	manuals.mak htmlinstall.mak upload.mak \
 	image-png image-pdf image-eps url.entities version.entities.in
 
 upload:

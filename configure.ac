@@ -521,6 +521,7 @@ docs/libs/Makefile
 docs/plugins/Makefile
 docs/manual/Makefile
 docs/pwg/Makefile
+docs/slides/Makefile
 docs/xsl/Makefile
 docs/version.entities
 win32/common/config.h
