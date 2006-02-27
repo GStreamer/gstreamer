@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *               2000,2005 Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2000,2005 Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2006      Tim-Philipp Müller <tim centricular net>
  *
  * gsttypefindhelper.h:
  *
@@ -28,6 +29,10 @@
 G_BEGIN_DECLS
 
 GstCaps * gst_type_find_helper (GstPad *src, guint64 size);
+
+GstCaps * gst_type_find_helper_for_buffer (GstObject              *obj,
+                                           GstBuffer              *buf,
+                                           GstTypeFindProbability *prob);
 
 G_END_DECLS
 
