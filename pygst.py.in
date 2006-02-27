@@ -41,15 +41,15 @@ def require(version):
     global _pygst_required_version
 
     if _pygst_required_version != None:
-        assert _pygst_required_version == version, \
-               "a different version of gst was already required"
+        if _pygst_required_version != version:
+            raise StandardError, "a different version of gst was already required"
         return
 
-    assert not sys.modules.has_key('gst'), \
-           "pygst.require() must be called before importing gst"
+    if not sys.modules.has_key('gst'):
+        raise StandardError, "pygst.require() must be called before importing gst"
 
-    assert version == _pygst_version, \
-           "Only version '%s' is available" % _pygst_version
+    if version != _pygst_version:
+        raise StandardError, "Only version '%s' is available" % _pygst_version
 
     # move the pygst path to the front
     while _pygst_dir in sys.path:

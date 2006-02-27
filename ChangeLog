@@ -1,3 +1,10 @@
+2006-02-27  Edward Hervey  <edward@fluendo.com>
+
+	* pygst.py.in:
+	use 'raise StandardError' instead of 'assert' so that compiled code
+	raise a noticeable exception.
+	Closes #332586
+
 2006-02-22  Joe Wreschnig  <piman@sacredchao.net>
 
 	reviewed by: Edward Hervey  <edward@fluendo.com>
