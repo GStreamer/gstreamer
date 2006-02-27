@@ -75,7 +75,7 @@ struct _GstMpeg2dec {
   gboolean       closed;
   gboolean       have_fbuf;
 
-  GstBuffer  *buffers[GST_MPEG2DEC_NUM_BUFS];
+  GstBuffer     *buffers[GST_MPEG2DEC_NUM_BUFS];
 
   DiscontState   discont_state;
 
@@ -96,7 +96,7 @@ struct _GstMpeg2dec {
   gint64         total_frames;
   gint64         frame_period;
   
-  guint64  offset;
+  guint64        offset;
   gint           fps_n;
   gint           fps_d;
   gboolean       need_sequence;
@@ -105,6 +105,8 @@ struct _GstMpeg2dec {
 
   GstIndex      *index;
   gint           index_id;
+  
+  gint           error_count;
 };
 
 struct _GstMpeg2decClass {

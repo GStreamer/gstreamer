@@ -75,6 +75,11 @@ enum
       /* FILL ME */
 };
 
+/* error out after receiving MAX_ERROR_COUNT STATE_INVALID return value
+ * from mpeg2_parse. -1 means never error out
+ */
+#define MAX_ERROR_COUNT (5)
+
 /*
  * We can't use fractions in static pad templates, so
  * we do something manual...
@@ -290,6 +295,8 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->userdatapad);
 #endif
 
+  mpeg2dec->error_count = 0;
+
   /* initialize the mpeg2dec acceleration */
 }
 
@@ -321,6 +328,7 @@ gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec)
   mpeg2dec->need_sequence = TRUE;
   mpeg2dec->next_time = 0;
   mpeg2dec->offset = 0;
+  mpeg2dec->error_count = 0;
   mpeg2_reset (mpeg2dec->decoder, 1);
 }
 
@@ -920,12 +928,20 @@ gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf)
         break;
         /* error */
       case STATE_INVALID:
-        GST_WARNING_OBJECT (mpeg2dec, "Decoding error");
+        mpeg2dec->error_count++;
+        GST_WARNING_OBJECT (mpeg2dec, "Decoding error #%d",
+            mpeg2dec->error_count);
+        if (mpeg2dec->error_count >= MAX_ERROR_COUNT && MAX_ERROR_COUNT > 0) {
+          GST_WARNING_OBJECT (mpeg2dec, "Too many decoding errors");
+          goto exit_error;
+        }
         goto exit;
       default:
         GST_ERROR_OBJECT (mpeg2dec, "Unknown libmpeg2 state %d, FIXME", state);
-        break;
+        goto exit;
     }
+
+    mpeg2dec->error_count = 0;
 
     /*
      * FIXME: should pass more information such as state the user data is from
@@ -949,6 +965,11 @@ gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf)
   return ret;
 
 exit:
+  gst_buffer_unref (buf);
+  return GST_FLOW_OK;
+
+exit_error:
+  GST_ELEMENT_ERROR (mpeg2dec, STREAM, DECODE, (NULL), (NULL));
   gst_buffer_unref (buf);
   return GST_FLOW_ERROR;
 }

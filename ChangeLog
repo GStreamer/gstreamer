@@ -1,3 +1,15 @@
+2006-02-27  Luca Ognibene  <luogni at tin dot it>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_init),
+	(gst_mpeg2dec_reset), (gst_mpeg2dec_chain):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  Don't treat STATE_INVALID as fatal error; throw an error
+	  only after five consecutive decoding errors. Makes decoding
+	  mpeg streams more robust and fixes playback of joined clips
+	  (#300682).
+
 2006-02-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdnav/dvdnavsrc.h:
