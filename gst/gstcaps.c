@@ -354,7 +354,7 @@ gst_caps_ref (GstCaps * caps)
   g_return_val_if_fail (caps != NULL, NULL);
 
 #ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG (GST_CAT_CAPS, "%p %d->%d", caps,
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "%p %d->%d", caps,
       GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) + 1);
 #endif
   g_return_val_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0, NULL);
@@ -377,7 +377,7 @@ gst_caps_unref (GstCaps * caps)
   g_return_if_fail (caps != NULL);
 
 #ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG (GST_CAT_CAPS, "%p %d->%d", caps,
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "%p %d->%d", caps,
       GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) - 1);
 #endif
 

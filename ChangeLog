@@ -1,3 +1,8 @@
+2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstcaps.c: (gst_caps_ref), (gst_caps_unref):
+	  Use the REFCOUNTING category for caps refcounting.
+	  
 2006-02-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gsttypefindelement.c: (stop_typefinding):
