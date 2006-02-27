@@ -330,23 +330,39 @@ int main (int argc, char *argv[])
   ])
 ])
 
-dnl *** mad ***
-dnl FIXME: we could use header checks here as well IMO
-translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
-GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
+dnl *** id3tag from the MAD project ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ID3TAG, true)
+GST_CHECK_FEATURE(ID3TAG, [id3tag reading and writing from the MAD project], id3tag, [
   dnl check with pkg-config first
-  PKG_CHECK_MODULES(MAD, mad >= 0.15 id3tag >= 0.15, HAVE_MAD="yes", HAVE_MAD="no")
-  if test "x$HAVE_MAD" = "xno"; then
+  PKG_CHECK_MODULES(ID3TAG, id3tag >= 0.15, HAVE_ID3TAG="yes", HAVE_ID3TAG="no")
+  if test "x$HAVE_ID3TAG" = "xno"; then
     dnl fall back to oldskool detection
-    AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad")
-    if test "x$HAVE_MAD" = "xyes"; then
-      HAVE_MAD="no"
+    AC_CHECK_HEADER(id3tag.h, [
       save_LIBS=$LIBS
       LIBS="-lz"
-      AC_CHECK_LIB(id3tag, id3_tag_options, HAVE_MAD="yes" MAD_LIBS="-lmad -lid3tag -lz")
+      AC_CHECK_LIB(id3tag, id3_tag_options, HAVE_ID3TAG="yes" ID3TAG_LIBS="-lid3tag -lz")
       LIBS=$save_LIBS
-    fi
-  fi    
+    ])
+  fi
+])
+AC_SUBST(ID3TAG_LIBS)
+
+dnl *** mad ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
+GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
+  if test "x$HAVE_ID3TAG" = "xyes"; then
+    dnl check with pkg-config first
+    PKG_CHECK_MODULES(MAD, mad >= 0.15 id3tag >= 0.15, HAVE_MAD="yes", HAVE_MAD="no")
+    if test "x$HAVE_MAD" = "xno"; then
+      dnl fall back to oldskool detection
+      AC_CHECK_HEADER(mad.h, [
+        AC_CHECK_LIB(mad, mad_decoder_finish, HAVE_MAD="yes" MAD_LIBS="-lmad $ID3TAG_LIBS")
+      ])
+    fi    
+  else
+    HAVE_MAD="no"
+    AC_MSG_WARN([libid3tag was not available, cannot build MAD MP3 decoder plugin])
+  fi
 ])
 AC_SUBST(MAD_LIBS)
 
