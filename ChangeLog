@@ -1,5 +1,16 @@
 2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_handle_event):
+	  When we get an EOS event and have not found a type yet
+	  (most likely because we had not yet accumulated
+	  TYPE_FIND_MIN_SIZE of data yet), try to determine the
+	  type given the data we have so far. Fixes typefinding
+	  for very short streams again, most notably quicktime
+	  redirections as used on Apple's trailer site (#331701).
+
+2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* libs/gst/base/gsttypefindhelper.c: (type_find_factory_rank_cmp),
 	(gst_type_find_helper):
 	  Try typefinding factories with the highest rank first.

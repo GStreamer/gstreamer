@@ -559,20 +559,24 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
     case MODE_TYPEFIND:
       switch (GST_EVENT_TYPE (event)) {
         case GST_EVENT_EOS:{
-          TypeFindEntry *entry;
+          GstTypeFindProbability prob;
+          GstCaps *caps;
 
-          entry = gst_type_find_element_get_best_possibility (typefind);
+          GST_INFO_OBJECT (typefind, "Got EOS and no type found yet");
 
-          if (entry && entry->probability >= typefind->min_probability) {
-            GST_INFO_OBJECT (typefind,
-                "'%s' is the best typefind left after we got all data, using it now (probability %u)",
-                GST_PLUGIN_FEATURE_NAME (entry->factory), entry->probability);
+          /* we might not have started typefinding yet because there was not
+           * enough data so far; just give it a shot now and see what we get */
+          caps = gst_type_find_helper_for_buffer (GST_OBJECT (typefind),
+              typefind->store, &prob);
+
+          if (caps && prob >= typefind->min_probability) {
             g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
-                0, entry->probability, entry->caps);
+                0, prob, caps);
           } else {
-            GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL),
-                (NULL));
+            GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
+                (NULL), (NULL));
           }
+          gst_caps_replace (&caps, NULL);
           stop_typefinding (typefind);
           res = gst_pad_event_default (pad, event);
           break;
