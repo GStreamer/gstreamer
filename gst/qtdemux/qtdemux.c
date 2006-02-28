@@ -2820,8 +2820,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         samples[j].duration =
             samples_per_chunk * stream->timescale / (stream->rate / 2);
         samples[j].timestamp = timestamp;
-        timestamp += gst_util_uint64_scale_int (samples_per_chunk, GST_SECOND,
-            stream->rate);
+
+        if (stream->rate > 0) {
+          timestamp += gst_util_uint64_scale_int (samples_per_chunk,
+              GST_SECOND, stream->rate);
+        }
 #if 0
         GST_INFO ("moo samples_per_chunk=%d rate=%d dur=%lld %lld",
             (int) samples_per_chunk,
