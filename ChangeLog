@@ -68,7 +68,6 @@
 	* ext/annodex/gstskeltag.h:
 	  Deleted; these files aren't used any more either.
 
->>>>>>> 1.2189
 2006-02-25  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/Makefile.am: Fix dist-check.
