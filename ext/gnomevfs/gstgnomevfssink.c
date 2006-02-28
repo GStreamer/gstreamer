@@ -50,8 +50,14 @@
  * The above pipeline will re-encode an mp3 file into FLAC format and store
  * it on a remote host using the Samba protocol.
  * </para>
+ * <para>
+ * Applications can connect to the allow-overwrite signal to receive a callback when an
+ * existing file will be overwritten. The return value of the signal will determine if
+ * gnomevfssink will overwrite the resource or abort with an error.
+ * </para>
  * </refsect2>
  *
+ * Last reviewed on 2006-02-28 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -182,6 +188,17 @@ gst_gnome_vfs_sink_class_init (GstGnomeVFSSinkClass * klass)
           "GnomeVFSHandle", "Handle for GnomeVFS",
           GST_TYPE_GNOME_VFS_HANDLE, G_PARAM_READWRITE));
 
+  /**
+   * GstGnomeVFSSink::allow-overwrite
+   * @sink: the object which received the signal
+   * @uri: the URI to be overwritten
+   *
+   * This signal is fired when gnomevfssink is about to overwrite an
+   * existing resource. The application can connect to this signal and ask
+   * the user if the resource may be overwritten. 
+   *
+   * Returns: A boolean indicating that the resource may be overwritten.
+   */
   gst_gnome_vfs_sink_signals[SIGNAL_ERASE_ASK] =
       g_signal_new ("allow-overwrite", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_CLEANUP, G_STRUCT_OFFSET (GstGnomeVFSSinkClass, erase_ask),
