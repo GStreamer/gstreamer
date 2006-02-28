@@ -45,7 +45,7 @@ Proposal:
 
      * Source        : produces data
      * Sink          : consumes data
-     * Filter        : transforms data, no modification on the data is
+     * Filter        : filters/transforms data, no modification on the data is
                        intended (although it might be unavoidable). The
 		       filter can decide on input and output caps independently
 		       of the stream contents (GstBaseTransform).
@@ -69,10 +69,10 @@ Proposal:
                        typically works on raw types only. The source media type
 		       is listed first.
      * Analyzer      : reports about the stream contents.
-     * Debug         : tee, identity, fakesrc, navseek, ...
      * Control       : controls some aspect of a hardware device
      * Extracter     : extracts tags/headers from a stream
      * Formatter     : adds tags/headers to a stream
+     * Connector     : allows for new connections in the pipeline. (tee, ...)
      * ...
 
    - Based on media type
@@ -100,6 +100,7 @@ Proposal:
      * Device        : operates on some hardware device (disk, network,
                        audio card, video card, usb, ...)
      * Visualisation : intended to be used for audio visualisation
+     * Debug         : intended usage is more for debugging purposes.
      
   3) suggested order:
 
@@ -117,7 +118,7 @@ Proposal:
      id3demux         : Extracter/Metadata
      udpsrc           : Source/Network/Protocol/Device
      videomixer       : Mixer/Video
-     ffmpegcolorspace : Transform/Video          (intended use to convert video with as little
+     ffmpegcolorspace : Filter/Video            (intended use to convert video with as little
                                                   visible change as possible)
      vertigotv        : Effect/Video             (intended use is to change the video)
      volume           : Effect/Audio             (intended use is to change the audio data)
@@ -127,12 +128,13 @@ Proposal:
      adder            : Mixer/Audio
      videobox         : Effect/Video
      alsamixer        : Control/Audio/Device
-     audioconvert     : Transform/Audio
-     audioresample    : Transform/Audio
+     audioconvert     : Filter/Audio
+     audioresample    : Filter/Audio
      xvimagesink      : Sink/Video/Device
-     navseek          : Debug
+     navseek          : Filter/Debug
      decodebin        : Decoder/Demuxer
-     level            : Transform/Analyzer/Audio
+     level            : Filter/Analyzer/Audio
+     tee              : Connector/Debug
    
 Use cases:
 

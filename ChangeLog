@@ -1,6 +1,15 @@
 2006-02-28  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/draft-klass.txt:
+	We use Filter now.
+	Added Connector to mark elements that are only used to
+	allow pipeline connections.
+	Moved Debug to extra feature since most of them are 
+	functionally something else.
+
+2006-02-28  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/draft-klass.txt:
 	Some updates and clarifications.
 
 2006-02-28  Wim Taymans  <wim@fluendo.com>
