@@ -19,3 +19,4 @@ EXPORTS
 	gst_collect_pads_stop
 	gst_push_src_get_type
 	gst_type_find_helper
+	gst_type_find_helper_for_buffer

@@ -13,6 +13,7 @@ EXPORTS
 	gst_bin_get_by_interface
 	gst_bin_get_by_name
 	gst_bin_get_type
+	gst_bin_iterate_elements
 	gst_bin_new
 	gst_bin_remove
 	gst_buffer_create_sub
@@ -137,6 +138,7 @@ EXPORTS
 	gst_fourcc_get_type
 	gst_fraction_get_type
 	gst_fraction_range_get_type
+	gst_ghost_pad_get_target
 	gst_ghost_pad_get_type
 	gst_ghost_pad_new
 	gst_ghost_pad_new_no_target
@@ -157,6 +159,7 @@ EXPORTS
 	gst_iterator_fold
 	gst_iterator_free
 	gst_iterator_next
+	gst_iterator_resync
 	gst_library_error_quark
 	gst_marshal_BOOLEAN__POINTER
 	gst_marshal_VOID__INT_INT

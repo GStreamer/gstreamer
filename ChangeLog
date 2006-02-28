@@ -1,3 +1,11 @@
+2006-02-28  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/common/libgstbase.def:
+	  added export of gst_type_find_helper_for_buffer
+	* win32/common/libgstbase.def:
+	  added some exports : gst_bin_iterate_elements, gst_iterator_resync,
+	  gst_ghost_pad_get_target
+
 2006-02-28  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/draft-klass.txt:
