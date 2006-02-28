@@ -1,5 +1,11 @@
 2006-02-28  Edward Hervey  <edward@fluendo.com>
 
+	* ext/alsa/gstalsasrc.c:
+	Set proper class on the ElementDetails:
+	Source/Audio instead of Src/Audio
+
+2006-02-28  Edward Hervey  <edward@fluendo.com>
+
 	* gst/videoscale/vs_scanline.c:
 	(vs_scanline_resample_nearest_RGBA):
 	Revert optimization in videoscale. It should go in liboil and have
