@@ -45,7 +45,7 @@ def require(version):
             raise StandardError, "a different version of gst was already required"
         return
 
-    if not sys.modules.has_key('gst'):
+    if sys.modules.has_key('gst'):
         raise StandardError, "pygst.require() must be called before importing gst"
 
     if version != _pygst_version:
