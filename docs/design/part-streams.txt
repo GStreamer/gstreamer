@@ -1,0 +1,47 @@
+Streams
+-------
+
+  This document describes the objects that are passed from element to
+  element in the streaming thread.
+
+
+Stream objects
+--------------
+
+The following objects are to be expected in the streaming thread:
+
+ - events
+    - NEW_SEGMENT	(NS)
+    - EOS		(EOS)  *
+    - TAG               (T)
+ - buffers              (B)    *
+
+Objects marked with * need to be synchronised to the clock in sinks
+and live sources.
+
+
+Typical stream
+--------------
+
+ A typical stream starts with a newsegment event that marks the
+ buffer timestamp range. After that buffers are send one after the
+ other. After the last buffer an EOS marks the end of the stream. No
+ more buffer are to be processed after the EOS event.
+
+  +--+ +-++-+     +-+ +---+
+  |NS| |B||B| ... |B| |EOS|
+  +--+ +-++-+     +-+ +---+
+
+  1) NEW_SEGMENT, rate, start/stop, time
+     - marks valid buffer timestamp range
+     - marks stream_time of buffers in NEW_SEGMENT
+     - marks playback rate
+
+  2) N buffers
+     - displayable buffers are between start/stop of the NEW_SEGMENT
+     - display_time: (B.timestamp - NS.start) * NS.abs_rate
+     - stream_time:  display_time + NS.time
+     - sync_time:    display_time + base_time 
+
+  3) EOS
+     - marks the end of data, nothing is to be expected after EOS

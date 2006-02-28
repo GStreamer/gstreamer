@@ -1,5 +1,13 @@
 2006-02-28  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/draft-klass.txt:
+	Proposal for klass field values.
+
+	* docs/design/part-streams.txt:
+	Start of a doc describing stream anatomy.
+
+2006-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_get_type), (gst_bin_handle_message_func):
 	Help the compiler a bit with type registration.
 	Use existing forward cod path instead of duplicating it when 

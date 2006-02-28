@@ -1,0 +1,140 @@
+Element Klass definition
+------------------------
+
+Status:
+
+  DRAFT.  
+
+
+Purpose:
+
+  Applications should be able to retrieve elements from the registry of existing
+  elements based on specific capabilities or features of the element.
+
+  A playback application might want to retrieve all the elements that can be
+  used for visualisation, for example, or a video editor might want to select all
+  video effect filters.
+
+  The topic of defining the klass of elements should be based on use cases.
+  
+
+Proposal:
+
+  The GstElementDetails contains a field named klass that is a pointer to a 
+  string describing the element type.
+
+  In this document we describe the format and contents of the string. Elements
+  should adhere to this specification although that is not enforced to allow
+  for wild (application specific) customisation.
+
+  1) string format
+
+      <keyword>['/'<keyword]*
+
+    The string consists of an unordered list of keywords separated with a '/' 
+    character. While the / suggests a hierarchy, this is not the case.
+  
+  2) keyword categories
+
+   - functional 
+     
+     Categories are base on _intended usage_ of the element. Some elements
+     might have other sideeffects (especially for filers/effects). The purpose
+     is to list enough keywords so that applications can do meaningfull filtering,
+     not to completely describe the functionality, that is expressed in caps etc..
+
+     * Source        : produces data
+     * Sink          : consumes data
+     * Filter        : transforms data, no modification on the data is
+                       intended (although it might be unavoidable)
+     * Effect        : applies an effect to some data, changes to data is
+                       intended.
+     * Demuxer       : splits audio, video, ... from a stream
+     * Muxer         : combines audio, video, ... into one stream
+     * Decoder       : decodes encoded data into a raw format
+     * Encoder       : encodes raw data into an encoded format
+     * Visualisation : transforms audio into video
+     * Analyzer      : reports about the stream contents.
+     * Debug         : tee, identity, fakesrc, navseek, ...
+     * Control       : controls some aspect of a hardware device
+     * Extracter     : extracts tags/headers from a stream
+     * Formatter     : adds tags/headers to a stream
+     * ...
+
+   - Based on media type
+
+     Purpose is to make a selection for elements operating on the different
+     types of media. An audio application must be able to filter out the
+     elements operating on audio, for example.
+
+     * Audio         : operates on audio data
+     * Video         : operates on video data
+     * Text          : operates on text data
+     * Metadata      : operates on metadata
+     * ...
+
+   - Extra features
+
+     The purpose is to further specialize the element, mostly for 
+     application specific needs.
+
+     * Network       : element is used in networked situations
+     * Protocol      : implements some protocol (RTSP, HTTP, ...)
+     * Payloader     : encapsulate as payload (RTP, RDT,.. )
+     * Depayloader   : strip a payload (RTP, RDT,.. )
+     * RTP           : intended to be used in RTP applications
+     
+  3) suggested order:
+
+     <functional>/<media type>/<extra...>
+
+  4) examples:
+ 
+     apedemux         : Extracter/Metadata
+     autoaudiosink    : Sink/Audio
+     cairotimeoverlay : Effect/Muxer/Video/Text
+     dvdec            : Decoder/Video
+     dvdemux          : Demuxer
+     goom             : Visualisation
+     id3demux         : Extracter/Metadata
+     udpsrc           : Source/Network/Protocol
+     videomixer       : Effect/Muxer/Video
+     ffmpegcolorspace : Filter/Video             (intended use to convert video)
+     vertigotv        : Effect/Video             (intended use is to change the video)
+     volume           : Effect/Audio             (intended use is to change the audio)
+     vorbisdec        : Decoder/Audio
+     vorbisenc        : Encoder/Audio
+     oggmux           : Muxer
+     adder            : Effect/Muxer/Audio
+     videobox         : Effect/Video
+     alsamixer        : Control/Audio
+     audioconvert     : Filter/Audio
+     audioresample    : Filter/Audio
+     xvimagesink      : Sink/Video
+     navseek          : Debug
+     decodebin        : Decoder/Demuxer
+     level            : Filter/Analyzer/Audio
+   
+Use cases:
+
+  - get a list of all elements implementing a video effect (pitivi):
+ 
+     klass.contains (Effect & Video)
+
+  - get list of muxers (pitivi):
+ 
+     klass.contains (Muxer & !Effect)
+
+  - get list of encoders (pitivi):
+ 
+     klass.contains (Encoder)
+
+  - Get a list of all visualisations (totem):
+
+     klass.contains (Visualisation)
+
+  - Get a list of all decoders/demuxer/metadata parsers/vis (playbin):
+
+     klass.contains (Visualisation | Demuxer | Decoder | (Extractor & Metadata))
+
+
