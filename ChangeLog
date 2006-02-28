@@ -1,6 +1,11 @@
 2006-02-28  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/draft-klass.txt:
+	Some updates and clarifications.
+
+2006-02-28  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/draft-klass.txt:
 	Proposal for klass field values.
 
 	* docs/design/part-streams.txt:
