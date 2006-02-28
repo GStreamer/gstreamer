@@ -1,5 +1,13 @@
 2006-02-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
+	(gst_wavparse_stream_headers), (gst_wavparse_stream_data),
+	(gst_wavparse_pad_convert), (gst_wavparse_srcpad_event),
+	(gst_wavparse_sink_activate), (gst_wavparse_sink_activate_pull):
+	Use DEBUG_OBJECT more.
+
+2006-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
