@@ -42,6 +42,9 @@ G_BEGIN_DECLS
 typedef struct _GstDVDemux GstDVDemux;
 typedef struct _GstDVDemuxClass GstDVDemuxClass;
 
+typedef gboolean (*GstDVDemuxSeekHandler) (GstDVDemux *demux, GstPad * pad, GstEvent * event);
+
+
 struct _GstDVDemux {
   GstElement     element;
 
@@ -67,14 +70,14 @@ struct _GstDVDemux {
 
   gint           framecount;
   
-  guint64        timestamp;
-  guint64        duration;
-  gint64         total_frames;
-  guint64        audio_offset;
-  guint64        video_offset;
+  gint64         frame_offset;
+  gint64         audio_offset;
+  gint64         video_offset;
 
+  GstDVDemuxSeekHandler seek_handler;
   GstSegment     byte_segment;
   GstSegment     time_segment;
+  gboolean       running;
   gboolean       need_segment;
   gboolean       new_media;
   

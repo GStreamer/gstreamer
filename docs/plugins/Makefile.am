@@ -82,6 +82,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/id3demux/gstid3demux.h \
 	$(top_srcdir)/ext/cairo/gsttimeoverlay.h \
 	$(top_srcdir)/ext/cdio/gstcdiocddasrc.h \
+	$(top_srcdir)/ext/dv/gstdvdec.h \
+	$(top_srcdir)/ext/dv/gstdvdemux.h \
 	$(top_srcdir)/ext/flac/gstflacdec.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosrc.h \

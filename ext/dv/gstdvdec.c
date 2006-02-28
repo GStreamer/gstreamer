@@ -18,6 +18,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-dvdec
+ *
+ * <refsect2>
+ * <para>
+ * dvdec decodes DV video into raw video. The element expects a full DV frame
+ * as input, which is 120000 bytes for NTSC and 144000 for PAL video.
+ * </para>
+ * <para>
+ * This element can perform simple frame dropping with the drop-factor
+ * property. Setting this property to a value N > 1 will only decode every 
+ * Nth frame.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=test.dv ! dvdemux name=demux ! dvdec ! xvimagesink
+ * </programlisting>
+ * This pipeline decodes and renders the raw DV stream to a videosink.
+ * </para>
+ * Last reviewed on 2006-02-28 (0.10.3)
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -33,6 +57,9 @@ GST_ELEMENT_DETAILS ("DV (smpte314) decoder plugin",
     "Uses libdv to decode DV video (libdv.sourceforge.net)",
     "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");
 
+/* sizes of one input buffer */
+#define NTSC_BUFFER 120000
+#define PAL_BUFFER 144000
 
 #define DV_DEFAULT_QUALITY DV_QUALITY_BEST
 #define DV_DEFAULT_DECODE_NTH 1
@@ -265,12 +292,25 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
   gint outframe_pitches[3];
   GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
+  guint length;
 
   dvdec = GST_DVDEC (gst_pad_get_parent (pad));
   inframe = GST_BUFFER_DATA (buf);
 
-  if (dv_parse_header (dvdec->decoder, inframe) < 0)
-    g_assert_not_reached ();
+  /* buffer should be at least the size of one NTSC frame, this should
+   * be enough to decode the header. */
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < NTSC_BUFFER))
+    goto wrong_size;
+
+  if (G_UNLIKELY (dv_parse_header (dvdec->decoder, inframe) < 0))
+    goto parse_header_error;
+
+  /* check the buffer is of right size after we know if we are
+   * dealing with PAL or NTSC */
+  length = (dvdec->PAL ? PAL_BUFFER : NTSC_BUFFER);
+  if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < length))
+    goto wrong_size;
+
   dv_parse_packs (dvdec->decoder, inframe);
 
   if (dvdec->video_offset % dvdec->drop_factor != 0)
@@ -280,7 +320,7 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
       gst_pad_alloc_buffer_and_set_caps (dvdec->srcpad, 0,
       (720 * dvdec->height) * dvdec->bpp,
       GST_PAD_CAPS (dvdec->srcpad), &outbuf);
-  if (ret != GST_FLOW_OK)
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto no_buffer;
 
   outframe = GST_BUFFER_DATA (outbuf);
@@ -306,19 +346,33 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
   ret = gst_pad_push (dvdec->srcpad, outbuf);
 
 skip:
-  gst_buffer_unref (buf);
   dvdec->video_offset++;
+
+done:
+  gst_buffer_unref (buf);
   gst_object_unref (dvdec);
 
   return ret;
 
   /* ERRORS */
+wrong_size:
+  {
+    GST_ELEMENT_ERROR (dvdec, STREAM, DECODE,
+        (NULL), ("Input buffer too small"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+parse_header_error:
+  {
+    GST_ELEMENT_ERROR (dvdec, STREAM, DECODE,
+        (NULL), ("Error parsing DV header"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 no_buffer:
   {
     GST_DEBUG_OBJECT (dvdec, "could not allocate buffer");
-    gst_buffer_unref (buf);
-    gst_object_unref (dvdec);
-    return ret;
+    goto done;
   }
 }
 

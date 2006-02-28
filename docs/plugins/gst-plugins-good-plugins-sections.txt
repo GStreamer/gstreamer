@@ -47,6 +47,22 @@ GstCdioCddaSrcClass
 </SECTION>
 
 <SECTION>
+<FILE>element-dvdec</FILE>
+GstDVDec
+<TITLE>dvdec</TITLE>
+<SUBSECTION Standard>
+GstDVDecClass
+</SECTION>
+
+<SECTION>
+<FILE>element-dvdemux</FILE>
+GstDVDemux
+<TITLE>dvdemux</TITLE>
+<SUBSECTION Standard>
+GstDVDemuxClass
+</SECTION>
+
+<SECTION>
 <FILE>element-flacdec</FILE>
 GstFlacDec
 <TITLE>flacdec</TITLE>

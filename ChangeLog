@@ -1,3 +1,36 @@
+2006-02-28  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	Added dvdec and dvdemux to docs.
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_base_init), (gst_dvdec_chain):
+	Added docs.
+	Check frame sizes so we don't crash when don't have enough
+	data.
+	Send nice error messages on error.
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_base_init),
+	(gst_dvdemux_class_init), (gst_dvdemux_init),
+	(gst_dvdemux_finalize), (gst_dvdemux_reset),
+	(gst_dvdemux_src_convert), (gst_dvdemux_sink_convert),
+	(gst_dvdemux_src_query), (gst_dvdemux_sink_query),
+	(gst_dvdemux_push_event), (gst_dvdemux_handle_sink_event),
+	(gst_dvdemux_convert_src_pair), (gst_dvdemux_convert_sink_pair),
+	(gst_dvdemux_convert_src_to_sink), (gst_dvdemux_handle_push_seek),
+	(gst_dvdemux_do_seek), (gst_dvdemux_handle_pull_seek),
+	(gst_dvdemux_handle_src_event), (gst_dvdemux_demux_audio),
+	(gst_dvdemux_demux_video), (gst_dvdemux_demux_frame),
+	(gst_dvdemux_flush), (gst_dvdemux_chain), (gst_dvdemux_loop),
+	(gst_dvdemux_sink_activate_push), (gst_dvdemux_sink_activate_pull),
+	(gst_dvdemux_sink_activate), (gst_dvdemux_change_state):
+	* ext/dv/gstdvdemux.h:
+	Added docs.
+	Implement pull mode.
+	Fix memleaks.
+	Reduce memcpy for the video demuxing.
+
 2006-02-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/annodex/gstcmmldec.c: (gst_cmml_dec_sink_event),
