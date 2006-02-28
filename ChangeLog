@@ -1,3 +1,10 @@
+2006-02-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/videoscale/vs_scanline.c:
+	(vs_scanline_resample_nearest_RGBA):
+	Revert optimization in videoscale. It should go in liboil and have
+	an appropriate liboil function.
+
 2006-02-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
