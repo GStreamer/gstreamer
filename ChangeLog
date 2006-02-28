@@ -1,3 +1,8 @@
+2006-02-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/iec958/ac3iec.c:
+	Set a proper klass (Codec/Muxer/Audio) for the ElementDetails.
+
 2006-02-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

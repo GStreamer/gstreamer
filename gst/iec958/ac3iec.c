@@ -42,7 +42,7 @@ GST_DEBUG_CATEGORY_STATIC (ac3iec_debug);
 /* ElementFactory information. */
 static GstElementDetails ac3iec_details = {
   "AC3 to IEC958 filter",
-  "audio/x-private1-ac3",
+  "Codec/Muxer/Audio",
   "Pads AC3 frames into IEC958 frames suitable for a raw S/PDIF interface",
   "Martin Soto <martinsoto@users.sourceforge.net>"
 };
