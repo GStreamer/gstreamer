@@ -1,3 +1,12 @@
+2006-02-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_transform):
+	Don't ignore return code from ffmpeg convert function.
+
+	* gst/ffmpegcolorspace/imgconvert.c: (img_convert):
+	Split out some long statements to ease debugging.
+
 2006-02-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/libvisual/visual.c: (gst_visual_init),

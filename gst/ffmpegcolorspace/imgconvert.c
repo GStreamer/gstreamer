@@ -2109,6 +2109,7 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
     x_shift = (dst_pix->x_chroma_shift - src_pix->x_chroma_shift);
     y_shift = (dst_pix->y_chroma_shift - src_pix->y_chroma_shift);
     xy_shift = ((x_shift & 0xf) << 4) | (y_shift & 0xf);
+
     /* there must be filters for conversion at least from and to
        YUV444 format */
     switch (xy_shift) {
@@ -2156,11 +2157,15 @@ img_convert (AVPicture * dst, int dst_pix_fmt,
 #define GEN_MASK(x) ((1<<(x))-1)
 #define DIV_ROUND_UP_X(v,x) (((v) + GEN_MASK(x)) >> (x))
 
-    for (i = 1; i <= 2; i++)
+    for (i = 1; i <= 2; i++) {
+      gint w, h;
+
+      w = DIV_ROUND_UP_X (dst_width, dst_pix->x_chroma_shift);
+      h = DIV_ROUND_UP_X (dst_height, dst_pix->y_chroma_shift);
+
       resize_func (dst->data[i], dst->linesize[i],
-          src->data[i], src->linesize[i],
-          DIV_ROUND_UP_X (dst_width, dst_pix->x_chroma_shift),
-          DIV_ROUND_UP_X (dst_height, dst_pix->y_chroma_shift));
+          src->data[i], src->linesize[i], w, h);
+    }
     /* if yuv color space conversion is needed, we do it here on
        the destination image */
     if (dst_pix->color_type != src_pix->color_type) {
@@ -2228,6 +2233,7 @@ no_chroma_filter:
   if (img_convert (tmp, int_pix_fmt,
           src, src_pix_fmt, src_width, src_height) < 0)
     goto fail1;
+
   if (img_convert (dst, dst_pix_fmt,
           tmp, int_pix_fmt, dst_width, dst_height) < 0)
     goto fail1;

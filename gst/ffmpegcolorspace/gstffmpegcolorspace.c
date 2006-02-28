@@ -429,6 +429,7 @@ gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstFFMpegCsp *space;
+  gint result;
 
   space = GST_FFMPEGCSP (btrans);
 
@@ -449,8 +450,10 @@ gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
       GST_BUFFER_DATA (outbuf), space->to_pixfmt, space->width, space->height);
 
   /* and convert */
-  img_convert (&space->to_frame, space->to_pixfmt,
+  result = img_convert (&space->to_frame, space->to_pixfmt,
       &space->from_frame, space->from_pixfmt, space->width, space->height);
+  if (result == -1)
+    goto not_supported;
 
   /* copy timestamps */
   gst_buffer_stamp (outbuf, inbuf);
@@ -464,6 +467,12 @@ unknown_format:
     GST_ELEMENT_ERROR (space, CORE, NOT_IMPLEMENTED, (NULL),
         ("attempting to convert colorspaces between unknown formats"));
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+not_supported:
+  {
+    GST_ELEMENT_ERROR (space, CORE, NOT_IMPLEMENTED, (NULL),
+        ("cannot convert between formats"));
+    return GST_FLOW_NOT_SUPPORTED;
   }
 }
 
