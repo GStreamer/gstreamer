@@ -357,6 +357,8 @@ gst_cmml_dec_sink_event (GstPad * pad, GstEvent * event)
 
       if (dec->flow_return == GST_FLOW_OK)
         dec->flow_return = gst_pad_push (dec->srcpad, buffer);
+      if (dec->flow_return == GST_FLOW_NOT_LINKED)
+        dec->flow_return = GST_FLOW_OK; /* Ignore NOT_LINKED */
 
       break;
     }
@@ -449,6 +451,8 @@ gst_cmml_dec_new_buffer (GstCmmlDec * dec,
     if (data)
       memcpy (GST_BUFFER_DATA (*buffer), data, size);
     GST_BUFFER_TIMESTAMP (*buffer) = dec->timestamp;
+  } else if (res == GST_FLOW_NOT_LINKED) {
+    GST_DEBUG_OBJECT (dec, "alloc function return NOT-LINKED, ignoring");
   } else {
     GST_WARNING_OBJECT (dec, "alloc function returned error %s",
         gst_flow_get_name (res));
@@ -547,15 +551,16 @@ gst_cmml_dec_parse_preamble (GstCmmlDec * dec, guchar * preamble,
   /* push the root element */
   dec->flow_return = gst_cmml_dec_new_buffer (dec,
       encoded_preamble, strlen ((gchar *) encoded_preamble), &buffer);
-  if (dec->flow_return != GST_FLOW_OK)
-    goto done;
+  if (dec->flow_return == GST_FLOW_OK) {
+    dec->flow_return = gst_pad_push (dec->srcpad, buffer);
+  }
 
-  dec->flow_return = gst_pad_push (dec->srcpad, buffer);
+  if (dec->flow_return == GST_FLOW_NOT_LINKED)
+    dec->flow_return = GST_FLOW_OK;     /* Ignore NOT_LINKED */
   if (!GST_FLOW_IS_FATAL (dec->flow_return)) {
     GST_INFO_OBJECT (dec, "preamble parsed");
   }
 
-done:
   g_free (encoded_preamble);
   return;
 }
@@ -598,6 +603,8 @@ gst_cmml_dec_parse_head (GstCmmlDec * dec, GstCmmlTagHead * head)
   g_free (head_str);
   if (dec->flow_return == GST_FLOW_OK)
     dec->flow_return = gst_pad_push (dec->srcpad, buffer);
+  if (dec->flow_return == GST_FLOW_NOT_LINKED)
+    dec->flow_return = GST_FLOW_OK;     /* Ignore NOT_LINKED */
 }
 
 /* send a TAG_MESSAGE event for a clip */
@@ -627,6 +634,8 @@ gst_cmml_dec_push_clip (GstCmmlDec * dec, GstCmmlTagClip * clip)
       clip_str, strlen ((gchar *) clip_str), &buffer);
   if (dec->flow_return == GST_FLOW_OK)
     dec->flow_return = gst_pad_push (dec->srcpad, buffer);
+  if (dec->flow_return == GST_FLOW_NOT_LINKED)
+    dec->flow_return = GST_FLOW_OK;     /* Ignore NOT_LINKED */
 
   g_free (clip_str);
 }

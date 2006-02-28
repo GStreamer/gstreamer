@@ -72,8 +72,7 @@ gst_cmml_parser_new (GstCmmlParserMode mode)
       (startElementNsSAX2Func) gst_cmml_parser_parse_start_element_ns;
   parser->context->sax->endElementNs =
       (endElementNsSAX2Func) gst_cmml_parser_parse_end_element_ns;
-  parser->context->sax->processingInstruction =
-      (processingInstructionSAXFunc)
+  parser->context->sax->processingInstruction = (processingInstructionSAXFunc)
       gst_cmml_parser_parse_processing_instruction;
   parser->preamble_callback = NULL;
   parser->cmml_end_callback = NULL;
@@ -111,6 +110,7 @@ gst_cmml_parser_parse_chunk (GstCmmlParser * parser,
   if (xmlres != XML_ERR_OK) {
     xmlErrorPtr xml_error = xmlCtxtGetLastError (parser->context);
 
+    GST_DEBUG ("Error occurred decoding chunk %s", data);
     g_set_error (err,
         GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_FAILED, xml_error->message);
     return FALSE;

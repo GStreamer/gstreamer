@@ -1,3 +1,12 @@
+2006-02-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/annodex/gstcmmldec.c: (gst_cmml_dec_sink_event),
+	(gst_cmml_dec_new_buffer), (gst_cmml_dec_parse_preamble),
+	(gst_cmml_dec_parse_head), (gst_cmml_dec_push_clip):
+	* ext/annodex/gstcmmlparser.c: (gst_cmml_parser_parse_chunk):
+	  Add a little extra debug. Make the decoder not return NOT_LINKED,
+	  as we want to continue decoding all CMML and emitting tags.
+
 2006-02-27  Michael Smith  <msmith@fluendo.com>
 
 	* ext/annodex/gstskeltag.c:
