@@ -1,3 +1,17 @@
+2006-02-28 Jürg Billeter  <j (at) bitron.ch>
+
+	Reviewed by: Christian Schaller <christian@fluendo.com>
+
+	This patch fixes bug: 329107
+
+	This Changelog entry is for a commit done on February 17
+
+	* ext/gconf/gconf.c
+	* ext/gconf/gconf.h
+	* ext/gconf/gstgconfaudiosink.c
+	* ext/gconf/gstgconfaudiosink.h
+	* gconf/gstreamer.schemas.in
+
 2006-02-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
@@ -54,6 +68,7 @@
 	* ext/annodex/gstskeltag.h:
 	  Deleted; these files aren't used any more either.
 
+>>>>>>> 1.2189
 2006-02-25  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/Makefile.am: Fix dist-check.
