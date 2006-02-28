@@ -1,5 +1,11 @@
 2006-02-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_provide_clock):
+	Don't try to provide a clock in the NULL state.
+
+2006-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_receive_event),
 	(gst_ogg_pad_event), (gst_ogg_pad_internal_chain),
 	(gst_ogg_demux_chain_peer), (gst_ogg_pad_submit_packet),

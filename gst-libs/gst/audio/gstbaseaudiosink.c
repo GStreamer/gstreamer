@@ -181,6 +181,10 @@ gst_base_audio_sink_provide_clock (GstElement * elem)
 
   sink = GST_BASE_AUDIO_SINK (elem);
 
+  /* we have no ringbuffer (must be NULL state */
+  if (sink->ringbuffer == NULL)
+    goto wrong_state;
+
   if (!gst_ring_buffer_is_acquired (sink->ringbuffer))
     goto wrong_state;
 
