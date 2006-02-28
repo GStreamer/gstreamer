@@ -112,6 +112,10 @@ SOURCE="..\..\gst-libs\gst\tag\gstvorbistag.c"
 
 SOURCE=..\common\libgsttag.def
 # End Source File
+# Begin Source File
+
+SOURCE="..\..\gst-libs\gst\tag\tags.c"
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

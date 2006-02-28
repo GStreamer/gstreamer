@@ -53,6 +53,15 @@
 
 #include "gstaudiotestsrc.h"
 
+
+#ifndef M_PI
+#define M_PI  3.14159265358979323846
+#endif
+
+#ifndef M_PI_2
+#define M_PI_2  1.57079632679489661923
+#endif
+
 #define M_PI_M2 ( M_PI + M_PI )
 
 GstElementDetails gst_audio_test_src_details = {

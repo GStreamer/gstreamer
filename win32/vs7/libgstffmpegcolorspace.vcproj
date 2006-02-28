@@ -19,10 +19,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../gstreamer,../../../gstreamer/libs,../common"
+				AdditionalIncludeDirectories="../../../gstreamer,../../../gstreamer/libs,../common,../../gst/ffmpegcolorspace"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGSTFFMPEGCOLORSPACE_EXPORTS;HAVE_CONFIG_H"
 				MinimalRebuild="TRUE"
-				BasicRuntimeChecks="0"
+				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -32,6 +32,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib"
 				OutputFile="$(OutDir)/libgstffmpegcolorspace.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/vs7/$(OutDir)"
@@ -70,10 +71,9 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../gstreamer,../../../gstreamer/libs,../common"
+				AdditionalIncludeDirectories="../../../gstreamer,../../../gstreamer/libs,../common,../../gst/ffmpegcolorspace"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGSTFFMPEGCOLORSPACE_EXPORTS;HAVE_CONFIG_H"
 				RuntimeLibrary="2"
-				BufferSecurityCheck="FALSE"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
@@ -82,6 +82,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib"
 				OutputFile="$(OutDir)/libgstffmpegcolorspace.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/vs7/$(OutDir)"

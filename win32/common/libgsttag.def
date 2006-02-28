@@ -1,3 +1,4 @@
 EXPORTS
 	gst_tag_list_from_vorbiscomment_buffer
 	gst_tag_to_vorbis_tag
+	gst_tag_register_musicbrainz_tags
