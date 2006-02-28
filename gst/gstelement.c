@@ -142,7 +142,7 @@ gst_element_get_type (void)
 {
   static GType gst_element_type = 0;
 
-  if (!gst_element_type) {
+  if (G_UNLIKELY (gst_element_type == 0)) {
     static const GTypeInfo element_info = {
       sizeof (GstElementClass),
       gst_element_base_class_init,

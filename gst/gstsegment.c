@@ -97,7 +97,7 @@ gst_segment_get_type (void)
 {
   static GType gst_segment_type = 0;
 
-  if (!gst_segment_type) {
+  if (G_UNLIKELY (gst_segment_type == 0)) {
     gst_segment_type = g_boxed_type_register_static ("GstSegment",
         (GBoxedCopyFunc) gst_segment_copy, (GBoxedFreeFunc) gst_segment_free);
   }

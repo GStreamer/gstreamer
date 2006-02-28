@@ -187,7 +187,7 @@ gst_pad_get_type (void)
 {
   static GType gst_pad_type = 0;
 
-  if (!gst_pad_type) {
+  if (G_UNLIKELY (gst_pad_type == 0)) {
     static const GTypeInfo pad_info = {
       sizeof (GstPadClass), NULL, NULL,
       (GClassInitFunc) gst_pad_class_init, NULL, NULL,

@@ -1,3 +1,30 @@
+2006-02-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_get_type), (gst_bin_handle_message_func):
+	Help the compiler a bit with type registration.
+	Use existing forward cod path instead of duplicating it when 
+	handling a message.
+	
+	* gst/gstbus.c: (gst_bus_get_type):
+	* gst/gstcaps.c: (gst_caps_get_type), (gst_static_caps_get_type):
+	* gst/gstchildproxy.c: (gst_child_proxy_get_type):
+	* gst/gstclock.c: (gst_clock_get_type):
+	* gst/gstelement.c: (gst_element_get_type),
+	* gst/gstelementfactory.c: (gst_element_factory_get_type):
+	* gst/gstindexfactory.c: (gst_index_factory_get_type):
+	* gst/gstminiobject.c: (gst_mini_object_get_type):
+	* gst/gstpad.c: (gst_pad_get_type):
+	* gst/gstsegment.c: (gst_segment_get_type):
+	* gst/gststructure.c: (gst_structure_get_type):
+	* gst/gstsystemclock.c: (gst_system_clock_get_type):
+	* gst/gsttask.c: (gst_task_get_type), (gst_task_join):
+	* gst/gstvalue.c:
+	Help compiler with type registration.
+
+	* plugins/elements/gstqueue.c: (gst_queue_handle_sink_event):
+	Small doc update.
+
+
 2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gsttypefindelement.c:

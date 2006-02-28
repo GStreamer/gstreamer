@@ -203,7 +203,7 @@ gst_bin_get_type (void)
 {
   static GType gst_bin_type = 0;
 
-  if (!gst_bin_type) {
+  if (G_UNLIKELY (gst_bin_type == 0)) {
     static const GTypeInfo bin_info = {
       sizeof (GstBinClass),
       gst_bin_base_init,
@@ -2020,12 +2020,8 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
     not_toplevel:
       {
         GST_OBJECT_UNLOCK (bin);
-        GST_DEBUG_OBJECT (bin, "not toplevel");
-
-        /* post message up, mark parent bins dirty */
-        gst_element_post_message (GST_ELEMENT_CAST (bin), message);
-
-        break;
+        GST_DEBUG_OBJECT (bin, "not toplevel, forwarding");
+        goto forward;
       }
     }
     case GST_MESSAGE_SEGMENT_START:
@@ -2103,12 +2099,11 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
           provided, playing, forward);
       GST_OBJECT_UNLOCK (bin);
 
-      if (forward) {
+      if (forward)
         goto forward;
-      }
+
       /* free message */
       gst_message_unref (message);
-
       break;
     }
     case GST_MESSAGE_CLOCK_PROVIDE:
@@ -2124,15 +2119,14 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 
       if (forward)
         goto forward;
+
       /* free message */
       gst_message_unref (message);
-
       break;
     }
     default:
       goto forward;
   }
-
   return;
 
 forward:

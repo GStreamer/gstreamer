@@ -50,7 +50,7 @@ gst_index_factory_get_type (void)
 {
   static GType indexfactory_type = 0;
 
-  if (!indexfactory_type) {
+  if (G_UNLIKELY (indexfactory_type == 0)) {
     static const GTypeInfo indexfactory_info = {
       sizeof (GstIndexFactoryClass),
       NULL,

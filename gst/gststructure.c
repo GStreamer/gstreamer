@@ -93,7 +93,7 @@ gst_structure_get_type (void)
 {
   static GType gst_structure_type = 0;
 
-  if (!gst_structure_type) {
+  if (G_UNLIKELY (gst_structure_type == 0)) {
     gst_structure_type = g_boxed_type_register_static ("GstStructure",
         (GBoxedCopyFunc) gst_structure_copy_conditional,
         (GBoxedFreeFunc) gst_structure_free);

@@ -497,7 +497,7 @@ gst_clock_get_type (void)
 {
   static GType clock_type = 0;
 
-  if (!clock_type) {
+  if (G_UNLIKELY (clock_type == 0)) {
     static const GTypeInfo clock_info = {
       sizeof (GstClockClass),
       NULL,

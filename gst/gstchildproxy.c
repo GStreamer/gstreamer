@@ -454,7 +454,7 @@ gst_child_proxy_get_type (void)
 {
   static GType type = 0;
 
-  if (type == 0) {
+  if (G_UNLIKELY (type == 0)) {
     static const GTypeInfo info = {
       sizeof (GstChildProxyInterface),
       gst_child_proxy_base_init,        /* base_init */

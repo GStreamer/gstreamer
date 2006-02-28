@@ -103,7 +103,7 @@ gst_caps_get_type (void)
 {
   static GType gst_caps_type = 0;
 
-  if (!gst_caps_type) {
+  if (G_UNLIKELY (gst_caps_type == 0)) {
     gst_caps_type = g_boxed_type_register_static ("GstCaps",
         (GBoxedCopyFunc) gst_caps_copy_conditional,
         (GBoxedFreeFunc) gst_caps_unref);
@@ -394,7 +394,7 @@ gst_static_caps_get_type (void)
 {
   static GType staticcaps_type = 0;
 
-  if (!staticcaps_type) {
+  if (G_UNLIKELY (staticcaps_type == 0)) {
     staticcaps_type = g_pointer_type_register_static ("GstStaticCaps");
   }
   return staticcaps_type;

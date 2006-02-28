@@ -520,7 +520,8 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       g_cond_signal (queue->item_del);
       GST_QUEUE_MUTEX_UNLOCK (queue);
 
-      /* make sure it pauses */
+      /* make sure it pauses, this should happen since we sent
+       * flush_start downstream. */
       gst_pad_pause_task (queue->srcpad);
       GST_CAT_LOG_OBJECT (queue_dataflow, queue, "loop stopped");
       goto done;

@@ -3655,7 +3655,7 @@ GType gst_ ## type ## _get_type (void)                          \
 {                                                               \
   static GType gst_ ## type ## _type = 0;                       \
                                                                 \
-  if (!gst_ ## type ## _type) {                                 \
+  if (G_UNLIKELY (gst_ ## type ## _type == 0)) {		\
     _info.value_table = & _gst_ ## type ## _value_table;        \
     gst_ ## type ## _type = g_type_register_fundamental (       \
         g_type_fundamental_next (),                             \

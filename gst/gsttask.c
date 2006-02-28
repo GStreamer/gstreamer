@@ -81,7 +81,7 @@ gst_task_get_type (void)
 {
   static GType _gst_task_type = 0;
 
-  if (!_gst_task_type) {
+  if (G_UNLIKELY (_gst_task_type == 0)) {
     static const GTypeInfo task_info = {
       sizeof (GstTaskClass),
       NULL,

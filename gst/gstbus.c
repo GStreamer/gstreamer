@@ -110,7 +110,7 @@ gst_bus_get_type (void)
 {
   static GType bus_type = 0;
 
-  if (!bus_type) {
+  if (G_UNLIKELY (bus_type == 0)) {
     static const GTypeInfo bus_info = {
       sizeof (GstBusClass),
       NULL,

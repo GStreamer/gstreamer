@@ -65,7 +65,7 @@ gst_mini_object_get_type (void)
 {
   static GType _gst_mini_object_type = 0;
 
-  if (!_gst_mini_object_type) {
+  if (G_UNLIKELY (_gst_mini_object_type == 0)) {
     GTypeValueTable value_table = {
       gst_value_mini_object_init,
       gst_value_mini_object_free,

@@ -79,7 +79,7 @@ gst_element_factory_get_type (void)
 {
   static GType elementfactory_type = 0;
 
-  if (!elementfactory_type) {
+  if (G_UNLIKELY (elementfactory_type == 0)) {
     static const GTypeInfo elementfactory_info = {
       sizeof (GstElementFactoryClass),
       NULL,
