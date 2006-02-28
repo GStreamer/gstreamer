@@ -1,5 +1,18 @@
 2006-02-28  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_receive_event),
+	(gst_ogg_pad_event), (gst_ogg_pad_internal_chain),
+	(gst_ogg_demux_chain_peer), (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_deactivate_current_chain),
+	(gst_ogg_demux_activate_chain), (gst_ogg_demux_do_seek),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_collect_info),
+	(gst_ogg_demux_find_chains), (gst_ogg_demux_chain),
+	(gst_ogg_demux_loop), (gst_ogg_demux_change_state):
+	Use GstSegment infrastructure to remove duplicated code
+	and handle more seek cases correctly.
+
+2006-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
 	(gst_ffmpegcsp_transform):
 	Don't ignore return code from ffmpeg convert function.
