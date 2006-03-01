@@ -2,6 +2,7 @@
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * This file:
  * Copyright (C) 2005 Luca Ognibene <luogni@tin.it>
+ * Copyright (C) 2006 Martin Zlomek <martin.zlomek@itonis.tv>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,133 +24,151 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #else
 #include <ffmpeg/avcodec.h>
 #endif
 
+#include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
+
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
 
-#define GST_TYPE_FFMPEGSCALE \
-  (gst_ffmpegscale_get_type())
-#define GST_FFMPEGSCALE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGSCALE,GstFFMpegScale))
-#define GST_FFMPEGSCALE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGSCALE,GstFFMpegScale))
-#define GST_IS_FFMPEGSCALE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGSCALE))
-#define GST_IS_FFMPEGSCALE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGSCALE))
-
-typedef struct _GstFFMpegScale GstFFMpegScale;
-typedef struct _GstFFMpegScaleClass GstFFMpegScaleClass;
-
-struct _GstFFMpegScale
+typedef struct _GstFFMpegScale
 {
-  GstElement element;
+  GstBaseTransform element;
 
   GstPad *sinkpad, *srcpad;
 
-  gint from_width, from_height;
-  gint to_width, to_height;
+  gint in_width, in_height;
+  gint out_width, out_height;
 
   enum PixelFormat pixfmt;
-  AVPicture from_frame, to_frame;
-  GstCaps *sinkcaps;
-  
-  guint to_size;
 
   ImgReSampleContext *res;
+} GstFFMpegScale;
 
-  gboolean passthru;
-};
-
-struct _GstFFMpegScaleClass
+typedef struct _GstFFMpegScaleClass
 {
-  GstElementClass parent_class;
-};
+  GstBaseTransformClass parent_class;
+} GstFFMpegScaleClass;
 
-/* elementfactory information */
-static GstElementDetails ffmpegscale_details = {
-  "FFMPEG Scale element",
-  "Filter/Converter/Video",
-  "Converts video from one resolution to another",
-  "Luca Ognibene <luogni@tin.it>",
-};
+#define GST_TYPE_FFMPEGSCALE \
+	(gst_ffmpegscale_get_type())
+#define GST_FFMPEGSCALE(obj) \
+	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGSCALE,GstFFMpegScale))
+#define GST_FFMPEGSCALE_CLASS(klass) \
+	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGSCALE,GstFFMpegScaleClass))
+#define GST_IS_FFMPEGSCALE(obj) \
+	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGSCALE))
+#define GST_IS_FFMPEGSCALE_CLASS(obj) \
+	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGSCALE))
 
-/* Signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-};
-
-static GstStaticPadTemplate gst_ffmpegscale_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
 
-static GstStaticPadTemplate gst_ffmpegscale_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
 
+GST_BOILERPLATE (GstFFMpegScale, gst_ffmpegscale, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM);
 
-static GType gst_ffmpegscale_get_type (void);
+static void gst_ffmpegscale_finalize (GObject * object);
 
-static void gst_ffmpegscale_base_init (GstFFMpegScaleClass * klass);
-static void gst_ffmpegscale_class_init (GstFFMpegScaleClass * klass);
-static void gst_ffmpegscale_init (GstFFMpegScale * space);
+static GstCaps *gst_ffmpegscale_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps);
+static void gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+static gboolean gst_ffmpegscale_get_unit_size (GstBaseTransform * trans,
+    GstCaps * caps, guint * size);
+static gboolean gst_ffmpegscale_set_caps (GstBaseTransform * trans,
+    GstCaps * incaps, GstCaps * outcaps);
+static GstFlowReturn gst_ffmpegscale_transform (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstBuffer * outbuf);
 
-static void gst_ffmpegscale_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_ffmpegscale_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
+static gboolean gst_ffmpegscale_handle_src_event (GstPad * pad,
+    GstEvent * event);
 
-static GstPadLinkReturn
-gst_ffmpegscale_pad_link (GstPad * pad, const GstCaps * caps);
+static void
+gst_ffmpegscale_base_init (gpointer g_class)
+{
+  static GstElementDetails plugin_details = {
+    "FFMPEG Scale element",
+    "Filter/Converter/Video",
+    "Converts video from one resolution to another",
+    "Luca Ognibene <luogni@tin.it>",
+  };
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-static void gst_ffmpegscale_chain (GstPad * pad, GstData * data);
-static GstStateChangeReturn gst_ffmpegscale_change_state (GstElement * element,
-    GstStateChange transition);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
+  gst_element_class_set_details (element_class, &plugin_details);
+}
 
-static GstElementClass *parent_class = NULL;
+static void
+gst_ffmpegscale_class_init (GstFFMpegScaleClass * klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
-/*static guint gst_ffmpegscale_signals[LAST_SIGNAL] = { 0 }; */
+  gobject_class->finalize = gst_ffmpegscale_finalize;
+
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_ffmpegscale_transform_caps);
+  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_ffmpegscale_fixate_caps);
+  trans_class->get_unit_size =
+      GST_DEBUG_FUNCPTR (gst_ffmpegscale_get_unit_size);
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_ffmpegscale_set_caps);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_ffmpegscale_transform);
+
+  trans_class->passthrough_on_same_caps = TRUE;
+}
+
+static void
+gst_ffmpegscale_init (GstFFMpegScale * scale, GstFFMpegScaleClass * klass)
+{
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (scale);
+
+  gst_pad_set_event_function (trans->srcpad, gst_ffmpegscale_handle_src_event);
+
+  scale->pixfmt = PIX_FMT_NB;
+  scale->res = NULL;
+}
+
+static void
+gst_ffmpegscale_finalize (GObject * object)
+{
+  GstFFMpegScale *scale = GST_FFMPEGSCALE (object);
+
+  if (scale->res != NULL)
+    img_resample_close (scale->res);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
 
 static GstCaps *
-gst_ffmpegscale_getcaps (GstPad * pad)
+gst_ffmpegscale_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps)
 {
-  GstFFMpegScale *filter;
-  GstCaps *othercaps;
-  GstCaps *caps;
-  GstPad *otherpad;
-  gint i;
-  
-  filter = GST_FFMPEGSCALE (gst_pad_get_parent (pad));
+  GstFFMpegScale *scale = GST_FFMPEGSCALE (trans);
+  GstCaps *retcaps;
+  int i;
 
-  otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
+  retcaps = gst_caps_copy (caps);
 
-  othercaps = gst_pad_get_allowed_caps (otherpad);
-
-  caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
-  gst_caps_free (othercaps);
-
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (caps, i);
+  for (i = 0; i < gst_caps_get_size (retcaps); i++) {
+    GstStructure *structure = gst_caps_get_structure (retcaps, i);
 
     gst_structure_set (structure,
         "width", GST_TYPE_INT_RANGE, 16, 4096,
@@ -157,34 +176,105 @@ gst_ffmpegscale_getcaps (GstPad * pad)
     gst_structure_remove_field (structure, "pixel-aspect-ratio");
   }
 
-  GST_DEBUG ("getcaps are: %" GST_PTR_FORMAT, caps);
-
-  return caps;
+  return retcaps;
 }
 
-static GstPadLinkReturn
-gst_ffmpegscale_pad_link (GstPad * pad, const GstCaps * caps)
+static void
+gst_ffmpegscale_fixate_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
-  GstStructure *structure;
+  GstStructure *instructure = gst_caps_get_structure (caps, 0);
+  GstStructure *outstructure = gst_caps_get_structure (othercaps, 0);
+  const GValue *in_par, *out_par;
+
+  in_par = gst_structure_get_value (instructure, "pixel-aspect-ratio");
+  out_par = gst_structure_get_value (outstructure, "pixel-aspect-ratio");
+
+  if (in_par && out_par) {
+    GValue out_ratio = { 0, };  /* w/h of output video */
+    int in_w, in_h, in_par_n, in_par_d, out_par_n, out_par_d;
+    int count = 0, w = 0, h = 0, num, den;
+
+    /* if both width and height are already fixed, we can't do anything
+     * about it anymore */
+    if (gst_structure_get_int (outstructure, "width", &w))
+      ++count;
+    if (gst_structure_get_int (outstructure, "height", &h))
+      ++count;
+    if (count == 2) {
+      GST_DEBUG_OBJECT (trans, "dimensions already set to %dx%d, not fixating",
+          w, h);
+      return;
+    }
+
+    gst_structure_get_int (instructure, "width", &in_w);
+    gst_structure_get_int (instructure, "height", &in_h);
+    in_par_n = gst_value_get_fraction_numerator (in_par);
+    in_par_d = gst_value_get_fraction_denominator (in_par);
+    out_par_n = gst_value_get_fraction_numerator (out_par);
+    out_par_d = gst_value_get_fraction_denominator (out_par);
+
+    g_value_init (&out_ratio, GST_TYPE_FRACTION);
+    gst_value_set_fraction (&out_ratio, in_w * in_par_n * out_par_d,
+        in_h * in_par_d * out_par_n);
+    num = gst_value_get_fraction_numerator (&out_ratio);
+    den = gst_value_get_fraction_denominator (&out_ratio);
+    GST_DEBUG_OBJECT (trans,
+        "scaling input with %dx%d and PAR %d/%d to output PAR %d/%d",
+        in_w, in_h, in_par_n, in_par_d, out_par_n, out_par_d);
+    GST_DEBUG_OBJECT (trans, "resulting output should respect ratio of %d/%d",
+        num, den);
+
+    /* now find a width x height that respects this display ratio.
+     * prefer those that have one of w/h the same as the incoming video
+     * using wd / hd = num / den */
+
+    /* start with same height, because of interlaced video */
+    /* check hd / den is an integer scale factor, and scale wd with the PAR */
+    if (in_h % den == 0) {
+      GST_DEBUG_OBJECT (trans, "keeping video height");
+      h = in_h;
+      w = h * num / den;
+    } else if (in_w % num == 0) {
+      GST_DEBUG_OBJECT (trans, "keeping video width");
+      w = in_w;
+      h = w * den / num;
+    } else {
+      GST_DEBUG_OBJECT (trans, "approximating but keeping video height");
+      h = in_h;
+      w = h * num / den;
+    }
+    GST_DEBUG_OBJECT (trans, "scaling to %dx%d", w, h);
+
+    /* now fixate */
+    gst_structure_fixate_field_nearest_int (outstructure, "width", w);
+    gst_structure_fixate_field_nearest_int (outstructure, "height", h);
+  } else {
+    gint width, height;
+
+    if (gst_structure_get_int (instructure, "width", &width)) {
+      if (gst_structure_has_field (outstructure, "width"))
+        gst_structure_fixate_field_nearest_int (outstructure, "width", width);
+    }
+    if (gst_structure_get_int (instructure, "height", &height)) {
+      if (gst_structure_has_field (outstructure, "height"))
+        gst_structure_fixate_field_nearest_int (outstructure, "height", height);
+    }
+  }
+}
+
+static gboolean
+gst_ffmpegscale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
+    guint * size)
+{
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  gint width, height;
   AVCodecContext *ctx;
-  GstFFMpegScale *scale;
-  GstPad *otherpad;
-  GstPadLinkReturn ret;
-  int height, width;
-  gchar *caps_string;
 
-  caps_string = gst_caps_to_string (caps);
-  GST_DEBUG ("ffmpegscale _link %s\n", caps_string);
-  g_free (caps_string);
-
-  scale = GST_FFMPEGSCALE (gst_pad_get_parent (pad));
-
-  otherpad = (pad == scale->srcpad) ? scale->sinkpad :
-      scale->srcpad;
-
-  structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", &width);
-  ret &= gst_structure_get_int (structure, "height", &height);
+  if (!gst_structure_get_int (structure, "width", &width))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "height", &height))
+    return FALSE;
 
   ctx = avcodec_alloc_context ();
   ctx->width = width;
@@ -193,258 +283,120 @@ gst_ffmpegscale_pad_link (GstPad * pad, const GstCaps * caps)
   gst_ffmpeg_caps_with_codectype (CODEC_TYPE_VIDEO, caps, ctx);
   if (ctx->pix_fmt == PIX_FMT_NB) {
     av_free (ctx);
+    return FALSE;
+  }
 
-    /* we disable ourself here */
-    return GST_PAD_LINK_REFUSED;
+  *size = (guint) avpicture_get_size (ctx->pix_fmt, ctx->width, ctx->height);
+
+  av_free (ctx);
+
+  return TRUE;
+}
+
+static gboolean
+gst_ffmpegscale_set_caps (GstBaseTransform * trans, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstFFMpegScale *scale = GST_FFMPEGSCALE (trans);
+  GstStructure *instructure = gst_caps_get_structure (incaps, 0);
+  GstStructure *outstructure = gst_caps_get_structure (outcaps, 0);
+  gint par_num, par_den;
+  AVCodecContext *ctx;
+
+  if (!gst_structure_get_int (instructure, "width", &scale->in_width))
+    return FALSE;
+  if (!gst_structure_get_int (instructure, "height", &scale->in_height))
+    return FALSE;
+
+  if (!gst_structure_get_int (outstructure, "width", &scale->out_width))
+    return FALSE;
+  if (!gst_structure_get_int (outstructure, "height", &scale->out_height))
+    return FALSE;
+
+  if (gst_structure_get_fraction (instructure, "pixel-aspect-ratio",
+          &par_num, &par_den)) {
+    gst_structure_set (outstructure,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        par_num * scale->in_width / scale->out_width,
+        par_den * scale->in_height / scale->out_height, NULL);
+  }
+
+  ctx = avcodec_alloc_context ();
+  ctx->width = scale->in_width;
+  ctx->height = scale->in_height;
+  ctx->pix_fmt = PIX_FMT_NB;
+  gst_ffmpeg_caps_with_codectype (CODEC_TYPE_VIDEO, incaps, ctx);
+  if (ctx->pix_fmt == PIX_FMT_NB) {
+    av_free (ctx);
+    return FALSE;
   }
 
   scale->pixfmt = ctx->pix_fmt;
+
   av_free (ctx);
 
-  ret = gst_pad_try_set_caps (otherpad, caps);
-  if (ret == GST_PAD_LINK_OK) {
-    /* cool, we can use passthru */
+  scale->res = img_resample_init (scale->out_width, scale->out_height,
+      scale->in_width, scale->in_height);
 
-    scale->to_width = width;
-    scale->to_height = height;
-    scale->from_width = width;
-    scale->from_height = height;
-
-    scale->passthru = TRUE;
-    GST_FLAG_SET (scale, GST_ELEMENT_WORK_IN_PLACE);
-
-    return GST_PAD_LINK_OK;
-  }
-
-  if (gst_pad_is_negotiated (otherpad)) {
-    GstCaps *newcaps = gst_caps_copy (caps);
-
-    if (pad == scale->srcpad) {
-      gst_caps_set_simple (newcaps,
-          "width", G_TYPE_INT, scale->from_width,
-          "height", G_TYPE_INT, scale->from_height, NULL);
-    } else {
-      gst_caps_set_simple (newcaps,
-          "width", G_TYPE_INT, scale->to_width,
-          "height", G_TYPE_INT, scale->to_height, NULL);
-    }
-    ret = gst_pad_try_set_caps (otherpad, newcaps);
-    gst_caps_free (newcaps);
-
-    if (GST_PAD_LINK_FAILED (ret)) {
-      return GST_PAD_LINK_REFUSED;
-    }
-  }
-
-  scale->passthru = FALSE;
-  GST_FLAG_UNSET (scale, GST_ELEMENT_WORK_IN_PLACE);
-
-  if (pad == scale->srcpad) {
-    scale->to_width = width;
-    scale->to_height = height;
-        
-  } else {
-    scale->from_width = width;
-    scale->from_height = height;
-  }  
-
-  if (gst_pad_is_negotiated (otherpad)) {
-
-    scale->to_size = avpicture_get_size (scale->pixfmt, scale->to_width, scale->to_height);
-
-    if (scale->res != NULL) img_resample_close (scale->res);
-
-    scale->res = img_resample_init (scale->to_width, scale->to_height,
-                                    scale->from_width, scale->from_height);
-
-  }
-
-  return GST_PAD_LINK_OK;
+  return TRUE;
 }
 
-static GType
-gst_ffmpegscale_get_type (void)
+static GstFlowReturn
+gst_ffmpegscale_transform (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
-  static GType ffmpegscale_type = 0;
+  GstFFMpegScale *scale = GST_FFMPEGSCALE (trans);
+  AVPicture in_frame, out_frame;
 
-  if (!ffmpegscale_type) {
-    static const GTypeInfo ffmpegscale_info = {
-      sizeof (GstFFMpegScaleClass),
-      (GBaseInitFunc) gst_ffmpegscale_base_init,
-      NULL,
-      (GClassInitFunc) gst_ffmpegscale_class_init,
-      NULL,
-      NULL,
-      sizeof (GstFFMpegScale),
-      0,
-      (GInstanceInitFunc) gst_ffmpegscale_init,
-    };
+  gst_buffer_stamp (outbuf, inbuf);
 
-    ffmpegscale_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstFFMpegScale", &ffmpegscale_info, 0);
-  }
+  gst_ffmpeg_avpicture_fill (&in_frame,
+      GST_BUFFER_DATA (inbuf),
+      scale->pixfmt, scale->in_width, scale->in_height);
 
-  return ffmpegscale_type;
+  gst_ffmpeg_avpicture_fill (&out_frame,
+      GST_BUFFER_DATA (outbuf),
+      scale->pixfmt, scale->out_width, scale->out_height);
+
+  img_resample (scale->res, &out_frame, &in_frame);
+
+  return GST_FLOW_OK;
 }
 
-static void
-gst_ffmpegscale_base_init (GstFFMpegScaleClass * klass)
+static gboolean
+gst_ffmpegscale_handle_src_event (GstPad * pad, GstEvent * event)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstFFMpegScale *scale = GST_FFMPEGSCALE (gst_pad_get_parent (pad));
+  GstStructure *structure;
+  gdouble pointer;
 
-  gst_element_class_set_details (element_class, &ffmpegscale_details);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NAVIGATION:
+      event =
+          GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_ffmpegscale_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_ffmpegscale_sink_template));
-}
-
-static void
-gst_ffmpegscale_class_init (GstFFMpegScaleClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  gobject_class->set_property = gst_ffmpegscale_set_property;
-  gobject_class->get_property = gst_ffmpegscale_get_property;
-
-  gstelement_class->change_state = gst_ffmpegscale_change_state;
-}
-
-static void
-gst_ffmpegscale_init (GstFFMpegScale * scale)
-{
-  scale->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get
-                                              (&gst_ffmpegscale_sink_template), 
-                                              "sink");
-  gst_pad_set_link_function (scale->sinkpad, gst_ffmpegscale_pad_link);
-  gst_pad_set_getcaps_function (scale->sinkpad, gst_ffmpegscale_getcaps);
-  gst_pad_set_chain_function (scale->sinkpad, gst_ffmpegscale_chain);
-  gst_element_add_pad (GST_ELEMENT (scale), scale->sinkpad);
-
-  scale->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
-                                             (&gst_ffmpegscale_src_template), 
-                                             "src");
-  gst_element_add_pad (GST_ELEMENT (scale), scale->srcpad);
-  gst_pad_set_link_function (scale->srcpad, gst_ffmpegscale_pad_link);
-  gst_pad_set_getcaps_function (scale->srcpad, gst_ffmpegscale_getcaps);
-
-  scale->pixfmt = PIX_FMT_NB;
-  scale->passthru = FALSE;
-  scale->res = NULL;
-}
-
-static void
-gst_ffmpegscale_chain (GstPad * pad, GstData * data)
-{
-  GstBuffer *inbuf = GST_BUFFER (data);
-  GstFFMpegScale *scale;
-  GstBuffer *outbuf = NULL;
-
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (inbuf != NULL);
-
-  scale = GST_FFMPEGSCALE (gst_pad_get_parent (pad));
-
-  g_return_if_fail (scale != NULL);
-  g_return_if_fail (GST_IS_FFMPEGSCALE (scale));
-
-  if (!GST_PAD_IS_USABLE (scale->srcpad)) {
-    gst_buffer_unref (inbuf);
-    return;
-  }
-  
-  if (scale->passthru == TRUE) {
-    gst_pad_push (scale->srcpad, GST_DATA (inbuf));
-    
-    return ;
-  }
-  
-  outbuf = gst_pad_alloc_buffer_and_set_caps (scale->srcpad, GST_BUFFER_OFFSET_NONE, scale->to_size);
-
-  gst_ffmpeg_avpicture_fill (&scale->from_frame,
-                             GST_BUFFER_DATA (inbuf),
-                             scale->pixfmt, 
-                             scale->from_width, scale->from_height);
-
-  gst_ffmpeg_avpicture_fill (&scale->to_frame,
-                             GST_BUFFER_DATA (outbuf),
-                             scale->pixfmt, 
-                             scale->to_width, scale->to_height);    
-  
-  img_resample (scale->res, &scale->to_frame, &scale->from_frame);    
-  
-  gst_buffer_stamp (outbuf, (const GstBuffer *) inbuf);
-
-  gst_buffer_unref (inbuf);
-  gst_pad_push (scale->srcpad, GST_DATA (outbuf));
-  
-}
-
-static GstStateChangeReturn
-gst_ffmpegscale_change_state (GstElement * element, GstStateChange transition)
-{
-  GstFFMpegScale *scale;
-
-  scale = GST_FFMPEGSCALE (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      if (scale->res != NULL)
-        img_resample_close (scale->res);
+      structure = gst_event_get_structure (event);
+      if (gst_structure_get_double (structure, "pointer_x", &pointer)) {
+        gst_structure_set (structure,
+            "pointer_x", G_TYPE_DOUBLE,
+            pointer * scale->in_width / scale->out_width, NULL);
+      }
+      if (gst_structure_get_double (structure, "pointer_y", &pointer)) {
+        gst_structure_set (structure,
+            "pointer_y", G_TYPE_DOUBLE,
+            pointer * scale->in_height / scale->out_height, NULL);
+      }
       break;
-  }
-
-  if (parent_class->change_state)
-    return parent_class->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
-}
-
-static void
-gst_ffmpegscale_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec)
-{
-  GstFFMpegScale *scale;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_FFMPEGSCALE (object));
-  scale = GST_FFMPEGSCALE (object);
-
-  switch (prop_id) {
     default:
       break;
   }
-}
 
-static void
-gst_ffmpegscale_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec)
-{
-  GstFFMpegScale *scale;
-
-  /* it's not null if we got it, but it might not be ours */
-  g_return_if_fail (GST_IS_FFMPEGSCALE (object));
-  scale = GST_FFMPEGSCALE (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+  return gst_pad_event_default (pad, event);
 }
 
 gboolean
 gst_ffmpegscale_register (GstPlugin * plugin)
 {
-
   return gst_element_register (plugin, "ffvideoscale",
       GST_RANK_NONE, GST_TYPE_FFMPEGSCALE);
 }

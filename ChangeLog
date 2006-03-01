@@ -1,3 +1,18 @@
+2006-03-01  Michal Benes  <michal dot benes at xeris dot cz>
+
+	Reviewed by : Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	* ext/ffmpeg/gstffmpegscale.c: (gst_ffmpegscale_base_init),
+	(gst_ffmpegscale_class_init), (gst_ffmpegscale_init),
+	(gst_ffmpegscale_finalize), (gst_ffmpegscale_transform_caps),
+	(gst_ffmpegscale_fixate_caps), (gst_ffmpegscale_get_unit_size),
+	(gst_ffmpegscale_set_caps), (gst_ffmpegscale_transform),
+	(gst_ffmpegscale_handle_src_event), (gst_ffmpegscale_register):
+	Port of ffvideoscale to 0.10.
+	Closes #332557
+
 2006-03-01  Josef Zlomek  <josef dot zlomek at itonis dot tv>
 
 	Reviewed by : Edward Hervey  <edward@fluendo.com>

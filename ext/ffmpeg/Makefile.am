@@ -1,14 +1,14 @@
 plugin_LTLIBRARIES = libgstffmpeg.la
 
-libgstffmpeg_la_SOURCES = gstffmpeg.c 		\
+libgstffmpeg_la_SOURCES = gstffmpeg.c	\
+			  gstffmpegprotocol.c	\
 			  gstffmpegcodecmap.c	\
-			  gstffmpegdec.c 	\
 			  gstffmpegenc.c	\
-			  gstffmpegdeinterlace.c \
+			  gstffmpegdec.c	\
 			  gstffmpegdemux.c	\
-			  gstffmpegprotocol.c
-#			  gstffmpegmux.c 	\
-#			  gstffmpegscale.c
+			  gstffmpegdeinterlace.c	\
+			  gstffmpegscale.c
+#			  gstffmpegmux.c
 
 libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-I $(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
@@ -16,7 +16,7 @@ libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-I $(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec
 libgstffmpeg_la_LIBADD = \
 	$(top_builddir)/gst-libs/ext/ffmpeg/libavformat/libavformat.la \
-	$(GST_LIBS)
+	$(GST_BASE_LIBS)
 libgstffmpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
