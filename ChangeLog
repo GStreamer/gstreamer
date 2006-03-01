@@ -1,5 +1,10 @@
 2006-03-01  Wim Taymans  <wim@fluendo.com>
 
+	* ext/theora/Makefile.am:
+	Dist new header too,
+
+2006-03-01  Wim Taymans  <wim@fluendo.com>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:

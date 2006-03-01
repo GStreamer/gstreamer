@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgsttheora.la
 
-noinst_HEADERS = gsttheoraenc.h
+noinst_HEADERS = gsttheoraenc.h gsttheoradec.h
 
 libgsttheora_la_SOURCES = theora.c theoraenc.c theoradec.c
 libgsttheora_la_CFLAGS = $(GST_CFLAGS) $(THEORA_CFLAGS)
