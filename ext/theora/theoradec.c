@@ -17,67 +17,39 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-theoradec
+ * @see_also: theoraenc, oggdemux
+ *
+ * <refsect2>
+ * <para>
+ * This element decodes theora streams into raw video
+ * <ulink url="http://www.theora.org/">Theora</ulink> is a royalty-free
+ * video codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
+ * Foundation</ulink>, based on the VP3 codec.
+ * </para>
+ * <para>
+ * </para>
+ * <title>Example pipeline</title>
+ * <programlisting>
+ * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! xvimagesink
+ * </programlisting>
+ * This example pipeline will decode an ogg stream and decodes the theora video. Refer to
+ * the theoraenc example to create the ogg file.
+ * </refsect2>
+ *
+ * Last reviewed on 2006-03-01 (0.10.4)
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include <theora/theora.h>
-#include <string.h>
+#include "gsttheoradec.h"
 #include <gst/tag/tag.h>
 
 GST_DEBUG_CATEGORY (theoradec_debug);
 #define GST_CAT_DEFAULT theoradec_debug
-
-#define GST_TYPE_THEORA_DEC \
-  (gst_theora_dec_get_type())
-#define GST_THEORA_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_THEORA_DEC,GstTheoraDec))
-#define GST_THEORA_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_THEORA_DEC,GstTheoraDec))
-#define GST_IS_THEORA_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_THEORA_DEC))
-#define GST_IS_THEORA_DEC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_THEORA_DEC))
-
-typedef struct _GstTheoraDec GstTheoraDec;
-typedef struct _GstTheoraDecClass GstTheoraDecClass;
-
-struct _GstTheoraDec
-{
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  theora_state state;
-  theora_info info;
-  theora_comment comment;
-
-  gboolean have_header;
-  guint64 granulepos;
-  guint64 granule_shift;
-
-  GstClockTime last_timestamp;
-  guint64 frame_nr;
-  gboolean need_keyframe;
-  gint width, height;
-  gint offset_x, offset_y;
-
-  gboolean crop;
-
-  GList *queued;
-
-  gdouble segment_rate;
-  gint64 segment_start;
-  gint64 segment_stop;
-  gint64 segment_time;
-};
-
-struct _GstTheoraDecClass
-{
-  GstElementClass parent_class;
-};
 
 #define THEORA_DEF_CROP         TRUE
 enum

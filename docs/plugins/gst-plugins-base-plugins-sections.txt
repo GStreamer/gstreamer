@@ -1,9 +1,13 @@
-
 <SECTION>
 <FILE>element-audioconvert</FILE>
 <TITLE>audioconvert</TITLE>
 GstAudioConvert
 <SUBSECTION Standard>
+GST_AUDIO_CONVERT
+GST_AUDIO_CONVERT_CLASS
+GST_IS_AUDIO_CONVERT
+GST_IS_AUDIO_CONVERT_CLASS
+GST_TYPE_AUDIO_CONVERT
 GstAudioConvertClass
 </SECTION>
 
@@ -11,8 +15,20 @@ GstAudioConvertClass
 <FILE>element-audiotestsrc</FILE>
 <TITLE>audiotestsrc</TITLE>
 GstAudioTestSrc
+GstAudioTestSrcWave
 <SUBSECTION Standard>
+GST_AUDIO_TEST_SRC
+GST_AUDIO_TEST_SRC_CLASS
+GST_IS_AUDIO_TEST_SRC
+GST_IS_AUDIO_TEST_SRC_CLASS
+GST_TYPE_AUDIO_TEST_SRC
 GstAudioTestSrcClass
+gst_audio_test_src_factory_init
+gst_audio_test_src_get_type
+GstPinkNoise
+PINK_MAX_RANDOM_ROWS
+PINK_RANDOM_BITS
+PINK_RANDOM_SHIFT
 </SECTION>
 
 <SECTION>
@@ -20,7 +36,13 @@ GstAudioTestSrcClass
 <TITLE>clockoverlay</TITLE>
 GstClockOverlay
 <SUBSECTION Standard>
+GST_CLOCK_OVERLAY
+GST_CLOCK_OVERLAY_CLASS
+GST_IS_CLOCK_OVERLAY
+GST_IS_CLOCK_OVERLAY_CLASS
+GST_TYPE_CLOCK_OVERLAY
 GstClockOverlayClass
+gst_clock_overlay_get_type
 </SECTION>
 
 <SECTION>
@@ -28,6 +50,11 @@ GstClockOverlayClass
 <TITLE>ffmpegcolorspace</TITLE>
 GstFFMpegCsp
 <SUBSECTION Standard>
+GST_FFMPEGCSP
+GST_FFMPEGCSP_CLASS
+GST_IS_FFMPEGCSP
+GST_IS_FFMPEGCSP_CLASS
+GST_TYPE_FFMPEGCSP
 GstFFMpegCspClass
 </SECTION>
 
@@ -35,14 +62,29 @@ GstFFMpegCspClass
 <FILE>element-multifdsink</FILE>
 <TITLE>multifdsink</TITLE>
 GstMultiFdSink
-
-GstMultiFdSinkFlags
 GstRecoverPolicy
 GstSyncMethod
-GstUnitType
 GstClientStatus
 <SUBSECTION Standard>
+CLIENTS_LOCK
+CLIENTS_LOCK_FREE
+CLIENTS_LOCK_INIT
+CLIENTS_UNLOCK
+GST_TYPE_MULTI_FD_SINK
+GST_IS_MULTI_FD_SINK
+GST_IS_MULTI_FD_SINK_CLASS
+GST_MULTI_FD_SINK
+GST_MULTI_FD_SINK_CLASS
+GST_MULTI_FD_SINK_GET_CLASS
+GstTCPClient
+GstUnitType
+GstMultiFdSinkFlags
 GstMultiFdSinkClass
+gst_multi_fd_sink_add
+gst_multi_fd_sink_clear
+gst_multi_fd_sink_get_stats
+gst_multi_fd_sink_get_type
+gst_multi_fd_sink_remove
 </SECTION>
 
 <SECTION>
@@ -51,6 +93,12 @@ GstMultiFdSinkClass
 GstGnomeVFSSink
 <SUBSECTION Standard>
 GstGnomeVFSSinkClass
+GST_GNOME_VFS_SINK_CLASS
+GST_TYPE_GNOME_VFS_SINK
+GST_IS_GNOME_VFS_SINK
+gst_gnome_vfs_sink_get_type
+GST_IS_GNOME_VFS_SINK_CLASS
+GST_GNOME_VFS_SINK
 </SECTION>
 
 <SECTION>
@@ -58,7 +106,13 @@ GstGnomeVFSSinkClass
 <TITLE>gnomevfssrc</TITLE>
 GstGnomeVFSSrc
 <SUBSECTION Standard>
+GST_GNOME_VFS_SRC
+GST_GNOME_VFS_SRC_CLASS
+GST_IS_GNOME_VFS_SRC
+GST_IS_GNOME_VFS_SRC_CLASS
+GST_TYPE_GNOME_VFS_SRC
 GstGnomeVFSSrcClass
+gst_gnome_vfs_src_get_type
 </SECTION>
 
 <SECTION>
@@ -67,14 +121,30 @@ GstGnomeVFSSrcClass
 GstTCPServerSink
 <SUBSECTION Standard>
 GstTCPServerSinkClass
+GST_TCP_SERVER_SINK
+GstTCPServerSinkFlags
+GST_TYPE_TCP_SERVER_SINK
+gst_tcp_server_sink_get_type
+GST_IS_TCP_SERVER_SINK_CLASS
+GST_IS_TCP_SERVER_SINK
 </SECTION>
 
 <SECTION>
 <FILE>element-textoverlay</FILE>
 <TITLE>textoverlay</TITLE>
 GstTextOverlay
+GstTextOverlayVAlign
+GstTextOverlayHAlign
+GstTextOverlayWrapMode
 <SUBSECTION Standard>
+GST_TEXT_OVERLAY
+GST_TEXT_OVERLAY_CLASS
+GST_TEXT_OVERLAY_GET_CLASS
+GST_IS_TEXT_OVERLAY
+GST_IS_TEXT_OVERLAY_CLASS
+GST_TYPE_TEXT_OVERLAY
 GstTextOverlayClass
+gst_text_overlay_get_type
 </SECTION>
 
 <SECTION>
@@ -82,7 +152,27 @@ GstTextOverlayClass
 <TITLE>textrender</TITLE>
 GstTextRender
 <SUBSECTION Standard>
+GST_TEXT_RENDER
+GST_TEXT_RENDER_CLASS
+GST_TEXT_RENDER_GET_CLASS
+GST_IS_TEXT_RENDER
+GST_IS_TEXT_RENDER_CLASS
+GST_TYPE_TEXT_RENDER
 GstTextRenderClass
+gst_text_render_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-theoradec</FILE>
+<TITLE>theoradec</TITLE>
+GstTheoraDec
+<SUBSECTION Standard>
+GST_THEORA_DEC
+GST_IS_THEORA_DEC
+GST_TYPE_THEORA_DEC
+GST_THEORA_DEC_CLASS
+GST_IS_THEORA_DEC_CLASS
+GstTheoraDecClass
 </SECTION>
 
 <SECTION>
@@ -91,6 +181,11 @@ GstTextRenderClass
 GstTheoraEnc
 GstTheoraEncBorderMode
 <SUBSECTION Standard>
+GST_THEORA_ENC
+GST_THEORA_ENC_CLASS
+GST_IS_THEORA_ENC
+GST_IS_THEORA_ENC_CLASS
+GST_TYPE_THEORA_ENC
 GstTheoraEncClass
 </SECTION>
 
@@ -99,7 +194,13 @@ GstTheoraEncClass
 <TITLE>timeoverlay</TITLE>
 GstTimeOverlay
 <SUBSECTION Standard>
+GST_TIME_OVERLAY
+GST_TIME_OVERLAY_CLASS
+GST_IS_TIME_OVERLAY
+GST_IS_TIME_OVERLAY_CLASS
+GST_TYPE_TIME_OVERLAY
 GstTimeOverlayClass
+gst_time_overlay_get_type
 </SECTION>
 
 <SECTION>
@@ -108,7 +209,13 @@ GstTimeOverlayClass
 GstVideoTestSrc
 GstVideoTestSrcPattern
 <SUBSECTION Standard>
+GST_VIDEO_TEST_SRC
+GST_VIDEO_TEST_SRC_CLASS
+GST_IS_VIDEO_TEST_SRC
+GST_IS_VIDEO_TEST_SRC_CLASS
+GST_TYPE_VIDEO_TEST_SRC
 GstVideoTestSrcClass
+gst_video_test_src_get_type
 </SECTION>
 
 <SECTION>
@@ -116,7 +223,13 @@ GstVideoTestSrcClass
 <TITLE>volume</TITLE>
 GstVolume
 <SUBSECTION Standard>
+GST_VOLUME
+GST_VOLUME_CLASS
+GST_IS_VOLUME
+GST_IS_VOLUME_CLASS
+GST_TYPE_VOLUME
 GstVolumeClass
+gst_volume_get_type
 </SECTION>
 
 <SECTION>
@@ -125,6 +238,13 @@ GstVolumeClass
 GstVorbisEnc
 <SUBSECTION Standard>
 GstVorbisEncClass
+vorbisenc_get_type
+GST_IS_VORBISENC
+GST_VORBISENC_CLASS
+GST_VORBISENC
+GST_TCP_SERVER_SINK_CLASS
+GST_TYPE_VORBISENC
+GST_IS_VORBISENC_CLASS
 </SECTION>
 
 <SECTION>
@@ -132,7 +252,13 @@ GstVorbisEncClass
 <TITLE>ximagesink</TITLE>
 GstXImageSink
 <SUBSECTION Standard>
+GST_XIMAGESINK
+GST_XIMAGESINK_CLASS
+GST_IS_XIMAGESINK
+GST_IS_XIMAGESINK_CLASS
+GST_TYPE_XIMAGESINK
 GstXImagesSinkClass
+gst_ximagesink_get_type
 </SECTION>
 
 <SECTION>
@@ -140,50 +266,11 @@ GstXImagesSinkClass
 <TITLE>xvimagesink</TITLE>
 GstXvImageSink
 <SUBSECTION Standard>
+GST_XVIMAGESINK
+GST_XVIMAGESINK_CLASS
+GST_IS_XVIMAGESINK
+GST_IS_XVIMAGESINK_CLASS
+GST_TYPE_XVIMAGESINK
 GstXvImagesSinkClass
-</SECTION>
-
-<SECTION>
-<FILE>private</FILE>
-
-CLIENTS_UNLOCK
-CLIENTS_LOCK_INIT
-GST_MULTI_FD_SINK_GET_CLASS
-CLIENTS_LOCK_FREE
-GST_IS_MULTI_FD_SINK_CLASS
-gst_multi_fd_sink_get_type
-gst_multi_fd_sink_remove
-GST_IS_MULTI_FD_SINK
-CLIENTS_LOCK
-GST_TYPE_MULTI_FD_SINK
-gst_multi_fd_sink_clear
-GstTCPClient
-GST_MULTI_FD_SINK_CLASS
-gst_multi_fd_sink_get_stats
-GST_MULTI_FD_SINK
-gst_multi_fd_sink_add
-
-GST_TCP_SERVER_SINK
-GstTCPServerSinkFlags
-GST_TYPE_TCP_SERVER_SINK
-gst_tcp_server_sink_get_type
-GST_IS_TCP_SERVER_SINK_CLASS
-GST_IS_TCP_SERVER_SINK
-
-GST_GNOME_VFS_SINK_CLASS
-GST_TYPE_GNOME_VFS_SINK
-GST_IS_GNOME_VFS_SINK
-gst_gnome_vfs_sink_get_type
-GST_IS_GNOME_VFS_SINK_CLASS
-GST_ELEMENT_CLASS
-GST_GNOME_VFS_SINK
-
-GST_IS_VORBISENC
-GST_VORBISENC_CLASS
-GST_VORBISENC
-GST_TCP_SERVER_SINK_CLASS
-GST_TYPE_VORBISENC
-GST_IS_VORBISENC_CLASS
-vorbisenc_get_type
-
+gst_xvimagesink_get_type
 </SECTION>

@@ -1,3 +1,33 @@
+2006-03-01  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* ext/pango/gstclockoverlay.h:
+	* ext/pango/gsttextoverlay.h:
+	* ext/pango/gsttextrender.h:
+	* ext/pango/gsttimeoverlay.h:
+	* ext/theora/gsttheoradec.h:
+	* ext/theora/gsttheoraenc.h:
+	* ext/theora/theoradec.c:
+	* ext/theora/theoraenc.c:
+	* gst/audioconvert/gstaudioconvert.h:
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.h:
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init):
+	* gst/tcp/gstmultifdsink.h:
+	Updated/added documentation.
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_valign_get_type),
+	(gst_text_overlay_halign_get_type),
+	(gst_text_overlay_wrap_mode_get_type),
+	(gst_text_overlay_base_init), (gst_text_overlay_class_init),
+	(gst_text_overlay_init), (gst_text_overlay_set_property),
+	(gst_text_overlay_get_property):
+	Fix up properties to be enums instead of string to make bindings,
+	introspection and automatic GUI creation possible.
+	Add getters for the properties.
+
 2006-02-28  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:

@@ -40,6 +40,11 @@ G_BEGIN_DECLS
 typedef struct _GstClockOverlay GstClockOverlay;
 typedef struct _GstClockOverlayClass GstClockOverlayClass;
 
+/**
+ * GstClockOverlay:
+ *
+ * Opaque clockoverlay data structure.
+ */
 struct _GstClockOverlay {
   GstTextOverlay textoverlay;
 };

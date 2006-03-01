@@ -21,30 +21,55 @@ G_BEGIN_DECLS
 typedef struct _GstTextOverlay      GstTextOverlay;
 typedef struct _GstTextOverlayClass GstTextOverlayClass;
 
-typedef enum _GstTextOverlayVAlign   GstTextOverlayVAlign;
-typedef enum _GstTextOverlayHAlign   GstTextOverlayHAlign;
-typedef enum _GstTextOverlayWrapMode GstTextOverlayWrapMode;
-
-enum _GstTextOverlayVAlign {
+/**
+ * GstTextOverlayVAlign:
+ * @GST_TEXT_OVERLAY_VALIGN_BASELINE: draw text on the baseline
+ * @GST_TEXT_OVERLAY_VALIGN_BOTTOM: draw text on the bottom
+ * @GST_TEXT_OVERLAY_VALIGN_TOP: draw test on top
+ *
+ * Vertical alignment of the text.
+ */
+typedef enum {
     GST_TEXT_OVERLAY_VALIGN_BASELINE,
     GST_TEXT_OVERLAY_VALIGN_BOTTOM,
     GST_TEXT_OVERLAY_VALIGN_TOP
-};
+} GstTextOverlayVAlign;
 
-enum _GstTextOverlayHAlign {
+/**
+ * GstTextOverlayHAlign:
+ * @GST_TEXT_OVERLAY_HALIGN_LEFT: align text left
+ * @GST_TEXT_OVERLAY_HALIGN_CENTER: align text center
+ * @GST_TEXT_OVERLAY_HALIGN_RIGHT: align text right
+ *
+ * Horizontal alignment of the text.
+ */
+typedef enum {
     GST_TEXT_OVERLAY_HALIGN_LEFT,
     GST_TEXT_OVERLAY_HALIGN_CENTER,
     GST_TEXT_OVERLAY_HALIGN_RIGHT
-};
+} GstTextOverlayHAlign;
 
-enum _GstTextOverlayWrapMode {
+/**
+ * GstTextOverlayWrapMode:
+ * @GST_TEXT_OVERLAY_WRAP_MODE_NONE: no wrapping
+ * @GST_TEXT_OVERLAY_WRAP_MODE_WORD: do word wrapping
+ * @GST_TEXT_OVERLAY_WRAP_MODE_CHAR: do char wrapping
+ * @GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR: do word and char wrapping
+ *
+ * Whether to wrap the text and if so how.
+ */
+typedef enum {
     GST_TEXT_OVERLAY_WRAP_MODE_NONE = -1,
     GST_TEXT_OVERLAY_WRAP_MODE_WORD = PANGO_WRAP_WORD,
     GST_TEXT_OVERLAY_WRAP_MODE_CHAR = PANGO_WRAP_CHAR,
     GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR = PANGO_WRAP_WORD_CHAR
-};
+} GstTextOverlayWrapMode;
 
-
+/**
+ * GstTextOverlay:
+ *
+ * Opaque textoverlay object structure
+ */
 struct _GstTextOverlay {
     GstElement               element;
 
@@ -92,7 +117,6 @@ struct _GstTextOverlayClass {
     PangoContext *pango_context;
 
     gchar *     (*get_text) (GstTextOverlay *overlay, GstBuffer *video_frame);
-
 };
 
 GType gst_text_overlay_get_type(void) G_GNUC_CONST;

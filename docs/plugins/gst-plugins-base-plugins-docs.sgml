@@ -20,6 +20,7 @@
     <xi:include href="xml/element-gnomevfssrc.xml" />
     <xi:include href="xml/element-multifdsink.xml" />
     <xi:include href="xml/element-tcpserversink.xml" />
+    <xi:include href="xml/element-theoradec.xml" />
     <xi:include href="xml/element-theoraenc.xml" />
     <xi:include href="xml/element-textoverlay.xml" />
     <xi:include href="xml/element-textrender.xml" />

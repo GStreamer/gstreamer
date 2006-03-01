@@ -21,6 +21,11 @@ G_BEGIN_DECLS
 typedef struct _GstTextRender      GstTextRender;
 typedef struct _GstTextRenderClass GstTextRenderClass;
 
+/**
+ * GstTextRender:
+ *
+ * Opaque textrender data structure.
+ */
 struct _GstTextRender {
     GstElement            element;
 

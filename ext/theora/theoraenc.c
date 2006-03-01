@@ -28,11 +28,29 @@
  * video codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
  * Foundation</ulink>, based on the VP3 codec.
  * </para>
+ * <para>
+ * The theora codec internally only supports encoding of images that are a
+ * multiple of 16 pixls in both X and Y direction. It is however perfectly possible 
+ * to encode images with other dimensions because an arbitrary rectangular cropping
+ * region can be set up. This element will automatically set up a correct cropping
+ * region if the dimensions are not multiples of 16 pixels. The "border" and "center" 
+ * properties control how this cropping region will be set up. 
+ * </para>
+ * <para>
+ * To control the quality of the encoding, the "bitrate" and "quality" properties can
+ * be used. These two properties are mutualy exclusive. Setting the bitrate property
+ * will produce a constant bitrate (CBR) stream while setting the quality property
+ * will produce a variable bitrate (VBR) stream.
+ * </para>
  * <title>Example pipeline</title>
  * <programlisting>
  * gst-launch -v videotestsrc num-buffers=1000 ! theoraenc ! oggmux ! filesink location=videotestsrc.ogg
  * </programlisting>
+ * This example pipeline will encode a test video source to theora muxed in an
+ * ogg container. Refer to the theoradec documentation to decode the create stream.
  * </refsect2>
+ *
+ * Last reviewed on 2006-03-01 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -69,19 +87,6 @@ gst_border_mode_get_type (void)
 #define ROUND_UP_4(x) (((x) + 3) & ~3)
 #define ROUND_UP_8(x) (((x) + 7) & ~7)
 
-#define THEORA_DEF_CENTER               TRUE
-#define THEORA_DEF_BORDER               BORDER_BLACK
-#define THEORA_DEF_BITRATE              0
-#define THEORA_DEF_QUALITY              16
-#define THEORA_DEF_QUICK                TRUE
-#define THEORA_DEF_KEYFRAME_AUTO        TRUE
-#define THEORA_DEF_KEYFRAME_FREQ        64
-#define THEORA_DEF_KEYFRAME_FREQ_FORCE  64
-#define THEORA_DEF_KEYFRAME_THRESHOLD   80
-#define THEORA_DEF_KEYFRAME_MINDISTANCE 8
-#define THEORA_DEF_NOISE_SENSITIVITY    1
-#define THEORA_DEF_SHARPNESS            0
-
 /* taken from theora/lib/toplevel.c */
 static int
 _ilog (unsigned int v)
@@ -95,6 +100,18 @@ _ilog (unsigned int v)
   return (ret);
 }
 
+#define THEORA_DEF_CENTER               TRUE
+#define THEORA_DEF_BORDER               BORDER_BLACK
+#define THEORA_DEF_BITRATE              0
+#define THEORA_DEF_QUALITY              16
+#define THEORA_DEF_QUICK                TRUE
+#define THEORA_DEF_KEYFRAME_AUTO        TRUE
+#define THEORA_DEF_KEYFRAME_FREQ        64
+#define THEORA_DEF_KEYFRAME_FREQ_FORCE  64
+#define THEORA_DEF_KEYFRAME_THRESHOLD   80
+#define THEORA_DEF_KEYFRAME_MINDISTANCE 8
+#define THEORA_DEF_NOISE_SENSITIVITY    1
+#define THEORA_DEF_SHARPNESS            0
 enum
 {
   ARG_0,

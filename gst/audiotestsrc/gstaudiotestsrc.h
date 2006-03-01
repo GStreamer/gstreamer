@@ -42,6 +42,19 @@ G_BEGIN_DECLS
 #define GST_IS_AUDIO_TEST_SRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_TEST_SRC))
 
+/**
+ * GstAudioTestSrcWave:
+ * @GST_AUDIO_TEST_SRC_WAVE_SINE: a sine wave
+ * @GST_AUDIO_TEST_SRC_WAVE_SQUARE: a square wave
+ * @GST_AUDIO_TEST_SRC_WAVE_SAW: a saw wave
+ * @GST_AUDIO_TEST_SRC_WAVE_TRIANGLE: a tringle wave
+ * @GST_AUDIO_TEST_SRC_WAVE_SILENCE: silence
+ * @GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE: white noise
+ * @GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE: pink noise
+ * @GST_AUDIO_TEST_SRC_WAVE_SINE_TAB: sine wave using a table
+ *
+ * Different types of supported sound waves.
+ */
 typedef enum {
   GST_AUDIO_TEST_SRC_WAVE_SINE,
   GST_AUDIO_TEST_SRC_WAVE_SQUARE,
@@ -51,7 +64,7 @@ typedef enum {
   GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE,
   GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE,
   GST_AUDIO_TEST_SRC_WAVE_SINE_TAB
-} GstAudioTestSrcWaves; 
+} GstAudioTestSrcWave; 
 
 #define PINK_MAX_RANDOM_ROWS   (30)
 #define PINK_RANDOM_BITS       (16)
@@ -68,13 +81,18 @@ typedef struct {
 typedef struct _GstAudioTestSrc GstAudioTestSrc;
 typedef struct _GstAudioTestSrcClass GstAudioTestSrcClass;
 
+/**
+ * GstAudioTestSrc:
+ *
+ * audiotestsrc object structure.
+ */
 struct _GstAudioTestSrc {
   GstBaseSrc parent;
 
   void (*process)(GstAudioTestSrc*, gint16 *);
 
   /* parameters */
-  GstAudioTestSrcWaves wave;
+  GstAudioTestSrcWave wave;
   gdouble volume;
   gdouble freq;
     
@@ -82,7 +100,7 @@ struct _GstAudioTestSrc {
   gint samplerate;
   gint samples_per_buffer;
   
-  /* < private > */
+  /*< private >*/
   gboolean tags_pushed;			/* send tags just once ? */
   GstClockTimeDiff timestamp_offset;    /* base offset */
   GstClockTime running_time;            /* total running time */

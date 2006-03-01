@@ -53,6 +53,16 @@ typedef enum {
   GST_MULTI_FD_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2),
 } GstMultiFdSinkFlags;
 
+/**
+ * GstRecoverPolicy:
+ * @GST_RECOVER_POLICY_NONE             : no recovering is done
+ * @GST_RECOVER_POLICY_RESYNC_LATEST    : client is moved to last buffer
+ * @GST_RECOVER_POLICY_RESYNC_SOFT_LIMIT: client is moved to the soft limit
+ * @GST_RECOVER_POLICY_RESYNC_KEYFRAME  : client is moved to latest keyframe
+ *
+ * Possible values for the recovery procedure to use when a client consumes
+ * data too slow and has a backlag of more that soft-limit buffers.
+ */
 typedef enum
 {
   GST_RECOVER_POLICY_NONE,
@@ -61,6 +71,15 @@ typedef enum
   GST_RECOVER_POLICY_RESYNC_KEYFRAME,
 } GstRecoverPolicy;
 
+/**
+ * GstSyncMethod:
+ * @GST_SYNC_METHOD_LATEST         : client receives most recent buffer
+ * @GST_SYNC_METHOD_NEXT_KEYFRAME  : client receives next keyframe
+ * @GST_SYNC_METHOD_LATEST_KEYFRAME: client receives latest keyframe (burst)
+ *
+ * This enum defines the selection of the first buffer that is sent
+ * to a new client. 
+ */
 typedef enum
 {
   GST_SYNC_METHOD_LATEST,
@@ -68,6 +87,14 @@ typedef enum
   GST_SYNC_METHOD_LATEST_KEYFRAME,
 } GstSyncMethod;
 
+/**
+ * GstUnitType:
+ * @GST_UNIT_TYPE_BUFFERS: a buffer
+ * @GST_UNIT_TYPE_TIME   : timeunits (in nanoseconds)
+ * @GST_UNIT_TYPE_BYTES  : bytes
+ *
+ * The units used to specify limits.
+ */
 typedef enum
 {
   GST_UNIT_TYPE_BUFFERS,
@@ -75,6 +102,18 @@ typedef enum
   GST_UNIT_TYPE_BYTES,
 } GstUnitType;
 
+/**
+ * GstClientStatus:
+ * @GST_CLIENT_STATUS_OK       : client is ok
+ * @GST_CLIENT_STATUS_CLOSED   : client closed the socket
+ * @GST_CLIENT_STATUS_REMOVED  : client is removed
+ * @GST_CLIENT_STATUS_SLOW     : client is too slow
+ * @GST_CLIENT_STATUS_ERROR    : client is in error
+ * @GST_CLIENT_STATUS_DUPLICATE: same client added twice
+ *
+ * This specifies the reason why a client was removed from 
+ * multifdsink and is received in the "client-removed" signal.
+ */
 typedef enum
 {
   GST_CLIENT_STATUS_OK          = 0,
@@ -86,7 +125,7 @@ typedef enum
 } GstClientStatus;
 
 /* structure for a client
- *  */
+ */
 typedef struct {
   GstFD fd;
 
@@ -121,9 +160,15 @@ typedef struct {
 #define CLIENTS_LOCK(fdsink)            (g_static_rec_mutex_lock(&fdsink->clientslock))
 #define CLIENTS_UNLOCK(fdsink)          (g_static_rec_mutex_unlock(&fdsink->clientslock))
 
+/**
+ * GstMultiFdSink:
+ *
+ * The multifdsink object structure.
+ */
 struct _GstMultiFdSink {
   GstBaseSink element;
 
+  /*< private >*/
   guint64 bytes_to_serve; /* how much bytes we must serve */
   guint64 bytes_served; /* how much bytes have we served */
 

@@ -100,19 +100,34 @@ static GstElementDetails text_overlay_details = {
   "David Schleef <ds@schleef.org>"
 };
 
+
+#define DEFAULT_PROP_TEXT 	""
+#define DEFAULT_PROP_SHADING	FALSE
+#define DEFAULT_PROP_VALIGN	GST_TEXT_OVERLAY_VALIGN_BASELINE
+#define DEFAULT_PROP_HALIGN	GST_TEXT_OVERLAY_HALIGN_CENTER
+#define DEFAULT_PROP_XPAD	25
+#define DEFAULT_PROP_YPAD	25
+#define DEFAULT_PROP_DELTAX	0
+#define DEFAULT_PROP_DELTAY	0
+#define DEFAULT_PROP_WRAP_MODE  GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR
+#define DEFAULT_PROP_FONT_DESC	""
+
+/* make a property of me */
+#define DEFAULT_SHADING_VALUE    -80
+
 enum
 {
-  ARG_0,
-  ARG_TEXT,
-  ARG_SHADING,
-  ARG_VALIGN,
-  ARG_HALIGN,
-  ARG_XPAD,
-  ARG_YPAD,
-  ARG_DELTAX,
-  ARG_DELTAY,
-  ARG_WRAP_MODE,
-  ARG_FONT_DESC
+  PROP_0,
+  PROP_TEXT,
+  PROP_SHADING,
+  PROP_VALIGN,
+  PROP_HALIGN,
+  PROP_XPAD,
+  PROP_YPAD,
+  PROP_DELTAX,
+  PROP_DELTAY,
+  PROP_WRAP_MODE,
+  PROP_FONT_DESC
 };
 
 
@@ -136,6 +151,67 @@ static GstStaticPadTemplate text_sink_template_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("text/x-pango-markup; text/plain")
     );
+
+
+#define GST_TYPE_TEXT_OVERLAY_VALIGN (gst_text_overlay_valign_get_type())
+static GType
+gst_text_overlay_valign_get_type (void)
+{
+  static GType text_overlay_valign_type = 0;
+  static GEnumValue text_overlay_valign[] = {
+    {GST_TEXT_OVERLAY_VALIGN_BASELINE, "baseline", "baseline"},
+    {GST_TEXT_OVERLAY_VALIGN_BOTTOM, "bottom", "bottom"},
+    {GST_TEXT_OVERLAY_VALIGN_TOP, "top", "top"},
+    {0, NULL, NULL},
+  };
+
+  if (!text_overlay_valign_type) {
+    text_overlay_valign_type =
+        g_enum_register_static ("GstTextOverlayVAlign", text_overlay_valign);
+  }
+  return text_overlay_valign_type;
+}
+
+#define GST_TYPE_TEXT_OVERLAY_HALIGN (gst_text_overlay_halign_get_type())
+static GType
+gst_text_overlay_halign_get_type (void)
+{
+  static GType text_overlay_halign_type = 0;
+  static GEnumValue text_overlay_halign[] = {
+    {GST_TEXT_OVERLAY_HALIGN_LEFT, "left", "left"},
+    {GST_TEXT_OVERLAY_HALIGN_CENTER, "center", "center"},
+    {GST_TEXT_OVERLAY_HALIGN_RIGHT, "right", "right"},
+    {0, NULL, NULL},
+  };
+
+  if (!text_overlay_halign_type) {
+    text_overlay_halign_type =
+        g_enum_register_static ("GstTextOverlayHAlign", text_overlay_halign);
+  }
+  return text_overlay_halign_type;
+}
+
+
+#define GST_TYPE_TEXT_OVERLAY_WRAP_MODE (gst_text_overlay_wrap_mode_get_type())
+static GType
+gst_text_overlay_wrap_mode_get_type (void)
+{
+  static GType text_overlay_wrap_mode_type = 0;
+  static GEnumValue text_overlay_wrap_mode[] = {
+    {GST_TEXT_OVERLAY_WRAP_MODE_NONE, "none", "none"},
+    {GST_TEXT_OVERLAY_WRAP_MODE_WORD, "word", "word"},
+    {GST_TEXT_OVERLAY_WRAP_MODE_CHAR, "char", "char"},
+    {GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR, "wordchar", "wordchar"},
+    {0, NULL, NULL},
+  };
+
+  if (!text_overlay_wrap_mode_type) {
+    text_overlay_wrap_mode_type =
+        g_enum_register_static ("GstTextOverlayWrapMode",
+        text_overlay_wrap_mode);
+  }
+  return text_overlay_wrap_mode_type;
+}
 
 /* These macros are adapted from videotestsrc.c */
 #define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
@@ -175,16 +251,11 @@ static void gst_text_overlay_pop_text (GstTextOverlay * overlay);
 static void gst_text_overlay_finalize (GObject * object);
 static void gst_text_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-
+static void gst_text_overlay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 GST_BOILERPLATE (GstTextOverlay, gst_text_overlay, GstElement, GST_TYPE_ELEMENT)
-#define DEFAULT_YPAD    25
-#define DEFAULT_XPAD    25
-#define DEFAULT_DELTAX   0
-#define DEFAULT_DELTAY   0
-/* keep wrap enum in sync with string in class_init */
-#define DEFAULT_WRAP_MODE        GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR
-#define DEFAULT_SHADING_VALUE    -80
+
      static void gst_text_overlay_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -221,6 +292,7 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
 
   gobject_class->finalize = gst_text_overlay_finalize;
   gobject_class->set_property = gst_text_overlay_set_property;
+  gobject_class->get_property = gst_text_overlay_get_property;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_text_overlay_change_state);
@@ -228,51 +300,48 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
   klass->get_text = gst_text_overlay_get_text;
   klass->pango_context = pango_ft2_get_context (72, 72);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TEXT,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TEXT,
       g_param_spec_string ("text", "text",
-          "Text to be display.", "", G_PARAM_WRITABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SHADING,
+          "Text to be display.", DEFAULT_PROP_TEXT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHADING,
       g_param_spec_boolean ("shaded-background", "shaded background",
-          "Whether to shade the background under the text area", FALSE,
-          G_PARAM_WRITABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VALIGN,
-      g_param_spec_string ("valign", "vertical alignment",
-          "Vertical alignment of the text. "
-          "Can be either 'baseline', 'bottom', or 'top'",
-          "baseline", G_PARAM_WRITABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HALIGN,
-      g_param_spec_string ("halign", "horizontal alignment",
-          "Horizontal alignment of the text. "
-          "Can be either 'left', 'right', or 'center'",
-          "center", G_PARAM_WRITABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_XPAD,
+          "Whether to shade the background under the text area",
+          DEFAULT_PROP_SHADING, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VALIGN,
+      g_param_spec_enum ("valign", "vertical alignment",
+          "Vertical alignment of the text. ",
+          GST_TYPE_TEXT_OVERLAY_VALIGN, DEFAULT_PROP_VALIGN,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HALIGN,
+      g_param_spec_enum ("halign", "horizontal alignment",
+          "Horizontal alignment of the text. ", GST_TYPE_TEXT_OVERLAY_HALIGN,
+          DEFAULT_PROP_HALIGN, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_XPAD,
       g_param_spec_int ("xpad", "horizontal paddding",
-          "Horizontal paddding when using left/right alignment",
-          0, G_MAXINT, DEFAULT_XPAD, G_PARAM_WRITABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_YPAD,
+          "Horizontal paddding when using left/right alignment", 0, G_MAXINT,
+          DEFAULT_PROP_XPAD, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_YPAD,
       g_param_spec_int ("ypad", "vertical padding",
-          "Vertical padding when using top/bottom alignment",
-          0, G_MAXINT, DEFAULT_YPAD, G_PARAM_WRITABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELTAX,
+          "Vertical padding when using top/bottom alignment", 0, G_MAXINT,
+          DEFAULT_PROP_YPAD, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELTAX,
       g_param_spec_int ("deltax", "X position modifier",
           "Shift X position to the left or to the right. Unit is pixels.",
-          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DELTAY,
+          G_MININT, G_MAXINT, DEFAULT_PROP_DELTAX, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELTAY,
       g_param_spec_int ("deltay", "Y position modifier",
-          "Shift Y position up or down. Unit is pixels.",
-          G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WRAP_MODE,
-      g_param_spec_string ("wrap-mode", "wrap mode",
-          "Whether to wrap the text and if so how."
-          "Can be either 'none', 'word', 'char' or 'wordchar'",
-          "wordchar", G_PARAM_WRITABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FONT_DESC,
+          "Shift Y position up or down. Unit is pixels.", G_MININT, G_MAXINT,
+          DEFAULT_PROP_DELTAY, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WRAP_MODE,
+      g_param_spec_enum ("wrap-mode", "wrap mode",
+          "Whether to wrap the text and if so how.",
+          GST_TYPE_TEXT_OVERLAY_WRAP_MODE, DEFAULT_PROP_WRAP_MODE,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FONT_DESC,
       g_param_spec_string ("font-desc", "font description",
-          "Pango font description of font "
-          "to be used for rendering. "
-          "See documentation of "
-          "pango_font_description_from_string"
-          " for syntax.", "", G_PARAM_WRITABLE));
+          "Pango font description of font to be used for rendering. "
+          "See documentation of pango_font_description_from_string "
+          "for syntax.", DEFAULT_PROP_FONT_DESC, G_PARAM_WRITABLE));
 }
 
 static void
@@ -353,19 +422,19 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
       pango_layout_new (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_context);
   memset (&overlay->bitmap, 0, sizeof (overlay->bitmap));
 
-  overlay->halign = GST_TEXT_OVERLAY_HALIGN_CENTER;
-  overlay->valign = GST_TEXT_OVERLAY_VALIGN_BASELINE;
-  overlay->xpad = DEFAULT_XPAD;
-  overlay->ypad = DEFAULT_YPAD;
-  overlay->deltax = 0;
-  overlay->deltay = 0;
+  overlay->halign = DEFAULT_PROP_HALIGN;
+  overlay->valign = DEFAULT_PROP_VALIGN;
+  overlay->xpad = DEFAULT_PROP_XPAD;
+  overlay->ypad = DEFAULT_PROP_YPAD;
+  overlay->deltax = DEFAULT_PROP_DELTAX;
+  overlay->deltay = DEFAULT_PROP_DELTAY;
 
-  overlay->wrap_mode = DEFAULT_WRAP_MODE;
+  overlay->wrap_mode = DEFAULT_PROP_WRAP_MODE;
 
-  overlay->want_shading = FALSE;
+  overlay->want_shading = DEFAULT_PROP_SHADING;
   overlay->shading_value = DEFAULT_SHADING_VALUE;
 
-  overlay->default_text = g_strdup ("");
+  overlay->default_text = g_strdup (DEFAULT_PROP_TEXT);
   overlay->need_render = TRUE;
 
   overlay->fps_n = 0;
@@ -448,82 +517,38 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
   GstTextOverlay *overlay = GST_TEXT_OVERLAY (object);
 
   GST_OBJECT_LOCK (overlay);
-
   switch (prop_id) {
-    case ARG_TEXT:
+    case PROP_TEXT:
       g_free (overlay->default_text);
       overlay->default_text = g_value_dup_string (value);
       overlay->need_render = TRUE;
       break;
-
-    case ARG_SHADING:{
+    case PROP_SHADING:
       overlay->want_shading = g_value_get_boolean (value);
       break;
-    }
-    case ARG_XPAD:{
+    case PROP_XPAD:
       overlay->xpad = g_value_get_int (value);
       break;
-    }
-    case ARG_YPAD:{
+    case PROP_YPAD:
       overlay->ypad = g_value_get_int (value);
       break;
-    }
-    case ARG_DELTAX:{
+    case PROP_DELTAX:
       overlay->deltax = g_value_get_int (value);
       break;
-    }
-    case ARG_DELTAY:{
+    case PROP_DELTAY:
       overlay->deltay = g_value_get_int (value);
       break;
-    }
-
-    case ARG_VALIGN:{
-      const gchar *s = g_value_get_string (value);
-
-      if (g_ascii_strcasecmp (s, "baseline") == 0)
-        overlay->valign = GST_TEXT_OVERLAY_VALIGN_BASELINE;
-      else if (g_ascii_strcasecmp (s, "bottom") == 0)
-        overlay->valign = GST_TEXT_OVERLAY_VALIGN_BOTTOM;
-      else if (g_ascii_strcasecmp (s, "top") == 0)
-        overlay->valign = GST_TEXT_OVERLAY_VALIGN_TOP;
-      else
-        g_warning ("Invalid 'valign' property value: %s", s);
+    case PROP_VALIGN:
+      overlay->valign = g_value_get_enum (value);
       break;
-    }
-
-    case ARG_HALIGN:{
-      const gchar *s = g_value_get_string (value);
-
-      if (g_ascii_strcasecmp (s, "left") == 0)
-        overlay->halign = GST_TEXT_OVERLAY_HALIGN_LEFT;
-      else if (g_ascii_strcasecmp (s, "right") == 0)
-        overlay->halign = GST_TEXT_OVERLAY_HALIGN_RIGHT;
-      else if (g_ascii_strcasecmp (s, "center") == 0)
-        overlay->halign = GST_TEXT_OVERLAY_HALIGN_CENTER;
-      else
-        g_warning ("Invalid 'halign' property value: %s", s);
+    case PROP_HALIGN:
+      overlay->halign = g_value_get_enum (value);
       break;
-    }
-
-    case ARG_WRAP_MODE:{
-      const gchar *s = g_value_get_string (value);
-
-      if (g_ascii_strcasecmp (s, "none") == 0)
-        overlay->wrap_mode = GST_TEXT_OVERLAY_WRAP_MODE_NONE;
-      else if (g_ascii_strcasecmp (s, "char") == 0)
-        overlay->wrap_mode = GST_TEXT_OVERLAY_WRAP_MODE_CHAR;
-      else if (g_ascii_strcasecmp (s, "word") == 0)
-        overlay->wrap_mode = GST_TEXT_OVERLAY_WRAP_MODE_WORD;
-      else if (g_ascii_strcasecmp (s, "wordchar") == 0)
-        overlay->wrap_mode = GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR;
-      else
-        g_warning ("Invalid 'wrap-mode' property value: %s", s);
-
+    case PROP_WRAP_MODE:
+      overlay->wrap_mode = g_value_get_enum (value);
       gst_text_overlay_update_wrap_mode (overlay);
       break;
-    }
-
-    case ARG_FONT_DESC:
+    case PROP_FONT_DESC:
     {
       PangoFontDescription *desc;
       const gchar *fontdesc_str;
@@ -531,22 +556,65 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       fontdesc_str = g_value_get_string (value);
       desc = pango_font_description_from_string (fontdesc_str);
       if (desc) {
-        GST_LOG ("font description set: %s", fontdesc_str);
+        GST_LOG_OBJECT (overlay, "font description set: %s", fontdesc_str);
         pango_layout_set_font_description (overlay->layout, desc);
         pango_font_description_free (desc);
       } else {
-        GST_WARNING ("font description parse failed: %s", fontdesc_str);
+        GST_WARNING_OBJECT (overlay, "font description parse failed: %s",
+            fontdesc_str);
       }
       break;
     }
-
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 
   overlay->need_render = TRUE;
+  GST_OBJECT_UNLOCK (overlay);
+}
 
+static void
+gst_text_overlay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstTextOverlay *overlay = GST_TEXT_OVERLAY (object);
+
+  GST_OBJECT_LOCK (overlay);
+  switch (prop_id) {
+    case PROP_TEXT:
+      g_value_set_string (value, overlay->default_text);
+      break;
+    case PROP_SHADING:
+      g_value_set_boolean (value, overlay->want_shading);
+      break;
+    case PROP_XPAD:
+      g_value_set_int (value, overlay->xpad);
+      break;
+    case PROP_YPAD:
+      g_value_set_int (value, overlay->ypad);
+      break;
+    case PROP_DELTAX:
+      g_value_set_int (value, overlay->deltax);
+      break;
+    case PROP_DELTAY:
+      g_value_set_int (value, overlay->deltay);
+      break;
+    case PROP_VALIGN:
+      g_value_set_enum (value, overlay->valign);
+      break;
+    case PROP_HALIGN:
+      g_value_set_enum (value, overlay->halign);
+      break;
+    case PROP_WRAP_MODE:
+      g_value_set_enum (value, overlay->wrap_mode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  overlay->need_render = TRUE;
   GST_OBJECT_UNLOCK (overlay);
 }
 

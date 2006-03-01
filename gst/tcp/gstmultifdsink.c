@@ -20,7 +20,66 @@
 
 /**
  * SECTION:element-multifdsink
+ * @short_description: Send data to multiple file descriptors
  * @see_also: tcpserversink
+ *
+ * <refsect2>
+ * <para>
+ * This plugin writes incoming data to a set of filedescriptors. The filedescriptors
+ * can be added to multifdsink by emiting the "add" signal. For each descriptor added
+ * the "client-added" signal will be called.
+ * </para>
+ * <para>
+ * Clients can be removed from multifdsink by emiting the "remove" signal. For each 
+ * descriptor removed the "client-removed" signal will be called. The "client-removed" 
+ * signal can also be fired when multifdsink decides that a client is not active anymore
+ * or, depending on the value of the "recover-policy" if the client is reading to slow.
+ * In all cases, multifdsink will never close a filedescriptor itself, the application
+ * has to do that itself, for example, in the "client-removed" signal callback.
+ * </para>
+ * <para>
+ * Multifdsink internally keeps a queue of the incomming buffers and uses a separate
+ * thread to send the buffers to the clients. This ensures that no client write can
+ * block the pipeline and that clients can read with different speeds. 
+ * </para>
+ * <para>
+ * When adding a client to multifdsink, the "sync-method" property will define which
+ * buffer will be sent first to the client. Clients can be sent respectively the most
+ * recent buffer (which might not be decodable by the client when it is not a keyframe),
+ * the next keyframe received in multifdsink (which can take some time depending on the 
+ * keyframe rate, or the last received keyframe (which will cause a burst-on-connect).
+ * </para>
+ * <para>
+ * When streaming data, clients are allowed to read at a different rate than the rate 
+ * at which multifdsink receives data. If the client is reading too fast, no data will
+ * be send to the client until multifdsink receives more data. If the client however
+ * reads too slow, data for that client will bunch up in multifdsink. Two properties
+ * control the amount of data (buffers) that is queued in multifdsink: "buffers-max"
+ * and "buffers-soft-max". A client with a lag of "buffers-max" is removed from
+ * multifdsink forcibly.
+ * </para>
+ * <para>
+ * A client with a lag of at least "buffers-soft-max" enters the recovery procedure 
+ * which is controled with the "recover-policy" property. A recover policy of NONE will
+ * do nothing, RESYNC_LATEST will send the most recently received buffer as the next
+ * buffer for the client, RESYNC_SOFT_LIMIT positions the client to the soft limit
+ * in the buffer queue and RESYNC_KEYFRAME positions the client to the most recent 
+ * keyframe in the buffer queue.
+ * </para>
+ * <para>
+ * multifdsink will synchronize on the clock before serving the buffers to the clients.
+ * </para>
+ * <para>
+ * Example pipeline:
+ * <programlisting>
+ * gst-launch -v videotestsrc ! multifdsink
+ * </programlisting>
+ * This pipeline will not do a lot since it is not possible from a gst-launch line
+ * to add filedescriptors to multifdsink.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-03-01 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -369,6 +428,21 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
       g_signal_new ("clear", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiFdSinkClass, clear),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+
+  /**
+   * GstMultiFdSink::get-stats:
+   * @gstmultifdsink: the multifdsink element to emit this signal on
+   * @fd:             the file descriptor to get stats of from multifdsink
+   *
+   * Get statistics about @fd. This function returns a GValueArray to ease
+   * automatic wrapping for bindings.
+   *
+   * Returns: a GValueArray with the statistics. The array contains 5 guint64
+   *     values that represent respectively total number of bytes sent, time
+   *     when the client was added, time when the client was disconnected/removed,
+   *     time the client is/was active, last activity time. All times are
+   *     expressed in nanoseconds (GstClockTime).
+   */
   gst_multi_fd_sink_signals[SIGNAL_GET_STATS] =
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMultiFdSinkClass, get_stats),
@@ -378,9 +452,11 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   /**
    * GstMultiFdSink::client-added:
    * @gstmultifdsink: the multifdsink element that emitted this signal
-   * @arg1:           the file descriptor that was added to multifdsink
+   * @fd:             the file descriptor that was added to multifdsink
    *
-   * The given file descriptor was added to multifdsink.
+   * The given file descriptor was added to multifdsink. This signal will
+   * be emited from the streaming thread so application should be prepared
+   * for that.
    */
   gst_multi_fd_sink_signals[SIGNAL_CLIENT_ADDED] =
       g_signal_new ("client-added", G_TYPE_FROM_CLASS (klass),
@@ -389,9 +465,12 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   /**
    * GstMultiFdSink::client-removed:
    * @gstmultifdsink: the multifdsink element that emitted this signal
-   * @arg1:           the file descriptor that was removed from multifdsink
+   * @fd:             the file descriptor that was removed from multifdsink
+   * @status:         the reason why the client was removed
    *
-   * The given file descriptor was removed from multifdsink.
+   * The given file descriptor was removed from multifdsink. This signal will
+   * be emited from the streaming thread so applications should be prepared
+   * for that.
    */
   gst_multi_fd_sink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
@@ -563,6 +642,14 @@ gst_multi_fd_sink_clear (GstMultiFdSink * sink)
   CLIENTS_UNLOCK (sink);
 }
 
+/* the array returned contains:
+ *
+ * guint64 : bytes_sent
+ * guint64 : connect time (in nanoseconds)
+ * guint64 : disconnect time (in nanoseconds)
+ * guint64 : time the client is/was connected (in nanoseconds)
+ * guint64 : last activity time (in nanoseconds)
+ */
 GValueArray *
 gst_multi_fd_sink_get_stats (GstMultiFdSink * sink, int fd)
 {
@@ -1204,7 +1291,6 @@ gst_multi_fd_sink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
  * had a position of -1) because they can proceed after adding this new buffer.
  * This is done by adding the client back into the write fd_set and signalling
  * the select thread that the fd_set changed.
- *
  */
 static void
 gst_multi_fd_sink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)

@@ -42,6 +42,11 @@ G_BEGIN_DECLS
 typedef struct _GstFFMpegCsp GstFFMpegCsp;
 typedef struct _GstFFMpegCspClass GstFFMpegCspClass;
 
+/**
+ * GstFFMpegCsp:
+ *
+ * Opaque object data structure.
+ */
 struct _GstFFMpegCsp
 {
   GstBaseTransform element;
