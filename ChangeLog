@@ -1,5 +1,12 @@
 2006-03-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_pad_added),
+	(gst_mpeg_parse_handle_src_query):
+	  Declare variables at the beginning of a block and make
+	  gcc-2.9x happy (fixes #328957; patch by: Jens Granseuer).
+
+2006-03-01  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_handle_data):
 	  Read packet size, sequence and padsize in right order again
 	  (fixes #332796; patch by: Fabrizio Gennari).

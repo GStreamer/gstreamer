@@ -455,6 +455,7 @@ static void
 gst_mpeg_parse_pad_added (GstElement * element, GstPad * pad)
 {
   GstMPEGParse *mpeg_parse;
+  GstEvent *event;
 
   if (GST_PAD_IS_SINK (pad)) {
     return;
@@ -466,7 +467,7 @@ gst_mpeg_parse_pad_added (GstElement * element, GstPad * pad)
    * the current time. This is required because MPEG allows any sort
    * of order of packets, and new substreams can be found at any
    * time. */
-  GstEvent *event = gst_event_new_new_segment (FALSE,
+  event = gst_event_new_new_segment (FALSE,
       mpeg_parse->current_segment.rate,
       GST_FORMAT_TIME, mpeg_parse->current_segment.start,
       -1, mpeg_parse->current_segment.start);
@@ -1016,6 +1017,8 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_POSITION:
     {
+      gint64 cur;
+
       gst_query_parse_position (query, &format, NULL);
 
       switch (format) {
@@ -1030,8 +1033,7 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
             goto done;
           }
 
-          gint64 cur =
-              (gint64) (mpeg_parse->current_scr) - mpeg_parse->first_scr;
+          cur = (gint64) (mpeg_parse->current_scr) - mpeg_parse->first_scr;
           src_value = MPEGTIME_TO_GSTTIME (MAX (0, cur));
           break;
       }
