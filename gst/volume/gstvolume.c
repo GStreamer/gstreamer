@@ -27,6 +27,9 @@
  * <refsect2>
  * <title>Example launch line</title>
  * <para>
+ * The volume element changes the volume of the audio data.
+ * </para>
+ * <para>
  * <programlisting>
  * gst-launch -v -m audiotestsrc ! volume volume=0.5 ! level ! fakesink silent=TRUE
  * </programlisting>

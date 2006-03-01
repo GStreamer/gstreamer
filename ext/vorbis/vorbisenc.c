@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-vorbisenc
+ * @short_description: an encoder that encodes audio to Vorbis
  * @see_also: vorbisdec, oggmux
  *
  * <refsect2>
@@ -42,16 +43,10 @@
  * <programlisting>
  * gst-launch -v alsasrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=alsasrc.ogg
  * </programlisting>
-  * </refsect2>
- */
-
-/**
- * SECTION:vorbisenc
- * @short_description: an encoder that encodes to Ogg/Vorbis
- * @see_also: oggdemux
+ * </refsect2>
  *
+ * Last reviewed on 2006-03-01 (0.10.4)
  */
-
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

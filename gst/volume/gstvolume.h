@@ -47,6 +47,11 @@ typedef enum {
   GST_VOLUME_FORMAT_FLOAT
 } GstVolumeFormat;
 
+/**
+ * GstVolume:
+ *
+ * Opaque data structure.
+ */
 struct _GstVolume {
   GstBaseTransform element;
 

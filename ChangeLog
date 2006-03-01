@@ -3,6 +3,30 @@
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* ext/gnomevfs/gstgnomevfssink.h:
+	* ext/gnomevfs/gstgnomevfssrc.h:
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):
+	* ext/vorbis/vorbisdec.h:
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_convert_sink):
+	* ext/vorbis/vorbisenc.h:
+	* ext/vorbis/vorbisparse.c: (vorbis_parse_set_header_on_caps),
+	(vorbis_parse_chain), (vorbis_parse_change_state):
+	* ext/vorbis/vorbisparse.h:
+	* gst/audioconvert/gstaudioconvert.h:
+	* gst/tcp/gsttcpserversink.h:
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/volume/gstvolume.c:
+	* gst/volume/gstvolume.h:
+	Fix some more docs.
+	Added docs for vorbisdec and vorbisparse.
+	Fix vorbisparse.
+
+2006-03-01  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
 	* ext/pango/gstclockoverlay.h:
 	* ext/pango/gsttextoverlay.h:
 	* ext/pango/gsttextrender.h:

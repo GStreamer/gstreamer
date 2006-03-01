@@ -24,9 +24,15 @@
  * <refsect2>
  * <title>Example launch line</title>
  * <para>
+ * The videotestsrc element is used to produce test video data in a wide variaty
+ * of formats. The video test data produced can be controlled with the "pattern"
+ * property.
+ * </para>
+ * <para>
  * <programlisting>
  * gst-launch -v videotestsrc pattern=snow ! ximagesink
  * </programlisting>
+ * Shows random noise in an X window.
  * </para>
  * </refsect2>
  */

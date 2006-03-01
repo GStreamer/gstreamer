@@ -62,6 +62,11 @@ typedef enum {
   GST_TCP_SERVER_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
 } GstTCPServerSinkFlags;
 
+/**
+ * GstTCPServerSink:
+ *
+ * Opaque data structure.
+ */
 struct _GstTCPServerSink {
   GstMultiFdSink element;
 

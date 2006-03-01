@@ -42,6 +42,11 @@ G_BEGIN_DECLS
 typedef struct _GstVorbisDec GstVorbisDec;
 typedef struct _GstVorbisDecClass GstVorbisDecClass;
 
+/**
+ * GstVorbisDec:
+ *
+ * Opaque data structure.
+ */
 struct _GstVorbisDec {
   GstElement            element;
 

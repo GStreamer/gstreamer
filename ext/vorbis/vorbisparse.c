@@ -17,6 +17,31 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-vorbisparse
+ * @short_description: parses vorbis streams 
+ * @see_also: vorbisdec, oggdemux
+ *
+ * <refsect2>
+ * <para>
+ * The vorbisparse element will parse the header packets of the Vorbis
+ * stream and put them as the streamheader in the caps. This is used in the
+ * multifdsink case where you want to stream live vorbis streams to multiple
+ * clients, each client has to receive the streamheaders first before they can
+ * consume the vorbis packets.
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisparse ! fakesink
+ * </programlisting>
+ * This pipeline shows that the streamheader is set in the caps.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-03-01 (0.10.4)
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -128,15 +153,15 @@ vorbis_parse_set_header_on_caps (GstVorbisParse * parse, GstCaps * caps)
   /* put buffers in a fixed list */
   g_value_init (&array, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
-  g_value_set_boxed (&value, buf1);
+  gst_value_set_buffer (&value, buf1);
   gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
-  g_value_set_boxed (&value, buf2);
+  gst_value_set_buffer (&value, buf2);
   gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
-  g_value_set_boxed (&value, buf3);
+  gst_value_set_buffer (&value, buf3);
   gst_value_array_append_value (&array, &value);
   gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&value);
@@ -146,6 +171,7 @@ vorbis_parse_set_header_on_caps (GstVorbisParse * parse, GstCaps * caps)
 static GstFlowReturn
 vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
 {
+  GstFlowReturn ret;
   GstBuffer *buf;
   GstVorbisParse *parse;
 
@@ -165,39 +191,58 @@ vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
    * set caps again, and send out the streamheader buffers */
   if (!parse->streamheader_sent) {
     /* mark and put on caps */
-    GstCaps *caps = gst_pad_get_caps (parse->srcpad);
+    GstCaps *padcaps, *caps;
+    GstBuffer *outbuf;
+
+    padcaps = gst_pad_get_caps (parse->srcpad);
+    caps = gst_caps_make_writable (padcaps);
+    gst_caps_unref (padcaps);
 
     vorbis_parse_set_header_on_caps (parse, caps);
 
     /* negotiate with these caps */
-    GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (parse, "here are the caps: %" GST_PTR_FORMAT, caps);
     gst_pad_set_caps (parse->srcpad, caps);
+    gst_caps_unref (caps);
 
-    /* push out buffers */
-    gst_pad_push (parse->srcpad, parse->streamheader->data);
-    gst_pad_push (parse->srcpad, parse->streamheader->next->data);
-    gst_pad_push (parse->srcpad, parse->streamheader->next->next->data);
+    /* push out buffers, ignoring return value... */
+    outbuf = GST_BUFFER_CAST (parse->streamheader->data);
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (parse->srcpad));
+    gst_pad_push (parse->srcpad, outbuf);
+    outbuf = GST_BUFFER_CAST (parse->streamheader->next->data);
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (parse->srcpad));
+    gst_pad_push (parse->srcpad, outbuf);
+    outbuf = GST_BUFFER_CAST (parse->streamheader->next->next->data);
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (parse->srcpad));
+    gst_pad_push (parse->srcpad, outbuf);
+
+    g_list_free (parse->streamheader);
+    parse->streamheader = NULL;
 
     parse->streamheader_sent = TRUE;
   }
   /* just send on buffer by default */
-  gst_pad_push (parse->srcpad, buf);
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
+  ret = gst_pad_push (parse->srcpad, buf);
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static GstStateChangeReturn
 vorbis_parse_change_state (GstElement * element, GstStateChange transition)
 {
   GstVorbisParse *parse = GST_VORBIS_PARSE (element);
+  GstStateChangeReturn ret;
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       parse->packetno = 0;
+      parse->streamheader_sent = FALSE;
       break;
     default:
       break;
   }
+  ret = parent_class->change_state (element, transition);
 
-  return parent_class->change_state (element, transition);
+  return ret;
 }

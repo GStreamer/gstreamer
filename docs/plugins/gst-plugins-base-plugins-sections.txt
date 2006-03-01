@@ -223,6 +223,7 @@ gst_video_test_src_get_type
 <TITLE>volume</TITLE>
 GstVolume
 <SUBSECTION Standard>
+GstVolumeFormat
 GST_VOLUME
 GST_VOLUME_CLASS
 GST_IS_VOLUME
@@ -230,6 +231,20 @@ GST_IS_VOLUME_CLASS
 GST_TYPE_VOLUME
 GstVolumeClass
 gst_volume_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-vorbisdec</FILE>
+GstVorbisDec
+<TITLE>vorbisdec</TITLE>
+<SUBSECTION Standard>
+GstVorbisDecClass
+GST_VORBIS_DEC
+GST_IS_VORBIS_DEC
+GST_TYPE_VORBIS_DEC
+gst_vorbis_dec_get_type
+GST_VORBIS_DEC_CLASS
+GST_IS_VORBIS_DEC_CLASS
 </SECTION>
 
 <SECTION>
@@ -245,6 +260,20 @@ GST_VORBISENC
 GST_TCP_SERVER_SINK_CLASS
 GST_TYPE_VORBISENC
 GST_IS_VORBISENC_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-vorbisparse</FILE>
+<TITLE>vorbisparse</TITLE>
+GstVorbisParse
+<SUBSECTION Standard>
+GstVorbisParseClass
+GST_VORBIS_PARSE
+GST_IS_VORBIS_PARSE
+GST_TYPE_VORBIS_PARSE
+gst_vorbis_parse_get_type
+GST_VORBIS_PARSE_CLASS
+GST_IS_VORBIS_PARSE_CLASS
 </SECTION>
 
 <SECTION>

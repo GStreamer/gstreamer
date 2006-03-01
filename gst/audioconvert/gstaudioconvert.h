@@ -38,7 +38,7 @@ typedef struct _GstAudioConvert GstAudioConvert;
 typedef struct _GstAudioConvertClass GstAudioConvertClass;
 
 /**
- * GstAudioConvert
+ * GstAudioConvert:
  *
  * The audioconvert object structure.
  */

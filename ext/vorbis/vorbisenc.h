@@ -26,9 +26,7 @@
 
 #include <vorbis/codec.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #define GST_TYPE_VORBISENC \
   (vorbisenc_get_type())
@@ -44,6 +42,11 @@ extern "C" {
 typedef struct _GstVorbisEnc GstVorbisEnc;
 typedef struct _GstVorbisEncClass GstVorbisEncClass;
 
+/**
+ * GstVorbisEnc:
+ *
+ * Opaque data structure.
+ */
 struct _GstVorbisEnc {
   GstElement       element;
 
@@ -86,10 +89,6 @@ struct _GstVorbisEncClass {
 
 GType vorbisenc_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __VORBISENC_H__ */

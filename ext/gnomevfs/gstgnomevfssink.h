@@ -44,6 +44,11 @@ G_BEGIN_DECLS
 typedef struct _GstGnomeVFSSink GstGnomeVFSSink;
 typedef struct _GstGnomeVFSSinkClass GstGnomeVFSSinkClass;
 
+/**
+ * GstGnomeVFSSink:
+ *
+ * Opaque data structure.
+ */
 struct _GstGnomeVFSSink
 {
   GstBaseSink basesink;

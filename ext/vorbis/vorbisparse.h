@@ -25,10 +25,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_VORBIS_PARSE \
   (gst_vorbis_parse_get_type())
@@ -44,6 +41,11 @@ extern "C" {
 typedef struct _GstVorbisParse GstVorbisParse;
 typedef struct _GstVorbisParseClass GstVorbisParseClass;
 
+/**
+ * GstVorbisParse:
+ *
+ * Opaque data structure.
+ */
 struct _GstVorbisParse {
   GstElement            element;
 
@@ -61,9 +63,6 @@ struct _GstVorbisParseClass {
 
 GType gst_vorbis_parse_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_VORBIS_PARSE_H__ */

@@ -37,6 +37,14 @@ G_BEGIN_DECLS
 #define GST_IS_VIDEO_TEST_SRC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_TEST_SRC))
 
+/**
+ * GstVideoTestSrcPattern:
+ * @GST_VIDEO_TEST_SRC_SMPTE: A standard SMPTE test pattern
+ * @GST_VIDEO_TEST_SRC_SNOW: Random noise
+ * @GST_VIDEO_TEST_SRC_BLACK: A black image
+ *
+ * The test pattern to produce.
+ */
 typedef enum {
   GST_VIDEO_TEST_SRC_SMPTE,
   GST_VIDEO_TEST_SRC_SNOW,
@@ -46,6 +54,11 @@ typedef enum {
 typedef struct _GstVideoTestSrc GstVideoTestSrc;
 typedef struct _GstVideoTestSrcClass GstVideoTestSrcClass;
 
+/**
+ * GstVideoTestSrc:
+ *
+ * Opaque data structure.
+ */
 struct _GstVideoTestSrc {
   GstPushSrc element;
 

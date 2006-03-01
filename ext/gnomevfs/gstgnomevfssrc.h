@@ -46,6 +46,11 @@ G_BEGIN_DECLS
 typedef struct _GstGnomeVFSSrc      GstGnomeVFSSrc;
 typedef struct _GstGnomeVFSSrcClass GstGnomeVFSSrcClass;
 
+/**
+ * GstGnomeVFSSrc:
+ *
+ * Opaque data structure.
+ */
 struct _GstGnomeVFSSrc
 {
   GstBaseSrc basesrc;
