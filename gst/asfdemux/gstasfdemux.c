@@ -2203,13 +2203,13 @@ gst_asf_demux_handle_data (GstASFDemux * demux, guint8 ** p_data,
 
   packet_info.multiple = ((flags & 0x01) == 0x01);
 
+  packet_length =
+      gst_asf_demux_get_var_length ((flags >> 5) & 0x03, p_data, p_size);
+
   sequence = gst_asf_demux_get_var_length ((flags >> 1) & 0x03, p_data, p_size);
 
   packet_info.padsize =
       gst_asf_demux_get_var_length ((flags >> 3) & 0x03, p_data, p_size);
-
-  packet_length =
-      gst_asf_demux_get_var_length ((flags >> 5) & 0x03, p_data, p_size);
 
   if (packet_length == 0)
     packet_length = demux->packet_size;
