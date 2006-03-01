@@ -578,8 +578,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
       if (in_size > size) {
         /* this is panic! we got a buffer, but still don't have enough
          * data. Merge them and retry in the next cycle... */
-        ffmpegenc->cache = gst_buffer_span (ffmpegenc->cache, 0, inbuf,
-                GST_BUFFER_SIZE (ffmpegenc->cache) + GST_BUFFER_SIZE (inbuf));
+        ffmpegenc->cache = gst_buffer_join (ffmpegenc->cache, inbuf);
       } else if (in_size == size) {
         /* exactly the same! how wonderful */
         ffmpegenc->cache = inbuf;
@@ -605,8 +604,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
       subbuf = gst_buffer_create_sub (inbuf, 0, frame_size - (in_size - size));
       GST_BUFFER_DURATION (subbuf) =
           GST_BUFFER_DURATION (inbuf) * GST_BUFFER_SIZE (subbuf) / size;
-      subbuf = gst_buffer_span (ffmpegenc->cache, 0, subbuf,
-              GST_BUFFER_SIZE (ffmpegenc->cache) + GST_BUFFER_SIZE (subbuf));
+      subbuf = gst_buffer_join (ffmpegenc->cache, subbuf);
       ffmpegenc->cache = NULL;
     } else {
       subbuf = gst_buffer_create_sub (inbuf, size - in_size, frame_size);
@@ -617,7 +615,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
           (size - in_size) / size);
     }
 
-    outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (inbuf));
+    outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (subbuf));
     ret_size = avcodec_encode_audio (ffmpegenc->context,
         GST_BUFFER_DATA (outbuf),
         GST_BUFFER_SIZE (outbuf), (const short int *)

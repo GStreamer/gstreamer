@@ -1,3 +1,11 @@
+2006-03-01  Josef Zlomek  <josef dot zlomek at itonis dot tv>
+
+	Reviewed by : Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_chain_audio):
+	Fix segmentation fault and memleak.
+	Fixes #332995 and #333001
+
 2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
