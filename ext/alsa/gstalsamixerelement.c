@@ -25,9 +25,13 @@
 #include "gstalsamixerelement.h"
 #include "gstalsadeviceprobe.h"
 
+#define DEFAULT_PROP_DEVICE          "default"
+#define DEFAULT_PROP_DEVICE_NAME     ""
+
 enum
 {
-  PROP_DEVICE = 1,
+  PROP_0,
+  PROP_DEVICE,
   PROP_DEVICE_NAME
 };
 
@@ -118,11 +122,12 @@ gst_alsa_mixer_element_class_init (GstAlsaMixerElementClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "ALSA device, as defined in an asound configuration file",
-          "default", G_PARAM_READWRITE));
+          DEFAULT_PROP_DEVICE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", "", G_PARAM_READABLE));
+          "Human-readable name of the sound device",
+          DEFAULT_PROP_DEVICE_NAME, G_PARAM_READABLE));
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_alsa_mixer_element_change_state);
@@ -143,7 +148,7 @@ gst_alsa_mixer_element_init (GstAlsaMixerElement * this,
     GstAlsaMixerElementClass * klass)
 {
   this->mixer = NULL;
-  this->device = g_strdup ("default");
+  this->device = g_strdup (DEFAULT_PROP_DEVICE);
 }
 
 static void

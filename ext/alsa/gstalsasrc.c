@@ -19,6 +19,27 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-alsasrc
+ * @short_description: capture audio from an alsa device
+ * @see_also: alsasink, alsamixer
+ *
+ * <refsect2>
+ * <para>
+ * This element reads data from an audio card using the ALSA API.
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * Record from a sound card using ALSA and encode to Ogg/Vorbis.
+ * </para>
+ * <programlisting>
+ * gst-launch -v alsasrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=alsasrc.ogg
+ * </programlisting>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-03-01 (0.10.4)
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -40,6 +61,9 @@ GST_ELEMENT_DETAILS ("Audio Src (ALSA)",
     "Source/Audio",
     "Read from a sound card via ALSA",
     "Wim Taymans <wim@fluendo.com>");
+
+#define DEFAULT_PROP_DEVICE		"default"
+#define DEFAULT_PROP_DEVICE_NAME	""
 
 enum
 {
@@ -76,12 +100,18 @@ enum
   LAST_SIGNAL
 };
 
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+# define ALSA_SRC_FACTORY_ENDIANNESS   "LITTLE_ENDIAN, BIG_ENDIAN"
+#else
+# define ALSA_SRC_FACTORY_ENDIANNESS   "BIG_ENDIAN, LITTLE_ENDIAN"
+#endif
+
 static GstStaticPadTemplate alsasrc_src_factory =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, "
+        "endianness = (int) { " ALSA_SRC_FACTORY_ENDIANNESS " }, "
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 16, "
         "depth = (int) 16, "
@@ -142,11 +172,12 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "ALSA device, as defined in an asound configuration file",
-          "default", G_PARAM_READWRITE));
+          DEFAULT_PROP_DEVICE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", "", G_PARAM_READABLE));
+          "Human-readable name of the sound device",
+          DEFAULT_PROP_DEVICE_NAME, G_PARAM_READABLE));
 }
 
 static void
@@ -204,7 +235,7 @@ gst_alsasrc_init (GstAlsaSrc * alsasrc, GstAlsaSrcClass * g_class)
 {
   GST_DEBUG_OBJECT (alsasrc, "initializing");
 
-  alsasrc->device = g_strdup ("default");
+  alsasrc->device = g_strdup (DEFAULT_PROP_DEVICE);
 }
 
 static GstCaps *

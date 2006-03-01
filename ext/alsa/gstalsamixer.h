@@ -33,18 +33,21 @@ G_BEGIN_DECLS
 /* This does not get you what you think it does, use obj->mixer   */
 /* #define GST_ALSA_MIXER(obj)             ((GstAlsaMixer*)(obj)) */
 
+typedef struct _GstAlsaMixer GstAlsaMixer;
 
 typedef enum {
   GST_ALSA_MIXER_CAPTURE = 1<<0,
   GST_ALSA_MIXER_PLAYBACK = 1<<1,
   GST_ALSA_MIXER_ALL = GST_ALSA_MIXER_CAPTURE | GST_ALSA_MIXER_PLAYBACK
 } GstAlsaMixerDirection;
-  
 
-typedef struct _GstAlsaMixer GstAlsaMixer;
-
-
-struct _GstAlsaMixer {
+/**
+ * GstAlsaMixer:
+ *
+ * Opaque data structure
+ */
+struct _GstAlsaMixer
+{
   GList *               tracklist;      /* list of available tracks */
 
   snd_mixer_t *         handle;

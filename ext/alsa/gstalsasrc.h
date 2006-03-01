@@ -23,11 +23,9 @@
 #ifndef __GST_ALSASRC_H__
 #define __GST_ALSASRC_H__
 
-
 #include <gst/audio/gstaudiosrc.h>
 #include "gstalsa.h"
 #include "gstalsamixer.h"
-
 
 G_BEGIN_DECLS
 
@@ -40,6 +38,11 @@ G_BEGIN_DECLS
 typedef struct _GstAlsaSrc GstAlsaSrc;
 typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
 
+/**
+ * GstAlsaSrc:
+ *
+ * Opaque data structure
+ */
 struct _GstAlsaSrc {
   GstAudioSrc           src;
 

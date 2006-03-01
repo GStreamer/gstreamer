@@ -12,6 +12,9 @@
 
   <chapter>
     <title>gst-plugins-base Elements</title>
+    <xi:include href="xml/element-alsamixer.xml" />
+    <xi:include href="xml/element-alsasink.xml" />
+    <xi:include href="xml/element-alsasrc.xml" />
     <xi:include href="xml/element-audioconvert.xml" />
     <xi:include href="xml/element-audiotestsrc.xml" />
     <xi:include href="xml/element-clockoverlay.xml" />

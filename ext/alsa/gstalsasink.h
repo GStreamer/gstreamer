@@ -23,11 +23,9 @@
 #ifndef __GST_ALSASINK_H__
 #define __GST_ALSASINK_H__
 
-
 #include <gst/gst.h>
 #include <gst/audio/gstaudiosink.h>
 #include <alsa/asoundlib.h>
-
 
 G_BEGIN_DECLS
 
@@ -45,6 +43,11 @@ typedef struct _GstAlsaSinkClass GstAlsaSinkClass;
 #define GST_ALSA_LOCK(obj)	(g_mutex_lock (GST_ALSA_GET_LOCK (obj)))
 #define GST_ALSA_UNLOCK(obj)	(g_mutex_unlock (GST_ALSA_GET_LOCK (obj)))
 
+/**
+ * GstAlsaSink:
+ *
+ * Opaque data structure
+ */
 struct _GstAlsaSink {
   GstAudioSink    sink;
 

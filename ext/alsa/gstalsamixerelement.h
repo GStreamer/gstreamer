@@ -25,9 +25,7 @@
 #include "gstalsamixer.h"
 #include "gstalsadeviceprobe.h"
 
-
 G_BEGIN_DECLS
-
 
 #define GST_ALSA_MIXER_ELEMENT(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_ELEMENT,GstAlsaMixerElement))
 #define GST_ALSA_MIXER_ELEMENT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_MIXER_ELEMENT,GstAlsaMixerElementClass))
@@ -35,11 +33,14 @@ G_BEGIN_DECLS
 #define GST_IS_ALSA_MIXER_ELEMENT_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER_ELEMENT))
 #define GST_TYPE_ALSA_MIXER_ELEMENT             (gst_alsa_mixer_element_get_type())
 
-
 typedef struct _GstAlsaMixerElement GstAlsaMixerElement;
 typedef struct _GstAlsaMixerElementClass GstAlsaMixerElementClass;
 
-
+/**
+ * GstAlsaMixerElement
+ *
+ * Opaque datastructure.
+ */
 struct _GstAlsaMixerElement {
   GstElement            parent;
 

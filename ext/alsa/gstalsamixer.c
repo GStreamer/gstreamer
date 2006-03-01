@@ -17,6 +17,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-alsamixer
+ * @short_description: control properties of an audio device
+ * @see_also: alsasink, alsasrc
+ *
+ * <refsect2>
+ * <para>
+ * This element controls various aspects such as the volume and balance
+ * of an audio device using the ALSA api.
+ * </para>
+ * <para>
+ * The application should query and use the interfaces provided by this 
+ * element to control the device.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-03-01 (0.10.4)
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
