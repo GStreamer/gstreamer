@@ -272,7 +272,7 @@ id3_type_find (GstTypeFind * tf, gpointer unused)
   }
   data = gst_type_find_peek (tf, -128, 3);
   if (data && memcmp (data, "TAG", 3) == 0) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, ID3_CAPS);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 3, ID3_CAPS);
   }
 }
 
@@ -289,14 +289,14 @@ apetag_type_find (GstTypeFind * tf, gpointer unused)
   /* APEv1/2 at start of file */
   data = gst_type_find_peek (tf, 0, 8);
   if (data && !memcmp (data, "APETAGEX", 8)) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, APETAG_CAPS);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, APETAG_CAPS);
     return;
   }
 
   /* APEv1/2 at end of file */
   data = gst_type_find_peek (tf, -32, 8);
   if (data && !memcmp (data, "APETAGEX", 8)) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, APETAG_CAPS);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 2, APETAG_CAPS);
     return;
   }
 }
@@ -1180,7 +1180,7 @@ ape_type_find (GstTypeFind * tf, gpointer unused)
   guint8 *data = gst_type_find_peek (tf, 0, 4);
 
   if (data && memcmp (data, "MAC ", 4) == 0) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, APE_CAPS);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY + 10, APE_CAPS);
   }
 }
 
@@ -2167,7 +2167,7 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_FIND_MAXIMUM);
   /* -1 so id3v1 or apev1/2 are detected with higher preference */
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-musepack", GST_RANK_PRIMARY,
-      musepack_exts, "MP+", 3, GST_TYPE_FIND_MAXIMUM - 1);
+      musepack_exts, "MP+", 3, GST_TYPE_FIND_LIKELY + 10);
   TYPE_FIND_REGISTER (plugin, "audio/x-au", GST_RANK_MARGINAL,
       au_type_find, au_exts, AU_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-msvideo", GST_RANK_PRIMARY,

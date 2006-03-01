@@ -1,3 +1,13 @@
+2006-03-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (id3_type_find),
+	(apetag_type_find), (ape_type_find), (plugin_init):
+	  Some typefinding fine-tuning:
+	  - rank ID3/APE tags in order of preference via probabilities, so that
+	    ID3v2 > APEv2 > APEv1 > ID3v1.
+	  - three or four bytes don't really justify MAXIMUM probability,
+	    change those to 'very likely' (musepack and monkeysaudio).
+
 2006-03-01  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/Makefile.am:
