@@ -1,3 +1,5 @@
+noinst_HEADERS = gstvideorate.h
+
 plugin_LTLIBRARIES = libgstvideorate.la
 
 libgstvideorate_la_SOURCES = gstvideorate.c
