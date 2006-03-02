@@ -1,3 +1,9 @@
+2006-03-02  Michael Smith  <msmith@fluendo.com>
+
+	* gst/gstregistryxml.c: (load_feature):
+	  Asserting on a failure to read part of the registry is Not Cool.
+	  Just log a warning and return NULL (which is already handled)
+
 2006-02-28  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/common/libgstbase.def:

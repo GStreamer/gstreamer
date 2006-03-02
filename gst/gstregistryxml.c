@@ -338,7 +338,7 @@ load_feature (xmlTextReaderPtr reader)
     }
   }
 
-  g_assert_not_reached ();
+  GST_WARNING ("Error reading feature from registry: registry corrupt?");
   return NULL;
 }
 
