@@ -56,12 +56,14 @@ type_find_factory_rank_cmp (gconstpointer fac1, gconstpointer fac2)
 
 typedef struct
 {
-  GstPad *src;
   guint best_probability;
   GstCaps *caps;
   guint64 size;
   GSList *buffers;
   GstTypeFindFactory *factory;
+
+  GstTypeFindHelperGetRangeFunction func;
+  GstObject *obj;
 }
 GstTypeFindHelper;
 
@@ -70,14 +72,12 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
 {
   GstTypeFindHelper *find;
   GstBuffer *buffer;
-  GstPad *src;
   GstFlowReturn ret;
 
   find = (GstTypeFindHelper *) data;
-  src = find->src;
 
-  GST_LOG_OBJECT (src, "'%s' called peek (%" G_GINT64_FORMAT ", %u)",
-      GST_PLUGIN_FEATURE_NAME (find->factory), offset, size);
+  GST_LOG_OBJECT (find->obj, "'%s' called peek (%" G_GINT64_FORMAT
+      ", %u)", GST_PLUGIN_FEATURE_NAME (find->factory), offset, size);
 
   if (size == 0)
     return NULL;
@@ -104,7 +104,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   }
 
   buffer = NULL;
-  ret = GST_PAD_GETRANGEFUNC (src) (src, offset, size, &buffer);
+  ret = find->func (find->obj, offset, size, &buffer);
 
   if (ret != GST_FLOW_OK)
     goto error;
@@ -134,7 +134,7 @@ helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
 {
   GstTypeFindHelper *find = (GstTypeFindHelper *) data;
 
-  GST_LOG_OBJECT (find->src,
+  GST_LOG_OBJECT (find->obj,
       "'%s' called called suggest (%u, %" GST_PTR_FORMAT ")",
       GST_PLUGIN_FEATURE_NAME (find->factory), probability, caps);
 
@@ -148,18 +148,30 @@ helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
 }
 
 /**
- * gst_type_find_helper:
- * @src: A source #GstPad
+ * gst_type_find_helper_get_range:
+ * @obj: A #GstObject that will be passed as first argument to @func
+ * @func: A generic #GstTypeFindHelperGetRangeFunction that will be used
+ *        to access data at random offsets when doing the typefinding
  * @size: The length in bytes
+ * @prob: location to store the probability of the found caps, or #NULL
  *
- * Tries to find what type of data is flowing from the given source #GstPad.
+ * Utility function to do pull-based typefinding. Unlike gst_type_find_helper()
+ * however, this function will use the specified function @func to obtain the
+ * data needed by the typefind functions, rather than operating on a given
+ * source pad. This is useful mostly for elements like tag demuxers which
+ * strip off data at the beginning and/or end of a file and want to typefind
+ * the stripped data stream before adding their own source pad (the specified
+ * callback can then call the upstream peer pad with offsets adjusted for the
+ * tag size, for example).
  *
  * Returns: The #GstCaps corresponding to the data stream.
  * Returns #NULL if no #GstCaps matches the data stream.
  */
 
 GstCaps *
-gst_type_find_helper (GstPad * src, guint64 size)
+gst_type_find_helper_get_range (GstObject * obj,
+    GstTypeFindHelperGetRangeFunction func, guint64 size,
+    GstTypeFindProbability * prob)
 {
   GstTypeFind gst_find;
   GstTypeFindHelper find;
@@ -167,18 +179,19 @@ gst_type_find_helper (GstPad * src, guint64 size)
   GList *walk, *type_list = NULL;
   GstCaps *result = NULL;
 
-  g_return_val_if_fail (src != NULL, NULL);
-  g_return_val_if_fail (GST_PAD_GETRANGEFUNC (src) != NULL, NULL);
+  g_return_val_if_fail (GST_IS_OBJECT (obj), NULL);
+  g_return_val_if_fail (func != NULL, NULL);
 
   type_list = gst_type_find_factory_get_list ();
 
   type_list = g_list_sort (type_list, type_find_factory_rank_cmp);
 
-  find.src = src;
   find.best_probability = 0;
   find.caps = NULL;
   find.size = size;
   find.buffers = NULL;
+  find.func = func;
+  find.obj = obj;
   gst_find.data = &find;
   gst_find.peek = helper_find_peek;
   gst_find.suggest = helper_find_suggest;
@@ -205,7 +218,37 @@ gst_type_find_helper (GstPad * src, guint64 size)
     gst_buffer_unref (GST_BUFFER_CAST (l->data));
   g_slist_free (find.buffers);
 
+  if (prob)
+    *prob = find.best_probability;
+
+  GST_LOG_OBJECT (obj, "Returning %" GST_PTR_FORMAT " (probability = %u)",
+      result, (guint) find.best_probability);
+
   return result;
+}
+
+/**
+ * gst_type_find_helper:
+ * @src: A source #GstPad
+ * @size: The length in bytes
+ *
+ * Tries to find what type of data is flowing from the given source #GstPad.
+ *
+ * Returns: The #GstCaps corresponding to the data stream.
+ * Returns #NULL if no #GstCaps matches the data stream.
+ */
+
+GstCaps *
+gst_type_find_helper (GstPad * src, guint64 size)
+{
+  GstTypeFindHelperGetRangeFunction func;
+
+  g_return_val_if_fail (GST_IS_OBJECT (src), NULL);
+  g_return_val_if_fail (GST_PAD_GETRANGEFUNC (src) != NULL, NULL);
+
+  func = (GstTypeFindHelperGetRangeFunction) (GST_PAD_GETRANGEFUNC (src));
+
+  return gst_type_find_helper_get_range (GST_OBJECT (src), func, size, NULL);
 }
 
 /* ********************** typefinding for buffers ************************* */

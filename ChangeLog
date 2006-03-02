@@ -1,3 +1,12 @@
+2006-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gsttypefindhelper.c: (helper_find_peek),
+	(helper_find_suggest), (gst_type_find_helper_get_range),
+	(gst_type_find_helper):
+	* libs/gst/base/gsttypefindhelper.h:
+	  New API: gst_type_find_helper_get_range() (#333042).
+
 2006-03-02  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gstregistryxml.c: (load_feature):
