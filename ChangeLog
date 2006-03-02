@@ -1,3 +1,29 @@
+2006-03-02  Wim Taymans  <wim@fluendo.com>
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* docs/libs/gst-plugins-base-libs.types:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	Added some more docs to libs and plugins.
+
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ring_buffer_prepare_read), (gst_ring_buffer_clear):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Document ringbuffer some more.
+
+	* gst/videorate/gstvideorate.c: (gst_video_rate_class_init),
+	(gst_video_rate_setcaps), (gst_video_rate_reset),
+	(gst_video_rate_init), (gst_video_rate_flush_prev),
+	(gst_video_rate_swap_prev), (gst_video_rate_event),
+	(gst_video_rate_chain), (gst_video_rate_change_state):
+	* gst/videorate/gstvideorate.h:
+	Fix videorate to use segments.
+	Make it work with 0/1 framerates (closes #331903)
+	Handle EOS correctly.
+	Added docs.
+
 2006-03-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ogg/gstogmparse.c: (gst_ogm_parse_class_init),

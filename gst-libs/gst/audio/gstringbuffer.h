@@ -199,6 +199,23 @@ struct _GstRingBufferSpec
 #define GST_RING_BUFFER_SIGNAL(buf)   (g_cond_signal (GST_RING_BUFFER_GET_COND (buf)))
 #define GST_RING_BUFFER_BROADCAST(buf)(g_cond_broadcast (GST_RING_BUFFER_GET_COND (buf)))
 
+/**
+ * GstRingBuffer:
+ * @cond: used to signal start/stop/pause/resume actions
+ * @open: boolean indicating that the ringbuffer is open
+ * @acquired: boolean indicating that the ringbuffer is acquired
+ * @data: data in the ringbuffer
+ * @spec: format and layout of the ringbuffer data
+ * @segstate: status of each segment in the ringbuffer (unused)
+ * @samples_per_seg: number of samples in one segment
+ * @empty_seg: pointer to memory holding one segment of silence samples
+ * @state: state of the buffer
+ * @segdone: readpointer in the ringbuffer
+ * @segbase: segment corresponding to segment 0 (unused)
+ * @waiting: is a reader or writer waiting for a free segment
+ *
+ * The ringbuffer base class structure.
+ */
 struct _GstRingBuffer {
   GstObject              object;
 
@@ -209,14 +226,14 @@ struct _GstRingBuffer {
   GstBuffer             *data;
   GstRingBufferSpec      spec;
   GstRingBufferSegState *segstate;
-  gint                   samples_per_seg;     /* number of samples per segment */
+  gint                   samples_per_seg;
   guint8                *empty_seg;
 
   /*< public >*/ /* ATOMIC */
-  gint                   state;         /* state of the buffer */
-  gint                   segdone;       /* number of segments processed since last start */
-  gint                   segbase;       /* segment corresponding to segment 0 */
-  gint                   waiting;       /* when waiting for a segment to be freed */
+  gint                   state;
+  gint                   segdone;
+  gint                   segbase;
+  gint                   waiting;
 
   /*< private >*/
   GstRingBufferCallback  callback;
@@ -232,26 +249,34 @@ struct _GstRingBuffer {
   } abidata;
 };
 
+/**
+ * GstRingBufferClass:
+ * @open_device:  open the device, don't set any params or allocate anything
+ * @acquire: allocate the resources for the ringbuffer using the given spec
+ * @release: free resources of the ringbuffer
+ * @close_device: close the device
+ * @start: start processing of samples
+ * @pause: pause processing of samples
+ * @resume: resume processing of samples after pause
+ * @stop: stop processing of samples
+ * @delay: get number of samples queued in device
+ *
+ * The vmethods that subclasses can override to implement the ringbuffer.
+ */
 struct _GstRingBufferClass {
   GstObjectClass parent_class;
 
   /*< public >*/
-  /* just open the device, don't set any params or allocate anything */
   gboolean     (*open_device)  (GstRingBuffer *buf);
-  /* allocate the resources for the ringbuffer using the given specs */
   gboolean     (*acquire)      (GstRingBuffer *buf, GstRingBufferSpec *spec);
-  /* free resources of the ringbuffer */
   gboolean     (*release)      (GstRingBuffer *buf);
-  /* close the device */
   gboolean     (*close_device) (GstRingBuffer *buf);
 
-  /* playback control */
   gboolean     (*start)        (GstRingBuffer *buf);
   gboolean     (*pause)        (GstRingBuffer *buf);
   gboolean     (*resume)       (GstRingBuffer *buf);
   gboolean     (*stop)         (GstRingBuffer *buf);
 
-  /* number of samples queued in device */
   guint        (*delay)        (GstRingBuffer *buf);
 
   /*< private >*/

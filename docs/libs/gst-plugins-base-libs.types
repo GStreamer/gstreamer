@@ -1,12 +1,17 @@
 #include <gst/gst.h>
 
 #include <gst/interfaces/colorbalance.h>
-#include <gst/audio/gstringbuffer.h>
-
-gst_ring_buffer_get_type
-
 gst_color_balance_get_type
 gst_color_balance_channel_get_type
+
+#include <gst/audio/gstringbuffer.h>
+gst_ring_buffer_get_type
+
+#include <gst/audio/gstaudiosink.h>
+gst_audio_sink_get_type
+
+#include <gst/audio/gstbaseaudiosink.h>
+gst_base_audio_sink_get_type
 
 #include <gst/cdda/gstcddabasesrc.h>
 gst_cdda_base_src_get_type

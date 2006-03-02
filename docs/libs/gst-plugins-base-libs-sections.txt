@@ -17,6 +17,32 @@ gst_audio_default_registry_mixer_filter
 </SECTION>
 
 <SECTION>
+<FILE>gstaudiosink</FILE>
+<INCLUDE>gst/audio/gstaudiosink.h</INCLUDE>
+GstAudioSink
+GstAudioSinkClass
+</SECTION>
+
+<SECTION>
+<FILE>gstbaseaudiosink</FILE>
+<INCLUDE>gst/audio/gstbaseaudiosink.h</INCLUDE>
+GstBaseAudioSink
+GstBaseAudioSinkClass
+GST_BASE_AUDIO_SINK_CLOCK
+GST_BASE_AUDIO_SINK_PAD
+gst_base_audio_sink_create_ringbuffer
+<SUBSECTION Standard>
+GST_BASE_AUDIO_SINK
+GST_IS_BASE_AUDIO_SINK
+GST_TYPE_BASE_AUDIO_SINK
+gst_base_audio_sink_get_type
+GST_BASE_AUDIO_SINK_CLASS
+GST_IS_BASE_AUDIO_SINK_CLASS
+GST_BASE_AUDIO_SINK_GET_CLASS
+</SECTION>
+
+
+<SECTION>
 <FILE>gstcddabasesrc</FILE>
 <INCLUDE>gst/cdda/gstcddabasesrc.h</INCLUDE>
 GstCddaBaseSrc
@@ -68,6 +94,7 @@ gst_mixer_options_get_values
 <FILE>gstringbuffer</FILE>
 <INCLUDE>gst/audio/gstringbuffer.h</INCLUDE>
 GstRingBuffer
+GstRingBufferSpec
 GstRingBufferClass
 
 gst_ring_buffer_set_callback

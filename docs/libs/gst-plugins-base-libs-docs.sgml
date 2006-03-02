@@ -7,6 +7,8 @@
 <!ENTITY GstCompiling SYSTEM "compiling.sgml">
 <!ENTITY GstAudio SYSTEM "xml/gstaudio.xml">
 <!ENTITY GstAudioMixerUtils SYSTEM "xml/gstaudiomixerutils.xml">
+<!ENTITY GstAudioSink SYSTEM "xml/gstaudiosink.xml">
+<!ENTITY GstBaseAudioSink SYSTEM "xml/gstbaseaudiosink.xml">
 <!ENTITY GstCddaBaseSrc SYSTEM "xml/gstcddabasesrc.xml">
 <!ENTITY GstVideoSink SYSTEM "xml/gstvideosink.xml">
 <!ENTITY GstVideoFilter SYSTEM "xml/gstvideofilter.xml">
@@ -43,6 +45,8 @@ This library should be linked to by getting cflags and libs from
     </para>
     &GstAudio;
     &GstAudioMixerUtils;
+    &GstBaseAudioSink;
+    &GstAudioSink;
     &GstRingBuffer;
   </chapter>
 

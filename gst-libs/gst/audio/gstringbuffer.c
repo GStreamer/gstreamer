@@ -21,11 +21,23 @@
 /**
  * SECTION:gstringbuffer
  * @short_description: Base class for audio ringbuffer implementations
+ * @see_also: gstbaseaudiosink
  *
+ * <refsect2>
+ * <para>
  * This object is the base class for audio ringbuffers used by the base
  * audio source and sink classes.
+ * </para>
+ * <para>
+ * The ringbuffer abstracts a circular buffer of data. One reader and
+ * one writer can operate on the data from different threads in a lockfree 
+ * manner. The base class is sufficiently flexible to be used as an
+ * abstraction for DMA based ringbuffers as well as a pure software 
+ * implementations.
+ * </para>
+ * </refsect2>
  *
- * Last reviewed on 2005-11-24 (0.9.6)
+ * Last reviewed on 2006-02-02 (0.10.4)
  */
 
 #include <string.h>
@@ -1121,7 +1133,7 @@ flushing:
  * @buf. The first sample should be written at position @sample in
  * the ringbuffer.
  *
- * @len not needs to be a multiple of the segment size of the ringbuffer
+ * @len does not need to be a multiple of the segment size of the ringbuffer
  * although it is recommended for optimal performance.
  *
  * Returns: The number of samples written to the ringbuffer or -1 on
@@ -1336,7 +1348,7 @@ not_started:
  * @len: the number of bytes to read
  *
  * Returns a pointer to memory where the data from segment @segment
- * can be found. This function is used by subclasses.
+ * can be found. This function is mostly used by subclasses.
  *
  * Returns: FALSE if the buffer is not started.
  *
@@ -1349,11 +1361,12 @@ gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
   guint8 *data;
   gint segdone;
 
+  g_return_val_if_fail (buf != NULL, FALSE);
+
   /* buffer must be started */
   if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
     return FALSE;
 
-  g_return_val_if_fail (buf != NULL, FALSE);
   g_return_val_if_fail (buf->data != NULL, FALSE);
   g_return_val_if_fail (segment != NULL, FALSE);
   g_return_val_if_fail (readptr != NULL, FALSE);
@@ -1429,7 +1442,9 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
   if (G_UNLIKELY (buf->data == NULL))
     return;
 
-  g_return_if_fail (buf->empty_seg != NULL);
+  /* no empty_seg means it's not opened */
+  if (G_UNLIKELY (buf->empty_seg == NULL))
+    return;
 
   segment %= buf->spec.segtotal;
 

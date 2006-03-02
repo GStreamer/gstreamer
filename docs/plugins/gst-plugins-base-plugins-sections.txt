@@ -250,6 +250,19 @@ gst_time_overlay_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-videorate</FILE>
+<TITLE>videorate</TITLE>
+GstVideoRate
+<SUBSECTION Standard>
+GstVideoRateClass
+GST_VIDEO_RATE
+GST_IS_VIDEO_RATE
+GST_TYPE_VIDEO_RATE
+GST_VIDEO_RATE_CLASS
+GST_IS_VIDEO_RATE_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-videotestsrc</FILE>
 <TITLE>videotestsrc</TITLE>
 GstVideoTestSrc
