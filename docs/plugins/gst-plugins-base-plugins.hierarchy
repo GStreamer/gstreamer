@@ -1,69 +1,53 @@
 GObject
-  GstRegistry
-    GstXMLRegistry
   GstObject
     GstPad
+    GstPluginFeature
+      GstElementFactory
+      GstTypeFindFactory
+      GstIndexFactory
     GstElement
       GstBin
         GstPipeline
           GstPlayBaseBin
             GstPlayBin
         GstDecodeBin
-      GstQueue
-      GstBaseSink
-        GstVideoSink
-          GstXvImageSink
-          GstXImageSink
-        GstGnomeVFSSink
-        GstMultiFdSink
-          GstTCPServerSink
-        GstBaseAudioSink
-          GstAudioSink
-            GstAlsaSink
+      GstAdder
+      GstBaseTransform
+        GstAudioConvert
+        GstAudioresample
+        GstFFMpegCsp
+        GstVideoScale
+        GstVolume
+      GstAudioRate
       GstBaseSrc
+        GstAudioTestSrc
         GstPushSrc
-          GstV4lElement
-            GstV4lSrc
-          GstVideoTestSrc
           GstTCPClientSrc
           GstTCPServerSrc
+          GstVideoTestSrc
+          GstV4lElement
+            GstV4lSrc
           GstBaseAudioSrc
             GstAudioSrc
               GstAlsaSrc
-        GstSineSrc
+          GstCddaBaseSrc
+            GstCdParanoiaSrc
         GstGnomeVFSSrc
-      GstVorbisTag
-      GstBaseTransform
-        GstAudioresample
-        GstVolume
-        GstVideoscale
-        GstFFMpegColorspace
-        GstAudioConvert
-      GstVideorate
-      GstTCPClientSink
-      GstSubparse
-      GstAudiorate
-      GstBufferFramesConvert
-      GstAdder
-      GstVorbisEnc
-      GstVorbisDec
-      GstVorbisParse
-      GstTextOverlay
-        GstTimeOverlay
-        GstClockOverlay
-      GstTextRender
-      GstTheoraDec
-      GstTheoraEnc
-      GstVisual
-        GstVisualbumpscope
-        GstVisualcorona
-        GstVisualG-Force
-        GstVisualjakdaw
-        GstVisualjess
-        GstVisuallv_analyzer
-        GstVisuallv_scope
-        GstVisualoinksie
-        GstVisualplazma
+      GstSubParse
+      GstSsaParse
+      GstBaseSink
+        GstTCPClientSink
+        GstMultiFdSink
+          GstTCPServerSink
+        GstVideoSink
+          GstXImageSink
+          GstXvImageSink
+        GstBaseAudioSink
+          GstAudioSink
+            GstAlsaSink
+        GstGnomeVFSSink
+      GstVideoRate
+      GstAlsaMixerElement
       GstOggDemux
       GstOggMux
       GstOgmParse
@@ -71,18 +55,35 @@ GObject
         GstOgmVideoParse
         GstOgmTextParse
       GstOggParse
-      GstAlsaMixerElement
+      GstVisual
+        GstVisualjess
+        GstVisualbumpscope
+        GstVisualcorona
+        GstVisualgdkpixbuf
+        GstVisualinfinite
+        GstVisualjakdaw
+        GstVisuallv_analyzer
+        GstVisuallv_scope
+        GstVisualoinksie
+        GstVisualplazma
+      GstTheoraDec
+      GstTheoraEnc
+      GstVorbisEnc
+      GstVorbisDec
+      GstVorbisParse
+      GstTextOverlay
+        GstTimeOverlay
+        GstClockOverlay
+      GstTextRender
+    GstPlugin
+    GstRegistry
     GstPadTemplate
-  GstPluginFeature
-    GstElementFactory
-    GstTypeFindFactory
-    GstIndexFactory
   GstSignalObject
-  GstColorBalanceChannel
-  GstTunerNorm
-  GstTunerChannel
   GstMixerTrack
     GstMixerOptions
+  GstTunerNorm
+  GstTunerChannel
+  GstColorBalanceChannel
   BonoboObject
     BonoboMonikerContext
     BonoboForeignObject
@@ -93,14 +94,18 @@ GObject
   LinkServer
     GIOPServer
   GConfClient
+  PangoFontMap
+    PangoFcFontMap
+      PangoFT2FontMap
+  PangoContext
 GInterface
   GstChildProxy
   GstURIHandler
   GstImplementsInterface
-  GstNavigation
+  GstMixer
+  GstTuner
   GstXOverlay
   GstColorBalance
-  GstTuner
   GstPropertyProbe
+  GstNavigation
   GstTagSetter
-  GstMixer

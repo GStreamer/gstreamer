@@ -1,3 +1,17 @@
+2006-03-02  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.interfaces:
+	* docs/plugins/gst-plugins-base-plugins.signals:
+	Fix hierarchy, added some more elements to the docs.
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_get_type):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.h:
+	Fix docs for ffmpegcolorspace.
+
 2006-03-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c: (id3_type_find),

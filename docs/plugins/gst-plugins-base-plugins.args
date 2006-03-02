@@ -225,7 +225,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>method</NICK>
 <BLURB>method.</BLURB>
-<DEFAULT>Point Sample (not implemented)</DEFAULT>
+<DEFAULT>Nearest Neighbour</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1142,7 +1142,7 @@
 <NAME>GstTextOverlay::deltax</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>X position modifier</NICK>
 <BLURB>Shift X position to the left or to the right. Unit is pixels.</BLURB>
 <DEFAULT>0</DEFAULT>
@@ -1152,7 +1152,7 @@
 <NAME>GstTextOverlay::deltay</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>Y position modifier</NICK>
 <BLURB>Shift Y position up or down. Unit is pixels.</BLURB>
 <DEFAULT>0</DEFAULT>
@@ -1170,19 +1170,19 @@
 
 <ARG>
 <NAME>GstTextOverlay::halign</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>GstTextOverlayHAlign</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>horizontal alignment</NICK>
-<BLURB>Horizontal alignment of the text. Can be either 'left', 'right', or 'center'.</BLURB>
-<DEFAULT>"center"</DEFAULT>
+<BLURB>Horizontal alignment of the text. .</BLURB>
+<DEFAULT>center</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstTextOverlay::shaded-background</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>shaded background</NICK>
 <BLURB>Whether to shade the background under the text area.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
@@ -1192,7 +1192,7 @@
 <NAME>GstTextOverlay::text</NAME>
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>text</NICK>
 <BLURB>Text to be display.</BLURB>
 <DEFAULT>""</DEFAULT>
@@ -1200,29 +1200,29 @@
 
 <ARG>
 <NAME>GstTextOverlay::valign</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>GstTextOverlayVAlign</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>vertical alignment</NICK>
-<BLURB>Vertical alignment of the text. Can be either 'baseline', 'bottom', or 'top'.</BLURB>
-<DEFAULT>"baseline"</DEFAULT>
+<BLURB>Vertical alignment of the text. .</BLURB>
+<DEFAULT>baseline</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstTextOverlay::wrap-mode</NAME>
-<TYPE>gchararray</TYPE>
+<TYPE>GstTextOverlayWrapMode</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>wrap mode</NICK>
-<BLURB>Whether to wrap the text and if so how.Can be either 'none', 'word', 'char' or 'wordchar'.</BLURB>
-<DEFAULT>"wordchar"</DEFAULT>
+<BLURB>Whether to wrap the text and if so how.</BLURB>
+<DEFAULT>wordchar</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstTextOverlay::xpad</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>horizontal paddding</NICK>
 <BLURB>Horizontal paddding when using left/right alignment.</BLURB>
 <DEFAULT>25</DEFAULT>
@@ -1232,7 +1232,7 @@
 <NAME>GstTextOverlay::ypad</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>vertical padding</NICK>
 <BLURB>Vertical padding when using top/bottom alignment.</BLURB>
 <DEFAULT>25</DEFAULT>

@@ -91,3 +91,17 @@ GstGnomeVFSSink *gstgnomevfssink
 GnomeVFSURI *arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstCdParanoiaSrc::transport-error</NAME>
+<RETURNS>void</RETURNS>
+GstCdParanoiaSrc *gstcdparanoiasrc
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCdParanoiaSrc::uncorrected-error</NAME>
+<RETURNS>void</RETURNS>
+GstCdParanoiaSrc *gstcdparanoiasrc
+gint  arg1
+</SIGNAL>
+

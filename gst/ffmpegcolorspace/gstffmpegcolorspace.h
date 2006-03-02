@@ -28,16 +28,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_FFMPEGCSP \
-  (gst_ffmpegcsp_get_type())
-#define GST_FFMPEGCSP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGCSP,GstFFMpegCsp))
-#define GST_FFMPEGCSP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGCSP,GstFFMpegCsp))
-#define GST_IS_FFMPEGCSP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGCSP))
-#define GST_IS_FFMPEGCSP_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGCSP))
+#define GST_TYPE_FFMPEGCSP 	   (gst_ffmpegcsp_get_type())
+#define GST_FFMPEGCSP(obj) 	   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGCSP,GstFFMpegCsp))
+#define GST_FFMPEGCSP_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGCSP,GstFFMpegCspClass))
+#define GST_IS_FFMPEGCSP(obj)      (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGCSP))
+#define GST_IS_FFMPEGCSP_CLASS(obj)(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGCSP))
 
 typedef struct _GstFFMpegCsp GstFFMpegCsp;
 typedef struct _GstFFMpegCspClass GstFFMpegCspClass;
@@ -47,8 +42,7 @@ typedef struct _GstFFMpegCspClass GstFFMpegCspClass;
  *
  * Opaque object data structure.
  */
-struct _GstFFMpegCsp
-{
+struct _GstFFMpegCsp {
   GstBaseTransform element;
 
   gint width, height;
