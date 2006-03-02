@@ -140,10 +140,6 @@ static void gst_ogm_video_parse_init (GstOgmParse * ogm);
 static void gst_ogm_audio_parse_init (GstOgmParse * ogm);
 static void gst_ogm_text_parse_init (GstOgmParse * ogm);
 
-#if 0
-static const GstFormat *gst_ogm_parse_get_sink_formats (GstPad * pad);
-#endif
-
 static const GstQueryType *gst_ogm_parse_get_sink_querytypes (GstPad * pad);
 static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_ogm_parse_sink_convert (GstPad * pad, GstFormat src_format,
@@ -325,9 +321,10 @@ gst_ogm_parse_class_init (GstOgmParseClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
-  gstelement_class->change_state = gst_ogm_parse_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_ogm_parse_change_state);
 }
 
 static void
@@ -352,11 +349,6 @@ gst_ogm_audio_parse_init (GstOgmParse * ogm)
       GST_DEBUG_FUNCPTR (gst_ogm_parse_chain));
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
 
-#if 0
-  ogm->srcpad = gst_pad_new_from_template (audio_src_templ, "src");
-  gst_pad_use_explicit_caps (ogm->srcpad);
-  gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
-#endif
   ogm->srcpad = NULL;
   ogm->srcpadtempl = audio_src_templ;
 }
@@ -374,11 +366,6 @@ gst_ogm_video_parse_init (GstOgmParse * ogm)
       GST_DEBUG_FUNCPTR (gst_ogm_parse_chain));
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
 
-#if 0
-  ogm->srcpad = gst_pad_new_from_template (video_src_templ, "src");
-  gst_pad_use_explicit_caps (ogm->srcpad);
-  gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
-#endif
   ogm->srcpad = NULL;
   ogm->srcpadtempl = video_src_templ;
 }
@@ -398,28 +385,9 @@ gst_ogm_text_parse_init (GstOgmParse * ogm)
       GST_DEBUG_FUNCPTR (gst_ogm_parse_chain));
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
 
-#if 0
-  ogm->srcpad = gst_pad_new_from_template (text_src_templ, "src");
-  gst_pad_use_explicit_caps (ogm->srcpad);
-  gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
-#endif
   ogm->srcpad = NULL;
   ogm->srcpadtempl = text_src_templ;
 }
-
-#if 0
-static const GstFormat *
-gst_ogm_parse_get_sink_formats (GstPad * pad)
-{
-  static GstFormat formats[] = {
-    GST_FORMAT_DEFAULT,
-    GST_FORMAT_TIME,
-    0
-  };
-
-  return formats;
-}
-#endif
 
 static const GstQueryType *
 gst_ogm_parse_get_sink_querytypes (GstPad * pad)
@@ -737,7 +705,12 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
 static GstStateChangeReturn
 gst_ogm_parse_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret;
   GstOgmParse *ogm = GST_OGM_PARSE (element);
+
+  ret = parent_class->change_state (element, transition);
+  if (ret != GST_STATE_CHANGE_SUCCESS)
+    return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -752,7 +725,7 @@ gst_ogm_parse_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return parent_class->change_state (element, transition);
+  return ret;
 }
 
 gboolean

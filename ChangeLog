@@ -1,5 +1,14 @@
 2006-03-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_class_init),
+	(gst_ogm_audio_parse_init), (gst_ogm_video_parse_init),
+	(gst_ogm_text_parse_init), (gst_ogm_parse_change_state):
+	  In state change function, first chain up to parent class,
+	  then handle downwards state change stuff. Remove some
+	  commented out cruft from 0.8 code.
+
+2006-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/ogg/gstogmparse.c: (gst_ogm_audio_parse_init),
 	(gst_ogm_video_parse_init), (gst_ogm_text_parse_init),
 	(gst_ogm_parse_sink_convert), (gst_ogm_parse_sink_query),
