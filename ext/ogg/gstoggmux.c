@@ -1044,10 +1044,10 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
  *
  * basic idea:
  *
- * 1) find a pad to pull on, this is done by looking at the buffers 
+ * 1) find a pad to pull on, this is done by looking at the buffers
  *    to decide which one to use, we use the 'oldest' one first.
- * 2) store the selected pad and keep on pulling until we fill a 
- *    complete ogg page or the ogg page is filled above the max-delay 
+ * 2) store the selected pad and keep on pulling until we fill a
+ *    complete ogg page or the ogg page is filled above the max-delay
  *    threshold. This is needed because the ogg spec says that
  *    you should fill a complete page with data from the same logical
  *    stream. When the page is filled, go back to 1).
@@ -1081,16 +1081,16 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     return GST_FLOW_OK;
   }
 
-  if (best)
-    GST_DEBUG_OBJECT (ogg_mux, "best pad %" GST_PTR_FORMAT " (oggpad %p)"
-        " pulling %" GST_PTR_FORMAT, best->collect.pad, best, ogg_mux->pulling);
-
-  if (!best) {                  /* EOS : FIXME !! We need to handle EOS correctly, and set EOS
-                                   flags on the ogg pages. */
+  if (!best) {
+    /* EOS : FIXME !! We need to handle EOS correctly, and set EOS
+       flags on the ogg pages. */
     GST_DEBUG_OBJECT (ogg_mux, "Pushing EOS");
     gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
     return GST_FLOW_WRONG_STATE;
   }
+
+  GST_DEBUG_OBJECT (ogg_mux, "best pad %" GST_PTR_FORMAT " (oggpad %p)"
+      " pulling %" GST_PTR_FORMAT, best->collect.pad, best, ogg_mux->pulling);
 
   /* if we were already pulling from one pad, but the new "best" buffer is
    * from another pad, we need to check if we have reason to flush a page
@@ -1259,8 +1259,8 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
          * so update the timestamp that we will give to the page */
         pad->timestamp = timestamp;
         pad->timestamp_end = timestamp_end;
-        GST_DEBUG_OBJECT (pad, "Timestamp of pad is %" GST_TIME_FORMAT
-            ", granulepos is %lld", GST_TIME_ARGS (timestamp), granulepos);
+        GST_DEBUG_OBJECT (pad, GST_GP_FORMAT " timestamp of pad is %"
+            GST_TIME_FORMAT, granulepos, GST_TIME_ARGS (timestamp));
       }
 
       /* push the page */
@@ -1295,7 +1295,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
       ogg_mux->pulling = NULL;
     }
 
-    /* Update the timestamp, if neccesary, since and future page will have at
+    /* Update the timestamp, if necessary, since any future page will have at
      * least this timestamp.
      */
     if (pad->timestamp < timestamp_end) {
