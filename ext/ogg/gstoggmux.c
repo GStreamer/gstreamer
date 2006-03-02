@@ -1101,10 +1101,15 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 
     GstClockTime last_ts = GST_BUFFER_END_TIME (pad->buffer);
 
-    /* if the next packet in the current page is going to make the page 
+    /* if the next packet in the current page is going to make the page
      * too long, we need to flush */
     if (last_ts > ogg_mux->next_ts + ogg_mux->max_delay) {
       ogg_page page;
+
+      GST_LOG_OBJECT (pad->pad,
+          GST_GP_FORMAT " stored packet %" G_GINT64_FORMAT
+          " will make page too long, flushing",
+          GST_BUFFER_OFFSET_END (pad->buffer), pad->stream.packetno);
 
       while (ogg_stream_flush (&pad->stream, &page)) {
         /* Place page into the per-pad queue */
@@ -1118,11 +1123,6 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
       pad->new_page = TRUE;
       ogg_mux->pulling = NULL;
     }
-  }
-
-  if (ogg_mux->need_headers) {
-    ret = gst_ogg_mux_send_headers (ogg_mux);
-    ogg_mux->need_headers = FALSE;
   }
 
   /* if we don't know which pad to pull on, use the best one */
@@ -1139,6 +1139,11 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
       gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
       return GST_FLOW_WRONG_STATE;
     }
+  }
+
+  if (ogg_mux->need_headers) {
+    ret = gst_ogg_mux_send_headers (ogg_mux);
+    ogg_mux->need_headers = FALSE;
   }
 
   /* we are pulling from a pad, continue to do so until a page
@@ -1174,6 +1179,9 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     /* mark BOS and packet number */
     packet.b_o_s = (pad->packetno == 0);
     packet.packetno = pad->packetno++;
+    GST_DEBUG_OBJECT (pad->pad, GST_GP_FORMAT
+        " packet %" G_GINT64_FORMAT " (%ld bytes) created from buffer",
+        packet.granulepos, packet.packetno, packet.bytes);
 
     packet.e_o_s = 0;
     tmpbuf = NULL;
@@ -1191,9 +1199,13 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 
     /* flush the currently built page if neccesary */
     if (force_flush) {
+      GST_LOG_OBJECT (pad->pad,
+          GST_GP_FORMAT " forcing flush because of keyframe",
+          GST_BUFFER_OFFSET_END (pad->buffer));
       while (ogg_stream_flush (&pad->stream, &page)) {
         ret = gst_ogg_mux_pad_queue_page (ogg_mux, pad, &page,
             pad->first_delta);
+
         /* increment the page number counter */
         pad->pageno++;
         /* mark other pages as delta */
@@ -1244,12 +1256,16 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     timestamp = GST_BUFFER_TIMESTAMP (pad->buffer);
     timestamp_end = GST_BUFFER_END_TIME (pad->buffer);
 
+    GST_LOG_OBJECT (pad->pad,
+        GST_GP_FORMAT " packet %" G_GINT64_FORMAT ", time %"
+        GST_TIME_FORMAT ") packetin'd",
+        granulepos, packet.packetno, GST_TIME_ARGS (timestamp));
     /* don't need the old buffer anymore */
     gst_buffer_unref (pad->buffer);
     /* store new readahead buffer */
     pad->buffer = tmpbuf;
 
-    /* let ogg write out the pages now. The packet we got could end 
+    /* let ogg write out the pages now. The packet we got could end
      * up in more than one page so we need to write them all */
     if (ogg_stream_pageout (&pad->stream, &page) > 0) {
       if (ogg_page_granulepos (&page) == granulepos) {
