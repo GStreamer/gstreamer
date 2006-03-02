@@ -74,6 +74,7 @@
 
 #include "gsttagdemux.h"
 
+#include <gst/base/gsttypefindhelper.h>
 #include <gst/gst-i18n-plugin.h>
 #include <string.h>
 
@@ -148,8 +149,6 @@ static GstStateChangeReturn gst_tag_demux_change_state (GstElement * element,
 static gboolean gst_tag_demux_pad_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_tag_demux_get_query_types (GstPad * pad);
 static gboolean gst_tag_demux_get_upstream_size (GstTagDemux * tagdemux);
-static GstCaps *gst_tag_demux_do_typefind (GstTagDemux * tagdemux,
-    GstBuffer * buffer);
 static void gst_tag_demux_send_tag_event (GstTagDemux * tagdemux);
 
 static void gst_tag_demux_base_init (gpointer g_class);
@@ -537,8 +536,9 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
         break;
       /* Fall-through */
     case GST_TAG_DEMUX_TYPEFINDING:{
-      GstCaps *caps;
+      GstTypeFindProbability probability = 0;
       GstBuffer *typefind_buf = NULL;
+      GstCaps *caps;
 
       if (GST_BUFFER_SIZE (demux->priv->collect) < TYPE_FIND_MIN_SIZE)
         break;                  /* Go get more data first */
@@ -552,7 +552,8 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
       if (!gst_tag_demux_trim_buffer (demux, &typefind_buf))
         return GST_FLOW_ERROR;
 
-      caps = gst_tag_demux_do_typefind (demux, typefind_buf);
+      caps = gst_type_find_helper_for_buffer (GST_OBJECT (demux),
+          typefind_buf, &probability);
 
       if (caps == NULL) {
         if (GST_BUFFER_SIZE (typefind_buf) < TYPE_FIND_MAX_SIZE) {
@@ -569,6 +570,9 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
         return GST_FLOW_ERROR;
       }
       gst_buffer_unref (typefind_buf);
+
+      GST_DEBUG_OBJECT (demux, "Found type %" GST_PTR_FORMAT " with a "
+          "probability of %u", caps, probability);
 
       if (!gst_tag_demux_add_srcpad (demux, caps)) {
         GST_DEBUG_OBJECT (demux, "Failed to add srcpad");
@@ -994,11 +998,10 @@ done:
 static gboolean
 gst_tag_demux_sink_activate (GstPad * sinkpad)
 {
+  GstTypeFindProbability probability = 0;
   GstTagDemux *demux = GST_TAG_DEMUX (GST_PAD_PARENT (sinkpad));
   gboolean ret = FALSE;
-  GstBuffer *buf = NULL;
   GstCaps *caps = NULL;
-  GstFlowReturn flow_ret;
 
   /* 1: */
   /* If we can activate pull_range upstream, then read any end and start
@@ -1039,17 +1042,14 @@ gst_tag_demux_sink_activate (GstPad * sinkpad)
     demux->priv->send_tag_event = TRUE;
   }
 
-  flow_ret = gst_tag_demux_read_range (demux, 0, TYPE_FIND_MAX_SIZE, &buf);
-  if (flow_ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (demux, "Could not read data from start of file ret=%s",
-        gst_flow_get_name (flow_ret));
-    goto done_activate;
-  }
+  /* 3 - Do typefinding on data */
+  caps = gst_type_find_helper_get_range (GST_OBJECT (demux),
+      (GstTypeFindHelperGetRangeFunction) gst_tag_demux_read_range,
+      demux->priv->upstream_size
+      - (demux->priv->strip_start + demux->priv->strip_end), &probability);
 
-  /* gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf)); */
-  caps = gst_tag_demux_do_typefind (demux, buf);
-  gst_buffer_unref (buf);
-  buf = NULL;
+  GST_DEBUG_OBJECT (demux, "Found type %" GST_PTR_FORMAT " with a "
+      "probability of %u", caps, probability);
 
   /* 4 - Deactivate pull mode */
   if (!gst_pad_activate_pull (sinkpad, FALSE)) {
@@ -1086,8 +1086,6 @@ gst_tag_demux_sink_activate (GstPad * sinkpad)
   }
 
 done_activate:
-  if (buf)
-    gst_buffer_unref (buf);
 
   return ret;
 }
@@ -1243,75 +1241,6 @@ gst_tag_demux_get_query_types (GstPad * pad)
   };
 
   return types;
-}
-
-typedef struct
-{
-  guint best_probability;
-  GstCaps *caps;
-  GstBuffer *buffer;
-} SimpleTypeFind;
-
-static guint8 *
-simple_find_peek (gpointer data, gint64 offset, guint size)
-{
-  SimpleTypeFind *find = (SimpleTypeFind *) data;
-
-  if (offset < 0)
-    return NULL;
-
-  if (GST_BUFFER_SIZE (find->buffer) >= offset + size) {
-    return GST_BUFFER_DATA (find->buffer) + offset;
-  }
-  return NULL;
-}
-static void
-simple_find_suggest (gpointer data, guint probability, const GstCaps * caps)
-{
-  SimpleTypeFind *find = (SimpleTypeFind *) data;
-
-  if (probability > find->best_probability) {
-    GstCaps *copy = gst_caps_copy (caps);
-
-    gst_caps_replace (&find->caps, copy);
-    gst_caps_unref (copy);
-    find->best_probability = probability;
-  }
-}
-
-static GstCaps *
-gst_tag_demux_do_typefind (GstTagDemux * tagdemux, GstBuffer * buffer)
-{
-  GList *walk, *type_list;
-  SimpleTypeFind find;
-  GstTypeFind gst_find;
-
-  walk = type_list = gst_type_find_factory_get_list ();
-
-  find.buffer = buffer;
-  find.best_probability = 0;
-  find.caps = NULL;
-  gst_find.data = &find;
-  gst_find.peek = simple_find_peek;
-  gst_find.get_length = NULL;
-  gst_find.suggest = simple_find_suggest;
-  while (walk) {
-    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
-
-    gst_type_find_factory_call_function (factory, &gst_find);
-    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
-      break;
-    walk = g_list_next (walk);
-  }
-  gst_plugin_feature_list_free (type_list);
-  if (find.best_probability > 0) {
-    GST_DEBUG ("Found caps %" GST_PTR_FORMAT " with buf size %u", find.caps,
-        GST_BUFFER_SIZE (buffer));
-    return find.caps;
-  }
-
-  gst_caps_replace (&find.caps, NULL);
-  return NULL;
 }
 
 static void

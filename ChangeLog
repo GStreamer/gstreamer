@@ -1,3 +1,18 @@
+2006-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Bump requirements to current core and -base CVS
+	  (core for new typefind helper API, and -base for the
+	  WAVFORMATEX support that was added to libgstriff and
+	  is needed by wavparse).
+	
+	* gst/apetag/Makefile.am:
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain),
+	(gst_tag_demux_sink_activate):
+	  Use new typefind helpers for typefinding instead of our
+	  home-grown stuff; also, do typefinding in pull-mode if
+	  upstream supports that.
+
 2006-02-28 Jürg Billeter  <j (at) bitron.ch>
 
 	Reviewed by: Christian Schaller <christian@fluendo.com>
