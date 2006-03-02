@@ -1,3 +1,11 @@
+2006-03-02  Michael Smith  <msmith@fluendo.com>
+
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_chain):
+	  The AMR encoder writes into the audio buffers it processes, so
+	  use gst_buffer_make_writable() on buffers we might (they go through
+	  an adapter, so there can be copying going on later anyway) be
+	  encoding.
+
 2006-03-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_pad_added),

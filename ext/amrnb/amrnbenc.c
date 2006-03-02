@@ -200,6 +200,9 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     amrnbenc->ts = GST_BUFFER_TIMESTAMP (buffer);
 
+  /* The AMR encoder actually writes into the source data buffers it gets */
+  buffer = gst_buffer_make_writable (buffer);
+
   ret = GST_FLOW_OK;
   gst_adapter_push (amrnbenc->adapter, buffer);
 
