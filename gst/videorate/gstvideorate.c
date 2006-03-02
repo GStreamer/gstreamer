@@ -24,7 +24,7 @@
  * <refsect2>
  * <para>
  * This element converts video from one framerate to another. This operation
- * is performed by dropping and duplicating frames, no fance algorithm is
+ * is performed by dropping and duplicating frames, no fancy algorithm is
  * used to interpolate frames (yet).
  * </para>
  * <para>

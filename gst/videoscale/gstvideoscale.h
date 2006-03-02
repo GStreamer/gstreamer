@@ -17,10 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_VIDEO_SCALE_H__
 #define __GST_VIDEO_SCALE_H__
-
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
@@ -29,10 +27,8 @@
 
 G_BEGIN_DECLS
 
-
 GST_DEBUG_CATEGORY_EXTERN (video_scale_debug);
 #define GST_CAT_DEFAULT video_scale_debug
-
 
 #define GST_TYPE_VIDEO_SCALE \
   (gst_video_scale_get_type())
@@ -45,17 +41,26 @@ GST_DEBUG_CATEGORY_EXTERN (video_scale_debug);
 #define GST_IS_VIDEO_SCALE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_SCALE))
 
-
+/**
+ * GstVideoScaleMethod:
+ * @GST_VIDEO_SCALE_NEAREST: use nearest neighbour scaling (fast and ugly)
+ * @GST_VIDEO_SCALE_BILINEAR: use bilinear scaling (slower but prettier).
+ *
+ * The videoscale method to use.
+ */
 typedef enum {
   GST_VIDEO_SCALE_NEAREST,
   GST_VIDEO_SCALE_BILINEAR,
 } GstVideoScaleMethod;
 
-
 typedef struct _GstVideoScale GstVideoScale;
 typedef struct _GstVideoScaleClass GstVideoScaleClass;
 
-
+/**
+ * GstVideoScale:
+ *
+ * Opaque data structure
+ */
 struct _GstVideoScale {
   GstBaseTransform element;
 
@@ -72,7 +77,7 @@ struct _GstVideoScale {
   gint from_width;
   gint from_height;
   
-  /* private */
+  /*< private >*/
   guint8 *tmp_buf;
 };
 
@@ -80,11 +85,8 @@ struct _GstVideoScaleClass {
   GstBaseTransformClass parent_class;
 };
 
-
 GType gst_video_scale_get_type(void);
 
-
 G_END_DECLS
-
 
 #endif /* __GST_VIDEO_SCALE_H__ */

@@ -1,5 +1,26 @@
 2006-03-02  Wim Taymans  <wim@fluendo.com>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	Added videoscale to docs.
+
+	* gst/videorate/gstvideorate.c: (gst_video_rate_flush_prev),
+	(gst_video_rate_swap_prev), (gst_video_rate_event),
+	(gst_video_rate_chain):
+	Fix typo in docs.
+
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_class_init),
+	(gst_video_scale_init), (gst_video_scale_prepare_size),
+	(gst_video_scale_set_caps), (gst_video_scale_get_unit_size),
+	(gst_video_scale_fixate_caps), (gst_video_scale_transform):
+	* gst/videoscale/gstvideoscale.h:
+	Added docs, examples.
+	Some code cleanups.
+	Post errors instead of g_warning.
+
+2006-03-02  Wim Taymans  <wim@fluendo.com>
+
 	* docs/libs/gst-plugins-base-libs-docs.sgml:
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* docs/libs/gst-plugins-base-libs.types:

@@ -263,6 +263,22 @@ GST_IS_VIDEO_RATE_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-videoscale</FILE>
+<TITLE>videoscale</TITLE>
+GstVideoScale
+GstVideoScaleMethod
+<SUBSECTION Standard>
+GstVideoScaleClass
+GST_CAT_DEFAULT
+GST_VIDEO_SCALE
+GST_IS_VIDEO_SCALE
+GST_TYPE_VIDEO_SCALE
+gst_video_scale_get_type
+GST_VIDEO_SCALE_CLASS
+GST_IS_VIDEO_SCALE_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-videotestsrc</FILE>
 <TITLE>videotestsrc</TITLE>
 GstVideoTestSrc

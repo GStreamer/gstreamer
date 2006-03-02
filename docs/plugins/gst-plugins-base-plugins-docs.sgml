@@ -29,6 +29,7 @@
     <xi:include href="xml/element-textrender.xml" />
     <xi:include href="xml/element-timeoverlay.xml" />
     <xi:include href="xml/element-videorate.xml" />
+    <xi:include href="xml/element-videoscale.xml" />
     <xi:include href="xml/element-videotestsrc.xml" />
     <xi:include href="xml/element-volume.xml" />
     <xi:include href="xml/element-vorbisdec.xml" />

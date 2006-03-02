@@ -18,6 +18,42 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-videoscale
+ * @short_description: rescale video
+ * @see_also: videorate, ffmpegcolorspace
+ *
+ * <refsect2>
+ * <para>
+ * This element resizes video frames. By default the element will try to
+ * negotiate to the same size on the source and sinkpad so that no scaling
+ * is needed. It is therefore safe to insert this element in a pipeline to
+ * get more robust behaviour without any cost if no scaling is needed.
+ * </para>
+ * <para>
+ * This element supports a wide range of color spaces including various YUV and 
+ * RGB formats and is therefore generally able to operate anywhere in a pipeline.
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! ffmpegcolorspace ! videoscale ! ximagesink
+ * </programlisting>
+ * Decode an Ogg/Theora and display the video using ximagesink. Since ximagesink cannot
+ * perform scaling, the video scaling will be performed by videoscale when you resize the
+ * video window.
+ * To create the test Ogg/Theora file refer to the documentation of theoraenc.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoscale ! video/x-raw-yuv, width=50 ! xvimagesink
+ * </programlisting>
+ * Decode an Ogg/Theora and display the video using xvimagesink with a width of 50.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-03-02 (0.10.4)
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -40,6 +76,8 @@ GST_ELEMENT_DETAILS ("Video scaler",
     "Filter/Effect/Video",
     "Resizes video",
     "Wim Taymans <wim.taymans@chello.be>");
+
+#define DEFAULT_PROP_METHOD	GST_VIDEO_SCALE_NEAREST
 
 enum
 {
@@ -214,7 +252,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_METHOD,
       g_param_spec_enum ("method", "method", "method",
-          GST_TYPE_VIDEO_SCALE_METHOD, 0, G_PARAM_READWRITE));
+          GST_TYPE_VIDEO_SCALE_METHOD, DEFAULT_PROP_METHOD, G_PARAM_READWRITE));
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_video_scale_transform_caps);
@@ -237,8 +275,7 @@ gst_video_scale_init (GstVideoScale * videoscale)
   gst_pad_set_event_function (trans->srcpad, gst_video_scale_handle_src_event);
 
   videoscale->tmp_buf = NULL;
-  videoscale->method = GST_VIDEO_SCALE_NEAREST;
-  /*videoscale->method = GST_VIDEO_SCALE_BILINEAR; */
+  videoscale->method = DEFAULT_PROP_METHOD;
 }
 
 
@@ -320,7 +357,7 @@ gst_video_scale_get_format (GstCaps * caps)
 
 /* calculate the size of a buffer */
 static gboolean
-gst_video_scale_prepare_size (gint format,
+gst_video_scale_prepare_size (GstVideoScale * videoscale, gint format,
     VSImage * img, gint width, gint height, guint * size)
 {
   gboolean res = TRUE;
@@ -375,12 +412,18 @@ gst_video_scale_prepare_size (gint format,
       *size = img->stride * img->height;
       break;
     default:
-      g_warning ("don't know how to scale");
-      res = FALSE;
-      break;
+      goto unknown_format;
   }
 
   return res;
+
+  /* ERRORS */
+unknown_format:
+  {
+    GST_ELEMENT_ERROR (videoscale, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("Unsupported format %d", videoscale->format));
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -413,15 +456,16 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   if (!ret)
     goto done;
 
-  ret = gst_video_scale_prepare_size (videoscale->format,
-      &videoscale->src, videoscale->from_width, videoscale->from_height,
-      &videoscale->src_size);
+  if (!(ret = gst_video_scale_prepare_size (videoscale, videoscale->format,
+              &videoscale->src, videoscale->from_width, videoscale->from_height,
+              &videoscale->src_size)))
+    /* prepare size has posted an error when it returns FALSE */
+    goto done;
 
-  ret &= gst_video_scale_prepare_size (videoscale->format,
-      &videoscale->dest, videoscale->to_width, videoscale->to_height,
-      &videoscale->dest_size);
-
-  if (!ret)
+  if (!(ret = gst_video_scale_prepare_size (videoscale, videoscale->format,
+              &videoscale->dest, videoscale->to_width, videoscale->to_height,
+              &videoscale->dest_size)))
+    /* prepare size has posted an error when it returns FALSE */
     goto done;
 
   if (videoscale->tmp_buf)
@@ -453,7 +497,8 @@ gst_video_scale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   if (!parse_caps (caps, &format, &width, &height))
     return FALSE;
 
-  if (!gst_video_scale_prepare_size (format, &img, width, height, size))
+  if (!gst_video_scale_prepare_size (videoscale, format, &img, width, height,
+          size))
     return FALSE;
 
   return TRUE;
@@ -479,8 +524,8 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
   if (from_par && to_par) {
     GValue to_ratio = { 0, };   /* w/h of output video */
-    int from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
-    int count = 0, w = 0, h = 0, num, den;
+    gint from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
+    gint count = 0, w = 0, h = 0, num, den;
 
     /* if both width and height are already fixed, we can't do anything
      * about it anymore */
@@ -639,7 +684,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           vs_image_scale_nearest_RGB555 (dest, src, videoscale->tmp_buf);
           break;
         default:
-          g_warning ("don't know how to scale");
+          goto unsupported;
       }
       break;
     case GST_VIDEO_SCALE_BILINEAR:
@@ -680,18 +725,32 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           vs_image_scale_linear_RGB555 (dest, src, videoscale->tmp_buf);
           break;
         default:
-          g_warning ("don't know how to scale");
+          goto unsupported;
       }
       break;
     default:
-      ret = GST_FLOW_ERROR;
-      break;
+      goto unknown_mode;
   }
 
   GST_LOG_OBJECT (videoscale, "pushing buffer of %d bytes",
       GST_BUFFER_SIZE (out));
 
   return ret;
+
+  /* ERRORS */
+unsupported:
+  {
+    GST_ELEMENT_ERROR (videoscale, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("Unsupported format %d for scaling method %d",
+            videoscale->format, videoscale->method));
+    return GST_FLOW_ERROR;
+  }
+unknown_mode:
+  {
+    GST_ELEMENT_ERROR (videoscale, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("Unknown scaling method %d", videoscale->method));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static gboolean
