@@ -13,6 +13,7 @@
 G_BEGIN_DECLS
 
 /* Work around bugs in PyGILState api fixed in 2.4.0a4 */
+#undef PYGIL_API_IS_BUGGY
 #if PY_VERSION_HEX < 0x020400A4
 #define PYGIL_API_IS_BUGGY TRUE
 #else

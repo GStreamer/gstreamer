@@ -1,3 +1,10 @@
+2006-03-02  Edward Hervey  <edward@fluendo.com>
+
+	* gst/pygstminiobject.h:
+	Some crack distributions do weirdo stuff with PYGIL_API_IS_BUGGY.
+	Let's keep our own detection.
+	Closes #333055
+
 2006-02-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* pygst.py.in:
