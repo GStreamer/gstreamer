@@ -133,10 +133,6 @@ gst_amrnbdec_init (GstAmrnbDec * amrnbdec)
 
   /* init rest */
   amrnbdec->handle = NULL;
-  amrnbdec->channels = 0;
-  amrnbdec->rate = 0;
-  amrnbdec->duration = 0;
-  amrnbdec->ts = -1;
 }
 
 static gboolean
@@ -214,6 +210,15 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
   if (amrnbdec->rate == 0 || amrnbdec->channels == 0)
     goto not_negotiated;
 
+  /* discontinuity, don't combine samples before and after the
+   * DISCONT */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    gst_adapter_clear (amrnbdec->adapter);
+    amrnbdec->ts = -1;
+  }
+
+  /* take latest timestamp, FIXME timestamp is the one of the
+   * first buffer in the adapter. */
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     amrnbdec->ts = GST_BUFFER_TIMESTAMP (buffer);
 
@@ -238,14 +243,14 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
       break;
     /* the library seems to write into the source data, hence
      * the copy. */
-    data = (guint8 *) gst_adapter_take (amrnbdec->adapter, block);
+    data = gst_adapter_take (amrnbdec->adapter, block);
 
     /* get output */
     out = gst_buffer_new_and_alloc (160 * 2);
     GST_BUFFER_DURATION (out) = amrnbdec->duration;
     GST_BUFFER_TIMESTAMP (out) = amrnbdec->ts;
     if (amrnbdec->ts != -1)
-      amrnbdec->ts += GST_BUFFER_DURATION (out);
+      amrnbdec->ts += amrnbdec->duration;
     gst_buffer_set_caps (out, GST_PAD_CAPS (amrnbdec->srcpad));
 
     /* decode */

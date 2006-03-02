@@ -54,6 +54,7 @@ struct _GstAmrnbEnc {
 
   /* input settings */
   gint channels, rate;
+  gint duration;
 };
 
 struct _GstAmrnbEncClass {

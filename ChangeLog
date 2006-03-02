@@ -1,3 +1,23 @@
+2006-03-02  Wim Taymans  <wim@fluendo.com>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_init),
+	(gst_amrnbdec_setcaps), (gst_amrnbdec_chain),
+	(gst_amrnbdec_state_change):
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_init),
+	(gst_amrnbenc_setcaps), (gst_amrnbenc_chain),
+	(gst_amrnbenc_state_change):
+	* ext/amrnb/amrnbenc.h:
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_init),
+	(gst_amrnbparse_query):
+	Further fancyfication.
+	Use _take to get writable data from the adapter.
+	Precalc packet duration.
+	Handle disconts.
+	Forward _push to upstream.
+	Post error messages when something goes wrong.
+	Remove old code in amrnbparse.
+	Don't ignore query results from upstream.
+
 2006-03-02  Michael Smith  <msmith@fluendo.com>
 
 	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_chain):

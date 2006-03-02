@@ -129,9 +129,6 @@ gst_amrnbparse_init (GstAmrnbParse * amrnbparse)
       GST_DEBUG_FUNCPTR (gst_amrnbparse_chain));
   gst_pad_set_event_function (amrnbparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_amrnbparse_event));
-/*  gst_pad_set_loop_function (amrnbparse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_amrnbparse_loop));
-*/
   gst_pad_set_activate_function (amrnbparse->sinkpad,
       gst_amrnbparse_sink_activate);
   gst_element_add_pad (GST_ELEMENT (amrnbparse), amrnbparse->sinkpad);
@@ -225,7 +222,7 @@ gst_amrnbparse_query (GstPad * pad, GstQuery * query)
 
         pformat = GST_FORMAT_BYTES;
         res = gst_pad_query_position (peer, &pformat, &pcur);
-        res = gst_pad_query_duration (peer, &pformat, &ptot);
+        res &= gst_pad_query_duration (peer, &pformat, &ptot);
         gst_object_unref (GST_OBJECT (peer));
         if (res) {
           tot = amrnbparse->ts * ((gdouble) ptot / pcur);

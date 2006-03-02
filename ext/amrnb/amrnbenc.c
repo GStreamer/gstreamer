@@ -132,9 +132,6 @@ gst_amrnbenc_init (GstAmrnbEnc * amrnbenc)
 
   /* init rest */
   amrnbenc->handle = NULL;
-  amrnbenc->channels = 0;
-  amrnbenc->rate = 0;
-  amrnbenc->ts = 0;
 }
 
 static void
@@ -178,6 +175,10 @@ gst_amrnbenc_setcaps (GstPad * pad, GstCaps * caps)
       "channels", G_TYPE_INT, amrnbenc->channels,
       "rate", G_TYPE_INT, amrnbenc->rate, NULL);
 
+  /* precalc duration as it's constant now */
+  amrnbenc->duration = gst_util_uint64_scale_int (160, GST_SECOND,
+      amrnbenc->rate * amrnbenc->channels);
+
   gst_pad_set_caps (amrnbenc->srcpad, copy);
   gst_caps_unref (copy);
 
@@ -197,11 +198,17 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
   if (amrnbenc->rate == 0 || amrnbenc->channels == 0)
     goto not_negotiated;
 
+  /* discontinuity clears adapter, FIXME, maybe we can set some
+   * encoder flag to mask the discont. */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    gst_adapter_clear (amrnbenc->adapter);
+    amrnbenc->ts = 0;
+  }
+
+  /* take latest timestamp, FIXME timestamp is the one of the
+   * first buffer in the adapter. */
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     amrnbenc->ts = GST_BUFFER_TIMESTAMP (buffer);
-
-  /* The AMR encoder actually writes into the source data buffers it gets */
-  buffer = gst_buffer_make_writable (buffer);
 
   ret = GST_FLOW_OK;
   gst_adapter_push (amrnbenc->adapter, buffer);
@@ -212,32 +219,34 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
     guint8 *data;
     gint outsize;
 
-    /* get output,  max size is 32 */
+    /* get output, max size is 32 */
     out = gst_buffer_new_and_alloc (32);
-    GST_BUFFER_DURATION (out) = GST_SECOND * 160 /
-        (amrnbenc->rate * amrnbenc->channels);
+    GST_BUFFER_DURATION (out) = amrnbenc->duration;
     GST_BUFFER_TIMESTAMP (out) = amrnbenc->ts;
-    amrnbenc->ts += GST_BUFFER_DURATION (out);
-    gst_buffer_set_caps (out, gst_pad_get_caps (amrnbenc->srcpad));
+    if (amrnbenc->ts != -1)
+      amrnbenc->ts += amrnbenc->duration;
+    gst_buffer_set_caps (out, GST_PAD_CAPS (amrnbenc->srcpad));
 
-    data = (guint8 *) gst_adapter_peek (amrnbenc->adapter, 320);
+    /* The AMR encoder actually writes into the source data buffers it gets */
+    data = gst_adapter_take (amrnbenc->adapter, 320);
 
     /* encode */
     outsize = Encoder_Interface_Encode (amrnbenc->handle, MR122, (short *) data,
         (guint8 *) GST_BUFFER_DATA (out), 0);
 
-    gst_adapter_flush (amrnbenc->adapter, 320);
-
     GST_BUFFER_SIZE (out) = outsize;
 
     /* play */
-    ret = gst_pad_push (amrnbenc->srcpad, out);
+    if ((ret = gst_pad_push (amrnbenc->srcpad, out)) != GST_FLOW_OK)
+      break;
   }
-
   return ret;
 
+  /* ERRORS */
 not_negotiated:
   {
+    GST_ELEMENT_ERROR (amrnbenc, STREAM, TYPE_NOT_FOUND,
+        (NULL), ("unknown type"));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
@@ -256,6 +265,8 @@ gst_amrnbenc_state_change (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      amrnbenc->rate = 0;
+      amrnbenc->channels = 0;
       amrnbenc->ts = 0;
       gst_adapter_clear (amrnbenc->adapter);
       break;
