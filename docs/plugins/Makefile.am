@@ -89,6 +89,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/vorbis/vorbisenc.h \
 	$(top_srcdir)/ext/vorbis/vorbisparse.h \
 	$(top_srcdir)/gst/audioconvert/gstaudioconvert.h \
+	$(top_srcdir)/gst/audioresample/gstaudioresample.h \
 	$(top_srcdir)/gst/audiotestsrc/gstaudiotestsrc.h \
 	$(top_srcdir)/gst/ffmpegcolorspace/gstffmpegcolorspace.h \
 	$(top_srcdir)/gst/tcp/gstmultifdsink.h \

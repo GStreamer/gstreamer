@@ -3,6 +3,29 @@
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	Add audioresample to docs.
+
+	* gst/audioconvert/gstaudioconvert.c:
+	Add revision date.
+
+	* gst/audioresample/gstaudioresample.c:
+	(gst_audioresample_base_init), (gst_audioresample_class_init),
+	(gst_audioresample_init), (gst_audioresample_dispose),
+	(audioresample_get_unit_size), (audioresample_transform_caps),
+	(resample_set_state_from_caps), (audioresample_transform_size),
+	(audioresample_set_caps), (audioresample_event),
+	(audioresample_do_output), (audioresample_transform),
+	(audioresample_pushthrough), (gst_audioresample_set_property),
+	(gst_audioresample_get_property), (plugin_init):
+	* gst/audioresample/gstaudioresample.h:
+	Added docs.
+	Small code cleanups.
+
+2006-03-02  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
 	Added videoscale to docs.
 
 	* gst/videorate/gstvideorate.c: (gst_video_rate_flush_prev),

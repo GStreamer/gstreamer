@@ -58,6 +58,20 @@ GstAudioConvertClass
 </SECTION>
 
 <SECTION>
+<FILE>element-audioresample</FILE>
+<TITLE>audioresample</TITLE>
+GstAudioresample
+<SUBSECTION Standard>
+GST_AUDIORESAMPLE
+GST_IS_AUDIORESAMPLE
+GST_TYPE_AUDIORESAMPLE
+gst_audioresample_get_type
+GST_AUDIORESAMPLE_CLASS
+GST_IS_AUDIORESAMPLE_CLASS
+GstAudioresampleClass
+</SECTION>
+
+<SECTION>
 <FILE>element-audiotestsrc</FILE>
 <TITLE>audiotestsrc</TITLE>
 GstAudioTestSrc

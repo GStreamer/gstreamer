@@ -16,6 +16,7 @@
     <xi:include href="xml/element-alsasink.xml" />
     <xi:include href="xml/element-alsasrc.xml" />
     <xi:include href="xml/element-audioconvert.xml" />
+    <xi:include href="xml/element-audioresample.xml" />
     <xi:include href="xml/element-audiotestsrc.xml" />
     <xi:include href="xml/element-clockoverlay.xml" />
     <xi:include href="xml/element-ffmpegcolorspace.xml" />

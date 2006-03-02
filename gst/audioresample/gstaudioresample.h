@@ -21,15 +21,12 @@
 #ifndef __AUDIORESAMPLE_H__
 #define __AUDIORESAMPLE_H__
 
-
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 
 #include "resample.h"
 
-
 G_BEGIN_DECLS
-
 
 #define GST_TYPE_AUDIORESAMPLE \
   (gst_audioresample_get_type())
@@ -45,6 +42,11 @@ G_BEGIN_DECLS
 typedef struct _GstAudioresample GstAudioresample;
 typedef struct _GstAudioresampleClass GstAudioresampleClass;
 
+/**
+ * GstAudioresample:
+ *
+ * Opaque data structure.
+ */
 struct _GstAudioresample {
   GstBaseTransform element;
 
@@ -70,8 +72,6 @@ struct _GstAudioresampleClass {
 
 GType gst_audioresample_get_type(void);
 
-
 G_END_DECLS
-
 
 #endif /* __AUDIORESAMPLE_H__ */
