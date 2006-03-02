@@ -703,7 +703,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
     walk = g_slist_next (walk);
 
-    GST_DEBUG_OBJECT (ogg_mux, "looking at pad %" GST_PTR_FORMAT " (oggpad %p)",
+    GST_LOG_OBJECT (ogg_mux, "looking at pad %" GST_PTR_FORMAT " (oggpad %p)",
         data->pad, pad);
 
     /* try to get a new buffer for this pad if needed and possible */
@@ -712,7 +712,7 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
       gboolean incaps;
 
       buf = gst_collect_pads_pop (ogg_mux->collect, data);
-      GST_DEBUG_OBJECT (ogg_mux, "popping buffer %" GST_PTR_FORMAT, buf);
+      GST_LOG_OBJECT (ogg_mux, "popping buffer %" GST_PTR_FORMAT, buf);
 
       /* On EOS we get a NULL buffer */
       if (buf != NULL) {
@@ -745,13 +745,13 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
      * pull on */
     if (pad->buffer) {
       if (gst_ogg_mux_compare_pads (ogg_mux, bestpad, pad) > 0) {
-        GST_DEBUG_OBJECT (ogg_mux, "best pad now %" GST_PTR_FORMAT
+        GST_LOG_OBJECT (ogg_mux, "best pad now %" GST_PTR_FORMAT
             " (oggpad %p)", data->pad, pad);
 
         bestpad = pad;
       }
     } else if (!pad->eos) {
-      GST_DEBUG_OBJECT (ogg_mux, "hungry pad %" GST_PTR_FORMAT
+      GST_LOG_OBJECT (ogg_mux, "hungry pad %" GST_PTR_FORMAT
           " (oggpad %p)", data->pad, pad);
       still_hungry = pad;
     }
@@ -1072,7 +1072,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
   gint64 granulepos = 0;
   GstClockTime timestamp, timestamp_end;
 
-  GST_DEBUG_OBJECT (ogg_mux, "collected");
+  GST_LOG_OBJECT (ogg_mux, "collected");
 
   /* queue buffers on all pads; find a buffer with the lowest timestamp */
   best = gst_ogg_mux_queue_pads (ogg_mux);
@@ -1089,7 +1089,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     return GST_FLOW_WRONG_STATE;
   }
 
-  GST_DEBUG_OBJECT (ogg_mux, "best pad %" GST_PTR_FORMAT " (oggpad %p)"
+  GST_LOG_OBJECT (ogg_mux, "best pad %" GST_PTR_FORMAT " (oggpad %p)"
       " pulling %" GST_PTR_FORMAT, best->collect.pad, best, ogg_mux->pulling);
 
   /* if we were already pulling from one pad, but the new "best" buffer is
@@ -1106,7 +1106,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     if (last_ts > ogg_mux->next_ts + ogg_mux->max_delay) {
       ogg_page page;
 
-      GST_LOG_OBJECT (pad->pad,
+      GST_LOG_OBJECT (pad->collect.pad,
           GST_GP_FORMAT " stored packet %" G_GINT64_FORMAT
           " will make page too long, flushing",
           GST_BUFFER_OFFSET_END (pad->buffer), pad->stream.packetno);
@@ -1128,7 +1128,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
   /* if we don't know which pad to pull on, use the best one */
   if (ogg_mux->pulling == NULL) {
     ogg_mux->pulling = best;
-    GST_DEBUG_OBJECT (ogg_mux, "pulling now %" GST_PTR_FORMAT " (oggpad %p)",
+    GST_LOG_OBJECT (ogg_mux, "pulling now %" GST_PTR_FORMAT " (oggpad %p)",
         ogg_mux->pulling->collect.pad, ogg_mux->pulling);
 
     /* remember timestamp of first buffer for this new pad */
@@ -1156,7 +1156,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     gint64 duration;
     gboolean force_flush;
 
-    GST_DEBUG_OBJECT (ogg_mux, "pulling now %" GST_PTR_FORMAT " (oggpad %p)",
+    GST_LOG_OBJECT (ogg_mux, "pulling now %" GST_PTR_FORMAT " (oggpad %p)",
         ogg_mux->pulling->collect.pad, ogg_mux->pulling);
 
     /* now see if we have a buffer */
@@ -1179,7 +1179,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     /* mark BOS and packet number */
     packet.b_o_s = (pad->packetno == 0);
     packet.packetno = pad->packetno++;
-    GST_DEBUG_OBJECT (pad->pad, GST_GP_FORMAT
+    GST_LOG_OBJECT (pad->collect.pad, GST_GP_FORMAT
         " packet %" G_GINT64_FORMAT " (%ld bytes) created from buffer",
         packet.granulepos, packet.packetno, packet.bytes);
 
@@ -1199,7 +1199,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 
     /* flush the currently built page if neccesary */
     if (force_flush) {
-      GST_LOG_OBJECT (pad->pad,
+      GST_LOG_OBJECT (pad->collect.pad,
           GST_GP_FORMAT " forcing flush because of keyframe",
           GST_BUFFER_OFFSET_END (pad->buffer));
       while (ogg_stream_flush (&pad->stream, &page)) {
@@ -1256,7 +1256,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     timestamp = GST_BUFFER_TIMESTAMP (pad->buffer);
     timestamp_end = GST_BUFFER_END_TIME (pad->buffer);
 
-    GST_LOG_OBJECT (pad->pad,
+    GST_LOG_OBJECT (pad->collect.pad,
         GST_GP_FORMAT " packet %" G_GINT64_FORMAT ", time %"
         GST_TIME_FORMAT ") packetin'd",
         granulepos, packet.packetno, GST_TIME_ARGS (timestamp));
@@ -1275,7 +1275,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
          * so update the timestamp that we will give to the page */
         pad->timestamp = timestamp;
         pad->timestamp_end = timestamp_end;
-        GST_DEBUG_OBJECT (pad, GST_GP_FORMAT " timestamp of pad is %"
+        GST_LOG_OBJECT (pad, GST_GP_FORMAT " timestamp of pad is %"
             GST_TIME_FORMAT, granulepos, GST_TIME_ARGS (timestamp));
       }
 
@@ -1296,7 +1296,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
           pad->timestamp_end = timestamp_end;
         }
 
-        /* we have a complete page now, we can push the page 
+        /* we have a complete page now, we can push the page
          * and make sure to pull on a new pad the next time around */
         ret = gst_ogg_mux_pad_queue_page (ogg_mux, pad, &page,
             pad->first_delta);
@@ -1306,7 +1306,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
       /* need a new page as well */
       pad->new_page = TRUE;
       pad->duration = 0;
-      /* we're done pulling on this pad, make sure to choose a new 
+      /* we're done pulling on this pad, make sure to choose a new
        * pad for pulling in the next iteration */
       ogg_mux->pulling = NULL;
     }
@@ -1317,7 +1317,7 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     if (pad->timestamp < timestamp_end) {
       pad->timestamp = timestamp_end;
       pad->timestamp_end = timestamp_end;
-      GST_DEBUG_OBJECT (ogg_mux, "Updated timestamp of pad %" GST_PTR_FORMAT
+      GST_LOG_OBJECT (ogg_mux, "Updated timestamp of pad %" GST_PTR_FORMAT
           " (oggpad %p) to %" GST_TIME_FORMAT, pad->collect.pad, pad,
           GST_TIME_ARGS (timestamp_end));
     }
