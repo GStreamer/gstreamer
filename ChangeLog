@@ -1,3 +1,16 @@
+2006-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ogg/gstogmparse.c: (gst_ogm_audio_parse_init),
+	(gst_ogm_video_parse_init), (gst_ogm_text_parse_init),
+	(gst_ogm_parse_sink_convert), (gst_ogm_parse_sink_query),
+	(gst_ogm_parse_chain):
+	  Don't remove/re-add source pad if the new caps are the same as
+	  the old caps anyway (#333042). When removing source pad, don't
+	  unref it afterwards - we didn't ref it when adding. Sprinkle some
+	  GST_DEBUG_FUNCPTR goodness here and there. Don't leak references
+	  after using gst_pad_get_parent(). Return downstream flow return
+	  value in chain function.
+
 2006-03-02  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
