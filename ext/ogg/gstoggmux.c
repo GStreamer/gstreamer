@@ -535,9 +535,11 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
      * time ordering. */
     if (pad->pagebuffers->length == 0) {
       if (pad->eos) {
-        GST_LOG_OBJECT (pad, "pad is EOS, skipping for dequeue decision");
+        GST_LOG_OBJECT (pad->collect.pad,
+            "pad is EOS, skipping for dequeue decision");
       } else {
-        GST_LOG_OBJECT (pad, "no pages in this queue, can't dequeue");
+        GST_LOG_OBJECT (pad->collect.pad,
+            "no pages in this queue, can't dequeue");
         return FALSE;
       }
     } else {
@@ -555,7 +557,8 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
         }
       }
       if (!valid) {
-        GST_LOG_OBJECT (pad, "No page timestamps in queue, can't dequeue");
+        GST_LOG_OBJECT (pad->collect.pad,
+            "No page timestamps in queue, can't dequeue");
         return FALSE;
       }
     }
@@ -567,11 +570,11 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
   while (walk) {
     GstOggPad *pad = (GstOggPad *) walk->data;
 
-    /* any page with a granulepos of -1 can be pushed immediately. 
+    /* any page with a granulepos of -1 can be pushed immediately.
      * TODO: it CAN be, but it seems silly to do so? */
     buf = g_queue_peek_head (pad->pagebuffers);
     while (buf && GST_BUFFER_OFFSET_END (buf) == -1) {
-      GST_LOG_OBJECT (pad, GST_GP_FORMAT " pushing page", -1);
+      GST_LOG_OBJECT (pad->collect.pad, GST_GP_FORMAT " pushing page", -1);
       g_queue_pop_head (pad->pagebuffers);
       *flowret = gst_ogg_mux_push_buffer (mux, buf);
       buf = g_queue_peek_head (pad->pagebuffers);
@@ -625,7 +628,7 @@ gst_ogg_mux_pad_queue_page (GstOggMux * mux, GstOggPad * pad, ogg_page * page,
   pad->timestamp = pad->timestamp_end;
 
   g_queue_push_tail (pad->pagebuffers, buffer);
-  GST_LOG_OBJECT (pad, GST_GP_FORMAT " queued buffer page (time %"
+  GST_LOG_OBJECT (pad->collect.pad, GST_GP_FORMAT " queued buffer page (time %"
       GST_TIME_FORMAT "), %d page buffers queued", ogg_page_granulepos (page),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       g_queue_get_length (pad->pagebuffers));
@@ -1246,9 +1249,9 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 
     /* swap the packet in */
     if (packet.e_o_s == 1)
-      GST_DEBUG_OBJECT (pad, "swapping in EOS packet");
+      GST_DEBUG_OBJECT (pad->collect.pad, "swapping in EOS packet");
     if (packet.b_o_s == 1)
-      GST_DEBUG_OBJECT (pad, "swapping in BOS packet");
+      GST_DEBUG_OBJECT (pad->collect.pad, "swapping in BOS packet");
 
     ogg_stream_packetin (&pad->stream, &packet);
 
@@ -1268,15 +1271,34 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
     /* let ogg write out the pages now. The packet we got could end
      * up in more than one page so we need to write them all */
     if (ogg_stream_pageout (&pad->stream, &page) > 0) {
+      /* we have a new page, so we need to timestamp it correctly.
+       * if this fresh packet ends on this page, then the page's granulepos
+       * comes from that packet, and we should set this buffer's timestamp */
+
+      GST_LOG_OBJECT (pad->collect.pad,
+          GST_GP_FORMAT " packet %" G_GINT64_FORMAT ", time %"
+          GST_TIME_FORMAT ") caused new page",
+          granulepos, packet.packetno, GST_TIME_ARGS (timestamp));
+      GST_LOG_OBJECT (pad->collect.pad,
+          GST_GP_FORMAT " new page %d", ogg_page_granulepos (&page),
+          pad->stream.pageno);
+
       if (ogg_page_granulepos (&page) == granulepos) {
         /* the packet we streamed in finishes on the page,
          * because the page's granulepos is the granulepos of the last
          * packet completed on that page,
          * so update the timestamp that we will give to the page */
+        GST_LOG_OBJECT (pad->collect.pad,
+            GST_GP_FORMAT
+            " packet finishes on new page, updating timestamp to %"
+            GST_TIME_FORMAT, granulepos, GST_TIME_ARGS (timestamp));
         pad->timestamp = timestamp;
         pad->timestamp_end = timestamp_end;
-        GST_LOG_OBJECT (pad, GST_GP_FORMAT " timestamp of pad is %"
-            GST_TIME_FORMAT, granulepos, GST_TIME_ARGS (timestamp));
+      } else {
+        GST_LOG_OBJECT (pad->collect.pad,
+            GST_GP_FORMAT
+            " packet spans across new page, keeping old timestamp %"
+            GST_TIME_FORMAT, granulepos, GST_TIME_ARGS (pad->timestamp));
       }
 
       /* push the page */
