@@ -1,3 +1,9 @@
+2006-03-04  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/vs6:
+	  add a project file for libgstvolume
+	  update the workspace
+
 2006-03-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/theora/theoraenc.c: (theora_set_header_on_caps):
