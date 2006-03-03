@@ -56,7 +56,12 @@ struct _GstDDrawSurface
 
   gint width;
   gint height;
+
+  /*TRUE when surface is locked*/
   gboolean locked;
+  /*TRUE when surface is using a system memory buffer 
+  (i'm using system memory when directdraw optimized pitch is not the same as the GStreamer one)*/
+  gboolean system_memory;
 
   DDPIXELFORMAT dd_pixel_format;
 
