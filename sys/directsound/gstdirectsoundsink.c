@@ -121,7 +121,7 @@ gst_directsoundsink_class_init (GstDirectSoundSinkClass * klass)
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_DIRECTSOUND_SINK);
+  parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_directsoundsink_dispose);
   gobject_class->get_property =
@@ -212,8 +212,7 @@ gst_directsoundsink_open (GstAudioSink * asink)
     return FALSE;
   }
 
-  if (FAILED (hRes =
-          IDirectSound_SetCooperativeLevel (dsoundsink->pDS,
+  if (FAILED (hRes = IDirectSound_SetCooperativeLevel (dsoundsink->pDS,
               GetDesktopWindow (), DSSCL_PRIORITY))) {
     GST_ELEMENT_ERROR (dsoundsink, RESOURCE, OPEN_READ,
         ("gst_directsoundsink_open: IDirectSound_SetCooperativeLevel: %s",

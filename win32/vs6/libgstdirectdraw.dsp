@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 libgstreamer-0.10.lib libgstbase-0.10.lib libgstvideo-0.10.lib glib-2.0.lib gobject-2.0.lib user32.lib gdi32.lib ddraw.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"../../../gst-plugins-base/win32/vs6/release" /libpath:"./release"
+# ADD LINK32 glib-2.0.lib gobject-2.0.lib libgstreamer-0.10.lib libgstbase-0.10.lib libgstvideo-0.10.lib ddraw.lib user32.lib gdi32.lib Rpcrt4.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"../../../gst-plugins-base/win32/vs6/release" /libpath:"./release"
 # Begin Special Build Tool
 TargetPath=.\Release\libgstdirectdraw.dll
 SOURCE="$(InputPath)"
@@ -84,7 +84,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libgstreamer-0.10.lib libgstbase-0.10.lib libgstvideo-0.10.lib glib-2.0D.lib gobject-2.0D.lib ddraw.lib user32.lib gdi32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"../../../gst-plugins-base/win32/vs6/debug" /libpath:"./debug"
+# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib libgstreamer-0.10.lib libgstbase-0.10.lib libgstvideo-0.10.lib ddraw.lib user32.lib gdi32.lib Rpcrt4.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"../../../gst-plugins-base/win32/vs6/debug" /libpath:"./debug"
 # Begin Special Build Tool
 TargetPath=.\Debug\libgstdirectdraw.dll
 SOURCE="$(InputPath)"
