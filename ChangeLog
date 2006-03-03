@@ -1,3 +1,11 @@
+2006-03-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/theora/theoraenc.c: (theora_set_header_on_caps):
+	* tests/check/pipelines/theoraenc.c: (check_buffer_is_header),
+	(GST_START_TEST):
+	  Fix for http://bugzilla.gnome.org/show_bug.cgi?id=333254
+	  Set IN_CAPS on header buffers
+
 2006-03-02  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/Makefile.am:

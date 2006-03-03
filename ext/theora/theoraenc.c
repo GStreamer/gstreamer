@@ -452,16 +452,16 @@ theora_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   caps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (caps, 0);
 
+  /* mark buffers */
+  GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_FLAG_IN_CAPS);
+  GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_IN_CAPS);
+
   /* Copy buffers, because we can't use the originals -
    * it creates a circular refcount with the caps<->buffers */
   buf1 = gst_buffer_copy (buf1);
   buf2 = gst_buffer_copy (buf2);
   buf3 = gst_buffer_copy (buf3);
-
-  /* mark buffers */
-  GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_FLAG_IN_CAPS);
-  GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_FLAG_IN_CAPS);
-  GST_BUFFER_FLAG_SET (buf3, GST_BUFFER_FLAG_IN_CAPS);
 
   /* put copies of the buffers in a fixed list */
   g_value_init (&array, GST_TYPE_ARRAY);

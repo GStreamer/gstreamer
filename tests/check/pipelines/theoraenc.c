@@ -127,6 +127,15 @@ stop_pipeline (GstElement * bin, GstPad * pad)
 }
 
 static void
+check_buffer_is_header (GstBuffer * buffer, gboolean is_header)
+{
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer,
+          GST_BUFFER_FLAG_IN_CAPS) == is_header,
+      "GST_BUFFER_IN_CAPS is set to %d but expected %d",
+      GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS), is_header);
+}
+
+static void
 check_buffer_timestamp (GstBuffer * buffer, GstClockTime timestamp)
 {
   fail_unless (GST_BUFFER_TIMESTAMP (buffer) == timestamp,
@@ -207,23 +216,26 @@ GST_START_TEST (test_granulepos_offset)
 
   start_pipeline (bin, pad);
 
-  /* header packets should have timestamp == NONE, granulepos 0 */
+  /* header packets should have timestamp == NONE, granulepos 0, IN_CAPS */
   buffer = get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
+  check_buffer_is_header (buffer, TRUE);
   gst_buffer_unref (buffer);
 
   buffer = get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
+  check_buffer_is_header (buffer, TRUE);
   gst_buffer_unref (buffer);
 
   buffer = get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
+  check_buffer_is_header (buffer, TRUE);
   gst_buffer_unref (buffer);
 
   {
@@ -240,6 +252,7 @@ GST_START_TEST (test_granulepos_offset)
     check_buffer_timestamp (buffer, TIMESTAMP_OFFSET);
     /* don't really have a good way of checking duration... */
     check_buffer_granulepos_from_starttime (buffer, TIMESTAMP_OFFSET);
+    check_buffer_is_header (buffer, FALSE);
 
     next_timestamp = TIMESTAMP_OFFSET + GST_BUFFER_DURATION (buffer);
 
@@ -253,6 +266,7 @@ GST_START_TEST (test_granulepos_offset)
             FRAMERATE)
         - gst_util_uint64_scale (last_granulepos, GST_SECOND, FRAMERATE));
     check_buffer_granulepos_from_starttime (buffer, next_timestamp);
+    check_buffer_is_header (buffer, FALSE);
 
     gst_buffer_unref (buffer);
   }
@@ -300,18 +314,21 @@ GST_START_TEST (test_continuity)
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
+  check_buffer_is_header (buffer, TRUE);
   gst_buffer_unref (buffer);
 
   buffer = get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
+  check_buffer_is_header (buffer, TRUE);
   gst_buffer_unref (buffer);
 
   buffer = get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
+  check_buffer_is_header (buffer, TRUE);
   gst_buffer_unref (buffer);
 
   {
@@ -329,6 +346,7 @@ GST_START_TEST (test_continuity)
     /* plain division because I know the answer is exact */
     check_buffer_duration (buffer, GST_SECOND / 10);
     check_buffer_granulepos (buffer, 0);
+    check_buffer_is_header (buffer, FALSE);
 
     next_timestamp = GST_BUFFER_DURATION (buffer);
 
@@ -339,6 +357,7 @@ GST_START_TEST (test_continuity)
     check_buffer_timestamp (buffer, next_timestamp);
     check_buffer_duration (buffer, GST_SECOND / 10);
     check_buffer_granulepos (buffer, 1);
+    check_buffer_is_header (buffer, FALSE);
 
     gst_buffer_unref (buffer);
   }
