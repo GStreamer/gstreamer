@@ -296,6 +296,8 @@ gst_ddrawsurface_init (GstDDrawSurface * surface, gpointer g_class)
   surface->width = 0;
   surface->height = 0;
   surface->ddrawsink = NULL;
+  surface->locked = FALSE;
+  surface->system_memory = FALSE;
   memset (&surface->dd_pixel_format, 0, sizeof (DDPIXELFORMAT));
 }
 
@@ -1184,9 +1186,10 @@ gst_directdrawsink_setup_ddraw (GstDirectDrawSink * ddrawsink)
     bRet = FALSE;
 
   /*for fullscreen mode, setup display mode */
-  if (ddrawsink->bFullScreen) {
+/*  if (ddrawsink->bFullScreen) {
     hRes = IDirectDraw_SetDisplayMode (ddrawsink->ddraw_object, 640, 480, 32);
   }
+  */
 
   if (!ddrawsink->extern_surface) {
     /*create our primary surface */
@@ -1309,8 +1312,6 @@ gst_directdrawsink_window_thread (GstDirectDrawSink * ddrawsink)
   if (ddrawsink->video_window == NULL)
     return FALSE;
 
-  ShowWindow (ddrawsink->video_window, SW_SHOW);
-
   /*start message loop processing our default window messages */
   while (1) {
     MSG msg;
@@ -1422,7 +1423,7 @@ gst_directdrawsink_get_depth (LPDDPIXELFORMAT lpddpfPixelFormat)
 }
 
 HRESULT WINAPI
-EnumModesCallback2 (LPDDSURFACEDESC2 lpDDSurfaceDesc, LPVOID lpContext)
+EnumModesCallback2 (LPDDSURFACEDESC lpDDSurfaceDesc, LPVOID lpContext)
 {
   GstDirectDrawSink *ddrawsink = (GstDirectDrawSink *) lpContext;
   GstCaps *format_caps = NULL;
@@ -1537,6 +1538,7 @@ gst_directdrawsink_surface_create (GstDirectDrawSink * ddrawsink,
 {
   GstDDrawSurface *surface = NULL;
   GstStructure *structure = NULL;
+  gint pitch;
 
   HRESULT hRes;
   DDSURFACEDESC surf_desc, surf_lock_desc;
@@ -1559,6 +1561,8 @@ gst_directdrawsink_surface_create (GstDirectDrawSink * ddrawsink,
     GST_WARNING ("failed getting geometry from caps %" GST_PTR_FORMAT, caps);
   }
 
+  pitch = GST_ROUND_UP_8 (size / surface->height);
+
   if (!gst_ddrawvideosink_get_format_from_caps (caps,
           &surface->dd_pixel_format)) {
     GST_WARNING ("failed getting pixel format from caps %" GST_PTR_FORMAT,
@@ -1568,9 +1572,6 @@ gst_directdrawsink_surface_create (GstDirectDrawSink * ddrawsink,
   if (ddrawsink->ddraw_object) {
     /* Creating an internal surface which will be used as GstBuffer, we used
        the detected pixel format and video dimensions */
-    gint pitch = GST_ROUND_UP_8 (size / surface->height);
-
-    surf_desc.lPitch = pitch;
 
     surf_desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
     surf_desc.dwFlags =
@@ -1600,7 +1601,9 @@ gst_directdrawsink_surface_create (GstDirectDrawSink * ddrawsink,
       GST_DEBUG
           ("DDraw stride/pitch %d isn't as expected value %d, let's continue allocating buffer.",
           surf_lock_desc.lPitch, pitch);
-      IDirectDrawSurface_Release (surface->surface);
+
+      /*Unlock the surface as we will change it to use system memory with a GStreamer compatible pitch */
+      hRes = IDirectDrawSurface_Unlock (surface->surface, NULL);
       goto surface_pitch_bad;
     }
 
@@ -1614,6 +1617,19 @@ gst_directdrawsink_surface_create (GstDirectDrawSink * ddrawsink,
     GST_BUFFER (surface)->malloc_data = g_malloc (size);
     GST_BUFFER_DATA (surface) = GST_BUFFER (surface)->malloc_data;
     GST_BUFFER_SIZE (surface) = size;
+
+/*    surf_desc.dwSize = sizeof(DDSURFACEDESC);
+    surf_desc.dwFlags = DDSD_PITCH | DDSD_LPSURFACE | DDSD_HEIGHT | DDSD_WIDTH ||DDSD_PIXELFORMAT;
+    surf_desc.lpSurface = GST_BUFFER (surface)->malloc_data;
+    surf_desc.lPitch = pitch;
+    //surf_desc.dwHeight = surface->height;
+    surf_desc.dwWidth = surface->width;
+    hRes = IDirectDrawSurface7_SetSurfaceDesc(surface->surface, &surf_desc, 0);
+    printf("%\n", DDErrorString(hRes));
+
+    hRes = IDirectDrawSurface7_Lock (surface->surface, NULL, &surf_lock_desc,
+        DDLOCK_WAIT | DDLOCK_NOSYSLOCK, NULL);
+*/
     surface->surface = NULL;
     printf ("allocating a buffer of %d bytes\n", size);
   }

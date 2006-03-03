@@ -1,3 +1,14 @@
+2006-03-04  Sebastien Moutte  <sebastien@moutte.net>
+
+	* sys/directdraw:
+	* sys/directsound:
+	  sinks are now using GST_RANK_PRIMARY to be used with autodectection
+	* win32/vs6:
+	  project files updated to fix some bugs
+	* win32/vs7:
+	* win32/vs8:
+	  vs7 and vs8 project files added
+	
 2006-03-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/xvid/gstxviddec.c: (gst_xviddec_chain):
