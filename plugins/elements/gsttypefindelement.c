@@ -192,10 +192,11 @@ gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
       g_param_spec_uint ("minimum", _("minimum"),
           "minimum probability required to accept caps", GST_TYPE_FIND_MINIMUM,
           GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MINIMUM, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_MINIMUM,
+  g_object_class_install_property (gobject_class, ARG_MAXIMUM,
       g_param_spec_uint ("maximum", _("maximum"),
-          "probability to stop typefinding", GST_TYPE_FIND_MINIMUM,
-          GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MAXIMUM, G_PARAM_READWRITE));
+          "probability to stop typefinding (deprecated; non-functional)",
+          GST_TYPE_FIND_MINIMUM, GST_TYPE_FIND_MAXIMUM, GST_TYPE_FIND_MAXIMUM,
+          G_PARAM_READWRITE));
   /**
    * GstTypeFindElement::have-type:
    * @typefind: the typefind instance
@@ -273,18 +274,14 @@ gst_type_find_element_set_property (GObject * object, guint prop_id,
 {
   GstTypeFindElement *typefind;
 
-  g_return_if_fail (GST_IS_TYPE_FIND_ELEMENT (object));
-
   typefind = GST_TYPE_FIND_ELEMENT (object);
 
   switch (prop_id) {
     case ARG_MINIMUM:
       typefind->min_probability = g_value_get_uint (value);
-      g_object_notify (object, "minimum");
       break;
     case ARG_MAXIMUM:
       typefind->max_probability = g_value_get_uint (value);
-      g_object_notify (object, "maximum");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -296,8 +293,6 @@ gst_type_find_element_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstTypeFindElement *typefind;
-
-  g_return_if_fail (GST_IS_TYPE_FIND_ELEMENT (object));
 
   typefind = GST_TYPE_FIND_ELEMENT (object);
 

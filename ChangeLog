@@ -1,9 +1,23 @@
 2006-03-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_class_init),
+	(gst_type_find_element_set_property),
+	(gst_type_find_element_get_property):
+	  Deprecate "maximum" property (not only was it only taken into
+	  account for typefinding in push-mode anyway, it also was never
+	  actually possible to set it in the first place because the
+	  property was registered with the numeric property ID for the
+	  "minimum" property). Register "maximum" property correctly,
+	  for the sake of future copy'n'pasters. Remove some cruft
+	  from property get/set functions.
+
+2006-03-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gsttypefindelement.c:
 	(gst_type_find_element_activate):
 	  Use gst_type_find_helper_get_range() here, so we
-	  can honour the min-probability property and also emit
+	  can honour the "minimum" property and also emit
 	  the signal with the correct probability of the found caps.
 
 2006-03-02  Tim-Philipp Müller  <tim at centricular dot net>
