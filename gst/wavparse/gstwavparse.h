@@ -48,6 +48,11 @@ typedef enum {
 typedef struct _GstWavParse GstWavParse;
 typedef struct _GstWavParseClass GstWavParseClass;
 
+/**
+ * GstWavParse:
+ *
+ * Opaque data structure.
+ */
 struct _GstWavParse {
   GstElement parent;
 
@@ -78,10 +83,10 @@ struct _GstWavParse {
   guint64 	datastart;
   guint64 	datasize;
   
+  /* pending seek */
   GstEvent *seek_event;
 
-  /* configured segment, start/stop expressed in
-   * bytes */
+  /* configured segment, start/stop expressed in time */
   GstSegment segment;
   gboolean segment_running;
 };

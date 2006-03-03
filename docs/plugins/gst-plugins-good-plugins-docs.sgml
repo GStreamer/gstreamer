@@ -36,6 +36,7 @@
     <xi:include href="xml/element-videobalance.xml" />
     <xi:include href="xml/element-videoflip.xml" />
     <xi:include href="xml/element-videomixer.xml" />
+    <xi:include href="xml/element-wavparse.xml" />
   </chapter>
 
   <chapter>

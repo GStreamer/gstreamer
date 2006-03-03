@@ -18,6 +18,28 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-wavparse
+ *
+ * <refsect2>
+ * <para>
+ * Parse a .wav file into raw or compressed audio. 
+ * </para>
+ * <para>
+ * This element currently only supports pull based scheduling. 
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc sine.wav ! wavparse ! audioconvert ! alsasink
+ * </programlisting>
+ * Read a wav file and output to the soundcard using the ALSA element. The
+ * wav file is assumed to contain raw uncompressed samples.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-03-03 (0.10.3)
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -29,10 +51,6 @@
 #include "gst/riff/riff-media.h"
 #include <gst/gst-i18n-plugin.h>
 
-#ifndef G_MAXUINT32
-#define G_MAXUINT32 0xffffffff
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (wavparse_debug);
 #define GST_CAT_DEFAULT (wavparse_debug)
 
@@ -43,6 +61,8 @@ static void gst_wavparse_init (GstWavParse * wavparse);
 static gboolean gst_wavparse_sink_activate (GstPad * sinkpad);
 static gboolean gst_wavparse_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
+static gboolean gst_wavparse_send_event (GstElement * element,
+    GstEvent * event);
 static GstStateChangeReturn gst_wavparse_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -64,6 +84,10 @@ GST_STATIC_PAD_TEMPLATE ("wavparse_sink",
     GST_STATIC_CAPS ("audio/x-wav")
     );
 
+/* the pad is marked a sometimes and is added to the element when the
+ * exact type is known. This makes it much easier for a static autoplugger
+ * to connect the right decoder when needed.
+ */
 static GstStaticPadTemplate src_template_factory =
     GST_STATIC_PAD_TEMPLATE ("wavparse_src",
     GST_PAD_SRC,
@@ -158,10 +182,12 @@ gst_wavparse_class_init (GstWavParseClass * klass)
   gstelement_class = (GstElementClass *) klass;
   object_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   object_class->get_property = gst_wavparse_get_property;
+
   gstelement_class->change_state = gst_wavparse_change_state;
+  gstelement_class->send_event = gst_wavparse_send_event;
 
   GST_DEBUG_CATEGORY_INIT (wavparse_debug, "wavparse", 0, "WAV parser");
 }
@@ -184,9 +210,7 @@ gst_wavparse_reset (GstWavParse * wavparse)
   wavparse->datasize = 0;
   wavparse->datastart = 0;
 
-  if (wavparse->seek_event)
-    gst_event_unref (wavparse->seek_event);
-  wavparse->seek_event = NULL;
+  gst_event_replace (&wavparse->seek_event, NULL);
 
   /* we keep the segment info in time */
   gst_segment_init (&wavparse->segment, GST_FORMAT_TIME);
@@ -195,16 +219,17 @@ gst_wavparse_reset (GstWavParse * wavparse)
 static void
 gst_wavparse_init (GstWavParse * wavparse)
 {
+  gst_wavparse_reset (wavparse);
+
   /* sink */
   wavparse->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&sink_template_factory), "sink");
-  gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->sinkpad);
   gst_pad_set_activate_function (wavparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavparse_sink_activate));
   gst_pad_set_activatepull_function (wavparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavparse_sink_activate_pull));
-  gst_wavparse_reset (wavparse);
+  gst_element_add_pad (GST_ELEMENT (wavparse), wavparse->sinkpad);
 }
 
 static void
@@ -221,6 +246,7 @@ gst_wavparse_create_sourcepad (GstWavParse * wavparse)
 {
   GstPadTemplate *templ;
 
+  /* destroy previous one */
   gst_wavparse_destroy_sourcepad (wavparse);
 
   /* source */
@@ -513,6 +539,7 @@ gst_wavparse_parse_file_header (GstElement * element, GstBuffer * buf)
 
   return TRUE;
 
+  /* ERRORS */
 not_wav:
   {
     GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
@@ -531,7 +558,6 @@ gst_wavparse_stream_init (GstWavParse * wav)
   if ((res = gst_pad_pull_range (wav->sinkpad,
               wav->offset, 12, &buf)) != GST_FLOW_OK)
     return res;
-
   else if (!gst_wavparse_parse_file_header (GST_ELEMENT (wav), buf))
     return GST_FLOW_ERROR;
 
@@ -698,6 +724,14 @@ gst_wavparse_other (GstWavParse * wav)
 }
 #endif
 
+/* This function is used to perform seeks on the element in 
+ * pull mode.
+ *
+ * It also works when event is NULL, in which case it will just
+ * start from the last configured segment. This technique is
+ * used when activating the element and to perform the seek in
+ * READY.
+ */
 static gboolean
 gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
 {
@@ -711,9 +745,10 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   gboolean update;
   GstSegment seeksegment;
 
-  GST_DEBUG_OBJECT (wav, "doing seek");
 
   if (event) {
+    GST_DEBUG_OBJECT (wav, "doing seek with event");
+
     gst_event_parse_seek (event, &rate, &format, &flags,
         &cur_type, &cur, &stop_type, &stop);
 
@@ -734,6 +769,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
       format = fmt;
     }
   } else {
+    GST_DEBUG_OBJECT (wav, "doing seek without event");
     flags = 0;
   }
 
@@ -751,6 +787,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   memcpy (&seeksegment, &wav->segment, sizeof (GstSegment));
 
   if (event) {
+    GST_DEBUG_OBJECT (wav, "configuring seek");
     gst_segment_set_seek (&seeksegment, rate, format, flags,
         cur_type, cur, stop_type, stop, &update);
   }
@@ -947,12 +984,16 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   GST_DEBUG_OBJECT (wav, "Finished parsing headers");
 
   duration = gst_util_uint64_scale_int (wav->datasize, GST_SECOND, wav->bps);
+  GST_DEBUG_OBJECT (wav, "Got duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (duration));
   gst_segment_set_duration (&wav->segment, GST_FORMAT_TIME, duration);
 
-  gst_pad_push_event (wav->srcpad,
-      gst_event_new_new_segment (FALSE, wav->segment.rate,
-          wav->segment.format, wav->segment.start,
-          wav->segment.duration, wav->segment.start));
+  /* now we have all the info to perform a pending seek if any, if no
+   * event, this will still do the right thing and it will also send
+   * the right newsegment event downstream. */
+  gst_wavparse_perform_seek (wav, wav->seek_event);
+  /* remove pending event */
+  gst_event_replace (&wav->seek_event, NULL);
 
   return GST_FLOW_OK;
 
@@ -1011,6 +1052,46 @@ header_read_error:
     g_free (codec_name);
     return GST_FLOW_ERROR;
   }
+}
+
+/* handle an event sent directly to the element.
+ *
+ * This event can be sent either in the READY state or the
+ * >READY state. The only event of interest really is the seek
+ * event.
+ *
+ * In the READY state we can only store the event and try to
+ * respect it when going to PAUSED. We assume we are in the
+ * READY state when our parsing state != GST_WAVPARSE_DATA.
+ *
+ * When we are steaming, we can simply perform the seek right
+ * away.
+ */
+static gboolean
+gst_wavparse_send_event (GstElement * element, GstEvent * event)
+{
+  GstWavParse *wav = GST_WAVPARSE (element);
+  gboolean res = FALSE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      if (wav->state == GST_WAVPARSE_DATA) {
+        /* we can handle the seek directly when streaming data */
+        res = gst_wavparse_perform_seek (wav, event);
+      } else {
+        GST_DEBUG_OBJECT (wav, "queuing seek for later");
+
+        gst_event_replace (&wav->seek_event, event);
+
+        /* we always return true */
+        res = TRUE;
+      }
+      break;
+    default:
+      break;
+  }
+  gst_event_unref (event);
+  return res;
 }
 
 #define MAX_BUFFER_SIZE 4096
@@ -1146,6 +1227,7 @@ gst_wavparse_loop (GstPad * pad)
 
   return;
 
+  /* ERRORS */
 pause:
   GST_LOG_OBJECT (wav, "pausing task %d", ret);
   gst_pad_pause_task (wav->sinkpad);
@@ -1372,6 +1454,10 @@ gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
 
   GST_DEBUG_OBJECT (wavparse, "event %d", GST_EVENT_TYPE (event));
 
+  /* can only handle events when we are in the data state */
+  if (wavparse->state != GST_WAVPARSE_DATA)
+    return FALSE;
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
@@ -1405,7 +1491,6 @@ gst_wavparse_sink_activate_pull (GstPad * sinkpad, gboolean active)
   GstWavParse *wav = GST_WAVPARSE (gst_pad_get_parent (sinkpad));
 
   if (active) {
-    wav->segment_running = TRUE;
     gst_pad_start_task (sinkpad, (GstTaskFunction) gst_wavparse_loop, sinkpad);
   } else {
     gst_pad_stop_task (sinkpad);
@@ -1425,7 +1510,7 @@ gst_wavparse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      wav->state = GST_WAVPARSE_START;
+      gst_wavparse_reset (wav);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -1440,7 +1525,6 @@ gst_wavparse_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_wavparse_destroy_sourcepad (wav);
-      gst_wavparse_reset (wav);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

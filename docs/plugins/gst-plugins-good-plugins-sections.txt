@@ -255,3 +255,18 @@ GstVideoMixerBackground
 GstVideoMixerClass
 </SECTION>
 
+<SECTION>
+<FILE>element-wavparse</FILE>
+GstWavParse
+<TITLE>wavparse</TITLE>
+<SUBSECTION Standard>
+GstWavParseClass
+GstWavParseState
+GST_WAVPARSE
+GST_IS_WAVPARSE
+GST_TYPE_WAVPARSE
+gst_wavparse_get_type
+GST_WAVPARSE_CLASS
+GST_IS_WAVPARSE_CLASS
+</SECTION>
+

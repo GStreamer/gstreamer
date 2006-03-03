@@ -80,6 +80,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/level/gstlevel.h \
 	$(top_srcdir)/gst/goom/gstgoom.h \
 	$(top_srcdir)/gst/id3demux/gstid3demux.h \
+	$(top_srcdir)/gst/wavparse/gstwavparse.h \
 	$(top_srcdir)/ext/cairo/gsttimeoverlay.h \
 	$(top_srcdir)/ext/cdio/gstcdiocddasrc.h \
 	$(top_srcdir)/ext/dv/gstdvdec.h \
