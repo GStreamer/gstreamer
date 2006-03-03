@@ -160,6 +160,35 @@ GST_IS_UDPSRC_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-videoflip</FILE>
+GstVideoFlip
+GstVideoFlipMethod
+<TITLE>videoflip</TITLE>
+<SUBSECTION Standard>
+GstVideoFlipClass
+GST_VIDEO_FLIP
+GST_IS_VIDEO_FLIP
+GST_TYPE_VIDEO_FLIP
+gst_video_flip_get_type
+GST_VIDEO_FLIP_CLASS
+GST_IS_VIDEO_FLIP_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-videobalance</FILE>
+GstVideoBalance
+<TITLE>videobalance</TITLE>
+<SUBSECTION Standard>
+GstVideoBalanceClass
+GST_VIDEO_BALANCE
+GST_IS_VIDEO_BALANCE
+GST_TYPE_VIDEO_BALANCE
+gst_video_balance_get_type
+GST_VIDEO_BALANCE_CLASS
+GST_IS_VIDEO_BALANCE_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-videomixer</FILE>
 GstVideoMixer
 GstVideoMixerBackground

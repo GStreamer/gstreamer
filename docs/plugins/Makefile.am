@@ -91,6 +91,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/multipart/multipartdemux.c \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
+	$(top_srcdir)/gst/videofilter/gstvideoflip.h \
+	$(top_srcdir)/gst/videofilter/gstvideobalance.h \
 	$(top_srcdir)/gst/videomixer/videomixer.c
 
 # example code that needs to be converted to xml and placed in xml/

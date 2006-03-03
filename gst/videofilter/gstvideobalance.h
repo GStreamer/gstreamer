@@ -18,47 +18,61 @@
  */
 
 
-#ifndef __GST_VIDEOBALANCE_H__
-#define __GST_VIDEOBALANCE_H__
+#ifndef __GST_VIDEO_BALANCE_H__
+#define __GST_VIDEO_BALANCE_H__
 
-#include "gstvideofilter.h"
+#include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VIDEOBALANCE \
-  (gst_videobalance_get_type())
-#define GST_VIDEOBALANCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEOBALANCE,GstVideobalance))
-#define GST_VIDEOBALANCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEOBALANCE,GstVideobalanceClass))
-#define GST_IS_VIDEOBALANCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEOBALANCE))
-#define GST_IS_VIDEOBALANCE_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOBALANCE))
+#define GST_TYPE_VIDEO_BALANCE \
+  (gst_video_balance_get_type())
+#define GST_VIDEO_BALANCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_BALANCE,GstVideoBalance))
+#define GST_VIDEO_BALANCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_BALANCE,GstVideoBalanceClass))
+#define GST_IS_VIDEO_BALANCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_BALANCE))
+#define GST_IS_VIDEO_BALANCE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_BALANCE))
 
-typedef struct _GstVideobalance GstVideobalance;
-typedef struct _GstVideobalanceClass GstVideobalanceClass;
+typedef struct _GstVideoBalance GstVideoBalance;
+typedef struct _GstVideoBalanceClass GstVideoBalanceClass;
 
-struct _GstVideobalance {
-  GstVideofilter videofilter;
+/**
+ * GstVideoBalance:
+ *
+ * Opaque data structure.
+ */
+struct _GstVideoBalance {
+  GstVideoFilter videofilter;
 
-  guint8   *tabley, **tableu, **tablev;
-  gboolean needupdate;
+  /* channels for interface */
+  GList *channels;
 
+  /* properties */
   gdouble contrast;
   gdouble brightness;
   gdouble hue;
   gdouble saturation;
-  
-  GList *channels;
+
+  gboolean passthru;
+
+  /* format */
+  gint width;
+  gint height;
+  gint size;
+
+  /* tables */
+  guint8   *tabley, **tableu, **tablev;
 };
 
-struct _GstVideobalanceClass {
-  GstVideofilterClass parent_class;
+struct _GstVideoBalanceClass {
+  GstVideoFilterClass parent_class;
 };
 
-GType gst_videobalance_get_type(void);
+GType gst_video_balance_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_VIDEOBALANCE_H__ */
+#endif /* __GST_VIDEO_BALANCE_H__ */

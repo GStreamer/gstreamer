@@ -1,3 +1,35 @@
+2006-03-03  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	Added videobalance and videoflip to the docs.
+
+	* gst/videofilter/Makefile.am:
+	* gst/videofilter/gstvideobalance.c:
+	(gst_video_balance_update_tables_planar411),
+	(gst_video_balance_is_passthrough),
+	(gst_video_balance_update_properties), (oil_tablelookup_u8),
+	(gst_video_balance_planar411_ip), (gst_video_balance_set_caps),
+	(gst_video_balance_transform_ip), (gst_video_balance_base_init),
+	(gst_video_balance_finalize), (gst_video_balance_class_init),
+	(gst_video_balance_init), (gst_video_balance_interface_supported),
+	(gst_video_balance_interface_init),
+	(gst_video_balance_colorbalance_list_channels),
+	(gst_video_balance_colorbalance_set_value),
+	(gst_video_balance_colorbalance_get_value),
+	(gst_video_balance_colorbalance_init),
+	(gst_video_balance_set_property), (gst_video_balance_get_property),
+	(gst_video_balance_get_type), (plugin_init):
+	* gst/videofilter/gstvideobalance.h:
+	Ported to 0.10. (Fixes #326160)
+	Added docs.
+
+	* gst/videofilter/gstvideoflip.c:
+	* gst/videofilter/gstvideoflip.h:
+	Added docs.
+
 2006-03-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

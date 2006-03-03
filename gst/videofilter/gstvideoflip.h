@@ -24,6 +24,19 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstVideoFlipMethod:
+ * @GST_VIDEO_FLIP_METHOD_IDENTITY: Identity (no rotation)
+ * @GST_VIDEO_FLIP_METHOD_90R: Rotate clockwise 90 degrees
+ * @GST_VIDEO_FLIP_METHOD_180: Rotate 180 degrees
+ * @GST_VIDEO_FLIP_METHOD_90L: Rotate counter-clockwise 90 degrees
+ * @GST_VIDEO_FLIP_METHOD_HORIZ: Flip horizontally
+ * @GST_VIDEO_FLIP_METHOD_VERT: Flip vertically
+ * @GST_VIDEO_FLIP_METHOD_TRANS: Flip across upper left/lower right diagonal
+ * @GST_VIDEO_FLIP_METHOD_OTHER: Flip across upper right/lower left diagonal
+ *
+ * The different flip methods.
+ */
 typedef enum {
   GST_VIDEO_FLIP_METHOD_IDENTITY,
   GST_VIDEO_FLIP_METHOD_90R,
@@ -49,6 +62,11 @@ typedef enum {
 typedef struct _GstVideoFlip GstVideoFlip;
 typedef struct _GstVideoFlipClass GstVideoFlipClass;
 
+/**
+ * GstVideoFlip:
+ *
+ * Opaque datastructure.
+ */
 struct _GstVideoFlip {
   GstVideoFilter videofilter;
   

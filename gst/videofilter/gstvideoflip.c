@@ -22,6 +22,25 @@
  * This file was (probably) generated from gstvideoflip.c,
  * gstvideoflip.c,v 1.7 2003/11/08 02:48:59 dschleef Exp 
  */
+/**
+ * SECTION:element-videoflip
+ *
+ * <refsect2>
+ * <para>
+ * Flips and rotates video.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch videotestsrc ! videoflip method=clockwise ! ffmpegcolorspace ! ximagesink
+ * </programlisting>
+ * This pipeline flips the test image 90 degrees clockwise.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-03-03 (0.10.3)
+ */
+
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
