@@ -197,6 +197,7 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
   GstBuffer *outbuf = NULL;
   xvid_dec_frame_t xframe;
   GstFlowReturn ret = GST_FLOW_OK;
+  guint bufsize;
   int error = 0;
 
   if (xviddec->handle == NULL) {
@@ -204,7 +205,7 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
       goto not_negotiated;
   }
 
-  guint bufsize = (xviddec->width * xviddec->height * xviddec->bpp / 8);
+  bufsize = (xviddec->width * xviddec->height * xviddec->bpp / 8);
 
   outbuf = gst_buffer_new_and_alloc (bufsize);
 

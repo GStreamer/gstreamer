@@ -1,3 +1,9 @@
+2006-03-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/xvid/gstxviddec.c: (gst_xviddec_chain):
+	  Declare variable at the beginning of the block and make gcc-2.9x
+	  happy (fixes #333283; patch by: Jens Granseuer).
+
 2006-03-03  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse), (qtdemux_parse_trak):
