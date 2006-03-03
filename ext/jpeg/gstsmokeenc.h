@@ -25,10 +25,7 @@
 #include <gst/gst.h>
 #include "smokecodec.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_SMOKEENC \
   (gst_smokeenc_get_type())
@@ -73,10 +70,6 @@ struct _GstSmokeEncClass {
 
 GType gst_smokeenc_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_SMOKEENC_H__ */

@@ -4,6 +4,28 @@
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
 	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	Added smoke and jpeg to the docs.
+
+	* ext/jpeg/Makefile.am:
+	* ext/jpeg/gstjpeg.c: (plugin_init):
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_chain):
+	* ext/jpeg/gstjpegenc.h:
+	* ext/jpeg/gstsmokedec.c: (gst_smokedec_init),
+	(gst_smokedec_chain):
+	* ext/jpeg/gstsmokedec.h:
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_chain):
+	* ext/jpeg/gstsmokeenc.h:
+	* ext/jpeg/smokecodec.h:
+	Port smokedec (fixes #331905).
+	Added some docs.
+	Some cleanups.
+
+2006-03-03  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
 	Added videobalance and videoflip to the docs.
 
 	* gst/videofilter/Makefile.am:

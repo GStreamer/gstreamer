@@ -39,6 +39,7 @@ GObject
       GstPngEnc
       GstJpegEnc
       GstJpegDec
+      GstSmokeDec
       GstSmokeEnc
       GstFlacEnc
       GstFlacDec

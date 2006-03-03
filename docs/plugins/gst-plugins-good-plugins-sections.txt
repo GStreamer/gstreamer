@@ -95,6 +95,64 @@ GstHalAudioSrcClass
 </SECTION>
 
 <SECTION>
+<FILE>element-jpegdec</FILE>
+GstJpegDec
+GstJpegDecErrorMgr
+GstJpegDecSourceMgr
+<TITLE>jpegdec</TITLE>
+<SUBSECTION Standard>
+GstJpegDecClass
+GST_JPEG_DEC
+GST_IS_JPEG_DEC
+GST_TYPE_JPEG_DEC
+gst_jpeg_dec_get_type
+GST_JPEG_DEC_CLASS
+GST_IS_JPEG_DEC_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-jpegenc</FILE>
+<TITLE>jpegenc</TITLE>
+GstJpegEnc
+<SUBSECTION Standard>
+GstJpegEncClass
+GST_JPEGENC
+GST_IS_JPEGENC
+GST_TYPE_JPEGENC
+gst_jpegenc_get_type
+GST_JPEGENC_CLASS
+GST_IS_JPEGENC_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-smokedec</FILE>
+GstSmokeDec
+<TITLE>smokedec</TITLE>
+<SUBSECTION Standard>
+GstSmokeDecClass
+GST_SMOKEDEC
+GST_IS_SMOKEDEC
+GST_TYPE_SMOKEDEC
+gst_smokedec_get_type
+GST_SMOKEDEC_CLASS
+GST_IS_SMOKEDEC_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-smokeenc</FILE>
+GstSmokeEnc
+<TITLE>smokeenc</TITLE>
+<SUBSECTION Standard>
+GstSmokeEncClass
+GST_SMOKEENC
+GST_IS_SMOKEENC
+GST_TYPE_SMOKEENC
+gst_smokeenc_get_type
+GST_SMOKEENC_CLASS
+GST_IS_SMOKEENC_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-id3demux</FILE>
 GstID3Demux
 <TITLE>id3demux</TITLE>

@@ -29,10 +29,7 @@
 #endif
 #include <jpeglib.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_JPEGENC \
   (gst_jpegenc_get_type())
@@ -82,10 +79,6 @@ struct _GstJpegEncClass {
 
 GType gst_jpegenc_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_JPEGENC_H__ */

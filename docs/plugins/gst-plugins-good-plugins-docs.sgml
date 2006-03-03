@@ -24,11 +24,15 @@
     <xi:include href="xml/element-halaudiosink.xml" />
     <xi:include href="xml/element-halaudiosrc.xml" />
     <xi:include href="xml/element-id3demux.xml" />
+    <xi:include href="xml/element-jpegdec.xml" />
+    <xi:include href="xml/element-jpegenc.xml" />
     <xi:include href="xml/element-level.xml" />
     <xi:include href="xml/element-udpsrc.xml" />
     <xi:include href="xml/element-multiudpsink.xml" />
     <xi:include href="xml/element-multipartmux.xml" />
     <xi:include href="xml/element-multipartdemux.xml" />
+    <xi:include href="xml/element-smokedec.xml" />
+    <xi:include href="xml/element-smokeenc.xml" />
     <xi:include href="xml/element-videobalance.xml" />
     <xi:include href="xml/element-videoflip.xml" />
     <xi:include href="xml/element-videomixer.xml" />

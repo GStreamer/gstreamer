@@ -87,6 +87,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/flac/gstflacdec.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosrc.h \
+	$(top_srcdir)/ext/jpeg/gstjpegdec.h \
+	$(top_srcdir)/ext/jpeg/gstjpegenc.h \
+	$(top_srcdir)/ext/jpeg/gstsmokedec.h \
+	$(top_srcdir)/ext/jpeg/gstsmokeenc.h \
 	$(top_srcdir)/gst/multipart/multipartmux.c \
 	$(top_srcdir)/gst/multipart/multipartdemux.c \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \

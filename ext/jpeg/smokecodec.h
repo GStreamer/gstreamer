@@ -61,6 +61,8 @@ int                     smokecodec_encode_new   (SmokeCodecInfo **info,
 
 int                     smokecodec_decode_new   (SmokeCodecInfo **info);
 
+int                     smokecodec_info_free    (SmokeCodecInfo * info);
+
 /* config */
 SmokeCodecResult        smokecodec_set_quality  (SmokeCodecInfo *info,
                                                  const unsigned int min,

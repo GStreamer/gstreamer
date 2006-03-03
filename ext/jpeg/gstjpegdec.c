@@ -828,8 +828,8 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     GstClockTime next_ts;
 
     dec->frames_decoded++;
-    next_ts = dec->frames_decoded * GST_SECOND *
-        dec->framerate_denominator / dec->framerate_numerator;
+    next_ts = gst_util_uint64_scale (dec->frames_decoded,
+        GST_SECOND * dec->framerate_denominator, dec->framerate_numerator);
 
     duration = next_ts - dec->next_ts;
     dec->next_ts = next_ts;

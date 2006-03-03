@@ -296,6 +296,7 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
   guint encsize;
   GstBuffer *outbuf;
   SmokeCodecFlags flags;
+  GstFlowReturn ret;
 
   smokeenc = GST_SMOKEENC (GST_OBJECT_PARENT (pad));
 
@@ -318,7 +319,7 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
 
     GST_BUFFER_SIZE (outbuf) = encsize;
 
-    gst_pad_push (smokeenc->srcpad, outbuf);
+    ret = gst_pad_push (smokeenc->srcpad, outbuf);
 
     smokeenc->need_header = FALSE;
   }
@@ -346,11 +347,11 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
   GST_BUFFER_OFFSET (outbuf) = smokeenc->frame;
   GST_BUFFER_OFFSET_END (outbuf) = smokeenc->frame + 1;
 
-  gst_pad_push (smokeenc->srcpad, outbuf);
+  ret = gst_pad_push (smokeenc->srcpad, outbuf);
 
   smokeenc->frame++;
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static void

@@ -5,9 +5,8 @@ libgstjpeg_la_SOURCES = \
 	gstjpegenc.c \
 	gstjpegdec.c \
 	gstsmokeenc.c \
-	smokecodec.c
-
-#	gstsmokedec.c
+	smokecodec.c \
+	gstsmokedec.c
 
 libgstjpeg_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstjpeg_la_LIBADD = $(GST_LIBS) $(JPEG_LIBS) 

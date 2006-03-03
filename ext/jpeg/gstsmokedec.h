@@ -25,10 +25,7 @@
 #include <gst/gst.h>
 #include "smokecodec.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_SMOKEDEC \
   (gst_smokedec_get_type())
@@ -54,7 +51,8 @@ struct _GstSmokeDec {
   gint format;
   gint width;
   gint height;
-  gdouble fps;
+  gint fps_num;
+  gint fps_denom;
   GstClockTime next_time;
 
   SmokeCodecInfo *info;
@@ -72,10 +70,6 @@ struct _GstSmokeDecClass {
 
 GType gst_smokedec_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_SMOKEDEC_H__ */
