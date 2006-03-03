@@ -1,3 +1,14 @@
+2006-03-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_handle_src_event), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_calculate_durations_from_index),
+	(gst_avi_demux_stream_header):
+	* gst/avi/gstavidemux.h:
+	  If we have an index, use a duration based on the index instead
+	  of blindly trusting the information in the stream headers
+	  (fixes #331817).
+
 2006-03-03  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/Makefile.am:

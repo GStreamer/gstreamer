@@ -82,6 +82,9 @@ typedef struct {
   guint64        total_bytes;
   guint32        total_frames;
 
+  /* stream length according to index */
+  GstClockTime   idx_duration;
+
   guint64       *indexes;
 } avi_stream_context;
 

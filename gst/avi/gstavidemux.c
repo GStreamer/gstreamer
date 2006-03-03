@@ -414,12 +414,25 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
-      gint64 len;
+      if (stream->strh->type != GST_RIFF_FCC_auds &&
+          stream->strh->type != GST_RIFF_FCC_vids) {
+        res = FALSE;
+        break;
+      }
 
-      len =
-          gst_util_uint64_scale ((guint64) stream->strh->length *
-          stream->strh->scale, GST_SECOND, stream->strh->rate);
-      gst_query_set_duration (query, GST_FORMAT_TIME, len);
+      /* use duration from the index if we have an
+       * index instead of trusting the stream header */
+      if (GST_CLOCK_TIME_IS_VALID (stream->idx_duration)) {
+        gst_query_set_duration (query, GST_FORMAT_TIME, stream->idx_duration);
+      } else {
+        gint64 len;
+
+        len =
+            gst_util_uint64_scale ((guint64) stream->strh->length *
+            stream->strh->scale, GST_SECOND, stream->strh->rate);
+
+        gst_query_set_duration (query, GST_FORMAT_TIME, len);
+      }
       break;
     }
     default:
@@ -493,9 +506,10 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
         tstop = stop;
       }
 
-      duration =
-          gst_util_uint64_scale ((guint64) stream->strh->length *
-          stream->strh->scale, GST_SECOND, stream->strh->rate);
+      if (!gst_pad_query_duration (stream->pad, &tformat, &duration)) {
+        res = FALSE;
+        goto done;
+      }
 
       switch (start_type) {
         case GST_SEEK_TYPE_CUR:
@@ -1115,6 +1129,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
     gst_object_unref (stream->pad);
   pad = stream->pad = gst_pad_new_from_template (templ, padname);
   stream->last_flow = GST_FLOW_OK;
+  stream->idx_duration = GST_CLOCK_TIME_NONE;
   g_free (padname);
 
   gst_pad_use_fixed_caps (pad);
@@ -1969,6 +1984,28 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
   GST_LOG ("Index massaging done");
 }
 
+static void
+gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
+{
+  gst_avi_index_entry *entry;
+  GstClockTime end_time = GST_CLOCK_TIME_NONE;
+  gint stream, i;
+
+  /* we assume all streams start at a timestamp of 0 for now */
+  for (stream = 0; stream < avi->num_streams; ++stream) {
+    i = 0;
+    while ((entry = gst_avi_demux_index_next (avi, stream, i))) {
+      end_time = entry->ts + entry->dur;
+      ++i;
+    }
+    if (GST_CLOCK_TIME_IS_VALID (end_time)) {
+      avi->stream[stream].idx_duration = end_time;
+      GST_INFO ("Stream %d duration according to index: %" GST_TIME_FORMAT,
+          stream, GST_TIME_ARGS (avi->stream[stream].idx_duration));
+    }
+  }
+}
+
 static gboolean
 gst_avi_demux_send_event (GstAviDemux * avi, GstEvent * event)
 {
@@ -2156,6 +2193,7 @@ done:
     goto no_index;
 
   gst_avi_demux_massage_index (avi, index, alloc);
+  gst_avi_demux_calculate_durations_from_index (avi);
 
   /* send initial discont */
   avi->segment_start = 0;
