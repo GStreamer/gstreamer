@@ -1,3 +1,10 @@
+2006-03-03  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse), (qtdemux_parse_trak):
+	Use GST_WARNING instead of GST_ERROR for all the too short/long atoms
+	when parsing.
+	Also let's be a bit less vulgar in our warning messages :)
+
 2006-02-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):

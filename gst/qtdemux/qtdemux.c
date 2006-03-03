@@ -1064,7 +1064,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         }
 
         if (stream == NULL) {
-          GST_WARNING_OBJECT (demux, "WHAT THE FUCK ?");
+          GST_WARNING_OBJECT (demux, "No stream found.");
           ret = GST_FLOW_ERROR;
           break;
         }
@@ -1562,11 +1562,11 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       }
       len = QTDEMUX_GUINT32_GET (buf);
       if (len < 8) {
-        GST_ERROR ("atom length too short (%d < 8)", len);
+        GST_WARNING ("atom length too short (%d < 8)", len);
         break;
       }
       if (len > (end - buf)) {
-        GST_ERROR ("atom length too long (%d > %d)", len, end - buf);
+        GST_WARNING ("atom length too long (%d > %d)", len, end - buf);
         break;
       }
 
@@ -1594,11 +1594,11 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         }
         len = QTDEMUX_GUINT32_GET (buf);
         if (len < 8) {
-          GST_ERROR ("length too short (%d < 8)");
+          GST_WARNING ("length too short (%d < 8)");
           break;
         }
         if (len > (end - buf)) {
-          GST_ERROR ("length too long (%d > %d)", len, end - buf);
+          GST_WARNING ("length too long (%d > %d)", len, end - buf);
           break;
         }
 
@@ -1627,11 +1627,11 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
           }
           len = QTDEMUX_GUINT32_GET (buf);
           if (len < 8) {
-            GST_ERROR ("length too short (%d < 8)");
+            GST_WARNING ("length too short (%d < 8)");
             break;
           }
           if (len > (end - buf)) {
-            GST_ERROR ("length too long (%d > %d)", len, end - buf);
+            GST_WARNING ("length too long (%d > %d)", len, end - buf);
             break;
           }
 
@@ -1680,11 +1680,11 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
           if (len == 0)
             break;
           if (len < 8) {
-            GST_ERROR ("length too short (%d < 8)");
+            GST_WARNING ("length too short (%d < 8)");
             break;
           }
           if (len > (end - buf)) {
-            GST_ERROR ("length too long (%d > %d)", len, end - buf);
+            GST_WARNING ("length too long (%d > %d)", len, end - buf);
             break;
           }
 
@@ -1710,11 +1710,11 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         }
         len = QTDEMUX_GUINT32_GET (buf);
         if (len < 8) {
-          GST_ERROR ("length too short (%d < 8)");
+          GST_WARNING ("length too short (%d < 8)");
           break;
         }
         if (len > (end - buf)) {
-          GST_ERROR ("length too long (%d > %d)", len, end - buf);
+          GST_WARNING ("length too long (%d > %d)", len, end - buf);
           break;
         }
 
@@ -1759,11 +1759,11 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
           if (len == 0)
             break;
           if (len < 8) {
-            GST_ERROR ("length too short (%d < 8)");
+            GST_WARNING ("length too short (%d < 8)");
             break;
           }
           if (len > (end - buf)) {
-            GST_ERROR ("length too long (%d > %d)", len, end - buf);
+            GST_WARNING ("length too long (%d > %d)", len, end - buf);
             break;
           }
 
@@ -2591,7 +2591,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         stream->compression = 320;
       }
     } else {
-      GST_ERROR ("unknown version %08x", version);
+      GST_WARNING ("unknown version %08x", version);
     }
 
     stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc, NULL, 0,
