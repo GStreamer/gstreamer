@@ -1,5 +1,12 @@
 2006-03-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/gst.c:
+	Add a check and output a g_warning when GStreamer is built
+	against GLib 2.6 but running against 2.8 or higher, and vice 
+	versa. (Closes: #323542)
+
+2006-03-03  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/parse/parse.l:
 	  Commit patch for parse_launch syntax from #331255. Removes 
 	  support for quoted strings and mimetypes when writing filtered 
