@@ -862,6 +862,7 @@ gst_type_find_element_activate_src_pull (GstPad * pad, gboolean active)
 static gboolean
 gst_type_find_element_activate (GstPad * pad)
 {
+  GstTypeFindProbability probability = 0;
   GstCaps *found_caps = NULL;
   GstTypeFindElement *typefind;
 
@@ -892,8 +893,15 @@ gst_type_find_element_activate (GstPad * pad)
       gint64 size;
       GstFormat format = GST_FORMAT_BYTES;
 
-      gst_pad_query_duration (peer, &format, &size);
-      found_caps = gst_type_find_helper (peer, (guint64) size);
+      if (!gst_pad_query_duration (peer, &format, &size)) {
+        GST_WARNING_OBJECT (typefind, "Could not query upstream length!");
+        return FALSE;
+      }
+
+      found_caps = gst_type_find_helper_get_range (GST_OBJECT (peer),
+          (GstTypeFindHelperGetRangeFunction) (GST_PAD_GETRANGEFUNC (peer)),
+          (guint64) size, &probability);
+
       gst_object_unref (peer);
     }
   }
@@ -905,14 +913,15 @@ gst_type_find_element_activate (GstPad * pad)
   gst_pad_activate_push (typefind->src, FALSE);
 
   /* 5 */
-  if (!found_caps) {
+  if (!found_caps || probability < typefind->min_probability) {
     GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+    gst_caps_replace (&found_caps, NULL);
     return FALSE;
   }
 
   /* 6 */
   g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
-      0, 100, found_caps);
+      0, probability, found_caps);
   gst_caps_unref (found_caps);
   typefind->mode = MODE_NORMAL;
 
