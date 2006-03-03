@@ -574,7 +574,7 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
      * TODO: it CAN be, but it seems silly to do so? */
     buf = g_queue_peek_head (pad->pagebuffers);
     while (buf && GST_BUFFER_OFFSET_END (buf) == -1) {
-      GST_LOG_OBJECT (pad->collect.pad, GST_GP_FORMAT " pushing page", -1);
+      GST_LOG_OBJECT (pad->collect.pad, "[gp        -1] pushing page");
       g_queue_pop_head (pad->pagebuffers);
       *flowret = gst_ogg_mux_push_buffer (mux, buf);
       buf = g_queue_peek_head (pad->pagebuffers);
@@ -584,11 +584,17 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
     if (buf) {
       /* if no oldest buffer yet, take this one */
       if (oldest == GST_CLOCK_TIME_NONE) {
+        GST_LOG_OBJECT (mux, "no oldest yet, taking from pad %"
+            GST_PTR_FORMAT " with timestamp %" GST_TIME_FORMAT,
+            pad->collect.pad, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
         oldest = GST_BUFFER_END_TIME (buf);
         opad = pad;
       } else {
         /* if we have an oldest, compare with this one */
         if (GST_BUFFER_END_TIME (buf) < oldest) {
+          GST_LOG_OBJECT (mux, "older buffer, taking from pad %"
+              GST_PTR_FORMAT " with timestamp %" GST_TIME_FORMAT,
+              pad->collect.pad, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
           oldest = GST_BUFFER_END_TIME (buf);
           opad = pad;
         }
@@ -600,7 +606,7 @@ gst_ogg_mux_dequeue_page (GstOggMux * mux, GstFlowReturn * flowret)
   if (oldest != GST_CLOCK_TIME_NONE) {
     g_assert (opad);
     buf = g_queue_pop_head (opad->pagebuffers);
-    GST_LOG_OBJECT (opad,
+    GST_LOG_OBJECT (opad->collect.pad,
         GST_GP_FORMAT " pushing oldest page (end time %" GST_TIME_FORMAT ")",
         GST_BUFFER_OFFSET_END (buf), GST_TIME_ARGS (GST_BUFFER_END_TIME (buf)));
     *flowret = gst_ogg_mux_push_buffer (mux, buf);
