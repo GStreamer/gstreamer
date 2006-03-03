@@ -25,7 +25,6 @@
 
 #include <gst/gstinfo.h>
 #include <gst/gstelement.h>
-/* #include <gst/gstbufferstore.h> */
 #include "gstbufferstore.h"
 
 G_BEGIN_DECLS
@@ -59,10 +58,6 @@ struct _GstTypeFindElement {
 
   guint			mode;
   GstBuffer *		store;
-  guint64		stream_length;
-  gboolean		stream_length_available;
-
-  GList *		possibilities;
 };
 
 struct _GstTypeFindElementClass {

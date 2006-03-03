@@ -1,5 +1,16 @@
 2006-03-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* plugins/elements/gsttypefindelement.h:
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_src_event), (start_typefinding),
+	(stop_typefinding), (gst_type_find_element_handle_event),
+	(gst_type_find_element_chain),
+	(gst_type_find_element_chain_do_typefinding):
+	  Use gst_type_find_helper_for_buffer() for chain-based
+	  typefinding.
+
+2006-03-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* plugins/elements/gsttypefindelement.c:
 	(gst_type_find_element_class_init),
 	(gst_type_find_element_set_property),
