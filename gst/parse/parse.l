@@ -39,9 +39,8 @@ _operator [(){}.!,;=]
 _identifier [[:alpha:]][[:alnum:]\-_%:]*
 
 _char ("\\".)|([^[:space:]])
-_string {_char}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
+_string {_char}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\'")*"'")
 
-_comma [[:space:]]*","[[:space:]]*
 _assign [[:space:]]*"="[[:space:]]*
 
 _protocol [[:alpha:]][[:alnum:]+-\.]*
@@ -56,10 +55,10 @@ _ref {_identifier}"."{_identifier}?
 _binref {_identifier}[[:space:]]*"."[[:space:]]*"("
 
 /* links */
-_mimechar ([[:alnum:]-])
-_mimetype ({_mimechar}+"/"{_mimechar}+)|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
+_mimechar [[:alnum:]-]
+_mimetype {_mimechar}+"/"{_mimechar}+
 _capschar ("\\".)|([^\;!])
-_capsstring {_capschar}+|("\""([^\"]|"\\\"")*"\"")|("'"([^']|"\\\"")*"'")
+_capsstring {_capschar}+
 _caps {_mimetype}(","[^!]|{_capsstring})*
 _link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)*"!")|("!")
 

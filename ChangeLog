@@ -1,3 +1,14 @@
+2006-03-03  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/parse/parse.l:
+	  Commit patch for parse_launch syntax from #331255. Removes 
+	  support for quoted strings and mimetypes when writing filtered 
+	  caps. See the bug report for more details - I'm pretty sure this
+	  obscure feature is not in use by _anyone_ anywhere.
+
+	  With this simple change, the size of the gstreamer.so here 
+	  drops from 2193KB to 1565KB.
+
 2006-03-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gsttypefindelement.h:
