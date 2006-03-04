@@ -1,3 +1,13 @@
+2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/faad/gstfaad.c: (gst_faad_init), (gst_faad_send_tags),
+	(gst_faad_setcaps), (gst_faad_do_raw_seek), (gst_faad_src_event),
+	(gst_faad_sink_event), (gst_faad_src_convert),
+	(gst_faad_src_query), (gst_faad_chain), (gst_faad_change_state):
+	  Add query function for position/duration querying (mostly for
+	  raw AAC streams); make seeking in raw AAC streams work; post
+	  tags with codec name if this is a raw AAC stream.
+
 2006-03-04  Sebastien Moutte  <sebastien@moutte.net>
 
 	* sys/directdraw:

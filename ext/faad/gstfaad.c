@@ -114,10 +114,14 @@ static void gst_faad_init (GstFaad * faad);
 
 static gboolean gst_faad_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_faad_srcgetcaps (GstPad * pad);
-static gboolean gst_faad_event (GstPad * pad, GstEvent * event);
+static gboolean gst_faad_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_faad_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_faad_src_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn gst_faad_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn gst_faad_change_state (GstElement * element,
     GstStateChange transition);
+static gboolean gst_faad_src_convert (GstFaad * faad, GstFormat src_format,
+    gint64 src_val, GstFormat dest_format, gint64 * dest_val);
 
 static GstElementClass *parent_class;   /* NULL */
 
@@ -192,7 +196,7 @@ gst_faad_init (GstFaad * faad)
       "sink");
   gst_element_add_pad (GST_ELEMENT (faad), faad->sinkpad);
   gst_pad_set_event_function (faad->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_faad_event));
+      GST_DEBUG_FUNCPTR (gst_faad_sink_event));
   gst_pad_set_setcaps_function (faad->sinkpad,
       GST_DEBUG_FUNCPTR (gst_faad_setcaps));
   gst_pad_set_chain_function (faad->sinkpad,
@@ -201,10 +205,27 @@ gst_faad_init (GstFaad * faad)
   faad->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
-  gst_element_add_pad (GST_ELEMENT (faad), faad->srcpad);
   gst_pad_use_fixed_caps (faad->srcpad);
   gst_pad_set_getcaps_function (faad->srcpad,
       GST_DEBUG_FUNCPTR (gst_faad_srcgetcaps));
+  gst_pad_set_query_function (faad->srcpad,
+      GST_DEBUG_FUNCPTR (gst_faad_src_query));
+  gst_pad_set_event_function (faad->srcpad,
+      GST_DEBUG_FUNCPTR (gst_faad_src_event));
+  gst_element_add_pad (GST_ELEMENT (faad), faad->srcpad);
+}
+
+static void
+gst_faad_send_tags (GstFaad * faad)
+{
+  GstTagList *tags;
+
+  tags = gst_tag_list_new ();
+
+  gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
+      GST_TAG_AUDIO_CODEC, "MPEG-4 AAC audio", NULL);
+
+  gst_element_found_tags (GST_ELEMENT (faad), tags);
 }
 
 static gboolean
@@ -256,6 +277,9 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   faad->need_channel_setup = TRUE;
+
+  if (!faad->packetised)
+    gst_faad_send_tags (faad);
 
   return TRUE;
 }
@@ -657,18 +681,77 @@ gst_faad_srcconnect (GstPad * pad, const GstCaps * caps)
 }*/
 
 static gboolean
-gst_faad_event (GstPad * pad, GstEvent * event)
+gst_faad_do_raw_seek (GstFaad * faad, GstEvent * event)
+{
+  GstSeekFlags flags;
+  GstSeekType start_type, end_type;
+  GstFormat format;
+  gdouble rate;
+  gint64 start, start_time;
+
+  gst_event_parse_seek (event, &rate, &format, &flags, &start_type,
+      &start_time, &end_type, NULL);
+
+  if (rate != 1.0 ||
+      format != GST_FORMAT_TIME ||
+      start_type != GST_SEEK_TYPE_SET || end_type != GST_SEEK_TYPE_NONE) {
+    return FALSE;
+  }
+
+  if (!gst_faad_src_convert (faad, GST_FORMAT_TIME, start_time,
+          GST_FORMAT_BYTES, &start)) {
+    return FALSE;
+  }
+
+  event = gst_event_new_seek (1.0, GST_FORMAT_BYTES, flags,
+      GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_NONE, -1);
+
+  GST_DEBUG_OBJECT (faad, "seeking to %" GST_TIME_FORMAT " at byte offset %"
+      G_GINT64_FORMAT, GST_TIME_ARGS (start_time), start);
+
+  return gst_pad_send_event (GST_PAD_PEER (faad->sinkpad), event);
+}
+
+static gboolean
+gst_faad_src_event (GstPad * pad, GstEvent * event)
+{
+  GstFaad *faad;
+  gboolean res;
+
+  faad = GST_FAAD (gst_pad_get_parent (pad));
+
+  GST_LOG_OBJECT (faad, "Handling %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:{
+      /* try upstream first, there might be a demuxer */
+      gst_event_ref (event);
+      if (!(res = gst_pad_event_default (pad, event))) {
+        res = gst_faad_do_raw_seek (faad, event);
+      }
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (faad);
+  return res;
+}
+
+static gboolean
+gst_faad_sink_event (GstPad * pad, GstEvent * event)
 {
   GstFaad *faad;
   gboolean res = TRUE;
 
   faad = GST_FAAD (gst_pad_get_parent (pad));
 
-  GST_LOG ("Handling %s event", GST_EVENT_TYPE_NAME (event));
+  GST_LOG_OBJECT (faad, "Handling %s event", GST_EVENT_TYPE_NAME (event));
 
-  /* FIXME: we should probably handle FLUSH and also
-   *  SEEK in the case where we are not in a container
-   *  (when our newsegment was in BYTES) */
+  /* FIXME: we should probably handle FLUSH */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
       if (faad->tempbuf != NULL) {
@@ -691,31 +774,33 @@ gst_faad_event (GstPad * pad, GstEvent * event)
             GST_TIME_FORMAT " - %" GST_TIME_FORMAT ")", GST_TIME_ARGS (start),
             GST_TIME_ARGS (end));
       } else if (fmt == GST_FORMAT_BYTES) {
-        GstEvent *new_ev;
-        guint64 new_start = 0;
-        guint64 new_end = GST_CLOCK_TIME_NONE;
+        gint64 new_start = 0;
+        gint64 new_end = -1;
 
         GST_DEBUG ("Got NEWSEGMENT event in GST_FORMAT_BYTES (%"
             G_GUINT64_FORMAT " - %" G_GUINT64_FORMAT ")", start, end);
 
-        if (faad->bytes_in > 0 && faad->sum_dur_out > 0) {
-          /* try to convert based on the average bitrate so far */
-          new_start = (faad->sum_dur_out * start) / faad->bytes_in;
-          if (new_end != (guint64) - 1) {
-            new_end = (faad->sum_dur_out * end) / faad->bytes_in;
+        if (gst_faad_src_convert (faad, GST_FORMAT_BYTES, start,
+                GST_FORMAT_TIME, &new_start)) {
+          if (end != -1) {
+            gst_faad_src_convert (faad, GST_FORMAT_BYTES, end,
+                GST_FORMAT_TIME, &new_end);
           }
         } else {
           GST_DEBUG
               ("no average bitrate yet, sending newsegment with start at 0");
         }
-        new_ev =
-            gst_event_new_new_segment (is_update, rate, GST_FORMAT_TIME,
-            new_start, new_end, base);
         gst_event_unref (event);
-        event = new_ev;
+
+        event = gst_event_new_new_segment (is_update, rate,
+            GST_FORMAT_TIME, new_start, new_end, new_start);
+
         GST_DEBUG ("Sending new NEWSEGMENT event, time %" GST_TIME_FORMAT
             " - %" GST_TIME_FORMAT, GST_TIME_ARGS (new_start),
             GST_TIME_ARGS (new_end));
+
+        faad->next_ts = new_start;
+        faad->prev_ts = GST_CLOCK_TIME_NONE;
       }
 
       res = gst_pad_push_event (faad->srcpad, event);
@@ -726,8 +811,140 @@ gst_faad_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  gst_object_unref (faad);
   return res;
 }
+
+static gboolean
+gst_faad_src_convert (GstFaad * faad, GstFormat src_format, gint64 src_val,
+    GstFormat dest_format, gint64 * dest_val)
+{
+  guint64 bytes_in, time_out, val;
+
+  if (src_format == dest_format) {
+    if (dest_val)
+      *dest_val = src_val;
+    return TRUE;
+  }
+
+  GST_OBJECT_LOCK (faad);
+  bytes_in = faad->bytes_in;
+  time_out = faad->sum_dur_out;
+  GST_OBJECT_UNLOCK (faad);
+
+  if (bytes_in == 0 || time_out == 0)
+    return FALSE;
+
+  /* convert based on the average bitrate so far */
+  if (src_format == GST_FORMAT_BYTES && dest_format == GST_FORMAT_TIME) {
+    val = gst_util_uint64_scale (src_val, time_out, bytes_in);
+  } else if (src_format == GST_FORMAT_TIME && dest_format == GST_FORMAT_BYTES) {
+    val = gst_util_uint64_scale (src_val, bytes_in, time_out);
+  } else {
+    return FALSE;
+  }
+
+  if (dest_val)
+    *dest_val = (gint64) val;
+
+  return TRUE;
+}
+
+static gboolean
+gst_faad_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean res = FALSE;
+  GstFaad *faad;
+  GstPad *peer = NULL;
+
+  faad = GST_FAAD (gst_pad_get_parent (pad));
+
+  GST_LOG_OBJECT (faad, "processing %s query", GST_QUERY_TYPE_NAME (query));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DURATION:{
+      GstFormat format;
+      gint64 len_bytes, duration;
+
+      /* try upstream first, in case there's a demuxer */
+      if ((res = gst_pad_query_default (pad, query)))
+        break;
+
+      gst_query_parse_duration (query, &format, NULL);
+      if (format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (faad, "query failed: can't handle format %s",
+            gst_format_get_name (format));
+        break;
+      }
+
+      peer = gst_pad_get_peer (faad->sinkpad);
+      if (peer == NULL)
+        break;
+
+      format = GST_FORMAT_BYTES;
+      if (!gst_pad_query_duration (peer, &format, &len_bytes)) {
+        GST_DEBUG_OBJECT (faad, "query failed: failed to get upstream length");
+        break;
+      }
+
+      res = gst_faad_src_convert (faad, GST_FORMAT_BYTES, len_bytes,
+          GST_FORMAT_TIME, &duration);
+
+      if (res) {
+        gst_query_set_duration (query, GST_FORMAT_TIME, duration);
+
+        GST_LOG_OBJECT (faad, "duration estimate: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (duration));
+      }
+      break;
+    }
+    case GST_QUERY_POSITION:{
+      GstFormat format;
+      gint64 pos_bytes, pos;
+
+      /* try upstream first, in case there's a demuxer */
+      if ((res = gst_pad_query_default (pad, query)))
+        break;
+
+      gst_query_parse_position (query, &format, NULL);
+      if (format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (faad, "query failed: can't handle format %s",
+            gst_format_get_name (format));
+        break;
+      }
+
+      peer = gst_pad_get_peer (faad->sinkpad);
+      if (peer == NULL)
+        break;
+
+      format = GST_FORMAT_BYTES;
+      if (!gst_pad_query_position (peer, &format, &pos_bytes)) {
+        GST_OBJECT_LOCK (faad);
+        pos = faad->next_ts;
+        GST_OBJECT_UNLOCK (faad);
+        res = TRUE;
+      } else {
+        res = gst_faad_src_convert (faad, GST_FORMAT_BYTES, pos_bytes,
+            GST_FORMAT_TIME, &pos);
+      }
+
+      if (res) {
+        gst_query_set_position (query, GST_FORMAT_TIME, pos);
+      }
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+  if (peer)
+    gst_object_unref (peer);
+
+  gst_object_unref (faad);
+  return res;
+}
+
 
 static gboolean
 gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info,
@@ -852,6 +1069,10 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 
   faad = GST_FAAD (gst_pad_get_parent (pad));
 
+  GST_OBJECT_LOCK (faad);
+  faad->bytes_in += GST_BUFFER_SIZE (buffer);
+  GST_OBJECT_UNLOCK (faad);
+
   if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE) {
     /* some demuxers send multiple buffers in a row
      *  with the same timestamp (e.g. matroskademux) */
@@ -901,6 +1122,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     /* make sure we create new caps below */
     faad->samplerate = 0;
     faad->channels = 0;
+    gst_faad_send_tags (faad);
   }
 
   /* decode cycle */
@@ -981,8 +1203,10 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
         GST_BUFFER_DURATION (outbuf) =
             GST_FRAMES_TO_CLOCK_TIME (num_samples, faad->samplerate);
 
+        GST_OBJECT_LOCK (faad);
         faad->next_ts += GST_BUFFER_DURATION (outbuf);
         faad->sum_dur_out += GST_BUFFER_DURATION (outbuf);
+        GST_OBJECT_UNLOCK (faad);
 
         GST_DEBUG ("pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%"
             GST_TIME_FORMAT, GST_BUFFER_OFFSET (outbuf),
@@ -1006,8 +1230,6 @@ next:
       gst_buffer_ref (buffer);
     }
   }
-
-  faad->bytes_in += input_size;
 
 out:
 
@@ -1060,6 +1282,8 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
       faad->channel_positions = NULL;
       faad->next_ts = 0;
       faad->prev_ts = GST_CLOCK_TIME_NONE;
+      faad->bytes_in = 0;
+      faad->sum_dur_out = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       faacDecClose (faad->handle);
