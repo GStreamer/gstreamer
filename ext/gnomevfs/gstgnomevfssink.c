@@ -552,8 +552,11 @@ gst_gnome_vfs_sink_render (GstBaseSink * basesink, GstBuffer * buf)
     case GNOME_VFS_ERROR_NO_SPACE:{
       /* TODO: emit signal/send msg on out-of-diskspace and
        * handle this gracefully (see open bug) (tpm) */
+      GST_ELEMENT_ERROR (sink, RESOURCE, NO_SPACE_LEFT, (NULL),
+          ("bufsize=%u, written=%u", GST_BUFFER_SIZE (buf), (guint) written));
+      ret = GST_FLOW_ERROR;
+      break;
     }
-      /* fall-through */
     default:{
       gchar *filename = gnome_vfs_uri_to_string (sink->uri,
           GNOME_VFS_URI_HIDE_PASSWORD);

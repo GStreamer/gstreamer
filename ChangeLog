@@ -1,3 +1,12 @@
+2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Bump requirements to GStreamer CVS for the new error enum.
+
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnome_vfs_sink_render):
+	  Emit new GST_RESOURCE_ERROR_NO_SPACE_LEFT when there's no
+	  space left on the device (fixes #333352).
+
 2006-03-04  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/vs6:
