@@ -1,5 +1,13 @@
 2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/id3demux/Makefile.am:
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_add_srcpad),
+	(gst_id3demux_chain), (gst_id3demux_sink_activate):
+	  Use new typefind helper functions here as well, and
+	  do typefinding in pull-mode if upstream supports that.
+
+2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* sys/sunaudio/gstsunaudiomixerctrl.c:
 	(gst_sunaudiomixer_ctrl_get_volume),
 	(gst_sunaudiomixer_ctrl_set_volume):

@@ -43,6 +43,7 @@
 #include "config.h"
 #endif
 #include <gst/gst.h>
+#include <gst/base/gsttypefindhelper.h>
 #include <gst/gst-i18n-plugin.h>
 
 #include "gstid3demux.h"
@@ -113,8 +114,6 @@ static GstStateChangeReturn gst_id3demux_change_state (GstElement * element,
 static gboolean gst_id3demux_pad_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_id3demux_get_query_types (GstPad * pad);
 static gboolean id3demux_get_upstream_size (GstID3Demux * id3demux);
-static GstCaps *gst_id3demux_do_typefind (GstID3Demux * id3demux,
-    GstBuffer * buffer);
 static void gst_id3demux_send_tag_event (GstID3Demux * id3demux);
 
 static GstElementClass *parent_class = NULL;
@@ -235,8 +234,6 @@ gst_id3demux_dispose (GObject * object)
 static gboolean
 gst_id3demux_add_srcpad (GstID3Demux * id3demux, GstCaps * new_caps)
 {
-  GstPad *srcpad = NULL;
-
   if (id3demux->src_caps == NULL ||
       !gst_caps_is_equal (new_caps, id3demux->src_caps)) {
 
@@ -253,7 +250,7 @@ gst_id3demux_add_srcpad (GstID3Demux * id3demux, GstCaps * new_caps)
   }
 
   if (id3demux->srcpad == NULL) {
-    srcpad = id3demux->srcpad =
+    id3demux->srcpad =
         gst_pad_new_from_template (gst_element_class_get_pad_template
         (GST_ELEMENT_GET_CLASS (id3demux), "src"), "src");
     g_return_val_if_fail (id3demux->srcpad != NULL, FALSE);
@@ -428,8 +425,9 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
 
       /* Fall-through */
     case GST_ID3DEMUX_TYPEFINDING:{
-      GstCaps *caps;
+      GstTypeFindProbability probability = 0;
       GstBuffer *typefind_buf = NULL;
+      GstCaps *caps;
 
       if (GST_BUFFER_SIZE (id3demux->collect) < ID3_TYPE_FIND_MIN_SIZE)
         break;                  /* Go get more data first */
@@ -443,7 +441,8 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
       if (!gst_id3demux_trim_buffer (id3demux, &typefind_buf))
         return GST_FLOW_ERROR;
 
-      caps = gst_id3demux_do_typefind (id3demux, typefind_buf);
+      caps = gst_type_find_helper_for_buffer (GST_OBJECT (id3demux),
+          typefind_buf, &probability);
 
       if (caps == NULL) {
         if (GST_BUFFER_SIZE (typefind_buf) < ID3_TYPE_FIND_MAX_SIZE) {
@@ -461,6 +460,11 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
         id3demux->collect = NULL;
         return GST_FLOW_ERROR;
       }
+
+      GST_DEBUG_OBJECT (id3demux, "Found type %" GST_PTR_FORMAT " with a "
+          "probability of %u, buf size was %u", caps, probability,
+          GST_BUFFER_SIZE (typefind_buf));
+
       gst_buffer_unref (typefind_buf);
 
       if (!gst_id3demux_add_srcpad (id3demux, caps)) {
@@ -774,11 +778,10 @@ beach:
 static gboolean
 gst_id3demux_sink_activate (GstPad * sinkpad)
 {
+  GstTypeFindProbability probability = 0;
   GstID3Demux *id3demux = GST_ID3DEMUX (GST_PAD_PARENT (sinkpad));
   gboolean ret = FALSE;
-  GstBuffer *buf = NULL;
   GstCaps *caps = NULL;
-  GstFlowReturn flow_ret;
 
   /* 1: */
   /* If we can activate pull_range upstream, then read any ID3v1 and ID3v2
@@ -818,17 +821,14 @@ gst_id3demux_sink_activate (GstPad * sinkpad)
     id3demux->send_tag_event = TRUE;
   }
 
-  flow_ret =
-      gst_id3demux_read_range (id3demux, 0, ID3_TYPE_FIND_MAX_SIZE, &buf);
-  if (flow_ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (id3demux, "Could not read data from start of file ret=%d",
-        flow_ret);
-    goto done_activate;
-  }
+  /* 3 - Do typefinding on data */
+  caps = gst_type_find_helper_get_range (GST_OBJECT (id3demux),
+      (GstTypeFindHelperGetRangeFunction) gst_id3demux_read_range,
+      id3demux->upstream_size - id3demux->strip_start - id3demux->strip_end,
+      &probability);
 
-  caps = gst_id3demux_do_typefind (id3demux, buf);
-  gst_buffer_unref (buf);
-  buf = NULL;
+  GST_DEBUG_OBJECT (id3demux, "Found type %" GST_PTR_FORMAT " with a "
+      "probability of %u", caps, probability);
 
   /* 4 - Deactivate pull mode */
   if (!gst_pad_activate_pull (sinkpad, FALSE)) {
@@ -874,8 +874,6 @@ gst_id3demux_sink_activate (GstPad * sinkpad)
   }
 
 done_activate:
-  if (buf)
-    gst_buffer_unref (buf);
 
   return ret;
 }
@@ -1023,78 +1021,6 @@ gst_id3demux_get_query_types (GstPad * pad)
   };
 
   return types;
-}
-
-typedef struct
-{
-  guint best_probability;
-  GstCaps *caps;
-  GstBuffer *buffer;
-}
-
-SimpleTypeFind;
-guint8 *
-simple_find_peek (gpointer data, gint64 offset, guint size)
-{
-  SimpleTypeFind *find = (SimpleTypeFind *) data;
-
-  if (offset < 0)
-    return NULL;
-
-  if (GST_BUFFER_SIZE (find->buffer) >= offset + size) {
-    return GST_BUFFER_DATA (find->buffer) + offset;
-  }
-  return NULL;
-}
-static void
-simple_find_suggest (gpointer data, guint probability, const GstCaps * caps)
-{
-  SimpleTypeFind *find = (SimpleTypeFind *) data;
-
-  if (probability > find->best_probability) {
-    GstCaps *copy = gst_caps_copy (caps);
-
-    gst_caps_replace (&find->caps, copy);
-    gst_caps_unref (copy);
-    find->best_probability = probability;
-  }
-}
-
-static GstCaps *
-gst_id3demux_do_typefind (GstID3Demux * id3demux, GstBuffer * buffer)
-{
-  GList *walk, *type_list;
-  SimpleTypeFind find;
-  GstTypeFind gst_find;
-
-  walk = type_list = gst_type_find_factory_get_list ();
-
-  find.buffer = buffer;
-  find.best_probability = 0;
-  find.caps = NULL;
-  gst_find.data = &find;
-  gst_find.peek = simple_find_peek;
-  gst_find.get_length = NULL;
-  gst_find.suggest = simple_find_suggest;
-  while (walk) {
-    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
-
-    gst_type_find_factory_call_function (factory, &gst_find);
-    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
-      break;
-    walk = g_list_next (walk);
-  }
-  gst_plugin_feature_list_free (type_list);
-  if (find.best_probability > 0) {
-    GST_DEBUG ("Found caps %" GST_PTR_FORMAT " with buf size %u", find.caps,
-        GST_BUFFER_SIZE (buffer));
-    return find.caps;
-  }
-
-  if (find.caps)
-    gst_caps_unref (find.caps);
-
-  return NULL;
 }
 
 static void
