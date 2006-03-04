@@ -119,7 +119,8 @@ typedef enum
  * @GST_RESOURCE_ERROR_WRITE: used when the resource can't be written to.
  * @GST_RESOURCE_ERROR_SEEK: used when a seek on the resource fails.
  * @GST_RESOURCE_ERROR_SYNC: used when a synchronize on the resource fails.
- * @GST_RESOURCE_ERROR_SETTINGS: used when settings can't be manipulated on
+ * @GST_RESOURCE_ERROR_SETTINGS: used when settings can't be manipulated on.
+ * @GST_RESOURCE_ERROR_NO_SPACE_LEFT: used when the resource has no space left.
  * @GST_RESOURCE_ERROR_NUM_ERRORS: the number of library error types.
  *
  * Resource errors are for any resource used by an element:
@@ -141,6 +142,7 @@ typedef enum
   GST_RESOURCE_ERROR_SEEK,
   GST_RESOURCE_ERROR_SYNC,
   GST_RESOURCE_ERROR_SETTINGS,
+  GST_RESOURCE_ERROR_NO_SPACE_LEFT,
   GST_RESOURCE_ERROR_NUM_ERRORS
 } GstResourceError;
 

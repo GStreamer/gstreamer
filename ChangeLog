@@ -1,3 +1,10 @@
+2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsterror.c: (_gst_resource_errors_init):
+	* gst/gsterror.h:
+	  Add GST_RESOURCE_ERROR_NO_SPACE_LEFT (for #333352;
+	  patch by: Ross Burton <ross at burtonini dot com>).
+
 2006-03-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gst.c:

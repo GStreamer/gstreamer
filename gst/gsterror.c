@@ -203,6 +203,7 @@ _gst_resource_errors_init (void)
   TABLE (t, RESOURCE, SYNC, N_("Could not synchronize on resource."));
   TABLE (t, RESOURCE, SETTINGS,
       N_("Could not get/set settings from/on resource."));
+  TABLE (t, RESOURCE, NO_SPACE_LEFT, N_("No space left on the resource."));
 
   return t;
 }
