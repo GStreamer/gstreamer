@@ -121,7 +121,7 @@ typedef enum
  * @GST_RESOURCE_ERROR_SYNC: used when a synchronize on the resource fails.
  * @GST_RESOURCE_ERROR_SETTINGS: used when settings can't be manipulated on.
  * @GST_RESOURCE_ERROR_NO_SPACE_LEFT: used when the resource has no space left.
- * @GST_RESOURCE_ERROR_NUM_ERRORS: the number of library error types.
+ * @GST_RESOURCE_ERROR_NUM_ERRORS: the number of resource error types.
  *
  * Resource errors are for any resource used by an element:
  * memory, files, network connections, process space, ...
@@ -166,7 +166,7 @@ typedef enum
  * @GST_STREAM_ERROR_MUX: used when muxing fails.
  * @GST_STREAM_ERROR_FORMAT: used when the stream is of the wrong format
  * (for example, wrong caps).
- * @GST_STREAM_ERROR_NUM_ERRORS: the number of library error types.
+ * @GST_STREAM_ERROR_NUM_ERRORS: the number of stream error types.
  *
  * Stream errors are for anything related to the stream being processed:
  * format errors, media type errors, ...

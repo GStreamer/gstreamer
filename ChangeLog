@@ -1,5 +1,10 @@
 2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gsterror.h:
+	  Fix some minor docs errors.
+
+2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gsterror.c: (_gst_resource_errors_init):
 	* gst/gsterror.h:
 	  Add GST_RESOURCE_ERROR_NO_SPACE_LEFT (for #333352;
