@@ -1,3 +1,13 @@
+2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	(gst_sunaudiomixer_ctrl_get_volume),
+	(gst_sunaudiomixer_ctrl_set_volume):
+	* sys/sunaudio/gstsunaudiomixertrack.c:
+	(gst_sunaudiomixer_track_new):
+	  Remove unused variables, breaks build from CVS
+	  with -Werror (#333392, patch by: Benjamin Pineau)
+
 2006-03-03  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/Makefile.am:

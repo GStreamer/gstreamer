@@ -89,7 +89,6 @@ gst_sunaudiomixer_track_new (gint track_num, gint max_chans, gint flags)
 {
   GstSunAudioMixerTrack *sunaudiotrack;
   GstMixerTrack *track;
-  gint volume;
 
   if (!labels)
     fill_labels ();

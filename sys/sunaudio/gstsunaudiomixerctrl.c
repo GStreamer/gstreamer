@@ -136,7 +136,6 @@ void
 gst_sunaudiomixer_ctrl_get_volume (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gint * volumes)
 {
-  gint volume;
   struct audio_info audioinfo;
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
 
@@ -168,7 +167,6 @@ gst_sunaudiomixer_ctrl_set_volume (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gint * volumes)
 {
   gint volume;
-  gchar buf[100];
   struct audio_info audioinfo;
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
 
