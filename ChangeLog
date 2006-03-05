@@ -1,3 +1,25 @@
+2006-03-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ogg/README:
+	  updated with some examples
+	* ext/theora/theoraenc.c: (granulepos_to_timestamp),
+	(granulepos_add), (theora_buffer_from_packet):
+	* ext/vorbis/vorbisenc.c: (granulepos_to_timestamp_offset),
+	(granulepos_to_timestamp), (gst_vorbisenc_buffer_from_packet),
+	(gst_vorbisenc_chain):
+	  implement strategy from ext/ogg/README
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_buffer_from_page),
+	(gst_ogg_mux_push_buffer), (gst_ogg_mux_dequeue_page),
+	(gst_ogg_mux_pad_queue_page), (gst_ogg_mux_compare_pads),
+	(gst_ogg_mux_queue_pads), (gst_ogg_mux_collected):
+	  Fix muxer so that oggz-validate is happy with all streams;
+	  except for no eos mark, and the BOS page ordering
+	* tests/check/pipelines/theoraenc.c: (check_buffer_is_header),
+	(check_buffer_granulepos):
+	* tests/check/pipelines/vorbisenc.c: (check_buffer_granulepos):
+	  update tests to check for OFFSET being set as requested
+	  fixed type of granulepos, it's not a ClockTime
+
 2006-03-05  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),

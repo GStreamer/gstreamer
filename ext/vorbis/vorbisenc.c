@@ -93,13 +93,26 @@ enum
 
 static GstFlowReturn gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc);
 
+/* this function takes into account the granulepos_offset and the subgranule
+ * time offset */
 static GstClockTime
-granulepos_to_clocktime (GstVorbisEnc * vorbisenc, ogg_int64_t granulepos)
+granulepos_to_timestamp_offset (GstVorbisEnc * vorbisenc,
+    ogg_int64_t granulepos)
 {
   if (granulepos >= 0)
     return gst_util_uint64_scale ((guint64) granulepos
         + vorbisenc->granulepos_offset, GST_SECOND, vorbisenc->frequency)
         + vorbisenc->subgranule_offset;
+  return GST_CLOCK_TIME_NONE;
+}
+
+/* this function does a straight granulepos -> timestamp conversion */
+static GstClockTime
+granulepos_to_timestamp (GstVorbisEnc * vorbisenc, ogg_int64_t granulepos)
+{
+  if (granulepos >= 0)
+    return gst_util_uint64_scale ((guint64) granulepos,
+        GST_SECOND, vorbisenc->frequency);
   return GST_CLOCK_TIME_NONE;
 }
 
@@ -807,18 +820,23 @@ gst_vorbisenc_buffer_from_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
 
   outbuf = gst_buffer_new_and_alloc (packet->bytes);
   memcpy (GST_BUFFER_DATA (outbuf), packet->packet, packet->bytes);
-  GST_BUFFER_OFFSET (outbuf) = vorbisenc->bytes_out;
+  /* see ext/ogg/README; OFFSET_END takes "our" granulepos, OFFSET its
+   * time representation */
   GST_BUFFER_OFFSET_END (outbuf) = packet->granulepos +
       vorbisenc->granulepos_offset;
+  GST_BUFFER_OFFSET (outbuf) = granulepos_to_timestamp (vorbisenc,
+      GST_BUFFER_OFFSET_END (outbuf));
   GST_BUFFER_TIMESTAMP (outbuf) = vorbisenc->next_ts;
 
-  /* need to pass in an unadjusted granulepos here */
-  vorbisenc->next_ts = granulepos_to_clocktime (vorbisenc, packet->granulepos);
-
+  /* update the next timestamp, taking granulepos_offset and subgranule offset
+   * into account */
+  vorbisenc->next_ts =
+      granulepos_to_timestamp_offset (vorbisenc, packet->granulepos);
   GST_BUFFER_DURATION (outbuf) =
       vorbisenc->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
 
-  GST_DEBUG ("encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+  GST_LOG_OBJECT (vorbisenc, "encoded buffer of %d bytes",
+      GST_BUFFER_SIZE (outbuf));
   return outbuf;
 }
 
@@ -1004,7 +1022,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
         (GST_BUFFER_TIMESTAMP (buffer), vorbisenc->frequency, GST_SECOND);
     vorbisenc->subgranule_offset = 0;
     vorbisenc->subgranule_offset =
-        vorbisenc->next_ts - granulepos_to_clocktime (vorbisenc, 0);
+        vorbisenc->next_ts - granulepos_to_timestamp_offset (vorbisenc, 0);
 
     vorbisenc->header_sent = TRUE;
   }

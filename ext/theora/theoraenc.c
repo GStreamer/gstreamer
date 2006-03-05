@@ -130,6 +130,25 @@ enum
   /* FILL ME */
 };
 
+/* this function does a straight granulepos -> timestamp conversion */
+static GstClockTime
+granulepos_to_timestamp (GstTheoraEnc * theoraenc, ogg_int64_t granulepos)
+{
+  guint64 iframe, pframe;
+  int shift = theoraenc->granule_shift;
+
+  if (granulepos < 0)
+    return GST_CLOCK_TIME_NONE;
+
+  iframe = granulepos >> shift;
+  pframe = granulepos - (iframe << shift);
+
+  /* num and den are 32 bit, so we can safely multiply with GST_SECOND */
+  return gst_util_uint64_scale ((guint64) (iframe + pframe),
+      GST_SECOND * theoraenc->info.fps_denominator,
+      theoraenc->info.fps_numerator);
+}
+
 static GstElementDetails theora_enc_details = {
   "TheoraEnc",
   "Codec/Encoder/Video",
@@ -365,7 +384,7 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 static guint64
 granulepos_add (guint64 granulepos, guint64 addend, gint shift)
 {
-  GstClockTime iframe, pframe;
+  guint64 iframe, pframe;
 
   iframe = granulepos >> shift;
   pframe = granulepos - (iframe << shift);
@@ -388,10 +407,14 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
     goto no_buffer;
 
   memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
-  GST_BUFFER_OFFSET (buf) = enc->bytes_out;
+  /* see ext/ogg/README; OFFSET_END takes "our" granulepos, OFFSET its
+   * time representation */
   GST_BUFFER_OFFSET_END (buf) =
       granulepos_add (packet->granulepos, enc->granulepos_offset,
       enc->granule_shift);
+  GST_BUFFER_OFFSET (buf) = granulepos_to_timestamp (enc,
+      GST_BUFFER_OFFSET_END (buf));
+
   GST_BUFFER_TIMESTAMP (buf) = timestamp + enc->timestamp_offset;
   GST_BUFFER_DURATION (buf) = duration;
 

@@ -341,4 +341,27 @@ In practice
 TODO
 ----
 - decide on a proper mechanism for communicating extra per-buffer fields
+- the ogg muxer sets timestamp and duration on outgoing ogg pages based on
+  timestamp/duration of incoming ogg packets.
+  Note that:
+  - since the ogg muxer *has* to output pages sorted by gp time, representing
+    end time of the page, this means that the buffer's timestamps are not
+    necessarily monotonically increasing
+  - timestamp + duration of buffers don't match up; the duration represents
+    the length of the ogg page *for that stream*.  Hence, for a normal
+    two-stream file, the sum of all durations is twice the length of the
+    muxed file.
 
+TESTING
+-------
+Proper muxing can be tested by generating test files with command lines like:
+- video and audio start from 0:
+gst-launch -v videotestsrc ! theoraenc ! oggmux audiotestsrc ! audioconvert ! vorbisenc ! identity ! oggmux0. oggmux0. ! filesink location=test.ogg
+
+- video starts after audio:
+gst-launch -v videotestsrc timestamp-offset=500000000 ! theoraenc ! oggmux audiotestsrc ! audioconvert ! vorbisenc ! identity ! oggmux0. oggmux0. ! filesink location=test.ogg
+
+- audio starts after video:
+gst-launch -v videotestsrc ! theoraenc ! oggmux audiotestsrc timestamp-offset=500000000 ! audioconvert ! vorbisenc ! identity ! oggmux0. oggmux0. ! filesink location=test.ogg
+
+The resulting files can be verified with oggz-validate for correctness.

@@ -124,12 +124,24 @@ check_buffer_duration (GstBuffer * buffer, GstClockTime duration)
 }
 
 static void
-check_buffer_granulepos (GstBuffer * buffer, GstClockTime granulepos)
+check_buffer_granulepos (GstBuffer * buffer, gint64 granulepos)
 {
+  GstClockTime clocktime;
+
   fail_unless (GST_BUFFER_OFFSET_END (buffer) == granulepos,
       "expected granulepos %" G_GUINT64_FORMAT
       ", but got granulepos %" G_GUINT64_FORMAT,
       granulepos, GST_BUFFER_OFFSET_END (buffer));
+
+  /* contrary to what we record as TIMESTAMP, we can use OFFSET to check
+   * the granulepos correctly here */
+  clocktime = gst_util_uint64_scale (GST_BUFFER_OFFSET_END (buffer), 44100,
+      GST_SECOND);
+
+  fail_unless (clocktime == GST_BUFFER_OFFSET (buffer),
+      "expected OFFSET set to clocktime %" GST_TIME_FORMAT
+      ", but got %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (clocktime), GST_TIME_ARGS (GST_BUFFER_OFFSET (buffer)));
 }
 
 /* this check is here to check that the granulepos we derive from the timestamp
@@ -140,7 +152,7 @@ check_buffer_granulepos (GstBuffer * buffer, GstClockTime granulepos)
 static void
 check_buffer_granulepos_from_endtime (GstBuffer * buffer, GstClockTime endtime)
 {
-  GstClockTime granulepos, expected;
+  gint64 granulepos, expected;
 
   granulepos = GST_BUFFER_OFFSET_END (buffer);
   expected = gst_util_uint64_scale (endtime, 44100, GST_SECOND);
@@ -202,7 +214,8 @@ GST_START_TEST (test_granulepos_offset)
   gst_buffer_unref (buffer);
 
   {
-    GstClockTime next_timestamp, last_granulepos;
+    GstClockTime next_timestamp;
+    gint64 last_granulepos;
 
     /* first buffer should have timestamp of TIMESTAMP_OFFSET, granulepos to
      * match the timestamp of the end of the last sample in the output buffer.
@@ -291,7 +304,8 @@ GST_START_TEST (test_timestamps)
   gst_buffer_unref (buffer);
 
   {
-    GstClockTime next_timestamp, last_granulepos;
+    GstClockTime next_timestamp;
+    gint64 last_granulepos;
 
     /* first buffer has timestamp 0 */
     buffer = get_buffer (bin, pad);
