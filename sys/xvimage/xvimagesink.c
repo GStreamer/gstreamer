@@ -473,7 +473,6 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
 
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
 
-
   xvimage = (GstXvImageBuffer *) gst_mini_object_new (GST_TYPE_XVIMAGE_BUFFER);
 
   structure = gst_caps_get_structure (caps, 0);
@@ -1834,7 +1833,8 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
       xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
           GST_BUFFER_CAPS (buf));
 
-      if (!xvimagesink->xvimage)
+      if ((!xvimagesink->xvimage) ||
+          (xvimagesink->xvimage->size < GST_BUFFER_SIZE (buf)))
         goto no_image;
     }
 
@@ -1976,6 +1976,11 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     /* We found no suitable image in the pool. Creating... */
     GST_DEBUG_OBJECT (xvimagesink, "no usable image in pool, creating xvimage");
     xvimage = gst_xvimagesink_xvimage_new (xvimagesink, intersection);
+    if (xvimage->size < size) {
+      /* This image is unusable. Destroying... */
+      gst_xvimage_buffer_free (xvimage);
+      xvimage = NULL;
+    }
   }
 
   if (xvimage) {
