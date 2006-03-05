@@ -1,3 +1,10 @@
+2006-03-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_transform_caps):
+	  Make sure caps are writable before passing them to
+	  gst_caps_append().
+
 2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsterror.h:

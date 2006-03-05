@@ -392,6 +392,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
       temp = klass->transform_caps (trans, direction, caps);
       GST_DEBUG_OBJECT (trans, "  to: %" GST_PTR_FORMAT, temp);
 
+      temp = gst_caps_make_writable (temp);
       gst_caps_append (ret, temp);
     } else {
       /* we send caps with just one structure to the transform
@@ -405,6 +406,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
         gst_caps_unref (nth);
         GST_DEBUG_OBJECT (trans, "  to[%d]: %" GST_PTR_FORMAT, i, temp);
 
+        temp = gst_caps_make_writable (temp);
         gst_caps_append (ret, temp);
       }
     }
