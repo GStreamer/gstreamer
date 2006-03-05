@@ -292,6 +292,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("FFmpeg MPEG-4");
       break;
 
+    case GST_MAKE_FOURCC ('3', 'i', 'v', 'd'):
+    case GST_MAKE_FOURCC ('3', 'I', 'V', 'D'):
+      if (codec_name)
+        *codec_name = g_strdup ("Microsoft MPEG-4 4.3");        /* FIXME? */
+      return gst_caps_from_string ("video/x-msmpeg, msmpegversion = (int) 43");
+
     case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
     case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
       caps = gst_caps_new_simple ("video/x-3ivx", NULL);
