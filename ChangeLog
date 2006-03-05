@@ -1,5 +1,12 @@
 2006-03-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	  Give id3 and ape tag typefinders a rank slightly higher
+	  than PRIMARY to ensure they're always run before any of
+	  the other typefinders (in particular wav and mp3) (#324186).
+
+2006-03-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
 	  Add support for '3IVD' fourcc (#333403).
 

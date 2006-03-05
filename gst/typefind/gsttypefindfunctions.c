@@ -2181,9 +2181,9 @@ plugin_init (GstPlugin * plugin)
       flac_exts, "fLaC", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "video/x-fli", GST_RANK_MARGINAL, flx_type_find,
       flx_exts, FLX_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "application/x-id3", GST_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "application/x-id3", GST_RANK_PRIMARY + 2,
       id3_type_find, id3_exts, ID3_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "application/x-apetag", GST_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "application/x-apetag", GST_RANK_PRIMARY + 1,
       apetag_type_find, apetag_exts, APETAG_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-ttafile", GST_RANK_PRIMARY,
       tta_type_find, tta_exts, TTA_CAPS, NULL, NULL);
