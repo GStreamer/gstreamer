@@ -927,7 +927,7 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     pad->headers = gst_ogg_mux_get_headers (pad);
   }
 
-  GST_LOG_OBJECT (mux, "creating first headers");
+  GST_LOG_OBJECT (mux, "creating BOS pages");
   walk = mux->collect->data;
   while (walk) {
     GstOggPad *pad;
@@ -935,16 +935,20 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     ogg_packet packet;
     ogg_page page;
     GstPad *thepad;
+    GstCaps *caps;
+    GstStructure *structure;
+    GstBuffer *hbuf;
 
     pad = (GstOggPad *) walk->data;
     thepad = pad->collect.pad;
+    caps = gst_pad_get_negotiated_caps (thepad);
+    structure = gst_caps_get_structure (caps, 0);
 
     walk = walk->next;
 
     pad->packetno = 0;
 
-    GST_LOG_OBJECT (mux, "looping over headers for pad %s:%s",
-        GST_DEBUG_PAD_NAME (thepad));
+    GST_LOG_OBJECT (thepad, "looping over headers");
 
     if (pad->headers) {
       buf = GST_BUFFER (pad->headers->data);
@@ -977,13 +981,25 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     ogg_stream_packetin (&pad->stream, &packet);
     gst_buffer_unref (buf);
 
-    GST_LOG_OBJECT (mux, "flushing page with first packet");
-    while (ogg_stream_flush (&pad->stream, &page)) {
-      GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
+    GST_LOG_OBJECT (thepad, "flushing out BOS page");
+    if (!ogg_stream_flush (&pad->stream, &page))
+      g_critical ("Could not flush BOS page");
 
-      GST_LOG_OBJECT (mux, "swapped out page");
+    hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
+
+    GST_LOG_OBJECT (mux, "swapped out page with mime type %s",
+        gst_structure_get_name (structure));
+
+    /* quick hack: put theora pages at the front.
+     * Ideally, we would have a settable enum for which Ogg
+     * profile we work with, and order based on that */
+    if (strcmp (gst_structure_get_name (structure), "video/x-theora") == 0) {
+      GST_DEBUG_OBJECT (thepad, "putting Theora page at the front");
+      hbufs = g_list_prepend (hbufs, hbuf);
+    } else {
       hbufs = g_list_append (hbufs, hbuf);
     }
+    gst_caps_unref (caps);
   }
 
   GST_LOG_OBJECT (mux, "creating next headers");

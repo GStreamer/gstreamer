@@ -1,3 +1,10 @@
+2006-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_buffer_from_page),
+	(gst_ogg_mux_send_headers), (gst_ogg_mux_collected):
+	  put Theora BOS pages before others.  This hardcodes
+	  the Ogg/Theora I profile, but hey.
+
 2006-03-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ogg/README:
