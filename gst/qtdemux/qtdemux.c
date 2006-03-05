@@ -3189,6 +3189,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       _codec ("MPEG-4 video");
       return gst_caps_from_string ("video/mpeg, "
           "mpegversion = (int) 4, " "systemstream = (boolean) false");
+    case GST_MAKE_FOURCC ('3', 'i', 'v', 'd'):
+    case GST_MAKE_FOURCC ('3', 'I', 'V', 'D'):
+      _codec ("Microsoft MPEG-4 4.3");  /* FIXME? */
+      return gst_caps_from_string ("video/x-msmpeg, msmpegversion = (int) 43");
     case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
     case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
       _codec ("3ivX video");

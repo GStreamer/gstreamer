@@ -1,3 +1,8 @@
+2006-03-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
+	  Add support for '3IVD' fourcc (#333403).
+
 2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/faad/gstfaad.c: (gst_faad_init), (gst_faad_send_tags),
