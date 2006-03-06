@@ -242,7 +242,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
       g_param_spec_int64 ("max-lateness", "Max Lateness",
           "Maximum number of nanoseconds that a buffer can be late before it "
           "is dropped (-1 unlimited)", -1, G_MAXINT64, DEFAULT_MAX_LATENESS,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          G_PARAM_READWRITE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
