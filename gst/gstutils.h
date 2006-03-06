@@ -189,7 +189,7 @@ static gboolean interface_as_function ## _supported (type *object, GType iface_t
 static void                                                             \
 type_as_function ## _implements_interface_init (GstImplementsInterfaceClass *klass)     \
 {                                                                       \
-  klass->supported = (gpointer)interface_as_function ## _supported;     \
+  klass->supported = (gboolean (*)(GstImplementsInterface*, GType))interface_as_function ## _supported;     \
 }                                                                       \
                                                                         \
 static void                                                             \
