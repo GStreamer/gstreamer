@@ -99,6 +99,7 @@ gst_video_sink_init (GstVideoSink * videosink)
 {
   videosink->width = 0;
   videosink->height = 0;
+  GST_BASE_SINK (videosink)->abidata.ABI.max_lateness = 20 * GST_MSECOND;
 }
 
 static void
@@ -110,7 +111,7 @@ gst_video_sink_class_init (GstVideoSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void

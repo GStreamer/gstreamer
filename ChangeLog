@@ -1,3 +1,9 @@
+2006-03-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/video/gstvideosink.c: (gst_video_sink_init),
+	(gst_video_sink_class_init):
+	Throw away frames that are later than 20 ms.
+
 2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
