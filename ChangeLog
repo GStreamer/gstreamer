@@ -1,3 +1,10 @@
+2006-03-06  Michael Smith  <msmith@fluendo.com>
+
+	* gst/gststructure.override:
+	* gst/gsttaglist.override:
+	  Don't leak PyObjects wrapping GValues when indexing into a
+	  GStStructure. Also fix a copy/paste identical bug in taglists.
+
 2006-03-02  Edward Hervey  <edward@fluendo.com>
 
 	* gst/pygstminiobject.h:

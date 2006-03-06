@@ -84,8 +84,6 @@ _wrap_gst_tag_list_subscript(PyGObject *self, PyObject *py_key)
 		PyErr_SetString(PyExc_KeyError, field);
 	}
 		
-	if (v != NULL)
-		Py_INCREF(v);
 	return v;
 }
 

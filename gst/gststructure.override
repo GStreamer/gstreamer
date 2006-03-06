@@ -193,8 +193,6 @@ _wrap_gst_structure_subscript(PyGObject *self, PyObject *py_key)
 		PyErr_SetString(PyExc_KeyError, field);
 	}
 		
-	if (v != NULL)
-		Py_INCREF(v);
 	return v;
 }
 
