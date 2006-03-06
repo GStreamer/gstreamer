@@ -39,23 +39,20 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MUSEPACK_DEC))
 
 typedef struct _GstMusepackDec {
-  GstElement element;
+  GstElement    element;
 
-  /* pads */
-  GstPad *srcpad, *sinkpad;
-  guint64 offset;
+  GstPad       *srcpad;
+  GstPad       *sinkpad;
+  guint64       offset;
 
   /* MUSEPACK_DEC object */
-  mpc_decoder *d;
-  mpc_reader *r;
-  gboolean init;
+  mpc_decoder  *d;
+  mpc_reader   *r;
 
-  /* bytes per sample and sample rate */
-  guint       bps;
-  guint       rate;
+  gint          bps;     /* bytes per sample */ /* ATOMIC */
+  gint          rate;    /* sample rate      */ /* ATOMIC */
 
-  /* currently configured segment, in samples (DEFAULT format) */
-  GstSegment  segment;
+  GstSegment    segment; /* configured segment in samples (DEFAULT format) */
 } GstMusepackDec;
 
 typedef struct _GstMusepackDecClass {

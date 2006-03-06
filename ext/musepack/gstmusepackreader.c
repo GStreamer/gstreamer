@@ -62,7 +62,8 @@ gst_musepack_reader_peek (void *this, void *ptr, mpc_int32_t size)
 
   if (read < size) {
     GST_WARNING_OBJECT (musepackdec, "Short read: got only %u bytes of %u "
-        "bytes requested", read, size);
+        "bytes requested at offset %" G_GINT64_FORMAT, read, size,
+        musepackdec->offset);
     /* GST_ELEMENT_ERROR (musepackdec, RESOURCE, READ, (NULL), (NULL)); */
   }
 

@@ -1,5 +1,11 @@
 2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/musepack/gstmusepackdec.h:
+	* ext/musepack/gstmusepackreader.c: (gst_musepack_reader_peek):
+	  Forgot those two.
+
+2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_base_init),
 	(gst_musepackdec_init), (gst_musepackdec_send_newsegment),
 	(gst_musepackdec_handle_seek_event),
