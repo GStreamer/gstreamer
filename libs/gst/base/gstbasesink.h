@@ -91,7 +91,9 @@ struct _GstBaseSink {
   union {
     struct {
       /* segment used for clipping incomming buffers */
-      GstSegment  *clip_segment;
+      GstSegment    *clip_segment;
+      /* max amount of time a buffer can be late, -1 no limit. */
+      gint64	     max_lateness;
     } ABI;
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING_LARGE + 0];

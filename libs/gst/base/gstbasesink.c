@@ -132,13 +132,16 @@ enum
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE /* fixme: enable me */
 #define DEFAULT_CAN_ACTIVATE_PUSH TRUE
 
-#define DEFAULT_SYNC TRUE
+#define DEFAULT_PREROLL_QUEUE_LEN 	0
+#define DEFAULT_SYNC 			TRUE
+#define DEFAULT_MAX_LATENESS		-1
 
 enum
 {
   PROP_0,
   PROP_PREROLL_QUEUE_LEN,
-  PROP_SYNC
+  PROP_SYNC,
+  PROP_MAX_LATENESS
 };
 
 static GstElementClass *parent_class = NULL;
@@ -226,13 +229,20 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * upstream element, ie, the BUFFER_SIZE event. */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_PREROLL_QUEUE_LEN,
-      g_param_spec_uint ("preroll-queue-len", "preroll-queue-len",
-          "Number of buffers to queue during preroll", 0, G_MAXUINT, 0,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+      g_param_spec_uint ("preroll-queue-len", "Preroll queue length",
+          "Number of buffers to queue during preroll", 0, G_MAXUINT,
+          DEFAULT_PREROLL_QUEUE_LEN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
           G_PARAM_READWRITE));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_MAX_LATENESS,
+      g_param_spec_int64 ("max-lateness", "Max Lateness",
+          "Maximum number of nanoseconds that a buffer can be late before it "
+          "is dropped (-1 unlimited)", -1, G_MAXINT64, DEFAULT_MAX_LATENESS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
@@ -342,6 +352,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->pad_mode = GST_ACTIVATE_NONE;
   basesink->preroll_queue = g_queue_new ();
   basesink->abidata.ABI.clip_segment = gst_segment_new ();
+  basesink->abidata.ABI.max_lateness = -1;
 
   basesink->can_activate_push = DEFAULT_CAN_ACTIVATE_PUSH;
   basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
@@ -382,6 +393,11 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
       sink->sync = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (sink);
       break;
+    case PROP_MAX_LATENESS:
+      GST_OBJECT_LOCK (sink);
+      sink->abidata.ABI.max_lateness = g_value_get_int64 (value);
+      GST_OBJECT_UNLOCK (sink);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -403,6 +419,11 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_SYNC:
       GST_OBJECT_LOCK (sink);
       g_value_set_boolean (value, sink->sync);
+      GST_OBJECT_UNLOCK (sink);
+      break;
+    case PROP_MAX_LATENESS:
+      GST_OBJECT_LOCK (sink);
+      g_value_set_int64 (value, sink->abidata.ABI.max_lateness);
       GST_OBJECT_UNLOCK (sink);
       break;
     default:
@@ -815,13 +836,16 @@ again:
     goto again;
   }
 
-  if (status == GST_CLOCK_EARLY && jitter > (10 * GST_MSECOND)) {
-    /* FIXME, update clock stats here and do some QoS */
-    GST_DEBUG_OBJECT (basesink, "late: jitter!! %" G_GINT64_FORMAT "\n",
-        jitter);
-    *late = TRUE;
-  } else {
-    *late = FALSE;
+  *late = FALSE;
+
+  if (basesink->abidata.ABI.max_lateness != -1) {
+    if (status == GST_CLOCK_EARLY
+        && jitter > basesink->abidata.ABI.max_lateness) {
+      /* FIXME, update clock stats here and do some QoS */
+      GST_DEBUG_OBJECT (basesink, "late: jitter!! %" G_GINT64_FORMAT "\n",
+          jitter);
+      *late = TRUE;
+    }
   }
 
   return GST_FLOW_OK;
