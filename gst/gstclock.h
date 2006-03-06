@@ -177,10 +177,14 @@ G_STMT_START {						\
  * Format @t for the GST_TIME_FORMAT format string.
  */
 #define GST_TIME_ARGS(t) \
-        (guint) (((GstClockTime)(t)) / (GST_SECOND * 60 * 60)), \
-        (guint) ((((GstClockTime)(t)) / (GST_SECOND * 60)) % 60), \
-        (guint) ((((GstClockTime)(t)) / GST_SECOND) % 60), \
-        (guint) (((GstClockTime)(t)) % GST_SECOND)
+        GST_CLOCK_TIME_IS_VALID (t) ? \
+        (guint) (((GstClockTime)(t)) / (GST_SECOND * 60 * 60)) : 99, \
+        GST_CLOCK_TIME_IS_VALID (t) ? \
+        (guint) ((((GstClockTime)(t)) / (GST_SECOND * 60)) % 60) : 99, \
+        GST_CLOCK_TIME_IS_VALID (t) ? \
+        (guint) ((((GstClockTime)(t)) / GST_SECOND) % 60) : 99, \
+        GST_CLOCK_TIME_IS_VALID (t) ? \
+        (guint) (((GstClockTime)(t)) % GST_SECOND) : 999999999
 
 /**
  * GST_CLOCK_ENTRY_TRACE_NAME:

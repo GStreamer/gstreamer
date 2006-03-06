@@ -1,3 +1,8 @@
+2006-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstclock.h:
+	  Show GST_CLOCK_TIME_NONE as 99:99:99.999999999
+
 2006-03-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gstbasetransform.c:
