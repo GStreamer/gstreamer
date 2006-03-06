@@ -11,6 +11,22 @@
   </para>
 
   <variablelist>
+
+    <varlistentry>
+      <term>6 Mar 2006</term>
+      <listitem>
+<para>
+When I opened my eyes I was in a court room. There were masters McIlroy and
+Thompson sitting in the jury and master Kernighan too. There were the GStreamer
+developers standing in the defendant's place, accused of violating several laws
+of Unix philosophy and customer lock-down via running on a proprietary
+pipeline, different from that of the Unix systems. I heard Eric Raymond
+whispering "got to add this case to my book.
+</para>
+<para><emphasis>behdad's blog</emphasis></para>
+      </listitem>
+    </varlistentry>
+
     <varlistentry>
       <term>12 Sep 2005</term>
       <listitem>
