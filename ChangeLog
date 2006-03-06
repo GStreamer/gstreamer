@@ -1,3 +1,14 @@
+2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_base_init),
+	(gst_musepackdec_init), (gst_musepackdec_send_newsegment),
+	(gst_musepackdec_handle_seek_event),
+	(gst_musepackdec_get_src_query_types), (gst_musepackdec_src_query),
+	(gst_musepack_stream_init), (gst_musepackdec_sink_activate),
+	(gst_musepackdec_sink_activate_pull), (gst_musepackdec_loop),
+	(gst_musepackdec_change_state):
+	  Some cleanups; pause task when push fails.
+
 2006-03-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
