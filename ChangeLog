@@ -1,3 +1,14 @@
+2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_init), (gst_base_src_pad_check_get_range),
+	(gst_base_src_default_check_get_range):
+	* libs/gst/base/gstbasesrc.h:
+	  Add ::check_get_range() vfunc to GstBaseSrc (#332611),
+	  provide default implementation, and rename
+	  gst_base_src_check_get_range() to
+	  gst_base_src_pad_check_get_range() for clarity.
+
 2006-03-06  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init):

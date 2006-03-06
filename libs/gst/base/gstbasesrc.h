@@ -168,8 +168,16 @@ struct _GstBaseSrcClass {
   /* notify subclasses of a query */
   gboolean      (*query)        (GstBaseSrc *src, GstQuery *query);
 
+  /* check whether the source would support pull-based operation if
+   * it were to be opened now. This vfunc is optional, but should be
+   * implemented if possible to avoid unnecessary start/stop cycles.
+   * The default implementation will open and close the resource to
+   * find out whether get_range is supported and that is usually
+   * undesirable. */
+  gboolean      (*check_get_range) (GstBaseSrc *src);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 3];
 };
 
 GType gst_base_src_get_type (void);

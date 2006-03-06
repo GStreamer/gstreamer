@@ -270,7 +270,8 @@ static GstStateChangeReturn gst_base_src_change_state (GstElement * element,
     GstStateChange transition);
 
 static void gst_base_src_loop (GstPad * pad);
-static gboolean gst_base_src_check_get_range (GstPad * pad);
+static gboolean gst_base_src_pad_check_get_range (GstPad * pad);
+static gboolean gst_base_src_default_check_get_range (GstBaseSrc * bsrc);
 static GstFlowReturn gst_base_src_pad_get_range (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buf);
 static GstFlowReturn gst_base_src_get_range (GstBaseSrc * src, guint64 offset,
@@ -320,6 +321,8 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   klass->event = GST_DEBUG_FUNCPTR (gst_base_src_default_event);
   klass->do_seek = GST_DEBUG_FUNCPTR (gst_base_src_default_do_seek);
   klass->query = GST_DEBUG_FUNCPTR (gst_base_src_default_query);
+  klass->check_get_range =
+      GST_DEBUG_FUNCPTR (gst_base_src_default_check_get_range);
 }
 
 static void
@@ -355,7 +358,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
       GST_DEBUG_FUNCPTR (gst_base_src_event_handler));
   gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_base_src_query));
   gst_pad_set_checkgetrange_function (pad,
-      GST_DEBUG_FUNCPTR (gst_base_src_check_get_range));
+      GST_DEBUG_FUNCPTR (gst_base_src_pad_check_get_range));
   gst_pad_set_getrange_function (pad,
       GST_DEBUG_FUNCPTR (gst_base_src_pad_get_range));
   gst_pad_set_getcaps_function (pad, GST_DEBUG_FUNCPTR (gst_base_src_getcaps));
@@ -1267,14 +1270,37 @@ gst_base_src_pad_get_range (GstPad * pad, guint64 offset, guint length,
 }
 
 static gboolean
-gst_base_src_check_get_range (GstPad * pad)
+gst_base_src_pad_check_get_range (GstPad * pad)
 {
+  GstBaseSrcClass *bclass;
   GstBaseSrc *src;
   gboolean res;
 
   src = GST_BASE_SRC (gst_pad_get_parent (pad));
 
+  bclass = GST_BASE_SRC_GET_CLASS (src);
+
+  if (bclass->check_get_range == NULL) {
+    GST_WARNING_OBJECT (src, "no check_get_range function set");
+    return FALSE;
+  }
+
+  res = bclass->check_get_range (src);
+  GST_LOG_OBJECT (src, "%s() returned %d",
+      GST_DEBUG_FUNCPTR_NAME (bclass->check_get_range), (gint) res);
+
+  gst_object_unref (src);
+
+  return res;
+}
+
+static gboolean
+gst_base_src_default_check_get_range (GstBaseSrc * src)
+{
+  gboolean res;
+
   if (!GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)) {
+    GST_LOG_OBJECT (src, "doing start/stop to check get_range support");
     gst_base_src_start (src);
     gst_base_src_stop (src);
   }
@@ -1283,8 +1309,6 @@ gst_base_src_check_get_range (GstPad * pad)
    * and we are seekable, this condition is set in the random_access
    * flag and is set in the _start() method. */
   res = src->random_access;
-
-  gst_object_unref (src);
 
   return res;
 }
