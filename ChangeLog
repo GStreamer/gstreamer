@@ -1,3 +1,10 @@
+2006-03-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnome_vfs_sink_class_init):
+	  change location param details
+	* gst/volume/gstvolume.c: (plugin_init):
+	  correct plugin description
+
 2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_class_init),

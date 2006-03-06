@@ -178,8 +178,9 @@ gst_gnome_vfs_sink_class_init (GstGnomeVFSSinkClass * klass)
   gobject_class->get_property = gst_gnome_vfs_sink_get_property;
   gobject_class->finalize = gst_gnome_vfs_sink_finalize;
 
-  gst_element_class_install_std_props (GST_ELEMENT_CLASS (klass),
-      "location", ARG_LOCATION, G_PARAM_READWRITE, NULL);
+  g_object_class_install_property (gobject_class, ARG_LOCATION,
+      g_param_spec_string ("location", "File Location",
+          "Location of the file to write", NULL, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_URI,
       g_param_spec_boxed ("uri", "GnomeVFSURI", "URI for GnomeVFS",
           GST_TYPE_GNOME_VFS_URI, G_PARAM_READWRITE));
