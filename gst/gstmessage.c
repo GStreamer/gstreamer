@@ -250,7 +250,7 @@ _gst_message_copy (GstMessage * message)
   if (message->structure) {
     copy->structure = gst_structure_copy (message->structure);
     gst_structure_set_parent_refcount (copy->structure,
-        &message->mini_object.refcount);
+        &copy->mini_object.refcount);
   }
 
   return copy;

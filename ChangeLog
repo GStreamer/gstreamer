@@ -1,3 +1,9 @@
+2006-03-06  Michael Smith  <msmith@fluendo.com>
+
+	* gst/gstmessage.c: (_gst_message_copy):
+	  When copying a message, set the parent_refcount of the enclosed
+	  structure to point at the copy, not the original message.
+
 2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstutils.h:
