@@ -681,12 +681,15 @@ out_of_segment:
  * release the PREROLL_LOCK so that other threads can interrupt the entry.
  */
 static GstClockReturn
-gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time)
+gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
+    GstClockTimeDiff * jitter)
 {
   GstClockID id;
   GstClockReturn ret;
   GstClock *clock;
   GstClockTime base_time;
+
+  *jitter = 0;
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time)))
     goto invalid_time;
@@ -706,7 +709,7 @@ gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time)
   /* release the preroll lock while waiting */
   GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
 
-  ret = gst_clock_id_wait (id, NULL);
+  ret = gst_clock_id_wait (id, jitter);
 
   GST_PAD_PREROLL_LOCK (basesink->sinkpad);
   gst_clock_id_unref (id);
@@ -750,9 +753,10 @@ no_clock:
  */
 static GstFlowReturn
 gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
-    GstMiniObject * obj)
+    GstMiniObject * obj, gboolean * late)
 {
   GstClockTime start, stop;
+  GstClockTimeDiff jitter;
   gboolean syncable;
   GstClockReturn status = GST_CLOCK_OK;
 
@@ -797,7 +801,7 @@ again:
   /* preroll done, we can sync since we ar in PLAYING now. */
   GST_DEBUG_OBJECT (basesink, "waiting for clock");
   basesink->end_time = stop;
-  status = gst_base_sink_wait_clock (basesink, start);
+  status = gst_base_sink_wait_clock (basesink, start, &jitter);
   GST_DEBUG_OBJECT (basesink, "clock returned %d", status);
 
   /* waiting could be interrupted and we can be flushing now */
@@ -811,7 +815,14 @@ again:
     goto again;
   }
 
-  /* FIXME, update clock stats here and do some QoS */
+  if (status == GST_CLOCK_EARLY && jitter > (10 * GST_MSECOND)) {
+    /* FIXME, update clock stats here and do some QoS */
+    GST_DEBUG_OBJECT (basesink, "late: jitter!! %" G_GINT64_FORMAT "\n",
+        jitter);
+    *late = TRUE;
+  } else {
+    *late = FALSE;
+  }
 
   return GST_FLOW_OK;
 
@@ -845,14 +856,19 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBaseSinkClass *bclass;
+  gboolean late = FALSE;
 
   /* synchronize this object */
-  ret = gst_base_sink_do_sync (basesink, pad, obj);
+  ret = gst_base_sink_do_sync (basesink, pad, obj, &late);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto sync_failed;
 
   /* and now render */
   if (G_LIKELY (GST_IS_BUFFER (obj))) {
+    /* drop late messages unconditionally */
+    if (late)
+      goto dropped;
+
     bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
     GST_DEBUG_OBJECT (basesink, "rendering buffer %p", obj);
@@ -911,6 +927,12 @@ sync_failed:
     gst_mini_object_unref (obj);
 
     return ret;
+  }
+dropped:
+  {
+    GST_DEBUG_OBJECT (basesink, "buffer late, dropping, unref object %p", obj);
+    gst_mini_object_unref (obj);
+    return GST_FLOW_OK;
   }
 }
 
