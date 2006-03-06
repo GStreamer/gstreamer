@@ -809,7 +809,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
       if (strf != NULL) {
         gst_caps_set_simple (caps,
-            "bitrate", G_TYPE_INT, strf->av_bps * 8, NULL);
+            "bitrate", G_TYPE_INT, strf->av_bps * 8,
+            "depth", G_TYPE_INT, strf->size, NULL);
       } else {
         gst_caps_set_simple (caps,
             "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
