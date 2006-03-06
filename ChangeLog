@@ -1,3 +1,9 @@
+2006-03-06  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/libpng/gstpngdec.c: (gst_pngdec_caps_create_and_set): 
+	Implement paletted and grayscale png files handling.
+	(#150363).
+
 2006-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/speex/gstspeexenc.c: (gst_speexenc_set_header_on_caps),

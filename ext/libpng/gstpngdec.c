@@ -294,7 +294,8 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
 
   /* We don't handle 16 bits per color, strip down to 8 */
   if (bpc == 16) {
-    GST_LOG ("this is a 16 bits per channel PNG image, strip down to 8 bits");
+    GST_LOG_OBJECT (pngdec,
+        "this is a 16 bits per channel PNG image, strip down to 8 bits");
     png_set_strip_16 (pngdec->png);
   }
 
@@ -304,6 +305,23 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   /* HACK: The doc states that it's RGBA but apparently it's not... */
   if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)
     png_set_bgr (pngdec->png);
+
+  /* Gray scale converted to RGB and upscaled to 8 bits */
+  if ((color_type == PNG_COLOR_TYPE_GRAY_ALPHA) ||
+      (color_type == PNG_COLOR_TYPE_GRAY)) {
+    GST_LOG_OBJECT (pngdec, "converting grayscale png to RGB");
+    png_set_gray_to_rgb (pngdec->png);
+    if (bpc < 8) {              /* Convert to 8 bits */
+      GST_LOG_OBJECT (pngdec, "converting grayscale image to 8 bits");
+      png_set_gray_1_2_4_to_8 (pngdec->png);
+    }
+  }
+
+  /* Palette converted to RGB */
+  if (color_type == PNG_COLOR_TYPE_PALETTE) {
+    GST_LOG_OBJECT (pngdec, "converting palette png to RGB");
+    png_set_palette_to_rgb (pngdec->png);
+  }
 
   /* Update the info structure */
   png_read_update_info (pngdec->png, pngdec->info);
@@ -316,20 +334,21 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   pngdec->width = width;
   pngdec->height = height;
 
-  GST_LOG ("this is a %dx%d PNG image", pngdec->width, pngdec->height);
+  GST_LOG_OBJECT (pngdec, "this is a %dx%d PNG image", pngdec->width,
+      pngdec->height);
 
   switch (pngdec->color_type) {
     case PNG_COLOR_TYPE_RGB:
-      GST_LOG ("we have no alpha channel, depth is 24 bits");
+      GST_LOG_OBJECT (pngdec, "we have no alpha channel, depth is 24 bits");
       pngdec->bpp = 24;
       break;
     case PNG_COLOR_TYPE_RGB_ALPHA:
-      GST_LOG ("we have an alpha channel, depth is 32 bits");
+      GST_LOG_OBJECT (pngdec, "we have an alpha channel, depth is 32 bits");
       pngdec->bpp = 32;
       break;
     default:
       GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
-          ("pngdec does not support grayscale or paletted data yet"));
+          ("pngdec does not support this color type"));
       ret = GST_FLOW_ERROR;
       goto beach;
   }
