@@ -1,3 +1,12 @@
+2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_class_init),
+	(gst_gnome_vfs_src_check_get_range):
+	  Override GstBaseSrc::check_get_range() in order to avoid opening
+	  the resource just to check whether we can operate in pull-mode or
+	  not - we can predict that pretty well from the URI alone. Should
+	  fix problems with last.fm (#331690). (Requires latest core CVS).
+
 2006-03-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/video/gstvideosink.c: (gst_video_sink_init),

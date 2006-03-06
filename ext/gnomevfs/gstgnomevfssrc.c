@@ -134,6 +134,7 @@ static void gst_gnome_vfs_src_get_property (GObject * object, guint prop_id,
 static gboolean gst_gnome_vfs_src_stop (GstBaseSrc * src);
 static gboolean gst_gnome_vfs_src_start (GstBaseSrc * src);
 static gboolean gst_gnome_vfs_src_is_seekable (GstBaseSrc * src);
+static gboolean gst_gnome_vfs_src_check_get_range (GstBaseSrc * src);
 static gboolean gst_gnome_vfs_src_get_size (GstBaseSrc * src, guint64 * size);
 static GstFlowReturn gst_gnome_vfs_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint size, GstBuffer ** buffer);
@@ -254,6 +255,8 @@ gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_get_size);
   gstbasesrc_class->is_seekable =
       GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_is_seekable);
+  gstbasesrc_class->check_get_range =
+      GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_check_get_range);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_create);
 }
 
@@ -1045,6 +1048,32 @@ gst_gnome_vfs_src_is_seekable (GstBaseSrc * basesrc)
   src = GST_GNOME_VFS_SRC (basesrc);
 
   return src->seekable;
+}
+
+static gboolean
+gst_gnome_vfs_src_check_get_range (GstBaseSrc * basesrc)
+{
+  GstGnomeVFSSrc *src;
+  gboolean is_local;
+
+  src = GST_GNOME_VFS_SRC (basesrc);
+
+  if (src->uri == NULL) {
+    GST_WARNING_OBJECT (src, "no URI set yet");
+    /* don't know what to do, let the basesrc class decide for us */
+    if (GST_BASE_SRC_CLASS (parent_class)->check_get_range)
+      return GST_BASE_SRC_CLASS (parent_class)->check_get_range (basesrc);
+    else
+      return FALSE;
+  }
+
+  is_local = gnome_vfs_uri_is_local (src->uri);
+
+  GST_LOG_OBJECT (src, "%s URI (%s), random access %spossible",
+      (is_local) ? "local" : "remote", GST_STR_NULL (src->uri_name),
+      (is_local) ? "" : "not ");
+
+  return is_local;
 }
 
 static gboolean
