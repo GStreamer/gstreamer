@@ -1,3 +1,12 @@
+2006-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/speex/gstspeexenc.c: (gst_speexenc_set_header_on_caps),
+	(gst_speexenc_chain):
+	  fix a tag list assert
+	  follow gst-plugins-base/ext/ogg/README; set OFFSET
+	  and OFFSET_END.  Muxes correctly with gst-plugins-base
+	  > 0.9.3
+
 2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/Makefile.am:

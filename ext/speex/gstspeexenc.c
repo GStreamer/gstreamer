@@ -830,7 +830,7 @@ gst_speexenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
 {
   caps = gst_caps_make_writable (caps);
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  GValue list = { 0 };
+  GValue array = { 0 };
   GValue value = { 0 };
 
   /* mark buffers */
@@ -838,17 +838,17 @@ gst_speexenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_FLAG_IN_CAPS);
 
   /* put buffers in a fixed list */
-  g_value_init (&list, GST_TYPE_ARRAY);
+  g_value_init (&array, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf1);
-  gst_value_list_append_value (&list, &value);
+  gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
   gst_value_set_buffer (&value, buf2);
-  gst_value_list_append_value (&list, &value);
-  gst_structure_set_value (structure, "streamheader", &list);
+  gst_value_array_append_value (&array, &value);
+  gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&value);
-  g_value_unset (&list);
+  g_value_unset (&array);
 
   return caps;
 }
@@ -1013,9 +1013,12 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
           (speexenc->frameno * frame_size -
           speexenc->lookahead) * GST_SECOND / speexenc->rate;
       GST_BUFFER_DURATION (outbuf) = frame_size * GST_SECOND / speexenc->rate;
-      GST_BUFFER_OFFSET (outbuf) = speexenc->bytes_out;
+      /* set gp time and granulepos; see gst-plugins-base/ext/ogg/README */
       GST_BUFFER_OFFSET_END (outbuf) =
-          speexenc->frameno * frame_size - speexenc->lookahead;
+          ((speexenc->frameno + 1) * frame_size - speexenc->lookahead);
+      GST_BUFFER_OFFSET (outbuf) =
+          gst_util_uint64_scale (GST_BUFFER_OFFSET_END (outbuf), GST_SECOND,
+          speexenc->rate);
 
       ret = gst_speexenc_push_buffer (speexenc, outbuf);
 
