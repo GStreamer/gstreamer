@@ -1,0 +1,18 @@
+Some notes about various stylistic issues
+-----------------------------------------
+
+(This file should end up as a nice web page eventually)
+
+CODING STYLE
+------------
+- No //-style comments allowed.  Never.  Reason: Forte doesn't support it.
+- Our indentation style is codified in gstreamer/tools/gst-indent
+- Don't mix tabs with spaces when writing new code.
+- use GST_*_OBJECT as much as possible so it's clear which object you're
+  logging for
+
+SUBMITTING CODE
+---------------
+- new code submitted to core, plugins-base, or plugins-good needs to pass a
+  review from another committer.
+- submitting new base classes also means you look at targets for assimilation.
