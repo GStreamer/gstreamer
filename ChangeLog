@@ -1,5 +1,11 @@
 2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstvalue.c:
+	  Document thread-unsafety of gst_value_register_foo_func()
+	  when used at the same time as gst_value_foo() (#322628).
+
+2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* libs/gst/base/gstpushsrc.c: (gst_push_src_class_init),
 	(gst_push_src_check_get_range):
 	  Push sources don't support pull mode by default.

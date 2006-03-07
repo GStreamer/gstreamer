@@ -2713,6 +2713,9 @@ gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)
  * Registers a union function that can create a union between GValues
  * of the type @type1 and @type2.
  *
+ * Union functions should be registered at startup before any pipelines are
+ * started, as gst_value_register_union_func() is not thread-safe and cannot
+ * be used at the same time as gst_value_union() or gst_value_can_union().
  */
 void
 gst_value_register_union_func (GType type1, GType type2, GstValueUnionFunc func)
@@ -2822,6 +2825,11 @@ gst_value_intersect (GValue * dest, const GValue * value1,
  *
  * Registers a function that is called to calculate the intersection
  * of the values having the types @type1 and @type2.
+ *
+ * Intersect functions should be registered at startup before any pipelines are
+ * started, as gst_value_register_intersect_func() is not thread-safe and
+ * cannot be used at the same time as gst_value_intersect() or
+ * gst_value_can_intersect().
  */
 void
 gst_value_register_intersect_func (GType type1, GType type2,
@@ -2930,6 +2938,10 @@ gst_value_can_subtract (const GValue * minuend, const GValue * subtrahend)
  *
  * Registers @func as a function capable of subtracting the values of
  * @subtrahend_type from values of @minuend_type.
+ *
+ * Subtract functions should be registered at startup before any pipelines are
+ * started, as gst_value_register_subtract_func() is not thread-safe and
+ * cannot be used at the same time as gst_value_subtract().
  */
 void
 gst_value_register_subtract_func (GType minuend_type, GType subtrahend_type,
