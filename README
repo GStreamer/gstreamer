@@ -3,10 +3,6 @@ WHAT IT IS
 
 This is GStreamer, a framework for streaming media.
 
-This package is in the 0.9.x series.  This means that this is a
-development series leading up to a stable 0.10.x series.
-You have been warned.
-
 WHERE TO START
 --------------
 
@@ -25,8 +21,8 @@ We track bugs in GNOME's bugzilla; see the website for details.
 
 You can join us on IRC - #gstreamer on irc.freenode.org
 
-GStreamer 0.9 development series - Hung by a Thread
----------------------------------------------------
+GStreamer 0.10 series
+---------------------
 
 Starring
 
