@@ -894,6 +894,11 @@ gst_text_overlay_render_text (GstTextOverlay * overlay,
   PangoRectangle ink_rect, logical_rect;
   gchar *string;
 
+  if (!overlay->need_render) {
+    GST_DEBUG ("Using previously rendered text.");
+    return;
+  }
+
   /* -1 is the whole string */
   if (text != NULL && textlen < 0) {
     textlen = strlen (text);
@@ -908,11 +913,6 @@ gst_text_overlay_render_text (GstTextOverlay * overlay,
   textlen = strlen (string);
 
   /* FIXME: should we check for UTF-8 here? */
-
-  if (!overlay->need_render) {
-    GST_DEBUG ("Using previously rendered text.");
-    return;
-  }
 
   GST_DEBUG ("Rendering '%s'", string);
   pango_layout_set_markup (overlay->layout, string, textlen);
@@ -1316,8 +1316,7 @@ gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
     g_free (text);
 
     /* Update last_stop */
-    gst_segment_set_last_stop (overlay->segment, GST_FORMAT_TIME,
-        GST_BUFFER_TIMESTAMP (buffer));
+    gst_segment_set_last_stop (overlay->segment, GST_FORMAT_TIME, clip_start);
   } else {                      /* Out of segment */
     GST_OBJECT_UNLOCK (overlay);
     GST_DEBUG_OBJECT (overlay, "buffer out of segment discarding");

@@ -1,5 +1,13 @@
 2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_render_text),
+	(gst_text_overlay_video_chain):
+	  Fix invalid memory access (we can't access a buffer after it's been
+	  pushed downstream without taking a reference); fix memory leak (if
+	  there's no text to render, bail out before allocating stuff).
+
+2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_init),
 	(gst_text_overlay_setcaps_txt), (gst_text_overlay_video_chain):
 	* ext/pango/gsttextoverlay.h:
