@@ -1,5 +1,10 @@
 2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audio_filter_chain):
+	  Don't ignore flow return from gst_pad_push().
+
+2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/libvisual/visual.c: (gst_visual_getcaps),
 	(gst_visual_src_setcaps), (gst_visual_sink_setcaps):
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_sinkconnect):

@@ -201,6 +201,7 @@ gst_audio_filter_init (GTypeInstance * instance, gpointer g_class)
 static GstFlowReturn
 gst_audio_filter_chain (GstPad * pad, GstBuffer * buffer)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *inbuf = GST_BUFFER (buffer);
   GstAudioFilter *audiofilter;
   GstBuffer *outbuf;
@@ -221,9 +222,9 @@ gst_audio_filter_chain (GstPad * pad, GstBuffer * buffer)
       GST_BUFFER_SIZE (inbuf), GST_OBJECT_NAME (audiofilter));
 
   if (audiofilter->passthru) {
-    gst_pad_push (audiofilter->srcpad, buffer);
+    ret = gst_pad_push (audiofilter->srcpad, buffer);
     gst_object_unref (audiofilter);
-    return GST_FLOW_OK;
+    return ret;
   }
 
   audiofilter->size = GST_BUFFER_SIZE (inbuf);
@@ -256,10 +257,10 @@ gst_audio_filter_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_unref (inbuf);
   }
 
-  gst_pad_push (audiofilter->srcpad, outbuf);
+  ret = gst_pad_push (audiofilter->srcpad, outbuf);
 
   gst_object_unref (audiofilter);
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static void
