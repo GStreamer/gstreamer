@@ -98,6 +98,7 @@ class GstCapsArg(ArgType):
             self.write_normal_param(pname, pdflt, pnull, info)
         else:
             raise RuntimeError, "write_param not implemented for %s" % ptype
+    
     def write_const_param(self, pname, pdflt, pnull, info):
         info.varlist.add('PyObject', '*py_'+pname)
         info.varlist.add('GstCaps', '*'+pname)
@@ -109,6 +110,7 @@ class GstCapsArg(ArgType):
         else:
             info.codebefore.append (self.before % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
         info.codeafter.append (self.after % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
+	
     def write_normal_param(self, pname, pdflt, pnull, info):
         info.varlist.add('PyObject', '*py_'+pname)
         info.varlist.add('GstCaps', '*'+pname)
@@ -118,8 +120,8 @@ class GstCapsArg(ArgType):
             info.codebefore.append (self.beforenull % { 'name' : pname, 'namecopy' : 'NULL' })
         else:
             info.codebefore.append (self.before % { 'name' : pname, 'namecopy' : 'NULL' })
-
-	def write_return(self, ptype, ownsreturn, info):
+	    
+    def write_return(self, ptype, ownsreturn, info):
         if ptype == 'GstCaps*':
 		    info.varlist.add('GstCaps', '*ret')
             copyval = 'FALSE'
@@ -166,6 +168,44 @@ class GstMiniObjectReturn(ReturnType):
         self.wrapper.write_code("gst_mini_object_ref((GstMiniObject *) retval);")
 
 matcher.register_reverse_ret('GstMiniObject*', GstMiniObjectReturn)
+
+class GstCapsParam(Parameter):
+
+	def get_c_type(self):
+		return self.props.get('c_type', 'GstCaps *')
+
+	def convert_c2py(self):
+		self.wrapper.add_declaration("PyObject *py_%s = NULL;" % self.name)
+		self.wrapper.write_code(code=("if (%s)\n"
+					      "    py_%s = pyg_boxed_new (GST_TYPE_CAPS, %s, FALSE, TRUE);\n"
+					      "else {\n"
+					      "    Py_INCREF(Py_None);\n"
+					      "    py_%s = Py_None;\n"
+					      "}"
+					      % (self.name, self.name, self.name, self.name)),
+					cleanup=("Py_DECREF(py_%s);" % self.name))
+		self.wrapper.add_pyargv_item("py_%s" % self.name)
+
+matcher.register_reverse('GstCaps*', GstCapsParam)
+
+class GstCapsReturn(ReturnType):
+
+	def get_c_type(self):
+		return self.props.get('c_type', 'GstCaps *')
+
+	def write_decl(self):
+		self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+
+	def write_error_return(self):
+		self.wrapper.write_code("return NULL;")
+
+	def write_conversion(self):
+		self.wrapper.write_code("retval = (%s) pygst_caps_from_pyobject (py_retval, NULL);"
+					% self.get_c_type())
+##         self.wrapper.write_code("gst_mini_object_ref((GstMiniObject *) retval);")
+
+matcher.register_reverse_ret('GstCaps*', GstCapsReturn)
+	
 
 class Int64Param(Parameter):
 

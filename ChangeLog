@@ -1,5 +1,11 @@
 2006-03-07  Edward Hervey  <edward@fluendo.com>
 
+	* gst/arg-types.py:
+	Add ReturnType and Parameter for GstCaps.
+	This allows the codegenerator to wrap properly more virtual proxies.
+
+2006-03-07  Edward Hervey  <edward@fluendo.com>
+
 	* gst/base.defs:
 	Update for new check_get_range virtual method in GstBaseSrc
 
