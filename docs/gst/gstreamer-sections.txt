@@ -2045,7 +2045,7 @@ gst_util_gdouble_to_guint64
 
 <SECTION>
 <FILE>gstvalue</FILE>
-<TITLE>GStreamer GValue types</TITLE>
+<TITLE>GstValue</TITLE>
 
 <SUBSECTION fourcc>
 GST_VALUE_HOLDS_FOURCC

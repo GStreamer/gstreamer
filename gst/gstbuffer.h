@@ -180,10 +180,12 @@ typedef struct _GstBufferClass GstBufferClass;
 
 /**
  * GstBufferFlag:
- * @GST_BUFFER_FLAG_READONLY: the buffer is read-only.
+ * @GST_BUFFER_FLAG_READONLY: the buffer is read-only. This means the data of
+ * the buffer should not be modified. The metadata might still be modified.
  * @GST_BUFFER_FLAG_PREROLL: the buffer is part of a preroll and should not be
  * displayed.
- * @GST_BUFFER_FLAG_DISCONT: the buffer marks a discontinuity in the stream.
+ * @GST_BUFFER_FLAG_DISCONT: the buffer marks a discontinuity in the stream. This
+ * typically occurs after a seek or a dropped buffer from a live or network source.
  * @GST_BUFFER_FLAG_IN_CAPS: the buffer has been added as a field in a #GstCaps.
  * @GST_BUFFER_FLAG_GAP: the buffer has been created to fill a gap in the stream.
  * @GST_BUFFER_FLAG_DELTA_UNIT: this unit cannot be decoded independently.
@@ -252,7 +254,6 @@ struct _GstBuffer {
 
 struct _GstBufferClass {
   GstMiniObjectClass    mini_object_class;
-
 };
 
 /* allocation */

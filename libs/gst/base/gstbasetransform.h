@@ -147,7 +147,7 @@ struct _GstBaseTransformClass {
   /* transform a buffer inplace */
   GstFlowReturn (*transform_ip) (GstBaseTransform *trans, GstBuffer *buf);
 
-  /* FIXME: When adjusting the padding, more these to nicer places in the class */
+  /* FIXME: When adjusting the padding, move these to nicer places in the class */
   /* Set by child classes to automatically do passthrough mode */
   gboolean       passthrough_on_same_caps;
 

@@ -23,7 +23,10 @@
  *
  * GValue implementations specific to GStreamer.
  *
- * Last reviewed on 2005-11-23 (0.9.5)
+ * Note that operations on the same GstValue (or GValue) from multiple
+ * threads may lead to undefined behaviour. 
+ *
+ * Last reviewed on 2006-03-07 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H
