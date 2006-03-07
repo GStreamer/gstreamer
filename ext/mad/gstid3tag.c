@@ -797,6 +797,15 @@ tag_list_to_id3_tag_foreach (const GstTagList * list, const gchar * tag_name,
       str = g_strdup_printf ("%u", u);
       put = g_utf8_to_ucs4_fast (str, -1, NULL);
       g_free (str);
+    } else if (strcmp (tag_name, GST_TAG_ALBUM_VOLUME_NUMBER) == 0) {
+      gchar *str;
+      guint u;
+
+      if (!gst_tag_list_get_uint_index (list, tag_name, values, &u))
+        g_assert_not_reached ();
+      str = g_strdup_printf ("%u", u);
+      put = g_utf8_to_ucs4_fast (str, -1, NULL);
+      g_free (str);
     } else if (strcmp (tag_name, GST_TAG_COMMENT) == 0) {
       gchar *str;
       id3_ucs4_t ucs4_empty[] = { 0 };
