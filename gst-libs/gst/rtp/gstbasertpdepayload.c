@@ -175,6 +175,7 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseRTPDepayload *filter;
   GstBaseRTPDepayloadClass *bclass;
+  gboolean res;
 
   filter = GST_BASE_RTP_DEPAYLOAD (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, FALSE);
@@ -183,9 +184,12 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
   bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
   if (bclass->set_caps)
-    return bclass->set_caps (filter, caps);
+    res = bclass->set_caps (filter, caps);
   else
-    return TRUE;
+    res = TRUE;
+
+  gst_object_unref (filter);
+  return res;
 }
 
 static GstFlowReturn

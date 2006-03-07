@@ -47,7 +47,7 @@ gst_audio_frame_byte_size (GstPad * pad)
   if (caps == NULL) {
     /* ERROR: could not get caps of pad */
     g_warning ("gstaudio: could not get caps of pad %s:%s\n",
-        GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+        GST_DEBUG_PAD_NAME (pad));
     return 0;
   }
 
@@ -102,7 +102,7 @@ gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
   if (caps == NULL) {
     /* ERROR: could not get caps of pad */
     g_warning ("gstaudio: could not get caps of pad %s:%s\n",
-        GST_ELEMENT_NAME (gst_pad_get_parent (pad)), GST_PAD_NAME (pad));
+        GST_DEBUG_PAD_NAME (pad));
     length = GST_CLOCK_TIME_NONE;
   } else {
     structure = gst_caps_get_structure (caps, 0);

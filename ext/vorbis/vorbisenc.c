@@ -309,8 +309,10 @@ gst_vorbisenc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
   vorbisenc = GST_VORBISENC (gst_pad_get_parent (pad));
 
   if (vorbisenc->samples_in == 0 ||
-      vorbisenc->bytes_out == 0 || vorbisenc->frequency == 0)
+      vorbisenc->bytes_out == 0 || vorbisenc->frequency == 0) {
+    gst_object_unref (vorbisenc);
     return FALSE;
+  }
 
   avg = (vorbisenc->bytes_out * vorbisenc->frequency) / (vorbisenc->samples_in);
 
@@ -336,6 +338,7 @@ gst_vorbisenc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
     default:
       res = FALSE;
   }
+  gst_object_unref (vorbisenc);
   return res;
 }
 
@@ -407,6 +410,7 @@ gst_vorbisenc_convert_sink (GstPad * pad, GstFormat src_format,
     default:
       res = FALSE;
   }
+  gst_object_unref (vorbisenc);
   return res;
 }
 

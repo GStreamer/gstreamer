@@ -197,7 +197,8 @@ gst_audio_rate_setcaps (GstPad * pad, GstCaps * caps)
   GstAudioRate *audiorate;
   GstStructure *structure;
   GstPad *otherpad;
-  gint ret, channels, width;
+  gboolean ret = FALSE;
+  gint channels, width;
 
   audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
 
@@ -205,21 +206,23 @@ gst_audio_rate_setcaps (GstPad * pad, GstCaps * caps)
       audiorate->srcpad;
 
   if (!gst_pad_set_caps (otherpad, caps))
-    return FALSE;
+    goto beach;
 
   structure = gst_caps_get_structure (caps, 0);
 
-  ret = gst_structure_get_int (structure, "channels", &channels);
-  ret &= gst_structure_get_int (structure, "width", &width);
-
-  if (!ret)
-    return FALSE;
+  if (!gst_structure_get_int (structure, "channels", &channels) ||
+      !gst_structure_get_int (structure, "width", &width)) {
+    goto beach;
+  }
 
   audiorate->bytes_per_sample = channels * (width / 8);
   if (audiorate->bytes_per_sample == 0)
     audiorate->bytes_per_sample = 1;
+  ret = TRUE;
 
-  return TRUE;
+beach:
+  gst_object_unref (audiorate);
+  return ret;
 }
 
 static void

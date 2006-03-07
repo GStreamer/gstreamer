@@ -1,3 +1,22 @@
+2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/libvisual/visual.c: (gst_visual_getcaps),
+	(gst_visual_src_setcaps), (gst_visual_sink_setcaps):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_sinkconnect):
+	* ext/vorbis/vorbisenc.c: (gst_vorbisenc_convert_src),
+	(gst_vorbisenc_convert_sink):
+	* gst-libs/gst/audio/audio.c: (gst_audio_frame_byte_size),
+	(gst_audio_duration_from_pad_buffer):
+	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audio_filter_link),
+	(gst_audio_filter_chain):
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_setcaps):
+	* gst-libs/gst/video/video.c: (gst_video_frame_rate),
+	(gst_video_get_size):
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_setcaps):
+	  Don't leak references returned by gst_pad_get_parent()
+	  (#333663, based on patch by: Christophe Fergeau).
+
 2006-03-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnome_vfs_sink_class_init):

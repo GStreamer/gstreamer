@@ -136,6 +136,7 @@ gst_audio_filter_link (GstPad * pad, GstPad * peer)
   }
 
   if (GST_PAD_LINK_FAILED (link_ret)) {
+    gst_object_unref (audiofilter);
     return link_ret;
   }
 
@@ -153,8 +154,10 @@ gst_audio_filter_link (GstPad * pad, GstPad * peer)
   ret &= gst_structure_get_int (structure, "rate", &audiofilter->rate);
   ret &= gst_structure_get_int (structure, "channels", &audiofilter->channels);
 
-  if (!ret)
+  if (!ret) {
+    gst_object_unref (audiofilter);
     return GST_PAD_LINK_REFUSED;
+  }
 
   audiofilter->bytes_per_sample = (audiofilter->width / 8) *
       audiofilter->channels;
@@ -163,6 +166,7 @@ gst_audio_filter_link (GstPad * pad, GstPad * peer)
     (audio_filter_class->setup) (audiofilter);
 #endif
 
+  gst_object_unref (audiofilter);
   return GST_PAD_LINK_OK;
 }
 
@@ -209,7 +213,7 @@ gst_audio_filter_chain (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (inbuf != NULL, GST_FLOW_ERROR);
 
   audiofilter = GST_AUDIO_FILTER (gst_pad_get_parent (pad));
-  //g_return_if_fail (audiofilter->inited);
+  /* g_return_if_fail (audiofilter->inited); */
   audio_filter_class =
       GST_AUDIO_FILTER_CLASS (G_OBJECT_GET_CLASS (audiofilter));
 
@@ -218,6 +222,7 @@ gst_audio_filter_chain (GstPad * pad, GstBuffer * buffer)
 
   if (audiofilter->passthru) {
     gst_pad_push (audiofilter->srcpad, buffer);
+    gst_object_unref (audiofilter);
     return GST_FLOW_OK;
   }
 
@@ -253,6 +258,7 @@ gst_audio_filter_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_pad_push (audiofilter->srcpad, outbuf);
 
+  gst_object_unref (audiofilter);
   return GST_FLOW_OK;
 }
 

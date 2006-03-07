@@ -231,18 +231,20 @@ gst_visual_getcaps (GstPad * pad)
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
   int depths;
 
-  if (!visual->actor)
-    return gst_caps_copy (gst_pad_get_pad_template_caps (visual->srcpad));
+  if (!visual->actor) {
+    ret = gst_caps_copy (gst_pad_get_pad_template_caps (visual->srcpad));
+    goto beach;
+  }
 
   ret = gst_caps_new_empty ();
   depths = visual_actor_get_supported_depth (visual->actor);
   if (depths < 0) {
     /* FIXME: set an error */
-    return ret;
+    goto beach;
   }
   if (depths == VISUAL_VIDEO_DEPTH_GL) {
     /* We can't handle GL only plugins */
-    return ret;
+    goto beach;
   }
 
   GST_DEBUG_OBJECT (visual, "libvisual plugin supports depths %u (0x%04x)",
@@ -261,7 +263,10 @@ gst_visual_getcaps (GstPad * pad)
     gst_caps_append (ret, gst_caps_from_string (GST_VIDEO_CAPS_RGB_16));
   }
 
+beach:
+
   GST_DEBUG_OBJECT (visual, "returning caps %" GST_PTR_FORMAT, ret);
+  gst_object_unref (visual);
   return ret;
 }
 
@@ -277,21 +282,28 @@ gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (visual, "src pad got caps %" GST_PTR_FORMAT, caps);
 
   if (!gst_structure_get_int (structure, "width", &visual->width))
-    return FALSE;
+    goto error;
   if (!gst_structure_get_int (structure, "height", &visual->height))
-    return FALSE;
+    goto error;
   if (!gst_structure_get_int (structure, "bpp", &depth))
-    return FALSE;
+    goto error;
   if (!gst_structure_get_fraction (structure, "framerate", &visual->fps_n,
           &visual->fps_d))
-    return FALSE;
+    goto error;
 
   visual_video_set_depth (visual->video,
       visual_video_depth_enum_from_value (depth));
   visual_video_set_dimension (visual->video, visual->width, visual->height);
   visual_actor_video_negotiate (visual->actor, 0, FALSE, FALSE);
 
+  gst_object_unref (visual);
   return TRUE;
+
+error:
+  {
+    gst_object_unref (visual);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -304,6 +316,7 @@ gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   gst_structure_get_int (structure, "rate", &visual->rate);
 
+  gst_object_unref (visual);
   return TRUE;
 }
 
