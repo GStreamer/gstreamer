@@ -65,6 +65,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_push_src_debug);
 GST_BOILERPLATE_FULL (GstPushSrc, gst_push_src, GstBaseSrc, GST_TYPE_BASE_SRC,
     _do_init);
 
+static gboolean gst_push_src_check_get_range (GstBaseSrc * src);
 static GstFlowReturn gst_push_src_create (GstBaseSrc * bsrc, guint64 offset,
     guint length, GstBuffer ** ret);
 
@@ -80,12 +81,20 @@ gst_push_src_class_init (GstPushSrcClass * klass)
   GstBaseSrcClass *gstbasesrc_class = (GstBaseSrcClass *) klass;
 
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_push_src_create);
+  gstbasesrc_class->check_get_range =
+      GST_DEBUG_FUNCPTR (gst_push_src_check_get_range);
 }
 
 static void
 gst_push_src_init (GstPushSrc * pushsrc, GstPushSrcClass * klass)
 {
   /* nop */
+}
+
+static gboolean
+gst_push_src_check_get_range (GstBaseSrc * src)
+{
+  return FALSE;
 }
 
 static GstFlowReturn
