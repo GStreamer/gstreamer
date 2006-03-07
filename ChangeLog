@@ -1,3 +1,8 @@
+2006-03-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/gstdynudpsink.c: (gst_dynudpsink_class_init):
+	Applied patch from Kai Vehmanen, fixes #333624.
+
 2006-03-06  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/libpng/gstpngdec.c: (gst_pngdec_caps_create_and_set): 

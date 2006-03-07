@@ -64,8 +64,6 @@ static void gst_dynudpsink_class_init (GstDynUDPSink * klass);
 static void gst_dynudpsink_init (GstDynUDPSink * udpsink);
 static void gst_dynudpsink_finalize (GObject * object);
 
-static void gst_dynudpsink_get_times (GstBaseSink * sink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end);
 static GstFlowReturn gst_dynudpsink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 static void gst_dynudpsink_close (GstDynUDPSink * sink);
@@ -148,7 +146,6 @@ gst_dynudpsink_class_init (GstDynUDPSink * klass)
 
   gstelement_class->change_state = gst_dynudpsink_change_state;
 
-  gstbasesink_class->get_times = gst_dynudpsink_get_times;
   gstbasesink_class->render = gst_dynudpsink_render;
 
   GST_DEBUG_CATEGORY_INIT (dynudpsink_debug, "dynudpsink", 0, "UDP sink");
@@ -169,14 +166,6 @@ static void
 gst_dynudpsink_finalize (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static void
-gst_dynudpsink_get_times (GstBaseSink * sink, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end)
-{
-  *start = GST_BUFFER_TIMESTAMP (buffer);
-  *end = *start + GST_BUFFER_DURATION (buffer);
 }
 
 static GstFlowReturn
