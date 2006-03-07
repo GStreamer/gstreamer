@@ -1021,6 +1021,8 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
 
+  GST_DEBUG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
       /* We just ignore those events from the text pad */
@@ -1047,7 +1049,8 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (overlay);
       /* We use flushing to make sure we return WRONG_STATE */
       overlay->text_flushing = TRUE;
-      gst_text_overlay_pop_text (overlay);
+      /* We don't signal anything here because we want to keep the last queued
+         buffer until video pad receives EOS or discard the buffer */
       GST_OBJECT_UNLOCK (overlay);
       gst_event_unref (event);
       ret = TRUE;
@@ -1070,6 +1073,8 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
   GstTextOverlay *overlay = NULL;
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:

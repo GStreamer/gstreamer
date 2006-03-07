@@ -1,3 +1,12 @@
+2006-03-07  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_text_event),
+	(gst_text_overlay_video_event): Fix wrong EOS handling on text
+	pad. We were releasing the queued text buffer when we should keep
+	it until video pad gets EOS or discard the text buffer because it's
+	too old. That was eating the last subtitle buffer. Add some more
+	debug.
+
 2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_render_text),
