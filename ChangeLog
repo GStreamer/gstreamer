@@ -1,5 +1,12 @@
 2006-03-07  Wim Taymans  <wim@fluendo.com>
 
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasetransform.h:
+	Fix #333669, Add pad accessor defines for GstBaseTransform
+	Fix docs for GstBaseSrc.
+
+2006-03-07  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstbuffer.h:
 	* gst/gstvalue.c:

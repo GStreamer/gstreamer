@@ -32,6 +32,8 @@ G_BEGIN_DECLS
 	(G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_BASE_TRANSFORM,GstBaseTransformClass))
 #define GST_IS_BASE_TRANSFORM(obj)	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_TRANSFORM))
 #define GST_IS_BASE_TRANSFORM_CLASS(obj)(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_TRANSFORM))
+/* since 0.10.4 */
+#define GST_BASE_TRANSFORM_CAST(obj)	((GstBaseTransform *)(obj))
 
 /**
  * GST_BASE_TRANSFORM_SINK_NAME:
@@ -45,6 +47,26 @@ G_BEGIN_DECLS
  * the name of the templates for the source pad
  */
 #define GST_BASE_TRANSFORM_SRC_NAME	"src"
+
+/**
+ * GST_BASE_TRANSFORM_SRC_PAD:
+ * @obj: base transform instance
+ * 
+ * Gives the pointer to the source #GstPad object of the element.
+ *
+ * Since: 0.10.4
+ */
+#define GST_BASE_TRANSFORM_SRC_PAD(obj)		(GST_BASE_TRANSFORM_CAST (obj)->srcpad)
+
+/**
+ * GST_BASE_TRANSFORM_SINK_PAD:
+ * @obj: base transform instance
+ * 
+ * Gives the pointer to the sink #GstPad object of the element.
+ *
+ * Since: 0.10.4
+ */
+#define GST_BASE_TRANSFORM_SINK_PAD(obj)	(GST_BASE_TRANSFORM_CAST (obj)->sinkpad)
 
 typedef struct _GstBaseTransform GstBaseTransform;
 typedef struct _GstBaseTransformClass GstBaseTransformClass;
