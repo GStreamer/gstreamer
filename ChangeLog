@@ -1,3 +1,8 @@
+2006-03-07  Edward Hervey  <edward@fluendo.com>
+
+	* gst/base.defs:
+	Update for new check_get_range virtual method in GstBaseSrc
+
 2006-03-06  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gststructure.override:

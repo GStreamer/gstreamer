@@ -330,6 +330,10 @@
   )
 )
 
+(define-virtual check_get_range
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+)
 
 ;; From ../gstreamer/libs/gst/base/gstbasetransform.h
 
