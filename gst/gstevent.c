@@ -615,17 +615,28 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
  * Allocate a new qos event with the given values.
  * The QOS event is generated in an element that wants an upstream
  * element to either reduce or increase its rate because of
- * high/low CPU load.
+ * high/low CPU load or other resource usage such as network performance.
  *
- * proportion is the requested adjustment in datarate, 1.0 is the normal
+ * @proportion is the requested adjustment in datarate, 1.0 is the normal
  * datarate, 0.75 means increase datarate by 75%, 1.5 is 150%. Negative
  * values request a slow down, so -0.75 means a decrease by 75%.
  *
- * diff is the difference against the clock in stream time of the last
+ * @diff is the difference against the clock in stream time of the last
  * buffer that caused the element to generate the QOS event.
  *
- * timestamp is the timestamp of the last buffer that cause the element
- * to generate the QOS event.
+ * @timestamp is the timestamp of the last buffer that cause the element
+ * to generate the QOS event. 
+ *
+ * The upstream element can use the @diff and @timestamp values to decide
+ * whether to process more buffers. All buffers with timestamp <=
+ * @timestamp + @diff will certainly arrive late in the sink as well. 
+ *
+ * The @proportion value is generally computed based on more long
+ * term statistics about the stream quality and can be used in various ways
+ * such as lowering or increasing processing quality.
+ *
+ * The application can use general event probes to intercept the QoS
+ * event and implement custom application specific QoS handling.
  *
  * Returns: A new QOS event.
  */

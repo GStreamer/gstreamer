@@ -136,6 +136,12 @@ struct _GstBaseSinkClass {
 
 GType gst_base_sink_get_type(void);
 
+void		gst_base_sink_set_sync 		(GstBaseSink *sink, gboolean sync);
+gboolean	gst_base_sink_get_sync 		(GstBaseSink *sink);
+
+void		gst_base_sink_set_max_lateness 	(GstBaseSink *sink, gint64 max_lateness);
+gint64		gst_base_sink_get_max_lateness 	(GstBaseSink *sink);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_SINK_H__ */

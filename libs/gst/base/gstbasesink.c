@@ -30,7 +30,7 @@
  * you, for example preroll, clock synchronization, state changes, activation in
  * push or pull mode, and queries. In most cases, when writing sink elements,
  * there is no need to implement class methods from #GstElement or to set
- * functions on pads, because the #GstBaseSink infrastructure is sufficient.
+ * functions on pads, because the #GstBaseSink infrastructure should be sufficient.
  *
  * There is only support in GstBaseSink for one sink pad, which should be named
  * "sink". A sink implementation (subclass of GstBaseSink) should install a pad
@@ -53,8 +53,8 @@
  * #GstBaseSink will handle the prerolling correctly. This means that it will
  * return GST_STATE_CHANGE_ASYNC from a state change to PAUSED until the first buffer
  * arrives in this element. The base class will call the GstBaseSink::preroll
- * vmethod with this preroll buffer and will then commit the state change to
- * PAUSED. 
+ * vmethod with this preroll buffer and will then commit the state change to the
+ * next asynchronously pending state.
  *
  * When the element is set to PLAYING, #GstBaseSink will synchronize on the clock
  * using the times returned from ::get_times. If this function returns
@@ -88,7 +88,7 @@
  * query will be forwarded upstream.
  *
  * The ::set_caps function will be called when the subclass should configure itself
- * to precess a specific media type.
+ * to process a specific media type.
  * 
  * The ::start and ::stop virtual methods will be called when resources should be
  * allocated. Any ::preroll, ::render  and ::set_caps function will be called
@@ -106,7 +106,16 @@
  * operations they perform in the ::render method. This is mostly usefull when
  * the ::render method performs a blocking write on a file descripter.
  *
- * Last reviewed on 2006-01-30 (0.10.3)
+ * The max-lateness property defines how the sink deals with buffers that arrive 
+ * too late in the sink. A buffer arrives too late in the sink when the presentation
+ * time (as a combination of the last segment, buffer timestamp and element
+ * base_time) is before the current time of the clock. If the frame is later than
+ * max-lateness, the sink will drop the buffer and will generate a QoS event upstream.
+ * This feature is disabled if sync is disabled, the ::get-times method does not
+ * return a valid start time or max-lateness is set to -1 (the default). 
+ * Subclasses can use gst_base_sink_set_max_lateness() to configure the max-lateness.
+ *
+ * Last reviewed on 2006-03-07 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -375,6 +384,95 @@ gst_base_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ * gst_base_sink_set_sync:
+ * @sink: the sink
+ * @sync: the new sync value.
+ *
+ * Configures @sink to synchronize on the clock or not. When
+ * @sync is FALSE, incomming samples will be played as fast as
+ * possible. If @sync is TRUE, the timestamps of the incomming
+ * buffers will be used to schedule the exact render time of its
+ * contents.
+ *
+ * Since: 0.10.4
+ */
+void
+gst_base_sink_set_sync (GstBaseSink * sink, gboolean sync)
+{
+  GST_OBJECT_LOCK (sink);
+  sink->sync = sync;
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_sink_get_sync:
+ * @sink: the sink
+ *
+ * Checks if @sink is currently configured to synchronize against the
+ * clock.
+ *
+ * Returns: TRUE if the sink is configured to synchronize against the clock.
+ *
+ * Since: 0.10.4
+ */
+gboolean
+gst_base_sink_get_sync (GstBaseSink * sink)
+{
+  gboolean res;
+
+  GST_OBJECT_LOCK (sink);
+  res = sink->sync;
+  GST_OBJECT_UNLOCK (sink);
+
+  return res;
+}
+
+/**
+ * gst_base_sink_set_max_lateness:
+ * @sink: the sink
+ * @max_lateness: the new max lateness value.
+ *
+ * Sets the new max lateness value to @max_lateness. This value is
+ * used to decide if a buffer should be dropped or not based on the
+ * buffer timestamp and the current clock time. A value of -1 means
+ * an unlimited time.
+ *
+ * Since: 0.10.4
+ */
+void
+gst_base_sink_set_max_lateness (GstBaseSink * sink, gint64 max_lateness)
+{
+  GST_OBJECT_LOCK (sink);
+  sink->abidata.ABI.max_lateness = max_lateness;
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_sink_get_max_lateness:
+ * @sink: the sink
+ *
+ * Gets the max lateness value. See gst_base_sink_set_max_lateness for
+ * more details.
+ *
+ * Returns: The maximum time in nanoseconds that a buffer can be late
+ * before it is dropped and not rendered. A value of -1 means an
+ * unlimited time.
+ *
+ * Since: 0.10.4
+ */
+gint64
+gst_base_sink_get_max_lateness (GstBaseSink * sink)
+{
+  gint64 res;
+
+  GST_OBJECT_LOCK (sink);
+  res = sink->abidata.ABI.max_lateness;
+  GST_OBJECT_UNLOCK (sink);
+
+  return res;
+}
+
 static void
 gst_base_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -389,14 +487,10 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
       GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
       break;
     case PROP_SYNC:
-      GST_OBJECT_LOCK (sink);
-      sink->sync = g_value_get_boolean (value);
-      GST_OBJECT_UNLOCK (sink);
+      gst_base_sink_set_sync (sink, g_value_get_boolean (value));
       break;
     case PROP_MAX_LATENESS:
-      GST_OBJECT_LOCK (sink);
-      sink->abidata.ABI.max_lateness = g_value_get_int64 (value);
-      GST_OBJECT_UNLOCK (sink);
+      gst_base_sink_set_max_lateness (sink, g_value_get_int64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -417,20 +511,17 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
       break;
     case PROP_SYNC:
-      GST_OBJECT_LOCK (sink);
-      g_value_set_boolean (value, sink->sync);
-      GST_OBJECT_UNLOCK (sink);
+      g_value_set_boolean (value, gst_base_sink_get_sync (sink));
       break;
     case PROP_MAX_LATENESS:
-      GST_OBJECT_LOCK (sink);
-      g_value_set_int64 (value, sink->abidata.ABI.max_lateness);
-      GST_OBJECT_UNLOCK (sink);
+      g_value_set_int64 (value, gst_base_sink_get_max_lateness (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
+
 
 static GstCaps *
 gst_base_sink_get_caps (GstBaseSink * sink)
@@ -838,14 +929,23 @@ again:
 
   *late = FALSE;
 
-  if (basesink->abidata.ABI.max_lateness != -1) {
-    if (status == GST_CLOCK_EARLY
+  /* FIXME, update clock stats here and do some QoS */
+  if (status == GST_CLOCK_EARLY) {
+    if (basesink->abidata.ABI.max_lateness != -1
         && jitter > basesink->abidata.ABI.max_lateness) {
-      /* FIXME, update clock stats here and do some QoS */
+      GstEvent *event;
+
       GST_DEBUG_OBJECT (basesink, "late: jitter!! %" G_GINT64_FORMAT "\n",
           jitter);
       *late = TRUE;
+
+      /* generate QoS event, FIXME, calculate decent proportion. */
+      event = gst_event_new_qos (-1.0, jitter, start);
+
+      /* send upstream */
+      gst_pad_push_event (basesink->sinkpad, event);
     }
+  } else {
   }
 
   return GST_FLOW_OK;

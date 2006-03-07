@@ -159,6 +159,11 @@ GstBaseSink
 
 GST_BASE_SINK_PAD
 
+gst_base_sink_set_sync
+gst_base_sink_get_sync
+gst_base_sink_set_max_lateness
+gst_base_sink_get_max_lateness
+
 <SUBSECTION Standard>
 GstBaseSinkClass
 GST_BASE_SINK

@@ -1,6 +1,31 @@
 2006-03-07  Wim Taymans  <wim@fluendo.com>
 
 	* docs/libs/gstreamer-libs-sections.txt:
+	Added basesink new methods.
+
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	Docs updates. Flesh out the QoS docs.
+
+	* libs/gst/base/gstadapter.c:
+	Small doc clarification about ownership and flushing.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_set_sync),
+	(gst_base_sink_get_sync), (gst_base_sink_set_max_lateness),
+	(gst_base_sink_get_max_lateness), (gst_base_sink_set_property),
+	(gst_base_sink_get_property), (gst_base_sink_do_sync):
+	* libs/gst/base/gstbasesink.h:
+	Added new methods to allow subclass to control max-lateness 
+	and sync.
+	Generate very basic QoS events based on last sync observation.
+	Updated docs, fix typo, added some QoS blurb.
+
+	* libs/gst/base/gstbasesrc.c:
+	Remove obsolete _get_state() calls from docs.
+
+2006-03-07  Wim Taymans  <wim@fluendo.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/gstbasetransform.h:
 	Fix #333669, Add pad accessor defines for GstBaseTransform
 	Fix docs for GstBaseSrc.

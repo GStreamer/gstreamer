@@ -378,7 +378,6 @@ void 		gst_event_parse_buffer_size	(GstEvent *event, GstFormat *format, gint64 *
 						 gint64 *maxsize, gboolean *async);
 
 /* QOS events */
-/* FIXME: QOS events need to be fully specified and implemented */
 GstEvent*	gst_event_new_qos		(gdouble proportion, GstClockTimeDiff diff,
 						 GstClockTime timestamp);
 void		gst_event_parse_qos		(GstEvent *event, gdouble *proportion, GstClockTimeDiff *diff,

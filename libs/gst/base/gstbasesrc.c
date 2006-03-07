@@ -135,7 +135,6 @@
  * ...
  * // stop recording
  * gst_element_set_state (audio_source, GST_STATE_NULL);
- * gst_element_get_state (audio_source, NULL, NULL, -1);
  * gst_element_set_locked_state (audio_source, TRUE);
  * ...
  * </programlisting>
@@ -146,13 +145,12 @@
  * ...
  * // everything done - shut down pipeline
  * gst_element_set_state (pipeline, GST_STATE_NULL);
- * gst_element_get_state (pipeline, NULL, NULL, -1);
  * gst_element_set_locked_state (audio_source, FALSE);
  * ...
  * </programlisting>
  * </para>
  * <para>
- * Last reviewed on 2005-12-18 (0.10.0)
+ * Last reviewed on 2006-03-07 (0.10.4)
  * </para>
  * </refsect2>
  */

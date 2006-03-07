@@ -67,6 +67,9 @@
  * gst_adapter_clear(). Data should also be cleared or processed on EOS and
  * when changing state from #GST_STATE_PAUSED to #GST_STATE_READY.
  *
+ * Also check the GST_BUFFER_FLAG_DISCONT flag on the buffer. Some elements might
+ * need to clear the adapter after a discontinuity.
+ *
  * A last thing to note is that while GstAdapter is pretty optimized,
  * merging buffers still might be an operation that requires a memcpy()
  * operation, and this operation is not the fastest. Because of this, some
@@ -76,11 +79,14 @@
  * GstAdapter is not MT safe. All operations on an adapter must be serialized by
  * the caller. This is not normally a problem, however, as the normal use case
  * of GstAdapter is inside one pad's chain function, in which case access is
- * serialized via the pad's stream lock.
+ * serialized via the pad's STREAM_LOCK.
  *
- * Note that gst_adapter_push() takes ownership of the buffer passed.
+ * Note that gst_adapter_push() takes ownership of the buffer passed. Use 
+ * gst_buffer_ref() before pushing it into the adapter if you still want to
+ * access the buffer later. The adapter will never modify the data in the
+ * buffer pushed in it.
  *
- * Last reviewed on 2005-12-18 (0.10.0).
+ * Last reviewed on 2006-03-07 (0.10.4).
  */
 
 #include <string.h>
