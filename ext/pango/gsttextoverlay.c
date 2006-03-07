@@ -234,6 +234,7 @@ static GstStateChangeReturn gst_text_overlay_change_state (GstElement * element,
 
 static GstCaps *gst_text_overlay_getcaps (GstPad * pad);
 static gboolean gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_text_overlay_setcaps_txt (GstPad * pad, GstCaps * caps);
 static gboolean gst_text_overlay_src_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_text_overlay_video_event (GstPad * pad, GstEvent * event);
@@ -397,6 +398,8 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
     overlay->text_sinkpad =
         gst_pad_new_from_template (gst_static_pad_template_get
         (&text_sink_template_factory), "text_sink");
+    gst_pad_set_setcaps_function (overlay->text_sinkpad,
+        GST_DEBUG_FUNCPTR (gst_text_overlay_setcaps_txt));
     gst_pad_set_event_function (overlay->text_sinkpad,
         GST_DEBUG_FUNCPTR (gst_text_overlay_text_event));
     gst_pad_set_chain_function (overlay->text_sinkpad,
@@ -466,6 +469,23 @@ gst_text_overlay_update_wrap_mode (GstTextOverlay * overlay)
     pango_layout_set_width (overlay->layout, overlay->width * PANGO_SCALE);
     pango_layout_set_wrap (overlay->layout, (PangoWrapMode) overlay->wrap_mode);
   }
+}
+
+static gboolean
+gst_text_overlay_setcaps_txt (GstPad * pad, GstCaps * caps)
+{
+  GstTextOverlay *overlay;
+  GstStructure *structure;
+
+  overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+
+  structure = gst_caps_get_structure (caps, 0);
+  overlay->have_pango_markup =
+      gst_structure_has_name (structure, "text/x-pango-markup");
+
+  gst_object_unref (overlay);
+
+  return TRUE;
 }
 
 /* FIXME: upstream nego (e.g. when the video window is resized) */
@@ -1256,9 +1276,18 @@ gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
           /* Push the video frame */
           ret = gst_pad_push (overlay->srcpad, buffer);
         } else {
+          const gchar *in_text;
+          gsize in_size;
+
+          in_text = (const gchar *) GST_BUFFER_DATA (overlay->text_buffer);
+          in_size = GST_BUFFER_SIZE (overlay->text_buffer);
+
           /* Get the string */
-          text = g_strndup ((gchar *) GST_BUFFER_DATA (overlay->text_buffer),
-              GST_BUFFER_SIZE (overlay->text_buffer));
+          if (overlay->have_pango_markup) {
+            text = g_strndup (in_text, in_size);
+          } else {
+            text = g_markup_escape_text (in_text, in_size);
+          }
 
           if (text != NULL && *text != '\0') {
             gint text_len = strlen (text);

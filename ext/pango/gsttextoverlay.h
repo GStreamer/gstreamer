@@ -109,6 +109,8 @@ struct _GstTextOverlay {
     gboolean                 need_render;
 
     gint                     shading_value;  /* for timeoverlay subclass */
+
+    gboolean                 have_pango_markup;
 };
 
 struct _GstTextOverlayClass {
