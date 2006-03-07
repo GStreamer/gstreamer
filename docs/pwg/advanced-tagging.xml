@@ -273,10 +273,10 @@ gst_my_filter_loopfunc (GstElement *element)
   }
 
   /* merge tags with the ones retrieved from the application */
-  if (gst_tag_setter_get_list (tagsetter)) {
+  if ((gst_tag_setter_get_tag_list (tagsetter)) {
     gst_tag_list_insert (taglist,
-			 gst_tag_setter_get_list (tagsetter),
-			 gst_tag_setter_get_merge_mode (tagsetter));
+			 gst_tag_setter_get_tag_list (tagsetter),
+			 gst_tag_setter_get_tag_merge_mode (tagsetter));
   }
 
   /* write tags */

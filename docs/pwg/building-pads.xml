@@ -84,9 +84,9 @@ static gboolean		gst_my_filter_event	(GstPad        *pad,
 <!-- example-begin init.func d -->
 
 static void
-gst_my_filter_init (GstMyFilter *filter)
+gst_my_filter_init (GstMyFilter *filter, GstMyFilterClass *filter_klass)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
+  GstElementClass *klass = GST_ELEMENT_CLASS (filter_klass);
 
   /* pad through which data comes in to the element */
   filter-&gt;sinkpad = gst_pad_new_from_template (

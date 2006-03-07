@@ -1,5 +1,11 @@
 2006-03-07  Wim Taymans  <wim@fluendo.com>
 
+	* docs/pwg/advanced-tagging.xml:
+	* docs/pwg/building-pads.xml:
+	Applied patch from Christophe Fergeau, fixes #333416
+
+2006-03-07  Wim Taymans  <wim@fluendo.com>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	Added basesink new methods.
 
