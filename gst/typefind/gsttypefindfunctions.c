@@ -45,35 +45,94 @@ static gboolean xml_check_first_element (GstTypeFind * tf,
 static GstStaticCaps utf8_caps = GST_STATIC_CAPS ("text/plain");
 
 #define UTF8_CAPS gst_static_caps_get(&utf8_caps)
-static void
-utf8_type_find (GstTypeFind * tf, gpointer unused)
+
+static guint
+utf8_type_find_count_embedded_zeroes (const gchar * data, guint size)
+{
+  guint num = 0;
+
+  while (size > 0) {
+    if (data[size - 1] == 0)
+      ++num;
+    --size;
+  }
+
+  return num;
+}
+
+static gboolean
+utf8_type_find_have_valid_utf8_at_offset (GstTypeFind * tf, guint64 offset,
+    GstTypeFindProbability * prob)
 {
   guint8 *data;
 
   /* randomly decided values */
-  guint size = 1024;            /* starting size */
+  guint min_size = 16;          /* minimum size  */
+  guint size = 32 * 1024;       /* starting size */
   guint probability = 95;       /* starting probability */
   guint step = 10;              /* how much we reduce probability in each
                                  * iteration */
 
-  /* leave xml to the xml typefinders */
-  if (xml_check_first_element (tf, "", 0))
-    return;
-
-  while (probability > step) {
-    data = gst_type_find_peek (tf, 0, size);
+  while (probability > step && size > min_size) {
+    data = gst_type_find_peek (tf, offset, size);
     if (data) {
       gchar *end;
       gchar *start = (gchar *) data;
 
       if (g_utf8_validate (start, size, (const gchar **) &end) || (end - start + 4 > size)) {   /* allow last char to be cut off */
-        gst_type_find_suggest (tf, probability, UTF8_CAPS);
+        /* embedded zeroes are a sure sign that this isn't a plain text file */
+        if (utf8_type_find_count_embedded_zeroes (start, size) <= 2) {
+          *prob = probability;
+          return TRUE;
+        }
       }
-      return;
+      *prob = 0;
+      return FALSE;
     }
     size /= 2;
     probability -= step;
   }
+  *prob = 0;
+  return FALSE;
+}
+
+static void
+utf8_type_find (GstTypeFind * tf, gpointer unused)
+{
+  GstTypeFindProbability start_prob, mid_prob;
+  guint64 length;
+
+  /* leave xml to the xml typefinders */
+  if (xml_check_first_element (tf, "", 0))
+    return;
+
+  /* check beginning of stream */
+  if (!utf8_type_find_have_valid_utf8_at_offset (tf, 0, &start_prob))
+    return;
+
+  GST_LOG ("start is plain text with probability of %u", start_prob);
+
+  /* POSSIBLE is the highest probability we ever return if we can't
+   * probe into the middle of the file and don't know its length */
+
+  length = gst_type_find_get_length (tf);
+  if (length == 0 || length == (guint64) - 1) {
+    gst_type_find_suggest (tf, MIN (start_prob, GST_TYPE_FIND_POSSIBLE),
+        UTF8_CAPS);
+    return;
+  }
+
+  if (length < 64 * 1024) {
+    gst_type_find_suggest (tf, start_prob, UTF8_CAPS);
+    return;
+  }
+
+  /* check middle of stream */
+  if (!utf8_type_find_have_valid_utf8_at_offset (tf, length / 2, &mid_prob))
+    return;
+
+  GST_LOG ("middle is plain text with probability of %u", mid_prob);
+  gst_type_find_suggest (tf, (start_prob + mid_prob) / 2, UTF8_CAPS);
 }
 
 /*** text/uri-list ***/

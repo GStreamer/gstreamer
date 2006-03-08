@@ -1,3 +1,15 @@
+2006-03-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	(utf8_type_find_count_embedded_zeroes),
+	(utf8_type_find_have_valid_utf8_at_offset), (utf8_type_find):
+	  Make plain/text typefinder more conservative: firstly, check
+	  for embedded zeroes, which are perfectly valid UTF-8 characters,
+	  but also a fairly good sign that something is not a plain text
+	  file; secondly, probe into the middle of the file if possible.
+	  If we can't probe into the middle, limit the probability value
+	  to be returned to TYPE_FIND_POSSIBLE (see #333900).
+
 2006-03-08  Michael Smith  <msmith@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
