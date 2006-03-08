@@ -1,3 +1,26 @@
+2006-03-08  Wim Taymans  <wim@fluendo.com>
+
+	* ext/libvisual/visual.c: (gst_visual_init),
+	(gst_visual_clear_actors), (gst_visual_dispose),
+	(gst_visual_reset), (gst_visual_src_setcaps),
+	(gst_visual_sink_setcaps), (gst_vis_src_negotiate),
+	(gst_visual_sink_event), (gst_visual_src_event), (get_buffer),
+	(gst_visual_chain), (gst_visual_change_state):
+	Cleanups, post nice errors.
+	Handle sink and src events.
+	Implement simple QoS.
+
+	* gst-libs/gst/video/gstvideosink.c: (gst_video_sink_init):
+	Use new basesink methods to configure max-lateness.
+	Small doc update.
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_transform_caps), (gst_ffmpegcsp_set_caps):
+	Debug statement cleanups.
+
+	* gst/volume/gstvolume.c: (gst_volume_class_init):
+	Simple cleanup.
+
 2006-03-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init),

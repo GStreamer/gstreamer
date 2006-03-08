@@ -62,10 +62,19 @@ struct _GstVisual
   gint fps_d;
   gint width;
   gint height;
+  GstClockTime duration;
+  guint outsize;
+
+  /* samples per frame based on caps */
+  guint spf;
 
   /* state stuff */
   GstAdapter *adapter;
   guint count;
+
+  /* QoS stuff *//* with LOCK */
+  gdouble proportion;
+  GstClockTime earliest_time;
 };
 
 struct _GstVisualClass
@@ -109,6 +118,8 @@ static void gst_visual_dispose (GObject * object);
 static GstStateChangeReturn gst_visual_change_state (GstElement * element,
     GstStateChange transition);
 static GstFlowReturn gst_visual_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_visual_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_visual_src_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_visual_src_setcaps (GstPad * pad, GstCaps * caps);
@@ -191,15 +202,29 @@ gst_visual_init (GstVisual * visual)
   visual->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_setcaps_function (visual->sinkpad, gst_visual_sink_setcaps);
   gst_pad_set_chain_function (visual->sinkpad, gst_visual_chain);
+  gst_pad_set_event_function (visual->sinkpad, gst_visual_sink_event);
   gst_element_add_pad (GST_ELEMENT (visual), visual->sinkpad);
 
   visual->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_setcaps_function (visual->srcpad, gst_visual_src_setcaps);
   gst_pad_set_getcaps_function (visual->srcpad, gst_visual_getcaps);
+  gst_pad_set_event_function (visual->srcpad, gst_visual_src_event);
   gst_element_add_pad (GST_ELEMENT (visual), visual->srcpad);
 
-  visual->next_ts = 0;
   visual->adapter = gst_adapter_new ();
+}
+
+static void
+gst_visual_clear_actors (GstVisual * visual)
+{
+  if (visual->actor) {
+    visual_object_unref (VISUAL_OBJECT (visual->actor));
+    visual->actor = NULL;
+  }
+  if (visual->video) {
+    visual_object_unref (VISUAL_OBJECT (visual->video));
+    visual->video = NULL;
+  }
 }
 
 static void
@@ -211,17 +236,21 @@ gst_visual_dispose (GObject * object)
     g_object_unref (visual->adapter);
     visual->adapter = NULL;
   }
+  gst_visual_clear_actors (visual);
 
-  if (visual->actor) {
-    visual_object_unref (VISUAL_OBJECT (visual->actor));
-    visual->actor = NULL;
-  }
-
-  if (visual->video) {
-    visual_object_unref (VISUAL_OBJECT (visual->video));
-    visual->video = NULL;
-  }
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+}
+
+static void
+gst_visual_reset (GstVisual * visual)
+{
+  visual->next_ts = -1;
+  gst_adapter_clear (visual->adapter);
+
+  GST_OBJECT_LOCK (visual);
+  visual->proportion = 1.0;
+  visual->earliest_time = -1;
+  GST_OBJECT_UNLOCK (visual);
 }
 
 static GstCaps *
@@ -296,6 +325,15 @@ gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
   visual_video_set_dimension (visual->video, visual->width, visual->height);
   visual_actor_video_negotiate (visual->actor, 0, FALSE, FALSE);
 
+  /* precalc some values */
+  visual->outsize =
+      visual->video->height * GST_ROUND_UP_4 (visual->video->width) *
+      visual->video->bpp;
+  visual->spf =
+      gst_util_uint64_scale_int (visual->rate, visual->fps_d, visual->fps_n);
+  visual->duration =
+      gst_util_uint64_scale_int (GST_SECOND, visual->fps_d, visual->fps_n);
+
   gst_object_unref (visual);
   return TRUE;
 
@@ -315,6 +353,11 @@ gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_get_int (structure, "rate", &visual->rate);
+
+  if (visual->fps_n != 0) {
+    visual->spf =
+        gst_util_uint64_scale_int (visual->rate, visual->fps_d, visual->fps_n);
+  }
 
   gst_object_unref (visual);
   return TRUE;
@@ -356,10 +399,72 @@ gst_vis_src_negotiate (GstVisual * visual)
 
 no_format:
   {
+    GST_ELEMENT_ERROR (visual, STREAM, FORMAT, (NULL),
+        ("could not negotiate output format"));
     gst_caps_unref (intersect);
     gst_caps_unref (othercaps);
     return FALSE;
   }
+}
+
+static gboolean
+gst_visual_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstVisual *visual;
+  gboolean res;
+
+  visual = GST_VISUAL (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      res = gst_pad_push_event (visual->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      /* reset QoS and adapter. */
+      gst_visual_reset (visual);
+      res = gst_pad_push_event (visual->srcpad, event);
+      break;
+    default:
+      res = gst_pad_push_event (visual->srcpad, event);
+      break;
+  }
+
+  gst_object_unref (visual);
+  return res;
+}
+
+static gboolean
+gst_visual_src_event (GstPad * pad, GstEvent * event)
+{
+  GstVisual *visual;
+  gboolean res;
+
+  visual = GST_VISUAL (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:
+    {
+      gdouble proportion;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+      GST_OBJECT_LOCK (visual);
+      visual->proportion = proportion;
+      visual->earliest_time = timestamp + diff;
+      GST_OBJECT_UNLOCK (visual);
+
+      res = gst_pad_push_event (visual->sinkpad, event);
+      break;
+    }
+    default:
+      res = gst_pad_push_event (visual->sinkpad, event);
+      break;
+  }
+
+  gst_object_unref (visual);
+  return res;
 }
 
 static GstFlowReturn
@@ -377,9 +482,8 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
 
   ret =
       gst_pad_alloc_buffer_and_set_caps (visual->srcpad,
-      GST_BUFFER_OFFSET_NONE,
-      visual->video->height * GST_ROUND_UP_4 (visual->video->width) *
-      visual->video->bpp, GST_PAD_CAPS (visual->srcpad), outbuf);
+      GST_BUFFER_OFFSET_NONE, visual->outsize,
+      GST_PAD_CAPS (visual->srcpad), outbuf);
 
   if (ret != GST_FLOW_OK)
     return ret;
@@ -397,7 +501,6 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
   guint i;
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
   GstFlowReturn ret = GST_FLOW_OK;
-  guint spf;
 
   GST_DEBUG_OBJECT (visual, "chain function called");
 
@@ -415,15 +518,33 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
   if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE)
     visual->next_ts = GST_BUFFER_TIMESTAMP (buffer);
 
-  /* spf = samples per frame */
-  spf = ((guint64) (visual->rate) * visual->fps_d) / visual->fps_n;
   gst_adapter_push (visual->adapter, buffer);
 
-  while (gst_adapter_available (visual->adapter) > MAX (512, spf) * 4 &&
+  while (gst_adapter_available (visual->adapter) > MAX (512, visual->spf) * 4 &&
       (ret == GST_FLOW_OK)) {
+    gboolean need_skip;
+
     /* Read 512 samples per channel */
-    const guint16 *data =
-        (const guint16 *) gst_adapter_peek (visual->adapter, 512 * 4);
+    const guint16 *data;
+
+    data = (const guint16 *) gst_adapter_peek (visual->adapter, 512 * 4);
+
+    GST_DEBUG_OBJECT (visual, "QoS: in: %" G_GUINT64_FORMAT
+        ", earliest: %" G_GUINT64_FORMAT, visual->next_ts,
+        visual->earliest_time);
+
+    if (visual->next_ts != -1) {
+      GST_OBJECT_LOCK (visual);
+      /* check for QoS, don't compute buffers that are known to be latea */
+      need_skip = visual->earliest_time != -1 &&
+          visual->next_ts <= visual->earliest_time;
+      GST_OBJECT_UNLOCK (visual);
+
+      if (need_skip) {
+        GST_WARNING_OBJECT (visual, "skipping frame because of QoS");
+        goto skip;
+      }
+    }
 
     for (i = 0; i < 512; i++) {
       visual->audio.plugpcm[0][i] = *data++;
@@ -436,32 +557,28 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
         goto beach;
       }
     }
+    visual_video_set_buffer (visual->video, GST_BUFFER_DATA (outbuf));
+    visual_audio_analyze (&visual->audio);
+    visual_actor_run (visual->actor, &visual->audio);
+    visual_video_set_buffer (visual->video, NULL);
 
-    if (visual->video != NULL) {
-      visual_video_set_buffer (visual->video, GST_BUFFER_DATA (outbuf));
-      visual_audio_analyze (&visual->audio);
-      visual_actor_run (visual->actor, &visual->audio);
+    GST_BUFFER_TIMESTAMP (outbuf) = visual->next_ts;
+    GST_BUFFER_DURATION (outbuf) = visual->duration;
 
-      GST_BUFFER_TIMESTAMP (outbuf) = visual->next_ts;
-      GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (GST_SECOND,
-          visual->fps_d, visual->fps_n);
-      visual->next_ts += GST_BUFFER_DURATION (outbuf);
-      ret = gst_pad_push (visual->srcpad, outbuf);
-      outbuf = NULL;
-    }
+    ret = gst_pad_push (visual->srcpad, outbuf);
+    outbuf = NULL;
+
+    GST_DEBUG_OBJECT (visual, "finished frame, flushing %u samples from input",
+        visual->spf);
+  skip:
+    /* interpollate next timestamp */
+    if (visual->next_ts != -1)
+      visual->next_ts += visual->duration;
 
     /* Flush out the number of samples per frame * channels * sizeof (gint16) */
-    /* Recompute spf in case caps changed */
-    spf = ((guint64) (visual->rate) * visual->fps_d) / visual->fps_n;
-    GST_DEBUG_OBJECT (visual, "finished frame, flushing %u samples from input",
-        spf);
     gst_adapter_flush (visual->adapter,
-        MIN (gst_adapter_available (visual->adapter), spf * 4));
+        MIN (gst_adapter_available (visual->adapter), visual->spf * 4));
   }
-
-  /* so we're on the safe side */
-  if (visual->video)
-    visual_video_set_buffer (visual->video, NULL);
 
   if (outbuf != NULL)
     gst_buffer_unref (outbuf);
@@ -485,18 +602,17 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
           plugname);
       visual->video = visual_video_new ();
 
+      /* can't have a play without actors */
       if (!visual->actor || !visual->video)
-        return GST_STATE_CHANGE_FAILURE;
+        goto no_actors;
 
-      if (visual_actor_realize (visual->actor) != 0) {
-        visual_object_unref (VISUAL_OBJECT (visual->actor));
-        visual->actor = NULL;
-        return GST_STATE_CHANGE_FAILURE;
-      }
+      if (visual_actor_realize (visual->actor) != 0)
+        goto no_realize;
+
       visual_actor_set_video (visual->actor, visual->video);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_adapter_clear (visual->adapter);
+      gst_visual_reset (visual);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -510,21 +626,31 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      visual->next_ts = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (visual->actor)
-        visual_object_unref (VISUAL_OBJECT (visual->actor));
-      if (visual->video)
-        visual_object_unref (VISUAL_OBJECT (visual->video));
-      visual->actor = NULL;
-      visual->video = NULL;
+      gst_visual_clear_actors (visual);
       break;
     default:
       break;
   }
 
   return ret;
+
+  /* ERRORS */
+no_actors:
+  {
+    GST_ELEMENT_ERROR (visual, LIBRARY, INIT, (NULL),
+        ("could not create actors"));
+    gst_visual_clear_actors (visual);
+    return GST_STATE_CHANGE_FAILURE;
+  }
+no_realize:
+  {
+    GST_ELEMENT_ERROR (visual, LIBRARY, INIT, (NULL),
+        ("could not realize actor"));
+    gst_visual_clear_actors (visual);
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
 
 static void

@@ -25,8 +25,12 @@
  * 
  * <refsect2>
  * <para>
- * Provides useful functions and a base class for video sinks. Right now it's
- * mostly used as a place holder for adding common code later on.
+ * Provides useful functions and a base class for video sinks. 
+ * </para>
+ * <para>
+ * GstVideoSink will configure the default base sink to drop frames that
+ * arrive later than 20ms as this is considered the default threshold for
+ * observing out-of-sync frames.
  * </para>
  * </refsect2>
  */
@@ -99,7 +103,8 @@ gst_video_sink_init (GstVideoSink * videosink)
 {
   videosink->width = 0;
   videosink->height = 0;
-  GST_BASE_SINK (videosink)->abidata.ABI.max_lateness = 20 * GST_MSECOND;
+
+  gst_base_sink_set_max_lateness (GST_BASE_SINK (videosink), 20 * GST_MSECOND);
 }
 
 static void

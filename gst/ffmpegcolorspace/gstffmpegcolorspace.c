@@ -154,6 +154,7 @@ gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
 
   GST_DEBUG_OBJECT (btrans, "transformed %" GST_PTR_FORMAT " into %"
       GST_PTR_FORMAT, caps, result);
+
   return result;
 }
 
@@ -251,28 +252,28 @@ gst_ffmpegcsp_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   /* ERRORS */
 no_width_height:
   {
-    GST_DEBUG ("did not specify width or height");
+    GST_DEBUG_OBJECT (space, "did not specify width or height");
     space->from_pixfmt = PIX_FMT_NB;
     space->to_pixfmt = PIX_FMT_NB;
     return FALSE;
   }
 no_framerate:
   {
-    GST_DEBUG ("did not specify framerate");
+    GST_DEBUG_OBJECT (space, "did not specify framerate");
     space->from_pixfmt = PIX_FMT_NB;
     space->to_pixfmt = PIX_FMT_NB;
     return FALSE;
   }
 format_mismatch:
   {
-    GST_DEBUG ("input and output formats do not match");
+    GST_DEBUG_OBJECT (space, "input and output formats do not match");
     space->from_pixfmt = PIX_FMT_NB;
     space->to_pixfmt = PIX_FMT_NB;
     return FALSE;
   }
 invalid_in_caps:
   {
-    GST_DEBUG ("could not configure context for input format");
+    GST_DEBUG_OBJECT (space, "could not configure context for input format");
     av_free (ctx);
     space->from_pixfmt = PIX_FMT_NB;
     space->to_pixfmt = PIX_FMT_NB;
@@ -280,7 +281,7 @@ invalid_in_caps:
   }
 invalid_out_caps:
   {
-    GST_DEBUG ("could not configure context for output format");
+    GST_DEBUG_OBJECT (space, "could not configure context for output format");
     av_free (ctx);
     space->from_pixfmt = PIX_FMT_NB;
     space->to_pixfmt = PIX_FMT_NB;

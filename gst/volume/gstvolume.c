@@ -278,8 +278,11 @@ static void
 gst_volume_class_init (GstVolumeClass * klass)
 {
   GObjectClass *gobject_class;
+  GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;
+  trans_class = (GstBaseTransformClass *) klass;
+
   gobject_class->set_property = volume_set_property;
   gobject_class->get_property = volume_get_property;
   gobject_class->dispose = gst_volume_dispose;
@@ -293,10 +296,8 @@ gst_volume_class_init (GstVolumeClass * klass)
           0.0, VOLUME_MAX_DOUBLE, 1.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  GST_BASE_TRANSFORM_CLASS (klass)->transform_ip =
-      GST_DEBUG_FUNCPTR (volume_transform_ip);
-  GST_BASE_TRANSFORM_CLASS (klass)->set_caps =
-      GST_DEBUG_FUNCPTR (volume_set_caps);
+  trans_class->transform_ip = GST_DEBUG_FUNCPTR (volume_transform_ip);
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (volume_set_caps);
 }
 
 static void
