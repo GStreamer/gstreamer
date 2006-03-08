@@ -76,9 +76,23 @@ main (gint   argc,
   /* build */
   pipeline = gst_pipeline_new ("my-pipeline");
   src = gst_element_factory_make ("videotestsrc", "src");
+  if (src == NULL)
+    g_error ("Could not create 'videotestsrc' element");
+
   filter = gst_element_factory_make ("capsfilter", "filter");
+  g_assert (filer != NULL); /* should always exist */
+
   csp = gst_element_factory_make ("ffmpegcolorspace", "csp");
+  if (csp == NULL)
+    g_error ("Could not create 'ffmpegcolorspace' element");
+
   sink = gst_element_factory_make ("xvimagesink", "sink");
+  if (sink == NULL) {
+    sink = gst_element_factory_make ("ximagesink", "sink");
+    if (sink == NULL)
+      g_error ("Could not create neither 'xvimagesink' nor 'ximagesink' element");
+  }
+
   gst_bin_add_many (GST_BIN (pipeline), src, filter, csp, sink, NULL);
   gst_element_link_many (src, filter, csp, sink, NULL);
   filtercaps = gst_caps_new_simple ("video/x-raw-rgb",
@@ -98,6 +112,13 @@ main (gint   argc,
 
   /* run */
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  /* wait until it's up and running or failed */
+  if (gst_element_get_state (pipeline, NULL, NULL, -1) == GST_STATE_CHANGE_FAILURE) {
+    g_error ("Failed to go into PLAYING state");
+  }
+
+  g_print ("Running ...\n");
   g_main_loop_run (loop);
 
   /* exit */

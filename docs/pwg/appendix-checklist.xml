@@ -92,6 +92,29 @@ gst_myelement_class_init (GstMyelementClass *klass)
           option <command>--gst-debug=myelement:5</command>.
         </para>
       </listitem>
+      <listitem>
+        <para>
+          Elements should use GST_DEBUG_FUNCPTR when setting pad functions or
+          overriding element class methods, for example:
+          <programlisting>
+gst_pad_set_event_func (myelement->srcpad,
+    GST_DEBUG_FUNCPTR (my_element_src_event));
+          </programlisting>
+          This makes debug output much easier to read later on.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Elements that are aimed for inclusion into one of the GStreamer
+          modules should ensure consistent naming of the element name,
+          structures and function names. For example, if the element type is
+          GstYellowFooDec, functions should be prefixed with
+          gst_yellow_foo_dec_ and the element should be registered
+          as 'yellowfoodec'. Separate words should be separate in this scheme,
+          so it should be GstFooDec and gst_foo_dec, and not GstFoodec and
+          gst_foodec.
+        </para>
+      </listitem>
     </itemizedlist>
   </sect1>
 
@@ -109,21 +132,27 @@ gst_myelement_class_init (GstMyelementClass *klass)
       </listitem>
       <listitem>
         <para>
-          All elements that are event-aware (their
-          <classname>GST_ELEMENT_EVENT_AWARE</classname> flag is set)
-          should implement event handling for <emphasis>all</emphasis>
-          events, either specifically or using
-          <function>gst_pad_event_default ()</function>. Elements that
-          you should handle specifically are the interrupt event, in
-          order to properly bail out as soon as possible if state is
-          changed. Events may never be dropped unless specifically
-          intended.
+          Elements should make sure they forward events they do not
+          handle with gst_pad_event_default (pad, event) instead of
+          just dropping them. Events should never be dropped unless
+          specifically intended.
         </para>
       </listitem>
       <listitem>
         <para>
-          Loop-based elements should always implement event handling,
-          in order to prevent hangs (infinite loop) on state changes.
+          Elements should make sure they forward queries they do not
+          handle with gst_pad_query_default (pad, query) instead of
+          just dropping them.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Elements should use gst_pad_get_parent() in event and query
+          functions, so that they hold a reference to the element while they
+          are operating. Note that gst_pad_get_parent() increases the
+          reference count of the element, so you must be very careful to call
+          gst_object_unref (element) before returning from your query or
+          event function, otherwise you will leak memory.
         </para>
       </listitem>
     </itemizedlist>

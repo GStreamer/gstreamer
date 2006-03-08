@@ -1,3 +1,11 @@
+2006-03-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  Add some very very basic error checking.
+
+	* docs/pwg/appendix-checklist.xml:
+	  Some updates to the list of things to check when writing an element.
+
 2006-03-08  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-element-transform.txt:
