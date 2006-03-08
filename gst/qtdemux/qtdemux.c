@@ -1316,6 +1316,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
 #define FOURCC__alb     GST_MAKE_FOURCC(0xa9,'a','l','b')
 #define FOURCC_gnre     GST_MAKE_FOURCC('g','n','r','e')
 #define FOURCC_disc     GST_MAKE_FOURCC('d','i','s','c')
+#define FOURCC_disk     GST_MAKE_FOURCC('d','i','s','k')
 #define FOURCC_trkn     GST_MAKE_FOURCC('t','r','k','n')
 #define FOURCC_cpil     GST_MAKE_FOURCC('c','p','i','l')
 #define FOURCC_tmpo     GST_MAKE_FOURCC('t','m','p','o')
@@ -1421,6 +1422,7 @@ QtNodeType qt_node_types[] = {
   {FOURCC_gnre, "Genre", QT_CONTAINER,},
   {FOURCC_trkn, "Track Number", QT_CONTAINER,},
   {FOURCC_disc, "Disc Number", QT_CONTAINER,},
+  {FOURCC_disk, "Disc Number", QT_CONTAINER,},
   {FOURCC_cpil, "cpil", QT_CONTAINER,},
   {FOURCC_tmpo, "Tempo", QT_CONTAINER,},
   {FOURCC__too, "too", QT_CONTAINER,},
@@ -2932,6 +2934,12 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   if (node) {
     qtdemux_tag_add_num (qtdemux, GST_TAG_ALBUM_VOLUME_NUMBER,
         GST_TAG_ALBUM_VOLUME_COUNT, node);
+  } else {
+    node = qtdemux_tree_get_child_by_type (ilst, FOURCC_disk);
+    if (node) {
+      qtdemux_tag_add_num (qtdemux, GST_TAG_ALBUM_VOLUME_NUMBER,
+          GST_TAG_ALBUM_VOLUME_COUNT, node);
+    }
   }
 
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC_gnre);
