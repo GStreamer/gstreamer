@@ -930,7 +930,7 @@ again:
   *late = FALSE;
 
   /* FIXME, update clock stats here and do some QoS */
-  if (status == GST_CLOCK_EARLY) {
+  if (status == GST_CLOCK_EARLY && GST_IS_BUFFER (obj)) {
     if (basesink->abidata.ABI.max_lateness != -1
         && jitter > basesink->abidata.ABI.max_lateness) {
       GstEvent *event;
@@ -940,7 +940,7 @@ again:
       *late = TRUE;
 
       /* generate QoS event, FIXME, calculate decent proportion. */
-      event = gst_event_new_qos (-1.0, jitter, start);
+      event = gst_event_new_qos (-1.0, jitter, GST_BUFFER_TIMESTAMP (obj));
 
       /* send upstream */
       gst_pad_push_event (basesink->sinkpad, event);

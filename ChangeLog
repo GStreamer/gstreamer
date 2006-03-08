@@ -1,3 +1,8 @@
+2006-03-08  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_do_sync):
+	Use last buffer timestamp in qos message.
+
 2006-03-07  Wim Taymans  <wim@fluendo.com>
 
 	* docs/pwg/advanced-tagging.xml:
