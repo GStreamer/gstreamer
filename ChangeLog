@@ -1,3 +1,8 @@
+2006-03-08  Michael Smith  <msmith@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	  Make typefind function name for mpeg4 video unique.
+
 2006-03-08  Wim Taymans  <wim@fluendo.com>
 
 	* ext/libvisual/visual.c: (gst_visual_init),

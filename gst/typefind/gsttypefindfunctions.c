@@ -2204,7 +2204,7 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "video/mpeg-stream", GST_RANK_MARGINAL,
       mpeg_video_stream_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL,
       NULL);
-  TYPE_FIND_REGISTER (plugin, "video/mpeg", GST_RANK_PRIMARY,
+  TYPE_FIND_REGISTER (plugin, "video/mpeg4", GST_RANK_PRIMARY,
       mpeg4_video_type_find, m4v_exts, MPEG_VIDEO_CAPS, NULL, NULL);
 
   /* ISO formats */
