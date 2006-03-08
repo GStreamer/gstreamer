@@ -2,10 +2,10 @@ common_cflags = $(PYGTK_CFLAGS) $(GST_CFLAGS) $(PYGST_CFLAGS) -fno-strict-aliasi
 common_libadd = $(GST_LIBS)
 common_ldflags = -module -avoid-version
 
-pkgpythondir = $(pythondir)/gst
 pkgpyexecdir = $(pyexecdir)/gst
 
-pygstdir = $(pkgpythondir)
+# we also put this in pyexecdir so it works across multilib
+pygstdir = $(pkgpyexecdir)
 pygst_PYTHON = __init__.py
 
 pygstexecdir = $(pkgpyexecdir)
