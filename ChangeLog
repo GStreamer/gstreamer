@@ -1,3 +1,10 @@
+2006-03-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_udta):
+	  Extract disc number and count from files that use
+	  'disk' instead of 'disc' as node identifier for that
+	  (fixes #332066).
+
 2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/musepack/gstmusepackdec.h:
