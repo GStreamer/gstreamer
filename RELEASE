@@ -1,28 +1,19 @@
 
-GStreamer: Release notes for GStreamer Python 0.8.3 "Nadolig LLawen"
+GStreamer: Release notes for GStreamer Python 0.8.4 "64 bit is enough for everyone"
         
 
-This is the 0.8.3 release of the GStreamer Python bindings.
+This is the 0.8.4 release of the GStreamer Python bindings.
 It should be used with the 0.8.x series of GStreamer and GStreamer Plug-ins.
 
 
-This is the fourth stable 0.8.0 gst-python release, it's now considered
+This is the fifth stable 0.8.0 gst-python release, it's now considered
 stable and ready to be used in production. It's already being used by
-serveral applications.
+several applications.
 
   
 Features of this release
     
-      * add GStreamer logging support from python
-      * added a gst.extend package
-      * added modules to do jukebox mixed and levelled playback
-      * memleak fixes
-
-Bugs fixed in this release
-    
-      * 147641 : [docs] pydoc segfaults when viewing gst package doc
-      * 171287 : gst-python leaks
-      * 313415 : current cvs of gst-python ( branch BRANCH-GSTREAMER-0_8  ...
+      * fix installation on 64-bit machines
 
 Download
 
@@ -50,16 +41,7 @@ will create more lists as necessary.
         
 Contributors to this release
     
-      * Andy Wingo
-      * Benjamin Otte
-      * Edward Hervey
-      * Jan Schmidt
-      * Johan Dahlin
-      * Martin Soto
-      * Michael Scherer
-      * Richard Hult
       * Thomas Vander Stichele
-      * Zaheer Abbas Merali
 Maintainers
     
       * Edward Hervey

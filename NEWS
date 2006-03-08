@@ -1,4 +1,8 @@
-This is GStreamer Python 0.8.3, "Nadolig LLawen"
+This is GStreamer Python 0.8.4, "64 bit is enough for anyone"
+
+Changes since 0.8.3:
+
+      * fix installation on 64-bit machines
 
 Changes since 0.8.2:
 

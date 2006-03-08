@@ -1,3 +1,10 @@
+=== release 0.8.4 ===
+
+2006-03-08  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.8.4, "64 bit is enough for anyone"
+
 2006-03-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/Makefile.am:
