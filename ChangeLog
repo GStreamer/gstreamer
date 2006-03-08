@@ -1,5 +1,15 @@
 2006-03-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_class_init),
+	(gst_text_overlay_init), (gst_text_overlay_set_property),
+	(gst_text_overlay_get_property):
+	  Revert API/ABI break from March 1. Keep 'halign' and 'valign'
+	  as string type properties, but mark them deprecated. Add
+	  'halignment' and 'valignment' properties that use enums
+	  instead of strings.
+
+2006-03-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
 	  Allow palettes with less than 256 colours in AVI files
 	  (#333488, patch by: Fabrizio Gennari).
