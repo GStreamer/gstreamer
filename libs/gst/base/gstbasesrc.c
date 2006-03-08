@@ -207,6 +207,7 @@ struct _GstBaseSrcPrivate
 {
   gboolean last_sent_eos;       /* last thing we did was send an EOS (we set this
                                  * to avoid the sending of two EOS in some cases) */
+  gboolean discont;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -850,6 +851,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
             src->segment.last_stop, stop, src->segment.time));
   }
 
+  src->priv->discont = TRUE;
   src->data.ABI.running = TRUE;
   /* and restart the task in case it got paused explicitely or by
    * the FLUSH_START event we pushed out. */
@@ -1370,6 +1372,12 @@ gst_base_src_loop (GstPad * pad)
   if (position != -1)
     gst_segment_set_last_stop (&src->segment, src->segment.format, position);
 
+  if (G_UNLIKELY (src->priv->discont)) {
+    buf = gst_buffer_make_metadata_writable (buf);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    src->priv->discont = FALSE;
+  }
+
   ret = gst_pad_push (pad, buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto pause;
@@ -1787,6 +1795,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
         basesrc->live_running = FALSE;
       }
       basesrc->priv->last_sent_eos = FALSE;
+      basesrc->priv->discont = TRUE;
       GST_LIVE_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

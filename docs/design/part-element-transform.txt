@@ -1,0 +1,38 @@
+Transform elements
+------------------
+
+Transform elements transform input buffers to output buffers based
+on the sink and source caps.
+
+typical transform elements include:
+
+ - audio convertors (audioconvert, ...)
+ - video convertors (colorspace, videoscale, audioconvert, ...)
+ - filters (capfilter, colorbalance, 
+
+The implementation of the transform element has to take care of
+the following things:
+
+ - efficient negotiation both up and downstream
+ - efficient buffer alloc and other buffer management
+
+Some transform elements can operate in different modes:
+
+ - passthrough (no changes to buffers)
+ - in-place (changes made to incomming buffer)
+ - metadata changes only 
+ 
+Depending on the mode of operation the buffer allocation strategy might change.
+
+
+Negotiation
+-----------
+
+The transform element is configured to perform a specific transform in these
+two situations:
+
+ - new caps are received on the sink pad.
+ - new caps are received on the source pad when allocating an output buffer and
+   we can transform to these caps with the current input buffer.
+
+

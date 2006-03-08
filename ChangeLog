@@ -1,3 +1,12 @@
+2006-03-08  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-element-transform.txt:
+	Added some docs about the design of tranform elements.
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek),
+	(gst_base_src_loop), (gst_base_src_change_state):
+	Mark buffers with the DISCONT flag.
+
 2006-03-08  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gstregistry.h:
