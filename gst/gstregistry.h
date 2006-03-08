@@ -54,8 +54,8 @@ struct _GstRegistry {
 
   GList 	*paths;
 
-  /* FIXME move elsewhere */
-  FILE          *cache_file;
+  /* FIXME move these elsewhere */
+  int            cache_file;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

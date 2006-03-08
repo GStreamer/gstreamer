@@ -56,17 +56,32 @@
 #define CLASS(registry)  GST_XML_REGISTRY_CLASS (G_OBJECT_GET_CLASS (registry))
 
 static gboolean
-gst_registry_xml_save (GstRegistry * registry, gchar * format, ...)
+gst_registry_save (GstRegistry * registry, gchar * format, ...)
 {
   va_list var_args;
+  size_t written, len;
+  gboolean ret;
+  char *str;
 
   va_start (var_args, format);
-
-  vfprintf (registry->cache_file, format, var_args);
-
+  str = g_strdup_vprintf (format, var_args);
   va_end (var_args);
 
-  return TRUE;
+  len = strlen (str);
+
+  written = write (registry->cache_file, str, len);
+
+  if (len == written)
+    ret = TRUE;
+  else {
+    ret = FALSE;
+    GST_ERROR ("Failed to write registry to temporary file: %s",
+        g_strerror (errno));
+  }
+
+  g_free (str);
+
+  return ret;
 }
 
 static void
@@ -527,15 +542,21 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
 /*
  * Save
  */
-#define PUT_ESCAPED(prefix,tag,value)                           \
-G_STMT_START{                                                   \
-  const gchar *toconv = value;                                  \
-  if (toconv) {                                                 \
-    gchar *v = g_markup_escape_text (toconv, strlen (toconv));  \
-    gst_registry_xml_save (registry, prefix "<%s>%s</%s>\n", tag, v, tag);                      \
-    g_free (v);                                                 \
-  }                                                             \
-}G_STMT_END
+static gboolean
+gst_registry_save_escaped (GstRegistry * registry, char *prefix, char *tag,
+    char *value)
+{
+  gboolean ret = TRUE;
+
+  if (value) {
+    gchar *v = g_markup_escape_text (value, strlen (value));
+
+    ret = gst_registry_save (registry, "%s<%s>%s</%s>\n", prefix, tag, v, tag);
+    g_free (v);
+  }
+
+  return ret;
+}
 
 
 static gboolean
@@ -545,14 +566,15 @@ gst_registry_xml_save_caps (GstRegistry * registry, const GstCaps * caps)
    * faster when loading them later on */
   char *s;
   GstCaps *copy = gst_caps_copy (caps);
+  gboolean ret;
 
   gst_caps_do_simplify (copy);
   s = gst_caps_to_string (copy);
   gst_caps_unref (copy);
 
-  PUT_ESCAPED ("  ", "caps", s);
+  ret = gst_registry_save_escaped (registry, "  ", "caps", s);
   g_free (s);
-  return TRUE;
+  return ret;
 }
 
 static gboolean
@@ -561,9 +583,14 @@ gst_registry_xml_save_pad_template (GstRegistry * registry,
 {
   gchar *presence;
 
-  PUT_ESCAPED ("   ", "nametemplate", template->name_template);
-  gst_registry_xml_save (registry, "   <direction>%s</direction>\n",
-      (template->direction == GST_PAD_SINK ? "sink" : "src"));
+  if (!gst_registry_save_escaped (registry, "   ", "nametemplate",
+          template->name_template))
+    return FALSE;
+
+  if (!gst_registry_save (registry,
+          "   <direction>%s</direction>\n",
+          (template->direction == GST_PAD_SINK ? "sink" : "src")))
+    return FALSE;
 
   switch (template->presence) {
     case GST_PAD_ALWAYS:
@@ -579,11 +606,13 @@ gst_registry_xml_save_pad_template (GstRegistry * registry,
       presence = "unknown";
       break;
   }
-  gst_registry_xml_save (registry, "   <presence>%s</presence>\n", presence);
+  if (!gst_registry_save (registry, "   <presence>%s</presence>\n", presence))
+    return FALSE;
 
   if (template->static_caps.string) {
-    gst_registry_xml_save (registry, "   <caps>%s</caps>\n",
-        template->static_caps.string);
+    if (!gst_registry_save (registry, "   <caps>%s</caps>\n",
+            template->static_caps.string))
+      return FALSE;
   }
   return TRUE;
 }
@@ -592,50 +621,68 @@ static gboolean
 gst_registry_xml_save_feature (GstRegistry * registry,
     GstPluginFeature * feature)
 {
-  PUT_ESCAPED ("  ", "name", feature->name);
+  if (!gst_registry_save_escaped (registry, "  ", "name", feature->name))
+    return FALSE;
 
   if (feature->rank > 0) {
     gint rank = feature->rank;
 
-    gst_registry_xml_save (registry, "  <rank>%d</rank>\n", rank);
+    if (!gst_registry_save (registry, "  <rank>%d</rank>\n", rank))
+      return FALSE;
   }
 
   if (GST_IS_ELEMENT_FACTORY (feature)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
     GList *walk;
 
-    PUT_ESCAPED ("  ", "longname", factory->details.longname);
-    PUT_ESCAPED ("  ", "class", factory->details.klass);
-    PUT_ESCAPED ("  ", "description", factory->details.description);
-    PUT_ESCAPED ("  ", "author", factory->details.author);
+    if (!gst_registry_save_escaped (registry, "  ", "longname",
+            factory->details.longname))
+      return FALSE;
+    if (!gst_registry_save_escaped (registry, "  ", "class",
+            factory->details.klass))
+      return FALSE;
+    if (!gst_registry_save_escaped (registry, "  ", "description",
+            factory->details.description))
+      return FALSE;
+    if (!gst_registry_save_escaped (registry, "  ", "author",
+            factory->details.author))
+      return FALSE;
 
     walk = factory->staticpadtemplates;
 
     while (walk) {
       GstStaticPadTemplate *template = walk->data;
 
-      gst_registry_xml_save (registry, "  <padtemplate>\n");
-      gst_registry_xml_save_pad_template (registry, template);
-      gst_registry_xml_save (registry, "  </padtemplate>\n");
+      if (!gst_registry_save (registry, "  <padtemplate>\n"))
+        return FALSE;
+      if (!gst_registry_xml_save_pad_template (registry, template))
+        return FALSE;
+      if (!gst_registry_save (registry, "  </padtemplate>\n"))
+        return FALSE;
 
       walk = g_list_next (walk);
     }
 
     walk = factory->interfaces;
     while (walk) {
-      PUT_ESCAPED ("  ", "interface", (gchar *) walk->data);
+      if (!gst_registry_save_escaped (registry, "  ", "interface",
+              (gchar *) walk->data))
+        return FALSE;
       walk = g_list_next (walk);
     }
 
     if (GST_URI_TYPE_IS_VALID (factory->uri_type)) {
       gchar **protocol;
 
-      PUT_ESCAPED ("  ", "uri_type",
-          factory->uri_type == GST_URI_SINK ? "sink" : "source");
+      if (!gst_registry_save_escaped (registry, "  ", "uri_type",
+              factory->uri_type == GST_URI_SINK ? "sink" : "source"))
+        return FALSE;
       g_assert (factory->uri_protocols);
       protocol = factory->uri_protocols;
       while (*protocol) {
-        PUT_ESCAPED ("  ", "uri_protocol", *protocol);
+        if (!gst_registry_save_escaped (registry, "  ", "uri_protocol",
+                *protocol))
+          return FALSE;
         protocol++;
       }
     }
@@ -644,16 +691,21 @@ gst_registry_xml_save_feature (GstRegistry * registry,
     gint i = 0;
 
     if (factory->caps) {
-      gst_registry_xml_save_caps (registry, factory->caps);
+      if (!gst_registry_xml_save_caps (registry, factory->caps))
+        return FALSE;
     }
     if (factory->extensions) {
       while (factory->extensions[i]) {
-        PUT_ESCAPED ("  ", "extension", factory->extensions[i]);
+        if (!gst_registry_save_escaped (registry, "  ", "extension",
+                factory->extensions[i]))
+          return FALSE;
         i++;
       }
     }
   } else if (GST_IS_INDEX_FACTORY (feature)) {
-    PUT_ESCAPED ("  ", "longdesc", GST_INDEX_FACTORY (feature)->longdesc);
+    if (!gst_registry_save_escaped (registry, "  ", "longdesc",
+            GST_INDEX_FACTORY (feature)->longdesc))
+      return FALSE;
   }
   return TRUE;
 }
@@ -665,33 +717,58 @@ gst_registry_xml_save_plugin (GstRegistry * registry, GstPlugin * plugin)
   GList *walk;
   char s[100];
 
-  PUT_ESCAPED (" ", "name", plugin->desc.name);
-  PUT_ESCAPED (" ", "description", plugin->desc.description);
-  PUT_ESCAPED (" ", "filename", plugin->filename);
+  if (!gst_registry_save_escaped (registry, " ", "name", plugin->desc.name))
+    return FALSE;
+  if (!gst_registry_save_escaped (registry, " ", "description",
+          plugin->desc.description))
+    return FALSE;
+  if (!gst_registry_save_escaped (registry, " ", "filename", plugin->filename))
+    return FALSE;
+
   sprintf (s, "%d", (int) plugin->file_size);
-  PUT_ESCAPED (" ", "size", s);
+  if (!gst_registry_save_escaped (registry, " ", "size", s))
+    return FALSE;
+
   sprintf (s, "%d", (int) plugin->file_mtime);
-  PUT_ESCAPED (" ", "m32p", s);
-  PUT_ESCAPED (" ", "version", plugin->desc.version);
-  PUT_ESCAPED (" ", "license", plugin->desc.license);
-  PUT_ESCAPED (" ", "source", plugin->desc.source);
-  PUT_ESCAPED (" ", "package", plugin->desc.package);
-  PUT_ESCAPED (" ", "origin", plugin->desc.origin);
+  if (!gst_registry_save_escaped (registry, " ", "m32p", s))
+    return FALSE;
+
+  if (!gst_registry_save_escaped (registry, " ", "version",
+          plugin->desc.version))
+    return FALSE;
+  if (!gst_registry_save_escaped (registry, " ", "license",
+          plugin->desc.license))
+    return FALSE;
+  if (!gst_registry_save_escaped (registry, " ", "source", plugin->desc.source))
+    return FALSE;
+  if (!gst_registry_save_escaped (registry, " ", "package",
+          plugin->desc.package))
+    return FALSE;
+  if (!gst_registry_save_escaped (registry, " ", "origin", plugin->desc.origin))
+    return FALSE;
 
   list = gst_registry_get_feature_list_by_plugin (registry, plugin->desc.name);
 
   for (walk = list; walk; walk = g_list_next (walk)) {
     GstPluginFeature *feature = GST_PLUGIN_FEATURE (walk->data);
 
-    gst_registry_xml_save (registry, " <feature typename=\"%s\">\n",
-        g_type_name (G_OBJECT_TYPE (feature)));
-    gst_registry_xml_save_feature (registry, feature);
-    gst_registry_xml_save (registry, " </feature>\n");
+    if (!gst_registry_save (registry,
+            " <feature typename=\"%s\">\n",
+            g_type_name (G_OBJECT_TYPE (feature))))
+      goto fail;
+    if (!gst_registry_xml_save_feature (registry, feature))
+      goto fail;
+    if (!gst_registry_save (registry, " </feature>\n"))
+      goto fail;
   }
 
   gst_plugin_feature_list_free (list);
-
   return TRUE;
+
+fail:
+  gst_plugin_feature_list_free (list);
+  return FALSE;
+
 }
 
 /**
@@ -712,9 +789,9 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
 
-  tmp_location = g_strconcat (location, ".tmp", NULL);
-  registry->cache_file = fopen (tmp_location, "w");
-  if (registry->cache_file == NULL) {
+  tmp_location = g_strconcat (location, ".tmpXXXXXX", NULL);
+  registry->cache_file = g_mkstemp (tmp_location);
+  if (registry->cache_file == -1) {
     char *dir;
 
     /* oops, I bet the directory doesn't exist */
@@ -722,14 +799,17 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
     g_mkdir_with_parents (dir, 0777);
     g_free (dir);
 
-    registry->cache_file = fopen (tmp_location, "w");
+    registry->cache_file = g_mkstemp (tmp_location);
   }
-  if (registry->cache_file == NULL) {
+  if (registry->cache_file == -1) {
+    g_free (tmp_location);
     return FALSE;
   }
 
-  gst_registry_xml_save (registry, "<?xml version=\"1.0\"?>\n");
-  gst_registry_xml_save (registry, "<GST-PluginRegistry>\n");
+  if (!gst_registry_save (registry, "<?xml version=\"1.0\"?>\n"))
+    goto fail;
+  if (!gst_registry_save (registry, "<GST-PluginRegistry>\n"))
+    goto fail;
 
 
   for (walk = g_list_last (registry->plugins); walk;
@@ -752,13 +832,17 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
       }
     }
 
-    gst_registry_xml_save (registry, "<plugin>\n");
-    gst_registry_xml_save_plugin (registry, plugin);
-    gst_registry_xml_save (registry, "</plugin>\n");
+    if (!gst_registry_save (registry, "<plugin>\n"))
+      goto fail;
+    if (!gst_registry_xml_save_plugin (registry, plugin))
+      goto fail;
+    if (!gst_registry_save (registry, "</plugin>\n"))
+      goto fail;
   }
-  gst_registry_xml_save (registry, "</GST-PluginRegistry>\n");
+  if (!gst_registry_save (registry, "</GST-PluginRegistry>\n"))
+    goto fail;
 
-  fclose (registry->cache_file);
+  close (registry->cache_file);
 
   if (g_file_test (tmp_location, G_FILE_TEST_EXISTS)) {
 #ifdef WIN32
@@ -766,7 +850,14 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
 #endif
     rename (tmp_location, location);
   }
+
   g_free (tmp_location);
 
   return TRUE;
+
+fail:
+  close (registry->cache_file);
+  g_free (tmp_location);
+
+  return FALSE;
 }

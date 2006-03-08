@@ -1,3 +1,14 @@
+2006-03-08  Michael Smith  <msmith@fluendo.com>
+
+	* gst/gstregistry.h:
+	* gst/gstregistryxml.c: (gst_registry_save),
+	(gst_registry_save_escaped), (gst_registry_xml_save_caps),
+	(gst_registry_xml_save_pad_template),
+	(gst_registry_xml_save_feature), (gst_registry_xml_save_plugin),
+	(gst_registry_xml_write_cache):
+	  Rewrite registry-saving to avoid race conditions and check for
+	  failed writes.
+
 2006-03-08  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasetransform.c:
