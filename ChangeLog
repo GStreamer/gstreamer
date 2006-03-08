@@ -1,5 +1,21 @@
 2006-03-08  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_transform_caps),
+	(gst_base_transform_transform_size),
+	(gst_base_transform_prepare_output_buffer),
+	(gst_base_transform_get_unit_size),
+	(gst_base_transform_buffer_alloc),
+	(gst_base_transform_handle_buffer),
+	(gst_base_transform_change_state):
+	Cleanups, separate normal flow from errors, add sensible
+	DEBUG lines.
+	Don't try to renegotiate when allocating an output buffer.
+	Also copy DISCONT buffer flag when copying a buffer.
+	Reset the transform after we finish streaming, not during.
+
+2006-03-08  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_do_sync):
 	Use last buffer timestamp in qos message.
 
