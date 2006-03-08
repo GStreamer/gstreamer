@@ -547,15 +547,26 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   }
 
   /* palette */
-  if (palette && GST_BUFFER_SIZE (palette) >= 256 * 4) {
-    GstBuffer *copy = gst_buffer_copy (palette);
+  if (palette) {
+    GstBuffer *copy;
+    guint num_colors;
+
+    if (strf != NULL)
+      num_colors = strf->num_colors;
+    else
+      num_colors = 256;
+
+    /* palette is always at least 256*4 bytes */
+    copy = gst_buffer_new_and_alloc (MAX (num_colors * 4, 256 * 4));
+    memcpy (GST_BUFFER_DATA (copy), GST_BUFFER_DATA (palette),
+        GST_BUFFER_SIZE (palette));
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
     gint n;
     guint32 *data = (guint32 *) GST_BUFFER_DATA (copy);
 
     /* own endianness */
-    for (n = 0; n < 256; n++)
+    for (n = 0; n < num_colors; n++)
       data[n] = GUINT32_FROM_LE (data[n]);
 #endif
     gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, copy, NULL);
