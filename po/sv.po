@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.40 2006/02/08 12:46:14 thaytan Exp $
+# $Id: sv.po,v 1.41 2006/03/09 19:02:32 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-08 13:46+0100\n"
+"POT-Creation-Date: 2006-03-09 19:28+0100\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -63,40 +63,40 @@ msgstr "Spela"
 msgid "Capture"
 msgstr "Satir"
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:212 ext/cdparanoia/gstcdparanoiasrc.c:218
+#: ext/cdparanoia/gstcdparanoiasrc.c:241 ext/cdparanoia/gstcdparanoiasrc.c:247
 msgid "Could not open CD device for reading."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:280
+#: ext/cdparanoia/gstcdparanoiasrc.c:334
 #, fuzzy
 msgid "Could not seek CD."
 msgstr "Kunde inte stänga vfs-filen \"%s\"."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:293
+#: ext/cdparanoia/gstcdparanoiasrc.c:364
 #, fuzzy
 msgid "Could not read CD."
 msgstr "Kunde inte spela in!"
 
-#: ext/gnomevfs/gstgnomevfssink.c:361
+#: ext/gnomevfs/gstgnomevfssink.c:382
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Kunde inte öppna vfs-filen \"%s\" för skrivning: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:368
+#: ext/gnomevfs/gstgnomevfssink.c:389
 msgid "No filename given"
 msgstr "Inget filnamn angivet"
 
-#: ext/gnomevfs/gstgnomevfssink.c:394
+#: ext/gnomevfs/gstgnomevfssink.c:415
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunde inte stänga vfs-filen \"%s\"."
 
-#: ext/gnomevfs/gstgnomevfssink.c:542
+#: ext/gnomevfs/gstgnomevfssink.c:566
 #, fuzzy, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2508
+#: ext/ogg/gstoggdemux.c:2610
 msgid "Internal data stream error."
 msgstr ""
 
@@ -118,24 +118,24 @@ msgstr ""
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1450
+#: gst/playback/gstplaybasebin.c:1451
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1455
+#: gst/playback/gstplaybasebin.c:1456
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1459
+#: gst/playback/gstplaybasebin.c:1460
 #, fuzzy
 msgid "This is not a media file"
 msgstr "%s är ingen cdrom-enhet"
 
-#: gst/playback/gstplaybasebin.c:1464
+#: gst/playback/gstplaybasebin.c:1465
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 

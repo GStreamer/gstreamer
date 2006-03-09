@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-08 13:46+0100\n"
+"POT-Creation-Date: 2006-03-09 19:28+0100\n"
 "PO-Revision-Date: 2004-08-03 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -60,41 +60,41 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:212 ext/cdparanoia/gstcdparanoiasrc.c:218
+#: ext/cdparanoia/gstcdparanoiasrc.c:241 ext/cdparanoia/gstcdparanoiasrc.c:247
 msgid "Could not open CD device for reading."
 msgstr "Не вдається відкрити пристрій компакт-дисків для читання."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:280
+#: ext/cdparanoia/gstcdparanoiasrc.c:334
 #, fuzzy
 msgid "Could not seek CD."
 msgstr "Не вдається закрити файл віртуальної файлової системи \"%s\"."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:293
+#: ext/cdparanoia/gstcdparanoiasrc.c:364
 #, fuzzy
 msgid "Could not read CD."
 msgstr "Не вдається записати у пристрій \"%s\"."
 
-#: ext/gnomevfs/gstgnomevfssink.c:361
+#: ext/gnomevfs/gstgnomevfssink.c:382
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr ""
 "Не вдається відкрити файл віртуальної файлової системи \"%s\" для запису: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:368
+#: ext/gnomevfs/gstgnomevfssink.c:389
 msgid "No filename given"
 msgstr "Не вказано файл"
 
-#: ext/gnomevfs/gstgnomevfssink.c:394
+#: ext/gnomevfs/gstgnomevfssink.c:415
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Не вдається закрити файл віртуальної файлової системи \"%s\"."
 
-#: ext/gnomevfs/gstgnomevfssink.c:542
+#: ext/gnomevfs/gstgnomevfssink.c:566
 #, fuzzy, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка закривання файлу \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2508
+#: ext/ogg/gstoggdemux.c:2610
 msgid "Internal data stream error."
 msgstr ""
 
@@ -116,24 +116,24 @@ msgstr ""
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1450
+#: gst/playback/gstplaybasebin.c:1451
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1455
+#: gst/playback/gstplaybasebin.c:1456
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1459
+#: gst/playback/gstplaybasebin.c:1460
 #, fuzzy
 msgid "This is not a media file"
 msgstr "Пристрій \"%s\" не є пристроєм захоплення."
 
-#: gst/playback/gstplaybasebin.c:1464
+#: gst/playback/gstplaybasebin.c:1465
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 

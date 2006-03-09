@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-08 13:46+0100\n"
+"POT-Creation-Date: 2006-03-09 19:28+0100\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -59,39 +59,39 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:212 ext/cdparanoia/gstcdparanoiasrc.c:218
+#: ext/cdparanoia/gstcdparanoiasrc.c:241 ext/cdparanoia/gstcdparanoiasrc.c:247
 msgid "Could not open CD device for reading."
 msgstr "Kunne ikke åpne CD-enheten for lesing."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:280
+#: ext/cdparanoia/gstcdparanoiasrc.c:334
 #, fuzzy
 msgid "Could not seek CD."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:293
+#: ext/cdparanoia/gstcdparanoiasrc.c:364
 msgid "Could not read CD."
 msgstr ""
 
-#: ext/gnomevfs/gstgnomevfssink.c:361
+#: ext/gnomevfs/gstgnomevfssink.c:382
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Kunne ikke åpne VFS-fil «%s» for skriving: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:368
+#: ext/gnomevfs/gstgnomevfssink.c:389
 msgid "No filename given"
 msgstr "Ingen filnavn oppgitt"
 
-#: ext/gnomevfs/gstgnomevfssink.c:394
+#: ext/gnomevfs/gstgnomevfssink.c:415
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunne ikke lukke VFS-fil «%s»."
 
-#: ext/gnomevfs/gstgnomevfssink.c:542
+#: ext/gnomevfs/gstgnomevfssink.c:566
 #, fuzzy, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Feil under lukking av fil «%s»."
 
-#: ext/ogg/gstoggdemux.c:2508
+#: ext/ogg/gstoggdemux.c:2610
 msgid "Internal data stream error."
 msgstr ""
 
@@ -113,24 +113,24 @@ msgstr ""
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1450
+#: gst/playback/gstplaybasebin.c:1451
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1455
+#: gst/playback/gstplaybasebin.c:1456
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1459
+#: gst/playback/gstplaybasebin.c:1460
 #, fuzzy
 msgid "This is not a media file"
 msgstr "Enhet «%s» kan ikke fange data."
 
-#: gst/playback/gstplaybasebin.c:1464
+#: gst/playback/gstplaybasebin.c:1465
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 

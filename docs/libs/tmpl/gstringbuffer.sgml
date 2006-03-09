@@ -35,6 +35,27 @@ an implementation of an audio ringbuffer
 @segbase: 
 @waiting: 
 
+<!-- ##### STRUCT GstRingBufferSpec ##### -->
+<para>
+
+</para>
+
+@caps: 
+@type: 
+@format: 
+@sign: 
+@bigend: 
+@width: 
+@depth: 
+@rate: 
+@channels: 
+@latency_time: 
+@buffer_time: 
+@segsize: 
+@segtotal: 
+@bytes_per_sample: 
+@silence_sample: 
+
 <!-- ##### STRUCT GstRingBufferClass ##### -->
 <para>
 
