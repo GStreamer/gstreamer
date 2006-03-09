@@ -1,5 +1,13 @@
 2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset),
+	(mp3_type_find):
+	  Refactor mpeg/audio typefinding to make it more maintainable
+	  and easier to fine-tune. Make probing into middle of the file
+	  work properly (fixes #333900, also see #152688).
+
+2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c:
 	(utf8_type_find_have_valid_utf8_at_offset):
 	  Remove part from previous commit that was bogus:
