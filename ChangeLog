@@ -1,3 +1,10 @@
+2006-03-09  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_sink_event),
+	(gst_dvdemux_convert_segment), (gst_dvdemux_demux_frame):
+	Handle events in push mode better, can now do non-flushing
+	seeks in push mode as well.
+
 2006-03-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/gstdynudpsink.c: (gst_dynudpsink_class_init):

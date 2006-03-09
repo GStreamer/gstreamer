@@ -726,10 +726,22 @@ gst_dvdemux_handle_sink_event (GstPad * pad, GstEvent * event)
           gst_segment_set_newsegment (&dvdemux->byte_segment, update,
               rate, format, start, stop, time);
 
-          /* and queue a SEGMENT before sending the next set of buffers, we
-           * cannot convert to time yet as we might not know the size of the
-           * frames, etc.. */
-          dvdemux->need_segment = TRUE;
+          /* the update can always be sent */
+          if (update) {
+            GstEvent *update;
+
+            update = gst_event_new_new_segment (TRUE,
+                dvdemux->time_segment.rate, dvdemux->time_segment.format,
+                dvdemux->time_segment.start, dvdemux->time_segment.last_stop,
+                dvdemux->time_segment.time);
+
+            gst_dvdemux_push_event (dvdemux, update);
+          } else {
+            /* and queue a SEGMENT before sending the next set of buffers, we
+             * cannot convert to time yet as we might not know the size of the
+             * frames, etc.. */
+            dvdemux->need_segment = TRUE;
+          }
           gst_event_unref (event);
           break;
         case GST_FORMAT_TIME:
@@ -849,6 +861,19 @@ done:
   return res;
 }
 
+#if 0
+static gboolean
+gst_dvdemux_convert_segment (GstDVDemux * dvdemux, GstSegment * src,
+    GstSegment * dest)
+{
+  dest->rate = src->rate;
+  dest->abs_rate = src->abs_rate;
+  dest->flags = src->flags;
+
+  return TRUE;
+}
+#endif
+
 /* handle seek in push base mode.
  *
  * Convert the time seek to a bytes seek and send it
@@ -856,6 +881,8 @@ done:
  *
  * FIXME, upstream might be able to perform time based
  * seek too.
+ *
+ * Does not take ownership of the event.
  */
 static gboolean
 gst_dvdemux_handle_push_seek (GstDVDemux * dvdemux, GstPad * pad,
@@ -941,6 +968,8 @@ done:
 }
 
 /* handle seek in pull base mode.
+ *
+ * Does not take ownership of the event.
  */
 static gboolean
 gst_dvdemux_handle_pull_seek (GstDVDemux * demux, GstPad * pad,
@@ -1277,6 +1306,10 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
                 &dvdemux->time_segment.start, &dvdemux->time_segment.stop)))
       goto segment_error;
 
+    dvdemux->time_segment.rate = dvdemux->byte_segment.rate;
+    dvdemux->time_segment.abs_rate = dvdemux->byte_segment.abs_rate;
+    dvdemux->time_segment.last_stop = dvdemux->time_segment.start;
+
     /* calculate current frame number */
     format = GST_FORMAT_DEFAULT;
     if (!(res = gst_dvdemux_src_convert (dvdemux, dvdemux->videosrcpad,
@@ -1290,9 +1323,9 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
         GST_TIME_ARGS (dvdemux->time_segment.stop),
         GST_TIME_ARGS (dvdemux->time_segment.start));
 
-    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-        dvdemux->time_segment.start, dvdemux->time_segment.stop,
-        dvdemux->time_segment.start);
+    event = gst_event_new_new_segment (FALSE, dvdemux->byte_segment.rate,
+        GST_FORMAT_TIME, dvdemux->time_segment.start,
+        dvdemux->time_segment.stop, dvdemux->time_segment.start);
     gst_dvdemux_push_event (dvdemux, event);
 
     dvdemux->need_segment = FALSE;
@@ -1328,7 +1361,7 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
   }
 
   ret = GST_FLOW_OK;
-  dvdemux->time_segment.last_stop = next_ts;
+  gst_segment_set_last_stop (&dvdemux->time_segment, GST_FORMAT_TIME, next_ts);
   dvdemux->frame_offset++;
 
 done:
