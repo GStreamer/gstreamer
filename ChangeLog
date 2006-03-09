@@ -1,3 +1,10 @@
+2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsturi.c: (gst_uri_has_protocol):
+	* gst/gsturi.h:
+	   Add new API: gst_uri_has_protocol() (#333779).
+
 2006-03-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstclock.c: (gst_clock_entry_new),

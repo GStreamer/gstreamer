@@ -115,6 +115,8 @@ struct _GstURIHandlerInterface {
 gboolean	gst_uri_protocol_is_valid	(const gchar * protocol);
 gboolean	gst_uri_is_valid		(const gchar * uri);
 gchar *		gst_uri_get_protocol		(const gchar * uri);
+gboolean        gst_uri_has_protocol            (const gchar * uri,
+                                                 const gchar * protocol);
 gchar *		gst_uri_get_location		(const gchar * uri);
 gchar *		gst_uri_construct		(const gchar * protocol,
 						 const gchar * location);

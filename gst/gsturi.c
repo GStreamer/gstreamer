@@ -373,6 +373,32 @@ gst_uri_get_protocol (const gchar * uri)
 }
 
 /**
+ * gst_uri_has_protocol:
+ * @uri: an URI string
+ * @protocol: a protocol string (e.g. "http")
+ *
+ * Returns TRUE if the protocol of a given valid URI matches @protocol.
+ *
+ * Since: 0.10.4
+ */
+gboolean
+gst_uri_has_protocol (const gchar * uri, const gchar * protocol)
+{
+  gchar *colon;
+
+  g_return_val_if_fail (uri != NULL, FALSE);
+  g_return_val_if_fail (protocol != NULL, FALSE);
+  g_return_val_if_fail (gst_uri_is_valid (uri), FALSE);
+
+  colon = strstr (uri, "://");
+
+  if (colon == NULL)
+    return FALSE;
+
+  return (strncmp (uri, protocol, (size_t) (colon - uri)) == 0);
+}
+
+/**
  * gst_uri_get_location:
  * @uri: A URI string
  *
