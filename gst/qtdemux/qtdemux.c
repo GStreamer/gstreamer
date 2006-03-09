@@ -449,8 +449,7 @@ gst_qtdemux_send_event (GstQTDemux * qtdemux, GstEvent * event)
       GST_EVENT_TYPE_NAME (event));
 
   for (n = 0; n < qtdemux->n_streams; n++) {
-    gst_event_ref (event);
-    gst_pad_push_event (qtdemux->streams[n]->pad, event);
+    gst_pad_push_event (qtdemux->streams[n]->pad, gst_event_ref (event));
   }
   gst_event_unref (event);
 }
