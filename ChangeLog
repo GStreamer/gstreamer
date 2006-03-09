@@ -1,3 +1,11 @@
+2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gsttypefindhelper.c: (helper_find_get_length),
+	(gst_type_find_helper_get_range):
+	  If we are provided with the size, we should implement
+	  GstTypeFind::get_length, so that typefind functions who
+	  want to can actually peek at the middle of a file.
+
 2006-03-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/advanced-dataaccess.xml:

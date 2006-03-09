@@ -147,6 +147,17 @@ helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
   }
 }
 
+static guint64
+helper_find_get_length (gpointer data)
+{
+  GstTypeFindHelper *find = (GstTypeFindHelper *) data;
+
+  GST_LOG_OBJECT (find->obj, "'%s' called called get_length, returning %"
+      G_GUINT64_FORMAT, GST_PLUGIN_FEATURE_NAME (find->factory), find->size);
+
+  return find->size;
+}
+
 /**
  * gst_type_find_helper_get_range:
  * @obj: A #GstObject that will be passed as first argument to @func
@@ -195,7 +206,12 @@ gst_type_find_helper_get_range (GstObject * obj,
   gst_find.data = &find;
   gst_find.peek = helper_find_peek;
   gst_find.suggest = helper_find_suggest;
-  gst_find.get_length = NULL;
+
+  if (size == 0 || size == (guint64) - 1) {
+    gst_find.get_length = NULL;
+  } else {
+    gst_find.get_length = helper_find_get_length;
+  }
 
   walk = type_list;
 
