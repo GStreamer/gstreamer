@@ -1,5 +1,23 @@
 2006-03-09  Wim Taymans  <wim@fluendo.com>
 
+	* ext/libvisual/visual.c: (gst_visual_get_type),
+	(gst_visual_src_setcaps), (gst_vis_src_negotiate),
+	(gst_visual_chain):
+	Small cleanups.
+
+	* ext/theora/gsttheoradec.h:
+	* ext/theora/theoradec.c: (gst_theora_dec_init),
+	(gst_theora_dec_reset), (_theora_granule_time),
+	(theora_dec_src_convert), (theora_dec_sink_convert),
+	(theora_dec_src_query), (theora_dec_src_event),
+	(theora_dec_sink_event), (theora_handle_comment_packet),
+	(theora_handle_header_packet), (theora_dec_push),
+	(theora_handle_data_packet), (theora_dec_chain),
+	(theora_dec_change_state):
+	Add simple QoS.
+
+2006-03-09  Wim Taymans  <wim@fluendo.com>
+
 	* ext/gnomevfs/gstgnomevfssrc.c: (audiocast_init),
 	(audiocast_register_listener), (gst_gnome_vfs_src_start):
 	Some cleanups.

@@ -53,9 +53,11 @@ struct _GstTheoraDec
 {
   GstElement element;
 
+  /* Pads */
   GstPad *sinkpad;
   GstPad *srcpad;
 
+  /* theora decoder state */
   theora_state state;
   theora_info info;
   theora_comment comment;
@@ -65,7 +67,7 @@ struct _GstTheoraDec
   guint64 granule_shift;
 
   GstClockTime last_timestamp;
-  guint64 frame_nr;
+  guint64 frame_nr; /* unused */
   gboolean need_keyframe;
   gint width, height;
   gint offset_x, offset_y;
@@ -74,10 +76,12 @@ struct _GstTheoraDec
 
   GList *queued;
 
-  gdouble segment_rate;
-  gint64 segment_start;
-  gint64 segment_stop;
-  gint64 segment_time;
+  /* segment info */ /* with STREAM_LOCK */
+  GstSegment segment;
+
+  /* QoS stuff */ /* with LOCK*/
+  gboolean proportion;
+  GstClockTime earliest_time;
 };
 
 struct _GstTheoraDecClass

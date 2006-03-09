@@ -134,7 +134,7 @@ gst_visual_get_type (void)
 {
   static GType type = 0;
 
-  if (!type) {
+  if (G_UNLIKELY (type == 0)) {
     static const GTypeInfo info = {
       sizeof (GstVisualClass),
       NULL,
@@ -337,8 +337,10 @@ gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
   gst_object_unref (visual);
   return TRUE;
 
+  /* ERRORS */
 error:
   {
+    GST_DEBUG_OBJECT (visual, "error parsing caps");
     gst_object_unref (visual);
     return FALSE;
   }
@@ -397,6 +399,7 @@ gst_vis_src_negotiate (GstVisual * visual)
 
   return TRUE;
 
+  /* ERRORS */
 no_format:
   {
     GST_ELEMENT_ERROR (visual, STREAM, FORMAT, (NULL),
@@ -535,7 +538,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
     if (visual->next_ts != -1) {
       GST_OBJECT_LOCK (visual);
-      /* check for QoS, don't compute buffers that are known to be latea */
+      /* check for QoS, don't compute buffers that are known to be late */
       need_skip = visual->earliest_time != -1 &&
           visual->next_ts <= visual->earliest_time;
       GST_OBJECT_UNLOCK (visual);
