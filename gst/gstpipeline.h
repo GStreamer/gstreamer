@@ -37,6 +37,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstPipeline GstPipeline;
 typedef struct _GstPipelineClass GstPipelineClass;
+typedef struct _GstPipelinePrivate GstPipelinePrivate;
 
 /**
  * GstPipelineFlags:
@@ -70,7 +71,8 @@ struct _GstPipeline {
   GstClockTime   delay;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  GstPipelinePrivate *priv;
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 struct _GstPipelineClass {
@@ -92,6 +94,9 @@ void            gst_pipeline_use_clock          (GstPipeline *pipeline, GstClock
 gboolean        gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);
 GstClock*       gst_pipeline_get_clock          (GstPipeline *pipeline);
 void            gst_pipeline_auto_clock         (GstPipeline *pipeline);
+
+void            gst_pipeline_set_auto_flush_bus (GstPipeline *pipeline, gboolean auto_flush);
+gboolean        gst_pipeline_get_auto_flush_bus (GstPipeline *pipeline);
 
 G_END_DECLS
 

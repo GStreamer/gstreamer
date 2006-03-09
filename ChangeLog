@@ -1,6 +1,20 @@
 2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpipeline.c: (gst_pipeline_class_init),
+	(gst_pipeline_init), (gst_pipeline_set_property),
+	(gst_pipeline_get_property), (gst_pipeline_change_state),
+	(gst_pipeline_set_auto_flush_bus),
+	(gst_pipeline_get_auto_flush_bus):
+	* gst/gstpipeline.h:
+	  Add new API: gst_pipeline_set_auto_flush_bus() and
+	  gst_pipeline_get_auto_flush_bus() to disable automatic
+	  flushing of the pipeline's GstBus when going from READY
+	  to NULL state (#332045).
+
+2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
 	* gst/gsturi.c: (gst_uri_has_protocol):
 	* gst/gsturi.h:
 	   Add new API: gst_uri_has_protocol() (#333779).

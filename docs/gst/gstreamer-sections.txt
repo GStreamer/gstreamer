@@ -1412,6 +1412,8 @@ gst_pipeline_set_clock
 gst_pipeline_set_new_stream_time
 gst_pipeline_use_clock
 
+gst_pipeline_get_auto_flush_bus
+gst_pipeline_set_auto_flush_bus
 <SUBSECTION Standard>
 GstPipelineClass
 GST_PIPELINE
@@ -1422,6 +1424,7 @@ GST_PIPELINE_GET_CLASS
 GST_TYPE_PIPELINE
 GST_TYPE_PIPELINE_FLAGS
 <SUBSECTION Private>
+GstPipelinePrivate
 gst_pipeline_get_type
 gst_pipeline_flags_get_type
 </SECTION>

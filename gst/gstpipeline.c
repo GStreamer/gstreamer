@@ -64,13 +64,23 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_DELAY 0
+#define DEFAULT_DELAY           0
+#define DEFAULT_AUTO_FLUSH_BUS  TRUE
 
 enum
 {
   PROP_0,
   PROP_DELAY,
-  /* FILL ME */
+  PROP_AUTO_FLUSH_BUS
+      /* FILL ME */
+};
+
+#define GST_PIPELINE_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_PIPELINE, GstPipelinePrivate))
+
+struct _GstPipelinePrivate
+{
+  gboolean auto_flush_bus;
 };
 
 
@@ -137,6 +147,8 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  g_type_class_add_private (klass, sizeof (GstPipelinePrivate));
+
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pipeline_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pipeline_get_property);
 
@@ -144,6 +156,21 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
       g_param_spec_uint64 ("delay", "Delay",
           "Expected delay needed for elements "
           "to spin up to PLAYING in nanoseconds", 0, G_MAXUINT64, DEFAULT_DELAY,
+          G_PARAM_READWRITE));
+
+    /**
+     * GstPipeline:auto-flush-bus:
+     *
+     * Whether or not to automatically flush all messages on the
+     * pipeline's bus when going from READY to NULL state. Please see
+     * gst_pipeline_set_auto_flush_bus() for more information on this option.
+     *
+     * Since: 0.10.4
+     **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_AUTO_FLUSH_BUS,
+      g_param_spec_boolean ("auto-flush-bus", "Auto Flush Bus",
+          "Whether to automatically flush the pipeline's bus when going "
+          "from READY into NULL state", DEFAULT_AUTO_FLUSH_BUS,
           G_PARAM_READWRITE));
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
@@ -160,6 +187,9 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
 {
   GstPipeline *pipeline = GST_PIPELINE (instance);
   GstBus *bus;
+
+  pipeline->priv = GST_PIPELINE_GET_PRIVATE (pipeline);
+  pipeline->priv->auto_flush_bus = DEFAULT_AUTO_FLUSH_BUS;
 
   pipeline->delay = DEFAULT_DELAY;
 
@@ -193,6 +223,9 @@ gst_pipeline_set_property (GObject * object, guint prop_id,
     case PROP_DELAY:
       pipeline->delay = g_value_get_uint64 (value);
       break;
+    case PROP_AUTO_FLUSH_BUS:
+      pipeline->priv->auto_flush_bus = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -210,6 +243,9 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DELAY:
       g_value_set_uint64 (value, pipeline->delay);
+      break;
+    case PROP_AUTO_FLUSH_BUS:
+      g_value_set_boolean (value, pipeline->priv->auto_flush_bus);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -420,7 +456,11 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_OBJECT_LOCK (element);
       if (element->bus) {
-        gst_bus_set_flushing (element->bus, TRUE);
+        if (pipeline->priv->auto_flush_bus) {
+          gst_bus_set_flushing (element->bus, TRUE);
+        } else {
+          GST_INFO_OBJECT (element, "not flushing bus, auto-flushing disabled");
+        }
       }
       GST_OBJECT_UNLOCK (element);
       break;
@@ -635,4 +675,58 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
   GST_OBJECT_UNLOCK (pipeline);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using automatic clock");
+}
+
+/**
+ * gst_pipeline_set_auto_flush_bus:
+ * @pipeline: a #GstPipeline
+ * @auto_flush: whether or not to automatically flush the bus when
+ * the pipeline goes from READY to NULL state
+ *
+ * Usually, when a pipeline goes from READY to NULL state, it automatically
+ * flushes all pending messages on the bus, which is done for refcounting
+ * purposes, to break circular references. This means that applications
+ * that update state using (async) bus messages (e.g. do certain things when a
+ * pipeline goes from PAUSED to READY) might not get to see messages when the
+ * pipeline is shut down, because they might be flushed before they can be
+ * dispatched in the main thread. This behaviour can be disabled using this
+ * function.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.4
+ */
+void
+gst_pipeline_set_auto_flush_bus (GstPipeline * pipeline, gboolean auto_flush)
+{
+  g_return_if_fail (GST_IS_PIPELINE (pipeline));
+
+  GST_OBJECT_LOCK (pipeline);
+  pipeline->priv->auto_flush_bus = auto_flush;
+  GST_OBJECT_UNLOCK (pipeline);
+}
+
+/**
+ * gst_pipeline_get_auto_flush_bus:
+ * @pipeline: a #GstPipeline
+ *
+ * Returns: whether the pipeline will automatically flush its bus when
+ * going from READY to NULL state or not.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.4
+ */
+gboolean
+gst_pipeline_get_auto_flush_bus (GstPipeline * pipeline)
+{
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_PIPELINE (pipeline), FALSE);
+
+  GST_OBJECT_LOCK (pipeline);
+  res = pipeline->priv->auto_flush_bus;
+  GST_OBJECT_UNLOCK (pipeline);
+
+  return res;
 }
