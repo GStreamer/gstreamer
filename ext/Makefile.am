@@ -190,6 +190,12 @@ else
 SWFDEC_DIR=
 endif
 
+if USE_TAGLIB
+TAGLIB_DIR = taglib
+else
+TAGLIB_DIR =
+endif
+
 # if USE_TARKIN
 # TARKIN_DIR=tarkin
 # else
@@ -240,6 +246,7 @@ SUBDIRS=\
 	$(SMOOTHWAVE_DIR) \
 	$(SNDFILE_DIR) \
 	$(SWFDEC_DIR) \
+	$(TAGLIB_DIR) \
 	$(TARKIN_DIR) \
 	$(WAVPACK_DIR) \
 	$(XINE_DIR) \
@@ -259,5 +266,6 @@ DIST_SUBDIRS= \
 	neon \
 	sdl \
 	swfdec \
+	taglib \
 	wavpack \
 	xvid

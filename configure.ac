@@ -649,6 +649,14 @@ int main () { return 0; }
   ], )
 ])
 
+dnl *** taglib ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_TAGLIB, true)
+GST_CHECK_FEATURE(TAGLIB, [taglib ID3v2 tag writer], taglib, [
+  PKG_CHECK_MODULES(TAGLIB, taglib >= 1.4, HAVE_TAGLIB="yes", HAVE_TAGLIB="no")
+  AC_SUBST(TAGLIB_CFLAGS)
+  AC_SUBST(TAGLIB_LIBS)
+])
+
 
 dnl also add builddir include for enumtypes and marshal
 GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $GST_ERROR"
@@ -738,6 +746,7 @@ ext/divx/Makefile
 ext/musepack/Makefile
 ext/sdl/Makefile
 ext/swfdec/Makefile
+ext/taglib/Makefile
 ext/xvid/Makefile
 docs/Makefile
 docs/plugins/Makefile

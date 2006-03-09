@@ -1,3 +1,13 @@
+2006-03-09  Christophe Fergeau  <teuf@gnome.org>
+
+	reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/taglib/Makefile.am:
+	* ext/taglib/gsttaglib.cc:
+	* ext/taglib/gsttaglib.h: new id3v2 muxer based on TagLib
+
 2006-03-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_udta):
