@@ -1557,6 +1557,12 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
   gst_ogg_demux_deactivate_current_chain (ogg);
 
+  /* FIXME, should not be called with NULL */
+  if (chain == NULL) {
+    ogg->current_chain = chain;
+    return TRUE;
+  }
+
   GST_DEBUG ("activating chain %p", chain);
 
   /* first add the pads */

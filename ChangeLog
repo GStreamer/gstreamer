@@ -1,3 +1,8 @@
+2006-03-09  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_activate_chain):
+	Don't try to activate NULL chains.
+
 2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset):
