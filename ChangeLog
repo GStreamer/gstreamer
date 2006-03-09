@@ -1,5 +1,11 @@
 2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/subparse/gstsubparse.c: (gst_subparse_type_find):
+	  Fix invalid memory access: make sure string passed to
+	  regexec() is NUL-termianted.
+
+2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset),
 	(mp3_type_find):
 	  Refactor mpeg/audio typefinding to make it more maintainable

@@ -867,10 +867,16 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
 {
   const guint8 *data;
   GstSubParseFormat format;
+  gchar *str;
 
   if (!(data = gst_type_find_peek (tf, 0, 36)))
     return;
-  format = gst_sub_parse_data_format_autodetect ((gchar *) data);
+
+  /* make sure string passed to _autodetect() is NUL-terminated */
+  str = g_strndup ((gchar *) data, 35);
+  format = gst_sub_parse_data_format_autodetect (str);
+  g_free (str);
+
   switch (format) {
     case GST_SUB_PARSE_FORMAT_MDVDSUB:
       GST_DEBUG ("MicroDVD format detected");
