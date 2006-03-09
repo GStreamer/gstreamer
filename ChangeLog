@@ -1,5 +1,11 @@
 2006-03-09  Wim Taymans  <wim@fluendo.com>
 
+	* ext/gnomevfs/gstgnomevfssrc.c: (audiocast_init),
+	(audiocast_register_listener), (gst_gnome_vfs_src_start):
+	Some cleanups.
+
+2006-03-09  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_activate_chain):
 	Don't try to activate NULL chains.
 

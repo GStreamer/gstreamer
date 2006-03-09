@@ -528,32 +528,51 @@ audiocast_init (GstGnomeVFSSrc * src)
 
   if (!src->iradio_mode)
     return TRUE;
+
   GST_DEBUG_OBJECT (src, "audiocast: registering listener");
   if (audiocast_register_listener (&src->audiocast_port,
-          &src->audiocast_fd) < 0) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-        ("Unable to listen on UDP port %d", src->audiocast_port));
-    close (src->audiocast_fd);
-    return FALSE;
-  }
+          &src->audiocast_fd) < 0)
+    goto no_listener;
+
   GST_DEBUG_OBJECT (src, "audiocast: creating pipe");
   src->audiocast_notify_queue = NULL;
-  if (pipe (pipefds) < 0) {
-    close (src->audiocast_fd);
-    return FALSE;
-  }
+  if (pipe (pipefds) < 0)
+    goto no_pipe;
+
   src->audiocast_thread_die_infd = pipefds[0];
   src->audiocast_thread_die_outfd = pipefds[1];
+
   GST_DEBUG_OBJECT (src, "audiocast: creating audiocast thread");
   src->audiocast_thread =
       g_thread_create ((GThreadFunc) audiocast_thread_run, src, TRUE, &error);
-  if (error != NULL) {
-    GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY, (NULL),
-        ("Unable to create thread: %s", error->message));
+  if (error != NULL)
+    goto no_thread;
+
+  return TRUE;
+
+  /* ERRORS */
+no_listener:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("Unable to listen on UDP port %d", src->audiocast_port));
+    return FALSE;
+  }
+no_pipe:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("Unable to create socketpair"));
     close (src->audiocast_fd);
     return FALSE;
   }
-  return TRUE;
+no_thread:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, TOO_LAZY, (NULL),
+        ("Unable to create thread: %s", error->message));
+    close (src->audiocast_fd);
+    close (pipefds[0]);
+    close (pipefds[1]);
+    return FALSE;
+  }
 }
 
 static int
@@ -586,6 +605,8 @@ audiocast_register_listener (gint * port, gint * fd)
   *fd = sock;
 
   return 0;
+
+  /* ERRORS */
 lose_and_close:
   close (sock);
 lose:
@@ -1093,7 +1114,7 @@ gst_gnome_vfs_src_get_size (GstBaseSrc * basesrc, guint64 * size)
   return TRUE;
 }
 
-/* open the file, do stuff necessary to go to READY state */
+/* open the file, do stuff necessary to go to PAUSED state */
 static gboolean
 gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
 {
@@ -1109,31 +1130,13 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
   gst_gnome_vfs_src_push_callbacks (src);
 
   if (src->uri != NULL) {
+    /* this can block... */
     if ((res = gnome_vfs_open_uri (&src->handle, src->uri,
-                GNOME_VFS_OPEN_READ)) != GNOME_VFS_OK) {
-      gchar *filename = gnome_vfs_uri_to_string (src->uri,
-          GNOME_VFS_URI_HIDE_PASSWORD);
-
-      gst_gnome_vfs_src_pop_callbacks (src);
-      audiocast_thread_kill (src);
-
-      if (res == GNOME_VFS_ERROR_NOT_FOUND ||
-          res == GNOME_VFS_ERROR_SERVICE_NOT_AVAILABLE) {
-        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
-            ("Could not open vfs file \"%s\" for reading: %s",
-                filename, gnome_vfs_result_to_string (res)));
-      } else {
-        GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-            ("Could not open vfs file \"%s\" for reading: %s",
-                filename, gnome_vfs_result_to_string (res)));
-      }
-      g_free (filename);
-      return FALSE;
-    }
+                GNOME_VFS_OPEN_READ)) != GNOME_VFS_OK)
+      goto open_failed;
     src->own_handle = TRUE;
   } else if (!src->handle) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL), ("No filename given"));
-    return FALSE;
+    goto no_filename;
   } else {
     src->own_handle = FALSE;
   }
@@ -1163,6 +1166,34 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
   }
 
   return TRUE;
+
+  /* ERRORS */
+open_failed:
+  {
+    gchar *filename = gnome_vfs_uri_to_string (src->uri,
+        GNOME_VFS_URI_HIDE_PASSWORD);
+
+    gst_gnome_vfs_src_pop_callbacks (src);
+    audiocast_thread_kill (src);
+
+    if (res == GNOME_VFS_ERROR_NOT_FOUND ||
+        res == GNOME_VFS_ERROR_SERVICE_NOT_AVAILABLE) {
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
+          ("Could not open vfs file \"%s\" for reading: %s",
+              filename, gnome_vfs_result_to_string (res)));
+    } else {
+      GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+          ("Could not open vfs file \"%s\" for reading: %s",
+              filename, gnome_vfs_result_to_string (res)));
+    }
+    g_free (filename);
+    return FALSE;
+  }
+no_filename:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL), ("No filename given"));
+    return FALSE;
+  }
 }
 
 static gboolean
