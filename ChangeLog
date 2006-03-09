@@ -1,3 +1,29 @@
+2006-03-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstclock.c: (gst_clock_entry_new),
+	(gst_clock_id_compare_func), (gst_clock_id_wait),
+	(gst_clock_id_wait_async), (gst_clock_id_unschedule),
+	(gst_clock_init), (gst_clock_get_internal_time),
+	(gst_clock_set_master), (do_linear_regression),
+	(gst_clock_add_observation), (gst_clock_set_property):
+	* gst/gstclock.h:
+	Review docs.
+	Small cleanups.
+	Fix a possible segfault when the window-size is made smaller.
+	Calculate jitter before performing the clock wait. Ideally
+	the clock implementation should calculate jitter but we need
+	API breakage for that.
+
+	* gst/gstsystemclock.c: (gst_system_clock_init):
+	Docs review.
+	
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_do_sync):
+	Remove leftover else
+
+	* tests/check/gst/gstsystemclock.c: (GST_START_TEST),
+	(gst_systemclock_suite):
+	Added check to test GST_CLOCK_DIFF.
+
 2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gsttypefindhelper.c: (helper_find_get_length),

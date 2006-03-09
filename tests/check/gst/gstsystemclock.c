@@ -189,6 +189,20 @@ GST_START_TEST (test_periodic_shot)
   gst_clock_id_unref (id);
 }
 
+GST_END_TEST
+GST_START_TEST (test_diff)
+{
+  GstClockTime time1[] =
+      { 0, -1, 0, 1, 2 * GST_SECOND, -GST_SECOND, -GST_SECOND };
+  GstClockTime time2[] =
+      { 0, 1, 1, 0, 1 * GST_SECOND, -GST_SECOND, GST_SECOND };
+  GstClockTimeDiff d[] = { 0, 2, 1, -1, -GST_SECOND, 0, 2 * GST_SECOND };
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (d); i++) {
+    fail_if (d[i] != GST_CLOCK_DIFF (time1[i], time2[i]));
+  }
+}
 GST_END_TEST Suite * gst_systemclock_suite (void)
 {
   Suite *s = suite_create ("GstSystemClock");
@@ -198,6 +212,7 @@ GST_END_TEST Suite * gst_systemclock_suite (void)
   tcase_add_test (tc_chain, test_signedness);
   tcase_add_test (tc_chain, test_single_shot);
   tcase_add_test (tc_chain, test_periodic_shot);
+  tcase_add_test (tc_chain, test_diff);
 
   return s;
 }

@@ -945,7 +945,6 @@ again:
       /* send upstream */
       gst_pad_push_event (basesink->sinkpad, event);
     }
-  } else {
   }
 
   return GST_FLOW_OK;

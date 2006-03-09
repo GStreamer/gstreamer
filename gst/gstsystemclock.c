@@ -35,7 +35,7 @@
  * async notifications to implement their own callback methods or blocking
  * wait operations.
  *
- * Last reviewed on 2005-10-28 (0.9.4)
+ * Last reviewed on 2006-03-08 (0.10.4)
  */
 
 #include "gst_private.h"
@@ -137,6 +137,7 @@ gst_system_clock_init (GstSystemClock * clock)
   GST_OBJECT_UNLOCK (clock);
   return;
 
+  /* ERRORS */
 no_thread:
   {
     g_warning ("could not create async clock thread: %s", error->message);

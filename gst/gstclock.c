@@ -31,16 +31,14 @@
  * base class.
  *
  * The #GstClock returns a monotonically increasing time with the method
- * gst_clock_get_time(). Its accuracy and base time depends on the specific
- * clock implementation but time is always expessed in nanoseconds. Since the
+ * gst_clock_get_time(). Its accuracy and base time depend on the specific
+ * clock implementation but time is always expressed in nanoseconds. Since the
  * baseline of the clock is undefined, the clock time returned is not
  * meaningful in itself, what matters are the deltas between two clock times.
  *
- * The pipeline uses the clock to calculate the stream time.  Usually all
+ * The pipeline uses the clock to calculate the stream time. Usually all
  * renderers synchronize to the global clock using the buffer timestamps, the
  * newsegment events and the element's base time.
- *
- * The time of the clock in itself is not very useful for an application.
  *
  * A clock implementation can support periodic and single shot clock
  * notifications both synchronous and asynchronous.
@@ -56,24 +54,27 @@
  * unscheduled a return value of GST_CLOCK_UNSCHEDULED is returned.
  *
  * Periodic callbacks scheduled async will be repeadedly called automatically
- * until it is unscheduled. To schedule an async periodic callback,
+ * until it is unscheduled. To schedule a sync periodic callback,
  * gst_clock_id_wait() should be called repeadedly.
  *
  * The async callbacks can happen from any thread, either provided by the core
  * or from a streaming thread. The application should be prepared for this.
  *
  * A #GstClockID that has been unscheduled cannot be used again for any wait
- * operation.
+ * operation, a new #GstClockID should be created and the old unscheduled one
+ * should be destroyed wirth gst_clock_id_unref().
  *
  * It is possible to perform a blocking wait on the same #GstClockID from
  * multiple threads. However, registering the same #GstClockID for multiple
- * async notifications is not possible, the callback will only be called once.
+ * async notifications is not possible, the callback will only be called for
+ * the thread registering the entry last.
  *
  * None of the wait operations unref the #GstClockID, the owner is responsible
  * for unreffing the ids itself. This holds for both periodic and single shot
  * notifications. The reason being that the owner of the #GstClockID has to
  * keep a handle to the #GstClockID to unblock the wait on FLUSHING events or
- * state changes and if we unref it automatically, the handle might be invalid.
+ * state changes and if the entry would be unreffed automatically, the handle 
+ * might become invalid without any notification.
  *
  * These clock operations do not operate on the stream time, so the callbacks
  * will also occur when not in PLAYING state as if the clock just keeps on
@@ -88,9 +89,16 @@
  * plugins that have an internal clock but must operate with another clock
  * selected by the #GstPipeline.  They can track the offset and rate difference
  * of their internal clock relative to the master clock by using the
- * gst_clock_get_calibration() function.
+ * gst_clock_get_calibration() function. 
  *
- * Last reviewed on 2005-10-28 (0.9.4)
+ * The master/slave synchronisation can be tuned with the "timeout", "window-size"
+ * and "window-threshold" properties. The "timeout" property defines the interval
+ * to sample the master clock and run the calibration functions. 
+ * "window-size" defines the number of samples to use when calibrating and
+ * "window-threshold" defines the minimum number of samples before the 
+ * calibration is performed.
+ *
+ * Last reviewed on 2006-03-09 (0.10.4)
  */
 
 #include <time.h>
@@ -145,7 +153,9 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 {
   GstClockEntry *entry;
 
-  entry = g_malloc0 (sizeof (GstClockEntry));
+  /* FIXME, use g_slice, we do this a lot and potentially from
+   * different threads. */
+  entry = g_new0 (GstClockEntry, 1);
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_clock_entry_trace, entry);
 #endif
@@ -164,9 +174,9 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 
 /**
  * gst_clock_id_ref:
- * @id: The clockid to ref
+ * @id: The #GstClockID to ref
  *
- * Increase the refcount of the given clockid.
+ * Increase the refcount of given @id.
  *
  * Returns: The same #GstClockID with increased refcount.
  *
@@ -197,9 +207,9 @@ _gst_clock_id_free (GstClockID id)
 
 /**
  * gst_clock_id_unref:
- * @id: The clockid to unref
+ * @id: The #GstClockID to unref
  *
- * Unref the given clockid. When the refcount reaches 0 the
+ * Unref given @id. When the refcount reaches 0 the
  * #GstClockID will be freed.
  *
  * MT safe.
@@ -220,14 +230,14 @@ gst_clock_id_unref (GstClockID id)
 
 /**
  * gst_clock_new_single_shot_id
- * @clock: The clockid to get a single shot notification from
+ * @clock: The #GstClockID to get a single shot notification from
  * @time: the requested time
  *
- * Get an ID from the given clock to trigger a single shot
+ * Get a #GstClockID from @clock to trigger a single shot
  * notification at the requested time. The single shot id should be
  * unreffed after usage.
  *
- * Returns: An id that can be used to request the time notification.
+ * Returns: A #GstClockID that can be used to request the time notification.
  *
  * MT safe.
  */
@@ -242,16 +252,16 @@ gst_clock_new_single_shot_id (GstClock * clock, GstClockTime time)
 
 /**
  * gst_clock_new_periodic_id
- * @clock: The clockid to get a periodic notification id from
+ * @clock: The #GstClockID to get a periodic notification id from
  * @start_time: the requested start time
  * @interval: the requested interval
  *
- * Get an ID from the given clock to trigger a periodic notification.
+ * Get an ID from @clock to trigger a periodic notification.
  * The periodeic notifications will be start at time start_time and
- * will then be fired with the given interval. The id should be unreffed
+ * will then be fired with the given interval. @id should be unreffed
  * after usage.
  *
- * Returns: An id that can be used to request the time notification.
+ * Returns: A #GstClockID that can be used to request the time notification.
  *
  * MT safe.
  */
@@ -269,10 +279,10 @@ gst_clock_new_periodic_id (GstClock * clock, GstClockTime start_time,
 
 /**
  * gst_clock_id_compare_func
- * @id1: A clockid
- * @id2: A clockid to compare with
+ * @id1: A #GstClockID
+ * @id2: A #GstClockID to compare with
  *
- * Compares the two GstClockID instances. This function can be used
+ * Compares the two #GstClockID instances. This function can be used
  * as a GCompareFunc when sorting ids.
  *
  * Returns: negative value if a < b; zero if a = b; positive value if a > b
@@ -293,13 +303,12 @@ gst_clock_id_compare_func (gconstpointer id1, gconstpointer id2)
   if (GST_CLOCK_ENTRY_TIME (entry1) < GST_CLOCK_ENTRY_TIME (entry2)) {
     return -1;
   }
-
-  return entry1 - entry2;
+  return 0;
 }
 
 /**
  * gst_clock_id_get_time
- * @id: The clockid to query
+ * @id: The #GstClockID to query
  *
  * Get the time of the clock ID
  *
@@ -318,13 +327,25 @@ gst_clock_id_get_time (GstClockID id)
 
 /**
  * gst_clock_id_wait
- * @id: The clockid to wait on
- * @jitter: A pointer that will contain the jitter
+ * @id: The #GstClockID to wait on
+ * @jitter: A pointer that will contain the jitter, can be NULL.
  *
- * Perform a blocking wait on the given ID. The jitter arg can be
- * NULL.
+ * Perform a blocking wait on @id. 
+ * @id should have been created with gst_clock_new_single_shot_id()
+ * or gst_clock_new_periodic_id() and should not have been unscheduled
+ * with a call to gst_clock_id_unschedule(). 
  *
- * Returns: the result of the blocking wait.
+ * If the @jitter argument is not NULL and this function returns #GST_CLOCK_OK
+ * or #GST_CLOCK_EARLY, it will contain the difference
+ * against the clock and the time of @id when this method was
+ * called. Negative values means @id was scheduled too late (and this
+ * function will return #GST_CLOCK_EARLY). Positive values indicate how
+ * early @id was scheduled. 
+ *
+ * Returns: the result of the blocking wait. #GST_CLOCK_EARLY will be returned
+ * if the current clock time is past the time of @id, #GST_CLOCK_OK if 
+ * @id was scheduled in time. #GST_CLOCK_UNSCHEDULED if @id was 
+ * unscheduled with gst_clock_id_unschedule().
  *
  * MT safe.
  */
@@ -344,37 +365,39 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
 
   clock = GST_CLOCK_ENTRY_CLOCK (entry);
 
+  /* can't sync on invalid times */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
     goto invalid_time;
 
+  /* a previously unscheduled entry cannot be scheduled again */
   if (G_UNLIKELY (entry->status == GST_CLOCK_UNSCHEDULED))
     goto unscheduled;
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
-  if (G_LIKELY (cclass->wait)) {
+  if (G_UNLIKELY (cclass->wait == NULL))
+    goto not_supported;
 
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "waiting on clock entry %p",
-        id);
-    res = cclass->wait (clock, entry);
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
-        "done waiting entry %p, res: %d", id, res);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "waiting on clock entry %p", id);
 
-    if (jitter) {
-      GstClockTime now = gst_clock_get_time (clock);
+  /* jitter is the diff against the clock when this entry is scheduled */
+  if (jitter) {
+    GstClockTime now = gst_clock_get_time (clock);
 
-      *jitter = now - requested;
-    }
-    if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
-      entry->time += entry->interval;
-    }
-
-    if (clock->stats) {
-      gst_clock_update_stats (clock);
-    }
-  } else {
-    res = GST_CLOCK_UNSUPPORTED;
+    *jitter = GST_CLOCK_DIFF (requested, now);
   }
+  res = cclass->wait (clock, entry);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+      "done waiting entry %p, res: %d", id, res);
+
+  if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
+    entry->time += entry->interval;
+  }
+
+  if (clock->stats)
+    gst_clock_update_stats (clock);
+
   return res;
 
   /* ERRORS */
@@ -390,6 +413,11 @@ unscheduled:
         "entry was unscheduled return _UNSCHEDULED");
     return GST_CLOCK_UNSCHEDULED;
   }
+not_supported:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "clock wait is not supported");
+    return GST_CLOCK_UNSUPPORTED;
+  }
 }
 
 /**
@@ -398,11 +426,11 @@ unscheduled:
  * @func: The callback function
  * @user_data: User data passed in the calback
  *
- * Register a callback on the given clockid with the given
- * function and user_data. When passing an id with an invalid
+ * Register a callback on the given #GstClockID @id with the given
+ * function and user_data. When passing a #GstClockID with an invalid
  * time to this function, the callback will be called immediatly
  * with  a time set to GST_CLOCK_TIME_NONE. The callback will
- * be called when the time of the id has been reached.
+ * be called when the time of @id has been reached.
  *
  * Returns: the result of the non blocking wait.
  *
@@ -425,22 +453,24 @@ gst_clock_id_wait_async (GstClockID id,
   requested = GST_CLOCK_ENTRY_TIME (entry);
   clock = GST_CLOCK_ENTRY_CLOCK (entry);
 
+  /* can't sync on invalid times */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
     goto invalid_time;
 
+  /* a previously unscheduled entry cannot be scheduled again */
   if (G_UNLIKELY (entry->status == GST_CLOCK_UNSCHEDULED))
     goto unscheduled;
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
-  if (cclass->wait_async) {
-    entry->func = func;
-    entry->user_data = user_data;
+  if (G_UNLIKELY (cclass->wait_async == NULL))
+    goto not_supported;
 
-    res = cclass->wait_async (clock, entry);
-  } else {
-    res = GST_CLOCK_UNSUPPORTED;
-  }
+  entry->func = func;
+  entry->user_data = user_data;
+
+  res = cclass->wait_async (clock, entry);
+
   return res;
 
   /* ERRORS */
@@ -457,16 +487,21 @@ unscheduled:
         "entry was unscheduled return _UNSCHEDULED");
     return GST_CLOCK_UNSCHEDULED;
   }
+not_supported:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "clock wait is not supported");
+    return GST_CLOCK_UNSUPPORTED;
+  }
 }
 
 /**
  * gst_clock_id_unschedule:
  * @id: The id to unschedule
  *
- * Cancel an outstanding request with the given ID. This can either
+ * Cancel an outstanding request with @id. This can either
  * be an outstanding async notification or a pending sync notification.
- * After this call, the @id cannot be used anymore to receive sync or
- * async notifications, you need to create a new GstClockID.
+ * After this call, @id cannot be used anymore to receive sync or
+ * async notifications, you need to create a new #GstClockID.
  *
  * MT safe.
  */
@@ -484,7 +519,7 @@ gst_clock_id_unschedule (GstClockID id)
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
-  if (cclass->unschedule)
+  if (G_LIKELY (cclass->unschedule))
     cclass->unschedule (clock, entry);
 }
 
@@ -573,9 +608,9 @@ gst_clock_init (GstClock * clock)
   clock->rate_denominator = 1;
 
   clock->slave_lock = g_mutex_new ();
-  clock->filling = TRUE;
   clock->window_size = DEFAULT_WINDOW_SIZE;
   clock->window_threshold = DEFAULT_WINDOW_THRESHOLD;
+  clock->filling = TRUE;
   clock->time_index = 0;
   clock->timeout = DEFAULT_TIMEOUT;
   clock->times = g_new0 (GstClockTime, 4 * clock->window_size);
@@ -716,15 +751,23 @@ gst_clock_get_internal_time (GstClock * clock)
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
-  if (cclass->get_internal_time) {
-    ret = cclass->get_internal_time (clock);
-  } else {
-    ret = G_GINT64_CONSTANT (0);
-  }
+  if (G_UNLIKELY (cclass->get_internal_time == NULL))
+    goto not_supported;
+
+  ret = cclass->get_internal_time (clock);
+
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "internal time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ret));
 
   return ret;
+
+  /* ERRORS */
+not_supported:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "internal time not supported, return 0");
+    return G_GINT64_CONSTANT (0);
+  }
 }
 
 /**
@@ -845,7 +888,7 @@ gst_clock_get_calibration (GstClock * clock, GstClockTime * internal,
 }
 
 /* will be called repeadedly to sample the master and slave clock
- * to recalibrate the clock */
+ * to recalibrate the clock  */
 static gboolean
 gst_clock_slave_callback (GstClock * master, GstClockTime time,
     GstClockID id, GstClock * clock)
@@ -880,7 +923,13 @@ gst_clock_slave_callback (GstClock * master, GstClockTime time,
  * A clock provider that slaves its clock to a master can get the current
  * calibration values with gst_clock_get_calibration().
  *
- * Returns: TRUE if the clock is capable of being slaved to a master clock.
+ * @master can be NULL in which case @clock will not be slaved anymore. It will
+ * however keep reporting its time adjusted with the last configured rate 
+ * and time offsets.
+ *
+ * Returns: TRUE if the clock is capable of being slaved to a master clock. 
+ * Trying to set a master on a clock without the 
+ * GST_CLOCK_FLAG_CAN_SET_MASTER flag will make this function return FALSE.
  *
  * MT safe.
  */
@@ -919,6 +968,7 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
 
   return TRUE;
 
+  /* ERRORS */
 not_supported:
   {
     GST_DEBUG_OBJECT (clock, "cannot be slaved to a master clock");
@@ -1043,7 +1093,7 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
     sxy += newx4 * newy4 - xbar4 * ybar4;
   }
 
-  if (sxx == 0)
+  if (G_UNLIKELY (sxx == 0))
     goto invalid;
 
   *m_num = sxy;
@@ -1099,12 +1149,13 @@ gst_clock_add_observation (GstClock * clock, GstClockTime slave,
   clock->times[(4 * clock->time_index) + 2] = master;
 
   clock->time_index++;
-  if (clock->time_index == clock->window_size) {
+  if (G_UNLIKELY (clock->time_index == clock->window_size)) {
     clock->filling = FALSE;
     clock->time_index = 0;
   }
 
-  if (clock->filling && clock->time_index < clock->window_threshold)
+  if (G_UNLIKELY (clock->filling
+          && clock->time_index < clock->window_threshold))
     goto filling;
 
   if (!do_linear_regression (clock, &m_num, &m_denom, &b, &xbase, r_squared))
@@ -1161,6 +1212,9 @@ gst_clock_set_property (GObject * object, guint prop_id,
           MIN (clock->window_threshold, clock->window_size);
       clock->times =
           g_renew (GstClockTime, clock->times, 4 * clock->window_size);
+      /* restart calibration */
+      clock->filling = TRUE;
+      clock->time_index = 0;
       GST_CLOCK_SLAVE_UNLOCK (clock);
       break;
     case PROP_WINDOW_THRESHOLD:
