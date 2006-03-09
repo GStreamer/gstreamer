@@ -1,3 +1,8 @@
+2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset):
+	  Fix invalid memory access to region before peek'd data (#332964).
+
 2006-03-09  Wim Taymans  <wim@fluendo.com>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_init):

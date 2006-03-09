@@ -586,6 +586,7 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
     guint * found_layer, GstTypeFindProbability * found_prob)
 {
   guint8 *data = NULL;
+  guint8 *data_end;
   guint size;
   guint64 skipped;
   gint last_free_offset = -1;
@@ -605,6 +606,7 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
       } while (size > 10 && !data);
       if (!data)
         break;
+      data_end = data + size;
     }
     if (*data == 0xFF) {
       guint8 *head_data = NULL;
@@ -619,7 +621,8 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
         guint prev_channels = 0, prev_samplerate = 0;
         gboolean free = FALSE;
 
-        if (offset + 4 <= skipped + size) {
+        if ((gint64) (offset - skipped + 4) >= 0 &&
+            data + offset - skipped + 4 < data_end) {
           head_data = data + offset - skipped;
         } else {
           head_data = gst_type_find_peek (tf, offset + start_off, 4);
