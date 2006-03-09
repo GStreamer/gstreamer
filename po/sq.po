@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-08 12:08+0100\n"
+"POT-Creation-Date: 2006-03-09 19:22+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -98,7 +98,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "Printo versionin e GStreamer"
 
-#: gst/gst.c:790
+#: gst/gst.c:807
 msgid "Unknown option"
 msgstr ""
 
@@ -120,7 +120,7 @@ msgstr ""
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer ndeshi në një gabim të përgjithshëm të librarisë bazë."
 
-#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
+#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:222
 #, fuzzy
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
@@ -244,50 +244,54 @@ msgstr "Sinkronizim i pamundur në burim."
 msgid "Could not get/set settings from/on resource."
 msgstr "E pamundur marrja/vendosja e rregullimeve nga/në burim."
 
-#: gst/gsterror.c:219
+#: gst/gsterror.c:206
+msgid "No space left on the resource."
+msgstr ""
+
+#: gst/gsterror.c:220
 #, fuzzy
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer ndeshi në një gabim të përgjithshëm të librarisë bazë."
 
-#: gst/gsterror.c:224
+#: gst/gsterror.c:225
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 "Elementi nuk suporton trajtimin e kësaj vazhde. Ju lutem raporto një bug."
 
-#: gst/gsterror.c:226
+#: gst/gsterror.c:227
 msgid "Could not determine type of stream."
 msgstr "I pamundur përcaktimi i llojit të vazhdës."
 
-#: gst/gsterror.c:228
+#: gst/gsterror.c:229
 msgid "The stream is of a different type than handled by this element."
 msgstr "Vazhda është e një lloji të ndryshëm nga të trajtuarit nga ky element."
 
-#: gst/gsterror.c:230
+#: gst/gsterror.c:231
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Asnjë kodues/dekodues në dispozicion për të trajtuar llojin e vazhdës."
 
-#: gst/gsterror.c:231
+#: gst/gsterror.c:232
 msgid "Could not decode stream."
 msgstr "I pamundur dekodifikimi i vazhdës."
 
-#: gst/gsterror.c:232
+#: gst/gsterror.c:233
 msgid "Could not encode stream."
 msgstr "I pamundur kodifikimi i vazhdës."
 
-#: gst/gsterror.c:233
+#: gst/gsterror.c:234
 msgid "Could not demultiplex stream."
 msgstr "I pamundur demultipleksimi i stream."
 
-#: gst/gsterror.c:234
+#: gst/gsterror.c:235
 msgid "Could not multiplex stream."
 msgstr "I pamundur multipleksimi i vazhdës."
 
-#: gst/gsterror.c:285
+#: gst/gsterror.c:286
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Asnjë mesazh gabimi për domain %s."
 
-#: gst/gsterror.c:293
+#: gst/gsterror.c:294
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Asnjë mesazh gabimi standart për domain %s dhe kodin %d."
@@ -642,16 +646,16 @@ msgstr "e pamundur lidhja e elementit sink për URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "nuk lejohet konduktori bosh"
 
-#: libs/gst/base/gstbasesrc.c:1317 libs/gst/base/gstbasesrc.c:1326
-#: plugins/elements/gstqueue.c:772
+#: libs/gst/base/gstbasesrc.c:1415 libs/gst/base/gstbasesrc.c:1425
+#: plugins/elements/gstqueue.c:773
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1237
+#: libs/gst/base/gstbasesink.c:1384
 msgid "Internal data flow problem."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1367
+#: libs/gst/base/gstbasesink.c:1514
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Gabim i brendshëm i GStreamer: problem me shtegun.  Raporto bug."
@@ -675,26 +679,26 @@ msgstr "Gabim gjatë mbylljes së file \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Gabim gjatë shkrimit tek file \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:910
+#: plugins/elements/gstfilesrc.c:912
 msgid "No file name specified for reading."
 msgstr "Nuk është përcaktuar asnjë emër file për tu lexuar."
 
-#: plugins/elements/gstfilesrc.c:922
+#: plugins/elements/gstfilesrc.c:924
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "E pamundur hapja e file \"%s\" për lexim."
 
-#: plugins/elements/gstfilesrc.c:931
+#: plugins/elements/gstfilesrc.c:933
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "e pamundur lidhja e %s me %s"
 
-#: plugins/elements/gstfilesrc.c:938
+#: plugins/elements/gstfilesrc.c:940
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" është një directory."
 
-#: plugins/elements/gstfilesrc.c:945
+#: plugins/elements/gstfilesrc.c:947
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "File \"%s\" është një socket."
@@ -703,19 +707,19 @@ msgstr "File \"%s\" është një socket."
 msgid "Failed after iterations as requested."
 msgstr "Dështoi mbas përsëritjeve sikurse të kërkuara."
 
-#: plugins/elements/gsttypefindelement.c:183
+#: plugins/elements/gsttypefindelement.c:190
 msgid "caps"
 msgstr "mbrojtëse"
 
-#: plugins/elements/gsttypefindelement.c:184
+#: plugins/elements/gsttypefindelement.c:191
 msgid "detected capabilities in stream"
 msgstr "u zbuluan mundësi në fluks"
 
-#: plugins/elements/gsttypefindelement.c:187
+#: plugins/elements/gsttypefindelement.c:194
 msgid "minimum"
 msgstr "minimum"
 
-#: plugins/elements/gsttypefindelement.c:191
+#: plugins/elements/gsttypefindelement.c:198
 msgid "maximum"
 msgstr "maksimum"
 
@@ -841,7 +845,7 @@ msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 
 #: tools/gst-launch.c:642
 #, fuzzy, c-format
-msgid "ERROR: Pipeline can't PREROLL ...\n"
+msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 
 #: tools/gst-launch.c:645

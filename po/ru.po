@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-08 12:08+0100\n"
+"POT-Creation-Date: 2006-03-09 19:22+0100\n"
 "PO-Revision-Date: 2005-02-15 22:33+0300\n"
 "Last-Translator: Peter Astakhov <astakhovp@mail.ru>\n"
 "Language-Team: Russian <ru@li.org>\n"
@@ -99,7 +99,7 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "Печатает версию GStreamer"
 
-#: gst/gst.c:790
+#: gst/gst.c:807
 msgid "Unknown option"
 msgstr ""
 
@@ -121,7 +121,7 @@ msgstr ""
 msgid "GStreamer encountered a general core library error."
 msgstr ""
 
-#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:221
+#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:222
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
@@ -260,48 +260,52 @@ msgstr "Не могу провести синхронизацию в ресур�
 msgid "Could not get/set settings from/on resource."
 msgstr "Не могу получить/установить параметры для ресурса."
 
-#: gst/gsterror.c:219
+#: gst/gsterror.c:206
+msgid "No space left on the resource."
+msgstr ""
+
+#: gst/gsterror.c:220
 msgid "GStreamer encountered a general stream error."
 msgstr ""
 
-#: gst/gsterror.c:224
+#: gst/gsterror.c:225
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 
-#: gst/gsterror.c:226
+#: gst/gsterror.c:227
 msgid "Could not determine type of stream."
 msgstr "Не могу определить тип потока."
 
-#: gst/gsterror.c:228
+#: gst/gsterror.c:229
 msgid "The stream is of a different type than handled by this element."
 msgstr "Тип потока отличается от обрабатываемого этим элементом."
 
-#: gst/gsterror.c:230
+#: gst/gsterror.c:231
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Нет кодека для обработки данного типа потока."
 
-#: gst/gsterror.c:231
+#: gst/gsterror.c:232
 msgid "Could not decode stream."
 msgstr "Не могу декодировать поток."
 
-#: gst/gsterror.c:232
+#: gst/gsterror.c:233
 msgid "Could not encode stream."
 msgstr "Не могу кодировать поток."
 
-#: gst/gsterror.c:233
+#: gst/gsterror.c:234
 msgid "Could not demultiplex stream."
 msgstr "Не могу демультиплексировать поток."
 
-#: gst/gsterror.c:234
+#: gst/gsterror.c:235
 msgid "Could not multiplex stream."
 msgstr "Не могу мультиплексировать поток."
 
-#: gst/gsterror.c:285
+#: gst/gsterror.c:286
 #, c-format
 msgid "No error message for domain %s."
 msgstr ""
 
-#: gst/gsterror.c:293
+#: gst/gsterror.c:294
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr ""
@@ -655,16 +659,16 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr ""
 
-#: libs/gst/base/gstbasesrc.c:1317 libs/gst/base/gstbasesrc.c:1326
-#: plugins/elements/gstqueue.c:772
+#: libs/gst/base/gstbasesrc.c:1415 libs/gst/base/gstbasesrc.c:1425
+#: plugins/elements/gstqueue.c:773
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1237
+#: libs/gst/base/gstbasesink.c:1384
 msgid "Internal data flow problem."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1367
+#: libs/gst/base/gstbasesink.c:1514
 #, fuzzy
 msgid "Internal data stream error."
 msgstr ""
@@ -690,26 +694,26 @@ msgstr "Ошибка закрытия файла \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Ошибка записи в файл \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:910
+#: plugins/elements/gstfilesrc.c:912
 msgid "No file name specified for reading."
 msgstr "Не указано имя файла для чтения."
 
-#: plugins/elements/gstfilesrc.c:922
+#: plugins/elements/gstfilesrc.c:924
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "Не могу открыть файл \"%s\" для чтения."
 
-#: plugins/elements/gstfilesrc.c:931
+#: plugins/elements/gstfilesrc.c:933
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "не могу присоединить %s к %s"
 
-#: plugins/elements/gstfilesrc.c:938
+#: plugins/elements/gstfilesrc.c:940
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" - это каталог."
 
-#: plugins/elements/gstfilesrc.c:945
+#: plugins/elements/gstfilesrc.c:947
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Файл \"%s\" является сокетом."
@@ -718,19 +722,19 @@ msgstr "Файл \"%s\" является сокетом."
 msgid "Failed after iterations as requested."
 msgstr ""
 
-#: plugins/elements/gsttypefindelement.c:183
+#: plugins/elements/gsttypefindelement.c:190
 msgid "caps"
 msgstr ""
 
-#: plugins/elements/gsttypefindelement.c:184
+#: plugins/elements/gsttypefindelement.c:191
 msgid "detected capabilities in stream"
 msgstr ""
 
-#: plugins/elements/gsttypefindelement.c:187
+#: plugins/elements/gsttypefindelement.c:194
 msgid "minimum"
 msgstr "минимум"
 
-#: plugins/elements/gsttypefindelement.c:191
+#: plugins/elements/gsttypefindelement.c:198
 msgid "maximum"
 msgstr "максимум"
 
@@ -856,7 +860,7 @@ msgstr ""
 
 #: tools/gst-launch.c:642
 #, c-format
-msgid "ERROR: Pipeline can't PREROLL ...\n"
+msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
 
 #: tools/gst-launch.c:645
