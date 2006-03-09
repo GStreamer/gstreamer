@@ -1,3 +1,12 @@
+2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	(utf8_type_find_have_valid_utf8_at_offset):
+	  Remove part from previous commit that was bogus:
+	  g_utf8_validate() does in fact not accept embedded
+	  zeroes, so we don't need to check for those (thanks
+	  to Mike for the hint).
+
 2006-03-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c:

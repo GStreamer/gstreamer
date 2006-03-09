@@ -46,20 +46,6 @@ static GstStaticCaps utf8_caps = GST_STATIC_CAPS ("text/plain");
 
 #define UTF8_CAPS gst_static_caps_get(&utf8_caps)
 
-static guint
-utf8_type_find_count_embedded_zeroes (const gchar * data, guint size)
-{
-  guint num = 0;
-
-  while (size > 0) {
-    if (data[size - 1] == 0)
-      ++num;
-    --size;
-  }
-
-  return num;
-}
-
 static gboolean
 utf8_type_find_have_valid_utf8_at_offset (GstTypeFind * tf, guint64 offset,
     GstTypeFindProbability * prob)
@@ -80,11 +66,8 @@ utf8_type_find_have_valid_utf8_at_offset (GstTypeFind * tf, guint64 offset,
       gchar *start = (gchar *) data;
 
       if (g_utf8_validate (start, size, (const gchar **) &end) || (end - start + 4 > size)) {   /* allow last char to be cut off */
-        /* embedded zeroes are a sure sign that this isn't a plain text file */
-        if (utf8_type_find_count_embedded_zeroes (start, size) <= 2) {
-          *prob = probability;
-          return TRUE;
-        }
+        *prob = probability;
+        return TRUE;
       }
       *prob = 0;
       return FALSE;
