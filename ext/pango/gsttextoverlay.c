@@ -391,10 +391,12 @@ gst_text_overlay_finalize (GObject * object)
 static void
 gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
 {
+  GstPadTemplate *template;
+
   /* video sink */
-  overlay->video_sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&video_sink_template_factory), "video_sink");
+  template = gst_static_pad_template_get (&video_sink_template_factory);
+  overlay->video_sinkpad = gst_pad_new_from_template (template, "video_sink");
+  gst_object_unref (template);
   gst_pad_set_getcaps_function (overlay->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_text_overlay_getcaps));
   gst_pad_set_setcaps_function (overlay->video_sinkpad,
@@ -407,9 +409,9 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
 
   if (!GST_IS_TIME_OVERLAY_CLASS (klass) && !GST_IS_CLOCK_OVERLAY_CLASS (klass)) {
     /* text sink */
-    overlay->text_sinkpad =
-        gst_pad_new_from_template (gst_static_pad_template_get
-        (&text_sink_template_factory), "text_sink");
+    template = gst_static_pad_template_get (&text_sink_template_factory);
+    overlay->text_sinkpad = gst_pad_new_from_template (template, "text_sink");
+    gst_object_unref (template);
     gst_pad_set_setcaps_function (overlay->text_sinkpad,
         GST_DEBUG_FUNCPTR (gst_text_overlay_setcaps_txt));
     gst_pad_set_event_function (overlay->text_sinkpad,
@@ -424,9 +426,9 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   }
 
   /* (video) source */
-  overlay->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&src_template_factory), "src");
+  template = gst_static_pad_template_get (&src_template_factory);
+  overlay->srcpad = gst_pad_new_from_template (template, "src");
+  gst_object_unref (template);
   gst_pad_set_getcaps_function (overlay->srcpad,
       GST_DEBUG_FUNCPTR (gst_text_overlay_getcaps));
   gst_pad_set_event_function (overlay->srcpad,

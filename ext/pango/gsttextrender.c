@@ -326,18 +326,20 @@ gst_text_render_finalize (GObject * object)
 static void
 gst_text_render_init (GstTextRender * render, GstTextRenderClass * klass)
 {
+  GstPadTemplate *template;
+
   /* sink */
-  render->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&sink_template_factory), "sink");
+  template = gst_static_pad_template_get (&sink_template_factory);
+  render->sinkpad = gst_pad_new_from_template (template, "sink");
+  gst_object_unref (template);
   gst_pad_set_chain_function (render->sinkpad,
       GST_DEBUG_FUNCPTR (gst_text_render_chain));
   gst_element_add_pad (GST_ELEMENT (render), render->sinkpad);
 
   /* source */
-  render->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&src_template_factory), "src");
+  template = gst_static_pad_template_get (&src_template_factory);
+  render->srcpad = gst_pad_new_from_template (template, "src");
+  gst_object_unref (template);
   gst_pad_set_fixatecaps_function (render->srcpad,
       GST_DEBUG_FUNCPTR (gst_text_render_fixate_caps));
   gst_pad_set_setcaps_function (render->srcpad,

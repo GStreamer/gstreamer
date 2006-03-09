@@ -1,3 +1,11 @@
+2006-03-09  Wim Taymans  <wim@fluendo.com>
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_init):
+	* ext/pango/gsttextrender.c: (gst_text_render_init):
+	* gst/adder/gstadder.c: (gst_adder_init):
+	Don't leak padtemplates, patch by Christophe Fergeau,
+	closes #333510.
+
 2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subparse/gstsubparse.c: (gst_subparse_type_find):
