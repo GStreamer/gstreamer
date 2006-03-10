@@ -104,7 +104,7 @@ gst_video_sink_init (GstVideoSink * videosink)
   videosink->width = 0;
   videosink->height = 0;
 
-  gst_base_sink_set_max_lateness (GST_BASE_SINK (videosink), 20 * GST_MSECOND);
+  gst_base_sink_set_max_lateness (GST_BASE_SINK (videosink), -1);
 }
 
 static void
