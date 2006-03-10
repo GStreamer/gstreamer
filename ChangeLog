@@ -1,3 +1,12 @@
+2006-03-10  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	Added new API:
+	gst_pipeline_[get|set]_auto_flush_bus()
+	gst_uri_has_protocol()
+	GST_RESOURCE_ERROR_NO_SPACE_LEFT
+
 2006-03-07  Edward Hervey  <edward@fluendo.com>
 
 	* gst/arg-types.py:

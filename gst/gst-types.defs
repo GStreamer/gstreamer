@@ -462,6 +462,7 @@
     '("seek" "GST_RESOURCE_ERROR_SEEK")
     '("sync" "GST_RESOURCE_ERROR_SYNC")
     '("settings" "GST_RESOURCE_ERROR_SETTINGS")
+    '("no-space-left" "GST_RESOURCE_ERROR_NO_SPACE_LEFT")
     '("num-errors" "GST_RESOURCE_ERROR_NUM_ERRORS")
   )
 )
