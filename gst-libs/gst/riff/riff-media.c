@@ -556,21 +556,25 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     else
       num_colors = 256;
 
-    /* palette is always at least 256*4 bytes */
-    copy = gst_buffer_new_and_alloc (MAX (num_colors * 4, 256 * 4));
-    memcpy (GST_BUFFER_DATA (copy), GST_BUFFER_DATA (palette),
-        GST_BUFFER_SIZE (palette));
+    if (GST_BUFFER_SIZE (palette) >= (num_colors * 4)) {
+      /* palette is always at least 256*4 bytes */
+      copy = gst_buffer_new_and_alloc (MAX (num_colors * 4, 256 * 4));
+      memcpy (GST_BUFFER_DATA (copy), GST_BUFFER_DATA (palette),
+          GST_BUFFER_SIZE (palette));
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-    gint n;
-    guint32 *data = (guint32 *) GST_BUFFER_DATA (copy);
+      gint n;
+      guint32 *data = (guint32 *) GST_BUFFER_DATA (copy);
 
-    /* own endianness */
-    for (n = 0; n < num_colors; n++)
-      data[n] = GUINT32_FROM_LE (data[n]);
+      /* own endianness */
+      for (n = 0; n < num_colors; n++)
+        data[n] = GUINT32_FROM_LE (data[n]);
 #endif
-    gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, copy, NULL);
-    gst_buffer_unref (copy);
+      gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, copy, NULL);
+      gst_buffer_unref (copy);
+    } else {
+      GST_WARNING ("Palette smaller than expected: broken file");
+    }
   }
 
   return caps;

@@ -1,3 +1,10 @@
+2006-03-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	  Make sure we don't read beyond the palette buffer in case of
+	  broken or manipulated files (#333488, patch by: Fabrizio
+	  Gennari)
+
 2006-03-10  Edward Hervey  <edward@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset):
