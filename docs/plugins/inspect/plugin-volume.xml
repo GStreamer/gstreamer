@@ -1,9 +1,9 @@
 <plugin>
   <name>volume</name>
-  <description>element for controlling audio volume</description>
+  <description>plugin for controlling audio volume</description>
   <filename>../../gst/volume/.libs/libgstvolume.so</filename>
   <basename>libgstvolume.so</basename>
-  <version>0.10.3</version>
+  <version>0.10.4</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

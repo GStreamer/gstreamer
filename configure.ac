@@ -6,7 +6,7 @@ AC_INIT
 
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-base, GST_PLUGINS_BASE_VERSION, 0, 10, 3, 2,
+AS_VERSION(gst-plugins-base, GST_PLUGINS_BASE_VERSION, 0, 10, 4, 0,
     GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
@@ -43,7 +43,7 @@ AS_LIBTOOL_TAGS
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.3.1
+GST_REQ=0.10.4
 
 dnl *** autotools stuff ****
 

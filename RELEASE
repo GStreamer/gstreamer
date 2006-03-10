@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Base Plug-ins 0.10.3 "Under Pressure"
+GStreamer: Release notes for GStreamer Base Plug-ins 0.10.4 "Power"
         
 
 
@@ -55,25 +55,51 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * typefind improvements
-      * Ogg decoding and encoding fixes
-      * Improved audio and video sink classes
-      * Bug and leak fixes
-      * Improved video scaling
-      * On-the-fly visualisation switching
-      * Subtitle support
+      * (Experimental) QoS support
+      * oggmuxer now creates 100% valid streams for Theora, Vorbis and Speex
+      * documentation updates
+      * better support for subtitles (seeking)
 
 Bugs fixed in this release
     
-      * 324000 : [playbin] post error or message on unknown input
-      * 153004 : [typefind] can't identify mp3 file with one single mpeg f...
-      * 323874 : [playbin] leaks sinks and threads when using gconfaudiosink
-      * 324626 : ffmpegcolorspace support for fourcc " UYVY " 
-      * 326447 : check that all elements in -base pass queries they can't ...
-      * 328263 : Fix build with gcc 2.95
-      * 328279 : [decodebin] timeout issue when pre-rolling
-      * 329326 : Fix oggmux removing pads from collect pads
-      * 330244 : gsttextoverlay.c:895: 'struct _GstCollectData' has no mem...
+      * 310202 : [subtitles] < i >  < /i > tags and others should be supported i...
+      * 312439 : XVideo output doesn't work on remote displays (probably r...
+      * 321271 : audio output is truncated at EOS
+      * 321650 : Can't decode this ogm file
+      * 325732 : [oggdemux] problem when seeking to time less than 4s with...
+      * 325972 : [typefinding] doesn't recognise this mp3
+      * 326720 : [alsasink] doesn't support more than 2 channels anymore
+      * 330711 : [ffmpegcolorspace] problems with palettized RGB (fencount...
+      * 330789 : gstbaseaudiosink causes noise on seeking
+      * 330888 : Fix build with gcc 2.95 (again)
+      * 331295 : gnomevfssink doesn't respect umask when creating files
+      * 331526 : 3GP type detection is too simple
+      * 331678 : Decodebin is not reusable within a single pipeline (as in...
+      * 331690 : playbin won't play my last.fm stream
+      * 331763 : [alsamixer] unmute sets the volume to 100%
+      * 331765 : [alsamixer] mixer applet slider doesn't want to move from...
+      * 331903 : [videorate] doesnt handle input caps of framerate=0/1 sanely
+      * 332778 : [ogmparse] " Already an existing pad " WARNING
+      * 332964 : random crashes in mp3_type_find
+      * 333254 : theora encoder does not set IN_CAPS flag properly
+      * 333352 : [gnomevfssink] reports disk full as generic error
+      * 333488 : Allow for palette < 256 colours in AVI files
+      * 333510 : [PATCH] Fix gst_pad_new_from_template (gst_static_pad_tem...
+      * 333545 : [riff] set depth on wma caps to make asfdemux and pitfdll...
+      * 333663 : [patch] unref the result of gst_pad_get_parent
+      * 333900 : [typefind] cannot play a particular mp3 file
+      * 334112 : variable not initialized
+      * 334129 : Disable frame dropping for now
+      * 317038 : use default channel layout if none is specified in multic...
+      * 319340 : [cdparanoia] uncorrected-error signal never fired
+
+API changed in this release
+     
+
+- API additions:
+    
+* GstTextOverlay::halignment
+* GstTextOverlay::valignment
 
 Download
 
@@ -104,16 +130,17 @@ Applications
 Contributors to this release
     
       * Andy Wingo
-      * David Schleef
-      * Edgard Lima
+      * Christophe Fergeau
       * Edward Hervey
+      * Fabrizio Gennari
       * Jan Schmidt
-      * Jens Granseuer
       * Julien MOUTTE
-      * Philippe Kalaf
+      * Mathieu Garcia
+      * Michael Smith
       * Sebastien Moutte
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Tommi Myöhänen
       * Wim Taymans
  

@@ -1054,7 +1054,7 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>New Pref</NICK>
-<BLURB>Value indicating how much to prefer new frames.</BLURB>
+<BLURB>Value indicating how much to prefer new frames (unused).</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -1170,12 +1170,12 @@
 
 <ARG>
 <NAME>GstTextOverlay::halign</NAME>
-<TYPE>GstTextOverlayHAlign</TYPE>
+<TYPE>gchararray</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>w</FLAGS>
 <NICK>horizontal alignment</NICK>
-<BLURB>Horizontal alignment of the text. .</BLURB>
-<DEFAULT>center</DEFAULT>
+<BLURB>Horizontal alignment of the text (deprecated; use halignment).</BLURB>
+<DEFAULT>"center"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1200,12 +1200,12 @@
 
 <ARG>
 <NAME>GstTextOverlay::valign</NAME>
-<TYPE>GstTextOverlayVAlign</TYPE>
+<TYPE>gchararray</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>w</FLAGS>
 <NICK>vertical alignment</NICK>
-<BLURB>Vertical alignment of the text. .</BLURB>
-<DEFAULT>baseline</DEFAULT>
+<BLURB>Vertical alignment of the text (deprecated; use valignment).</BLURB>
+<DEFAULT>"baseline"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1236,6 +1236,26 @@
 <NICK>vertical padding</NICK>
 <BLURB>Vertical padding when using top/bottom alignment.</BLURB>
 <DEFAULT>25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::halignment</NAME>
+<TYPE>GstTextOverlayHAlign</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>horizontal alignment</NICK>
+<BLURB>Horizontal alignment of the text.</BLURB>
+<DEFAULT>center</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::valignment</NAME>
+<TYPE>GstTextOverlayVAlign</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>vertical alignment</NICK>
+<BLURB>Vertical alignment of the text.</BLURB>
+<DEFAULT>baseline</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1394,7 +1414,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Location</NICK>
-<BLURB>Location of the file to read.</BLURB>
+<BLURB>Location of the file to write.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 

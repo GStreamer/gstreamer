@@ -1,3 +1,10 @@
+=== release 0.10.4 ===
+
+2006-03-10  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.4, "Power"
+
 2006-03-10  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst-libs/gst/video/gstvideosink.c: (gst_video_sink_init):
@@ -7,10 +14,11 @@
 
 2006-03-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Fabrizio Gennari
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
 	  Make sure we don't read beyond the palette buffer in case of
-	  broken or manipulated files (#333488, patch by: Fabrizio
-	  Gennari)
+	  broken or manipulated files (#333488)
 
 2006-03-10  Edward Hervey  <edward@fluendo.com>
 
@@ -53,11 +61,12 @@
 
 2006-03-09  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Christophe Fergeau
+
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_init):
 	* ext/pango/gsttextrender.c: (gst_text_render_init):
 	* gst/adder/gstadder.c: (gst_adder_init):
-	Don't leak padtemplates, patch by Christophe Fergeau,
-	closes #333510.
+	Don't leak padtemplates, closes #333510.
 
 2006-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -134,9 +143,11 @@
 
 2006-03-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Fabrizio Gennari
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
 	  Allow palettes with less than 256 colours in AVI files
-	  (#333488, patch by: Fabrizio Gennari).
+	  (#333488)
 
 2006-03-07  Julien MOUTTE  <julien@moutte.net>
 
@@ -170,6 +181,8 @@
 
 2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Fabrizio Gennari
+
 	* ext/libvisual/visual.c: (gst_visual_getcaps),
 	(gst_visual_src_setcaps), (gst_visual_sink_setcaps):
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_sinkconnect):
@@ -185,7 +198,7 @@
 	(gst_video_get_size):
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_setcaps):
 	  Don't leak references returned by gst_pad_get_parent()
-	  (#333663, based on patch by: Christophe Fergeau).
+	  (#333663)
 
 2006-03-06  Stefan Kost  <ensonic@users.sf.net>
 
@@ -211,8 +224,10 @@
 
 2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Fabrizio Gennari
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
-	  Set depth on WMA caps (#333545, patch by: Fabrizio Gennari).
+	  Set depth on WMA caps (#333545)
 
 2006-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -584,9 +599,10 @@
 
 2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Fabrizio Gennari <fabrizio dot get at tiscali dot it>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
-	  Pick up palette for MS video v1 (#327028, patch by:
-	  Fabrizio Gennari <fabrizio dot get at tiscali dot it>)
+	  Pick up palette for MS video v1 (#327028)
 
 2006-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -630,7 +646,7 @@
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_create):
 	  Don't send EOS event here, the base class will send one for us.
-  
+
 	* gst/playback/gstplaybasebin.c: (prepare_output):
 	  Subpictures without video stream aren't allowed either.
 	
@@ -722,7 +738,7 @@
 2006-02-19  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/playback/gstdecodebin.c: (mimetype_is_raw): pango layout
-	should be considered as row.
+	should be considered as raw.
 
 2006-02-19  Julien MOUTTE  <julien@moutte.net>
 
@@ -2082,10 +2098,12 @@
 
 2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Michael Benes
+
 	* gst/videotestsrc/gstvideotestsrc.c:
 	(gst_video_test_src_class_init), (gst_video_test_src_start):
 	  Add start method to reset running time and number of frames sent
-	  when starting up (fixes #324696; patch by: Michal Benes).
+	  when starting up (fixes #324696)
 
 2005-12-27  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -2232,12 +2250,13 @@
 
 2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	  Patch by: Benjamin Pineau
+
 	* gst/tcp/gsttcp.c:
 	* gst/tcp/gsttcpclientsink.c:
 	* gst/tcp/gsttcpserversink.c:
 	* gst/tcp/gsttcpserversrc.c:
-	  Add <string.h> includes for memset and FD_ZERO (fixes #323878;
-	  patch by: Benjamin Pineau).
+	  Add <string.h> includes for memset and FD_ZERO (fixes #323878)
 
 2005-12-15  Michael Smith  <msmith@fluendo.com>
 

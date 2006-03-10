@@ -1,14 +1,21 @@
 <plugin>
   <name>subparse</name>
-  <description>Subtitle (.sub) file parsing</description>
+  <description>Subtitle parsing</description>
   <filename>../../gst/subparse/.libs/libgstsubparse.so</filename>
   <basename>libgstsubparse.so</basename>
-  <version>0.10.3</version>
+  <version>0.10.4</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>ssaparse</name>
+      <longname>SSA Subtitle Parser</longname>
+      <class>Codec/Parser/Subtitle</class>
+      <description>Parses SSA subtitle streams</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
+    </element>
     <element>
       <name>subparse</name>
       <longname>Subtitle parsers</longname>
