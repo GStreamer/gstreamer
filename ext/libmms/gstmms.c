@@ -27,23 +27,15 @@
 #include <string.h>
 #include "gstmms.h"
 
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 enum
 {
   ARG_0,
-  ARG_LOCATION,
-  ARG_BLOCKSIZE
+  ARG_LOCATION
 };
 
 
 GST_DEBUG_CATEGORY (mmssrc_debug);
-#define GST_CATEGORY_DEFAULT mmssrc_debug
+#define GST_CAT_DEFAULT mmssrc_debug
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -51,13 +43,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-ms-asf")
     );
 
-static void gst_mms_class_init (GstMMSClass * klass);
-static void gst_mms_base_init (gpointer g_class);
-static void gst_mms_init (GstMMS * mmssrc, GstMMSClass * g_class);
 static void gst_mms_finalize (GObject * gobject);
-
 static void gst_mms_uri_handler_init (gpointer g_iface, gpointer iface_data);
-
 
 static void gst_mms_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -67,13 +54,12 @@ static void gst_mms_get_property (GObject * object, guint prop_id,
 static const GstQueryType *gst_mms_get_query_types (GstPad * pad);
 static gboolean gst_mms_src_query (GstPad * pad, GstQuery * query);
 
-
 static gboolean gst_mms_start (GstBaseSrc * bsrc);
 static gboolean gst_mms_stop (GstBaseSrc * bsrc);
 static GstFlowReturn gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf);
 
 static void
-_urihandler_init (GType mms_type)
+gst_mms_urihandler_init (GType mms_type)
 {
   static const GInterfaceInfo urihandler_info = {
     gst_mms_uri_handler_init,
@@ -83,12 +69,10 @@ _urihandler_init (GType mms_type)
 
   g_type_add_interface_static (mms_type, GST_TYPE_URI_HANDLER,
       &urihandler_info);
-
-  GST_DEBUG_CATEGORY_INIT (mmssrc_debug, "mmssrc", 0, "MMS Source Element");
 }
 
 GST_BOILERPLATE_FULL (GstMMS, gst_mms, GstPushSrc, GST_TYPE_PUSH_SRC,
-    _urihandler_init);
+    gst_mms_urihandler_init);
 
 static void
 gst_mms_base_init (gpointer g_class)
@@ -104,6 +88,8 @@ gst_mms_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_set_details (element_class, &plugin_details);
+
+  GST_DEBUG_CATEGORY_INIT (mmssrc_debug, "mmssrc", 0, "MMS Source Element");
 }
 
 /* initialize the plugin's class */
@@ -127,12 +113,6 @@ gst_mms_class_init (GstMMSClass * klass)
           "Host URL to connect to. Accepted are mms://, mmsu://, mmst:// URL types",
           NULL, G_PARAM_READWRITE));
 
-
-  g_object_class_install_property (gobject_class, ARG_BLOCKSIZE,
-      g_param_spec_int ("blocksize", "blocksize",
-          "How many bytes should be read at once", 0, 65536, 2048,
-          G_PARAM_READWRITE));
-
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_mms_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_mms_stop);
 
@@ -148,22 +128,21 @@ gst_mms_class_init (GstMMSClass * klass)
 static void
 gst_mms_init (GstMMS * mmssrc, GstMMSClass * g_class)
 {
-  gst_pad_set_query_function (GST_BASE_SRC (mmssrc)->srcpad, gst_mms_src_query);
+  gst_pad_set_query_function (GST_BASE_SRC (mmssrc)->srcpad,
+      GST_DEBUG_FUNCPTR (gst_mms_src_query));
   gst_pad_set_query_type_function (GST_BASE_SRC (mmssrc)->srcpad,
-      gst_mms_get_query_types);
+      GST_DEBUG_FUNCPTR (gst_mms_get_query_types));
 
   mmssrc->uri_name = NULL;
   mmssrc->connection = NULL;
   mmssrc->connection_h = NULL;
-  mmssrc->blocksize = 2048;
+  GST_BASE_SRC (mmssrc)->blocksize = 2048;
 }
 
 static void
 gst_mms_finalize (GObject * gobject)
 {
   GstMMS *mmssrc = GST_MMS (gobject);
-
-  gst_mms_stop (GST_BASE_SRC (mmssrc));
 
   if (mmssrc->uri_name) {
     g_free (mmssrc->uri_name);
@@ -247,50 +226,29 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstMMS *mmssrc;
   guint8 *data;
+  guint blocksize;
   gint result;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  /* DEBUG */
-  GstFormat fmt = GST_FORMAT_BYTES;
-  gint64 query_res;
 
   mmssrc = GST_MMS (psrc);
-  *buf = gst_buffer_new_and_alloc (mmssrc->blocksize);
 
-  if (NULL == *buf) {
-    ret = GST_FLOW_ERROR;
-    goto done;
-  }
+  GST_OBJECT_LOCK (mmssrc);
+  blocksize = GST_BASE_SRC (mmssrc)->blocksize;
+  GST_OBJECT_UNLOCK (mmssrc);
+
+  *buf = gst_buffer_new_and_alloc (blocksize);
 
   data = GST_BUFFER_DATA (*buf);
-  GST_DEBUG ("mms: data: %p\n", data);
-
-  if (NULL == GST_BUFFER_DATA (*buf)) {
-    ret = GST_FLOW_ERROR;
-    gst_buffer_unref (*buf);
-    *buf = NULL;
-    goto done;
-  }
-
   GST_BUFFER_SIZE (*buf) = 0;
-  GST_DEBUG ("reading %d bytes", mmssrc->blocksize);
+  GST_DEBUG ("reading %d bytes", blocksize);
   if (mmssrc->connection) {
-    result =
-        mms_read (NULL, mmssrc->connection, (char *) data, mmssrc->blocksize);
+    result = mms_read (NULL, mmssrc->connection, (char *) data, blocksize);
   } else {
-    result =
-        mmsh_read (NULL, mmssrc->connection_h, (char *) data,
-        mmssrc->blocksize);
+    result = mmsh_read (NULL, mmssrc->connection_h, (char *) data, blocksize);
   }
 
   /* EOS? */
-  if (result == 0) {
-    gst_buffer_unref (*buf);
-    *buf = NULL;
-    GST_DEBUG ("Returning EOS");
-    ret = GST_FLOW_UNEXPECTED;
-    goto done;
-  }
+  if (result == 0)
+    goto eos;
 
   if (mmssrc->connection) {
     GST_BUFFER_OFFSET (*buf) =
@@ -301,48 +259,62 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   }
   GST_BUFFER_SIZE (*buf) = result;
 
-  /* DEBUG */
-  fmt = GST_FORMAT_BYTES;
-  gst_pad_query_position (GST_BASE_SRC (mmssrc)->srcpad, &fmt, &query_res);
-  GST_DEBUG ("mms position: %" G_GINT64_FORMAT, query_res);
+  GST_DEBUG ("Returning buffer with offset %" G_GINT64_FORMAT " and size %u",
+      GST_BUFFER_OFFSET (*buf), GST_BUFFER_SIZE (*buf));
 
-done:
+  return GST_FLOW_OK;
 
-  return ret;
+eos:
+  {
+    GST_DEBUG ("EOS");
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    return GST_FLOW_UNEXPECTED;
+  }
 }
 
 static gboolean
 gst_mms_start (GstBaseSrc * bsrc)
 {
   GstMMS *mms;
-  gboolean ret = FALSE;
 
   mms = GST_MMS (bsrc);
 
-  if (!mms->uri_name || *mms->uri_name == '\0') {
+  if (!mms->uri_name || *mms->uri_name == '\0')
+    goto no_uri;
+
+  /* FIXME: pass some sane arguments here */
+  GST_DEBUG_OBJECT (mms, "Trying mms_connect (%s)", mms->uri_name);
+  mms->connection = mms_connect (NULL, NULL, mms->uri_name, 128 * 1024);
+  if (mms->connection)
+    goto success;
+
+  GST_DEBUG_OBJECT (mms, "Trying mmsh_connect (%s)", mms->uri_name);
+  mms->connection_h = mmsh_connect (NULL, NULL, mms->uri_name, 128 * 1024);
+  if (!mms->connection_h)
+    goto no_connect;
+
+  /* fall through */
+
+success:
+  {
+    GST_DEBUG_OBJECT (mms, "Connect successful");
+    return TRUE;
+  }
+
+no_uri:
+  {
     GST_ELEMENT_ERROR (mms, RESOURCE, OPEN_READ,
         ("No URI to open specified"), (NULL));
     return FALSE;
   }
 
-  /* FIXME: pass some sane arguments here */
-  gst_mms_stop (bsrc);
-
-  mms->connection = mms_connect (NULL, NULL, mms->uri_name, 128 * 1024);
-  if (mms->connection) {
-    ret = TRUE;
-  } else {
-    mms->connection_h = mmsh_connect (NULL, NULL, mms->uri_name, 128 * 1024);
-    if (mms->connection_h) {
-      ret = TRUE;
-    } else {
-      GST_ELEMENT_ERROR (mms, RESOURCE, OPEN_READ,
-          ("Could not connect to this stream"), (NULL));
-    }
+no_connect:
+  {
+    GST_ELEMENT_ERROR (mms, RESOURCE, OPEN_READ,
+        ("Could not connect to this stream"), (NULL));
+    return FALSE;
   }
-
-  return ret;
-
 }
 
 static gboolean
@@ -370,6 +342,7 @@ gst_mms_set_property (GObject * object, guint prop_id,
 
   mmssrc = GST_MMS (object);
 
+  GST_OBJECT_LOCK (mmssrc);
   switch (prop_id) {
     case ARG_LOCATION:
       if (mmssrc->uri_name) {
@@ -378,13 +351,11 @@ gst_mms_set_property (GObject * object, guint prop_id,
       }
       mmssrc->uri_name = g_value_dup_string (value);
       break;
-    case ARG_BLOCKSIZE:
-      mmssrc->blocksize = g_value_get_int (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (mmssrc);
 }
 
 static void
@@ -395,18 +366,17 @@ gst_mms_get_property (GObject * object, guint prop_id,
 
   mmssrc = GST_MMS (object);
 
+  GST_OBJECT_LOCK (mmssrc);
   switch (prop_id) {
     case ARG_LOCATION:
       if (mmssrc->uri_name)
         g_value_set_string (value, mmssrc->uri_name);
       break;
-    case ARG_BLOCKSIZE:
-      g_value_set_int (value, mmssrc->blocksize);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (mmssrc);
 }
 
 /* entry point to initialize the plug-in
@@ -437,7 +407,6 @@ gst_mms_uri_get_protocols (void)
 static const gchar *
 gst_mms_uri_get_uri (GstURIHandler * handler)
 {
-
   GstMMS *src = GST_MMS (handler);
 
   return src->uri_name;

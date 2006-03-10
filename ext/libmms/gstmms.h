@@ -18,10 +18,10 @@ G_BEGIN_DECLS
 #define GST_MMS(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MMS,GstMMS))
 #define GST_MMS_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MMS,GstMMS))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MMS,GstMMSClass))
 #define GST_IS_MMS(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MMS))
-#define GST_IS_MMS_CLASS(obj) \
+#define GST_IS_MMS_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MMS))
 
 typedef struct _GstMMS      GstMMS;
@@ -34,7 +34,6 @@ struct _GstMMS
   gchar *uri_name;
   gpointer connection;
   gpointer connection_h;
-  gint blocksize;
 };
 
 struct _GstMMSClass 
