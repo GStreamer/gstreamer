@@ -21,12 +21,9 @@
 #ifndef __GST_MODPLUG_H__
 #define __GST_MODPLUG_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #include <gst/gst.h>
-#include <gst/bytestream/bytestream.h>
+
+G_BEGIN_DECLS
         
 #define GST_TYPE_MODPLUG \
   (gst_modplug_get_type())
@@ -34,46 +31,48 @@ extern "C" {
 #define GST_MODPLUG(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MODPLUG,GstModPlug))
 #define GST_MODPLUG_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstModPlug))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MODPLUG,GstModPlug))
 #define GST_IS_MODPLUG(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MODPLUG))
 #define GST_IS_MODPLUG_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MODPLUG))
   
 struct _GstModPlug {
-  GstElement element;
-  GstPad *sinkpad, *srcpad;
-  guint8 *buffer_in;
-  GstByteStream *bs;
+  GstElement  element;
 
+  GstPad     *sinkpad;
+  GstPad     *srcpad;
+
+  /* properties */
   const gchar *songname;
-  gboolean reverb;
-  gint reverb_depth;
-  gint reverb_delay;
-  gboolean megabass;
-  gint megabass_amount;
-  gint megabass_range;
-  gboolean surround;
-  gint surround_depth;
-  gint surround_delay;
-  gboolean noise_reduction;
-  gboolean _16bit;
-  gboolean oversamp;
-  gint channel;
-  gint frequency;
+  gboolean     reverb;
+  gint         reverb_depth;
+  gint         reverb_delay;
+  gboolean     megabass;
+  gint         megabass_amount;
+  gint         megabass_range;
+  gboolean     surround;
+  gint         surround_depth;
+  gint         surround_delay;
+  gboolean     noise_reduction;
+  gboolean     _16bit;
+  gboolean     oversamp;
+  gint         channel;
+  gint         frequency;
 
-  guchar *audiobuffer;
-  gint32 length;
-  guint state;
-  guint bitsPerSample;
-  gboolean need_discont;
-  gboolean eos;
-  gint64 seek_at;
-  guint64 song_size;
-  guint64 timestamp;
+  /* state */
+  GstBuffer   *buffer;
 
-  CSoundFile *mSoundFile;
-  gboolean opened; /* set to TRUE when mSoundFile is created */
+  gint32       read_bytes;
+  gint32       read_samples;
+
+  gint64       seek_at;      /* pending seek, or -1                 */
+  gint64       song_size;    /* size of the raw song data in bytes  */
+  gint64       song_length;  /* duration of the song in nanoseconds */
+  gint64       offset;       /* current position in samples         */
+  gint64       timestamp;
+
+  CSoundFile  *mSoundFile;
 };
 
 struct _GstModPlugClass {
@@ -83,13 +82,8 @@ struct _GstModPlugClass {
 typedef struct _GstModPlug GstModPlug;
 typedef struct _GstModPlugClass GstModPlugClass;
 
-GstPad *srcpad;
-int need_sync;
+GType gst_modplug_get_type (void);
 
-GType gst_modplug_get_type(void);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_MODPLUG_H__ */

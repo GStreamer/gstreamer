@@ -290,7 +290,9 @@ GST_PLUGINS_ALL="\
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
-  GST_PLUGINS_ALL="$GST_PLUGINS_ALL"
+  GST_PLUGINS_ALL="$GST_PLUGINS_ALL \
+  		   modplug \
+		   "
 else
   AC_MSG_WARN([Not compiling plug-ins requiring C++ compiler])
 fi
@@ -723,6 +725,8 @@ gst-plugins-bad.spec
 gst/Makefile
 gst/cdxaparse/Makefile
 gst/freeze/Makefile
+gst/modplug/Makefile
+gst/modplug/libmodplug/Makefile
 gst/speed/Makefile
 gst/qtdemux/Makefile
 gst/tta/Makefile

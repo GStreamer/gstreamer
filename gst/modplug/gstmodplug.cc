@@ -25,6 +25,21 @@
      Olivier Lapicque <olivierl@jps.net>  
 */
 
+/*
+ * SECTION:element-modplug
+ * 
+ * <refsect2>
+ * <para>
+ * Modplug uses the <ulink url="http://modplug-xmms.sourceforge.net/">modplug</ulink>
+ * library to decode tracked music in the MOD/S3M/XM/IT and related formats.
+ * </para>
+ * <title>Example pipeline</title>
+ * <programlisting>
+ * gst-launch -v filesrc location=1990s-nostalgia.xm ! modplug ! audioconvert ! alsasink
+ * </programlisting>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -38,20 +53,15 @@
 #include <stdlib.h>
 #include <gst/audio/audio.h>
 
+GST_DEBUG_CATEGORY_STATIC (modplug_debug);
+#define GST_CAT_DEFAULT modplug_debug
+
 /* elementfactory information */
 GstElementDetails modplug_details = {
   "ModPlug",
   "Codec/Decoder/Audio",
   "Module decoder based on modplug engine",
   "Jeremy SIMON <jsimon13@yahoo.fr>"
-};
-
-
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
 };
 
 enum
@@ -71,87 +81,78 @@ enum
   ARG_OVERSAMP
 };
 
+#define DEFAULT_REVERB           FALSE
+#define DEFAULT_REVERB_DEPTH     30
+#define DEFAULT_REVERB_DELAY     100
+#define DEFAULT_MEGABASS         FALSE
+#define DEFAULT_MEGABASS_AMOUNT  40
+#define DEFAULT_MEGABASS_RANGE   30
+#define DEFAULT_SURROUND         TRUE
+#define DEFAULT_SURROUND_DEPTH   20
+#define DEFAULT_SURROUND_DELAY   20
+#define DEFAULT_OVERSAMP         TRUE
+#define DEFAULT_NOISE_REDUCTION  TRUE
+
+#define SRC_CAPS \
+  "audio/x-raw-int,"                              \
+  " endianness = (int) BYTE_ORDER,"               \
+  " signed = (boolean) true,"                     \
+  " width = (int) 16,"                            \
+  " depth = (int) 16,"                            \
+  " rate = (int) { 8000, 11025, 22050, 44100 },"  \
+  " channels = (int) 2; "                         \
+  "audio/x-raw-int,"                              \
+  " endianness = (int) BYTE_ORDER,"               \
+  " signed = (boolean) false,"                    \
+  " width = (int) 8,"                             \
+  " depth = (int) 8,"                             \
+  " rate = (int) { 8000, 11025, 22050, 44100 }, " \
+  " channels = (int) [ 1, 2 ]"
+
 static GstStaticPadTemplate modplug_src_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, " "endianness = (int) BYTE_ORDER, " "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16, " "rate = (int) { 8000, 11025, 22050, 44100 }, " /* FIXME? */
-        "channels = (int) [ 1, 2 ]; " "audio/x-raw-int, " "endianness = (int) BYTE_ORDER, " "signed = (boolean) FALSE, " "width = (int) 8, " "depth = (int) 8, " "rate = (int) { 8000, 11025, 22050, 44100 }, " /* FIXME? */
-        "channels = (int) [ 1, 2 ]")
-    );
+    GST_STATIC_CAPS (SRC_CAPS));
 
 static GstStaticPadTemplate modplug_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-mod")
-    );
+    GST_STATIC_CAPS ("audio/x-mod"));
 
-enum
-{
-  MODPLUG_STATE_NEED_TUNE = 1,
-  MODPLUG_STATE_LOAD_TUNE = 2,
-  MODPLUG_STATE_PLAY_TUNE = 3
-};
-
-static void gst_modplug_base_init (GstModPlugClass * klass);
-static void gst_modplug_class_init (GstModPlugClass * klass);
-static void gst_modplug_init (GstModPlug * filter);
+static void gst_modplug_dispose (GObject * object);
 static void gst_modplug_set_property (GObject * object,
     guint id, const GValue * value, GParamSpec * pspec);
 static void gst_modplug_get_property (GObject * object,
     guint id, GValue * value, GParamSpec * pspec);
-static GstPadLinkReturn
-gst_modplug_srclink (GstPad * pad, const GstCaps * caps);
-static GstCaps *gst_modplug_fixate (GstPad * pad, const GstCaps * caps);
-static void gst_modplug_loop (GstElement * element);
-static void gst_modplug_setup (GstModPlug * modplug);
-static const GstFormat *gst_modplug_get_formats (GstPad * pad);
+
+static void gst_modplug_fixate (GstPad * pad, GstCaps * caps);
 static const GstQueryType *gst_modplug_get_query_types (GstPad * pad);
 static gboolean gst_modplug_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_modplug_src_query (GstPad * pad,
-    GstQueryType type, GstFormat * format, gint64 * value);
+static gboolean gst_modplug_src_query (GstPad * pad, GstQuery * query);
 static GstStateChangeReturn gst_modplug_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
+static gboolean gst_modplug_sinkpad_activate (GstPad * pad);
+static gboolean gst_modplug_sinkpad_activate_pull (GstPad * pad,
+    gboolean active);
+static void gst_modplug_loop (GstModPlug * element);
 
-GType
-gst_modplug_get_type (void)
-{
-  static GType modplug_type = 0;
-
-  if (!modplug_type) {
-    static const GTypeInfo modplug_info = {
-      sizeof (GstModPlugClass),
-      (GBaseInitFunc) gst_modplug_base_init,
-      NULL,
-      (GClassInitFunc) gst_modplug_class_init,
-      NULL,
-      NULL,
-      sizeof (GstModPlug),
-      0,
-      (GInstanceInitFunc) gst_modplug_init,
-      NULL
-    };
-
-    modplug_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstModPlug", &modplug_info,
-        (GTypeFlags) 0);
-  }
-  return modplug_type;
-}
+GST_BOILERPLATE (GstModPlug, gst_modplug, GstElement, GST_TYPE_ELEMENT);
 
 static void
-gst_modplug_base_init (GstModPlugClass * klass)
+gst_modplug_base_init (gpointer g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&modplug_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&modplug_src_template_factory));
   gst_element_class_set_details (element_class, &modplug_details);
+
+  GST_DEBUG_CATEGORY_INIT (modplug_debug, "modplug", 0, "ModPlug element");
 }
 
 static void
@@ -163,111 +164,324 @@ gst_modplug_class_init (GstModPlugClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = GST_ELEMENT_CLASS (g_type_class_ref (GST_TYPE_ELEMENT));
+  gobject_class->set_property = gst_modplug_set_property;
+  gobject_class->get_property = gst_modplug_get_property;
+  gobject_class->dispose = gst_modplug_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SONGNAME,
       g_param_spec_string ("songname", "Songname", "The song name",
-          "", G_PARAM_READABLE));
+          NULL, G_PARAM_READABLE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB,
-      g_param_spec_boolean ("reverb", "reverb", "reverb",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_boolean ("reverb", "reverb", "Reverb",
+          DEFAULT_REVERB, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB_DEPTH,
-      g_param_spec_int ("reverb_depth", "reverb_depth", "reverb_depth",
-          0, 100, 30, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("reverb-depth", "reverb depth", "Reverb depth",
+          0, 100, DEFAULT_REVERB_DEPTH, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_REVERB_DELAY,
-      g_param_spec_int ("reverb_delay", "reverb_delay", "reverb_delay",
-          0, 200, 100, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("reverb-delay", "reverb delay", "Reverb delay",
+          0, 200, DEFAULT_REVERB_DELAY, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEGABASS,
-      g_param_spec_boolean ("megabass", "megabass", "megabass",
-          FALSE, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_boolean ("megabass", "megabass", "Megabass",
+          DEFAULT_MEGABASS, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEGABASS_AMOUNT,
-      g_param_spec_int ("megabass_amount", "megabass_amount", "megabass_amount",
-          0, 100, 40, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("megabass-amount", "megabass amount", "Megabass amount",
+          0, 100, DEFAULT_MEGABASS_AMOUNT, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MEGABASS_RANGE,
-      g_param_spec_int ("megabass_range", "megabass_range", "megabass_range",
-          0, 100, 30, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("megabass-range", "megabass range", "Megabass range",
+          0, 100, DEFAULT_MEGABASS_RANGE, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND,
-      g_param_spec_boolean ("surround", "surround", "surround",
-          TRUE, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_boolean ("surround", "surround", "Surround",
+          DEFAULT_SURROUND, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND_DEPTH,
-      g_param_spec_int ("surround_depth", "surround_depth", "surround_depth",
-          0, 100, 20, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("surround-depth", "surround depth", "Surround depth",
+          0, 100, DEFAULT_SURROUND_DEPTH, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SURROUND_DELAY,
-      g_param_spec_int ("surround_delay", "surround_delay", "surround_delay",
-          0, 40, 20, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_int ("surround-delay", "surround delay", "Surround delay",
+          0, 40, DEFAULT_SURROUND_DELAY, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_OVERSAMP,
       g_param_spec_boolean ("oversamp", "oversamp", "oversamp",
-          TRUE, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_OVERSAMP, (GParamFlags) G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NOISE_REDUCTION,
-      g_param_spec_boolean ("noise_reduction", "noise_reduction",
-          "noise_reduction", TRUE, (GParamFlags) G_PARAM_READWRITE));
+      g_param_spec_boolean ("noise-reduction", "noise reduction",
+          "noise reduction", DEFAULT_NOISE_REDUCTION,
+          (GParamFlags) G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_modplug_set_property;
-  gobject_class->get_property = gst_modplug_get_property;
-
-  gstelement_class->change_state = gst_modplug_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_modplug_change_state);
 }
 
 static void
-gst_modplug_init (GstModPlug * modplug)
+gst_modplug_init (GstModPlug * modplug, GstModPlugClass * klass)
 {
+  /* create the sink and src pads */
   modplug->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&modplug_sink_template_factory), "sink");
+      gst_pad_new_from_static_template (&modplug_sink_template_factory, "sink");
+  gst_pad_set_activate_function (modplug->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_modplug_sinkpad_activate));
+  gst_pad_set_activatepull_function (modplug->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_modplug_sinkpad_activate_pull));
   gst_element_add_pad (GST_ELEMENT (modplug), modplug->sinkpad);
 
   modplug->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&modplug_src_template_factory), "src");
-  gst_pad_set_link_function (modplug->srcpad, gst_modplug_srclink);
-  gst_pad_set_fixate_function (modplug->srcpad, gst_modplug_fixate);
+      gst_pad_new_from_static_template (&modplug_src_template_factory, "src");
+  gst_pad_set_fixatecaps_function (modplug->srcpad,
+      GST_DEBUG_FUNCPTR (gst_modplug_fixate));
   gst_pad_set_event_function (modplug->srcpad,
-      (GstPadEventFunction) GST_DEBUG_FUNCPTR (gst_modplug_src_event));
-  gst_pad_set_query_function (modplug->srcpad, gst_modplug_src_query);
-  gst_pad_set_query_type_function (modplug->srcpad, (GstPadQueryTypeFunction)
+      GST_DEBUG_FUNCPTR (gst_modplug_src_event));
+  gst_pad_set_query_function (modplug->srcpad,
+      GST_DEBUG_FUNCPTR (gst_modplug_src_query));
+  gst_pad_set_query_type_function (modplug->srcpad,
       GST_DEBUG_FUNCPTR (gst_modplug_get_query_types));
-  gst_pad_set_formats_function (modplug->srcpad,
-      (GstPadFormatsFunction) GST_DEBUG_FUNCPTR (gst_modplug_get_formats));
   gst_element_add_pad (GST_ELEMENT (modplug), modplug->srcpad);
 
-  gst_element_set_loop_function (GST_ELEMENT (modplug), gst_modplug_loop);
-
-  modplug->reverb = FALSE;
-  modplug->reverb_depth = 30;
-  modplug->reverb_delay = 100;
-  modplug->megabass = FALSE;
-  modplug->megabass_amount = 40;
-  modplug->megabass_range = 30;
-  modplug->surround = TRUE;
-  modplug->surround_depth = 20;
-  modplug->surround_delay = 20;
-  modplug->oversamp = TRUE;
-  modplug->noise_reduction = TRUE;
+  modplug->reverb = DEFAULT_REVERB;
+  modplug->reverb_depth = DEFAULT_REVERB_DEPTH;
+  modplug->reverb_delay = DEFAULT_REVERB_DELAY;
+  modplug->megabass = DEFAULT_MEGABASS;
+  modplug->megabass_amount = DEFAULT_MEGABASS_AMOUNT;
+  modplug->megabass_range = DEFAULT_MEGABASS_RANGE;
+  modplug->surround = DEFAULT_SURROUND;
+  modplug->surround_depth = DEFAULT_SURROUND_DEPTH;
+  modplug->surround_delay = DEFAULT_SURROUND_DELAY;
+  modplug->oversamp = DEFAULT_OVERSAMP;
+  modplug->noise_reduction = DEFAULT_NOISE_REDUCTION;
 
   modplug->_16bit = TRUE;
   modplug->channel = 2;
   modplug->frequency = 44100;
-  modplug->audiobuffer = NULL;
-  modplug->buffer_in = NULL;
+}
 
-  modplug->state = MODPLUG_STATE_NEED_TUNE;
-  GST_FLAG_SET (modplug, GST_ELEMENT_EVENT_AWARE);
+
+static void
+gst_modplug_dispose (GObject * object)
+{
+  GstModPlug *modplug = GST_MODPLUG (object);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+
+  if (modplug->buffer) {
+    gst_buffer_unref (modplug->buffer);
+    modplug->buffer = NULL;
+  }
+}
+
+static const GstQueryType *
+gst_modplug_get_query_types (GstPad * pad)
+{
+  static const GstQueryType gst_modplug_src_query_types[] = {
+    GST_QUERY_DURATION,
+    GST_QUERY_POSITION,
+    (GstQueryType) 0
+  };
+
+  return gst_modplug_src_query_types;
+}
+
+
+static gboolean
+gst_modplug_src_query (GstPad * pad, GstQuery * query)
+{
+  GstModPlug *modplug;
+  gboolean res = FALSE;
+
+  modplug = GST_MODPLUG (gst_pad_get_parent (pad));
+
+  if (!modplug->mSoundFile)
+    goto done;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+
+      gst_query_parse_duration (query, &format, NULL);
+      if (format == GST_FORMAT_TIME) {
+        gst_query_set_duration (query, format, modplug->song_length);
+        res = TRUE;
+      }
+    }
+      break;
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+
+      gst_query_parse_position (query, &format, NULL);
+      if (format == GST_FORMAT_TIME) {
+        gfloat fpos;
+        gint64 pos;
+
+        fpos = ((float) (modplug->song_length *
+                modplug->mSoundFile->GetCurrentPos ()) /
+            (float) modplug->mSoundFile->GetMaxPosition ());
+        pos = (gint64) (fpos * GST_SECOND);
+        gst_query_set_position (query, format, pos);
+        res = TRUE;
+      }
+    }
+      break;
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+
+done:
+  gst_object_unref (modplug);
+
+  return res;
+}
+
+static gboolean
+gst_modplug_src_event (GstPad * pad, GstEvent * event)
+{
+  GstModPlug *modplug;
+  gboolean res = FALSE;
+
+  modplug = GST_MODPLUG (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      gdouble rate;
+      GstFormat format;
+      GstSeekFlags flags;
+      GstSeekType cur_type, stop_type;
+      gboolean flush;
+      gint64 cur, stop;
+      gint64 timestamp;
+
+      if (modplug->frequency == 0) {
+        GST_DEBUG_OBJECT (modplug, "no song loaded yet");
+        break;
+      }
+
+      timestamp = gst_util_uint64_scale_int (modplug->offset, GST_SECOND,
+          modplug->frequency);
+
+      gst_event_parse_seek (event, &rate, &format, &flags,
+          &cur_type, &cur, &stop_type, &stop);
+
+      if (format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (modplug, "seeking is only supported in TIME format");
+        gst_event_unref (event);
+        break;
+      }
+
+      /* FIXME: we should be using GstSegment for all this */
+      if (cur_type != GST_SEEK_TYPE_SET || stop_type != GST_SEEK_TYPE_NONE) {
+        GST_DEBUG_OBJECT (modplug, "unsupported seek type");
+        gst_event_unref (event);
+        break;
+      }
+
+      if (stop_type == GST_SEEK_TYPE_NONE)
+        stop = GST_CLOCK_TIME_NONE;
+
+      cur = CLAMP (cur, 0, modplug->song_length);
+
+      GST_DEBUG_OBJECT (modplug, "seek to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (cur));
+
+      modplug->seek_at = cur;
+
+      flush = ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
+
+      if (flush) {
+        gst_pad_push_event (modplug->srcpad, gst_event_new_flush_start ());
+      } else {
+        gst_pad_stop_task (modplug->sinkpad);
+      }
+
+      GST_PAD_STREAM_LOCK (modplug->sinkpad);
+
+      if (flags & GST_SEEK_FLAG_SEGMENT) {
+        gst_element_post_message (GST_ELEMENT (modplug),
+            gst_message_new_segment_start (GST_OBJECT (modplug), format, cur));
+      }
+      if (stop == -1 && modplug->song_length > 0)
+        stop = modplug->song_length;
+
+      if (flush) {
+        gst_pad_push_event (modplug->srcpad, gst_event_new_flush_stop ());
+      }
+
+      GST_LOG_OBJECT (modplug, "sending newsegment from %" GST_TIME_FORMAT "-%"
+          GST_TIME_FORMAT ", pos=%" GST_TIME_FORMAT, GST_TIME_ARGS (cur),
+          GST_TIME_ARGS (stop), GST_TIME_ARGS (cur));
+
+      gst_pad_push_event (modplug->srcpad,
+          gst_event_new_new_segment (FALSE, rate,
+              GST_FORMAT_TIME, cur, stop, cur));
+
+      modplug->offset =
+          gst_util_uint64_scale_int (cur, modplug->frequency, GST_SECOND);
+
+      gst_pad_start_task (modplug->sinkpad,
+          (GstTaskFunction) gst_modplug_loop, modplug);
+
+      GST_PAD_STREAM_UNLOCK (modplug->sinkpad);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (modplug);
+  return res;
 }
 
 static void
-gst_modplug_setup (GstModPlug * modplug)
+gst_modplug_fixate (GstPad * pad, GstCaps * caps)
 {
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (gst_structure_fixate_field_nearest_int (structure, "rate", 44100))
+    return;
+  if (gst_structure_fixate_field_nearest_int (structure, "channels", 2))
+    return;
+}
+
+static gboolean
+gst_modplug_load_song (GstModPlug * modplug)
+{
+  GstCaps *newcaps, *othercaps;
+  GstStructure *structure;
+  gint depth;
+
+  GST_DEBUG_OBJECT (modplug, "Loading song");
+
+  modplug->mSoundFile = new CSoundFile;
+
+  /* negotiate srcpad caps */
+  othercaps = gst_pad_get_allowed_caps (modplug->srcpad);
+  structure = gst_caps_get_structure (othercaps, 0);
+  newcaps = gst_caps_copy_nth (othercaps, 0);
+  gst_caps_unref (othercaps);
+  gst_pad_fixate_caps (modplug->srcpad, newcaps);
+  gst_pad_set_caps (modplug->srcpad, newcaps);
+
+  /* set up modplug to output the negotiated format */
+  structure = gst_caps_get_structure (newcaps, 0);
+  gst_structure_get_int (structure, "depth", &depth);
+  modplug->_16bit = (depth == 16);
+  gst_structure_get_int (structure, "channels", &modplug->channel);
+  gst_structure_get_int (structure, "rate", &modplug->frequency);
+
+  modplug->read_samples = 1152;
+  modplug->read_bytes = modplug->read_samples * modplug->channel * depth / 8;
+
   if (modplug->_16bit)
     modplug->mSoundFile->SetWaveConfig (modplug->frequency, 16,
         modplug->channel);
@@ -291,385 +505,193 @@ gst_modplug_setup (GstModPlug * modplug)
     modplug->mSoundFile->SetReverbParameters (modplug->reverb_depth,
         modplug->reverb_delay);
 
-}
-
-static const GstFormat *
-gst_modplug_get_formats (GstPad * pad)
-{
-  static const GstFormat src_formats[] = {
-/*    GST_FORMAT_BYTES,
-    GST_FORMAT_DEFAULT,*/
-    GST_FORMAT_TIME,
-    (GstFormat) 0
-  };
-  static const GstFormat sink_formats[] = {
-    /*GST_FORMAT_BYTES, */
-    GST_FORMAT_TIME,
-    (GstFormat) 0
-  };
-
-  return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
-}
-
-static const GstQueryType *
-gst_modplug_get_query_types (GstPad * pad)
-{
-  static const GstQueryType gst_modplug_src_query_types[] = {
-    GST_QUERY_TOTAL,
-    GST_QUERY_POSITION,
-    (GstQueryType) 0
-  };
-
-  return gst_modplug_src_query_types;
-}
-
-
-static gboolean
-gst_modplug_src_query (GstPad * pad, GstQueryType type,
-    GstFormat * format, gint64 * value)
-{
-  gboolean res = TRUE;
-  GstModPlug *modplug;
-  gfloat tmp;
-
-  modplug = GST_MODPLUG (gst_pad_get_parent (pad));
-
-  switch (type) {
-    case GST_QUERY_TOTAL:
-      switch (*format) {
-        case GST_FORMAT_TIME:
-          *value = (gint64) modplug->mSoundFile->GetSongTime () * GST_SECOND;
-          break;
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-    case GST_QUERY_POSITION:
-      switch (*format) {
-        case GST_FORMAT_TIME:
-          tmp =
-              ((float) (modplug->mSoundFile->GetSongTime () *
-                  modplug->mSoundFile->GetCurrentPos ()) /
-              (float) modplug->mSoundFile->GetMaxPosition ());
-          *value = (gint64) (tmp * GST_SECOND);
-          break;
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
-    default:
-      res = FALSE;
-      break;
+  if (!modplug->mSoundFile->Create (GST_BUFFER_DATA (modplug->buffer),
+          modplug->song_size)) {
+    GST_ELEMENT_ERROR (modplug, STREAM, DECODE, (NULL),
+        ("Unable to load song"));
+    return FALSE;
   }
 
+  modplug->song_length = modplug->mSoundFile->GetSongTime () * GST_SECOND;
+  modplug->seek_at = -1;
+
+  GST_INFO_OBJECT (modplug, "Song length: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (modplug->song_length));
+
+  return TRUE;
+}
+
+static gboolean
+gst_modplug_sinkpad_activate (GstPad * pad)
+{
+  if (!gst_pad_check_pull_range (pad))
+    return FALSE;
+
+  return gst_pad_activate_pull (pad, TRUE);
+}
+
+static gboolean
+gst_modplug_sinkpad_activate_pull (GstPad * pad, gboolean active)
+{
+  GstModPlug *modplug = GST_MODPLUG (GST_OBJECT_PARENT (pad));
+
+  if (active) {
+    return gst_pad_start_task (pad, (GstTaskFunction) gst_modplug_loop,
+        modplug);
+  } else {
+    return gst_pad_stop_task (pad);
+  }
+}
+
+static gboolean
+gst_modplug_get_upstream_size (GstModPlug * modplug, gint64 * length)
+{
+  GstFormat format = GST_FORMAT_BYTES;
+  gboolean res = FALSE;
+  GstPad *peer;
+
+  peer = gst_pad_get_peer (modplug->sinkpad);
+  if (peer == NULL)
+    return FALSE;
+
+  if (gst_pad_query_duration (peer, &format, length) && *length >= 0) {
+    res = TRUE;
+  }
+
+  gst_object_unref (peer);
   return res;
 }
 
-
-static gboolean
-gst_modplug_src_event (GstPad * pad, GstEvent * event)
+static void
+gst_modplug_loop (GstModPlug * modplug)
 {
-  gboolean res = TRUE;
-  GstModPlug *modplug;
+  GstFlowReturn flow;
+  GstBuffer *out = NULL;
 
-  modplug = GST_MODPLUG (gst_pad_get_parent (pad));
+  g_assert (GST_IS_MODPLUG (modplug));
 
-  switch (GST_EVENT_TYPE (event)) {
-      /* the all-formats seek logic */
-    case GST_EVENT_SEEK:
-    {
-      gboolean flush;
-      GstFormat format;
-
-      format = GST_FORMAT_TIME;
-
-      /* shave off the flush flag, we'll need it later */
-      flush = GST_EVENT_SEEK_FLAGS (event) & GST_SEEK_FLAG_FLUSH;
-
-      modplug->seek_at = GST_EVENT_SEEK_OFFSET (event);
-      break;
+  /* first, get the size of the song */
+  if (!modplug->song_size) {
+    if (!gst_modplug_get_upstream_size (modplug, &modplug->song_size)) {
+      GST_ELEMENT_ERROR (modplug, STREAM, DECODE, (NULL),
+          ("Unable to load song"));
+      goto pause;
     }
-    default:
-      res = FALSE;
-      break;
+
+    if (modplug->buffer) {
+      gst_buffer_unref (modplug->buffer);
+    }
+    modplug->buffer = gst_buffer_new_and_alloc (modplug->song_size);
+    modplug->offset = 0;
   }
 
-  gst_event_unref (event);
+  /* read in the song data */
+  if (!modplug->mSoundFile) {
+    GstBuffer *buffer = NULL;
+    guint64 read_size = modplug->song_size - modplug->offset;
 
-  return res;
-}
+    if (read_size > 4096)
+      read_size = 4096;
 
-#if 0
-static GstCaps *
-gst_modplug_get_streaminfo (GstModPlug * modplug)
-{
-  GstCaps *caps;
+    flow =
+        gst_pad_pull_range (modplug->sinkpad, modplug->offset, read_size,
+        &buffer);
+    if (flow != GST_FLOW_OK) {
+      GST_ELEMENT_ERROR (modplug, STREAM, DECODE, (NULL),
+          ("Unable to load song"));
+      goto pause;
+    }
 
-  props = gst_props_empty_new ();
+    /* GST_LOG_OBJECT (modplug, "Read %u bytes", GST_BUFFER_SIZE (buffer)); */
+    g_memmove (GST_BUFFER_DATA (modplug->buffer) + modplug->offset,
+        GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+    gst_buffer_unref (buffer);
 
-  entry =
-      gst_props_entry_new ("Patterns",
-      G_TYPE_INT ((gint) modplug->mSoundFile->GetNumPatterns ()));
-  gst_props_add_entry (props, (GstPropsEntry *) entry);
+    modplug->offset += read_size;
 
-  caps = gst_caps_new_simple ("application/x-gst-streaminfo", NULL);
-  return caps;
-}
+    /* actually load it */
+    if (modplug->offset == modplug->song_size) {
+      GstEvent *newsegment;
+      gboolean ok;
 
+      ok = gst_modplug_load_song (modplug);
+      gst_buffer_unref (modplug->buffer);
+      modplug->buffer = NULL;
+      modplug->offset = 0;
 
-static void
-gst_modplug_update_info (GstModPlug * modplug)
-{
-  if (modplug->streaminfo) {
-    gst_caps_unref (modplug->streaminfo);
-  }
-
-  modplug->streaminfo = gst_modplug_get_streaminfo (modplug);
-  g_object_notify (G_OBJECT (modplug), "streaminfo");
-}
-
-static void
-gst_modplug_update_metadata (GstModPlug * modplug)
-{
-  GstProps *props;
-  GstPropsEntry *entry;
-  const gchar *title;
-
-  props = gst_props_empty_new ();
-
-  title = modplug->mSoundFile->GetTitle ();
-  entry = gst_props_entry_new ("Title", G_TYPE_STRING (title));
-  gst_props_add_entry (props, entry);
-
-  modplug->metadata = gst_caps_new_simple ("application/x-gst-metadata", NULL);
-
-  g_object_notify (G_OBJECT (modplug), "metadata");
-}
-#endif
-
-static GstPadLinkReturn
-gst_modplug_srclink (GstPad * pad, const GstCaps * caps)
-{
-  GstModPlug *modplug;
-  GstStructure *structure;
-  gint depth;
-
-  modplug = GST_MODPLUG (gst_pad_get_parent (pad));
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  gst_structure_get_int (structure, "depth", &depth);
-  modplug->_16bit = (depth == 16);
-  gst_structure_get_int (structure, "channels", &modplug->channel);
-  gst_structure_get_int (structure, "rate", &modplug->frequency);
-
-  modplug->length = 1152 * modplug->channel * depth / 8;
-  gst_modplug_setup (modplug);
-
-  return GST_PAD_LINK_OK;
-}
-
-static GstCaps *
-gst_modplug_fixate (GstPad * pad, const GstCaps * caps)
-{
-  if (gst_caps_is_simple (caps)) {
-    GstCaps *copy;
-    GstStructure *structure;
-
-    copy = gst_caps_copy (caps);
-    structure = gst_caps_get_structure (copy, 0);
-    if (gst_structure_fixate_field_nearest_int (structure, "rate", 44100))
-      return copy;
-    if (gst_structure_fixate_field_nearest_int (structure, "channels", 2))
-      return copy;
-    gst_caps_free (copy);
-  }
-  return NULL;
-}
-
-static void
-gst_modplug_handle_event (GstModPlug * modplug)
-{
-  gint64 value;
-  guint32 remaining;
-  GstEvent *event;
-
-  gst_bytestream_get_status (modplug->bs, &remaining, &event);
-
-  if (!event) {
-    g_warning ("modplug: no bytestream event");
-    return;
-  }
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      gst_event_unref (event);
-      break;
-    case GST_EVENT_DISCONTINUOUS:
-      if (gst_event_discont_get_value (event, GST_FORMAT_BYTES, &value)) {
-        if (remaining == value) {
-          gst_event_unref (event);
-          break;
-        }
+      if (!ok) {
+        goto pause;
       }
-      gst_bytestream_flush_fast (modplug->bs, remaining);
-    default:
-      gst_pad_event_default (modplug->sinkpad, event);
-      break;
-  }
-}
 
-static void
-gst_modplug_loop (GstElement * element)
-{
-  GstModPlug *modplug;
-  GstEvent *event;
-
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_MODPLUG (element));
-
-  modplug = GST_MODPLUG (element);
-
-  if (modplug->state == MODPLUG_STATE_NEED_TUNE) {
-/*    GstBuffer *buf;*/
-
-    modplug->seek_at = -1;
-    modplug->need_discont = TRUE;
-    modplug->eos = FALSE;
-/*            
-    buf = gst_pad_pull (modplug->sinkpad);
-    g_assert (buf != NULL);
-      
-    if (GST_IS_EVENT (buf)) {
-      GstEvent *event = GST_EVENT (buf);
-
-      switch (GST_EVENT_TYPE (buf)) {
-        case GST_EVENT_EOS:             
-          modplug->state = MODPLUG_STATE_LOAD_TUNE;
-          break;
-        case GST_EVENT_DISCONTINUOUS:
-          break;
-        default:
-           bail out, we're not going to do anything 
-          gst_event_unref (event);
-          gst_pad_send_event (modplug->srcpad, gst_event_new (GST_EVENT_EOS));
-          gst_element_set_eos (element);
-          return;
-      }
-      gst_event_unref (event);
-    }
-    else {      
-      memcpy (modplug->buffer_in + modplug->song_size, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-      modplug->song_size += GST_BUFFER_SIZE (buf);
-
-      gst_buffer_unref (buf);
-    }
-*/
-
-    if (modplug->bs) {
-      guint64 got;
-
-      modplug->song_size = gst_bytestream_length (modplug->bs);
-
-      got =
-          gst_bytestream_peek_bytes (modplug->bs, &modplug->buffer_in,
-          modplug->song_size);
-
-      if (got < modplug->song_size) {
-        gst_modplug_handle_event (modplug);
-        return;
-      }
-      modplug->state = MODPLUG_STATE_LOAD_TUNE;
-    }
-  }
-
-  if (modplug->state == MODPLUG_STATE_LOAD_TUNE) {
-    modplug->mSoundFile = new CSoundFile;
-
-    if (!GST_PAD_CAPS (modplug->srcpad) &&
-        GST_PAD_LINK_FAILED (gst_pad_renegotiate (modplug->srcpad))) {
-      GST_ELEMENT_ERROR (modplug, CORE, NEGOTIATION, (NULL), (NULL));
+      newsegment = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+          0, modplug->song_length, 0);
+      gst_pad_push_event (modplug->srcpad, newsegment);
+    } else {
+      /* not fully loaded yet */
       return;
     }
-
-    modplug->mSoundFile->Create (modplug->buffer_in, modplug->song_size);
-    modplug->opened = TRUE;
-
-    gst_bytestream_flush (modplug->bs, modplug->song_size);
-    modplug->buffer_in = NULL;
-
-    modplug->audiobuffer = (guchar *) g_malloc (modplug->length);
-
-    //gst_modplug_update_metadata (modplug);
-    //gst_modplug_update_info (modplug);
-
-    modplug->state = MODPLUG_STATE_PLAY_TUNE;
   }
 
-  if (modplug->state == MODPLUG_STATE_PLAY_TUNE && !modplug->eos) {
-    if (modplug->seek_at != -1) {
-      gint seek_to_pos;
-      gint64 total;
-      gfloat temp;
+  /* could move this to gst_modplug_src_event 
+   * if libmodplug was definitely thread safe.. */
+  if (modplug->seek_at != -1) {
+    gint seek_to_pos;
+    gfloat temp;
 
-      total = modplug->mSoundFile->GetSongTime () * GST_SECOND;
+    temp = (gfloat) modplug->song_length / modplug->seek_at;
+    seek_to_pos = (int) (modplug->mSoundFile->GetMaxPosition () / temp);
 
-      temp = (gfloat) total / modplug->seek_at;
-      seek_to_pos = (int) (modplug->mSoundFile->GetMaxPosition () / temp);
+    GST_DEBUG_OBJECT (modplug, "Seeking to row %d", seek_to_pos);
 
-      modplug->mSoundFile->SetCurrentPos (seek_to_pos);
-      modplug->need_discont = TRUE;
-      modplug->seek_at = -1;
-    }
+    modplug->mSoundFile->SetCurrentPos (seek_to_pos);
+    modplug->seek_at = -1;
+  }
 
-    if (modplug->need_discont && GST_PAD_IS_USABLE (modplug->srcpad)) {
-      GstEvent *discont;
-      gint64 value;
-      GstFormat format = GST_FORMAT_TIME;
+  /* read and output a buffer */
+  flow = gst_pad_alloc_buffer_and_set_caps (modplug->srcpad,
+      GST_BUFFER_OFFSET_NONE, modplug->read_bytes,
+      GST_PAD_CAPS (modplug->srcpad), &out);
 
-      if (gst_modplug_src_query (modplug->srcpad, GST_QUERY_POSITION, &format,
-              &value)) {
-        discont =
-            gst_event_new_discontinuous (FALSE, GST_FORMAT_TIME, value,
-            GST_FORMAT_UNDEFINED);
-        modplug->timestamp = value;
-      } else {
-        modplug->timestamp = GST_CLOCK_TIME_NONE;
-        discont = gst_event_new_discontinuous (FALSE, GST_FORMAT_UNDEFINED);
-      }
-      gst_pad_push (modplug->srcpad, GST_DATA (discont));
-      modplug->need_discont = FALSE;
-    }
+  if (flow != GST_FLOW_OK) {
+    GST_LOG_OBJECT (modplug, "pad alloc flow: %s", gst_flow_get_name (flow));
+    goto pause;
+  }
 
-    if (modplug->mSoundFile->Read (modplug->audiobuffer, modplug->length) != 0) {
-      GstBuffer *buffer_out;
+  if (!modplug->mSoundFile->Read (GST_BUFFER_DATA (out), modplug->read_bytes))
+    goto eos;
 
-      buffer_out = gst_buffer_new ();
-      GST_BUFFER_DATA (buffer_out) =
-          (guchar *) g_memdup (modplug->audiobuffer, modplug->length);
-      GST_BUFFER_SIZE (buffer_out) = modplug->length;
-      GST_BUFFER_TIMESTAMP (buffer_out) = modplug->timestamp;
+  GST_BUFFER_SIZE (out) = modplug->read_bytes;
+  GST_BUFFER_DURATION (out) =
+      gst_util_uint64_scale_int (modplug->read_samples, GST_SECOND,
+      modplug->frequency);
+  GST_BUFFER_OFFSET (out) = modplug->offset;
+  GST_BUFFER_TIMESTAMP (out) =
+      gst_util_uint64_scale_int (modplug->offset, GST_SECOND,
+      modplug->frequency);
 
-      if (GST_CLOCK_TIME_IS_VALID (modplug->timestamp)) {
-        GST_BUFFER_DURATION (buffer_out) =
-            modplug->length * GST_SECOND / modplug->frequency /
-            modplug->channel / (modplug->_16bit ? 2 : 1);
-        modplug->timestamp += GST_BUFFER_DURATION (buffer_out);
-      }
+  modplug->offset += modplug->read_samples;
 
-      if (GST_PAD_IS_USABLE (modplug->srcpad))
-        gst_pad_push (modplug->srcpad, GST_DATA (buffer_out));
-    } else if (GST_PAD_IS_LINKED (modplug->srcpad)) {
-      /* FIXME, hack, pull final EOS from peer */
-      gst_bytestream_flush (modplug->bs, 1);
+  flow = gst_pad_push (modplug->srcpad, out);
 
-      event = gst_event_new (GST_EVENT_EOS);
-      gst_pad_push (modplug->srcpad, GST_DATA (event));
-      gst_element_set_eos (element);
-      modplug->eos = TRUE;
-    }
+  if (flow != GST_FLOW_OK) {
+    GST_LOG_OBJECT (modplug, "pad push flow: %s", gst_flow_get_name (flow));
+    goto pause;
+  }
+
+  return;
+
+eos:
+  {
+    gst_buffer_unref (out);
+    GST_INFO_OBJECT (modplug, "EOS");
+    gst_pad_push_event (modplug->srcpad, gst_event_new_eos ());
+    goto pause;
+  }
+
+pause:
+  {
+    GST_INFO_OBJECT (modplug, "Pausing");
+    gst_pad_pause_task (modplug->sinkpad);
   }
 }
 
@@ -678,42 +700,38 @@ static GstStateChangeReturn
 gst_modplug_change_state (GstElement * element, GstStateChange transition)
 {
   GstModPlug *modplug;
+  GstStateChangeReturn ret;
 
   modplug = GST_MODPLUG (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      modplug->bs = gst_bytestream_new (modplug->sinkpad);
+      modplug->buffer = NULL;
+      modplug->offset = 0;
       modplug->song_size = 0;
-      modplug->state = MODPLUG_STATE_NEED_TUNE;
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_bytestream_destroy (modplug->bs);
-      modplug->bs = NULL;
-      if (modplug->opened) {
-        modplug->mSoundFile->Destroy ();
-        modplug->opened = FALSE;
-      }
-      if (modplug->audiobuffer)
-        g_free (modplug->audiobuffer);
-      modplug->buffer_in = NULL;
-      modplug->audiobuffer = NULL;
-      modplug->state = MODPLUG_STATE_NEED_TUNE;
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (modplug->buffer) {
+        gst_buffer_unref (modplug->buffer);
+        modplug->buffer = NULL;
+      }
+      if (modplug->mSoundFile) {
+        modplug->mSoundFile->Destroy ();
+        modplug->mSoundFile = NULL;
+      }
+      break;
+    default:
+      break;
+  }
 
   return GST_STATE_CHANGE_SUCCESS;
 }
@@ -725,7 +743,6 @@ gst_modplug_set_property (GObject * object, guint id, const GValue * value,
 {
   GstModPlug *modplug;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MODPLUG (object));
   modplug = GST_MODPLUG (object);
 
@@ -771,7 +788,6 @@ gst_modplug_get_property (GObject * object, guint id, GValue * value,
 {
   GstModPlug *modplug;
 
-  /* it's not null if we got it, but it might not be ours */
   g_return_if_fail (GST_IS_MODPLUG (object));
   modplug = GST_MODPLUG (object);
 
@@ -814,10 +830,6 @@ gst_modplug_get_property (GObject * object, guint id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* this filter needs the bytestream package */
-  if (!gst_library_load ("gstbytestream"))
-    return FALSE;
-
   return gst_element_register (plugin, "modplug",
       GST_RANK_PRIMARY, GST_TYPE_MODPLUG);
 }

@@ -1175,7 +1175,8 @@ UINT CSoundFile::ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR lpMemFile, 
 			short int *pSample = (short int *)pIns->pSample;
 			for (UINT j=0; j<len; j+=2)
 			{
-			        *pSample++ = bswapLE16(*pSample);
+				short int s = bswapLE16(*pSample);
+			        *pSample++ = s;
 			}
 		}
 		break;
@@ -1366,7 +1367,8 @@ UINT CSoundFile::ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR lpMemFile, 
 			WORD *pSampleW = (WORD *)pIns->pSample;
 			for (UINT j=0; j<len; j+=2)   // swaparoni!
 			{
-			        *pSampleW++ = bswapLE16(*pSampleW);
+				WORD s = bswapLE16(*pSampleW);
+			        *pSampleW++ = s;
 			}
 		}
 		break;

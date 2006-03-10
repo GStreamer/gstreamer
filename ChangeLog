@@ -1,5 +1,16 @@
 2006-03-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	* gst/modplug/Makefile.am:
+	* gst/modplug/gstmodplug.cc:
+	* gst/modplug/gstmodplug.h:
+	* gst/modplug/libmodplug/sndfile.cpp:
+	* gst/modplug/libmodplug/sndfile.h:
+	  modplug plugin ported to 0.10 (#332598, patch by:
+	  Jonathan Matthew <jonathan at kaolin wh9 net>).
+
+2006-03-10  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/libmms/gstmms.c: (gst_mms_urihandler_init),
 	(gst_mms_base_init), (gst_mms_class_init), (gst_mms_init),
 	(gst_mms_finalize), (gst_mms_create), (gst_mms_start),
