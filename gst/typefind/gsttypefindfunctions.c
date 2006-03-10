@@ -586,7 +586,7 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
     guint * found_layer, GstTypeFindProbability * found_prob)
 {
   guint8 *data = NULL;
-  guint8 *data_end;
+  guint8 *data_end = NULL;
   guint size;
   guint64 skipped;
   gint last_free_offset = -1;

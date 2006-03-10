@@ -1,3 +1,8 @@
+2006-03-10  Edward Hervey  <edward@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset):
+	Fix for variable not initialized.
+
 2006-03-09  Wim Taymans  <wim@fluendo.com>
 
 	* ext/libvisual/visual.c: (gst_visual_get_type),
