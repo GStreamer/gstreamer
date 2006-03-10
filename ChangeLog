@@ -1,3 +1,8 @@
+2006-03-10  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/modplug/Makefile.am:
+	* gst/modplug/gstmodplug.cc: Fix modplug compilation.
+
 2006-03-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

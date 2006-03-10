@@ -357,7 +357,7 @@ gst_modplug_src_event (GstPad * pad, GstEvent * event)
       GstSeekType cur_type, stop_type;
       gboolean flush;
       gint64 cur, stop;
-      gint64 timestamp;
+      guint64 timestamp;
 
       if (modplug->frequency == 0) {
         GST_DEBUG_OBJECT (modplug, "no song loaded yet");
@@ -389,7 +389,7 @@ gst_modplug_src_event (GstPad * pad, GstEvent * event)
       cur = CLAMP (cur, 0, modplug->song_length);
 
       GST_DEBUG_OBJECT (modplug, "seek to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (cur));
+          GST_TIME_ARGS ((guint64) cur));
 
       modplug->seek_at = cur;
 
@@ -415,8 +415,9 @@ gst_modplug_src_event (GstPad * pad, GstEvent * event)
       }
 
       GST_LOG_OBJECT (modplug, "sending newsegment from %" GST_TIME_FORMAT "-%"
-          GST_TIME_FORMAT ", pos=%" GST_TIME_FORMAT, GST_TIME_ARGS (cur),
-          GST_TIME_ARGS (stop), GST_TIME_ARGS (cur));
+          GST_TIME_FORMAT ", pos=%" GST_TIME_FORMAT,
+          GST_TIME_ARGS ((guint64) cur), GST_TIME_ARGS ((guint64) stop),
+          GST_TIME_ARGS ((guint64) cur));
 
       gst_pad_push_event (modplug->srcpad,
           gst_event_new_new_segment (FALSE, rate,
@@ -516,7 +517,7 @@ gst_modplug_load_song (GstModPlug * modplug)
   modplug->seek_at = -1;
 
   GST_INFO_OBJECT (modplug, "Song length: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (modplug->song_length));
+      GST_TIME_ARGS ((guint64) modplug->song_length));
 
   return TRUE;
 }
