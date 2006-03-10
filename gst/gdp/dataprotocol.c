@@ -413,7 +413,7 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
  * Use this function if you want to pre-allocate a buffer based on the
  * packet header to read the packet payload in to.
  *
- * Returns: %TRUE if the buffer was successfully created.
+ * Returns: A #GstBuffer if the buffer was successfully created, or NULL.
  */
 GstBuffer *
 gst_dp_buffer_from_header (guint header_length, const guint8 * header)
@@ -441,7 +441,8 @@ gst_dp_buffer_from_header (guint header_length, const guint8 * header)
  *
  * Creates a newly allocated #GstCaps from the given packet.
  *
- * Returns: %TRUE if the caps was successfully created.
+ * Returns: A #GstCaps containing the caps represented in the packet,
+ *          or NULL if the packet could not be converted.
  */
 GstCaps *
 gst_dp_caps_from_packet (guint header_length, const guint8 * header,
@@ -469,7 +470,8 @@ gst_dp_caps_from_packet (guint header_length, const guint8 * header,
  *
  * Creates a newly allocated #GstEvent from the given packet.
  *
- * Returns: %TRUE if the event was successfully created.
+ * Returns: A #GstEvent if the event was successfully created,
+ *          or NULL if an event could not be read from the payload.
  */
 GstEvent *
 gst_dp_event_from_packet (guint header_length, const guint8 * header,
