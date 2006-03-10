@@ -1,3 +1,10 @@
+2006-03-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstclock.h:
+	  Fix GST_CLOCK_TIME_IS_VALID signedness issues - we need
+	  to cast the input to GstClockTime before comparing with
+	  another GstClockTime value.
+
 2006-03-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

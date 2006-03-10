@@ -79,7 +79,7 @@ typedef gpointer GstClockID;
  *
  * Tests if a given #GstClockTime represents a valid defined time.
  */
-#define GST_CLOCK_TIME_IS_VALID(time)	((time) != GST_CLOCK_TIME_NONE)
+#define GST_CLOCK_TIME_IS_VALID(time)	(((GstClockTime)(time)) != GST_CLOCK_TIME_NONE)
 
 /**
  * GST_SECOND:
