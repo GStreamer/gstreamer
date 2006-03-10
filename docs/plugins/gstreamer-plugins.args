@@ -9,6 +9,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPipeline::auto-flush-bus</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Auto Flush Bus</NICK>
+<BLURB>Whether to automatically flush the pipeline's bus when going from READY into NULL state.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstCapsFilter::caps</NAME>
 <TYPE>GstCaps</TYPE>
 <RANGE></RANGE>
@@ -574,7 +584,7 @@
 <RANGE>[1,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>maximum</NICK>
-<BLURB>probability to stop typefinding.</BLURB>
+<BLURB>probability to stop typefinding (deprecated; non-functional).</BLURB>
 <DEFAULT>100</DEFAULT>
 </ARG>
 

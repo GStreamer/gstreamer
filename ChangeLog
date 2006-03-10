@@ -1,3 +1,10 @@
+=== release 0.10.4 ===
+
+2006-03-10  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.4, "Light"
+
 2006-03-10  Michael Smith  <msmith@fluendo.com>
 
 	* libs/gst/dataprotocol/dataprotocol.c:
@@ -110,9 +117,11 @@
 
 2006-03-07  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Christophe Fergeau
+
 	* docs/pwg/advanced-tagging.xml:
 	* docs/pwg/building-pads.xml:
-	Applied patch from Christophe Fergeau, fixes #333416
+	  fixes #333416
 
 2006-03-07  Wim Taymans  <wim@fluendo.com>
 
@@ -131,6 +140,7 @@
 	(gst_base_sink_get_max_lateness), (gst_base_sink_set_property),
 	(gst_base_sink_get_property), (gst_base_sink_do_sync):
 	* libs/gst/base/gstbasesink.h:
+	API additions: 
 	Added new methods to allow subclass to control max-lateness 
 	and sync.
 	Generate very basic QoS events based on last sync observation.
@@ -143,7 +153,7 @@
 
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/gstbasetransform.h:
-	Fix #333669, Add pad accessor defines for GstBaseTransform
+	API addition: Fix #333669, Add pad accessor defines for GstBaseTransform
 	Fix docs for GstBaseSrc.
 
 2006-03-07  Wim Taymans  <wim@fluendo.com>
@@ -172,7 +182,7 @@
 	(gst_base_src_init), (gst_base_src_pad_check_get_range),
 	(gst_base_src_default_check_get_range):
 	* libs/gst/base/gstbasesrc.h:
-	  Add ::check_get_range() vfunc to GstBaseSrc (#332611),
+	  API addition:  Add ::check_get_range() vfunc to GstBaseSrc (#332611),
 	  provide default implementation, and rename
 	  gst_base_src_check_get_range() to
 	  gst_base_src_pad_check_get_range() for clarity.
@@ -188,7 +198,7 @@
 	(gst_base_sink_init), (gst_base_sink_set_property),
 	(gst_base_sink_get_property), (gst_base_sink_do_sync):
 	* libs/gst/base/gstbasesink.h:
-	Make max-lateness a property.
+	API addition: Make max-lateness a property.
 
 2006-03-06  Wim Taymans  <wim@fluendo.com>
 
@@ -204,9 +214,11 @@
 
 2006-03-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Christophe Fergeau
+
 	* gst/gstutils.h:
 	  Do proper cast here to make GST_BOILERPLATE_WITH_INTERFACE
-	  usable in c++ code (#333417; patch by: Christophe Fergeau)
+	  usable in c++ code (#333417)
 
 2006-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
@@ -227,10 +239,11 @@
 
 2006-03-04  Tim-Philipp Müller  <tim at centricular dot net>
 
+	  Patch by: Ross Burton <ross at burtonini dot com>
+
 	* gst/gsterror.c: (_gst_resource_errors_init):
 	* gst/gsterror.h:
 	  Add GST_RESOURCE_ERROR_NO_SPACE_LEFT (for #333352;
-	  patch by: Ross Burton <ross at burtonini dot com>).
 
 2006-03-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
@@ -354,7 +367,6 @@
 	* plugins/elements/gstqueue.c: (gst_queue_handle_sink_event):
 	Small doc update.
 
-
 2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gsttypefindelement.c:
@@ -390,10 +402,12 @@
 	  
 2006-02-27  Michael Smith  <msmith@fluendo.com>
 
+	Patch by: Loïc Minier
+
 	* configure.ac:
 	* docs/Makefile.am:
 	* docs/slides/Makefile.am:
-	  Patch from Loïc Minier to prevent CVS directories getting disted.
+	  prevent CVS directories getting disted.
 
 2006-02-27  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -423,15 +437,6 @@
 	* libs/gst/base/gstbasesrc.c:
 	  Document how applications can stop recording from
 	  live sources (see #330996).
-
-2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
-
-	* docs/gst/tmpl/.cvsignore:
-	* docs/plugins/tmpl/.cvsignore:
-	* tests/check/gst/.cvsignore:
-	* tests/check/libs/.cvsignore:
-	* tests/check/pipelines/.cvsignore:
-	  Ignore more stuff.
 
 2006-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -485,7 +490,7 @@
 
 	* libs/gst/base/gstbasetransform.c:
 	(gst_base_transform_change_state): Fix a stupid bug. I was 
-	sure i compiled that.
+	sure I compiled that.
 
 2006-02-20  Julien MOUTTE  <julien@moutte.net>
 
@@ -526,8 +531,8 @@
 	(gst_pad_set_query_function), (gst_pad_set_query_type_function),
 	(gst_pad_set_getcaps_function)
 	* gst/parse/grammar.y: (gst_parse_found_pad), (gst_parse_perform_delayed_link)
-		Fixed NULL pointer used in GST_CAT_DEBUG using GST_STR_NULL macro
-		So now, we can use --gst-debug-level=5 on Windows
+	  Fixed NULL pointer used in GST_CAT_DEBUG using GST_STR_NULL macro
+	  So now, we can use --gst-debug-level=5 on Windows
 	* win32/common/libgstcontroller.def:
 	  Added export of gst_controller_init
 	* win32/vs6/libgstcontroller.dsp:
@@ -580,10 +585,12 @@
 
 2006-02-14  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Torsten Schoenfeld
+
 	* gst/gstregistry.c: (gst_registry_get_default),
 	(_gst_registry_cleanup):
 	Protect default registry with lock and ref/sink it.
-	Fixes #324818, patch by Torsten Schoenfeld.
+	Fixes #324818
 
 2006-02-14  Wim Taymans  <wim@fluendo.com>
 
@@ -693,14 +700,16 @@
 	it. Fixes #330684.
 
 	* gst/gstbus.h (GstBus): Use a padding pointer to cache the
-	location of the bus-private structuure.
+	location of the bus-private structure.
 	(gst_bus_enable_sync_message_emission)
-	(gst_bus_disable_sync_message_emission): New public functions.
+	(gst_bus_disable_sync_message_emission): API addition
 
 2006-02-10  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	Patch by: Vincent Torri
+
 	* docs/pwg/building-boiler.xml:
-	PWG patch from #326800 (Patch by Vincent Torri)
+	PWG patch from #326800
 
 2006-02-09  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -897,7 +906,7 @@
 2006-02-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/manual/README:
-          uncover a nasty detail of the docs build
+	  uncover a nasty detail of the docs build
 
 2006-01-31  Wim Taymans  <wim@fluendo.com>
 
@@ -923,12 +932,12 @@
 2006-01-31  Sebastien Moutte  <sebastien@moutte.net>
 	
 	* win32/vs7/grammar.vcproj:
-		activate copy of autogenerated files for Release mode
+	  activate copy of autogenerated files for Release mode
 
 2006-01-30  Sebastien Moutte  <sebastien@moutte.net>
 	
 	* win32/common/libgstreamer.def:
-		export gst_value_compare
+	  export gst_value_compare
 
 2006-01-30  Jan Schmidt  <thaytan@mad.scientist.com>
 
@@ -962,7 +971,7 @@
 2006-01-30  Sebastien Moutte  <sebastien@moutte.net>
 	
 	* win32/vs6/grammar.dsp:
-		add autogen of gstmarshal.c,h for Release mode
+	  add autogen of gstmarshal.c,h for Release mode
 		
 2006-01-30  Wim Taymans  <wim@fluendo.com>
 
@@ -1000,13 +1009,13 @@
 
 2006-01-29  Sebastien Moutte  <sebastien@moutte.net>
 	* win32/vs6/grammar.dsp:
-		fix some bugs in Release mode for autogenerated files
+	  fix some bugs in Release mode for autogenerated files
 		
 2006-01-29  Sebastien Moutte  <sebastien@moutte.net>
 	* win32/common/libgstbase.def:
 	* win32/common/libgstreamer.def:
-		export some new symbols: gst_base_src_set_format,
-		gst_iterator_next, gst_structure_set_valist
+	  export some new symbols: gst_base_src_set_format,
+	  gst_iterator_next, gst_structure_set_valist
 
 2006-01-29  Julien MOUTTE  <julien@moutte.net>
 
@@ -1015,7 +1024,7 @@
 
 2006-01-29  Sebastien Moutte  <sebastien@moutte.net>
 	* win32/vs8:
-		add vs8 project files created by Sergey Scobich
+	  add vs8 project files created by Sergey Scobich
 
 2006-01-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
@@ -1121,7 +1130,7 @@
 	* gst/gstelement.c: (gst_element_send_event):
 	* gst/gstevent.c:
 	* gst/gstpad.c: (gst_pad_send_event):
-          added code for downstream events, reviewed docs in gstevent.c
+	  added code for downstream events, reviewed docs in gstevent.c
 
 2006-01-25  Julien MOUTTE  <julien@moutte.net>
 

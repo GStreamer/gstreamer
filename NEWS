@@ -1,5 +1,61 @@
-This is GStreamer 0.10.3, "Like a virgin"
+This is GStreamer 0.10.4, "Light"
+  
+Changes since 0.10.3:
+    
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+      * 33% of library size removed by parse change
+      * (Experimental) QoS features (use max-lateness on BaseSink subclasses to enable)
+
+Bugs fixed since 0.10.3:
+    
+      * 323542 : GStreamer 0.10 hangs at EOS for all songs
+      * 320340 : triggering a gst_task_join from the streaming task can de...
+      * 322628 : document thread-unsafety of gst_value_foo() + gst_value_r...
+      * 324186 : Smarter (deterministic!) typefind decisions
+      * 324398 : varargs/valist functions aren't bindable
+      * 328873 : only one gst_bin_recalc_state allowed at a time
+      * 330899 : CVS directory in make dist tarball
+      * 330906 : API: add GST_QUERY_TYPE_NAME and GST_MESSAGE_TYPE_NAME
+      * 330996 : basesrc emits EOS unconditionally when going to READY
+      * 331255 : Shrinking gst_parse_launch bloat
+      * 331898 : Basetranform is not reusable
+      * 332045 : API: GstPipeline needs API to disable  flushing of its bu...
+      * 332277 : [filesrc] seek does not correct read position in non-mmap...
+      * 332611 : [basesrc] needs way to prevent expensive start/stop in ch...
+      * 332723 : New API: gst_type_find_helper_for_buffer
+      * 333042 : New API: gst_type_find_helper_get_range
+      * 333266 : Registry file writing rewrite
+      * 333272 : tests should set G_SLICE=always-malloc now
+      * 333417 : GST_BOILERPLATE_WITH_INTERFACE can't be used in C++ code
+      * 333669 : Add pad accessor defines for GstBaseTransform
+      * 333779 : New API: add gst_uri_has_protocol
+      * 324818 : gst_registry_get_default doesn't sink newly created registry
+      * 330125 : _pad_send_event does not check flushing correctly
+      * 330684 : Add ability to emit sync-message without messing with the...
+ 
+API added since 0.10.3:
+    
+      * gst_pipeline_set_auto_flush_bus()
+      * gst_pipeline_get_auto_flush_bus()
+      * gst_uri_has_protocol()
+      * gst_pipeline_set_max_lateness()
+      * gst_pipeline_get_max_lateness()
+      * gst_pipeline_get_sync()
+      * gst_pipeline_do_sync()
+      * GST_BASE_TRANSFORM_SRC_PAD()
+      * GST_BASE_TRANSFORM_SINK_PAD()
+      * GstBaseSrc::check_get_range()
+      * GstBaseSink::max-lateness
+      * gst_type_find_helper_get_range()
+      * gst_type_find_helper_for_buffer()
+      * GST_MESSAGE_TYPE_NAME()
+      * GST_QUERY_TYPE_NAME()
+      * gst_bus_enable_sync_message_emission()
+      * gst_bus_disable_sync_message_emission()
+
 Changes since 0.10.2:
+
       * Documentation updates
       * Bug fixes
       * Base class improvements

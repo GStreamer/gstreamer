@@ -13,7 +13,7 @@
 # correct User entry for the Host entry for the DOC_SERVER
 
 # these variables define the location of the online docs
-DOC_SERVER=freedesktop.org
+DOC_SERVER=gstreamer.freedesktop.org
 DOC_BASE=/srv/gstreamer.freedesktop.org/www/data/doc
 DOC_URL=$(DOC_SERVER):$(DOC_BASE)
 

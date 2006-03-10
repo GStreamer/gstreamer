@@ -27,7 +27,8 @@ Thomas's new comments on the doc building :
 
 Ensonic's comments on the doc build system :
 --------------------------------------------
-In case you like to share files between the manual and the pwg - its not trivial.
+In case you like to share files between the manual and the pwg - it's
+not trivial.
 Before anything is done, the build-system copies all xml files into the build
 subdir and this breaks including shared docs via entities.
 
