@@ -180,8 +180,6 @@ _pygst_element_init (gpointer gclass, PyTypeObject *pyclass)
 {
   PyObject *templates, *details;
   
-  GST_DEBUG ("gclass %p", gclass);
-
   templates = PyDict_GetItemString(pyclass->tp_dict, "__gsttemplates__");
   if (templates) {
     if (add_templates(gclass, templates) != 0)
@@ -248,7 +246,6 @@ include
   gststructure.override
   gsttaglist.override
   gstlibs.override
-  gstbase.override
 %%
 init
 {

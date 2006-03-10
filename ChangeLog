@@ -1,5 +1,10 @@
 2006-03-10  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.override:
+	Commited a bit too much :)
+
+2006-03-10  Edward Hervey  <edward@fluendo.com>
+
 	* gst/base.defs:
 	typo fix for gst_type_find_helper()
 	Added new API : gst_type_find_helper_for_buffer()
