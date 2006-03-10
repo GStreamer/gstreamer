@@ -910,8 +910,9 @@ again:
     }
   }
 
-  /* preroll done, we can sync since we ar in PLAYING now. */
-  GST_DEBUG_OBJECT (basesink, "waiting for clock");
+  /* preroll done, we can sync since we are in PLAYING now. */
+  GST_DEBUG_OBJECT (basesink, "waiting for clock to reach %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (start));
   basesink->end_time = stop;
   status = gst_base_sink_wait_clock (basesink, start, &jitter);
   GST_DEBUG_OBJECT (basesink, "clock returned %d", status);
