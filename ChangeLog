@@ -1,5 +1,13 @@
 2006-03-10  Edward Hervey  <edward@fluendo.com>
 
+	* gst/base.defs:
+	typo fix for gst_type_find_helper()
+	Added new API : gst_type_find_helper_for_buffer()
+	* gst/gst.override:
+	override for gst.type_find_helper_for_buffer()
+
+2006-03-10  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst-types.defs:
 	* gst/gst.defs:
 	Added new API:

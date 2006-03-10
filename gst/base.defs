@@ -613,7 +613,7 @@
 
 ;; From ../gstreamer/libs/gst/base/gsttypefindhelper.h
 
-(define-function gst_type_find_helper
+(define-function type_find_helper
   (c-name "gst_type_find_helper")
   (return-type "GstCaps*")
   (parameters
@@ -622,4 +622,12 @@
   )
 )
 
-
+(define-function type_find_helper_for_buffer
+  (c-name "gst_type_find_helper_for_buffer")
+  (return-type "GstCaps*")
+  (parameters
+    '("GstObject*" "obj")
+    '("GstBuffer*" "buf")
+    '("GstTypeFindProbability*" "prob")
+  )
+)

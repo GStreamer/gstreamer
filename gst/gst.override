@@ -180,6 +180,8 @@ _pygst_element_init (gpointer gclass, PyTypeObject *pyclass)
 {
   PyObject *templates, *details;
   
+  GST_DEBUG ("gclass %p", gclass);
+
   templates = PyDict_GetItemString(pyclass->tp_dict, "__gsttemplates__");
   if (templates) {
     if (add_templates(gclass, templates) != 0)
@@ -246,6 +248,7 @@ include
   gststructure.override
   gsttaglist.override
   gstlibs.override
+  gstbase.override
 %%
 init
 {
@@ -338,14 +341,6 @@ _wrap_gst_plugin_feature_tp_str(PyObject *self)
     return ret;
 }
 
-%%
-override gst_type_find_factory_get_caps noargs
-static PyObject *
-_wrap_gst_type_find_factory_get_caps(PyGObject *self)
-{
-	GstCaps *ret = (GstCaps*)gst_type_find_factory_get_caps(GST_TYPE_FIND_FACTORY(self->obj));
-	return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
-}
 %%
 override gst_type_find_factory_get_caps noargs
 static PyObject *
@@ -646,7 +641,6 @@ _wrap_gst_tag_setter_get_tag_list(PyGObject *self)
     /* pyg_boxed_new handles NULL checking */
     return pyg_boxed_new(GST_TYPE_TAG_LIST, ret, TRUE, TRUE);
 }
-
 %%
 override gst_element_register kwargs
 
@@ -921,4 +915,41 @@ _wrap_gst_clock_get_calibration (PyGObject * self)
     PyTuple_SetItem(ret, 3, PyLong_FromUnsignedLongLong(rate_denom));
     
     return ret;
+}
+%%
+override gst_type_find_helper_for_buffer kwargs
+static PyObject *
+_wrap_gst_type_find_helper_for_buffer (PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "object", "buffer", NULL };
+    PyGObject *py_object;
+    PyGstMiniObject *py_buffer;
+    PyObject *py_ret;
+    GstTypeFindProbability prob = 0;
+    GstCaps *caps = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!:type_find_helper_for_buffer",
+				     kwlist, &PyGstObject_Type, &py_object,
+				     &PyGstBuffer_Type, &py_buffer))
+	return NULL;
+    
+    caps = gst_type_find_helper_for_buffer (GST_OBJECT (py_object->obj),
+					    GST_BUFFER (py_buffer->obj),
+					    &prob);
+    py_ret = PyTuple_New(2);
+    if (caps)
+	PyTuple_SetItem(py_ret, 0, pyg_boxed_new (GST_TYPE_CAPS, caps, FALSE, TRUE));
+    else {
+	Py_INCREF(Py_None);
+	PyTuple_SetItem(py_ret, 0, Py_None);
+    }
+
+    if (prob)
+	PyTuple_SetItem(py_ret, 1, pyg_enum_from_gtype(GST_TYPE_TYPE_FIND_PROBABILITY, prob));
+    else {
+	Py_INCREF(Py_None);
+	PyTuple_SetItem(py_ret, 1, Py_None);
+    }
+    
+    return py_ret;
 }
