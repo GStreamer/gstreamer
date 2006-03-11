@@ -1,3 +1,10 @@
+2006-03-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_render):
+	* plugins/elements/gstfilesink.c: (gst_file_sink_render):
+	  Emit RESOURCE_NO_SPACE_LEFT error here as well when
+	  there's no space left on the device.
+
 2006-03-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstclock.h:

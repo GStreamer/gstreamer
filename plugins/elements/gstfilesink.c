@@ -420,12 +420,20 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   return GST_FLOW_OK;
 
 handle_error:
-
-  GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
-      (_("Error while writing to file \"%s\"."), filesink->filename),
-      ("%s", g_strerror (errno)));
-
-  return GST_FLOW_ERROR;
+  {
+    switch (errno) {
+      case ENOSPC:{
+        GST_ELEMENT_ERROR (filesink, RESOURCE, NO_SPACE_LEFT, (NULL), (NULL));
+        break;
+      }
+      default:{
+        GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
+            (_("Error while writing to file \"%s\"."), filesink->filename),
+            ("%s", g_strerror (errno)));
+      }
+    }
+    return GST_FLOW_ERROR;
+  }
 }
 
 static gboolean

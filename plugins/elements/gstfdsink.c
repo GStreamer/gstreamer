@@ -278,15 +278,13 @@ gst_fd_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
     GST_DEBUG ("writing %d bytes to file descriptor %d",
         GST_BUFFER_SIZE (buffer), fdsink->fd);
+    /* FIXME: short writes are perfectly valid and may happen; also,
+     * we should probably handle EINTR and EAGAIN in a non-fatal way */
     bytes_written =
         write (fdsink->fd, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
     fdsink->bytes_written += bytes_written;
-    if (bytes_written != GST_BUFFER_SIZE (buffer)) {
-      GST_ELEMENT_ERROR (fdsink, RESOURCE, WRITE,
-          (_("Error while writing to file descriptor \"%d\"."), fdsink->fd),
-          ("%s", g_strerror (errno)));
-      return GST_FLOW_ERROR;
-    }
+    if (bytes_written != GST_BUFFER_SIZE (buffer))
+      goto write_error;
   }
 
   return GST_FLOW_OK;
@@ -305,6 +303,21 @@ stopped:
     return GST_FLOW_WRONG_STATE;
   }
 #endif
+
+write_error:
+  {
+    switch (errno) {
+      case ENOSPC:
+        GST_ELEMENT_ERROR (fdsink, RESOURCE, NO_SPACE_LEFT, (NULL), (NULL));
+        break;
+      default:{
+        GST_ELEMENT_ERROR (fdsink, RESOURCE, WRITE,
+            (_("Error while writing to file descriptor \"%d\"."), fdsink->fd),
+            ("%s", g_strerror (errno)));
+      }
+    }
+    return GST_FLOW_ERROR;
+  }
 }
 
 static gboolean
