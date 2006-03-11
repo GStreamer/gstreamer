@@ -1,3 +1,10 @@
+2006-03-11  Christophe Fergeau  <teuf@gnome.org>
+	
+	Patch by: Alex Lancaster
+	
+	* ext/taglib/gsttaglib.cc: fix writing of TPOS tags (album number),
+	and add support for TCOP (copyright)
+
 2006-03-10  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/modplug/Makefile.am:
