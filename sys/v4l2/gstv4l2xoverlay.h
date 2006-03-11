@@ -23,15 +23,15 @@
 #define __GST_V4L2_X_OVERLAY_H__
 
 #include <gst/gst.h>
-#include <gst/xoverlay/xoverlay.h>
+#include <gst/interfaces/xoverlay.h>
 
 #include "gstv4l2element.h"
 
 G_BEGIN_DECLS
 
-void    gst_v4l2_xoverlay_interface_init (GstXOverlayClass *klass);
+void	gst_v4l2_xoverlay_interface_init (GstXOverlayClass *klass);
 
-void    gst_v4l2_xoverlay_open          (GstV4l2Element  *v4l2element);
-void    gst_v4l2_xoverlay_close         (GstV4l2Element  *v4l2element);
+void	gst_v4l2_xoverlay_start		(GstV4l2Element  *v4l2element);
+void	gst_v4l2_xoverlay_stop		(GstV4l2Element  *v4l2element);
 
 #endif /* __GST_V4L2_X_OVERLAY_H__ */

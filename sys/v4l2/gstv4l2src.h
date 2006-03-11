@@ -1,5 +1,8 @@
-/* G-Streamer Video4linux2 video-capture plugin
- * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+/* GStreamer
+ *
+ * gstv4l2src.h: BT8x8/V4L2 video source element
+ *
+ * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,6 +23,7 @@
 #ifndef __GST_V4L2SRC_H__
 #define __GST_V4L2SRC_H__
 
+
 #include <gstv4l2element.h>
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
@@ -27,83 +31,86 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 #define GST_V4L2_MAX_BUFFERS 16
 #define GST_V4L2_MIN_BUFFERS 2
 
-#define GST_TYPE_V4L2SRC \
-                (gst_v4l2src_get_type())
-#define GST_V4L2SRC(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_V4L2SRC,GstV4l2Src))
-#define GST_V4L2SRC_CLASS(klass) \
-                (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_V4L2SRC,GstV4l2SrcClass))
-#define GST_IS_V4L2SRC(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4L2SRC))
-#define GST_IS_V4L2SRC_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4L2SRC))
+G_BEGIN_DECLS
 
-typedef struct _GstV4l2BufferPool       GstV4l2BufferPool;
-typedef struct _GstV4l2Buffer           GstV4l2Buffer;
-typedef struct _GstV4l2Src              GstV4l2Src;
-typedef struct _GstV4l2SrcClass         GstV4l2SrcClass;
+#define GST_TYPE_V4L2SRC			\
+  (gst_v4l2src_get_type())
+#define GST_V4L2SRC(obj)						\
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_V4L2SRC,GstV4l2Src))
+#define GST_V4L2SRC_CLASS(klass)					\
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_V4L2SRC,GstV4l2SrcClass))
+#define GST_IS_V4L2SRC(obj)				\
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4L2SRC))
+#define GST_IS_V4L2SRC_CLASS(obj)			\
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4L2SRC))
+
+
+typedef struct _GstV4l2BufferPool	GstV4l2BufferPool;
+typedef struct _GstV4l2Buffer		GstV4l2Buffer;
+typedef struct _GstV4l2Src GstV4l2Src;
+typedef struct _GstV4l2SrcClass GstV4l2SrcClass;
+
 
 /* global info */
 struct _GstV4l2BufferPool {
-  GstAtomicInt          refcount; /* number of users: 1 for every buffer, 1 for element */
-  gint                  video_fd;
-  guint                 buffer_count;
-  GstV4l2Buffer *       buffers;
+  gint  		refcount; /* number of users: 1 for every buffer, 1 for element */
+  gint			video_fd;
+  guint			buffer_count;
+  GstV4l2Buffer *	buffers;
 };
 
 struct _GstV4l2Buffer {
-  struct v4l2_buffer    buffer;
-  guint8 *              start;
-  guint                 length;
-  GstAtomicInt          refcount; /* add 1 if in use by element, add 1 if in use by GstBuffer */
-  GstV4l2BufferPool *   pool;
+  struct v4l2_buffer	buffer;
+  guint8 *		start;
+  guint			length;
+  gint  		refcount; /* add 1 if in use by element, add 1 if in use by GstBuffer */
+  GstV4l2BufferPool *	pool;
 };
 
-struct _GstV4l2Src {
-        GstV4l2Element v4l2element;
+enum
+  {
+    QUEUE_STATE_ERROR = -1,
+    QUEUE_STATE_READY_FOR_QUEUE,  /* the frame is ready to be queued for capture */
+    QUEUE_STATE_QUEUED,           /* the frame is queued for capture */
+    QUEUE_STATE_SYNCED            /* the frame is captured */
+  };
 
-        /* pads */
-        GstPad *srcpad;
 
-        /* internal lists */
-        GSList *formats; /* list of available capture formats */
+struct _GstV4l2Src
+{
+  GstV4l2Element v4l2element;
 
-        /* buffers */
-        GstV4l2BufferPool *pool;
+  /* pads */
+  GstPad *srcpad;
 
-        struct v4l2_requestbuffers breq;
-        struct v4l2_format format;
+  /* internal lists */
+  GSList *formats; /* list of available capture formats */
 
-        /* True if we want to stop */
-        gboolean quit, is_capturing;
+  /* buffers */
+  GstV4l2BufferPool *pool;
 
-        /* A/V sync... frame counter and internal cache */
-        gulong handled;
-        gint need_writes;
-        GstBuffer *cached_buffer;
-        gulong last_seq;
+  struct v4l2_requestbuffers breq;
+  struct v4l2_format format;
 
-        /* clock */
-        GstClock *clock;
-        
-        /* time to substract from clock time to get back to timestamp */
-        GstClockTime substract_time;
+  /* True if we want to stop */
+  gboolean quit, is_capturing;
 
-        /* how are we going to push buffers? */
-        gboolean use_fixed_fps;
+  gint offset;
+
+  /* how are we going to push buffers? */
+  gboolean use_fixed_fps;
 };
 
-struct _GstV4l2SrcClass {
-        GstV4l2ElementClass parent_class;
-
-        void (*frame_capture) (GObject *object);
-        void (*frame_drop)    (GObject *object);
-        void (*frame_insert)  (GObject *object);
-        void (*frame_lost)    (GObject *object,
-                               gint     num_lost);
+struct _GstV4l2SrcClass
+{
+  GstV4l2ElementClass parent_class;
 };
 
 
-GType gst_v4l2src_get_type(void);
+GType gst_v4l2src_get_type (void);
+
+
+G_END_DECLS
+
 
 #endif /* __GST_V4L2SRC_H__ */
