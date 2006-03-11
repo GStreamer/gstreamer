@@ -1075,26 +1075,45 @@ static gboolean
 gst_gnome_vfs_src_check_get_range (GstBaseSrc * basesrc)
 {
   GstGnomeVFSSrc *src;
-  gboolean is_local;
+  const gchar *protocol;
 
   src = GST_GNOME_VFS_SRC (basesrc);
 
   if (src->uri == NULL) {
     GST_WARNING_OBJECT (src, "no URI set yet");
-    /* don't know what to do, let the basesrc class decide for us */
-    if (GST_BASE_SRC_CLASS (parent_class)->check_get_range)
-      return GST_BASE_SRC_CLASS (parent_class)->check_get_range (basesrc);
-    else
-      return FALSE;
+    return FALSE;
   }
 
-  is_local = gnome_vfs_uri_is_local (src->uri);
+  if (gnome_vfs_uri_is_local (src->uri)) {
+    GST_LOG_OBJECT (src, "local URI (%s), assuming random access is possible",
+        GST_STR_NULL (src->uri_name));
+    return TRUE;
+  }
 
-  GST_LOG_OBJECT (src, "%s URI (%s), random access %spossible",
-      (is_local) ? "local" : "remote", GST_STR_NULL (src->uri_name),
-      (is_local) ? "" : "not ");
+  /* blacklist certain protocols we know won't work getrange-based */
+  protocol = gnome_vfs_uri_get_scheme (src->uri);
+  if (protocol == NULL)
+    goto undecided;
 
-  return is_local;
+  if (strcmp (protocol, "http") == 0) {
+    GST_LOG_OBJECT (src, "blacklisted protocol '%s', no random access possible"
+        " (URI=%s)", protocol, GST_STR_NULL (src->uri_name));
+    return FALSE;
+  }
+
+  /* fall through to undecided */
+
+undecided:
+  {
+    /* don't know what to do, let the basesrc class decide for us */
+    GST_LOG_OBJECT (src, "undecided about URI '%s', let base class handle it",
+        GST_STR_NULL (src->uri_name));
+
+    if (GST_BASE_SRC_CLASS (parent_class)->check_get_range)
+      return GST_BASE_SRC_CLASS (parent_class)->check_get_range (basesrc);
+
+    return FALSE;
+  }
 }
 
 static gboolean

@@ -1,3 +1,14 @@
+2006-03-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	(gst_gnome_vfs_src_check_get_range):
+	  gnome_vfs_uri_is_local() alone is not a good indicator
+	  whether we can operate in pull-mode with a specific URI,
+	  as it returns FALSE for file:// URIs that point to an
+	  NFS-mounted path. Be more conservative here: whitelist
+	  local files, blacklist http URIs and use the old
+	  mechanism for anything else (fixes #334216).
+
 2006-03-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
