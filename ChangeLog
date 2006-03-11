@@ -1,3 +1,24 @@
+2006-03-11  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/v4l2/Makefile.am:
+	* sys/v4l2/gstv4l2.c:
+	* sys/v4l2/gstv4l2colorbalance.h:
+	* sys/v4l2/gstv4l2element.c:
+	* sys/v4l2/gstv4l2element.h:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2src.h:
+	* sys/v4l2/gstv4l2tuner.c:
+	* sys/v4l2/gstv4l2tuner.h:
+	* sys/v4l2/gstv4l2xoverlay.c:
+	* sys/v4l2/gstv4l2xoverlay.h:
+	* sys/v4l2/v4l2_calls.c:
+	* sys/v4l2/v4l2_calls.h:
+	* sys/v4l2/v4l2src_calls.c:
+	* sys/v4l2/v4l2src_calls.h:
+	V4L2 ported to 0.10.
+	
 2006-03-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

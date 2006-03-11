@@ -1,5 +1,8 @@
-/* G-Streamer generic V4L2 element
- * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+/* GStreamer
+ *
+ * gstv4l2element.h: base class for V4L2 elements
+ *
+ * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,9 +23,6 @@
 #ifndef __GST_V4L2ELEMENT_H__
 #define __GST_V4L2ELEMENT_H__
 
-#include <gst/gst.h>
-#include <gst/xwindowlistener/xwindowlistener.h>
-
 /* Because of some really cool feature in video4linux1, also known as
  * 'not including sys/types.h and sys/time.h', we had to include it
  * ourselves. In all their intelligence, these people decided to fix
@@ -36,104 +36,87 @@
  * errors here, check your linux/time.h && sys/time.h header setup.
  */
 #include <sys/types.h>
-#include <linux/types.h>
 #define _LINUX_TIME_H
-#define __user
 #include <linux/videodev2.h>
 
-/*
- * See bug #135919, the Suse9 (and Mandrake10) videodev2 headers
- * contain a bug where (for userspace applications) the v4l2_buffer
- * struct is not declared, so applications have to declare it.
- * Declaration straightly ripped out from <linux/videodev2.h>.
- */
-#ifdef GST_V4L2_MISSING_BUFDECL
-struct v4l2_buffer
-{
-        __u32                   index;
-        enum v4l2_buf_type      type;
-        __u32                   bytesused;
-        __u32                   flags;
-        enum v4l2_field         field;
-        struct timeval          timestamp;
-        struct v4l2_timecode    timecode;
-        __u32                   sequence;
-
-        /* memory location */
-        enum v4l2_memory        memory;
-        union {
-                __u32           offset;
-                unsigned long   userptr;
-        } m;
-        __u32                   length;
-
-        __u32                   reserved[2];
-};
-#endif /* GST_V4L2_MISSING_BUFDECL */
+#include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
 
 
-#define GST_TYPE_V4L2ELEMENT \
-                (gst_v4l2element_get_type())
-#define GST_V4L2ELEMENT(obj) \
-                (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_V4L2ELEMENT, GstV4l2Element))
-#define GST_V4L2ELEMENT_CLASS(klass) \
-                (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_V4L2ELEMENT, GstV4l2ElementClass))
-#define GST_IS_V4L2ELEMENT(obj) \
-                (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_V4L2ELEMENT))
-#define GST_IS_V4L2ELEMENT_CLASS(obj) \
-                (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_V4L2ELEMENT))
-#define GST_V4L2ELEMENT_GET_CLASS(obj) \
-                (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4L2ELEMENT, GstV4l2ElementClass))
+G_BEGIN_DECLS
 
+#define GST_TYPE_V4L2ELEMENT			\
+  (gst_v4l2element_get_type())
+#define GST_V4L2ELEMENT(obj)						\
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_V4L2ELEMENT,GstV4l2Element))
+#define GST_V4L2ELEMENT_CLASS(klass)					\
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_V4L2ELEMENT,GstV4l2ElementClass))
+#define GST_IS_V4L2ELEMENT(obj)					\
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4L2ELEMENT))
+#define GST_IS_V4L2ELEMENT_CLASS(obj)				\
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4L2ELEMENT))
+#define GST_V4L2ELEMENT_GET_CLASS(obj)					\
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4L2ELEMENT, GstV4l2ElementClass))
 
-typedef struct _GstV4l2Element          GstV4l2Element;
-typedef struct _GstV4l2ElementClass     GstV4l2ElementClass;
-typedef struct _GstV4l2Xv               GstV4l2Xv;
+typedef struct _GstV4l2Element GstV4l2Element;
+typedef struct _GstV4l2ElementClass GstV4l2ElementClass;
+typedef struct _GstV4l2Xv GstV4l2Xv;
 
 struct _GstV4l2Element {
-        GstElement element;
+  GstPushSrc element;
 
-        /* the video device */
-        char *device;
+  /* the video device */
+  char *videodev;
 
-        /* the video-device's file descriptor */
-        gint video_fd;
+  /* the video-device's file descriptor */
+  gint video_fd;
 
-        /* the video buffer (mmap()'ed) */
-        guint8 **buffer;
+  /* the video buffer (mmap()'ed) */
+  guint8 **buffer;
 
-        /* the video-device's capabilities */
-        struct v4l2_capability vcap;
+  /* the video device's capabilities */
+  struct v4l2_capability vcap;
 
-        /* the toys available to us */
-        GList *channels;
-        GList *norms;
-        GList *colors;
+  /* the video device's window properties */
+  struct v4l2_window vwin;
 
-        /* X-overlay */
-        GstV4l2Xv *xv;
-        XID xwindow_id;
+  /* some more info about the current input's capabilities */
+  struct v4l2_input vinput;
 
-        /* properties */
-        gchar *norm;
-        gchar *channel;
-        gulong frequency;
+  /* lists... */
+  GList *colors;
+  GList *stds;
+  GList *inputs;
+
+  /* properties */
+  gchar *std;
+  gchar *input;
+  gulong frequency;
+
+
+  /* X-overlay */
+  GstV4l2Xv *xv;
+  gulong xwindow_id;
 };
 
 struct _GstV4l2ElementClass {
-        GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 
-        /* probed devices */
-        GList *devices;
+  /* probed devices */
+  GList *devices;
 
-        /* signals */
-        void     (*open)            (GstElement  *element,
-                                     const gchar *device);
-        void     (*close)           (GstElement  *element,
-                                     const gchar *device);
+  /* actions */
+  gboolean (*get_attribute)   (GstElement  *element,
+                               const gchar *attr_name,
+                               int         *value);
+  gboolean (*set_attribute)   (GstElement  *element,
+                               const gchar *attr_name,
+                               const int    value);
 };
 
+GType gst_v4l2element_get_type(void);
 
-GType gst_v4l2element_get_type (void);
+
+G_END_DECLS
 
 #endif /* __GST_V4L2ELEMENT_H__ */

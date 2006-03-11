@@ -641,6 +641,97 @@ GST_CHECK_FEATURE(TAGLIB, [taglib ID3v2 tag writer], taglib, [
   fi
 ])
 
+dnl *** XVideo ***
+dnl Look for the PIC library first, Debian requires it.
+dnl Check debian-devel archives for gory details.
+dnl 20020110:
+dnl At the moment XFree86 doesn't distribute shared libXv due
+dnl to unstable API.  On many platforms you CAN NOT link a shared
+dnl lib to a static non-PIC lib.  This is what the xvideo GStreamer
+dnl plug-in wants to do.  So Debian distributes a PIC compiled
+dnl version of the static lib for plug-ins to link to when it is
+dnl inappropriate to link the main application to libXv directly.
+dnl FIXME: add check if this platform can support linking to a
+dnl        non-PIC libXv, if not then don not use Xv.
+dnl FIXME: perhaps warn user if they have a shared libXv since
+dnl        this is an error until XFree86 starts shipping one
+
+dnl Check for Xv extension
+translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
+GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
+                  [xvimagesink], [
+  if test x$HAVE_X = xyes; then
+    AC_CHECK_LIB(Xv_pic, XvQueryExtension,
+                 HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
+                 $X_LIBS -lXext)
+
+    if test x$HAVE_XVIDEO = xyes; then
+      XVIDEO_LIBS="-lXv_pic -lXext"
+      AC_SUBST(XVIDEO_LIBS)
+    else
+      dnl try again using something else if we didn't find it first
+      if test x$HAVE_XVIDEO = xno; then
+        AC_CHECK_LIB(Xv, XvQueryExtension,
+                   HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
+                   $X_LIBS -lXext)
+
+        if test x$HAVE_XVIDEO = xyes; then
+          XVIDEO_LIBS="-lXv -lXext"
+          AC_SUBST(XVIDEO_LIBS)
+        fi
+      fi
+    fi
+  fi
+])
+
+dnl *** Video 4 Linux 2 ***
+dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
+dnl renamed to GST_V4L2 because of some conflict with kernel headers
+translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
+GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
+  HAVE_GST_V4L2="no"
+  if test "$HAVE_X" = "yes"
+  then
+    AC_MSG_CHECKING([Checking for uptodate v4l2 installation])
+    AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <linux/types.h>
+#define _LINUX_TIME_H
+#define __user
+#include <linux/videodev2.h>
+#if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
+#error too early v4l2 version or no v4l2 at all
+#endif
+    ], [
+return 0;
+    ], [ HAVE_GST_V4L2="yes" && AC_MSG_RESULT(yes)],
+       [ HAVE_GST_V4L2="no"  && AC_MSG_RESULT(no) &&
+         AC_CHECK_HEADER(linux/videodev2.h,
+                         [ AC_MSG_WARN([video4linux2 headers were found, but they're old. Please update v4l2 to compile the v4l2 plugins])],
+                         [ AC_MSG_WARN([video4linux2 was not found])])
+       ])
+  fi
+  dnl check for missing v4l2_buffer declaration (see #135919)
+  if [ test x$HAVE_GST_V4L2 = xyes ]; then
+    MISSING_DECL=0
+    AC_MSG_CHECKING(struct v4l2_buffer declaration)
+    AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <linux/types.h>
+#define _LINUX_TIME_H
+#define __user
+#include <linux/videodev2.h>
+    ],[
+struct v4l2_buffer buf;
+buf.index = 0;
+return 0;
+    ], [ AC_MSG_RESULT(yes) ], [ MISSING_DECL=1 && AC_MSG_RESULT(no) ])
+    if [ test x$MISSING_DECL = x1 ]; then
+      AC_DEFINE(GST_V4L2_MISSING_BUFDECL, 1, [struct v4l2_buffer missing])
+    fi
+  fi
+])
+
 
 dnl also add builddir include for enumtypes and marshal
 GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS $GST_ERROR"
@@ -716,6 +807,7 @@ gst/xingheader/Makefile
 sys/Makefile
 sys/glsink/Makefile
 sys/ximagesrc/Makefile
+sys/v4l2/Makefile
 examples/Makefile
 examples/directfb/Makefile
 ext/Makefile

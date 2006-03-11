@@ -1,5 +1,8 @@
-/* G-Streamer Video4linux2 video-capture plugin
- * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+/* GStreamer
+ *
+ * gstv4l2.c: plugin for v4l2 elements
+ *
+ * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,20 +24,31 @@
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
-
 #include "gst/gst-i18n-plugin.h"
+
+#include <gst/gst.h>
 
 #include "gstv4l2element.h"
 #include "gstv4l2src.h"
+/* #include "gstv4l2jpegsrc.h" */
+/* #include "gstv4l2mjpegsrc.h" */
+/* #include "gstv4l2mjpegsink.h" */
+
+GST_DEBUG_CATEGORY (v4l2_debug);        /* used in v4l2_calls.c and v4l2src_calls.c */
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "v4l2element",
-          GST_RANK_NONE, GST_TYPE_V4L2ELEMENT) ||
-      !gst_element_register (plugin, "v4l2src",
-          GST_RANK_NONE, GST_TYPE_V4L2SRC))
+  GST_DEBUG_CATEGORY_INIT (v4l2_debug, "v4l2", 0, "V4L2 API calls");
+
+  if (!gst_element_register (plugin, "v4l2src", GST_RANK_NONE,
+          GST_TYPE_V4L2SRC))
+    /*       !gst_element_register (plugin, "v4l2jpegsrc", */
+    /*           GST_RANK_NONE, GST_TYPE_V4L2JPEGSRC) || */
+    /*       !gst_element_register (plugin, "v4l2mjpegsrc", */
+    /*           GST_RANK_NONE, GST_TYPE_V4L2MJPEGSRC) || */
+    /*       !gst_element_register (plugin, "v4l2mjpegsink", */
+    /*           GST_RANK_NONE, GST_TYPE_V4L2MJPEGSINK)) */
     return FALSE;
 
 #ifdef ENABLE_NLS
@@ -48,5 +62,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "video4linux2",
-    "elements for Video 4 Linux 2",
+    "elements for Video 4 Linux",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)

@@ -25,7 +25,6 @@
 
 #include <string.h>
 #include <gst/gst.h>
-#include <gst/xoverlay/xoverlay.h>
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xv.h>
@@ -59,19 +58,27 @@ gst_v4l2_xoverlay_interface_init (GstXOverlayClass * klass)
       "V4L2 XOverlay interface debugging");
 }
 
-void
+static void
 gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
 {
   struct stat s;
   GstV4l2Xv *v4l2xv;
   const gchar *name = g_getenv ("DISPLAY");
-  int ver, rel, req, ev, err, anum, i, id = 0, first_id = 0, min;
+  unsigned int ver, rel, req, ev, err, anum;
+  int i, id = 0, first_id = 0, min;
   XvAdaptorInfo *ai;
   Display *dpy;
 
   /* we need a display, obviously */
   if (!name || !(dpy = XOpenDisplay (name))) {
     GST_WARNING ("No $DISPLAY set or failed to open - no overlay");
+    return;
+  }
+
+  /* First let's check that XVideo extension is available */
+  if (!XQueryExtension (dpy, "XVideo", &i, &i, &i)) {
+    GST_WARNING ("Xv extension not available - no overlay");
+    XCloseDisplay (dpy);
     return;
   }
 
@@ -93,7 +100,7 @@ gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
   }
   min = s.st_rdev & 0xff;
   for (i = 0; i < anum; i++) {
-    if (!strcmp (ai[i].name, "video4linux")) {
+    if (!strcmp (ai[i].name, "video4linux2")) {
       if (first_id == 0)
         first_id = ai[i].base_id;
 
@@ -123,7 +130,7 @@ gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
   }
 }
 
-void
+static void
 gst_v4l2_xoverlay_close (GstV4l2Element * v4l2element)
 {
   GstV4l2Xv *v4l2xv = v4l2element->xv;
@@ -141,6 +148,20 @@ gst_v4l2_xoverlay_close (GstV4l2Element * v4l2element)
     g_source_remove (v4l2xv->idle_id);
   g_free (v4l2xv);
   v4l2element->xv = NULL;
+}
+
+void
+gst_v4l2_xoverlay_start (GstV4l2Element * v4l2element)
+{
+  if (v4l2element->xwindow_id) {
+    gst_v4l2_xoverlay_open (v4l2element);
+  }
+}
+
+void
+gst_v4l2_xoverlay_stop (GstV4l2Element * v4l2element)
+{
+  gst_v4l2_xoverlay_close (v4l2element);
 }
 
 static gboolean
@@ -170,11 +191,16 @@ static void
 gst_v4l2_xoverlay_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (overlay);
-  GstV4l2Xv *v4l2xv = v4l2element->xv;
+  GstV4l2Xv *v4l2xv;
   XWindowAttributes attr;
   gboolean change = (v4l2element->xwindow_id != xwindow_id);
 
   GST_LOG_OBJECT (v4l2element, "Setting XID to %lx", (gulong) xwindow_id);
+
+  if (!v4l2element->xv && GST_V4L2_IS_OPEN (v4l2element))
+    gst_v4l2_xoverlay_open (v4l2element);
+
+  v4l2xv = v4l2element->xv;
 
   if (v4l2xv)
     g_mutex_lock (v4l2xv->mutex);

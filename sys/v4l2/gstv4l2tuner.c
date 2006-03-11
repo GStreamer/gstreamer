@@ -24,7 +24,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/tuner/tuner.h>
 
 #include "gstv4l2tuner.h"
 #include "gstv4l2element.h"
@@ -156,12 +155,7 @@ gst_v4l2_tuner_interface_init (GstTunerClass * klass)
 static gboolean
 gst_v4l2_tuner_is_sink (GstV4l2Element * v4l2element)
 {
-  const GList *pads = gst_element_get_pad_list (GST_ELEMENT (v4l2element));
   GstPadDirection dir = GST_PAD_UNKNOWN;
-
-  /* get direction */
-  if (pads && g_list_length ((GList *) pads) == 1)
-    dir = GST_PAD_DIRECTION (GST_PAD (pads->data));
 
   return (dir == GST_PAD_SINK);
 }
@@ -172,7 +166,7 @@ gst_v4l2_tuner_contains_channel (GstV4l2Element * v4l2element,
 {
   const GList *item;
 
-  for (item = v4l2element->channels; item != NULL; item = item->next)
+  for (item = v4l2element->inputs; item != NULL; item = item->next)
     if (item->data == v4l2channel)
       return TRUE;
 
@@ -183,7 +177,7 @@ static const GList *
 gst_v4l2_tuner_list_channels (GstTuner * mixer)
 {
   /* ... or output, if we're a sink... */
-  return GST_V4L2ELEMENT (mixer)->channels;
+  return GST_V4L2ELEMENT (mixer)->inputs;
 }
 
 static void
@@ -201,7 +195,7 @@ gst_v4l2_tuner_set_channel (GstTuner * mixer, GstTunerChannel * channel)
       gst_v4l2_set_output (v4l2element, v4l2channel->index) :
       gst_v4l2_set_input (v4l2element, v4l2channel->index)) {
     gst_tuner_channel_changed (mixer, channel);
-    g_object_notify (G_OBJECT (v4l2element), "channel");
+    g_object_notify (G_OBJECT (v4l2element), "input");
   }
 }
 
@@ -221,7 +215,7 @@ gst_v4l2_tuner_get_channel (GstTuner * mixer)
   else
     gst_v4l2_get_input (v4l2element, &channel);
 
-  for (item = v4l2element->channels; item != NULL; item = item->next) {
+  for (item = v4l2element->inputs; item != NULL; item = item->next) {
     if (channel == GST_V4L2_TUNER_CHANNEL (item->data)->index)
       return (GstTunerChannel *) item->data;
   }
@@ -235,7 +229,7 @@ gst_v4l2_tuner_contains_norm (GstV4l2Element * v4l2element,
 {
   const GList *item;
 
-  for (item = v4l2element->norms; item != NULL; item = item->next)
+  for (item = v4l2element->stds; item != NULL; item = item->next)
     if (item->data == v4l2norm)
       return TRUE;
 
@@ -245,7 +239,7 @@ gst_v4l2_tuner_contains_norm (GstV4l2Element * v4l2element,
 static const GList *
 gst_v4l2_tuner_list_norms (GstTuner * mixer)
 {
-  return GST_V4L2ELEMENT (mixer)->norms;
+  return GST_V4L2ELEMENT (mixer)->stds;
 }
 
 static void
@@ -260,7 +254,7 @@ gst_v4l2_tuner_set_norm (GstTuner * mixer, GstTunerNorm * norm)
 
   if (gst_v4l2_set_norm (v4l2element, v4l2norm->index)) {
     gst_tuner_norm_changed (mixer, norm);
-    g_object_notify (G_OBJECT (v4l2element), "norm");
+    g_object_notify (G_OBJECT (v4l2element), "std");
   }
 }
 
@@ -276,7 +270,7 @@ gst_v4l2_tuner_get_norm (GstTuner * mixer)
 
   gst_v4l2_get_norm (v4l2element, &norm);
 
-  for (item = v4l2element->norms; item != NULL; item = item->next) {
+  for (item = v4l2element->stds; item != NULL; item = item->next) {
     if (norm == GST_V4L2_TUNER_NORM (item->data)->index)
       return (GstTunerNorm *) item->data;
   }
