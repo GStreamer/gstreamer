@@ -2245,7 +2245,7 @@ plugin_init (GstPlugin * plugin)
     "msstyles", "cpl", NULL
   };
   static gchar *flv_exts[] = { "flv", NULL };
-  static gchar *m4v_exts[] = { "m4v" };
+  static gchar *m4v_exts[] = { "m4v", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");

@@ -1,5 +1,11 @@
 2006-03-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	  NULL-terminate array of mpeg4 video file extensions.
+	  Fixes crash on PPC (#334226).
+
+2006-03-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gnomevfs/gstgnomevfssrc.c:
 	(gst_gnome_vfs_src_check_get_range):
 	  gnome_vfs_uri_is_local() alone is not a good indicator
