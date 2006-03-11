@@ -246,7 +246,7 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 
       ID3v2::TextIdentificationFrame * frame;
 
-      frame = new ID3v2::TextIdentificationFrame ("TRCK", String::UTF8);
+      frame = new ID3v2::TextIdentificationFrame ("TPOS", String::UTF8);
       result = gst_tag_list_get_uint_index (list, GST_TAG_ALBUM_VOLUME_COUNT,
           0, &volume_count);
       if (result) {
@@ -258,7 +258,22 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
       id3v2tag->addFrame (frame);
       frame->setText (tag_str);
       g_free (tag_str);
-      GST_DEBUG ("Setting track number to %s", tag_str);
+      GST_DEBUG ("Setting album number to %s", tag_str);
+    }
+  } else if (strcmp (tag, GST_TAG_COPYRIGHT) == 0) {
+    gchar *copyright;
+
+    result = gst_tag_list_get_string_index (list, tag, 0, &copyright);
+
+    if (result != FALSE) {
+      ID3v2::TextIdentificationFrame * frame;
+
+      frame = new ID3v2::TextIdentificationFrame ("TCOP", String::UTF8);
+
+      id3v2tag->addFrame (frame);
+      frame->setText (copyright);
+      g_free (copyright);
+      GST_DEBUG ("Setting copyright to %s", copyright);
     }
   } else {
     GST_WARNING ("Unsupported tag: %s", tag);
