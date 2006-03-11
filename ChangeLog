@@ -1,4 +1,15 @@
 2006-03-11  Christophe Fergeau  <teuf@gnome.org>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/xingheader/Makefile.am:
+	* gst/xingheader/gstxingmux.c: 
+	* gst/xingheader/gstxingmux.h: added new element to add Xing headers
+	to MP3 files (this allows decoder to figure out the length of VBR
+	files) 
+
+2006-03-11  Christophe Fergeau  <teuf@gnome.org>
 	
 	Patch by: Alex Lancaster
 	

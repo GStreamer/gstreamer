@@ -285,6 +285,7 @@ GST_PLUGINS_ALL="\
 		freeze \
 		speed   \
 		qtdemux \
+		xingheader \
 		tta     \
                 "
 
@@ -730,6 +731,7 @@ gst/modplug/libmodplug/Makefile
 gst/speed/Makefile
 gst/qtdemux/Makefile
 gst/tta/Makefile
+gst/xingheader/Makefile
 sys/Makefile
 sys/glsink/Makefile
 sys/ximagesrc/Makefile
