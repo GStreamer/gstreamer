@@ -1,3 +1,10 @@
+2006-03-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Only compile the taglib plugin if a C++ compiler is
+	  present. Use GST_DEFAULT_ELEMENTS macro from common/
+	  for all the defaults stuff.
+
 2006-03-11  Christophe Fergeau  <teuf@gnome.org>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
