@@ -272,7 +272,6 @@ gst_tag_lookup (GQuark entry)
  * with that name is already registered, that one is used.
  * The old registration may have used a different type however. So don't rely
  * on your supplied values.
- * This function takes ownership of all supplied variables.
  */
 void
 gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
