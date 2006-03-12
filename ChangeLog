@@ -1,5 +1,12 @@
 2006-03-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/taglib/Makefile.am:
+	* ext/taglib/gsttaglib.cc:
+	* ext/taglib/gsttaglib.h:
+	  Add support for writing MusicBrainz IDs.
+
+2006-03-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* sys/v4l2/gstv4l2element.h:
 	  Include "_stdint.h" in an attempt to make the
 	  PPC-buildbot happy.

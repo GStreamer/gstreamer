@@ -1,4 +1,4 @@
-/*
+/* GStreamer taglib-based ID3 muxer
  * (c) 2006 Christophe Fergeau  <teuf@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -24,8 +24,10 @@
 
 #include <string.h>
 #include <textidentificationframe.h>
+#include <uniquefileidentifierframe.h>
 #include <id3v2tag.h>
 #include <gst/gsttagsetter.h>
+#include <gst/tag/tag.h>
 #include "gsttaglib.h"
 
 using namespace TagLib;
@@ -142,6 +144,32 @@ gst_tag_lib_mux_init (GstTagLibMux * taglib,
   gst_element_add_pad (GST_ELEMENT (taglib), taglib->srcpad);
 
   taglib->render_tag = TRUE;
+}
+
+static void
+add_one_txxx_musicbrainz_tag (ID3v2::Tag * id3v2tag, const gchar * spec_id,
+    const gchar * realworld_id, const gchar * id_str)
+{
+  ID3v2::UserTextIdentificationFrame * frame;
+
+  if (id_str == NULL)
+    return;
+
+  GST_DEBUG ("Setting %s to %s", GST_STR_NULL (spec_id), id_str);
+
+  if (spec_id) {
+    frame = new ID3v2::UserTextIdentificationFrame (String::Latin1);
+    id3v2tag->addFrame (frame);
+    frame->setDescription (spec_id);
+    frame->setText (id_str);
+  }
+
+  if (realworld_id) {
+    frame = new ID3v2::UserTextIdentificationFrame (String::Latin1);
+    id3v2tag->addFrame (frame);
+    frame->setDescription (realworld_id);
+    frame->setText (id_str);
+  }
 }
 
 static void
@@ -274,6 +302,51 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
       frame->setText (copyright);
       g_free (copyright);
       GST_DEBUG ("Setting copyright to %s", copyright);
+    }
+  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ARTISTID) == 0) {
+    gchar *id_str;
+
+    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
+      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz Artist Id",
+          "musicbrainz_artistid", id_str);
+      g_free (id_str);
+    }
+  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ALBUMID) == 0) {
+    gchar *id_str;
+
+    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
+      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz Album Id",
+          "musicbrainz_albumid", id_str);
+      g_free (id_str);
+    }
+  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ALBUMARTISTID) == 0) {
+    gchar *id_str;
+
+    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
+      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz Album Artist Id",
+          "musicbrainz_albumartistid", id_str);
+      g_free (id_str);
+    }
+  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_TRMID) == 0) {
+    gchar *id_str;
+
+    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
+      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz TRM Id",
+          "musicbrainz_trmid", id_str);
+      g_free (id_str);
+    }
+  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_TRACKID) == 0) {
+    gchar *id_str;
+
+    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
+      ID3v2::UniqueFileIdentifierFrame * frame;
+
+      GST_DEBUG ("Setting Musicbrainz Track Id to %s", id_str);
+
+      frame = new ID3v2::UniqueFileIdentifierFrame ("http://musicbrainz.org",
+          id_str);
+      id3v2tag->addFrame (frame);
+      g_free (id_str);
     }
   } else {
     GST_WARNING ("Unsupported tag: %s", tag);
@@ -450,6 +523,8 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (gst_tag_lib_mux_debug, "taglibmux", 0,
       "ID3 Tag Muxer");
+
+  gst_tag_register_musicbrainz_tags ();
 
   return TRUE;
 }
