@@ -1,3 +1,11 @@
+2006-03-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Julio M. Merino Vidal <jmmv at netbsd org>
+
+	* configure.ac:
+	  Don't check for libgnomeui (leftover from old examples
+	  that aren't built or disted any longer) (#334303).
+	  
 2006-03-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gstfdsink.c: (gst_fd_sink_render):

@@ -472,14 +472,6 @@ dnl LDFLAGS for plugins; includes GST_ALL_LDFLAGS
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
-dnl ##################################################
-dnl # deps for examples from manual                  #
-dnl ##################################################
-
-PKG_CHECK_MODULES(LIBGNOMEUI, libgnomeui-2.0,
-                  HAVE_LIBGNOMEUI="yes", HAVE_LIBGNOMEUI="no")
-AM_CONDITIONAL(HAVE_LIBGNOMEUI, test "x$HAVE_LIBGNOMEUI" = "xyes")
-
 AC_CONFIG_FILES(
 Makefile
 gst/Makefile
