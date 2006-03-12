@@ -1,5 +1,12 @@
 2006-03-12  Edward Hervey  <edward@fluendo.com>
 
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_capture_init),
+	(gst_v4l2src_buffer_pool_free):
+	g_atomic_int_set is only available in glib-0.10, use gst_atomic_int_et
+	instead.
+
+2006-03-12  Edward Hervey  <edward@fluendo.com>
+
 	* sys/v4l2/gstv4l2element.h:
 	Remove tim's addition of "_stdint.h" since it doesn't make the PPC
 	buildbot happy.
