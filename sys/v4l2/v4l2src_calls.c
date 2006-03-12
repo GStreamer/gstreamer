@@ -332,7 +332,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
     GST_LOG_OBJECT (v4l2src, "initiating buffer pool");
 
     v4l2src->pool = g_new (GstV4l2BufferPool, 1);
-    g_atomic_int_set (&v4l2src->pool->refcount, 1);
+    gst_atomic_int_set (&v4l2src->pool->refcount, 1);
     v4l2src->pool->video_fd = GST_V4L2ELEMENT (v4l2src)->video_fd;
     v4l2src->pool->buffer_count = v4l2src->breq.count;
     v4l2src->pool->buffers = g_new0 (GstV4l2Buffer, v4l2src->breq.count);
@@ -340,7 +340,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
     for (n = 0; n < v4l2src->breq.count; n++) {
       GstV4l2Buffer *buffer = &v4l2src->pool->buffers[n];
 
-      g_atomic_int_set (&buffer->refcount, 1);
+      gst_atomic_int_set (&buffer->refcount, 1);
       buffer->pool = v4l2src->pool;
       buffer->buffer.index = n;
       buffer->buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -455,11 +455,11 @@ gst_v4l2src_buffer_pool_free (GstV4l2BufferPool * pool, gboolean do_close)
   guint i;
 
   for (i = 0; i < pool->buffer_count; i++) {
-    g_atomic_int_set (&pool->buffers[i].refcount, 0);
+    gst_atomic_int_set (&pool->buffers[i].refcount, 0);
     munmap (pool->buffers[i].start, pool->buffers[i].length);
   }
   g_free (pool->buffers);
-  g_atomic_int_set (&pool->refcount, 0);
+  gst_atomic_int_set (&pool->refcount, 0);
   if (do_close)
     close (pool->video_fd);
   g_free (pool);
