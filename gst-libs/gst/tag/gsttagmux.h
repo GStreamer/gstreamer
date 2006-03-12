@@ -1,4 +1,4 @@
-/*
+/* GStreamer taglib-based ID3 muxer
  * (c) 2006 Christophe Fergeau  <teuf@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -51,7 +51,7 @@ typedef struct _GstTagLibMuxClass {
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TAGLIB_MUX,GstTagLibMuxClass))
 #define GST_IS_TAGLIB_MUX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TAGLIB_MUX))
-#define GST_IS_TAGLIB_MUX_CLASS(obj) \
+#define GST_IS_TAGLIB_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TAGLIB_MUX))
 
 /* Standard function returning type information. */
