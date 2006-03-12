@@ -1,3 +1,12 @@
+2006-03-12  Christophe Fergeau  <teuf@gnome.org>
+
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/lame/gstlame.c: (gst_lame_class_init): mark the xing-header
+	property as BROKEN (see
+	http://bugzilla.gnome.org/show_bug.cgi?id=330317#c19 for an
+	explanation why it's broken).
+
 2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstid3tag.c: (tag_list_to_id3_tag_foreach):

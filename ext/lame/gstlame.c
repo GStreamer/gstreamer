@@ -421,7 +421,8 @@ gst_lame_class_init (GstLameClass * klass)
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_XINGHEADER,
       g_param_spec_boolean ("xingheader", "Output Xing Header",
-          "Output Xing Header", FALSE, G_PARAM_READWRITE));
+          "Output Xing Header (BROKEN, use xingmux instead)",
+          FALSE, G_PARAM_READWRITE));
 #ifdef GSTLAME_PRESET
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PRESET,
       g_param_spec_enum ("preset", "Lame Preset", "Lame Preset",
