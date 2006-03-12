@@ -1,3 +1,11 @@
+2006-03-12  Edward Hervey  <edward@fluendo.com>
+
+	* sys/v4l2/gstv4l2element.h:
+	Remove tim's addition of "_stdint.h" since it doesn't make the PPC
+	buildbot happy.
+	I will just use the same comment Ronald used when he added these lines:
+	Yet Another Hack (tm) for kernel header borkedness.
+
 2006-03-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/taglib/Makefile.am:
