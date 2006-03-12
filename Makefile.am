@@ -7,12 +7,12 @@ SUBDIRS_EXAMPLES =
 endif
 
 SUBDIRS = \
-	gst sys ext \
+	gst gst-libs sys ext \
 	m4 common docs \
 	$(SUBDIRS_EXAMPLES)
 
 DIST_SUBDIRS = \
-	gst sys ext m4 common docs examples
+	gst gst-libs sys ext m4 common docs examples
 
 EXTRA_DIST = \
 	gst-plugins-bad.spec depcomp \

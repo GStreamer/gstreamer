@@ -40,14 +40,11 @@ AM_PROG_AS
 AS="${CC}"
 AS_PROG_OBJC
 
-dnl the gettext stuff needed
-AM_GNU_GETTEXT_VERSION(0.11.5)
+dnl set up gettext
+dnl the version check needs to stay here because autopoint greps for it
+AM_GNU_GETTEXT_VERSION([0.11.5])
 AM_GNU_GETTEXT([external])
-                                                                            
-GETTEXT_PACKAGE=gst-plugins-bad-$GST_MAJORMINOR
-AC_SUBST(GETTEXT_PACKAGE)
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "$GETTEXT_PACKAGE",
-                  [gettext package name])
+GST_GETTEXT([gst-plugins-bad-$GST_MAJORMINOR])
 
 GST_ARG_EXAMPLES
 
@@ -804,6 +801,8 @@ gst/speed/Makefile
 gst/qtdemux/Makefile
 gst/tta/Makefile
 gst/xingheader/Makefile
+gst-libs/Makefile
+gst-libs/gst/Makefile
 sys/Makefile
 sys/glsink/Makefile
 sys/ximagesrc/Makefile
