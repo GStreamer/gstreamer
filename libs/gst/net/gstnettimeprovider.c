@@ -25,10 +25,10 @@
  * This object exposes the time of a #GstClock on the network.
  *
  * A #GstNetTimeProvider is created with gst_net_time_provider_new() which
- * takes a #GstClock, an address and a port numner as arguments.
+ * takes a #GstClock, an address and a port number as arguments.
  *
  * After creating the object, a client clock such as #GstNetClientClock can
- * query the exposed clock for its values.
+ * query the exposed clock over the network for its values.
  *
  * The #GstNetTimeProvider typically wraps the clock used by a #GstPipeline.
  *
@@ -453,11 +453,11 @@ gst_net_time_provider_stop (GstNetTimeProvider * self)
  * @clock: a #GstClock to export over the network
  * @address: an address to bind on as a dotted quad (xxx.xxx.xxx.xxx), or NULL
  *           to bind to all addresses
- * @port: a port to bind on, or -1 to let the kernel choose
+ * @port: a port to bind on, or 0 to let the kernel choose
  *
  * Allows network clients to get the current time of @clock.
  *
- * Returns: The new #GstNetTimeProvider, or NULL on error.
+ * Returns: the new #GstNetTimeProvider, or NULL on error
  */
 GstNetTimeProvider *
 gst_net_time_provider_new (GstClock * clock, const gchar * address, gint port)

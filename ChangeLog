@@ -1,3 +1,10 @@
+2006-03-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* libs/gst/net/gstnettimeprovider.c:
+	  fix docs
+	* win32/common/config.h:
+	  update
+
 2006-03-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Julio M. Merino Vidal <jmmv at netbsd org>
