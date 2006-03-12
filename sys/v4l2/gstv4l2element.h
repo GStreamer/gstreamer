@@ -23,6 +23,8 @@
 #ifndef __GST_V4L2ELEMENT_H__
 #define __GST_V4L2ELEMENT_H__
 
+#include "_stdint.h"
+
 /* Because of some really cool feature in video4linux1, also known as
  * 'not including sys/types.h and sys/time.h', we had to include it
  * ourselves. In all their intelligence, these people decided to fix
