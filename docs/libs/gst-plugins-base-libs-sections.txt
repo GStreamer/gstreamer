@@ -151,6 +151,7 @@ gst_tag_id3_genre_count
 gst_tag_id3_genre_get
 gst_tag_list_new_from_id3v1
 gst_tag_from_id3_tag
+gst_tag_from_id3_user_tag
 gst_tag_to_id3_tag
 </SECTION>
 

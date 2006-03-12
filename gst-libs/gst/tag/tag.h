@@ -112,6 +112,8 @@ G_CONST_RETURN gchar *  gst_tag_id3_genre_get                   (const guint    
 GstTagList *            gst_tag_list_new_from_id3v1             (const guint8 *         data);
 
 G_CONST_RETURN gchar *  gst_tag_from_id3_tag                    (const gchar *          id3_tag);
+G_CONST_RETURN gchar *  gst_tag_from_id3_user_tag               (const gchar *          type,
+                                                                 const gchar *          id3_user_tag);
 G_CONST_RETURN gchar *  gst_tag_to_id3_tag                      (const gchar *          gst_tag);
 
 void gst_tag_register_musicbrainz_tags (void);

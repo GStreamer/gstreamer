@@ -208,13 +208,13 @@ static GstTagEntryMatch tag_matches[] = {
 };
 
 /**
-* gst_tag_from_id3_tag:
-* @id3_tag: ID3v2 tag to convert to GStreamer tag
-*
-* Looks up the GStreamer tag for a ID3v2 tag.
-*
-* Returns: The corresponding GStreamer tag or NULL if none exists.
-*/
+ * gst_tag_from_id3_tag:
+ * @id3_tag: ID3v2 tag to convert to GStreamer tag
+ *
+ * Looks up the GStreamer tag for a ID3v2 tag.
+ *
+ * Returns: The corresponding GStreamer tag or NULL if none exists.
+ */
 G_CONST_RETURN gchar *
 gst_tag_from_id3_tag (const gchar * id3_tag)
 {
@@ -235,14 +235,62 @@ gst_tag_from_id3_tag (const gchar * id3_tag)
   return NULL;
 }
 
+static GstTagEntryMatch user_tag_matches[] = {
+  /* musicbrainz identifiers being used in the real world (foobar2000) */
+  {GST_TAG_MUSICBRAINZ_ARTISTID, "TXXX|musicbrainz_artistid"},
+  {GST_TAG_MUSICBRAINZ_ALBUMID, "TXXX|musicbrainz_albumid"},
+  {GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "TXXX|musicbrainz_albumartistid"},
+  {GST_TAG_MUSICBRAINZ_TRMID, "TXXX|musicbrainz_trmid"},
+  /* musicbrainz identifiers according to spec no one pays
+   * attention to (http://musicbrainz.org/docs/specs/metadata_tags.html) */
+  {GST_TAG_MUSICBRAINZ_ARTISTID, "TXXX|MusicBrainz Artist Id"},
+  {GST_TAG_MUSICBRAINZ_ALBUMID, "TXXX|MusicBrainz Album Id"},
+  {GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "TXXX|MusicBrainz Album Artist Id"},
+  {GST_TAG_MUSICBRAINZ_TRMID, "TXXX|MusicBrainz TRM Id"},
+  {NULL, NULL}
+};
+
 /**
-* gst_tag_to_id3_tag:
-* @gst_tag: GStreamer tag to convert to vorbiscomment tag
-*
-* Looks up the ID3v2 tag for a GStreamer tag.
-*
-* Returns: The corresponding ID3v2 tag or NULL if none exists.
-*/
+ * gst_tag_from_id3_user_tag:
+ * @type: the type of ID3v2 user tag (e.g. "TXXX" or "UDIF")
+ * @id3_user_tag: ID3v2 user tag to convert to GStreamer tag
+ *
+ * Looks up the GStreamer tag for an ID3v2 user tag (e.g. description in
+ * TXXX frame or owner in UFID frame).
+ *
+ * Returns: The corresponding GStreamer tag or NULL if none exists.
+ */
+G_CONST_RETURN gchar *
+gst_tag_from_id3_user_tag (const gchar * type, const gchar * id3_user_tag)
+{
+  int i = 0;
+
+  g_return_val_if_fail (type != NULL && strlen (type) == 4, NULL);
+  g_return_val_if_fail (id3_user_tag != NULL, NULL);
+
+  for (i = 0; i < G_N_ELEMENTS (user_tag_matches); ++i) {
+    if (strncmp (type, user_tag_matches[i].original_tag, 4) == 0 &&
+        strcmp (id3_user_tag, user_tag_matches[i].original_tag + 5) == 0) {
+      GST_LOG ("Mapped ID3v2 user tag '%s' to GStreamer tag '%s'",
+          user_tag_matches[i].original_tag, user_tag_matches[i].gstreamer_tag);
+      return user_tag_matches[i].gstreamer_tag;
+    }
+  }
+
+  GST_INFO ("Cannot map ID3v2 user tag '%s' of type '%s' to GStreamer tag",
+      id3_user_tag, type);
+
+  return NULL;
+}
+
+/**
+ * gst_tag_to_id3_tag:
+ * @gst_tag: GStreamer tag to convert to vorbiscomment tag
+ *
+ * Looks up the ID3v2 tag for a GStreamer tag.
+ *
+ * Returns: The corresponding ID3v2 tag or NULL if none exists.
+ */
 G_CONST_RETURN gchar *
 gst_tag_to_id3_tag (const gchar * gst_tag)
 {
@@ -330,14 +378,14 @@ beach:
 }
 
 /**
-* gst_tag_list_new_from_id3v1:
-* @data: 128 bytes of data containing the ID3v1 tag
-*
-* Parses the data containing an ID3v1 tag and returns a #GstTagList from the
-* parsed data.
-*
-* Returns: A new tag list or NULL if the data was not an ID3v1 tag.
-*/
+ * gst_tag_list_new_from_id3v1:
+ * @data: 128 bytes of data containing the ID3v1 tag
+ *
+ * Parses the data containing an ID3v1 tag and returns a #GstTagList from the
+ * parsed data.
+ *
+ * Returns: A new tag list or NULL if the data was not an ID3v1 tag.
+ */
 GstTagList *
 gst_tag_list_new_from_id3v1 (const guint8 * data)
 {
