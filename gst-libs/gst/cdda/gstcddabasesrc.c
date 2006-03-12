@@ -44,6 +44,32 @@
  * Provides a base class for CDDA sources, which handles things like seeking,
  * querying, discid calculation, tags, and buffer timestamping.
  * </para>
+ * <title>Using GstCddaBaseSrc-based elements in applications</title>
+ * <para>
+ * GstCddaBaseSrc registers two #GstFormat<!-- -->s of its own, namely
+ * the "track" format and the "sector" format. Applications will usually
+ * only find the "track" format interesting. You can retrieve that #GstFormat
+ * for use in seek events or queries with gst_format_get_by_nick("track").
+ * </para>
+ * <para>
+ * In order to query the number of tracks, for example, an application would
+ * set the CDDA source element to READY or PAUSED state and then query the
+ * the number of tracks via gst_element_query_duration() using the track
+ * format acquired above. Applications can query the currently playing track
+ * in the same way.
+ * </para>
+ * <para>
+ * Alternatively, applications may retrieve the currently playing track and
+ * the total number of tracks from the taglist that will posted on the bus
+ * whenever the CD is opened or the currently playing track changes. The
+ * taglist will contain GST_TAG_TRACK_NUMBER and GST_TAG_TRACK_COUNT tags.
+ * </para>
+ * <para>
+ * Applications playing back CD audio using playbin and cdda://n URIs should
+ * issue a seek command in track format to change between tracks, rather than
+ * setting a new cdda://n+1 URI on playbin (as setting a new URI on playbin
+ * involves closing and re-opening the CD device, which is much much slower).
+ * </para>
  * </refsect2>
  */
 

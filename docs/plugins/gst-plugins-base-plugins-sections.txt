@@ -92,6 +92,14 @@ PINK_RANDOM_SHIFT
 </SECTION>
 
 <SECTION>
+<FILE>element-cdparanoiasrc</FILE>
+<TITLE>cdparanoiasrc</TITLE>
+GstCdParanoiaSrc
+<SUBSECTION Standard>
+GstCdParanoiaSrcClass
+</SECTION>
+
+<SECTION>
 <FILE>element-clockoverlay</FILE>
 <TITLE>clockoverlay</TITLE>
 GstClockOverlay

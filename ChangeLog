@@ -1,5 +1,15 @@
 2006-03-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	  Add cdparanoiasrc to docs.
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	  More GstCddaBaseSrc docs.
+
+2006-03-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/tag/gstid3tag.c: (gst_tag_from_id3_user_tag):
 	* gst-libs/gst/tag/tag.h:

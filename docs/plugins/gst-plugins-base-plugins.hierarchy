@@ -22,6 +22,8 @@ GObject
       GstBaseSrc
         GstAudioTestSrc
         GstPushSrc
+          GstCddaBaseSrc
+            GstCdParanoiaSrc
           GstTCPClientSrc
           GstTCPServerSrc
           GstVideoTestSrc
