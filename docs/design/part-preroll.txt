@@ -14,7 +14,8 @@ wait to render the buffers or in the EOS case, wait to post the EOS
 message.
 
 Several things can happen that require the preroll lock to be unlocked. This
-include state changes or flush events.
+include state changes or flush events. The prerolling is implemented in
+sinks (see part-element-sink.txt)
 
 
 Committing the state

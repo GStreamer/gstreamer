@@ -1,3 +1,19 @@
+2006-03-13  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/draft-klass.txt:
+	* docs/design/part-clocks.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-gstbin.txt:
+	* docs/design/part-gstpipeline.txt:
+	* docs/design/part-messages.txt:
+	* docs/design/part-negotiation.txt:
+	* docs/design/part-overview.txt:
+	* docs/design/part-preroll.txt:
+	* docs/design/part-seeking.txt:
+	* docs/design/part-states.txt:
+	* docs/design/part-streams.txt:
+	Documentation updates.
+
 2006-03-12  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/gsttaglist.c: Fix rubbish docs that are encouraging

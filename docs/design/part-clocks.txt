@@ -52,7 +52,7 @@ is for the following reasons:
 
  - demuxers are easier if they can just copy the timestamps as encoded in
    the file. The initial NEWSEGMENT event would contain the lowest timestamp in
-   the stream which makes the stream time start from 0.
+   the stream which makes the buffer stream time start from 0.
  - pipelines requiring retimestamping of buffers can efficiently adjust
    the timestamp in the NEWSEGMENT events and have all buffers retimestamped
    automatically.

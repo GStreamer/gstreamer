@@ -59,11 +59,7 @@ part-states.txt.
 The application can retrieve the external GstBus and integrate it in the
 mainloop or it can just _pop() messages off in its own thread.
 
-When a bin goes from READY into NULL state, it will set its bus to flushing, 
-ie. the bus will drop all existing and new messages on the bus. This is 
-necessary because bus messages hold references to the bin or its elements, 
-so there are circular references that need to be broken if one ever wants 
-to be able to destroy the bin properly. 
+When a bin goes to READY it will clear all cached messages.
 
 
 EOS
@@ -83,11 +79,15 @@ to PLAYING again.
 SEGMENT_START/DONE
 ------------------
 
-* not implemented.
-
 A bin collects SEGMENT_START messages but does not post them to the application.
 It counts the number of SEGMENT_START messages and posts a SEGMENT_STOP message
 to the application when an equal number of SEGMENT_STOP messages where received.
+
+The cached SEGMENT_START/STOP messages are cleared when going to READY.
+
+
+DURATION
+--------
 
 
 Subclassing
@@ -96,4 +96,7 @@ Subclassing
 Subclasses of GstBin are free to implement their own add/remove implementations.
 It is a good idea to update the GList of children so that the _iterate() functions
 can still be used if the custom bin allows acces to its children.
+
+Any bin subclass can also implement a custom message handler by overriding the
+default message handler.
 

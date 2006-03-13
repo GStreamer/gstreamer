@@ -28,7 +28,11 @@ Segment seeking will not emit an EOS at the end of the range but will
 post a SEGMENT_DONE message on the bus. This message is posted by the
 earliest element in the pipeline, typically a demuxer. After receiving
 the message, the application can reconnect the pipeline or issue other
-seek events in the pipeline.
+seek events in the pipeline. Since the message is posted as early as
+possible in the pipeline, the application has some time to issue a new
+seek to make the transition seemless. Typically the allowed delay is
+defined by the buffer sizes of the sinks as well as the size of any 
+queues in the pipeline.
 
 The seek can also  change the playback speed of the configured segment.
 A speed of 1.0 is normal speed, 2.0 is double speed. Negative values
@@ -59,6 +63,10 @@ seeking without FLUSH
 
 This seek type is typically performed after issuing segment seeks to finish
 the playback of the pipeline.
+
+Performing a non-flushing seek in a PAUSED pipeline blocks until the pipeline
+is set to playing again since all data passing is blocked in the prerolled
+sinks.
 
 
 segment seeking with FLUSH

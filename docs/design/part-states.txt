@@ -65,15 +65,17 @@ the following state changes are possible:
      and the base time. It stores this information to continue playback when
      going back to the PLAYING state.
    - sinks unblock any clock wait calls.
-   - sinks return ASYNC from this state change and complete the state change
-     when they receive a buffer or an EOS event.
+   - when a sink did not have a pending buffer to play, it returns ASYNC from 
+     this state change and complete the state change when they receive a new buffer
+     or an EOS event.
    - any queued EOS messages are removed since they will be reposted when going
-     back to the PLAYING state.
+     back to the PLAYING state. The EOS messages are queued in GstBins.
    - live sources stop generating data and return NO_PREROLL.
 
  PAUSED -> READY
    - sinks unblock any waits in the preroll.
    - elements unblock any waits on devices
+   - chain or get_range functions return WRONG_STATE.
    - the element pads are deactivated so that streaming becomes impossible and
      all streaming threads are stopped. 
  
@@ -125,7 +127,7 @@ The _set_state() function can return 3 possible values:
   GST_STATE_NO_PREROLL: The state change is completed successfully but the element
                      will not be able to produce data in the PAUSED state.
 
-In the case of an async state change, it is possible to proceed to the next
+In the case of an ASYNC state change, it is possible to proceed to the next
 state before the current state change completed, however, the element will only
 get to this next state before completing the previous ASYNC state change. 
 After receiving an ASYNC return value, you can use _element_get_state() to poll 
@@ -204,6 +206,8 @@ ASYNC, the function returns ASYNC as well.
 If after calling the state function on all children, one of the children returned
 NO_PREROLL, the function returns NO_PREROLL as well. 
 
+If both NO_PREROLL and ASYNC children are present, NO_PREROLL is returned.
+
 The current state of the bin can be retrieved with _get_state(). 
 
 If the bin is performing an ASYNC state change, it will automatically update its
@@ -246,7 +250,8 @@ Bin:
   A->B: some elements ASYNC
     - no commit state
     - listen for commit messages on bus
-    - for each commit message, poll elements
+    - for each commit message, poll elements, this happens in another
+      thread.
     - if no ASYNC elements, commit state, continue state change 
       to STATE_PENDING
 
@@ -331,7 +336,7 @@ Locking overview (element)
  - STATE_LOCK is taken in set_state
  - change state is called and returns ASYNC
  - ASYNC returned to the caller.
- - element takes STATE_LOCK in streaming thread.
+ - element takes LOCK in streaming thread.
  - element calls commit_state in streaming thread.
  - commit state calls change_state to next state change.
 

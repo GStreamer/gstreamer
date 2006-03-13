@@ -41,7 +41,7 @@ Introduction
  vorbisdec element decodes the compressed data and sends it to the alsasink
  element. The alsasink element sends the samples to the audio card for playback.
 
- Downstream and upstream are the term used to describe the direction in the
+ Downstream and upstream are the terms used to describe the direction in the
  Pipeline. From source to sink is called "downstream" and "upstream" is 
  from sink to source.
 
@@ -53,7 +53,7 @@ Introduction
  level functions on the pipeline object such as PLAY/PAUSE/STOP.
 
  The application also receives messages and notifications from the pipeline such
- as metadata, warning or error messages.
+ as metadata, warning, error and EOS messages.
  
  If the application needs more control over the graph it is possible to directly
  access the elements and pads in the pipeline.
@@ -102,8 +102,8 @@ Elements
 
  An element state change to PAUSED will activate the pads of the element. First the
  source pads are activated, then the sinkpads. When the pads are activated, the
- pad activate function is called. Some pads will start a thread or some other
- mechanism to start producing or consuming data.
+ pad activate function is called. Some pads will start a thread (GstTask) or some 
+ other mechanism to start producing or consuming data.
 
  The PAUSED state is special as it is used to preroll data in the pipeline. The purpose
  is to fill all connected elements in the pipeline with data so that the subsequent
@@ -125,7 +125,7 @@ Elements
   - demuxer elements, these elements parse a stream and produce several output streams.
   - mixer/muxer elements, combine several input streams into one output stream.
  
- Other categories of elements can be constructed.
+ Other categories of elements can be constructed (see part-klass.txt).
 
 
 Bins
@@ -158,8 +158,9 @@ Pipeline
  A pipeline is a special bin subclass that provides the following features to its 
  children:
 
-   - Select and manage a clock
-   - Provide means for elements to comunicate with the application by the Bus.
+   - Select and manage a clock.
+   - Manage stream time based on the selected clock.
+   - Provide means for elements to comunicate with the application by the GstBus.
    - Manage the global state of the elements such as Errors and end-of-stream.
  
  Normally the application creates one pipeline that will manage all the elements
@@ -241,6 +242,8 @@ Dataflow and events
 
  the events are used to denote special conditions in the dataflow such as EOS or 
  to inform plugins of special events such as flushing or seeking.
+
+ Some events must be serialized with the buffer flow, others don't.
 
 
 Pipeline construction
@@ -396,7 +399,7 @@ Pipeline EOS
  finished. When all sinks have reported EOS, the pipeline forwards the EOS message
  to the application. 
 
- When in EOS, the pipeline remains in the playing state, if is the application
+ When in EOS, the pipeline remains in the playing state, it is the applications
  responsability to PAUSE or READY the pipeline. The application can also issue
  a seek, for example.
 
@@ -428,13 +431,13 @@ Pipeline READY
                         WRONG_STATE return value to the peer element. The sinkpad is
 			deactivated and becomes unusable for sending more data. 
    mp3dec to READY:     the pads are deactivated and the state change completes when
-                        mp3dec leaves its _chain() function.
+                        mp3dec leaves its _chain() function. 
    filesrc to READY:    the pads are deactivated and the thread is paused.
 
  The upstream elements finish their chain() function because the downstream element
- returned an error code from the _push() functions. These error codes are eventually
- returned to the element that started the streaming thread (filesrc), which pauses
- the thread and completes the state change.
+ returned an error code (WRONG_STATE) from the _push() functions. These error codes 
+ are eventually returned to the element that started the streaming thread (filesrc),
+ which pauses the thread and completes the state change.
  
  This sequence of events ensure that all elements are unblocked and all streaming
  threads stopped.

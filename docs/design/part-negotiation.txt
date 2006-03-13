@@ -24,6 +24,8 @@ The basics of negotiation are as follows:
    new format before processing the buffer data. If the data type on
    the buffer is not acceptable, the element should refuse the buffer by 
    returning an appropriate return value from the chain function.
+   The core will automatically call the set_caps function for this purpose
+   when it is installed on the sink or source pad.
 
  - When requesting a buffer from a bufferpool, the prefered type should
    be passed to the buffer allocation function. After receiving a buffer

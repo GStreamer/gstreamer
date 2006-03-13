@@ -25,14 +25,16 @@ GstBin, the pipeline performs the following actions during a state change:
     - reset the stream time to 0
 
  - PAUSED -> PLAYING:
-    - Select and set a clock.
+    - Select and a clock.
     - calculate base time using the stream time.
+    - set clock and base time on all elements before performing the
+      state change.
 
  - PAUSED -> PLAYING:
     - calculate the stream time when the pipeline was stopped.
 
  - READY -> NULL:
-    - set the bus to flushing
+    - set the bus to flushing (when auto-flushing is enabled)
 
 
 Clock selection
@@ -44,14 +46,20 @@ pipeline must select a clock.
 The default clock selection algorithm works as follows:
 
  - If the application selected a clock, use that clock. (see below)
- - use clock of source elements (*)
- - use clock of other element, starting from the sinks going upstream. 
-   (+)
- - use GstSystemClock.
 
-(*) currently not implemented.
-(+) traversing the graph upstream to find the best clock is not implemented,
-    currently the first element found that provides a clock is used.
+ - Use the clock of most upstream element that can provide a clock. This 
+   selection is performed by iterating the element starting from the 
+   sinks going upstream. 
+
+    * since this selection procedure happens in the PAUSED->PLAYING
+      state change, all the sinks are prerolled and we can thus be sure
+      that each sink is linked to some upstream element.
+    * in the case of a live pipeline (NO_PREROLL), the sink will not
+      be prerolled and the selection process will select the clock of
+      a more upstream element.
+      
+ - use GstSystemClock, this only happens when no element provides a
+   clock.
 
 The application can influence this clock selection with two methods:
 gst_pipeline_use_clock() and gst_pipeline_auto_clock(). 
@@ -64,6 +72,7 @@ possible.
 The _auto_clock() method removes the fixed clock and reactivates the auto-
 matic clock selection algorithm described above.
 
+
 Seeking
 -------
 
@@ -73,7 +82,7 @@ the pipeline performs the following actions:
  - record the current state of the pipeline.
  - set the pipeline to paused if a FLUSHING seek is requested
  - send the seek event to all sinks
- - when a FLUSH seek is done, the stream_time is set 0 again.
+ - when a FLUSH seek was performed successfully, the stream_time is set 0 again.
  - restore old state of the pipeline.
 
 

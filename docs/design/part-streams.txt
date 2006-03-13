@@ -33,15 +33,23 @@ Typical stream
   +--+ +-++-+     +-+ +---+
 
   1) NEW_SEGMENT, rate, start/stop, time
-     - marks valid buffer timestamp range
-     - marks stream_time of buffers in NEW_SEGMENT
-     - marks playback rate
+     - marks valid buffer timestamp range (start, stop)
+     - marks stream_time of buffers (time)
+     - marks playback rate (rate)
 
   2) N buffers
      - displayable buffers are between start/stop of the NEW_SEGMENT
+
      - display_time: (B.timestamp - NS.start) * NS.abs_rate
+        * used to calculate stream_time and sync_time
+
      - stream_time:  display_time + NS.time
-     - sync_time:    display_time + base_time 
+        * current position in stream between 0 and duration
+
+     - sync_time:    display_time + NS.accum + base_time 
+        * used to synchronize against the clock.
 
   3) EOS
      - marks the end of data, nothing is to be expected after EOS
+
+
