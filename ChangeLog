@@ -1,3 +1,8 @@
+2006-03-13  Julien MOUTTE  <julien@moutte.net>
+
+	* docs/plugins/gst-plugins-bad-plugins-decl-list.txt:
+	* sys/v4l2/Makefile.am: Fix build of v4l2 (sigh)
+
 2006-03-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* Makefile.am:
