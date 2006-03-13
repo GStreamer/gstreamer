@@ -1,3 +1,11 @@
+2006-03-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mikhail Zabaluev  <mhz altlinux org>
+
+	* autogen.sh:
+	  Don't check for file that only exists in CVS but isn't
+	  disted (#334417)
+
 2006-03-13  Julien MOUTTE  <julien@moutte.net>
 
 	* docs/plugins/gst-plugins-bad-plugins-decl-list.txt:

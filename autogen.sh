@@ -3,7 +3,7 @@
 
 DIE=0
 package=gst-plugins
-srcfile=gst/librfb/gstrfbsrc.c
+srcfile=gst/speed/gstspeed.c
 
 # a quick cvs co to ease the transition
 if test ! -d common;
