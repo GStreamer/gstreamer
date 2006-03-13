@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-09 19:28+0100\n"
+"POT-Creation-Date: 2006-03-13 17:54+0100\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -191,8 +191,8 @@ msgstr ""
 msgid "MusicBrainz artist sortname"
 msgstr ""
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1362
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1395
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1388
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1421
 msgid "This CD has no audio tracks"
 msgstr ""
 

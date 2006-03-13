@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-09 19:28+0100\n"
+"POT-Creation-Date: 2006-03-13 17:54+0100\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -192,8 +192,8 @@ msgstr ""
 msgid "MusicBrainz artist sortname"
 msgstr ""
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1362
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1395
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1388
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1421
 msgid "This CD has no audio tracks"
 msgstr ""
 
