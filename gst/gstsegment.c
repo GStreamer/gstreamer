@@ -64,7 +64,7 @@
  * If the cur_type was different from GST_SEEK_TYPE_NONE, playback continues from
  * the last_pos position, possibly with updated flags or rate.
  *
- * For elements that want to us #GstSegment to track the playback region, use
+ * For elements that want to use #GstSegment to track the playback region, use
  * gst_segment_set_newsegment() to update the segment fields with the information from
  * the newsegment event. The gst_segment_clip() method can be used to check and clip
  * the media data to the segment boundaries.
@@ -77,7 +77,7 @@
  * gst_segment_to_stream_time() can be used to convert a timestamp and the segment
  * info to stream time (which is always between 0 and the duration of the stream).
  *
- * Last reviewed on 2005-12-12 (0.10.0)
+ * Last reviewed on 2006-03-12 (0.10.5)
  */
 
 static GstSegment *
@@ -174,7 +174,7 @@ gst_segment_init (GstSegment * segment, GstFormat format)
  * used by elements that perform seeking and know the total duration of the
  * segment.
  * 
- * This field should be set to allow seeking request relative to the
+ * This field should be set to allow seeking requests relative to the
  * duration.
  */
 void
@@ -198,6 +198,9 @@ gst_segment_set_duration (GstSegment * segment, GstFormat format,
  * @position: the position 
  *
  * Set the last observed stop position in the segment to @position.
+ *
+ * This field should be set to allow seeking requests relative to the
+ * current playing position.
  */
 void
 gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
@@ -223,8 +226,7 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
  * @cur: the seek start value
  * @stop_type: the seek method
  * @stop: the seek stop value
- * @update: boolean holding whether an update the current segment is
- *    needed.
+ * @update: boolean holding whether start or stop were updated.
  *
  * Update the segment structure with the field values of a seek event.
  *
@@ -450,11 +452,12 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
  * @position: the position in the segment
  *
  * Translate @position to the total running time using the currently configured 
- * segment.
+ * and previously accumulated segments.
  *
  * This function is typically used by elements that need to synchronize to the
  * global clock in a pipeline. The runnning time is a constantly increasing value
- * starting from 0.
+ * starting from 0. When gst_segment_init() is called, this value will reset to
+ * 0.
  *
  * Returns: the position as the total running time.
  */
@@ -491,8 +494,16 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
  * Clip the given @start and @stop values to the segment boundaries given
  * in @segment.
  *
- * Returns: TRUE if the given @start and @stop times fall partially in 
- *     @segment, FALSE if the values are completely outside of the segment.
+ * If the function returns FALSE, @start and @stop are known to fall
+ * outside of @segment and @clip_start and @clip_stop are not updated.
+ *
+ * When the function returns TRUE, @clip_start and @clip_stop will be
+ * updated. If @clip_start or @clip_stop are different from @start or @stop
+ * respectively, the region fell partially in the segment.
+ *
+ * Returns: TRUE if the given @start and @stop times fall partially or 
+ *     completely in @segment, FALSE if the values are completely outside 
+ *     of the segment.
  */
 gboolean
 gst_segment_clip (GstSegment * segment, GstFormat format, gint64 start,

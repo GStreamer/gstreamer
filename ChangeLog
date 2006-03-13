@@ -1,5 +1,33 @@
 2006-03-13  Wim Taymans  <wim@fluendo.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbin.c: (bin_bus_handler), (gst_bin_handle_message_func):
+	* gst/gstbin.h:
+	* gst/gstbus.c: (gst_bus_class_init):
+	* gst/gstbus.h:
+	* gst/gstclock.c:
+	* gst/gstelement.c: (gst_element_set_locked_state):
+	* gst/gstsegment.c:
+	Documentation updates.
+
+	* gst/gstpipeline.c: (gst_pipeline_get_type),
+	(gst_pipeline_class_init), (gst_pipeline_init),
+	(gst_pipeline_dispose), (gst_pipeline_set_property),
+	(gst_pipeline_get_property), (do_pipeline_seek),
+	(gst_pipeline_send_event), (gst_pipeline_change_state),
+	(gst_pipeline_provide_clock_func), (gst_pipeline_set_delay),
+	(gst_pipeline_get_delay):
+	* gst/gstpipeline.h:
+	Added methods for setting the delay.
+	API: gst_pipeline_set_delay
+	API: gst_pipeline_get_delay
+	Add pipeline debug category
+	Various cleanups.
+	Updated docs.
+	Don't reset stream time when seek failed.
+
+2006-03-13  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/draft-klass.txt:
 	* docs/design/part-clocks.txt:
 	* docs/design/part-events.txt:

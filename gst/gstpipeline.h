@@ -72,6 +72,7 @@ struct _GstPipeline {
 
   /*< private >*/
   GstPipelinePrivate *priv;
+
   gpointer _gst_reserved[GST_PADDING-1];
 };
 
@@ -94,6 +95,9 @@ void            gst_pipeline_use_clock          (GstPipeline *pipeline, GstClock
 gboolean        gst_pipeline_set_clock          (GstPipeline *pipeline, GstClock *clock);
 GstClock*       gst_pipeline_get_clock          (GstPipeline *pipeline);
 void            gst_pipeline_auto_clock         (GstPipeline *pipeline);
+
+void            gst_pipeline_set_delay          (GstPipeline *pipeline, GstClockTime delay);
+GstClockTime    gst_pipeline_get_delay          (GstPipeline *pipeline);
 
 void            gst_pipeline_set_auto_flush_bus (GstPipeline *pipeline, gboolean auto_flush);
 gboolean        gst_pipeline_get_auto_flush_bus (GstPipeline *pipeline);

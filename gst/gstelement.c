@@ -25,9 +25,9 @@
  * @short_description: Abstract base class for all pipeline elements
  * @see_also: #GstElementFactory, #GstPad
  *
- * GstElement is the base class needed to construct an element that can be
- * used in a GStreamer pipeline.  As such, it is not a functional entity, and
- * cannot do anything when placed in a pipeline.
+ * GstElement is the abstract base class needed to construct an element that 
+ * can be used in a GStreamer pipeline. Please refer to the plugin writers
+ * guide for more information on creating #GstElement subclasses.
  *
  * The name of a #GstElement can be get with gst_element_get_name() and set with
  * gst_element_set_name().  For speed, GST_ELEMENT_NAME() can be used in the
@@ -73,7 +73,7 @@
  * toplevel #GstPipeline so the clock functions are only to be used in very
  * specific situations.
  *
- * Last reviewed on 2005-11-23 (0.9.5)
+ * Last reviewed on 2006-03-12 (0.10.5)
  */
 
 #include "gst_private.h"

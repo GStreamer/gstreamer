@@ -98,6 +98,9 @@ typedef GstBusSyncReply (*GstBusSyncHandler) 	(GstBus * bus, GstMessage * messag
  * The message passed to the function will be unreffed after execution of this
  * function so it should not be freed in the function.
  *
+ * Note that this function is used as a GSourceFunc which means that returning
+ * FALSE will remove the GSource from the mainloop.
+ *
  * Returns: %FALSE if the event source should be removed.
  */
 typedef gboolean 	(*GstBusFunc)	 	(GstBus * bus, GstMessage * message, gpointer data);

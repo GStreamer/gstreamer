@@ -79,21 +79,58 @@
  *     a SEGMENT_START have posted a SEGMENT_DONE.</para></listitem>
  *   </varlistentry>
  *   <varlistentry>
+ *     <term>GST_MESSAGE_DURATION</term>
+ *     <listitem><para> Is posted by an element that detected a change
+ *     in the stream duration. The default bin behaviour is to clear any
+ *     cached duration values so that the next duration query will perform
+ *     a full duration recalculation. The duration change is posted to the
+ *     application so that it can refetch the new duration with a duration
+ *     query.
+ *     </para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>GST_MESSAGE_CLOCK_LOST</term>
+ *     <listitem><para> This message is posted by an element when it
+ *     can no longer provide a clock. The default bin behaviour is to
+ *     check if the lost clock was the one provided by the bin. If so and
+ *     the bin is currently in the PLAYING state, the message is forwarded to
+ *     the bin parent.
+ *     This message is also generated when a clock provider is removed from
+ *     the bin. If this message is received by the application, it should
+ *     PAUSE the pipeline and set it back to PLAYING to force a new clock
+ *     distribution.
+ *     </para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>GST_MESSAGE_CLOCK_PROVIDE</term>
+ *     <listitem><para> This message is generated when an element
+ *     can provide a clock. This mostly happens when a new clock 
+ *     provider is added to the bin. The default behaviour of the bin is to 
+ *     mark the currently selected clock as dirty, which will perform a clock
+ *     recalculation the next time the bin is asked to provide a clock.
+ *     This message is never sent tot the application but is forwarded to
+ *     the parent of the bin.
+ *     </para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
  *     <term>OTHERS</term>
  *     <listitem><para> posted upwards.</para></listitem>
  *   </varlistentry>
  * </variablelist>
+ *
  *
  * A #GstBin implements the following default behaviour for answering to a
  * #GstQuery:
  * <variablelist>
  *   <varlistentry>
  *     <term>GST_QUERY_DURATION</term>
- *     <listitem><para>If the query has been asked before with the same format,
+ *     <listitem><para>If the query has been asked before with the same format
+ *     and the bin is a toplevel bin (ie. has no parent),
  *     use the cached previous value. If no previous value was cached, the
  *     query is sent to all sink elements in the bin and the MAXIMUM of all
- *     values is returned and cached. If no sinks are available in the bin, the
- *     query fails.</para></listitem>
+ *     values is returned. If the bin is a toplevel bin the value is cached. 
+ *     If no sinks are available in the bin, the query fails.
+ *     </para></listitem>
  *   </varlistentry>
  *   <varlistentry>
  *     <term>OTHERS</term>
@@ -110,7 +147,7 @@
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2005-12-16 (0.10.0)
+ * Last reviewed on 2006-03-12 (0.10.5)
  */
 
 #include "gst_private.h"
@@ -1918,6 +1955,21 @@ gst_bin_recalc_func (GstBin * bin, gpointer data)
   gst_object_unref (bin);
 }
 
+static GstBusSyncReply
+bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
+{
+
+  GstBinClass *bclass;
+
+  bclass = GST_BIN_GET_CLASS (bin);
+  if (bclass->handle_message)
+    bclass->handle_message (bin, message);
+  else
+    gst_message_unref (message);
+
+  return GST_BUS_DROP;
+}
+
 /* handle child messages:
  *
  * GST_MESSAGE_EOS: This message is only posted by sinks
@@ -1941,23 +1993,26 @@ gst_bin_recalc_func (GstBin * bin, gpointer data)
  *     changes its duration marks our cached values invalid.
  *     This message is also posted upwards.
  *
+ * GST_MESSAGE_CLOCK_LOST: This message is posted by an element when it
+ *     can no longer provide a clock. The default bin behaviour is to
+ *     check if the lost clock was the one provided by the bin. If so and
+ *     we are currently in the PLAYING state, we forward the message to 
+ *     our parent.
+ *     This message is also generated when we remove a clock provider from
+ *     a bin. If this message is received by the application, it should
+ *     PAUSE the pipeline and set it back to PLAYING to force a new clock
+ *     distribution.
+ *
+ * GST_MESSAGE_CLOCK_PROVIDE: This message is generated when an element
+ *     can provide a clock. This mostly happens when we add a new clock
+ *     provider to the bin. The default behaviour of the bin is to mark the
+ *     currently selected clock as dirty, which will perform a clock
+ *     recalculation the next time we are asked to provide a clock.
+ *     This message is never sent tot the application but is forwarded to
+ *     the parent.
+ *
  * OTHER: post upwards.
  */
-static GstBusSyncReply
-bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
-{
-
-  GstBinClass *bclass;
-
-  bclass = GST_BIN_GET_CLASS (bin);
-  if (bclass->handle_message)
-    bclass->handle_message (bin, message);
-  else
-    gst_message_unref (message);
-
-  return GST_BUS_DROP;
-}
-
 static void
 gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 {

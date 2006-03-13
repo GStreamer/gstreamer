@@ -24,7 +24,7 @@
 /**
  * SECTION:gstclock
  * @short_description: Abstract class for global clocks
- * @see_also: #GstSystemClock
+ * @see_also: #GstSystemClock, #GstPipeline
  *
  * GStreamer uses a global clock to synchronize the plugins in a pipeline.
  * Different clock implementations are possible by implementing this abstract
@@ -35,10 +35,11 @@
  * clock implementation but time is always expressed in nanoseconds. Since the
  * baseline of the clock is undefined, the clock time returned is not
  * meaningful in itself, what matters are the deltas between two clock times.
+ * The time returned by a clock is called the absolute time.
  *
  * The pipeline uses the clock to calculate the stream time. Usually all
  * renderers synchronize to the global clock using the buffer timestamps, the
- * newsegment events and the element's base time.
+ * newsegment events and the element's base time, see #GstPipeline.
  *
  * A clock implementation can support periodic and single shot clock
  * notifications both synchronous and asynchronous.

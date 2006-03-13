@@ -24,23 +24,59 @@
  * SECTION:gstpipeline
  * @short_description: Top-level bin with clocking and bus management
                        functionality.
- * @see_also: #GstBin
+ * @see_also: #GstElement, #GstBin, #GstClock, #GstBus
  *
- * In almost all cases, you'll want to use a GstPipeline when creating a filter
- * graph.  The GstPipeline will manage the selection and distribution of a
- * global
- * clock as well as provide a GstBus to the application.
- *
- * The pipeline will also use the selected clock to calculate the stream time
- * of the pipeline.
- *
- * When sending a seek event to a GstPipeline, it will make sure that the
- * pipeline is properly PAUSED and resumed as well as update the new stream
- * time after the seek.
+ * A #GstPipeline is a special #GstBin used as the toplevel container for
+ * the filter graph. The #GstPipeline will manage the selection and 
+ * distribution of a global #GstClock as well as provide a #GstBus to the 
+ * application. It will also implement a default behavour for managing
+ * seek events (see gst_element_seek()).
  *
  * gst_pipeline_new() is used to create a pipeline. when you are done with
  * the pipeline, use gst_object_unref() to free its resources including all
  * added #GstElement objects (if not otherwise referenced).
+ *
+ * Elements are added and removed from the pipeline using the #GstBin 
+ * methods like gst_bin_add() and gst_bin_remove() (see #GstBin).
+ *
+ * Before changing the state of the #GstPipeline (see #GstElement) a #GstBus
+ * can be retrieved with gst_pipeline_get_bus(). This bus can then be
+ * used to receive #GstMessage from the elements in the pipeline.
+ *
+ * By default, a #GstPipeline will automatically flush the pending #GstBus
+ * messages when going to the NULL state to ensure that no circular
+ * references exist when no messages are read from the #GstBus. This
+ * behaviour can be changed with gst_pipeline_set_auto_flush_bus().
+ *
+ * When the #GstPipeline performs the PAUSED to PLAYING state change it will
+ * select a clock for the elements. The clock selection algorithm will by
+ * default select a clock provided by an element that is most upstream 
+ * (closest to the source). For live pipelines (ones that return 
+ * #GST_STATE_CHANGE_NO_PREROLL from the gst_element_set_state() call) this
+ * will select the clock provided by the live source. For normal pipelines
+ * this will select a clock provided by the sinks (most likely the audio
+ * sink). If no element provides a clock, a default #GstSystemClock is used.
+ *
+ * The clock selection can be controlled with the gst_pipeline_use_clock()
+ * method, which will enforce a given clock on the pipeline. With
+ * gst_pipeline_auto_clock() the default clock selection algorithm can be 
+ * restored.
+ *
+ * A #GstPipeline maintains a stream time for the elements. The stream
+ * time is defined as the difference between the current clock time and
+ * the base time. When the pipeline goes to READY or a flushing seek is
+ * performed on it, the stream time is reset to 0. When the pipeline is
+ * set from PLAYING to PAUSED, the current clock time is sampled and used to 
+ * configure the base time for the elements when the pipeline is set
+ * to PLAYING again. This default behaviour can be changed with the
+ * gst_pipeline_set_new_stream_time() method. 
+ * 
+ * When sending a flushing seek event to a GstPipeline (see 
+ * gst_element_seek()), it will make sure that the pipeline is properly 
+ * PAUSED and resumed as well as set the new stream time to 0 when the
+ * seek succeeded.
+ *
+ * Last reviewed on 2006-03-12 (0.10.5)
  */
 
 #include "gst_private.h"
@@ -50,6 +86,9 @@
 #include "gstpipeline.h"
 #include "gstinfo.h"
 #include "gstsystemclock.h"
+
+GST_DEBUG_CATEGORY_STATIC (pipeline_debug);
+#define GST_CAT_DEFAULT pipeline_debug
 
 static GstElementDetails gst_pipeline_details =
 GST_ELEMENT_DETAILS ("Pipeline object",
@@ -80,6 +119,7 @@ enum
 
 struct _GstPipelinePrivate
 {
+  /* with LOCK */
   gboolean auto_flush_bus;
 };
 
@@ -110,7 +150,7 @@ gst_pipeline_get_type (void)
 {
   static GType pipeline_type = 0;
 
-  if (!pipeline_type) {
+  if (G_UNLIKELY (pipeline_type == 0)) {
     static const GTypeInfo pipeline_info = {
       sizeof (GstPipelineClass),
       gst_pipeline_base_init,
@@ -126,6 +166,9 @@ gst_pipeline_get_type (void)
 
     pipeline_type =
         g_type_register_static (GST_TYPE_BIN, "GstPipeline", &pipeline_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (pipeline_debug, "pipeline", GST_DEBUG_BOLD,
+        "debugging info for the 'pipeline' container element");
   }
   return pipeline_type;
 }
@@ -152,21 +195,28 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pipeline_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pipeline_get_property);
 
+  /**
+   * GstPipeline:delay
+   *
+   * The expected delay needed for elements to spin up to the
+   * PLAYING state expressed in nanoseconds.
+   * see gst_pipeline_set_delay() for more information on this option.
+   **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELAY,
       g_param_spec_uint64 ("delay", "Delay",
           "Expected delay needed for elements "
           "to spin up to PLAYING in nanoseconds", 0, G_MAXUINT64, DEFAULT_DELAY,
           G_PARAM_READWRITE));
 
-    /**
-     * GstPipeline:auto-flush-bus:
-     *
-     * Whether or not to automatically flush all messages on the
-     * pipeline's bus when going from READY to NULL state. Please see
-     * gst_pipeline_set_auto_flush_bus() for more information on this option.
-     *
-     * Since: 0.10.4
-     **/
+  /**
+   * GstPipeline:auto-flush-bus:
+   *
+   * Whether or not to automatically flush all messages on the
+   * pipeline's bus when going from READY to NULL state. Please see
+   * gst_pipeline_set_auto_flush_bus() for more information on this option.
+   *
+   * Since: 0.10.4
+   **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_AUTO_FLUSH_BUS,
       g_param_spec_boolean ("auto-flush-bus", "Auto Flush Bus",
           "Whether to automatically flush the pipeline's bus when going "
@@ -189,14 +239,15 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
   GstBus *bus;
 
   pipeline->priv = GST_PIPELINE_GET_PRIVATE (pipeline);
-  pipeline->priv->auto_flush_bus = DEFAULT_AUTO_FLUSH_BUS;
 
+  /* set default property values */
+  pipeline->priv->auto_flush_bus = DEFAULT_AUTO_FLUSH_BUS;
   pipeline->delay = DEFAULT_DELAY;
 
+  /* create and set a default bus */
   bus = gst_bus_new ();
   gst_element_set_bus (GST_ELEMENT_CAST (pipeline), bus);
   GST_DEBUG_OBJECT (pipeline, "set bus %" GST_PTR_FORMAT " on pipeline", bus);
-
   gst_object_unref (bus);
 }
 
@@ -207,6 +258,7 @@ gst_pipeline_dispose (GObject * object)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pipeline, "dispose");
 
+  /* clear and unref any fixed clock */
   gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -221,10 +273,10 @@ gst_pipeline_set_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (pipeline);
   switch (prop_id) {
     case PROP_DELAY:
-      pipeline->delay = g_value_get_uint64 (value);
+      gst_pipeline_set_delay (pipeline, g_value_get_uint64 (value));
       break;
     case PROP_AUTO_FLUSH_BUS:
-      pipeline->priv->auto_flush_bus = g_value_get_boolean (value);
+      gst_pipeline_set_auto_flush_bus (pipeline, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -242,10 +294,10 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (pipeline);
   switch (prop_id) {
     case PROP_DELAY:
-      g_value_set_uint64 (value, pipeline->delay);
+      g_value_set_uint64 (value, gst_pipeline_get_delay (pipeline));
       break;
     case PROP_AUTO_FLUSH_BUS:
-      g_value_set_boolean (value, pipeline->priv->auto_flush_bus);
+      g_value_set_boolean (value, gst_pipeline_get_auto_flush_bus (pipeline));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -254,6 +306,16 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
   GST_OBJECT_UNLOCK (pipeline);
 }
 
+/* default pipeline seeking code:
+ *
+ * If the pipeline is PLAYING and a flushing seek is done, set
+ * the pipeline to PAUSED before doing the seek.
+ *
+ * A flushing seek also resets the stream time to 0 so that when
+ * we go back to PLAYING after the seek, the base_time is recalculated
+ * and redistributed to the elements.
+ *
+ */
 static gboolean
 do_pipeline_seek (GstElement * element, GstEvent * event)
 {
@@ -263,10 +325,12 @@ do_pipeline_seek (GstElement * element, GstEvent * event)
   gboolean was_playing = FALSE;
   gboolean res;
 
+  /* we are only interested in the FLUSH flag of the seek event. */
   gst_event_parse_seek (event, &rate, NULL, &flags, NULL, NULL, NULL, NULL);
 
   flush = flags & GST_SEEK_FLAG_FLUSH;
 
+  /* if flushing seek, get the current state */
   if (flush) {
     GstState state;
 
@@ -276,34 +340,39 @@ do_pipeline_seek (GstElement * element, GstEvent * event)
     was_playing = state == GST_STATE_PLAYING;
 
     if (was_playing) {
+      /* and PAUSE when the pipeline was PLAYING, we don't need
+       * to wait for the state change to complete since we are going
+       * to flush out any preroll sample anyway */
       gst_element_set_state (element, GST_STATE_PAUSED);
     }
   }
 
+  /* let parent class implement the seek behaviour */
   res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 
-  if (flush && res) {
+  /* if flushing seek restore previous state */
+  if (flush) {
     gboolean need_reset;
 
     GST_OBJECT_LOCK (element);
     need_reset = GST_PIPELINE (element)->stream_time != GST_CLOCK_TIME_NONE;
     GST_OBJECT_UNLOCK (element);
 
-    /* need to reset the stream time to 0 after a flushing seek, unless the user
-       explicitly disabled this behavior by setting stream time to NONE */
-    if (need_reset)
+    /* need to reset the stream time to 0 after a successfull flushing seek, 
+     * unless the user explicitly disabled this behavior by setting stream 
+     * time to NONE */
+    if (need_reset && res)
       gst_pipeline_set_new_stream_time (GST_PIPELINE (element), 0);
 
     if (was_playing)
-      /* and continue playing */
+      /* and continue playing, this might return ASYNC in which case the
+       * application can wait for the PREROLL to complete after the seek. 
+       */
       gst_element_set_state (element, GST_STATE_PLAYING);
   }
   return res;
 }
 
-/* sending a seek event on the pipeline pauses the pipeline if it
- * was playing.
- */
 static gboolean
 gst_pipeline_send_event (GstElement * element, GstEvent * event)
 {
@@ -312,9 +381,11 @@ gst_pipeline_send_event (GstElement * element, GstEvent * event)
 
   switch (event_type) {
     case GST_EVENT_SEEK:
+      /* do the default seek handling */
       res = do_pipeline_seek (element, event);
       break;
     default:
+      /* else parent implements the defaults */
       res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
       break;
   }
@@ -375,11 +446,14 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
         GST_OBJECT_UNLOCK (element);
 
         if (new_clock) {
-          /* now distribute the clock (which could be NULL I guess) */
+          /* now distribute the clock (which could be NULL). If some
+           * element refuses the clock, this will return FALSE and
+           * we effectively fail the state change. */
           if (!gst_element_set_clock (element, clock))
             goto invalid_clock;
 
-          /* if we selected a new clock, let the app know about it */
+          /* if we selected and distributed a new clock, let the app 
+           * know about it */
           gst_element_post_message (element,
               gst_message_new_new_clock (GST_OBJECT_CAST (element), clock));
         }
@@ -403,6 +477,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     }
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -417,6 +492,8 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     {
       gboolean need_reset;
 
+      /* only reset the stream time when the application did not
+       * specify a stream time explicitly */
       GST_OBJECT_LOCK (element);
       need_reset = pipeline->stream_time != GST_CLOCK_TIME_NONE;
       GST_OBJECT_UNLOCK (element);
@@ -467,8 +544,11 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
   }
   return result;
 
+  /* ERRORS */
 invalid_clock:
   {
+    /* we generate this error when the selected clock was not
+     * accepted by some element */
     GST_ELEMENT_ERROR (pipeline, CORE, CLOCK,
         (_("Selected clock cannot be used in pipeline.")),
         ("Pipeline cannot operate with selected clock"));
@@ -480,11 +560,11 @@ invalid_clock:
 
 /**
  * gst_pipeline_get_bus:
- * @pipeline: the pipeline
+ * @pipeline: a #GstPipeline
  *
- * Gets the #GstBus of this pipeline.
+ * Gets the #GstBus of @pipeline.
  *
- * Returns: a GstBus
+ * Returns: a #GstBus, unref after usage.
  *
  * MT safe.
  */
@@ -496,11 +576,11 @@ gst_pipeline_get_bus (GstPipeline * pipeline)
 
 /**
  * gst_pipeline_set_new_stream_time:
- * @pipeline: the pipeline
+ * @pipeline: a #GstPipeline
  * @time: the new stream time to set
  *
- * Set the new stream time of the pipeline. The stream time is used to
- * set the base time on the elements (see @gst_element_set_base_time())
+ * Set the new stream time of @pipeline to @time. The stream time is used to
+ * set the base time on the elements (see gst_element_set_base_time())
  * in the PAUSED->PLAYING state transition.
  *
  * Setting @time to #GST_CLOCK_TIME_NONE will disable the pipeline's management
@@ -529,14 +609,18 @@ gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
 
 /**
  * gst_pipeline_get_last_stream_time:
- * @pipeline: the pipeline
+ * @pipeline: a #GstPipeline
  *
- * Gets the last stream time of the pipeline. If the pipeline is PLAYING,
- * the returned time is the stream time used to configure the elements
- * in the PAUSED->PLAYING state. If the pipeline is PAUSED, the returned
- * time is the stream time when the pipeline was paused.
+ * Gets the last stream time of @pipeline. If the pipeline is PLAYING,
+ * the returned time is the stream time used to configure the element's
+ * base time in the PAUSED->PLAYING state. If the pipeline is PAUSED, the 
+ * returned time is the stream time when the pipeline was paused.
  *
- * Returns: a GstClockTime
+ * This function returns #GST_CLOCK_TIME_NONE if the pipeline was
+ * configured to not handle the management of the element's base time 
+ * (see gst_pipeline_set_new_stream_time()).
+ *
+ * Returns: a #GstClockTime.
  *
  * MT safe.
  */
@@ -571,6 +655,7 @@ gst_pipeline_provide_clock_func (GstElement * element)
         clock, clock ? GST_STR_NULL (GST_OBJECT_NAME (clock)) : "-");
   } else {
     GST_OBJECT_UNLOCK (pipeline);
+    /* let the parent bin select a clock */
     clock =
         GST_ELEMENT_CLASS (parent_class)->
         provide_clock (GST_ELEMENT (pipeline));
@@ -590,11 +675,11 @@ gst_pipeline_provide_clock_func (GstElement * element)
 
 /**
  * gst_pipeline_get_clock:
- * @pipeline: the pipeline
+ * @pipeline: a #GstPipeline
  *
- * Gets the current clock used by the pipeline.
+ * Gets the current clock used by @pipeline.
  *
- * Returns: a GstClock
+ * Returns: a #GstClock, unref after usage.
  */
 GstClock *
 gst_pipeline_get_clock (GstPipeline * pipeline)
@@ -607,12 +692,15 @@ gst_pipeline_get_clock (GstPipeline * pipeline)
 
 /**
  * gst_pipeline_use_clock:
- * @pipeline: the pipeline
+ * @pipeline: a #GstPipeline
  * @clock: the clock to use
  *
- * Force the pipeline to use the given clock. The pipeline will
+ * Force @pipeline to use the given @clock. The pipeline will
  * always use the given clock even if new clock providers are added
  * to this pipeline.
+ *
+ * If @clock is NULL all clocking will be disabled which will make
+ * the pipeline run as fast as possible.
  *
  * MT safe.
  */
@@ -634,13 +722,14 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
 
 /**
  * gst_pipeline_set_clock:
- * @pipeline: the pipeline
+ * @pipeline: a #GstPipeline
  * @clock: the clock to set
  *
- * Set the clock for the pipeline. The clock will be distributed
+ * Set the clock for @pipeline. The clock will be distributed
  * to all the elements managed by the pipeline.
  *
- * Returns: TRUE if the clock could be set on the pipeline.
+ * Returns: TRUE if the clock could be set on the pipeline. FALSE if
+ *   some element did not accept the clock.
  *
  * MT safe.
  */
@@ -656,9 +745,14 @@ gst_pipeline_set_clock (GstPipeline * pipeline, GstClock * clock)
 
 /**
  * gst_pipeline_auto_clock:
- * @pipeline: the pipeline
+ * @pipeline: a #GstPipeline
  *
- * Let the pipeline select a clock automatically.
+ * Let @pipeline select a clock automatically. This is the default
+ * behaviour. 
+ *
+ * Use this function if you previous forced a fixed clock with 
+ * gst_pipeline_use_clock() and want to restore the default
+ * pipeline clock selection algorithm.
  *
  * MT safe.
  */
@@ -678,6 +772,59 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
 }
 
 /**
+ * gst_pipeline_set_delay:
+ * @pipeline: a #GstPipeline
+ * @delay: the delay
+ *
+ * Set the expected delay needed for all elements to perform the
+ * PAUSED to PLAYING state change. @delay will be added to the
+ * base time of the elements so that they wait an additional @delay
+ * amount of time before starting to process buffers.
+ *
+ * This option is used for tuning purposes and should normally not be 
+ * used.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.5
+ */
+void
+gst_pipeline_set_delay (GstPipeline * pipeline, GstClockTime delay)
+{
+  g_return_if_fail (GST_IS_PIPELINE (pipeline));
+
+  GST_OBJECT_LOCK (pipeline);
+  pipeline->delay = delay;
+  GST_OBJECT_UNLOCK (pipeline);
+}
+
+/**
+ * gst_pipeline_get_delay:
+ * @pipeline: a #GstPipeline
+ *
+ * Get the configured delay (see gst_pipeline_set_delay()).
+ *
+ * Returns: The configured delay.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.5
+ */
+GstClockTime
+gst_pipeline_get_delay (GstPipeline * pipeline)
+{
+  GstClockTime res;
+
+  g_return_val_if_fail (GST_IS_PIPELINE (pipeline), GST_CLOCK_TIME_NONE);
+
+  GST_OBJECT_LOCK (pipeline);
+  res = pipeline->delay;
+  GST_OBJECT_UNLOCK (pipeline);
+
+  return res;
+}
+
+/**
  * gst_pipeline_set_auto_flush_bus:
  * @pipeline: a #GstPipeline
  * @auto_flush: whether or not to automatically flush the bus when
@@ -685,12 +832,16 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
  *
  * Usually, when a pipeline goes from READY to NULL state, it automatically
  * flushes all pending messages on the bus, which is done for refcounting
- * purposes, to break circular references. This means that applications
- * that update state using (async) bus messages (e.g. do certain things when a
- * pipeline goes from PAUSED to READY) might not get to see messages when the
- * pipeline is shut down, because they might be flushed before they can be
- * dispatched in the main thread. This behaviour can be disabled using this
- * function.
+ * purposes, to break circular references. 
+ *
+ * This means that applications that update state using (async) bus messages 
+ * (e.g. do certain things when a pipeline goes from PAUSED to READY) might 
+ * not get to see messages when the pipeline is shut down, because they might 
+ * be flushed before they can be dispatched in the main thread. This behaviour
+ * can be disabled using this function.
+ *
+ * It is important that all messages on the bus are handled when the 
+ * automatic flushing is disabled else memory leaks will be introduced.
  *
  * MT safe.
  *
@@ -709,6 +860,9 @@ gst_pipeline_set_auto_flush_bus (GstPipeline * pipeline, gboolean auto_flush)
 /**
  * gst_pipeline_get_auto_flush_bus:
  * @pipeline: a #GstPipeline
+ *
+ * Check if @pipeline will automatically flush messages when going to
+ * the NULL state.
  *
  * Returns: whether the pipeline will automatically flush its bus when
  * going from READY to NULL state or not.

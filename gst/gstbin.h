@@ -83,7 +83,7 @@ typedef struct _GstBinClass GstBinClass;
  * @children: the list of children in this bin
  * @children_cookie: updated whenever @children changes
  * @child_bus: internal bus for handling child messages
- * @messages: queued messages
+ * @messages: queued and cached messages
  * @polling: the bin is currently calculating its state
  * @state_dirty: the bin needs to recalculate its state
  * @clock_dirty: the bin needs to select a new clock

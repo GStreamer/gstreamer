@@ -48,7 +48,9 @@
  * bus to handle them.
  * Alternatively the application can register an asynchronous bus function
  * using gst_bus_add_watch_full() or gst_bus_add_watch(). This function will
- * receive messages a short while after they have been posted.
+ * install a #GSource in the default glib main loop and will deliver messages 
+ * a short while after they have been posted. Note that the main loop should 
+ * be running for the asynchronous callbacks.
  *
  * It is also possible to get messages from the bus without any thread
  * marshalling with the gst_bus_set_sync_handler() method. This makes it
@@ -61,7 +63,7 @@
  * Note that a #GstPipeline will set its bus into flushing state when changing
  * from READY to NULL state.
  *
- * Last reviewed on 2005-10-28 (0.9.4)
+ * Last reviewed on 2006-03-12 (0.10.5)
  */
 
 #include <errno.h>
@@ -195,7 +197,8 @@ gst_bus_class_init (GstBusClass * klass)
    * @message: the message that has been posted asynchronously
    *
    * A message has been posted on the bus. This signal is emitted from a
-   * GSource added to the mainloop.
+   * GSource added to the mainloop. this signal will only be emited when
+   * there is a mainloop running.
    */
   gst_bus_signals[ASYNC_MESSAGE] =
       g_signal_new ("message", G_TYPE_FROM_CLASS (klass),
@@ -684,13 +687,13 @@ gst_bus_create_watch (GstBus * bus)
  * @user_data: user data passed to @func.
  * @notify: the function to call when the source is removed.
  *
- * Adds a bus watch to the default main context with the given priority.
- * If the func returns FALSE, the source will be removed.
+ * Adds a bus watch to the default main context with the given @priority.
  *
- * When the func is called, the message belongs to the caller; if you want to
- * keep a copy of it, call gst_message_ref() before leaving the func.
+ * When @func is called, the message belongs to the caller; if you want to
+ * keep a copy of it, call gst_message_ref() before leaving @func.
  *
- * The watch can be removed using #g_source_remove().
+ * The watch can be removed using g_source_remove() or by returning FALSE
+ * from @func.
  *
  * Returns: The event source id.
  *
@@ -727,7 +730,8 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  *
  * Adds a bus watch to the default main context with the default priority.
  *
- * The watch can be removed using #g_source_remove().
+ * The watch can be removed using g_source_remove() or by returning FALSE
+ * from @func.
  *
  * Returns: The event source id.
  *
@@ -874,7 +878,7 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
  * @message: the #GstMessage received
  * @data: user data
  *
- * A helper GstBusFunc that can be used to convert all asynchronous messages
+ * A helper #GstBusFunc that can be used to convert all asynchronous messages
  * into signals.
  *
  * Returns: TRUE
@@ -925,7 +929,7 @@ gst_bus_sync_signal_handler (GstBus * bus, GstMessage * message, gpointer data)
  * gst_bus_enable_sync_message_emission:
  * @bus: a #GstBus on which you want to receive the "sync-message" signal
  *
- * Instructs GStreamer to emit the sync-message signal after running the bus's
+ * Instructs GStreamer to emit the "sync-message" signal after running the bus's
  * sync handler. This function is here so that code can ensure that they can
  * synchronously receive messages without having to affect what the bin's sync
  * handler is. 
@@ -936,9 +940,9 @@ gst_bus_sync_signal_handler (GstBus * bus, GstMessage * message, gpointer data)
  *
  * While this function looks similar to gst_bus_add_signal_watch(), it is not
  * exactly the same -- this function enables <emphasis>synchronous</emphasis> emission of
- * signals when messages arrive; gst_bus_add_signal_watch adds an idle callback
+ * signals when messages arrive; gst_bus_add_signal_watch() adds an idle callback
  * to pop messages off the bus <emphasis>asynchronously</emphasis>. The sync-message signal
- * comes from the thread of whatever object posted the message; the message
+ * comes from the thread of whatever object posted the message; the "message"
  * signal is marshalled to the main thread via the main loop.
  *
  * MT safe.
@@ -960,14 +964,14 @@ gst_bus_enable_sync_message_emission (GstBus * bus)
  * @bus: a #GstBus on which you previously called
  * gst_bus_enable_sync_message_emission()
  *
- * Instructs GStreamer to stop emitting the sync-message signal for this bus.
+ * Instructs GStreamer to stop emitting the "sync-message" signal for this bus.
  * See gst_bus_enable_sync_message_emission() for more information.
  *
  * In the event that multiple pieces of code have called
  * gst_bus_enable_sync_message_emission(), the sync-message emissions will only
  * be stopped after all calls to gst_bus_enable_sync_message_emission() were
  * "cancelled" by calling this function. In this way the semantics are exactly
- * the same as gst_object_ref(); that which calls enable should also call
+ * the same as gst_object_ref() that which calls enable should also call
  * disable.
  *
  * MT safe.
@@ -992,8 +996,8 @@ gst_bus_disable_sync_message_emission (GstBus * bus)
  * @priority: The priority of the watch.
  *
  * Adds a bus signal watch to the default main context with the given priority.
- * After calling this statement, the bus will emit the message signal for each
- * message posted on the bus.
+ * After calling this statement, the bus will emit the "message" signal for each
+ * message posted on the bus when the main loop is running.
  *
  * This function may be called multiple times. To clean up, the caller is
  * responsible for calling gst_bus_remove_signal_watch() as many times as this
@@ -1031,7 +1035,7 @@ done:
  *
  * Adds a bus signal watch to the default main context with the default
  * priority.
- * After calling this statement, the bus will emit the message signal for each
+ * After calling this statement, the bus will emit the "message" signal for each
  * message posted on the bus.
  *
  * This function may be called multiple times. To clean up, the caller is

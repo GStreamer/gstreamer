@@ -1404,16 +1404,23 @@ GstPipelineFlags
 
 gst_pipeline_new
 
-gst_pipeline_auto_clock
 gst_pipeline_get_bus
-gst_pipeline_get_clock
-gst_pipeline_get_last_stream_time
-gst_pipeline_set_clock
-gst_pipeline_set_new_stream_time
-gst_pipeline_use_clock
 
-gst_pipeline_get_auto_flush_bus
+gst_pipeline_set_clock
+gst_pipeline_get_clock
+
+gst_pipeline_use_clock
+gst_pipeline_auto_clock
+
+gst_pipeline_set_new_stream_time
+gst_pipeline_get_last_stream_time
+
 gst_pipeline_set_auto_flush_bus
+gst_pipeline_get_auto_flush_bus
+
+gst_pipeline_set_delay
+gst_pipeline_get_delay
+
 <SUBSECTION Standard>
 GstPipelineClass
 GST_PIPELINE
