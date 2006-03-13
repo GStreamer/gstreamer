@@ -1,3 +1,8 @@
+2006-03-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/plugins/Makefile.am:
+	  Part of previous cdparanoiasrc docs fixes, forgot to commit.
+	  
 2006-03-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
