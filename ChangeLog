@@ -1,3 +1,10 @@
+=== release 0.10.5 ===
+
+2006-03-13  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.5, "Net"
+
 2006-03-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/Makefile.am:

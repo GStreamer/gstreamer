@@ -1,4 +1,9 @@
-This is GStreamer Base Plug-ins 0.10.4, "Power"
+This is GStreamer Base Plug-ins 0.10.5, "Net"
+
+Bugs fixed since 0.10.4:
+    
+      * 334216 : [gnomevfssrc] won't open some media on NFS mounts any longer
+      * 334226 : typefindfunctions plugin crashes on PPC on registration
 
 Changes since 0.10.3:
     
