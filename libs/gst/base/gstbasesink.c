@@ -124,6 +124,7 @@
 
 #include "gstbasesink.h"
 #include <gst/gstmarshal.h>
+#include <gst/gst_private.h>
 #include <gst/gst-i18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_sink_debug);
@@ -361,12 +362,12 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->pad_mode = GST_ACTIVATE_NONE;
   basesink->preroll_queue = g_queue_new ();
   basesink->abidata.ABI.clip_segment = gst_segment_new ();
-  basesink->abidata.ABI.max_lateness = -1;
 
   basesink->can_activate_push = DEFAULT_CAN_ACTIVATE_PUSH;
   basesink->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
 
   basesink->sync = DEFAULT_SYNC;
+  basesink->abidata.ABI.max_lateness = DEFAULT_MAX_LATENESS;
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }
@@ -600,6 +601,7 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
 }
 
 /* with PREROLL_LOCK, STREAM_LOCK */
+/* FIXME, call change_state function, see #326311 */
 static gboolean
 gst_base_sink_commit_state (GstBaseSink * basesink)
 {
@@ -856,10 +858,17 @@ no_clock:
  * if needed and then block if we still are not PLAYING.
  *
  * We start waiting on the clock in PLAYING. If we got interrupted, we
- * immediatly try to repreroll.
+ * immediatly try to re-preroll.
  *
  * Some objects do not need synchronisation (most events) and so this function
  * immediatly returns GST_FLOW_OK.
+ *
+ * objects that arrive later than max-lateness to be synchronized to the clock
+ * generate a QoS message upstream and the @late boolean is set to TRUE.
+ *
+ * This function keeps a running average of the jitter (the diff between the
+ * clock time and the requested sync time). The jitter is negative for
+ * objects that arrive in time and positive for late buffers.
  *
  * does not take ownership of obj.
  */
@@ -871,6 +880,7 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
   GstClockTimeDiff jitter;
   gboolean syncable;
   GstClockReturn status = GST_CLOCK_OK;
+  GstClockTime timestamp;
 
   /* get timing information for this object */
   start = stop = -1;
@@ -914,6 +924,8 @@ again:
   GST_DEBUG_OBJECT (basesink, "waiting for clock to reach %" GST_TIME_FORMAT,
       GST_TIME_ARGS (start));
   basesink->end_time = stop;
+  /* this function will return immediatly if start == -1 with
+   * GST_CLOCK_OK and jitter = 0. */
   status = gst_base_sink_wait_clock (basesink, start, &jitter);
   GST_DEBUG_OBJECT (basesink, "clock returned %d", status);
 
@@ -930,24 +942,45 @@ again:
 
   *late = FALSE;
 
-  /* FIXME, update clock stats here and do some QoS */
-  if (status == GST_CLOCK_EARLY && GST_IS_BUFFER (obj)) {
+  /* only do stats for buffers */
+  if (G_UNLIKELY (!GST_IS_BUFFER (obj)))
+    goto done;
+
+  /* did not sync on this object, we don't need to do stats */
+  if (start == -1)
+    goto done;
+
+  /* can't do stats if we don't have a timestamp */
+  if ((timestamp = GST_BUFFER_TIMESTAMP (obj)) == -1)
+    goto done;
+
+  /* FIXME, do stats here in jitter. This could be used to derive
+   * a trend, which should then result in an updated proportion. */
+
+  if (status == GST_CLOCK_EARLY) {
     if (basesink->abidata.ABI.max_lateness != -1
         && jitter > basesink->abidata.ABI.max_lateness) {
       GstEvent *event;
+      gdouble proportion;
 
-      GST_DEBUG_OBJECT (basesink, "late: jitter!! %" G_GINT64_FORMAT "\n",
-          jitter);
+      GST_DEBUG_OBJECT (basesink, "late: jitter!! %" G_GINT64_FORMAT, jitter);
       *late = TRUE;
 
-      /* generate QoS event, FIXME, calculate decent proportion. */
-      event = gst_event_new_qos (-1.0, jitter, GST_BUFFER_TIMESTAMP (obj));
+      /* generate QoS event, proportion is still silly.  */
+      proportion = 0.0;
+
+      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
+          "qos: proportion: %lf, diff %" G_GUINT64_FORMAT ", timestamp %"
+          GST_TIME_FORMAT, proportion, jitter, GST_TIME_ARGS (timestamp));
+
+      event = gst_event_new_qos (proportion, jitter, timestamp);
 
       /* send upstream */
       gst_pad_push_event (basesink->sinkpad, event);
     }
   }
 
+done:
   return GST_FLOW_OK;
 
   /* ERRORS */

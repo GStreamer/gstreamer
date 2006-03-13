@@ -1,5 +1,12 @@
 2006-03-13  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),
+	(gst_base_sink_do_sync):
+	Small cleanups.
+	Use QOS debug category.
+
+2006-03-13  Wim Taymans  <wim@fluendo.com>
+
 	* plugins/elements/gstqueue.c:
 	Very small doc update.
 
