@@ -253,8 +253,11 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_wavenc_setup (wavenc);
 
   if (wavenc->setup) {
+    gst_object_unref (wavenc);
     return TRUE;
   }
+
+  gst_object_unref (wavenc);
 
   return FALSE;
 }

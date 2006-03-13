@@ -280,6 +280,7 @@ gst_jpegenc_getcaps (GstPad * pad)
           GST_STR_FOURCC ("I420"), NULL);
     }
   }
+  gst_object_unref (jpegenc);
 
   return caps;
 }
@@ -321,6 +322,8 @@ gst_jpegenc_setcaps (GstPad * pad, GstCaps * caps)
   if (GST_PAD_LINK_SUCCESSFUL (ret)) {
     gst_jpegenc_resync (jpegenc);
   }
+
+  gst_object_unref (jpegenc);
 
   return ret;
 }

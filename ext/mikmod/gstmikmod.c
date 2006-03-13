@@ -269,6 +269,7 @@ gst_mikmod_srclink (GstPad * pad, const GstCaps * caps)
   GstStructure *structure;
   gint depth;
   gint channels;
+  gboolean result;
 
   filter = GST_MIKMOD (gst_pad_get_parent (pad));
 
@@ -280,7 +281,14 @@ gst_mikmod_srclink (GstPad * pad, const GstCaps * caps)
   filter->stereo = (channels == 2);
   gst_structure_get_int (structure, "rate", &filter->mixfreq);
 
-  return gst_mikmod_setup (filter) ? GST_PAD_LINK_OK : GST_PAD_LINK_REFUSED;
+  result = gst_mikmod_setup (filter);
+  gst_object_unref (filter);
+
+  if (result) {
+    return GST_PAD_LINK_OK;
+  } else {
+    return GST_PAD_LINK_REFUSED;
+  }
 }
 
 static void

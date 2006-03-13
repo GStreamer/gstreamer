@@ -289,11 +289,11 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
   /* Initial state, we don't even know if we are dealing with a flac file */
   if (tag->state == GST_FLAC_TAG_STATE_INIT) {
     if (!caps_nego (tag)) {
-      return;
+      goto cleanup;
     }
 
     if (GST_BUFFER_SIZE (tag->buffer) < sizeof (FLAC_MAGIC)) {
-      return;
+      goto cleanup;
     }
 
     if (strncmp (GST_BUFFER_DATA (tag->buffer), FLAC_MAGIC,
@@ -337,7 +337,7 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
      * 24 next bits: size of the metadata to follow (big endian)
      */
     if (GST_BUFFER_SIZE (tag->buffer) < 4) {
-      return;
+      goto cleanup;
     }
     is_last = (((GST_BUFFER_DATA (tag->buffer)[0]) & 0x80) == 0x80);
     /* If we have metadata set on the element, the last metadata block 
@@ -443,7 +443,7 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
 
       if (tag->only_output_tags) {
         send_eos (tag);
-        return;
+        goto cleanup;
       }
     }
 
@@ -456,7 +456,7 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
          * metadata, so just stop now
          */
         send_eos (tag);
-        return;
+        goto cleanup;
       } else {
         tag->state = GST_FLAC_TAG_STATE_ADD_VORBIS_COMMENT;
       }
@@ -507,7 +507,7 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
       if (buffer == NULL) {
         GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
             ("Error converting tag list to vorbiscomment buffer"));
-        return;
+        goto cleanup;
       }
       size = GST_BUFFER_SIZE (buffer) - 4;
       if ((size > 0xFFFFFF) || (size < 0)) {
@@ -517,7 +517,7 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
          */
         GST_ELEMENT_ERROR (tag, CORE, TAG, (NULL),
             ("Vorbis comment of size %d too long", size));
-        return;
+        goto cleanup;
       }
 
       /* Get rid of the framing bit at the end of the vorbiscomment buffer 
@@ -545,12 +545,14 @@ gst_flac_tag_chain (GstPad * pad, GstData * data)
     tag->state = GST_FLAC_TAG_STATE_AUDIO_DATA;
   }
 
-
   /* The metadata blocks have been read, now we are reading audio data */
   if (tag->state == GST_FLAC_TAG_STATE_AUDIO_DATA) {
     gst_pad_push (tag->srcpad, GST_DATA (tag->buffer));
     tag->buffer = NULL;
   }
+
+cleanup:
+  gst_object_unref (tag);
 }
 
 

@@ -158,12 +158,16 @@ speex_dec_convert (GstPad * pad,
 
   dec = GST_SPEEXDEC (gst_pad_get_parent (pad));
 
-  if (dec->packetno < 1)
-    return FALSE;
+  if (dec->packetno < 1) {
+    res = FALSE;
+    goto cleanup;
+  }
 
   if (pad == dec->sinkpad &&
-      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
-    return FALSE;
+      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES)) {
+    res = FALSE;
+    goto cleanup;
+  }
 
   switch (src_format) {
     case GST_FORMAT_TIME:
@@ -206,6 +210,8 @@ speex_dec_convert (GstPad * pad,
       res = FALSE;
   }
 
+cleanup:
+  gst_object_unref (dec);
   return res;
 }
 
@@ -289,6 +295,8 @@ speex_dec_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  gst_object_unref (dec);
+
   return res;
 }
 
@@ -350,6 +358,7 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn res;
   GstSpeexDec *dec;
+  GstFlowReturn result;
 
   dec = GST_SPEEXDEC (gst_pad_get_parent (pad));
 
@@ -363,14 +372,16 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
     if (!dec->header) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
           (NULL), ("couldn't read header"));
-      return GST_FLOW_ERROR;
+      result = GST_FLOW_ERROR;
+      goto cleanup;
     }
     if (dec->header->mode >= SPEEX_NB_MODES) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
           (NULL),
           ("Mode number %d does not (yet/any longer) exist in this version",
               dec->header->mode));
-      return GST_FLOW_ERROR;
+      result = GST_FLOW_ERROR;
+      goto cleanup;
     }
 
     dec->mode = (SpeexMode *) speex_mode_list[dec->header->mode];
@@ -381,7 +392,8 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
           (NULL), ("couldn't initialize decoder"));
       gst_buffer_unref (buf);
-      return GST_FLOW_ERROR;
+      result = GST_FLOW_ERROR;
+      goto cleanup;
     }
 
     speex_decoder_ctl (dec->state, SPEEX_SET_ENH, &dec->enh);
@@ -408,7 +420,8 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
 
     if (!gst_pad_set_caps (dec->srcpad, caps)) {
       gst_caps_unref (caps);
-      return GST_FLOW_NOT_NEGOTIATED;
+      result = GST_FLOW_NOT_NEGOTIATED;
+      goto cleanup;
     }
     gst_caps_unref (caps);
     gst_pad_push_event (dec->srcpad,
@@ -511,8 +524,12 @@ speex_dec_chain (GstPad * pad, GstBuffer * buf)
     }
   }
   dec->packetno++;
+  result = GST_FLOW_OK;
 
-  return GST_FLOW_OK;
+cleanup:
+  gst_object_unref (dec);
+
+  return result;
 }
 
 static void

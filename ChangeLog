@@ -1,3 +1,42 @@
+2006-03-13  Wim Taymans  <wim@fluendo.com>
+
+	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_setcaps):
+	* ext/esd/esdmon.c: (gst_esdmon_get):
+	* ext/flac/gstflactag.c: (gst_flac_tag_chain):
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_setcaps),
+	(gst_gdk_pixbuf_sink_getcaps):
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_getcaps),
+	(gst_jpegenc_setcaps):
+	* ext/jpeg/gstsmokedec.c: (gst_smokedec_chain):
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_getcaps),
+	(gst_smokeenc_setcaps):
+	* ext/libmng/gstmngdec.c: (gst_mngdec_sinklink),
+	(gst_mngdec_src_getcaps):
+	* ext/libmng/gstmngenc.c: (gst_mngenc_sinklink),
+	(gst_mngenc_chain):
+	* ext/libpng/gstpngenc.c: (gst_pngenc_setcaps):
+	* ext/mikmod/gstmikmod.c: (gst_mikmod_srclink):
+	* ext/speex/gstspeexdec.c: (speex_dec_convert),
+	(speex_dec_src_event), (speex_dec_chain):
+	* gst/avi/gstavimux.c: (gst_avimux_vidsinkconnect),
+	(gst_avimux_audsinkconnect), (gst_avimux_handle_event):
+	* gst/debug/negotiation.c: (gst_negotiation_getcaps),
+	(gst_negotiation_pad_link), (gst_negotiation_chain):
+	* gst/flx/gstflxdec.c: (gst_flxdec_src_query_handler),
+	(gst_flxdec_chain):
+	* gst/interleave/deinterleave.c: (deinterleave_sink_link),
+	(deinterleave_chain):
+	* gst/law/mulaw-encode.c: (mulawenc_setcaps):
+	* gst/median/gstmedian.c: (gst_median_link):
+	* gst/monoscope/gstmonoscope.c: (gst_monoscope_srcconnect),
+	(gst_monoscope_chain):
+	* gst/rtp/gstrtpL16pay.c: (gst_rtpL16pay_sinkconnect):
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_sink_setcaps):
+	* sys/osxaudio/gstosxaudiosink.c: (gst_osxaudiosink_chain):
+	* sys/osxaudio/gstosxaudiosrc.c: (gst_osxaudiosrc_get):
+	close #333784 unref the result of gst_pad_get_parent()
+	by: Christophe Fergeau.
+
 2006-03-09  Wim Taymans  <wim@fluendo.com>
 
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_sink_event),

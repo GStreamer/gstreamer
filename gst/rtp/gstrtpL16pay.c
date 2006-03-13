@@ -171,12 +171,16 @@ gst_rtpL16pay_sinkconnect (GstPad * pad, const GstCaps * caps)
   ret = gst_structure_get_int (structure, "rate", &rtpL16enc->frequency);
   ret &= gst_structure_get_int (structure, "channels", &rtpL16enc->channels);
 
-  if (!ret)
+  if (!ret) {
+    gst_object_unref (rtpL16enc);
     return GST_PAD_LINK_REFUSED;
+  }
 
   /* Pre-calculate what we can */
   rtpL16enc->time_interval =
       GST_SECOND / (2 * rtpL16enc->channels * rtpL16enc->frequency);
+
+  gst_object_unref (rtpL16enc);
 
   return GST_PAD_LINK_OK;
 }

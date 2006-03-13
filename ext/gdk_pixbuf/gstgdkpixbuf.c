@@ -126,7 +126,7 @@ GST_BOILERPLATE (GstGdkPixbuf, gst_gdk_pixbuf, GstElement, GST_TYPE_ELEMENT)
     GST_DEBUG ("got framerate of %d/%d fps => packetized mode",
         filter->framerate_numerator, filter->framerate_denominator);
   }
-
+  gst_object_unref (filter);
   return TRUE;
 }
 
@@ -184,6 +184,7 @@ gst_gdk_pixbuf_sink_getcaps (GstPad * pad)
   filter = GST_GDK_PIXBUF (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, NULL);
   g_return_val_if_fail (GST_IS_GDK_PIXBUF (filter), NULL);
+  gst_object_unref (filter);
 
   return gst_gdk_pixbuf_get_capslist ();
 }

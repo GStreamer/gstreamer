@@ -317,8 +317,10 @@ gst_avimux_vidsinkconnect (GstPad * pad, const GstCaps * vscaps)
   ret &= gst_structure_get_int (structure, "height", &avimux->vids.height);
   fps = gst_structure_get_value (structure, "framerate");
   ret &= (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps));
-  if (!ret)
+  if (!ret) {
+    gst_object_unref (avimux);
     return GST_PAD_LINK_REFUSED;
+  }
 
   avimux->vids_hdr.rate = gst_value_get_fraction_numerator (fps);
   avimux->vids_hdr.scale = gst_value_get_fraction_denominator (fps);
@@ -388,6 +390,7 @@ gst_avimux_vidsinkconnect (GstPad * pad, const GstCaps * vscaps)
     }
 
     if (!avimux->vids.compression) {
+      gst_object_unref (avimux);
       return GST_PAD_LINK_DELAYED;
     }
   }
@@ -397,6 +400,9 @@ gst_avimux_vidsinkconnect (GstPad * pad, const GstCaps * vscaps)
   avimux->avi_hdr.width = avimux->vids.width;
   avimux->avi_hdr.height = avimux->vids.height;
   avimux->avi_hdr.us_frame = avimux->vids_hdr.scale;
+
+  gst_object_unref (avimux);
+
   return GST_PAD_LINK_OK;
 }
 
@@ -463,6 +469,7 @@ gst_avimux_audsinkconnect (GstPad * pad, const GstCaps * vscaps)
     avimux->auds.size = 16;
 
     if (!avimux->auds.format) {
+      gst_object_unref (avimux);
       return GST_PAD_LINK_REFUSED;
     }
   }
@@ -470,6 +477,9 @@ gst_avimux_audsinkconnect (GstPad * pad, const GstCaps * vscaps)
   avimux->auds_hdr.rate = avimux->auds.blockalign * avimux->auds.rate;
   avimux->auds_hdr.samplesize = avimux->auds.blockalign;
   avimux->auds_hdr.scale = 1;
+
+  gst_object_unref (avimux);
+
   return GST_PAD_LINK_OK;
 }
 
@@ -1089,6 +1099,7 @@ gst_avimux_handle_event (GstPad * pad, GstEvent * event)
   }
 
   gst_event_unref (event);
+  gst_object_unref (avimux);
 
   return TRUE;
 }

@@ -154,6 +154,8 @@ gst_median_link (GstPad * pad, const GstCaps * caps)
     filter->height = h;
   }
 
+  gst_object_unref (filter);
+
   return ret;
 }
 

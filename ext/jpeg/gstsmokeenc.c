@@ -228,6 +228,8 @@ gst_smokeenc_getcaps (GstPad * pad)
     }
   }
 
+  gst_object_unref (smokeenc);
+
   return caps;
 }
 
@@ -269,6 +271,8 @@ gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps)
   if (GST_PAD_LINK_SUCCESSFUL (ret)) {
     gst_smokeenc_resync (smokeenc);
   }
+
+  gst_object_unref (smokeenc);
 
   return ret;
 }

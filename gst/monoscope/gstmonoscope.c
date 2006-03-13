@@ -224,6 +224,8 @@ gst_monoscope_srcconnect (GstPad * pad, const GstCaps * caps)
   gst_structure_get_int (structure, "height", &monoscope->height);
   gst_structure_get_double (structure, "framerate", &monoscope->fps);
 
+  gst_object_unref (monoscope);
+
   return GST_PAD_LINK_OK;
 }
 
@@ -250,6 +252,7 @@ gst_monoscope_chain (GstPad * pad, GstData * _data)
     GST_DEBUG ("timestamp is %" G_GUINT64_FORMAT ": want >= %" G_GUINT64_FORMAT,
         GST_BUFFER_TIMESTAMP (bufin), monoscope->next_time);
     gst_buffer_unref (bufin);
+    gst_object_unref (monoscope);
     return;
   }
 
@@ -266,6 +269,7 @@ gst_monoscope_chain (GstPad * pad, GstData * _data)
     if (!gst_pad_is_negotiated (monoscope->srcpad)) {
       if (gst_pad_renegotiate (monoscope->srcpad) <= 0) {
         GST_ELEMENT_ERROR (monoscope, CORE, NEGOTIATION, (NULL), (NULL));
+        gst_object_unref (monoscope);
         return;
       }
     }
@@ -284,6 +288,7 @@ gst_monoscope_chain (GstPad * pad, GstData * _data)
   gst_pad_push (monoscope->srcpad, GST_DATA (bufout));
 
   gst_buffer_unref (bufin);
+  gst_object_unref (monoscope);
 
   GST_DEBUG ("Monoscope: exiting chainfunc");
 

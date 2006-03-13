@@ -158,6 +158,7 @@ gst_mngenc_sinklink (GstPad * pad, const GstCaps * caps)
   GstMngEnc *mngenc;
   gdouble fps;
   GstStructure *structure;
+  GstPadLinkReturn result;
 
   mngenc = GST_MNGENC (gst_pad_get_parent (pad));
 
@@ -172,7 +173,10 @@ gst_mngenc_sinklink (GstPad * pad, const GstCaps * caps)
       "width", G_TYPE_INT, mngenc->width,
       "height", G_TYPE_INT, mngenc->height, NULL);
 
-  return gst_pad_try_set_caps (mngenc->srcpad, caps);
+  result = gst_pad_try_set_caps (mngenc->srcpad, caps);
+  gst_object_unref (mngenc);
+
+  return result;
 }
 
 static void
@@ -202,6 +206,7 @@ gst_mngenc_chain (GstPad * pad, GstData * _data)
   /* FIXME, do something here */
 
   gst_buffer_unref (buf);
+  gst_object_unref (mngenc);
 }
 
 

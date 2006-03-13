@@ -210,6 +210,7 @@ gst_negotiation_getcaps (GstPad * pad)
       GST_PTR_FORMAT, pad, caps);
 
   gst_negotiation_update_caps (negotiation);
+  gst_object_unref (negotiation);
 
   return caps;
 }
@@ -228,6 +229,7 @@ gst_negotiation_pad_link (GstPad * pad, const GstCaps * caps)
 
   GST_ERROR ("pad_link called on %" GST_PTR_FORMAT " with caps %"
       GST_PTR_FORMAT ", returning %d", pad, caps, ret);
+  gst_object_unref (negotiation);
 
   return ret;
 }
@@ -257,6 +259,7 @@ gst_negotiation_chain (GstPad * pad, GstData * _data)
   GstNegotiation *negotiation = GST_NEGOTIATION (gst_pad_get_parent (pad));
 
   gst_pad_push (negotiation->srcpad, _data);
+  gst_object_unref (negotiation);
 }
 
 static void

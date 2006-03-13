@@ -141,6 +141,7 @@ gst_mngdec_sinklink (GstPad * pad, const GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_double (structure, "framerate", &mngdec->fps);
+  gst_object_unref (mngdec);
 
   return TRUE;
 }
@@ -226,6 +227,8 @@ gst_mngdec_src_getcaps (GstPad * pad)
           "framerate", G_TYPE_DOUBLE, mngdec->fps, NULL);
     }
   }
+
+  gst_object_unref (mngdec);
 
   return caps;
 }

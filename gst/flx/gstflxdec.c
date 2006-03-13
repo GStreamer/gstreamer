@@ -627,7 +627,7 @@ gst_flxdec_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 need_more_data:
-
+  gst_object_unref (flxdec);
   return res;
 
   /* ERRORS */
@@ -635,6 +635,7 @@ wrong_type:
   {
     GST_ELEMENT_ERROR (flxdec, STREAM, WRONG_TYPE, (NULL),
         ("not a flx file (type %x)", flxh->type));
+    gst_object_unref (flxdec);
     return GST_FLOW_ERROR;
   }
 }

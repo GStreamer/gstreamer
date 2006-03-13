@@ -183,7 +183,8 @@ gst_smokedec_chain (GstPad * pad, GstBuffer * buf)
     if (smokeret != SMOKECODEC_OK)
       goto header_error;
 
-    return GST_FLOW_OK;
+    ret = GST_FLOW_OK;
+    goto done;
   }
 
   /* now handle data packets */

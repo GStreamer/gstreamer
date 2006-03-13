@@ -126,6 +126,7 @@ mulawenc_setcaps (GstPad * pad, GstCaps * caps)
 
   gst_pad_set_caps (otherpad, base_caps);
 
+  gst_object_unref (mulawenc);
   gst_caps_unref (base_caps);
 
   return TRUE;

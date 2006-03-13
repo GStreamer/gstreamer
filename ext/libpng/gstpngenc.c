@@ -176,6 +176,9 @@ gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
     gst_caps_unref (pcaps);
     gst_object_unref (opeer);
   }
+
+  gst_object_unref (pngenc);
+
   return ret;
 }
 

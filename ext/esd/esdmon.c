@@ -277,6 +277,7 @@ gst_esdmon_get (GstPad * pad)
 
   GST_DEBUG ("pushed buffer from esdmon of %ld bytes, timestamp %"
       G_GINT64_FORMAT, readbytes, GST_BUFFER_TIMESTAMP (buf));
+  gst_object_unref (esdmon);
   return GST_DATA (buf);
 }
 

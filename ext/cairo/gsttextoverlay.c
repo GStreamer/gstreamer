@@ -556,6 +556,8 @@ gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
   overlay->fps_n = gst_value_get_fraction_numerator (fps);
   overlay->fps_d = gst_value_get_fraction_denominator (fps);
 
+  gst_object_unref (overlay);
+
   return ret;
 }
 

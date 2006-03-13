@@ -168,10 +168,12 @@ gst_osxaudiosink_chain (GstPad * pad, GstData * _data)
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_EOS:
         gst_pad_event_default (pad, event);
+        gst_object_unref (osxaudiosink);
         return;
       case GST_EVENT_DISCONTINUOUS:
         /* pass-through */
       default:
+        gst_object_unref (osxaudiosink);
         gst_pad_event_default (pad, event);
         return;
     }
@@ -189,6 +191,7 @@ gst_osxaudiosink_chain (GstPad * pad, GstData * _data)
         write_buffer (GST_OSXAUDIOELEMENT (osxaudiosink), data, to_write);
   }
   gst_buffer_unref (buf);
+  gst_object_unref (osxaudiosink);
 }
 
 static GstStateChangeReturn

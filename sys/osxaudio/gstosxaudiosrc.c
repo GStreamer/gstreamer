@@ -159,11 +159,13 @@ gst_osxaudiosrc_get (GstPad * pad)
   if (readbytes < 0) {
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+    gst_object_unref (src);
     return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
   if (readbytes == 0) {
     gst_buffer_unref (buf);
+    gst_object_unref (src);
     return GST_DATA (gst_event_new (GST_EVENT_INTERRUPT));
   }
 
@@ -173,6 +175,8 @@ gst_osxaudiosrc_get (GstPad * pad)
   src->curoffset += readbytes;
 
   GST_DEBUG ("pushed buffer from soundcard of %ld bytes", readbytes);
+
+  gst_object_unref (src);
 
   return GST_DATA (buf);
 }
