@@ -246,6 +246,7 @@ include
   gststructure.override
   gsttaglist.override
   gstlibs.override
+  gstbase.override
 %%
 init
 {

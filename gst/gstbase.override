@@ -1,0 +1,262 @@
+/* -*- Mode: C; ; c-basic-offset: 4 -*- */
+/* gst-python
+ * Copyright (C) 2006 Edward Hervey
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ * 
+ * Author: Johan Dahlin <johan@gnome.org>
+ */
+
+%%
+override GstBaseSrc__proxy_do_create
+static GstFlowReturn
+_wrap_GstBaseSrc__proxy_do_create (GstBaseSrc * self,
+				   guint64 offset,
+				   guint size,
+				   GstBuffer ** buf)
+{
+  PyGILState_STATE __py_state;
+  PyObject *py_self;
+  GstFlowReturn retval = GST_FLOW_ERROR;
+  PyObject *py_ret;
+  PyObject *py_flow;
+  PyObject *py_buffer;
+  PyObject *py_args;
+  PyObject *py_method;
+
+    __py_state = pyg_gil_state_ensure();
+    py_self = pygobject_new((GObject *) self);
+    if (!py_self) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+	goto beach;
+    }
+
+    py_args = PyTuple_New(2);
+    PyTuple_SET_ITEM(py_args, 0, PyLong_FromUnsignedLongLong(offset));
+    PyTuple_SET_ITEM(py_args, 1, PyInt_FromLong(size));
+    
+    py_method = PyObject_GetAttrString(py_self, "do_create");
+
+    if (!py_method) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        Py_DECREF(py_args);
+        Py_DECREF(py_self);
+	goto beach;
+    }
+
+    py_ret = PyObject_CallObject(py_method, py_args);
+    if (!py_ret) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        Py_DECREF(py_method);
+        Py_DECREF(py_args);
+        Py_DECREF(py_self);
+	goto beach;
+    }
+    
+    /* process the python return value */
+    /* Should be a list containing the gst.FlowReturn and the gst.Buffer */
+    if (PyTuple_Check(py_ret)) {
+      /* gst.FlowReturn */
+      py_flow = PyTuple_GetItem(py_ret, 0);
+      
+      if (!py_flow) {
+        if (PyErr_Occurred())
+	  PyErr_Print();
+	Py_DECREF(py_ret);
+        Py_DECREF(py_method);
+        Py_DECREF(py_args);
+        Py_DECREF(py_self);
+	goto beach;
+      }
+      
+      if (py_flow == Py_None) {
+	  GST_ERROR ("WHAT THE HEL????");
+	  goto beach;
+      }
+
+      GST_DEBUG ("py_flow:%p", py_flow);
+
+      if (pyg_enum_get_value(GST_TYPE_FLOW_RETURN, py_flow, (gint*) &retval)) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+	Py_DECREF(py_ret);
+	Py_DECREF(py_flow);
+        Py_DECREF(py_method);
+        Py_DECREF(py_args);
+        Py_DECREF(py_self);
+	retval = GST_FLOW_ERROR;
+	goto beach;
+      }
+
+      py_buffer = PyTuple_GetItem(py_ret, 1);
+      if (!py_buffer) {
+        if (PyErr_Occurred())
+	  PyErr_Print();
+	Py_DECREF(py_ret);
+	Py_DECREF(py_method);
+        Py_DECREF(py_args);
+        Py_DECREF(py_self);
+	goto beach;
+      }
+      
+      if (pygstminiobject_check(py_buffer, &PyGstBuffer_Type)) {
+	*buf = GST_BUFFER (pygstminiobject_get (py_buffer));
+	gst_buffer_ref (*buf);
+      } else {
+	*buf = NULL;
+      }
+    }
+    
+    Py_DECREF(py_ret);
+    Py_DECREF(py_method);
+    Py_DECREF(py_args);
+    Py_DECREF(py_self);
+
+ beach:
+    pyg_gil_state_release(__py_state);
+    
+    return retval;
+}
+%%
+override GstBaseSrc__do_create kwargs
+static PyObject *
+_wrap_GstBaseSrc__do_create (PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    gpointer klass;
+    static char *kwlist[] = { "self", "offset", "size", NULL };
+    PyGObject *self;
+    guint64 offset;
+    guint size;
+    PyObject *py_ret;
+    GstFlowReturn flow;
+    GstBuffer *buffer = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!KI:GstBaseSrc.create",
+				     kwlist, &PyGstBaseSrc_Type, &self, &offset, &size))
+        return NULL;
+
+    klass = g_type_class_ref(pyg_type_from_object(cls));
+    if (GST_BASE_SRC_CLASS(klass)->create)
+      flow = GST_BASE_SRC_CLASS(klass)->create(GST_BASE_SRC(self->obj), offset, size, &buffer);
+    else {
+      PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseSrc.set_caps not implemented");
+      g_type_class_unref(klass);
+      return NULL;
+    }
+    g_type_class_unref(klass);
+
+    /* We now need to return a tuple with (flow, buffer) */
+    if (buffer)
+      py_ret = PyTuple_New(2);
+    else
+      py_ret = PyTuple_New(1);
+
+    PyTuple_SET_ITEM(py_ret, 0, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, flow));
+
+    if (buffer)
+      PyTuple_SET_ITEM(py_ret, 1, pygstminiobject_new(GST_MINI_OBJECT (buffer)));
+
+    return py_ret;
+}
+%%
+override GstBaseSrc__proxy_do_get_size
+static gboolean
+_wrap_GstBaseSrc__proxy_do_get_size (GstBaseSrc * self,
+				     guint64 * size)
+{
+  PyGILState_STATE __py_state;
+  PyObject *py_self;
+  gboolean ret = FALSE;
+  PyObject *py_method;
+  PyObject *py_ret;
+
+    __py_state = pyg_gil_state_ensure();
+    py_self = pygobject_new((GObject *) self);
+    if (!py_self) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+	goto beach;
+    }
+    
+    py_method = PyObject_GetAttrString(py_self, "do_get_size");
+
+    if (!py_method) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        Py_DECREF(py_self);
+	goto beach;
+    }
+
+    py_ret = PyObject_CallObject(py_method, NULL);
+    if (!py_ret) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        Py_DECREF(py_method);
+        Py_DECREF(py_self);
+	goto beach;
+    }
+
+    /*
+      If the method returned a numeric, the return value will be TRUE.
+      For ANY other case, we don't set size and the return value is FALSE.
+    */
+
+    if (PyLong_Check(py_ret)) {
+	*size = PyLong_AsUnsignedLongLongMask(py_ret);
+	ret = TRUE;
+    }
+
+    Py_DECREF(py_method);
+    Py_DECREF(py_self);
+    Py_DECREF(py_ret);
+
+ beach:
+    pyg_gil_state_release(__py_state);
+    
+    return ret;
+}
+%%
+override GstBaseSrc__do_get_size kwargs
+static PyObject *
+_wrap_GstBaseSrc__do_get_size (PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    gpointer klass;
+    static char *kwlist[] = { "self", NULL };
+    PyGObject *self;
+    gboolean ret;
+    guint64 size = 0;
+    PyObject *py_ret;
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:GstBaseSrc.get_size",
+				     kwlist, &PyGstBaseSrc_Type, &self))
+	return NULL;
+    klass = g_type_class_ref(pyg_type_from_object(cls));
+    if (GST_BASE_SRC_CLASS(klass)->get_size)
+      ret = GST_BASE_SRC_CLASS(klass)->get_size(GST_BASE_SRC(self->obj), &size);
+    else {
+      PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseSrc.get_size not implemented");
+      g_type_class_unref(klass);
+      return NULL;
+    }
+    g_type_class_unref(klass);
+    
+    py_ret = PyLong_FromUnsignedLongLong(size);
+
+    return py_ret;
+}

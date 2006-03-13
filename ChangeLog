@@ -1,3 +1,12 @@
+2006-03-13  Edward Hervey  <edward@fluendo.com>
+
+	* gst/Makefile.am:
+	* gst/gst.override:
+	* gst/gstbase.override:
+	Added base elements override file.
+	* gst/gstpad.override:
+	Added override for gst_pad_alloc_buffer_and_set_caps
+
 2006-03-10  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override:

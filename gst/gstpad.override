@@ -785,6 +785,36 @@ _wrap_gst_pad_alloc_buffer (PyGObject *self, PyObject * args, PyObject *kwargs)
     return ret;
 }
 %%
+override gst_pad_alloc_buffer_and_set_caps kwargs
+static PyObject *
+_wrap_gst_pad_alloc_buffer_and_set_caps (PyGObject *self, PyObject * args, PyObject *kwargs)
+{
+    static char *kwlist[] = {"offset", "size", "caps", NULL};
+    guint64    offset;
+    gint    size;
+    PyObject    *pcaps;
+    GstCaps    *caps;
+    PyObject    *ret;
+    GstBuffer    *buf;
+    GstFlowReturn    res;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                     "KiO:GstPad.alloc_buffer_and_set_caps",
+                     kwlist, &offset, &size, &pcaps))
+    return NULL;
+    caps = pyg_boxed_get(pcaps, GstCaps);
+    res = gst_pad_alloc_buffer_and_set_caps (GST_PAD(pygobject_get(self)),
+                offset, size, caps, &buf);
+    ret = PyList_New(2);
+    PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, res));
+    if (res != GST_FLOW_OK) {
+        PyList_SetItem(ret, 1, Py_None);
+    } else {
+        PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+    }
+    return ret;
+}
+%%
 override gst_pad_pull_range kwargs
 static PyObject *
 _wrap_gst_pad_pull_range (PyGObject *self, PyObject * args, PyObject *kwargs)

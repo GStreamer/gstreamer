@@ -57,7 +57,8 @@ GST_OVERRIDES = 		\
 	gstpad.override		\
 	gststructure.override	\
 	gsttaglist.override	\
-	gstlibs.override
+	gstlibs.override	\
+	gstbase.override
 
 GST_DEFS = gst.defs gst-types.defs gst-extrafuncs.defs libs.defs base.defs
 CLEANFILES = gst.c
