@@ -17,11 +17,12 @@ libgstvideo4linux2_la_SOURCES = \
 	v4l2_calls.c \
 	v4l2src_calls.c $(xv_source)
 
-libgstvideo4linux2_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_LIBS_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) 
+libgstvideo4linux2_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
+			       $(GST_PLUGINS_BASE_CFLAGS) 
 libgstvideo4linux2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideo4linux2_la_LIBADD = \
 	-lgstinterfaces-$(GST_MAJORMINOR) \
-	$(GST_BASE_LIBS) $(GST_LIBS) $(xv_libs)
+	$(GST_BASE_LIBS) $(GST_LIBS) $(GST_PLUGINS_BASE_LIBS) $(xv_libs)
 
 noinst_HEADERS = gstv4l2element.h v4l2_calls.h \
 		gstv4l2src.h v4l2src_calls.h \
