@@ -210,8 +210,6 @@ gst_wavparse_reset (GstWavParse * wavparse)
   wavparse->datasize = 0;
   wavparse->datastart = 0;
 
-  gst_event_replace (&wavparse->seek_event, NULL);
-
   /* we keep the segment info in time */
   gst_segment_init (&wavparse->segment, GST_FORMAT_TIME);
 }
@@ -1525,6 +1523,8 @@ gst_wavparse_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_wavparse_destroy_sourcepad (wav);
+      gst_event_replace (&wav->seek_event, NULL);
+      gst_wavparse_reset (wav);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

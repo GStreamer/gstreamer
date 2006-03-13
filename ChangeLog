@@ -1,5 +1,11 @@
 2006-03-13  Wim Taymans  <wim@fluendo.com>
 
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_reset),
+	(gst_wavparse_change_state):
+	Implement seek in READY (re-fixes #327658)
+
+2006-03-13  Wim Taymans  <wim@fluendo.com>
+
 	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_setcaps):
 	* ext/esd/esdmon.c: (gst_esdmon_get):
 	* ext/flac/gstflactag.c: (gst_flac_tag_chain):
