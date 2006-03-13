@@ -1,5 +1,25 @@
 2006-03-13  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_class_init), (gst_base_transform_init),
+	(gst_base_transform_sink_event),
+	(gst_base_transform_sink_eventfunc),
+	(gst_base_transform_src_event), (gst_base_transform_src_eventfunc),
+	(gst_base_transform_handle_buffer), (gst_base_transform_chain),
+	(gst_base_transform_set_property),
+	(gst_base_transform_get_property),
+	(gst_base_transform_change_state), (gst_base_transform_update_qos),
+	(gst_base_transform_set_qos_enabled),
+	(gst_base_transform_is_qos_enabled):
+	* libs/gst/base/gstbasetransform.h:
+	Make basetransform virtual method for src events too.
+	Handle QOS in basetransform.
+	API: gst_base_transform_update_qos
+	API: gst_base_transform_set_qos_enabled
+	API: gst_base_transform_is_qos_enabled
+
+2006-03-13  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),
 	(gst_base_sink_do_sync):
 	Small cleanups.

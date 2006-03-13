@@ -188,6 +188,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../../../gst/gst_private.h"
 #include "../../../gst/gst-i18n-lib.h"
 #include "gstbasetransform.h"
 #include <gst/gstmarshal.h>
@@ -202,9 +203,23 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_PROP_QOS	FALSE
+
 enum
 {
   PROP_0,
+  PROP_QOS
+};
+
+#define GST_BASE_TRANSFORM_GET_PRIVATE(obj)  \
+    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_TRANSFORM, GstBaseTransformPrivate))
+
+struct _GstBaseTransformPrivate
+{
+  /* QoS *//* with LOCK */
+  gboolean qos_enabled;
+  gdouble proportion;
+  GstClockTime earliest_time;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -255,8 +270,11 @@ static gboolean gst_base_transform_get_unit_size (GstBaseTransform * trans,
 static GstStateChangeReturn gst_base_transform_change_state (GstElement *
     element, GstStateChange transition);
 
-static gboolean gst_base_transform_event (GstPad * pad, GstEvent * event);
-static gboolean gst_base_transform_eventfunc (GstBaseTransform * trans,
+static gboolean gst_base_transform_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_base_transform_src_eventfunc (GstBaseTransform * trans,
+    GstEvent * event);
+static gboolean gst_base_transform_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_base_transform_sink_eventfunc (GstBaseTransform * trans,
     GstEvent * event);
 static GstFlowReturn gst_base_transform_getrange (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buffer);
@@ -297,6 +315,8 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
 
+  g_type_class_add_private (klass, sizeof (GstBaseTransformPrivate));
+
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property =
@@ -304,13 +324,18 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_base_transform_get_property);
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QOS,
+      g_param_spec_boolean ("qos", "QoS", "handle QoS messages",
+          DEFAULT_PROP_QOS, G_PARAM_READWRITE));
+
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_transform_finalize);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_transform_change_state);
 
   klass->passthrough_on_same_caps = FALSE;
-  klass->event = GST_DEBUG_FUNCPTR (gst_base_transform_eventfunc);
+  klass->event = GST_DEBUG_FUNCPTR (gst_base_transform_sink_eventfunc);
+  klass->src_event = GST_DEBUG_FUNCPTR (gst_base_transform_src_eventfunc);
 }
 
 static void
@@ -321,6 +346,8 @@ gst_base_transform_init (GstBaseTransform * trans,
 
   GST_DEBUG ("gst_base_transform_init");
 
+  trans->priv = GST_BASE_TRANSFORM_GET_PRIVATE (trans);
+
   pad_template =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (bclass), "sink");
   g_return_if_fail (pad_template != NULL);
@@ -330,7 +357,7 @@ gst_base_transform_init (GstBaseTransform * trans,
   gst_pad_set_setcaps_function (trans->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_setcaps));
   gst_pad_set_event_function (trans->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_transform_event));
+      GST_DEBUG_FUNCPTR (gst_base_transform_sink_event));
   gst_pad_set_chain_function (trans->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_chain));
   gst_pad_set_activatepush_function (trans->sinkpad,
@@ -347,6 +374,8 @@ gst_base_transform_init (GstBaseTransform * trans,
       GST_DEBUG_FUNCPTR (gst_base_transform_getcaps));
   gst_pad_set_setcaps_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_setcaps));
+  gst_pad_set_event_function (trans->srcpad,
+      GST_DEBUG_FUNCPTR (gst_base_transform_src_event));
   gst_pad_set_getrange_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_getrange));
   gst_pad_set_activatepull_function (trans->srcpad,
@@ -356,6 +385,7 @@ gst_base_transform_init (GstBaseTransform * trans,
   trans->transform_lock = g_mutex_new ();
   trans->delay_configure = FALSE;
   trans->pending_configure = FALSE;
+  trans->priv->qos_enabled = DEFAULT_PROP_QOS;
   trans->cache_caps1 = NULL;
   trans->cache_caps2 = NULL;
 
@@ -1085,7 +1115,7 @@ unknown_size:
 }
 
 static gboolean
-gst_base_transform_event (GstPad * pad, GstEvent * event)
+gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
 {
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
@@ -1100,7 +1130,7 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
   /* FIXME, do this in the default event handler so the subclass can do
    * something different. */
   if (ret)
-    ret = gst_pad_event_default (pad, event);
+    ret = gst_pad_push_event (trans->srcpad, event);
 
   gst_object_unref (trans);
 
@@ -1108,12 +1138,17 @@ gst_base_transform_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_base_transform_eventfunc (GstBaseTransform * trans, GstEvent * event)
+gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
 {
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       break;
     case GST_EVENT_FLUSH_STOP:
+      GST_OBJECT_LOCK (trans);
+      /* reset QoS parameters */
+      trans->priv->proportion = 1.0;
+      trans->priv->earliest_time = -1;
+      GST_OBJECT_UNLOCK (trans);
       /* we need new segment info after the flush. */
       gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
       break;
@@ -1163,6 +1198,53 @@ gst_base_transform_eventfunc (GstBaseTransform * trans, GstEvent * event)
   return TRUE;
 }
 
+static gboolean
+gst_base_transform_src_event (GstPad * pad, GstEvent * event)
+{
+  GstBaseTransform *trans;
+  GstBaseTransformClass *bclass;
+  gboolean ret = TRUE;
+
+  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  if (bclass->src_event)
+    ret = bclass->src_event (trans, event);
+
+  gst_object_unref (trans);
+
+  return ret;
+}
+
+static gboolean
+gst_base_transform_src_eventfunc (GstBaseTransform * trans, GstEvent * event)
+{
+  gboolean ret;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      break;
+    case GST_EVENT_NAVIGATION:
+      break;
+    case GST_EVENT_QOS:
+    {
+      gdouble proportion;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+      gst_base_transform_update_qos (trans, proportion, diff, timestamp);
+      break;
+    }
+    default:
+      break;
+  }
+
+  ret = gst_pad_push_event (trans->sinkpad, event);
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer ** outbuf)
@@ -1171,6 +1253,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   GstFlowReturn ret = GST_FLOW_OK;
   guint out_size;
   gboolean want_in_place;
+  GstClockTime outtime;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
@@ -1188,6 +1271,26 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
    */
   if (!trans->negotiated && !trans->passthrough && (bclass->set_caps != NULL))
     goto not_negotiated;
+
+  if ((outtime = GST_BUFFER_TIMESTAMP (inbuf)) != -1) {
+    gboolean need_skip;
+    GstClockTime earliest_time;
+
+    GST_OBJECT_LOCK (trans);
+    earliest_time = trans->priv->earliest_time;
+    /* check for QoS, don't perform conversion for buffers
+     * that are known to be late. */
+    need_skip = trans->priv->qos_enabled &&
+        earliest_time != -1 && outtime <= earliest_time;
+    GST_OBJECT_UNLOCK (trans);
+
+    if (need_skip) {
+      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, trans, "skipping transform: outtime %"
+          GST_TIME_FORMAT " <= %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (outtime), GST_TIME_ARGS (earliest_time));
+      goto skip;
+    }
+  }
 
   if (trans->passthrough) {
     /* In passthrough mode, give transform_ip a look at the
@@ -1260,6 +1363,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     if (!success)
       goto configure_failed;
   }
+skip:
   gst_buffer_unref (inbuf);
 
   return ret;
@@ -1334,10 +1438,13 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   ret = gst_base_transform_handle_buffer (trans, buffer, &outbuf);
   g_mutex_unlock (trans->transform_lock);
 
-  if (ret == GST_FLOW_OK) {
-    ret = gst_pad_push (trans->srcpad, outbuf);
-  } else if (outbuf != NULL)
-    gst_buffer_unref (outbuf);
+  /* outbuf can be NULL, this means a dropped buffer */
+  if (outbuf != NULL) {
+    if (ret == GST_FLOW_OK)
+      ret = gst_pad_push (trans->srcpad, outbuf);
+    else
+      gst_buffer_unref (outbuf);
+  }
 
   gst_object_unref (trans);
 
@@ -1353,6 +1460,9 @@ gst_base_transform_set_property (GObject * object, guint prop_id,
   trans = GST_BASE_TRANSFORM (object);
 
   switch (prop_id) {
+    case PROP_QOS:
+      gst_base_transform_set_qos_enabled (trans, g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1368,6 +1478,9 @@ gst_base_transform_get_property (GObject * object, guint prop_id,
   trans = GST_BASE_TRANSFORM (object);
 
   switch (prop_id) {
+    case PROP_QOS:
+      g_value_set_boolean (value, gst_base_transform_is_qos_enabled (trans));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1441,6 +1554,8 @@ gst_base_transform_change_state (GstElement * element,
       trans->negotiated = FALSE;
       trans->have_newsegment = FALSE;
       gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
+      trans->priv->proportion = 1.0;
+      trans->priv->earliest_time = -1;
       GST_OBJECT_UNLOCK (trans);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -1594,6 +1709,85 @@ gst_base_transform_is_in_place (GstBaseTransform * trans)
 
   GST_OBJECT_LOCK (trans);
   result = trans->always_in_place;
+  GST_OBJECT_UNLOCK (trans);
+
+  return result;
+}
+
+/**
+ * gst_base_transform_update_qos:
+ * @trans: a #GstBaseTransform
+ * @proportion: the proportion
+ * @diff: the diff against the clock
+ * @timestamp: the timestamp of the buffer generating the QoS
+ *
+ * Set the QoS parameters in the transform.
+ *
+ * Since: 0.10.5
+ *
+ * MT safe.
+ */
+void
+gst_base_transform_update_qos (GstBaseTransform * trans,
+    gdouble proportion, GstClockTimeDiff diff, GstClockTime timestamp)
+{
+
+  g_return_if_fail (trans != NULL);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, trans,
+      "qos: proportion: %lf, diff %" G_GINT64_FORMAT ", timestamp %"
+      GST_TIME_FORMAT, proportion, diff, GST_TIME_ARGS (timestamp));
+
+  GST_OBJECT_LOCK (trans);
+  trans->priv->proportion = proportion;
+  trans->priv->earliest_time = timestamp + diff;
+  GST_OBJECT_UNLOCK (trans);
+}
+
+/**
+ * gst_base_transform_set_qos_enabled:
+ * @trans: a #GstBaseTransform
+ * @enabled: new state
+ *
+ * Enable or disable QoS handling in the transform.
+ *
+ * Since: 0.10.5
+ *
+ * MT safe.
+ */
+void
+gst_base_transform_set_qos_enabled (GstBaseTransform * trans, gboolean enabled)
+{
+  g_return_if_fail (trans != NULL);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, trans, "enabled: %d", enabled);
+
+  GST_OBJECT_LOCK (trans);
+  trans->priv->qos_enabled = enabled;
+  GST_OBJECT_UNLOCK (trans);
+}
+
+/**
+ * gst_base_transform_is_qos_enabled:
+ * @trans: a #GstBaseTransform
+ *
+ * Queries if the transform will handle QoS.
+ *
+ * Returns: TRUE if QoS is enabled.
+ *
+ * Since: 0.10.5
+ *
+ * MT safe.
+ */
+gboolean
+gst_base_transform_is_qos_enabled (GstBaseTransform * trans)
+{
+  gboolean result;
+
+  g_return_val_if_fail (trans != NULL, FALSE);
+
+  GST_OBJECT_LOCK (trans);
+  result = trans->priv->qos_enabled;
   GST_OBJECT_UNLOCK (trans);
 
   return result;

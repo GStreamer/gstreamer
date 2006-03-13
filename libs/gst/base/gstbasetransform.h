@@ -70,6 +70,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstBaseTransform GstBaseTransform;
 typedef struct _GstBaseTransformClass GstBaseTransformClass;
+typedef struct _GstBaseTransformPrivate GstBaseTransformPrivate;
+
 
 /**
  * GstBaseTransform:
@@ -107,7 +109,9 @@ struct _GstBaseTransform {
   GMutex	*transform_lock;
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  GstBaseTransformPrivate *priv;
+
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 1];
 };
 
 /**
@@ -157,6 +161,7 @@ struct _GstBaseTransformClass {
   gboolean      (*start)        (GstBaseTransform *trans);
   gboolean      (*stop)         (GstBaseTransform *trans);
 
+  /* sink event */
   gboolean      (*event)        (GstBaseTransform *trans, GstEvent *event);
 
   /* transform one incoming buffer to one outgoing buffer.
@@ -180,8 +185,11 @@ struct _GstBaseTransformClass {
   GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans,
      GstBuffer *input, gint size, GstCaps *caps, GstBuffer **buf);
 
+  /* src event */
+  gboolean      (*src_event)      (GstBaseTransform *trans, GstEvent *event);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 1];
 };
 
 GType           gst_base_transform_get_type         (void);
@@ -194,6 +202,13 @@ void		gst_base_transform_set_in_place     (GstBaseTransform *trans,
 	                                             gboolean in_place);
 gboolean	gst_base_transform_is_in_place      (GstBaseTransform *trans);
 
+void		gst_base_transform_update_qos       (GstBaseTransform *trans, 
+						     gdouble proportion, 
+						     GstClockTimeDiff diff, 
+						     GstClockTime timestamp);
+void		gst_base_transform_set_qos_enabled  (GstBaseTransform *trans, 
+		                                     gboolean enabled);
+gboolean	gst_base_transform_is_qos_enabled   (GstBaseTransform *trans);
 
 G_END_DECLS
 
