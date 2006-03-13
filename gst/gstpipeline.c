@@ -270,7 +270,6 @@ gst_pipeline_set_property (GObject * object, guint prop_id,
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
-  GST_OBJECT_LOCK (pipeline);
   switch (prop_id) {
     case PROP_DELAY:
       gst_pipeline_set_delay (pipeline, g_value_get_uint64 (value));
@@ -282,7 +281,6 @@ gst_pipeline_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (pipeline);
 }
 
 static void
@@ -291,7 +289,6 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
 
-  GST_OBJECT_LOCK (pipeline);
   switch (prop_id) {
     case PROP_DELAY:
       g_value_set_uint64 (value, gst_pipeline_get_delay (pipeline));
@@ -303,7 +300,6 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  GST_OBJECT_UNLOCK (pipeline);
 }
 
 /* default pipeline seeking code:

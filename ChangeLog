@@ -1,5 +1,13 @@
 2006-03-13  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpipeline.c: (gst_pipeline_set_property),
+	(gst_pipeline_get_property), (do_pipeline_seek),
+	(gst_pipeline_change_state), (gst_pipeline_set_delay),
+	(gst_pipeline_get_delay):
+	Don't deadlock when reading properties.
+
+2006-03-13  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasetransform.c:
 	(gst_base_transform_class_init), (gst_base_transform_init),
 	(gst_base_transform_sink_event),
