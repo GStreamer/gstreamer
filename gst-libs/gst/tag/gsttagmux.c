@@ -17,6 +17,32 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-tagid3v2mux
+ * @see_also: #GstID3Demux, #GstTagSetter
+ *
+ * <refsect2>
+ * <para>
+ * This element adds ID3v2 tags to the beginning of a stream using the taglib
+ * library. More precisely, the tags written are ID3 version 2.4.0 tags (which
+ * means in practice that some hardware players or outdated programs might not
+ * be able to read them properly).
+ * </para>
+ * <para>
+ * Applications can set the tags to write using the #GstTagSetter interface.
+ * Tags sent by upstream elements will be picked up automatically (and merged
+ * according to the merge mode set via the tag setter interface).
+ * </para>
+ * <para>
+ * Here is a simple pipeline that transcodes a file from Ogg/Vorbis to mp3
+ * format with an ID3v2 that contains the same as the the Ogg/Vorbis file:
+ * <programlisting>
+ * gst-launch -v filesrc location=foo.ogg ! decodebin ! audioconvert ! lame ! tagid3v2mux ! filesink location=foo.mp3
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -531,6 +557,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "taglibmux",
+    "taglib",
     "Tag-writing plug-in based on taglib",
     plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
