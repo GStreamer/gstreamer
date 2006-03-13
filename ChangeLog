@@ -1,5 +1,11 @@
 2006-03-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/taglib/gsttaglib.cc:
+	  Add gtk-doc blurb (unused for the time being); match registered
+	  plugin name to the filename of the plugin (taglibmux => taglib)
+
+2006-03-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Mikhail Zabaluev  <mhz altlinux org>
 
 	* autogen.sh:
