@@ -1,5 +1,11 @@
 2006-03-13  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gst_private.h:
+	* gst/gstinfo.c: (_gst_debug_init):
+	Added QOS debug category
+
+2006-03-13  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstbin.c: (bin_bus_handler), (gst_bin_handle_message_func):
 	* gst/gstbin.h:

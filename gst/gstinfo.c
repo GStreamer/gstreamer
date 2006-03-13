@@ -188,6 +188,8 @@ static GSList *__log_functions = NULL;
 
 static gint __default_level;
 static gint __use_color;
+
+/* enabled by default */
 gboolean __gst_debug_enabled = TRUE;
 
 
@@ -222,6 +224,7 @@ GstDebugCategory *GST_CAT_CALL_TRACE = NULL;
 GstDebugCategory *GST_CAT_SIGNAL = NULL;
 GstDebugCategory *GST_CAT_PROBE = NULL;
 GstDebugCategory *GST_CAT_REGISTRY = NULL;
+GstDebugCategory *GST_CAT_QOS = NULL;
 
 /* FIXME: export this? */
 gboolean
@@ -345,6 +348,7 @@ _gst_debug_init (void)
   GST_CAT_PROBE = _gst_debug_category_new ("GST_PROBE",
       GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "pad probes");
   GST_CAT_REGISTRY = _gst_debug_category_new ("GST_REGISTRY", 0, "registry");
+  GST_CAT_QOS = _gst_debug_category_new ("GST_QOS", 0, "QoS");
 
 
   /* print out the valgrind message if we're in valgrind */
@@ -1086,8 +1090,6 @@ gst_debug_category_get_description (GstDebugCategory * category)
  * Returns a snapshot of a all categories that are currently in use . This list
  * may change anytime.
  * The caller has to free the list after use.
- * <emphasis>This function is not threadsafe, so only use it while only the
- * main thread is running.</emphasis>
  *
  * Returns: the list of categories
  */

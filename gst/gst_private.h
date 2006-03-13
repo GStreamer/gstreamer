@@ -74,6 +74,7 @@ extern GstDebugCategory *GST_CAT_CALL_TRACE;
 extern GstDebugCategory *GST_CAT_SIGNAL;
 extern GstDebugCategory *GST_CAT_PROBE;
 extern GstDebugCategory *GST_CAT_REGISTRY;
+extern GstDebugCategory *GST_CAT_QOS;
 
 #else
 
@@ -105,6 +106,7 @@ extern GstDebugCategory *GST_CAT_REGISTRY;
 #define GST_CAT_SIGNAL           NULL
 #define GST_CAT_PROBE            NULL
 #define GST_CAT_REGISTRY         NULL
+#define GST_CAT_QOS              NULL
 
 #endif
 
