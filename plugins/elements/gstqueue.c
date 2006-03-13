@@ -28,7 +28,8 @@
  *
  * Data is queued till max_level buffers have been stored. Any subsequent
  * buffers sent to this filter will block until free space becomes available in
- * the buffer. The queue is typically used in conjunction with a thread.
+ * the buffer. The queue will create a new thread on the source pad to
+ * decouple the processing on sink and source pad.
  *
  * You can query how many buffers are queued with the level argument.
  *

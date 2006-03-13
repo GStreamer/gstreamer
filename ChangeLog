@@ -1,5 +1,10 @@
 2006-03-13  Wim Taymans  <wim@fluendo.com>
 
+	* plugins/elements/gstqueue.c:
+	Very small doc update.
+
+2006-03-13  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gst_private.h:
 	* gst/gstinfo.c: (_gst_debug_init):
 	Added QOS debug category
