@@ -427,12 +427,12 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
 {
   gint64 result, time;
 
-  g_return_val_if_fail (segment != NULL, FALSE);
+  g_return_val_if_fail (segment != NULL, -1);
 
   if (segment->format == GST_FORMAT_UNDEFINED)
     segment->format = format;
   else
-    g_return_val_if_fail (segment->format == format, FALSE);
+    g_return_val_if_fail (segment->format == format, -1);
 
   if ((time = segment->time) == -1)
     time = 0;

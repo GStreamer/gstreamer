@@ -1,5 +1,10 @@
 2006-03-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstsegment.c: (gst_segment_to_stream_time):
+	Return correct return type in case of errors.
+
+2006-03-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstformat.c: (gst_format_get_name), (gst_format_to_quark):
 	  Don't segfault on invalid formats.
 
