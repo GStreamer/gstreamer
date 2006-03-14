@@ -126,6 +126,8 @@ gst_v4l2src_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  GST_DEBUG_CATEGORY_INIT (v4l2src_debug, "v4l2src", 0, "V4L2 source element");
+
   gst_element_class_set_details (gstelement_class, &gst_v4l2src_details);
 
   gst_element_class_add_pad_template
@@ -154,8 +156,6 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
           "Drop/Insert frames to reach a certain FPS (TRUE) "
           "or adapt FPS to suit the number of frabbed frames",
           TRUE, G_PARAM_READWRITE));
-
-  GST_DEBUG_CATEGORY_INIT (v4l2src_debug, "v4l2src", 0, "V4L2 source element");
 
   basesrc_class->get_caps = gst_v4l2src_get_caps;
   basesrc_class->set_caps = gst_v4l2src_set_caps;

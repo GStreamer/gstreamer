@@ -1,3 +1,10 @@
+2006-03-14  Edward Hervey  <edward@fluendo.com>
+
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_base_init),
+	(gst_v4l2src_class_init):
+	Initialization of the debugging category should be as early as possible,
+	moving it from _class_init() to beginning of _base_init().
+
 2006-03-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/taglib/gsttaglib.cc:
