@@ -1,5 +1,13 @@
 2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times):
+	  Can't use gst_segment_to_running_time() when the segment
+	  is not in GST_TIME_FORMAT (like with filesink, for example).
+	  Stops flac encoding pipelines from spewing critical warnings
+	  at EOS (#331248).
+	  
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstpipeline.c: (gst_pipeline_class_init):
 	  Add 'Since: 0.10.5' to gtk-doc blurb for added property.
 

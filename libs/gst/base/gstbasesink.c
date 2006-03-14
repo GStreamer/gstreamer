@@ -767,11 +767,17 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     }
   }
 
-  *start =
-      gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME, cstart);
-  *stop =
-      gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME, cstop);
-
+  if (G_LIKELY (basesink->segment.format == GST_FORMAT_TIME)) {
+    *start =
+        gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME,
+        cstart);
+    *stop =
+        gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME,
+        cstop);
+  } else {
+    *start = -1;
+    *stop = -1;
+  }
   /* buffers always need syncing and preroll */
   return TRUE;
 
