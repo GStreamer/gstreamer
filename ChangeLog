@@ -1,3 +1,8 @@
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  back to CVS.
+
 === release 0.10.5 ===
 
 2006-03-13  Thomas Vander Stichele <thomas at apestaart dot org>
