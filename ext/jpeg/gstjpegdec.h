@@ -38,10 +38,10 @@ G_BEGIN_DECLS
 #define GST_JPEG_DEC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_JPEG_DEC,GstJpegDec))
 #define GST_JPEG_DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_JPEG_DEC,GstJpegDec))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_JPEG_DEC,GstJpegDecClass))
 #define GST_IS_JPEG_DEC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_JPEG_DEC))
-#define GST_IS_JPEG_DEC_CLASS(obj) \
+#define GST_IS_JPEG_DEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JPEG_DEC))
 
 typedef struct _GstJpegDec           GstJpegDec;
@@ -72,13 +72,12 @@ struct _GstJpegDec {
   /* TRUE if each input buffer contains a whole jpeg image */
   gboolean packetized;
 
-  /* the timestamp of the next frame */
+  /* the (expected) timestamp of the next frame */
   guint64  next_ts;
 
   /* video state */
   gint framerate_numerator;
   gint framerate_denominator;
-  gint frames_decoded;
 
   /* negotiated state */
   gint     caps_framerate_numerator;

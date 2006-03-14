@@ -57,7 +57,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         G_STRINGIFY (MAX_HEIGHT) " ], " "framerate = (fraction) [ 0/1, MAX ]")
     );
 
-GST_DEBUG_CATEGORY (jpeg_dec_debug);
+GST_DEBUG_CATEGORY_STATIC (jpeg_dec_debug);
 #define GST_CAT_DEFAULT jpeg_dec_debug
 
 /* These macros are adapted from videotestsrc.c 
@@ -144,7 +144,9 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_jpeg_dec_finalize;
-  gstelement_class->change_state = gst_jpeg_dec_change_state;
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_jpeg_dec_change_state);
 
   GST_DEBUG_CATEGORY_INIT (jpeg_dec_debug, "jpegdec", 0, "JPEG decoder");
 }
@@ -708,6 +710,13 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
+  duration = GST_BUFFER_DURATION (buf);
+
+/*
+  GST_LOG_OBJECT (dec, "Received buffer: %d bytes, ts=%" GST_TIME_FORMAT
+      ", dur=%" GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
+      GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
+*/
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     dec->next_ts = timestamp;
@@ -824,15 +833,18 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   outdata = GST_BUFFER_DATA (outbuf);
   GST_BUFFER_TIMESTAMP (outbuf) = dec->next_ts;
 
-  if (dec->packetized && dec->framerate_numerator != 0) {
-    GstClockTime next_ts;
-
-    dec->frames_decoded++;
-    next_ts = gst_util_uint64_scale (dec->frames_decoded,
-        GST_SECOND * dec->framerate_denominator, dec->framerate_numerator);
-
-    duration = next_ts - dec->next_ts;
-    dec->next_ts = next_ts;
+  if (dec->packetized && GST_CLOCK_TIME_IS_VALID (dec->next_ts)) {
+    if (GST_CLOCK_TIME_IS_VALID (duration)) {
+      /* use duration from incoming buffer for outgoing buffer */
+      dec->next_ts += duration;
+    } else if (dec->framerate_numerator != 0) {
+      duration = gst_util_uint64_scale (GST_SECOND,
+          dec->framerate_denominator, dec->framerate_numerator);
+      dec->next_ts += duration;
+    } else {
+      duration = GST_CLOCK_TIME_NONE;
+      dec->next_ts = GST_CLOCK_TIME_NONE;
+    }
   } else {
     duration = GST_CLOCK_TIME_NONE;
     dec->next_ts = GST_CLOCK_TIME_NONE;
@@ -874,7 +886,10 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (dec, "decompressing finished");
   jpeg_finish_decompress (&dec->cinfo);
 
-  GST_LOG_OBJECT (dec, "pushing buffer");
+  GST_LOG_OBJECT (dec, "pushing buffer (ts=%" GST_TIME_FORMAT ", dur=%"
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
+
   ret = gst_pad_push (dec->srcpad, outbuf);
 
 done:
@@ -942,7 +957,6 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
       dec->framerate_numerator = 0;
       dec->framerate_denominator = 1;
       dec->caps_framerate_numerator = dec->caps_framerate_denominator = 0;
-      dec->frames_decoded = 0;
       dec->caps_width = -1;
       dec->caps_height = -1;
       dec->packetized = FALSE;
@@ -952,6 +966,8 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret != GST_STATE_CHANGE_SUCCESS)
+    return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:

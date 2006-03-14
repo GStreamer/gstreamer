@@ -1,3 +1,11 @@
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_class_init),
+	(gst_jpeg_dec_chain), (gst_jpeg_dec_change_state):
+	* ext/jpeg/gstjpegdec.h:
+	  Fix durations on outgoing buffers after seeking
+	  in MJPEG files (#334083); some minor clean-ups.
+
 2006-03-13  Wim Taymans  <wim@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_reset),
