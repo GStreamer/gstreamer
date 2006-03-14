@@ -578,8 +578,9 @@ gst_clock_class_init (GstClockClass * klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_clock_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_STATS,
-      g_param_spec_boolean ("stats", "Stats", "Enable clock stats",
-          DEFAULT_STATS, G_PARAM_READWRITE));
+      g_param_spec_boolean ("stats", "Stats",
+          "Enable clock stats (unimplemented)", DEFAULT_STATS,
+          G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WINDOW_SIZE,
       g_param_spec_int ("window-size", "Window size",
           "The size of the window used to calculate rate and offset", 2, 1024,
@@ -1114,6 +1115,7 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
 
 invalid:
   {
+    GST_DEBUG_OBJECT (clock, "sxx == 0, regression failed");
     return FALSE;
   }
 }
@@ -1129,6 +1131,12 @@ invalid:
  * clock are added to the list of observations. If enough observations
  * are available, a linear regression algorithm is run on the
  * observations and @clock is recalibrated.
+ *
+ * If this functions returns %TRUE, @r_squared will contain the sum
+ * of squared distances from the interpolated values. Lower values
+ * means the regression yielded a more accurate result. This value can
+ * be used to control the sampling frequency of the master and slave
+ * clocks.
  *
  * Returns: TRUE if enough observations were added to run the 
  * regression algorithm.

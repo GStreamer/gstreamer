@@ -1,5 +1,13 @@
 2006-03-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstclock.c: (gst_clock_class_init), (do_linear_regression):
+	Marked the stats property as unimplemented so people don't get
+	wild ideas.
+	Add debug message when regression goes wrong.
+	Added some more docs.
+
+2006-03-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstsegment.c: (gst_segment_to_stream_time):
 	Return correct return type in case of errors.
 
