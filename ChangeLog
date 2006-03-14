@@ -1,5 +1,17 @@
 2006-03-14  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_configure_segment),
+	(gst_base_sink_get_sync_times), (gst_base_sink_wait_clock),
+	(gst_base_sink_do_sync), (gst_base_sink_do_qos):
+	Better debug info when we receive a segment event.
+	Reorganize a bit so we can pass the get_times() results around.
+	Use the segment format when calculating the running time.
+	Don't do QoS is sync is disabled or we have no clock or the
+	element does not want us to sync to the clock.
+	Don't drop buffers if QoS is disabled for now.
+
+2006-03-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstclock.c: (gst_clock_class_init), (do_linear_regression):
 	Marked the stats property as unimplemented so people don't get
 	wild ideas.

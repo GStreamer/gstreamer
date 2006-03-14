@@ -214,7 +214,8 @@ static gboolean gst_base_sink_activate_pull (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_base_sink_do_qos (GstBaseSink * basesink,
-    GstMiniObject * obj, GstClockReturn status, GstClockTimeDiff jitter);
+    GstMiniObject * obj, GstClockTime sstart, GstClockTime sstop,
+    GstClockReturn status, GstClockTimeDiff jitter);
 
 static void
 gst_base_sink_base_init (gpointer g_class)
@@ -593,13 +594,22 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
 
   gst_segment_set_newsegment (segment, update, rate, format, start, stop, time);
 
-  GST_DEBUG_OBJECT (basesink,
-      "configured NEWSEGMENT %" GST_TIME_FORMAT " -- %"
-      GST_TIME_FORMAT ", time %" GST_TIME_FORMAT ", accum %"
-      GST_TIME_FORMAT,
-      GST_TIME_ARGS (segment->start),
-      GST_TIME_ARGS (segment->stop),
-      GST_TIME_ARGS (segment->time), GST_TIME_ARGS (segment->accum));
+  if (format == GST_FORMAT_TIME) {
+    GST_DEBUG_OBJECT (basesink,
+        "configured NEWSEGMENT update %d, rate %lf, format GST_FORMAT_TIME, "
+        "%" GST_TIME_FORMAT " -- %" GST_TIME_FORMAT
+        ", time %" GST_TIME_FORMAT ", accum %" GST_TIME_FORMAT,
+        update, rate, GST_TIME_ARGS (segment->start),
+        GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time),
+        GST_TIME_ARGS (segment->accum));
+  } else {
+    GST_DEBUG_OBJECT (basesink,
+        "configured NEWSEGMENT update %d, rate %lf, format %d, "
+        "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
+        G_GINT64_FORMAT ", accum %" G_GINT64_FORMAT, update, rate,
+        segment->format, segment->start, segment->stop, segment->time,
+        segment->accum);
+  }
   GST_OBJECT_UNLOCK (basesink);
 }
 
@@ -693,13 +703,16 @@ stopping:
  * Returns TRUE if the object needs synchronisation and takes therefore
  * part in prerolling.
  *
+ * sstart/sstop contain the raw timestamp start/stop times of the object.
+ * start/stop contain the times usefull for synchronising to the clock.
+ *
  * start and stop cannot be NULL.
  */
 static gboolean
 gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
+    GstClockTime * sstart, GstClockTime * sstop,
     GstClockTime * start, GstClockTime * stop)
 {
-  GstClockTime sstart, sstop;
   gint64 cstart, cstop;
   GstBaseSinkClass *bclass;
   GstBuffer *buffer;
@@ -729,21 +742,21 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
-  sstart = sstop = -1;
+  *sstart = *sstop = -1;
   if (bclass->get_times)
-    bclass->get_times (basesink, buffer, &sstart, &sstop);
+    bclass->get_times (basesink, buffer, sstart, sstop);
 
   GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
-      ", stop: %" GST_TIME_FORMAT, GST_TIME_ARGS (sstart),
-      GST_TIME_ARGS (sstop));
+      ", stop: %" GST_TIME_FORMAT, GST_TIME_ARGS (*sstart),
+      GST_TIME_ARGS (*sstop));
 
   if (G_LIKELY (basesink->segment.format == GST_FORMAT_TIME)) {
     /* clip */
     if (G_UNLIKELY (!gst_segment_clip (&basesink->segment, GST_FORMAT_TIME,
-                (gint64) sstart, (gint64) sstop, &cstart, &cstop)))
+                (gint64) * sstart, (gint64) * sstop, &cstart, &cstop)))
       goto out_of_segment;
 
-    if (G_UNLIKELY (sstart != cstart || sstop != cstop)) {
+    if (G_UNLIKELY (*sstart != cstart || *sstop != cstop)) {
       GST_DEBUG_OBJECT (basesink, "clipped to: start %" GST_TIME_FORMAT
           ", stop: %" GST_TIME_FORMAT, GST_TIME_ARGS (cstart),
           GST_TIME_ARGS (cstop));
@@ -759,25 +772,21 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   } else {
     if (basesink->segment.accum == 0) {
       /* no clipping for formats different from GST_FORMAT_TIME */
-      cstart = sstart;
-      cstop = sstop;
+      cstart = *sstart;
+      cstop = *sstop;
     } else {
       cstart = -1;
       cstop = -1;
     }
   }
 
-  if (G_LIKELY (basesink->segment.format == GST_FORMAT_TIME)) {
-    *start =
-        gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME,
-        cstart);
-    *stop =
-        gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME,
-        cstop);
-  } else {
-    *start = -1;
-    *stop = -1;
-  }
+  *start =
+      gst_segment_to_running_time (&basesink->segment, basesink->segment.format,
+      cstart);
+  *stop =
+      gst_segment_to_running_time (&basesink->segment, basesink->segment.format,
+      cstop);
+
   /* buffers always need syncing and preroll */
   return TRUE;
 
@@ -796,9 +805,10 @@ out_of_segment:
 /* with STREAM_LOCK, PREROLL_LOCK
  *
  * Waits for the clock to reach @time. If @time is not valid, no
- * synchronisation is done. 
+ * synchronisation is done and BADTIME is returned. 
  * If synchronisation is disabled in the element or there is no
- * clock, no synchronisation is done.
+ * clock, no synchronisation is done and BADTIME is returned.
+ *
  * Else a blocking wait is performed on the clock. We save the ClockID
  * so we can unlock the entry at any time. While we are blocking, we 
  * release the PREROLL_LOCK so that other threads can interrupt the entry.
@@ -811,8 +821,6 @@ gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
   GstClockReturn ret;
   GstClock *clock;
   GstClockTime base_time;
-
-  *jitter = 0;
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time)))
     goto invalid_time;
@@ -840,22 +848,23 @@ gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
 
   return ret;
 
+  /* no syncing needed */
 invalid_time:
   {
     GST_DEBUG_OBJECT (basesink, "time not valid, no sync needed");
-    return GST_CLOCK_OK;
+    return GST_CLOCK_BADTIME;
   }
 no_sync:
   {
     GST_DEBUG_OBJECT (basesink, "sync disabled");
     GST_OBJECT_UNLOCK (basesink);
-    return GST_CLOCK_OK;
+    return GST_CLOCK_BADTIME;
   }
 no_clock:
   {
     GST_DEBUG_OBJECT (basesink, "no clock, can't sync");
     GST_OBJECT_UNLOCK (basesink);
-    return GST_CLOCK_OK;
+    return GST_CLOCK_BADTIME;
   }
 }
 
@@ -885,14 +894,16 @@ static GstFlowReturn
 gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
     GstMiniObject * obj, gboolean * late)
 {
+  GstClockTime sstart, sstop;
   GstClockTime start, stop;
   GstClockTimeDiff jitter;
   gboolean syncable;
   GstClockReturn status = GST_CLOCK_OK;
 
   /* get timing information for this object */
-  start = stop = -1;
-  syncable = gst_base_sink_get_sync_times (basesink, obj, &start, &stop);
+  sstart = sstop = start = stop = -1;
+  syncable = gst_base_sink_get_sync_times (basesink, obj,
+      &sstart, &sstop, &start, &stop);
 
   /* a syncable object needs to participate in preroll and
    * clocking. All buffers and EOS are syncable. */
@@ -929,15 +940,20 @@ again:
   }
 
   /* preroll done, we can sync since we are in PLAYING now. */
+  basesink->end_time = stop;
+
   GST_DEBUG_OBJECT (basesink, "waiting for clock to reach %" GST_TIME_FORMAT,
       GST_TIME_ARGS (start));
-  basesink->end_time = stop;
-  /* this function will return immediatly if start == -1 with
-   * GST_CLOCK_OK and jitter = 0. */
+  /* this function will return immediatly if start == -1, no clock
+   * or sync is disabled with GST_CLOCK_BADTIME. */
   status = gst_base_sink_wait_clock (basesink, start, &jitter);
   GST_DEBUG_OBJECT (basesink, "clock returned %d", status);
 
-  /* waiting could be interrupted and we can be flushing now */
+  /* invalid time, no clock or sync disabled, don't do QoS */
+  if (status == GST_CLOCK_BADTIME)
+    goto done;
+
+  /* waiting could have been interrupted and we can be flushing now */
   if (G_UNLIKELY (basesink->flushing))
     goto flushing;
 
@@ -949,8 +965,9 @@ again:
   }
 
   /* perform QoS */
-  *late = gst_base_sink_do_qos (basesink, obj, status, jitter);
+  *late = gst_base_sink_do_qos (basesink, obj, sstart, sstop, status, jitter);
 
+done:
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -980,13 +997,13 @@ stopping:
  */
 static gboolean
 gst_base_sink_do_qos (GstBaseSink * basesink, GstMiniObject * obj,
+    GstClockTime sstart, GstClockTime sstop,
     GstClockReturn status, GstClockTimeDiff jitter)
 {
   gboolean late;
-  GstClockTime timestamp, duration;
   gint64 max_lateness;
 
-  /* only for buffers that are too late */
+  /* only for objects that were too late */
   if (status != GST_CLOCK_EARLY)
     goto in_time;
 
@@ -995,21 +1012,27 @@ gst_base_sink_do_qos (GstBaseSink * basesink, GstMiniObject * obj,
     goto not_buffer;
 
   /* can't do stats if we don't have a timestamp */
-  if (G_UNLIKELY ((timestamp = GST_BUFFER_TIMESTAMP (obj)) == -1))
+  if (G_UNLIKELY (sstart == -1))
     goto no_timestamp;
-
-  /* if the jitter bigger than duration we are too late */
-  if (G_UNLIKELY ((duration = GST_BUFFER_DURATION (obj)) != -1))
-    late = jitter > duration;
-  else
-    late = FALSE;
 
   /* copy for code clarity */
   max_lateness = basesink->abidata.ABI.max_lateness;
 
-  /* check if we need to do qos */
-  if (max_lateness == -1 || jitter <= max_lateness)
+  /* check if QoS (and frame dropping) is enabled */
+  /* FIXME, frame dropping should not depend on the QoS
+   * being enabled or not. We need another property for that. */
+  if (max_lateness == -1)
     goto no_qos;
+
+  /* if the jitter bigger than duration we are too late */
+  if (G_LIKELY (sstop != -1))
+    late = sstart + jitter > sstop;
+  else
+    late = FALSE;
+
+  /* check if we need to do qos */
+  if (jitter <= max_lateness)
+    goto in_qos_limit;
 
   /* FIXME, do stats here in jitter. This could be used to derive
    * a trend, which should then result in an updated proportion. */
@@ -1024,12 +1047,12 @@ gst_base_sink_do_qos (GstBaseSink * basesink, GstMiniObject * obj,
 
     GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
         "qos: proportion: %lf, diff %" G_GUINT64_FORMAT ", timestamp %"
-        GST_TIME_FORMAT, proportion, jitter, GST_TIME_ARGS (timestamp));
+        GST_TIME_FORMAT, proportion, jitter, GST_TIME_ARGS (sstart));
 
-    event = gst_event_new_qos (proportion, jitter, timestamp);
+    event = gst_event_new_qos (proportion, jitter, sstart);
 
     /* if no duration set, we assume lateness here as well. */
-    if (duration == -1)
+    if (sstop == -1)
       late = TRUE;
 
     /* send upstream */
@@ -1056,7 +1079,12 @@ no_timestamp:
   }
 no_qos:
   {
-    GST_DEBUG_OBJECT (basesink, "qos disabled");
+    GST_DEBUG_OBJECT (basesink, "QoS disabled");
+    return FALSE;
+  }
+in_qos_limit:
+  {
+    GST_DEBUG_OBJECT (basesink, "in QoS limit");
     return late;
   }
 }
