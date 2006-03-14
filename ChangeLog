@@ -1,3 +1,11 @@
+2006-03-14  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_do_sync),
+	(gst_base_sink_do_qos):
+	Separate QoS calculation.
+	Only drop buffers when lateness is bigger than the 
+	duration of the buffer.
+
 2006-03-13  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpipeline.c: (gst_pipeline_set_property),

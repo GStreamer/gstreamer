@@ -213,6 +213,9 @@ static gboolean gst_base_sink_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_activate_pull (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
 
+static gboolean gst_base_sink_do_qos (GstBaseSink * basesink,
+    GstMiniObject * obj, GstClockReturn status, GstClockTimeDiff jitter);
+
 static void
 gst_base_sink_base_init (gpointer g_class)
 {
@@ -880,7 +883,6 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
   GstClockTimeDiff jitter;
   gboolean syncable;
   GstClockReturn status = GST_CLOCK_OK;
-  GstClockTime timestamp;
 
   /* get timing information for this object */
   start = stop = -1;
@@ -940,47 +942,9 @@ again:
     goto again;
   }
 
-  *late = FALSE;
+  /* perform QoS */
+  *late = gst_base_sink_do_qos (basesink, obj, status, jitter);
 
-  /* only do stats for buffers */
-  if (G_UNLIKELY (!GST_IS_BUFFER (obj)))
-    goto done;
-
-  /* did not sync on this object, we don't need to do stats */
-  if (start == -1)
-    goto done;
-
-  /* can't do stats if we don't have a timestamp */
-  if ((timestamp = GST_BUFFER_TIMESTAMP (obj)) == -1)
-    goto done;
-
-  /* FIXME, do stats here in jitter. This could be used to derive
-   * a trend, which should then result in an updated proportion. */
-
-  if (status == GST_CLOCK_EARLY) {
-    if (basesink->abidata.ABI.max_lateness != -1
-        && jitter > basesink->abidata.ABI.max_lateness) {
-      GstEvent *event;
-      gdouble proportion;
-
-      GST_DEBUG_OBJECT (basesink, "late: jitter!! %" G_GINT64_FORMAT, jitter);
-      *late = TRUE;
-
-      /* generate QoS event, proportion is still silly.  */
-      proportion = 0.0;
-
-      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
-          "qos: proportion: %lf, diff %" G_GUINT64_FORMAT ", timestamp %"
-          GST_TIME_FORMAT, proportion, jitter, GST_TIME_ARGS (timestamp));
-
-      event = gst_event_new_qos (proportion, jitter, timestamp);
-
-      /* send upstream */
-      gst_pad_push_event (basesink->sinkpad, event);
-    }
-  }
-
-done:
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -998,6 +962,96 @@ stopping:
   {
     GST_DEBUG_OBJECT (basesink, "stopping while commiting state");
     return GST_FLOW_WRONG_STATE;
+  }
+}
+
+/* perform QoS on the given object. 
+ *
+ * If the object was scheduled later that max_lateness we generate
+ * a QoS message upstream.
+ *
+ * returns TRUE if the buffer was too late.
+ */
+static gboolean
+gst_base_sink_do_qos (GstBaseSink * basesink, GstMiniObject * obj,
+    GstClockReturn status, GstClockTimeDiff jitter)
+{
+  gboolean late;
+  GstClockTime timestamp, duration;
+  gint64 max_lateness;
+
+  /* only for buffers that are too late */
+  if (status != GST_CLOCK_EARLY)
+    goto in_time;
+
+  /* only do stats for buffers */
+  if (G_UNLIKELY (!GST_IS_BUFFER (obj)))
+    goto not_buffer;
+
+  /* can't do stats if we don't have a timestamp */
+  if (G_UNLIKELY ((timestamp = GST_BUFFER_TIMESTAMP (obj)) == -1))
+    goto no_timestamp;
+
+  /* if the jitter bigger than duration we are too late */
+  if (G_UNLIKELY ((duration = GST_BUFFER_DURATION (obj)) != -1))
+    late = jitter > duration;
+  else
+    late = FALSE;
+
+  /* copy for code clarity */
+  max_lateness = basesink->abidata.ABI.max_lateness;
+
+  /* check if we need to do qos */
+  if (max_lateness == -1 || jitter <= max_lateness)
+    goto no_qos;
+
+  /* FIXME, do stats here in jitter. This could be used to derive
+   * a trend, which should then result in an updated proportion. */
+  {
+    GstEvent *event;
+    gdouble proportion;
+
+    GST_DEBUG_OBJECT (basesink, "late: jitter!! %" G_GINT64_FORMAT, jitter);
+
+    /* generate QoS event, proportion is still silly.  */
+    proportion = 0.0;
+
+    GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
+        "qos: proportion: %lf, diff %" G_GUINT64_FORMAT ", timestamp %"
+        GST_TIME_FORMAT, proportion, jitter, GST_TIME_ARGS (timestamp));
+
+    event = gst_event_new_qos (proportion, jitter, timestamp);
+
+    /* if no duration set, we assume lateness here as well. */
+    if (duration == -1)
+      late = TRUE;
+
+    /* send upstream */
+    gst_pad_push_event (basesink->sinkpad, event);
+  }
+
+  return late;
+
+  /* cases where no qos is needed */
+in_time:
+  {
+    GST_DEBUG_OBJECT (basesink, "object was scheduled in time");
+    return FALSE;
+  }
+not_buffer:
+  {
+    GST_DEBUG_OBJECT (basesink, "object is not a buffer");
+    return FALSE;
+  }
+no_timestamp:
+  {
+    GST_DEBUG_OBJECT (basesink, "buffer has no timestamp");
+    return FALSE;
+  }
+no_qos:
+  {
+    GST_DEBUG_OBJECT (basesink, "qos disabled");
+    return late;
   }
 }
 
