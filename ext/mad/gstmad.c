@@ -85,6 +85,8 @@ struct _GstMad
 
   gboolean check_for_xing;
   gboolean xing_found;
+
+  gboolean framed;              /* whether there is a demuxer in front of us */
 };
 
 struct _GstMadClass
@@ -445,7 +447,8 @@ gst_mad_convert_sink (GstPad * pad, GstFormat src_format, gint64 src_value,
       switch (*dest_format) {
         case GST_FORMAT_TIME:
           /* multiply by 8 because vbr is in bits/second */
-          *dest_value = src_value * 8 * GST_SECOND / mad->vbr_average;
+          *dest_value = gst_util_uint64_scale (src_value, 8 * GST_SECOND,
+              mad->vbr_average);
           break;
         default:
           res = FALSE;
@@ -455,7 +458,8 @@ gst_mad_convert_sink (GstPad * pad, GstFormat src_format, gint64 src_value,
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
           /* multiply by 8 because vbr is in bits/second */
-          *dest_value = src_value * mad->vbr_average / (8 * GST_SECOND);
+          *dest_value = gst_util_uint64_scale (src_value, mad->vbr_average,
+              8 * GST_SECOND);
           break;
         default:
           res = FALSE;
@@ -1008,6 +1012,14 @@ G_STMT_START{                                                   \
         GST_TAG_LAYER, mad->header.layer,
         GST_TAG_MODE, mode->value_nick,
         GST_TAG_EMPHASIS, emphasis->value_nick, NULL);
+    if (!mad->framed) {
+      gchar *str;
+
+      str = g_strdup_printf ("MPEG-1 layer %d", mad->header.layer);
+      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+          GST_TAG_AUDIO_CODEC, str, NULL);
+      g_free (str);
+    }
     if (!mad->xing_found) {
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_BITRATE, mad->header.bitrate, NULL);
@@ -1040,6 +1052,7 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
         result = gst_pad_push_event (mad->srcpad, event);
         /* we don't need to restart when we get here */
         mad->restart = FALSE;
+        mad->framed = TRUE;
       } else {
         GST_DEBUG ("dropping newsegment event in format %s",
             gst_format_get_name (format));
@@ -1048,6 +1061,7 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
         mad->restart = TRUE;
         gst_event_unref (event);
         mad->tempsize = 0;
+        mad->framed = FALSE;
         result = TRUE;
       }
       break;
@@ -1677,6 +1691,7 @@ gst_mad_change_state (GstElement * element, GstStateChange transition)
       mad->vbr_average = 0;
       mad->segment_start = 0;
       mad->new_header = TRUE;
+      mad->framed = FALSE;
       mad->framecount = 0;
       mad->vbr_rate = 0;
       mad->frame.header.samplerate = 0;

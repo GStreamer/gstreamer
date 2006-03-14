@@ -1,3 +1,10 @@
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mad/gstmad.c: (gst_mad_convert_sink), (gst_mad_update_info),
+	(gst_mad_sink_event), (gst_mad_change_state):
+	  Include AUDIO_CODEC tag with tags posted if input is not
+	  framed (#334258). Use _scale() util functions in more places.
+
 2006-03-12  Christophe Fergeau  <teuf@gnome.org>
 
 	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
