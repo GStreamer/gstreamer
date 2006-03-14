@@ -81,16 +81,21 @@ _gst_format_initialize (void)
  *
  * Get a printable name for the given format. Do not modify or free.
  *
- * Returns: a reference to the static name of the format.
+ * Returns: a reference to the static name of the format or NULL if
+ * the format is unknown.
  */
 const gchar *
 gst_format_get_name (GstFormat format)
 {
   const GstFormatDefinition *def;
+  const gchar *result;
 
-  def = gst_format_get_details (format);
+  if ((def = gst_format_get_details (format)) != NULL)
+    result = def->nick;
+  else
+    result = NULL;
 
-  return def->nick;
+  return result;
 }
 
 /**
@@ -99,16 +104,21 @@ gst_format_get_name (GstFormat format)
  *
  * Get the unique quark for the given format.
  *
- * Returns: the quark associated with the format
+ * Returns: the quark associated with the format or 0 if the format
+ * is unknown.
  */
 GQuark
 gst_format_to_quark (GstFormat format)
 {
   const GstFormatDefinition *def;
+  GQuark result;
 
-  def = gst_format_get_details (format);
+  if ((def = gst_format_get_details (format)) != NULL)
+    result = def->quark;
+  else
+    result = 0;
 
-  return def->quark;
+  return result;
 }
 
 /**
