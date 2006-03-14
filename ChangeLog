@@ -1,3 +1,11 @@
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
+	  Don't use gst_pad_alloc_buffer() for frames with palette,
+	  as we'll artificially shorten the size of buffers in that
+	  case and GstBaseTransform will complain about unit size
+	  issues if we use _alloc_buffer() with the full size.
+
 2006-03-01  Michal Benes  <michal dot benes at xeris dot cz>
 
 	Reviewed by : Edward Hervey  <edward@fluendo.com>

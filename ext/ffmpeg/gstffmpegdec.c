@@ -897,12 +897,21 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
           if (!gst_ffmpegdec_negotiate (ffmpegdec))
             return -1;
 
-          if ((*ret =
-                  gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad,
-                      GST_BUFFER_OFFSET_NONE, fsize,
-                      GST_PAD_CAPS (ffmpegdec->srcpad),
-                      &outbuf)) != GST_FLOW_OK)
-            return -1;
+          if (!ffmpegdec->context->palctrl) {
+            if ((*ret =
+                    gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad,
+                        GST_BUFFER_OFFSET_NONE, fsize,
+                        GST_PAD_CAPS (ffmpegdec->srcpad),
+                        &outbuf)) != GST_FLOW_OK)
+              return -1;
+          } else {
+            /* for paletted data we can't use pad_alloc_buffer(), because
+             * fsize contains the size of the palette, so the overall size
+             * is bigger than ffmpegcolorspace's unit size, which will
+             * prompt GstBaseTransform to complain endlessly ... */
+            outbuf = gst_buffer_new_and_alloc (fsize);
+            gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
+          }
 
           /* original ffmpeg code does not handle odd sizes correctly.
            * This patched up version does */
