@@ -1,3 +1,8 @@
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	  Add support for 24bpp DIB (#305279).
+
 2006-03-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/video/gstvideofilter.c: (gst_video_filter_init):
