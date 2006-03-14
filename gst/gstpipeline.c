@@ -201,6 +201,8 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
    * The expected delay needed for elements to spin up to the
    * PLAYING state expressed in nanoseconds.
    * see gst_pipeline_set_delay() for more information on this option.
+   *
+   * Since: 0.10.5
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELAY,
       g_param_spec_uint64 ("delay", "Delay",

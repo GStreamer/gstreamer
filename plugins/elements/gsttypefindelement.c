@@ -470,8 +470,10 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
 
           /* we might not have started typefinding yet because there was not
            * enough data so far; just give it a shot now and see what we get */
-          caps = gst_type_find_helper_for_buffer (GST_OBJECT (typefind),
-              typefind->store, &prob);
+          if (typefind->store) {
+            caps = gst_type_find_helper_for_buffer (GST_OBJECT (typefind),
+                typefind->store, &prob);
+          }
 
           if (caps && prob >= typefind->min_probability) {
             g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],

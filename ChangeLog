@@ -1,3 +1,12 @@
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstpipeline.c: (gst_pipeline_class_init):
+	  Add 'Since: 0.10.5' to gtk-doc blurb for added property.
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_handle_event):
+	  Don't try to typefind empty streams.
+
 2006-03-14  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_do_sync),
