@@ -1,5 +1,11 @@
 2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_invert):
+	  Fix DIB image inversion for pictures with a
+	  depth != 8 (#305279).
+
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_class_init),
 	(gst_jpeg_dec_chain), (gst_jpeg_dec_change_state):
 	* ext/jpeg/gstjpegdec.h:

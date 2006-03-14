@@ -2368,20 +2368,30 @@ swap_line (guint8 * d1, guint8 * d2, guint8 * tmp, gint bytes)
 static GstBuffer *
 gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
 {
-  gint y, h = stream->strf.vids->height, w = stream->strf.vids->width;
+  GstStructure *s;
+  gint y, h = stream->strf.vids->height;
+  gint bpp, stride;
   guint8 *tmp = NULL;
 
-  buf = gst_buffer_make_writable (buf);
-  if (GST_BUFFER_SIZE (buf) < (w * h)) {
-    GST_WARNING ("Buffer is smaller than reported Width x Height");
+  s = gst_caps_get_structure (GST_PAD_CAPS (stream->pad), 0);
+  if (!gst_structure_get_int (s, "bpp", &bpp)) {
+    GST_WARNING ("Failed to retrieve depth from caps");
     return buf;
   }
 
-  tmp = g_malloc (w);
+  stride = stream->strf.vids->width * (bpp / 8);
+
+  buf = gst_buffer_make_writable (buf);
+  if (GST_BUFFER_SIZE (buf) < (stride * h)) {
+    GST_WARNING ("Buffer is smaller than reported Width x Height x Depth");
+    return buf;
+  }
+
+  tmp = g_malloc (stride);
 
   for (y = 0; y < h / 2; y++) {
-    swap_line (GST_BUFFER_DATA (buf) + w * y,
-        GST_BUFFER_DATA (buf) + w * (h - 1 - y), tmp, w);
+    swap_line (GST_BUFFER_DATA (buf) + stride * y,
+        GST_BUFFER_DATA (buf) + stride * (h - 1 - y), tmp, stride);
   }
 
   g_free (tmp);
