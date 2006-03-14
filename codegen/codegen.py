@@ -1227,17 +1227,24 @@ def register_types(parser):
 
 usage = 'usage: codegen.py [-o overridesfile] [-p prefix] defsfile'
 def main(argv):
-    o = override.Overrides()
     prefix = 'pygtk'
     outfilename = None
     errorfilename = None
-    opts, args = getopt.getopt(argv[1:], "o:p:r:t:D:",
+    extendpath = []
+    opts, args = getopt.getopt(argv[1:], "o:p:r:t:D:x",
                         ["override=", "prefix=", "register=", "outfilename=",
-                         "load-types=", "errorfilename="])
+                         "load-types=", "errorfilename=", "extendpath="])
     defines = {} # -Dkey[=val] options
+
+    for opt, arg in opts:
+        if opt in ('-x', '--extendpath'):
+            extendpath.append(arg)
+    extendpath.insert(0, os.getcwd())
+    o = override.Overrides(path=extendpath)
+    
     for opt, arg in opts:
         if opt in ('-o', '--override'):
-            o = override.Overrides(arg)
+            o = override.Overrides(arg, path=extendpath)
         elif opt in ('-p', '--prefix'):
             prefix = arg
         elif opt in ('-r', '--register'):

@@ -22,7 +22,7 @@ def class2cname(klass, method):
 import_pat = re.compile(r'\s*import\s+(\S+)\.([^\s.]+)\s+as\s+(\S+)')
 
 class Overrides:
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, path=[]):
         self.modulename = None
 	self.ignores = {}
 	self.glob_ignores = []
@@ -38,13 +38,24 @@ class Overrides:
         self.imports = []
         self.defines = {}
         self.functions = {}
+        self.path = path
 	if filename:
             self.handle_file(filename)
 
     def handle_file(self, filename):
         oldpath = os.getcwd()
+
+        fp = None
+        for path in self.path:
+            os.chdir(oldpath)
+            os.chdir(os.path.abspath(path))
+            try:
+                fp = open(filename, 'r')
+            except:
+                continue
+        if not fp:
+            raise Exception, "Couldn't find file %s" % filename
         
-        fp = open(filename, 'r')
         dirname = os.path.dirname(os.path.abspath(filename))
 
         if dirname != oldpath:

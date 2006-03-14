@@ -1,3 +1,10 @@
+2006-03-14  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/codegen.py:
+	* codegen/override.py:
+	New --extendpath option for codegenerator so we can add
+	extra path to search for included override files.
+
 2006-03-13  Edward Hervey  <edward@fluendo.com>
 
 	* gst/Makefile.am:
