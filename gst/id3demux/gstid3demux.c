@@ -45,6 +45,7 @@
 #include <gst/gst.h>
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/gst-i18n-plugin.h>
+#include <gst/tag/tag.h>
 
 #include "gstid3demux.h"
 #include "id3tags.h"
@@ -1044,6 +1045,8 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (id3demux_debug, "id3demux", 0,
       "GStreamer ID3 tag demuxer");
+
+  gst_tag_register_musicbrainz_tags ();
 
   return gst_element_register (plugin, "id3demux",
       GST_RANK_PRIMARY, GST_TYPE_ID3DEMUX);

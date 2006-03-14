@@ -1,5 +1,17 @@
 2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	  Bump -base requirement to 0.10.5 for gst_tag_from_id3_user_tag(),
+	  used by id3demux.
+
+	* gst/id3demux/gstid3demux.c: (plugin_init):
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame),
+	(parse_user_text_identification_frame),
+	(parse_unique_file_identifier):
+	  Add support for UFID and TXXX frames and extract musicbrainz tags.
+
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_process_next_entry):
 	  Catch short reads, like they might happen with truncated
 	  files (see #305279); remove unnecessary indentation.

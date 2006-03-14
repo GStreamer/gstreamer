@@ -37,6 +37,10 @@ GST_DEBUG_CATEGORY_EXTERN (id3demux_debug);
 
 static gchar *parse_comment_frame (ID3TagsWorking * work);
 static GArray *parse_text_identification_frame (ID3TagsWorking * work);
+static gchar *parse_user_text_identification_frame (ID3TagsWorking * work,
+    const gchar ** tag_name);
+static gchar *parse_unique_file_identifier (ID3TagsWorking * work,
+    const gchar ** tag_name);
 static gboolean id3v2_tag_to_taglist (ID3TagsWorking * work,
     const gchar * tag_name, const gchar * tag_str);
 /* Parse a single string into an array of gchar* */
@@ -85,8 +89,11 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
   }
 
   tag_name = gst_tag_from_id3_tag (work->frame_id);
-  if (tag_name == NULL)
+  if (tag_name == NULL &&
+      strncmp (work->frame_id, "TXXX", 4) != 0 &&
+      strncmp (work->frame_id, "UFID", 4) != 0) {
     return FALSE;
+  }
 
   if (work->frame_flags & (ID3V2_FRAME_FORMAT_COMPRESSION |
           ID3V2_FRAME_FORMAT_DATA_LENGTH_INDICATOR)) {
@@ -140,6 +147,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
       tag_fields = parse_text_identification_frame (work);
     } else {
       /* Handle user text frame */
+      tag_str = parse_user_text_identification_frame (work, &tag_name);
     }
   } else if (!strcmp (work->frame_id, "COMM")) {
     /* Comment */
@@ -150,6 +158,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     /* Relative volume */
   } else if (!strcmp (work->frame_id, "UFID")) {
     /* Unique file identifier */
+    tag_str = parse_unique_file_identifier (work, &tag_name);
   }
 
   if (work->frame_flags & ID3V2_FRAME_FORMAT_COMPRESSION)
@@ -249,6 +258,87 @@ parse_text_identification_frame (ID3TagsWorking * work)
   }
 
   return fields;
+}
+
+static gchar *
+parse_user_text_identification_frame (ID3TagsWorking * work,
+    const gchar ** tag_name)
+{
+  gchar *ret;
+  guchar encoding;
+  GArray *fields = NULL;
+
+  *tag_name = NULL;
+
+  if (work->parse_size < 2)
+    return NULL;
+
+  encoding = work->parse_data[0];
+
+  parse_split_strings (encoding, (gchar *) work->parse_data + 1,
+      work->parse_size - 1, &fields);
+
+  if (fields == NULL)
+    return NULL;
+
+  if (fields->len != 2) {
+    GST_WARNING ("Expected 2 fields in TXXX frame, but got %d", fields->len);
+    free_tag_strings (fields);
+    return NULL;
+  }
+
+  *tag_name =
+      gst_tag_from_id3_user_tag ("TXXX", g_array_index (fields, gchar *, 0));
+
+  GST_LOG ("TXXX frame of size %d. Mapped descriptor '%s' to GStreamer tag %s",
+      work->parse_size - 1, g_array_index (fields, gchar *, 0),
+      GST_STR_NULL (*tag_name));
+
+  if (*tag_name) {
+    ret = g_strdup (g_array_index (fields, gchar *, 1));
+    /* GST_LOG ("%s = %s", *tag_name, GST_STR_NULL (ret)); */
+  } else {
+    ret = NULL;
+  }
+
+  free_tag_strings (fields);
+  return ret;
+}
+
+static gchar *
+parse_unique_file_identifier (ID3TagsWorking * work, const gchar ** tag_name)
+{
+  gint len, datalen;
+  gchar *owner_id, *data, *ret = NULL;
+
+  if (work->parse_size < 2)
+    return NULL;
+
+  GST_LOG ("parsing UFID frame of size %d", work->parse_size);
+
+  for (len = 0; len < work->parse_size - 1; ++len) {
+    if (work->parse_data[len] == '\0')
+      break;
+  }
+
+  datalen = work->parse_size - (len + 1);
+  if (datalen <= 0)
+    return NULL;
+
+  owner_id = g_strndup ((gchar *) work->parse_data, len);
+  data = (gchar *) work->parse_data + len + 1;
+  GST_LOG ("UFID owner ID: %s (+ %d bytes of data)", owner_id, datalen);
+
+  if (strcmp (owner_id, "http://musicbrainz.org") == 0 &&
+      g_utf8_validate (data, datalen, NULL)) {
+    *tag_name = GST_TAG_MUSICBRAINZ_TRACKID;
+    ret = g_strndup (data, datalen);
+  } else {
+    GST_INFO ("Unknown UFID owner ID: %s", owner_id);
+  }
+  g_free (owner_id);
+
+  return ret;
 }
 
 static gboolean
