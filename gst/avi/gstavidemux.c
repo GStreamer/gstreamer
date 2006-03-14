@@ -2457,30 +2457,38 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
       }
 
       if ((res = gst_pad_pull_range (avi->sinkpad, entry->offset +
-                  avi->index_offset, entry->size, &buf)) != GST_FLOW_OK)
+                  avi->index_offset, entry->size, &buf)) != GST_FLOW_OK) {
         return res;
-      else {
-        if (stream->strh->fcc_handler == GST_MAKE_FOURCC ('D', 'I', 'B', ' ')) {
-          buf = gst_avi_demux_invert (stream, buf);
-        }
-        if (!(entry->flags & GST_RIFF_IF_KEYFRAME))
-          GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-        GST_BUFFER_TIMESTAMP (buf) = entry->ts;
-        GST_BUFFER_DURATION (buf) = entry->dur;
-        gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
-        GST_DEBUG_OBJECT (avi, "Processing buffer of size %d and time %"
-            GST_TIME_FORMAT " on pad %s",
-            GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-            GST_PAD_NAME (stream->pad));
-        res = gst_pad_push (stream->pad, buf);
-        stream->last_flow = res;
-        if (res != GST_FLOW_OK && res != GST_FLOW_NOT_LINKED) {
-          GST_DEBUG_OBJECT (avi, "Flow on pad %s: %s",
-              GST_PAD_NAME (stream->pad), gst_flow_get_name (res));
-          return res;
-        }
-        processed = TRUE;
       }
+
+      if (GST_BUFFER_SIZE (buf) < entry->size) {
+        GST_WARNING_OBJECT (avi, "Short read at offset %" G_GUINT64_FORMAT
+            ", only got %d/%d bytes (truncated file?)", entry->offset +
+            avi->index_offset, GST_BUFFER_SIZE (buf), entry->size);
+        goto eos;
+      }
+
+      if (stream->strh->fcc_handler == GST_MAKE_FOURCC ('D', 'I', 'B', ' ')) {
+        buf = gst_avi_demux_invert (stream, buf);
+      }
+      if (!(entry->flags & GST_RIFF_IF_KEYFRAME))
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+      GST_BUFFER_TIMESTAMP (buf) = entry->ts;
+      GST_BUFFER_DURATION (buf) = entry->dur;
+      gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
+      GST_DEBUG_OBJECT (avi, "Processing buffer of size %d and time %"
+          GST_TIME_FORMAT " on pad %s",
+          GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+          GST_PAD_NAME (stream->pad));
+      res = gst_pad_push (stream->pad, buf);
+      stream->last_flow = res;
+      if (res != GST_FLOW_OK && res != GST_FLOW_NOT_LINKED) {
+        GST_DEBUG_OBJECT (avi, "Flow on pad %s: %s",
+            GST_PAD_NAME (stream->pad), gst_flow_get_name (res));
+        return res;
+      }
+      processed = TRUE;
+
     next:
       stream->current_frame = entry->frames_before + 1;
       stream->current_byte = entry->bytes_before + entry->size;
