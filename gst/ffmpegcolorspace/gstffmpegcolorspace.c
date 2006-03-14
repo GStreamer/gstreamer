@@ -371,6 +371,7 @@ gst_ffmpegcsp_class_init (GstFFMpegCspClass * klass)
 static void
 gst_ffmpegcsp_init (GstFFMpegCsp * space)
 {
+  gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (space), TRUE);
   space->from_pixfmt = space->to_pixfmt = PIX_FMT_NB;
   space->palette = NULL;
 }

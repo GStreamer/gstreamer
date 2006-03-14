@@ -177,7 +177,7 @@ gst_video_scale_sink_template_factory (void)
 static void gst_video_scale_base_init (gpointer g_class);
 static void gst_video_scale_class_init (GstVideoScaleClass * klass);
 static void gst_video_scale_init (GstVideoScale * videoscale);
-static gboolean gst_video_scale_handle_src_event (GstPad * pad,
+static gboolean gst_video_scale_src_event (GstBaseTransform * trans,
     GstEvent * event);
 
 /* base transform vmethods */
@@ -261,6 +261,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_scale_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_scale_transform);
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_scale_fixate_caps);
+  trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_scale_src_event);
 
   trans_class->passthrough_on_same_caps = TRUE;
 
@@ -270,10 +271,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
 static void
 gst_video_scale_init (GstVideoScale * videoscale)
 {
-  GstBaseTransform *trans = GST_BASE_TRANSFORM (videoscale);
-
-  gst_pad_set_event_function (trans->srcpad, gst_video_scale_handle_src_event);
-
+  gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (videoscale), TRUE);
   videoscale->tmp_buf = NULL;
   videoscale->method = DEFAULT_PROP_METHOD;
 }
@@ -754,14 +752,14 @@ unknown_mode:
 }
 
 static gboolean
-gst_video_scale_handle_src_event (GstPad * pad, GstEvent * event)
+gst_video_scale_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVideoScale *videoscale;
   gboolean ret;
   double a;
   GstStructure *structure;
 
-  videoscale = GST_VIDEO_SCALE (gst_pad_get_parent (pad));
+  videoscale = GST_VIDEO_SCALE (trans);
 
   GST_DEBUG_OBJECT (videoscale, "handling %s event",
       GST_EVENT_TYPE_NAME (event));
@@ -781,13 +779,13 @@ gst_video_scale_handle_src_event (GstPad * pad, GstEvent * event)
             a * videoscale->from_height / videoscale->to_height, NULL);
       }
       break;
+    case GST_EVENT_QOS:
+      break;
     default:
       break;
   }
 
-  ret = gst_pad_event_default (pad, event);
-
-  gst_object_unref (videoscale);
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
 
   return ret;
 }

@@ -24,8 +24,11 @@
  * 
  * <refsect2>
  * <para>
- * Provides useful functions and a base class for video filters. Right now it's
- * mostly used as a place holder for adding common code later on.
+ * Provides useful functions and a base class for video filters.
+ * </para>
+ * <para>
+ * The videofilter will by default enable QoS on the parent GstBaseTransform
+ * to implement frame dropping.
  * </para>
  * </refsect2>
  */
@@ -95,4 +98,6 @@ gst_video_filter_init (GTypeInstance * instance, gpointer g_class)
   GST_DEBUG_OBJECT (videofilter, "gst_video_filter_init");
 
   videofilter->inited = FALSE;
+  /* enable QoS */
+  gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (videofilter), TRUE);
 }
