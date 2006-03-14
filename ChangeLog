@@ -1,5 +1,13 @@
 2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Fabrizio Gennari  <fabrizio dot ge at tiscali dot it>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	  Make sure the buffer we copy into is really always big
+	  enough, this time for real (#333488).
+	  
+2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
 	  Add support for 24bpp DIB (#305279).
 

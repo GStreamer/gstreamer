@@ -577,7 +577,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
     if (GST_BUFFER_SIZE (palette) >= (num_colors * 4)) {
       /* palette is always at least 256*4 bytes */
-      copy = gst_buffer_new_and_alloc (MAX (num_colors * 4, 256 * 4));
+      copy =
+          gst_buffer_new_and_alloc (MAX (GST_BUFFER_SIZE (palette), 256 * 4));
       memcpy (GST_BUFFER_DATA (copy), GST_BUFFER_DATA (palette),
           GST_BUFFER_SIZE (palette));
 
