@@ -1,5 +1,25 @@
 2006-03-14  Edward Hervey  <edward@fluendo.com>
 
+	* configure.ac:
+	Only require GStreamer core >= 0.10.2
+	Detect version of core the bindings are being compiled against and
+	write gst/gstversion.override file with eventual API additions that
+	should be ignored.
+	* gst/Makefile.am:
+	* gst/base.defs:
+	Added gst_base_sync_[set|get]_[sync|max_lateness]() and
+	gst_type_find_helper_get_range() definitions
+	* gst/gst-0.10.3.ignore:
+	API added in gstreamer core 0.10.3
+	* gst/gst-0.10.4.ignore:
+	API added in gstreamer core 0.10.4
+	* gst/gst.override:
+	Include gstversion.override.
+	* gst/gstversion.override.in:
+	Magic file for API additions to ignore.
+
+2006-03-14  Edward Hervey  <edward@fluendo.com>
+
 	* codegen/codegen.py:
 	* codegen/override.py:
 	New --extendpath option for codegenerator so we can add

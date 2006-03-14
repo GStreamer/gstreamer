@@ -1,0 +1,21 @@
+%%
+ignore
+  gst_bus_enable_sync_message_emission
+  gst_bus_disable_sync_message_emission
+  gst_pipeline_set_auto_flush_bus
+  gst_pipeline_get_auto_flush_bus
+  gst_query_set_formats
+  gst_query_set_formatsv
+  gst_query_new_formats
+  gst_query_parse_formats_length
+  gst_query_parse_formats_nth
+  gst_type_find_helper_for_buffer
+  gst_type_find_helper_get_range
+  gst_uri_has_protocol
+  GstBaseSrc__do_check_get_range
+  GstBaseSrc__proxy_do_check_get_range
+  gst_base_sink_set_sync
+  gst_base_sink_get_sync
+  gst_base_sink_set_max_lateness
+  gst_base_sink_get_max_lateness
+%%

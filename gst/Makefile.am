@@ -22,8 +22,12 @@ defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 
 noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstobject.h pygstexception.h
 
+versioned_overrides = \
+	gst-0.10.3.ignore	\
+	gst-0.10.4.ignore
+
 INCLUDES = $(PYTHON_INCLUDES)
-EXTRA_DIST = $(defs_DATA) common.h arg-types.py
+EXTRA_DIST = $(defs_DATA) $(versioned_overrides) common.h arg-types.py
 PYGTK_DEFSDIR = @PYGTK_DEFSDIR@
 GEN_FILES = arg-types.py gst-types.defs libs.defs base.defs
 
@@ -44,6 +48,7 @@ _gst_la_SOURCES = 		\
 nodist__gst_la_SOURCES = gst.c
 GST_OVERRIDES = 		\
 	gst.override 		\
+	gstversion.override	\
 	gstbin.override 	\
 	gstbuffer.override 	\
 	gstbus.override		\
@@ -62,8 +67,8 @@ GST_OVERRIDES = 		\
 
 GST_DEFS = gst.defs gst-types.defs gst-extrafuncs.defs libs.defs base.defs
 CLEANFILES = gst.c
-EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES)
-gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES)
+EXTRA_DIST += $(GST_DEFS) $(GST_OVERRIDES) gstversion.override.in
+gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES) gstversion.override
 
 # GStreamer interfaces bindings
 interfaces_la_CFLAGS = $(common_cflags) $(GST_PLUGINS_BASE_CFLAGS)
@@ -83,6 +88,7 @@ interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) $(GEN_FILES)
 		--load-types $(srcdir)/arg-types.py \
 		--register $(srcdir)/gst-types.defs \
 		--override $*.override \
+		--extendpath $(top_builddir)/gst/ \
 		--prefix py$* $*.defs) > gen-$*.c \
 	&& cp gen-$*.c $*.c \
 	&& rm -f gen-$*.c

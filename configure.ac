@@ -27,7 +27,7 @@ dnl required versions of other packages
 AC_SUBST(PYGTK_REQ, 2.6.3)
 AC_SUBST(GLIB_REQ,  2.6.0)
 AC_SUBST(GTK_REQ,   2.6.0)
-AC_SUBST(GST_REQ,   0.10.3.1)
+AC_SUBST(GST_REQ,   0.10.2)
 AC_SUBST(GSTPB_REQ, 0.10.0.2)
 
 
@@ -59,6 +59,35 @@ AC_SUBST(GST_MAJORMINOR)
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ)
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
+
+dnl get the installed GStreamer core version
+GST_MINOR_VERSION=`$PKG_CONFIG --modversion gstreamer-$GST_MAJORMINOR | cut -f 3 -d.`
+
+echo "Building against GStreamer core 0.10.$GST_MINOR_VERSION , ignoring API additions if needed"
+
+dnl Magic for allowing new API additions without forcing dependency on new core
+dnl release. The lines do the magic so that new API additions are ignored at
+dnl compile time.
+dnl * Also see gst/gstversion.override.in and gst-0.10.*.override
+dnl The following lines should be updated whenever:
+dnl _ GST_REQ is up-ed (remove obsolete lines + gst-0.10.MINOR.ignore)
+dnl _ new core/base is released (add lines + gst-0.10.MINOR.ignore)
+
+if test $GST_MINOR_VERSION -lt "3"
+then
+  IGNORE_GST_0_10_3="gst-0.10.3.ignore"
+else
+  IGNORE_GST_0_10_3=""
+fi
+AC_SUBST(IGNORE_GST_0_10_3)
+
+if test $GST_MINOR_VERSION -lt "4"
+then
+  IGNORE_GST_0_10_4="gst-0.10.4.ignore"
+else
+  IGNORE_GST_0_10_4=""
+fi
+AC_SUBST(IGNORE_GST_0_10_4)
 
 dnl check for gstreamer-base; uninstalled is selected preferentially
 PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,
@@ -176,6 +205,7 @@ AC_OUTPUT([
   Makefile
   codegen/Makefile
   gst/Makefile
+  gst/gstversion.override
   gst/extend/Makefile
   examples/Makefile
   pkgconfig/Makefile

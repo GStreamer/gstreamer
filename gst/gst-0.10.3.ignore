@@ -1,0 +1,9 @@
+%%
+ignore
+  gst_bin_iterate_sources
+  gst_bin_find_unconnected_pad
+  gst_buffer_is_metadata_writable
+  gst_buffer_make_metadata_writable
+  gst_parse_bin_from_description
+  gst_index_add_associationv
+%%

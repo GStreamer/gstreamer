@@ -131,6 +131,37 @@
   (return-type "GType")
 )
 
+
+(define-method set_sync
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_set_sync")
+  (return-type "none")
+  (parameters
+    '("gboolean" "sync")
+  )
+)
+
+(define-method get_sync
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_get_sync")
+  (return-type "gboolean")
+)
+
+(define-method set_max_lateness
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_set_max_lateness")
+  (return-type "none")
+  (parameters
+    '("gint64" "max_lateness")
+  )
+)
+
+(define-method get_max_lateness
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_get_max_lateness")
+  (return-type "gint64")
+)
+
 (define-virtual get_caps
   (of-object "GstBaseSink")
   (return-type "GstCaps*")
@@ -628,6 +659,17 @@
   (parameters
     '("GstObject*" "obj")
     '("GstBuffer*" "buf")
+    '("GstTypeFindProbability*" "prob")
+  )
+)
+
+(define-function type_find_helper_get_range
+  (c-name "gst_type_find_helper_get_range")
+  (return-type "GstCaps*")
+  (parameters
+    '("GstObject*" "obj")
+    '("GstTypeFindHelperGetRangeFunction" "func")
+    '("guint64" "size")
     '("GstTypeFindProbability*" "prob")
   )
 )

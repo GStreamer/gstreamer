@@ -247,6 +247,7 @@ include
   gsttaglist.override
   gstlibs.override
   gstbase.override
+  gstversion.override
 %%
 init
 {
@@ -306,6 +307,43 @@ ignore
   gst_implements_interface_check
   gst_plugin_get_module
   gst_object_sink
+%%
+/*
+  Magic to be able to use bugfixes of new releases without having to use
+  newer core/base
+*/
+#warn your mom !
+ignore
+#if (GST_VERSION_MICRO < 5)
+# if (GST_VERSION_MICRO < 4)
+#  if (GST_VERSION_MICRO < 3)
+#warning Version smaller than .3
+/* API added between 0.10.2 and 0.10.3 */
+  gst_bin_iterate_sources
+  gst_bin_find_unconnected_pad
+  gst_buffer_is_metadata_writable
+  gst_buffer_make_metadata_writable
+  gst_parse_bin_from_description
+#  endif
+#warning Version smaller than .4
+/* API added between 0.10.3 and 0.10.4 */
+  gst_bus_enable_sync_message_emission
+  gst_bus_disable_sync_message_emission
+  gst_pipeline_set_auto_flush_bus
+  gst_pipeline_get_auto_flush_bus
+  gst_query_set_formats
+  gst_query_new_formats
+  gst_query_parse_formats_length
+  gst_query_parse_formats_nth
+  gst_type_find_helper_for_buffer
+  gst_uri_has_protocol
+  GstBaseSrc__do_check_get_range
+  GstBaseSrc__proxy_do_check_get_range
+# endif
+#warning Version smaller than .5
+/* API Added between 0.10.4 and 0.10.5 */
+
+#endif
 %%
 override-slot GstPluginFeature.tp_repr
 static PyObject *
