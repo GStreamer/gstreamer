@@ -610,6 +610,11 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
         GST_DEBUG_OBJECT (demux, "Pushing buffer %p", outbuf);
         /* gst_util_dump_mem (GST_BUFFER_DATA (outbuf),
            GST_BUFFER_SIZE (outbuf)); */
+
+        /* Ensure the caps are set correctly */
+        outbuf = gst_buffer_make_metadata_writable (outbuf);
+        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (demux->priv->srcpad));
+
         return gst_pad_push (demux->priv->srcpad, outbuf);
       }
     }

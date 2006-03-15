@@ -1,3 +1,15 @@
+2006-03-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain):
+	  Ensure that we set caps on the buffers we pass.
+
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain),
+	(gst_id3demux_sink_activate):
+	  Ensure that we set caps on the buffers we pass.
+
+	  Use STREAM, TYPE_NOT_FOUND as the error class when
+	  typefinding fails.
+
 2006-03-15  Edward Hervey  <edward@fluendo.com>
 
 	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_init):

@@ -453,9 +453,9 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
         }
 
         /* We failed typefind */
-        GST_ELEMENT_ERROR (id3demux, CORE, CAPS,
+        GST_ELEMENT_ERROR (id3demux, STREAM, TYPE_NOT_FOUND,
             ("Could not determine the mime type of the file"),
-            ("No caps found for contents within an ID3 tag"));
+            ("Could not detect type for contents within an ID3 tag"));
         gst_buffer_unref (typefind_buf);
         gst_buffer_unref (id3demux->collect);
         id3demux->collect = NULL;
@@ -510,6 +510,11 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
         }
 
         GST_DEBUG_OBJECT (id3demux, "Pushing buffer %p", outbuf);
+
+        /* Ensure the caps are set correctly */
+        outbuf = gst_buffer_make_metadata_writable (outbuf);
+        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (id3demux->srcpad));
+
         return gst_pad_push (id3demux->srcpad, outbuf);
       }
     }
@@ -842,9 +847,9 @@ gst_id3demux_sink_activate (GstPad * sinkpad)
 
   /* 5 - If we didn't find the caps, fail */
   if (caps == NULL) {
-    GST_ELEMENT_ERROR (id3demux, CORE, CAPS,
+    GST_ELEMENT_ERROR (id3demux, STREAM, TYPE_NOT_FOUND,
         ("Could not determine the mime type of the file"),
-        ("No caps found for contents within an ID3 tag"));
+        ("Could not detect type for contents within an ID3 tag"));
     goto done_activate;
   }
 
