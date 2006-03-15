@@ -1,5 +1,14 @@
 2006-03-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
+	
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_pop_callbacks):
+	  Don't forget to set src->callbacks_pushed to FALSE again when
+	  popping them, otherwise re-activation in a different mode won't
+	  work (#334620).
+
+2006-03-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Sebastien Moutte  <sebastien moutte net>
 
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c: (gst_ff_vid_caps_new),

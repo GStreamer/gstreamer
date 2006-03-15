@@ -872,6 +872,8 @@ gst_gnome_vfs_src_pop_callbacks (GstGnomeVFSSrc * src)
       (GNOME_VFS_MODULE_CALLBACK_HTTP_SEND_ADDITIONAL_HEADERS);
   gnome_vfs_module_callback_pop
       (GNOME_VFS_MODULE_CALLBACK_HTTP_RECEIVED_HEADERS);
+
+  src->http_callbacks_pushed = FALSE;
 }
 
 static void
