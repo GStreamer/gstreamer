@@ -1,5 +1,10 @@
 2006-03-15  Edward Hervey  <edward@fluendo.com>
 
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_dispose):
+	Let's not forget to chain up to the parent dispose.
+
+2006-03-15  Edward Hervey  <edward@fluendo.com>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_class_init),
 	(gst_qtdemux_init), (gst_qtdemux_dispose),
 	(gst_qtdemux_add_stream), (qtdemux_parse_trak):
