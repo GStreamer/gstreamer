@@ -1,3 +1,9 @@
+2006-03-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Bump requirements to gst-plugins-base CVS because
+	  of buggy gst_tag_from_id3_user_tag() in 0.10.5.
+
 2006-03-15  Philippe Kalaf  <philippe.kalaf at collabora.co.uk>
 
 	* rtp/gst/gstrtppcmadepay.c:
