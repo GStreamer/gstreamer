@@ -47,6 +47,7 @@ struct _GstA52Dec {
                 *srcpad;
 
   gboolean       dvdmode;
+  gboolean       sent_segment;
 
   int            bit_rate;
   int            sample_rate;

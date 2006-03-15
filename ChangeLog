@@ -1,3 +1,10 @@
+2006-03-15  Michael Smith  <msmith@fluendo.com>
+
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_sink_event),
+	(gst_a52dec_chain_raw), (gst_a52dec_change_state):
+	* ext/a52dec/gsta52dec.h:
+	  Fix #334550: failure to play raw AC3 files due to segment problems.
+
 2006-03-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Christophe Fergeau  <teuf gnome org>

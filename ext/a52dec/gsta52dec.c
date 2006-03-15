@@ -369,6 +369,7 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
         GST_WARNING ("No time in newsegment event %p", event);
       } else {
         a52dec->time = val;
+        a52dec->sent_segment = TRUE;
       }
 
       if (a52dec->cache) {
@@ -579,6 +580,22 @@ gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
   gint length = 0, flags, sample_rate, bit_rate;
   GstFlowReturn result = GST_FLOW_OK;
 
+  if (!a52dec->sent_segment) {
+    GstSegment segment;
+
+    /* Create a basic segment. Usually, we'll get a new-segment sent by 
+     * another element that will know more information (a demuxer). If we're
+     * just looking at a raw AC3 stream, we won't - so we need to send one
+     * here, but we don't know much info, so just send a minimal TIME 
+     * new-segment event
+     */
+    gst_segment_init (&segment, GST_FORMAT_TIME);
+    gst_pad_push_event (a52dec->srcpad, gst_event_new_new_segment (FALSE,
+            segment.rate, segment.format, segment.start,
+            segment.duration, segment.start));
+    a52dec->sent_segment = TRUE;
+  }
+
   /* merge with cache, if any. Also make sure timestamps match */
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     a52dec->time = GST_BUFFER_TIMESTAMP (buf);
@@ -662,6 +679,7 @@ gst_a52dec_change_state (GstElement * element, GstStateChange transition)
       a52dec->level = 1;
       a52dec->bias = 0;
       a52dec->time = 0;
+      a52dec->sent_segment = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
