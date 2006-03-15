@@ -138,7 +138,7 @@ gst_rtp_pcma_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   srccaps = GST_PAD_CAPS (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
   if (!srccaps) {
     /* Set the default caps */
-    srccaps = gst_caps_new_simple ("audio/x-mulaw",
+    srccaps = gst_caps_new_simple ("audio/x-alaw",
         "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, 8000, NULL);
     gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
     gst_caps_unref (srccaps);
