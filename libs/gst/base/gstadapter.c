@@ -27,6 +27,9 @@
  * a file. So if you have undefined buffer sizes and require a specific size,
  * this object is for you.
  *
+ * An adapter is created with gst_adapter_new(). It can be freed again with
+ * g_object_unref().
+ *
  * The theory of operation is like this: All buffers received are put
  * into the adapter using gst_adapter_push() and the data is then read back
  * in chunks of the desired size using gst_adapter_peek(). After the data is
@@ -152,7 +155,7 @@ gst_adapter_finalize (GObject * object)
 /**
  * gst_adapter_new:
  *
- * Creates a new #GstAdapter.
+ * Creates a new #GstAdapter. Free with g_object_unref().
  *
  * Returns: a new #GstAdapter
  */
