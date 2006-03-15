@@ -1,3 +1,22 @@
+2006-03-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstbuffer.h:
+	Documentation fix.
+
+	* gst/gstpad.c: (gst_pad_init), (gst_pad_acceptcaps_default),
+	(gst_pad_accept_caps), (gst_pad_configure_sink),
+	(gst_pad_configure_src), (gst_pad_chain), (gst_pad_push):
+	Make the default acceptcaps behaviour be to check the requested 
+	caps against the gst_pad_get_caps output. 
+
+	Ensure that gst_pad_accept_caps is used to check caps when a pad
+	doesn't have a setcaps function, so that pads automatically refuse 
+	caps that they don't allow in their pad template. (Fixes #332986)
+
+	When a buffer with attached caps is pushed, ensure that the source 
+	pad receives those caps even if the element didn't call
+	gst_pad_set_caps first.
+
 2006-03-15  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstadapter.c:

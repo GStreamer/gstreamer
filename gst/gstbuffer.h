@@ -314,7 +314,7 @@ G_STMT_START {						\
  * Tests if you can safely write data into a buffer's data array or validly
  * modify the caps and timestamp metadata. Metadata in a GstBuffer is always
  * writable, but it is only safe to change it when there is only one owner
- * of the buffer - ie, the buffer is 1. 
+ * of the buffer - ie, the refcount is 1. 
  */
 #define		gst_buffer_is_writable(buf)	gst_mini_object_is_writable (GST_MINI_OBJECT (buf))
 /**
