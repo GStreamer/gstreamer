@@ -1132,9 +1132,9 @@ invalid:
  * are available, a linear regression algorithm is run on the
  * observations and @clock is recalibrated.
  *
- * If this functions returns %TRUE, @r_squared will contain the sum
- * of squared distances from the interpolated values. Lower values
- * means the regression yielded a more accurate result. This value can
+ * If this functions returns %TRUE, @r_squared will contain the 
+ * correlation coefficient of the interpollation. A value of 1.0
+ * means a perfect regression was performed. This value can
  * be used to control the sampling frequency of the master and slave
  * clocks.
  *
