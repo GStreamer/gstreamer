@@ -1,3 +1,10 @@
+2006-03-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* win32/common/libgstbase.def:
+	* win32/common/libgstcontroller.def:
+	* win32/common/libgstreamer.def:
+	  Add a whole bunch of missing functions (#334434).
+
 2006-03-14  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_configure_segment),

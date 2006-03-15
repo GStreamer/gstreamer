@@ -1,22 +1,46 @@
 EXPORTS
+	gst_adapter_new
+	gst_adapter_clear
+	gst_adapter_push
+	gst_adapter_peek
+	gst_adapter_flush
+	gst_adapter_take
+	gst_adapter_available
+	gst_adapter_available_fast
+	gst_adapter_get_type
 	gst_base_sink_get_type
+	gst_base_sink_set_sync
+	gst_base_sink_get_sync
+	gst_base_sink_set_max_lateness
+	gst_base_sink_get_max_lateness
 	gst_base_src_get_type
+	gst_base_src_set_live
 	gst_base_src_is_live
 	gst_base_src_set_format
-	gst_base_src_set_live
 	gst_base_transform_get_type
 	gst_base_transform_set_passthrough
-	gst_collect_pads_add_pad
-	gst_collect_pads_available
-	gst_collect_pads_flush
+	gst_base_transform_is_passthrough
+	gst_base_transform_set_in_place
+	gst_base_transform_is_in_place
+	gst_base_transform_update_qos
+	gst_base_transform_set_qos_enabled
+	gst_base_transform_is_qos_enabled
+	gst_collect_pads_get_type
 	gst_collect_pads_new
-	gst_collect_pads_peek
-	gst_collect_pads_pop
-	gst_collect_pads_read
-	gst_collect_pads_remove_pad
 	gst_collect_pads_set_function
+	gst_collect_pads_add_pad
+	gst_collect_pads_remove_pad
+	gst_collect_pads_is_active
+	gst_collect_pads_collect
+	gst_collect_pads_collect_range
 	gst_collect_pads_start
 	gst_collect_pads_stop
+	gst_collect_pads_peek
+	gst_collect_pads_pop
+	gst_collect_pads_available
+	gst_collect_pads_read
+	gst_collect_pads_flush
 	gst_push_src_get_type
 	gst_type_find_helper
 	gst_type_find_helper_for_buffer
+	gst_type_find_helper_get_range

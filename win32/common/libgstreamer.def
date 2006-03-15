@@ -10,26 +10,46 @@ EXPORTS
 	gst_alloc_trace_set_flags_all
 	gst_bin_add
 	gst_bin_add_many
+	gst_bin_find_unconnected_pad
 	gst_bin_get_by_interface
 	gst_bin_get_by_name
+	gst_bin_get_by_name_recurse_up
 	gst_bin_get_type
+	gst_bin_iterate_all_by_interface
 	gst_bin_iterate_elements
+	gst_bin_iterate_recurse
+	gst_bin_iterate_sinks
+	gst_bin_iterate_sorted
+	gst_bin_iterate_sources
 	gst_bin_new
 	gst_bin_remove
 	gst_buffer_create_sub
+	gst_buffer_get_caps
 	gst_buffer_get_type
 	gst_buffer_is_metadata_writable
 	gst_buffer_is_span_fast
 	gst_buffer_join
+	gst_buffer_make_metadata_writable
 	gst_buffer_merge
 	gst_buffer_new
 	gst_buffer_new_and_alloc
 	gst_buffer_set_caps
+	gst_buffer_span
 	gst_buffer_stamp  
+	gst_bus_add_signal_watch_full
+	gst_bus_add_watch_full
+	gst_bus_disable_sync_message_emission
+	gst_bus_enable_sync_message_emission
+	gst_bus_get_type
+	gst_bus_have_pending
 	gst_bus_new
+	gst_bus_peek
 	gst_bus_poll
 	gst_bus_pop
 	gst_bus_post
+	gst_bus_remove_signal_watch
+	gst_bus_set_flushing
+	gst_bus_set_sync_handler
 	gst_caps_append
 	gst_caps_append_structure
 	gst_caps_copy
@@ -40,89 +60,147 @@ EXPORTS
 	gst_caps_get_structure
 	gst_caps_get_type
 	gst_caps_intersect
+	gst_caps_is_always_compatible
 	gst_caps_is_any
 	gst_caps_is_empty
 	gst_caps_is_equal
 	gst_caps_is_fixed
+	gst_caps_is_subset
 	gst_caps_make_writable
 	gst_caps_new_any
 	gst_caps_new_empty
 	gst_caps_new_full
 	gst_caps_new_simple
+	gst_caps_normalize
 	gst_caps_ref
 	gst_caps_replace
 	gst_caps_set_simple
+	gst_caps_subtract
 	gst_caps_to_string
 	gst_caps_truncate
-	gst_caps_unref
+	gst_caps_union
+	gst_caps_unref	gst_clock_adjust_unlocked
 	gst_clock_get_calibration
 	gst_clock_get_internal_time
+	gst_clock_get_master
+	gst_clock_get_resolution
 	gst_clock_get_time
 	gst_clock_get_type
 	gst_clock_id_unref
 	gst_clock_id_unschedule
 	gst_clock_id_wait
+	gst_clock_new_periodic_id
 	gst_clock_new_single_shot_id
 	gst_clock_set_calibration
 	gst_clock_set_master
+	gst_clock_set_resolution
 	gst_core_error_quark
 	gst_date_get_type
+	gst_debug_construct_term_color
+	gst_debug_get_default_threshold
+	gst_debug_is_active
+	gst_debug_is_colored
+	gst_debug_log
 	gst_debug_log_valist
+	gst_debug_set_active
+	gst_debug_set_colored
+	gst_debug_set_default_threshold
+	gst_debug_set_threshold_for_name
+	gst_debug_unset_threshold_for_name
+	gst_default_registry_check_feature_version
 	gst_deinit
 	gst_double_range_get_type
 	gst_element_abort_state
 	gst_element_add_pad
+	gst_element_factory_can_sink_caps
+	gst_element_factory_can_src_caps
 	gst_element_class_add_pad_template
 	gst_element_class_get_pad_template
 	gst_element_class_get_pad_template_list
 	gst_element_class_set_details
+	gst_element_continue_state
+	gst_element_create_all_pads
 	gst_element_default_error
 	gst_element_factory_create
 	gst_element_factory_find
+	gst_element_factory_get_author
+	gst_element_factory_get_description
 	gst_element_factory_get_element_type
 	gst_element_factory_get_klass
+	gst_element_factory_get_longname
+	gst_element_factory_get_num_pad_templates
 	gst_element_factory_get_static_pad_templates
 	gst_element_factory_get_type
+	gst_element_factory_get_uri_type
 	gst_element_factory_make
 	gst_element_found_tags
 	gst_element_found_tags_for_pad
 	gst_element_get_base_time
 	gst_element_get_bus
 	gst_element_get_clock
+	gst_element_get_compatible_pad
+	gst_element_get_compatible_pad_template
 	gst_element_get_factory
+	gst_element_get_index
 	gst_element_get_pad
 	gst_element_get_request_pad
 	gst_element_get_state
+	gst_element_get_static_pad
 	gst_element_get_type
+	gst_element_implements_interface
+	gst_element_is_locked_state
 	gst_element_is_indexable
 	gst_element_iterate_pads
+	gst_element_iterate_sink_pads
 	gst_element_iterate_src_pads
 	gst_element_link
+	gst_element_link_filtered
 	gst_element_link_many
 	gst_element_link_pads
+	gst_element_link_pads_filtered
 	gst_element_lost_state
 	gst_element_make_from_uri
 	gst_element_message_full
 	gst_element_no_more_pads
 	gst_element_post_message
+	gst_element_provide_clock
 	gst_element_provides_clock
+	gst_element_query
+	gst_element_query_convert
+	gst_element_query_duration
+	gst_element_query_position
 	gst_element_register
+	gst_element_release_request_pad
 	gst_element_remove_pad
 	gst_element_requires_clock
+	gst_element_seek
 	gst_element_send_event
+	gst_element_set_base_time
 	gst_element_set_bus
+	gst_element_set_clock
+	gst_element_set_index
+	gst_element_set_locked_state
 	gst_element_set_state
+	gst_element_state_get_name
 	gst_element_sync_state_with_parent
 	gst_element_unlink
+	gst_element_unlink_pads
+	gst_error_get_message
 	gst_event_get_structure
 	gst_event_get_type
+	gst_event_new_buffer_size
+	gst_event_new_custom
 	gst_event_new_eos
 	gst_event_new_flush_start
 	gst_event_new_flush_stop
+	gst_event_new_navigation
 	gst_event_new_new_segment
+	gst_event_new_qos
 	gst_event_new_seek
 	gst_event_new_tag
+	gst_event_parse_buffer_size
 	gst_event_parse_new_segment
+	gst_event_parse_qos
 	gst_event_parse_seek
 	gst_event_parse_tag
 	gst_event_type_get_name
@@ -133,11 +211,14 @@ EXPORTS
 	gst_format_get_by_nick
 	gst_format_get_details
 	gst_format_get_name
+	gst_format_get_type
+	gst_format_iterate_definitions
 	gst_format_register
 	gst_formats_contains
 	gst_fourcc_get_type
 	gst_fraction_get_type
 	gst_fraction_range_get_type
+	gst_g_error_get_type
 	gst_ghost_pad_get_target
 	gst_ghost_pad_get_type
 	gst_ghost_pad_new
@@ -148,17 +229,31 @@ EXPORTS
 	gst_implements_interface_get_type
 	gst_index_add_association
 	gst_index_add_format
+	gst_index_commit
 	gst_index_entry_assoc_map
+	gst_index_factory_create
+	gst_index_factory_destroy
 	gst_index_factory_get_type
+	gst_index_factory_find
+	gst_index_factory_make
+	gst_index_factory_new
 	gst_index_get_assoc_entry
+	gst_index_get_certainty
+	gst_index_get_group
 	gst_index_get_writer_id
+	gst_index_get_type
+	gst_index_new_group
+	gst_index_set_certainty
+	gst_index_set_group
 	gst_init
+	gst_init_check
 	gst_init_get_option_group
 	gst_int_range_get_type
 	gst_is_tag_list
 	gst_iterator_fold
 	gst_iterator_free
 	gst_iterator_next
+	gst_iterator_push
 	gst_iterator_resync
 	gst_library_error_quark
 	gst_marshal_BOOLEAN__POINTER
@@ -168,17 +263,28 @@ EXPORTS
 	gst_marshal_VOID__UINT_BOXED
 	gst_message_get_structure
 	gst_message_get_type
+	gst_message_new_application
+	gst_message_new_clock_lost
+	gst_message_new_clock_provide
 	gst_message_new_custom
+	gst_message_new_duration
 	gst_message_new_element
 	gst_message_new_eos
+	gst_message_new_error
+	gst_message_new_new_clock
 	gst_message_new_segment_done
 	gst_message_new_segment_start
 	gst_message_new_state_changed
 	gst_message_new_state_dirty
 	gst_message_new_tag
 	gst_message_new_warning
+	gst_message_parse_clock_lost
+	gst_message_parse_clock_provide
+	gst_message_parse_duration
 	gst_message_parse_error
 	gst_message_parse_new_clock
+	gst_message_parse_segment_done
+	gst_message_parse_segment_start
 	gst_message_parse_state_changed
 	gst_message_parse_tag
 	gst_message_parse_warning
@@ -194,15 +300,20 @@ EXPORTS
 	gst_object_default_deep_notify
 	gst_object_default_error
 	gst_object_get_name
+	gst_object_get_name_prefix
 	gst_object_get_parent
+	gst_object_get_path_string
 	gst_object_get_type
+	gst_object_has_ancestor
 	gst_object_ref
 	gst_object_replace
 	gst_object_set_name
+	gst_object_set_name_prefix
 	gst_object_set_parent
 	gst_object_set_parent
 	gst_object_sink
 	gst_object_unref
+	gst_object_unparent
 	gst_pad_accept_caps
 	gst_pad_activate_pull
 	gst_pad_activate_push
@@ -211,6 +322,7 @@ EXPORTS
 	gst_pad_add_event_probe
 	gst_pad_alloc_buffer
 	gst_pad_alloc_buffer_and_set_caps
+	gst_pad_can_link
 	gst_pad_chain
 	gst_pad_check_pull_range
 	gst_pad_event_default
@@ -219,22 +331,27 @@ EXPORTS
 	gst_pad_get_caps
 	gst_pad_get_direction
 	gst_pad_get_element_private
+	gst_pad_get_fixed_caps_func
 	gst_pad_get_internal_links
 	gst_pad_get_internal_links_default
 	gst_pad_get_negotiated_caps
+	gst_pad_get_pad_template
 	gst_pad_get_pad_template_caps
 	gst_pad_get_parent_element
 	gst_pad_get_peer
+	gst_pad_get_range
 	gst_pad_get_query_types
 	gst_pad_get_query_types_default
 	gst_pad_get_type
 	gst_pad_is_active
+	gst_pad_is_blocked
 	gst_pad_is_linked
 	gst_pad_link
 	gst_pad_new
 	gst_pad_new_from_static_template
 	gst_pad_new_from_template
 	gst_pad_pause_task
+	gst_pad_peer_accept_caps
 	gst_pad_peer_get_caps
 	gst_pad_proxy_getcaps
 	gst_pad_proxy_setcaps
@@ -248,11 +365,13 @@ EXPORTS
 	gst_pad_query_position
 	gst_pad_remove_buffer_probe
 	gst_pad_remove_data_probe
+	gst_pad_remove_event_probe
 	gst_pad_send_event
 	gst_pad_set_activate_function
 	gst_pad_set_activatepull_function
 	gst_pad_set_activatepush_function
 	gst_pad_set_active
+	gst_pad_set_blocked
 	gst_pad_set_blocked_async
 	gst_pad_set_bufferalloc_function
 	gst_pad_set_caps
@@ -274,42 +393,99 @@ EXPORTS
 	gst_pad_template_get_caps
 	gst_pad_template_get_type
 	gst_pad_template_new
+	gst_pad_template_pad_created
 	gst_pad_unlink
 	gst_pad_use_fixed_caps
 	gst_param_spec_mini_object
+	gst_parse_bin_from_description
 	gst_parse_launch
 	gst_parse_launchv
+	gst_pipeline_auto_clock
+	gst_pipeline_get_bus
+	gst_pipeline_get_clock
 	gst_pipeline_get_type
 	gst_pipeline_new
+	gst_pipeline_get_auto_flush_bus
+	gst_pipeline_get_delay
+	gst_pipeline_get_last_stream_time
+	gst_pipeline_set_auto_flush_bus
+	gst_pipeline_set_clock
+	gst_pipeline_set_delay
 	gst_pipeline_set_new_stream_time
+	gst_pipeline_use_clock
+	gst_plugin_feature_check_version
 	gst_plugin_feature_get_name
 	gst_plugin_feature_get_rank
 	gst_plugin_feature_get_type
 	gst_plugin_feature_list_free
 	gst_plugin_feature_load
+	gst_plugin_feature_set_name
+	gst_plugin_feature_set_rank
+	gst_plugin_get_description
+	gst_plugin_get_filename
+	gst_plugin_get_license
+	gst_plugin_get_name
+	gst_plugin_get_origin
+	gst_plugin_get_package
+	gst_plugin_get_source
+	gst_plugin_get_type
+	gst_plugin_get_version
+	gst_plugin_is_loaded
 	gst_plugin_list_free
+	gst_plugin_load
 	gst_plugin_load_file
+	gst_plugin_load_by_name
+	gst_plugin_name_filter
+	gst_query_get_structure
+	gst_query_get_type
+	gst_query_new_application
+	gst_query_new_convert
 	gst_query_new_duration
+	gst_query_new_formats
+	gst_query_new_position
+	gst_query_new_seeking
+	gst_query_new_segment
 	gst_query_parse_convert
 	gst_query_parse_duration
+	gst_query_parse_formats_length
+	gst_query_parse_formats_nth
 	gst_query_parse_position
+	gst_query_parse_seeking
+	gst_query_parse_segment
 	gst_query_set_convert
 	gst_query_set_duration
 	gst_query_set_formats
+	gst_query_set_formatsv
 	gst_query_set_position
 	gst_query_set_seeking
 	gst_query_set_segment
+	gst_query_type_get_by_nick
 	gst_query_type_get_details
+	gst_query_type_iterate_definitions
+	gst_query_type_register
+	gst_registry_add_feature
+	gst_registry_add_plugin
 	gst_registry_feature_filter
 	gst_registry_find_feature
 	gst_registry_find_plugin
 	gst_registry_get_default
+	gst_registry_get_feature_list
 	gst_registry_get_feature_list_by_plugin
+	gst_registry_get_path_list
 	gst_registry_get_plugin_list
+	gst_registry_get_type
+	gst_registry_lookup
+	gst_registry_lookup_feature
+	gst_registry_remove_feature
+	gst_registry_remove_plugin
+	gst_registry_scan_path
+	gst_registry_xml_read_cache
+	gst_registry_xml_write_cache
 	gst_resource_error_quark
 	gst_seek_type_get_type
 	gst_segment_clip
 	gst_segment_free
+	gst_segment_get_type
 	gst_segment_init
 	gst_segment_new
 	gst_segment_set_duration
@@ -317,8 +493,12 @@ EXPORTS
 	gst_segment_set_newsegment
 	gst_segment_set_seek
 	gst_segment_to_running_time
+	gst_segment_to_stream_time
 	gst_static_caps_get
+	gst_static_caps_get_type
 	gst_static_pad_template_get
+	gst_static_pad_template_get_caps
+	gst_static_pad_template_get_type
 	gst_stream_error_quark
 	gst_structure_copy
 	gst_structure_fixate_field_boolean
@@ -326,18 +506,26 @@ EXPORTS
 	gst_structure_fixate_field_nearest_fraction
 	gst_structure_fixate_field_nearest_int
 	gst_structure_foreach
+	gst_structure_free
+	gst_structure_from_string
 	gst_structure_get_boolean
 	gst_structure_get_double
+	gst_structure_get_field_type
 	gst_structure_get_fourcc
 	gst_structure_get_fraction
 	gst_structure_get_int
 	gst_structure_get_name
 	gst_structure_get_string
+	gst_structure_get_type
 	gst_structure_get_value
 	gst_structure_has_field
+	gst_structure_has_field_typed
 	gst_structure_has_name
+	gst_structure_n_fields
 	gst_structure_new
 	gst_structure_new_valist
+	gst_structure_nth_field_name
+	gst_structure_remove_all_fields
 	gst_structure_remove_field
 	gst_structure_set
 	gst_structure_set_name
@@ -345,8 +533,13 @@ EXPORTS
 	gst_structure_set_value
 	gst_structure_to_string
 	gst_system_clock_get_type
+	gst_system_clock_obtain
+	gst_tag_exists
+	gst_tag_get_description
+	gst_tag_get_flag
 	gst_tag_get_nick
 	gst_tag_get_type
+	gst_tag_is_fixed
 	gst_tag_list_add
 	gst_tag_list_add_values
 	gst_tag_list_copy
@@ -357,6 +550,7 @@ EXPORTS
 	gst_tag_list_get_string
 	gst_tag_list_get_string_index
 	gst_tag_list_get_tag_size
+	gst_tag_list_get_type
 	gst_tag_list_get_uint_index
 	gst_tag_list_get_value_index
 	gst_tag_list_insert
@@ -366,7 +560,15 @@ EXPORTS
 	gst_tag_setter_get_tag_list
 	gst_tag_setter_get_tag_merge_mode
 	gst_tag_setter_get_type
+	gst_tag_setter_merge_tags
+	gst_tag_setter_set_tag_merge_mode
+	gst_task_get_state
+	gst_task_get_type
+	gst_task_pause
+	gst_task_start
+	gst_task_stop
 	gst_type_find_factory_call_function
+	gst_type_find_factory_get_caps
 	gst_type_find_factory_get_list
 	gst_type_find_factory_get_type
 	gst_type_find_get_length
@@ -376,9 +578,15 @@ EXPORTS
 	gst_uri_construct
 	gst_uri_get_location
 	gst_uri_get_protocol
+	gst_uri_handler_get_protocols
 	gst_uri_handler_get_type
 	gst_uri_handler_get_type
+	gst_uri_handler_get_uri
+	gst_uri_handler_get_uri_type
 	gst_uri_handler_new_uri
+	gst_uri_handler_set_uri
+	gst_uri_is_valid
+	gst_uri_protocol_is_valid
 	gst_util_dump_mem
 	gst_util_gdouble_to_guint64
 	gst_util_guint64_to_gdouble
@@ -391,8 +599,13 @@ EXPORTS
 	gst_value_array_get_value
 	gst_value_compare
 	gst_value_get_caps
+	gst_value_get_double_range_max
+	gst_value_get_double_range_min
+	gst_value_get_fourcc
 	gst_value_get_fraction_denominator
 	gst_value_get_fraction_numerator
+	gst_value_get_fraction_range_max
+	gst_value_get_fraction_range_min
 	gst_value_get_int_range_max
 	gst_value_get_int_range_min
 	gst_value_get_mini_object
@@ -403,11 +616,71 @@ EXPORTS
 	gst_value_list_get_value
 	gst_value_serialize
 	gst_value_set_caps
+	gst_value_set_double_range
+	gst_value_set_fourcc
+	gst_value_set_fraction_range
 	gst_value_set_fraction
+	gst_value_set_int_range
 	gst_value_set_mini_object
 	gst_version
 	gst_version_string
+	gst_xml_get_element
 	gst_xml_get_topelements
+	gst_xml_get_type
+	gst_xml_make_element
 	gst_xml_new
+	gst_xml_parse_doc
 	gst_xml_parse_file
+	gst_xml_parse_memory
+	gst_xml_write
 	gst_xml_write_file
+	gst_activate_mode_get_type
+	gst_alloc_trace_flags_get_type
+	gst_assoc_flags_get_type
+	gst_bin_flags_get_type
+	gst_buffer_flag_get_type
+	gst_bus_flags_get_type
+	gst_bus_sync_reply_get_type
+	gst_caps_flags_get_type
+	gst_clock_entry_type_get_type
+	gst_clock_flags_get_type
+	gst_clock_return_get_type
+	gst_core_error_get_type
+	gst_debug_color_flags_get_type
+	gst_debug_level_get_type
+	gst_element_flags_get_type
+	gst_element_get_query_types
+	gst_event_type_flags_get_type
+	gst_index_certainty_get_type
+	gst_index_entry_type_get_type
+	gst_index_flags_get_type
+	gst_index_lookup_method_get_type
+	gst_index_resolver_method_get_type
+	gst_iterator_item_get_type
+	gst_iterator_result_get_type
+	gst_library_error_get_type
+	gst_message_type_get_type
+	gst_mini_object_flags_get_type
+	gst_object_flags_get_type
+	gst_pad_direction_get_type
+	gst_pad_flags_get_type
+	gst_pad_link_return_get_type
+	gst_pad_presence_get_type
+	gst_pad_template_flags_get_type
+	gst_parse_error_get_type
+	gst_pipeline_flags_get_type
+	gst_plugin_error_get_type
+	gst_plugin_flags_get_type
+	gst_query_type_get_type
+	gst_rank_get_type
+	gst_resource_error_get_type
+	gst_seek_flags_get_type
+	gst_state_change_get_type
+	gst_state_change_return_get_type
+	gst_state_get_type
+	gst_stream_error_get_type
+	gst_tag_flag_get_type
+	gst_tag_merge_mode_get_type
+	gst_task_state_get_type
+	gst_type_find_probability_get_type
+	gst_uri_type_get_type
