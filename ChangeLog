@@ -1,3 +1,13 @@
+2006-03-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Christophe Fergeau  <teuf gnome org>
+
+	* ext/lame/gstlame.c: (gst_lame_release_memory),
+	(gst_lame_finalize), (gst_lame_class_init),
+	(gst_lame_sink_setcaps), (gst_lame_init), (gst_lame_sink_event),
+	(gst_lame_change_state):
+	  Fix some memory leaks (#333345), use GST_DEBUG_FUNCPTR more often.
+
 2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstmad.c: (gst_mad_convert_sink), (gst_mad_update_info),

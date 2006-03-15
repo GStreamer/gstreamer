@@ -276,13 +276,27 @@ gst_lame_get_type (void)
 }
 
 static void
-gst_lame_finalize (GObject * obj)
+gst_lame_release_memory (GstLame * lame)
 {
-  GstLame *lame = GST_LAME (obj);
-
   g_slist_foreach (lame->tag_strings, (GFunc) g_free, NULL);
   g_slist_free (lame->tag_strings);
   lame->tag_strings = NULL;
+
+  if (lame->tags) {
+    gst_tag_list_free (lame->tags);
+    lame->tags = NULL;
+  }
+
+  if (lame->lgf) {
+    lame_close (lame->lgf);
+    lame->lgf = NULL;
+  }
+}
+
+static void
+gst_lame_finalize (GObject * obj)
+{
+  gst_lame_release_memory (GST_LAME (obj));
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -308,7 +322,7 @@ gst_lame_class_init (GstLameClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_lame_set_property;
   gobject_class->get_property = gst_lame_get_property;
@@ -429,7 +443,7 @@ gst_lame_class_init (GstLameClass * klass)
           GST_TYPE_LAME_PRESET, 0, G_PARAM_READWRITE));
 #endif
 
-  gstelement_class->change_state = gst_lame_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_lame_change_state);
 }
 
 static gboolean
@@ -467,6 +481,7 @@ gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
   /* and use these caps */
   gst_pad_set_caps (lame->srcpad, othercaps);
   gst_caps_unref (othercaps);
+  gst_object_unref (lame);
 
   return TRUE;
 
@@ -474,24 +489,28 @@ no_rate:
   {
     GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
         ("no rate specified in input"));
+    gst_object_unref (lame);
     return FALSE;
   }
 no_channels:
   {
     GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
         ("no channels specified in input"));
+    gst_object_unref (lame);
     return FALSE;
   }
 zero_output_rate:
   {
     GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
         ("lame decided on a zero sample rate"));
+    gst_object_unref (lame);
     return FALSE;
   }
 setup_failed:
   {
     GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
         ("could not initialize encoder (wrong parameters?)"));
+    gst_object_unref (lame);
     return FALSE;
   }
 }
@@ -502,16 +521,17 @@ gst_lame_init (GstLame * lame)
   GST_DEBUG_OBJECT (lame, "starting initialization");
 
   lame->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_lame_sink_template), "sink");
-  gst_pad_set_event_function (lame->sinkpad, gst_lame_sink_event);
-  gst_pad_set_chain_function (lame->sinkpad, gst_lame_chain);
-  gst_pad_set_setcaps_function (lame->sinkpad, gst_lame_sink_setcaps);
+      gst_pad_new_from_static_template (&gst_lame_sink_template, "sink");
+  gst_pad_set_event_function (lame->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_lame_sink_event));
+  gst_pad_set_chain_function (lame->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_lame_chain));
+  gst_pad_set_setcaps_function (lame->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_lame_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (lame), lame->sinkpad);
 
   lame->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_lame_src_template), "src");
+      gst_pad_new_from_static_template (&gst_lame_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
 
   /* create an encoder state so we can ask about defaults */
@@ -976,6 +996,7 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
       gst_pad_push_event (lame->srcpad, event);
       break;
   }
+  gst_object_unref (lame);
   return TRUE;
 }
 
@@ -1195,7 +1216,7 @@ gst_lame_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_tag_list_free (lame->tags);
+      gst_lame_release_memory (lame);
       break;
     default:
       break;
